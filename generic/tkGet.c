@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.6 1999/12/14 06:52:28 hobbs Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.6.8.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -37,9 +37,12 @@ static Tcl_ThreadDataKey dataKey;
  * used by Tk_GetAnchorFromObj and Tk_GetJustifyFromObj.
  */
 
-static char *anchorStrings[] = {"n", "ne", "e", "se", "s", "sw", "w", "nw",
-	"center", (char *) NULL};
-static char *justifyStrings[] = {"left", "right", "center", (char *) NULL};
+static CONST char *anchorStrings[] = {
+    "n", "ne", "e", "se", "s", "sw", "w", "nw", "center", (char *) NULL
+};
+static CONST char *justifyStrings[] = {
+    "left", "right", "center", (char *) NULL
+};
 
 
 /*
@@ -545,7 +548,7 @@ Tk_GetScreenMM(interp, tkwin, string, doublePtr)
     Tk_Window tkwin;		/* Window whose screen determines conversion
 				 * from centimeters and other absolute
 				 * units. */
-    char *string;		/* String describing a screen distance. */
+    CONST char *string;		/* String describing a screen distance. */
     double *doublePtr;		/* Place to store converted result. */
 {
     char *end;
@@ -621,7 +624,7 @@ Tk_GetPixels(interp, tkwin, string, intPtr)
     Tk_Window tkwin;		/* Window whose screen determines conversion
 				 * from centimeters and other absolute
 				 * units. */
-    char *string;		/* String describing a number of pixels. */
+    CONST char *string;		/* String describing a number of pixels. */
     int *intPtr;		/* Place to store converted result. */
 {
     double d;

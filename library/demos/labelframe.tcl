@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing
 # several labelframe widgets.
 #
-# RCS: @(#) $Id: labelframe.tcl,v 1.1 2001/09/26 21:36:19 pspjuth Exp $
+# RCS: @(#) $Id: labelframe.tcl,v 1.1.2.1 2002/02/05 02:25:16 wolfsuit Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -19,7 +19,8 @@ positionWindow $w
 # Some information
 
 label $w.msg -font $font -wraplength 4i -justify left -text "Labelframes are\
-typically used to group related widgets together."
+	used to group related widgets together.  The label may be either \
+	plain text or another widget."
 pack $w.msg -side top
 
 # The bottom buttons
@@ -42,7 +43,7 @@ labelframe $w.f -text "Value" -padx 2 -pady 2
 grid $w.f -row 0 -column 0 -pady 2m -padx 2m
 
 foreach value {1 2 3 4} {
-    radiobutton $w.f.b$value -text $value -width 3 \
+    radiobutton $w.f.b$value -text "This is value $value" \
             -variable lfdummy -value $value
     pack $w.f.b$value -side top -fill x -pady 2
 }

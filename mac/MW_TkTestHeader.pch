@@ -1,5 +1,5 @@
 /*
- * MW_TkHeader.pch --
+ * MW_TkTestHeader.pch --
  *
  *  This file is the source for a pre-compilied header that gets used
  *  for all files in the Tk projects.  This make compilies go a bit
@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: MW_TkTestHeader.pch,v 1.1 2000/02/10 08:45:30 jingham Exp $
+ * RCS: @(#) $Id: MW_TkTestHeader.pch,v 1.1.8.1 2002/02/05 02:25:16 wolfsuit Exp $
  */
 
 /*
@@ -31,33 +31,12 @@
 #pragma precompile_target "MW_TkTestHeader68K"
 #endif
 
+#define BUILD_tk 1
+
+#define STATIC_BUILD 1
+
 #define TCL_DEBUG 1
 
-/*#define TCL_THREADS 1*/
+#define TCL_THREADS 1
 
-#include "tclMacCommonPch.h"
-
-#ifdef TCL_DEBUG
-    #define TK_TEST
-#endif
-
-/*
- * The following defines are for the Xlib.h file to force 
- * it to generate prototypes in the way we need it.  This is
- * defined here in case X.h & company are ever included before
- * tk.h.
- */
-
-#define NeedFunctionPrototypes 1
-#define NeedWidePrototypes 0
-
-/*
- * Place any includes below that will are needed by the majority of the
- * and is OK to be in any file in the system.
- */
-
-#include <tcl.h>
-#pragma export on
-#include "tk.h"
-#include "tkInt.h"
-#pragma export off
+#include "MW_TkHeaderCommon.h"

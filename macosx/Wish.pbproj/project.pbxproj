@@ -5,8 +5,98 @@
 	};
 	objectVersion = 34;
 	objects = {
+		F50D96120196176E01DC9062 = {
+			isa = PBXFrameworkReference;
+			name = ApplicationServices.framework;
+			path = /System/Library/Frameworks/ApplicationServices.framework;
+			refType = 0;
+		};
+		F50D96130196176E01DC9062 = {
+			fileRef = F50D96120196176E01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F50D96140196176E01DC9062 = {
+			fileRef = F50D96120196176E01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F51D903E0181474301DC9062 = {
 			fileRef = F5875C7B016FEF1D01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D903F018149BD01DC9062 = {
+			buildActionMask = 2147483647;
+			dstPath = "Versions/$(FRAMEWORK_VERSION)/Headers/X11";
+			dstSubfolderSpec = 1;
+			files = (
+				F51D9040018149FD01DC9062,
+				F51D9041018149FD01DC9062,
+				F51D9042018149FD01DC9062,
+				F51D9043018149FD01DC9062,
+				F51D9044018149FD01DC9062,
+				F51D9045018149FD01DC9062,
+				F51D9046018149FD01DC9062,
+				F51D9047018149FD01DC9062,
+				F51D9048018149FD01DC9062,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			name = "Copy Files";
+		};
+		F51D9040018149FD01DC9062 = {
+			fileRef = F53755CE016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9041018149FD01DC9062 = {
+			fileRef = F53755CF016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9042018149FD01DC9062 = {
+			fileRef = F53755D0016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9043018149FD01DC9062 = {
+			fileRef = F53755D1016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9044018149FD01DC9062 = {
+			fileRef = F53755D2016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9045018149FD01DC9062 = {
+			fileRef = F53755D3016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9046018149FD01DC9062 = {
+			fileRef = F53755D4016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9047018149FD01DC9062 = {
+			fileRef = F53755D5016C389901DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D9048018149FD01DC9062 = {
+			fileRef = F53755D6016C389901DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1239,7 +1329,9 @@
 				F53755E3016C38D301DC9062,
 				F53755E4016C38D301DC9062,
 				F5B1FC08016FFE3501DC9062,
+				F51D903F018149BD01DC9062,
 				F56570CF01722FA201DC9062,
+				F5C1D51901B88F9A01DC9062,
 			);
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 8.4;
@@ -1251,12 +1343,15 @@
 				LIBRARY_SEARCH_PATHS = "";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMAC_OSX_TCL -DMAC_OSX_TK -DHAVE_UNISTD_H=1 -DHAVE_LIMITS_H=1 -DTCL_THREADS=1 -DHAVE_PTHREAD_ATTR_SETSTACKSIZE=1 -DHAVE_GETCWD=1 -DHAVE_OPENDIR=1 -DHAVE_STRSTR=1 -DHAVE_STRTOL=1 -DHAVE_TMPNAM=1 -DHAVE_WAITPID=1 -DNO_VALUES_H=1 -DNO_DLFCN_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_PARAM_H=1 -DUSE_TERMIOS=1 -DHAVE_SYS_TIME_H=1 -DTIME_WITH_SYS_TIME=1 -DHAVE_TM_ZONE=1 -DHAVE_TM_GMTOFF=1 -DHAVE_ST_BLKSIZE=1 -DSTDC_HEADERS=1 -DNEED_MATHERR=1 -DHAVE_SIGNED_CHAR=1 -DHAVE_SYS_IOCTL_H=1 -DHAVE_SYS_FILIO_H=1";
-				OTHER_LDFLAGS = "-seg1addr 0x350000";
+				OTHER_LDFLAGS = "-seg1addr 0x400000";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "-i \"../../tcl/generic\" -i \"../generic\"";
 				PRINCIPAL_CLASS = "";
 				PRODUCT_NAME = Tk;
 				SECTORDER_FLAGS = "";
+				TK_MAJOR_VERSION = 8;
+				TK_MINOR_VERSION = 4;
+				TK_PATCH_LEVEL = a4;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -1486,6 +1581,7 @@ Copyright Apple Computer, Inc 2001</string>
 			files = (
 				F51D903E0181474301DC9062,
 				F537567E016C3ADB01DC9062,
+				F50D96130196176E01DC9062,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -2324,18 +2420,24 @@ Copyright Apple Computer, Inc 2001</string>
 			fileRef = F53755CE016C389901DC9062;
 			isa = PBXBuildFile;
 			settings = {
+				ATTRIBUTES = (
+				);
 			};
 		};
 		F537566F016C3A1F01DC9062 = {
 			fileRef = F53755CF016C389901DC9062;
 			isa = PBXBuildFile;
 			settings = {
+				ATTRIBUTES = (
+				);
 			};
 		};
 		F5375670016C3A1F01DC9062 = {
 			fileRef = F53755D0016C389901DC9062;
 			isa = PBXBuildFile;
 			settings = {
+				ATTRIBUTES = (
+				);
 			};
 		};
 		F5375671016C3A1F01DC9062 = {
@@ -2406,6 +2508,7 @@ Copyright Apple Computer, Inc 2001</string>
 		};
 		F537567C016C3ADB01DC9062 = {
 			children = (
+				F50D96120196176E01DC9062,
 				F5875C7B016FEF1D01DC9062,
 				F537567D016C3ADB01DC9062,
 			);
@@ -2707,6 +2810,7 @@ Copyright Apple Computer, Inc 2001</string>
 				F53756A8016C4DD401DC9062,
 				F5875C7D016FEF1D01DC9062,
 				F53756A7016C4DD401DC9062,
+				F50D96140196176E01DC9062,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -2994,6 +3098,19 @@ Copyright Apple Computer, Inc 2001</string>
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F5C1D51901B88F9A01DC9062 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			name = "Shell Script";
+			neededFileNames = (
+			);
+			shellPath = /bin/sh;
+			shellScript = "source buildConfig";
 		};
 		F5C88659017D625C01DC9062 = {
 			children = (

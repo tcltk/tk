@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.10 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.10.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -313,7 +313,7 @@ MessageWidgetObjCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument strings. */
 {
     register Message *msgPtr = (Message *) clientData;
-    static char *optionStrings[] = { "cget", "configure", (char *) NULL };
+    static CONST char *optionStrings[] = { "cget", "configure", (char *) NULL };
     enum options { MESSAGE_CGET, MESSAGE_CONFIGURE };
     int index;
     int result = TCL_OK;
@@ -479,7 +479,7 @@ ConfigureMessage(interp, msgPtr, objc, objv, flags)
      */
 
     if (msgPtr->textVarName != NULL) {
-	char *value;
+	CONST char *value;
 
 	value = Tcl_GetVar(interp, msgPtr->textVarName, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
@@ -852,7 +852,7 @@ MessageTextVarProc(clientData, interp, name1, name2, flags)
     int flags;			/* Information about what happened. */
 {
     register Message *msgPtr = (Message *) clientData;
-    char *value;
+    CONST char *value;
 
     /*
      * If the variable is unset, then immediately recreate it unless

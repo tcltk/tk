@@ -51,7 +51,6 @@
  *      license.
  */
 
-#include <tcl.h>
 #include "tkMacOSXInt.h"
 #include "tkPort.h"
 #include "tkMacOSXWm.h"

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacFont.c,v 1.5 1999/12/07 03:04:51 hobbs Exp $
+ * RCS: @(#) $Id: tkMacFont.c,v 1.5.8.1 2002/02/05 02:25:16 wolfsuit Exp $
  */
  
 #include <Windows.h>
@@ -257,7 +257,7 @@ static void		ReleaseFont(MacFont *fontPtr);
 static void		ReleaseSubFont(SubFont *subFontPtr);
 static int		SeenName(CONST char *name, Tcl_DString *dsPtr);
 
-static char *      	BreakLine(FontFamily *familyPtr, int flags, 
+static CONST char *    	BreakLine(FontFamily *familyPtr, int flags, 
 			    CONST char *source, int numBytes, int *widthPtr);
 static int		GetFamilyNum(CONST char *faceName, short *familyPtr);
 static int		GetFamilyOrAliasNum(CONST char *faceName, 
@@ -326,7 +326,7 @@ TkpFontPkgInit(mainPtr)
 	 */
 	
 	fontMenu = NewMenu('FT', "\px");
-	AddResMenu(fontMenu, 'FONT');
+	AppendResMenu(fontMenu, 'FONT');
 	
 	numFonts = CountMItems(fontMenu);
 	tmpFontNameMap = (FontNameMap *) ckalloc(sizeof(FontNameMap) * numFonts);
@@ -761,7 +761,7 @@ Tk_MeasureChars(
         int widthLeft;
         FontFamily *thisFamilyPtr;
         Tcl_UniChar ch;
-        char *rest;
+        CONST char *rest;
         
 	/*
 	 * How many chars will fit in the space allotted? 
@@ -835,7 +835,7 @@ Tk_MeasureChars(
  *---------------------------------------------------------------------------
  */
  
-static char *      	
+static CONST char *      	
 BreakLine(
     FontFamily *familyPtr,	/* FontFamily that describes the font values
     				 * that are already selected into the graphics

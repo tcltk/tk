@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.6.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: event.test,v 1.6.2.2 2002/02/05 02:25:17 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -62,8 +62,78 @@ return
 
 
 
+test event-click-drag-1.2 { click and drag in an entry widget, this
+                            tests tkEntryMouseSelect in entry.tcl } {
+    destroy .t
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    _keypress_string $e "A Tcl/Tk selection!"
+    set anchor 6
+    set selend 18
 
 
 
 
+    # Save the position of the insert cursor
+    lappend result [$e index insert]
+    
+    # Now drag until selend is highlighted, then click up
+
+    set current $anchor
+    while {$current <= $selend} {
+        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+        event generate $e <B1-Motion> -x $current_x -y $current_y
+        incr current
+        _pause 50
+    }
+
+    event generate $e <ButtonRelease-1> -x $current_x -y $current_y
+    _pause 200
+
+    # Save the position of the insert cursor
+    lappend result [$e index insert]
+
+    # Save the highlighted text
+    lappend result [selection get]
+
+    # Now click and click and drag to the left, over "Tcl/Tk selection"
+
+    event generate $e <ButtonPress-1> -x $current_x -y $current_y
+
+    while {$current >= ($anchor - 4)} {
+        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+        event generate $e <B1-Motion> -x $current_x -y $current_y
+        incr current -1
+        _pause 50
+    }
+
+    event generate $e <ButtonRelease-1> -x $current_x -y $current_y
+    _pause 200
+
+    # Save the position of the insert cursor
+    lappend result [$e index insert]
+
+    # Save the highlighted text
+    lappend result [selection get]
+
+} {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
+
+
+
+# cleanup
+
+destroy .t
+
+unset keypress_lookup
+rename _init_keypress_lookup {}
+rename _keypress_lookup {}
+rename _keypress {}
+rename _pause {}
+rename _text_ind_to_x_y {}
+
+::tcltest::cleanupTests
+return
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.13 2001/10/12 13:30:31 tmh Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.13.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 /*
@@ -105,8 +105,10 @@ TCL_DECLARE_MUTEX(menuMutex)
 
 char *tkMenuStateStrings[] = {"active", "normal", "disabled", (char *) NULL};
 
-static char *menuEntryTypeStrings[] = {"cascade", "checkbutton", "command", 
-	"radiobutton", "separator", (char *) NULL};
+static CONST char *menuEntryTypeStrings[] = {
+    "cascade", "checkbutton", "command", "radiobutton", "separator",
+    (char *) NULL
+};
 
 /*
  * The following table defines the legal values for the -compound option.
@@ -243,7 +245,7 @@ static Tk_OptionSpec *specsArray[] = {
  * Menu type strings for use with Tcl_GetIndexFromObj.
  */
 
-static char *menuTypeStrings[] = {"normal", "tearoff", "menubar",
+static CONST char *menuTypeStrings[] = {"normal", "tearoff", "menubar",
 	(char *) NULL};
 
 Tk_OptionSpec tkMenuConfigSpecs[] = {
@@ -311,7 +313,7 @@ Tk_OptionSpec tkMenuConfigSpecs[] = {
  * along with MenuWidgetObjCmd.
  */
 
-static char *menuOptions[] = {
+static CONST char *menuOptions[] = {
     "activate", "add", "cget", "clone", "configure", "delete", "entrycget",
     "entryconfigure", "index", "insert", "invoke", "post", "postcascade",
     "type", "unpost", "yposition", (char *) NULL
@@ -463,7 +465,7 @@ MenuCmd(clientData, interp, objc, objv)
     int i, index;
     int toplevel;
     char *windowName;
-    static char *typeStringList[] = {"-type", (char *) NULL};
+    static CONST char *typeStringList[] = {"-type", (char *) NULL};
     TkMenuOptionTables *optionTablesPtr = (TkMenuOptionTables *) clientData;
 
     if (objc < 2) {
@@ -1012,9 +1014,9 @@ MenuWidgetObjCmd(clientData, interp, objc, objv)
 	    if (menuPtr->entries[index]->type == TEAROFF_ENTRY) {
 		Tcl_SetResult(interp, "tearoff", TCL_STATIC);
 	    } else {
-		Tcl_SetResult(interp,
+		Tcl_SetStringObj(Tcl_GetObjResult(interp),
 			menuEntryTypeStrings[menuPtr->entries[index]->type],
-			TCL_STATIC);
+			-1);
 	    }
 	    break;
 	}
@@ -1996,7 +1998,7 @@ ConfigureMenuCloneEntries(interp, menuPtr, index, objc, objv)
 	    oldCascadeName = Tcl_GetStringFromObj(oldCascadePtr,
 		    NULL);
 	    cascadeEntryChanged = (strcmp(oldCascadeName, newCascadeName) 
-		    == 0);
+		    != 0);
 	}
 	if (oldCascadePtr != NULL) {
 	    Tcl_DecrRefCount(oldCascadePtr);
@@ -2467,7 +2469,7 @@ MenuVarProc(clientData, interp, name1, name2, flags)
 {
     TkMenuEntry *mePtr = (TkMenuEntry *) clientData;
     TkMenu *menuPtr;
-    char *value;
+    CONST char *value;
     char *name = Tcl_GetStringFromObj(mePtr->namePtr, NULL);
     char *onValue;
 

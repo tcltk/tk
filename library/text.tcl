@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.17.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: text.tcl,v 1.17.2.2 2002/02/05 02:25:16 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -204,6 +204,7 @@ bind Text <Control-i> {
 }
 bind Text <Return> {
     tk::TextInsert %W \n
+    if {[%W cget -autoseparators]} {%W edit separator}
 }
 bind Text <Delete> {
     if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
@@ -255,7 +256,8 @@ bind Text <<Clear>> {
     catch {%W delete sel.first sel.last}
 }
 bind Text <<PasteSelection>> {
-    if {!$tk::Priv(mouseMoved) || $tk_strictMotif} {
+    if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
+	|| !$tk::Priv(mouseMoved)} {
 	tk::TextPaste %W %x %y
     }
 }
@@ -336,6 +338,18 @@ bind Text <Control-p> {
 bind Text <Control-t> {
     if {!$tk_strictMotif} {
 	tk::TextTranspose %W
+    }
+}
+
+bind Text <<Undo>> {
+    if { ! [ catch { %W edit undo } ] } {
+       %W see insert
+    }
+}
+
+bind Text <<Redo>> {
+    if { ! [ catch { %W edit redo } ] } {
+       %W see insert
     }
 }
 
@@ -436,20 +450,12 @@ bind Text <Control-h> {
 }
 bind Text <2> {
     if {!$tk_strictMotif} {
-	%W scan mark %x %y
-	set tk::Priv(x) %x
-	set tk::Priv(y) %y
-	set tk::Priv(mouseMoved) 0
+	tk::TextScanMark %W %x %y
     }
 }
 bind Text <B2-Motion> {
     if {!$tk_strictMotif} {
-	if {(%x != $tk::Priv(x)) || (%y != $tk::Priv(y))} {
-	    set tk::Priv(mouseMoved) 1
-	}
-	if {$tk::Priv(mouseMoved)} {
-	    %W scan dragto %x %y
-	}
+	tk::TextScanDrag %W %x %y
     }
 }
 set ::tk::Priv(prevPos) {}
@@ -519,7 +525,11 @@ proc ::tk::TextButton1 {w x y} {
     set Priv(pressX) $x
     $w mark set insert [TextClosestGap $w $x $y]
     $w mark set anchor insert
-    if {[string equal [$w cget -state] "normal"]} {focus $w}
+    # Allow focus in any case on Windows, because that will let the
+    # selection be displayed even for state disabled text widgets.
+    if {[string equal $::tcl_platform(platform) "windows"] \
+	    || [string equal [$w cget -state] "normal"]} {focus $w}
+    if {[$w cget -autoseparators]} {$w edit separator}
 }
 
 # ::tk::TextSelectTo --
@@ -631,6 +641,18 @@ proc ::tk::TextKeyExtend {w index} {
 proc ::tk::TextPaste {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
     catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
+    catch {
+	set oldSeparator [$w cget -autoseparators]
+	if {$oldSeparator} {
+	    $w configure -autoseparators 0
+	    $w edit separator
+	}
+	$w insert insert [::tk::GetSelection $w PRIMARY]
+	if {$oldSeparator} {
+	    $w edit separator
+	    $w configure -autoseparators 1
+	}
+    }
     if {[string equal [$w cget -state] "normal"]} {focus $w}
 }
 
@@ -681,6 +703,7 @@ proc ::tk::TextSetCursor {w pos} {
     $w mark set insert $pos
     $w tag remove sel 1.0 end
     $w see insert
+    if {[$w cget -autoseparators]} {$w edit separator}
 }
 
 # ::tk::TextKeySelect
@@ -788,14 +811,25 @@ proc ::tk::TextInsert {w s} {
     if {[string equal $s ""] || [string equal [$w cget -state] "disabled"]} {
 	return
     }
+    set compound 0
     catch {
 	if {[$w compare sel.first <= insert] \
 		&& [$w compare sel.last >= insert]} {
+            set oldSeparator [$w cget -autoseparators]
+            if { $oldSeparator } {
+                $w configure -autoseparators 0
+                $w edit separator
+                set compound 1
+            }
 	    $w delete sel.first sel.last
 	}
     }
     $w insert insert $s
     $w see insert
+    if { $compound && $oldSeparator } {
+        $w edit separator
+        $w configure -autoseparators 1
+    }
 }
 
 # ::tk::TextUpDownLine --
@@ -969,12 +1003,19 @@ proc ::tk_textCut w {
 proc ::tk_textPaste w {
     global tcl_platform
     catch {
+	set oldSeparator [$w cget -autoseparators]
+	if { $oldSeparator } {
+	    $w configure -autoseparators 0
+	    $w edit separator
+	}
 	if {[string compare $tcl_platform(windowingsystem) "x11"]} {
-	    catch {
-		$w delete sel.first sel.last
-	    }
+	    catch { $w delete sel.first sel.last }
 	}
 	$w insert insert [::tk::GetSelection $w CLIPBOARD]
+	if { $oldSeparator } {
+	    $w edit separator
+	    $w configure -autoseparators 1
+	}
     }
 }
 
@@ -1061,4 +1102,42 @@ proc ::tk::TextPrevPos {w start op} {
 	set cur [$w index "$cur linestart - 1c"]
     }
     return 0.0
+}
+
+# ::tk::TextScanMark --
+#
+# Marks the start of a possible scan drag operation
+#
+# Arguments:
+# w -	The text window from which the text to get
+# x -	x location on screen
+# y -	y location on screen
+
+proc ::tk::TextScanMark {w x y} {
+    $w scan mark $x $y
+    set ::tk::Priv(x) $x
+    set ::tk::Priv(y) $y
+    set ::tk::Priv(mouseMoved) 0
+}
+
+# ::tk::TextScanDrag --
+#
+# Marks the start of a possible scan drag operation
+#
+# Arguments:
+# w -	The text window from which the text to get
+# x -	x location on screen
+# y -	y location on screen
+
+proc ::tk::TextScanDrag {w x y} {
+    # Make sure these exist, as some weird situations can trigger the
+    # motion binding without the initial press.  [Bug #220269]
+    if {![info exists ::tk::Priv(x)]} { set ::tk::Priv(x) $x }
+    if {![info exists ::tk::Priv(y)]} { set ::tk::Priv(y) $y }
+    if {($x != $::tk::Priv(x)) || ($y != $::tk::Priv(y))} {
+	set ::tk::Priv(mouseMoved) 1
+    }
+    if {[info exists ::tk::Priv(mouseMoved)] && $::tk::Priv(mouseMoved)} {
+	$w scan dragto $x $y
+    }
 }

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
  */
 
 #include <stdio.h>
@@ -21,8 +21,6 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-
-#include <tcl.h>
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXEvent.h"

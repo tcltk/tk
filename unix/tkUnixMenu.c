@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.5 2001/10/12 13:30:31 tmh Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.5.2.1 2002/02/05 02:25:18 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -877,8 +877,8 @@ DrawMenuUnderline(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
 	int activeBorderWidth;
 	int leftEdge;
 	char *label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
-	char *start = Tcl_UtfAtIndex(label, mePtr->underline);
-	char *end = Tcl_UtfNext(start);
+	CONST char *start = Tcl_UtfAtIndex(label, mePtr->underline);
+	CONST char *end = Tcl_UtfNext(start);
 
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);

@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# RCS: @(#) $Id: palette.tcl,v 1.6 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: palette.tcl,v 1.6.2.1 2002/02/05 02:25:16 wolfsuit Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
@@ -40,10 +40,18 @@ proc ::tk_setPalette {args} {
     if {![info exists new(background)]} {
 	error "must specify a background color"
     }
-    if {![info exists new(foreground)]} {
-	set new(foreground) black
-    }
     set bg [winfo rgb . $new(background)]
+    if {![info exists new(foreground)]} {
+	# Note that the range of each value in the triple returned by
+	# [winfo rgb] is 0-65535, and your eyes are more sensitive to
+	# green than to red, and more to red than to blue.
+	foreach {r g b} $bg {break}
+	if {$r+1.5*$g+0.5*$b > 100000} {
+	    set new(foreground) black
+	} else {
+	    set new(foreground) white
+	}
+    }
     set fg [winfo rgb . $new(foreground)]
     set darkerBg [format #%02x%02x%02x [expr {(9*[lindex $bg 0])/2560}] \
 	    [expr {(9*[lindex $bg 1])/2560}] [expr {(9*[lindex $bg 2])/2560}]]
@@ -98,8 +106,11 @@ proc ::tk_setPalette {args} {
     # defaults are currently for this platform.
     toplevel .___tk_set_palette
     wm withdraw .___tk_set_palette
-    foreach q {button canvas checkbutton entry frame label listbox \
-	    menubutton menu message radiobutton scale scrollbar text} {
+    foreach q {
+	button canvas checkbutton entry frame label labelframe
+	listbox menubutton menu message radiobutton scale scrollbar
+	spinbox text
+    } {
 	$q .___tk_set_palette.$q
     }
 
@@ -150,14 +161,22 @@ proc ::tk_setPalette {args} {
 proc ::tk::RecolorTree {w colors} {
     upvar $colors c
     set result {}
+    set prototype .___tk_set_palette.[string tolower [winfo class $w]]
+    if {![winfo exists $prototype]} {
+	unset prototype
+    }
     foreach dbOption [array names c] {
 	set option -[string tolower $dbOption]
+	set class [string replace $dbOption 0 0 [string toupper \
+		[string index $dbOption 0]]]
 	if {![catch {$w config $option} value]} {
 	    # if the option database has a preference for this
 	    # dbOption, then use it, otherwise use the defaults
 	    # for the widget.
-	    set defaultcolor [option get $w $dbOption widgetDefault]
-	    if {[string match {} $defaultcolor]} {
+	    set defaultcolor [option get $w $dbOption $class]
+	    if {[string match {} $defaultcolor] || \
+		    ([info exists prototype] && \
+		    [$prototype cget $option] ne "$defaultcolor")} {
 		set defaultcolor [winfo rgb . [lindex $value 3]]
 	    } else {
 		set defaultcolor [winfo rgb . $defaultcolor]

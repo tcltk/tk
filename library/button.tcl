@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.11.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: button.tcl,v 1.11.2.2 2002/02/05 02:25:16 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -506,9 +506,8 @@ proc ::tk::ButtonDown w {
 
 	# If this button has a repeatdelay set up, get it going with an after
 	after cancel $Priv(afterId)
+    set Priv(repeated) 0
 	if { ![catch {$w cget -repeatdelay} delay] } {
-	    set delay [$w cget -repeatdelay]
-	    set Priv(repeated) 0
 	    if {$delay > 0} {
 		set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
 	    }

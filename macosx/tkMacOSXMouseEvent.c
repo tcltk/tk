@@ -55,7 +55,6 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include "tkMacOSXEvent.h"
-#include <tcl.h>
 #include "tkMacOSXInt.h"
 #include "tkPort.h"
 #include "tkMacOSXDebug.h"

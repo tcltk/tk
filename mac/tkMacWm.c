@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.11 2001/08/06 18:29:41 dgp Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.11.2.1 2002/02/05 02:25:17 wolfsuit Exp $
  */
 
 #include <Gestalt.h>
@@ -194,7 +194,7 @@ typedef struct TkWmInfo {
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for
 				 * this window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
-    char **cmdArgv;		/* Array of strings to store in the
+    CONST char **cmdArgv;	/* Array of strings to store in the
 				 * WM_COMMAND property.  NULL means nothing
 				 * available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
@@ -320,6 +320,9 @@ static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *string, TkWindow *winPtr));
 static void		TopLevelEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
+static void		TkWmStackorderToplevelWrapperMap _ANSI_ARGS_((
+			    TkWindow *winPtr,
+			    Tcl_HashTable *reparentTable));
 static void		TopLevelReqProc _ANSI_ARGS_((ClientData dummy,
 			    Tk_Window tkwin));
 static void		UpdateGeometryInfo _ANSI_ARGS_((
@@ -730,7 +733,7 @@ Tk_WmCmd(
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!Tk_IsTopLevel(winPtr)) {
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
 		"\" isn't a top-level window", (char *) NULL);
 	return TCL_ERROR;
@@ -811,7 +814,7 @@ Tk_WmCmd(
 	TkWindow **cmapList;
 	TkWindow *winPtr2;
 	int i, windowArgc, gotToplevel = 0;
-	char **windowArgv;
+	CONST char **windowArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -877,7 +880,7 @@ Tk_WmCmd(
     } else if ((c == 'c') && (strncmp(argv[1], "command", length) == 0)
 	    && (length >= 3)) {
 	int cmdArgc;
-	char **cmdArgv;
+	CONST char **cmdArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -1549,6 +1552,99 @@ Tk_WmCmd(
 	}
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 	goto updateGeom;
+    } else if ((c == 's') && (strncmp(argv[1], "stackorder", length) == 0)
+	    && (length >= 2)) {
+	TkWindow **windows, **window_ptr;
+
+	if ((argc != 3) && (argc != 5)) {
+	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
+		    argv[0],
+		    " stackorder window ?isabove|isbelow? ?window?\"",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+
+	if (argc == 3) {
+            windows = TkWmStackorderToplevel(winPtr);
+            if (windows == NULL) {
+                panic("TkWmStackorderToplevel failed");
+	    } else {
+                for (window_ptr = windows; *window_ptr ; window_ptr++) {
+                    Tcl_AppendElement(interp, (*window_ptr)->pathName);
+                }
+                ckfree((char *) windows);
+                return TCL_OK;
+	    }
+	} else {
+	    TkWindow *winPtr2;
+	    int index1=-1, index2=-1, result;
+
+	    winPtr2 = (TkWindow *) Tk_NameToWindow(interp, argv[4], tkwin);
+	    if (winPtr2 == NULL) {
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsTopLevel(winPtr2)) {
+		Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
+		    "\" isn't a top-level window", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsMapped(winPtr)) {
+		Tcl_AppendResult(interp, "window \"", winPtr->pathName,
+		    "\" isn't mapped", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsMapped(winPtr2)) {
+		Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
+		    "\" isn't mapped", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+            /*
+             * Lookup stacking order of all toplevels that are children
+             * of "." and find the position of winPtr and winPtr2
+             * in the stacking order.
+             */
+
+            windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
+
+            if (windows == NULL) {
+                Tcl_AppendResult(interp, "TkWmStackorderToplevel failed",
+                    (char *) NULL);
+                return TCL_ERROR;
+	    } else {
+                for (window_ptr = windows; *window_ptr ; window_ptr++) {
+                    if (*window_ptr == winPtr)
+                        index1 = (window_ptr - windows);
+                    if (*window_ptr == winPtr2)
+                        index2 = (window_ptr - windows);
+                }
+                if (index1 == -1)
+                    panic("winPtr window not found");
+                if (index2 == -1)
+                    panic("winPtr2 window not found");
+
+                ckfree((char *) windows);
+	    }
+
+	    c = argv[3][0];
+	    length = strlen(argv[3]);
+	    if ((length > 2) && (c == 'i')
+		    && (strncmp(argv[3], "isabove", length) == 0)) {
+		result = index1 > index2;
+	    } else if ((length > 2) && (c == 'i')
+		    && (strncmp(argv[3], "isbelow", length) == 0)) {
+		result = index1 < index2;
+	    } else {
+		Tcl_AppendResult(interp, "bad argument \"", argv[3],
+			"\": must be isabove or isbelow", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    Tcl_SetIntObj(Tcl_GetObjResult(interp), result);
+	    return TCL_OK;
+	}
     } else if ((c == 's') && (strncmp(argv[1], "state", length) == 0)
 	    && (length >= 2)) {
 	if ((argc < 3) || (argc > 4)) {
@@ -1697,8 +1793,8 @@ Tk_WmCmd(
 		"focusmodel, frame, geometry, grid, group, iconbitmap, ",
 		"iconify, iconmask, iconname, iconposition, ",
 		"iconwindow, maxsize, minsize, overrideredirect, ",
-		"positionfrom, protocol, resizable, sizefrom, state, title, ",
-		"transient, or withdraw",
+		"positionfrom, protocol, resizable, sizefrom, stackorder, ",
+		"state, title, transient, or withdraw",
 		(char *) NULL);
 	return TCL_ERROR;
     }
@@ -2924,6 +3020,132 @@ TkWmProtocolEventProc(
 /*
  *----------------------------------------------------------------------
  *
+ * TkWmStackorderToplevelWrapperMap --
+ *
+ *	This procedure will create a table that maps the reparent wrapper
+ *	X id for a toplevel to the TkWindow structure that is wraps.
+ *	Tk keeps track of a mapping from the window X id to the TkWindow
+ *	structure but that does us no good here since we only get the X
+ *	id of the wrapper window. Only those toplevel windows that are
+ *	mapped have a position in the stacking order.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Adds entries to the passed hashtable.
+ *
+ *----------------------------------------------------------------------
+ */
+void
+TkWmStackorderToplevelWrapperMap(winPtr, table)
+    TkWindow *winPtr;				/* TkWindow to recurse on */
+    Tcl_HashTable *table;			/* Maps mac window to TkWindow */
+{
+    TkWindow *childPtr;
+    Tcl_HashEntry *hPtr;
+    WindowPeek wrapper;
+    int newEntry;
+
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+        wrapper = (WindowPeek) TkMacGetDrawablePort(winPtr->window);
+
+        hPtr = Tcl_CreateHashEntry(table,
+            (char *) wrapper, &newEntry);
+        Tcl_SetHashValue(hPtr, winPtr);
+    }
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+            childPtr = childPtr->nextPtr) {
+        TkWmStackorderToplevelWrapperMap(childPtr, table);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmStackorderToplevel --
+ *
+ *	This procedure returns the stack order of toplevel windows.
+ *
+ * Results:
+ *	An array of pointers to tk window objects in stacking order
+ *	or else NULL if there was an error.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkWindow **
+TkWmStackorderToplevel(parentPtr)
+    TkWindow *parentPtr;		/* Parent toplevel window. */
+{
+    WindowPeek frontWindow;
+    TkWindow *childWinPtr, **windows, **window_ptr;
+    Tcl_HashTable table;
+    Tcl_HashEntry *hPtr;
+    Tcl_HashSearch search;
+
+    /*
+     * Map mac windows to a TkWindow of the wrapped toplevel.
+     */
+
+    Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
+    TkWmStackorderToplevelWrapperMap(parentPtr, &table);
+
+    windows = (TkWindow **) ckalloc((table.numEntries+1)
+        * sizeof(TkWindow *));
+
+    /*
+     * Special cases: If zero or one toplevels were mapped
+     * there is no need to enumerate Windows.
+     */
+
+    switch (table.numEntries) {
+    case 0:
+        windows[0] = NULL;
+        goto done;
+    case 1:
+        hPtr = Tcl_FirstHashEntry(&table, &search);
+        windows[0] = (TkWindow *) Tcl_GetHashValue(hPtr);
+        windows[1] = NULL;
+        goto done;
+    }
+
+    if (TkMacHaveAppearance() >= 0x110) {
+        frontWindow = (WindowPeek) FrontNonFloatingWindow();
+    } else {	
+    	frontWindow = (WindowPeek) FrontWindow();
+    }
+
+    if (frontWindow == NULL) {
+        ckfree((char *) windows);
+        windows = NULL;
+    } else {
+    	window_ptr = windows + table.numEntries;
+    	*window_ptr-- = NULL;
+	    while (frontWindow != NULL) {
+		    hPtr = Tcl_FindHashEntry(&table, (char *) frontWindow);
+            if (hPtr != NULL) {
+                childWinPtr = (TkWindow *) Tcl_GetHashValue(hPtr);
+                *window_ptr-- = childWinPtr;
+            }
+			frontWindow = frontWindow->nextWindow;
+	    }
+        if (window_ptr != (windows-1))
+            panic("num matched toplevel windows does not equal num children");
+    }
+
+    done:
+    Tcl_DeleteHashTable(&table);
+    return windows;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWmRestackToplevel --
  *
  *	This procedure restacks a top-level window.
@@ -3783,7 +4005,7 @@ TkUnsupported1Cmd(
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
+    if (!Tk_IsTopLevel(winPtr)) {
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
 		"\" isn't a top-level window", (char *) NULL);
 	return TCL_ERROR;
@@ -4009,7 +4231,7 @@ TkUnsupported1Cmd(
 	    } else {
 	        int foundOne = 0;
 	        int attrArgc, i;
-	        char **attrArgv = NULL;
+	        CONST char **attrArgv = NULL;
 	        
 	        if (Tcl_SplitList(interp, argv[4], &attrArgc, &attrArgv) != TCL_OK) {
 	            wmPtr->macClass = oldClass;
@@ -4534,7 +4756,12 @@ TkMacHaveAppearance()
 	if (err == noErr) {
 	    TkMacHaveAppearance = 1;
 	}
+/* even if AppearanceManager 1.1 routines are present,
+we can't call them from 68K code, so we pretend
+to be running Apperarance Mgr 1.0 */
+#if !(GENERATING68K && !GENERATINGCFM)
 	err = Gestalt(gestaltAppearanceVersion, &response);
+#endif
 	if (err == noErr) {
 	    TkMacHaveAppearance = (int) response;
 	}

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -22,8 +22,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/types.h>
-
-#include <tcl.h>
 
 #include <X11/Xatom.h>
 
@@ -92,7 +90,7 @@ int _XInitImageFuncPtrs _ANSI_ARGS_((XImage *image));
 
 TkDisplay *
 TkpOpenDisplay(
-    char *display_name)
+    CONST char *display_name)
 {
     Display *display;
     Screen *screen;
@@ -843,10 +841,10 @@ XCreateIC(
  *----------------------------------------------------------------------
  */
 
-char *
+CONST char *
 TkGetDefaultScreenName(
     Tcl_Interp *interp,		/* Not used. */
-    char *screenName)		/* If NULL, use default string. */
+    CONST char *screenName)		/* If NULL, use default string. */
 {
 #if 0
     if ((screenName == NULL) || (screenName[0] == '\0')) {

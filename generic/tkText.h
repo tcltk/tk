@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.7 2000/01/06 02:18:58 hobbs Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.7.8.1 2002/02/05 02:25:16 wolfsuit Exp $
  */
 
 #ifndef _TKTEXT
@@ -451,6 +451,25 @@ typedef struct TkTextTabArray {
 					 * BE THE LAST IN THE STRUCTURE. */
 } TkTextTabArray;
 
+/* enum definining the types used in an edit stack */
+
+typedef enum {
+    TK_EDIT_SEPARATOR,			/* Marker */
+    TK_EDIT_INSERT,			/* The undo is an insert */
+    TK_EDIT_DELETE			/* The undo is a delete */
+} TkTextEditType;
+
+/* strcut defining the basic undo/redo stack element */
+
+typedef struct TkTextEditAtom {
+    TkTextEditType type;		/* The type that will trigger the
+					 * required action*/
+    char * index;			/* The starting index of the range */
+    char * string;			/* The text to be inserted / deleted */
+    struct TkTextEditAtom * next;	/* Pointer to the next element in the
+					 * stack */
+} TkTextEditAtom;
+
 /*
  * A data structure of the following type is kept for each text widget that
  * currently exists for this process:
@@ -604,7 +623,7 @@ typedef struct TkText {
 				/* Pointer to segment for "current" mark,
 				 * or NULL if none. */
     XEvent pickEvent;		/* The event from which the current character
-				 * was chosen.  Must be saved so that we
+				 * was chosen.	Must be saved so that we
 				 * can repick after modifications to the
 				 * text. */
     int numCurTags;		/* Number of tags associated with character
@@ -616,15 +635,43 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-    char *takeFocus;		/* Value of -takeFocus option;  not used in
+    char *takeFocus;		/* Value of -takeFocus option;	not used in
 				 * the C code, but used by keyboard traversal
 				 * scripts.  Malloc'ed, but may be NULL. */
     char *xScrollCmd;		/* Prefix of command to issue to update
 				 * horizontal scrollbar when view changes. */
     char *yScrollCmd;		/* Prefix of command to issue to update
 				 * vertical scrollbar when view changes. */
-    int flags;			/* Miscellaneous flags;  see below for
+    int flags;			/* Miscellaneous flags;	 see below for
 				 * definitions. */
+
+    /*
+     * Information related to the undo/redo functonality
+     */
+     
+    TkTextEditAtom * undoStack; /* The undo stack */
+    
+    TkTextEditAtom * redoStack; /* The redo stack */
+    
+    int undo;			/* non zero means the undo/redo behaviour is 
+				 * enabled */
+    
+    int autoSeparators;		/* non zero means the separatorss will be 
+				 * inserted automatically */
+    
+    int modifiedSet;		/* Flag indicating that the 'dirtynesss' of
+				 * the text widget has been expplicitly set.
+				 */
+
+    int isDirty;		/* Flag indicating the 'dirtynesss' of the text
+				 * widget. If the flag is not zero, unsaved 
+				 * modifications have been applied to the
+				 * text widget */
+
+    int isDirtyIncrement;	/* Amount with which the isDirty flag is
+				 * incremented every edit action
+				 */
+
 } TkText;
 
 /*
@@ -787,7 +834,7 @@ EXTERN int		TkTextDLineInfo _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *basePtr));
 EXTERN TkTextTag *	TkTextCreateTag _ANSI_ARGS_((TkText *textPtr,
-			    char *tagName));
+			    CONST char *tagName));
 EXTERN void		TkTextFreeDInfo _ANSI_ARGS_((TkText *textPtr));
 EXTERN void		TkTextFreeTag _ANSI_ARGS_((TkText *textPtr,
 			    TkTextTag *tagPtr));

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.31 2001/10/12 13:30:32 tmh Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.31.2.1 2002/02/05 02:25:18 wolfsuit Exp $
  */
 
 #include "tkWinInt.h"
@@ -52,6 +52,14 @@ typedef struct ProtocolHandler {
 
 #define HANDLER_SIZE(cmdLength) \
     ((unsigned) (sizeof(ProtocolHandler) - 3 + cmdLength))
+
+/*
+ * Helper type passed via lParam to TkWmStackorderToplevelEnumProc
+ */
+typedef struct TkWmStackorderToplevelPair {
+    Tcl_HashTable *table;
+    TkWindow **window_ptr;
+} TkWmStackorderToplevelPair;
 
 /* 
  * This structure represents the contents of a icon, in terms of its
@@ -232,7 +240,7 @@ typedef struct TkWmInfo {
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for
 				 * this window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
-    char **cmdArgv;		/* Array of strings to store in the
+    CONST char **cmdArgv;	/* Array of strings to store in the
 				 * WM_COMMAND property.  NULL means nothing
 				 * available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
@@ -342,7 +350,6 @@ static Tcl_ThreadDataKey dataKey;
  * because they must be shared across threads.
  */
 
-static WNDCLASS toplevelClass; /* Class for toplevel windows. */
 static int initialized;        /* Flag indicating whether module has
 				* been initialized. */
 TCL_DECLARE_MUTEX(winWmMutex)
@@ -371,6 +378,9 @@ static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 static void		RefreshColormap _ANSI_ARGS_((Colormap colormap,
 	                    TkDisplay *dispPtr));
 static void		SetLimits _ANSI_ARGS_((HWND hwnd, MINMAXINFO *info));
+static void		TkWmStackorderToplevelWrapperMap _ANSI_ARGS_((
+	                    TkWindow *winPtr,
+	                    Tcl_HashTable *table));
 static LRESULT CALLBACK	TopLevelProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
 static void		TopLevelEventProc _ANSI_ARGS_((ClientData clientData,
@@ -659,8 +669,6 @@ static int ReadICOHeader( Tcl_Channel channel )
 static int InitWindowClass(WinIconPtr titlebaricon) {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    WNDCLASS * classPtr;
-    classPtr = &toplevelClass;
 
     if (! tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
@@ -670,7 +678,15 @@ static int InitWindowClass(WinIconPtr titlebaricon) {
     if (! initialized) {
 	Tcl_MutexLock(&winWmMutex);
 	if (! initialized) {
+	    Tcl_DString classString;
+	    WNDCLASS class;
 	    initialized = 1;
+
+	    /*
+	     * The only difference between WNDCLASSW and WNDCLASSA are
+	     * in pointers, so we can use the generic structure WNDCLASS.
+	     */
+	    ZeroMemory(&class, sizeof(WNDCLASS));
 
 	    /*
 	     * When threads are enabled, we cannot use CLASSDC because
@@ -681,23 +697,20 @@ static int InitWindowClass(WinIconPtr titlebaricon) {
 	     * which also initializes a WNDCLASS structure.
 	     */
 
-	#ifdef TCL_THREADS
-	    classPtr->style = CS_HREDRAW | CS_VREDRAW;
-	#else
-	    classPtr->style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
-	#endif
-	    classPtr->cbClsExtra = 0;
-	    classPtr->cbWndExtra = 0;
-	    classPtr->hInstance = Tk_GetHINSTANCE();
-	    classPtr->hbrBackground = NULL;
-	    classPtr->lpszMenuName = NULL;
-	    classPtr->lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
-	    classPtr->lpfnWndProc = WmProc;
+#ifdef TCL_THREADS
+	    class.style = CS_HREDRAW | CS_VREDRAW;
+#else
+	    class.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
+#endif
+	    class.hInstance = Tk_GetHINSTANCE();
+	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
+	    class.lpszClassName = (LPCTSTR) Tcl_DStringValue(&classString);
+	    class.lpfnWndProc = WmProc;
 	    if (titlebaricon == NULL) {
-		classPtr->hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
+		class.hIcon = LoadIcon(Tk_GetHINSTANCE(), "tk");
 	    } else {
-		classPtr->hIcon = GetIcon(titlebaricon, ICON_BIG);
-		if (classPtr->hIcon == NULL) {
+		class.hIcon = GetIcon(titlebaricon, ICON_BIG);
+		if (class.hIcon == NULL) {
 		    return TCL_ERROR;
 		}
 		/* 
@@ -706,11 +719,12 @@ static int InitWindowClass(WinIconPtr titlebaricon) {
 		 */
 		tsdPtr->iconPtr = titlebaricon;
 	    }
-	    classPtr->hCursor = LoadCursor(NULL, IDC_ARROW);
+	    class.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-	    if (!RegisterClass(classPtr)) {
+	    if (!(*tkWinProcs->registerClass)(&class)) {
 		panic("Unable to register TkTopLevel class");
 	    }
+	    Tcl_DStringFree(&classString);
 	}
 	Tcl_MutexUnlock(&winWmMutex);
     }
@@ -883,13 +897,16 @@ WinSetIcon(interp, titlebaricon, tkw)
 	    wmPtr = ((TkWindow*)tkw)->wmInfoPtr;
 	    hwnd = wmPtr->wrapper;
 	    if (hwnd == NULL) {
-		Tcl_AppendResult(interp,"Can't set icon; window has no wrapper.", (char*)NULL);
+		Tcl_AppendResult(interp,
+			"Can't set icon; window has no wrapper.", (char*)NULL);
 		return TCL_ERROR;
 	    }
 	}
-	SendMessage(hwnd,WM_SETICON,ICON_SMALL,(LPARAM)GetIcon(titlebaricon, ICON_SMALL));
-	SendMessage(hwnd,WM_SETICON,ICON_BIG,(LPARAM)GetIcon(titlebaricon, ICON_BIG));
-	
+	SendMessage(hwnd, WM_SETICON, ICON_SMALL,
+		(LPARAM) GetIcon(titlebaricon, ICON_SMALL));
+	SendMessage(hwnd, WM_SETICON, ICON_BIG,
+		(LPARAM) GetIcon(titlebaricon, ICON_BIG));
+
 	/* Update the iconPtr we keep for each WmInfo structure. */
 	if (wmPtr->iconPtr != NULL) {
 	    /* Free any old icon ptr which is associated with this window. */
@@ -1486,7 +1503,7 @@ UpdateWrapper(winPtr)
     WINDOWPLACEMENT place;
     HICON hSmallIcon = NULL;
     HICON hBigIcon = NULL;
-    Tcl_DString titleString;
+    Tcl_DString titleString, classString;
     int *childStateInfo = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1573,11 +1590,14 @@ UpdateWrapper(winPtr)
 	 */
 
 	tsdPtr->createWindow = winPtr;
-	Tcl_UtfToExternalDString(NULL, wmPtr->titleUid, -1, &titleString);
-	wmPtr->wrapper = CreateWindowEx(wmPtr->exStyle,
-		TK_WIN_TOPLEVEL_CLASS_NAME,
-		Tcl_DStringValue(&titleString), wmPtr->style, x, y, width, 
-		height, parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
+	Tcl_WinUtfToTChar(wmPtr->titleUid, -1, &titleString);
+	Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
+	wmPtr->wrapper = (*tkWinProcs->createWindowEx)(wmPtr->exStyle,
+		(LPCTSTR) Tcl_DStringValue(&classString),
+		(LPCTSTR) Tcl_DStringValue(&titleString),
+		wmPtr->style, x, y, width, height,
+		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
+	Tcl_DStringFree(&classString);
 	Tcl_DStringFree(&titleString);
 #ifdef _WIN64
 	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (LONG_PTR) winPtr);
@@ -1616,8 +1636,10 @@ UpdateWrapper(winPtr)
     }
     oldWrapper = SetParent(child, wmPtr->wrapper);
     if (oldWrapper) {
-	hSmallIcon = (HICON) SendMessage(oldWrapper,WM_GETICON,ICON_SMALL,(LPARAM)NULL);
-	hBigIcon = (HICON) SendMessage(oldWrapper,WM_GETICON,ICON_BIG,(LPARAM)NULL);
+	hSmallIcon = (HICON) SendMessage(oldWrapper, WM_GETICON, ICON_SMALL,
+		(LPARAM) NULL);
+	hBigIcon = (HICON) SendMessage(oldWrapper, WM_GETICON, ICON_BIG,
+		(LPARAM) NULL);
     }
     
     if (oldWrapper && (oldWrapper != wmPtr->wrapper) 
@@ -2187,7 +2209,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	TkWindow **cmapList;
 	TkWindow *winPtr2;
 	int i, windowArgc, gotToplevel;
-	char **windowArgv;
+	CONST char **windowArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -2256,7 +2278,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     } else if ((c == 'c') && (strncmp(argv[1], "command", length) == 0)
 	    && (length >= 3)) {
 	int cmdArgc;
-	char **cmdArgv;
+	CONST char **cmdArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -3044,6 +3066,99 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    }
 	}
 	goto updateGeom;
+    } else if ((c == 's') && (strncmp(argv[1], "stackorder", length) == 0)
+	    && (length >= 2)) {
+	TkWindow **windows, **window_ptr;
+
+	if ((argc != 3) && (argc != 5)) {
+	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
+		    argv[0],
+		    " stackorder window ?isabove|isbelow? ?window?\"",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+
+	if (argc == 3) {
+            windows = TkWmStackorderToplevel(winPtr);
+            if (windows == NULL) {
+                panic("TkWmStackorderToplevel failed");
+	    } else {
+                for (window_ptr = windows; *window_ptr ; window_ptr++) {
+                    Tcl_AppendElement(interp, (*window_ptr)->pathName);
+                }
+                ckfree((char *) windows);
+                return TCL_OK;
+	    }
+	} else {
+	    TkWindow *winPtr2;
+	    int index1=-1, index2=-1, result;
+
+	    winPtr2 = (TkWindow *) Tk_NameToWindow(interp, argv[4], tkwin);
+	    if (winPtr2 == NULL) {
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsTopLevel(winPtr2)) {
+		Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
+		    "\" isn't a top-level window", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsMapped(winPtr)) {
+		Tcl_AppendResult(interp, "window \"", winPtr->pathName,
+		    "\" isn't mapped", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+	    if (!Tk_IsMapped(winPtr2)) {
+		Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
+		    "\" isn't mapped", (char *) NULL);
+		return TCL_ERROR;
+	    }
+
+            /*
+             * Lookup stacking order of all toplevels that are children
+             * of "." and find the position of winPtr and winPtr2
+             * in the stacking order.
+             */
+
+            windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
+
+            if (windows == NULL) {
+                Tcl_AppendResult(interp, "TkWmStackorderToplevel failed",
+                    (char *) NULL);
+                return TCL_ERROR;
+	    } else {
+                for (window_ptr = windows; *window_ptr ; window_ptr++) {
+                    if (*window_ptr == winPtr)
+                        index1 = (window_ptr - windows);
+                    if (*window_ptr == winPtr2)
+                        index2 = (window_ptr - windows);
+                }
+                if (index1 == -1)
+                    panic("winPtr window not found");
+                if (index2 == -1)
+                    panic("winPtr2 window not found");
+
+                ckfree((char *) windows);
+	    }
+
+	    c = argv[3][0];
+	    length = strlen(argv[3]);
+	    if ((length > 2) && (c == 'i')
+		    && (strncmp(argv[3], "isabove", length) == 0)) {
+		result = index1 > index2;
+	    } else if ((length > 2) && (c == 'i')
+		    && (strncmp(argv[3], "isbelow", length) == 0)) {
+		result = index1 < index2;
+	    } else {
+		Tcl_AppendResult(interp, "bad argument \"", argv[3],
+			"\": must be isabove or isbelow", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    Tcl_SetIntObj(Tcl_GetObjResult(interp), result);
+	    return TCL_OK;
+	}
     } else if ((c == 's') && (strncmp(argv[1], "state", length) == 0)
 	    && (length >= 2)) {
 	if ((argc < 3) || (argc > 4)) {
@@ -3137,9 +3252,9 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	    wmPtr->titleUid = Tk_GetUid(argv[3]);
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
 		Tcl_DString titleString;
-		Tcl_UtfToExternalDString(NULL, wmPtr->titleUid, -1, 
-			&titleString);
-		SetWindowText(wmPtr->wrapper, Tcl_DStringValue(&titleString));
+		Tcl_WinUtfToTChar(wmPtr->titleUid, -1, &titleString);
+		(*tkWinProcs->setWindowText)(wmPtr->wrapper,
+			(LPCTSTR) Tcl_DStringValue(&titleString));
 		Tcl_DStringFree(&titleString);
 	    }
 	}
@@ -3224,8 +3339,8 @@ Tk_WmCmd(clientData, interp, argc, argv)
 		"focusmodel, frame, geometry, grid, group, iconbitmap, ",
 		"iconify, iconmask, iconname, iconposition, ",
 		"iconwindow, maxsize, minsize, overrideredirect, ",
-		"positionfrom, protocol, resizable, sizefrom, state, title, ",
-		"transient, or withdraw",
+		"positionfrom, protocol, resizable, sizefrom, stackorder ",
+		"state, title, transient, or withdraw",
 		(char *) NULL);
 	return TCL_ERROR;
     }
@@ -4145,6 +4260,172 @@ TkWmProtocolEventProc(winPtr, eventPtr)
     if (protocol == Tk_InternAtom((Tk_Window) winPtr, "WM_DELETE_WINDOW")) {
 	Tk_DestroyWindow((Tk_Window) winPtr);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmStackorderToplevelEnumProc --
+ *
+ *	This procedure is invoked once for each HWND Window on the
+ *	display as a result of calling EnumWindows from
+ *	TkWmStackorderToplevel.
+ *
+ * Results:
+ *	TRUE to request further iteration.
+ *
+ * Side effects:
+ *	Adds entries to the passed array of TkWindows.
+ *
+ *----------------------------------------------------------------------
+ */
+
+BOOL CALLBACK TkWmStackorderToplevelEnumProc(hwnd, lParam)
+    HWND hwnd;     /* handle to parent window */
+    LPARAM lParam; /* application-defined value */
+{
+    Tcl_HashEntry *hPtr;
+    TkWindow *childWinPtr;
+
+    TkWmStackorderToplevelPair *pair =
+        (TkWmStackorderToplevelPair *) lParam;
+
+    /*fprintf(stderr, "Looking up HWND %d\n", hwnd);*/
+
+    hPtr = Tcl_FindHashEntry(pair->table, (char *) hwnd);
+    if (hPtr != NULL) {
+        childWinPtr = (TkWindow *) Tcl_GetHashValue(hPtr);
+        /* Double check that same HWND does not get passed twice */
+        if (childWinPtr == NULL) {
+            panic("duplicate HWND in TkWmStackorderToplevelEnumProc");
+        } else {
+            Tcl_SetHashValue(hPtr, NULL);
+        }
+        /*fprintf(stderr, "Found mapped HWND %d -> %x (%s)\n", hwnd,
+	  childWinPtr, childWinPtr->pathName);*/
+        *(pair->window_ptr)-- = childWinPtr;
+    }
+    return TRUE;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmStackorderToplevelWrapperMap --
+ *
+ *	This procedure will create a table that maps the wrapper
+ *	HWND id for a toplevel to the TkWindow structure that is wraps.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Adds entries to the passed hashtable.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkWmStackorderToplevelWrapperMap(winPtr, table)
+    TkWindow *winPtr;				/* TkWindow to recurse on */
+    Tcl_HashTable *table;		/* Table to maps HWND to TkWindow */
+{
+    TkWindow *childPtr;
+    Tcl_HashEntry *hPtr;
+    HWND wrapper;
+    int newEntry;
+
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+        wrapper = TkWinGetWrapperWindow((Tk_Window) winPtr);
+
+        /*fprintf(stderr, "Mapped HWND %d to %x (%s)\n", wrapper,
+	  winPtr, winPtr->pathName);*/
+
+        hPtr = Tcl_CreateHashEntry(table,
+            (char *) wrapper, &newEntry);
+        Tcl_SetHashValue(hPtr, winPtr);
+    }
+
+    for (childPtr = winPtr->childList; childPtr != NULL;
+            childPtr = childPtr->nextPtr) {
+        TkWmStackorderToplevelWrapperMap(childPtr, table);
+    }
+}
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWmStackorderToplevel --
+ *
+ *	This procedure returns the stack order of toplevel windows.
+ *
+ * Results:
+ *	An array of pointers to tk window objects in stacking order
+ *	or else NULL if there was an error.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkWindow **
+TkWmStackorderToplevel(parentPtr)
+    TkWindow *parentPtr;		/* Parent toplevel window. */
+{
+    TkWmStackorderToplevelPair pair;
+    TkWindow **windows;
+    Tcl_HashTable table;
+    Tcl_HashEntry *hPtr;
+    Tcl_HashSearch search;
+
+    /*
+     * Map HWND ids to a TkWindow of the wrapped toplevel.
+     */
+
+    Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
+    TkWmStackorderToplevelWrapperMap(parentPtr, &table);
+
+    windows = (TkWindow **) ckalloc((table.numEntries+1)
+        * sizeof(TkWindow *));
+
+    /*
+     * Special cases: If zero or one toplevels were mapped
+     * there is no need to call EnumWindows.
+     */
+
+    switch (table.numEntries) {
+    case 0:
+        windows[0] = NULL;
+        goto done;
+    case 1:
+        hPtr = Tcl_FirstHashEntry(&table, &search);
+        windows[0] = (TkWindow *) Tcl_GetHashValue(hPtr);
+        windows[1] = NULL;
+        goto done;
+    }
+
+    /* 
+     * We will be inserting into the array starting at the end
+     * and working our way to the beginning since EnumWindows
+     * returns windows in highest to lowest order.
+     */
+
+    pair.table = &table;
+    pair.window_ptr = windows + table.numEntries;
+    *pair.window_ptr-- = NULL;
+
+    if (EnumWindows((WNDENUMPROC) TkWmStackorderToplevelEnumProc,
+	    (LPARAM) &pair) == 0) {
+        ckfree((char *) windows);
+        windows = NULL;
+    } else {
+        if (pair.window_ptr != (windows-1))
+            panic("num matched toplevel windows does not equal num children");
+    }
+
+    done:
+    Tcl_DeleteHashTable(&table);
+    return windows;
 }
 
 /*
@@ -5195,7 +5476,8 @@ WmProc(hwnd, message, wParam, lParam)
 		 * This allows us to pass the message onto the
 		 * native menus [Bug: 2272]
 		 */
-		result = DefWindowProc(hwnd, message, wParam, lParam);
+		result = (*tkWinProcs->defWindowProc)(hwnd, message,
+			wParam, lParam);
 		goto done;
 	    }
 
@@ -5228,10 +5510,11 @@ WmProc(hwnd, message, wParam, lParam)
 	    result = 0;
 	} else if (!Tk_TranslateWinEvent(child, message, wParam, lParam,
 		&result)) {
-	    result = DefWindowProc(hwnd, message, wParam, lParam);
+	    result = (*tkWinProcs->defWindowProc)(hwnd, message,
+		    wParam, lParam);
 	}
     } else {
-	result = DefWindowProc(hwnd, message, wParam, lParam);
+	result = (*tkWinProcs->defWindowProc)(hwnd, message, wParam, lParam);
     }
 
     done:

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.6.2.2 2001/10/17 07:10:46 wolfsuit Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.6.2.3 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 /*
@@ -18,13 +18,9 @@
  * do these includes before we add the stubs defines.  This a hack.
  */
 
-#if defined(MAC_TCL)
-#include "tkMacInt.h"
-#else defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#endif
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
 #include "tkInt.h"
 #include "tkPort.h"
 #endif /* MAC_TCL */
@@ -46,8 +42,6 @@
 #endif
 #undef USE_TK_STUB_PROCS
 
-#if !defined(MAC_TCL) && !defined(MAC_OSX_TK)
-
 #include "tkPort.h"
 #include "tkInt.h"
 
@@ -55,7 +49,9 @@
 #include "tkWinInt.h"
 #endif
 
-#endif /* !MAC_TCL */
+#ifdef MAC_TCL
+#include "tkMacInt.h"
+#endif
 
 #include "tkDecls.h"
 #include "tkIntDecls.h"

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.10 2001/09/26 21:36:19 pspjuth Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.10.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "default.h"
@@ -718,7 +718,7 @@ FrameWidgetObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *frameOptions[] = {
+    static CONST char *frameOptions[] = {
 	"cget", "configure", (char *) NULL
     };
     enum options {

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.20.2.2 2001/10/17 07:02:07 wolfsuit Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.20.2.3 2002/02/05 02:25:14 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -65,7 +65,7 @@ Tk_BellObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *bellOptions[] = {"-displayof", "-nice", (char *) NULL};
+    static CONST char *bellOptions[] = {"-displayof", "-nice", (char *) NULL};
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window) clientData;
     int i, index, nice = 0;
@@ -618,7 +618,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 {
     int index;
     Tk_Window tkwin;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"appname",	"scaling",	"useinputmethods",	NULL
     };
     enum options {
@@ -709,13 +709,13 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		 * That will indicate to the user that input methods
 		 * are just not available.
 		 */
-		int bool;
-		if (Tcl_GetBooleanFromObj(interp, objv[2+skip], &bool)
+		int boolVal;
+		if (Tcl_GetBooleanFromObj(interp, objv[2+skip], &boolVal)
 			!= TCL_OK) {
 		    return TCL_ERROR;
 		}
 #ifdef TK_USE_INPUT_METHODS
-		dispPtr->useInputMethods = bool;
+		dispPtr->useInputMethods = boolVal;
 #endif /* TK_USE_INPUT_METHODS */
 	    } else if ((objc - skip) != 2) {
 		Tcl_WrongNumArgs(interp, 2, objv,
@@ -758,7 +758,7 @@ Tk_TkwaitObjCmd(clientData, interp, objc, objv)
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     int done, index;
-    static char *optionStrings[] = { "variable", "visibility", "window",
+    static CONST char *optionStrings[] = { "variable", "visibility", "window",
 					 (char *) NULL };
     enum options { TKWAIT_VARIABLE, TKWAIT_VISIBILITY, TKWAIT_WINDOW };
     
@@ -920,7 +920,7 @@ Tk_UpdateObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *updateOptions[] = {"idletasks", (char *) NULL};
+    static CONST char *updateOptions[] = {"idletasks", (char *) NULL};
     int flags, index;
     TkDisplay *dispPtr;
 
@@ -1008,7 +1008,7 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 	{StaticGray,	"staticgray"},
 	{-1,		NULL}
     };
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"cells",	"children",	"class",	"colormapfull",
 	"depth",	"geometry",	"height",	"id",
 	"ismapped",	"manager",	"name",		"parent",
@@ -1599,7 +1599,7 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin;
     TkWindow *winPtr;
 
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"aspect",	"client",	"command",	"deiconify",
 	"focusmodel",	"frame",	"geometry",	"grid",
 	"group",	"iconbitmap",	"iconify",	"iconmask",

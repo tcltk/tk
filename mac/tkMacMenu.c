@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.20 2001/10/12 13:30:31 tmh Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.20.2.1 2002/02/05 02:25:17 wolfsuit Exp $
  */
 
 #include "tkMacInt.h"
@@ -178,7 +178,7 @@ static char *currentMenuBarName;
 static Tk_Window currentMenuBarOwner;
 				/* Which window owns the current menu bar. */
 static char elipsisString[TCL_UTF_MAX + 1];
-				/* The UTF representation of the elipsis (ƒ) 
+				/* The UTF representation of the elipsis (Š) 
 				 * character. */
 static int helpItemCount;	/* The number of items in the help menu. 
 				 * -1 means that the help menu is
@@ -529,7 +529,7 @@ TkpNewMenu(
     	    (length > 230) ? 230 : length);
     itemText[0] = (length > 230) ? 230 : length;
     macMenuHdl = NewMenu(menuID, itemText);
-#ifdef GENERATINGCFM
+#if GENERATINGCFM
     {
         Handle mdefProc = FixMDEF();
         if ((mdefProc != NULL)) {
@@ -687,7 +687,7 @@ TkpDestroyMenuEntry(
  *	Given a menu entry, gives back the text that should go in it.
  *	Separators should be done by the caller, as they have to be
  *	handled specially. This is primarily used to do a substitution
- *	between "..." and "ƒ".
+ *	between "..." and "Š".
  *
  * Results:
  *	itemText points to the new text for the item.
@@ -752,10 +752,10 @@ GetEntryText(
  * 	We try the following special mac characters. If none of them
  * 	are present, just use the check mark.
  * 	'' - Check mark character		(\022)
- * 	'¥' - Mac Bullet character		(\245)
+ * 	'€' - Mac Bullet character		(\245)
  * 	'' - Filled diamond			(\023)
  * 	'×' - Hollow diamond			(\327)
- * 	'Ñ' = Mac Long dash ("em dash")	(\321)
+ * 	'‹' = Mac Long dash ("em dash")	(\321)
  * 	'-' = short dash (minus, "en dash");
  *
  * Results:
@@ -1223,7 +1223,7 @@ ReconfigureMacintoshMenu(
     ReconfigureIndividualMenu(menuPtr, macMenuHdl, 0);
 
     if (menuPtr->menuFlags & MENU_APPLE_MENU) {
-    	AddResMenu(macMenuHdl, 'DRVR');
+    	AppendResMenu(macMenuHdl, 'DRVR');
     }
 
     if ((*macMenuHdl)->menuID == currentHelpMenuID) {
@@ -4462,10 +4462,16 @@ TkpMenuNotifyToplevelCreate(
  *----------------------------------------------------------------------
  */
 
+#if __MWERKS__ != 0x2400
+#define MDEF_PROC_OFFSET 0x24
+#else
+#define MDEF_PROC_OFFSET 0x20
+#endif
+
 static Handle
 FixMDEF(void)
 {
-#ifdef GENERATINGCFM
+#if GENERATINGCFM
     Handle MDEFHandle = GetResource('MDEF', 591);
     Handle SICNHandle = GetResource('SICN', SICN_RESOURCE_NUMBER);
     if ((MDEFHandle != NULL) && (SICNHandle != NULL)) {
@@ -4474,7 +4480,7 @@ FixMDEF(void)
 	if (menuDefProc == NULL) {
     	    menuDefProc = TkNewMenuDefProc(MenuDefProc);
 	}
-    	memmove((void *) (((long) (*MDEFHandle)) + 0x24), &menuDefProc, 4);
+    	memmove((void *) (((long) (*MDEFHandle)) + MDEF_PROC_OFFSET), &menuDefProc, 4);
         return MDEFHandle;
     } else {
         return NULL;
@@ -4531,7 +4537,7 @@ TkpMenuInit(void)
     }
     FixMDEF();
 
-    Tcl_ExternalToUtf(NULL, NULL, "\311", /* É */
+    Tcl_ExternalToUtf(NULL, NULL, "\311", /* Š */
 	    -1, 0, NULL, elipsisString,
 	    TCL_UTF_MAX + 1, NULL, NULL, NULL);
 }

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.13.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.13.2.2 2002/02/05 02:25:18 wolfsuit Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -888,7 +888,7 @@ test unixWm-24.3 {Tk_WmCmd procedure, "iconmask" option} {
 
 test unixWm-25.1 {Tk_WmCmd procedure, "iconname" option} {
     list [catch {wm icon .t} msg] $msg
-} {1 {unknown or ambiguous option "icon": must be aspect, client, command, deiconify, focusmodel, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconposition, iconwindow, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, state, title, transient, or withdraw}}
+} {1 {unknown or ambiguous option "icon": must be aspect, client, command, deiconify, focusmodel, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconposition, iconwindow, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 test unixWm-25.2 {Tk_WmCmd procedure, "iconname" option} {
     list [catch {wm iconname .t 12 13} msg] $msg
 } {1 {wrong # arguments: must be "wm iconname window ?newName?"}}
@@ -1321,7 +1321,7 @@ test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} {
 
 test unixWm-39.1 {Tk_WmCmd procedure, miscellaneous} {
     list [catch {wm unknown .t} msg] $msg
-} {1 {unknown or ambiguous option "unknown": must be aspect, client, command, deiconify, focusmodel, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconposition, iconwindow, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, state, title, transient, or withdraw}}
+} {1 {unknown or ambiguous option "unknown": must be aspect, client, command, deiconify, focusmodel, frame, geometry, grid, group, iconbitmap, iconify, iconmask, iconname, iconposition, iconwindow, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}}
 
 catch {destroy .t}
 catch {destroy .icon}

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.16 2001/10/12 13:30:32 tmh Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.16.2.1 2002/02/05 02:25:18 wolfsuit Exp $
  */
 
 #define OEMRESOURCE
@@ -461,7 +461,7 @@ GetEntryText(mePtr)
 		: Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
 	char *accel = (mePtr->accelPtr == NULL) ? "" 
 		: Tcl_GetStringFromObj(mePtr->accelPtr, NULL);
-	char *p, *next;
+	CONST char *p, *next;
 	Tcl_DString itemString;
 
 	/*
@@ -913,6 +913,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			    (ClientData) menuPtr);
 		    ReconfigureWindowsMenu((ClientData) menuPtr);
 		}
+		RecursivelyClearActiveMenu(menuPtr);
 		if (!tsdPtr->inPostMenu) {
 		    Tcl_Interp *interp;
 		    int code;
@@ -1078,6 +1079,18 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    } else {
 			TkActivateMenuEntry(menuPtr, -1);
 		    }
+		} else {
+		    /* On windows, menu entries should highlight even if they
+		    ** are disabled. (I know this seems dumb, but it is the way
+		    ** native windows menus works so we ought to mimic it.)
+		    ** The ENTRY_PLATFORM_FLAG1 flag will indicate that the
+		    ** entry should be highlighted even though it is disabled.
+		    */
+		    if (itemPtr->itemState & ODS_SELECTED) {
+			mePtr->entryFlags |= ENTRY_PLATFORM_FLAG1;
+		    } else {
+			mePtr->entryFlags &= ~ENTRY_PLATFORM_FLAG1;
+		    }
 		}
 
 		tkfont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
@@ -1140,6 +1153,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    Tcl_ServiceAll();
 		}
 	    }
+	    break;
 	}
     }
     return returnResult;
@@ -1172,6 +1186,10 @@ RecursivelyClearActiveMenu(
     MenuSelectEvent(menuPtr);
     for (i = 0; i < menuPtr->numEntries; i++) {
     	mePtr = menuPtr->entries[i];
+	if (mePtr->state == ENTRY_ACTIVE) {
+	    mePtr->state = ENTRY_NORMAL;
+	}
+	mePtr->entryFlags &= ~ENTRY_PLATFORM_FLAG1;
     	if (mePtr->type == CASCADE_ENTRY) {
     	    if ((mePtr->childMenuRefPtr != NULL)
     	    	    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
@@ -1710,8 +1728,8 @@ DrawMenuUnderline(
 {
     if (mePtr->underline >= 0) {
 	char *label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
-	char *start = Tcl_UtfAtIndex(label, mePtr->underline);
-	char *end = Tcl_UtfNext(start);
+	CONST char *start = Tcl_UtfAtIndex(label, mePtr->underline);
+	CONST char *end = Tcl_UtfNext(start);
 
     	Tk_UnderlineChars(menuPtr->display, d,
     		gc, tkfont, label, x + mePtr->indicatorSpace,
@@ -2408,7 +2426,8 @@ DrawMenuEntryBackground(
     int width,				/* width of rectangle to draw */
     int height)				/* height of rectangle to draw */
 {
-    if (mePtr->state == ENTRY_ACTIVE) {
+    if (mePtr->state == ENTRY_ACTIVE 
+		|| (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)!=0 ) {
 	bgBorder = activeBorder;
     }
     Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder,

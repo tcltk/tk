@@ -1,5 +1,11 @@
 // !$*UTF8*$!
 {
+	F50D961501961F0201DC9062 = {
+		fileReference = F5375551016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 902;
+		state = 2;
+	};
 	F537552A016C352C01DC9062 = {
 		activeBuildStyle = F537552C016C352C01DC9062;
 		activeTarget = F53756A0016C4DD401DC9062;
@@ -16,68 +22,78 @@
 			F571FE4E01796F9201DC9062,
 			F571FE4F0179702301DC9062,
 			F571FE500179702301DC9062,
-			F5D47B92017C934C01DC9062,
-			F54B24D6017FF76601DC9062,
-			F54B24D7017FFFBF01DC9062,
+			F583DC0E018D092D01DC9062,
+			F583DC0F018D0CB501DC9062,
+			F583DC13018D2B4A01DC9062,
+			F58907BE018DCE8F01DC9062,
+			F58907C5018DD1C301DC9062,
+			F50D961501961F0201DC9062,
+			F566083B0197283B01DC9062,
+			F566083C0197823801DC9062,
+			F5A5146F01D05DC201DC9062,
+			F5A5147001D0758C01DC9062,
+			F5A852D6020F6C6C01DC9062,
 		);
+		intermediatesDirectory = /Volumes/CodeBits/jingham/Tcl/Build;
 		perUserDictionary = {
 			PBXWorkspaceConfiguration = {
-				ContentSize = "{906, 673}";
+				ContentSize = "{906, 681}";
 				LeftSlideOut = {
 					ActiveTab = 0;
-					Frame = "{{0, 23}, {906, 650}}";
+					Frame = "{{0, 23}, {906, 658}}";
 					Split0 = {
-						Frame = "{{322, 0}, {584, 650}}";
+						ActiveTab = 2;
+						Frame = "{{259, 0}, {647, 658}}";
 						Split0 = {
-							Frame = "{{0, 25}, {584, 625}}";
+							Frame = "{{0, 307}, {647, 351}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
 							Debugger = {
-								ActiveTab = 1;
-								Frame = "{{0, 0}, {516, 264}}";
+								ActiveTab = 0;
+								Frame = "{{0, 0}, {647, 264}}";
 								Split0 = {
-									Frame = "{{0, 263}, {516, 1}}";
+									Frame = "{{0, 136}, {647, 128}}";
 									Split0 = {
-										Frame = "{{0, 0}, {66, 1}}";
+										Frame = "{{0, 0}, {187, 128}}";
 									};
 									Split1 = {
-										Frame = "{{75, 0}, {441, 1}}";
+										Frame = "{{196, 0}, {451, 128}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {616, 112}}";
+									Frame = "{{0, 0}, {647, 112}}";
 								};
 								Tab1 = {
-									Frame = "{{0, 0}, {516, 238}}";
+									Frame = "{{0, 0}, {647, 114}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {516, 264}}";
+							Frame = "{{0, 0}, {647, 264}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
-							Frame = "{{0, 0}, {516, 133}}";
+							Frame = "{{0, 0}, {647, 133}}";
 							LauncherConfigVersion = 3;
 							Runner = {
-								Frame = "{{0, 0}, {516, 133}}";
+								Frame = "{{0, 0}, {647, 133}}";
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {615, 53}}";
-							BuildTranscriptFrame = "{{0, 62}, {615, 126}}";
-							Frame = "{{0, 0}, {613, 186}}";
+							BuildMessageFrame = "{{0, 0}, {649, 118}}";
+							BuildTranscriptFrame = "{{0, 127}, {649, 158}}";
+							Frame = "{{0, 0}, {647, 283}}";
 						};
 						Tab3 = {
-							Frame = "{{0, 0}, {516, 295}}";
+							Frame = "{{0, 0}, {647, 225}}";
 						};
 						TabCount = 4;
 					};
 					SplitCount = 1;
 					Tab0 = {
-						Frame = "{{0, 0}, {297, 650}}";
+						Frame = "{{0, 0}, {235, 658}}";
 					};
 					Tab1 = {
 						ClassesFrame = "{{0, 0}, {202, 56}}";
@@ -89,22 +105,23 @@
 						Frame = "{{0, 0}, {200, 644}}";
 					};
 					Tab3 = {
-						Frame = "{{0, 0}, {200, 651}}";
+						Frame = "{{0, 0}, {177, 658}}";
 						Split0 = {
-							Frame = "{{0, 0}, {200, 312}}";
+							Frame = "{{0, 0}, {177, 314}}";
 						};
 						Split1 = {
-							Frame = "{{0, 321}, {200, 330}}";
+							Frame = "{{0, 323}, {177, 335}}";
 						};
 						SplitCount = 2;
 					};
 					Tab4 = {
-						Frame = "{{0, 0}, {250, 655}}";
+						Frame = "{{0, 0}, {250, 658}}";
 					};
 					TabCount = 5;
 				};
 			};
 		};
+		productDirectory = /Volumes/CodeBits/jingham/Tcl/Products;
 		wantsIndex = 1;
 		wantsSCM = -1;
 	};
@@ -138,17 +155,16 @@
 		sourceDirectories = (
 		);
 	};
-	F54B24D6017FF76601DC9062 = {
+	F566083B0197283B01DC9062 = {
 		fileReference = F5375548016C376E01DC9062;
 		isa = PBXFileBreakpoint;
-		lineNumber = 129;
-		state = 1;
+		lineNumber = 208;
+		state = 2;
 	};
-	F54B24D7017FFFBF01DC9062 = {
-		fileReference = F53755AA016C389901DC9062;
-		isa = PBXFileBreakpoint;
-		lineNumber = 141;
-		state = 1;
+	F566083C0197823801DC9062 = {
+		isa = PBXSymbolicBreakpoint;
+		state = 2;
+		symbolName = Tcl_CreateObjCommand;
 	};
 	F571FE470179562E01DC9062 = {
 		fileReference = F5375583016C389901DC9062;
@@ -192,16 +208,58 @@
 		lineNumber = 469;
 		state = 2;
 	};
+	F583DC0E018D092D01DC9062 = {
+		fileReference = F5375551016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 531;
+		state = 2;
+	};
+	F583DC0F018D0CB501DC9062 = {
+		fileReference = F5375551016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 547;
+		state = 2;
+	};
+	F583DC13018D2B4A01DC9062 = {
+		fileReference = F5375551016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 1478;
+		state = 2;
+	};
+	F58907BE018DCE8F01DC9062 = {
+		fileReference = F5375548016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 190;
+		state = 2;
+	};
+	F58907C5018DD1C301DC9062 = {
+		fileReference = F5375551016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 502;
+		state = 2;
+	};
+	F5A5146F01D05DC201DC9062 = {
+		fileReference = F5375550016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 651;
+		state = 1;
+	};
+	F5A5147001D0758C01DC9062 = {
+		fileReference = F5375550016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 838;
+		state = 1;
+	};
+	F5A852D6020F6C6C01DC9062 = {
+		fileReference = F5375550016C376E01DC9062;
+		isa = PBXFileBreakpoint;
+		lineNumber = 277;
+		state = 1;
+	};
 	F5B2CDC10175829501DC9062 = {
 		fileReference = F5375583016C389901DC9062;
 		isa = PBXFileBreakpoint;
 		lineNumber = 2584;
 		state = 2;
-	};
-	F5D47B92017C934C01DC9062 = {
-		fileReference = F5375548016C376E01DC9062;
-		isa = PBXFileBreakpoint;
-		lineNumber = 269;
-		state = 1;
 	};
 }

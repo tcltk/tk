@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.13 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.13.2.1 2002/02/05 02:25:16 wolfsuit Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -47,11 +47,11 @@ proc ::tk::dialog::color:: {args} {
     # Note that the bars may be of any width.
     # However, NUM_COLORBARS must be a number that evenly divides 256.
     # Such as 256, 128, 64, etc.
-    set data(NUM_COLORBARS) 8
+    set data(NUM_COLORBARS) 16
 
     # BARS_WIDTH is the number of pixels wide the color bar portion of the
     # canvas is. This number must be a multiple of NUM_COLORBARS
-    set data(BARS_WIDTH) 128
+    set data(BARS_WIDTH) 160
 
     # PLGN_WIDTH is the number of pixels wide of the triangular selection
     # polygon. This also results in the definition of the padding on the 
@@ -340,7 +340,9 @@ proc ::tk::dialog::color::SetRGBValue {w color} {
 proc ::tk::dialog::color::XToRgb {w x} {
     upvar ::tk::dialog::color::[winfo name $w] data
     
-    return [expr {($x * $data(intensityIncr))/ $data(colorbarWidth)}]
+    set x [expr {($x * $data(intensityIncr))/ $data(colorbarWidth)}]
+    if {$x > 255} { set x 255 }
+    return $x
 }
 
 # ::tk::dialog::color::RgbToX
@@ -557,8 +559,8 @@ proc ::tk::dialog::color::MoveSelector {w sel color x delta} {
 
     if { $x < 0 } {
 	set x 0
-    } elseif { $x >= $data(BARS_WIDTH)} {
-	set x [expr {$data(BARS_WIDTH) - 1}]
+    } elseif { $x > $data(BARS_WIDTH)} {
+	set x $data(BARS_WIDTH)
     }
     set diff [expr {$x - $data($color,x)}]
     $sel move $data($color,index) $diff 0

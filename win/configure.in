@@ -1,8 +1,9 @@
+#! /bin/bash -norc
 # This file is an input file used by the GNU "autoconf" program to
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.36 2001/08/08 18:41:10 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.36.2.1 2002/02/05 02:25:18 wolfsuit Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -22,6 +23,8 @@ fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
+# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
+eval libdir="$libdir"
 
 #------------------------------------------------------------------------
 # Standard compiler checks
@@ -165,7 +168,7 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
+if test "$SHARED_BUILD" = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
     if test "${DBGX}" = "d"; then
         RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
@@ -214,9 +217,6 @@ AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(CYGPATH)
 AC_SUBST(DEPARG)
 AC_SUBST(CFLAGS_DEFAULT)
-AC_SUBST(CFLAGS_DEBUG)
-AC_SUBST(CFLAGS_OPTIMIZE)
-AC_SUBST(CFLAGS_WARNING)
 AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(STLIB_LD)
 AC_SUBST(SHLIB_LD)
@@ -251,7 +251,15 @@ AC_SUBST(MAKE_LIB)
 AC_SUBST(POST_MAKE_LIB)
 AC_SUBST(MAKE_DLL)
 AC_SUBST(MAKE_EXE)
-AC_SUBST(TK_XINCLUDES)
-AC_SUBST(XINCLUDES)
+
+# undefined at this point for win
+AC_SUBST(TK_BUILD_LIB_SPEC)
+AC_SUBST(TK_CC_SEARCH_FLAGS)
+AC_SUBST(TK_LD_SEARCH_FLAGS)
+AC_SUBST(TK_LIB_FLAG)
+AC_SUBST(TK_LIB_SPEC)
+AC_SUBST(TK_STUB_LIB_SPEC)
+AC_SUBST(TK_BUILD_STUB_LIB_PATH)
+AC_SUBST(TK_STUB_LIB_PATH)
 
 AC_OUTPUT(Makefile tkConfig.sh)

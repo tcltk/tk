@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacKeyboard.c,v 1.6 2000/04/17 02:16:58 jingham Exp $
+ * RCS: @(#) $Id: tkMacKeyboard.c,v 1.6.8.1 2002/02/05 02:25:16 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -247,7 +247,8 @@ TkpGetString(
 	    len = 0;
 	}
     }
-    return Tcl_ExternalToUtfDString(NULL, string, len, dsPtr);
+    Tcl_ExternalToUtfDString(NULL, string, len, dsPtr);
+    return Tcl_DStringValue(dsPtr);
 }
 
 /*

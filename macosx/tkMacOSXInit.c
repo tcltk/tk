@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.3 2002/01/22 01:28:18 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.4 2002/02/05 02:25:17 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -137,8 +137,8 @@ TkpGetAppName(interp, namePtr)
 
 void
 TkpDisplayWarning(msg, title)
-    char *msg;                  /* Message to be displayed. */
-    char *title;                /* Title of warning. */
+    CONST char *msg;                  /* Message to be displayed. */
+    CONST char *title;                /* Title of warning. */
 {
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
     if (errChannel) {

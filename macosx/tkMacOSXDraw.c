@@ -11,14 +11,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
  */
 
 #include "tkInt.h"
 #include "X11/X.h"
 #include "X11/Xlib.h"
 #include <stdio.h>
-#include <tcl.h>
 
 #include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
@@ -28,6 +27,9 @@
 #ifndef PI
 #    define PI 3.14159265358979323846
 #endif
+#define RGBFLOATRED( c )	(float)((float)(c.red) / 65535.0)
+#define RGBFLOATGREEN( c )	(float)((float)(c.green) / 65535.0)
+#define RGBFLOATBLUE( c )	(float)((float)(c.blue) / 65535.0)
 
 /*
  * Temporary regions that can be reused.
@@ -38,11 +40,17 @@ static RgnHandle tmpRgn2 = NULL;
 
 static PixPatHandle gPenPat = NULL;
 
+static int useCGDrawing = 0;
+
 /*
  * Prototypes for functions used only in this file.
  */
 static unsigned char    InvertByte _ANSI_ARGS_((unsigned char data));
-
+
+void TkMacOSXSetUpCGContext(MacDrawable *macWin,
+    CGrafPtr destPort, GC gc,  CGContextRef *contextPtr);
+void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort, 
+        CGContextRef *context);
 /*
  *----------------------------------------------------------------------
  *
@@ -517,24 +525,44 @@ XDrawLines(
     
     TkMacOSXSetUpClippingRgn(d);
 
-    TkMacOSXSetUpGraphicsPort(gc, destPort);
-
-    ShowPen();
-
-    PenPixPat(gPenPat);
-    MoveTo((short) (macWin->xOff + points[0].x),
-            (short) (macWin->yOff + points[0].y));
-    for (i = 1; i < npoints; i++) {
+    if (useCGDrawing) {
+        CGContextRef outContext;
+        
+        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+        
+        CGContextBeginPath(outContext);
+        CGContextMoveToPoint(outContext, (float) points[0].x,
+                (float) points[0].y);
         if (mode == CoordModeOrigin) {
-            LineTo((short) (macWin->xOff + points[i].x),
-                    (short) (macWin->yOff + points[i].y));
-        } else {
-            Line((short) (macWin->xOff + points[i].x),
-                    (short) (macWin->yOff + points[i].y));
+            for (i = 1; i < npoints; i++) {
+                CGContextAddLineToPoint(outContext,
+                        (float) points[i].x,
+                        (float) points[i].y); 
+            }
         }
-    }
-    HidePen();
+        
+        CGContextStrokePath(outContext);
+        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+    } else {
+        TkMacOSXSetUpGraphicsPort(gc, destPort);
+    
+        ShowPen();
+    
+        PenPixPat(gPenPat);
+        MoveTo((short) (macWin->xOff + points[0].x),
+                (short) (macWin->yOff + points[0].y));
+        for (i = 1; i < npoints; i++) {
+            if (mode == CoordModeOrigin) {
+                LineTo((short) (macWin->xOff + points[i].x),
+                        (short) (macWin->yOff + points[i].y));
+            } else {
+                Line((short) (macWin->xOff + points[i].x),
+                        (short) (macWin->yOff + points[i].y));
+            }
+        }
+        HidePen();
 
+    }
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -576,19 +604,37 @@ void XDrawSegments(
     
     TkMacOSXSetUpClippingRgn(d);
 
-    TkMacOSXSetUpGraphicsPort(gc, destPort);
+    if (useCGDrawing) {
+        CGContextRef outContext;
 
-    ShowPen();
+        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
 
-    PenPixPat(gPenPat);
-    for (i = 0; i < nsegments; i++) {
-        MoveTo((short) (macWin->xOff + segments[i].x1),
-                (short) (macWin->yOff + segments[i].y1));
-        LineTo((short) (macWin->xOff + segments[i].x2),
-                (short) (macWin->yOff + segments[i].y2));
+        CGContextBeginPath(outContext);
+        for (i = 0; i < nsegments; i++) {
+            CGContextMoveToPoint(outContext,
+                    (float) segments[i].x1,
+                    (float) segments[i].y1);
+            CGContextAddLineToPoint (outContext,
+                    (float) segments[i].x2,
+                    (float) segments[i].y2);
+        }
+        CGContextStrokePath(outContext);
+        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+    } else {
+        TkMacOSXSetUpGraphicsPort(gc, destPort);
+
+        ShowPen();
+
+        PenPixPat(gPenPat);
+        for (i = 0; i < nsegments; i++) {
+            MoveTo((short) (macWin->xOff + segments[i].x1),
+                   (short) (macWin->yOff + segments[i].y1));
+            LineTo((short) (macWin->xOff + segments[i].x2),
+                   (short) (macWin->yOff + segments[i].y2));
+        }
+        HidePen();
     }
-    HidePen();
-
+    
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -633,28 +679,49 @@ XFillPolygon(
 
     TkMacOSXSetUpClippingRgn(d);
     
-    TkMacOSXSetUpGraphicsPort(gc, destPort);
-
-    PenNormal();
-    polygon = OpenPoly();
-
-    MoveTo((short) (macWin->xOff + points[0].x),
-            (short) (macWin->yOff + points[0].y));
-    for (i = 1; i < npoints; i++) {
-        if (mode == CoordModePrevious) {
-            Line((short) (macWin->xOff + points[i].x),
-                    (short) (macWin->yOff + points[i].y));
-        } else {
-            LineTo((short) (macWin->xOff + points[i].x),
-                    (short) (macWin->yOff + points[i].y));
+    if (useCGDrawing) {
+        CGContextRef outContext;
+        
+        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+        
+        CGContextBeginPath(outContext);
+        CGContextMoveToPoint(outContext, (float) (points[0].x),
+                (float) (points[0].y));
+        for (i = 1; i < npoints; i++) {
+            
+            if (mode == CoordModePrevious) {
+                CGContextAddLineToPoint(outContext, (float) points[i].x,
+                        (float) points[i].y);
+            } else {
+            }
         }
+        //CGContextStrokePath(outContext);
+        CGContextFillPath(outContext);
+        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+    } else {
+        TkMacOSXSetUpGraphicsPort(gc, destPort);
+    
+        PenNormal();
+        polygon = OpenPoly();
+    
+        MoveTo((short) (macWin->xOff + points[0].x),
+                (short) (macWin->yOff + points[0].y));
+        for (i = 1; i < npoints; i++) {
+            if (mode == CoordModePrevious) {
+                Line((short) (macWin->xOff + points[i].x),
+                        (short) (macWin->yOff + points[i].y));
+            } else {
+                LineTo((short) (macWin->xOff + points[i].x),
+                        (short) (macWin->yOff + points[i].y));
+            }
+        }
+    
+        ClosePoly();
+    
+        FillCPoly(polygon, gPenPat);
+    
+        KillPoly(polygon);
     }
-
-    ClosePoly();
-
-    FillCPoly(polygon, gPenPat);
-
-    KillPoly(polygon);
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -815,7 +882,15 @@ XDrawArc(
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
+    float fX = (float) x,
+          fY = (float) y,
+          fWidth = (float) width,
+          fHeight = (float) height;
 
+    if (width == 0 || height == 0) {
+        return;
+    }
+    
     destPort = TkMacOSXGetDrawablePort(d);
 
     display->request++;
@@ -824,20 +899,52 @@ XDrawArc(
 
     TkMacOSXSetUpClippingRgn(d);
 
-    TkMacOSXSetUpGraphicsPort(gc, destPort);
+    if (useCGDrawing) {
+        CGContextRef outContext;
+        CGAffineTransform transform;
+        int clockwise = angle1 ? 0 : 1;
 
-    theRect.left = (short) (macWin->xOff + x);
-    theRect.top = (short) (macWin->yOff + y);
-    theRect.right = (short) (theRect.left + width);
-    theRect.bottom = (short) (theRect.top + height);
-    start = (short) (90 - (angle1 / 64));
-    extent = (short) (-(angle2 / 64));
+        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
 
-    ShowPen();
-    PenPixPat(gPenPat);
-    FrameArc(&theRect, start, extent);
-    HidePen();
+        CGContextBeginPath(outContext);
+        
+        /*
+         * If we are drawing an oval, we have to squash the coordinate
+         * system before drawing, since CGContextAddArcToPoint only draws
+         * circles.
+         */
 
+        CGContextSaveGState(outContext);
+        transform = CGAffineTransformMakeTranslation((float) (x + width/2),
+                (float) (y + height/2));
+        transform = CGAffineTransformScale(transform, 1.0, fHeight/fWidth);
+        CGContextConcatCTM(outContext, transform);
+
+        CGContextAddArc(outContext, 0.0, 0.0,
+                (float) width/2,
+                (float) angle1, (float) angle2, clockwise);
+
+        CGContextRestoreGState(outContext);
+
+        CGContextStrokePath(outContext);
+        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+    } else {
+        TkMacOSXSetUpGraphicsPort(gc, destPort);
+
+
+        theRect.left = (short) (macWin->xOff + x);
+        theRect.top = (short) (macWin->yOff + y);
+        theRect.right = (short) (theRect.left + width);
+        theRect.bottom = (short) (theRect.top + height);
+        start = (short) (90 - (angle1 / 64));
+        extent = (short) (-(angle2 / 64));
+
+        ShowPen();
+        PenPixPat(gPenPat);
+        FrameArc(&theRect, start, extent);
+        HidePen();
+    }
+    
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -1299,7 +1406,116 @@ TkMacOSXSetUpGraphicsPort(
          */
     }
 }
-
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXSetUpGraphicsPort --
+ *
+ *        Set up the graphics port from the given GC.
+ *
+ * Results:
+ *        None.
+ *
+ * Side effects:
+ *        The current port is adjusted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXSetUpCGContext(
+    MacDrawable *macWin,
+    CGrafPtr destPort,
+    GC gc,
+    CGContextRef *contextPtr)                /* GC to apply to current port. */
+{
+    RGBColor macColor;
+    CGContextRef outContext;
+    OSStatus err;
+    Rect boundsRect;
+    CGAffineTransform coordsTransform;
+
+    err = QDBeginCGContext(destPort, contextPtr);
+    outContext = *contextPtr;
+    
+    CGContextSaveGState(outContext);
+    
+    GetPortBounds(destPort, &boundsRect);
+    
+    CGContextResetCTM(outContext);
+    coordsTransform = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0, 
+            (float)(boundsRect.bottom - boundsRect.top));
+    CGContextConcatCTM(outContext, coordsTransform);
+    
+    if (macWin->clipRgn != NULL) {
+        ClipCGContextToRegion(outContext, &boundsRect, macWin->clipRgn);
+    } else {
+        RgnHandle clipRgn = NewRgn();
+        GetPortClipRegion(destPort, clipRgn);
+        ClipCGContextToRegion(outContext, &boundsRect, 
+                clipRgn);
+        DisposeRgn(clipRgn);
+    }
+
+    /* Now offset the CTM to the subwindow offset */
+    
+    CGContextTranslateCTM(outContext, macWin->xOff, macWin->yOff);
+
+    if (TkSetMacColor(gc->foreground, &macColor) == true) {                
+        CGContextSetRGBStrokeColor(outContext, RGBFLOATRED(macColor), 
+                RGBFLOATGREEN(macColor), 
+                RGBFLOATBLUE(macColor), 1.0);
+    }
+    if (TkSetMacColor(gc->background, &macColor) == true) {                
+        CGContextSetRGBFillColor(outContext, RGBFLOATRED(macColor), 
+                RGBFLOATGREEN(macColor), 
+                RGBFLOATBLUE(macColor), 1.0);
+    }
+    
+    if(gc->function == GXxor) {
+    }
+    
+    CGContextSetLineWidth(outContext, (float) gc->line_width);
+
+    if (gc->line_style != LineSolid) {
+        unsigned char *p = (unsigned char *) &(gc->dashes);
+        /*
+         * Here the dash pattern should be set in the drawing,
+         * environment, but I don't know how to do that for the Mac.
+         *
+         * p[] is an array of unsigned chars containing the dash list.
+         * A '\0' indicates the end of this list.
+         *
+         * Someone knows how to implement this? If you have a more
+         * complete implementation of SetUpGraphicsPort() for
+         * the Mac (or for Windows), please let me know.
+         *
+         *        Jan Nijtmans
+         *        CMG Arnhem, B.V.
+         *        email: j.nijtmans@chello.nl (private)
+         *               jan.nijtmans@cmg.nl (work)
+         *        url:   http://purl.oclc.org/net/nijtmans/
+         *
+         * FIXME:
+         * This is not possible with QuickDraw line drawing, we either
+         * have to convert all line drawings to regions, or, on Mac OS X
+         * we can use CG to draw our lines instead of QuickDraw.
+         */
+    }
+}
+
+void
+TkMacOSXReleaseCGContext(
+        MacDrawable *macWin,
+        CGrafPtr destPort, 
+        CGContextRef *outContext)
+{
+    CGContextResetCTM(*outContext);
+    CGContextRestoreGState(*outContext);
+    QDEndCGContext(destPort, outContext);
+
+}
+
 /*
  *----------------------------------------------------------------------
  *

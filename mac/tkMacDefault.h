@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDefault.h,v 1.11 2001/10/12 13:30:31 tmh Exp $
+ * RCS: @(#) $Id: tkMacDefault.h,v 1.11.2.1 2002/02/05 02:25:16 wolfsuit Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -433,6 +433,7 @@
  * Defaults for texts:
  */
 
+#define DEF_TEXT_AUTO_SEPARATORS	"1"
 #define DEF_TEXT_BG_COLOR		NORMAL_BG
 #define DEF_TEXT_BG_MONO		WHITE
 #define DEF_TEXT_BORDER_WIDTH		"0"
@@ -467,6 +468,7 @@
 #define DEF_TEXT_STATE			"normal"
 #define DEF_TEXT_TABS			""
 #define DEF_TEXT_TAKE_FOCUS		(char *) NULL
+#define DEF_TEXT_UNDO    		"0"
 #define DEF_TEXT_WIDTH			"80"
 #define DEF_TEXT_WRAP			"char"
 #define DEF_TEXT_XSCROLL_COMMAND	""

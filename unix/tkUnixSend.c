@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.4 1999/04/16 01:51:47 stanton Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.4.18.1 2002/02/05 02:25:18 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -603,7 +603,7 @@ ValidateName(dispPtr, name, commWindow, oldOK)
     Atom actualType;
     char *property;
     Tk_ErrorHandler handler;
-    char **argv;
+    CONST char **argv;
 
     property = NULL;
 
@@ -1508,7 +1508,7 @@ SendEventProc(clientData, eventPtr)
 		Tcl_DStringAppend(&reply, Tcl_GetStringResult(remoteInterp),
 			-1);
 		if (result == TCL_ERROR) {
-		    char *varValue;
+		    CONST char *varValue;
     
 		    varValue = Tcl_GetVar2(remoteInterp, "errorInfo",
 			    (char *) NULL, TCL_GLOBAL_ONLY);

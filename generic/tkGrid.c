@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.17 2001/09/30 19:01:58 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.17.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -333,7 +333,7 @@ Tk_GridObjCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"bbox", "columnconfigure", "configure", "forget",
 	"info",	"location", "propagate", "remove",
 	"rowconfigure", "size",	"slaves", (char *) NULL };
@@ -849,7 +849,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     int ok;			/* temporary TCL result code */
     int i, j;
     char *string;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-minsize", "-pad", "-uniform", "-weight", (char *) NULL };
     enum options { ROWCOL_MINSIZE, ROWCOL_PAD, ROWCOL_UNIFORM, ROWCOL_WEIGHT };
     int index;
@@ -1117,7 +1117,7 @@ GridSlavesCommand(tkwin, interp, objc, objv)
     Gridder *slavePtr;
     int i, value;
     int row = -1, column = -1;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-column", "-row", (char *) NULL };
     enum options { SLAVES_COLUMN, SLAVES_ROW };
     int index;
@@ -1848,7 +1848,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 		    UniformGroup *old = uniformGroupPtr;
 		    memcpy((VOID *) new, (VOID *) old, oldSize);
 		    if (old != uniformPre) {
-			Tcl_Free((char *) old);
+			ckfree((char *) old);
 		    }
 		    uniformGroupPtr = new;
 		    uniformGroupsAlloced += UNIFORM_PREALLOC;
@@ -1888,7 +1888,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
     }
 
     if (uniformGroupPtr != uniformPre) {
-	Tcl_Free((char *) uniformGroupPtr);
+	ckfree((char *) uniformGroupPtr);
     }
 
     /*
@@ -2074,7 +2074,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     --layoutPtr;
     if (layoutPtr != layoutData) {
-	Tcl_Free((char *)layoutPtr);
+	ckfree((char *)layoutPtr);
     }
     return requiredSize;
 }
@@ -2254,7 +2254,7 @@ CheckSlotData(masterPtr, slot, slotType, checkOnly)
 		    masterPtr->masterDataPtr->columnPtr;
 	    memcpy((VOID *) new, (VOID *) old, oldSize );
 	    memset((VOID *) (new+numSlot), 0, newSize - oldSize );
-	    Tcl_Free((char *) old);
+	    ckfree((char *) old);
 	    if (slotType == ROW) {
 	 	masterPtr->masterDataPtr->rowPtr = new ;
 	    	masterPtr->masterDataPtr->rowSpace = newNumSlot ;
@@ -2405,14 +2405,14 @@ DestroyGrid(memPtr)
 
     if (gridPtr->masterDataPtr != NULL) {
 	if (gridPtr->masterDataPtr->rowPtr != NULL) {
-	    Tcl_Free((char *) gridPtr->masterDataPtr -> rowPtr);
+	    ckfree((char *) gridPtr->masterDataPtr -> rowPtr);
 	}
 	if (gridPtr->masterDataPtr->columnPtr != NULL) {
-	    Tcl_Free((char *) gridPtr->masterDataPtr -> columnPtr);
+	    ckfree((char *) gridPtr->masterDataPtr -> columnPtr);
 	}
-	Tcl_Free((char *) gridPtr->masterDataPtr);
+	ckfree((char *) gridPtr->masterDataPtr);
     }
-    Tcl_Free((char *) gridPtr);
+    ckfree((char *) gridPtr);
 }
 
 /*
@@ -2536,7 +2536,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     char *lastWindow;		/* use this window to base current
 				 * Row/col on */
     int numSkip;		/* number of 'x' found */
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-column", "-columnspan", "-in", "-ipadx", "-ipady",
 	"-padx", "-pady", "-row", "-rowspan", "-sticky",
 	(char *) NULL };
@@ -2554,7 +2554,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     firstChar = 0;
     for (numWindows = i = 0; i < objc; i++) {
 	prevChar = firstChar;
-	string = Tcl_GetStringFromObj(objv[i], &length);
+	string = Tcl_GetStringFromObj(objv[i], (int *) &length);
     	firstChar = string[0];
 	
 	if (firstChar == '.') {

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.1.2.2 2002/02/05 02:25:17 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenuButton.h"
@@ -2008,19 +2008,20 @@ TkMacOSXDispatchMenuEvent(
     	} else {
 	    Tcl_HashEntry *commandEntryPtr = 
 	    	    Tcl_FindHashEntry(&commandTable, (char *) ((int)menuID));
-	    TkMenu *menuPtr = (TkMenu *) Tcl_GetHashValue(commandEntryPtr);
-	    if ((currentAppleMenuID == menuID) 
-	    	    && (index > menuPtr->numEntries + 1)) {
-	    	Str255 itemText;
-	    	
-	    	GetMenuItemText(GetMenuHandle(menuID), index, itemText);
-#ifdef STUBBED_OUT_FOR_OSX
-	    	OpenDeskAcc(itemText);
-#endif
-	    	result = TCL_OK;
-	    } else {
-	    	result = TkInvokeMenu(menuPtr->interp, menuPtr, index - 1);
-	    }
+            if (commandEntryPtr != NULL) {
+                TkMenu *menuPtr = (TkMenu *) Tcl_GetHashValue(commandEntryPtr);
+                if ((currentAppleMenuID == menuID)
+                    && (index > menuPtr->numEntries + 1)) {
+                    Str255 itemText;
+
+                    GetMenuItemText(GetMenuHandle(menuID), index, itemText);
+                    result = TCL_OK;
+                } else {
+                    result = TkInvokeMenu(menuPtr->interp, menuPtr, index - 1);
+                }
+            } else {
+                return TCL_ERROR;
+            }
 	}
     }
     return result;

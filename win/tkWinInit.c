@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.4.8.1 2001/10/15 09:22:01 wolfsuit Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.4.8.2 2002/02/05 02:25:18 wolfsuit Exp $
  */
 
 #include "tkWinInt.h"
@@ -76,17 +76,18 @@ TkpGetAppName(interp, namePtr)
     Tcl_Interp *interp;
     Tcl_DString *namePtr;	/* A previously initialized Tcl_DString. */
 {
-    int argc;
-    char **argv = NULL, *name, *p;
+    int argc, namelength;
+    CONST char **argv = NULL, *name, *p;
 
     name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
+    namelength = -1;
     if (name != NULL) {
 	Tcl_SplitPath(name, &argc, &argv);
 	if (argc > 0) {
 	    name = argv[argc-1];
 	    p = strrchr(name, '.');
 	    if (p != NULL) {
-		*p = '\0';
+		namelength = p - name;
 	    }
 	} else {
 	    name = NULL;
@@ -94,8 +95,9 @@ TkpGetAppName(interp, namePtr)
     }
     if ((name == NULL) || (*name == 0)) {
 	name = "tk";
+	namelength = -1;
     }
-    Tcl_DStringAppend(namePtr, name, -1);
+    Tcl_DStringAppend(namePtr, name, namelength);
     if (argv != NULL) {
 	ckfree((char *)argv);
     }
@@ -120,9 +122,18 @@ TkpGetAppName(interp, namePtr)
 
 void
 TkpDisplayWarning(msg, title)
-    char *msg;			/* Message to be displayed. */
-    char *title;		/* Title of warning. */
+    CONST char *msg;		/* Message to be displayed. */
+    CONST char *title;		/* Title of warning. */
 {
-    MessageBox(NULL, msg, title, MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
+    Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
+    Tcl_DString msgString, titleString;
+
+    Tcl_UtfToExternalDString(unicodeEncoding, msg, -1, &msgString);
+    Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
+    MessageBoxW(NULL, (WCHAR *) Tcl_DStringValue(&msgString),
+	    (WCHAR *) Tcl_DStringValue(&titleString),
+	    MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
 	    | MB_SETFOREGROUND | MB_TOPMOST);
+    Tcl_DStringFree(&msgString);
+    Tcl_DStringFree(&titleString);
 }

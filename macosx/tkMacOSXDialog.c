@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.2 2001/10/24 06:00:04 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.3 2002/02/05 02:25:17 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -69,10 +69,14 @@ pascal void             OpenEventProc(NavEventCallbackMessage callBackSelector,
                             NavCallBackUserData callBackUD );
 static void             InitFileDialogs();
 static int              NavServicesGetFile(Tcl_Interp *interp, OpenFileData *ofd,
-                            AEDesc *initialDesc, unsigned char *initialFile,
+                            AEDesc *initialDescPtr,
+                            unsigned char *initialFile, AEDescList *selectDescPtr,
                             StringPtr title, StringPtr message, int multiple, int isOpen);
-static int              HandleInitialDirectory (Tcl_Interp *interp, char *initialDir, FSSpec *dirSpec, 
-                            AEDesc *dirDescPtr);                            
+static int              HandleInitialDirectory (Tcl_Interp *interp,
+                                                char *initialFile, char *initialDir,
+                                                FSRef *dirRef,
+                                                AEDescList *selectDescPtr,
+                                                AEDesc *dirDescPtr);                            
 
 /*
  * Have we initialized the file dialog subsystem
@@ -117,7 +121,6 @@ Tk_ChooseColorObjCmd(
     Tk_Window parent;
     char *title;
     int i, picked, srcRead, dstWrote;
-    long response;
     OSErr err;
     ColorPickerInfo cpinfo;
     static int inited = 0;
@@ -254,8 +257,10 @@ Tk_GetOpenFileObjCmd(
     Tk_Window parent;
     Str255 message, title;
     AEDesc initialDesc = {typeNull, NULL};
-    FSSpec dirSpec;
+    FSRef dirRef;
     AEDesc *initialPtr = NULL;
+    AEDescList selectDesc = {typeNull, NULL};
+    char *initialFile = NULL, *initialDir = NULL;
     static char *openOptionStrings[] = {
             "-defaultextension", "-filetypes", 
             "-initialdir", "-initialfile", 
@@ -316,14 +321,10 @@ Tk_GetOpenFileObjCmd(
                 }
                 break;
             case OPEN_INITDIR:
-                choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
-                if (HandleInitialDirectory(interp, choice, &dirSpec, 
-                        &initialDesc) != TCL_OK) {
-                    result = TCL_ERROR;
-                    goto end;
-                }
+                initialDir = Tcl_GetStringFromObj(objv[i + 1], NULL);
                 break;
             case OPEN_INITFILE:
+                initialFile = Tcl_GetStringFromObj(objv[i + 1], NULL);
                 break;
             case OPEN_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -356,16 +357,24 @@ Tk_GetOpenFileObjCmd(
                 break;
         }
     }
-             
-    if (initialDesc.descriptorType == typeFSS) {
+
+    if (HandleInitialDirectory(interp, initialFile, initialDir, &dirRef,
+                               &selectDesc, &initialDesc) != TCL_OK) {
+        result = TCL_ERROR;
+        goto end;
+    }
+    
+    if (initialDesc.descriptorType == typeFSRef) {
         initialPtr = &initialDesc;
     }
-    result = NavServicesGetFile(interp, &ofd, initialPtr, NULL, 
-        title, message, multiple, OPEN_FILE);
+    result = NavServicesGetFile(interp, &ofd, initialPtr,
+            NULL, &selectDesc, 
+            title, message, multiple, OPEN_FILE);
 
     end:
     TkFreeFileFilters(&ofd.fl);
     AEDisposeDesc(&initialDesc);
+    AEDisposeDesc(&selectDesc);
     
     return result;
 }
@@ -398,7 +407,7 @@ Tk_GetSaveFileObjCmd(
     Tk_Window parent;
     AEDesc initialDesc = {typeNull, NULL};
     AEDesc *initialPtr = NULL;
-    FSSpec dirSpec;
+    FSRef dirRef;
     Str255 title, message;
     OpenFileData ofd;
     static char *saveOptionStrings[] = {
@@ -445,8 +454,8 @@ Tk_GetSaveFileObjCmd(
                 break;
             case SAVE_INITDIR:
                 choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
-                if (HandleInitialDirectory(interp, choice, &dirSpec, 
-                        &initialDesc) != TCL_OK) {
+                if (HandleInitialDirectory(interp, NULL, choice, &dirRef, 
+                        NULL, &initialDesc) != TCL_OK) {
                     result = TCL_ERROR;
                     goto end;
                 }
@@ -491,10 +500,10 @@ Tk_GetSaveFileObjCmd(
     TkInitFileFilters(&ofd.fl);
     ofd.usePopup = 0;
 
-    if (initialDesc.descriptorType == typeFSS) {
+    if (initialDesc.descriptorType == typeFSRef) {
         initialPtr = &initialDesc;
     }
-    result = NavServicesGetFile(interp, &ofd, initialPtr, initialFile, 
+    result = NavServicesGetFile(interp, &ofd, initialPtr, initialFile, NULL,
         title, message, false, SAVE_FILE);
 
     end:
@@ -534,7 +543,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     Tk_Window parent;
     AEDesc initialDesc = {typeNull, NULL};
     AEDesc *initialPtr = NULL;
-    FSSpec dirSpec;
+    FSRef dirRef;
     Str255 message, title;
     int srcRead, dstWrote;
     OpenFileData ofd;
@@ -577,8 +586,8 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
         switch (index) {
             case CHOOSE_INITDIR:
                 choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
-                if (HandleInitialDirectory(interp, choice, &dirSpec, 
-                        &initialDesc) != TCL_OK) {
+                if (HandleInitialDirectory(interp, NULL, choice, &dirRef,  
+                        NULL, &initialDesc) != TCL_OK) {
                     result = TCL_ERROR;
                     goto end;
                 }
@@ -612,10 +621,10 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     ofd.usePopup = 0;
 
         
-    if (initialDesc.descriptorType == typeFSS) {
+    if (initialDesc.descriptorType == typeFSRef) {
         initialPtr = &initialDesc;
     }
-    result = NavServicesGetFile(interp, &ofd, initialPtr, NULL, 
+    result = NavServicesGetFile(interp, &ofd, initialPtr, NULL, NULL,
         title, message, false, CHOOSE_FOLDER);
 
     end:
@@ -627,42 +636,74 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 int
 HandleInitialDirectory (
     Tcl_Interp *interp,
-    char *initialDir, 
-    FSSpec *dirSpec, 
+    char *initialFile,
+    char *initialDir,
+    FSRef *dirRef, 
+    AEDescList *selectDescPtr,
     AEDesc *dirDescPtr)
 {
-        Tcl_DString ds;
-        long dirID;
-        OSErr err;
-        Boolean isDirectory;
-        Str255 dir;
-        int srcRead, dstWrote;
-        
-        fprintf(stderr,"HandleInitialDir\n");
-        if (Tcl_TranslateFileName(interp, initialDir, &ds) == NULL) {
-            return TCL_ERROR;
-        }
-        Tcl_UtfToExternal(NULL, NULL, Tcl_DStringValue(&ds), 
-                Tcl_DStringLength(&ds), 0, NULL, StrBody(dir), 255, 
-                &srcRead, &dstWrote, NULL);
-        StrLength(dir) = (unsigned char) dstWrote;
-        Tcl_DStringFree(&ds);
-          
-        err = FSpLocationFromPath(StrLength(dir), StrBody(dir), dirSpec);
-        if (err != noErr) {
-            Tcl_AppendResult(interp, "bad directory \"", 
-                    initialDir, "\"", NULL);
-            return TCL_ERROR;
-        }
-        err = FSpGetDirectoryID(dirSpec, &dirID, &isDirectory);
-        if ((err != noErr) || !isDirectory) {
-            Tcl_AppendResult(interp, "bad directory \"", 
-                    initialDir, "\"", NULL);
+    Tcl_DString ds;
+    OSErr err;
+    Boolean isDirectory;
+    char *dirName = NULL;
+    int result = TCL_OK;
+
+    if (initialDir != NULL) {
+        dirName = Tcl_TranslateFileName(interp, initialDir, &ds);
+        if (dirName == NULL) {
             return TCL_ERROR;
         }
 
-        AECreateDesc( typeFSS, dirSpec, sizeof(*dirSpec), dirDescPtr);        
-        return TCL_OK;
+        err = FSPathMakeRef(dirName,
+                dirRef, &isDirectory);     
+
+        if (err != noErr) {
+            Tcl_AppendResult(interp, "bad directory \"",
+                             initialDir, "\"", NULL);
+            result = TCL_ERROR;
+            goto end;
+        }
+        if (!isDirectory) {
+            Tcl_AppendResult(interp, "-intialdir \"",
+                    initialDir, " is a file, not a directory.\"", NULL);
+            result = TCL_ERROR;
+            goto end;
+        }
+
+        AECreateDesc(typeFSRef, dirRef, sizeof(*dirRef), dirDescPtr);
+    }
+
+    if (initialFile != NULL && selectDescPtr != NULL) {
+        FSRef fileRef;
+        AEDesc fileDesc;
+        char *namePtr;
+
+        if (initialDir != NULL) {
+            Tcl_DStringAppend(&ds, "/", 1);
+            Tcl_DStringAppend(&ds, initialFile, -1);
+            namePtr = Tcl_DStringValue(&ds);
+        } else {
+            namePtr = initialFile;
+        }
+
+        AECreateList(NULL, 0, false, selectDescPtr);
+
+        err = FSPathMakeRef(namePtr, &fileRef, &isDirectory);
+        if (err != noErr) {
+            Tcl_AppendResult(interp, "bad initialfile \"", initialFile,
+                    "\" file does not exist.", NULL);
+            return TCL_ERROR;
+        }
+        AECreateDesc(typeFSRef, &fileRef, sizeof(fileRef), &fileDesc);
+        AEPutDesc(selectDescPtr, 1, &fileDesc);
+        AEDisposeDesc(&fileDesc);
+    }
+
+end:
+    if (dirName != NULL) {
+        Tcl_DStringFree(&ds);
+    }
+    return result;
 }
 
 static void
@@ -677,8 +718,9 @@ static int
 NavServicesGetFile(
     Tcl_Interp *interp,
     OpenFileData *ofdPtr,
-    AEDesc *initialDesc,
+    AEDesc *initialDescPtr,
     unsigned char *initialFile,
+    AEDescList *selectDescPtr,
     StringPtr title,
     StringPtr message,
     int multiple,
@@ -790,7 +832,16 @@ NavServicesGetFile(
             dialogRef = NULL;
         }
     }
+
     if (dialogRef) {
+        if (initialDescPtr != NULL) {
+            NavCustomControl (dialogRef, kNavCtlSetLocation, initialDescPtr);
+        }
+        if ((selectDescPtr != NULL)
+                && (selectDescPtr->descriptorType != typeNull)) {
+            NavCustomControl(dialogRef, kNavCtlSetSelection, &selectDescPtr);
+        }
+        
         if ((err = NavDialogRun(dialogRef)) != noErr ){
             fprintf(stderr,"NavDialogRun failed, %d\n", err );
         } else {

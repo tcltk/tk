@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.5 1999/08/10 16:58:37 hobbs Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.5.16.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -121,8 +121,9 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *focusOptions[] = {"-displayof", "-force", "-lastfor",
-				   (char *) NULL};
+    static CONST char *focusOptions[] = {
+	"-displayof", "-force", "-lastfor", (char *) NULL
+    };
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr = (TkWindow *) clientData;
     TkWindow *newPtr, *focusWinPtr, *topLevelPtr;

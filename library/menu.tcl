@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.13.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.13.2.2 2002/02/05 02:25:16 wolfsuit Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -780,16 +780,13 @@ proc ::tk::MenuNextMenu {menu direction} {
 	set count -1
 	set m2 [winfo parent $menu]
 	if {[string equal [winfo class $m2] "Menu"]} {
+	    $menu activate none
+	    GenerateMenuSelect $menu
+	    tk_menuSetFocus $m2
+
+	    $m2 postcascade none
+
 	    if {[string compare [$m2 cget -type] "menubar"]} {
-		$menu activate none
-		GenerateMenuSelect $menu
-		tk_menuSetFocus $m2
-		
-		# This code unposts any posted submenu in the parent.
-		
-		set tmp [$m2 index active]
-		$m2 activate none
-		$m2 activate $tmp
 		return
 	    }
 	}
@@ -873,7 +870,9 @@ proc ::tk::MenuNextEntry {menu count} {
 	    incr i -$length
 	}
 	if {[catch {$menu entrycget $i -state} state] == 0} {
-	    if {[string compare $state "disabled"]} {
+	    if {$state!="disabled" && 
+		($i!=0 || [$menu cget -type]!="tearoff" 
+			|| [$menu type 0]!="tearoff")} {
 		break
 	    }
 	}
@@ -885,7 +884,9 @@ proc ::tk::MenuNextEntry {menu count} {
     }
     $menu activate $i
     GenerateMenuSelect $menu
-    if {[string equal [$menu type $i] "cascade"]} {
+
+    if {[string equal [$menu type $i] "cascade"] \
+	    && [string equal [$menu cget -type] "menubar"]} {
 	set cascade [$menu entrycget $i -menu]
 	if {[string compare $cascade ""]} {
 	    # Here we auto-post a cascade.  This is necessary when

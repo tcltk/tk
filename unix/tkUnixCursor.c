@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixCursor.c,v 1.4 1999/04/16 01:51:45 stanton Exp $
+ * RCS: @(#) $Id: tkUnixCursor.c,v 1.4.18.1 2002/02/05 02:25:18 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -154,7 +154,7 @@ TkGetCursorByName(interp, tkwin, string)
     TkUnixCursor *cursorPtr = NULL;
     Cursor cursor = None;
     int argc;
-    char **argv = NULL;
+    CONST char **argv = NULL;
     Pixmap source = None;
     Pixmap mask = None;
     Display *display = Tk_Display(tkwin);

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.9 2000/05/17 21:17:21 ericm Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.9.6.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -707,7 +707,8 @@ FormatConfigInfo(interp, tkwin, specPtr, widgRec)
     char *widgRec;			/* Pointer to record holding current
 					 * values of info for widget. */
 {
-    char *argv[6], *result;
+    CONST char *argv[6];
+    char *result;
     char buffer[200];
     Tcl_FreeProc *freeProc = (Tcl_FreeProc *) NULL;
 
@@ -735,9 +736,9 @@ FormatConfigInfo(interp, tkwin, specPtr, widgRec)
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree(argv[4]);
+	    ckfree((char *)argv[4]);
 	} else {
-	    (*freeProc)(argv[4]);
+	    (*freeProc)((char *)argv[4]);
 	}
     }
     return result;

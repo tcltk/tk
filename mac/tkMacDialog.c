@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDialog.c,v 1.6 2000/04/23 03:47:24 jingham Exp $
+ * RCS: @(#) $Id: tkMacDialog.c,v 1.6.8.1 2002/02/05 02:25:16 wolfsuit Exp $
  */
 
 #include <Gestalt.h>
@@ -141,7 +141,7 @@ Tk_ChooseColorObjCmd(
     OSErr err;
     static inited = 0;
     static RGBColor in;
-    static char *optionStrings[] = {
+    static CONST char *optionStrings[] = {
 	"-initialcolor",    "-parent",	    "-title",	    NULL
     };
     enum options {
@@ -228,7 +228,7 @@ Tk_ChooseColorObjCmd(
     	cpinfo.theColor.color.rgb.green = in.green;
     	cpinfo.theColor.color.rgb.blue  = in.blue;
     	cpinfo.dstProfile = 0L;
-    	cpinfo.flags = CanModifyPalette | CanAnimatePalette;
+    	cpinfo.flags = kColorPickerCanModifyPalette | kColorPickerCanAnimatePalette;
     	cpinfo.placeWhere = kDeepestColorScreen;
     	cpinfo.pickerType = 0L;
     	cpinfo.eventProc = NULL;
@@ -304,7 +304,7 @@ Tk_GetOpenFileObjCmd(
     Str255 message, title;
     AEDesc initialDesc = {typeNull, NULL};
     FSSpec dirSpec;
-    static char *openOptionStrings[] = {
+    static CONST char *openOptionStrings[] = {
 	    "-defaultextension", "-filetypes", 
 	    "-initialdir", "-initialfile", 
 	    "-message", "-multiple",
@@ -453,12 +453,12 @@ Tk_GetSaveFileObjCmd(
     FSSpec dirSpec;
     Str255 title, message;
     OpenFileData ofd;
-    static char *saveOptionStrings[] = {
-	    "-defaultextension", "-initialdir", "-initialfile", 
+    static CONST char *saveOptionStrings[] = {
+	    "-defaultextension", "-filetypes", "-initialdir", "-initialfile", 
 	    "-message", "-parent",	"-title", 	NULL
     };
     enum saveOptions {
-	    SAVE_DEFAULT,	SAVE_INITDIR,	SAVE_INITFILE,
+	    SAVE_DEFAULT,	SAVE_TYPES,	SAVE_INITDIR,	SAVE_INITFILE,
 	    SAVE_MESSAGE,	SAVE_PARENT,	SAVE_TITLE
     };
 
@@ -492,6 +492,8 @@ Tk_GetSaveFileObjCmd(
 	}
 	switch (index) {
 	    case SAVE_DEFAULT:
+	        break;
+	    case SAVE_TYPES:
 	        break;
 	    case SAVE_INITDIR:
 	        choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
@@ -593,7 +595,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     Str255 message, title;
     int srcRead, dstWrote;
     OpenFileData ofd;
-    static char *chooseOptionStrings[] = {
+    static CONST char *chooseOptionStrings[] = {
 	    "-initialdir", "-message", "-mustexist", "-parent", "-title", NULL
     };
     enum chooseOptions {
@@ -712,7 +714,7 @@ HandleInitialDirectory (
 	    Tcl_AppendResult(interp, "bad directory \"", initialDir, "\"", NULL);
 	    return TCL_ERROR;
 	}
-	err = FSpGetDirectoryID(dirSpec, &dirID, &isDirectory);
+	err = FSpGetDirectoryIDTcl(dirSpec, &dirID, &isDirectory);
 	if ((err != noErr) || !isDirectory) {
 	    Tcl_AppendResult(interp, "bad directory \"", initialDir, "\"", NULL);
 	    return TCL_ERROR;
@@ -1055,9 +1057,17 @@ OpenEventProc(
     if (callBackSelector ==  kNavCBPopupMenuSelect) {
         chosenItem = (NavMenuItemSpec *) callBackParams->eventData.eventDataParms.param;
         ofd->curType = chosenItem->menuType;
-    } else if (callBackSelector == kNavCBAdjustRect || callBackSelector & otherEvent != 0) { 
+    } else if ( callBackSelector & otherEvent != 0) { 
         while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT|TCL_WINDOW_EVENTS)) {
             /* Empty Body */
+        }
+    } else if (callBackSelector == kNavCBEvent) {
+    	if (callBackParams->eventData.eventDataParms.event->what == updateEvt) {
+    		if (TkMacConvertEvent( callBackParams->eventData.eventDataParms.event)) {
+        		while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT|TCL_WINDOW_EVENTS)) {
+           			/* Empty Body */
+        		}
+        	}
         }
     }
 }
@@ -1121,7 +1131,7 @@ StdGetFile(
     if (isOpen == OPEN_FILE) {
         if (ofd != NULL && ofd->usePopup) {
 	    CustomGetFile(openFilter, (short) -1, NULL, &reply, OPEN_BOX,
-	    	    mypoint, openHook, NULL, NULL, NULL, (void*) &ofd);
+	    	    mypoint, openHook, NULL, NULL, NULL, (void*) ofd);
 	} else {
 	    StandardGetFile(NULL, -1, NULL, &reply);
 	}
@@ -1213,7 +1223,7 @@ OpenHookProc(
 	    if (ofdPtr->usePopup) {
 		GetDialogItem(theDialog, ofdPtr->popupItem,
 			&ignore, &handle, &rect);
-		newType = GetCtlValue((ControlRef) handle) - 1;
+		newType = GetControlValue((ControlRef) handle) - 1;
 		if (ofdPtr->curType != newType) {
 		    if (newType<0 || newType>ofdPtr->fl.numFilters) {
 			/*

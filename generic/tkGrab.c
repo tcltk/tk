@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.6.6.2 2001/10/17 07:10:46 wolfsuit Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.6.6.3 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -202,10 +202,10 @@ Tk_GrabObjCmd(clientData, interp, objc, objv)
     char *arg;
     int index;
     int len;
-    static char *optionStrings[] = { "current", "release",
+    static CONST char *optionStrings[] = { "current", "release",
 					 "set", "status", (char *) NULL };
   
-    static char *flagStrings[] = { "-global", (char *) NULL };
+    static CONST char *flagStrings[] = { "-global", (char *) NULL };
 
     enum options { GRABCMD_CURRENT, GRABCMD_RELEASE,
 		       GRABCMD_SET, GRABCMD_STATUS };

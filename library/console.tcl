@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.13.2.1 2001/10/15 09:22:00 wolfsuit Exp $
+# RCS: @(#) $Id: console.tcl,v 1.13.2.2 2002/02/05 02:25:16 wolfsuit Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -301,6 +301,10 @@ proc ::tk::ConsoleBind {w} {
     ## We really didn't want the newline insertion
     bind Console <Control-Key-o> {}
 
+    # For the moment, transpose isn't enabled until the console
+    # gets and overhaul of how it handles input -- hobbs
+    bind Console <Control-Key-t> {}
+
     # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
 
@@ -403,10 +407,6 @@ proc ::tk::ConsoleBind {w} {
 	    %W delete insert {insert lineend}
 	}
     }
-    bind Console <<Console_Transpose>> {
-	## Transpose current and previous chars
-	if {[%W compare insert > promptEnd]} { ::tk::TextTranspose %W }
-    }
     bind Console <<Console_Clear>> {
 	## Clear console display
 	%W delete 1.0 "promptEnd linestart"
@@ -455,7 +455,7 @@ proc ::tk::ConsoleBind {w} {
     bind Console <F9> {
 	eval destroy [winfo child .]
 	if {[string equal $tcl_platform(platform) "macintosh"]} {
-	    source -rsrc Console
+	    if {[catch {source $tk_library:console.tcl}]} {source -rsrc console}
 	} else {
 	    source [file join $tk_library console.tcl]
 	}
@@ -557,9 +557,10 @@ proc ::tk::ConsoleInsert {w s} {
 # string -	The string to be displayed.
 
 proc ::tk::ConsoleOutput {dest string} {
-    .console insert output $string $dest
+    set w .console
+    $w insert output $string $dest
     ::tk::console::ConstrainBuffer $w $::tk::console::maxLines
-    .console see insert
+    $w see insert
 }
 
 # ::tk::ConsoleExit --

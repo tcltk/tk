@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.12 2001/04/12 12:30:42 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.12.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -160,7 +160,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument strings. */
 {
-    static char *imageOptions[] = {
+    static CONST char *imageOptions[] = {
 	"create", "delete", "height", "inuse", "names", "type", "types",
 	    "width", (char *) NULL
     };
@@ -368,12 +368,8 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
-	    if (masterPtr->typePtr != NULL) {
-		for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
-		     imagePtr = imagePtr->nextPtr) {
-		    count = 1;
-		    break;
-		}
+	    if (masterPtr->typePtr != NULL && masterPtr->instancePtr != NULL) {
+		count = 1;
 	    }
 	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), count);
 	    break;

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.3 1999/04/16 01:51:46 stanton Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.3.18.1 2002/02/05 02:25:18 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -118,7 +118,7 @@ DisplayExitHandler(clientData)
 
 TkDisplay *
 TkpOpenDisplay(display_name)
-    char *display_name;
+    CONST char *display_name;
 {
     TkDisplay *dispPtr;
     Display *display = XOpenDisplay(display_name);

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: spinbox.n,v 1.2 2000/08/25 06:58:33 ericm Exp $
+'\" RCS: @(#) $Id: spinbox.n,v 1.2.6.1 2002/02/05 02:25:14 wolfsuit Exp $
 '\" 
 .so man.macros
 .TH spinbox n 8.4 Tk "Tk Built-In Commands"
@@ -323,7 +323,7 @@ given by \fIindex\fR.  Returns an empty string.
 \fIpathName \fBidentify\fI x y\fR
 Returns the name of the window element corresponding to coordinates
 \fIx\fR and \fIy\fR in the spinbox.  Return value is one of:
-\fBnone\fR, \fBspindown\fR, \fBspinup\fR, \fBentry\fR.
+\fBnone\fR, \fBbuttondown\fR, \fBbuttonup\fR, \fBentry\fR.
 .TP
 \fIpathName \fBindex\fI index\fR
 Returns the numerical index corresponding to \fIindex\fR.
@@ -333,7 +333,7 @@ Insert the characters of \fIstring\fR just before the character
 indicated by \fIindex\fR.  Returns an empty string.
 .TP
 \fIpathName \fBinvoke\fI element\fR
-Causes the specified element, either \fBspindown\fR or \fBspinup\fR,
+Causes the specified element, either \fBbuttondown\fR or \fBbuttonup\fR,
 to be invoked, triggering the action associated with it.
 .TP
 \fIpathName \fBscan\fR \fIoption args\fR

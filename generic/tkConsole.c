@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.13 2001/08/06 18:29:41 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.13.2.1 2002/02/05 02:25:14 wolfsuit Exp $
  */
 
 #include "tk.h"
@@ -47,9 +47,6 @@ TCL_DECLARE_MUTEX(consoleMutex)
  * The first three will be used in the tk app shells...
  */
  
-void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
-			    int devId, char *buffer, long size));
-
 static int	ConsoleCmd _ANSI_ARGS_((ClientData clientData,
 		    Tcl_Interp *interp, int argc, char **argv));
 static void	ConsoleDeleteProc _ANSI_ARGS_((ClientData clientData));
@@ -61,7 +58,7 @@ static int	InterpreterCmd _ANSI_ARGS_((ClientData clientData,
 static int	ConsoleInput _ANSI_ARGS_((ClientData instanceData,
 		    char *buf, int toRead, int *errorCode));
 static int	ConsoleOutput _ANSI_ARGS_((ClientData instanceData,
-		    char *buf, int toWrite, int *errorCode));
+		    CONST char *buf, int toWrite, int *errorCode));
 static int	ConsoleClose _ANSI_ARGS_((ClientData instanceData,
 		    Tcl_Interp *interp));
 static void	ConsoleWatch _ANSI_ARGS_((ClientData instanceData,
@@ -336,7 +333,7 @@ Tk_CreateConsoleWindow(interp)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #ifdef MAC_TCL
-    static char initCmd[] = "source -rsrc {Console}";
+    static char initCmd[] = "if {[catch {source $tk_library:console.tcl}]} {source -rsrc console}";
 #else
     static char initCmd[] = "source $tk_library/console.tcl";
 #endif
@@ -408,7 +405,7 @@ Tk_CreateConsoleWindow(interp)
 static int
 ConsoleOutput(instanceData, buf, toWrite, errorCode)
     ClientData instanceData;		/* Indicates which device to use. */
-    char *buf;				/* The data buffer. */
+    CONST char *buf;			/* The data buffer. */
     int toWrite;			/* How many bytes to write? */
     int *errorCode;			/* Where to store error code. */
 {
@@ -476,6 +473,9 @@ ConsoleClose(instanceData, interp)
     ClientData instanceData;	/* Unused. */
     Tcl_Interp *interp;		/* Unused. */
 {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr->gStdoutInterp = NULL;
     return 0;
 }
 
@@ -775,7 +775,7 @@ TkConsolePrint(interp, devId, buffer, size)
     Tcl_Interp *interp;		/* Main interpreter. */
     int devId;			/* TCL_STDOUT for stdout, TCL_STDERR for
                                  * stderr. */
-    char *buffer;		/* Text buffer. */
+    CONST char *buffer;		/* Text buffer. */
     long size;			/* Size of text buffer. */
 {
     Tcl_DString command, output;

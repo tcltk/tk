@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.13.2.3 2001/11/11 17:58:53 wolfsuit Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.13.2.4 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -141,8 +141,8 @@ EXTERN void		TkGetButtPoints _ANSI_ARGS_((double p1[],
 EXTERN TkCursor *	TkGetCursorByName _ANSI_ARGS_((Tcl_Interp * interp, 
 				Tk_Window tkwin, Tk_Uid string));
 /* 33 */
-EXTERN char *		TkGetDefaultScreenName _ANSI_ARGS_((
-				Tcl_Interp * interp, char * screenName));
+EXTERN CONST char *	TkGetDefaultScreenName _ANSI_ARGS_((
+				Tcl_Interp * interp, CONST char * screenName));
 /* 34 */
 EXTERN TkDisplay *	TkGetDisplay _ANSI_ARGS_((Display * display));
 /* 35 */
@@ -214,8 +214,8 @@ EXTERN void		TkpCloseDisplay _ANSI_ARGS_((TkDisplay * dispPtr));
 EXTERN void		TkpClaimFocus _ANSI_ARGS_((TkWindow * topLevelPtr, 
 				int force));
 /* 58 */
-EXTERN void		TkpDisplayWarning _ANSI_ARGS_((char * msg, 
-				char * title));
+EXTERN void		TkpDisplayWarning _ANSI_ARGS_((CONST char * msg, 
+				CONST char * title));
 /* 59 */
 EXTERN void		TkpGetAppName _ANSI_ARGS_((Tcl_Interp * interp, 
 				Tcl_DString * name));
@@ -241,7 +241,8 @@ EXTERN Window		TkpMakeWindow _ANSI_ARGS_((TkWindow * winPtr,
 EXTERN void		TkpMenuNotifyToplevelCreate _ANSI_ARGS_((
 				Tcl_Interp * interp1, char * menuName));
 /* 68 */
-EXTERN TkDisplay *	TkpOpenDisplay _ANSI_ARGS_((char * display_name));
+EXTERN TkDisplay *	TkpOpenDisplay _ANSI_ARGS_((
+				CONST char * display_name));
 /* 69 */
 EXTERN int		TkPointerEvent _ANSI_ARGS_((XEvent * eventPtr, 
 				TkWindow * winPtr));
@@ -469,16 +470,7 @@ EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle* rect,
 EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle* rect, 
 				TkRegion src, TkRegion dr_return));
 #endif /* MAC_OSX_TK */
-#ifdef MAC_TCL
-/* 120 */
-EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
-				TkWindow * winPtr, int active));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 120 */
-EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
-				TkWindow * winPtr, int active));
-#endif /* MAC_OSX_TCL */
+/* Slot 120 is reserved */
 #ifdef MAC_TCL
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display * display, 
@@ -497,14 +489,7 @@ EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
 /* 122 */
 EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
 #endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-/* 123 */
-EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 123 */
-EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
-#endif /* MAC_OSX_TCL */
+/* Slot 123 is reserved */
 #ifdef MAC_TCL
 /* 124 */
 EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display * display, 
@@ -515,80 +500,16 @@ EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display * display,
 EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display * display, 
 				CONST char * name, int * width, int * height));
 #endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-/* 125 */
-EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow * winPtr));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 125 */
-EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow * winPtr));
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-/* 126 */
-EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow * winPtr));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 126 */
-EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow * winPtr));
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-/* 127 */
-EXTERN void		TkpSetCursor _ANSI_ARGS_((TkpCursor cursor));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 127 */
-EXTERN void		TkpSetCursor _ANSI_ARGS_((TkpCursor cursor));
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-/* 128 */
-EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
-				int state));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 128 */
-EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
-				int state));
-#endif /* MAC_OSX_TCL */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
 /* Slot 129 is reserved */
-#ifdef MAC_TCL
-/* 130 */
-EXTERN Window		TkGetTransientMaster _ANSI_ARGS_((TkWindow * winPtr));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 130 */
-EXTERN Window		TkGetTransientMaster _ANSI_ARGS_((TkWindow * winPtr));
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-/* 131 */
-EXTERN int		TkGenerateButtonEvent _ANSI_ARGS_((int x, int y, 
-				Window window, unsigned int state));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 131 */
-EXTERN int		TkGenerateButtonEvent _ANSI_ARGS_((int x, int y, 
-				Window window, unsigned int state));
-#endif /* MAC_OSX_TCL */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
 /* Slot 132 is reserved */
-#ifdef MAC_TCL
-/* 133 */
-EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 133 */
-EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-/* 134 */
-EXTERN void		TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin, 
-				int x, int y, int width, int height, 
-				int flags));
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-/* 134 */
-EXTERN void		TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin, 
-				int x, int y, int width, int height, 
-				int flags));
-#endif /* MAC_OSX_TCL */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
 /* 135 */
 EXTERN void		TkpDrawHighlightBorder _ANSI_ARGS_((Tk_Window tkwin, 
 				GC fgGC, GC bgGC, int highlightWidth, 
@@ -607,6 +528,9 @@ EXTERN void		TkpInitKeymapInfo _ANSI_ARGS_((TkDisplay * dispPtr));
 /* 140 */
 EXTERN TkRegion		TkPhotoGetValidRegion _ANSI_ARGS_((
 				Tk_PhotoHandle handle));
+/* 141 */
+EXTERN TkWindow **	TkWmStackorderToplevel _ANSI_ARGS_((
+				TkWindow * parentPtr));
 
 typedef struct TkIntStubs {
     int magic;
@@ -645,7 +569,7 @@ typedef struct TkIntStubs {
     char * (*tkGetBitmapData) _ANSI_ARGS_((Tcl_Interp * interp, char * string, char * fileName, int * widthPtr, int * heightPtr, int * hotXPtr, int * hotYPtr)); /* 30 */
     void (*tkGetButtPoints) _ANSI_ARGS_((double p1[], double p2[], double width, int project, double m1[], double m2[])); /* 31 */
     TkCursor * (*tkGetCursorByName) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid string)); /* 32 */
-    char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp * interp, char * screenName)); /* 33 */
+    CONST char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * screenName)); /* 33 */
     TkDisplay * (*tkGetDisplay) _ANSI_ARGS_((Display * display)); /* 34 */
     int (*tkGetDisplayOf) _ANSI_ARGS_((Tcl_Interp * interp, int objc, Tcl_Obj *CONST objv[], Tk_Window * tkwinPtr)); /* 35 */
     TkWindow * (*tkGetFocusWin) _ANSI_ARGS_((TkWindow * winPtr)); /* 36 */
@@ -670,7 +594,7 @@ typedef struct TkIntStubs {
     int (*tkpChangeFocus) _ANSI_ARGS_((TkWindow * winPtr, int force)); /* 55 */
     void (*tkpCloseDisplay) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 56 */
     void (*tkpClaimFocus) _ANSI_ARGS_((TkWindow * topLevelPtr, int force)); /* 57 */
-    void (*tkpDisplayWarning) _ANSI_ARGS_((char * msg, char * title)); /* 58 */
+    void (*tkpDisplayWarning) _ANSI_ARGS_((CONST char * msg, CONST char * title)); /* 58 */
     void (*tkpGetAppName) _ANSI_ARGS_((Tcl_Interp * interp, Tcl_DString * name)); /* 59 */
     TkWindow * (*tkpGetOtherWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 60 */
     TkWindow * (*tkpGetWrapperWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 61 */
@@ -680,7 +604,7 @@ typedef struct TkIntStubs {
     void (*tkpMakeMenuWindow) _ANSI_ARGS_((Tk_Window tkwin, int transient)); /* 65 */
     Window (*tkpMakeWindow) _ANSI_ARGS_((TkWindow * winPtr, Window parent)); /* 66 */
     void (*tkpMenuNotifyToplevelCreate) _ANSI_ARGS_((Tcl_Interp * interp1, char * menuName)); /* 67 */
-    TkDisplay * (*tkpOpenDisplay) _ANSI_ARGS_((char * display_name)); /* 68 */
+    TkDisplay * (*tkpOpenDisplay) _ANSI_ARGS_((CONST char * display_name)); /* 68 */
     int (*tkPointerEvent) _ANSI_ARGS_((XEvent * eventPtr, TkWindow * winPtr)); /* 69 */
     int (*tkPolygonToArea) _ANSI_ARGS_((double * polyPtr, int numPoints, double * rectPtr)); /* 70 */
     double (*tkPolygonToPoint) _ANSI_ARGS_((double * polyPtr, int numPoints, double * pointPtr)); /* 71 */
@@ -809,18 +733,7 @@ typedef struct TkIntStubs {
 #ifdef MAC_OSX_TK
     void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle* rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* MAC_OSX_TK */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved120;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved120;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 120 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 120 */
-#endif /* MAC_OSX_TCL */
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved121;
 #endif /* UNIX */
@@ -845,18 +758,7 @@ typedef struct TkIntStubs {
 #ifdef MAC_OSX_TCL
     void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 122 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved123;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved123;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 123 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 123 */
-#endif /* MAC_OSX_TCL */
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved124;
 #endif /* UNIX */
@@ -869,110 +771,23 @@ typedef struct TkIntStubs {
 #ifdef MAC_OSX_TCL
     Pixmap (*tkpGetNativeAppBitmap) _ANSI_ARGS_((Display * display, CONST char * name, int * width, int * height)); /* 124 */
 #endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved125;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved125;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 125 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 125 */
-#endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved126;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved126;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow * winPtr)); /* 126 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow * winPtr)); /* 126 */
-#endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved127;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved127;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkpSetCursor) _ANSI_ARGS_((TkpCursor cursor)); /* 127 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void (*tkpSetCursor) _ANSI_ARGS_((TkpCursor cursor)); /* 127 */
-#endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved128;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved128;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 128 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 128 */
-#endif /* MAC_OSX_TCL */
     void *reserved129;
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved130;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved130;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    Window (*tkGetTransientMaster) _ANSI_ARGS_((TkWindow * winPtr)); /* 130 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    Window (*tkGetTransientMaster) _ANSI_ARGS_((TkWindow * winPtr)); /* 130 */
-#endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved131;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved131;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    int (*tkGenerateButtonEvent) _ANSI_ARGS_((int x, int y, Window window, unsigned int state)); /* 131 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    int (*tkGenerateButtonEvent) _ANSI_ARGS_((int x, int y, Window window, unsigned int state)); /* 131 */
-#endif /* MAC_OSX_TCL */
     void *reserved132;
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved133;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved133;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 133 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 133 */
-#endif /* MAC_OSX_TCL */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))/* UNIX */
     void *reserved134;
-#endif /* UNIX */
-#ifdef __WIN32__
-    void *reserved134;
-#endif /* __WIN32__ */
-#ifdef MAC_TCL
-    void (*tkGenWMConfigureEvent) _ANSI_ARGS_((Tk_Window tkwin, int x, int y, int width, int height, int flags)); /* 134 */
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-    void (*tkGenWMConfigureEvent) _ANSI_ARGS_((Tk_Window tkwin, int x, int y, int width, int height, int flags)); /* 134 */
-#endif /* MAC_OSX_TCL */
     void (*tkpDrawHighlightBorder) _ANSI_ARGS_((Tk_Window tkwin, GC fgGC, GC bgGC, int highlightWidth, Drawable drawable)); /* 135 */
     void (*tkSetFocusWin) _ANSI_ARGS_((TkWindow * winPtr, int force)); /* 136 */
     void (*tkpSetKeycodeAndState) _ANSI_ARGS_((Tk_Window tkwin, KeySym keySym, XEvent * eventPtr)); /* 137 */
     KeySym (*tkpGetKeySym) _ANSI_ARGS_((TkDisplay * dispPtr, XEvent * eventPtr)); /* 138 */
     void (*tkpInitKeymapInfo) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 139 */
     TkRegion (*tkPhotoGetValidRegion) _ANSI_ARGS_((Tk_PhotoHandle handle)); /* 140 */
+    TkWindow ** (*tkWmStackorderToplevel) _ANSI_ARGS_((TkWindow * parentPtr)); /* 141 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1564,18 +1379,7 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkUnionRectWithRegion) /* 119 */
 #endif
 #endif /* MAC_OSX_TK */
-#ifdef MAC_TCL
-#ifndef TkGenerateActivateEvents
-#define TkGenerateActivateEvents \
-	(tkIntStubsPtr->tkGenerateActivateEvents) /* 120 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkGenerateActivateEvents
-#define TkGenerateActivateEvents \
-	(tkIntStubsPtr->tkGenerateActivateEvents) /* 120 */
-#endif
-#endif /* MAC_OSX_TCL */
+/* Slot 120 is reserved */
 #ifdef MAC_TCL
 #ifndef TkpCreateNativeBitmap
 #define TkpCreateNativeBitmap \
@@ -1600,18 +1404,7 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpDefineNativeBitmaps) /* 122 */
 #endif
 #endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-#ifndef TkpGetMS
-#define TkpGetMS \
-	(tkIntStubsPtr->tkpGetMS) /* 123 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkpGetMS
-#define TkpGetMS \
-	(tkIntStubsPtr->tkpGetMS) /* 123 */
-#endif
-#endif /* MAC_OSX_TCL */
+/* Slot 123 is reserved */
 #ifdef MAC_TCL
 #ifndef TkpGetNativeAppBitmap
 #define TkpGetNativeAppBitmap \
@@ -1624,104 +1417,16 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpGetNativeAppBitmap) /* 124 */
 #endif
 #endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-#ifndef TkPointerDeadWindow
-#define TkPointerDeadWindow \
-	(tkIntStubsPtr->tkPointerDeadWindow) /* 125 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkPointerDeadWindow
-#define TkPointerDeadWindow \
-	(tkIntStubsPtr->tkPointerDeadWindow) /* 125 */
-#endif
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-#ifndef TkpSetCapture
-#define TkpSetCapture \
-	(tkIntStubsPtr->tkpSetCapture) /* 126 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkpSetCapture
-#define TkpSetCapture \
-	(tkIntStubsPtr->tkpSetCapture) /* 126 */
-#endif
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-#ifndef TkpSetCursor
-#define TkpSetCursor \
-	(tkIntStubsPtr->tkpSetCursor) /* 127 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkpSetCursor
-#define TkpSetCursor \
-	(tkIntStubsPtr->tkpSetCursor) /* 127 */
-#endif
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-#ifndef TkpWmSetState
-#define TkpWmSetState \
-	(tkIntStubsPtr->tkpWmSetState) /* 128 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkpWmSetState
-#define TkpWmSetState \
-	(tkIntStubsPtr->tkpWmSetState) /* 128 */
-#endif
-#endif /* MAC_OSX_TCL */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
 /* Slot 129 is reserved */
-#ifdef MAC_TCL
-#ifndef TkGetTransientMaster
-#define TkGetTransientMaster \
-	(tkIntStubsPtr->tkGetTransientMaster) /* 130 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkGetTransientMaster
-#define TkGetTransientMaster \
-	(tkIntStubsPtr->tkGetTransientMaster) /* 130 */
-#endif
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-#ifndef TkGenerateButtonEvent
-#define TkGenerateButtonEvent \
-	(tkIntStubsPtr->tkGenerateButtonEvent) /* 131 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkGenerateButtonEvent
-#define TkGenerateButtonEvent \
-	(tkIntStubsPtr->tkGenerateButtonEvent) /* 131 */
-#endif
-#endif /* MAC_OSX_TCL */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
 /* Slot 132 is reserved */
-#ifdef MAC_TCL
-#ifndef TkGenWMDestroyEvent
-#define TkGenWMDestroyEvent \
-	(tkIntStubsPtr->tkGenWMDestroyEvent) /* 133 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkGenWMDestroyEvent
-#define TkGenWMDestroyEvent \
-	(tkIntStubsPtr->tkGenWMDestroyEvent) /* 133 */
-#endif
-#endif /* MAC_OSX_TCL */
-#ifdef MAC_TCL
-#ifndef TkGenWMConfigureEvent
-#define TkGenWMConfigureEvent \
-	(tkIntStubsPtr->tkGenWMConfigureEvent) /* 134 */
-#endif
-#endif /* MAC_TCL */
-#ifdef MAC_OSX_TCL
-#ifndef TkGenWMConfigureEvent
-#define TkGenWMConfigureEvent \
-	(tkIntStubsPtr->tkGenWMConfigureEvent) /* 134 */
-#endif
-#endif /* MAC_OSX_TCL */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
 #ifndef TkpDrawHighlightBorder
 #define TkpDrawHighlightBorder \
 	(tkIntStubsPtr->tkpDrawHighlightBorder) /* 135 */
@@ -1745,6 +1450,10 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkPhotoGetValidRegion
 #define TkPhotoGetValidRegion \
 	(tkIntStubsPtr->tkPhotoGetValidRegion) /* 140 */
+#endif
+#ifndef TkWmStackorderToplevel
+#define TkWmStackorderToplevel \
+	(tkIntStubsPtr->tkWmStackorderToplevel) /* 141 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

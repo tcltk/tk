@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.15 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.15.2.1 2002/02/05 02:25:14 wolfsuit Exp $
  */
 
 /*
@@ -743,7 +743,7 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	    int new;
 
 	    if (Tcl_GetIndexFromObj(interp, valuePtr,
-		    (char **) optionPtr->specPtr->clientData,
+		    (CONST char **) optionPtr->specPtr->clientData,
 		    optionPtr->specPtr->optionName+1, 0, &new) != TCL_OK) {
 		return TCL_ERROR;
 	    }

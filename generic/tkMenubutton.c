@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.8 2001/10/12 13:30:31 tmh Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.8.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkMenubutton.h"
@@ -155,7 +155,7 @@ static Tk_OptionSpec optionSpecs[] = {
  * to dispatch the scale widget command.
  */
 
-static char *commandNames[] = {
+static CONST char *commandNames[] = {
     "cget", "configure", (char *) NULL
 };
 
@@ -627,7 +627,7 @@ ConfigureMenuButton(interp, mbPtr, objc, objv)
        * current value.
        */
 
-      char *value;
+      CONST char *value;
 
       value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
       if (value == NULL) {
@@ -872,7 +872,7 @@ MenuButtonTextVarProc(clientData, interp, name1, name2, flags)
     int flags;			/* Information about what happened. */
 {
     register TkMenuButton *mbPtr = (TkMenuButton *) clientData;
-    char *value;
+    CONST char *value;
 
     /*
      * If the variable is unset, then immediately recreate it unless

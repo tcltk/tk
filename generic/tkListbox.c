@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.22 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.22.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -321,7 +321,7 @@ static Tk_OptionSpec itemAttrOptionSpecs[] = {
  * commands) and map the indexes into the string tables into 
  * enumerated types used to dispatch the listbox widget command.
  */
-static char *commandNames[] = {
+static CONST char *commandNames[] = {
     "activate", "bbox", "cget", "configure", "curselection", "delete", "get",
 	"index", "insert", "itemcget", "itemconfigure", "nearest", "scan",
 	"see", "selection", "size", "xview", "yview",
@@ -336,7 +336,7 @@ enum command {
 	COMMAND_SIZE, COMMAND_XVIEW, COMMAND_YVIEW
 };
 
-static char *selCommandNames[] = {
+static CONST char *selCommandNames[] = {
     "anchor", "clear", "includes", "set", (char *) NULL
 };
 
@@ -344,7 +344,7 @@ enum selcommand {
     SELECTION_ANCHOR, SELECTION_CLEAR, SELECTION_INCLUDES, SELECTION_SET
 };
 
-static char *scanCommandNames[] = {
+static CONST char *scanCommandNames[] = {
     "mark", "dragto", (char *) NULL
 };
 
@@ -352,7 +352,7 @@ enum scancommand {
     SCAN_MARK, SCAN_DRAGTO
 };
 
-static char *indexNames[] = {
+static CONST char *indexNames[] = {
     "active", "anchor", "end", (char *)NULL
 };
 
@@ -2673,8 +2673,12 @@ ChangeListboxOffset(listPtr, offset)
     /*
      * Make sure that the new offset is within the allowable range, and
      * round it off to an even multiple of xScrollUnit.
+     *
+     * Add half a scroll unit to do entry/text-like synchronization.
+     * [Bug #225025]
      */
 
+    offset += listPtr->xScrollUnit / 2;
     maxOffset = listPtr->maxWidth - (Tk_Width(listPtr->tkwin) -
 	    2*listPtr->inset - 2*listPtr->selBorderWidth)
 	    + listPtr->xScrollUnit - 1;

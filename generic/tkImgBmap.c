@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.12 2001/07/14 15:53:53 drh Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.12.2.1 2002/02/05 02:25:15 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -498,7 +498,8 @@ TkGetBitmapData(interp, string, fileName, widthPtr, heightPtr,
     int *hotXPtr, *hotYPtr;		/* Position of hot spot or -1,-1. */
 {
     int width, height, numBytes, hotX, hotY;
-    char *p, *end, *expandedFileName;
+    CONST char *expandedFileName;
+    char *p, *end;
     ParseInfo pi;
     char *data = NULL;
     Tcl_DString buffer;
@@ -761,7 +762,7 @@ ImgBmapCmd(clientData, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    static char *bmapOptions[] = {"cget", "configure", (char *) NULL};
+    static CONST char *bmapOptions[] = {"cget", "configure", (char *) NULL};
     BitmapMaster *masterPtr = (BitmapMaster *) clientData;
     int code, index;
 
