@@ -1,5 +1,9 @@
 2002-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/grid.test:
+	* generic/tkGrid.c: The grid size was not updated properly
+	when removing a widget from a grid. [Bug #621241] (forssen)
+
 	* generic/tkCanvas.h: moved TkColormapData struct to tkCanvPs.c
 	* generic/tkCanvPs.c (TkImageGetColor): corrected bogus use of
 	TkColormapData on Windows (Windows now requires RGB pixel data

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.8 2000/04/17 17:44:27 ericm Exp $
+# RCS: @(#) $Id: grid.test,v 1.8.2.1 2002/10/10 22:22:56 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -1240,20 +1240,28 @@ test grid-17.1 {forget and pending idle handlers} {
     destroy .t
     set result ok
 } ok
+grid_reset 17.1
+
+test grid-20.1 {recalculate size after removal (destroy)} {
+    label .l1 -text l1
+    grid .l1 -row 2 -column 2
+    destroy .l1
+    label .l2 -text l2
+    grid .l2
+    grid size .
+} {1 1}
+grid_reset 20.1
+
+test grid-20.2 {recalculate size after removal (forget)} {
+    label .l1 -text l1
+    grid .l1 -row 2 -column 2
+    grid forget .l1
+    label .l2 -text l2
+    grid .l2
+    grid size .
+} {1 1}
+grid_reset 20.2
 
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-

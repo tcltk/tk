@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.9.2.1 2002/01/04 16:39:57 dgp Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.9.2.2 2002/10/10 22:22:56 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1973,18 +1973,15 @@ Unlink(slavePtr)
     register Gridder *slavePtr;		/* Window to unlink. */
 {
     register Gridder *masterPtr, *slavePtr2;
-    GridMaster *gridPtr;	/* pointer to grid data */
 
     masterPtr = slavePtr->masterPtr;
     if (masterPtr == NULL) {
 	return;
     }
 
-    gridPtr = masterPtr->masterDataPtr;
     if (masterPtr->slavePtr == slavePtr) {
 	masterPtr->slavePtr = slavePtr->nextPtr;
-    }
-    else {
+    } else {
 	for (slavePtr2 = masterPtr->slavePtr; ; slavePtr2 = slavePtr2->nextPtr) {
 	    if (slavePtr2 == NULL) {
 		panic("Unlink couldn't find previous window");
@@ -2003,9 +2000,7 @@ Unlink(slavePtr)
 	*masterPtr->abortPtr = 1;
     }
 
-    if ((slavePtr->numCols+slavePtr->column == gridPtr->columnMax)
-	    || (slavePtr->numRows+slavePtr->row == gridPtr->rowMax)) {
-    }
+    SetGridSize(slavePtr->masterPtr);
     slavePtr->masterPtr = NULL;
 }
 
