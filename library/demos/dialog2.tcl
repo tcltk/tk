@@ -2,7 +2,7 @@
 #
 # This demonstration script creates a dialog box with a global grab.
 #
-# RCS: @(#) $Id: dialog2.tcl,v 1.2 1998/09/14 18:23:27 stanton Exp $
+# RCS: @(#) $Id: dialog2.tcl,v 1.3 2001/11/05 10:13:53 dkf Exp $
 
 after idle {
     .dialog2.msg configure -wraplength 4i
@@ -10,7 +10,7 @@ after idle {
 after 100 {
     grab -global .dialog2
 }
-set i [tk_dialog .dialog2 "Dialog with local grab" {This dialog box uses a global grab, so it prevents you from interacting with anything on your display until you invoke one of the buttons below.  Global grabs are almost always a bad idea; don't use them unless you're truly desperate.} warning 0 OK Cancel {Show Code}]
+set i [tk_dialog .dialog2 "Dialog with global grab" {This dialog box uses a global grab, so it prevents you from interacting with anything on your display until you invoke one of the buttons below.  Global grabs are almost always a bad idea; don't use them unless you're truly desperate.} warning 0 OK Cancel {Show Code}]
 
 switch $i {
     0 {puts "You pressed OK"}

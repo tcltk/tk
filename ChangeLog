@@ -1,3 +1,11 @@
+2001-11-05  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/dialog2.tcl: Typo-fix.
+	* library/demos/browse, library/demos/ixset, library/demos/rolodex: 
+	Installation does version number fixup, so we shouldn't.  Thanks
+	to wohnivec@iol.cz for pointing these (thankfully minor) problems
+	out.
+
 2001-10-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/widget: Integrated labelframe item into the labels
