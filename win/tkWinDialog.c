@@ -1,3 +1,4 @@
+
 /*
  * tkWinDialog.c --
  *
@@ -8,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.1.4.3 1998/12/13 08:16:17 lfb Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.1.4.4 1998/12/13 09:54:45 lfb Exp $
  *
  */
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.1.4.5 1998/12/13 08:16:00 lfb Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.1.4.6 1998/12/13 09:54:43 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -728,7 +728,7 @@ TkBindInit(mainPtr)
      */
 
     if (!initialized) {
-        Tcl_MutexLock(bindMutex);
+        Tcl_MutexLock(&bindMutex);
 	if (!initialized) {
 	    Tcl_HashEntry *hPtr;
 	    ModInfo *modPtr;
@@ -762,6 +762,7 @@ TkBindInit(mainPtr)
 	    }
 	    initialized = 1;
 	}
+        Tcl_MutexUnlock(&bindMutex);
     }
 
     mainPtr->bindingTable = Tk_CreateBindingTable(mainPtr->interp);
