@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.7 1999/09/02 17:02:52 hobbs Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.8 1999/12/21 23:55:27 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -249,6 +249,9 @@ proc tkListboxMotion {w el} {
 		$w selection clear $i $el
 		$w selection clear anchor $el
 	    }
+	    if {![info exists tkPriv(listboxSelection)]} {
+		set tkPriv(listboxSelection) [$w curselection]
+	    }
 	    while {($i < $el) && ($i < $anchor)} {
 		if {[lsearch $tkPriv(listboxSelection) $i] >= 0} {
 		    $w selection set $i
@@ -392,7 +395,13 @@ proc tkListboxExtendUpDown {w amount} {
     if {[string compare [$w cget -selectmode] "extended"]} {
 	return
     }
-    $w activate [expr {[$w index active] + $amount}]
+    set active [$w index active]
+    if {![info exists tkPriv(listboxSelection)]} {
+	global tkPriv
+	$w selection set $active
+	set tkPriv(listboxSelection) [$w curselection]
+    }
+    $w activate [expr {$active + $amount}]
     $w see active
     tkListboxMotion $w [$w index active]
 }
