@@ -2,56 +2,76 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# RCS: @(#) $Id: all,v 1.2 1998/09/14 18:23:42 stanton Exp $
+# RCS: @(#) $Id: all,v 1.3 1998/12/04 04:19:12 hershey Exp $
 
-switch $tcl_platform(platform) {
-    "windows" {
-	# Tests that cause tk to crash under windows.
-	set crash {}
+set TESTS_DIR [file join [pwd] [file dirname [info script]]]
+source [file join $TESTS_DIR defs]
+set currentDir [pwd]
 
-	# Tests that fail under windows.
+catch {array set flag $argv}
+set requiredSourceFiles [list arc.tcl bugs.tcl butGeom2.tcl \
+	canvPsBmap.tcl canvPsText.tcl bevel.tcl butGeom.tcl \
+	canvPsArc.tcl canvPsGrph.tcl cmap.tcl filebox.test \
+	option.file1 option.file2 visual defs]
 
-	set fail { grid.test }
+#
+# Set the TMP_DIR to pwd or the arg of -tmpdir, if given.
+# 
 
-	if {! [info exist exclude] } {
-	    set exclude [string tolower "$crash $fail"]
+if {[info exists flag(-tmpdir)]} {
+    set TMP_DIR $flag(-tmpdir)
+    if {![file exists $TMP_DIR]} {
+	if {[catch {file mkdir $TMP_DIR} msg]} {
+	    error "bad argument \"$flag(-tmpdir)\" to -tmpdir:\n$msg"
 	}
+	file mkdir $TMP_DIR
+    } elseif {![file isdir $TMP_DIR]} {
+	error "bad argument \"$flag(-tmpdir)\" to -tmpdir:\n$TMP_DIR is not a directory"
     }
-    "macintosh" {
-	set x [pwd]
-	cd $tk_library
-	set tk_library [pwd]
-	cd $x
-	
-	# Tests that cause tk to crash under mac.
-	set crash {}
+    if {[string compare [file pathtype $TMP_DIR] absolute] != 0} {
+	set TMP_DIR [file join [pwd] $TMP_DIR]
+    }
+    cd $TMP_DIR
+}
 
-	# Tests that fail under mac.
-	set fail {bind.test entry.test send.test textDisp.test}
-	
-	set exclude [string tolower "$crash $fail"]
-    }    
-    "unix" {
-	set exclude ""
+#
+# copy each required source file to the current dir (if it's not already there).
+#
+
+if {[string compare $TESTS_DIR [pwd]] != 0} {
+
+    foreach file $requiredSourceFiles {
+	if {![file exists $file]} {
+	    catch {file copy [file join $TESTS_DIR $file] .}
+	}
     }
 }
 
 if {$tcl_platform(os) == "Win32s"} {
-    set tests [lsort [glob *.tes]]
+    set globPattern [file join $TESTS_DIR *.tes]
 } else {
-    set tests [lsort [glob *.test]]
+    set globPattern [file join $TESTS_DIR *.test]
 }
 
-foreach i $tests {
-    if [string match l.*.test $i] {
-	# This is an SCCS lock file;  ignore it.
+foreach file [lsort [glob $globPattern]] {
+    set tail [file tail $file]
+    if {[string match l.*.test $tail]} {
+	# This is an SCCS lockfile; ignore it
 	continue
     }
-    if [lsearch $exclude [string tolower $i]]>=0 {
-	# Do not source this file; it exercises a known bug at this time.
-	puts stdout "Skipping $i"
-	continue
+    puts stdout $tail
+    if {[catch {source $file} msg]} {
+	puts stdout $msg
     }
-    puts stdout $i
-    source $i
 }
+
+# remove the required source files from the current dir.
+if {[info exists TMP_DIR]} {
+    foreach file $requiredSourceFiles {
+        catch {file delete -force $file}
+    }
+    cd $currentDir
+}
+
+catch {destroy .}
+exit
