@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.27 2002/06/21 23:09:54 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.28 2002/06/22 08:21:51 hobbs Exp $
  */
 
 #include "default.h"
@@ -287,7 +287,8 @@ WrapModePrintProc(clientData, tkwin, widgRec, offset, freeProcPtr)
 static int		ConfigureText _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkText *textPtr, int argc, char **argv, int flags));
 static int		DeleteChars _ANSI_ARGS_((TkText *textPtr,
-			    char *index1String, char *index2String));
+			    char *index1String, char *index2String,
+			    TkTextIndex *indexPtr1, TkTextIndex *indexPtr2));
 static void		DestroyText _ANSI_ARGS_((char *memPtr));
 static void		InsertChars _ANSI_ARGS_((TkText *textPtr,
 			    TkTextIndex *indexPtr, char *string));
@@ -298,6 +299,8 @@ static void		TextEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
 static int		TextFetchSelection _ANSI_ARGS_((ClientData clientData,
 			    int offset, char *buffer, int maxBytes));
+static int		TextIndexSortProc _ANSI_ARGS_((CONST VOID *first,
+			    CONST VOID *second));
 static int		TextSearchCmd _ANSI_ARGS_((TkText *textPtr,
 			    Tcl_Interp *interp, int argc, char **argv));
 static int		TextEditCmd _ANSI_ARGS_((TkText *textPtr,
@@ -590,15 +593,114 @@ TextWidgetCmd(clientData, interp, argc, argv)
 	}
     } else if ((c == 'd') && (strncmp(argv[1], "delete", length) == 0)
 	    && (length >= 3)) {
-	if ((argc != 3) && (argc != 4)) {
+	int i;
+
+	if (argc < 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " delete index1 ?index2?\"", (char *) NULL);
+		    argv[0], " delete index1 ?index2 ...?\"", (char *) NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
 	if (textPtr->state == TK_STATE_NORMAL) {
-	    result = DeleteChars(textPtr, argv[2],
-		    (argc == 4) ? argv[3] : (char *) NULL);
+	    if (argc < 5) {
+		/*
+		 * Simple case requires no predetermination of indices.
+		 */
+		result = DeleteChars(textPtr, argv[2],
+			(argc == 4) ? argv[3] : (char *) NULL, NULL, NULL);
+	    } else {
+		/*
+		 * Multi-index pair case requires that we prevalidate the
+		 * indices and sort from last to first so that deletes
+		 * occur in the exact (unshifted) text.  It also needs to
+		 * handle partial and fully overlapping ranges.  We have to
+		 * do this with multiple passes.
+		 */
+		TkTextIndex *indices, *ixStart, *ixEnd, *lastStart, *lastEnd;
+		char *useIdx;
+
+		argc -= 2;
+		argv += 2;
+		indices = (TkTextIndex *)
+		    ckalloc((argc + 1) * sizeof(TkTextIndex));
+
+		/*
+		 * First pass verifies that all indices are valid.
+		 */
+		for (i = 0; i < argc; i++) {
+		    if (TkTextGetIndex(interp, textPtr, argv[i],
+			    &indices[i]) != TCL_OK) {
+			result = TCL_ERROR;
+			ckfree((char *) indices);
+			goto done;
+		    }
+		}
+		/*
+		 * Pad out the pairs evenly to make later code easier.
+		 */
+		if (argc & 1) {
+		    indices[i] = indices[i-1];
+		    TkTextIndexForwChars(&indices[i], 1, &indices[i]);
+		    argc++;
+		}
+		useIdx = (char *) ckalloc((unsigned) argc);
+		memset(useIdx, 0, (unsigned) argc);
+		/*
+		 * Do a decreasing order sort so that we delete the end
+		 * ranges first to maintain index consistency.
+		 */
+		qsort((VOID *) indices, (unsigned) (argc / 2),
+			2 * sizeof(TkTextIndex), TextIndexSortProc);
+		lastStart = lastEnd = NULL;
+		/*
+		 * Second pass will handle bogus ranges (end < start) and
+		 * overlapping ranges.
+		 */
+		for (i = 0; i < argc; i += 2) {
+		    ixStart = &indices[i];
+		    ixEnd   = &indices[i+1];
+		    if (TkTextIndexCmp(ixEnd, ixStart) <= 0) {
+			continue;
+		    }
+		    if (lastStart) {
+			if (TkTextIndexCmp(ixStart, lastStart) == 0) {
+			    /*
+			     * Start indices were equal, and the sort placed
+			     * the longest range first, so skip this one.
+			     */
+			    continue;
+			} else if (TkTextIndexCmp(lastStart, ixEnd) < 0) {
+			    /*
+			     * The next pair has a start range before the end
+			     * point of the last range.  Constrain the delete
+			     * range, but use the pointer values.
+			     */
+			    *ixEnd = *lastStart;
+			    if (TkTextIndexCmp(ixEnd, ixStart) <= 0) {
+				continue;
+			    }
+			}
+		    }
+		    lastStart = ixStart;
+		    lastEnd   = ixEnd;
+		    useIdx[i]   = 1;
+		}
+		/*
+		 * Final pass take the input from the previous and deletes
+		 * the ranges which are flagged to be deleted.
+		 */
+		for (i = 0; i < argc; i += 2) {
+		    if (useIdx[i]) {
+			/*
+			 * We don't need to check the return value because all
+			 * indices are preparsed above.
+			 */
+			DeleteChars(textPtr, NULL, NULL,
+				&indices[i], &indices[i+1]);
+		    }
+		}
+		ckfree((char *) indices);
+	    }
 	}
     } else if ((c == 'd') && (strncmp(argv[1], "dlineinfo", length) == 0)
 	    && (length >= 2)) {
@@ -624,34 +726,61 @@ TextWidgetCmd(clientData, interp, argc, argv)
     } else if ((c == 'e') && (strncmp(argv[1], "edit", length) == 0)) {
         result = TextEditCmd(textPtr, interp, argc, argv);
     } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
-	if ((argc != 3) && (argc != 4)) {
+	Tcl_Obj *objPtr = NULL;
+	Tcl_DString ds;
+	int i, found = 0;
+
+	if (argc < 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " get index1 ?index2?\"", (char *) NULL);
+		    argv[0], " get index1 ?index2 ...?\"", (char *) NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[2], &index1) != TCL_OK) {
-	    result = TCL_ERROR;
-	    goto done;
+	for (i = 2; i < argc; i += 2) {
+	    if (TkTextGetIndex(interp, textPtr, argv[i], &index1) != TCL_OK) {
+		result = TCL_ERROR;
+		goto done;
+	    }
+	    if (i+1 == argc) {
+		index2 = index1;
+		TkTextIndexForwChars(&index2, 1, &index2);
+	    } else if (TkTextGetIndex(interp, textPtr, argv[i+1], &index2)
+		    != TCL_OK) {
+		if (objPtr) {
+		    Tcl_DecrRefCount(objPtr);
+		}
+		result = TCL_ERROR;
+		goto done;
+	    }
+	    if (TkTextIndexCmp(&index1, &index2) < 0) {
+		/* 
+		 * Place the text in a DString and move it to the result.
+		 * Since this could in principle be a megabyte or more, we
+		 * want to do it efficiently!
+		 */
+		TextGetText(&index1, &index2, &ds);
+		found++;
+		if (found == 1) {
+		    Tcl_DStringResult(interp, &ds);
+		} else {
+		    if (found == 2) {
+			/*
+			 * Move the first item we put into the result into
+			 * the first element of the list object.
+			 */
+			objPtr = Tcl_NewObj();
+			Tcl_ListObjAppendElement(NULL, objPtr,
+				Tcl_GetObjResult(interp));
+		    }
+		    Tcl_ListObjAppendElement(NULL, objPtr,
+			    Tcl_NewStringObj(Tcl_DStringValue(&ds),
+				    Tcl_DStringLength(&ds)));
+		}
+		Tcl_DStringFree(&ds);
+	    }
 	}
-	if (argc == 3) {
-	    index2 = index1;
-	    TkTextIndexForwChars(&index2, 1, &index2);
-	} else if (TkTextGetIndex(interp, textPtr, argv[3], &index2)
-		!= TCL_OK) {
-	    result = TCL_ERROR;
-	    goto done;
-	}
-	if (TkTextIndexCmp(&index1, &index2) < 0) {
-	    /* 
-	     * Place the text in a DString and move it to the result.  Since
-	     * this could in principle be a megabyte or more, we want to do
-	     * it efficiently!
-	     */
-	    Tcl_DString ds;
-	    TextGetText(&index1, &index2, &ds);
-	    Tcl_DStringResult(interp, &ds);
-	    Tcl_DStringFree(&ds);
+	if (found > 1) {
+	    Tcl_SetObjResult(interp, objPtr);
 	}
     } else if ((c == 'i') && (strncmp(argv[1], "index", length) == 0)
 	    && (length >= 3)) {
@@ -749,6 +878,49 @@ TextWidgetCmd(clientData, interp, argc, argv)
     done:
     Tcl_Release((ClientData) textPtr);
     return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TextIndexSortProc --
+ *
+ *	This procedure is called by qsort when sorting an array of
+ *	indices in *decreasing* order (last to first).
+ *
+ * Results:
+ *	The return value is -1 if the first argument should be before
+ *	the second element, 0 if it's equivalent, and 1 if it should be
+ *	after the second element.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TextIndexSortProc(first, second)
+    CONST VOID *first, *second;		/* Elements to be compared. */
+{
+    TkTextIndex *pair1 = (TkTextIndex *) first;
+    TkTextIndex *pair2 = (TkTextIndex *) second;
+    int cmp = TkTextIndexCmp(&pair1[1], &pair2[1]);
+
+    if (cmp == 0) {
+	/*
+	 * If the first indices were equal, we want the second index of the
+	 * pair also to be the greater.  Use pointer magic to access the
+	 * second index pair.
+	 */
+	cmp = TkTextIndexCmp(&pair1[0], &pair2[0]);
+    }
+    if (cmp > 0) {
+	return -1;
+    } else if (cmp < 0) {
+	return 1;
+    }
+    return 0;
 }
 
 /*
@@ -1314,7 +1486,7 @@ InsertChars(textPtr, indexPtr, string)
  */
 
 static int
-DeleteChars(textPtr, index1String, index2String)
+DeleteChars(textPtr, index1String, index2String, indexPtr1, indexPtr2)
     TkText *textPtr;		/* Overall information about text widget. */
     char *index1String;		/* String describing location of first
 				 * character to delete. */
@@ -1322,6 +1494,12 @@ DeleteChars(textPtr, index1String, index2String)
 				 * character to delete.  NULL means just
 				 * delete the one character given by
 				 * index1String. */
+    TkTextIndex *indexPtr1;	/* index describing location of first
+				 * character to delete. */
+    TkTextIndex *indexPtr2;	/* index describing location of last
+				 * character to delete.  NULL means just
+				 * delete the one character given by
+				 * indexPtr1. */
 {
     int line1, line2, line, byteIndex, resetView;
     TkTextIndex index1, index2;
@@ -1331,18 +1509,28 @@ DeleteChars(textPtr, index1String, index2String)
      * Parse the starting and stopping indices.
      */
 
-    if (TkTextGetIndex(textPtr->interp, textPtr, index1String, &index1)
-	    != TCL_OK) {
-	return TCL_ERROR;
-    }
-    if (index2String != NULL) {
-	if (TkTextGetIndex(textPtr->interp, textPtr, index2String, &index2)
+    if (index1String != NULL) {
+	if (TkTextGetIndex(textPtr->interp, textPtr, index1String, &index1)
 		!= TCL_OK) {
 	    return TCL_ERROR;
 	}
+	if (index2String != NULL) {
+	    if (TkTextGetIndex(textPtr->interp, textPtr, index2String, &index2)
+		    != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	} else {
+	    index2 = index1;
+	    TkTextIndexForwChars(&index2, 1, &index2);
+	}
     } else {
-	index2 = index1;
-	TkTextIndexForwChars(&index2, 1, &index2);
+	index1 = *indexPtr1;
+	if (indexPtr2 != NULL) {
+	    index2 = *indexPtr2;
+	} else {
+	    index2 = index1;
+	    TkTextIndexForwChars(&index2, 1, &index2);
+	}
     }
 
     /*
