@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.62 2002/06/18 00:34:45 davygrvy Exp $
+ * RCS: @(#) $Id: tk.h,v 1.63 2002/06/18 23:51:46 dkf Exp $
  */
 
 #ifndef _TK
@@ -116,6 +116,9 @@ typedef struct Tk_PostscriptInfo_ *Tk_PostscriptInfo;
 typedef struct Tk_TextLayout_ *Tk_TextLayout;
 typedef struct Tk_Window_ *Tk_Window;
 typedef struct Tk_3DBorder_ *Tk_3DBorder;
+typedef struct Tk_Style_ *Tk_Style;
+typedef struct Tk_StyleEngine_ *Tk_StyleEngine;
+typedef struct Tk_StyledElement_ *Tk_StyledElement;
 
 /*
  * Additional types exported to clients.
@@ -146,7 +149,8 @@ typedef enum {
     TK_OPTION_PIXELS,
     TK_OPTION_WINDOW,
     TK_OPTION_END,
-    TK_OPTION_CUSTOM
+    TK_OPTION_CUSTOM,
+    TK_OPTION_STYLE
 } Tk_OptionType;
 
 /*
@@ -1385,6 +1389,77 @@ EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
 #define Tk_CreatePhotoImageFormat Tk_CreateOldPhotoImageFormat
 #endif
 
+
+/*
+ *--------------------------------------------------------------
+ *
+ * Procedure prototypes and structures used for managing styles:
+ *
+ *--------------------------------------------------------------
+ */
+
+/*
+ * Style support version tag.
+ */
+#define TK_STYLE_VERSION_1      0x1
+#define TK_STYLE_VERSION        TK_STYLE_VERSION_1
+
+/*
+ * The following structures and prototypes are used as static templates to
+ * declare widget elements.
+ */
+
+typedef void (Tk_GetElementSizeProc) _ANSI_ARGS_((ClientData clientData,
+        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
+        int width, int height, int inner, int *widthPtr, int *heightPtr));
+typedef void (Tk_GetElementBoxProc) _ANSI_ARGS_((ClientData clientData,
+        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
+        int x, int y, int width, int height, int inner, int *xPtr, int *yPtr,
+        int *widthPtr, int *heightPtr));
+typedef int (Tk_GetElementBorderWidthProc) _ANSI_ARGS_((ClientData clientData,
+        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin));
+typedef void (Tk_DrawElementProc) _ANSI_ARGS_((ClientData clientData,
+        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
+        Drawable d, int x, int y, int width, int height, int state));
+
+typedef struct Tk_ElementOptionSpec {
+    char *name;                 /* Name of the required option. */
+    Tk_OptionType type;         /* Accepted option type. TK_OPTION_END means
+                                 * any. */
+} Tk_ElementOptionSpec;
+
+typedef struct Tk_ElementSpec {
+    int version;                /* Version of the style support. */
+    char *name;                 /* Name of element. */
+    Tk_ElementOptionSpec *options;
+                                /* List of required options. Last one's name
+                                 * must be NULL. */
+
+    /*
+     * Hooks
+     */
+
+    Tk_GetElementSizeProc *getSize;
+                                /* Compute the external (resp. internal) size of
+                                 * the element from its desired internal (resp.
+                                 * external) size. */
+    Tk_GetElementBoxProc *getBox;
+                                /* Compute the inscribed or bounding boxes
+                                 * within a given area. */
+    Tk_GetElementBorderWidthProc *getBorderWidth;
+                                /* Return the element's internal border width.
+                                 * Mostly useful for widgets. */
+    Tk_DrawElementProc *draw;   /* Draw the element in the given bounding box.*/
+} Tk_ElementSpec;
+
+/*
+ * Element state flags. Can be OR'ed.
+ */
+
+#define TK_ELEMENT_STATE_ACTIVE         1<<0
+#define TK_ELEMENT_STATE_DISABLED       1<<1
+#define TK_ELEMENT_STATE_FOCUS          1<<2
+#define TK_ELEMENT_STATE_PRESSED        1<<3
 
 /*
  *--------------------------------------------------------------

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.21 2002/06/15 00:21:41 hobbs Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.22 2002/06/18 23:51:46 dkf Exp $
  */
 
 #ifndef _TKDECLS
@@ -860,6 +860,57 @@ EXTERN void		Tk_PhotoPutZoomedBlock _ANSI_ARGS_((
 /* 248 */
 EXTERN int		Tk_CollapseMotionEvents _ANSI_ARGS_((
 				Display * display, int collapse));
+/* 249 */
+EXTERN Tk_StyleEngine	Tk_RegisterStyleEngine _ANSI_ARGS_((char * name, 
+				Tk_StyleEngine parent));
+/* 250 */
+EXTERN Tk_StyleEngine	Tk_GetStyleEngine _ANSI_ARGS_((char * name));
+/* 251 */
+EXTERN int		Tk_RegisterStyledElement _ANSI_ARGS_((
+				Tk_StyleEngine engine, 
+				Tk_ElementSpec * templatePtr));
+/* 252 */
+EXTERN int		Tk_GetElementId _ANSI_ARGS_((char * name));
+/* 253 */
+EXTERN Tk_Style		Tk_CreateStyle _ANSI_ARGS_((CONST char * name, 
+				Tk_StyleEngine engine, ClientData clientData));
+/* 254 */
+EXTERN Tk_Style		Tk_GetStyle _ANSI_ARGS_((Tcl_Interp * interp, 
+				CONST char * name));
+/* 255 */
+EXTERN void		Tk_FreeStyle _ANSI_ARGS_((Tk_Style style));
+/* 256 */
+EXTERN CONST char *	Tk_NameOfStyle _ANSI_ARGS_((Tk_Style style));
+/* 257 */
+EXTERN Tk_Style		Tk_AllocStyleFromObj _ANSI_ARGS_((
+				Tcl_Interp * interp, Tcl_Obj * objPtr));
+/* 258 */
+EXTERN Tk_Style		Tk_GetStyleFromObj _ANSI_ARGS_((Tcl_Obj * objPtr));
+/* 259 */
+EXTERN void		Tk_FreeStyleFromObj _ANSI_ARGS_((Tcl_Obj * objPtr));
+/* 260 */
+EXTERN Tk_StyledElement	 Tk_GetStyledElement _ANSI_ARGS_((Tk_Style style, 
+				int elementId, Tk_OptionTable optionTable));
+/* 261 */
+EXTERN void		Tk_GetElementSize _ANSI_ARGS_((Tk_Style style, 
+				Tk_StyledElement element, char * recordPtr, 
+				Tk_Window tkwin, int width, int height, 
+				int inner, int * widthPtr, int * heightPtr));
+/* 262 */
+EXTERN void		Tk_GetElementBox _ANSI_ARGS_((Tk_Style style, 
+				Tk_StyledElement element, char * recordPtr, 
+				Tk_Window tkwin, int x, int y, int width, 
+				int height, int inner, int * xPtr, 
+				int * yPtr, int * widthPtr, int * heightPtr));
+/* 263 */
+EXTERN int		Tk_GetElementBorderWidth _ANSI_ARGS_((Tk_Style style, 
+				Tk_StyledElement element, char * recordPtr, 
+				Tk_Window tkwin));
+/* 264 */
+EXTERN void		Tk_DrawElement _ANSI_ARGS_((Tk_Style style, 
+				Tk_StyledElement element, char * recordPtr, 
+				Tk_Window tkwin, Drawable d, int x, int y, 
+				int width, int height, int state));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1121,6 +1172,22 @@ typedef struct TkStubs {
     void (*tk_PhotoPutBlock) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule)); /* 246 */
     void (*tk_PhotoPutZoomedBlock) _ANSI_ARGS_((Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)); /* 247 */
     int (*tk_CollapseMotionEvents) _ANSI_ARGS_((Display * display, int collapse)); /* 248 */
+    Tk_StyleEngine (*tk_RegisterStyleEngine) _ANSI_ARGS_((char * name, Tk_StyleEngine parent)); /* 249 */
+    Tk_StyleEngine (*tk_GetStyleEngine) _ANSI_ARGS_((char * name)); /* 250 */
+    int (*tk_RegisterStyledElement) _ANSI_ARGS_((Tk_StyleEngine engine, Tk_ElementSpec * templatePtr)); /* 251 */
+    int (*tk_GetElementId) _ANSI_ARGS_((char * name)); /* 252 */
+    Tk_Style (*tk_CreateStyle) _ANSI_ARGS_((CONST char * name, Tk_StyleEngine engine, ClientData clientData)); /* 253 */
+    Tk_Style (*tk_GetStyle) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * name)); /* 254 */
+    void (*tk_FreeStyle) _ANSI_ARGS_((Tk_Style style)); /* 255 */
+    CONST char * (*tk_NameOfStyle) _ANSI_ARGS_((Tk_Style style)); /* 256 */
+    Tk_Style (*tk_AllocStyleFromObj) _ANSI_ARGS_((Tcl_Interp * interp, Tcl_Obj * objPtr)); /* 257 */
+    Tk_Style (*tk_GetStyleFromObj) _ANSI_ARGS_((Tcl_Obj * objPtr)); /* 258 */
+    void (*tk_FreeStyleFromObj) _ANSI_ARGS_((Tcl_Obj * objPtr)); /* 259 */
+    Tk_StyledElement (*tk_GetStyledElement) _ANSI_ARGS_((Tk_Style style, int elementId, Tk_OptionTable optionTable)); /* 260 */
+    void (*tk_GetElementSize) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, int width, int height, int inner, int * widthPtr, int * heightPtr)); /* 261 */
+    void (*tk_GetElementBox) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int * xPtr, int * yPtr, int * widthPtr, int * heightPtr)); /* 262 */
+    int (*tk_GetElementBorderWidth) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin)); /* 263 */
+    void (*tk_DrawElement) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, Drawable d, int x, int y, int width, int height, int state)); /* 264 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -2126,6 +2193,70 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_CollapseMotionEvents
 #define Tk_CollapseMotionEvents \
 	(tkStubsPtr->tk_CollapseMotionEvents) /* 248 */
+#endif
+#ifndef Tk_RegisterStyleEngine
+#define Tk_RegisterStyleEngine \
+	(tkStubsPtr->tk_RegisterStyleEngine) /* 249 */
+#endif
+#ifndef Tk_GetStyleEngine
+#define Tk_GetStyleEngine \
+	(tkStubsPtr->tk_GetStyleEngine) /* 250 */
+#endif
+#ifndef Tk_RegisterStyledElement
+#define Tk_RegisterStyledElement \
+	(tkStubsPtr->tk_RegisterStyledElement) /* 251 */
+#endif
+#ifndef Tk_GetElementId
+#define Tk_GetElementId \
+	(tkStubsPtr->tk_GetElementId) /* 252 */
+#endif
+#ifndef Tk_CreateStyle
+#define Tk_CreateStyle \
+	(tkStubsPtr->tk_CreateStyle) /* 253 */
+#endif
+#ifndef Tk_GetStyle
+#define Tk_GetStyle \
+	(tkStubsPtr->tk_GetStyle) /* 254 */
+#endif
+#ifndef Tk_FreeStyle
+#define Tk_FreeStyle \
+	(tkStubsPtr->tk_FreeStyle) /* 255 */
+#endif
+#ifndef Tk_NameOfStyle
+#define Tk_NameOfStyle \
+	(tkStubsPtr->tk_NameOfStyle) /* 256 */
+#endif
+#ifndef Tk_AllocStyleFromObj
+#define Tk_AllocStyleFromObj \
+	(tkStubsPtr->tk_AllocStyleFromObj) /* 257 */
+#endif
+#ifndef Tk_GetStyleFromObj
+#define Tk_GetStyleFromObj \
+	(tkStubsPtr->tk_GetStyleFromObj) /* 258 */
+#endif
+#ifndef Tk_FreeStyleFromObj
+#define Tk_FreeStyleFromObj \
+	(tkStubsPtr->tk_FreeStyleFromObj) /* 259 */
+#endif
+#ifndef Tk_GetStyledElement
+#define Tk_GetStyledElement \
+	(tkStubsPtr->tk_GetStyledElement) /* 260 */
+#endif
+#ifndef Tk_GetElementSize
+#define Tk_GetElementSize \
+	(tkStubsPtr->tk_GetElementSize) /* 261 */
+#endif
+#ifndef Tk_GetElementBox
+#define Tk_GetElementBox \
+	(tkStubsPtr->tk_GetElementBox) /* 262 */
+#endif
+#ifndef Tk_GetElementBorderWidth
+#define Tk_GetElementBorderWidth \
+	(tkStubsPtr->tk_GetElementBorderWidth) /* 263 */
+#endif
+#ifndef Tk_DrawElement
+#define Tk_DrawElement \
+	(tkStubsPtr->tk_DrawElement) /* 264 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

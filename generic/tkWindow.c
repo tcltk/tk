@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.48 2002/06/15 21:06:07 mdejong Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.49 2002/06/18 23:51:46 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -864,6 +864,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     TkEventInit();
     TkBindInit(mainPtr);
     TkFontPkgInit(mainPtr);
+    TkStylePkgInit(mainPtr);
     mainPtr->tlFocusPtr = NULL;
     mainPtr->displayFocusPtr = NULL;
     mainPtr->optionRootPtr = NULL;
@@ -1446,6 +1447,7 @@ Tk_DestroyWindow(tkwin)
 	    TkDeleteAllImages(winPtr->mainPtr);
 	    TkFontPkgFree(winPtr->mainPtr);
 	    TkFocusFree(winPtr->mainPtr);
+	    TkStylePkgFree(winPtr->mainPtr);
 
             /*
              * When embedding Tk into other applications, make sure 
