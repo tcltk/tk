@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.1.2.1 1999/03/06 23:07:51 stanton Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.1.2.2 1999/03/07 00:15:45 redman Exp $
  */
 
 /*
@@ -20,14 +20,24 @@
  * including the rest of the stub functions.
  */
 
+
 #ifndef USE_TK_STUBS
 #define USE_TK_STUBS
 #endif
 #undef USE_TK_STUB_PROCS
 
-#ifndef USE_TCL_STUBS
-#define USE_TCL_STUBS
+#include "tkInt.h"
+#include "tkPort.h"
+
+#ifdef __WIN32__
+#include "tkWinInt.h"
 #endif
+
+#include "tkDecls.h"
+#include "tkIntDecls.h"
+#include "tkPlatDecls.h"
+#include "tkIntPlatDecls.h"
+#include "tkIntXlibDecls.h"
 
 /*
  * Ensure that Tk_InitStubs is built as an exported symbol.  The other stub
@@ -41,6 +51,7 @@ TkStubs *tkStubsPtr;
 TkPlatStubs *tkPlatStubsPtr;
 TkIntStubs *tkIntStubsPtr;
 TkIntPlatStubs *tkIntPlatStubsPtr;
+TkIntXlibStubs *tkIntXlibStubsPtr;
 
 
 /*
@@ -85,6 +96,7 @@ Tk_InitStubs(interp, version, exact)
     tkPlatStubsPtr = tkStubsPtr->hooks->tkPlatStubs;
     tkIntStubsPtr = tkStubsPtr->hooks->tkIntStubs;
     tkIntPlatStubsPtr = tkStubsPtr->hooks->tkIntPlatStubs;
+    tkIntXlibStubsPtr = tkStubsPtr->hooks->tkIntXlibStubs;
     
     return actualVersion;
 }

@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.19.2.1 1999/03/06 00:07:07 redman Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.19.2.2 1999/03/07 00:15:47 redman Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -30,7 +30,6 @@ TOOLS32		= c:\program files\devstudio\vc
 TOOLS32_rc	= c:\program files\devstudio\sharedide
 TCLDIR		= ..\..\tcl8.0.5
 INSTALLDIR	= c:\program files\tcl
-TCLBINDIR       = d:\tcl8.0\bin
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86
@@ -67,7 +66,7 @@ OUTDIR		= $(TMPDIR)
 
 TCLLIB 		= $(TCLNAMEPREFIX)$(VERSION)$(DBGX).lib
 TCLPLUGINLIB 	= $(TCLNAMEPREFIX)$(VERSION)p.lib
-TCLSTUBLIBNAME  = $(TCLSTUBPREFIX)$(VERSION)$(DBGX).lib
+TCLSTUBLIB	= $(TCLSTUBPREFIX)$(VERSION)$(DBGX).lib
 TKDLLNAME	= $(TKNAMEPREFIX)$(VERSION)$(DBGX).dll
 TKDLL 		= $(OUTDIR)\$(TKDLLNAME)
 TKLIB		= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)$(DBGX).lib
@@ -195,18 +194,20 @@ TKOBJS = \
 	$(TMPDIR)\tkTrig.obj \
 	$(TMPDIR)\tkUtil.obj \
 	$(TMPDIR)\tkVisual.obj \
+	$(TMPDIR)\tkStubInit.obj \
 	$(TMPDIR)\tkWindow.obj
 
 TKSTUBOBJS = \
-	$(TMDIR)\tkStubLib.obj \
+	$(TMPDIR)\tkStubLib.obj \
 	$(TMPDIR)\tkStubs.obj \
 	$(TMPDIR)\tkPlatStubs.obj \
 	$(TMPDIR)\tkIntStubs.obj \
 	$(TMPDIR)\tkIntPlatStubs.obj
 
-cc32		= @"$(TOOLS32)\bin\cl.exe"
-link32		= @"$(TOOLS32)\bin\link.exe"
-rc32		= @"$(TOOLS32_rc)\bin\rc.exe"
+cc32		= "$(TOOLS32)\bin\cl.exe"
+link32		= "$(TOOLS32)\bin\link.exe"
+lib32		= "$(TOOLS32)\bin\lib.exe"
+rc32		= "$(TOOLS32_rc)\bin\rc.exe"
 include32	= -I"$(TOOLS32)\include"
 
 WINDIR          = $(ROOT)\win
@@ -218,10 +219,13 @@ RCDIR		= $(WINDIR)\rc
 
 TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
 			-I$(TCLDIR)\generic
-TK_DEFINES	= $(DEBUGDEFINES) -DUSE_TCL_STUBS
+TK_DEFINES	= $(DEBUGDEFINES)
 
 TK_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
-			$(TK_INCLUDES) $(TK_DEFINES) 
+			$(TK_INCLUDES) $(TK_DEFINES)
+
+WISH_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
+			$(TK_INCLUDES) $(TK_DEFINES)
 
 ######################################################################
 # Link flags
@@ -335,7 +339,8 @@ install-binaries:
 #
 
 stubs:
-	$(TCLBINDIR)\tclsh$(VERSION) $(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
+	$(TCLDIR)\win\$(TMPDIRNAME)\tclsh$(VERSION)$(DBGX) \
+		$(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\tk.decls $(GENERICDIR)\tkInt.decls
 
 install-libraries:
@@ -363,7 +368,7 @@ $(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\tk.def
 <<
 
 $(TKSTUBLIB): $(TKSTUBOBJS)
-	$lib32) /out:$@ $(TKSTUBOBJS)
+	$(lib32) /out:$@ $(TKSTUBOBJS)
 
 $(TKPLUGINLIB): $(TKPLUGINDLL)
 
@@ -375,7 +380,7 @@ $(TKPLUGINDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\plugin.def
 			$(TKOBJS)
 <<
 
-$(WISH): $(WISHOBJS) $(TKLIB) $(TMPDIR)\wish.res
+$(WISH): $(WISHOBJS) $(TKSTUBLIB) $(TKLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -stack:2300000 \
 		-out:$@ \
@@ -388,7 +393,7 @@ $(WISHP): $(WISHOBJS) $(TKPLUGINLIB) $(TMPDIR)\wish.res
 		$(guilibsdll) $(TCLLIBDIR)\$(TCLPLUGINLIB) \
 		$(TKPLUGINLIB) $(WISHOBJS) 
 
-$(TKTEST): $(TKTESTOBJS) $(TKLIB) $(TMPDIR)\wish.res
+$(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TMPDIR)\wish.res
 	set LIB=$(TOOLS32)\lib
 	$(link32) $(ldebug) $(guilflags) $(TMPDIR)\wish.res -stack:2300000 \
 		-out:$@ \
@@ -424,7 +429,7 @@ $(TMPDIR)\tkSquare.obj: $(ROOT)\generic\tkSquare.c
 	$(cc32) $(TK_CFLAGS) -Fo$@ $?
 
 $(TMPDIR)\winMain.obj: $(ROOT)\win\winMain.c
-	$(cc32) $(TK_CFLAGS) -Fo$@ $?
+	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
 #
 # Implicit rules

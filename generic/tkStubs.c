@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubs.c,v 1.1.2.1 1999/03/06 00:08:07 redman Exp $
+ * RCS: @(#) $Id: tkStubs.c,v 1.1.2.2 1999/03/07 00:15:45 redman Exp $
  */
 
 #include "tk.h"
@@ -1305,16 +1305,6 @@ Tk_IntersectTextLayout(layout, x, y, width, height)
 
 /* Slot 121 */
 void
-Tk_Main(argc, argv, appInitProc)
-    int argc;
-    char ** argv;
-    Tcl_AppInitProc * appInitProc;
-{
-    (tkStubsPtr->tk_Main)(argc, argv, appInitProc);
-}
-
-/* Slot 122 */
-void
 Tk_MaintainGeometry(slave, master, x, y, width, height)
     Tk_Window slave;
     Tk_Window master;
@@ -1326,7 +1316,7 @@ Tk_MaintainGeometry(slave, master, x, y, width, height)
     (tkStubsPtr->tk_MaintainGeometry)(slave, master, x, y, width, height);
 }
 
-/* Slot 123 */
+/* Slot 122 */
 Tk_Window
 Tk_MainWindow(interp)
     Tcl_Interp * interp;
@@ -1334,7 +1324,7 @@ Tk_MainWindow(interp)
     return (tkStubsPtr->tk_MainWindow)(interp);
 }
 
-/* Slot 124 */
+/* Slot 123 */
 void
 Tk_MakeWindowExist(tkwin)
     Tk_Window tkwin;
@@ -1342,7 +1332,7 @@ Tk_MakeWindowExist(tkwin)
     (tkStubsPtr->tk_MakeWindowExist)(tkwin);
 }
 
-/* Slot 125 */
+/* Slot 124 */
 void
 Tk_ManageGeometry(tkwin, mgrPtr, clientData)
     Tk_Window tkwin;
@@ -1352,7 +1342,7 @@ Tk_ManageGeometry(tkwin, mgrPtr, clientData)
     (tkStubsPtr->tk_ManageGeometry)(tkwin, mgrPtr, clientData);
 }
 
-/* Slot 126 */
+/* Slot 125 */
 void
 Tk_MapWindow(tkwin)
     Tk_Window tkwin;
@@ -1360,7 +1350,7 @@ Tk_MapWindow(tkwin)
     (tkStubsPtr->tk_MapWindow)(tkwin);
 }
 
-/* Slot 127 */
+/* Slot 126 */
 int
 Tk_MeasureChars(tkfont, source, maxChars, maxPixels, flags, lengthPtr)
     Tk_Font tkfont;
@@ -1373,7 +1363,7 @@ Tk_MeasureChars(tkfont, source, maxChars, maxPixels, flags, lengthPtr)
     return (tkStubsPtr->tk_MeasureChars)(tkfont, source, maxChars, maxPixels, flags, lengthPtr);
 }
 
-/* Slot 128 */
+/* Slot 127 */
 void
 Tk_MoveResizeWindow(tkwin, x, y, width, height)
     Tk_Window tkwin;
@@ -1385,7 +1375,7 @@ Tk_MoveResizeWindow(tkwin, x, y, width, height)
     (tkStubsPtr->tk_MoveResizeWindow)(tkwin, x, y, width, height);
 }
 
-/* Slot 129 */
+/* Slot 128 */
 void
 Tk_MoveWindow(tkwin, x, y)
     Tk_Window tkwin;
@@ -1395,7 +1385,7 @@ Tk_MoveWindow(tkwin, x, y)
     (tkStubsPtr->tk_MoveWindow)(tkwin, x, y);
 }
 
-/* Slot 130 */
+/* Slot 129 */
 void
 Tk_MoveToplevelWindow(tkwin, x, y)
     Tk_Window tkwin;
@@ -1405,7 +1395,7 @@ Tk_MoveToplevelWindow(tkwin, x, y)
     (tkStubsPtr->tk_MoveToplevelWindow)(tkwin, x, y);
 }
 
-/* Slot 131 */
+/* Slot 130 */
 char *
 Tk_NameOf3DBorder(border)
     Tk_3DBorder border;
@@ -1413,7 +1403,7 @@ Tk_NameOf3DBorder(border)
     return (tkStubsPtr->tk_NameOf3DBorder)(border);
 }
 
-/* Slot 132 */
+/* Slot 131 */
 char *
 Tk_NameOfAnchor(anchor)
     Tk_Anchor anchor;
@@ -1421,7 +1411,7 @@ Tk_NameOfAnchor(anchor)
     return (tkStubsPtr->tk_NameOfAnchor)(anchor);
 }
 
-/* Slot 133 */
+/* Slot 132 */
 char *
 Tk_NameOfBitmap(display, bitmap)
     Display * display;
@@ -1430,7 +1420,7 @@ Tk_NameOfBitmap(display, bitmap)
     return (tkStubsPtr->tk_NameOfBitmap)(display, bitmap);
 }
 
-/* Slot 134 */
+/* Slot 133 */
 char *
 Tk_NameOfCapStyle(cap)
     int cap;
@@ -1438,7 +1428,7 @@ Tk_NameOfCapStyle(cap)
     return (tkStubsPtr->tk_NameOfCapStyle)(cap);
 }
 
-/* Slot 135 */
+/* Slot 134 */
 char *
 Tk_NameOfColor(colorPtr)
     XColor * colorPtr;
@@ -1446,7 +1436,7 @@ Tk_NameOfColor(colorPtr)
     return (tkStubsPtr->tk_NameOfColor)(colorPtr);
 }
 
-/* Slot 136 */
+/* Slot 135 */
 char *
 Tk_NameOfCursor(display, cursor)
     Display * display;
@@ -1455,7 +1445,7 @@ Tk_NameOfCursor(display, cursor)
     return (tkStubsPtr->tk_NameOfCursor)(display, cursor);
 }
 
-/* Slot 137 */
+/* Slot 136 */
 char *
 Tk_NameOfFont(font)
     Tk_Font font;
@@ -1463,7 +1453,7 @@ Tk_NameOfFont(font)
     return (tkStubsPtr->tk_NameOfFont)(font);
 }
 
-/* Slot 138 */
+/* Slot 137 */
 char *
 Tk_NameOfImage(imageMaster)
     Tk_ImageMaster imageMaster;
@@ -1471,7 +1461,7 @@ Tk_NameOfImage(imageMaster)
     return (tkStubsPtr->tk_NameOfImage)(imageMaster);
 }
 
-/* Slot 139 */
+/* Slot 138 */
 char *
 Tk_NameOfJoinStyle(join)
     int join;
@@ -1479,7 +1469,7 @@ Tk_NameOfJoinStyle(join)
     return (tkStubsPtr->tk_NameOfJoinStyle)(join);
 }
 
-/* Slot 140 */
+/* Slot 139 */
 char *
 Tk_NameOfJustify(justify)
     Tk_Justify justify;
@@ -1487,7 +1477,7 @@ Tk_NameOfJustify(justify)
     return (tkStubsPtr->tk_NameOfJustify)(justify);
 }
 
-/* Slot 141 */
+/* Slot 140 */
 char *
 Tk_NameOfRelief(relief)
     int relief;
@@ -1495,7 +1485,7 @@ Tk_NameOfRelief(relief)
     return (tkStubsPtr->tk_NameOfRelief)(relief);
 }
 
-/* Slot 142 */
+/* Slot 141 */
 Tk_Window
 Tk_NameToWindow(interp, pathName, tkwin)
     Tcl_Interp * interp;
@@ -1505,7 +1495,7 @@ Tk_NameToWindow(interp, pathName, tkwin)
     return (tkStubsPtr->tk_NameToWindow)(interp, pathName, tkwin);
 }
 
-/* Slot 143 */
+/* Slot 142 */
 void
 Tk_OwnSelection(tkwin, selection, proc, clientData)
     Tk_Window tkwin;
@@ -1516,7 +1506,7 @@ Tk_OwnSelection(tkwin, selection, proc, clientData)
     (tkStubsPtr->tk_OwnSelection)(tkwin, selection, proc, clientData);
 }
 
-/* Slot 144 */
+/* Slot 143 */
 int
 Tk_ParseArgv(interp, tkwin, argcPtr, argv, argTable, flags)
     Tcl_Interp * interp;
@@ -1529,7 +1519,7 @@ Tk_ParseArgv(interp, tkwin, argcPtr, argv, argTable, flags)
     return (tkStubsPtr->tk_ParseArgv)(interp, tkwin, argcPtr, argv, argTable, flags);
 }
 
-/* Slot 145 */
+/* Slot 144 */
 void
 Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
     Tk_PhotoHandle handle;
@@ -1542,7 +1532,7 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height)
     (tkStubsPtr->tk_PhotoPutBlock)(handle, blockPtr, x, y, width, height);
 }
 
-/* Slot 146 */
+/* Slot 145 */
 void
 Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY, subsampleX, subsampleY)
     Tk_PhotoHandle handle;
@@ -1559,7 +1549,7 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY, subs
     (tkStubsPtr->tk_PhotoPutZoomedBlock)(handle, blockPtr, x, y, width, height, zoomX, zoomY, subsampleX, subsampleY);
 }
 
-/* Slot 147 */
+/* Slot 146 */
 int
 Tk_PhotoGetImage(handle, blockPtr)
     Tk_PhotoHandle handle;
@@ -1568,7 +1558,7 @@ Tk_PhotoGetImage(handle, blockPtr)
     return (tkStubsPtr->tk_PhotoGetImage)(handle, blockPtr);
 }
 
-/* Slot 148 */
+/* Slot 147 */
 void
 Tk_PhotoBlank(handle)
     Tk_PhotoHandle handle;
@@ -1576,7 +1566,7 @@ Tk_PhotoBlank(handle)
     (tkStubsPtr->tk_PhotoBlank)(handle);
 }
 
-/* Slot 149 */
+/* Slot 148 */
 void
 Tk_PhotoExpand(handle, width, height)
     Tk_PhotoHandle handle;
@@ -1586,7 +1576,7 @@ Tk_PhotoExpand(handle, width, height)
     (tkStubsPtr->tk_PhotoExpand)(handle, width, height);
 }
 
-/* Slot 150 */
+/* Slot 149 */
 void
 Tk_PhotoGetSize(handle, widthPtr, heightPtr)
     Tk_PhotoHandle handle;
@@ -1596,7 +1586,7 @@ Tk_PhotoGetSize(handle, widthPtr, heightPtr)
     (tkStubsPtr->tk_PhotoGetSize)(handle, widthPtr, heightPtr);
 }
 
-/* Slot 151 */
+/* Slot 150 */
 void
 Tk_PhotoSetSize(handle, width, height)
     Tk_PhotoHandle handle;
@@ -1606,7 +1596,7 @@ Tk_PhotoSetSize(handle, width, height)
     (tkStubsPtr->tk_PhotoSetSize)(handle, width, height);
 }
 
-/* Slot 152 */
+/* Slot 151 */
 int
 Tk_PointToChar(layout, x, y)
     Tk_TextLayout layout;
@@ -1616,7 +1606,7 @@ Tk_PointToChar(layout, x, y)
     return (tkStubsPtr->tk_PointToChar)(layout, x, y);
 }
 
-/* Slot 153 */
+/* Slot 152 */
 int
 Tk_PostscriptFontName(tkfont, dsPtr)
     Tk_Font tkfont;
@@ -1625,7 +1615,7 @@ Tk_PostscriptFontName(tkfont, dsPtr)
     return (tkStubsPtr->tk_PostscriptFontName)(tkfont, dsPtr);
 }
 
-/* Slot 154 */
+/* Slot 153 */
 void
 Tk_PreserveColormap(display, colormap)
     Display * display;
@@ -1634,7 +1624,7 @@ Tk_PreserveColormap(display, colormap)
     (tkStubsPtr->tk_PreserveColormap)(display, colormap);
 }
 
-/* Slot 155 */
+/* Slot 154 */
 void
 Tk_QueueWindowEvent(eventPtr, position)
     XEvent * eventPtr;
@@ -1643,7 +1633,7 @@ Tk_QueueWindowEvent(eventPtr, position)
     (tkStubsPtr->tk_QueueWindowEvent)(eventPtr, position);
 }
 
-/* Slot 156 */
+/* Slot 155 */
 void
 Tk_RedrawImage(image, imageX, imageY, width, height, drawable, drawableX, drawableY)
     Tk_Image image;
@@ -1658,7 +1648,7 @@ Tk_RedrawImage(image, imageX, imageY, width, height, drawable, drawableX, drawab
     (tkStubsPtr->tk_RedrawImage)(image, imageX, imageY, width, height, drawable, drawableX, drawableY);
 }
 
-/* Slot 157 */
+/* Slot 156 */
 void
 Tk_ResizeWindow(tkwin, width, height)
     Tk_Window tkwin;
@@ -1668,7 +1658,7 @@ Tk_ResizeWindow(tkwin, width, height)
     (tkStubsPtr->tk_ResizeWindow)(tkwin, width, height);
 }
 
-/* Slot 158 */
+/* Slot 157 */
 int
 Tk_RestackWindow(tkwin, aboveBelow, other)
     Tk_Window tkwin;
@@ -1678,7 +1668,7 @@ Tk_RestackWindow(tkwin, aboveBelow, other)
     return (tkStubsPtr->tk_RestackWindow)(tkwin, aboveBelow, other);
 }
 
-/* Slot 159 */
+/* Slot 158 */
 Tk_RestrictProc *
 Tk_RestrictEvents(proc, arg, prevArgPtr)
     Tk_RestrictProc * proc;
@@ -1688,7 +1678,7 @@ Tk_RestrictEvents(proc, arg, prevArgPtr)
     return (tkStubsPtr->tk_RestrictEvents)(proc, arg, prevArgPtr);
 }
 
-/* Slot 160 */
+/* Slot 159 */
 int
 Tk_SafeInit(interp)
     Tcl_Interp * interp;
@@ -1696,7 +1686,7 @@ Tk_SafeInit(interp)
     return (tkStubsPtr->tk_SafeInit)(interp);
 }
 
-/* Slot 161 */
+/* Slot 160 */
 char *
 Tk_SetAppName(tkwin, name)
     Tk_Window tkwin;
@@ -1705,7 +1695,7 @@ Tk_SetAppName(tkwin, name)
     return (tkStubsPtr->tk_SetAppName)(tkwin, name);
 }
 
-/* Slot 162 */
+/* Slot 161 */
 void
 Tk_SetBackgroundFromBorder(tkwin, border)
     Tk_Window tkwin;
@@ -1714,7 +1704,7 @@ Tk_SetBackgroundFromBorder(tkwin, border)
     (tkStubsPtr->tk_SetBackgroundFromBorder)(tkwin, border);
 }
 
-/* Slot 163 */
+/* Slot 162 */
 void
 Tk_SetClass(tkwin, className)
     Tk_Window tkwin;
@@ -1723,7 +1713,7 @@ Tk_SetClass(tkwin, className)
     (tkStubsPtr->tk_SetClass)(tkwin, className);
 }
 
-/* Slot 164 */
+/* Slot 163 */
 void
 Tk_SetGrid(tkwin, reqWidth, reqHeight, gridWidth, gridHeight)
     Tk_Window tkwin;
@@ -1735,7 +1725,7 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, gridWidth, gridHeight)
     (tkStubsPtr->tk_SetGrid)(tkwin, reqWidth, reqHeight, gridWidth, gridHeight);
 }
 
-/* Slot 165 */
+/* Slot 164 */
 void
 Tk_SetInternalBorder(tkwin, width)
     Tk_Window tkwin;
@@ -1744,7 +1734,7 @@ Tk_SetInternalBorder(tkwin, width)
     (tkStubsPtr->tk_SetInternalBorder)(tkwin, width);
 }
 
-/* Slot 166 */
+/* Slot 165 */
 void
 Tk_SetWindowBackground(tkwin, pixel)
     Tk_Window tkwin;
@@ -1753,7 +1743,7 @@ Tk_SetWindowBackground(tkwin, pixel)
     (tkStubsPtr->tk_SetWindowBackground)(tkwin, pixel);
 }
 
-/* Slot 167 */
+/* Slot 166 */
 void
 Tk_SetWindowBackgroundPixmap(tkwin, pixmap)
     Tk_Window tkwin;
@@ -1762,7 +1752,7 @@ Tk_SetWindowBackgroundPixmap(tkwin, pixmap)
     (tkStubsPtr->tk_SetWindowBackgroundPixmap)(tkwin, pixmap);
 }
 
-/* Slot 168 */
+/* Slot 167 */
 void
 Tk_SetWindowBorder(tkwin, pixel)
     Tk_Window tkwin;
@@ -1771,7 +1761,7 @@ Tk_SetWindowBorder(tkwin, pixel)
     (tkStubsPtr->tk_SetWindowBorder)(tkwin, pixel);
 }
 
-/* Slot 169 */
+/* Slot 168 */
 void
 Tk_SetWindowBorderWidth(tkwin, width)
     Tk_Window tkwin;
@@ -1780,7 +1770,7 @@ Tk_SetWindowBorderWidth(tkwin, width)
     (tkStubsPtr->tk_SetWindowBorderWidth)(tkwin, width);
 }
 
-/* Slot 170 */
+/* Slot 169 */
 void
 Tk_SetWindowBorderPixmap(tkwin, pixmap)
     Tk_Window tkwin;
@@ -1789,7 +1779,7 @@ Tk_SetWindowBorderPixmap(tkwin, pixmap)
     (tkStubsPtr->tk_SetWindowBorderPixmap)(tkwin, pixmap);
 }
 
-/* Slot 171 */
+/* Slot 170 */
 void
 Tk_SetWindowColormap(tkwin, colormap)
     Tk_Window tkwin;
@@ -1798,7 +1788,7 @@ Tk_SetWindowColormap(tkwin, colormap)
     (tkStubsPtr->tk_SetWindowColormap)(tkwin, colormap);
 }
 
-/* Slot 172 */
+/* Slot 171 */
 int
 Tk_SetWindowVisual(tkwin, visual, depth, colormap)
     Tk_Window tkwin;
@@ -1809,7 +1799,7 @@ Tk_SetWindowVisual(tkwin, visual, depth, colormap)
     return (tkStubsPtr->tk_SetWindowVisual)(tkwin, visual, depth, colormap);
 }
 
-/* Slot 173 */
+/* Slot 172 */
 void
 Tk_SizeOfBitmap(display, bitmap, widthPtr, heightPtr)
     Display * display;
@@ -1820,7 +1810,7 @@ Tk_SizeOfBitmap(display, bitmap, widthPtr, heightPtr)
     (tkStubsPtr->tk_SizeOfBitmap)(display, bitmap, widthPtr, heightPtr);
 }
 
-/* Slot 174 */
+/* Slot 173 */
 void
 Tk_SizeOfImage(image, widthPtr, heightPtr)
     Tk_Image image;
@@ -1830,7 +1820,7 @@ Tk_SizeOfImage(image, widthPtr, heightPtr)
     (tkStubsPtr->tk_SizeOfImage)(image, widthPtr, heightPtr);
 }
 
-/* Slot 175 */
+/* Slot 174 */
 int
 Tk_StrictMotif(tkwin)
     Tk_Window tkwin;
@@ -1838,7 +1828,7 @@ Tk_StrictMotif(tkwin)
     return (tkStubsPtr->tk_StrictMotif)(tkwin);
 }
 
-/* Slot 176 */
+/* Slot 175 */
 void
 Tk_TextLayoutToPostscript(interp, layout)
     Tcl_Interp * interp;
@@ -1847,7 +1837,7 @@ Tk_TextLayoutToPostscript(interp, layout)
     (tkStubsPtr->tk_TextLayoutToPostscript)(interp, layout);
 }
 
-/* Slot 177 */
+/* Slot 176 */
 int
 Tk_TextWidth(font, string, numChars)
     Tk_Font font;
@@ -1857,7 +1847,7 @@ Tk_TextWidth(font, string, numChars)
     return (tkStubsPtr->tk_TextWidth)(font, string, numChars);
 }
 
-/* Slot 178 */
+/* Slot 177 */
 void
 Tk_UndefineCursor(window)
     Tk_Window window;
@@ -1865,7 +1855,7 @@ Tk_UndefineCursor(window)
     (tkStubsPtr->tk_UndefineCursor)(window);
 }
 
-/* Slot 179 */
+/* Slot 178 */
 void
 Tk_UnderlineChars(display, drawable, gc, tkfont, source, x, y, firstChar, lastChar)
     Display * display;
@@ -1881,7 +1871,7 @@ Tk_UnderlineChars(display, drawable, gc, tkfont, source, x, y, firstChar, lastCh
     (tkStubsPtr->tk_UnderlineChars)(display, drawable, gc, tkfont, source, x, y, firstChar, lastChar);
 }
 
-/* Slot 180 */
+/* Slot 179 */
 void
 Tk_UnderlineTextLayout(display, drawable, gc, layout, x, y, underline)
     Display * display;
@@ -1895,7 +1885,7 @@ Tk_UnderlineTextLayout(display, drawable, gc, layout, x, y, underline)
     (tkStubsPtr->tk_UnderlineTextLayout)(display, drawable, gc, layout, x, y, underline);
 }
 
-/* Slot 181 */
+/* Slot 180 */
 void
 Tk_Ungrab(tkwin)
     Tk_Window tkwin;
@@ -1903,7 +1893,7 @@ Tk_Ungrab(tkwin)
     (tkStubsPtr->tk_Ungrab)(tkwin);
 }
 
-/* Slot 182 */
+/* Slot 181 */
 void
 Tk_UnmaintainGeometry(slave, master)
     Tk_Window slave;
@@ -1912,7 +1902,7 @@ Tk_UnmaintainGeometry(slave, master)
     (tkStubsPtr->tk_UnmaintainGeometry)(slave, master);
 }
 
-/* Slot 183 */
+/* Slot 182 */
 void
 Tk_UnmapWindow(tkwin)
     Tk_Window tkwin;
@@ -1920,7 +1910,7 @@ Tk_UnmapWindow(tkwin)
     (tkStubsPtr->tk_UnmapWindow)(tkwin);
 }
 
-/* Slot 184 */
+/* Slot 183 */
 void
 Tk_UnsetGrid(tkwin)
     Tk_Window tkwin;
@@ -1928,7 +1918,7 @@ Tk_UnsetGrid(tkwin)
     (tkStubsPtr->tk_UnsetGrid)(tkwin);
 }
 
-/* Slot 185 */
+/* Slot 184 */
 void
 Tk_UpdatePointer(tkwin, x, y, state)
     Tk_Window tkwin;

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.4.4.2 1999/03/06 23:07:52 stanton Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.4.4.3 1999/03/07 00:15:46 redman Exp $
  */
 
 #include "tkPort.h"
@@ -2835,7 +2835,7 @@ Initialize(interp)
      * Provide Tk and its stub table.
      */
 
-    code = Tcl_PkgProvide(interp, "Tk", TK_VERSION, (ClientData) tkStubsPtr);
+    code = Tcl_PkgProvideEx(interp, "Tk", TK_VERSION, (ClientData) tkStubsPtr);
     if (code != TCL_OK) {
 	goto done;
     }

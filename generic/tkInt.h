@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.8.4.1 1999/03/06 00:08:03 redman Exp $ 
+ * RCS: $Id: tkInt.h,v 1.8.4.2 1999/03/07 00:15:44 redman Exp $ 
  */
 
 #ifndef _TKINT
@@ -710,6 +710,10 @@ extern int			tkSendSerial;
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
+
+int	TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
+void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
+			    int devId, char *buffer, long size));
 
 /*
  * For backwards compatibility, need the tkIntPlatDecls.h here for

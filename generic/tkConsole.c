@@ -10,10 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.3.4.1 1999/03/06 23:18:05 stanton Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.3.4.2 1999/03/07 00:15:43 redman Exp $
  */
 
 #include "tk.h"
+#include "tkInt.h"
 #include <string.h>
 
 /*
@@ -167,6 +168,7 @@ TkConsoleInit(interp)
 #endif
     
     consoleInterp = Tcl_CreateInterp();
+    
     if (consoleInterp == NULL) {
 	goto error;
     }

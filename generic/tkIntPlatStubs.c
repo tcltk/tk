@@ -7,11 +7,16 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatStubs.c,v 1.1.2.3 1999/03/06 02:23:17 redman Exp $
+ * RCS: @(#) $Id: tkIntPlatStubs.c,v 1.1.2.4 1999/03/07 00:15:44 redman Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
+
+#ifdef __WIN32__
+#include "tkWinInt.h"
+#endif
+
 #include "tkIntPlatDecls.h"
 
 /*
@@ -114,8 +119,7 @@ TkpScanWindowId(interp, string, idPtr)
     return (tkIntPlatStubsPtr->tkpScanWindowId)(interp, string, idPtr);
 }
 
-/* Slot 10 is reserved */
-/* Slot 11 */
+/* Slot 10 */
 void
 TkpSetCapture(winPtr)
     TkWindow * winPtr;
@@ -123,7 +127,7 @@ TkpSetCapture(winPtr)
     (tkIntPlatStubsPtr->tkpSetCapture)(winPtr);
 }
 
-/* Slot 12 */
+/* Slot 11 */
 void
 TkpSetCursor(cursor)
     TkpCursor cursor;
@@ -131,7 +135,7 @@ TkpSetCursor(cursor)
     (tkIntPlatStubsPtr->tkpSetCursor)(cursor);
 }
 
-/* Slot 13 */
+/* Slot 12 */
 void
 TkpWmSetState(winPtr, state)
     TkWindow * winPtr;
@@ -140,7 +144,7 @@ TkpWmSetState(winPtr, state)
     (tkIntPlatStubsPtr->tkpWmSetState)(winPtr, state);
 }
 
-/* Slot 14 */
+/* Slot 13 */
 int
 TkRectInRegion(rgn, x, y, width, height)
     TkRegion rgn;
@@ -152,7 +156,7 @@ TkRectInRegion(rgn, x, y, width, height)
     return (tkIntPlatStubsPtr->tkRectInRegion)(rgn, x, y, width, height);
 }
 
-/* Slot 15 */
+/* Slot 14 */
 void
 TkSetPixmapColormap(pixmap, colormap)
     Pixmap pixmap;
@@ -161,7 +165,7 @@ TkSetPixmapColormap(pixmap, colormap)
     (tkIntPlatStubsPtr->tkSetPixmapColormap)(pixmap, colormap);
 }
 
-/* Slot 16 */
+/* Slot 15 */
 void
 TkSetRegion(display, gc, rgn)
     Display* display;
@@ -171,7 +175,7 @@ TkSetRegion(display, gc, rgn)
     (tkIntPlatStubsPtr->tkSetRegion)(display, gc, rgn);
 }
 
-/* Slot 17 */
+/* Slot 16 */
 void
 TkUnionRectWithRegion(rect, src, dr_return)
     XRectangle* rect;
@@ -181,15 +185,14 @@ TkUnionRectWithRegion(rect, src, dr_return)
     (tkIntPlatStubsPtr->tkUnionRectWithRegion)(rect, src, dr_return);
 }
 
-/* Slot 18 */
+/* Slot 17 */
 void
 TkWinCancelMouseTimer()
 {
     (tkIntPlatStubsPtr->tkWinCancelMouseTimer)();
 }
 
-/* Slot 19 is reserved */
-/* Slot 20 */
+/* Slot 18 */
 void
 TkWinClipboardRender(dispPtr, format)
     TkDisplay * dispPtr;
@@ -198,7 +201,7 @@ TkWinClipboardRender(dispPtr, format)
     (tkIntPlatStubsPtr->tkWinClipboardRender)(dispPtr, format);
 }
 
-/* Slot 21 */
+/* Slot 19 */
 LRESULT
 TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
     HWND hwnd;
@@ -209,7 +212,7 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
     return (tkIntPlatStubsPtr->tkWinEmbeddedEventProc)(hwnd, message, wParam, lParam);
 }
 
-/* Slot 22 */
+/* Slot 20 */
 void
 TkWinFillRect(dc, x, y, width, height, pixel)
     HDC dc;
@@ -222,7 +225,7 @@ TkWinFillRect(dc, x, y, width, height, pixel)
     (tkIntPlatStubsPtr->tkWinFillRect)(dc, x, y, width, height, pixel);
 }
 
-/* Slot 23 */
+/* Slot 21 */
 COLORREF
 TkWinGetBorderPixels(tkwin, border, which)
     Tk_Window tkwin;
@@ -232,7 +235,7 @@ TkWinGetBorderPixels(tkwin, border, which)
     return (tkIntPlatStubsPtr->tkWinGetBorderPixels)(tkwin, border, which);
 }
 
-/* Slot 24 */
+/* Slot 22 */
 HDC
 TkWinGetDrawableDC(display, d, state)
     Display * display;
@@ -242,21 +245,21 @@ TkWinGetDrawableDC(display, d, state)
     return (tkIntPlatStubsPtr->tkWinGetDrawableDC)(display, d, state);
 }
 
-/* Slot 25 */
+/* Slot 23 */
 int
 TkWinGetModifierState()
 {
     return (tkIntPlatStubsPtr->tkWinGetModifierState)();
 }
 
-/* Slot 26 */
+/* Slot 24 */
 HPALETTE
 TkWinGetSystemPalette()
 {
     return (tkIntPlatStubsPtr->tkWinGetSystemPalette)();
 }
 
-/* Slot 27 */
+/* Slot 25 */
 HWND
 TkWinGetWrapperWindow(tkwin)
     Tk_Window tkwin;
@@ -264,7 +267,7 @@ TkWinGetWrapperWindow(tkwin)
     return (tkIntPlatStubsPtr->tkWinGetWrapperWindow)(tkwin);
 }
 
-/* Slot 28 */
+/* Slot 26 */
 int
 TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
     HWND * phwnd;
@@ -276,7 +279,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
     return (tkIntPlatStubsPtr->tkWinHandleMenuEvent)(phwnd, pMessage, pwParam, plParam, plResult);
 }
 
-/* Slot 29 */
+/* Slot 27 */
 int
 TkWinIndexOfColor(colorPtr)
     XColor * colorPtr;
@@ -284,43 +287,7 @@ TkWinIndexOfColor(colorPtr)
     return (tkIntPlatStubsPtr->tkWinIndexOfColor)(colorPtr);
 }
 
-/* Slot 30 */
-void
-TkWinPointerDeadWindow(winPtr)
-    TkWindow * winPtr;
-{
-    (tkIntPlatStubsPtr->tkWinPointerDeadWindow)(winPtr);
-}
-
-/* Slot 31 */
-void
-TkWinPointerEvent(hwnd, x, y)
-    HWND hwnd;
-    int x;
-    int y;
-{
-    (tkIntPlatStubsPtr->tkWinPointerEvent)(hwnd, x, y);
-}
-
-/* Slot 32 */
-void
-TkWinPointerInit()
-{
-    (tkIntPlatStubsPtr->tkWinPointerInit)();
-}
-
-/* Slot 33 */
-LRESULT
-TkWinReflectMessage(hwnd, message, wParam, lParam)
-    HWND hwnd;
-    UINT message;
-    WPARAM wParam;
-    LPARAM lParam;
-{
-    return (tkIntPlatStubsPtr->tkWinReflectMessage)(hwnd, message, wParam, lParam);
-}
-
-/* Slot 34 */
+/* Slot 28 */
 void
 TkWinReleaseDrawableDC(d, hdc, state)
     Drawable d;
@@ -330,7 +297,7 @@ TkWinReleaseDrawableDC(d, hdc, state)
     (tkIntPlatStubsPtr->tkWinReleaseDrawableDC)(d, hdc, state);
 }
 
-/* Slot 35 */
+/* Slot 29 */
 LRESULT
 TkWinResendEvent(wndproc, hwnd, eventPtr)
     WNDPROC wndproc;
@@ -340,7 +307,7 @@ TkWinResendEvent(wndproc, hwnd, eventPtr)
     return (tkIntPlatStubsPtr->tkWinResendEvent)(wndproc, hwnd, eventPtr);
 }
 
-/* Slot 36 */
+/* Slot 30 */
 HPALETTE
 TkWinSelectPalette(dc, colormap)
     HDC dc;
@@ -349,7 +316,7 @@ TkWinSelectPalette(dc, colormap)
     return (tkIntPlatStubsPtr->tkWinSelectPalette)(dc, colormap);
 }
 
-/* Slot 37 */
+/* Slot 31 */
 void
 TkWinSetMenu(tkwin, hMenu)
     Tk_Window tkwin;
@@ -358,7 +325,7 @@ TkWinSetMenu(tkwin, hMenu)
     (tkIntPlatStubsPtr->tkWinSetMenu)(tkwin, hMenu);
 }
 
-/* Slot 38 */
+/* Slot 32 */
 void
 TkWinSetWindowPos(hwnd, siblingHwnd, pos)
     HWND hwnd;
@@ -368,15 +335,7 @@ TkWinSetWindowPos(hwnd, siblingHwnd, pos)
     (tkIntPlatStubsPtr->tkWinSetWindowPos)(hwnd, siblingHwnd, pos);
 }
 
-/* Slot 39 */
-void
-TkWinUpdateCursor(winPtr)
-    TkWindow * winPtr;
-{
-    (tkIntPlatStubsPtr->tkWinUpdateCursor)(winPtr);
-}
-
-/* Slot 40 */
+/* Slot 33 */
 void
 TkWinWmCleanup(hInstance)
     HINSTANCE hInstance;
@@ -384,24 +343,7 @@ TkWinWmCleanup(hInstance)
     (tkIntPlatStubsPtr->tkWinWmCleanup)(hInstance);
 }
 
-/* Slot 41 */
-HWND
-TkWinWmFindEmbedAssociation(winPtr)
-    TkWindow * winPtr;
-{
-    return (tkIntPlatStubsPtr->tkWinWmFindEmbedAssociation)(winPtr);
-}
-
-/* Slot 42 */
-void
-TkWinWmStoreEmbedAssociation(winPtr, hwnd)
-    TkWindow * winPtr;
-    HWND hwnd;
-{
-    (tkIntPlatStubsPtr->tkWinWmStoreEmbedAssociation)(winPtr, hwnd);
-}
-
-/* Slot 43 */
+/* Slot 34 */
 void
 TkWinXCleanup(hInstance)
     HINSTANCE hInstance;
@@ -409,7 +351,7 @@ TkWinXCleanup(hInstance)
     (tkIntPlatStubsPtr->tkWinXCleanup)(hInstance);
 }
 
-/* Slot 44 */
+/* Slot 35 */
 void
 TkWinXInit(hInstance)
     HINSTANCE hInstance;
@@ -588,8 +530,7 @@ TkpSetCursor(cursor)
     (tkIntPlatStubsPtr->tkpSetCursor)(cursor);
 }
 
-/* Slot 12 is reserved */
-/* Slot 13 */
+/* Slot 12 */
 void
 TkpWmSetState(winPtr, state)
     TkWindow * winPtr;
@@ -598,7 +539,7 @@ TkpWmSetState(winPtr, state)
     (tkIntPlatStubsPtr->tkpWmSetState)(winPtr, state);
 }
 
-/* Slot 14 */
+/* Slot 13 */
 int
 TkRectInRegion(rgn, x, y, width, height)
     TkRegion rgn;
@@ -610,7 +551,7 @@ TkRectInRegion(rgn, x, y, width, height)
     return (tkIntPlatStubsPtr->tkRectInRegion)(rgn, x, y, width, height);
 }
 
-/* Slot 15 */
+/* Slot 14 */
 void
 TkSetRegion(display, gc, rgn)
     Display* display;
@@ -620,7 +561,7 @@ TkSetRegion(display, gc, rgn)
     (tkIntPlatStubsPtr->tkSetRegion)(display, gc, rgn);
 }
 
-/* Slot 16 */
+/* Slot 15 */
 void
 TkUnionRectWithRegion(rect, src, dr_return)
     XRectangle* rect;
@@ -630,7 +571,7 @@ TkUnionRectWithRegion(rect, src, dr_return)
     (tkIntPlatStubsPtr->tkUnionRectWithRegion)(rect, src, dr_return);
 }
 
-/* Slot 17 */
+/* Slot 16 */
 int
 HandleWMEvent(theEvent)
     EventRecord * theEvent;
@@ -638,21 +579,21 @@ HandleWMEvent(theEvent)
     return (tkIntPlatStubsPtr->handleWMEvent)(theEvent);
 }
 
-/* Slot 18 */
+/* Slot 17 */
 void
 TkAboutDlg()
 {
     (tkIntPlatStubsPtr->tkAboutDlg)();
 }
 
-/* Slot 19 */
+/* Slot 18 */
 void
 TkCreateMacEventSource()
 {
     (tkIntPlatStubsPtr->tkCreateMacEventSource)();
 }
 
-/* Slot 20 */
+/* Slot 19 */
 void
 TkFontList(interp, display)
     Tcl_Interp * interp;
@@ -661,7 +602,7 @@ TkFontList(interp, display)
     (tkIntPlatStubsPtr->tkFontList)(interp, display);
 }
 
-/* Slot 21 */
+/* Slot 20 */
 Window
 TkGetTransientMaster(winPtr)
     TkWindow * winPtr;
@@ -669,7 +610,7 @@ TkGetTransientMaster(winPtr)
     return (tkIntPlatStubsPtr->tkGetTransientMaster)(winPtr);
 }
 
-/* Slot 22 */
+/* Slot 21 */
 int
 TkGenerateButtonEvent(x, y, window, state)
     int x;
@@ -680,7 +621,7 @@ TkGenerateButtonEvent(x, y, window, state)
     return (tkIntPlatStubsPtr->tkGenerateButtonEvent)(x, y, window, state);
 }
 
-/* Slot 23 */
+/* Slot 22 */
 int
 TkGetCharPositions(font_struct, string, count, buffer)
     XFontStruct * font_struct;
@@ -691,7 +632,7 @@ TkGetCharPositions(font_struct, string, count, buffer)
     return (tkIntPlatStubsPtr->tkGetCharPositions)(font_struct, string, count, buffer);
 }
 
-/* Slot 24 */
+/* Slot 23 */
 void
 TkGenWMDestroyEvent(tkwin)
     Tk_Window tkwin;
@@ -699,7 +640,7 @@ TkGenWMDestroyEvent(tkwin)
     (tkIntPlatStubsPtr->tkGenWMDestroyEvent)(tkwin);
 }
 
-/* Slot 25 */
+/* Slot 24 */
 void
 TkGenWMConfigureEvent(tkwin, x, y, width, height, flags)
     Tk_Window tkwin;
@@ -712,21 +653,21 @@ TkGenWMConfigureEvent(tkwin, x, y, width, height, flags)
     (tkIntPlatStubsPtr->tkGenWMConfigureEvent)(tkwin, x, y, width, height, flags);
 }
 
-/* Slot 26 */
+/* Slot 25 */
 unsigned int
 TkMacButtonKeyState()
 {
     return (tkIntPlatStubsPtr->tkMacButtonKeyState)();
 }
 
-/* Slot 27 */
+/* Slot 26 */
 void
 TkMacClearMenubarActive()
 {
     (tkIntPlatStubsPtr->tkMacClearMenubarActive)();
 }
 
-/* Slot 28 */
+/* Slot 27 */
 int
 TkMacConvertEvent(eventPtr)
     EventRecord * eventPtr;
@@ -734,7 +675,7 @@ TkMacConvertEvent(eventPtr)
     return (tkIntPlatStubsPtr->tkMacConvertEvent)(eventPtr);
 }
 
-/* Slot 29 */
+/* Slot 28 */
 int
 TkMacDispatchMenuEvent(menuID, index)
     int menuID;
@@ -743,7 +684,7 @@ TkMacDispatchMenuEvent(menuID, index)
     return (tkIntPlatStubsPtr->tkMacDispatchMenuEvent)(menuID, index);
 }
 
-/* Slot 30 */
+/* Slot 29 */
 void
 TkMacInstallCursor(resizeOverride)
     int resizeOverride;
@@ -751,7 +692,7 @@ TkMacInstallCursor(resizeOverride)
     (tkIntPlatStubsPtr->tkMacInstallCursor)(resizeOverride);
 }
 
-/* Slot 31 */
+/* Slot 30 */
 int
 TkMacConvertTkEvent(eventPtr, window)
     EventRecord * eventPtr;
@@ -760,14 +701,14 @@ TkMacConvertTkEvent(eventPtr, window)
     return (tkIntPlatStubsPtr->tkMacConvertTkEvent)(eventPtr, window);
 }
 
-/* Slot 32 */
+/* Slot 31 */
 void
 TkMacHandleTearoffMenu()
 {
     (tkIntPlatStubsPtr->tkMacHandleTearoffMenu)();
 }
 
-/* Slot 33 */
+/* Slot 32 */
 void
 tkMacInstallMWConsole(interp)
     Tcl_Interp * interp;
@@ -775,7 +716,7 @@ tkMacInstallMWConsole(interp)
     (tkIntPlatStubsPtr->tkMacInstallMWConsole)(interp);
 }
 
-/* Slot 34 */
+/* Slot 33 */
 void
 TkMacInvalClipRgns(winPtr)
     TkWindow * winPtr;
@@ -783,7 +724,7 @@ TkMacInvalClipRgns(winPtr)
     (tkIntPlatStubsPtr->tkMacInvalClipRgns)(winPtr);
 }
 
-/* Slot 35 */
+/* Slot 34 */
 void
 TkMacDoHLEvent(theEvent)
     EventRecord * theEvent;
@@ -791,7 +732,7 @@ TkMacDoHLEvent(theEvent)
     (tkIntPlatStubsPtr->tkMacDoHLEvent)(theEvent);
 }
 
-/* Slot 36 */
+/* Slot 35 */
 void
 TkMacFontInfo(fontId, family, style, size)
     Font fontId;
@@ -802,14 +743,14 @@ TkMacFontInfo(fontId, family, style, size)
     (tkIntPlatStubsPtr->tkMacFontInfo)(fontId, family, style, size);
 }
 
-/* Slot 37 */
+/* Slot 36 */
 Time
 TkMacGenerateTime()
 {
     return (tkIntPlatStubsPtr->tkMacGenerateTime)();
 }
 
-/* Slot 38 */
+/* Slot 37 */
 GWorldPtr
 TkMacGetDrawablePort(drawable)
     Drawable drawable;
@@ -817,7 +758,7 @@ TkMacGetDrawablePort(drawable)
     return (tkIntPlatStubsPtr->tkMacGetDrawablePort)(drawable);
 }
 
-/* Slot 39 */
+/* Slot 38 */
 TkWindow *
 TkMacGetScrollbarGrowWindow(winPtr)
     TkWindow * winPtr;
@@ -825,7 +766,7 @@ TkMacGetScrollbarGrowWindow(winPtr)
     return (tkIntPlatStubsPtr->tkMacGetScrollbarGrowWindow)(winPtr);
 }
 
-/* Slot 40 */
+/* Slot 39 */
 Window
 TkMacGetXWindow(macWinPtr)
     WindowRef macWinPtr;
@@ -833,7 +774,7 @@ TkMacGetXWindow(macWinPtr)
     return (tkIntPlatStubsPtr->tkMacGetXWindow)(macWinPtr);
 }
 
-/* Slot 41 */
+/* Slot 40 */
 int
 TkMacGrowToplevel(whichWindow, start)
     WindowRef whichWindow;
@@ -842,7 +783,7 @@ TkMacGrowToplevel(whichWindow, start)
     return (tkIntPlatStubsPtr->tkMacGrowToplevel)(whichWindow, start);
 }
 
-/* Slot 42 */
+/* Slot 41 */
 void
 TkMacHandleMenuSelect(mResult, optionKeyPressed)
     long mResult;
@@ -851,14 +792,14 @@ TkMacHandleMenuSelect(mResult, optionKeyPressed)
     (tkIntPlatStubsPtr->tkMacHandleMenuSelect)(mResult, optionKeyPressed);
 }
 
-/* Slot 43 */
+/* Slot 42 */
 int
 TkMacHaveAppearance()
 {
     return (tkIntPlatStubsPtr->tkMacHaveAppearance)();
 }
 
-/* Slot 44 */
+/* Slot 43 */
 void
 TkMacInitAppleEvents(interp)
     Tcl_Interp * interp;
@@ -866,7 +807,7 @@ TkMacInitAppleEvents(interp)
     (tkIntPlatStubsPtr->tkMacInitAppleEvents)(interp);
 }
 
-/* Slot 45 */
+/* Slot 44 */
 void
 TkMacInitMenus(interp)
     Tcl_Interp * interp;
@@ -874,7 +815,7 @@ TkMacInitMenus(interp)
     (tkIntPlatStubsPtr->tkMacInitMenus)(interp);
 }
 
-/* Slot 46 */
+/* Slot 45 */
 void
 TkMacInvalidateWindow(macWin, flag)
     MacDrawable * macWin;
@@ -883,7 +824,7 @@ TkMacInvalidateWindow(macWin, flag)
     (tkIntPlatStubsPtr->tkMacInvalidateWindow)(macWin, flag);
 }
 
-/* Slot 47 */
+/* Slot 46 */
 int
 TkMacIsCharacterMissing(tkfont, searchChar)
     Tk_Font tkfont;
@@ -892,7 +833,7 @@ TkMacIsCharacterMissing(tkfont, searchChar)
     return (tkIntPlatStubsPtr->tkMacIsCharacterMissing)(tkfont, searchChar);
 }
 
-/* Slot 48 */
+/* Slot 47 */
 void
 TkMacMakeRealWindowExist(winPtr)
     TkWindow * winPtr;
@@ -900,7 +841,7 @@ TkMacMakeRealWindowExist(winPtr)
     (tkIntPlatStubsPtr->tkMacMakeRealWindowExist)(winPtr);
 }
 
-/* Slot 49 */
+/* Slot 48 */
 BitMapPtr
 TkMacMakeStippleMap(d1, d2)
     Drawable d1;
@@ -909,14 +850,14 @@ TkMacMakeStippleMap(d1, d2)
     return (tkIntPlatStubsPtr->tkMacMakeStippleMap)(d1, d2);
 }
 
-/* Slot 50 */
+/* Slot 49 */
 void
 TkMacMenuClick()
 {
     (tkIntPlatStubsPtr->tkMacMenuClick)();
 }
 
-/* Slot 51 */
+/* Slot 50 */
 void
 TkMacRegisterOffScreenWindow(window, portPtr)
     Window window;
@@ -925,7 +866,7 @@ TkMacRegisterOffScreenWindow(window, portPtr)
     (tkIntPlatStubsPtr->tkMacRegisterOffScreenWindow)(window, portPtr);
 }
 
-/* Slot 52 */
+/* Slot 51 */
 int
 TkMacResizable(winPtr)
     TkWindow * winPtr;
@@ -933,7 +874,7 @@ TkMacResizable(winPtr)
     return (tkIntPlatStubsPtr->tkMacResizable)(winPtr);
 }
 
-/* Slot 53 */
+/* Slot 52 */
 void
 TkMacSetEmbedRgn(winPtr, rgn)
     TkWindow * winPtr;
@@ -942,14 +883,14 @@ TkMacSetEmbedRgn(winPtr, rgn)
     (tkIntPlatStubsPtr->tkMacSetEmbedRgn)(winPtr, rgn);
 }
 
-/* Slot 54 */
+/* Slot 53 */
 void
 TkMacSetHelpMenuItemCount()
 {
     (tkIntPlatStubsPtr->tkMacSetHelpMenuItemCount)();
 }
 
-/* Slot 55 */
+/* Slot 54 */
 void
 TkMacSetScrollbarGrow(winPtr, flag)
     TkWindow * winPtr;
@@ -958,7 +899,7 @@ TkMacSetScrollbarGrow(winPtr, flag)
     (tkIntPlatStubsPtr->tkMacSetScrollbarGrow)(winPtr, flag);
 }
 
-/* Slot 56 */
+/* Slot 55 */
 void
 TkMacSetUpClippingRgn(drawable)
     Drawable drawable;
@@ -966,7 +907,7 @@ TkMacSetUpClippingRgn(drawable)
     (tkIntPlatStubsPtr->tkMacSetUpClippingRgn)(drawable);
 }
 
-/* Slot 57 */
+/* Slot 56 */
 void
 TkMacSetUpGraphicsPort(gc)
     GC gc;
@@ -974,7 +915,7 @@ TkMacSetUpGraphicsPort(gc)
     (tkIntPlatStubsPtr->tkMacSetUpGraphicsPort)(gc);
 }
 
-/* Slot 58 */
+/* Slot 57 */
 void
 TkMacUpdateClipRgn(winPtr)
     TkWindow * winPtr;
@@ -982,7 +923,7 @@ TkMacUpdateClipRgn(winPtr)
     (tkIntPlatStubsPtr->tkMacUpdateClipRgn)(winPtr);
 }
 
-/* Slot 59 */
+/* Slot 58 */
 void
 TkMacUnregisterMacWindow(portPtr)
     GWorldPtr portPtr;
@@ -990,7 +931,7 @@ TkMacUnregisterMacWindow(portPtr)
     (tkIntPlatStubsPtr->tkMacUnregisterMacWindow)(portPtr);
 }
 
-/* Slot 60 */
+/* Slot 59 */
 int
 TkMacUseMenuID(macID)
     short macID;
@@ -998,7 +939,7 @@ TkMacUseMenuID(macID)
     return (tkIntPlatStubsPtr->tkMacUseMenuID)(macID);
 }
 
-/* Slot 61 */
+/* Slot 60 */
 RgnHandle
 TkMacVisableClipRgn(winPtr)
     TkWindow * winPtr;
@@ -1006,7 +947,7 @@ TkMacVisableClipRgn(winPtr)
     return (tkIntPlatStubsPtr->tkMacVisableClipRgn)(winPtr);
 }
 
-/* Slot 62 */
+/* Slot 61 */
 void
 TkMacWinBounds(winPtr, geometry)
     TkWindow * winPtr;
@@ -1015,7 +956,7 @@ TkMacWinBounds(winPtr, geometry)
     (tkIntPlatStubsPtr->tkMacWinBounds)(winPtr, geometry);
 }
 
-/* Slot 63 */
+/* Slot 62 */
 void
 TkMacWindowOffset(wRef, xOffset, yOffset)
     WindowRef wRef;
@@ -1025,14 +966,14 @@ TkMacWindowOffset(wRef, xOffset, yOffset)
     (tkIntPlatStubsPtr->tkMacWindowOffset)(wRef, xOffset, yOffset);
 }
 
-/* Slot 64 */
+/* Slot 63 */
 void
 TkResumeClipboard()
 {
     (tkIntPlatStubsPtr->tkResumeClipboard)();
 }
 
-/* Slot 65 */
+/* Slot 64 */
 int
 TkSetMacColor(pixel, macColor)
     unsigned long pixel;
@@ -1041,7 +982,7 @@ TkSetMacColor(pixel, macColor)
     return (tkIntPlatStubsPtr->tkSetMacColor)(pixel, macColor);
 }
 
-/* Slot 66 */
+/* Slot 65 */
 void
 TkSetWMName(winPtr, titleUid)
     TkWindow * winPtr;
@@ -1050,14 +991,14 @@ TkSetWMName(winPtr, titleUid)
     (tkIntPlatStubsPtr->tkSetWMName)(winPtr, titleUid);
 }
 
-/* Slot 67 */
+/* Slot 66 */
 void
 TkSuspendClipboard()
 {
     (tkIntPlatStubsPtr->tkSuspendClipboard)();
 }
 
-/* Slot 68 */
+/* Slot 67 */
 int
 TkWMGrowToplevel(whichWindow, start)
     WindowRef whichWindow;
@@ -1066,7 +1007,7 @@ TkWMGrowToplevel(whichWindow, start)
     return (tkIntPlatStubsPtr->tkWMGrowToplevel)(whichWindow, start);
 }
 
-/* Slot 69 */
+/* Slot 68 */
 int
 TkMacZoomToplevel(whichWindow, where, zoomPart)
     WindowPtr whichWindow;
@@ -1076,7 +1017,7 @@ TkMacZoomToplevel(whichWindow, where, zoomPart)
     return (tkIntPlatStubsPtr->tkMacZoomToplevel)(whichWindow, where, zoomPart);
 }
 
-/* Slot 70 */
+/* Slot 69 */
 Tk_Window
 Tk_TopCoordsToWindow(tkwin, rootX, rootY, newX, newY)
     Tk_Window tkwin;
@@ -1088,7 +1029,7 @@ Tk_TopCoordsToWindow(tkwin, rootX, rootY, newX, newY)
     return (tkIntPlatStubsPtr->tk_TopCoordsToWindow)(tkwin, rootX, rootY, newX, newY);
 }
 
-/* Slot 71 */
+/* Slot 70 */
 MacDrawable *
 TkMacContainerId(winPtr)
     TkWindow * winPtr;
@@ -1096,7 +1037,7 @@ TkMacContainerId(winPtr)
     return (tkIntPlatStubsPtr->tkMacContainerId)(winPtr);
 }
 
-/* Slot 72 */
+/* Slot 71 */
 MacDrawable *
 TkMacGetHostToplevel(winPtr)
     TkWindow * winPtr;

@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.1.2.2 1999/03/06 01:54:58 redman Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.1.2.3 1999/03/07 00:15:43 redman Exp $
 
 library tk
 
@@ -544,143 +544,114 @@ declare 9 win {
     int TkpScanWindowId (Tcl_Interp *interp, char *string, int *idPtr)
 }
 
-declare 11 win {
+declare 10 win {
     void TkpSetCapture (TkWindow *winPtr)
 }
 
-declare 12 win {
+declare 11 win {
     void TkpSetCursor (TkpCursor cursor)
 }
 
-declare 13 win {
+declare 12 win {
     void TkpWmSetState (TkWindow *winPtr, int state)
 }
 
-declare 14 win {
+declare 13 win {
     int TkRectInRegion (TkRegion rgn, int x, int y, unsigned int width, \
 	    unsigned int height)
 }
 
-declare 15 win {
+declare 14 win {
     void TkSetPixmapColormap (Pixmap pixmap, Colormap colormap)
 }
 
-declare 16 win {
+declare 15 win {
     void TkSetRegion (Display* display, GC gc, TkRegion rgn)
 }
 
-declare 17 win {
+declare 16 win {
     void TkUnionRectWithRegion (XRectangle* rect, \
 	    TkRegion src, TkRegion dr_return)
 }
 
-declare 18 win {
+declare 17 win {
     void  TkWinCancelMouseTimer (void)
 }
 
-declare 20 win {
+declare 18 win {
     void  TkWinClipboardRender (TkDisplay *dispPtr, UINT format)
 }
 
-declare 21 win {
+declare 19 win {
     LRESULT  TkWinEmbeddedEventProc (HWND hwnd, UINT message, \
 	    WPARAM wParam, LPARAM lParam)
 }
 
-declare 22 win {
+declare 20 win {
     void  TkWinFillRect (HDC dc, int x, int y, int width, int height, \
 	    int pixel)
 }
 
-declare 23 win {
+declare 21 win {
     COLORREF  TkWinGetBorderPixels (Tk_Window tkwin, Tk_3DBorder border, \
 	    int which)
 }
 
-declare 24 win {
+declare 22 win {
     HDC  TkWinGetDrawableDC (Display *display, Drawable d, TkWinDCState* state)
 }
 
-declare 25 win {
+declare 23 win {
     int  TkWinGetModifierState (void)
 }
 
-declare 26 win {
+declare 24 win {
     HPALETTE  TkWinGetSystemPalette (void)
 }
 
-declare 27 win {
+declare 25 win {
     HWND  TkWinGetWrapperWindow (Tk_Window tkwin)
 }
 
-declare 28 win {
+declare 26 win {
     int  TkWinHandleMenuEvent (HWND *phwnd, \
 	    UINT *pMessage, WPARAM *pwParam, LPARAM *plParam, \
 	    LRESULT *plResult)
 }
 
-declare 29 win {
+declare 27 win {
     int  TkWinIndexOfColor (XColor *colorPtr)
 }
 
-declare 30 win {
-    void  TkWinPointerDeadWindow (TkWindow *winPtr)
-}
-
-declare 31 win {
-    void  TkWinPointerEvent (HWND hwnd, int x, int y)
-}
-
-declare 32 win {
-    void  TkWinPointerInit (void)
-}
-
-declare 33 win {
-    LRESULT   TkWinReflectMessage (HWND hwnd, UINT message, \
-	    WPARAM wParam, LPARAM lParam)
-}
-
-declare 34 win {
+declare 28 win {
     void  TkWinReleaseDrawableDC (Drawable d, HDC hdc, TkWinDCState* state)
 }
 
-declare 35 win {
+declare 29 win {
     LRESULT  TkWinResendEvent (WNDPROC wndproc, HWND hwnd, XEvent *eventPtr)
 }
 
-declare 36 win {
+declare 30 win {
     HPALETTE  TkWinSelectPalette (HDC dc, Colormap colormap)
 }
 
-declare 37 win {
+declare 31 win {
     void  TkWinSetMenu (Tk_Window tkwin, HMENU hMenu)
 }
 
-declare 38 win {
+declare 32 win {
     void  TkWinSetWindowPos (HWND hwnd, HWND siblingHwnd, int pos)
 }
 
-declare 39 win {
-    void  TkWinUpdateCursor (TkWindow *winPtr)
-}
-
-declare 40 win {
+declare 33 win {
     void  TkWinWmCleanup (HINSTANCE hInstance)
 }
 
-declare 41 win {
-    HWND  TkWinWmFindEmbedAssociation (TkWindow *winPtr)
-}
-
-declare 42 win {
-    void  TkWinWmStoreEmbedAssociation (TkWindow *winPtr, HWND hwnd)
-}
-
-declare 43 win {
+declare 34 win {
     void  TkWinXCleanup (HINSTANCE hInstance)
 }
 
-declare 44 win {
+declare 35 win {
     void   TkWinXInit (HINSTANCE hInstance)
 }
 
@@ -737,250 +708,250 @@ declare 11 mac {
     void TkpSetCursor (TkpCursor cursor)
 }
 
-declare 13 mac {
+declare 12 mac {
     void TkpWmSetState (TkWindow *winPtr, int state)
 }
 
-declare 14 mac {
+declare 13 mac {
     int TkRectInRegion (TkRegion rgn, int x, int y, unsigned int width, \
 	    unsigned int height)
 }
 
-declare 15 mac {
+declare 14 mac {
     void TkSetRegion (Display* display, GC gc, TkRegion rgn)
 }
 
-declare 16 mac {
+declare 15 mac {
     void TkUnionRectWithRegion (XRectangle* rect, \
 	    TkRegion src, TkRegion dr_return)
 }
 
-declare 17 mac {
+declare 16 mac {
     int  HandleWMEvent (EventRecord *theEvent)
 }
 
-declare 18 mac {
+declare 17 mac {
     void   TkAboutDlg (void)
 }
 
-declare 19 mac {
+declare 18 mac {
     void  TkCreateMacEventSource (void)
 }
 
-declare 20 mac {
+declare 19 mac {
     void   TkFontList (Tcl_Interp *interp, Display *display)
 }
 
-declare 21 mac {
+declare 20 mac {
     Window  TkGetTransientMaster (TkWindow *winPtr)
 }
 
-declare 22 mac {
+declare 21 mac {
     int  TkGenerateButtonEvent (int x, int y, \
 	    Window window, unsigned int state)
 }
 
-declare 23 mac {
+declare 22 mac {
     int   TkGetCharPositions (XFontStruct *font_struct, char *string, \
 	    int count, short *buffer)
 }
 
-declare 24 mac {
+declare 23 mac {
     void  TkGenWMDestroyEvent (Tk_Window tkwin)
 }
 
-declare 25 mac {
+declare 24 mac {
     void  TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, \
 	    int width, int height, int flags)
 }
 
-declare 26 mac {
+declare 25 mac {
     unsigned int TkMacButtonKeyState (void)
 }
 
-declare 27 mac {
+declare 26 mac {
     void  TkMacClearMenubarActive (void)
 }
 
-declare 28 mac {
+declare 27 mac {
     int  TkMacConvertEvent (EventRecord *eventPtr)
 }
 
-declare 29 mac {
+declare 28 mac {
     int  TkMacDispatchMenuEvent (int menuID, int index)
 }
 
-declare 30 mac {
+declare 29 mac {
     void  TkMacInstallCursor (int resizeOverride)
 }
 
-declare 31 mac {
+declare 30 mac {
     int  TkMacConvertTkEvent (EventRecord *eventPtr, Window window)
 }
 
-declare 32 mac {
+declare 31 mac {
     void  TkMacHandleTearoffMenu (void)
 }
 
-declare 33 mac {
+declare 32 mac {
     void  tkMacInstallMWConsole (Tcl_Interp *interp)
 }
 
-declare 34 mac {
+declare 33 mac {
     void  TkMacInvalClipRgns (TkWindow *winPtr)
 }
 
-declare 35 mac {
+declare 34 mac {
     void  TkMacDoHLEvent (EventRecord *theEvent)
 }
 
-declare 36 mac {
+declare 35 mac {
     void   TkMacFontInfo (Font fontId, short *family, \
 	    short *style, short *size)
 }
 
-declare 37 mac {
+declare 36 mac {
     Time  TkMacGenerateTime (void)
 }
 
-declare 38 mac {
+declare 37 mac {
     GWorldPtr  TkMacGetDrawablePort (Drawable drawable)
 }
 
-declare 39 mac {
+declare 38 mac {
     TkWindow *  TkMacGetScrollbarGrowWindow (TkWindow *winPtr)
 }
 
-declare 40 mac {
+declare 39 mac {
     Window   TkMacGetXWindow (WindowRef macWinPtr)
 }
 
-declare 41 mac {
+declare 40 mac {
     int  TkMacGrowToplevel (WindowRef whichWindow, Point start)
 }
 
-declare 42 mac {
+declare 41 mac {
     void   TkMacHandleMenuSelect (long mResult, int optionKeyPressed)
 }
 
-declare 43 mac {
+declare 42 mac {
     int  TkMacHaveAppearance (void)
 }
 
-declare 44 mac {
+declare 43 mac {
     void  TkMacInitAppleEvents (Tcl_Interp *interp)
 }
 
-declare 45 mac {
+declare 44 mac {
     void   TkMacInitMenus (Tcl_Interp  *interp)
 }
 
-declare 46 mac {
+declare 45 mac {
     void  TkMacInvalidateWindow (MacDrawable *macWin, int flag)
 }
 
-declare 47 mac {
+declare 46 mac {
     int  TkMacIsCharacterMissing (Tk_Font tkfont, unsigned int searchChar)
 }
 
-declare 48 mac {
+declare 47 mac {
     void  TkMacMakeRealWindowExist (TkWindow *winPtr)
 }
 
-declare 49 mac {
+declare 48 mac {
     BitMapPtr TkMacMakeStippleMap(Drawable d1, Drawable d2)
 }
 
-declare 50 mac {
+declare 49 mac {
     void  TkMacMenuClick (void)
 }
 
-declare 51 mac {
+declare 50 mac {
     void  TkMacRegisterOffScreenWindow (Window window, GWorldPtr portPtr)
 }
 
-declare 52 mac {
+declare 51 mac {
     int  TkMacResizable (TkWindow *winPtr)
 }
 
-declare 53 mac {
+declare 52 mac {
     void  TkMacSetEmbedRgn (TkWindow *winPtr, RgnHandle rgn)
 }
 
-declare 54 mac {
+declare 53 mac {
     void  TkMacSetHelpMenuItemCount (void)
 }
 
-declare 55 mac {
+declare 54 mac {
     void  TkMacSetScrollbarGrow (TkWindow *winPtr, int flag)
 }
 
-declare 56 mac {
+declare 55 mac {
     void  TkMacSetUpClippingRgn (Drawable drawable)
 }
 
-declare 57 mac {
+declare 56 mac {
     void  TkMacSetUpGraphicsPort (GC gc)
 }
 
-declare 58 mac {
+declare 57 mac {
     void   TkMacUpdateClipRgn (TkWindow *winPtr)
 }
 
-declare 59 mac {
+declare 58 mac {
     void  TkMacUnregisterMacWindow (GWorldPtr portPtr)
 }
 
-declare 60 mac {
+declare 59 mac {
     int  TkMacUseMenuID (short macID)
 }
 
-declare 61 mac {
+declare 60 mac {
     RgnHandle  TkMacVisableClipRgn (TkWindow *winPtr)
 }
 
-declare 62 mac {
+declare 61 mac {
     void  TkMacWinBounds (TkWindow *winPtr, Rect *geometry)
 }
 
-declare 63 mac {
+declare 62 mac {
     void  TkMacWindowOffset (WindowRef wRef, int *xOffset, int *yOffset)
 }
 
-declare 64 mac {
+declare 63 mac {
     void  TkResumeClipboard (void)
 }
 
-declare 65 mac {
+declare 64 mac {
     int   TkSetMacColor (unsigned long pixel, RGBColor *macColor)
 }
 
-declare 66 mac {
+declare 65 mac {
     void   TkSetWMName (TkWindow *winPtr, Tk_Uid titleUid)
 }
 
-declare 67 mac {
+declare 66 mac {
     void  TkSuspendClipboard (void)
 }
 
-declare 68 mac {
+declare 67 mac {
     int  TkWMGrowToplevel (WindowRef whichWindow, Point start)
 }
 
-declare 69 mac {
+declare 68 mac {
     int  TkMacZoomToplevel (WindowPtr whichWindow, Point where, short zoomPart)
 }
 
-declare 70 mac {
+declare 69 mac {
     Tk_Window Tk_TopCoordsToWindow (Tk_Window tkwin, \
 	    int rootX, int rootY, int *newX, int *newY)
 }
 
-declare 71 mac {
+declare 70 mac {
     MacDrawable * TkMacContainerId (TkWindow *winPtr)
 }
 
-declare 72 mac {
+declare 71 mac {
     MacDrawable * TkMacGetHostToplevel  (TkWindow *winPtr)
 }
 
@@ -1350,352 +1321,253 @@ declare 78 win {
 
 # X functions for Mac
 
-declare 78 mac {
+declare 0 mac {
     XModifierKeymap* XGetModifierMapping (Display* d)
 }
 
-declare 79 mac {
+declare 1 mac {
     XImage * XCreateImage (Display* d, Visual* v, unsigned int ui1, int i1, \
 	    int i2, char* cp, unsigned int ui2, unsigned int ui3, int i3, \
 	    int i4)
 
 }
 
-declare 80 mac {
+declare 2 mac {
     XImage *XGetImage (Display* d, Drawable dr, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)
 }
 
-declare 81 mac {
+declare 3 mac {
     char *XGetAtomName (Display* d,Atom a)
 
 }
 
-declare 82 mac {
+declare 4 mac {
     char *XKeysymToString (KeySym k)
 }
 
-declare 83 mac {
+declare 5 mac {
     Colormap XCreateColormap (Display* d, Window w, Visual* v, int i)
 
 }
 
-#  declare 84 mac {
-#      Cursor XCreatePixmapCursor (Display* d, Pixmap p1, Pixmap p2, \
-#  	    XColor* x1, XColor* x2, \
-#  	    unsigned int ui1, unsigned int ui2)
-#  }
-
-#  declare 85 mac {
-#      Cursor XCreateGlyphCursor (Display* d, Font f1, Font f2, \
-#  	    unsigned int ui1, unsigned int ui2, XColor* x1, XColor* x2)
-#  }
-
-declare 86 mac {
+declare 6 mac {
     GContext XGContextFromGC (GC g)
 }
 
-#  declare 87 mac {
-#      XHostAddress *XListHosts (Display* d, int* i, Bool* b)
-#  }
-
-declare 88 mac {
+declare 7 mac {
     KeySym XKeycodeToKeysym (Display* d, KeyCode k, int i)
 }
 
-declare 89 mac {
+declare 8 mac {
     KeySym XStringToKeysym (_Xconst char* c)
 }
 
-declare 90 mac {
+declare 9 mac {
     Window XRootWindow (Display* d, int i)
 }
 
-declare 91 mac {
+declare 10 mac {
     XErrorHandler XSetErrorHandler  (XErrorHandler x)
 }
 
-#  declare 92 mac {
-#      Status XIconifyWindow (Display* d, Window w, int i)
-#  }
-
-#  declare 93 mac {
-#      Status XWithdrawWindow (Display* d, Window w, int i)
-#  }
-
-#  declare 94 mac {
-#      Status XGetWMColormapWindows (Display* d, Window w, Window** wpp, int* ip)
-#  }
-
-declare 95 mac {
+declare 11 mac {
     Status XAllocColor (Display* d, Colormap c, XColor* xp)
 }
 
-declare 96 mac {
+declare 12 mac {
     void XBell (Display* d, int i)
 }
 
-declare 97 mac {
+declare 13 mac {
     void XChangeProperty (Display* d, Window w, Atom a, Atom a, int i1, \
 	    int i2, _Xconst unsigned char* c, int i3)
 }
 
-declare 98 mac {
+declare 14 mac {
     void XChangeWindowAttributes (Display* d, Window w, unsigned long ul, \
 	    XSetWindowAttributes* x)
 }
 
-#  declare 99 mac {
-#      void XClearWindow (Display* d, Window w)
-#  }
-
-declare 100 mac {
+declare 15 mac {
     void XConfigureWindow (Display* d, Window w, unsigned int i, \
 	    XWindowChanges* x)
 }
 
-declare 101 mac {
+declare 16 mac {
     void XCopyArea (Display* d, Drawable dr1, Drawable dr2, GC g, int i1, \
 	    int i2, unsigned int ui1, \
 	    unsigned int ui2, int i3, int i4)
 }
 
-declare 102 mac {
+declare 17 mac {
     void XCopyPlane (Display* d, Drawable dr1, Drawable dr2, GC g, int i1, \
 	    int i2, unsigned int ui1, \
 	    unsigned int ui2, int i3, int i4, unsigned long ul)
 }
 
-declare 103 mac {
+declare 18 mac {
     void XDefineCursor (Display* d, Window w, Cursor c)
 }
 
-#  declare 104 mac {
-#      void XDeleteProperty (Display* d, Window w, Atom a)
-#  }
-
-declare 105 mac {
+declare 19 mac {
     void XDestroyWindow (Display* d, Window w)
 }
 
-declare 106 mac {
+declare 20 mac {
     void XDrawArc (Display* d, Drawable dr, GC g, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 
-declare 107 mac {
+declare 21 mac {
     void XDrawLines (Display* d, Drawable dr, GC g, XPoint* x, int i1, int i2)
 }
 
-declare 108 mac {
+declare 22 mac {
     void XDrawRectangle (Display* d, Drawable dr, GC g, int i1, int i2,\
 	    unsigned int ui1, unsigned int ui2)
 }
 
-declare 109 mac {
+declare 23 mac {
     void XFillArc (Display* d, Drawable dr, GC g, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 
-declare 110 mac {
+declare 24 mac {
     void XFillPolygon (Display* d, Drawable dr, GC g, XPoint* x, \
 	    int i1, int i2, int i3)
 }
 
-declare 111 mac {
+declare 25 mac {
     void XFillRectangles (Display* d, Drawable dr, GC g, XRectangle* x, int i)
 }
 
-#  declare 112 mac {
-#      void XForceScreenSaver (Display* d, int i)
-#  }
-
-declare 113 mac {
+declare 26 mac {
     void XFreeColormap (Display* d, Colormap c)
 }
 
-declare 114 mac {
+declare 27 mac {
     void XFreeColors (Display* d, Colormap c, \
 	    unsigned long* ulp, int i, unsigned long ul)
 }
 
-#  declare 115 mac {
-#      void XFreeCursor (Display* d, Cursor c)
-#  }
-
-declare 116 mac {
+declare 28 mac {
     void XFreeModifiermap (XModifierKeymap* x)
 }
 
-declare 117 mac {
+declare 29 mac {
     Status XGetGeometry (Display* d, Drawable dr, Window* w, int* i1, \
 	    int* i2, unsigned int* ui1, unsigned int* ui2, unsigned int* ui3, \
 	    unsigned int* ui4)
 }
 
-#  declare 118 mac {
-#      void XGetInputFocus (Display* d, Window* w, int* i)
-#  }
-
-declare 119 mac {
+declare 30 mac {
     int XGetWindowProperty (Display* d, Window w, Atom a1, long l1, long l2, \
 	    Bool b, Atom a2, Atom* ap, int* ip, unsigned long* ulp1, \
 	    unsigned long* ulp2, unsigned char** cpp)
 }
 
-#  declare 120 mac {
-#      Status XGetWindowAttributes (Display* d, Window w, XWindowAttributes* x)
-#  }
-
-declare 121 mac {
+declare 31 mac {
     int XGrabKeyboard (Display* d, Window w, Bool b, int i1, int i2, Time t)
 }
 
-declare 122 mac {
+declare 32 mac {
     int XGrabPointer (Display* d, Window w1, Bool b, unsigned int ui, \
 	    int i1, int i2, Window w2, Cursor c, Time t)
 }
 
-declare 123 mac {
+declare 33 mac {
     KeyCode XKeysymToKeycode (Display* d, KeySym k)
 }
 
-#  declare 124 mac {
-#      Status XLookupColor (Display* d, Colormap c1, _Xconst char* c2, \
-#  	    XColor* x1, XColor* x2)
-#  }
-
-declare 125 mac {
+declare 34 mac {
     void XMapWindow (Display* d, Window w)
 }
 
-declare 126 mac {
+declare 35 mac {
     void XMoveResizeWindow (Display* d, Window w, int i1, int i2, \
 	    unsigned int ui1, unsigned int ui2)
 }
 
-declare 127 mac {
+declare 36 mac {
     void XMoveWindow (Display* d, Window w, int i1, int i2)
 }
 
-#  declare 128 mac {
-#      void XNextEvent (Display* d, XEvent* x)
-#  }
-
-#  declare 129 mac {
-#      void XPutBackEvent (Display* d, XEvent* x)
-#  }
-
-#  declare 130 mac {
-#      void XQueryColors (Display* d, Colormap c, XColor* x, int i)
-#  }
-
-declare 131 mac {
+declare 37 mac {
     Bool XQueryPointer (Display* d, Window w1, Window* w2, Window* w3, \
 	    int* i1, int* i2, int* i3, int* i4, unsigned int* ui)
 }
 
-#  declare 132 mac {
-#      Status XQueryTree (Display* d, Window w1, Window* w2, Window* w3, \
-#  	    Window** w4, unsigned int* ui)
-#  }
-
-declare 133 mac {
+declare 38 mac {
     void XRaiseWindow (Display* d, Window w)
 }
 
-declare 134 mac {
+declare 39 mac {
     void XRefreshKeyboardMapping (XMappingEvent* x)
 }
 
-declare 135 mac {
+declare 40 mac {
     void XResizeWindow (Display* d, Window w, unsigned int ui1, \
 	    unsigned int ui2)
 }
 
-declare 136 mac {
+declare 41 mac {
     void XSelectInput (Display* d, Window w, long l)
 }
 
-declare 137 mac {
+declare 42 mac {
     Status XSendEvent (Display* d, Window w, Bool b, long l, XEvent* x)
 }
 
-#  declare 138 mac {
-#      void XSetCommand (Display* d, Window w, char** c, int i)
-#  }
-
-declare 139 mac {
+declare 43 mac {
     void XSetIconName (Display* d, Window w, _Xconst char* c)
 }
 
-declare 140 mac {
+declare 44 mac {
     void XSetInputFocus (Display* d, Window w, int i, Time t)
 }
 
-declare 141 mac {
+declare 45 mac {
     void XSetSelectionOwner (Display* d, Atom a, Window w, Time t)
 }
 
-declare 142 mac {
+declare 46 mac {
     void XSetWindowBackground (Display* d, Window w, unsigned long ul)
 }
 
-declare 143 mac {
+declare 47 mac {
     void XSetWindowBackgroundPixmap (Display* d, Window w, Pixmap p)
 }
 
-declare 144 mac {
+declare 48 mac {
     void XSetWindowBorder (Display* d, Window w, unsigned long ul)
 }
 
-declare 145 mac {
+declare 49 mac {
     void XSetWindowBorderPixmap (Display* d, Window w, Pixmap p)
 }
 
-declare 146 mac {
+declare 50 mac {
     void XSetWindowBorderWidth (Display* d, Window w, unsigned int ui)
 }
 
-declare 147 mac {
+declare 51 mac {
     void XSetWindowColormap (Display* d, Window w, Colormap c)
 }
 
-#  declare 148 mac {
-#      Bool XTranslateCoordinates (Display* d, Window w1, Window w2, int i1,\
-#  	    int i2, int* i3, int* i4, Window* w3)
-#  }
-
-declare 149 mac {
+declare 52 mac {
     void XUngrabKeyboard (Display* d, Time t)
 }
 
-declare 150 mac {
+declare 53 mac {
     void XUngrabPointer (Display* d, Time t) 
 }
 
-declare 151 mac {
+declare 54 mac {
     void XUnmapWindow (Display* d, Window w)
 }
 
-#  declare 152 mac {
-#      void XWindowEvent (Display* d, Window w, long l, XEvent* x)
-#  }
-
-#  declare 153 mac {
-#      void XDestroyIC (XIC x)
-#  }
-
-#  declare 154 mac {
-#      Bool XFilterEvent (XEvent* x, Window w)
-#  }
-
-#  declare 155 mac {
-#      int XmbLookupString (XIC xi, XKeyPressedEvent* xk, \
-#  	    char* c, int i, KeySym* k, Status* s)
-#  }
-
-declare 156 mac {
+declare 55 mac {
     void TkPutImage (unsigned long *colors, \
 	    int ncolors, Display* display, Drawable d, \
 	    GC gc, XImage* image, int src_x, int src_y, \

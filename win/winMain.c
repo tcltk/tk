@@ -8,10 +8,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.4.4.1 1999/03/06 23:18:05 stanton Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.4.4.2 1999/03/07 00:15:47 redman Exp $
  */
 
 #include <tk.h>
+#include "tkInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
@@ -22,8 +23,6 @@
  * The following declarations refer to internal Tk routines.  These
  * interfaces are available for use, but are not supported.
  */
-
-EXTERN int		TkConsoleInit(Tcl_Interp *interp);
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -133,6 +132,7 @@ Tcl_AppInit(interp)
     if (Tk_Init(interp) == TCL_ERROR) {
 	goto error;
     }
+
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
     /*
