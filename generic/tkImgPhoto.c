@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.7 2004/05/03 17:59:21 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.8 2004/05/03 18:01:32 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -937,17 +937,18 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	 */
 
 	if (options.options & OPT_FORMAT) {
+	    matched = 0;
 	    for (imageFormat = tsdPtr->formatList; imageFormat != NULL;
 	 	imageFormat = imageFormat->nextPtr) {
 		if ((strncasecmp(Tcl_GetString(options.format),
 			imageFormat->name, strlen(imageFormat->name)) == 0)) {
+		    matched = 1;
 		    if (imageFormat->stringWriteProc != NULL) {
 			stringWriteProc = imageFormat->stringWriteProc;
 			break;
 		    }
 		}
 	    }
-	    matched = 0;
 	    if (stringWriteProc == NULL) {
 		oldformat = 1;
 		for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
