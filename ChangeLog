@@ -1,5 +1,11 @@
 2001-10-17 Daniel Steffen <das@users.sourceforge.net>
 
+	* mac/tkMacProjects.sea.hqx: updated projects with new version
+	numbers and resource reorganization; included XML versions of
+	the projects for CW Pro5 or Pro7 users.
+	
+2001-10-17 Daniel Steffen <das@users.sourceforge.net>
+
 	Backport of mac specific changes added to 8.4 since 8.3.3:
 	
 	* generic/tkConsole.c: crashing bug fix when printing to console
