@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.6 2004/05/03 22:28:45 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.7 2004/11/13 03:41:47 das Exp $
  */
 
 #include "tkInt.h"
@@ -419,9 +419,29 @@ XGetGeometry(display, d, root_return, x_return, y_return, width_return,
     unsigned int* border_width_return;
     unsigned int* depth_return;
 {
-    /* Used in tkCanvPs.c & wm code */
-    Debugger();
-    return 0;
+    TkWindow *winPtr = ((MacDrawable *) d)->winPtr;
+
+    display->request++;
+    *root_return = ROOT_ID;
+    if (winPtr) {
+	*x_return = Tk_X(winPtr);
+	*y_return = Tk_Y(winPtr);
+	*width_return = Tk_Width(winPtr);
+	*height_return = Tk_Height(winPtr);
+	*border_width_return = winPtr->changes.border_width;
+        *depth_return = Tk_Depth(winPtr);
+    } else {
+	Rect boundsRect;
+	CGrafPtr destPort = TkMacOSXGetDrawablePort(d);
+	GetPortBounds(destPort,&boundsRect);
+	*x_return = boundsRect.left;
+	*y_return =  boundsRect.top;
+	*width_return = boundsRect.right - boundsRect.left;
+	*height_return = boundsRect.bottom - boundsRect.top;
+    	*border_width_return = 0;
+        *depth_return = 32;
+    }
+    return 1;
 }
 
 void
