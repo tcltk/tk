@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.16 2004/01/25 01:29:15 pspjuth Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.17 2004/03/17 18:15:44 das Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -65,8 +65,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }    
 
-    if {[string equal $tcl_platform(platform) "macintosh"]
-	    || [string equal [tk windowingsystem] "aqua"]} {
+    if {[string equal [tk windowingsystem] "aqua"]} {
 	::tk::unsupported::MacWindowStyle style $w dBoxProc
     }
 
@@ -85,8 +84,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    if {[string equal $tcl_platform(platform) "macintosh"]
-	    || [string equal [tk windowingsystem] "aqua"]} {
+    if {[string equal [tk windowingsystem] "aqua"]} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
 	option add *Dialog.msg.font {Times 12} widgetDefault
@@ -95,8 +93,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     label $w.msg -justify left -text $text
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
     if {[string compare $bitmap ""]} {
-	if {([string equal $tcl_platform(platform) "macintosh"]
-	     || [string equal [tk windowingsystem] "aqua"]) &&\
+	if {[string equal [tk windowingsystem] "aqua"] &&\
 		[string equal $bitmap "error"]} {
 	    set bitmap "stop"
 	}
@@ -118,8 +115,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 		-padx 10 -pady 4
 	grid columnconfigure $w.bot $i
 	# We boost the size of some Mac buttons for l&f
-	if {[string equal $tcl_platform(platform) "macintosh"]
-	    || [string equal [tk windowingsystem] "aqua"]} {
+	if {[string equal [tk windowingsystem] "aqua"]} {
 	    set tmp [string tolower $but]
 	    if {[string equal $tmp "ok"] || [string equal $tmp "cancel"]} {
 		grid columnconfigure $w.bot $i -minsize [expr {59 + 20}]

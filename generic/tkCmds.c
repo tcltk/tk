@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.31 2002/09/02 19:16:23 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.32 2004/03/17 18:15:43 das Exp $
  */
 
 #include "tkPort.h"
@@ -20,8 +20,6 @@
 
 #if defined(WIN32)
 #include "tkWinInt.h"
-#elif defined(MAC_TCL)
-#include "tkMacInt.h"
 #elif defined(MAC_OSX_TK) 
 #include "tkMacOSXInt.h"
 #else
@@ -842,8 +840,6 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    }
 #if defined(WIN32)
 	    windowingsystem = "win32";
-#elif defined(MAC_TCL)
-	    windowingsystem = "classic";
 #elif defined(MAC_OSX_TK)
 	    windowingsystem = "aqua";
 #else

@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.25 2003/12/20 19:57:53 jenglish Exp $
-# $Id: bgerror.tcl,v 1.25 2003/12/20 19:57:53 jenglish Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.26 2004/03/17 18:15:44 das Exp $
+# $Id: bgerror.tcl,v 1.26 2004/03/17 18:15:44 das Exp $
 
 namespace eval ::tk {
     namespace eval dialog {
@@ -92,8 +92,7 @@ proc ::tk::dialog::error::bgerror err {
 
     # Ok the application's tkerror either failed or was not found
     # we use the default dialog then :
-    if {($tcl_platform(platform) eq "macintosh")
-             || ([tk windowingsystem] eq "aqua")} {
+    if {[tk windowingsystem] eq "aqua"} {
 	set ok		[mc Ok]
 	set messageFont	system
 	set textRelief	flat
@@ -143,8 +142,7 @@ proc ::tk::dialog::error::bgerror err {
     if {$tcl_platform(platform) eq "windows"} {
 	wm attributes .bgerrorDialog -topmost 1
     }
-    if {($tcl_platform(platform) eq "macintosh")
-            || ([tk windowingsystem] eq "aqua")} {
+    if {[tk windowingsystem] eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
     }
 
@@ -186,8 +184,7 @@ proc ::tk::dialog::error::bgerror err {
     set wrapwidth [expr {$wrapwidth-60-[winfo pixels .bgerrorDialog 9m]}]
     label .bgerrorDialog.msg -justify left -text $text -font $messageFont \
 	    -wraplength $wrapwidth
-    if {($tcl_platform(platform) eq "macintosh")
-            || ([tk windowingsystem] eq "aqua")} {
+    if {[tk windowingsystem] eq "aqua"} {
 	# On the Macintosh, use the stop bitmap
 	label .bgerrorDialog.bitmap -bitmap stop
     } else {
@@ -222,8 +219,7 @@ proc ::tk::dialog::error::bgerror err {
 		-padx 10
 	grid columnconfigure .bgerrorDialog.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
-	if {($tcl_platform(platform) eq "macintosh")
-	    || ([tk windowingsystem] eq "aqua")} {
+	if {[tk windowingsystem] eq "aqua"} {
 	    if {($name eq "ok") || ($name eq "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 79
 	    }

@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.25 2003/03/06 15:05:25 dkf Exp $
+# RCS: @(#) $Id: tk.decls,v 1.26 2004/03/17 18:15:42 das Exp $
 
 library tk
 
@@ -1296,58 +1296,6 @@ declare 4 win {
 declare 5 win {
     int Tk_TranslateWinEvent (HWND hwnd,
 	    UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)
-}
-
-# Mac specific functions
-
-declare 0 mac {
-    void Tk_MacSetEmbedHandler (
-	    Tk_MacEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacEmbedGetClipProc *getClipProc,
-	    Tk_MacEmbedGetOffsetInParentProc *getOffsetProc)
-}
- 
-declare 1 mac {
-    void Tk_MacTurnOffMenus (void)
-}
-
-declare 2 mac {
-    void Tk_MacTkOwnsCursor (int tkOwnsIt)
-}
-
-declare 3 mac {
-    void TkMacInitMenus (Tcl_Interp *interp)
-}
-
-declare 4 mac {
-    void TkMacInitAppleEvents (Tcl_Interp *interp)
-}
-
-declare 5 mac {
-    int TkMacConvertEvent (EventRecord *eventPtr)
-}
-
-declare 6 mac {
-    int TkMacConvertTkEvent (EventRecord *eventPtr, Window window)
-}
-
-declare 7 mac {
-    void TkGenWMConfigureEvent (Tk_Window tkwin,
-	    int x, int y, int width, int height, int flags)
-}
-
-declare 8 mac {
-    void TkMacInvalClipRgns (TkWindow *winPtr)
-}
-
-declare 9 mac {
-    int TkMacHaveAppearance (void)
-}
-
-declare 10 mac {
-    GWorldPtr TkMacGetDrawablePort (Drawable drawable)
 }
 
 # Mac OS X specific functions

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.48 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.49 2004/03/17 18:15:44 das Exp $
  */
 
 #include "default.h"
@@ -22,7 +22,7 @@
 #include "tkInt.h"
 #include "tkUndo.h"
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
 #define Style TkStyle
 #define DInfo TkDInfo
 #endif

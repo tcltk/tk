@@ -9,19 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.6 2002/08/31 06:12:31 das Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.7 2004/03/17 18:15:50 das Exp $
  */
 
 #include <tkInt.h>
 
-#if !defined(MAC_TCL) && !defined(MAC_OSX_TK)
+#if !defined(MAC_OSX_TK)
 #	include <X11/Xlib.h>
-#endif
-#ifdef MAC_TCL
-#	include <Xlib.h>
-#	include <X.h>
-#	define Cursor XCursor
-#	define Region XRegion
 #endif
 #ifdef MAC_OSX_TK
 #	include <X11/Xlib.h>
@@ -445,7 +439,7 @@ XDrawPoints(display, d, gc, points, npoints, mode)
     }
 }
 
-#if !defined(MAC_TCL) && !defined(MAC_OSX_TK)
+#if !defined(MAC_OSX_TK)
 void
 XDrawSegments(display, d, gc, segments, nsegments)
     Display* display;

@@ -4,7 +4,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: spinbox.test,v 1.7 2003/04/01 21:06:52 dgp Exp $
+# RCS: @(#) $Id: spinbox.test,v 1.8 2004/03/17 18:15:50 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1139,7 +1139,7 @@ test spinbox-13.10 {GetSpinboxIndex procedure} {unixOnly} {
 
     list [catch {.e index sel.first} msg] $msg
 } {1 {selection isn't in widget .e}}
-test spinbox-13.11 {GetSpinboxIndex procedure} {macOrPc} {
+test spinbox-13.11 {GetSpinboxIndex procedure} {pcOnly} {
     # On mac and pc, when selection is cleared, spinbox widget remembers
     # last selected range.  When selection ownership is restored to 
     # spinbox, the old range will be rehighlighted.
@@ -1149,10 +1149,10 @@ test spinbox-13.11 {GetSpinboxIndex procedure} {macOrPc} {
 test spinbox-13.12 {GetSpinboxIndex procedure} {unixOnly} {
     list [catch {.e index sbogus} msg] $msg
 } {1 {selection isn't in widget .e}}
-test spinbox-13.13 {GetSpinboxIndex procedure} {macOrPc} {
+test spinbox-13.13 {GetSpinboxIndex procedure} {pcOnly} {
     list [catch {.e index sbogus} msg] $msg
 } {1 {bad spinbox index "sbogus"}}
-test spinbox-13.14 {GetSpinboxIndex procedure} {macOrPc} {
+test spinbox-13.14 {GetSpinboxIndex procedure} {pcOnly} {
     list [catch {selection get}] [catch {.e index sbogus}]
 } {1 1}
 test spinbox-13.15 {GetSpinboxIndex procedure} {

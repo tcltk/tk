@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.8 2002/08/31 06:12:27 das Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.9 2004/03/17 18:15:44 das Exp $
  */
 
 
@@ -36,10 +36,6 @@
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
-#endif
-
-#ifdef MAC_TCL
-#include "tkMacInt.h"
 #endif
 
 #ifdef MAC_OSX_TK

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.19 2003/09/20 03:43:29 chengyemao Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.20 2004/03/17 18:15:43 das Exp $
  */
 
 #include "tk.h"
@@ -332,11 +332,7 @@ Tk_CreateConsoleWindow(interp)
     Tk_Window mainWindow = Tk_MainWindow(interp);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-#ifdef MAC_TCL
-    static char initCmd[] = "if {[catch {source $tk_library:console.tcl}]} {source -rsrc console}";
-#else
     static char initCmd[] = "source $tk_library/console.tcl";
-#endif
     
     consoleInterp = Tcl_CreateInterp();
     if (consoleInterp == NULL) {
