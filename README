@@ -1,13 +1,14 @@
 The Tk Toolkit
 
-SCCS: %Z% $Id: README,v 1.6 1998/07/29 22:58:24 welch Exp $ 
+SCCS: %Z% $Id: README,v 1.7 1998/08/04 23:25:15 welch Exp $ 
 
 0. Preface
 ----------
-This is a pre-release of 8.0.3, tk_patchLevel "8.0.3-4"
-This is close to final, with the exception of one important
-windows bug that we plan to fix in the next week or two.
-(See the tcl/README file)
+This is a pre-release of 8.0.3, tk_patchLevel "8.0.3-5"
+This is very close to final, and we plan code freeze Thursday,
+so I'll make the release that night.  But, please compile now
+to flush out any problems.
+
 This release is being made early to help
 with the Consortium CD project.  Please do not advertise or
 circulate this release widely.  If you have problems, please figure
@@ -23,6 +24,15 @@ and improved Macintosh embedding code.
 certain Tk structures.  This means extensions should work with
 either vanilla Tk or a dash-patched version.
 4. Modifications to support the Macintosh Appearance manager.
+
+Fixes relative to previous pre-releases
+	Fixed the reverse video bitmaps on UNIX
+	Several menu and alt-key fixes:
+	    fixed bug in menus where bgerrors were not generated during menu callbacks
+	    fixed memory leak in menu code
+	    fixed Alt-key handling
+	    fixed bug in menubar handling so menubar doesn't get destroyed when a
+		window is destroyed
 
 1. Introduction
 ---------------
