@@ -1,5 +1,8 @@
 2004-08-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* doc/TkInitStubs.3, doc/photo.n, doc/ParseArgv.3, doc/options.n: 
+	* doc/keysyms.n, doc/font.n: More doc fixes. [Patch 1012837]
+
 	* doc/place.n, doc/pack.n, doc/grid.n, doc/getOpenFile.n:
 	* doc/event.n, doc/chooseDirectory.n, doc/bind.n:
 	Spelling and grammar fixes from Mikhail Kolesnitchenko. [Patch 1012083]
