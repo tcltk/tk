@@ -1,3 +1,132 @@
+2004-03-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	Removed support for Mac OS Classic platform [Patch 918139]
+
+	* doc/console.n:
+	* doc/tk.n:
+	* generic/README:
+	* generic/default.h:
+	* generic/tk.decls:
+	* generic/tk.h:
+	* generic/tkBind.c:
+	* generic/tkCmds.c:
+	* generic/tkConsole.c:
+	* generic/tkFileFilter.h:
+	* generic/tkGrab.c:
+	* generic/tkInitScript.h:
+	* generic/tkInt.decls:
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkMain.c:
+	* generic/tkPlatDecls.h:
+	* generic/tkPointer.c:
+	* generic/tkPort.h:
+	* generic/tkSelect.c:
+	* generic/tkStubInit.c:
+	* generic/tkStubLib.c:
+	* generic/tkTest.c:
+	* generic/tkText.c:
+	* generic/tkWindow.c:
+	* library/bgerror.tcl:
+	* library/button.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/msgbox.tcl:
+	* library/spinbox.tcl:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/demos/text.tcl:
+	* library/demos/widget:
+	* mac/MW_TkBuildLibHeader.h (removed):
+	* mac/MW_TkBuildLibHeader.pch (removed):
+	* mac/MW_TkHeader.h (removed):
+	* mac/MW_TkHeader.pch (removed):
+	* mac/MW_TkHeaderCommon.h (removed):
+	* mac/MW_TkOldImgHeader.h (removed):
+	* mac/MW_TkOldImgStaticHeader.h (removed):
+	* mac/MW_TkStaticHeader.h (removed):
+	* mac/MW_TkStaticHeader.pch (removed):
+	* mac/MW_TkTestHeader.h (removed):
+	* mac/MW_TkTestHeader.pch (removed):
+	* mac/README (removed):
+	* mac/bugs.doc (removed):
+	* mac/tclets.r (removed):
+	* mac/tclets.tcl (removed):
+	* mac/tkMac.h (removed):
+	* mac/tkMacAppInit.c (removed):
+	* mac/tkMacAppearanceStubs.c (removed):
+	* mac/tkMacApplication.r (removed):
+	* mac/tkMacBitmap.c (removed):
+	* mac/tkMacButton.c (removed):
+	* mac/tkMacClipboard.c (removed):
+	* mac/tkMacColor.c (removed):
+	* mac/tkMacConfig.c (removed):
+	* mac/tkMacCursor.c (removed):
+	* mac/tkMacCursors.r (removed):
+	* mac/tkMacDefault.h (removed):
+	* mac/tkMacDialog.c (removed):
+	* mac/tkMacDraw.c (removed):
+	* mac/tkMacEmbed.c (removed):
+	* mac/tkMacFont.c (removed):
+	* mac/tkMacHLEvents.c (removed):
+	* mac/tkMacInit.c (removed):
+	* mac/tkMacInt.h (removed):
+	* mac/tkMacKeyboard.c (removed):
+	* mac/tkMacLibrary.r (removed):
+	* mac/tkMacMDEF.c (removed):
+	* mac/tkMacMDEF.r (removed):
+	* mac/tkMacMenu.c (removed):
+	* mac/tkMacMenu.r (removed):
+	* mac/tkMacMenubutton.c (removed):
+	* mac/tkMacMenus.c (removed):
+	* mac/tkMacPort.h (removed):
+	* mac/tkMacProjects.sea.hqx (removed):
+	* mac/tkMacRegion.c (removed):
+	* mac/tkMacResource.r (removed):
+	* mac/tkMacScale.c (removed):
+	* mac/tkMacScrlbr.c (removed):
+	* mac/tkMacSend.c (removed):
+	* mac/tkMacSubwindows.c (removed):
+	* mac/tkMacTclCode.r (removed):
+	* mac/tkMacTest.c (removed):
+	* mac/tkMacWindowMgr.c (removed):
+	* mac/tkMacWm.c (removed):
+	* mac/tkMacXCursors.r (removed):
+	* mac/tkMacXStubs.c (removed):
+	* mac/widget.r (removed):
+	* tests/clrpick.test:
+	* tests/cursor.test:
+	* tests/entry.test:
+	* tests/font.test:
+	* tests/macEmbed.test (removed):
+	* tests/macFont.test (removed):
+	* tests/macMenu.test (removed):
+	* tests/macWinMenu.test (removed):
+	* tests/macscrollbar.test (removed):
+	* tests/menuDraw.test:
+	* tests/safe.test:
+	* tests/scrollbar.test:
+	* tests/select.test:
+	* tests/spinbox.test:
+	* tests/text.test:
+	* tests/tk.test:
+	* tests/winfo.test:
+	* tests/wm.test:
+	* unix/Makefile.in:
+	* unix/README:
+	* unix/tk.spec:
+	* unix/tkUnix3d.c:
+	* unix/tkUnixDraw.c:
+	* xlib/xgc.c:
+	* xlib/xutil.c:
+	* xlib/X11/X.h:
+	* xlib/X11/Xlib.h:
+	* xlib/X11/Xutil.h:
+	* xlib/X11/keysym.h:
+
 2004-03-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tkUnixButton.c (TkpDrawCheckIndicator): correct crash

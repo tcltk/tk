@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.91 2004/03/04 00:07:06 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.92 2004/03/17 18:15:50 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1133,15 +1133,6 @@ dist:   $(UNIX_DIR)/configure mklinks
 		$(DISTDIR)/win/rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/wish.exe.manifest
-	mkdir $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/tkMacProjects.sea.hqx $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/*.c $(TOP_DIR)/mac/*.h $(TOP_DIR)/mac/*.r \
-		$(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/README $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/*.pch $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/*.doc $(DISTDIR)/mac
-	cp -p $(TOP_DIR)/mac/*.tcl $(DISTDIR)/mac
 	mkdir $(DISTDIR)/macosx
 	cp -p $(TOP_DIR)/macosx/Makefile $(TOP_DIR)/macosx/Wish.icns \
 		$(TOP_DIR)/macosx/*.c $(TOP_DIR)/macosx/*.h \
@@ -1228,21 +1219,6 @@ allpatch: dist
 		gzip -9 $(DISTNAME)-src.tar; zip -r8 $(ZIPNAME) tk${VERSION}
 	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/$(DISTNAME)
 	mv $(DISTROOT)/old $(DISTROOT)/tk${VERSION}
-
-#
-# Target to create a Macintosh version of the distribution.  This will
-# do a normal distribution and then massage the output to prepare it
-# for moving to the Mac platform.  This requires a few scripts and
-# programs found only in the Tcl greoup's tool workspace.
-#
-
-macdist: dist
-	rm -f $(DISTDIR)/mac/tkMacProjects.sea.hqx
-	$(TCL_EXE) $(TOOL_DIR)/man2html.tcl $(DISTDIR)/tmp ../.. tk$(VERSION)
-	mv $(DISTDIR)/tmp/tk$(VERSION) $(DISTDIR)/html
-	rm -rf $(DISTDIR)/doc
-	rm -rf $(DISTDIR)/tmp
-	$(TCL_EXE) $(TOOL_DIR)/cvtEOL.tcl $(DISTDIR)
 
 #
 # Targets to build Solaris package of the distribution for the current

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.16 2003/09/05 22:44:39 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.17 2004/03/17 18:15:43 das Exp $
  */
 
 #include <ctype.h>
@@ -55,11 +55,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 #if !defined(__WIN32__) && !defined(_WIN32)
-#if !defined(MAC_TCL)
 extern int		isatty _ANSI_ARGS_((int fd));
-#else
-#include <unistd.h>
-#endif
 extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
 
@@ -126,7 +122,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     Tcl_FindExecutable(argv[0]);
     tsdPtr->interp = interp;
 
-#if (defined(__WIN32__) || defined(MAC_TCL))
+#if defined(__WIN32__)
     Tk_InitConsoleChannels(interp);
 #endif
     
