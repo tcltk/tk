@@ -1,3 +1,8 @@
+2001-10-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/console.tcl (ConsoleOutput): fixed undefined widget
+	argument.
+
 2001-10-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/xmfbox.tcl: fixed filtering in motif file dialog.
