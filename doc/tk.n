@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tk.n,v 1.5 2002/06/17 20:09:01 hobbs Exp $
+'\" RCS: @(#) $Id: tk.n,v 1.6 2002/06/22 00:37:16 dkf Exp $
 '\" 
 .so man.macros
 .TH tk n 8.4 Tk "Tk Built-In Commands"
@@ -45,7 +45,7 @@ this command will reenable them and recreate the \fBsend\fR
 command.
 .VS 8.4
 .TP
-\fBtk caret window \fR?\fB\-x \fIx\fR? \fR?\fB\-y \fIy\fR? \fR?\fB\-height \fIheight\fR?
+\fBtk caret window \fR?\fB\-x \fIx\fR? ?\fB\-y \fIy\fR? ?\fB\-height \fIheight\fR?
 .
 Sets and queries the caret location for the display of the specified
 Tk window \fIwindow\fR.  The caret is the per-display cursor location
