@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinRegion.c,v 1.4 2004/10/26 13:15:09 dkf Exp $
+ * RCS: @(#) $Id: tkWinRegion.c,v 1.5 2004/10/26 14:07:57 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -179,7 +179,7 @@ TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
 
     for (y1 = 0; y1 < height; y1++) {
 	lineDataPtr = dataPtr;
-	for {x1 = 0; x1 < width; x1 = end) {
+	for (x1 = 0; x1 < width; x1 = end) {
 	    /* search for first non-transparent pixel */
 	    while ((x1 < width) && !*lineDataPtr) {
 		x1++;

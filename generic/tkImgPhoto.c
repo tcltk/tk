@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.50 2004/10/26 13:15:09 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.51 2004/10/26 14:07:57 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -4520,7 +4520,6 @@ Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height, compRule)
      */
 
     if (alphaOffset) {
-	int x1, y1, end;
 
 	/*
 	 * This block is grossly inefficient.  For each row in the image, it
