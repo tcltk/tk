@@ -4,21 +4,25 @@
         by trying to avoid posting a menu offscreen.
 
 2003-06-09  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixRFont.c: fix for [Bug#751553] "Xft: 
 	[font configure] does not update in-use fonts".
 	Fixed TkpGetSubFonts() to return information about
 	all subfonts, not just the first one.
 
 2003-06-01  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/configure.in: BUGFIX, --enable-xft test was broken.
 	* unix/configure: regen
 
 2003-05-31  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixRFont.c (InitFont): Fill in TkFontAttributes from
 	pattern returned from GetFont (actual font) instead of the 
 	query pattern (requested font).
 
 2003-05-31  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixRFont.c: New file 
 	* unix/tkUnixDefault.h: Use different default fonts if HAVE_XFT
 	* unix/Makefile.in:
@@ -35,6 +39,7 @@
 	[Bug#465324] and removed 'knownBug' from a test.
 	
 2003-05-29  Joe English  <jenglish@users.sourceforge.net>
+
 	* doc/text.n: Fixed markup errors.
 
 2003-05-28  Miguel Bañón <bagnonm@users.sourceforge.net>
@@ -908,6 +913,7 @@
 	extended use of -to.
 
 2003-01-17  D. Richard Hipp <drh@hwaci.com>
+
 	* generic/tkCanvUtil.c: The clipping algorithm introduced on 2003-01-08
 	was unnecessarily aggressive in reducing the size of the clipping box.
 	This did not cause a problem for normal display, but did create
@@ -916,6 +922,7 @@
 	the clipping box somewhat.  [Bug #663981]
 
 2003-01-14  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/tkSelect.c (Tk_CreateSelHandler):
 	Fix for #666346 "Selection handling crashes under KDE 3.0"
 	* tests/unixSelect.test (unixSelect-1.20): Added test case.
@@ -5933,6 +5940,7 @@
 	in win/tkConfig.sh, fix that.
 
 2000-07-25  Joe English  <jenglish@flightlab.com>
+
 	* doc: CanvPsY.3, ConfigWidg.3, CrtImgType.3, CrtItemType.3, 
 	FontId.3, GetFont.3, canvas.n, font.n, options.n, text.n:
 	Documentation fix: Replaced references to XFontStruct *
