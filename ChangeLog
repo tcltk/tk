@@ -1,3 +1,15 @@
+2003-09-30  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/browse:		Added suitable [package require]
+	* library/demos/hello:		lines to all the Tk demo scripts
+	* library/demos/ixset:		which are not run as part of
+	* library/demos/rmt:		something larger.  [FRQ 815118]
+	* library/demos/rolodex: 
+	* library/demos/square: 
+	* library/demos/tcolor: 
+	* library/demos/timer: 
+	* library/demos/widget: 
+
 2003-09-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/safe.test:    Accomodate TIP #150 in the results.

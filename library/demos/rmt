@@ -7,7 +7,10 @@ exec wish "$0" "$@"
 # Tk applications.  It allows you to select an application and
 # then type commands to that application.
 #
-# RCS: @(#) $Id: rmt,v 1.3 2001/10/29 16:23:32 dkf Exp $
+# RCS: @(#) $Id: rmt,v 1.4 2003/09/30 14:54:30 dkf Exp $
+
+package require Tcl 8.4
+package require Tk
 
 wm title . "Tk Remote Controller"
 wm iconname . "Tk Remote"
@@ -62,58 +65,60 @@ bind .t <Return> {
 }
 bind .t <Delete> {
     catch {.t tag remove sel sel.first promptEnd}
-    if {[.t tag nextrange sel 1.0 end] == ""} {
-	if [.t compare insert < promptEnd] {
+    if {[.t tag nextrange sel 1.0 end] eq ""} {
+	if {[.t compare insert < promptEnd]} {
 	    break
 	}
     }
 }
 bind .t <BackSpace> {
     catch {.t tag remove sel sel.first promptEnd}
-    if {[.t tag nextrange sel 1.0 end] == ""} {
-	if [.t compare insert <= promptEnd] {
+    if {[.t tag nextrange sel 1.0 end] eq ""} {
+	if {[.t compare insert <= promptEnd]} {
 	    break
 	}
     }
 }
 bind .t <Control-d> {
-    if [.t compare insert < promptEnd] {
+    if {[.t compare insert < promptEnd]} {
 	break
     }
 }
 bind .t <Control-k> {
-    if [.t compare insert < promptEnd] {
+    if {[.t compare insert < promptEnd]} {
 	.t mark set insert promptEnd
     }
 }
 bind .t <Control-t> {
-    if [.t compare insert < promptEnd] {
+    if {[.t compare insert < promptEnd]} {
 	break
     }
 }
 bind .t <Meta-d> {
-    if [.t compare insert < promptEnd] {
+    if {[.t compare insert < promptEnd]} {
 	break
     }
 }
 bind .t <Meta-BackSpace> {
-    if [.t compare insert <= promptEnd] {
+    if {[.t compare insert <= promptEnd]} {
 	break
     }
 }
 bind .t <Control-h> {
-    if [.t compare insert <= promptEnd] {
+    if {[.t compare insert <= promptEnd]} {
 	break
     }
 }
-auto_load tkTextInsert
-proc tkTextInsert {w s} {
-    if {$s == ""} {
+### This next bit *isn't* nice - DKF ###
+auto_load tk::TextInsert
+proc tk::TextInsert {w s} {
+    if {$s eq ""} {
 	return
     }
     catch {
-	if {[$w compare sel.first <= insert]
-		&& [$w compare sel.last >= insert]} {
+	if {
+	    [$w compare sel.first <= insert] && [$w compare sel.last >= insert]
+	} then {
 	    $w tag remove sel sel.first promptEnd
 	    $w delete sel.first sel.last
 	}
@@ -145,23 +150,21 @@ proc invoke {} {
     global app executing lastCommand
     set cmd [.t get promptEnd insert]
     incr executing 1
-    if [info complete $cmd] {
-	if {$cmd == "!!\n"} {
+    if {[info complete $cmd]} {
+	if {$cmd eq "!!\n"} {
 	    set cmd $lastCommand
 	} else {
 	    set lastCommand $cmd
 	}
-	if {$app == "local"} {
+	if {$app eq "local"} {
 	    set result [catch [list uplevel #0 $cmd] msg]
 	} else {
 	    set result [catch [list send $app $cmd] msg]
 	}
 	if {$result != 0} {
 	    .t insert insert "Error: $msg\n"
-	} else {
-	    if {$msg != ""} {
-		.t insert insert $msg\n
-	    }
+	} elseif {$msg ne ""} {
+	    .t insert insert $msg\n
 	}
 	prompt
 	.t mark set promptEnd insert
@@ -179,14 +182,14 @@ proc invoke {} {
 proc newApp appName {
     global app executing
     set app $appName
-    if !$executing {
+    if {!$executing} {
 	.t mark gravity promptEnd right
 	.t delete "promptEnd linestart" promptEnd
 	.t insert promptEnd "$appName: "
 	.t tag add bold "promptEnd linestart" promptEnd
 	.t mark gravity promptEnd left
     }
-    return {}
+    return
 }
 
 # The procedure below will fill in the applications sub-menu with a list
