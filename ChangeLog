@@ -1,5 +1,10 @@
 2004-08-16  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* doc/button.n, doc/checkbutton.n, doc/label.n, doc/menubutton.n:
+	* doc/radiobutton.n: Added cross-reference to new standard option.
+	* doc/options.n: Added standard documentation for the -compound
+	option. [Bug 712588]
+
 	* doc/canvas.n: Spelling and grammar fixes from Mikhail
 	Kolesnitschenko. [Bug 1009636]
 
