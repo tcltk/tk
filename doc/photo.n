@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.5 2000/05/23 00:31:36 hobbs Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.6 2000/07/25 21:14:35 jenglish Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -337,7 +337,6 @@ if this option is not given, is the whole image.
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
 .RE
-.TP
 .SH "IMAGE FORMATS"
 .PP
 The photo image code is structured to allow handlers for additional
