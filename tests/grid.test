@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.6 1999/11/13 01:23:01 wart Exp $
+# RCS: @(#) $Id: grid.test,v 1.7 2000/01/20 23:46:21 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -783,6 +783,22 @@ test grid-11.14 {default widget placement} {
     set a
 } {{0,25  50,50} {50,0  50,50} {50,50  50,50}}
 grid_reset 11.14
+
+test grid-11.15 {^ ^ test with multiple windows} {
+    foreach i {1 2 3 4} {
+	frame .f$i -width 50 -height 50 -bd 1 -relief solid
+    }
+    grid .f1 .f2 .f3 -sticky ns
+    grid .f4 ^ ^
+    update
+    set a ""
+    foreach i {1 2 3 4} {
+	lappend a "[winfo x .f$i],[winfo y .f$i]\
+		[winfo width .f$i],[winfo height .f$i]"
+    }
+    set a
+} {{0,0 50,50} {50,0 50,100} {100,0 50,100} {0,50 50,50}}
+grid_reset 11.15
 
 test grid-12.1 {-sticky} {
     catch {unset data}

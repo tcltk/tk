@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.6 1999/11/10 02:56:25 hobbs Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.7 2000/01/20 23:46:20 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -2505,6 +2505,7 @@ ConfigureSlaves(interp, tkwin, argc, argv)
 	    return TCL_ERROR;
 	}
 
+	/* Count the number of consecutive ^'s starting from this position */
 	for (width=1; width+j < numWindows && *argv[j+width] == REL_VERT;
 		width++) {
 	    /* Null Body */
@@ -2517,7 +2518,7 @@ ConfigureSlaves(interp, tkwin, argc, argv)
 	if (lastWindow == NULL) { 
 	    if (masterPtr->masterDataPtr != NULL) {
 		SetGridSize(masterPtr);
-		lastRow = masterPtr->masterDataPtr->rowEnd - 1;
+		lastRow = masterPtr->masterDataPtr->rowEnd - 2;
 	    } else {
 		lastRow = 0;
 	    }
@@ -2525,27 +2526,30 @@ ConfigureSlaves(interp, tkwin, argc, argv)
 	} else {
 	    other = Tk_NameToWindow(interp, lastWindow, tkwin);
 	    otherPtr = GetGrid(other);
-	    lastRow = otherPtr->row;
+	    lastRow = otherPtr->row + otherPtr->numRows - 2;
 	    lastColumn = otherPtr->column + otherPtr->numCols;
 	}
 
 	for (match=0, slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 					 slavePtr = slavePtr->nextPtr) {
 
-	    if (slavePtr->numCols == width
-		    && slavePtr->column == lastColumn
-		    && slavePtr->row + slavePtr->numRows == lastRow) {
-		slavePtr->numRows++;
-		match++;
+	    if (slavePtr->column == lastColumn
+		    && slavePtr->row + slavePtr->numRows - 1 == lastRow) {
+		if (slavePtr->numCols <= width) {
+		    slavePtr->numRows++;
+		    match++;
+		    j += slavePtr->numCols - 1;
+		    lastWindow = Tk_PathName(slavePtr->tkwin);
+		    break;
+		}
 	    }
-	    lastWindow = Tk_PathName(slavePtr->tkwin);
 	}
 	if (!match) {
 	    Tcl_AppendResult(interp, "can't find slave to extend with \"^\".",
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
-	j += width - 1;
+/*	j += width - 1; */
     }
 
     if (masterPtr == NULL) {
