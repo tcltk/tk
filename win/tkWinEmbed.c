@@ -11,11 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.13 2004/12/19 18:14:26 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.14 2004/12/20 01:13:12 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
-extern TkWinProcs *tkWinProcs;
 
 /*
  * One of the following structures exists for each container in this
@@ -51,6 +50,7 @@ static void		EmbeddedEventProc _ANSI_ARGS_((
 static void		EmbedGeometryRequest _ANSI_ARGS_((
     			    Container*containerPtr, int width, int height));
 static void		EmbedWindowDeleted _ANSI_ARGS_((TkWindow *winPtr));
+
 
 /*
  *----------------------------------------------------------------------
@@ -194,7 +194,7 @@ TkpUseWindow(interp, tkwin, string)
     if(id == 0 || id != (long)hwnd) {
 	char msg[256];
 	if(id == 0) {
-	    sprintf(msg, "The window \"%s\" is already in use", string);
+	    sprintf(msg, "The window \"%s\" is either unable or already to be used as a container", string);
 	    Tcl_SetResult(interp, msg, TCL_VOLATILE);
 	    return TCL_ERROR;
 	} else {
@@ -436,11 +436,8 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    TkWinSetWindowPos(GetParent(containerPtr->parentHWnd), (HWND)wParam, (int)lParam);
 	    break;
 
-	    case TK_TITLE:
-	    /*
-	     * lParam - a pointer to a unicode string
-	     */
-	    (*tkWinProcs->setWindowText)(GetParent(containerPtr->parentHWnd), (LPCTSTR)lParam);
+	    case TK_GETFRAMEWID:
+	    result = (long)GetParent(containerPtr->parentHWnd);
 	    break;
 
 	    case TK_CLAIMFOCUS:
@@ -454,15 +451,16 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    }
 	    break;
 
-	    /*
-	     * Return 0 since the current Tk container implementation 
-	     * is unable to provide these services.
-	     *  
-	     */
-	    case TK_ICONIFY:
-	    case TK_DEICONIFY:
 	    case TK_WITHDRAW:
-	    result = 0;  
+	    TkpWinToplevelWithDraw(containerPtr->parentPtr);
+	    break;
+
+	    case TK_ICONIFY:
+	    TkpWinToplevelIconify(containerPtr->parentPtr);
+	    break;
+
+	    case TK_DEICONIFY:
+	    TkpWinToplevelDeiconify(containerPtr->parentPtr);
 	    break;
 
 	    case TK_MOVEWINDOW:
@@ -470,6 +468,16 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     *	wParam - x value of the frame's upper left;
 	     *	lParam - y value of the frame's upper left;
 	     */
+	    result = TkpWinToplevelMove(containerPtr->parentPtr, wParam, lParam);
+	    break;
+
+	     /*
+	     * Return 0 since the current Tk container implementation 
+	     * is unable to provide following services.
+	     *  
+	     */
+
+	    default:
 	    result = 0;  
 	    break;
 	}
