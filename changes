@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.59 2002/09/08 23:42:21 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.60 2002/09/09 23:51:06 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5311,4 +5311,4 @@ Rewrote Tk test suite to use tcltest package.
 
 2002-09-02 (platfrom support) 64-bit compile on HP-11 (martin)
 
---- Released 8.4.0, September X, 2002 --- See ChangeLog for details ---
+--- Released 8.4.0, September 10, 2002 --- See ChangeLog for details ---
