@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.72 2002/06/25 16:45:12 rmax Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.73 2002/06/26 02:38:26 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -88,6 +88,15 @@ TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Libraries built with optimization switches have this additional extension
 TK_DBGX			= @TK_DBGX@
+
+# Flag, 1: we're building a shared lib, 0 we're not
+TK_SHARED_BUILD		= @TK_SHARED_BUILD@
+
+# Directory in which to install the pkgIndex.tcl file for loadable Tk
+PKG_INSTALL_DIR		= $(LIB_INSTALL_DIR)/tk$(VERSION)$(TK_DBGX)
+
+# Package index file for loadable Tk
+PKG_INDEX		= $(PKG_INSTALL_DIR)/pkgIndex.tcl
 
 # warning flags
 CFLAGS_WARNING		= @CFLAGS_WARNING@
@@ -482,7 +491,7 @@ install: all install-binaries install-libraries install-demos install-doc
 # possible (e.g. if installing as root).
 
 install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
-	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
+	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) $(PKG_INSTALL_DIR); \
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
@@ -496,6 +505,16 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    fi
 	@echo "Installing $(TK_LIB_FILE) to $(LIB_INSTALL_DIR)/"
 	@$(INSTALL_DATA) $(TK_LIB_FILE) $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
+	@if test "$(TK_SHARED_BUILD)"; then \
+	    echo "Creating package index $(PKG_INDEX)"; \
+	    rm -f $(PKG_INDEX); \
+	    echo "if {[package vcompare \\" > $(PKG_INDEX); \
+	    echo "    [package provide Tcl] \\" >> $(PKG_INDEX); \
+	    echo "    $(TCLVERSION)] != 0} {return}" >> $(PKG_INDEX); \
+	    echo "package ifneeded Tk $(VERSION) \\" >> $(PKG_INDEX); \
+	    echo "    [list load [file join \$$dir .. \\" >> $(PKG_INDEX); \
+	    echo "    $(TK_LIB_FILE)] Tk]" >> $(PKG_INDEX); \
+	    fi
 	@(cd $(LIB_INSTALL_DIR); $(RANLIB) $(TK_LIB_FILE))
 	@chmod 555 $(LIB_INSTALL_DIR)/$(TK_LIB_FILE)
 	@echo "Installing wish as $(BIN_INSTALL_DIR)/wish$(VERSION)"
