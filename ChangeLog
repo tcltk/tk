@@ -1,5 +1,14 @@
 2002-01-11  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	Use ${libdir} instead of ${exec_prefix}/lib. [Tcl bug 489370]
+	
+	* unix/configure: Regen.
+	* unix/configure.in: Define and use libdir.
+	* win/configure: Regen.
+	* win/configure.in: Define libdir.
+
+2002-01-11  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* unix/Makefile.in: Burn Tcl and Tk build
 	directories into tktest executable to avoid crashes
 	caused by ld loading a previously installed version

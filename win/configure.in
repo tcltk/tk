@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.39 2001/11/25 02:54:42 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.40 2002/01/11 20:56:38 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -23,6 +23,8 @@ fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
+# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
+eval libdir="$libdir"
 
 #------------------------------------------------------------------------
 # Standard compiler checks
