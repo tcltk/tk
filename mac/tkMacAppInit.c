@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.8 1999/04/16 01:51:29 stanton Exp $
+ * RCS: @(#) $Id: tkMacAppInit.c,v 1.9 1999/04/28 18:18:07 redman Exp $
  */
 
 #include <Gestalt.h>
@@ -54,8 +54,6 @@ short			SIOUXHandleOneEvent _ANSI_ARGS_((EventRecord *event));
  * Prototypes for functions from the tkConsole.c file.
  */
  
-EXTERN void		TkConsoleCreate _ANSI_ARGS_((void));
-EXTERN int		TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN void		TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
 			    int devId, char *buffer, long size));
 /*
@@ -311,7 +309,7 @@ SetupMainInterp(
 
     if (strcmp(Tcl_GetVar(interp, "tcl_interactive", TCL_GLOBAL_ONLY), "1")
 	    == 0) {
-	if (TkConsoleInit(interp) == TCL_ERROR) {
+	if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 	    goto error;
 	}
     }

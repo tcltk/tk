@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.3 1999/04/16 01:51:13 stanton Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.4 1999/04/28 18:18:06 redman Exp $
  */
 
 #ifndef _TKDECLS
@@ -742,6 +742,12 @@ EXTERN int		Tk_SetOptions _ANSI_ARGS_((Tcl_Interp * interp,
 				int objc, Tcl_Obj *CONST objv[], 
 				Tk_Window tkwin, Tk_SavedOptions * savePtr, 
 				int * maskPtr));
+/* 215 */
+EXTERN void		Tk_InitConsoleChannels _ANSI_ARGS_((
+				Tcl_Interp * interp));
+/* 216 */
+EXTERN int		Tk_CreateConsoleWindow _ANSI_ARGS_((
+				Tcl_Interp * interp));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -969,6 +975,8 @@ typedef struct TkStubs {
     void (*tk_MainEx) _ANSI_ARGS_((int argc, char ** argv, Tcl_AppInitProc * appInitProc, Tcl_Interp * interp)); /* 212 */
     void (*tk_RestoreSavedOptions) _ANSI_ARGS_((Tk_SavedOptions * savePtr)); /* 213 */
     int (*tk_SetOptions) _ANSI_ARGS_((Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *CONST objv[], Tk_Window tkwin, Tk_SavedOptions * savePtr, int * maskPtr)); /* 214 */
+    void (*tk_InitConsoleChannels) _ANSI_ARGS_((Tcl_Interp * interp)); /* 215 */
+    int (*tk_CreateConsoleWindow) _ANSI_ARGS_((Tcl_Interp * interp)); /* 216 */
 } TkStubs;
 
 extern TkStubs *tkStubsPtr;
@@ -1838,6 +1846,14 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_SetOptions
 #define Tk_SetOptions \
 	(tkStubsPtr->tk_SetOptions) /* 214 */
+#endif
+#ifndef Tk_InitConsoleChannels
+#define Tk_InitConsoleChannels \
+	(tkStubsPtr->tk_InitConsoleChannels) /* 215 */
+#endif
+#ifndef Tk_CreateConsoleWindow
+#define Tk_CreateConsoleWindow \
+	(tkStubsPtr->tk_CreateConsoleWindow) /* 216 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

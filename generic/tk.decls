@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.3 1999/04/16 01:51:09 stanton Exp $
+# RCS: @(#) $Id: tk.decls,v 1.4 1999/04/28 18:18:06 redman Exp $
 
 library tk
 
@@ -1032,6 +1032,13 @@ declare 214 generic {
 	    Tk_SavedOptions *savePtr, int *maskPtr)
 }
 
+declare 215 generic {
+    void Tk_InitConsoleChannels(Tcl_Interp *interp)
+}
+
+declare 216 generic {
+    int Tk_CreateConsoleWindow(Tcl_Interp *interp)
+}
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.4 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.5 1999/04/28 18:18:06 redman Exp $
  */
 
 #include <ctype.h>
@@ -59,8 +59,6 @@ extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
 extern void		TkpDisplayWarning _ANSI_ARGS_((char *msg,
 			    char *title));
-
-extern void TkConsoleCreate_ _ANSI_ARGS_((void));
 
 /*
  * Forward declarations for procedures defined later in this file.
@@ -125,7 +123,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     tsdPtr->interp = interp;
 
 #if (defined(__WIN32__) || defined(MAC_TCL))
-    TkConsoleCreate_();
+    Tk_InitConsoleChannels(interp);
 #endif
     
 #ifdef TCL_MEM_DEBUG

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.6 1999/04/16 01:51:55 stanton Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.7 1999/04/28 18:18:07 redman Exp $
  */
 
 #include <tk.h>
@@ -95,7 +95,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 
     /*
      * Create the console channels and install them as the standard
-     * channels.  All I/O will be discarded until TkConsoleInit is
+     * channels.  All I/O will be discarded until Tk_CreateConsoleWindow is
      * called to attach the console to a text widget.
      */
 
@@ -143,7 +143,7 @@ Tcl_AppInit(interp)
      */
 
     if (consoleRequired) {
-	if (TkConsoleInit(interp) == TCL_ERROR) {
+	if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 	    goto error;
 	}
     }
@@ -366,7 +366,7 @@ int main(int argc, char **argv)
 
     /*
      * Create the console channels and install them as the standard
-     * channels.  All I/O will be discarded until TkConsoleInit is
+     * channels.  All I/O will be discarded until Tk_CreateConsoleWindow is
      * called to attach the console to a text widget.
      */
 

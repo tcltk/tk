@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.5 1999/04/16 01:51:13 stanton Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.6 1999/04/28 18:18:06 redman Exp $
  */
 
 #include "tk.h"
@@ -33,6 +33,13 @@ typedef struct ThreadSpecificData {
     Tcl_Interp *gStdoutInterp;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+static int consoleInitialized = 0;
+
+/* 
+ * The Mutex below is used to lock access to the consoleIntialized flag
+ */
+
+TCL_DECLARE_MUTEX(consoleMutex)
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -40,8 +47,6 @@ static Tcl_ThreadDataKey dataKey;
  * The first three will be used in the tk app shells...
  */
  
-void	TkConsoleCreate_ _ANSI_ARGS_((void));
-int	TkConsoleInit _ANSI_ARGS_((Tcl_Interp *interp));
 void	TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
 			    int devId, char *buffer, long size));
 
@@ -84,7 +89,7 @@ static Tcl_ChannelType consoleChannelType = {
 /*
  *----------------------------------------------------------------------
  *
- * TkConsoleCreate, TkConsoleCreate_ --
+ * Tk_InitConsoleChannels --
  *
  * 	Create the console channels and install them as the standard
  * 	channels.  All I/O will be discarded until TkConsoleInit is
@@ -101,71 +106,86 @@ static Tcl_ChannelType consoleChannelType = {
  */
 
 void
-TkConsoleCreate()
-{
-    /*
-     * This function is being diabled so we don't end up calling it
-     * twice.  Once from WinMain() and once from Tk_MainEx(). The real
-     * function is now tkCreateConsole_ and is only called from Tk_MainEx.
-     * All of this is an ugly hack.
-     */
-}
-
-void
-TkConsoleCreate_()
+Tk_InitConsoleChannels(interp)
+    Tcl_Interp *interp;
 {
     Tcl_Channel consoleChannel;
 
     /*
-     * check for STDIN, otherwise create it
+     * Ensure that we are getting the matching version of Tcl.  This is
+     * really only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_GetStdChannel(TCL_STDIN) == NULL) {
-	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
-	        (ClientData) TCL_STDIN, TCL_READABLE);
-	if (consoleChannel != NULL) {
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
-	}
-	Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
+    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+        return;
     }
 
-    /*
-     * check for STDOUT, otherwise create it
-     */
+    Tcl_MutexLock(&consoleMutex);
+    if (!consoleInitialized) {
 
-    if (Tcl_GetStdChannel(TCL_STDOUT) == NULL) {
-	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
-	        (ClientData) TCL_STDOUT, TCL_WRITABLE);
-	if (consoleChannel != NULL) {
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
+	consoleInitialized = 1;
+	
+	/*
+	 * check for STDIN, otherwise create it
+	 */
+
+	if (Tcl_GetStdChannel(TCL_STDIN) == NULL) {
+	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
+		    (ClientData) TCL_STDIN, TCL_READABLE);
+	    if (consoleChannel != NULL) {
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-translation", "lf");
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-buffering", "none");
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-encoding", "utf-8");
+	    }
+	    Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
 	}
-	Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
-    }
 
-    /*
-     * check for STDERR, otherwise create it
-     */
-
-    if (Tcl_GetStdChannel(TCL_STDERR) == NULL) {
-	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
-	        (ClientData) TCL_STDERR, TCL_WRITABLE);
-	if (consoleChannel != NULL) {
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
-	    Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
+	/*
+	 * check for STDOUT, otherwise create it
+	 */
+	
+	if (Tcl_GetStdChannel(TCL_STDOUT) == NULL) {
+	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
+		    (ClientData) TCL_STDOUT, TCL_WRITABLE);
+	    if (consoleChannel != NULL) {
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-translation", "lf");
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-buffering", "none");
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-encoding", "utf-8");
+	    }
+	    Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
 	}
-	Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
+	
+	/*
+	 * check for STDERR, otherwise create it
+	 */
+	
+	if (Tcl_GetStdChannel(TCL_STDERR) == NULL) {
+	    consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
+		    (ClientData) TCL_STDERR, TCL_WRITABLE);
+	    if (consoleChannel != NULL) {
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-translation", "lf");
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-buffering", "none");
+		Tcl_SetChannelOption(NULL, consoleChannel,
+			"-encoding", "utf-8");
+	    }
+	    Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
+	}
     }
+    Tcl_MutexUnlock(&consoleMutex);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkConsoleInit --
+ * Tk_CreateConsoleWindow --
  *
  *	Initialize the console.  This code actually creates a new
  *	application and associated interpreter.  This effectivly hides
@@ -181,7 +201,7 @@ TkConsoleCreate_()
  */
 
 int 
-TkConsoleInit(interp)
+Tk_CreateConsoleWindow(interp)
     Tcl_Interp *interp;			/* Interpreter to use for prompting. */
 {
     Tcl_Interp *consoleInterp;

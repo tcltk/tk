@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.6 1999/04/24 01:50:50 stanton Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.7 1999/04/28 18:18:07 redman Exp $
  */
 
 #include "tkInt.h"
@@ -784,6 +784,8 @@ TkStubs tkStubs = {
     Tk_MainEx, /* 212 */
     Tk_RestoreSavedOptions, /* 213 */
     Tk_SetOptions, /* 214 */
+    Tk_InitConsoleChannels, /* 215 */
+    Tk_CreateConsoleWindow, /* 216 */
 };
 
 /* !END!: Do not edit above this line. */
