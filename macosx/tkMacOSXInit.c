@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.7 2005/01/25 06:54:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.8 2005/03/09 19:40:52 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -167,6 +167,15 @@ TkpInit(interp)
          * then use the Tk based console interpreter.
          */
     
+        /* REMOVE ME: Close stdin & stdout for remote debugging otherwise we
+         * will fight with gdb for stdin & stdout 
+         */
+            
+        if (getenv ("XCNOSTDIN") != NULL) {
+            close (0);
+            close (1);
+        }
+        
         if (!isatty(0)) {
             struct stat st;
             if (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)) {
