@@ -1,3 +1,11 @@
+2002-11-06  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/configure: Regen.
+	* unix/tcl.m4: Update from Tcl.
+	* win/configure: Regen.
+	* win/configure.in: Check that AR, RANLIB, and RC
+	are found on the path when building with gcc.
+
 2002-11-04  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.pbproj/project.pbxproj: added Wish linker flag
