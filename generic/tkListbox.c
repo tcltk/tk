@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.24 2002/01/18 02:55:06 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.25 2002/02/26 01:07:29 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1529,7 +1529,8 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *oldListObj = NULL;
-    int oldExport;
+    Tcl_Obj *errorResult = NULL;
+    int oldExport, error;
 
     oldExport = listPtr->exportSelection;
     if (listPtr->listVarName != NULL) {
@@ -1537,99 +1538,118 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ListboxListVarProc, (ClientData) listPtr);
     }
-    
-    if (Tk_SetOptions(interp, (char *)listPtr,
-	    listPtr->optionTable, objc, objv, listPtr->tkwin,
-	    &savedOptions, (int *)NULL) != TCL_OK) {
-	Tk_RestoreSavedOptions(&savedOptions);
-	return TCL_ERROR;
-    }
-    
-    /*
-     * A few options need special processing, such as setting the
-     * background from a 3-D border.
-     */
 
-    Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
+    for (error = 0; error <= 1; error++) {
+	if (!error) {
+	    /*
+	     * First pass: set options to new values.
+	     */
 
-    if (listPtr->highlightWidth < 0) {
-	listPtr->highlightWidth = 0;
-    }
-    listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
-
-    /*
-     * Claim the selection if we've suddenly started exporting it and
-     * there is a selection to export.
-     */
-
-    if (listPtr->exportSelection && !oldExport
-	    && (listPtr->numSelected != 0)) {
-	Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY, ListboxLostSelection,
-		(ClientData) listPtr);
-    }
-
-    
-    /* Verify the current status of the list var.
-     * PREVIOUS STATE    | NEW STATE     | ACTION
-     * ------------------+---------------+----------------------------------
-     * no listvar        | listvar       | If listvar does not exist, create
-     *                                     it and copy the internal list obj's
-     *                                     content to the new var.  If it does
-     *                                     exist, toss the internal list obj.
-     *
-     * listvar           | no listvar    | Copy old listvar content to the
-     *                                     internal list obj
-     *
-     * listvar           | listvar       | no special action
-     *
-     * no listvar        | no listvar    | no special action
-     */
-    oldListObj = listPtr->listObj;
-    if (listPtr->listVarName != NULL) {
-	Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
-		(char *)NULL, TCL_GLOBAL_ONLY);
-	int dummy;
-	if (listVarObj == NULL) {
-	    if (listPtr->listObj != NULL) {
-		listVarObj = listPtr->listObj;
-	    } else {
-		listVarObj = Tcl_NewObj();
+	    if (Tk_SetOptions(interp, (char *) listPtr,
+		    listPtr->optionTable, objc, objv,
+		    listPtr->tkwin, &savedOptions, (int *) NULL) != TCL_OK) {
+		continue;
 	    }
-	    if (Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *)NULL,
-		    listVarObj, TCL_GLOBAL_ONLY) == NULL) {
-		Tcl_DecrRefCount(listVarObj);
-		Tk_RestoreSavedOptions(&savedOptions);
-		return TCL_ERROR;
-	    }
-	}
-	/* Make sure the object is a good list object */
-	if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy) != TCL_OK) {
+	} else {
+	    /*
+	     * Second pass: restore options to old values.
+	     */
+
+	    errorResult = Tcl_GetObjResult(interp);
+	    Tcl_IncrRefCount(errorResult);
 	    Tk_RestoreSavedOptions(&savedOptions);
-	    Tcl_AppendResult(listPtr->interp, ": invalid listvar value",
-		    (char *)NULL);
-	    return TCL_ERROR;
 	}
-    
-	listPtr->listObj = listVarObj;
-	Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
-                TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                ListboxListVarProc, (ClientData) listPtr);
-    } else {
-	if (listPtr->listObj == NULL) {
+
+	/*
+	 * A few options need special processing, such as setting the
+	 * background from a 3-D border.
+	 */
+
+	Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
+
+	if (listPtr->highlightWidth < 0) {
+	    listPtr->highlightWidth = 0;
+	}
+	listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
+
+	/*
+	 * Claim the selection if we've suddenly started exporting it and
+	 * there is a selection to export.
+	 */
+
+	if (listPtr->exportSelection && !oldExport
+		&& (listPtr->numSelected != 0)) {
+	    Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY, ListboxLostSelection,
+		    (ClientData) listPtr);
+	}
+
+	/* Verify the current status of the list var.
+	 * PREVIOUS STATE | NEW STATE  | ACTION
+	 * ---------------+------------+----------------------------------
+	 * no listvar     | listvar    | If listvar does not exist, create
+	 *                               it and copy the internal list obj's
+	 *                               content to the new var.  If it does
+	 *                               exist, toss the internal list obj.
+	 *
+	 * listvar        | no listvar | Copy old listvar content to the
+	 *                               internal list obj
+	 *
+	 * listvar        | listvar    | no special action
+	 *
+	 * no listvar     | no listvar | no special action
+	 */
+	oldListObj = listPtr->listObj;
+	if (listPtr->listVarName != NULL) {
+	    Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
+		    (char *) NULL, TCL_GLOBAL_ONLY);
+	    int dummy;
+	    if (listVarObj == NULL) {
+		listVarObj = (oldListObj ? oldListObj : Tcl_NewObj());
+		if (Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *) NULL,
+			listVarObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+			== NULL) {
+		    if (oldListObj == NULL) {
+			Tcl_DecrRefCount(listVarObj);
+		    }
+		    continue;
+		}
+	    }
+	    /* Make sure the object is a good list object */
+	    if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy)
+		    != TCL_OK) {
+		Tcl_AppendResult(listPtr->interp,
+			": invalid -listvariable value", (char *) NULL);
+		continue;
+	    }
+
+	    listPtr->listObj = listVarObj;
+	    Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ListboxListVarProc, (ClientData) listPtr);
+	} else if (listPtr->listObj == NULL) {
 	    listPtr->listObj = Tcl_NewObj();
 	}
+	Tcl_IncrRefCount(listPtr->listObj);
+	if (oldListObj != NULL) {
+	    Tcl_DecrRefCount(oldListObj);
+	}
+	break;
     }
-    Tcl_IncrRefCount(listPtr->listObj);
-    if (oldListObj != NULL) {
-	Tcl_DecrRefCount(oldListObj);
+    if (!error) {
+	Tk_FreeSavedOptions(&savedOptions);
     }
 
     /* Make sure that the list length is correct */
     Tcl_ListObjLength(listPtr->interp, listPtr->listObj, &listPtr->nElements);
     
-    Tk_FreeSavedOptions(&savedOptions);
-    ListboxWorldChanged((ClientData) listPtr);
-    return TCL_OK;
+    if (error) {
+        Tcl_SetObjResult(interp, errorResult);
+	Tcl_DecrRefCount(errorResult);
+	return TCL_ERROR;
+    } else {
+	ListboxWorldChanged((ClientData) listPtr);
+	return TCL_OK;
+    }
 }
 
 /*
