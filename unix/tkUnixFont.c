@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.4 1998/11/25 23:12:14 stanton Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.1.4.5 1998/11/25 23:31:05 stanton Exp $
  */
  
 #include "tkUnixInt.h"
@@ -420,7 +420,7 @@ TkpGetNativeFont(tkwin, name)
     UnixFont *fontPtr;
     XFontStruct *fontStructPtr;
     FontAttributes fa;
-    char *p;
+    CONST char *p;
     int hasSpace, dashes, hasWild;
 
     /*
@@ -2422,7 +2422,7 @@ GetFontAttributes(display, fontStructPtr, faPtr)
     } else {
 	TkInitFontAttributes(&faPtr->fa);
 	TkInitXLFDAttributes(&faPtr->xa);
-	faPtr->xa.family = Tk_GetUid("");
+	faPtr->fa.family = Tk_GetUid("");
 	faPtr->xa.foundry = Tk_GetUid("");
 	faPtr->xa.charset = Tk_GetUid("");
     }
