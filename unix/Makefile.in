@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.67 2002/06/14 23:10:42 jenglish Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.68 2002/06/17 20:17:55 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1074,7 +1074,7 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
-	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest $(TOP_DIR)/win/rc/
+	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest $(DISTDIR)/win/rc/
 	cp -p $(TOP_DIR)/win/rc/*.rc $(TOP_DIR)/win/rc/*.cur \
 		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
 		$(DISTDIR)/win/rc
