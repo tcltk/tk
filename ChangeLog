@@ -1,5 +1,15 @@
 2000-08-01  Eric Melski  <ericm@ajubasolutions.com>
 
+	* generic/tkInt.h: Replaced prototype for Tk_MessageCmd with
+	prototype for Tk_MessageObjCmd.
+
+	* generic/tkWindow.c: Marked message command as using the new
+	MessageObjCmd instead of the old MessageCmd.
+
+	* tests/message.test: Added tests for the message widget.
+
+	* generic/tkMessage.c: Obj'ified the message widget.
+
 	* generic/tkInt.h: Removed prototype for Tk_ClipboardCmd, added
 	prototype for Tk_ClipboardObjCmd.
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.18 2000/05/29 01:43:14 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.19 2000/08/02 01:33:33 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -100,7 +100,7 @@ static TkCmd commands[] = {
     {"bell",		NULL,			Tk_BellObjCmd,		0, 1},
     {"bind",		Tk_BindCmd,		NULL,			1, 1},
     {"bindtags",	Tk_BindtagsCmd,		NULL,			1, 1},
-    {"clipboard",	Tk_ClipboardCmd,	NULL,			0, 1},
+    {"clipboard",	NULL,			Tk_ClipboardObjCmd,	0, 1},
     {"destroy",		NULL,			Tk_DestroyObjCmd,	1, 1},
     {"event",		NULL,			Tk_EventObjCmd,		1, 1},
     {"focus",		NULL,			Tk_FocusObjCmd,		1, 1},
@@ -141,7 +141,7 @@ static TkCmd commands[] = {
     {"label",		NULL,			Tk_LabelObjCmd,		1, 0},
     {"listbox",		NULL,			Tk_ListboxObjCmd,	1, 0},
     {"menubutton",	NULL,                   Tk_MenubuttonObjCmd,	1, 0},
-    {"message",		Tk_MessageCmd,		NULL,			1, 1},
+    {"message",		NULL,			Tk_MessageObjCmd,	1, 0},
     {"radiobutton",	NULL,			Tk_RadiobuttonObjCmd,	1, 0},
     {"scale",		NULL,	                Tk_ScaleObjCmd,		1, 0},
     {"scrollbar",	Tk_ScrollbarCmd,	NULL,			1, 1},
