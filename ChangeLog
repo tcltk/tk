@@ -1,3 +1,8 @@
+2004-11-15  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.c: fix to multi-line search problem and
+        * tests/text.test:  removed 'knownBug' from one test.
+
 2004-11-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* unix/tcl.m4, unix/configure.in: Expanded all AC_DEFINE calls to

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.34 2004/11/09 12:46:10 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.35 2004/11/15 13:09:08 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2648,7 +2648,7 @@ test text-20.172 {TextSearchCmd, regexp search multi-line} {knownBug} {
     # Should match at 1.0 for a true greedy match
 } {1.0}
 
-test text-20.172.1 {TextSearchCmd, regexp search multi-line} {knownBug} {
+test text-20.172.1 {TextSearchCmd, regexp search multi-line} {
     deleteWindows
     pack [text .t2]
     .t2 insert 1.0 "line0\nline1\nline1\nline1\nline1\nline2\nline2\nline2\nline3\n"
