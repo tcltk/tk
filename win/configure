@@ -1185,7 +1185,7 @@ echo "configure:1181: checking compiler flags" >&5
 	SHLIB_LD=""
 	SHLIB_LD_LIBS=""
 	LIBS=""
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32"
 	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
@@ -1326,7 +1326,7 @@ echo "configure:1181: checking compiler flags" >&5
 	SHLIB_LD="${LINKBIN} -dll -nologo -incremental:no"
 	SHLIB_LD_LIBS="user32.lib advapi32.lib"
 	LIBS="user32.lib advapi32.lib"
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib"
 	RC_OUT=-fo
 	RC_TYPE=-r
 	RC_INCLUDE=-i
@@ -1553,11 +1553,14 @@ echo "configure:1548: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
         echo "$ac_t""file not found" 1>&6
     fi
 
-    # The eval is required to do the TCL_DBGX substitution in the
-    # TCL_LIB_FILE variable.
+    #
+    # eval is required to do the TCL_DBGX substitution
+    #
 
     eval TCL_LIB_FILE=${TCL_LIB_FILE}
     eval TCL_LIB_FLAG=${TCL_LIB_FLAG}
+    eval TCL_STUB_LIB_FILE=${TCL_STUB_LIB_FILE}
+    eval TCL_STUB_LIB_FLAG=${TCL_STUB_LIB_FLAG}
 
     
     
@@ -1566,7 +1569,7 @@ echo "configure:1548: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1570: checking for tclsh" >&5
+echo "configure:1573: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6

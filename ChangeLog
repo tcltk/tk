@@ -1,3 +1,10 @@
+2002-01-16  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/configure: Regen.
+	* unix/tcl.m4: Update from Tcl.
+	* win/configure: Regen.
+	* win/tcl.m4: Update from Tcl.
+
 2002-01-04  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkMain.c (Tk_MainEx):  Updated callers of CONSTified
