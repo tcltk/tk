@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.19 2004/09/10 12:13:42 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.20 2004/10/05 01:26:10 hobbs Exp $
  */
 
 #include "default.h"
@@ -731,7 +731,6 @@ GetIndex(interp, sharedPtr, textPtr, string, indexPtr, canCachePtr)
                                  * we can cache the index (or NULL) */
 {
     char *p, *end, *endOfBase;
-    Tcl_HashEntry *hPtr;
     TkTextIndex first, last;
     int wantLast, result;
     char c;
@@ -777,6 +776,7 @@ GetIndex(interp, sharedPtr, textPtr, string, indexPtr, canCachePtr)
     if (p != NULL) {
 	TkTextSearch search;
 	TkTextTag *tagPtr;
+	Tcl_HashEntry *hPtr = NULL;
 	CONST char *tagName;
 	
 	if ((p[1] == 'f') && (strncmp(p+1, "first", 5) == 0)) {

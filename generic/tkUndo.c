@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.c,v 1.5 2004/09/10 12:13:42 vincentdarley Exp $
+ * RCS: @(#) $Id: tkUndo.c,v 1.6 2004/10/05 01:26:10 hobbs Exp $
  */
 
 #include "tkUndo.h"
@@ -642,21 +642,21 @@ TkUndoApply(stack)
  *----------------------------------------------------------------------
  */
 
-static int 
+static int
 EvaluateActionList(interp, action)
     Tcl_Interp *interp;     /* Interpreter to evaluate the action in. */
     TkUndoSubAtom *action;  /* Head of linked list of action steps
                              * to perform. */
 {
-    int result;
-    
+    int result = TCL_OK;
+
     while (action != NULL) {
 	if (action->funcPtr != NULL) {
-	    result = (*action->funcPtr)(interp, action->clientData, 
+	    result = (*action->funcPtr)(interp, action->clientData,
 					action->action);
 	} else if (action->command != NULL) {
 	    Tcl_Obj *cmdNameObj, *evalObj;
-	    
+
 	    cmdNameObj = Tcl_NewObj();
 	    evalObj = Tcl_NewObj();
 	    Tcl_IncrRefCount(evalObj);
