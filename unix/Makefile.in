@@ -5,12 +5,12 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.44 2000/04/04 08:09:31 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.45 2000/04/25 21:00:07 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
-TCLVERSION = @TCL_VERSION@
-VERSION = @TK_VERSION@
+TCLVERSION		= @TCL_VERSION@
+VERSION			= @TK_VERSION@
 
 #----------------------------------------------------------------
 # Things you can change to personalize the Makefile for your own
@@ -25,167 +25,174 @@ VERSION = @TK_VERSION@
 # at configure-time with the --exec-prefix and --prefix options
 # to the "configure" script.
 
-prefix =		@prefix@
-exec_prefix =		@exec_prefix@
+prefix			= @prefix@
+exec_prefix		= @exec_prefix@
+bindir			= @bindir@
+libdir			= @libdir@
+includedir		= @includedir@
+mandir			= @mandir@
 
 # The following definition can be set to non-null for special systems
 # like AFS with replication.  It allows the pathnames used for installation
 # to be different than those used for actually reference files at
 # run-time.  INSTALL_ROOT is prepended to $prefix and $exec_prefix
 # when installing files.
-INSTALL_ROOT =
+INSTALL_ROOT		=
 
 # Directory from which applications will reference the library of Tcl
 # scripts (note: you can set the TK_LIBRARY environment variable at
 # run-time to override the compiled-in location):
-TK_LIBRARY =		$(prefix)/lib/tk$(VERSION)
-
-# Path name to use when installing library scripts:
-SCRIPT_INSTALL_DIR =	$(INSTALL_ROOT)$(TK_LIBRARY)
-
-# Directory in which to install the .a or .so binary for the Tk library:
-LIB_INSTALL_DIR =	$(INSTALL_ROOT)$(exec_prefix)/lib
+TK_LIBRARY		= $(prefix)/lib/tk$(VERSION)
 
 # Path to use at runtime to refer to LIB_INSTALL_DIR:
-LIB_RUNTIME_DIR =	$(exec_prefix)/lib
+LIB_RUNTIME_DIR		= $(libdir)
 
 # Directory in which to install the program wish:
-BIN_INSTALL_DIR =	$(INSTALL_ROOT)$(exec_prefix)/bin
+BIN_INSTALL_DIR		= $(INSTALL_ROOT)$(bindir)
 
-# Directory from which the program wish should be referenced by scripts:
-BIN_DIR =		$(exec_prefix)/bin
+# Directory in which to install the .a or .so binary for the Tk library:
+LIB_INSTALL_DIR		= $(INSTALL_ROOT)$(libdir)
+
+# Path name to use when installing library scripts:
+SCRIPT_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)
 
 # Directory in which to install the include file tk.h:
-INCLUDE_INSTALL_DIR =	$(INSTALL_ROOT)$(prefix)/include
+INCLUDE_INSTALL_DIR	= $(INSTALL_ROOT)$(includedir)
 
 # Top-level directory for manual entries:
-MAN_INSTALL_DIR =	$(INSTALL_ROOT)@mandir@
+MAN_INSTALL_DIR		= $(INSTALL_ROOT)$(mandir)
 
 # Directory in which to install manual entry for wish:
-MAN1_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man1
+MAN1_INSTALL_DIR	= $(MAN_INSTALL_DIR)/man1
 
 # Directory in which to install manual entries for Tk's C library
 # procedures:
-MAN3_INSTALL_DIR =	$(MAN_INSTALL_DIR)/man3
+MAN3_INSTALL_DIR	= $(MAN_INSTALL_DIR)/man3
 
 # Directory in which to install manual entries for the built-in
 # Tcl commands implemented by Tk:
-MANN_INSTALL_DIR =	$(MAN_INSTALL_DIR)/mann
+MANN_INSTALL_DIR	= $(MAN_INSTALL_DIR)/mann
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR =	@TCL_SRC_DIR@/generic
+TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
-TCL_BIN_DIR =		@TCL_BIN_DIR@
+TCL_BIN_DIR		= @TCL_BIN_DIR@
 
 # The linker flags needed to link in the Tcl library (ex: -ltcl8.2)
-TCL_LIB_FLAG =		@TCL_LIB_FLAG@
+TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Libraries built with optimization switches have this additional extension
-TK_DBGX =		@TK_DBGX@
+TK_DBGX			= @TK_DBGX@
 
 # warning flags
-CFLAGS_WARNING =	@CFLAGS_WARNING@
+CFLAGS_WARNING		= @CFLAGS_WARNING@
 
 # The default switches for optimization or debugging
-CFLAGS_DEBUG =		@CFLAGS_DEBUG@
-CFLAGS_OPTIMIZE =	@CFLAGS_OPTIMIZE@
+CFLAGS_DEBUG		= @CFLAGS_DEBUG@
+CFLAGS_OPTIMIZE		= @CFLAGS_OPTIMIZE@
 
 # To change the compiler switches, for example to change from optimization to
 # debugging symbols, change the following line:
-#CFLAGS = 		$(CFLAGS_DEBUG)
-#CFLAGS = 		$(CFLAGS_OPTIMIZE)
-#CFLAGS = 		$(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS = 		@CFLAGS@
+#CFLAGS			= $(CFLAGS_DEBUG)
+#CFLAGS			= $(CFLAGS_OPTIMIZE)
+#CFLAGS			= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
+CFLAGS			= @CFLAGS@
 
 # A "-I" switch that can be used when compiling to make all of the
 # X11 include files accessible (the configure script will try to
 # set this value, and will cause it to be an empty string if the
 # include files are accessible via /usr/include).
-X11_INCLUDES =		@XINCLUDES@
+X11_INCLUDES		= @XINCLUDES@
 
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
-X11_LIB_SWITCHES =	@XLIBSW@
+X11_LIB_SWITCHES	= @XLIBSW@
 
 
 # To turn off the security checks that disallow incoming sends when
 # the X server appears to be insecure, reverse the comments on the
 # following lines:
-SECURITY_FLAGS =
-#SECURITY_FLAGS = -DTK_NO_SECURITY
+SECURITY_FLAGS		=
+#SECURITY_FLAGS		= -DTK_NO_SECURITY
 
 # To disable ANSI-C procedure prototypes reverse the comment characters
 # on the following lines:
-PROTO_FLAGS =
-#PROTO_FLAGS = -DNO_PROTOTYPE
+PROTO_FLAGS		=
+#PROTO_FLAGS		= -DNO_PROTOTYPE
 
 # To enable memory debugging reverse the comment characters on the following
 # lines.  Warning:  if you enable memory debugging, you must do it
 # *everywhere*, including all the code that calls Tcl, and you must use
 # ckalloc and ckfree everywhere instead of malloc and free.
-MEM_DEBUG_FLAGS =
-#MEM_DEBUG_FLAGS = -DTCL_MEM_DEBUG
+MEM_DEBUG_FLAGS		=
+#MEM_DEBUG_FLAGS	= -DTCL_MEM_DEBUG
 
 # If your X server is X11R4 or earlier, then you may wish to reverse
 # the comment characters on the following two lines.  This will enable
 # extra code to speed up XStringToKeysym.  In X11R5 and later releases
 # XStringToKeysym is plenty fast, so you needn't define REDO_KEYSYM_LOOKUP.
-KEYSYM_FLAGS =
-#KEYSYM_FLAGS = -DREDO_KEYSYM_LOOKUP
+KEYSYM_FLAGS		=
+#KEYSYM_FLAGS		= -DREDO_KEYSYM_LOOKUP
 
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS= -DTCL_NO_DEPRECATED
-#NO_DEPRECATED_FLAGS= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
+NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+#NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # Some versions of make, like SGI's, use the following variable to
 # determine which shell to use for executing commands:
-SHELL =		/bin/sh
+SHELL			= /bin/sh
 
 # Tk used to let the configure script choose which program to use
 # for installing, but there are just too many different versions of
 # "install" around;  better to use the install-sh script that comes
 # with the distribution, which is slower but guaranteed to work.
 
-INSTALL = @srcdir@/install-sh -c
-INSTALL_PROGRAM =	${INSTALL}
-INSTALL_DATA =		${INSTALL} -m 644
+INSTALL			= @srcdir@/install-sh -c
+INSTALL_PROGRAM		= ${INSTALL}
+INSTALL_DATA		= ${INSTALL} -m 644
 
+# The following specifies which Tcl executable to use for make targets
+# below.  This can generally be 'tclsh', meaning all targets will work
+# once we have created the initial executable, but in some cases you
+# may want to use a target without having made tclsh on these sources
+# (like for make genstubs)
+TCL_EXE			= tclsh
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  The values of the symbols are normally set by the
 # configure script.  You shouldn't normally need to modify any of
 # these definitions by hand.
 
-SHLIB_CFLAGS = @SHLIB_CFLAGS@
+SHLIB_CFLAGS		= @SHLIB_CFLAGS@
 
 # To enable support for stubs in Tcl.
-STUB_LIB_FILE = @STUB_LIB_FILE@
+STUB_LIB_FILE		= @STUB_LIB_FILE@
 
-TK_STUB_LIB_FILE = @TK_STUB_LIB_FILE@
-#TK_STUB_LIB_FILE = libtkstub.a
+TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
+#TK_STUB_LIB_FILE	= libtkstub.a
 
-TK_STUB_LIB_FLAG = @TK_STUB_LIB_FLAG@
-#TK_STUB_LIB_FLAG = -ltkstub
+TK_STUB_LIB_FLAG	= @TK_STUB_LIB_FLAG@
+#TK_STUB_LIB_FLAG	= -ltkstub
 
-TK_LIB_FILE = @TK_LIB_FILE@
-#TK_LIB_FILE = libtk.a
+TK_LIB_FILE		= @TK_LIB_FILE@
+#TK_LIB_FILE		= libtk.a
 
-TK_LIB_FLAG = @TK_LIB_FLAG@
-#TK_LIB_FLAG = -ltk
+TK_LIB_FLAG		= @TK_LIB_FLAG@
+#TK_LIB_FLAG		= -ltk
 
-#TCL_LIB_SPEC = @TCL_BUILD_LIB_SPEC@
-TCL_LIB_SPEC = @TCL_LIB_SPEC@
-TK_EXP_FILE = @TK_EXP_FILE@
-TK_BUILD_EXP_FILE = @TK_BUILD_EXP_FILE@
+#TCL_LIB_SPEC		= @TCL_BUILD_LIB_SPEC@
+TCL_LIB_SPEC		= @TCL_LIB_SPEC@
+TK_EXP_FILE		= @TK_EXP_FILE@
+TK_BUILD_EXP_FILE	= @TK_BUILD_EXP_FILE@
 
-TCL_STUB_FLAGS = @TCL_STUB_FLAGS@
+TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
@@ -196,14 +203,14 @@ WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
 # libraries.  See configure.in for a description of what it means.
 # The values of the symbolis normally set by the configure script.
 
-SHLIB_LD = @SHLIB_LD@
-SHLIB_LD_LIBS = @SHLIB_LD_LIBS@
+SHLIB_LD		= @SHLIB_LD@
+SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@
 
 # Additional search flags needed to find the various shared libraries
 # at run-time.  The first symbol is for use when creating a binary
 # with cc, and the second is for use when running ld directly.
-TK_CC_SEARCH_FLAGS = @TK_CC_SEARCH_FLAGS@
-TK_LD_SEARCH_FLAGS = @TK_LD_SEARCH_FLAGS@
+TK_CC_SEARCH_FLAGS	= @TK_CC_SEARCH_FLAGS@
+TK_LD_SEARCH_FLAGS	= @TK_LD_SEARCH_FLAGS@
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -211,14 +218,14 @@ TK_LD_SEARCH_FLAGS = @TK_LD_SEARCH_FLAGS@
 # modify any of this stuff by hand.
 #----------------------------------------------------------------
 
-AC_FLAGS =		@EXTRA_CFLAGS@ @DEFS@
-RANLIB =		@RANLIB@
-SRC_DIR =		@srcdir@/..
-TOP_DIR =		@srcdir@/..
-GENERIC_DIR =		$(TOP_DIR)/generic
-UNIX_DIR = 		@srcdir@
-BMAP_DIR =		$(TOP_DIR)/bitmaps
-TOOL_DIR =		@TCL_SRC_DIR@/tools
+AC_FLAGS		= @EXTRA_CFLAGS@ @DEFS@
+RANLIB			= @RANLIB@
+SRC_DIR			= @srcdir@/..
+TOP_DIR			= @srcdir@/..
+GENERIC_DIR		= $(TOP_DIR)/generic
+UNIX_DIR		= @srcdir@
+BMAP_DIR		= $(TOP_DIR)/bitmaps
+TOOL_DIR		= @TCL_SRC_DIR@/tools
 
 #----------------------------------------------------------------
 # The information below should be usable as is.  The configure
@@ -226,8 +233,7 @@ TOOL_DIR =		@TCL_SRC_DIR@/tools
 # either.
 #----------------------------------------------------------------
 
-
-CC =		@CC@
+CC			= @CC@
 
 CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
@@ -236,8 +242,6 @@ ${AC_FLAGS} ${PROTO_FLAGS} \
 ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS}
 
 CC_SWITCHES = ${CC_SWITCHES_NO_STUBS} ${TCL_STUB_FLAGS} 
-
-
 
 DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} \
@@ -466,7 +470,7 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    fi
 
 install-libraries:
-	@for i in $(INSTALL_ROOT)$(prefix)/lib $(INCLUDE_INSTALL_DIR) \
+	@for i in $(INCLUDE_INSTALL_DIR) \
 		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images; \
 	    do \
 	    if [ ! -d $$i ] ; then \
@@ -499,7 +503,7 @@ install-libraries:
 	    done;
 
 install-demos:
-	@for i in $(INSTALL_ROOT)$(prefix)/lib $(SCRIPT_INSTALL_DIR) \
+	@for i in $(SCRIPT_INSTALL_DIR) \
 		$(SCRIPT_INSTALL_DIR)/demos \
 		$(SCRIPT_INSTALL_DIR)/demos/images ; \
 	    do \
@@ -903,7 +907,7 @@ checkexports: $(TK_LIB_FILE)
 #
 
 genstubs:
-	tclsh $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
+	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
 		$(GENERIC_DIR)/tk.decls $(GENERIC_DIR)/tkInt.decls
 
 #
@@ -966,7 +970,7 @@ dist:   $(UNIX_DIR)/configure
 		$(UNIX_DIR)/README $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
 	chmod +x $(DISTDIR)/unix/install-sh
-	tclsh $(TCLDIR)/unix/mkLinks.tcl $(TOP_DIR)/doc/*.[13n] \
+	$(TCL_EXE) $(TCLDIR)/unix/mkLinks.tcl $(TOP_DIR)/doc/*.[13n] \
 		> $(DISTDIR)/unix/mkLinks
 	chmod +x $(DISTDIR)/unix/mkLinks
 	mkdir $(DISTDIR)/bitmaps
@@ -1098,11 +1102,11 @@ allpatch: dist
 
 macdist: dist
 	rm -f $(DISTDIR)/mac/tkMacProjects.sea.hqx
-	tclsh $(TOOL_DIR)/man2html.tcl $(DISTDIR)/tmp ../.. tk$(VERSION)
+	$(TCL_EXE) $(TOOL_DIR)/man2html.tcl $(DISTDIR)/tmp ../.. tk$(VERSION)
 	mv $(DISTDIR)/tmp/tk$(VERSION) $(DISTDIR)/html
 	rm -rf $(DISTDIR)/doc
 	rm -rf $(DISTDIR)/tmp
-	tclsh $(TOOL_DIR)/cvtEOL.tcl $(DISTDIR)
+	$(TCL_EXE) $(TOOL_DIR)/cvtEOL.tcl $(DISTDIR)
 
 #
 # Targets to build Solaris package of the distribution for the current
@@ -1180,7 +1184,7 @@ package-generate:
 		 $(DISTDIR)/SUNWtcl/$(TCLVERSION)/lib=lib \
 		 $(DISTDIR)/SUNWtcl/$(TCLVERSION)/man=man \
 		 $(DISTDIR)/SUNWtcl/$(TCLVERSION)/`arch`=`arch` \
-	| tclsh $(TCLDIR)/unix/mkProto.tcl $(TCLVERSION) \
+	| $(TCL_EXE) $(TCLDIR)/unix/mkProto.tcl $(TCLVERSION) \
 		$(UNIX_DIR) > prototype
 	pkgmk -o -d . -f prototype -a `arch`
 	pkgtrans -s . $(PACKAGE).`arch` $(PACKAGE)

@@ -1,3 +1,8 @@
+2000-04-25  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* unix/Makefile.in:
+	* win/Makefile.in: makefile cleanup
+
 2000-04-25  Eric Melski  <ericm@scriptics.com>
 
 	* generic/tkMain.c: Fixed function header comment for Tk_MainEx.

@@ -4,10 +4,10 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.21 2000/04/21 04:07:09 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.22 2000/04/25 21:00:08 hobbs Exp $
 
-TCLVERSION = @TCL_VERSION@
-VERSION = @TK_VERSION@
+TCLVERSION		= @TCL_VERSION@
+VERSION			= @TK_VERSION@
 
 #----------------------------------------------------------------
 # Things you can change to personalize the Makefile for your own
@@ -22,59 +22,63 @@ VERSION = @TK_VERSION@
 # at configure-time with the --exec-prefix and --prefix options
 # to the "configure" script.
 
-prefix		= @prefix@
-exec_prefix	= @exec_prefix@
+prefix			= @prefix@
+exec_prefix		= @exec_prefix@
+bindir			= @bindir@
+libdir			= @libdir@
+includedir		= @includedir@
+mandir			= @mandir@
 
 # The following definition can be set to non-null for special systems
 # like AFS with replication.  It allows the pathnames used for installation
 # to be different than those used for actually reference files at
 # run-time.  INSTALL_ROOT is prepended to $prefix and $exec_prefix
 # when installing files.
-INSTALL_ROOT	=
+INSTALL_ROOT		=
 
 # Directory from which applications will reference the library of Tk
 # scripts (note: you can set the TK_LIBRARY environment variable at
 # run-time to override this value):
-TK_LIBRARY	= $(prefix)/lib/tk$(VERSION)
+TK_LIBRARY		= $(prefix)/lib/tk$(VERSION)
 
 # Path to use at runtime to refer to LIB_INSTALL_DIR:
-LIB_RUNTIME_DIR = $(exec_prefix)/lib
+LIB_RUNTIME_DIR		= $(libdir)
 
 # Directory in which to install the program wish:
-BIN_INSTALL_DIR = $(INSTALL_ROOT)$(exec_prefix)/bin
+BIN_INSTALL_DIR		= $(INSTALL_ROOT)$(bindir)
 
-# Directory in which to install libtk.so or libtk.a:
-LIB_INSTALL_DIR = $(INSTALL_ROOT)$(exec_prefix)/lib
+# Directory in which to install the .a or .so binary for the Tk library:
+LIB_INSTALL_DIR		= $(INSTALL_ROOT)$(libdir)
 
 # Path name to use when installing library scripts:
-SCRIPT_INSTALL_DIR = $(INSTALL_ROOT)$(TK_LIBRARY)
+SCRIPT_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)
 
 # Directory in which to install the include file tk.h:
-INCLUDE_INSTALL_DIR = $(INSTALL_ROOT)$(prefix)/include
+INCLUDE_INSTALL_DIR	= $(INSTALL_ROOT)$(includedir)
 
-# Top-level directory in which to install manual entries:
-MAN_INSTALL_DIR = $(INSTALL_ROOT)$(prefix)/man
+# Top-level directory for manual entries:
+MAN_INSTALL_DIR		= $(INSTALL_ROOT)$(mandir)
 
 # Directory in which to install manual entry for wish:
-MAN1_INSTALL_DIR = $(MAN_INSTALL_DIR)/man1
+MAN1_INSTALL_DIR	= $(MAN_INSTALL_DIR)/man1
 
 # Directory in which to install manual entries for Tk's C library
 # procedures:
-MAN3_INSTALL_DIR = $(MAN_INSTALL_DIR)/man3
+MAN3_INSTALL_DIR	= $(MAN_INSTALL_DIR)/man3
 
 # Directory in which to install manual entries for the built-in
 # Tk commands:
-MANN_INSTALL_DIR = $(MAN_INSTALL_DIR)/mann
+MANN_INSTALL_DIR	= $(MAN_INSTALL_DIR)/mann
 
 # Libraries built with optimization switches have this additional extension
-TK_DBGX		= @TK_DBGX@
+TK_DBGX			= @TK_DBGX@
 
 # The directory containing the Tcl source and header files.
-TCL_SRC_DIR	= @TCL_SRC_DIR@
+TCL_SRC_DIR		= @TCL_SRC_DIR@
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
-TCL_BIN_DIR	= @TCL_BIN_DIR@
+TCL_BIN_DIR		= @TCL_BIN_DIR@
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
@@ -156,7 +160,7 @@ LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 CFLAGS		= @CFLAGS@
 
 # Special compiler flags to use when building man2tcl on Windows.
-MAN2TCLFLAGS =		@MAN2TCLFLAGS@
+MAN2TCLFLAGS	= @MAN2TCLFLAGS@
 
 AR		= @AR@
 CC		= @CC@
@@ -190,8 +194,8 @@ CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
  -I"${TCL_GENERIC_NATIVE}" ${AC_FLAGS}
 
-STUB_CC_SWITCHES = ${CC_SWITCHES} -DUSE_TCL_STUBS
-CON_CC_SWITCHES = ${CC_SWITCHES} -DCONSOLE
+STUB_CC_SWITCHES	= ${CC_SWITCHES} -DUSE_TCL_STUBS
+CON_CC_SWITCHES		= ${CC_SWITCHES} -DCONSOLE
 
 # Tk used to let the configure script choose which program to use
 # for installing, but there are just too many different versions of
