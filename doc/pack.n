@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: pack.n,v 1.3 2001/02/12 18:06:47 drh Exp $
+'\" RCS: @(#) $Id: pack.n,v 1.3.6.1 2004/10/28 12:25:22 dkf Exp $
 '\" 
 .so man.macros
 .TH pack n 4.0 Tk "Tk Built-In Commands"
@@ -108,7 +108,7 @@ of two values to specify padding for left and right separately.
 \fB\-pady \fIamount\fR
 \fIAmount\fR specifies how much vertical external padding to
 leave on each side of the slave(s).  \fIAmount\fR may be a list
-of two values to specify padding for top and bottom separtely.
+of two values to specify padding for top and bottom separately.
 \fIAmount\fR defaults to 0.
 .TP
 \fB\-side \fIside\fR
@@ -156,7 +156,6 @@ Returns a list of all of the slaves in the packing order for \fImaster\fR.
 The order of the slaves in the list is the same as their order in
 the packing order.
 If \fImaster\fR has no slaves then an empty string is returned.
-
 .SH "THE PACKER ALGORITHM"
 .PP
 For each master the packer maintains an ordered list of slaves
@@ -217,7 +216,6 @@ left in the cavity.
 If the cavity shrinks to zero size, then all remaining slaves
 on the packing list will be unmapped from the screen until
 the master window becomes large enough to hold them again.
-
 .SH "EXPANSION"
 .PP
 If a master window is so large that there will be extra space
@@ -228,7 +226,6 @@ Extra horizontal space is distributed among the expandable
 slaves whose \fB\-side\fR is \fBleft\fR or \fBright\fR,
 and extra vertical space is distributed among the expandable
 slaves whose \fB\-side\fR is \fBtop\fR or \fBbottom\fR.
-
 .SH "GEOMETRY PROPAGATION"
 .PP
 The packer normally computes how large a master must be to
@@ -243,7 +240,6 @@ If propagation is disabled then the packer will not set
 the requested width and height of the packer.
 This may be useful if, for example, you wish for a master
 window to have a fixed size that you specify.
-
 .SH "RESTRICTIONS ON MASTER WINDOWS"
 .PP
 The master for each slave must either be the slave's parent
@@ -251,7 +247,6 @@ The master for each slave must either be the slave's parent
 This restriction is necessary to guarantee that the
 slave can be placed over any part of its master that is
 visible without danger of the slave being clipped by its parent.
-
 .SH "PACKING ORDER"
 .PP
 If the master for a slave is not its parent then you must make sure
@@ -263,6 +258,25 @@ to create the master window first:  the most recently created window
 will be highest in the stacking order.
 Or, you can use the \fBraise\fR and \fBlower\fR commands to change
 the stacking order of either the master or the slave.
+.SH EXAMPLE
+.CS
+# Make the widgets
+label .t \-text "This widget is at the top"    \-bg red
+label .b \-text "This widget is at the bottom" \-bg green
+label .l \-text "Left\\nHand\\nSide"
+label .r \-text "Right\\nHand\\nSide"
+text .mid
+\.mid insert end "This layout is like Java's BorderLayout"
+# Lay them out
+\fBpack\fR .t   \-side top    \-fill x
+\fBpack\fR .b   \-side bottom \-fill x
+\fBpack\fR .l   \-side left   \-fill y
+\fBpack\fR .r   \-side right  \-fill y
+\fBpack\fR .mid \-expand 1    \-fill both
+.CE
+
+.SH "SEE ALSO"
+grid(n), place(n)
 
 .SH KEYWORDS
 geometry manager, location, packer, parcel, propagation, size
