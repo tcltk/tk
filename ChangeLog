@@ -1,3 +1,11 @@
+2001-11-08  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/Makefile.in:
+	Avoid adding libc to the LIBS and WISH_LIBS
+	variables since it is not needed when linking with CC.
+	If required when linking with LD it should be done
+	on a case by case basis in tcl.m4.
+
 2001-11-05  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/dialog2.tcl: Typo-fix.
