@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.43 2000/05/17 21:17:20 ericm Exp $
+ * RCS: @(#) $Id: tk.h,v 1.44 2000/05/29 01:42:47 hobbs Exp $
  */
 
 #ifndef _TK
@@ -656,40 +656,40 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
 
 typedef struct Tk_FakeWin {
     Display *display;
-    char *dummy1;
+    char *dummy1;		/* dispPtr */
     int screenNum;
     Visual *visual;
     int depth;
     Window window;
-    char *dummy2;
-    char *dummy3;
-    Tk_Window parentPtr;
-    char *dummy4;
-    char *dummy5;
+    char *dummy2;		/* childList */
+    char *dummy3;		/* lastChildPtr */
+    Tk_Window parentPtr;	/* parentPtr */
+    char *dummy4;		/* nextPtr */
+    char *dummy5;		/* mainPtr */
     char *pathName;
     Tk_Uid nameUid;
     Tk_Uid classUid;
     XWindowChanges changes;
-    unsigned int dummy6;
+    unsigned int dummy6;	/* dirtyChanges */
     XSetWindowAttributes atts;
-    unsigned long dummy7;
+    unsigned long dummy7;	/* dirtyAtts */
     unsigned int flags;
-    char *dummy8;
+    char *dummy8;		/* handlerList */
 #ifdef TK_USE_INPUT_METHODS
-    XIC dummy9;
+    XIC dummy9;			/* inputContext */
 #endif /* TK_USE_INPUT_METHODS */
-    ClientData *dummy10;
-    int dummy11;
-    int dummy12;
-    char *dummy13;
-    char *dummy14;
-    ClientData dummy15;
+    ClientData *dummy10;	/* tagPtr */
+    int dummy11;		/* numTags */
+    int dummy12;		/* optionLevel */
+    char *dummy13;		/* selHandlerList */
+    char *dummy14;		/* geomMgrPtr */
+    ClientData dummy15;		/* geomData */
     int reqWidth, reqHeight;
     int internalBorderWidth;
-    char *dummy16;
-    char *dummy17;
-    ClientData dummy18;
-    char *dummy19;
+    char *dummy16;		/* wmInfoPtr */
+    char *dummy17;		/* classProcPtr */
+    ClientData dummy18;		/* instanceData */
+    char *dummy19;		/* privatePtr */
 } Tk_FakeWin;
 
 /*
