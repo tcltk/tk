@@ -121,14 +121,6 @@ if test -r CanvTxtInfo.3; then
     rm -f Tk_CanvasTextInfo.3
     ln CanvTxtInfo.3 Tk_CanvasTextInfo.3
 fi
-if test -r chooseColor.n; then
-    rm -f tk_chooseColor.n
-    ln chooseColor.n tk_chooseColor.n
-fi
-if test -r chooseDirectory.n; then
-    rm -f tk_chooseDirectory.n
-    ln chooseDirectory.n tk_chooseDirectory.n
-fi
 if test -r Clipboard.3; then
     rm -f Tk_ClipboardClear.3
     rm -f Tk_ClipboardAppend.3
@@ -239,10 +231,6 @@ if test -r DeleteImg.3; then
     rm -f Tk_DeleteImage.3
     ln DeleteImg.3 Tk_DeleteImage.3
 fi
-if test -r dialog.n; then
-    rm -f tk_dialog.n
-    ln dialog.n tk_dialog.n
-fi
 if test -r DrawFocHlt.3; then
     rm -f Tk_DrawFocusHighlight.3
     ln DrawFocHlt.3 Tk_DrawFocusHighlight.3
@@ -270,14 +258,6 @@ if test -r FindPhoto.3; then
     ln FindPhoto.3 Tk_PhotoExpand.3
     ln FindPhoto.3 Tk_PhotoGetSize.3
     ln FindPhoto.3 Tk_PhotoSetSize.3
-fi
-if test -r focusNext.n; then
-    rm -f tk_focusNext.n
-    rm -f tk_focusPrev.n
-    rm -f tk_focusFollowsMouse.n
-    ln focusNext.n tk_focusNext.n
-    ln focusNext.n tk_focusPrev.n
-    ln focusNext.n tk_focusFollowsMouse.n
 fi
 if test -r FontId.3; then
     rm -f Tk_FontId.3
@@ -429,12 +409,6 @@ if test -r GetJustify.3; then
     ln GetJustify.3 Tk_GetJustify.3
     ln GetJustify.3 Tk_NameOfJustify.3
 fi
-if test -r getOpenFile.n; then
-    rm -f tk_getOpenFile.n
-    rm -f tk_getSaveFile.n
-    ln getOpenFile.n tk_getOpenFile.n
-    ln getOpenFile.n tk_getSaveFile.n
-fi
 if test -r GetOption.3; then
     rm -f Tk_GetOption.3
     ln GetOption.3 Tk_GetOption.3
@@ -483,13 +457,13 @@ if test -r GetUid.3; then
     ln GetUid.3 Tk_GetUid.3
     ln GetUid.3 Tk_Uid.3
 fi
-if test -r GetVisual.3; then
-    rm -f Tk_GetVisual.3
-    ln GetVisual.3 Tk_GetVisual.3
-fi
 if test -r GetVRoot.3; then
     rm -f Tk_GetVRootGeometry.3
     ln GetVRoot.3 Tk_GetVRootGeometry.3
+fi
+if test -r GetVisual.3; then
+    rm -f Tk_GetVisual.3
+    ln GetVisual.3 Tk_GetVisual.3
 fi
 if test -r Grab.3; then
     rm -f Tk_Grab.3
@@ -497,13 +471,13 @@ if test -r Grab.3; then
     ln Grab.3 Tk_Grab.3
     ln Grab.3 Tk_Ungrab.3
 fi
-if test -r HandleEvent.3; then
-    rm -f Tk_HandleEvent.3
-    ln HandleEvent.3 Tk_HandleEvent.3
-fi
 if test -r HWNDToWindow.3; then
     rm -f Tk_HWNDToWindow.3
     ln HWNDToWindow.3 Tk_HWNDToWindow.3
+fi
+if test -r HandleEvent.3; then
+    rm -f Tk_HandleEvent.3
+    ln HandleEvent.3 Tk_HandleEvent.3
 fi
 if test -r IdToWindow.3; then
     rm -f Tk_IdToWindow.3
@@ -523,17 +497,17 @@ if test -r MainLoop.3; then
     rm -f Tk_MainLoop.3
     ln MainLoop.3 Tk_MainLoop.3
 fi
-if test -r MaintGeom.3; then
-    rm -f Tk_MaintainGeometry.3
-    rm -f Tk_UnmaintainGeometry.3
-    ln MaintGeom.3 Tk_MaintainGeometry.3
-    ln MaintGeom.3 Tk_UnmaintainGeometry.3
-fi
 if test -r MainWin.3; then
     rm -f Tk_MainWindow.3
     rm -f Tk_GetNumMainWindows.3
     ln MainWin.3 Tk_MainWindow.3
     ln MainWin.3 Tk_GetNumMainWindows.3
+fi
+if test -r MaintGeom.3; then
+    rm -f Tk_MaintainGeometry.3
+    rm -f Tk_UnmaintainGeometry.3
+    ln MaintGeom.3 Tk_MaintainGeometry.3
+    ln MaintGeom.3 Tk_UnmaintainGeometry.3
 fi
 if test -r ManageGeom.3; then
     rm -f Tk_ManageGeometry.3
@@ -555,20 +529,6 @@ if test -r MeasureChar.3; then
     ln MeasureChar.3 Tk_DrawChars.3
     ln MeasureChar.3 Tk_UnderlineChars.3
 fi
-if test -r menubar.n; then
-    rm -f tk_menuBar.n
-    rm -f tk_bindForTraversal.n
-    ln menubar.n tk_menuBar.n
-    ln menubar.n tk_bindForTraversal.n
-fi
-if test -r menu.n; then
-    rm -f tk_menuSetFocus.n
-    ln menu.n tk_menuSetFocus.n
-fi
-if test -r messageBox.n; then
-    rm -f tk_messageBox.n
-    ln messageBox.n tk_messageBox.n
-fi
 if test -r MoveToplev.3; then
     rm -f Tk_MoveToplevelWindow.3
     ln MoveToplev.3 Tk_MoveToplevelWindow.3
@@ -585,27 +545,13 @@ if test -r NameOfImg.3; then
     rm -f Tk_NameOfImage.3
     ln NameOfImg.3 Tk_NameOfImage.3
 fi
-if test -r optionMenu.n; then
-    rm -f tk_optionMenu.n
-    ln optionMenu.n tk_optionMenu.n
-fi
 if test -r OwnSelect.3; then
     rm -f Tk_OwnSelection.3
     ln OwnSelect.3 Tk_OwnSelection.3
 fi
-if test -r palette.n; then
-    rm -f tk_setPalette.n
-    rm -f tk_bisque.n
-    ln palette.n tk_setPalette.n
-    ln palette.n tk_bisque.n
-fi
 if test -r ParseArgv.3; then
     rm -f Tk_ParseArgv.3
     ln ParseArgv.3 Tk_ParseArgv.3
-fi
-if test -r popup.n; then
-    rm -f tk_popup.n
-    ln popup.n tk_popup.n
 fi
 if test -r QWinEvent.3; then
     rm -f Tk_CollapseMotionEvents.3
@@ -624,6 +570,10 @@ fi
 if test -r SetAppName.3; then
     rm -f Tk_SetAppName.3
     ln SetAppName.3 Tk_SetAppName.3
+fi
+if test -r SetCaret.3; then
+    rm -f Tk_SetCaretPos.3
+    ln SetCaret.3 Tk_SetCaretPos.3
 fi
 if test -r SetClass.3; then
     rm -f Tk_SetClass.3
@@ -691,21 +641,13 @@ if test -r TextLayout.3; then
     ln TextLayout.3 Tk_IntersectTextLayout.3
     ln TextLayout.3 Tk_TextLayoutToPostscript.3
 fi
-if test -r text.n; then
-    rm -f tk_textCopy.n
-    rm -f tk_textCut.n
-    rm -f tk_textPaste.n
-    ln text.n tk_textCopy.n
-    ln text.n tk_textCut.n
-    ln text.n tk_textPaste.n
+if test -r TkInitStubs.3; then
+    rm -f Tk_InitStubs.3
+    ln TkInitStubs.3 Tk_InitStubs.3
 fi
 if test -r Tk_Init.3; then
     rm -f Tk_SafeInit.3
     ln Tk_Init.3 Tk_SafeInit.3
-fi
-if test -r TkInitStubs.3; then
-    rm -f Tk_InitStubs.3
-    ln TkInitStubs.3 Tk_InitStubs.3
 fi
 if test -r WindowId.3; then
     rm -f Tk_WindowId.3
@@ -762,5 +704,67 @@ if test -r WindowId.3; then
     ln WindowId.3 Tk_Visual.3
     ln WindowId.3 Tk_Depth.3
     ln WindowId.3 Tk_Colormap.3
+fi
+if test -r chooseColor.n; then
+    rm -f tk_chooseColor.n
+    ln chooseColor.n tk_chooseColor.n
+fi
+if test -r chooseDirectory.n; then
+    rm -f tk_chooseDirectory.n
+    ln chooseDirectory.n tk_chooseDirectory.n
+fi
+if test -r dialog.n; then
+    rm -f tk_dialog.n
+    ln dialog.n tk_dialog.n
+fi
+if test -r focusNext.n; then
+    rm -f tk_focusNext.n
+    rm -f tk_focusPrev.n
+    rm -f tk_focusFollowsMouse.n
+    ln focusNext.n tk_focusNext.n
+    ln focusNext.n tk_focusPrev.n
+    ln focusNext.n tk_focusFollowsMouse.n
+fi
+if test -r getOpenFile.n; then
+    rm -f tk_getOpenFile.n
+    rm -f tk_getSaveFile.n
+    ln getOpenFile.n tk_getOpenFile.n
+    ln getOpenFile.n tk_getSaveFile.n
+fi
+if test -r menu.n; then
+    rm -f tk_menuSetFocus.n
+    ln menu.n tk_menuSetFocus.n
+fi
+if test -r menubar.n; then
+    rm -f tk_menuBar.n
+    rm -f tk_bindForTraversal.n
+    ln menubar.n tk_menuBar.n
+    ln menubar.n tk_bindForTraversal.n
+fi
+if test -r messageBox.n; then
+    rm -f tk_messageBox.n
+    ln messageBox.n tk_messageBox.n
+fi
+if test -r optionMenu.n; then
+    rm -f tk_optionMenu.n
+    ln optionMenu.n tk_optionMenu.n
+fi
+if test -r palette.n; then
+    rm -f tk_setPalette.n
+    rm -f tk_bisque.n
+    ln palette.n tk_setPalette.n
+    ln palette.n tk_bisque.n
+fi
+if test -r popup.n; then
+    rm -f tk_popup.n
+    ln popup.n tk_popup.n
+fi
+if test -r text.n; then
+    rm -f tk_textCopy.n
+    rm -f tk_textCut.n
+    rm -f tk_textPaste.n
+    ln text.n tk_textCopy.n
+    ln text.n tk_textCut.n
+    ln text.n tk_textPaste.n
 fi
 exit 0
