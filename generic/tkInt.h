@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.63 2004/10/05 22:04:44 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.64 2004/10/26 13:15:09 dkf Exp $ 
  */
 
 #ifndef _TKINT
@@ -1176,6 +1176,11 @@ EXTERN void		TkCreateExitHandler _ANSI_ARGS_((Tcl_ExitProc *proc,
 EXTERN void		TkDeleteExitHandler _ANSI_ARGS_((Tcl_ExitProc *proc,
 			    ClientData clientData));
 EXTERN Tcl_ExitProc	TkFinalize;
+EXTERN void		TkpBuildRegionFromAlphaData _ANSI_ARGS_((
+			    TkRegion region, unsigned int x, unsigned int y,
+			    unsigned int width, unsigned int height,
+			    unsigned char *dataPtr, unsigned int pixelStride,
+			    unsigned int lineStride));
 
 /* 
  * Unsupported commands.
