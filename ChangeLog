@@ -1,6 +1,6 @@
 1999-03-01    <redman@scriptics.com>
 
-	* win/tkWinWm.c:
+	* win/tkWinWm.c: 
 	* win/tkWinPointer.c:
 	* win/tkWinInt.h: Fix "focus -force" for Windows.  The Win32 API
 	function SetForegroundWindow() does not work unless the window
