@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.57 2002/03/29 03:55:24 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.58 2002/03/29 04:14:40 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -40,30 +40,30 @@ the environment.  Jump to this line to read the new instructions.
 #     the 64-bit compiler, if your SDK has it.
 #
 # 3)  Targets are:
-#	release  -- builds the core, the shell and the dlls. (default)
-#	dlls     -- just builds the windows extensions and the 16-bit DOS
-#		    pipe/thunk driver.
-#	shell    -- Just builds the shell and the core.
+#	release  -- builds the core, the shell. (default)
 #	core     -- Only builds the core.
 #	all      -- builds everything.
 #	test     -- builds and runs the test suite.
-#	tcltest  -- just builds the binaries for the test suite.
+#	tktest   -- just builds the binaries for the test suite.
 #	install  -- installs the built binaries and libraries to $(INSTALLDIR)
 #		    as the root of the install tree.
-#	plugin   -- [currently out-dated].
+#	console-wish -- builds a console version of wish.
 #	clean    -- removes the contents of $(TMP_DIR)
 #	hose     -- removes the contents of $(TMP_DIR) and $(OUT_DIR)
 #	genstubs -- rebuilds the Stubs table and support files (dev only).
+#	depend   -- Generates an accurate set of source dependancies for this
+#		    makefile.  Helpful to avoid problems when the sources are
+#		    refreshed and you rebuild, but can "overbuild" when common
+#		    headers like tkInt.h just get small changes.
 #	winhelp  -- builds the windows .hlp file for Tcl from the troff man
 #		    files.
 #
 # 4)  Macros usable on the commandline:
 #	TCLDIR=<path>
 #		Sets the location for where to find the Tcl headers and
-#		libraries.  The install point is assumed when not
-#		specified.  This can be the source tree or an installation.
+#		libraries.  The install point is assumed when not specified.
 #		Tk does need the source directory, though.  Tk comes very close
-#		to not needing the sources.
+#		to not needing the sources, but does, in fact, require them.
 #
 #	INSTALLDIR=<path>
 #		Sets where to install Tcl from the built binaries.
@@ -80,9 +80,8 @@ the environment.  Jump to this line to read the new instructions.
 #			   using libcmt(d) as the C runtime [by default] to
 #			   msvcrt(d). This is useful for static embedding
 #			   support.
-#		linkexten = Effects the static option only to switch
-#			   tclshXX.exe to have the dde and reg extension linked
-#			   inside it.
+#		linkexten = Affects the static option only to switch wishXX.exe
+#			   to have the dde and reg extension linked inside it.
 #		threads =  Turns on full multithreading support.
 #		symbols =  Adds symbols for step debugging.
 #		profile =  Adds profiling hooks.  Map file is assumed.
@@ -476,6 +475,7 @@ TESTFLAGS   = -file $(TESTPAT)
 release:  setup $(TKSTUBLIB) $(WISH)
 all:	  release $(CAT32)
 core:	  setup $(TKSTUBLIB) $(TKLIB)
+console-wish : $(WISHC)
 install:  install-binaries install-libraries install-docs
 tktest:	  setup $(TKTEST) $(CAT32)
 
@@ -514,8 +514,6 @@ rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 setup:
 	@if not exist $(OUT_DIR)\nul mkdir $(OUT_DIR)
 	@if not exist $(TMP_DIR)\nul mkdir $(TMP_DIR)
-
-console-wish : $(WISHC)
 
 !if !$(STATIC_BUILD)
 $(TKIMPLIB): $(TKLIB)
