@@ -1,5 +1,10 @@
 2001-03-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/safe.test: added note about correcting failures in
+	safe.test.
+	* library/tk.tcl: moved package require msgcat inside if case to
+	not be used in safe interps.
+
 	* win/makefile.vc:
 	* win/configure:
 	* win/tcl.m4: added imm32.lib to LIBS_GUI for Tk IME support.

@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.28 2001/03/30 07:04:35 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.29 2001/03/31 05:46:10 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -13,11 +13,11 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Insist on running with compatible versions of Tcl and Tk.
-
 package require -exact Tk 8.4
 package require -exact Tcl 8.4
-package require msgcat
+
 if { ![interp issafe] } {
+    package require msgcat
     ::msgcat::mcload [file join $::tk_library msgs]
 }
 
@@ -314,11 +314,9 @@ switch $tcl_platform(platform) {
 	event add <<Clear>> <Clear>
     }
 }
-
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
-
 if {[string compare $tcl_platform(platform) "macintosh"] && \
 	[string compare {} $tk_library]} {
     source [file join $tk_library button.tcl]
@@ -330,7 +328,6 @@ if {[string compare $tcl_platform(platform) "macintosh"] && \
     source [file join $tk_library spinbox.tcl]
     source [file join $tk_library text.tcl]
 }
-
 # ----------------------------------------------------------------------
 # Default bindings for keyboard traversal.
 # ----------------------------------------------------------------------
