@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.7 2001/07/03 01:03:16 hobbs Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.8 2002/01/04 16:35:04 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -325,7 +325,7 @@ Tk_DeleteSelHandler(tkwin, selection, target)
 	 */
 
 	((CommandInfo*)selPtr->clientData)->interp = NULL;
-	Tcl_EventuallyFree(selPtr->clientData, Tcl_Free);
+	Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
     }
     ckfree((char *) selPtr);
 }
@@ -1122,7 +1122,7 @@ TkSelDeadWindow(winPtr)
 	     */
 
 	    ((CommandInfo*)selPtr->clientData)->interp = NULL;
-	    Tcl_EventuallyFree(selPtr->clientData, Tcl_Free);
+	    Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
 	}
 	ckfree((char *) selPtr);
     }
