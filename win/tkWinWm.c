@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.5 2004/09/10 20:51:07 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.6 2004/09/13 22:54:51 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1190,7 +1190,6 @@ ReadIconFromFile(interp, fileName)
 	 */
 	if (lpIR == NULL && shgetfileinfoProc != NULL) {
 	    SHFILEINFO sfiSM;
-	    SHFILEINFO sfi;
 	    Tcl_DString ds, ds2;
 	    DWORD *res;
 	    CONST char *file;
@@ -1203,13 +1202,17 @@ ReadIconFromFile(interp, fileName)
 		    sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
 
 	    if (res != 0) {
+		SHFILEINFO sfi;
+		int size;
+
 		Tcl_ResetResult(interp);
 		res = (*shgetfileinfoProc)(Tcl_DStringValue(&ds2), 0, &sfi,
 			sizeof(SHFILEINFO), SHGFI_ICON);
 
 		/* Account for extra icon, if necessary */
-		lpIR = (BlockOfIconImagesPtr) ckalloc(sizeof(BlockOfIconImages)
-			+ (res != 0) ? sizeof(ICONIMAGE) : 0);
+		size = sizeof(BlockOfIconImages) +
+		    ((res != 0) ? sizeof(ICONIMAGE) : 0);
+		lpIR = (BlockOfIconImagesPtr) ckalloc(size);
 		if (lpIR == NULL) {
 		    if (res != 0) {
 			DestroyIcon(sfi.hIcon);
@@ -1218,28 +1221,20 @@ ReadIconFromFile(interp, fileName)
 		    Tcl_DStringFree(&ds2);
 		    return NULL;
 		}
+		ZeroMemory(lpIR, size);
 
-		lpIR->nNumImages               = (res != 0) ? 2 : 1;
+		lpIR->nNumImages               = ((res != 0) ? 2 : 1);
 		lpIR->IconImages[0].Width      = 16;
 		lpIR->IconImages[0].Height     = 16;
 		lpIR->IconImages[0].Colors     = 4;
 		lpIR->IconImages[0].hIcon      = sfiSM.hIcon;
-		/* These fields are ignored */
-		lpIR->IconImages[0].lpBits     = 0;
-		lpIR->IconImages[0].dwNumBytes = 0;
-		lpIR->IconImages[0].lpXOR      = 0;
-		lpIR->IconImages[0].lpAND      = 0;
+		/* All other IconImages fields are ignored */
 
 		if (res != 0) {
 		    lpIR->IconImages[1].Width  = 32;
 		    lpIR->IconImages[1].Height = 32;
 		    lpIR->IconImages[1].Colors = 4;
 		    lpIR->IconImages[1].hIcon  = sfi.hIcon;
-		    /* These fields are ignored */
-		    lpIR->IconImages[1].lpBits = 0;
-		    lpIR->IconImages[1].dwNumBytes = 0;
-		    lpIR->IconImages[1].lpXOR  = 0;
-		    lpIR->IconImages[1].lpAND  = 0;
 		}
 	    }
 	    Tcl_DStringFree(&ds2);

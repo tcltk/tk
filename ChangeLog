@@ -1,3 +1,8 @@
+2004-09-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c (ReadIconFromFile): fix mem alloc to get the right
+	size for both icons ('?:' order of precedence mistake).
+
 2004-09-10  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/tkfbox.tcl (::tk::dialog::file::): Make sure that the
