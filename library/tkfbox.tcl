@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.23 2000/08/29 20:17:12 ericm Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.24 2000/10/19 01:05:01 ericm Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1626,7 +1626,7 @@ proc ::tk::dialog::file::OkCmd {w} {
 	set text [lindex $text 0]
 	set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
 	if {[file isdirectory $file]} {
-	    ::tk::dialog::file::ListInvoke $w $text
+	    ::tk::dialog::file::ListInvoke $w [list $text]
 	    return
 	}
     }
@@ -1699,8 +1699,7 @@ proc ::tk::dialog::file::ListInvoke {w text} {
 	return
     }
 
-    set file [::tk::dialog::file::JoinFile $data(selectPath) \
-	    [lindex $text 0]]
+    set file [::tk::dialog::file::JoinFile $data(selectPath) [lindex $text 0]]
     
     set class [winfo class $w]
     if {[string equal $class TkChooseDir] || [file isdirectory $file]} {
