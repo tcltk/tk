@@ -1,3 +1,24 @@
+2002-07-24  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/canvas.test: added canvas-14.[1-6]
+	* generic/tkCanvas.c (CanvasWidgetCmd): corrected handling of
+	'scan' subcommand args.  Also removed early return cases to goto
+	done instead where the canvasPtr would be Tcl_Release'd.  This may
+	solve other problems with unreleased canvasPtr's. [Bug #581560]
+
+	* win/tkWinButton.c (TkpDisplayButton): corrected display of focus
+	ring around the actual text when the button is a compound button.
+	[Bug #583691]
+
+	* unix/README: Corrected notes about running user interactive Tk
+	tests. [Bug #462320]
+
+	* generic/tkText.c (TextEditUndo): set isDirtyIncrement to -1 when
+	reverting to note proper "dirtiness". [Bug #580362] (callewaert)
+
+	* generic/tkEntry.c (DisplayEntry): correct cursor position before
+	calling Tk_SetCaretPos. (yamamoto)
+
 2002-07-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
