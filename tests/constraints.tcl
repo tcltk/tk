@@ -161,10 +161,13 @@ testConstraint pseudocolor8 [expr {([catch {
 destroy .t
 setupbg
 set app [dobg {tk appname}]
-testConstraint secureserver 1
-if {[catch {send $app set a 0} msg] == 1} {
-    if {[string match "X server insecure *" $msg]} {
-        testConstraint secureserver 0
+testConstraint secureserver 0
+if {[llength [info commands send]]} {
+    testConstraint secureserver 1
+    if {[catch {send $app set a 0} msg] == 1} {
+        if {[string match "X server insecure *" $msg]} {
+            testConstraint secureserver 0
+	}
     }
 }
 cleanupbg
