@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.21 1998/09/14 18:22:44 stanton Exp $
+RCS: @(#) $Id: changes,v 1.22 1998/10/10 00:30:34 rjohnson Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4250,3 +4250,13 @@ on windows.  If you build your own Tk main program, you no longer
 need to compile and link this yourself. (SKS)
 
 -------- Released 8.0.3 to the Tcl Consortium CD-ROM project, 8/13/98 ------
+
+10/5/98 (new feature) Added the event "MouseWheel" that will fire on
+Windows applications in response to mouse wheel movement.  You can
+bind to the MouseWheel event and use the %D substitution to get the
+delta the wheel moved.  The "event generate" command has also been
+enhanced with the -delta flag so you can generate these events from
+Tcl.  See the bind and event man pages for more details.  The listbox
+and text widgets' default bindings have been updated to understand
+MouseWheel events. (RJ)
+

@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.3 1998/09/14 18:23:03 stanton Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.4 1998/10/10 00:30:36 rjohnson Exp $
  */
 
 #include "tkPort.h"
@@ -495,6 +496,7 @@ static EventInfo eventArray[] = {
     {"Colormap",	ColormapNotify,		ColormapChangeMask},
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
+    {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
     {(char *) NULL,	0,			0}
 };
 static Tcl_HashTable eventTable;
@@ -567,7 +569,8 @@ static int flagArray[TK_LASTEVENT] = {
    /* MappingNotify */		0,
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,	    
-   /* Deactivate */		ACTIVATE
+   /* Deactivate */		ACTIVATE,
+   /* MouseWheel */		KEY
 };
 
 /*
@@ -2394,6 +2397,13 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 	    case 'B':
 		number = eventPtr->xcreatewindow.border_width;
 		goto doNumber;
+	    case 'D':
+		/*
+		 * This is used only by the MouseWheel event.
+		 */
+		    
+		number = eventPtr->xkey.keycode;
+		goto doNumber;
 	    case 'E':
 		number = (int) eventPtr->xany.send_event;
 		goto doNumber;
@@ -3164,7 +3174,7 @@ HandleEventGenerate(interp, mainwin, argc, argv)
     flags = flagArray[event.xany.type];
     if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
 	event.xkey.state = pat.needMods;
-	if (flags & KEY) {
+	if ((flags & KEY) && (event.xany.type != MouseWheelEvent)) {
 	    /*
 	     * When mapping from a keysym to a keycode, need information about
 	     * the modifier state that should be used so that when they call 
@@ -3279,6 +3289,15 @@ HandleEventGenerate(interp, mainwin, argc, argv)
 	    } else {
 		goto badopt;
 	    }
+	} else if (strcmp(field, "-delta") == 0) {
+	    if (Tcl_GetInt(interp, value, &number) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    if ((flags & KEY) && (event.xkey.type == MouseWheelEvent)) {
+	        event.xkey.keycode = number;
+	    } else {
+		goto badopt;
+	    }
 	} else if (strcmp(field, "-detail") == 0) {
 	    number = TkFindStateNum(interp, field, notifyDetail, value);
 	    if (number < 0) {
@@ -3315,7 +3334,7 @@ HandleEventGenerate(interp, mainwin, argc, argv)
 	    if (Tcl_GetInt(interp, value, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & KEY) {
+	    if ((flags & KEY) && (event.xkey.type != MouseWheelEvent)) {
 	        event.xkey.keycode = number;
 	    } else {
 		goto badopt;
@@ -3353,7 +3372,7 @@ HandleEventGenerate(interp, mainwin, argc, argv)
 		    break;
 		}
 	    }	    
-	    if (flags & KEY) {
+	    if ((flags & KEY) && (event.xkey.type != MouseWheelEvent)) {
 		event.xkey.keycode = number;
 	    } else {
 		goto badopt;

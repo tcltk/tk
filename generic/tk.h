@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.13 1998/09/30 19:01:19 rjohnson Exp $
+ * RCS: @(#) $Id: tk.h,v 1.14 1998/10/10 00:30:35 rjohnson Exp $
  */
 
 #ifndef _TK
@@ -416,11 +416,14 @@ typedef struct Tk_GeomMgr {
 #define VirtualEvent	    (LASTEvent)
 #define ActivateNotify	    (LASTEvent + 1)
 #define DeactivateNotify    (LASTEvent + 2)
-#define TK_LASTEVENT	    (LASTEvent + 3)
+#define MouseWheelEvent     (LASTEvent + 3)
+#define TK_LASTEVENT	    (LASTEvent + 4)
 
-#define VirtualEventMask    (1L << 30)
+#define MouseWheelMask	    (1L << 28)
+
 #define ActivateMask	    (1L << 29)
-#define TK_LASTEVENT	    (LASTEvent + 3)
+#define VirtualEventMask    (1L << 30)
+#define TK_LASTEVENT	    (LASTEvent + 4)
 
 
 /*
