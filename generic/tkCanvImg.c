@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvImg.c,v 1.5 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkCanvImg.c,v 1.6 2003/02/09 07:48:22 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -160,35 +160,19 @@ Tk_ItemType tkImageType = {
  */
 
 static int
-CreateImage(interp, canvas, itemPtr, argc, argv)
+CreateImage(interp, canvas, itemPtr, objc, objv)
     Tcl_Interp *interp;			/* Interpreter for error reporting. */
     Tk_Canvas canvas;			/* Canvas to hold new item. */
     Tk_Item *itemPtr;			/* Record to hold new item;  header
 					 * has been initialized by caller. */
-    int argc;				/* Number of arguments in argv. */
-    Tcl_Obj *CONST argv[];		/* Arguments describing rectangle. */
+    int objc;				/* Number of arguments in objv. */
+    Tcl_Obj *CONST objv[];		/* Arguments describing rectangle. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
     int i;
 
-    if (argc==1) {
-	i = 1;
-    } else {
-	char *arg = Tcl_GetStringFromObj((Tcl_Obj *) argv[1], NULL);
-	if (((argc>1) && (arg[0] == '-')
-		&& (arg[1] >= 'a') && (arg[1] <= 'z'))) {
-	    i = 1;
-	} else {
-	    i = 2;
-	}
-    }
-
-    if (argc < i) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		Tk_PathName(Tk_CanvasTkwin(canvas)), " create ",
-		itemPtr->typePtr->name, " x y ?options?\"",
-		(char *) NULL);
-	return TCL_ERROR;
+    if (objc == 0) {
+	panic("canvas did not pass any coords\n");
     }
 
     /*
@@ -206,12 +190,22 @@ CreateImage(interp, canvas, itemPtr, argc, argv)
 
     /*
      * Process the arguments to fill in the item record.
+     * Only 1 (list) or 2 (x y) coords are allowed.
      */
 
-    if ((ImageCoords(interp, canvas, itemPtr, i, argv) != TCL_OK)) {
+    if (objc == 1) {
+	i = 1;
+    } else {
+	char *arg = Tcl_GetString(objv[1]);
+	i = 2;
+	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
+	    i = 1;
+	}
+    }
+    if ((ImageCoords(interp, canvas, itemPtr, i, objv) != TCL_OK)) {
 	goto error;
     }
-    if (ConfigureImage(interp, canvas, itemPtr, argc-i, argv+i, 0) == TCL_OK) {
+    if (ConfigureImage(interp, canvas, itemPtr, objc-i, objv+i, 0) == TCL_OK) {
 	return TCL_OK;
     }
 
@@ -239,40 +233,40 @@ CreateImage(interp, canvas, itemPtr, argc, argv)
  */
 
 static int
-ImageCoords(interp, canvas, itemPtr, argc, argv)
+ImageCoords(interp, canvas, itemPtr, objc, objv)
     Tcl_Interp *interp;			/* Used for error reporting. */
     Tk_Canvas canvas;			/* Canvas containing item. */
     Tk_Item *itemPtr;			/* Item whose coordinates are to be
 					 * read or modified. */
-    int argc;				/* Number of coordinates supplied in
-					 * argv. */
-    Tcl_Obj *CONST argv[];		/* Array of coordinates: x1, y1,
+    int objc;				/* Number of coordinates supplied in
+					 * objv. */
+    Tcl_Obj *CONST objv[];		/* Array of coordinates: x1, y1,
 					 * x2, y2, ... */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
 
-    if (argc == 0) {
+    if (objc == 0) {
 	Tcl_Obj *obj = Tcl_NewObj();
 	Tcl_Obj *subobj = Tcl_NewDoubleObj(imgPtr->x);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	subobj = Tcl_NewDoubleObj(imgPtr->y);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
-    } else if (argc < 3) {
-	if (argc==1) {
-	    if (Tcl_ListObjGetElements(interp, argv[0], &argc,
-		    (Tcl_Obj ***) &argv) != TCL_OK) {
+    } else if (objc < 3) {
+	if (objc==1) {
+	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
-	    } else if (argc != 2) {
+	    } else if (objc != 2) {
 		char buf[64];
 
-		sprintf(buf, "wrong # coordinates: expected 2, got %d", argc);
+		sprintf(buf, "wrong # coordinates: expected 2, got %d", objc);
 		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		return TCL_ERROR;
 	    }
 	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, argv[0], &imgPtr->x) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, argv[1],
+	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &imgPtr->x) != TCL_OK)
+		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
   		    &imgPtr->y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
@@ -280,7 +274,7 @@ ImageCoords(interp, canvas, itemPtr, argc, argv)
     } else {
 	char buf[64];
 	
-	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", argc);
+	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", objc);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
     }
@@ -306,12 +300,12 @@ ImageCoords(interp, canvas, itemPtr, argc, argv)
  */
 
 static int
-ConfigureImage(interp, canvas, itemPtr, argc, argv, flags)
+ConfigureImage(interp, canvas, itemPtr, objc, objv, flags)
     Tcl_Interp *interp;		/* Used for error reporting. */
     Tk_Canvas canvas;		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr;		/* Image item to reconfigure. */
-    int argc;			/* Number of elements in argv.  */
-    Tcl_Obj *CONST argv[];	/* Arguments describing things to configure. */
+    int objc;			/* Number of elements in objv.  */
+    Tcl_Obj *CONST objv[];	/* Arguments describing things to configure. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
@@ -319,8 +313,8 @@ ConfigureImage(interp, canvas, itemPtr, argc, argv, flags)
     Tk_Image image;
 
     tkwin = Tk_CanvasTkwin(canvas);
-    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, argc,
-	    (CONST char **) argv, (char *) imgPtr, flags|TK_CONFIG_OBJS)) {
+    if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
+	    (CONST char **) objv, (char *) imgPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 
