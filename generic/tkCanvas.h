@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.h,v 1.6 2002/10/10 07:25:24 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvas.h,v 1.7 2003/01/08 23:02:33 drh Exp $
  */
 
 #ifndef _TKCANVAS
@@ -294,5 +294,14 @@ typedef struct TkCanvas {
 
 extern int		TkCanvPostscriptCmd _ANSI_ARGS_((TkCanvas *canvasPtr,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
+
+/*
+ * Other procedures that are shared among Tk canvas modules but not exported
+ * to the outside world:
+ */
+extern int 		TkCanvTranslatePath _ANSI_ARGS_((TkCanvas *canvPtr,
+			    int numVertex, double *coordPtr, int closed,
+			    XPoint *outPtr));
+
 
 #endif /* _TKCANVAS */
