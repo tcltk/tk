@@ -1,3 +1,19 @@
+2004-11-16  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj: 
+	* macosx/buildTkConfig.tcl: fixes for tclConfig.h changes.
+
+	* macosx/Wish.pbproj/project.pbxproj: fixed references to renamed
+	bitmap files.
+
+	* macosx/Wish.xcode/project.pbxproj (new):
+	* macosx/Wish.xcode/default.pbxuser (new):
+	* macosx/Wish-Info.plist (new):
+	* macosx/Tk-Info.plist (new): added new Xcode 1.5 project using
+	native targets, made possible by tclConfig.h changes.
+
+	* generic/tk.h: added version number change comments for new files.
+
 2004-11-15  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: fix to multi-line search problem and
