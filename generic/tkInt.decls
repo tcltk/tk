@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.33.2.2 2004/09/23 00:56:14 mdejong Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.33.2.3 2004/10/27 00:35:53 davygrvy Exp $
 
 library tk
 
@@ -857,7 +857,7 @@ declare 27 win {
 }
 
 declare 28 win {
-    void  TkWinXCleanup (HINSTANCE hInstance)
+    void  TkWinXCleanup (ClientData clientData)
 }
 
 declare 29 win {
