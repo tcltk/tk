@@ -1,3 +1,9 @@
+2004-07-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tkfbox.tcl (::tk::dialog::file::Update): use -directory
+	[pwd] (instead of .) to get around some VFS edge case bugs.
+	Use [bind $w], not [$w configure] to modify bindings.
+
 2004-07-20  Jim Ingham  <jingham@apple.com>
 
 	* generic/tkEvent.c (TkQueueEventForAllChildren): Don't queue
