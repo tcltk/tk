@@ -1592,13 +1592,13 @@ fi
 
 
     if test "$CYGPATH" = "echo" || test "$ac_cv_cygwin" = "yes"; then
-        DEPARG='"$<"'
+	DEPARG='"$<"'
     else
-        DEPARG='"$(shell $(CYGPATH) $<)"'
+	DEPARG='"$(shell $(CYGPATH) $<)"'
     fi
 
     # set various compiler flags depending on whether we are using gcc or cl
-
+    
     echo $ac_n "checking compiler flags""... $ac_c" 1>&6
 echo "configure:1604: checking compiler flags" >&5
     if test "${GCC}" = "yes" ; then
@@ -1643,7 +1643,7 @@ echo "configure:1604: checking compiler flags" >&5
 	    # ad-hoc check to see if CC supports -shared.
 	    if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
 		{ echo "configure: error: ${CC} does not support the -shared option.
-                You will need to upgrade to a newer version of the toolchain." 1>&2; exit 1; }
+		 You will need to upgrade to a newer version of the toolchain." 1>&2; exit 1; }
 	    fi
 
 	    runtime=
@@ -1653,7 +1653,7 @@ echo "configure:1604: checking compiler flags" >&5
 	    SHLIB_LD='${CC} -shared ${CFLAGS}'
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
 	    MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \$@ ${extra_ldflags} \
-	        -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
+		-Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
 
 	    LIBSUFFIX="\${DBGX}.a"
 	    EXESUFFIX="\${DBGX}.exe"
@@ -1764,7 +1764,7 @@ echo "configure:1604: checking compiler flags" >&5
 	CFLAGS_WARNING="-W3"
 	LDFLAGS_DEBUG="-debug:full -debugtype:cv"
 	LDFLAGS_OPTIMIZE="-release"
-	
+
 	# Specify the CC output file names based on the target name
 	CC_OBJNAME="-Fo\$@"
 	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) '\$@')\""
@@ -1775,13 +1775,19 @@ echo "configure:1604: checking compiler flags" >&5
 	LDFLAGS_WINDOW="-link -subsystem:windows ${lflags}"
     fi
 
+    # DL_LIBS is empty, but then we match the Unix version
+    
+    
+    
+    
+
 
 #--------------------------------------------------------------------
 # man2tcl needs this so that it can use errno.h
 #--------------------------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1785: checking how to run the C preprocessor" >&5
+echo "configure:1791: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1796,13 +1802,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1800 "configure"
+#line 1806 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1806: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1812: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1813,13 +1819,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1817 "configure"
+#line 1823 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1823: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1829: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1830,13 +1836,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1834 "configure"
+#line 1840 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1840: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1846: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1862,17 +1868,17 @@ echo "$ac_t""$CPP" 1>&6
 
 ac_safe=`echo "errno.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for errno.h""... $ac_c" 1>&6
-echo "configure:1866: checking for errno.h" >&5
+echo "configure:1872: checking for errno.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1871 "configure"
+#line 1877 "configure"
 #include "confdefs.h"
 #include <errno.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1876: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1882: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1904,7 +1910,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1908: checking for build with symbols" >&5
+echo "configure:1914: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1935,7 +1941,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1939: checking the location of tclConfig.sh" >&5
+echo "configure:1945: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.3$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.3$TK_PATCH_LEVEL/win
@@ -1961,7 +1967,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1965: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1971: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1983,7 +1989,7 @@ echo "configure:1965: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1987: checking for tclsh" >&5
+echo "configure:1993: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2312,6 +2318,10 @@ s%@OBJEXT@%$OBJEXT%g
 s%@EXEEXT@%$EXEEXT%g
 s%@TCL_THREADS@%$TCL_THREADS%g
 s%@CYGPATH@%$CYGPATH%g
+s%@DL_LIBS@%$DL_LIBS%g
+s%@CFLAGS_DEBUG@%$CFLAGS_DEBUG%g
+s%@CFLAGS_OPTIMIZE@%$CFLAGS_OPTIMIZE%g
+s%@CFLAGS_WARNING@%$CFLAGS_WARNING%g
 s%@CPP@%$CPP%g
 s%@MAN2TCLFLAGS@%$MAN2TCLFLAGS%g
 s%@TCL_BIN_DIR@%$TCL_BIN_DIR%g
@@ -2345,9 +2355,6 @@ s%@CFG_TK_EXPORT_FILE_SUFFIX@%$CFG_TK_EXPORT_FILE_SUFFIX%g
 s%@TK_SHARED_BUILD@%$TK_SHARED_BUILD%g
 s%@DEPARG@%$DEPARG%g
 s%@CFLAGS_DEFAULT@%$CFLAGS_DEFAULT%g
-s%@CFLAGS_DEBUG@%$CFLAGS_DEBUG%g
-s%@CFLAGS_OPTIMIZE@%$CFLAGS_OPTIMIZE%g
-s%@CFLAGS_WARNING@%$CFLAGS_WARNING%g
 s%@EXTRA_CFLAGS@%$EXTRA_CFLAGS%g
 s%@STLIB_LD@%$STLIB_LD%g
 s%@SHLIB_LD@%$SHLIB_LD%g
