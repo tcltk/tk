@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.5 2000/08/04 00:46:33 ericm Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.6 2000/09/06 19:02:16 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -201,7 +201,7 @@ Tk_GrabObjCmd(clientData, interp, objc, objv)
     TkDisplay *dispPtr;
     char *arg;
     int index;
-    size_t len;
+    int len;
     static char *optionStrings[] = { "current", "release",
 					 "set", "status", (char *) NULL };
   
