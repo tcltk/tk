@@ -1,3 +1,8 @@
+2002-02-28  Don Porter  <dgp@users.sourceforge.net>
+
+        * library/console.tcl (tkConsoleBind): Corrected console <<Paste>>
+        binding on Unix platforms.
+
 2002-02-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c (ConfigureText): reenable the blinking cursor
