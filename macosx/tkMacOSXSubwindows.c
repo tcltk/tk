@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.3 2004/11/11 01:26:43 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.4 2005/03/12 00:49:28 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -68,6 +68,31 @@ XDestroyWindow(
     
     
     if (Tk_IsTopLevel(macWin->winPtr)) {
+        WindowRef winRef;
+        /*
+         * We are relying on the Activate Mac OS event to pass the
+         * focus away from a window that is getting Destroyed to the
+         * Front non-floating window.  BUT we don't get activate events
+         * when a floating window is destroyed - since the front non-floating
+         * window doesn't in fact get activated...  So maybe we can check here
+         * and if we are destroying a floating window, we can pass the focus
+         * back to the front non-floating window...
+         */
+         
+        if (macWin->grafPtr != NULL) {
+            TkWindow *focusPtr = TkGetFocusWin(macWin->winPtr);
+            if (focusPtr == NULL || (focusPtr->mainPtr->winPtr == macWin->winPtr)) {
+                winRef = GetWindowFromPort(macWin->grafPtr);
+                if (TkpIsWindowFloating (winRef)) {
+                    Window window;
+                    
+                    window = TkMacOSXGetXWindow(FrontNonFloatingWindow());
+                    if (window != None) {
+                        TkMacOSXGenerateFocusEvent(window, 1);
+                    }
+                }
+            }
+        }
 	DisposeRgn(macWin->clipRgn);
 	DisposeRgn(macWin->aboveClipRgn);
 	
