@@ -1,3 +1,9 @@
+2005-01-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/loadTk.n, doc/toplevel.n: Convert to other form of emacs
+	mode control comment to prevent problems with old versions of
+	man. [Bug 1085127]
+
 2005-01-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (TkWinWmCleanup): clean up layered window class.
