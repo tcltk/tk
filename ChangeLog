@@ -1,3 +1,40 @@
+1999-03-29    <stanton@scriptics.com>
+
+	* doc/MeasureChar.3: 
+	* doc/TextLayout.3: 
+	* generic/tk.decls: 
+	* generic/tkCanvText.c: 
+	* generic/tkEntry.c:
+	* generic/tkFont.c: 
+	* generic/tkListbox.c: 
+	* generic/tkMessage.c: 
+	* mac/tkMacFont.c: 
+	* unix/tkUnixButton.c: 
+	* unix/tkUnixFont.c: 
+	* unix/tkUnixMenu.c: 
+	* win/tkWinFont.c: 
+	* win/tkWinMenu.c: Standardized text layout and font interfaces
+	so they are consistent with respect to byte versus character
+	oriented indices.  The layout functions all manipulate character
+	oriented values while the lower level measurement functions all
+	operate on byte oriented values.  This distinction was not clear
+	and so the functions were being used improperly in a number of
+	places.  [Bug: 1053, 747, 749, 1646]
+
+	* generic/tk.decls: Eliminated uses of C++ STL types string and
+	list from declarations.
+
+	* generic/tkFont.c: Changes to named fonts were not being
+	propagated in some cases. [Bug: 1144]
+	
+	* xlib/X11/Xlib.h:
+	* generic/tkInt.decls: Added XParseColor to xlib stub
+	tables. [Bug: 1574] 
+
+	* doc/GetBitmap.3: 
+	* generic/tkBitmap.c (BitmapInit): Eliminated use of Tk_Uid's in
+	bitmaps.  Added a few CONST declarations.
+
 1999-03-29    <redman@scriptics.com>
 
 	* unix/configure.in:
@@ -23,8 +60,8 @@
 	strings into read-only memory.
 
 1999-03-26    <suresh@scriptics.com>
-
-        * unix/configure.in:
+	
+	* unix/configure.in:
         --nameble-shared is now the default and builds Tk as a shared
         library; specify --disable-shared to build a static Tk library
         and shell.
