@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.36 2002/06/13 06:17:21 mdejong Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.37 2002/07/22 21:25:39 mdejong Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -877,13 +877,6 @@ proc ::tk::dialog::file:: {type args} {
     vwait ::tk::Priv(selectFilePath)
 
     ::tk::RestoreFocusGrab $w $data(ent) withdraw
-
-    # Remove the transient property to insulate the
-    # dialog from changes in the master's state.
-
-    if {[winfo exists $w]} {
-        wm transient $w {}
-    }
 
     # Cleanup traces on selectPath variable
     #
