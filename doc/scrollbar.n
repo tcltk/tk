@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scrollbar.n,v 1.3 2000/08/25 06:58:32 ericm Exp $
+'\" RCS: @(#) $Id: scrollbar.n,v 1.4 2004/08/17 22:37:24 dkf Exp $
 '\" 
 .so man.macros
 .TH scrollbar n 4.1 Tk "Tk Built-In Commands"
@@ -69,7 +69,7 @@ A scrollbar is a widget that displays two arrows, one at each end of
 the scrollbar, and a \fIslider\fR in the middle portion of the
 scrollbar.
 It provides information about what is visible in an \fIassociated window\fR
-that displays an document of some sort (such as a file being edited or
+that displays a document of some sort (such as a file being edited or
 a drawing).
 The position and size of the slider indicate which portion of the
 document is visible in the associated window.  For example, if the

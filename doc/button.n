@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.7 2004/08/16 14:01:10 dkf Exp $
+'\" RCS: @(#) $Id: button.n,v 1.8 2004/08/17 22:37:24 dkf Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -44,7 +44,6 @@ the same size.  In disabled state, the button is drawn with the
 non-default button appearance without leaving space for the default
 appearance.  The disabled state may result in a smaller button than
 the active state.
-ring.
 .VE
 .OP \-height height Height
 Specifies a desired height for the button.

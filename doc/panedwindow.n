@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: panedwindow.n,v 1.3 2003/07/17 20:52:08 dkf Exp $
+'\" RCS: @(#) $Id: panedwindow.n,v 1.4 2004/08/17 22:37:24 dkf Exp $
 '\" 
 .so man.macros
 .TH panedwindow n 8.4 Tk "Tk Built-In Commands"
@@ -125,7 +125,7 @@ the following forms:
 Return a list containing the x and y coordinates of the most recent
 proxy location.
 .TP
-\fIpathname \fBproxy forget\fR
+\fIpathName \fBproxy forget\fR
 Remove the proxy from the display.
 .TP
 \fIpathName \fBproxy place \fIx y\fR
@@ -142,6 +142,7 @@ Return the current x and y coordinate pair for the sash given by
 \fIindex\fR.  \fIIndex\fR must be an integer between 0 and 1 less than
 the number of panes in the panedwindow.  The coordinates given are
 those of the top left corner of the region containing the sash.
+.TP
 \fIpathName \fBsash dragto \fIindex x y\fR
 This command computes the difference between the given coordinates and the
 coordinates given to the last \fBsash coord\fR command for the given
@@ -238,7 +239,7 @@ bindings on the widget.  When a sash is moved, the sizes of the panes
 on each side of the sash, and thus the widgets in those panes, are
 adjusted.
 .PP
-When a pane is resized from outside (eg, it is packed to expand and
+When a pane is resized from outside (e.g. it is packed to expand and
 fill, and the containing toplevel is resized), space is added to the final
 (rightmost or bottommost) pane in the window.
 

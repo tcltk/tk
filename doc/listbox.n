@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.10 2004/03/25 12:12:36 vincentdarley Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.11 2004/08/17 22:37:24 dkf Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.4 Tk "Tk Built-In Commands"
@@ -30,7 +30,7 @@ listbox \- Create and manipulate listbox widgets
 .OP \-activestyle activeStyle ActiveStyle
 Specifies the style in which to draw the active element.  This must be
 one of \fBdotbox\fR (show a focus ring around the active element),
-\fBnone\fR (nospecial indication of active element) or
+\fBnone\fR (no special indication of active element) or
 \fBunderline\fR (underline the active element).
 The default is \fBunderline\fR.
 .VS 8.4

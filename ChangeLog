@@ -1,3 +1,12 @@
+2004-08-17  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/menu.n, doc/text.n: Assorted fixes, including spelling fixes
+	from Mikhail Kolesnitschenko. [Patch 1010083]
+
+	* doc/spinbox.n, doc/scrollbar.n, doc/scale.n, doc/panedwindow.n: 
+	* doc/message.n, doc/listbox.n, doc/entry.n, doc/button.n:
+	More spelling fixes from Mikhail Kolesnitschenko. [Patch 1010607]
+
 2004-08-16  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/button.n, doc/checkbutton.n, doc/label.n, doc/menubutton.n:
