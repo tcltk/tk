@@ -1,3 +1,14 @@
+2000-04-19  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/aclocal.m4: made SC_PROG_TCLSH search specifically for
+	tclsh*.exe type files to find an executable.
+
+	* win/Makefile.in: fixed up cleanup, winhelp, cat32 targets
+
+	* library/console.tcl: made console use systemfixed font on Win
+
+	* generic/tkEntry.c: removed unnecessary ENTRY_VALIDATE #define
+
 2000-04-19  Eric Melski  <ericm@scriptics.com>
 
 	* generic/tkRectOval.c (ConfigureRectOval): Added checks for valid
