@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.12.2.3 2001/08/24 23:58:29 hobbs Exp $
+# RCS: @(#) $Id: listbox.test,v 1.12.2.4 2002/02/26 01:16:32 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -938,11 +938,19 @@ test listbox-4.18 {ConfigureListbox, no listvar -> bad listvar} {
     catch {destroy .l}
     listbox .l
     .l insert end a b c d
-    set x {this is a " bad list}
+    set x "this is a \" bad list"
     catch {.l configure -listvar x} result
     list [.l get 0 end] [.l cget -listvar] $result
 } [list [list a b c d] {} \
-	"unmatched open quote in list: invalid listvar value"]
+	"unmatched open quote in list: invalid -listvariable value"]
+test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} {
+    catch {destroy .l}
+    listbox .l -listvar foo
+    .l insert end a b c d
+    catch {.l configure -listvar ::zoo::bar::foo} result
+    list [.l get 0 end] [.l cget -listvar] $foo $result
+} [list [list a b c d] foo [list a b c d] \
+	{can't set "::zoo::bar::foo": parent namespace doesn't exist}]
 
 # No tests for DisplayListbox:  I don't know how to test this procedure.
 
@@ -1846,7 +1854,7 @@ test listbox-21.11 {ListboxListVarProc, bad list} {
     catch {unset x}
     listbox .l -listvar x
     set x [list a b c d]
-    catch {set x {this is a " bad list}} result
+    catch {set x "this is a \" bad list"} result
     set result
 } {can't set "x": invalid listvar value}
 test listbox-21.12 {ListboxListVarProc, cleanup item attributes} {
@@ -2051,10 +2059,6 @@ test listbox-25.2 {listbox item configurations and widget based inserts} {
     list [.l itemcget 0 -fg] [.l itemcget 4 -fg]
 } [list {} red]
 
-resetGridInfo
-eval destroy [winfo children .]
-option clear
-
 test listbox-27.1 {widget deletion while active} {
     destroy .l
     pack [listbox .l]
@@ -2064,7 +2068,9 @@ test listbox-27.1 {widget deletion while active} {
     winfo exists .l
 } 0
 
+resetGridInfo
 eval destroy [winfo children .]
+option clear
 
 # cleanup
 ::tcltest::cleanupTests
