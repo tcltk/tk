@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.2 1998/09/30 02:19:39 stanton Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.1.4.3 1998/11/10 19:04:51 stanton Exp $
  */
 
 #include "tkWinInt.h"
@@ -2179,7 +2179,7 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, widthInc, heightInc)
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
 	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == PBaseSize|PResizeInc)) {
+		    == (PBaseSize|PResizeInc))) {
 	return;
     }
 
