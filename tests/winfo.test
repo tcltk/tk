@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.1.4.6 1999/04/02 18:06:46 hershey Exp $
+# RCS: @(#) $Id: winfo.test,v 1.1.4.7 1999/04/07 00:49:19 stanton Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -315,7 +315,7 @@ proc MakeEmbed {} {
     pack .emb.b -expand yes -fill both
     update
 }
-test winfo-13.1 {root coordinates of embedded toplevel} {winCrash} {
+test winfo-13.1 {root coordinates of embedded toplevel} {
     MakeEmbed
     set z [expr [winfo rootx .emb] == [winfo rootx .con] && \
 		[winfo rooty .emb] == [winfo rooty .con]]
@@ -323,7 +323,7 @@ test winfo-13.1 {root coordinates of embedded toplevel} {winCrash} {
     destroy .con
     set z
 } {1}
-test winfo-13.2 {destroying embedded toplevel} {winCrash} {
+test winfo-13.2 {destroying embedded toplevel} {
     destroy .emb
     update
     expr [winfo exists .emb.b] || [winfo exists .con]
@@ -333,7 +333,7 @@ foreach i [winfo children .] {
     destroy $i
 }
 
-test winfo-13.3 {destroying container window} {winCrash} {
+test winfo-13.3 {destroying container window} {
     MakeEmbed
     destroy .con
     update
@@ -347,7 +347,7 @@ foreach i [winfo children .] {
     destroy $i
 }
 
-test winfo-13.4 {[winfo containing] with embedded windows} {winCrash} {
+test winfo-13.4 {[winfo containing] with embedded windows} {
     MakeEmbed
     button .b
     pack .b -expand yes -fill both
