@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.4 1999/04/30 22:49:55 stanton Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.5 2000/09/06 23:39:47 ericm Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -25,6 +25,11 @@
  * in the generic/tk.decls script.
  */
 
+#ifdef __WIN32__
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
+#endif /* __WIN32__ */
 
 /* !BEGIN!: Do not edit below this line. */
 
