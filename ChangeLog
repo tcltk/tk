@@ -1,3 +1,17 @@
+2004-07-23  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+
+	[Merge from HEAD]
+
+	Mac OS X: Fix several problems with Icelandic (and Faroese) keyboards
+	reported by Jérôme Gagnon-Voyer <gagnonje5000<at>mac<dot>com> on
+	tcl-mac on 2004-03-22.
+	
+	* macosx/tkMacOSXKeyEvent.c (KLSInit): Add.
+	(GetKeyboardLayout): Add calls to Keyboard Layout Services, if
+	present.  Rework classic handling.  Use GetKCHREncoding().  Add
+	parameter encodingPtr.
+	(GetKCHREncoding): Add.
+
 2004-07-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/tkfbox.tcl (::tk::dialog::file::Update): use -directory
