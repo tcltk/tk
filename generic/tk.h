@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.48 2000/09/06 19:05:16 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.49 2000/09/07 00:28:38 ericm Exp $
  */
 
 #ifndef _TK
@@ -1360,12 +1360,6 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 
 #include "tkDecls.h"
 
-/*
- * Platform dependant exported procedures and variables.
- */
-    
-#include "tkPlatDecls.h"
-    
 /*
  * Tcl commands exported by Tk:
  */
