@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.21 2004/11/11 01:24:31 das Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.22 2005/02/17 00:06:08 mdejong Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -68,6 +68,10 @@ a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values
 outside that range will be constrained.  This is supported on Windows
 2000/XP+.  Where not supported, the \fB\-alpha\fR value remains at
 \fB1.0\fR.
+.VE 8.5
+\fB\-fullscreen\fR attribute will place the window in a mode that
+takes up the entire screen, has no borders, and covers the Start
+menu and taskbar.
 .VE 8.5
 .PP
 On Mac OS X, \fB\-modified\fR gets or sets the modification state of the
