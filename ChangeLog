@@ -1,3 +1,8 @@
+2001-08-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure:
+	* unix/aclocal.m4: added QNX-6 build support. [Bug #219410] (loverso)
+
 2001-08-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure: regenerated
