@@ -16,7 +16,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.28 2002/02/01 14:27:30 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.29 2002/02/19 16:30:26 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -3572,7 +3572,7 @@ MatchFileFormat(interp, chan, fileName, formatObj, imageFormatPtr,
 	    }
 	}
 	if (formatPtr->fileMatchProc != NULL) {
-	    (void) Tcl_Seek(chan, 0L, SEEK_SET);
+	    (void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
 	    
 	    if ((*formatPtr->fileMatchProc)(chan, fileName, formatObj,
 		    widthPtr, heightPtr, interp)) {
@@ -3603,7 +3603,7 @@ MatchFileFormat(interp, chan, fileName, formatObj, imageFormatPtr,
 	    }
 	}
 	if (formatPtr->fileMatchProc != NULL) {
-	    (void) Tcl_Seek(chan, 0L, SEEK_SET);
+	    (void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
 	    if ((*formatPtr->fileMatchProc)(chan, fileName, (Tcl_Obj *) formatString,
 		    widthPtr, heightPtr, interp)) {
 		if (*widthPtr < 1) {
@@ -3633,7 +3633,7 @@ MatchFileFormat(interp, chan, fileName, formatObj, imageFormatPtr,
 
     *imageFormatPtr = formatPtr;
     *oldformat = useoldformat;
-    (void) Tcl_Seek(chan, 0L, SEEK_SET);
+    (void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
     return TCL_OK;
 }
 
