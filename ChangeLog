@@ -1,3 +1,10 @@
+2004-02-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock): 
+	* tests/imgPhoto.test (imgPhoto-16.1): Better handling of the case
+	when copying from one area of a photo to another triggers a
+	resizing of the image.  [Bug 877950]
+
 2004-02-07  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc:
