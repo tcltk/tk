@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.5 2001/08/15 15:44:36 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.6 2001/08/17 09:38:30 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -669,12 +669,13 @@ TkGetWindowFromObj(interp, tkwin, objPtr, windowPtr)
     register Tcl_Obj *objPtr;	/* The object from which to get boolean. */
     Tk_Window *windowPtr;	/* Place to store resulting window. */
 {
-    register int result;
     Tk_Window lastWindow;
 
-    result = SetWindowFromAny(interp, objPtr);
-    if (result != TCL_OK) {
-	return result;
+    if (objPtr->typePtr != &windowObjType) {
+	register int result = SetWindowFromAny(interp, objPtr);
+	if (result != TCL_OK) {
+	    return result;
+	}
     }
 
     lastWindow = (Tk_Window) objPtr->internalRep.twoPtrValue.ptr1;
@@ -690,7 +691,7 @@ TkGetWindowFromObj(interp, tkwin, objPtr, windowPtr)
     }
     *windowPtr = (Tk_Window) objPtr->internalRep.twoPtrValue.ptr2;
 
-    return result;
+    return TCL_OK;
 }
 
 /*
