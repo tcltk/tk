@@ -1,3 +1,10 @@
+2005-02-03  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkCanvas.c (GetStaticUids): New function to manage the
+	thread-specific data detailing the list of all uids in a thread.
+	(typeList): Protect this (the other piece of global data) with a
+	mutex. [Bug 1114977]
+
 2005-01-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tcl.m4, unix/configure: add solaris-64 gcc build
