@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: visual.test,v 1.5 2002/07/13 20:28:36 dgp Exp $
+# RCS: @(#) $Id: visual.test,v 1.6 2002/07/14 05:48:46 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -270,9 +270,7 @@ if {([winfo visual .] == "pseudocolor") && ([winfo depth .] == 8)} {
 }
 
 test visual-8.1 {Tk_FreeColormap procedure} {
-    foreach w [winfo child .] {
-	destroy $w
-    }
+    deleteWindows
     toplevel .t1 -width 300 -height 180 -colormap new
     wm geometry .t1 +0+0
     foreach i {.t2 .t3 .t4} {
@@ -286,9 +284,7 @@ test visual-8.1 {Tk_FreeColormap procedure} {
 } {}
 if {$other != {}} {
     test visual-8.2 {Tk_FreeColormap procedure} {
-	foreach w [winfo child .] {
-	    destroy $w
-	}
+	deleteWindows
 	toplevel .t1 -width 300 -height 180 -visual $other
 	wm geometry .t1 +0+0
 	foreach i {.t2 .t3 .t4} {

@@ -6,17 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.7 2002/06/26 08:22:54 a_kovalenko Exp $
+# RCS: @(#) $Id: font.test,v 1.8 2002/07/14 05:48:46 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-if {[info commands testfont] != "testfont"} {
-    puts "testfont command not available; skipping tests"
-    ::tcltest::cleanupTests
-    return
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 catch {destroy .b}
 toplevel .b
@@ -458,7 +455,7 @@ test font-13.4 {CreateNamedFont: recreate "deleted" font} {
 test font-14.1 {Tk_GetFont procedure} {
 } {}
 
-test font-15.1 {Tk_AllocFontFromObj - converting internal reps} {
+test font-15.1 {Tk_AllocFontFromObj - converting internal reps} testfont {
     set x {Times 16}
     lindex $x 0
     destroy .b1 .b2
@@ -466,7 +463,7 @@ test font-15.1 {Tk_AllocFontFromObj - converting internal reps} {
     lindex $x 0
     testfont counts {Times 16}
 } {{1 0}}
-test font-15.2 {Tk_AllocFontFromObj - discard stale font} {
+test font-15.2 {Tk_AllocFontFromObj - discard stale font} testfont {
     set x {Times 16}
     destroy .b1 .b2
     button .b1 -font $x
@@ -476,7 +473,7 @@ test font-15.2 {Tk_AllocFontFromObj - discard stale font} {
     button .b2 -font $x
     lappend result [testfont counts {Times 16}]
 } {{} {{1 1}}}
-test font-15.3 {Tk_AllocFontFromObj - reuse existing font} {
+test font-15.3 {Tk_AllocFontFromObj - reuse existing font} testfont {
     set x {Times 16}
     destroy .b1 .b2
     button .b1 -font $x
@@ -551,7 +548,7 @@ test font-16.1 {Tk_NameOfFont procedure} {
     .b.f cget -font
 } {-family fixed}
 
-test font-17.1 {Tk_FreeFontFromObj - reference counts} {
+test font-17.1 {Tk_FreeFontFromObj - reference counts} testfont {
     set x {Courier 12}
     destroy .b1 .b2 .b3
     button .b1 -font $x
@@ -611,7 +608,7 @@ test font-17.6 {Tk_FreeFont procedure: named font not deleted yet} {
     list [lindex [font actual xyz] 0] [lindex $x 0]
 } {-family -family}
 
-test font-18.1 {FreeFontObjProc} {
+test font-18.1 {FreeFontObjProc} testfont {
     destroy .b1
     set x [format {Courier 12}]
     button .b1 -font $x

@@ -6,17 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.11 2001/04/03 04:40:50 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.12 2002/07/14 05:48:46 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
-
-foreach i [winfo children .] {
-    destroy $i
-}
-wm geometry . {}
-raise .
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 proc scroll args {
     global scrollInfo
@@ -1140,7 +1137,7 @@ test entry-11.1 {EntryEventProc procedure} {
     update
 } {}
 test entry-11.2 {EntryEventProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     entry .e1 -fg #112233
     rename .e1 .e2
     set x {}
@@ -1151,7 +1148,7 @@ test entry-11.2 {EntryEventProc procedure} {
 } {.e1 #112233 {} {}}
 
 test entry-12.1 {EntryCmdDeletedProc procedure} {
-    eval destroy [winfo children .]
+    deleteWindows
     button .e1 -text "xyz_123"
     rename .e1 {}
     list [info command .e*] [winfo children .]
@@ -1380,7 +1377,7 @@ test entry-17.4 {EntryUpdateScrollbar procedure} {
     (horizontal scrolling command executed by .e)}}
 
 set l [interp hidden]
-eval destroy [winfo children .]
+deleteWindows
 
 test entry-18.1 {Entry widget vs hiding} {
     destroy .e

@@ -6,23 +6,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bitmap.test,v 1.2 1999/04/16 01:51:34 stanton Exp $
+# RCS: @(#) $Id: bitmap.test,v 1.3 2002/07/14 05:48:46 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
-if {[info commands testbitmap] != "testbitmap"} {
-    puts "testbitmap command not available; skipping tests"
-    ::tcltest::cleanupTests
-    return
-}
+testConstraint testbitmap [llength [info commands testbitmap]]
 
-eval destroy [winfo children .]
-wm geometry . {}
-raise .
-
-test bitmap-1.1 {Tk_AllocBitmapFromObj - converting internal reps} {
+test bitmap-1.1 {Tk_AllocBitmapFromObj - converting internal reps} testbitmap {
     set x gray25
     lindex $x 0
     destroy .b1
@@ -30,7 +25,7 @@ test bitmap-1.1 {Tk_AllocBitmapFromObj - converting internal reps} {
     lindex $x 0
     testbitmap gray25
 } {{1 0}}
-test bitmap-1.2 {Tk_AllocBitmapFromObj - discard stale bitmap} {
+test bitmap-1.2 {Tk_AllocBitmapFromObj - discard stale bitmap} testbitmap {
     set x gray25
     destroy .b1 .b2
     button .b1 -bitmap $x
@@ -40,7 +35,7 @@ test bitmap-1.2 {Tk_AllocBitmapFromObj - discard stale bitmap} {
     button .b2 -bitmap $x
     lappend result [testbitmap gray25]
 } {{} {{1 1}}}
-test bitmap-1.3 {Tk_AllocBitmapFromObj - reuse existing bitmap} {
+test bitmap-1.3 {Tk_AllocBitmapFromObj - reuse existing bitmap} testbitmap {
     set x gray25
     destroy .b1 .b2
     button .b1 -bitmap $x
@@ -60,7 +55,7 @@ test bitmap-2.2 {Tk_GetBitmap procedure} {
     list [catch {button .b1 -bitmap @xyzzy} msg] $msg
 } {1 {error reading bitmap file "xyzzy"}}
 
-test bitmap-3.1 {Tk_FreeBitmapFromObj - reference counts} {
+test bitmap-3.1 {Tk_FreeBitmapFromObj - reference counts} testbitmap {
     set x questhead
     destroy .b1 .b2 .b3
     button .b1 -bitmap $x
@@ -76,7 +71,7 @@ test bitmap-3.1 {Tk_FreeBitmapFromObj - reference counts} {
     lappend result [testbitmap questhead]
 } {{{3 1}} {{2 1}} {{1 1}} {}}
 
-test bitmap-4.1 {FreeBitmapObjProc} {
+test bitmap-4.1 {FreeBitmapObjProc} testbitmap {
     destroy .b
     set x [format questhead]
     button .b -bitmap $x

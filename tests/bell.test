@@ -5,11 +5,14 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bell.test,v 1.5 2000/05/17 22:44:10 hobbs Exp $
+# RCS: @(#) $Id: bell.test,v 1.6 2002/07/14 05:48:45 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::configure
+namespace import -force tcltest::testsDirectory
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
 
 test bell-1.1 {bell command} {
     list [catch {bell a} msg] $msg
