@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.10 2002/09/30 13:42:26 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.11 2002/10/01 08:48:08 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -363,6 +363,7 @@ TkSelPropProc(eventPtr)
 	     */
 
 	    if ((formatType == XA_STRING)
+		    || (dispPtr && formatType==dispPtr->utf8Atom)
 		    || (dispPtr && formatType==dispPtr->compoundTextAtom)) {
 		Tcl_DString ds;
 		int encodingCvtFlags;
@@ -384,6 +385,8 @@ TkSelPropProc(eventPtr)
 		}
 		if (formatType == XA_STRING) {
 		    encoding = Tcl_GetEncoding(NULL, "iso8859-1");
+		} else if (dispPtr && formatType==dispPtr->utf8Atom) {
+		    encoding = Tcl_GetEncoding(NULL, "utf-8");
 		} else {
 		    encoding = Tcl_GetEncoding(NULL, "iso2022");
 		}
@@ -449,43 +452,6 @@ TkSelPropProc(eventPtr)
 		}
 		memcpy(incrPtr->converts[i].buffer, src, (size_t) srcLen+1);
 		Tcl_DStringFree(&ds);
-	    } else if (dispPtr && formatType==dispPtr->utf8Atom) {
-		/*
-		 * Detect if the last character was a complete UTF-8
-		 * character; if not, it is not a good idea to send it
-		 * to the remote end as there's no telling whether the
-		 * other side will be able to digest partial
-		 * characters.
-		 *
-		 * Note that utfLength is calculated and then potentially
-		 * recalculated...
-		 */
-		CONST char *utfBuffer = (CONST char *) buffer;
-		CONST char *lastChar =
-			Tcl_UtfPrev(utfBuffer+numItems, utfBuffer);
-		int utfLength = lastChar-utfBuffer;
-
-		if (numItems-utfLength > TCL_UTF_MAX) {
-		    panic("Tcl_UtfPrev scanned backward over more than one character");
-		}
-		if (!Tcl_UtfCharComplete(lastChar, numItems-utfLength)) {
-		    /*
-		     * numItems must not be reduced, so we need to set
-		     * the length of the bits we want to subtract off
-		     * it here.  Horrid!
-		     */
-		    length = numItems - utfLength;
-		} else {
-		    /*
-		     * We want to shovel all the data we've got across
-		     */
-		    utfLength = numItems;
-		}
-
-		XChangeProperty(eventPtr->xproperty.display,
-			eventPtr->xproperty.window, eventPtr->xproperty.atom,
-			formatType, 8, PropModeReplace,
-			(unsigned char *) utfBuffer, utfLength);
 	    } else {
 		/*
 		 * Set the property to the encoded string value.
@@ -1182,6 +1148,7 @@ SelRcvIncrProc(clientData, eventPtr)
     }
     if ((type == XA_STRING)
 	    || (type == retrPtr->winPtr->dispPtr->textAtom)
+	    || (type == retrPtr->winPtr->dispPtr->utf8Atom)
 	    || (type == retrPtr->winPtr->dispPtr->compoundTextAtom)) {
 	char *dst, *src;
 	int srcLen, dstLen, srcRead, dstWrote, soFar;
@@ -1203,6 +1170,8 @@ SelRcvIncrProc(clientData, eventPtr)
 
 	if (type == retrPtr->winPtr->dispPtr->compoundTextAtom) {
 	    encoding = Tcl_GetEncoding(NULL, "iso2022");
+	} else if (type == retrPtr->winPtr->dispPtr->utf8Atom) {
+	    encoding = Tcl_GetEncoding(NULL, "utf-8");
 	} else {
 	    encoding = Tcl_GetEncoding(NULL, "iso8859-1");
 	}
@@ -1284,54 +1253,6 @@ SelRcvIncrProc(clientData, eventPtr)
 	Tcl_DStringFree(&temp);
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);
-	}
-	if (result != TCL_OK) {
-	    retrPtr->result = result;
-	}
-    } else if (type == retrPtr->winPtr->dispPtr->utf8Atom) {
-	/*
-	 * The X selection data is in UTF-8 format already.
-	 * We can't guarantee that propInfo is NULL-terminated,
-	 * so we might have to copy the string.
-	 */
-	char *propData = propInfo;
-
-	if (format != 8) {
-	    char buf[64 + TCL_INTEGER_SPACE];
-	    
-	    sprintf(buf, 
-		    "bad format for string selection: wanted \"8\", got \"%d\"",
-		    format);
-	    Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
-	    retrPtr->result = TCL_ERROR;
-	    goto done;
-	}
-
-	/*
-	 * Check for the end of the incremental transfer.
-	 */
-	if (numItems == 0) {
-	    retrPtr->result = TCL_OK;
-	    goto done;
-	}
-
-	/*
-	 * Not sure if this is correct; can propInfo contain embedded
-	 * NUL bytes?  Certainly not if it is coming from Tcl/Tk, but
-	 * I don't remember if all other apps treat \u0000 the same
-	 * way...
-	 */
-	if (propInfo[numItems] != '\0') {
-	    propData = ckalloc((size_t) numItems + 1);
-	    strcpy(propData, propInfo);
-	    propData[numItems] = '\0';
-	}
-        interp = retrPtr->interp;
-        Tcl_Preserve((ClientData) interp);
-	result = (*retrPtr->proc)(retrPtr->clientData, interp, propData);
-	Tcl_Release((ClientData) interp);
-	if (propData != propInfo) {
-	    ckfree((char *) propData);
 	}
 	if (result != TCL_OK) {
 	    retrPtr->result = result;
