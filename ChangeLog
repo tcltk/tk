@@ -1,3 +1,8 @@
+2004-07-20  Jim Ingham  <jingham@apple.com>
+
+	* generic/tkEvent.c (TkQueueEventForAllChildren): Don't queue
+	events for unmapped windows.
+	
 2004-07-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkEvent.c (Tk_HandleEvent): ensure IC focus is set after
