@@ -1,3 +1,8 @@
+2005-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tcl.m4, win/configure: do not require cygpath in macros to
+	allow msys alone as an alternative.
+
 2005-03-27  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* tests/textDisp.test: added test for fix of 2005-03-15.
