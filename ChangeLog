@@ -1,3 +1,16 @@
+2001-04-01  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* README:
+	* mac/README: updated patchlevel to 8.4a3 and corrected links and
+	notes.
+
+	* generic/tk.h:
+	* unix/configure.in (TK_PATCH_LEVEL): 
+	* unix/configure:
+	* unix/tk.spec:
+	* win/configure.in (TK_PATCH_LEVEL): 
+	* win/configure: updated patchlevel to 8.4a3
+
 2001-03-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/safe.test: added note about correcting failures in
