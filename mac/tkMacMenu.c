@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.14 1999/12/07 03:04:51 hobbs Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.15 1999/12/07 03:09:58 hobbs Exp $
  */
 
 #include "tkMacInt.h"
@@ -4424,4 +4424,34 @@ TkpMenuThreadInit()
     /*
      * Nothing to do.
      */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPreprocessMacMenu --
+ *
+ *    Handle preprocessing of menubar if it exists.
+ *
+ * Results:
+ *    None.
+ *
+ * Side effects:
+ *    All post commands for the current menubar get executed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpPreprocessMacMenu()
+{
+    TkMenuReferences *menuBarRefPtr;
+
+    if ( currentMenuBarName != NULL ) {
+        menuBarRefPtr = TkFindMenuReferences(currentMenuBarInterp,
+		currentMenuBarName);
+        if ( (menuBarRefPtr != NULL) && (menuBarRefPtr->menuPtr != NULL) ) {
+	    TkPreprocessMenu(menuBarRefPtr->menuPtr->masterMenuPtr);
+        }
+    }
 }
