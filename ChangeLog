@@ -1,3 +1,29 @@
+1999-11-17  Eric Melski  <ericm@scriptics.com>
+
+	* tests/listbox.test: New tests for -listvar functionality, and an
+	odd extra case that wasn't covered before.
+
+	* generic/tkListbox.c: Tests exposed some bugs, now fixed.
+
+1999-11-16  Eric Melski  <ericm@scriptics.com>
+
+	* tests/listbox.test: Fixed tests to comply with new objectified
+	error messages.  No -listvar specific tests yet.
+
+	* win/tkWinDefault.h: 
+	* unix/tkUnixDefault.h: 
+	* mac/tkMacDefault.h: Added default value for -listvar option.
+
+	* generic/tkWindow.c: Changed "listbox" mapping from old-school to
+	new-school objectified command.
+
+	* generic/tkListbox.c: Objectified listbox; added support for
+	-listvar option.  Converted internal structure to use a Tcl list
+	object to store the data.
+
+	* generic/tkInt.h: Changed reference to Tk_ListboxCmd to
+	Tk_ListboxObjCmd.
+
 1999-11-09  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkGrid.c: changed Tcl_Alloc to ckalloc

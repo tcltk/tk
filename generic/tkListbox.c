@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.5 1999/11/17 02:38:28 ericm Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.6 1999/11/17 21:56:37 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -1259,7 +1259,7 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    Tcl_Obj *oldListVarObj = NULL;
+    Tcl_Obj *oldListObj = NULL;
     int oldExport;
 
     oldExport = listPtr->exportSelection;
@@ -1267,8 +1267,6 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 	Tcl_UntraceVar(interp, listPtr->listVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ListboxListVarProc, (ClientData) listPtr);
-	oldListVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
-		(char *)NULL, TCL_GLOBAL_ONLY);
     }
     
     if (Tk_SetOptions(interp, (char *)listPtr,
@@ -1319,50 +1317,37 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
      *
      * no listvar        | no listvar    | no special action
      */
+    oldListObj = listPtr->listObj;
     if (listPtr->listVarName != NULL) {
-	/* We now have a listvar */
 	if (Tcl_GetVar2(interp, listPtr->listVarName, (char *)NULL,
 		TCL_GLOBAL_ONLY) == NULL) {
-	    /* New listvar DOES NOT exist */
 	    Tcl_Obj *listVarObj;
-	    /* Use internal list obj if we have one; else, create an object */
 	    if (listPtr->listObj != NULL) {
 		listVarObj = listPtr->listObj;
 	    } else {
 		listVarObj = Tcl_NewObj();
-		Tcl_IncrRefCount(listVarObj);
 	    }
-	    if (Tcl_SetVar2Ex(interp, listPtr->listVarName,
-		    (char *)NULL, listVarObj, TCL_GLOBAL_ONLY) == NULL) {
+	    if (Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *)NULL,
+		    listVarObj, TCL_GLOBAL_ONLY) == NULL) {
 		Tcl_DecrRefCount(listVarObj);
 		return TCL_ERROR;
 	    }
 	}
 	listPtr->listObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
 		(char *)NULL, TCL_GLOBAL_ONLY);
-        Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
+	Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
                 TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                 ListboxListVarProc, (ClientData) listPtr);
     } else {
-	/* We do not now have a listvar */
-	if (oldListVarObj != NULL) {
-	    /* We used to have a list var */
-	    if (listPtr->listObj != NULL) {
-		Tcl_DecrRefCount(listPtr->listObj);
-		listPtr->listObj = NULL;
-	    }
-	    /* Copy the old listvar's content to the internal list obj */
-	    listPtr->listObj = Tcl_DuplicateObj(oldListVarObj);
-	    Tcl_IncrRefCount(listPtr->listObj);
-	} else {
-	    /* We didn't have a listvar before */
-	    if (listPtr->listObj == NULL) {
-		/* If we don't have an internal list obj, create one */
-		listPtr->listObj = Tcl_NewObj();
-		Tcl_IncrRefCount(listPtr->listObj);
-	    }
+	if (listPtr->listObj == NULL) {
+	    listPtr->listObj = Tcl_NewObj();
 	}
     }
+    Tcl_IncrRefCount(listPtr->listObj);
+    if (oldListObj != NULL) {
+	Tcl_DecrRefCount(oldListObj);
+    }
+
     /* Make sure that the list length is correct */
     Tcl_ListObjLength(listPtr->interp, listPtr->listObj, &listPtr->nElements);
     
@@ -2810,6 +2795,9 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
 {
     Listbox *listPtr = (Listbox *)clientData;
     Tcl_Obj *oldListObj;
+    int oldLength;
+    int i;
+    Tcl_HashEntry *entry;
     
     /* Bwah hahahaha -- puny mortal, you can't unset a -listvar'd variable! */
     if (flags & TCL_TRACE_UNSETS) {
@@ -2832,9 +2820,21 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
 	Tcl_DecrRefCount(oldListObj);
     }
 
-    /* Get the list length */
+    /* If the list length has decreased, then we should clean up the selection
+     * from elements past the end of the new list
+     */
+    oldLength = listPtr->nElements;
     Tcl_ListObjLength(listPtr->interp, listPtr->listObj, &listPtr->nElements);
+    if (listPtr->nElements < oldLength) {
+	for (i = listPtr->nElements; i < oldLength; i++) {
+	    entry = Tcl_FindHashEntry(listPtr->selection, (char *)i);
+	    if (entry != NULL) {
+		Tcl_DeleteHashEntry(entry);
+	    }
+	}
+    }
 
+    
     /*
      * The computed maxWidth may have changed as a result of this operation.
      * However, we don't want to recompute it every time this trace fires

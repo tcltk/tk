@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.4 1999/11/17 02:40:55 ericm Exp $
+# RCS: @(#) $Id: listbox.test,v 1.5 1999/11/17 21:56:37 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -866,7 +866,74 @@ test listbox-4.8 {ConfigureListbox procedure} {
     update
     set log
 } {{y 0 1} {x 0 1}}
-
+test listbox-4.9 {ConfigureListbox procedure, -listvar} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l get 0 end
+} [list a b c d]
+test listbox-4.10 {ConfigureListbox, no listvar -> existing listvar} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l
+    .l insert end 1 2 3 4
+    .l configure -listvar x
+    .l get 0 end
+} [list a b c d]
+test listbox-4.11 {ConfigureListbox procedure, listvar -> no listvar} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l configure -listvar {}
+    .l insert end 1 2 3 4
+    list $x [.l get 0 end]
+} [list [list a b c d] [list a b c d 1 2 3 4]]
+test listbox-4.12 {ConfigureListbox procedure, listvar -> different listvar} {
+    catch {destroy .l}
+    set x [list a b c d]
+    set y [list 1 2 3 4]
+    listbox .l 
+    .l configure -listvar x
+    .l configure -listvar y
+    .l insert end 5 6 7 8
+    list $x $y
+} [list [list a b c d] [list 1 2 3 4 5 6 7 8]]
+test listbox-4.13 {ConfigureListbox, no listvar -> non-existant listvar} {
+    catch {destroy .l}
+    catch {unset x}
+    listbox .l
+    .l insert end a b c d
+    .l configure -listvar x
+    set x
+} [list a b c d]
+test listbox-4.14 {ConfigureListbox, non-existant listvar} {
+    catch {destroy .l}
+    catch {unset x}
+    listbox .l -listvar x
+    list [info exists x] $x
+} [list 1 {}]
+test listbox-4.15 {ConfigureListbox, listvar -> non-existant listvar} {
+    catch {destroy .l}
+    catch {unset y}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l configure -listvar y
+    list [info exists y] $y
+} [list 1 [list a b c d]]
+test listbox-4.16 {ConfigureListbox, listvar -> same listvar} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l configure -listvar x
+    set x
+} [list a b c d]
+test listbox-4.17 {ConfigureListbox, no listvar -> no listvar} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c d
+    .l configure -listvar {}
+    .l get 0 end
+} [list a b c d]
 # No tests for DisplayListbox:  I don't know how to test this procedure.
 
 test listbox-5.1 {ListboxComputeGeometry procedure} {fonts} {
@@ -1008,6 +1075,22 @@ test listbox-6.12 {InsertEls procedure} {fonts} {
     .l2 insert 0 "much longer entry"
     lappend x [winfo reqwidth .l2] [winfo reqheight .l2]
 } {80 93 122 110}
+test listbox-6.13 {InsertEls procedure, check -listvar update} {
+    catch {destroy .l2}
+    set x [list a b c d]
+    listbox .l2 -listvar x
+    .l2 insert 0 1 2 3 4
+    set x
+} [list 1 2 3 4 a b c d]
+test listbox-6.14 {InsertEls procedure, check selection update} {
+    catch {destroy .l2}
+    listbox .l2
+    .l2 insert 0 0 1 2 3 4
+    .l2 selection set 2 4
+    .l2 insert 0 a
+    .l2 curselection
+} [list 3 4 5]
+
 
 test listbox-7.1 {DeleteEls procedure} {
     .l delete 0 end
@@ -1164,6 +1247,13 @@ test listbox-7.20 {DeleteEls procedure} {fonts} {
     lappend x [winfo reqwidth .l2] [winfo reqheight .l2]
 } {80 144 17 93}
 catch {destroy .l2}
+test listbox-7.21 {DeleteEls procedure, check -listvar update} {
+    catch {destroy .l2}
+    set x [list a b c d]
+    listbox .l2 -listvar x
+    .l2 delete 0 1
+    set x
+} [list c d]
 
 test listbox-8.1 {ListboxEventProc procedure} {fonts} {
     catch {destroy .l}
@@ -1649,6 +1739,71 @@ test listbox-20.1 {listbox vs hidden commands} {
     destroy .l
     list [winfo children .] [interp hidden]
 } [list {} $l]
+
+# tests for ListboxListVarProc
+test listbox-21.1 {ListboxListVarProc} {
+    catch {destroy .l}
+    catch {unset x}
+    listbox .l -listvar x
+    set x [list a b c d]
+    .l get 0 end
+} [list a b c d]
+test listbox-21.2 {ListboxListVarProc} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    unset x
+    set x
+} [list a b c d]
+test listbox-21.3 {ListboxListVarProc} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l configure -listvar {}
+    unset x
+    info exists x
+} 0
+test listbox-21.4 {ListboxListVarProc} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    lappend x e f g
+    .l size
+} 7
+test listbox-21.5 {ListboxListVarProc, test selection after listvar mod} {
+    catch {destroy .l}
+    set x [list a b c d e f g]
+    listbox .l -listvar x
+    .l selection set end
+    set x [list a b c d]
+    set x [list 0 1 2 3 4 5 6]
+    .l curselection
+} {}
+test listbox-21.6 {ListboxListVarProc, test selection after listvar mod} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l selection set 3
+    lappend x e f g
+    .l curselection
+} 3
+test listbox-21.7 {ListboxListVarProc, test selection after listvar mod} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l selection set 0
+    set x [linsert $x 0 1 2 3 4]
+    .l curselection
+} 0
+test listbox-21.8 {ListboxListVarProc, test selection after listvar mod} {
+    catch {destroy .l}
+    set x [list a b c d]
+    listbox .l -listvar x
+    .l selection set 2
+    set x [list a b c]
+    .l curselection
+} 2
+    
 
 resetGridInfo
 catch {destroy .l2}
