@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenubutton.c,v 1.1.4.2 1999/01/07 02:42:56 lfb Exp $
+ * RCS: @(#) $Id: tkMacMenubutton.c,v 1.1.4.3 1999/02/13 05:38:49 lfb Exp $
  */
 
 #include "tkMenubutton.h"
@@ -110,9 +110,11 @@ TkpDisplayMenuButton(
     SetGWorld(destPort, NULL);
     macDraw = (MacDrawable *) Tk_WindowId(tkwin);
 
-    if ((mbPtr->state == TK_STATE_DISABLED) && (mbPtr->disabledFg != NULL)) {
+    if ((mbPtr->state[0] == 'd') && (strcmp(mbPtr->state, "disabled"))
+	    && (mbPtr->disabledFg != NULL)) {
 	gc = mbPtr->disabledGC;
-    } else if ((mbPtr->state == TK_STATE_ACTIVE) && !Tk_StrictMotif(mbPtr->tkwin)) {
+    } else if ((mbPtr->state[0] == 'a') && (strcmp(mbPtr->state, "active"))
+	    && !Tk_StrictMotif(mbPtr->tkwin)) {
 	gc = mbPtr->activeTextGC;
     } else {
 	gc = mbPtr->normalTextGC;
@@ -162,7 +164,7 @@ TkpDisplayMenuButton(
      * foreground color, generate the stippled effect.
      */
 
-    if ((mbPtr->state == TK_STATE_DISABLED)
+    if ((mbPtr->state[0] == 'd') && (strcmp(mbPtr->state, "disabled"))
 	    && ((mbPtr->disabledFg == NULL) || (mbPtr->image != NULL))) {
 	XFillRectangle(mbPtr->display, Tk_WindowId(tkwin), mbPtr->disabledGC,
 		mbPtr->inset, mbPtr->inset,
@@ -220,9 +222,6 @@ TkpDisplayMenuButton(
 	LineTo(r.right, r.bottom);
 	LineTo(r.left + kShadowOffset, r.bottom);
     }
-    
-	if (mbPtr->state == TK_STATE_DISABLED) {
-	}
     
     if (mbPtr->highlightWidth != 0) {
 	GC gc;

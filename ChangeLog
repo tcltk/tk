@@ -1,5 +1,10 @@
 1999-02-12    <lfb@scriptics.com>
 
+        * generic/tkMenuButton.h:
+        * generic/tkMenuButton.c:
+	* mac/tkMacMenubutton.c:
+	* unix/tkUnixMenubu.c: Eliminated Tk_Uids used by -state option.
+
 	* generic/tk.h:
 	* generic/tkScale.h:
 	* generic/tkScale.c:

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.4 1999/01/07 02:42:50 lfb Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.5 1999/02/13 05:38:48 lfb Exp $
  */
 
 #include "tkMenubutton.h"
@@ -109,7 +109,7 @@ static Tk_ConfigSpec configSpecs[] = {
 	DEF_MENUBUTTON_PADY, Tk_Offset(TkMenuButton, padY), 0},
     {TK_CONFIG_RELIEF, "-relief", "relief", "Relief",
 	DEF_MENUBUTTON_RELIEF, Tk_Offset(TkMenuButton, relief), 0},
-    {TK_CONFIG_STATE, "-state", "state", "State",
+    {TK_CONFIG_STRING, "-state", "state", "State",
 	DEF_MENUBUTTON_STATE, Tk_Offset(TkMenuButton, state), 0},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENUBUTTON_TAKE_FOCUS, Tk_Offset(TkMenuButton, takeFocus),
@@ -216,7 +216,7 @@ Tk_MenubuttonCmd(clientData, interp, argc, argv)
     mbPtr->bitmap = None;
     mbPtr->imageString = NULL;
     mbPtr->image = NULL;
-    mbPtr->state = TK_STATE_NORMAL;
+    mbPtr->state = "normal";
     mbPtr->normalBorder = NULL;
     mbPtr->activeBorder = NULL;
     mbPtr->borderWidth = 0;
@@ -260,7 +260,7 @@ Tk_MenubuttonCmd(clientData, interp, argc, argv)
 	    rightUid = Tk_GetUid("right");
 	    flushUid = Tk_GetUid("flush");
 	}
-        Tcl_MutexLock(&menuButMutex);
+        Tcl_MutexUnlock(&menuButMutex);
     }
     mbPtr->direction = flushUid;
 
@@ -458,16 +458,20 @@ ConfigureMenuButton(interp, mbPtr, argc, argv, flags)
      * defaults that couldn't be specified to Tk_ConfigureWidget.
      */
 
-    if ((mbPtr->state == TK_STATE_ACTIVE) && !Tk_StrictMotif(mbPtr->tkwin)) {
+    if ((mbPtr->state[0] == 'a') && (strcmp(mbPtr->state, "active") == 0)
+            && !Tk_StrictMotif(mbPtr->tkwin)) {
 	Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->activeBorder);
     } else {
 	Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->normalBorder);
-	if ((mbPtr->state != TK_STATE_NORMAL) 
-	        && (mbPtr->state != TK_STATE_ACTIVE)
-		&& (mbPtr->state != TK_STATE_DISABLED)) {
+	if ((mbPtr->state[0] != 'a') 
+                && (strcmp(mbPtr->state, "active") != 0)
+                && (mbPtr->state[0] != 'd') 
+                && (strcmp(mbPtr->state, "disabled") != 0)
+	        && (mbPtr->state[0] != 'n') 
+                && (strcmp(mbPtr->state, "normal") != 0)) {
 	    Tcl_AppendResult(interp, "bad state value \"", mbPtr->state,
-		    "\": must be normal, active, or disabled", (char *) NULL);
-	    mbPtr->state = TK_STATE_NORMAL;
+	        "\": must be normal, active, or disabled", (char *) NULL);
+	    mbPtr->state = "normal";
 	    return TCL_ERROR;
 	}
     }

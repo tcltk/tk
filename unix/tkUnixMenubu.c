@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenubu.c,v 1.1.4.2 1999/01/07 02:42:57 lfb Exp $
+ * RCS: @(#) $Id: tkUnixMenubu.c,v 1.1.4.3 1999/02/13 05:38:49 lfb Exp $
  */
 
 #include "tkMenubutton.h"
@@ -84,10 +84,12 @@ TkpDisplayMenuButton(clientData)
 	return;
     }
 
-    if ((mbPtr->state == TK_STATE_DISABLED) && (mbPtr->disabledFg != NULL)) {
+    if ((mbPtr->state[0] == 'd') && (strcmp(mbPtr->state, "disabled") == 0)
+            && (mbPtr->disabledFg != NULL)) {
 	gc = mbPtr->disabledGC;
 	border = mbPtr->normalBorder;
-    } else if ((mbPtr->state == TK_STATE_ACTIVE) 
+    } else if ((mbPtr->state[0] == 'a') 
+            && (strcmp(mbPtr->state, "active") == 0)
             && !Tk_StrictMotif(mbPtr->tkwin)) {
 	gc = mbPtr->activeTextGC;
 	border = mbPtr->activeBorder;
@@ -143,7 +145,7 @@ TkpDisplayMenuButton(clientData)
      * foreground color, generate the stippled effect.
      */
 
-    if ((mbPtr->state == TK_STATE_DISABLED)
+    if ((mbPtr->state[0] == 'd') && (strcmp(mbPtr->state, "disabled") ==0)
 	    && ((mbPtr->disabledFg == NULL) || (mbPtr->image != NULL))) {
 	XFillRectangle(mbPtr->display, pixmap, mbPtr->disabledGC,
 		mbPtr->inset, mbPtr->inset,

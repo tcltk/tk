@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.h,v 1.1.4.2 1999/01/07 02:42:50 lfb Exp $
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.1.4.3 1999/02/13 05:38:49 lfb Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -65,7 +65,7 @@ typedef struct {
      * Information used when displaying widget:
      */
 
-    int state;	          	/* State of button for display purposes:
+    char * state;          	/* State of button for display purposes:
 				 * normal, active, or disabled. */
     Tk_3DBorder normalBorder;	/* Structure used to draw 3-D
 				 * border and background when window
