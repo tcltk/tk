@@ -1,5 +1,11 @@
 2000-07-17  Eric Melski  <ericm@scriptics.com>
 
+	* generic/tkStubImg.c (Tk_InitImageArgs): Applied patch from [Bug:
+	5990], from Anselm Lingnau, which correctly sets the value of
+	useNewImage to 0 when the new image system is not to be used,
+	instead of leaving it at -1, which causes the check to be
+	performed more times than is really necessary.
+	
 	* library/bgerror.tcl: Fixed a typo in one of the bgerror dialog
 	label.
 
