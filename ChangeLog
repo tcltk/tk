@@ -1,3 +1,11 @@
+2002-02-01  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/photo.n: Documented transparency subcommand.
+	* tests/imgPhoto.test (imgPhoto-4.40...imgPhoto-4.68): Tests for
+	the transparency subcommand.
+	* generic/tkImgPhoto.c (ImgPhotoCmd): Added transparency
+	subcommand (see TIP #14.)
+
 2002-01-31  Todd Helfter <tmh@users.sourceforge.net>
 	* generic/tkMenu.c (ConfigureMenuCloneEntries)
 	* tests/menu.test (menu3.68)
