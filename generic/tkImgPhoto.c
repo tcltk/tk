@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.12 1999/12/15 19:27:27 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.13 2000/01/26 17:02:27 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -1670,7 +1670,9 @@ ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, flags)
 	masterPtr->fileString = NULL;
     }
     if (data) {
-	if (data->length) {
+	if (data->length
+		|| (data->typePtr == &tclByteArrayType
+			&& data->internalRep.otherValuePtr != NULL)) {
 	    Tcl_IncrRefCount(data);
 	} else {
 	    data = NULL;
@@ -3554,9 +3556,11 @@ MatchStringFormat(interp, data, formatObj, imageFormatPtr,
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char *formatString = NULL;
-
+    int len;
+    
     if (formatObj) {
-	formatString = Tcl_GetString(formatObj);
+	formatString = Tcl_GetByteArrayFromObj(formatObj, &len);
+	    /*Tcl_GetString(formatObj);*/
     }
 
     /*
