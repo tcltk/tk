@@ -1,4 +1,10 @@
-2003-05-13  Vince Darley <vincentdarley@users.sourceforge.net>
+2003-05-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkTextMark.c:		Removed complaints about signed vs.
+	* generic/tkTextImage.c:	unsigned in arguments to strncmp() by
+	* generic/tkText.c:		using Tcl_GetIndexFromObj() more.
+
+2003-05-19  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* doc/text.n
 	* generic/tkCanvas.c
