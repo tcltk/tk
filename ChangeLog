@@ -44,6 +44,7 @@
 	invalid memory ref on shutdown.
 	* win/tkWinX.c (TkpCloseDisplay): Don't free
 	the displayPtr since this is now done in TkCloseDisplay.
+	[Tk patch 570902]
 
 2002-06-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
