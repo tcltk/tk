@@ -1,3 +1,8 @@
+2004-11-01  Don Porter  <dgp@users.sourceforge.net>
+
+	* dialog.test (dialog-1.1):	Update expected result to changes
+	in the error messages produced by procs.
+
 2004-10-29  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* tests/wm.test: Add Win32 test cases for attributes
