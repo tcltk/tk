@@ -1,3 +1,8 @@
+2002-02-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* library/console.tcl (ConsoleBind): Corrected console <<Paste>>
+	binding on Unix platforms.
+
 2002-02-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure: Regen.

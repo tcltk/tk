@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.16 2001/11/23 02:04:17 das Exp $
+# RCS: @(#) $Id: console.tcl,v 1.17 2002/03/01 00:04:27 dgp Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -289,8 +289,10 @@ proc ::tk::ConsoleBind {w} {
 
     ## Get all Text bindings into Console
     foreach ev [bind Text] { bind Console $ev [bind Text $ev] }	
-    ## We really didn't want the newline insertion
+    ## We really didn't want the newline insertion...
     bind Console <Control-Key-o> {}
+    ## ...or any Control-v binding (would block <<Paste>>)
+    bind Console <Control-Key-v> {}
 
     # For the moment, transpose isn't enabled until the console
     # gets and overhaul of how it handles input -- hobbs
