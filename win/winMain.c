@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.19 2003/12/21 23:50:13 davygrvy Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.20 2004/02/01 10:44:54 davygrvy Exp $
  */
 
 #include <tk.h>
@@ -31,16 +31,12 @@
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		setargv _ANSI_ARGS_((int *argcPtr, char ***argvPtr));
 static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(CONST char *,format));
-static void		AppInitExitHandler(ClientData clientData);
-
 #ifdef TK_TEST
 extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
 
 static BOOL consoleRequired = TRUE;
-static char **argvSave = NULL;
 
 /*
  * The following #if block allows you to change the AppInit
@@ -91,7 +87,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
 {
     char **argv;
     int argc;
-    char buffer[MAX_PATH+1];
     char *p;
 
     Tcl_SetPanicProc(WishPanic);
@@ -110,21 +105,19 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      */
 
     setlocale(LC_ALL, "C");
-    setargv(&argc, &argv);
 
     /*
-     * Save this for later, so we can free it.
+     *  Get our args from the c-runtime.  Ignore lpszCmdLine.
      */
-    argvSave = argv;
+
+    argc = __argc;
+    argv = __argv;
 
     /*
-     * Replace argv[0] with full pathname of executable, and forward
-     * slashes substituted for backslashes.
+     * Forward slashes substituted for backslashes.
      */
 
-    GetModuleFileName(NULL, buffer, sizeof(buffer));
-    argv[0] = buffer;
-    for (p = buffer; *p != '\0'; p++) {
+    for (p = argv[0]; *p != '\0'; p++) {
 	if (*p == '\\') {
 	    *p = '/';
 	}
@@ -171,12 +164,6 @@ Tcl_AppInit(interp)
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
     /*
-     * This exit handler will be used to free the
-     * resources allocated in this file.
-     */
-    TkCreateExitHandler(AppInitExitHandler, NULL);
-
-    /*
      * Initialize the console only if we are running as an interactive
      * application.
      */
@@ -186,7 +173,7 @@ Tcl_AppInit(interp)
 	    goto error;
 	}
     }
-#if defined(STATIC_BUILD) && defined(TCL_USE_STATIC_PACKAGES)
+#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
     {
 	extern Tcl_PackageInitProc Registry_Init;
 	extern Tcl_PackageInitProc Dde_Init;
@@ -256,150 +243,6 @@ WishPanic TCL_VARARGS_DEF(CONST char *,arg1)
     DebugBreak();
 #endif
     ExitProcess(1);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * AppInitExitHandler --
- *
- *	This function is called to cleanup the app init resources before
- *	Tcl is unloaded.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Frees the saved argv and deletes the async exit handler.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-AppInitExitHandler(
-    ClientData clientData)
-{
-    if (argvSave != NULL) {
-        ckfree((char *)argvSave);
-        argvSave = NULL;
-    }
-}
-
-/*
- *-------------------------------------------------------------------------
- *
- * setargv --
- *
- *	Parse the Windows command line string into argc/argv.  Done here
- *	because we don't trust the builtin argument parser in crt0.  
- *	Windows applications are responsible for breaking their command
- *	line into arguments.
- *
- *	2N backslashes + quote -> N backslashes + begin quoted string
- *	2N + 1 backslashes + quote -> literal
- *	N backslashes + non-quote -> literal
- *	quote + quote in a quoted string -> single quote
- *	quote + quote not in quoted string -> empty string
- *	quote -> begin quoted string
- *
- * Results:
- *	Fills argcPtr with the number of arguments and argvPtr with the
- *	array of arguments.
- *
- * Side effects:
- *	Memory allocated.
- *
- *--------------------------------------------------------------------------
- */
-
-static void
-setargv(argcPtr, argvPtr)
-    int *argcPtr;		/* Filled with number of argument strings. */
-    char ***argvPtr;		/* Filled with argument strings (malloc'd). */
-{
-    char *cmdLine, *p, *arg, *argSpace;
-    char **argv;
-    int argc, size, inquote, copy, slashes;
-    
-    cmdLine = GetCommandLine();	/* INTL: BUG */
-
-    /*
-     * Precompute an overly pessimistic guess at the number of arguments
-     * in the command line by counting non-space spans.
-     */
-
-    size = 2;
-    for (p = cmdLine; *p != '\0'; p++) {
-	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
-	    size++;
-	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
-		p++;
-	    }
-	    if (*p == '\0') {
-		break;
-	    }
-	}
-    }
-    argSpace = (char *) ckalloc(
-	    (unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
-    argv = (char **) argSpace;
-    argSpace += size * sizeof(char *);
-    size--;
-
-    p = cmdLine;
-    for (argc = 0; argc < size; argc++) {
-	argv[argc] = arg = argSpace;
-	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
-	    p++;
-	}
-	if (*p == '\0') {
-	    break;
-	}
-
-	inquote = 0;
-	slashes = 0;
-	while (1) {
-	    copy = 1;
-	    while (*p == '\\') {
-		slashes++;
-		p++;
-	    }
-	    if (*p == '"') {
-		if ((slashes & 1) == 0) {
-		    copy = 0;
-		    if ((inquote) && (p[1] == '"')) {
-			p++;
-			copy = 1;
-		    } else {
-			inquote = !inquote;
-		    }
-                }
-                slashes >>= 1;
-            }
-
-            while (slashes) {
-		*arg = '\\';
-		arg++;
-		slashes--;
-	    }
-
-	    if ((*p == '\0')
-		    || (!inquote && ((*p == ' ') || (*p == '\t')))) { /* INTL: ISO space. */
-		break;
-	    }
-	    if (copy != 0) {
-		*arg = *p;
-		arg++;
-	    }
-	    p++;
-        }
-	*arg = '\0';
-	argSpace = arg + 1;
-    }
-    argv[argc] = NULL;
-
-    *argcPtr = argc;
-    *argvPtr = argv;
 }
 
 #if !defined(__GNUC__) || defined(TK_TEST)
