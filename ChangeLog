@@ -1,5 +1,9 @@
 2002-06-13  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* tests/winfo.test: Add basic tests for winfo ismapped.
+
+2002-06-13  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* tests/unixWm.test:
 	* tests/wm.test: Move wm minsize and wm maxsize
 	usage tests into the cross platform wm tests.
