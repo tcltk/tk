@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.6 2000/01/12 11:46:05 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.7 2000/02/10 08:53:19 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3571,7 +3571,7 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
     WmInfo *wmPtr;
     TkWindow *winPtr, *childPtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
-    Tk_ErrorHandler handler;
+    Tk_ErrorHandler handler = NULL;
 
     /*
      * Step 1: scan the list of toplevel windows to see if there is a
@@ -3646,7 +3646,14 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
     }
 
     gotToplevel:
-    Tk_DeleteErrorHandler(handler);
+    if (handler) {
+	/*
+	 * Check value of handler, because we can reach this label
+	 * from above or below
+	 */
+	Tk_DeleteErrorHandler(handler);
+	handler = NULL;
+    }
     winPtr = wmPtr->winPtr;
     if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
 	return NULL;

@@ -543,6 +543,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	fi
     fi
 
+    if test "$CC" = "gcc" -o `$CC -v 2>&1 | grep -c gcc` != "0" ; then
+	using_gcc="yes"
+    else
+	using_gcc="no"
+    fi
+
     # Step 2: check for existence of -ldl library.  This is needed because
     # Linux can use either -ldl or -ldld for dynamic loading.
 
@@ -560,14 +566,21 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     TCL_LIB_VERSIONS_OK=ok
     CFLAGS_DEBUG=-g
     CFLAGS_OPTIMIZE=-O
+    if test "$using_gcc" = "yes" ; then
+	CFLAGS_WARNING="-Wall -Wconversion -Wno-implicit-int"
+    else
+	CFLAGS_WARNING=""
+    fi
     TCL_NEEDS_EXP_FILE=0
     TCL_BUILD_EXP_FILE=""
     TCL_EXP_FILE=""
     case $system in
 	AIX-4.[[2-9]])
-	    # The IBM compiler has a bug with -O when compiling the
-	    # text widget code (TkTextPixelIndex segv)
-	    CFLAGS_OPTIMIZE=""
+	    if test "$using_gcc" = "no" ; then
+		# The IBM compiler has a bug with -O when compiling the
+		# text widget code (TkTextPixelIndex segv)
+		CFLAGS_OPTIMIZE=""
+	    fi
 	    SHLIB_CFLAGS=""
 	    SHLIB_LD=$TCL_SHLIB_LD
 	    SHLIB_LD_LIBS='${LIBS}'
@@ -576,7 +589,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    DL_LIBS="-ldl ${TCL_BUILD_LIB_SPEC}"
 	    LDFLAGS=""
 	    LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
-	    TCL_NEEDS_EXP_FILE=1
+	    TCL_NEEDS_EXP_FILE=0
 	    TCL_EXPORT_FILE_SUFFIX='${VERSION}\$\{DBGX\}.exp'
 	    ;;
 	AIX-*)
@@ -654,7 +667,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
 	    LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
-	    if test "$CC" = "gcc" -o `$CC -v 2>&1 | grep -c gcc` != "0" ; then
+	    if test "$using_gcc" = "yes" ; then
 		EXTRA_CFLAGS="-mabi=n32"
 		LDFLAGS="-mabi=n32"
 	    else
@@ -777,7 +790,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
+	    LDFLAGS="-export-dynamic"
 	    LD_SEARCH_FLAGS=""
 	    ;;
 	NEXTSTEP-*)
@@ -839,16 +852,21 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
 	    ;;
 	SCO_SV-3.2*)
-	    # Note, dlopen is available only on SCO 3.2.5 and greater.  However,
+	    # Note, dlopen is available only on SCO 3.2.5 and greater. However,
 	    # this test works, since "uname -s" was non-standard in 3.2.4 and
 	    # below.
-	    SHLIB_CFLAGS="-Kpic -belf"
+	    if test "$using_gcc" = "yes" ; then
+	    	SHLIB_CFLAGS="-fPIC -melf"
+	    	LDFLAGS="-melf -Wl,-Bexport"
+	    else
+	    	SHLIB_CFLAGS="-Kpic -belf"
+	    	LDFLAGS="-belf -Wl,-Bexport"
+	    fi
 	    SHLIB_LD="ld -G"
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS="-belf -Wl,-Bexport"
 	    LD_SEARCH_FLAGS=""
 	    ;;
 	SINIX*5.4*)
@@ -901,20 +919,20 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     
 	    do64bit_ok=no
 	    if test "$do64bit" = "yes" ; then
-	    arch=`isainfo`
-	    if test "$arch" = "sparcv9 sparc" ; then
-		if test "$CC" != "gcc" -a `$CC -v 2>&1 | grep -c gcc` = "0" ; then
-		do64bit_ok=yes
-		EXTRA_CFLAGS="-xarch=v9"
-		LDFLAGS="-xarch=v9"
-		else 
-		AC_MSG_WARN("64bit mode not supported using GCC on $system")
+		arch=`isainfo`
+		if test "$arch" = "sparcv9 sparc" ; then
+			if test "$using_gcc" = "no" ; then
+			    do64bit_ok=yes
+			    EXTRA_CFLAGS="-xarch=v9"
+			    LDFLAGS="-xarch=v9"
+			else 
+			    AC_MSG_WARN("64bit mode not supported with GCC on $system")
+			fi
+		else
+		    AC_MSG_WARN("64bit mode only supported sparcv9 system")
 		fi
-	    else
-		AC_MSG_WARN("64bit mode only supported sparcv9 system")
 	    fi
-	    fi
-	    
+
 	    # Note: need the LIBS below, otherwise Tk won't find Tcl's
 	    # symbols when dynamically loaded into tclsh.
 
@@ -922,7 +940,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    if test "$CC" = "gcc" -o `$CC -v 2>&1 | grep -c gcc` != "0" ; then
+	    if test "$using_gcc" = "yes" ; then
 		LD_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
 	    else
 		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
@@ -1071,7 +1089,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     # standard manufacturer compiler.
 
     if test "$DL_OBJS" != "tclLoadNone.o" ; then
-	if test "$CC" = "gcc" -o `$CC -v 2>&1 | grep -c gcc` != "0" ; then
+	if test "$using_gcc" = "yes" ; then
 	    case $system in
 		AIX-*)
 		    ;;
@@ -1102,6 +1120,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     AC_SUBST(DL_LIBS)
     AC_SUBST(CFLAGS_DEBUG)
     AC_SUBST(CFLAGS_OPTIMIZE)
+    AC_SUBST(CFLAGS_WARNING)
 ])
 
 #--------------------------------------------------------------------
