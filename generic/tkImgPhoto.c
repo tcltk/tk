@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.5 2004/02/23 10:49:30 das Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.6 2004/03/26 22:01:26 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -948,9 +948,25 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 		}
 	    }
 	    if (stringWriteProc == NULL) {
+		oldformat = 1;
+		for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
+			imageFormat = imageFormat->nextPtr) {
+		    if ((strncasecmp(Tcl_GetString(options.format),
+			    imageFormat->name,
+			    strlen(imageFormat->name)) == 0)) {
+			matched = 1;
+			if (imageFormat->stringWriteProc != NULL) {
+			    stringWriteProc = imageFormat->stringWriteProc;
+			    break;
+			}
+		    }
+		}
+	    }
+	    if (stringWriteProc == NULL) {
 		Tcl_AppendResult(interp, "image string format \"",
-			Tcl_GetString(options.format),
-			"\" is not supported", (char *) NULL);
+			Tcl_GetString(options.format), "\" is ",
+			(matched ? "not supported" : "unknown"),
+			(char *) NULL);
 		return TCL_ERROR;
 	    }
 	} else {
@@ -964,9 +980,25 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 
 	data = ImgGetPhoto(masterPtr, &block, &options);
 
-	result = ((int (*) _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *formatString,
-		Tk_PhotoImageBlock *blockPtr, VOID *dummy))) stringWriteProc)
-		(interp, options.format, &block, (VOID *) NULL);
+	if (oldformat) {
+	    Tcl_DString buffer;
+
+	    Tcl_DStringInit(&buffer);
+	    result = ((int (*) _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tcl_DString *buffer, char *formatString,
+		    Tk_PhotoImageBlock *blockPtr))) stringWriteProc)
+		    (interp, &buffer, Tcl_GetString(options.format), &block);
+	    if (result == TCL_OK) {
+		Tcl_DStringResult(interp, &buffer);
+	    } else {
+		Tcl_DStringFree(&buffer);
+	    }
+	} else {
+	    result = ((int (*) _ANSI_ARGS_((Tcl_Interp *interp,
+		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
+		    VOID *dummy))) stringWriteProc)
+		    (interp, options.format, &block, (VOID *) NULL);
+	}
 	if (options.background) {
 	    Tk_FreeColor(options.background);
 	}
