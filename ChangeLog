@@ -1,3 +1,10 @@
+2005-01-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkObj.c (TkParsePadAmount):
+	* generic/tkPack.c: Moved function to tkObj.c and rewrote so that it
+	takes advantage of Tcl_Objs properly and cannot leave objects in an
+	inconsistent state. [Bug 1098779]
+
 2005-01-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkWindow.c (GetScreen): Make sure the result is reset on
