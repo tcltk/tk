@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.3 2003/02/10 22:03:23 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -20,8 +20,10 @@
 
 /*
  * There are three different ways to set the cursor on the Mac.
+ * The default theme cursors (listed in cursorNames below),
+ * color resource cursors, & normal cursors.
  */
-#define ARROW        0        /* The arrow cursor. */
+ 
 #define COLOR        1        /* Cursors of type crsr. */
 #define NORMAL        2        /* Cursors of type CURS. */
 
@@ -32,8 +34,11 @@
 
 typedef struct {
     TkCursor info;                /* Generic cursor info used by tkCursor.c */
-    Handle macCursor;                /* Resource containing Macintosh cursor. */
-    int type;                        /* Type of Mac cursor: arrow, crsr, CURS */
+    Handle macCursor;                /* Resource containing Macintosh cursor. 
+                                      * For theme cursors, this is -1. */
+    int type;                        /* Type of Mac cursor: for theme cursors
+                                      * this is the theme cursor constant,
+                                      * otherwise one of crsr or CURS */
 } TkMacOSXCursor;
 
 /*
@@ -45,15 +50,22 @@ static struct CursorName {
     char *name;
     int id;
 } cursorNames[] = {
-    {"ibeam",                1},
-    {"text",                1},
-    {"xterm",                1},
-    {"cross",                2},
-    {"crosshair",        2},
-    {"cross-hair",        2},
-    {"plus",                3},
-    {"watch",                4},
-    {"arrow",                5},
+    {"ibeam",                kThemeIBeamCursor},
+    {"text",                kThemeIBeamCursor},
+    {"xterm",                kThemeIBeamCursor},
+    {"cross",                kThemeCrossCursor},
+    {"crosshair",        kThemeCrossCursor},
+    {"cross-hair",        kThemeCrossCursor},
+    {"plus",                kThemePlusCursor},
+    {"watch",                kThemeWatchCursor},
+    {"arrow",                kThemeArrowCursor},
+    {"closedhand",	kThemeClosedHandCursor},
+    {"openhand",	kThemeOpenHandCursor},
+    {"pointinghand",	kThemePointingHandCursor},
+    {"countinguphand",	kThemeCountingUpHandCursor},
+    {"countingdownhand",	kThemeCountingDownHandCursor},
+    {"countingupanddownhand",	kThemeCountingUpAndDownHandCursor},
+    {"spinning",	kThemeSpinningCursor},
     {NULL,                0}
 };
 
@@ -188,13 +200,8 @@ TkGetCursorByName(
 
 
     if (namePtr->name != NULL) {
-            if (namePtr->id == 5) {
             macCursorPtr->macCursor = (Handle) -1;
-            macCursorPtr->type = ARROW;
-            } else {
-            macCursorPtr->macCursor = (Handle) GetCursor(namePtr->id);
-            macCursorPtr->type = NORMAL;
-        }
+            macCursorPtr->type = namePtr->id;
     } else {
         FindCursorByName(macCursorPtr, string);
 
@@ -320,6 +327,7 @@ TkMacOSXInstallCursor(
     TkMacOSXCursor *macCursorPtr = gCurrentCursor;
     CCrsrHandle ccursor;
     CursHandle cursor;
+    static unsigned int cursorStep = 0;
     
     gResizeOverride = resizeOverride;
 
@@ -332,8 +340,17 @@ TkMacOSXInstallCursor(
             fprintf(stderr,"Resize cursor failed, %d\n", ResError());
              */
         }
-    } else if (macCursorPtr == NULL || macCursorPtr->type == ARROW) {
+    } else if (macCursorPtr == NULL) {
         SetThemeCursor(kThemeArrowCursor);
+    } else if (macCursorPtr->macCursor == (void *) -1) {
+        OSErr err = noErr;
+        
+        if (macCursorPtr->type >= kThemeWatchCursor) {
+            err = SetAnimatedThemeCursor(macCursorPtr->type, cursorStep++);
+        }
+        if (err != noErr) {
+            SetThemeCursor(macCursorPtr->type);
+        }
     } else {
         switch (macCursorPtr->type) {
             case COLOR:
