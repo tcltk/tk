@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.9 2003/04/01 21:06:49 dgp Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.10 2003/05/21 15:31:01 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1883,6 +1883,16 @@ test panedwindow-23.1 {PanedWindowReqProc, react to slave geometry changes} {
     destroy .p .f1 .f2
     set result
 } {40 80}
+test panedwindow-23.2 {PanedWindowReqProc, react to slave geometry changes} {
+    panedwindow .p -orient horizontal -sashpad 0 -sashwidth 2
+    .p add [frame .f1 -width 10] [frame .f2 -width 10]
+    set result [winfo reqwidth .p]
+    .f1 configure -width 20
+    lappend result [winfo reqwidth .p]
+    destroy .p .f1 .f2
+    set result
+} {32 42}
+
 
 test panedwindow-24.1 {ConfigurePanes, can't add panedwindow to itself} {
     panedwindow .p
