@@ -1,6 +1,16 @@
+2002-03-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	*** 8.4a4 TAGGED FOR RELEASE ***
+
+	* README: 
+	* mac/README: 
+	* unix/README: 
+	* win/README: updated to use www.tcl.tk URL.
+
 2002-03-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* library/entry.tcl: added catch around Triple-1 binding use of sel.last
+	* library/entry.tcl: added catch around Triple-1 binding use of
+	sel.last
 
 2002-02-28  Don Porter  <dgp@users.sourceforge.net>
 
