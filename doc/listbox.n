@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.6 2000/05/23 00:31:36 hobbs Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.7 2000/07/28 16:34:54 ericm Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.0 Tk "Tk Built-In Commands"
@@ -16,11 +16,14 @@ listbox \- Create and manipulate listbox widgets
 .SH SYNOPSIS
 \fBlistbox\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background	\-foreground	\-relief	\-takefocus
-\-borderwidth	\-height	\-listvar	\-selectbackground	\-width
-\-cursor	\-highlightbackground	\-selectborderwidth	\-xscrollcommand
-\-exportselection	\-highlightcolor	\-selectforeground	\-yscrollcommand
-\-font	\-highlightthickness	\-setgrid
+\-background            \-borderwidth           \-cursor
+\-disabledforeground    \-exportselection       \-font
+\-foreground            \-height                \-highlightbackground
+\-highlightcolor        \-highlightthickness    \-listvar
+\-relief                \-selectbackground      \-selectborderwidth
+\-selectforeground      \-setgrid               \-state
+\-takefocus             \-width                 \-xscrollcommand
+\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-height height Height
@@ -39,6 +42,11 @@ Specifies one of several styles for manipulating the selection.
 The value of the option may be arbitrary, but the default bindings
 expect it to be either \fBsingle\fR, \fBbrowse\fR, \fBmultiple\fR,
 or \fBextended\fR;  the default value is \fBbrowse\fR.
+.OP \-state state State
+Specifies one of two states for the listbox:  \fBnormal\fR or \fBdisabled\fR.
+If the listbox is disabled then items may not be inserted or deleted,
+items are drawn in the \fB-disabledforeground\fR color, and selection
+cannot be modified and is not shown (though selection information is retained).
 .OP \-width width Width
 Specifies the desired width for the window in characters.
 If the font doesn't have a uniform width then the width of the

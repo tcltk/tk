@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.8 2000/05/17 22:23:26 ericm Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.9 2000/07/28 16:34:56 ericm Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -200,10 +200,11 @@
  * Defaults for listboxes:
  */
 
-#define DEF_LISTBOX_BG_COLOR		NORMAL_BG
+#define DEF_LISTBOX_BG_COLOR		"SystemWindow"
 #define DEF_LISTBOX_BG_MONO		WHITE
 #define DEF_LISTBOX_BORDER_WIDTH	"2"
 #define DEF_LISTBOX_CURSOR		""
+#define DEF_LISTBOX_DISABLED_FG		DISABLED
 #define DEF_LISTBOX_EXPORT_SELECTION	"1"
 #define DEF_LISTBOX_FONT		CTL_FONT
 #define DEF_LISTBOX_FG			NORMAL_FG
@@ -216,11 +217,12 @@
 #define DEF_LISTBOX_LIST_VARIABLE	""
 #define DEF_LISTBOX_SELECT_COLOR	SELECT_BG
 #define DEF_LISTBOX_SELECT_MONO		BLACK
-#define DEF_LISTBOX_SELECT_BD		"1"
+#define DEF_LISTBOX_SELECT_BD		"0"
 #define DEF_LISTBOX_SELECT_FG_COLOR	SELECT_FG
 #define DEF_LISTBOX_SELECT_FG_MONO	WHITE
 #define DEF_LISTBOX_SELECT_MODE		"browse"
 #define DEF_LISTBOX_SET_GRID		"0"
+#define DEF_LISTBOX_STATE		"normal"
 #define DEF_LISTBOX_TAKE_FOCUS		(char *) NULL
 #define DEF_LISTBOX_WIDTH		"20"
 

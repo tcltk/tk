@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.12 2000/02/01 11:41:22 hobbs Exp $
+# RCS: @(#) $Id: listbox.test,v 1.13 2000/07/28 16:34:55 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -79,6 +79,7 @@ foreach test {
     {-bg #ff0000 #ff0000 non-existent {unknown color name "non-existent"}}
     {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
+    {-disabledforeground #110022 #110022 bogus {unknown color name "bogus"}}
     {-exportselection yes 1 xyzzy {expected boolean value but got "xyzzy"}}
     {-fg #110022 #110022 bogus {unknown color name "bogus"}}
     {-font {Helvetica 12} {Helvetica 12} {} {font "" doesn't exist}}
@@ -94,6 +95,7 @@ foreach test {
     {-selectforeground #654321 #654321 bogus {unknown color name "bogus"}}
     {-selectmode string string {} {}}
     {-setgrid false 0 lousy {expected boolean value but got "lousy"}}
+    {-state disabled disabled foo {bad state "foo": must be disabled or normal}}
     {-takefocus "any string" "any string" {} {}}
     {-width 45 45 3p {expected integer but got "3p"}}
     {-xscrollcommand {Some command} {Some command} {} {}}
@@ -239,7 +241,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} {
 } {0}
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} {
     llength [.l configure]
-} {24}
+} {26}
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} {
     list [catch {.l configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}
@@ -2051,7 +2053,52 @@ test listbox-25.2 {listbox item configurations and widget based inserts} {
     list [.l itemcget 0 -fg] [.l itemcget 4 -fg]
 } [list {} red]
     
-
+# state issues
+test listbox-26.1 {listbox disabled state disallows inserts} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c
+    .l configure -state disabled
+    .l insert end d e f
+    .l get 0 end
+} [list a b c]
+test listbox-26.2 {listbox disabled state disallows deletions} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c
+    .l configure -state disabled
+    .l delete 0 end
+    .l get 0 end
+} [list a b c]
+test listbox-26.3 {listbox disabled state disallows selection modification} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c
+    .l selection set 0
+    .l selection set 2
+    .l configure -state disabled
+    .l selection clear 0 end
+    .l selection set 1
+    .l curselection
+} [list 0 2]
+test listbox-26.4 {listbox disabled state disallows anchor modification} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c
+    .l selection anchor 0
+    .l configure -state disabled
+    .l selection anchor 2
+    .l index anchor
+} 0
+test listbox-26.5 {listbox disabled state disallows active modification} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c
+    .l activate 0
+    .l configure -state disabled
+    .l activate 2
+    .l index active
+} 0
 
 resetGridInfo
 catch {destroy .l2}

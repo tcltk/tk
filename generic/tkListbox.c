@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.16 2000/03/02 21:52:41 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.17 2000/07/28 16:34:54 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -74,6 +74,7 @@ typedef struct {
 				 * room for borders. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *fgColorPtr;		/* Text color in normal mode. */
+    XColor *dfgColorPtr;	/* Text color in disabled mode. */
     GC textGC;			/* For drawing normal text. */
     Tk_3DBorder selBorder;	/* Borders and backgrounds for selected
 				 * elements. */
@@ -155,6 +156,8 @@ typedef struct {
     char *xScrollCmd;		/* Command prefix for communicating with
 				 * horizontal scrollbar.  NULL means no command
 				 * to issue.  Malloc'ed. */
+    int state;			/* Listbox state. */
+    Pixmap gray;		/* Pixmap for displaying disabled text. */
     int flags;			/* Various flag bits:  see below for
 				 * definitions. */
 } Listbox;
@@ -194,6 +197,20 @@ typedef struct {
 #define LISTBOX_DELETED		32
 
 /*
+ * The following enum is used to define a type for the -state option
+ * of the Entry widget.  These values are used as indices into the 
+ * string table below.
+ */
+
+enum state {
+    STATE_DISABLED, STATE_NORMAL
+};
+
+static char *stateStrings[] = {
+    "disabled", "normal", (char *) NULL
+};
+
+/*
  * The optionSpecs table defines the valid configuration options for the
  * listbox widget
  */
@@ -210,6 +227,10 @@ static Tk_OptionSpec optionSpecs[] = {
 	 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	 DEF_LISTBOX_CURSOR, -1, Tk_Offset(Listbox, cursor),
+	 TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
+	 "Foreground",
+	 DEF_LISTBOX_DISABLED_FG, -1, Tk_Offset(Listbox, dfgColorPtr),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	 "ExportSelection", DEF_LISTBOX_EXPORT_SELECTION, -1,
@@ -247,6 +268,9 @@ static Tk_OptionSpec optionSpecs[] = {
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
 	 DEF_LISTBOX_SET_GRID, -1, Tk_Offset(Listbox, setGrid), 0, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-state", "state", "State",
+	DEF_LISTBOX_STATE, -1, Tk_Offset(Listbox, state), 
+        0, (ClientData) stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	 DEF_LISTBOX_TAKE_FOCUS, -1, Tk_Offset(Listbox, takeFocus),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -519,6 +543,7 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     listPtr->inset 			= 0;
     listPtr->tkfont 			= NULL;
     listPtr->fgColorPtr 		= NULL;
+    listPtr->dfgColorPtr 		= NULL;
     listPtr->textGC 			= None;
     listPtr->selBorder 			= NULL;
     listPtr->selBorderWidth 		= 0;
@@ -547,6 +572,8 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     listPtr->takeFocus 			= NULL;
     listPtr->xScrollCmd 		= NULL;
     listPtr->yScrollCmd 		= NULL;
+    listPtr->state			= STATE_NORMAL;
+    listPtr->gray			= None;
     listPtr->flags 			= 0;
 
     Tk_SetClass(listPtr->tkwin, "Listbox");
@@ -629,6 +656,11 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	    if (result != TCL_OK) {
 		break;
 	    }
+
+	    if (!(listPtr->state & STATE_NORMAL)) {
+		break;
+	    }
+
 	    if (index >= listPtr->nElements) {
 		index = listPtr->nElements-1;
 	    }
@@ -733,6 +765,11 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	    if (result != TCL_OK) {
 		break;
 	    }
+
+	    if (!(listPtr->state & STATE_NORMAL)) {
+		break;
+	    }
+
 	    if (first < listPtr->nElements) {
 		/*
 		 * if a "last index" was given, get it now; otherwise, use the
@@ -838,6 +875,11 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	    if (result != TCL_OK) {
 		break;
 	    }
+
+	    if (!(listPtr->state & STATE_NORMAL)) {
+		break;
+	    }
+
 	    result = ListboxInsertSubCmd(listPtr, index, objc-3, objv+3);
 	    break;
 	}
@@ -1018,6 +1060,10 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	}
 
 	case COMMAND_SELECTION: {
+	    if (!(listPtr->state & STATE_NORMAL)) {
+		break;
+	    }
+
 	    result = ListboxSelectionSubCmd(interp, listPtr, objc, objv);
 	    break;
 	}
@@ -1458,6 +1504,10 @@ DestroyListbox(memPtr)
     if (listPtr->selTextGC != None) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
+    if (listPtr->gray != None) {
+	Tk_FreeBitmap(Tk_Display(listPtr->tkwin), listPtr->gray);
+    }
+
     Tk_FreeConfigOptions((char *)listPtr, listPtr->optionTable,
 	    listPtr->tkwin);
     listPtr->tkwin = NULL;
@@ -1698,10 +1748,30 @@ ListboxWorldChanged(instanceData)
     
     listPtr = (Listbox *) instanceData;
 
-    gcValues.foreground = listPtr->fgColorPtr->pixel;
+    if (listPtr->state & STATE_NORMAL) {
+	gcValues.foreground = listPtr->fgColorPtr->pixel;
+	gcValues.graphics_exposures = False;
+	mask = GCForeground | GCFont | GCGraphicsExposures;
+    } else {
+	if (listPtr->dfgColorPtr != NULL) {
+	    gcValues.foreground = listPtr->dfgColorPtr->pixel;
+	    gcValues.graphics_exposures = False;
+	    mask = GCForeground | GCFont | GCGraphicsExposures;
+	} else {
+	    gcValues.foreground = listPtr->fgColorPtr->pixel;
+	    mask = GCForeground | GCFont;
+	    if (listPtr->gray == None) {
+		listPtr->gray = Tk_GetBitmap(NULL, listPtr->tkwin, "gray50");
+	    }
+	    if (listPtr->gray != None) {
+		gcValues.fill_style = FillStippled;
+		gcValues.stipple = listPtr->gray;
+		mask |= GCFillStyle | GCStipple;
+	    }
+	}
+    }
+
     gcValues.font = Tk_FontId(listPtr->tkfont);
-    gcValues.graphics_exposures = False;
-    mask = GCForeground | GCFont | GCGraphicsExposures;
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
     if (listPtr->textGC != None) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
@@ -1823,102 +1893,122 @@ DisplayListbox(clientData)
 	 */
 	entry = Tcl_FindHashEntry(listPtr->itemAttrTable, (char *)i);
 
-	/* If the item is selected, it is drawn differently */
-	if (Tcl_FindHashEntry(listPtr->selection, (char *)i) != NULL) {
-	    gc = listPtr->selTextGC;
-	    width = Tk_Width(tkwin) - 2*listPtr->inset;
-	    selectedBg = listPtr->selBorder;
-
-	    /* If there is attribute information for this item,
-	     * adjust the drawing accordingly */
-	    if (entry != NULL) {
-		attrs = (ItemAttr *)Tcl_GetHashValue(entry);
-		/* The default GC has the settings from the widget at large */
-		gcValues.foreground = listPtr->selFgColorPtr->pixel;
-		gcValues.font = Tk_FontId(listPtr->tkfont);
-		gcValues.graphics_exposures = False;
-		mask = GCForeground | GCFont | GCGraphicsExposures;
-
-		if (attrs->selBorder != NULL) {
-		    selectedBg = attrs->selBorder;
+	/*
+	 * If the listbox is enabled, items may be drawn differently;
+	 * they may be drawn selected, or they may have special foreground
+	 * or background colors.
+	 */
+	if (listPtr->state & STATE_NORMAL) {
+	    if (Tcl_FindHashEntry(listPtr->selection, (char *)i) != NULL) {
+		/* Selected items are drawn differently. */
+		gc = listPtr->selTextGC;
+		width = Tk_Width(tkwin) - 2*listPtr->inset;
+		selectedBg = listPtr->selBorder;
+		
+		/* If there is attribute information for this item,
+		 * adjust the drawing accordingly */
+		if (entry != NULL) {
+		    attrs = (ItemAttr *)Tcl_GetHashValue(entry);
+		    /* Default GC has the values from the widget at large */
+		    gcValues.foreground = listPtr->selFgColorPtr->pixel;
+		    gcValues.font = Tk_FontId(listPtr->tkfont);
+		    gcValues.graphics_exposures = False;
+		    mask = GCForeground | GCFont | GCGraphicsExposures;
+		    
+		    if (attrs->selBorder != NULL) {
+			selectedBg = attrs->selBorder;
+		    }
+		    
+		    if (attrs->selFgColor != NULL) {
+			gcValues.foreground = attrs->selFgColor->pixel;
+			gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
+		    }
 		}
+		
+		Tk_Fill3DRectangle(tkwin, pixmap, selectedBg, x, y,
+			width, listPtr->lineHeight, 0, TK_RELIEF_FLAT);
 
-		if (attrs->selFgColor != NULL) {
-		    gcValues.foreground = attrs->selFgColor->pixel;
-		    gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
+		/*
+		 * Draw beveled edges around the selection, if there are
+		 * visible edges next to this element.  Special considerations:
+		 * 1. The left and right bevels may not be visible if
+		 *	horizontal scrolling is enabled (the "left" and "right"
+		 *	variables are zero to indicate that the corresponding
+		 *	bevel is visible).
+		 * 2. Top and bottom bevels are only drawn if this is the
+		 *	first or last seleted item.
+		 * 3. If the left or right bevel isn't visible, then the "left"
+		 *	and "right" variables, computed above, have non-zero
+		 *	values that extend the top and bottom bevels so that
+		 *	the mitered corners are off-screen.
+		 */
+		
+		/* Draw left bevel */
+		if (left == 0) {
+		    Tk_3DVerticalBevel(tkwin, pixmap, selectedBg,
+			    x, y, listPtr->selBorderWidth, listPtr->lineHeight,
+			    1, TK_RELIEF_RAISED);
 		}
-	    }
-
-	    Tk_Fill3DRectangle(tkwin, pixmap, selectedBg, x, y,
-		    width, listPtr->lineHeight, 0, TK_RELIEF_FLAT);
-
-	    /*
-	     * Draw beveled edges around the selection, if there are visible
-	     * edges next to this element.  Special considerations:
-	     * 1. The left and right bevels may not be visible if horizontal
-	     *    scrolling is enabled (the "left" and "right" variables
-	     *    are zero to indicate that the corresponding bevel is
-	     *    visible).
-	     * 2. Top and bottom bevels are only drawn if this is the
-	     *    first or last seleted item.
-	     * 3. If the left or right bevel isn't visible, then the "left"
-	     *    and "right" variables, computed above, have non-zero values
-	     *    that extend the top and bottom bevels so that the mitered
-	     *    corners are off-screen.
-	     */
-
-	    /* Draw left bevel */
-	    if (left == 0) {
-		Tk_3DVerticalBevel(tkwin, pixmap, selectedBg,
-			x, y, listPtr->selBorderWidth, listPtr->lineHeight,
-			1, TK_RELIEF_RAISED);
-	    }
-	    /* Draw right bevel */
-	    if (right == 0) {
-		Tk_3DVerticalBevel(tkwin, pixmap, selectedBg,
-			x + width - listPtr->selBorderWidth, y,
-			listPtr->selBorderWidth, listPtr->lineHeight,
-			0, TK_RELIEF_RAISED);
-	    }
-	    /* Draw top bevel */
-	    if (!prevSelected) {
-		Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg,
-			x-left, y, width+left+right, listPtr->selBorderWidth,
-			1, 1, 1, TK_RELIEF_RAISED);
-	    }
-	    /* Draw bottom bevel */
-	    if (i + 1 == listPtr->nElements ||
-		    Tcl_FindHashEntry(listPtr->selection,
-			    (char *)(i + 1)) == NULL ) {
-		Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg, x-left,
-			y + listPtr->lineHeight - listPtr->selBorderWidth,
-			width+left+right, listPtr->selBorderWidth, 0, 0, 0,
-			TK_RELIEF_RAISED);
-	    }
-	    prevSelected = 1;
-	} else {
-	    /* If there is an item attributes record for this item,
-	     * draw the background box and set the foreground color
-	     * accordingly */
-	    if (entry != NULL) {
-		attrs = (ItemAttr *)Tcl_GetHashValue(entry);
-		gcValues.foreground = listPtr->fgColorPtr->pixel;
-		gcValues.font = Tk_FontId(listPtr->tkfont);
-		gcValues.graphics_exposures = False;
-		mask = GCForeground | GCFont | GCGraphicsExposures;
-		if (attrs->border != NULL) {
-		    width = Tk_Width(tkwin) - 2*listPtr->inset;
-		    Tk_Fill3DRectangle(tkwin, pixmap, attrs->border, x, y,
-			    width, listPtr->lineHeight, 0, TK_RELIEF_FLAT);
+		/* Draw right bevel */
+		if (right == 0) {
+		    Tk_3DVerticalBevel(tkwin, pixmap, selectedBg,
+			    x + width - listPtr->selBorderWidth, y,
+			    listPtr->selBorderWidth, listPtr->lineHeight,
+			    0, TK_RELIEF_RAISED);
 		}
-		if (attrs->fgColor != NULL) {
-		    gcValues.foreground = attrs->fgColor->pixel;
-		    gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
+		/* Draw top bevel */
+		if (!prevSelected) {
+		    Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg,
+			    x-left, y, width+left+right,
+			    listPtr->selBorderWidth,
+			    1, 1, 1, TK_RELIEF_RAISED);
 		}
+		/* Draw bottom bevel */
+		if (i + 1 == listPtr->nElements ||
+			Tcl_FindHashEntry(listPtr->selection,
+				(char *)(i + 1)) == NULL ) {
+		    Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg, x-left,
+			    y + listPtr->lineHeight - listPtr->selBorderWidth,
+			    width+left+right, listPtr->selBorderWidth, 0, 0, 0,
+			    TK_RELIEF_RAISED);
+		}
+		prevSelected = 1;
+	    } else {
+		/*
+		 * If there is an item attributes record for this item, draw
+		 * the background box and set the foreground color accordingly
+		 */
+		if (entry != NULL) {
+		    attrs = (ItemAttr *)Tcl_GetHashValue(entry);
+		    gcValues.foreground = listPtr->fgColorPtr->pixel;
+		    gcValues.font = Tk_FontId(listPtr->tkfont);
+		    gcValues.graphics_exposures = False;
+		    mask = GCForeground | GCFont | GCGraphicsExposures;
+		    
+		    /*
+		     * If the item has its own background color, draw it now.
+		     */
+		    
+		    if (attrs->border != NULL) {
+			width = Tk_Width(tkwin) - 2*listPtr->inset;
+			Tk_Fill3DRectangle(tkwin, pixmap, attrs->border, x, y,
+				width, listPtr->lineHeight, 0, TK_RELIEF_FLAT);
+		    }
+		    
+		    /*
+		     * If the item has its own foreground, use it to override
+		     * the value in the gcValues structure.
+		     */
+		    
+		    if ((listPtr->state & STATE_NORMAL)
+			    && attrs->fgColor != NULL) {
+			gcValues.foreground = attrs->fgColor->pixel;
+			gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
+		    }
+		}
+		prevSelected = 0;
 	    }
-	    prevSelected = 0;
 	}
-
 	/* Draw the actual text of this item */
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	y += fm.ascent + listPtr->selBorderWidth;
