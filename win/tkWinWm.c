@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.16 2000/01/21 03:55:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.17 2000/01/21 04:33:41 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2302,9 +2302,11 @@ WmWaitVisibilityProc(clientData, eventPtr)
 	    if ((state == NormalState) || (state == ZoomState)) {
 		TkpWmSetState(winPtr, state);
 		UpdateWrapper(winPtr);
+#if 0
 		Tk_DeleteEventHandler((Tk_Window) masterPtr,
 			VisibilityChangeMask,
 			WmWaitVisibilityProc, (ClientData) winPtr);
+#endif
 	    }
 	}
     }
