@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: pack.n,v 1.4 2004/06/21 14:56:28 dkf Exp $
+'\" RCS: @(#) $Id: pack.n,v 1.5 2004/07/01 08:06:15 dkf Exp $
 '\" 
 .so man.macros
 .TH pack n 4.0 Tk "Tk Built-In Commands"
@@ -263,8 +263,8 @@ the stacking order of either the master or the slave.
 # Make the widgets
 label .t \-text "This widget is at the top"    \-bg red
 label .b \-text "This widget is at the bottom" \-bg green
-label .l \-text "Left\nHand\nSide"
-label .r \-text "Right\nHand\nSide"
+label .l \-text "Left\\nHand\\nSide"
+label .r \-text "Right\\nHand\\nSide"
 text .mid
 \.mid insert end "This layout is like Java's BorderLayout"
 # Lay them out
