@@ -4,11 +4,16 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: spinbox.test,v 1.1 2000/05/29 01:43:15 hobbs Exp $
+# RCS: @(#) $Id: spinbox.test,v 1.2 2002/07/13 00:30:25 dgp Exp $
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
-}
+package require tcltest 2.1
+namespace import -force tcltest::test
+namespace import -force tcltest::testsDirectory
+namespace import -force tcltest::configure
+configure -testdir [file join [pwd] [file dirname [info script]]]
+configure -loadfile [file join [testsDirectory] constraints.tcl]
+tcltest::loadTestedCommands
+eval configure $argv
 
 foreach i [winfo children .] {
     destroy $i
