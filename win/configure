@@ -1079,6 +1079,12 @@ fi
 #define TCL_THREADS 1
 EOF
 
+	# USE_THREAD_ALLOC tells us to try the special thread-based
+	# allocator that significantly reduces lock contention
+	cat >> confdefs.h <<\EOF
+#define USE_THREAD_ALLOC 1
+EOF
+
     else
 	TCL_THREADS=0
 	echo "$ac_t""no (default)" 1>&6
@@ -1093,7 +1099,7 @@ EOF
 
 
     echo $ac_n "checking how to build libraries""... $ac_c" 1>&6
-echo "configure:1097: checking how to build libraries" >&5
+echo "configure:1103: checking how to build libraries" >&5
     # Check whether --enable-shared or --disable-shared was given.
 if test "${enable_shared+set}" = set; then
   enableval="$enable_shared"
@@ -1134,7 +1140,7 @@ EOF
     # Step 0: Enable 64 bit support?
 
     echo $ac_n "checking if 64bit support is requested""... $ac_c" 1>&6
-echo "configure:1138: checking if 64bit support is requested" >&5
+echo "configure:1144: checking if 64bit support is requested" >&5
     # Check whether --enable-64bit or --disable-64bit was given.
 if test "${enable_64bit+set}" = set; then
   enableval="$enable_64bit"
@@ -1151,7 +1157,7 @@ fi
     # Extract the first word of "cygpath", so it can be a program name with args.
 set dummy cygpath; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1155: checking for $ac_word" >&5
+echo "configure:1161: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_CYGPATH'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1193,9 +1199,9 @@ fi
 	echo "END" >> $conftest
 
 	echo $ac_n "checking for Windows native path bug in windres""... $ac_c" 1>&6
-echo "configure:1197: checking for Windows native path bug in windres" >&5
+echo "configure:1203: checking for Windows native path bug in windres" >&5
 	cyg_conftest=`$CYGPATH $conftest`
-	if { ac_try='$RC -o conftest.res.o $cyg_conftest'; { (eval echo configure:1199: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } ; then
+	if { ac_try='$RC -o conftest.res.o $cyg_conftest'; { (eval echo configure:1205: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } ; then
 	    echo "$ac_t""no" 1>&6
 	else
 	    echo "$ac_t""yes" 1>&6
@@ -1214,7 +1220,7 @@ echo "configure:1197: checking for Windows native path bug in windres" >&5
     # set various compiler flags depending on whether we are using gcc or cl
 
     echo $ac_n "checking compiler flags""... $ac_c" 1>&6
-echo "configure:1218: checking compiler flags" >&5
+echo "configure:1224: checking compiler flags" >&5
     if test "${GCC}" = "yes" ; then
 	if test "$do64bit" = "yes" ; then
 	    echo "configure: warning: "64bit mode not supported with GCC on Windows"" 1>&2
@@ -1424,7 +1430,7 @@ echo "configure:1218: checking compiler flags" >&5
 #--------------------------------------------------------------------
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1428: checking how to run the C preprocessor" >&5
+echo "configure:1434: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -1439,13 +1445,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 1443 "configure"
+#line 1449 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1449: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1455: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1456,13 +1462,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 1460 "configure"
+#line 1466 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1466: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1472: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1473,13 +1479,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 1477 "configure"
+#line 1483 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1483: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1489: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -1505,17 +1511,17 @@ echo "$ac_t""$CPP" 1>&6
 
 ac_safe=`echo "errno.h" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for errno.h""... $ac_c" 1>&6
-echo "configure:1509: checking for errno.h" >&5
+echo "configure:1515: checking for errno.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1514 "configure"
+#line 1520 "configure"
 #include "confdefs.h"
 #include <errno.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1519: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:1525: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -1547,7 +1553,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1551: checking for build with symbols" >&5
+echo "configure:1557: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1580,9 +1586,20 @@ EOF
 
     fi
 
+    if test "$tcl_ok" = "compile" -o "$tcl_ok" = "all"; then
+	cat >> confdefs.h <<\EOF
+#define TCL_COMPILE_DEBUG 1
+EOF
+
+	cat >> confdefs.h <<\EOF
+#define TCL_COMPILE_STATS 1
+EOF
+
+    fi
+
     if test "$tcl_ok" != "yes" -a "$tcl_ok" != "no"; then
 	if test "$tcl_ok" = "all"; then
-	    echo "$ac_t""enabled symbols mem debugging" 1>&6
+	    echo "$ac_t""enabled symbols mem compile debugging" 1>&6
 	else
 	    echo "$ac_t""enabled $tcl_ok debugging" 1>&6
 	fi
@@ -1597,7 +1614,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1601: checking the location of tclConfig.sh" >&5
+echo "configure:1618: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.4$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.4$TK_PATCH_LEVEL/win
@@ -1625,7 +1642,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1629: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1646: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1673,10 +1690,12 @@ echo "configure:1629: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
     
     
 
+    
+
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1680: checking for tclsh" >&5
+echo "configure:1699: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -1699,7 +1718,12 @@ fi
 
 
     if test -f "$ac_cv_path_tclsh" ; then
-	TCLSH_PROG=$ac_cv_path_tclsh
+	TCLSH_PROG="$ac_cv_path_tclsh"
+	echo "$ac_t""$TCLSH_PROG" 1>&6
+    elif test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
+	# One-tree build.
+	ac_cv_path_tclsh="$TCL_BIN_DIR/tclsh"
+	TCLSH_PROG="$ac_cv_path_tclsh"
 	echo "$ac_t""$TCLSH_PROG" 1>&6
     else
 	{ echo "configure: error: No tclsh found in PATH:  $search_path" 1>&2; exit 1; }
@@ -2019,6 +2043,7 @@ s%@TCL_LIB_SPEC@%$TCL_LIB_SPEC%g
 s%@TCL_STUB_LIB_FILE@%$TCL_STUB_LIB_FILE%g
 s%@TCL_STUB_LIB_FLAG@%$TCL_STUB_LIB_FLAG%g
 s%@TCL_STUB_LIB_SPEC@%$TCL_STUB_LIB_SPEC%g
+s%@TCL_DEFS@%$TCL_DEFS%g
 s%@TCLSH_PROG@%$TCLSH_PROG%g
 s%@TK_VERSION@%$TK_VERSION%g
 s%@TK_MAJOR_VERSION@%$TK_MAJOR_VERSION%g
