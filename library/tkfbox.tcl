@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.4 2004/07/11 22:32:47 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.5 2004/07/22 22:24:31 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1079,7 +1079,11 @@ static char updir_bits[] = {
     }
 
     # the okBtn is created after the typeMenu so that the keyboard traversal
-    # is in the right order
+    # is in the right order, and add binding so that we find out when the
+    # dialog is destroyed by the user (added here instead of to the overall
+    # window so no confusion about how much <Destroy> gets called; exactly
+    # once will do). [Bug 987169]
+
     set data(okBtn)     [::tk::AmpWidget button $f2.ok \
 	    -text "[mc "&OK"]"     -default active -pady 3]
     bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
@@ -1113,9 +1117,9 @@ static char updir_bits[] = {
     $data(cancelBtn) config -command [list ::tk::dialog::file::CancelCmd $w]
     bind $w <KeyPress-Escape> [list tk::ButtonInvoke $data(cancelBtn)]
     bind $w <Alt-Key> [list tk::AltKeyInDialog $w %A]
+
     # Set up event handlers specific to File or Directory Dialogs
     #
-
     if { [string equal $class TkFDialog] } {
 	bind $data(ent) <Return> [list ::tk::dialog::file::ActivateEnt $w]
 	$data(okBtn)     config -command [list ::tk::dialog::file::OkCmd $w]
@@ -1243,9 +1247,9 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     ::tk::IconList_DeleteAll $data(icons)
 
     # Make the dir list
-    #
+    # Using -directory [pwd] is better in some VFS cases.
     set dirs [lsort -dictionary -unique \
-		     [glob -tails -directory . -type d -nocomplain .* *]]
+		  [glob -tails -directory [pwd] -type d -nocomplain .* *]]
     set dirList {}
     foreach d $dirs {
 	if {$d eq "." || $d eq ".."} {
@@ -1259,7 +1263,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# Make the file list if this is a File Dialog, selecting all
 	# but 'd'irectory type files.
 	#
-	set cmd [list glob -tails -directory . -type {f b c l p s} -nocomplain]
+	set cmd [list glob -tails -directory [pwd] \
+		     -type {f b c l p s} -nocomplain]
 	if {[string equal $data(filter) *]} {
 	    lappend cmd .* *
 	} else {
@@ -1657,7 +1662,7 @@ proc ::tk::dialog::file::CancelCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
-    $data(okBtn) configure <Destroy> {}
+    bind $data(okBtn) <Destroy> {}
     set Priv(selectFilePath) ""
 }
 
@@ -1788,6 +1793,6 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	    }
 	}
     }
-    $data(okBtn) configure <Destroy> {}
+    bind $data(okBtn) <Destroy> {}
     set Priv(selectFilePath) $selectFilePath
 }
