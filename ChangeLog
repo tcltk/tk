@@ -1,4 +1,16 @@
-2002-06-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+2002-06-21  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/wm.test: Add tests to make sure a withdrawn
+	transient does not get remapped by state changes
+	in the master.
+	* unix/tkUnixWm.c (Tk_WmCmd, WmWaitMapProc):
+	* win/tkWinWm.c (Tk_WmCmd, WmWaitVisibilityOrMapProc):
+	Add a WM_TRANSIENT_WITHDRAWN flag that gets set by the
+	withdraw, deiconify, or state wm subcommands. Check
+	this flag before mapping a transient when processing
+	a MapNotify event. [Tk bug 570764]
+
+2002-06-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* unix/tk.spec (version), README, win/configure.in, unix/configure.in: 
 	* generic/tk.h (TK_RELEASE_*, TK_PATCH_LEVEL): Bumped to beta1.
