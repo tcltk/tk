@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.43 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.44 2002/09/09 23:52:02 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -110,6 +110,11 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	    set y 0
 	} elseif {$y > ([winfo screenheight $w]-[winfo reqheight $w])} {
 	    set y [expr {[winfo screenheight $w]-[winfo reqheight $w]}]
+	}
+	if {[tk windowingsystem] eq "macintosh" \
+		|| [tk windowingsystem] eq "aqua"} {
+	    # Avoid the native menu bar which sits on top of everything.
+	    if {$y < 20} { set y 20 }
 	}
     }
     wm geometry $w +$x+$y
@@ -369,13 +374,13 @@ switch [tk windowingsystem] {
 	event add <<Redo>> <Control-Key-y>
     }
     "aqua" {
-	event add <<Cut>> <Control-Key-x> <Key-F2> 
-	event add <<Copy>> <Control-Key-c> <Key-F3>
-	event add <<Paste>> <Control-Key-v> <Key-F4>
+	event add <<Cut>> <Command-Key-x> <Key-F2> 
+	event add <<Copy>> <Command-Key-c> <Key-F3>
+	event add <<Paste>> <Command-Key-v> <Key-F4>
 	event add <<PasteSelection>> <ButtonRelease-2>
 	event add <<Clear>> <Clear>
-  	event add <<Undo>> <Control-Key-z>
-	event add <<Redo>> <Control-Key-y>
+  	event add <<Undo>> <Command-Key-z>
+	event add <<Redo>> <Command-Key-y>
     }
     "classic" {
 	event add <<Cut>> <Control-Key-x> <Key-F2> 

@@ -215,7 +215,17 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
          
         medPtr->global = where;
         medPtr->local = where;
-        SetPortWindowPort(frontWindow);
+	/* 
+	 * We must set the port to the right window -- the one
+	 * we are actually going to use -- before finding
+	 * the local coordinates, otherwise we will have completely
+	 * wrong local x,y!
+	 * 
+	 * I'm pretty sure this window is medPtr->whichWin, unless
+	 * perhaps there is a grab.  Certainly 'frontWindow' or
+	 * 'medPtr->activeNonFloating' are wrong.
+	 */ 
+	SetPortWindowPort(medPtr->whichWin);
         GlobalToLocal(&medPtr->local);
         if (eventPtr->eKind == kEventMouseWheelMoved ) {
             return GenerateMouseWheelEvent(medPtr); 
@@ -389,7 +399,14 @@ GeneratePollingEvents(MouseEventData * medPtr)
     int local_x, local_y;
     TkDisplay *dispPtr;
 
- 
+    /* 
+     * I really do not understand this complicated logic.  Surely the event
+     * should be to either: (1) medPtr->whichWin, the window under the mouse
+     * (from which we then obviously extract the correct Tk subwindow), or
+     * (2) the current grab window.  I really don't see why anything else is
+     * relevant.
+     */
+#if 0
     if ((!TkpIsWindowFloating(medPtr->whichWin) 
             && (medPtr->activeNonFloating != medPtr->whichWin))) {
         tkwin = NULL;
@@ -416,6 +433,23 @@ GeneratePollingEvents(MouseEventData * medPtr)
     if ((tkwin == NULL) && (grabWin != NULL)) {
         tkwin = grabWin;
     }
+#else
+    grabWin = TkMacOSXGetCapture();
+    if (grabWin != NULL) {
+	tkwin = grabWin;
+    } else {
+	window = TkMacOSXGetXWindow(medPtr->whichWin);
+	dispPtr = TkGetDisplayList();
+	rootwin = Tk_IdToWindow(dispPtr->display, window);
+	if (rootwin == NULL) {
+	    tkwin = NULL;
+	} else {
+	    tkwin = Tk_TopCoordsToWindow(rootwin, 
+		    medPtr->local.h, medPtr->local.v, 
+		    &local_x, &local_y);
+	}
+    }
+#endif
     Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v,
             medPtr->state);
     
@@ -683,15 +717,17 @@ TkGenerateButtonEvent(
     FindWindow(where, &whichWin);
     frontWin = FrontNonFloatingWindow();
                         
-    if ((frontWin == NULL) || ((!(TkpIsWindowFloating(whichWin)) 
+    if (0 && ((frontWin == NULL) || ((!(TkpIsWindowFloating(whichWin)) 
             && (frontWin != whichWin))
-            && TkMacOSXGetCapture() == NULL)) {
+            && TkMacOSXGetCapture() == NULL))) {
         return false;
     }
 
     dispPtr = TkGetDisplayList();
     tkwin = Tk_IdToWindow(dispPtr->display, window);
     
+    /* SetPortWindowPort(ActiveNonFloatingWindow()); */
+    SetPortWindowPort(whichWin);
     GlobalToLocal(&where);
     if (tkwin != NULL) {
         tkwin = Tk_TopCoordsToWindow(tkwin, where.h, where.v, 
