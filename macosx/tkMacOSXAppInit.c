@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.3 2002/09/12 17:34:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.4 2002/10/21 04:37:34 das Exp $
  */
 #include <pthread.h>
 #include <sys/stat.h>
@@ -20,12 +20,9 @@
 #include "locale.h"
 
 #include <Carbon/Carbon.h>
+#include "tkPort.h"
 #include "tkMacOSX.h"
 #include "tkMacOSXEvent.h"
-
-#ifndef MAX_PATH_LEN
-    #define MAX_PATH_LEN 1024
-#endif
 
 /*
  * If the App is in an App package, then we want to add the Scripts
@@ -34,7 +31,7 @@
  * figured out in main.
  */
  
-char scriptPath[MAX_PATH_LEN + 1];
+char scriptPath[PATH_MAX + 1];
 
 extern Tcl_Interp *gStdoutInterp;
 
@@ -116,17 +113,17 @@ main(argc, argv)
 
         if (appMainURL != NULL) {
             CFURLRef scriptFldrURL;
-            char *startupScript = malloc(MAX_PATH_LEN + 1);
+            char *startupScript = malloc(PATH_MAX + 1);
                             
             if (CFURLGetFileSystemRepresentation (appMainURL, true,
-                    startupScript, MAX_PATH_LEN)) {
+                    startupScript, PATH_MAX)) {
                 TclSetStartupScriptFileName(startupScript);
                 scriptFldrURL = CFBundleCopyResourceURL(bundleRef,
                         CFSTR("Scripts"),
                         NULL,
                         NULL);
                 CFURLGetFileSystemRepresentation(scriptFldrURL, 
-                        true, scriptPath, MAX_PATH_LEN);
+                        true, scriptPath, PATH_MAX);
                 CFRelease(scriptFldrURL);
             } else {
                 free(startupScript);
