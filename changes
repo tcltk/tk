@@ -4193,11 +4193,11 @@ but you cannot use the Win keys as modifiers. (SS, BW)
 
 7/6/98 (new feature) Added support for the Macintosh Appearance Manager. (JI)
 
-7/24/98 (feature change) Simplified search order for tk.tcl.  The
-tk_library variable can now be set before calling Tk_Init to avoid
-doing any searches.  If it isn't set, then Tk checks env(TK_LIBRARY),
-relative to tcl_library, an install directory relative to the
-executable, a source directory relative to the executable, and a tk
-directory relative to the source heirarchy containing the executable.
-See the comment at the top of generic/tkInitScript.h for more
-details. (SS)
+7/24/98 (feature change) Eliminated the static variable that sets
+tk_library and simplified search order for tk.tcl.  The tk_library
+variable can now be set before calling Tk_Init to avoid doing any
+searches.  If it isn't set, then Tk checks env(TK_LIBRARY), relative
+to tcl_library, an install directory relative to the executable, a
+source directory relative to the executable, and a tk directory
+relative to the source heirarchy containing the executable.  See the
+comment at the top of generic/tkInitScript.h for more details. (SS)
