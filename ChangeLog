@@ -1,3 +1,17 @@
+2003-11-10  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImgPhoto.c (ImgPhotoBlendComplexAlpha): add alpha
+	blending for images with partial transparency.  Only operates for
+	15bpp+ display, and not on Mac at all. [Bug 809157]
+
+	* win/configure:
+	* win/configure.in: define TK_LIB_FLAG, TK_LIB_SPEC,
+	TK_BUILD_LIB_SPEC, TK_STUB_LIB_SPEC, TK_STUB_LIB_PATH, and
+	TK_BUILD_STUB_LIB_PATH for tkConfig.sh [Bug #826614]
+
+	* unix/Makefile.in (SHLIB_LD_FLAGS): include in Makefile as it is
+	used in MAKE_LIB sometimes (ie: AIX-64) [Bug #829686] (jimix)
+
 2003-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/msgs/nl.msg: Updated messages from Arjen Markus and
