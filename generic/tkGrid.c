@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.15 2001/09/17 23:16:26 dgp Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.16 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -1487,13 +1487,22 @@ ArrangeGrid(clientData)
     SetGridSize(masterPtr);
     width =  ResolveConstraints(masterPtr, COLUMN, 0);
     height = ResolveConstraints(masterPtr, ROW, 0);
-    width += 2*Tk_InternalBorderWidth(masterPtr->tkwin);
-    height += 2*Tk_InternalBorderWidth(masterPtr->tkwin);
+    width += Tk_InternalBorderLeft(masterPtr->tkwin) +
+	    Tk_InternalBorderRight(masterPtr->tkwin);
+    height += Tk_InternalBorderTop(masterPtr->tkwin) +
+	    Tk_InternalBorderBottom(masterPtr->tkwin);
+    
+    if (width < Tk_MinReqWidth(masterPtr->tkwin)) {
+	width = Tk_MinReqWidth(masterPtr->tkwin);
+    }
+    if (height < Tk_MinReqHeight(masterPtr->tkwin)) {
+	height = Tk_MinReqHeight(masterPtr->tkwin);
+    }
 
     if (((width != Tk_ReqWidth(masterPtr->tkwin))
-            || (height != Tk_ReqHeight(masterPtr->tkwin)))
-            && !(masterPtr->flags & DONT_PROPAGATE)) {
-        Tk_GeometryRequest(masterPtr->tkwin, width, height);
+	    || (height != Tk_ReqHeight(masterPtr->tkwin)))
+	    && !(masterPtr->flags & DONT_PROPAGATE)) {
+	Tk_GeometryRequest(masterPtr->tkwin, width, height);
 	if (width>1 && height>1) {
 	    masterPtr->flags |= REQUESTED_RELAYOUT;
 	    Tcl_DoWhenIdle(ArrangeGrid, (ClientData) masterPtr);
@@ -1512,15 +1521,17 @@ ArrangeGrid(clientData)
      */
 
     realWidth = Tk_Width(masterPtr->tkwin) -
-	    2*Tk_InternalBorderWidth(masterPtr->tkwin);
+	    Tk_InternalBorderLeft(masterPtr->tkwin) -
+	    Tk_InternalBorderRight(masterPtr->tkwin);
     realHeight = Tk_Height(masterPtr->tkwin) -
-	    2*Tk_InternalBorderWidth(masterPtr->tkwin);
+	    Tk_InternalBorderTop(masterPtr->tkwin) -
+	    Tk_InternalBorderBottom(masterPtr->tkwin);
     slotPtr->startX = AdjustOffsets(realWidth,
 	    MAX(slotPtr->columnEnd,slotPtr->columnMax), slotPtr->columnPtr);
     slotPtr->startY = AdjustOffsets(realHeight,
 	    MAX(slotPtr->rowEnd,slotPtr->rowMax), slotPtr->rowPtr);
-    slotPtr->startX += Tk_InternalBorderWidth(masterPtr->tkwin);
-    slotPtr->startY += Tk_InternalBorderWidth(masterPtr->tkwin);
+    slotPtr->startX += Tk_InternalBorderLeft(masterPtr->tkwin);
+    slotPtr->startY += Tk_InternalBorderTop(masterPtr->tkwin);
 
     /*
      * Now adjust the actual size of the slave to its cavity by

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.38 2001/08/21 20:21:36 pspjuth Exp $ 
+ * RCS: $Id: tkInt.h,v 1.39 2001/09/26 20:25:17 pspjuth Exp $ 
  */
 
 #ifndef _TKINT
@@ -743,10 +743,12 @@ typedef struct TkWindow {
 				 * Tk_GeometryRequest, or 0's if
 				 * Tk_GeometryRequest hasn't been
 				 * called. */
-    int internalBorderWidth;	/* Width of internal border of window
+    int internalBorderLeft;	/* Width of internal border of window
 				 * (0 means no internal border).  Geometry
 				 * managers should not normally place children
-				 * on top of the border. */
+				 * on top of the border. 
+				 * Fields for the other three sides are found 
+				 * below. */
 
     /*
      * Information maintained by tkWm.c for window manager communication.
@@ -770,6 +772,18 @@ typedef struct TkWindow {
      */
 
     struct TkWindowPrivate *privatePtr;
+
+    /*
+     * More information used by tkGeometry.c for geometry management.
+     */
+
+    /* The remaining fields of internal border. */
+    int internalBorderRight; 
+    int internalBorderTop;
+    int internalBorderBottom;
+    
+    int minReqWidth;		/* Minimum requested width. */
+    int minReqHeight;		/* Minimum requested height. */
 } TkWindow;
 
 /*

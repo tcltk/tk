@@ -1,3 +1,23 @@
+2001-09-26  Peter Spjuth <peter.spjuth@space.se>
+
+	* doc/GeomReq.3:
+	* doc/WindowId.3:
+	* generic/tk.decls:
+	* generic/tk.h:
+	* generic/tkDecls.h:
+	* generic/tkGeometry.c:
+	* generic/tkGrid.c (ArrangeGrid):
+	* generic/tkInt.h:
+	* generic/tkPack.c (ArrangePacking):
+	* generic/tkPlace.c (RecomputePlacement):
+	* generic/tkStubInit.c:
+	* generic/tkUtil.c (TkComputeAnchor):
+	* generic/tkWindow.c (TkAllocWindow):
+	* unix/mkLinks: Geometry manager changes to support TIP#18.
+	Allows a widget to set different internal border widths on
+	different sides, and to set a minimum requested size.
+	POTENTIAL INCOMPATIBILITY.  [Patch 429164]
+	
 2001-09-25  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkBind.c:

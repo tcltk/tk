@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.56 2001/08/08 18:41:10 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.57 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #ifndef _TK
@@ -717,8 +717,19 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_LEVEL)
 #define Tk_ReqWidth(tkwin)		(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)		(((Tk_FakeWin *) (tkwin))->reqHeight)
+/* Tk_InternalBorderWidth is deprecated */
 #define Tk_InternalBorderWidth(tkwin) \
-    (((Tk_FakeWin *) (tkwin))->internalBorderWidth)
+    (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
+#define Tk_InternalBorderLeft(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
+#define Tk_InternalBorderRight(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderRight)
+#define Tk_InternalBorderTop(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderTop)
+#define Tk_InternalBorderBottom(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->internalBorderBottom)
+#define Tk_MinReqWidth(tkwin)		(((Tk_FakeWin *) (tkwin))->minReqWidth)
+#define Tk_MinReqHeight(tkwin)		(((Tk_FakeWin *) (tkwin))->minReqHeight)
 #define Tk_Parent(tkwin)		(((Tk_FakeWin *) (tkwin))->parentPtr)
 #define Tk_Colormap(tkwin)		(((Tk_FakeWin *) (tkwin))->atts.colormap)
 
@@ -764,11 +775,16 @@ typedef struct Tk_FakeWin {
     char *dummy14;		/* geomMgrPtr */
     ClientData dummy15;		/* geomData */
     int reqWidth, reqHeight;
-    int internalBorderWidth;
+    int internalBorderLeft;
     char *dummy16;		/* wmInfoPtr */
     char *dummy17;		/* classProcPtr */
     ClientData dummy18;		/* instanceData */
     char *dummy19;		/* privatePtr */
+    int internalBorderRight;
+    int internalBorderTop;
+    int internalBorderBottom;
+    int minReqWidth;
+    int minReqHeight;
 } Tk_FakeWin;
 
 /*
