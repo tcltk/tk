@@ -1,3 +1,9 @@
+2002-06-13  Don Porter <dgp@users.sf.net>
+
+	* tests/cursor.test:  corrected error after cursor-2.2.
+	* tests/defs.tcl: Added enhancements to Tk's fake version of
+	tcltest required by recent cursor.test changes.
+
 2002-06-13  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* tests/cursor.test (cursor-2.[34]): Tests added to ensure that
