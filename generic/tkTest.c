@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.17 2002/07/09 17:53:54 dgp Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.18 2002/07/15 16:56:32 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -281,16 +281,20 @@ Tktest_Init(interp)
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateCommand(interp, "testmakeexist", TestmakeexistCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#if !(defined(__WIN32__) || defined(MAC_TCL))
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#endif
 #if defined(__WIN32__) || defined(MAC_TCL)
     Tcl_CreateCommand(interp, "testmetrics", TestmetricsCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
     Tcl_CreateCommand(interp, "testprop", TestpropCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#if !(defined(__WIN32__) || defined(MAC_TCL))
     Tcl_CreateCommand(interp, "testsend", TestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+#endif
     Tcl_CreateCommand(interp, "testtext", TesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #if !(defined(__WIN32__) || defined(MAC_TCL))
@@ -2186,6 +2190,7 @@ TestpropCmd(clientData, interp, argc, argv)
  */
 
 	/* ARGSUSED */
+#if !(defined(__WIN32__) || defined(MAC_TCL))
 static int
 TestsendCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
@@ -2193,9 +2198,7 @@ TestsendCmd(clientData, interp, argc, argv)
     int argc;				/* Number of arguments. */
     char **argv;			/* Argument strings. */
 {
-#if !(defined(__WIN32__) || defined(MAC_TCL))
     TkWindow *winPtr = (TkWindow *) clientData;
-#endif
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
@@ -2203,7 +2206,6 @@ TestsendCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-#if !(defined(__WIN32__) || defined(MAC_TCL))
     if (strcmp(argv[1], "bogus") == 0) {
 	XChangeProperty(winPtr->dispPtr->display,
 		RootWindow(winPtr->dispPtr->display, 0),
@@ -2272,9 +2274,9 @@ TestsendCmd(clientData, interp, argc, argv)
 		"\": must be bogus, prop, or serial", (char *) NULL);
 	return TCL_ERROR;
     }
-#endif
     return TCL_OK;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
