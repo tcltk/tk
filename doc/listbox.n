@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.11 2004/08/17 22:37:24 dkf Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.12 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.4 Tk "Tk Built-In Commands"
@@ -26,14 +26,12 @@ listbox \- Create and manipulate listbox widgets
 \-foreground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
-.VS 8.4
 .OP \-activestyle activeStyle ActiveStyle
 Specifies the style in which to draw the active element.  This must be
 one of \fBdotbox\fR (show a focus ring around the active element),
 \fBnone\fR (no special indication of active element) or
 \fBunderline\fR (underline the active element).
 The default is \fBunderline\fR.
-.VS 8.4
 .OP \-height height Height
 Specifies the desired height for the window, in lines.
 If zero or less, then the desired height for the window is made just
@@ -119,11 +117,9 @@ Indicates the anchor point for the selection, which is set with the
 .TP 12
 \fBend\fR
 Indicates the end of the listbox.
-.VS 8.0
 For most commands this refers to the last element in the listbox,
 but for a few commands such as \fBindex\fR and \fBinsert\fR
 it refers to the element just after the last one.
-.VE
 .TP 12
 \fB@\fIx\fB,\fIy\fR
 Indicates the element that covers the point in the listbox window
@@ -150,10 +146,8 @@ commands are possible for listbox widgets:
 .TP
 \fIpathName \fBactivate\fR \fIindex\fR
 Sets the active element to the one indicated by \fIindex\fR.
-.VS 8.0
 If \fIindex\fR is outside the range of elements in the listbox
 then the closest element is activated.
-.VE
 The active element is drawn as specified by \fB\-activestyle\fR when the
 widget has the input focus, and its index may be retrieved with the
 index \fBactive\fR.
@@ -167,9 +161,7 @@ of the upper-left corner of the screen area covered by the text
 elements give the width and height of the area, in pixels.
 If no part of the element given by \fIindex\fR is visible on the
 screen,
-.VS 8.0
 or if \fIindex\fR refers to a non-existent element,
-.VE
 then the result is an empty string;  if the element is
 partially visible, the result gives the full area of the element,
 including any parts that are not visible.
@@ -209,9 +201,7 @@ to delete.  If \fIlast\fR isn't specified it defaults to
 \fIpathName \fBget \fIfirst\fR ?\fIlast\fR?
 If \fIlast\fR is omitted, returns the contents of the listbox
 element indicated by \fIfirst\fR,
-.VS 8.0
 or an empty string if \fIfirst\fR refers to a non-existent element.
-.VE
 If \fIlast\fR is specified, the command returns a list whose elements
 are all of the listbox elements between \fIfirst\fR and \fIlast\fR,
 inclusive.
@@ -220,10 +210,8 @@ forms for indices.
 .TP
 \fIpathName \fBindex \fIindex\fR
 Returns the integer index value that corresponds to \fIindex\fR.
-.VS 8.0
 If \fIindex\fR is \fBend\fR the return value is a count of the number
 of elements in the listbox (not the index of the last element).
-.VE
 .TP
 \fIpathName \fBinsert \fIindex \fR?\fIelement element ...\fR?
 Inserts zero or more new elements in the list just before the
@@ -310,10 +298,8 @@ has several forms, depending on \fIoption\fR:
 .TP
 \fIpathName \fBselection anchor \fIindex\fR
 Sets the selection anchor to the element given by \fIindex\fR.
-.VS 8.0
 If \fIindex\fR refers to a non-existent element, then the closest
 element is used.
-.VE
 The selection anchor is the end of the selection that is fixed
 while dragging out a selection with the mouse.
 The index \fBanchor\fR may be used to refer to the anchor

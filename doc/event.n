@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.11 2005/01/12 11:03:33 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.12 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -51,10 +51,8 @@ trigger anymore.
 Generates a window event and arranges for it to be processed just as if
 it had come from the window system.
 \fIWindow\fR gives the path name of the window for which the event
-.VS 8.3
 will be generated; it may also be an identifier (such as returned by
 \fBwinfo id\fR) as long as it is for a window in the current application.
-.VE
 \fIEvent\fR provides a basic description of
 the event, such as \fB<Shift-Button-2>\fR or \fB<<Paste>>\fR.
 If \fIWindow\fR is empty the whole screen is meant, and coordinates

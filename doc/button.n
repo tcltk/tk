@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.9 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: button.n,v 1.10 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -32,7 +32,6 @@ Specifies a Tcl command to associate with the button.  This command
 is typically invoked when mouse button 1 is released over the button
 window.
 .OP \-default default Default
-.VS
 Specifies one of three states for the default ring: \fBnormal\fR,
 \fBactive\fR, or \fBdisabled\fR.  In active state, the button is drawn
 with the platform specific appearance for a default button.  In normal
@@ -43,7 +42,6 @@ the same size.  In disabled state, the button is drawn with the
 non-default button appearance without leaving space for the default
 appearance.  The disabled state may result in a smaller button than
 the active state.
-.VE
 .OP \-height height Height
 Specifies a desired height for the button.
 If an image or bitmap is being displayed in the button then the value is in
@@ -51,7 +49,6 @@ screen units (i.e. any of the forms acceptable to \fBTk_GetPixels\fR);
 for text it is in lines of text.
 If this option isn't specified, the button's desired height is computed
 from the size of the image or bitmap or text being displayed in it.
-.VS 8.4
 .OP \-overrelief overRelief OverRelief
 Specifies an alternative relief for the button, to be used when the
 mouse cursor is over the widget.  This option can be used to make
@@ -59,7 +56,6 @@ toolbar buttons, by configuring \fB\-relief flat \-overrelief
 raised\fR.  If the value of this option is the empty string, then no
 alternative relief is used when the mouse cursor is over the button.
 The empty string is the default value.
-.VE 8.4
 .OP \-state state State
 Specifies one of three states for the button:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the button is displayed using the
@@ -161,10 +157,8 @@ default behavior:
 .IP [1]
 A button activates whenever the mouse passes over it and deactivates
 whenever the mouse leaves the button.
-.VS
 Under Windows, this binding is only active when mouse button 1 has
 been pressed over the button.
-.VE
 .IP [2]
 A button's relief is changed to sunken whenever mouse button 1 is
 pressed over the button, and the relief is restored to its original

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCursor.3,v 1.7 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: GetCursor.3,v 1.8 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocCursorFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -16,7 +16,6 @@ Tk_AllocCursorFromObj, Tk_GetCursor, Tk_GetCursorFromObj, Tk_GetCursorFromData, 
 .nf
 \fB#include <tk.h>\fR
 .sp
-.VS 8.1
 Tk_Cursor
 \fBTk_AllocCursorFromObj(\fIinterp, tkwin, objPtr\fB)\fR
 .sp
@@ -25,7 +24,6 @@ Tk_Cursor
 .sp
 Tk_Cursor
 \fBTk_GetCursorFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 Tk_Cursor
 \fBTk_GetCursorFromData(\fIinterp, tkwin, source, mask, width, height, xHot, yHot, fg, bg\fB)\fR
@@ -33,9 +31,7 @@ Tk_Cursor
 CONST char *
 \fBTk_NameOfCursor(\fIdisplay, cursor\fB)\fR
 .sp
-.VS 8.1
 \fBTk_FreeCursorFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 \fBTk_FreeCursor(\fIdisplay, cursor\fB)\fR
 .SH ARGUMENTS
@@ -44,14 +40,12 @@ CONST char *
 Interpreter to use for error reporting.
 .AP Tk_Window tkwin in
 Token for window in which the cursor will be used.
-.VS 8.1 br
 .AP Tcl_Obj *objPtr in/out
 Description of cursor;  see below for possible values.  Internal rep will be
 modified to cache pointer to corresponding Tk_Cursor.
 .AP char *name in
 Same as \fIobjPtr\fR except description of cursor is passed as a string and
 resulting Tk_Cursor isn't cached.
-.VE
 .AP "CONST char" *source in
 Data for cursor cursor, in standard cursor format.
 .AP "CONST char" *mask in
@@ -83,7 +77,6 @@ being used by an application.  The procedures allow cursors to be
 re-used efficiently, thereby avoiding server overhead, and also
 allow cursors to be named with character strings.
 .PP
-.VS 8.1
 \fBTk_AllocCursorFromObj\fR takes as argument an object describing a
 cursor, and returns an opaque Tk identifier for a cursor corresponding
 to the description.  It re-uses an existing cursor if possible and
@@ -95,7 +88,6 @@ such as when \fIobjPtr\fR refers to a non-existent file, then \fBNone\fR
 is returned and an error message will be stored in \fIinterp\fR's result
 if \fIinterp\fR isn't NULL.  \fIObjPtr\fR must contain a standard Tcl
 list with one of the following forms:
-.VE
 .TP
 \fIname\fR\0[\fIfgColor\fR\0[\fIbgColor\fR]]
 \fIName\fR is the name of a cursor in the standard X cursor cursor,
@@ -144,7 +136,6 @@ This form only works on Windows, and will load a Windows system
 cursor (\fB.ani\fR or \fB.cur\fR) from the file specified in
 \fIsourceName\fR.
 .PP
-.VS 8.1
 \fBTk_GetCursor\fR is identical to \fBTk_AllocCursorFromObj\fR except
 that the description of the cursor is specified with a string instead
 of an object.  This prevents \fBTk_GetCursor\fR from caching the
@@ -159,7 +150,6 @@ must already have been created with a previous call to
 value is cached in \fIobjPtr\fR, which speeds up
 future calls to \fBTk_GetCursorFromObj\fR with the same \fIobjPtr\fR
 and \fItkwin\fR.
-.VE
 .PP
 \fBTk_GetCursorFromData\fR allows cursors to be created from
 in-memory descriptions of their source and mask cursors.  \fISource\fR
@@ -213,7 +203,6 @@ only guaranteed to persist until the next call to
 \fBTk_NameOfCursor\fR.  Also, this call is not portable except for
 cursors returned by \fBTk_GetCursor\fR.
 .PP
-.VS 8.1
 When a cursor returned by \fBTk_AllocCursorFromObj\fR, \fBTk_GetCursor\fR,
 or \fBTk_GetCursorFromData\fR
 is no longer needed, \fBTk_FreeCursorFromObj\fR or
@@ -225,7 +214,6 @@ with its Tk_Cursor token.
 There should be exactly one call to \fBTk_FreeCursor\fR for
 each call to \fBTk_AllocCursorFromObj\fR, \fBTk_GetCursor\fR,
 or \fBTk_GetCursorFromData\fR.
-.VE
 
 .SH BUGS
 In determining whether an existing cursor can be used to satisfy

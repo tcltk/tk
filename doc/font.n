@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.7 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: font.n,v 1.8 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -114,7 +114,6 @@ The platform-specific name of a font, interpreted by the graphics server.
 This also includes, under X, an XLFD (see [4]) for which a single ``\fB*\fR''
 character was used to elide more than one field in the middle of the
 name.  See PLATFORM-SPECIFIC issues for a list of the system fonts.
-.VS 8.0 br
 .TP
 [3] \fIfamily \fR?\fIsize\fR? ?\fIstyle\fR? ?\fIstyle ...\fR?
 .
@@ -146,7 +145,6 @@ pixel size (not point size); although this interpretation is not strictly
 correct, all existing applications using XLFDs assumed that one ``point''
 was in fact one pixel and would display incorrectly (generally larger) if
 the correct size font were actually used.
-.VE
 .TP
 [5] \fIoption value \fR?\fIoption value ...\fR?
 .
@@ -213,7 +211,6 @@ The \fIname\fR may also be the name of a native, platform-specific font
 family; in that case it will work as desired on one platform but may not
 display correctly on other platforms.  If the family is unspecified or 
 unrecognized, a platform-specific default font will be chosen.
-.VS
 .TP
 \fB\-size \fIsize\fR
 .
@@ -233,7 +230,6 @@ to a fixed-size bitmap.  The mapping between points and pixels is set when
 the application starts, based on properties of the installed monitor, but it
 can be overridden by calling the \fBtk scaling\fR command.
 .RE
-.VE
 .TP
 \fB\-weight \fIweight\fR 
 .

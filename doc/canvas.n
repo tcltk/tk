@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.18 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.19 2005/04/06 21:11:54 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -195,11 +195,9 @@ the screen;  if it is \fBc\fR then the distance is in centimeters;
 \fBi\fR means inches, and \fBp\fR means printers points (1/72 inch).
 Larger y-coordinates refer to points lower on the screen;  larger
 x-coordinates refer to points farther to the right.
-.VS
 Coordinates can be specified either as an even number of parameters,
 or as a single list parameter containing an even number of x and y
 coordinate values.
-.VE
 .SS TRANSFORMATIONS
 .PP
 Normally the origin of the canvas coordinate system is at the

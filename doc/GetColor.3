@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetColor.3,v 1.4 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: GetColor.3,v 1.5 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocColorFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -15,7 +15,6 @@ Tk_AllocColorFromObj, Tk_GetColor, Tk_GetColorFromObj, Tk_GetColorByValue, Tk_Na
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
-.VS 8.1
 .sp
 XColor *
 \fBTk_AllocColorFromObj(\fIinterp, tkwin, objPtr\fB)\fR
@@ -25,7 +24,6 @@ XColor *
 .sp
 XColor *
 \fBTk_GetColorFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 XColor *
 \fBTk_GetColorByValue(\fItkwin, prefPtr\fB)\fR
@@ -36,9 +34,7 @@ CONST char *
 GC
 \fBTk_GCForColor(\fIcolorPtr, drawable\fB)\fR
 .sp
-.VS 8.1
 \fBTk_FreeColorFromObj(\fItkwin, objPtr\fB)\fR
-.VE
 .sp
 \fBTk_FreeColor(\fIcolorPtr\fB)\fR
 .SH ARGUMENTS
@@ -47,14 +43,12 @@ GC
 Interpreter to use for error reporting.
 .AP Tk_Window tkwin in
 Token for window in which color will be used.
-.VS 8.1 br
 .AP Tcl_Obj *objPtr in/out
 String value describes desired color; internal rep will be
 modified to cache pointer to corresponding (XColor *).
 .AP char *name in
 Same as \fIobjPtr\fR except description of color is passed as a string and
 resulting (XColor *) isn't cached.
-.VE
 .AP XColor *prefPtr in
 Indicates red, green, and blue intensities of desired
 color.
@@ -68,7 +62,6 @@ same screen and depth as the window for which the color was allocated.
 .BE
 
 .SH DESCRIPTION
-.VS 8.1
 .PP
 These procedures manage the colors being used by a Tk application.
 They allow colors to be shared whenever possible, so that colormap
@@ -79,7 +72,6 @@ Given a textual description of a color, \fBTk_AllocColorFromObj\fR
 locates a pixel value that may be used to render the color
 in a particular window.  The desired color is specified with an
 object whose string value must have one of the following forms:
-.VE
 .TP 20
 \fIcolorname\fR
 Any of the valid textual names for a color defined in the
@@ -100,7 +92,6 @@ When fewer than 16 bits are provided for each color, they represent
 the most significant bits of the color.  For example, #3a7 is the
 same as #3000a0007000.
 .PP
-.VS 8.1
 \fBTk_AllocColorFromObj\fR returns a pointer to
 an XColor structure;  the structure indicates the exact intensities of
 the allocated color (which may differ slightly from those requested,
@@ -129,7 +120,6 @@ must already have been created with a previous call to
 value is cached in \fIobjPtr\fR, which speeds up
 future calls to \fBTk_GetColorFromObj\fR with the same \fIobjPtr\fR
 and \fItkwin\fR.
-.VE
 .PP
 \fBTk_GetColorByValue\fR is similar to \fBTk_GetColor\fR except that
 the desired color is indicated with the \fIred\fR, \fIgreen\fR, and
@@ -175,7 +165,6 @@ The graphics context is cached with the color and will exist only as
 long as \fIcolorPtr\fR exists;  it is freed when the last reference
 to \fIcolorPtr\fR is freed by calling \fBTk_FreeColor\fR.
 .PP
-.VS 8.1
 When a color is no longer needed \fBTk_FreeColorFromObj\fR or
 \fBTk_FreeColor\fR should be called to release it.
 For \fBTk_FreeColorFromObj\fR the color to release is specified
@@ -185,6 +174,5 @@ with a pointer to its XColor structure.
 There should be exactly one call to \fBTk_FreeColorFromObj\fR
 or \fBTk_FreeColor\fR for each call to \fBTk_AllocColorFromObj\fR,
 \fBTk_GetColor\fR, or \fBTk_GetColorByValue\fR.
-.VE
 .SH KEYWORDS
 color, intensity, object, pixel value

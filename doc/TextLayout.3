@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: TextLayout.3,v 1.6 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: TextLayout.3,v 1.7 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ComputeTextLayout 3 8.1 Tk "Tk Library Procedures"
@@ -55,10 +55,8 @@ lifetime of the text layout.
 .AP int numChars in
 The number of characters to consider from \fIstring\fR.  If
 \fInumChars\fR is less than 0, then assumes \fIstring\fR is null
-.VS 8.1
 terminated and uses \fBTcl_NumUtfChars\fR to determine the length of
 \fIstring\fR.
-.VE
 .AP int wrapLength in
 Longest permissible line length, in pixels.  Lines in \fIstring\fR will
 automatically be broken at word boundaries and wrapped when they reach
@@ -139,13 +137,11 @@ strings, refer to the documentation for \fBTk_MeasureChars\fR.  There is
 no programming interface in the core of Tk that supports multi-font,
 multi-line text; support for that behavior must be built on top of
 simpler layers.  
-.VS 8.1
 Note that unlike the lower level text display routines, the functions
 described here all operate on character-oriented lengths and indices
 rather than byte-oriented values.  See the description of
 \fBTcl_UtfAtIndex\fR for more details on converting between character
 and byte offsets.
-.VE 8.1
 .PP
 The routines described here are built on top of the programming interface
 described in the \fBTk_MeasureChars\fR documentation.  Tab characters and

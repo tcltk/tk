@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: send.n,v 1.4 2004/06/21 14:06:37 dkf Exp $
+'\" RCS: @(#) $Id: send.n,v 1.5 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH send n 4.0 Tk "Tk Built-In Commands"
@@ -87,10 +87,8 @@ list of enabled hosts is empty.
 This means that applications cannot connect to your server unless
 they use some other form of authorization
 such as that provide by \fBxauth\fR.
-.VS
 Under Windows, \fBsend\fR is currently disabled.  Most of the
 functionality is provided by the \fBdde\fR command instead.
-.VE
 .SH EXAMPLE
 This script fragment can be used to make an application that only runs
 once on a particular display.
@@ -109,6 +107,4 @@ proc RemoteStart args {
 }
 .CE
 .SH KEYWORDS
-.VS
 application, dde, name, remote execution, security, send
-.VE

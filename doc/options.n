@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.10 2005/02/14 20:40:35 hobbs Exp $
+'\" RCS: @(#) $Id: options.n,v 1.11 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -45,10 +45,8 @@ will cause some action to occur.
 If strict Motif compliance has been requested by setting the
 \fBtk_strictMotif\fR variable, this option will normally be
 ignored;  the normal background color will be used instead.
-.VS
 For some elements on Windows and Macintosh systems, the active color
 will only be used while mouse button 1 is pressed over the element.
-.VE
 .OP \-activeborderwidth activeBorderWidth BorderWidth
 Specifies a non-negative value indicating
 the width of the 3-D border drawn around active elements.  See above for

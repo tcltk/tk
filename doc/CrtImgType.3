@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtImgType.3,v 1.8 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: CrtImgType.3,v 1.9 2005/04/06 21:11:53 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateImageType 3 8.3 Tk "Tk Library Procedures"
@@ -18,7 +18,6 @@ Tk_CreateImageType, Tk_GetImageMasterData, Tk_InitImageArgs \- define new kind o
 .sp
 \fBTk_CreateImageType\fR(\fItypePtr\fR)
 .sp
-.VS
 ClientData
 \fBTk_GetImageMasterData\fR(\fIinterp, name, typePtrPtr\fR)
 .sp
@@ -40,7 +39,6 @@ the given image, if it exists.
 Number of arguments
 .AP char ***argvPtr in/out
 Pointer to argument list
-.VE
 .BE
 
 .SH DESCRIPTION
@@ -249,7 +247,6 @@ image was created.
 the image.
 
 .SH TK_GETIMAGEMASTERDATA
-.VS
 .PP
 The procedure \fBTk_GetImageMasterData\fR may be invoked to retrieve
 information about an image.  For example, an image manager can use this
@@ -262,10 +259,8 @@ and the return value is the ClientData value returned by the
 \fIcreateProc\fR when the image was created (this is typically a
 pointer to the image master data structure).  If no such image exists
 then NULL is returned and NULL is stored at \fI*typePtrPtr\fR.
-.VE
 
 .SH TK_INITIMAGEARGS
-.VS
 .PP
 The function \fBTk_InitImageArgs\fR converts the arguments of the
 \fBcreateProc\fR from objects to strings when necessary. When

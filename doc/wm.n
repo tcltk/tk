@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.22 2005/02/17 00:06:08 mdejong Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.23 2005/04/06 21:11:54 dkf Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -44,7 +44,6 @@ a Tcl list containing four elements, which are the current values
 of \fIminNumer\fR, \fIminDenom\fR, \fImaxNumer\fR, and \fImaxDenom\fR
 (if no aspect restrictions are in effect, then an empty string is
 returned).
-.VS 8.4
 .TP
 \fBwm attributes \fIwindow\fR
 .TP
@@ -63,12 +62,13 @@ disabled state. \fB\-toolwindow\fR gets or sets the style of the window
 to toolwindow (as defined in the MSDN). \fB\-topmost\fR gets or sets
 whether this is a topmost window (displays above all other windows).
 .VS 8.5
+The
 \fB\-alpha\fR sets the alpha transparency level of the toplevel.  It accepts
 a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values
 outside that range will be constrained.  This is supported on Windows
 2000/XP+.  Where not supported, the \fB\-alpha\fR value remains at
 \fB1.0\fR.
-.VE 8.5
+The
 \fB\-fullscreen\fR attribute will place the window in a mode that
 takes up the entire screen, has no borders, and covers the Start
 menu and taskbar.
@@ -84,7 +84,6 @@ values outside that range will be constrained.
 .PP
 On Unix, there are currently no special attribute values.
 .RE
-.VE 8.4
 .TP
 \fBwm client \fIwindow\fR ?\fIname\fR?
 If \fIname\fR is specified, this command stores \fIname\fR (which
@@ -161,14 +160,12 @@ The focus model defaults to \fBpassive\fR, and Tk's \fBfocus\fR command
 assumes a passive model of focusing.
 .TP
 \fBwm frame \fIwindow\fR
-.VS
 If \fIwindow\fR has been reparented by the window manager into a
 decorative frame, the command returns the platform specific window
 identifier for the outermost frame that contains \fIwindow\fR (the
 window whose parent is the root or virtual root).  If \fIwindow\fR
 hasn't been reparented by the window manager then the command returns
 the platform specific window identifier for \fIwindow\fR.
-.VE
 .TP
 \fBwm geometry \fIwindow\fR ?\fInewGeometry\fR?
 If \fInewGeometry\fR is specified, then the geometry of \fIwindow\fR
