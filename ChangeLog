@@ -1,3 +1,14 @@
+2004-10-19  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* tests/canvPsImg.tcl, tests/canvPsBmap.tcl: 
+	* generic/tkBitmap.c, bitmaps/*.bmp:
+	* library/demos/icon.tcl, library/demos/items.tcl: 
+	* library/demos/label.tcl, library/demos/menu.tcl: 
+	* library/demos/ruler.tcl, library/demos/twind.tcl: 
+	* library/demos/images/*.bmp: Renamed all X bitmap files files to
+	have an .xbm extension so Windows users won't get confused when
+	wandering around the Tcl source tree. [Bug 733835]
+
 2004-10-11  Miguel Bañon <bagnonm@users.sourceforge.net>
 
 	* library/msgs/sv.msg: Swedish message catalog from Mats Bengtsson.
