@@ -1,3 +1,7 @@
+2003-08-19  Joe English  <jenglish@users.sourceforge.net>
+	* doc/bind.n: Added more information on event types and details
+	[FRQ #523593 "bind(n) manpage needs more detail"]
+
 2003-08-18  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/configure: Regen.
