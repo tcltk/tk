@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.11 1999/11/24 20:59:06 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.12 1999/12/16 21:57:53 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -283,12 +283,12 @@ proc tkIconList_Arrange {w} {
     }
 
     if {$sW < $W} {
-	$data(canvas) config -scrollregion "$pad $pad $sW $H"
+	$data(canvas) config -scrollregion [list $pad $pad $sW $H]
 	$data(sbar) config -command ""
 	$data(canvas) xview moveto 0
 	set data(noScroll) 1
     } else {
-	$data(canvas) config -scrollregion "$pad $pad $sW $H"
+	$data(canvas) config -scrollregion [list $pad $pad $sW $H]
 	$data(sbar) config -command [list $data(canvas) xview]
 	set data(noScroll) 0
     }
@@ -298,7 +298,7 @@ proc tkIconList_Arrange {w} {
 	set data(itemsPerColumn) 1
     }
 
-    if {$data(curItem) != {}} {
+    if {[string compare $data(curItem) {}]} {
 	tkIconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
     }
 }
@@ -310,7 +310,7 @@ proc tkIconList_Invoke {w} {
     upvar #0 $w data
 
     if {[string compare $data(-command) ""] && [info exists data(selected)]} {
-	eval $data(-command)
+	uplevel #0 $data(-command)
     }
 }
 
@@ -392,11 +392,11 @@ proc tkIconList_Select {w rTag {callBrowse 1}} {
     }
     $data(canvas) lower $data(rect)
     set bbox [$data(canvas) bbox $tTag]
-    eval $data(canvas) coords $data(rect) $bbox
+    eval [list $data(canvas) coords $data(rect)] $bbox
 
     set data(curItem) $serial
     set data(selected) $text
-    
+
     if {$callBrowse && [string compare $data(-browsecmd) ""]} {
 	eval $data(-browsecmd) [list $text]
     }
@@ -412,7 +412,7 @@ proc tkIconList_Unselect {w} {
     if {[info exists data(selected)]} {
 	unset data(selected)
     }
-    set data(curItem)  {}
+    #set data(curItem)  {}
 }
 
 # Returns the selected item
@@ -472,9 +472,8 @@ proc tkIconList_FocusIn {w} {
 	return
     }
 
-    if {[string equal $data(curItem) {}]} {
-	set rTag [lindex [lindex $data(list) 0] 2]
-	tkIconList_Select $w $rTag
+    if {[string compare $data(curItem) {}]} {
+	tkIconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 1
     }
 }
 
@@ -686,7 +685,6 @@ proc tkFDialog {type args} {
 	$data(typeMenuBtn) config -state disabled -takefocus 0
 	$data(typeMenuLab) config -state disabled
     }
-
     tkFDialog_UpdateWhenIdle $w
 
     # Withdraw the window, then update all the geometry information
@@ -796,7 +794,7 @@ proc tkFDialog_Config {dataName type argList} {
 proc tkFDialog_Create {w} {
     set dataName [lindex [split $w .] end]
     upvar #0 $dataName data
-    global tk_library
+    global tk_library tkPriv
 
     toplevel $w -class TkFDialog
 
@@ -830,8 +828,8 @@ static char updir_bits[] = {
     # data(icons): the IconList that list the files and directories.
     #
     set data(icons) [tkIconList $w.icons \
-	-browsecmd "tkFDialog_ListBrowse $w" \
-	-command   "tkFDialog_OkCmd $w"]
+	-browsecmd [list tkFDialog_ListBrowse $w] \
+	-command   [list tkFDialog_OkCmd $w]]
 
     # f2: the frame with the OK button and the "file name" field
     #
@@ -1205,8 +1203,7 @@ proc tkFDialog_EntFocusIn {w} {
     upvar #0 [winfo name $w] data
 
     if {[string compare [$data(ent) get] ""]} {
-	$data(ent) selection from 0
-	$data(ent) selection to   end
+	$data(ent) selection range 0 end
 	$data(ent) icursor end
     } else {
 	$data(ent) selection clear
