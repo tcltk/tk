@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.84 2004/09/06 13:45:37 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.85 2004/09/10 12:32:24 vincentdarley Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSDEVDIR)" == ""
@@ -736,6 +736,7 @@ $(GENERICDIR)/tkTextTag.c: $(GENERICDIR)/default.h
 $(GENERICDIR)/tkUndo.c: $(GENERICDIR)/tkUndo.h
 
 $(GENERICDIR)/tkText.c: $(GENERICDIR)/tkText.h
+$(GENERICDIR)/tkTest.c: $(GENERICDIR)/tkText.h
 $(GENERICDIR)/tkTextBTree.c: $(GENERICDIR)/tkText.h
 $(GENERICDIR)/tkTextDisp.c: $(GENERICDIR)/tkText.h
 $(GENERICDIR)/tkTextDisp.c: $(GENERICDIR)/tkText.h
