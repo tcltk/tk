@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.10 2002/08/05 04:30:41 dgp Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.10.2.1 2003/07/19 01:02:51 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -98,7 +98,7 @@ TkGetCursorByName(interp, tkwin, string)
     if (Tcl_SplitList(interp, string, &argc, &argv) != TCL_OK) {
 	return NULL;
     }
-    if (argc != 1) {
+    if (argc == 0) {
 	goto badCursorSpec;
     }
 
