@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.3 1998/09/14 18:23:17 stanton Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.4 1999/02/04 20:57:17 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -151,7 +151,7 @@ static int		TestwrapperCmd _ANSI_ARGS_((ClientData dummy,
  * External (platform specific) initialization routine:
  */
 
-EXTERN int		TkplatformtestInit _ANSI_ARGS_((
+extern int		TkplatformtestInit _ANSI_ARGS_((
 			    Tcl_Interp *interp));
 #ifndef MAC_TCL
 #define TkplatformtestInit(x) TCL_OK

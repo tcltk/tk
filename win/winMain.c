@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.3 1998/09/14 18:24:02 stanton Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.4 1999/02/04 20:57:18 stanton Exp $
  */
 
 #include <tk.h>
@@ -34,7 +34,7 @@ static void		setargv _ANSI_ARGS_((int *argcPtr, char ***argvPtr));
 static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(char *,format));
 
 #ifdef TK_TEST
-EXTERN int		Tktest_Init(Tcl_Interp *interp);
+extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
 
 
