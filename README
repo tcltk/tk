@@ -2,10 +2,10 @@ README:  Tk
     This is the Tk 8.4a3 source distribution.
     Tcl/Tk is also available through NetCVS:
 	http://tcl.sourceforge.net/
-    You can get any release of Tcl from:
-        http://www.purl.org/tcl/home/registration/<version>.html
+    You can get any source release of Tcl from the file distributions
+    link at the above URL.
 
-RCS: @(#) $Id: README,v 1.29 2001/07/05 17:24:13 hobbs Exp $
+RCS: @(#) $Id: README,v 1.30 2001/08/07 02:43:52 hobbs Exp $
 
 1. Introduction
 ---------------
