@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.31 2000/08/04 00:46:33 ericm Exp $ 
+ * RCS: $Id: tkInt.h,v 1.32 2000/08/07 21:49:16 ericm Exp $ 
  */
 
 #ifndef _TKINT
@@ -991,8 +991,9 @@ EXTERN int		Tk_ScaleObjCmd _ANSI_ARGS_((ClientData clientData,
                             Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_ScrollbarCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
-EXTERN int		Tk_SelectionCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, char **argv));
+EXTERN int		Tk_SelectionObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
 EXTERN int		Tk_SendCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN int		Tk_SendObjCmd _ANSI_ARGS_((ClientData clientData,
