@@ -1,3 +1,10 @@
+2002-01-04  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkBind.c (TkBindFree):
+	* generic/tkGrid.c (ResolveConstraints,CheckSlotData,DestroyGrid):
+	* generic/tkSelect.c (Tk_DeleteSelHandler,TkSelDeadWindow): Replaced
+	Tcl_Free calls with ckfree so that memory debugging is fully supported.
+
 2001-12-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* test/winButton.test:
