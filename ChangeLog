@@ -1,5 +1,13 @@
 2000-04-17  Eric Melski  <ericm@scriptics.com>
 
+	* doc/menu.n: Added note regarding rendering of
+	checkbuttons/radiobuttons in menubars on different platforms --
+	some systems do not draw indicators for check/radiobuttons in
+	menubars.
+
+	* library/menu.tcl: Corrected behavior of
+	checkbuttons/commands/radiobuttons in menubars [Bug: 630].
+
 	* tests/grid.test: Added test for [grid propagate . 0] to not toggle.
 	
 	* generic/tkGrid.c: Fixed bogus logic in [grid propagate] that

@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.11 2000/03/31 09:24:11 hobbs Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.12 2000/04/17 19:32:00 ericm Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -655,9 +655,27 @@ proc tkMenuInvoke {w buttonRelease} {
 	tkMenuUnpost $w
     } elseif {[string equal [$w cget -type] "menubar"]} {
 	$w postcascade none
-	$w activate none
-	event generate $w <<MenuSelect>>
+	set active [$w index active]
+	set isCascade [string equal [$w type $active] "cascade"]
+
+	# Only de-activate the active item if it's a cascade; this prevents
+	# the annoying "activation flicker" you otherwise get with 
+	# checkbuttons/commands/etc. on menubars
+
+	if { $isCascade } {
+	    $w activate none
+	    event generate $w <<MenuSelect>>
+	}
+
 	tkMenuUnpost $w
+
+	# If the active item is not a cascade, invoke it.  This enables
+	# the use of checkbuttons/commands/etc. on menubars (which is legal,
+	# but not recommended)
+
+	if { !$isCascade } {
+	    uplevel #0 [list $w invoke $active]
+	}
     } else {
 	tkMenuUnpost $w
 	uplevel #0 [list $w invoke active]

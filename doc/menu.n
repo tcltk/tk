@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.2 1998/09/14 18:22:57 stanton Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.3 2000/04/17 19:32:00 ericm Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -236,6 +236,12 @@ menu's items will be displayed in a menubar accross the top of the
 window. These menus will behave according to the interface guidelines
 of their platforms. For every menu set as a menubar, a clone menu is
 made. See the \fBCLONES\fR section for more information.
+.PP
+As noted, menubars may behave differently on different platforms.  One
+example of this concerns the handling of checkbuttons and radiobuttons
+within the menu.  While it is permitted to put these menu elements on
+menubars, they may not be drawn with indicators on some platforms, due
+to system restrictions.
 .VE
 
 .VS
