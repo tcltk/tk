@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.56.2.1 2003/10/13 03:30:05 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.56.2.2 2004/10/05 22:27:26 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -506,6 +506,9 @@ typedef struct TkDisplay {
 				 * defined in below. */
     TkCaret caret;		/* information about the caret for this
 				 * display.  This is not a pointer. */
+
+    int iconDataSize;		/* size of default iconphoto image data */
+    unsigned char *iconDataPtr;	/* default iconphoto image data, if set */
 } TkDisplay;
 
 /*
