@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: send.test,v 1.1.4.7 1999/03/26 00:08:05 hershey Exp $
+# RCS: @(#) $Id: send.test,v 1.1.4.8 1999/04/05 18:36:04 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -552,7 +552,7 @@ r
 	setupbg
 	dobg {tk appname t_s_3}
 	set x [list [catch {send t_s_3 exit} msg] $msg]
-	close $fd
+	close $::tcltest::fd
 	set x
     } {1 {target application died}}
 
@@ -583,15 +583,15 @@ test send-12.2 {TimeoutProc procedure} {
     tk appname tktest
     update
     setupbg
-    puts $fd {after 10 {after 5000; exit}; puts [tk appname]; puts **DONE**; flush stdout}
+    puts $::tcltest::fd {after 10 {after 5000; exit}; puts [tk appname]; puts **DONE**; flush stdout}
     set ::tcltest::bgDone 0
     set ::tcltest::bgData {}
-    flush $fd
+    flush $::tcltest::fd
     tkwait variable ::tcltest::bgDone
     set app $::tcltest::bgData
     after 200
     set result [list [catch {send $app foo} msg] $msg]
-    close $fd
+    close $::tcltest::fd
     set result
 } {1 {target application died}}
 
