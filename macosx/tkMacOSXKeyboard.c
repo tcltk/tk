@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.10 2003/12/15 16:47:12 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.11 2003/12/15 18:48:07 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -184,7 +184,7 @@ static void
 InitLatin1Table(
     Display *display)
 {
-    static Boolean initialized = false;
+    static Boolean latin1_initialized = false;
     static SInt16 lastKeyLayoutID = -1;
 
     SInt16 keyScript;
@@ -193,13 +193,15 @@ InitLatin1Table(
     keyScript = GetScriptManagerVariable(smKeyScript);
     keyLayoutID = GetScriptVariable(keyScript,smScriptKeys);
 
-    if (!initialized || (lastKeyLayoutID != keyLayoutID)) {
+    if (!latin1_initialized || (lastKeyLayoutID != keyLayoutID)) {
         int keycode;
         KeySym keysym;
         int state;
         int modifiers;
 
-        initialized = true;
+        latin1_initialized = true;
+        lastKeyLayoutID = keyLayoutID;
+
         memset(latin1Table, 0, sizeof(latin1Table));
         
         /*
@@ -226,7 +228,7 @@ InitLatin1Table(
             }
 
             for (keycode = 0; keycode <= MAC_KEYCODE_MAX; keycode++) {
-                keysym = XKeycodeToKeysym(display,keycode,state);
+                keysym = XKeycodeToKeysym(display,keycode<<16,state);
                 if (keysym <= LATIN1_MAX) {
                     latin1Table[keysym] = keycode | modifiers;
                 }
@@ -259,8 +261,6 @@ XKeycodeToKeysym(
     int index)
 {
     register Tcl_HashEntry *hPtr;
-    int c;
-    int virtualKey;
     int newKeycode;
     UniChar newChar;
 
@@ -270,22 +270,6 @@ XKeycodeToKeysym(
         InitKeyMaps();
     }
 
-    if (keycode == 0) {
-
-        /* 
-         * This means we had a pure modifier keypress or something similar
-         * which is a TO DO.
-         */
-
-        return NoSymbol;
-    }
-    
-    virtualKey = keycode >> 16;
-    c = keycode & 0xFFFF;
-    if (c > MAC_KEYCODE_MAX) {
-        return NoSymbol;
-    }
-
     /*
      * When determining what keysym to produce we first check to see if the
      * key is a function key.  We then check to see if the character is
@@ -293,13 +277,15 @@ XKeycodeToKeysym(
      * ASCII and Latin-1 chars.
      */
 
-    if (c == 0x10) {
-        hPtr = Tcl_FindHashEntry(&vkeyTable, (char *) virtualKey);
+    newKeycode = keycode >> 16;
+
+    if ((keycode & 0xFFFF) == 0x10) {
+        hPtr = Tcl_FindHashEntry(&vkeyTable, (char *) newKeycode);
         if (hPtr != NULL) {
             return (KeySym) Tcl_GetHashValue(hPtr);
         }
     }
-    hPtr = Tcl_FindHashEntry(&keycodeTable, (char *) virtualKey);
+    hPtr = Tcl_FindHashEntry(&keycodeTable, (char *) newKeycode);
     if (hPtr != NULL) {
         return (KeySym) Tcl_GetHashValue(hPtr);
     }
@@ -308,7 +294,6 @@ XKeycodeToKeysym(
      * Add in the Mac modifier flags for shift and option.
      */
 
-    newKeycode = virtualKey;
     if (index & 1) {
         newKeycode |= shiftKey;
     }
@@ -531,7 +516,8 @@ XKeysymToMacKeycode(
  *
  * Results:
  *      A 32 bit keycode with the the mac keycode (without modifiers) in the
- *      higher 16 bits and the keysym in the lower 16 bits.
+ *      higher 16 bits of the keycode and the ASCII or Latin-1 code in the
+ *      lower 8 bits of the keycode.
  *
  * Side effects:
  *      None.
@@ -545,12 +531,22 @@ XKeysymToKeycode(
     KeySym keysym)
 {
     int macKeycode = XKeysymToMacKeycode(display, keysym);
+    KeyCode result;
     
     /*
-     * See also TkpSetKeycodeAndState.
+     * See also TkpSetKeycodeAndState.  The 0x0010 magic is used in
+     * XKeycodeToKeysym.  For special keys like XK_Return the lower 8 bits of
+     * the keysym are usually a related ASCII control code.
      */
 
-    return (0xFFFF & keysym) | ((macKeycode & MAC_KEYCODE_MASK) << 16);
+    if ((keysym >= XK_F1) && (keysym <= XK_F35)) {
+        result = 0x0010;
+    } else {
+        result = 0x00FF & keysym;
+    }
+    result |= (macKeycode & MAC_KEYCODE_MASK) << 16;
+
+    return result;
 }
 
 /*
@@ -617,8 +613,12 @@ TkpSetKeycodeAndState(
          * See also XKeysymToKeycode.
          */
 
-        eventPtr->xkey.keycode =
-            (0xFFFF & keysym) | ((macKeycode & MAC_KEYCODE_MASK) << 16);
+        if ((keysym >= XK_F1) && (keysym <= XK_F35)) {
+            eventPtr->xkey.keycode = 0x0010;
+        } else {
+            eventPtr->xkey.keycode = 0x00FF & keysym;
+        }
+        eventPtr->xkey.keycode |= (macKeycode & MAC_KEYCODE_MASK) << 16;
 
         eventPtr->xkey.state = 0;
         if (shiftKey & macKeycode) {
