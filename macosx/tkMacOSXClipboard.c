@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.1.2.4 2002/07/19 09:22:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.1.2.5 2002/07/21 11:11:54 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -299,7 +299,7 @@ TkSuspendClipboard()
 
         ClearCurrentScrap();
         GetCurrentScrap(&scrapRef);
-        Tcl_UtfToExternalDString(NULL, buffer, length, &encodedText);
+        Tcl_UtfToExternalDString(TkMacOSXCarbonEncoding, buffer, length, &encodedText);
         PutScrapFlavor(scrapRef, 'TEXT', 0, Tcl_DStringLength(&encodedText), Tcl_DStringValue(&encodedText) );
         Tcl_DStringFree(&encodedText);
         ckfree(buffer);

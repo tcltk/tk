@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.5 2002/07/19 09:22:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.6 2002/07/21 11:11:55 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -205,6 +205,7 @@ Tk_ChooseColorObjCmd(
     cpinfo.colorProc = NULL;
     cpinfo.colorProcData = NULL;
     
+    /* This doesn't seem to actually set the title! */
     Tcl_UtfToExternal(NULL, NULL, title, -1, 0, NULL, 
         StrBody(cpinfo.prompt), 255, &srcRead, &dstWrote, NULL);
     StrLength(cpinfo.prompt) = (unsigned char) dstWrote;
@@ -327,7 +328,7 @@ Tk_GetOpenFileObjCmd(
                 break;
             case OPEN_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, NULL, choice, choiceLen, 
+                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
                         0, NULL, StrBody(message), 255, 
                         &srcRead, &dstWrote, NULL);
                 message[0] = dstWrote;
@@ -349,7 +350,7 @@ Tk_GetOpenFileObjCmd(
                 break;
             case OPEN_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, NULL, choice, choiceLen, 
+                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
                         0, NULL, StrBody(title), 255, 
                         &srcRead, &dstWrote, NULL);
                 title[0] = dstWrote;
@@ -465,7 +466,7 @@ Tk_GetSaveFileObjCmd(
                     result = TCL_ERROR;
                     goto end;
                 }
-                Tcl_UtfToExternal(NULL, NULL, Tcl_DStringValue(&ds), 
+                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, Tcl_DStringValue(&ds), 
                         Tcl_DStringLength(&ds), 0, NULL, 
                         StrBody(initialFile), 255, &srcRead, &dstWrote, NULL);
                 StrLength(initialFile) = (unsigned char) dstWrote;
@@ -473,7 +474,7 @@ Tk_GetSaveFileObjCmd(
                 break;
             case SAVE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, NULL, choice, choiceLen, 
+                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
                         0, NULL, StrBody(message), 255, 
                         &srcRead, &dstWrote, NULL);
                 StrLength(message) = (unsigned char) dstWrote;
@@ -488,7 +489,7 @@ Tk_GetSaveFileObjCmd(
                 break;
             case SAVE_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, NULL, choice, choiceLen, 
+                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
                         0, NULL, StrBody(title), 255, 
                         &srcRead, &dstWrote, NULL);
                 StrLength(title) = (unsigned char) dstWrote;
@@ -593,7 +594,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
                 break;
             case CHOOSE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, NULL, choice, choiceLen, 
+                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
                         0, NULL, StrBody(message), 255, 
                         &srcRead, &dstWrote, NULL);
                 StrLength(message) = (unsigned char) dstWrote;
@@ -608,7 +609,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
                 break;
             case CHOOSE_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                Tcl_UtfToExternal(NULL, NULL, choice, choiceLen, 
+                Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, choice, choiceLen, 
                         0, NULL, StrBody(title), 255, 
                         &srcRead, &dstWrote, NULL);
                 StrLength(title) = (unsigned char) dstWrote;

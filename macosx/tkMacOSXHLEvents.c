@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.1.2.3 2002/07/18 23:45:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.1.2.4 2002/07/21 11:11:55 vincentdarley Exp $
  */
 
 #include "tkMacOSXUtil.h"
@@ -39,6 +39,7 @@ static OSErr OappHandler (const AppleEvent * event, AppleEvent * reply, long han
 static OSErr OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
 static OSErr PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
 static OSErr ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
+static OSErr PrefsHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
 
 static int MissedAnyParameters _ANSI_ARGS_((const AppleEvent *theEvent));
 static int ReallyKillMe _ANSI_ARGS_((Tcl_Event *eventPtr, int flags));
@@ -66,7 +67,8 @@ TkMacOSXInitAppleEvents(
 {
     OSErr err;
     AEEventHandlerUPP        OappHandlerUPP, OdocHandlerUPP,
-        PrintHandlerUPP, QuitHandlerUPP, ScriptHandlerUPP;
+        PrintHandlerUPP, QuitHandlerUPP, ScriptHandlerUPP,
+        PrefsHandlerUPP;
         
     /*
      * Install event handlers for the core apple events.
@@ -86,6 +88,10 @@ TkMacOSXInitAppleEvents(
     PrintHandlerUPP = NewAEEventHandlerUPP(PrintHandler);
     err = AEInstallEventHandler(kCoreEventClass, kAEPrintDocuments,
             PrintHandlerUPP, (long) interp, false);
+
+    PrefsHandlerUPP = NewAEEventHandlerUPP(PrefsHandler);
+    err = AEInstallEventHandler(kCoreEventClass, kAEShowPreferences,
+            PrefsHandlerUPP, (long) interp, false);
 
     if (interp != NULL) {
         ScriptHandlerUPP = NewAEEventHandlerUPP(ScriptHandler);
@@ -153,13 +159,33 @@ OSErr QuitHandler (const AppleEvent * event, AppleEvent * reply, long handlerRef
     return noErr;
 }
 
-
-OSErr OappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+static OSErr 
+OappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
 {
     return noErr;
 }
 
-static OSErr OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+/* Called when the user selects 'Preferences...' in MacOS X */
+static OSErr 
+PrefsHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+{
+    Tcl_CmdInfo dummy;
+    Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
+    /*
+     * Don't bother if we don't have an interp or
+     * the show preferences procedure doesn't exist.
+     */
+
+    if ((interp == NULL) || 
+            (Tcl_GetCommandInfo(interp, "::tk::mac::ShowPreferences", &dummy)) == 0) {
+            return noErr;
+    }
+    Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences");
+    return noErr;
+}
+
+static OSErr 
+OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     AEDescList fileSpecList;
@@ -233,7 +259,8 @@ static OSErr OdocHandler (const AppleEvent * event, AppleEvent * reply, long han
     return noErr;
 }
 
-OSErr PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+static OSErr 
+PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
 {
     return noErr;
 }
@@ -254,7 +281,8 @@ OSErr PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRe
  *----------------------------------------------------------------------
  */
 
-OSErr ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+static OSErr 
+ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
 {
     OSErr theErr;
     AEDescList theDesc;
@@ -376,7 +404,7 @@ OSErr ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerR
  *----------------------------------------------------------------------
  */
 
-int 
+static int 
 ReallyKillMe(Tcl_Event *eventPtr, int flags) 
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.3 2002/06/12 03:37:37 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1.2.4 2002/07/21 11:11:55 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -23,6 +23,7 @@
 #include "tkScrollbar.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
+#include "tkMacOSXUtil.h"
 
 /*
  * This is a list of all of the toplevels that have been mapped so far. It is
@@ -527,6 +528,44 @@ Tk_WmCmd(
 	}
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
 	goto updateGeom;
+    } else if ((c == 'a') && (strncmp(argv[1], "attributes", length) == 0)
+	    && (length >= 2)) {
+	char buf[TCL_INTEGER_SPACE];
+	int i, boolean;
+        WindowRef macWindow;
+
+	if (argc < 3) {
+	    configArgs:
+	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
+		    argv[0], " attributes window",
+		    " ?-modified ?bool??",
+		    "\"", (char *) NULL);
+	    return TCL_ERROR;
+	}
+        macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+	if (argc == 3) {
+	    sprintf(buf, "%d", (IsWindowModified(macWindow) == true));
+            Tcl_AppendResult(interp, "-modified ", buf, (char *) NULL);
+	    return TCL_OK;
+	}
+	for (i = 3; i < argc; i += 2) {
+	    length = strlen(argv[i]);
+	    if ((length < 2) || (argv[i][0] != '-')) {
+		goto configArgs;
+	    }
+	    if ((i < argc-1) &&
+		    (Tcl_GetBoolean(interp, argv[i+1], &boolean) != TCL_OK)) {
+		return TCL_ERROR;
+	    }
+	    if (strncmp(argv[i], "-modified", length) == 0) {
+		SetWindowModified(macWindow, boolean);
+            } else {
+		goto configArgs;
+	    }
+	    if (i == argc-1) {
+		Tcl_SetIntObj(Tcl_GetObjResult(interp), boolean);
+	    }
+	}
     } else if ((c == 'c') && (strncmp(argv[1], "client", length) == 0)
 	    && (length >= 2)) {
 	if ((argc != 3) && (argc != 4)) {
@@ -875,6 +914,20 @@ Tk_WmCmd(
 	    }
 	    wmPtr->hints.flags &= ~IconPixmapHint;
 	} else {
+	    OSErr err;
+	    FSSpec spec;
+            FSRef ref;
+            Boolean isDirectory;
+            err = FSPathMakeRef(argv[3], &ref, &isDirectory);     
+            if (err == noErr) {
+                err = FSGetCatalogInfo (&ref, kFSCatInfoNone, NULL, NULL, &spec, NULL);
+                if (err == noErr) {
+                    WindowRef macWin = 
+		      GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+                    SetWindowProxyFSSpec(macWin, &spec);
+                    return TCL_OK;
+                }
+	    }
 	    pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr,
 		    Tk_GetUid(argv[3]));
 	    if (pixmap == None) {
@@ -3209,7 +3262,7 @@ TkSetWMName(
     if (Tk_IsEmbedded(winPtr)) {
         return;
     }
-    Tcl_UtfToExternal(NULL, NULL, titleUid,
+    Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, titleUid,
 	    strlen(titleUid), 0, NULL, 
 	    (char *) &pTitle[1],
 	    255, NULL, &destWrote, NULL); /* Internalize native */
