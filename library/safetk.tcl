@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# RCS: @(#) $Id: safetk.tcl,v 1.5 1999/09/02 17:02:53 hobbs Exp $
+# RCS: @(#) $Id: safetk.tcl,v 1.6 2000/04/08 06:59:28 hobbs Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
@@ -185,12 +185,15 @@ proc ::safe::allowTk {interpPath argv} {
 
 proc ::safe::disallowTk {interpPath} {
     variable tkInit
-    unset tkInit($interpPath)
-    none
+    # This can already be deleted by the DeleteHook of the interp
+    if {[info exists tkInit($interpPath)]} {
+	unset tkInit($interpPath)
+    }
+    return
 }
 
 
-# safe::disallowTk --
+# safe::tkDelete --
 #
 #	Clean up the window associated with the interp being deleted.
 #

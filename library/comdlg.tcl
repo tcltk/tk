@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.6 1999/12/07 03:04:43 hobbs Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.7 2000/04/08 06:59:28 hobbs Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -201,6 +201,12 @@ proc tkFocusGroup_Destroy {t w} {
 proc tkFocusGroup_In {t w detail} {
     global tkPriv tkFocusIn
 
+    if {[string compare $detail NotifyNonlinear] && \
+	    [string compare $detail NotifyNonlinearVirtual]} {
+	# This is caused by mouse moving out&in of the window *or*
+	# ordinary keypresses some window managers (ie: CDE [Bug: 2960]).
+	return
+    }
     if {![info exists tkFocusIn($t,$w)]} {
 	set tkFocusIn($t,$w) ""
 	return
@@ -228,8 +234,8 @@ proc tkFocusGroup_In {t w detail} {
 proc tkFocusGroup_Out {t w detail} {
     global tkPriv tkFocusOut
 
-    if {[string compare $detail NotifyNonlinear] &&
-	[string compare $detail NotifyNonlinearVirtual]} {
+    if {[string compare $detail NotifyNonlinear] && \
+	    [string compare $detail NotifyNonlinearVirtual]} {
 	# This is caused by mouse moving out of the window
 	return
     }
