@@ -1,3 +1,11 @@
+2003-02-20  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* unix/tkUnixFont.c (CanUseFallback): Added argument, passed
+	through from callers to FindSubFontForChar(), so that pointers
+	into the old subfont table to be updated when that table is
+	reallocated, avoiding a (sometimes fatal) FMR.
+	[Bugs #618872 and #689357]
+
 2003-02-19  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXKeyEvent.c: fix for uninitialized var warning.
