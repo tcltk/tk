@@ -1,5 +1,9 @@
 1999-11-17  Eric Melski  <ericm@scriptics.com>
 
+	* tests/listbox.test: Updated tests for new error messages.
+
+	* generic/tkListbox.c: Improved error messages for bad -listvar's.
+
 	* tests/listbox.test: Added tests for bad -listvar's.
 
 	* generic/tkListbox.c: Added handlers for bad -listvar's (ie, bad
