@@ -1,6 +1,12 @@
 2001-03-12  Don Porter  <dgp@users.sourceforge.net>
 
 	BRANCH dgp-privates-into-namespace:
+	* doc/menu.n:
+	* unix/mkLinks: Added documentation for [tk_menuSetFocus].
+
+2001-03-12  Don Porter  <dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
 	* doc/text.n:
 	* doc/tkvars.n:
 	* unix/mkLinks: Added documentation for commands and variables

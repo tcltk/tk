@@ -706,6 +706,10 @@ if test -r getOpenFile.n; then
     ln getOpenFile.n tk_getOpenFile.n
     ln getOpenFile.n tk_getSaveFile.n
 fi
+if test -r menu.n; then
+    rm -f tk_menuSetFocus.n
+    ln menu.n tk_menuSetFocus.n
+fi
 if test -r menubar.n; then
     rm -f tk_menuBar.n
     rm -f tk_bindForTraversal.n
