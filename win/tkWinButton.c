@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.13 2001/11/17 22:44:04 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.14 2001/12/29 00:30:30 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -744,9 +744,11 @@ TkpComputeButtonGeometry(butPtr)
     int width = 0, height = 0;		/* Width and height of button */
     int haveImage, haveText;
     int avgWidth;
+    int minWidth;
     /* Vertical and horizontal dialog units size in pixels. */
     double vDLU, hDLU;
     Tk_FontMetrics fm;
+    
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -778,7 +780,6 @@ TkpComputeButtonGeometry(butPtr)
      * Figure out font metrics (even if we don't have text because we need
      * DLUs (based on font, not text) for some spacing calculations below).
      */
-
     Tk_FreeTextLayout(butPtr->textLayout);
     butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
 	    Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
@@ -810,95 +811,114 @@ TkpComputeButtonGeometry(butPtr)
     /*
      * Set width and height by button type; See User Experience table, p449.
      */
-    if (haveText) {
-	switch (butPtr->type) {
-	    case TYPE_BUTTON: {
-		width = (int)(0.5 + (50 * hDLU));
-		/*
-		 * If the text is wider than the default button width,
-		 * adjust the button width up to suit.  We'll allow 6 DLUs
-		 * left and right.  There is no rule but this is consistent
-		 * with the fact that button text is 8 DLUs high and buttons
-		 * are 14 DLUs high.
-		 */
-		if (txtWidth + (int)(0.5 + (6 * hDLU)) > width) {
+    switch (butPtr->type) {
+        case TYPE_BUTTON: {
+            if (haveText) {
+                /*
+                 * First compute the minimum width of the button in 
+                 * characters.  MWUE says that the button should be
+                 * 50 DLUs.  We allow 6 DLUs padding left and right.
+                 * (There is no rule but this is consistent with the
+                 * fact that button text is 8 DLUs high and buttons
+		 * are 14 DLUs high.)
+                 * 
+                 * The width is specified in characters.  A character
+                 * is, by definition, 4 DLUs wide.  11 char * 4 DLU
+                 * is 44 DLU + 6 DLU padding = 50 DLU.  Therefore,
+                 * width = -11 -> MWUE compliant buttons.
+                 */
+                if (butPtr->width < 0) {
+                    /* Min width in characters */
+                    minWidth = -(butPtr->width);
+                    /* Allow for characters */
+                    width = avgWidth * minWidth;
+                    /* Add for padding */
+                    width += (int)(0.5 + (6 * hDLU));
+                } 
+
+                /*
+                 * If shrink-wrapping was requested (width = 0) or
+                 * if the text is wider than the default button width,
+                 * adjust the button width up to suit.  
+                 */
+                if (butPtr->width == 0 
+                || (txtWidth + (int)(0.5 + (6 * hDLU)) > width)) {
 		    width = txtWidth + (int)(0.5 + (6 * hDLU));
 		}
 
-		/*
-		 * The User Experience says 14 DLUs.  Since text is, by
-		 * definition, 8 DLU/line, this allows for multi-line text
-		 * while working perfectly for single-line text.
-		 */
-		height = txtHeight + (int)(0.5 + (6 * vDLU));
+                /*
+                 * The User Experience says 14 DLUs.  Since text is, by
+                 * definition, 8 DLU/line, this allows for multi-line text
+                 * while working perfectly for single-line text.
+                 */
+                height = txtHeight + (int)(0.5 + (6 * vDLU));
 
-		/*
-		 * The above includes 6 DLUs of padding which should include
-		 * defaults of 1 pixel of highlightwidth, 2 pixels of 
-		 * borderwidth, 1 pixel of padding and 1 pixel of extra inset 
-		 * on each side.  Those will be added later so reduce width 
-		 * and height now to compensate.
-		 */
-		width  -= 10;
-		height -= 10;
+                /*
+                 * The above includes 6 DLUs of padding which should include
+                 * defaults of 1 pixel of highlightwidth, 2 pixels of 
+                 * borderwidth, 1 pixel of padding and 1 pixel of extra inset 
+                 * on each side.  Those will be added later so reduce width 
+                 * and height now to compensate.
+                 */
+                width  -= 10;
+                height -= 10;
+                
+                /*
+                 * Extra inset for the focus ring.
+                 */
+                butPtr->inset += 1;
+            }
+            break;
+        }
 
-		/*
-		 * Extra inset for the focus ring.
-		 */
+        case TYPE_LABEL: {
+            /*
+             * The User Experience says, "as wide as needed".
+             */
+            width = txtWidth;
 
-		butPtr->inset += 1;
-		break;
-	    }
+            /*
+             * The User Experience says, "8 (DLUs) per line of text."
+             * Since text is, by definition, 8 DLU/line, this allows
+             * for multi-line text while working perfectly for single-line
+             * text.
+             */
+            if (txtHeight) {
+                height = txtHeight;
+            } else {
+            /* If there's no text, we want the height to be one linespace */
+            /* WUZ - and no image? */
+                height = fm.linespace;
+            }
+            break;
+        }
 
-	    case TYPE_LABEL: {
-		/*
-		 * The User Experience says, "as wide as needed".
-		 */
-		width = txtWidth;
-
-		/*
-		 * The User Experience says, "8 (DLUs) per line of text."
-		 * Since text is, by definition, 8 DLU/line, this allows
-		 * for multi-line text while working perfectly for single-line
-		 * text.
-		 */
-		height = txtHeight;
-		break;
-	    }
-
-	    case TYPE_RADIO_BUTTON:
-	    case TYPE_CHECK_BUTTON: {
-		/* See note for TYPE_LABEL */
-		width = txtWidth;
-		/*
-		 * The User Experience says 10 DLUs.  (Is that one DLU above
-		 * and below for the focus ring?)	 See note above about
-		 * multi-line text and 8 DLU/line.
-		 */
-		height = txtHeight + (int)(0.5 + (2.0 * vDLU));
-
-		/*
-		 * The above includes 2 DLUs of padding which should include
-		 * defaults of 1 pixel of highlightwidth, 0 pixels of 
-		 * borderwidth, and 1 pixel of padding on each side.  Those
-		 * will be added later so reduce height now to compensate.
-		 */
-		height -= 4;
-
-		/*
-		 * Extra inset for the focus ring.
-		 */
-
-		butPtr->inset += 1;
-		break;
-	    }
-
-	    default:
-	    {
-		/* WUZ - error here */
-	    }
-	} /* switch */
-    }
+        case TYPE_RADIO_BUTTON:
+        case TYPE_CHECK_BUTTON: {
+            /* See note for TYPE_LABEL */
+            width = txtWidth;
+            /*
+             * The User Experience says 10 DLUs.  (Is that one DLU above
+             * and below for the focus ring?)	 See note above about
+             * multi-line text and 8 DLU/line.
+             */
+            height = txtHeight + (int)(0.5 + (2.0 * vDLU));
+            
+            /*
+             * The above includes 2 DLUs of padding which should include
+             * defaults of 1 pixel of highlightwidth, 0 pixels of 
+             * borderwidth, and 1 pixel of padding on each side.  Those
+             * will be added later so reduce height now to compensate.
+             */
+            height -= 4;
+            
+            /*
+             * Extra inset for the focus ring.
+             */
+            butPtr->inset += 1;
+            break;
+        }
+    }/* switch */
 
     /*
      * At this point, the width and height are correct for a Tk text
@@ -913,7 +933,6 @@ TkpComputeButtonGeometry(butPtr)
      * We only honor the compound bit if the button has both text and an
      * image, because otherwise it is not really a compound button.
      */
-
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
 	switch ((enum compound) butPtr->compound) {
 	    case COMPOUND_TOP:
@@ -953,16 +972,19 @@ TkpComputeButtonGeometry(butPtr)
 	    }
 	} /* switch */
 
-	if (butPtr->width > 0) {
+        /* Fix up for minimum width */
+        if (butPtr->width < 0) {
+            /* minWidth in pixels (because there's an image */
+            minWidth = -(butPtr->width);
+            if (width < minWidth) {
+                width =  minWidth;
+            }
+        } else if (butPtr->width > 0) {
 	    width = butPtr->width;
 	}
+
 	if (butPtr->height > 0) {
 	    height = butPtr->height;
-	}
-
-	if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	    butPtr->indicatorSpace = tsdPtr->boxWidth * 2;
-	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
 	}
 
 	width += 2*butPtr->padX;
@@ -979,11 +1001,13 @@ TkpComputeButtonGeometry(butPtr)
 	    height = imgHeight;
 	}
     } else {
-	/*
+        /* No image.  May or may not be text.  May or may not be compound. */
+
+        /*
 	 * butPtr->width is in characters.  We need to allow for that
 	 * many characters on the face, not in the over-all button width
 	 */
-	if (butPtr->width > 0) {
+        if (butPtr->width > 0) {
 	    width = butPtr->width * avgWidth;
 	}
 
@@ -1000,11 +1024,19 @@ TkpComputeButtonGeometry(butPtr)
 	height += 2 * butPtr->padY;
     }
 
-    /* Compute indicator spacing for radio and check buttons. */
+    /* Fix up width and height for indicator sizing and spacing */
     if (butPtr->type == TYPE_RADIO_BUTTON
-	    || butPtr->type == TYPE_CHECK_BUTTON) {
+    || butPtr->type == TYPE_CHECK_BUTTON) {
 	if (butPtr->indicatorOn) {
 	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
+
+            /* 
+             * Make sure we can see the whole indicator, even if the text
+             * or image is very small.
+             */
+            if (height < butPtr->indicatorDiameter) {
+                height = butPtr->indicatorDiameter;
+            }
 
 	    /*
 	     * There is no rule for space between the indicator and
