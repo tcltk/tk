@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.4 1999/08/10 05:04:45 jingham Exp $
+ * RCS: @(#) $Id: tkUnixDraw.c,v 1.5 1999/09/02 17:03:23 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -172,7 +172,7 @@ ScrollRestrictProc(arg, eventPtr)
     }
     return TK_DISCARD_EVENT;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -196,13 +196,12 @@ ScrollRestrictProc(arg, eventPtr)
  */
 
 void 
-TkpDrawHighlightBorder (
-        Tk_Window tkwin, 
-        GC fgGC, 
-        GC bgGC, 
-        int highlightWidth,
-        Drawable drawable)
+TkpDrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth, drawable)
+    Tk_Window tkwin;
+    GC fgGC;
+    GC bgGC;
+    int highlightWidth;
+    Drawable drawable;
 {
-    TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+    TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
-        

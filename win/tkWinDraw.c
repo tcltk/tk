@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.5 1999/08/10 05:04:56 jingham Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.6 1999/09/02 17:03:26 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1269,7 +1269,7 @@ TkWinFillRect(dc, x, y, width, height, pixel)
     ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
     SetBkColor(dc, oldColor);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1293,13 +1293,12 @@ TkWinFillRect(dc, x, y, width, height, pixel)
  */
 
 void 
-TkpDrawHighlightBorder (
-        Tk_Window tkwin, 
-        GC fgGC, 
-        GC bgGC, 
-        int highlightWidth,
-        Drawable drawable)
+TkpDrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth, drawable)
+    Tk_Window tkwin;
+    GC fgGC;
+    GC bgGC;
+    int highlightWidth;
+    Drawable drawable;
 {
-    TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+    TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
-        
