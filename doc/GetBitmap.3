@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetBitmap.3,v 1.1.4.3 1999/03/30 04:11:56 stanton Exp $
+'\" RCS: @(#) $Id: GetBitmap.3,v 1.1.4.4 1999/04/07 00:36:10 stanton Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocBitmapFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -51,11 +51,11 @@ Token for window in which the bitmap will be used.
 .AP Tcl_Obj *objPtr in/out
 String value describes desired bitmap; internal rep will be
 modified to cache pointer to corresponding Pixmap.
-.AP CONST char *info in
+.AP "CONST char" *info in
 Same as \fIobjPtr\fR except description of bitmap is passed as a string and
 resulting Pixmap isn't cached.
 .VE
-.AP CONST char *name in
+.AP "CONST char" *name in
 Name for new bitmap to be defined.
 .AP char *source in
 Data for bitmap, in standard bitmap format.
