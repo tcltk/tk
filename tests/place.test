@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: place.test,v 1.4 2000/08/08 19:21:20 ericm Exp $
+# RCS: @(#) $Id: place.test,v 1.5 2000/08/10 00:21:08 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -77,7 +77,11 @@ test place-3.3 {ConfigureSlave procedure, -relheight option} {
 test place-4.1 {ConfigureSlave procedure, bad -in options} {
     place forget .t.f2
     list [catch {place .t.f2 -in .t.f2} msg] $msg
-} {1 {can't place .t.f2 relative to itself}}
+} [list 1 "can't place .t.f2 relative to itself"]
+test place-4.2 {ConfigureSlave procedure, bad -in option} {
+    place forget .t.f2
+    list [catch {place .t.f2 -in .} msg] $msg
+} [list 1 "can't place .t.f2 relative to ."]
 
 test place-5.1 {ConfigureSlave procedure, -relwidth option} {
     list [catch {place .t.f2 -relwidth abcd} msg] $msg
@@ -243,58 +247,111 @@ test place-9.6 {PlaceObjCmd, configure errors} {
     set res [list [catch {place configure .foo} msg] $msg]
     destroy .foo
     set res
-} [list 1 "wrong # args: should be \"place configure pathName option value ?option value ...?\""]
+} [list 0 ""]
 test place-9.7 {PlaceObjCmd, configure errors} {
     catch {destroy .foo}
     frame .foo
     set res [list [catch {place configure .foo bar} msg] $msg]
     destroy .foo
     set res
-} [list 1 "wrong # args: should be \"place configure pathName option value ?option value ...?\""]
-test place-9.8 {PlaceObjCmd, forget errors} {
+} [list 0 ""]
+test place-9.8 {PlaceObjCmd, configure} {
+    catch {destroy .foo}
+    frame .foo
+    place .foo -x 0 -y 0
+    set res [place configure .foo]
+    destroy .foo
+    set res
+} [list {-anchor {} {} nw nw} {-bordermode {} {} inside inside} {-height {} {} {} {}} {-in {} {} {} .} {-relheight {} {} {} {}} {-relwidth {} {} {} {}} {-relx {} {} 0 0.0} {-rely {} {} 0 0.0} {-width {} {} {} {}} {-x {} {} 0 0} {-y {} {} 0 0}]
+test place-9.9 {PlaceObjCmd, configure} {
+    catch {destroy .foo}
+    frame .foo
+    place .foo -x 0 -y 0
+    set res [place configure .foo -x]
+    destroy .foo
+    set res
+} [list -x {} {} 0 0]
+test place-9.10 {PlaceObjCmd, forget errors} {
     catch {destroy .foo}
     frame .foo
     set res [list [catch {place forget .foo bar} msg] $msg]
     destroy .foo
     set res
 } [list 1 "wrong # args: should be \"place forget pathName\""]
-test place-9.9 {PlaceObjCmd, info errors} {
+test place-9.11 {PlaceObjCmd, info errors} {
     catch {destroy .foo}
     frame .foo
     set res [list [catch {place info .foo bar} msg] $msg]
     destroy .foo
     set res
 } [list 1 "wrong # args: should be \"place info pathName\""]
-test place-9.10 {PlaceObjCmd, slaves errors} {
+test place-9.12 {PlaceObjCmd, slaves errors} {
     catch {destroy .foo}
     frame .foo
     set res [list [catch {place slaves .foo bar} msg] $msg]
     destroy .foo
     set res
 } [list 1 "wrong # args: should be \"place slaves pathName\""]
-
+    
 test place-10.1 {ConfigureSlave} {
     catch {destroy .foo}
     frame .foo
     set res [list [catch {place .foo -badopt} msg] $msg]
     destroy .foo
     set res
-} [list 1 "bad option \"-badopt\": must be -anchor, -bordermode, -height, -in, -relheight, -relwidth, -relx, -rely, -width, -x, or -y"]
+} [list 1 "unknown option \"-badopt\""]
 test place-10.2 {ConfigureSlave} {
     catch {destroy .foo}
     frame .foo
     set res [list [catch {place .foo -anchor} msg] $msg]
     destroy .foo
     set res
-} [list 1 "value missing for option \"-anchor\""]
+} [list 1 "value for \"-anchor\" missing"]
 test place-10.3 {ConfigureSlave} {
     catch {destroy .foo}
     frame .foo
     set res [list [catch {place .foo -bordermode j} msg] $msg]
     destroy .foo
     set res
-} [list 1 "bad border mode \"j\": must be ignore, inside, or outside"]
+} [list 1 "bad bordermode \"j\": must be inside, outside, or ignore"]
+test place-10.4 {ConfigureSlave} {
+    catch {destroy .foo}
+    frame .foo
+    set res [list [catch {place configure .foo -x 0 -y} msg] $msg]
+    destroy .foo
+    set res
+} [list 1 "value for \"-y\" missing"]
 	
+test place-11.1 {PlaceObjCmd, slaves command} {
+    catch {destroy .foo}
+    frame .foo
+    set res [place slaves .foo]
+    destroy .foo
+    set res
+} {}
+test place-11.2 {PlaceObjCmd, slaves command} {
+    catch {destroy .foo .bar}
+    frame .foo
+    frame .bar
+    place .bar -in .foo
+    set res [place slaves .foo]
+    destroy .foo
+    destroy .bar
+    set res
+} [list .bar]
+
+test place-12.1 {PlaceObjCmd, forget command} {
+    catch {destroy .foo}
+    frame .foo
+    place .foo -width 50 -height 50
+    update
+    set res [winfo ismapped .foo]
+    place forget .foo
+    update
+    lappend res [winfo ismapped .foo]
+    destroy .foo
+    set res
+} [list 1 0]
 
 catch {destroy .t}
 

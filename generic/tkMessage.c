@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.6 2000/08/02 01:33:33 ericm Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.7 2000/08/10 00:21:07 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -230,7 +230,7 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
 {
     register Message *msgPtr;
     Tk_OptionTable optionTable;
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin;
 
     optionTable = (Tk_OptionTable) clientData;
     if (optionTable == NULL) {

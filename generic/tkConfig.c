@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.9 2000/05/17 21:17:20 ericm Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.10 2000/08/10 00:21:07 ericm Exp $
  */
 
 /*
@@ -685,10 +685,15 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	case TK_OPTION_DOUBLE: {
 	    double new;
 	    
-	    if (Tcl_GetDoubleFromObj(interp, valuePtr, &new) 
-		    != TCL_OK) {
-		return TCL_ERROR;
+	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		new = 0;
+	    } else {
+		if (Tcl_GetDoubleFromObj(interp, valuePtr, &new) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    }
+
 	    if (internalPtr != NULL) {
 		*((double *) oldInternalPtr) = *((double *) internalPtr);
 		*((double *) internalPtr) = new;
@@ -866,10 +871,15 @@ DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin, savedOptionPtr)
 	}
 	case TK_OPTION_PIXELS: {
 	    int new;
-	    
-	    if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
-		    &new) != TCL_OK) {
-		return TCL_ERROR;
+
+	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		new = 0;
+	    } else {
+		if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
+			&new) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    }
 	    if (internalPtr != NULL) {
 		*((int *) oldInternalPtr) = *((int *) internalPtr);
