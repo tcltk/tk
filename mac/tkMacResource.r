@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.5 1999/08/16 00:09:26 jingham Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.6 1999/08/16 08:51:46 jingham Exp $
  */
 
 /*
@@ -50,7 +50,7 @@ resource 'vers' (1) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham "\n© 1993-1997 Sun Microsystems" "\n  1998-1999 Scriptics Inc."
+	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham " "\n" "© 1993-1997 Sun Microsystems" "\n" "© 1998-1999 Scriptics Inc."
 };
 
 resource 'vers' (2) {
