@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.3 2002/09/03 11:48:56 vincentdarley Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -758,10 +758,6 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     int i;
     WindowRef macWindow;
 
-    if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 2, objv, "window");
-        return TCL_ERROR;
-    }
     if (objc < 3) {
 configArgs:
         Tcl_AppendResult(interp, "wrong # arguments: must be \"",
