@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.26 2000/10/05 18:31:26 ericm Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.27 2000/11/03 18:46:58 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3057,6 +3057,8 @@ Initialize(interp)
     code = Tcl_PkgProvideEx(interp, "Tk", TK_VERSION, (ClientData) &tkStubs);
     if (code != TCL_OK) {
 	goto done;
+    } else {
+	Tcl_SetMainLoop(Tk_MainLoop);
     }
 
 #ifdef Tk_InitStubs
