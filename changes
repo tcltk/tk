@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.37.2.1 1999/10/02 01:14:12 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.37.2.2 1999/11/03 00:43:00 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4679,3 +4679,15 @@ Tk_DrawChars(). (Jim Ingham)
 9/24/99 (feature change) tk_dialog now uses {Times 12} by default. (hobbs)
 
 --- Released 8.2.1, October 04, 1999 --- See ChangeLog for details ---
+
+10/30/99 (bug fix) fixed XKeysymToKeycode to handle mapping of symbolic
+keysyms (Left, Home, ...) with event generate (hobbs)
+
+10/30/99 (bug fix) change tkEntrySeeInsert to avoid the use of a while loop
+that could eat CPU tremendously.  Behavior of moving the cursor at the
+right edge changes slightly. [Bug: 3195] (hobbs)
+
+10/30/99 (bug fix) changed tkScrollButtonUp to check for existence of
+tkPriv(relief) in order to avoid spurious release events (hobbs)
+
+--- Released 8.2.2, November 04, 1999 --- See ChangeLog for details ---

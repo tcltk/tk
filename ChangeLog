@@ -1,6 +1,9 @@
 1999-11-02  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* tagged 8.2.2 final
+	* changes: updated based on ChangeLog
+	* win/winMain.c: changed Tcl_AppInit to not cause a DebugBreak
+	on simple startup errors (like bad options to wish)
 
 1999-10-30  Jeff Hobbs  <hobbs@scriptics.com>
 
