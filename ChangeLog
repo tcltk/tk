@@ -10,7 +10,7 @@
 	the master is visible. This check already
 	appeared in some of the dialogs. This patch
 	just copies the check into those that were
-	lacking.
+	lacking. [Tk patch 568253]
 
 2002-06-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
