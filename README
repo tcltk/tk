@@ -4,14 +4,15 @@ README:  Tk
 	service to the Tcl community by Scriptics Corporation.
 	http://www.scriptics.com/
 
-RCS: @(#) $Id: README,v 1.19 1999/08/10 23:16:41 redman Exp $
+RCS: @(#) $Id: README,v 1.19.2.1 1999/09/24 02:08:44 hobbs Exp $
 
 1. Introduction
 ---------------
 
 This directory contains the sources and documentation for Tk, an X11
 toolkit implemented with the Tcl scripting language.  The information
-here corresponds to release 8.2.0, which is the first beta for Tk 8.2.
+here corresponds to release 8.2.1, which is the first patch release
+for Tk 8.2.
 
 For details on features, incompatibilities, and potential problems with
 this release, see the Tcl/Tk 8.2 Web page at
@@ -19,7 +20,8 @@ this release, see the Tcl/Tk 8.2 Web page at
 	http://www.scriptics.com/software/8.2.html
 
 or refer to the "changes" file in this directory, which contains a
-historical record of all changes to Tk.
+historical record of all changes to Tk, or "ChangeLog", which is a
+more detailed history of recent changes to Tk.
 
 Tk is a freely available open source package.  You can do virtually
 anything you like with it, such as modifying it, redistributing it,

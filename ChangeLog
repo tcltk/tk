@@ -1,3 +1,8 @@
+1999-09-23  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* README:
+	* generic/tk.h: changed to reflect 8.2.1 version
+
 1999-09-21  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkFont.c: fixed processing of font options and error
