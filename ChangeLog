@@ -1,3 +1,11 @@
+2000-11-23  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* doc/image.n: 
+	* tests/image.test (image-1.10):
+	* generic/tkImage.c (Tk_ImageObjCmd): Prohibited image names that
+	start with "." since they can cause some really obscure crashes.
+	Fixes Bug #120819.  [POTENTIAL INCOMPATABILITY]
+
 2000-11-21  Eric Melski  <ericm@ajubasolutions.com>
 
 	Overall change:  Implemented TIP 5, which exports
