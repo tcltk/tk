@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.7.2.1.2.1 2005/01/04 05:07:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.7.2.1.2.2 2005/01/05 02:45:53 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -124,9 +124,13 @@ TkpTestembedCmd(clientData, interp, argc, argv)
  *
  *	This procesure sends a TK_ATTACHWINDOW message to the window to 
  *	use. The returned value is either 0 (the window to use is already 
- *	in use) or the hwnd of the window to use (the window to use is 
- *	ready to serve as a container) or other values (the window to use 
- *	needs to be confirmed since this protocol was not used before Tk85).
+ *	in use or unable to be used as a container) or the hwnd of the 
+ *	window to use (the window to use is ready to serve as a container) 
+ *	or other values	(the window to use needs to be confirmed since 
+ *	this protocol was not used before Tk85). This protocol is required
+ *	in order to verify if the window to use is a valid container.
+ *	Without an id verification, an invalid window attachment may cause
+ *	unexpected crashes/panics (see bug # 1096074).
  *
  * Results:
  *	The return value is normally TCL_OK. If an error occurred (such as
@@ -195,7 +199,7 @@ TkpUseWindow(interp, tkwin, string)
     if(id == 0 || id != (long)hwnd) {
 	char msg[256];
 	if(id == 0) {
-	    sprintf(msg, "The window \"%s\" is either unable or already to be used as a container", string);
+	    sprintf(msg, "The window \"%s\" is unable to be or has already been used as a container.", string);
 	    Tcl_SetResult(interp, msg, TCL_VOLATILE);
 	    return TCL_ERROR;
 	} else {
