@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.17 2000/02/08 11:31:33 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.18 2000/04/25 01:03:06 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -31,7 +31,7 @@
  * Declaration for internal Xlib function used here:
  */
 
-extern _XInitImageFuncPtrs _ANSI_ARGS_((XImage *image));
+extern int _XInitImageFuncPtrs _ANSI_ARGS_((XImage *image));
 
 /*
  * A signed 8-bit integral type.  If chars are unsigned and the compiler
@@ -293,6 +293,10 @@ static void		ImgPhotoDisplay _ANSI_ARGS_((ClientData clientData,
 static void		ImgPhotoFree _ANSI_ARGS_((ClientData clientData,
 			    Display *display));
 static void		ImgPhotoDelete _ANSI_ARGS_((ClientData clientData));
+static int		ImgPhotoPostscript _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin,
+			    Tk_PostscriptInfo psInfo, int x, int y, int width,
+			    int height, int prepass));
 
 Tk_ImageType tkPhotoImageType = {
     "photo",			/* name */
@@ -301,7 +305,7 @@ Tk_ImageType tkPhotoImageType = {
     ImgPhotoDisplay,		/* displayProc */
     ImgPhotoFree,		/* freeProc */
     ImgPhotoDelete,		/* deleteProc */
-    (Tk_ImagePostscriptProc *) NULL, /* postscriptProc */
+    ImgPhotoPostscript,		/* postscriptProc */
     (Tk_ImageType *) NULL	/* nextPtr */
 };
 
@@ -5111,4 +5115,40 @@ Tk_CreatePhotoOption(interp, name, proc)
     ptr->nextPtr = list;
     Tcl_SetAssocData(interp, "photoOption", PhotoOptionCleanupProc,
 		(ClientData) ptr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkPostscriptPhoto --
+ *
+ *	This procedure is called to output the contents of a
+ *	photo image in Postscript by calling the Tk_PostscriptPhoto
+ *	function.
+ *
+ * Results:
+ *	Returns a standard Tcl return value.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+static int
+ImgPhotoPostscript(clientData, interp, tkwin, psInfo,
+        x, y, width, height, prepass)
+    ClientData clientData;
+    Tcl_Interp *interp;
+    Tk_Window tkwin;
+    Tk_PostscriptInfo psInfo; /* postscript info */
+    int x, y;   /* First pixel to output */
+    int width, height;  /* Width and height of area */
+    int prepass;
+{
+    Tk_PhotoImageBlock block;
+
+    Tk_PhotoGetImage((Tk_PhotoHandle) clientData, &block);
+    block.pixelPtr += y * block.pitch + x * block.pixelSize;
+
+    return Tk_PostscriptPhoto(interp, &block, psInfo, width, height);
 }

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.5 1999/12/14 06:52:28 hobbs Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.6 2000/04/25 01:03:06 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -634,11 +634,31 @@ Tk_PostscriptImage(image, interp, tkwin, psinfo, x, y, width, height, prepass)
     int width, height;		/* Dimensions of region to redraw. */
     int prepass;
 {
+    Image *imagePtr = (Image *) image;
     int result;
     XImage *ximage;
     Pixmap pmap;
     GC newGC;
     XGCValues gcValues;
+
+    if (imagePtr->masterPtr->typePtr == NULL) {
+	/*
+	 * No master for image, so nothing to display on postscript.
+	 */
+	return TCL_OK;
+    }
+
+    /*
+     * Check if an image specific postscript-generation function
+     * exists; otherwise go on with generic code.
+     */
+
+    if (imagePtr->masterPtr->typePtr->postscriptProc != NULL) {
+	return (*imagePtr->masterPtr->typePtr->postscriptProc)(
+	    imagePtr->masterPtr->masterData, interp, tkwin, psinfo,
+	    x, y, width, height, prepass);
+    }
+
     if (prepass) {
 	return TCL_OK;
     }

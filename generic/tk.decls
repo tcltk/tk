@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.9 2000/04/19 23:11:23 ericm Exp $
+# RCS: @(#) $Id: tk.decls,v 1.10 2000/04/25 01:03:05 hobbs Exp $
 
 library tk
 
@@ -1119,6 +1119,11 @@ declare 236 generic {
 }
 declare 237 generic {
     double Tk_PostscriptY (double y, Tk_PostscriptInfo psInfo)
+}
+declare 238 generic {
+    int	Tk_PostscriptPhoto (Tcl_Interp *interp, \
+	    Tk_PhotoImageBlock *blockPtr, Tk_PostscriptInfo psInfo, \
+	    int width, int height)
 }
 
 # Define the platform specific public Tk interface.  These functions are
