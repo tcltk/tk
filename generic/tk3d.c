@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.5 1999/04/21 21:53:23 rjohnson Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.6 1999/12/21 23:55:10 hobbs Exp $
  */
 
 #include "tk3d.h"
@@ -975,6 +975,17 @@ Tk_Fill3DRectangle(tkwin, drawable, border, x, y, width,
   
     if (relief == TK_RELIEF_FLAT) {
 	borderWidth = 0;
+    } else {
+	/*
+	 * We need to make this extra check, otherwise we will leave
+	 * garbage in thin frames [Bug: 3596]
+	 */
+	if (width < 2*borderWidth) {
+	    borderWidth = width/2;
+	}
+	if (height < 2*borderWidth) {
+	    borderWidth = height/2;
+	}
     }
     doubleBorder = 2*borderWidth;
 

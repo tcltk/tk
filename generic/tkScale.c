@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.8 1999/04/21 21:53:27 rjohnson Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.9 1999/12/21 23:55:11 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -528,6 +528,13 @@ DestroyScale(memPtr)
 {
     register TkScale *scalePtr = (TkScale *) memPtr;
 
+    scalePtr->flags |= SCALE_DELETED;
+
+    Tcl_DeleteCommandFromToken(scalePtr->interp, scalePtr->widgetCmd);
+    if (scalePtr->flags & REDRAW_ALL) {
+	Tcl_CancelIdleCall(TkpDisplayScale, (ClientData) scalePtr);
+    }
+
     /*
      * Free up all the stuff that requires special handling, then
      * let Tk_FreeOptions handle all the standard option-related
@@ -550,6 +557,7 @@ DestroyScale(memPtr)
     }
     Tk_FreeConfigOptions((char *) scalePtr, scalePtr->optionTable,
 	    scalePtr->tkwin);
+    scalePtr->tkwin = NULL;
     TkpDestroyScale(scalePtr);
 }
 
@@ -1022,14 +1030,7 @@ ScaleEventProc(clientData, eventPtr)
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
     } else if (eventPtr->type == DestroyNotify) {
-	if (scalePtr->tkwin != NULL) {
-	    scalePtr->tkwin = NULL;
-	    Tcl_DeleteCommandFromToken(scalePtr->interp, scalePtr->widgetCmd);
-	}
-	if (scalePtr->flags & REDRAW_ALL) {
-	    Tcl_CancelIdleCall(TkpDisplayScale, (ClientData) scalePtr);
-	}
-	Tcl_EventuallyFree((ClientData) scalePtr, DestroyScale);
+	DestroyScale((char *) clientData);
     } else if (eventPtr->type == ConfigureNotify) {
 	ComputeScaleGeometry(scalePtr);
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
@@ -1082,8 +1083,7 @@ ScaleCmdDeletedProc(clientData)
      * destroys the widget.
      */
 
-    if (tkwin != NULL) {
-	scalePtr->tkwin = NULL;
+    if (!(scalePtr->flags & SCALE_DELETED)) {
 	Tk_DestroyWindow(tkwin);
     }
 }
@@ -1114,6 +1114,7 @@ TkEventuallyRedrawScale(scalePtr, what)
 				 * or REDRAW_ALL. */
 {
     if ((what == 0) || (scalePtr->tkwin == NULL)
+	    || (scalePtr->flags & SCALE_DELETED)
 	    || !Tk_IsMapped(scalePtr->tkwin)) {
 	return;
     }

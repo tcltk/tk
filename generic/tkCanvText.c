@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.7 1999/12/14 06:52:26 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.8 1999/12/21 23:55:10 hobbs Exp $
  */
 
 #include <stdio.h>
@@ -767,9 +767,6 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
     selLastChar = 0;		/* lint. */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	char *text;
-
-	text = textPtr->text;
 	selFirstChar = textInfoPtr->selectFirst;
 	selLastChar = textInfoPtr->selectLast;
 	if (selLastChar > textPtr->numChars) {

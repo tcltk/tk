@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.8 1999/12/16 21:57:36 hobbs Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.9 1999/12/21 23:55:11 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3039,11 +3039,9 @@ ParseFontNameObj(interp, tkwin, objPtr, faPtr)
     char *dash;
     int objc, result, i, n;
     Tcl_Obj **objv;
-    Tcl_Obj *resultPtr;
     char *string;
     
     TkInitFontAttributes(faPtr);
-    resultPtr = Tcl_GetObjResult(interp);
 
     string = Tcl_GetString(objPtr);
     if (*string == '-') {

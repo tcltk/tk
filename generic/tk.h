@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.34 1999/12/14 06:52:25 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.35 1999/12/21 23:55:09 hobbs Exp $
  */
 
 #ifndef _TK
@@ -38,18 +38,19 @@ extern "C" {
  * mac/README		(not patchlevel)
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
-
+ * win/aclocal.m4	(not patchlevel)
+ *
  * You may also need to update some of these files when the numbers change
  * for the version of Tcl that this release of Tk is compiled against.
  */
 
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   3
-#define TK_RELEASE_LEVEL   TCL_ALPHA_RELEASE
+#define TK_RELEASE_LEVEL   TCL_BETA_RELEASE
 #define TK_RELEASE_SERIAL  1
 
 #define TK_VERSION	"8.3"
-#define TK_PATCH_LEVEL	"8.3a1"
+#define TK_PATCH_LEVEL	"8.3b1"
 
 /*
  * The following definitions set up the proper options for Macintosh

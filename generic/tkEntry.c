@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.7 1999/12/14 06:52:27 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.8 1999/12/21 23:55:10 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -663,7 +663,6 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
     switch (cmdIndex) {
         case COMMAND_BBOX: {
 	    int index, x, y, width, height;
-	    char *string;
 	    char buf[TCL_INTEGER_SPACE * 4];
 
 	    if (objc != 3) {
@@ -677,7 +676,6 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	    if ((index == entryPtr->numChars) && (index > 0)) {
 	        index--;
 	    }
-	    string = entryPtr->displayString;
 	    Tk_CharBbox(entryPtr->textLayout, index, &x, &y, 
                     &width, &height);
 	    sprintf(buf, "%d %d %d %d", x + entryPtr->layoutX,
@@ -1365,7 +1363,6 @@ DisplayEntry(clientData)
     Tk_FontMetrics fm;
     Pixmap pixmap;
     int showSelection;
-    char *string;
 
     entryPtr->flags &= ~REDRAW_PENDING;
     if ((entryPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1421,7 +1418,6 @@ DisplayEntry(clientData)
     Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->normalBorder,
 		0, 0, Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
-    string = entryPtr->displayString;
     if (showSelection
 	    && (entryPtr->selectLast > entryPtr->leftIndex)) {
 	if (entryPtr->selectFirst <= entryPtr->leftIndex) {

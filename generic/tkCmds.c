@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.9 1999/12/16 21:57:35 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.10 1999/12/21 23:55:10 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -652,7 +652,6 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	    }
 	    if ((objc - skip) == 3) {
-#ifdef TK_USE_INPUT_METHODS
 		/*
 		 * In the case where TK_USE_INPUT_METHODS is not defined,
 		 * this will be ignored and we will always return 0.
@@ -664,6 +663,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 			!= TCL_OK) {
 		    return TCL_ERROR;
 		}
+#ifdef TK_USE_INPUT_METHODS
 		dispPtr->useInputMethods = bool;
 #endif /* TK_USE_INPUT_METHODS */
 	    } else if ((objc - skip) != 2) {
