@@ -1,3 +1,16 @@
+2002-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCanvas.h: moved TkColormapData struct to tkCanvPs.c
+	* generic/tkCanvPs.c (TkImageGetColor): corrected bogus use of
+	TkColormapData on Windows.  Non-separated data may need correction
+	as well.
+	* win/tkWinImage.c (XGetImage, XGetImageZPixmap): added support
+	for generating ps for embedded windows on canvases.
+
+	* unix/configure: regen
+	* unix/tcl.m4: replaced SC_ENABLE_MEMDEBUG with a more intelligent
+	SC_ENABLE_SYMBOLS that takes yes|no|mem|all as options now.
+
 2002-07-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/tk.tcl (RestoreFocusGrab): handle the case where the
