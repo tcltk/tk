@@ -11,7 +11,7 @@
 #
 # The information in this file is specific to a single platform.
 #
-# RCS: @(#) $Id: tkConfig.sh.in,v 1.1 1999/06/16 22:54:03 surles Exp $
+# RCS: @(#) $Id: tkConfig.sh.in,v 1.2 2001/10/15 21:19:16 hobbs Exp $
 
 # Tk's version number.
 TK_VERSION='@TK_VERSION@'
@@ -32,7 +32,7 @@ TK_DBGX=@TK_DBGX@
 TK_LIB_FILE='@TK_LIB_FILE@'
 
 # Additional libraries to use when linking Tk.
-TK_LIBS='@XLIBSW@ @DL_LIBS@ @LIBS@ @MATH_LIBS@'
+TK_LIBS='@LIBS@ @LIBS_GUI@'
 
 # Top-level directory in which Tcl's platform-independent files are
 # installed.
@@ -41,12 +41,6 @@ TK_PREFIX='@prefix@'
 # Top-level directory in which Tcl's platform-specific files (e.g.
 # executables) are installed.
 TK_EXEC_PREFIX='@exec_prefix@'
-
-# -I switch(es) to use to make all of the X11 include files accessible:
-TK_XINCLUDES='@XINCLUDES@'
-
-# Linker switch(es) to use to link with the X11 library archive.
-TK_XLIBSW='@XLIBSW@'
 
 # -l flag to pass to the linker to pick up the Tcl library
 TK_LIB_FLAG='@TK_LIB_FLAG@'
