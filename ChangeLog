@@ -1,3 +1,9 @@
+2004-09-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/README: typos
+	* macosx/tkMacOSXDraw.c (TkMacOSXSetUpCGContext): performance
+	improvements: removed slow & unnecessary calls.
+
 2004-09-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/winWm.test: Add 'wm attributes -alpha' to control toplevel
