@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.32 2004/09/10 12:13:43 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.33 2004/09/23 14:57:25 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2676,6 +2676,34 @@ test text-20.175 {TextSearchCmd, regexp search multi-line} {
     lappend res [.t2 search -count c -regexp -- {(\n+(\t+ *)*)+} 2.0] $c
     set res
 } {2.3 13}
+
+test text-20.176 {TextSearchCmd, empty search range} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\na\na\n"
+    .t2 search -- a 2.0 1.0
+} {}
+
+test text-20.177 {TextSearchCmd, empty search range} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\na\na\n"
+    .t2 search -backwards -- a 1.0 2.0
+} {}
+
+test text-20.178 {TextSearchCmd, empty search range} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\na\na\n"
+    .t2 search -- a 1.0 1.0
+} {}
+
+test text-20.179 {TextSearchCmd, empty search range} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\na\na\n"
+    .t2 search -backwards -- a 2.0 2.0
+} {}
 
 deleteWindows
 text .t2 -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100

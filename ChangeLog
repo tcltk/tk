@@ -1,3 +1,9 @@
+2004-09-23  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkTest.c
+	* tests/text.test: fix and tests for [Bug 1026485] -- negative 
+	text search ranges should not lead to any matches.
+
 2004-09-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinInt.h (TkWinDisplayChanged): added decl
