@@ -1,3 +1,23 @@
+2002-07-27  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/Makefile.in: Add MAJOR_VERSION, MINOR_VERSION,
+	PATCH_LEVEL, INSTALL_LIBRARY, STUB_LIB_FILE, and LIB_FILE
+	to support changes in tcl.m4 related to library builds.
+	Use MAKE_LIB macro to avoid dealing with RANLIB issues.
+	Rename TK_CC_SEARCH_FLAGS to CC_SEARCH_FLAGS and
+	rename TK_LD_SEARCH_FLAGS to LD_SEARCH_FLAGS.
+	Use new INSTALL_LIB and INSTALL_STUB_LIB substs to
+	deal with ranlib issues when install libraries.
+	* unix/configure: Regen.
+	* unix/configure.in: Remove AC_PROG_RANLIB since
+	this is done by tcl.m4 now. Define CC_SEARCH_FLAGS
+	instead of TK_CC_SEARCH_FLAGS and so on.
+	Use MAKE_LIB and MAKE_STUB_LIB from tcl.m4.
+	Remove AC_SUBST calls that are no done in tcl.m4.
+	* unix/tcl.m4: Update from Tcl.
+	* unix/tkConfig.sh.in: Subst CC_SEARCH_FLAGS and
+	LD_SEARCH_FLAGS.
+
 2002-07-25  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkInt.h:
