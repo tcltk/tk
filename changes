@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.8 1999/03/12 03:12:43 stanton Exp $
+RCS: @(#) $Id: changes,v 1.1.4.9 1999/03/15 16:21:22 hershey Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4514,3 +4514,23 @@ The Tk library now contains no direct references to any symbols in
 Tcl.  In addition, there is a new Tk_MainEx() function that takes an
 interpreter as an argument.  See the Tcl documentation for more
 information about the stubs mechanism. (redman)
+
+3/14/99 (feature change) Test suite now uses "test" namespace to
+define the test procedure and other auxiliary procedures as well as
+global variables.
+    - Global array testConfige is now called ::test::testConfig.
+    - Global variable VERBOSE is now called ::test::verbose, and
+      ::test::verbose no longer works with numerical values.  We've
+      switched to a bitwise character string.  You can set
+      ::test::verbose by using the -verbose option on the Tk command
+      line.
+    - Global variable TESTS is now called ::test::matchingTests, and
+      can be set on the Tk command line via the -match option.
+    - There is now a ::test::skipTests variable (works similarly to
+      ::test::matchTests) that can be set on the Tk command line via
+      the -match option.
+    - The test suite can now be run in any working directory.  When
+      you run "make test", the working directory is nolonger switched
+      to ../tests.
+(hirschl)
+*** POTENTIAL INCOMPATIBILITY ***
