@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.28 2004/09/10 12:13:40 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.29 2004/09/19 16:05:37 dkf Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -1263,7 +1263,7 @@ The following forms of the command are currently supported:
 Returns the value of a configuration option for an embedded image.
 \fIIndex\fR identifies the embedded image, and \fIoption\fR
 specifies a particular configuration option, which must be one of
-the ones listed in the section EMBEDDED IMAGES.
+the ones listed in the section \fBEMBEDDED IMAGES\fR.
 .TP
 \fIpathName \fBimage configure \fIindex\fR ?\fIoption value ...\fR?
 Query or modify the configuration options for an embedded image.
@@ -1750,7 +1750,7 @@ The following forms of the command are currently supported:
 Returns the value of a configuration option for an embedded window.
 \fIIndex\fR identifies the embedded window, and \fIoption\fR
 specifies a particular configuration option, which must be one of
-the ones listed in the section EMBEDDED WINDOWS.
+the ones listed in the section \fBEMBEDDED WINDOWS\fR.
 .TP
 \fIpathName \fBwindow configure \fIindex\fR ?\fIoption value ...\fR?
 Query or modify the configuration options for an embedded window.

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetDash.3,v 1.3 2004/08/22 15:43:20 dkf Exp $
+'\" RCS: @(#) $Id: GetDash.3,v 1.4 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetDash 3 8.3 Tk "Tk Library Procedures"
@@ -34,8 +34,8 @@ value converted from \fIstring\fR.
 These procedure parses the string and fills in the result in the
 Tk_Dash structure. The string can be a list of integers or a
 character string containing only \fB[.,-_]\fR or spaces. If all
-goes well, TCL_OK is returned. If \fIstring\fR doesn't have the
-proper syntax then TCL_ERROR is returned, an error message is left
+goes well, \fBTCL_OK\fR is returned. If \fIstring\fR doesn't have the
+proper syntax then \fBTCL_ERROR\fR is returned, an error message is left
 in the interpreter's result, and nothing is stored at *\fIdashPtr\fR.
 .PP
 The first possible syntax is a list of integers. Each element

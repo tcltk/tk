@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.8 2004/08/20 14:15:29 dkf Exp $
+'\" RCS: @(#) $Id: options.n,v 1.9 2004/09/19 16:05:37 dkf Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -252,7 +252,7 @@ communicate with the window manager so that when the user interactively
 resizes the top-level window that contains the widget, the dimensions of
 the window will be displayed to the user in grid units and the window
 size will be constrained to integral numbers of grid units.
-See the section GRIDDED GEOMETRY MANAGEMENT in the \fBwm\fR manual
+See the section \fBGRIDDED GEOMETRY MANAGEMENT\fR in the \fBwm\fR manual
 entry for more details.
 .OP \-takefocus takeFocus TakeFocus
 Determines whether the window accepts the focus during keyboard

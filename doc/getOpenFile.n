@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: getOpenFile.n,v 1.12 2004/08/20 10:56:36 dkf Exp $
+'\" RCS: @(#) $Id: getOpenFile.n,v 1.13 2004/09/19 16:05:37 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_getOpenFile n 4.2 Tk "Tk Built-In Commands"
@@ -55,7 +55,7 @@ the user choose a filetype in the listbox, only the files of that type
 are listed. If this option is unspecified, or if it is set to the
 empty list, or if the \fBFile types\fR listbox is not supported by the
 particular platform then all files are listed regardless of their
-types. See the section SPECIFYING FILE PATTERNS below for a
+types. See the section \fBSPECIFYING FILE PATTERNS\fR below for a
 discussion on the contents of \fIfilePatternList\fR.
 .TP
 \fB\-initialdir\fR \fIdirectory\fR

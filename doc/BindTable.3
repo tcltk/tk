@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: BindTable.3,v 1.3 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: BindTable.3,v 1.4 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateBindingTable 3 4.0 Tk "Tk Library Procedures"
@@ -119,7 +119,7 @@ message is left in \fIinterp->result\fR.
 \fBTk_DeleteBinding\fR removes from \fIbindingTable\fR the
 binding given by \fIobject\fR and \fIeventString\fR, if
 such a binding exists.
-\fBTk_DeleteBinding\fR always returns TCL_OK.
+\fBTk_DeleteBinding\fR always returns \fBTCL_OK\fR.
 In some cases it may reset \fIinterp->result\fR to the default
 empty value.
 .PP

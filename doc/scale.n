@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scale.n,v 1.4 2004/08/17 22:37:24 dkf Exp $
+'\" RCS: @(#) $Id: scale.n,v 1.5 2004/09/19 16:05:37 dkf Exp $
 '\" 
 .so man.macros
 .TH scale n 4.1 Tk "Tk Built-In Commands"
@@ -117,7 +117,7 @@ of real values (determined by the \fBfrom\fR, \fBto\fR, and
 \fBresolution\fR options),
 and the position of the slider selects a particular real value.
 The slider's position (and hence the scale's value) may be adjusted
-with the mouse or keyboard as described in the BINDINGS
+with the mouse or keyboard as described in the \fBBINDINGS\fR
 section below.  Whenever the scale's value is changed, a Tcl
 command is invoked (using the \fBcommand\fR option) to notify
 other interested widgets of the change.

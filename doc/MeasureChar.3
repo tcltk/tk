@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: MeasureChar.3,v 1.5 2004/08/22 15:43:20 dkf Exp $
+'\" RCS: @(#) $Id: MeasureChar.3,v 1.6 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_MeasureChars 3 8.1 Tk "Tk Library Procedures"
@@ -48,13 +48,13 @@ line length in pixels.  Characters from \fIstring\fR are processed only
 until this many pixels have been covered.  If \fImaxPixels\fR is < 0, then
 the line length is unbounded and the \fIflags\fR argument is ignored.
 .AP int flags in
-Various flag bits OR-ed together: TK_PARTIAL_OK means include a character
+Various flag bits OR-ed together: \fBTK_PARTIAL_OK\fR means include a character
 as long as any part of it fits in the length given by \fImaxPixels\fR;
 otherwise, a character must fit completely to be considered.
-TK_WHOLE_WORDS means stop on a word boundary, if possible.  If
-TK_AT_LEAST_ONE is set, it means return at least one character even if no
+\fBTK_WHOLE_WORDS\fR means stop on a word boundary, if possible.  If
+\fBTK_AT_LEAST_ONE\fR is set, it means return at least one character even if no
 characters could fit in the length given by \fImaxPixels\fR.  If
-TK_AT_LEAST_ONE is set and TK_WHOLE_WORDS is also set, it means that if
+\fBTK_AT_LEAST_ONE\fR is set and \fBTK_WHOLE_WORDS\fR is also set, it means that if
 not even one word fits on the line, return the first few letters of the
 word that did fit; if not even one letter of the word fit, then the first
 letter will still be returned.

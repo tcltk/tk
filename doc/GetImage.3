@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetImage.3,v 1.5 2002/08/05 04:30:38 dgp Exp $
+'\" RCS: @(#) $Id: GetImage.3,v 1.6 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetImage 3 4.0 Tk "Tk Library Procedures"
@@ -109,13 +109,13 @@ The \fIchangeProc\fR and \fIclientData\fR arguments to
 in the image;  it must match the following prototype:
 .CS
 typedef void Tk_ImageChangedProc(
-	ClientData \fIclientData\fR,
-	int \fIx\fR,
-	int \fIy\fR,
-	int \fIwidth\fR,
-	int \fIheight\fR,
-	int \fIimageWidth\fR,
-	int \fIimageHeight\fR);
+    ClientData \fIclientData\fR,
+    int \fIx\fR,
+    int \fIy\fR,
+    int \fIwidth\fR,
+    int \fIheight\fR,
+    int \fIimageWidth\fR,
+    int \fIimageHeight\fR);
 .CE
 The \fIclientData\fR argument to \fIchangeProc\fR is the same as the
 \fIclientData\fR argument to \fBTk_GetImage\fR.

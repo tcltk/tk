@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: TkInitStubs.3,v 1.3 2004/08/20 14:15:29 dkf Exp $
+'\" RCS: @(#) $Id: TkInitStubs.3,v 1.4 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_InitStubs 3 8.4 Tk "Tk Library Procedures"
@@ -50,8 +50,8 @@ Tcl functions.
 Call \fBTk_InitStubs\fR if the extension before calling any other
 Tk functions.
 .IP 2) 5
-Define the USE_TCL_STUBS symbol.  Typically, you would include the
--DUSE_TCL_STUBS flag when compiling the extension.
+Define the \fBUSE_TCL_STUBS\fR symbol. Typically, you would include the
+\fB-DUSE_TCL_STUBS\fR flag when compiling the extension.
 .IP 3) 5
 Link the extension with the Tcl and Tk stubs libraries instead of
 the standard Tcl and Tk libraries.  On Unix platforms, the library

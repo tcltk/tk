@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCursor.3,v 1.6 2004/08/22 15:43:20 dkf Exp $
+'\" RCS: @(#) $Id: GetCursor.3,v 1.7 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocCursorFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -180,8 +180,8 @@ Tk_Cursor cursor;
 #include "source.cursor"
 #include "mask.cursor"
 cursor = Tk_GetCursorFromData(interp, tkwin, source_bits,
-	mask_bits, source_width, source_height, source_x_hot,
-	source_y_hot, Tk_GetUid("red"), Tk_GetUid("blue"));
+    mask_bits, source_width, source_height, source_x_hot,
+    source_y_hot, Tk_GetUid("red"), Tk_GetUid("blue"));
 .CE
 .PP
 Under normal conditions \fBTk_GetCursorFromData\fR

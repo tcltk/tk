@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: TextLayout.3,v 1.5 1999/04/21 21:53:22 rjohnson Exp $
+'\" RCS: @(#) $Id: TextLayout.3,v 1.6 2004/09/19 16:05:36 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ComputeTextLayout 3 8.1 Tk "Tk Library Procedures"
@@ -69,15 +69,17 @@ wrapping; lines will get as long as they need to be and only wrap if a
 newline/return character is encountered.
 .AP Tk_Justify justify in
 How to justify the lines in a multi-line text layout.  Possible values
-are TK_JUSTIFY_LEFT, TK_JUSTIFY_CENTER, or TK_JUSTIFY_RIGHT.  If the text
-layout only occupies a single line, then \fIjustify\fR is irrelevant.  
+are \fBTK_JUSTIFY_LEFT\fR, \fBTK_JUSTIFY_CENTER\fR, or
+\fBTK_JUSTIFY_RIGHT\fR. If the text layout only occupies a single
+line, then \fIjustify\fR is irrelevant.
 .AP int flags in
-Various flag bits OR-ed together.  TK_IGNORE_TABS means that tab characters
-should not be expanded to the next tab stop.  TK_IGNORE_NEWLINES means that
-newline/return characters should not cause a line break.  If either tabs or
-newlines/returns are ignored, then they will be treated as regular
-characters, being measured and displayed in a platform-dependent manner as
-described in \fBTk_MeasureChars\fR, and will not have any special behaviors.
+Various flag bits OR-ed together. \fBTK_IGNORE_TABS\fR means that tab
+characters should not be expanded to the next tab stop.
+\fBTK_IGNORE_NEWLINES\fR means that newline/return characters should
+not cause a line break.  If either tabs or newlines/returns are
+ignored, then they will be treated as regular characters, being
+measured and displayed in a platform-dependent manner as described in
+\fBTk_MeasureChars\fR, and will not have any special behaviors.
 .AP int *widthPtr out
 If non-NULL, filled with either the width, in pixels, of the widest
 line in the text layout, or the width, in pixels, of the bounding box for the 
