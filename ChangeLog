@@ -1,3 +1,16 @@
+1999-11-19  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* README:
+	* unix/configure.in:
+	* win/configure.in:
+	* generic/tk.h: updated to patchlevel 3
+
+	* generic/tkColor.c:
+	* generic/tkColor.h: fixed Tk_NameOfColor to work correctly,
+	with minor change to TkColor struct.
+	* generic/tkEntry.c: fixed C expr error in destroy of entry
+	that could lead to 'malformed bucket chain' error
+
 1999-11-02  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* tagged 8.2.2 final
