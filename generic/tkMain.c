@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.10 2001/11/23 02:06:48 das Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.11 2002/01/15 21:29:12 dgp Exp $
  */
 
 #include <ctype.h>
@@ -101,7 +101,8 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 					 * to execute commands. */
     Tcl_Interp *interp;
 {
-    char *args, *fileName;
+    char *args;
+    CONST char *fileName;
     char buf[TCL_INTEGER_SPACE];
     int code;
     size_t length;
