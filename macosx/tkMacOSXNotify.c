@@ -1,5 +1,5 @@
 /*
- * tclMacOSXNotify.c --
+ * tkMacOSXNotify.c --
  *
  *	This file contains the implementation of a merged 
  *	Carbon/select-based notifier, which is the lowest-level part 
@@ -12,15 +12,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5.2.1 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5.2.2 2005/02/24 00:41:08 das Exp $
  */
 
 #include "tclInt.h"
-
-/* FIXME - Why do I need these here? */
-
-#undef environ
-#include "tkMacOSX.h"
+#include "tkInt.h"
 #include "tkMacOSXEvent.h"
 
 #include <signal.h> 
