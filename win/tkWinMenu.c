@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.11 2000/07/06 03:17:44 mo Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.12 2000/07/28 17:37:24 ericm Exp $
  */
 
 #define OEMRESOURCE
@@ -582,7 +582,7 @@ ReconfigureWindowsMenu(
 	 */
 	
 	if (mePtr->state == ENTRY_DISABLED) {
-	    flags |= MF_DISABLED;
+	    flags |= MF_DISABLED | MF_GRAYED;
 	}
 	
 	/*
