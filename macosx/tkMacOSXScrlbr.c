@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.6 2003/11/16 01:01:32 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.7 2003/11/16 14:11:28 vincentdarley Exp $
  */
 
 #include "tkScrollbar.h"
@@ -42,8 +42,8 @@ enum {
 
 #define MIN_SLIDER_LENGTH       5
 #define MIN_SCROLLBAR_VALUE     0
-#define MAX_SCROLLBAR_VALUE     1000
-#define MAX_SCROLLBAR_DVALUE    1000.0
+#define MAX_SCROLLBAR_VALUE     100000
+#define MAX_SCROLLBAR_DVALUE    100000.0
 
 /*
  * Declaration of Windows specific scrollbar structure.
@@ -95,8 +95,12 @@ typedef struct MacScrollbar {
  */
 static ControlActionUPP scrollActionProc = NULL; /* Pointer to func. */
 static ThumbActionUPP thumbActionProc = NULL;    /* Pointer to func. */
-static TkScrollbar *activeScrollPtr = NULL;        /* Non-null when in thumb */
+static TkScrollbar *activeScrollPtr = NULL;      /* Non-null when in thumb */
                                                  /* proc. */
+static Point activePoint;                        /* Used when
+                                                  * activeScrollPtr is
+                                                  * non-NULL */
+						 
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -237,9 +241,9 @@ TkpDisplayScrollbar(
 
     if (macScrollPtr->sbHandle == NULL) {
         Rect r;
-        SInt16 initialValue;
-        SInt16 minValue;
-        SInt16 maxValue;
+        SInt32 initialValue;
+        SInt32 minValue;
+        SInt32 maxValue;
         SInt16 procID;
         WindowRef frontNonFloating;
         
@@ -603,21 +607,21 @@ ThumbActionProc()
      * Note: the arrowLength is equal to the thumb width of a Mac scrollbar.
      */
 
-    origValue = GetControlValue(macScrollPtr->sbHandle);
+    origValue = GetControl32BitValue(macScrollPtr->sbHandle);
     GetControlBounds(macScrollPtr->sbHandle, &trackRect);
     if (scrollPtr->vertical == true) {
         trackBarSize = (double) (trackRect.bottom - trackRect.top
             - (scrollPtr->arrowLength * 3));
         trackBarPin = trackRect.top + scrollPtr->arrowLength
             + (scrollPtr->arrowLength / 2);
-        InsetRect(&trackRect, -25, -113);
+        InsetRect(&trackRect, -50, -226);
         
     } else {
         trackBarSize = (double) (trackRect.right - trackRect.left
             - (scrollPtr->arrowLength * 3));
         trackBarPin = trackRect.left + scrollPtr->arrowLength
             + (scrollPtr->arrowLength / 2);
-        InsetRect(&trackRect, -113, -25);
+        InsetRect(&trackRect, -226, -50);
     }
 
     /*
@@ -644,18 +648,24 @@ ThumbActionProc()
          * be resent to the scrollbar to update its value.
          */
             thumbWidth = scrollPtr->lastFraction - scrollPtr->firstFraction;
+	    newFirstFraction = ((double) origValue / MAX_SCROLLBAR_DVALUE)
+	       * (1.0 - thumbWidth);
             if (PtInRect(currentPoint, &trackRect)) {
+		double pixDiff;
+		double fracDelta;
                 if (scrollPtr->vertical == true) {
-                    newFirstFraction =  (1.0 - thumbWidth) *
-                        ((double) (currentPoint.v - trackBarPin) / trackBarSize);
+		    pixDiff = (double)(currentPoint.v - activePoint.v);
                 } else {
-                    newFirstFraction =  (1.0 - thumbWidth) *
-                        ((double) (currentPoint.h - trackBarPin) / trackBarSize);
+		    pixDiff = (double)(currentPoint.h - activePoint.h);
                 }
-            } else {
-                newFirstFraction = ((double) origValue / MAX_SCROLLBAR_DVALUE)
-                   * (1.0 - thumbWidth);
-            }
+		fracDelta = pixDiff/trackBarSize;
+		newFirstFraction += fracDelta;
+		if (newFirstFraction > 1.0) {
+		    newFirstFraction = 1.0;
+		} else if (newFirstFraction < 0.0) {
+		    newFirstFraction = 0.0;
+		}
+	    }
             sprintf(valueString, "%g", newFirstFraction);
             Tcl_DStringSetLength(&cmdString, 0);
             Tcl_DStringAppend(&cmdString, scrollPtr->command,
@@ -763,10 +773,10 @@ ScrollbarBindProc(
     macScrollPtr->macFlags |= IN_MODAL_LOOP;
     
     if (eventPtr->type == ButtonPress) {
-            Point where;
-            Rect bounds;
-            int part, x, y, dummy;
-            unsigned int state;
+	Point where;
+	Rect bounds;
+	int part, x, y, dummy;
+	unsigned int state;
         CGrafPtr saveWorld;
         GDHandle saveDevice;
         GWorldPtr destPort;
@@ -783,8 +793,8 @@ ScrollbarBindProc(
         TkMacOSXSetUpClippingRgn(Tk_WindowId(scrollPtr->tkwin));
 
         TkMacOSXWinBounds((TkWindow *) scrollPtr->tkwin, &bounds);                
-            where.h = eventPtr->xbutton.x + bounds.left;
-            where.v = eventPtr->xbutton.y + bounds.top;
+	where.h = eventPtr->xbutton.x + bounds.left;
+	where.v = eventPtr->xbutton.y + bounds.top;
         part = TestControl(macScrollPtr->sbHandle, where);
         if (part == kControlIndicatorPart && scrollPtr->jump == false) {
             /*
@@ -794,6 +804,8 @@ ScrollbarBindProc(
              * so the callback may have access to it.
              */
             activeScrollPtr = scrollPtr;
+	    activePoint.h = where.h;
+	    activePoint.v = where.v;
             part = TrackControl(macScrollPtr->sbHandle, where,
                     (ControlActionUPP) thumbActionProc);
             activeScrollPtr = NULL;
@@ -816,8 +828,9 @@ ScrollbarBindProc(
                  */
                 thumbWidth = scrollPtr->lastFraction
                      - scrollPtr->firstFraction;
-                newFirstFraction = (1.0 - thumbWidth) *
-                    ((double) GetControlValue(macScrollPtr->sbHandle) / MAX_SCROLLBAR_DVALUE);
+		 newFirstFraction = (1.0 - thumbWidth) *
+		((double) GetControl32BitValue(macScrollPtr->sbHandle) / MAX_SCROLLBAR_DVALUE);
+
                 sprintf(valueString, "%g", newFirstFraction);
 
                 Tcl_DStringInit(&cmdString);
@@ -1068,22 +1081,22 @@ UpdateControlValues(
      * end of the thumb, the following calculation determines the
      * location for the fixed sized Macintosh thumb.
      */
-    middle = scrollPtr->firstFraction / (scrollPtr->firstFraction +
-            (1.0 - scrollPtr->lastFraction));
+    middle = scrollPtr->firstFraction /
+	    (1.0 - (scrollPtr->lastFraction - scrollPtr->firstFraction));
     
     viewSize = (SInt32) ((scrollPtr->lastFraction - scrollPtr->firstFraction) 
-            * MAX_SCROLLBAR_DVALUE
-	    /(1 - (scrollPtr->lastFraction - scrollPtr->firstFraction)));
+            * MAX_SCROLLBAR_DVALUE 
+	    / (1.0 - (scrollPtr->lastFraction - scrollPtr->firstFraction)));
     
     SetControlViewSize(macScrollPtr->sbHandle,viewSize);
-    SetControlValue(macScrollPtr->sbHandle, 
-            (short) (middle * MAX_SCROLLBAR_VALUE) );
+    SetControl32BitValue(macScrollPtr->sbHandle, 
+			 (middle * MAX_SCROLLBAR_VALUE) );
     contrlHilite = GetControlHilite(macScrollPtr->sbHandle);
-    SetControlMinimum(macScrollPtr->sbHandle, 0);
+    SetControl32BitMinimum(macScrollPtr->sbHandle, 0);
     if ( contrlHilite == 0 || contrlHilite == 255) {
         if (scrollPtr->firstFraction == 0.0 &&
                 scrollPtr->lastFraction == 1.0) {
-            SetControlMinimum(macScrollPtr->sbHandle, MAX_SCROLLBAR_VALUE);
+            SetControl32BitMinimum(macScrollPtr->sbHandle, MAX_SCROLLBAR_VALUE);
         } else {
             HiliteControl(macScrollPtr->sbHandle, 0);
         }
