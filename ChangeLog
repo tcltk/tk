@@ -1,3 +1,8 @@
+2002-11-07  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj: fix to 'wish' script
+	to allow it to work when not installed into '/'.
+
 2002-11-06  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
