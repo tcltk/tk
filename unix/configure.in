@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.1.4.10 1999/03/10 07:13:50 stanton Exp $
+# RCS: @(#) $Id: configure.in,v 1.1.4.11 1999/03/11 00:48:54 redman Exp $
 
 TK_VERSION=8.1
 TK_MAJOR_VERSION=8
@@ -492,11 +492,12 @@ if test "$tk_ok" = "yes" ; then
 
     # Don't link Tk directly to Tcl.
 
-    SHLIB_LD_LIBS="\${TCL_BUILD_STUB_LIB_SPEC}"
+    SHLIB_LD_LIBS=${TCL_BUILD_STUB_LIB_SPEC}
 else
     AC_MSG_RESULT(dynamic linking)
 
-    TCL_BUILD_STUB_LIB_SPEC=""
+    MAKE_STUB_LIB="\# nothing to do here..."
+    SHLIB_LD_LIBS=${TCL_BUILD_LIB_SPEC}
     TCL_STUB_FLAGS=""
 fi
 

@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.1.4.5 1999/03/10 07:13:49 stanton Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.1.4.6 1999/03/11 00:48:54 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -378,17 +378,19 @@ objs: ${OBJS}
 
 
 wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE)
-	$(CC) @LD_FLAGS@ $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ $(WISH_LIBS) \
-		$(TK_CC_SEARCH_FLAGS) -o wish
+	$(CC) @LD_FLAGS@ $(WISH_OBJS) \
+		@TK_BUILD_LIB_SPEC@ \
+		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o wish
 
 tktest: $(TKTEST_OBJS) $(TK_LIB_FILE)
-	${CC} @LD_FLAGS@ $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ $(LIBS) \
-		$(TK_CC_SEARCH_FLAGS) -o tktest
+	${CC} @LD_FLAGS@ $(TKTEST_OBJS) \
+		@TK_BUILD_LIB_SPEC@ \
+		$(WISH_LIBS) $(TK_CC_SEARCH_FLAGS) -o tktest
 
 xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 	${CC} @LD_FLAGS@ test.o tkTest.o tkSquare.o \
-		@TK_BUILD_LIB_SPEC@ $(LIBS) \
-		@TK_LD_SEARCH_FLAGS@ -lXt -o xttest
+		@TK_BUILD_LIB_SPEC@ \
+		$(WISH_LIBS) $(TK_LD_SEARCH_FLAGS) -lXt -o xttest
 
 # Note, in the target below TCL_LIBRARY needs to be set or else
 # "make test" won't work in the case where the compilation directory
