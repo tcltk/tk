@@ -1,3 +1,10 @@
+1999-03-22    <redman@scriptics.com>
+
+	* unix/configure.in: Removed --enable-tcl-stub from configure
+ 	scripts.  Due to linking problems with wish and potentially anyone
+ 	else linking directly to Tk, linking Tk to the Tcl stubs is being
+ 	disabled until Tk is a truly loadable extension.
+	
 1999-03-11    <stanton@GASPODE>
 
 	* generic/tkInt.decls: Added reserved slot for XSetDashes for use
