@@ -1,3 +1,8 @@
+1999-03-11    <stanton@GASPODE>
+
+	* generic/tkInt.decls: Added reserved slot for XSetDashes for use
+	by the dash patch.
+
 1999-03-10    <redman@scriptics.com>
 
 	* xlib/xdraw.c:
@@ -65,22 +70,22 @@
 	
 1999-03-08    <lfb@scriptics.com>
 
-        * win/tkWinWm.c: Toplevel class no longer shared between 
+	* win/tkWinWm.c: Toplevel class no longer shared between 
 	threads.
-        
+	
 	* win/tkWinX.c: Multiple threads no longer share the same
 	TkDisplay structure.  Required because TkDisplay stores much
 	thread-specific data for a given thread.
 
-        * win/tkWinSend.c: Moved application instance handle out
+	* win/tkWinSend.c: Moved application instance handle out
 	out thread-local storage.  DDE was failing to initialize
 	when the instance handles were different between threads.
-        
+	
 	* win/makefile.vc: Added THREADDEFINES for building with
 	threads enabled.
 	
 	* generic/tkMenu.c:
-        * win/tkWinMenu.c:
+	* win/tkWinMenu.c:
 	* unix/tkUnixMenu.c: Added TkpMenuThreadInit for initializing
 	thread-specific Menu state.
 
@@ -114,7 +119,7 @@
 	adding code to disable the call to Tk_ConsoleInit().
 	
 	* generic/tkConsole.c: Check the standard handles before creating the
-	new standard channels.  This allows a windows app that has stdin,
+	new standard channels.	This allows a windows app that has stdin,
 	stdout, or stderr to correctly connect to them.
 	
 	* generic/tkMain.c: Add a proper check for the interactive mode, since
@@ -128,8 +133,8 @@
 
 1999-02-12    <lfb@scriptics.com>
 
-        * generic/tkMenuButton.h:
-        * generic/tkMenuButton.c:
+	* generic/tkMenuButton.h:
+	* generic/tkMenuButton.c:
 	* mac/tkMacMenubutton.c:
 	* mac/tkMacDefault.h
 	* unix/tkUnixMenubu.c: Eliminated Tk_Uids used by -state option.
@@ -141,7 +146,7 @@
 	* generic/tkScale.h:
 	* generic/tkScale.c:
 	* generic/tkWindow.c:
-	* unix/tkUnixScale.c: 	
+	* unix/tkUnixScale.c:	
 	* unix/tkUnixDefault.h:
 	* unix/tkWinDefault.h:
 	* mac/tkMacDefault.h:  Objectified scale widget.
@@ -182,7 +187,7 @@
 	mask changed but ended up with the same XID, the GC failed to be
 	updated and so the new mask was not used. [Bug: 970]
 
-	* generic/tkFocus.c (SetFocus): Changed o focus window is always
+	* generic/tkFocus.c (SetFocus): Changed so focus window is always
 	set if -force is specified.  This fixes the problem on Windows
 	where Tk does not activate the window if it already has focus.
 
@@ -308,7 +313,7 @@
 	* tkMenu.c: Backed out the previous fix for bug 620 and
 	eliminated a bunch of code that created unnecessary objects.
 	Changed back to using internal types instead of objects for many
-	configuration options.  There are many more fixes like this that
+	configuration options.	There are many more fixes like this that
 	could be made, but some require a little restructuring of the
 	code. In any case the leaks are fixed and there is a lot less
 	allocation happening. [Bug: 620]

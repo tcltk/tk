@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.7 1999/02/11 04:13:44 stanton Exp $
+RCS: @(#) $Id: changes,v 1.1.4.8 1999/03/12 03:12:43 stanton Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4456,3 +4456,61 @@ configuration options in buttons. [Bug: 619] (stanton)
 12/8/98 (bug fix) The Windows clipboard was not correctly traslating
 multibyte characters. [Bug: 935] (stanton)
 
+----------------- Released 8.1b1, Dec 11 1998 -----------------------
+
+1/29/99 (bug fix) Fixed bug in "grid forget" that failed to cancel
+pending idle handlers, resulting in a crash in a few odd
+cases. (stanton)
+
+2/4/99 (bug fix): Fixed uninitialized memory access in
+Tk_SetAppName. [Bug: 919] (stanton)
+
+2/4/99 (bug fix): Added a workaround for a bug in GetTextExtentExPoint
+on Win NT 4.0/Japanese. [Bug: 1006] (stanton)
+
+2/4/99 (bug fix): Changed so keyboard shortcuts for menus will only be
+found in the current toplevel.  Previously, they might be found in
+menus attached to other toplevels that might not even be mapped.
+[Bug: 924] (stanton)
+
+2/4/99 (bug fix): Changed to treat zero width lines in the canvas like
+they have width 1 for purposes of selection. [Bug: 925] (stanton)
+
+2/4/99 (bug fix): TK_LD_SEARCH_FLAGS was set incorrectly if
+SHLIB_LD_LIBS='${LIBS}', and shared linking is performed through the C
+compiler. Systems affected are Linux, MP-RAS and NEXTSTEP, but also
+with gcc on many more systems. [Bug: 908] (stanton)
+
+2/4/99 (feature enhancement): Changed so windows that aren't resizable
+don't have resize handles and the zoom box is disabled on
+Windows. (stanton)
+
+2/4/99 (bug fix): Fixed so errors in console eval are reported
+properly.  Eliminated duplicate result messages. [Bug: 973] (stanton)
+
+2/4/99 (bug fix): Changed so focus window is always set if -force is
+specified.  This fixes the problem on Windows where Tk does not
+activate the window if it already has focus. (stanton)
+
+2/4/99 (bug fix): If an image mask changed but ended up with the same
+XID, the GC failed to be updated and so the new mask was not
+used. [Bug: 970] (stanton)
+
+2/12/99 (new feature): Tk is now thread safe.  You enable this by
+configuring with --enable-threads.  Tcl must also be compiled with
+--enable-threads.  See Tcl for more information about the threading
+interfaces. (lfb)
+
+2/25/99 (bug fix) Under Windows, wish can now inherit pipe handles on
+stdio so it is possible to use the wish executable in a command
+pipeline to capture the output of puts or read from the pipe with
+gets.  (redman)
+
+3/1/99 (bug fix) Under Windows, Tk was not properly handling focus and
+activation changes in some cases. (redman)
+
+3/10/99 (new feature) Tk now uses the new stub library feature in Tcl.
+The Tk library now contains no direct references to any symbols in
+Tcl.  In addition, there is a new Tk_MainEx() function that takes an
+interpreter as an argument.  See the Tcl documentation for more
+information about the stubs mechanism. (redman)
