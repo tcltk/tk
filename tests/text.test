@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.37 2004/12/04 00:04:41 dkf Exp $
+# RCS: @(#) $Id: text.test,v 1.38 2005/04/04 21:59:00 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2713,6 +2713,121 @@ test text-20.179 {TextSearchCmd, empty search range} {
     .t2 insert 1.0 "a\na\na\n"
     .t2 search -backwards -- a 2.0 2.0
 } {}
+
+test text-20.180 {TextSearchCmd, elide up to match} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\nb\nc"
+    .t2 tag configure e -elide 1
+    set res {}
+    lappend res [.t2 search -regexp a 1.0]
+    lappend res [.t2 search -regexp b 1.0]
+    lappend res [.t2 search -regexp c 1.0]
+    .t2 tag add e 1.0 2.0
+    lappend res [.t2 search -regexp a 1.0]
+    lappend res [.t2 search -regexp b 1.0]
+    lappend res [.t2 search -regexp c 1.0]
+    lappend res [.t2 search -elide -regexp a 1.0]
+    lappend res [.t2 search -elide -regexp b 1.0]
+    lappend res [.t2 search -elide -regexp c 1.0]
+} {1.0 2.0 3.0 {} 2.0 3.0 1.0 2.0 3.0}
+
+test text-20.181 {TextSearchCmd, elide up to match, backwards} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\nb\nc"
+    .t2 tag configure e -elide 1
+    set res {}
+    lappend res [.t2 search -backward -regexp a 1.0]
+    lappend res [.t2 search -backward -regexp b 1.0]
+    lappend res [.t2 search -backward -regexp c 1.0]
+    .t2 tag add e 1.0 2.0
+    lappend res [.t2 search -backward -regexp a 1.0]
+    lappend res [.t2 search -backward -regexp b 1.0]
+    lappend res [.t2 search -backward -regexp c 1.0]
+    lappend res [.t2 search -backward -elide -regexp a 1.0]
+    lappend res [.t2 search -backward -elide -regexp b 1.0]
+    lappend res [.t2 search -backward -elide -regexp c 1.0]
+} {1.0 2.0 3.0 {} 2.0 3.0 1.0 2.0 3.0}
+
+test text-20.182 {TextSearchCmd, elide up to match} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\nb\nc"
+    .t2 tag configure e -elide 1
+    set res {}
+    lappend res [.t2 search a 1.0]
+    lappend res [.t2 search b 1.0]
+    lappend res [.t2 search c 1.0]
+    .t2 tag add e 1.0 2.0
+    lappend res [.t2 search a 1.0]
+    lappend res [.t2 search b 1.0]
+    lappend res [.t2 search c 1.0]
+    lappend res [.t2 search -elide a 1.0]
+    lappend res [.t2 search -elide b 1.0]
+    lappend res [.t2 search -elide c 1.0]
+} {1.0 2.0 3.0 {} 2.0 3.0 1.0 2.0 3.0}
+
+test text-20.183 {TextSearchCmd, elide up to match, backwards} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "a\nb\nc"
+    .t2 tag configure e -elide 1
+    set res {}
+    lappend res [.t2 search -backward a 1.0]
+    lappend res [.t2 search -backward b 1.0]
+    lappend res [.t2 search -backward c 1.0]
+    .t2 tag add e 1.0 2.0
+    lappend res [.t2 search -backward a 1.0]
+    lappend res [.t2 search -backward b 1.0]
+    lappend res [.t2 search -backward c 1.0]
+    lappend res [.t2 search -backward -elide a 1.0]
+    lappend res [.t2 search -backward -elide b 1.0]
+    lappend res [.t2 search -backward -elide c 1.0]
+} {1.0 2.0 3.0 {} 2.0 3.0 1.0 2.0 3.0}
+
+test text-20.184 {TextSearchCmd, elide up to match} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aa\nbb\ncc"
+    .t2 tag configure e -elide 1
+    set res {}
+    lappend res [.t2 search ab 1.0]
+    lappend res [.t2 search bc 1.0]
+    .t2 tag add e 1.1 2.1
+    lappend res [.t2 search ab 1.0]
+    lappend res [.t2 search b 1.0]
+    .t2 tag remove e 1.0 end
+    .t2 tag add e 2.1 3.1
+    lappend res [.t2 search bc 1.0]
+    lappend res [.t2 search c 1.0]
+    .t2 tag remove e 1.0 end
+    .t2 tag add e 2.1 3.0
+    lappend res [.t2 search bc 1.0]
+    lappend res [.t2 search c 1.0]
+} {{} {} 1.0 2.1 2.0 3.1 2.0 3.0}
+
+test text-20.185 {TextSearchCmd, elide up to match} {
+    deleteWindows
+    pack [text .t2]
+    .t2 insert 1.0 "aa\nbb\ncc"
+    .t2 tag configure e -elide 1
+    set res {}
+    lappend res [.t2 search -regexp ab 1.0]
+    lappend res [.t2 search -regexp bc 1.0]
+    .t2 tag add e 1.1 2.1
+    lappend res [.t2 search -regexp ab 1.0]
+    lappend res [.t2 search -regexp b 1.0]
+    .t2 tag remove e 1.0 end
+    .t2 tag add e 2.1 3.1
+    lappend res [.t2 search -regexp bc 1.0]
+    lappend res [.t2 search -regexp c 1.0]
+    .t2 tag remove e 1.0 end
+    .t2 tag add e 2.1 3.0
+    lappend res [.t2 search -regexp bc 1.0]
+    lappend res [.t2 search -regexp c 1.0]
+} {{} {} 1.0 2.1 2.0 3.1 2.0 3.0}
+
 
 deleteWindows
 text .t2 -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
