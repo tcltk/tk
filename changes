@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.12 1999/03/26 20:03:21 suresh Exp $
+RCS: @(#) $Id: changes,v 1.1.4.13 1999/04/06 05:48:56 welch Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4535,6 +4535,8 @@ global variables.
 (hirschl)
 *** POTENTIAL INCOMPATIBILITY ***
 
+----------------- Released 8.1b2, March 16, 1999 ---------------------
+
 3/23/99 (feature change) Test suite now uses "tcltest" namespace to
 define the test procedure and other auxiliary procedures as well as
 global variables.  The previously chosen "test" namespace was thought
@@ -4546,7 +4548,37 @@ to be too generic and likely to create conflits.
 menubutton bindings.  There was a false assumption that there was
 always a menu attached to the button.  [Bug 1116] (surles)
 
+3/26/99 (feature change) Removed --enable-tcl-stub from the configure
+script. Linking Tk to Tcl stubs is causing too many problems when
+linking executables like wish.  Until the Tk is a fully loadable
+extension, linking against the Tcl stubs is not supported in Tk.
+(redman)
+
 3/26/99 (feature change) --nameble-shared is now the default and builds
 Tk as a shared library; specify --disable-shared to build a static Tk
 library and shell.
 *** POTENTIAL INCOMPATIBILITY ***
+
+3/29/99 (api change) Standardized text layout and font interfaces
+so they are consistent with respect to byte versus character
+oriented indices.  The layout functions all manipulate character
+oriented values while the lower level measurement functions all
+operate on byte oriented values. (stanton)
+
+4/1/99 (bug fix) Image handlers are finalized before the font subsystem
+to fix crashes during finalization of complex widgets. (stanton)
+
+4/1/99 (feature change) Removed the send command on Windows.  Moved
+the DDE basis of that command out to its own extension.  The send
+implementation on top of DDE was causing Tk to lock up in some cases.
+(redman)
+
+4/5/99 (bug fix) Fixed handling of Unicode in text searches.  The
+-count option was returning byte counts instead of character counts.
+
+4/5/99 (feature change) Cut and paste to an entry widget returns the
+selection instead of the widget contents, which can be different if the
+-show option is used to hide the display. (stanton)
+
+--------------- Released 8.1b3, April 6, 1999 ----------------------
+
