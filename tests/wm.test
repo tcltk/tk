@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.18 2002/08/08 23:45:01 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.19 2002/09/02 21:21:13 hobbs Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -31,6 +31,16 @@ proc stdWindow {} {
     wm geom .t +0+0
     update
 }
+
+# [raise] and [lower] may return before the window manager
+# has completed the operation.  The raiseDelay procedure
+# idles for a while to give the operation a chance to complete.
+#
+
+proc raiseDelay {} {
+    after 100; update
+}
+
 
 deleteWindows
 stdWindow
@@ -906,6 +916,7 @@ test wm-stackorder-2.2 {} {
     catch {destroy .t}
     toplevel .t ; update
     raise .
+    raiseDelay
     wm stackorder .
 } {.t .}
 
@@ -916,6 +927,7 @@ test wm-stackorder-2.3 {} {
     toplevel .t2 ; update
     raise .
     raise .t2
+    raiseDelay
     wm stackorder .
 } {.t . .t2}
 
@@ -926,6 +938,7 @@ test wm-stackorder-2.4 {} {
     toplevel .t2 ; update
     raise .
     lower .t2
+    raiseDelay
     wm stackorder .
 } {.t2 .t .}
 
@@ -940,6 +953,7 @@ test wm-stackorder-2.5 {} {
     toplevel .extra ; update
     raise .parent
     lower .parent.child2
+    raiseDelay
     wm stackorder .parent
 } {.parent.child2 .parent.child1 .parent}
 
@@ -1051,6 +1065,7 @@ test wm-stackorder-4.3 {wm stackorder isabove|isbelow} {
     catch {destroy .t}
     toplevel .t ; update
     raise .
+    raiseDelay
     wm stackorder .t isa .
 } {0}
 
@@ -1058,6 +1073,7 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} {
     catch {destroy .t}
     toplevel .t ; update
     raise .
+    raiseDelay
     wm stackorder .t isb .
 } {1}
 
@@ -1071,6 +1087,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} {
     .t configure -menu .t.m
     update
     raise .
+    raiseDelay
     wm stackorder .
 } {.t .}
 
@@ -1081,6 +1098,7 @@ test wm-stackorder-5.2 {A normal toplevel can't be
     wm overrideredirect .t 1
     raise .
     update
+    raiseDelay
     wm stackorder . isabove .t
 } 0
 
@@ -1091,6 +1109,7 @@ test wm-stackorder-5.3 {An overrideredirect window
     wm overrideredirect .t 1
     lower .t
     update
+    raiseDelay
     wm stackorder .t isbelow .
 } 1
 
