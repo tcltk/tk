@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.8 2004/02/16 00:19:42 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.9 2004/05/24 18:28:40 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -1316,7 +1316,7 @@ Tk_MessageBoxObjCmd(
     int                     result = TCL_OK;
     
     static CONST char *movableAlertStrings[] = {
-	"-default", /* "-finemessage", */ "-icon", 
+	"-default", "-finemessage", "-icon", 
 	"-message", "-parent", 
 	"-title", "-type", 	
 	(char *)NULL
@@ -1337,7 +1337,7 @@ Tk_MessageBoxObjCmd(
 	(char *)NULL
     };
     enum movableAlertOptions {
-	ALERT_DEFAULT, /* ALERT_FINEMESSAGE, */ ALERT_ICON,
+	ALERT_DEFAULT, ALERT_FINEMESSAGE, ALERT_ICON,
 	ALERT_MESSAGE, ALERT_PARENT,
 	ALERT_TITLE, ALERT_TYPE
     };
@@ -1422,11 +1422,11 @@ Tk_MessageBoxObjCmd(
 	    indexDefaultOption = i;
 	    break;
 	    
-/*	    case ALERT_FINEMESSAGE:
+            case ALERT_FINEMESSAGE:
 	    str = Tcl_GetStringFromObj( objv[i + 1], NULL );
 	    finemessageTextCF = CFStringCreateWithCString( NULL, str, kCFStringEncodingUTF8 );
 	    break;
-*/	    
+	    
 	    case ALERT_ICON:
 	    /*  not sure about UTF translation here... */
 	    if (Tcl_GetIndexFromObj( interp, objv[i + 1], movableIconStrings, 
