@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.6 2000/05/17 21:17:22 ericm Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.7 2000/07/29 01:08:54 ericm Exp $
  */
 
 #include "tkButton.h"
@@ -323,10 +323,15 @@ TkpDisplayButton(clientData)
 	    dim -= 2*butPtr->borderWidth;
 	    if (butPtr->flags & SELECTED) {
 		GC gc;
-
-		gc = Tk_3DBorderGC(tkwin, (butPtr->selectBorder != NULL)
-			? butPtr->selectBorder : butPtr->normalBorder,
-			TK_3D_FLAT_GC);
+		if (butPtr->state != STATE_DISABLED &&
+			butPtr->selectBorder != NULL) {
+		    gc = Tk_3DBorderGC(tkwin, butPtr->selectBorder,
+			    TK_3D_FLAT_GC);
+		} else {
+		    gc = Tk_3DBorderGC(tkwin, butPtr->normalBorder,
+			    TK_3D_FLAT_GC);
+		}
+		
 		XFillRectangle(butPtr->display, pixmap, gc, x, y,
 			(unsigned int) dim, (unsigned int) dim);
 	    } else {
@@ -350,9 +355,13 @@ TkpDisplayButton(clientData)
 	if (butPtr->flags & SELECTED) {
 	    GC gc;
 
-	    gc = Tk_3DBorderGC(tkwin, (butPtr->selectBorder != NULL)
-		    ? butPtr->selectBorder : butPtr->normalBorder,
-		    TK_3D_FLAT_GC);
+	    if (butPtr->state != STATE_DISABLED &&
+		    butPtr->selectBorder != NULL) {
+		gc = Tk_3DBorderGC(tkwin, butPtr->selectBorder,	TK_3D_FLAT_GC);
+	    } else {
+		gc = Tk_3DBorderGC(tkwin, butPtr->normalBorder,	TK_3D_FLAT_GC);
+	    }
+	    
 	    XFillPolygon(butPtr->display, pixmap, gc, points, 4, Convex,
 		    CoordModeOrigin);
 	} else {
