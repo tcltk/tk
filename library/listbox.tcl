@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.13.2.1 2004/02/16 23:09:25 wolfsuit Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.13.2.2 2004/02/17 07:17:17 das Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -183,6 +183,15 @@ if {[string equal [tk windowingsystem] "classic"]
 	|| [string equal [tk windowingsystem] "aqua"]} {
     bind Listbox <MouseWheel> {
         %W yview scroll [expr {- (%D)}] units
+    }
+    bind Listbox <Option-MouseWheel> {
+        %W yview scroll [expr {-10 * (%D)}] units
+    }
+    bind Listbox <Shift-MouseWheel> {
+        %W xview scroll [expr {- (%D)}] units
+    }
+    bind Listbox <Shift-Option-MouseWheel> {
+        %W xview scroll [expr {-10 * (%D)}] units
     }
 } else {
     bind Listbox <MouseWheel> {
