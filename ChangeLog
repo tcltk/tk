@@ -1,3 +1,11 @@
+2001-11-24  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/configure: Regen.
+	* win/configure.in: Don't AC_SUBST CFLAGS_DEBUG, CFLAGS_OPTIMIZE,
+	or CFLAGS_WARNING since it is now done in SC_CONFIG_CFLAGS.
+	* win/tcl.m4 (SC_CONFIG_CFLAGS): AC_SUBST DL_LIBS, CFLAGS_DEBUG,
+	CFLAGS_OPTIMIZE, and CFLAGS_WARNING.
+
 2001-11-23  Daniel Steffen <das@users.sourceforge.net>
 
 	Up-port to 8.4 of mac code changes for 8.3.3 & various new
