@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.4 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.5 1999/08/10 16:58:37 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -95,7 +95,6 @@ static void		FocusMapProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
 static void		GenerateFocusEvents _ANSI_ARGS_((TkWindow *sourcePtr,
 			    TkWindow *destPtr));
-static void		SetFocus _ANSI_ARGS_((TkWindow *winPtr, int force));
 
 /*
  *--------------------------------------------------------------
@@ -164,7 +163,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 	    if (!(newPtr->flags & TK_ALREADY_DEAD)) {
-		SetFocus(newPtr, 0);
+		TkSetFocusWin(newPtr, 0);
 	    }
 	    return TCL_OK;
 	}
@@ -205,7 +204,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
 	    if (newPtr == NULL) {
 		return TCL_ERROR;
 	    }
-	    SetFocus(newPtr, 1);
+	    TkSetFocusWin(newPtr, 1);
 	    break;
 	}
         case 2: {        /* -lastfor */
@@ -309,7 +308,7 @@ TkFocusFilterEvent(winPtr, eventPtr)
 
     if ((eventPtr->xfocus.mode == EMBEDDED_APP_WANTS_FOCUS)
 	    && (eventPtr->type == FocusIn)) {
-	SetFocus(winPtr, eventPtr->xfocus.detail);
+	TkSetFocusWin(winPtr, eventPtr->xfocus.detail);
 	return 0;
     }
 
@@ -530,7 +529,7 @@ TkFocusFilterEvent(winPtr, eventPtr)
 /*
  *----------------------------------------------------------------------
  *
- * SetFocus --
+ * TkSetFocusWin --
  *
  *	This procedure is invoked to change the focus window for a
  *	given display in a given application.
@@ -545,8 +544,8 @@ TkFocusFilterEvent(winPtr, eventPtr)
  *----------------------------------------------------------------------
  */
 
-static void
-SetFocus(winPtr, force)
+void
+TkSetFocusWin(winPtr, force)
     TkWindow *winPtr;		/* Window that is to be the new focus for
 				 * its display and application. */
     int force;			/* If non-zero, set the X focus to this
@@ -959,7 +958,7 @@ FocusMapProc(clientData, eventPtr)
 	Tk_DeleteEventHandler((Tk_Window) winPtr, VisibilityChangeMask,
 		FocusMapProc, clientData);
 	displayFocusPtr->focusOnMapPtr = NULL;
-	SetFocus(winPtr, displayFocusPtr->forceFocus);
+	TkSetFocusWin(winPtr, displayFocusPtr->forceFocus);
     }
 }
 

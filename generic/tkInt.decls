@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.10 1999/08/10 05:06:14 jingham Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.11 1999/08/10 16:58:37 hobbs Exp $
 
 library tk
 
@@ -613,6 +613,10 @@ declare 134 mac {
 declare 135 generic {
     void TkpDrawHighlightBorder (Tk_Window tkwin, GC fgGC, GC bgGC, \
         int highlightWidth, Drawable drawable)
+}
+
+declare 136 generic {
+    void TkSetFocusWin (TkWindow *winPtr, int force) 
 }
 
 ##############################################################################
