@@ -40,6 +40,45 @@
 	* xlib/xgc.c: #def'd out XDrawSegments for the Mac, and added
 	some extra include info for the Mac
 
+2000-02-09  Jim Ingham  <jingham@cygnus.com>
+
+        * mac/tkMacButton.c: Stop removing the appearance window from the Window
+        List.  It is not clear why Ray did this, and it causes the Appearance 
+        manager to crash at random times.
+        
+        * mac/tkMacWM.c: Add support in unsupported1 style for the Appearance
+        specification of window styles, including floating window support.
+        * mac/tkMacWindowMgr.c: Operate on the front non-floating window, unless
+        the mouse is directly over the floating window.  Also, keystrokes go to
+        the front non-floating window.
+        * mac/tkMacAppInit.c: Initialize floating window support.
+        * mac/tkMacScrlbr.c:
+        * mac/tkMacmenu.c: Fixes for floating windows - operate on the 
+        FrontNonFloatingWindow.
+        * mac/tkMacLibrary.r: Fix typo in File info string.
+        * mac/tkMacApplication.r: Fix typo in file info string.  Add Finder balloon
+        help for no apparent reason.
+        
+        * mac/tkMacSubwindows.c: Change panic in tkMacGetDrawablePort to Debugger.  
+        This is only a temporary fix.  The panic is only triggered when a safeTk
+        interpreter is torn down, and ignoring it does no harm.  I haven't figured out
+        how to avoid it yet, however.
+        Also use the Appearance MoveWindowStructure call when available.
+        
+        New Files:
+        * MW_TkOldImageHeader.h: Handle #defining USE_OLD_IMAGE for tkImgPPM.c.
+        * MW_TkTestHeader.h:
+        * MW_TkTestHeader.pch:
+        * MW_TkHeader.h: Add separate prefix files for test & release versions of
+        Tk, so we can just have separate targets w/o having to edit files.
+        
+        * tclets.r: The D&D Tclets icon in rez form so we can have a target for this.
+
+        The above are curtesy of Daniel Steffen (steffen@math.mq.edu.au)
+        
+        * tkMacAppearanceStubs.c: Stubs of the Mac Appearance calls I use so I
+        can link the static 68K Shell without putting ifdef's all over the code.
+        
 2000-02-08  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tk.decls:
