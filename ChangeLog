@@ -1,3 +1,11 @@
+2002-06-06  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* library/msgbox.tcl (MessageBox): Add -default normal
+	when creating non-default buttons for message box.
+	They already get -default normal when they're 
+	unfocused, and dialog window size used to change suddenly
+	in such cases.
+
 2002-06-05  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* unix/tkUnixFont.c (Tk_DrawChars): Don't assume that
