@@ -8,9 +8,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.8 1999/04/16 01:51:31 stanton Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.9 1999/05/22 06:33:19 jingham Exp $
  */
 
+#include "tkMacInt.h"
+#include "tkMenuButton.h"
+#include "tkMenu.h"
+#include "tkColor.h"
+#undef Status
 #include <Menus.h>
 #include <OSUtils.h>
 #include <Palettes.h>
@@ -19,12 +24,7 @@
 #include <ToolUtils.h>
 #include <Balloons.h>
 #include <Appearance.h>
-#undef Status
 #include <Devices.h>
-#include "tkMenu.h"
-#include "tkMacInt.h"
-#include "tkMenuButton.h"
-#include "tkColor.h"
 
 typedef struct MacMenu {
     MenuHandle menuHdl;		/* The Menu Manager data structure. */
@@ -218,11 +218,6 @@ static TopLevelMenubarList *windowListPtr;
 static MenuItemDrawingUPP tkThemeMenuItemDrawingUPP; 
 				/* Points to the UPP for theme Item drawing. */
 
-static GC     appearanceGC = NULL; /* The fake appearance GC.  If you
-				      pass the foreground of this to TkMacSetColor, 
-				      it will return false, so you will know 
-				      not to set the foreground color */
-					  
 				
 /*
  * Forward declarations for procedures defined later in this file:
@@ -263,7 +258,7 @@ static void		DrawTearoffEntry _ANSI_ARGS_((TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc, 
 			    Tk_Font tkfont, CONST Tk_FontMetrics *fmPtr, 
 			    int x, int y, int width, int height));
-static void		FixMDEF _ANSI_ARGS_((void));
+static Handle		FixMDEF _ANSI_ARGS_((void));
 static void		GetEntryText _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    Tcl_DString *dStringPtr));
 static void		GetMenuAccelGeometry _ANSI_ARGS_((TkMenu *menuPtr,
@@ -1065,7 +1060,6 @@ ReconfigureIndividualMenu(
     TkMenuEntry *mePtr;
     Str255 itemText;
     int parentDisabled = 0;
-    int state;
     
     for (mePtr = menuPtr->menuRefPtr->parentEntryPtr; mePtr != NULL;
     	    mePtr = mePtr->nextCascadePtr) {
@@ -1477,7 +1471,7 @@ TkpMenuNewEntry(
  *----------------------------------------------------------------------
  */
 
-EXTERN void
+void
 Tk_MacTurnOffMenus()
 {
     gNoTkMenus = 1;
@@ -2387,11 +2381,11 @@ DrawSICN(
 	GetForeColor(&origForeColor);
 	GetBackColor(&origBackColor);
 	
-	if (TkSetMacColor(gc->foreground, &foreColor) == true) {
+	if (TkSetMacColor(gc->foreground, &foreColor)) {
 	    RGBForeColor(&foreColor);
 	}
 	
-	if (TkSetMacColor(gc->background, &backColor) == true) {
+	if (TkSetMacColor(gc->background, &backColor)) {
 	    RGBBackColor(&backColor);
 	}
 
@@ -2580,8 +2574,10 @@ DrawMenuSeparator(
     
     TkMacSetUpGraphicsPort(mePtr->disabledGC != None ? mePtr->disabledGC
     	    : menuPtr->disabledGC);
+    
     MoveTo(x, y + (height / 2));
     Line(width, 0);
+    
     SetGWorld(saveWorld, saveDevice);
 }
 }
@@ -2808,16 +2804,16 @@ MenuDefProc(
  	    GetBackColor(&origBackColor);
 
 	    if (TkSetMacColor(menuPtr->textGC->foreground, 
-	    	    &foreColor) == true) {
-	    	if (!TkMacHaveAppearance()) {
+	    	    &foreColor)) {
+	    	/* if (!TkMacHaveAppearance()) { */
 	    	    RGBForeColor(&foreColor);
-	    	}
+	    	/* } */
 	    }
 	    if (TkSetMacColor(menuPtr->textGC->background, 
-	    	    &backColor) == true) {
-	    	if (!TkMacHaveAppearance()) {
+	    	    &backColor)) {
+	    	/* if (!TkMacHaveAppearance()) { */
 	    	    RGBBackColor(&backColor);
-	    	}
+	    	/* } */
 	    }
 
 	    /*
@@ -3549,12 +3545,13 @@ TkpDrawMenuEntry(
 				     * arrow for cascade items. Only applies
 				     * to Windows. */
 {
-    GC gc, indicatorGC;
+    GC gc;
     TkMenu *menuPtr = mePtr->menuPtr;
-    Tk_3DBorder bgBorder, activeBorder;
-    CONST Tk_FontMetrics *fmPtr;
-    Tk_FontMetrics entryMetrics;
     int padY = (menuPtr->menuType == MENUBAR) ? 3 : 0;
+    GC indicatorGC;
+    Tk_3DBorder bgBorder, activeBorder;
+    const Tk_FontMetrics *fmPtr;
+    Tk_FontMetrics entryMetrics;
     int adjustedY = y + padY;
     int adjustedHeight = height - 2 * padY;
     int state;
@@ -3568,12 +3565,7 @@ TkpDrawMenuEntry(
     if ((mePtr->state == ENTRY_ACTIVE) && !strictMotif) {
 	gc = mePtr->activeGC;
 	if (gc == NULL) {
-	    if ((TkMacHaveAppearance() > 1) && (menuPtr->menuType != TEAROFF_MENU)) {
-	        SetThemeTextColor(kThemeSelectedMenuItemTextColor,32,true);
-	        gc = appearanceGC;
-	    } else {
 	        gc = menuPtr->activeGC;
-	    }
 	}
     } else {
     	TkMenuEntry *cascadeEntryPtr;
@@ -3597,22 +3589,12 @@ TkpDrawMenuEntry(
 		&& (menuPtr->disabledFgPtr != NULL)) {
 	    gc = mePtr->disabledGC;
 	    if (gc == NULL) {
-	        if ((TkMacHaveAppearance() > 1) && (mePtr->bitmap == NULL)) {
-	            SetThemeTextColor(kThemeDisabledMenuItemTextColor,32,true);
-	            gc = appearanceGC;
-	        } else {
 		gc = menuPtr->disabledGC;
-	    }
 	    }
 	} else {
 	    gc = mePtr->textGC;
 	    if (gc == NULL) {
-	        if ((TkMacHaveAppearance() > 1) && (mePtr->bitmap == NULL)) {
-	            SetThemeTextColor(kThemeActiveMenuItemTextColor,32,true);
-	            gc = appearanceGC;
-	        } else {
-		    gc = menuPtr->textGC;
-	        }
+		gc = menuPtr->textGC;
 	    }
         }
     }
@@ -3941,7 +3923,6 @@ DrawMenuEntryLabel(
     int indicatorSpace =  mePtr->indicatorSpace;
     int leftEdge = x + indicatorSpace;
     int imageHeight, imageWidth;
-    int state;
     
     /*
      * Draw label or bitmap or image for entry.
@@ -4031,8 +4012,8 @@ DrawMenuEntryBackground(
     if (!TkMacHaveAppearance()
             || (menuPtr->menuType == TEAROFF_MENU)
             || ((mePtr->state == ENTRY_ACTIVE)
-		    && (mePtr->activeBorder != NULL)) 
-            || ((mePtr->state != ENTRY_ACTIVE) && (mePtr->border != NULL))) {
+		    && (mePtr->activeBorderPtr != None)) 
+            || ((mePtr->state != ENTRY_ACTIVE) && (mePtr->borderPtr != None))) {
         if (mePtr->state == ENTRY_ACTIVE) {
 	    bgBorder = activeBorder;
         }
@@ -4376,7 +4357,6 @@ TkpMenuInit(void)
         tmpColorPtr = TkpGetColor(NULL, "systemAppearanceColor");
         tmpValues.foreground = tmpColorPtr->color.pixel;
         tmpValues.background = tmpColorPtr->color.pixel;
-        appearanceGC = XCreateGC(NULL, NULL, GCForeground | GCBackground, &tmpValues);
         ckfree((char *) tmpColorPtr);
         
         tkThemeMenuItemDrawingUPP = NewMenuItemDrawingProc(tkThemeMenuItemDrawingProc);				
