@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.12 2002/04/12 07:29:55 hobbs Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.13 2002/06/15 21:02:20 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -555,7 +555,7 @@ Tk_GetOption(tkwin, name, className)
 	 */
 	
 	classNameLength	= (unsigned int)(masqName - name);
-	masqClass	= (char *)malloc(classNameLength + 1);
+	masqClass	= (char *)ckalloc(classNameLength + 1);
 	strncpy(masqClass, name, classNameLength);
 	masqClass[classNameLength] = '\0';
 	

@@ -1,3 +1,10 @@
+2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkOption.c (Tk_GetOption): Allocate
+	memory with ckalloc not malloc. This keeps
+	Tk from erroring out when built with
+	TCL_MEM_DEBUG.
+
 2002-06-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkBind.c (HandleEventGenerate): 
