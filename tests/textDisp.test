@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.20 2003/11/15 16:57:57 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.21 2003/11/21 17:29:13 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3150,11 +3150,43 @@ test textDisp-27.6 {SizeOfTab procedure, center alignment} {textfonts} {
 } [list [list 32 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 39 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
 test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts} {
     .t delete 1.0 end
-    .t configure -tabs {1c 2c center 3c 4c} -wrap none -width 40
+    set cm [winfo fpixels .t 1c]
+    .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
     .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
+    set width [expr {$fixedWidth * 19}]
+    set tab $cm
+    while {$tab < $width} {
+	set tab [expr {$tab + $cm}]
+    }
+    # Now we've calculated to the end of the tab after 'a', add one
+    # more for 'bb\t' and we're there, with 4 for the border
+    set tab [expr {4 + int($tab + $cm)}]
     update
-    .t bbox 2.24
-} [list 200 [expr {$fixedDiff + 18}] 7 $fixedHeight]
+    set res [.t bbox 2.23]
+    lset res 0 [expr {[lindex $res 0] - $tab}]
+    set res
+} [list 0 [expr {$fixedDiff + 18}] 7 $fixedHeight]
+test textDisp-27.7.1 {SizeOfTab procedure, fractional tab interpolation problem} {knownBug textfonts} {
+    .t delete 1.0 end
+    set cm [winfo fpixels .t 1c]
+    .t configure -tabs {1c 2c 3c 4c} -wrap none -width 40
+    .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
+    set width [expr {$fixedWidth * 19}]
+    set tab $cm
+    while {$tab < $width} {
+	set tab [expr {$tab + $cm}]
+    }
+    # Now we've calculated to the end of the tab after 'a', add one
+    # more for 'bb\t' and we're there, with 4 for the border
+    set tab [expr {4 + int($tab + $cm)}]
+    update
+    set res [.t bbox 2.23]
+    # Now, on some platforms Tk interpolated from 3c-4c->5c but that
+    # interpolation doesn't use fractional pixels and so this result
+    # might be off by one.
+    lset res 0 [expr {[lindex $res 0] - $tab}]
+    set res
+} [list 0 [expr {$fixedDiff + 18}] 7 $fixedHeight]
 
 .t configure -wrap char -tabs {} -width 20
 update
@@ -3325,10 +3357,10 @@ test textDisp-29.2.5 {miscellaneous: can show last character} {
     .t2.t xview scroll 2 units
     set iWidth2 [lindex [.t2.t bbox end-2c] 2]
     
-    if {($iWidth == $iWidth2) && $iWidth > 2} {
+    if {($iWidth == $iWidth2) && $iWidth >= 2} {
 	set result "correct"
     } else {
-	set result "not correct"
+	set result "last character is not completely visible when it should be"
     }
 } {correct}
 test textDisp-29.3 {miscellaneous: lines wrap but are still too long} {textfonts} {
@@ -3494,24 +3526,63 @@ test textDisp-32.1 {everything elided} {
 
 test textDisp-33.0 {one line longer than fits in the widget} {
     pack [text .tt -wrap char]
-    .tt insert 1.0 [string repeat "hello there " 2500]
+    .tt insert 1.0 [string repeat "more wrap + " 300]
     update ; update ; update
     .tt see 1.0
     lindex [.tt yview] 0
 } {0.0}
-
 test textDisp-33.1 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
-    .tt insert 1.0 [string repeat "hello there " 2500]
+    .tt insert 1.0 [string repeat "more wrap + " 300]
     update ; update ; update
     .tt yview "1.0 +1 displaylines"
     if {[lindex [.tt yview] 0] > 0.1} {
-	set result "bad result"
+	set result "window should be scrolled to the top"
     } else {
 	set result "ok"
     }
 } {ok}
+test textDisp-33.2 {one line longer than fits in the widget} {
+    destroy .tt
+    pack [text .tt -wrap char]
+    .tt debug 1
+    set tk_textHeightCalc ""
+    .tt insert 1.0 [string repeat "more wrap + " 1]
+    after 100 ; update
+    # Nothing should have been recalculated.
+    set tk_textHeightCalc
+} {}
+test textDisp-33.3 {one line longer than fits in the widget} {
+    destroy .tt
+    pack [text .tt -wrap char]
+    .tt debug 1
+    set tk_textHeightCalc ""
+    .tt insert 1.0 [string repeat "more wrap + " 300]
+    after 100 ; update
+    # Each line should have been recalculated just once
+    .tt debug 0
+    expr {[llength $tk_textHeightCalc] == [.tt count -displaylines 1.0 end]}
+} {1}
+test textDisp-33.4 {one line longer than fits in the widget} {
+    destroy .tt
+    pack [text .tt -wrap char]
+    .tt debug 1
+    set tk_textHeightCalc ""
+    .tt insert 1.0 [string repeat "more wrap + " 300]
+    update ; update ; update
+    set idx [.tt index "1.0 + 1 displaylines"]
+    .tt yview $idx
+    if {[lindex [.tt yview] 0] > 0.1} {
+	set result "window should be scrolled to the top"
+    } else {
+	set result "ok"
+    }
+    set idx [.tt index "1.0 + 1 displaylines"]
+    .tt debug 0
+    set result
+} {ok}
+destroy .tt
 
 deleteWindows
 option clear
