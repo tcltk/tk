@@ -1,3 +1,7 @@
+2003-12-20  Joe English  <jenglish@users.sourceforge.net>
+	* library/bgerror.tcl: Truncate displayed error message
+	if it's too long (fixes: #231251)
+
 2003-12-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/rc/wish.exe.manifest: It seems that Windows XP insists on a
