@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.23 1999/04/21 21:53:23 rjohnson Exp $
+ * RCS: @(#) $Id: tk.h,v 1.24 1999/04/30 23:40:44 stanton Exp $
  */
 
 #ifndef _TK
@@ -23,9 +23,8 @@
  * and update the version numbers:
  *
  * unix/configure.in
- * win/makefile.bc
- * win/makefile.vc
  * README
+ * win/makefile.vc	(only if major.minor changes, not patchlevel)
  * library/tk.tcl	(only if major.minor changes, not patchlevel)
  * mac/README		(only if major.minor changes, not patchlevel)
  * win/README		(only if major.minor changes, not patchlevel)
@@ -38,10 +37,10 @@
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   1
 #define TK_RELEASE_LEVEL   TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL  0
+#define TK_RELEASE_SERIAL  1
 
 #define TK_VERSION "8.1"
-#define TK_PATCH_LEVEL "8.1.0"
+#define TK_PATCH_LEVEL "8.1.1"
 
 /*
  * The following definitions set up the proper options for Macintosh
