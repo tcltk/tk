@@ -1,3 +1,8 @@
+2003-07-07  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkTextDisp.c (DisplayText): correct use of textPtr data
+	with respect to Tcl_Release time. [Bug #767009]
+
 2003-07-07  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkImage.c (TkDeleteAllImages,etc.): Stopped the deleting

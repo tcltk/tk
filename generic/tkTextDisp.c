@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.16 2003/05/27 15:35:53 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.17 2003/07/07 20:39:50 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2179,7 +2179,6 @@ DisplayText(clientData)
 {
     register TkText *textPtr = (TkText *) clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    Tk_Window tkwin;
     register DLine *dlPtr;
     DLine *prevPtr;
     Pixmap pixmap;
@@ -2244,16 +2243,14 @@ DisplayText(clientData)
      */
 
     while (dInfoPtr->flags & REPICK_NEEDED) {
-	int flags = textPtr->flags;
-	
 	Tcl_Preserve((ClientData) textPtr);
 	dInfoPtr->flags &= ~REPICK_NEEDED;
 	TkTextPickCurrent(textPtr, &textPtr->pickEvent);
-	tkwin = textPtr->tkwin;
-	Tcl_Release((ClientData) textPtr);
 	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+	    Tcl_Release((ClientData) textPtr);
 	    goto end;
 	}
+	Tcl_Release((ClientData) textPtr);
     }
 
     /*
