@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.18 2003/12/12 00:45:33 davygrvy Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.19 2003/12/21 23:50:13 davygrvy Exp $
  */
 
 #include <tk.h>
@@ -174,7 +174,7 @@ Tcl_AppInit(interp)
      * This exit handler will be used to free the
      * resources allocated in this file.
      */
-    Tcl_CreateExitHandler(AppInitExitHandler, NULL);
+    TkCreateExitHandler(AppInitExitHandler, NULL);
 
     /*
      * Initialize the console only if we are running as an interactive

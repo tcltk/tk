@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.8 2003/12/13 01:07:35 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.9 2003/12/21 23:50:13 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -208,7 +208,7 @@ TkpUseWindow(interp, tkwin, string)
      */
 
     if (tsdPtr->firstContainerPtr == (Container *) NULL) {
-        Tcl_CreateExitHandler(CleanupContainerList, (ClientData) NULL);
+        TkCreateExitHandler(CleanupContainerList, (ClientData) NULL);
     }
     
     /*
@@ -284,7 +284,7 @@ TkpMakeContainer(tkwin)
      */
 
     if (tsdPtr->firstContainerPtr == (Container *) NULL) {
-        Tcl_CreateExitHandler(CleanupContainerList, (ClientData) NULL);
+        TkCreateExitHandler(CleanupContainerList, (ClientData) NULL);
     }
     
     /*

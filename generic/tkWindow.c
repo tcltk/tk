@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.60 2003/07/18 13:24:19 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.61 2003/12/21 23:50:13 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -360,7 +360,7 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
 	 * exits.
 	 */
 
-	Tcl_CreateExitHandler(DeleteWindowsExitProc, (ClientData) NULL);
+	TkCreateExitHandler(DeleteWindowsExitProc, (ClientData) tsdPtr);
     }
 
     if ((parent != NULL) && (screenName != NULL) && (screenName[0] == '\0')) {
@@ -2705,12 +2705,11 @@ Tk_GetNumMainWindows()
 
 static void
 DeleteWindowsExitProc(clientData)
-    ClientData clientData;		/* Not used. */
+    ClientData clientData;		/* tsdPtr when handler was created. */
 {
     TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) clientData;
 
     /*
      * Finish destroying any windows that are in a

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.23 2003/12/03 16:38:23 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.24 2003/12/21 23:50:13 davygrvy Exp $
  */
 
 /*
@@ -3594,7 +3594,7 @@ TkMenuInit()
 	/* 
 	 * Make sure we cleanup on finalize. 
 	 */ 
-	Tcl_CreateExitHandler((Tcl_ExitProc *) TkMenuCleanup, NULL); 
+	TkCreateExitHandler((Tcl_ExitProc *) TkMenuCleanup, NULL); 
 	Tcl_MutexUnlock(&menuMutex);
     }
     if (!tsdPtr->menusInitialized) {

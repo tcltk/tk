@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.25 2003/12/16 03:12:51 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.26 2003/12/21 23:50:13 davygrvy Exp $
  */
 
 #define OEMRESOURCE
@@ -2990,7 +2990,7 @@ TkpMenuInit()
     tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, "MenuWindow", WS_POPUP,
 	0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
-    Tcl_CreateExitHandler(MenuExitHandler, (ClientData) NULL);
+    TkCreateExitHandler(MenuExitHandler, (ClientData) NULL);
     SetDefaults(1);
 }
 
