@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.68 2004/09/13 22:54:37 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.69 2004/09/15 04:02:57 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -3893,13 +3893,8 @@ WmIconwindowCmd(tkwin, winPtr, interp, objc, objv)
 	wmPtr->icon = tkwin2;
 	wmPtr2->iconFor = (Tk_Window) winPtr;
 	if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
-	    if (XWithdrawWindow(Tk_Display(tkwin2), Tk_WindowId(tkwin2),
-		    Tk_ScreenNumber(tkwin2)) == 0) {
-		Tcl_SetResult(interp,
-			"couldn't send withdraw message to window manager",
-			TCL_STATIC);
-		return TCL_ERROR;
-	    }
+	    wmPtr2->flags |= WM_WITHDRAWN;
+	    TkpWmSetState(((TkWindow *) tkwin2), WithdrawnState);
 	}
     }
     return TCL_OK;
