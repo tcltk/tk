@@ -1,5 +1,10 @@
 2001-08-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	8.4a3 RELEASE
+
+	* changes:
+	* README: updated for 8.4a3 release
+
 	* unix/configure: regenerated
 	* unix/tcl.m4: added GNU (HURD) configuration target. (brinkmann)
 	[Patch: #442974]
@@ -80,24 +85,24 @@
 	Tk commands and variables matching tk[A-Z]* are now in the
 	::tk namespace.  See "BRANCH: dgp-privates-into-namespace"
 	entries below for details.  [FR 220936]
- 
+
 2001-07-24  Mo DeJong  <mdejong@redhat.com>
 
 	* generic/default.h: Include tkWinDefault.h
 	when built with Cygwin or Mingw.
 
-2001-07-18  Don Porter  <dgp@users.sourceforge.net>
- 
- 	BRANCH dgp-privates-into-namespace:
- 	* doc/console.n:  Updated names of private console commands.
- 
-2001-07-16  Don Porter  <dgp@users.sourceforge.net>
- 
- 	BRANCH dgp-privates-into-namespace:
- 	* library/console.tcl:
- 	* library/unsupported.tcl: Renamed tk::histNum to tk::HistNum
- 	as directed by the Tcl Style Guide.
- 
+2001-07-18  Don Porter	<dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* doc/console.n:  Updated names of private console commands.
+
+2001-07-16  Don Porter	<dgp@users.sourceforge.net>
+
+	BRANCH dgp-privates-into-namespace:
+	* library/console.tcl:
+	* library/unsupported.tcl: Renamed tk::histNum to tk::HistNum
+	as directed by the Tcl Style Guide.
+
 2001-07-10  Mo DeJong  <mdejong@redhat.com>
 
 	* unix/Makefile.in: Add AR and STLIB_LD variables.
