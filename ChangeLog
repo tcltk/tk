@@ -1,3 +1,38 @@
+2004-07-24  Jim Ingham  <jingham@apple.com>
+
+	Mac OS X: Complete the implementation of the CG version of
+	the X drawing emulation layer.
+	
+	This was mostly done by James Tittle (tigital<at>mac<dot>com), 
+	with a little help from me.
+
+	macosx/tkMacOSXint.h: Add declaration of TkMacOSXInitCGDrawing.
+	macosx/tkMacOSXInit.c: Call it.
+	macosx/tkMacOSXDraw.c (TkMacOSXInitCGDrawing): New function
+	set up the variables controlling the use of cg drawing.
+	(XFillRectangles): Make the CG branch work.
+	(XDrawLines): Ditto
+	(XDrawSegments): Ditto
+	(XFillPolygon): Ditto
+	(XDrawRectangle): Ditto
+	(XDrawRectangles): Ditto
+	(XDrawArc): Ditto
+	(XDrawArcs): Ditto
+	(XFillArc): Ditto
+	(XFillArcs): Ditto
+	(TkMacOSXSetupCGContext): Make this actually work.
+	(TkMacOSXReleaseCGContext): Ditto.
+
+	Mac OS X: Add support for reading the wm attributes -titlepath 
+	command, and convert to using FSRef's.  
+	This was done by Neil Madden (nem<at>cs<dot>nott<dot>ac<dot>uk).
+
+	macosx/tkMacOSXWm.c (WmAttrGetModifiedStatus): New function.
+	(WmAttrGetTitlePath) New function.
+	(WmAttributesCmd): Convert command parsing to use the options index.
+	Use the two above functions to report results.  Convert the titlepath
+	code to use FSRef's.
+	
 2004-07-23  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	[Merge from HEAD]

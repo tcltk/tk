@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3 2002/10/16 19:44:05 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.1 2004/07/25 01:57:41 wolfsuit Exp $
  */
 
 #ifndef _TKMACINT
@@ -151,6 +151,7 @@ extern TkMacOSXWindowList *tkMacOSXWindowListPtr;
 extern Tcl_Encoding TkMacOSXCarbonEncoding;
 
 extern int TkMacOSXUseAntialiasedText(Tcl_Interp *interp, int enable);
+extern int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable, int antiAlias);
 
 #include "tkIntPlatDecls.h"
 
