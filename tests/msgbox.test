@@ -6,7 +6,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: msgbox.test,v 1.1.4.2 1998/09/30 02:18:49 stanton Exp $
+# RCS: @(#) $Id: msgbox.test,v 1.1.4.3 1998/12/09 01:18:38 stanton Exp $
 #
 
 if {[string compare test [info procs test]] == 1} {
@@ -42,15 +42,15 @@ test msgbox-1.5 {tk_messageBox command} {
 
 test msgbox-1.6 {tk_messageBox command} {
     list [catch {tk_messageBox -default 1.1} msg] $msg
-} {1 {bad -default value "1.1": must be abort, retry, ignore, ok, cancel, no, or yes}}
+} {1 {invalid default button "1.1"}}
 
 test msgbox-1.7 {tk_messageBox command} {
     list [catch {tk_messageBox -default foo} msg] $msg
-} {1 {bad -default value "foo": must be abort, retry, ignore, ok, cancel, no, or yes}}
+} {1 {invalid default button "foo"}}
 
 test msgbox-1.8 {tk_messageBox command} {
     list [catch {tk_messageBox -type yesno -default 3} msg] $msg
-} {1 {bad -default value "3": must be abort, retry, ignore, ok, cancel, no, or yes}}
+} {1 {invalid default button "3"}}
 
 test msgbox-1.9 {tk_messageBox command} {
     list [catch {tk_messageBox -icon foo} msg] $msg
