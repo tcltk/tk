@@ -1170,7 +1170,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
     fullSrcDir=`cd $srcdir; pwd`
     EXTRA_CFLAGS=""
     TCL_EXPORT_FILE_SUFFIX=""
-    TCL_UNSHARED_LIB_SUFFIX=""
+    UNSHARED_LIB_SUFFIX=""
     TCL_TRIM_DOTS='`echo ${VERSION} | tr -d .`'
     ECHO_VERSION='`echo ${VERSION}`'
     TCL_LIB_VERSIONS_OK=ok
@@ -1257,7 +1257,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    DL_LIBS=""
 	    LD_FLAGS="-Wl,-D,08000000"
 	    LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
-	    TCL_SHARED_LIB_SUFFIX='${VERSION}\$\{DBGX\}.a'
+	    SHARED_LIB_SUFFIX='${VERSION}\$\{DBGX\}.a'
 	    ;;
 	IRIX-5.*|IRIX-6.*|IRIX64-6.5*)
 	    SHLIB_CFLAGS=""
@@ -1343,7 +1343,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 		DL_LIBS=""
 		LD_FLAGS=""
 		LD_SEARCH_FLAGS=""
-		TCL_SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so.1.0'
+		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so.1.0'
 	    ], [
 		SHLIB_CFLAGS=""
 		SHLIB_LD="echo tclLdAout $CC \{$SHLIB_CFLAGS\} | `pwd`/tclsh -r"
@@ -1353,12 +1353,12 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 		DL_LIBS=""
 		LD_FLAGS=""
 		LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR}'
-		TCL_SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
+		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
 	    ])
 
 	    # FreeBSD doesn't handle version numbers with dots.
 
-	    TCL_UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
+	    UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
 	    TCL_LIB_VERSIONS_OK=nodots
 	    ;;
 	FreeBSD-*)
@@ -1468,8 +1468,8 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	    # requires an extra version number at the end of .so file names.
 	    # So, the library has to have a name like libtcl75.so.1.0
 
-	    TCL_SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so.1.0'
-	    TCL_UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
+	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so.1.0'
+	    UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.a'
 	    TCL_LIB_VERSIONS_OK=nodots
 	    ;;
 	SunOS-5.[[0-6]]*)
@@ -1682,6 +1682,13 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 		    ;;
 	    esac
 	fi
+    fi
+
+    if test "$SHARED_LIB_SUFFIX" = "" ; then
+	SHARED_LIB_SUFFIX='${VERSION}\$\{DBGX\}${SHLIB_SUFFIX}'
+    fi
+    if test "$UNSHARED_LIB_SUFFIX" = "" ; then
+	UNSHARED_LIB_SUFFIX='${VERSION}\$\{DBGX\}.a'
     fi
 
     AC_SUBST(DL_LIBS)
