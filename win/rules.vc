@@ -10,7 +10,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.6 2003/03/06 03:08:40 davygrvy Exp $
+# RCS: @(#) $Id: rules.vc,v 1.7 2003/03/23 02:17:44 kennykb Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -192,15 +192,15 @@ TCL_USE_STATIC_PACKAGES = 0
 # by accident.
 #----------------------------------------------------------
 
-SUFX	    = tsdx
+SUFX	    = tsgx
 
 !if $(DEBUG)
 BUILDDIRTOP = Debug
-DBGX	    = d
+DBGX	    = g
 !else
 BUILDDIRTOP = Release
 DBGX	    =
-SUFX	    = $(SUFX:d=)
+SUFX	    = $(SUFX:g=)
 !endif
 
 TMP_DIRFULL = .\$(BUILDDIRTOP)\$(PROJECT)_ThreadedDynamicStaticX
