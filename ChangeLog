@@ -1,3 +1,8 @@
+2004-06-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkCmds.c (Tk_WinfoObjCmd): refetch interp result obj for
+	'winfo id' as it can change when making the window exist.
+
 2004-06-26  Joe Mistachkin  <joe@mistachkin.com>
 
 	* generic/tkConsole.c (ConsoleDeleteProc): Set tsdPtr->gStdoutInterp

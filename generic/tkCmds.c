@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.32 2004/03/17 18:15:43 das Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.33 2004/06/29 23:21:43 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1241,6 +1241,10 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 	    
 	    Tk_MakeWindowExist(tkwin);
 	    TkpPrintWindowId(buf, Tk_WindowId(tkwin));
+	    /*
+	     * interp result may have changed, refetch it
+	     */
+	    resultPtr = Tcl_GetObjResult(interp);
 	    Tcl_SetStringObj(resultPtr, buf, -1);
 	    break;
 	}
