@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.5 2002/07/31 14:10:56 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.6 2002/08/02 15:35:53 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1436,7 +1436,10 @@ DestroyPanedWindow(pwPtr)
     if (pwPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(DisplayPanedWindow, (ClientData) pwPtr);
     }
-    
+    if (pwPtr->flags & REQUESTED_RELAYOUT) {
+	Tcl_CancelIdleCall(ArrangePanes, (ClientData) pwPtr);
+    }
+
     /*
      * Clean up the slave list; foreach slave:
      *  o  Cancel the slave's structure notification callback
