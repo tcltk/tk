@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.7 2002/06/17 19:42:11 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.8 2002/06/19 19:37:55 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -1275,25 +1275,11 @@ void
 TkSendCleanup(dispPtr)
     TkDisplay *dispPtr;
 {
-    TkWindow *winPtr = (TkWindow *) dispPtr->commTkwin;
-
     if (dispPtr->commTkwin != NULL) {
-	Tk_DeleteEventHandler((Tk_Window) winPtr, PropertyChangeMask,
+	Tk_DeleteEventHandler(dispPtr->commTkwin, PropertyChangeMask,
 		SendEventProc, (ClientData) dispPtr);
-
-	/*
-	 * We need to manually free all the XIC structures that
-	 * have been allocated in order to avoid a nasty bug in XCloseIM().
-	 */
-	if (winPtr->inputContext != NULL) {
-	    XDestroyIC(winPtr->inputContext);
-	    winPtr->inputContext = NULL;
-	}
-
-#ifdef PURIFY
-	/* Tk_DestroyWindow(dispPtr->commTkwin); */
-	ckfree((char *) dispPtr->commTkwin);
-#endif
+	Tk_DestroyWindow(dispPtr->commTkwin);
+	Tcl_Release((ClientData) dispPtr->commTkwin);
 	dispPtr->commTkwin = NULL;
     }
 }
@@ -1335,6 +1321,7 @@ SendInit(interp, dispPtr)
     if (dispPtr->commTkwin == NULL) {
 	panic("Tk_CreateWindow failed in SendInit!");
     }
+    Tcl_Preserve((ClientData) dispPtr->commTkwin);
     atts.override_redirect = True;
     Tk_ChangeWindowAttributes(dispPtr->commTkwin,
 	    CWOverrideRedirect, &atts);
