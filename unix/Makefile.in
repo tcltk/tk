@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.58 2001/11/25 06:43:44 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.59 2001/12/19 07:45:52 mdejong Exp $
 
 # Current Tk version;  used in various names.
 
@@ -400,7 +400,7 @@ wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE)
 # building tcltest in the Tcl bin directory. Just do it for them.
 ${TCL_BIN_DIR}/tcltest:
 	cd ${TCL_BIN_DIR} ; \
-	make tcltest
+	$(MAKE) tcltest
 
 tktest: ${TCL_BIN_DIR}/tcltest $(TKTEST_OBJS) $(TK_LIB_FILE)
 	${CC} $(LDFLAGS) $(TKTEST_OBJS) \
