@@ -1,3 +1,10 @@
+2001-08-10  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/image2.tcl (loadDir): Converted non-portable
+	[glob [file join $dirName *]] to [glob -directory $dirName *]
+	which is both fully portable and more reliable when directory
+	names contain glob-significant characters.  [Bug 223313]
+
 2001-08-08  Don Porter <dgp@users.sourceforge.net>
 
 	* tests/dialog.test:  New file testing [tk_dialog].
@@ -6,15 +13,15 @@
 	* library/tkfbox.tcl: Corrections to problems introduced by
 	the TIP 44 changes.  [Bug 449261]
 
-        * README:
-        * generic/tk.h:
-        * unix/configure:
-        * unix/configure.in:
-        * unix/tk.spec:
-        * win/configure:
-        * win/configure.in: Bumped up patchlevel to 8.4a4 to distinguish
-        CVS snapshots from the 8.4a3 release.  This does not necessarily
-        mean there will be an 8.4a4 release.  [Bug 448938].
+	* README:
+	* generic/tk.h:
+	* unix/configure:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure:
+	* win/configure.in: Bumped up patchlevel to 8.4a4 to distinguish
+	CVS snapshots from the 8.4a3 release.  This does not necessarily
+	mean there will be an 8.4a4 release.  [Bug 448938].
 
 2001-08-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
@@ -667,10 +674,10 @@
 
 2001-02-12  D. Richard Hipp  <drh@hwaci.com>
 
-        TIP #21: Asymmetric padding in the pack and grid geometry managers.
-        With this changes, you can now say "-padx {10 20}" to put 10 pixels
-        of padding on the left and 20 on the right.  Similar rules apply
-        for vertical padding.  See the revised documentation for details.
+	TIP #21: Asymmetric padding in the pack and grid geometry managers.
+	With this changes, you can now say "-padx {10 20}" to put 10 pixels
+	of padding on the left and 20 on the right.  Similar rules apply
+	for vertical padding.  See the revised documentation for details.
 
 2001-01-02  Andreas Kupries  <a.kupries@westend.com>
 
@@ -3426,7 +3433,7 @@
 	here to draw the text.
 	* mac/tkMacProjects.sea.hqx: Rearrange the projects so that the build 
 	directory is separate from the sources.  Much more convenient! 
-        
+
 1999-08-10  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/tkWinWm.c: changed "wm deiconify" on Windows to raise and
@@ -3852,9 +3859,9 @@
 1999-03-26    <suresh@scriptics.com>
 	
 	* unix/configure.in:
-        --nameble-shared is now the default and builds Tk as a shared
-        library; specify --disable-shared to build a static Tk library
-        and shell.
+	--nameble-shared is now the default and builds Tk as a shared
+	library; specify --disable-shared to build a static Tk library
+	and shell.
 
 1999-03-26    <surles@scriptics.com>
 
