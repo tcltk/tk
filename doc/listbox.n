@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.5 1999/12/21 23:54:17 hobbs Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.6 2000/05/23 00:31:36 hobbs Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.0 Tk "Tk Built-In Commands"
@@ -27,13 +27,13 @@ listbox \- Create and manipulate listbox widgets
 Specifies the desired height for the window, in lines.
 If zero or less, then the desired height for the window is made just
 large enough to hold all the elements in the listbox.
-.OP \-listvar listVariable Variable
-Specifies the name of a variable.  The value of the variable is a list
-to be displayed inside the widget;  if the variable value changes
-then the widget will automatically update itself to reflect the new value.
-Attempts to assign a bad list value to a variable in use as a listvar
-will cause an error.  Attempts to unset a variable in use as a listvar
-will fail but will not generate an error.
+.OP \-listvariable listVariable Variable
+Specifies the name of a variable.  The value of the variable is a list to
+be displayed inside the widget; if the variable value changes then the
+widget will automatically update itself to reflect the new value.  Attempts
+to assign a variable with an invalid list value to \fB\-listvariable\fR
+will cause an error.  Attempts to unset a variable in use as a
+\fB\-listvariable\fR will fail but will not generate an error.
 .OP \-selectmode selectMode SelectMode
 Specifies one of several styles for manipulating the selection.
 The value of the option may be arbitrary, but the default bindings

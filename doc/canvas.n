@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.6 2000/01/21 03:54:20 hobbs Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.7 2000/05/23 00:31:36 hobbs Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -283,7 +283,7 @@ are drawn transparant.
 The second possible syntax is a character list containing only
 5 possible characters \fB[.,-_ ]\fR. The space can be used
 to enlarge the space between other line elements, and can not
-occur as the first posibion in the string. Some examples:
+occur as the first position in the string. Some examples:
     -dash .	= -dash {2 4}
     -dash -     = -dash {6 4}
     -dash -.    = -dash {6 4 2 4}
@@ -297,11 +297,11 @@ list will be multiplied by the line width before display. This
 assures that "." will always be displayed as a dot and "-"
 always as a dash regardless of the line width.
 .PP
-On systems where only a limited set of dash patterns, the dash
-pattern will be displayed as the most close dash pattern that
-is available. For example, on Windows only the first 4 of the
-above examples are available. The last 2 examples will be
-displayed identically as the first one.
+On systems which support only a limited set of dash patterns, the dash
+pattern will be displayed as the closest dash pattern that is available.
+For example, on Windows only the first 4 of the above examples are
+available.  The last 2 examples will be displayed identically to the first
+one.
 
 .SH "WIDGET COMMAND"
 .PP
@@ -1023,15 +1023,17 @@ explained here, and then referred to be each widget type for brevity.
 \fB\-activedash \fIpattern\fR
 .TP
 \fB\-disableddash \fIpattern\fR
-This option specifies dash patterns for the normal state, the active
-state, and the disabled state of an arc item.
+This option specifies dash patterns for the normal, active
+state, and disabled state of an item.
 \fIpattern\fR may have any of the forms accepted by \fBTk_GetDash\fR.
 If the dash options are omitted then the default is a solid outline.
 See "DASH PATTERNS" for more information.
 .TP
 \fB\-dashoffset \fIoffset\fR
-The starting \fIoffset\fR into the pattern provided by the \fB\-dash\fR option.
-\fB\-dashoffset\fR is ignored if there is no \fB-dash\fR pattern.
+The starting \fIoffset\fR in pixels into the pattern provided by the
+\fB\-dash\fR option.  \fB\-dashoffset\fR is ignored if there is no
+\fB-dash\fR pattern.  The \fIoffset\fR may have any of the forms described
+in the COORDINATES section above.
 .TP
 \fB\-fill \fIcolor\fR
 .TP
@@ -1064,7 +1066,7 @@ Specifies the offset of stipples.  The offset value can be of the form
 first case the origin is the origin of the toplevel of the current window.
 For the canvas itself and canvas objects the origin is the canvas origin,
 but putting \fB#\fR in front of the coordinate pair indicates using the
-toplevel origin in stead. For canvas objects, the \fB-offset\fR option is
+toplevel origin instead. For canvas objects, the \fB-offset\fR option is
 used for stippling as well.  For the line and polygon canvas items you can
 also specify an index as argument, which connects the stipple origin to one
 of the coordinate points of the line/polygon.
