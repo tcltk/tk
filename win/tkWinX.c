@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.23 2002/06/19 19:37:55 mdejong Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.24 2002/12/06 23:29:37 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -249,6 +249,12 @@ TkWinXInit(hInstance)
     if (!RegisterClass(&childClass)) {
 	panic("Unable to register TkChild class");
     }
+
+    /*
+     * Make sure we cleanup on finalize.
+     */
+    Tcl_CreateExitHandler((Tcl_ExitProc *) TkWinXCleanup,
+	    (ClientData) hInstance);
 }
 
 /*
