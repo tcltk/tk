@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.16 2003/05/19 13:04:22 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.17 2003/05/29 21:57:56 jenglish Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -162,7 +162,7 @@ See EMBEDDED IMAGES below for more details.
 .PP
 .VS 8.4
 The text widget also has a built-in undo/redo mechanism.
-See UNDO MECHANISM below for more details.
+See THE UNDO MECHANISM below for more details.
 .VE 8.4
 
 .SH INDICES
@@ -1182,11 +1182,11 @@ command for details).  The default matching automatically passes
 both the \fB\-lineanchor\fR and \fB\-linestop\fR options 
 to the regexp engine (unless \fB\-nolinestop\fR is used), so that
 \fI^$\fR match beginning and end of line, and \fI.\fR, \fI[^\fR 
-sequences will never match the newline character \fI\n\fR.
+sequences will never match the newline character \fI\en\fR.
 .TP
 \fB\-nolinestop\fR
 This allows 
-\fI.\fR and \fI[^\fR sequences to match the newline character \fI\n\fR,
+\fI.\fR and \fI[^\fR sequences to match the newline character \fI\en\fR,
 which they will otherwise not do (see the \fBregexp\fR
 command for details). This option is only meaningful if \fB\-regexp\fR 
 is also given, and an error will be thrown otherwise.
