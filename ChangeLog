@@ -1,5 +1,8 @@
 2004-09-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* tests/bind.test (bind-22.163): Fix inadvertent minor breakage
+	from TIP#165. [Bug 1019085]
+
 	* doc/toplevel.n, doc/loadTk.n: More spelling/abbreviation fixes
 	from Mikhail Kolesnitchenko.
 
