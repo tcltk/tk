@@ -1,3 +1,12 @@
+2004-02-23  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXXStubs.c:
+	* xlib/ximage.c: fixed MacOSX XGetImage/XPutImage and related 
+	functions to deal properly with XImages copied from screen.
+	* generic/tkCanvPs.c (TkImageGetColor): MacOSX fix.
+	[Bug 809157]
+
 2004-02-18  Peter Spjuth  <peter.spjuth@space.se>
 
 	* tests/grid.test:

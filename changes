@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.65 2004/02/20 19:54:48 dgp Exp $
+RCS: @(#) $Id: changes,v 1.66 2004/02/23 10:48:10 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5615,5 +5615,8 @@ with spaces in their names.
 2004-02-18 (platform support) Mac OS MouseWheel event handling
 
 2004-02-18 (bug fix)[899246] fix shrinking grid geometry calculations
+
+2003-02-23 (platform support)[809157] Mac OS X: Add alpha blending for
+images with partial transparency.
 
 --- Released 8.4.6, February 27, 2004 --- See ChangeLog for details ---
