@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.14 2002/06/15 01:54:09 hobbs Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.15 2002/06/15 02:08:12 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -861,7 +861,7 @@ Tk_HandleEvent(eventPtr)
      * Unix, but this hasn't been factored out of the generic code yet.
      */
     dispPtr = winPtr->dispPtr;
-    if ((dispPtr->useInputMethods)) {
+    if ((dispPtr->flags & TK_DISPLAY_USE_IM)) {
 	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
 	    winPtr->flags |= TK_CHECKED_IC;
 	    if (dispPtr->inputMethod != NULL) {

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.25 2002/06/15 01:54:47 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.26 2002/06/15 02:08:12 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -714,7 +714,11 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		    return TCL_ERROR;
 		}
 #ifdef TK_USE_INPUT_METHODS
-		dispPtr->useInputMethods = boolVal;
+		if (boolVal) {
+		    dispPtr->flags |= TK_DISPLAY_USE_IM;
+		} else {
+		    dispPtr->flags &= ~TK_DISPLAY_USE_IM;
+		}
 #endif /* TK_USE_INPUT_METHODS */
 	    } else if ((objc - skip) != 2) {
 		Tcl_WrongNumArgs(interp, 2, objv,
@@ -722,7 +726,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
-		    dispPtr->useInputMethods);
+		    (dispPtr->flags & TK_DISPLAY_USE_IM));
 	    break;
 	}
     }
