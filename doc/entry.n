@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.7 2000/05/23 00:31:36 hobbs Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.8 2000/08/25 06:58:32 ericm Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -17,15 +17,14 @@ entry \- Create and manipulate entry widgets
 .SH SYNOPSIS
 \fBentry\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background             \-borderwidth            \-cursor
-\-exportselection        \-font                   \-foreground
-\-highlightbackground    \-highlightcolor         \-highlightthickness
-\-insertbackground       \-insertborderwidth      \-insertofftime
-\-insertontime           \-insertwidth            \-justify
-\-relief                 \-selectbackground       \-selectborderwidth
-\-selectforeground       \-takefocus              \-textvariable
-\-xscrollcommand
-                                             
+\-background	\-highlightthickness	\-selectbackground
+\-borderwidth	\-insertbackground	\-selectborderwidth
+\-cursor	\-insertborderwidth	\-selectforeground
+\-exportselection	\-insertofftime	\-takefocus
+\-font	\-insertontime	\-textvariable
+\-foreground	\-insertwidth	\-xscrollcommand
+\-highlightbackground	\-justify
+\-highlightcolor	\-relief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .VS 8.4

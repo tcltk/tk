@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.7 2000/07/28 16:34:54 ericm Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.8 2000/08/25 06:58:32 ericm Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.0 Tk "Tk Built-In Commands"
@@ -16,14 +16,13 @@ listbox \- Create and manipulate listbox widgets
 .SH SYNOPSIS
 \fBlistbox\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background            \-borderwidth           \-cursor
-\-disabledforeground    \-exportselection       \-font
-\-foreground            \-height                \-highlightbackground
-\-highlightcolor        \-highlightthickness    \-listvar
-\-relief                \-selectbackground      \-selectborderwidth
-\-selectforeground      \-setgrid               \-state
-\-takefocus             \-width                 \-xscrollcommand
-\-yscrollcommand
+\-background	\-height	\-selectforeground
+\-borderwidth	\-highlightbackground	\-setgrid
+\-cursor	\-highlightcolor	\-state
+\-disabledforeground	\-highlightthickness	\-takefocus
+\-exportselection	\-relief	\-width
+\-font	\-selectbackground	\-xscrollcommand
+\-foreground	\-selectborderwidth	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-height height Height

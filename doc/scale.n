@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scale.n,v 1.2 1998/09/14 18:22:59 stanton Exp $
+'\" RCS: @(#) $Id: scale.n,v 1.3 2000/08/25 06:58:32 ericm Exp $
 '\" 
 .so man.macros
 .TH scale n 4.1 Tk "Tk Built-In Commands"
@@ -16,10 +16,11 @@ scale \- Create and manipulate scale widgets
 .SH SYNOPSIS
 \fBscale\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-activebackground	\-font	\-highlightthickness	\-repeatinterval
-\-background	\-foreground	\-orient	\-takefocus
-\-borderwidth	\-highlightbackground	\-relief	\-troughcolor
-\-cursor	\-highlightcolor	\-repeatdelay
+\-activebackground	\-foreground	\-relief
+\-background	\-highlightbackground	\-repeatdelay
+\-borderwidth	\-highlightcolor	\-repeatinterval
+\-cursor	\-highlightthickness	\-takefocus
+\-font	\-orient	\-troughcolor
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-bigincrement bigIncrement BigIncrement

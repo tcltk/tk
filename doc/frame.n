@@ -6,7 +6,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\"
-'\" RCS: @(#) $Id: frame.n,v 1.2 1998/09/14 18:22:56 stanton Exp $
+'\" RCS: @(#) $Id: frame.n,v 1.3 2000/08/25 06:58:32 ericm Exp $
 '\" 
 .so man.macros
 .TH frame n 8.0 Tk "Tk Built-In Commands"
@@ -17,8 +17,9 @@ frame \- Create and manipulate frame widgets
 .SH SYNOPSIS
 \fBframe\fR \fIpathName\fR ?\fIoptions\fR?
 .SO
-\-borderwidth	\-highlightbackground	\-highlightthickness	\-takefocus
-\-cursor	\-highlightcolor	\-relief
+\-borderwidth	\-highlightcolor	\-takefocus
+\-cursor	\-highlightthickness
+\-highlightbackground	\-relief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-background background Background
