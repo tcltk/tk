@@ -1,3 +1,10 @@
+2000-10-10  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkConfig.c (Tk_InitOptions): Added
+	Tcl_IncrRefCount/Tcl_DecrRefCount calls on valuePtr, to prevent
+	memory leaks when the value object comes from the option
+	database.  [Bug: 6275].
+
 2000-10-06  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
 	* win/Makefile.in (cat32.${OBJEXT}): add win/ subdirectory to
