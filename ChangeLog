@@ -1,4 +1,9 @@
-Wed Nov 25 14:11:31 1998  Scott Stanton  <stanton@uncle>
+1998-11-25    <stanton@GASPODE>
+
+	* integrated tk8.0.4 changes.
+	
+	* generic/tkBind.c: fixed deletion order bug where a crash would
+	result if a binding deleted "."
 
 	* unix/tkUnixMenu.c: hidemargin option was not honored properly in
 	menus [Bug: 859]
