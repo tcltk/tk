@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.4 2003/11/19 16:28:17 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.5 2004/02/20 19:51:24 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5589,3 +5589,31 @@ with spaces in their names.
 2003-11-17 (bug fix) Fix menubutton -compound state disabled drawing.
 
 --- Released 8.4.5, November 20, 2003 --- See ChangeLog for details ---
+
+2003-12-17 (platform support)[842952] Mac OS X: [scrollbar]
+
+2004-02-13 (platform support)[776646] Win: native hand2/fleur cursors
+
+2004-02-03 (enhancement) post menubuttons so they stay on screen.
+
+2004-02-09 (bug fix)[877950] stop crash during intra-image copy/resize
+
+2004-02-10 (enhancement) New msg catalogs for Esperanto and Polish (trzewik)
+
+2004-02-13 (platform support)[478568] Win: bold/italic font handling
+
+2004-02-15 (platform support)[860454] Mac OS X: [event generate]
+
+2004-02-15 (platform support)[840107] Mac OS X: Unicode clipboard (senn)
+
+2004-02-15 (platform support)[517600] Mac OS X: handle FSRef's
+
+2004-02-15 (platform support) Mac OS X: native [tk_messageBox]
+
+2004-02-15 (platform support) Mac OS X: PowerBook keycode 0x34 -> <Return>
+
+2004-02-18 (platform support) Mac OS MouseWheel event handling
+
+2004-02-18 (bug fix)[899246] fix shrinking grid geometry calculations
+
+--- Released 8.4.6, February 27, 2004 --- See ChangeLog for details ---
