@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.18 2004/10/26 08:07:28 dkf Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.19 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2445,7 +2445,7 @@ test panedwindow-27.14 {identify subcommand errors} {
     destroy .p
     set result
 } [list 1 "expected integer but got \"foo\""]
-test panedwindow-27.14 {identify subcommand errors} {
+test panedwindow-27.14a {identify subcommand errors} {
     panedwindow .p
     set result [list [catch {.p identify 0 bar} msg] $msg]
     destroy .p

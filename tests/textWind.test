@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.18 2004/09/10 12:13:43 vincentdarley Exp $
+# RCS: @(#) $Id: textWind.test,v 1.19 2004/12/04 00:04:42 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -980,7 +980,7 @@ test textWind-17.8 {peer widget window configuration} {
     set res
 } {{-window {} {} {} .t.f} {-window {} {} {} {}}}
 
-test textWind-17.8 {peer widget window configuration} {
+test textWind-17.8a {peer widget window configuration} {
     catch {destroy .t .tt}
     pack [text .t]
     .t delete 1.0 end

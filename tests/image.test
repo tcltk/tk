@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.12 2003/11/18 01:47:51 dgp Exp $
+# RCS: @(#) $Id: image.test,v 1.13 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -91,7 +91,7 @@ test image-1.11 {Tk_ImageCmd procedure, "create" option with same name as main w
     removeFile script
     set x
 } {0 {1 {images may not be named the same as the main window}}}
-test image-1.11 {Tk_ImageCmd, "create" option: do not generated command name in use} -setup {
+test image-1.12 {Tk_ImageCmd, "create" option: do not generated command name in use} -setup {
     set i [image create bitmap]
     regexp {^image(\d+)$} $i -> serial
     incr serial

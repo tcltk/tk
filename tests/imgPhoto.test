@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.19 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.20 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -408,7 +408,7 @@ proc checkImgTransLoopResetSet {img width height} {
     }
     return $result
 }
-test imgPhoto-4.68 {ImgPhotoCmd procedure: transparency set option} {
+test imgPhoto-4.67a {ImgPhotoCmd procedure: transparency set option} {
     checkImgTransLoopResetSet p1 3 3
 } {0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 2 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 1 0 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 1 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 2 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 2 0 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 1 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 2 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 . 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 , 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 .}
 catch {rename checkImgTransLoopSetReset {}}

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: pack.test,v 1.12 2003/04/01 21:06:48 dgp Exp $
+# RCS: @(#) $Id: pack.test,v 1.13 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -132,7 +132,7 @@ test pack-2.11 {x padding and filling} {
 test pack-2.12 {x padding and filling} {
     pack1 -side top -ipadx 5 -padx 10 -fill x
 } {280x40+10+0 300x160+0+40}
-test pack-2.12 {x padding and filling} {
+test pack-2.12a {x padding and filling} {
     pack1 -side top -ipadx 5 -padx {5 15} -fill x
 } {280x40+5+0 300x160+0+40}
 set pad [winfo pixels .pack 1c]
