@@ -1,5 +1,14 @@
 2003-02-18  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkText.c (TextWidgetCmd): remove unused lastEnd var.
+	[Bug #664790]
+
+	* generic/tkCanvPs.c (TkPostscriptImage): remove unused depth var.
+	[Bug #664787]
+
+	* generic/tkEntry.c (EntrySetValue): removed unused code var.
+	[Bug #664781]
+
 	* library/tk.tcl (::tk::TabToWindow): auto-highlight spinboxes as
 	well as entries when tabbing in. [Patch #683813] (bron)
 
