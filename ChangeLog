@@ -7,6 +7,7 @@
         * unix/installManPage:              added
         * unix/mkLinks.tcl:                 removed
         * unix/mkLinks:                     removed
+	* unix/configure:                   generated
 
 2004-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
