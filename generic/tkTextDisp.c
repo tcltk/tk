@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.9 2000/01/06 02:18:59 hobbs Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.9.2.1 2002/06/15 03:02:09 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -4380,7 +4380,7 @@ ElideMeasureProc(chunkPtr, x)
  *
  *	This procedure is the "layoutProc" for character segments.
  *
-n * Results:
+ * Results:
  *	If there is something to display for the chunk then a
  *	non-zero value is returned and the fields of chunkPtr
  *	will be filled in (see the declaration of TkTextDispChunk
