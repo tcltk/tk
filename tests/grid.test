@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.17 2002/10/10 21:07:52 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.18 2003/03/12 00:09:37 mdejong Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -945,6 +945,14 @@ test grid-13.1 {-in} {
     list [catch "grid .f -in .f" msg] $msg
 } {1 {Window can't be managed in itself}}
 grid_reset 13.1
+
+test grid-13.1.1 {-in} {
+    frame .f -bg red
+    list [winfo manager .f] \
+         [catch {grid .f -in .f} err] $err \
+         [winfo manager .f]
+} {{} 1 {Window can't be managed in itself} {}}
+grid_reset 13.1.1
 
 test grid-13.2 {-in} {
     frame .f -bg red

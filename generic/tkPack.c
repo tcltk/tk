@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.16 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.17 2003/03/12 00:09:36 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -37,12 +37,12 @@ typedef struct Packer {
 				 * is packed (NULL means this window
 				 * isn't managed by the packer). */
     struct Packer *nextPtr;	/* Next window packed within same
-				 * parent.  List is priority-ordered:
+				 * master.  List is priority-ordered:
 				 * first on list gets packed first. */
     struct Packer *slavePtr;	/* First in list of slaves packed
 				 * inside this window (NULL means
 				 * no packed slaves). */
-    Side side;			/* Side of parent against which
+    Side side;			/* Side of master against which
 				 * this window is packed. */
     Tk_Anchor anchor;		/* If frame allocated for window is larger
 				 * than window needs, this indicates how
@@ -60,7 +60,7 @@ typedef struct Packer {
 				 * each side). */
     int doubleBw;		/* Twice the window's last known border
 				 * width.  If this changes, the window
-				 * must be repacked within its parent. */
+				 * must be repacked within its master. */
     int *abortPtr;		/* If non-NULL, it means that there is a nested
 				 * call to ArrangePacking already working on
 				 * this window.  *abortPtr may be set to 1 to
@@ -83,7 +83,7 @@ typedef struct Packer {
  *				any larger than needed.
  * FILLY:			Same as FILLX, except for height.
  * EXPAND:			1 means this window's frame will absorb any
- *				extra space in the parent window.
+ *				extra space in the master window.
  * OLD_STYLE:			1 means this window is being managed with
  *				the old-style packer algorithms (before
  *				Tk version 3.3).  The main difference is
@@ -544,7 +544,7 @@ PackLostSlaveProc(clientData, tkwin)
 
 static void
 ArrangePacking(clientData)
-    ClientData clientData;	/* Structure describing parent whose slaves
+    ClientData clientData;	/* Structure describing master whose slaves
 				 * are to be re-layed out. */
 {
     register Packer *masterPtr = (Packer *) clientData;
@@ -552,7 +552,7 @@ ArrangePacking(clientData)
     int cavityX, cavityY, cavityWidth, cavityHeight;
 				/* These variables keep track of the
 				 * as-yet-unallocated space remaining in
-				 * the middle of the parent window. */
+				 * the middle of the master window. */
     int frameX, frameY, frameWidth, frameHeight;
 				/* These variables keep track of the frame
 				 * allocated to the current window. */
@@ -568,8 +568,8 @@ ArrangePacking(clientData)
     masterPtr->flags &= ~REQUESTED_REPACK;
 
     /*
-     * If the parent has no slaves anymore, then don't do anything
-     * at all:  just leave the parent's size as-is.
+     * If the master has no slaves anymore, then don't do anything
+     * at all:  just leave the master's size as-is.
      */
 
     if (masterPtr->slavePtr == NULL) {
@@ -648,10 +648,10 @@ ArrangePacking(clientData)
     }
 
     /*
-     * If the total amount of space needed in the parent window has
+     * If the total amount of space needed in the master window has
      * changed, and if we're propagating geometry information, then
      * notify the next geometry manager up and requeue ourselves to
-     * start again after the parent has had a chance to
+     * start again after the master has had a chance to
      * resize us.
      */
 
@@ -1129,7 +1129,7 @@ TkParsePadAmount(interp, tkwin, specObj, halfPtr, allPtr)
  * PackAfter --
  *
  *	This procedure does most of the real work of adding
- *	one or more windows into the packing order for its parent.
+ *	one or more windows into the packing order for its master.
  *
  * Results:
  *	A standard Tcl return value.
@@ -1316,7 +1316,7 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
 	    }
 	
 	    /*
-	     * Add the window in the correct place in its parent's
+	     * Add the window in the correct place in its master's
 	     * packing order, then make sure that the window is
 	     * managed by us.
 	     */
@@ -1334,7 +1334,7 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
     }
 
     /*
-     * Arrange for the parent to be re-packed at the first
+     * Arrange for the master to be re-packed at the first
      * idle moment.
      */
 
@@ -1353,13 +1353,13 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
  *
  * Unlink --
  *
- *	Remove a packer from its parent's list of slaves.
+ *	Remove a packer from its master's list of slaves.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The parent will be scheduled for repacking.
+ *	The master will be scheduled for repacking.
  *
  *----------------------------------------------------------------------
  */
@@ -1458,9 +1458,9 @@ PackStructureProc(clientData, eventPtr)
 	    packPtr->flags |= REQUESTED_REPACK;
 	    Tcl_DoWhenIdle(ArrangePacking, (ClientData) packPtr);
 	}
-	if (packPtr->doubleBw != 2*Tk_Changes(packPtr->tkwin)->border_width) {
-	    if ((packPtr->masterPtr != NULL)
-		    && !(packPtr->masterPtr->flags & REQUESTED_REPACK)) {
+	if ((packPtr->masterPtr != NULL)
+	        && (packPtr->doubleBw != 2*Tk_Changes(packPtr->tkwin)->border_width)) {
+	    if (!(packPtr->masterPtr->flags & REQUESTED_REPACK)) {
 		packPtr->doubleBw = 2*Tk_Changes(packPtr->tkwin)->border_width;
 		packPtr->masterPtr->flags |= REQUESTED_REPACK;
 		Tcl_DoWhenIdle(ArrangePacking, (ClientData) packPtr->masterPtr);
@@ -1759,7 +1759,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 
 	/*
-	 * If the slave is going to be put back after itself then
+	 * If the slave is going to be put back after itself or
+	 * the same -in window is passed in again, then just
 	 * skip the whole operation, since it won't work anyway.
 	 */
 
@@ -1834,7 +1835,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	prevPtr = slavePtr;
 
 	/*
-	 * Arrange for the parent to be re-packed at the first
+	 * Arrange for the master to be re-packed at the first
 	 * idle moment.
 	 */
 
