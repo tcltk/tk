@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.42.2.1 2000/08/08 19:03:43 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.42.2.2 2001/04/04 23:16:47 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4926,3 +4926,44 @@ and corrected search combining -regexp and -nocase. (melski)
 borders on multiple screens simultaneously. (hobbs, hipp)
 
 --- Released 8.3.2, August 9, 2000 --- See ChangeLog for details ---
+
+2001-04-04 (build improvements) redid Mac build structure (steffen)
+Corrected IRIX-5* configure (english).  Added support for AIX-5 (hobbs).
+Added support for Win64 (hobbs).
+
+2001-04-04 (doc fixes) numerous doc corrections and clarifications.
+Update of READMEs.
+
+2001-04-04 (bug fix) corrected reseting of service mode to only occur when
+it was set (hedin, hobbs)
+
+2001-04-02 (bug fix) Improved tests on Windows for correctness.
+Checked for menu deletion before calling associated menu entry command.
+Fixed listbox, canvas and entry destruction to be more aware of current
+widget activity. (hobbs)
+
+2001-03-30 (feature enhancement) added support for changing IME on the fly
+in Windows (2000) (lam)
+(bug fix) handled the error case where a valid-looking but invalid
+identifier could be passed in certain event generate options causing a
+crash (hobbs)
+
+2001-03-29 (bug fix) corrected handling of drag-selection (dejong)
+
+2001-01-02 (feature enhancement) added Windows icon support in wm
+iconbitmap (darley)
+
+2000-10-27 (feature enhancement) made [tk useinputmethods 1] the default
+for Tk (hobbs)
+
+2000-10-18 (bug fix) Corrected rendering of 1-pixel wide stippled lines on
+Windows.  Correct use of active- and disabledwidth values for displaying
+lines.  Enhanced error handling in Windows native dialogs (melski)
+
+2000-09-29 (bug fix) corrected BadMatch errors when using Tk on multiple
+screens (hipp)
+
+2000-08-18 (feature enhancement) Removed redundant call to DitherInstance
+(melski)
+
+--- Released 8.3.3, April 6, 2001 --- See ChangeLog for details ---
