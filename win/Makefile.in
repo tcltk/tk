@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.52 2002/06/21 23:09:54 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.53 2002/06/26 02:38:26 dgp Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -72,6 +72,12 @@ MANN_INSTALL_DIR	= $(MAN_INSTALL_DIR)/mann
 
 # Libraries built with optimization switches have this additional extension
 TK_DBGX			= @TK_DBGX@
+
+# Directory in which to install the pkgIndex.tcl file for loadable Tk
+PKG_INSTALL_DIR                = $(LIB_INSTALL_DIR)/tk$(VERSION)$(TK_DBGX)
+
+# Package index file for loadable Tk
+PKG_INDEX              = $(PKG_INSTALL_DIR)/pkgIndex.tcl
 
 # The directory containing the Tcl source and header files.
 TCL_SRC_DIR		= @TCL_SRC_DIR@
@@ -414,12 +420,12 @@ gdb: binaries
 	@echo "set env TK_LIBRARY=$(ROOT_DIR_NATIVE)/library" >> gdb.run
 	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
 	gdb ./$(WISH) --command=gdb.run
-	rm gdb.run
+	@$(RM) gdb.run
 
 install: all install-binaries install-libraries install-doc install-demos
 
 install-binaries: binaries
-	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) ; \
+	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) $(PKG_INSTALL_DIR); \
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
@@ -435,6 +441,14 @@ install-binaries: binaries
 		$(COPY) $$i "$(BIN_INSTALL_DIR)"; \
 	    fi; \
 	    done
+	@echo "Creating package index $(PKG_INDEX)"; 
+	@$(RM) $(PKG_INDEX);
+	@echo "if {[package vcompare \\" > $(PKG_INDEX); \
+	@echo "    [package provide Tcl] \\" >> $(PKG_INDEX); \
+	@echo "    $(TCLVERSION)] != 0} {return}" >> $(PKG_INDEX); \
+	@echo "package ifneeded Tk $(VERSION) \\" >> $(PKG_INDEX); \
+	@echo "    [list load [file join \$$dir .. \\" >> $(PKG_INDEX); \
+	@echo "    $(TK_DLL_FILE)] Tk]" >> $(PKG_INDEX); \
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
 	    if [ -f $$i ]; then \

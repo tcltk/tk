@@ -1,3 +1,9 @@
+2002-06-25  Don Porter <dgp@users.sf.net>
+
+	* unix/Makefile.in:	Expanded install-binaries target to create
+	* win/Makefile.in:	and install a pkgIndex.tcl file to enable
+	Tk as a loadable package [Patch 521356]
+
 2002-06-25  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* library/mkpsenc.tcl: (added) utilities to generate
