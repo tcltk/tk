@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.17 2004/11/03 18:07:46 dgp Exp $
+# RCS: @(#) $Id: button.test,v 1.18 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -450,7 +450,7 @@ test button-6.2 {ConfigureButton - textvariable trace} {
     set x New
     lindex [.b1 configure -text] 4
 } {From-y}
-test button-6.2 {ConfigureButton - variable traces} {
+test button-6.2a {ConfigureButton - variable traces} {
     catch {destroy .b1}
     catch {unset x}
     checkbutton .b1 -variable x

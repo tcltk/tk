@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winSend.test,v 1.6 2004/05/23 17:34:50 dkf Exp $
+# RCS: @(#) $Id: winSend.test,v 1.7 2004/12/04 00:04:43 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -99,16 +99,16 @@ test winSend-1.6 {Tk_SetAppName - safe interps} winSend {
 test winSend-2.1 {Tk_SendObjCmd - # of args} winSend {
     list [catch {send tktest} msg] $msg
 } {1 {wrong # args: should be "send ?options? interpName arg ?arg ...?"}}
-test winSend-2.1 {Tk_SendObjCmd: arguments} winSend {
+test winSend-2.1a {Tk_SendObjCmd: arguments} winSend {
     list [catch {send -bogus tktest} msg] $msg
 } {1 {bad option "-bogus": must be -async, -displayof, or --}}
-test winSend-2.1 {Tk_SendObjCmd: arguments} winSend {
+test winSend-2.1b {Tk_SendObjCmd: arguments} winSend {
     list [catch {send -async bogus foo} msg] $msg
 } {1 {no registered server named "bogus"}}
-test winSend-2.1 {Tk_SendObjCmd: arguments} winSend {
+test winSend-2.1c {Tk_SendObjCmd: arguments} winSend {
     list [catch {send -displayof . bogus foo} msg] $msg
 } {1 {no registered server named "bogus"}}
-test winSend-2.1 {Tk_SendObjCmd: arguments} winSend {
+test winSend-2.1d {Tk_SendObjCmd: arguments} winSend {
     list [catch {send -- -bogus foo} msg] $msg
 } {1 {no registered server named "-bogus"}}
 test winSend-2.2 {Tk_SendObjCmd - sending to ourselves} winSend {

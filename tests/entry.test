@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.18 2004/06/24 12:45:42 dkf Exp $
+# RCS: @(#) $Id: entry.test,v 1.19 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -249,7 +249,7 @@ test entry-3.26 {EntryWidgetCmd procedure, "delete" widget command} {
     .e configure -state normal
     .e get
 } {01234567890}
-test entry-3.27 {EntryWidgetCmd procedure, "delete" widget command} {
+test entry-3.26a {EntryWidgetCmd procedure, "delete" widget command} {
     .e delete 0 end
     .e insert end "01234567890"
     .e configure -state readonly
@@ -313,7 +313,7 @@ test entry-3.40 {EntryWidgetCmd procedure, "insert" widget command} {
     .e configure -state normal
     .e get
 } {01234567890}
-test entry-3.40 {EntryWidgetCmd procedure, "insert" widget command} {
+test entry-3.40a {EntryWidgetCmd procedure, "insert" widget command} {
     .e delete 0 end
     .e insert end "01234567890"
     .e configure -state readonly
@@ -450,7 +450,7 @@ test entry-3.64 {EntryWidgetCmd procedure, "selection" widget command} {
     .e configure -state normal
     list [.e index sel.first] [.e index sel.last]
 } {0 10}
-test entry-3.64 {EntryWidgetCmd procedure, "selection" widget command} {
+test entry-3.64a {EntryWidgetCmd procedure, "selection" widget command} {
     .e delete 0 end
     .e insert end 0123456789
     .e selection range 0 end
@@ -462,7 +462,7 @@ test entry-3.64 {EntryWidgetCmd procedure, "selection" widget command} {
 .e delete 0 end
 .e insert end "This is quite a long text string, so long that it "
 .e insert end "runs off the end of the window quite a bit."
-test entry-3.64 {EntryWidgetCmd procedure, "selection to" widget command} {
+test entry-3.64b {EntryWidgetCmd procedure, "selection to" widget command} {
     list [catch {.e select to 2 3} msg] $msg
 } {1 {wrong # args: should be ".e selection to index"}}
 test entry-3.65 {EntryWidgetCmd procedure, "xview" widget command} {

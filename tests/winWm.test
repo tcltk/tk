@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.14 2004/10/05 22:04:46 hobbs Exp $
+# RCS: @(#) $Id: winWm.test,v 1.15 2004/12/04 00:04:43 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -113,7 +113,7 @@ test winWm-2.2 {TkpWmSetState} win {
     destroy .t
     set result
 } {normal withdrawn iconic normal}
-test winWm-2.2 {TkpWmSetState} win {
+test winWm-2.3 {TkpWmSetState} win {
     toplevel .t
     wm geometry .t 150x50+10+10
     update

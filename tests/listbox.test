@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.23 2003/10/13 00:54:45 hobbs Exp $
+# RCS: @(#) $Id: listbox.test,v 1.24 2004/12/04 00:04:41 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1864,7 +1864,7 @@ test listbox-21.12 {ListboxListVarProc, cleanup item attributes} {
     set x [list 0 1 2 3 4 5 6]
     .l itemcget end -fg
 } {}
-test listbox-21.12 {ListboxListVarProc, cleanup item attributes} {
+test listbox-21.12a {ListboxListVarProc, cleanup item attributes} {
     catch {destroy .l}
     set x [list a b c d e f g]
     listbox .l -listvar x
@@ -2030,7 +2030,7 @@ test listbox-24.3 {itemcget} {
     catch {.l itemcget 0} result
     set result
 } {wrong # args: should be ".l itemcget index option"}
-test listbox-24.3 {itemcget, itemcg shortcut} {
+test listbox-24.4 {itemcget, itemcg shortcut} {
     catch {destroy .l}
     listbox .l
     .l insert end a b c d
