@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.1.4.2 1998/09/30 02:17:19 stanton Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.1.4.3 1998/11/20 02:53:03 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -71,7 +71,7 @@ static Tk_OptionSpec configSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	    "2", Tk_Offset(Square, borderWidthPtr), -1},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
-	    "1", Tk_Offset(Square, doubleBufferPtr) -1,},
+	    "1", Tk_Offset(Square, doubleBufferPtr), -1},
     {TK_OPTION_SYNONYM, "-fg", (char *) NULL, (char *) NULL,
 	    (char *) NULL, 0, -1, 0, (ClientData) "-foreground"},
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
