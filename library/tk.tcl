@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.4 1998/09/14 18:23:25 stanton Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.5 1998/11/12 06:22:05 welch Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -145,13 +145,13 @@ switch $tcl_platform(platform) {
 # ----------------------------------------------------------------------
 
 if {$tcl_platform(platform) != "macintosh"} {
-    source $tk_library/button.tcl
-    source $tk_library/entry.tcl
-    source $tk_library/listbox.tcl
-    source $tk_library/menu.tcl
-    source $tk_library/scale.tcl
-    source $tk_library/scrlbar.tcl
-    source $tk_library/text.tcl
+    source [file join $tk_library button.tcl]
+    source [file join $tk_library entry.tcl]
+    source [file join $tk_library listbox.tcl]
+    source [file join $tk_library menu.tcl]
+    source [file join $tk_library scale.tcl]
+    source [file join $tk_library scrlbar.tcl]
+    source [file join $tk_library text.tcl]
 }
 
 # ----------------------------------------------------------------------

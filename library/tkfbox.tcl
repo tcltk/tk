@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.7 1998/09/14 18:23:25 stanton Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.8 1998/11/12 06:22:05 welch Exp $
 #
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 #
@@ -1254,7 +1254,7 @@ proc tkFDialog_ActivateEnt {w} {
     set path [lindex $list 1]
     set file [lindex $list 2]
 
-    case $flag {
+    switch -- $flag {
 	OK {
 	    if {![string compare $file ""]} {
 		# user has entered an existing (sub)directory

@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.3 1998/09/14 18:23:24 stanton Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.4 1998/11/12 06:22:05 welch Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -312,7 +312,7 @@ proc tkScrollByUnits {w orient amount} {
     if {[llength $info] == 2} {
 	uplevel #0 $cmd scroll $amount units
     } else {
-	uplevel #0 $cmd [expr [lindex $info 2] + $amount]
+	uplevel #0 $cmd [expr {[lindex $info 2] + $amount}]
     }
 }
 
@@ -337,7 +337,7 @@ proc tkScrollByPages {w orient amount} {
     if {[llength $info] == 2} {
 	uplevel #0 $cmd scroll $amount pages
     } else {
-	uplevel #0 $cmd [expr [lindex $info 2] + $amount*([lindex $info 1] - 1)]
+	uplevel #0 $cmd [expr {[lindex $info 2] + $amount*([lindex $info 1] - 1)}]
     }
 }
 
@@ -360,7 +360,7 @@ proc tkScrollToPos {w pos} {
     if {[llength $info] == 2} {
 	uplevel #0 $cmd moveto $pos
     } else {
-	uplevel #0 $cmd [expr round([lindex $info 0]*$pos)]
+	uplevel #0 $cmd [expr {round([lindex $info 0]*$pos)}]
     }
 }
 

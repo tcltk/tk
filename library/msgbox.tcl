@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.3 1998/09/14 18:23:24 stanton Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.4 1998/11/12 06:22:05 welch Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -65,7 +65,7 @@ proc tkMessageBox {args} {
 	error "bad window path name \"$data(-parent)\""
     }
 
-    case $data(-type) {
+    switch -- $data(-type) {
 	abortretryignore {
 	    set buttons {
 		{abort  -width 6 -text Abort -under 0}
