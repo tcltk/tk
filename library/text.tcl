@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.17 2001/08/27 01:44:48 dgp Exp $
+# RCS: @(#) $Id: text.tcl,v 1.18 2001/11/13 00:19:05 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -204,6 +204,7 @@ bind Text <Control-i> {
 }
 bind Text <Return> {
     tk::TextInsert %W \n
+    if {[%W cget -autoseparators]} {%W edit separator}
 }
 bind Text <Delete> {
     if {[string compare [%W tag nextrange sel 1.0 end] ""]} {
@@ -335,6 +336,18 @@ bind Text <Control-p> {
 bind Text <Control-t> {
     if {!$tk_strictMotif} {
 	tk::TextTranspose %W
+    }
+}
+
+bind Text <<Undo>> {
+    if { ! [ catch { %W edit undo } ] } {
+       %W see insert
+    }
+}
+
+bind Text <<Redo>> {
+    if { ! [ catch { %W edit redo } ] } {
+       %W see insert
     }
 }
 
@@ -518,6 +531,7 @@ proc ::tk::TextButton1 {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
     $w mark set anchor insert
     if {[string equal [$w cget -state] "normal"]} {focus $w}
+    if {[$w cget -autoseparators]} {$w edit separator}
 }
 
 # ::tk::TextSelectTo --
@@ -628,6 +642,18 @@ proc ::tk::TextKeyExtend {w index} {
 proc ::tk::TextPaste {w x y} {
     $w mark set insert [TextClosestGap $w $x $y]
     catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
+    catch {
+	set oldSeparator [$w cget -autoseparators]
+	if {$oldSeparator} {
+	    $w configure -autoseparators 0
+	    $w edit separator
+	}
+	$w insert insert [::tk::GetSelection $w PRIMARY]
+	if {$oldSeparator} {
+	    $w edit separator
+	    $w configure -autoseparators 1
+	}
+    }
     if {[string equal [$w cget -state] "normal"]} {focus $w}
 }
 
@@ -678,6 +704,7 @@ proc ::tk::TextSetCursor {w pos} {
     $w mark set insert $pos
     $w tag remove sel 1.0 end
     $w see insert
+    if {[$w cget -autoseparators]} {$w edit separator}
 }
 
 # ::tk::TextKeySelect
@@ -785,14 +812,25 @@ proc ::tk::TextInsert {w s} {
     if {[string equal $s ""] || [string equal [$w cget -state] "disabled"]} {
 	return
     }
+    set compound 0
     catch {
 	if {[$w compare sel.first <= insert] \
 		&& [$w compare sel.last >= insert]} {
+            set oldSeparator [$w cget -autoseparators]
+            if { $oldSeparator } {
+                $w configure -autoseparators 0
+                $w edit separator
+                set compound 1
+            }
 	    $w delete sel.first sel.last
 	}
     }
     $w insert insert $s
     $w see insert
+    if { $compound && $oldSeparator } {
+        $w edit separator
+        $w configure -autoseparators 1
+    }
 }
 
 # ::tk::TextUpDownLine --
@@ -966,12 +1004,19 @@ proc ::tk_textCut w {
 proc ::tk_textPaste w {
     global tcl_platform
     catch {
+	set oldSeparator [$w cget -autoseparators]
+	if { $oldSeparator } {
+	    $w configure -autoseparators 0
+	    $w edit separator
+	}
 	if {[string compare $tcl_platform(platform) "unix"]} {
-	    catch {
-		$w delete sel.first sel.last
-	    }
+	    catch { $w delete sel.first sel.last }
 	}
 	$w insert insert [::tk::GetSelection $w CLIPBOARD]
+	if { $oldSeparator } {
+	    $w edit separator
+	    $w configure -autoseparators 1
+	}
     }
 }
 

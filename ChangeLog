@@ -1,3 +1,18 @@
+2001-11-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/text.n:
+	* generic/tkText.c:
+	* generic/tkText.h:
+	* generic/tkTextTag.c:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* mac/tkMacDefault.h:
+	* tests/text.test:
+	* unix/tkUnixDefault.h:
+	* win/tkWinDefault.h: added TIP #26 implementation of simple
+	built-in undo/redo of text editing in the text widget.
+	[Patch #458879] (callewaert)
+
 2001-11-12  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/demos/menu.tcl: Show off -compound support in menus.
