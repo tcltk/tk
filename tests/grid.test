@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.8 2000/04/17 17:44:27 ericm Exp $
+# RCS: @(#) $Id: grid.test,v 1.9 2001/02/12 18:06:47 drh Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -197,6 +197,15 @@ test grid-4.3 {forget} {
     grid info .c
 } {-in . -column 0 -row 0 -columnspan 1 -rowspan 1 -ipadx 0 -ipady 0 -padx 0 -pady 0 -sticky {}}
 grid_reset 4.3
+
+test grid-4.3.1 {forget} {
+    button .c
+    grid .c -row 2 -column 2 -rowspan 2 -columnspan 2 -padx {3 5} -pady {4 7} -sticky ns
+    grid forget .c
+    grid .c -row 0 -column 0
+    grid info .c
+} {-in . -column 0 -row 0 -columnspan 1 -rowspan 1 -ipadx 0 -ipady 0 -padx 0 -pady 0 -sticky {}}
+grid_reset 4.3.1
 
 test grid-4.4 {forget, calling Tk_UnmaintainGeometry} {
     frame .f -bd 2 -relief raised
@@ -915,8 +924,14 @@ grid_reset 13.7
 test grid-13.8 {-padx} {
     frame .f -width 20 -height 20 -highlightthickness 0 -bg red
     list [catch "grid .f -padx x" msg] $msg
-} {1 {bad padx value "x": must be positive screen distance}}
+} {1 {bad pad value "x": must be positive screen distance}}
 grid_reset 13.8
+
+test grid-13.8.1 {-padx} {
+    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    list [catch "grid .f -padx {10 x}" msg] $msg
+} {1 {bad 2nd pad value "x": must be positive screen distance}}
+grid_reset 13.8.1
 
 test grid-13.9 {-padx} {
     frame .f -width 200 -height 100 -highlightthickness 0 -bg red
@@ -925,15 +940,32 @@ test grid-13.9 {-padx} {
     set a "[winfo width .f] [winfo width .]"
     grid .f -padx 1
     update
-    list $a "[winfo width .f] [winfo width .]"
-} {{200 200} {200 202}}
+    list $a "[winfo width .f] [winfo width .] [winfo x .f]"
+} {{200 200} {200 202 1}}
 grid_reset 13.9
+
+test grid-13.9.1 {-padx} {
+    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    grid .f
+    update
+    set a "[winfo width .f] [winfo width .]"
+    grid .f -padx {10 5}
+    update
+    list $a "[winfo width .f] [winfo width .] [winfo x .f]"
+} {{200 200} {200 215 10}}
+grid_reset 13.9.1
 
 test grid-13.10 {-pady} {
     frame .f -width 20 -height 20 -highlightthickness 0 -bg red
     list [catch "grid .f -pady x" msg] $msg
-} {1 {bad pady value "x": must be positive screen distance}}
+} {1 {bad pad value "x": must be positive screen distance}}
 grid_reset 13.10
+
+test grid-13.10.1 {-pady} {
+    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    list [catch "grid .f -pady {10 x}" msg] $msg
+} {1 {bad 2nd pad value "x": must be positive screen distance}}
+grid_reset 13.10.1
 
 test grid-13.11 {-pady} {
     frame .f -width 200 -height 100 -highlightthickness 0 -bg red
@@ -942,9 +974,20 @@ test grid-13.11 {-pady} {
     set a "[winfo height .f] [winfo height .]"
     grid .f -pady 1
     update
-    list $a "[winfo height .f] [winfo height .]"
-} {{100 100} {100 102}}
+    list $a "[winfo height .f] [winfo height .] [winfo y .f]"
+} {{100 100} {100 102 1}}
 grid_reset 13.11
+
+test grid-13.11.1 {-pady} {
+    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    grid .f
+    update
+    set a "[winfo height .f] [winfo height .]"
+    grid .f -pady {4 16}
+    update
+    list $a "[winfo height .f] [winfo height .] [winfo y .f]"
+} {{100 100} {100 120 4}}
+grid_reset 13.11.1
 
 test grid-13.12 {-ipad x and y} {
     frame .f -width 20 -height 20 -highlightthickness 0 -bg red
@@ -1244,16 +1287,3 @@ test grid-17.1 {forget and pending idle handlers} {
 # cleanup
 ::tcltest::cleanupTests
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
