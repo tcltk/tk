@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.16 2004/10/29 22:34:06 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.17 2005/01/04 01:28:51 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1838,6 +1838,15 @@ TkWinWmCleanup(hInstance)
     tsdPtr->initialized = 0;
 
     UnregisterClass(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
+#ifndef TCL_THREADS
+    /*
+     * Clean up specialized class created for layered windows.
+     */
+    if (setLayeredWindowAttributesProc != NULL) {
+	UnregisterClass(TK_WIN_TOPLEVEL_NOCDC_CLASS_NAME, hInstance);
+	setLayeredWindowAttributesProc = NULL;
+    }
+#endif
 }
 
 /*
