@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.21 2005/01/09 19:17:23 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.22 2005/01/10 15:35:30 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -168,7 +168,7 @@ TkpUseWindow(interp, tkwin, string)
 	return TCL_ERROR;
     }
 */
-    if(stricmp(string, "") == 0) {
+    if(strcmp(string, "") == 0) {
 	if(winPtr->flags & TK_EMBEDDED) {
 	    TkpWinToplevelDetachWindow(winPtr);
 	    TkpWinToplevelOverrideRedirect(winPtr, 0);
@@ -427,11 +427,16 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	     * window.
 	     *
 	     * wParam - a handle of an embedded window
+	     * lParam - N/A
 	     *
 	     * An embedded window may send this message with a wParam of NULL
 	     * to test if a window is able to provide embedding service. The 
 	     * container returns its window handle for accepting the attachment 
 	     * and identifying itself or a zero for being already in use.
+	     *
+	     * Return value:
+	     * 0    - the container is unable to be used.
+	     * hwnd - the container is ready to be used. 
 	     */
 	    if (containerPtr->embeddedHWnd == NULL) {
 		containerPtr->embeddedHWnd = (HWND)wParam;
@@ -442,6 +447,17 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    break;
 
 	    case TK_DETACHWINDOW:
+	    /* An embedded window notifies the container that it is detached.
+	     * The container should clearn the related variables and redraw
+	     * its window.
+	     * 
+	     * wParam - N/A
+	     * lParam - N/A
+	     *
+	     * Return value:
+	     * 0	- the message is not processed.
+	     * others	- the message is processed.
+	     */
 	    containerPtr->embeddedMenuHWnd = NULL;
 	    containerPtr->embeddedHWnd = NULL;
 	    containerPtr->parentPtr->flags &= ~TK_BOTH_HALVES;
@@ -450,28 +466,66 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    break;
 
 	    case TK_GEOMETRYREQ:
-	    /*
+	    /* An embedded window requests a window size change.
+	     *
 	     * wParam - window width
 	     * lParam - window height
+	     *
+	     * Return value:
+	     * 0	- the message is not processed.
+	     * others	- the message is processed.
 	     */
-	    EmbedGeometryRequest(containerPtr, (int) wParam, lParam);
+	    EmbedGeometryRequest(containerPtr, (int)wParam, lParam);
 	    break;
 
 	    case TK_RAISEWINDOW:
-	    /*
+	    /* An embedded window requests to change its Z-order
+	     * 
 	     * wParam - a window handle as a z-order stack reference 
 	     * lParam - a flag of above-below: 0 - above; 1 or others: - below
+	     * 
+	     * Return value:
+	     * 0	- the message is not processed.
+	     * others	- the message is processed.
 	     */
 	    TkWinSetWindowPos(GetParent(containerPtr->parentHWnd), (HWND)wParam, (int)lParam);
 	    break;
 
 	    case TK_GETFRAMEWID:
-	    result = (long)GetParent(containerPtr->parentHWnd);
+	    /* An embedded window requests to get the frame window's id
+	     *
+	     * wParam - N/A
+	     * lParam - N/A
+	     *
+	     * Return vlaue:
+	     *
+	     * A handle of the frame window. If it is not availble, a 
+	     * zeor is returned.
+	     */
+	    if(topwinPtr) {
+		result = (long)GetParent(containerPtr->parentHWnd);
+	    } else {
+		topwinPtr = containerPtr->parentPtr;
+		while (!(topwinPtr->flags & TK_TOP_HIERARCHY)) {
+		    topwinPtr = topwinPtr->parentPtr;
+		}
+		if(topwinPtr && topwinPtr->window) {
+		    result = (long)GetParent(Tk_GetHWND(topwinPtr->window));
+		} else {
+		    result = 0;
+		}
+	    }
 	    break;
 
 	    case TK_CLAIMFOCUS:
-	    /* 
+	    /* An embedded window requests a focus
+	     * 
 	     * wParam - a flag of forcing focus 
+	     * lParam - N/A
+	     *
+	     * Return value:
+	     * 0    - the message is not processed
+	     * 1    - the message is processed
 	     */
 	    if(!SetFocus(containerPtr->embeddedHWnd) && wParam) {
 		/*
@@ -481,61 +535,140 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    break;
 
 	    case TK_WITHDRAW:
-	    if(topwinPtr) TkpWinToplevelWithDraw(topwinPtr);
+	    /* An embedded window requests withdraw
+	     * 
+	     * wParam	- N/A
+	     * lParam	- N/A
+	     *
+	     * Return value
+	     * 0    - the message is not processed
+	     * 1    - the message is processed
+	     */
+	    if(topwinPtr) 
+		TkpWinToplevelWithDraw(topwinPtr);
+	    else
+		result = 0;
 	    break;
 
 	    case TK_ICONIFY:
-	    if(topwinPtr) TkpWinToplevelIconify(topwinPtr);
+	    /* An embedded window requests iconification
+	     * 
+	     * wParam	- N/A
+	     * lParam	- N/A
+	     *
+	     * Return value
+	     * 0    - the message is not processed
+	     * 1    - the message is processed
+	     */
+	    if(topwinPtr) 
+		TkpWinToplevelIconify(topwinPtr);
+	    else
+		result = 0;
 	    break;
 
 	    case TK_DEICONIFY:
-	    if(topwinPtr) TkpWinToplevelDeiconify(topwinPtr);
+	    /* An embedded window requests deiconification
+	     * 
+	     * wParam	- N/A
+	     * lParam	- N/A
+	     *
+	     * Return value
+	     * 0    - the message is not processed
+	     * 1    - the message is processed
+	     */
+	    if(topwinPtr) 
+		TkpWinToplevelDeiconify(topwinPtr);
+	    else
+		result = 0;
 	    break;
 
 	    case TK_MOVEWINDOW:
-	    /*
-	     *	wParam - x value of the frame's upper left;
-	     *	lParam - y value of the frame's upper left;
+	    /* An embedded window requests to move position if
+	     * both wParam and lParam are greater or equal to 0.
+	     *	    wParam - x value of the frame's upper left
+	     *	    lParam - y value of the frame's upper left
+	     *
+	     * Otherwise an embedded window requests the current 
+	     * position
+	     *
+	     * Return value: an encoded window position in a 32bit long, 
+	     * i.e, ((x << 16) & 0xffff0000) | (y & 0xffff)
+	     * 
+	     * Only a toplevel container may move the embedded.
 	     */
-	    if(topwinPtr) {
-	        result = TkpWinToplevelMove(topwinPtr, wParam, lParam);
-	    }
+	    result = TkpWinToplevelMove(containerPtr->parentPtr, wParam, lParam);
 	    break;
 
 	    case TK_OVERRIDEREDIRECT:
+	    /* An embedded window request overrideredirect.
+	     *
+	     * wParam
+	     *	0	- add a frame if there is no one
+	     *  1	- remove the frame if there is a one
+	     *  < 0	- query the current overrideredirect value
+	     *
+	     * lParam	- N/A
+	     *
+	     * Return value:
+	     * the current value of overrideredirect if the container is
+	     * a toplevel.  Otherwise -1.
+	     */
 	    if(topwinPtr) {
 		result = TkpWinToplevelOverrideRedirect(topwinPtr, wParam);
+	    } else {
+		result = -1;
 	    }
 	    break;
 
 	    case TK_SETMENU:
+	    /* An embedded requests to set a menu
+	     *
+	     * wParam	- a menu handle
+	     * lParam	- a menu window handle
+	     *
+	     * Return value:
+	     * 1    - the message is processed
+	     * 0    - the message is not processed
+	     */
 	    if(topwinPtr) {
 		containerPtr->embeddedMenuHWnd = (HWND)lParam;
 		TkWinSetMenu((Tk_Window)topwinPtr, (HMENU)wParam);
-		result = 1;
+	    } else {
+		result = 0;
 	    }
 	    break;
 
 	    case TK_STATE:
-	    /*
-	     *	0 - normal state
-	     *	1 - withdrawn state
-	     *	2 - zoom state
-	     *	3 - icon state
+	    /* An embedded window request set/get state services
+	     *
+	     * wParam	- service directive
+	     *	    0 - 3 for setting state
+	     *		0 - withdrawn state
+	     *		1 - normal state
+	     *		2 - zoom state
+	     *		3 - icon state
+	     * others for gettting state
+	     *
+	     * lParam	- N/A
+	     *
+	     * Return value
+	     * the current state or -1 if the container is not a toplevel
 	     */
 	    if(topwinPtr) {
 		if(wParam >= 0 && wParam <= 3) {
 		    TkpWmSetState(topwinPtr, wParam);
 		}
 		result = TkpWmGetState(topwinPtr);
+	    } else {
+		result = -1;
 	    }
 	    break;
+
 	    /*
 	     * Return 0 since the current Tk container implementation 
 	     * is unable to provide following services.
 	     *  
 	     */
-
 	    default:
 	    result = 0;  
 	    break;
