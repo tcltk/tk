@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.65 2001/12/19 08:01:56 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.66 2002/01/11 18:41:05 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -349,11 +349,10 @@ TCL_STUB_LIB_SPEC='-L$(TCL_BIN_DIR) $(TCL_STUB_LIB_FLAG)'
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     TK_SHLIB_CFLAGS="${SHLIB_CFLAGS}"
     TK_LIB_FILE=libtk${TK_SHARED_LIB_SUFFIX}
-    MAKE_LIB="\${SHLIB_LD} -o \[$]@ \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${TCL_STUB_LIB_SPEC} \${SHLIB_LD_LIBS}"
+    MAKE_LIB="\${SHLIB_LD} -o \[$]@ \${OBJS} \$(TK_LD_SEARCH_FLAGS) \${TCL_STUB_LIB_SPEC} \${SHLIB_LD_LIBS}"
     RANLIB=":"
 
-#    TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
-    TCL_STUB_FLAGS=""
+    TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 else
     TK_SHLIB_CFLAGS=""
     TK_LIB_FILE=libtk${TK_UNSHARED_LIB_SUFFIX}
@@ -463,7 +462,9 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(SHLIB_VERSION)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(TCL_LIB_SPEC)
+AC_SUBST(TCL_STUB_LIB_SPEC)
 AC_SUBST(TCL_LIB_FLAG)
+AC_SUBST(TCL_STUB_LIB_FLAG)
 #AC_SUBST(TCL_BUILD_STUB_LIB_SPEC)
 #AC_SUBST(TCL_BUILD_LIB_SPEC)
 AC_SUBST(TCL_DBGX)
