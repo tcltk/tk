@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.1.4.10 1999/03/25 17:13:55 hershey Exp $
+RCS: @(#) $Id: changes,v 1.1.4.11 1999/03/26 19:42:57 surles Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -4541,3 +4541,8 @@ global variables.  The previously chosen "test" namespace was thought
 to be too generic and likely to create conflits.
 (hirschl)
 *** POTENTIAL INCOMPATIBILITY ***
+
+3/26/99 [bug fix]  Fixed bug reported by Bryan Oakley in the
+menubutton bindings.  There was a false assumption that there was
+always a menu attached to the button.  [Bug 1116] (surles)
+
