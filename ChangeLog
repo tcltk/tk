@@ -1,5 +1,12 @@
 2004-01-07  Vince Darley <vincentdarley@users.sourceforge.net>
 
+	* generic/tkTextDisp.c:
+	* generic/tkTextBTree.c:
+	* tests/text.test: fixed crashing [Bug 872299] in yview code,
+	and added tests and better error checking in the B-tree.
+	
+2004-01-07  Vince Darley <vincentdarley@users.sourceforge.net>
+
 	* generic/tkTextIndex.c:
 	* tests/textIndex.test: fixed bug in which 'wordstart' and 
 	'wordend' were not utf-8 aware (they haven't been changed since

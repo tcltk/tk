@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.27 2003/12/05 17:19:06 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.28 2004/01/07 16:28:45 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2926,6 +2926,24 @@ test text-27.4 {tabs - must be positive and must be increasing} {
     catch {.t configure -tabs {10c 5c}}
     update ; update ; update
     # This test must simply not go into an infinite loop to succeed
+    set result 1
+} {1}
+
+test text-28.0 {repeated insert and scroll} {
+    foreach subcmd {
+	{moveto 1}
+	{scroll 1 pages}
+	{scroll 100 pixels}
+	{scroll 10 units}
+    } {
+	destroy .t
+	pack [text .t]
+	for {set i 0} {$i < 30} {incr i} {
+	    .t insert end "blabla\n"
+	    eval .t yview $subcmd
+	}
+    }
+    # This test must simply not crash to succeed
     set result 1
 } {1}
 

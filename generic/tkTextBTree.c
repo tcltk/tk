@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.11 2003/12/15 11:51:06 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.12 2004/01/07 16:28:23 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -1002,6 +1002,10 @@ TkBTreeFindPixelLine(tree, pixels, pixelOffset)
 	return NULL;
     }
 
+    if (nodePtr->numPixels == 0) {
+	panic("TkBTreeFindPixelLine called with empty window");
+    }
+    
     /*
      * Work down through levels of the tree until a node is found at
      * level 0.
@@ -1012,7 +1016,7 @@ TkBTreeFindPixelLine(tree, pixels, pixelOffset)
 		nodePtr->numPixels <= pixelsLeft;
 		nodePtr = nodePtr->nextPtr) {
 	    if (nodePtr == NULL) {
-		panic("TkBTreeFindLine ran out of nodes");
+		panic("TkBTreeFindPixelLine ran out of nodes");
 	    }
 	    pixelsLeft -= nodePtr->numPixels;
 	}
@@ -1026,7 +1030,7 @@ TkBTreeFindPixelLine(tree, pixels, pixelOffset)
 	    linePtr->pixelHeight < pixelsLeft;
 	    linePtr = linePtr->nextPtr) {
 	if (linePtr == NULL) {
-	    panic("TkBTreeFindLine ran out of lines");
+	    panic("TkBTreeFindPixelLine ran out of lines");
 	}
 	pixelsLeft -= linePtr->pixelHeight;
     }
