@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.18 2003/08/14 10:31:14 dkf Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.19 2003/10/31 09:02:17 vincentdarley Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -479,6 +479,7 @@
 #define DEF_TEXT_AUTO_SEPARATORS	"1"
 #define DEF_TEXT_BG_COLOR		NORMAL_BG
 #define DEF_TEXT_BG_MONO		WHITE
+#define DEF_TEXT_BLOCK_CURSOR		"0"
 #define DEF_TEXT_BORDER_WIDTH		"2"
 #define DEF_TEXT_CURSOR			"xterm"
 #define DEF_TEXT_FG			BLACK
