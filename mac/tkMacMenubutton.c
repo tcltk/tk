@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenubutton.c,v 1.8 2001/05/21 14:07:33 tmh Exp $
+ * RCS: @(#) $Id: tkMacMenubutton.c,v 1.9 2001/10/12 13:30:31 tmh Exp $
  */
 
 #include "tkMenubutton.h"
@@ -396,7 +396,7 @@ void
 TkpComputeMenuButtonGeometry(mbPtr)
     register TkMenuButton *mbPtr;		/* Widget record for menu button. */
 {
-    int width, height, mm, pixels;
+    int width=0, height=0, textwidth=0, textheight=0, mm, pixels, noimage=0;
 
     mbPtr->inset = mbPtr->highlightWidth + mbPtr->borderWidth;
     if (mbPtr->image != None) {
@@ -416,23 +416,54 @@ TkpComputeMenuButtonGeometry(mbPtr)
 	    height = mbPtr->height;
 	}
     } else {
+    noimage=1;
+    }
+    
+    if ( noimage || mbPtr->compound != COMPOUND_NONE ) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
 	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->text,
 		-1, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
 		&mbPtr->textHeight);
-	width = mbPtr->textWidth;
-	height = mbPtr->textHeight;
+	textwidth = mbPtr->textWidth;
+	textheight = mbPtr->textHeight;
 	if (mbPtr->width > 0) {
-	    width = mbPtr->width * Tk_TextWidth(mbPtr->tkfont, "0", 1);
+	    textwidth = mbPtr->width * Tk_TextWidth(mbPtr->tkfont, "0", 1);
 	}
 	if (mbPtr->height > 0) {
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(mbPtr->tkfont, &fm);
-	    height = mbPtr->height * fm.linespace;
+	    textheight = mbPtr->height * fm.linespace;
 	}
-	width += 2*mbPtr->padX;
-	height += 2*mbPtr->padY;
+	textwidth += 2*mbPtr->padX;
+	textheight +=  2*mbPtr->padY;
+    }
+    
+	switch ((enum compound) mbPtr->compound) {
+	  case COMPOUND_TOP:
+	  case COMPOUND_BOTTOM: {
+	      height += textheight + mbPtr->padY;
+	      width = (width > textwidth ? width : textwidth);
+	      break;
+	  }
+	  case COMPOUND_LEFT:
+	  case COMPOUND_RIGHT: {
+	      height = (height > textheight ? height : textheight);
+	      width += textwidth + mbPtr->padX;
+	      break;
+	  }
+	  case COMPOUND_CENTER: {
+	      height = (height > textheight ? height : textheight);
+	      width = (width > textwidth ? width : textwidth);
+	      break;
+	  }
+	  case COMPOUND_NONE: {
+	     if (noimage) {
+	     	height = textheight;
+	     	width = textwidth;
+	     }
+	     break;
+	}
     }
 
     if (mbPtr->indicatorOn) {

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001 ActiveState Corporation.
 #
-# RCS: @(#) $Id: makefile.vc,v 1.41 2001/10/01 21:04:37 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.42 2001/10/12 13:30:32 tmh Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -52,12 +52,12 @@ lib32		= "$(TOOLS32)\bin\Win64\lib.exe"
 !ELSE
 
 # Visual Studio 5 default
-#TOOLS32		= C:\Progra~1\devstudio\vc
-#TOOLS32_rc	= C:\Progra~1\devstudio\sharedide
+TOOLS32		= C:\Progra~1\devstudio\vc
+TOOLS32_rc	= C:\Progra~1\devstudio\sharedide
 
 # Visual Studio 6 default
-TOOLS32		= C:\Progra~1\Microsoft Visual Studio\VC98
-TOOLS32_rc	= C:\Progra~1\Microsoft Visual Studio\common\MSDev98
+#TOOLS32		= C:\Progra~1\Microsoft Visual Studio\VC98
+#TOOLS32_rc	= C:\Progra~1\Microsoft Visual Studio\common\MSDev98
 
 cc32		= "$(TOOLS32)\bin\cl.exe"
 link32		= "$(TOOLS32)\bin\link.exe"
@@ -77,6 +77,7 @@ NODEBUG = 1
 
 # uncomment the following two lines to compile with TCL_MEM_DEBUG
 #DEBUGDEFINES	=-DTCL_MEM_DEBUG
+#DEBUGDEFINES = -DTCL_MEM_DEBUG -DUSE_TCLALLOC=0 -DPURIFY
 
 ######################################################################
 # Do not modify below this line

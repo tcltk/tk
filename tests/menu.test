@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.8 2001/08/30 01:51:42 hobbs Exp $
+# RCS: @(#) $Id: menu.test,v 1.9 2001/10/12 13:30:31 tmh Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -732,7 +732,7 @@ test menu-3.36 {MenuWidgetCmd procedure, "entryconfigure" option} {
     menu .m1
     .m1 add command -label "test"
     list [catch {llength [.m1 entryconfigure 1]} msg] $msg [destroy .m1]
-} {0 14 {}}
+} {0 15 {}}
 test menu-3.37 {MenuWidgetCmd procedure, "entryconfigure" option} {
     catch {destroy .m1}
     menu .m1
@@ -2426,6 +2426,41 @@ test menu-32.7 {DeleteMenuCloneEntries - one entry} {
     .m1 add command -label Hello
     list [catch {.m1 delete Hello} msg] $msg [destroy .m1]
 } {0 {} {}}
+test menu-32.8 {Ensure all menu clone commands are deleted} {
+    catch {destroy .menubar}
+    catch {destroy .menubar.test}
+    menu .menubar
+    . configure -menu .menubar
+    menu .menubar.test
+    .menubar.test add command -label "hi"
+    for {set i 0} {$i < 10} {incr i} {
+	.menubar add cascade -menu .menubar.test -label "Test"
+	.menubar delete Test
+    }
+
+    info commands .#menubar*test*
+} {}
+test menu-32.9 {Ensure deleting of clones doesn't corrupt menu refs} {
+    catch {destroy .menubar}
+    catch {destroy .menubar.test}
+    
+    menu .menubar
+    . configure -menu .menubar
+    menu .menubar.test
+    .menubar add cascade -menu .menubar.test -label "Test"
+    menu .menubar.cascade
+
+    .menubar.test add cascade -menu .menubar.cascade -label "Cascade"
+    set res {}
+    lappend res [.menubar.test entrycget 1 -menu]
+    lappend res [.#menubar.#menubar#test entrycget 1 -menu]
+    destroy .menubar.test
+    menu .menubar.test
+    .menubar.test add cascade -menu .menubar.cascade -label "Cascade"
+    lappend res [.menubar.test entrycget 1 -menu]
+    lappend res [.#menubar.#menubar#test entrycget 1 -menu]
+    set res
+} {.menubar.cascade .#menubar.#menubar#test.#menubar#cascade .menubar.cascade .#menubar.#menubar#test.#menubar#cascade}
 
 set l [interp hidden]
 eval destroy [winfo children .]
