@@ -4878,43 +4878,52 @@ fi
     if test "$tcl_strtod" = 1; then
 	echo $ac_n "checking for Solaris2.4/Tru64 strtod bugs""... $ac_c" 1>&6
 echo "configure:4881: checking for Solaris2.4/Tru64 strtod bugs" >&5
-	if test "$cross_compiling" = yes; then
-  tcl_ok=0
+	if eval "test \"`echo '$''{'tcl_cv_strtod_buggy'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+	    if test "$cross_compiling" = yes; then
+  tcl_cv_strtod_buggy=0
 else
   cat > conftest.$ac_ext <<EOF
-#line 4886 "configure"
+#line 4890 "configure"
 #include "confdefs.h"
 
-	    extern double strtod();
-	    int main()
-	    {
-		char *string = "NaN", *spaceString = " ";
-		char *term;
-		double value;
-		value = strtod(string, &term);
-		if ((term != string) && (term[-1] == 0)) {
-		    exit(1);
+		extern double strtod();
+		int main() {
+		    char *infString="Inf", *nanString="NaN", *spaceString=" ";
+		    char *term;
+		    double value;
+		    value = strtod(infString, &term);
+		    if ((term != infString) && (term[-1] == 0)) {
+			exit(1);
+		    }
+		    value = strtod(nanString, &term);
+		    if ((term != nanString) && (term[-1] == 0)) {
+			exit(1);
+		    }
+		    value = strtod(spaceString, &term);
+		    if (term == (spaceString+1)) {
+			exit(1);
+		    }
+		    exit(0);
 		}
-		value = strtod(spaceString, &term);
-		if (term == (spaceString+1)) {
-		    exit(1);
-		}
-		exit(0);
-	    }
 EOF
-if { (eval echo configure:4906: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:4913: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
-  tcl_ok=1
+  tcl_cv_strtod_buggy=1
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -fr conftest*
-  tcl_ok=0
+  tcl_cv_strtod_buggy=0
 fi
 rm -fr conftest*
 fi
 
-	if test "$tcl_ok" = 1; then
+fi
+
+	if test "$tcl_cv_strtod_buggy" = 1; then
 	    echo "$ac_t""ok" 1>&6
 	else
 	    echo "$ac_t""buggy" 1>&6
