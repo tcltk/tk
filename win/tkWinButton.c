@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.17 2002/07/24 19:15:10 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.18 2002/08/28 01:08:06 drh Exp $
  */
 
 #define OEMRESOURCE
@@ -383,13 +383,40 @@ TkpDisplayButton(clientData)
 
     /*
      * Override the relief specified for the button if this is a
-     * checkbutton or radiobutton and there's no indicator.
+     * checkbutton or radiobutton and there's no indicator.  The new
+     * relief is as follows:
+     *      If the button is select  --> "sunken"
+     *      If relief==overrelief    --> relief
+     *      Otherwise                --> overrelief
+     *
+     * The effect we are trying to achieve is as follows:
+     *
+     *      value    mouse-over?   -->   relief
+     *     -------  ------------        --------
+     *       off        no               flat
+     *       off        yes              raised
+     *       on         no               sunken
+     *       on         yes              sunken
+     *
+     * This is accomplished by configuring the checkbutton or radiobutton
+     * like this:
+     *
+     *     -indicatoron 0 -overrelief raised -offrelief flat
+     *
+     * Bindings (see library/button.tcl) will copy the -overrelief into
+     * -relief on mouseover.  Hence, we can tell if we are in mouse-over by
+     * comparing relief against overRelief.  This is an aweful kludge, but
+     * it gives use the desired behavior while keeping the code backwards
+     * compatible.
      */
 
     relief = butPtr->relief;
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
-	relief = (butPtr->flags & SELECTED) ? TK_RELIEF_SUNKEN
-		: butPtr->offRelief;
+	if (butPtr->flags & SELECTED) {
+	    relief = TK_RELIEF_SUNKEN;
+	} else if (butPtr->overRelief != relief) {
+	    relief = butPtr->offRelief;
+	}
     }
 
     /*
