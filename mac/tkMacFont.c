@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacFont.c,v 1.2 1998/09/14 18:23:35 stanton Exp $
+ * RCS: @(#) $Id: tkMacFont.c,v 1.2.2.1 1999/03/22 06:43:41 jingham Exp $
  */
  
 #include <Windows.h>
@@ -542,7 +542,7 @@ Tk_DrawChars(
 	TextSize(fontPtr->size);
 	TextFace(fontPtr->style);
 	
-	if (TkSetMacColor(gc->foreground, &macColor) == true) {
+	if (TkSetMacColor(gc->foreground, &macColor)) {
 	    RGBForeColor(&macColor);
 	}
 
