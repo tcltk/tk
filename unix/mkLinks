@@ -476,7 +476,9 @@ if test -r GetHWND.3; then
     rm -f GetHWND.3.*
     $ZIP GetHWND.3
     rm -f Tk_GetHWND.3 Tk_GetHWND.3.* 
+    rm -f Tk_AttachHWND.3 Tk_AttachHWND.3.* 
     ln $S GetHWND.3$Z Tk_GetHWND.3$Z 
+    ln $S GetHWND.3$Z Tk_AttachHWND.3$Z 
 fi
 if test -r GetImage.3; then
     rm -f GetImage.3.*
