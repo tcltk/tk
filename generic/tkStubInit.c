@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.27 2001/09/25 16:25:20 dgp Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.28 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -955,6 +955,8 @@ TkStubs tkStubs = {
     Tk_DeleteClientMessageHandler, /* 240 */
     Tk_CreateAnonymousWindow, /* 241 */
     Tk_SetClassProcs, /* 242 */
+    Tk_SetInternalBorderEx, /* 243 */
+    Tk_SetMinimumRequestSize, /* 244 */
 };
 
 /* !END!: Do not edit above this line. */

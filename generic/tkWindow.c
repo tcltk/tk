@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.37 2001/09/21 22:08:19 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.38 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -649,11 +649,16 @@ TkAllocWindow(dispPtr, screenNum, parentPtr)
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
     winPtr->reqWidth = winPtr->reqHeight = 1;
-    winPtr->internalBorderWidth = 0;
+    winPtr->internalBorderLeft = 0;
     winPtr->wmInfoPtr = NULL;
     winPtr->classProcsPtr = NULL;
     winPtr->instanceData = NULL;
     winPtr->privatePtr = NULL;
+    winPtr->internalBorderRight = 0;
+    winPtr->internalBorderTop = 0;
+    winPtr->internalBorderBottom = 0;
+    winPtr->minReqWidth = 0;
+    winPtr->minReqHeight = 0;
 
     return winPtr;
 }

@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.14 2000/11/22 01:49:37 ericm Exp $
+# RCS: @(#) $Id: tk.decls,v 1.15 2001/09/26 20:25:17 pspjuth Exp $
 
 library tk
 
@@ -1145,6 +1145,17 @@ declare 241 generic {
 declare 242 generic {
     void Tk_SetClassProcs (Tk_Window tkwin, \
 	    Tk_ClassProcs *procs, ClientData instanceData)
+}
+
+# New in 8.4a4
+#
+declare 243 generic {
+    void Tk_SetInternalBorderEx (Tk_Window tkwin, int left, int right, \
+            int top, int bottom)
+}
+declare 244 generic {
+    void Tk_SetMinimumRequestSize (Tk_Window tkwin, \
+            int minWidth, int minHeight)
 }
 
 # Define the platform specific public Tk interface.  These functions are

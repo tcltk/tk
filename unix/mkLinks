@@ -268,9 +268,13 @@ if test -r FreeXId.3; then
 fi
 if test -r GeomReq.3; then
     rm -f Tk_GeometryRequest.3
+    rm -f Tk_SetMinimumRequestSize.3
     rm -f Tk_SetInternalBorder.3
+    rm -f Tk_SetInternalBorderEx.3
     ln GeomReq.3 Tk_GeometryRequest.3
+    ln GeomReq.3 Tk_SetMinimumRequestSize.3
     ln GeomReq.3 Tk_SetInternalBorder.3
+    ln GeomReq.3 Tk_SetInternalBorderEx.3
 fi
 if test -r GetAnchor.3; then
     rm -f Tk_GetAnchorFromObj.3
@@ -651,9 +655,14 @@ if test -r WindowId.3; then
     rm -f Tk_IsEmbedded.3
     rm -f Tk_IsMapped.3
     rm -f Tk_IsTopLevel.3
+    rm -f Tk_MinReqWidth.3
+    rm -f Tk_MinReqHeight.3
     rm -f Tk_ReqWidth.3
     rm -f Tk_ReqHeight.3
-    rm -f Tk_InternalBorderWidth.3
+    rm -f Tk_InternalBorderLeft.3
+    rm -f Tk_InternalBorderRight.3
+    rm -f Tk_InternalBorderTop.3
+    rm -f Tk_InternalBorderBottom.3
     rm -f Tk_Visual.3
     rm -f Tk_Depth.3
     rm -f Tk_Colormap.3
@@ -673,9 +682,14 @@ if test -r WindowId.3; then
     ln WindowId.3 Tk_IsEmbedded.3
     ln WindowId.3 Tk_IsMapped.3
     ln WindowId.3 Tk_IsTopLevel.3
+    ln WindowId.3 Tk_MinReqWidth.3
+    ln WindowId.3 Tk_MinReqHeight.3
     ln WindowId.3 Tk_ReqWidth.3
     ln WindowId.3 Tk_ReqHeight.3
-    ln WindowId.3 Tk_InternalBorderWidth.3
+    ln WindowId.3 Tk_InternalBorderLeft.3
+    ln WindowId.3 Tk_InternalBorderRight.3
+    ln WindowId.3 Tk_InternalBorderTop.3
+    ln WindowId.3 Tk_InternalBorderBottom.3
     ln WindowId.3 Tk_Visual.3
     ln WindowId.3 Tk_Depth.3
     ln WindowId.3 Tk_Colormap.3

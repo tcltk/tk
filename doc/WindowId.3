@@ -5,13 +5,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: WindowId.3,v 1.5 2000/01/21 03:54:20 hobbs Exp $
+'\" RCS: @(#) $Id: WindowId.3,v 1.6 2001/09/26 20:25:17 pspjuth Exp $
 '\" 
 .so man.macros
-.TH Tk_WindowId 3 "" Tk "Tk Library Procedures"
+.TH Tk_WindowId 3 "8.4" Tk "Tk Library Procedures"
 .BS
 .SH NAME
-Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsContainer, Tk_IsEmbedded, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_InternalBorderWidth, Tk_Visual, Tk_Depth, Tk_Colormap  \- retrieve information from Tk's local data structure
+Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsContainer, Tk_IsEmbedded, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_MinReqWidth, Tk_MinReqHeight, Tk_InternalBorderLeft, Tk_InternalBorderRight, Tk_InternalBorderTop, Tk_InternalBorderBottom, Tk_Visual, Tk_Depth, Tk_Colormap  \- retrieve information from Tk's local data structure
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -71,7 +71,22 @@ int
 \fBTk_ReqHeight\fR(\fItkwin\fR)
 .sp
 int
-\fBTk_InternalBorderWidth\fR(\fItkwin\fR)
+\fBTk_MinReqWidth\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_MinReqHeight\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_InternalBorderLeft\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_InternalBorderRight\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_InternalBorderTop\fR(\fItkwin\fR)
+.sp
+int
+\fBTk_InternalBorderBottom\fR(\fItkwin\fR)
 .sp
 Visual *
 \fBTk_Visual\fR(\fItkwin\fR)
@@ -145,10 +160,16 @@ screen) and zero if \fItkwin\fR isn't a top-level window.
 the window's requested size.  These values correspond to the last
 call to \fBTk_GeometryRequest\fR for \fItkwin\fR.
 .PP
-\fBTk_InternalBorderWidth\fR returns the width of internal border
-that has been requested for \fItkwin\fR, or 0 if no internal border
-was requested.  The return value is simply the last value passed
-to \fBTk_SetInternalBorder\fR for \fItkwin\fR.
+\fBTk_MinReqWidth\fR and \fBTk_MinReqHeight\fR return information about
+the window's minimum requested size.  These values correspond to the last
+call to \fBTk_SetMinimumRequestSize\fR for \fItkwin\fR.
+.PP
+\fBTk_InternalBorderLeft\fR, \fBTk_InternalBorderRight\fR,
+\fBTk_InternalBorderTop\fR and \fBTk_InternalBorderBottom\fR 
+return the width of one side of the internal border
+that has been requested for \fItkwin\fR, or 0 if no internal border was
+requested.  The return value is simply the last value passed to
+\fBTk_SetInternalBorder\fR or \fBTk_SetInternalBorderEx\fR for \fItkwin\fR.
 .PP
 \fBTk_Visual\fR, \fBTk_Depth\fR, and \fBTk_Colormap\fR return
 information about the visual characteristics of a window.
