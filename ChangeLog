@@ -1,3 +1,11 @@
+2004-03-20  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXSubwindows.c (GenerateConfigureNotify): New
+	function.
+	(XMoveWindow): Generate configure notify events for child
+	widgets on move.
+	(XMoveResizeWindow): Ditto.
+	
 2004-03-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	Removed support for Mac OS Classic platform [Patch 918139]
