@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.71 2003/05/13 14:15:08 vincentdarley Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.72 2003/08/25 20:35:59 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -373,16 +373,16 @@ cflags = $(cflags) -QIA64_Bx
 !endif
 
 !if $(MSVCRT)
-!if "$(DBGX)" == ""
-crt = -MD
-!else
+!if $(DEBUG)
 crt = -MDd
+!else
+crt = -MD
 !endif
 !else
-!if "$(DBGX)" == ""
-crt = -MT
-!else
+!if $(DEBUG)
 crt = -MTd
+!else
+crt = -MT
 !endif
 !endif
 
@@ -555,8 +555,12 @@ install-libraries:
 #---------------------------------------------------------------------
 
 genstubs:
+!if !exist($(TCLSH))
+	@echo Build tclsh first!
+!else
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
+!endif
 
 
 #---------------------------------------------------------------------
