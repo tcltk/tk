@@ -1,5 +1,15 @@
 2002-01-11  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* unix/Makefile.in: Burn Tcl and Tk build
+	directories into tktest executable to avoid crashes
+	caused by ld loading a previously installed version
+	of the tcl or tk shared libraries. Remove setting
+	of LD_LIBRARY_PATH, LIBPATH, and SHLIB_PATH
+	before running tktest since it should no
+	longer be required.
+
+2002-01-11  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	Enable use of Tcl stubs when building Tk as
 	a shared library. This should fix the build
 	under AIX. [Bugs 220858, 220955, 220921]
