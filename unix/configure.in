@@ -384,11 +384,11 @@ fi
 # up the Tcl library.
 
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    TK_BUILD_LIB_SPEC="-L`pwd` -ltk${VERSION}"
-    TK_LIB_SPEC="-L${exec_prefix}/lib -ltk${VERSION}"
+    TK_BUILD_LIB_SPEC="-L`pwd` -ltk${VERSION}\${DBGX}"
+    TK_LIB_SPEC="-L${exec_prefix}/lib -ltk${VERSION}\${DBGX}"
 else
-    TK_BUILD_LIB_SPEC="-L`pwd` -ltk`echo ${VERSION} | tr -d .`"
-    TK_LIB_SPEC="-L${exec_prefix}/lib -ltk`echo ${VERSION} | tr -d .`"
+    TK_BUILD_LIB_SPEC="-L`pwd` -ltk`echo ${VERSION} | tr -d .`\${DBGX}"
+    TK_LIB_SPEC="-L${exec_prefix}/lib -ltk`echo ${VERSION} | tr -d .`\${DBGX}"
 fi
 
 echo CFLAGS_DEBUG=$CFLAGS_DEBUG
