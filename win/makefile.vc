@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.2 2003/03/13 16:41:48 kennykb Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.3 2003/03/23 02:25:21 kennykb Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -373,9 +373,17 @@ cflags = $(cflags) -QIA64_Bx
 !endif
 
 !if $(MSVCRT)
-crt = -MD$(DBGX)
+!if "$(DBGX)" == ""
+crt = -MD
 !else
-crt = -MT$(DBGX)
+crt = -MDd
+!endif
+!else
+!if "$(DBGX)" == ""
+crt = -MT
+!else
+crt = -MTd
+!endif
 !endif
 
 BASE_CLFAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
@@ -450,9 +458,9 @@ test: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
 !if "$(OS)" == "Windows_NT"  || "$(MSVCDIR)" == "IDE"
-	$(TKTEST) $(ROOT)/tests/all.tcl $(TESTFLAGS) | $(CAT32)
+	$(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
 !else
-	$(TKTEST) $(ROOT)/tests/all.tcl $(TESTFLAGS) | $(CAT32)
+	$(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
 !endif
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
