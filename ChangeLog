@@ -1,5 +1,8 @@
 2003-05-21  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
+	* generic/tkPanedWindow.c (PanedWindowReqProc): Thanks very much
+	to Eric Boudaillier for making panes resize correctly!  [Bug 738143]
+
 	* generic/tkText.c (TextSearchCmd): Forwards and backwards aren't
 	the same.  [Bug 740558]  Also edited SearchCore to get it closer
 	to the Engineering Manual style guidelines.
