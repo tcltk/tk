@@ -1,3 +1,17 @@
+2004-07-20  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Makefile: added support to tk framework build to
+	optionally install tk manpages in addition to html help,
+	similarly to current support in tcl/macosx/Makefile.
+	
+	* macosx/Wish.pbproj/project.pbxproj: fixes for building with
+	non-default SYMROOT/OBJROOT/SRCROOT, added support using a
+	Tcl.framework in DYLIB_INSTALL_PATH !=  /Library/Frameworks,
+	added optional support for building html help without tcl sources 
+	present by giving explicit location of tcltk-man2html script.
+	
+	* macosx/tkMacOSXMenu.c: fixed #include case sensitivity bug.
+
 2004-07-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in, unix/tcl.m4:     move (C|LD)FLAGS after their
