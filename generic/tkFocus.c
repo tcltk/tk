@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.2 1998/09/14 18:23:10 stanton Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.3 1999/02/04 20:53:53 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -550,7 +550,14 @@ SetFocus(winPtr, force)
     int allMapped, serial;
 
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
-    if (winPtr == displayFocusPtr->focusWinPtr) {
+
+    /*
+     * If force is set, we should make sure we grab the focus regardless
+     * of the current focus window since under Windows, we may need to
+     * take control away from another application.
+     */
+
+    if (winPtr == displayFocusPtr->focusWinPtr && !force) {
 	return;
     }
 
