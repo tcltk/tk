@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.26 2000/07/06 03:17:45 mo Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.27 2000/11/03 01:22:17 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -406,7 +406,11 @@ GetTopLevel(hwnd)
     if (tsdPtr->createWindow) {
 	return tsdPtr->createWindow;
     }
+#ifdef _WIN64
+    return (TkWindow *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+#else
     return (TkWindow *) GetWindowLong(hwnd, GWL_USERDATA);
+#endif
 }
 
 /*
@@ -755,7 +759,11 @@ UpdateWrapper(winPtr)
 		Tcl_DStringValue(&titleString), wmPtr->style, x, y, width, 
 		height, parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
 	Tcl_DStringFree(&titleString);
+#ifdef _WIN64
+	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (LONG_PTR) winPtr);
+#else
 	SetWindowLong(wmPtr->wrapper, GWL_USERDATA, (LONG) winPtr);
+#endif
 	tsdPtr->createWindow = NULL;
 
 	place.length = sizeof(WINDOWPLACEMENT);
@@ -772,15 +780,28 @@ UpdateWrapper(winPtr)
      * Windows doesn't try to set the focus to the child window.
      */
 
+#ifdef _WIN64
+    SetWindowLongPtr(child, GWL_STYLE,
+	    WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+#else
     SetWindowLong(child, GWL_STYLE,
 	    WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+#endif
     if (winPtr->flags & TK_EMBEDDED) {
+#ifdef _WIN64
+	SetWindowLongPtr(child, GWLP_WNDPROC, (LONG_PTR) TopLevelProc);
+#else
 	SetWindowLong(child, GWL_WNDPROC, (LONG) TopLevelProc);
+#endif
     }
     oldWrapper = SetParent(child, wmPtr->wrapper);
     if (oldWrapper && (oldWrapper != wmPtr->wrapper) 
 	    && (oldWrapper != GetDesktopWindow())) {
+#ifdef _WIN64
+	SetWindowLongPtr(oldWrapper, GWLP_USERDATA, (LONG) NULL);
+#else
 	SetWindowLong(oldWrapper, GWL_USERDATA, (LONG) NULL);
+#endif
 
 	if (wmPtr->numTransients > 0) {
 	    /*
@@ -4198,7 +4219,7 @@ WmProc(hwnd, message, wParam, lParam)
     LPARAM lParam;
 {
     static int inMoveSize = 0;
-    static oldMode;	/* This static is set upon entering move/size mode
+    static int oldMode;	/* This static is set upon entering move/size mode
 			 * and is used to reset the service mode after
 			 * leaving move/size mode.  Note that this mechanism
 			 * assumes move/size is only one level deep. */
