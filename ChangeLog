@@ -1,5 +1,10 @@
 2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* generic/tkBind.c (TkXErrorHandler): Declare static
+	function to avoid compiler error with VC++.
+
+2002-06-14  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* generic/tkBind.c (ExpandPercents): Cast argument to
 	Tk_GetAtomName in order to avoid compiler warning.
 
