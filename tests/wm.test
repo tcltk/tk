@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.10 2002/06/13 21:35:09 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.11 2002/06/22 01:43:47 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -508,6 +508,39 @@ test wm-transient-5.3 { remove transient property from window
     destroy .master
     wm transient .subject
 } {}
+
+test wm-transient-6.1 { a withdrawn transient does not track
+        state changes in the master } {
+    deleteWindows
+    toplevel .master
+    toplevel .subject
+    update
+    wm transient .subject .master
+    wm withdraw .subject
+    wm withdraw .master
+    wm deiconify .master
+    wm state .subject
+} {withdrawn}
+
+test wm-transient-6.2 { a withdrawn transient does not track
+        state changes in the master } {
+    set results [list]
+    deleteWindows
+    toplevel .master
+    toplevel .subject
+    update
+    wm transient .subject .master
+    wm withdraw .subject
+    wm withdraw .master
+    wm deiconify .master
+    lappend results [wm state .subject]
+    wm deiconify .subject
+    lappend results [wm state .subject]
+    wm withdraw .master
+    lappend results [wm state .subject]
+    wm deiconify .master
+    lappend results [wm state .subject]
+} {withdrawn normal withdrawn normal}
 
 
 test wm-state-1.1 {usage} {
