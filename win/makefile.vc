@@ -9,10 +9,10 @@
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001 ActiveState Corporation.
-# Copyright (c) 2001 Tomasoft Engineering.
+# Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.52 2002/03/21 17:48:54 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.53 2002/03/28 23:23:03 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -62,6 +62,8 @@ the environment.  Jump to this line to read the new instructions.
 #		Sets the location for where to find the Tcl headers and
 #		libraries.  The install point is assumed when not
 #		specified.  This can be the source tree or an installation.
+#		Tk does need the source directory, though.  Tk comes very close
+#		to not needing the sources.
 #
 #	INSTALLDIR=<path>
 #		Sets where to install Tcl from the built binaries.
@@ -205,27 +207,26 @@ TCL_LIBRARY	= $(INSTALLDIR)\lib
 TCLREGLIB	= $(INSTALLDIR)\lib\$(TCLREGLIBNAME)
 TCLDDELIB	= $(INSTALLDIR)\lib\$(TCLDDELIBNAME)
 TCLTMP_DIR	= \must\have\tcl\sources\to\build\this\target
+COFFBASE	= \must\have\tcl\sources\to\build\this\target
+TOOLSDIR	= \must\have\tcl\sources\to\build\this\target
 !else
-TCLSH		= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLNAMEPREFIX)sh$(VERSION)$(SUFX).exe
+TCLSH		= $(TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(VERSION)$(SUFX).exe
 TCLSTUBLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLSTUBLIBNAME)
 TCLIMPLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLIMPLIBNAME)
 TCL_LIBRARY	= $(TCLDIR)\library
 TCLREGLIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLREGLIBNAME)
 TCLDDELIB	= $(TCLDIR)\win\$(BUILDDIRTOP)\$(TCLDDELIBNAME)
 TCLTMP_DIR	= $(TCLDIR)\win\$(TMP_DIR:tk=tcl)
+COFFBASE	= $(TCLDIR)\win\coffbase.txt
+TOOLSDIR	= $(TCLDIR)\tools
 !endif
 
 WISH 		= $(OUT_DIR)\$(WISHNAMEPREFIX)$(VERSION)$(SUFX).exe
 WISHC 		= $(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe
 
-#TKHLPBASE	= $(PROJECT)$(VERSION)
-#TKHLP		= $(OUT_DIR)\$(TKHLPBASE).hlp
-#TKHLPCNT	= $(OUT_DIR)\$(TKHLPBASE).cnt
-
 TKTEST		= $(OUT_DIR)\$(PROJECT)test.exe
 CAT32		= $(OUT_DIR)\cat32.exe
 RMDIR		= .\rmd.bat
-MKDIR		= .\mkd.bat
 RM		= del
 
 LIB_INSTALL_DIR		= $(INSTALLDIR)\lib
@@ -369,6 +370,7 @@ WINDIR          = $(ROOT)\win
 GENERICDIR	= $(ROOT)\generic
 XLIBDIR		= $(ROOT)\xlib
 BITMAPDIR	= $(ROOT)\bitmaps
+DOCDIR		= $(ROOT)\doc
 RCDIR		= $(WINDIR)\rc
 
 !if $(TCLINSTALL)
@@ -399,7 +401,15 @@ cdebug = -Oti
 !endif
 
 # declarations common to all compiler options
-cflags = -nologo -c -W3 -Fp$(TMP_DIR)^\ -YX
+cflags = -nologo -c -W3 -YX -Fp$(TMP_DIR)^\
+
+!if $(PENT_0F_ERRATA)
+cflags = $(cflags) -QI0f
+!endif
+
+!if $(ITAN_B_ERRATA)
+cflags = $(cflags) -QIA64_Bx
+!endif
 
 !if $(MSVCRT)
 crt = -MD$(DBGX)
@@ -418,29 +428,35 @@ WISH_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES)
 #---------------------------------------------------------------------
 
 !if $(DEBUG)
-ldebug	    = -debug:full -debugtype:cv
+ldebug	= -debug:full -debugtype:cv
 !else
-ldebug	    = -release
+ldebug	= -release -opt:ref -opt:icf,3
 !endif
 
 # declarations common to all linker options
-lflags	    = -nologo -machine:$(MACHINE)
+lflags	= -nologo -machine:$(MACHINE) $(ldebug)
 
-# declarations for use on Intel i386, i486, and Pentium systems
-!IF "$(MACHINE)" == "IX86"
-DLLENTRY    = @12
-dlllflags   = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
-!ELSE IF "$(MACHINE)" == "IA64"
-DLLENTRY    = @12
-dlllflags   = $(lflags) -dll
-!ELSE
-dlllflags   = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
-!ENDIF
+!if $(PROFILE)
+lflags	= $(lflags) -profile
+!endif
 
-conlflags   = $(lflags) -subsystem:console -entry:mainCRTStartup
-guilflags   = $(lflags) -subsystem:windows -entry:WinMainCRTStartup
+!if $(ALIGN98_HACK) && !$(STATIC_BUILD)
+# align sections for PE size savings.
+lflags	= $(lflags) -opt:nowin98
+!else if !$(ALIGN98_HACK) && $(STATIC_BUILD)
+# align sections for speed in loading by choosing the virtual page size.
+lflags	= $(lflags) -align:4096
+!endif
 
-baselibs    = kernel32.lib advapi32.lib user32.lib
+!if $(LOIMPACT)
+lflags	= $(lflags) -ws:aggressive
+!endif
+
+dlllflags = $(lflags) -dll
+conlflags = $(lflags) -subsystem:console
+guilflags = $(lflags) -subsystem:windows
+
+baselibs   = kernel32.lib advapi32.lib user32.lib
 guilibs	    = $(baselibs) gdi32.lib comdlg32.lib winspool.lib imm32.lib comctl32.lib
 
 
@@ -496,8 +512,8 @@ rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 	$(TKTEST) $(ROOT)\library\demos\widget
 
 setup:
-	@$(MKDIR) $(TMP_DIR)
-	@$(MKDIR) $(OUT_DIR)
+	@if not exist $(OUT_DIR)\nul mkdir $(OUT_DIR)
+	@if not exist $(TMP_DIR)\nul mkdir $(TMP_DIR)
 
 console-wish : $(WISHC)
 
@@ -511,7 +527,8 @@ $(TKLIB): $(TKOBJS)
 $**
 <<
 !else
-	$(link32) $(ldebug) $(dlllflags) -out:$@ $(guilibs) $(TCLSTUBLIB) @<<
+	$(link32) $(ldebug) $(dlllflags) -base:@$(COFFBASE),tk -out:$@ \
+		$(guilibs) $(TCLSTUBLIB) @<<
 $**
 <<
 	-@del $*.exp
@@ -568,34 +585,68 @@ genstubs:
 # Regenerate the windows help files.
 #---------------------------------------------------------------------
 
-#MAN2TCL		= $(TOOLSDIR)\man2tcl
-#TCLRTF		= $(TOOLSDIR)\tcl.rtf
-#MAN2HELP	= $(TOOLSDIR)\man2help.tcl
-#TCLHPJ		= $(TOOLSDIR)\tcl.hpj
+TCLHLPBASE	= $(PROJECT)$(VERSION)
+HELPFILE	= $(OUT_DIR)\$(TCLHLPBASE).hlp
+HELPCNT		= $(OUT_DIR)\$(TCLHLPBASE).cnt
+DOCTMP_DIR	= $(OUT_DIR)\$(PROJECT)_docs
+HELPRTF		= $(DOCTMP_DIR)\$(PROJECT).rtf
+MAN2HELP	= $(DOCTMP_DIR)\man2help.tcl
+MAN2HELP2	= $(DOCTMP_DIR)\man2help2.tcl
+INDEX		= $(DOCTMP_DIR)\index.tcl
+BMP		= $(DOCTMP_DIR)\lamp.bmp
+BMP_NOPATH	= lamp.bmp
+MAN2TCL		= $(DOCTMP_DIR)\man2tcl.exe
 
-#winhelp: $(TCLHLP)
+winhelp: docsetup $(HELPFILE)
 
-#$(TCLHLP): $(TCLRTF)
-#	cd $(TOOLSDIR)
-#	start /wait hcrtf.exe -x tcl.hpj
-#	cd $(MAKEDIR)
-#	copy $(TOOLSDIR)\$(TCLHLPBASE).hlp $(OUT_DIR)
-#	copy $(TOOLSDIR)\$(TCLHLPBASE).cnt $(OUT_DIR)
+docsetup:
+	@if not exist $(DOCTMP_DIR)\nul mkdir $(DOCTMP_DIR)
 
-#$(TCLHPJ): $(TCLHPJ).in
-#	copy $(TCLHPJ).in $(TCLHPJ)
+$(MAN2HELP) $(MAN2HELP2) $(INDEX): $(TOOLSDIR)\$$(@F)
+	copy $(TOOLSDIR)\$(@F) $(@D)
 
-#$(MAN2TCL).exe: $(MAN2TCL).obj 
-#	cd $(TOOLSDIR)
-#	$(cc32) -nologo -G4 -ML -O2 $(MAN2TCL).c
-#	cd $(MAKEDIR)
+$(BMP):
+	copy $(WINDIR)\$(@F) $(@D)
 
-#$(TCLRTF): $(MAN2TCL).exe $(TCLSH)
-#	cd $(TOOLSDIR)
-#	..\win\$(TCLSH) $(MAN2HELP) $(PROJECT) $(VERSION) $(ROOT)/doc \
-#		../../tk$(DOTVERSION)/doc
-#	cd $(MAKEDIR)
+$(HELPFILE): $(HELPRTF) $(BMP)
+	cd $(DOCTMP_DIR)
+	start /wait hcrtf.exe -x <<$(PROJECT).hpj
+[OPTIONS]
+COMPRESS=12 Hall Zeck
+LCID=0x409 0x0 0x0 ; English (United States)
+TITLE=Tcl/Tk Reference Manual
+BMROOT=.
+CNT=$(@B).cnt
+HLP=$(@B).hlp
 
+[FILES]
+$(PROJECT).rtf
+
+[WINDOWS]
+main="Tcl/Tk Reference Manual",,27648,(r15263976),(r4227327)
+
+[CONFIG]
+BrowseButtons()
+CreateButton(1, "Web", ExecFile("http://www.tcl.tk"))
+CreateButton(2, "SF", ExecFile("http://sf.net/projects/tcl"))
+CreateButton(3, "Wiki", ExecFile("http://wiki.tcl.tk"))
+CreateButton(4, "FAQ", ExecFile("http://www.purl.org/NET/Tcl-FAQ/"))
+<<
+	cd $(MAKEDIR)
+	copy "$(DOCTMP_DIR)\$(@B).hlp" "$(OUT_DIR)"
+	copy "$(DOCTMP_DIR)\$(@B).cnt" "$(OUT_DIR)"
+
+$(MAN2TCL): $(TOOLSDIR)\$$(@B).c
+	$(cc32) -nologo -G4 -ML -O2 -Fo$(@D)\ $(TOOLSDIR)\$(@B).c -link -out:$@
+
+$(HELPRTF): $(MAN2TCL) $(MAN2HELP) $(MAN2HELP2) $(INDEX)
+	$(TCLSH) $(MAN2HELP:\=/) -bitmap $(BMP_NOPATH) $(PROJECT) $(VERSION) $(DOCDIR:\=/)
+
+install-docs:
+!if exist($(HELPFILE))
+	@xcopy /i /y "$(HELPFILE)" "$(DOC_INSTALL_DIR)\"
+	@xcopy /i /y "$(HELPCNT)" "$(DOC_INSTALL_DIR)\"
+!endif
 
 #---------------------------------------------------------------------
 # Special case object file targets
@@ -675,7 +726,15 @@ $(GENERICDIR)/tkMenu.c: $(GENERICDIR)/tkMenu.h
 $(GENERICDIR)/tkMenuDraw.c: $(GENERICDIR)/tkMenu.h
 $(WINDIR)/tkWinMenu.c: $(GENERICDIR)/tkMenu.h
 
+!if exist("$(OUT_DIR)\depend.mk")
+!include "$(OUT_DIR)\depend.mk"
+!message *** Dependency rules in effect.
+!else
+!message *** Dependency rules are not being used.
+!endif
 
+### add a spacer in the output
+!message
 
 #---------------------------------------------------------------------
 # Implicit rules
