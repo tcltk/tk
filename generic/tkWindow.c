@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.9 1999/09/21 06:42:30 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.10 1999/10/29 03:57:57 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -107,7 +107,7 @@ static TkCmd commands[] = {
     {"font",		NULL,			Tk_FontObjCmd,		1, 1},
     {"grab",		Tk_GrabCmd,		NULL,			0, 1},
     {"grid",		Tk_GridCmd,		NULL,			1, 1},
-    {"image",		Tk_ImageCmd,		NULL,			1, 1},
+    {"image",		NULL,			Tk_ImageObjCmd,		1, 1},
     {"lower",		Tk_LowerCmd,		NULL,			1, 1},
     {"option",		Tk_OptionCmd,		NULL,			1, 1},
     {"pack",		Tk_PackCmd,		NULL,			1, 1},
@@ -268,7 +268,7 @@ CreateTopLevelWindow(interp, parent, name, screenName)
 	 */
     
 	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
-	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
+	Tk_CreateOldPhotoImageFormat(&tkImgFmtPPM);
 
 	/*
 	 * Create exit handler to delete all windows when the application

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.31 1999/10/01 22:45:16 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.32 1999/10/29 03:57:55 hobbs Exp $
  */
 
 #ifndef _TK
@@ -978,9 +978,15 @@ typedef struct Tk_CanvasTextInfo {
  */
 
 typedef struct Tk_ImageType Tk_ImageType;
+#ifdef USE_OLD_IMAGE
 typedef int (Tk_ImageCreateProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	char *name, int argc, char **argv, Tk_ImageType *typePtr,
 	Tk_ImageMaster master, ClientData *masterDataPtr));
+#else
+typedef int (Tk_ImageCreateProc) _ANSI_ARGS_((Tcl_Interp *interp,
+	char *name, int objc, Tcl_Obj *CONST objv[], Tk_ImageType *typePtr,
+	Tk_ImageMaster master, ClientData *masterDataPtr));
+#endif
 typedef ClientData (Tk_ImageGetProc) _ANSI_ARGS_((Tk_Window tkwin,
 	ClientData masterData));
 typedef void (Tk_ImageDisplayProc) _ANSI_ARGS_((ClientData instanceData,
@@ -1055,10 +1061,9 @@ typedef struct Tk_PhotoImageBlock {
 				 * pixels in successive lines. */
     int		pixelSize;	/* Address difference between successive
 				 * pixels in the same line. */
-    int		offset[3];	/* Address differences between the red, green
-				 * and blue components of the pixel and the
-				 * pixel as a whole. */
-    int		reserved;	/* Reserved for extensions (dash patch) */
+    int		offset[4];	/* Address differences between the red, green,
+				 * blue and alpha components of the pixel and
+				 * the pixel as a whole. */
 } Tk_PhotoImageBlock;
 
 /*
@@ -1067,6 +1072,7 @@ typedef struct Tk_PhotoImageBlock {
  */
 
 typedef struct Tk_PhotoImageFormat Tk_PhotoImageFormat;
+#ifdef USE_OLD_IMAGE
 typedef int (Tk_ImageFileMatchProc) _ANSI_ARGS_((Tcl_Channel chan,
 	char *fileName, char *formatString, int *widthPtr, int *heightPtr));
 typedef int (Tk_ImageStringMatchProc) _ANSI_ARGS_((char *string,
@@ -1083,6 +1089,26 @@ typedef int (Tk_ImageFileWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
 typedef int (Tk_ImageStringWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	Tcl_DString *dataPtr, char *formatString,
 	Tk_PhotoImageBlock *blockPtr));
+#else
+typedef int (Tk_ImageFileMatchProc) _ANSI_ARGS_((Tcl_Channel chan,
+	char *fileName, Tcl_Obj *format, int *widthPtr,
+	int *heightPtr, Tcl_Interp *interp));
+typedef int (Tk_ImageStringMatchProc) _ANSI_ARGS_((Tcl_Obj *dataObj,
+	Tcl_Obj *format, int *widthPtr, int *heightPtr,
+	Tcl_Interp *interp));
+typedef int (Tk_ImageFileReadProc) _ANSI_ARGS_((Tcl_Interp *interp,
+	Tcl_Channel chan, char *fileName, Tcl_Obj *format,
+	Tk_PhotoHandle imageHandle, int destX, int destY,
+	int width, int height, int srcX, int srcY));
+typedef int (Tk_ImageStringReadProc) _ANSI_ARGS_((Tcl_Interp *interp,
+	Tcl_Obj *dataObj, Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+	int destX, int destY, int width, int height, int srcX, int srcY));
+typedef int (Tk_ImageFileWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
+	char *fileName, Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
+typedef int (Tk_ImageStringWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
+	Tcl_DString *dataPtr, Tcl_Obj *format,
+	Tk_PhotoImageBlock *blockPtr));
+#endif
 
 /*
  * The following structure represents a particular file format for
@@ -1117,6 +1143,17 @@ struct Tk_PhotoImageFormat {
 				 * currently known.  Filled in by Tk, not
 				 * by image format handler. */
 };
+
+EXTERN void		Tk_CreateOldImageType _ANSI_ARGS_((
+				Tk_ImageType *typePtr));
+EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
+				Tk_PhotoImageFormat *formatPtr));
+
+#ifdef USE_OLD_IMAGE
+#define Tk_CreateImageType Tk_CreateOldImageType
+#define Tk_CreatePhotoImageFormat Tk_CreateOldPhotoImageFormat
+#endif
+
 
 /*
  *--------------------------------------------------------------

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.6 1999/04/16 01:51:12 stanton Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.7 1999/10/29 03:57:56 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -24,7 +24,6 @@
 #else
 #include "tkUnixInt.h"
 #endif
-
 
 /*
  * Forward declarations for procedures defined later in this file:

@@ -3,13 +3,15 @@
  *
  *	A photo image file handler for GIF files. Reads 87a and 89a GIF
  *	files. At present there is no write function.  GIF images may be
- *	read using the -data option of the photo image by representing
+ *	read using the -data option of the photo image.  The data may be
+ *	given as a binary string in a Tcl_Obj or by representing
  *	the data as BASE64 encoded ascii.  Derived from the giftoppm code
  *	found in the pbmplus package and tkImgFmtPPM.c in the tk4.0b2
  *	distribution.
  *
  * Copyright (c) Reed Wade (wade@cs.utk.edu), University of Tennessee
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1997 Australian National University
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -27,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.4 1999/07/01 00:39:44 redman Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.5 1999/10/29 03:57:56 hobbs Exp $
  */
 
 /*
@@ -63,7 +65,8 @@ typedef struct mFile {
 /*
  * 			 HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
  * This code is hard-wired for reading from files.  In order to read
- * from a data stream, we'll trick fread so we can reuse the same code
+ * from a data stream, we'll trick fread so we can reuse the same code.
+ * 0==from file; 1==from base64 encoded data; 2==from binary data
  */
 
 typedef struct ThreadSpecificData {
@@ -76,15 +79,17 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static int      FileMatchGIF _ANSI_ARGS_((Tcl_Channel chan, char *fileName,
-		    char *formatString, int *widthPtr, int *heightPtr));
+		    Tcl_Obj *format, int *widthPtr, int *heightPtr,
+		    Tcl_Interp *interp));
 static int      FileReadGIF  _ANSI_ARGS_((Tcl_Interp *interp,
-		    Tcl_Channel chan, char *fileName, char *formatString,
+		    Tcl_Channel chan, char *fileName, Tcl_Obj *format,
 		    Tk_PhotoHandle imageHandle, int destX, int destY,
 		    int width, int height, int srcX, int srcY));
-static int	StringMatchGIF _ANSI_ARGS_(( char *string,
-		    char *formatString, int *widthPtr, int *heightPtr));
-static int	StringReadGIF _ANSI_ARGS_((Tcl_Interp *interp, char *string,
-		    char *formatString, Tk_PhotoHandle imageHandle,
+static int	StringMatchGIF _ANSI_ARGS_(( Tcl_Obj *dataObj,
+		    Tcl_Obj *format, int *widthPtr, int *heightPtr,
+		    Tcl_Interp *interp));
+static int	StringReadGIF _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *dataObj,
+		    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
 		    int destX, int destY, int width, int height,
 		    int srcX, int srcY));
 
@@ -165,13 +170,14 @@ static void		mInit _ANSI_ARGS_((unsigned char *string,
  */
 
 static int
-FileMatchGIF(chan, fileName, formatString, widthPtr, heightPtr)
+FileMatchGIF(chan, fileName, format, widthPtr, heightPtr, interp)
     Tcl_Channel chan;		/* The image file, open for reading. */
     char *fileName;		/* The name of the image file. */
-    char *formatString;		/* User-specified format string, or NULL. */
+    Tcl_Obj *format;		/* User-specified format object, or NULL. */
     int *widthPtr, *heightPtr;	/* The dimensions of the image are
 				 * returned here if the file is a valid
 				 * raw GIF file. */
+    Tcl_Interp *interp;		/* not used */
 {
 	return ReadGIFHeader(chan, widthPtr, heightPtr);
 }
@@ -197,12 +203,12 @@ FileMatchGIF(chan, fileName, formatString, widthPtr, heightPtr)
  */
 
 static int
-FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
+FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	width, height, srcX, srcY)
     Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan;		/* The image file, open for reading. */
     char *fileName;		/* The name of the image file. */
-    char *formatString;		/* User-specified format string, or NULL. */
+    Tcl_Obj *format;		/* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
     int destX, destY;		/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
@@ -212,15 +218,38 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 				 * in image being read. */
 {
     int fileWidth, fileHeight;
-    int nBytes;
+    int nBytes, index = 0, argc = 0, i;
+    Tcl_Obj **objv;
     Tk_PhotoImageBlock block;
     unsigned char buf[100];
     int bitPixel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
+    static char *optionStrings[] = {
+	"-index",	NULL
+    };
 
+    if (format && Tcl_ListObjGetElements(interp, format,
+	    &argc, &objv) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    for (i = 1; i < argc; i++) {
+	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option name", 0,
+		&nBytes) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (i == (argc-1)) {
+	    Tcl_AppendResult(interp, "no value given for \"",
+		    Tcl_GetStringFromObj(objv[i], NULL),
+		    "\" option", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	if (Tcl_GetIntFromObj(interp, objv[++i], &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    }
     if (!ReadGIFHeader(chan, &fileWidth, &fileHeight)) {
-	Tcl_AppendResult(interp, "couldn't read GIF header from file \"",
+    	Tcl_AppendResult(interp, "couldn't read GIF header from file \"",
 		fileName, "\"", NULL);
 	return TCL_ERROR;
     }
@@ -263,9 +292,8 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
     block.offset[0] = 0;
     block.offset[1] = 1;
     block.offset[2] = 2;
-    block.offset[3] = 0;
-    nBytes = height * block.pitch;
-    block.pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
+    block.offset[3] = 3;
+    block.pixelPtr = NULL;
 
     while (1) {
 	if (Fread(buf, 1, 1, chan) != 1) {
@@ -282,7 +310,9 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	     * GIF terminator.
 	     */
 
-	    break;
+	    Tcl_AppendResult(interp,"no image data for this index",
+		    (char *) NULL);
+	    goto error;
 	}
 
 	if (buf[0] == '!') {
@@ -318,7 +348,42 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	    goto error;
 	}
 
+	fileWidth = LM_to_uint(buf[4],buf[5]);
+	fileHeight = LM_to_uint(buf[6],buf[7]);
+
 	bitPixel = 1<<((buf[8]&0x07)+1);
+
+	if (index--) {
+	    int x,y;
+	    unsigned char c;
+	    /* this is not the image we want to read: skip it. */
+
+	    if (BitSet(buf[8], LOCALCOLORMAP)) {
+		if (!ReadColorMap(chan, bitPixel, 0)) {
+		    Tcl_AppendResult(interp,
+			    "error reading color map", (char *) NULL);
+		    goto error;
+		}
+	    }
+
+	    /* read data */
+	    if (!ReadOK(chan,&c,1)) {
+		goto error;
+	    }
+
+	    LWZReadByte(chan, 1, c);
+
+	    for (y=0; y<fileHeight; y++) {
+		for (x=0; x<fileWidth; x++) {
+		    if (LWZReadByte(chan, 0, c) < 0) {
+			Tcl_AppendResult(interp,
+				"error reading image data", (char *) NULL);
+			goto error;
+		    }
+		}
+	    }
+	    continue;
+	}
 
 	if (BitSet(buf[8], LOCALCOLORMAP)) {
 	    if (!ReadColorMap(chan, bitPixel, colorMap)) {
@@ -327,50 +392,62 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 		    goto error;
 	    }
 	}
+
+	index = LM_to_uint(buf[0],buf[1]);
+	srcX -= index;
+	if (srcX<0) {
+	    destX -= srcX; width += srcX;
+	    srcX = 0;
+	}
+
+	if (width > fileWidth) {
+	    width = fileWidth;
+	}
+
+	index = LM_to_uint(buf[2],buf[3]);
+	srcY -= index;
+	if (index > srcY) {
+	    destY -= srcY; height += srcY;
+	    srcY = 0;
+	}
+	if (height > fileHeight) {
+	    height = fileHeight;
+	}
+
+	if ((width <= 0) || (height <= 0)) {
+	    block.pixelPtr = 0;
+	    goto noerror;
+	}
+
+	block.width = width;
+	block.height = height;
+	block.pixelSize = (transparent>=0) ? 4 : 3;
+	block.offset[3] = (transparent>=0) ? 3 : 0;
+	block.pitch = block.pixelSize * width;
+	nBytes = block.pitch * height;
+	block.pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
+
 	if (ReadImage(interp, (char *) block.pixelPtr, chan, width,
 		height, colorMap, fileWidth, fileHeight, srcX, srcY,
 		BitSet(buf[8], INTERLACE), transparent) != TCL_OK) {
 	    goto error;
 	}
 	break;
-   }
-
-    if (transparent == -1) {
-	Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, height);
-    } else {
-	int x, y, end;
-	unsigned char *imagePtr, *rowPtr, *pixelPtr;
-
-	imagePtr = rowPtr = block.pixelPtr;
-	for (y = 0; y < height; y++) {
-	    x = 0;
-	    pixelPtr = rowPtr;
-	    while(x < width) {
-		/* search for first non-transparent pixel */
-		while ((x < width) && !(pixelPtr[CM_ALPHA])) {
-		    x++; pixelPtr += 4;
-		}
-		end = x;
-		/* search for first transparent pixel */
-		while ((end < width) && pixelPtr[CM_ALPHA]) {
-		    end++; pixelPtr += 4;
-		}
-		if (end > x) {
-		    block.pixelPtr = rowPtr + 4 * x;
-		    Tk_PhotoPutBlock(imageHandle, &block, destX+x,
-			    destY+y, end-x, 1);
-		}
-		x = end;
-	    }
-	    rowPtr += block.pitch;
-	}
-	block.pixelPtr = imagePtr;
     }
-    ckfree((char *) block.pixelPtr);
+
+    Tk_PhotoPutBlock(imageHandle, &block, destX, destY, width, height);
+
+    noerror:
+    if (block.pixelPtr) {
+	ckfree((char *) block.pixelPtr);
+    }
+    Tcl_AppendResult(interp, tkImgFmtGIF.name, (char *) NULL);
     return TCL_OK;
 
     error:
-    ckfree((char *) block.pixelPtr);
+    if (block.pixelPtr) {
+	ckfree((char *) block.pixelPtr);
+    }
     return TCL_ERROR;
 
 }
@@ -381,10 +458,10 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
  * StringMatchGIF --
  *
  *  This procedure is invoked by the photo image type to see if
- *  a string contains image data in GIF format.
+ *  an object contains image data in GIF format.
  *
  * Results:
- *  The return value is 1 if the first characters in the string
+ *  The return value is 1 if the first characters in the data are
  *  like GIF data, and 0 otherwise.
  *
  * Side effects:
@@ -394,21 +471,38 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
  */
 
 static int
-StringMatchGIF(string, formatString, widthPtr, heightPtr)
-    char *string;		/* the string containing the image data */
-    char *formatString;		/* the image format string */
+StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
+    Tcl_Obj *dataObj;		/* the object containing the image data */
+    Tcl_Obj *format;		/* the image format object, or NULL */
     int *widthPtr;		/* where to put the string width */
     int *heightPtr;		/* where to put the string height */
+    Tcl_Interp *interp;		/* not used */
 {
-    unsigned char header[10];
-    int got;
+    unsigned char *data, header[10];
+    int got, length;
     MFile handle;
-    mInit((unsigned char *) string, &handle);
-    got = Mread(header, 10, 1, &handle);
-    if (got != 10
-	    || ((strncmp("GIF87a", (char *) header, 6) != 0)
-	    && (strncmp("GIF89a", (char *) header, 6) != 0))) {
-	return 0;
+
+    data = Tcl_GetByteArrayFromObj(dataObj, &length);
+
+    /* Header is a minimum of 10 bytes */
+    if (length < 10) {
+      return 0;
+    }
+
+    /* Check whether the data is Base64 encoded */
+
+    if ((strncmp("\107\111\106\70\67\141", data, 6) != 0) && 
+	(strncmp("\107\111\106\70\71\141", data, 6) != 0)) {
+      /* Try interpreting the data as Base64 encoded */
+      mInit((unsigned char *) data, &handle);
+      got = Mread(header, 10, 1, &handle);
+      if (got != 10
+	      || ((strncmp("\107\111\106\70\67\141", (char *) header, 6) != 0)
+	      && (strncmp("\107\111\106\70\71\141", (char *) header, 6) != 0))) {
+	  return 0;
+      }
+    } else {
+      memcpy((VOID *) header, (VOID *) data, 10);
     }
     *widthPtr = LM_to_uint(header[6],header[7]);
     *heightPtr = LM_to_uint(header[8],header[9]);
@@ -421,8 +515,8 @@ StringMatchGIF(string, formatString, widthPtr, heightPtr)
  * StringReadGif -- --
  *
  *	This procedure is called by the photo image type to read
- *	GIF format data from a base64 encoded string, and give it to
- *	the photo image.
+ *	GIF format data from an object, optionally base64 encoded, 
+ *	and give it to the photo image.
  *
  * Results:
  *	A standard TCL completion code.  If TCL_ERROR is returned
@@ -437,11 +531,11 @@ StringMatchGIF(string, formatString, widthPtr, heightPtr)
  */
 
 static int
-StringReadGIF(interp,string,formatString,imageHandle,
+StringReadGIF(interp, dataObj, format, imageHandle,
 	destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;		/* interpreter for reporting errors in */
-    char *string;		/* string containing the image */
-    char *formatString;		/* format string if any */
+    Tcl_Obj *dataObj;		/* object containing the image */
+    Tcl_Obj *format;		/* format object, or NULL */
     Tk_PhotoHandle imageHandle;	/* the image to write this data into */
     int destX, destY;		/* The rectangular region of the  */
     int  width, height;		/*   image to copy */
@@ -451,11 +545,22 @@ StringReadGIF(interp,string,formatString,imageHandle,
     MFile handle;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    mInit((unsigned char *)string,&handle);
-    tsdPtr->fromData = 1;
-    result = FileReadGIF(interp, (Tcl_Channel) &handle, "inline data",
-            formatString, imageHandle, destX, destY, width, height,
+    Tcl_Channel dataSrc;
+    char *data;
+    /* Check whether the data is Base64 encoded */
+    data = Tcl_GetByteArrayFromObj(dataObj, NULL);
+    if ((strncmp("\107\111\106\70\67\141", data, 6) != 0) && 
+	    (strncmp("\107\111\106\70\71\141", data, 6) != 0)) {
+	mInit((unsigned char *)data,&handle);
+	tsdPtr->fromData = 1;
+	dataSrc = (Tcl_Channel) &handle;
+    } else {
+	tsdPtr->fromData = 2;
+	mInit((unsigned char *)data,&handle);
+	dataSrc = (Tcl_Channel) &handle;
+    }
+    result = FileReadGIF(interp, dataSrc, "inline data",
+	    format, imageHandle, destX, destY, width, height,
             srcX, srcY);
     tsdPtr->fromData = 0;
     return(result);
@@ -490,8 +595,8 @@ ReadGIFHeader(chan, widthPtr, heightPtr)
     unsigned char buf[7];
 
     if ((Fread(buf, 1, 6, chan) != 6)
-	    || ((strncmp("GIF87a", (char *) buf, 6) != 0)
-	    && (strncmp("GIF89a", (char *) buf, 6) != 0))) {
+	    || ((strncmp("\107\111\106\70\67\141", (char *) buf, 6) != 0)
+	    && (strncmp("\107\111\106\70\71\141", (char *) buf, 6) != 0))) {
 	return 0;
     }
 
@@ -525,10 +630,12 @@ ReadColorMap(chan, number, buffer)
 		return 0;
 	    }
 	    
-	    buffer[i][CM_RED] = rgb[0] ;
-	    buffer[i][CM_GREEN] = rgb[1] ;
-	    buffer[i][CM_BLUE] = rgb[2] ;
-	    buffer[i][CM_ALPHA] = 255 ;
+	    if (buffer) {
+		buffer[i][CM_RED] = rgb[0] ;
+		buffer[i][CM_GREEN] = rgb[1] ;
+		buffer[i][CM_BLUE] = rgb[2] ;
+		buffer[i][CM_ALPHA] = 255 ;
+	    }
 	}
 	return 1;
 }
@@ -649,7 +756,9 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
 	    *pixelPtr++ = cmap[v][CM_RED];
 	    *pixelPtr++ = cmap[v][CM_GREEN];
 	    *pixelPtr++ = cmap[v][CM_BLUE];
-	    *pixelPtr++ = cmap[v][CM_ALPHA];
+	    if (transparent >= 0) {
+		*pixelPtr++ = cmap[v][CM_ALPHA];
+	    }
 	}
 
 	++xpos;
@@ -682,7 +791,7 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
 	    } else {
 		++ypos;
 	    }
-	    pixelPtr = imagePtr + (ypos-srcY) * len * 4;
+	    pixelPtr = imagePtr + (ypos-srcY) * len * ((transparent>=0)?4:3);
 	}
 	if (ypos >= height)
 	    break;
@@ -1064,10 +1173,17 @@ Fread(dst, hunk, count, chan)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    MFile *handle;
 
-    if (tsdPtr->fromData) {
+    switch (tsdPtr->fromData) {
+      case 1:
 	return(Mread(dst, hunk, count, (MFile *) chan));
-    } else {
+      case 2:
+	handle = (MFile *) chan;
+	memcpy((VOID *)dst, (VOID *) handle->data, (size_t) (hunk * count));
+	handle->data += hunk * count;
+	return((int) (hunk * count));
+      default:
 	return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
     }
 }

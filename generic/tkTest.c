@@ -13,8 +13,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.6 1999/06/16 20:11:29 surles Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.7 1999/10/29 03:57:57 hobbs Exp $
  */
+
+#define USE_OLD_IMAGE
 
 #include "tkInt.h"
 #include "tkPort.h"

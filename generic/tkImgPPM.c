@@ -13,8 +13,10 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.5 1999/07/01 00:39:44 redman Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.6 1999/10/29 03:57:56 hobbs Exp $
  */
+
+#define USE_OLD_IMAGE
 
 #include "tkInt.h"
 #include "tkPort.h"
