@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.5 2002/04/10 19:56:50 hobbs Exp $
+# RCS: @(#) $Id: all.tcl,v 1.6 2002/04/12 09:18:52 hobbs Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -65,16 +65,3 @@ foreach file [lsort $fileList] {
 puts stdout "\nTests ended at [eval $timeCmd]"
 ::tcltest::cleanupTests 1
 return
-
-
-
-
-
-
-
-
-
-
-
-
-
