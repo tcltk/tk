@@ -1,5 +1,14 @@
 2001-08-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/menu.test:
+	* tests/send.test:
+	* tests/select.test: corrected to use testConfig constraints in
+	the TK_ALT_DISPLAY case
+
+	* tests/unixSend.test: removed test file completely identical to
+	send.test.  Removed platform specific named file in case somebody
+	gets send working on Win/Mac in the future.
+
 	* tests/config.test: added config-14.1 to test namespace import
 	evaluation of widgets.
 	* generic/tkButton.c (ButtonCreate):
