@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.33 2004/03/16 19:53:28 hobbs Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.34 2004/11/07 22:00:23 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -2730,13 +2730,14 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 				 * make sure that there is at least one
 				 * window name. */
 {
-    Gridder *masterPtr;
+    Gridder *masterPtr = NULL;
     Gridder *slavePtr;
     Tk_Window other, slave, parent, ancestor;
     int i, j, tmp;
     int length;
     int numWindows;
     int width;
+    int defaultRow = -1;
     int defaultColumn = 0;	/* default column number */
     int defaultColumnSpan = 1;	/* default number of columns */
     char *lastWindow;		/* use this window to base current
@@ -2765,6 +2766,20 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     	firstChar = string[0];
 
 	if (firstChar == '.') {
+	    /*
+	     * Check that windows are valid, and locate the first slave's
+	     * parent window (default for -in).
+	     */
+	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &slave) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    if (masterPtr == NULL) {
+		parent = Tk_Parent(slave);
+		if (parent != NULL) {
+		    masterPtr = GetGrid(parent);
+		    InitMasterData(masterPtr);
+		}
+	    }
 	    numWindows++;
 	    continue;
     	}
@@ -2809,6 +2824,49 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     }
 
     /*
+     * Go through all options looking for -in and -row, which are needed to
+     * be found first to handle the special case where ^ is used on a row
+     * without windows names, but with an -in option.
+     * Since all options are checked here, we do not need to handle the
+     * error case again later.
+     */ 
+
+    for (i = numWindows; i < objc; i += 2) {
+	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
+		    &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (index == CONF_IN) {
+	    if (TkGetWindowFromObj(interp, tkwin, objv[i+1], &other) !=
+		    TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    masterPtr = GetGrid(other);
+	    InitMasterData(masterPtr);
+	} else if (index == CONF_ROW) {
+	    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK
+		    || tmp < 0) {
+		Tcl_ResetResult(interp);
+		Tcl_AppendResult(interp, "bad row value \"",
+			Tcl_GetString(objv[i+1]),
+			"\": must be a non-negative integer", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    defaultRow = tmp;
+	}
+    }
+
+    /* If no -row is given, use the first unoccupied row of the master. */
+    if (defaultRow < 0) {
+	if (masterPtr != NULL && masterPtr->masterDataPtr != NULL) {
+	    SetGridSize(masterPtr);
+	    defaultRow = masterPtr->masterDataPtr->rowEnd;
+	} else {
+	    defaultRow = 0;
+	}
+    }
+
+    /*
      * Iterate over all of the slave windows and short-cuts, parsing
      * options for each slave.  It's a bit wasteful to re-parse the
      * options for each slave, but things get too messy if we try to
@@ -2819,7 +2877,6 @@ ConfigureSlaves(interp, tkwin, objc, objv)
      * first window.
      */
 
-    masterPtr = NULL;
     positionGiven = 0;
     for (j = 0; j < numWindows; j++) {
 	string = Tcl_GetString(objv[j]);
@@ -2873,10 +2930,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	 */
 
 	for (i = numWindows; i < objc; i += 2) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
-		    &index) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	    Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0, 
+		    &index);
 	    if (index == CONF_COLUMN) {
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK ||
 			tmp < 0) {
@@ -2948,7 +3003,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK
 			|| tmp < 0) {
 		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad grid value \"",
+		    Tcl_AppendResult(interp, "bad row value \"",
 			    Tcl_GetString(objv[i+1]),
 			    "\": must be a non-negative integer", (char *)NULL);
 		    return TCL_ERROR;
@@ -3063,11 +3118,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 	slavePtr->numCols += defaultColumnSpan - 1;
 	if (slavePtr->row == -1) {
-	    if (masterPtr->masterDataPtr == NULL) {
-	    	slavePtr->row = 0;
-	    } else {
-	    	slavePtr->row = masterPtr->masterDataPtr->rowEnd;
-	    }
+	    slavePtr->row = defaultRow;
 	}
 	defaultColumn += slavePtr->numCols;
 	defaultColumnSpan = 1;
@@ -3127,12 +3178,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	 */
 
 	if (lastWindow == NULL) {
-	    if (masterPtr->masterDataPtr != NULL) {
-		SetGridSize(masterPtr);
-		lastRow = masterPtr->masterDataPtr->rowEnd - 2;
-	    } else {
-		lastRow = 0;
-	    }
+	    lastRow = defaultRow - 1;
 	    lastColumn = 0;
 	} else {
 	    other = Tk_NameToWindow(interp, lastWindow, tkwin);
@@ -3143,7 +3189,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 
 	lastColumn += numSkip;
 
-	for (match=0, slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+	match = 0;
+	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 					 slavePtr = slavePtr->nextPtr) {
 
 	    if (slavePtr->column == lastColumn

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.24 2004/02/18 21:25:42 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.25 2004/11/07 22:00:12 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -164,7 +164,7 @@ grid_reset 3.2
 test grid-3.3 {configure: basic argument checking} {
     button .b
     list [catch {grid .b -row -1} msg] $msg
-} {1 {bad grid value "-1": must be a non-negative integer}}
+} {1 {bad row value "-1": must be a non-negative integer}}
 grid_reset 3.3
 
 test grid-3.4 {configure: basic argument checking} {
@@ -951,6 +951,41 @@ test grid-11.17 {default widget placement} {
     lappend res [winfo height .c]
 } {100 50 100}
 grid_reset 11.17
+
+test grid-11.18 {default widget placement} {
+    foreach l {a b c d e} {
+        frame .$l -width 50 -height 50
+    }
+    grid .a .b .c .d -sticky news
+    grid  ^  ^  ^  x -in .           ;# ^ and no child should work with -in.
+    grid rowconfigure . {0 1} -uniform a
+    update
+    set res ""
+    lappend res [winfo height .a]
+    lappend res [winfo height .b]
+    lappend res [winfo height .c]
+    lappend res [winfo height .d]
+} {100 100 100 50}
+grid_reset 11.18
+
+test grid-11.19 {default widget placement} {
+    foreach l {a b c d e} {
+        frame .$l -width 50 -height 50
+    }
+    grid .a .b -sticky news
+    grid .c .d -sticky news
+    grid ^     -in . -row 2
+    grid x  ^  -in . -row 1
+
+    grid rowconfigure . {0 1 2} -uniform a
+    update
+    set res ""
+    lappend res [winfo height .a]
+    lappend res [winfo height .b]
+    lappend res [winfo height .c]
+    lappend res [winfo height .d]
+} {50 100 100 50}
+grid_reset 11.19
 
 test grid-12.1 {-sticky} {
     catch {unset data}

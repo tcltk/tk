@@ -1,3 +1,10 @@
+2004-11-07  Peter Spjuth  <peter.spjuth@space.se>
+
+	* tests/grid.test:
+	* generic/tkGrid.c: Made handling of ^ a bit more consistent in
+	corner cases.  This makes ^ work without any widgets in the same
+	command. [Bug 962589]
+
 2004-11-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/demos/anilabel.tcl: Added a simple demonstration of how
