@@ -1,5 +1,9 @@
 2000-07-20  Eric Melski  <ericm@ajubasolutions.com>
 
+	* unix/tkUnixDraw.c (TkScrollWindow): Replaced a use of a trinary
+	operator with an if/else, to avoid build problems on some
+	platforms [Bug: 5819].
+
 	* win/makefile.vc: Applied patch from Don Porter to enhance nmake
 	support on NT/Alpha [RFE: 5939].
 
