@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.57 2002/07/05 20:19:16 dgp Exp $
+RCS: @(#) $Id: changes,v 1.58 2002/09/03 05:15:43 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5262,3 +5262,53 @@ hobbs)
 multiple range pairs (hobbs)
 
 --- Released 8.4b1, July 5, 2002 --- See ChangeLog for details ---
+
+2002-07-11 (bug fix) some memory allocation failures now result in
+	error messages rather than panic (fellows)
+
+2002-07-15 (platform support) Borland makefile on Windows (gravereaux,giese)
+
+2002-07-16 (bug fix)[220800,581627] icon reading (darley)
+
+2002-07-19 (bug fix) Postscript generation on Win2K (hipp)
+
+2002-07-22 (bug fix)[570764,568278] transient windows (dejong)
+
+2002-07-24 (bug fix)[581560] canvas memory management (hobbs)
+
+2002-07-24 (bug fix)[584691] focus ring on compound button (hobbs)
+
+2002-07-25 (feature enhancement)[564521] Obj-ified [wm] (spjuth)
+
+2002-08-04 (new feature)[589853][TIP 27] Tk interfaces are now fully
+	CONST-ified.  Use the symbols USE_NON_CONST or USE_COMPAT_CONST
+	to select interfaces with fewer changes.
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2002-08-07 (bug fix)[578654] bezier curves on canvas (hobbs)
+
+2002-08-07 (platform support)[468139] native directory browser on Win (hobbs)
+
+2002-08-07 (bug fix)[467524] fixed -from handling for gifs (obermeier)
+
+2002-08-08 (bug fix)[592201] wm transient panic (english,dejong)
+
+Rewrote Tk test suite to use tcltest package.
+
+--- Released 8.4b2, August 9, 2002 --- See ChangeLog for details ---
+
+2002-08-20 (bug fix) tk.h checks for matching tcl.h version (porter)
+
+2002-08-27 (bug fix)[582457] toolbar button bindings (hipp)
+
+2002-08-31 (platform support)[602770] Mac OS X / Aqua port (steffen)
+
+2002-09-02 (bug fix)[565485] button height on windows (hobbs)
+
+2002-09-02 (new feature)[TIP ???] new comand [tk windowingsystem] (steffen)
+
+2002-09-02 (new feature)[TIP 107][601518] [raise] is non-blocking (english)
+
+2002-09-02 (platfrom support) 64-bit compile on HP-11 (martin)
+
+--- Released 8.4.0, September X, 2002 --- See ChangeLog for details ---
