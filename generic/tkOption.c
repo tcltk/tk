@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.6 2000/05/27 01:49:37 ericm Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.7 2000/05/27 02:11:37 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -396,7 +396,7 @@ Tk_GetOption(tkwin, name, className)
 				 * is no class for this option:  just
 				 * check for name. */
 {
-    Tk_Uid nameId, classId;
+    Tk_Uid nameId, classId = NULL;
     char *masqName;
     register Element *elPtr, *bestPtr;
     register int count;
