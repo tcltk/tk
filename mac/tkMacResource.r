@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacResource.r,v 1.9 2002/04/23 14:28:02 das Exp $
+ * RCS: @(#) $Id: tkMacResource.r,v 1.10 2002/09/12 17:34:16 das Exp $
  */
 
 /*
@@ -28,7 +28,7 @@
  * the version string for Tcl.
  */
 
-#define RESOURCE_INCLUDED
+#define RC_INVOKED
 #include "tcl.h"
 #include "tk.h"
 
