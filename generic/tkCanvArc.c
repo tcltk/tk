@@ -545,7 +545,7 @@ ComputeArcBbox(canvas, arcPtr)
     TkIncludePoint((Tk_Item *) arcPtr, arcPtr->center2);
     center[0] = (arcPtr->bbox[0] + arcPtr->bbox[2])/2;
     center[1] = (arcPtr->bbox[1] + arcPtr->bbox[3])/2;
-    if (arcPtr->style != arcUid) {
+    if (arcPtr->style == pieSliceUid) {
 	TkIncludePoint((Tk_Item *) arcPtr, center);
     }
 
