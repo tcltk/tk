@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.20 2003/12/10 12:00:22 cc_benny Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.21 2003/12/18 14:48:58 cc_benny Exp $
  */
 
 #include "tkWinInt.h"
@@ -591,11 +591,13 @@ Tk_MeasureChars(
 				 * ignored. */
     int flags,			/* Various flag bits OR-ed together:
 				 * TK_PARTIAL_OK means include the last char
-				 * which only partially fit on this line.
+				 * which only partially fits on this line.
 				 * TK_WHOLE_WORDS means stop on a word
 				 * boundary, if possible.
-				 * TK_AT_LEAST_ONE means return at least one
-				 * character even if no characters fit. */
+                                 * TK_AT_LEAST_ONE means return at least one
+				 * character (or at least the first partial
+				 * word in case TK_WHOLE_WORDS is also set)
+				 * even if no characters (words) fit. */
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
@@ -624,13 +626,13 @@ Tk_MeasureChars(
     lastSubFontPtr = &fontPtr->subFontArray[0];
     oldFont = SelectObject(hdc, lastSubFontPtr->hFont);
 
-    	/*
-    	 * A three step process:
-    	 * 1. Find a contiguous range of characters that can all be 
-    	 *    represented by a single screen font.
-    	 * 2. Convert those chars to the encoding of that font.
-	 * 3. Measure converted chars.
-    	 */
+    /*
+     * A three step process:
+     * 1. Find a contiguous range of characters that can all be
+     *    represented by a single screen font.
+     * 2. Convert those chars to the encoding of that font.
+     * 3. Measure converted chars.
+     */
 
     moretomeasure = 0;
     curX = 0;
@@ -726,8 +728,9 @@ Tk_MeasureChars(
          */
 
         if ((p < end)
-                && (((flags & TK_PARTIAL_OK) && curX != maxLength)
-                        || ((flags & TK_AT_LEAST_ONE) && (curX == 0)))) {
+                && (((flags & TK_PARTIAL_OK) && (curX != maxLength))
+                        || ((p == source) && (flags & TK_AT_LEAST_ONE)
+                                && (curX == 0)))) {
 
             /*
              * Include the first character that didn't quite fit in
@@ -745,7 +748,7 @@ Tk_MeasureChars(
     SelectObject(hdc, oldFont);
     ReleaseDC(fontPtr->hwnd, hdc);
 
-    if ((flags & TK_WHOLE_WORDS) && (p < end) && (ch != ' ')) {
+    if ((flags & TK_WHOLE_WORDS) && (p < end)) {
 
         /*
          * Scan the string for the last word break and than repeat the
@@ -756,19 +759,27 @@ Tk_MeasureChars(
         Tcl_UniChar ch2;
 
         end = p;
-        p = source + Tcl_UtfToUniChar(source, &ch);
-        for ( ; p < end; p = next) {
+        p = source;
+        ch = 0;
+        while (p < end) {
             next = p + Tcl_UtfToUniChar(p, &ch2);
             if ((ch != ' ') && (ch2 == ' ')) {
                 lastWordBreak = p;
             }
+            p = next;
+            ch = ch2;
         }
 
         if (lastWordBreak != NULL) {
             return Tk_MeasureChars(
-                tkfont, source, lastWordBreak-source, -1, 0, lengthPtr );
+                tkfont, source, lastWordBreak-source, -1, 0, lengthPtr);
         } else {
-            p = end;
+            if (flags & TK_AT_LEAST_ONE) {
+                p = end;
+            } else {
+                p = source;
+                curX = 0;
+            }
         }
     }
 
