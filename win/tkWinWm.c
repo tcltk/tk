@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.69 2004/09/15 04:02:57 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.70 2004/09/17 22:44:34 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1897,7 +1897,7 @@ UpdateWrapper(winPtr)
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     HWND parentHWND, oldWrapper = wmPtr->wrapper;
-    HWND child;
+    HWND child, nextHWND, focusHWND;
     int x, y, width, height, state;
     WINDOWPLACEMENT place;
     HICON hSmallIcon = NULL;
@@ -1916,6 +1916,15 @@ UpdateWrapper(winPtr)
 
     child = TkWinGetHWND(winPtr->window);
     parentHWND = NULL;
+    /*
+     * nextHWND will help us maintain Z order.
+     * focusHWND will help us maintain focus, if we had it.
+     */
+    nextHWND = NULL;
+    focusHWND = GetFocus();
+    if ((oldWrapper == NULL) || (oldWrapper != GetForegroundWindow())) {
+	focusHWND = NULL;
+    }
 
     if (winPtr->flags & TK_EMBEDDED) {
 	wmPtr->wrapper = (HWND) winPtr->privatePtr;
@@ -2025,6 +2034,13 @@ UpdateWrapper(winPtr)
 	wmPtr->y = place.rcNormalPosition.top;
 
 	TkInstallFrameMenu((Tk_Window) winPtr);
+
+	if (oldWrapper && (oldWrapper != wmPtr->wrapper)) {
+	    /*
+	     * We will adjust wrapper to have the same Z order as oldWrapper
+	     */
+	    nextHWND = GetNextWindow(oldWrapper, GW_HWNDPREV);
+	}
     }
 
     /*
@@ -2097,11 +2113,16 @@ UpdateWrapper(winPtr)
 
     /*
      * Force an initial transition from withdrawn to the real
-     * initial state.
+     * initial state.  Set the Z order based on previous wrapper
+     * before we set the state.
      */
 
     state = wmPtr->hints.initial_state;
     wmPtr->hints.initial_state = WithdrawnState;
+    if (nextHWND) {
+	SetWindowPos(wmPtr->wrapper, nextHWND, 0, 0, 0, 0,
+		SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING);
+    }
     TkpWmSetState(winPtr, state);
 
     if (hSmallIcon != NULL) {
@@ -2158,12 +2179,17 @@ UpdateWrapper(winPtr)
 
     /*
      * If this is the first window created by the application, then
-     * we should activate the initial window.
+     * we should activate the initial window.  Otherwise, if this had
+     * the focus, we need to restore that.
+     * XXX: Rewrapping generates a <FocusOut> and <FocusIn> that would
+     * XXX: best be avoided, if we could safely mask them.
      */
 
     if (tsdPtr->firstWindow) {
 	tsdPtr->firstWindow = 0;
 	SetActiveWindow(wmPtr->wrapper);
+    } else if (focusHWND) {
+	SetFocus(focusHWND);
     }
 }
 
