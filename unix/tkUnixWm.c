@@ -12,13 +12,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.4 2004/10/27 17:34:36 dgp Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.5 2005/01/14 21:09:46 jenglish Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkUnixInt.h"
-#include <errno.h>
 
 /*
  * A data structure of the following type holds information for
@@ -108,9 +107,9 @@ typedef struct TkWmInfo {
 				 * window is gridded;  otherwise it isn't
 				 * gridded. */
     int minWidth, minHeight;	/* Minimum dimensions of window, in
-				 * grid units, not pixels. */
+				 * pixels or grid units. */
     int maxWidth, maxHeight;	/* Maximum dimensions of window, in
-				 * grid units, not pixels. */
+				 * pixels or grid units. 0 to default.*/
     Tk_Window gridWin;		/* Identifies the window that controls
 				 * gridding for this top-level, or NULL if
 				 * the top-level isn't currently gridded. */
@@ -131,7 +130,7 @@ typedef struct TkWmInfo {
      */
 
     int width, height;		/* Desired dimensions of window, specified
-				 * in grid units.  These values are
+				 * in pixels or grid units.  These values are
 				 * set by the "wm geometry" command and by
 				 * ConfigureNotify events (for when wm
 				 * resizes window).  -1 means user hasn't
@@ -334,7 +333,9 @@ static void		UpdateCommand _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdateGeometryInfo _ANSI_ARGS_((
 			    ClientData clientData));
 static void		UpdateHints _ANSI_ARGS_((TkWindow *winPtr));
-static void		UpdateSizeHints _ANSI_ARGS_((TkWindow *winPtr));
+static void		UpdateSizeHints _ANSI_ARGS_((TkWindow *winPtr,
+			    int newWidth, int newHeight));
+static void		UpdateTitle _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdatePhotoIcon _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdateVRootGeometry _ANSI_ARGS_((WmInfo *wmPtr));
 static void		UpdateWmProtocols _ANSI_ARGS_((WmInfo *wmPtr));
@@ -550,13 +551,15 @@ TkWmNewWindow(winPtr)
     wmPtr->hints.icon_x = wmPtr->hints.icon_y = 0;
     wmPtr->hints.icon_mask = None;
     wmPtr->hints.window_group = None;
-    wmPtr->minWidth = wmPtr->minHeight = 1;
 
     /*
      * Default the maximum dimensions to the size of the display, minus
      * a guess about how space is needed for window manager decorations.
      */
 
+    wmPtr->gridWin = NULL;
+    wmPtr->minWidth = wmPtr->minHeight = 1;
+    wmPtr->maxWidth = wmPtr->maxHeight = 0;
     wmPtr->widthInc = wmPtr->heightInc = 1;
     wmPtr->minAspect.x = wmPtr->minAspect.y = 1;
     wmPtr->maxAspect.x = wmPtr->maxAspect.y = 1;
@@ -618,7 +621,6 @@ TkWmMapWindow(winPtr)
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     XTextProperty textProp;
-    Tk_Uid string;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	Tcl_DString ds;
@@ -640,25 +642,9 @@ TkWmMapWindow(winPtr)
 	 * window.
 	 */
 
-	string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
-	Tcl_UtfToExternalDString(NULL, string, -1, &ds);
-	string = Tcl_DStringValue(&ds);
-	if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
-		&textProp)  != 0) {
-	    XSetWMName(winPtr->display, wmPtr->wrapperPtr->window, &textProp);
-	    XFree((char *) textProp.value);
-	}
-	Tcl_DStringFree(&ds);
-
 	TkWmSetClass(winPtr);
+	UpdateTitle(winPtr);
 	UpdatePhotoIcon(winPtr);
-
-	if (wmPtr->iconName != NULL) {
-	    Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
-	    XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
-		    Tcl_DStringValue(&ds));
-	    Tcl_DStringFree(&ds);
-	}
 
 	if (wmPtr->masterPtr != NULL) {
 	    /*
@@ -798,7 +784,7 @@ TkWmDeadWindow(winPtr)
 	for (prevPtr = (WmInfo *) winPtr->dispPtr->firstWmPtr; ;
                 prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
-		panic("couldn't unlink window in TkWmDeadWindow");
+		Tcl_Panic("couldn't unlink window in TkWmDeadWindow");
 	    }
 	    if (prevPtr->nextPtr == wmPtr) {
 		prevPtr->nextPtr = wmPtr->nextPtr;
@@ -880,8 +866,8 @@ TkWmDeadWindow(winPtr)
 	            WmWaitMapProc, (ClientData) wmPtr2->winPtr);
 	    wmPtr2->masterPtr = NULL;
 	    if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
-		XSetTransientForHint(wmPtr2->winPtr->display,
-		        wmPtr2->wrapperPtr->window, None);
+		XDeleteProperty(winPtr->display, wmPtr2->wrapperPtr->window,
+			Tk_InternAtom((Tk_Window) winPtr, "WM_TRANSIENT_FOR"));
 		/* FIXME: Need a call like Win32's UpdateWrapper() so
 		   we can recreate the wrapper and get rid of the
 		   transient window decorations. */
@@ -889,7 +875,7 @@ TkWmDeadWindow(winPtr)
 	}
     }
     if (wmPtr->numTransients != 0)
-        panic("numTransients should be 0");
+        Tcl_Panic("numTransients should be 0");
 
     if (wmPtr->masterPtr != NULL) {
 	wmPtr2 = wmPtr->masterPtr->wmInfoPtr;
@@ -1748,12 +1734,12 @@ WmGridCmd(tkwin, winPtr, interp, objc, objv)
 	    Tcl_SetResult(interp, "baseHeight can't be < 0", TCL_STATIC);
 	    return TCL_ERROR;
 	}
-	if (widthInc < 0) {
-	    Tcl_SetResult(interp, "widthInc can't be < 0", TCL_STATIC);
+	if (widthInc <= 0) {
+	    Tcl_SetResult(interp, "widthInc can't be <= 0", TCL_STATIC);
 	    return TCL_ERROR;
 	}
-	if (heightInc < 0) {
-	    Tcl_SetResult(interp, "heightInc can't be < 0", TCL_STATIC);
+	if (heightInc <= 0) {
+	    Tcl_SetResult(interp, "heightInc can't be <= 0", TCL_STATIC);
 	    return TCL_ERROR;
 	}
 	Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
@@ -2065,12 +2051,7 @@ WmIconnameCmd(tkwin, winPtr, interp, objc, objv)
 	wmPtr->iconName = ckalloc((unsigned) (length + 1));
 	strcpy(wmPtr->iconName, argv3);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	    Tcl_DString ds;
-
-	    Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
-	    XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
-		    Tcl_DStringValue(&ds));
-	    Tcl_DStringFree(&ds);
+	    UpdateTitle(winPtr);
 	}
     }
     return TCL_OK;
@@ -2882,7 +2863,7 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
 	if (windows == NULL) {
-	    panic("TkWmStackorderToplevel failed");
+	    Tcl_Panic("TkWmStackorderToplevel failed");
 	} else {
 	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
 		Tcl_AppendElement(interp, (*window_ptr)->pathName);
@@ -2937,9 +2918,9 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
 		    index2 = (window_ptr - windows);
 	    }
 	    if (index1 == -1)
-		panic("winPtr window not found");
+		Tcl_Panic("winPtr window not found");
 	    if (index2 == -1)
-		panic("winPtr2 window not found");
+		Tcl_Panic("winPtr2 window not found");
 
 	    ckfree((char *) windows);
 	}
@@ -3104,17 +3085,7 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
 	strcpy(wmPtr->title, argv3);
 
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	    XTextProperty textProp;
-	    Tcl_DString ds;
-
-	    Tcl_UtfToExternalDString(NULL, wmPtr->title, -1, &ds);
-	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
-		    &textProp)  != 0) {
-		XSetWMName(winPtr->display, wmPtr->wrapperPtr->window,
-			&textProp);
-		XFree((char *) textProp.value);
-	    }
-	    Tcl_DStringFree(&ds);
+	    UpdateTitle(winPtr);
 	}
     }
     return TCL_OK;
@@ -3250,10 +3221,13 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
 		return TCL_ERROR;
 	    }
 	} else {
-	    Window xwin = (wmPtr->masterPtr == NULL) ? None :
-		    wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window;
-	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
-		    xwin);
+	    if (wmPtr->masterPtr != NULL) {
+		XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
+			wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
+	    } else {
+		XDeleteProperty(winPtr->display, wmPtr->wrapperPtr->window,
+			Tk_InternAtom((Tk_Window)winPtr, "WM_TRANSIENT_FOR"));
+	    }
 	}
     }
     return TCL_OK;
@@ -3380,6 +3354,16 @@ Tk_SetGrid(tkwin, reqWidth, reqHeight, widthInc, heightInc)
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     register WmInfo *wmPtr;
+
+    /*
+     * Ensure widthInc and heightInc are greater than 0
+     */
+    if (widthInc <= 0) {
+	widthInc = 1;
+    }
+    if (heightInc <= 0) {
+	heightInc = 1;
+    }
 
     /*
      * Find the top-level window for tkwin, plus the window manager
@@ -4124,7 +4108,7 @@ UpdateGeometryInfo(clientData)
 {
     register TkWindow *winPtr = (TkWindow *) clientData;
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int x, y, width, height;
+    int x, y, width, height, min, max;
     unsigned long serial;
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -4135,9 +4119,10 @@ UpdateGeometryInfo(clientData)
      * requested depends on (a) the size requested internally
      * by the window's widgets, (b) the size requested by the
      * user in a "wm geometry" command or via wm-based interactive
-     * resizing (if any), and (c) whether or not the window is
-     * gridded.  Don't permit sizes <= 0 because this upsets
-     * the X server.
+     * resizing (if any), (c) whether or not the window is
+     * gridded, and (d) the current min or max size for
+     * the toplevel. Don't permit sizes <= 0 because this
+     * upsets the X server.
      */
 
     if (wmPtr->width == -1) {
@@ -4151,6 +4136,28 @@ UpdateGeometryInfo(clientData)
     if (width <= 0) {
 	width = 1;
     }
+    /*
+     * Account for window max/min width
+     */
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqWidth
+		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	if (wmPtr->maxWidth > 0) {
+	    max = winPtr->reqWidth
+		+ (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minWidth;
+	max = wmPtr->maxWidth;
+    }
+    if (width < min) {
+	width = min;
+    } else if ((max > 0) && (width > max)) {
+	width = max;
+    }
+
     if (wmPtr->height == -1) {
 	height = winPtr->reqHeight;
     } else if (wmPtr->gridWin != NULL) {
@@ -4161,6 +4168,27 @@ UpdateGeometryInfo(clientData)
     }
     if (height <= 0) {
 	height = 1;
+    }
+    /*
+     * Account for window max/min height
+     */
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqHeight
+		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+	if (wmPtr->maxHeight > 0) {
+	    max = winPtr->reqHeight
+		+ (wmPtr->maxHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minHeight;
+	max = wmPtr->maxHeight;
+    }
+    if (height < min) {
+	height = min;
+    } else if ((max > 0) && (height > max)) {
+	height = max;
     }
 
     /*
@@ -4198,7 +4226,7 @@ UpdateGeometryInfo(clientData)
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     }
     if (wmPtr->flags & WM_UPDATE_SIZE_HINTS) {
-	UpdateSizeHints(winPtr);
+	UpdateSizeHints(winPtr, width, height);
     }
 
     /*
@@ -4332,8 +4360,10 @@ UpdateGeometryInfo(clientData)
  */
 
 static void
-UpdateSizeHints(winPtr)
+UpdateSizeHints(winPtr, newWidth, newHeight)
     TkWindow *winPtr;
+    int newWidth;
+    int newHeight;
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     XSizeHints *hintsPtr;
@@ -4395,27 +4425,81 @@ UpdateSizeHints(winPtr)
      */
 
     if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
-	if (wmPtr->width >= 0) {
-	    hintsPtr->min_width = wmPtr->width;
-	} else {
-	    hintsPtr->min_width = winPtr->reqWidth;
-	}
-	hintsPtr->max_width = hintsPtr->min_width;
-	hintsPtr->flags |= PMaxSize;
+	hintsPtr->max_width = hintsPtr->min_width = newWidth;
+    	hintsPtr->flags |= PMaxSize;
     }
     if (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
-	if (wmPtr->height >= 0) {
-	    hintsPtr->min_height = wmPtr->height;
-	} else {
-	    hintsPtr->min_height = winPtr->reqHeight + wmPtr->menuHeight;
-	}
-	hintsPtr->max_height = hintsPtr->min_height;
-	hintsPtr->flags |= PMaxSize;
+	hintsPtr->max_height = hintsPtr->min_height =
+	    newHeight + wmPtr->menuHeight;
+    	hintsPtr->flags |= PMaxSize;
     }
 
     XSetWMNormalHints(winPtr->display, wmPtr->wrapperPtr->window, hintsPtr);
 
     XFree((char *) hintsPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * UpdateTitle --
+ *
+ *	This procedure is called to update the window title and 
+ *	icon name.  It sets the ICCCM-defined properties WM_NAME
+ *	and WM_ICON_NAME for older window managers, and the 
+ *	freedesktop.org-defined _NET_WM_NAME and _NET_WM_ICON_NAME
+ *	properties for newer ones.  The ICCCM properties are
+ *	stored in the system encoding, the newer properties
+ *	are stored in UTF-8.
+ *
+ *	NOTE: the ICCCM specifies that WM_NAME and WM_ICON_NAME are 
+ *	stored in ISO-Latin-1.  Tk has historically used the default 
+ *	system encoding (since 8.1).  It's not clear whether this is 
+ *	correct or not.
+ *
+ * Side effects:
+ *	Properties get changed for winPtr.
+ *
+ *--------------------------------------------------------------
+ */
+static void
+UpdateTitle(winPtr)
+    TkWindow *winPtr;
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    Atom XA_UTF8_STRING = Tk_InternAtom((Tk_Window) winPtr, "UTF8_STRING");
+    const char *string;
+    Tcl_DString ds;
+
+    /*
+     * Set window title:
+     */
+    string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
+    Tcl_UtfToExternalDString(NULL, string, -1, &ds);
+    XStoreName(winPtr->display, wmPtr->wrapperPtr->window,
+	    Tcl_DStringValue(&ds));
+    Tcl_DStringFree(&ds);
+
+    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+	    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_NAME"),
+	    XA_UTF8_STRING, 8, PropModeReplace, 
+	    (const unsigned char*)string, (signed int)strlen(string));
+
+    /*
+     * Set icon name:
+     */
+    if (wmPtr->iconName != NULL) {
+	Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
+	XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
+		Tcl_DStringValue(&ds));
+	Tcl_DStringFree(&ds);
+
+	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON_NAME"),
+		XA_UTF8_STRING, 8, PropModeReplace,
+		(const unsigned char*)wmPtr->iconName,
+		(signed int)strlen(wmPtr->iconName));
+    }
 }
 
 /*
@@ -4589,7 +4673,7 @@ WaitForEvent(display, wmInfoPtr, type, eventPtr)
     oldRestrictProc = Tk_RestrictEvents(WaitRestrictProc, (ClientData) &info,
 	    &oldRestrictData);
 
-    TclpGetTime(&timeout);
+    Tcl_GetTime(&timeout);
     timeout.sec += 2;
 
     while (!info.foundEvent) {
@@ -5353,7 +5437,7 @@ Tk_MoveToplevelWindow(tkwin, x, y)
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	panic("Tk_MoveToplevelWindow called with non-toplevel window");
+	Tcl_Panic("Tk_MoveToplevelWindow called with non-toplevel window");
     }
     wmPtr->x = x;
     wmPtr->y = y;
@@ -5633,7 +5717,7 @@ TkWmStackorderToplevel(parentPtr)
             }
         }
         if ((window_ptr - windows) != table.numEntries)
-            panic("num matched toplevel windows does not equal num children");
+            Tcl_Panic("num matched toplevel windows does not equal num children");
         *window_ptr = NULL;
 	if (numChildren) {
 	    XFree((char *) children);
@@ -6278,7 +6362,7 @@ TkUnixSetMenubar(tkwin, menubar)
     } else {
 	if ((menubarPtr->flags & TK_TOP_LEVEL)
 	     || (Tk_Screen(menubar) != Tk_Screen(tkwin))) {
-	    panic("TkUnixSetMenubar got bad menubar");
+	    Tcl_Panic("TkUnixSetMenubar got bad menubar");
 	}
 	wmPtr->menuHeight = Tk_ReqHeight(menubar);
 	if (wmPtr->menuHeight == 0) {

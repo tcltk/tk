@@ -1,3 +1,15 @@
+2005-01-14  Joe English  <jenglish@users.sourceforge.net>
+	* unix/tkUnixWm.c: Sync with CVS HEAD (r1.47):
+	Fixes: #959973 "wm title bug" (support Unicode titles)
+	Fixes: #742882 "Potential division by zero in gridded wm geometry"
+	Use Tcl_GetTime instead of TclpGetTime [#874745]
+	Use Tcl_Panic() instead of "panic" [#865264]
+	Fixes: #632816 "cannot remove transient"
+	Fixes: #568861 "Fix for wm minsize and maxsize commands"
+	* tests/unixWm.test, tests/wm.test: Updated test suite for 
+	#632816 (unixWm-37.3, unixWm-37.4, wm-grid-1.11, wm-grid-1.12)
+	and #742882 (unixWm-20.9, unixWm-20.11).
+
 2005-01-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkObj.c (TkParsePadAmount):

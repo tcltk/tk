@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.29.2.3 2004/10/05 22:27:27 hobbs Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.29.2.4 2005/01/14 21:09:47 jenglish Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure
@@ -733,13 +733,13 @@ test unixWm-20.8 {Tk_WmCmd procedure, "grid" option} unix {
 } {1 {expected integer but got "bar"}}
 test unixWm-20.9 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 -2 13} msg] $msg
-} {1 {widthInc can't be < 0}}
+} {1 {widthInc can't be <= 0}}
 test unixWm-20.10 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 12 bogus} msg] $msg
 } {1 {expected integer but got "bogus"}}
 test unixWm-20.11 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 12 -1} msg] $msg
-} {1 {heightInc can't be < 0}}
+} {1 {heightInc can't be <= 0}}
 
 catch {destroy .t}
 catch {destroy .icon}
@@ -1232,7 +1232,7 @@ test unixWm-37.3 {Tk_WmCmd procedure, "transient" option} {unix testwrapper} {
 	    [testprop [testwrapper .t2] WM_TRANSIENT_FOR]
     destroy .t2
     set result
-} {{} {} .t 0 {} 0x0}
+} {{} {} .t 0 {} {}}
 test unixWm-37.4 {TkWmDeadWindow, destroy on master should clear transient} {unix testwrapper} {
     catch {destroy .t2}
     toplevel .t2
@@ -1243,7 +1243,7 @@ test unixWm-37.4 {TkWmDeadWindow, destroy on master should clear transient} {uni
     destroy .t3
     update
     list [wm transient .t2] [testprop [testwrapper .t2] WM_TRANSIENT_FOR]
-} {{} 0x0}
+} {{} {}}
 test unixWm-37.5 {Tk_WmCmd procedure, "transient" option, create master wrapper} {unix testwrapper} {
     catch {destroy .t2}
     catch {destroy .t3}
