@@ -7,12 +7,12 @@
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994 The Australian National University.
  * Copyright (c) 1994-1998 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright (c) 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.38 2000/02/08 11:31:32 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.39 2000/04/19 09:25:53 hobbs Exp $
  */
 
 #ifndef _TK
@@ -31,13 +31,14 @@ extern "C" {
  * and update the version numbers:
  *
  * library/tk.tcl	(only if Major.minor changes, not patchlevel)
- * unix/configure.in
- * win/configure.in
+ * unix/configure.in	(2 LOC Major, 2 LOC minor, 1 LOC patch)
+ * win/configure.in	(as above)
  * win/makefile.vc	(not patchlevel)
- * README
+ * README		(sections 0 and 1)
  * mac/README		(not patchlevel)
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
+ * unix/tk.spec		(3 LOC Major/Minor, 2 LOC patch)
  * win/aclocal.m4	(not patchlevel)
  *
  * You may also need to update some of these files when the numbers change
@@ -47,10 +48,10 @@ extern "C" {
 #define TK_MAJOR_VERSION   8
 #define TK_MINOR_VERSION   3
 #define TK_RELEASE_LEVEL   TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL  0
+#define TK_RELEASE_SERIAL  1
 
 #define TK_VERSION	"8.3"
-#define TK_PATCH_LEVEL	"8.3.0"
+#define TK_PATCH_LEVEL	"8.3.1"
 
 /*
  * The following definitions set up the proper options for Macintosh

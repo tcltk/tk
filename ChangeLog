@@ -1,3 +1,17 @@
+2000-04-19  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* README:
+	* generic/tk.h:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in: bumped to version 8.3.1
+
+	* library/msgbox.tcl (tkMessageBox): changed to use grid in some
+	places, realign icon to anchor nw.
+
+	* mac/tkMacScale.c: reverted tkMacScale.c to 1.5 equivalent (it
+	was accidentally bumped forward).
+
 2000-04-18  Eric Melski  <ericm@scriptics.com>
 
 	* win/tkWinPointer.c: Changed Mod2Mask in TkWinGetModifierState to

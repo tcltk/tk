@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacScale.c,v 1.6 2000/04/17 02:17:12 jingham Exp $
+ * RCS: @(#) $Id: tkMacScale.c,v 1.7 2000/04/19 09:25:54 hobbs Exp $
  */
 
 #include "tkScale.h"
@@ -161,7 +161,7 @@ TkpDisplayScale(clientData)
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve((ClientData) interp);
 	sprintf(string, scalePtr->format, scalePtr->value);
-	result = Tcl_VarEval(interp, scalePtr->commandPtr," ", string,
+	result = Tcl_VarEval(interp, scalePtr->command, " ", string,
 		(char *) NULL);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
@@ -236,12 +236,14 @@ TkpDisplayScale(clientData)
      * Apple releases the Copland version of the MacOS in late 1996.
      */
 
-    (**macScalePtr->scaleHandle).contrlRect.left = macDraw->xOff + scalePtr->inset;
-    (**macScalePtr->scaleHandle).contrlRect.top = macDraw->yOff + scalePtr->inset;
-    (**macScalePtr->scaleHandle).contrlRect.right = macDraw->xOff + Tk_Width(tkwin)
-	- scalePtr->inset;
-    (**macScalePtr->scaleHandle).contrlRect.bottom = macDraw->yOff +
-	Tk_Height(tkwin) - scalePtr->inset;
+    (**macScalePtr->scaleHandle).contrlRect.left   = macDraw->xOff
+	+ scalePtr->inset;
+    (**macScalePtr->scaleHandle).contrlRect.top    = macDraw->yOff
+	+ scalePtr->inset;
+    (**macScalePtr->scaleHandle).contrlRect.right  = macDraw->xOff
+	+ Tk_Width(tkwin) - scalePtr->inset;
+    (**macScalePtr->scaleHandle).contrlRect.bottom = macDraw->yOff
+	+ Tk_Height(tkwin) - scalePtr->inset;
 
     /*
      * Set the thumb and resolution etc.
@@ -334,171 +336,6 @@ TkpScaleElement(scalePtr, x, y)
 /*
  *--------------------------------------------------------------
  *
- * TkpSetScaleValue --
- *
- *	This procedure changes the value of a scale and invokes
- *	a Tcl command to reflect the current position of a scale
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	A Tcl command is invoked, and an additional error-processing
- *	command may also be invoked.  The scale's slider is redrawn.
- *
- *--------------------------------------------------------------
- */
-
-void
-TkpSetScaleValue(scalePtr, value, setVar, invokeCommand)
-    register TkScale *scalePtr;	/* Info about widget. */
-    double value;		/* New value for scale.  Gets adjusted
-				 * if it's off the scale. */
-    int setVar;			/* Non-zero means reflect new value through
-				 * to associated variable, if any. */
-    int invokeCommand;		/* Non-zero means invoked -command option
-				 * to notify of new value, 0 means don't. */
-{
-    char string[PRINT_CHARS];
-
-    value = TkRoundToResolution(scalePtr, value);
-    if ((value < scalePtr->fromValue)
-	    ^ (scalePtr->toValue < scalePtr->fromValue)) {
-	value = scalePtr->fromValue;
-    }
-    if ((value > scalePtr->toValue)
-	    ^ (scalePtr->toValue < scalePtr->fromValue)) {
-	value = scalePtr->toValue;
-    }
-    if (scalePtr->flags & NEVER_SET) {
-	scalePtr->flags &= ~NEVER_SET;
-    } else if (scalePtr->value == value) {
-	return;
-    }
-    scalePtr->value = value;
-    if (invokeCommand) {
-	scalePtr->flags |= INVOKE_COMMAND;
-    }
-    TkEventuallyRedrawScale(scalePtr, REDRAW_SLIDER);
-
-    if (setVar && (scalePtr->varNamePtr != NULL)) {
-	sprintf(string, scalePtr->format, scalePtr->value);
-	scalePtr->flags |= SETTING_VAR;
-	Tcl_ObjSetVar2(scalePtr->interp, scalePtr->varNamePtr, NULL, Tcl_NewStringObj(string, -1),
-	       TCL_GLOBAL_ONLY);
-	scalePtr->flags &= ~SETTING_VAR;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpPixelToValue --
- *
- *	Given a pixel within a scale window, return the scale
- *	reading corresponding to that pixel.
- *
- * Results:
- *	A double-precision scale reading.  If the value is outside
- *	the legal range for the scale then it's rounded to the nearest
- *	end of the scale.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-double
-TkpPixelToValue(scalePtr, x, y)
-    register TkScale *scalePtr;		/* Information about widget. */
-    int x, y;				/* Coordinates of point within
-					 * window. */
-{
-    double value, pixelRange;
-
-    if (scalePtr->orient == ORIENT_VERTICAL) {
-	pixelRange = Tk_Height(scalePtr->tkwin) - scalePtr->sliderLength
-		- 2*scalePtr->inset - 2*scalePtr->borderWidth;
-	value = y;
-    } else {
-	pixelRange = Tk_Width(scalePtr->tkwin) - scalePtr->sliderLength
-		- 2*scalePtr->inset - 2*scalePtr->borderWidth;
-	value = x;
-    }
-
-    if (pixelRange <= 0) {
-	/*
-	 * Not enough room for the slider to actually slide:  just return
-	 * the scale's current value.
-	 */
-
-	return scalePtr->value;
-    }
-    value -= scalePtr->sliderLength/2 + scalePtr->inset
-		+ scalePtr->borderWidth;
-    value /= pixelRange;
-    if (value < 0) {
-	value = 0;
-    }
-    if (value > 1) {
-	value = 1;
-    }
-    value = scalePtr->fromValue +
-		value * (scalePtr->toValue - scalePtr->fromValue);
-    return TkRoundToResolution(scalePtr, value);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpValueToPixel --
- *
- *	Given a reading of the scale, return the x-coordinate or
- *	y-coordinate corresponding to that reading, depending on
- *	whether the scale is vertical or horizontal, respectively.
- *
- * Results:
- *	An integer value giving the pixel location corresponding
- *	to reading.  The value is restricted to lie within the
- *	defined range for the scale.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpValueToPixel(scalePtr, value)
-    register TkScale *scalePtr;		/* Information about widget. */
-    double value;			/* Reading of the widget. */
-{
-    int y, pixelRange;
-    double valueRange;
-
-    valueRange = scalePtr->toValue - scalePtr->fromValue;
-    pixelRange = (scalePtr->orient == ORIENT_VERTICAL ? Tk_Height(scalePtr->tkwin)
-	    : Tk_Width(scalePtr->tkwin)) - scalePtr->sliderLength
-	    - 2*scalePtr->inset - 2*scalePtr->borderWidth;
-    if (valueRange == 0) {
-	y = 0;
-    } else {
-	y = (int) ((value - scalePtr->fromValue) * pixelRange
-		  / valueRange + 0.5);
-	if (y < 0) {
-	    y = 0;
-	} else if (y > pixelRange) {
-	    y = pixelRange;
-	}
-    }
-    y += scalePtr->sliderLength/2 + scalePtr->inset + scalePtr->borderWidth;
-    return y;
-}
-
-/*
- *--------------------------------------------------------------
- *
  * MacScaleEventProc --
  *
  *	This procedure is invoked by the Tk dispatcher for 
@@ -553,7 +390,7 @@ MacScaleEventProc(clientData, eventPtr)
      * Update the value for the widget.
      */
     macScalePtr->info.value = (**macScalePtr->scaleHandle).contrlValue;
-    /* TkpSetScaleValue(&macScalePtr->info, macScalePtr->info.value, 1, 0); */
+    /* TkScaleSetValue(&macScalePtr->info, macScalePtr->info.value, 1, 0); */
 
     /*
      * The TrackControl call will "eat" the ButtonUp event.  We now
@@ -594,7 +431,7 @@ ScaleActionProc(ControlRef theControl, ControlPartCode partCode)
     register TkScale *scalePtr = (TkScale *) GetCRefCon(theControl);
 
     value = (**theControl).contrlValue;
-    TkpSetScaleValue(scalePtr, value, 1, 1);
+    TkScaleSetValue(scalePtr, value, 1, 1);
     Tcl_Preserve((ClientData) scalePtr);
     Tcl_DoOneEvent(TCL_IDLE_EVENTS);
     Tcl_Release((ClientData) scalePtr);
