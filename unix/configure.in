@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.69 2002/01/29 08:23:36 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.70 2002/02/19 01:06:19 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 
@@ -71,6 +71,14 @@ if test -n "$GCC"; then
     AC_MSG_RESULT(no))
 fi  
 fi
+
+#--------------------------------------------------------------------
+#	Detect what compiler flags to set for 64-bit support.
+#--------------------------------------------------------------------
+
+SC_TCL_EARLY_FLAGS
+
+SC_TCL_64BIT_FLAGS
 
 #--------------------------------------------------------------------
 # Find and load the tclConfig.sh file
