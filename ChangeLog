@@ -1,3 +1,9 @@
+2002-03-26  Andreas Kupries  <andreask_kupries@users.sourceforge.net>
+
+	* unix/tkUnixFont.c: Added inclusion of <arpa/inet.h>. This fixes
+	  a GCC/HPUX problem with missing a "htons". See also
+	  "tclUnixPort.h" for equivalent code.
+
 2002-03-21  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: Changed optimize flag to -0ti instead of -02.
