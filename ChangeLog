@@ -1,3 +1,9 @@
+2004-07-20  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/Makefile.in:
+	* win/Makefile.in: added 'install-private-headers' makefile target
+	to allow optionally installing private tk headers. [Tcl FR 922727]
+
 2004-07-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in, unix/tcl.m4:     move (C|LD)FLAGS after their
