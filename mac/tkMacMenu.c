@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacMenu.c,v 1.11 1999/08/05 06:19:52 jingham Exp $
+ * RCS: @(#) $Id: tkMacMenu.c,v 1.12 1999/08/07 18:54:37 jingham Exp $
  */
 
 #include "tkMacInt.h"
@@ -3574,6 +3574,7 @@ TkpDrawMenuEntry(
     Tk_FontMetrics entryMetrics;
     int adjustedY = y + padY;
     int adjustedHeight = height - 2 * padY;
+    int state;
 
     /*
      * Choose the gc for drawing the foreground part of the entry.
@@ -3604,7 +3605,7 @@ TkpDrawMenuEntry(
     	    }
     	}
 
-	if (((parentDisabled || (mePtr->state == ENTRY_DISABLED)))
+	if (((parentDisabled || (state == ENTRY_DISABLED)))
 		&& (menuPtr->disabledFgPtr != NULL)) {
 	    gc = mePtr->disabledGC;
 	    if (gc == NULL) {
