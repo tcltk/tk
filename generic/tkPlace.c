@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.5 1999/04/21 21:53:27 rjohnson Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.6 2000/05/29 01:42:34 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -161,18 +161,6 @@ Tk_PlaceCmd(clientData, interp, argc, argv)
     int c;
     TkDisplay *dispPtr;
 
-    dispPtr = ((TkWindow *) clientData)->dispPtr;
-
-    /*
-     * Initialize, if that hasn't been done yet.
-     */
-
-    if (!dispPtr->placeInit) {
-	Tcl_InitHashTable(&dispPtr->masterTable, TCL_ONE_WORD_KEYS);
-	Tcl_InitHashTable(&dispPtr->slaveTable, TCL_ONE_WORD_KEYS);
-	dispPtr->placeInit = 1;
-    }
-
     if (argc < 3) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
 		argv[0], " option|pathName args", (char *) NULL);
@@ -190,6 +178,18 @@ Tk_PlaceCmd(clientData, interp, argc, argv)
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
+
+	/*
+	 * Initialize, if that hasn't been done yet.
+	 */
+
+	dispPtr = ((TkWindow *) tkwin)->dispPtr;
+	if (!dispPtr->placeInit) {
+	    Tcl_InitHashTable(&dispPtr->masterTable, TCL_ONE_WORD_KEYS);
+	    Tcl_InitHashTable(&dispPtr->slaveTable, TCL_ONE_WORD_KEYS);
+	    dispPtr->placeInit = 1;
+	}
+
 	slavePtr = FindSlave(tkwin);
 	return ConfigureSlave(interp, slavePtr, argc-2, argv+2);
     }
@@ -203,6 +203,18 @@ Tk_PlaceCmd(clientData, interp, argc, argv)
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Initialize, if that hasn't been done yet.
+     */
+
+    dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    if (!dispPtr->placeInit) {
+	Tcl_InitHashTable(&dispPtr->masterTable, TCL_ONE_WORD_KEYS);
+	Tcl_InitHashTable(&dispPtr->slaveTable, TCL_ONE_WORD_KEYS);
+	dispPtr->placeInit = 1;
+    }
+
     if ((c == 'c') && (strncmp(argv[1], "configure", length) == 0)) {
 	if (argc < 5) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
