@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.32 2005/02/03 13:44:58 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.33 2005/02/03 13:46:43 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -243,7 +243,7 @@ typedef struct {
 } SearchUids;
 
 static Tcl_ThreadDataKey dataKey;
-static SearchUids *GetStaticUids _ANSI_ARGS((void));
+static SearchUids *GetStaticUids _ANSI_ARGS_((void));
 #endif /* USE_OLD_TAG_SEARCH */
 
 /*
