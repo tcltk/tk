@@ -1,3 +1,105 @@
+2001-05-04  Daniel Steffen <das@users.sourceforge.net>
+
+        ** Mac 8.3.3 binary release
+
+        **  detailed change log for changes to mac code for 8.3.3
+        **  (expands on log entries below marked 2001-04-04  Jeff Hobbs)
+
+	* mac/tkMacShLib.exp: removed file
+
+	* mac/MWTkBuildLibHeader.h:
+	* mac/MW_TkBuildLibHeader.pch:
+	* mac/MW_TkHeaderCommon.h:
+	* mac/MW_TkOldImgStaticHeader.h:
+	* mac/MW_TkStaticHeader.h:
+	* mac/MW_TkStaticHeader.pch: new precompiled header files
+
+	* mac/MW_TkHeader.pch:
+	* mac/MW_TkOldImgHeader.h:
+	* mac/MW_TkTestHeader.pch: revised precompiled header handling: now
+	include a common header file 'MW_TkHeaderCommon.h' from all .pch files,
+	the .pch files themselves now only setup #defines (e.g. BUILD_tk,
+	STATIC_BUILD, TCL_DEBUG, TCL_THREADS) like in makefiles on other
+	platforms.
+
+	* mac/tkMac.h:
+	* mac/tkMacPort.h:
+	* mac/tkMacInt.h: use of BUILD_tk and TCL_STORAGE_CLASS like on other
+	platforms, standardize #include'd files to what's done on other
+	platforms, removed use of #pragma export, changed extern to EXTERN
+	where appropriate to enable DLL export via the TCL_STORAGE_CLASS
+	mechanism.
+
+	* mac/tkMacAppearanceStubs.c: removed use of #pragma export
+
+	* mac/widget.r: new resource file for 'Widget Demos'
+
+	* mac/tkMacProjects.sea.hqx: updated mac build project files:
+	- build support for CodeWarrior Pro6, UnivIntf 3.4 & shared runtime
+	libraries (see Tcl ChangeLog for details).
+	- changed weak linking so that CFM68k binaries now work on all OS
+	versions from the free 7.5.5 onwards, with or without AppearanceMgr
+	and/or NavigationMgr installed.
+	- added target to automatically build 'Widget Demos'
+
+	* generic/tkInt.decls:
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkStubInit.c:
+
+	* mac/tkMacInt.h: MAC_TCL tk stub support was badly broken due to
+	multiply defined (mac specific) names in tk.decls and tkInt.decls,
+	removed the duplicates from the internal unsupported interfaces
+	"interface tkInt" and "interface tkIntPlat"; moved declaration of
+	TkpIsWindowFloating from tkMacInt.h to tkInt.decls: interface tkIntPlat.
+	- these changes to the stub tables might require you to recompile your
+	Tk extensions if they turn out to reference one of the removed routines
+	in the wrong table (should be unlikely).
+
+	* generic/tkMain.c: MAC_TCL: workaround for broken/non-standard isatty
+	on MW Pro6, #include <unistd.h> instead of defining isatty
+	
+	* generic/tkPointer.c: MAC_TCL: #include tkMacInt.h
+
+	* generic/tkStubLib.c: MAC_TCL: removed obsolete special casing of mac
+	headers, standardize #include'd files to what's done on other platforms
+
+	* mac/tclets.r:
+	* mac/tkMacWindowMgr.c:
+	* mac/tkMacScrlbr.c:
+	* mac/tkMacMenu.c:
+	* mac/tkMacMenus.c:
+	* mac/tkMacFont.c:
+	* mac/tkMacDialog.c: 
+	* mac/tkMacButton.c: renamed obsolete apple API names to modern
+	equivalents; UH3.4 support: added #include <ControlDefinitions.h>;
+	fixed munged non-ASCII chars in sources due to bungled latin1<->mac
+	roman encoding in CVS repository.
+
+	* mac/tkMacDialog.c: added support for -filetypes option (fix for bug
+	tcl #221636); added update event handling for background windows while
+	in a NavigationMgr dialog; fixed nasty bug when calling CustomGetFile
+	(missing addr operator) (fix for bug tk #220911 & tcl #219367); renamed
+	routines conflicting with standard MoreFiles headers (see Tcl ChangeLog
+	for details)
+
+	* mac/tkMacApplication.r:
+	* mac/tkMacLibrary.r:
+	* mac/tkMacResource.r: fixed obsolete copyrights/dates in version
+	strings, updated version strings to standard usage, added support for
+	'(Support Libraries)' subfolder for shared runtime libraries in
+	unmerged binaries, commented out demo setting of "Tcl Environment
+	Variables"
+
+	* mac/tkMacMenu.c: 
+	* mac/tkMacMDEF.r: changes to support MW Pro 6 68k compiler producing
+	different offset to start of MDEF; fix to static 68k presence testing
+	when calling the custom MDEF
+
+	* mac/tkMacWm.c.c:
+	* mac/tkMacWindowMgr.c: added/fixed AppearanceMgr checks; override
+	AppearanceMgr version detection on static 68k to ensure static 68k Wish
+	runs on PPCs with recent AppearanceMgr
 2001-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/canvas.test: marked canvas-13.1 knownBug
