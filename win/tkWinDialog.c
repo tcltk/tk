@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.21 2001/08/28 20:58:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.22 2001/10/01 21:20:55 hobbs Exp $
  *
  */
 
@@ -611,7 +611,8 @@ GetFileNameW(clientData, interp, objc, objv, open)
     Tk_MakeWindowExist(tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
-    ofn.lStructSize		= sizeof(ofn);
+    ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
+    ofn.lStructSize		= sizeof(OPENFILENAMEW);
     ofn.hwndOwner		= hWnd;
 #ifdef _WIN64
     ofn.hInstance		= (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner, 
@@ -620,24 +621,12 @@ GetFileNameW(clientData, interp, objc, objv, open)
     ofn.hInstance		= (HINSTANCE) GetWindowLong(ofn.hwndOwner, 
 					GWL_HINSTANCE);
 #endif
-    ofn.lpstrFilter		= NULL;
-    ofn.lpstrCustomFilter	= NULL;
-    ofn.nMaxCustFilter		= 0;
-    ofn.nFilterIndex		= 0;
     ofn.lpstrFile		= (WCHAR *) file;
     ofn.nMaxFile		= TK_MULTI_MAX_PATH;
-    ofn.lpstrFileTitle		= NULL;
-    ofn.nMaxFileTitle		= 0;
-    ofn.lpstrInitialDir		= NULL;
-    ofn.lpstrTitle		= NULL;
     ofn.Flags			= OFN_HIDEREADONLY | OFN_PATHMUSTEXIST 
 				  | OFN_NOCHANGEDIR | OFN_EXPLORER;
-    ofn.nFileOffset		= 0;
-    ofn.nFileExtension		= 0;
-    ofn.lpstrDefExt		= NULL;
     ofn.lpfnHook		= (LPOFNHOOKPROC) OFNHookProcW;
     ofn.lCustData		= (LPARAM) interp;
-    ofn.lpTemplateName		= NULL;
 
     if (open != 0) {
 	ofn.Flags |= OFN_FILEMUSTEXIST;
@@ -1478,7 +1467,7 @@ MakeFilter(interp, string, dsPtr)
 	 * Since we may only add asterisks (*) to the filter, we need at most
 	 * twice the size of the string to format the filter
 	 */
-	filterStr = ckalloc(strlen(string) * 3);
+	filterStr = ckalloc((unsigned int) strlen(string) * 3);
 
 	for (filterPtr = flist.filters, p = filterStr; filterPtr;
 	        filterPtr = filterPtr->next) {
@@ -1536,7 +1525,7 @@ MakeFilter(interp, string, dsPtr)
 	*p = '\0';
     }
 
-    Tcl_DStringAppend(dsPtr, filterStr, p - filterStr);
+    Tcl_DStringAppend(dsPtr, filterStr, (int) (p - filterStr));
     ckfree((char *) filterStr);
 
     TkFreeFileFilters(&flist);
@@ -2159,14 +2148,7 @@ SetTkDialog(ClientData clientData)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char buf[32];
-    HWND hwnd;
 
-    hwnd = (HWND) clientData;
-
-#ifdef _WIN64
-    sprintf(buf, "0x%16x", hwnd);
-#else
-    sprintf(buf, "0x%08x", hwnd);
-#endif
+    sprintf(buf, "0x%p", (HWND) clientData);
     Tcl_SetVar(tsdPtr->debugInterp, "tk_dialog", buf, TCL_GLOBAL_ONLY);
 }
