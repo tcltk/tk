@@ -1,3 +1,10 @@
+2002-06-21  Don Porter <dgp@users.sf.net>
+
+	* unix/Makefile.in:	Removed unnecessary dependence of tktest
+	* unix/tkAppInit.c:	executable on the tcltest executable on
+	Unix.  If there are similar dependencies on other platforms, they
+	can probably be removed as well.  [Bug 572134].
+
 2002-06-20  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkGrid.c: Corrected the test for grid propagate change.
