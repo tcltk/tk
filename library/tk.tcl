@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.24 2000/06/30 20:19:06 ericm Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.25 2000/09/30 18:00:12 drh Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -108,7 +108,9 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
     if {[winfo exists $oldGrab]} {
 	lappend data [grab status $oldGrab]
     }
-    grab $grab
+    # The "grab" command will fail if another application
+    # already holds the grab.  So catch it.
+    catch {grab $grab}
     if {[winfo exists $focus]} {
 	focus $focus
     }
