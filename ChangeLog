@@ -1,3 +1,39 @@
+2000-03-24  Eric Melski  <ericm@scriptics.com>
+
+	* tests/filebox.test: 
+	* tests/choosedir.test: Updated tests.
+
+	* library/xmfbox.tcl: Updated to stash data array in
+	::tk::dialog::file namespace instead of in global namespace.
+
+	* library/tkfbox.tcl: Extended some functions to support creation
+	of a choosedir dialog, to allow greater code reuse between the two
+	dialogs.  Moved tkFDialog* functions into a namespace
+	(::tk::dialog::file).  Because these are private Tk functions (and
+	should thus not be used directly by users), this should not impact
+	anybody (the tk_getOpenFile and tk_getSaveFile commands still
+	exist at the global scope).
+
+	* library/tk.tcl: 
+	* library/tclIndex: Updated function names for tkFDialog*
+	functions and choosedir functions.
+
+	* library/choosedir.tcl: New and improved implementation of
+	tk_chooseDirectory dialog.  Based on tk_getOpenFile dialog.
+
+2000-03-23  Eric Melski  <ericm@scriptics.com>
+
+	* generic/tkWindow.c: 
+	* generic/tkInt.h: Updated Tcl_OptionCmd -> Tcl_OptionObjCmd
+
+	* generic/tkOption.c: Tcl_Obj'ectified the "option" command.
+
+2000-03-22  Eric Melski  <ericm@scriptics.com>
+
+	* library/listbox.tcl: (tkListboxCancel) Added a check for empty
+	string value for tkPriv(listboxPrev).  Without this check, it's
+	possible to get a stack trace under certain conditions. [Bug: 4373].
+
 2000-03-15  Sven Delmas  <sven@scriptics.com>
 
 	* win/tkWinDialog.c: Changed the behavior for the
@@ -6,6 +42,11 @@
 	case the user selected the initial directory anyway), we now
 	return the value shown in the entry. This seems to be in
 	accordance with the expected behavior for this dialog.
+
+2000-03-14  Eric Melski  <ericm@scriptics.com>
+
+	* tests/choosedir.test: Marked test 3.1 and 3.2 as bad until the
+	issue with those tests on IRIX can be determined.
 
 2000-03-10  Eric Melski  <ericm@scriptics.com>
 

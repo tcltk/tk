@@ -4,12 +4,17 @@
 #	Unix platform. This implementation is used only if the
 #	"tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.10 2000/01/06 02:22:25 hobbs Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.11 2000/03/24 19:38:57 ericm Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
+# Copyright (c) 1998-2000 Scriptics Corporation
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+
+namespace eval ::tk::dialog {}
+namespace eval ::tk::dialog::file {}
+
 
 # tkMotifFDialog --
 #
@@ -29,7 +34,7 @@
 proc tkMotifFDialog {type args} {
     global tkPriv
     set dataName __tk_filedialog
-    upvar #0 $dataName data
+    upvar ::tk::dialog::file::$dataName data
 
     set w [tkMotifFDialog_Create $dataName $type $args]
 
@@ -71,7 +76,7 @@ proc tkMotifFDialog {type args} {
 
 proc tkMotifFDialog_Create {dataName type argList} {
     global tkPriv
-    upvar #0 $dataName data
+    upvar ::tk::dialog::file::$dataName data
 
     tkMotifFDialog_Config $dataName $type $argList
 
@@ -125,7 +130,7 @@ proc tkMotifFDialog_Create {dataName type argList} {
 #	argList		Options parsed by the procedure.
 
 proc tkMotifFDialog_Config {dataName type argList} {
-    upvar #0 $dataName data
+    upvar ::tk::dialog::file::$dataName data
 
     set data(type) $type
 
@@ -150,7 +155,7 @@ proc tkMotifFDialog_Config {dataName type argList} {
 
     # 3: parse the arguments
     #
-    tclParseConfigSpec $dataName $specs "" $argList
+    tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
     if {[string equal $data(-title) ""]} {
 	if {[string equal $type "open"]} {
@@ -205,7 +210,7 @@ proc tkMotifFDialog_Config {dataName type argList} {
 
 proc tkMotifFDialog_BuildUI {w} {
     set dataName [lindex [split $w .] end]
-    upvar #0 $dataName data
+    upvar ::tk::dialog::file::$dataName data
 
     # Create the dialog toplevel and internal frames.
     #
@@ -351,7 +356,7 @@ proc tkMotifFDialog_MakeSList {w f label under cmdPrefix} {
 # 	pattern itself.
 
 proc tkMotifFDialog_InterpFilter {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     set text [string trim [$data(fEnt) get]]
 
@@ -383,13 +388,13 @@ proc tkMotifFDialog_InterpFilter {w} {
 	    -message "\"$text\" must be an absolute pathname"
 
 	$data(fEnt) delete 0 end
-	$data(fEnt) insert 0 [tkFDialog_JoinFile $data(selectPath) \
+	$data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
 		$data(filter)]
 
 	return [list $data(selectPath) $data(filter)]
     }
 
-    set resolved [tkFDialog_JoinFile [file dirname $text] [file tail $text]]
+    set resolved [::tk::dialog::file::JoinFile [file dirname $text] [file tail $text]]
 
     if {[file isdirectory $resolved]} {
 	set dir $resolved
@@ -414,12 +419,12 @@ proc tkMotifFDialog_InterpFilter {w} {
 #	None.
 
 proc tkMotifFDialog_Update {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     $data(fEnt) delete 0 end
-    $data(fEnt) insert 0 [tkFDialog_JoinFile $data(selectPath) $data(filter)]
+    $data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
     $data(sEnt) delete 0 end
-    $data(sEnt) insert 0 [tkFDialog_JoinFile $data(selectPath) \
+    $data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
 	    $data(selectFile)]
  
     tkMotifFDialog_LoadFiles $w
@@ -437,7 +442,7 @@ proc tkMotifFDialog_Update {w} {
 #	None.
 
 proc tkMotifFDialog_LoadFiles {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     $data(dList) delete 0 end
     $data(fList) delete 0 end
@@ -496,7 +501,7 @@ proc tkMotifFDialog_LoadFiles {w} {
 #	None.	
 
 proc tkMotifFDialog_BrowseDList {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     focus $data(dList)
     if {[string equal [$data(dList) curselection] ""]} {
@@ -514,14 +519,14 @@ proc tkMotifFDialog_BrowseDList {w} {
 
     switch -- $subdir {
 	. {
-	    set newSpec [tkFDialog_JoinFile $data(selectPath) $data(filter)]
+	    set newSpec [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
 	}
 	.. {
-	    set newSpec [tkFDialog_JoinFile [file dirname $data(selectPath)] \
+	    set newSpec [::tk::dialog::file::JoinFile [file dirname $data(selectPath)] \
 		$data(filter)]
 	}
 	default {
-	    set newSpec [tkFDialog_JoinFile [tkFDialog_JoinFile \
+	    set newSpec [::tk::dialog::file::JoinFile [::tk::dialog::file::JoinFile \
 		    $data(selectPath) $subdir] $data(filter)]
 	}
     }
@@ -542,7 +547,7 @@ proc tkMotifFDialog_BrowseDList {w} {
 #	None.	
 
 proc tkMotifFDialog_ActivateDList {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     if {[string equal [$data(dList) curselection] ""]} {
 	return
@@ -562,7 +567,7 @@ proc tkMotifFDialog_ActivateDList {w} {
 	    set newDir [file dirname $data(selectPath)]
 	}
 	default {
-	    set newDir [tkFDialog_JoinFile $data(selectPath) $subdir]
+	    set newDir [::tk::dialog::file::JoinFile $data(selectPath) $subdir]
 	}
     }
 
@@ -590,7 +595,7 @@ proc tkMotifFDialog_ActivateDList {w} {
 #	None.	
 
 proc tkMotifFDialog_BrowseFList {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     focus $data(fList)
     if {[string equal [$data(fList) curselection] ""]} {
@@ -604,11 +609,11 @@ proc tkMotifFDialog_BrowseFList {w} {
     $data(dList) selection clear 0 end
 
     $data(fEnt) delete 0 end
-    $data(fEnt) insert 0 [tkFDialog_JoinFile $data(selectPath) $data(filter)]
+    $data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
     $data(fEnt) xview end
  
     $data(sEnt) delete 0 end
-    $data(sEnt) insert 0 [tkFDialog_JoinFile $data(selectPath) \
+    $data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
 	    $data(selectFile)]
     $data(sEnt) xview end
 }
@@ -625,7 +630,7 @@ proc tkMotifFDialog_BrowseFList {w} {
 #	None.	
 
 proc tkMotifFDialog_ActivateFList {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     if {[string equal [$data(fList) curselection] ""]} {
 	return
@@ -651,7 +656,7 @@ proc tkMotifFDialog_ActivateFList {w} {
 #	None.	
 
 proc tkMotifFDialog_ActivateFEnt {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     set list [tkMotifFDialog_InterpFilter $w]
     set data(selectPath) [lindex $list 0]
@@ -675,7 +680,7 @@ proc tkMotifFDialog_ActivateFEnt {w} {
 
 proc tkMotifFDialog_ActivateSEnt {w} {
     global tkPriv
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     set selectFilePath [string trim [$data(sEnt) get]]
     set selectFile     [file tail    $selectFilePath]
@@ -731,13 +736,13 @@ proc tkMotifFDialog_ActivateSEnt {w} {
 
 
 proc tkMotifFDialog_OkCmd {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     tkMotifFDialog_ActivateSEnt $w
 }
 
 proc tkMotifFDialog_FilterCmd {w} {
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::[winfo name $w] data
 
     tkMotifFDialog_ActivateFEnt $w
 }

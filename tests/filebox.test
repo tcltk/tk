@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.8 1999/11/30 00:02:20 hobbs Exp $
+# RCS: @(#) $Id: filebox.test,v 1.9 2000/03/24 19:38:57 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -54,7 +54,7 @@ proc EnterFileByKey {parent fileName fileDir} {
     } else {
 	set w $parent.__tk_filedialog
     }
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::__tk_filedialog data
 
     if {$tk_strictMotif} {
 	$data(sEnt) delete 0 end
@@ -75,7 +75,7 @@ proc SendButtonPress {parent btn type} {
     } else {
 	set w $parent.__tk_filedialog
     }
-    upvar #0 [winfo name $w] data
+    upvar ::tk::dialog::file::__tk_filedialog data
 
     set button $data($btn\Btn)
     if ![winfo ismapped $button] {
@@ -160,7 +160,7 @@ foreach mode $modes {
 	    list [catch {$command -filetypes {Foo}} msg] $msg
 	} {1 {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}}
 
-	if {[info commands tkMotifFDialog] == "" && [info commands tkFDialog] == ""} {
+	if {[info commands tkMotifFDialog] == "" && [info commands ::tk::dialog::file::tkFDialog] == ""} {
 	    set isNative 1
 	} else {
 	    set isNative 0

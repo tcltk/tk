@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.7 2000/03/14 20:37:08 ericm Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.8 2000/03/24 19:38:57 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -23,8 +23,8 @@ proc ToPressButton {parent btn} {
     after 100 SendButtonPress $parent $btn mouse
 }
 
-proc ToEnterDirByKey {parent dir} {
-    after 100 EnterDirByKey $parent [list $dir]
+proc ToEnterDirsByKey {parent dirs} {
+    after 100 [list EnterDirsByKey $parent $dirs]
 }
 
 proc PressButton {btn} {
@@ -33,28 +33,34 @@ proc PressButton {btn} {
     event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
-proc EnterDirByKey {parent dir} {
+proc EnterDirsByKey {parent dirs} {
+    global tk_strictMotif
     if {$parent == "."} {
-	set w .choosedirectory
+	set w .__tk_choosedir
     } else {
-	set w $parent.choosedirectory
+	set w $parent.__tk_choosedir
     }
+    upvar ::tk::dialog::file::__tk_choosedir data
 
-    $w.e delete 0 end
-    $w.e insert 0 $dir
-
-    update
-    SendButtonPress $parent ok mouse
+    foreach dir $dirs {
+	$data(ent) delete 0 end
+	$data(ent) insert 0 $dir
+	update
+	SendButtonPress $parent ok mouse
+	after 50
+    }
 }
 
 proc SendButtonPress {parent btn type} {
+    global tk_strictMotif
     if {$parent == "."} {
-	set w .choosedirectory
+	set w .__tk_choosedir
     } else {
-	set w $parent.choosedirectory
+	set w $parent.__tk_choosedir
     }
+    upvar ::tk::dialog::file::__tk_choosedir data
 
-    set button $w.$btn
+    set button $data($btn\Btn)
     if ![winfo ismapped $button] {
 	update
     }
@@ -75,15 +81,6 @@ proc SendButtonPress {parent btn type} {
 # The test suite proper
 #
 #----------------------------------------------------------------------
-catch {unset err}
-append err(usage) "tk_chooseDirectory "
-append err(usage) "?-initialdir directory? ?-mustexist boolean? "
-append err(usage) "?-parent window? ?-title title?"
-
-set err(wrongNumArgs) "wrong # args: should be \"$err(usage)\""
-set err(valueMissing) "value for \"%s\" missing: should be \"$err(usage)\""
-set err(unknownOpt)   "unknown option \"%s\": should be \"$err(usage)\""
-
 # Make a dir for us to rely on for tests
 makeDirectory choosedirTest
 set dir [pwd]
@@ -95,11 +92,11 @@ set parent .
 foreach opt {-initialdir -mustexist -parent -title} {
     test choosedir-1.1 "tk_chooseDirectory command" unixOnly {
 	list [catch {tk_chooseDirectory $opt} msg] $msg
-    } [list 1 [format $err(valueMissing) $opt]]
+    } [list 1 "value for \"$opt\" missing"]
 }
 test choosedir-1.2 "tk_chooseDirectory command" unixOnly {
     list [catch {tk_chooseDirectory -foo bar} msg] $msg
-} [list 1 [format $err(unknownOpt) "-foo"]]
+} [list 1 "bad option \"-foo\": must be -initialdir, -mustexist, -parent, or -title"]
 test choosedir-1.3 "tk_chooseDirectory command" unixOnly {
     list [catch {tk_chooseDirectory -parent foo.bar} msg] $msg
 } {1 {bad window path name "foo.bar"}}
@@ -110,19 +107,16 @@ test choosedir-2.1 "tk_chooseDirectory command, cancel gives null" {unixOnly} {
     tk_chooseDirectory -title "Press Cancel" -parent $parent
 } ""
 
-test choosedir-3.1 "tk_chooseDirectory -mustexist 1" {unixOnly badTest} {
+test choosedir-3.1 "tk_chooseDirectory -mustexist 1" {unixOnly} {
     # first enter a bogus dirname, then enter a real one.
-    set afterId1 [after 100 EnterDirByKey $parent [list $fake]]
-    set afterId2 [after 200 EnterDirByKey $parent [list $real]]
+    ToEnterDirsByKey $parent [list $fake $real $real]
     set result [tk_chooseDirectory \
 	    -title "Enter \"$fake\", press OK, enter \"$real\", press OK" \
 	    -parent $parent -mustexist 1]
-    after cancel $afterId1
-    after cancel $afterId2
     set result
 } $real
-test choosedir-3.2 "tk_chooseDirectory -mustexist 0" {unixOnly badTest} {
-    ToEnterDirByKey $parent $fake
+test choosedir-3.2 "tk_chooseDirectory -mustexist 0" {unixOnly} {
+    ToEnterDirsByKey $parent [list $fake $fake]
     tk_chooseDirectory -title "Enter \"$fake\", press OK" \
 	    -parent $parent -mustexist 0
 } $fake
@@ -132,20 +126,24 @@ test choosedir-4.1 "tk_chooseDirectory command, initialdir" {unixOnly} {
     tk_chooseDirectory -title "Press Ok" -parent $parent -initialdir $real
 } $real
 test choosedir-4.2 "tk_chooseDirectory command, initialdir" {unixOnly} {
-    ToEnterDirByKey $parent $fake
+    ToEnterDirsByKey $parent [list $fake $fake]
     tk_chooseDirectory \
 	    -title "Enter \"$fake\" and press Ok" \
 	    -parent $parent -initialdir $real
 } $fake
 test choosedir-4.3 "tk_chooseDirectory, -initialdir {}" {unixOnly} {
+    catch {unset ::tk::dialog::file::__tk_choosedir}
     ToPressButton $parent ok
     tk_chooseDirectory \
 	    -title "Press OK" \
 	    -parent $parent -initialdir ""
 } [pwd]
 
-
-unset err
+test choosedir-5.1 "tk_chooseDirectory, handles {} entry text" {unixOnly} {
+    ToEnterDirsByKey $parent [list "" $real $real]
+    tk_chooseDirectory -title "Clear entry, Press OK; Enter $real, press OK" \
+	    -parent $parent
+} $real
 
 # cleanup
 ::tcltest::cleanupTests

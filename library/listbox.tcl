@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.10 2000/02/10 08:52:50 hobbs Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.11 2000/03/24 19:38:57 ericm Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -465,6 +465,10 @@ proc tkListboxCancel w {
     }
     set first [$w index anchor]
     set last $tkPriv(listboxPrev)
+    if { [string equal $last ""] } {
+	# Not actually doing any selection right now
+	return
+    }
     if {$first > $last} {
 	set tmp $first
 	set first $last

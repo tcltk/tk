@@ -1,225 +1,272 @@
 # choosedir.tcl --
 #
-#	Choose directory dialog implementation for Unix/Mac.  Adapted from
-#	Christopher Nelson's (chris@pinebush.com) implementation.
+#	Choose directory dialog implementation for Unix/Mac.
 #
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.5 2000/03/04 01:44:16 ericm Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.6 2000/03/24 19:38:57 ericm Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
+namespace eval ::tk::dialog::file {}
 
 # Make the chooseDir namespace inside the dialog namespace
-namespace eval ::tk::dialog::chooseDir {
-    # value is an array that holds the current selection value for each dialog
-    variable value
+namespace eval ::tk::dialog::file::chooseDir {
 }
 
-proc ::tk::dialog::chooseDir::tkChooseDirectory { args } {
-    variable value
+# ::tk::dialog::file::tkChooseDirectory --
+#
+#	Implements the TK directory selection dialog.
+#
+# Arguments:
+#	args		Options parsed by the procedure.
+#
 
-    # Error messages
-    append err(usage) "tk_chooseDirectory "
-    append err(usage) "?-initialdir directory? ?-mustexist boolean? "
-    append err(usage) "?-parent window? ?-title title?"
+proc ::tk::dialog::file::chooseDir::tkChooseDirectory {args} {
+    global tkPriv
+    set dataName __tk_choosedir
+    upvar ::tk::dialog::file::$dataName data
+    ::tk::dialog::file::chooseDir::Config $dataName $args
 
-    set err(wrongNumArgs) "wrong # args: should be \"$err(usage)\""
-    set err(valueMissing) "value for \"%s\" missing: should be \"$err(usage)\""
-    set err(unknownOpt)   "unknown option \"%s\": should be \"$err(usage)\""
-    set err(badWindow)    "bad window path name \"%s\""
-
-    # Default values
-    set opts(-initialdir)	[pwd]
-    set opts(-mustexist)	0
-    set opts(-parent)		.
-    set opts(-title)		"Choose Directory"
-
-    # Process args
-    set len [llength $args]
-    for { set i 0 } { $i < $len } {incr i} {
-	set flag [lindex $args $i]
-	incr i
-	if { $i >= $len } {
-	    error [format $err(valueMissing) $flag]
-	}
-	switch -glob -- $flag {
-	    "-initialdir" -
-	    "-mustexist"  -
-	    "-parent"     -
-	    "-title" {
-		set opts($flag) [lindex $args $i]
-	    }
-	    default {
-		error [format $err(unknownOpt) $flag]
-	    }
-	}
-    }
-	    
-    # Handle default parent window
-    if { ![winfo exists $opts(-parent)] } {
-	error [format $err(badWindow) $opts(-parent)]
-    }
-    if {[string equal $opts(-parent) "."]} {
-	set opts(-parent) ""
+    if {[string equal $data(-parent) .]} {
+        set w .$dataName
+    } else {
+        set w $data(-parent).$dataName
     }
 
-    if { [string equal $opts(-initialdir) ""] } {
-	set opts(-initialdir) [pwd]
+    # (re)create the dialog box if necessary
+    #
+    if {![winfo exists $w]} {
+	::tk::dialog::file::Create $w TkChooseDir
+    } elseif {[string compare [winfo class $w] TkChooseDir]} {
+	destroy $w
+	::tk::dialog::file::Create $w TkChooseDir
+    } else {
+	set data(dirMenuBtn) $w.f1.menu
+	set data(dirMenu) $w.f1.menu.menu
+	set data(upBtn) $w.f1.up
+	set data(icons) $w.icons
+	set data(ent) $w.f2.ent
+	set data(okBtn) $w.f2.ok
+	set data(cancelBtn) $w.f3.cancel
     }
+    wm transient $w $data(-parent)
 
-    set w [toplevel $opts(-parent).choosedirectory]
-    wm title $w $opts(-title)
+    trace variable data(selectPath) w "::tk::dialog::file::SetPath $w"
+    $data(dirMenuBtn) configure \
+	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
 
-    # Commands for various bindings (which follow)
-    set okCommand  [namespace code \
-	    [list Done $w ok $opts(-mustexist)]]
+    set data(filter) "*"
+    set data(previousEntryText) ""
+    ::tk::dialog::file::UpdateWhenIdle $w
 
-    set cancelCommand  [namespace code \
-	    [list Done $w cancel $opts(-mustexist)]]
+    # Withdraw the window, then update all the geometry information
+    # so we know how big it wants to be, then center the window in the
+    # display and de-iconify it.
 
-    # Create controls.
-    set lbl  [label $w.l -text "Directory name:" -anchor w]
-    set ent  [entry $w.e -width 30]
-    set frm  [frame $w.f]
-    set lst  [listbox $frm.lb -height 8 \
-	    -yscrollcommand [list $frm.sb set] \
-	    -selectmode browse \
-	    -setgrid true \
-	    -exportselection 0 \
-	    -takefocus 1]
-    set scr  [scrollbar $frm.sb -orient vertical \
-	    -command [list $frm.lb yview]]
-    set bOK  [button $w.ok     -width 8 -text OK -command $okCommand \
-	    -default active]
-    set bCan [button $w.cancel -width 8 -text Cancel -command $cancelCommand]
+    ::tk::PlaceWindow $w widget $data(-parent)
+    wm title $w $data(-title)
 
-    if {[llength [file volumes]]} {
-	# On Macs it would be nice to add a volume combobox
+    # Set a grab and claim the focus too.
+
+    ::tk::SetFocusGrab $w $data(ent)
+    $data(ent) delete 0 end
+    $data(ent) insert 0 $data(selectPath)
+    $data(ent) selection range 0 end
+    $data(ent) icursor end
+
+    # Wait for the user to respond, then restore the focus and
+    # return the index of the selected button.  Restore the focus
+    # before deleting the window, since otherwise the window manager
+    # may take the focus away so we can't redirect it.  Finally,
+    # restore any grab that was in effect.
+
+    tkwait variable tkPriv(selectFilePath)
+
+    ::tk::RestoreFocusGrab $w $data(ent) withdraw
+
+    # Cleanup traces on selectPath variable
+    #
+
+    foreach trace [trace vinfo data(selectPath)] {
+	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
+    $data(dirMenuBtn) configure -textvariable {}
 
-    # Place controls on window
-    set padding 4
-    grid $lst $scr -sticky nsew
-    grid columnconfigure $frm 0 -weight 1
-    grid rowconfigure    $frm 0 -weight 1
-
-    grid $lbl $bOK  -padx $padding -pady $padding
-    grid $ent $bCan -padx $padding -pady $padding
-    grid $frm       -padx $padding -pady $padding
-
-    grid configure $lbl -sticky w
-    grid configure $ent -sticky ew
-    grid configure $frm -sticky nsew
-    grid columnconfigure $w 0 -weight 1
-    grid columnconfigure $w 1 -weight 1
-    grid rowconfigure $w 2 -weight 1
-
-    $ent insert end $opts(-initialdir)
-
-    # Set bindings
-    # <Return> is the same as OK
-    bind $w <Return> $okCommand
-
-    # <Escape> is the same as cancel
-    bind $w <Escape> $cancelCommand
-
-    # Closing the window is the same as cancel
-    wm protocol $w WM_DELETE_WINDOW $cancelCommand
+    # Return value to user
+    #
     
-    # Fill listbox and bind for browsing
-    Refresh $lst $opts(-initialdir)
-    
-    bind $lst <Return> [namespace code [list Update $ent $lst]]
-    bind $lst <Double-ButtonRelease-1> [namespace code [list Update $ent $lst]]
-
-    ::tk::PlaceWindow $w widget [winfo parent $w]
-
-    # Set the min size when the size is known
-#    tkwait visibility $w
-#    tkChooseDirectory::MinSize $w
-
-    focus $ent
-    $ent selection range 0 end
-    grab set $w
-
-    # Wait for OK, Cancel or close
-    tkwait window $w
-
-    grab release $w
-    
-    set dir $value($w)
-    unset value($w)
-    return $dir
-}
-# tkChooseDirectory::tk_chooseDirectory
-
-proc ::tk::dialog::chooseDir::MinSize { w } {
-    set geometry [wm geometry $w]
-
-    regexp {([0-9]*)x([0-9]*)\+} geometry whole width height
-
-    wm minsize $w $width $height
+    return $tkPriv(selectFilePath)
 }
 
-proc ::tk::dialog::chooseDir::Done { w why mustexist } {
-    variable value
+# ::tk::dialog::file::chooseDir::Config --
+#
+#	Configures the Tk choosedir dialog according to the argument list
+#
+proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
+    upvar ::tk::dialog::file::$dataName data
 
-    switch -- $why {
-	ok {
-	    # If mustexist, validate value
-	    set value($w) [$w.e get]
-	    if { $mustexist } {
-		if { ![file exists $value($w)] } {
-		    return
-		}
-		if { ![file isdirectory $value($w)] } {
-		    return
-		}
-	    }
+    # 0: Delete all variable that were set on data(selectPath) the
+    # last time the file dialog is used. The traces may cause troubles
+    # if the dialog is now used with a different -parent option.
+
+    foreach trace [trace vinfo data(selectPath)] {
+	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    }
+
+    # 1: the configuration specs
+    #
+
+    set specs {
+	{-mustexist "" "" 0}
+	{-initialdir "" "" ""}
+	{-parent "" "" "."}
+	{-title "" "" ""}
+    }
+
+    # 2: default values depending on the type of the dialog
+    #
+
+    if {![info exists data(selectPath)]} {
+	# first time the dialog has been popped up
+	set data(selectPath) [pwd]
+    }
+
+    # 3: parse the arguments
+    #
+
+    tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
+
+    if {[string equal $data(-title) ""]} {
+	set data(-title) "Choose Directory"
+    }
+
+    # 4: set the default directory and selection according to the -initial
+    #    settings
+    #
+
+    if {[string compare $data(-initialdir) ""]} {
+	if {[file isdirectory $data(-initialdir)]} {
+	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
+	} else {
+	    set data(selectPath) [pwd]
 	}
-	cancel {
-	    set value($w) ""
-	}
+
+	# Convert the initialdir to an absolute path name.
+
+	set old [pwd]
+	cd $data(selectPath)
+	set data(selectPath) [pwd]
+	cd $old
     }
 
-    destroy $w
-}
-
-proc ::tk::dialog::chooseDir::Refresh { listbox dir } {
-    $listbox delete 0 end
-
-    # Find the parent directory; if it is different (ie, we're not
-    # already at the root), add a ".." entry
-    set parentDir [file dirname $dir]
-    if { ![string equal $parentDir $dir] } {
-	$listbox insert end ".."
-    }
-    
-    # add the subdirs to the listbox
-    foreach f [lsort [glob -nocomplain $dir/*]] {
-	if {[file isdirectory $f]} {
-	    $listbox insert end "[file tail $f]/"
-	}
+    if {![winfo exists $data(-parent)]} {
+	error "bad window path name \"$data(-parent)\""
     }
 }
 
-proc ::tk::dialog::chooseDir::Update { entry listbox } {
-    set sel [$listbox curselection]
-    if { [string equal $sel ""] } {
-	return
-    }
-    set subdir [$listbox get $sel]
-    if {[string equal $subdir ".."]} {
-	set fullpath [file dirname [$entry get]]
-	if { [string equal $fullpath [$entry get]] } {
+# Gets called when user presses Return in the "Selection" entry or presses OK.
+#
+proc ::tk::dialog::file::chooseDir::OkCmd {w} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+
+    # This is the brains behind selecting non-existant directories.  Here's
+    # the flowchart:
+    # 1.  If the icon list has a selection, join it with the current directory,
+    #     and return that value.
+    # 1a.  If the icon list does not have a selection ...
+    # 2.  If the entry is empty, do nothing.
+    # 3.  If the entry contains an invalid directory, then...
+    # 3a.   If the value is the same as last time through here, end dialog.
+    # 3b.   If the value is different than last time, save it and return.
+    # 4.  If entry contains a valid directory, then...
+    # 4a.   If the value is the same as the current directory, end dialog.
+    # 4b.   If the value is different from the current directory, change to
+    #       that directory.
+
+    set iconText [tkIconList_Get $data(icons)]
+    if { ![string equal $iconText ""] } {
+	set iconText [file join $data(selectPath) $iconText]
+	::tk::dialog::file::chooseDir::Done $w $iconText
+    } else {
+	set text [$data(ent) get]
+	if { [string equal $text ""] } {
 	    return
 	}
-    } else {
-	set fullpath [file join [$entry get] $subdir]
+	set text [eval file join [file split [string trim $text]]]
+	if { ![file exists $text] || ![file isdirectory $text] } {
+	    # Entry contains an invalid directory.  If it's the same as the
+	    # last time they came through here, reset the saved value and end
+	    # the dialog.  Otherwise, save the value (so we can do this test
+	    # next time).
+	    if { [string equal $text $data(previousEntryText)] } {
+		set data(previousEntryText) ""
+		::tk::dialog::file::chooseDir::Done $w $text
+	    } else {
+		set data(previousEntryText) $text
+	    }
+	} else {
+	    # Entry contains a valid directory.  If it is the same as the
+	    # current directory, end the dialog.  Otherwise, change to that
+	    # directory.
+	    if { [string equal $text $data(selectPath)] } {
+		::tk::dialog::file::chooseDir::Done $w $text
+	    } else {
+		set data(selectPath) $text
+	    }
+	}
     }
-    $entry delete 0 end
-    $entry insert end $fullpath
-    Refresh $listbox $fullpath
+    return
+}
+
+proc ::tk::dialog::file::chooseDir::DblClick {w} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+    set text [tkIconList_Get $data(icons)]
+    if {[string compare $text ""]} {
+	set file $data(selectPath)
+	if {[file isdirectory $file]} {
+	    ::tk::dialog::file::ListInvoke $w $text
+	    return
+	}
+    }
+}    
+
+# Gets called when user browses the IconList widget (dragging mouse, arrow
+# keys, etc)
+#
+proc ::tk::dialog::file::chooseDir::ListBrowse {w text} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+
+    if {[string equal $text ""]} {
+	return
+    }
+
+    set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
+    $data(ent) delete 0 end
+    $data(ent) insert 0 $file
+}
+
+# ::tk::dialog::file::chooseDir::Done --
+#
+#	Gets called when user has input a valid filename.  Pops up a
+#	dialog box to confirm selection when necessary. Sets the
+#	tkPriv(selectFilePath) variable, which will break the "tkwait"
+#	loop in tk_chooseDirectory and return the selected filename to the
+#	script that calls tk_getOpenFile or tk_getSaveFile
+#
+proc ::tk::dialog::file::chooseDir::Done {w {selectFilePath ""}} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+    global tkPriv
+
+    if {[string equal $selectFilePath ""]} {
+	set selectFilePath $data(selectPath)
+    }
+    if { $data(-mustexist) } {
+	if { ![file exists $selectFilePath] || \
+		![file isdir $selectFilePath] } {
+	    return
+	}
+    }
+    set tkPriv(selectFilePath) $selectFilePath
 }
