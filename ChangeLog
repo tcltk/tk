@@ -1,3 +1,7 @@
+2004-09-24  Don Porter	<dgp@users.sourceforge.net>
+
+	* generic/tkCursor.c:  Add missing initialization in debug routine.
+
 2004-09-22  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinInt.h (TkWinDisplayChanged): added decl
