@@ -67,3 +67,5 @@ read 'TEXT' (TK_LIBRARY_RESOURCES+18, "spinbox", purgeable)
 	"::library:spinbox.tcl";
 read 'TEXT' (TK_LIBRARY_RESOURCES+19, "panedwindow", purgeable) 
 	"::library:panedwindow.tcl";
+read 'TEXT' (TK_LIBRARY_RESOURCES+20, "msgcat", purgeable) 
+	":::tcl:library:msgcat:msgcat.tcl";
