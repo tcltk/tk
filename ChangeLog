@@ -1,3 +1,21 @@
+2001-04-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkWinHandleMenuEvent): corrected reseting of
+	service mode to only occur when it was set. [Bug #220948]
+
+2001-04-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/winClipboard.test: improved results for understanding when
+	tests fail.
+
+	* tests/winDialog.test: string totitle'd some results that
+	expected [pwd] to return a capital drive letter.
+
+	* tests/cursor.test: changed tests to use 'heart' cursor because
+	'arrow' on windows has a pre-skewed use count.
+
+	* win/tkWinDialog.c (GetFileNameA): initialize multi to 0.
+
 2001-04-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure:
