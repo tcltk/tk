@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.5 2003/07/18 11:04:59 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.6 2003/10/23 23:55:17 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -755,11 +755,11 @@ NavServicesGetFile(
     diagOptions.location.v = -1;
     diagOptions.optionFlags = kNavDontAutoTranslate 
         + kNavDontAddTranslateItems;
-            
     if (multiple) {
         diagOptions.optionFlags += kNavAllowMultipleFiles;
     }
-    
+    diagOptions.modality = kWindowModalityAppModal;
+            
     if (ofdPtr != NULL && ofdPtr->usePopup) {
         FileFilter *filterPtr;
         
@@ -783,7 +783,7 @@ NavServicesGetFile(
                     filterPtr->name, encoding);
         }
         diagOptions.popupExtension = CFArrayCreate(NULL, 
-                (const void **)menuItemNames, ofdPtr->fl.numFilters, NULL);;
+                (const void **) menuItemNames, ofdPtr->fl.numFilters, NULL);
     } else {        
         diagOptions.optionFlags += kNavNoTypePopup; 
         diagOptions.popupExtension = NULL;
@@ -797,7 +797,7 @@ NavServicesGetFile(
     diagOptions.optionFlags += kNavSupportPackages;
     
     diagOptions.clientName = CFStringCreateWithCString(NULL, "Wish", encoding);
-    if (message == NULL) {
+    if (message == NULL || message[0] == 0) {
         diagOptions.message = NULL;
     } else {
         diagOptions.message = CFStringCreateWithPascalString(NULL, message, encoding);
@@ -808,7 +808,7 @@ NavServicesGetFile(
     } else {
         diagOptions.saveFileName = NULL;
     }
-    if (title == NULL) {
+    if (title == NULL || title[0] == '\0') {
         diagOptions.windowTitle = NULL;
     } else {
         diagOptions.windowTitle = CFStringCreateWithPascalString(NULL, title, encoding);
@@ -831,7 +831,7 @@ NavServicesGetFile(
             openFileFilterUPP,
             ofdPtr,
             &dialogRef);
-        if (err!=noErr){
+        if (err != noErr) {
             fprintf(stderr,"NavCreateGetFileDialog failed, %d\n", err );
             dialogRef = NULL;
         }
@@ -997,30 +997,60 @@ OpenFileFilterProc(
     NavFilterModes filterMode )
 {
     OpenFileData *ofdPtr = (OpenFileData *) callBackUD;
+    
     if (!ofdPtr || !ofdPtr->usePopup) {
         return true;
     } else {
         if (ofdPtr->fl.numFilters == 0) {
             return true;
         } else {
-            
-            if ( theItem->descriptorType == typeFSS ) {
-                NavFileOrFolderInfo* theInfo = (NavFileOrFolderInfo*)info;
+            if ((theItem->descriptorType == typeFSS)
+                    || (theItem->descriptorType = typeFSRef)) {
+                NavFileOrFolderInfo* theInfo = (NavFileOrFolderInfo *) info;
+                char fileName[256];
                 int result;
                 
                 if ( !theInfo->isFolder ) {
                     OSType fileType;
                     StringPtr fileNamePtr;
+                    Tcl_DString fileNameDString;
                     int i;
                     FileFilter *filterPtr;
                
-                    fileType = theInfo->fileAndFolder.fileInfo.finderInfo.fdType;
-                    HLock((Handle)theItem->dataHandle);
-                    fileNamePtr = (((FSSpec *) *theItem->dataHandle)->name);
+                    fileType = 
+                            theInfo->fileAndFolder.fileInfo.finderInfo.fdType;
+                    Tcl_DStringInit (&fileNameDString);
                     
+                    if (theItem->descriptorType == typeFSS) {
+                        int len;
+                        fileNamePtr = (((FSSpec *) *theItem->dataHandle)->name);
+                        len = fileNamePtr[0];
+                        strncpy(fileName, fileNamePtr + 1, len);
+                        fileName[len] = '\0';
+                        fileNamePtr = fileName;
+
+                    } else if (theItem->descriptorType = typeFSRef) {
+                        OSStatus err;
+                        FSRef *theRef = (FSRef *) *theItem->dataHandle;
+                        HFSUniStr255 uniFileName;
+                        err = FSGetCatalogInfo (theRef, kFSCatInfoNone, NULL,
+                                &uniFileName, NULL, NULL);
+                        
+                        if (err == noErr) {
+                            int numChars;
+                            Tcl_UniCharToUtfDString (
+                                    (Tcl_UniChar *) uniFileName.unicode, 
+                                    uniFileName.length,
+                                    &fileNameDString);
+                            fileNamePtr = Tcl_DStringValue(&fileNameDString);
+                        } else {
+                            fileNamePtr = NULL;
+                        }
+                    }
                     if (ofdPtr->usePopup) {
                         i = ofdPtr->curType;
-                        for (filterPtr = ofdPtr->fl.filters; filterPtr && i > 0; i--) {
+                        for (filterPtr = ofdPtr->fl.filters; 
+                                filterPtr && i > 0; i--) {
                             filterPtr = filterPtr->next;
                         }
                         if (filterPtr) {
@@ -1031,9 +1061,11 @@ OpenFileFilterProc(
                         }
                     } else {
                         /*
-                         * We are not using the popup menu. In this case, the file is
-                         * considered matched if it matches any of the file filters.
+                         * We are not using the popup menu. In this case, the 
+                         * file is considered matched if it matches any of 
+                         * the file filters.
                          */
+                         
                         result = UNMATCHED;
                         for (filterPtr = ofdPtr->fl.filters; filterPtr;
                                 filterPtr = filterPtr->next) {
@@ -1045,7 +1077,7 @@ OpenFileFilterProc(
                         }
                     }
                     
-                    HUnlock((Handle)theItem->dataHandle);
+                    Tcl_DStringFree (&fileNameDString);
                     return (result == MATCHED);
                 } else {
                     return true;
@@ -1140,17 +1172,11 @@ MatchOneType(
         }
 
         for (globPtr=clausePtr->patterns; globPtr; globPtr=globPtr->next) {
-            char filename[256];
-            int len;
-            char * p, *q, *ext;
+            char *q, *ext;
         
             if (fileNamePtr == NULL) {
                 continue;
             }
-            p = (char*)(fileNamePtr);
-            len = p[0];
-            strncpy(filename, p+1, len);
-            filename[len] = '\0';
             ext = globPtr->pattern;
 
             if (ext[0] == '\0') {
@@ -1158,7 +1184,7 @@ MatchOneType(
                  * We don't want any extensions: OK if the filename doesn't
                  * have "." in it
                  */
-                for (q=filename; *q; q++) {
+                for (q=fileNamePtr; *q; q++) {
                     if (*q == '.') {
                         goto glob_unmatched;
                     }
@@ -1166,7 +1192,7 @@ MatchOneType(
                 goto glob_matched;
             }
         
-            if (Tcl_StringMatch(filename, ext)) {
+            if (Tcl_StringMatch(fileNamePtr, ext)) {
                 goto glob_matched;
             } else {
                 goto glob_unmatched;
@@ -1531,7 +1557,8 @@ Tk_MessageBoxObjCmd(
 	data.windowRef = windowRef;
 	data.buttonIndex = 1;
 	handler = NewEventHandlerUPP( AlertHandler );
-	InstallEventHandler( notifyTarget, handler, GetEventTypeCount(kEvents), &kEvents, &data, NULL );
+	InstallEventHandler( notifyTarget, handler, GetEventTypeCount(kEvents), 
+            &kEvents, &data, NULL );
 	osError = ShowSheetWindow( GetDialogWindow(dialogRef), windowRef );
 	if(osError != noErr) {
 	    result = TCL_ERROR;
