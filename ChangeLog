@@ -1,3 +1,19 @@
+2004-02-13  Jim Ingham  <jingham@apple.com>
+
+	* tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): Use CFStringRef for
+	title & message options, not pascal strings.
+	(Tk_GetSaveFileObjCmd): Ditto
+	(Tk_ChooseDirectoryObjCmd): Ditto
+	(NavServicesGetFile): Now that we get CFStrings, we don't need
+	to convert them here.
+
+	* tkMacOSXMenu.c (TkMacOSXDispatchMenuEvent): Cleanup, we don't
+	need to handle the Apple Menu picks any more, but the code didn't
+	reflect that.
+
+	* tkMacOSXWm.c (TkSetWMName): Use CFStrings for the Window Title
+	name, not Pascal strings.  
+	
 2004-02-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* README:       update to patchlevel 8.4.6

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.1 2003/09/26 16:19:52 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.2 2004/02/14 01:08:29 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -4269,29 +4269,27 @@ TkSetWMName(
     TkWindow *winPtr,
     Tk_Uid titleUid)
 {
-    Str255  pTitle;
+    CFStringRef  title;
     WindowRef macWin;
-    int destWrote;
     
     if (Tk_IsEmbedded(winPtr)) {
         return;
     }
-    Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, titleUid,
-	    strlen(titleUid), 0, NULL, 
-	    (char *) &pTitle[1],
-	    255, NULL, &destWrote, NULL); /* Internalize native */
-    pTitle[0] = destWrote;
+    
+    if (strlen(titleUid) > 0) {
+        title = CFStringCreateWithBytes(NULL, titleUid, strlen(titleUid), 
+                kCFStringEncodingUTF8, false); 
+    } else {
+    	title = NULL;
+    }
     
     macWin = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
 
-    /* 
-     * FIXME: Convert this to SetWindowTitleWithCFString, we should
-     * use CFStrings and not pascal strings wherever they are supported,
-     * since at some point there will be encodings that can't be supported
-     * with the pascal string interfaces.
-     */
-     
-    SetWTitle( macWin, pTitle);
+    SetWindowTitleWithCFString(macWin, title);
+    
+    if (title != NULL) {
+        CFRelease(title);
+    }
 }
 
 
