@@ -1,5 +1,26 @@
 1999-04-05    <stanton@scriptics.com>
 
+	* library/bgerror.tcl:
+	* library/button.tcl:
+	* library/clrpick.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/focus.tcl:
+	* library/listbox.tcl:
+	* library/menu.tcl:
+	* library/msgbox.tcl:
+	* library/palette.tcl:
+	* library/scale.tcl:
+	* library/scrlbar.tcl:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tk.tcl: Lots of minor performance improvements
+	contributed by Jeffrey Hobbs. [Bug: 1118]
+
+	* win/tkWinWm.c (Tk_WmCmd): Fixed bad code in tracing
+	suboption. [Bug: 1519]
+
 	* library/tkfbox.tcl: Change to restore button text after an
 	action to avoid the sticky "Open" button in a save dialog.
 	[Bug: 1640]
