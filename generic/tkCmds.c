@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.24 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.25 2002/06/15 01:54:47 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1629,6 +1629,7 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
     }
 
     if (index == TKWM_TRACING) {
+	int wmTracing;
 	TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
 	if ((objc != 2) && (objc != 3)) {
@@ -1636,10 +1637,19 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(dispPtr->wmTracing));
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewBooleanObj(dispPtr->flags & TK_DISPLAY_WM_TRACING));
 	    return TCL_OK;
 	}
-	return Tcl_GetBooleanFromObj(interp, objv[2], &dispPtr->wmTracing);
+	if (Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if (wmTracing) {
+	    dispPtr->flags |= TK_DISPLAY_WM_TRACING;
+	} else {
+	    dispPtr->flags &= ~TK_DISPLAY_WM_TRACING;
+	}
+	return TCL_OK;
     }
 
     if (objc < 3) {
