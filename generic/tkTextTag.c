@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.11 2003/10/31 09:02:12 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.12 2003/11/07 15:36:26 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -176,7 +176,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    }
 		} else {
 		    index2 = index1;
-		    TkTextIndexForwChars(&index2, 1, &index2, COUNT_INDICES);
+		    TkTextIndexForwChars(NULL,&index2, 1, &index2, COUNT_INDICES);
 		}
 
 		if (tagPtr->affectsDisplay) {

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.19 2003/10/31 09:02:07 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.20 2003/11/07 15:36:26 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -889,20 +889,21 @@ this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBtext\fR
 command.
 .TP
-\fIpathName \fBcount \fI?options\fI? \fIindex1 \fIindex2\fR 
-Counts the number of relevant things between the two indices.  If index1
-is after index2, the result will be a negative number (and this holds for
-each of the possible options).  The actual items which are counted depend
-on the options given.  The result is a list of integers, one for the
-result of each counting option given.  Valid counting options are
-'-chars', '-displaychars', '-displayindices', '-displaylines',
-'-indices', '-lines', '-xpixels' and '-ypixels'.  The default value, if
-no option is specified, is '-indices'.  There is an additional possible
-option '-update' which is a modifier.  If given, then all subsequent
-options ensure that any possible out of date information is recalculated.
-This currently only has any effect for the '-ypixels' count (which, if
-'update' is not given, will use the text widget's current cached value
-for each line).  The count options are interpreted as follows:
+\fIpathName \fBcount \fI?options\fI? \fIindex1 \fIindex2\fR Counts the
+number of relevant things between the two indices.  If index1 is after
+index2, the result will be a negative number (and this holds for each of
+the possible options).  The actual items which are counted depend on the
+options given.  The result is a list of integers, one for the result of
+each counting option given.  Valid counting options are \fI-chars\fR,
+\fI-displaychars\fR, \fI-displayindices\fR, \fI-displaylines\fR,
+\fI-indices\fR, \fI-lines\fR, \fI-xpixels\fR and \fI-ypixels\fR. The
+default value, if no option is specified, is \fI-indices\fR. There is an
+additional possible option \fI-update\fR which is a modifier.  If given,
+then all subsequent options ensure that any possible out of date
+information is recalculated.  This currently only has any effect for the
+\fI-ypixels\fR count (which, if 'update' is not given, will use the text
+widget's current cached value for each line).  The count options are
+interpreted as follows:
 .TP
 \fI-chars\fR - count all characters, whether elided or not.  Do not count
 embedded windows or images.

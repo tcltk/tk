@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.9 2003/10/31 09:02:11 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.10 2003/11/07 15:36:26 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1118,9 +1118,9 @@ ForwBack(textPtr, string, indexPtr)
 	    type = COUNT_DISPLAY_CHARS;
 	}
 	if (*string == '+') {
-	    TkTextIndexForwChars(indexPtr, count, indexPtr, type);
+	    TkTextIndexForwChars(textPtr, indexPtr, count, indexPtr, type);
 	} else {
-	    TkTextIndexBackChars(indexPtr, count, indexPtr, type);
+	    TkTextIndexBackChars(textPtr, indexPtr, count, indexPtr, type);
 	}
     } else if ((*units == 'i') && (strncmp(units, "indices", length) == 0)) {
 	TkTextCountType type;
@@ -1130,9 +1130,9 @@ ForwBack(textPtr, string, indexPtr)
 	    type = COUNT_INDICES;
 	}
 	if (*string == '+') {
-	    TkTextIndexForwChars(indexPtr, count, indexPtr, type);
+	    TkTextIndexForwChars(textPtr, indexPtr, count, indexPtr, type);
 	} else {
-	    TkTextIndexBackChars(indexPtr, count, indexPtr, type);
+	    TkTextIndexBackChars(textPtr, indexPtr, count, indexPtr, type);
 	}
     } else if ((*units == 'l') && (strncmp(units, "lines", length) == 0)) {
 	if (modifier == TKINDEX_DISPLAY) {
@@ -1147,10 +1147,10 @@ ForwBack(textPtr, string, indexPtr)
 	     * original pixel offset.
 	     */
 	    int xOffset, forward;
-	    if (TkTextIsElided(textPtr, indexPtr)) {
+	    if (TkTextIsElided(textPtr, indexPtr, NULL)) {
 	        /* Go forward to the first non-elided index */
-		TkTextIndexForwChars(indexPtr, 0, indexPtr, 
-				     COUNT_DISPLAY_INDICES | COUNT_IS_ELIDED);
+		TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr, 
+				     COUNT_DISPLAY_INDICES);
 	    }
 	    /* 
 	     * Unlike the Forw/BackChars code, the display line code
@@ -1177,9 +1177,8 @@ ForwBack(textPtr, string, indexPtr)
 		     * line.
 		     */
 		    TkTextFindDisplayLineEnd(textPtr, indexPtr, 1, NULL);
-		    TkTextIndexForwChars(indexPtr, 1, indexPtr, 
-					 COUNT_DISPLAY_INDICES
-			| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+		    TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, 
+					 COUNT_DISPLAY_INDICES);
 		}
 	    } else {
 		TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, &xOffset);
@@ -1189,9 +1188,8 @@ ForwBack(textPtr, string, indexPtr)
 		     * char/byte to get to the end of the previous line
 		     */
 		    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
-		    TkTextIndexBackChars(indexPtr, 1, indexPtr, 
-					 COUNT_DISPLAY_INDICES 
-			| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+		    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, 
+					 COUNT_DISPLAY_INDICES);
 		}
 		TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
 	    }
@@ -1335,7 +1333,8 @@ TkTextIndexForwBytes(srcPtr, byteCount, dstPtr)
  */
 
 void
-TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
+TkTextIndexForwChars(textPtr, srcPtr, charCount, dstPtr, type)
+    CONST TkText *textPtr;      /* Overall information about text widget. */
     CONST TkTextIndex *srcPtr;	/* Source index. */
     int charCount;		/* How many characters forward to move.
 				 * May be negative. */
@@ -1344,18 +1343,20 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
 {
     TkTextLine *linePtr;
     TkTextSegment *segPtr;
+    TkTextElideInfo *infoPtr = NULL;
     int byteOffset;
     char *start, *end, *p;
     Tcl_UniChar ch;
     int elide = 0;
     int checkElided = (type & COUNT_DISPLAY);
-
+    
     if (charCount < 0) {
-	TkTextIndexBackChars(srcPtr, -charCount, dstPtr, type);
+	TkTextIndexBackChars(textPtr, srcPtr, -charCount, dstPtr, type);
 	return;
     }
     if (checkElided) {
-	elide = ((type & COUNT_IS_ELIDED) ? 1 : 0);
+	infoPtr = (TkTextElideInfo*)ckalloc((unsigned)sizeof(TkTextElideInfo));
+	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
     }
 
     *dstPtr = *srcPtr;
@@ -1366,6 +1367,7 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
      */
 
     segPtr = TkTextIndexToSeg(dstPtr, &byteOffset);
+    
     while (1) {
 	/*
 	 * Go through each segment in line looking for specified character
@@ -1381,14 +1383,27 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
 	     */
 	    if (checkElided) {
 		if ((segPtr->typePtr == &tkTextToggleOffType)
-		  || (segPtr->typePtr == &tkTextToggleOnType)) {		
-		    if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+		    || (segPtr->typePtr == &tkTextToggleOnType)) {		
+		    TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
+		    if (tagPtr->elideString != NULL 
+		      && (tagPtr->priority >= infoPtr->elidePriority)) {
 			if (elide) {
-			    elide = (segPtr->typePtr == &tkTextToggleOffType)
-			      & !segPtr->body.toggle.tagPtr->elide;
+			    elide = ((segPtr->typePtr == &tkTextToggleOffType)
+				     & !tagPtr->elide);
 			} else {
-			    elide = (segPtr->typePtr == &tkTextToggleOnType)
-			      & segPtr->body.toggle.tagPtr->elide;
+			    elide = ((segPtr->typePtr == &tkTextToggleOnType)
+				     & tagPtr->elide);
+			}
+			if (!elide && tagPtr->priority 
+			    == infoPtr->elidePriority) {
+			    /* Find previous elide tag, if any */
+			    while (--infoPtr->elidePriority > 0) {
+				if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
+				    break;
+				}
+			    }
+			} else {
+			    infoPtr->elidePriority = tagPtr->priority;
 			}
 		    }
 		}
@@ -1401,7 +1416,7 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
 		    for (p = start; p < end; p += Tcl_UtfToUniChar(p, &ch)) {
 			if (charCount == 0) {
 			    dstPtr->byteIndex += (p - start);
-			    return;
+			    goto forwardCharDone;
 			}
 			charCount--;
 		    }
@@ -1409,7 +1424,7 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
 		    if (type & COUNT_INDICES) {
 			if (charCount < segPtr->size - byteOffset) {
 			    dstPtr->byteIndex += charCount;
-			    return;
+			    goto forwardCharDone;
 			}
 			charCount -= segPtr->size - byteOffset;
 		    }
@@ -1429,11 +1444,15 @@ TkTextIndexForwChars(srcPtr, charCount, dstPtr, type)
 	linePtr = TkBTreeNextLine(dstPtr->linePtr);
 	if (linePtr == NULL) {
 	    dstPtr->byteIndex -= sizeof(char);
-	    return;
+	    goto forwardCharDone;
 	}
 	dstPtr->linePtr = linePtr;
 	dstPtr->byteIndex = 0;
 	segPtr = dstPtr->linePtr->segPtr;
+    }
+  forwardCharDone:
+    if (infoPtr != NULL) {
+	ckfree((char*) infoPtr);
     }
 }
 
@@ -1474,6 +1493,7 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 {
     TkTextLine *linePtr1;
     TkTextSegment *segPtr, *seg2Ptr = NULL;
+    TkTextElideInfo *infoPtr = NULL;
     int byteOffset, maxBytes;
     int count = 0;
     int elide = 0;
@@ -1490,7 +1510,8 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
     seg2Ptr = TkTextIndexToSeg(indexPtr2, &maxBytes);
 
     if (checkElided) {
-	elide = TkTextIsElided(textPtr, indexPtr1);
+	infoPtr = (TkTextElideInfo*)ckalloc((unsigned)sizeof(TkTextElideInfo));
+	elide = TkTextIsElided(textPtr, indexPtr1, infoPtr);
     }
 	
     while (1) {
@@ -1509,13 +1530,26 @@ TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type)
 	    if (checkElided) {
 		if ((segPtr->typePtr == &tkTextToggleOffType)
 		  || (segPtr->typePtr == &tkTextToggleOnType)) {		
-		    if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+		    TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
+		    if (tagPtr->elideString != NULL 
+		      && (tagPtr->priority >= infoPtr->elidePriority)) {
 			if (elide) {
-			    elide = (segPtr->typePtr == &tkTextToggleOffType)
-			      & !segPtr->body.toggle.tagPtr->elide;
+			    elide = ((segPtr->typePtr == &tkTextToggleOffType)
+				     & !tagPtr->elide);
 			} else {
-			    elide = (segPtr->typePtr == &tkTextToggleOnType)
-			      & segPtr->body.toggle.tagPtr->elide;
+			    elide = ((segPtr->typePtr == &tkTextToggleOnType)
+				     & tagPtr->elide);
+			}
+			if (!elide && tagPtr->priority 
+			    == infoPtr->elidePriority) {
+			    /* Find previous elide tag, if any */
+			    while (--infoPtr->elidePriority > 0) {
+				if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
+				    break;
+				}
+			    }
+			} else {
+			    infoPtr->elidePriority = tagPtr->priority;
 			}
 		    }
 		}
@@ -1676,7 +1710,8 @@ TkTextIndexBackBytes(srcPtr, byteCount, dstPtr)
  */
 
 void
-TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
+TkTextIndexBackChars(textPtr, srcPtr, charCount, dstPtr, type)
+    CONST TkText *textPtr;      /* Overall information about text widget. */
     CONST TkTextIndex *srcPtr;	/* Source index. */
     int charCount;		/* How many characters backward to move.
 				 * May be negative. */
@@ -1684,17 +1719,19 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
     TkTextCountType type;       /* The type of item to count */
 {
     TkTextSegment *segPtr, *oldPtr;
+    TkTextElideInfo *infoPtr = NULL;
     int lineIndex, segSize;
     CONST char *p, *start, *end;
     int elide = 0;
     int checkElided = (type & COUNT_DISPLAY);
 
     if (charCount < 0) {
-	TkTextIndexForwChars(srcPtr, -charCount, dstPtr, type);
+	TkTextIndexForwChars(textPtr, srcPtr, -charCount, dstPtr, type);
 	return;
     }
     if (checkElided) {
-        elide = ((type & COUNT_IS_ELIDED) ? 1 : 0);
+	infoPtr = (TkTextElideInfo*)ckalloc((unsigned)sizeof(TkTextElideInfo));
+	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
     }
     
     *dstPtr = *srcPtr;
@@ -1723,13 +1760,26 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
 	if (checkElided) {
 	    if ((segPtr->typePtr == &tkTextToggleOffType)
 	      || (segPtr->typePtr == &tkTextToggleOnType)) {		
-		if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+		TkTextTag *tagPtr = segPtr->body.toggle.tagPtr;
+		if (tagPtr->elideString != NULL 
+		    && (tagPtr->priority >= infoPtr->elidePriority)) {
 		    if (elide) {
-			elide = (segPtr->typePtr == &tkTextToggleOnType)
-			  & !segPtr->body.toggle.tagPtr->elide;
+			elide = ((segPtr->typePtr == &tkTextToggleOnType)
+				 & !tagPtr->elide);
 		    } else {
-			elide = (segPtr->typePtr == &tkTextToggleOffType)
-			  & segPtr->body.toggle.tagPtr->elide;
+			elide = ((segPtr->typePtr == &tkTextToggleOffType)
+				 & tagPtr->elide);
+		    }
+		    if (!elide && tagPtr->priority 
+			== infoPtr->elidePriority) {
+			/* Find previous elide tag, if any */
+			while (--infoPtr->elidePriority > 0) {
+			    if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
+				break;
+			    }
+			}
+		    } else {
+			infoPtr->elidePriority = tagPtr->priority;
 		    }
 		}
 	    }
@@ -1742,7 +1792,7 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
 		for (p = end; ; p = Tcl_UtfPrev(p, start)) {
 		    if (charCount == 0) {
 			dstPtr->byteIndex -= (end - p);
-			return;
+			goto backwadCharDone;
 		    }
 		    if (p == start) {
 			break;
@@ -1753,7 +1803,7 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
 		if (type & COUNT_INDICES) {
 		    if (charCount <= segSize) {
 			dstPtr->byteIndex -= charCount;
-			return;
+			goto backwadCharDone;
 		    }
 		    charCount -= segSize;
 		}
@@ -1784,7 +1834,7 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
 	}
 	if (lineIndex == 0) {
 	    dstPtr->byteIndex = 0;
-	    return;
+	    goto backwadCharDone;
 	}
 	lineIndex--;
 	dstPtr->linePtr = TkBTreeFindLine(dstPtr->tree, lineIndex);
@@ -1800,6 +1850,10 @@ TkTextIndexBackChars(srcPtr, charCount, dstPtr, type)
 	}
 	segPtr = oldPtr;
 	segSize = segPtr->size;
+    }
+  backwadCharDone:
+    if (infoPtr != NULL) {
+	ckfree((char*) infoPtr);
     }
 }
 
@@ -1908,8 +1962,8 @@ StartEnd(textPtr, string, indexPtr)
 	 */
 
 	if (modifier == TKINDEX_DISPLAY) {
-	    TkTextIndexForwChars(indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES
-		| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr, 
+				 COUNT_DISPLAY_INDICES);
 	}
 	segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	while (1) {
@@ -1928,10 +1982,11 @@ StartEnd(textPtr, string, indexPtr)
 	}
 	if (firstChar) {
 	    if (modifier == TKINDEX_DISPLAY) {
-		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_DISPLAY_INDICES
-		    | (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+		TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, 
+				     COUNT_DISPLAY_INDICES);
 	    } else {
-		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_INDICES);
+		TkTextIndexForwChars(NULL, indexPtr, 1, indexPtr, 
+				     COUNT_INDICES);
 	    }
 	}
     } else if ((*string == 'w') && (strncmp(string, "wordstart", length) == 0)
@@ -1939,8 +1994,8 @@ StartEnd(textPtr, string, indexPtr)
 	int firstChar = 1;
 
 	if (modifier == TKINDEX_DISPLAY) {
-	    TkTextIndexForwChars(indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES
-		| (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+	    TkTextIndexForwChars(NULL, indexPtr, 0, indexPtr, 
+				 COUNT_DISPLAY_INDICES);
 	}
 	/*
 	 * Starting with the current character, look for one that's not
@@ -1970,10 +2025,11 @@ StartEnd(textPtr, string, indexPtr)
 	}
 	if (!firstChar) {
 	    if (modifier == TKINDEX_DISPLAY) {
-		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_DISPLAY_INDICES
-		    | (COUNT_IS_ELIDED * TkTextIsElided(textPtr, indexPtr)));
+		TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, 
+				     COUNT_DISPLAY_INDICES);
 	    } else {
-		TkTextIndexForwChars(indexPtr, 1, indexPtr, COUNT_INDICES);
+		TkTextIndexForwChars(NULL, indexPtr, 1, indexPtr, 
+				     COUNT_INDICES);
 	    }
 	}
     } else {

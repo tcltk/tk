@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.39 2003/10/31 09:02:08 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.40 2003/11/07 15:36:26 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -922,7 +922,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 		     */
 		    if (objc & 1) {
 			indices[i] = indices[i-1];
-			TkTextIndexForwChars(&indices[i], 1, &indices[i], 
+			TkTextIndexForwChars(NULL, &indices[i], 1, &indices[i], 
 					     COUNT_INDICES);
 			objc++;
 		    }
@@ -1075,7 +1075,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 		    goto done;
 		}
 		if (i+1 == objc) {
-		    TkTextIndexForwChars(index1Ptr, 1, &index2, COUNT_INDICES);
+		    TkTextIndexForwChars(NULL, index1Ptr, 1, &index2, COUNT_INDICES);
 		    index2Ptr = &index2;
 		} else {
 		    index2Ptr = TkTextGetIndexFromObj(interp, textPtr, 
@@ -1247,7 +1247,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 			 * Move the insertion position to the correct
 			 * place 
 			 */
-			TkTextIndexForwChars(indexFromPtr, deleteInsertOffset, 
+			TkTextIndexForwChars(NULL, indexFromPtr, deleteInsertOffset, 
 					     &index, COUNT_INDICES);
 			TkBTreeUnlinkSegment(textPtr->tree, 
 			    textPtr->insertMarkPtr,
@@ -1833,7 +1833,7 @@ TextEventProc(clientData, eventPtr)
 	    TkTextRedrawTag(textPtr, NULL, NULL, textPtr->selTagPtr, 1);
 #endif
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	    TkTextIndexForwChars(&index, 1, &index2, COUNT_INDICES);
+	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
 	    /* 
 	     * While we wish to redisplay, no heights have changed, so
 	     * no need to call TkTextInvalidateLineMetrics
@@ -2186,7 +2186,7 @@ DeleteChars(textPtr, indexPtr1, indexPtr2, noViewUpdate)
 	index2 = *indexPtr2;
     } else {
 	index2 = index1;
-	TkTextIndexForwChars(&index2, 1, &index2, COUNT_INDICES);
+	TkTextIndexForwChars(NULL, &index2, 1, &index2, COUNT_INDICES);
     }
 
     /*
@@ -2217,10 +2217,10 @@ DeleteChars(textPtr, indexPtr1, indexPtr2, noViewUpdate)
 	TkTextIndex oldIndex2;
 
 	oldIndex2 = index2;
-	TkTextIndexBackChars(&oldIndex2, 1, &index2, COUNT_INDICES);
+	TkTextIndexBackChars(NULL, &oldIndex2, 1, &index2, COUNT_INDICES);
 	line2--;
 	if ((index1.byteIndex == 0) && (line1 != 0)) {
-	    TkTextIndexBackChars(&index1, 1, &index1, COUNT_INDICES);
+	    TkTextIndexBackChars(NULL, &index1, 1, &index1, COUNT_INDICES);
 	    line1--;
 	}
 	arrayPtr = TkBTreeGetTags(&index2, &arraySize);
@@ -2479,7 +2479,7 @@ TextFetchSelection(clientData, offset, buffer, maxBytes)
 		}
 	    }
 	    if ((segPtr->typePtr == &tkTextCharType)
-		    && !TkTextIsElided(textPtr, &textPtr->selIndex)) {
+		    && !TkTextIsElided(textPtr, &textPtr->selIndex, NULL)) {
 		memcpy((VOID *) buffer, (VOID *) (segPtr->body.chars
 			+ offsetInSeg), (size_t) chunkSize);
 		buffer += chunkSize;
@@ -3000,7 +3000,7 @@ TextSearchIndexInLine(searchSpecPtr, linePtr, byteIndex)
 	 curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
 	if ((segPtr->typePtr == &tkTextCharType)
 	    && (searchSpecPtr->searchElide || 
-		!TkTextIsElided(textPtr, &curIndex))) {
+		!TkTextIsElided(textPtr, &curIndex, NULL))) {
 	    if (leftToScan < segPtr->size) {
 		if (searchSpecPtr->exact) {
 		    index += leftToScan;
@@ -3068,7 +3068,7 @@ TextSearchAddNextLine(lineNum, searchSpecPtr, theLine, lenPtr)
 	    curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
 	if ((segPtr->typePtr != &tkTextCharType)
 	  || (!searchSpecPtr->searchElide 
-	      && TkTextIsElided(textPtr, &curIndex))) {
+	      && TkTextIsElided(textPtr, &curIndex, NULL))) {
 	    continue;
 	}
 	Tcl_AppendToObj(theLine, segPtr->body.chars, segPtr->size);
@@ -3191,7 +3191,7 @@ TextSearchFoundMatch(lineNum, searchSpecPtr, clientData, theLine,
 	if (segPtr->typePtr != &tkTextCharType) {
 	    matchOffset += segPtr->size;
 	} else if (!searchSpecPtr->searchElide 
-		   && TkTextIsElided(textPtr, &curIndex)) {
+		   && TkTextIsElided(textPtr, &curIndex, NULL)) {
 	    if (searchSpecPtr->exact) {
 		matchOffset += segPtr->size;
 	    } else {
@@ -3243,7 +3243,7 @@ TextSearchFoundMatch(lineNum, searchSpecPtr, clientData, theLine,
 	    numChars += segPtr->size;
 	    continue;
 	} else if (!searchSpecPtr->searchElide 
-		 && TkTextIsElided(textPtr, &curIndex)) {
+		 && TkTextIsElided(textPtr, &curIndex, NULL)) {
 	    numChars += Tcl_NumUtfChars(segPtr->body.chars, -1);
 	    continue;
 	}
@@ -3483,7 +3483,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
     arg++;
     atEnd = 0;
     if (objc == arg) {
-	TkTextIndexForwChars(&index1, 1, &index2, COUNT_INDICES);
+	TkTextIndexForwChars(NULL,&index1, 1, &index2, COUNT_INDICES);
     } else {
 	int length;
 	char *str;
@@ -3956,7 +3956,7 @@ TextGetText(textPtr, indexPtr1,indexPtr2, visibleOnly)
 		}
 	    }
 	    if (segPtr->typePtr == &tkTextCharType) {
-		if (!visibleOnly || !TkTextIsElided(textPtr, &tmpIndex)) {
+		if (!visibleOnly || !TkTextIsElided(textPtr, &tmpIndex, NULL)) {
 		    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset,
 				    last - offset);
 		}
