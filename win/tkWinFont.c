@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.14 2001/09/26 21:36:19 pspjuth Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.15 2002/04/12 07:18:49 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -180,7 +180,6 @@ static Tcl_ThreadDataKey dataKey;
  * Information cached about the system at startup time.
  */
  
-static Tcl_Encoding unicodeEncoding;
 static Tcl_Encoding systemEncoding;
 
 /*
@@ -248,7 +247,6 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	/*
 	 * If running NT, then we will be calling some Unicode functions 
@@ -256,7 +254,7 @@ TkpFontPkgInit(
 	 * make sure we convert to/from the Unicode char set. 
 	 */
 
-	systemEncoding = unicodeEncoding;
+	systemEncoding = TkWinGetUnicodeEncoding();
     }
 }
 
@@ -1082,7 +1080,7 @@ InitFont(
     InitSubFont(hdc, hFont, 1, &fontPtr->subFontArray[0]);
 
     encoding = fontPtr->subFontArray[0].familyPtr->encoding;
-    if (encoding == unicodeEncoding) {
+    if (encoding == TkWinGetUnicodeEncoding()) {
 	GetCharWidthW(hdc, 0, BASE_CHARS - 1, fontPtr->widths);
     } else {
 	GetCharWidthA(hdc, 0, BASE_CHARS - 1, fontPtr->widths);
@@ -1353,7 +1351,7 @@ FreeFontFamily(
     if (familyPtr->endCount != NULL) {
 	ckfree((char *) familyPtr->endCount);
     }
-    if (familyPtr->encoding != unicodeEncoding) {
+    if (familyPtr->encoding != TkWinGetUnicodeEncoding()) {
 	Tcl_FreeEncoding(familyPtr->encoding);
     }
     
@@ -1671,7 +1669,7 @@ FontMapLoadPage(
     familyPtr = subFontPtr->familyPtr;
     encoding = familyPtr->encoding;
 
-    if (familyPtr->encoding == unicodeEncoding) {
+    if (familyPtr->encoding == TkWinGetUnicodeEncoding()) {
 	/*
 	 * Font is Unicode.  Few fonts are going to have all characters, so 
 	 * examine the TrueType character existence metrics to determine 

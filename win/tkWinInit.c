@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.8 2002/01/29 20:51:24 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.9 2002/04/12 07:18:49 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -124,8 +124,8 @@ TkpDisplayWarning(msg, title)
     CONST char *msg;		/* Message to be displayed. */
     CONST char *title;		/* Title of warning. */
 {
-    Tcl_Encoding unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
     Tcl_DString msgString, titleString;
+    Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
 
     Tcl_UtfToExternalDString(unicodeEncoding, msg, -1, &msgString);
     Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
