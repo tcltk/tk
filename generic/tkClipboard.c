@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.8 2002/01/17 05:13:11 dgp Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.9 2002/04/12 10:03:02 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -618,6 +618,44 @@ Tk_ClipboardObjCmd(clientData, interp, objc, objv)
 	}
     }
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkClipCleanup --
+ *
+ *	This procedure is called to cleanup resources associated with
+ *	claiming clipboard ownership and for receiving selection get
+ *	results.  This function is called in tkWindow.c.  This has to be
+ *	called by the display cleanup function because we still need the
+ *	access display elements.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Resources are freed - the clipboard may no longer be used.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkClipCleanup(dispPtr)
+    TkDisplay *dispPtr;	/* display associated with clipboard */
+{
+    if (dispPtr->clipWindow != NULL) {
+	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
+		dispPtr->applicationAtom);
+	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
+		dispPtr->windowAtom);
+	/*
+	 * It may be too late to call Tk_DestroyWindow, so just free the
+	 * memory created directly.
+	 */
+	ckfree((char *) dispPtr->clipWindow);
+	dispPtr->clipWindow = NULL;
+    }
 }
 
 /*
