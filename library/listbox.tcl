@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.13 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.13.2.1 2004/02/16 23:09:25 wolfsuit Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -179,8 +179,15 @@ bind Listbox <B2-Motion> {
 # someone could use the "event generate" command to produce one
 # on other platforms.
 
-bind Listbox <MouseWheel> {
-    %W yview scroll [expr {- (%D / 120) * 4}] units
+if {[string equal [tk windowingsystem] "classic"]
+	|| [string equal [tk windowingsystem] "aqua"]} {
+    bind Listbox <MouseWheel> {
+        %W yview scroll [expr {- (%D)}] units
+    }
+} else {
+    bind Listbox <MouseWheel> {
+        %W yview scroll [expr {- (%D / 120) * 4}] units
+    }
 }
 
 if {[string equal "x11" [tk windowingsystem]]} {
