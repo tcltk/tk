@@ -49,7 +49,7 @@ TK_XINCLUDES='@XINCLUDES@'
 TK_XLIBSW='@XLIBSW@'
 
 # -l flag to pass to the linker to pick up the Tcl library
-TK_LIB_FLAG='@TK_LIB_FLAG@'
+TK_LIB_FLAG="@TK_LIB_FLAG@"
 
 # String to pass to linker to pick up the Tk library from its
 # build directory.
