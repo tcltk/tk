@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.4 2001/08/29 23:22:24 hobbs Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.5 2002/01/17 23:33:53 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -104,7 +104,7 @@ static void		SquareDisplay _ANSI_ARGS_((ClientData clientData));
 static void		KeepInWindow _ANSI_ARGS_((Square *squarePtr));
 static void		SquareObjEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
-static int		SquareWidgetCmd _ANSI_ARGS_((ClientData clientData,
+static int		SquareWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *, int objc, Tcl_Obj * CONST objv[]));
 
 /*
@@ -169,7 +169,7 @@ SquareObjCmd(clientData, interp, objc, objv)
     squarePtr->display		= Tk_Display(tkwin);
     squarePtr->interp		= interp;
     squarePtr->widgetCmd	= Tcl_CreateObjCommand(interp,
-	    Tk_PathName(squarePtr->tkwin), SquareWidgetCmd,
+	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd,
 	    (ClientData) squarePtr, SquareDeletedProc);
     squarePtr->gc		= None;
     squarePtr->optionTable	= optionTable;
@@ -203,7 +203,7 @@ error:
 /*
  *--------------------------------------------------------------
  *
- * SquareWidgetCmd --
+ * SquareWidgetObjCmd --
  *
  *	This procedure is invoked to process the Tcl command
  *	that corresponds to a widget managed by this module.
@@ -219,7 +219,7 @@ error:
  */
 
 static int
-SquareWidgetCmd(clientData, interp, objc, objv)
+SquareWidgetObjCmd(clientData, interp, objc, objv)
     ClientData clientData;		/* Information about square widget. */
     Tcl_Interp *interp;			/* Current interpreter. */
     int objc;				/* Number of arguments. */
@@ -227,7 +227,7 @@ SquareWidgetCmd(clientData, interp, objc, objv)
 {
     Square *squarePtr = (Square *) clientData;
     int result = TCL_OK;
-    static char *squareOptions[] = {"cget", "configure", (char *) NULL};
+    static CONST char *squareOptions[] = {"cget", "configure", (char *) NULL};
     enum {
 	SQUARE_CGET, SQUARE_CONFIGURE
     };
