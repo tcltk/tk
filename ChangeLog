@@ -1,5 +1,8 @@
 2003-11-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkListbox.c (ListboxDeleteSubCmd, ListboxListVarProc):
+	free itemconfig data when removing it from table. [Bug #836483]
+
 	* macosx/tkMacOSXClipboard.c (TkSuspendClipboard, TkSelGetSelection):
 	add unicode clipboard support. [Patch #840107] (senn)
 	
