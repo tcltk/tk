@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacWinMenu.c 1.39 97/04/09 14:56:59
+ * SCCS: @(#) tkMacWinMenu.c 1.41 97/10/22 15:05:23
  */
 
 #include "tkMenu.h"
@@ -67,7 +67,7 @@ PreprocessMenu(menuPtr)
     	finished = 1;
         for (index = 0; index < menuPtr->numEntries; index++) {
             if ((menuPtr->entries[index]->type == CASCADE_ENTRY)
-            	    && (menuPtr->entries[index]->name != NULL)) {
+            	    && (menuPtr->entries[index]->namePtr != NULL)) {
             	if ((menuPtr->entries[index]->childMenuRefPtr != NULL)
             		&& (menuPtr->entries[index]->childMenuRefPtr->menuPtr
             		!= NULL)) {

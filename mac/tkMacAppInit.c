@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacAppInit.c 1.35 97/07/28 11:18:55
+ * SCCS: @(#) tkMacAppInit.c 1.36 97/11/07 21:20:46
  */
 
 #include <Gestalt.h>
@@ -108,7 +108,7 @@ main(
  *
  * Results:
  *	Returns a standard Tcl completion code, and leaves an error
- *	message in interp->result if an error occurs.
+ *	message in the interp's result if an error occurs.
  *
  * Side effects:
  *	Depends on the startup script.
@@ -307,7 +307,7 @@ SetupMainInterp(
     return TCL_OK;
 
 error:
-    panic(interp->result);
+    panic(Tcl_GetStringResult(interp));
     return TCL_ERROR;
 }
 

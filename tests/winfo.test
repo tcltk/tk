@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) winfo.test 1.19 97/05/16 08:49:01
+# SCCS: @(#) winfo.test 1.20 97/05/26 13:24:39
 
 if {[info procs test] != "test"} {
     source defs
@@ -311,7 +311,7 @@ proc MakeEmbed {} {
     pack .emb.b -expand yes -fill both
     update
 }
-test winfo-13.1 {root coordinates of embedded toplevel} {macOrUnix} {
+test winfo-13.1 {root coordinates of embedded toplevel} {winCrash} {
     MakeEmbed
     set z [expr [winfo rootx .emb] == [winfo rootx .con] && \
 		[winfo rooty .emb] == [winfo rooty .con]]
@@ -319,8 +319,8 @@ test winfo-13.1 {root coordinates of embedded toplevel} {macOrUnix} {
     destroy .con
     set z
 } {1}
-test winfo-13.2 {destroying embedded toplevel} {macOrUnix} {
-    catch {destroy .emb}
+test winfo-13.2 {destroying embedded toplevel} {winCrash} {
+    destroy .emb
     update
     expr [winfo exists .emb.b] || [winfo exists .con]
 } 0
@@ -329,7 +329,7 @@ foreach i [winfo children .] {
     destroy $i
 }
 
-test winfo-13.3 {destroying container window} {macOrUnix} {
+test winfo-13.3 {destroying container window} {winCrash} {
     MakeEmbed
     destroy .con
     update
@@ -343,7 +343,7 @@ foreach i [winfo children .] {
     destroy $i
 }
 
-test winfo-13.4 {[winfo containing] with embedded windows} {macOrUnix} {
+test winfo-13.4 {[winfo containing] with embedded windows} {winCrash} {
     MakeEmbed
     button .b
     pack .b -expand yes -fill both

@@ -4,12 +4,12 @@
  *	This file contains X specific routines for manipulating 
  *	selections.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixSelect.c 1.5 96/03/29 14:14:31
+ * SCCS: @(#) tkUnixSelect.c 1.6 97/11/07 21:24:34
  */
 
 #include "tkInt.h"
@@ -98,7 +98,7 @@ static void		SelTimeoutProc _ANSI_ARGS_((ClientData clientData));
  * Results:
  *	The return value is a standard Tcl return value.
  *	If an error occurs (such as no selection exists)
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -422,9 +422,12 @@ TkSelEventProc(tkwin, eventPtr)
 	if ((type == XA_STRING) || (type == dispPtr->textAtom)
 		|| (type == dispPtr->compoundTextAtom)) {
 	    if (format != 8) {
-		sprintf(retrPtr->interp->result,
-		    "bad format for string selection: wanted \"8\", got \"%d\"",
-		    format);
+		char buf[64 + TCL_INTEGER_SPACE];
+		
+		sprintf(buf, 
+			"bad format for string selection: wanted \"8\", got \"%d\"",
+			format);
+		Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -456,9 +459,12 @@ TkSelEventProc(tkwin, eventPtr)
 	    char *string;
 
 	    if (format != 32) {
-		sprintf(retrPtr->interp->result,
-		    "bad format for selection: wanted \"32\", got \"%d\"",
-		    format);
+		char buf[64 + TCL_INTEGER_SPACE];
+		
+		sprintf(buf, 
+			"bad format for selection: wanted \"32\", got \"%d\"",
+			format);
+		Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -891,10 +897,12 @@ SelRcvIncrProc(clientData, eventPtr)
 	    || (type == retrPtr->winPtr->dispPtr->textAtom)
 	    || (type == retrPtr->winPtr->dispPtr->compoundTextAtom)) {
 	if (format != 8) {
-	    Tcl_SetResult(retrPtr->interp, (char *) NULL, TCL_STATIC);
-	    sprintf(retrPtr->interp->result,
-		"bad format for string selection: wanted \"8\", got \"%d\"",
-		format);
+	    char buf[64 + TCL_INTEGER_SPACE];
+	    
+	    sprintf(buf, 
+		    "bad format for string selection: wanted \"8\", got \"%d\"",
+		    format);
+	    Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
 	    retrPtr->result = TCL_ERROR;
 	    goto done;
 	}
@@ -909,10 +917,12 @@ SelRcvIncrProc(clientData, eventPtr)
 	char *string;
 
 	if (format != 32) {
-	    Tcl_SetResult(retrPtr->interp, (char *) NULL, TCL_STATIC);
-	    sprintf(retrPtr->interp->result,
-		"bad format for selection: wanted \"32\", got \"%d\"",
-		format);
+	    char buf[64 + TCL_INTEGER_SPACE];
+
+	    sprintf(buf,
+		    "bad format for selection: wanted \"32\", got \"%d\"",
+		    format);
+	    Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
 	    retrPtr->result = TCL_ERROR;
 	    goto done;
 	}

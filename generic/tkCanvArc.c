@@ -4,12 +4,12 @@
  *	This file implements arc items for canvas widgets.
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCanvArc.c 1.34 97/04/25 16:50:56
+ * SCCS: @(#) tkCanvArc.c 1.35 97/11/07 21:14:21
  */
 
 #include <stdio.h>
@@ -188,7 +188,7 @@ static Tk_Uid pieSliceUid = NULL;
  * Results:
  *	A standard Tcl return value.  If an error occurred in
  *	creating the item, then an error message is left in
- *	interp->result;  in this case itemPtr is
+ *	the interp's result;  in this case itemPtr is
  *	left uninitialized, so it can be safely freed by the
  *	caller.
  *
@@ -276,7 +276,7 @@ CreateArc(interp, canvas, itemPtr, argc, argv)
  *	on what it does.
  *
  * Results:
- *	Returns TCL_OK or TCL_ERROR, and sets interp->result.
+ *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
  *
  * Side effects:
  *	The coordinates for the given item may be changed.
@@ -319,9 +319,10 @@ ArcCoords(interp, canvas, itemPtr, argc, argv)
 	}
 	ComputeArcBbox(canvas, arcPtr);
     } else {
-	sprintf(interp->result,
-		"wrong # coordinates: expected 0 or 4, got %d",
-		argc);
+	char buf[64 + TCL_INTEGER_SPACE];
+	
+	sprintf(buf, "wrong # coordinates: expected 0 or 4, got %d", argc);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -337,7 +338,7 @@ ArcCoords(interp, canvas, itemPtr, argc, argv)
  *
  * Results:
  *	A standard Tcl result code.  If an error occurs, then
- *	an error message is left in interp->result.
+ *	an error message is left in the interp's result.
  *
  * Side effects:
  *	Configuration information, such as colors and stipple
@@ -1574,7 +1575,7 @@ AngleInRange(x, y, start, extent)
  * Results:
  *	The return value is a standard Tcl result.  If an error
  *	occurs in generating Postscript then an error message is
- *	left in interp->result, replacing whatever used
+ *	left in the interp's result, replacing whatever used
  *	to be there.  If no error occurs, then Postscript for the
  *	item is appended to the result.
  *

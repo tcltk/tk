@@ -10,11 +10,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixInt.h 1.9 97/05/08 11:20:12
+ * SCCS: @(#) tkUnixInt.h 1.10 97/05/15 14:47:03
  */
 
 #ifndef _TKUNIXINT
 #define _TKUNIXINT
+
+#ifndef _TKINT
+#include "tkInt.h"
+#endif
 
 /*
  * Prototypes for procedures that are referenced in files other

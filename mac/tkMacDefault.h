@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacDefault.h 1.48 97/10/09 17:45:04
+ * SCCS: @(#) tkMacDefault.h 1.49 98/01/08 13:18:41
  */
 
 #ifndef _TKMACDEFAULT
@@ -61,7 +61,8 @@
 #define DEF_CHKRAD_FG			DEF_BUTTON_FG
 #define DEF_BUTTON_FONT			"system"
 #define DEF_BUTTON_HEIGHT		"0"
-#define DEF_BUTTON_HIGHLIGHT_BG		NORMAL_BG
+#define DEF_BUTTON_HIGHLIGHT_BG_COLOR	DEF_BUTTON_BG_COLOR
+#define DEF_BUTTON_HIGHLIGHT_BG_MONO	DEF_BUTTON_BG_MONO
 #define DEF_BUTTON_HIGHLIGHT		"systemButtonFrame"
 #define DEF_LABEL_HIGHLIGHT_WIDTH	"0"
 #define DEF_BUTTON_HIGHLIGHT_WIDTH	"4"

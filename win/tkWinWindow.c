@@ -4,12 +4,12 @@
  *	Xlib emulation routines for Windows related to creating,
  *	displaying and destroying windows.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinWindow.c 1.23 97/07/01 18:14:13
+ * SCCS: @(#) tkWinWindow.c 1.25 97/12/08 15:16:32
  */
 
 #include "tkWinInt.h"
@@ -114,7 +114,12 @@ Tk_Window
 Tk_HWNDToWindow(hwnd)
     HWND hwnd;
 {
-    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&windowTable, (char*)hwnd);
+    Tcl_HashEntry *entryPtr;
+    if (!initialized) {
+	Tcl_InitHashTable(&windowTable, TCL_ONE_WORD_KEYS);
+	initialized = 1;
+    }
+    entryPtr = Tcl_FindHashEntry(&windowTable, (char*)hwnd);
     if (entryPtr != NULL) {
 	return (Tk_Window) Tcl_GetHashValue(entryPtr);
     }
@@ -185,7 +190,7 @@ TkpPrintWindowId(buf, window)
  *	The return value is normally TCL_OK;  in this case *idPtr
  *	will be set to the X Window id equivalent to string.  If
  *	string is improperly formed then TCL_ERROR is returned and
- *	an error message will be left in interp->result.  If the
+ *	an error message will be left in the interp's result.  If the
  *	number does not correspond to a Tk Window, then *idPtr will
  *	be set to None.
  *

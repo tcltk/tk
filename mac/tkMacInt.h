@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacInt.h 1.67 97/11/20 18:30:38
+ * SCCS:@(#) tkMacInt.h 1.69 98/02/18 10:50:53
  */
 
 #ifndef _TKMACINT
@@ -71,6 +71,24 @@ typedef struct TkMacWindowList {
  * what the correct port is after the TKWindow  structure has been freed.  This 
  * actually happens when you bind destroy of a toplevel to Destroy of a child.
  */
+
+/*
+ * This structure is for handling Netscape-type in process
+ * embedding where Tk does not control the top-level.  It contains
+ * various functions that are needed by Mac specific routines, like
+ * TkMacGetDrawablePort.  The definitions of the function types
+ * are in tclMac.h.
+ */
+
+typedef struct {
+	Tk_MacEmbedRegisterWinProc *registerWinProc;
+	Tk_MacEmbedGetGrafPortProc *getPortProc;
+	Tk_MacEmbedMakeContainerExistProc *containerExistProc;
+	Tk_MacEmbedGetClipProc *getClipProc;
+	Tk_MacEmbedGetOffsetInParentProc *getOffsetProc;
+} TkMacEmbedHandler;
+
+extern TkMacEmbedHandler *gMacEmbedHandler;
 
 /*
  * Defines used for TkMacInvalidateWindow
@@ -233,6 +251,7 @@ extern int		TkMacGrowToplevel _ANSI_ARGS_((WindowRef whichWindow,
 			    Point start));
 extern void 		TkMacHandleMenuSelect _ANSI_ARGS_((long mResult,
 			    int optionKeyPressed));
+extern int		TkMacHaveAppearance _ANSI_ARGS_((void));
 extern void		TkMacInitAppleEvents _ANSI_ARGS_((Tcl_Interp *interp));
 extern void 		TkMacInitMenus _ANSI_ARGS_((Tcl_Interp 	*interp));
 extern void		TkMacInvalidateWindow _ANSI_ARGS_((MacDrawable *macWin, int flag));

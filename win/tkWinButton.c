@@ -4,12 +4,12 @@
  *	This file implements the Windows specific portion of the button
  *	widgets.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinButton.c 1.12 97/09/02 13:18:27
+ * SCCS: @(#) tkWinButton.c 1.14 98/01/09 09:46:46
  */
 
 #define OEMRESOURCE
@@ -65,12 +65,6 @@ enum {
 };
 
 /*
- * Set to non-zero if this module is initialized.
- */
-
-static int initialized = 0;
-
-/*
  * Variables for the cached information about the boxes bitmap.
  */
 
@@ -80,11 +74,12 @@ static LPSTR boxesBits = NULL;		    /* Pointer to bitmap data. */
 static DWORD boxHeight = 0, boxWidth = 0;    /* Size of each sub-image. */
 
 /*
- * This variable holds the default border width for a button in string
- * form for use in a Tk_ConfigSpec.
+ * The following variable holds the default border width for a button
+ * in string form for use in Tk_OptionSpecs for the various button
+ * widget classes.
  */
 
-static char defWidth[8];
+static char defWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declarations for functions defined in this file.
@@ -99,7 +94,6 @@ static DWORD		ComputeStyle _ANSI_ARGS_((WinButton* butPtr));
 static Window		CreateProc _ANSI_ARGS_((Tk_Window tkwin,
 			    Window parent, ClientData instanceData));
 static void		InitBoxes _ANSI_ARGS_((void));
-static void		UpdateButtonDefaults _ANSI_ARGS_((void));
 
 /*
  * The class procedure table for the button widgets.
@@ -177,33 +171,38 @@ InitBoxes()
 /*
  *----------------------------------------------------------------------
  *
- * UpdateButtonDefaults --
+ * TkpButtonSetDefaults --
  *
- *	This function retrieves the current system defaults for
- *	the button widgets.
+ *	This procedure is invoked before option tables are created for
+ *	buttons.  It modifies some of the default values to match the
+ *	current values defined for this platform.
  *
  * Results:
- *	None.
+ *	Some of the default values in *specPtr are modified.
  *
  * Side effects:
- *	Updates the configuration defaults for buttons.
+ *	Updates some of.
  *
  *----------------------------------------------------------------------
  */
 
 void
-UpdateButtonDefaults()
+TkpButtonSetDefaults(specPtr)
+    Tk_OptionSpec *specPtr;	/* Points to an array of option specs,
+				 * terminated by one with type
+				 * TK_OPTION_END. */
 {
-    Tk_ConfigSpec *specPtr;
-    int width = GetSystemMetrics(SM_CXEDGE);
+    int width;
 
-    if (width == 0) {
-	width = 1;
+    if (defWidth[0] == 0) {
+	width = GetSystemMetrics(SM_CXEDGE);
+	if (width == 0) {
+	    width = 1;
+	}
+	sprintf(defWidth, "%d", width);
     }
-    sprintf(defWidth, "%d", width);
-    for (specPtr = tkpButtonConfigSpecs; specPtr->type != TK_CONFIG_END;
-	    specPtr++) {
-	if (specPtr->offset == Tk_Offset(TkButton, borderWidth)) {
+    for ( ; specPtr->type != TK_OPTION_END; specPtr++) {
+	if (specPtr->internalOffset == Tk_Offset(TkButton, borderWidth)) {
 	    specPtr->defValue = defWidth;
 	}
     }
@@ -230,11 +229,6 @@ TkpCreateButton(tkwin)
     Tk_Window tkwin;
 {
     WinButton *butPtr;
-
-    if (!initialized) {
-	UpdateButtonDefaults();
-	initialized = 1;
-    }
 
     butPtr = (WinButton *)ckalloc(sizeof(WinButton));
     butPtr->hwnd = NULL;
@@ -361,16 +355,16 @@ TkpDisplayButton(clientData)
     }
 
     border = butPtr->normalBorder;
-    if ((butPtr->state == tkDisabledUid) && (butPtr->disabledFg != NULL)) {
+    if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
 	gc = butPtr->disabledGC;
-    } else if ((butPtr->state == tkActiveUid)
+    } else if ((butPtr->state == STATE_ACTIVE)
 	    && !Tk_StrictMotif(butPtr->tkwin)) {
 	gc = butPtr->activeTextGC;
 	border = butPtr->activeBorder;
     } else {
 	gc = butPtr->normalTextGC;
     }
-    if ((butPtr->flags & SELECTED) && (butPtr->state != tkActiveUid)
+    if ((butPtr->flags & SELECTED) && (butPtr->state != STATE_ACTIVE)
 	    && (butPtr->selectBorder != NULL) && !butPtr->indicatorOn) {
 	border = butPtr->selectBorder;
     }
@@ -391,7 +385,7 @@ TkpDisplayButton(clientData)
      */
 
     if (butPtr->type == TYPE_BUTTON) {
-	defaultWidth = ((butPtr->defaultState == tkActiveUid)
+	defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
 		? butPtr->highlightWidth : 0);
 	offset = 1;
     } else {
@@ -507,7 +501,7 @@ TkpDisplayButton(clientData)
 	y -= butPtr->indicatorDiameter / 2;
 
 	xSrc = (butPtr->flags & SELECTED) ? boxWidth : 0;
-	if (butPtr->state == tkActiveUid) {
+	if (butPtr->state == STATE_ACTIVE) {
 	    xSrc += boxWidth*2;
 	}
 	ySrc = (butPtr->type == TYPE_RADIO_BUTTON) ? 0 : boxHeight;
@@ -530,7 +524,7 @@ TkpDisplayButton(clientData)
 		border, TK_3D_LIGHT2));
 	boxesPalette[PAL_BOTTOM_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
 		border, TK_3D_LIGHT_GC));
-	if (butPtr->state == tkDisabledUid) {
+	if (butPtr->state == STATE_DISABLED) {
 	    boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
 		border, TK_3D_LIGHT2));
 	} else if (butPtr->selectBorder != NULL) {
@@ -556,7 +550,7 @@ TkpDisplayButton(clientData)
      * must temporarily modify the GC.
      */
 
-    if ((butPtr->state == tkDisabledUid)
+    if ((butPtr->state == STATE_DISABLED)
 	    && ((butPtr->disabledFg == NULL) || (butPtr->image != NULL))) {
 	if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
 		&& (butPtr->selectBorder != NULL)) {
@@ -666,8 +660,8 @@ TkpComputeButtonGeometry(butPtr)
     } else {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		butPtr->text, -1, butPtr->wrapLength, butPtr->justify, 0,
-		&butPtr->textWidth, &butPtr->textHeight);
+		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
 	width = butPtr->textWidth;
 	height = butPtr->textHeight;
@@ -788,7 +782,7 @@ ButtonProc(hwnd, message, wParam, lParam)
 	case BN_CLICKED: {
 	    int code;
 	    Tcl_Interp *interp = butPtr->info.interp;
-	    if (butPtr->info.state != tkDisabledUid) {
+	    if (butPtr->info.state != STATE_DISABLED) {
 		Tcl_Preserve((ClientData)interp);
 		code = TkInvokeButton((TkButton*)butPtr);
 		if (code != TCL_OK && code != TCL_CONTINUE

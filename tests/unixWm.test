@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) unixWm.test 1.46 97/10/27 16:15:36
+# SCCS: @(#) unixWm.test 1.47 98/01/20 14:20:10
 
 if {$tcl_platform(platform) != "unix"} {
     return
@@ -2284,6 +2284,37 @@ test unixWm-57.2 {MenubarReqProc procedure} {unixOnly} {
     update
     lappend result [expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]
 } {0 20 0 1}
+
+test unixWm-58.1 {UpdateCommand procedure, DString gets reallocated} {unixOnly} {
+    catch {destroy .t}
+    toplevel .t -width 100 -height 50
+    wm geom .t +0+0
+    wm command .t "argumentNumber0 argumentNumber1 argumentNumber2 argumentNumber0 argumentNumber3 argumentNumber4 argumentNumber5 argumentNumber6 argumentNumber0 argumentNumber7 argumentNumber8 argumentNumber9 argumentNumber10 argumentNumber0 argumentNumber11 argumentNumber12 argumentNumber13 argumentNumber14 argumentNumber15 argumentNumber16 argumentNumber17 argumentNumber18"
+    update
+    testprop [testwrapper .t] WM_COMMAND
+} {argumentNumber0
+argumentNumber1
+argumentNumber2
+argumentNumber0
+argumentNumber3
+argumentNumber4
+argumentNumber5
+argumentNumber6
+argumentNumber0
+argumentNumber7
+argumentNumber8
+argumentNumber9
+argumentNumber10
+argumentNumber0
+argumentNumber11
+argumentNumber12
+argumentNumber13
+argumentNumber14
+argumentNumber15
+argumentNumber16
+argumentNumber17
+argumentNumber18
+}
 
 # Test exit processing and cleanup:
 

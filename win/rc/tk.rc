@@ -1,7 +1,9 @@
-// SCCS: @(#) tk.rc 1.22 97/03/21 18:35:14
+// SCCS: @(#) tk.rc 1.23 97/07/24 13:55:02
 //
 // Version
 //
+
+#include <windows.h>
 
 #define RESOURCE_INCLUDED
 #include <tk.h>
@@ -35,6 +37,36 @@ BEGIN
     BEGIN
         VALUE "Translation", 0x409, 1200
     END
+END
+
+#include <dlgs.h>
+FILEOPENORD DIALOG DISCARDABLE  36, 24, 218, 138
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Choose Directory"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "Directory &name:",-1,8,6,118,9
+    EDITTEXT        edt10,8,26,144,12, WS_TABSTOP | ES_AUTOHSCROLL
+    LISTBOX         lst2,8,40,144,64,LBS_SORT | LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | 
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dri&ves:",stc4,8,106,92,9
+    COMBOBOX        cmb2,8,115,144,68,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",1,160,6,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",2,160,24,50,14,WS_GROUP
+    PUSHBUTTON      "&Help",psh15,160,42,50,14,WS_GROUP
+    CHECKBOX        "&Read only",chx1,160,66,50,12,WS_GROUP
+    PUSHBUTTON      "Net&work...",psh14,160,115,50,14,WS_GROUP
+
+    LTEXT           "a",stc3,9,143,114,15
+    EDITTEXT        edt1,7,158,135,20,NOT WS_TABSTOP
+    LISTBOX         lst1,8,205,134,42,LBS_NOINTEGRALHEIGHT
+    COMBOBOX        cmb1,8,253,135,21,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | 
+                    WS_VSCROLL
+
 END
 
 //

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkImgBmap.c 1.33 97/07/31 09:08:22
+ * SCCS: @(#) tkImgBmap.c 1.34 97/11/07 21:17:15
  */
 
 #include "tkInt.h"
@@ -227,7 +227,7 @@ ImgBmapCreate(interp, name, argc, argv, typePtr, master, clientDataPtr)
  *
  * Results:
  *	A standard Tcl return value.  If TCL_ERROR is returned then
- *	an error message is left in masterPtr->interp->result.
+ *	an error message is left in the masterPtr->interp's result.
  *
  * Side effects:
  *	Existing instances of the image will be redisplayed to match
@@ -278,7 +278,8 @@ ImgBmapConfigureMaster(masterPtr, argc, argv, flags)
     if ((masterPtr->maskFileString != NULL)
 	    || (masterPtr->maskDataString != NULL)) {
 	if (masterPtr->data == NULL) {
-	    masterPtr->interp->result = "can't have mask without bitmap";
+	    Tcl_SetResult(masterPtr->interp, "can't have mask without bitmap",
+		    TCL_STATIC);
 	    return TCL_ERROR;
 	}
 	masterPtr->maskData = TkGetBitmapData(masterPtr->interp,
@@ -291,7 +292,8 @@ ImgBmapConfigureMaster(masterPtr, argc, argv, flags)
 		|| (maskHeight != masterPtr->height)) {
 	    ckfree(masterPtr->maskData);
 	    masterPtr->maskData = NULL;
-	    masterPtr->interp->result = "bitmap and mask have different sizes";
+	    Tcl_SetResult(masterPtr->interp,
+		    "bitmap and mask have different sizes", TCL_STATIC);
 	    return TCL_ERROR;
 	}
     }
@@ -451,7 +453,7 @@ ImgBmapConfigureInstance(instancePtr)
  *	*heightPtr.  *hotXPtr and *hotYPtr are set to the bitmap
  *	hotspot if one is defined, otherwise they are set to -1, -1.
  *	If an error occurred, NULL is returned and an error message is
- *	left in interp->result.
+ *	left in the interp's result.
  *
  * Side effects:
  *	A bitmap is created.
@@ -615,7 +617,7 @@ TkGetBitmapData(interp, string, fileName, widthPtr, heightPtr,
     return data;
 
     error:
-    interp->result = "format error in bitmap data";
+    Tcl_SetResult(interp, "format error in bitmap data", TCL_STATIC);
     errorCleanup:
     if (data != NULL) {
 	ckfree(data);
@@ -725,9 +727,8 @@ ImgBmapCmd(clientData, interp, argc, argv)
     size_t length;
 
     if (argc < 2) {
-	sprintf(interp->result,
-		"wrong # args: should be \"%.50s option ?arg arg ...?\"",
-		argv[0]);
+	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
+		" option ?arg arg ...?\"", (char *) NULL);
 	return TCL_ERROR;
     }
     c = argv[1][0];

@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# SCCS: @(#) dialog.tcl 1.33 97/06/06 11:20:04
+# SCCS: @(#) dialog.tcl 1.35 97/12/19 16:07:49
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -61,16 +61,17 @@ proc tk_dialog {w title text bitmap default args} {
     pack $w.top -side top -fill both -expand 1
 
     # 2. Fill the top part with bitmap and message (use the option
-    # database for -wraplength so that it can be overridden by
-    # the caller).
+    # database for -wraplength and -font so that they can be
+    # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    label $w.msg -justify left -text $text
     if {$tcl_platform(platform) == "macintosh"} {
-	$w.msg configure -font system
+	option add *Dialog.msg.font system widgetDefault
     } else {
-	$w.msg configure -font {Times 18}
+	option add *Dialog.msg.font {Times 18} widgetDefault
     }
+
+    label $w.msg -justify left -text $text
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
     if {$bitmap != ""} {
 	if {($tcl_platform(platform) == "macintosh") && ($bitmap == "error")} {
@@ -126,10 +127,10 @@ proc tk_dialog {w title text bitmap default args} {
 
     wm withdraw $w
     update idletasks
-    set x [expr [winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]]
-    set y [expr [winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]]
+    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
+	    - [winfo vrootx [winfo parent $w]]}]
+    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
+	    - [winfo vrooty [winfo parent $w]]}]
     wm geom $w +$x+$y
     wm deiconify $w
 

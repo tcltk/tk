@@ -3,12 +3,12 @@
  *
  *	Main entry point for wish and other Tk-based applications.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) winMain.c 1.33 96/12/17 12:56:14
+ * SCCS: @(#) winMain.c 1.37 98/01/20 22:47:06
  */
 
 #include <tk.h>
@@ -37,6 +37,11 @@ static void		WishPanic _ANSI_ARGS_(TCL_VARARGS(char *,format));
 EXTERN int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
 
+#ifdef TCL_TEST
+EXTERN int		TclObjTest_Init _ANSI_ARGS_((Tcl_Interp *interp));
+EXTERN int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
+#endif /* TCL_TEST */
+
 
 /*
  *----------------------------------------------------------------------
@@ -62,9 +67,8 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     LPSTR lpszCmdLine;
     int nCmdShow;
 {
-    char **argv, *p;
+    char **argv;
     int argc;
-    char buffer[MAX_PATH];
 
     Tcl_SetPanicProc(WishPanic);
 
@@ -74,7 +78,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      */
 
     setlocale(LC_ALL, "C");
-
+    setargv(&argc, &argv);
 
     /*
      * Increase the application queue size from default value of 8.
@@ -83,6 +87,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      * This is only needed for Windows 3.x, since NT dynamically expands
      * the queue.
      */
+
     SetMessageQueue(64);
 
     /*
@@ -92,21 +97,6 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
      */
 
     TkConsoleCreate();
-
-    setargv(&argc, &argv);
-
-    /*
-     * Replace argv[0] with full pathname of executable, and forward
-     * slashes substituted for backslashes.
-     */
-
-    GetModuleFileName(NULL, buffer, sizeof(buffer));
-    argv[0] = buffer;
-    for (p = buffer; *p != '\0'; p++) {
-	if (*p == '\\') {
-	    *p = '/';
-	}
-    }
 
     Tk_Main(argc, argv, Tcl_AppInit);
     return 1;
@@ -124,7 +114,7 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
  *
  * Results:
  *	Returns a standard Tcl completion code, and leaves an error
- *	message in interp->result if an error occurs.
+ *	message in the interp's result if an error occurs.
  *
  * Side effects:
  *	Depends on the startup script.
@@ -153,6 +143,17 @@ Tcl_AppInit(interp)
 	goto error;
     }
 
+#ifdef TCL_TEST
+    if (Tcltest_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    Tcl_StaticPackage(interp, "Tcltest", Tcltest_Init,
+            (Tcl_PackageInitProc *) NULL);
+    if (TclObjTest_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+#endif /* TCL_TEST */
+
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
 	goto error;
@@ -165,7 +166,7 @@ Tcl_AppInit(interp)
     return TCL_OK;
 
 error:
-    WishPanic(interp->result);
+    WishPanic(Tcl_GetStringResult(interp));
     return TCL_ERROR;
 }
 
@@ -241,7 +242,7 @@ setargv(argcPtr, argvPtr)
     char **argv;
     int argc, size, inquote, copy, slashes;
     
-    cmdLine = GetCommandLine();
+    cmdLine = GetCommandLine();	/* INTL: BUG */
 
     /*
      * Precompute an overly pessimistic guess at the number of arguments
@@ -250,9 +251,9 @@ setargv(argcPtr, argvPtr)
 
     size = 2;
     for (p = cmdLine; *p != '\0'; p++) {
-	if (isspace(*p)) {
+	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
 	    size++;
-	    while (isspace(*p)) {
+	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
 		p++;
 	    }
 	    if (*p == '\0') {
@@ -260,8 +261,8 @@ setargv(argcPtr, argvPtr)
 	    }
 	}
     }
-    argSpace = (char *) ckalloc((unsigned) (size * sizeof(char *) 
-	    + strlen(cmdLine) + 1));
+    argSpace = (char *) Tcl_Alloc(
+	    (unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
     argv = (char **) argSpace;
     argSpace += size * sizeof(char *);
     size--;
@@ -269,7 +270,7 @@ setargv(argcPtr, argvPtr)
     p = cmdLine;
     for (argc = 0; argc < size; argc++) {
 	argv[argc] = arg = argSpace;
-	while (isspace(*p)) {
+	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
 	    p++;
 	}
 	if (*p == '\0') {
@@ -303,7 +304,8 @@ setargv(argcPtr, argvPtr)
 		slashes--;
 	    }
 
-	    if ((*p == '\0') || (!inquote && isspace(*p))) {
+	    if ((*p == '\0')
+		    || (!inquote && ((*p == ' ') || (*p == '\t')))) { /* INTL: ISO space. */
 		break;
 	    }
 	    if (copy != 0) {
@@ -320,4 +322,3 @@ setargv(argcPtr, argvPtr)
     *argcPtr = argc;
     *argvPtr = argv;
 }
-

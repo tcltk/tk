@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinPort.h 1.25 97/04/21 17:08:42
+ * SCCS: @(#) tkWinPort.h 1.27 98/02/10 10:35:52
  */
 
 #ifndef _WINPORT
@@ -33,6 +33,7 @@
 #include <io.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <tchar.h>
 
 #ifdef _MSC_VER
 #    define hypot _hypot
@@ -89,7 +90,6 @@
  * The following Tk functions are implemented as macros under Windows.
  */
 
-#define TkGetNativeProlog(interp) TkGetProlog(interp)
 #define TkpGetPixel(p) (((((p)->red >> 8) & 0xff) \
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnix.c 1.5 97/01/07 11:41:39
+ * SCCS: @(#) tkUnix.c 1.6 97/11/07 21:24:29
  */
 
 #include <tkInt.h>
@@ -40,7 +40,8 @@ TkGetServerInfo(interp, tkwin)
     Tk_Window tkwin;		/* Token for window;  this selects a
 				 * particular display and server. */
 {
-    char buffer[50], buffer2[50];
+    char buffer[8 + TCL_INTEGER_SPACE * 2];
+    char buffer2[TCL_INTEGER_SPACE];
 
     sprintf(buffer, "X%dR%d ", ProtocolVersion(Tk_Display(tkwin)),
 	    ProtocolRevision(Tk_Display(tkwin)));

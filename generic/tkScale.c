@@ -12,12 +12,12 @@
  *	permission.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkScale.c 1.88 97/07/31 09:11:57
+ * SCCS: @(#) tkScale.c 1.89 97/11/07 21:20:16
  */
 
 #include "tkPort.h"
@@ -261,7 +261,7 @@ Tk_ScaleCmd(clientData, interp, argc, argv)
 	goto error;
     }
 
-    interp->result = Tk_PathName(scalePtr->tkwin);
+    Tcl_SetResult(interp, Tk_PathName(scalePtr->tkwin), TCL_STATIC);
     return TCL_OK;
 
     error:
@@ -334,6 +334,7 @@ ScaleWidgetCmd(clientData, interp, argc, argv)
 	    && (length >= 3)) {
 	int x, y ;
 	double value;
+	char buf[TCL_INTEGER_SPACE * 2];
 
 	if ((argc != 2) && (argc != 3)) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -356,10 +357,12 @@ ScaleWidgetCmd(clientData, interp, argc, argv)
 	    y = scalePtr->horizTroughY + scalePtr->width/2
 		    + scalePtr->borderWidth;
 	}
-	sprintf(interp->result, "%d %d", x, y);
+	sprintf(buf, "%d %d", x, y);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
 	double value;
 	int x, y;
+	char buf[TCL_DOUBLE_SPACE];
 
 	if ((argc != 2) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -375,7 +378,8 @@ ScaleWidgetCmd(clientData, interp, argc, argv)
 	    }
 	    value = TkpPixelToValue(scalePtr, x, y);
 	}
-	sprintf(interp->result, scalePtr->format, value);
+	sprintf(buf, scalePtr->format, value);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'i') && (strncmp(argv[1], "identify", length) == 0)) {
 	int x, y, thing;
 
@@ -390,9 +394,15 @@ ScaleWidgetCmd(clientData, interp, argc, argv)
 	}
 	thing = TkpScaleElement(scalePtr, x,y);
 	switch (thing) {
-	    case TROUGH1:	interp->result = "trough1";	break;
-	    case SLIDER:	interp->result = "slider";	break;
-	    case TROUGH2:	interp->result = "trough2";	break;
+	    case TROUGH1:
+		Tcl_SetResult(interp, "trough1", TCL_STATIC);
+		break;
+	    case SLIDER:
+		Tcl_SetResult(interp, "slider", TCL_STATIC);
+		break;
+	    case TROUGH2:
+		Tcl_SetResult(interp, "trough2", TCL_STATIC);
+		break;
 	}
     } else if ((c == 's') && (strncmp(argv[1], "set", length) == 0)) {
 	double value;
@@ -481,7 +491,7 @@ DestroyScale(memPtr)
  *
  * Results:
  *	The return value is a standard Tcl result.  If TCL_ERROR is
- *	returned, then interp->result contains an error message.
+ *	returned, then the interp's result contains an error message.
  *
  * Side effects:
  *	Configuration information, such as colors, border width,

@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) canvas.test 1.10 97/07/31 10:22:48
+# SCCS: @(#) canvas.test 1.11 97/12/16 16:20:53
 
 if {[info procs test] != "test"} {
     source defs
@@ -74,7 +74,16 @@ canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
 	-highlightthickness 0
 pack .c
 update
-test canvas-2.1 {CanvasWidgetCmd, xview option} {
+
+test canvas-2.1 {CanvasWidgetCmd, bind option} {
+    set i [.c create rect 10 10 100 100]
+    list [catch {.c bind $i <a>} msg] $msg
+} {0 {}}
+test canvas-2.2 {CanvasWidgetCmd, bind option} {
+    set i [.c create rect 10 10 100 100]
+    list [catch {.c bind $i <} msg] $msg
+} {1 {no event type or button # or keysym}}
+test canvas-2.3 {CanvasWidgetCmd, xview option} {
     .c configure -xscrollincrement 40 -yscrollincrement 5
     .c xview moveto 0
     update
@@ -83,7 +92,7 @@ test canvas-2.1 {CanvasWidgetCmd, xview option} {
     update
     lappend x [.c xview]
 } {{0 0.3} {0.4 0.7}}
-test canvas-2.2 {CanvasWidgetCmd, xview option} {nonPortable} {
+test canvas-2.4 {CanvasWidgetCmd, xview option} {nonPortable} {
     # This test gives slightly different results on platforms such
     # as NetBSD.  I don't know why...
     .c configure -xscrollincrement 0 -yscrollincrement 5

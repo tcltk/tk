@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * SCCS: @(#) tkImgPhoto.c 1.60 97/08/08 11:32:46
+ * SCCS: @(#) tkImgPhoto.c 1.61 97/11/07 21:19:00
  */
 
 #include "tkInt.h"
@@ -522,7 +522,6 @@ ImgPhotoCmd(clientData, interp, argc, argv)
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
     Tk_Window tkwin;
-    char string[16];
     XColor color;
     Tk_PhotoImageFormat *imageFormat;
     int imageWidth, imageHeight;
@@ -677,6 +676,8 @@ ImgPhotoCmd(clientData, interp, argc, argv)
 	/*
 	 * photo get command - first parse and check parameters.
 	 */
+
+	char string[TCL_INTEGER_SPACE * 3];
 
 	if (argc != 4) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
@@ -1254,7 +1255,7 @@ ParseSubcommandOptions(optPtr, interp, allowedOptions, optIndexPtr, argc, argv)
  *
  * Results:
  *	A standard Tcl return value.  If TCL_ERROR is returned then
- *	an error message is left in masterPtr->interp->result.
+ *	an error message is left in the masterPtr->interp's result.
  *
  * Side effects:
  *	Existing instances of the image will be redisplayed to match
@@ -1597,7 +1598,7 @@ ImgPhotoGet(tkwin, masterData)
     int mono, nRed, nGreen, nBlue;
     XVisualInfo visualInfo, *visInfoPtr;
     XRectangle validBox;
-    char buf[16];
+    char buf[TCL_INTEGER_SPACE * 3];
     int numVisuals;
     XColor *white, *black;
     XGCValues gcValues;

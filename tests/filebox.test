@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) filebox.test 1.5 97/10/10 11:03:21
+# SCCS: @(#) filebox.test 1.7 97/10/20 14:49:37
 #
 
 set tk_strictMotif_old $tk_strictMotif
@@ -92,7 +92,7 @@ if {$tcl_platform(platform) == "unix"} {
     set modes 1
 }
 
-set unknownOptionsMsg {1 {unknown option "-foo", must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent or -title}}
+set unknownOptionsMsg {1 {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, or -title}}
 
 foreach mode $modes {
 
@@ -110,11 +110,11 @@ foreach mode $modes {
     #
 
     foreach command "tk_getOpenFile tk_getSaveFile" {
-
 	test filebox-1.1 "$command command" {
 	    list [catch {$command -foo} msg] $msg
 	} $unknownOptionsMsg
 
+	catch {$command -foo 1} msg
 	regsub -all ,      $msg "" options
 	regsub \"-foo\" $options "" options
 
@@ -170,7 +170,6 @@ foreach mode $modes {
 	    ToPressButton $parent cancel
 	    $command -title "Press Cancel ($verylongstring)" -parent $parent
 	} ""
-
 
 	if {$command == "tk_getSaveFile"} {
 	    set fileName "12x 455"

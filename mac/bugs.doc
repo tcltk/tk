@@ -4,7 +4,7 @@ by Ray Johnson
 Sun Microsystems Laboratories
 rjohnson@eng.sun.com
 
-SCCS: @(#) bugs.doc 1.10 97/11/03 17:16:00
+SCCS: @(#) bugs.doc 1.11 98/02/18 13:24:41
 
 We are now very close to passing the test suite for Tk.  We are very
 interested in finding remaining bugs that still linger.  Please let us
@@ -26,7 +26,11 @@ Known bugs:
   container, so you can watch that instead.
   All the focus bugs in Tk8.0 have been fixed, however.
   
-* The send command is not yet implemented.
+* The send command is only implemented within the same app.
+
+* You cannot color buttons, and the indicators for radiobuttons and
+  checkbuttons under Appearance.  They will always use the current
+  Theme color.  But, then, you are not supposed to...
 
 * Drawing is not really correct.  This shows up mostly in the canvas
   when line widths are greater than one.  Unfortunantly, this will not

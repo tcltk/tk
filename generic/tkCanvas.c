@@ -6,12 +6,12 @@
  *	objects such as rectangles, lines, and texts.
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkCanvas.c 1.126 97/07/31 09:05:52
+ * SCCS: @(#) tkCanvas.c 1.128 97/12/16 16:20:11
  */
 
 #include "default.h"
@@ -369,7 +369,7 @@ Tk_CanvasCmd(clientData, interp, argc, argv)
 	goto error;
     }
 
-    interp->result = Tk_PathName(canvasPtr->tkwin);
+    Tcl_SetResult(interp, Tk_PathName(canvasPtr->tkwin), TCL_STATIC);
     return TCL_OK;
 
     error:
@@ -472,7 +472,10 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    }
 	}
 	if (gotAny) {
-	    sprintf(interp->result, "%d %d %d %d", x1, y1, x2, y2);
+	    char buf[TCL_INTEGER_SPACE * 4];
+	    
+	    sprintf(buf, "%d %d %d %d", x1, y1, x2, y2);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	}
     } else if ((c == 'b') && (strncmp(argv[1], "bind", length) == 0)
 	    && (length >= 2)) {
@@ -562,15 +565,30 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    command = Tk_GetBinding(interp, canvasPtr->bindingTable,
 		    object, argv[3]);
 	    if (command == NULL) {
-		goto error;
+		char *string;
+
+		string = Tcl_GetStringResult(interp); 
+		/*
+		 * Ignore missing binding errors.  This is a special hack
+		 * that relies on the error message returned by FindSequence
+		 * in tkBind.c.
+		 */
+
+		if (string[0] != '\0') {
+		    goto error;
+		} else {
+		    Tcl_ResetResult(interp);
+		}
+	    } else {
+		Tcl_SetResult(interp, command, TCL_STATIC);
 	    }
-	    interp->result = command;
 	} else {
 	    Tk_GetAllBindings(interp, canvasPtr->bindingTable, object);
 	}
     } else if ((c == 'c') && (strcmp(argv[1], "canvasx") == 0)) {
 	int x;
 	double grid;
+	char buf[TCL_DOUBLE_SPACE];
 
 	if ((argc < 3) || (argc > 4)) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -590,10 +608,12 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    grid = 0.0;
 	}
 	x += canvasPtr->xOrigin;
-	Tcl_PrintDouble(interp, GridAlign((double) x, grid), interp->result);
+	Tcl_PrintDouble(interp, GridAlign((double) x, grid), buf);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'c') && (strcmp(argv[1], "canvasy") == 0)) {
 	int y;
 	double grid;
+	char buf[TCL_DOUBLE_SPACE];
 
 	if ((argc < 3) || (argc > 4)) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -613,7 +633,8 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    grid = 0.0;
 	}
 	y += canvasPtr->yOrigin;
-	Tcl_PrintDouble(interp, GridAlign((double) y, grid), interp->result);
+	Tcl_PrintDouble(interp, GridAlign((double) y, grid), buf);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)
 	    && (length >= 2)) {
 	if (argc != 3) {
@@ -664,6 +685,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	Tk_ItemType *typePtr;
 	Tk_ItemType *matchPtr = NULL;
 	Tk_Item *itemPtr;
+	char buf[TCL_INTEGER_SPACE];
 
 	if (argc < 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -713,7 +735,8 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 		itemPtr->x1, itemPtr->y1, itemPtr->x2, itemPtr->y2);
 	canvasPtr->flags |= REPICK_NEEDED;
-	sprintf(interp->result, "%d", itemPtr->id);
+	sprintf(buf, "%d", itemPtr->id);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'd') && (strncmp(argv[1], "dchars", length) == 0)
 	    && (length >= 2)) {
 	int first, last;
@@ -853,7 +876,10 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	itemPtr = canvasPtr->textInfo.focusItemPtr;
 	if (argc == 2) {
 	    if (itemPtr != NULL) {
-		sprintf(interp->result, "%d", itemPtr->id);
+		char buf[TCL_INTEGER_SPACE];
+		
+		sprintf(buf, "%d", itemPtr->id);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    }
 	    goto done;
 	}
@@ -923,6 +949,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
     } else if ((c == 'i') && (strncmp(argv[1], "index", length) == 0)
 	    && (length >= 3)) {
 	int index;
+	char buf[TCL_INTEGER_SPACE];
 
 	if (argc != 4) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -945,7 +972,8 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		itemPtr, argv[3], &index) != TCL_OK) {
 	    goto error;
 	}
-	sprintf(interp->result, "%d", index);
+	sprintf(buf, "%d", index);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'i') && (strncmp(argv[1], "insert", length) == 0)
 	    && (length >= 3)) {
 	int beforeThis;
@@ -1129,7 +1157,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    goto error;
 	}
 	if ((xScale == 0.0) || (yScale == 0.0)) {
-	    interp->result = "scale factor cannot be zero";
+	    Tcl_SetResult(interp, "scale factor cannot be zero", TCL_STATIC);
 	    goto error;
 	}
 	for (itemPtr = StartTagSearch(canvasPtr, argv[2], &search);
@@ -1264,8 +1292,10 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 		goto error;
 	    }
 	    if (canvasPtr->textInfo.selItemPtr != NULL) {
-		sprintf(interp->result, "%d",
-			canvasPtr->textInfo.selItemPtr->id);
+		char buf[TCL_INTEGER_SPACE];
+		
+		sprintf(buf, "%d", canvasPtr->textInfo.selItemPtr->id);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    }
 	} else if ((c == 't') && (strncmp(argv[2], "to", length) == 0)) {
 	    if (argc != 5) {
@@ -1289,7 +1319,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	}
 	itemPtr = StartTagSearch(canvasPtr, argv[2], &search);
 	if (itemPtr != NULL) {
-	    interp->result = itemPtr->typePtr->name;
+	    Tcl_SetResult(interp, itemPtr->typePtr->name, TCL_STATIC);
 	}
     } else if ((c == 'x') && (strncmp(argv[1], "xview", length) == 0)) {
 	int count, type;
@@ -1301,7 +1331,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    PrintScrollFractions(canvasPtr->xOrigin + canvasPtr->inset,
 		    canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin)
 		    - canvasPtr->inset, canvasPtr->scrollX1,
-		    canvasPtr->scrollX2, interp->result);
+		    canvasPtr->scrollX2, Tcl_GetStringResult(interp));
 	} else {
 	    type = Tk_GetScrollInfo(interp, argc, argv, &fraction, &count);
 	    switch (type) {
@@ -1339,7 +1369,7 @@ CanvasWidgetCmd(clientData, interp, argc, argv)
 	    PrintScrollFractions(canvasPtr->yOrigin + canvasPtr->inset,
 		    canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin)
 		    - canvasPtr->inset, canvasPtr->scrollY1,
-		    canvasPtr->scrollY2, interp->result);
+		    canvasPtr->scrollY2, Tcl_GetStringResult(interp));
 	} else {
 	    type = Tk_GetScrollInfo(interp, argc, argv, &fraction, &count);
 	    switch (type) {
@@ -1456,7 +1486,7 @@ DestroyCanvas(memPtr)
  *
  * Results:
  *	The return value is a standard Tcl result.  If TCL_ERROR is
- *	returned, then interp->result contains an error message.
+ *	returned, then the interp's result contains an error message.
  *
  * Side effects:
  *	Configuration information, such as colors, border width,
@@ -2344,7 +2374,7 @@ NextItem(searchPtr)
  *
  * Side effects:
  *	If tag is NULL then itemPtr's id is added as a list element
- *	to interp->result;  otherwise tag is added to itemPtr's
+ *	to the interp's result;  otherwise tag is added to itemPtr's
  *	list of tags.
  *
  *--------------------------------------------------------------
@@ -2366,7 +2396,8 @@ DoItem(interp, itemPtr, tag)
      */
 
     if (tag == NULL) {
-	char msg[30];
+	char msg[TCL_INTEGER_SPACE];
+
 	sprintf(msg, "%d", itemPtr->id);
 	Tcl_AppendElement(interp, msg);
 	return;
@@ -2420,9 +2451,9 @@ DoItem(interp, itemPtr, tag)
  * Results:
  *	A standard Tcl return value.  If newTag is NULL, then a
  *	list of ids from all the items that match argc/argv is
- *	returned in interp->result.  If newTag is NULL, then
- *	the normal interp->result is an empty string.  If an error
- *	occurs, then interp->result will hold an error message.
+ *	returned in the interp's result.  If newTag is NULL, then
+ *	the normal the interp's result is an empty string.  If an error
+ *	occurs, then the interp's result will hold an error message.
  *
  * Side effects:
  *	If newTag is non-NULL, then all the items that match the
@@ -2445,7 +2476,7 @@ FindItems(interp, canvasPtr, argc, argv, newTag, cmdName, option)
     char *newTag;			/* If non-NULL, gives new tag to set
 					 * on all found items;  if NULL, then
 					 * ids of found items are returned
-					 * in interp->result. */
+					 * in the interp's result. */
     char *cmdName;			/* Name of original Tcl command, for
 					 * use in error messages. */
     char *option;			/* For error messages:  gives option
@@ -2651,9 +2682,9 @@ FindItems(interp, canvasPtr, argc, argv, newTag, cmdName, option)
  * Results:
  *	A standard Tcl return value.  If newTag is NULL, then a
  *	list of ids from all the items overlapping or enclosed
- *	by the rectangle given by argc is returned in interp->result.
- *	If newTag is NULL, then the normal interp->result is an
- *	empty string.  If an error occurs, then interp->result will
+ *	by the rectangle given by argc is returned in the interp's result.
+ *	If newTag is NULL, then the normal the interp's result is an
+ *	empty string.  If an error occurs, then the interp's result will
  *	hold an error message.
  *
  * Side effects:
@@ -2676,7 +2707,7 @@ FindArea(interp, canvasPtr, argv, uid, enclosed)
     Tk_Uid uid;				/* If non-NULL, gives new tag to set
 					 * on all found items;  if NULL, then
 					 * ids of found items are returned
-					 * in interp->result. */
+					 * in the interp's result. */
     int enclosed;			/* 0 means overlapping or enclosed
 					 * items are OK, 1 means only enclosed
 					 * items are OK. */

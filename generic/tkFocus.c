@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkFocus.c 1.48 97/10/31 09:55:22
+ * SCCS: @(#) tkFocus.c 1.51 97/11/07 21:16:51
  */
 
 #include "tkInt.h"
@@ -106,7 +106,7 @@ static void		SetFocus _ANSI_ARGS_((TkWindow *winPtr, int force));
 /*
  *--------------------------------------------------------------
  *
- * Tk_FocusCmd --
+ * Tk_FocusObjCmd --
  *
  *	This procedure is invoked to process the "focus" Tcl command.
  *	See the user documentation for details on what it does.
@@ -121,28 +121,30 @@ static void		SetFocus _ANSI_ARGS_((TkWindow *winPtr, int force));
  */
 
 int
-Tk_FocusCmd(clientData, interp, argc, argv)
+Tk_FocusObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
+    static char *focusOptions[] = {"-displayof", "-force", "-lastfor",
+				   (char *) NULL};
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr = (TkWindow *) clientData;
     TkWindow *newPtr, *focusWinPtr, *topLevelPtr;
     ToplevelFocusInfo *tlFocusPtr;
-    char c;
-    size_t length;
+    char *windowName;
+    int index;
 
     /*
      * If invoked with no arguments, just return the current focus window.
      */
 
-    if (argc == 1) {
+    if (objc == 1) {
 	focusWinPtr = TkGetFocusWin(winPtr);
 	if (focusWinPtr != NULL) {
-	    interp->result = focusWinPtr->pathName;
+	    Tcl_SetResult(interp, focusWinPtr->pathName, TCL_STATIC);
 	}
 	return TCL_OK;
     }
@@ -152,12 +154,18 @@ Tk_FocusCmd(clientData, interp, argc, argv)
      * on that window.
      */
 
-    if (argc == 2) {
-	if (argv[1][0] == 0) {
+    if (objc == 2) {
+	windowName = Tcl_GetStringFromObj(objv[1], (int *) NULL);
+
+	/*
+	 * The empty string case exists for backwards compatibility.
+	 */
+	
+	if (windowName[0] == '\0') {
 	    return TCL_OK;
 	}
-	if (argv[1][0] == '.') {
-	    newPtr = (TkWindow *) Tk_NameToWindow(interp, argv[1], tkwin);
+	if (windowName[0] == '.') {
+	    newPtr = (TkWindow *) Tk_NameToWindow(interp, windowName, tkwin);
 	    if (newPtr == NULL) {
 		return TCL_ERROR;
 	    }
@@ -168,65 +176,72 @@ Tk_FocusCmd(clientData, interp, argc, argv)
 	}
     }
 
-    length = strlen(argv[1]);
-    c = argv[1][1];
-    if ((c == 'd') && (strncmp(argv[1], "-displayof", length) == 0)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " -displayof window\"", (char *) NULL);
-	    return TCL_ERROR;
+    if (Tcl_GetIndexFromObj(interp, objv[1], focusOptions, "option", 0,
+	    &index) != TCL_OK) {
+    	return TCL_ERROR;
+    }
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window");
+	return TCL_ERROR;
+    }
+    switch (index) {
+        case 0: {        /* -displayof */
+	    windowName = Tcl_GetStringFromObj(objv[2], (int *) NULL);
+	    newPtr = (TkWindow *) Tk_NameToWindow(interp, windowName, tkwin);
+	    if (newPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    newPtr = TkGetFocusWin(newPtr);
+	    if (newPtr != NULL) {
+		Tcl_SetResult(interp, newPtr->pathName, TCL_STATIC);
+	    }
+	    break;
 	}
-	newPtr = (TkWindow *) Tk_NameToWindow(interp, argv[2], tkwin);
-	if (newPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	newPtr = TkGetFocusWin(newPtr);
-	if (newPtr != NULL) {
-	    interp->result = newPtr->pathName;
-	}
-    } else if ((c == 'f') && (strncmp(argv[1], "-force", length) == 0)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " -force window\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (argv[2][0] == 0) {
-	    return TCL_OK;
-	}
-	newPtr = (TkWindow *) Tk_NameToWindow(interp, argv[2], tkwin);
-	if (newPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	SetFocus(newPtr, 1);
-    } else if ((c == 'l') && (strncmp(argv[1], "-lastfor", length) == 0)) {
-	if (argc != 3) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " -lastfor window\"", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	newPtr = (TkWindow *) Tk_NameToWindow(interp, argv[2], tkwin);
-	if (newPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	for (topLevelPtr = newPtr; topLevelPtr != NULL;
-		topLevelPtr = topLevelPtr->parentPtr)  {
-	    if (topLevelPtr->flags & TK_TOP_LEVEL) {
-		for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr;
-			tlFocusPtr != NULL;
-			tlFocusPtr = tlFocusPtr->nextPtr) {
-		    if (tlFocusPtr->topLevelPtr == topLevelPtr) {
-			interp->result = tlFocusPtr->focusWinPtr->pathName;
-			return TCL_OK;
-		    }
-		}
-		interp->result = topLevelPtr->pathName;
+        case 1: {        /* -force */
+	    windowName = Tcl_GetStringFromObj(objv[2], (int *) NULL);
+
+	    /*
+	     * The empty string case exists for backwards compatibility.
+	     */
+	
+	    if (windowName[0] == '\0') {
 		return TCL_OK;
 	    }
+	    newPtr = (TkWindow *) Tk_NameToWindow(interp, windowName, tkwin);
+	    if (newPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    SetFocus(newPtr, 1);
+	    break;
 	}
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be -displayof, -force, or -lastfor", (char *) NULL);
-	return TCL_ERROR;
+        case 2: {        /* -lastfor */
+	    windowName = Tcl_GetStringFromObj(objv[2], (int *) NULL);
+	    newPtr = (TkWindow *) Tk_NameToWindow(interp, windowName, tkwin);
+	    if (newPtr == NULL) {
+		return TCL_ERROR;
+	    }
+	    for (topLevelPtr = newPtr; topLevelPtr != NULL;
+		    topLevelPtr = topLevelPtr->parentPtr)  {
+		if (topLevelPtr->flags & TK_TOP_LEVEL) {
+		    for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr;
+			    tlFocusPtr != NULL;
+			    tlFocusPtr = tlFocusPtr->nextPtr) {
+		        if (tlFocusPtr->topLevelPtr == topLevelPtr) {
+			    Tcl_SetResult(interp,
+				    tlFocusPtr->focusWinPtr->pathName,
+				    TCL_STATIC);
+			    return TCL_OK;
+			}
+		    }
+		    Tcl_SetResult(interp, topLevelPtr->pathName, TCL_STATIC);
+		    return TCL_OK;
+		}
+	    }
+	    break;
+	}
+	default: {
+	    panic("bad const entries to focusOptions in focus command");
+	}
     }
     return TCL_OK;
 }

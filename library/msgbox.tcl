@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# SCCS: @(#) msgbox.tcl 1.8 97/07/28 17:20:01
+# SCCS: @(#) msgbox.tcl 1.11 97/12/19 16:07:48
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -49,7 +49,7 @@ proc tkMessageBox {args} {
     tclParseConfigSpec $w $specs "" $args
 
     if {[lsearch {info warning error question} $data(-icon)] == -1} {
-	error "invalid icon \"$data(-icon)\", must be error, info, question or warning"
+	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
     if {$tcl_platform(platform) == "macintosh"} {
 	if {$data(-icon) == "error"} {
@@ -61,7 +61,7 @@ proc tkMessageBox {args} {
 	}
     }
 
-    if ![winfo exists $data(-parent)] {
+    if {![winfo exists $data(-parent)]} {
 	error "bad window path name \"$data(-parent)\""
     }
 
@@ -107,27 +107,27 @@ proc tkMessageBox {args} {
 	    }
 	}
 	default {
-	    error "invalid message box type \"$data(-type)\", must be abortretryignore, ok, okcancel, retrycancel, yesno or yesnocancel"
+	    error "bad -type value \"$data(-type)\": must be abortretryignore, ok, okcancel, retrycancel, yesno, or yesnocancel"
 	}
     }
 
-    if [string compare $data(-default) ""] {
+    if {[string compare $data(-default) ""]} {
 	set valid 0
 	foreach btn $buttons {
-	    if ![string compare [lindex $btn 0] $data(-default)] {
+	    if {![string compare [lindex $btn 0] $data(-default)]} {
 		set valid 1
 		break
 	    }
 	}
-	if !$valid {
-	    error "invalid default button \"$data(-default)\""
+	if {!$valid} {
+	    error "bad -default value \"$data(-default)\": must be abort, retry, ignore, ok, cancel, no, or yes"
 	}
     }
 
     # 2. Set the dialog to be a child window of $parent
     #
     #
-    if [string compare $data(-parent) .] {
+    if {[string compare $data(-parent) .]} {
 	set w $data(-parent).__tk__messagebox
     } else {
 	set w .__tk__messagebox
@@ -156,14 +156,17 @@ proc tkMessageBox {args} {
     }
 
     # 4. Fill the top part with bitmap and message (use the option
-    # database for -wraplength so that it can be overridden by
-    # the caller).
+    # database for -wraplength and -font so that they can be
+    # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    label $w.msg -justify left -text $data(-message)
-    catch {$w.msg configure -font \
-		-Adobe-Times-Medium-R-Normal--*-180-*-*-*-*-*-*
+    if {$tcl_platform(platform) == "macintosh"} {
+	option add *Dialog.msg.font system widgetDefault
+    } else {
+	option add *Dialog.msg.font {Times 18} widgetDefault
     }
+
+    label $w.msg -justify left -text $data(-message)
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
     if {$data(-icon) != ""} {
 	label $w.bitmap -bitmap $data(-icon)
@@ -176,7 +179,7 @@ proc tkMessageBox {args} {
     foreach but $buttons {
 	set name [lindex $but 0]
 	set opts [lrange $but 1 end]
-	if ![string compare $opts {}] {
+	if {![string compare $opts {}]} {
 	    # Capitalize the first letter of $name
 	    set capName \
 		[string toupper \
@@ -186,7 +189,7 @@ proc tkMessageBox {args} {
 
 	eval button $w.$name $opts -command [list "set tkPriv(button) $name"]
 
-	if ![string compare $name $data(-default)] {
+	if {![string compare $name $data(-default)]} {
 	    $w.$name configure -default active
 	}
 	pack $w.$name -in $w.bot -side left -expand 1 \
@@ -206,7 +209,7 @@ proc tkMessageBox {args} {
     # 6. Create a binding for <Return> on the dialog if there is a
     # default button.
 
-    if [string compare $data(-default) ""] {
+    if {[string compare $data(-default) ""]} {
 	bind $w <Return> "tkButtonInvoke $w.$data(-default)"
     }
 
@@ -216,10 +219,10 @@ proc tkMessageBox {args} {
 
     wm withdraw $w
     update idletasks
-    set x [expr [winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
-	    - [winfo vrootx [winfo parent $w]]]
-    set y [expr [winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
-	    - [winfo vrooty [winfo parent $w]]]
+    set x [expr {[winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
+	    - [winfo vrootx [winfo parent $w]]}]
+    set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
+	    - [winfo vrooty [winfo parent $w]]}]
     wm geom $w +$x+$y
     wm deiconify $w
 
@@ -231,7 +234,7 @@ proc tkMessageBox {args} {
 	set grabStatus [grab status $oldGrab]
     }
     grab $w
-    if [string compare $data(-default) ""] {
+    if {[string compare $data(-default) ""]} {
 	focus $w.$data(-default)
     } else {
 	focus $w

@@ -4,12 +4,12 @@
  *	Declarations of public types and interfaces that are only
  *	available under Windows.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWin.h 1.6 96/08/15 13:19:41
+ * SCCS: @(#) tkWin.h 1.10 97/08/29 15:21:40
  */
 
 #ifndef _TKWIN
@@ -44,6 +44,9 @@
 
 EXTERN Window		Tk_AttachHWND _ANSI_ARGS_((Tk_Window tkwin,
 			    HWND hwnd));
+EXTERN int		Tk_DdeObjCmd _ANSI_ARGS_((ClientData clientData,
+			    Tcl_Interp *interp, int objc, 
+			    Tcl_Obj *CONST objv[]));
 EXTERN HINSTANCE 	Tk_GetHINSTANCE _ANSI_ARGS_((void));
 EXTERN HWND		Tk_GetHWND _ANSI_ARGS_((Window window));
 EXTERN Tk_Window	Tk_HWNDToWindow _ANSI_ARGS_((HWND hwnd));

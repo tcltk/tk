@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMenubutton.c 1.94 97/07/31 09:10:37
+ * SCCS: @(#) tkMenubutton.c 1.95 97/11/07 21:20:06
  */
 
 #include "tkMenubutton.h"
@@ -267,7 +267,7 @@ Tk_MenubuttonCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-    interp->result = Tk_PathName(mbPtr->tkwin);
+    Tcl_SetResult(interp, Tk_PathName(mbPtr->tkwin), TCL_STATIC);
     return TCL_OK;
 }
 
@@ -409,7 +409,7 @@ DestroyMenuButton(memPtr)
  *
  * Results:
  *	The return value is a standard Tcl result.  If TCL_ERROR is
- *	returned, then interp->result contains an error message.
+ *	returned, then the interp's result contains an error message.
  *
  * Side effects:
  *	Configuration information, such as text string, colors, font,

@@ -2,12 +2,12 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# SCCS: @(#) configure.in 1.90 97/11/20 12:45:45
+# SCCS: @(#) configure.in 1.97 98/02/19 14:17:04
 
-TK_VERSION=8.0
+TK_VERSION=8.1
 TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=0
-TK_PATCH_LEVEL="p2"
+TK_MINOR_VERSION=1
+TK_PATCH_LEVEL=a2
 VERSION=${TK_VERSION}
 
 if test "${prefix}" = "NONE"; then
@@ -17,6 +17,10 @@ if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
 TK_SRC_DIR=`cd $srcdir/..; pwd`
+
+# Most of the checks here are duplicated from Tcl's configure.in
+# and should not be redone but rather simply used from the definitions
+# found in tclConfig.sh
 
 AC_PROG_RANLIB
 AC_ARG_ENABLE(gcc, [  --enable-gcc            allow use of gcc if available],
@@ -35,8 +39,8 @@ AC_HAVE_HEADERS(unistd.h limits.h)
 #	not, assume that its top-level directory is a sibling of ours.
 #--------------------------------------------------------------------
 
-AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 8.0 binaries from DIR],
-	TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd ../../tcl8.0/unix; pwd`)
+AC_ARG_WITH(tcl, [  --with-tcl=DIR          use Tcl 8.1 binaries from DIR],
+	TCL_BIN_DIR=$withval, TCL_BIN_DIR=`cd ../../tcl8.1a2/unix; pwd`)
 if test ! -d $TCL_BIN_DIR; then
     AC_MSG_ERROR(Tcl directory $TCL_BIN_DIR doesn't exist)
 fi
@@ -66,7 +70,7 @@ LIB_RUNTIME_DIR='${LIB_RUNTIME_DIR}'
 # search path to reflect this.
 
 if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
-    LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}"
+    LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
 fi
 
 #--------------------------------------------------------------------
@@ -297,13 +301,6 @@ fi
 MATH_LIBS=""
 AC_CHECK_FUNC(sin, , MATH_LIBS="-lm")
 AC_CHECK_LIB(ieee, main, [MATH_LIBS="-lieee $MATH_LIBS"])
-
-#--------------------------------------------------------------------
-#	If this system doesn't have a memmove procedure, use memcpy
-#	instead.
-#--------------------------------------------------------------------
-
-AC_CHECK_FUNC(memmove, , [AC_DEFINE(memmove, memcpy)])
 
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkConsole.c 1.54 97/10/17 10:46:08
+ * SCCS: @(#) tkConsole.c 1.55 98/01/02 17:40:37
  */
 
 #include "tk.h"
@@ -28,6 +28,8 @@ typedef struct ConsoleInfo {
 } ConsoleInfo;
 
 static Tcl_Interp *gStdoutInterp = NULL;
+
+EXTERN void		TclInitSubsystems _ANSI_ARGS_((CONST char *argv0));
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -100,11 +102,14 @@ TkConsoleCreate()
 {
     Tcl_Channel consoleChannel;
 
+    TclInitSubsystems(NULL);
+
     consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
 	    (ClientData) TCL_STDIN, TCL_READABLE);
     if (consoleChannel != NULL) {
 	Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
 	Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+	Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
     }
     Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
     consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
@@ -112,6 +117,7 @@ TkConsoleCreate()
     if (consoleChannel != NULL) {
 	Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
 	Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+	Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
     }
     Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
     consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
@@ -119,6 +125,7 @@ TkConsoleCreate()
     if (consoleChannel != NULL) {
 	Tcl_SetChannelOption(NULL, consoleChannel, "-translation", "lf");
 	Tcl_SetChannelOption(NULL, consoleChannel, "-buffering", "none");
+	Tcl_SetChannelOption(NULL, consoleChannel, "-encoding", "utf-8");
     }
     Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
 }

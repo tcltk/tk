@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWindow.c 1.233 97/10/31 09:55:23
+ * SCCS: @(#) tkWindow.c 1.237 98/01/12 15:56:12
  */
 
 #include "tkPort.h"
@@ -94,6 +94,10 @@ typedef struct {
     int isSafe;			/* If !0, this command will be exposed in
                                  * a safe interpreter. Otherwise it will be
                                  * hidden in a safe interpreter. */
+    int passMainWindow;		/* 0 means provide NULL clientData to
+				 * command procedure; 1 means pass main
+				 * window as clientData to command
+				 * procedure. */
 } TkCmd;
 
 static TkCmd commands[] = {
@@ -101,62 +105,67 @@ static TkCmd commands[] = {
      * Commands that are part of the intrinsics:
      */
 
-    {"bell",		Tk_BellCmd,		NULL,			0},
-    {"bind",		Tk_BindCmd,		NULL,			1},
-    {"bindtags",	Tk_BindtagsCmd,		NULL,			1},
-    {"clipboard",	Tk_ClipboardCmd,	NULL,			0},
-    {"destroy",		Tk_DestroyCmd,		NULL,			1},
-    {"event",		Tk_EventCmd,		NULL,			1},
-    {"focus",		Tk_FocusCmd,		NULL,			1},
-    {"font",		NULL,			Tk_FontObjCmd,		1},
-    {"grab",		Tk_GrabCmd,		NULL,			0},
-    {"grid",		Tk_GridCmd,		NULL,			1},
-    {"image",		Tk_ImageCmd,		NULL,			1},
-    {"lower",		Tk_LowerCmd,		NULL,			1},
-    {"option",		Tk_OptionCmd,		NULL,			1},
-    {"pack",		Tk_PackCmd,		NULL,			1},
-    {"place",		Tk_PlaceCmd,		NULL,			1},
-    {"raise",		Tk_RaiseCmd,		NULL,			1},
-    {"selection",	Tk_SelectionCmd,	NULL,			0},
-    {"tk",		NULL,			Tk_TkObjCmd,		0},
-    {"tkwait",		Tk_TkwaitCmd,		NULL,			1},
-    {"tk_chooseColor",  Tk_ChooseColorCmd,	NULL,			0},
-    {"tk_getOpenFile",  Tk_GetOpenFileCmd,	NULL,			0},
-    {"tk_getSaveFile",  Tk_GetSaveFileCmd,	NULL,			0},
-    {"tk_messageBox",   Tk_MessageBoxCmd,	NULL,			0},
-    {"update",		Tk_UpdateCmd,		NULL,			1},
-    {"winfo",		NULL,			Tk_WinfoObjCmd,		1},
-    {"wm",		Tk_WmCmd,		NULL,			0},
+    {"bell",		NULL,			Tk_BellObjCmd,		0, 1},
+    {"bind",		Tk_BindCmd,		NULL,			1, 1},
+    {"bindtags",	Tk_BindtagsCmd,		NULL,			1, 1},
+    {"clipboard",	Tk_ClipboardCmd,	NULL,			0, 1},
+    {"destroy",		Tk_DestroyCmd,		NULL,			1, 1},
+    {"event",		NULL,			Tk_EventObjCmd,		1, 1},
+    {"focus",		NULL,			Tk_FocusObjCmd,		1, 1},
+    {"font",		NULL,			Tk_FontObjCmd,		1, 1},
+    {"grab",		Tk_GrabCmd,		NULL,			0, 1},
+    {"grid",		Tk_GridCmd,		NULL,			1, 1},
+    {"image",		Tk_ImageCmd,		NULL,			1, 1},
+    {"lower",		Tk_LowerCmd,		NULL,			1, 1},
+    {"option",		Tk_OptionCmd,		NULL,			1, 1},
+    {"pack",		Tk_PackCmd,		NULL,			1, 1},
+    {"place",		Tk_PlaceCmd,		NULL,			1, 1},
+    {"raise",		Tk_RaiseCmd,		NULL,			1, 1},
+    {"selection",	Tk_SelectionCmd,	NULL,			0, 1},
+    {"tk",		NULL,			Tk_TkObjCmd,		0, 1},
+    {"tkwait",		Tk_TkwaitCmd,		NULL,			1, 1},
+#if defined(__WIN32__) || defined(MAC_TCL)
+    {"tk_chooseColor",  NULL,			Tk_ChooseColorObjCmd,	0, 1},
+    {"tk_chooseDirectory", NULL,		Tk_ChooseDirectoryObjCmd, 0, 1},
+    {"tk_getOpenFile",  NULL,			Tk_GetOpenFileObjCmd,	0, 1},
+    {"tk_getSaveFile",  NULL,			Tk_GetSaveFileObjCmd,	0, 1},
+#endif
+#ifdef __WIN32__
+    {"tk_messageBox",   NULL,			Tk_MessageBoxObjCmd,	0, 1},
+#endif
+    {"update",		NULL,			Tk_UpdateObjCmd,	1, 1},
+    {"winfo",		NULL,			Tk_WinfoObjCmd,		1, 1},
+    {"wm",		Tk_WmCmd,		NULL,			0, 1},
 
     /*
      * Widget class commands.
      */
-    {"button",		Tk_ButtonCmd,		NULL,			1},
-    {"canvas",		Tk_CanvasCmd,		NULL,			1},
-    {"checkbutton",	Tk_CheckbuttonCmd,	NULL,			1},
-    {"entry",		Tk_EntryCmd,		NULL,			1},
-    {"frame",		Tk_FrameCmd,		NULL,			1},
-    {"label",		Tk_LabelCmd,		NULL,			1},
-    {"listbox",		Tk_ListboxCmd,		NULL,			1},
-    {"menu",		Tk_MenuCmd,		NULL,			0},
-    {"menubutton",	Tk_MenubuttonCmd,	NULL,			1},
-    {"message",		Tk_MessageCmd,		NULL,			1},
-    {"radiobutton",	Tk_RadiobuttonCmd,	NULL,			1},
-    {"scale",		Tk_ScaleCmd,		NULL,			1},
-    {"scrollbar",	Tk_ScrollbarCmd,	NULL,			1},
-    {"text",		Tk_TextCmd,		NULL,			1},
-    {"toplevel",	Tk_ToplevelCmd,		NULL,			0},
+
+    {"button",		NULL,			Tk_ButtonObjCmd,	1, 0},
+    {"canvas",		Tk_CanvasCmd,		NULL,			1, 1},
+    {"checkbutton",	NULL,			Tk_CheckbuttonObjCmd,	1, 0},
+    {"entry",		Tk_EntryCmd,		NULL,			1, 1},
+    {"frame",		Tk_FrameCmd,		NULL,			1, 1},
+    {"label",		NULL,			Tk_LabelObjCmd,		1, 0},
+    {"listbox",		Tk_ListboxCmd,		NULL,			1, 1},
+    {"menubutton",	Tk_MenubuttonCmd,	NULL,			1, 1},
+    {"message",		Tk_MessageCmd,		NULL,			1, 1},
+    {"radiobutton",	NULL,			Tk_RadiobuttonObjCmd,	1, 0},
+    {"scale",		Tk_ScaleCmd,		NULL,			1, 1},
+    {"scrollbar",	Tk_ScrollbarCmd,	NULL,			1, 1},
+    {"text",		Tk_TextCmd,		NULL,			1, 1},
+    {"toplevel",	Tk_ToplevelCmd,		NULL,			0, 1},
 
     /*
      * Misc.
      */
 
 #ifdef MAC_TCL
-    {"unsupported1",	TkUnsupported1Cmd,	NULL,			1},
+    {"unsupported1",	TkUnsupported1Cmd,	NULL,			1, 1},
 #endif
     {(char *) NULL,	(int (*) _ANSI_ARGS_((ClientData, Tcl_Interp *, int, char **))) NULL, NULL, 0}
 };
-    
+
 /*
  * The variables and table below are used to parse arguments from
  * the "argv" variable in Tk_Init.
@@ -221,7 +230,7 @@ static void		UnlinkWindow _ANSI_ARGS_((TkWindow *winPtr));
  *	The return value is a token for the new window, or NULL if
  *	an error prevented the new window from being created.  If
  *	NULL is returned, an error message will be left in
- *	interp->result.
+ *	the interp's result.
  *
  * Side effects:
  *	A new window structure is allocated locally.  An X
@@ -331,7 +340,7 @@ CreateTopLevelWindow(interp, parent, name, screenName)
  * Results:
  *	The return value is a pointer to information about the display,
  *	or NULL if the display couldn't be opened.  In this case, an
- *	error message is left in interp->result.  The location at
+ *	error message is left in the interp's result.  The location at
  *	*screenPtr is overwritten with the screen number parsed from
  *	screenName.
  *
@@ -364,8 +373,9 @@ GetScreen(interp, screenName, screenPtr)
 
     screenName = TkGetDefaultScreenName(interp, screenName);
     if (screenName == NULL) {
-	interp->result =
-	    "no display name and no $DISPLAY environment variable";
+	Tcl_SetResult(interp,
+		"no display name and no $DISPLAY environment variable",
+		TCL_STATIC);
 	return (TkDisplay *) NULL;
     }
     length = strlen(screenName);
@@ -442,7 +452,10 @@ GetScreen(interp, screenName, screenPtr)
 	}
     }
     if (screenId >= ScreenCount(dispPtr->display)) {
-	sprintf(interp->result, "bad screen number \"%d\"", screenId);
+	char buf[32 + TCL_INTEGER_SPACE];
+	
+	sprintf(buf, "bad screen number \"%d\"", screenId);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return (TkDisplay *) NULL;
     }
     *screenPtr = screenId;
@@ -675,7 +688,7 @@ NameWindow(interp, winPtr, parentPtr, name)
  *	The return value is a token for the new window, or NULL if
  *	an error prevented the new window from being created.  If
  *	NULL is returned, an error message will be left in
- *	interp->result.
+ *	the interp's result.
  *
  * Side effects:
  *	A new window structure is allocated locally;  "interp" is
@@ -703,6 +716,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     register TkMainInfo *mainPtr;
     register TkWindow *winPtr;
     register TkCmd *cmdPtr;
+    ClientData clientData;
     
     /*
      * Panic if someone updated the TkWindow structure without
@@ -774,12 +788,17 @@ TkCreateMainWindow(interp, screenName, baseName)
 	if ((cmdPtr->cmdProc == NULL) && (cmdPtr->objProc == NULL)) {
 	    panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
+	if (cmdPtr->passMainWindow) {
+	    clientData = (ClientData) tkwin;
+	} else {
+	    clientData = (ClientData) NULL;
+	}
 	if (cmdPtr->cmdProc != NULL) {
 	    Tcl_CreateCommand(interp, cmdPtr->name, cmdPtr->cmdProc,
-		    (ClientData) tkwin, (void (*) _ANSI_ARGS_((ClientData))) NULL);
+		    clientData, (void (*) _ANSI_ARGS_((ClientData))) NULL);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
-		    (ClientData) tkwin, NULL);
+		    clientData, NULL);
 	}
         if (isSafe) {
             if (!(cmdPtr->isSafe)) {
@@ -787,6 +806,8 @@ TkCreateMainWindow(interp, screenName, baseName)
             }
         }
     }
+
+    TkCreateMenuCmd(interp);
 
     /*
      * Set variables for the intepreter.
@@ -811,7 +832,7 @@ TkCreateMainWindow(interp, screenName, baseName)
  *	The return value is a token for the new window.  This
  *	is not the same as X's token for the window.  If an error
  *	occurred in creating the window (e.g. no such display or
- *	screen), then an error message is left in interp->result and
+ *	screen), then an error message is left in the interp's result and
  *	NULL is returned.
  *
  * Side effects:
@@ -825,7 +846,7 @@ TkCreateMainWindow(interp, screenName, baseName)
 Tk_Window
 Tk_CreateWindow(interp, parent, name, screenName)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting.
-				 * Interp->result is assumed to be
+				 * the interp's result is assumed to be
 				 * initialized by the caller. */
     Tk_Window parent;		/* Token for parent of new window. */
     char *name;			/* Name for new window.  Must be unique
@@ -878,7 +899,7 @@ Tk_CreateWindow(interp, parent, name, screenName)
  *	The return value is a token for the new window.  This
  *	is not the same as X's token for the window.  If an error
  *	occurred in creating the window (e.g. no such display or
- *	screen), then an error message is left in interp->result and
+ *	screen), then an error message is left in the interp's result and
  *	NULL is returned.
  *
  * Side effects:
@@ -892,7 +913,7 @@ Tk_CreateWindow(interp, parent, name, screenName)
 Tk_Window
 Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting.
-				 * Interp->result is assumed to be
+				 * the interp's result is assumed to be
 				 * initialized by the caller. */
     Tk_Window tkwin;		/* Token for any window in application
 				 * that is to contain new window. */
@@ -1993,7 +2014,7 @@ TkSetClassProcs(tkwin, procs, instanceData)
  * Results:
  *	The return result is either a token for the window corresponding
  *	to "name", or else NULL to indicate that there is no such
- *	window.  In this case, an error message is left in interp->result.
+ *	window.  In this case, an error message is left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -2274,7 +2295,7 @@ Tk_RestackWindow(tkwin, aboveBelow, other)
  * Results:
  *	If interp has a Tk application associated with it, the main
  *	window for the application is returned.  Otherwise NULL is
- *	returned and an error message is left in interp->result.
+ *	returned and an error message is left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -2296,7 +2317,7 @@ Tk_MainWindow(interp)
 	    return (Tk_Window) mainPtr->winPtr;
 	}
     }
-    interp->result = "this isn't a Tk application";
+    Tcl_SetResult(interp, "this isn't a Tk application", TCL_STATIC);
     return NULL;
 }
 
@@ -2504,7 +2525,7 @@ DeleteWindowsExitProc(clientData)
  *	the arguments that are extracted).
  *
  * Results:
- *	Returns a standard Tcl completion code and sets interp->result
+ *	Returns a standard Tcl completion code and sets the interp's result
  *	if there is an error.
  *
  * Side effects:
@@ -2529,7 +2550,7 @@ Tk_Init(interp)
  *	invokes the internal procedure that does the real work.
  *
  * Results:
- *	Returns a standard Tcl completion code and sets interp->result
+ *	Returns a standard Tcl completion code and sets the interp's result
  *	if there is an error.
  *
  * Side effects:
@@ -2589,8 +2610,8 @@ Tk_SafeInit(interp)
  *
  *
  * Results:
- *	A standard Tcl result. Also leaves an error message in interp->result
- *	if there was an error.
+ *	A standard Tcl result. Also leaves an error message in the interp's
+ *	result if there was an error.
  *
  * Side effects:
  *	Depends on the initialization scripts that are invoked.
@@ -2606,7 +2627,6 @@ Initialize(interp)
     int argc, code;
     char **argv, *args[20];
     Tcl_DString class;
-    char buffer[30];
 
     /*
      * Start by initializing all the static variables to default acceptable
@@ -2624,14 +2644,89 @@ Initialize(interp)
     rest = 0;
 
     /*
-     * If there is an "argv" variable, get its value, extract out
-     * relevant arguments from it, and rewrite the variable without
-     * the arguments that we used.
+     * We start by resetting the result because it might not be clean
      */
+    Tcl_ResetResult(interp);
 
-    p = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
+    if (Tcl_IsSafe(interp)) {
+	/*
+	 * Get the clearance to start Tk and the "argv" parameters
+	 * from the master.
+	 */
+	Tcl_DString ds;
+	
+	/*
+	 * Step 1 : find the master and construct the interp name
+	 * (could be a function if new APIs were ok).
+	 * We could also construct the path while walking, but there
+	 * is no API to get the name of an interp either.
+	 */
+	Tcl_Interp *master = interp;
+
+	while (1) {
+	    master = Tcl_GetMaster(master);
+	    if (master == NULL) {
+		Tcl_DStringFree(&ds);
+		Tcl_AppendResult(interp, "NULL master", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    if (!Tcl_IsSafe(master)) {
+		/* Found the trusted master. */
+		break;
+	    }
+	}
+	/*
+	 * Construct the name (rewalk...)
+	 */
+	if (Tcl_GetInterpPath(master, interp) != TCL_OK) {
+	    Tcl_AppendResult(interp, "error in Tcl_GetInterpPath",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+	/*
+	 * Build the string to eval.
+	 */
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppendElement(&ds, "::safe::TkInit");
+	Tcl_DStringAppendElement(&ds, Tcl_GetStringResult(master));
+	
+	/*
+	 * Step 2 : Eval in the master. The argument is the *reversed*
+	 * interp path of the slave.
+	 */
+	
+	if (Tcl_Eval(master, Tcl_DStringValue(&ds)) != TCL_OK) {
+	    /*
+	     * We might want to transfer the error message or not.
+	     * We don't. (no API to do it and maybe security reasons).
+	     */
+	    Tcl_DStringFree(&ds);
+	    Tcl_AppendResult(interp, 
+		    "not allowed to start Tk by master's safe::TkInit",
+		    (char *) NULL);
+	    return TCL_ERROR;
+	}
+	Tcl_DStringFree(&ds);
+	/* 
+	 * Use the master's result as argv.
+	 * Note: We don't use the Obj interfaces to avoid dealing with
+	 * cross interp refcounting and changing the code below.
+	 */
+
+	p = Tcl_GetStringResult(master);
+    } else {
+	/*
+	 * If there is an "argv" variable, get its value, extract out
+	 * relevant arguments from it, and rewrite the variable without
+	 * the arguments that we used.
+	 */
+
+	p = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
+    }
     argv = NULL;
     if (p != NULL) {
+	char buffer[TCL_INTEGER_SPACE];
+
 	if (Tcl_SplitList(interp, p, &argc, &argv) != TCL_OK) {
 	    argError:
 	    Tcl_AddErrorInfo(interp,
@@ -2668,8 +2763,8 @@ Initialize(interp)
     }
 
     p = Tcl_DStringValue(&class);
-    if (islower(UCHAR(*p))) {
-	*p = toupper(UCHAR(*p));
+    if (*p) {
+	Tcl_UtfToTitle(p);
     }
 
     /*

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacClipboard.c 1.18 97/05/01 15:41:17
+ * SCCS: @(#) tkMacClipboard.c 1.19 97/11/07 21:21:42
  */
 
 #include "tkInt.h"
@@ -32,7 +32,7 @@
  * Results:
  *	The return value is a standard Tcl return value.
  *	If an error occurs (such as no selection exists)
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	None.

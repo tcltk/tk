@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacHLEvents.c 1.21 97/09/17 17:19:00
+ * SCCS: @(#) tkMacHLEvents.c 1.22 97/11/07 21:20:50
  */
 
 #include "tcl.h"
@@ -361,10 +361,12 @@ ScriptHandler(
     if (tclErr >= 0) {
 	if (tclErr == TCL_OK)  {
 	    AEPutParamPtr(reply, keyDirectObject, typeChar,
-		interp->result, strlen(interp->result));
+		Tcl_GetStringResult(interp),
+		strlen(Tcl_GetStringResult(interp)));
 	} else {
 	    AEPutParamPtr(reply, keyErrorString, typeChar,
-		interp->result, strlen(interp->result));
+		Tcl_GetStringResult(interp),
+		strlen(Tcl_GetStringResult(interp)));
 	    AEPutParamPtr(reply, keyErrorNumber, typeInteger,
 		(Ptr) &tclErr, sizeof(int));
 	}

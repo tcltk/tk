@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacXStubs.c 1.87 97/11/20 18:35:29
+ * SCCS: @(#) tkMacXStubs.c 1.89 97/11/26 13:10:52
  */
 
 #include "tkInt.h"
@@ -46,7 +46,7 @@
  */
 
 static TkDisplay *gMacDisplay = NULL; /* Macintosh display. */
-static char *macScreenName = "Macintosh:0";
+static char *macScreenName = ":0";
 				/* Default name of macintosh display. */
 
 /*
@@ -541,7 +541,8 @@ TkGetServerInfo(
     Tk_Window tkwin)		/* Token for window;  this selects a
 				 * particular display and server. */
 {
-    char buffer[50], buffer2[50];
+    char buffer[8 + TCL_INTEGER_SPACE * 2];
+    char buffer2[TCL_INTEGER_SPACE];
 
     sprintf(buffer, "X%dR%d ", ProtocolVersion(Tk_Display(tkwin)),
 	    ProtocolRevision(Tk_Display(tkwin)));

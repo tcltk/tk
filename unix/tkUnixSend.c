@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixSend.c 1.74 97/11/04 17:12:18
+ * SCCS: @(#) tkUnixSend.c 1.76 97/11/07 21:25:10
  */
 
 #include "tkPort.h"
@@ -752,10 +752,6 @@ Tk_SetAppName(tkwin, name)
     Tcl_DString dString;
     int offset, i;
 
-#ifdef __WIN32__
-    return name;
-#endif /* __WIN32__ */
-    
     dispPtr = winPtr->dispPtr;
     interp = winPtr->mainPtr->interp;
     if (dispPtr->commTkwin == NULL) {
@@ -898,7 +894,7 @@ Tk_SendCmd(clientData, interp, argc, argv)
     Window commWindow;
     PendingCommand pending;
     register RegisteredInterp *riPtr;
-    char *destName, buffer[30];
+    char *destName;
     int result, c, async, i, firstArg;
     size_t length;
     Tk_RestrictProc *prevRestrictProc;
@@ -990,6 +986,7 @@ Tk_SendCmd(clientData, interp, argc, argv)
 	}
 	if (interp != localInterp) {
 	    if (result == TCL_ERROR) {
+		Tcl_Obj *errorObjPtr;
 
 		/*
 		 * An error occurred, so transfer error information from the
@@ -1003,17 +1000,11 @@ Tk_SendCmd(clientData, interp, argc, argv)
 		Tcl_ResetResult(interp);
 		Tcl_AddErrorInfo(interp, Tcl_GetVar2(localInterp,
 			"errorInfo", (char *) NULL, TCL_GLOBAL_ONLY));
-		Tcl_SetVar2(interp, "errorCode", (char *) NULL,
-			Tcl_GetVar2(localInterp, "errorCode", (char *) NULL,
-			TCL_GLOBAL_ONLY), TCL_GLOBAL_ONLY);
+		errorObjPtr = Tcl_GetObjVar2(localInterp, "errorCode", NULL,
+			TCL_GLOBAL_ONLY);
+		Tcl_SetObjErrorCode(interp, errorObjPtr);
 	    }
-            if (localInterp->freeProc != TCL_STATIC) {
-                interp->result = localInterp->result;
-                interp->freeProc = localInterp->freeProc;
-                localInterp->freeProc = TCL_STATIC;
-            } else {
-                Tcl_SetResult(interp, localInterp->result, TCL_VOLATILE);
-            }
+	    Tcl_SetObjResult(interp, Tcl_GetObjResult(localInterp));
             Tcl_ResetResult(localInterp);
 	}
 	Tcl_Release((ClientData) riPtr);
@@ -1044,6 +1035,8 @@ Tk_SendCmd(clientData, interp, argc, argv)
     Tcl_DStringAppend(&request, "\0c\0-n ", 6);
     Tcl_DStringAppend(&request, destName, -1);
     if (!async) {
+	char buffer[TCL_INTEGER_SPACE * 2];
+
 	sprintf(buffer, "%x %d",
 		(unsigned int) Tk_WindowId(dispPtr->commTkwin),
 		tkSendSerial);
@@ -1153,8 +1146,9 @@ Tk_SendCmd(clientData, interp, argc, argv)
 	ckfree(pending.errorInfo);
     }
     if (pending.errorCode != NULL) {
-	Tcl_SetVar2(interp, "errorCode", (char *) NULL, pending.errorCode,
-		TCL_GLOBAL_ONLY);
+	Tcl_Obj *errorObjPtr;
+	errorObjPtr = Tcl_NewStringObj(pending.errorCode, -1);
+	Tcl_SetObjErrorCode(interp, errorObjPtr);
 	ckfree(pending.errorCode);
     }
     Tcl_SetResult(interp, pending.result, TCL_DYNAMIC);
@@ -1171,10 +1165,10 @@ Tk_SendCmd(clientData, interp, argc, argv)
  *	of a particular window.
  *
  * Results:
- *	A standard Tcl return value.  Interp->result will be set
+ *	A standard Tcl return value.  The interp's result will be set
  *	to hold a list of all the interpreter names defined for
  *	tkwin's display.  If an error occurs, then TCL_ERROR
- *	is returned and interp->result will hold an error message.
+ *	is returned and the interp's result will hold an error message.
  *
  * Side effects:
  *	None.
@@ -1498,7 +1492,8 @@ SendEventProc(clientData, eventPtr)
              */
 
 	    if (commWindow != None) {
-		Tcl_DStringAppend(&reply, remoteInterp->result, -1);
+		Tcl_DStringAppend(&reply, Tcl_GetStringResult(remoteInterp),
+			-1);
 		if (result == TCL_ERROR) {
 		    char *varValue;
     
@@ -1529,7 +1524,7 @@ SendEventProc(clientData, eventPtr)
 	    returnResult:
 	    if (commWindow != None) {
 		if (result != TCL_OK) {
-		    char buffer[20];
+		    char buffer[TCL_INTEGER_SPACE];
     
 		    sprintf(buffer, "%d", result);
 		    Tcl_DStringAppend(&reply, "\0-c ", 4);

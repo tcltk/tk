@@ -6,12 +6,12 @@
  * 	supplied on demand to requesting applications.
  *
  * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkClipboard.c 1.15 96/05/03 10:51:08
+ * SCCS: @(#) tkClipboard.c 1.16 97/11/07 21:16:25
  */
 
 #include "tkInt.h"
@@ -226,7 +226,7 @@ ClipboardLostSel(clientData)
  *
  * Results:
  *	A standard Tcl result.  If an error occurs, an error message is
- *	left in interp->result.
+ *	left in the interp's result.
  *
  * Side effects:
  *	From now on, requests for the CLIPBOARD selection will be
@@ -311,7 +311,7 @@ Tk_ClipboardClear(interp, tkwin)
  *
  * Results:
  *	A standard Tcl result.  If an error is returned, an error message
- *	is left in interp->result.
+ *	is left in the interp's result.
  *
  * Side effects:
  * 	The specified buffer will be copied onto the end of the clipboard.
@@ -528,9 +528,10 @@ Tk_ClipboardCmd(clientData, interp, argc, argv)
 	}
 	return Tk_ClipboardClear(interp, tkwin);
     } else {
-	sprintf(interp->result,
-		"bad option \"%.50s\": must be clear or append",
-		argv[1]);
+	char buf[100 + TCL_INTEGER_SPACE];
+	
+	sprintf(buf, "bad option \"%.50s\": must be clear or append", argv[1]);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
     }
 }
@@ -546,8 +547,8 @@ Tk_ClipboardCmd(clientData, interp, argc, argv)
  *
  * Results:
  *	The result is a standard Tcl return value, which is normally TCL_OK.
- *	If an error occurs then an error message is left in interp->result
- *	and TCL_ERROR is returned.
+ *	If an error occurs then an error message is left in the interp's
+ *	result and TCL_ERROR is returned.
  *
  * Side effects:
  *	Sets up the clipWindow and related data structures.

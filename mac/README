@@ -1,10 +1,11 @@
-Tk 8.0 for Macintosh
+Tk 8.1 for Macintosh
 
-by Ray Johnson
+by Ray Johnson and Jim Ingham
 Sun Microsystems Laboratories
 rjohnson@eng.sun.com
+jim.ingham@sun.com
 
-SCCS: @(#) README 1.30 97/11/20 22:06:57
+SCCS: @(#) README 1.33 98/02/18 11:23:12
 
 1. Introduction
 ---------------
@@ -18,50 +19,12 @@ directory.
 2. What's new?
 -------------
 
-Native Look & Feel!!!  We now try really hard to support the 
-Macintosh Look & Feel with Tcl/Tk 8.0.  We aren't finished but
-it look pretty good.  Let me know what are the most "un-mac like"
-problems and I'll fix them as quickly as I can.
+All the widgets will now display internationalized text!
 
-The button, checkbutton, radiobutton, and scrollbar widgets actually
-use the Mac toolbox controls.  This means that they will track the
-look&feel if you use extension that change the appearance of
-applications (like Aaron.)  We also use "system" colors so the default
-backgrounds etc. will also change colors.  We plan to support this
-feature - so let me know if something doesn't work quite right.
-Unfortunantly, we are not able to change the colors of buttons under
-MacOS 8.  We are working on a solution to this.  
-In the meantime, if you really must have colored buttons, turn off the 
-"System-wide platinum appearance" option in the Appearance Control Panel,
-and you will get the System 7, colorable, buttons back.
-
-We also now support native menus!  By using the new -menu option
-on toplevels you can have a menubar that is cross platform.  You
-can also place Tk menus in the Apple and Help menus!  Check out
-the documentation for more details.  Syd Polk <icepick@eng.sun.com> is
-the author of the new menu code.  Feel free to contact him if you
-have questions or comments about the menu mechanism.
-
-The "tk_messageBox" command on the Macintosh is now much more
-mac-like.  I'll probably still need to adjust this more - but it
-looks a hell of alot better than it did before.
-
-I've also added a command that allows you to get more native window
-styles.  However, we have yet to decide on a cross platform solution
-to the problem of varying window styles.  None the less, I thought
-it would be use full to add the capability in an unsupported means
-to tide you over until a better solution is available.  The command
-is called "unsupported1".  It can be used in the following way:
-
-	toplevel .foo; unsupported1 style .foo zoomDocProc
-
-The above command will create a document window with a zoom box.
-Type "unsupported1 style . ???" to get a list of the supported
-styles.  The command works like "wm overrideredirect" - you must
-make the call before the window is mapped.
-
-As always - report the bugs you find - including asthetic ones
-in the look & feel of widgets.
+The widget configuration package has been changed to support the new object
+model introduced with the 8.0 compiler.  For now the old configuration
+package is retained, and in fact, only the menu and button widgets use
+the new package.
 
 3. Mac specific features
 ------------------------
@@ -94,8 +57,8 @@ pointers to where you can find more information about the feature.
   Mac version of Tk allows you to use several Mac specific icons.  See
   the GetBitmap.3 man page for a complete list.
 
-* The send command does not yet work on the Macintosh.  We hope to
-  have it available in Tk 8.1.
+* The send command works among interpreters in the same application.  We hope to
+  have the complete implementation available in Tk 8.1.
 
 * The -use and -container options almost work. The focus bugs that
   were in Tk8.0 final have been fixed.  But there are still some
@@ -109,7 +72,7 @@ Macintosh Tk is distributed in three different forms.  This
 should make it easier to only download what you need.  The 
 packages are as follows:
 
-mactk8.0.sea.hqx
+mactk8.1.sea.hqx
 
     This distribution is a "binary" only release.  It contains an
     installer program that will install a 68k, PowerPC, or Fat
@@ -117,13 +80,13 @@ mactk8.0.sea.hqx
     the Tcl & Tk libraries in the Extensions folder inside your
     System Folder.  (No "INIT"'s or Control Pannels are installed.)
 
-mactcltk-full-8.0.sea.hqx
+mactcltk-full-8.1.sea.hqx
 
     This release contains the full release of Tcl and Tk for the
     Macintosh plus the More Files package on which Macintosh Tcl and
     Tk rely.
 
-mactk-source-8.0.sea.hqx
+mactk-source-8.1.sea.hqx
 
     This release contains the complete source to Tk for the Macintosh
     In addition, Metrowerks CodeWarrior libraries and project files
@@ -172,44 +135,36 @@ available (see below).
 In order to compile Macintosh Tk you must have the 
 following items:
 
-	CodeWarrior Pro 1 or higher (CodeWarrior release 9 or higher can work
-		and we have project files, but we are depricating support)
-	Mac Tcl 8.0 (source)
+	CodeWarrior Pro 2 or higher
+	Mac Tcl 8.1 (source)
 	  (which requires More Files 1.4.2 or 1.4.3)
-	Mac Tk 8.0 (source)
+	Mac Tk 8.1 (source)
 
 The project  files included with the Mac Tcl source should work 
 fine.  The only thing you may need to update are the access paths.
-As with Tcl, there is something in the initial release of the CW Pro 2
-linker that rendersthe CFM68K version of Wish very unstable.  I am
-working with Metrowerks to resolve the issue.
+As with Tcl, you need to upgrade to the 2.0.1 version of the C
+compilers or later to build the CFM68K version of Tcl/Tk.
 
 Special notes:
 
 * Check out the file bugs.doc for information about known bugs.
 
 * We are starting to support the new Appearance Manager that shipped
-  with MacOS 8.  At this point, the only feature that we are using is 
-  the API to Iconify windows (so that wm iconify will work).   However,
-  as of the release of Tk8.0p1, the SDK from Apple is still in Beta, so 
-  we cannot ship it.  So support for the Appearance Manager is turned off
-  in the source version of Tk8.0p1.
-  If you want to build Tk, and want to get the Appearance Manager features, 
-  then need to do the following:
-      1) get the SDK from Apple
-      2) Uncomment the #define HAVE_APPEARANCE line in tk8.0:mac:MW_TkHeader.pch
-      3) Add the Appearance.lib to tk8.0:mac:TkShells.¼, and put the include 
-         directory of the SDK on your path in this project, and TkLibraries.¼.
+  with MacOS 8.  wm iconify uses it, and the coloring of the
+  backgrounds of radiobuttons & checkbuttons now works under
+  Appearance.  Tk correctly checks the Gestalt for Appearance, so you
+  do not have to install it on your target machines.  However, you do
+  have to have the header and stub files to build it.  These come with
+  CWPro 2, and are also available now from Apple.
+
 
 7. About Dialog
 ---------------
 
-There is now a way to replace the default dialog box for the Wish
-application.  If you create the tcl procedure "tkAboutDialog" it will
-be called instead of creating the default dialog box.  Your procedure
-is then responsible for displaying a window, removing it, etc.  This
-interface is experimental and may change in the future - tell me what
-you think of it.
+The prefered method for replacing the about dialog is to replace the
+main menubar of the application, using the -menu option for the "."
+window.  Then add a cascade called .mainMenu.apple to your mainMenu,
+and you can put an about item in here WITH YOUR OWN LABEL!
 
 8. Apple Events
 ---------------

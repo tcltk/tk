@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixDefault.h 1.105 97/10/09 17:45:10
+ * SCCS: @(#) tkUnixDefault.h 1.106 97/12/13 15:47:22
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -59,7 +59,8 @@
 #define DEF_CHKRAD_FG			DEF_BUTTON_FG
 #define DEF_BUTTON_FONT			"Helvetica -12 bold"
 #define DEF_BUTTON_HEIGHT		"0"
-#define DEF_BUTTON_HIGHLIGHT_BG		NORMAL_BG
+#define DEF_BUTTON_HIGHLIGHT_BG_COLOR	DEF_BUTTON_BG_COLOR
+#define DEF_BUTTON_HIGHLIGHT_BG_MONO	DEF_BUTTON_BG_MONO
 #define DEF_BUTTON_HIGHLIGHT		BLACK
 #define DEF_LABEL_HIGHLIGHT_WIDTH	"0"
 #define DEF_BUTTON_HIGHLIGHT_WIDTH	"1"

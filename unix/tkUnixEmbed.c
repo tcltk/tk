@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixEmbed.c 1.22 97/08/13 11:15:51
+ * SCCS: @(#) tkUnixEmbed.c 1.23 97/11/07 21:24:52
  */
 
 #include "tkInt.h"
@@ -83,7 +83,7 @@ static void		EmbedWindowDeleted _ANSI_ARGS_((TkWindow *winPtr));
  * Results:
  *	The return value is normally TCL_OK.  If an error occurs (such
  *	as string not being a valid window spec), then the return value
- *	is TCL_ERROR and an error message is left in interp->result if
+ *	is TCL_ERROR and an error message is left in the interp's result if
  *	interp is non-NULL.
  *
  * Side effects:

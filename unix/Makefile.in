@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# SCCS: @(#) Makefile.in 1.146 97/11/05 11:10:45
+# SCCS: @(#) Makefile.in 1.154 98/02/10 10:24:55
 
 # Current Tk version;  used in various names.
 
@@ -76,6 +76,7 @@ MANN_INSTALL_DIR =	$(MAN_INSTALL_DIR)/mann
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
 TCL_GENERIC_DIR =	@TCL_SRC_DIR@/generic
+TCL_UNIX_DIR =		@TCL_SRC_DIR@/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
@@ -124,6 +125,12 @@ MEM_DEBUG_FLAGS =
 # XStringToKeysym is plenty fast, so you needn't define REDO_KEYSYM_LOOKUP.
 KEYSYM_FLAGS =
 #KEYSYM_FLAGS = -DREDO_KEYSYM_LOOKUP
+
+# Tk does not used deprecated Tcl constructs so it should
+# compile fine with -DTCL_NO_DEPRECATED. To remove its own
+# set of deprecated code uncomment the second line.
+NO_DEPRECATED_FLAGS= -DTCL_NO_DEPRECATED
+#NO_DEPRECATED_FLAGS= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # Some versions of make, like SGI's, use the following variable to
 # determine which shell to use for executing commands:
@@ -186,7 +193,7 @@ TOOL_DIR =		@TCL_SRC_DIR@/tools
 CC =		@CC@
 CC_SWITCHES =	${CFLAGS} ${TK_SHLIB_CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS}
+${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS}
 
 DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} \
@@ -196,7 +203,8 @@ ${KEYSYM_FLAGS}
 
 WISH_OBJS = tkAppInit.o
 
-TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o
+TCLTEST_OBJS = ${TCL_BIN_DIR}/tclTest.o ${TCL_BIN_DIR}/tclUnixTest.o
+TKTEST_OBJS = $(TCLTEST_OBJS) tkTestInit.o tkTest.o tkSquare.o
 
 WIDGOBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
 	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o tkScale.o \
@@ -211,16 +219,16 @@ IMAGEOBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPPM.o tkImgPhoto.o
 TEXTOBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
 
-UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixCursor.o \
-	tkUnixDialog.o tkUnixDraw.o \
-	tkUnixEmbed.o tkUnixEvent.o tkUnixFocus.o tkUnixFont.o tkUnixInit.o \
-	tkUnixMenu.o tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o \
-	tkUnixSelect.o tkUnixSend.o tkUnixWm.o tkUnixXId.o
+UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
+	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
+	tkUnixFocus.o tkUnixFont.o tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
+	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
+	tkUnixSend.o tkUnixWm.o tkUnixXId.o
 
 OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkColor.o tkConfig.o tkCursor.o tkError.o tkEvent.o \
 	tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o tkGrid.o \
-	tkMain.o tkOption.o tkPack.o tkPlace.o \
+	tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
 	tkSelect.o tkUtil.o tkVisual.o tkWindow.o \
 	$(UNIXOBJS) $(WIDGOBJS) $(CANVOBJS) $(IMAGEOBJS) $(TEXTOBJS)
 
@@ -239,7 +247,7 @@ SRCS = \
 	$(GENERIC_DIR)/tkPack.c $(GENERIC_DIR)/tkPlace.c \
 	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkUtil.c \
 	$(GENERIC_DIR)/tkVisual.c $(GENERIC_DIR)/tkWindow.c \
-	$(GENERIC_DIR)/tkButton.c \
+	$(GENERIC_DIR)/tkButton.c $(GENERIC_DIR)/tkObj.c \
 	$(GENERIC_DIR)/tkEntry.c $(GENERIC_DIR)/tkFrame.c \
 	$(GENERIC_DIR)/tkListbox.c $(GENERIC_DIR)/tkMenu.c \
 	$(GENERIC_DIR)/tkMenubutton.c $(GENERIC_DIR)/tkMenuDraw.c \
@@ -259,15 +267,18 @@ SRCS = \
 	$(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextMark.c \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
+	$(GENERIC_DIR)/tkOldConfig.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
 	$(UNIX_DIR)/tkUnix3d.c \
 	$(UNIX_DIR)/tkUnixButton.c $(UNIX_DIR)/tkUnixColor.c \
+	$(UNIX_DIR)/tkUnixConfig.c \
 	$(UNIX_DIR)/tkUnixCursor.c \
-	$(UNIX_DIR)/tkUnixDialog.c $(UNIX_DIR)/tkUnixDraw.c \
+	$(UNIX_DIR)/tkUnixDraw.c \
 	$(UNIX_DIR)/tkUnixEmbed.c $(UNIX_DIR)/tkUnixEvent.c \
 	$(UNIX_DIR)/tkUnixFocus.c \
 	$(UNIX_DIR)/tkUnixFont.c $(UNIX_DIR)/tkUnixInit.c \
+	$(UNIX_DIR)/tkUnixKey.c \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
 	$(UNIX_DIR)/tkUnixSelect.c \
@@ -320,8 +331,10 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 test: tktest
 	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
 	export LD_LIBRARY_PATH; \
+	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
+	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TK_LIBRARY=$(TOP_DIR)/library; export TK_LIBRARY; \
+	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	( echo cd $(TOP_DIR)/tests\; source all\; exit ) \
 	| ./tktest -geometry +0+0
 
@@ -330,8 +343,10 @@ test: tktest
 runtest:
 	LD_LIBRARY_PATH=`pwd`:${TCL_BIN_DIR}:${LD_LIBRARY_PATH}; \
 	export LD_LIBRARY_PATH; \
+	SHLIB_PATH=`pwd`:${TCL_BIN_DIR}:${SHLIB_PATH}; \
+	export SHLIB_PATH; \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TK_LIBRARY=$(TOP_DIR)/library; export TK_LIBRARY; \
+	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
 	./tktest
 
 install: install-binaries install-libraries install-demos install-man
@@ -372,7 +387,7 @@ install-libraries:
 	    done;
 	@echo "Installing tk.h"
 	@$(INSTALL_DATA) $(GENERIC_DIR)/tk.h $(INCLUDE_INSTALL_DIR)/tk.h
-	for i in $(SRC_DIR)/library/*.tcl $(SRC_DIR)/library/tclIndex $(SRC_DIR)/library/prolog.ps $(UNIX_DIR)/tkAppInit.c; \
+	for i in $(SRC_DIR)/library/*.tcl $(SRC_DIR)/library/tclIndex $(UNIX_DIR)/tkAppInit.c; \
 	    do \
 	    echo "Installing $$i"; \
 	    $(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR); \
@@ -548,6 +563,12 @@ tkGrid.o: $(GENERIC_DIR)/tkGrid.c
 tkMain.o: $(GENERIC_DIR)/tkMain.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkMain.c
 
+tkObj.o: $(GENERIC_DIR)/tkObj.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkObj.c
+
+tkOldConfig.o: $(GENERIC_DIR)/tkOldConfig.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkOldConfig.c
+
 tkOption.o: $(GENERIC_DIR)/tkOption.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkOption.c
 
@@ -692,11 +713,11 @@ tkUnixButton.o: $(UNIX_DIR)/tkUnixButton.c
 tkUnixColor.o: $(UNIX_DIR)/tkUnixColor.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixColor.c
 
+tkUnixConfig.o: $(UNIX_DIR)/tkUnixConfig.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixConfig.c
+
 tkUnixCursor.o: $(UNIX_DIR)/tkUnixCursor.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixCursor.c
-
-tkUnixDialog.o: $(UNIX_DIR)/tkUnixDialog.c
-	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixDialog.c
 
 tkUnixDraw.o: $(UNIX_DIR)/tkUnixDraw.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixDraw.c
@@ -716,6 +737,9 @@ tkUnixFont.o: $(UNIX_DIR)/tkUnixFont.c
 tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c $(GENERIC_DIR)/tkInitScript.h tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
 	    $(UNIX_DIR)/tkUnixInit.c
+
+tkUnixKey.o: $(UNIX_DIR)/tkUnixKey.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixKey.c
 
 tkUnixMenu.o: $(UNIX_DIR)/tkUnixMenu.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixMenu.c
@@ -796,7 +820,8 @@ dist:   $(UNIX_DIR)/configure
 	    fi; \
 	done;)
 	mkdir $(DISTDIR)/generic
-	cp -p $(GENERIC_DIR)/*.c $(GENERIC_DIR)/*.h $(DISTDIR)/generic
+	cp -p $(GENERIC_DIR)/*.c $(GENERIC_DIR)/*.h $(GENERIC_DIR)/prolog.ps \
+		$(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/README $(DISTDIR)/generic
 	cp -p $(TOP_DIR)/changes $(TOP_DIR)/README $(TOP_DIR)/license.terms \
 		$(DISTDIR)
@@ -835,7 +860,7 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/xlib/X11
 	mkdir $(DISTDIR)/library
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/library/*.tcl \
-		$(TOP_DIR)/library/tclIndex $(TOP_DIR)/library/prolog.ps \
+		$(TOP_DIR)/library/tclIndex \
 		$(DISTDIR)/library
 	mkdir $(DISTDIR)/library/images
 	@(cd $(TOP_DIR); for i in library/images/* ; do \
@@ -878,10 +903,10 @@ dist:   $(UNIX_DIR)/configure
 #
 
 alldist: dist
-	rm -f /proj/tcl/dist/$(DISTNAME).tar.Z \
-		/proj/tcl/dist/$(DISTNAME).tar.gz \
-		/proj/tcl/dist/$(ZIPNAME)
-	cd /proj/tcl/dist; tar cf $(DISTNAME).tar $(DISTNAME); \
+	rm -f $(DISTDIR)/../$(DISTNAME).tar.Z \
+		$(DISTDIR)/../$(DISTNAME).tar.gz \
+		$(DISTDIR)/../$(ZIPNAME)
+	cd $(DISTDIR)/..; tar cf $(DISTNAME).tar $(DISTNAME); \
 		gzip -9 -c $(DISTNAME).tar > $(DISTNAME).tar.gz; \
 		compress $(DISTNAME).tar; zip -r8 $(ZIPNAME) $(DISTNAME)
 

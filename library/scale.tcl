@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# SCCS: @(#) scale.tcl 1.12 96/04/16 11:42:25
+# SCCS: @(#) scale.tcl 1.13 97/12/03 15:29:03
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -19,7 +19,7 @@
 # Standard Motif bindings:
 
 bind Scale <Enter> {
-    if $tk_strictMotif {
+    if {$tk_strictMotif} {
 	set tkPriv(activeBg) [%W cget -activebackground]
 	%W config -activebackground [%W cget -background]
     }
@@ -29,7 +29,7 @@ bind Scale <Motion> {
     tkScaleActivate %W %x %y
 }
 bind Scale <Leave> {
-    if $tk_strictMotif {
+    if {$tk_strictMotif} {
 	%W config -activebackground $tkPriv(activeBg)
     }
     if {[%W cget -state] == "active"} {
@@ -137,8 +137,8 @@ proc tkScaleButtonDown {w x y} {
 	set tkPriv(dragging) 1
 	set tkPriv(initValue) [$w get]
 	set coords [$w coords]
-	set tkPriv(deltaX) [expr $x - [lindex $coords 0]]
-	set tkPriv(deltaY) [expr $y - [lindex $coords 1]]
+	set tkPriv(deltaX) [expr {$x - [lindex $coords 0]}]
+	set tkPriv(deltaY) [expr {$y - [lindex $coords 1]}]
 	$w configure -sliderrelief sunken
     }
 }
@@ -155,11 +155,11 @@ proc tkScaleButtonDown {w x y} {
 
 proc tkScaleDrag {w x y} {
     global tkPriv
-    if !$tkPriv(dragging) {
+    if {!$tkPriv(dragging)} {
 	return
     }
-    $w set [$w get [expr $x - $tkPriv(deltaX)] \
-	    [expr $y - $tkPriv(deltaY)]]
+    $w set [$w get [expr {$x - $tkPriv(deltaX)}] \
+	    [expr {$y - $tkPriv(deltaY)}]]
 }
 
 # tkScaleEndDrag --
@@ -197,7 +197,7 @@ proc tkScaleIncrement {w dir big repeat} {
     if {$big == "big"} {
 	set inc [$w cget -bigincrement]
 	if {$inc == 0} {
-	    set inc [expr abs([$w cget -to] - [$w cget -from])/10.0]
+	    set inc [expr {abs([$w cget -to] - [$w cget -from])/10.0}]
 	}
 	if {$inc < [$w cget -resolution]} {
 	    set inc [$w cget -resolution]
@@ -206,9 +206,9 @@ proc tkScaleIncrement {w dir big repeat} {
 	set inc [$w cget -resolution]
     }
     if {([$w cget -from] > [$w cget -to]) ^ ($dir == "up")} {
-	set inc [expr -$inc]
+	set inc [expr {-$inc}]
     }
-    $w set [expr [$w get] + $inc]
+    $w set [expr {[$w get] + $inc}]
 
     if {$repeat == "again"} {
 	set tkPriv(afterId) [after [$w cget -repeatinterval] \

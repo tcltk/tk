@@ -546,7 +546,7 @@ typedef struct {
 	Bool same_screen;	/* same screen flag */
         char trans_chars[XMaxTransChars];
 				/* translated characters */
-	int nchars;
+	int nbytes;
 } XKeyEvent;
 typedef XKeyEvent XKeyPressedEvent;
 typedef XKeyEvent XKeyReleasedEvent;

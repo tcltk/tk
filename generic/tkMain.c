@@ -8,12 +8,12 @@
  *	for Tk applications.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMain.c 1.154 97/08/29 10:40:43
+ * SCCS: @(#) tkMain.c 1.158 98/01/20 22:46:33
  */
 
 #include <ctype.h>
@@ -93,10 +93,11 @@ Tk_Main(argc, argv, appInitProc)
 					 * to execute commands. */
 {
     char *args, *fileName;
-    char buf[20];
+    char buf[TCL_INTEGER_SPACE];
     int code;
     size_t length;
     Tcl_Channel inChannel, outChannel;
+    Tcl_DString argString;
 
     Tcl_FindExecutable(argv[0]);
     interp = Tcl_CreateInterp();
@@ -131,12 +132,19 @@ Tk_Main(argc, argv, appInitProc)
      */
 
     args = Tcl_Merge(argc-1, argv+1);
+    Tcl_ExternalToUtfDString(NULL, args, -1, &argString);
     Tcl_SetVar(interp, "argv", args, TCL_GLOBAL_ONLY);
+    Tcl_DStringFree(&argString);
     ckfree(args);
     sprintf(buf, "%d", argc-1);
+
+    if (fileName == NULL) {
+	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &argString);
+    } else {
+	fileName = Tcl_ExternalToUtfDString(NULL, fileName, -1, &argString);
+    }
     Tcl_SetVar(interp, "argc", buf, TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "argv0", (fileName != NULL) ? fileName : argv[0],
-	    TCL_GLOBAL_ONLY);
+    Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
 
     /*
      * Set the "tcl_interactive" variable.
@@ -162,7 +170,8 @@ Tk_Main(argc, argv, appInitProc)
      */
 
     if ((*appInitProc)(interp) != TCL_OK) {
-	TkpDisplayWarning(interp->result, "Application initialization failed");
+	TkpDisplayWarning(Tcl_GetStringResult(interp),
+		"Application initialization failed");
     }
 
     /*
@@ -205,6 +214,7 @@ Tk_Main(argc, argv, appInitProc)
 	    Prompt(interp, 0);
 	}
     }
+    Tcl_DStringFree(&argString);
 
     outChannel = Tcl_GetStdChannel(TCL_STDOUT);
     if (outChannel) {
@@ -294,16 +304,13 @@ StdinProc(clientData, mask)
 		(ClientData) chan);
     }
     Tcl_DStringFree(&command);
-    if (*interp->result != 0) {
+    if (Tcl_GetStringResult(interp)[0] != '\0') {
 	if ((code != TCL_OK) || (tty)) {
-	    /*
-	     * The statement below used to call "printf", but that resulted
-	     * in core dumps under Solaris 2.3 if the result was very long.
-             *
-             * NOTE: This probably will not work under Windows either.
-	     */
-
-	    puts(interp->result);
+	    chan = Tcl_GetStdChannel(TCL_STDOUT);
+	    if (chan) {
+		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
+		Tcl_WriteChars(chan, "\n", 1);
+	    }
 	}
     }
 
@@ -361,7 +368,7 @@ defaultPrompt:
 
 	    outChannel = Tcl_GetChannel(interp, "stdout", NULL);
             if (outChannel != (Tcl_Channel) NULL) {
-                Tcl_Write(outChannel, "% ", 2);
+                Tcl_WriteChars(outChannel, "% ", 2);
             }
 	}
     } else {
@@ -377,8 +384,8 @@ defaultPrompt:
             
 	    errChannel = Tcl_GetChannel(interp, "stderr", NULL);
             if (errChannel != (Tcl_Channel) NULL) {
-                Tcl_Write(errChannel, interp->result, -1);
-                Tcl_Write(errChannel, "\n", 1);
+                Tcl_WriteObj(errChannel, Tcl_GetObjResult(interp));
+                Tcl_WriteChars(errChannel, "\n", 1);
             }
 	    goto defaultPrompt;
 	}

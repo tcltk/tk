@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# SCCS: @(#) tk.tcl 1.98 97/10/28 15:21:04
+# SCCS: @(#) tk.tcl 1.101 97/12/19 16:16:40
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -13,8 +13,8 @@
 
 # Insist on running with compatible versions of Tcl and Tk.
 
-package require -exact Tk 8.0
-package require -exact Tcl 8.0
+package require -exact Tk 8.1
+package require -exact Tcl 8.1
 
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
@@ -42,7 +42,7 @@ set tk_strictMotif 0
 proc tkScreenChanged screen {
     set x [string last . $screen]
     if {$x > 0} {
-	set disp [string range $screen 0 [expr $x - 1]]
+	set disp [string range $screen 0 [expr {$x - 1}]]
     } else {
 	set disp $screen
     }
@@ -51,7 +51,7 @@ proc tkScreenChanged screen {
     global tkPriv
     global tcl_platform
 
-    if [info exists tkPriv] {
+    if {[info exists tkPriv]} {
 	set tkPriv(screen) $screen
 	return
     }
@@ -101,7 +101,7 @@ tkScreenChanged [winfo screen .]
 proc tkEventMotifBindings {n1 dummy dummy} {
     upvar $n1 name
     
-    if $name {
+    if {$name} {
 	set op delete
     } else {
 	set op add
@@ -112,6 +112,40 @@ proc tkEventMotifBindings {n1 dummy dummy} {
     event $op <<Paste>> <Control-Key-y>
 }
 
+#----------------------------------------------------------------------
+# Define common dialogs on platforms where they are not implemented 
+# using compiled code.
+#----------------------------------------------------------------------
+
+if {[info commands tk_chooseColor] == ""} {
+    proc tk_chooseColor {args} {
+	return [eval tkColorDialog $args]
+    }
+}
+if {[info commands tk_getOpenFile] == ""} {
+    proc tk_getOpenFile {args} {
+	if {$::tk_strictMotif} {
+	    return [eval tkMotifFDialog open $args]
+	} else {
+	    return [eval tkFDialog open $args]
+	}
+    }
+}
+if {[info commands tk_getSaveFile] == ""} {
+    proc tk_getSaveFile {args} {
+	if {$::tk_strictMotif} {
+	    return [eval tkMotifFDialog save $args]
+	} else {
+	    return [eval tkFDialog save $args]
+	}
+    }
+}
+if {[info commands tk_messageBox] == ""} {
+    proc tk_messageBox {args} {
+	return [eval tkMessageBox $args]
+    }
+}
+	
 #----------------------------------------------------------------------
 # Define the set of common virtual events.
 #----------------------------------------------------------------------

@@ -27,7 +27,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * SCCS: @(#) tkImgGIF.c 1.19 97/08/13 15:23:45
+ * SCCS: @(#) tkImgGIF.c 1.20 97/11/07 21:20:21
  */
 
 /*
@@ -184,7 +184,7 @@ FileMatchGIF(chan, fileName, formatString, widthPtr, heightPtr)
  *
  * Results:
  *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	The access position in file f is changed, and new data is
@@ -287,12 +287,14 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	     */
 
 	    if (Fread(buf, 1, 1, chan) != 1) {
-		interp->result =
-			"error reading extension function code in GIF image";
+		Tcl_SetResult(interp,
+			"error reading extension function code in GIF image",
+			TCL_STATIC);
 		goto error;
 	    }
 	    if (DoExtension(chan, buf[0], &transparent) < 0) {
-		interp->result = "error reading extension in GIF image";
+		Tcl_SetResult(interp, "error reading extension in GIF image",
+			TCL_STATIC);
 		goto error;
 	    }
 	    continue;
@@ -306,7 +308,9 @@ FileReadGIF(interp, chan, fileName, formatString, imageHandle, destX, destY,
 	}
 
 	if (Fread(buf, 1, 9, chan) != 9) {
-	    interp->result = "couldn't read left/top/width/height in GIF image";
+	    Tcl_SetResult(interp,
+		    "couldn't read left/top/width/height in GIF image",
+		    TCL_STATIC);
 	    goto error;
 	}
 
@@ -418,7 +422,7 @@ StringMatchGIF(string, formatString, widthPtr, heightPtr)
  *
  * Results:
  *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	new data is added to the image given by imageHandle.  This
@@ -619,7 +623,7 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
     }
 
     if (LWZReadByte(chan, 1, c) < 0) {
-	interp->result = "format error in GIF image";
+	Tcl_SetResult(interp, "format error in GIF image", TCL_STATIC);
 	return TCL_ERROR;
     }
 

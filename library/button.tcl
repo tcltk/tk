@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# SCCS: @(#) button.tcl 1.22 96/11/14 14:49:11
+# SCCS: @(#) button.tcl 1.23 97/12/03 15:28:54
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -69,12 +69,12 @@ if {$tcl_platform(platform) == "windows"} {
 }
 if {$tcl_platform(platform) == "unix"} {
     bind Checkbutton <Return> {
-	if !$tk_strictMotif {
+	if {!$tk_strictMotif} {
 	    tkCheckRadioInvoke %W
 	}
     }
     bind Radiobutton <Return> {
-	if !$tk_strictMotif {
+	if {!$tk_strictMotif} {
 	    tkCheckRadioInvoke %W
 	}
     }

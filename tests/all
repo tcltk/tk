@@ -2,20 +2,21 @@
 # tests.  Execute it by invoking "source all" when running tclTest
 # in this directory.
 #
-# SCCS: @(#) all 1.23 97/08/06 18:50:18
+# SCCS: @(#) all 1.28 97/12/23 15:00:50
 
+# These tests are not done because they cause the new configuration package 
+# to crash.
+
+set exclude {}
 switch $tcl_platform(platform) {
     "windows" {
 	# Tests that cause tk to crash under windows.
-	set crash {}
+	set crash { safe.test }
 
 	# Tests that fail under windows.
-
 	set fail { grid.test }
 
-	if {! [info exist exclude] } {
-	    set exclude [string tolower "$crash $fail"]
-	}
+	set exclude [string tolower [concat $exclude $crash $fail]]
     }
     "macintosh" {
 	set x [pwd]
@@ -29,10 +30,16 @@ switch $tcl_platform(platform) {
 	# Tests that fail under mac.
 	set fail {bind.test entry.test send.test textDisp.test}
 	
-	set exclude [string tolower "$crash $fail"]
+	set exclude [string tolower [concat $exclude $crash $fail]]
     }    
     "unix" {
-	set exclude ""
+	# Tests that cause tk to crash under unix.
+	set crash {}
+
+	# Tests that fail under unix.
+	set fail {}
+
+	set exclude [concat $exclude $crash $fail]
     }
 }
 

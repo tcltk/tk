@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) unixMenu.test 1.9 97/06/24 13:52:38
+# SCCS: @(#) unixMenu.test 1.10 97/10/13 13:10:04
 
 if {$tcl_platform(platform) != "unix"} {
     return
@@ -332,8 +332,8 @@ test unixMenu-18.1 {GetTearoffEntryGeometry} {
     .mb.m add command -label test
     pack .mb
     raise .
-    list [catch {tkMbPost .mb} msg] $msg [destroy .mb]
-} {0 {} {}}
+    list [catch {tkMbPost .mb} msg] $msg [tkMenuUnpost .mb.m] [destroy .mb]
+} {0 {} {} {}}
 
 # Don't know how to reproduce the case where the tkwin has been deleted.
 test unixMenu-19.1 {TkpComputeMenubarGeometry - zero entries} {
@@ -848,8 +848,8 @@ test unixMenu-25.5 {TkpComputeStandardMenuGeometry - tearoff entry} {unixOnly} {
     .mb.m add command -label test
     pack .mb
     catch {tkMbPost .mb}
-    list [update] [destroy .mb]
-} {{} {}}
+    list [update] [tkMenuUnpost .mb.m] [destroy .mb]
+} {{} {} {}}
 test unixMenu-25.6 {TkpComputeStandardMenuGeometry - standard label geometry} {
     catch {destroy .m1}
     menu .m1

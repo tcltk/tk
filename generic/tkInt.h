@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkInt.h 1.204 97/10/31 09:55:20
+ * SCCS: @(#) tkInt.h 1.212 98/02/10 10:34:03
  */
 
 #ifndef _TKINT
@@ -81,11 +81,30 @@ typedef struct TkClassProcs {
 
 typedef struct TkCursor {
     Tk_Cursor cursor;		/* System specific identifier for cursor. */
-    int refCount;		/* Number of active uses of cursor. */
+    Display *display;		/* Display containing cursor. Needed for
+				 * disposal and retrieval of cursors. */
+    int resourceRefCount;	/* Number of active uses of this cursor (each
+				 * active use corresponds to a call to
+				 * Tk_AllocPreserveFromObj or Tk_GetPreserve).
+				 * If this count is 0, then this structure
+				 * is no longer valid and it isn't present
+				 * in a hash table: it is being kept around
+				 * only because there are objects referring
+				 * to it.  The structure is freed when
+				 * resourceRefCount and objRefCount are
+				 * both 0. */
+    int objRefCount;		/* Number of Tcl objects that reference
+				 * this structure.. */
     Tcl_HashTable *otherTable;	/* Second table (other than idTable) used
 				 * to index this entry. */
     Tcl_HashEntry *hashPtr;	/* Entry in otherTable for this structure
 				 * (needed when deleting). */
+    Tcl_HashEntry *idHashPtr;	/* Entry in idTable for this structure
+				 * (needed when deleting). */
+    struct TkCursor *nextPtr;	/* Points to the next TkCursor structure with
+				 * the same name.  Cursors with the same
+				 * name but different displays are chained
+				 * together off a single hash table entry. */
 } TkCursor;
 
 /*
@@ -409,10 +428,10 @@ typedef struct TkMainInfo {
 				/* Used in conjunction with "bind" command
 				 * to bind events to Tcl commands. */
     TkBindInfo bindInfo;	/* Information used by tkBind.c on a per
-				 * interpreter basis. */
+				 * application basis. */
     struct TkFontInfo *fontInfoPtr;
-				/* Hold named font tables.  Used only by
-				 * tkFont.c. */
+				/* Information used by tkFont.c on a per
+				 * application basis. */
 
     /*
      * Information used only by tkFocus.c and tk*Embed.c:
@@ -744,6 +763,7 @@ EXTERN int		TkCreateFrame _ANSI_ARGS_((ClientData clientData,
 			    int toplevel, char *appName));
 EXTERN Tk_Window	TkCreateMainWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *screenName, char *baseName));
+EXTERN int		TkCreateMenuCmd _ANSI_ARGS_((Tcl_Interp *interp));
 #ifndef TkCreateRegion
 EXTERN TkRegion		TkCreateRegion _ANSI_ARGS_((void));
 #endif
@@ -751,6 +771,18 @@ EXTERN Time		TkCurrentTime _ANSI_ARGS_((TkDisplay *dispPtr));
 EXTERN int		TkDeadAppCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int argc, char **argv));
 EXTERN void		TkDeleteAllImages _ANSI_ARGS_((TkMainInfo *mainPtr));
+EXTERN Tcl_Obj *	TkDebugBitmap _ANSI_ARGS_(( Tk_Window tkwin,
+			    char *name));
+EXTERN Tcl_Obj *	TkDebugBorder _ANSI_ARGS_(( Tk_Window tkwin,
+			    char *name));
+EXTERN Tcl_Obj *	TkDebugCursor _ANSI_ARGS_(( Tk_Window tkwin,
+			    char *name));
+EXTERN Tcl_Obj *	TkDebugColor _ANSI_ARGS_(( Tk_Window tkwin,
+			    char *name));
+EXTERN Tcl_Obj *	TkDebugConfig _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_OptionTable table));
+EXTERN Tcl_Obj *	TkDebugFont _ANSI_ARGS_(( Tk_Window tkwin,
+			    char *name));
 #ifndef TkDestroyRegion
 EXTERN void		TkDestroyRegion _ANSI_ARGS_((TkRegion rgn));
 #endif
@@ -767,6 +799,9 @@ EXTERN void		TkFillPolygon _ANSI_ARGS_((Tk_Canvas canvas,
 EXTERN int		TkFindStateNum _ANSI_ARGS_((Tcl_Interp *interp,
 			    CONST char *option, CONST TkStateMap *mapPtr,
 			    CONST char *strKey));
+EXTERN int		TkFindStateNumObj _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tcl_Obj *optionPtr, CONST TkStateMap *mapPtr,
+			    Tcl_Obj *keyPtr));
 EXTERN char *		TkFindStateString _ANSI_ARGS_((
 			    CONST TkStateMap *mapPtr, int numKey));
 EXTERN void		TkFocusDeadWindow _ANSI_ARGS_((TkWindow *winPtr));
@@ -777,7 +812,6 @@ EXTERN TkWindow *	TkFocusKeyEvent _ANSI_ARGS_((TkWindow *winPtr,
 EXTERN void		TkFontPkgInit _ANSI_ARGS_((TkMainInfo *mainPtr));
 EXTERN void		TkFontPkgFree _ANSI_ARGS_((TkMainInfo *mainPtr));
 EXTERN void		TkFreeBindingTags _ANSI_ARGS_((TkWindow *winPtr));
-EXTERN void		TkFreeCursor _ANSI_ARGS_((TkCursor *cursorPtr));
 EXTERN void		TkFreeWindowId _ANSI_ARGS_((TkDisplay *dispPtr,
 			    Window w));
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
@@ -802,14 +836,13 @@ EXTERN int		TkGetInterpNames _ANSI_ARGS_((Tcl_Interp *interp,
 EXTERN int		TkGetMiterPoints _ANSI_ARGS_((double p1[], double p2[],
 			    double p3[], double width, double m1[],
 			    double m2[]));
-#ifndef TkGetNativeProlog
-EXTERN int		TkGetNativeProlog _ANSI_ARGS_((Tcl_Interp *interp));
-#endif
 EXTERN void		TkGetPointerCoords _ANSI_ARGS_((Tk_Window tkwin,
 			    int *xPtr, int *yPtr));
-EXTERN int		TkGetProlog _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN void		TkGetServerInfo _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin));
+EXTERN int		TkGetWindowFromObj _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Window tkwin, Tcl_Obj *objPtr,  
+			    Tk_Window *windowPtr));
 EXTERN void		TkGrabDeadWindow _ANSI_ARGS_((TkWindow *winPtr));
 EXTERN int		TkGrabState _ANSI_ARGS_((TkWindow *winPtr));
 EXTERN TkWindow *      	TkIDToWindow _ANSI_ARGS_((Window window, 
@@ -867,6 +900,7 @@ EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
 #endif
 EXTERN void		TkpDisplayWarning _ANSI_ARGS_((char *msg,
 			    char *title));
+EXTERN void		TkpFreeCursor _ANSI_ARGS_((TkCursor *cursorPtr));
 EXTERN void		TkpGetAppName _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_DString *name));
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
@@ -875,6 +909,12 @@ EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display *display,
 			    char *name, int *width, int *height));
 #endif
 EXTERN TkWindow *	TkpGetOtherWindow _ANSI_ARGS_((TkWindow *winPtr));
+EXTERN char *		TkpGetString _ANSI_ARGS_((TkWindow *winPtr,
+			    XEvent *eventPtr, Tcl_DString *dsPtr));
+EXTERN void		TkpGetSubFonts _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Font tkfont));
+EXTERN Tcl_Obj *	TkpGetSystemDefault _ANSI_ARGS_((Tk_Window tkwin,
+			    char *dbName, char *className));
 EXTERN TkWindow *	TkpGetWrapperWindow _ANSI_ARGS_((TkWindow *winPtr));
 EXTERN int		TkpInit _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN void		TkpInitializeMenuBindings _ANSI_ARGS_((

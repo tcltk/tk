@@ -3,12 +3,12 @@
  *
  *	This file handles the implementation of native bitmaps.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright (c) 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacBitmap.c 1.4 96/12/13 11:13:16
+ * SCCS: @(#) tkMacBitmap.c 1.7 98/01/22 17:00:58
  */
 
 #include "tkPort.h"
@@ -82,7 +82,7 @@ static BuiltInIcon builtInIcons[] = {
  *
  * Results:
  *	A standard Tcl result.  If an error occurs then TCL_ERROR is
- *	returned and a message is left in interp->result.
+ *	returned and a message is left in the interp's result.
  *
  * Side effects:
  *	"Name" is entered into the bitmap table and may be used from
@@ -128,7 +128,7 @@ TkpDefineNativeBitmaps()
  *
  * Results:
  *	A standard Tcl result.  If an error occurs then TCL_ERROR is
- *	returned and a message is left in interp->result.
+ *	returned and a message is left in the interp's result.
  *
  * Side effects:
  *	"Name" is entered into the bitmap table and may be used from
@@ -188,7 +188,7 @@ TkpCreateNativeBitmap(
  *
  * Results:
  *	A standard Tcl result.  If an error occurs then TCL_ERROR is
- *	returned and a message is left in interp->result.
+ *	returned and a message is left in the interp's result.
  *
  * Side effects:
  *	"Name" is entered into the bitmap table and may be used from
@@ -210,19 +210,28 @@ TkpGetNativeAppBitmap(
     GWorldPtr destPort;
     Rect destRect;
     Handle resource;
-    int type;
+    int type, destWrote;
+    Str255 nativeName;
+    
+    /*
+     * macRoman is the encoding that the resource fork uses.
+     */
 
-    c2pstr(name);
-    resource = GetNamedResource('cicn', (StringPtr) name);
+    Tcl_UtfToExternal(NULL, Tcl_GetEncoding(NULL, "macRoman"), name,
+	    strlen(name), 0, NULL, 
+	    (char *) &nativeName[1],
+	    255, NULL, &destWrote, NULL); /* Internalize native */
+    nativeName[0] = destWrote;
+
+    resource = GetNamedResource('cicn', nativeName);
     if (resource != NULL) {
 	type = TYPE3;
     } else {
-	resource = GetNamedResource('ICON', (StringPtr) name);
+	resource = GetNamedResource('ICON', nativeName);
 	if (resource != NULL) {
 	    type = TYPE2;
 	}
     }
-    p2cstr((StringPtr) name);
     
     if (resource == NULL) {
 	return NULL;

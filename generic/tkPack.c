@@ -5,12 +5,12 @@
  *	geometry manager for Tk.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkPack.c 1.64 96/05/03 10:51:52
+ * SCCS: @(#) tkPack.c 1.65 97/11/07 21:17:36
  */
 
 #include "tkPort.h"
@@ -281,7 +281,7 @@ Tk_PackCmd(clientData, interp, argc, argv)
     } else if ((c == 'i') && (strncmp(argv[1], "info", length) == 0)) {
 	register Packer *slavePtr;
 	Tk_Window slave;
-	char buffer[300];
+	char buffer[64 + TCL_INTEGER_SPACE * 4];
 	static char *sideNames[] = {"top", "bottom", "left", "right"};
 
 	if (argc != 3) {
@@ -342,9 +342,9 @@ Tk_PackCmd(clientData, interp, argc, argv)
 	masterPtr = GetPacker(master);
 	if (argc == 3) {
 	    if (masterPtr->flags & DONT_PROPAGATE) {
-		interp->result = "0";
+		Tcl_SetResult(interp, "0", TCL_STATIC);
 	    } else {
-		interp->result = "1";
+		Tcl_SetResult(interp, "1", TCL_STATIC);
 	    }
 	    return TCL_OK;
 	}
@@ -1398,7 +1398,7 @@ PackStructureProc(clientData, eventPtr)
  *
  * Results:
  *	TCL_OK is returned if all went well.  Otherwise, TCL_ERROR is
- *	returned and interp->result is set to contain an error message.
+ *	returned and the interp's result is set to contain an error message.
  *
  * Side effects:
  *	Slave windows get taken over by the packer.

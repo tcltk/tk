@@ -2,7 +2,7 @@
 #
 # This file contains procedures that implement tear-off menus.
 #
-# SCCS: @(#) tearoff.tcl 1.20 97/08/21 14:49:27
+# SCCS: @(#) tearoff.tcl 1.22 98/01/16 15:21:49
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -49,7 +49,7 @@ proc tkTearOffMenu {w {x 0} {y 0}} {
     }
     for {set i 1} 1 {incr i} {
 	set menu $parent.tearoff$i
-	if ![winfo exists $menu] {
+	if {![winfo exists $menu]} {
 	    break
 	}
     }
@@ -134,12 +134,34 @@ proc tkMenuDup {src dst type} {
 
     # Duplicate the binding tags and bindings from the source menu.
 
-    regsub -all . $src {\\&} quotedSrc
-    regsub -all . $dst {\\&} quotedDst
-    regsub -all $quotedSrc [bindtags $src] $dst x
+    set tags [bindtags $src]
+    set srcLen [string length $src]
+ 
+    # Copy tags to x, replacing each substring of src with dst.
+
+    while {[set index [string first $src $tags]] != -1} {
+	append x [string range $tags 0 [expr $index - 1]]
+	append x $dst
+	set tags [string range $tags [expr $index + $srcLen] end]
+    }
+    append x $tags
+
     bindtags $dst $x
+
     foreach event [bind $src] {
-	regsub -all $quotedSrc [bind $src $event] $dst x
+	unset x
+	set script [bind $src $event]
+	set eventLen [string length $event]
+
+	# Copy script to x, replacing each substring of event with dst.
+
+	while {[set index [string first $event $script]] != -1} {
+	    append x [string range $script 0 [expr $index - 1]]
+	    append x $dst
+	    set script [string range $script [expr $index + $eventLen] end]
+	}
+	append x $script
+
 	bind $dst $event $x
     }
 }

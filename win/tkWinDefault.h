@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinDefault.h 1.34 97/10/09 17:45:20
+ * SCCS: @(#) tkWinDefault.h 1.35 98/01/09 09:46:28
  */
 
 #ifndef _TKWINDEFAULT
@@ -65,7 +65,8 @@
 #define DEF_CHKRAD_FG			TEXT_FG
 #define DEF_BUTTON_FONT		CTL_FONT
 #define DEF_BUTTON_HEIGHT		"0"
-#define DEF_BUTTON_HIGHLIGHT_BG	NORMAL_BG
+#define DEF_BUTTON_HIGHLIGHT_BG_COLOR	DEF_BUTTON_BG_COLOR
+#define DEF_BUTTON_HIGHLIGHT_BG_MONO	DEF_BUTTON_BG_MONO
 #define DEF_BUTTON_HIGHLIGHT		HIGHLIGHT
 #define DEF_LABEL_HIGHLIGHT_WIDTH	"0"
 #define DEF_BUTTON_HIGHLIGHT_WIDTH	"1"

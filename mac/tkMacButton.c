@@ -2,20 +2,21 @@
  * tkMacButton.c --
  *
  *	This file implements the Macintosh specific portion of the
- *	button widgets.
+ *	button widgets. 
  *
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkMacButton.c 1.18 97/11/20 18:27:21
+ * SCCS: @(#) tkMacButton.c 1.20 98/02/18 10:48:42
  */
 
 #include "tkButton.h"
 #include "tkMacInt.h"
 #include <Controls.h>
 #include <LowMem.h>
+#include <Appearance.h>
 
 /*
  * Some defines used to control what type of control is drawn.
@@ -43,18 +44,36 @@ static CCTabHandle radioTabHandle;
 static PixMapHandle oldPixPtr;
 
 /*
+ * These functions are used when Appearance is present.
+ * By embedding all our controls in a userPane control,
+ * we can color the background of the text in radiobuttons
+ * and checkbuttons.  Thanks to Peter Gontier of Apple DTS
+ * for help on this one.
+ */
+
+static ControlRef userPaneHandle;
+static RGBColor gUserPaneBackground = { ~0, ~0, ~0};
+static pascal OSErr SetUserPaneDrawProc(ControlRef control,
+	ControlUserPaneDrawProcPtr upp);
+static pascal OSErr SetUserPaneSetUpSpecialBackgroundProc(ControlRef control,
+	ControlUserPaneBackgroundProcPtr upp);
+static pascal void UserPaneDraw(ControlRef control, ControlPartCode cpc);
+static pascal void UserPaneBackgroundProc(ControlHandle,
+	ControlBackgroundPtr info);
+
+/*
  * Forward declarations for procedures defined later in this file:
  */
 
-static int		UpdateControlColors _ANSI_ARGS_((TkButton *butPtr,
-			    ControlRef controlHandle, CCTabHandle ccTabHandle,
-			    RGBColor *saveColorPtr));
-static void		DrawBufferedControl _ANSI_ARGS_((TkButton *butPtr,
-			    GWorldPtr destPort));
-static void		ChangeBackgroundWindowColor _ANSI_ARGS_((
-			    WindowRef macintoshWindow, RGBColor rgbColor,
-			    RGBColor *oldColor));
-static void		ButtonExitProc _ANSI_ARGS_((ClientData clientData));
+static int	UpdateControlColors _ANSI_ARGS_((TkButton *butPtr,
+		    ControlRef controlHandle, CCTabHandle ccTabHandle,
+		    RGBColor *saveColorPtr));
+static void	DrawBufferedControl _ANSI_ARGS_((TkButton *butPtr,
+		    GWorldPtr destPort));
+static void	ChangeBackgroundWindowColor _ANSI_ARGS_((
+		    WindowRef macintoshWindow, RGBColor rgbColor,
+		    RGBColor *oldColor));
+static void	ButtonExitProc _ANSI_ARGS_((ClientData clientData));
 
 /*
  * The class procedure table for the button widgets.
@@ -137,15 +156,16 @@ TkpDisplayButton(
     }
 
     border = butPtr->normalBorder;
-    if ((butPtr->state == tkDisabledUid) && (butPtr->disabledFg != NULL)) {
+    if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
 	gc = butPtr->disabledGC;
-    } else if ((butPtr->type == TYPE_BUTTON) && (butPtr->state == tkActiveUid)) {
+    } else if ((butPtr->type == TYPE_BUTTON)
+	    && (butPtr->state == STATE_ACTIVE)) {
 	gc = butPtr->activeTextGC;
 	border = butPtr->activeBorder;
     } else {
 	gc = butPtr->normalTextGC;
     }
-    if ((butPtr->flags & SELECTED) && (butPtr->state != tkActiveUid)
+    if ((butPtr->flags & SELECTED) && (butPtr->state != STATE_ACTIVE)
 	    && (butPtr->selectBorder != NULL) && !butPtr->indicatorOn) {
 	border = butPtr->selectBorder;
     }
@@ -173,9 +193,18 @@ TkpDisplayButton(
 
     pixmap = Tk_GetPixmap(butPtr->display, Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
-    Tk_Fill3DRectangle(tkwin, pixmap, butPtr->normalBorder, 0, 0,
-	    Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
-
+    /*
+     * See the comment in UpdateControlColors as to why we use the 
+     * highlightbackground for the border of Macintosh buttons.
+     */
+     
+    if (butPtr->type == TYPE_BUTTON) {
+        Tk_Fill3DRectangle(tkwin, pixmap, butPtr->highlightBorder, 0, 0,
+	        Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
+    } else {
+        Tk_Fill3DRectangle(tkwin, pixmap, butPtr->normalBorder, 0, 0,
+	        Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
+    }
    
     if (butPtr->type == TYPE_LABEL) {
 	drawType = DRAW_LABEL;
@@ -274,7 +303,7 @@ TkpDisplayButton(
      * must temporarily modify the GC.
      */
 
-    if ((butPtr->state == tkDisabledUid)
+    if ((butPtr->state == STATE_DISABLED)
 	    && ((butPtr->disabledFg == NULL) || (butPtr->image != NULL))) {
 	if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
 		&& (butPtr->selectBorder != NULL)) {
@@ -361,7 +390,7 @@ TkpComputeButtonGeometry(
      * highlight width as there is also one pixel of spacing.
      */
 
-    if (butPtr->defaultState != tkDisabledUid) {
+    if (butPtr->defaultState != DEFAULT_DISABLED) {
 	butPtr->inset += butPtr->highlightWidth;
     }
     butPtr->indicatorSpace = 0;
@@ -388,8 +417,8 @@ TkpComputeButtonGeometry(
     } else {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		butPtr->text, -1, butPtr->wrapLength, butPtr->justify, 0,
-		&butPtr->textWidth, &butPtr->textHeight);
+		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
 	width = butPtr->textWidth;
 	height = butPtr->textHeight;
@@ -491,36 +520,74 @@ DrawBufferedControl(
 
 	/*
 	 * Create a dummy window that we can draw to.  We will
-	 * actually replace this windows bitmap with a the one
+	 * actually replace this window's bitmap with the one
 	 * we want to draw to at a later time.  This window and
 	 * the data structures attached to it are only deallocated
 	 * on exit of the application.
 	 */
-	
-	windowRef = NewCWindow(NULL, &geometry, "\pempty", false, 
+	 
+        windowRef = NewCWindow(NULL, &geometry, "\pempty", false, 
 	    zoomDocProc, (WindowRef) -1, true, 0);
 	if (windowRef == NULL) {
 	    panic("Can't allocate buffer window.");
 	}
-	
+            
 	/*
 	 * Now add the three standard controls to hidden window.  We
 	 * only create one of each and reuse them for every widget in
 	 * Tk.
+	 * Under Appearance, we have to embed the controls in a UserPane
+	 * control, so that we can color the background text in 
+	 * radiobuttons and checkbuttons.
 	 */
 	
 	SetPort(windowRef);
-	buttonHandle = NewControl(windowRef, &geometry, "\p",
-		false, 1, 0, 1, pushButProc, (SInt32) 0);
-	checkHandle = NewControl(windowRef, &geometry, "\p",
-		false, 1, 0, 1, checkBoxProc, (SInt32) 0);
-	radioHandle = NewControl(windowRef, &geometry, "\p",
-		false, 1, 0, 1, radioButProc, (SInt32) 0);
-	((CWindowPeek) windowRef)->visible = true;
+	
+        if (TkMacHaveAppearance()) {
+            
+ 	    OSErr err;
+ 	    ControlRef dontCare;
+ 	    
+ 	    /* Adding UserPaneBackgroundProcs to the root control does
+ 	     * not seem to work, so we have to add another UserPane to 
+ 	     * the root control.
+ 	     */
+ 	     
+	    err = CreateRootControl(windowRef, &dontCare);
+	    if (err != noErr) {
+	        panic("Can't create root control in DrawBufferedControl");
+	    }
+	    
+	    userPaneHandle = NewControl(windowRef, &geometry, "\p",
+		true, kControlSupportsEmbedding|kControlHasSpecialBackground, 
+		0, 1, kControlUserPaneProc, (SInt32) 5);
+	    SetUserPaneSetUpSpecialBackgroundProc(userPaneHandle,
+		    UserPaneBackgroundProc);
+	    SetUserPaneDrawProc(userPaneHandle, UserPaneDraw);
 
-	buttonTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
-	checkTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
-	radioTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
+	    buttonHandle = NewControl(windowRef, &geometry, "\p",
+		false, 1, 0, 1, kControlPushButtonProc, (SInt32) 6);
+	    EmbedControl(buttonHandle, userPaneHandle);
+	    checkHandle = NewControl(windowRef, &geometry, "\p",
+		false, 1, 0, 1, kControlCheckBoxProc, (SInt32) 7);
+	    EmbedControl(checkHandle, userPaneHandle);
+	    radioHandle = NewControl(windowRef, &geometry, "\p",
+		false, 1, 0, 1, kControlRadioButtonProc, (SInt32) 8);
+	    EmbedControl(radioHandle, userPaneHandle);
+	    ((CWindowPeek) windowRef)->visible = true;
+        } else {
+	    buttonHandle = NewControl(windowRef, &geometry, "\p",
+	            false, 1, 0, 1, pushButProc, (SInt32) 0);
+	    checkHandle = NewControl(windowRef, &geometry, "\p",
+	            false, 1, 0, 1, checkBoxProc, (SInt32) 0);
+	    radioHandle = NewControl(windowRef, &geometry, "\p",
+	            false, 1, 0, 1, radioButProc, (SInt32) 0);
+	    ((CWindowPeek) windowRef)->visible = true;
+
+	    buttonTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
+	    checkTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
+	    radioTabHandle = (CCTabHandle) NewHandle(sizeof(CtlCTab));
+        }
 
 	/*
 	 * Remove our window from the window list.  This way our
@@ -556,10 +623,29 @@ DrawBufferedControl(
     }
     
     /*
-     * Set up control in hidden window to match what we need
-     * to draw in the buffered window.
+     * Now swap in the passed in GWorld for the portBits of our fake
+     * window.  We also adjust various fields in the WindowRecord to make
+     * the system think this is a normal window.
+     * Note, we can use DrawControlInCurrentPort under Appearance, so we don't
+     * need to swap pixmaps.
      */
-
+    
+    if (!TkMacHaveAppearance()) {
+        ((CWindowPeek) windowRef)->port.portPixMap = destPort->portPixMap;
+    }
+    
+    ((CWindowPeek) windowRef)->port.portRect = destPort->portRect;
+    RectRgn(((CWindowPeek) windowRef)->port.visRgn, &destPort->portRect);
+    RectRgn(((CWindowPeek) windowRef)->strucRgn, &destPort->portRect);
+    RectRgn(((CWindowPeek) windowRef)->updateRgn, &destPort->portRect);
+    RectRgn(((CWindowPeek) windowRef)->contRgn, &destPort->portRect);
+    PortChanged(windowRef);
+    
+    /*
+     * Set up control in hidden window to match what we need
+     * to draw in the buffered window.  
+     */
+   
     switch (butPtr->type) {
 	case TYPE_BUTTON:
 	    controlHandle = buttonHandle;
@@ -574,21 +660,38 @@ DrawBufferedControl(
 	    ccTabHandle = checkTabHandle;
 	    break;
     }
+    
     (**controlHandle).contrlRect.left = butPtr->inset;
     (**controlHandle).contrlRect.top = butPtr->inset;
     (**controlHandle).contrlRect.right = Tk_Width(butPtr->tkwin) 
 	    - butPtr->inset;
     (**controlHandle).contrlRect.bottom = Tk_Height(butPtr->tkwin) 
 	    - butPtr->inset;
-    if ((**controlHandle).contrlVis != 255) {
-	(**controlHandle).contrlVis = 255;
-    }
+	    
+    /*
+     * Setting the control visibility by hand does not 
+     * seem to work under Appearance. 
+     */
+     
+    if (TkMacHaveAppearance()) {
+        SetControlVisibility(controlHandle, true, false);      
+        (**userPaneHandle).contrlRect.left = 0;
+        (**userPaneHandle).contrlRect.top = 0;
+        (**userPaneHandle).contrlRect.right = Tk_Width(butPtr->tkwin);
+        (**userPaneHandle).contrlRect.bottom = Tk_Height(butPtr->tkwin);
+    } else {      
+        (**controlHandle).contrlVis = 255;
+    }     
+    
+	        
+    
     if (butPtr->flags & SELECTED) {
 	(**controlHandle).contrlValue = 1;
     } else {
 	(**controlHandle).contrlValue = 0;
     }
-    if (butPtr->state == tkActiveUid) {
+    
+    if (butPtr->state == STATE_ACTIVE) {
 	switch (butPtr->type) {
 	    case TYPE_BUTTON:
 		(**controlHandle).contrlHilite = kControlButtonPart;
@@ -600,26 +703,12 @@ DrawBufferedControl(
 		(**controlHandle).contrlHilite = kControlCheckBoxPart;
 		break;
 	}
-    } else if (butPtr->state == tkDisabledUid) {
+    } else if (butPtr->state == STATE_DISABLED) {
 	(**controlHandle).contrlHilite = kControlInactivePart;
     } else {
 	(**controlHandle).contrlHilite = kControlNoPart;
     }
 
-    /*
-     * Now swap in the passed in GWorld for the portBits of our fake
-     * window.  We also adjust various fields in the WindowRecord to make
-     * the system think this is a normal window.
-     */
-
-    ((CWindowPeek) windowRef)->port.portPixMap = destPort->portPixMap;
-    ((CWindowPeek) windowRef)->port.portRect = destPort->portRect;
-    RectRgn(((CWindowPeek) windowRef)->port.visRgn, &destPort->portRect);
-    RectRgn(((CWindowPeek) windowRef)->strucRgn, &destPort->portRect);
-    RectRgn(((CWindowPeek) windowRef)->updateRgn, &destPort->portRect);
-    RectRgn(((CWindowPeek) windowRef)->contRgn, &destPort->portRect);
-    PortChanged(windowRef);
-    
     /*
      * Before we draw the control we must add the hidden window back to the
      * main window list.  Otherwise, radiobuttons and checkbuttons will draw
@@ -635,14 +724,41 @@ DrawBufferedControl(
      * to muck with the colors for the port & window to draw the control
      * with the proper Tk colors.  If we need to we also draw a default
      * ring for buttons.
+     * Under Appearance, we draw the control directly into destPort, and
+     * just set the default control data.
      */
 
-    SetPort(windowRef);
+    if (TkMacHaveAppearance()) {
+        SetPort((GrafPort *) destPort);
+    } else {
+        SetPort(windowRef);
+    }
+    
     windowColorChanged = UpdateControlColors(butPtr, controlHandle, 
 	ccTabHandle, &saveBackColor);
-    Draw1Control(controlHandle);
-    if ((butPtr->type == TYPE_BUTTON) && 
-	    (butPtr->defaultState == tkActiveUid)) {
+	
+    if ((butPtr->type == TYPE_BUTTON) && TkMacHaveAppearance()) {
+        Boolean isDefault;
+        
+        if (butPtr->defaultState == DEFAULT_ACTIVE) {
+	    isDefault = true;
+	} else {
+	    isDefault = false;
+	}
+	SetControlData(controlHandle, kControlNoPart, 
+	        kControlPushButtonDefaultTag,
+	        sizeof(isDefault), (Ptr) &isDefault);	
+    }
+
+    if (TkMacHaveAppearance()) {
+        DrawControlInCurrentPort(userPaneHandle);
+    } else {
+        Draw1Control(controlHandle);
+    }
+
+    if (!TkMacHaveAppearance() &&
+            (butPtr->type == TYPE_BUTTON) && 
+	    (butPtr->defaultState == DEFAULT_ACTIVE)) {
 	Rect box = (**controlHandle).contrlRect;
 	RGBColor rgbColor;
 
@@ -652,16 +768,134 @@ DrawBufferedControl(
 	InsetRect(&box, -butPtr->highlightWidth, -butPtr->highlightWidth);
 	FrameRoundRect(&box, 16, 16);
     }
+    
     if (windowColorChanged) {
 	RGBColor dummyColor;
 	ChangeBackgroundWindowColor(windowRef, saveBackColor, &dummyColor);
     }
     
     /*
-     * Clean up: remove the hidden window from the main window list.
+     * Clean up: remove the hidden window from the main window list, and
+     * hide the control we drew.  
      */
 
+    if (TkMacHaveAppearance()) {
+        SetControlVisibility(controlHandle, false, false);      
+    } else {      
+        (**controlHandle).contrlVis = 0;
+    }     
     LMSetWindowList((WindowRef) ((CWindowPeek) windowRef)->nextWindow);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SetUserPaneDrawProc --
+ *
+ *	Utility function to add a UserPaneDrawProc
+ *      to a userPane control.  From MoreControls code
+ *      from Apple DTS.
+ *
+ * Results:
+ *	MacOS system error.
+ *
+ * Side effects:
+ *	The user pane gets a new UserPaneDrawProc.
+ *
+ *--------------------------------------------------------------
+ */
+pascal OSErr SetUserPaneDrawProc (
+        ControlRef control,
+        ControlUserPaneDrawProcPtr upp)
+{
+    ControlUserPaneDrawUPP myControlUserPaneDrawUPP;
+    myControlUserPaneDrawUPP = NewControlUserPaneDrawProc(upp);	
+    return SetControlData (control, 
+	        kControlNoPart, kControlUserPaneDrawProcTag, 
+	        sizeof(myControlUserPaneDrawUPP), 
+	        (Ptr) &myControlUserPaneDrawUPP);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SetUserPaneSetUpSpecialBackgroundProc --
+ *
+ *	Utility function to add a UserPaneBackgroundProc
+ *      to a userPane control
+ *
+ * Results:
+ *	MacOS system error.
+ *
+ * Side effects:
+ *	The user pane gets a new UserPaneBackgroundProc.
+ *
+ *--------------------------------------------------------------
+ */
+pascal OSErr
+SetUserPaneSetUpSpecialBackgroundProc(
+    ControlRef control, 
+    ControlUserPaneBackgroundProcPtr upp)
+{
+    ControlUserPaneBackgroundUPP myControlUserPaneBackgroundUPP;
+    myControlUserPaneBackgroundUPP = NewControlUserPaneBackgroundProc(upp);
+    return SetControlData (control, kControlNoPart, 
+                kControlUserPaneBackgroundProcTag, 
+	        sizeof(myControlUserPaneBackgroundUPP), 
+	        (Ptr) &myControlUserPaneBackgroundUPP);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * UserPaneDraw --
+ *
+ *	This function draws the background of the user pane that will 
+ *      lie under checkboxes and radiobuttons.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The user pane gets updated to the current color.
+ *
+ *--------------------------------------------------------------
+ */
+pascal void
+UserPaneDraw(
+    ControlRef control,
+    ControlPartCode cpc)
+{
+	Rect contrlRect = (**control).contrlRect;
+	RGBBackColor (&gUserPaneBackground);
+	EraseRect (&contrlRect);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * UserPaneBackgroundProc --
+ *
+ *	This function sets up the background of the user pane that will 
+ *      lie under checkboxes and radiobuttons.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The user pane background gets set to the current color.
+ *
+ *--------------------------------------------------------------
+ */
+
+pascal void
+UserPaneBackgroundProc(
+    ControlHandle,
+    ControlBackgroundPtr info)
+{
+    if (info->colorDevice) {
+        RGBBackColor (&gUserPaneBackground);
+    }
 }
 
 /*
@@ -673,6 +907,9 @@ DrawBufferedControl(
  *	a Macintosh button.  If any non-standard colors are
  *	used we create a custom palette for the button, populate
  *	with the colors for the button and install the palette.
+ *
+ *      Under Appearance, we just set the pointer that will be
+ *      used by the UserPaneDrawProc.
  *
  * Results:
  *	None.
@@ -692,33 +929,50 @@ UpdateControlColors(
 {
     XColor *xcolor;
     
-    xcolor = Tk_3DBorderColor(butPtr->normalBorder);
-
-    (**ccTabHandle).ccSeed = 0;
-    (**ccTabHandle).ccRider = 0;
-    (**ccTabHandle).ctSize = 3;
-    (**ccTabHandle).ctTable[0].value = cBodyColor;
-    TkSetMacColor(xcolor->pixel,
-	&(**ccTabHandle).ctTable[0].rgb);
-    (**ccTabHandle).ctTable[1].value = cTextColor;
-    TkSetMacColor(butPtr->normalFg->pixel,
-	&(**ccTabHandle).ctTable[1].rgb);
-    (**ccTabHandle).ctTable[2].value = cFrameColor;
-    TkSetMacColor(butPtr->highlightColorPtr->pixel,
-	&(**ccTabHandle).ctTable[2].rgb);
-    SetControlColor(controlHandle, ccTabHandle);
-        
-    if (((xcolor->pixel >> 24) != CONTROL_BODY_PIXEL) && 
-	    ((butPtr->type == TYPE_CHECK_BUTTON) ||
-		    (butPtr->type == TYPE_RADIO_BUTTON))) {
-	RGBColor newColor;
-	
-	TkSetMacColor(xcolor->pixel, &newColor);
-	ChangeBackgroundWindowColor((**controlHandle).contrlOwner,
-		newColor, saveColorPtr);
-	return true;
+    /*
+     * Under Appearance we cannot change the background of the
+     * button itself.  However, the color we are setting is the color
+     *  of the containing userPane.  This will be the color that peeks 
+     * around the rounded corners of the button.  
+     * We make this the highlightbackground rather than the background,
+     * because if you color the background of a frame containing a
+     * button, you usually also color the highlightbackground as well,
+     * or you will get a thin grey ring around the button.
+     */
+      
+    if (TkMacHaveAppearance() && (butPtr->type == TYPE_BUTTON)) {
+        xcolor = Tk_3DBorderColor(butPtr->highlightBorder);
+    } else {
+        xcolor = Tk_3DBorderColor(butPtr->normalBorder);
     }
-    
+    if (TkMacHaveAppearance()) {
+         TkSetMacColor(xcolor->pixel, &gUserPaneBackground);
+     } else {
+        (**ccTabHandle).ccSeed = 0;
+        (**ccTabHandle).ccRider = 0;
+        (**ccTabHandle).ctSize = 3;
+        (**ccTabHandle).ctTable[0].value = cBodyColor;
+        TkSetMacColor(xcolor->pixel,
+	    &(**ccTabHandle).ctTable[0].rgb);
+        (**ccTabHandle).ctTable[1].value = cTextColor;    
+        TkSetMacColor(butPtr->normalFg->pixel,
+	    &(**ccTabHandle).ctTable[1].rgb);
+        (**ccTabHandle).ctTable[2].value = cFrameColor;
+        TkSetMacColor(butPtr->highlightColorPtr->pixel,
+	    &(**ccTabHandle).ctTable[2].rgb);
+        SetControlColor(controlHandle, ccTabHandle);
+        if (((xcolor->pixel >> 24) != CONTROL_BODY_PIXEL) &&
+            ((butPtr->type == TYPE_CHECK_BUTTON) ||
+    		    (butPtr->type == TYPE_RADIO_BUTTON))) {
+    	    RGBColor newColor;
+	
+	    TkSetMacColor(xcolor->pixel, &newColor);
+	    ChangeBackgroundWindowColor((**controlHandle).contrlOwner,
+		    newColor, saveColorPtr);
+            return true;
+	}
+    }
+            
     return false;
 }
 

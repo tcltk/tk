@@ -6,12 +6,12 @@
  *	with windows either by name or by class or both.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkOption.c 1.57 96/10/17 15:16:45
+ * SCCS: @(#) tkOption.c 1.59 97/11/17 12:53:36
  */
 
 #include "tkPort.h"
@@ -530,7 +530,7 @@ Tk_OptionCmd(clientData, interp, argc, argv)
 	}
 	value = Tk_GetOption(window, argv[3], argv[4]);
 	if (value != NULL) {
-	    interp->result = value;
+	    Tcl_SetResult(interp, value, TCL_STATIC);
 	}
 	return TCL_OK;
     } else if ((c == 'r') && (strncmp(argv[1], "readfile", length) == 0)) {
@@ -674,7 +674,7 @@ TkOptionClassChanged(winPtr)
  * Results:
  *	The return value is the integer priority level corresponding
  *	to string, or -1 if string doesn't point to a valid priority level.
- *	In this case, an error message is left in interp->result.
+ *	In this case, an error message is left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -734,7 +734,7 @@ ParsePriority(interp, string)
  * Results:
  *	The return value is a standard Tcl return code.  In the case of
  *	an error in parsing string, TCL_ERROR will be returned and an
- *	error message will be left in interp->result.  The memory at
+ *	error message will be left in the interp's result.  The memory at
  *	string is totally trashed by this procedure.  If you care about
  *	its contents, make a copy before calling here.
  *
@@ -797,8 +797,10 @@ AddFromString(interp, tkwin, string, priority)
 	dst = name = src;
 	while (*src != ':') {
 	    if ((*src == '\0') || (*src == '\n')) {
-		sprintf(interp->result, "missing colon on line %d",
-			lineNum);
+		char buf[32 + TCL_INTEGER_SPACE];
+		
+		sprintf(buf, "missing colon on line %d", lineNum);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		return TCL_ERROR;
 	    }
 	    if ((src[0] == '\\') && (src[1] == '\n')) {
@@ -830,7 +832,10 @@ AddFromString(interp, tkwin, string, priority)
 	    src++;
 	}
 	if (*src == '\0') {
-	    sprintf(interp->result, "missing value on line %d", lineNum);
+	    char buf[32 + TCL_INTEGER_SPACE];
+	    
+	    sprintf(buf, "missing value on line %d", lineNum);
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    return TCL_ERROR;
 	}
 
@@ -842,8 +847,10 @@ AddFromString(interp, tkwin, string, priority)
 	dst = value = src;
 	while (*src != '\n') {
 	    if (*src == '\0') {
-		sprintf(interp->result, "missing newline on line %d",
-			lineNum);
+		char buf[32 + TCL_INTEGER_SPACE];
+		
+		sprintf(buf, "missing newline on line %d", lineNum);
+		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		return TCL_ERROR;
 	    }
 	    if ((src[0] == '\\') && (src[1] == '\n')) {
@@ -879,7 +886,7 @@ AddFromString(interp, tkwin, string, priority)
  * Results:
  *	The return value is a standard Tcl return code.  In the case of
  *	an error in parsing string, TCL_ERROR will be returned and an
- *	error message will be left in interp->result.
+ *	error message will be left in the interp's result.
  *
  * Side effects:
  *	None.

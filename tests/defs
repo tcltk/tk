@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) defs 1.39 97/08/06 15:32:02
+# SCCS: @(#) defs 1.43 98/01/13 17:21:10
 
 if ![info exists VERBOSE] {
     set VERBOSE 0
@@ -41,6 +41,10 @@ wm title . tktest
 #			where the configuration is well known.  The presence
 #			of the file "doAllTests" in this directory indicates
 #			that it is safe to run non-portable tests.
+#       knownBug -      The test is known to fail and the bug is not yet
+#                       fixed. The test will be run only if the file
+#                       "doBuggyTests" exists (intended for Tcl dev. group
+#                       internal use only).
 #	fonts -		1 means that this platform uses fonts with
 #			well-know geometries, so it is safe to run
 #			tests that depend on particular font sizes.
@@ -60,6 +64,7 @@ set testConfig(macOrPc) [expr $testConfig(macOnly) || $testConfig(pcOnly)]
 set testConfig(macOrUnix) [expr $testConfig(macOnly) || $testConfig(unixOnly)]
 
 set testConfig(nonPortable) 	[expr [file exists doAllTests] || [file exists DOALLT~1]]
+set testConfig(knownBug)	[expr [file exists doBuggyTests] || [file exists doBuggyT]]
 
 set testConfig(nt)		[expr {$tcl_platform(os) == "Windows NT"}]
 set testConfig(95)		[expr {$tcl_platform(os) == "Windows 95"}]
@@ -88,7 +93,8 @@ entry .e -width 0 -font {Helvetica -12} -bd 1
 if {([winfo reqwidth .e] != 37) || ([winfo reqheight .e] != 20)} {
     set testConfig(fonts) 0
 }
-destroy .e .t
+destroy .e
+catch {destroy .t}
 text .t -width 80 -height 20 -font {Times -14} -bd 1
 pack .t
 .t insert end "This is\na dot."
@@ -364,4 +370,22 @@ proc makeFile {contents name} {
 
 proc removeFile {name} {
     file delete -- $name
+}
+
+#
+# Construct a string that consists of the requested sequence of bytes,
+# as opposed to a string of properly formed UTF-8 characters.  
+# This allows the tester to 
+# 1. Create denormalized or improperly formed strings to pass to C procedures 
+#    that are supposed to accept strings with embedded NULL bytes.
+# 2. Confirm that a string result has a certain pattern of bytes, for instance
+#    to confirm that "\xe0\0" in a Tcl script is stored internally in 
+#    UTF-8 as the sequence of bytes "\xc3\xa0\xc0\x80".
+#
+# Generally, it's a bad idea to examine the bytes in a Tcl string or to
+# construct improperly formed strings in this manner, because it involves
+# exposing that Tcl uses UTF-8 internally.
+
+proc bytestring {string} {
+    testencoding toutf $string identity
 }

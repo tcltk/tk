@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkUnixEvent.c 1.17 97/09/11 12:51:04
+ * SCCS: @(#) tkUnixEvent.c 1.18 97/10/28 18:47:15
  */
 
 #include "tkInt.h"
@@ -34,6 +34,8 @@ static void		DisplayFileProc _ANSI_ARGS_((ClientData clientData,
 			    int flags));
 static void		DisplaySetupProc _ANSI_ARGS_((ClientData clientData,
 			    int flags));
+static void		TransferXEventsToTcl _ANSI_ARGS_((Display *display));
+
 
 /*
  *----------------------------------------------------------------------
@@ -196,9 +198,46 @@ DisplaySetupProc(clientData, flags)
 	 */
 
 	XFlush(dispPtr->display);
-	if (XQLength(dispPtr->display) > 0) {
+	if (QLength(dispPtr->display) > 0) {
 	    Tcl_SetMaxBlockTime(&blockTime);
 	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ *  TransferXEventsToTcl
+ *
+ *      Transfer events from the X event queue to the Tk event queue.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Moves queued X events onto the Tcl event queue.
+ *
+ *----------------------------------------------------------------------
+ */
+
+
+static void
+TransferXEventsToTcl(display)
+    Display *display;
+{
+    int numFound;
+    XEvent event;
+
+    numFound = QLength(display);
+
+    /*
+     * Transfer events from the X event queue to the Tk event queue.
+     */
+
+    while (numFound > 0) {
+	XNextEvent(display, &event);
+	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+	numFound--;
     }
 }
 
@@ -225,8 +264,6 @@ DisplayCheckProc(clientData, flags)
     int flags;
 {
     TkDisplay *dispPtr;
-    XEvent event;
-    int numFound;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -235,19 +272,11 @@ DisplayCheckProc(clientData, flags)
     for (dispPtr = tkDisplayList; dispPtr != NULL;
 	 dispPtr = dispPtr->nextPtr) {
 	XFlush(dispPtr->display);
-	numFound = XQLength(dispPtr->display);
-
-	/*
-	 * Transfer events from the X event queue to the Tk event queue.
-	 */
-
-	while (numFound > 0) {
-	    XNextEvent(dispPtr->display, &event);
-	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	    numFound--;
-	}
+	TransferXEventsToTcl(dispPtr->display);
     }
 }
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -273,7 +302,6 @@ DisplayFileProc(clientData, flags)
 {
     TkDisplay *dispPtr = (TkDisplay *) clientData;
     Display *display = dispPtr->display;
-    XEvent event;
     int numFound;
 
     XFlush(display);
@@ -311,15 +339,7 @@ DisplayFileProc(clientData, flags)
 	(void) signal(SIGPIPE, oldHandler);
     }
     
-    /*
-     * Transfer events from the X event queue to the Tk event queue.
-     */
-
-    while (numFound > 0) {
-	XNextEvent(display, &event);
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	numFound--;
-    }
+    TransferXEventsToTcl(display);
 }
 
 /*
@@ -397,7 +417,7 @@ TkUnixDoOneXEvent(timePtr)
     for (dispPtr = tkDisplayList; dispPtr != NULL;
 	 dispPtr = dispPtr->nextPtr) {
 	XFlush(dispPtr->display);
-	if (XQLength(dispPtr->display) > 0) {
+	if (QLength(dispPtr->display) > 0) {
 	    blockTime.tv_sec = 0;
 	    blockTime.tv_usec = 0;
 	}
@@ -430,7 +450,7 @@ TkUnixDoOneXEvent(timePtr)
 	fd = ConnectionNumber(dispPtr->display);
 	index = fd/(NBBY*sizeof(fd_mask));
 	bit = 1 << (fd%(NBBY*sizeof(fd_mask)));
-	if ((readMask[index] & bit) || (XQLength(dispPtr->display) > 0)) {
+	if ((readMask[index] & bit) || (QLength(dispPtr->display) > 0)) {
 	    DisplayFileProc((ClientData)dispPtr, TCL_READABLE);
 	}
     }
@@ -480,19 +500,11 @@ void
 TkpSync(display)
     Display *display;		/* Display to sync. */
 {
-    int numFound = 0;
-    XEvent event;
-
     XSync(display, False);
 
     /*
      * Transfer events from the X event queue to the Tk event queue.
      */
+    TransferXEventsToTcl(display);
 
-    numFound = XQLength(display);
-    while (numFound > 0) {
-	XNextEvent(display, &event);
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	numFound--;
-    }
 }

@@ -13,7 +13,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) unixFont.test 1.7 97/06/24 13:34:24
+# SCCS: @(#) unixFont.test 1.9 97/10/13 11:11:25
 
 if {$tcl_platform(platform)!="unix"} {
     return
@@ -233,12 +233,12 @@ test unixfont-8.3 {AllocFont procedure: can't parse info from name} {
 } {0}
 test unixfont-8.4 {AllocFont procedure: classify characters} {
     set x 0
-    incr x [font measure $courier "\001"]   ;# 4
+    incr x [font measure $courier "\u4000"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
     incr x [font measure $courier "\012"]   ;# 2
     incr x [font measure $courier "\101"]   ;# 1
     set x
-} [expr $cx*11]
+} [expr $cx*13]
 test unixfont-8.5 {AllocFont procedure: setup widths of normal chars} {
     font metrics $courier -fixed
 } {1}
@@ -281,7 +281,7 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {
 } {0 1 1 2}
 test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {
     .b.c dchars $t 0 end
-    .b.c insert $t 0 "0\1770"
+    .b.c insert $t 0 "0\0010"
     set x {}
     lappend x [.b.c index $t @[expr $ax*0],0]
     lappend x [.b.c index $t @[expr $ax*1],0]

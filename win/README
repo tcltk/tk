@@ -1,10 +1,10 @@
-Tk 8.0p2 for Windows
+Tk 8.1a2 for Windows
 
 by Scott Stanton
 Sun Microsystems Laboratories
 scott.stanton@eng.sun.com
 
-SCCS: @(#) README 1.20 97/11/21 15:17:54
+SCCS: @(#) README 1.22 98/02/18 18:03:07
 
 1. Introduction
 ---------------
@@ -17,7 +17,7 @@ contains information specific to the Windows version of Tk.
 2. Distribution notes
 ---------------------
 
-Tk 8.0 for Windows is distributed in binary form in addition to the
+Tk 8.1 for Windows is distributed in binary form in addition to the
 common source release.  The binary distribution is a self-extracting
 archive with a built-in installation script.
 
@@ -34,8 +34,8 @@ source distribution in order to build and use extensions.
 
 In order to compile Tk for Windows, you need the following items:
 
-	Tcl 8.0 Source Distribution (plus any patches)
-	Tk 8.0 Source Distribution (plus any patches)
+	Tcl 8.1 Source Distribution (plus any patches)
+	Tk 8.1 Source Distribution (plus any patches)
 
 	The latest Win32 SDK header files
 
@@ -58,24 +58,24 @@ find them.  Tk looks in one of two places for the library files:
 
 	1) The environment variable "TK_LIBRARY".
 
-	2) In the lib\tk8.0 directory under the Tcl installation directory
+	2) In the lib\tk8.1 directory under the Tcl installation directory
 	   as specified in the registry:
 
 		For Windows NT & 95:
-		    HKEY_LOCAL_MACHINE\SOFTWARE\Sun\Tcl\8.0
+		    HKEY_LOCAL_MACHINE\SOFTWARE\Sun\Tcl\8.1
 			Value Name is "Root"
 
 		For Win32s:
-		    HKEY_CLASSES_ROOT\SOFTWARE\Sun\Tcl\8.0\
+		    HKEY_CLASSES_ROOT\SOFTWARE\Sun\Tcl\8.1\
 
 	2) Relative to the directory containing the current .exe.
-	    Tk will look for a directory "..\lib\tk8.0" relative to the
+	    Tk will look for a directory "..\lib\tk8.1" relative to the
 	    directory containing the currently running .exe.
 
-Note that in order to run wish80.exe, you must ensure that tcl80.dll,
-tclpip80.dll (plus tcl1680.dll under Win32s), and tk80.dll are on your
+Note that in order to run wish81.exe, you must ensure that tcl81.dll,
+tclpip81.dll (plus tcl1681.dll under Win32s), and tk81.dll are on your
 path, in the system directory, or in the directory containing
-wish80.exe.
+wish81.exe.
 
 4. Test suite
 -------------
@@ -103,12 +103,10 @@ Windows beta version of Tk:
 - Color management on some displays doesn't work properly resulting in
   Tk switching to monochrome mode.
 - Tk seems to fail to draw anything on some Matrox Millenium cards.
-- Send and winfo interps are not currently supported
 - Printing does not work for images (e.g. GIF) on a canvas.
 - Tk_dialog appears in the upper left corner.  This is a symptom of a
   larger problem with "wm geometry" when applied to unmapped or
   iconified windows.
-- Some keys don't work on international keyboards.
 - Grabs do not affect native menus or the title bar.
 - PPM images are using the wrong translation mode for writing to
   files, resulting in CR/LF terminated PPM files.
@@ -116,9 +114,6 @@ Windows beta version of Tk:
   also doesn't consistently track changes in the system colors.
 
 If you have comments or bug reports for the Windows version of Tk,
-please direct them to:
-
-Scott Stanton
-scott.stanton@eng.sun.com
-
-or post them to the newsgroup comp.lang.tcl.
+please direct them to the comp.lang.tcl newsgroup or the wintcl
+mailing list (see http://sunscript.sun.com/win/wintcl-list.html for
+more information).

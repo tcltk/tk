@@ -7,7 +7,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) safe.test 1.15 97/08/13 16:05:17
+# SCCS: @(#) safe.test 1.20 98/02/19 15:12:48
 
 if {[info procs test] != "test"} {
     source defs
@@ -20,11 +20,11 @@ foreach i [winfo children .] {
 # The set of hidden commands is platform dependent:
 
 if {"$tcl_platform(platform)" == "macintosh"} {
-    set hidden_cmds {beep bell cd clipboard echo exit fconfigure file glob grab load ls menu open pwd selection socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+    set hidden_cmds {beep bell cd clipboard echo exit fconfigure file glob grab load ls menu open pwd selection send socket source tk tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile toplevel wm}
 } elseif {"$tcl_platform(platform)" == "windows"} {
     set hidden_cmds {bell cd clipboard exec exit fconfigure file glob grab load menu open pwd selection socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
 } else {
-    set hidden_cmds {bell cd clipboard exec exit fconfigure file glob grab load menu open pwd selection send socket source tk tk_chooseColor tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+    set hidden_cmds {bell cd clipboard exec exit fconfigure file glob grab load menu open pwd selection send socket source tk toplevel wm}
 }
 
 test safe-1.1 {Safe Tk loading into an interpreter} {
@@ -118,5 +118,59 @@ test safe-4.2 {testing loadTk -use} {
     safe::interpDelete $i
     destroy $w
 } {}
+
+test safe-5.1 {loading Tk in safe interps without master's clearance} {
+    set i [safe::interpCreate]
+    catch {interp eval $i {load {} Tk}} msg
+    safe::interpDelete $i
+    set msg
+} {not allowed to start Tk by master's safe::TkInit}
+
+test safe-5.2 {multi-level Tk loading with clearance} {
+    # No error shall occur in that test and no window
+    # shall remain at the end.
+    set i [safe::interpCreate]
+    set j [list $i x]
+    set j [safe::interpCreate $j]
+    safe::loadTk $j
+    interp eval $j {
+	button .b -text Ok -command {destroy .}
+	pack .b
+#	tkwait window . ; # for interactive testing/debugging
+    }
+    safe::interpDelete $j
+    safe::interpDelete $i
+} {}
+
+test safe-6.1 {loadTk -use windowPath} {
+    set w .safeTkFrame
+    catch {destroy $w}
+    frame $w -container 1;
+    pack .safeTkFrame
+    set i [safe::loadTk [safe::interpCreate] -use $w]
+    interp eval $i {button .b -text "hello world!"; pack .b}
+    safe::interpDelete $i
+    destroy $w
+} {}
+
+test safe-6.2 {loadTk -use windowPath, conflicting -display} {
+    set w .safeTkFrame
+    catch {destroy $w}
+    frame $w -container 1;
+    pack .safeTkFrame
+    set i     [safe::interpCreate]
+    catch {safe::loadTk $i -use $w -display :23.56} msg
+    safe::interpDelete $i
+    destroy $w
+    string range $msg 0 36
+} {conflicting -display :23.56 and -use }
+
+
+test safe-7.1 {canvas printing} {
+    set i [safe::loadTk [safe::interpCreate]]
+    set r [catch {interp eval $i {canvas .c; .c postscript}}]
+    safe::interpDelete $i
+    set r
+} 0
 
 unset hidden_cmds

@@ -6,12 +6,12 @@
  *	one application can use as its main window an internal window from
  *	another application).
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright (c) 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinEmbed.c 1.20 97/11/05 17:47:09;
+ * SCCS: @(#) tkWinEmbed.c 1.21 97/11/07 21:59:08;
  */
 
 #include "tkWinInt.h"
@@ -126,7 +126,7 @@ TkpTestembedCmd(clientData, interp, argc, argv)
  *	The return value is normally TCL_OK. If an error occurred (such as
  *	if the argument does not identify a legal Windows window handle),
  *	the return value is TCL_ERROR and an error message is left in the
- *	interp->result if interp is not NULL.
+ *	the interp's result if interp is not NULL.
  *
  * Side effects:
  *	None.
@@ -159,7 +159,8 @@ TkpUseWindow(interp, tkwin, string)
 
     /*
      * Check if the window is a valid handle. If it is invalid, return
-     * TCL_ERROR and potentially leave an error message in interp->result.
+     * TCL_ERROR and potentially leave an error message in the interp's
+     * result.
      */
 
     if (!IsWindow(hwnd)) {

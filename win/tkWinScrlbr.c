@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinScrlbr.c 1.19 97/08/13 17:37:49
+ * SCCS: @(#) tkWinScrlbr.c 1.20 97/11/07 21:25:53
  */
 
 #include "tkWinInt.h"
@@ -62,7 +62,7 @@ static int vArrowWidth, vArrowHeight, vThumb; /* Vertical control metrics. */
  * form for use in a Tk_ConfigSpec.
  */
 
-static char defWidth[8];
+static char defWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declarations for functions defined in this file.

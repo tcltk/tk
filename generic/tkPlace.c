@@ -5,12 +5,12 @@
  *	for Tk based on absolute placement or "rubber-sheet" placement.
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkPlace.c 1.27 96/08/20 17:05:31
+ * SCCS: @(#) tkPlace.c 1.28 97/11/07 21:17:41
  */
 
 #include "tkPort.h"
@@ -243,7 +243,7 @@ Tk_PlaceCmd(clientData, interp, argc, argv)
 	Tk_UnmapWindow(tkwin);
 	ckfree((char *) slavePtr);
     } else if ((c == 'i') && (strncmp(argv[1], "info", length) == 0)) {
-	char buffer[50];
+	char buffer[32 + TCL_INTEGER_SPACE];
 
 	if (argc != 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -467,7 +467,7 @@ FindMaster(tkwin)
  *
  * Results:
  *	A standard Tcl result.  If an error occurs then a message is
- *	left in interp->result.
+ *	left in the interp's result.
  *
  * Side effects:
  *	Information in slavePtr may change, and slavePtr's master is

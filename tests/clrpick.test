@@ -6,7 +6,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# @(#) clrpick.test 1.9 97/10/21 11:29:53
+# @(#) clrpick.test 1.10 97/10/29 10:33:44
 #
 
 if {[string compare test [info procs test]] == 1} {
@@ -15,9 +15,9 @@ if {[string compare test [info procs test]] == 1} {
 
 test clrpick-1.1 {tk_chooseColor command} {
     list [catch {tk_chooseColor -foo} msg] $msg
-} {1 {unknown option "-foo", must be -initialcolor, -parent or -title}}
+} {1 {bad option "-foo": must be -initialcolor, -parent, or -title}}
 
-catch {tk_chooseColor -foo} msg
+catch {tk_chooseColor -foo 1} msg
 regsub -all ,      $msg "" options
 regsub \"-foo\" $options "" options
 
@@ -31,7 +31,7 @@ foreach option $options {
 
 test clrpick-1.3 {tk_chooseColor command} {
     list [catch {tk_chooseColor -foo bar} msg] $msg
-} {1 {unknown option "-foo", must be -initialcolor, -parent or -title}}
+} {1 {bad option "-foo": must be -initialcolor, -parent, or -title}}
 
 test clrpick-1.4 {tk_chooseColor command} {
     list [catch {tk_chooseColor -initialcolor} msg] $msg

@@ -3,12 +3,12 @@
  *
  *	This file contains functions for managing the clipboard.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkWinClipboard.c 1.8 97/05/20 17:01:13
+ * SCCS: @(#) tkWinClipboard.c 1.9 97/11/07 21:25:49
  */
 
 #include "tkWinInt.h"
@@ -27,7 +27,7 @@
  * Results:
  *	The return value is a standard Tcl return value.
  *	If an error occurs (such as no selection exists)
- *	then an error message is left in interp->result.
+ *	then an error message is left in the interp's result.
  *
  * Side effects:
  *	None.
