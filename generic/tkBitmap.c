@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.1.4.5 1999/03/30 04:11:56 stanton Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.1.4.6 1999/03/30 23:56:54 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -347,8 +347,14 @@ GetBitmap(interp, tkwin, string)
                     " safe interpreter", (char *) NULL);
             goto error;
         }
-        
-	string = Tcl_TranslateFileName(interp, string + 1, &buffer);
+
+	/*
+	 * Note that we need to cast away the CONST from the string because
+	 * Tcl_TranslateFileName is non const, even though it doesn't modify
+	 * the string.
+	 */
+
+	string = Tcl_TranslateFileName(interp, (char *) string + 1, &buffer);
 	if (string == NULL) {
 	    goto error;
 	}

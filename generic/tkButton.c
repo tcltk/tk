@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.1.4.5 1999/02/16 06:00:40 lfb Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.1.4.6 1999/03/30 23:56:55 stanton Exp $
  */
 
 #include "tkButton.h"
@@ -977,7 +977,7 @@ ConfigureButton(interp, butPtr, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;
-    Tcl_Obj *errorResult;
+    Tcl_Obj *errorResult = NULL;
     int error;
     Tk_Image image;
 

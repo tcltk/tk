@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.6 1999/02/16 06:00:41 lfb Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.1.4.7 1999/03/30 23:56:57 stanton Exp $
  */
 
 #include "tkMenubutton.h"
@@ -498,7 +498,7 @@ ConfigureMenuButton(interp, mbPtr, objc, objv)
     Tcl_Obj *CONST objv[];	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
-    Tcl_Obj *errorResult;
+    Tcl_Obj *errorResult = NULL;
     int error;
     Tk_Image image;
 

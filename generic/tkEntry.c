@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.1.4.5 1999/03/30 04:12:56 stanton Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.1.4.6 1999/03/30 23:56:56 stanton Exp $
  */
 
 #include "tkInt.h"
@@ -1049,7 +1049,7 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    Tcl_Obj *errorResult;
+    Tcl_Obj *errorResult = NULL;
     int error;
     int oldExport;
 

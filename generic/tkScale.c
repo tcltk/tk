@@ -17,7 +17,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.1.4.7 1999/03/26 19:14:46 hershey Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.1.4.8 1999/03/30 23:56:57 stanton Exp $
  */
 
 #include "tkPort.h"
@@ -582,7 +582,7 @@ ConfigureScale(interp, scalePtr, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;
-    Tcl_Obj *errorResult;
+    Tcl_Obj *errorResult = NULL;
     int error;
     char *label;
 
