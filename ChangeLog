@@ -1,3 +1,8 @@
+2004-07-13  Don Porter  <dgp@users.sourceforge.net>
+
+	* library/tkfbox.tcl: Corrected coding errors in most recent change.
+	Use [bind $w], not [$w configure] to modify bindings.
+
 2004-07-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/tkfbox.tcl (::tk::dialog::file::Create): Watch out for
