@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.6 2004/11/11 01:24:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.7 2005/01/25 06:54:18 das Exp $
  */
 
 #include "tkInt.h"
@@ -174,11 +174,12 @@ TkpInit(interp)
                 Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
                 Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
                 Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
-                if (Tk_CreateConsoleWindow(interp) == TCL_OK) {
-                    /* Only show the console if we don't have a startup script */
-                    if (Tcl_GetStartupScript(NULL) == NULL) {
-                        Tcl_Eval(interp, "console show");
-                    }
+                /* Only show the console if we don't have a startup script */
+                if (Tcl_GetStartupScript(NULL) == NULL) {
+                    Tcl_SetVar(interp, "tcl_interactive", "1", TCL_GLOBAL_ONLY);
+                }
+                if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
+                    return TCL_ERROR;
                 }
             }
         }
