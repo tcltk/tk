@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.28 2003/11/14 17:21:03 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.29 2003/11/15 02:33:50 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -232,10 +232,9 @@ typedef struct TextDInfo {
      * Information used for scrolling:
      */
 
-    int newXByteOffset;		/* Desired x scroll position, measured as the
-				 * number of average-size characters off-screen
-				 * to the left for a line with no left
-				 * margin. */
+    int newXPixelOffset;	/* Desired x scroll position, measured as the
+				 * number of pixels off-screen to the left 
+				 * for a line with no left margin. */
     int curXPixelOffset;	/* Actual x scroll position, measured as the
 				 * number of pixels off-screen to the left. */
     int maxLength;		/* Length in pixels of longest line that's
@@ -255,9 +254,8 @@ typedef struct TextDInfo {
      * The following information is used to implement scanning:
      */
 
-    int scanMarkIndex;		/* Byte index of character that was at the
-				 * left edge of the window when the scan
-				 * started. */
+    int scanMarkXPixel;		/* Pixel index of left edge of the window 
+                       		 * when the scan started. */
     int scanMarkX;		/* X-position of mouse at time scan started. */
     int scanTotalYScroll;	/* Total scrolling (in screen pixels) that has
 				 * occurred since scanMarkY was set. */
@@ -495,14 +493,14 @@ TkTextCreateDInfo(textPtr)
     dInfoPtr->scrollGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures,
 	    &gcValues);
     dInfoPtr->topOfEof = 0;
-    dInfoPtr->newXByteOffset = 0;
+    dInfoPtr->newXPixelOffset = 0;
     dInfoPtr->curXPixelOffset = 0;
     dInfoPtr->maxLength = 0;
     dInfoPtr->xScrollFirst = -1;
     dInfoPtr->xScrollLast = -1;
     dInfoPtr->yScrollFirst = -1;
     dInfoPtr->yScrollLast = -1;
-    dInfoPtr->scanMarkIndex = 0;
+    dInfoPtr->scanMarkXPixel = 0;
     dInfoPtr->scanMarkX = 0;
     dInfoPtr->scanTotalYScroll = 0;
     dInfoPtr->scanMarkY = 0;
@@ -1861,15 +1859,29 @@ UpdateDisplayInfo(textPtr)
 	    dInfoPtr->maxLength = dlPtr->length;
 	}
     }
-    maxOffset = (dInfoPtr->maxLength - (dInfoPtr->maxX - dInfoPtr->x)
-	    + textPtr->charWidth - 1)/textPtr->charWidth;
-    if (dInfoPtr->newXByteOffset > maxOffset) {
-	dInfoPtr->newXByteOffset = maxOffset;
+    maxOffset = dInfoPtr->maxLength - (dInfoPtr->maxX - dInfoPtr->x);
+
+    xPixelOffset = dInfoPtr->newXPixelOffset;
+    if (xPixelOffset > maxOffset) {
+	xPixelOffset = maxOffset;
     }
-    if (dInfoPtr->newXByteOffset < 0) {
-	dInfoPtr->newXByteOffset = 0;
+    if (xPixelOffset < 0) {
+	xPixelOffset = 0;
     }
-    xPixelOffset = dInfoPtr->newXByteOffset * textPtr->charWidth;
+    
+    /* 
+     * Here's a problem: see the tests textDisp-29.2.1-4
+     * 
+     * If the widget is being created, but has not yet been configured
+     * it will have a maxY of 1 above, and we we won't have examined
+     * all the lines (just the first line, in fact), and so maxOffset
+     * will not be a true reflection of the widget's lines.  Therefore
+     * we must not overwrite the original newXPixelOffset in this case.
+     */
+    if (!(((Tk_FakeWin *) (textPtr->tkwin))->flags & TK_NEED_CONFIG_NOTIFY)) {
+	dInfoPtr->newXPixelOffset = xPixelOffset;
+    }
+    
     if (xPixelOffset != dInfoPtr->curXPixelOffset) {
 	dInfoPtr->curXPixelOffset = xPixelOffset;
 	for (dlPtr = dInfoPtr->dLinePtr; dlPtr != NULL;
@@ -2689,7 +2701,7 @@ TkTextInvalidateLineMetrics(textPtr, linePtr, lineCount, action)
 	fromLine = TkBTreeLineIndex(linePtr);
 
 	/* 
-	 * Invalid the height calculations of each line in the
+	 * Invalidate the height calculations of each line in the
 	 * given range.
 	 */
 	linePtr->pixelCalculationEpoch = 0;
@@ -3923,7 +3935,7 @@ TkTextRedrawTag(textPtr, index1Ptr, index2Ptr, tagPtr, withTag)
 	    lineCount -= TkBTreeLineIndex(startLine);
 	}
 	TkTextInvalidateLineMetrics(textPtr, startLine, lineCount, 
-		TK_TEXT_INVALIDATE_ONLY);
+				    TK_TEXT_INVALIDATE_ONLY);
     }
 
     /*
@@ -4124,6 +4136,9 @@ TkTextRelayoutWindow(textPtr, mask)
     if (dInfoPtr->maxX <= dInfoPtr->x) {
 	dInfoPtr->maxX = dInfoPtr->x + 1;
     }
+    /* 
+     * This is the only place where dInfoPtr->maxY is set.
+     */
     dInfoPtr->maxY = Tk_Height(textPtr->tkwin) - textPtr->highlightWidth
 	    - textPtr->borderWidth - textPtr->padY;
     if (dInfoPtr->maxY <= dInfoPtr->y) {
@@ -4630,21 +4645,17 @@ TkTextSeeCmd(textPtr, interp, objc, objv)
 	oneThird = lineWidth/3;
 	if (delta < 0) {
 	    if (delta < -oneThird) {
-		dInfoPtr->newXByteOffset = (x - lineWidth/2)
-			/ textPtr->charWidth;
+		dInfoPtr->newXPixelOffset = (x - lineWidth/2);
 	    } else {
-		dInfoPtr->newXByteOffset -= ((-delta) + textPtr->charWidth - 1)
-			/ textPtr->charWidth;
+		dInfoPtr->newXPixelOffset -= ((-delta) );
 	    }
 	} else {
 	    delta -= (lineWidth - width);
 	    if (delta > 0) {
 		if (delta > oneThird) {
-		    dInfoPtr->newXByteOffset = (x - lineWidth/2)
-			    / textPtr->charWidth;
+		    dInfoPtr->newXPixelOffset = (x - lineWidth/2);
 		} else {
-		    dInfoPtr->newXByteOffset +=
-			     (delta+textPtr->charWidth-1) / textPtr->charWidth;
+		    dInfoPtr->newXPixelOffset += (delta );
 		}
 	    } else {
 		return TCL_OK;
@@ -4699,34 +4710,36 @@ TkTextXviewCmd(textPtr, interp, objc, objv)
 	return TCL_OK;
     }
 
-    newOffset = dInfoPtr->newXByteOffset;
-    type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
+    newOffset = dInfoPtr->newXPixelOffset;
+    type = TextGetScrollInfoObj(interp, textPtr, objc, objv, 
+				&fraction, &count);
     switch (type) {
-	case TK_SCROLL_ERROR:
+	case TKTEXT_SCROLL_ERROR:
 	    return TCL_ERROR;
-	case TK_SCROLL_MOVETO:
+	case TKTEXT_SCROLL_MOVETO:
 	    if (fraction > 1.0) {
 		fraction = 1.0;
 	    }
 	    if (fraction < 0) {
 		fraction = 0;
 	    }
-	    newOffset = (int) (((fraction * dInfoPtr->maxLength) 
-				/ textPtr->charWidth) + 0.5);
+	    newOffset = (int) (fraction * dInfoPtr->maxLength + 0.5);
 	    break;
-	case TK_SCROLL_PAGES:
+	case TKTEXT_SCROLL_PAGES:
 	    charsPerPage = (dInfoPtr->maxX-dInfoPtr->x)/textPtr->charWidth - 2;
 	    if (charsPerPage < 1) {
 		charsPerPage = 1;
 	    }
-	    newOffset += charsPerPage * count;
+	    newOffset += charsPerPage * count * textPtr->charWidth;
 	    break;
-	case TK_SCROLL_UNITS:
+	case TKTEXT_SCROLL_UNITS:
+	    newOffset += count * textPtr->charWidth;
+	    break;
+	case TKTEXT_SCROLL_PIXELS:
 	    newOffset += count;
 	    break;
     }
-
-    dInfoPtr->newXByteOffset = newOffset;
+    dInfoPtr->newXPixelOffset = newOffset;
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	dInfoPtr->flags |= REDRAW_PENDING;
@@ -5106,7 +5119,7 @@ TkTextScanCmd(textPtr, interp, objc, objv)
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
-    int c, x, y, totalScroll, newByte, maxByte, gain=10;
+    int c, x, y, totalScroll, gain=10;
     size_t length;
 
     if ((objc != 5) && (objc != 6)) {
@@ -5128,6 +5141,8 @@ TkTextScanCmd(textPtr, interp, objc, objv)
     c = Tcl_GetString(objv[2])[0];
     length = strlen(Tcl_GetString(objv[2]));
     if (c=='d' && strncmp(Tcl_GetString(objv[2]), "dragto", length)==0) {
+	int newX, maxX;
+	
 	/*
 	 * Amplify the difference between the current position and the
 	 * mark position to compute how much the view should shift, then
@@ -5140,20 +5155,18 @@ TkTextScanCmd(textPtr, interp, objc, objv)
 	 * moving again).
 	 */
 
-	newByte = dInfoPtr->scanMarkIndex + (gain*(dInfoPtr->scanMarkX - x))
-		/ (textPtr->charWidth);
-	maxByte = 1 + (dInfoPtr->maxLength - (dInfoPtr->maxX - dInfoPtr->x)
-		+ textPtr->charWidth - 1)/textPtr->charWidth;
-	if (newByte < 0) {
-	    newByte = 0;
-	    dInfoPtr->scanMarkIndex = 0;
+	newX = dInfoPtr->scanMarkXPixel + gain*(dInfoPtr->scanMarkX - x);
+	maxX = 1 + dInfoPtr->maxLength - (dInfoPtr->maxX - dInfoPtr->x);
+	if (newX < 0) {
+	    newX = 0;
+	    dInfoPtr->scanMarkXPixel = 0;
 	    dInfoPtr->scanMarkX = x;
-	} else if (newByte > maxByte) {
-	    newByte = maxByte;
-	    dInfoPtr->scanMarkIndex = maxByte;
+	} else if (newX > maxX) {
+	    newX = maxX;
+	    dInfoPtr->scanMarkXPixel = maxX;
 	    dInfoPtr->scanMarkX = x;
 	}
-	dInfoPtr->newXByteOffset = newByte;
+	dInfoPtr->newXPixelOffset = newX;
 
 	totalScroll = gain*(dInfoPtr->scanMarkY - y);
 	if (totalScroll != dInfoPtr->scanTotalYScroll) {
@@ -5167,7 +5180,7 @@ TkTextScanCmd(textPtr, interp, objc, objv)
 	    }
 	}
     } else if (c=='m' && strncmp(Tcl_GetString(objv[2]), "mark", length)==0) {
-	dInfoPtr->scanMarkIndex = dInfoPtr->newXByteOffset;
+	dInfoPtr->scanMarkXPixel = dInfoPtr->newXPixelOffset;
 	dInfoPtr->scanMarkX = x;
 	dInfoPtr->scanTotalYScroll = 0;
 	dInfoPtr->scanMarkY = y;
