@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.15 2003/12/05 17:19:06 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.16 2003/12/09 13:43:35 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -990,6 +990,8 @@ TkTextFreeTag(textPtr, tagPtr)
     TkText *textPtr;			/* Info about overall widget. */
     register TkTextTag *tagPtr;		/* Tag being deleted. */
 {
+    int i;
+    
     /* Let Tk do most of the hard work for us */
     Tk_FreeConfigOptions((char *) tagPtr, tagPtr->optionTable,
 			 textPtr->tkwin);
@@ -997,6 +999,18 @@ TkTextFreeTag(textPtr, tagPtr)
     if (tagPtr->tabArrayPtr != NULL) {
 	ckfree((char *) tagPtr->tabArrayPtr);
     }
+    /* Make sure this tag isn't referenced from the 'current' tag array */
+    for (i = 0; i < textPtr->numCurTags; i++) {
+	if (textPtr->curTagArrayPtr[i] == tagPtr) {
+	    for (; i < textPtr->numCurTags-1; i++) {
+		textPtr->curTagArrayPtr[i] = textPtr->curTagArrayPtr[i+1];
+	    }
+	    textPtr->curTagArrayPtr[textPtr->numCurTags] = NULL;
+	    textPtr->numCurTags--;
+	    break;
+	}
+    }
+    /* Finally free the tag's memory */
     ckfree((char *) tagPtr);
 }
 
