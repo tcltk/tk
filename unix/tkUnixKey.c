@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.2 1999/04/16 01:51:46 stanton Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.3 1999/12/16 21:59:13 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -53,7 +53,8 @@ TkpGetString(winPtr, eventPtr, dsPtr)
     Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
     
 #ifdef TK_USE_INPUT_METHODS
-    if ((winPtr->inputContext != NULL)
+    if (winPtr->dispPtr->useInputMethods
+	    && (winPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
@@ -67,8 +68,7 @@ TkpGetString(winPtr, eventPtr, dsPtr)
 	    len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
 		    Tcl_DStringValue(&buf), len, (KeySym *) NULL, &status);
 	}
-	if ((status != XLookupChars)
-		&& (status != XLookupBoth)) {
+	if ((status != XLookupChars) && (status != XLookupBoth)) {
 	    len = 0;
 	}
     } else {
