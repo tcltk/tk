@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.1.2.1 1999/03/06 00:08:06 redman Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.1.2.2 1999/03/06 01:54:59 redman Exp $
  */
 
 #include "tkInt.h"
@@ -380,12 +380,11 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkCreateXEventSource, /* 0 */
     TkFreeWindowId, /* 1 */
     TkInitXId, /* 2 */
-    TkpGetContainer, /* 3 */
-    TkpCmapStressed, /* 4 */
-    TkpSync, /* 5 */
-    TkUnixContainerId, /* 6 */
-    TkUnixDoOneXEvent, /* 7 */
-    TkUnixSetMenubar, /* 8 */
+    TkpCmapStressed, /* 3 */
+    TkpSync, /* 4 */
+    TkUnixContainerId, /* 5 */
+    TkUnixDoOneXEvent, /* 6 */
+    TkUnixSetMenubar, /* 7 */
 #endif /* UNIX */
 #ifdef MAC_TCL
     TkClipBox, /* 0 */

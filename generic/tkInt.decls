@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.1.2.1 1999/03/06 00:08:03 redman Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.1.2.2 1999/03/06 01:54:58 redman Exp $
 
 library tk
 
@@ -480,26 +480,22 @@ declare 2 unix {
 }
 
 declare 3 unix {
-    TkWindow * TkpGetContainer (TkWindow *embeddedPtr)
-}
+    int TkpCmapStressed (Tk_Window tkwin, Colormap colormap)}
+
 
 declare 4 unix {
-    int TkpCmapStressed (Tk_Window tkwin, Colormap colormap)
-}
-
-declare 5 unix {
     void TkpSync (Display *display)
 }
 
-declare 6 unix {
+declare 5 unix {
     Window TkUnixContainerId (TkWindow *winPtr)
 }
 
-declare 7 unix {
+declare 6 unix {
     int TkUnixDoOneXEvent (Tcl_Time *timePtr)
 }
 
-declare 8 unix {
+declare 7 unix {
     void TkUnixSetMenubar (Tk_Window tkwin, Tk_Window menubar)
 }
 	

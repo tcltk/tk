@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.1.2.1 1999/03/06 00:08:04 redman Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.1.2.2 1999/03/06 01:54:59 redman Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -160,17 +160,15 @@ EXTERN void		TkFreeWindowId _ANSI_ARGS_((TkDisplay * dispPtr,
 /* 2 */
 EXTERN void		TkInitXId _ANSI_ARGS_((TkDisplay * dispPtr));
 /* 3 */
-EXTERN TkWindow *	TkpGetContainer _ANSI_ARGS_((TkWindow * embeddedPtr));
-/* 4 */
 EXTERN int		TkpCmapStressed _ANSI_ARGS_((Tk_Window tkwin, 
 				Colormap colormap));
-/* 5 */
+/* 4 */
 EXTERN void		TkpSync _ANSI_ARGS_((Display * display));
-/* 6 */
+/* 5 */
 EXTERN Window		TkUnixContainerId _ANSI_ARGS_((TkWindow * winPtr));
-/* 7 */
+/* 6 */
 EXTERN int		TkUnixDoOneXEvent _ANSI_ARGS_((Tcl_Time * timePtr));
-/* 8 */
+/* 7 */
 EXTERN void		TkUnixSetMenubar _ANSI_ARGS_((Tk_Window tkwin, 
 				Tk_Window menubar));
 #endif /* UNIX */
@@ -417,12 +415,11 @@ typedef struct TkIntPlatStubs {
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 0 */
     void (*tkFreeWindowId) _ANSI_ARGS_((TkDisplay * dispPtr, Window w)); /* 1 */
     void (*tkInitXId) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 2 */
-    TkWindow * (*tkpGetContainer) _ANSI_ARGS_((TkWindow * embeddedPtr)); /* 3 */
-    int (*tkpCmapStressed) _ANSI_ARGS_((Tk_Window tkwin, Colormap colormap)); /* 4 */
-    void (*tkpSync) _ANSI_ARGS_((Display * display)); /* 5 */
-    Window (*tkUnixContainerId) _ANSI_ARGS_((TkWindow * winPtr)); /* 6 */
-    int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time * timePtr)); /* 7 */
-    void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 8 */
+    int (*tkpCmapStressed) _ANSI_ARGS_((Tk_Window tkwin, Colormap colormap)); /* 3 */
+    void (*tkpSync) _ANSI_ARGS_((Display * display)); /* 4 */
+    Window (*tkUnixContainerId) _ANSI_ARGS_((TkWindow * winPtr)); /* 5 */
+    int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time * timePtr)); /* 6 */
+    void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 7 */
 #endif /* UNIX */
 #ifdef MAC_TCL
     void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle* rect_return)); /* 0 */
@@ -698,29 +695,25 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkInitXId(dispPtr) \
 	(tkIntPlatStubsPtr->tkInitXId)(dispPtr) /* 2 */
 #endif
-#ifndef TkpGetContainer
-#define TkpGetContainer(embeddedPtr) \
-	(tkIntPlatStubsPtr->tkpGetContainer)(embeddedPtr) /* 3 */
-#endif
 #ifndef TkpCmapStressed
 #define TkpCmapStressed(tkwin, colormap) \
-	(tkIntPlatStubsPtr->tkpCmapStressed)(tkwin, colormap) /* 4 */
+	(tkIntPlatStubsPtr->tkpCmapStressed)(tkwin, colormap) /* 3 */
 #endif
 #ifndef TkpSync
 #define TkpSync(display) \
-	(tkIntPlatStubsPtr->tkpSync)(display) /* 5 */
+	(tkIntPlatStubsPtr->tkpSync)(display) /* 4 */
 #endif
 #ifndef TkUnixContainerId
 #define TkUnixContainerId(winPtr) \
-	(tkIntPlatStubsPtr->tkUnixContainerId)(winPtr) /* 6 */
+	(tkIntPlatStubsPtr->tkUnixContainerId)(winPtr) /* 5 */
 #endif
 #ifndef TkUnixDoOneXEvent
 #define TkUnixDoOneXEvent(timePtr) \
-	(tkIntPlatStubsPtr->tkUnixDoOneXEvent)(timePtr) /* 7 */
+	(tkIntPlatStubsPtr->tkUnixDoOneXEvent)(timePtr) /* 6 */
 #endif
 #ifndef TkUnixSetMenubar
 #define TkUnixSetMenubar(tkwin, menubar) \
-	(tkIntPlatStubsPtr->tkUnixSetMenubar)(tkwin, menubar) /* 8 */
+	(tkIntPlatStubsPtr->tkUnixSetMenubar)(tkwin, menubar) /* 7 */
 #endif
 #endif /* UNIX */
 #ifdef MAC_TCL
