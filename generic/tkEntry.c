@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.14.2.1 2001/04/04 07:57:16 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.14.2.2 2001/08/24 23:57:46 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -500,10 +500,13 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     /*
      * Initialize the fields of the structure that won't be initialized
      * by ConfigureEntry, or that ConfigureEntry requires to be
-     * initialized already (e.g. resource pointers).
+     * initialized already (e.g. resource pointers).  Only the non-NULL/0
+     * data must be initialized as memset covers the rest.
      */
 
     entryPtr			= (Entry *) ckalloc(sizeof(Entry));
+    memset((VOID *) entryPtr, 0, sizeof(Entry));
+
     entryPtr->tkwin		= tkwin;
     entryPtr->display		= Tk_Display(tkwin);
     entryPtr->interp		= interp;
@@ -513,57 +516,28 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->optionTable	= optionTable;
     entryPtr->string		= (char *) ckalloc(1);
     entryPtr->string[0]		= '\0';
-    entryPtr->insertPos		= 0;
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
-    entryPtr->selectAnchor	= 0;
-    entryPtr->scanMarkX		= 0;
-    entryPtr->scanMarkIndex	= 0;
 
-    entryPtr->normalBorder	= NULL;
-    entryPtr->borderWidth	= 0;
     entryPtr->cursor		= None;
     entryPtr->exportSelection	= 1;
-    entryPtr->tkfont		= NULL;
-    entryPtr->fgColorPtr	= NULL;
-    entryPtr->highlightBgColorPtr	= NULL;
-    entryPtr->highlightColorPtr	= NULL;
-    entryPtr->highlightWidth	= 0;
-    entryPtr->insertBorder	= NULL;
-    entryPtr->insertBorderWidth	= 0;
-    entryPtr->insertOffTime	= 0;
-    entryPtr->insertOnTime	= 0;
-    entryPtr->insertWidth	= 0;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
-    entryPtr->selBorder		= NULL;
-    entryPtr->selBorderWidth	= 0;
-    entryPtr->selFgColorPtr	= NULL;
-    entryPtr->showChar		= NULL;
     entryPtr->state		= STATE_NORMAL;
-    entryPtr->textVarName	= NULL;
-    entryPtr->takeFocus		= NULL;
-    entryPtr->prefWidth		= 0;
-    entryPtr->scrollCmd		= NULL;
-    entryPtr->numBytes		= 0;
-    entryPtr->numChars		= 0;
     entryPtr->displayString	= entryPtr->string;
-    entryPtr->numDisplayBytes	= 0;
     entryPtr->inset		= XPAD;
-    entryPtr->textLayout	= NULL;
-    entryPtr->layoutX		= 0;
-    entryPtr->layoutY		= 0;
-    entryPtr->leftX		= 0;
-    entryPtr->leftIndex		= 0;
-    entryPtr->insertBlinkHandler	= (Tcl_TimerToken) NULL;
     entryPtr->textGC		= None;
     entryPtr->selTextGC		= None;
     entryPtr->highlightGC	= None;
     entryPtr->avgWidth		= 1;
-    entryPtr->flags		= 0;
-    entryPtr->validateCmd	= NULL;
     entryPtr->validate		= VALIDATE_NONE;
-    entryPtr->invalidCmd	= NULL;
+
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) entryPtr->tkwin);
 
     Tk_SetClass(entryPtr->tkwin, "Entry");
     TkSetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
@@ -617,7 +591,6 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) entryPtr);
 
     /* 
      * Parse the widget command by looking up the second token in
@@ -630,6 +603,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	return result;
     }
 
+    Tcl_Preserve((ClientData) entryPtr);
     switch (cmdIndex) {
         case COMMAND_BBOX: {
 	    int index, x, y, width, height;
@@ -1069,15 +1043,9 @@ DestroyEntry(memPtr)
     Tk_FreeTextLayout(entryPtr->textLayout);
     Tk_FreeConfigOptions((char *) entryPtr, entryPtr->optionTable,
 	    entryPtr->tkwin);
+    Tcl_Release((ClientData) entryPtr->tkwin);
     entryPtr->tkwin = NULL;
 
-    /*
-     * Tcl_EventuallyFree should be used here or better yet in the
-     * DestroyNotify branch of EntryEventProc.  However, that can lead
-     * complications in Tk_FreeConfigOptions where the display for the
-     * entry has been deleted by Tk_DestroyWindow, which is needed
-     * when freeing the cursor option. 
-     */
     ckfree((char *) entryPtr);
 }
 
@@ -1343,16 +1311,20 @@ DisplayEntry(clientData)
 
     if (entryPtr->flags & UPDATE_SCROLLBAR) {
 	entryPtr->flags &= ~UPDATE_SCROLLBAR;
+
+        /*
+	 * Preserve/Release because updating the scrollbar can have
+	 * the side-effect of destroying or unmapping the entry widget.
+	 */
+
+	Tcl_Preserve((ClientData) entryPtr);
 	EntryUpdateScrollbar(entryPtr);
-    }
 
-    /*
-     * We do this check twice because updating the scrollbar can have
-     * the side-effect of destroying or unmapping the entry widget.
-     */
-
-    if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
-	return;
+	if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) entryPtr);
+	    return;
+	}
+	Tcl_Release((ClientData) entryPtr);
     }
 
     /*
@@ -2029,33 +2001,36 @@ EntryEventProc(clientData, eventPtr)
     XEvent *eventPtr;		/* Information about event. */
 {
     Entry *entryPtr = (Entry *) clientData;
-    if (eventPtr->type == Expose) {
-	EventuallyRedraw(entryPtr);
-	entryPtr->flags |= BORDER_NEEDED;
-    } else if (eventPtr->type == DestroyNotify) {
-	if (!(entryPtr->flags & ENTRY_DELETED)) {
-	    entryPtr->flags |= (ENTRY_DELETED | VALIDATE_ABORT);
-	    Tcl_DeleteCommandFromToken(entryPtr->interp,
-		    entryPtr->widgetCmd);
-	    if (entryPtr->flags & REDRAW_PENDING) {
-		Tcl_CancelIdleCall(DisplayEntry, clientData);
+
+    switch (eventPtr->type) {
+	case Expose:
+	    EventuallyRedraw(entryPtr);
+	    entryPtr->flags |= BORDER_NEEDED;
+	    break;
+	case DestroyNotify:
+	    if (!(entryPtr->flags & ENTRY_DELETED)) {
+		entryPtr->flags |= (ENTRY_DELETED | VALIDATE_ABORT);
+		Tcl_DeleteCommandFromToken(entryPtr->interp,
+			entryPtr->widgetCmd);
+		if (entryPtr->flags & REDRAW_PENDING) {
+		    Tcl_CancelIdleCall(DisplayEntry, clientData);
+		}
+		Tcl_EventuallyFree(clientData, DestroyEntry);
 	    }
-	    DestroyEntry((char *) entryPtr);
-	}
-    } else if (eventPtr->type == ConfigureNotify) {
-	Tcl_Preserve((ClientData) entryPtr);
-	entryPtr->flags |= UPDATE_SCROLLBAR;
-	EntryComputeGeometry(entryPtr);
-	EventuallyRedraw(entryPtr);
-	Tcl_Release((ClientData) entryPtr);
-    } else if (eventPtr->type == FocusIn) {
-	if (eventPtr->xfocus.detail != NotifyInferior) {
-	    EntryFocusProc(entryPtr, 1);
-	}
-    } else if (eventPtr->type == FocusOut) {
-	if (eventPtr->xfocus.detail != NotifyInferior) {
-	    EntryFocusProc(entryPtr, 0);
-	}
+	    break;
+	case ConfigureNotify:
+	    Tcl_Preserve((ClientData) entryPtr);
+	    entryPtr->flags |= UPDATE_SCROLLBAR;
+	    EntryComputeGeometry(entryPtr);
+	    EventuallyRedraw(entryPtr);
+	    Tcl_Release((ClientData) entryPtr);
+	    break;
+	case FocusIn:
+	case FocusOut:
+	    if (eventPtr->xfocus.detail != NotifyInferior) {
+		EntryFocusProc(entryPtr, (eventPtr->type == FocusIn));
+	    }
+	    break;
     }
 }
 
