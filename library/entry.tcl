@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.20 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.21 2003/01/23 23:30:11 drh Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -188,6 +188,7 @@ bind Entry <Control-backslash> {
     %W selection clear
 }
 bind Entry <KeyPress> {
+    tk::CancelRepeat
     tk::EntryInsert %W %A
 }
 
