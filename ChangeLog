@@ -1,3 +1,12 @@
+2000-11-29  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* tests/image.test (image-1.10): Improved this test, which
+	  previously only worked if the command failed to delete the root
+	  window, and caused *major* trouble otherwise...
+	* generic/tkImage.c (EventuallyDeleteImage): Created this function
+	  so that images that get deleted during the creation of an image
+	  won't cause a nasty core dump.  Properly fixes bug #120819.
+
 2000-11-28  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* doc/image.n: 
