@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.1 2003/12/17 18:08:29 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.2 2004/02/16 00:42:34 wolfsuit Exp $
  */
 
 #include "tkScrollbar.h"
@@ -637,7 +637,7 @@ ThumbActionProc()
                 NULL,
                 &trackingResult);
             
-        if ((err==noErr) 
+        if ((err == noErr) 
                 && ((trackingResult == kMouseTrackingMouseDragged)
                 || (trackingResult == kMouseTrackingMouseMoved))) {
         /*
@@ -681,7 +681,7 @@ ThumbActionProc()
             Tcl_GlobalEval(interp, cmdString.string);
             Tcl_Release((ClientData) interp);
         }
-    } while ((err==noErr) && trackingResult!=kMouseTrackingMouseReleased );
+    } while ((err == noErr) && trackingResult != kMouseTrackingMouseReleased);
 
     Tcl_DStringFree(&cmdString);
     return;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.1 2003/05/13 02:42:57 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.2 2004/02/16 00:42:34 wolfsuit Exp $
  */
 
 #include "tkMacOSXPort.h"
@@ -329,10 +329,11 @@ ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
             else {
                    AEGetDescData(&theDesc,data,size);
                    data [ size ] = 0;
-                   for (i=0; i<size; i++)
+                   for (i = 0; i < size; i++)
                     if (data[i] == '\r')
                      data[i] = '\n';
-                   AEReplaceDescData(theDesc.descriptorType,data,size+1,&theDesc);
+                   AEReplaceDescData(theDesc.descriptorType, data, 
+		           size + 1, &theDesc);
             }
             Tcl_ExternalToUtfDString(NULL, data, size,
                     &encodedText);

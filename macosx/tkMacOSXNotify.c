@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5 2002/09/26 17:07:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5.2.1 2004/02/16 00:42:34 wolfsuit Exp $
  */
 
 #include "tclInt.h"
@@ -1155,11 +1155,11 @@ TkMacOSXCreateFakeEvent ()
     EventTime       eTime;
     EventRef        eventRef;
     EventAttributes flags;
-    eClass=kEventClassWish;
+    eClass = kEventClassWish;
     eKind = 0xffff;
-    eTime =GetLastUserEventTime() + 0.001;
-    flags=kEventAttributeUserEvent;
-    if (CreateEvent(NULL,eClass,eKind,eTime,flags,&eventRef)!=noErr) {
+    eTime = GetLastUserEventTime() + 0.001;
+    flags = kEventAttributeUserEvent;
+    if (CreateEvent(NULL,eClass,eKind,eTime,flags,&eventRef) != noErr) {
         fprintf(stderr,"CreateEvent failed\n");
         return NULL;
     }

@@ -1,3 +1,73 @@
+2004-02-15  Jim Ingham  <jingham@apple.com>
+
+	Backport Mac OS X specific fixes from TOT:
+
+        * macosx/tkMacOSXKeyboard.c: General cleanup.  Add support for
+	[event generate].  [Bug #860454] - [Benjamin Riefenstahl]
+	* macosx/tkMacOSXKeyboard.c: Add PowerBook keycode 0x34 as <Return>.
+	[Benjamin Riefenstahl]
+
+        * macosx/tkMacOSXScrlbr.c: Reworking Vince's fix to [Bug 842952].  This
+	version is clearer, and works helps keep the mouse better pinned to the
+	scrollbar.  I also removed the glitch where the scrollbar would jump get
+	its middle over the mouse when you first moved it.
+	
+        * macosx/tkMacOSXClipboard.c (TkSuspendClipboard, TkSelGetSelection):
+        add unicode clipboard support. [Patch #840107] (senn)	
+	
+        * macosx/tkMacOSXDialog.c (NavServicesGetFile): Minor cleanups.
+        * (OpenFileFilterProc): Handle FSRef's as well as FSSpec's in the input
+	file.  Also convert the FSSpec filename to an C-string before passing
+	to MatchOneFile.  [bug 517600]
+	* (MatchOneFile): Require the input filename to be a C-string, not a
+	pascal string.
+	
+	* macosx/tkMacOSXDialog.c (MatchOneType): If the Macintosh filetype
+	is 0, then automatically pass the fileType check.
+
+        * macosx/tkMacOSXButton.c (TkpDisplayButton): Use the tk text
+        drawing for checkbuttons & radiobuttons as well as for labels.
+	* macosx/tkMacOSXEvent.c (XSync): New function, need to implement
+	this so drawing will get flushed in "update idletasks".
+	* tkMacOSXPort.h: convert #define of XSync to function def'n.
+
+	* generic/tkWindow.c:
+	* macosx/tkMacOSXDialog.c: added native tk_messageBox command,
+	(Tk_MessageBoxObjCmd) for MacOS X platform. [Vince Darley]
+
+        * macosx/tkMacOSXMenu.c: corrected encoding conversion for
+	torn-off menu entries (but many other display problems still
+	exist with these) [Vince Darley]
+
+	* macosx/tkMacOSXMouseEvent.c: improved handling of events in the
+	presence of grabs, particularly activation events. [Vince Darley]
+	
+        * macosx/tkMacOSXColor.c (GetControlPartColor): Use
+	the ThemeBrushes to get the control text color for
+	buttons.
+	
+	* tkMacOSXAppInit.c: Formatting cleanups.
+	* tkMacOSXButton.c: Ditto
+	* tkMacOSXClipboard.c: Ditto
+	* tkMacOSXDebug.c: Ditto
+	* tkMacOSXDialog.c: Ditto
+	* tkMacOSXDraw.c: Ditto
+	* tkMacOSXEvent.c: Ditto
+	* tkMacOSXFont.c: Ditto
+	* tkMacOSXHLEvents.c: Ditto
+	* tkMacOSXInit.c: Ditto
+	* tkMacOSXInt.h
+	* tkMacOSXKeyEvent.c: Ditto
+	* tkMacOSXMenu.c: Ditto
+	* tkMacOSXMenubutton.c: Ditto
+	* tkMacOSXMouseEvent.c: Ditto
+	* tkMacOSXNotify.c: Ditto
+	* tkMacOSXScale.c: Ditto
+	* tkMacOSXScrlbr.c: Ditto
+	* tkMacOSXSubwindows.c: Ditto
+	* tkMacOSXWindowEvent.c: Ditto
+	* tkMacOSXWm.c: Ditto
+	
 2004-02-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinFont.c (Tk_MeasureChars): backport fixes to bold/italic
@@ -7,18 +77,18 @@
 
 2004-02-13  Jim Ingham  <jingham@apple.com>
 
-	* tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): Use CFStringRef for
+	* macosx/tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): Use CFStringRef for
 	title & message options, not pascal strings.
 	(Tk_GetSaveFileObjCmd): Ditto
 	(Tk_ChooseDirectoryObjCmd): Ditto
 	(NavServicesGetFile): Now that we get CFStrings, we don't need
 	to convert them here.
 
-	* tkMacOSXMenu.c (TkMacOSXDispatchMenuEvent): Cleanup, we don't
+	* macosx/tkMacOSXMenu.c (TkMacOSXDispatchMenuEvent): Cleanup, we don't
 	need to handle the Apple Menu picks any more, but the code didn't
 	reflect that.
 
-	* tkMacOSXWm.c (TkSetWMName): Use CFStrings for the Window Title
+	* macosx/tkMacOSXWm.c (TkSetWMName): Use CFStrings for the Window Title
 	name, not Pascal strings.  
 	
 2004-02-12  Jeff Hobbs  <jeffh@ActiveState.com>
