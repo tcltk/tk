@@ -1,3 +1,11 @@
+2002-06-05  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* unix/tkUnixFont.c (Tk_DrawChars): Don't assume that
+	one char is always one byte, and that required 
+	subfont for the last character in any string is 
+	the same as for the previous character 
+	[Bug #559435] [Patch #559437]
+
 2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* changes: Document [wm transient .t .t] error.
@@ -56,7 +64,7 @@
 	a radiobutton with -value "" it was not drawn properly
 	if the -variable was created by the radiobutton.
 	[Bug #548765]
-	
+
 2002-05-26  Peter Spjuth <peter.spjuth@space.se>
 
 	* generic/tkCanvText.c (ComputeTextBbox): Negative

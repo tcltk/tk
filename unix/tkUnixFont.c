@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.12 2002/04/23 00:20:35 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.13 2002/06/05 22:11:09 a_kovalenko Exp $
  */
  
 #include "tkUnixInt.h"
@@ -1159,6 +1159,7 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     Tcl_UniChar ch;
     FontFamily *familyPtr;
     int rx, ry, width, height, border_width, depth;
+    int do_width;
     Drawable root;
 
     fontPtr = (UnixFont *) tkfont;
@@ -1178,18 +1179,20 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 
     end = source + numBytes;
     needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
-    for (p = source; p < end; ) {
-	next = p + Tcl_UtfToUniChar(p, &ch);
-	thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
+    for (p = source; p <= end; ) {
+	if (p < end) {
+	    next = p + Tcl_UtfToUniChar(p, &ch);
+	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch);
+	} else {
+	    next = p + 1;
+	    thisSubFontPtr = lastSubFontPtr;
+	}
 	if ((thisSubFontPtr != lastSubFontPtr)
-		|| (p == end-1) || (p-source > 200)) {
-	    if (p == end-1) {
-		p++;
-	    }
+		|| (p == end) || (p-source > 200)) {
 	    if (p > source) {
-	        int do_width = (needWidth || (p != end-1)) ? 1 : 0;
-
+	        do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
+
 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
@@ -1238,6 +1241,9 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 		(unsigned) (x - xStart), (unsigned) fontPtr->barHeight);
     }
 }
+
+
+
 
 /*
  *-------------------------------------------------------------------------
