@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.5.12.2 2001/10/13 01:25:10 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.5.12.3 2002/04/08 22:03:42 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -219,7 +219,7 @@ TkpScanWindowId(interp, string, idPtr)
 #ifdef _WIN64
 	(sscanf(string, "0x%p", &number) != 1) &&
 #endif
-	Tcl_GetInt(interp, string, (int *)&number) != TCL_OK) {
+	Tcl_GetInt(interp, (char *) string, (int *)&number) != TCL_OK) {
 	return TCL_ERROR;
     }
 
