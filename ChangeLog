@@ -2,6 +2,9 @@
 
 	* win/tkWinWm.c (WmAttributesCmd): correct -alpha 0.0/1.0 setting
 	and round the value.
+	(UpdateWrapper): don't adjust Z order of TOPMOST window.
+	(WmAttributesCmd): don't call UpdateWrapper for -disabled or
+	-toolwindow attr changes.
 
 2004-09-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
