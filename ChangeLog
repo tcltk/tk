@@ -1,3 +1,8 @@
+1999-05-07    <stanton@scriptics.com>
+
+	* library/menu.tcl: Fixed bug where tk_popup fails when called too
+	quickly. [Bug: 2009]
+
 1999-04-30    <stanton@scriptics.com>
 
 	* Changed version number to 8.1.1.
