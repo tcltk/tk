@@ -511,6 +511,10 @@ if test -r CrtItemType.3; then
     rm -f Tk_GetItemTypes.3
     ln CrtItemType.3 Tk_GetItemTypes.3
 fi
+if test -r GetDash.3; then
+    rm -f Tk_GetDash.3
+    ln GetDash.3 Tk_GetDash.3
+fi
 if test -r GetJoinStl.3; then
     rm -f Tk_GetJoinStyle.3
     ln GetJoinStl.3 Tk_GetJoinStyle.3
