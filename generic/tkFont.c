@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.14 2002/06/22 09:13:37 hobbs Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.15 2002/06/25 16:27:43 a_kovalenko Exp $
  */
 
 #include "tkPort.h"
@@ -2756,22 +2756,29 @@ Tk_TextLayoutToPostscript(interp, layout)
     Tk_TextLayout layout;	/* The layout to be rendered. */
 {
 #define MAXUSE 128
-    char buf[MAXUSE+10];
+    char buf[MAXUSE+30];
     LayoutChunk *chunkPtr;
     int i, j, used, c, baseline;
     Tcl_UniChar ch;
-    CONST char *p;
+    CONST char *p, *last_p,*glyphname;
     TextLayout *layoutPtr;
+    char uindex[5]="\0\0\0\0";
+    char one_char[5];
+    int charsize;
+    int bytecount=0;
 
     layoutPtr = (TextLayout *) layout;
     chunkPtr = layoutPtr->chunks;
     baseline = chunkPtr->y;
     used = 0;
+    buf[used++] = '[';
     buf[used++] = '(';
     for (i = 0; i < layoutPtr->numChunks; i++) {
 	if (baseline != chunkPtr->y) {
 	    buf[used++] = ')';
+	    buf[used++] = ']';
 	    buf[used++] = '\n';
+	    buf[used++] = '[';
 	    buf[used++] = '(';
 	    baseline = chunkPtr->y;
 	}
@@ -2788,23 +2795,43 @@ Tk_TextLayoutToPostscript(interp, layout)
 		 * data and display the lower byte.  Eventually this should
 		 * be revised to handle international postscript fonts.
 		 */
+		last_p=p;
+		p +=(charsize= Tcl_UtfToUniChar(p,&ch));
+		Tcl_UtfToExternal(interp,NULL,last_p,charsize,0,NULL,one_char,4,
+			NULL,&bytecount,NULL); 
+                if (bytecount == 1) {
+		    c = UCHAR(one_char[0]);
+		    /* c = UCHAR( ch & 0xFF) */;
+		    if ((c == '(') || (c == ')') || (c == '\\') || (c < 0x20)
+			    || (c >= UCHAR(0x7f))) {
+			/*
+			 * Tricky point:  the "03" is necessary in the sprintf
+			 * below, so that a full three digits of octal are
+			 * always generated.  Without the "03", a number
+			 * following this sequence could be interpreted by
+			 * Postscript as part of this sequence.
+			 */
 
-		p += Tcl_UtfToUniChar(p, &ch);
-		c = UCHAR(ch & 0xff);
-		if ((c == '(') || (c == ')') || (c == '\\') || (c < 0x20)
-			|| (c >= UCHAR(0x7f))) {
-		    /*
-		     * Tricky point:  the "03" is necessary in the sprintf
-		     * below, so that a full three digits of octal are
-		     * always generated.  Without the "03", a number
-		     * following this sequence could be interpreted by
-		     * Postscript as part of this sequence.
-		     */
-
-		    sprintf(buf + used, "\\%03o", c);
-		    used += 4;
+			sprintf(buf + used, "\\%03o", c);
+			used += 4;
+		    } else {
+			buf[used++] = c;
+		    }
 		} else {
-		    buf[used++] = c;
+		    /* This character doesn't belong to system character set.
+		     * So, we must use full glyph name */
+		    sprintf(uindex,"%04X",ch); /* endianness? */
+		    if ((glyphname = Tcl_GetVar2( interp , "::tk::psglyphs",uindex,0))) {
+			if (used > 0 && buf [used-1] == '(') 
+			    --used;
+			else
+			    buf[used++] = ')';
+			buf[used++] = '/';
+			while( *glyphname ) 
+			    buf[used++] = *glyphname++ ;
+			buf[used++] = '(';
+		    }
+		    
 		}
 		if (used >= MAXUSE) {
 		    buf[used] = '\0';
@@ -2826,6 +2853,7 @@ Tk_TextLayoutToPostscript(interp, layout)
 	chunkPtr++;
     }
     buf[used++] = ')';
+    buf[used++] = ']';
     buf[used++] = '\n';
     buf[used] = '\0';
     Tcl_AppendResult(interp, buf, (char *) NULL);

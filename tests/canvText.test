@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.9 2000/02/03 21:27:27 ericm Exp $
+# RCS: @(#) $Id: canvText.test,v 1.10 2002/06/25 16:27:44 a_kovalenko Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -493,9 +493,9 @@ test canvText-17.1 {TextToPostscript procedure} {
 } "/Courier-Oblique findfont [font actual $font -size] scalefont ISOEncode setfont
 0.000 0.000 0.000 setrgbcolor AdjustColor
 100 200 \[
-(000)
-(000)
-(00)
+\[(000)\]
+\[(000)\]
+\[(00)\]
 ] $ay -0.5 0 0 false DrawText
 grestore
 restore showpage
