@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.10 2002/09/15 20:38:18 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.11 2003/01/10 20:23:17 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -584,9 +584,8 @@ OpenIM(dispPtr)
 {
     unsigned short i;
     XIMStyles *stylePtr;
-    char *modifier_list;
 
-    if ((modifier_list = XSetLocaleModifiers("")) == NULL) {
+    if (XSetLocaleModifiers("") == NULL) {
 	goto error;
     }
 
