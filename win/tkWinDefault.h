@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.17 2003/10/31 09:02:18 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.18 2004/02/18 00:40:24 hobbs Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -93,6 +93,7 @@
 #define DEF_BUTTON_TAKE_FOCUS		(char *) NULL
 #define DEF_BUTTON_TEXT			""
 #define DEF_BUTTON_TEXT_VARIABLE	""
+#define DEF_BUTTON_TRISTATE_VALUE	""
 #define DEF_BUTTON_UNDERLINE		"-1"
 #define DEF_BUTTON_VALUE		""
 #define DEF_BUTTON_WIDTH		"0"

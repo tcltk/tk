@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.16 2003/10/10 20:19:51 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.17 2004/02/18 00:40:24 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -180,30 +180,34 @@ TkpDrawCheckIndicator(tkwin, display, d, x, y, bgBorder, indicatorColor,
     switch (mode) {
     default:
     case CHECK_BUTTON:
-	imgsel = on ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
-	imgsel += disabled ? CHECK_DISOFF_OFFSET : 0;
+	imgsel = on == 2 ? CHECK_DISON_OFFSET : 
+	    on == 1 ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
+	imgsel += disabled  && on != 2 ? CHECK_DISOFF_OFFSET : 0;
 	imgstart = CHECK_START;
 	dim = CHECK_BUTTON_DIM;
 	break;
 
     case CHECK_MENU:
-	imgsel = on ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
-	imgsel += disabled ? CHECK_DISOFF_OFFSET : 0;
+	imgsel = on == 2 ? CHECK_DISOFF_OFFSET : 
+	    on == 1 ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
+	imgsel += disabled  && on != 2 ? CHECK_DISOFF_OFFSET : 0;
 	imgstart = CHECK_START + 2;
 	imgsel += 2;
 	dim = CHECK_MENU_DIM;
 	break;
 
     case RADIO_BUTTON:
-	imgsel = on ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
-	imgsel += disabled ? RADIO_DISOFF_OFFSET : 0;
+	imgsel = on == 2 ? RADIO_DISON_OFFSET :
+	    on==1 ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
+	imgsel += disabled && on != 2 ? RADIO_DISOFF_OFFSET : 0;
 	imgstart = RADIO_START;
 	dim = RADIO_BUTTON_DIM;
 	break;
 
     case RADIO_MENU:    
-	imgsel = on ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
-	imgsel += disabled ? RADIO_DISOFF_OFFSET : 0;
+	imgsel = on == 2 ? RADIO_DISOFF_OFFSET :
+	    on==1 ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
+	imgsel += disabled && on != 2 ? RADIO_DISOFF_OFFSET : 0;
 	imgstart = RADIO_START + 3;
 	imgsel += 3;
 	dim = RADIO_MENU_DIM;
@@ -515,6 +519,9 @@ TkpDisplayButton(clientData)
 	    if ((butPtr->selectImage != NULL) && (butPtr->flags & SELECTED)) {
 		Tk_RedrawImage(butPtr->selectImage, 0, 0,
 			width, height, pixmap, imageXOffset, imageYOffset);
+	    } else if ((butPtr->tristateImage != NULL) && (butPtr->flags & TRISTATED)) {
+		Tk_RedrawImage(butPtr->tristateImage, 0, 0,
+			width, height, pixmap, imageXOffset, imageYOffset);
 	    } else {
 		Tk_RedrawImage(butPtr->image, 0, 0, width,
 			height, pixmap, imageXOffset, imageYOffset);
@@ -554,6 +561,10 @@ TkpDisplayButton(clientData)
 		if ((butPtr->selectImage != NULL) &&
 			(butPtr->flags & SELECTED)) {
 		    Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
+			    height, pixmap, imageXOffset, imageYOffset);
+		} else if ((butPtr->tristateImage != NULL) &&
+			(butPtr->flags & TRISTATED)) {
+		    Tk_RedrawImage(butPtr->tristateImage, 0, 0, width,
 			    height, pixmap, imageXOffset, imageYOffset);
 		} else {
 		    Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
@@ -608,7 +619,7 @@ TkpDisplayButton(clientData)
 	    y = Tk_Height(tkwin)/2;
 	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
 		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
-		    (butPtr->flags & SELECTED), 
+		    ((butPtr->flags & SELECTED)?1:(butPtr->flags & TRISTATED)?2:0), 
 		    (butPtr->state == STATE_DISABLED), CHECK_BUTTON);
 	}
     } else if ((butPtr->type == TYPE_RADIO_BUTTON) && butPtr->indicatorOn) {
@@ -623,7 +634,7 @@ TkpDisplayButton(clientData)
 	    y = Tk_Height(tkwin)/2;
 	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap,  x, y,
 		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
-		    (butPtr->flags & SELECTED), 
+		    ((butPtr->flags & SELECTED)?1:(butPtr->flags & TRISTATED)?2:0),
 		    (butPtr->state == STATE_DISABLED), RADIO_BUTTON);
 	}
     }

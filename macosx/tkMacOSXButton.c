@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.8 2004/02/16 00:19:41 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.9 2004/02/18 00:40:24 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -382,6 +382,10 @@ TkpDisplayButton(
                         (butPtr->flags & SELECTED)) {
                     Tk_RedrawImage(butPtr->selectImage, 0, 0,
                             width, height, pixmap, imageXOffset, imageYOffset);
+		} else if ((butPtr->tristateImage != NULL) &&
+                        (butPtr->flags & TRISTATED)) {
+                    Tk_RedrawImage(butPtr->tristateImage, 0, 0,
+                            width, height, pixmap, imageXOffset, imageYOffset);
                 } else {
                     Tk_RedrawImage(butPtr->image, 0, 0, width,
                             height, pixmap, imageXOffset, imageYOffset);
@@ -426,6 +430,10 @@ TkpDisplayButton(
                     if ((butPtr->selectImage != NULL) &&
                             (butPtr->flags & SELECTED)) {
                         Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
+                                height, pixmap, imageXOffset, imageYOffset);
+		    } else if ((butPtr->tristateImage != NULL) &&
+                            (butPtr->flags & TRISTATED)) {
+                        Tk_RedrawImage(butPtr->tristateImage, 0, 0, width,
                                 height, pixmap, imageXOffset, imageYOffset);
                     } else {
                         Tk_RedrawImage(butPtr->image, 0, 0, width, height,
@@ -822,13 +830,12 @@ TkMacOSXInitControl (
      */
 
     initiallyVisible = false;
-    initialValue = kControlSupportsEmbedding|   
-        kControlHasSpecialBackground;
-    minValue = 0;
-    maxValue = 1;
-    procID = kControlUserPaneProc;
+    initialValue     = kControlSupportsEmbedding|kControlHasSpecialBackground;
+    minValue         = 0;
+    maxValue         = 1;
+    procID           = kControlUserPaneProc;
     controlReference = (SInt32)mbPtr;
-    mbPtr->userPane = NewControl(mbPtr->windowRef,
+    mbPtr->userPane  = NewControl(mbPtr->windowRef,
         paneRect, "\p",
         initiallyVisible,
         initialValue,
@@ -842,7 +849,7 @@ TkMacOSXInitControl (
         return 1;
     }
     
-    if ((status=EmbedControl(mbPtr->userPane,rootControl)) != noErr) {
+    if ((status = EmbedControl(mbPtr->userPane,rootControl)) != noErr) {
         fprintf(stderr,"Failed to embed user pane control %d\n", status);
         return 1;
     }
@@ -909,25 +916,27 @@ TkMacOSXDrawControl(
     TkWindow * winPtr;
     Rect       paneRect;
     Rect       cntrRect;
+    int        hilitePart = -1;
+
 
     winPtr = (TkWindow *)butPtr->tkwin;
    
-    paneRect.left = winPtr->privatePtr->xOff;
-    paneRect.top = winPtr->privatePtr->yOff;
-    paneRect.right = paneRect.left + Tk_Width(butPtr->tkwin);
+    paneRect.left   = winPtr->privatePtr->xOff;
+    paneRect.top    = winPtr->privatePtr->yOff;
+    paneRect.right  = paneRect.left + Tk_Width(butPtr->tkwin);
     paneRect.bottom = paneRect.top + Tk_Height(butPtr->tkwin);
 
     cntrRect = paneRect;
 
 /*
-    cntrRect.left += butPtr->inset;
-    cntrRect.top += butPtr->inset;
-    cntrRect.right -= butPtr->inset;
+    cntrRect.left   += butPtr->inset;
+    cntrRect.top    += butPtr->inset;
+    cntrRect.right  -= butPtr->inset;
     cntrRect.bottom -= butPtr->inset;
 */
-    cntrRect.left += DEF_INSET_LEFT;
-    cntrRect.top += DEF_INSET_TOP;
-    cntrRect.right -= DEF_INSET_RIGHT;
+    cntrRect.left   += DEF_INSET_LEFT;
+    cntrRect.top    += DEF_INSET_TOP;
+    cntrRect.right  -= DEF_INSET_RIGHT;
     cntrRect.bottom -= DEF_INSET_BOTTOM;
 
     /* 
@@ -999,6 +1008,8 @@ TkMacOSXDrawControl(
 
     if (butPtr->flags & SELECTED) {
      SetControlValue(mbPtr->control, 1);
+    } else if (butPtr->flags & TRISTATED) {
+     SetControlValue(mbPtr->control, 2);
     } else {
      SetControlValue(mbPtr->control, 0);
     }
@@ -1125,6 +1136,9 @@ SetupBevelButton(
     if ((butPtr->selectImage != NULL) && (butPtr->flags & SELECTED)) {
         Tk_RedrawImage(butPtr->selectImage, 0, 0, width, height,
                 pixmap, 0, 0);
+    } else if ((butPtr->tristateImage != NULL) && (butPtr->flags & TRISTATED)) {
+        Tk_RedrawImage(butPtr->tristateImage, 0, 0, width, height,
+                pixmap, 0, 0);
     } else if (butPtr->image != NULL) {
         Tk_RedrawImage(butPtr->image, 0, 0, width, 
                 height, pixmap, 0, 0);
@@ -1140,7 +1154,7 @@ SetupBevelButton(
     if ((err = SetControlData(controlHandle, kControlButtonPart,
             kControlBevelButtonContentTag,
             sizeof(ControlButtonContentInfo),
-            (char *) &mbPtr->bevelButtonContent)) != noErr ) {
+            (char *) &mbPtr->bevelButtonContent)) != noErr) {
         fprintf(stderr,
                 "SetControlData BevelButtonContent failed, %d\n", err );
     }
@@ -1168,7 +1182,7 @@ SetupBevelButton(
     if ((err = SetControlData(controlHandle, kControlButtonPart,
             kControlBevelButtonGraphicAlignTag,
             sizeof(ControlButtonGraphicAlignment),
-            (char *) &theAlignment)) != noErr ) {
+            (char *) &theAlignment)) != noErr) {
         fprintf(stderr,
                 "SetControlData BevelButtonGraphicAlign failed, %d\n", err );
     }
@@ -1188,7 +1202,7 @@ SetupBevelButton(
         if ((err = SetControlData(controlHandle, kControlButtonPart,
                 kControlBevelButtonTextPlaceTag,
                 sizeof(ControlButtonTextPlacement),
-                (char *) &thePlacement)) != noErr ) {
+                (char *) &thePlacement)) != noErr) {
             fprintf(stderr,
                     "SetControlData BevelButtonTextPlace failed, %d\n", err );
         }
@@ -1449,14 +1463,14 @@ TkMacOSXComputeControlParams(TkButton * butPtr, MacControlParams * paramsPtr )
                 || (butPtr->indicatorOn)) {
                 paramsPtr->initialValue = 1;
                 paramsPtr->minValue = 0;
-                paramsPtr->maxValue = 1;
+                paramsPtr->maxValue = 2;
                 paramsPtr->procID = kControlRadioButtonProc;
             } else {
                 paramsPtr->initialValue = 0;
                 paramsPtr->minValue = kControlBehaviorOffsetContents|
                     kControlBehaviorSticky|
                     kControlContentPictHandle;
-                paramsPtr->maxValue = 1;
+                paramsPtr->maxValue = 2;
                 if (butPtr->borderWidth <= 2) {
                     paramsPtr->procID = kControlBevelButtonSmallBevelProc;
                 } else if (butPtr->borderWidth == 3) {
@@ -1473,14 +1487,14 @@ TkMacOSXComputeControlParams(TkButton * butPtr, MacControlParams * paramsPtr )
                     || (butPtr->indicatorOn)) {
                 paramsPtr->initialValue = 1;
                 paramsPtr->minValue = 0;
-                paramsPtr->maxValue = 1;
+                paramsPtr->maxValue = 2;
                 paramsPtr->procID = kControlCheckBoxProc;
             } else {
                 paramsPtr->initialValue = 0;
                 paramsPtr->minValue = kControlBehaviorOffsetContents
                     | kControlBehaviorSticky
                     | kControlContentPictHandle;
-                paramsPtr->maxValue = 1;
+                paramsPtr->maxValue = 2;
                 if (butPtr->borderWidth <= 2) {
                     paramsPtr->procID = kControlBevelButtonSmallBevelProc;
                 } else if (butPtr->borderWidth == 3) {

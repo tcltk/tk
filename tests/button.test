@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.14 2003/04/01 21:06:17 dgp Exp $
+# RCS: @(#) $Id: button.test,v 1.15 2004/02/18 00:40:24 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -75,7 +75,7 @@ foreach test {
     {-justify right right bogus {bad justification "bogus": must be left, right, or center} {1 1 1 1}}
     {-offrelief flat flat 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {0 0 1 1}}
     {-offvalue lousy lousy {} {} {0 0 1 0}}
-    {-offvalue fantastic fantastic {} {} {0 0 1 0}}
+    {-onvalue fantastic fantastic {} {} {0 0 1 0}}
     {-overrelief "" "" 1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken} {0 1 1 1}}
     {-padx 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
     {-pady 12m 12m 420x {bad screen distance "420x"} {1 1 1 1}}
@@ -88,6 +88,8 @@ foreach test {
     {-takefocus "any string" "any string" {} {} {1 1 1 1}}
     {-text "Sample text" {Sample text} {} {} {1 1 1 1}}
     {-textvariable i i {} {} {1 1 1 1}}
+    {-tristateimage image1 image1 bogus {image "bogus" doesn't exist} {0 0 1 1}}
+    {-tristatevalue unknowable unknowable {} {} {0 0 1 1}}
     {-underline 5 5 3p {expected integer but got "3p"} {1 1 1 1}}
     {-value anyString anyString {} {} {0 0 0 1}}
     {-width 402 402 3p {expected integer but got "3p"} {1 1 1 1}}
@@ -215,7 +217,7 @@ test button-4.13 {ButtonWidgetCmd procedure, "cget" option} {
 } {1 {unknown option "-onvalue"}}
 test button-4.14 {ButtonWidgetCmd procedure, "configure" option} {
     llength [.c configure]
-} {39}
+} {41}
 test button-4.15 {ButtonWidgetCmd procedure, "configure" option} {
     list [catch {.b configure -gorp} msg] $msg
 } {1 {unknown option "-gorp"}}
