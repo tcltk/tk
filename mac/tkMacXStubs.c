@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacXStubs.c,v 1.11 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkMacXStubs.c,v 1.12 2002/04/05 08:37:52 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -802,4 +802,21 @@ TkGetDefaultScreenName(
 	screenName = macScreenName;
     }
     return screenName;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_SetCaretPos --
+ *
+ *	This indicates the cursor position to Tk.  This is not used
+ *	on the Mac currently.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
+{
+    return;
 }
