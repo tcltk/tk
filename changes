@@ -4139,3 +4139,9 @@ on Windows platforms in addition to moving the focus. (SS)
 
 6/12/98 (bug fix) Fixed bug in Windows font measurement that did not
 take kerning into account. (BS)
+
+6/24/98 (bug fix) On Unix, fixed -initialdir switch to tk_getOpenFile
+and tk_getSaveFile to convert the specified directory to an absolute
+path and to use the current working directory if the specified
+directory does not exist. (SS)
+
