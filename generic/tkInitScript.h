@@ -47,44 +47,10 @@
 
 static char initScript[] = "if {[info proc tkInit]==\"\"} {\n\
   proc tkInit {} {\n\
-    global tk_library tk_version tk_patchLevel env errorInfo\n\
+    global tk_library tk_version tk_patchLevel\n\
     rename tkInit {}\n\
-    set errors {}\n\
-    set dirs {}\n\
-    if {[info exists tk_library]} {\n\
-	lappend dirs $tk_library\n\
-    } else {\n\
-	if {[info exists env(TK_LIBRARY)]} {\n\
-	    lappend dirs $env(TK_LIBRARY)\n\
-	}\n\
-	lappend dirs [file join [file dirname [info library]] tk$tk_version]\n\
-	set parentDir [file dirname [file dirname [info nameofexecutable]]]\n\
-	lappend dirs [file join $parentDir lib tk$tk_version]\n\
-	lappend dirs [file join $parentDir library]\n\
-	if [string match {*[ab]*} $tk_patchLevel] {\n\
-	    set ver $tk_patchLevel\n\
-	} else {\n\
-	    set ver $tk_version\n\
-	}\n\
-	lappend dirs [file join [file dirname $parentDir] tk$ver/library]\n\
+    tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
     }\n\
-    foreach i $dirs {\n\
-	set tk_library $i\n\
-	set tkfile [file join $i tk.tcl]\n\
-        if {[interp issafe] || [file exists $tkfile]} {\n\
-	    if {![catch {uplevel #0 [list source $tkfile]} msg]} {\n\
-		return\n\
-	    } else {\n\
-		append errors \"$tkfile: $msg\n$errorInfo\n\"\n\
-	    }\n\
-	}\n\
-    }\n\
-    set msg \"Can't find a usable tk.tcl in the following directories: \n\"\n\
-    append msg \"    $dirs\n\n\"\n\
-    append msg \"$errors\n\n\"\n\
-    append msg \"This probably means that Tk wasn't installed properly.\n\"\n\
-    error $msg\n\
-  }\n\
 }\n\
 tkInit";
 
