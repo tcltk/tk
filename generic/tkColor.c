@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.5 1999/04/21 21:53:25 rjohnson Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.6 1999/11/19 22:00:02 hobbs Exp $
  */
 
 #include "tkColor.h"
@@ -254,7 +254,7 @@ Tk_GetColor(interp, tkwin, name)
     tkColPtr->visual  = Tk_Visual(tkwin);
     tkColPtr->resourceRefCount = 1;
     tkColPtr->objRefCount = 0;
-    tkColPtr->tablePtr = &dispPtr->colorNameTable;
+    tkColPtr->type = TK_COLOR_BY_NAME;
     tkColPtr->hashPtr = nameHashPtr;
     tkColPtr->nextPtr = existingColPtr;
     Tcl_SetHashValue(nameHashPtr, tkColPtr);
@@ -334,7 +334,7 @@ Tk_GetColorByValue(tkwin, colorPtr)
     tkColPtr->visual  = Tk_Visual(tkwin);
     tkColPtr->resourceRefCount = 1;
     tkColPtr->objRefCount = 0;
-    tkColPtr->tablePtr = &dispPtr->colorValueTable;
+    tkColPtr->type = TK_COLOR_BY_VALUE;
     tkColPtr->hashPtr = valueHashPtr;
     tkColPtr->nextPtr = NULL;
     Tcl_SetHashValue(valueHashPtr, tkColPtr);
@@ -368,15 +368,17 @@ Tk_NameOfColor(colorPtr)
     XColor *colorPtr;		/* Color whose name is desired. */
 {
     register TkColor *tkColPtr = (TkColor *) colorPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     
-    if (tkColPtr->magic == COLOR_MAGIC) {
+    if ((tkColPtr->magic == COLOR_MAGIC) &&
+	    (tkColPtr->type == TK_COLOR_BY_NAME)) {
 	return tkColPtr->hashPtr->key.string;
+    } else {
+	ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red, 
+		colorPtr->green, colorPtr->blue);
+	return tsdPtr->rgbString;
     }
-    sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red, 
-            colorPtr->green, colorPtr->blue);
-    return tsdPtr->rgbString;
 }
 
 /*

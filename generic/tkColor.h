@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.h,v 1.5 1999/04/16 01:51:12 stanton Exp $
+ * RCS: @(#) $Id: tkColor.h,v 1.6 1999/11/19 22:00:03 hobbs Exp $
  */
 
 #ifndef _TKCOLOR
@@ -27,6 +27,9 @@
  * each color that is being used by the application; typically there
  * is a colormap entry allocated for each of these colors.
  */
+
+#define TK_COLOR_BY_NAME	1
+#define TK_COLOR_BY_VALUE	2
 
 #define COLOR_MAGIC ((unsigned int) 0x46140277)
 
@@ -55,8 +58,7 @@ typedef struct TkColor {
 				 * are both 0. */
     int objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
-    Tcl_HashTable *tablePtr;	/* Hash table that indexes this structure
-				 * (needed when deleting structure). */
+    int type;			/* TK_COLOR_BY_NAME or TK_COLOR_BY_VALUE */
     Tcl_HashEntry *hashPtr;	/* Pointer to hash table entry for this
 				 * structure. (for use in deleting entry). */
     struct TkColor *nextPtr;	/* Points to the next TkColor structure with

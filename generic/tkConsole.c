@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.10 1999/07/30 02:09:25 redman Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.11 1999/11/19 22:00:03 hobbs Exp $
  */
 
 #include "tk.h"
@@ -673,7 +673,7 @@ InterpreterCmd(clientData, interp, argc, argv)
  *----------------------------------------------------------------------
  */
 
-void 
+static void
 ConsoleDeleteProc(clientData) 
     ClientData clientData;
 {
