@@ -1,5 +1,10 @@
 1999-11-29  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* generic/tkImgGIF.c: added GIF writing that uses miGIF RLE
+	[Bug: 2039, new patch]
+
+	* library/entry.tcl: fixed up tkEntrySeeInsert (Nemthi)
+
 	* generic/tkListbox.c: fixed 'get' of listbox to return a string
 	when only one item is requested.
 
