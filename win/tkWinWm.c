@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.87 2005/01/04 02:09:46 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.88 2005/01/07 15:18:03 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2204,6 +2204,7 @@ UpdateWrapper(winPtr)
 	{
 	    SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, 
 		Tk_ReqWidth((Tk_Window)winPtr), Tk_ReqHeight((Tk_Window)winPtr));
+	    SendMessage(wmPtr->wrapper, TK_SETMENU, (WPARAM)wmPtr->hMenu, 0);
 	}
     }
 
@@ -2430,6 +2431,28 @@ TkpWmSetState(winPtr, state)
     wmPtr->flags &= ~WM_SYNC_PENDING;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWinGetState --
+ *
+ *	This function returns state value of a toplevel window.
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	May deiconify the toplevel window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int TkpWmGetState(winPtr)
+    TkWindow *winPtr;
+{
+    return winPtr->wmInfoPtr->hints.initial_state;
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -4791,16 +4814,43 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
-	if (winPtr->flags & TK_EMBEDDED) {
-	    Tcl_AppendResult(interp, "can't change state of ",
-		    winPtr->pathName, ": it is an embedded window",
-		    (char *) NULL);
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
+		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
 		&index) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+
+	if (winPtr->flags & TK_EMBEDDED) {
+	    int state;
+	    switch(index) {
+		case OPT_NORMAL:
+		state = NormalState;
+		break;
+
+		case OPT_ICONIC:
+		state = IconicState;
+		break;
+
+		case OPT_WITHDRAWN:
+		state = WithdrawnState;
+		break;
+
+		case OPT_ZOOMED:
+		state = ZoomState;
+		break;
+	    }
+
+	    if(state != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
+	        Tcl_AppendResult(interp, "can't change state of ",
+		    winPtr->pathName, ": it is an embedded window",
+		    (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    return TCL_OK;
 	}
 
 	if (index == OPT_NORMAL) {
@@ -4837,7 +4887,12 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetResult(interp, "icon", TCL_STATIC);
 	} else {
-	    switch (wmPtr->hints.initial_state) {
+	    int state;
+	    if(winPtr->flags & TK_EMBEDDED) 
+		state = SendMessage(wmPtr->wrapper, TK_STATE, -1, -1);
+	    else
+		state = wmPtr->hints.initial_state;
+	    switch (state) {
 	      case NormalState:
 		Tcl_SetResult(interp, "normal", TCL_STATIC);
 		break;
