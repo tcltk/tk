@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.15 2000/01/12 11:45:03 hobbs Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.16 2000/02/08 11:31:33 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -919,6 +919,26 @@ TkStubs tkStubs = {
     Tk_InitConsoleChannels, /* 215 */
     Tk_CreateConsoleWindow, /* 216 */
     Tk_CreateSmoothMethod, /* 217 */
+    NULL, /* 218 */
+    NULL, /* 219 */
+    Tk_GetDash, /* 220 */
+    Tk_CreateOutline, /* 221 */
+    Tk_DeleteOutline, /* 222 */
+    Tk_ConfigOutlineGC, /* 223 */
+    Tk_ChangeOutlineGC, /* 224 */
+    Tk_ResetOutlineGC, /* 225 */
+    Tk_CanvasPsOutline, /* 226 */
+    Tk_SetTSOrigin, /* 227 */
+    Tk_CanvasGetCoordFromObj, /* 228 */
+    Tk_CanvasSetOffset, /* 229 */
+    Tk_DitherPhoto, /* 230 */
+    Tk_PostscriptBitmap, /* 231 */
+    Tk_PostscriptColor, /* 232 */
+    Tk_PostscriptFont, /* 233 */
+    Tk_PostscriptImage, /* 234 */
+    Tk_PostscriptPath, /* 235 */
+    Tk_PostscriptStipple, /* 236 */
+    Tk_PostscriptY, /* 237 */
 };
 
 /* !END!: Do not edit above this line. */

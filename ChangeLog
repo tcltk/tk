@@ -1,5 +1,25 @@
 2000-02-08  Jeff Hobbs  <hobbs@scriptics.com>
 
+	* generic/tkDecls.h:
+	* generic/tk.decls:
+	* generic/tk.h: moved new public functions created in dash patch
+	to the stubs interface [Bug: 4062]
+
+	* generic/tk.h: 
+	* doc/CrtImgType.3:
+	* doc/CrtPhImgFmt.3:
+	* generic/tk.h:
+	* generic/tkImgGIF.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkStubImg.c (new file):
+	* generic/tkTest.c:
+	* unix/Makefile.in:
+	* win/Makefile.in:
+	* win/makefile.vc: improved support for moving from the old style
+	image C API to the new obj'ified one with new Tk_InitImageArgs
+	command and stub'ing of image code.  See docs for how to make the
+	transition. [Bug: 4060]
+
 	* library/tk.tcl: wrapped check for tcl_platform(os) around info
 	exists because it won't in safe interpreters
 

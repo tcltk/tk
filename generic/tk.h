@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.37 2000/02/08 10:00:44 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.38 2000/02/08 11:31:32 hobbs Exp $
  */
 
 #ifndef _TK
@@ -1065,27 +1065,6 @@ typedef struct Tk_Outline {
     Pixmap disabledStipple;	/* Outline Stipple pattern if state is disabled. */
 } Tk_Outline;
 
-/*
- * Some functions handy for Dashing and Outlines (in tkCanvUtil.c).
- */
-
-EXTERN int	Tk_GetDash _ANSI_ARGS_((Tcl_Interp *interp,
-		    CONST char *value, Tk_Dash *dash));
-EXTERN void	Tk_CreateOutline _ANSI_ARGS_((Tk_Outline *outline));
-EXTERN void	Tk_DeleteOutline _ANSI_ARGS_((Display *display,
-		    Tk_Outline *outline));
-EXTERN int	Tk_ConfigOutlineGC _ANSI_ARGS_((XGCValues *gcValues,
-		    Tk_Canvas canvas ,Tk_Item *item,
-		    Tk_Outline *outline));
-EXTERN int	Tk_ChangeOutlineGC _ANSI_ARGS_((Tk_Canvas canvas,
-		    Tk_Item *item, Tk_Outline *outline));
-EXTERN int	Tk_ResetOutlineGC _ANSI_ARGS_((Tk_Canvas canvas,
-		    Tk_Item *item, Tk_Outline *outline));
-EXTERN int	Tk_CanvasPsOutline _ANSI_ARGS_((Tk_Canvas canvas,
-		    Tk_Item *item, Tk_Outline *outline));
-EXTERN void	Tk_SetTSOrigin _ANSI_ARGS_((Tk_Window tkwin, GC gc, int x,
-		    int y));
-
 
 /*
  *--------------------------------------------------------------
@@ -1215,23 +1194,22 @@ typedef int (Tk_ImageStringWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	Tk_PhotoImageBlock *blockPtr));
 #else
 typedef int (Tk_ImageFileMatchProc) _ANSI_ARGS_((Tcl_Channel chan,
-	char *fileName, Tcl_Obj *format, int *widthPtr,
+	CONST char *fileName, Tcl_Obj *format, int *widthPtr,
 	int *heightPtr, Tcl_Interp *interp));
 typedef int (Tk_ImageStringMatchProc) _ANSI_ARGS_((Tcl_Obj *dataObj,
 	Tcl_Obj *format, int *widthPtr, int *heightPtr,
 	Tcl_Interp *interp));
 typedef int (Tk_ImageFileReadProc) _ANSI_ARGS_((Tcl_Interp *interp,
-	Tcl_Channel chan, char *fileName, Tcl_Obj *format,
+	Tcl_Channel chan, CONST char *fileName, Tcl_Obj *format,
 	Tk_PhotoHandle imageHandle, int destX, int destY,
 	int width, int height, int srcX, int srcY));
 typedef int (Tk_ImageStringReadProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	Tcl_Obj *dataObj, Tcl_Obj *format, Tk_PhotoHandle imageHandle,
 	int destX, int destY, int width, int height, int srcX, int srcY));
 typedef int (Tk_ImageFileWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
-	char *fileName, Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
+	CONST char *fileName, Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
 typedef int (Tk_ImageStringWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
-	Tcl_DString *dataPtr, Tcl_Obj *format,
-	Tk_PhotoImageBlock *blockPtr));
+	Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
 #endif
 
 /*
@@ -1273,7 +1251,7 @@ EXTERN void		Tk_CreateOldImageType _ANSI_ARGS_((
 EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
 				Tk_PhotoImageFormat *formatPtr));
 
-#ifdef USE_OLD_IMAGE
+#if !defined(USE_TK_STUBS) && defined(USE_OLD_IMAGE)
 #define Tk_CreateImageType Tk_CreateOldImageType
 #define Tk_CreatePhotoImageFormat Tk_CreateOldPhotoImageFormat
 #endif
@@ -1337,6 +1315,14 @@ char *Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp, char *version, int exact));
 
 #endif
 
+void Tk_InitImageArgs _ANSI_ARGS_((Tcl_Interp *interp, int argc, char ***argv));
+
+#if !defined(USE_TK_STUBS) || !defined(USE_OLD_IMAGE)
+
+#define Tk_InitImageArgs(interp, argc, argv) /**/
+
+#endif
+
 
 /*
  *--------------------------------------------------------------
@@ -1360,43 +1346,6 @@ typedef Tk_RestrictAction (Tk_RestrictProc) _ANSI_ARGS_((
 typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 	int offset, char *buffer, int maxBytes));
 
-/*
- *--------------------------------------------------------------
- *
- * Exported procedures introduced by dash-patch.
- *
- *--------------------------------------------------------------
- */
-
-EXTERN int		Tk_CanvasGetCoordFromObj _ANSI_ARGS_((
-			    Tcl_Interp *interp, Tk_Canvas canvas, Tcl_Obj *obj,
-			    double *doublePtr));
-EXTERN void		Tk_CanvasSetOffset _ANSI_ARGS_((
-			    Tk_Canvas canvas, GC gc, Tk_TSOffset *offset));
-EXTERN void		Tk_CreatePhotoOption _ANSI_ARGS_((Tcl_Interp *interp,
-			    CONST char *name, Tcl_ObjCmdProc *proc));
-EXTERN void		Tk_DitherPhoto _ANSI_ARGS_((Tk_PhotoHandle handle,
-			    int x, int y, int width, int height));
-EXTERN int		Tk_PostscriptBitmap _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window tkwin, Tk_PostscriptInfo psInfo,
-			    Pixmap bitmap, int startX, int startY,
-			    int width, int height));
-EXTERN int		Tk_PostscriptColor _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_PostscriptInfo psInfo, XColor *colorPtr));
-EXTERN int		Tk_PostscriptFont _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_PostscriptInfo psInfo, Tk_Font font));
-EXTERN int		Tk_PostscriptImage _ANSI_ARGS_((Tk_Image image,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    Tk_PostscriptInfo psinfo, int x, int y,
-			    int width, int height, int prepass));
-EXTERN void		Tk_PostscriptPath _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_PostscriptInfo psInfo, double *coordPtr,
-			    int numPoints));
-EXTERN int		Tk_PostscriptStipple _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window tkwin, Tk_PostscriptInfo psInfo,
-			    Pixmap bitmap));
-EXTERN double		Tk_PostscriptY _ANSI_ARGS_((double y,
-			    Tk_PostscriptInfo psInfo));
 
 /*
  *--------------------------------------------------------------

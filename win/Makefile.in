@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.17 2000/02/01 11:41:43 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.18 2000/02/08 11:31:49 hobbs Exp $
 
 TCLVERSION = @TCL_VERSION@
 VERSION = @TK_VERSION@
@@ -331,7 +331,8 @@ TK_OBJS = \
 	tkWindow.$(OBJEXT)
 
 STUB_OBJS = \
-	tkStubLib.$(OBJEXT)
+	tkStubLib.$(OBJEXT) \
+	tkStubImg.$(OBJEXT)
 
 TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)"/../doc/*.[13n]
 TK_DOCS = "$(ROOT_DIR_NATIVE)"/doc/*.[13n]

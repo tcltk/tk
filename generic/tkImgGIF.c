@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.10 2000/01/27 16:58:42 ericm Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.11 2000/02/08 11:31:33 hobbs Exp $
  */
 
 /*
@@ -78,11 +78,11 @@ static Tcl_ThreadDataKey dataKey;
  * The format record for the GIF file format:
  */
 
-static int      FileMatchGIF _ANSI_ARGS_((Tcl_Channel chan, char *fileName,
+static int      FileMatchGIF _ANSI_ARGS_((Tcl_Channel chan, CONST char *fileName,
 		    Tcl_Obj *format, int *widthPtr, int *heightPtr,
 		    Tcl_Interp *interp));
 static int      FileReadGIF  _ANSI_ARGS_((Tcl_Interp *interp,
-		    Tcl_Channel chan, char *fileName, Tcl_Obj *format,
+		    Tcl_Channel chan, CONST char *fileName, Tcl_Obj *format,
 		    Tk_PhotoHandle imageHandle, int destX, int destY,
 		    int width, int height, int srcX, int srcY));
 static int	StringMatchGIF _ANSI_ARGS_(( Tcl_Obj *dataObj,
@@ -93,14 +93,14 @@ static int	StringReadGIF _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *dataObj,
 		    int destX, int destY, int width, int height,
 		    int srcX, int srcY));
 static int 	FileWriteGIF _ANSI_ARGS_((Tcl_Interp *interp,  
-		    char *filename, Tcl_Obj *format,
+		    CONST char *filename, Tcl_Obj *format,
 		    Tk_PhotoImageBlock *blockPtr));
 static int	CommonWriteGIF _ANSI_ARGS_((Tcl_Interp *interp,
 		    Tcl_Channel handle, Tcl_Obj *format,
 		    Tk_PhotoImageBlock *blockPtr));
 
 Tk_PhotoImageFormat tkImgFmtGIF = {
-	"GIF",			/* name */
+	"gif",			/* name */
 	FileMatchGIF,   /* fileMatchProc */
 	StringMatchGIF, /* stringMatchProc */
 	FileReadGIF,    /* fileReadProc */
@@ -177,7 +177,7 @@ static void		mInit _ANSI_ARGS_((unsigned char *string,
 static int
 FileMatchGIF(chan, fileName, format, widthPtr, heightPtr, interp)
     Tcl_Channel chan;		/* The image file, open for reading. */
-    char *fileName;		/* The name of the image file. */
+    CONST char *fileName;	/* The name of the image file. */
     Tcl_Obj *format;		/* User-specified format object, or NULL. */
     int *widthPtr, *heightPtr;	/* The dimensions of the image are
 				 * returned here if the file is a valid
@@ -212,7 +212,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	width, height, srcX, srcY)
     Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan;		/* The image file, open for reading. */
-    char *fileName;		/* The name of the image file. */
+    CONST char *fileName;	/* The name of the image file. */
     Tcl_Obj *format;		/* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
     int destX, destY;		/* Coordinates of top-left pixel in
@@ -1323,14 +1323,14 @@ static int no_bits _ANSI_ARGS_((int colors));
 static int
 FileWriteGIF (interp, filename, format, blockPtr)
     Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    char	*filename;
+    CONST char	*filename;
     Tcl_Obj	*format;
     Tk_PhotoImageBlock *blockPtr;
 {
     Tcl_Channel chan = NULL;
     int result;
 
-    chan = Tcl_OpenFileChannel(interp, filename, "w", 0644);
+    chan = Tcl_OpenFileChannel(interp, (char *) filename, "w", 0644);
     if (!chan) {
 	return TCL_ERROR;
     }

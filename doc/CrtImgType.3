@@ -5,13 +5,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtImgType.3,v 1.3 1999/10/29 03:57:40 hobbs Exp $
+'\" RCS: @(#) $Id: CrtImgType.3,v 1.4 2000/02/08 11:31:30 hobbs Exp $
 '\" 
 .so man.macros
-.TH Tk_CreateImageType 3 8.0 Tk "Tk Library Procedures"
+.TH Tk_CreateImageType 3 8.3 Tk "Tk Library Procedures"
 .BS
 .SH NAME
-Tk_CreateImageType, Tk_GetImageMasterData \- define new kind of image
+Tk_CreateImageType, Tk_GetImageMasterData, Tk_InitImageArgs \- define new kind of image
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -21,6 +21,8 @@ ClientData
 .sp
 .VS
 \fBTk_GetImageMasterData\fR(\fIinterp, name, typePtrPtr\fR)
+.sp
+\fBTk_InitImageArgs\fR(\fIinterp, argc, argvPtr\fR)
 .SH ARGUMENTS
 .AS Tk_ImageType *typePtrPtr
 .AP Tk_ImageType *typePtr in
@@ -34,6 +36,10 @@ Name of existing image.
 .AP Tk_ImageType **typePtrPtr out
 Points to word in which to store a pointer to type information for
 the given image, if it exists.
+.AP int argc
+Number of arguments
+.AP char ***argvPtr
+Pointer to argument list
 .VE
 .BE
 
@@ -99,6 +105,16 @@ in \fBimage create\fR commands to create images of the new
 type.
 If there already existed an image type by this name then
 the new image type replaces the old one.
+
+.SH PORTABILITY
+.PP
+In Tk 8.2 and earlier, the createProc below had a different
+signature. If you want to compile an image type using the
+old interface which should still run on all Tcl/Tk versions,
+compile it with the flag -DUSE_OLD_IMAGE. Further on, if
+you are using Stubs, you need to call the function
+Tk_InitImageArgs(interp, argc, &argv) first in your
+createProc. See below for a description of this function.
 
 .SH CREATEPROC
 \fItypePtr->createProc\fR provides the address of a procedure for
@@ -247,6 +263,18 @@ and the return value is the ClientData value returned by the
 pointer to the image master data structure).  If no such image exists
 then NULL is returned and NULL is stored at \fI*typePtrPtr\fR.
 .VE
+
+.SH TK_INITIMAGEARGS
+.VS
+.PP
+The function \fBTk_InitImageArgs\fR converts the arguments of the
+\fBcreateProc\fR from objects to strings when necessary. When
+not using stubs, not using the old interface, or running
+under an older (pre-8.3) Tk version, this function has no
+effect. This function makes porting older image handlers to
+the new interface a lot easier: After running this function,
+the arguments are guaranteed to be in string format, no
+matter how Tk deliverd them.
 
 .SH "SEE ALSO"
 Tk_ImageChanged, Tk_GetImage, Tk_FreeImage, Tk_RedrawImage, Tk_SizeOfImage

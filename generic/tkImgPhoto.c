@@ -15,7 +15,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.16 2000/01/31 18:38:26 ericm Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.17 2000/02/08 11:31:33 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -371,7 +371,7 @@ static void		ImgPhotoSetSize _ANSI_ARGS_((PhotoMaster *masterPtr,
 static void		ImgPhotoInstanceSetSize _ANSI_ARGS_((
 			    PhotoInstance *instancePtr));
 static int		ImgStringWrite _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tcl_DString *dataPtr, Tcl_Obj *formatString,
+			    Tcl_Obj *formatString,
 			    Tk_PhotoImageBlock *blockPtr));
 static char *		ImgGetPhoto _ANSI_ARGS_((PhotoMaster *masterPtr,
 			    Tk_PhotoImageBlock *blockPtr,
@@ -462,8 +462,13 @@ Tk_CreatePhotoImageFormat(formatPtr)
     *copyPtr = *formatPtr;
     copyPtr->name = (char *) ckalloc((unsigned) (strlen(formatPtr->name) + 1));
     strcpy(copyPtr->name, formatPtr->name);
-    copyPtr->nextPtr = tsdPtr->formatList;
-    tsdPtr->formatList = copyPtr;
+    if (isupper((unsigned char) *formatPtr->name)) {
+	copyPtr->nextPtr = tsdPtr->oldFormatList;
+	tsdPtr->oldFormatList = copyPtr;
+    } else {
+	copyPtr->nextPtr = tsdPtr->formatList;
+	tsdPtr->formatList = copyPtr;
+    }
 }
 
 /*
@@ -796,9 +801,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	break;
       }
       case PHOTO_DATA: {
-        Tcl_DString buffer;
 	char *data;
-	Tcl_Obj *formatObj;
 
 	/*
 	 * photo data command - first parse and check any options given.
@@ -854,19 +857,6 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 		}
 	    }
 	    if (stringWriteProc == NULL) {
-		oldformat = 1;
-		for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
-	 	    imageFormat = imageFormat->nextPtr) {
-		    if ((strncasecmp(Tcl_GetString(options.format),
-			    imageFormat->name, strlen(imageFormat->name)) == 0)) {
-			if (imageFormat->stringWriteProc != NULL) {
-			    stringWriteProc = imageFormat->stringWriteProc;
-			    break;
-			}
-		    }
-		}
-	    }
-	    if (stringWriteProc == NULL) {
 		Tcl_AppendResult(interp, "image string format \"",
 			Tcl_GetString(options.format),
 			"\" is not supported", (char *) NULL);
@@ -882,24 +872,15 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	 */
 
 	data = ImgGetPhoto(masterPtr, &block, &options);
-	Tcl_DStringInit(&buffer);
 
-	formatObj = options.format;
-	if (oldformat && formatObj) {
-	    formatObj = (Tcl_Obj *) Tcl_GetString(options.format);
-	}
-	result =  stringWriteProc(interp, &buffer,
-		formatObj, &block);
+	result =  ((int	(*) _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *formatString,
+		Tk_PhotoImageBlock *blockPtr, VOID *dummy))) stringWriteProc)
+		(interp, options.format, &block, (VOID *) NULL);
 	if (options.background) {
 	    Tk_FreeColor(options.background);
 	}
 	if (data) {
 	    ckfree(data);
-	}
-	if (result == TCL_OK) {
-	    Tcl_DStringResult(interp, &buffer);
-	} else {
-	    Tcl_DStringFree(&buffer);
 	}
 	return result;
 	break;
@@ -4908,9 +4889,8 @@ ImgGetPhoto(masterPtr, blockPtr, optPtr)
  */
 
 static int
-ImgStringWrite(interp, dataPtr, formatString, blockPtr)
+ImgStringWrite(interp, formatString, blockPtr)
     Tcl_Interp *interp;
-    Tcl_DString *dataPtr;
     Tcl_Obj *formatString;
     Tk_PhotoImageBlock *blockPtr;
 {
@@ -4918,10 +4898,12 @@ ImgStringWrite(interp, dataPtr, formatString, blockPtr)
     char *line, *linePtr;
     unsigned char *pixelPtr;
     int greenOffset, blueOffset;
+    Tcl_DString data;
 
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
 
+    Tcl_DStringInit(&data);
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
 	line = (char *) ckalloc((unsigned int) ((8 * blockPtr->width) + 2));
 	for (row=0; row<blockPtr->height; row++) {
@@ -4934,10 +4916,11 @@ ImgStringWrite(interp, dataPtr, formatString, blockPtr)
 		pixelPtr += blockPtr->pixelSize;
 		linePtr += 8;
 	    }
-	    Tcl_DStringAppendElement(dataPtr, line+1);
+	    Tcl_DStringAppendElement(&data, line+1);
 	}
 	ckfree (line);
     }
+    Tcl_DStringResult(interp, &data);
     return TCL_OK;
 }
 

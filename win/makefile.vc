@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.30 1999/12/09 14:46:41 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.31 2000/02/08 11:31:49 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -216,6 +216,7 @@ TKOBJS = \
 	$(TMPDIR)\tkWindow.obj
 
 TKSTUBOBJS = $(TMPDIR)\tkStubLib.obj \
+	$(TMPDIR)\tkStubImg.obj
 
 
 cc32		= "$(TOOLS32)\bin\cl.exe"

@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.38 2000/01/16 05:33:08 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.39 2000/02/08 11:31:36 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -270,7 +270,7 @@ UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixWm.o tkUnixXId.o tkStubInit.o tkStubLib.o
 
-STUB_LIB_OBJS = tkStubLib.o
+STUB_LIB_OBJS = tkStubLib.o tkStubImg.o
 
 OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o tkEvent.o \
@@ -807,6 +807,9 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
+
+tkStubImg.o: $(GENERIC_DIR)/tkStubImg.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubImg.c
 
 tkUnix.o: $(UNIX_DIR)/tkUnix.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnix.c

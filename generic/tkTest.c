@@ -13,8 +13,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.9 1999/12/14 06:52:31 hobbs Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.10 2000/02/08 11:31:34 hobbs Exp $
  */
+
+#ifdef MAC_TCL
+#define USE_OLD_IMAGE
+#endif
 
 #include "tkInt.h"
 #include "tkPort.h"
@@ -61,10 +65,17 @@ typedef struct TImageInstance {
  * The type record for test images:
  */
 
+#ifdef USE_OLD_IMAGE
+static int		ImageCreate _ANSI_ARGS_((Tcl_Interp *interp,
+			    char *name, int argc, char **argv,
+			    Tk_ImageType *typePtr, Tk_ImageMaster master,
+			    ClientData *clientDataPtr));
+#else
 static int		ImageCreate _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *name, int argc, Tcl_Obj *CONST objv[],
 			    Tk_ImageType *typePtr, Tk_ImageMaster master,
 			    ClientData *clientDataPtr));
+#endif
 static ClientData	ImageGet _ANSI_ARGS_((Tk_Window tkwin,
 			    ClientData clientData));
 static void		ImageDisplay _ANSI_ARGS_((ClientData clientData,
@@ -78,7 +89,7 @@ static void		ImageDelete _ANSI_ARGS_((ClientData clientData));
 
 static Tk_ImageType imageType = {
     "test",			/* name */
-    ImageCreate,		/* createProc */
+    (Tk_ImageCreateProc *) ImageCreate, /* createProc */
     ImageGet,			/* getProc */
     ImageDisplay,		/* displayProc */
     ImageFree,			/* freeProc */
@@ -1557,6 +1568,41 @@ TestfontObjCmd(clientData, interp, objc, objv)
  */
 
 	/* ARGSUSED */
+#ifdef USE_OLD_IMAGE
+static int
+ImageCreate(interp, name, argc, argv, typePtr, master, clientDataPtr)
+    Tcl_Interp *interp;		/* Interpreter for application containing
+				 * image. */
+    char *name;			/* Name to use for image. */
+    int argc;			/* Number of arguments. */
+    char **argv;		/* Argument strings for options (doesn't
+				 * include image name or type). */
+    Tk_ImageType *typePtr;	/* Pointer to our type record (not used). */
+    Tk_ImageMaster master;	/* Token for image, to be used by us in
+				 * later callbacks. */
+    ClientData *clientDataPtr;	/* Store manager's token for image here;
+				 * it will be returned in later callbacks. */
+{
+    TImageMaster *timPtr;
+    char *varName;
+    int i;
+
+    Tk_InitImageArgs(interp, argc, &argv);
+    varName = "log";
+    for (i = 0; i < argc; i += 2) {
+	if (strcmp(argv[i], "-variable") != 0) {
+	    Tcl_AppendResult(interp, "bad option name \"",
+		    argv[i], "\"", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	if ((i+1) == argc) {
+	    Tcl_AppendResult(interp, "no value given for \"",
+		    argv[i], "\" option", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	varName = argv[i+1];
+    }
+#else
 static int
 ImageCreate(interp, name, objc, objv, typePtr, master, clientDataPtr)
     Tcl_Interp *interp;		/* Interpreter for application containing
@@ -1589,6 +1635,7 @@ ImageCreate(interp, name, objc, objv, typePtr, master, clientDataPtr)
 	}
 	varName = Tcl_GetString(objv[i+1]);
     }
+#endif
     timPtr = (TImageMaster *) ckalloc(sizeof(TImageMaster));
     timPtr->master = master;
     timPtr->interp = interp;
