@@ -1,3 +1,10 @@
+2001-08-15  Don Porter <dgp@users.sourceforge.net>
+
+	* changes: Labelled the TIP 44 changes as "POTENTIAL INCOMPATIBILITY".
+	Although technically internal changes are not incompatible, they'll
+	be perceived as such by those who get bitten, and this will help
+	them find the cause of their trouble.
+
 2001-08-14  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tk{Util,Font,Cursor,Color,Bitmap,3d}.c: Modified

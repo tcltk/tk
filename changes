@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.46 2001/08/07 02:43:52 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.47 2001/08/15 19:51:50 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5053,6 +5053,7 @@ screens (hipp)
 
  * moved all private tk* commands and variables in the ::tk:: namespace
    [TIP #44] (porter)
+	*** POTENTIAL INCOMPATIBILITY ***
 
  * improved tests to better handle results on variant systems (hobbs)
 
