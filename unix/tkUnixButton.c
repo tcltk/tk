@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.17 2004/02/18 00:40:24 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.18 2004/03/16 19:55:12 hobbs Exp $
  */
 
 #include "tkButton.h"
@@ -244,12 +244,16 @@ TkpDrawCheckIndicator(tkwin, display, d, x, y, bgBorder, indicatorColor,
 	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
     imgColors[1 /*B*/] =
 	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
-    imgColors[2 /*C*/] =
-	    Tk_GetColorByValue(tkwin, bg_brdr->lightColorPtr)->pixel;
+    imgColors[2 /*C*/] = (bg_brdr->lightColorPtr != NULL) ?
+	Tk_GetColorByValue(tkwin, bg_brdr->lightColorPtr)->pixel :
+	WhitePixelOfScreen(bg_brdr->screen);
     imgColors[3 /*D*/] =
 	    Tk_GetColorByValue(tkwin, selectColor)->pixel;
     imgColors[4 /*E*/] =
 	    Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr)->pixel;
+    imgColors[4 /*E*/] = (bg_brdr->darkColorPtr != NULL) ? 
+	Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr)->pixel :
+	BlackPixelOfScreen(bg_brdr->screen);
     imgColors[5 /*F*/] =
 	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
     imgColors[6 /*G*/] =
