@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.13 2002/10/02 20:59:28 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.14 2003/02/25 00:46:41 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1598,6 +1598,22 @@ test entry-20.7 {widget deletion with textvariable active} {
     destroy .e
     winfo exists .e
 } 0
+
+test entry-21.1 {selection present while disabled, bug 637828} {
+    destroy .e
+    entry .e
+    .e insert end 0123456789
+    .e select from 3
+    .e select to 6
+    set out [.e selection present]
+    .e configure -state disabled
+    # still return 1 when disabled, because 'selection get' will work,
+    # but selection cannot be changed (new behavior since 8.4)
+    .e select to 9
+    lappend out [.e selection present] [selection get]
+} {1 1 345}
+
+destroy .e
 
 # XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
 # and EntryTextVarProc.

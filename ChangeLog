@@ -1,3 +1,11 @@
+2003-02-24  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkEntry.c (SpinboxWidgetObjCmd, EntryWidgetObjCmd):
+	* tests/entry.test:   return 1 if selection is present even if
+	* tests/spinbox.test: entry/spinbox is disabled, as selection get
+	will still return the selection (although selection still ignore
+	modify requests when entry/spinbox is disabled). [Bug #637828]
+
 2003-02-24  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	* tkMacOSXDialog.c (NavServicesGetFile): Fix bug with
