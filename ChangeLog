@@ -1,3 +1,17 @@
+2000-08-01  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkInt.h: Removed prototype for Tk_ClipboardCmd, added
+	prototype for Tk_ClipboardObjCmd.
+
+	* generic/tkWindow.c: Updated function pointers for clipboard
+	command to use Tcl_Obj version.
+
+	* tests/clipboard.test: Updated tests to expect standard error
+	messages.
+
+	* generic/tkClipboard.c (Tk_ClipboardObjCmd): Obj'ified
+	Tk_ClipboardCmd -> Tk_ClipboardObjCmd.
+
 2000-07-28  Eric Melski  <ericm@ajubasolutions.com>
 
 	* unix/tkUnixButton.c (TkpDisplayButton): Added bits to change
