@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.73 2004/09/19 00:11:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.74 2004/09/21 00:09:19 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2094,6 +2094,11 @@ UpdateWrapper(winPtr)
 	    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
 		    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
 		    LWA_ALPHA);
+	} else {
+	    /*
+	     * Layering not used or supported.
+	     */
+	    wmPtr->alpha = 1.0;
 	}
 
 	place.length = sizeof(WINDOWPLACEMENT);
@@ -2914,28 +2919,28 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 				!= TCL_OK)) {
 		    return TCL_ERROR;
 		}
+		/*
+		 * The user should give (transparent) 0 .. 1.0 (opaque),
+		 * but we ignore the setting of this (it will always be 1)
+		 * in the case that the API is not available.
+		 */
+		if (dval < 0.0) {
+		    dval = 0;
+		} else if (dval > 1.0) {
+		    dval = 1;
+		}
+		wmPtr->alpha = dval;
+		if (dval < 1.0) {
+		    *stylePtr |= styleBit;
+		} else {
+		    *stylePtr &= ~styleBit;
+		}
 		if (setLayeredWindowAttributesProc != NULL) {
 		    /*
-		     * The user should give (transparent) 0 .. 1.0 (opaque),
-		     * but we ignore the setting of this (it will always be 1)
-		     * in the case that the API is not available.
-		     */
-		    if (dval < 0.0) {
-			dval = 0;
-		    } else if (dval > 1.0) {
-			dval = 1;
-		    }
-		    wmPtr->alpha = dval;
-		    if (dval < 1.0) {
-			*stylePtr |= styleBit;
-		    } else {
-			*stylePtr &= ~styleBit;
-		    }
-		    /*
 		     * Set the window directly regardless of UpdateWrapper.
-		     * The user supplies (opaque) 0..100 (transparent), but
-		     * Windows wants (transparent) 0..255 (opaque), so do the
-		     * translation. Add the 0.5 to round the value.
+		     * The user supplies a double from [0..1], but Windows
+		     * wants an int (transparent) 0..255 (opaque), so do the
+		     * translation.  Add the 0.5 to round the value.
 		     */
 		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
 			    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
@@ -2958,30 +2963,25 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	    }
 	}
     }
-    if ((wmPtr->styleConfig != style) || (wmPtr->exStyleConfig != exStyle)) {
+    if (wmPtr->styleConfig != style) {
 	/*
-	 * Only the change of TOPMOST or LAYERED bits require UpdateWrapper.
-	 * Using SetWindowPos prevents the toplevel "blink", but requires the
-	 * current style info, as *Config only contains a few configurable
-	 * bits which changed.
+	 * Currently this means only WS_DISABLED changed, which we can
+	 * effect with EnableWindow.
 	 */
-	if ((wmPtr->exStyleConfig ^ exStyle) & (WS_EX_TOPMOST|WS_EX_LAYERED)) {
-	    wmPtr->styleConfig = style;
-	    wmPtr->exStyleConfig = exStyle;
+	wmPtr->styleConfig = style;
+	if ((wmPtr->exStyleConfig == exStyle)
+		&& !(wmPtr->flags & WM_NEVER_MAPPED)) {
+	    EnableWindow(wmPtr->wrapper, (style & WS_DISABLED) ? 0 : 1);
+	}
+    }
+    if (wmPtr->exStyleConfig != exStyle) {
+	/*
+	 * UpdateWrapper ensure that all effects are properly handled,
+	 * such as TOOLWINDOW disappearing from the taskbar.
+	 */
+	wmPtr->exStyleConfig = exStyle;
+	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    UpdateWrapper(winPtr);
-	} else {
-	    LONG curStyle, curExStyle;
-	    curExStyle = (LONG) GetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE);
-	    curStyle   = (LONG) GetWindowLongPtr(wmPtr->wrapper, GWL_STYLE);
-	    curExStyle = (curExStyle & ~(wmPtr->exStyleConfig)) | exStyle;
-	    curStyle   = (curStyle & ~(wmPtr->styleConfig)) | style;
-	    wmPtr->styleConfig = style;
-	    wmPtr->exStyleConfig = exStyle;
-	    SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,(LONG_PTR)curExStyle);
-	    SetWindowLongPtr(wmPtr->wrapper, GWL_STYLE, (LONG_PTR) curStyle);
-	    SetWindowPos(wmPtr->wrapper, NULL, 0, 0, 0, 0,
-		    SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING
-		    |SWP_NOZORDER|SWP_FRAMECHANGED);
 	}
     }
     return TCL_OK;
