@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.32 2002/10/02 20:59:26 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.33 2002/12/09 00:32:45 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -252,11 +252,12 @@ typedef struct {
  *				during next redisplay operation.
  * GOT_SELECTION:		Non-zero means we've claimed the selection.
  * ENTRY_DELETED:		This entry has been effectively destroyed.
- * VALIDATING:                  Non-zero means we are in a validateCmd
- * VALIDATE_VAR:                Non-zero means we are attempting to validate
- *                              the entry's textvariable with validateCmd
- * VALIDATE_ABORT:              Non-zero if validatecommand signals an abort
- *                              for current procedure and make no changes
+ * VALIDATING:			Non-zero means we are in a validateCmd
+ * VALIDATE_VAR:		Non-zero means we are attempting to validate
+ *				the entry's textvariable with validateCmd
+ * VALIDATE_ABORT:		Non-zero if validatecommand signals an abort
+ *				for current procedure and make no changes
+ * ENTRY_VAR_TRACED:		Non-zero if a var trace is set.
  */
 
 #define REDRAW_PENDING		1
@@ -269,6 +270,7 @@ typedef struct {
 #define VALIDATING              0x80
 #define VALIDATE_VAR            0x100
 #define VALIDATE_ABORT          0x200
+#define ENTRY_VAR_TRACED        0x400
 
 /*
  * The following macro defines how many extra pixels to leave on each
@@ -1335,6 +1337,7 @@ DestroyEntry(memPtr)
 	Tcl_UntraceVar(entryPtr->interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, (ClientData) entryPtr);
+	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
     if (entryPtr->textGC != None) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
@@ -1413,10 +1416,12 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
      * Eliminate any existing trace on a variable monitored by the entry.
      */
 
-    if (entryPtr->textVarName != NULL) {
+    if ((entryPtr->textVarName != NULL)
+	    && (entryPtr->flags & ENTRY_VAR_TRACED)) {
 	Tcl_UntraceVar(interp, entryPtr->textVarName, 
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, (ClientData) entryPtr);
+	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
 
     /*
@@ -1653,10 +1658,12 @@ ConfigureEntry(interp, entryPtr, objc, objv, flags)
      * constrained the value according to new -from/-to values.
      */
 
-    if (entryPtr->textVarName != NULL) {
+    if ((entryPtr->textVarName != NULL)
+	    && !(entryPtr->flags & ENTRY_VAR_TRACED)) {
 	Tcl_TraceVar(interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, (ClientData) entryPtr);
+	entryPtr->flags |= ENTRY_VAR_TRACED;
     }
 
     EntryWorldChanged((ClientData) entryPtr);
@@ -3314,6 +3321,7 @@ EntryTextVarProc(clientData, interp, name1, name2, flags)
 	    Tcl_TraceVar(interp, entryPtr->textVarName,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
+	    entryPtr->flags |= ENTRY_VAR_TRACED;
 	}
 	return (char *) NULL;
     }
