@@ -1,3 +1,15 @@
+2002-04-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* generic/tkTextDisp.c (GetXView,GetYView): Comparison with
+	previous values of scrollbar range are now done in a way that is
+	sensitive to the bizarreness of floating-point on architectures
+	where IEEE-FP is not used on the processor.  Also increased the
+	size of the temporary buffer to take account of the fact that
+	TCL_DOUBLE_SPACE is meant to only imply enough space to take a
+	printed double and trailing '\0', and no more.  [Bug #223739]
+	(FP_EQUAL_SCALE): New macro to help compare floating-point numbers
+	for equality in a sane way, used in GetXView and GetYView.
+
 2002-04-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (TkCloseDisplay): Added to centralize where a
