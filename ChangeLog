@@ -1,5 +1,7 @@
 2002-01-25  Don Porter  <dgp@users.sourceforge.net>
 
+	* All changes below are Patch 505159
+
 	* doc/AddOption.3:
 	* doc/CanvTkWin.3:
 	* doc/GetPixels.3:
