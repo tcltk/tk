@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.1.2.4 1999/02/16 11:39:31 lfb Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.1.2.5 1999/03/09 01:56:01 lfb Exp $
  */
 
 #include "tkPort.h"
@@ -184,7 +184,11 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 		    return TCL_ERROR;
 		}
 	    } else {
-		value = specPtr->defValue;
+		if (specPtr->defValue != NULL) {
+		    value = Tk_GetUid(specPtr->defValue);
+		} else {
+		    value = NULL;
+		}
 		if ((value != NULL) && !(specPtr->specFlags
 			& TK_CONFIG_DONT_SET_DEFAULT)) {
 		    if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.1.4.3 1999/02/11 04:13:47 stanton Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.1.4.4 1999/03/09 01:56:01 lfb Exp $
  */
 
 #include "tkInt.h"
@@ -204,6 +204,8 @@ static void		TrivialEventProc _ANSI_ARGS_((ClientData clientData,
 
 extern int		TkplatformtestInit _ANSI_ARGS_((
 			    Tcl_Interp *interp));
+extern int              TclThread_Init _ANSI_ARGS_((Tcl_Interp *interp));
+
 #if !(defined(__WIN32__) || defined(MAC_TCL))
 #define TkplatformtestInit(x) TCL_OK
 #endif
@@ -279,7 +281,13 @@ Tktest_Init(interp)
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
 
-/*
+#ifdef TCL_THREADS
+    if (TclThread_Init(interp) != TCL_OK) {
+	return TCL_ERROR;
+    }
+#endif
+    
+    /*
      * Create test image type.
      */
 
