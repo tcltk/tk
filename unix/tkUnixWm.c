@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.28 2002/08/02 03:18:07 dgp Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.29 2002/08/02 15:12:23 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -983,7 +983,7 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
         WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
     int index; 
-    size_t length;
+    int length;
     char *argv1;
     TkWindow *winPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -995,7 +995,7 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
     }
 
     argv1 = Tcl_GetStringFromObj(objv[1], &length);
-    if ((argv1[0] == 't') && (strncmp(argv1, "tracing", length) == 0)
+    if ((argv1[0] == 't') && (strncmp(argv1, "tracing", (size_t) length) == 0)
 	    && (length >= 3)) {
 	int wmTracing;
 	if ((objc != 2) && (objc != 3)) {
