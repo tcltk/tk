@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.10 2002/12/08 00:46:51 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.11 2003/02/18 19:18:33 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -126,8 +126,17 @@ TkpDisplayWarning(msg, title)
     Tcl_DString msgString, titleString;
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
 
+    /*
+     * Truncate MessageBox string if it is too long to not overflow
+     * the screen and cause possible oversized window error.
+     */
+#define TK_MAX_WARN_LEN (1024 * sizeof(WCHAR))
     Tcl_UtfToExternalDString(unicodeEncoding, msg, -1, &msgString);
     Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
+    if (Tcl_DStringLength(&msgString) > TK_MAX_WARN_LEN) {
+	Tcl_DStringSetLength(&msgString, TK_MAX_WARN_LEN);
+	Tcl_DStringAppend(&msgString, (char *) L" ...", 4 * sizeof(WCHAR));
+    }
     MessageBoxW(NULL, (WCHAR *) Tcl_DStringValue(&msgString),
 	    (WCHAR *) Tcl_DStringValue(&titleString),
 	    MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
