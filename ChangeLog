@@ -2,6 +2,36 @@
 
 	** Start changes for improved mac build (steffen)  **
 	
+	* generic/tkInt.decls: removed superfluous declarations.
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkMain.c: include unistd.h for mac.
+	* generic/tkPointer.c: include tkMacInt.h for mac.
+	* generic/tkStubInit.c:
+	* generic/tkStubLib.c:
+	* mac/MW_TkHeader.pch:
+	* mac/MW_TkOldImgHeader.h:
+	* mac/MW_TkTestHeader.pch:
+	* mac/tclets.r:
+	* mac/tkMac.h:
+	* mac/tkMacAppearanceStubs.c:
+	* mac/tkMacApplication.r:
+	* mac/tkMacButton.c:
+	* mac/tkMacDialog.c: support for -filetypes
+	* mac/tkMacFont.c:
+	* mac/tkMacInt.h:
+	* mac/tkMacLibrary.r:
+	* mac/tkMacMDEF.r:
+	* mac/tkMacMenu.c:
+	* mac/tkMacMenus.c:
+	* mac/tkMacPort.h:
+	* mac/tkMacResource.r:
+	* mac/tkMacScrlbr.c: improved scrollbar code
+	* mac/tkMacWindowMgr.c: added control of floating windows
+	* mac/tkMacWm.c: improved use of precompiled headers, better
+	support for Appearance Manager, change copyrights, resource files,
+	use DLLIMPORT/DLLEXPORT, comment corrections.
+
 	* mac/MWTkBuildLibHeader.h:
 	* mac/MW_TkBuildLibHeader.pch:
 	* mac/MW_TkHeaderCommon.h:

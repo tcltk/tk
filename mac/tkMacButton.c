@@ -9,12 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.10 2000/04/17 02:16:36 jingham Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.10.2.1 2001/04/04 21:39:48 hobbs Exp $
  */
 
 #include "tkButton.h"
 #include "tkMacInt.h"
 #include <Controls.h>
+#include <ControlDefinitions.h>
 #include <LowMem.h>
 #include <Appearance.h>
 

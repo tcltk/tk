@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacFont.c,v 1.5 1999/12/07 03:04:51 hobbs Exp $
+ * RCS: @(#) $Id: tkMacFont.c,v 1.5.2.1 2001/04/04 21:39:48 hobbs Exp $
  */
  
 #include <Windows.h>
@@ -326,7 +326,7 @@ TkpFontPkgInit(mainPtr)
 	 */
 	
 	fontMenu = NewMenu('FT', "\px");
-	AddResMenu(fontMenu, 'FONT');
+	AppendResMenu(fontMenu, 'FONT');
 	
 	numFonts = CountMItems(fontMenu);
 	tmpFontNameMap = (FontNameMap *) ckalloc(sizeof(FontNameMap) * numFonts);

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacApplication.r,v 1.4 2000/02/10 08:48:00 jingham Exp $
+ * RCS: @(#) $Id: tkMacApplication.r,v 1.4.2.1 2001/04/04 21:39:48 hobbs Exp $
  */
 
 #include <Types.r>
@@ -45,14 +45,14 @@ resource 'vers' (1) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham" "\n" "© 1993-1997 Sun Microsystems" "\n" "1998-2000 Scriptics Inc."
+	TK_PATCH_LEVEL ", by Ray Johnson & Jim Ingham" "\n" "© 2000 Ajuba Solutions"
 };
 
 resource 'vers' (2) {
 	TK_MAJOR_VERSION, MINOR_VERSION,
 	RELEASE_LEVEL, 0x00, verUS,
 	TK_PATCH_LEVEL,
-	"Wish " TK_PATCH_LEVEL " © 1993-1999"
+	"Wish " TK_PATCH_LEVEL " © 1993-2000"
 };
 
 #define TK_APP_RESOURCES 128
@@ -94,7 +94,7 @@ resource 'FREF' (TK_APP_RESOURCES+1, purgeable)
 
 type TK_APP_CREATOR as 'STR ';
 resource TK_APP_CREATOR (0, purgeable) {
-	"Wish " TK_PATCH_LEVEL " © 1996"
+	"Wish " TK_PATCH_LEVEL " © 1993-2000"
 };
 
 /*

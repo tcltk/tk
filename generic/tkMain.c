@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.8 2000/04/25 17:25:27 ericm Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.8.2.1 2001/04/04 21:39:48 hobbs Exp $
  */
 
 #include <ctype.h>
@@ -55,7 +55,11 @@ Tcl_ThreadDataKey dataKey;
  */
 
 #if !defined(__WIN32__) && !defined(_WIN32)
+#if !defined(MAC_TCL)
 extern int		isatty _ANSI_ARGS_((int fd));
+#else
+#include <unistd.h>
+#endif
 extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
 extern void		TkpDisplayWarning _ANSI_ARGS_((char *msg,

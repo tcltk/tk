@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWm.c,v 1.10 2000/04/25 01:02:13 hobbs Exp $
+ * RCS: @(#) $Id: tkMacWm.c,v 1.10.2.1 2001/04/04 21:39:49 hobbs Exp $
  */
 
 #include <Gestalt.h>
@@ -4534,7 +4534,12 @@ TkMacHaveAppearance()
 	if (err == noErr) {
 	    TkMacHaveAppearance = 1;
 	}
+/* even if AppearanceManager 1.1 routines are present,
+we can't call them from 68K code, so we pretend
+to be running Apperarance Mgr 1.0 */
+#if !(GENERATING68K && !GENERATINGCFM)
 	err = Gestalt(gestaltAppearanceVersion, &response);
+#endif
 	if (err == noErr) {
 	    TkMacHaveAppearance = (int) response;
 	}
