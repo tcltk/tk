@@ -30,6 +30,13 @@ fi
 AC_C_CROSS
 AC_HAVE_HEADERS(unistd.h limits.h)
 
+# set the warning flags depending on whether or not we are using gcc
+if test "${GCC}" = "yes" ; then
+    CFLAGS_WARNING="-Wall -Wconversion"
+else
+    CFLAGS_WARNING=""
+fi
+
 #--------------------------------------------------------------------
 #	See if there was a command-line option for where Tcl is;  if
 #	not, assume that its top-level directory is a sibling of ours.
@@ -394,6 +401,7 @@ TK_LIB_SPEC="-L${exec_prefix}/lib \${TK_LIB_FLAG}"
 AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(CFLAGS_OPTIMIZE)
+AC_SUBST(CFLAGS_WARNING)
 AC_SUBST(DBGX)
 AC_SUBST(DL_LIBS)
 AC_SUBST(LD_FLAGS)

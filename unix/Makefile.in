@@ -84,6 +84,9 @@ TCL_BIN_DIR =		@TCL_BIN_DIR@
 # Libraries built with optimization switches have this additional extension
 DBGX =			@DBGX@
 
+# warning flags
+CFLAGS_WARNING =	@CFLAGS_WARNING@
+
 # The default switches for optimization or debugging
 CFLAGS_DEBUG =		@CFLAGS_DEBUG@
 CFLAGS_OPTIMIZE =	@CFLAGS_OPTIMIZE@
@@ -200,7 +203,8 @@ TOOL_DIR =		@TCL_SRC_DIR@/tools
 
 
 CC =		@CC@
-CC_SWITCHES =	${CFLAGS} ${TK_SHLIB_CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
+CC_SWITCHES =	${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
+-I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} \
 ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS}
 
