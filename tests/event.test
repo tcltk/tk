@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: event.test,v 1.8 2002/02/14 12:13:51 mdejong Exp $
+# RCS: @(#) $Id: event.test,v 1.9 2002/02/15 05:48:08 mdejong Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -448,6 +448,207 @@ test event-click-drag-1.2 { click and drag in an entry widget, this
 
 } {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
 
+
+
+test event-double-click-drag-1.1 { click down, click up, click down again,
+                            then drag in a text widget } {
+    destroy .t
+    set t [toplevel .t]
+    set e [text $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    _keypress_string $e "Word select test"
+    set anchor 1.8
+
+    # Get the x,y coords of the second e in "select"
+    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+
+    # Click down, release, then click down again
+    event generate $e <Enter>
+    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
+    _pause 50
+    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    _pause 50
+
+    # Save the highlighted text
+    set result [list]
+    lappend result [_get_selection $e]
+
+    # Insert cursor should be at end of "select"
+    lappend result [$e index insert]
+
+    # Move mouse one character to the left
+    set current [$e index [list $anchor - 1 char]]
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 50
+
+    # Insert cursor should be before the l in "select"
+    lappend result [$e index insert]
+
+    # Selection should still be the word "select"
+    lappend result [_get_selection $e]
+
+    # Move mouse to the space before the word "select"
+    set current [$e index [list $current - 3 char]]
+
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 200
+
+    lappend result [$e index insert]
+    lappend result [_get_selection $e]
+
+    # Move mouse to the r in "Word"
+    set current 1.2
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 50
+
+    # Selection should now be "Word select"
+    lappend result [_get_selection $e]
+
+    # Insert cursor should be before the r in "Word"
+    lappend result [$e index insert]
+
+    set result
+} {select 1.11 1.7 select 1.4 { select} {Word select} 1.2}
+
+
+
+test event-double-click-drag-1.2 { click down, click up, click down again,
+                            then drag in an entry widget } {
+    destroy .t
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    _keypress_string $e "Word select test"
+
+    set anchor 8
+
+    # Get the x,y coords of the second e in "select"
+    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+
+    # Click down, release, then click down again
+    event generate $e <Enter>
+    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
+    _pause 50
+    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    _pause 50
+
+    set result [list]
+    lappend result [_get_selection $e]
+
+    # Insert cursor should be at the end of "select"
+    lappend result [$e index insert]
+
+    # Move mouse one character to the left
+    set current [expr {$anchor - 1}]
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 50
+
+    # Insert cursor should be before the l in "select"
+    lappend result [$e index insert]
+
+    # Selection should still be the word "select"
+    lappend result [_get_selection $e]
+
+    # Move mouse to the space before the word "select"
+    set current [expr {$current - 3}]
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 50
+
+    lappend result [$e index insert]
+    lappend result [_get_selection $e]
+
+    # Move mouse to the r in "Word"
+    set current [expr {$current - 2}]
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 50
+
+    # Selection should now be "Word select"
+    lappend result [_get_selection $e]
+
+    # Insert cursor should be before the r in "Word"
+    lappend result [$e index insert]
+
+    set result
+} {select 11 7 select 4 { select} {Word select} 2}
+
+
+test event-triple-click-drag-1.1 { Triple click and drag across lines in
+        a text widget, this should extend the selection to the new line } {
+    destroy .t
+    set t [toplevel .t]
+    set e [text $t.e]
+    pack $e
+    tkwait visibility $e
+    focus -force $e
+    _keypress_string $e "LINE ONE\nLINE TWO\nLINE THREE"
+
+    set anchor 3.2
+
+    # Triple click one third line leaving mouse down
+
+    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+
+    event generate $e <Enter>
+
+    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
+    _pause 50
+
+    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    _pause 50
+    event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
+    _pause 50
+
+    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    _pause 50
+
+    set result [list]
+    lappend result [_get_selection $e]
+
+    # Drag up to second line
+
+    set current [$e index [list $anchor - 1 line]]
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 50
+
+    lappend result [_get_selection $e]
+
+    # Drag up to first line
+
+    set current [$e index [list $current - 1 line]]
+    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+
+    event generate $e <B1-Motion> -x $current_x -y $current_y
+    _pause 50
+
+    lappend result [_get_selection $e]
+
+    set result
+
+} [list "LINE THREE\n" "LINE TWO\nLINE THREE\n" \
+        "LINE ONE\nLINE TWO\nLINE THREE\n"]
 
 
 # cleanup
