@@ -2,7 +2,7 @@ Tk 8.4 for Windows
 
 Originally by Scott Stanton while at Sun Microsystems Labs
 
-RCS: @(#) $Id: README,v 1.15 2001/07/05 01:45:04 uid38172 Exp $
+RCS: @(#) $Id: README,v 1.16 2002/03/04 23:31:45 hobbs Exp $
 
 This is the directory where you configure and compile the Windows
 version of Tk.  This directory also contains source files for Tk
@@ -20,4 +20,4 @@ locate the necessary Tcl files.  Otherwise you may need to
 edit makefile.vc and adjust the path to Tcl accordingly.
 
 Information about compiling for windows is maintained at:
-    http://www.purl.org/tcl/home/doc/howto/compile.html
+    http://www.tcl.tk/doc/howto/compile.html
