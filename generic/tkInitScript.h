@@ -12,54 +12,62 @@
  * SCCS: @(#) tkInitScript.h 1.3 97/08/11 19:12:28
  */
 
-
-
 /*
- * The following string is the startup script executed in new
- * interpreters.  It looks in several different directories
- * for a script "tk.tcl" that is compatible with this version
- * of Tk.  The tk.tcl script does all of the real work of
- * initialization.
- * When called from a safe interpreter, it does not use file exists.
- * we don't use pwd either because of safe interpreters.
+ * In order to find tk.tcl during initialization, the following script
+ * is invoked by Tk_Init().  It looks in several different directories:
  *
- * We leave the door open to the application by using an existing
- * tkInit proc which if it exists is responsible for finding and sourcing
- * tk.tcl themselves. With that, an application that wish to ignore
- * the env(TK_LIBRARY) or have special initialization need can do it.
+ *	$tk_library		- can specify a primary location, if set
+ *				  no other locations will be checked
+ *
+ *	$env(TK_LIBRARY)	- highest priority so user can always override
+ *				  the search path unless the application has
+ *				  specified an exact directory above
+ *
+ *	$tcl_library/../tk$tk_version
+ *				- look relative to init.tcl in an installed
+ *				  lib directory (e.g. /usr/local)
+ *
+ *	<executable directory>/../lib/tk$tk_version
+ *				- look for a lib/tk<ver> in a sibling of
+ *				  the bin directory (e.g. /usr/local)
+ *
+ *	<executable directory>/../library
+ *				- look in Tk build directory
+ *
+ *	<executable directory>/../../tk$tk_patchLevel/library
+ *				- look for Tk build directory relative
+ *				  to a parallel build directory
+ *
+ * The first directory on this path that contains a valid tk.tcl script
+ * will be set ast the value of tk_library.
+ *
+ * Note that this entire search mechanism can be bypassed by defining an
+ * alternate tkInit procedure before calling Tk_Init().
  */
 
 static char initScript[] = "if {[info proc tkInit]==\"\"} {\n\
   proc tkInit {} {\n\
     global tk_library tk_version tk_patchLevel env errorInfo\n\
     rename tkInit {}\n\
-    set errors \"\"\n\
-    if {![info exists tk_library]} {\n\
-	set tk_library .\n\
-    }\n\
+    set errors {}\n\
     set dirs {}\n\
-    if {[info exists env(tk_pkgLibrary)]} {\n\
-	lappend dirs $env(tk_pkgLibrary)\n\
-    }\n\
-    if {[info exists env(TK_LIBRARY)]} {\n\
-	lappend dirs $env(TK_LIBRARY)\n\
-    }\n\
-    lappend dirs $tk_library\n\
-    lappend dirs [file join [file dirname [info library]] tk$tk_version]\n\
-    set parentDir [file dirname [file dirname [info nameofexecutable]]]\n\
-    lappend dirs [file join $parentDir tk$tk_version]\n\
-    lappend dirs [file join $parentDir lib tk$tk_version]\n\
-    lappend dirs [file join $parentDir library]\n\
-    set parentParentDir [file dirname $parentDir]\n\
-    if [string match {*[ab]*} $tk_patchLevel] {\n\
-        set dirSuffix $tk_patchLevel\n\
+    if {[info exists tk_library]} {\n\
+	lappend dirs $tk_library\n\
     } else {\n\
-        set dirSuffix $tk_version\n\
+	if {[info exists env(TK_LIBRARY)]} {\n\
+	    lappend dirs $env(TK_LIBRARY)\n\
+	}\n\
+	lappend dirs [file join [file dirname [info library]] tk$tk_version]\n\
+	set parentDir [file dirname [file dirname [info nameofexecutable]]]\n\
+	lappend dirs [file join $parentDir lib tk$tk_version]\n\
+	lappend dirs [file join $parentDir library]\n\
+	if [string match {*[ab]*} $tk_patchLevel] {\n\
+	    set ver $tk_patchLevel\n\
+	} else {\n\
+	    set ver $tk_version\n\
+	}\n\
+	lappend dirs [file join [file dirname $parentDir] tk$ver/library]\n\
     }\n\
-    lappend dirs [file join $parentParentDir tk$dirSuffix library]\n\
-    lappend dirs [file join $parentParentDir library]\n\
-    lappend dirs [file join [file dirname \
-	[file dirname [info library]]] tk$dirSuffix library]\n\
     foreach i $dirs {\n\
 	set tk_library $i\n\
 	set tkfile [file join $i tk.tcl]\n\
