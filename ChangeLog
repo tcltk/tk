@@ -1,3 +1,9 @@
+2001-11-29  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/palette.tcl (tk_setPalette): Added heuristic to guess
+	from the background whether to use black or white for the
+	foreground when not told specifically.  Suggested by Chris Nelson.
+
 2001-11-27  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: Fixed CAT32 target.  cat.c is located in the Tcl
