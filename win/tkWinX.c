@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.20 2002/04/05 08:40:35 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.21 2002/04/12 07:19:13 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -84,6 +84,7 @@ static Tcl_Encoding keyInputEncoding = NULL;/* The current character
 				     * encoding for keyboard input */
 static int keyInputCharset = -1;    /* The Win32 CHARSET for the keyboard
 				     * encoding */
+static Tcl_Encoding unicodeEncoding = NULL; /* unicode encoding */
 
 /*
  * Thread local storage.  Notice that now each thread must have its
@@ -279,6 +280,11 @@ TkWinXCleanup(hInstance)
         UnregisterClass(TK_WIN_CHILD_CLASS_NAME, hInstance);
     }
 
+    if (unicodeEncoding != NULL) {
+	Tcl_FreeEncoding(unicodeEncoding);
+	unicodeEncoding = NULL;
+    }
+
     /*
      * And let the window manager clean up its own class(es).
      */
@@ -385,6 +391,8 @@ TkpOpenDisplay(display_name)
     }
 
     display = (Display *) ckalloc(sizeof(Display));
+    ZeroMemory(display, sizeof(Display));
+
     display->display_name = (char *) ckalloc(strlen(display_name)+1);
     strcpy(display->display_name, display_name);
 
@@ -481,6 +489,7 @@ TkpOpenDisplay(display_name)
     screen->cmap = XCreateColormap(display, None, screen->root_visual,
 	    AllocNone);
     tsdPtr->winDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
     return tsdPtr->winDisplay;
@@ -607,27 +616,6 @@ TkWinChildProc(hwnd, message, wParam, lParam)
 	    UpdateInputLanguage(wParam);
 	    result = 1;
 	    break;
-
-        case WM_IME_STARTCOMPOSITION: {
-	    /*
-	     * Position the IME composition window according the known
-	     * cursor (caret) position.
-	     */
-
-	    HIMC hIMC;
-	    POINT pt;
-	    hIMC = ImmGetContext(hwnd);
-	    if (hIMC && GetCaretPos(&pt)) {
-		COMPOSITIONFORM cform;
-
-		cform.dwStyle = CFS_POINT;
-		cform.ptCurrentPos = pt;
-		result = ImmSetCompositionWindow(hIMC, &cform);
-	    } else {
-		result = DefWindowProc(hwnd, message, wParam, lParam);
-	    }
-	    break;
-	}
 
         case WM_IME_COMPOSITION:
             result = 0;
@@ -848,6 +836,15 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	    while (otherWinPtr && !(otherWinPtr->flags & TK_TOP_LEVEL)) {
 		otherWinPtr = otherWinPtr->parentPtr;
 	    }
+
+	    /*
+	     * Do a catch-all Tk_SetCaretPos here to make sure that the
+	     * window receiving focus sets the caret at least once.
+	     */
+	    if (message == WM_SETFOCUS) {
+		Tk_SetCaretPos((Tk_Window) winPtr, 0, 0, 0);
+	    }
+
 	    if (otherWinPtr == winPtr) {
 		return;
 	    }
@@ -856,6 +853,14 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	    event.type = (message == WM_SETFOCUS) ? FocusIn : FocusOut;
 	    event.xfocus.mode = NotifyNormal;
 	    event.xfocus.detail = NotifyNonlinear;
+
+	    /*
+	     * Destroy the caret if we own it.  If we are moving to another Tk
+	     * window, it will reclaim and reposition it with Tk_SetCaretPos.
+	     */
+	    if (message == WM_KILLFOCUS) {
+		DestroyCaret();
+	    }
 	    break;
 	}
 
@@ -1253,6 +1258,31 @@ TkWinGetKeyInputEncoding()
 /*
  *----------------------------------------------------------------------
  *
+ * TkWinGetUnicodeEncoding --
+ *
+ *	Returns the cached unicode encoding.
+ *
+ * Results:
+ *	The unicode encoding.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tcl_Encoding
+TkWinGetUnicodeEncoding()
+{
+    if (unicodeEncoding == NULL) {
+	unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
+    }
+    return unicodeEncoding;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * HandleIMEComposition --
  *
  *      This function works around a definciency in some versions
@@ -1290,14 +1320,8 @@ HandleIMEComposition(hwnd, lParam)
     XEvent event;
     char * buff;
     TkWindow *winPtr;
-
-    if (TkWinGetPlatformId() != VER_PLATFORM_WIN32_NT) {
-        /*
-         * The ImmGetCompositionStringW function works only on WinNT.
-         */
-
-        return 0;
-    }
+    Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
+    BOOL isWinNT = (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT);
 
     if ((lParam & GCS_RESULTSTR) == 0) {
         /*
@@ -1309,11 +1333,39 @@ HandleIMEComposition(hwnd, lParam)
 
     hIMC = ImmGetContext(hwnd);
     if (hIMC) {
-        n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
+	if (isWinNT) {
+	    n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
+	} else {
+	    n = ImmGetCompositionStringA(hIMC, GCS_RESULTSTR, NULL, 0);
+	}
 
-        if (n > 0) {
-            buff = (char*)ckalloc(n);
-            n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, buff, n);
+        if ((n > 0) && ((buff = (char *) ckalloc(n)) != NULL)) {
+	    if (isWinNT) {
+		n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, buff, n);
+	    } else {
+		Tcl_DString utfString, unicodeString;
+
+		n = ImmGetCompositionStringA(hIMC, GCS_RESULTSTR, buff, n);
+		Tcl_DStringInit(&utfString);
+		Tcl_ExternalToUtfDString(keyInputEncoding, buff, n,
+			&utfString);
+		Tcl_UtfToExternalDString(unicodeEncoding,
+			Tcl_DStringValue(&utfString), -1, &unicodeString);
+		i = Tcl_DStringLength(&unicodeString);
+		if (n < i) {
+		    /*
+		     * Only alloc more space if we need, otherwise just
+		     * use what we've created.  Don't realloc as that may
+		     * copy data we no longer need.
+		     */
+		    ckfree((char *) buff);
+		    buff = (char *) ckalloc(i);
+		}
+		n = i;
+		memcpy(buff, Tcl_DStringValue(&unicodeString), n);
+		Tcl_DStringFree(&utfString);
+		Tcl_DStringFree(&unicodeString);
+	    }
 
 	    /*
 	     * Set up the fields pertinent to key event.
@@ -1368,7 +1420,7 @@ HandleIMEComposition(hwnd, lParam)
  *
  * Tk_FreeXId --
  *
- *	This inteface is not needed under Windows.
+ *	This interface is not needed under Windows.
  *
  * Results:
  *	None.
@@ -1530,8 +1582,8 @@ void
 Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 {
     static HWND caretHWND = NULL;
+    static int lastX = -1, lastY = -1;
     Window win;
-    HWND   hwnd;
 
     /*
      * We adjust to the toplevel to get the coords right, as setting
@@ -1550,7 +1602,19 @@ Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 
     win = Tk_WindowId(tkwin);
     if (win) {
-	hwnd = Tk_GetHWND(win);
+	HIMC hIMC;
+	HWND hwnd = Tk_GetHWND(win);
+
+	if ((hwnd == caretHWND) && (lastX == x) && (lastY == y)) {
+	    /*
+	     * Prevent processing anything if the values haven't changed.
+	     */
+	    return;
+	}
+
+	lastX = x;
+	lastY = y;
+
 	if (hwnd != caretHWND) {
 	    DestroyCaret();
 	    if (CreateCaret(hwnd, NULL, 0, 0)) {
@@ -1562,5 +1626,22 @@ Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 	    caretHWND = hwnd;
 	    SetCaretPos(x, y);
 	}
+
+	/*
+	 * The IME composition window should be updated whenever the caret
+	 * position is changed because a clause of the composition string may
+	 * be converted to the final characters and the other clauses still
+	 * stay on the composition window.  -- yamamoto
+	 */
+	hIMC = ImmGetContext(hwnd);
+	if (hIMC) {
+	    COMPOSITIONFORM cform;
+	    cform.dwStyle = CFS_POINT;
+	    cform.ptCurrentPos.x = x;
+	    cform.ptCurrentPos.y = y;
+	    ImmSetCompositionWindow(hIMC, &cform);
+	    ImmReleaseContext(hwnd, hIMC);
+	}
+
     }
 }
