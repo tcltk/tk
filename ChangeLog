@@ -2,6 +2,9 @@
 
 	* library/text.tcl: corrected mousewheel scrolling [Bug 960190]
 
+	* tests/textDisp.test: made some tests more robust to slowness
+	in asynchronous height calculation callbacks [Bug 1025781]
+
 2004-09-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinX.c: Added declaration for advapi32 now that this file
