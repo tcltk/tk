@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.77 2002/07/28 03:23:08 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.78 2002/07/29 23:03:52 mdejong Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -240,22 +240,11 @@ if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
 fi
 
 # The statement below is very tricky!  It actually *evaluates* the
-# string in TCL_LD_SEARCH_FLAGS, which causes a substitution of the
-# variable LIB_RUNTIME_DIR.
+# string in TCL_CC_SEARCH_FLAGS and TCL_LD_SEARCH_FLAGS which
+# causes a substitution of the variable LIB_RUNTIME_DIR.
 
-eval "CC_SEARCH_FLAGS=\"$TCL_LD_SEARCH_FLAGS\""
-
-# The following case handles the differences between linking with "ld"
-# and the compiler
-
-case $SHLIB_LD in
-    *ld*)
-      LD_SEARCH_FLAGS=`echo ${CC_SEARCH_FLAGS} |sed -e "s|-Wl,||g" -e "s|,| |g"`
-      ;;
-    *)
-      LD_SEARCH_FLAGS="${CC_SEARCH_FLAGS}"
-      ;;
-esac
+eval "CC_SEARCH_FLAGS=\"$TCL_CC_SEARCH_FLAGS\""
+eval "LD_SEARCH_FLAGS=\"$TCL_LD_SEARCH_FLAGS\""
 
 #--------------------------------------------------------------------
 #	Check for the existence of various libraries.  The order here
@@ -442,8 +431,6 @@ AC_SUBST(TK_BUILD_EXP_FILE)
 AC_SUBST(TK_EXP_FILE)
 
 AC_SUBST(MATH_LIBS)
-AC_SUBST(CC_SEARCH_FLAGS)
-AC_SUBST(LD_SEARCH_FLAGS)
 AC_SUBST(TK_BUILD_LIB_SPEC)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_LIB_FLAG)
