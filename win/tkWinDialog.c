@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.14 2000/10/19 00:56:25 ericm Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.15 2000/11/02 00:18:02 ericm Exp $
  *
  */
 
@@ -319,13 +319,18 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
 	 * needed.
 	 */
 	switch (CommDlgExtendedError()) {
+	    case 0: {
+		/* User hit cancel or closed the dialog. */
+		result = TCL_OK;
+		break;
+	    }
 	    default: {
 		Tcl_SetResult(interp, "error while using color dialog",
 			TCL_STATIC);
+		result = TCL_ERROR;
 		break;
 	    }
 	}
-	result = TCL_ERROR;
     }
 
     return result;
@@ -485,10 +490,16 @@ GetFileNameW(clientData, interp, objc, objv, open)
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static char *optionStrings[] = {
+    static char *saveOptionStrings[] = {
+	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
+	    "-parent", "-title", NULL
+    };
+    static char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	    "-multiple", "-parent", "-title", NULL
     };
+    char **optionStrings;
+    
     enum options {
 	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE,
 	    FILE_MULTIPLE, FILE_PARENT,	FILE_TITLE
@@ -508,6 +519,12 @@ GetFileNameW(clientData, interp, objc, objv, open)
     tkwin = (Tk_Window) clientData;
     title = NULL;
 
+    if (open) {
+	optionStrings = openOptionStrings;
+    } else {
+	optionStrings = saveOptionStrings;
+    }
+
     for (i = 1; i < objc; i += 2) {
 	int index;
 	char *string;
@@ -516,9 +533,23 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 
-		0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
+		"option", 0, &index) != TCL_OK) {
 	    goto end;
+	}
+	/*
+	 * We want to maximize code sharing between the open and save file
+	 * dialog implementations; in particular, the switch statement below.
+	 * We use different sets of option strings from the GetIndexFromObj
+	 * call above, but a single enumeration for both.  The save file
+	 * dialog doesn't support -multiple, but it falls in the middle of
+	 * the enumeration.  Ultimately, this means that when the index found
+	 * by GetIndexFromObj is >= FILE_MULTIPLE, when doing a save file
+	 * dialog, we have to increment the index, so that it matches the
+	 * open file dialog enumeration.
+	 */
+	if (!open && index >= FILE_MULTIPLE) {
+	    index++;
 	}
 	if (i + 1 == objc) {
 	    string = Tcl_GetStringFromObj(optionPtr, NULL);
@@ -635,12 +666,14 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	ofn.lpstrDefExt = (WCHAR *) Tcl_DStringValue(&extString);
     }
 
-    Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&utfFilterString),
+    Tcl_UtfToExternalDString(unicodeEncoding,
+	    Tcl_DStringValue(&utfFilterString),
 	    Tcl_DStringLength(&utfFilterString), &filterString);
     ofn.lpstrFilter = (WCHAR *) Tcl_DStringValue(&filterString);
 
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
-	Tcl_UtfToExternalDString(unicodeEncoding, Tcl_DStringValue(&utfDirString),
+	Tcl_UtfToExternalDString(unicodeEncoding,
+		Tcl_DStringValue(&utfDirString),
 		Tcl_DStringLength(&utfDirString), &dirString);
         ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
     }
@@ -780,6 +813,11 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	 * needed.
 	 */
 	switch (CommDlgExtendedError()) {
+	    case 0: {
+		/* User hit cancel or closed the dialog. */
+		result = TCL_OK;
+		break;
+	    }
 	    case FNERR_INVALIDFILENAME: {
 		char *p;
 		Tcl_DString ds;
@@ -1123,6 +1161,11 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	 * needed.
 	 */
 	switch (CommDlgExtendedError()) {
+	    case 0: {
+		/* User hit cancel or closed the dialog. */
+		result = TCL_OK;
+		break;
+	    }
 	    case FNERR_INVALIDFILENAME: {
 		char *p;
 		Tcl_DString ds;
@@ -1545,13 +1588,18 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 	 * needed.
 	 */
 	switch (CommDlgExtendedError()) {
+	    case 0: {
+		/* User hit cancel or closed the dialog. */
+		result = TCL_OK;
+		break;
+	    }
 	    default: {
 		Tcl_SetResult(interp, "error while using color dialog",
 			TCL_STATIC);
+		result = TCL_ERROR;
 		break;
 	    }
 	}
-	result = TCL_ERROR;
     }
 
     if (ofn.lpstrTitle != NULL) {

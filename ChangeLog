@@ -1,3 +1,12 @@
+2000-11-01  Eric Melski  <ericm@ajubasolutions.com>
+
+	* win/tkWinDialog.c: Added branch for 0 return from
+	CommDlgExtendedError() switches; this was formerly treated as an
+	error, but it actually is not, since it just means the user hit
+	cancel or closed the dialog.  (GetFileNameW): Added better smarts
+	such that -multiple is not considered a valid option for
+	tk_getSaveFile.
+
 2000-10-30  David Gravereaux  <davygrvy@ajubasolutions.com>
 
 	* win/configure.in:
@@ -5,9 +14,9 @@
 	* win/makefile.vc:
 	* win/rc/tk.rc:
 	* win/rc/tk_base.rc (new):
-	* win/rc/wish.rc: Added logic to derive filenames better in the resource
-	scripts based on compile options along with better support for building
-	a static wish shell with cursor resources.
+	* win/rc/wish.rc: Added logic to derive filenames better in the 
+	resource scripts based on compile options along with better
+	support for building a static wish shell with cursor resources.
 
 2000-10-27  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
@@ -23,6 +32,7 @@
 	* win/Makefile.in (test, winhelp, tktest): corrected the
 	TCL_LIBRARY path specification.
 
+>>>>>>> 1.236
 2000-10-18  Eric Melski  <ericm@ajubasolutions.com>
 
 	* win/tkWinDraw.c (RenderObject): Applied patch from [Bug: 6368],
