@@ -6,6 +6,9 @@
 	* generic/tkText.h: refactoring of text widget cleanup code 
 	to ensure all resources are freed.  [Bug#741179]
 	
+	* library/tearoff.tcl: ensure torn-off menus do not appear underneath
+	the MacOS/MacOS X main menu bar.
+
 2003-05-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/mkLinks: Set the var S to "" at the top
