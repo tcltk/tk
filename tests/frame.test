@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.14 2004/06/24 12:45:43 dkf Exp $
+# RCS: @(#) $Id: frame.test,v 1.15 2005/02/15 03:22:10 chengyemao Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -159,12 +159,22 @@ test frame-2.4 {toplevel configuration options} {
     list [catch {toplevel .t -width 200 -height 100 -colormap bogus} msg] $msg
 } {1 {bad window path name "bogus"}}
 set default "[winfo visual .] [winfo depth .]"
+if {$tcl_platform(platform) == "windows"} {
+test frame-2.5 {toplevel configuration options} {
+    catch {destroy .t}
+    toplevel .t -width 200 -height 100
+    wm geometry .t +0+0
+    list [catch {.t configure -use 0x44022} msg] $msg [.t configure -use]
+} {1 {window "0x44022" doesn't exist} {-use use Use {} {}}}
+} else {
 test frame-2.5 {toplevel configuration options} {
     catch {destroy .t}
     toplevel .t -width 200 -height 100
     wm geometry .t +0+0
     list [catch {.t configure -use 0x44022} msg] $msg [.t configure -use]
 } {1 {can't modify -use option after widget is created} {-use use Use {} {}}}
+}
+
 test frame-2.6 {toplevel configuration options} {
     catch {destroy .t}
     toplevel .t -width 200 -height 100 -visual default
@@ -905,3 +915,4 @@ rename colorsFree {}
 # cleanup
 cleanupTests
 return
+
