@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.8 1999/06/16 20:11:28 surles Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.9 1999/07/31 03:36:49 hobbs Exp $
 
 library tk
 
@@ -1505,6 +1505,10 @@ declare 104 win {
     void XDrawLine (Display* d, Drawable dr, GC g, int x1, int y1, \
 	    int x2, int y2)
 }
+declare 106 win {
+    void XFillRectangle (Display* display, Drawable d, GC gc, \
+	    int x, int y, unsigned int width, unsigned int height)
+}
 
 # X functions for Mac
 
@@ -1880,4 +1884,8 @@ declare 81 mac {
 declare 82 mac {
     void XDrawLine (Display* d, Drawable dr, GC g, int x1, int y1, \
 	    int x2, int y2)
+}
+declare 83 mac {
+    void XFillRectangle (Display* display, Drawable d, GC gc, \
+	    int x, int y, unsigned int width, unsigned int height)
 }

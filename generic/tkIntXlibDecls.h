@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.10 1999/06/16 20:11:28 surles Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.11 1999/07/31 03:36:49 hobbs Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -354,6 +354,11 @@ EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char** list,
 /* 104 */
 EXTERN void		XDrawLine _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
 				int x1, int y1, int x2, int y2));
+/* Slot 105 is reserved */
+/* 106 */
+EXTERN void		XFillRectangle _ANSI_ARGS_((Display* display, 
+				Drawable d, GC gc, int x, int y, 
+				unsigned int width, unsigned int height));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -611,6 +616,10 @@ EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display* display,
 /* 82 */
 EXTERN void		XDrawLine _ANSI_ARGS_((Display* d, Drawable dr, GC g, 
 				int x1, int y1, int x2, int y2));
+/* 83 */
+EXTERN void		XFillRectangle _ANSI_ARGS_((Display* display, 
+				Drawable d, GC gc, int x, int y, 
+				unsigned int width, unsigned int height));
 #endif /* MAC_TCL */
 
 typedef struct TkIntXlibStubs {
@@ -723,6 +732,8 @@ typedef struct TkIntXlibStubs {
     void (*xSetWMClientMachine) _ANSI_ARGS_((Display* display, Window w, XTextProperty* text_prop)); /* 102 */
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char** list, int count, XTextProperty* text_prop_return)); /* 103 */
     void (*xDrawLine) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 104 */
+    void *reserved105;
+    void (*xFillRectangle) _ANSI_ARGS_((Display* display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 106 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
     void *reserved0;
@@ -808,6 +819,7 @@ typedef struct TkIntXlibStubs {
     void (*xDrawSegments) _ANSI_ARGS_((Display * display, Drawable d, GC gc, XSegment * segments, int nsegments)); /* 80 */
     void (*xForceScreenSaver) _ANSI_ARGS_((Display* display, int mode)); /* 81 */
     void (*xDrawLine) _ANSI_ARGS_((Display* d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
+    void (*xFillRectangle) _ANSI_ARGS_((Display* display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
 #endif /* MAC_TCL */
 } TkIntXlibStubs;
 
@@ -1240,6 +1252,11 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XDrawLine \
 	(tkIntXlibStubsPtr->xDrawLine) /* 104 */
 #endif
+/* Slot 105 is reserved */
+#ifndef XFillRectangle
+#define XFillRectangle \
+	(tkIntXlibStubsPtr->xFillRectangle) /* 106 */
+#endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* Slot 0 is reserved */
@@ -1570,6 +1587,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifndef XDrawLine
 #define XDrawLine \
 	(tkIntXlibStubsPtr->xDrawLine) /* 82 */
+#endif
+#ifndef XFillRectangle
+#define XFillRectangle \
+	(tkIntXlibStubsPtr->xFillRectangle) /* 83 */
 #endif
 #endif /* MAC_TCL */
 
