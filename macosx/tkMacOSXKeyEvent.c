@@ -98,7 +98,7 @@ int TkMacOSXProcessKeyboardEvent(
         TkMacOSXEvent * eventPtr, 
         MacEventStatus * statusPtr)
 {
-    static UInt32 savedKeyCode;
+    /* static */ UInt32 savedKeyCode = 0;
     OSStatus     status;
     KeyEventData keyEventData;
     Window    window;
