@@ -7,11 +7,12 @@
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994 The Australian National University.
  * Copyright (c) 1994-1998 Sun Microsystems, Inc.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.1.4.5 1999/01/07 02:42:48 lfb Exp $
+ * RCS: @(#) $Id: tk.h,v 1.1.4.6 1999/01/29 00:34:31 stanton Exp $
  */
 
 #ifndef _TK

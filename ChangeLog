@@ -1,3 +1,8 @@
+1999-1-28    <stanton@GASPODE>
+
+	* generic/tkGrid.c: Fixed bug in "grid forget" that failed to cancel
+	pending idle handlers, resulting in a crash in a few odd cases.
+
 1999-01-06  <lfb@JUSTICE>
 
 	* generic/tk.h, generic/tkGet.c, generic/tkConfig.c, 
