@@ -1,3 +1,45 @@
+1999-12-21  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* generic/tk.h:
+	* unix/configure.in:
+	* win/configure.in:
+	* win/aclocal.m4:
+	* README: updated for patch level 8.3b1
+
+	* unix/tkUnixWm.c: fixed panic in Tk_CoordsToWindow to print error
+	and continue instead (for Tix) [Bug: 716 et al]
+
+	* scale.test:
+	* generic/tkScale.c:
+	* generic/tkScale.h: fixed possible core when freeing options
+	(cursor) associated with scale widget [Bug: 3897]
+
+	* doc/MeasureChar.3: fixed docs for Tk_MeasureChars to reflect code
+	* doc/listbox.n: fixed formatting problem
+
+	* generic/tk3d.c: added extra calculations to ensure that thin
+	frames get refreshed too [Bug: 3596]
+
+	* unix/tkUnixMenu.c:
+	* unix/tkUnixFont.c:
+	* generic/tkCanvText.c:
+	* generic/tkEntry.c:
+	* generic/tkFont.c:
+	* generic/tkImgPPM.c: removed extranneous vars that were set but
+	never used.
+
+	* mac/tclMacHLEvents.c: fixed applescript for I18N [Bug: 3644]
+
+	* unix/aclocal.m4: removed -O flag for AIX when using the IBM
+	compiler (several versions have a bug that crops up in the text
+	widget). [Bug: 2316]
+
+	* unix/Makefile.in: removed extra slash in SCRIPT_INSTALL_DIR
+	[Bug: 3896]
+
+	* library/listbox.tcl: added extra checks for existence of
+	tkPriv(listboxSelection) before it was used. [Bug: 3892]
+
 1999-12-16  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* doc/GetCursor.3:
