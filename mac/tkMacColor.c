@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacColor.c,v 1.5 1999/04/16 01:51:30 stanton Exp $
+ * RCS: @(#) $Id: tkMacColor.c,v 1.6 1999/05/22 06:32:36 jingham Exp $
  */
 
 #include <tkColor.h>
@@ -88,8 +88,7 @@ TkSetMacColor(
 	case MENU_BACKGROUND_PIXEL:
 	case MENU_DISABLED_PIXEL:
 	case MENU_TEXT_PIXEL:
-	    GetMenuPartColor((pixel >> 24), macColor);
-	    return true;
+	    return GetMenuPartColor((pixel >> 24), macColor);
 	case APPEARANCE_PIXEL:
 	    return false;
 	case PIXEL_MAGIC:
@@ -431,8 +430,19 @@ GetMenuPartColor(
     RGBColor backColor, foreColor;
     GDHandle maxDevice;
     Rect globalRect;
-    MCEntryPtr mcEntryPtr = GetMCEntry(0, 0);
+    MCEntryPtr mcEntryPtr;
     
+    /* Under Appearance, we don't want to set any menu colors when we
+       are asked for the standard menu colors.  So we return false (which
+       means don't use this color... */
+       
+    if (TkMacHaveAppearance()) {
+        macColor->red = 0xFFFF;
+        macColor->green = 0;
+        macColor->blue = 0;
+        return false;
+    } else {
+        mcEntryPtr = GetMCEntry(0, 0);
     switch (pixel) {
     	case MENU_ACTIVE_PIXEL:
     	    if (mcEntryPtr == NULL) {
@@ -440,21 +450,21 @@ GetMenuPartColor(
     	    } else {
     	    	*macColor = mcEntryPtr->mctRGB3;
     	    }
-    	    return 1;
+    	    return true;
     	case MENU_ACTIVE_TEXT_PIXEL:
     	    if (mcEntryPtr == NULL) {
     		macColor->red = macColor->blue = macColor->green = 0xFFFF;
     	    } else {
     	        *macColor = mcEntryPtr->mctRGB2;
     	    }
-    	    return 1;
+    	    return true;
     	case MENU_BACKGROUND_PIXEL:
     	    if (mcEntryPtr == NULL) {
     		macColor->red = macColor->blue = macColor->green = 0xFFFF;
     	    } else {
     	        *macColor = mcEntryPtr->mctRGB2;
     	    }
-    	    return 1;
+    	    return true;
     	case MENU_DISABLED_PIXEL:
     	    if (mcEntryPtr == NULL) {
     		backColor.red = backColor.blue = backColor.green = 0xFFFF;
@@ -480,14 +490,15 @@ GetMenuPartColor(
     	    	    *macColor = mcEntryPtr->mctRGB2;
     	    	}
     	    }
-    	    return 1;
+    	    return true;
     	case MENU_TEXT_PIXEL:
     	    if (mcEntryPtr == NULL) {
     	    	macColor->red = macColor->green = macColor->blue = 0;
     	    } else {
     	    	*macColor = mcEntryPtr->mctRGB3;
     	    }
-    	    return 1;
+    	    return true;
     }
-    return 0;
+    return false;
+}
 }
