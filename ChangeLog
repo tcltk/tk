@@ -19,6 +19,8 @@
 	* doc/console.n:  Changed topic from "Tcl Built-In Commands" to
 	"Tk Built-In Commands"
 
+	* win/buildall.vc.bat:  Update to match Tcl.
+
 2002-03-26  Andreas Kupries  <andreask_kupries@users.sourceforge.net>
 
 	* unix/tkUnixFont.c: Added inclusion of <arpa/inet.h>. This fixes
