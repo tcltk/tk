@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.4 2003/02/25 16:09:25 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5 2003/02/25 16:11:22 das Exp $
  */
 
 #include "tkMacOSXPort.h"
@@ -484,7 +484,7 @@ FSRefToDString(const FSRef *fsref, Tcl_DString *ds)
 
     err = FSRefMakePath(fsref, fileName, sizeof(fileName));
     if (err == noErr) {
-        Tcl_UtfToExternalDString(NULL, fileName, -1, ds);
+        Tcl_ExternalToUtfDString(NULL, fileName, -1, ds);
     }
     return err;
 }
