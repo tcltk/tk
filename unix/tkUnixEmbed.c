@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.3 1999/04/16 01:51:46 stanton Exp $
+ * RCS: @(#) $Id: tkUnixEmbed.c,v 1.4 2002/05/27 17:33:26 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -105,6 +105,7 @@ TkpUseWindow(interp, tkwin, string)
 				 * for tkwin;  must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *usePtr;
     int id, anyError;
     Window parent;
     Tk_ErrorHandler handler;
@@ -120,6 +121,15 @@ TkpUseWindow(interp, tkwin, string)
 	return TCL_ERROR;
     }
     parent = (Window) id;
+
+    usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, parent);
+    if (usePtr != NULL) {
+	if (!(usePtr->flags & TK_CONTAINER)) {
+	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
+                    "\" doesn't have -container option set", (char *) NULL);
+	    return TCL_ERROR;
+	}
+    }
 
     /*
      * Tk sets the window colormap to the screen default colormap in

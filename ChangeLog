@@ -1,3 +1,18 @@
+2002-05-27  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* tests/embed.test: Added cross platform embed tests.
+	Check that window passed to -use has the -container
+	option set.
+	* tests/wm.test: Remove useless catch call. Deiconify
+	. just in case, stackorder tests will not pass unless
+	it is in the normal state. Add -container flag to
+	embedded stackorder test.
+	* unix/tkUnixEmbed.c (TkpUseWindow):
+	* win/tkWinEmbed.c (TkpUseWindow): Lookup Tk window
+	based on the id passed in as the value for -use.
+	Generate an error if the Tk window did not have
+	the -container option set.
+
 2002-05-26  Peter Spjuth <peter.spjuth@space.se>
 
 	* generic/tkButton.c (ConfigureButton): When creating
