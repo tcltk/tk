@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.6 2002/06/06 20:41:54 dkf Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.7 2002/06/11 08:25:49 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -133,14 +133,14 @@ TkGetCursorByName(interp, tkwin, string)
 	 */
 
 	for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
-	    if (strcmp(namePtr->name, name[0]) == 0) {
+	    if (strcmp(namePtr->name, argv[0]) == 0) {
 		/*
 		 * It is either a system cursor or one of ours!
 		 */
 		cursorPtr->winCursor = LoadCursor(NULL, namePtr->id);
 		if (cursorPtr->winCursor == NULL) {
 		    cursorPtr->winCursor =
-			    LoadCursor(Tk_GetHINSTANCE(), name[0]);
+			    LoadCursor(Tk_GetHINSTANCE(), argv[0]);
 		    cursorPtr->system = 0;
 		} else {
 		    cursorPtr->system = 1;
