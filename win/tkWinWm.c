@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.14 2000/01/14 03:25:59 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.15 2000/01/14 19:35:13 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2213,7 +2213,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	     * to them anymore
 	     */
 	    wmPtr->masterPtr->wmInfoPtr->numTransients--;
-	    Tk_DeleteEventHandler((Tk_Window) masterPtr,
+	    Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
 		    VisibilityChangeMask,
 		    WmWaitVisibilityProc, (ClientData) winPtr);
 	}
