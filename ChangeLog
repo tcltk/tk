@@ -1,3 +1,8 @@
+2004-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/text.tcl (::tk::TextTranspose): Ensure that Transpose is
+	an atomic op to undo.
+
 2004-08-25  Don Porter  <dgp@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c:	Made use of Tcl_WrongNumArgs in a few
