@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.49.4.1 2001/07/03 20:01:09 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.49.4.2 2001/07/13 19:33:48 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -209,6 +209,7 @@ WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
 # libraries.  See configure.in for a description of what it means.
 # The values of the symbolis normally set by the configure script.
 
+STLIB_LD		= @STLIB_LD@
 SHLIB_LD		= @SHLIB_LD@
 SHLIB_LD_LIBS		= @SHLIB_LD_LIBS@
 
@@ -225,6 +226,7 @@ TK_LD_SEARCH_FLAGS	= @TK_LD_SEARCH_FLAGS@
 #----------------------------------------------------------------
 
 AC_FLAGS		= @EXTRA_CFLAGS@ @DEFS@
+AR			= @AR@
 RANLIB			= @RANLIB@
 SRC_DIR			= @srcdir@/..
 TOP_DIR			= @srcdir@/..

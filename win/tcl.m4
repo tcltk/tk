@@ -300,6 +300,7 @@ AC_DEFUN(SC_ENABLE_SYMBOLS, [
 #		PATHTYPE
 #		VPSEP
 #		CYGPATH
+#		STLIB_LD
 #		SHLIB_LD
 #		SHLIB_LD_LIBS
 #		LIBS
@@ -350,13 +351,13 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	SHLIB_LD_LIBS=""
 	LIBS=""
 	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32"
-	STLIB_LD="${AR}"
+	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
 	RC_INCLUDE=--include
 	RC_DEFINE=--define
 	RES=res.o
-	MAKE_LIB="\${AR} crv \[$]@"
+	MAKE_LIB="\${STLIB_LD} \[$]@"
 	POST_MAKE_LIB="\${RANLIB} \[$]@"
 	MAKE_EXE="\${CC} -o \[$]@"
 	LIBPREFIX="lib"
@@ -424,14 +425,20 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 
 	# Specify linker flags depending on the type of app being 
 	# built -- Console vs. Window.
+	#
+	# We need to pass -e _WinMain@16 so that ld will use
+	# WinMain() instead of main() as the entry point. We can't
+	# use autoconf to check for this case since it would need
+	# to run an executable and that does not work when
+	# cross compiling. Remove this -e workaround once we
+	# require a gcc that does not have this bug.
 	LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
-	LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
+	LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
     else
 	SHLIB_LD="link -dll -nologo -incremental:no"
 	SHLIB_LD_LIBS="user32.lib advapi32.lib"
 	LIBS="user32.lib advapi32.lib"
 	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib"
-	AR="lib -nologo"
 	STLIB_LD="lib -nologo"
 	RC="rc"
 	RC_OUT=-fo
@@ -439,7 +446,7 @@ AC_DEFUN(SC_CONFIG_CFLAGS, [
 	RC_INCLUDE=-i
 	RC_DEFINE=-d
 	RES=res
-	MAKE_LIB="\${AR} -out:\[$]@"
+	MAKE_LIB="\${STLIB_LD} -out:\[$]@"
 	POST_MAKE_LIB=
 	MAKE_EXE="\${CC} -Fe\[$]@"
 	LIBPREFIX=""

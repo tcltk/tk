@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.55.4.1 2001/07/03 20:01:10 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.55.4.2 2001/07/13 19:33:48 dgp Exp $
 
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
@@ -351,7 +351,7 @@ if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
 else
     TK_SHLIB_CFLAGS=""
     TK_LIB_FILE=libtk${TK_UNSHARED_LIB_SUFFIX}
-    MAKE_LIB="ar cr \[$]@ \${OBJS}"
+    MAKE_LIB="\${STLIB_LD} \[$]@ \${OBJS}"
 
     TCL_STUB_FLAGS=""
 fi
@@ -395,7 +395,7 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
 
 # FIXME: Should we add MAKE_STUB_LIB to tclConfig.sh ?
-MAKE_STUB_LIB="ar cr \[$]@ \${STUB_LIB_OBJS}"
+MAKE_STUB_LIB="\${STLIB_LD} \[$]@ \${STUB_LIB_OBJS}"
 
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
     eval TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}\${TK_DBGX}"
@@ -435,9 +435,12 @@ AC_SUBST(TK_DBGX)
 AC_SUBST(DL_LIBS)
 AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(MATH_LIBS)
+AC_SUBST(AR)
+AC_SUBST(RANLIB)
 AC_SUBST(MAKE_LIB)
 AC_SUBST(SHLIB_CFLAGS)
 AC_SUBST(TK_SHLIB_CFLAGS)
+AC_SUBST(STLIB_LD)
 AC_SUBST(SHLIB_LD)
 AC_SUBST(SHLIB_LD_LIBS)
 AC_SUBST(SHLIB_SUFFIX)
