@@ -1,3 +1,9 @@
+2000-09-07  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* doc/Tk_Init.3:
+	* doc/bell.n:
+	* doc/loadTk.n: minor doc cleanup
+
 2000-09-06  Eric Melski  <ericm@ajubasolutions.com>
 
 	* generic/tkPlatDecls.h: Added #include <windows.h> for Windows,
