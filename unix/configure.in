@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.1.4.16 1999/03/30 02:08:03 redman Exp $
+# RCS: @(#) $Id: configure.in,v 1.1.4.17 1999/04/06 02:17:06 stanton Exp $
 
 TK_VERSION=8.1
 TK_MAJOR_VERSION=8
@@ -198,6 +198,18 @@ AC_UID_T
 
 AC_CHECK_HEADERS(sys/time.h)
 AC_HEADER_TIME
+
+#-------------------------------------------
+#     In OS/390 struct pwd has no pw_gecos field
+#-------------------------------------------
+
+AC_MSG_CHECKING([pw_gecos in struct pwd])
+AC_TRY_COMPILE([#include <pwd.h>],
+      [struct passwd pwd; pwd.pw_gecos;], tk_ok=yes, tk_ok=no)
+AC_MSG_RESULT($tk_ok)
+if test $tk_ok = yes; then
+    AC_DEFINE(HAVE_PW_GECOS)
+fi
 
 #--------------------------------------------------------------------
 #	Locate the X11 header files and the X11 library archive.  Try

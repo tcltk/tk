@@ -1,3 +1,9 @@
+1999-04-05    <stanton@scriptics.com>
+
+	* unix/configure.in:
+	* generic/tkCanvPs.c: Added configure test for pw_gecos field in
+	pwd to support OS/390. [Bug: 1724]
+
 1999-04-02    <stanton@scriptics.com>
 
 	* tests/text.test: 
