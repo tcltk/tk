@@ -1,3 +1,13 @@
+2001-06-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c: Corrected support for iso10646 (X11 Unicode)
+	fonts on Unix. This adds a ucs-2be (UCS-2 Big Endian) encoding in
+	Tk on Unix that is used for those fonts (X11 requires
+	big-endianness). (welch) [Patch #406411; Bug #220890 #220899]
+	This differs from the 8.3.3 patch by not adding ucs-2be in the
+	preferred encodingList (seems works fine without).
+	Added alias for jisx0201* fonts to jis0201 encoding. [Bug #414033]
+
 2001-05-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinKey.c (TkpSetKeycodeAndState): removed old debug info
