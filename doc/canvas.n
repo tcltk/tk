@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.14 2004/07/07 09:27:10 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.15 2004/08/16 08:24:45 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -128,7 +128,7 @@ the \fBraise\fR and \fBlower\fR Tk commands instead.
 .PP
 Items in a canvas widget may be named in either of two ways:
 by id or by tag.
-Each item has a unique identifying number which is assigned to
+Each item has a unique identifying number, which is assigned to
 that item when it is created.  The id of an item never changes
 and id numbers are never re-used within the lifetime of a
 canvas widget.
@@ -164,7 +164,7 @@ an argument specifies either an id that selects a single
 item or a tag that selects zero or more items.
 .PP
 \fItagOrId\fR may contain a logical expressions of
-tags by using operators: '&&', '||', '^' '!', and parenthezised
+tags by using operators: '&&', '||', '^' '!', and parenthesized
 subexpressions.  For example:
 .CS
       .c find withtag {(a&&!b)||(!a&&b)}
@@ -241,7 +241,7 @@ Note that it is possible to refer to the character just after
 the last one in the text item;  this is necessary for such
 tasks as inserting new text at the end of the item.
 Lines and Polygons don't support the insertion cursor
-and the selection. Their indixes are supposed to be even
+and the selection. Their indices are supposed to be even
 always, because coordinates always appear in pairs.
 .TP 10
 \fInumber\fR
@@ -254,7 +254,7 @@ A number less than 0 is treated as if it were zero, and a
 number greater than the length of the text item is treated
 as if it were equal to the length of the text item. For
 polygons, numbers less than 0 or greater then the length
-of the coordinate list will be adjusted by adding or substracting
+of the coordinate list will be adjusted by adding or subtracting
 the length until the result is between zero and the length,
 inclusive.
 .TP 10
@@ -284,12 +284,12 @@ text item, then they refer to the first or last character in the
 line that is closest to the given point.
 .SH "DASH PATTERNS"
 .PP
-Many items support the notion of an dash pattern for outlines.
+Many items support the notion of a dash pattern for outlines.
 .PP
 The first possible syntax is a list of integers. Each element
 represents the number of pixels of a line segment. Only the odd
 segments are drawn using the "outline" color. The other segments
-are drawn transparant.
+are drawn transparent.
 .PP
 The second possible syntax is a character list containing only
 5 possible characters \fB[.,-_ ]\fR. The space can be used
@@ -303,7 +303,7 @@ occur as the first position in the string. Some examples:
     -dash ,	= -dash {4 4}
 .PP
 The main difference of this syntax with the previous is that it
-it shape-conserving. This means that all values in the dash
+is shape-conserving. This means that all values in the dash
 list will be multiplied by the line width before display. This
 assures that "." will always be displayed as a dot and "-"
 always as a dash regardless of the line width.
@@ -616,7 +616,7 @@ operations (in display list order).
 For each of the items given by \fItagOrId\fR, if the item supports
 text or coordinate, insertion then \fIstring\fR is inserted into the item's
 text just before the character, or coordinate, whose index is \fIbeforeThis\fR.
-Text items interpret \fIbeforethis\fR as an index to a  character,
+Text items interpret \fIbeforeThis\fR as an index to a  character,
 line and polygon items interpret it as an index to a coordinate (an x,y pair).
 For lines and polygons the \fIstring\fR must be a valid coordinate
 sequence.
@@ -1055,7 +1055,7 @@ in the COORDINATES section above.
 Specifies the color to be used to fill item's area.
 in its normal, active, and disabled states,
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string (the default), then
+If \fIcolor\fR is an empty string (the default),
 then the item will not be filled.
 For the line item, it specifies the color of the line drawn.
 For the text item, it specifies the foreground color of the text.
@@ -1103,7 +1103,7 @@ in a solid fashion.
 \fB\-activestipple \fIbitmap\fR
 .TP
 \fB\-disabledstipple \fIbitmap\fR
-This option specifies stipple patterns that should be used to fill the
+This option specifies stipple patterns that should be used to fill
 the item in its normal, active and disabled states.
 \fIbitmap\fR specifies the stipple pattern to use, in any of the
 forms accepted by \fBTk_GetBitmap\fR.
@@ -1399,7 +1399,7 @@ irrelevant.
 \fBTk_GetBoolean\fR or a line smoothing method.  Only \fBbezier\fR is
 supported in the core, but more can be added at runtime.  If a boolean
 false value or empty string is given, no smoothing is applied.  A boolean
-truth value assume \fBbezier\fR smoothing.
+truth value assumes \fBbezier\fR smoothing.
 It indicates whether or not the line should be drawn as a curve.
 If so, the line is rendered as a set of parabolic splines: one spline
 is drawn for the first and second line segments, one for the second

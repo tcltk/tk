@@ -1,3 +1,8 @@
+2004-08-16  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/canvas.n: Spelling and grammar fixes from Mikhail
+	Kolesnitschenko. [Bug 1009636]
+
 2004-08-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/tkfbox.tcl (ResolveFile): Added some environment
