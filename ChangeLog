@@ -1,3 +1,11 @@
+2001-11-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/demos/entry3.tcl: New demo showing off validation and
+	password entry.
+
+	* library/demos/widget: Some reorganization to make the code
+	simpler, plus a new entry demo.
+
 2001-11-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinButton.c (TkpComputeButtonGeometry): corrected the
