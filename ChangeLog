@@ -1,3 +1,9 @@
+2001-11-26  D. Richard Hipp <drh@hwaci.com>
+
+	* win/tkWinMenu.c: disabled menu items show the activebackground
+	color in their background.  This change makes menu behavior
+	consistent with what native windows does.
+
 2001-11-24  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/Makefile.in: Add comments to better describe
