@@ -101,21 +101,21 @@ test winbutton-1.4 {TkpComputeButtonGeometry procedure} {nonPortable} {
 	    [winfo reqwidth .b2] [winfo reqheight .b2] \
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
-} {45 21 54 30 74 27 76 25} 
+} {58 24 67 33 88 30 90 28} 
 test winbutton-1.5 {TkpComputeButtonGeometry procedure} {nonPortable} {
     eval destroy [winfo children .]
     label .l1 -text "This is a long string that will wrap around on several lines.\n\nIt also has a blank line (above)." -wraplength 1.5i -padx 0 -pady 0
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
-} {142 69}
+} {178 84}
 test winbutton-1.6 {TkpComputeButtonGeometry procedure} {nonPortable} {
     eval destroy [winfo children .]
     label .l1 -text "This is a long string without wrapping.\n\nIt also has a blank line (above)." -padx 0 -pady 0
     pack .l1
     update
     list [winfo reqwidth .l1] [winfo reqheight .l1]
-} {180 43}
+} {222 52}
 test winbutton-1.7 {TkpComputeButtonGeometry procedure} {nonPortable} {
     eval destroy [winfo children .]
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 -width 10
@@ -128,7 +128,7 @@ test winbutton-1.7 {TkpComputeButtonGeometry procedure} {nonPortable} {
 	    [winfo reqwidth .b2] [winfo reqheight .b2] \
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
-} {64 21 54 82 153 40 59 25}
+} {74 24 67 97 174 46 64 28}
 test winbutton-1.8 {TkpComputeButtonGeometry procedure} {nonPortable} {
     eval destroy [winfo children .]
     label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 \
@@ -144,7 +144,7 @@ test winbutton-1.8 {TkpComputeButtonGeometry procedure} {nonPortable} {
 	    [winfo reqwidth .b2] [winfo reqheight .b2] \
 	    [winfo reqwidth .b3] [winfo reqheight .b3] \
 	    [winfo reqwidth .b4] [winfo reqheight .b4]
-} {53 29 52 28 56 28 58 26}
+} {66 32 65 31 69 31 71 29}
 test winbutton-1.9 {TkpComputeButtonGeometry procedure} {
     eval destroy [winfo children .]
     button .b2 -bitmap question -default normal
