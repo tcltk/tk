@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.8 2002/07/19 09:28:15 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.1.2.9 2002/08/21 12:28:56 das Exp $
  */
 #include <pthread.h>
 #include "tk.h"
@@ -27,14 +27,6 @@
 #endif
 
 /*
- * The following variable is a special hack that is needed in order for
- * Sun shared libraries to be used for Tcl.
- */
-
-extern int matherr();
-int *tclDummyMathPtr = (int *) matherr;
-
-/*
  * If the App is in an App package, then we want to add the Scripts
  * directory to the auto_path.  But we have to wait till after the
  * Tcl_Init is run, or it gets blown away.  This stores what we
@@ -46,7 +38,6 @@ char scriptPath[MAX_PATH_LEN + 1];
 extern Tcl_Interp *gStdoutInterp;
 
 #ifdef TK_TEST
-extern int                Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 extern int                Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TK_TEST */
 
@@ -72,7 +63,6 @@ main(argc, argv)
     int argc;                        /* Number of command-line arguments. */
     char **argv;                /* Values of command-line arguments. */
 {
-    Tcl_Interp *interp;
     int textEncoding; /* 
                        * Variable used to take care of
                        * lazy font initialization
@@ -178,50 +168,9 @@ int
 Tcl_AppInit(interp)
     Tcl_Interp *interp;                /* Interpreter for application. */
 {        
-    char tclLibPath[MAX_PATH_LEN], tkLibPath[MAX_PATH_LEN];
-    Tcl_Obj *pathPtr;
-    
-    Tcl_MacOSXOpenBundleResources (interp, "com.tcltk.tcllibrary", 
-        0, MAX_PATH_LEN, tclLibPath);
-
-    if (tclLibPath[0] != '\0') {
-        Tcl_SetVar(interp, "tcl_library", tclLibPath, TCL_GLOBAL_ONLY);
-        Tcl_SetVar(interp, "tclDefaultLibrary", tclLibPath,
-            TCL_GLOBAL_ONLY);
-        Tcl_SetVar(interp, "tcl_pkgPath", tclLibPath, TCL_GLOBAL_ONLY);
-    }
-    
     if (Tcl_Init(interp) == TCL_ERROR) {
         return TCL_ERROR;
     }    
-
-    Tcl_MacOSXOpenBundleResources (interp, "com.tcltk.tklibrary", 
-            1, MAX_PATH_LEN, tkLibPath);
-
-    /* 
-     * FIXME: This is currently a hack...  I set the tcl_library, and
-     * tk_library, but apparently that's not enough to get slave interpreters,
-     * even unsafe ones, to find the library code.  They seem to ignore 
-     * this and look at the var set in TclGetLibraryPath.  So I override
-     * that here.  There must be a better way to do this!
-     */
-         
-    if (tclLibPath[0] != '\0') {
-        pathPtr = Tcl_NewStringObj(tclLibPath, -1);
-    } else {
-        pathPtr = TclGetLibraryPath();
-    }
-
-    if (tkLibPath[0] != '\0') {
-        Tcl_Obj *objPtr;
-            
-        Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
-        objPtr = Tcl_NewStringObj(tkLibPath, -1);
-        Tcl_ListObjAppendElement(NULL, pathPtr, objPtr);
-    }
-    
-    TclSetLibraryPath(pathPtr);
-
     if (Tk_Init(interp) == TCL_ERROR) {
         return TCL_ERROR;
     }
@@ -233,11 +182,6 @@ Tcl_AppInit(interp)
     }
     
 #ifdef TK_TEST
-    if (Tcltest_Init(interp) == TCL_ERROR) {
-        return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "Tcltest", Tcltest_Init,
-            (Tcl_PackageInitProc *) NULL);
     if (Tktest_Init(interp) == TCL_ERROR) {
         return TCL_ERROR;
     }

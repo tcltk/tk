@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.1.2.2 2001/10/17 07:02:02 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.1.2.3 2002/08/21 12:28:56 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -2154,6 +2154,23 @@ GetFontEncoding(
     }
     return Tcl_GetEncoding(NULL, name);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInitControlFontStyle --
+ *
+ *	This procedure sets up the appropriate ControlFontStyleRec
+ *	for a Mac control.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 void
 TkMacOSXInitControlFontStyle(Tk_Font tkfont, ControlFontStylePtr fsPtr)

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.6 2002/07/19 09:22:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.1.2.7 2002/08/21 12:28:56 das Exp $
  */
 
 #include "tkInt.h"
@@ -150,8 +150,6 @@ TkpInit(interp)
      
     if (result != TCL_ERROR) {
         Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
-        Tcl_SetVar(interp, "auto_path", tkLibPath, 
-            TCL_GLOBAL_ONLY | TCL_LIST_ELEMENT | TCL_APPEND_VALUE);
     }
     
     return Tcl_Eval(interp, initScript);
@@ -180,7 +178,7 @@ TkpGetAppName(interp, namePtr)
     Tcl_Interp *interp;
     Tcl_DString *namePtr;        /* A previously initialized Tcl_DString. */
 {
-    char *p, *name;
+    CONST char *p, *name;
 
     name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
     if ((name == NULL) || (*name == 0)) {

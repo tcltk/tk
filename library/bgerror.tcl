@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.4 2002/08/20 20:27:09 das Exp $
-# $Id: bgerror.tcl,v 1.17.2.4 2002/08/20 20:27:09 das Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.17.2.5 2002/08/21 12:28:55 das Exp $
+# $Id: bgerror.tcl,v 1.17.2.5 2002/08/21 12:28:55 das Exp $
 
 namespace eval ::tk {
     namespace eval dialog {
@@ -219,8 +219,8 @@ proc ::tk::dialog::error::bgerror err {
 		-padx 10
 	grid columnconfigure .bgerrorDialog.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
-        if {($tcl_platform(platform) eq "macintosh")
-             || ($tcl_platform(windowingsystem) eq "aqua")} {
+	if {($tcl_platform(platform) eq "macintosh")
+	    || ($tcl_platform(windowingsystem) eq "aqua")} {
 	    if {($name eq "ok") || ($name eq "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 79
 	    }

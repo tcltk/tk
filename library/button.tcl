@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.11.2.4 2002/08/20 20:27:09 das Exp $
+# RCS: @(#) $Id: button.tcl,v 1.11.2.5 2002/08/21 12:28:55 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -19,7 +19,7 @@
 #-------------------------------------------------------------------------
 
 if {[string equal $tcl_platform(windowingsystem) "classic"]
-        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
+	|| [string equal $tcl_platform(windowingsystem) "aqua"]} {
     bind Radiobutton <Enter> {
 	tk::ButtonEnter %W
     }
@@ -427,7 +427,7 @@ proc ::tk::ButtonUp w {
 }
 
 if {[string equal $tcl_platform(windowingsystem) "classic"]
-        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
+	|| [string equal $tcl_platform(windowingsystem) "aqua"]} {
 
 ####################
 # Mac implementation

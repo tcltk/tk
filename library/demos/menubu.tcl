@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubuttons.
 #
-# # RCS: @(#) $Id: menubu.tcl,v 1.2.24.1 2001/10/15 09:22:00 wolfsuit Exp $
+# # RCS: @(#) $Id: menubu.tcl,v 1.2.24.2 2002/08/21 12:28:56 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -58,7 +58,7 @@ tk_optionMenu $body.buttons.options menubuttonoptions one two three
 pack $body.buttons.options -side left -padx 25 -pady 25
 set m [tk_optionMenu $body.buttons.colors paletteColor Black red4 DarkGreen NavyBlue gray75 Red Green Blue gray50 Yellow Cyan Magenta White Brown DarkSeaGreen DarkViolet]
 if {[string equal $tcl_platform(windowingsystem) "classic"]
-        || [string equal $tcl_platform(windowingsystem) "aqua"]} {
+	|| [string equal $tcl_platform(windowingsystem) "aqua"]} {
     set topBorderColor Black
     set bottomBorderColor Black
 } else {

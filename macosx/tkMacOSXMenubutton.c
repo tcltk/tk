@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.1.2.3 2002/07/21 20:40:34 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.1.2.4 2002/08/21 12:28:56 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -84,8 +84,8 @@ static void CompareControlTitleParams(
     int * styleChanged
 );
 
-int Tk_GetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst);
-void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
+extern int TkFontGetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst); 
+extern void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
 
 extern int tkPictureIsOpen;
 
@@ -556,7 +556,7 @@ static void
 ComputeControlTitleParams(TkMenuButton * butPtr, ControlTitleParams * paramsPtr )
 {
     Tk_Font font;
-    paramsPtr->len =Tk_GetFirstTextLayout(butPtr->textLayout,&font, paramsPtr->title);
+    paramsPtr->len =TkFontGetFirstTextLayout(butPtr->textLayout,&font, paramsPtr->title);
     paramsPtr->title [paramsPtr->len] = 0;
     if (paramsPtr->len) {
         TkMacOSXInitControlFontStyle(font,&paramsPtr->style);

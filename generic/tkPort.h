@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPort.h,v 1.2.24.3 2002/08/20 20:27:06 das Exp $
+ * RCS: @(#) $Id: tkPort.h,v 1.2.24.4 2002/08/21 12:28:55 das Exp $
  */
 
 #ifndef _TKPORT
@@ -36,5 +36,3 @@
 #endif
 
 #endif /* _TKPORT */
-
-

@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.31.2.4 2002/08/20 20:27:09 das Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.31.2.5 2002/08/21 12:28:55 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -13,7 +13,6 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Insist on running with compatible versions of Tcl and Tk.
-
 package require -exact Tk 8.4
 package require -exact Tcl 8.4
 
@@ -571,6 +570,6 @@ proc ::tk::mcmaxamp {args} {
 
 if {[string equal $tcl_platform(windowingsystem) "aqua"]} {
     namespace eval ::tk::mac {
-        set useCustomMDEF 0
+	set useCustomMDEF 0
     }
 }
