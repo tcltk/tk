@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.7 1999/05/22 06:34:57 jingham Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.8 1999/08/01 21:25:23 hobbs Exp $
  */
 
 #ifndef _TKMACPORT
@@ -70,7 +70,9 @@ extern int errno;
  * in any other header file.
  */
 
+#ifndef panic	/* In a stubs-aware setting, this could confuse the #define */
 extern void 		panic  _ANSI_ARGS_(TCL_VARARGS(char *, string));
+#endif
 extern int		strcasecmp _ANSI_ARGS_((CONST char *s1,
 			    CONST char *s2));
 extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
