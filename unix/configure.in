@@ -379,15 +379,18 @@ AC_ARG_ENABLE(shared,
 if test "$ok" = "yes" -a "${SHLIB_SUFFIX}" != ""; then
     TK_SHARED_BUILD=1
     TK_SHLIB_CFLAGS="${SHLIB_CFLAGS}"
-    eval "TK_LIB_FILE=libtk${TCL_SHARED_LIB_SUFFIX}"
+    TK_LIB_FILE=libtk${TCL_SHARED_LIB_SUFFIX}
     MAKE_LIB="\${SHLIB_LD} -o \${TK_LIB_FILE} \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${SHLIB_LD_LIBS}"
     RANLIB=":"
 else
     TK_SHARED_BUILD=0
     TK_SHLIB_CFLAGS=""
-    eval "TK_LIB_FILE=libtk${TCL_UNSHARED_LIB_SUFFIX}"
+    TK_LIB_FILE=libtk${TCL_UNSHARED_LIB_SUFFIX}
     MAKE_LIB="ar cr \${TK_LIB_FILE} \${OBJS}"
 fi
+
+DBGX='${TK_DBGX}'
+eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
 # Note:  in the following variable, it's important to use the absolute
 # path name of the Tcl directory rather than "..":  this is because
@@ -399,8 +402,8 @@ if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
 else
     TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${TK_DBGX}"
 fi
-TK_BUILD_LIB_SPEC="-L`pwd` \${TK_LIB_FLAG}"
-TK_LIB_SPEC="-L${exec_prefix}/lib \${TK_LIB_FLAG}"
+TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
+TK_LIB_SPEC="-L${exec_prefix}/lib ${TK_LIB_FLAG}"
 
 AC_SUBST(CFLAGS_DEBUG)
 AC_SUBST(CFLAGS_DEFAULT)
