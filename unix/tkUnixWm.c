@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.2 2004/08/10 18:14:18 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.3 2004/10/05 22:27:27 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -198,6 +198,8 @@ typedef struct TkWmInfo {
 				 * property, or NULL. */
     int flags;			/* Miscellaneous flags, defined below. */
     int numTransients;		/* number of transients on this window */
+    int iconDataSize;		/* size of iconphoto image data */
+    unsigned char *iconDataPtr;	/* iconphoto image data, if set */
     struct TkWmInfo *nextPtr;	/* Next in list of all top-level windows. */
 } WmInfo;
 
@@ -333,6 +335,7 @@ static void		UpdateGeometryInfo _ANSI_ARGS_((
 			    ClientData clientData));
 static void		UpdateHints _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdateSizeHints _ANSI_ARGS_((TkWindow *winPtr));
+static void		UpdatePhotoIcon _ANSI_ARGS_((TkWindow *winPtr));
 static void		UpdateVRootGeometry _ANSI_ARGS_((WmInfo *wmPtr));
 static void		UpdateWmProtocols _ANSI_ARGS_((WmInfo *wmPtr));
 static void		WaitForConfigureNotify _ANSI_ARGS_((TkWindow *winPtr,
@@ -392,6 +395,9 @@ static int 		WmIconmaskCmd _ANSI_ARGS_((Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 static int 		WmIconnameCmd _ANSI_ARGS_((Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
+static int 		WmIconphotoCmd _ANSI_ARGS_((Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 static int 		WmIconpositionCmd _ANSI_ARGS_((Tk_Window tkwin,
@@ -472,6 +478,9 @@ void TkWmCleanup(dispPtr)
 	if (wmPtr->iconName != NULL) {
 	    ckfree(wmPtr->iconName);
 	}
+	if (wmPtr->iconDataPtr != NULL) {
+	    ckfree(wmPtr->iconDataPtr);
+	}
 	if (wmPtr->leaderName != NULL) {
 	    ckfree(wmPtr->leaderName);
 	}
@@ -495,6 +504,10 @@ void TkWmCleanup(dispPtr)
 	    ckfree((char *) wmPtr->clientMachine);
 	}
 	ckfree((char *) wmPtr);
+    }
+    if (dispPtr->iconDataPtr != NULL) {
+	ckfree(dispPtr->iconDataPtr);
+	dispPtr->iconDataPtr = NULL;
     }
 }
 
@@ -638,6 +651,7 @@ TkWmMapWindow(winPtr)
 	Tcl_DStringFree(&ds);
 
 	TkWmSetClass(winPtr);
+	UpdatePhotoIcon(winPtr);
 
 	if (wmPtr->iconName != NULL) {
 	    Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
@@ -797,6 +811,9 @@ TkWmDeadWindow(winPtr)
     }
     if (wmPtr->iconName != NULL) {
 	ckfree(wmPtr->iconName);
+    }
+    if (wmPtr->iconDataPtr != NULL) {
+	ckfree(wmPtr->iconDataPtr);
     }
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -968,7 +985,8 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "frame",
 	"geometry", "grid", "group", "iconbitmap",
-	"iconify", "iconmask", "iconname", "iconposition",
+	"iconify", "iconmask", "iconname",
+	"iconphoto", "iconposition",
 	"iconwindow", "maxsize", "minsize", "overrideredirect",
         "positionfrom", "protocol", "resizable", "sizefrom",
         "stackorder", "state", "title", "transient",
@@ -977,7 +995,8 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
         WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FRAME,
 	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
-	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME, WMOPT_ICONPOSITION,
+	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
+	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION,
 	WMOPT_ICONWINDOW, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
         WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
         WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
@@ -1069,6 +1088,8 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
 	return WmIconmaskCmd(tkwin, winPtr, interp, objc, objv);
       case WMOPT_ICONNAME:
 	return WmIconnameCmd(tkwin, winPtr, interp, objc, objv);
+      case WMOPT_ICONPHOTO:
+        return WmIconphotoCmd(tkwin, winPtr, interp, objc, objv);
       case WMOPT_ICONPOSITION:
 	return WmIconpositionCmd(tkwin, winPtr, interp, objc, objv);
       case WMOPT_ICONWINDOW:
@@ -2051,6 +2072,147 @@ WmIconnameCmd(tkwin, winPtr, interp, objc, objv)
 		    Tcl_DStringValue(&ds));
 	    Tcl_DStringFree(&ds);
 	}
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmIconphotoCmd --
+ *
+ *	This procedure is invoked to process the "wm iconphoto"
+ *	Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    TkWindow *winPtr;           /* Toplevel to work with */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    Tk_PhotoHandle photo;
+    Tk_PhotoImageBlock block;
+    int i, size = 0, width, height, index = 0, x, y, isDefault = 0;
+    long R, G, B, A;
+    long *iconPropertyData;
+    unsigned char *pixelByte;
+
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv,
+		"window ?-default? image1 ?image2 ...?");
+	return TCL_ERROR;
+    }
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	isDefault = 1;
+	if (objc == 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv,
+		    "window ?-default? image1 ?image2 ...?");
+	    return TCL_ERROR;
+	}
+    }
+    /*
+     * Iterate over all images to retrieve their sizes, in order to allocate a
+     * buffer large enough to hold all images.
+     */
+    for (i = 3 + isDefault; i < objc; i++) {
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	if (photo == NULL) {
+	    Tcl_AppendResult(interp, "can't use \"", Tcl_GetString(objv[i]),
+		    "\" as iconphoto: not a photo image", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	Tk_PhotoGetSize(photo, &width, &height);
+	/* We need to cardinals for width & height and one cardinal for each
+	 * image pixel. */
+	size += 2 + width * height;
+    }
+    /* We have calculated the size of the data. Try to allocate the needed
+     * memory space. */
+    iconPropertyData = (long *) Tcl_AttemptAlloc(sizeof(long)*size);
+    if (iconPropertyData == NULL) {
+	return TCL_ERROR;
+    }
+    memset(iconPropertyData, 0, sizeof(long)*size);
+
+    for (i = 3 + isDefault; i < objc; i++) {
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	if (photo == NULL) {
+	    Tcl_Free((char *) iconPropertyData);
+	    return TCL_ERROR;
+	}
+	Tk_PhotoGetSize(photo, &width, &height);
+	Tk_PhotoGetImage(photo, &block);
+	/*
+	 * Each image data will be placed as an array of 32bit packed
+	 * CARDINAL, in a window property named "_NET_WM_ICON":
+	 * _NET_WM_ICON
+	 *
+	 * _NET_WM_ICON CARDINAL[][2+n]/32
+	 *
+	 * This is an array of possible icons for the client.
+	 * This specification does not stipulate what size these icons should
+	 * be, but individual desktop environments or toolkits may do so.
+	 * The Window Manager MAY scale any of these icons to an appropriate
+	 * size.
+	 *
+	 * This is an array of 32bit packed CARDINAL ARGB with high byte being
+	 * A, low byte being B. The first two cardinals are width, height.
+	 * Data is in rows, left to right and top to bottom.
+	 */
+
+	/*
+	 * Encode the image data in the iconPropertyData array.
+	 */
+	iconPropertyData[index++] = width;
+	iconPropertyData[index++] = height;
+	for (y = 0; y < height; y++) {
+	    for (x = 0; x < width; x++) {
+		R = *(block.pixelPtr + x*block.pixelSize +
+			y*block.pitch + block.offset[0]);
+		G = *(block.pixelPtr + x*block.pixelSize +
+			y*block.pitch + block.offset[1]);
+		B = *(block.pixelPtr + x*block.pixelSize +
+			y*block.pitch + block.offset[2]);
+		A = *(block.pixelPtr + x*block.pixelSize +
+			y*block.pitch + block.offset[3]);
+		pixelByte = (unsigned char *) &iconPropertyData[index];
+		pixelByte[3] = A;
+		pixelByte[2] = R;
+		pixelByte[1] = G;
+		pixelByte[0] = B;
+		index++;
+	    }
+	}
+    }
+    if (wmPtr->iconDataPtr != NULL) {
+	ckfree(wmPtr->iconDataPtr);
+	wmPtr->iconDataPtr = NULL;
+    }
+    if (isDefault) {
+	if (winPtr->dispPtr->iconDataPtr != NULL) {
+	    ckfree((char *) winPtr->dispPtr->iconDataPtr);
+	}
+	winPtr->dispPtr->iconDataPtr  = (unsigned char *) iconPropertyData;
+	winPtr->dispPtr->iconDataSize = size;
+    } else {
+	wmPtr->iconDataPtr  = (unsigned char *) iconPropertyData;
+	wmPtr->iconDataSize = size;
+    }
+    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+	UpdatePhotoIcon(winPtr);
     }
     return TCL_OK;
 }
@@ -4254,6 +4416,42 @@ UpdateSizeHints(winPtr)
     XSetWMNormalHints(winPtr->display, wmPtr->wrapperPtr->window, hintsPtr);
 
     XFree((char *) hintsPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * UpdatePhotoIcon --
+ *
+ *	This procedure is called to update the window ohoto icon.
+ *	It sets the EWMH-defined properties _NET_WM_ICON.
+ *
+ * Side effects:
+ *	Properties get changed for winPtr.
+ *
+ *--------------------------------------------------------------
+ */
+static void
+UpdatePhotoIcon(winPtr)
+    TkWindow *winPtr;
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    unsigned char *data = wmPtr->iconDataPtr;
+    int size = wmPtr->iconDataSize;
+
+    if (data == NULL) {
+	data = winPtr->dispPtr->iconDataPtr;
+	size = winPtr->dispPtr->iconDataSize;
+    }
+    if (data != NULL) {
+	/*
+	 * Set icon:
+	 */
+	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON"),
+		XA_CARDINAL, 32, PropModeReplace,
+		(unsigned char *) data, size);
+    }
 }
 
 /*
