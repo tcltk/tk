@@ -1,3 +1,9 @@
+2005-03-10  Jim Ingham  <jingham@apple.com>
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): In
+	the inDrag section, set the GrafPort to the drag window's GrafPort
+	before doing LocalToGlobal. [Bug 1160025]
+	
 2005-03-08  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (WinSetIcon): fix GCLP_ICONSM -> GCLP_HICONSM.
