@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 AC_INIT(../generic/tk.h)
-# RCS: @(#) $Id: configure.in,v 1.1.4.15 1999/03/26 19:48:03 suresh Exp $
+# RCS: @(#) $Id: configure.in,v 1.1.4.16 1999/03/30 02:08:03 redman Exp $
 
 TK_VERSION=8.1
 TK_MAJOR_VERSION=8
@@ -437,13 +437,17 @@ if test "$ok" = "yes" -a "${SHLIB_SUFFIX}" != ""; then
     TK_SHARED_BUILD=1
     TK_SHLIB_CFLAGS="${SHLIB_CFLAGS}"
     TK_LIB_FILE=libtk${TCL_SHARED_LIB_SUFFIX}
-    MAKE_LIB="\${SHLIB_LD} -o \${TK_LIB_FILE} \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${SHLIB_LD_LIBS}"
+    MAKE_LIB="\${SHLIB_LD} -o \${TK_LIB_FILE} \${OBJS} \$(TK_LD_SEARCH_FLAGS) ${TCL_BUILD_STUB_LIB_SPEC} \${LIBS}"
     RANLIB=":"
+
+    TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 else
     TK_SHARED_BUILD=0
     TK_SHLIB_CFLAGS=""
     TK_LIB_FILE=libtk${TCL_UNSHARED_LIB_SUFFIX}
     MAKE_LIB="ar cr \${TK_LIB_FILE} \${OBJS}"
+
+    TCL_STUB_FLAGS=""
 fi
 
 DBGX='${TK_DBGX}'
@@ -481,14 +485,9 @@ fi
 # too many problems with linking.  When Tk is a fully loadable 
 # extension, linking the the Tcl stubs will be supported.
 
-MAKE_STUB_LIB="\# nothing to do here..."
-SHLIB_LD_LIBS=${TCL_BUILD_LIB_SPEC}
-TCL_STUB_FLAGS=""
 
 # Replace ${VERSION} with contents of ${TK_VERSION}
 eval "STUB_LIB_FILE=libtkstub${TCL_UNSHARED_LIB_SUFFIX}"
-# Replace DBGX with TCL_DBGX
-eval "STUB_LIB_FILE=\"${STUB_LIB_FILE}\""
 
 MAKE_STUB_LIB="ar cr \${STUB_LIB_FILE} \${STUB_LIB_OBJS}"
 

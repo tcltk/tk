@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.1.4.9 1999/03/14 19:26:03 stanton Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.1.4.10 1999/03/30 02:08:03 redman Exp $
 
 # Current Tk version;  used in various names.
 
@@ -187,7 +187,7 @@ TCL_STUB_FLAGS = @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @SHLIB_LD_LIBS@ @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
 WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @DL_LIBS@ @MATH_LIBS@ -lc
 
 # The symbol below provides support for dynamic loading and shared
@@ -225,23 +225,15 @@ TOOL_DIR =		@TCL_SRC_DIR@/tools
 
 
 CC =		@CC@
-CC_SWITCHES =	${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
--I${UNIX_DIR} -I${GENERIC_DIR} \
--I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
-${AC_FLAGS} ${PROTO_FLAGS} ${TCL_STUB_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS}
 
-WISH_CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
+CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} \
 -I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} \
 ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS}
 
-STUB_CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${TK_SHLIB_CFLAGS} \
--I${UNIX_DIR} -I${GENERIC_DIR} \
--I${BMAP_DIR} -I${TCL_GENERIC_DIR} ${X11_INCLUDES} \
-${AC_FLAGS} ${PROTO_FLAGS} \
-${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS}
+CC_SWITCHES = ${CC_SWITCHES_NO_STUBS} ${TCL_STUB_FLAGS} 
+
 
 
 DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} \
@@ -275,8 +267,7 @@ UNIXOBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixWm.o tkUnixXId.o tkStubInit.o
 
-STUB_LIB_OBJS = tkStubs.o tkIntStubs.o tkIntPlatStubs.o tkPlatStubs.o \
-	tkIntXlibStubs.o tkStubLib.o
+STUB_LIB_OBJS = tkStubLib.o
 
 OBJS =  tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkClipboard.o tkCmds.o \
 	tkColor.o tkConfig.o tkCursor.o tkError.o tkEvent.o \
@@ -326,9 +317,6 @@ SRCS = \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
 	$(GENERIC_DIR)/tkOldConfig.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
-	$(GENERIC_DIR)/tkStubs.c $(GENERIC_DIR)/tkIntStubs.c \
-	$(GENERIC_DIR)/tkPlatStubs.c $(GENERIC_DIR)/tkIntPlatStubs.c \
-	$(GENERIC_DIR)/tkIntXlibStubs.c $(GENERIC_DIR)/tkInitStubs.c \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
 	$(UNIX_DIR)/tkUnix3d.c \
 	$(UNIX_DIR)/tkUnixButton.c $(UNIX_DIR)/tkUnixColor.c \
@@ -572,7 +560,7 @@ tkTestInit.o: $(UNIX_DIR)/tkAppInit.c
 	    rm -f tkAppInit.sav; \
 	    mv tkAppInit.o tkAppInit.sav; \
 	fi;
-	$(CC) -c $(CC_SWITCHES) -DTK_TEST $(UNIX_DIR)/tkAppInit.c
+	$(CC) -c $(CC_SWITCHES_NO_STUBS) -DTK_TEST $(UNIX_DIR)/tkAppInit.c
 	rm -f tkTestInit.o
 	mv tkAppInit.o tkTestInit.o
 	@if test -f tkAppInit.sav ; then \
@@ -580,7 +568,7 @@ tkTestInit.o: $(UNIX_DIR)/tkAppInit.c
 	fi;
 
 tkAppInit.o: $(UNIX_DIR)/tkAppInit.c
-	$(CC) -c $(WISH_CC_SWITCHES) $(UNIX_DIR)/tkAppInit.c
+	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(UNIX_DIR)/tkAppInit.c
 
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c
@@ -700,7 +688,7 @@ tkScrollbar.o: $(GENERIC_DIR)/tkScrollbar.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkScrollbar.c
 
 tkSquare.o: $(GENERIC_DIR)/tkSquare.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkSquare.c
+	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(GENERIC_DIR)/tkSquare.c
 
 tkCanvas.o: $(GENERIC_DIR)/tkCanvas.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkCanvas.c
@@ -754,7 +742,7 @@ tkImgPhoto.o: $(GENERIC_DIR)/tkImgPhoto.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhoto.c
 
 tkTest.o: $(GENERIC_DIR)/tkTest.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTest.c
+	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(GENERIC_DIR)/tkTest.c
 
 tkText.o: $(GENERIC_DIR)/tkText.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkText.c
@@ -786,23 +774,8 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 # Stub library binaries, these must be compiled for use in a shared library
 # even though they will be placed in a static archive
 
-tkStubs.o: $(GENERIC_DIR)/tkStubs.c
-	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkStubs.c
-
-tkIntStubs.o: $(GENERIC_DIR)/tkIntStubs.c
-	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntStubs.c
-
-tkPlatStubs.o: $(GENERIC_DIR)/tkPlatStubs.c
-	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkPlatStubs.c
-
-tkIntPlatStubs.o: $(GENERIC_DIR)/tkIntPlatStubs.c
-	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntPlatStubs.c
-
-tkIntXlibStubs.o: $(GENERIC_DIR)/tkIntXlibStubs.c
-	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkIntXlibStubs.c
-
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(STUB_CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(GENERIC_DIR)/tkStubLib.c
 
 
 tkUnix.o: $(UNIX_DIR)/tkUnix.c

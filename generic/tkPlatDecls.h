@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.2.2.1 1999/03/10 07:13:45 stanton Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.2.2.2 1999/03/30 02:08:02 redman Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -126,78 +126,78 @@ extern TkPlatStubs *tkPlatStubsPtr;
 
 #ifdef __WIN32__
 #ifndef Tk_AttachHWND
-#define Tk_AttachHWND(tkwin, hwnd) \
-	(tkPlatStubsPtr->tk_AttachHWND)(tkwin, hwnd) /* 0 */
+#define Tk_AttachHWND \
+	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
 #endif
 #ifndef Tk_GetHINSTANCE
-#define Tk_GetHINSTANCE() \
-	(tkPlatStubsPtr->tk_GetHINSTANCE)() /* 1 */
+#define Tk_GetHINSTANCE \
+	(tkPlatStubsPtr->tk_GetHINSTANCE) /* 1 */
 #endif
 #ifndef Tk_GetHWND
-#define Tk_GetHWND(window) \
-	(tkPlatStubsPtr->tk_GetHWND)(window) /* 2 */
+#define Tk_GetHWND \
+	(tkPlatStubsPtr->tk_GetHWND) /* 2 */
 #endif
 #ifndef Tk_HWNDToWindow
-#define Tk_HWNDToWindow(hwnd) \
-	(tkPlatStubsPtr->tk_HWNDToWindow)(hwnd) /* 3 */
+#define Tk_HWNDToWindow \
+	(tkPlatStubsPtr->tk_HWNDToWindow) /* 3 */
 #endif
 #ifndef Tk_PointerEvent
-#define Tk_PointerEvent(hwnd, x, y) \
-	(tkPlatStubsPtr->tk_PointerEvent)(hwnd, x, y) /* 4 */
+#define Tk_PointerEvent \
+	(tkPlatStubsPtr->tk_PointerEvent) /* 4 */
 #endif
 #ifndef Tk_TranslateWinEvent
-#define Tk_TranslateWinEvent(hwnd, message, wParam, lParam, result) \
-	(tkPlatStubsPtr->tk_TranslateWinEvent)(hwnd, message, wParam, lParam, result) /* 5 */
+#define Tk_TranslateWinEvent \
+	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
 #endif
 #ifndef Tk_DdeObjCmd
-#define Tk_DdeObjCmd(clientData, interp, objc, objv) \
-	(tkPlatStubsPtr->tk_DdeObjCmd)(clientData, interp, objc, objv) /* 6 */
+#define Tk_DdeObjCmd \
+	(tkPlatStubsPtr->tk_DdeObjCmd) /* 6 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 #ifndef Tk_MacSetEmbedHandler
-#define Tk_MacSetEmbedHandler(registerWinProcPtr, getPortProcPtr, containerExistProcPtr, getClipProc, getOffsetProc) \
-	(tkPlatStubsPtr->tk_MacSetEmbedHandler)(registerWinProcPtr, getPortProcPtr, containerExistProcPtr, getClipProc, getOffsetProc) /* 0 */
+#define Tk_MacSetEmbedHandler \
+	(tkPlatStubsPtr->tk_MacSetEmbedHandler) /* 0 */
 #endif
 #ifndef Tk_MacTurnOffMenus
-#define Tk_MacTurnOffMenus() \
-	(tkPlatStubsPtr->tk_MacTurnOffMenus)() /* 1 */
+#define Tk_MacTurnOffMenus \
+	(tkPlatStubsPtr->tk_MacTurnOffMenus) /* 1 */
 #endif
 #ifndef Tk_MacTkOwnsCursor
-#define Tk_MacTkOwnsCursor(tkOwnsIt) \
-	(tkPlatStubsPtr->tk_MacTkOwnsCursor)(tkOwnsIt) /* 2 */
+#define Tk_MacTkOwnsCursor \
+	(tkPlatStubsPtr->tk_MacTkOwnsCursor) /* 2 */
 #endif
 #ifndef TkMacInitMenus
-#define TkMacInitMenus(interp) \
-	(tkPlatStubsPtr->tkMacInitMenus)(interp) /* 3 */
+#define TkMacInitMenus \
+	(tkPlatStubsPtr->tkMacInitMenus) /* 3 */
 #endif
 #ifndef TkMacInitAppleEvents
-#define TkMacInitAppleEvents(interp) \
-	(tkPlatStubsPtr->tkMacInitAppleEvents)(interp) /* 4 */
+#define TkMacInitAppleEvents \
+	(tkPlatStubsPtr->tkMacInitAppleEvents) /* 4 */
 #endif
 #ifndef TkMacConvertEvent
-#define TkMacConvertEvent(eventPtr) \
-	(tkPlatStubsPtr->tkMacConvertEvent)(eventPtr) /* 5 */
+#define TkMacConvertEvent \
+	(tkPlatStubsPtr->tkMacConvertEvent) /* 5 */
 #endif
 #ifndef TkMacConvertTkEvent
-#define TkMacConvertTkEvent(eventPtr, window) \
-	(tkPlatStubsPtr->tkMacConvertTkEvent)(eventPtr, window) /* 6 */
+#define TkMacConvertTkEvent \
+	(tkPlatStubsPtr->tkMacConvertTkEvent) /* 6 */
 #endif
 #ifndef TkGenWMConfigureEvent
-#define TkGenWMConfigureEvent(tkwin, x, y, width, height, flags) \
-	(tkPlatStubsPtr->tkGenWMConfigureEvent)(tkwin, x, y, width, height, flags) /* 7 */
+#define TkGenWMConfigureEvent \
+	(tkPlatStubsPtr->tkGenWMConfigureEvent) /* 7 */
 #endif
 #ifndef TkMacInvalClipRgns
-#define TkMacInvalClipRgns(winPtr) \
-	(tkPlatStubsPtr->tkMacInvalClipRgns)(winPtr) /* 8 */
+#define TkMacInvalClipRgns \
+	(tkPlatStubsPtr->tkMacInvalClipRgns) /* 8 */
 #endif
 #ifndef TkMacHaveAppearance
-#define TkMacHaveAppearance() \
-	(tkPlatStubsPtr->tkMacHaveAppearance)() /* 9 */
+#define TkMacHaveAppearance \
+	(tkPlatStubsPtr->tkMacHaveAppearance) /* 9 */
 #endif
 #ifndef TkMacGetDrawablePort
-#define TkMacGetDrawablePort(drawable) \
-	(tkPlatStubsPtr->tkMacGetDrawablePort)(drawable) /* 10 */
+#define TkMacGetDrawablePort \
+	(tkPlatStubsPtr->tkMacGetDrawablePort) /* 10 */
 #endif
 #endif /* MAC_TCL */
 
