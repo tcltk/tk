@@ -14,7 +14,7 @@
 	* generic/tkConsole.c: Added comments for a Win2K OS bug with
 	GetStdHandle(STD_OUTPUT_HANDLE).  No change was done to the code
 	as the resulting behaviour of ShouldUseConsoleChannel() was
-	correct, anyways.
+	correct, anyways. [BUG: 5971]
 
 2000-07-17  Eric Melski  <ericm@scriptics.com>
 
