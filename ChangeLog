@@ -1,3 +1,30 @@
+2001-12-03  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	Add TK patch 481148 to implement TIP 74, the
+	wm stackorder command.
+
+	* doc/winfo.n: Update documentation for the winfo
+	children command to indicate that top-level windows
+	are not returned in stacking order.
+	* doc/wm.n: Add documentation for wm stackorder.
+	* generic/tkInt.decls (TkWmStackorderToplevel):
+	Add decl for new function.
+	* generic/tkIntDecls.h: Regen.
+	* generic/tkStubInit.c: Regen.
+	* tests/unixWm.test: Add stackorder command to test
+	for wm command usage message.
+	* tests/wm.test: Add new set of tests for generic
+	window manager methods.
+	* unix/tkUnixWm.c (Tk_WmCmd,
+	TkWmStackorderToplevelWrapperMap,
+	TkWmStackorderToplevel): Add unix implementation of
+	new wm stackorder command.
+	* win/tkWinWm.c (Tk_WmCmd,
+	TkWmStackorderToplevelEnumProc,
+	TkWmStackorderToplevelWrapperMap,
+	TkWmStackorderToplevel): Add windows implementation
+	of new wm stackorder command.
+
 2001-12-03  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: install target changes by request from
