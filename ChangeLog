@@ -1,3 +1,8 @@
+2003-02-18  Andreas Kupries  <andreask@activestate.com>
+
+	* unix/configure: Regen.
+	* unix/tcl.m4: Update from Tcl (HP xnet [Bug #651811]).
+
 2003-02-18  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
