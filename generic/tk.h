@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.67 2002/08/20 15:39:13 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.68 2002/08/31 06:12:20 das Exp $
  */
 
 #ifndef _TK
@@ -54,11 +54,19 @@ extern "C" {
 #define TK_PATCH_LEVEL	"8.4b3"
 
 /*
+ * A special define for MacOS & MacOS X, allows us to use the header
+ * in the resource compiler without having it choke on the more complex
+ * C preprocessor constructs.
+ */
+    
+#ifndef RESOURCE_INCLUDED
+    
+/*
  * The following definitions set up the proper options for Macintosh
  * compilers.  We use this method because there is no autoconf equivalent.
  */
 
-#ifdef MAC_TCL
+#if defined(MAC_TCL) || defined(MAC_OSX_TK)
 #   ifndef REDO_KEYSYM_LOOKUP
 #	define REDO_KEYSYM_LOOKUP
 #   endif
@@ -79,9 +87,12 @@ extern "C" {
 #ifndef RC_INVOKED
 
 #ifndef _XLIB_H
-#   ifdef MAC_TCL
+#   if defined (MAC_TCL)
 #	include <Xlib.h>
 #	include <X.h>
+#   elif defined(MAC_OSX_TK)
+#	include <X11/Xlib.h>
+#	include <X11/X.h>
 #   else
 #	include <X11/Xlib.h>
 #   endif
@@ -1594,6 +1605,8 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#endif /* RESOURCE_INCLUDED */
 
 /*
  * end block for C++

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.11 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.12 2002/08/31 06:12:26 das Exp $
  */
 
 #include "tkInt.h"
@@ -1199,7 +1199,7 @@ TkSelInit(tkwin)
      *    http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
      */
 
-#if !defined(__WIN32__) && !defined(MAC_TCL)
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
     dispPtr->utf8Atom		= Tk_InternAtom(tkwin, "UTF8_STRING");
 #else
     dispPtr->utf8Atom		= (Atom) NULL;

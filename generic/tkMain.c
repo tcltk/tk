@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.13 2002/02/08 02:57:11 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.14 2002/08/31 06:12:22 das Exp $
  */
 
 #include <ctype.h>
@@ -43,7 +43,7 @@ typedef struct ThreadSpecificData {
 				 * terminal-like device.  Zero means it's
 				 * a file. */
 } ThreadSpecificData;
-Tcl_ThreadDataKey dataKey;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Declarations for various library procedures and variables (don't want

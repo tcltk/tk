@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.22 2002/07/22 21:25:39 mdejong Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.23 2002/08/31 06:12:28 das Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -157,7 +157,8 @@ proc ::tk::MessageBox {args} {
     if {[lsearch -exact {info warning error question} $data(-icon)] == -1} {
 	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
-    if {[string equal $tcl_platform(platform) "macintosh"]} {
+    if {[string equal [tk windowingsystem] "classic"]
+	    || [string equal [tk windowingsystem] "aqua"]} {
 	switch -- $data(-icon) {
 	    "error"     {set data(-icon) "stop"}
 	    "warning"   {set data(-icon) "caution"}
@@ -260,7 +261,8 @@ proc ::tk::MessageBox {args} {
 	wm transient $w $data(-parent)
     }    
 
-    if {[string equal $tcl_platform(platform) "macintosh"]} {
+    if {[string equal [tk windowingsystem] "classic"]
+	    || [string equal [tk windowingsystem] "aqua"]} {
 	unsupported::MacWindowStyle style $w dBoxProc
     }
 
@@ -268,7 +270,8 @@ proc ::tk::MessageBox {args} {
     pack $w.bot -side bottom -fill both
     frame $w.top -background $bg
     pack $w.top -side top -fill both -expand 1
-    if {[string compare $tcl_platform(platform) "macintosh"]} {
+    if {![string equal [tk windowingsystem] "classic"]
+	    && ![string equal [tk windowingsystem] "aqua"]} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -278,7 +281,8 @@ proc ::tk::MessageBox {args} {
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    if {[string equal $tcl_platform(platform) "macintosh"]} {
+    if {[string equal [tk windowingsystem] "classic"]
+	    || [string equal [tk windowingsystem] "aqua"]} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
 	option add *Dialog.msg.font {Times 18} widgetDefault
@@ -287,7 +291,8 @@ proc ::tk::MessageBox {args} {
     label $w.msg -anchor nw -justify left -text $data(-message) \
 	    -background $bg
     if {[string compare $data(-icon) ""]} {
-	if {[string equal $tcl_platform(platform) "macintosh"] \
+	if {([string equal [tk windowingsystem] "classic"]
+		|| [string equal [tk windowingsystem] "aqua"])
 		|| ([winfo depth $w] < 4) || $tk_strictMotif} {
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {

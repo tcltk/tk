@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.42 2002/07/25 20:36:55 hobbs Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.43 2002/08/31 06:12:28 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -257,7 +257,7 @@ proc ::tk::ScreenChanged screen {
 	selectMode	char
     }
     set Priv(screen) $screen
-    set Priv(tearoff) [string equal $tcl_platform(platform) "unix"]
+    set Priv(tearoff) [string equal [tk windowingsystem] "x11"]
     set Priv(window) {}
 }
 
@@ -333,8 +333,8 @@ if {[string equal [info command tk_chooseDirectory] ""]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
-switch $::tcl_platform(platform) {
-    "unix" {
+switch [tk windowingsystem] {
+    "x11" {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
 	event add <<Paste>> <Control-Key-v> <Key-F18>
@@ -360,7 +360,7 @@ switch $::tcl_platform(platform) {
 	trace variable ::tk_strictMotif w ::tk::EventMotifBindings
 	set ::tk_strictMotif $::tk_strictMotif
     }
-    "windows" {
+    "win32" {
 	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete>
 	event add <<Copy>> <Control-Key-c> <Control-Key-Insert>
 	event add <<Paste>> <Control-Key-v> <Shift-Key-Insert>
@@ -368,7 +368,16 @@ switch $::tcl_platform(platform) {
   	event add <<Undo>> <Control-Key-z>
 	event add <<Redo>> <Control-Key-y>
     }
-    "macintosh" {
+    "aqua" {
+	event add <<Cut>> <Control-Key-x> <Key-F2> 
+	event add <<Copy>> <Control-Key-c> <Key-F3>
+	event add <<Paste>> <Control-Key-v> <Key-F4>
+	event add <<PasteSelection>> <ButtonRelease-2>
+	event add <<Clear>> <Clear>
+  	event add <<Undo>> <Control-Key-z>
+	event add <<Redo>> <Control-Key-y>
+    }
+    "classic" {
 	event add <<Cut>> <Control-Key-x> <Key-F2> 
 	event add <<Copy>> <Control-Key-c> <Key-F3>
 	event add <<Paste>> <Control-Key-v> <Key-F4>
@@ -556,4 +565,11 @@ proc ::tk::mcmaxamp {args} {
 	}
     }
     return $maxlen
+}
+# For now, turn off the custom mdef proc for the mac:
+
+if {[string equal [tk windowingsystem] "aqua"]} {
+    namespace eval ::tk::mac {
+	set useCustomMDEF 0
+    }
 }

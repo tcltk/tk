@@ -9,13 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.8 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.9 2002/08/31 06:12:20 das Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
 
-#if !defined(__WIN32__) && !defined(MAC_TCL)
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
 #include "tkUnixInt.h"
 #endif
 
