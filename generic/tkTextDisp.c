@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.45 2004/10/26 12:51:45 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.46 2005/01/11 16:00:14 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -347,7 +347,12 @@ typedef struct TextDInfo {
                                  * calculation so far...*/
     int metricEpoch;            /* ...and this for the epoch of the
                                  * partial calculation so it can be
-                                 * cancelled if things change once more. */
+                                 * cancelled if things change once more.
+                                 * This field will be -1 if there is no
+                                 * long-line calculation in progress, 
+                                 * and take a non-negative value if 
+                                 * there is such a calculation in 
+                                 * progress. */
     int lastMetricUpdateLine;   /* When the current update line reaches
 				 * this line, we are done and should
 				 * stop the asychronous callback
@@ -2670,7 +2675,13 @@ AsyncUpdateLineMetrics(clientData)
 		    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     }
     
-    if (lineNum == dInfoPtr->lastMetricUpdateLine) {
+    /* 
+     * If we're not in the middle of a long-line calculation 
+     * (metricEpoch == -1) and we've reached the last line, then
+     * we're done.
+     */
+    if (dInfoPtr->metricEpoch == -1 
+      && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done.  We must
 	 * release our refCount on the widget (the timer token
@@ -2757,7 +2768,11 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 		lineNum++;
 		linePtr = TkBTreeNextLine(textPtr, linePtr);
 	    }
-	    if (lineNum == endLine) {
+	    /* 
+	     * If we're in the middle of a partial-line height calculation,
+	     * then we can't be done.
+	     */
+	    if (textPtr->dInfoPtr->metricEpoch == -1 && lineNum == endLine) {
 		/* 
 		 * We have looped over all lines, so we're done.
 		 */ 
@@ -2829,6 +2844,10 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 			 * cache as far as we got for next time around.
 			 */
 			if (pixelHeight == 0) {
+			    /*
+			     * These have already been stored, unless 
+			     * we just started the new line
+			     */
 			    textPtr->dInfoPtr->metricIndex = index;
 			    textPtr->dInfoPtr->metricEpoch = 
 			              textPtr->sharedTextPtr->stateEpoch;
@@ -2836,6 +2855,9 @@ TkTextUpdateLineMetrics(textPtr, lineNum, endLine, doThisMuch)
 			textPtr->dInfoPtr->metricPixelHeight = 
 			              TkBTreeLinePixelCount(textPtr, linePtr);
 			break;
+		    } else {
+			/* We're done with this long line */
+			textPtr->dInfoPtr->metricEpoch = -1;
 		    }
 		}
 	    } else {
