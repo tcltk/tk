@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.2 2002/01/19 00:36:02 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.3 2002/04/10 19:39:01 mdejong Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -34,11 +34,11 @@ test wm-stackorder-1.1 {usage} {
 
 test wm-stackorder-1.2 {usage} {
     list [catch {wm stackorder . _} err] $err
-} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow? ?window?"}}
+} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow window?"}}
 
 test wm-stackorder-1.3 {usage} {
     list [catch {wm stackorder . _ _ _} err] $err
-} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow? ?window?"}}
+} {1 {wrong # arguments: must be "wm stackorder window ?isabove|isbelow window?"}}
 
 test wm-stackorder-1.4 {usage} {
     list [catch {wm stackorder . is .} err] $err

@@ -1,3 +1,13 @@
+2002-04-10  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* doc/wm.n:
+	* mac/tkMacWm.c:
+	* tests/wm.test:
+	* unix/tkUnixWm.c:
+	* win/tkWinWm.c: Update wm stackorder usage message
+	to make it clear that either 1 or 3 arguments are
+	required. [Bug 540013]
+
 2002-04-08  Daniel Steffen  <das@users.sourceforge.net>
 
 	* mac/tkMacProjects.sea.hqx: added tkPanedWindow.c to projects

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.13 2002/04/05 08:41:44 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.14 2002/04/10 19:39:01 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -1759,7 +1759,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	if ((argc != 3) && (argc != 5)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
 		    argv[0],
-		    " stackorder window ?isabove|isbelow? ?window?\"",
+		    " stackorder window ?isabove|isbelow window?\"",
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
