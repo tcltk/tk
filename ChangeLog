@@ -1,3 +1,11 @@
+2004-12-09  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
+	Added guards so that rescanning for the complex-alpha check is not
+	done in the common case of creating a simple image a bit at a
+	time, or any other time where the image was simple before and the
+	input data has no alpha channel. [Bug 1081966]
+
 2004-12-07  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/canvPs.test:	Cleaned up the matching of [makeFile] and
