@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.33 2003/01/22 14:32:59 dkf Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.34 2003/10/13 03:41:37 hobbs Exp $
 
 library tk
 
@@ -671,6 +671,11 @@ declare 147 generic {
 declare 148 generic {
     Tk_Window TkToplevelWindowForCommand(Tcl_Interp *interp,
 	    CONST char *cmdName)
+}
+
+declare 149 generic {
+    CONST Tk_OptionSpec * TkGetOptionSpec (CONST char *name,
+					   Tk_OptionTable optionTable)
 }
 
 ##############################################################################
