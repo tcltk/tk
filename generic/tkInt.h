@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkInt.h 1.204 97/10/31 09:55:20
+ * SCCS: %Z% $Id: tkInt.h,v 1.2 1998/07/24 16:44:01 rjohnson Exp $ 
  */
 
 #ifndef _TKINT
@@ -736,6 +737,9 @@ EXTERN unsigned long	TkCreateBindingProcedure _ANSI_ARGS_((
 			    ClientData object, char *eventString,
 			    TkBindEvalProc *evalProc, TkBindFreeProc *freeProc,
 			    ClientData clientData));
+EXTERN Pixmap		TkCreateBitmapFromData _ANSI_ARGS_((Display* display,
+			    Drawable d, _Xconst char* data,
+			    unsigned int width, unsigned int height));
 EXTERN TkCursor *	TkCreateCursorFromData _ANSI_ARGS_((Tk_Window tkwin,
 			    char *source, char *mask, int width, int height,
 			    int xHot, int yHot, XColor fg, XColor bg));
@@ -931,6 +935,12 @@ EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 EXTERN void		TkQueueEventForAllChildren _ANSI_ARGS_((
 			    TkWindow *winPtr, XEvent *eventPtr));
 #ifndef TkRectInRegion
+EXTERN int		TkReadBitmapFile _ANSI_ARGS_((Display* display,
+			    Drawable d, _Xconst char* filename,
+			    unsigned int* width_return,
+			    unsigned int* height_return,
+			    Pixmap* bitmap_return,
+			    int* x_hot_return, int* y_hot_return));
 EXTERN int		TkRectInRegion _ANSI_ARGS_((TkRegion rgn,
 			    int x, int y, unsigned int width,
 			    unsigned int height));
