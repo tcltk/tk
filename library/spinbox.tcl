@@ -4,7 +4,7 @@
 # procedures that help in implementing those bindings.  The spinbox builds
 # off the entry widget, so it can reuse Entry bindings and procedures.
 #
-# RCS: @(#) $Id: spinbox.tcl,v 1.4 2001/12/27 22:26:41 hobbs Exp $
+# RCS: @(#) $Id: spinbox.tcl,v 1.5 2002/07/25 20:57:33 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -56,7 +56,7 @@ bind Spinbox <<Copy>> {
 bind Spinbox <<Paste>> {
     global tcl_platform
     catch {
-	if {[string compare $tcl_platform(platform) "unix"]} {
+	if {$tcl_platform(platform) ne "unix"} {
 	    catch {
 		%W delete sel.first sel.last
 	    }
@@ -366,7 +366,7 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 
     switch -exact $Priv(element) {
 	"buttonup" - "buttondown" {
-	    if {[string compare "disabled" [$w cget -state]]} {
+	    if {"disabled" ne [$w cget -state]} {
 		$w selection element $Priv(element)
 		set Priv(repeated) 0
 		set Priv(relief) [$w cget -$Priv(element)relief]
@@ -387,7 +387,7 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 	    set Priv(pressX) $x
 	    $w icursor [::tk::spinbox::ClosestGap $w $x]
 	    $w selection from insert
-	    if {[string compare "disabled" [$w cget -state]]} {focus $w}
+	    if {"disabled" ne [$w cget -state]} {focus $w}
 	    $w selection clear
 	}
 	default {
@@ -436,18 +436,14 @@ proc ::tk::spinbox::ButtonUp {w x y} {
 proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
     variable ::tk::Priv
 
-    if {[string compare "entry" $Priv(element)]} {
-	if {[string compare "none" $Priv(element)] && \
-		[string compare "ignore" $cursor]} {
-	    $w selection element none
-	    $w invoke $Priv(element)
-	    $w selection element $Priv(element)
-	}
+    if {$Priv(element) ne "entry"} {
+	# The ButtonUp command triggered by ButtonRelease-1 handles
+	# invoking one of the spinbuttons.
 	return
     }
     set cur [::tk::spinbox::ClosestGap $w $x]
     set anchor [$w index anchor]
-    if {($cur != $anchor) || (abs($Priv(pressX) - $x) >= 3)} {
+    if {($cur ne $anchor) || (abs($Priv(pressX) - $x) >= 3)} {
 	set Priv(mouseMoved) 1
     }
     switch $Priv(selectMode) {
@@ -482,7 +478,7 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 	    $w selection range 0 end
 	}
     }
-    if {[string compare $cursor {}] && [string compare $cursor "ignore"]} {
+    if {$cursor ne {} && $cursor ne "ignore"} {
 	catch {$w icursor $cursor}
     }
     update idletasks
@@ -517,9 +513,9 @@ proc ::tk::spinbox::Motion {w x y} {
     }
 
     set Priv(x) $x
-    if {[string equal "entry" $Priv(element)]} {
+    if {"entry" eq $Priv(element)} {
 	::tk::spinbox::MouseSelect $w $x ignore
-    } elseif {[string compare [$w identify $x $y] $Priv(element)]} {
+    } elseif {[$w identify $x $y] ne $Priv(element)} {
 	if {![info exists Priv(outsideElement)]} {
 	    # We've wandered out of the spin button
 	    # setting outside element will cause ::tk::spinbox::Invoke to

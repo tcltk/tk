@@ -1,5 +1,9 @@
 2002-07-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/spinbox.tcl (MouseSelect): when not in the entry, just
+	return instead of invoking - ButtonUp handles invoking already.
+	[Bug #499168]
+
 	* library/tk.tcl (RestoreFocusGrab): handle the case where the
 	FocusGrab info is not set. [Bug #553283]
 
