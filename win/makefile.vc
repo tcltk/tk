@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.63 2002/08/14 15:31:21 vincentdarley Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.64 2002/11/01 18:33:54 andreas_kupries Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -197,7 +197,7 @@ TCLIMPLIBNAME	= tcl$(VERSION)$(SUFX).lib
 TCLLIBNAME	= tcl$(VERSION)$(SUFX).$(EXT)
 TCLSTUBLIBNAME	= tclstub$(VERSION).lib
 
-TCLREGLIBNAME	= tclreg10$(SUFX:t=).lib
+TCLREGLIBNAME	= tclreg11$(SUFX:t=).lib
 TCLDDELIBNAME	= tcldde12$(SUFX:t=).lib
 
 TKIMPLIB	= $(OUT_DIR)\$(PROJECT)$(VERSION)$(SUFX).lib
