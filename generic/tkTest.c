@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.13 2000/09/17 21:02:40 ericm Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.14 2000/09/29 17:55:31 ericm Exp $
  */
 
 #include "tkInt.h"
@@ -190,10 +190,10 @@ static int		TestobjconfigObjCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Obj * CONST objv[]));
 static int	CustomOptionSet _ANSI_ARGS_((ClientData clientData,
 			Tcl_Interp *interp, Tk_Window tkwin,
-			Tcl_Obj **value, char *internalPtr,
+			Tcl_Obj **value, char *recordPtr, int internalOffset,
 			char *saveInternalPtr, int flags));
 static Tcl_Obj *CustomOptionGet _ANSI_ARGS_((ClientData clientData,
-			Tk_Window tkwin, char *internalPtr));
+			Tk_Window tkwin, char *recordPtr, int internalOffset));
 static void	CustomOptionRestore _ANSI_ARGS_((ClientData clientData,
 			Tk_Window tkwin, char *internalPtr,
 			char *saveInternalPtr));
@@ -2440,20 +2440,28 @@ TestwrapperCmd(clientData, interp, argc, argv)
  */
 
 static int
-CustomOptionSet(clientData,interp, tkwin, value, internalPtr,
+CustomOptionSet(clientData,interp, tkwin, value, recordPtr, internalOffset,
 	saveInternalPtr, flags)
     ClientData clientData;
     Tcl_Interp *interp;
     Tk_Window tkwin;
     Tcl_Obj **value;
-    char *internalPtr;
+    char *recordPtr;
+    int internalOffset;
     char *saveInternalPtr;
     int flags;
 {
     int objEmpty, length;
-    char *new, *string;
+    char *new, *string, *internalPtr;
     
     objEmpty = 0;
+
+    if (internalOffset >= 0) {
+	internalPtr = recordPtr + internalOffset;
+    } else {
+	internalPtr = NULL;
+    }
+    
     /*
      * See if the object is empty.
      */
@@ -2473,11 +2481,7 @@ CustomOptionSet(clientData,interp, tkwin, value, internalPtr,
     } else {
 	string = Tcl_GetStringFromObj((*value), &length);
 	Tcl_UtfToUpper(string);
-	if (objEmpty) {
-	    Tcl_SetResult(interp, "expected good value, got \"\"", TCL_STATIC);
-	    return TCL_ERROR;
-	}
-	if (strncmp(string, "BAD", (size_t)length) == 0) {
+	if (strcmp(string, "BAD") == 0) {
 	    Tcl_SetResult(interp, "expected good value, got \"BAD\"",
 		    TCL_STATIC);
 	    return TCL_ERROR;
@@ -2499,12 +2503,13 @@ CustomOptionSet(clientData,interp, tkwin, value, internalPtr,
 }
 
 static Tcl_Obj *
-CustomOptionGet(clientData, tkwin, internalPtr)
+CustomOptionGet(clientData, tkwin, recordPtr, internalOffset)
     ClientData clientData;
     Tk_Window tkwin;
-    char *internalPtr;
+    char *recordPtr;
+    int internalOffset;
 {
-    return (Tcl_NewStringObj(*(char **)internalPtr, -1));
+    return (Tcl_NewStringObj(*(char **)(recordPtr + internalOffset), -1));
 }
 
 static void
