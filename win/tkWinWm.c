@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.86 2005/01/04 01:29:12 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.87 2005/01/04 02:09:46 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -7430,11 +7430,6 @@ WmProc(hwnd, message, wParam, lParam)
     winPtr = GetTopLevel(hwnd);
     switch(message) {
 	case WM_SYSCOMMAND:
-        if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &result)) {
-    	    goto done;
-        }
-	break;
-
 	case WM_INITMENU:
 	case WM_COMMAND:
 	case WM_MENUCHAR:
@@ -7442,11 +7437,14 @@ WmProc(hwnd, message, wParam, lParam)
 	case WM_DRAWITEM:
 	case WM_MENUSELECT:
 	case WM_ENTERIDLE:
+	case WM_INITMENUPOPUP:
+	case WM_UNINITMENUPOPUP:
 	{
 	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window)winPtr);
 	    if(hMenuHWnd) {
-		SendMessage(hMenuHWnd, message, wParam, lParam);
-		goto done;
+		if(SendMessage(hMenuHWnd, message, wParam, lParam)) {
+		    goto done;
+		}
 	    } else {
 		if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &result)) {
     		    goto done;
