@@ -1,3 +1,12 @@
+2004-10-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/wm.n (iconphoto):           added support for Tk photo
+	* generic/tkInt.h (TkDisplay):    images as titlebar icons. TIP #159
+	* win/tkWinWm.c (WmIconphotoCmd): wm iconphoto ?-default? image1 ...
+	* macosx/tkMacOSXWm.c (WmIconphotoCmd): Implemented for Win/Unix,
+	* unix/tkUnixWm.c (WmIconphotoCmd):     stubbed out for OS X.
+	* tests/wm.test, tests/unixWm.test, tests/winWm.test: [Bug 815751]
+
 2004-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkTextWind.c (EmbWinDelayedUnmap): Fix init warnings

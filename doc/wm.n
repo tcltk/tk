@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.16 2004/09/28 18:54:37 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.17 2004/10/05 22:04:44 hobbs Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -279,6 +279,28 @@ then the command returns the current icon name for \fIwindow\fR,
 or an empty string if no icon name has been specified (in this
 case the window manager will normally display the window's title,
 as specified with the \fBwm title\fR command).
+.VS 8.5
+.TP
+\fBwm iconphoto \fIwindow\fR ?\fI-default\fR? \fIimage1\fR ?\fIimage2 ...\fR?
+.RS
+Sets the titlebar icon for \fIwindow\fR based on the named photo images.
+If \fI-default\fR is specified, this is applied to all future created
+toplevels as well.  The data in the images is taken as a snapshot at the
+time of invocation.  If the images are later changed, this is not
+reflected to the titlebar icons.  Multiple images are accepted to allow
+different images sizes (eg, 16x16 and 32x32) to be provided.
+.PP
+On Windows, the images are packed into a Windows icon structure.
+This will override an ico specified to \fBwm iconbitmap\fR, and
+vice versa.
+.PP
+On X, the images are arranged into the _NET_WM_ICON X property, which
+most modern window managers support.  A \fBwm iconbitmap\fR may exist
+simultaneously.
+.PP
+On Macintosh, this is currently does nothing.
+.VE 8.5
+.RE
 .TP
 \fBwm iconposition \fIwindow\fR ?\fIx y\fR?
 If \fIx\fR and \fIy\fR are specified, they are passed to the window

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.76 2004/09/23 01:08:11 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.77 2004/10/05 22:04:47 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -498,6 +498,9 @@ static int 		WmIconmaskCmd _ANSI_ARGS_((Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 static int 		WmIconnameCmd _ANSI_ARGS_((Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]));
+static int 		WmIconphotoCmd _ANSI_ARGS_((Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
 static int 		WmIconpositionCmd _ANSI_ARGS_((Tk_Window tkwin,
@@ -1351,7 +1354,7 @@ GetIconFromPixmap(dsPtr, pixmap)
 	int width, height;
 
 	Tk_SizeOfBitmap(dsPtr, pixmap, &width, &height);
-    
+
 	icon.fIcon = TRUE;
 	icon.xHotspot = 0;
 	icon.yHotspot = 0;
@@ -1368,7 +1371,7 @@ GetIconFromPixmap(dsPtr, pixmap)
 	    DestroyIcon(hIcon);
 	    return NULL;
 	}
-	
+
 	lpIR->nNumImages = 1;
 	lpIR->IconImages[0].Width = width;
 	lpIR->IconImages[0].Height = height;
@@ -1379,7 +1382,7 @@ GetIconFromPixmap(dsPtr, pixmap)
 	lpIR->IconImages[0].dwNumBytes = 0;
 	lpIR->IconImages[0].lpXOR = 0;
 	lpIR->IconImages[0].lpAND = 0;
-	
+
 	titlebaricon = (WinIconPtr) ckalloc(sizeof(WinIconInstance));
 	titlebaricon->iconBlock = lpIR;
 	titlebaricon->refCount = 1;
@@ -2618,7 +2621,8 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "frame",
 	"geometry", "grid", "group", "iconbitmap",
-	"iconify", "iconmask", "iconname", "iconposition",
+	"iconify", "iconmask", "iconname",
+	"iconphoto", "iconposition",
 	"iconwindow", "maxsize", "minsize", "overrideredirect",
         "positionfrom", "protocol", "resizable", "sizefrom",
         "stackorder", "state", "title", "transient",
@@ -2627,7 +2631,8 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
         WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FRAME,
 	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
-	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME, WMOPT_ICONPOSITION,
+	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
+	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION,
 	WMOPT_ICONWINDOW, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
         WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
         WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
@@ -2718,6 +2723,8 @@ Tk_WmObjCmd(clientData, interp, objc, objv)
 	return WmIconmaskCmd(tkwin, winPtr, interp, objc, objv);
       case WMOPT_ICONNAME:
 	return WmIconnameCmd(tkwin, winPtr, interp, objc, objv);
+      case WMOPT_ICONPHOTO:
+        return WmIconphotoCmd(tkwin, winPtr, interp, objc, objv);
       case WMOPT_ICONPOSITION:
 	return WmIconpositionCmd(tkwin, winPtr, interp, objc, objv);
       case WMOPT_ICONWINDOW:
@@ -3907,6 +3914,110 @@ WmIconnameCmd(tkwin, winPtr, interp, objc, objv)
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    XSetIconName(winPtr->display, winPtr->window, wmPtr->iconName);
 	}
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmIconphotoCmd --
+ *
+ *	This procedure is invoked to process the "wm iconphoto"
+ *	Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    TkWindow *winPtr;           /* Toplevel to work with */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+{
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
+    Tk_PhotoHandle photo;
+    Tk_PhotoImageBlock block;
+    int i, size, width, height, startObj = 3;
+    BlockOfIconImagesPtr lpIR;
+    WinIconPtr titlebaricon = NULL;
+    HICON hIcon;
+
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv,
+		"window ?-default? image1 ?image2 ...?");
+	return TCL_ERROR;
+    }
+    /*
+     * Iterate over all images to validate their existence.
+     */
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	useWinPtr = NULL;
+	startObj = 4;
+	if (objc == 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv,
+		    "window ?-default? image1 ?image2 ...?");
+	    return TCL_ERROR;
+	}
+    }
+    for (i = startObj; i < objc; i++) {
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	if (photo == NULL) {
+	    Tcl_AppendResult(interp, "can't use \"", Tcl_GetString(objv[i]),
+		    "\" as iconphoto: not a photo image", (char *) NULL);
+	    return TCL_ERROR;
+	}
+    }
+    /* We have calculated the size of the data. Try to allocate the needed
+     * memory space. */
+    size = sizeof(BlockOfIconImages)
+	+ (sizeof(ICONIMAGE) * (objc - (startObj+1)));
+    lpIR = (BlockOfIconImagesPtr) Tcl_AttemptAlloc(size);
+    if (lpIR == NULL) {
+	return TCL_ERROR;
+    }
+    ZeroMemory(lpIR, size);
+
+    lpIR->nNumImages = objc - startObj;
+    for (i = startObj; i < objc; i++) {
+	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
+	Tk_PhotoGetSize(photo, &width, &height);
+	Tk_PhotoGetImage(photo, &block);
+
+	/*
+	 * Encode the image data into an HICON.
+	 */
+	hIcon = CreateIcon(Tk_GetHINSTANCE(), width, height, 1, 32,
+		NULL, (BYTE *) block.pixelPtr);
+	if (hIcon == NULL) {
+	    /* XXX should free up created icons */
+	    Tcl_Free((char *) lpIR);
+	    Tcl_AppendResult(interp, "failed to create icon for \"",
+		    Tcl_GetString(objv[i]), "\"", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	lpIR->IconImages[i-startObj].Width  = width;
+	lpIR->IconImages[i-startObj].Height = height;
+	lpIR->IconImages[i-startObj].Colors = 4;
+	lpIR->IconImages[i-startObj].hIcon  = hIcon;
+    }
+    titlebaricon = (WinIconPtr) ckalloc(sizeof(WinIconInstance));
+    titlebaricon->iconBlock = lpIR;
+    titlebaricon->refCount = 1;
+    if (WinSetIcon(interp, titlebaricon, (Tk_Window) useWinPtr) != TCL_OK) {
+	/* We didn't use the titlebaricon after all */
+	DecrIconRefCount(titlebaricon);
+	return TCL_ERROR;
     }
     return TCL_OK;
 }
