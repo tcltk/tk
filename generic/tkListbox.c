@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.20 2001/04/03 04:41:08 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.21 2001/07/03 06:16:19 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -574,6 +574,13 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     listPtr->gray			= None;
     listPtr->flags 			= 0;
 
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) listPtr->tkwin);
+
     Tk_SetClass(listPtr->tkwin, "Listbox");
     Tk_SetClassProcs(listPtr->tkwin, &listboxClass, (ClientData) listPtr);
     Tk_CreateEventHandler(listPtr->tkwin,
@@ -629,7 +636,6 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData)listPtr);
 
     /*
      * Parse the command by looking up the second argument in the list
@@ -638,10 +644,10 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
     result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
 	    "option", 0, &cmdIndex);
     if (result != TCL_OK) {
-	Tcl_Release((ClientData)listPtr);
 	return result;
     }
 
+    Tcl_Preserve((ClientData)listPtr);
     /* The subcommand was valid, so continue processing */
     switch (cmdIndex) {
 	case COMMAND_ACTIVATE: {
@@ -1498,6 +1504,7 @@ DestroyListbox(memPtr)
 
     Tk_FreeConfigOptions((char *)listPtr, listPtr->optionTable,
 	    listPtr->tkwin);
+    Tcl_Release((ClientData) listPtr->tkwin);
     listPtr->tkwin = NULL;
     ckfree((char *) listPtr);
 }
@@ -1834,16 +1841,23 @@ DisplayListbox(clientData)
 	listPtr->flags |= UPDATE_H_SCROLLBAR;
     }
 
+    Tcl_Preserve((ClientData) listPtr);
     if (listPtr->flags & UPDATE_V_SCROLLBAR) {
 	ListboxUpdateVScrollbar(listPtr);
+	if ((listPtr->flags & LISTBOX_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) listPtr);
+	    return;
+	}
     }
     if (listPtr->flags & UPDATE_H_SCROLLBAR) {
 	ListboxUpdateHScrollbar(listPtr);
+	if ((listPtr->flags & LISTBOX_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) listPtr);
+	    return;
+	}
     }
     listPtr->flags &= ~(REDRAW_PENDING|UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR);
-    if ((listPtr->flags & LISTBOX_DELETED) || (!Tk_IsMapped(tkwin))) {
-	return;
-    }
+    Tcl_Release((ClientData) listPtr);
 
     /*
      * Redrawing is done in a temporary pixmap that is allocated
