@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.32 2003/03/13 19:34:41 dgp Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.33 2003/03/18 16:30:42 dgp Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure
@@ -1365,7 +1365,7 @@ test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} u
     sleep 500
     lappend result [winfo width .t] [winfo height .t]
 } {400 150 200 300}
-test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable testmenubar} unix {
+test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable testmenubar} {
     catch {destroy .t}
     toplevel .t -width 300 -height 200 -bd 2 -relief raised
     wm geom .t +0+0
