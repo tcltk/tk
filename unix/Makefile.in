@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.83 2002/09/26 17:07:33 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.84 2002/09/27 00:47:26 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1128,6 +1128,13 @@ dist:   $(UNIX_DIR)/configure mklinks
 	cp -p $(TOP_DIR)/mac/*.pch $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.doc $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.tcl $(DISTDIR)/mac
+	mkdir $(DISTDIR)/macosx
+	cp -p $(TOP_DIR)/macosx/Makefile $(TOP_DIR)/macosx/Wish.icns \
+		$(TOP_DIR)/macosx/*.c $(TOP_DIR)/macosx/*.h \
+		$(TOP_DIR)/macosx/*.r $(DISTDIR)/macosx
+	mkdir $(DISTDIR)/macosx/Wish.pbproj
+	cp -p $(TOP_DIR)/macosx/Wish.pbproj/*.pbx* \
+		$(DISTDIR)/macosx/Wish.pbproj
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
 		$(TCLDIR)/compat/stdlib.h $(TCLDIR)/compat/limits.h \
@@ -1186,12 +1193,9 @@ dist:   $(UNIX_DIR)/configure mklinks
 #
 
 alldist: dist
-	rm -f $(DISTROOT)/$(DISTNAME).tar.Z \
-		$(DISTROOT)/$(DISTNAME).tar.gz \
-		$(DISTROOT)/$(ZIPNAME)
-	cd $(DISTROOT); tar cf $(DISTNAME).tar $(DISTNAME); \
-		gzip -9 -c $(DISTNAME).tar > $(DISTNAME).tar.gz; \
-		compress $(DISTNAME).tar; zip -qr8 $(ZIPNAME) $(DISTNAME)
+	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)
+	cd $(DISTROOT); tar cf $(DISTNAME)-src.tar $(DISTNAME); \
+		gzip -9 $(DISTNAME)-src.tar; zip -qr8 $(ZIPNAME) $(DISTNAME)
 
 #
 # The target below is similar to "alldist" except it works for patch
@@ -1202,14 +1206,11 @@ alldist: dist
 #
 
 allpatch: dist
-	rm -f $(DISTROOT)/$(DISTNAME).tar.Z \
-		$(DISTROOT)/$(DISTNAME).tar.gz \
-		$(DISTROOT)/$(ZIPNAME)
+	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)
 	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/old
 	mv $(DISTROOT)/$(DISTNAME) $(DISTROOT)/tk${VERSION}
-	cd $(DISTROOT); tar cf $(DISTNAME).tar tk${VERSION}; \
-		gzip -9 -c $(DISTNAME).tar > $(DISTNAME).tar.gz; \
-		compress $(DISTNAME).tar; zip -r8 $(ZIPNAME) tk${VERSION}
+	cd $(DISTROOT); tar cf $(DISTNAME)-src.tar tk${VERSION}; \
+		gzip -9 $(DISTNAME)-src.tar; zip -r8 $(ZIPNAME) tk${VERSION}
 	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/$(DISTNAME)
 	mv $(DISTROOT)/old $(DISTROOT)/tk${VERSION}
 
