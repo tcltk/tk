@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.6 2003/02/20 21:08:30 pspjuth Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.7 2003/02/21 01:57:51 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -243,16 +243,30 @@ test panedwindow-6.8 {sash coord subcommand, errors} {
     set result
 } [list 1 "invalid sash index" 1 "invalid sash index" 1 "invalid sash index"]
 test panedwindow-6.9 {sash coord subcommand, errors} {
+    # There are no sashes until you have 2 panes
     panedwindow .p
     .p add [frame .p.f]
     set result [list \
 	    [catch {.p sash coord -1} msg] $msg \
-	    [catch {.p sash coord  0} msg] \
+	    [catch {.p sash coord  0} msg] $msg \
 	    [catch {.p sash coord  1} msg] $msg \
 	    ]
     destroy .p
     set result
-} [list 1 "invalid sash index" 0 1 "invalid sash index"]
+} [list 1 "invalid sash index" 1 "invalid sash index" 1 "invalid sash index"]
+test panedwindow-6.10 {sash coord subcommand, errors} {
+    # There are no sashes until you have 2 panes
+    panedwindow .p
+    .p add [frame .p.f] [frame .p.f2]
+    set result [list \
+	    [catch {.p sash coord -1} msg] $msg \
+	    [catch {.p sash coord  0} msg] \
+	    [catch {.p sash coord  1} msg] $msg \
+	    [catch {.p sash coord  2} msg] $msg \
+	    ]
+    destroy .p
+    set result
+} [list 1 "invalid sash index" 0 1 "invalid sash index" 1 "invalid sash index"]
 
 test panedwindow-8.1 {sash mark subcommand, errors} {
     panedwindow .p
@@ -371,67 +385,66 @@ test panedwindow-11.1 {sash place subcommand, errors} {
     set result
 } [list 1 "wrong # args: should be \".p sash place index x y\""]
 test panedwindow-11.2 {sash place subcommand, errors} {
-    panedwindow .p
-    set result [list [catch {.p sash place foo bar baz} msg] $msg]
     destroy .p
-    set result
+    panedwindow .p
+    list [catch {.p sash place foo bar baz} msg] $msg
 } [list 1 "expected integer but got \"foo\""]
 test panedwindow-11.3 {sash place subcommand, errors} {
-    panedwindow .p
-    set result [list [catch {.p sash place 0 foo bar} msg] $msg]
     destroy .p
-    set result
+    panedwindow .p
+    list [catch {.p sash place 0 foo bar} msg] $msg
 } [list 1 "invalid sash index"]
 test panedwindow-11.4 {sash place subcommand, errors} {
+    destroy .p .b .c
     panedwindow .p
     .p add [button .b] [button .c]
-    set result [list [catch {.p sash place 0 foo bar} msg] $msg]
-    destroy .p .b .c
-    set result
+    list [catch {.p sash place 0 foo bar} msg] $msg
 } [list 1 "expected integer but got \"foo\""]
 test panedwindow-11.5 {sash place subcommand, errors} {
+    destroy .p .f .c .b
     panedwindow .p
     .p add [button .b] [button .c]
-    set result [list [catch {.p sash place 0 0 bar} msg] $msg]
-    destroy .p .b .c
-    set result
+    list [catch {.p sash place 0 0 bar} msg] $msg
 } [list 1 "expected integer but got \"bar\""]
 test panedwindow-11.6 {sash place subcommand, moves sash} {
+    destroy .p .f .c .b
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4
     .p add [frame .f -width 20 -height 20] [button .c]
     .p sash place 0 10 0
-    set result [.p sash coord 0]
-    destroy .p .f .c
-    set result
+    .p sash coord 0
 } [list 10 0]
 test panedwindow-11.7 {sash place subcommand, moves sash} {
+    destroy .p .f .c
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -orient vertical
     .p add [frame .f -width 20 -height 20] [button .c]
     .p sash place 0 0 10
-    set result [.p sash coord 0]
-    destroy .p .f .c
-    set result
+    .p sash coord 0
 } [list 0 10]
 test panedwindow-11.8 {sash place subcommand, respects minsize} {
+    destroy .p .f .c
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -showhandle false
     .p add [frame .f -width 20 -height 20] [button .c] -minsize 15
     .p sash place 0 10 0
-    set result [.p sash coord 0]
-    destroy .p .f .c
-    set result
+    .p sash coord 0
 } [list 15 0]
+test panedwindow-11.9 {sash place subcommand, respects minsize} {
+    destroy .p .f .c
+    panedwindow .p
+    .p add [frame .f -width 20 -height 20 -bg pink]
+    list [catch {.p sash place 0 2 0} msg] $msg
+} [list 1 {invalid sash index}]
 
 test panedwindow-12.1 {moving sash changes size of pane to left} {
+    destroy .p .f .c
     panedwindow .p -borderwidth 0 -sashpad 0 -sashwidth 4 -showhandle false
     .p add [frame .f -width 20 -height 20] [button .c -text foobar] -sticky nsew
     .p sash place 0 30 0
     pack .p
     update
-    set result [winfo width .f]
-    destroy .p .f .c
-    set result
+    winfo width .f
 } 30
 test panedwindow-12.2 {moving sash changes size of pane to right} {
+    destroy .p .f .f2
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4
     .p add [frame .f -width 20 -height 20] [frame .f2 -width 20 -height 20]
     pack .p
@@ -440,18 +453,16 @@ test panedwindow-12.2 {moving sash changes size of pane to right} {
     .p sash place 0 30 0
     update
     lappend result [winfo width .f2]
-    destroy .p .f .f2
-    set result
 } {20 10}
 test panedwindow-12.3 {moving sash does not change reqsize of panedwindow} {
+    destroy .p .f .f2
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4
     .p add [frame .f -width 20 -height 20] [frame .f2 -width 20 -height 20]
     .p sash place 0 30 0
-    set result [winfo reqwidth .p]
-    destroy .p .f .f2
-    set result
+    winfo reqwidth .p
 } 44
 test panedwindow-12.4 {moving sash changes size of pane above} {
+    destroy .p .f .c
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4 \
             -orient vertical
     .p add [frame .f -width 20 -height 10] [button .c -text foobar] -sticky nsew
@@ -463,6 +474,7 @@ test panedwindow-12.4 {moving sash changes size of pane above} {
     set result
 } 20
 test panedwindow-12.5 {moving sash changes size of pane below} {
+    destroy .p .f .f2
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4 \
             -orient vertical
     .p add [frame .f -width 20 -height 10] [frame .f2 -width 20 -height 10]
@@ -486,6 +498,7 @@ test panedwindow-12.6 {moving sash does not change reqsize of panedwindow} {
     set result
 } [list 24 24]
 test panedwindow-12.7 {moving sash does not alter reqsize of widget} {
+    destroy .p .f .f2
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4 \
             -orient vertical
     .p add [frame .f -width 20 -height 10] [frame .f2 -width 20 -height 10]
@@ -496,6 +509,7 @@ test panedwindow-12.7 {moving sash does not alter reqsize of widget} {
     set result
 } [list 10 10]
 test panedwindow-12.8 {moving sash restricted to minsize} {
+    destroy .p .f .c
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4
     .p add [frame .f -width 20 -height 20] [button .c] -minsize 15
     .p sash place 0 10 0
@@ -506,6 +520,7 @@ test panedwindow-12.8 {moving sash restricted to minsize} {
     set result
 } 15
 test panedwindow-12.10 {moving sash restricted to minsize} {
+    destroy .p .f .c
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4 \
             -orient vertical
     .p add [frame .f -width 20 -height 30] [button .c] -minsize 10
@@ -738,6 +753,7 @@ test panedwindow-13.13 {vertical panedwindow reqwidth is max slave width} {
     set result
 } {20 20}
 test panedwindow-13.14 {panedwindow pane height overrides widget width} {
+    destroy .p
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 4 \
             -orient vertical
     foreach win {.p.f .p.f2} {.p add [frame $win -width 20 -height 20]}
@@ -747,7 +763,7 @@ test panedwindow-13.14 {panedwindow pane height overrides widget width} {
     set result [winfo height .p.f]
     .p paneconfigure .p.f -height 30
     lappend result [winfo height .p.f]
-    destroy .p .p.f .p.f2
+    destroy .p
     set result
 } [list 10 10]
 
@@ -758,6 +774,7 @@ test panedwindow-14.1 {PanestructureProc, widget yields managements} {
 
     # This test should not cause a core dump, and it should not cause
     # a memory leak.
+    destroy .p .b
     panedwindow .p
     .p add [button .b]
     destroy .p
@@ -771,6 +788,7 @@ test panedwindow-14.2 {PanedWindowLostSlaveProc, widget yields management} {
     
     # This test should not cause a core dump, and it should not cause a
     # memory leak.
+    destroy .p .b
     panedwindow .p
     .p add [button .b]
     pack .p
@@ -787,6 +805,7 @@ set stickygets [list n s e w ns ns ne ne nw nw nes nes nsw nesw ""]
 set i 0
 foreach s $stickysets g $stickygets {
     test panedwindow-15.[incr i] {panedwindow sticky settings} {
+	destroy .p .b
 	panedwindow .p -showhandle false
 	.p add [button .b]
 	.p paneconfigure .b -sticky $s
