@@ -1,3 +1,8 @@
+2003-10-28  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
+
+	* library/tk.tcl (::tk::PlaceWindow): Added check for empty string
+	first when determining placement strategy. [Bug 819284]
+
 2003-10-22  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* library/dialog.tcl (tk_dialog): Constrain the dialog to be
