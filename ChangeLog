@@ -1,3 +1,13 @@
+1999-08-09  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* library/button.tcl: cleaned up programming (config -> configure)
+	and fixed Windows relief bug [Bug: 664]
+	* library/entry.tcl: changed Entry C/C/P to not use global data
+	(now uses tkPriv(data)) [Bug: 1475]
+	* library/listbox.tcl: fixed extended mode script error [Bug: 866]
+	* doc/options.n: clarified that -troughcolor doesn't work on Windows
+	* doc/wm.n: fixed wm positionfrom docs [Bug: 2284]
+
 1999-08-01  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* mac/tkMacPort.h: wrapped panic in #ifndef panic to avoid
