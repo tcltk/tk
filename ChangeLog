@@ -1,3 +1,7 @@
+2002-09-03  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c: fix to 'wm attributes' error-handling bug.
+	
 2002-09-03  Don Porter <dgp@users.sf.net>
 
 	* changes: Updated for 8.4.0 release
