@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.2 1998/09/14 18:24:00 stanton Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.2.4.1 1999/03/06 00:07:08 redman Exp $
  */
 
 #include "tkWinInt.h"
@@ -926,6 +926,8 @@ XDrawLines(display, d, gc, points, npoints, mode)
 /*
  *----------------------------------------------------------------------
  *
+#if 0
+
  * XFillPolygon --
  *
  *	Draws a filled polygon.

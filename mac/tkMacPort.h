@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacPort.h,v 1.4 1998/11/11 17:31:29 jingham Exp $
+ * RCS: @(#) $Id: tkMacPort.h,v 1.4.4.1 1999/03/06 00:06:40 redman Exp $
  */
 
 #ifndef _TKMACPORT
@@ -99,7 +99,6 @@ extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 #define TkpCmapStressed(tkwin,colormap) (0)
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
-#define Tk_FreeXId(display,xid)
 #define TkpSync(display)
 
 /*

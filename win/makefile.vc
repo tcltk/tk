@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.19 1999/02/12 00:51:12 stanton Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.19.2.1 1999/03/06 00:07:07 redman Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -30,6 +30,7 @@ TOOLS32		= c:\program files\devstudio\vc
 TOOLS32_rc	= c:\program files\devstudio\sharedide
 TCLDIR		= ..\..\tcl8.0.5
 INSTALLDIR	= c:\program files\tcl
+TCLBINDIR       = d:\tcl8.0\bin
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86
@@ -46,6 +47,8 @@ NODEBUG = 1
 
 TCLNAMEPREFIX = tcl
 TKNAMEPREFIX = tk
+TCLSTUBPREFIX = $(TCLNAMEPREFIX)stub
+TKSTUBPREFIX = $(TKNAMEPREFIX)stub
 WISHNAMEPREFIX = wish
 VERSION = 80
 DOTVERSION = 8.0
@@ -64,9 +67,12 @@ OUTDIR		= $(TMPDIR)
 
 TCLLIB 		= $(TCLNAMEPREFIX)$(VERSION)$(DBGX).lib
 TCLPLUGINLIB 	= $(TCLNAMEPREFIX)$(VERSION)p.lib
+TCLSTUBLIBNAME  = $(TCLSTUBPREFIX)$(VERSION)$(DBGX).lib
 TKDLLNAME	= $(TKNAMEPREFIX)$(VERSION)$(DBGX).dll
 TKDLL 		= $(OUTDIR)\$(TKDLLNAME)
-TKLIB 		= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)$(DBGX).lib
+TKLIB		= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)$(DBGX).lib
+TKSTUBLIBNAME	= $(TKSTUBPREFIX)$(VERSION)$(DBGX).lib
+TKSTUBLIB	= $(OUTDIR)\$(TKSTUBLIBNAME)
 TKPLUGINDLLNAME	= $(TKNAMEPREFIX)$(VERSION)p$(DBG).dll
 TKPLUGINDLL 	= $(OUTDIR)\$(TKPLUGINDLLNAME)
 TKPLUGINLIB 	= $(OUTDIR)\$(TKNAMEPREFIX)$(VERSION)p$(DBGX).lib
@@ -191,9 +197,16 @@ TKOBJS = \
 	$(TMPDIR)\tkVisual.obj \
 	$(TMPDIR)\tkWindow.obj
 
-cc32		= "$(TOOLS32)\bin\cl.exe"
-link32		= "$(TOOLS32)\bin\link.exe"
-rc32		= "$(TOOLS32_rc)\bin\rc.exe"
+TKSTUBOBJS = \
+	$(TMDIR)\tkStubLib.obj \
+	$(TMPDIR)\tkStubs.obj \
+	$(TMPDIR)\tkPlatStubs.obj \
+	$(TMPDIR)\tkIntStubs.obj \
+	$(TMPDIR)\tkIntPlatStubs.obj
+
+cc32		= @"$(TOOLS32)\bin\cl.exe"
+link32		= @"$(TOOLS32)\bin\link.exe"
+rc32		= @"$(TOOLS32_rc)\bin\rc.exe"
 include32	= -I"$(TOOLS32)\include"
 
 WINDIR          = $(ROOT)\win
@@ -205,7 +218,7 @@ RCDIR		= $(WINDIR)\rc
 
 TK_INCLUDES	= -I$(WINDIR) -I$(GENERICDIR) -I$(BITMAPDIR) -I$(XLIBDIR) \
 			-I$(TCLDIR)\generic
-TK_DEFINES	= $(DEBUGDEFINES)
+TK_DEFINES	= $(DEBUGDEFINES) -DUSE_TCL_STUBS
 
 TK_CFLAGS	= $(cdebug) $(cflags) $(cvarsdll) $(include32) \
 			$(TK_INCLUDES) $(TK_DEFINES) 
@@ -317,6 +330,14 @@ install-binaries:
 	@mkd "$(LIB_INSTALL_DIR)"
 	copy $(TKLIB) "$(LIB_INSTALL_DIR)"
 
+#
+# Regenerate the stubs files.
+#
+
+stubs:
+	$(TCLBINDIR)\tclsh$(VERSION) $(TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
+		$(GENERICDIR)\tk.decls $(GENERICDIR)\tkInt.decls
+
 install-libraries:
 	@mkd "$(INCLUDE_INSTALL_DIR)"
 	@mkd "$(INCLUDE_INSTALL_DIR)\X11"
@@ -340,6 +361,9 @@ $(TKDLL): $(TKOBJS) $(TMPDIR)\tk.res $(TMPDIR)\tk.def
 		$(guilibsdll) @<<
 			$(TKOBJS)
 <<
+
+$(TKSTUBLIB): $(TKSTUBOBJS)
+	$lib32) /out:$@ $(TKSTUBOBJS)
 
 $(TKPLUGINLIB): $(TKPLUGINDLL)
 

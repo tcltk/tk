@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.4 1998/09/14 18:23:59 stanton Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.4.4.1 1999/03/06 00:07:08 redman Exp $
  */
 
 #ifndef _TKWIN
@@ -27,6 +27,7 @@
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
+
 
 /*
  * The following messages are use to communicate between a Tk toplevel
@@ -46,17 +47,7 @@
  *
  *--------------------------------------------------------------
  */
-
-EXTERN Window		Tk_AttachHWND _ANSI_ARGS_((Tk_Window tkwin,
-			    HWND hwnd));
-EXTERN HINSTANCE 	Tk_GetHINSTANCE _ANSI_ARGS_((void));
-EXTERN HWND		Tk_GetHWND _ANSI_ARGS_((Window window));
-EXTERN Tk_Window	Tk_HWNDToWindow _ANSI_ARGS_((HWND hwnd));
-EXTERN void		Tk_PointerEvent _ANSI_ARGS_((HWND hwnd,
-			    int x, int y));
-EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd,
-			    UINT message, WPARAM wParam, LPARAM lParam,
-			    LRESULT *result));
+#include "tkPlatDecls.h"
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT
