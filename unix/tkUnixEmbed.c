@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.7 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkUnixEmbed.c,v 1.8 2005/01/09 18:28:06 chengyemao Exp $
  */
 
 #include "tkInt.h"
@@ -115,7 +115,8 @@ TkpUseWindow(interp, tkwin, string)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->window != None) {
-	Tcl_Panic("TkUseWindow: X window already assigned");
+	Tcl_AppendResult(interp, "can't modify container after widget is created", (char *) NULL);
+	return TCL_ERROR;
     }
     if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
 	return TCL_ERROR;

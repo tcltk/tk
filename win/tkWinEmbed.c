@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.19 2005/01/07 15:18:03 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.20 2005/01/09 18:28:06 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -162,11 +162,25 @@ TkpUseWindow(interp, tkwin, string)
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+/*
+    if(winPtr->window != None) {
+	Tcl_AppendResult(interp, "can't modify container after widget is created", (char *) NULL);
+	return TCL_ERROR;
+    }
+*/
+    if(stricmp(string, "") == 0) {
+	if(winPtr->flags & TK_EMBEDDED) {
+	    TkpWinToplevelDetachWindow(winPtr);
+	    TkpWinToplevelOverrideRedirect(winPtr, 0);
+	}
+	return TCL_OK;
+    }
 
     if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
         return TCL_ERROR;
     }
     hwnd = (HWND) id;
+    if((HWND)winPtr->privatePtr == hwnd) return TCL_OK;
 
     /*
      * Check if the window is a valid handle. If it is invalid, return
@@ -207,6 +221,8 @@ TkpUseWindow(interp, tkwin, string)
 	}
     }
 
+    TkpWinToplevelDetachWindow(winPtr);    
+
     /*
      * Store the parent window in the platform private data slot so
      * TkWmMapWindow can use it when creating the wrapper window.
@@ -233,7 +249,10 @@ TkpUseWindow(interp, tkwin, string)
             containerPtr != NULL; containerPtr = containerPtr->nextPtr) {
 	if (containerPtr->parentHWnd == hwnd) {
 	    winPtr->flags |= TK_BOTH_HALVES;
-	    containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
+	    containerPtr->parentPtr = usePtr;
+	    if(usePtr) {
+		containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
+	    }
 	    break;
 	}
     }
@@ -257,6 +276,8 @@ TkpUseWindow(interp, tkwin, string)
 
     winPtr->flags |= TK_EMBEDDED;
     winPtr->flags &= (~(TK_MAPPED));
+
+    Tcl_DoWhenIdle(TkWmMapWindow, (ClientData)winPtr);
 
     return TCL_OK;
 }
@@ -420,6 +441,7 @@ TkWinEmbeddedEventProc(hwnd, message, wParam, lParam)
 	    containerPtr->embeddedMenuHWnd = NULL;
 	    containerPtr->embeddedHWnd = NULL;
 	    containerPtr->parentPtr->flags &= ~TK_BOTH_HALVES;
+	    TkWinSetMenu((Tk_Window)containerPtr->parentPtr, 0);
 	    InvalidateRect(hwnd, NULL, TRUE);
 	    break;
 
