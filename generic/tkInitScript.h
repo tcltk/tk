@@ -50,7 +50,7 @@ static char initScript[] = "if {[info proc tkInit]==\"\"} {\n\
     global tk_library tk_version tk_patchLevel\n\
     rename tkInit {}\n\
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
-    }\n\
+  }\n\
 }\n\
 tkInit";
 
