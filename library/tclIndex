@@ -7,10 +7,10 @@
 # a script that loads the command.
 
 set auto_index(::tk::dialog::error::Return) [list source [file join $dir bgerror.tcl]]
-set auto_index(::tk::dialog::error::details) [list source [file join $dir bgerror.tcl]]
-set auto_index(::tk::dialog::error::evalFunction) [list source [file join $dir bgerror.tcl]]
-set auto_index(::tk::dialog::error::saveToLog) [list source [file join $dir bgerror.tcl]]
+set auto_index(::tk::dialog::error::Details) [list source [file join $dir bgerror.tcl]]
+set auto_index(::tk::dialog::error::SaveToLog) [list source [file join $dir bgerror.tcl]]
 set auto_index(::tk::dialog::error::Destroy) [list source [file join $dir bgerror.tcl]]
+set auto_index(::tk::dialog::error::bgerror) [list source [file join $dir bgerror.tcl]]
 set auto_index(bgerror) [list source [file join $dir bgerror.tcl]]
 set auto_index(::tk::ButtonInvoke) [list source [file join $dir button.tcl]]
 set auto_index(::tk::ButtonAutoInvoke) [list source [file join $dir button.tcl]]
