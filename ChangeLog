@@ -1,3 +1,10 @@
+2004-05-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImgPhoto.c (ImgPhotoConfigureMaster): force -data into
+	ByteArray and -format into String to correctly handle them if they
+	have been shimmered or created as some other object type.
+	(ImgPhotoCmd): correctly init matched to 0.
+
 2004-04-20  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixWm.c: Backported fix for bug #915350  
