@@ -6,11 +6,12 @@
  *	file that contains #ifdefs to handle different flavors of OS.
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.2 1998/09/14 18:24:01 stanton Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.3 1998/09/30 19:01:22 rjohnson Exp $
  */
 
 #ifndef _WINPORT
@@ -89,7 +90,6 @@
  * The following Tk functions are implemented as macros under Windows.
  */
 
-#define TkGetNativeProlog(interp) TkGetProlog(interp)
 #define TkpGetPixel(p) (((((p)->red >> 8) & 0xff) \
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 

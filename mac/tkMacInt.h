@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInt.h,v 1.4 1998/09/14 18:23:36 stanton Exp $
+ * RCS: @(#) $Id: tkMacInt.h,v 1.5 1998/09/30 19:01:21 rjohnson Exp $
  */
 
 #ifndef _TKMACINT
@@ -292,10 +292,5 @@ extern Tk_Window	Tk_TopCoordsToWindow _ANSI_ARGS_((Tk_Window tkwin,
 			    int rootX, int rootY, int *newX, int *newY));
 extern MacDrawable *	TkMacContainerId _ANSI_ARGS_((TkWindow *winPtr));
 extern MacDrawable *	TkMacGetHostToplevel  _ANSI_ARGS_((TkWindow *winPtr));
-/*
- * The following prototypes need to go into tkMac.h
- */
-EXTERN void		Tk_UpdatePointer _ANSI_ARGS_((Tk_Window tkwin,
-			    int x, int y, int state));
 
 #endif /* _TKMACINT */

@@ -11,11 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * Author: Paul Mackerras (paulus@cs.anu.edu.au),
- *	   Department of Computer Science,
- *	   Australian National University.
- *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.2 1998/09/14 18:23:13 stanton Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.3 1998/09/30 19:01:20 rjohnson Exp $
  */
 
 #include "tkInt.h"

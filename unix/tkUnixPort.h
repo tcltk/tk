@@ -7,11 +7,12 @@
  *
  * Copyright (c) 1991-1993 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.2 1998/09/14 18:23:57 stanton Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.3 1998/09/30 19:01:22 rjohnson Exp $
  */
 
 #ifndef _UNIXPORT
@@ -156,12 +157,6 @@ extern int errno;
 #define TkPutImage(colors, ncolors, display, pixels, gc, image, destx, desty, srcx, srcy, width, height) \
 	XPutImage(display, pixels, gc, image, destx, desty, srcx, \
 	srcy, width, height);
-
-/*
- * The following Tk functions are implemented as macros under Windows.
- */
-
-#define TkGetNativeProlog(interp) TkGetProlog(interp)
 
 /*
  * Supply macros for seek offsets, if they're not already provided by

@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright (c) 1998 by Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.3 1998/09/14 18:23:08 stanton Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.4 1998/09/30 19:01:19 rjohnson Exp $
  */
 
 #include "tkPort.h"
@@ -33,7 +34,7 @@ static void		WaitWindowProc _ANSI_ARGS_((ClientData clientData,
 /*
  *----------------------------------------------------------------------
  *
- * Tk_BellCmd --
+ * Tk_BellObjCmd --
  *
  *	This procedure is invoked to process the "bell" Tcl command.
  *	See the user documentation for details on what it does.
@@ -48,29 +49,31 @@ static void		WaitWindowProc _ANSI_ARGS_((ClientData clientData,
  */
 
 int
-Tk_BellCmd(clientData, interp, argc, argv)
+Tk_BellObjCmd(clientData, interp, objc, objv)
     ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    size_t length;
+    int index;
+    char *string;
+    static char *optionStrings[] = {
+	"-displayof",	NULL
+    };
 
-    if ((argc != 1) && (argc != 3)) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" ?-displayof window?\"", (char *) NULL);
+    if ((objc != 1) && (objc != 3)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?-displayof window?");
 	return TCL_ERROR;
     }
 
-    if (argc == 3) {
-	length = strlen(argv[1]);
-	if ((length < 2) || (strncmp(argv[1], "-displayof", length) != 0)) {
-	    Tcl_AppendResult(interp, "bad option \"", argv[1],
-		    "\": must be -displayof", (char *) NULL);
+    if (objc == 3) {
+	if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, argv[2], tkwin);
+	string = Tcl_GetStringFromObj(objv[2], NULL);
+	tkwin = Tk_NameToWindow(interp, string, tkwin);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
