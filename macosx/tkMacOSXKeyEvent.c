@@ -138,10 +138,8 @@ int TkMacOSXProcessKeyboardEvent(
     static UniChar savedChar = 0;
     OSStatus     status;
     KeyEventData keyEventData;
-#if 0
     MenuRef   menuRef;
     MenuItemIndex menuItemIndex;
-#endif
     int eventGenerated;
     UniChar uniChars[5]; /* make this larger, if needed */
     UInt32 uniCharsLen = 0;
@@ -150,51 +148,44 @@ int TkMacOSXProcessKeyboardEvent(
         statusPtr->err = 1;
         return false;
     }
-
-#if 0
-    /*
-     * This block of code seems like a good idea, to trap
-     * key-bindings which point directly to menus, but it
-     * has a number of problems:
-     * (1) when grabs are present we definitely don't want
-     * to do this.
-     * (2) Tk's semantics define accelerator keystrings in
-     * menus as a purely visual adornment, and require that
-     * the developer create separate bindings to trigger
-     * them.  This breaks those semantics.  (i.e. Tk will
-     * behave differently on Aqua to the behaviour on Unix/Win).
-     * (3) Tk's bindings depend on the current window's bindtags,
-     * which may be completely different to what happens to be
-     * in some global menu (agreed, it shouldn't be that different,
-     * but it often is).
-     * 
-     * While a better middleground might be possible, the best, most
-     * compatible, approach at present is to disable this block.
-     */
-    if (IsMenuKeyEvent(NULL, eventPtr->eventRef, 
-            kNilOptions, &menuRef, &menuItemIndex)) {
-        int    oldMode;
-        MenuID menuID;
-        KeyMap theKeys;
-        int    selection;
-        
-        menuID = GetMenuID(menuRef);
-        selection = (menuID << 16) | menuItemIndex;
     
-        GetKeys(theKeys);
-        oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-        TkMacOSXClearMenubarActive();
- 
-        /*
-         * Handle -postcommand
-         */
-         
-        TkMacOSXPreprocessMenu();
-        TkMacOSXHandleMenuSelect(selection, theKeys[1] & 4);
-        Tcl_SetServiceMode(oldMode);
-        return 0; /* TODO: may not be on event on queue. */
+    /*
+     * Because of the way that Tk operates, we can't in general funnel menu
+     * accelerators through IsMenuKeyEvent.  Tk treats accelerators as mere
+     * decoration, and the user has to install bindings to get them to fire.
+     *
+     * However, the only way to trigger the Hide & Hide Others functions
+     * is by invoking the Menu command for Hide.  So there is no nice way to
+     * provide a Tk command to hide the app which would be available for a
+     * binding.  So I am going to hijack Command-H and Command-Shift-H 
+     * here, and run the menu commands.  Since the HI Guidelines explicitly
+     * reserve these for Hide, this isn't such a bad thing.  Also, if you do
+     * rebind Command-H to another menu item, Hide will lose its binding.
+     * 
+     * Note that I don't really do anything at this point, 
+     * I just mark stopProcessing as 0 and return, and then the
+     * RecieveAndProcessEvent code will dispatch the event to the default
+     * handler.
+     */
+
+    if (IsMenuKeyEvent(NULL, eventPtr->eventRef, 
+            kMenuEventQueryOnly, &menuRef, &menuItemIndex)) {
+        MenuCommand menuCmd;
+        
+        GetMenuItemCommandID (menuRef, menuItemIndex, &menuCmd);
+        
+        switch (menuCmd) {
+            case kHICommandHide:
+            case kHICommandHideOthers:
+            case kHICommandShowAll:
+            case kHICommandPreferences:
+                statusPtr->stopProcessing = 0;
+                return 0; /* TODO: may not be on event on queue. */
+                break;
+            default:
+                break;
+        }
     }
-#endif
 
     status = GetEventParameter(eventPtr->eventRef, 
             kEventParamKeyMacCharCodes,
@@ -506,13 +497,17 @@ InitKeyEvent(
     tkwin = Tk_IdToWindow(dispPtr->display, window);
     
     if (tkwin == NULL) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"tkwin == NULL, %d\n", __LINE__);
+#endif
         return -1;
     }
     
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->dispPtr->focusPtr;
     if (tkwin == NULL) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"tkwin == NULL, %d\n", __LINE__);
+#endif
         return -1;
     }
 
