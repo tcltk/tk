@@ -93,7 +93,6 @@ XLIBOBJS = \
 	$(TMPDIR)\xcolors.obj \
 	$(TMPDIR)\xdraw.obj \
 	$(TMPDIR)\xgc.obj \
-	$(TMPDIR)\ximage.obj \
 	$(TMPDIR)\xutil.obj
 
 TKOBJS = \
