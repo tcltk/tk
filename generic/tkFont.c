@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.17 2002/07/16 23:29:33 mdejong Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.18 2002/07/17 14:37:55 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -435,8 +435,6 @@ TkFontPkgFree(mainPtr)
 	fprintf(stderr, "Font %s still in cache.\n", 
 		Tcl_GetHashKey(&fiPtr->fontCache, searchPtr));
     }
-    if (fontsLeft == 0)
-        panic("no fontsLeft");
 #ifdef PURIFY
     if (fontsLeft) {
 	panic("TkFontPkgFree: all fonts should have been freed already");
