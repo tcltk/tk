@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: choosedir.test,v 1.3 2000/03/02 23:45:12 hobbs Exp $
+# RCS: @(#) $Id: choosedir.test,v 1.4 2000/03/03 00:14:33 ericm Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
@@ -84,6 +84,14 @@ set err(wrongNumArgs) "wrong # args: should be \"$err(usage)\""
 set err(valueMissing) "value for \"%s\" missing: should be \"$err(usage)\""
 set err(unknownOpt)   "unknown option \"%s\": should be \"$err(usage)\""
 
+# Make a dir for us to rely on for tests
+makeDirectory choosedirTest
+set dir $::tcltest::temporaryDirectory
+set fake [file join $dir non-existant]
+set real [file join $dir choosedirTest]
+
+set parent .
+
 foreach opt {-initialdir -mustexist -parent -title} {
     test filebox-1.1 "tk_chooseDirectory command" {
 	list [catch {tk_chooseDirectory $opt} msg] $msg
@@ -96,26 +104,45 @@ test filebox-1.3 "tk_chooseDirectory command" {
     list [catch {tk_chooseDirectory -parent foo.bar} msg] $msg
 } {1 {bad window path name "foo.bar"}}
 
-set parent .
-set initialdir [pwd]
-set pathName [pwd]
-set otherdir "/tmp"
 
-test filebox-2.1 "tk_chooseDirectory command" {unixOnly} {
+test choosedir-2.1 "tk_chooseDirectory command, cancel gives null" {unixOnly} {
     ToPressButton $parent cancel
     tk_chooseDirectory -title "Press Cancel" -parent $parent
 } ""
-test filebox-2.2 "tk_chooseDirectory command" {unixOnly} {
+
+test choosedir-3.1 "tk_chooseDirectory -mustexist 1" {unixOnly} {
+    ToEnterDirByKey $parent $fake
+    after 25
+    ToEnterDirByKey $parent $real
+    tk_chooseDirectory \
+	    -title "Enter \"$fake\", press OK, enter \"$real\", press OK" \
+	    -parent $parent -mustexist 1
+} $real
+test choosedir-3.2 "tk_chooseDirectory -mustexist 0" {unixOnly} {
+    ToEnterDirByKey $parent $fake
+    tk_chooseDirectory \
+	    -title "Enter \"$fake\", press OK" \
+	    -parent $parent -mustexist 0
+} $fake
+
+test choosedir-4.1 "tk_chooseDirectory command, initialdir" {unixOnly} {
     ToPressButton $parent ok
-    set choice [tk_chooseDirectory -title "Press Ok" \
-	    -parent $parent -initialdir $initialdir]
-} $initialdir
-test filebox-2.3 "tk_chooseDirectory command" {unixOnly} {
-    ToEnterDirByKey $parent $otherdir
-    set choice [tk_chooseDirectory \
-	    -title "Enter \"$otherdir\" and press Ok" \
-	    -parent $parent -initialdir $initialdir]
-} $otherdir
+    tk_chooseDirectory -title "Press Ok" -parent $parent -initialdir $real
+} $real
+test choosedir-4.2 "tk_chooseDirectory command, initialdir" {unixOnly} {
+    ToEnterDirByKey $parent $fake
+    tk_chooseDirectory \
+	    -title "Enter \"$fake\" and press Ok" \
+	    -parent $parent -initialdir $real
+} $fake
+test choosedir-4.3 "tk_chooseDirectory, -initialdir {}" {unixOnly} {
+    ToPressButton $parent ok
+    tk_chooseDirectory \
+	    -title "Press OK" \
+	    -parent $parent -initialdir ""
+} [pwd]
+
+
 
 # cleanup
 ::tcltest::cleanupTests
