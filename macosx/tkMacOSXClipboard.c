@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.2.2.1 2003/05/13 02:42:57 das Exp $
  */
 
 #include "tkInt.h"
@@ -81,8 +81,9 @@ TkSelGetSelection(
         }
         if (length > 0) {
             Tcl_DString encodedText;
+            char *data;
 
-            buf = (char *)ckalloc(length+1);
+            buf = (char *) ckalloc(length + 1);
 	    buf[length] = 0;
 	    err = GetScrapFlavorData(scrapRef, 'TEXT', &length, buf);
             if (err != noErr) {
@@ -90,7 +91,17 @@ TkSelGetSelection(
                         " GetScrapFlavorData failed.", (char *) NULL);
                     return TCL_ERROR;
             }
+            
+            /* 
+             * Tcl expects '\n' not '\r' as the line break character.
+             */
 
+            for (data = buf; *data != '\0'; data++) {
+                if (*data == '\r') {
+                    *data = '\n';
+                }
+            }
+            
             Tcl_ExternalToUtfDString(TkMacOSXCarbonEncoding, buf, length, 
 				     &encodedText);
             result = (*proc)(clientData, interp,
