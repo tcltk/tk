@@ -1,3 +1,13 @@
+2003-02-19  Jim Ingham <jingham@apple.com>
+
+	* tkMacOSXMouseEvents.c (GeneratePollingEvents): In the case
+	where there was a capture window, we were sending the events to
+	the capture window.  But the capture window (return value or
+	TkMacOSXGetCapture) is always a toplevel.  So this is wrong in 
+	the case that the Event's toplevel IS the capture window - in
+	which case the event should go to the subwindow most closely
+	containing the event.
+	
 2003-02-19  Benjamin Riefenstahl <Benjamin.Riefenstahl@epost.de>
 	       & Jim Ingham <jingham@apple.com>
 
