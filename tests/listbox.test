@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.8 1999/11/18 02:24:41 ericm Exp $
+# RCS: @(#) $Id: listbox.test,v 1.9 1999/11/19 15:48:19 ericm Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -741,19 +741,19 @@ test listbox-3.132 {ListboxWidgetCmd procedure, "xview" option} {
 } {0.55 0.65}
 test listbox-3.133 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l whoknows} msg] $msg
-} {1 {bad option "whoknows": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {bad option "whoknows": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, itemcget, itemconfigure, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.134 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l c} msg] $msg
-} {1 {ambiguous option "c": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "c": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, itemcget, itemconfigure, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.135 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l in} msg] $msg
-} {1 {ambiguous option "in": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "in": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, itemcget, itemconfigure, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.136 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l s} msg] $msg
-} {1 {ambiguous option "s": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "s": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, itemcget, itemconfigure, nearest, scan, see, selection, size, xview, or yview}}
 test listbox-3.137 {ListboxWidgetCmd procedure, "xview" option} {
     list [catch {.l se} msg] $msg
-} {1 {ambiguous option "se": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, nearest, scan, see, selection, size, xview, or yview}}
+} {1 {ambiguous option "se": must be activate, bbox, cget, configure, curselection, delete, get, index, insert, itemcget, itemconfigure, nearest, scan, see, selection, size, xview, or yview}}
 
 # No tests for DestroyListbox:  I can't come up with anything to test
 # in this procedure.
@@ -1849,6 +1849,42 @@ test listbox-21.11 {ListboxListVarProc, bad list} {
     catch {set x {this is a " bad list}} result
     set result
 } {can't set "x": invalid listvar value}
+test listbox-21.12 {ListboxListVarProc, cleanup item attributes} {
+    catch {destroy .l}
+    set x [list a b c d e f g]
+    listbox .l -listvar x
+    .l itemconfigure end -fg red
+    set x [list a b c d]
+    set x [list 0 1 2 3 4 5 6]
+    .l itemcget end -fg
+} {}
+test listbox-21.12 {ListboxListVarProc, cleanup item attributes} {
+    catch {destroy .l}
+    set x [list a b c d e f g]
+    listbox .l -listvar x
+    .l itemconfigure end -fg red
+    set x [list a b c d]
+    set x [list 0 1 2 3 4 5 6]
+    .l itemcget end -fg
+} {}
+test listbox-21.13 {listbox item configurations and listvar based deletions} {
+    catch {destroy .l}
+    catch {unset x}
+    listbox .l -listvar x
+    .l insert end a b c
+    .l itemconfigure 1 -fg red
+    set x [list b c]
+    .l itemcget 1 -fg
+} red
+test listbox-21.14 {listbox item configurations and listvar based inserts} {
+    catch {destroy .l}
+    catch {unset x}
+    listbox .l -listvar x
+    .l insert end a b c
+    .l itemconfigure 0 -fg red
+    set x [list 1 2 3 4 a b c]
+    .l itemcget 0 -fg
+} red
 
 # UpdateHScrollbar
 test listbox-22.1 {UpdateHScrollbar} {
@@ -1863,6 +1899,130 @@ test listbox-22.1 {UpdateHScrollbar} {
     update
     set log
 } [list {x 0 1} {x 0 1} {x 0 0.5}]
+
+# ConfigureListboxItem
+test listbox-23.1 {ConfigureListboxItem} {
+    catch {destroy .l}
+    listbox .l
+    catch {.l itemconfigure 0} result
+    set result
+} {item number "0" out of range}
+test listbox-23.2 {ConfigureListboxItem} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c d
+    .l itemconfigure 0
+} [list {-background background Background {} {}} \
+	{-bg -background} \
+	{-fg -foreground} \
+	{-foreground foreground Foreground {} {}} \
+	{-selectbackground selectBackground Background {} {}} \
+	{-selectforeground selectForeground Foreground {} {}}]
+test listbox-23.3 {ConfigureListboxItem, itemco shortcut} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c d
+    .l itemco 0 -background
+} {-background background Background {} {}}
+test listbox-23.4 {ConfigureListboxItem, wrong num args} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a
+    catch {.l itemco} result
+    set result
+} {wrong # args: should be ".l itemconfigure index ?option? ?value? ?option value ...?"}
+test listbox-23.5 {ConfigureListboxItem, multiple calls} {
+    catch {destroy .l}
+    listbox .l
+    set i 0
+    foreach color {red orange yellow green blue darkblue violet} {
+	.l insert end $color
+	.l itemconfigure $i -bg $color
+	incr i
+    }
+    pack .l
+    update
+    list [.l itemcget 0 -bg] [.l itemcget 1 -bg] [.l itemcget 2 -bg] \
+	    [.l itemcget 3 -bg] [.l itemcget 4 -bg] [.l itemcget 5 -bg] \
+	    [.l itemcget 6 -bg]
+} {red orange yellow green blue darkblue violet}
+catch {destroy .l}
+listbox .l
+.l insert end a b c d
+set i 6
+foreach test {
+    {-background #ff0000 #ff0000 non-existent
+	    {unknown color name "non-existent"}}
+    {-bg #ff0000 #ff0000 non-existent {unknown color name "non-existent"}}
+    {-fg #110022 #110022 bogus {unknown color name "bogus"}}
+    {-foreground #110022 #110022 bogus {unknown color name "bogus"}}
+    {-selectbackground #110022 #110022 bogus {unknown color name "bogus"}}
+    {-selectforeground #654321 #654321 bogus {unknown color name "bogus"}}
+} {
+    set name [lindex $test 0]
+    test listbox-23.$i {configuration options} {
+	.l itemconfigure 0 $name [lindex $test 1]
+	list [lindex [.l itemconfigure 0 $name] 4] [.l itemcget 0 $name]
+    } [list [lindex $test 2] [lindex $test 2]]
+    incr i
+    if {[lindex $test 3] != ""} {
+	test listbox-1.$i {configuration options} {
+	    list [catch {.l configure $name [lindex $test 3]} msg] $msg
+	} [list 1 [lindex $test 4]]
+    }
+    .l configure $name [lindex [.l configure $name] 3]
+    incr i
+}
+
+# ListboxWidgetObjCmd, itemcget
+test listbox-24.1 {itemcget} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c d
+    .l itemcget 0 -fg
+} {}
+test listbox-24.2 {itemcget} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c d
+    .l itemconfigure 0 -fg red
+    .l itemcget 0 -fg
+} red
+test listbox-24.3 {itemcget} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c d
+    catch {.l itemcget 0} result
+    set result
+} {wrong # args: should be ".l itemcget index option"}
+test listbox-24.3 {itemcget, itemcg shortcut} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c d
+    catch {.l itemcg 0} result
+    set result
+} {wrong # args: should be ".l itemcget index option"}
+
+# General item configuration issues
+test listbox-25.1 {listbox item configurations and widget based deletions} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a
+    .l itemconfigure 0 -fg red
+    .l delete 0 end
+    .l insert end a
+    .l itemcget 0 -fg
+} {}
+test listbox-25.2 {listbox item configurations and widget based inserts} {
+    catch {destroy .l}
+    listbox .l
+    .l insert end a b c
+    .l itemconfigure 0 -fg red
+    .l insert 0 1 2 3 4
+    list [.l itemcget 0 -fg] [.l itemcget 4 -fg]
+} [list {} red]
+    
+
 
 resetGridInfo
 catch {destroy .l2}

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.2 1998/09/14 18:22:57 stanton Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.3 1999/11/19 15:48:18 ericm Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.0 Tk "Tk Built-In Commands"
@@ -17,7 +17,7 @@ listbox \- Create and manipulate listbox widgets
 \fBlistbox\fR \fIpathName \fR?\fIoptions\fR?
 .SO
 \-background	\-foreground	\-relief	\-takefocus
-\-borderwidth	\-height	\-selectbackground	\-width
+\-borderwidth	\-height	\-listvar	\-selectbackground	\-width
 \-cursor	\-highlightbackground	\-selectborderwidth	\-xscrollcommand
 \-exportselection	\-highlightcolor	\-selectforeground	\-yscrollcommand
 \-font	\-highlightthickness	\-setgrid
@@ -27,6 +27,13 @@ listbox \- Create and manipulate listbox widgets
 Specifies the desired height for the window, in lines.
 If zero or less, then the desired height for the window is made just
 large enough to hold all the elements in the listbox.
+.OP \-listvar listVariable Variable
+Specifies the name of a variable.  The value of the variable is a list
+to be displayed inside the widget;  if the variable value changes
+then the widget will automatically update itself to reflect the new value.
+Attempts to assign a bad list value to a variable in use as a listvar
+will cause an error.  Attempts to unset a variable in use as a listvar
+will fail but will not generate an error.
 .OP \-selectmode selectMode SelectMode
 Specifies one of several styles for manipulating the selection.
 The value of the option may be arbitrary, but the default bindings
@@ -207,6 +214,44 @@ Inserts zero or more new elements in the list just before the
 element given by \fIindex\fR.  If \fIindex\fR is specified as
 \fBend\fR then the new elements are added to the end of the
 list.  Returns an empty string.
+.TP
+\fIpathName \fBitemcget \fIindex \foption
+Returns the current value of the item configuration option given
+by \fIoption\fR. \fIOption\fR may have any of the values accepted 
+by the \fBlistbox itemconfigure\fR command.
+.TP
+\fIpathName \fBitemconfigure \fIindex ?\fIoption\fR? ?\fIvalue? ?option value ...\fR?
+Query or modify the configuration options of an item in the listbox.
+If no \fIoption\fR is specified, returns a list describing all of
+the available options for the item (see \fBTk_ConfigureInfo\fR for
+information on the format of this list).  If \fIoption\fR is specified
+with no \fIvalue\fR, then the command returns a list describing the
+one named option (this list will be identical to the corresponding
+sublist of the value returned if no \fIoption\fR is specified).  If
+one or more \fIoption\-value\fR pairs are specified, then the command
+modifies the given widget option(s) to have the given value(s);  in
+this case the command returns an empty string. The following options
+are currently supported for items:
+.RS
+.TP
+\fB\-background \fIcolor\fR
+\fIColor\fR specifies the background color to use when displaying the 
+item. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.TP
+\fB\-foreground \fIcolor\fR
+\fIColor\fR specifies the foreground color to use when displaying the
+item. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.TP
+\fB\-selectbackground \fIcolor\fR
+\fIcolor\fR specifies the background color to use when displaying the
+item while it is selected. It may have any of the forms accepted by
+\fBTk_GetColor\fR.
+.TP
+\fB\-selectforeground \fIcolor\fR
+\fIcolor\fR specifies the foreground color to use when displaying the
+item while it is selected. It may have any of the forms accepted by
+\fBTk_GetColor\fR.
+.RE
 .TP
 \fIpathName \fBnearest \fIy\fR
 Given a y-coordinate within the listbox window, this command returns
