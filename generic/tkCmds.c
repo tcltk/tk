@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.18 2000/08/04 00:46:32 ericm Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.19 2000/10/05 18:31:25 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -1081,8 +1081,10 @@ Tk_WinfoObjCmd(clientData, interp, objc, objv)
 
 	    winPtr = winPtr->childList;
 	    for ( ; winPtr != NULL; winPtr = winPtr->nextPtr) {
-		strPtr = Tcl_NewStringObj(winPtr->pathName, -1);
-		Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
+		if (!(winPtr->flags & TK_ANONYMOUS_WINDOW)) {
+		    strPtr = Tcl_NewStringObj(winPtr->pathName, -1);
+		    Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
+		}
 	    }
 	    break;
 	}

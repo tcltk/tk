@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.12 2000/06/03 08:58:15 hobbs Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.13 2000/10/05 18:31:25 ericm Exp $
  */
 
 #ifndef _TKDECLS
@@ -826,6 +826,10 @@ EXTERN void		Tk_CreateClientMessageHandler _ANSI_ARGS_((
 /* 240 */
 EXTERN void		Tk_DeleteClientMessageHandler _ANSI_ARGS_((
 				Tk_ClientMessageProc * proc));
+/* 241 */
+EXTERN Tk_Window	Tk_CreateAnonymousWindow _ANSI_ARGS_((
+				Tcl_Interp * interp, Tk_Window parent, 
+				char * screenName));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1079,6 +1083,7 @@ typedef struct TkStubs {
     int (*tk_PostscriptPhoto) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoImageBlock * blockPtr, Tk_PostscriptInfo psInfo, int width, int height)); /* 238 */
     void (*tk_CreateClientMessageHandler) _ANSI_ARGS_((Tk_ClientMessageProc * proc)); /* 239 */
     void (*tk_DeleteClientMessageHandler) _ANSI_ARGS_((Tk_ClientMessageProc * proc)); /* 240 */
+    Tk_Window (*tk_CreateAnonymousWindow) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Window parent, char * screenName)); /* 241 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -2052,6 +2057,10 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_DeleteClientMessageHandler
 #define Tk_DeleteClientMessageHandler \
 	(tkStubsPtr->tk_DeleteClientMessageHandler) /* 240 */
+#endif
+#ifndef Tk_CreateAnonymousWindow
+#define Tk_CreateAnonymousWindow \
+	(tkStubsPtr->tk_CreateAnonymousWindow) /* 241 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

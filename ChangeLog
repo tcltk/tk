@@ -1,3 +1,28 @@
+2000-10-05  Eric Melski  <ericm@ajubasolutions.com>
+
+	* generic/tkCmds.c (Tk_WinfoObjCmd): Added check for
+	TK_ANONYMOUS_WINDOW flag in the [winfo children] subcommand; if
+	set, the window will not be printed in the list of children.
+
+	* doc/CrtWindow.3: Added entry for Tk_CreateAnonymousWindow.
+
+	* generic/tkWindow.c 
+	(Tk_CreateAnonymousWindow): New API for creating anonymous
+	windows.  These windows are manipulable from C, but not from Tcl,
+	because they have no pathname associated with them.  They are used
+	initially by widgets that do rubber-band resizing (panedwindow,
+	multi-column listbox, etc.), and may be useful for other widgets
+	as well (dropbox, combobox).
+	(Tk_DestroyWindow): Added check for TK_ANONYMOUS_WINDOW flag when
+	determining whether to generate a DestroyNotify event.
+
+	* generic/tkStubInit.c: 
+	* generic/tkDecls.h: Regen'd from tk.decls.
+
+	* generic/tk.decls: Added Tk_CreateAnonymousWindow declaration.
+
+	* generic/tk.h: Added TK_ANONYMOUS_WINDOW flag for Tk_Window's.
+
 2000-10-04  Eric Melski  <ericm@ajubasolutions.com>
 
 	* doc/MaintGeom.3: Noted that Tk_MaintainGeometry handles direct
