@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.7 2002/02/22 13:13:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.7.2.1 2004/05/03 23:23:42 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -762,10 +762,23 @@ DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
 		break;
 	    }
 	    case COMPOUND_LEFT: {
+		/*
+		 * Position image in the indicator space to the left of the
+		 * entries, unless this entry is a radio|check button because
+		 * then the indicator space will be used.
+		 */
 		textXOffset = imageWidth + 2;
 		textYOffset = 0;
 		imageXOffset = 0;
 		imageYOffset = 0;
+		if ((mePtr->type != CHECK_BUTTON_ENTRY) 
+			&& (mePtr->type != RADIO_BUTTON_ENTRY)) {
+		    textXOffset -= indicatorSpace;
+		    if (textXOffset < 0) {
+			textXOffset = 0;
+		    }
+		    imageXOffset = -indicatorSpace;
+		}
 		break;
 	    }
 	    case COMPOUND_RIGHT: {
