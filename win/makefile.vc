@@ -12,10 +12,10 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.85 2004/09/10 12:32:24 vincentdarley Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.86 2004/09/16 17:52:08 davygrvy Exp $
 #------------------------------------------------------------------------------
 
-!if "$(MSDEVDIR)" == ""
+!if !defined(MSDEVDIR) && !defined(MSVCDIR)
 MSG = ^
 You will need to run vcvars32.bat from Developer Studio, first, to setup^
 the environment.  Jump to this line to read the new instructions.
@@ -192,6 +192,8 @@ WISHNAMEPREFIX = wish
 
 BINROOT		= .
 ROOT		= ..
+
+TK_LIBRARY	= $(ROOT)\library
 
 TKIMPLIB	= "$(OUT_DIR)\$(PROJECT)$(VERSION)$(SUFX).lib"
 TKLIBNAME	= $(PROJECT)$(VERSION)$(SUFX).$(EXT)
@@ -485,7 +487,7 @@ tktest:	  setup $(TKTEST) $(CAT32)
 
 test: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
-	set TK_LIBRARY=$(ROOT)/library
+	set TK_LIBRARY=$(TK_LIBRARY)
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
@@ -499,7 +501,7 @@ test: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
-	set TK_LIBRARY=$(ROOT)/library
+	set TK_LIBRARY=$(TK_LIBRARY)
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
@@ -509,7 +511,7 @@ runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
-	set TK_LIBRARY=$(ROOT)/library
+	set TK_LIBRARY=$(TK_LIBRARY)
 !if $(TCLINSTALL)
 	set PATH=$(_TCLDIR)\bin;$(PATH)
 !else
