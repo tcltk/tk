@@ -1,3 +1,50 @@
+2002-06-19  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* generic/tkBind.c (TkBindDeadWindow):
+	Handle case where Tk_DestroyWindow is invoked
+	on clipboard and send windows.
+	* generic/tkClipboard.c (TkClipCleanup):
+	Invoke Tk_DestroyWindow to cleanup the
+	dispPtr->clipWindow. Call Tcl_Preserve
+	and Tcl_Release on the window to avoid an
+	invalid memory ref on shutdown.
+	* generic/tkEvent.c (Tk_HandleEvent):
+	Panic if XCreateIC is invoked twice for
+	the same window. This should never happen,
+	the check were just added to make sure it
+	does not since this could lead to crashes
+	in XCloseIM.
+	* generic/tkFocus.c (TkFocusDeadWindow):
+	Handle case where Tk_DestroyWindow is invoked
+	on clipboard and send windows.
+	* generic/tkOption.c (TkOptionDeadWindow): Ditto.
+	* generic/tkWindow.c (TkCloseDisplay): Move
+	deletion of dispPtr->winTable after TkpCloseDisplay
+	call since Tk_DestroyWindow uses it and could
+	be called by TkpCloseDisplay for clipboard/send windows.
+	Also invoke ckfree for the dispPtr instead of
+	doing it in TkpCloseDisplay.
+	(Tk_DestroyWindow): Check for a null winPtr->mainPtr
+	before doing certain cleanup tasks so the we can
+	invoke Tk_DestroyWindow on clipboard and send windows.
+	We need to do this so that XDestroyIC will get invoked
+	for the input contexts of each window.
+	* mac/tkMacXStubs.c (TkpCloseDisplay): Don't free
+	the displayPtr since this is now done in TkCloseDisplay.
+	* unix/tkUnixEvent.c (TkpCloseDisplay, OpenIM): Remove
+	conditional compilation around calls to XCloseIM
+	since I am confident that the crashes related to
+	input contexts has been fixed. Don't free
+	the displayPtr since this is now done in TkCloseDisplay.
+	* unix/tkUnixSend.c (TkSendCleanup): Invoke the
+	Tk_DestroyWindow method to cleanup the special
+	send window. This will call XDestroyIC and thereby
+	avoid a crash in XCloseIM. The send window needs
+	to be Tcl_Preserve and Tcl_Release to avoid an
+	invalid memory ref on shutdown.
+	* win/tkWinX.c (TkpCloseDisplay): Don't free
+	the displayPtr since this is now done in TkCloseDisplay.
+
 2002-06-19  Donal K. Fellows  <fellowsd@cs.man.ac.uk>
 
 	* generic/tkStyle.c: TIP#48 style engine.

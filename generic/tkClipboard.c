@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.9 2002/04/12 10:03:02 hobbs Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.10 2002/06/19 19:37:54 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -649,12 +649,9 @@ TkClipCleanup(dispPtr)
 		dispPtr->applicationAtom);
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
 		dispPtr->windowAtom);
-	/*
-	 * It may be too late to call Tk_DestroyWindow, so just free the
-	 * memory created directly.
-	 */
-	ckfree((char *) dispPtr->clipWindow);
-	dispPtr->clipWindow = NULL;
+
+	Tk_DestroyWindow(dispPtr->clipWindow);
+	Tcl_Release((ClientData) dispPtr->clipWindow);
     }
 }
 
@@ -700,6 +697,7 @@ TkClipInit(interp, dispPtr)
     if (dispPtr->clipWindow == NULL) {
 	return TCL_ERROR;
     }
+    Tcl_Preserve((ClientData) dispPtr->clipWindow);
     atts.override_redirect = True;
     Tk_ChangeWindowAttributes(dispPtr->clipWindow, CWOverrideRedirect, &atts);
     Tk_MakeWindowExist(dispPtr->clipWindow);

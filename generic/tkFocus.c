@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.8 2002/06/14 22:25:12 jenglish Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.9 2002/06/19 19:37:54 mdejong Exp $
  */
 
 #include "tkInt.h"
@@ -811,6 +811,14 @@ TkFocusDeadWindow(winPtr)
     ToplevelFocusInfo *tlFocusPtr, *prevPtr;
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
+
+    /*
+     * Certain special windows like those used for send and clipboard
+     * have no mainPtr.
+     */
+
+    if (winPtr->mainPtr == NULL)
+        return;
 
     /*
      * Search for focus records that refer to this window either as
