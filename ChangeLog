@@ -1,9 +1,21 @@
+2003-12-03  Don Porter	<dgp@users.sourceforge.net>
+
+	* README:		Bumped patch level to 8.4.6 to distinguish
+	* generic/tk.h:		CVS snapshots from the 8.4.5 release.
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* macosx/Wish.pbproj/project.pbxproj:
+
+	* unix/configure:	autoconf (2.13)
+	* win/configure:
+
 2003-12-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenu.c (MenuVarProc): prevent this from triggering
 	while interp is being destroyed.
 
-2003-11-21  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
+2x03-11-21  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	*** 8.4.5 TAGGED FOR RELEASE ***
 
