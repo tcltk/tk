@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.11 2002/07/16 18:06:41 vincentdarley Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.11.2.1 2004/10/28 12:25:22 dkf Exp $
 '\" 
 .so man.macros
 .TH wm n 8.4 Tk "Tk Built-In Commands"
@@ -58,12 +58,13 @@ flags and their values. The second form returns the value for the
 specific option. The third form sets one or more of the values. The
 values are as follows:
 .PP
-On Windows, \fB-disabled\fR gets or sets whether the window is in a
-disabled state. \fB-toolwindow\fR gets or sets the style of the window
-to toolwindow (as defined in the MSDN). \fB-topmost\fR gets or sets
+On Windows, \fB\-disabled\fR gets or sets whether the window is in a
+disabled state. \fB\-toolwindow\fR gets or sets the style of the window
+to toolwindow (as defined in the MSDN). \fB\-topmost\fR gets or sets
 whether this is a topmost window (displays above all other windows).
 .PP
-On Macintosh,
+On Macintosh, there are currently two attribute values:
+\fB\-modified\fR and \fB\-titlepath\fR.
 .PP
 On Unix, there are currently no special attribute values.
 .RE
@@ -234,8 +235,8 @@ Otherwise it returns the name of
 the current icon bitmap associated with \fIwindow\fR, or an empty
 string if \fIwindow\fR has no icon bitmap.  On the Windows operating
 system, an additional flag is supported: 
-\fBwm iconbitmap \fIwindow\fR ?\fI-default\fR? ?\fIimage\fR?.  
-If the \fI-default\fR
+\fBwm iconbitmap \fIwindow\fR ?\fB\-default\fR? ?\fIimage\fR?.  
+If the \fB\-default\fR
 flag is given, the icon is applied to all toplevel windows (existing
 and future) to which no other specific icon has yet been applied.
 In addition to bitmap image types, a full path specification to
@@ -312,8 +313,6 @@ specified, then the command returns an empty string.  Otherwise
 it returns a Tcl list with two elements, which are the
 maximum width and height currently in effect.
 The maximum size defaults to the size of the screen.
-If resizing has been disabled with the \fBwm resizable\fR command,
-then this command has no effect.
 See the sections on geometry management below for more information.
 .TP
 \fBwm minsize \fIwindow\fR ?\fIwidth height\fR?
@@ -328,8 +327,6 @@ specified, then the command returns an empty string.  Otherwise
 it returns a Tcl list with two elements, which are the
 minimum width and height currently in effect.
 The minimum size defaults to one pixel in each dimension.
-If resizing has been disabled with the \fBwm resizable\fR command,
-then this command has no effect.
 See the sections on geometry management below for more information.
 .TP
 \fBwm overrideredirect \fIwindow\fR ?\fIboolean\fR?
@@ -483,7 +480,6 @@ Note: it sometimes seems to be necessary to withdraw a
 window and then re-map it (e.g. with \fBwm deiconify\fR) to get some
 window managers to pay attention to changes in window attributes
 such as group.
-
 .SH "GEOMETRY MANAGEMENT"
 .PP
 By default a top-level window appears on the screen in its
@@ -510,7 +506,6 @@ all forms of resizing, including the window's natural size as
 well as manual resizes and the \fBwm geometry\fR command.
 You can also use the command \fBwm resizable\fR to completely
 disable interactive resizing in one or both dimensions.
-
 .SH "GRIDDED GEOMETRY MANAGEMENT"
 .PP
 Gridded geometry management occurs when one of the widgets of an
@@ -544,13 +539,46 @@ in \fBwm minsize\fR, \fBwm maxsize\fR, and \fBwm geometry\fR commands
 are treated as grid units rather than pixel units.
 Interactive resizing is also carried out in even numbers of grid units
 rather than pixels.
-
 .SH BUGS
 .PP
 Most existing window managers appear to have bugs that affect the
 operation of the \fBwm\fR command.  For example, some changes won't
 take effect if the window is already active:  the window will have
 to be withdrawn and de-iconified in order to make the change happen.
+.SH EXAMPLES
+A fixed-size window that says that it is fixed-size too:
+.CS
+toplevel .fixed
+\fBwm title\fR     .fixed "Fixed-size Window"
+\fBwm resizable\fR .fixed 0 0
+.CE
+.PP
+A simple dialog-like window, centred on the screen:
+.CS
+# Create and arrange the dialog contents.
+toplevel .msg
+label  .msg.l  \-text "This is a very simple dialog demo."
+button .msg.ok \-text OK \-default active \-command {destroy .msg}
+pack .msg.ok \-side bottom \-fill x
+pack .msg.l  \-expand 1    \-fill both
+
+# Now set the widget up as a centred dialog.
+
+# But first, we need the geometry managers to finish setting
+# up the interior of the dialog, for which we need to run the
+# event loop with the widget hidden completely...
+\fBwm withdraw\fR .msg
+update
+set x [expr {([winfo screenwidth .]\-[winfo width .msg])/2}]
+set y [expr {([winfo screenheight .]\-[winfo height .msg])/2}]
+\fBwm geometry\fR  .msg +$x+$y
+\fBwm transient\fR .msg .
+\fBwm title\fR     .msg "Dialog demo"
+\fBwm deiconify\fR .msg
+.CE
+
+.SH "SEE ALSO"
+toplevel(n), winfo(n)
 
 .SH KEYWORDS
 aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager
