@@ -26,7 +26,6 @@ typedef struct WinFont {
     HFONT hFont;		/* Windows information about font. */
     HWND hwnd;			/* Toplevel window of application that owns
 				 * this font, used for getting HDC. */
-    int widths[256];		/* Widths of first 256 chars in this font. */
 } WinFont;
 
 /*
@@ -332,14 +331,6 @@ Tk_MeasureChars(tkfont, source, numChars, maxLength, flags, lengthPtr)
     HFONT hFont;
     int curX, curIdx;
 
-    /*
-     * On the authority of the Gates Empire, Windows does not use kerning
-     * or fractional character widths when displaying text on the screen.
-     * So that means we can safely measure individual characters or spans
-     * of characters and add up the widths w/o any "off-by-one pixel" 
-     * errors.  
-     */
-
     fontPtr = (WinFont *) tkfont;
 
     hdc = GetDC(fontPtr->hwnd);
@@ -351,75 +342,70 @@ Tk_MeasureChars(tkfont, source, numChars, maxLength, flags, lengthPtr)
     } else if (maxLength <= 0) {
 	SIZE size;
 
-	GetTextExtentPoint(hdc, source, numChars, &size);
+	GetTextExtentPoint32(hdc, source, numChars, &size);
 	curX = size.cx;
 	curIdx = numChars;
     } else {
-	int newX, termX, sawNonSpace;
-	CONST char *term, *end, *p;
-	int ch;
-
-	ch = UCHAR(*source);
-	newX = curX = termX = 0;
+	int max;
+	int *partials;
+	SIZE size;
 	
-	term = source;
-	end = source + numChars;
+	partials = (int *) ckalloc(numChars * sizeof (int));
+	GetTextExtentExPoint(hdc, source, numChars, maxLength, &max,
+		partials, &size);
+	
+	if ((flags & TK_WHOLE_WORDS) && max < numChars) {
+	    int sawSpace;
+	    int i;
+	    
+	    sawSpace = 0;
+	    i = max;
+	    while (i >= 0 && !isspace(source[i])) {
+    		--i;
+            }
+	    while (i >= 0 && isspace(source[i])) {
+		sawSpace = 1;
+		--i;
+            }
 
-	sawNonSpace = !isspace(ch);
-	for (p = source; ; ) {
-	    newX += fontPtr->widths[ch];
-	    if (newX > maxLength) {
-		break;
-	    }
-	    curX = newX;
-	    p++;
-	    if (p >= end) {
-		term = end;
-		termX = curX;
-		break;
-	    }
-
-	    ch = UCHAR(*p);
-	    if (isspace(ch)) {
-		if (sawNonSpace) {
-		    term = p;
-		    termX = curX;
-		    sawNonSpace = 0;
-		}
-	    } else {
-		sawNonSpace = 1;
-	    }
-	}
-
-	/*
-	 * P points to the first character that doesn't fit in the desired
-	 * span.  Use the flags to figure out what to return.
-	 */
-
-	if ((flags & TK_PARTIAL_OK) && (p < end) && (curX < maxLength)) {
 	    /*
-	     * Include the first character that didn't quite fit in the desired
-	     * span.  The width returned will include the width of that extra
-	     * character.
+	     * If a space char was not found, and the flag for forcing
+	     * at least on (or more) chars to be drawn is false, then
+	     * set MAX to zero so no text is drawn.  Otherwise, if a
+	     * space was found, set max to be one char past the space.
 	     */
-
-	    curX = newX;
-	    p++;
-	}
-	if ((flags & TK_AT_LEAST_ONE) && (term == source) && (p < end)) {
-	    term = p;
-	    termX = curX;
-	    if (term == source) {
-		term++;
-		termX = newX;
+	    
+	    if ((i < 0) && !(flags & TK_AT_LEAST_ONE)) {
+		max = 0;
+	    } else if (sawSpace) {
+		max = i + 1;
 	    }
-	} else if ((p >= end) || !(flags & TK_WHOLE_WORDS)) {
-	    term = p;
-	    termX = curX;
+		
 	}
 
-	curX = termX;
-	curIdx = term - source;	
+	if (max == 0) {
+	    curX = 0;
+	} else {
+	    curX = partials[max - 1];
+	}
+
+	if (((flags & TK_PARTIAL_OK) && max < numChars && curX < maxLength)
+		|| ((flags & TK_AT_LEAST_ONE) && max == 0 && numChars > 0)) {
+	    /*
+	     * We want to include the first character that didn't
+	     * quite fit.  Call the function again to include the
+	     * width of the extra character.
+             */
+	    
+	    GetTextExtentExPoint(hdc, source, max + 1, 0, NULL, partials,
+                       &size);
+	    curX = partials[max];
+	    ++max;
+
+	} 
+		
+	ckfree((char *) partials);
+	curIdx = max;
     }
 
     SelectObject(hdc, hFont);
@@ -613,7 +599,6 @@ AllocFont(tkFontPtr, tkwin, hFont)
     hFont = SelectObject(hdc, hFont);
     GetTextFace(hdc, sizeof(buf), buf);
     GetTextMetrics(hdc, &tm);
-    GetCharWidth(hdc, 0, 255, fontPtr->widths);
 
     fontPtr->font.fid	= (Font) fontPtr;
 
