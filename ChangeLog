@@ -12,6 +12,19 @@
 	added test that the restoreProc is not NULL, to allow for custom
 	options that don't care about supporting Tk_RestoreSavedOptions.
 
+2000-09-29  D. Richard Hipp <drh@hwaci.com>
+
+	* generic/tkBitmap.c: Changes to prevent a BadMatch error from the
+	Xserver when the same bitmap is used on two or more screens of the
+	same display.
+
+	* tests/menu.test: Print a warning if the TK_ALT_DISPLAY environment
+	variable is not configured so as to test for the bug fix above.
+
+	* library/tk.tcl (::tk::SetGrabFocus): "Catch" the grab in case
+	another application already holds the grab and the "grab" command
+	fails.
+
 2000-09-29  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* win/Makefile.in: commented use of TESTFLAGS
@@ -3256,4 +3269,3 @@
 
 	* tkWinWm.c, tkWinMenu.c: fixed titles and menus so they properly
 	display Unicode [Bug: 819]
-
