@@ -1,3 +1,8 @@
+2004-08-25  Don Porter  <dgp@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c:	Made use of Tcl_WrongNumArgs in a few
+	* win/tkWinMenu.c:	appropriate spots.
+
 2004-08-22  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/SetOptions.3, doc/SetClassProcs.3, doc/MeasureChar.3:
