@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.4 1999/04/16 01:51:52 stanton Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.5 1999/10/29 03:58:39 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -354,5 +354,3 @@ XKeysymToString(keysym)
 {
     return NULL;
 }
-
-

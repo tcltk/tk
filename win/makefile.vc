@@ -4,7 +4,7 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
-# RCS: @(#) $Id: makefile.vc,v 1.28 1999/10/01 22:45:31 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.29 1999/10/29 03:58:39 hobbs Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from 
@@ -26,10 +26,10 @@
 #
 
 ROOT		= ..
-TOOLS32		= c:\program files\devstudio\vc
-TOOLS32_rc	= c:\program files\devstudio\sharedide
+TOOLS32		= c:\progra~1\devstudio\vc
+TOOLS32_rc	= c:\progra~1\devstudio\sharedide
 TCLDIR		= ..\..\tcl8.3
-INSTALLDIR      = c:\program files\tcl
+INSTALLDIR      = c:\progra~1\tcl
 
 # Set this to the appropriate value of /MACHINE: for your platform
 MACHINE	= IX86
@@ -38,7 +38,7 @@ MACHINE	= IX86
 #THREADDEFINES = -DTCL_THREADS=1
 
 # Set NODEBUG to 0 to compile with symbols
-NODEBUG = 1
+NODEBUG = 0
 
 # uncomment the following two lines to compile with TCL_MEM_DEBUG
 #DEBUGDEFINES	=-DTCL_MEM_DEBUG
