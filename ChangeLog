@@ -1,3 +1,8 @@
+2002-09-05  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.pbproj/project.pbxproj: added overlooked missing
+	TK_PATCH_LEVEL version bump to 8.4.0.
+
 2002-09-04  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
 
 	* win/Makefile.in (install-libraries): Added code section to
