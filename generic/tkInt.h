@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.55 2003/01/28 20:39:15 jenglish Exp $ 
+ * RCS: $Id: tkInt.h,v 1.56 2003/02/18 06:22:44 mdejong Exp $ 
  */
 
 #ifndef _TKINT
@@ -493,6 +493,8 @@ typedef struct TkDisplay {
      */
     int mouseButtonState;	/* current mouse button state for this
 				 * display */
+    Window mouseButtonWindow;	/* Window the button state was set in,
+				 * added in Tk 8.4. */
     Window warpWindow;
     int warpX;
     int warpY;
