@@ -1,3 +1,8 @@
+2004-02-28  Vince Darley  <vincentdarley@users.sourceforge.net>
+
+	* generic/tkTextIndex.c: remove use of internal Tcl interface
+	'TclUtfToUniChar'
+
 2004-02-25  Benjamin Riefenstahl  <Benjamin.Riefenstahl@epost.de>
 
 	* library/demos/widget (addFormattedText): Correct off-by-one error.
