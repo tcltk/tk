@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.15 2001/09/26 20:25:17 pspjuth Exp $
+# RCS: @(#) $Id: tk.decls,v 1.16 2002/01/25 21:09:36 dgp Exp $
 
 library tk
 
@@ -55,8 +55,8 @@ declare 4 generic {
 }
 
 declare 5 generic {
-    void Tk_AddOption (Tk_Window tkwin, char *name, \
-	    char *value, int priority)
+    void Tk_AddOption (Tk_Window tkwin, CONST char *name, \
+	    CONST char *value, int priority)
 }
 
 declare 6 generic {
@@ -78,7 +78,7 @@ declare 8 generic {
 
 declare 9 generic {
     int Tk_CanvasGetCoord (Tcl_Interp *interp, \
-	    Tk_Canvas canvas, char *str, double *doublePtr)
+	    Tk_Canvas canvas, CONST char *str, double *doublePtr)
 }
 
 declare 10 generic {
@@ -528,7 +528,7 @@ declare 103 generic {
 
 declare 104 generic {
     int Tk_GetPixels (Tcl_Interp *interp, \
-	    Tk_Window tkwin, char *str, int *intPtr)
+	    Tk_Window tkwin, CONST char *str, int *intPtr)
 }
 
 declare 105 generic {
@@ -551,7 +551,7 @@ declare 108 generic {
 
 declare 109 generic {
     int Tk_GetScreenMM (Tcl_Interp *interp, \
-	    Tk_Window tkwin, char *str, double *doublePtr)
+	    Tk_Window tkwin, CONST char *str, double *doublePtr)
 }
 
 declare 110 generic {
@@ -692,7 +692,7 @@ declare 140 generic {
 
 declare 141 generic {
     Tk_Window Tk_NameToWindow (Tcl_Interp *interp, \
-	    char *pathName, Tk_Window tkwin)
+	    CONST char *pathName, Tk_Window tkwin)
 }
 
 declare 142 generic {
@@ -703,7 +703,7 @@ declare 142 generic {
 
 declare 143 generic {
     int Tk_ParseArgv (Tcl_Interp *interp, \
-	    Tk_Window tkwin, int *argcPtr, char **argv, \
+	    Tk_Window tkwin, int *argcPtr, CONST char **argv, \
 	    Tk_ArgvInfo *argTable, int flags)
 }
 

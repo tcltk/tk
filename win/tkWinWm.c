@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.33 2001/12/28 23:44:19 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.34 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -240,7 +240,7 @@ typedef struct TkWmInfo {
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for
 				 * this window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
-    char **cmdArgv;		/* Array of strings to store in the
+    CONST char **cmdArgv;	/* Array of strings to store in the
 				 * WM_COMMAND property.  NULL means nothing
 				 * available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
@@ -2209,7 +2209,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
 	TkWindow **cmapList;
 	TkWindow *winPtr2;
 	int i, windowArgc, gotToplevel;
-	char **windowArgv;
+	CONST char **windowArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",
@@ -2278,7 +2278,7 @@ Tk_WmCmd(clientData, interp, argc, argv)
     } else if ((c == 'c') && (strncmp(argv[1], "command", length) == 0)
 	    && (length >= 3)) {
 	int cmdArgc;
-	char **cmdArgv;
+	CONST char **cmdArgv;
 
 	if ((argc != 3) && (argc != 4)) {
 	    Tcl_AppendResult(interp, "wrong # arguments: must be \"",

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.24 2002/01/17 03:35:00 dgp Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.25 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "default.h"
@@ -676,7 +676,7 @@ TextWidgetCmd(clientData, interp, argc, argv)
     } else if ((c == 'i') && (strncmp(argv[1], "insert", length) == 0)
 	    && (length >= 3)) {
 	int i, j, numTags;
-	char **tagNames;
+	CONST char **tagNames;
 	TkTextTag **oldTagArrayPtr;
 
 	if (argc < 4) {
@@ -2125,7 +2125,7 @@ TkTextGetTabs(interp, tkwin, string)
 					 * the text manual entry for details. */
 {
     int argc, i, count, c;
-    char **argv;
+    CONST char **argv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
     Tcl_UniChar ch;
@@ -2458,7 +2458,7 @@ DumpSegment(interp, key, value, command, index, what)
 	Tcl_AppendElement(interp, buffer);
 	return TCL_OK;
     } else {
-	char *argv[4];
+	CONST char *argv[4];
 	char *list;
 	int result;
 	argv[0] = key;

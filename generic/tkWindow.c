@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.40 2001/10/16 21:45:28 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.41 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -206,7 +206,7 @@ static Tk_Window	CreateTopLevelWindow _ANSI_ARGS_((Tcl_Interp *interp,
 static void		DeleteWindowsExitProc _ANSI_ARGS_((
 			    ClientData clientData));
 static TkDisplay *	GetScreen _ANSI_ARGS_((Tcl_Interp *interp,
-			    char *screenName, int *screenPtr));
+			    CONST char *screenName, int *screenPtr));
 static int		Initialize _ANSI_ARGS_((Tcl_Interp *interp));
 static int		NameWindow _ANSI_ARGS_((Tcl_Interp *interp,
 			    TkWindow *winPtr, TkWindow *parentPtr,
@@ -356,12 +356,12 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
 static TkDisplay *
 GetScreen(interp, screenName, screenPtr)
     Tcl_Interp *interp;		/* Place to leave error message. */
-    char *screenName;		/* Name for screen.  NULL or empty means
+    CONST char *screenName;	/* Name for screen.  NULL or empty means
 				 * use DISPLAY envariable. */
     int *screenPtr;		/* Where to store screen number. */
 {
     register TkDisplay *dispPtr;
-    char *p;
+    CONST char *p;
     int screenId;
     size_t length;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
@@ -2209,7 +2209,7 @@ Tk_SetClassProcs(tkwin, procs, instanceData)
 Tk_Window
 Tk_NameToWindow(interp, pathName, tkwin)
     Tcl_Interp *interp;		/* Where to report errors. */
-    char *pathName;		/* Path name of window. */
+    CONST char *pathName;	/* Path name of window. */
     Tk_Window tkwin;		/* Token for window:  name is assumed to
 				 * belong to the same main window as tkwin. */
 {
@@ -2830,7 +2830,9 @@ Initialize(interp)
 {
     char *p;
     int argc, code;
-    char **argv, *args[20];
+    CONST char **argv; 
+    char *args[20];
+    CONST char *argString = NULL;
     Tcl_DString class;
     ThreadSpecificData *tsdPtr;
     
@@ -2940,7 +2942,7 @@ Initialize(interp)
 	 * cross interp refcounting and changing the code below.
 	 */
 
-	p = Tcl_GetStringResult(master);
+	argString = Tcl_GetStringResult(master);
     } else {
 	/*
 	 * If there is an "argv" variable, get its value, extract out
@@ -2948,13 +2950,13 @@ Initialize(interp)
 	 * the arguments that we used.
 	 */
 
-	p = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
+	argString = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
     }
     argv = NULL;
-    if (p != NULL) {
+    if (argString != NULL) {
 	char buffer[TCL_INTEGER_SPACE];
 
-	if (Tcl_SplitList(interp, p, &argc, &argv) != TCL_OK) {
+	if (Tcl_SplitList(interp, argString, &argc, &argv) != TCL_OK) {
 	    argError:
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (processing arguments in argv variable)");

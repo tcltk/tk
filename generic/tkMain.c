@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.11 2002/01/15 21:29:12 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.12 2002/01/25 21:09:37 dgp Exp $
  */
 
 #include <ctype.h>
@@ -62,8 +62,6 @@ extern int		isatty _ANSI_ARGS_((int fd));
 #endif
 extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
-extern void		TkpDisplayWarning _ANSI_ARGS_((char *msg,
-			    char *title));
 
 /*
  * Forward declarations for procedures defined later in this file.
@@ -165,7 +163,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      * and "argv".
      */
 
-    args = Tcl_Merge(argc-1, argv+1);
+    args = Tcl_Merge(argc-1, (CONST char **)argv+1);
     Tcl_ExternalToUtfDString(NULL, args, -1, &argString);
     Tcl_SetVar(interp, "argv", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
     Tcl_DStringFree(&argString);
@@ -409,12 +407,12 @@ Prompt(interp, partial)
 					 * exists a partial command, so use
 					 * the secondary prompt. */
 {
-    char *promptCmd;
+    Tcl_Obj *promptCmd;
     int code;
     Tcl_Channel outChannel, errChannel;
 
-    promptCmd = Tcl_GetVar(interp,
-	partial ? "tcl_prompt2" : "tcl_prompt1", TCL_GLOBAL_ONLY);
+    promptCmd = Tcl_GetVar2Ex(interp,
+	partial ? "tcl_prompt2" : "tcl_prompt1", NULL, TCL_GLOBAL_ONLY);
     if (promptCmd == NULL) {
 defaultPrompt:
 	if (!partial) {
@@ -431,7 +429,7 @@ defaultPrompt:
             }
 	}
     } else {
-	code = Tcl_Eval(interp, promptCmd);
+	code = Tcl_EvalObjEx(interp, promptCmd, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");

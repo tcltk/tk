@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.23 2001/12/04 03:07:43 mdejong Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.24 2002/01/25 21:09:37 dgp Exp $
 
 library tk
 
@@ -178,7 +178,8 @@ declare 32 generic {
 }
 
 declare 33 generic {
-    char * TkGetDefaultScreenName (Tcl_Interp *interp, char *screenName)
+    CONST char * TkGetDefaultScreenName (Tcl_Interp *interp, \
+	    CONST char *screenName)
 }
 
 declare 34 generic {
@@ -287,7 +288,7 @@ declare 57 generic {
 }
 
 declare 58 generic {
-    void TkpDisplayWarning (char *msg, char *title)
+    void TkpDisplayWarning (CONST char *msg, CONST char *title)
 }
 
 declare 59 generic {
@@ -328,7 +329,7 @@ declare 67 generic {
 }
 
 declare 68 generic {
-    TkDisplay * TkpOpenDisplay (char *display_name)
+    TkDisplay * TkpOpenDisplay (CONST char *display_name)
 }
 
 declare 69 generic {
@@ -1366,7 +1367,7 @@ declare 61 win {
 }
 
 declare 62 win {
-    void XSetCommand (Display* d, Window w, char** c, int i)
+    void XSetCommand (Display* d, Window w, CONST char** c, int i)
 }
 
 declare 63 win {

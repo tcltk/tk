@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.9 2001/07/03 06:03:44 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.10 2002/01/25 21:09:36 dgp Exp $
  */
 
 #include <stdio.h>
@@ -1872,7 +1872,7 @@ ParseArrowShape(clientData, interp, tkwin, value, recordPtr, offset)
     LineItem *linePtr = (LineItem *) recordPtr;
     double a, b, c;
     int argc;
-    char **argv = NULL;
+    CONST char **argv = NULL;
 
     if (offset != Tk_Offset(LineItem, arrowShapeA)) {
 	panic("ParseArrowShape received bogus offset");
