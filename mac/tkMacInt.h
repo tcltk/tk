@@ -8,19 +8,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInt.h,v 1.7 1999/04/16 01:51:31 stanton Exp $
+ * RCS: @(#) $Id: tkMacInt.h,v 1.8 1999/05/22 06:32:55 jingham Exp $
  */
 
 #ifndef _TKMACINT
 #define _TKMACINT
 
 #include "tkInt.h"
-#include "tkPort.h"
 
-#ifndef _TKMAC
-#    include "tkMac.h"
-#endif /* _TKMAC */
-
+#include "tkMac.h"
 
 #include <AppleEvents.h>
 #include <Windows.h>
@@ -207,5 +203,7 @@ typedef TkMenuDefProcPtr TkMenuDefUPP;
 	(*(userRoutine))((message), (theMenu), (menuRectPtr), (hitPt), \
 	(whichItemPtr), (globalsPtr))
 #endif
+
+#include "tkIntPlatDecls.h"
 
 #endif /* _TKMACINT */

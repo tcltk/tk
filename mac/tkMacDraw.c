@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacDraw.c,v 1.4 1999/04/16 01:51:30 stanton Exp $
+ * RCS: @(#) $Id: tkMacDraw.c,v 1.5 1999/05/22 06:32:50 jingham Exp $
  */
 
 #include "tkInt.h"
@@ -23,6 +23,7 @@
 #include <Fonts.h>
 #include <QDOffscreen.h>
 #include "tkMacInt.h"
+#include "tkPort.h"
 
 #ifndef PI
 #    define PI 3.14159265358979323846
