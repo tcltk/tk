@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: toplevel.n,v 1.4 2001/09/26 21:36:19 pspjuth Exp $
+'\" RCS: @(#) $Id: toplevel.n,v 1.5 2004/03/25 12:12:36 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH toplevel n 8.4 Tk "Tk Built-In Commands"
@@ -75,7 +75,7 @@ database, and it may not be modified with the \fBconfigure\fR
 widget command.
 .OP \-use use Use
 This option is used for embedding. If the value isn't an empty string,
-it must be the the window identifier of a container window, specified as
+it must be the window identifier of a container window, specified as
 a hexadecimal string like the ones returned by the \fBwinfo id\fR
 command. The toplevel widget will be created as a child of the given
 container instead of the root window for the screen.  If the container

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Name.3,v 1.3 2002/01/25 21:09:36 dgp Exp $
+'\" RCS: @(#) $Id: Name.3,v 1.4 2004/03/25 12:12:35 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH Tk_Name 3 "" Tk "Tk Library Procedures"
@@ -57,7 +57,7 @@ Path names have a structure similar to file names in Unix but with
 dots between elements instead of slashes:  the main window for
 an application has the path name ``.'';  its children have names like
 ``.a'' and ``.b''; their children have names like ``.a.aa'' and
-``.b.bb''; and so on.  A window is considered to be be a child of
+``.b.bb''; and so on.  A window is considered to be a child of
 another window for naming purposes if the second window was named
 as the first window's \fIparent\fR when the first window was created.
 This is not always the same as the X window hierarchy.  For

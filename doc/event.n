@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.6 2000/11/03 01:13:51 hobbs Exp $
+'\" RCS: @(#) $Id: event.n,v 1.7 2004/03/25 12:12:36 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -280,7 +280,7 @@ Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
-Corresponds to the the \fB%x\fR substitution for binding scripts.
+Corresponds to the \fB%x\fR substitution for binding scripts.
 If \fIWindow\fR is empty the coordinate is relative to the
 screen, and this option corresponds to the \fB%X\fR substitution
 for binding scripts.
@@ -292,7 +292,7 @@ Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
-Corresponds to the the \fB%y\fR substitution for binding scripts.
+Corresponds to the \fB%y\fR substitution for binding scripts.
 If \fIWindow\fR is empty the coordinate is relative to the
 screen, and this option corresponds to the \fB%Y\fR substitution
 for binding scripts.
