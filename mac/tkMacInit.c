@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacInit.c,v 1.4 2001/11/23 02:05:52 das Exp $
+ * RCS: @(#) $Id: tkMacInit.c,v 1.5 2001/12/27 22:45:10 das Exp $
  */
 
 #include <Resources.h>
@@ -55,27 +55,23 @@ TkpInit(
     Tcl_Interp *interp)		/* Interp to initialize. */
 {
     char *libDir, *tempPath;
-    Tcl_DString path;
+    Tcl_DString path, ds;
     int result;
 
-    /*
-     * The following does not work with
-     * safe interps because file exists is restricted.
-     * to be fixed using [interp issafe] like in Unix & Windows.
-     */
-    static char initCmd[] = "\
+    static char initCmd[] = "if {[info proc tkInit]==\"\"} {\n\
+proc tkInit {} {\n\
 proc sourcePath {file} {\n\
   global tk_library\n\
-  if {[catch {uplevel #0 [list source $tk_library:$file.tcl]}] == 0} {\n\
+  if {[catch {uplevel #0 [list source [file join $tk_library $file.tcl]]}] == 0} {\n\
     return\n\
   }\n\
   if {[catch {uplevel #0 [list source -rsrc $file]}] == 0} {\n\
     return\n\
   }\n\
   rename sourcePath {}\n\
-  set msg \"can't find $file resource or a usable $file.tcl file\"\n\
-  append msg \" perhaps you need to install Tk or set your \"\n\
-  append msg \"TK_LIBRARY environment variable?\"\n\
+  set msg \"Can't find $file resource or a usable $file.tcl file\"\n\
+  append msg \" perhaps you need to install Tk or set your\"\n\
+  append msg \" TK_LIBRARY environment variable?\"\n\
   error $msg\n\
 }\n\
 sourcePath tk\n\
@@ -94,9 +90,14 @@ sourcePath text\n\
 sourcePath bgerror\n\
 sourcePath msgbox\n\
 sourcePath comdlg\n\
-rename sourcePath {}";
+sourcePath spinbox\n\
+rename sourcePath {}\n\
+rename tkInit {}\n\
+} }\n\
+tkInit";
 
     Tcl_DStringInit(&path);
+    Tcl_DStringInit(&ds);
 
     /*
      * The tk_library path can be found in several places.  Here is the order
@@ -108,11 +109,11 @@ rename sourcePath {}";
      
     libDir = Tcl_GetVar(interp, "tk_library", TCL_GLOBAL_ONLY);
     if (libDir == NULL) {
-	libDir = Tcl_GetVar2(interp, "env", "TK_LIBRARY", TCL_GLOBAL_ONLY);
+    libDir = TclGetEnv("TK_LIBRARY", &ds);
     }
-    if (libDir == NULL) {
-	tempPath = Tcl_GetVar2(interp, "env", "EXT_FOLDER", TCL_GLOBAL_ONLY);
-	if (tempPath != NULL) {
+    if ((libDir == NULL) || (libDir[0] == '\0')) {
+    tempPath = TclGetEnv("EXT_FOLDER", &ds);
+    if ((tempPath != NULL) && (tempPath[0] != '\0')) {
 	    Tcl_DString libPath;
 	    char *argv[3];
 	    
@@ -121,10 +122,10 @@ rename sourcePath {}";
 	    Tcl_DStringInit(&libPath);
 	    Tcl_DStringAppend(&libPath, "tk", -1);
 	    Tcl_DStringAppend(&libPath, TK_VERSION, -1);
-	    argv[2] = libPath.string;
+	    argv[2] = Tcl_DStringValue(&libPath);
 	    Tcl_JoinPath(3, argv, &path);
 	    Tcl_DStringFree(&libPath);
-	    libDir = path.string;
+	    libDir = Tcl_DStringValue(&path);
 	}
     }
     if (libDir == NULL) {
@@ -136,6 +137,7 @@ rename sourcePath {}";
      */
     Tcl_SetVar(interp, "tk_library", libDir, TCL_GLOBAL_ONLY);
     Tcl_DStringFree(&path);
+    Tcl_DStringFree(&ds);
 
 	result = Tcl_Eval(interp, initCmd);
     return result;
