@@ -1,3 +1,10 @@
+2004-06-12  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* win/tkWinWm.c (UpdateWrapper): Let overrideredirect'ed window's
+	wrapper be the child of desktop window, thus making it to behave more
+	similarly to X11 Override Redirect. Esp. useful for combobox-like
+	megawidgets.
+
 2004-06-09  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: 
