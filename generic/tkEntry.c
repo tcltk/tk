@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.20 2001/07/02 23:52:36 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.21 2001/07/03 06:16:19 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -837,6 +837,13 @@ Tk_EntryObjCmd(clientData, interp, objc, objv)
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) entryPtr->tkwin);
+
     Tk_SetClass(entryPtr->tkwin, "Entry");
     Tk_SetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
     Tk_CreateEventHandler(entryPtr->tkwin,
@@ -889,7 +896,6 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) entryPtr);
 
     /* 
      * Parse the widget command by looking up the second token in
@@ -902,6 +908,7 @@ EntryWidgetObjCmd(clientData, interp, objc, objv)
 	return result;
     }
 
+    Tcl_Preserve((ClientData) entryPtr);
     switch ((enum entryCmd) cmdIndex) {
         case COMMAND_BBOX: {
 	    int index, x, y, width, height;
@@ -1360,18 +1367,10 @@ DestroyEntry(memPtr)
     Tk_FreeTextLayout(entryPtr->textLayout);
     Tk_FreeConfigOptions((char *) entryPtr, entryPtr->optionTable,
 	    entryPtr->tkwin);
+    Tcl_Release((ClientData) entryPtr->tkwin);
     entryPtr->tkwin = NULL;
 
-    /*
-     * Tcl_EventuallyFree should be used in
-     * DestroyNotify branch of EntryEventProc.  However, that can lead
-     * complications in Tk_FreeConfigOptions where the display for the
-     * entry has been deleted by Tk_DestroyWindow, which is needed
-     * when freeing the cursor option.  Also, there can be a timing
-     * issue were we wouldn't get called until too late in Tk clean-up,
-     * and it complains that we haven't freed our fonts yet.
-     */
-    Tcl_EventuallyFree((ClientData) entryPtr, TCL_DYNAMIC);
+    ckfree((char *) entryPtr);
 }
 
 /*
@@ -1810,16 +1809,20 @@ DisplayEntry(clientData)
 
     if (entryPtr->flags & UPDATE_SCROLLBAR) {
 	entryPtr->flags &= ~UPDATE_SCROLLBAR;
+
+        /*
+	 * Preserve/Release because updating the scrollbar can have
+	 * the side-effect of destroying or unmapping the entry widget.
+	 */
+
+	Tcl_Preserve((ClientData) entryPtr);
 	EntryUpdateScrollbar(entryPtr);
-    }
 
-    /*
-     * We do this check twice because updating the scrollbar can have
-     * the side-effect of destroying or unmapping the entry widget.
-     */
-
-    if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
-	return;
+	if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
+	    Tcl_Release((ClientData) entryPtr);
+	    return;
+	}
+	Tcl_Release((ClientData) entryPtr);
     }
 
     /*
@@ -2635,7 +2638,7 @@ EntryEventProc(clientData, eventPtr)
 		if (entryPtr->flags & REDRAW_PENDING) {
 		    Tcl_CancelIdleCall(DisplayEntry, clientData);
 		}
-		DestroyEntry((char *) entryPtr);
+		Tcl_EventuallyFree(clientData, DestroyEntry);
 	    }
 	    break;
 	case ConfigureNotify:
@@ -3782,6 +3785,13 @@ Tk_SpinboxObjCmd(clientData, interp, objc, objv)
     sbPtr->bdRelief		= TK_RELIEF_FLAT;
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
+    /*
+     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * otherwise Tk might free it while we still need it.
+     */
+
+    Tcl_Preserve((ClientData) entryPtr->tkwin);
+
     Tk_SetClass(entryPtr->tkwin, "Spinbox");
     Tk_SetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
     Tk_CreateEventHandler(entryPtr->tkwin,
@@ -3841,7 +3851,6 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) entryPtr);
 
     /*
      * Parse the widget command by looking up the second token in
@@ -3854,6 +3863,7 @@ SpinboxWidgetObjCmd(clientData, interp, objc, objv)
 	return result;
     }
 
+    Tcl_Preserve((ClientData) entryPtr);
     switch ((enum sbCmd) cmdIndex) {
         case SB_CMD_BBOX: {
 	    int index, x, y, width, height;
