@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.11 2002/08/13 16:20:49 rmax Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.12 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkPort.h"
@@ -534,7 +534,7 @@ RegClose(regPtr)
 {
     if (regPtr->modified) {
 	if (!regPtr->locked && !sendDebug) {
-	    panic("The name registry was modified without being locked!");
+	    Tcl_Panic("The name registry was modified without being locked!");
 	}
 	XChangeProperty(regPtr->dispPtr->display,
 		RootWindow(regPtr->dispPtr->display, 0),
@@ -1141,7 +1141,7 @@ Tk_SendCmd(clientData, interp, argc, argv)
      */
 
     if (tsdPtr->pendingCommands != &pending) {
-	panic("Tk_SendCmd: corrupted send stack");
+	Tcl_Panic("Tk_SendCmd: corrupted send stack");
     }
     tsdPtr->pendingCommands = pending.nextPtr;
     if (pending.errorInfo != NULL) {
@@ -1319,7 +1319,7 @@ SendInit(interp, dispPtr)
     dispPtr->commTkwin = Tk_CreateWindow(interp, (Tk_Window) NULL,
 	    "_comm", DisplayString(dispPtr->display));
     if (dispPtr->commTkwin == NULL) {
-	panic("Tk_CreateWindow failed in SendInit!");
+	Tcl_Panic("Tk_CreateWindow failed in SendInit!");
     }
     Tcl_Preserve((ClientData) dispPtr->commTkwin);
     atts.override_redirect = True;

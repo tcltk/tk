@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.16 2003/07/16 23:16:52 pspjuth Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.17 2004/01/13 02:06:00 davygrvy Exp $
  */
 
 #include "default.h"
@@ -1818,7 +1818,7 @@ TkInstallFrameMenu(tkwin)
 	Frame *framePtr;
 	framePtr = (Frame*) winPtr->instanceData;
 	if (framePtr == NULL) {
-	    panic("TkInstallFrameMenu couldn't get frame pointer");
+	    Tcl_Panic("TkInstallFrameMenu couldn't get frame pointer");
 	}
 	TkpMenuNotifyToplevelCreate(winPtr->mainPtr->interp, 
 		framePtr->menuName);

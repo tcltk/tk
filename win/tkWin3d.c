@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin3d.c,v 1.6 2003/08/20 23:31:39 patthoyts Exp $
+ * RCS: @(#) $Id: tkWin3d.c,v 1.7 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -478,7 +478,7 @@ TkpGetShadows(borderPtr, tkwin)
 	borderPtr->shadow = Tk_GetBitmap((Tcl_Interp *) NULL, tkwin,
 		Tk_GetUid("gray50"));
 	if (borderPtr->shadow == None) {
-	    panic("TkpGetShadows couldn't allocate bitmap for border");
+	    Tcl_Panic("TkpGetShadows couldn't allocate bitmap for border");
 	}
     }
     if (borderPtr->visual->map_entries > 2) {

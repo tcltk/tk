@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.10 2003/11/07 15:36:26 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.11 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -647,7 +647,7 @@ MarkCheckProc(markPtr, linePtr)
     Tcl_HashEntry *hPtr;
 
     if (markPtr->body.mark.linePtr != linePtr) {
-	panic("MarkCheckProc: markPtr->body.mark.linePtr bogus");
+	Tcl_Panic("MarkCheckProc: markPtr->body.mark.linePtr bogus");
     }
 
     /*
@@ -659,7 +659,7 @@ MarkCheckProc(markPtr, linePtr)
 	    &search); hPtr != markPtr->body.mark.hPtr;
 	    hPtr = Tcl_NextHashEntry(&search)) {
 	if (hPtr == NULL) {
-	    panic("MarkCheckProc couldn't find hash table entry for mark");
+	    Tcl_Panic("MarkCheckProc couldn't find hash table entry for mark");
 	}
     }
 }

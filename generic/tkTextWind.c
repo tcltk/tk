@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.11 2003/12/04 12:28:37 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.12 2004/01/13 02:06:01 davygrvy Exp $
  */
 
 #include "tk.h"
@@ -685,7 +685,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
     int width, height;
 
     if (offset != 0) {
-	panic("Non-zero offset in EmbWinLayoutProc");
+	Tcl_Panic("Non-zero offset in EmbWinLayoutProc");
     }
 
     if ((ewPtr->body.ew.tkwin == NULL) && (ewPtr->body.ew.create != NULL)) {
@@ -820,10 +820,10 @@ EmbWinCheckProc(ewPtr, linePtr)
     TkTextLine *linePtr;		/* Line containing segment. */
 {
     if (ewPtr->nextPtr == NULL) {
-	panic("EmbWinCheckProc: embedded window is last segment in line");
+	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
     if (ewPtr->size != 1) {
-	panic("EmbWinCheckProc: embedded window has size %d", ewPtr->size);
+	Tcl_Panic("EmbWinCheckProc: embedded window has size %d", ewPtr->size);
     }
 }
 

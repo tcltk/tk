@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPointer.c,v 1.8 2000/04/19 01:06:51 ericm Exp $
+ * RCS: @(#) $Id: tkWinPointer.c,v 1.9 2004/01/13 02:06:02 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -469,7 +469,7 @@ TkpChangeFocus(winPtr, force)
     }
 
     if (winPtr->window == None) {
-	panic("ChangeXFocus got null X window");
+	Tcl_Panic("ChangeXFocus got null X window");
     }
  
     /*

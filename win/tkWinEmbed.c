@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.9 2003/12/21 23:50:13 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.10 2004/01/13 02:06:02 davygrvy Exp $
  */
 
 #include "tkWinInt.h"
@@ -156,7 +156,7 @@ TkpUseWindow(interp, tkwin, string)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->window != None) {
-        panic("TkpUseWindow: Already assigned a window");
+        Tcl_Panic("TkpUseWindow: Already assigned a window");
     }
 
     if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
@@ -542,7 +542,7 @@ TkpGetOtherWindow(winPtr)
 	    return containerPtr->embeddedPtr;
 	}
     }
-    panic("TkpGetOtherWindow couldn't find window");
+    Tcl_Panic("TkpGetOtherWindow couldn't find window");
     return NULL;
 }
 
@@ -659,7 +659,7 @@ EmbedWindowDeleted(winPtr)
 	prevPtr = containerPtr;
 	containerPtr = containerPtr->nextPtr;
 	if (containerPtr == NULL) {
-	    panic("EmbedWindowDeleted couldn't find window");
+	    Tcl_Panic("EmbedWindowDeleted couldn't find window");
 	}
     }
     if ((containerPtr->embeddedPtr == NULL)
