@@ -1,3 +1,8 @@
+2004-09-18  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinWm.c (WmAttributesCmd): correct -alpha 0.0/1.0 setting
+	and round the value.
+
 2004-09-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/wm.n:
