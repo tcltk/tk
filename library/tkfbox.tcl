@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.47 2004/09/06 23:22:14 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.48 2004/09/10 22:31:10 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -820,6 +820,7 @@ proc ::tk::dialog::file:: {type args} {
 	set data(cancelBtn) $w.f2.cancel
 	::tk::dialog::file::SetSelectMode $w $data(-multiple)
     }
+    catch {unset data(extUsed)}
 
     # Dialog boxes should be transient with respect to their parent,
     # so that they will always stay on top of their parent window.  However,
