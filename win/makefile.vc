@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.60 2002/06/10 22:45:51 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.61 2002/06/18 23:51:46 dkf Exp $
 #------------------------------------------------------------------------------
 
 !if "$(MSVCDIR)" == ""
@@ -351,6 +351,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkScale.obj \
 	$(TMP_DIR)\tkScrollbar.obj \
 	$(TMP_DIR)\tkSelect.obj \
+	$(TMP_DIR)\tkStyle.obj \
 	$(TMP_DIR)\tkText.obj \
 	$(TMP_DIR)\tkTextBTree.obj \
 	$(TMP_DIR)\tkTextDisp.obj \

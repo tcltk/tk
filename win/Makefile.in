@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.50 2002/04/23 00:20:08 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.51 2002/06/18 23:51:46 dkf Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -330,6 +330,7 @@ TK_OBJS = \
 	tkScale.$(OBJEXT) \
 	tkScrollbar.$(OBJEXT) \
 	tkSelect.$(OBJEXT) \
+	tkStyle.$(OBJEXT) \
 	tkText.$(OBJEXT) \
 	tkTextBTree.$(OBJEXT) \
 	tkTextDisp.$(OBJEXT) \
