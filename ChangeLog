@@ -10,13 +10,19 @@
 
 2000-11-01  Eric Melski  <ericm@ajubasolutions.com>
 
+	* tests/winDialog.test: Corrected expected results for bad option
+	tests (5.2, 5.5) to include -multiple option.
+
 	* win/tkWinDialog.c: Added branch for 0 return from
 	CommDlgExtendedError() switches; this was formerly treated as an
 	error, but it actually is not, since it just means the user hit
 	cancel or closed the dialog.  (GetFileNameW): Added better smarts
 	such that -multiple is not considered a valid option for
 	tk_getSaveFile.
-
+	Removed CommDlgExtendedError() checks for color and choosedir
+	dialogs, and removed all except the explicit invalid filename
+	checks for the file dialogs.
+	
 2000-10-30  David Gravereaux  <davygrvy@ajubasolutions.com>
 
 	* win/configure.in:

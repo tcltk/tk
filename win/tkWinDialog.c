@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.16 2000/11/02 01:18:20 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.17 2000/11/02 02:19:57 ericm Exp $
  *
  */
 
@@ -308,29 +308,6 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
         Tcl_AppendResult(interp, color, NULL);
 	oldColor = chooseColor.rgbResult;
 	result = TCL_OK;
-    } else {
-	/*
-	 * Use the CommDlgExtendedError() function to retrieve the error code.
-	 * This function can return one of about two dozen codes; most of
-	 * these indicate some sort of gross system failure (insufficient
-	 * memory, bad window handles, etc.).  Most of the error codes will be
-	 * handled by the default case below; as we find we want more specific
-	 * error messages for particular errors, we can extend the switch as
-	 * needed.
-	 */
-	switch (CommDlgExtendedError()) {
-	    case 0: {
-		/* User hit cancel or closed the dialog. */
-		result = TCL_OK;
-		break;
-	    }
-	    default: {
-		Tcl_SetResult(interp, "error while using color dialog",
-			TCL_STATIC);
-		result = TCL_ERROR;
-		break;
-	    }
-	}
     }
 
     return result;
@@ -826,41 +803,29 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	 * This function can return one of about two dozen codes; most of
 	 * these indicate some sort of gross system failure (insufficient
 	 * memory, bad window handles, etc.).  Most of the error codes will be
-	 * handled by the default case below; as we find we want more specific
-	 * error messages for particular errors, we can extend the switch as
-	 * needed.
+	 * ignored; as we find we want more specific error messages for
+	 * particular errors, we can extend the code as needed.
 	 */
-	switch (CommDlgExtendedError()) {
-	    case 0: {
-		/* User hit cancel or closed the dialog. */
-		result = TCL_OK;
-		break;
-	    }
-	    case FNERR_INVALIDFILENAME: {
-		char *p;
-		Tcl_DString ds;
+	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
+	    char *p;
+	    Tcl_DString ds;
 	    
-		Tcl_ExternalToUtfDString(unicodeEncoding,
-			(char *) ofn.lpstrFile, -1, &ds);
-		for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-		    /*
-		     * Change the pathname to the Tcl "normalized" pathname,
-		     * where back slashes are used instead of forward slashes
-		     */
-		    if (*p == '\\') {
-			*p = '/';
-		    }
+	    Tcl_ExternalToUtfDString(unicodeEncoding,
+		    (char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname,
+		 * where back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
 		}
-		Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
-		Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
-		Tcl_DStringFree(&ds);
-		break;
 	    }
-	    default: {
-		Tcl_SetResult(interp, "error while using file dialog",
-			TCL_STATIC);
-		break;
-	    }
+	    Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    result = TCL_OK;
 	}
     }
     
@@ -1193,40 +1158,28 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	 * This function can return one of about two dozen codes; most of
 	 * these indicate some sort of gross system failure (insufficient
 	 * memory, bad window handles, etc.).  Most of the error codes will be
-	 * handled by the default case below; as we find we want more specific
-	 * error messages for particular errors, we can extend the switch as
-	 * needed.
+	 * ignored;; as we find we want specific error messages for particular
+	 * errors, we can extend the code as needed.
 	 */
-	switch (CommDlgExtendedError()) {
-	    case 0: {
-		/* User hit cancel or closed the dialog. */
-		result = TCL_OK;
-		break;
-	    }
-	    case FNERR_INVALIDFILENAME: {
-		char *p;
-		Tcl_DString ds;
+	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
+	    char *p;
+	    Tcl_DString ds;
 	    
-		Tcl_ExternalToUtfDString(NULL,(char *) ofn.lpstrFile, -1, &ds);
-		for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-		    /*
-		     * Change the pathname to the Tcl "normalized" pathname,
-		     * where back slashes are used instead of forward slashes
-		     */
-		    if (*p == '\\') {
-			*p = '/';
-		    }
+	    Tcl_ExternalToUtfDString(NULL,(char *) ofn.lpstrFile, -1, &ds);
+	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
+		/*
+		 * Change the pathname to the Tcl "normalized" pathname,
+		 * where back slashes are used instead of forward slashes
+		 */
+		if (*p == '\\') {
+		    *p = '/';
 		}
-		Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
-		Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
-		Tcl_DStringFree(&ds);
-		break;
 	    }
-	    default: {
-		Tcl_SetResult(interp, "error while using file dialog",
-			TCL_STATIC);
-		break;
-	    }
+	    Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
+	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
+	    Tcl_DStringFree(&ds);
+	} else {
+	    result = TCL_OK;
 	}
     }
 
@@ -1633,29 +1586,6 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 	}
 	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
 	Tcl_DStringFree(&ds);
-    } else {
-	/*
-	 * Use the CommDlgExtendedError() function to retrieve the error code.
-	 * This function can return one of about two dozen codes; most of
-	 * these indicate some sort of gross system failure (insufficient
-	 * memory, bad window handles, etc.).  Most of the error codes will be
-	 * handled by the default case below; as we find we want more specific
-	 * error messages for particular errors, we can extend the switch as
-	 * needed.
-	 */
-	switch (CommDlgExtendedError()) {
-	    case 0: {
-		/* User hit cancel or closed the dialog. */
-		result = TCL_OK;
-		break;
-	    }
-	    default: {
-		Tcl_SetResult(interp, "error while using color dialog",
-			TCL_STATIC);
-		result = TCL_ERROR;
-		break;
-	    }
-	}
     }
 
     if (ofn.lpstrTitle != NULL) {
