@@ -1,5 +1,10 @@
 2003-10-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkInt.h:      move TkGetOptionSpec to stubs intDecls
+	* generic/tkIntDecls.h:
+	* generic/tkInt.decls:
+	* generic/tkStubInit.c:
+
 	* tests/listbox.test (13.3): correct result size
 	(4.7): correct test for possible window drift [Bug #701931] (dgp)
 
