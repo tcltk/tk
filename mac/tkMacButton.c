@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacButton.c,v 1.7 1999/08/07 18:53:23 jingham Exp $
+ * RCS: @(#) $Id: tkMacButton.c,v 1.8 2000/02/10 08:49:29 jingham Exp $
  */
 
 #include "tkButton.h"
@@ -171,7 +171,7 @@ TkpDisplayButton(
     GDHandle saveDevice;
     GWorldPtr destPort;
     int drawType, borderWidth;
-    
+
     GetGWorld(&saveWorld, &saveDevice);
 
     butPtr->flags &= ~REDRAW_PENDING;
@@ -639,7 +639,7 @@ DrawBufferedControl(
     int windowColorChanged = false;
     RGBColor saveBackColor;
     int isBevel = 0;
-    
+   
     if (windowRef == NULL) {
 	InitSampleControls();
     }
@@ -794,16 +794,17 @@ DrawBufferedControl(
     } else {
 	(**controlHandle).contrlHilite = kControlNoPart;
     }
-
     /*
      * Before we draw the control we must add the hidden window back to the
      * main window list.  Otherwise, radiobuttons and checkbuttons will draw
      * incorrectly.  I don't really know why - but clearly the control draw
-     * proc needs to have the controls window in the window list.
+     * proc needs to have the controls window in the window list.  This is not
+     * necessary under Appearance, and will have to go when we Carbonize Tk...
      */
-
-    ((CWindowPeek) windowRef)->nextWindow = (CWindowPeek) LMGetWindowList();
-    LMSetWindowList(windowRef);
+    if (!TkMacHaveAppearance()) {
+        ((CWindowPeek) windowRef)->nextWindow = (CWindowPeek) LMGetWindowList();
+        LMSetWindowList(windowRef);
+    }
 
     /*
      * Now we can set the port to our doctered up window.  We next need
@@ -819,7 +820,7 @@ DrawBufferedControl(
     } else {
 	SetPort(windowRef);
     }
-    
+
     windowColorChanged = UpdateControlColors(butPtr, controlHandle, 
 	    ccTabHandle, &saveBackColor);
 	
@@ -873,7 +874,9 @@ DrawBufferedControl(
     } else {	  
 	(**controlHandle).contrlVis = 0;
     }	  
+#if 0    
     LMSetWindowList((WindowRef) ((CWindowPeek) windowRef)->nextWindow);
+#endif
 }
 
 /*
@@ -1023,21 +1026,27 @@ InitSampleControls()
      * Remove our window from the window list.	This way our
      * applications and others will not be confused that this
      * window exists - but no one knows about it.
+     * I actually don't see the point of doing this, and it causes Floating
+     * Window support to crash under Appearance, so I just leave it out.
+     * Note that we have to do without this under Carbon, since you can't
+     * go poking at the window list...
      */
 
-    windowList = (CWindowPeek) LMGetWindowList();
-    if (windowList == (CWindowPeek) windowRef) {
-	LMSetWindowList((WindowRef) windowList->nextWindow);
-    } else {
-	while ((windowList != NULL) 
-		&& (windowList->nextWindow != (CWindowPeek) windowRef)) {
-	    windowList = windowList->nextWindow;
-	}
-	if (windowList != NULL) {
-	    windowList->nextWindow = windowList->nextWindow->nextWindow;
-	}
+    if (!TkMacHaveAppearance()) {
+        windowList = (CWindowPeek) LMGetWindowList();
+        if (windowList == (CWindowPeek) windowRef) {
+	    LMSetWindowList((WindowRef) windowList->nextWindow);
+        } else {
+	    while ((windowList != NULL) 
+		    && (windowList->nextWindow != (CWindowPeek) windowRef)) {
+	        windowList = windowList->nextWindow;
+	    }
+	    if (windowList != NULL) {
+	        windowList->nextWindow = windowList->nextWindow->nextWindow;
+	    }
+        }
+        ((CWindowPeek) windowRef)->nextWindow = NULL;
     }
-    ((CWindowPeek) windowRef)->nextWindow = NULL;
 
     /* 
      * Create an exit handler to clean up this mess if we our
