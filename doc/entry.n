@@ -1,11 +1,12 @@
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: entry.n,v 1.3 1999/12/14 06:51:44 hobbs Exp $
+'\" RCS: @(#) $Id: entry.n,v 1.4 2000/03/02 21:53:01 hobbs Exp $
 '\" 
 .so man.macros
 .TH entry n 8.3 Tk "Tk Built-In Commands"
@@ -128,10 +129,10 @@ just as you would in a \fBbind\fR script.  The following substitutions
 are recognized:
 .PP
 .IP \fB%d\fR 5
-type of action. 1 == INSERT, 0 == DELETE,
--1 if it's a forced validation or textvariable validation
+Type of action: 1 for \fBinsert\fR, 0 for \fBdelete\fR,
+or -1 for focus, forced or textvariable validation.
 .IP \fB%i\fR 5
-index of char string to be added/delete, if any. -1 otherwise
+Index of char string to be inserted/deleted, if any, otherwise -1.
 .IP \fB%P\fR 5
 The value of the entry should edition occur.  If you are configuring the
 entry widget to have a new textvariable, this will be the value of that
@@ -142,19 +143,22 @@ The current value of entry before edition.
 The text string being inserted/deleted, if any, {} otherwise.
 .IP \fB%v\fR 5
 The type of validation currently set.
+.IP \fB%V\fR 5
+The type of validation that triggered the callback
+(key, focusin, focusout, forced).
 .IP \fB%W\fR 5
 The name of the entry widget.
 .PP
-
 In general, the \fBtextVariable\fR and \fBvalidateCommand\fR can be
 dangerous to mix.  Any problems have been overcome so that using the
 \fBvalidateCommand\fR will not interfere with the traditional behavior of
-the entry widget.  The danger comes when you try set the \fBtextVariable\fR
-to something that the \fBvalidateCommand\fR would not accept.  Using the
-\fBtextVariable\fR for read-only purposes will never cause problems.
-Otherwise, the \fBvalidateCommand\fR will turn itself off by setting
-\fBvalidate\fR to \fBnone\fR when an error occurs.
-
+the entry widget.  Using the \fBtextVariable\fR for read-only purposes will
+never cause problems.  The danger comes when you try set the
+\fBtextVariable\fR to something that the \fBvalidateCommand\fR would not
+accept, which causes \fBvalidate\fR to become \fInone\fR (the
+\fBinvalidCommand\fR will not be triggered).  The same happens
+when an error occurs evaluating the \fBvalidateCommand\fR.
+.PP
 Primarily, an error will occur when the \fBvalidateCommand\fR or
 \fBinvalidCommand\fR encounters an error in its script while evaluating or
 \fBvalidateCommand\fR does not return a valid tcl boolean value.  The
@@ -163,9 +167,14 @@ entry widget from within either the \fBvalidateCommand\fR or the
 \fBinvalidCommand\fR.  Such editions will override the one that was being
 validated.  If you wish to edit the entry widget (for example set it to {})
 during validation and still have the \fBvalidate\fR option set, you should
-include the command "\fIafter idle {%W config -validate %v}\fR" in the
-\fBvalidateCommand\fR or \fBinvalidCommand\fR (whichever one you were
-editing the entry widget from).
+include the command
+.CS
+     \fIafter idle {%W config -validate %v}\fR
+.CE
+in the \fBvalidateCommand\fR or \fBinvalidCommand\fR (whichever one you
+were editing the entry widget from).  It is also recommended to not set an
+associated \fBtextVariable\fR during validation, as that can cause the
+entry widget to become out of sync with the \fBtextVariable\fR.
 .VE
 
 .SH "WIDGET COMMAND"
@@ -350,8 +359,9 @@ Returns an empty string.
 .VS 8.3
 \fIpathName \fBvalidate\fR
 This command is used to force an evaluation of the \fBvalidateCommand\fR
-independent of the conditions specified by the \fBvalidate\fR option.  It
-returns 0 or 1.
+independent of the conditions specified by the \fBvalidate\fR option.
+This is done by temporarily setting the \fBvalidate\fR option to \fBall\fR.
+It returns 0 or 1.
 .VE
 .TP
 \fIpathName \fBxview \fIargs\fR

@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtItemType.3,v 1.4 1999/04/21 21:53:20 rjohnson Exp $
+'\" RCS: @(#) $Id: CrtItemType.3,v 1.5 2000/03/02 21:53:00 hobbs Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateItemType 3 4.0 Tk "Tk Library Procedures"
@@ -185,8 +185,8 @@ typedef int Tk_ItemCreateProc(
 	Tcl_Interp *\fIinterp\fR,
 	Tk_Canvas \fIcanvas\fR,
 	Tk_Item *\fIitemPtr\fR,
-	int \fIargc\fR,
-	char **\fIargv\fR);
+	int \fIobjc\fR,
+	Tcl_Obj* CONST \fIobjv\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the canvas's
 \fBcreate\fR widget command was invoked, and \fIcanvas\fR is a
@@ -195,17 +195,17 @@ handle for the canvas widget.
 size \fItypePtr->itemSize\fR.
 Tk has already initialized the item's header (the first
 \fBsizeof(Tk_ItemType)\fR bytes).
-The \fIargc\fR and \fIargv\fR arguments describe all of the
+The \fIobjc\fR and \fIobjv\fR arguments describe all of the
 arguments to the \fBcreate\fR command after the \fItype\fR
 argument.
 For example, in the widget command
 .CS
 \fB\&.c create rectangle 10 20 50 50 \-fill black\fR
 .CE
-\fIargc\fR will be \fB6\fR and \fIargv\fR[0] will contain the
-string \fB10\fR.
+\fIobjc\fR will be \fB6\fR and \fIobjv\fR[0] will contain the
+integer object \fB10\fR.
 .PP
-\fIcreateProc\fR should use \fIargc\fR and \fIargv\fR to initialize
+\fIcreateProc\fR should use \fIobjc\fR and \fIobjv\fR to initialize
 the type-specific parts of the item record and set an initial value
 for the bounding box in the item's header.
 It should return a standard Tcl completion code and leave an
@@ -241,21 +241,21 @@ typedef int Tk_ItemConfigureProc(
 	Tcl_Interp *\fIinterp\fR,
 	Tk_Canvas \fIcanvas\fR,
 	Tk_Item *\fIitemPtr\fR,
-	int \fIargc\fR,
-	char **\fIargv\fR,
+	int \fIobjc\fR,
+	Tcl_Obj* CONST \fIobjv\fR,
 	int \fIflags\fR);
 .CE
-The \fIinterp\fR argument identifies the interpreter in which the
+The \fIinterp\fR objument identifies the interpreter in which the
 widget command was invoked,  \fIcanvas\fR is a handle for the canvas
 widget, and \fIitemPtr\fR is a pointer to the item being configured.
-\fIargc\fR and \fIargv\fR contain the configuration options.  For
+\fIobjc\fR and \fIobjv\fR contain the configuration options.  For
 example, if the following command is invoked:
 .CS
 \fB\&.c itemconfigure 2 \-fill red \-outline black\fR
 .CE
-\fIargc\fR is \fB4\fR and \fIargv\fR contains the strings \fB\-fill\fR
+\fIobjc\fR is \fB4\fR and \fIobjv\fR contains the string objects \fB\-fill\fR
 through \fBblack\fR.
-\fIargc\fR will always be an even value.
+\fIobjc\fR will always be an even value.
 The  \fIflags\fR argument contains flags to pass to \fBTk_ConfigureWidget\fR;
 currently this value is always TK_CONFIG_ARGV_ONLY when Tk
 invokes \fItypePtr->configProc\fR, but the type manager's \fIcreateProc\fR
@@ -276,17 +276,17 @@ typedef int Tk_ItemCoordProc(
 	Tcl_Interp *\fIinterp\fR,
 	Tk_Canvas \fIcanvas\fR,
 	Tk_Item *\fIitemPtr\fR,
-	int \fIargc\fR,
-	char **\fIargv\fR);
+	int \fIobjc\fR,
+	Tcl_Obj* CONST \fIobjv\fR);
 .CE
 The arguments \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR
-all have the standard meanings, and \fIargc\fR and \fIargv\fR
+all have the standard meanings, and \fIobjc\fR and \fIobjv\fR
 describe the coordinate arguments.
 For example, if the following widget command is invoked:
 .CS
 \fB\&.c coords 2 30 90\fR
 .CE
-\fIargc\fR will be \fB2\fR and \fBargv\fR will contain the string values
+\fIobjc\fR will be \fB2\fR and \fBobjv\fR will contain the integer objects
 \fB30\fR and \fB90\fR.
 .PP
 The \fIcoordProc\fR procedure should process the new coordinates,
