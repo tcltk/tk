@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.16 2004/02/14 16:32:39 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.17 2004/02/17 19:49:16 cc_benny Exp $
  */
 
 #include "tkInt.h"
@@ -805,8 +805,22 @@ TkpInitKeymapInfo(
 
     dispPtr->lockUsage = LU_CAPS;
     dispPtr->modeModMask = 0;
+
+#if 0
+    /*
+     * With this, <Alt> and <Meta> become synonyms for <Command> and <Option>
+     * in bindings like they are (and always have been) in the keysyms that
+     * are reported by KeyPress events.  But the init scripts like text.tcl
+     * have some disabling bindings for <Meta>, so we don't want this without
+     * some changes in those scripts.  See also bug #700311.
+     */
+
     dispPtr->altModMask = ALT_MASK;
     dispPtr->metaModMask = OPTION_MASK;
+#else
+    dispPtr->altModMask = 0;
+    dispPtr->metaModMask = 0;
+#endif
 
     /*
      * MacOSX doesn't use the keycodes for the modifiers for anything, and we
