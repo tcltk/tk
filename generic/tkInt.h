@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.56.2.3 2004/10/27 00:37:37 davygrvy Exp $ 
+ * RCS: $Id: tkInt.h,v 1.56.2.4 2005/01/11 10:46:39 dkf Exp $ 
  */
 
 #ifndef _TKINT
@@ -1171,6 +1171,11 @@ EXTERN void		TkCreateExitHandler _ANSI_ARGS_((Tcl_ExitProc *proc,
 EXTERN void		TkDeleteExitHandler _ANSI_ARGS_((Tcl_ExitProc *proc,
 			    ClientData clientData));
 EXTERN Tcl_ExitProc	TkFinalize;
+EXTERN void		TkPrintPadAmount _ANSI_ARGS_((Tcl_Interp *interp,
+			    char *buffer, int pad1, int pad2));
+EXTERN int		TkParsePadAmount _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tk_Window tkwin, Tcl_Obj *objPtr,
+			    int *pad1Ptr, int *pad2Ptr));
 
 /* 
  * Unsupported commands.
