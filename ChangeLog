@@ -133,11 +133,11 @@
 2001-03-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/focus.test (focus-6.1):
-	* tests/macEmbed.testi (unixEmbed-5.1):
+	* tests/macEmbed.test (unixEmbed-5.1):
 	* tests/macMenu.test (macMenu-21.3):
-	* tests/menu.testi (menu-27.1):
+	* tests/menu.test (menu-27.1):
 	* tests/unixEmbed.test (unixEmbed-8.2):
-	* tests/unixWm.testi (unixWm-50.4):  Replaced all [load {} tk]
+	* tests/unixWm.test (unixWm-50.4):  Replaced all [load {} tk]
 	in Tk test suite with [load {} Tk].  [Bug 220940, Patch 411952]
 
 2001-01-02  Andreas Kupries  <a.kupries@westend.com>

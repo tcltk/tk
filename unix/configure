@@ -539,7 +539,7 @@ else
 fi
 
 
-# RCS: @(#) $Id: configure.in,v 1.49.2.1 2000/07/27 01:05:58 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.49.2.2 2001/04/04 07:57:18 hobbs Exp $
 
 TK_VERSION=8.3
 TK_MAJOR_VERSION=8
