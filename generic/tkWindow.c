@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.14 1999/12/16 21:57:36 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.15 2000/03/07 00:09:09 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -2109,6 +2109,15 @@ Tk_NameToWindow(interp, pathName, tkwin)
 {
     Tcl_HashEntry *hPtr;
 
+    if (tkwin == NULL) {
+	/*
+	 * Either we're not really in Tk, or the main window was destroyed and
+	 * we're on our way out of the application
+	 */
+	Tcl_AppendResult(interp, "NULL main window", (char *)NULL);
+	return NULL;
+    }
+    
     hPtr = Tcl_FindHashEntry(&((TkWindow *) tkwin)->mainPtr->nameTable,
 	    pathName);
     if (hPtr == NULL) {

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.5 1999/12/14 06:52:30 hobbs Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.6 2000/03/07 00:09:08 ericm Exp $
  */
 
 #include "tkPort.h"
@@ -89,6 +89,15 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 				 * or else they are not considered. */
     int hateFlags;		/* If a spec contains any bits here, it's
 				 * not considered. */
+
+    if (tkwin == NULL) {
+	/*
+	 * Either we're not really in Tk, or the main window was destroyed and
+	 * we're on our way out of the application
+	 */
+	Tcl_AppendResult(interp, "NULL main window", (char *)NULL);
+	return TCL_ERROR;
+    }
 
     needFlags = flags & ~(TK_CONFIG_USER_BIT - 1);
     if (Tk_Depth(tkwin) <= 1) {
