@@ -22,7 +22,7 @@ common source release.  The binary distribution is a self-extracting
 archive with a built-in installation script.
 
 Look for the binary release in the same location as the source release
-(ftp.smli.com:/pub/tcl or any of the mirror sites).  For most users,
+(ftp.scriptics.com:/pub/tcl/tcl8_0 or any of the mirror sites).  For most users,
 the binary release will be much easier to install and use.  You only
 need the source release if you plan to modify the core of Tcl, or if
 you need to compile with a different compiler.  With the addition of
@@ -104,7 +104,6 @@ Windows beta version of Tk:
 - Color management on some displays doesn't work properly resulting in
   Tk switching to monochrome mode.
 - Tk seems to fail to draw anything on some Matrox Millenium cards.
-- Send and winfo interps are not currently supported
 - Printing does not work for images (e.g. GIF) on a canvas.
 - Tk_dialog appears in the upper left corner.  This is a symptom of a
   larger problem with "wm geometry" when applied to unmapped or
