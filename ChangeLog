@@ -1,3 +1,8 @@
+2000-04-07  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* win/tkWinFont.c (GetScreenFont): corrected adjustment against
+	LC_FACESIZE limitation for NT.  [Bug: 4931]
+
 2000-04-03  Jeff Hobbs  <hobbs@scriptics.com>
 
 	* generic/tkTest.c: fixed incorrect platform inclusion for

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.9 2000/03/31 09:24:27 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.10 2000/04/07 20:57:10 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1947,15 +1947,15 @@ GetScreenFont(
 
     Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &ds);
 
-    /*
-     * We can only store up to LF_FACESIZE characters
-     */
-    if (Tcl_DStringLength(&ds) >= LF_FACESIZE) {
-	Tcl_DStringSetLength(&ds, LF_FACESIZE);
-    }
-
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	Tcl_UniChar *src, *dst;
+
+	/*
+	 * We can only store up to LF_FACESIZE wide characters
+	 */
+	if (Tcl_DStringLength(&ds) >= (LF_FACESIZE * sizeof(WCHAR))) {
+	    Tcl_DStringSetLength(&ds, LF_FACESIZE);
+	}
 	src = (Tcl_UniChar *) Tcl_DStringValue(&ds);
 	dst = (Tcl_UniChar *) lf.lfFaceName;
 	while (*src != '\0') {
@@ -1964,6 +1964,12 @@ GetScreenFont(
 	*dst = '\0';
 	hFont = CreateFontIndirectW(&lf);
     } else {
+	/*
+	 * We can only store up to LF_FACESIZE characters
+	 */
+	if (Tcl_DStringLength(&ds) >= LF_FACESIZE) {
+	    Tcl_DStringSetLength(&ds, LF_FACESIZE);
+	}
 	strcpy((char *) lf.lfFaceName, Tcl_DStringValue(&ds));
 	hFont = CreateFontIndirectA((LOGFONTA *) &lf);
     }
