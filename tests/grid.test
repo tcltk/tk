@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.1.4.6 1999/03/26 19:14:48 hershey Exp $
+# RCS: @(#) $Id: grid.test,v 1.1.4.7 1999/04/02 18:06:43 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -988,23 +988,26 @@ test grid-14.2 {structure notify} {
 } {{0 0 200 100,0 0 200 100} {0 0 240 140,20 20 200 100}}
 grid_reset 14.2
 
-test grid-14.3 {map notify} {
-	global A
-	catch {unset A}
-	bind . <Configure> {incr A(%W)}
-	set A(.) 0
-	foreach i {0 1 2} {
-		frame .$i -width 100 -height 75
-		set A(.$i) 0
-	}
-	grid .0 .1 .2
-	update
-	bind <Configure> .1 {destroy .0}
-	.2 configure -bd 10
-	update
-	bind . <Configure> {}
-	array get A
-} {.2 2 .0 1 . 1 .1 1}
+test grid-14.3 {map notify: bug 1648} {nonPortable} {
+    # This test is nonPortable because the number of times
+    # A(.) will be incremented is unspecified--the behavior
+    # is different accross window managers.
+    global A
+    catch {unset A}
+    bind . <Configure> {incr A(%W)}
+    set A(.) 0
+    foreach i {0 1 2} {
+	frame .$i -width 100 -height 75
+	set A(.$i) 0
+    }
+    grid .0 .1 .2
+    update
+    bind <Configure> .1 {destroy .0}
+    .2 configure -bd 10
+    update
+    bind . <Configure> {}
+    array get A
+} {.2 2 .0 1 . 2 .1 1}
 grid_reset 14.3
 
 test grid-15.1 {lost slave} {

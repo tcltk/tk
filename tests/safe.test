@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: safe.test,v 1.1.4.5 1999/03/24 02:54:57 hershey Exp $
+# RCS: @(#) $Id: safe.test,v 1.1.4.6 1999/04/02 18:06:44 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -101,9 +101,9 @@ test safe-4.1 {testing loadTk} {
     # eventually see a new toplevel
     set i [safe::loadTk [safe::interpCreate]]
     interp eval $i {button .b -text "hello world!"; pack .b}
-# lets don't update because it might impy that the user has
-# to position the window (if the wm does not do it automatically)
-# and thus make the test suite not runable non interactively
+    # lets don't update because it might imply that the user has
+    # to position the window (if the wm does not do it automatically)
+    # and thus make the test suite not runable non interactively
     safe::interpDelete $i
 } {}
 
