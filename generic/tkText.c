@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.22 2001/11/21 02:05:54 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.23 2001/12/05 18:18:22 hobbs Exp $
  */
 
 #include "default.h"
@@ -1220,12 +1220,12 @@ InsertChars(textPtr, indexPtr, string)
 
     if ( textPtr->undo ) {
         if (textPtr->autoSeparators && textPtr->undoStack &&
-            textPtr->undoStack->type != INSERT) {
+            textPtr->undoStack->type != TK_EDIT_INSERT) {
             insertSeparator(&(textPtr->undoStack));
         }
         
         insertion = (TkTextEditAtom *) ckalloc(sizeof(TkTextEditAtom));
-        insertion->type = INSERT;
+        insertion->type = TK_EDIT_INSERT;
         
         TkTextPrintIndex(indexPtr,indexBuffer);
         insertion->index = (char *) ckalloc(strlen(indexBuffer) + 1);
@@ -1404,12 +1404,12 @@ DeleteChars(textPtr, index1String, index2String)
 	Tcl_DString ds;
 
 	if (textPtr->autoSeparators && (textPtr->undoStack != NULL)
-		&& (textPtr->undoStack->type != DELETE)) {
+		&& (textPtr->undoStack->type != TK_EDIT_DELETE)) {
 	   insertSeparator(&(textPtr->undoStack));
 	}
 
 	deletion = (TkTextEditAtom *) ckalloc(sizeof(TkTextEditAtom));
-	deletion->type = DELETE;
+	deletion->type = TK_EDIT_DELETE;
 
 	TkTextPrintIndex(&index1, indexBuffer);
 	deletion->index = (char *) ckalloc(strlen(indexBuffer) + 1);
@@ -2531,9 +2531,9 @@ static void insertSeparator ( stack )
 {
     TkTextEditAtom * separator;
 
-    if ( *stack != NULL && (*stack)->type != SEPARATOR ) {
+    if ( *stack != NULL && (*stack)->type != TK_EDIT_SEPARATOR ) {
         separator = (TkTextEditAtom *) ckalloc(sizeof(TkTextEditAtom));
-        separator->type = SEPARATOR;
+        separator->type = TK_EDIT_SEPARATOR;
         pushStack(stack,separator);
     }
 }
@@ -2555,7 +2555,7 @@ static void clearStack ( stack )
     TkTextEditAtom * elem;
 
     while ( (elem = popStack(stack)) ) {
-        if ( elem->type != SEPARATOR ) {
+        if ( elem->type != TK_EDIT_SEPARATOR ) {
             ckfree(elem->index);
             ckfree(elem->string);
         }
@@ -2605,14 +2605,14 @@ static int TextEditUndo (interp,textPtr)
         return TCL_ERROR;
     }
 
-    if ( ( elem != NULL ) && ( elem->type == SEPARATOR ) ) {
+    if ( ( elem != NULL ) && ( elem->type == TK_EDIT_SEPARATOR ) ) {
         ckfree((char *) elem);
         elem = popStack(&(textPtr->undoStack));
     }
     
-    while ( elem && (elem->type != SEPARATOR) ) {
+    while ( elem && (elem->type != TK_EDIT_SEPARATOR) ) {
         switch ( elem->type ) {
-            case INSERT:
+            case TK_EDIT_INSERT:
                 TkTextGetIndex(interp,textPtr,elem->index,&toIndex);
                 strcpy(viewIndex,elem->index);
                 TkTextIndexForwBytes(&toIndex,(int)strlen(elem->string),&toIndex);
@@ -2621,7 +2621,7 @@ static int TextEditUndo (interp,textPtr)
                 DeleteChars(textPtr,elem->index,buffer);
                 textPtr->isDirtyIncrement = 1;
                 break;
-            case DELETE: 
+            case TK_EDIT_DELETE: 
                 TkTextGetIndex(interp,textPtr,elem->index,&fromIndex);
                 textPtr->isDirtyIncrement = -1;
                 InsertChars(textPtr,&fromIndex,elem->string);
@@ -2693,21 +2693,21 @@ static int TextEditRedo (interp,textPtr)
        return TCL_ERROR;
     }
 
-    if ( ( elem != NULL ) && ( elem->type == SEPARATOR ) ) {
+    if ( ( elem != NULL ) && ( elem->type == TK_EDIT_SEPARATOR ) ) {
         ckfree((char *) elem);
         elem = popStack(&(textPtr->redoStack));
     }
 
-    while ( elem && (elem->type != SEPARATOR) ) {
+    while ( elem && (elem->type != TK_EDIT_SEPARATOR) ) {
         switch ( elem->type ) {
-            case INSERT:
+            case TK_EDIT_INSERT:
                 TkTextGetIndex(interp, textPtr, elem->index, &fromIndex);
                 InsertChars(textPtr, &fromIndex, elem->string);
                 TkTextIndexForwBytes(&fromIndex, (int) strlen(elem->string),
 			&toIndex);
                 TkTextPrintIndex(&toIndex, viewIndex);
                 break;
-            case DELETE: 
+            case TK_EDIT_DELETE: 
                 TkTextGetIndex(interp, textPtr, elem->index, &toIndex);
                 strcpy(viewIndex, elem->index);
                 TkTextIndexForwBytes(&toIndex, (int) strlen(elem->string),
