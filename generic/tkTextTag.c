@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.16 2003/12/09 13:43:35 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.17 2003/12/10 12:57:59 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -1005,7 +1005,7 @@ TkTextFreeTag(textPtr, tagPtr)
 	    for (; i < textPtr->numCurTags-1; i++) {
 		textPtr->curTagArrayPtr[i] = textPtr->curTagArrayPtr[i+1];
 	    }
-	    textPtr->curTagArrayPtr[textPtr->numCurTags] = NULL;
+	    textPtr->curTagArrayPtr[textPtr->numCurTags-1] = NULL;
 	    textPtr->numCurTags--;
 	    break;
 	}
