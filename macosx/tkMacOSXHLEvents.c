@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.3 2002/09/12 17:34:16 das Exp $
  */
 
 #include "tkMacOSXUtil.h"
@@ -36,6 +36,7 @@ typedef struct KillEvent {
 
 static OSErr QuitHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
 static OSErr OappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
+static OSErr RappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
 static OSErr OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
 static OSErr PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
 static OSErr ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
@@ -66,7 +67,7 @@ TkMacOSXInitAppleEvents(
     Tcl_Interp *interp)                /* Interp to handle basic events. */
 {
     OSErr err;
-    AEEventHandlerUPP        OappHandlerUPP, OdocHandlerUPP,
+    AEEventHandlerUPP        OappHandlerUPP, RappHandlerUPP, OdocHandlerUPP,
         PrintHandlerUPP, QuitHandlerUPP, ScriptHandlerUPP,
         PrefsHandlerUPP;
         
@@ -80,6 +81,10 @@ TkMacOSXInitAppleEvents(
     OappHandlerUPP = NewAEEventHandlerUPP(OappHandler);
     err = AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
             OappHandlerUPP, (long) interp, false);
+
+    RappHandlerUPP = NewAEEventHandlerUPP(RappHandler);
+    err = AEInstallEventHandler(kCoreEventClass, kAEReopenApplication,
+            RappHandlerUPP, (long) interp, false);
 
     OdocHandlerUPP = NewAEEventHandlerUPP(OdocHandler);
     err = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
@@ -163,6 +168,13 @@ static OSErr
 OappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
 {
     return noErr;
+}
+
+static OSErr 
+RappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+{
+    ProcessSerialNumber thePSN = {0, kCurrentProcess};
+    return SetFrontProcess(&thePSN);
 }
 
 /* Called when the user selects 'Preferences...' in MacOS X */

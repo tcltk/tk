@@ -11,9 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXAppInit.c,v 1.3 2002/09/12 17:34:16 das Exp $
  */
 #include <pthread.h>
+#include <sys/stat.h>
 #include "tk.h"
 #include "tclInt.h"
 #include "locale.h"
@@ -190,22 +191,26 @@ Tcl_AppInit(interp)
 #endif /* TK_TEST */
 
     /*
-     * If we don't have a TTY, then use the Tk based console
-     * interpreter instead.
+     * If we don't have a TTY and stdin is a special character file of length 0,
+     * (e.g. /dev/null, which is what Finder sets when double clicking Wish)
+     * then use the Tk based console interpreter.
      */
 
-    if (ttyname(0) == NULL) {
-        Tk_InitConsoleChannels(interp);
-        Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
-        Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
-        Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
-        if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
-            goto error;
-        }
-	/* Only show the console if we don't have a startup script */
-        if (TclGetStartupScriptPath() == NULL) {
-            Tcl_Eval(interp, "console show");
-        }
+    if (!isatty(0)) {
+	struct stat st;
+	if (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)) {
+            Tk_InitConsoleChannels(interp);
+            Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
+            Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
+            Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
+	    if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
+		goto error;
+	    }
+	    /* Only show the console if we don't have a startup script */
+	    if (TclGetStartupScriptPath() == NULL) {
+		Tcl_Eval(interp, "console show");
+	    }
+	}
     }
     
     /*

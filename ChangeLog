@@ -1,5 +1,24 @@
 2002-09-12  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/tk.h:
+	* mac/tkMacApplication.r:
+	* mac/tkMacLibrary.r:
+	* mac/tkMacResource.r:
+	* macosx/tkAboutDlg.r:
+	* macosx/tkMacOSXApplication.r:
+	* macosx/tkMacOSXLibrary.r:
+	* macosx/tkMacOSXResource.r: unified use of the two equivalent 
+	resource compiler header inclusion defines RC_INVOKED and
+	RESOURCE_INCLUDED, now use RC_INVOKED throughout.
+
+	* macosx/tkMacOSXAppInit.c: improved detection of Wish startup
+	by the finder (by checking if stdin is /dev/null), in which
+	case we want to bring up the Tk console window.
+
+	* macosx/tkMacOSXHLEvents.c: added 'rapp' apple event handler.
+
+2002-09-12  Daniel Steffen  <das@users.sourceforge.net>
+
 	* macosx/Wish.pbproj/project.pbxproj: reference & install
 	tk/generic/prolog.ps instead of tk/library/prolog.ps.
 

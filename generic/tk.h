@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.69 2002/09/02 20:16:59 hobbs Exp $
+ * RCS: @(#) $Id: tk.h,v 1.70 2002/09/12 17:34:15 das Exp $
  */
 
 #ifndef _TK
@@ -53,13 +53,17 @@ extern "C" {
 #define TK_VERSION	"8.4"
 #define TK_PATCH_LEVEL	"8.4.0"
 
-/*
- * A special define for MacOS & MacOS X, allows us to use the header
- * in the resource compiler without having it choke on the more complex
- * C preprocessor constructs.
+/* 
+ * A special definition used to allow this header file to be included
+ * from windows or mac resource files so that they can obtain version
+ * information.  RC_INVOKED is defined by default by the windows RC tool
+ * and manually set for macintosh.
+ *
+ * Resource compilers don't like all the C stuff, like typedefs and
+ * procedure declarations, that occur below, so block them out.
  */
     
-#ifndef RESOURCE_INCLUDED
+#ifndef RC_INVOKED
     
 /*
  * The following definitions set up the proper options for Macintosh
@@ -78,13 +82,6 @@ extern "C" {
 #	error Tk 8.4 must be compiled with tcl.h from Tcl 8.4
 #   endif
 #endif
-
-/* 
- * A special definition used to allow this header file to be included 
- * in resource files.
- */
-
-#ifndef RC_INVOKED
 
 #ifndef _XLIB_H
 #   if defined (MAC_TCL)
@@ -1601,12 +1598,10 @@ typedef int (Tk_SelectionProc) _ANSI_ARGS_((ClientData clientData,
  */
 
 
-#endif /* RC_INVOKED */
-
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#endif /* RESOURCE_INCLUDED */
+#endif /* RC_INVOKED */
 
 /*
  * end block for C++
