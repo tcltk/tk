@@ -6,15 +6,16 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixEmbed.test,v 1.1.4.5 1999/03/24 02:55:07 hershey Exp $
-
-if {$tcl_platform(platform) != "unix"} {
-    puts "skipping: Unix only tests..."
-    return
-}
+# RCS: @(#) $Id: unixEmbed.test,v 1.1.4.6 1999/03/26 00:08:07 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
+
+if {$tcl_platform(platform) != "unix"} {
+    puts "skipping: Unix only tests..."
+    ::tcltest::cleanupTests
+    return
 }
 
 eval destroy [winfo children .]
@@ -101,6 +102,7 @@ if {[string compare testembed [info commands testembed]] != 0} {
     puts "This application hasn't been compiled with the testembed command,"
     puts "therefore I am skipping all of these tests."
     cleanupbg
+    ::tcltest::cleanupTests
     return
 }
 

@@ -10,15 +10,16 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: macFont.test,v 1.1.4.5 1999/03/24 02:54:49 hershey Exp $
-
-if {$tcl_platform(platform)!="macintosh"} {
-    puts "skipping: Mac only tests..."
-    return
-}
+# RCS: @(#) $Id: macFont.test,v 1.1.4.6 1999/03/26 00:07:59 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
+
+if {$tcl_platform(platform)!="macintosh"} {
+    puts "skipping: Mac only tests..."
+    ::tcltest::cleanupTests
+    return
 }
 
 catch {destroy .b}

@@ -5,17 +5,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menuDraw.test,v 1.1.4.5 1999/03/24 02:54:52 hershey Exp $
+# RCS: @(#) $Id: menuDraw.test,v 1.1.4.6 1999/03/26 00:08:02 hershey Exp $
+
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
 
 if {[lsearch [image types] test] < 0} {
     puts "This application hasn't been compiled with the \"test\" image"
     puts "type, so I can't run this test.  Are you sure you're using"
     puts "tktest instead of wish?"
+    ::tcltest::cleanupTests
     return
-}
-
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 proc deleteWindows {} {
@@ -180,7 +181,7 @@ test menuDraw-7.2 {TkEventuallyRecomputeMenu - update pending} {
 } {{} {}}
 
 
-test menuDraw-8.1 {TkRecomputeMenu} {pcOnly interactive} {
+test menuDraw-8.1 {TkRecomputeMenu} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 configure -postcommand [.m1 add command -label foo]
@@ -495,7 +496,7 @@ test menuDraw-16.5 {TkPostSubMenu} {unixOnly} {
     set tearoff [tkTearOffMenu .m1 40 40]
     list [catch {$tearoff postcascade test} msg] $msg [destroy .m1] [destroy .m2]
 } {1 {invalid command name "glorp"} {} {}}
-test menuDraw-16.6 {TkPostSubMenu} {pcOnly interactive} {
+test menuDraw-16.6 {TkPostSubMenu} {pcOnly userInteraction} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -521,7 +522,7 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} {unixOnly} {
     }
     list [$w postcascade 0] [. configure -menu ""] [destroy .m1] [destroy .m2]
 } {{} {} {} {}}
-test menuDraw-17.2 {AdjustMenuCoords - menu} {pcOnly interactive} {
+test menuDraw-17.2 {AdjustMenuCoords - menu} {pcOnly userInteraction} {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1

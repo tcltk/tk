@@ -7,15 +7,16 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winSend.test,v 1.1.2.5 1999/03/24 02:55:14 hershey Exp $
-
-if {$tcl_platform(platform) != "windows"} {
-    puts "skipping: Windows only tests..."
-    return
-}
+# RCS: @(#) $Id: winSend.test,v 1.1.2.6 1999/03/26 00:08:12 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
+
+if {$tcl_platform(platform) != "windows"} {
+    puts "skipping: Windows only tests..."
+    ::tcltest::cleanupTests
+    return
 }
 
 foreach i [winfo children .] {
@@ -28,6 +29,7 @@ set currentInterps [winfo interps]
 
 if {[catch {exec tktest &}] == 1} {
     puts "Could not run winSend.test because another instance of tktest could not be loaded."
+    ::tcltest::cleanupTests
     return;
 }
 
@@ -70,7 +72,8 @@ foreach interp $newInterps {
 # it works first.
 if {[catch {send $interp {console hide; update}}] == 1} {
     puts "Could not send to child interpreter $interp"
-    return
+    ::tcltest::cleanupTests
+   return
 }
 
 # setting up dde server is done when the first interp is created and

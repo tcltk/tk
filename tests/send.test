@@ -7,24 +7,28 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: send.test,v 1.1.4.6 1999/03/24 02:55:00 hershey Exp $
-
-if {$tcl_platform(platform) == "macintosh"} {
-    puts "send is not available on the Mac - skipping tests"
-    return
-}
-if {$tcl_platform(platform) == "window"} {
-    puts "send is not available under Windows - skipping tests"
-    return
-}
-if {[auto_execok xhost] == ""} {
-    puts "xhost application isn't available - skipping tests"
-    return
-}
+# RCS: @(#) $Id: send.test,v 1.1.4.7 1999/03/26 00:08:05 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
+
+if {$tcl_platform(platform) == "macintosh"} {
+    puts "send is not available on the Mac - skipping tests"
+    ::tcltest::cleanupTests
+    return
+}
+if {$tcl_platform(platform) == "window"} {
+    puts "send is not available under Windows - skipping tests"
+    ::tcltest::cleanupTests
+    return
+}
+if {[auto_execok xhost] == ""} {
+    puts "xhost application isn't available - skipping tests"
+    ::tcltest::cleanupTests
+    return
+}
+
 if {[info commands testsend] == "testsend"} {
     set gotTestCmds 1
 } else {
@@ -47,6 +51,7 @@ if {[catch {send $app set a 0} msg] == 1} {
 	puts -nonewline "Your X server is insecure, so \"send\" can't be used;"
 	puts " skipping \"send\" tests."
 	cleanupbg
+	::tcltest::cleanupTests
 	return
     }
 }

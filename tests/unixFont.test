@@ -12,15 +12,16 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixFont.test,v 1.1.4.5 1999/03/24 02:55:07 hershey Exp $
-
-if {$tcl_platform(platform)!="unix"} {
-    puts "skipping: Unix only tests..."
-    return
-}
+# RCS: @(#) $Id: unixFont.test,v 1.1.4.6 1999/03/26 00:08:08 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
+
+if {$tcl_platform(platform)!="unix"} {
+    puts "skipping: Unix only tests..."
+    ::tcltest::cleanupTests
+    return
 }
 
 catch {destroy .b}

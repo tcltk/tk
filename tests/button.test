@@ -7,17 +7,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.1.4.5 1999/03/24 02:54:26 hershey Exp $
+# RCS: @(#) $Id: button.test,v 1.1.4.6 1999/03/26 00:07:50 hershey Exp $
+
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
 
 if {[lsearch [image types] test] < 0} {
     puts "This application hasn't been compiled with the \"test\""
     puts "image, so I can't run this test.  Are you sure you're using"
     puts "tktest instead of wish?"
+    ::tcltest::cleanupTests
     return
-}
-
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 foreach i [winfo children .] {

@@ -7,17 +7,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winMenu.test,v 1.1.4.5 1999/03/24 02:55:13 hershey Exp $
+# RCS: @(#) $Id: winMenu.test,v 1.1.4.6 1999/03/26 00:08:12 hershey Exp $
+
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
 
 if {[lsearch [image types] test] < 0} {
     puts "This application hasn't been compiled with the \"test\" image"
     puts "type, so I can't run this test.  Are you sure you're using"
     puts "tktest instead of wish?"
+    ::tcltest::cleanupTests
     return
-}
-
-if {[lsearch [namespace children] ::tcltest] == -1} {
-    source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
 
 proc deleteWindows {} {
@@ -309,13 +310,13 @@ test winMenu-8.2 {TkpPostMenu} {pcOnly} {
     menu .m1 -postcommand "destroy .m1"
     list [.m1 post 40 40] [winfo exists .m1]
 } {{} 0}
-test winMenu-8.3 {TkpPostMenu - popup menu} {pcOnly interactive} {
+test winMenu-8.3 {TkpPostMenu - popup menu} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-8.3: Hit ESCAPE."
     list [.m1 post 40 40] [destroy .m1]
 } {{} {}}
-test winMenu-8.4 {TkpPostMenu - menu button} {pcOnly interactive} {
+test winMenu-8.4 {TkpPostMenu - menu button} {pcOnly userInteraction} {
     catch {destroy .mb}
     menubutton .mb -text test -menu .mb.menu
     menu .mb.menu
@@ -323,7 +324,7 @@ test winMenu-8.4 {TkpPostMenu - menu button} {pcOnly interactive} {
     pack .mb
     list [tkMbPost .mb] [destroy .m1]
 } {{} {}}
-test winMenu-8.5 {TkpPostMenu - update not pending} {pcOnly interactive} {
+test winMenu-8.5 {TkpPostMenu - update not pending} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-8.5 - Hit ESCAPE."
@@ -337,7 +338,7 @@ test winMenu-9.1 {TkpMenuNewEntry} {pcOnly} {
     list [catch {.m1 add command} msg] $msg [destroy .m1]
 } {0 {} {}}
 
-test winMenu-10.1 {TkwinMenuProc} {pcOnly interactive} {
+test winMenu-10.1 {TkwinMenuProc} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-10.1: Hit ESCAPE."
@@ -345,21 +346,21 @@ test winMenu-10.1 {TkwinMenuProc} {pcOnly interactive} {
 } {{} {}}
 
 # Can't generate a WM_INITMENU without a Tk menu yet.
-test winMenu-11.1 {TkWinHandleMenuEvent - WM_INITMENU} {pcOnly interactive} {
+test winMenu-11.1 {TkWinHandleMenuEvent - WM_INITMENU} {pcOnly userInteraction} {
     catch {destroy .m1}
     catch {unset foo}
     menu .m1 -postcommand "set foo test"
     .m1 add command -label "winMenu-11.1: Hit ESCAPE."
     list [.m1 post 40 40] [set foo] [unset foo] [destroy .m1]
 } {test test {} {}}
-test winMenu-11.2 {TkWinHandleMenuEvent - WM_COMMAND} {pcOnly interactive} {
+test winMenu-11.2 {TkWinHandleMenuEvent - WM_COMMAND} {pcOnly userInteraction} {
     catch {destroy .m1}
     catch {unset foo}
     menu .m1
     .m1 add checkbutton -variable foo -label "winMenu-11.2: Please select this menu item."
     list [.m1 post 40 40] [update] [set foo] [unset foo] [destroy .m1]
 } {{} {} 1 {} {}}
-test winMenu-11.3 {TkWinHandleMenuEvent - WM_COMMAND} {pcOnly interactive} {
+test winMenu-11.3 {TkWinHandleMenuEvent - WM_COMMAND} {pcOnly userInteraction} {
     catch {destroy .m1}
     catch {unset foo}
     proc bgerror {args} {
@@ -375,33 +376,33 @@ test winMenu-11.3 {TkWinHandleMenuEvent - WM_COMMAND} {pcOnly interactive} {
     (menu invoke)}} {} {}}
 
 # Can't test WM_MENUCHAR
-test winMenu-11.4 {TkWinHandleMenuEvent - WM_MEASUREITEM} {pcOnly interactive} {
+test winMenu-11.4 {TkWinHandleMenuEvent - WM_MEASUREITEM} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-11.3: Hit ESCAPE."
     list [.m1 post 40 40] [destroy .m1]
 } {{} {}}
-test winMenu-11.5 {TkWinHandleMenuEvent - WM_MEASUREITEM} {pcOnly interactive} {
+test winMenu-11.5 {TkWinHandleMenuEvent - WM_MEASUREITEM} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add checkbutton -label "winMenu-11.4: Hit ESCAPE" -hidemargin 1
     list [.m1 post 40 40] [destroy .m1]
 } {{} {}}
-test winMenu-11.6 {TkWinHandleMenuEvent - WM_DRAWITEM} {pcOnly interactive} {
+test winMenu-11.6 {TkWinHandleMenuEvent - WM_DRAWITEM} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-11.5: Hit ESCAPE."
     list [.m1 post 40 40] [destroy .m1]
 } {{} {}}
 test winMenu-11.7 {TkWinHandleMenuEvent - WM_DRAWITEM - item disabled} \
-	{pcOnly interactive} {
+	{pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-11.6: Hit ESCAPE." -state disabled
     list [.m1 post 40 40] [destroy .m1]
 } {{} {}}
 test winMenu-11.8 {TkWinHandleMenuEvent - WM_INITMENU - not pending} \
-	{pcOnly interactive} {
+	{pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1 -tearoff 0
     .m1 add command -label "winMenu-11.7: Hit ESCAPE"
@@ -467,7 +468,7 @@ test winMenu-15.3 {GetMenuAccelGeometry} {pcOnly} {
     list [catch {tkTearOffMenu .m1 40 40}] [destroy .m1]
 } {0 {}}
 
-test winMenu-16.1 {GetTearoffEntryGeometry} {pcOnly interactive} {
+test winMenu-16.1 {GetTearoffEntryGeometry} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-19.1: Hit ESCAPE."
@@ -578,7 +579,7 @@ test winMenu-20.4 {DrawMenuEntryAccelerator - cascade, drawArrow true} {pcOnly} 
     list [update] [destroy .m1]
 } {{} {}}
 test winMenu-20.5 {DrawMenuEntryAccelerator - cascade, drawArrow false} \
-	{pcOnly interactive} {
+	{pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add cascade -label "winMenu-23.5: Hit ESCAPE."
@@ -635,7 +636,7 @@ test winMenu-26.1 {TkpComputeMenubarGeometry} {pcOnly} {
     list [. configure -menu .m1] [. configure -menu ""] [destroy .m1]
 } {{} {} {}}
 
-test winMenu-27.1 {DrawTearoffEntry} {pcOnly interactive} {
+test winMenu-27.1 {DrawTearoffEntry} {pcOnly userInteraction} {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "winMenu-24.4: Hit ESCAPE."

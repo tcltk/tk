@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvRect.test,v 1.1.4.4 1999/03/24 02:54:31 hershey Exp $
+# RCS: @(#) $Id: canvRect.test,v 1.1.4.5 1999/03/26 00:07:52 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -293,7 +293,7 @@ test canvRect-10.1 {TranslateRectOval procedure} {
 # This test is non-portable because different color information
 # will get generated on different displays (e.g. mono displays
 # vs. color).
-test canvRect-11.1 {RectOvalToPostscript procedure} {nonPortable win32sCrash macCrash} {
+test canvRect-11.1 {RectOvalToPostscript procedure} {nonPortable macCrash} {
     # Crashes on Mac because the XGetImage() call isn't implemented, causing a
     # dereference of NULL.
     

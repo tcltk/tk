@@ -7,15 +7,16 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.1.4.7 1999/03/24 02:55:09 hershey Exp $
-
-if {$tcl_platform(platform) != "unix"} {
-    puts "skipping: Unix only tests..."
-    return
-}
+# RCS: @(#) $Id: unixWm.test,v 1.1.4.8 1999/03/26 00:08:10 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
+
+if {$tcl_platform(platform) != "unix"} {
+    puts "skipping: Unix only tests..."
+    ::tcltest::cleanupTests
+    return
 }
 
 proc sleep ms {
@@ -195,7 +196,7 @@ test unixWm-6.3 {size changes} {
     update
     wm geom .t
 } 170x140+10+10
-test unixWm-6.4 {size changes} {nonPortable} {
+test unixWm-6.4 {size changes} {nonPortable userInteraction} {
     wm minsize .t 1 1
     update
     puts stdout "Please resize window \"t\" with the mouse (but don't move it!),"
@@ -355,6 +356,7 @@ test unixWm-8.9 {icon windows} {nonPortable} {
 if {[string compare testwrapper [info commands testwrapper]] != 0} {
     puts "This application hasn't been compiled with the testwrapper command,"
     puts "therefore I am skipping all of these tests."
+    ::tcltest::cleanupTests
     return
 }
 

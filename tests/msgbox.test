@@ -5,12 +5,17 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: msgbox.test,v 1.1.4.6 1999/03/24 02:54:53 hershey Exp $
+# RCS: @(#) $Id: msgbox.test,v 1.1.4.7 1999/03/26 00:08:03 hershey Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
+
+# Some tests require user interaction on non-unix platform
+set ::tcltest::testConfig(nonUnixUserInteraction) \
+    [expr {$::tcltest::testConfig(userInteraction) || \
+	$::tcltest::testConfig(unixOnly)}]
 
 test msgbox-1.1 {tk_messageBox command} {
     list [catch {tk_messageBox -foo} msg] $msg
@@ -39,17 +44,25 @@ test msgbox-1.5 {tk_messageBox command} {
     list [catch {tk_messageBox -type foo} msg] $msg
 } {1 {bad -type value "foo": must be abortretryignore, ok, okcancel, retrycancel, yesno, or yesnocancel}}
 
+proc createPlatformMsg {val} {
+    global tcl_platform
+    if {$tcl_platform(platform) == "unix"} {
+	return "invalid default button \"$val\""
+    }
+    return "bad -default value \"$val\": must be abort, retry, ignore, ok, cancel, no, or yes"
+}
+
 test msgbox-1.6 {tk_messageBox command} {
     list [catch {tk_messageBox -default 1.1} msg] $msg
-} {1 {invalid default button "1.1"}}
+} [list 1 [createPlatformMsg "1.1"]]
 
 test msgbox-1.7 {tk_messageBox command} {
     list [catch {tk_messageBox -default foo} msg] $msg
-} {1 {invalid default button "foo"}}
+} [list 1 [createPlatformMsg "foo"]]
 
 test msgbox-1.8 {tk_messageBox command} {
     list [catch {tk_messageBox -type yesno -default 3} msg] $msg
-} {1 {invalid default button "3"}}
+} [list 1 [createPlatformMsg "3"]]
 
 test msgbox-1.9 {tk_messageBox command} {
     list [catch {tk_messageBox -icon foo} msg] $msg
@@ -63,13 +76,6 @@ if {[info commands tkMessageBox] == ""} {
     set isNative 1
 } else {
     set isNative 0
-}
-
-if {$isNative && ![info exists tcl_interactive]} {
-    puts " Some tests were skipped because they could not be performed"
-    puts " automatically on this platform. If you wish to execute them"
-    puts " run them in an tcl_interactive shell."
-    return
 }
 
 proc ChooseMsg {parent btn} {
@@ -126,31 +132,36 @@ set specs {
 # Try out all combinations of (type) x (default button) and
 # (type) x (icon).
 #
+set count 1
 foreach spec $specs {
     set type [lindex $spec 0]
     set buttons [lindex $spec 3]
 
     set button [lindex $buttons 0]
-    test msgbox-2.1 {tk_messageBox command} {
+    test msgbox-2.$count {tk_messageBox command} {nonUnixUserInteraction} {
 	ChooseMsg $parent $button
 	tk_messageBox -title Hi -message "Please press $button" \
 	    -type $type
     } $button
+    incr count
 
     foreach icon {warning error info question} {
-	test msgbox-2.2 {tk_messageBox command -icon option} {
+	test msgbox-2.$count {tk_messageBox command -icon option} \
+		{nonUnixUserInteraction} {
 	    ChooseMsg $parent $button
 	    tk_messageBox -title Hi -message "Please press $button" \
 		-type $type -icon $icon
 	} $button
+        incr count
     }
 
     foreach button $buttons {
-	test msgbox-2.3 {tk_messageBox command} {
+	test msgbox-2.$count {tk_messageBox command} {nonUnixUserInteraction} {
 	    ChooseMsg $parent $button
 	    tk_messageBox -title Hi -message "Please press $button" \
 		-type $type -default $button
 	} "$button"
+        incr count
     }
 }
 

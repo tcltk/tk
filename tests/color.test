@@ -5,15 +5,16 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: color.test,v 1.1.4.5 1999/03/24 02:54:36 hershey Exp $
-
-if {[info commands testcolor] != "testcolor"} {
-    puts "testcolor command not available; skipping tests"
-    return
-}
+# RCS: @(#) $Id: color.test,v 1.1.4.6 1999/03/26 00:07:53 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
+}
+
+if {[info commands testcolor] != "testcolor"} {
+    puts "testcolor command not available; skipping tests"
+    ::tcltest::cleanupTests
+    return
 }
 
 eval destroy [winfo children .]
@@ -107,11 +108,13 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
 # test file.
 
 if [catch {toplevel .t -visual {pseudocolor 8} -colormap new}] {
+    ::tcltest::cleanupTests
     return
 }
 wm geom .t +0+0
 if {[winfo depth .t] != 8} {
     destroy .t
+    ::tcltest::cleanupTests
     return
 }
 mkColors .t.c 40 6 0 0 0 0 6 0 0 0 40
@@ -119,12 +122,14 @@ pack .t.c
 update
 if ![colorsFree .t.c 101 233 17] {
     destroy .t
+    ::tcltest::cleanupTests
     return
 }
 mkColors .t.c2 20 1 250 0 0 -10 0 0 0 0 0
 pack .t.c2
 if [colorsFree .t.c] {
     destroy .t
+    ::tcltest::cleanupTests
     return
 }
 destroy .t.c .t.c2

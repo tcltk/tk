@@ -5,12 +5,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.1.4.5 1999/03/24 02:54:34 hershey Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.1.4.6 1999/03/26 00:07:52 hershey Exp $
 #
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
 }
+
+# Some tests require user interaction on non-unix platform
+
+set ::tcltest::testConfig(nonUnixUserInteraction) \
+    [expr {$::tcltest::testConfig(userInteraction) || \
+	$::tcltest::testConfig(unixOnly)}]
 
 test clrpick-1.1 {tk_chooseColor command} {
     list [catch {tk_chooseColor -foo} msg] $msg
@@ -50,10 +56,8 @@ test clrpick-1.7 {tk_chooseColor command} {
 
 if {[info commands tkColorDialog] == ""} {
     set isNative 1
-    set ::tcltest::testConfig(tkDialog) 0
 } else {
     set isNative 0
-    set ::tcltest::testConfig(tkDialog) 1
 }
 
 proc ToPressButton {parent btn} {
@@ -165,7 +169,7 @@ destroy .c
 
 set color #404040
 test clrpick-2.1 {tk_chooseColor command} \
-	{interactive colorsLeftover tkDialog} {
+	{nonUnixUserInteraction colorsLeftover} {
     ToPressButton $parent ok
     tk_chooseColor -title "Press Ok $verylongstring" -initialcolor $color \
 	    -parent $parent
@@ -173,7 +177,7 @@ test clrpick-2.1 {tk_chooseColor command} \
     
 set color #808040
 test clrpick-2.2 {tk_chooseColor command} \
-	{interactive colorsLeftover tkDialog} {
+	{nonUnixUserInteraction colorsLeftover} {
     if {$tcl_platform(platform) == "macintosh"} {
 	set colors "32768 32768 16384"
     } else {
@@ -184,23 +188,23 @@ test clrpick-2.2 {tk_chooseColor command} \
 } "$color"
     
 test clrpick-2.3 {tk_chooseColor command} \
-	{interactive colorsLeftover tkDialog} {
+	{nonUnixUserInteraction colorsLeftover} {
     ToPressButton $parent ok
     tk_chooseColor -parent $parent -title "Press OK"
 } "$color"
     
-test clrpick-2.4 {tk_chooseColor command} {interactive tkDialog} {
+test clrpick-2.4 {tk_chooseColor command} {nonUnixUserInteraction} {
     ToPressButton $parent cancel
     tk_chooseColor -parent $parent -title "Press Cancel"
 } ""
 
 set color #000000
-test clrpick-3.1 {tk_chooseColor: background events} {interactive tkDialog} {
+test clrpick-3.1 {tk_chooseColor: background events} {nonUnixUserInteraction} {
     after 1 {set x 53}
     ToPressButton $parent ok
     tk_chooseColor -parent $parent -title "Press OK" -initialcolor $color
 } "#000000"
-test clrpick-3.2 {tk_chooseColor: background events} {interactive tkDialog} {
+test clrpick-3.2 {tk_chooseColor: background events} {nonUnixUserInteraction} {
     after 1 {set x 53}
     ToPressButton $parent cancel
     tk_chooseColor -parent $parent -title "Press Cancel"

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.1.4.4 1999/03/24 02:54:59 hershey Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.1.4.5 1999/03/26 00:08:04 hershey Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     source [file join [pwd] [file dirname [info script]] defs.tcl]
@@ -169,13 +169,13 @@ test scrollbar-3.10 {ScrollbarWidgetCmd procedure, "cget" option} {
     list [catch {.s cget -orient} msg] $msg
 } {0 vertical}
 scrollbar .s2
-test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} {pc} {
+test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} {pcOnly} {
     list [catch {.s2 cget -bd} msg] $msg
 } {0 0}
 test scrollbar-3.12 {ScrollbarWidgetCmd procedure, "cget" option} {macOrUnix} {
     list [catch {.s2 cget -bd} msg] $msg
 } {0 2}
-test scrollbar-3.13 {ScrollbarWidgetCmd procedure, "cget" option} {pc} {
+test scrollbar-3.13 {ScrollbarWidgetCmd procedure, "cget" option} {pcOnly} {
     list [catch {.s2 cget -highlightthickness} msg] $msg
 } {0 0}
 test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} {macOrUnix} {
