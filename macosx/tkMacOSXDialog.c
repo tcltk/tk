@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.6 2002/07/21 11:11:55 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1.2.7 2002/07/22 04:08:26 wolfsuit Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -777,7 +777,14 @@ NavServicesGetFile(
         diagOptions.optionFlags += kNavNoTypePopup; 
         diagOptions.popupExtension = NULL;
     }
-        
+
+    /*
+     * This is required to allow App packages to be selectable in the
+     * file dialogs...
+     */
+    
+    diagOptions.optionFlags += kNavSupportPackages;
+    
     diagOptions.clientName = CFStringCreateWithCString(NULL, "Wish", encoding);
     if (message == NULL) {
         diagOptions.message = NULL;
