@@ -1,3 +1,14 @@
+2000-10-30  David Gravereaux  <davygrvy@ajubasolutions.com>
+
+	* win/configure.in:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/rc/tk.rc:
+	* win/rc/tk_base.rc (new):
+	* win/rc/wish.rc: Added logic to derive filenames better in the resource
+	scripts based on compile options along with better support for building
+	a static wish shell with cursor resources.
+
 2000-10-27  Jeff Hobbs  <hobbs@ajubasolutions.com>
 
 	* unix/tcl.m4: added support for AIX-5.
