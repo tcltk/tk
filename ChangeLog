@@ -1,3 +1,9 @@
+2002-10-22  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	*** 8.4.1 TAGGED FOR RELEASE ***
+
+	* changes: updated for 8.4.1 release
+
 2002-10-21  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/README: revised according to Jim's suggestions
@@ -61,7 +67,7 @@
 	#622582] to fix some of [Bug #616988].  Further work is needed
 	in this area, but this will let foreign keyboards at least work
 	reasonably with Tk.
-	
+
 2002-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure:
@@ -76,7 +82,7 @@
 	* tests/grid.test:
 	* generic/tkGrid.c: The grid size was not updated properly
 	when removing a widget from a grid. [Bug #621241] (forssen)
-	
+
 2002-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* tests/canvPs.test: tests for canvas embedded window ps generation
@@ -160,14 +166,14 @@
 	* macosx/tkMacOSXScrlbr.c (TkpDisplayScrollbar): Put the Tk scrollbar
 	pointer into the control reference data for the Mac scrollbar, so we
 	can get it out again in the ScrollbarActionProc.
-        
+
 2002-10-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c (TextBlinkProc): don't blink the cursor unless
 	it is visible. [Bug #616791] [Patch #614474] (bonfield)
 
 	* tests/entry.test: added entry-20.7
-	* generic/tkEntry.c (EntryTextVarProc): check if the entry if
+	* generic/tkEntry.c (EntryTextVarProc): check if the entry is
 	being deleted before handling an associated textvariable.
 	[Bug #607390 #617446]
 
@@ -253,7 +259,7 @@
 	since Headers/X11/Xlib.h includes it. Install wish8.4 script
 	that runs "Wish Shell.app" and corresponding wish link.
 	Use tcl headers from built Tcl.framework instead of from tcl
-	source directory.	
+	source directory.
 
 	* macosx/tkMacOSXPort.h: added missing standard unix includes 
 	and defines, similarly to tkUnixPort.h.
@@ -270,7 +276,7 @@
 	doesn't give the proper "nothing to scroll" look on Mac OS X.
 	You have to set the min value greater than the max value to
 	get this.
-	
+
 2002-09-15  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/configure: Regen.
