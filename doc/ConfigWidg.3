@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.9 2003/10/06 22:20:22 dgp Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.10 2004/03/22 16:04:51 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -312,12 +312,12 @@ is stored in the target.
 \fBTK_CONFIG_STRING\fR
 A copy
 of the value is made by allocating memory space with
-\fBmalloc\fR and copying the value into the dynamically-allocated
+\fBTcl_Alloc\fR and copying the value into the dynamically-allocated
 space.  A pointer to the new string is stored in the target.
 If TK_CONFIG_NULL_OK is specified in \fIspecFlags\fR then the value
 may be an empty string, in which case the target will be set to NULL.
 If the previous value of the target wasn't NULL, then it is
-freed by passing it to \fBfree\fR.
+freed by passing it to \fBTcl_Free\fR.
 .TP
 \fBTK_CONFIG_SYNONYM\fR
 This \fItype\fR value identifies special entries in \fIspecs\fR that
