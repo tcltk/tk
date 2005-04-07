@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.98 2005/03/08 21:54:33 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.99 2005/04/07 20:14:42 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -433,6 +433,7 @@ static void		RefreshColormap _ANSI_ARGS_((Colormap colormap,
 static void		SetLimits _ANSI_ARGS_((HWND hwnd, MINMAXINFO *info));
 static void		TkWmStackorderToplevelWrapperMap _ANSI_ARGS_((
 			    TkWindow *winPtr,
+			    Display *display,
 			    Tcl_HashTable *table));
 static LRESULT CALLBACK	TopLevelProc _ANSI_ARGS_((HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam));
@@ -6342,8 +6343,9 @@ BOOL CALLBACK TkWmStackorderToplevelEnumProc(hwnd, lParam)
  */
 
 static void
-TkWmStackorderToplevelWrapperMap(winPtr, table)
+TkWmStackorderToplevelWrapperMap(winPtr, display, table)
     TkWindow *winPtr;				/* TkWindow to recurse on */
+    Display *display;                          /* X display of parent window */
     Tcl_HashTable *table;		/* Table to maps HWND to TkWindow */
 {
     TkWindow *childPtr;
@@ -6352,7 +6354,7 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     int newEntry;
 
     if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) &&
-            !Tk_IsEmbedded(winPtr)) {
+            !Tk_IsEmbedded(winPtr) && (winPtr->display == display)) {
         wrapper = TkWinGetWrapperWindow((Tk_Window) winPtr);
 
         /*fprintf(stderr, "Mapped HWND %d to %x (%s)\n", wrapper,
@@ -6365,7 +6367,7 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
 
     for (childPtr = winPtr->childList; childPtr != NULL;
             childPtr = childPtr->nextPtr) {
-        TkWmStackorderToplevelWrapperMap(childPtr, table);
+        TkWmStackorderToplevelWrapperMap(childPtr, display, table);
     }
 }
 /*
@@ -6400,7 +6402,7 @@ TkWmStackorderToplevel(parentPtr)
      */
 
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
-    TkWmStackorderToplevelWrapperMap(parentPtr, &table);
+    TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
     windows = (TkWindow **) ckalloc((table.numEntries+1)
         * sizeof(TkWindow *));
