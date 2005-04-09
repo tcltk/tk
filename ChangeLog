@@ -1,5 +1,8 @@
 2005-04-09  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXEntry.c (ComputeIncDecParameters): manually define
+	constants present only in 10.3 headers so that we can build on 10.2.
+	
 	* macosx/Wish.pbproj/project.pbxproj: fixed absolute path to 
 	tkEntry.h that confused 10.2 PBX.
 	
