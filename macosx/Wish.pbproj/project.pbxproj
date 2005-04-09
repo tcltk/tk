@@ -48,13 +48,13 @@
 			};
 		};
 		4C94055B07F3C897004B0BCE = {
-			fileEncoding = 30;
+			fileEncoding = 5;
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
 			name = tkEntry.h;
-			path = "/Volumes/CodeBits/jingham/Tcl/Source-8-4/tk/generic/tkEntry.h";
-			refType = 0;
-			sourceTree = "<absolute>";
+			path = ../generic/tkEntry.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		4C94055C07F3C897004B0BCE = {
 			fileRef = 4C94055B07F3C897004B0BCE;
@@ -253,7 +253,6 @@
 		};
 		F537552F016C376E01DC9062 = {
 			children = (
-				4C94055B07F3C897004B0BCE,
 				F5375569016C37A601DC9062,
 				F537556A016C37A601DC9062,
 				F537556B016C37A601DC9062,
@@ -262,6 +261,7 @@
 				F537556E016C37A601DC9062,
 				F537556F016C37A601DC9062,
 				F5375570016C37A601DC9062,
+				4C94055B07F3C897004B0BCE,
 				F5375571016C37A601DC9062,
 				F5375572016C37A601DC9062,
 				F5375573016C37A601DC9062,

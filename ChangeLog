@@ -1,5 +1,8 @@
 2005-04-09  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/Wish.pbproj/project.pbxproj: fixed absolute path to 
+	tkEntry.h that confused 10.2 PBX.
+	
 	* unix/tcl.m4 (Darwin): added -single_module linker flag to
 	TCL_SHLIB_LD_EXTRAS and TK_SHLIB_LD_EXTRAS.
 	* unix/configure: autoconf-2.13
