@@ -88,6 +88,12 @@ ComputeIncDecParameters (int height, int *width)
     /* 
      * The small and mini incDec buttons were introduced in 10.3.
      */
+    #ifndef kThemeIncDecButtonSmall
+    #define kThemeIncDecButtonSmall 21
+    #endif
+    #ifndef kThemeIncDecButtonMini
+    #define kThemeIncDecButtonMini 22
+    #endif
      
     if (version >= 0x1030) {
         if (height < 11 || height > 28) {
