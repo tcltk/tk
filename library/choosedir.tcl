@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.15 2002/07/22 21:25:39 mdejong Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.16 2005/04/12 20:33:12 hobbs Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -13,7 +13,7 @@ namespace eval ::tk::dialog::file {}
 
 # Make the chooseDir namespace inside the dialog namespace
 namespace eval ::tk::dialog::file::chooseDir {
-    namespace import ::tk::msgcat::*
+    namespace import -force ::tk::msgcat::*
 }
 
 # ::tk::dialog::file::chooseDir:: --
@@ -49,7 +49,15 @@ proc ::tk::dialog::file::chooseDir:: {args} {
 	set data(icons) $w.icons
 	set data(ent) $w.f2.ent
 	set data(okBtn) $w.f2.ok
-	set data(cancelBtn) $w.f3.cancel
+	set data(cancelBtn) $w.f2.cancel
+	set data(hiddenBtn) $w.f2.hidden
+    }
+    if {$::tk::dialog::file::showHiddenBtn} {
+	$data(hiddenBtn) configure -state normal
+	grid $data(hiddenBtn)
+    } else {
+	$data(hiddenBtn) configure -state disabled
+	grid remove $data(hiddenBtn)
     }
 
     # Dialog boxes should be transient with respect to their parent,
