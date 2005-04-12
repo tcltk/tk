@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.7 2004/09/10 22:28:30 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.8 2005/04/12 20:33:35 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -774,6 +774,8 @@ proc ::tk::IconList_Reset {w} {
 namespace eval ::tk::dialog {}
 namespace eval ::tk::dialog::file {
     namespace import -force ::tk::msgcat::*
+    set ::tk::dialog::file::showHiddenBtn 0
+    set ::tk::dialog::file::showHiddenVar 1
 }
 
 # ::tk::dialog::file:: --
@@ -804,7 +806,7 @@ proc ::tk::dialog::file:: {type args} {
     #
     if {![winfo exists $w]} {
 	::tk::dialog::file::Create $w TkFDialog
-    } elseif {[string compare [winfo class $w] TkFDialog]} {
+    } elseif {[winfo class $w] ne "TkFDialog"} {
 	destroy $w
 	::tk::dialog::file::Create $w TkFDialog
     } else {
@@ -813,13 +815,22 @@ proc ::tk::dialog::file:: {type args} {
 	set data(upBtn) $w.f1.up
 	set data(icons) $w.icons
 	set data(ent) $w.f2.ent
-	set data(typeMenuLab) $w.f2.lab
+	set data(typeMenuLab) $w.f2.lab2
 	set data(typeMenuBtn) $w.f2.menu
 	set data(typeMenu) $data(typeMenuBtn).m
 	set data(okBtn) $w.f2.ok
 	set data(cancelBtn) $w.f2.cancel
+	set data(hiddenBtn) $w.f2.hidden
 	::tk::dialog::file::SetSelectMode $w $data(-multiple)
     }
+    if {$::tk::dialog::file::showHiddenBtn} {
+	$data(hiddenBtn) configure -state normal
+	grid $data(hiddenBtn)
+    } else {
+	$data(hiddenBtn) configure -state disabled
+	grid remove $data(hiddenBtn)
+    }
+
     # Make sure subseqent uses of this dialog are independent [Bug 845189]
     catch {unset data(extUsed)}
 
@@ -830,7 +841,7 @@ proc ::tk::dialog::file:: {type args} {
     # window, this can hang the entire application.  Therefore we only make
     # the dialog transient if the parent is viewable.
 
-    if {[winfo viewable [winfo toplevel $data(-parent)]] } {
+    if {[winfo viewable [winfo toplevel $data(-parent)]]} {
 	wm transient $w $data(-parent)
     }
 
@@ -1018,7 +1029,7 @@ static char updir_bits[] = {
     $data(upBtn) config -image $Priv(updirImage)
 
     $f1.menu config -takefocus 1 -highlightthickness 2
- 
+
     pack $data(upBtn) -side right -padx 4 -fill both
     pack $f1.lab -side left -padx 4 -fill both
     pack $f1.menu -expand yes -fill both -padx 4
@@ -1068,6 +1079,19 @@ static char updir_bits[] = {
 		focus $data(typeMenuBtn)]
     }
 
+    # The hidden button is displayed when ::tk::dialog::file::showHiddenBtn
+    # is true.  Create it disabled so the binding doesn't trigger if it
+    # isn't shown.
+    if {$class eq "TkFDialog"} {
+	set text [mc "Show &Hidden Files and Directories"]
+    } else {
+	set text [mc "Show &Hidden Directories"]
+    }
+    set data(hiddenBtn) [::tk::AmpWidget checkbutton $f2.hidden \
+	    -text $text -anchor w -padx 3 -state disabled \
+	    -variable ::tk::dialog::file::showHiddenVar \
+	    -command [list ::tk::dialog::file::UpdateWhenIdle $w]]
+
     # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order, and add binding so that we find out when the
     # dialog is destroyed by the user (added here instead of to the overall
@@ -1075,10 +1099,10 @@ static char updir_bits[] = {
     # once will do). [Bug 987169]
 
     set data(okBtn)     [::tk::AmpWidget button $f2.ok \
-	    -text "[mc "&OK"]"     -default active -pady 3]
+	    -text [mc "&OK"]     -default active -pady 3]
     bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
     set data(cancelBtn) [::tk::AmpWidget button $f2.cancel \
-	    -text "[mc "&Cancel"]" -default normal -pady 3]
+	    -text [mc "&Cancel"] -default normal -pady 3]
 
     # grid the widgets in f2
     #
@@ -1088,8 +1112,9 @@ static char updir_bits[] = {
 	grid $data(typeMenuLab) $data(typeMenuBtn) $data(cancelBtn) \
 		-padx 4 -sticky ew
 	grid configure $data(typeMenuBtn) -padx 0
+	grid $data(hiddenBtn) -columnspan 2 -padx 4 -sticky ew
     } else {
-	grid x x $data(cancelBtn) -padx 4 -sticky ew
+	grid $data(hiddenBtn) - $data(cancelBtn) -padx 4 -sticky ew
     }
     grid columnconfigure $f2 1 -weight 1
 
@@ -1125,6 +1150,7 @@ static char updir_bits[] = {
 	bind $w <Alt-s> [list focus $data(ent)]
 	bind $w <Alt-o> [list tk::ButtonInvoke $data(okBtn)]
     }
+    bind $w <Alt-h> [list $data(hiddenBtn) invoke]
 
     # Build the focus group for all the entries
     #
@@ -1236,10 +1262,13 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     ::tk::IconList_DeleteAll $data(icons)
 
+    set showHidden $::tk::dialog::file::showHiddenVar
+
     # Make the dir list
     # Using -directory [pwd] is better in some VFS cases.
-    set dirs [lsort -dictionary -unique \
-		  [glob -tails -directory [pwd] -type d -nocomplain .* *]]
+    set cmd [list glob -tails -directory [pwd] -type d -nocomplain *]
+    if {$showHidden} { lappend cmd .* }
+    set dirs [lsort -dictionary -unique [eval $cmd]]
     set dirList {}
     foreach d $dirs {
 	if {$d eq "." || $d eq ".."} {
@@ -1256,7 +1285,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	set cmd [list glob -tails -directory [pwd] \
 		     -type {f b c l p s} -nocomplain]
 	if {[string equal $data(filter) *]} {
-	    lappend cmd .* *
+	    lappend cmd *
+	    if {$showHidden} { lappend cmd .* }
 	} else {
 	    eval [list lappend cmd] $data(filter)
 	}
