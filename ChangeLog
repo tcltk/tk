@@ -1,5 +1,8 @@
 2005-04-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/tkUnixFont.c (FontMapLoadPage): reorder char[] decls to
+	avoid possible segv.  Minimal fix for [Bug 1122671]
+
 	* library/tkfbox.tcl (::tk::dialog::file::): fix typeMenuLab ref.
 	Add undoc'd ::tk::dialog::file::showHiddenBtn var (default 0) that
 	will add a "Show Hidden" checkbutton to tk_get*File and
