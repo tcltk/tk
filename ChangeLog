@@ -1,3 +1,12 @@
+2005-04-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tkfbox.tcl (::tk::dialog::file::): fix typeMenuLab ref.
+	Add undoc'd ::tk::dialog::file::showHiddenBtn var (default 0) that
+	will add a "Show Hidden" checkbutton to tk_get*File and
+	tk_chooseDirectory if set to true.
+	* library/choosedir.tcl (::tk::dialog::file::chooseDir::): fix
+	cancelBtn ref, add hiddenBtn ref for "Show Hidden" button.
+
 2005-04-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/README: updated requirements for OS & developer tool
