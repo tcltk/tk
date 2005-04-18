@@ -1,3 +1,10 @@
+2003-04-18  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* library/text.tcl
+	* doc/text.n: corrected 'Home' and 'End' and Control-a/e handling
+	to work with display lines.  This was an ommission of the previous
+	tip155 patch.  Clarified the documentation on this point.
+
 2005-04-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tkUnixFont.c (FontMapLoadPage): reorder char[] decls to

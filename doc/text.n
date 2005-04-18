@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.35 2005/02/14 23:02:52 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.36 2005/04/18 11:34:41 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -2026,14 +2026,14 @@ Control-Next and Control-Prior scroll the view right or left by one page
 without moving the insertion cursor or affecting the selection.
 .IP [13]
 Home and Control-a move the insertion cursor to the
-beginning of its line and clear any selection in the widget.
-Shift-Home moves the insertion cursor to the beginning of the line
+beginning of its display line and clear any selection in the widget.
+Shift-Home moves the insertion cursor to the beginning of the display line
 and also extends the selection to that point.
 .IP [14]
 End and Control-e move the insertion cursor to the
-end of the line and clear any selection in the widget.
-Shift-End moves the cursor to the end of the line and extends the selection
-to that point.
+end of the display line and clear any selection in the widget.
+Shift-End moves the cursor to the end of the display line and extends 
+the selection to that point.
 .IP [15]
 Control-Home and Meta-< move the insertion cursor to the beginning of
 the text and clear any selection in the widget.
