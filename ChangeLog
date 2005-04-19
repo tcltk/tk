@@ -1,3 +1,9 @@
+2003-04-18  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixRFont.c(Tk_MeasureChars): Use Tcl_UtfToUnichar()
+	for lax UTF-8 parsing instead of strict parsing with FcUtf8ToUcs4()
+	[fix/workaround for #1185640]
+
 2003-04-18  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* library/text.tcl
