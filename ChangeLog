@@ -1,3 +1,8 @@
+2005-04-22  George Peter Staplin  <GeorgePS (at) XMission.com>
+	* doc/FontId.3: I fixed a typo.  "linespace" was used instead of 
+	"ascent".  I also added a .PP before the paragraph to make the 
+	formatting look better for the ascent paragraph.
+
 2003-04-18  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixRFont.c(Tk_MeasureChars): Use Tcl_UtfToUnichar()
