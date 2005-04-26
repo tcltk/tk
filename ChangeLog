@@ -1,3 +1,23 @@
+2005-04-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXNotify.c: sync with tclUnixNotfy.c changes since
+	2004-06-22, added compile time check for threaded tcl core, removed
+	unthreaded code paths as they are never used anyway, fixed
+	TkMacOSXAlertNotifier() implementation.
+
+	* unix/Makefile.in: added TCL_STUB_LIB_FILE, needed for unexporting of
+	symbols from libtclstub to avoid duplicate symbol warnings.
+
+	* unix/tcl.m4 (Darwin): added configure checks for recently added linker
+	flags -single_module and -search_paths_first to allow building with
+	older tools (and on Mac OS X 10.1), use -single_module in SHLIB_LD and
+	not just T{CL,K}_SHLIB_LD_EXTRAS, added unexporting from Tk of symbols
+	from libtclstub to avoid duplicate symbol warnings, added PLAT_SRCS
+	definition for Mac OS X, defined MODULE_SCOPE to __private_extern__.
+	(SC_MISSING_POSIX_HEADERS): added caching of dirent.h check.
+
+	* unix/configure: autoconf-2.59
+
 2005-04-22  George Peter Staplin  <GeorgePS (at) XMission.com>
 	* doc/FontId.3: I fixed a typo.  "linespace" was used instead of 
 	"ascent".  I also added a .PP before the paragraph to make the 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.8 2005/02/24 00:41:04 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.9 2005/04/26 00:46:53 das Exp $
  */
 
 #include "tclInt.h"
@@ -21,7 +21,9 @@
 
 #include <signal.h> 
 
-extern TclStubs tclStubs;
+#ifndef TCL_THREADS
+#error Mac OS X notifier requires tcl threads!
+#endif
 
 /*
  * This structure is used to keep track of the notifier info for a 
@@ -57,6 +59,18 @@ typedef struct FileHandlerEvent {
 } FileHandlerEvent;
 
 /*
+ *
+ * The following structure contains a set of select() masks to track
+ * readable, writable, and exceptional conditions.
+ */
+
+typedef struct SelectMasks {
+    fd_set readable;
+    fd_set writable;
+    fd_set exceptional;
+} SelectMasks;
+
+/*
  * The following static structure contains the state information for the
  * select based implementation of the Tcl notifier.  One of these structures
  * is created for each thread that is using the notifier.  
@@ -65,13 +79,12 @@ typedef struct FileHandlerEvent {
 typedef struct ThreadSpecificData {
     FileHandler *firstFileHandlerPtr;
 				/* Pointer to head of file handler list. */
-    fd_mask checkMasks[3*MASK_SIZE];
-				/* This array is used to build up the masks
+    
+    SelectMasks checkMasks;	/* This structure is used to build up the masks
 				 * to be used in the next call to select.
 				 * Bits are set in response to calls to
 				 * Tcl_CreateFileHandler. */
-    fd_mask readyMasks[3*MASK_SIZE];
-				/* This array reflects the readable/writable
+    SelectMasks readyMasks;	/* This array reflects the readable/writable
 				 * conditions that were found to exist by the
 				 * last call to select. */
     int numFdBits;		/* Number of valid bits in checkMasks
@@ -79,7 +92,6 @@ typedef struct ThreadSpecificData {
 				 * Tcl_WatchFile has been called). */
     int isMainLoop;             /* Is this the main Carbon Loop (in which case
                                  * we will call RNE in the actual wait... */
-#ifdef TCL_THREADS
     int onList;			/* True if it is in this list */
     unsigned int pollState;	/* pollState is used to implement a polling 
 				 * handshake between each thread and the
@@ -97,12 +109,10 @@ typedef struct ThreadSpecificData {
     int eventReady;           /* True if an event is ready to be processed.
                                * Used as condition flag together with
                                * waitCV above. */
-#endif
 } ThreadSpecificData;
 
 static Tcl_ThreadDataKey dataKey;
 
-#ifdef TCL_THREADS
 /*
  * The following static indicates the number of threads that have
  * initialized notifiers.
@@ -170,15 +180,11 @@ static Tcl_Condition notifierCV;
  */
 static Tcl_ThreadId notifierThread;
 
-#endif
-
 /*
  * Static routines defined in this file.
  */
 
-#ifdef TCL_THREADS
 static void	NotifierThreadProc _ANSI_ARGS_((ClientData clientData));
-#endif
 static int	FileHandlerEventProc _ANSI_ARGS_((Tcl_Event *evPtr,
 		    int flags));
                     
@@ -194,7 +200,7 @@ EventRef TkMacOSXCreateFakeEvent ();
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetupTkNotifier --
+ * Tk_MacOSXSetupTkNotifier --
  *
  *	Replaces the Tcl notifier (from tclUnixNotfy.c) with
  *      the Mac notifier that melds the Unix select based notifer
@@ -273,7 +279,6 @@ TkMacOSXInitNotifier()
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
-#ifdef TCL_THREADS
     tsdPtr->eventReady = 0;
 
     /*
@@ -304,7 +309,6 @@ TkMacOSXInitNotifier()
     }
 
     Tcl_MutexUnlock(&notifierMutex);
-#endif
     return (ClientData) tsdPtr;
 }
 
@@ -330,7 +334,6 @@ void
 TkMacOSXFinalizeNotifier(clientData)
     ClientData clientData;		/* Not used. */
 {
-#ifdef TCL_THREADS
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     Tcl_MutexLock(&notifierMutex);
@@ -369,7 +372,6 @@ TkMacOSXFinalizeNotifier(clientData)
     Tcl_ConditionFinalize(&(tsdPtr->waitCV));
 
     Tcl_MutexUnlock(&notifierMutex);
-#endif
 }
 
 /*
@@ -397,13 +399,23 @@ void
 TkMacOSXAlertNotifier(clientData)
     ClientData clientData;
 {
-#ifdef TCL_THREADS
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) clientData;
     Tcl_MutexLock(&notifierMutex);
     tsdPtr->eventReady = 1;
-    Tcl_ConditionNotify(&tsdPtr->waitCV);
+    if (tsdPtr->isMainLoop) {
+       OSErr err;
+       
+       /* We need to wake up the main loop, and let it have the event. */
+       EventRef fakeEvent = TkMacOSXCreateFakeEvent();
+       EventQueueRef mainEventQueue = GetMainEventQueue();
+       
+       err = PostEventToQueue(mainEventQueue, fakeEvent,
+                              kEventPriorityHigh);
+       ReleaseEvent(fakeEvent);
+    } else {
+       Tcl_ConditionNotify(&tsdPtr->waitCV);
+    }
     Tcl_MutexUnlock(&notifierMutex);
-#endif
 }
 
 /*
@@ -488,7 +500,6 @@ TkMacOSXCreateFileHandler(fd, mask, proc, clientData)
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
     FileHandler *filePtr;
-    int index, bit;
 
     for (filePtr = tsdPtr->firstFileHandlerPtr; filePtr != NULL;
 	 filePtr = filePtr->nextPtr) {
@@ -511,22 +522,20 @@ TkMacOSXCreateFileHandler(fd, mask, proc, clientData)
      * Update the check masks for this file.
      */
 
-    index = fd/(NBBY*sizeof(fd_mask));
-    bit = 1 << (fd%(NBBY*sizeof(fd_mask)));
-    if (mask & TCL_READABLE) {
-	tsdPtr->checkMasks[index] |= bit;
+    if ( mask & TCL_READABLE ) {
+	FD_SET( fd, &(tsdPtr->checkMasks.readable) );
     } else {
-	tsdPtr->checkMasks[index] &= ~bit;
-    } 
-    if (mask & TCL_WRITABLE) {
-	(tsdPtr->checkMasks+MASK_SIZE)[index] |= bit;
-    } else {
-	(tsdPtr->checkMasks+MASK_SIZE)[index] &= ~bit;
+	FD_CLR( fd, &(tsdPtr->checkMasks.readable) );
     }
-    if (mask & TCL_EXCEPTION) {
-	(tsdPtr->checkMasks+2*(MASK_SIZE))[index] |= bit;
+    if ( mask & TCL_WRITABLE ) {
+	FD_SET( fd, &(tsdPtr->checkMasks.writable) );
     } else {
-	(tsdPtr->checkMasks+2*(MASK_SIZE))[index] &= ~bit;
+	FD_CLR( fd, &(tsdPtr->checkMasks.writable) );
+    }
+    if ( mask & TCL_EXCEPTION ) {
+	FD_SET( fd, &(tsdPtr->checkMasks.exceptional) );
+    } else {
+	FD_CLR( fd, &(tsdPtr->checkMasks.exceptional) );
     }
     if (tsdPtr->numFdBits <= fd) {
 	tsdPtr->numFdBits = fd+1;
@@ -555,8 +564,7 @@ TkMacOSXDeleteFileHandler(fd)
     int fd;		/* Stream id for which to remove callback procedure. */
 {
     FileHandler *filePtr, *prevPtr;
-    int index, bit, i;
-    unsigned long flags;
+    int i;
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     /*
@@ -577,17 +585,14 @@ TkMacOSXDeleteFileHandler(fd)
      * Update the check masks for this file.
      */
 
-    index = fd/(NBBY*sizeof(fd_mask));
-    bit = 1 << (fd%(NBBY*sizeof(fd_mask)));
-
     if (filePtr->mask & TCL_READABLE) {
-	tsdPtr->checkMasks[index] &= ~bit;
+	FD_CLR( fd, &(tsdPtr->checkMasks.readable) );
     }
     if (filePtr->mask & TCL_WRITABLE) {
-	(tsdPtr->checkMasks+MASK_SIZE)[index] &= ~bit;
+	FD_CLR( fd, &(tsdPtr->checkMasks.writable) );
     }
     if (filePtr->mask & TCL_EXCEPTION) {
-	(tsdPtr->checkMasks+2*(MASK_SIZE))[index] &= ~bit;
+	FD_CLR( fd, &(tsdPtr->checkMasks.exceptional) );
     }
 
     /*
@@ -595,17 +600,12 @@ TkMacOSXDeleteFileHandler(fd)
      */
 
     if (fd+1 == tsdPtr->numFdBits) {
-	for (tsdPtr->numFdBits = 0; index >= 0; index--) {
-	    flags = tsdPtr->checkMasks[index]
-		| (tsdPtr->checkMasks+MASK_SIZE)[index]
-		| (tsdPtr->checkMasks+2*(MASK_SIZE))[index];
-	    if (flags) {
-		for (i = (NBBY*sizeof(fd_mask)); i > 0; i--) {
-		    if (flags & (((unsigned long)1) << (i-1))) {
-			break;
-		    }
-		}
-		tsdPtr->numFdBits = index * (NBBY*sizeof(fd_mask)) + i;
+	tsdPtr->numFdBits = 0;
+	for (i = fd-1; i >= 0; i--) {
+	    if ( FD_ISSET( i, &(tsdPtr->checkMasks.readable) )
+		 || FD_ISSET( i, &(tsdPtr->checkMasks.writable) )
+		 || FD_ISSET( i, &(tsdPtr->checkMasks.exceptional ) ) ) {
+		tsdPtr->numFdBits = i+1;
 		break;
 	    }
 	}
@@ -696,31 +696,6 @@ FileHandlerEventProc(evPtr, flags)
     return 1;
 }
 
-void
-DoActualWait(timePtr)
-    Tcl_Time *timePtr;		/* Maximum block time, or NULL. */
-{
-    ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
-    OSErr err;
-    
-    if (!tsdPtr->isMainLoop) {
-            Tcl_ConditionWait(&tsdPtr->waitCV, &notifierMutex, timePtr);
-    } else {
-        EventRef eventRef;
-        EventTime waitTime;
-        Tcl_MutexUnlock(&notifierMutex);
-
-        if (timePtr == NULL) {
-            waitTime = kEventDurationForever;
-        } else {
-            waitTime = timePtr->sec * kEventDurationSecond 
-                    + timePtr->usec * kEventDurationMicrosecond;
-        }
-        err = ReceiveNextEvent(0, NULL, waitTime, false, &eventRef);
-        Tcl_MutexLock(&notifierMutex);
-    }
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -746,14 +721,10 @@ TkMacOSXWaitForEvent(timePtr)
 {
     FileHandler *filePtr;
     FileHandlerEvent *fileEvPtr;
-    struct timeval timeout, *timeoutPtr;
-    int bit, index, mask;
-#ifdef TCL_THREADS
+    int mask;
+    Tcl_Time myTime;
     int waitForFiles;
-#else
-    int numFound;
-#endif
-    
+    Tcl_Time *myTimePtr;
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     /*
@@ -763,26 +734,25 @@ TkMacOSXWaitForEvent(timePtr)
      */
 
     if (timePtr) {
-	timeout.tv_sec = timePtr->sec;
-	timeout.tv_usec = timePtr->usec;
-	timeoutPtr = &timeout;
-#ifndef TCL_THREADS
-    } else if (tsdPtr->numFdBits == 0) {
-	/*
-	 * If there are no threads, no timeout, and no fds registered,
-	 * then there are no events possible and we must avoid deadlock.
-	 * Note that this is not entirely correct because there might
-	 * be a signal that could interrupt the select call, but we
-	 * don't handle that case if we aren't using threads.
-	 */
+	/* TIP #233 (Virtualized Time). Is virtual time in effect ?
+	 * And do we actually have something to scale ? If yes to both
+	 * then we call the handler to do this scaling */
 
-	return -1;
-#endif
+        myTime.sec  = timePtr->sec;
+	myTime.usec = timePtr->usec;
+
+	if (myTime.sec != 0 || myTime.usec != 0) {
+            Tcl_ScaleTimeProc* tclScaleTimeProcPtr;
+            ClientData         tclTimeClientData;
+            Tcl_QueryTimeProc(NULL, &tclScaleTimeProcPtr, &tclTimeClientData);
+            
+	    (*tclScaleTimeProcPtr) (&myTime, tclTimeClientData);
+	}
+	myTimePtr = &myTime;
     } else {
-	timeoutPtr = NULL;
+        myTimePtr  = NULL;
     }
 
-#ifdef TCL_THREADS
     /*
      * Place this thread on the list of interested threads, signal the
      * notifier thread, and wait for a response or a timeout.
@@ -791,7 +761,7 @@ TkMacOSXWaitForEvent(timePtr)
     Tcl_MutexLock(&notifierMutex);
 
     waitForFiles = (tsdPtr->numFdBits > 0);
-    if (timePtr != NULL && timePtr->sec == 0 && timePtr->usec == 0) {
+    if (myTimePtr != NULL && myTimePtr->sec == 0 && myTimePtr->usec == 0) {
 	/*
 	 * Cannot emulate a polling select with a polling condition variable.
 	 * Instead, pretend to wait for files and tell the notifier
@@ -802,7 +772,7 @@ TkMacOSXWaitForEvent(timePtr)
 
 	waitForFiles = 1;
 	tsdPtr->pollState = POLL_WANT;
-	timePtr = NULL;
+	myTimePtr = NULL;
     } else {
 	tsdPtr->pollState = 0;
     }
@@ -826,10 +796,28 @@ TkMacOSXWaitForEvent(timePtr)
 	write(triggerPipe, "", 1);
     }
 
-    memset((VOID *) tsdPtr->readyMasks, 0, 3*MASK_SIZE*sizeof(fd_mask));
+    FD_ZERO( &(tsdPtr->readyMasks.readable) );
+    FD_ZERO( &(tsdPtr->readyMasks.writable) );
+    FD_ZERO( &(tsdPtr->readyMasks.exceptional) );
 
     if (!tsdPtr->eventReady) {
-        DoActualWait(timePtr);
+        if (!tsdPtr->isMainLoop) {
+            Tcl_ConditionWait(&tsdPtr->waitCV, &notifierMutex, myTimePtr);
+        } else {
+            OSErr err;
+            EventRef eventRef;
+            EventTime waitTime;
+            
+            if (timePtr == NULL) {
+                waitTime = kEventDurationForever;
+            } else {
+                waitTime = myTimePtr->sec  * kEventDurationSecond 
+                         + myTimePtr->usec * kEventDurationMicrosecond;
+            }
+            Tcl_MutexUnlock(&notifierMutex);
+            err = ReceiveNextEvent(0, NULL, waitTime, false, &eventRef);
+            Tcl_MutexLock(&notifierMutex);
+        }
     }
     tsdPtr->eventReady = 0;
 
@@ -855,41 +843,21 @@ TkMacOSXWaitForEvent(timePtr)
     }
 
     
-#else
-    memcpy((VOID *) tsdPtr->readyMasks, (VOID *) tsdPtr->checkMasks,
-	    3*MASK_SIZE*sizeof(fd_mask));
-    numFound = select(tsdPtr->numFdBits,
-	    (SELECT_MASK *) &tsdPtr->readyMasks[0],
-	    (SELECT_MASK *) &tsdPtr->readyMasks[MASK_SIZE],
-	    (SELECT_MASK *) &tsdPtr->readyMasks[2*MASK_SIZE], timeoutPtr);
-
-    /*
-     * Some systems don't clear the masks after an error, so
-     * we have to do it here.
-     */
-
-    if (numFound == -1) {
-	memset((VOID *) tsdPtr->readyMasks, 0, 3*MASK_SIZE*sizeof(fd_mask));
-    }
-#endif
-
     /*
      * Queue all detected file events before returning.
      */
 
     for (filePtr = tsdPtr->firstFileHandlerPtr; (filePtr != NULL);
 	 filePtr = filePtr->nextPtr) {
-	index = filePtr->fd / (NBBY*sizeof(fd_mask));
-	bit = 1 << (filePtr->fd % (NBBY*sizeof(fd_mask)));
-	mask = 0;
 
-	if (tsdPtr->readyMasks[index] & bit) {
+	mask = 0;
+	if ( FD_ISSET( filePtr->fd, &(tsdPtr->readyMasks.readable) ) ) {
 	    mask |= TCL_READABLE;
 	}
-	if ((tsdPtr->readyMasks+MASK_SIZE)[index] & bit) {
+	if ( FD_ISSET( filePtr->fd, &(tsdPtr->readyMasks.writable) ) ) {
 	    mask |= TCL_WRITABLE;
 	}
-	if ((tsdPtr->readyMasks+2*(MASK_SIZE))[index] & bit) {
+	if ( FD_ISSET( filePtr->fd, &(tsdPtr->readyMasks.exceptional) ) ) {
 	    mask |= TCL_EXCEPTION;
 	}
 
@@ -911,15 +879,11 @@ TkMacOSXWaitForEvent(timePtr)
 	}
 	filePtr->readyMask = mask;
     }
-    
+    Tcl_MutexUnlock(&notifierMutex);
+
     /* 
      * Also queue the Mac Events found...
      */
-    
-#ifdef TCL_THREADS
-    Tcl_MutexUnlock(&notifierMutex);
-#endif
-
     if (tsdPtr->isMainLoop) {
         TkMacOSXCountAndProcessMacEvents();
     }
@@ -927,7 +891,6 @@ TkMacOSXWaitForEvent(timePtr)
     return 0;
 }
 
-#ifdef TCL_THREADS
 /*
  *----------------------------------------------------------------------
  *
@@ -958,12 +921,13 @@ NotifierThreadProc(clientData)
     ClientData clientData;	/* Not used. */
 {
     ThreadSpecificData *tsdPtr;
-    fd_mask masks[3*MASK_SIZE];
-    long *maskPtr = (long *)masks;	/* masks[] cast to type long[] */
+    fd_set readableMask;
+    fd_set writableMask;
+    fd_set exceptionalMask;
     int fds[2];
-    int i, status, index, bit, numFdBits, found, receivePipe, word;
+    int i, status, numFdBits = 0, receivePipe;
+    long found;
     struct timeval poll = {0., 0.}, *timePtr;
-    int maskSize = 3 * ((MASK_SIZE) / sizeof(long)) * sizeof(fd_mask);
     char buf[2];
 
     if (pipe(fds) != 0) {
@@ -972,7 +936,6 @@ NotifierThreadProc(clientData)
 
     receivePipe = fds[0];
 
-#ifndef USE_FIONBIO
     status = fcntl(receivePipe, F_GETFL);
     status |= O_NONBLOCK;
     if (fcntl(receivePipe, F_SETFL, status) < 0) {
@@ -983,14 +946,6 @@ NotifierThreadProc(clientData)
     if (fcntl(fds[1], F_SETFL, status) < 0) {
 	Tcl_Panic("NotifierThreadProc: could not make trigger pipe non blocking.");
     }
-#else
-    if (ioctl(receivePipe, (int) FIONBIO, &status) < 0) {
-	Tcl_Panic("NotifierThreadProc: could not make receive pipe non blocking.");
-    }
-    if (ioctl(fds[1], (int) FIONBIO, &status) < 0) {
-	Tcl_Panic("NotifierThreadProc: could not make trigger pipe non blocking.");
-    }
-#endif
 
     /*
      * Install the write end of the pipe into the global variable.
@@ -1011,29 +966,33 @@ NotifierThreadProc(clientData)
      */
 
     while (1) {
-	/*
-	 * Set up the select mask to include the receive pipe.
-	 */
 
-	memset((VOID *)masks, 0, 3*MASK_SIZE*sizeof(fd_mask));
-        numFdBits = receivePipe + 1;
-	index = receivePipe / (NBBY*sizeof(fd_mask));
-	bit = 1 << (receivePipe % (NBBY*sizeof(fd_mask)));
-	masks[index] |= bit;
+	FD_ZERO( &readableMask );
+	FD_ZERO( &writableMask );
+	FD_ZERO( &exceptionalMask );
 
 	/*
-	 * Add in the check masks from all of the waiting notifiers.
+	 * Compute the logical OR of the select masks from all the
+	 * waiting notifiers.
 	 */
-	
+
 	Tcl_MutexLock(&notifierMutex);
 	timePtr = NULL;
         for (tsdPtr = waitingListPtr; tsdPtr; tsdPtr = tsdPtr->nextPtr) {
-            for (i = 0; i < maskSize; i++) {
-                maskPtr[i] |= ((long*)tsdPtr->checkMasks)[i];
-            }
-            if (tsdPtr->numFdBits > numFdBits) {
-                numFdBits = tsdPtr->numFdBits;
-            }
+	    for ( i = tsdPtr->numFdBits-1; i >= 0; --i ) {
+		if ( FD_ISSET( i, &(tsdPtr->checkMasks.readable) ) ) {
+		    FD_SET( i, &readableMask );
+		}
+		if ( FD_ISSET( i, &(tsdPtr->checkMasks.writable) ) ) {
+		    FD_SET( i, &writableMask );
+		}
+		if ( FD_ISSET( i, &(tsdPtr->checkMasks.exceptional) ) ) {
+		    FD_SET( i, &exceptionalMask );
+		}
+	    }
+	    if ( tsdPtr->numFdBits > numFdBits ) {
+		numFdBits = tsdPtr->numFdBits;
+	    }
 	    if (tsdPtr->pollState & POLL_WANT) {
 		/*
 		 * Here we make sure we go through select() with the same
@@ -1043,14 +1002,20 @@ NotifierThreadProc(clientData)
 		tsdPtr->pollState |= POLL_DONE;
 		timePtr = &poll;
 	    }
-        }
+	}
 	Tcl_MutexUnlock(&notifierMutex);
 
-	maskSize = 3 * ((MASK_SIZE) / sizeof(long)) * sizeof(fd_mask);
+	/*
+	 * Set up the select mask to include the receive pipe.
+	 */
 
-	if (select(numFdBits, (SELECT_MASK *) &masks[0],
-		(SELECT_MASK *) &masks[MASK_SIZE],
-		(SELECT_MASK *) &masks[2*MASK_SIZE], timePtr) == -1) {
+	if ( receivePipe >= numFdBits ) {
+	    numFdBits = receivePipe + 1;
+	}
+	FD_SET( receivePipe, &readableMask );
+
+	if ( select( numFdBits, &readableMask, &writableMask,
+		     &exceptionalMask, timePtr) == -1 ) {
 	    /*
 	     * Try again immediately on an error.
 	     */
@@ -1066,33 +1031,46 @@ NotifierThreadProc(clientData)
         for (tsdPtr = waitingListPtr; tsdPtr; tsdPtr = tsdPtr->nextPtr) {
 	    found = 0;
 
-            for (i = 0; i < maskSize; i++) {
-                word = maskPtr[i] & ((long*)tsdPtr->checkMasks)[i];
-                found |= word;
-                (((long*)(tsdPtr->readyMasks))[i]) = word;
+	    for ( i = tsdPtr->numFdBits-1; i >= 0; --i ) {
+		if ( FD_ISSET( i, &(tsdPtr->checkMasks.readable) )
+		     && FD_ISSET( i, &readableMask ) ) {
+		    FD_SET( i, &(tsdPtr->readyMasks.readable) );
+		    found = 1;
+		}
+		if ( FD_ISSET( i, &(tsdPtr->checkMasks.writable) )
+		     && FD_ISSET( i, &writableMask ) ) {
+		    FD_SET( i, &(tsdPtr->readyMasks.writable) );
+		    found = 1;
+		}
+		if ( FD_ISSET( i, &(tsdPtr->checkMasks.exceptional) )
+		     && FD_ISSET( i, &exceptionalMask ) ) {
+		    FD_SET( i, &(tsdPtr->readyMasks.exceptional) );
+		    found = 1;
+		}
 	    }
+			       
             if (found || (tsdPtr->pollState & POLL_DONE)) {
-                if (tsdPtr->onList) {
-                    /*
-                    * Remove the ThreadSpecificData structure of this
-                    * thread from the waiting list. This prevents us from
-                    * continuously spining on select until the other
-                    * threads runs and services the file event.
-                    */
-        
-                    if (tsdPtr->prevPtr) {
-                        tsdPtr->prevPtr->nextPtr = tsdPtr->nextPtr;
-                    } else {
-                        waitingListPtr = tsdPtr->nextPtr;
-                    }
-                    if (tsdPtr->nextPtr) {
-                        tsdPtr->nextPtr->prevPtr = tsdPtr->prevPtr;
-                    }
-                    tsdPtr->nextPtr = tsdPtr->prevPtr = NULL;
-                    tsdPtr->onList = 0;
-                    tsdPtr->pollState = 0;
-                }
                 tsdPtr->eventReady = 1;
+		if (tsdPtr->onList) {
+		    /*
+		     * Remove the ThreadSpecificData structure of this
+		     * thread from the waiting list. This prevents us from
+		     * continuously spining on select until the other
+		     * threads runs and services the file event.
+		     */
+	    
+		    if (tsdPtr->prevPtr) {
+			tsdPtr->prevPtr->nextPtr = tsdPtr->nextPtr;
+		    } else {
+			waitingListPtr = tsdPtr->nextPtr;
+		    }
+		    if (tsdPtr->nextPtr) {
+			tsdPtr->nextPtr->prevPtr = tsdPtr->prevPtr;
+		    }
+		    tsdPtr->nextPtr = tsdPtr->prevPtr = NULL;
+		    tsdPtr->onList = 0;
+		    tsdPtr->pollState = 0;
+		}
                 if (tsdPtr->isMainLoop) {
                     OSErr err;
                     
@@ -1116,8 +1094,9 @@ NotifierThreadProc(clientData)
 	 * to avoid a race condition we only read one at a time.
 	 */
 
-	if (masks[index] & bit) {
+	if ( FD_ISSET( receivePipe, &readableMask ) ) {
 	    i = read(receivePipe, buf, 1);
+
 	    if ((i == 0) || ((i == 1) && (buf[0] == 'q'))) {
 		/*
 		 * Someone closed the write end of the pipe or sent us a
@@ -1140,8 +1119,9 @@ NotifierThreadProc(clientData)
     triggerPipe = -1;
     Tcl_ConditionNotify(&notifierCV);
     Tcl_MutexUnlock(&notifierMutex);
+
+    Tcl_ExitThread (0);
 }
-#endif
 
 EventRef 
 TkMacOSXCreateFakeEvent ()
