@@ -1,3 +1,9 @@
+2005-04-28  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* macosx/tkMacOSXNotify.c (TkMacOSXWaitForEvent): Fix for typo in
+	waitTime computation. [Bug 1191097]
+	(AlertNotifier): Factor out the core of the notifier alerting code.
+
 2005-04-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXNotify.c: sync with tclUnixNotfy.c changes since
