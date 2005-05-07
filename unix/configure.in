@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.13 2004/11/25 00:26:23 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.14 2005/05/07 00:03:05 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -108,6 +108,12 @@ TK_DBGX=${DBGX}
 SC_TCL_EARLY_FLAGS
 
 SC_TCL_64BIT_FLAGS
+
+#--------------------------------------------------------------------
+#	Check endianness because we can optimize some operations
+#--------------------------------------------------------------------
+
+AC_C_BIGENDIAN
 
 #------------------------------------------------------------------------
 # If Tcl and Tk are installed in different places, adjust the library

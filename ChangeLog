@@ -1,3 +1,10 @@
+2005-05-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure: regen
+	* unix/configure.in: add AC_C_BIGENDIAN check
+	* unix/tcl.m4: correct Solaris 10 (5.10) check and add support for
+	x86_64 Solaris cc builds.
+
 2005-04-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXNotify.c: syncd with tclUnixNotfy.c changes since
