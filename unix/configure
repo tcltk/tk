@@ -8824,6 +8824,7 @@ echo $ECHO_N "checking for xft configuration... $ECHO_C" >&6
     XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || enable_xft="no"
     XFT_LIBS=`xft-config --libs 2>/dev/null` || enable_xft="no"
     if test "$enable_xft" = "no" ; then
+	enable_xft=yes
 	XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || enable_xft="no"
 	XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || enable_xft="no"
     fi
