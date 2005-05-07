@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.99 2005/01/10 18:57:41 jenglish Exp $
+# RCS: @(#) $Id: configure.in,v 1.100 2005/05/07 00:28:17 hobbs Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.57)
@@ -108,6 +108,12 @@ SC_ENABLE_SYMBOLS
 SC_TCL_EARLY_FLAGS
 
 SC_TCL_64BIT_FLAGS
+
+#--------------------------------------------------------------------
+#	Check endianness because we can optimize some operations
+#--------------------------------------------------------------------
+
+AC_C_BIGENDIAN
 
 #------------------------------------------------------------------------
 # If Tcl and Tk are installed in different places, adjust the library
@@ -295,8 +301,12 @@ XFT_CFLAGS=""
 XFT_LIBS=""
 if test "$enable_xft" = "yes" ; then
     AC_MSG_CHECKING([for xft configuration])
-    XFT_CFLAGS=`xft-config --cflags` || enable_xft="no"
-    XFT_LIBS=`xft-config --libs` || enable_xft="no"
+    XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || enable_xft="no"
+    XFT_LIBS=`xft-config --libs 2>/dev/null` || enable_xft="no"
+    if test "$enable_xft" = "no" ; then
+	XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || enable_xft="no"
+	XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || enable_xft="no"
+    fi
     if test "$enable_xft" = "yes" ; then
     	AC_MSG_RESULT([ok])
     else
