@@ -1,3 +1,10 @@
+2005-05-10  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkTextDisp.c (GetXView):	Improved numerical precision
+	of calculation of [.t xview] return values.
+	* tests/textDisp.test:	Match greater precisions of [.t xview] and
+	[.t yview] values in tests.
+
 2005-05-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure: regen

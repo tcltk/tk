@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.35 2005/03/27 15:03:47 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.36 2005/05/10 21:36:37 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -928,7 +928,7 @@ test textDisp-6.8 {DisplayText, vertical scrollbar updates} {
     }
     update ; .t count -update -ypixels 1.0 end ; update
     set scrollInfo
-} {0.0 0.769230769231}
+} [list 0.0 [expr {10.0/13}]]
 .t configure -yscrollcommand {} -xscrollcommand scroll
 test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     .t configure -wrap none
@@ -940,7 +940,7 @@ test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxx
     update
     set scrollInfo
-} {0.0 0.363636363636}
+} [list 0.0 [expr {4.0/11}]]
 
 # The following group of tests is marked non-portable because
 # they result in a lot of extra redisplay under Ultrix.  I don't
@@ -1595,7 +1595,7 @@ test textDisp-14.1 {TkTextXviewCmd procedure} {
     .t insert end "xxxx xxxxxxxxx xxxxxxxxxxxxx"
     .t xview moveto .5
     .t xview
-} {0.5 0.857142857143}
+} [list 0.5 [expr {6./7.}]]
 .t configure -wrap char
 test textDisp-14.2 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
@@ -1638,7 +1638,7 @@ test textDisp-14.8 {TkTextXviewCmd procedure} {
     .t insert end "xxxx xxxxxxxxx xxxxxxxxxxxxx"
     .t xview moveto -.4
     .t xview
-} {0.0 0.357142857143}
+} [list 0.0 [expr {5.0/14}]]
 test textDisp-14.9 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
@@ -1646,7 +1646,7 @@ test textDisp-14.9 {TkTextXviewCmd procedure} {
     .t insert end "xxxx xxxxxxxxx xxxxxxxxxxxxx"
     .t xview m 1.4
     .t xview
-} {0.642857142857 1.0}
+} [list [expr {9.0/14}] 1.0]
 test textDisp-14.10 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll a} msg] $msg
 } {1 {wrong # args: should be ".t xview scroll number units|pages|pixels"}}
@@ -1863,7 +1863,7 @@ test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {textfonts} {
     set result [.top1.t yview]
     destroy .top1
     set result
-} {0.333333333333 0.833333333333}
+} [list [expr {1.0/3}] [expr {5.0/6}]]
 test textDisp-16.19 {TkTextYviewCmd procedure, "scroll" option} {
     list [catch {.t yview scroll a} msg] $msg
 } {1 {wrong # args: should be ".t yview scroll number units|pages|pixels"}}
@@ -2089,7 +2089,7 @@ test textDisp-18.1 {GetXView procedure} {
     .t insert end xxxxxxxxxxxxxxxxxxxxxxxxxx
     update
     set scrollInfo
-} {0.0 0.363636363636}
+} [list 0.0 [expr {4.0/11}]]
 test textDisp-18.2 {GetXView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -2123,7 +2123,7 @@ test textDisp-18.5 {GetXView procedure} {
     .t xview scroll 31 units
     update
     set scrollInfo
-} {0.563636363636 0.927272727273}
+} [list [expr {31.0/55}] [expr {51.0/55}]]
 test textDisp-18.6 {GetXView procedure} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -2144,7 +2144,7 @@ test textDisp-18.6 {GetXView procedure} {
     .t configure -wrap none
     update
     lappend x $scrollInfo
-} {{0.553571428571 0.910714285714} {0.0 1.0} {0.0 1.0} {0.0 0.357142857143}}
+} [list [list [expr {31.0/56}] [expr {51.0/56}]] {0.0 1.0} {0.0 1.0} [list 0.0 [expr {5.0/14}]]]
 test textDisp-18.7 {GetXView procedure} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -2218,7 +2218,7 @@ test textDisp-19.4 {GetYView procedure} {
     }
     update
     set scrollInfo
-} {0.0 0.769230769231}
+} [list 0.0 [expr {70.0/91}]]
 test textDisp-19.5 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -2277,7 +2277,7 @@ test textDisp-19.9 {GetYView procedure} {
     .t yview 3.0
     update
     set scrollInfo
-} {0.133333333333 0.8}
+} [list [expr {4.0/30}] 0.8]
 test textDisp-19.10 {GetYView procedure} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -2288,7 +2288,7 @@ test textDisp-19.10 {GetYView procedure} {
     .t yview 11.0
     update
     set scrollInfo
-} {0.333333333333 1.0}
+} [list [expr {1.0/3}] 1.0]
 test textDisp-19.10.1 {Widget manipulation causes height miscount} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3275,7 +3275,7 @@ test textDisp-29.1 {miscellaneous: lines wrap but are still too long} {textfonts
     .t2.t window create 1.1 -window .t2.t.f
     update
     list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list {0.0 0.466666666667} 300x50+5+[expr {$fixedDiff + 18}] [list 12 [expr {$fixedDiff + 68}] 7 $fixedHeight]]
+} [list [list 0.0 [expr {14.0/30}]] 300x50+5+[expr {$fixedDiff + 18}] [list 12 [expr {$fixedDiff + 68}] 7 $fixedHeight]]
 test textDisp-29.2 {miscellaneous: lines wrap but are still too long} {textfonts} {
     catch {destroy .t2}
     toplevel .t2
@@ -3291,7 +3291,7 @@ test textDisp-29.2 {miscellaneous: lines wrap but are still too long} {textfonts
     .t2.t xview scroll 1 unit
     update
     list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list {0.0233333333333 0.49} 300x50+-2+[expr {$fixedDiff + 18}] [list 5 [expr {$fixedDiff + 68}] 7 $fixedHeight]]
+} [list [list [expr {7.0/300}] 0.49] 300x50+-2+[expr {$fixedDiff + 18}] [list 5 [expr {$fixedDiff + 68}] 7 $fixedHeight]]
 test textDisp-29.2.1 {miscellaneous: lines wrap but are still too long} {textfonts} {
     catch {destroy .t2}
     toplevel .t2
@@ -3306,7 +3306,7 @@ test textDisp-29.2.1 {miscellaneous: lines wrap but are still too long} {textfon
     .t2.t xview scroll 5 unit
     update
     .t2.t xview
-} {0.0555555555556 0.277777777778}
+} [list [expr {5.0/90}] [expr {25.0/90}]]
 test textDisp-29.2.2 {miscellaneous: lines wrap but are still too long} {textfonts} {
     catch {destroy .t2}
     toplevel .t2
@@ -3322,7 +3322,7 @@ test textDisp-29.2.2 {miscellaneous: lines wrap but are still too long} {textfon
     .t2.t xview scroll 2 unit
     update
     list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list {0.0466666666667 0.513333333333} 300x50+-9+[expr {$fixedDiff + 18}] {}]
+} [list [list [expr {14.0/300}] [expr {154.0/300}]] 300x50+-9+[expr {$fixedDiff + 18}] {}]
 test textDisp-29.2.3 {miscellaneous: lines wrap but are still too long} {textfonts} {
     catch {destroy .t2}
     toplevel .t2
@@ -3338,7 +3338,7 @@ test textDisp-29.2.3 {miscellaneous: lines wrap but are still too long} {textfon
     .t2.t xview scroll 7 pixels
     update
     list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list {0.0233333333333 0.49} 300x50+-2+[expr {$fixedDiff + 18}] [list 5 [expr {$fixedDiff + 68}] 7 $fixedHeight]]
+} [list [list [expr {7.0/300}] 0.49] 300x50+-2+[expr {$fixedDiff + 18}] [list 5 [expr {$fixedDiff + 68}] 7 $fixedHeight]]
 test textDisp-29.2.4 {miscellaneous: lines wrap but are still too long} {textfonts} {
     catch {destroy .t2}
     toplevel .t2
@@ -3354,7 +3354,7 @@ test textDisp-29.2.4 {miscellaneous: lines wrap but are still too long} {textfon
     .t2.t xview scroll 17 pixels
     update
     list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list {0.0566666666667 0.523333333333} 300x50+-12+[expr {$fixedDiff + 18}] {}]
+} [list [list [expr {17.0/300}] [expr {157.0/300}]] 300x50+-12+[expr {$fixedDiff + 18}] {}]
 test textDisp-29.2.5 {miscellaneous: can show last character} {
     catch {destroy .t2}
     toplevel .t2
@@ -3399,7 +3399,7 @@ test textDisp-29.3 {miscellaneous: lines wrap but are still too long} {textfonts
     .t2.t xview scroll 200 units
     update
     list [.t2.t xview] [winfo geom .t2.t.f] [.t2.t bbox 1.3]
-} [list {0.533333333333 1.0} 300x50+-155+[expr {$fixedDiff + 18}] {}]
+} [list [list [expr {16.0/30}] 1.0] 300x50+-155+[expr {$fixedDiff + 18}] {}]
 test textDisp-30.1 {elidden text joining multiple logical lines} {
     .t2.t delete 1.0 end
     .t2.t insert 1.0 "1111\n2222\n3333"

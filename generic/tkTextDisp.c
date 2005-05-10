@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.48 2005/03/15 14:07:47 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.49 2005/05/10 21:36:37 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -5808,8 +5808,8 @@ GetXView(interp, textPtr, report)
     if (dInfoPtr->maxLength > 0) {
 	first = ((double) dInfoPtr->curXPixelOffset)
 		/ dInfoPtr->maxLength;
-	last = first + ((double) (dInfoPtr->maxX - dInfoPtr->x))
-		/ dInfoPtr->maxLength;
+	last = ((double) (dInfoPtr->curXPixelOffset + dInfoPtr->maxX
+		- dInfoPtr->x))/dInfoPtr->maxLength;
 	if (last > 1.0) {
 	    last = 1.0;
 	}
