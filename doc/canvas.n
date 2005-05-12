@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.19 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.20 2005/05/12 22:51:03 dgp Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1394,7 +1394,7 @@ irrelevant.
 .TP
 \fB\-smooth \fIsmoothMethod\fR
 \fIsmoothMethod\fR must have one of the forms accepted by
-\fBTk_GetBoolean\fR or a line smoothing method.
+\fBTcl_GetBoolean\fR or a line smoothing method.
 .VS 8.5
 Only \fBtrue\fR and \fBraw\fR are
 supported in the core (with \fBbezier\fR being an alias for \fBtrue\fR), but more can be added at runtime.  If a boolean
@@ -1525,7 +1525,7 @@ of the outline.
 If this option isn't specified then it defaults to \fBmiter\fR.
 .TP
 \fB\-smooth \fIboolean\fR
-\fIBoolean\fR must have one of the forms accepted by \fBTk_GetBoolean\fR
+\fIBoolean\fR must have one of the forms accepted by \fBTcl_GetBoolean\fR
 .VS 8.5
 or a line smoothing method. Only \fBtrue\fR and \fBraw\fR are
 supported in the core (with \fBbezier\fR being an alias for \fBtrue\fR), but more can be added at runtime.  If a boolean

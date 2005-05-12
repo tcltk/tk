@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.36 2005/04/18 11:34:41 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.37 2005/05/12 22:51:03 dgp Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -529,7 +529,7 @@ distances.
 \fB\-overstrike \fIboolean\fR
 Specifies whether or not to draw a horizontal rule through
 the middle of characters.
-\fIBoolean\fR may have any of the forms accepted by \fBTk_GetBoolean\fR.
+\fIBoolean\fR may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 .TP
 \fB\-relief \fIrelief\fR
 \fIRelief\fR specifies the 3-D relief to use for drawing backgrounds,
@@ -586,7 +586,7 @@ widget option.
 \fB\-underline \fIboolean\fR
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters.
-It may have any of the forms accepted by \fBTk_GetBoolean\fR.
+It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 .TP
 \fB\-wrap \fImode\fR
 \fIMode\fR specifies how to handle lines that are wider than the
