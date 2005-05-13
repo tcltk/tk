@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.36 2005/04/18 11:34:41 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.37 2005/05/13 13:46:12 vincentdarley Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -909,7 +909,7 @@ proc ::tk::TextPrevPara {w pos} {
 	      dummy index]} {
 		set pos [$w index "$pos + [lindex $index 0] chars"]
 	    }
-	    if {[$w compare $pos != insert] || [string equal $pos 1.0]} {
+	    if {[$w compare $pos != insert] || [lindex [split $pos .] 0] == 1} {
 		return $pos
 	    }
 	}
