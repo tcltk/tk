@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.7 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.7.2.1 2005/05/13 13:48:21 vincentdarley Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -666,6 +666,17 @@ test testIndex-16.2 {TkTextPrintIndex} {
     pack $t
     catch {destroy $t}
 } 0
+
+test textIndex-23.1 {text paragraph start} {
+    pack [text .t2]
+    .t2 insert end " Text"
+    set res 2.0
+    for {set i 0} {$i < 2} {incr i} {
+	lappend res [::tk::TextPrevPara .t2 [lindex $res end]]
+    }
+    destroy .t2
+    set res
+} {2.0 1.1 1.1}
 
 # cleanup
 rename textimage {}
