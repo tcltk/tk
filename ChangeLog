@@ -1,3 +1,11 @@
+2005-05-10  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* library/text.tcl: test and fix to TextPrevPara to avoid infinite loop
+	* tests/textIndex.test: at start of widget [Bug 1191895]
+
+	* generic/tkTextDisp.c:	better synchronisation between 
+        explicit and implicit pixel line-height calculations [Bug 1186558]
+
 2005-05-10  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkTextDisp.c (GetXView):	Improved numerical precision

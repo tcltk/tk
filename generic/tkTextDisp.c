@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.49 2005/05/10 21:36:37 dgp Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.50 2005/05/13 13:46:12 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -1539,6 +1539,7 @@ LayoutDLine(textPtr, indexPtr)
      */
 
     dlPtr->length = lastChunkPtr->x + lastChunkPtr->width;
+    
     return dlPtr;
 }
 
@@ -1745,16 +1746,18 @@ UpdateDisplayInfo(textPtr)
 	    }
 	    
 	    if ((lineHeight != -1) 
-	      && (lineHeight > TkBTreeLinePixelCount(textPtr, 
+	      && (lineHeight != TkBTreeLinePixelCount(textPtr, 
 						     prevPtr->index.linePtr))) {
 		/* 
-		 * The logical line height we just calculated is actually
-		 * larger than the currently cached height of the
-		 * text line.  That is fine (the text line heights
+		 * The logical line height we just calculated is
+		 * actually differnt to the currently cached height of
+		 * the text line.  That is fine (the text line heights
 		 * are only calculated asynchronously), but we must
-		 * update the cached height so that any counts made
-		 * with DLine pointers do not exceed counts made
-		 * through the BTree.  
+		 * update the cached height so that any counts made with
+		 * DLine pointers are the same as counts made through the
+		 * BTree.  This helps to ensure that the scrollbar size
+		 * corresponds accurately to that displayed contents,
+		 * even as the window is re-sized.
 		 */
 		TkBTreeAdjustPixelHeight(textPtr, 
 					 prevPtr->index.linePtr, 
