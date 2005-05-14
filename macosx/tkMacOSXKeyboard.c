@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5.2.3 2004/02/25 13:29:41 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5.2.4 2005/05/14 20:53:31 das Exp $
  */
 
 #include "tkInt.h"
@@ -30,6 +30,7 @@
 #define LATIN1_MAX       255
 #define MAC_KEYCODE_MAX  0x7F
 #define MAC_KEYCODE_MASK 0x7F
+#undef ALT_MASK
 #define ALT_MASK         Mod1Mask
 #define OPTION_MASK      Mod2Mask
 

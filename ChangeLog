@@ -1,3 +1,32 @@
+2005-05-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXNotify.c: introduction of new tcl notifier based on
+	CFRunLoop allows replacement of the custom TkAqua notifier by a
+	standard tcl event source. Removes requirement of threaded tcl core
+	for TkAqua, allows to stub-link TkAqua against Tcl by removing use of
+	the unstubbed TclInitNotifier & TclFinalizeNotifier. [Tcl Patch 1202052]
+
+	* macosx/Wish.pbproj/project.pbxproj: stub-link TkAqua: build with
+	USE_TCL_STUBS and link against libtclstub instead of Tcl.framework,
+	unexport libtclstub symbols from Tk to avoid duplicate symbol warnings
+	when linking with both Tcl and Tk, fixes for gcc4.0 warnings.
+
+	* macosx/tkMacOSXBitmap.c:
+	* macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXHLEvents.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXKeyboard.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c: fixed gcc 4.0 warnings.
+
+	* unix/tcl.m4: sync with tcl
+	* unix/configure: autoconf-2.13
+
 2005-05-10  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* library/text.tcl: test and fix to TextPrevPara to avoid infinite loop

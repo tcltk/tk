@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.8 2005/03/12 00:49:28 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.9 2005/05/14 20:53:31 das Exp $
  */
 
 #include "tkButton.h"
@@ -965,7 +965,7 @@ TkMacOSXDrawControl(
         if (((mbPtr->info.image == NULL) && (mbPtr->info.bitmap == None))
                || (mbPtr->info.compound != COMPOUND_NONE)) {
             len = TkFontGetFirstTextLayout(butPtr->textLayout, 
-                    &font, controlTitle);
+                    &font, (char*) controlTitle);
             controlTitle[len] = 0;
         } else {
             len = 0;
@@ -974,7 +974,7 @@ TkMacOSXDrawControl(
         if (bcmp(mbPtr->controlTitle, controlTitle, len+1)) {
             CFStringRef cf;    	    
             cf = CFStringCreateWithCString(NULL,
-                  controlTitle, kCFStringEncodingUTF8);
+                  (char*) controlTitle, kCFStringEncodingUTF8);
             if (cf != NULL) {
             SetControlTitleWithCFString(mbPtr->control, cf);
             CFRelease(cf);
