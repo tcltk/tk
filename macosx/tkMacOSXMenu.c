@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.16 2004/11/11 01:24:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.17 2005/05/14 20:48:15 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -946,9 +946,11 @@ TkpConfigureMenuEntry(
 			 * some fields. */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
+#if 0 /* Unused */ 
     int index = mePtr->index;
     MenuHandle macMenuHdl = ((MacMenu *) menuPtr->platformData)->menuHdl;
     MenuHandle helpMenuHdl = NULL;
+#endif
 
     /*
      * Cascade menus have to have menu IDs of less than 256. So
@@ -1081,7 +1083,6 @@ ReconfigureIndividualMenu(
                     0, NULL);
     	} else {
     	    Tcl_DString itemTextDString;
-    	    int destWrote;
             CFStringRef cf;    	    
 	    GetEntryText(mePtr, &itemTextDString);
             cf = CFStringCreateWithCString(NULL,
@@ -1754,7 +1755,6 @@ DrawMenuBarWhenIdle(
 	    	} else if (i == helpIndex) {
 	    	    TkMenu *helpMenuPtr = menuBarPtr->entries[i]
 	    	    	    ->childMenuRefPtr->menuPtr;
-	    	    MenuHandle helpMenuHdl = NULL;
 	    	    
 	    	    if (helpMenuPtr == NULL) {
 	    	    	continue;
@@ -4308,9 +4308,11 @@ HandleMenuFindItemsMsg (MenuRef menu,
         TkMenu *menuPtr)
 {
     TkMenuEntry *parentEntryPtr;
+#if 0 /* Unused */ 
     Tk_Font tkfont;
     Tk_FontMetrics fontMetrics, entryMetrics;
     Tk_FontMetrics *fmPtr;
+#endif
     TkMenuEntry *mePtr;
     int i;
     int newItem = -1;
@@ -4476,8 +4478,10 @@ HandleMenuFindItemsMsg (MenuRef menu,
     }
     
     if (scrollDirection != DONT_SCROLL) {
+#if 0
         Tk_Font menuFont;
         RgnHandle updateRgn = NewRgn();
+#endif
         
         ScrollMenuImage(menu, menuRectPtr, 0, scrollAmt, NULL);
         mtdPtr->virtualMenuTop += scrollAmt;

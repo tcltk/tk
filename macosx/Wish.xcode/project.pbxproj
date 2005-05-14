@@ -114,6 +114,7 @@
 				F537556E016C37A601DC9062,
 				F537556F016C37A601DC9062,
 				F5375570016C37A601DC9062,
+				F94BE8E60835D4CB00DE8145,
 				F5375571016C37A601DC9062,
 				F5375572016C37A601DC9062,
 				F5375573016C37A601DC9062,
@@ -378,6 +379,7 @@
 				F5375550016C376E01DC9062,
 				F5375551016C376E01DC9062,
 				F5375552016C376E01DC9062,
+				F94BE9090835D5D700DE8145,
 				F5375553016C376E01DC9062,
 				F5375554016C376E01DC9062,
 				F5375555016C376E01DC9062,
@@ -2211,6 +2213,19 @@
 //F92
 //F93
 //F94
+		F92CCC75080CEBA800E72D64 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# extract global symbols in libtclstub so that we can unexport them from Tk.framework\nnm -gjp \"${TCL_FRAMEWORK_DIR}/Tcl.framework/libtclstub${FRAMEWORK_VERSION}.a\" | tail +3 > \"${TEMP_DIR}/tclstub.exp\"";
+		};
 		F92ED9910403D0F0006F146B = {
 			fileEncoding = 5;
 			isa = PBXFileReference;
@@ -2219,6 +2234,35 @@
 			path = ../ChangeLog;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
+		};
+		F94BE8E60835D4CB00DE8145 = {
+			fileEncoding = 5;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = tkEntry.h;
+			path = ../generic/tkEntry.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		F94BE8FC0835D58C00DE8145 = {
+			fileRef = F94BE8E60835D4CB00DE8145;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F94BE9090835D5D700DE8145 = {
+			fileEncoding = 5;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
+			path = tkMacOSXEntry.c;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		F94BE90A0835D5D700DE8145 = {
+			fileRef = F94BE9090835D5D700DE8145;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F95787DD0745BB260058B6A3 = {
 			buildPhases = (
@@ -2259,6 +2303,7 @@
 				SYMROOT = "${SRCROOT}/../../build/tk";
 				TCL_FRAMEWORK_DIR = "$(SYMROOT)/../tcl";
 				UNSTRIPPED_PRODUCT = YES;
+				WARNING_CFLAGS = "-Wno-deprecated-declarations";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = NO;
 			};
@@ -2412,6 +2457,7 @@
 		F95788500745BB270058B6A3 = {
 			buildPhases = (
 				F95788520745BB270058B6A3,
+				F92CCC75080CEBA800E72D64,
 				F95788530745BB270058B6A3,
 				F95788860745BB270058B6A3,
 				F95788870745BB270058B6A3,
@@ -2428,23 +2474,20 @@
 			buildRules = (
 			);
 			buildSettings = {
-				DEAD_CODE_STRIPPING = NO;
 				DOCDIR = "${INSTALL_PATH}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}/Resources/Documentation/Reference";
 				DYLIB_COMPATIBILITY_VERSION = 8.5;
 				DYLIB_CURRENT_VERSION = "$(FRAMEWORK_VERSION)";
 				DYLIB_INSTALL_PATH = /Library/Frameworks;
 				FRAMEWORK_SEARCH_PATHS = "$(TCL_FRAMEWORK_DIR)";
 				FRAMEWORK_VERSION = 8.5;
-				GCC_DEBUGGING_SYMBOLS = default;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "MAC_OSX_TK HAVE_TCL_CONFIG_H";
-				GCC_USE_GCC3_PFE_SUPPORT = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "MAC_OSX_TK USE_TCL_STUBS HAVE_TCL_CONFIG_H";
 				HEADER_SEARCH_PATHS = "$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers $(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders . ../bitmaps ../generic ../xlib";
 				INFOPLIST_FILE = "Tk-Info.plist";
 				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
-				OTHER_LDFLAGS = "-seg1addr 0xb000000";
+				LIBRARY_SEARCH_PATHS = "$(TCL_FRAMEWORK_DIR)/Tcl.framework";
+				OTHER_CFLAGS = "-imacros tclConfig.h";
+				OTHER_LDFLAGS = "-ltclstub${FRAMEWORK_VERSION} -seg1addr 0xb000000 -Wl,-search_paths_first -Wl,-unexported_symbols_list \"${TEMP_DIR}/tclstub.exp\"";
 				PRODUCT_NAME = Tk;
 				PROJECT_TEMP_DIR = "${TEMP_ROOT}/$(PROJECT_NAME).build";
 				REZ_RESOURCE_MAP_READ_ONLY = YES;
@@ -2454,8 +2497,8 @@
 				TCLTKMAN2HTML = "";
 				TCL_FRAMEWORK_DIR = "$(SYMROOT)/../tcl";
 				UNSTRIPPED_PRODUCT = YES;
+				WARNING_CFLAGS = "-Wno-deprecated-declarations";
 				WRAPPER_EXTENSION = framework;
-				ZERO_LINK = NO;
 			};
 			dependencies = (
 				F957893D0745BB270058B6A3,
@@ -2529,6 +2572,7 @@
 				F95788830745BB270058B6A3,
 				F95788840745BB270058B6A3,
 				F95788850745BB270058B6A3,
+				F94BE8FC0835D58C00DE8145,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2992,6 +3036,7 @@
 				F95788F30745BB270058B6A3,
 				F95788F40745BB270058B6A3,
 				F95788F50745BB270058B6A3,
+				F94BE90A0835D5D700DE8145,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3659,18 +3704,11 @@
 		F95788F60745BB270058B6A3 = {
 			buildActionMask = 2147483647;
 			files = (
-				F95788F70745BB270058B6A3,
 				F95788F80745BB270058B6A3,
 				F95788F90745BB270058B6A3,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F95788F70745BB270058B6A3 = {
-			fileRef = F5875C7B016FEF1D01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F95788F80745BB270058B6A3 = {
 			fileRef = F537567D016C3ADB01DC9062;
@@ -4050,7 +4088,7 @@
 			isa = PBXShellScriptBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# keep copy of debug library around, so that\n\t# Deployment build can be installed on top\n\t# of Development build without overwriting it\n\tcd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\n\tcp -fp \"${PRODUCT_NAME}\" \"${PRODUCT_NAME}_debug\"\n\tln -fs \"Versions/Current/${PRODUCT_NAME}_debug\" ../..\n\tcp -fp \"libtkstub${FRAMEWORK_VERSION}.a\" \"libtkstub${FRAMEWORK_VERSION}g.a\"\n\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME }.LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME }.LinkFileList\"\n\tfi\nelif [ \"${BUILD_STYLE}\" = \"Deployment\" ]; then\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME }.LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME }.LinkFileList\"\n\tfi\nfi\n\n# fixup Framework structure\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\nln -fs `ls libtkstub* | sed -e \"s|.*|Versions/${FRAMEWORK_VERSION}/&|\"` ../..\nln -fs \"Versions/Current/tkConfig.sh\" ../..\nranlib libtkstub${FRAMEWORK_VERSION}*.a\n\n# create pkgIndex\n( echo \"if {[package vcompare [package provide Tcl] ${FRAMEWORK_VERSION}] != 0} { return }\" && \\\n  echo \"package ifneeded Tk ${FRAMEWORK_VERSION} [list load [file join \\$dir .. .. Tk] Tk]\" \\\n) > \"Resources/Scripts/pkgIndex.tcl\"\n";
+			shellScript = "if [ \"${BUILD_STYLE}\" = \"Development\" ]; then\n\t# keep copy of debug library around, so that\n\t# Deployment build can be installed on top\n\t# of Development build without overwriting it\n\tcd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\n\tln -f \"${PRODUCT_NAME}\" \"${PRODUCT_NAME}_debug\"\n\tln -fs \"Versions/Current/${PRODUCT_NAME}_debug\" ../..\n\n\t# force Deployment build to be relinked next time\n\tif [ -f \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME}.LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Deployment.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME }.LinkFileList\"\n\tfi\nelif [ \"${BUILD_STYLE}\" = \"Deployment\" ]; then\n\t# force Development build to be relinked next time\n\tif [ -f \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME}.LinkFileList\" ]; then\n\t    touch -t `date -r \\`expr \\\\\\`date +\"%s\"\\\\\\` + 30\\` +\"%Y%m%d%H%M.%S\"` \"${OBJROOT}/Development.build/${PROJECT_NAME}.build/${TARGET_NAME}.build/Objects-normal/${PRODUCT_NAME }.LinkFileList\"\n\tfi\nfi\n\n# fixup Framework structure\ncd \"${TARGET_BUILD_DIR}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Versions/${FRAMEWORK_VERSION}\"\nln -fs `ls libtkstub* | sed -e \"s|.*|Versions/${FRAMEWORK_VERSION}/&|\"` ../..\nln -fs \"Versions/Current/tkConfig.sh\" ../..\nranlib libtkstub${FRAMEWORK_VERSION}*.a\n\n# create pkgIndex\n( echo \"if {[package vcompare [package provide Tcl] ${FRAMEWORK_VERSION}] != 0} { return }\" && \\\n  echo \"package ifneeded Tk ${FRAMEWORK_VERSION} [list load [file join \\$dir .. .. Tk] Tk]\" \\\n) > \"Resources/Scripts/pkgIndex.tcl\"\n";
 		};
 		F957892E0745BB270058B6A3 = {
 			buildActionMask = 8;
@@ -4103,6 +4141,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "MAC_OSX_TK HAVE_TCL_CONFIG_H";
 				HEADER_SEARCH_PATHS = "$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers $(TCL_FRAMEWORK_DIR)/Tcl.framework/PrivateHeaders . ../generic ../xlib";
 				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "-imacros tclConfig.h";
 				PRODUCT_NAME = tkstub8.5;
 				PROJECT_TEMP_DIR = "${TEMP_ROOT}/$(PROJECT_NAME).build";
 				REZ_RESOURCE_MAP_READ_ONLY = YES;
@@ -4110,6 +4149,7 @@
 				SYMROOT = "${SRCROOT}/../../build/tk";
 				TCL_FRAMEWORK_DIR = "$(SYMROOT)/../tcl";
 				UNSTRIPPED_PRODUCT = YES;
+				WARNING_CFLAGS = "-Wno-deprecated-declarations";
 				ZERO_LINK = NO;
 			};
 			dependencies = (
@@ -4178,7 +4218,7 @@
 			isa = PBXContainerItemProxy;
 			proxyType = 1;
 			remoteGlobalIDString = F95788500745BB270058B6A3;
-			remoteInfo = "TkLibrary (Upgraded)";
+			remoteInfo = TkLibrary;
 		};
 		F957893B0745BB270058B6A3 = {
 			isa = PBXTargetDependency;
@@ -4190,7 +4230,7 @@
 			isa = PBXContainerItemProxy;
 			proxyType = 1;
 			remoteGlobalIDString = F95789320745BB270058B6A3;
-			remoteInfo = "TkStubLibrary (Upgraded)";
+			remoteInfo = TkStubLibrary;
 		};
 		F957893D0745BB270058B6A3 = {
 			isa = PBXTargetDependency;
