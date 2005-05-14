@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.6 2004/11/12 09:03:19 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.7 2005/05/14 20:48:15 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -87,7 +87,7 @@ static TkStateMap scriptMap[] = {
     {smEastEurRoman,    "macCentEuro"},
     {smVietnamese,      "macVietnam"},
     {smExtArabic,       "macSindhi"},
-    {NULL,               NULL}
+    {0,                 NULL}
 };    
 
 static TkStateMap romanMap[] = {
@@ -97,13 +97,13 @@ static TkStateMap romanMap[] = {
     {langRomanian,        "macRomania"},
     {langTurkish,         "macTurkish"},
     {langGreek,           "macGreek"},
-    {NULL,                NULL}
+    {0,                   NULL}
 };
 
 static TkStateMap cyrillicMap[] = {
     {langUkrainian,        "macUkraine"},
     {langBulgarian,        "macBulgaria"},
-    {NULL,                NULL}
+    {0,                    NULL}
 };
 
 /*

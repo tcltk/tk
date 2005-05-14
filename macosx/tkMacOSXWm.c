@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.17 2005/04/07 20:14:24 mdejong Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.18 2005/05/14 20:48:15 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -873,7 +873,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		break;
 	    case WmAttrTitlePathIdx:
                 err = FSPathMakeRef(
-		    Tcl_GetStringFromObj(objv[i+1], NULL), 
+		    (unsigned char*) Tcl_GetStringFromObj(objv[i+1], NULL), 
 		    &ref, &isDirectory);
                 if (err == noErr) {
 		    err = FSNewAlias(NULL, &ref, &alias);
@@ -974,7 +974,7 @@ static void WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj *result)
 	err = FSRefMakePath(&ref, path, 2048);
     }
     if (err == noErr) {
-	Tcl_AppendToObj(result, path, -1);
+	Tcl_AppendToObj(result, (char*) path, -1);
     } else {
 	Tcl_AppendToObj(result, "{}", -1);
     }
@@ -1687,7 +1687,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
         AliasHandle alias;
         FSRef ref;
         Boolean isDirectory;
-        err = FSPathMakeRef(Tcl_GetStringFromObj(objv[3], NULL), &ref, &isDirectory);
+        err = FSPathMakeRef((unsigned char*) Tcl_GetStringFromObj(objv[3], NULL), &ref, &isDirectory);
         if (err == noErr) {
             err = FSNewAlias(NULL, &ref, &alias);
             if (err == noErr) {
@@ -4588,7 +4588,7 @@ TkSetWMName(
     }
     
     if (strlen(titleUid) > 0) {
-        title = CFStringCreateWithBytes(NULL, titleUid, strlen(titleUid), 
+        title = CFStringCreateWithBytes(NULL, (unsigned char*) titleUid, strlen(titleUid), 
                 kCFStringEncodingUTF8, false); 
     } else {
     	title = NULL;

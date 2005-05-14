@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.7 2004/11/13 03:41:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.8 2005/05/14 20:48:15 das Exp $
  */
 
 #include "tkInt.h"
@@ -365,7 +365,7 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
     int format;
 { 
     XImage *   imagePtr = NULL;
-    Pixmap     pixmap = NULL;
+    Pixmap     pixmap = (Pixmap) NULL;
     Tk_Window  win = (Tk_Window) ((MacDrawable *) d)->winPtr;
     GC         gc;
     int        depth = 32;
