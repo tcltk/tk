@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.3 2005/05/14 20:48:14 das Exp $
  */
 
 #include "tkPort.h"
@@ -240,7 +240,7 @@ TkpGetNativeAppBitmap(
     }
     
     if (resource == NULL) {
-        return NULL;
+        return (Pixmap) NULL;
     }
     
     pix = Tk_GetPixmap(display, None, 32, 32, 0);

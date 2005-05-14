@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.8 2005/03/09 19:40:52 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.9 2005/05/14 20:48:15 das Exp $
  */
 
 #include "tkInt.h"
@@ -79,7 +79,7 @@ static Map scriptMap[] = {
     {smEastEurRoman,	"macCentEuro"},
     {smVietnamese,	"macVietnam"},
     {smExtArabic,	"macSindhi"},
-    {NULL,		NULL}
+    {0, 		NULL}
 };
 
 Tcl_Encoding TkMacOSXCarbonEncoding = NULL;
@@ -115,6 +115,8 @@ TkpInit(interp)
     static char tkLibPath[PATH_MAX + 1];
     static int tkMacOSXInitialized = false;
 
+    Tk_MacOSXSetupTkNotifier();
+
     /* 
      * Since it is possible for TkInit to be called multiple times
      * and we don't want to do the initialization multiple times
@@ -128,7 +130,6 @@ TkpInit(interp)
 
     	tkMacOSXInitialized = true;
 
-        Tk_MacOSXSetupTkNotifier();
         TkMacOSXInitAppleEvents(interp);
         TkMacOSXInitCarbonEvents(interp);
         TkMacOSXInitMenus(interp);
@@ -380,13 +381,13 @@ TkMacOSXDefaultStartupScript(void)
             char startupScript[PATH_MAX + 1];
                             
             if (CFURLGetFileSystemRepresentation (appMainURL, true,
-                    startupScript, PATH_MAX)) {
+                    (unsigned char*) startupScript, PATH_MAX)) {
                 Tcl_SetStartupScript(Tcl_NewStringObj(startupScript, -1), NULL);
                 scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(
                         NULL, appMainURL);
                 if (scriptFldrURL != NULL) {
                     CFURLGetFileSystemRepresentation(scriptFldrURL, 
-                            true, scriptPath, PATH_MAX);
+                            true, (unsigned char*) scriptPath, PATH_MAX);
                     CFRelease(scriptFldrURL);
                 }
             }

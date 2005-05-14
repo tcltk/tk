@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.12 2005/02/22 08:48:56 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.13 2005/05/14 20:48:14 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -214,7 +214,7 @@ Tk_ChooseColorObjCmd(
     cpinfo.pickerType = 0L;
     cpinfo.eventProc = NULL;
     cpinfo.colorProc = NULL;
-    cpinfo.colorProcData = NULL;
+    cpinfo.colorProcData = 0;
     
     /* This doesn't seem to actually set the title! */
     Tcl_UtfToExternal(NULL, NULL, title, -1, 0, NULL, 
@@ -337,7 +337,7 @@ Tk_GetOpenFileObjCmd(
                 break;
             case OPEN_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                message = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                message = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen, 
                         kCFStringEncodingUTF8, false);
                 break;
             case OPEN_MULTIPLE:
@@ -357,7 +357,7 @@ Tk_GetOpenFileObjCmd(
                 break;
             case OPEN_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                title = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                title = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen, 
                         kCFStringEncodingUTF8, false);
                 break;
         }
@@ -473,7 +473,7 @@ Tk_GetSaveFileObjCmd(
                 break;
             case SAVE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                message = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                message = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen, 
                         kCFStringEncodingUTF8, false);
                 break;
             case SAVE_PARENT:
@@ -486,7 +486,7 @@ Tk_GetSaveFileObjCmd(
                 break;
             case SAVE_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                title = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                title = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen, 
                         kCFStringEncodingUTF8, false);
                 break;
         }
@@ -594,7 +594,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
                 break;
             case CHOOSE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                message = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                message = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen, 
                         kCFStringEncodingUTF8, false);
                 break;
             case CHOOSE_PARENT:
@@ -607,7 +607,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
                 break;
             case CHOOSE_TITLE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
-                title = CFStringCreateWithBytes(NULL, choice, choiceLen, 
+                title = CFStringCreateWithBytes(NULL, (unsigned char*) choice, choiceLen, 
                         kCFStringEncodingUTF8, false);
                 break;
         }
@@ -656,7 +656,7 @@ HandleInitialDirectory (
             return TCL_ERROR;
         }
 
-        err = FSPathMakeRef(dirName,
+        err = FSPathMakeRef((unsigned char*) dirName,
                 dirRef, &isDirectory);     
 
         if (err != noErr) {
@@ -690,7 +690,7 @@ HandleInitialDirectory (
 
         AECreateList(NULL, 0, false, selectDescPtr);
 
-        err = FSPathMakeRef(namePtr, &fileRef, &isDirectory);
+        err = FSPathMakeRef((unsigned char*) namePtr, &fileRef, &isDirectory);
         if (err != noErr) {
             Tcl_AppendResult(interp, "bad initialfile \"", initialFile,
                     "\" file does not exist.", NULL);
@@ -882,7 +882,7 @@ NavServicesGetFile(
                             != noErr ) {
                         fprintf(stderr,"AEGetDescData failed %d\n", err );
                     } else {
-                        if (err = FSRefMakePath(&fsRef, pathPtr, 1024) ) {
+                        if (err = FSRefMakePath(&fsRef, (unsigned char*) pathPtr, 1024) ) {
                             fprintf(stderr,"FSRefMakePath failed, %d\n", err );
                         } else {
                             if (isOpen == SAVE_FILE) {
@@ -1000,9 +1000,9 @@ OpenFileFilterProc(
                         int len;
                         fileNamePtr = (((FSSpec *) *theItem->dataHandle)->name);
                         len = fileNamePtr[0];
-                        strncpy(fileName, fileNamePtr + 1, len);
+                        strncpy(fileName, (char*) fileNamePtr + 1, len);
                         fileName[len] = '\0';
-                        fileNamePtr = fileName;
+                        fileNamePtr = (unsigned char*) fileName;
 
                     } else if (theItem->descriptorType = typeFSRef) {
                         OSStatus err;
@@ -1016,7 +1016,7 @@ OpenFileFilterProc(
                                     (Tcl_UniChar *) uniFileName.unicode, 
                                     uniFileName.length,
                                     &fileNameDString);
-                            fileNamePtr = Tcl_DStringValue(&fileNameDString);
+                            fileNamePtr = (unsigned char*) Tcl_DStringValue(&fileNameDString);
                         } else {
                             fileNamePtr = NULL;
                         }
@@ -1161,7 +1161,7 @@ MatchOneType(
                  * have "." in it
                  */
 
-                for (q = fileNamePtr; *q; q++) {
+                for (q = (char*) fileNamePtr; *q; q++) {
                     if (*q == '.') {
                         goto glob_unmatched;
                     }
@@ -1169,7 +1169,7 @@ MatchOneType(
                 goto glob_matched;
             }
         
-            if (Tcl_StringMatch(fileNamePtr, ext)) {
+            if (Tcl_StringMatch((char*) fileNamePtr, ext)) {
                 goto glob_matched;
             } else {
                 goto glob_unmatched;
