@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.3 2004/02/16 00:19:42 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.4 2005/05/14 20:48:15 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -234,7 +234,7 @@ TkpDisplayMenuButton(
         if (titleChanged) {
             CFStringRef cf;    	    
             cf = CFStringCreateWithCString(NULL,
-                  titleParams.title, kCFStringEncodingUTF8);
+                  (char*) titleParams.title, kCFStringEncodingUTF8);
             if (hasImageOrBitmap) {
                 SetControlTitleWithCFString(mbPtr->control, cf);
             } else {
@@ -559,7 +559,7 @@ static void
 ComputeControlTitleParams(TkMenuButton * butPtr, ControlTitleParams * paramsPtr )
 {
     Tk_Font font;
-    paramsPtr->len =TkFontGetFirstTextLayout(butPtr->textLayout,&font, paramsPtr->title);
+    paramsPtr->len =TkFontGetFirstTextLayout(butPtr->textLayout,&font, (char*) paramsPtr->title);
     paramsPtr->title [paramsPtr->len] = 0;
     if (paramsPtr->len) {
         TkMacOSXInitControlFontStyle(font,&paramsPtr->style);
@@ -663,7 +663,7 @@ MenuButtonInitControl (
     if (mbPtr->params.isBevel) {
             CFStringRef cf;    	    
             cf = CFStringCreateWithCString(NULL,
-                  mbPtr->titleParams.title, kCFStringEncodingUTF8);
+                  (char*) mbPtr->titleParams.title, kCFStringEncodingUTF8);
         SetControlTitleWithCFString(mbPtr->control, cf);
         CFRelease(cf);
         if (mbPtr->titleParams.len) {
@@ -687,7 +687,7 @@ MenuButtonInitControl (
             return 1;
         }
         cf = CFStringCreateWithCString(NULL,
-                mbPtr->titleParams.title, kCFStringEncodingUTF8);
+                (char*) mbPtr->titleParams.title, kCFStringEncodingUTF8);
         AppendMenuItemText(mbPtr->menuRef, "\px");
         if (cf != NULL) {
         SetMenuItemTextWithCFString(mbPtr->menuRef, 1, cf);
