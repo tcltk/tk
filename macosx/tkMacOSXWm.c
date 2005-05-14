@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.7 2005/03/12 00:49:38 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.8 2005/05/14 20:53:31 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -852,7 +852,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		break;
 	    case WmAttrTitlePathIdx:
                 err = FSPathMakeRef(
-		    Tcl_GetStringFromObj(objv[i+1], NULL), 
+		    (unsigned char*) Tcl_GetStringFromObj(objv[i+1], NULL), 
 		    &ref, &isDirectory);
                 if (err == noErr) {
 		    err = FSNewAlias(NULL, &ref, &alias);
@@ -945,7 +945,7 @@ static void WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj *result)
 	err = FSRefMakePath(&ref, path, 2048);
     }
     if (err == noErr) {
-	Tcl_AppendToObj(result, path, -1);
+	Tcl_AppendToObj(result, (char*) path, -1);
     } else {
 	Tcl_AppendToObj(result, "{}", -1);
     }
@@ -1600,7 +1600,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
         AliasHandle alias;
         FSRef ref;
         Boolean isDirectory;
-        err = FSPathMakeRef(Tcl_GetStringFromObj(objv[3], NULL), &ref, &isDirectory);
+        err = FSPathMakeRef((unsigned char*) Tcl_GetStringFromObj(objv[3], NULL), &ref, &isDirectory);
         if (err == noErr) {
             err = FSNewAlias(NULL, &ref, &alias);
             if (err == noErr) {
@@ -1814,7 +1814,9 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
+#if 0 /* Unused */
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
+#endif
     Tk_PhotoHandle photo;
     int i, width, height, isDefault = 0;
 
@@ -2612,7 +2614,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
                                  (char *) NULL);
                 return TCL_ERROR;
             }
-            if (wmPtr->master != NULL) {
+            if (wmPtr->master != None) {
                 Tcl_AppendResult(interp, "can't iconify \"",
                                  winPtr->pathName,
                                  "\": it is a transient", (char *) NULL);
@@ -4491,7 +4493,7 @@ TkSetWMName(
     }
     
     if (strlen(titleUid) > 0) {
-        title = CFStringCreateWithBytes(NULL, titleUid, strlen(titleUid), 
+        title = CFStringCreateWithBytes(NULL, (unsigned char*) titleUid, strlen(titleUid), 
                 kCFStringEncodingUTF8, false); 
     } else {
     	title = NULL;
