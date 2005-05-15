@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.2 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.3 2005/05/15 20:57:08 wolfsuit Exp $
  */
 
 #include "tkScrollbar.h"
@@ -1095,7 +1095,6 @@ UpdateControlValues(
     controlValue = (SInt32) (SCROLLBAR_SCALING_DVALUE * scrollPtr->firstFraction);
 
     SetControlViewSize(macScrollPtr->sbHandle,viewSize);
-    SetControl32BitValue(macScrollPtr->sbHandle, controlValue);
     SetControl32BitMaximum(macScrollPtr->sbHandle, controlMax);
 
 #if 0             
@@ -1121,6 +1120,7 @@ UpdateControlValues(
             HiliteControl(macScrollPtr->sbHandle, 0);
         }
     }
+    SetControl32BitValue(macScrollPtr->sbHandle, controlValue);
     
     if ( !IsControlVisible (macScrollPtr -> sbHandle) ) {
         SetControlVisibility(macScrollPtr->sbHandle,TRUE,FALSE);
