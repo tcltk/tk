@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.10 2005/03/15 02:11:55 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.11 2005/05/15 04:18:36 wolfsuit Exp $
  */
 
 #include "tkScrollbar.h"
@@ -674,6 +674,7 @@ ThumbActionProc()
             interp = scrollPtr->interp;
             Tcl_Preserve((ClientData) interp);
             Tcl_GlobalEval(interp, cmdString.string);
+	    Tcl_Release ((ClientData) interp);
 
             TclServiceIdle();
         }
