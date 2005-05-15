@@ -1,3 +1,18 @@
+2005-05-15  Jim Ingham  <jingham@apple.com>
+
+	Fixes from Michael Kirkham:
+
+	* macosx/tkMacOSXMenu.c (TkpConfigureMenuEntry): Thinko in clearing 
+	the ENTRY_ACCEL_MASK before re-parsing it. [Tk Bug 1012852]
+
+	* macosx/tkMacOSXScrlbr.c (UpdateControlValues): Don't set the 
+	control value BEFORE setting the min and max or the control manager
+	will reset it for you. [Tk Bug 1202181]
+
+	* macosx/tkMacOSXXStubs.c (TkMacOSXXGetPixel, TkMacOSXXPutPixel):
+	Restore the port to what it was before putting we were called.
+	[Tk Bug 1202223]
+	
 2005-05-14  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXInit.c:

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.5 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.6 2005/05/15 20:57:08 wolfsuit Exp $
  */
 
 #include "tkInt.h"
@@ -761,10 +761,11 @@ TkMacOSXXGetPixel(
     int x,
     int y)
 {
-    CGrafPtr grafPtr;
+    CGrafPtr grafPtr, oldPort;
     RGBColor cPix;
     unsigned long r, g, b, c;
     grafPtr = (CGrafPtr)image->data;
+    GetPort(&oldPort);
     SetPort(grafPtr);
     GetCPixel(x,y,&cPix);
     if (image->obdata) {
@@ -778,6 +779,7 @@ TkMacOSXXGetPixel(
         b = cPix . blue;
     }
     c = (r<<16)|(g<<8)|(b);
+    SetPort(oldPort);
     return c;
 }
 
@@ -788,10 +790,11 @@ TkMacOSXXPutPixel(
     int y,
     unsigned long pixel)
 {
-    CGrafPtr grafPtr;
+    CGrafPtr grafPtr, oldPort;
     RGBColor cPix;
     unsigned long r, g, b;
     grafPtr = (CGrafPtr)image->data;
+    GetPort(&oldPort);
     SetPort(grafPtr);
     r  = (pixel & image->red_mask)>>16;
     g  = (pixel & image->green_mask)>>8;
@@ -807,6 +810,7 @@ TkMacOSXXPutPixel(
         cPix . blue = b;
     }
     SetCPixel(x,y,&cPix);
+    SetPort(oldPort);
     return 0;
 }
 

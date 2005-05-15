@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.7 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.8 2005/05/15 20:57:08 wolfsuit Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -991,7 +991,7 @@ TkpConfigureMenuEntry(
 	char *accelString = (mePtr->accelPtr == NULL) ? ""
 		: Tcl_GetStringFromObj(mePtr->accelPtr, NULL);
 	char *accel = accelString;
-	mePtr->entryFlags |= ~ENTRY_ACCEL_MASK;
+	mePtr->entryFlags &= ~ENTRY_ACCEL_MASK;
 	    
 	mePtr->entryFlags |= ParseAccelerators(&accelString);
 	
