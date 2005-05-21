@@ -1,17 +1,22 @@
+2005-05-22  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkFileFilter.c (TkGetFileFilters): Add all filters, not
+	just the first one. [Bug 1206133]
+
 2005-05-15  Jim Ingham  <jingham@apple.com>
 
-        Fixes from Michael Kirkham:
+	Fixes from Michael Kirkham:
 
-        * macosx/tkMacOSXMenu.c (TkpConfigureMenuEntry): Thinko in clearing 
-        the ENTRY_ACCEL_MASK before re-parsing it. [Tk Bug 1012852]
+	* macosx/tkMacOSXMenu.c (TkpConfigureMenuEntry): Thinko in clearing 
+	the ENTRY_ACCEL_MASK before re-parsing it. [Tk Bug 1012852]
 
-        * macosx/tkMacOSXScrlbr.c (UpdateControlValues): Don't set the 
-        control value BEFORE setting the min and max or the control manager
-        will reset it for you. [Tk Bug 1202181]
+	* macosx/tkMacOSXScrlbr.c (UpdateControlValues): Don't set the 
+	control value BEFORE setting the min and max or the control manager
+	will reset it for you. [Tk Bug 1202181]
 
-        * macosx/tkMacOSXXStubs.c (TkMacOSXXGetPixel, TkMacOSXXPutPixel):
-        Restore the port to what it was before putting we were called.
-        [Tk Bug 1202223]
+	* macosx/tkMacOSXXStubs.c (TkMacOSXXGetPixel, TkMacOSXXPutPixel):
+	Restore the port to what it was before putting we were called.
+	[Tk Bug 1202223]
 
 2005-05-14  Jim Ingham <jingham@apple.com>
 
@@ -218,7 +223,7 @@
 	* tkMacOSXDefaults.h: Change the Mac OS X defaults so they fit
 	the native widget shapes.
 	
-        This is cleanup thanks to Neil Madden <nem@cs.nott.ac.uk>.
+	This is cleanup thanks to Neil Madden <nem@cs.nott.ac.uk>.
 	
 	* macosx/tkMacOSXWm.c (TkMacOSXWinStyle) New function.
 	(TkUnsupported1ObjCmd): New function, replaces the un-objectified
@@ -243,7 +248,7 @@
 2005-03-15  Vince Darley  <vincentdarley@users.sourceforge.net>
 
 	* generic/tkTextDisp.c: fix for [Bug 1143776] in adjusting
-        displayed lines when running into the bottom of the window.
+	displayed lines when running into the bottom of the window.
 
 2005-03-14  Jim Ingham  <jingham@apple.com>
 
@@ -2991,7 +2996,7 @@
 	* generic/tkListbox.c (ListboxSelect): Remove unused variable
 	'increment'.  [Bug 664783]
 
-2003-08-25   David Gravereaux <davygrvy@pobox.com>
+2003-08-25  David Gravereaux  <davygrvy@pobox.com>
 
 	* win/makefile.vc: Don't do a string compare on the $(DBGX)
 	variable, use the $(DEBUG) boolean directly.  Also, don't try
