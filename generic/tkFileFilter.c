@@ -9,23 +9,22 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.c,v 1.6 2004/12/20 10:34:20 vincentdarley Exp $
+ * RCS: @(#) $Id: tkFileFilter.c,v 1.7 2005/05/21 23:29:40 dkf Exp $
  */
 
 #include "tkInt.h"
 #include "tkFileFilter.h"
 
-static int		AddClause _ANSI_ARGS_((
-			    Tcl_Interp * interp, FileFilter * filterPtr,
-			    Tcl_Obj * patternsObj, Tcl_Obj * ostypesObj,
-			    int isWindows));
-static void		FreeClauses _ANSI_ARGS_((FileFilter * filterPtr));
+static int		AddClause _ANSI_ARGS_((Tcl_Interp *interp,
+			    FileFilter *filterPtr, Tcl_Obj *patternsObj,
+			    Tcl_Obj *ostypesObj, int isWindows));
+static void		FreeClauses _ANSI_ARGS_((FileFilter *filterPtr));
 static void		FreeGlobPatterns _ANSI_ARGS_((
-			    FileFilterClause * clausePtr));
+			    FileFilterClause *clausePtr));
 static void		FreeMacFileTypes _ANSI_ARGS_((
-			    FileFilterClause * clausePtr));
-static FileFilter *	GetFilter _ANSI_ARGS_((FileFilterList * flistPtr,
-			    CONST char * name));
+			    FileFilterClause *clausePtr));
+static FileFilter *	GetFilter _ANSI_ARGS_((FileFilterList *flistPtr,
+			    CONST char *name));
 
 /*
  *----------------------------------------------------------------------
@@ -51,7 +50,7 @@ static FileFilter *	GetFilter _ANSI_ARGS_((FileFilterList * flistPtr,
 
 void
 TkInitFileFilters(flistPtr)
-    FileFilterList * flistPtr;	/* The structure to be initialized. */
+    FileFilterList *flistPtr;	/* The structure to be initialized. */
 {
     flistPtr->filters = NULL;
     flistPtr->filtersTail = NULL;
@@ -65,7 +64,7 @@ TkInitFileFilters(flistPtr)
  *
  *	This function is called by the Mac and Windows implementation
  *	of tk_getOpenFile and tk_getSaveFile to translate the string
- *	value of the -filetypes option of into an easy-to-parse C
+ *	value of the -filetypes option into an easy-to-parse C
  *	structure (flistPtr). The caller of this function will then use
  *	flistPtr to perform filetype matching in a platform specific way.
  *
@@ -81,8 +80,8 @@ TkInitFileFilters(flistPtr)
 int
 TkGetFileFilters(interp, flistPtr, types, isWindows)
     Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
-    FileFilterList * flistPtr;	/* Stores the list of file filters. */
-    Tcl_Obj* types;		/* Value of the -filetypes option. */
+    FileFilterList *flistPtr;	/* Stores the list of file filters. */
+    Tcl_Obj *types;		/* Value of the -filetypes option. */
     int isWindows;		/* True if we are running on Windows. */
 {
     int listObjc;
@@ -93,7 +92,8 @@ TkGetFileFilters(interp, flistPtr, types, isWindows)
         return TCL_OK;
     }
     
-    if (Tcl_ListObjGetElements(interp, types, &listObjc, &listObjv) != TCL_OK) {
+    if (Tcl_ListObjGetElements(interp, types, &listObjc,
+	    &listObjv) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (listObjc == 0) {
@@ -114,11 +114,11 @@ TkGetFileFilters(interp, flistPtr, types, isWindows)
 	 * The third is the Mac OSType ID, but we don't care about them here.
 	 */
 	int count;
-	FileFilter * filterPtr;
-	Tcl_Obj ** typeInfo;
+	FileFilter *filterPtr;
+	Tcl_Obj **typeInfo;
 
 	if (Tcl_ListObjGetElements(interp, listObjv[i], &count, 
-				   &typeInfo) != TCL_OK) {
+		&typeInfo) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	
@@ -132,12 +132,9 @@ TkGetFileFilters(interp, flistPtr, types, isWindows)
 
 	filterPtr = GetFilter(flistPtr, Tcl_GetString(typeInfo[0]));
 
-	if (count == 2) {
-	    return AddClause(interp, filterPtr, typeInfo[1], 
-			     NULL, isWindows);
-	} else {
-	    return AddClause(interp, filterPtr, typeInfo[1], 
-			     typeInfo[2], isWindows);
+	if (AddClause(interp, filterPtr, typeInfo[1], 
+		(count==2 ? NULL : typeInfo[2]), isWindows) != TCL_OK) {
+	    return TCL_ERROR;
 	}
     }
 
@@ -161,14 +158,14 @@ TkGetFileFilters(interp, flistPtr, types, isWindows)
 
 void
 TkFreeFileFilters(flistPtr)
-    FileFilterList * flistPtr;	/* List of file filters to free */
+    FileFilterList *flistPtr;	/* List of file filters to free */
 {
-    FileFilter * filterPtr, *toFree;
+    FileFilter *filterPtr, *toFree;
 
     filterPtr=flistPtr->filters;
-    while (filterPtr) {
+    while (filterPtr != NULL) {
 	toFree = filterPtr;
-	filterPtr=filterPtr->next;
+	filterPtr = filterPtr->next;
 	FreeClauses(toFree);
 	ckfree((char*)toFree->name);
 	ckfree((char*)toFree);
@@ -191,36 +188,38 @@ TkFreeFileFilters(flistPtr)
  *----------------------------------------------------------------------
  */
 
-static int AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
-    Tcl_Interp * interp;	/* Interpreter to use for error reporting. */
-    FileFilter * filterPtr;	/* Stores the new filter clause */
-    Tcl_Obj * patternsObj;	/* A Tcl list of glob patterns. */
-    Tcl_Obj * ostypesObj;	/* A Tcl list of Mac OSType strings. */
+static int
+AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
+    Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
+    FileFilter *filterPtr;	/* Stores the new filter clause */
+    Tcl_Obj *patternsObj;	/* A Tcl list of glob patterns. */
+    Tcl_Obj *ostypesObj;	/* A Tcl list of Mac OSType strings. */
     int isWindows;		/* True if we are running on Windows; False
 				 * if we are running on the Mac; Glob
 				 * patterns need to be processed differently
 				 * on these two platforms */
 {
-    Tcl_Obj ** globList = NULL;
-    int globCount;
-    Tcl_Obj ** ostypeList = NULL;
-    int ostypeCount;
-    FileFilterClause * clausePtr;
-    int i;
-    int code = TCL_OK;
+    Tcl_Obj **globList = NULL, **ostypeList = NULL;
+    int globCount, ostypeCount, i, code = TCL_OK;
+    FileFilterClause *clausePtr;
     Tcl_Encoding macRoman = NULL;
-    
-    if (Tcl_ListObjGetElements(interp, patternsObj, &globCount, &globList)
-	    != TCL_OK) {
+
+    if (Tcl_ListObjGetElements(interp, patternsObj,
+	    &globCount, &globList) != TCL_OK) {
 	code = TCL_ERROR;
 	goto done;
     }
     if (ostypesObj != NULL) {
-	if (Tcl_ListObjGetElements(interp, ostypesObj, &ostypeCount, &ostypeList)
-		!= TCL_OK) {
+	if (Tcl_ListObjGetElements(interp, ostypesObj,
+		&ostypeCount, &ostypeList) != TCL_OK) {
 	    code = TCL_ERROR;
 	    goto done;
 	}
+	/*
+	 * We probably need this encoding now...
+	 */
+	macRoman = Tcl_GetEncoding(NULL, "macRoman");
+
 	/* 
 	 * Might be cleaner to use 'Tcl_GetOSTypeFromObj' but that is
 	 * actually static to the MacOS X/Darwin version of Tcl, and
@@ -235,33 +234,26 @@ static int AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
 	     * the correct length (assuming there may be non-ascii
 	     * characters, eg., embedded nulls or accented characters in
 	     * the string, the macRoman length will be different).
+	     *
+	     * If we couldn't load the encoding, then we can't
+	     * actually check the correct length.  But here we assume
+	     * we're probably operating on unix/windows with a minimal
+	     * set of encodings and so don't care about MacOS types.
+	     * So we won't signal an error.
 	     */
-	    if (len >= 4) {
-		if (macRoman == NULL) {
-		    macRoman = Tcl_GetEncoding(NULL, "macRoman");
-		}
+	    if (len >= 4 && macRoman != NULL) {
+		Tcl_DString osTypeDS;
 		/* 
-		 * If we couldn't load the encoding, then we can't
-		 * actually check the correct length.  But here we
-		 * assume we're probably operating on unix/windows
-		 * with a minimal set of encodings and so don't
-		 * care about MacOS types.  So we won't signal
-		 * an error.
+		 * Convert utf to macRoman, since MacOS types are
+		 * defined to be 4 macRoman characters long
 		 */
-		if (macRoman != NULL) {
-		    Tcl_DString osTypeDS;
-		    /* 
-		     * Convert utf to macRoman, since MacOS types are 
-		     * defined to be 4 macRoman characters long
-		     */
-		    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
-		    len = Tcl_DStringLength(&osTypeDS);
-		    Tcl_DStringFree(&osTypeDS);
-		}
+		Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+		len = Tcl_DStringLength(&osTypeDS);
+		Tcl_DStringFree(&osTypeDS);
 	    }
 	    if (len != 4) {
 		Tcl_AppendResult(interp, "bad Macintosh file type \"",
-		    Tcl_GetString(ostypeList[i]), "\"", NULL);
+			Tcl_GetString(ostypeList[i]), "\"", NULL);
 		code = TCL_ERROR;
 		goto done;
 	    }
@@ -288,9 +280,9 @@ static int AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
 
     if (globCount > 0 && globList != NULL) {
 	for (i=0; i<globCount; i++) {
-	    GlobPattern * globPtr = (GlobPattern*)ckalloc(sizeof(GlobPattern));
+	    GlobPattern *globPtr = (GlobPattern*)ckalloc(sizeof(GlobPattern));
 	    int len;
-	    
+
 	    CONST char *str = Tcl_GetStringFromObj(globList[i], &len);
 	    len = (len + 1) * sizeof(char);
 
@@ -301,22 +293,19 @@ static int AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
 		globPtr->pattern = (char*)ckalloc((unsigned int) len+1);
 		globPtr->pattern[0] = '*';
 		strcpy(globPtr->pattern+1, str);
-	    }
-	    else if (isWindows) {
+	    } else if (isWindows) {
 		if (strcmp(str, "*") == 0) {
-		    globPtr->pattern = (char*)ckalloc(4*sizeof(char));
+		    globPtr->pattern = (char*)ckalloc(4 * sizeof(char));
 		    strcpy(globPtr->pattern, "*.*");
-		}
-		else if (strcmp(str, "") == 0) {
+		} else if (strcmp(str, "") == 0) {
 		    /*
 		     * An empty string means "match all files with no
 		     * extensions"
 		     * BUG: "*." actually matches with all files on Win95
 		     */
-		    globPtr->pattern = (char*)ckalloc(3*sizeof(char));
+		    globPtr->pattern = (char*)ckalloc(3 * sizeof(char));
 		    strcpy(globPtr->pattern, "*.");
-		}
-		else {
+		} else {
 		    globPtr->pattern = (char*)ckalloc((unsigned int) len);
 		    strcpy(globPtr->pattern, str);
 		}
@@ -345,7 +334,7 @@ static int AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
 	for (i=0; i<ostypeCount; i++) {
 	    Tcl_DString osTypeDS;
 	    int len;
-	    MacFileType * mfPtr = (MacFileType*)ckalloc(sizeof(MacFileType));
+	    MacFileType *mfPtr = (MacFileType *) ckalloc(sizeof(MacFileType));
 	    CONST char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 
 	    /* 
@@ -393,25 +382,26 @@ static int AddClause(interp, filterPtr, patternsObj, ostypesObj, isWindows)
  *----------------------------------------------------------------------
  */
 
-static FileFilter * GetFilter(flistPtr, name)
-    FileFilterList * flistPtr;	/* The FileFilterList that contains the
+static FileFilter *
+GetFilter(flistPtr, name)
+    FileFilterList *flistPtr;	/* The FileFilterList that contains the
 				 * newly created filter */
-    CONST char * name;		/* Name of the filter. It is usually displayed
+    CONST char *name;		/* Name of the filter. It is usually displayed
 				 * in the "File Types" listbox in the file
 				 * dialogs. */
 {
-    FileFilter * filterPtr;
+    FileFilter *filterPtr = flistPtr->filters;
 
-    for (filterPtr=flistPtr->filters; filterPtr; filterPtr=filterPtr->next) {
-	if (strcmp(filterPtr->name, name)==0) {
+    for (; filterPtr; filterPtr=filterPtr->next) {
+	if (strcmp(filterPtr->name, name) == 0) {
 	    return filterPtr;
 	}
     }
 
-    filterPtr = (FileFilter*)ckalloc(sizeof(FileFilter));
+    filterPtr = (FileFilter *) ckalloc(sizeof(FileFilter));
     filterPtr->clauses = NULL;
     filterPtr->clausesTail = NULL;
-    filterPtr->name = (char*)ckalloc((strlen(name)+1) * sizeof(char));
+    filterPtr->name = (char *) ckalloc((strlen(name)+1) * sizeof(char));
     strcpy(filterPtr->name, name);
 
     if (flistPtr->filters == NULL) {
@@ -445,15 +435,15 @@ static void
 FreeClauses(filterPtr)
     FileFilter * filterPtr;	/* FileFilter whose clauses are to be freed */
 {
-    FileFilterClause * clausePtr, * toFree;
+    FileFilterClause *clausePtr = filterPtr->clauses;
 
-    clausePtr = filterPtr->clauses;
-    while (clausePtr) {
-	toFree = clausePtr;
-	clausePtr=clausePtr->next;
+    while (clausePtr != NULL) {
+	FileFilterClause *toFree = clausePtr;
+	clausePtr = clausePtr->next;
+
 	FreeGlobPatterns(toFree);
 	FreeMacFileTypes(toFree);
-	ckfree((char*)toFree);
+	ckfree((char *) toFree);
     }
     filterPtr->clauses = NULL;
     filterPtr->clausesTail = NULL;
@@ -478,15 +468,14 @@ static void
 FreeGlobPatterns(clausePtr)
     FileFilterClause * clausePtr;/* The clause whose patterns are to be freed*/
 {
-    GlobPattern * globPtr, * toFree;
+    GlobPattern *globPtr = clausePtr->patterns;
 
-    globPtr = clausePtr->patterns;
-    while (globPtr) {
-	toFree = globPtr;
-	globPtr=globPtr->next;
+    while (globPtr != null) {
+	GlobPattern *toFree = globPtr;
+	globPtr = globPtr->next;
 
-	ckfree((char*)toFree->pattern);
-	ckfree((char*)toFree);
+	ckfree((char *) toFree->pattern);
+	ckfree((char *) toFree);
     }
     clausePtr->patterns = NULL;
 }
@@ -511,13 +500,12 @@ FreeMacFileTypes(clausePtr)
     FileFilterClause * clausePtr;  /* The clause whose mac types are to be
 				    * freed */
 {
-    MacFileType * mfPtr, * toFree;
+    MacFileType *mfPtr = clausePtr->macTypes;
 
-    mfPtr = clausePtr->macTypes;
-    while (mfPtr) {
-	toFree = mfPtr;
-	mfPtr=mfPtr->next;
-	ckfree((char*)toFree);
+    while (mfPtr != NULL) {
+	MacFileType *toFree = mfPtr;
+	mfPtr = mfPtr->next;
+	ckfree((char *) toFree);
     }
     clausePtr->macTypes = NULL;
 }
