@@ -1,0 +1,244 @@
+/* tkConfig.h.in.  Generated from configure.in by autoheader.  */
+
+#ifndef _TKCONFIG
+#define _TKCONFIG
+
+/* Is pthread_attr_get_np() declared in <pthread.h>? */
+#undef ATTRGETNP_NOT_DECLARED
+
+/* Is pthread_getattr_np declared in <pthread.h>? */
+#undef GETATTRNP_NOT_DECLARED
+
+/* Do we have access to Darwin CoreFoundation.framework ? */
+#undef HAVE_COREFOUNDATION
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <libkern/OSAtomic.h> header file. */
+#undef HAVE_LIBKERN_OSATOMIC_H
+
+/* Define to 1 if you have the <limits.h> header file. */
+#undef HAVE_LIMITS_H
+
+/* Define to 1 if you have the `lseek64' function. */
+#undef HAVE_LSEEK64
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `open64' function. */
+#undef HAVE_OPEN64
+
+/* Define to 1 if you have the `OSSpinLockLock' function. */
+#undef HAVE_OSSPINLOCKLOCK
+
+/* Do we want a BSD-like thread-attribute interface? */
+#undef HAVE_PTHREAD_ATTR_GET_NP
+
+/* Define to 1 if you have the `pthread_attr_setstacksize' function. */
+#undef HAVE_PTHREAD_ATTR_SETSTACKSIZE
+
+/* Do we want a Linux-like thread-attribute interface? */
+#undef HAVE_PTHREAD_GETATTR_NP
+
+/* Does struct password have a pw_gecos field? */
+#undef HAVE_PW_GECOS
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Is 'struct dirent64' in <sys/types.h>? */
+#undef HAVE_STRUCT_DIRENT64
+
+/* Is 'struct stat64' in <sys/stat.h>? */
+#undef HAVE_STRUCT_STAT64
+
+/* Should we include <sys/select.h>? */
+#undef HAVE_SYS_SELECT_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Is off64_t in <sys/types.h>? */
+#undef HAVE_TYPE_OFF64_T
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Have we turned on XFT (antialiased fonts)? */
+#undef HAVE_XFT
+
+/* Define to 1 if you have the `_dyld_get_image_header_containing_address'
+   function. */
+#undef HAVE__DYLD_GET_IMAGE_HEADER_CONTAINING_ADDRESS
+
+/* Is this a Mac I see before me? */
+#undef MAC_OSX_TCL
+
+/* Are we building TkAqua? */
+#undef MAC_OSX_TK
+
+/* Linker support for module scope symbols */
+#undef MODULE_SCOPE
+
+/* Do we have access to the fd_set type? */
+#undef NO_FD_SET
+
+/* Do we have a working <stdlib.h> to include? */
+#undef NO_STDLIB_H
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* May we use XIM peeking safely? */
+#undef PEEK_XCLOSEIM
+
+/* Is this a static build? */
+#undef STATIC_BUILD
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Is debugging enabled? */
+#undef TCL_CFG_DEBUG
+
+/* Is this a 64-bit build? */
+#undef TCL_CFG_DO64BIT
+
+/* Is this an optimized build? */
+#undef TCL_CFG_OPTIMIZED
+
+/* Is bytecode debugging enabled? */
+#undef TCL_COMPILE_DEBUG
+
+/* Are bytecode statistics enabled? */
+#undef TCL_COMPILE_STATS
+
+/* Are we to override what our default encoding is? */
+#undef TCL_DEFAULT_ENCODING
+
+/* Can this platform load code from memory? */
+#undef TCL_LOAD_FROM_MEMORY
+
+/* Is memory debugging enabled? */
+#undef TCL_MEM_DEBUG
+
+/* What is the default extension for shared libraries? */
+#undef TCL_SHLIB_EXT
+
+/* Are we building with threads enabled? */
+#undef TCL_THREADS
+
+/* Are wide integers to be implemented with C 'long's? */
+#undef TCL_WIDE_INT_IS_LONG
+
+/* What type should be used to define wide integers? */
+#undef TCL_WIDE_INT_TYPE
+
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+#undef TIME_WITH_SYS_TIME
+
+/* Is Tk built as a framework? */
+#undef TK_FRAMEWORK
+
+/* Should we use <a.out.h> when doing dynamic loading? */
+#undef USE_A_OUT_H
+
+/* Do we need a special AIX hack for timezones? */
+#undef USE_DELTA_FOR_TZ
+
+/* Should we use <sys/exec_aout.h> when doing dynamic loading? */
+#undef USE_SYS_EXEC_AOUT_H
+
+/* Should we use <sys/exec.h> when doing dynamic loading? */
+#undef USE_SYS_EXEC_H
+
+/* Do we want to use the threaded memory allocator? */
+#undef USE_THREAD_ALLOC
+
+/* Use the generic thread storage subsystem? */
+#undef USE_THREAD_STORAGE
+
+/* Should we use vfork() instead of fork()? */
+#undef USE_VFORK
+
+/* Define to 1 if your processor stores words with the most significant byte
+   first (like Motorola and SPARC, unlike Intel and VAX). */
+#undef WORDS_BIGENDIAN
+
+/* Add the _ISOC99_SOURCE flag when building */
+#undef _ISOC99_SOURCE
+
+/* Add the _LARGEFILE64_SOURCE flag when building */
+#undef _LARGEFILE64_SOURCE
+
+/* # needed in sys/socket.h Should OS/390 do the right thing with sockets? */
+#undef _OE_SOCKETS
+
+/* Do we really want to follow the standard? Yes we do! */
+#undef _POSIX_PTHREAD_SEMANTICS
+
+/* Do we want the reentrant OS API? */
+#undef _REENTRANT
+
+/* Do we want the thread-safe OS API? */
+#undef _THREAD_SAFE
+
+/* Do we want to use the XOPEN network library? */
+#undef _XOPEN_SOURCE
+
+/* Do we want to use the XOPEN network library? */
+#undef _XOPEN_SOURCE_EXTENDED
+
+/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
+#ifndef __CHAR_UNSIGNED__
+# undef __CHAR_UNSIGNED__
+#endif
+
+/* Define to `int' if <sys/types.h> doesn't define. */
+#undef gid_t
+
+/* Define to `int' if <sys/types.h> does not define. */
+#undef mode_t
+
+/* Define to `int' if <sys/types.h> does not define. */
+#undef pid_t
+
+/* Define to `unsigned' if <sys/types.h> does not define. */
+#undef size_t
+
+/* Do we want to use the strtod() in compat? */
+#undef strtod
+
+/* Define to `int' if <sys/types.h> doesn't define. */
+#undef uid_t
+
+#endif /* _TKCONFIG */
