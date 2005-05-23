@@ -1,7 +1,7 @@
 TclTkAqua README 
 ----------------
 
-RCS: @(#) $Id: README,v 1.12 2005/04/09 15:39:09 das Exp $
+RCS: @(#) $Id: README,v 1.13 2005/05/23 20:24:59 das Exp $
 
 This is the README file for the Mac OS X native versions of Tcl & Tk.
 
@@ -47,7 +47,7 @@ OS9 TclTk droplets.
 
 - If standard input is a special file of zero length (e.g. /dev/null), Wish
 brings up the tk console window at startup. This is the case when double
-clicking Wish in the Finder (or using 'open Wish\ Shell.app' from the Terminal).
+clicking Wish in the Finder (or using 'open Wish.app' from the Terminal).
 
 - Tcl extensions will be found in any of:
 	$HOME/Library/Tcl /Library/Tcl /Network/Library/Tcl /System/Library/Tcl
@@ -68,12 +68,12 @@ No manpages are installed by default for either tcl or tk.
 system's standard framework directories:
 	$HOME/Library/Frameworks /Library/Frameworks
 	/Network/Library/Frameworks /System/Library/Frameworks
-and 'Wish Shell' as well as /usr/bin/tclsh will work.
+and 'Wish' as well as /usr/bin/tclsh will work.
 
-- /usr/bin/wish is a script that calls a copy of 'Wish Shell' contained in
+- /usr/bin/wish is a script that calls a copy of 'Wish' contained in
 	Tk.framework/Resources
 
-- if 'Wish Shell' is started from the Finder or via 'open', $argv contains a
+- if 'Wish' is started from the Finder or via 'open', $argv contains a
 "-psn_XXXX" argument. This is the Wish's carbon process serial number, you may
 need to filter it out for cross platform compatibility of your scripts.
 
@@ -132,14 +132,14 @@ name.  So, for instance this code will spin the spinner:
 This was added in Tk 8.4.2
 
 - If you want to use Remote Debugging with Xcode 1.5 or 2.0, then you need to set
-the environment variable XCNOSTDIN to 1 in the Executable editor for Wish Shell.  That
+the environment variable XCNOSTDIN to 1 in the Executable editor for Wish.  That
 will cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
 Wish remotely, they will be left open and then Wish & gdb will fight for stdin...
 
 3. Building TclTkAqua
 ---------------------
 
-- Mac OS X 10.2 (or higher) is required to build Tcl on MacOSX.
+- Mac OS X 10.2 (or higher) is required to build TclTkAqua on MacOSX.
 
 - Apple's Developer Tools CD needs to be installed (the most recent version
 matching your OS release, but no earlier than December 2002). This CD should
@@ -147,14 +147,14 @@ have come with Mac OS X retail or should be present as a disk image on new macs
 that came with OSX preinstalled. It can also be downloaded from
 http://connect.apple.com (after you register for free ADC membership).
 
-- Tcl is built as a Mac OS X framework via the Makefile in tcl/macosx, but can
-also be built from Apple's ProjectBuilder IDE using the Tcl.pbproj project (which
-calls through to the Makefile).
+- Tcl and Tk are built as a Mac OS X frameworks via the Makefiles in tcl/macosx
+and tk/macosx, but can also be built directly with the standard unix configure
+and make buildsystem in tcl/unix resp. tk/unix.
 
-- TkAqua is built as a Mac OS X frameworks using Apple's ProjectBuilder
-IDE, but you do not have to deal with the IDE if you don't want to, the
-Makefile in tk/macosx takes care of calling the ProjectBuilder command line tool
-with all the details taken care of. 
+- It is still possible to build with Apple's Xcode IDE using the Tcl.pbproj and
+Wish.pbproj projects but this is not recommended anymore (currently Tcl.pbproj
+calls through to the tcl/macosx/Makefile; but Wish.pbproj doesn't, so there could
+be build differences).
 
 - Unpack the tcl and tk source release archives and place the tcl and tk source
 trees in a common parent directory.
@@ -176,9 +176,7 @@ set ${ver} to the empty string instead:
 	set ver=""     ;: if your shell is csh
 	ver=""         ;: if your shell is sh
 
-- If you're only interested in _building_ TclTkAqua and don't plan on doing
-development with the ProjectBuilder projects, using the Makefiles is easiest.
-The following steps will build Tcl and Tk from the Terminal, assuming you are
+- The following steps will build Tcl and Tk from the Terminal, assuming you are
 located in the directory containing the tcl and tk source trees:
 	make -C tcl${ver}/macosx
 	make -C tk${ver}/macosx
@@ -206,11 +204,11 @@ For example, to build and install only the optimized versions:
 	sudo make -C tcl${ver}/macosx install-deploy
 	sudo make -C tk${ver}/macosx  install-deploy
 
-- The Makefiles can also build a version of 'Wish Shell' that has the Tcl and Tk
+- The Makefiles can also build a version of 'Wish' that has the Tcl and Tk
 frameworks embedded in its application package. This allows for standalone
 deployment of the application with no installation required, e.g. from read-only
 media. To build & install in this manner, use the 'embedded' target variants of
-the Makefiles. For example, to build a standalone 'Wish Shell.app'
+the Makefiles. For example, to build a standalone 'Wish.app'
 in ./embedded/Applications/Utilities:
 	make -C tcl${ver}/macosx embedded
 	make -C tk${ver}/macosx embedded
@@ -221,32 +219,19 @@ Notes:
   require any new compiling or linking, so you can skip the first two makes.
   (making relinking unnecessary was added in 8.4.2)
   * the embedded frameworks include only optimized builds and no documentation.
-  * the standalone Wish has the directory Wish\ Shell.app/Contents/lib in its
+  * the standalone Wish has the directory Wish.app/Contents/lib in its
   auto_path. Thus you can place tcl extensions in this directory (i.e. embed
   them in the app package) and load them with [package require].
 
-- It is possible to build Tk without without the tcl sourcetree; but in that
-case you need to tell the Tk Makefile where the copies of 'Tcl.framework' and 
-'tclsh8.4' are located that you want to build & link against 
-(their default location is ${BUILD_DIR}/tcl).
-
-For instance to use their default systemwide install locations:
+- It is possible to build Tk against an installed Tcl.framework; but you will
+still need a tcl sourcetree in the location specified in TCL_SRC_DIR in
+Tcl.framework/tclConfig.sh. Also, linking with Tcl.framework has to work
+exactly as indicated in TCL_LIB_SPEC in Tcl.framework/tclConfig.sh.
+If you used non-default install locations for Tcl.framework, specify them as
+make overrides to the tk/macosx Makefile, e.g.
 	make -C tk${ver}/macosx \
-	    TCL_FRAMEWORK_DIR=/Library/Frameworks TCLSH_DIR=/usr/bin
+	    TCL_FRAMEWORK_DIR=$HOME/Library/Frameworks TCLSH_DIR=$HOME/usr/bin
 	sudo make -C tk${ver}/macosx install \
-	    TCL_FRAMEWORK_DIR=/Library/Frameworks TCLSH_DIR=/usr/bin
-[ of course this will only work if /Library/Frameworks does indeed contain a  ]
-[ Tcl.framework corresponding in version to the Tk.framework you're trying to ]
-[ build, and if TCLSH_DIR contains a corresponding /usr/bin/tclsh8.4          ]
-
-or to use an earlier install of Tcl into INSTALL_ROOT="${TCLTK}/" :
-	make -C tk${ver}/macosx \
-	    TCL_FRAMEWORK_DIR=${TCLTK}/Library/Frameworks TCLSH_DIR=${TCLTK}/usr/bin
-	sudo make -C tk${ver}/macosx install INSTALL_ROOT="${TCLTK}/" \
-	    TCL_FRAMEWORK_DIR=${TCLTK}/Library/Frameworks TCLSH_DIR=${TCLTK}/usr/bin
+	    TCL_FRAMEWORK_DIR=$HOME/Library/Frameworks TCLSH_DIR=$HOME/usr/bin
 
 The Makefile variables TCL_FRAMEWORK_DIR and TCLSH_DIR were added in Tk 8.4.3.
-
-Note that html help in Tk.framework is only built if TCL_FRAMEWORK_DIR contains
-the tcl Makefile (as is the case for the default value of TCL_FRAMEWORK_DIR).
-
