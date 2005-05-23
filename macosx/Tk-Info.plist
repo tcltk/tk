@@ -7,10 +7,8 @@
 	<key>CFBundleExecutable</key>
 	<string>Tk</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Tk Library 8.5, Copyright © 2004 Tcl Core Team.
-MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
-	<key>CFBundleIconFile</key>
-	<string></string>
+	<string>Tk Library 8.5, Copyright © 2005 Tcl Core Team.
+Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.tcltk.tklibrary</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -22,7 +20,7 @@ MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright �
 	<key>CFBundleShortVersionString</key>
 	<string>8.5a3</string>
 	<key>CFBundleSignature</key>
-	<string>WiSH</string>
+	<string>Tk  </string>
 	<key>CFBundleVersion</key>
 	<string>8.5a3</string>
 </dict>
