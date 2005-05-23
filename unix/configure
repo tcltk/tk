@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC MAN_FLAGS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP TCL_THREADS RANLIB ac_ct_RANLIB AR LIBOBJS TCL_LIBS DL_LIBS DL_OBJS PLAT_OBJS PLAT_SRCS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING LDFLAGS_DEBUG LDFLAGS_OPTIMIZE CC_SEARCH_FLAGS LD_SEARCH_FLAGS STLIB_LD SHLIB_LD TCL_SHLIB_LD_EXTRAS TK_SHLIB_LD_EXTRAS SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX MAKE_LIB MAKE_STUB_LIB INSTALL_LIB INSTALL_STUB_LIB CFLAGS_DEFAULT LDFLAGS_DEFAULT XFT_CFLAGS XFT_LIBS UNIX_FONT_OBJS TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_STUB_LIB_SPEC TK_BUILD_STUB_LIB_PATH TK_STUB_LIB_PATH TK_STUB_FLAGS TK_BUILD_EXP_FILE TK_EXP_FILE TCL_STUB_FLAGS LD_LIBRARY_PATH_VAR TK_BUILD_LIB_SPEC TK_LIB_FILE TK_LIB_FLAG TK_LIB_SPEC TK_INCLUDE_SPEC TK_SRC_DIR XINCLUDES XLIBSW TK_SHARED_BUILD LOCALES LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC MAN_FLAGS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP TCL_THREADS RANLIB ac_ct_RANLIB AR LIBOBJS TCL_LIBS DL_LIBS DL_OBJS PLAT_OBJS PLAT_SRCS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING LDFLAGS_DEBUG LDFLAGS_OPTIMIZE CC_SEARCH_FLAGS LD_SEARCH_FLAGS STLIB_LD SHLIB_LD TCL_SHLIB_LD_EXTRAS TK_SHLIB_LD_EXTRAS SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX MAKE_LIB MAKE_STUB_LIB INSTALL_LIB INSTALL_STUB_LIB CFLAGS_DEFAULT LDFLAGS_DEFAULT XFT_CFLAGS XFT_LIBS UNIX_FONT_OBJS TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_YEAR TK_LIB_FILE TK_LIB_FLAG TK_LIB_SPEC TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_STUB_LIB_SPEC TK_STUB_LIB_PATH TK_INCLUDE_SPEC TK_BUILD_STUB_LIB_SPEC TK_BUILD_STUB_LIB_PATH TK_SRC_DIR TK_SHARED_BUILD LD_LIBRARY_PATH_VAR TK_BUILD_LIB_SPEC TK_BUILD_EXP_FILE TK_EXP_FILE TCL_STUB_FLAGS XINCLUDES XLIBSW LOCALES TK_WINDOWINGSYSTEM TK_PKG_DIR TK_LIBRARY PRIVATE_INCLUDE_DIR HTML_DIR EXTRA_CC_SWITCHES EXTRA_INSTALL EXTRA_INSTALL_BINARIES EXTRA_BUILD_HTML EXTRA_WISH_LIBS TK_RSRC_FILE WISH_RSRC_FILE LIB_RSRC_FILE APP_RSRC_FILE REZ REZ_FLAGS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -858,7 +858,9 @@ Optional Features:
   --enable-corefoundation use CoreFoundation API --enable-corefoundation
   --disable-load          disallow dynamic loading and "load" command
   --enable-symbols        build with debugging symbols --disable-symbols
+  --enable-aqua           enable Aqua windowingsystem on Mac OS X --disable-aqua
   --enable-xft         Use freetype/fontconfig/xft --disable-xft
+  --enable-framework      package shared libraries in MacOSX frameworks --disable-framework
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1325,6 +1327,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
+
 TK_VERSION=8.5
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=5
@@ -1518,8 +1521,6 @@ fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
-# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
-eval libdir="$libdir"
 # Make sure srcdir is fully qualified!
 srcdir=`cd $srcdir ; pwd`
 TK_SRC_DIR=`cd $srcdir/..; pwd`
@@ -3166,10 +3167,10 @@ fi
 done
 
 
-#------------------------------------------------------------------------------
+#------------------------------------------------------------------------
 # If we're using GCC, see if the compiler understands -pipe.  If so, use it.
 # It makes compiling go faster.  (This is only a performance feature.)
-#------------------------------------------------------------------------------
+#------------------------------------------------------------------------
 
 if test -z "$no_pipe"; then
 if test -n "$GCC"; then
@@ -4059,10 +4060,6 @@ echo "${ECHO_T}no (default)" >&6
 # Add the threads support libraries
 LIBS="$LIBS$THREADS_LIBS"
 
-#--------------------------------------------------------------------
-# Recompute the necessary flags to run the compiler
-#--------------------------------------------------------------------
-
 
     echo "$as_me:$LINENO: checking how to build libraries" >&5
 echo $ECHO_N "checking how to build libraries... $ECHO_C" >&6
@@ -4096,6 +4093,12 @@ _ACEOF
 
     fi
 
+
+#--------------------------------------------------------------------
+# The statements below define a collection of compile flags.  This
+# macro depends on the value of SHARED_BUILD, and should be called
+# after SC_ENABLE_SHARED checks the configure switches.
+#--------------------------------------------------------------------
 
 if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
@@ -5758,8 +5761,6 @@ echo "${ECHO_T}$tcl_cv_ld_search_paths_first" >&6
 	    LD_LIBRARY_PATH_VAR="DYLD_LIBRARY_PATH"
 	    PLAT_OBJS='${MAC_OSX_OBJS}'
 	    PLAT_SRCS='${MAC_OSX_SRCS}'
-	    TCL_SHLIB_LD_EXTRAS='-compatibility_version ${VERSION} -current_version ${VERSION} -install_name ${DYLIB_INSTALL_DIR}/${TCL_LIB_FILE} -seg1addr 0xa000000'
-	    TK_SHLIB_LD_EXTRAS=' -compatibility_version ${VERSION} -current_version ${VERSION} -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE}  -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | tail +3 > $$f && echo $$f)'
             echo "$as_me:$LINENO: checking whether to use CoreFoundation" >&5
 echo $ECHO_N "checking whether to use CoreFoundation... $ECHO_C" >&6
             # Check whether --enable-corefoundation or --disable-corefoundation was given.
@@ -6109,6 +6110,11 @@ _ACEOF
 
 cat >>confdefs.h <<\_ACEOF
 #define MODULE_SCOPE __private_extern__
+_ACEOF
+
+
+cat >>confdefs.h <<\_ACEOF
+#define TCL_LOAD_FROM_MEMORY 1
 _ACEOF
 
 	    # prior to Darwin 7, realpath is not threadsafe, so don't
@@ -8595,13 +8601,152 @@ _ACEOF
 fi
 
 #--------------------------------------------------------------------
-#	Locate the X11 header files and the X11 library archive.  Try
-#	the ac_path_x macro first, but if it doesn't find the X stuff
-#	(e.g. because there's no xmkmf program) then check through
-#	a list of possible directories.  Under some conditions the
-#	autoconf macro will return an include directory that contains
-#	no include files, so double-check its result just to be safe.
+#	On Mac OS X, we can build either with X11 or with Aqua
 #--------------------------------------------------------------------
+
+if test "`uname -s`" = "Darwin" ; then
+    # Check whether --enable-aqua or --disable-aqua was given.
+if test "${enable_aqua+set}" = set; then
+  enableval="$enable_aqua"
+  tk_aqua=$enableval
+else
+  tk_aqua=no
+fi;
+    if test $tk_aqua = yes; then
+        if test $tcl_corefoundation = no; then
+            { echo "$as_me:$LINENO: WARNING: \"Aqua can only be used when CoreFoundation is available\"" >&5
+echo "$as_me: WARNING: \"Aqua can only be used when CoreFoundation is available\"" >&2;}
+            tk_aqua=no
+        elif test ! -d /System/Library/Frameworks/Carbon.framework; then
+            { echo "$as_me:$LINENO: WARNING: \"Aqua can only be used when Carbon is available\"" >&5
+echo "$as_me: WARNING: \"Aqua can only be used when Carbon is available\"" >&2;}
+            tk_aqua=no
+        fi
+    fi
+else
+    tk_aqua=no
+fi
+
+if test $tk_aqua = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define MAC_OSX_TK 1
+_ACEOF
+
+    LIBS="$LIBS -framework Carbon"
+    CFLAGS="$CFLAGS -fpascal-strings"
+
+for ac_func in _dyld_get_image_header_containing_address
+do
+as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $ac_func" >&5
+echo $ECHO_N "checking for $ac_func... $ECHO_C" >&6
+if eval "test \"\${$as_ac_var+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+/* Define $ac_func to an innocuous variant, in case <limits.h> declares $ac_func.
+   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
+#define $ac_func innocuous_$ac_func
+
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $ac_func (); below.
+    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    <limits.h> exists even on freestanding compilers.  */
+
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+
+#undef $ac_func
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char $ac_func ();
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_$ac_func) || defined (__stub___$ac_func)
+choke me
+#else
+char (*f) () = $ac_func;
+#endif
+#ifdef __cplusplus
+}
+#endif
+
+int
+main ()
+{
+return f != $ac_func;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  eval "$as_ac_var=yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+eval "$as_ac_var=no"
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_var'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_var'}'`" >&6
+if test `eval echo '${'$as_ac_var'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+done
+
+    TK_WINDOWINGSYSTEM=AQUA
+else
+    #--------------------------------------------------------------------
+    #	Locate the X11 header files and the X11 library archive.  Try
+    #	the ac_path_x macro first, but if it doesn't find the X stuff
+    #	(e.g. because there's no xmkmf program) then check through
+    #	a list of possible directories.  Under some conditions the
+    #	autoconf macro will return an include directory that contains
+    #	no include files, so double-check its result just to be safe.
+    #--------------------------------------------------------------------
 
 
     echo "$as_me:$LINENO: checking for X" >&5
@@ -9039,6 +9184,8 @@ echo "${ECHO_T}couldn't find any!  Using -lX11." >&6
 	XLIBSW=-lX11
     fi
 
+    TK_WINDOWINGSYSTEM=X11
+fi
 
 #--------------------------------------------------------------------
 #	Various manipulations on the search path used at runtime to
@@ -9537,74 +9684,211 @@ _ACEOF
 #	building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------
 
-eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
+eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
+eval "TK_LIB_FILE=libtk${LIB_SUFFIX}"
+
+# tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
+# since on some platforms TK_LIB_FILE contains shell escapes.
+
+eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
 if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TCL_STUB_LIB_SPEC}"
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
-else
-    TCL_STUB_FLAGS=""
 fi
-TK_LIB_FILE=libtk${LIB_SUFFIX}
-eval "TK_LIB_FILE=${TK_LIB_FILE}"
+
+TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
+PRIVATE_INCLUDE_DIR='$(includedir)'
+HTML_DIR='$(DISTDIR)/html'
+TK_PKG_DIR='tk$(VERSION)'
+TK_RSRC_FILE='tk$(VERSION).rsrc'
+WISH_RSRC_FILE='wish$(VERSION).rsrc'
 
 # Note:  in the following variable, it's important to use the absolute
 # path name of the Tcl directory rather than "..":  this is because
 # AIX remembers this path and will attempt to use it at run-time to look
 # up the Tcl library.
 
-if test "$SHARED_BUILD" = 0 -o $TCL_NEEDS_EXP_FILE = 0; then
-    if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-	eval TK_LIB_FLAG="-ltk${VERSION}"
-    else
-	eval TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`"
-    fi
-    TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
-    TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
-    TK_BUILD_EXP_FILE=""
-    TK_EXP_FILE=""
-else
-    TK_BUILD_EXP_FILE="lib.exp"
-    eval "TK_EXP_FILE=libtk${TCL_EXPORT_FILE_SUFFIX}"
+if test "`uname -s`" = "Darwin" ; then
 
-    if test "$GCC" = "yes" ; then
-	TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
-	TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L`pwd`"
+    echo "$as_me:$LINENO: checking how to package libraries" >&5
+echo $ECHO_N "checking how to package libraries... $ECHO_C" >&6
+    # Check whether --enable-framework or --disable-framework was given.
+if test "${enable_framework+set}" = set; then
+  enableval="$enable_framework"
+  tcl_ok=$enableval
+else
+  tcl_ok=no
+fi;
+
+    if test "${enable_framework+set}" = set; then
+	enableval="$enable_framework"
+	tcl_ok=$enableval
     else
-	TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
-	TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"
+	tcl_ok=no
+    fi
+
+    if test "$tcl_ok" = "yes" ; then
+	echo "$as_me:$LINENO: result: framework" >&5
+echo "${ECHO_T}framework" >&6
+	FRAMEWORK_BUILD=1
+	if test "${SHARED_BUILD}" = "0" ; then
+	    { echo "$as_me:$LINENO: WARNING: \"Frameworks can only be built if --enable-shared is yes\"" >&5
+echo "$as_me: WARNING: \"Frameworks can only be built if --enable-shared is yes\"" >&2;}
+	    FRAMEWORK_BUILD=0
+	fi
+	if test $tcl_corefoundation = no; then
+	    { echo "$as_me:$LINENO: WARNING: \"Frameworks can only be used when CoreFoundation is available\"" >&5
+echo "$as_me: WARNING: \"Frameworks can only be used when CoreFoundation is available\"" >&2;}
+	    FRAMEWORK_BUILD=0
+	fi
+    else
+	echo "$as_me:$LINENO: result: standard shared library" >&5
+echo "${ECHO_T}standard shared library" >&6
+	FRAMEWORK_BUILD=0
+    fi
+
+    TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk '{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}'`"
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | tail +3 > $$f && echo $$f)'
+fi
+
+if test "$FRAMEWORK_BUILD" = "1" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define TK_FRAMEWORK 1
+_ACEOF
+
+              ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in"
+
+    # Construct a fake local framework structure to make linking with
+    # '-framework Tk' and running of tktest work
+              ac_config_commands="$ac_config_commands Tk.framework"
+
+    LD_LIBRARY_PATH_VAR="DYLD_FRAMEWORK_PATH"
+    if test "$libdir" = '${exec_prefix}/lib'; then
+        # override libdir default
+        libdir="/Library/Frameworks"
+    fi
+    TK_LIB_FILE="Tk"
+    TK_LIB_FLAG="-framework Tk"
+    TK_BUILD_LIB_SPEC="-F`pwd` -framework Tk"
+    TK_LIB_SPEC="-F${libdir} -framework Tk"
+    libdir="$libdir/Tk.framework/Versions/\${VERSION}"
+    TK_LIBRARY="$libdir/Resources/Scripts"
+    TK_PKG_DIR="Resources/Scripts"
+    TK_RSRC_FILE="Tk.rsrc"
+    WISH_RSRC_FILE="Wish.rsrc"
+    includedir="$libdir/Headers"
+    PRIVATE_INCLUDE_DIR="$libdir/PrivateHeaders"
+    HTML_DIR="$libdir/Resources/Documentation/Reference/Tk"
+    EXTRA_INSTALL="install-private-headers html-tk"
+    EXTRA_BUILD_HTML='@ln -fs contents.htm $(HTML_INSTALL_DIR)/TkTOC.html'
+    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources" && mkdir -p "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
+    if test $tk_aqua = yes; then
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing ${TK_RSRC_FILE} to $(LIB_INSTALL_DIR)/Resources" && mkdir -p "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) "${TK_RSRC_FILE}" "$(LIB_INSTALL_DIR)/Resources"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing wish$(VERSION) script to $(INSTALL_ROOT)/'"${bindir}"'" && mkdir -p "$(INSTALL_ROOT)/'"${bindir}"'" && printf > "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)" "#!/bin/sh\n\"\$$(dirname \$$0)'"`eval d="${bindir}"; echo "$d" | sed -e 's#/[^/][^/]*#/..#g'`"'$(bindir)/Wish\" \"\$$@\"" && chmod +x "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)"'
+        bindir="$libdir/Resources/Wish.app/Contents/MacOS"
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Info.plist to $(BIN_INSTALL_DIR)/.." && $(INSTALL_DATA) Wish-Info.plist "$(BIN_INSTALL_DIR)/../Info.plist" && mv -f "$(BIN_INSTALL_DIR)/wish$(VERSION)" "$(BIN_INSTALL_DIR)/Wish"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && mkdir -p "$(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.icns" "$(BIN_INSTALL_DIR)/../Resources"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing ${WISH_RSRC_FILE} to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "${WISH_RSRC_FILE}" "$(BIN_INSTALL_DIR)/../Resources"'
+    fi
+    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" "$(STUB_LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done'
+    TK_YEAR="`date +%Y`"
+    # Don't use AC_DEFINE for the following as the framework version define
+    # needs to go into the Makefile even when using autoheader, so that we
+    # can pick up a potential make override of VERSION. Also, don't put this
+    # into CFLAGS as it should not go into tkConfig.sh
+    EXTRA_CC_SWITCHES='-DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
+else
+    # libdir must be a fully qualified path and not ${exec_prefix}/lib
+    eval libdir="$libdir"
+    if test "$SHARED_BUILD" = "0" || test "$TCL_NEEDS_EXP_FILE" = "0"; then
+        if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+            TK_LIB_FLAG="-ltk${TK_VERSION}"
+        else
+            TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
+        fi
+        TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
+        TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
+    else
+        TK_BUILD_EXP_FILE="lib.exp"
+        eval "TK_EXP_FILE=libtk${TCL_EXPORT_FILE_SUFFIX}"
+
+        if test "$GCC" = "yes" ; then
+            TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
+            TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L`pwd`"
+        else
+            TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
+            TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"
+        fi
     fi
 fi
-TK_SHARED_BUILD=${SHARED_BUILD}
+
+# Support for building the Aqua resource files
+if test $tk_aqua = yes; then
+              ac_config_files="$ac_config_files Wish-Info.plist:../macosx/Wish-Info.plist.in"
+
+    EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
+    LIB_RSRC_FILE='${TK_RSRC_FILE}'
+    APP_RSRC_FILE='${WISH_RSRC_FILE}'
+    REZ=/Developer/Tools/Rez
+    REZ_FLAGS='-d "SystemSevenOrLater=1" -useDF'
+    if test "$SHARED_BUILD" = 0; then
+        EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) $(LIB_INSTALL_DIR)'
+	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd`/\${TK_RSRC_FILE}"
+	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"
+    elif test "$FRAMEWORK_BUILD" = "0"; then
+        TK_SHLIB_LD_EXTRAS="$TK_SHLIB_LD_EXTRAS -sectcreate __TEXT __tk_rsrc \${TK_RSRC_FILE}"
+    fi
+fi
 
 #--------------------------------------------------------------------
-# The statements below define various symbols relating to creating
-# the stub'd version of the Tk library
-#
-# For now, linking to Tcl stubs is not supported with Tk. It causes
-# too many problems with linking.  When Tk is a fully loadable
-# extension, linking the the Tcl stubs will be supported.
+#       The statements below define various symbols relating to Tk
+#       stub support.
 #--------------------------------------------------------------------
 
 # Replace ${VERSION} with contents of ${TK_VERSION}
 eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
+eval "TK_STUB_LIB_DIR=${libdir}"
 
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    eval TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}"
+    TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}"
 else
-    eval TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`"
+    TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`"
 fi
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd` ${TK_STUB_LIB_FLAG}"
-TK_STUB_LIB_SPEC="-L${libdir} ${TK_STUB_LIB_FLAG}"
+TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
-TK_STUB_LIB_PATH="${libdir}/${TK_STUB_LIB_FILE}"
+TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
 # Install time header dir can be set via --includedir
 eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
 
-eval "TK_LIB_FILE=${TK_LIB_FILE}"
+#------------------------------------------------------------------------
+# tkConfig.sh refers to this by a different name
+#------------------------------------------------------------------------
+
+TK_SHARED_BUILD=${SHARED_BUILD}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -9639,6 +9923,7 @@ eval "TK_LIB_FILE=${TK_LIB_FILE}"
 
 
                     ac_config_files="$ac_config_files Makefile tkConfig.sh"
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -10082,6 +10367,9 @@ Usage: $0 [OPTIONS] [FILE]...
 Configuration files:
 $config_files
 
+Configuration commands:
+$config_commands
+
 Report bugs to <bug-autoconf@gnu.org>."
 _ACEOF
 
@@ -10180,7 +10468,14 @@ fi
 
 _ACEOF
 
+cat >>$CONFIG_STATUS <<_ACEOF
+#
+# INIT-COMMANDS section.
+#
 
+VERSION=${TK_VERSION} && tk_aqua=${tk_aqua}
+
+_ACEOF
 
 
 
@@ -10189,8 +10484,11 @@ for ac_config_target in $ac_config_targets
 do
   case "$ac_config_target" in
   # Handling of arguments.
+  "Tk-Info.plist" ) CONFIG_FILES="$CONFIG_FILES Tk-Info.plist:../macosx/Tk-Info.plist.in" ;;
+  "Wish-Info.plist" ) CONFIG_FILES="$CONFIG_FILES Wish-Info.plist:../macosx/Wish-Info.plist.in" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "tkConfig.sh" ) CONFIG_FILES="$CONFIG_FILES tkConfig.sh" ;;
+  "Tk.framework" ) CONFIG_COMMANDS="$CONFIG_COMMANDS Tk.framework" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
@@ -10203,6 +10501,7 @@ done
 # bizarre bug on SunOS 4.1.3.
 if $ac_need_defaults; then
   test "${CONFIG_FILES+set}" = set || CONFIG_FILES=$config_files
+  test "${CONFIG_COMMANDS+set}" = set || CONFIG_COMMANDS=$config_commands
 fi
 
 # Have a temporary directory for convenience.  Make it in the build tree
@@ -10330,27 +10629,43 @@ s,@TK_VERSION@,$TK_VERSION,;t t
 s,@TK_MAJOR_VERSION@,$TK_MAJOR_VERSION,;t t
 s,@TK_MINOR_VERSION@,$TK_MINOR_VERSION,;t t
 s,@TK_PATCH_LEVEL@,$TK_PATCH_LEVEL,;t t
-s,@TK_STUB_LIB_FILE@,$TK_STUB_LIB_FILE,;t t
-s,@TK_STUB_LIB_FLAG@,$TK_STUB_LIB_FLAG,;t t
-s,@TK_BUILD_STUB_LIB_SPEC@,$TK_BUILD_STUB_LIB_SPEC,;t t
-s,@TK_STUB_LIB_SPEC@,$TK_STUB_LIB_SPEC,;t t
-s,@TK_BUILD_STUB_LIB_PATH@,$TK_BUILD_STUB_LIB_PATH,;t t
-s,@TK_STUB_LIB_PATH@,$TK_STUB_LIB_PATH,;t t
-s,@TK_STUB_FLAGS@,$TK_STUB_FLAGS,;t t
-s,@TK_BUILD_EXP_FILE@,$TK_BUILD_EXP_FILE,;t t
-s,@TK_EXP_FILE@,$TK_EXP_FILE,;t t
-s,@TCL_STUB_FLAGS@,$TCL_STUB_FLAGS,;t t
-s,@LD_LIBRARY_PATH_VAR@,$LD_LIBRARY_PATH_VAR,;t t
-s,@TK_BUILD_LIB_SPEC@,$TK_BUILD_LIB_SPEC,;t t
+s,@TK_YEAR@,$TK_YEAR,;t t
 s,@TK_LIB_FILE@,$TK_LIB_FILE,;t t
 s,@TK_LIB_FLAG@,$TK_LIB_FLAG,;t t
 s,@TK_LIB_SPEC@,$TK_LIB_SPEC,;t t
+s,@TK_STUB_LIB_FILE@,$TK_STUB_LIB_FILE,;t t
+s,@TK_STUB_LIB_FLAG@,$TK_STUB_LIB_FLAG,;t t
+s,@TK_STUB_LIB_SPEC@,$TK_STUB_LIB_SPEC,;t t
+s,@TK_STUB_LIB_PATH@,$TK_STUB_LIB_PATH,;t t
 s,@TK_INCLUDE_SPEC@,$TK_INCLUDE_SPEC,;t t
+s,@TK_BUILD_STUB_LIB_SPEC@,$TK_BUILD_STUB_LIB_SPEC,;t t
+s,@TK_BUILD_STUB_LIB_PATH@,$TK_BUILD_STUB_LIB_PATH,;t t
 s,@TK_SRC_DIR@,$TK_SRC_DIR,;t t
+s,@TK_SHARED_BUILD@,$TK_SHARED_BUILD,;t t
+s,@LD_LIBRARY_PATH_VAR@,$LD_LIBRARY_PATH_VAR,;t t
+s,@TK_BUILD_LIB_SPEC@,$TK_BUILD_LIB_SPEC,;t t
+s,@TK_BUILD_EXP_FILE@,$TK_BUILD_EXP_FILE,;t t
+s,@TK_EXP_FILE@,$TK_EXP_FILE,;t t
+s,@TCL_STUB_FLAGS@,$TCL_STUB_FLAGS,;t t
 s,@XINCLUDES@,$XINCLUDES,;t t
 s,@XLIBSW@,$XLIBSW,;t t
-s,@TK_SHARED_BUILD@,$TK_SHARED_BUILD,;t t
 s,@LOCALES@,$LOCALES,;t t
+s,@TK_WINDOWINGSYSTEM@,$TK_WINDOWINGSYSTEM,;t t
+s,@TK_PKG_DIR@,$TK_PKG_DIR,;t t
+s,@TK_LIBRARY@,$TK_LIBRARY,;t t
+s,@PRIVATE_INCLUDE_DIR@,$PRIVATE_INCLUDE_DIR,;t t
+s,@HTML_DIR@,$HTML_DIR,;t t
+s,@EXTRA_CC_SWITCHES@,$EXTRA_CC_SWITCHES,;t t
+s,@EXTRA_INSTALL@,$EXTRA_INSTALL,;t t
+s,@EXTRA_INSTALL_BINARIES@,$EXTRA_INSTALL_BINARIES,;t t
+s,@EXTRA_BUILD_HTML@,$EXTRA_BUILD_HTML,;t t
+s,@EXTRA_WISH_LIBS@,$EXTRA_WISH_LIBS,;t t
+s,@TK_RSRC_FILE@,$TK_RSRC_FILE,;t t
+s,@WISH_RSRC_FILE@,$WISH_RSRC_FILE,;t t
+s,@LIB_RSRC_FILE@,$LIB_RSRC_FILE,;t t
+s,@APP_RSRC_FILE@,$APP_RSRC_FILE,;t t
+s,@REZ@,$REZ,;t t
+s,@REZ_FLAGS@,$REZ_FLAGS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 
@@ -10583,6 +10898,131 @@ s,@abs_top_builddir@,$ac_abs_top_builddir,;t t
     rm -f $tmp/out
   fi
 
+done
+_ACEOF
+cat >>$CONFIG_STATUS <<\_ACEOF
+
+#
+# CONFIG_COMMANDS section.
+#
+for ac_file in : $CONFIG_COMMANDS; do test "x$ac_file" = x: && continue
+  ac_dest=`echo "$ac_file" | sed 's,:.*,,'`
+  ac_source=`echo "$ac_file" | sed 's,[^:]*:,,'`
+  ac_dir=`(dirname "$ac_dest") 2>/dev/null ||
+$as_expr X"$ac_dest" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$ac_dest" : 'X\(//\)[^/]' \| \
+	 X"$ac_dest" : 'X\(//\)$' \| \
+	 X"$ac_dest" : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X"$ac_dest" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+  { if $as_mkdir_p; then
+    mkdir -p "$ac_dir"
+  else
+    as_dir="$ac_dir"
+    as_dirs=
+    while test ! -d "$as_dir"; do
+      as_dirs="$as_dir $as_dirs"
+      as_dir=`(dirname "$as_dir") 2>/dev/null ||
+$as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
+	 X"$as_dir" : 'X\(//\)[^/]' \| \
+	 X"$as_dir" : 'X\(//\)$' \| \
+	 X"$as_dir" : 'X\(/\)' \| \
+	 .     : '\(.\)' 2>/dev/null ||
+echo X"$as_dir" |
+    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{ s//\1/; q; }
+  	  /^X\(\/\/\)[^/].*/{ s//\1/; q; }
+  	  /^X\(\/\/\)$/{ s//\1/; q; }
+  	  /^X\(\/\).*/{ s//\1/; q; }
+  	  s/.*/./; q'`
+    done
+    test ! -n "$as_dirs" || mkdir $as_dirs
+  fi || { { echo "$as_me:$LINENO: error: cannot create directory \"$ac_dir\"" >&5
+echo "$as_me: error: cannot create directory \"$ac_dir\"" >&2;}
+   { (exit 1); exit 1; }; }; }
+
+  ac_builddir=.
+
+if test "$ac_dir" != .; then
+  ac_dir_suffix=/`echo "$ac_dir" | sed 's,^\.[\\/],,'`
+  # A "../" for each directory in $ac_dir_suffix.
+  ac_top_builddir=`echo "$ac_dir_suffix" | sed 's,/[^\\/]*,../,g'`
+else
+  ac_dir_suffix= ac_top_builddir=
+fi
+
+case $srcdir in
+  .)  # No --srcdir option.  We are building in place.
+    ac_srcdir=.
+    if test -z "$ac_top_builddir"; then
+       ac_top_srcdir=.
+    else
+       ac_top_srcdir=`echo $ac_top_builddir | sed 's,/$,,'`
+    fi ;;
+  [\\/]* | ?:[\\/]* )  # Absolute path.
+    ac_srcdir=$srcdir$ac_dir_suffix;
+    ac_top_srcdir=$srcdir ;;
+  *) # Relative path.
+    ac_srcdir=$ac_top_builddir$srcdir$ac_dir_suffix
+    ac_top_srcdir=$ac_top_builddir$srcdir ;;
+esac
+
+# Do not use `cd foo && pwd` to compute absolute paths, because
+# the directories may not exist.
+case `pwd` in
+.) ac_abs_builddir="$ac_dir";;
+*)
+  case "$ac_dir" in
+  .) ac_abs_builddir=`pwd`;;
+  [\\/]* | ?:[\\/]* ) ac_abs_builddir="$ac_dir";;
+  *) ac_abs_builddir=`pwd`/"$ac_dir";;
+  esac;;
+esac
+case $ac_abs_builddir in
+.) ac_abs_top_builddir=${ac_top_builddir}.;;
+*)
+  case ${ac_top_builddir}. in
+  .) ac_abs_top_builddir=$ac_abs_builddir;;
+  [\\/]* | ?:[\\/]* ) ac_abs_top_builddir=${ac_top_builddir}.;;
+  *) ac_abs_top_builddir=$ac_abs_builddir/${ac_top_builddir}.;;
+  esac;;
+esac
+case $ac_abs_builddir in
+.) ac_abs_srcdir=$ac_srcdir;;
+*)
+  case $ac_srcdir in
+  .) ac_abs_srcdir=$ac_abs_builddir;;
+  [\\/]* | ?:[\\/]* ) ac_abs_srcdir=$ac_srcdir;;
+  *) ac_abs_srcdir=$ac_abs_builddir/$ac_srcdir;;
+  esac;;
+esac
+case $ac_abs_builddir in
+.) ac_abs_top_srcdir=$ac_top_srcdir;;
+*)
+  case $ac_top_srcdir in
+  .) ac_abs_top_srcdir=$ac_abs_builddir;;
+  [\\/]* | ?:[\\/]* ) ac_abs_top_srcdir=$ac_top_srcdir;;
+  *) ac_abs_top_srcdir=$ac_abs_builddir/$ac_top_srcdir;;
+  esac;;
+esac
+
+
+  { echo "$as_me:$LINENO: executing $ac_dest commands" >&5
+echo "$as_me: executing $ac_dest commands" >&6;}
+  case $ac_dest in
+    Tk.framework ) n=Tk &&
+        f=$n.framework && v=Versions/$VERSION &&
+        rm -rf $f && mkdir -p $f/$v/Resources &&
+        ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
+        ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
+        if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
+        unset n f v
+     ;;
+  esac
 done
 _ACEOF
 

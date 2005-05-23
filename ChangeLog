@@ -1,3 +1,40 @@
+2005-05-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Makefile:
+	* macosx/README:
+	* macosx/Tk-Info.plist.in (new file):
+	* macosx/Wish-Info.plist.in (new file):
+	* unix/Makefile.in:
+	* unix/configure.in:
+	* unix/tcl.m4:
+	* unix/tkUnixInit.c:  moved all Darwin framework and TkAqua build
+	support from macosx/Wish.pbproj and macosx/Makefile into the standard
+	unix configure/make buildsystem, the project and macosx/Makefile are
+	no longer required to build Tk.framework and/or TkAqua. TkAqua is now
+	enabled by the --enable-aqua configure option, and static and
+	non-framework builds of TkAqua are now available via the standard
+	configure switches. Tk/X11 can also be built as a framework. The
+	macosx/Makefile now wraps the unix buildsystem and no longer uses the
+	projects, embedded builds are still only available via this Makefile,
+	but for other builds it is not longer required (but its current
+	functionality is still available for backwards compatibility). The
+	projects currently do not call through to the Makefile to build
+	(unlike Tcl.pbproj) so project builds may differ from makefile builds.
+	Due to issues with spaces in pathnames, 'Wish Shell.app' has been
+	renamed to 'Wish.app', the macosx/Makefile installs backwards
+	compatibility symlinks for the old name.
+	* macosx/tkMacOSXInit.c (TkpInit): added support for Tk resource file
+	in non-framework and static builds: the resource file is copied into a
+	__tk_rsrc MachO segment of the library or executable at link time and
+	extracted into a temporary location at initialization.
+	* unix/configure: autoconf-2.59
+	* unix/tkConfig.h.in (new file): autoheader-2.59
+
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/Tk-Info.plist:
+	* macosx/Wish-Info.plist:
+	* macosx/tkAboutDlg.r: updated copyright years to 2005.
+
 2005-05-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkFileFilter.c (TkGetFileFilters): Add all filters, not
