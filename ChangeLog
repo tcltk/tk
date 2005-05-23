@@ -1,3 +1,7 @@
+2005-05-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkFileFilter.c (FreeGlobPatterns): s/null/NULL/
+
 2005-05-24  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Makefile:
