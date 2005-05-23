@@ -24,8 +24,8 @@
 	<key>CFBundleExecutable</key>
 	<string>Wish Shell</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Wish Shell 8.5, Copyright © 2004 Tcl Core Team.
-MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
+	<string>Wish Shell 8.5, Copyright © 2005 Tcl Core Team.
+Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Copyright © 2001-2002, Apple Computer, Inc.</string>
 	<key>CFBundleIconFile</key>
 	<string>Wish.icns</string>
 	<key>CFBundleIdentifier</key>
