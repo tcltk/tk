@@ -4,6 +4,8 @@
 
 2005-05-24  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/tkTest.c: disable commands not available on TkAqua.
+
 	* macosx/Makefile:
 	* macosx/README:
 	* macosx/Tk-Info.plist.in (new file):
