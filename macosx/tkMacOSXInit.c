@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.10 2005/05/23 20:24:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.11 2005/05/24 02:32:15 das Exp $
  */
 
 #include "tkInt.h"
@@ -160,8 +160,11 @@ TkpInit(interp)
          * FIXME: Should we come up with a more generic way of doing this?
          */
          
+#ifdef TK_FRAMEWORK
         if (Tcl_MacOSXOpenVersionedBundleResources(interp, 
-                "com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 1, PATH_MAX, tkLibPath) != TCL_OK) {
+                "com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 1, PATH_MAX, tkLibPath) != TCL_OK)
+#endif
+            {
             /* Tk.framework not found, check if resource file is open */
             Handle rsrc = Get1NamedResource('CURS', "\phand");
             if (rsrc) {
