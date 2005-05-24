@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.21 2002/09/02 19:14:04 hobbs Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.21.2.1 2005/05/24 04:21:01 das Exp $
  */
 
 #include "tkInt.h"
@@ -281,7 +281,7 @@ Tktest_Init(interp)
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateCommand(interp, "testmakeexist", TestmakeexistCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
-#if !(defined(__WIN32__) || defined(MAC_TCL))
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
@@ -291,7 +291,7 @@ Tktest_Init(interp)
 #endif
     Tcl_CreateCommand(interp, "testprop", TestpropCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
-#if !(defined(__WIN32__) || defined(MAC_TCL))
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
     Tcl_CreateCommand(interp, "testsend", TestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
@@ -2190,7 +2190,7 @@ TestpropCmd(clientData, interp, argc, argv)
  */
 
 	/* ARGSUSED */
-#if !(defined(__WIN32__) || defined(MAC_TCL))
+#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
 static int
 TestsendCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
