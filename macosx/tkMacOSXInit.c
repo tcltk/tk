@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.5 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.6 2005/05/24 04:21:32 das Exp $
  */
 
 #include "tkInt.h"
@@ -18,6 +18,7 @@
 #include "tclInt.h"
 #include <sys/stat.h>
 #include <mach-o/dyld.h>
+#include <mach-o/getsect.h>
 
 /*
  * The Init script (common to Windows and Unix platforms) is
@@ -158,8 +159,64 @@ TkpInit(interp)
          * FIXME: Should we come up with a more generic way of doing this?
          */
          
-        Tcl_MacOSXOpenVersionedBundleResources(interp, 
-                "com.tcltk.tklibrary", TK_VERSION, 1, 1024, tkLibPath);
+#ifdef TK_FRAMEWORK
+        if (Tcl_MacOSXOpenVersionedBundleResources(interp, 
+                "com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 1, PATH_MAX, tkLibPath) != TCL_OK)
+#endif
+            {
+            /* Tk.framework not found, check if resource file is open */
+            Handle rsrc = Get1NamedResource('CURS', "\phand");
+            if (rsrc) {
+                ReleaseResource(rsrc);
+            } else {
+                struct mach_header *image;
+                char *data = NULL;
+                unsigned long size;
+                int fd = -1;
+                char fileName[L_tmpnam + 15];
+
+                /* Get resource data from __tk_rsrc section of tk library file */
+#ifdef HAVE__DYLD_GET_IMAGE_HEADER_CONTAINING_ADDRESS
+                image = _dyld_get_image_header_containing_address((unsigned long)&TkpInit);
+                if (image) {
+                    data = getsectdatafromheader(image, SEG_TEXT, "__tk_rsrc", &size);
+                }
+#else
+                int i, n = _dyld_image_count();
+                for (i = 0; i < n; i++) {
+                    image = _dyld_get_image_header(i);
+                    if (image) {
+                        data = getsectdatafromheader(image, SEG_TEXT, "__tk_rsrc", &size);
+                    }
+                    if (data) break;
+                }
+#endif
+                while (data) {
+                    OSStatus err;
+                    FSRef ref;
+                    SInt16 refNum;
+                    
+                    /* Write resource data to temporary file and open it */
+                    strcpy(fileName, P_tmpdir);
+                    if (fileName[strlen(fileName) - 1] != '/') {
+                        strcat(fileName, "/");
+                    }
+                    strcat(fileName, "tkMacOSX_XXXXXX");
+                    fd = mkstemp(fileName);
+                    if (fd == -1) break;
+                    fcntl(fd, F_SETFD, FD_CLOEXEC);
+                    if (write(fd, data, size) == -1) break;
+                    err = FSPathMakeRef(fileName, &ref, NULL);
+                    if (err != noErr) break;
+                    err = FSOpenResourceFile(&ref, 0, NULL, fsRdPerm, &refNum);
+                    break;
+                }
+                if (fd != -1) {
+                    unlink(fileName);
+                    close(fd);
+                }
+            }
+        }
                  
         /*
          * If we don't have a TTY and stdin is a special character file of length 0,
