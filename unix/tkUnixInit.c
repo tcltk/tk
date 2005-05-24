@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixInit.c,v 1.5 2002/01/25 21:09:37 dgp Exp $
+ * RCS: @(#) $Id: tkUnixInit.c,v 1.5.2.1 2005/05/24 04:21:34 das Exp $
  */
 
 #include "tkInt.h"
@@ -20,6 +20,11 @@
  * defined in tkInitScript.h
  */
 #include "tkInitScript.h"
+
+#ifdef HAVE_COREFOUNDATION
+static int		MacOSXGetLibraryPath _ANSI_ARGS_((
+			    Tcl_Interp *interp));
+#endif /* HAVE_COREFOUNDATION */
 
 
 /*
@@ -45,6 +50,9 @@ TkpInit(interp)
     Tcl_Interp *interp;
 {
     TkCreateXEventSource();
+#ifdef HAVE_COREFOUNDATION
+    MacOSXGetLibraryPath(interp);
+#endif /* HAVE_COREFOUNDATION */
     return Tcl_Eval(interp, initScript);
 }
 
@@ -115,3 +123,38 @@ TkpDisplayWarning(msg, title)
 	Tcl_WriteChars(errChannel, "\n", 1);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MacOSXGetLibraryPath --
+ *
+ *	If we have a bundle structure for the Tk installation,
+ *	then check there first to see if we can find the libraries
+ *	there.
+ *
+ * Results:
+ *	TCL_OK if we have found the tk library; TCL_ERROR otherwise.
+ *
+ * Side effects:
+ *	Same as for Tcl_MacOSXOpenVersionedBundleResources.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#ifdef HAVE_COREFOUNDATION
+static int
+MacOSXGetLibraryPath(Tcl_Interp *interp)
+{
+    int foundInFramework = TCL_ERROR;
+#ifdef TK_FRAMEWORK
+    char tkLibPath[PATH_MAX + 1];
+    foundInFramework = Tcl_MacOSXOpenVersionedBundleResources(interp, 
+	"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX, tkLibPath);
+    if (tkLibPath[0] != '\0') {
+        Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
+    }
+#endif
+    return foundInFramework;
+}
+#endif /* HAVE_COREFOUNDATION */
