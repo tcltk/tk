@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.15 2005/05/24 04:21:34 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.16 2005/05/25 18:49:49 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -415,14 +415,15 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     tk_config_files="${tk_config_files} [Tk-Info.plist:../macosx/Tk-Info.plist.in]"
     # Construct a fake local framework structure to make linking with
     # '-framework Tk' and running of tktest work
-    AC_OUTPUT_COMMANDS([n=Tk && echo "creating $n.framework" &&
-        f=$n.framework && v=Versions/$VERSION &&
-        rm -rf $f && mkdir -p $f/$v/Resources &&
-        ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
-        ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
-        if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
-        unset n f v
-    ], VERSION=${TK_VERSION} && tk_aqua=${tk_aqua})
+    AC_OUTPUT_COMMANDS([test "$FRAMEWORK_BUILD" = "1" &&
+	n=Tk && f=$n.framework && v=Versions/$VERSION &&
+	echo "creating $f" && rm -rf $f && mkdir -p $f/$v/Resources &&
+	ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
+	ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
+	if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
+	unset n f v
+    ], [VERSION=${TK_VERSION} FRAMEWORK_BUILD=${FRAMEWORK_BUILD}
+	tk_aqua=${tk_aqua}])
     LD_LIBRARY_PATH_VAR="DYLD_FRAMEWORK_PATH"
     if test "${libdir}" = '${exec_prefix}/lib'; then
         # override libdir default
