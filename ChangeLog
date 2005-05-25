@@ -1,3 +1,8 @@
+2005-05-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in (install-libraries): protect possible empty
+	list in for with list= trick for older shells.
+
 2005-05-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkFileFilter.c (FreeGlobPatterns): s/null/NULL/

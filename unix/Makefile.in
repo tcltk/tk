@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.104 2005/05/24 00:32:55 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.105 2005/05/25 20:32:33 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -681,7 +681,7 @@ install-libraries: libraries
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
 	    done;
-	@for i in $(@TK_WINDOWINGSYSTEM@_XLIB_HDRS) ; \
+	@list='$(@TK_WINDOWINGSYSTEM@_XLIB_HDRS)'; for i in $$list ; \
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR)/X11; \
 	    done;
