@@ -6312,17 +6312,18 @@ rm -f conftest.s*
 
 EOF
 cat >> $CONFIG_STATUS <<EOF
-VERSION=${TK_VERSION} && tk_aqua=${tk_aqua}
+VERSION=${TK_VERSION} FRAMEWORK_BUILD=${FRAMEWORK_BUILD}
+	tk_aqua=${tk_aqua}
 
 EOF
 cat >> $CONFIG_STATUS <<\EOF
-n=Tk && echo "creating $n.framework" &&
-        f=$n.framework && v=Versions/$VERSION &&
-        rm -rf $f && mkdir -p $f/$v/Resources &&
-        ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
-        ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
-        if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
-        unset n f v
+test "$FRAMEWORK_BUILD" = "1" &&
+	n=Tk && f=$n.framework && v=Versions/$VERSION &&
+	echo "creating $f" && rm -rf $f && mkdir -p $f/$v/Resources &&
+	ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
+	ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
+	if test $tk_aqua = yes; then ln -s ../../../../$n.rsrc $f/$v/Resources; fi &&
+	unset n f v
     
 
 exit 0

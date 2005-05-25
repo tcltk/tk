@@ -1,5 +1,8 @@
 2005-05-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* unix/configure, unix/configure.in: ensure false Tcl.framework is
+	only created with --enable-framework
+
 	* unix/Makefile.in (install-libraries): protect possible empty
 	list in for with list= trick for older shells.
 
