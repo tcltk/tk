@@ -1,3 +1,8 @@
+2005-05-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in (install-libraries): protect possible empty
+	list in for with list= trick for older shells.
+
 2005-05-24  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkTest.c: disable commands not available on TkAqua.
