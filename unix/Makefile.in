@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.87.2.9 2005/05/24 04:21:32 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.87.2.10 2005/05/25 17:46:40 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -608,7 +608,7 @@ install-strip:
 install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) $(PKG_INSTALL_DIR); \
 	    do \
-	    if [ ! -d $$i ] ; then \
+		if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
 		mkdir -p $$i; \
 		chmod 755 $$i; \
@@ -654,7 +654,7 @@ install-libraries: libraries
 		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images \
 		$(SCRIPT_INSTALL_DIR)/msgs; \
 	    do \
-	    if [ ! -d $$i ] ; then \
+		if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
 		mkdir -p $$i; \
 		chmod 755 $$i; \
@@ -670,7 +670,7 @@ install-libraries: libraries
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
 	    done;
-	@for i in $(@TK_WINDOWINGSYSTEM@_XLIB_HDRS) ; \
+	@list='$(@TK_WINDOWINGSYSTEM@_XLIB_HDRS)'; for i in $$list ; \
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR)/X11; \
 	    done;
