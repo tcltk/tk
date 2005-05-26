@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: Makefile,v 1.7.2.8 2005/05/24 04:21:32 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7.2.9 2005/05/26 11:20:08 das Exp $
 #
 ########################################################################################################
 
@@ -96,6 +96,7 @@ PRODUCT_NAME		:= Tk
 
 UNIX_DIR		:= ${CURDIR}/../unix
 VERSION			:= $(shell awk -F= '/^TK_VERSION/ {print $$2; nextfile}' ${UNIX_DIR}/configure.in)
+TCL_VERSION		:= ${VERSION}
 WISH			= wish${VERSION}
 
 BUILD_TARGET		:= wish
@@ -106,7 +107,7 @@ TCL_DIR			:= ${TCL_BUILD_DIR}
 TCL_FRAMEWORK_DIR	:= ${TCL_BUILD_DIR}/..
 else
 TCL_DIR			:= ${TCL_FRAMEWORK_DIR}/Tcl.framework
-TCL_EXE                 := ${TCLSH_DIR}/tclsh${VERSION}
+TCL_EXE                 := ${TCLSH_DIR}/tclsh${TCL_VERSION}
 MAKE_VARS		= TCL_EXE
 export DYLD_FRAMEWORK_PATH := ${TCL_FRAMEWORK_DIR}
 endif
@@ -154,7 +155,7 @@ APP_DIR			:= .
 FMWK_DIR		:= .
 endif
 
-TCL_FMWK_DIR		:= ${FMWK_DIR}/Tcl.framework/Versions/${VERSION}
+TCL_FMWK_DIR		:= ${FMWK_DIR}/Tcl.framework/Versions/${TCL_VERSION}
 TK_FMWK_DIR		:= ${FMWK_DIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}
 
 #-------------------------------------------------------------------------------------------------------
@@ -168,6 +169,10 @@ ${OBJ_DIR}/Makefile: ${UNIX_DIR}/Makefile.in ${UNIX_DIR}/configure
 	--mandir=${MANDIR} --enable-threads --enable-framework \
 	--with-tcl=${TCL_DIR} \
 	${CONFIGURE_ARGS} ${EXTRA_CONFIGURE_ARGS}
+ifneq (${TK_X11},)
+	@cd ${OBJ_DIR} && sed -e 's#/Versions/${TCL_VERSION}#/Versions/${VERSION}#' \
+	tkConfig.sh > tkConfig.sh.1 && mv -f tkConfig.sh.1 tkConfig.sh
+endif
 
 build-${PROJECT}: ${OBJ_DIR}/Makefile
 	${DO_MAKE}
@@ -187,7 +192,8 @@ endif
 install-${PROJECT}: build-${PROJECT}
 ifeq (${EMBEDDED_BUILD}_${INSTALL_ROOT},1_)
 	@echo "Cannot install-embedded with empty INSTALL_ROOT !" && false
-else
+endif
+ifeq (${EMBEDDED_BUILD},1)
 	@rm -rf "${INSTALL_ROOT}/${LIBDIR}/Tk.framework"
 endif
 	${DO_MAKE}
@@ -225,9 +231,9 @@ endif
 ifeq (${TK_X11},)
 ifeq (${EMBEDDED_BUILD},)
 # install Wish.app link in APPLICATION_INSTALL_PATH and setup 'Wish Shell' compatibility links
-	@cd ${TOP_DIR} && mkdir -p "./${APP_DIR}" && \
-	ln -fsh "$$(echo ./${APP_DIR} | sed -e 's#/[^/][^/]*#/..#g')/${TK_FMWK_DIR}/Resources/Wish.app" "./${APP_DIR}" && \
-	ln -fsh Wish.app "./${APP_DIR}/Wish Shell.app" && \
+	@cd ${TOP_DIR} && if [ -n "${APP_DIR}" ]; then mkdir -p "./${APP_DIR}" && \
+	ln -fsh "./$$(echo ${APP_DIR} | sed -e 's#/[^/][^/]*#/..#g')/${FMWK_DIR}/${PRODUCT_NAME}.framework/Resources/Wish.app" "./${APP_DIR}" && \
+	ln -fsh Wish.app "./${APP_DIR}/Wish Shell.app"; fi && \
 	ln -fsh Wish.app "./${TK_FMWK_DIR}/Resources/Wish Shell.app" && \
 	ln -fsh Wish "./${TK_FMWK_DIR}/Resources/Wish.app/Contents/MacOS/Wish Shell"
 else
@@ -240,7 +246,8 @@ else
 	mkdir -p "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
 	mv -f "./${FMWK_DIR}"/T{cl,k}.framework "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
 	rmdir -p "./${FMWK_DIR}" 2>&- || true && cd "./${APP_DIR}/Wish.app/Contents" && \
-	rm -rf Frameworks/T{cl,k}.framework/{,/Versions/$(VERSION)}/{Headers,PrivateHeaders,*_debug,lib*.a,*Config.sh} && \
+	rm -rf Frameworks/Tcl.framework/{,/Versions/$(TCL_VERSION)}/{Headers,PrivateHeaders,*_debug,lib*.a,*Config.sh} && \
+	rm -rf Frameworks/Tk.framework/{,/Versions/$(VERSION)}/{Headers,PrivateHeaders,*_debug,lib*.a,*Config.sh} && \
 	fix_install_id ( ) { \
 	    chmod -RH a+w "$$1"; \
 	    install_name_tool -id $$(otool -L "$$1" | awk "/$$2\.framework.*[^:]\$$/ {sub(\"^.*/Frameworks\",\"@executable_path/../Frameworks\",\$$1); print \$$1}") "$$1"; \
