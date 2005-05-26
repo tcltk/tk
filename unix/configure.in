@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.16 2005/05/25 18:49:49 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.17 2005/05/26 11:20:09 das Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -249,7 +249,6 @@ if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK)
     LIBS="$LIBS -framework Carbon"
     CFLAGS="$CFLAGS -fpascal-strings"
-    AC_CHECK_FUNCS(_dyld_get_image_header_containing_address)
     TK_WINDOWINGSYSTEM=AQUA
 else
     #--------------------------------------------------------------------
@@ -415,8 +414,8 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     tk_config_files="${tk_config_files} [Tk-Info.plist:../macosx/Tk-Info.plist.in]"
     # Construct a fake local framework structure to make linking with
     # '-framework Tk' and running of tktest work
-    AC_OUTPUT_COMMANDS([test "$FRAMEWORK_BUILD" = "1" &&
-	n=Tk && f=$n.framework && v=Versions/$VERSION &&
+    AC_OUTPUT_COMMANDS([test "$FRAMEWORK_BUILD" = "1" && n=Tk &&
+	f=$n.framework && v=Versions/$VERSION &&
 	echo "creating $f" && rm -rf $f && mkdir -p $f/$v/Resources &&
 	ln -s $v/$n $v/Resources $f && ln -s ../../../$n $f/$v &&
 	ln -s ../../../../$n-Info.plist $f/$v/Resources/Info.plist &&
@@ -452,7 +451,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
         EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && mkdir -p "$(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "'\$\(MAC\_OSX_DIR\)'/Wish.icns" "$(BIN_INSTALL_DIR)/../Resources"'
         EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing ${WISH_RSRC_FILE} to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "${WISH_RSRC_FILE}" "$(BIN_INSTALL_DIR)/../Resources"'
     fi
-    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" "$(STUB_LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done'
+    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
     TK_YEAR="`date +%Y`"
     # Don't use AC_DEFINE for the following as the framework version define 
     # needs to go into the Makefile even when using autoheader, so that we  

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.6 2005/05/24 04:21:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.7 2005/05/26 11:20:09 das Exp $
  */
 
 #include "tkInt.h"
@@ -174,23 +174,20 @@ TkpInit(interp)
                 unsigned long size;
                 int fd = -1;
                 char fileName[L_tmpnam + 15];
+                int i, n;
 
                 /* Get resource data from __tk_rsrc section of tk library file */
-#ifdef HAVE__DYLD_GET_IMAGE_HEADER_CONTAINING_ADDRESS
-                image = _dyld_get_image_header_containing_address((unsigned long)&TkpInit);
-                if (image) {
-                    data = getsectdatafromheader(image, SEG_TEXT, "__tk_rsrc", &size);
-                }
-#else
-                int i, n = _dyld_image_count();
+                n = _dyld_image_count();
                 for (i = 0; i < n; i++) {
                     image = _dyld_get_image_header(i);
                     if (image) {
                         data = getsectdatafromheader(image, SEG_TEXT, "__tk_rsrc", &size);
+                        if (data) {
+                            data += _dyld_get_image_vmaddr_slide(i);
+                            break;
+                        }
                     }
-                    if (data) break;
                 }
-#endif
                 while (data) {
                     OSStatus err;
                     FSRef ref;
@@ -209,6 +206,7 @@ TkpInit(interp)
                     err = FSPathMakeRef(fileName, &ref, NULL);
                     if (err != noErr) break;
                     err = FSOpenResourceFile(&ref, 0, NULL, fsRdPerm, &refNum);
+                    if (err != noErr) fprintf(stderr,"FSOpenResourceFile error %d\n",err);
                     break;
                 }
                 if (fd != -1) {

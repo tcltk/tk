@@ -1,3 +1,17 @@
+2005-05-26  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXInit.c (TkpInit): fixed resource file extraction
+	from __tk_rsrc section to work with non-prebound .dylib and .bundle.
+
+	* macosx/Makefile: corrected EMBEDDED_BUILD check, use separate tcl
+	and tk version vars to properly support tk/x11 framework version
+	overriding, rewrite tkConfig.sh when overriding tk version, corrected
+	Wish.app symlink in tk build dir.
+	
+	* unix/configure.in: corrected framework finalization to softlink
+	stub library to Versions/8.x subdir instead of Versions/Current.
+	* unix/configure: autoconf-2.13
+
 2005-05-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/configure, unix/configure.in: ensure false Tcl.framework is
