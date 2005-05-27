@@ -10,8 +10,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.45 2005/03/04 01:13:03 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.46 2005/05/27 23:14:29 dkf Exp $
  */
+
+/*
+ * Make sure the SendInput API is available:
+ */
+#if (_WIN32_WINNT <= 0x0400)
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0401
+#endif
 
 #include "tkWinInt.h"
 
@@ -1836,4 +1844,90 @@ Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 	    ImmReleaseContext(hwnd, hIMC);
 	}
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetUserInactiveTime --
+ *
+ *	Return the number of milliseconds the user was inactive.
+ *
+ * Results:
+ *	Milliseconds of user inactive time or -1 if the user32.dll doesn't
+ *	have the symbol GetLastInputInfo or GetLastInputInfo returns an
+ *	error.
+ *
+ * Side effects:
+ *	None.
+ *----------------------------------------------------------------------
+ */
+
+long
+Tk_GetUserInactiveTime(dpy)
+     Display *dpy;			/* Ignored on Windows */
+{
+    struct tagLASTINPUTINFO {
+	UINT cbSize;
+	DWORD dwTime;
+    } li;
+    /*
+     * Multiple settings of either of these variables should be OK;
+     * any thread hazards should just cause inefficiency...
+     */
+    static FARPROC pfnGetLastInputInfo = NULL;
+    static int initinfo = 0;
+
+    if (!initinfo) {
+	HMODULE hMod = GetModuleHandleA("USER32.DLL");
+
+	initinfo = 1;
+	if (hMod){
+	    pfnGetLastInputInfo =
+		    GetProcAddress(hMod, "GetLastInputInfo");
+	}
+    }
+    if (pfnGetLastInputInfo == NULL) {
+	return -1;
+    }
+    li.cbSize = sizeof(li);
+    if (!(BOOL)(pfnGetLastInputInfo)(&li)) {
+	return -1;
+    }
+    /* last input info is in milliseconds, since restart time. */
+    return (GetTickCount()-li.dwTime);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_ResetUserInactiveTime --
+ *
+ *	Reset the user inactivity timer
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	The user inactivity timer of the underlaying windowing system
+ *	is reset to zero.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_ResetUserInactiveTime(dpy)
+    Display *dpy;
+{
+    INPUT inp;
+
+    inp.type=INPUT_MOUSE;
+    inp.mi.dx=0;
+    inp.mi.dy=0;
+    inp.mi.mouseData=0;
+    inp.mi.dwFlags=MOUSEEVENTF_MOVE;
+    inp.mi.time=0;
+    inp.mi.dwExtraInfo=NULL;
+
+    SendInput(1, &inp, sizeof(inp));
 }
