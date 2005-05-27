@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.35 2004/11/12 23:53:12 hobbs Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.36 2005/05/27 23:14:29 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -619,11 +619,11 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
     Tk_Window tkwin;
     static CONST char *optionStrings[] = {
 	"appname",	"caret",	"scaling",	"useinputmethods",
-	"windowingsystem",		NULL
+	"windowingsystem",		"inactive",	NULL
     };
     enum options {
 	TK_APPNAME,	TK_CARET,	TK_SCALING,	TK_USE_IM,
-	TK_WINDOWINGSYSTEM
+	TK_WINDOWINGSYSTEM,		TK_INACTIVE
     };
 
     tkwin = (Tk_Window) clientData;
@@ -638,7 +638,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
     }
 
     switch ((enum options) index) {
-        case TK_APPNAME: {
+	case TK_APPNAME: {
 	    TkWindow *winPtr;
 	    char *string;
 
@@ -652,7 +652,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    winPtr = (TkWindow *) tkwin;
 
 	    if (objc > 3) {
-	        Tcl_WrongNumArgs(interp, 2, objv, "?newName?");
+		Tcl_WrongNumArgs(interp, 2, objv, "?newName?");
 		return TCL_ERROR;
 	    }
 	    if (objc == 3) {
@@ -672,7 +672,7 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		{ TK_CARET_X, TK_CARET_Y, TK_CARET_HEIGHT };
 
 	    if ((objc < 3) || ((objc > 4) && !(objc & 1))) {
-	        Tcl_WrongNumArgs(interp, 2, objv,
+		Tcl_WrongNumArgs(interp, 2, objv,
 			"window ?-x x? ?-y y? ?-height height?");
 		return TCL_ERROR;
 	    }
@@ -829,11 +829,11 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 		    (int) (dispPtr->flags & TK_DISPLAY_USE_IM));
 	    break;
 	}
-        case TK_WINDOWINGSYSTEM: {
+	case TK_WINDOWINGSYSTEM: {
 	    CONST char *windowingsystem;
 	    
 	    if (objc != 2) {
-	        Tcl_WrongNumArgs(interp, 2, objv, NULL);
+		Tcl_WrongNumArgs(interp, 2, objv, NULL);
 		return TCL_ERROR;
 	    }
 #if defined(WIN32)
@@ -844,6 +844,45 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    windowingsystem = "x11";
 #endif
 	    Tcl_SetStringObj(Tcl_GetObjResult(interp), windowingsystem, -1);
+	    break;
+	}
+	case TK_INACTIVE: {
+	    int skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
+	    if (skip < 0) {
+		return TCL_ERROR;
+	    }
+	    if (objc - skip == 2) {
+		long inactive;
+
+		inactive = (Tcl_IsSafe(interp) ? -1 :
+			Tk_GetUserInactiveTime(Tk_Display(tkwin)));
+		Tcl_SetObjResult(interp, Tcl_NewLongObj(inactive));
+
+	    } else if (objc - skip == 3) {
+		char *string;
+
+		string = Tcl_GetStringFromObj(objv[objc-1], NULL);
+		if (strcmp(string, "reset") != 0) {
+		    Tcl_Obj *msg = Tcl_NewStringObj("bad option \"", -1);
+		    Tcl_AppendStringsToObj(msg, string,
+			    "\": must be reset", NULL);
+		    Tcl_SetObjResult(interp, msg);
+		    return TCL_ERROR;
+		}
+		if (Tcl_IsSafe(interp)) {
+		    Tcl_SetResult(interp,
+			    "resetting the user inactivity timer "
+			    "is not allowed in a safe interpreter",
+			    TCL_STATIC);
+		    return TCL_ERROR;
+		}
+		Tk_ResetUserInactiveTime(Tk_Display(tkwin));
+		Tcl_ResetResult(interp);
+	    } else {
+		Tcl_WrongNumArgs(interp, 2, objv,
+			"?-displayof window? ?reset?");
+		return TCL_ERROR;
+	    }
 	    break;
 	}
     }
@@ -1053,7 +1092,7 @@ Tk_UpdateObjCmd(clientData, interp, objc, objv)
 	}
 	flags = TCL_IDLE_EVENTS;
     } else {
-        Tcl_WrongNumArgs(interp, 1, objv, "?idletasks?");
+	Tcl_WrongNumArgs(interp, 1, objv, "?idletasks?");
 	return TCL_ERROR;
     }
 

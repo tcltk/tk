@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.9 2005/05/15 21:09:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.10 2005/05/27 23:14:29 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -29,6 +29,8 @@
 #include "tkMacOSXInt.h"
 #include "tkPort.h"
 #include "tkMacOSXEvent.h"
+
+#include <IOKit/IOKitLib.h>
 
 /*
  * Because this file is still under major development Debugger statements are
@@ -966,4 +968,97 @@ TkGetDefaultScreenName(
     return screenName;
 #endif
     return macScreenName;
+}
+
+/*
+ *----------------------------------------------------------------------
+ * 
+ * Tk_GetUserInactiveTime --
+ *
+ *	Return the number of milliseconds the user was inactive.
+ *
+ * Results:
+ *	The number of milliseconds the user has been inactive,
+ *	or -1 if querying the inactive time is not supported.
+ *
+ * Side effects:
+ *	None.
+ *----------------------------------------------------------------------
+ */
+
+long
+Tk_GetUserInactiveTime(Display *dpy)
+{
+    io_registry_entry_t regEntry;
+    CFMutableDictionaryRef props = NULL;
+    CFTypeRef timeObj;
+    long ret = -1l;
+    uint64_t time;
+
+    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
+	    IOServiceMatching("IOHIDSystem"));
+
+    if (regEntry == NULL) {
+	return -1l;
+    }
+
+    IOReturn result = IORegistryEntryCreateCFProperties(regEntry, &props,
+	    kCFAllocatorDefault, 0);
+    IOObjectRelease(regEntry);
+
+    if (result != KERN_SUCCESS || props == NULL) {
+	return -1l;
+    }
+
+    timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
+
+    if (timeObj) {
+	CFRetain(timeObj);
+	CFTypeID type = CFGetTypeID(timeObj);
+
+	if (type == CFDataGetTypeID()) { /* Jaguar */
+	    CFDataGetBytes((CFDataRef) timeObj,
+		    CFRangeMake(0, sizeof(time)), (UInt8 *) &time);
+	    /* Convert nanoseconds to milliseconds. */
+	    /* ret /= kMillisecondScale; */
+	    ret = (long)(time/kMillisecondScale);
+	} else if (type == CFNumberGetTypeID()) { /* Panther+ */
+	    CFNumberGetValue((CFNumberRef)timeObj,
+		    kCFNumberSInt64Type, &time);
+	    /* Convert nanoseconds to milliseconds. */
+	    /* ret /= kMillisecondScale; */
+	    ret = (long)(time/kMillisecondScale);
+	} else {
+	    ret = -1l;
+	}
+
+	CFRelease(timeObj);
+    }
+    /* Cleanup */
+    CFRelease(props);
+
+    return ret;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_ResetUserInactiveTime --
+ *
+ *	Reset the user inactivity timer
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	The user inactivity timer of the underlaying windowing system
+ *	is reset to zero.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_ResetUserInactiveTime(Display *dpy)
+{
+    UpdateSystemActivity(0);
 }

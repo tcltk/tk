@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tk.n,v 1.9 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: tk.n,v 1.10 2005/05/27 23:14:28 dkf Exp $
 '\" 
 .so man.macros
 .TH tk n 8.4 Tk "Tk Built-In Commands"
@@ -78,6 +78,22 @@ after the scaling factor is changed will use the new scaling factor, but it
 is undefined whether existing widgets will resize themselves dynamically to
 accomodate the new scaling factor.
 .RE
+.TP
+\fBtk inactive \fR?\fB\-displayof \fIwindow\fR? ?\fBreset\fR?
+.
+Returns a positive integer, the number of milliseconds since the last
+time the user interacted with the system. If the \fB-displayof\fR
+option is given then the return value refers to the display of
+\fIwindow\fR; otherwise it refers to the display of the application's
+main window.
+
+\fBtk inactive\fR will return -1, if querying the user inactive time
+is not supported by the system, and in safe interpreters.
+
+If the literal string \fBreset\fR is given as an additional argument,
+the timer is reset and an empty string is returned. Resetting the
+inactivity time is forbidden in safe interpreters and will throw and
+error if tried.
 .TP
 \fBtk useinputmethods \fR?\fB\-displayof \fIwindow\fR? ?\fIboolean\fR?
 .
