@@ -1,3 +1,9 @@
+2005-05-27  Todd Helfter <tmh@users.sourceforge.net>
+
+        * library/menu.tcl: correct the sticky behavior of menus posted by 
+        tk_popup so that they "stick" after the initial <ButtonRelease>
+        following the post, that is not over an active menu entry.
+
 2005-05-26  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXInit.c (TkpInit): fixed resource file extraction
