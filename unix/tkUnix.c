@@ -10,10 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix.c,v 1.6 2004/10/26 13:15:09 dkf Exp $
+ * RCS: @(#) $Id: tkUnix.c,v 1.7 2005/05/27 23:14:29 dkf Exp $
  */
 
 #include <tkInt.h>
+#ifdef HAVE_XSS
+#include <X11/extensions/scrnsaver.h>
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -164,4 +167,67 @@ TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
 	}
 	dataPtr += lineStride;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ * 
+ * Tk_GetUserInactiveTime --
+ *
+ *	Return the number of milliseconds the user was inactive.
+ *
+ * Results:
+ *	The number of milliseconds since the user's latest interaction
+ *	with the system on the given display, or -1 if the
+ *	XScreenSaver extension is not supported by the client
+ *	libraries or the X server implementation.
+ *
+ * Side effects:
+ *	None.
+ *----------------------------------------------------------------------
+ */
+
+long
+Tk_GetUserInactiveTime(dpy)
+    Display *dpy;			/* The display for which to query the
+					 * inactive time. */
+{
+    long inactiveTime = -1;
+#ifdef HAVE_XSS
+    int eventBase;
+    int errorBase;
+
+    if (XScreenSaverQueryExtension(dpy, &eventBase, &errorBase)) {
+	XScreenSaverInfo *info = XScreenSaverAllocInfo();
+
+	XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
+	inactiveTime = info->idle;
+	XFree(info);
+    }
+#endif /* HAVE_XSS */
+    return inactiveTime;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_ResetUserInactiveTime --
+ *
+ *	Reset the user inactivity timer
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	The user inactivity timer of the underlaying windowing system
+ *	is reset to zero.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_ResetUserInactiveTime(dpy)
+    Display *dpy;
+{
+    XResetScreenSaver(dpy);
 }

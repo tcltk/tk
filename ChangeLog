@@ -1,3 +1,16 @@
+2005-05-28  Donal K. Fellows  <dkf@users.sf.net>
+
+	TIP #245 IMPLEMENTATION from Reinhard Max <max@suse.de>
+
+	* doc/tk.n: Documentation of [tk inactivity].
+	* win/tkWinX.c (Tk_GetUserInactiveTime, Tk_ResetUserInactiveTime): 
+	* unix/tkUnix.c (Tk_GetUserInactiveTime, Tk_ResetUserInactiveTime): 
+	* macosx/tkMacOSXXStubs.c:	Implementations of the core API for
+	(Tk_GetUserInactiveTime):	determining how long as user's left
+	(Tk_ResetUserInactiveTime):	her machine alone.
+	* unix/configure.in: Test for XScreenSaver support.
+	* generic/tkCmds.c (Tk_TkObjCmd): Implementation of [tk inactivity].
+
 2005-05-27  Todd Helfter <tmh@users.sourceforge.net>
 
         * library/menu.tcl: correct the sticky behavior of menus posted by 

@@ -101,6 +101,36 @@
 //4C2
 //4C3
 //4C4
+//950
+//951
+//952
+//953
+//954
+		95911CC7081532D8006F6BCB = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = IOKit.framework;
+			path = /System/Library/Frameworks/IOKit.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		95911CC8081532D8006F6BCB = {
+			fileRef = 95911CC7081532D8006F6BCB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		95911CC9081532D8006F6BCB = {
+			fileRef = 95911CC7081532D8006F6BCB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//950
+//951
+//952
+//953
+//954
 //F50
 //F51
 //F52
@@ -2167,6 +2197,7 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 			files = (
 				F537567E016C3ADB01DC9062,
 				F50D96130196176E01DC9062,
+				95911CC9081532D8006F6BCB,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3075,6 +3106,7 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 		};
 		F537567C016C3ADB01DC9062 = {
 			children = (
+				95911CC7081532D8006F6BCB,
 				F50D96120196176E01DC9062,
 				F5875C7B016FEF1D01DC9062,
 				F537567D016C3ADB01DC9062,
@@ -3427,6 +3459,7 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 				F53756A7016C4DD401DC9062,
 				F50D96140196176E01DC9062,
 				F5877FB9031F9F49016F146B,
+				95911CC8081532D8006F6BCB,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;

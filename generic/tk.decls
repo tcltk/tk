@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.26 2004/03/17 18:15:42 das Exp $
+# RCS: @(#) $Id: tk.decls,v 1.27 2005/05/27 23:14:28 dkf Exp $
 
 library tk
 
@@ -1261,6 +1261,13 @@ declare 267 generic {
 declare 268 generic {
     int Tk_PhotoSetSize(Tcl_Interp *interp, Tk_PhotoHandle handle,
 	    int width, int height)
+}
+# TIP#245
+declare 269 generic {
+    long Tk_GetUserInactiveTime(Display *dpy)
+}
+declare 270 generic {
+    void Tk_ResetUserInactiveTime(Display *dpy)
 }
 
 # Define the platform specific public Tk interface.  These functions are
