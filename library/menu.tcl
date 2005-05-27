@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.18.2.1 2004/02/04 00:23:04 hobbs Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.18.2.2 2005/05/27 18:00:59 tmh Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -687,7 +687,10 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	    uplevel #0 [list $w invoke $active]
 	}
     } else {
-	MenuUnpost $w
+	set active [$w index active]
+	if {$Priv(popup) eq "" || $active ne "none"} {
+	    MenuUnpost $w
+	}
 	uplevel #0 [list $w invoke active]
     }
 }
