@@ -8633,7 +8633,7 @@ cat >>confdefs.h <<\_ACEOF
 #define MAC_OSX_TK 1
 _ACEOF
 
-    LIBS="$LIBS -framework Carbon"
+    LIBS="$LIBS -framework Carbon -framework IOKit"
     CFLAGS="$CFLAGS -fpascal-strings"
     TK_WINDOWINGSYSTEM=AQUA
 else
@@ -9131,7 +9131,8 @@ eval "LD_SEARCH_FLAGS=\"$TCL_LD_SEARCH_FLAGS\""
 #	   if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
-echo "$as_me:$LINENO: checking for main in -lXbsd" >&5
+if test $tk_aqua = no; then
+    echo "$as_me:$LINENO: checking for main in -lXbsd" >&5
 echo $ECHO_N "checking for main in -lXbsd... $ECHO_C" >&6
 if test "${ac_cv_lib_Xbsd_main+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -9193,6 +9194,7 @@ if test $ac_cv_lib_Xbsd_main = yes; then
   LIBS="$LIBS -lXbsd"
 fi
 
+fi
 
 #--------------------------------------------------------------------
 # One more check related to the X libraries.  The standard releases
@@ -9205,7 +9207,7 @@ fi
 # because it can't deal with the "-" in the library name.
 #--------------------------------------------------------------------
 
-if test -d /usr/include/mit ; then
+if test -d /usr/include/mit -a $tk_aqua = no; then
     echo "$as_me:$LINENO: checking MIT X libraries" >&5
 echo $ECHO_N "checking MIT X libraries... $ECHO_C" >&6
     tk_oldCFlags=$CFLAGS
@@ -9273,10 +9275,88 @@ rm -f conftest.err conftest.$ac_objext \
 fi
 
 #--------------------------------------------------------------------
+# Check whether the header and library for the XScreenSaver
+# extension are available, and set HAVE_XSS if so.
+# XScreenSaver is needed for Tk_GetUserInactiveTime().
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    echo "$as_me:$LINENO: checking for XScreenSaver support" >&5
+echo $ECHO_N "checking for XScreenSaver support... $ECHO_C" >&6
+    tk_oldCFlags=$CFLAGS
+    CFLAGS="$CFLAGS $XINCLUDES"
+    tk_oldLibs=$LIBS
+    LIBS="$LIBS $XLIBSW -lXss -lXext"
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+        #include <X11/Xlib.h>
+        #include <X11/extensions/scrnsaver.h>
+
+int
+main ()
+{
+
+        XScreenSaverAllocInfo();
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+        echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+        XLIBSW="$XLIBSW -lXss -lXext"
+        cat >>confdefs.h <<\_ACEOF
+#define HAVE_XSS 1
+_ACEOF
+
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+    CFLAGS=$tk_oldCFlags
+    LIBS=$tk_oldLibs
+fi
+
+#--------------------------------------------------------------------
 #	Check for freetype / fontconfig / Xft support.
 #--------------------------------------------------------------------
 
-# Check whether --enable-xft or --disable-xft was given.
+if test $tk_aqua = no; then
+    # Check whether --enable-xft or --disable-xft was given.
 if test "${enable_xft+set}" = set; then
   enableval="$enable_xft"
   enable_xft=$enableval
@@ -9284,40 +9364,41 @@ else
   enable_xft="no"
 fi;
 
-XFT_CFLAGS=""
-XFT_LIBS=""
-if test "$enable_xft" = "yes" ; then
-    echo "$as_me:$LINENO: checking for xft configuration" >&5
-echo $ECHO_N "checking for xft configuration... $ECHO_C" >&6
-    XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || enable_xft="no"
-    XFT_LIBS=`xft-config --libs 2>/dev/null` || enable_xft="no"
-    if test "$enable_xft" = "no" ; then
-	enable_xft=yes
-	XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || enable_xft="no"
-	XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || enable_xft="no"
-    fi
+    XFT_CFLAGS=""
+    XFT_LIBS=""
     if test "$enable_xft" = "yes" ; then
-    	echo "$as_me:$LINENO: result: ok" >&5
+        echo "$as_me:$LINENO: checking for xft configuration" >&5
+echo $ECHO_N "checking for xft configuration... $ECHO_C" >&6
+        XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || enable_xft="no"
+        XFT_LIBS=`xft-config --libs 2>/dev/null` || enable_xft="no"
+        if test "$enable_xft" = "no" ; then
+            enable_xft=yes
+            XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || enable_xft="no"
+            XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || enable_xft="no"
+        fi
+        if test "$enable_xft" = "yes" ; then
+            echo "$as_me:$LINENO: result: ok" >&5
 echo "${ECHO_T}ok" >&6
-    else
-    	{ echo "$as_me:$LINENO: WARNING: Can't find xft configuration" >&5
+        else
+            { echo "$as_me:$LINENO: WARNING: Can't find xft configuration" >&5
 echo "$as_me: WARNING: Can't find xft configuration" >&2;}
+        fi
     fi
-fi
-if test $enable_xft = "yes" ; then
-    UNIX_FONT_OBJS=tkUnixRFont.o
+    if test $enable_xft = "yes" ; then
+        UNIX_FONT_OBJS=tkUnixRFont.o
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_XFT 1
 _ACEOF
 
-else
-    UNIX_FONT_OBJS=tkUnixFont.o
+    else
+        UNIX_FONT_OBJS=tkUnixFont.o
+    fi
+
+
+
+
 fi
-
-
-
-
 
 #--------------------------------------------------------------------
 #	Figure out whether "char" is unsigned.  If so, set a
