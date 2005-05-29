@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.7 2005/05/14 20:48:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.8 2005/05/29 10:32:30 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -2113,7 +2113,7 @@ GetUtfFaceName(
             return mapPtr->utfName;
         }
     }
-    panic("GetUtfFaceName: unexpected nativeName");
+    Tcl_Panic("GetUtfFaceName: unexpected nativeName");
     return NULL;
 }
 
