@@ -1718,9 +1718,10 @@
 		};
 		F537567C016C3ADB01DC9062 = {
 			children = (
-				F50D96120196176E01DC9062,
 				F5875C7B016FEF1D01DC9062,
+				F50D96120196176E01DC9062,
 				F537567D016C3ADB01DC9062,
+				F979735F08499838007D2C84,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks";
@@ -2374,7 +2375,6 @@
 				F95787E70745BB260058B6A3,
 				F95787E80745BB260058B6A3,
 				F957893F0745BB270058B6A3,
-				F95787EA0745BB260058B6A3,
 				F957893E0745BB270058B6A3,
 			);
 			isa = PBXFrameworksBuildPhase;
@@ -2388,12 +2388,6 @@
 		};
 		F95787E80745BB260058B6A3 = {
 			fileRef = F5875C7B016FEF1D01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F95787EA0745BB260058B6A3 = {
-			fileRef = F50D96120196176E01DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3705,19 +3699,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				F95788F80745BB270058B6A3,
-				F95788F90745BB270058B6A3,
+				F979736008499838007D2C84,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F95788F80745BB270058B6A3 = {
 			fileRef = F537567D016C3ADB01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F95788F90745BB270058B6A3 = {
-			fileRef = F50D96120196176E01DC9062;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4251,6 +4239,20 @@
 		};
 		F95789400745BB270058B6A3 = {
 			fileRef = F95789390745BB270058B6A3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F979735F08499838007D2C84 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.framework;
+			name = IOKit.framework;
+			path = /System/Library/Frameworks/IOKit.framework;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		F979736008499838007D2C84 = {
+			fileRef = F979735F08499838007D2C84;
 			isa = PBXBuildFile;
 			settings = {
 			};
