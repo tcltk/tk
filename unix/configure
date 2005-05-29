@@ -9333,7 +9333,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
         echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
         XLIBSW="$XLIBSW -lXss -lXext"
-        cat >>confdefs.h <<\_ACEOF
+
+cat >>confdefs.h <<\_ACEOF
 #define HAVE_XSS 1
 _ACEOF
 
