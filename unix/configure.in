@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.18 2005/05/27 18:52:41 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.19 2005/05/29 06:48:16 das Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -310,7 +310,9 @@ eval "LD_SEARCH_FLAGS=\"$TCL_LD_SEARCH_FLAGS\""
 #	   if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
-AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
+if test $tk_aqua = no; then
+    AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
+fi
 
 tk_checkBoth=0
 AC_CHECK_FUNC(connect, tk_checkSocket=0, tk_checkSocket=1)
@@ -335,7 +337,7 @@ AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, main, [LIBS="$LIBS -lnsl"])])
 # because it can't deal with the "-" in the library name.
 #--------------------------------------------------------------------
 
-if test -d /usr/include/mit ; then
+if test -d /usr/include/mit -a $tk_aqua = no; then
     AC_MSG_CHECKING([MIT X libraries])
     tk_oldCFlags=$CFLAGS
     CFLAGS="$CFLAGS -I/usr/include/mit"

@@ -1,3 +1,8 @@
+2005-05-29  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/configure.in: skip X11 configure checks when building tk_aqua.
+	* unix/configure: autoconf-2.13
+
 2005-05-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* README:       Bumped patchlevel to 8.4.10
