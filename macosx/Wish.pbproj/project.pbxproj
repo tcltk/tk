@@ -1892,7 +1892,7 @@
 				INSTALL_PATH = "${DYLIB_INSTALL_PATH}";
 				LIBRARY_SEARCH_PATHS = "\"$(TCL_FRAMEWORK_DIR)/Tcl.framework\"";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMAC_OSX_TK -DUSE_TCL_STUBS -DTCL_WIDE_INT_TYPE=\"long long\"";
+				OTHER_CFLAGS = "-DMAC_OSX_TK -DUSE_TCL_STUBS -DTCL_WIDE_INT_TYPE=\"long long\" -DTK_FRAMEWORK -DTK_FRAMEWORK_VERSION=\\\\\\\"$(FRAMEWORK_VERSION)\\\\\\\"";
 				OTHER_LDFLAGS = "-ltclstub${FRAMEWORK_VERSION}${TCL_DBGX} -seg1addr 0xb000000 -Wl,-search_paths_first -Wl,-unexported_symbols_list \"${TEMP_DIR}/tclstub.exp\"";
 				OTHER_LIBTOOL_FLAGS = "";
 				OTHER_REZFLAGS = "-i \"$(TCL_FRAMEWORK_DIR)/Tcl.framework/Headers\" -i \"../generic\"";
