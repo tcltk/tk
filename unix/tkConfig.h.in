@@ -84,9 +84,8 @@
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
 
-/* Define to 1 if you have the `_dyld_get_image_header_containing_address'
-   function. */
-#undef HAVE__DYLD_GET_IMAGE_HEADER_CONTAINING_ADDRESS
+/* Is XScreenSaver available? */
+#undef HAVE_XSS
 
 /* Is this a Mac I see before me? */
 #undef MAC_OSX_TCL
