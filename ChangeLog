@@ -1,5 +1,13 @@
 2005-05-29  Daniel Steffen  <das@users.sourceforge.net>
 
+	* unix/configure.in: added description of HAVE_XSS for autoheader.
+	* unix/configure: autoconf-2.59
+	* unix/tkConfig.h.in: autoheader-2.59
+
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/Wish.xcode/project.pbxproj: added missing FRAMEWORK defines
+	introduced with configure/make based build.
+
 	* macosx/tkMacOSXInit.c:
 	* macosx/tkMacOSXNotify.c: fixed warnings.
 
