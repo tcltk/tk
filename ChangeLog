@@ -1,5 +1,7 @@
 2005-05-29  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXFont.c: use Tcl_Panic instead of panic.
+	
 	* unix/configure.in: added description of HAVE_XSS for autoheader.
 	* unix/configure: autoconf-2.59
 	* unix/tkConfig.h.in: autoheader-2.59
