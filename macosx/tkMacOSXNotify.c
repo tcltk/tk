@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5.2.4 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5.2.5 2005/05/29 07:00:47 das Exp $
  */
 
 #include "tclInt.h"
@@ -63,7 +63,7 @@ Tk_MacOSXSetupTkNotifier()
          * the main thread.  Calling GetMainEventQueue will force this to
          * happen.
          */
-        EventQueueRef mainEventQueue = GetMainEventQueue();
+        GetMainEventQueue();
 
         tsdPtr->initialized = 1;
         /* Install Carbon events event source in main event loop thread. */

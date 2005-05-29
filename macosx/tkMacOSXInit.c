@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.7 2005/05/26 11:20:09 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.8 2005/05/29 07:00:47 das Exp $
  */
 
 #include "tkInt.h"
@@ -206,7 +206,7 @@ TkpInit(interp)
                     err = FSPathMakeRef(fileName, &ref, NULL);
                     if (err != noErr) break;
                     err = FSOpenResourceFile(&ref, 0, NULL, fsRdPerm, &refNum);
-                    if (err != noErr) fprintf(stderr,"FSOpenResourceFile error %d\n",err);
+                    if (err != noErr) fprintf(stderr,"FSOpenResourceFile error %ld\n",err);
                     break;
                 }
                 if (fd != -1) {
