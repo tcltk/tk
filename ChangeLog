@@ -1,5 +1,8 @@
 2005-05-29  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXNotify.c: fixed warnings.
+
 	* generic/tkDecls.h:
 	* generic/tkIntPlatDecls.h:
 	* generic/tkPlatDecls.h:
