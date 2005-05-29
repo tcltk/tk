@@ -1,5 +1,8 @@
 2005-05-29  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/Wish.pbproj/project.pbxproj: added missing FRAMEWORK defines
+	introduced with configure/make based build.
+
 	* macosx/tkMacOSXInit.c:
 	* macosx/tkMacOSXNotify.c: fixed warnings.
 
