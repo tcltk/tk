@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.10 2004/12/28 08:44:48 chengyemao Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.11 2005/05/29 06:47:04 das Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -65,16 +65,6 @@ EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd,
 				UINT message, WPARAM wParam, LPARAM lParam, 
 				LRESULT * result));
 #endif
-#ifndef Tk_GetMenuHWND_TCL_DECLARED
-#define Tk_GetMenuHWND_TCL_DECLARED
-/* 6 */
-EXTERN HWND		Tk_GetMenuHWND _ANSI_ARGS_((Tk_Window tkwin));
-#endif
-#ifndef Tk_GetEmbeddedMenuHWND_TCL_DECLARED
-#define Tk_GetEmbeddedMenuHWND_TCL_DECLARED
-/* 7 */
-EXTERN HWND		Tk_GetEmbeddedMenuHWND _ANSI_ARGS_((Tk_Window tkwin));
-#endif 
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
 #ifndef Tk_MacOSXSetEmbedHandler_TCL_DECLARED
@@ -155,8 +145,6 @@ typedef struct TkPlatStubs {
     Tk_Window (*tk_HWNDToWindow) _ANSI_ARGS_((HWND hwnd)); /* 3 */
     void (*tk_PointerEvent) _ANSI_ARGS_((HWND hwnd, int x, int y)); /* 4 */
     int (*tk_TranslateWinEvent) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT * result)); /* 5 */
-    HWND (*tk_GetMenuHWND) _ANSI_ARGS_((Tk_Window tkwin)); /* 6 */
-    HWND (*tk_GetEmbeddedMenuHWND) _ANSI_ARGS_((Tk_Window tkwin)); /* 7 */
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
     void (*tk_MacOSXSetEmbedHandler) _ANSI_ARGS_((Tk_MacOSXEmbedRegisterWinProc * registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc * getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc * containerExistProcPtr, Tk_MacOSXEmbedGetClipProc * getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc * getOffsetProc)); /* 0 */
@@ -211,14 +199,6 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #ifndef Tk_TranslateWinEvent
 #define Tk_TranslateWinEvent \
 	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
-#endif
-#ifndef Tk_GetMenuHWND
-#define Tk_GetMenuHWND \
-	(tkPlatStubsPtr->tk_GetMenuHWND) /* 6 */
-#endif
-#ifndef Tk_GetEmbeddedMenuHWND
-#define Tk_GetEmbeddedMenuHWND \
-	(tkPlatStubsPtr->tk_GetEmbeddedMenuHWND) /* 7 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK

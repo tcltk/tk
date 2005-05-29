@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.25 2003/10/13 03:41:37 hobbs Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.26 2005/05/29 06:47:04 das Exp $
  */
 
 #ifndef _TKDECLS
@@ -1735,6 +1735,16 @@ EXTERN int		Tk_PhotoPutZoomedBlock _ANSI_ARGS_((
 EXTERN int		Tk_PhotoSetSize _ANSI_ARGS_((Tcl_Interp * interp, 
 				Tk_PhotoHandle handle, int width, int height));
 #endif
+#ifndef Tk_GetUserInactiveTime_TCL_DECLARED
+#define Tk_GetUserInactiveTime_TCL_DECLARED
+/* 269 */
+EXTERN long		Tk_GetUserInactiveTime _ANSI_ARGS_((Display * dpy));
+#endif
+#ifndef Tk_ResetUserInactiveTime_TCL_DECLARED
+#define Tk_ResetUserInactiveTime_TCL_DECLARED
+/* 270 */
+EXTERN void		Tk_ResetUserInactiveTime _ANSI_ARGS_((Display * dpy));
+#endif
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -2016,6 +2026,8 @@ typedef struct TkStubs {
     int (*tk_PhotoPutBlock) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule)); /* 266 */
     int (*tk_PhotoPutZoomedBlock) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule)); /* 267 */
     int (*tk_PhotoSetSize) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, int width, int height)); /* 268 */
+    long (*tk_GetUserInactiveTime) _ANSI_ARGS_((Display * dpy)); /* 269 */
+    void (*tk_ResetUserInactiveTime) _ANSI_ARGS_((Display * dpy)); /* 270 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -3101,6 +3113,14 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_PhotoSetSize
 #define Tk_PhotoSetSize \
 	(tkStubsPtr->tk_PhotoSetSize) /* 268 */
+#endif
+#ifndef Tk_GetUserInactiveTime
+#define Tk_GetUserInactiveTime \
+	(tkStubsPtr->tk_GetUserInactiveTime) /* 269 */
+#endif
+#ifndef Tk_ResetUserInactiveTime
+#define Tk_ResetUserInactiveTime \
+	(tkStubsPtr->tk_ResetUserInactiveTime) /* 270 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

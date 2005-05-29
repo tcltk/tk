@@ -114,12 +114,6 @@
 			refType = 0;
 			sourceTree = "<absolute>";
 		};
-		95911CC8081532D8006F6BCB = {
-			fileRef = 95911CC7081532D8006F6BCB;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		95911CC9081532D8006F6BCB = {
 			fileRef = 95911CC7081532D8006F6BCB;
 			isa = PBXBuildFile;
@@ -143,18 +137,6 @@
 			path = /System/Library/Frameworks/ApplicationServices.framework;
 			refType = 0;
 			sourceTree = "<absolute>";
-		};
-		F50D96130196176E01DC9062 = {
-			fileRef = F50D96120196176E01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F50D96140196176E01DC9062 = {
-			fileRef = F50D96120196176E01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F51D903F018149BD01DC9062 = {
 			buildActionMask = 2147483647;
@@ -2196,7 +2178,6 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 			buildActionMask = 2147483647;
 			files = (
 				F537567E016C3ADB01DC9062,
-				F50D96130196176E01DC9062,
 				95911CC9081532D8006F6BCB,
 			);
 			isa = PBXFrameworksBuildPhase;
@@ -3106,10 +3087,10 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 		};
 		F537567C016C3ADB01DC9062 = {
 			children = (
-				95911CC7081532D8006F6BCB,
-				F50D96120196176E01DC9062,
 				F5875C7B016FEF1D01DC9062,
+				F50D96120196176E01DC9062,
 				F537567D016C3ADB01DC9062,
+				95911CC7081532D8006F6BCB,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks";
@@ -3455,11 +3436,9 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 			buildActionMask = 2147483647;
 			files = (
 				F53756A8016C4DD401DC9062,
-				F5875C7D016FEF1D01DC9062,
 				F53756A7016C4DD401DC9062,
-				F50D96140196176E01DC9062,
 				F5877FB9031F9F49016F146B,
-				95911CC8081532D8006F6BCB,
+				F979766E08499884007D2C84,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3627,12 +3606,6 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 			path = ../tcl/Tcl.framework;
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		F5875C7D016FEF1D01DC9062 = {
-			fileRef = F5875C7B016FEF1D01DC9062;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5877FB7031F97ED016F146B = {
 			buildActionMask = 8;
@@ -4330,6 +4303,12 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 			path = ../ChangeLog;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
+		};
+		F979766E08499884007D2C84 = {
+			fileRef = F5875C7B016FEF1D01DC9062;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F9A61D2F04C2C861006F5A0B = {
 			buildActionMask = 8;
