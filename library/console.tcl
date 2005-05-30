@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.26 2004/11/17 22:16:44 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.27 2005/05/30 23:41:01 hobbs Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -136,6 +136,12 @@ proc ::tk::ConsoleInit {} {
     tk::TextSetCursor $con end
     $con mark set promptEnd insert
     $con mark gravity promptEnd left
+
+    ConsolePrompt
+    if {$tcl_platform(platform) eq "windows"} {
+	# Subtle work-around to erase the '% ' that tclMain.c prints out
+	after idle [list $con delete 1.0 output]
+    }
 }
 
 # ::tk::ConsoleSource --
