@@ -1,5 +1,9 @@
 2005-05-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkMenu.c (MenuCmd): create event handler earlier to
+	ensure proper destruction of menu through DestroyNotify.
+	[Bug 1159367]
+
 	* library/console.tcl (::tk::ConsoleInit): print out first prompt
 	and swallow the extra "% " that comes once from Tcl on Windows.
 
