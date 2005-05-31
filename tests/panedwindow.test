@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.19 2004/12/04 00:04:41 dkf Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.20 2005/05/31 05:23:44 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1906,6 +1906,52 @@ test panedwindow-22.13 {ArrangePanes, last pane shrinks} {
     destroy .p .f1 .f2
     set result
 } 18
+test panedwindow-22.14 {ArrangePanes, panedwindow resizes} {
+    -body {
+	panedwindow .p -width 200 -borderwidth 0
+	frame .f1 -height 50 -bg blue
+	set result [list]
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+	.p add .f1
+	pack .p
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+    }
+    -cleanup {destroy .p .f1}
+    -result {200 1 200 50}
+}
+test panedwindow-22.15 {ArrangePanes, panedwindow resizes} {
+    -body {
+	panedwindow .p -height 200 -borderwidth 0 -orient vertical
+	frame .f1 -width 50 -bg blue
+	set result [list]
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+	.p add .f1
+	pack .p
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+    }
+    -cleanup {destroy .p .f1}
+    -result {1 200 50 200}
+}
+test panedwindow-22.16 {ArrangePanes, last pane grows} {
+    -body {
+	panedwindow .p -showhandle false -height 50
+	.p add [frame .f1 -width 50 -bg red] [frame .f2 -width 50 -bg white] \
+		[frame .f3 -width 50 -bg blue] [frame .f4 -width 50 -bg green]
+	.p sash place 1 250 0
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+	.p configure -width 300
+	update
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {50 150 1 1 222 50 150 1 78 300}
+}
+
 
 test panedwindow-23.1 {PanedWindowReqProc, react to slave geometry changes} {
     # Basically just want to make sure that the PanedWindowReqProc is called
@@ -2213,93 +2259,178 @@ test panedwindow-24.28 {ConfigurePanes, restrict possible panes} {
     destroy .f .f.f .f.f.f .f.f.f.p .b
     set result
 } [list 0 ""]
-test panedwindow-24.29 {ConfigurePanes, -hide works} {
-    panedwindow .p 
-    frame .f1 -width 10 -bg red
-    frame .f2 -width 10 -bg white
-    frame .f3 -width 10 -bg blue
-    frame .f4 -width 10 -bg green
-    .p add .f1 .f2 .f3 .f4
-    pack .p -fill both -expand 1
-    update
-    set result [list]
-    lappend result [winfo ismapped .f1] [winfo ismapped .f2] [winfo ismapped .f3] [winfo ismapped .f4]
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    .p paneconfigure .f2 -hide 1
-    update
-    lappend result [winfo ismapped .f1] [winfo ismapped .f2] [winfo ismapped .f3] [winfo ismapped .f4]
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    destroy .f1 .f2 .f3 .f4 .p
-    set result
-} [list 1 1 1 1 10 10 10 10 1 0 1 1 10 10 10 24]
+test panedwindow-24.29.1 {ConfigurePanes, -hide works} {
+    -body {
+	panedwindow .p -showhandle false
+	frame .f1 -width 40 -height 100 -bg red
+	frame .f2 -width 40 -height 100 -bg white
+	frame .f3 -width 40 -height 100 -bg blue
+	frame .f4 -width 40 -height 100 -bg green
+	.p add .f1 .f2 .f3 .f4
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
+		[winfo ismapped .f3] [winfo ismapped .f4]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
+		[winfo ismapped .f3] [winfo ismapped .f4]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {1 1 1 1 40 40 40 40 182 1 0 1 1 40 40 40 40 136}
+}
+test panedwindow-24.29.2 {ConfigurePanes, -hide works} {
+    -body {
+	panedwindow .p -showhandle false -width 130 -height 100
+	frame .f1 -width 40 -bg red
+	frame .f2 -width 40 -bg white
+	frame .f3 -width 40 -bg blue
+	frame .f4 -width 40 -bg green
+	.p add .f1 .f2 .f3 .f4
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
+		[winfo ismapped .f3] [winfo ismapped .f4]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
+		[winfo ismapped .f3] [winfo ismapped .f4]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {1 1 1 0 28 40 40 1 130 1 0 1 1 40 40 40 34 130}
+}
+test panedwindow-24.29.3 {ConfigurePanes, -hide works, last pane stretches} {
+    -body {
+	panedwindow .p -showhandle false -width 200 -height 200 -borderwidth 0
+	frame .f1 -width 50 -bg red
+	frame .f2 -width 50 -bg green
+	frame .f3 -width 50 -bg blue
+	.p add .f1 .f2 .f3
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3}
+    -result {50 50 88 50 50 144}
+}
+test panedwindow-24.29.4 {ConfigurePanes, -hide works, last pane stretches} {
+    -body {
+	panedwindow .p -showhandle false -width 200 -height 200 \
+		-borderwidth 0 -orient vertical
+	frame .f1 -height 50 -bg red
+	frame .f2 -height 50 -bg green
+	frame .f3 -height 50 -bg blue
+	.p add .f1 .f2 .f3
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo height .f1] [winfo height .f2] [winfo height .f3]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo height .f1] [winfo height .f2] [winfo height .f3]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3}
+    -result {50 50 88 50 50 144}
+}
+
 test panedwindow-24.30 {ConfigurePanes, -stretch first} {
-    panedwindow .p 
-    frame .f1 -width 10 -bg red
-    frame .f2 -width 10 -bg white
-    frame .f3 -width 10 -bg blue
-    frame .f4 -width 10 -bg green
-    .p add .f1 .f2 .f3 .f4 -stretch first
-    pack .p -fill both -expand 1
-    update
-    set result [list]
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    .p paneconfigure .f2 -hide 1
-    update
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    destroy .f1 .f2 .f3 .f4 .p
-    set result
-} [list 10 10 10 10 24 10 10 10]
+    -body {
+	panedwindow .p -showhandle false -height 100 -width 182
+	frame .f1 -width 40 -bg red
+	frame .f2 -width 40 -bg white
+	frame .f3 -width 40 -bg blue
+	frame .f4 -width 40 -bg green
+	.p add .f1 .f2 .f3 .f4 -stretch first
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {40 40 40 40 86 40 40 40}
+}
 test panedwindow-24.31 {ConfigurePanes, -stretch middle} {
-    panedwindow .p 
-    frame .f1 -width 10 -bg red
-    frame .f2 -width 10 -bg white
-    frame .f3 -width 10 -bg blue
-    frame .f4 -width 10 -bg green
-    .p add .f1 .f2 .f3 .f4 -stretch middle
-    pack .p -fill both -expand 1
-    update
-    set result [list]
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    .p paneconfigure .f2 -hide 1
-    update
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    destroy .f1 .f2 .f3 .f4 .p
-    set result
-} [list 10 10 10 10 10 10 24 10]
+    -body {
+	panedwindow .p -showhandle false -height 100 -width 182
+	frame .f1 -width 40 -bg red
+	frame .f2 -width 40 -bg white
+	frame .f3 -width 40 -bg blue
+	frame .f4 -width 40 -bg green
+	.p add .f1 .f2 .f3 .f4 -stretch middle
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {40 40 40 40 40 40 86 40}
+}
 test panedwindow-24.32 {ConfigurePanes, -stretch always} {
-    panedwindow .p 
-    frame .f1 -width 10 -bg red
-    frame .f2 -width 10 -bg white
-    frame .f3 -width 10 -bg blue
-    frame .f4 -width 10 -bg green
-    .p add .f1 .f2 .f3 .f4 -stretch always
-    pack .p -fill both -expand 1
-    update
-    set result [list]
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    .p paneconfigure .f2 -hide 1
-    update
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    destroy .f1 .f2 .f3 .f4 .p
-    set result
-} [list 10 10 10 10 14 10 14 14]
+    -body {
+	panedwindow .p -showhandle false -height 100 -width 182
+	frame .f1 -width 40 -bg red
+	frame .f2 -width 40 -bg white
+	frame .f3 -width 40 -bg blue
+	frame .f4 -width 40 -bg green
+	.p add .f1 .f2 .f3 .f4 -stretch always
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {40 40 40 40 55 40 55 56}
+}
 test panedwindow-24.33 {ConfigurePanes, -stretch never} {
-    panedwindow .p 
-    frame .f1 -width 10 -bg red
-    frame .f2 -width 10 -bg white
-    frame .f3 -width 10 -bg blue
-    frame .f4 -width 10 -bg green
-    .p add .f1 .f2 .f3 .f4 -stretch never
-    pack .p -fill both -expand 1
-    update
-    set result [list]
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    .p paneconfigure .f2 -hide 1
-    update
-    lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] [winfo width .f4]
-    destroy .f1 .f2 .f3 .f4 .p
-    set result
-} [list 10 10 10 10 10 10 10 10]
+    -body {
+	panedwindow .p -showhandle false -height 100 -width 182
+	frame .f1 -width 40 -bg red
+	frame .f2 -width 40 -bg white
+	frame .f3 -width 40 -bg blue
+	frame .f4 -width 40 -bg green
+	.p add .f1 .f2 .f3 .f4 -stretch never
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+	.p paneconfigure .f2 -hide 1
+	update
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {40 40 40 40 40 40 40 40}
+}
 
 test panedwindow-25.1 {Unlink, remove a paned with -before/-after refs} {
     # Bug 928413
