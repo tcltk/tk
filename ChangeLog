@@ -1,5 +1,11 @@
 2005-05-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkPanedWindow.c, tests/panedwindow.test: batch of fixes
+	to panedwindow from Daniel South.  Improved auto-size to fit
+	internal windows, fixed sash placement at edge of pane, fixed
+	calculation of stretch amount for internal windows.
+	[Bug 1124198 1161543 1054117 1010941 795869 690169 1192323]
+
 	* generic/tkMenu.c (MenuCmd): create event handler earlier to
 	ensure proper destruction of menu through DestroyNotify.
 	[Bug 1159367]

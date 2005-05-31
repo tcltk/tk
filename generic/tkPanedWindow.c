@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.7 2004/11/17 22:18:07 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.8 2005/05/31 05:22:06 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -866,6 +866,9 @@ ConfigureSlaves(pwPtr, interp, objc, objv)
 		Tk_SetOptions(interp, (char *) pwPtr->slaves[j],
 			pwPtr->slaveOpts, objc - firstOptionArg,
 			objv + firstOptionArg, pwPtr->tkwin, NULL, NULL);
+		if (pwPtr->slaves[j]->minSize < 0) {
+		    pwPtr->slaves[j]->minSize = 0;
+		}
 		found = 1;
 
 		/*
@@ -925,11 +928,14 @@ ConfigureSlaves(pwPtr, interp, objc, objv)
 	} else {
 	    slavePtr->paneHeight = Tk_ReqHeight(tkwin) + doubleBw;
 	}
+	if (slavePtr->minSize < 0) {
+	    slavePtr->minSize = 0;
+	}
 
 	/*
 	 * Set up the geometry management callbacks for this slave.
 	 */
-	
+
 	Tk_CreateEventHandler(slavePtr->tkwin, StructureNotifyMask,
 		SlaveStructureProc, (ClientData) slavePtr);
 	Tk_ManageGeometry(slavePtr->tkwin, &panedWindowMgrType,
@@ -1243,9 +1249,9 @@ PanedWindowWorldChanged(instanceData)
     /*
      * Issue geometry size requests to Tk.
      */
-    
+
     Tk_SetInternalBorder(pwPtr->tkwin, pwPtr->borderWidth);
-    if (pwPtr->width > 0 || pwPtr->height > 0) {
+    if (pwPtr->width > 0 && pwPtr->height > 0) {
 	Tk_GeometryRequest(pwPtr->tkwin, pwPtr->width, pwPtr->height);
     }
 
@@ -1360,15 +1366,17 @@ DisplayPanedWindow(clientData)
     ClientData clientData;	/* Information about window. */
 {
     PanedWindow *pwPtr = (PanedWindow *) clientData;
+    Slave *slavePtr;
     Pixmap pixmap;
     Tk_Window tkwin = pwPtr->tkwin;
     int i, sashWidth, sashHeight;
-    
+    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+
     pwPtr->flags &= ~REDRAW_PENDING;
     if ((pwPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
     }
-    
+
     if (pwPtr->flags & REQUESTED_RELAYOUT) {
 	ArrangePanes(clientData);
     }
@@ -1383,16 +1391,17 @@ DisplayPanedWindow(clientData)
     /*
      * Redraw the widget's background and border.
      */
+
     Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background, 0, 0,
 	    Tk_Width(tkwin), Tk_Height(tkwin), pwPtr->borderWidth,
 	    pwPtr->relief);
-    
+
     /*
      * Set up boilerplate geometry values for sashes (width, height, common
      * coordinates).
      */
 
-    if (pwPtr->orient == ORIENT_HORIZONTAL) {
+    if (horizontal) {
 	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
 	sashWidth = pwPtr->sashWidth;
     } else {
@@ -1403,24 +1412,25 @@ DisplayPanedWindow(clientData)
     /*
      * Draw the sashes.
      */
-    for (i = 0; i < pwPtr->numSlaves - 1; i++) {
-	Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background,
-		pwPtr->slaves[i]->sashx, pwPtr->slaves[i]->sashy,
-		sashWidth, sashHeight, 1, pwPtr->sashRelief);
 
+    for (i = 0; i < pwPtr->numSlaves - 1; i++) {
+	slavePtr = pwPtr->slaves[i];
+	Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background,
+		slavePtr->sashx, slavePtr->sashy,
+		sashWidth, sashHeight, 1, pwPtr->sashRelief);
 	if (pwPtr->showHandle) {
 	    Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background,
-		    pwPtr->slaves[i]->handlex, pwPtr->slaves[i]->handley,
+		    slavePtr->handlex, slavePtr->handley,
 		    pwPtr->handleSize, pwPtr->handleSize, 1,
 		    TK_RELIEF_RAISED);
 	}
     }
-    
+
     /*
      * Copy the information from the off-screen pixmap onto the screen,
      * then delete the pixmap.
      */
-    
+
     XCopyArea(Tk_Display(tkwin), pixmap, Tk_WindowId(tkwin), pwPtr->gc,
 	    0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
 	    0, 0);
@@ -1615,10 +1625,18 @@ ArrangePanes(clientData)
 				 * are to be re-layed out. */
 {
     register PanedWindow *pwPtr = (PanedWindow *) clientData;
-    register Slave *slavePtr;	
-    int i, slaveWidth, slaveHeight, slaveX, slaveY, paneWidth, paneHeight;
+    register Slave *slavePtr;
+    int i, slaveWidth, slaveHeight, slaveX, slaveY;
+    int paneWidth, paneHeight, paneSize, paneMinSize;
     int doubleBw;
-    
+    int x, y;
+    int sashWidth, sashOffset, sashCount, handleOffset;
+    int sashReserve, sxReserve, syReserve;
+    int internalBW;
+    int paneDynSize, paneDynMinSize, pwHeight, pwWidth, pwSize;
+    int stretchReserve, stretchAmount;
+    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+
     pwPtr->flags &= ~(REQUESTED_RELAYOUT|RESIZE_PENDING);
 
     /*
@@ -1633,6 +1651,62 @@ ArrangePanes(clientData)
     }
 
     Tcl_Preserve((ClientData) pwPtr);
+
+    /*
+     * First pass; compute sizes
+     */
+
+    paneDynSize = paneDynMinSize = 0;
+    internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+    pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
+    pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
+    x = y = internalBW;
+    stretchReserve = (horizontal ? pwWidth : pwHeight);
+
+    /*
+     * Calculate the sash width, including handle and padding,
+     * and the sash and handle offsets.
+     */
+
+    sashOffset = handleOffset = pwPtr->sashPad;
+    if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
+	sashWidth = (2 * pwPtr->sashPad) + pwPtr->handleSize;
+	sashOffset = ((pwPtr->handleSize - pwPtr->sashWidth) / 2)
+		+ pwPtr->sashPad;
+    } else {
+	sashWidth = (2 * pwPtr->sashPad) + pwPtr->sashWidth;
+	handleOffset = ((pwPtr->sashWidth - pwPtr->handleSize) / 2)
+		+ pwPtr->sashPad;
+    }
+    sashCount = pwPtr->numSlaves - 1;
+
+    for (i = 0; i < pwPtr->numSlaves; i++) {
+	slavePtr = pwPtr->slaves[i];
+
+	/*
+	 * Compute the total size needed by all the slaves and the
+	 * left-over, or shortage of space available.
+	 */
+
+	if (horizontal) {
+	    paneSize = slavePtr->paneWidth;
+	    stretchReserve -= paneSize + (2 * slavePtr->padx);
+	} else {
+	    paneSize = slavePtr->paneHeight;
+	    stretchReserve -= paneSize + (2 * slavePtr->pady);
+	}
+	if (i == sashCount) {
+	    paneDynSize += paneSize;
+	    paneDynMinSize += slavePtr->minSize;
+	} else {
+	    stretchReserve -= sashWidth;
+	}
+    }
+
+    /*
+     * Second pass; adjust/arrange panes.
+     */
+
     for (i = 0; i < pwPtr->numSlaves; i++) {
 	slavePtr = pwPtr->slaves[i];
 
@@ -1647,47 +1721,130 @@ ArrangePanes(clientData)
 	 *	determine the x and y, and actual width and height of the
 	 *	widget.
 	 */
-	
+
 	doubleBw = 2 * Tk_Changes(slavePtr->tkwin)->border_width;
 	slaveWidth = (slavePtr->width > 0 ? slavePtr->width :
 		Tk_ReqWidth(slavePtr->tkwin) + doubleBw);
 	slaveHeight = (slavePtr->height > 0 ? slavePtr->height :
 		Tk_ReqHeight(slavePtr->tkwin) + doubleBw);
+	paneMinSize = slavePtr->minSize;
 
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    paneWidth = slavePtr->paneWidth;
-	    if (i == pwPtr->numSlaves - 1 && Tk_IsMapped(pwPtr->tkwin)) {
-		if (Tk_Width(pwPtr->tkwin) != Tk_ReqWidth(pwPtr->tkwin)) {
-		    paneWidth += Tk_Width(pwPtr->tkwin) -
-			Tk_ReqWidth(pwPtr->tkwin);
-		    if (paneWidth < 0) {
-			paneWidth = 0;
-		    }
-		}
-	    }
-	    paneHeight = Tk_Height(pwPtr->tkwin) - (2 * slavePtr->pady) -
-		(2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+	/*
+	 * Calculate pane width and height.
+	 */
+
+	if (horizontal) {
+	    paneSize = slavePtr->paneWidth;
+	    pwSize = pwWidth;
 	} else {
-	    paneHeight = slavePtr->paneHeight;
-	    if (i == pwPtr->numSlaves - 1 && Tk_IsMapped(pwPtr->tkwin)) {
-		if (Tk_Height(pwPtr->tkwin) != Tk_ReqHeight(pwPtr->tkwin)) {
-		    paneHeight += Tk_Height(pwPtr->tkwin) -
-			Tk_ReqHeight(pwPtr->tkwin);
-		    if (paneHeight < 0) {
-			paneHeight = 0;
-		    }
+	    paneSize = slavePtr->paneHeight;
+	    pwSize = pwHeight;
+	}
+	if (Tk_IsMapped(pwPtr->tkwin)) {
+	    if (i == pwPtr->numSlaves - 1) {
+		double frac;
+		if (paneDynSize > 0) {
+		    frac = (double)paneSize / (double)paneDynSize;
+		} else {
+		    frac = (double)paneSize / (double)pwSize;
+		}
+		paneDynSize -= paneSize;
+		paneDynMinSize -= slavePtr->minSize;
+		stretchAmount = (int) (frac * stretchReserve);
+		if (paneSize + stretchAmount >= paneMinSize) {
+		    stretchReserve -= stretchAmount;
+		    paneSize += stretchAmount;
+		} else {
+		    stretchReserve += paneSize - paneMinSize;
+		    paneSize = paneMinSize;
+		}
+	        if (stretchReserve > 0) {
+		    paneSize += stretchReserve;
+		    stretchReserve = 0;
+	        }
+	    } else if (paneDynSize - paneDynMinSize + stretchReserve < 0) {
+		if (paneSize + paneDynSize - paneDynMinSize + stretchReserve
+			<= paneMinSize) {
+		    stretchReserve += paneSize - paneMinSize;
+		    paneSize = paneMinSize;
+		} else {
+		    paneSize += paneDynSize - paneDynMinSize + stretchReserve;
+		    stretchReserve = paneDynMinSize - paneDynSize;
 		}
 	    }
-	    paneWidth = Tk_Width(pwPtr->tkwin) - (2 * slavePtr->padx) -
-		(2 * Tk_InternalBorderWidth(pwPtr->tkwin));
 	}
-	
+	if (horizontal) {
+	    paneWidth = paneSize;
+	    paneHeight = pwHeight - (2 * slavePtr->pady);
+	} else {
+	    paneWidth = pwWidth - (2 * slavePtr->padx);
+	    paneHeight = paneSize;
+	}
+
+	/*
+	 * Adjust for area reserved for sashes.
+	 */
+
+	if (sashCount) {
+	    sashReserve = sashWidth * sashCount;
+	    if (horizontal) {
+		sxReserve = sashReserve;
+		syReserve = 0;
+	    } else {
+		sxReserve = 0;
+		syReserve = sashReserve;
+	    }
+	} else {
+	    sxReserve = syReserve = 0;
+	}
+
+	if (pwWidth - sxReserve < x + paneWidth - internalBW) {
+	    paneWidth = pwWidth - sxReserve - x + internalBW;
+	}
+	if (pwHeight - syReserve < y + paneHeight - internalBW) {
+	    paneHeight = pwHeight - syReserve - y + internalBW;
+	}
+
 	if (slaveWidth > paneWidth) {
 	    slaveWidth = paneWidth;
 	}
 	if (slaveHeight > paneHeight) {
 	    slaveHeight = paneHeight;
 	}
+
+	slavePtr->x = x;
+	slavePtr->y = y;
+
+	/*
+	 * Compute the location of the sash at the right or bottom of the
+	 * parcel and the location of the next parcel.
+	 */
+
+	if (horizontal) {
+	    x += paneWidth + (2 * slavePtr->padx);
+	    if (x < internalBW) {
+		x = internalBW;
+	    }
+	    slavePtr->sashx   = x + sashOffset;
+	    slavePtr->sashy   = y;
+	    slavePtr->handlex = x + handleOffset;
+	    slavePtr->handley = y + pwPtr->handlePad;
+	    x += sashWidth;
+	} else {
+	    y += paneHeight + (2 * slavePtr->pady);
+	    if (y < internalBW) {
+		y = internalBW;
+	    }
+	    slavePtr->sashx   = x;
+	    slavePtr->sashy   = y + sashOffset;
+	    slavePtr->handlex = x + pwPtr->handlePad;
+	    slavePtr->handley = y + handleOffset;
+	    y += sashWidth;
+	}
+
+	/*
+	 * Compute the actual dimensions of the slave in the pane.
+	 */
 
 	slaveX = slavePtr->x;
 	slaveY = slavePtr->y;
@@ -1700,13 +1857,17 @@ ArrangePanes(clientData)
 	/*
 	 * Now put the window in the proper spot.
 	 */
-	if ((slaveWidth <= 0) || (slaveHeight <= 0)) {
+
+	if (slaveWidth <= 0 || slaveHeight <= 0 ||
+		(horizontal ? slaveX - internalBW > pwWidth :
+		slaveY - internalBW > pwHeight)) {
 	    Tk_UnmaintainGeometry(slavePtr->tkwin, pwPtr->tkwin);
 	    Tk_UnmapWindow(slavePtr->tkwin);
 	} else {
 	    Tk_MaintainGeometry(slavePtr->tkwin, pwPtr->tkwin,
 		    slaveX, slaveY, slaveWidth, slaveHeight);
 	}
+	sashCount--;
     }
     Tcl_Release((ClientData) pwPtr);
 }
@@ -1871,47 +2032,42 @@ ComputeGeometry(pwPtr)
     PanedWindow *pwPtr;		/* Pointer to the Paned Window structure. */
 {
     int i, x, y, doubleBw, internalBw;
-    int reqWidth, reqHeight, sashWidth, sxOff, syOff, hxOff, hyOff, dim;
+    int sashWidth, sashOffset, handleOffset;
+    int reqWidth, reqHeight, dim;
     Slave *slavePtr;
+    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
     x = y = internalBw = Tk_InternalBorderWidth(pwPtr->tkwin);
     reqWidth = reqHeight = 0;
-    
+
     /*
      * Sashes and handles share space on the display.  To simplify
      * processing below, precompute the x and y offsets of the handles and
      * sashes within the space occupied by their combination; later, just add
      * those offsets blindly (avoiding the extra showHandle, etc, checks).
      */
-    sxOff = syOff = hxOff = hyOff = 0;
+
+    sashOffset = handleOffset = pwPtr->sashPad;
     if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
-	sashWidth = pwPtr->handleSize;
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    sxOff = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
-	    hyOff = pwPtr->handlePad;
-	} else {
-	    syOff = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
-	    hxOff = pwPtr->handlePad;
-	}
+	sashWidth = (2 * pwPtr->sashPad) + pwPtr->handleSize;
+	sashOffset = ((pwPtr->handleSize - pwPtr->sashWidth) / 2)
+		+ pwPtr->sashPad;
     } else {
-	sashWidth = pwPtr->sashWidth;
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    hxOff = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
-	    hyOff = pwPtr->handlePad;
-	} else {
-	    hyOff = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
-	    hxOff = pwPtr->handlePad;
-	}
+	sashWidth = (2 * pwPtr->sashPad) + pwPtr->sashWidth;
+	handleOffset = ((pwPtr->sashWidth - pwPtr->handleSize) / 2)
+		+ pwPtr->sashPad;
     }
-    
+
     for (i = 0; i < pwPtr->numSlaves; i++) {
 	slavePtr = pwPtr->slaves[i];
+
 	/*
 	 * First set the coordinates for the top left corner of the slave's
 	 * parcel.
 	 */
+
 	slavePtr->x = x;
 	slavePtr->y = y;
 
@@ -1920,7 +2076,8 @@ ComputeGeometry(pwPtr)
 	 * This check may be redundant, since the only way to change a pane's
 	 * size is by moving a sash, and that code checks the minsize.
 	 */
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
+
+	if (horizontal) {
 	    if (slavePtr->paneWidth < slavePtr->minSize) {
 		slavePtr->paneWidth = slavePtr->minSize;
 	    }
@@ -1929,62 +2086,64 @@ ComputeGeometry(pwPtr)
 		slavePtr->paneHeight = slavePtr->minSize;
 	    }
 	}
-	
+
 	/*
 	 * Compute the location of the sash at the right or bottom of the
 	 * parcel.
 	 */
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    x += slavePtr->paneWidth + (2 * slavePtr->padx) + pwPtr->sashPad;
-	} else {
-	    y += slavePtr->paneHeight + (2 * slavePtr->pady) +  pwPtr->sashPad;
-	}
-	slavePtr->sashx		= x + sxOff;
-	slavePtr->sashy		= y + syOff;
-	slavePtr->handlex	= x + hxOff;
-	slavePtr->handley	= y + hyOff;
 
-	/*
-	 * Compute the location of the next parcel.
-	 */
-
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    x += sashWidth + pwPtr->sashPad;
+	if (horizontal) {
+	    x += slavePtr->paneWidth + (2 * slavePtr->padx);
+	    slavePtr->sashx   = x + sashOffset;
+	    slavePtr->sashy   = y;
+	    slavePtr->handlex = x + handleOffset;
+	    slavePtr->handley = y + pwPtr->handlePad;
+	    x += sashWidth;
 	} else {
-	    y += sashWidth + pwPtr->sashPad;
+	    y += slavePtr->paneHeight + (2 * slavePtr->pady);
+	    slavePtr->sashx   = x;
+	    slavePtr->sashy   = y + sashOffset;
+	    slavePtr->handlex = x + pwPtr->handlePad;
+	    slavePtr->handley = y + handleOffset;
+	    y += sashWidth;
 	}
-	
+
 	/*
 	 * Find the maximum height/width of the slaves, for computing the
 	 * requested height/width of the paned window.
 	 */
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
+
+	if (horizontal) {
+
 	    /*
 	     * If the slave has an explicit height set, use that; otherwise,
 	     * use the slave's requested height.
 	     */
+
 	    if (slavePtr->height > 0) {
 		dim = slavePtr->height;
 	    } else {
-	    	doubleBw = (2 * Tk_Changes(slavePtr->tkwin)->border_width);
+		doubleBw = 2 * Tk_Changes(slavePtr->tkwin)->border_width;
 		dim = Tk_ReqHeight(slavePtr->tkwin) + doubleBw;
 	    }
-	    dim += (2 * slavePtr->pady);
+	    dim += 2 * slavePtr->pady;
 	    if (dim > reqHeight) {
 		reqHeight = dim;
 	    }
 	} else {
+
 	    /*
 	     * If the slave has an explicit width set use that; otherwise,
 	     * use the slave's requested width.
 	     */
+
 	    if (slavePtr->width > 0) {
 		dim = slavePtr->width;
 	    } else {
-	    	doubleBw = (2 * Tk_Changes(slavePtr->tkwin)->border_width);
+		doubleBw = 2 * Tk_Changes(slavePtr->tkwin)->border_width;
 		dim = Tk_ReqWidth(slavePtr->tkwin) + doubleBw;
 	    }
-	    dim += (2 * slavePtr->padx);
+	    dim += 2 * slavePtr->padx;
 	    if (dim > reqWidth) {
 		reqWidth = dim;
 	    }
@@ -2004,17 +2163,23 @@ ComputeGeometry(pwPtr)
      * The height (or width) is equal to the maximum height (or width) of
      * the slaves, plus the width of the border of the top and bottom (or left
      * and right) of the paned window.
+     *
+     * If the panedwindow has an explicit width/height set use that; otherwise,
+     * use the requested width/height.
      */
-    if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	reqWidth	= x - (sashWidth + (2 * pwPtr->sashPad)) + internalBw;
-	reqHeight	+= 2 * internalBw;
+
+    if (horizontal) {
+	reqWidth = (pwPtr->width > 0 ?
+		pwPtr->width : x - sashWidth + internalBw);
+	reqHeight = (pwPtr->height > 0 ?
+		pwPtr->height : reqHeight + (2 * internalBw));
     } else {
-	reqHeight	= y - (sashWidth + (2 * pwPtr->sashPad)) + internalBw;
-	reqWidth	+= 2 * internalBw;
+	reqWidth = (pwPtr->width > 0 ?
+		pwPtr->width : reqWidth + (2 * internalBw));
+	reqHeight = (pwPtr->height > 0 ?
+		pwPtr->height : y - sashWidth + internalBw);
     }
-    if (pwPtr->width <= 0 && pwPtr->height <= 0) {
-	Tk_GeometryRequest(pwPtr->tkwin, reqWidth, reqHeight);
-    }
+    Tk_GeometryRequest(pwPtr->tkwin, reqWidth, reqHeight);
     if (Tk_IsMapped(pwPtr->tkwin) && !(pwPtr->flags & REDRAW_PENDING)) {
 	pwPtr->flags |= REDRAW_PENDING;
 	Tcl_DoWhenIdle(DisplayPanedWindow, (ClientData) pwPtr);
@@ -2273,135 +2438,109 @@ MoveSash(pwPtr, sash, diff)
     int sash;
     int diff;
 {
-    int diffConsumed = 0, i, extra, maxCoord, currCoord;
-    int *lengthPtr, newLength;
-    Slave *slave;
-    
-    if (diff > 0) {
-	/*
-	 * Growing the pane, at the expense of panes to the right.
-	 */
+    int i;
+    int expandPane, reduceFirst, reduceLast, reduceIncr, slaveSize, sashOffset;
+    Slave *slavePtr;
+    int stretchReserve = 0;
+    int nextSash = sash + 1;
+    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
 
-	/*
-	 * First check that moving the sash the requested distance will not
-	 * leave it off the screen.  If necessary, clip the requested diff
-	 * to the maximum possible while remaining visible.
-	 */
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    if (Tk_IsMapped(pwPtr->tkwin)) {
-		maxCoord	= Tk_Width(pwPtr->tkwin);
-	    } else {
-		maxCoord	= Tk_ReqWidth(pwPtr->tkwin);
-	    }
-	    extra	= Tk_Width(pwPtr->tkwin) - Tk_ReqWidth(pwPtr->tkwin);
-	    currCoord	= pwPtr->slaves[sash]->sashx;
+    if (diff == 0)
+	return;
+
+    /*
+     * Update the slave sizes with their real sizes.
+     */
+
+    if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
+	sashOffset = ((pwPtr->handleSize - pwPtr->sashWidth) / 2)
+		+ pwPtr->sashPad;
+    } else {
+	sashOffset = pwPtr->sashPad;
+    }
+    for (i = 0; i < pwPtr->numSlaves; i++) {
+	slavePtr = pwPtr->slaves[i];
+	if (horizontal) {
+	    slavePtr->paneWidth = slavePtr->width = slavePtr->sashx
+		    - sashOffset - slavePtr->x - (2 * slavePtr->padx);
 	} else {
-	    if (Tk_IsMapped(pwPtr->tkwin)) {
-		maxCoord	= Tk_Height(pwPtr->tkwin);
-	    } else {
-		maxCoord	= Tk_ReqHeight(pwPtr->tkwin);
-	    }
-	    extra	= Tk_Height(pwPtr->tkwin) - Tk_ReqHeight(pwPtr->tkwin);
-	    currCoord	= pwPtr->slaves[sash]->sashy;
-	}
-
-	maxCoord -= (pwPtr->borderWidth + pwPtr->sashWidth + pwPtr->sashPad);
-	if (currCoord + diff >= maxCoord) {
-	    diff = maxCoord - currCoord;
-	}
-
-	for (i = sash + 1; i < pwPtr->numSlaves; i++) {
-	    if (diffConsumed == diff) {
-		break;
-	    }
-	    slave = pwPtr->slaves[i];
-
-	    if (pwPtr->orient == ORIENT_HORIZONTAL) {
-		lengthPtr	= &(slave->paneWidth);
-	    } else {
-		lengthPtr	= &(slave->paneHeight);
-	    }
-
-	    /*
-	     * Remove as much space from this pane as possible (constrained
-	     * by the minsize value and the visible dimensions of the window).
-	     */
-
-	    if (i == pwPtr->numSlaves - 1 && extra > 0) {
-		/*
-		 * The last pane may have some additional "virtual" space,
-		 * if the width (or height) of the paned window is bigger
-		 * than the requested width (or height).
-		 *
-		 * That extra space is not included in the paneWidth
-		 * (or paneHeight) value, so we have to handle the last
-		 * pane specially.
-		 */
-		newLength = (*lengthPtr + extra) - (diff - diffConsumed);
-		if (newLength < slave->minSize) {
-		    newLength = slave->minSize;
-		}
-		if (newLength < 0) {
-		    newLength = 0;
-		}
-		diffConsumed += (*lengthPtr + extra) - newLength;
-		if (newLength < *lengthPtr) {
-		    *lengthPtr = newLength;
-		}
-	    } else {
-		newLength = *lengthPtr - (diff - diffConsumed);
-		if (newLength < slave->minSize) {
-		    newLength = slave->minSize;
-		}
-		if (newLength < 0) {
-		    newLength = 0;
-		}
-		diffConsumed += *lengthPtr - newLength;
-		*lengthPtr = newLength;
-	    }
-	}
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    pwPtr->slaves[sash]->paneWidth += diffConsumed;
-	} else {
-	    pwPtr->slaves[sash]->paneHeight += diffConsumed;
-	}
-    } else if (diff < 0) {
-	/*
-	 * Shrinking the pane; additional space is given to the pane to the
-	 * right.
-	 */
-	for (i = sash; i >= 0; i--) {
-	    if (diffConsumed == diff) {
-		break;
-	    }
-	    /*
-	     * Remove as much space from this pane as possible.
-	     */
-	    slave = pwPtr->slaves[i];
-
-	    if (pwPtr->orient == ORIENT_HORIZONTAL) {
-		lengthPtr	= &(slave->paneWidth);
-	    } else {
-		lengthPtr	= &(slave->paneHeight);
-	    }
-	    
-	    newLength = *lengthPtr + (diff - diffConsumed);
-	    if (newLength < slave->minSize) {
-		newLength = slave->minSize;
-	    }
-	    if (newLength < 0) {
-		newLength = 0;
-	    }
-	    diffConsumed -= *lengthPtr - newLength;
-	    *lengthPtr = newLength;
-	}
-	if (pwPtr->orient == ORIENT_HORIZONTAL) {
-	    pwPtr->slaves[sash + 1]->paneWidth -= diffConsumed;
-	} else {
-	    pwPtr->slaves[sash + 1]->paneHeight -= diffConsumed;
+	    slavePtr->paneWidth = slavePtr->height = slavePtr->sashy
+		    - sashOffset - slavePtr->y - (2 * slavePtr->pady);
 	}
     }
-    
+
+    /*
+     * Consolidate +/-diff variables to reduce duplicate code.
+     */
+
+    if (diff > 0) {
+	expandPane = sash;
+	reduceFirst = nextSash;
+	reduceLast = pwPtr->numSlaves;
+	reduceIncr = 1;
+    } else {
+	diff = abs(diff);
+	expandPane = nextSash;
+	reduceFirst = sash;
+	reduceLast = -1;
+	reduceIncr = -1;
+    }
+
+    /*
+     * Calculate how much room we have to stretch in
+     * and adjust diff value accordingly.
+     */
+
+    for (i = reduceFirst; i != reduceLast; i += reduceIncr) {
+	slavePtr = pwPtr->slaves[i];
+	if (horizontal) {
+	    stretchReserve += slavePtr->width - slavePtr->minSize;
+	} else {
+	    stretchReserve += slavePtr->height - slavePtr->minSize;
+	}
+    }
+    if (stretchReserve <= 0) {
+	return;
+    }
+    if (diff > stretchReserve) {
+	diff = stretchReserve;
+    }
+
+    /*
+     * Expand pane by diff amount.
+     */
+
+    slavePtr = pwPtr->slaves[expandPane];
+    if (horizontal) {
+	slavePtr->paneWidth = slavePtr->width += diff;
+    } else {
+	slavePtr->paneHeight = slavePtr->height += diff;
+    }
+
+    /*
+     * Reduce panes, respecting minsize, until diff amount has been used.
+     */
+
+    for (i = reduceFirst; i != reduceLast; i += reduceIncr) {
+	slavePtr = pwPtr->slaves[i];
+	if (horizontal) {
+	    slaveSize = slavePtr->width;
+	} else {
+	    slaveSize = slavePtr->height;
+	}
+	if (diff > (slaveSize - slavePtr->minSize)) {
+	    diff -= slaveSize - slavePtr->minSize;
+	    slaveSize = slavePtr->minSize;
+	} else {
+	    slaveSize -= diff;
+	    i = reduceLast - reduceIncr;
+	}
+	if (horizontal) {
+	    slavePtr->paneWidth = slavePtr->width = slaveSize;
+	} else {
+	    slavePtr->paneHeight = slavePtr->height = slaveSize;
+	}
+    }
 }
 
 /*
@@ -2479,7 +2618,7 @@ DisplayProxyWindow(clientData)
      */
     Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background, 0, 0,
 	    Tk_Width(tkwin), Tk_Height(tkwin), 2, pwPtr->sashRelief);
-    
+
     /*
      * Copy the pixmap to the display.
      */
