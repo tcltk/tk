@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.20.2.4 2004/10/27 00:37:38 davygrvy Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.20.2.5 2005/05/31 05:05:35 hobbs Exp $
  */
 
 /*
@@ -502,50 +502,28 @@ MenuCmd(clientData, interp, objc, objv)
      */
 
     menuPtr = (TkMenu *) ckalloc(sizeof(TkMenu));
+    memset(menuPtr, 0, sizeof(TkMenu));
     menuPtr->tkwin = new;
     menuPtr->display = Tk_Display(new);
     menuPtr->interp = interp;
     menuPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd,
 	    (ClientData) menuPtr, MenuCmdDeletedProc);
-    menuPtr->entries = NULL;
-    menuPtr->numEntries = 0;
     menuPtr->active = -1;
-    menuPtr->borderPtr = NULL;
-    menuPtr->borderWidthPtr = NULL;
-    menuPtr->reliefPtr = NULL;
-    menuPtr->activeBorderPtr = NULL;
-    menuPtr->activeBorderWidthPtr = NULL;
-    menuPtr->fontPtr = NULL;
-    menuPtr->fgPtr = NULL;
-    menuPtr->disabledFgPtr = NULL;
-    menuPtr->activeFgPtr = NULL;
-    menuPtr->indicatorFgPtr = NULL;
-    menuPtr->tearoff = 0;
-    menuPtr->tearoffCommandPtr = NULL;
     menuPtr->cursorPtr = None;
-    menuPtr->takeFocusPtr = NULL;
-    menuPtr->postCommandPtr = NULL;
-    menuPtr->postCommandGeneration = 0;
-    menuPtr->postedCascade = NULL;
-    menuPtr->nextInstancePtr = NULL;
     menuPtr->masterMenuPtr = menuPtr;
     menuPtr->menuType = UNKNOWN_TYPE;
-    menuPtr->menuFlags = 0;
-    menuPtr->parentTopLevelPtr = NULL;
-    menuPtr->menuTypePtr = NULL;
-    menuPtr->titlePtr = NULL;
-    menuPtr->errorStructPtr = NULL;
     menuPtr->optionTablesPtr = optionTablesPtr;
     TkMenuInitializeDrawingFields(menuPtr);
 
     Tk_SetClass(menuPtr->tkwin, "Menu");
     Tk_SetClassProcs(menuPtr->tkwin, &menuClass, (ClientData) menuPtr);
+    Tk_CreateEventHandler(new, ExposureMask|StructureNotifyMask|ActivateMask,
+	    TkMenuEventProc, (ClientData) menuPtr);
     if (Tk_InitOptions(interp, (char *) menuPtr,
 	    menuPtr->optionTablesPtr->menuOptionTable, menuPtr->tkwin)
 	    != TCL_OK) {
     	Tk_DestroyWindow(menuPtr->tkwin);
-    	ckfree((char *) menuPtr);
     	return TCL_ERROR;
     }
 
@@ -556,12 +534,9 @@ MenuCmd(clientData, interp, objc, objv)
     menuPtr->menuRefPtr = menuRefPtr;
     if (TCL_OK != TkpNewMenu(menuPtr)) {
     	Tk_DestroyWindow(menuPtr->tkwin);
-    	ckfree((char *) menuPtr);
     	return TCL_ERROR;
     }
 
-    Tk_CreateEventHandler(new, ExposureMask|StructureNotifyMask|ActivateMask,
-	    TkMenuEventProc, (ClientData) menuPtr);
     if (ConfigureMenu(interp, menuPtr, objc - 2, objv + 2) != TCL_OK) {
     	Tk_DestroyWindow(menuPtr->tkwin);
     	return TCL_ERROR;
@@ -583,7 +558,7 @@ MenuCmd(clientData, interp, objc, objv)
      * to be the cascade entry for the clone of .m1. This is special case
      * #1 listed in the introductory comment.
      */
-    
+
     if (menuRefPtr->parentEntryPtr != NULL) {
         TkMenuEntry *cascadeListPtr = menuRefPtr->parentEntryPtr;
         TkMenuEntry *nextCascadePtr;
@@ -593,7 +568,7 @@ MenuCmd(clientData, interp, objc, objv)
         while (cascadeListPtr != NULL) {
 
 	    nextCascadePtr = cascadeListPtr->nextCascadePtr;
-     
+
      	    /*
      	     * If we have a new master menu, and an existing cloned menu
 	     * points to this menu in a cascade entry, we have to clone
@@ -602,7 +577,7 @@ MenuCmd(clientData, interp, objc, objv)
 	     * will hook up the platform-specific cascade linkages now
 	     * that the menu we are creating exists.
      	     */
-     	     
+
      	    if ((menuPtr->masterMenuPtr != menuPtr)
      	    	    || ((menuPtr->masterMenuPtr == menuPtr)
      	    	    && ((cascadeListPtr->menuPtr->masterMenuPtr
@@ -625,7 +600,7 @@ MenuCmd(clientData, interp, objc, objv)
      	    		windowNamePtr, menuPtr);
 		Tcl_IncrRefCount(newMenuName);
             	CloneMenu(menuPtr, newMenuName, normalPtr);
-    	            
+
                 /*
                  * Now we can set the new menu instance to be the cascade entry
                  * of the parent's instance.
@@ -643,25 +618,25 @@ MenuCmd(clientData, interp, objc, objv)
             cascadeListPtr = nextCascadePtr;
         }
     }
-    
+
     /*
      * If there already exist toplevel widgets that refer to this menu,
      * find them and notify them so that they can reconfigure their
      * geometry to reflect the menu.
      */
- 
+
     if (menuRefPtr->topLevelListPtr != NULL) {
     	TkMenuTopLevelList *topLevelListPtr = menuRefPtr->topLevelListPtr;
     	TkMenuTopLevelList *nextPtr;
     	Tk_Window listtkwin;
    	while (topLevelListPtr != NULL) {
-    	
+
     	    /*
     	     * Need to get the next pointer first. TkSetWindowMenuBar
     	     * changes the list, so that the next pointer is different
     	     * after calling it.
     	     */
-    	
+
     	    nextPtr = topLevelListPtr->nextPtr;
     	    listtkwin = topLevelListPtr->tkwin;
     	    TkSetWindowMenuBar(menuPtr->interp, listtkwin, 
@@ -1186,6 +1161,9 @@ DestroyMenuInstance(menuPtr)
      */
 
     TkpDestroyMenu(menuPtr);
+    if (menuPtr->menuRefPtr == NULL) {
+	return;
+    }
     cascadePtr = menuPtr->menuRefPtr->parentEntryPtr;
     menuPtr->menuRefPtr->menuPtr = NULL;
     if (TkFreeMenuReferences(menuPtr->menuRefPtr)) {
