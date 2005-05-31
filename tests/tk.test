@@ -5,18 +5,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.12 2004/06/24 12:45:44 dkf Exp $
+# RCS: @(#) $Id: tk.test,v 1.13 2005/05/31 15:24:53 rmax Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-test tk-1.1 {tk command: general} {
-    list [catch {tk} msg] $msg
-} {1 {wrong # args: should be "tk option ?arg?"}}
-test tk-1.2 {tk command: general} {
-    list [catch {tk xyz} msg] $msg
-} {1 {bad option "xyz": must be appname, caret, scaling, useinputmethods, or windowingsystem}}
+test tk-1.1 {tk command: general} \
+    -body {tk} -returnCodes 1 \
+    -result {wrong # args: should be "tk option ?arg?"}
+test tk-1.2 {tk command: general} \
+    -body {tk xyz} -returnCodes 1 \
+    -result {bad option "xyz": must be appname, caret, scaling, useinputmethods, windowingsystem, or inactive}
 
 set appname [tk appname]
 test tk-2.1 {tk command: appname} {
@@ -128,6 +128,38 @@ test tk-5.5 {tk caret} {
 test tk-5.6 {tk caret} {
     list [catch {tk caret . -x 20 -y 25 -h 30; tk caret . -hei} msg] $msg
 } {0 30}
+
+# tk inactive
+test tk-5.1 {tk inactive} -body {
+    string is integer [tk inactive]
+} -result 1
+test tk-5.2 {tk inactive reset} -body {
+    catch {tk inactive reset}
+} -result 0
+test tk-5.3 {tk inactive wrong argument} -body {
+    tk inactive foo
+} -returnCodes 1 -result {bad option "foo": must be reset}
+test tk-5.4 {tk inactive too many arguments} -body {
+    tk inactive reset foo
+} -returnCodes 1 -result {wrong # args: should be "tk inactive ?-displayof window? ?reset?"}
+test tk-5.3 {tk inactive} -body {
+    tk inactive reset
+    update
+    after 100
+    set i [tk inactive]
+    expr {$i == -1 || ( $i > 90 && $i < 200 )}
+} -result 1
+
+# tk inactive in safe interpreters
+safe::interpCreate foo
+safe::loadTk foo
+test tk-6.1 {tk inactive in a safe interpreter} -body {
+    foo eval {tk inactive}
+} -result -1
+test tk-6.2 {tk inactive reset in a safe interpreter} -body {
+    foo eval {tk inactive reset}
+} -returnCodes 1 -result {resetting the user inactivity timer is not allowed in a safe interpreter}
+::safe::interpDelete foo
 
 # cleanup
 cleanupTests
