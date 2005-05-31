@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: panedwindow.test,v 1.8.2.3 2004/05/03 19:17:39 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.test,v 1.8.2.4 2005/05/31 05:22:06 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1895,6 +1895,52 @@ test panedwindow-22.13 {ArrangePanes, last pane shrinks} {
     destroy .p .f1 .f2
     set result
 } 18
+test panedwindow-22.14 {ArrangePanes, panedwindow resizes} {
+    -body {
+	panedwindow .p -width 200 -borderwidth 0
+	frame .f1 -height 50 -bg blue
+	set result [list]
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+	.p add .f1
+	pack .p
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+    }
+    -cleanup {destroy .p .f1}
+    -result {200 1 200 50}
+}
+test panedwindow-22.15 {ArrangePanes, panedwindow resizes} {
+    -body {
+	panedwindow .p -height 200 -borderwidth 0 -orient vertical
+	frame .f1 -width 50 -bg blue
+	set result [list]
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+	.p add .f1
+	pack .p
+	lappend result [winfo reqwidth .p] [winfo reqheight .p]
+    }
+    -cleanup {destroy .p .f1}
+    -result {1 200 50 200}
+}
+test panedwindow-22.16 {ArrangePanes, last pane grows} {
+    -body {
+	panedwindow .p -showhandle false -height 50
+	.p add [frame .f1 -width 50 -bg red] [frame .f2 -width 50 -bg white] \
+		[frame .f3 -width 50 -bg blue] [frame .f4 -width 50 -bg green]
+	.p sash place 1 250 0
+	pack .p
+	update
+	set result [list]
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+	.p configure -width 300
+	update
+	lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
+		[winfo width .f4] [winfo width .p]
+    }
+    -cleanup {destroy .p .f1 .f2 .f3 .f4}
+    -result {50 150 1 1 222 50 150 1 78 300}
+}
+
 
 test panedwindow-23.1 {PanedWindowReqProc, react to slave geometry changes} {
     # Basically just want to make sure that the PanedWindowReqProc is called
@@ -1907,6 +1953,16 @@ test panedwindow-23.1 {PanedWindowReqProc, react to slave geometry changes} {
     destroy .p .f1 .f2
     set result
 } {40 80}
+test panedwindow-23.2 {PanedWindowReqProc, react to slave geometry changes} {
+    panedwindow .p -orient horizontal -sashpad 0 -sashwidth 2
+    .p add [frame .f1 -width 10] [frame .f2 -width 10]
+    set result [winfo reqwidth .p]
+    .f1 configure -width 20
+    lappend result [winfo reqwidth .p]
+    destroy .p .f1 .f2
+    expr {[lindex $result 1] - [lindex $result 0]}
+} {10}
+
 
 test panedwindow-24.1 {ConfigurePanes, can't add panedwindow to itself} {
     panedwindow .p
@@ -2337,7 +2393,7 @@ test panedwindow-27.14 {identify subcommand errors} {
     destroy .p
     set result
 } [list 1 "expected integer but got \"foo\""]
-test panedwindow-27.14 {identify subcommand errors} {
+test panedwindow-27.14a {identify subcommand errors} {
     panedwindow .p
     set result [list [catch {.p identify 0 bar} msg] $msg]
     destroy .p
