@@ -1,5 +1,9 @@
 2005-06-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinInt.h: added private decls of Tk_GetEmbeddedMenuHWND,
+	Tk_GetMenuHWND, TkWinCleanupContainerList, and TkpWmGetState to
+	that are used across source files.
+
 	* win/tkWinX.c (Tk_ResetUserInactiveTime): cast to squelch
 	compiler warning.
 

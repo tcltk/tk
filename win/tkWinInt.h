@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.23 2005/01/31 04:08:32 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.24 2005/06/01 17:54:16 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -173,8 +173,16 @@ EXTERN HICON	TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
 
 /*
  * Used by tkWinX.c on for certain system display change messages
+ * and cleanup up containers
  */
 EXTERN void	TkWinDisplayChanged(Display *display);
+void	TkWinCleanupContainerList(void);
+
+/*
+ * Used by tkWinWm.c for embedded menu handling.  May become public.
+ */
+EXTERN HWND	Tk_GetMenuHWND(Tk_Window tkwin);
+EXTERN HWND	Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
 
 /*
  * The following structure keeps track of whether we are using the 
@@ -232,5 +240,5 @@ long	TkpWinToplevelIsControlledByWm	_ANSI_ARGS_((TkWindow *winPtr));
 long	TkpWinToplevelMove		_ANSI_ARGS_((TkWindow *winPtr, int x, int y));
 long	TkpWinToplevelOverrideRedirect	_ANSI_ARGS_((TkWindow *winPtr, int reqValue));
 void	TkpWinToplevelDetachWindow	_ANSI_ARGS_((TkWindow *winPtr));
+int	TkpWmGetState			_ANSI_ARGS_((TkWindow *winPtr));
 #endif /* _TKWININT */
-
