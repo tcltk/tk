@@ -1,3 +1,13 @@
+2005-05-31  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (TkWmStackorderToplevelWrapperMap, TkWmStackorderToplevel):
+	* unix/tkUnixWm.c (TkWmStackorderToplevelWrapperMap, TkWmStackorderToplevel):
+	* win/tkWinWm.c (TkWmStackorderToplevelWrapperMap, TkWmStackorderToplevel):
+	Fix panic in wm stackorder when a toplevel is created on another
+	diplay. The code now ignores toplevels that have a display
+	that does not match the display of the parent window.
+	[Bug 1152809]
+
 2005-05-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkPanedWindow.c, tests/panedwindow.test: batch of fixes
