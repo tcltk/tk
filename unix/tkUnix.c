@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix.c,v 1.8 2005/06/01 16:36:29 rmax Exp $
+ * RCS: @(#) $Id: tkUnix.c,v 1.9 2005/06/01 18:14:40 rmax Exp $
  */
 
 #include <tkInt.h>
@@ -201,8 +201,9 @@ Tk_GetUserInactiveTime(dpy)
 	major == 1 && minor == 0 ) {
 	
 	XScreenSaverInfo *info = XScreenSaverAllocInfo();
-	XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
-	inactiveTime = info->idle;
+	if (XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info)) {
+	    inactiveTime = info->idle;
+	}
 	XFree(info);
     }
 #endif /* HAVE_XSS */
