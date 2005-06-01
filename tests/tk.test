@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.13 2005/05/31 15:24:53 rmax Exp $
+# RCS: @(#) $Id: tk.test,v 1.14 2005/06/01 15:48:50 rmax Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -130,19 +130,19 @@ test tk-5.6 {tk caret} {
 } {0 30}
 
 # tk inactive
-test tk-5.1 {tk inactive} -body {
+test tk-6.1 {tk inactive} -body {
     string is integer [tk inactive]
 } -result 1
-test tk-5.2 {tk inactive reset} -body {
+test tk-6.2 {tk inactive reset} -body {
     catch {tk inactive reset}
 } -result 0
-test tk-5.3 {tk inactive wrong argument} -body {
+test tk-6.3 {tk inactive wrong argument} -body {
     tk inactive foo
 } -returnCodes 1 -result {bad option "foo": must be reset}
-test tk-5.4 {tk inactive too many arguments} -body {
+test tk-6.4 {tk inactive too many arguments} -body {
     tk inactive reset foo
 } -returnCodes 1 -result {wrong # args: should be "tk inactive ?-displayof window? ?reset?"}
-test tk-5.3 {tk inactive} -body {
+test tk-6.5 {tk inactive} -body {
     tk inactive reset
     update
     after 100
@@ -153,10 +153,10 @@ test tk-5.3 {tk inactive} -body {
 # tk inactive in safe interpreters
 safe::interpCreate foo
 safe::loadTk foo
-test tk-6.1 {tk inactive in a safe interpreter} -body {
+test tk-7.1 {tk inactive in a safe interpreter} -body {
     foo eval {tk inactive}
 } -result -1
-test tk-6.2 {tk inactive reset in a safe interpreter} -body {
+test tk-7.2 {tk inactive reset in a safe interpreter} -body {
     foo eval {tk inactive reset}
 } -returnCodes 1 -result {resetting the user inactivity timer is not allowed in a safe interpreter}
 ::safe::interpDelete foo
