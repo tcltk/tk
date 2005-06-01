@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.8 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.9 2005/06/01 00:07:28 mdejong Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -73,7 +73,9 @@ static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 static void		TopLevelEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
 static void             TkWmStackorderToplevelWrapperMap _ANSI_ARGS_((
-                            TkWindow *winPtr, Tcl_HashTable *table));
+                            TkWindow *winPtr,
+                            Display *display,
+                            Tcl_HashTable *table));
 static void		TopLevelReqProc _ANSI_ARGS_((ClientData dummy,
 			    Tk_Window tkwin));
 static void		UpdateGeometryInfo _ANSI_ARGS_((
@@ -5626,8 +5628,9 @@ TkpChangeFocus(winPtr, force)
  *----------------------------------------------------------------------
  */
 static void
-TkWmStackorderToplevelWrapperMap(winPtr, table)
+TkWmStackorderToplevelWrapperMap(winPtr, display, table)
     TkWindow *winPtr;				/* TkWindow to recurse on */
+    Display *display;                           /* X display of parent window */
     Tcl_HashTable *table;			/* Maps mac window to TkWindow */
 {
     TkWindow *childPtr;
@@ -5635,7 +5638,7 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     WindowRef macWindow;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)) {
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) && (winPtr->display == display)) {
         macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
 
         hPtr = Tcl_CreateHashEntry(table,
@@ -5645,7 +5648,7 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
 
     for (childPtr = winPtr->childList; childPtr != NULL;
             childPtr = childPtr->nextPtr) {
-        TkWmStackorderToplevelWrapperMap(childPtr, table);
+        TkWmStackorderToplevelWrapperMap(childPtr, display, table);
     }
 }
 
@@ -5681,7 +5684,7 @@ TkWmStackorderToplevel(parentPtr)
      */
 
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
-    TkWmStackorderToplevelWrapperMap(parentPtr, &table);
+    TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
     windows = (TkWindow **) ckalloc((table.numEntries+1)
         * sizeof(TkWindow *));
