@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.46 2005/05/27 23:14:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.47 2005/06/01 17:52:57 hobbs Exp $
  */
 
 /*
@@ -1921,13 +1921,13 @@ Tk_ResetUserInactiveTime(dpy)
 {
     INPUT inp;
 
-    inp.type=INPUT_MOUSE;
-    inp.mi.dx=0;
-    inp.mi.dy=0;
-    inp.mi.mouseData=0;
-    inp.mi.dwFlags=MOUSEEVENTF_MOVE;
-    inp.mi.time=0;
-    inp.mi.dwExtraInfo=NULL;
+    inp.type           = INPUT_MOUSE;
+    inp.mi.dx          = 0;
+    inp.mi.dy          = 0;
+    inp.mi.mouseData   = 0;
+    inp.mi.dwFlags     = MOUSEEVENTF_MOVE;
+    inp.mi.time        = 0;
+    inp.mi.dwExtraInfo = (ULONG_PTR) NULL;
 
     SendInput(1, &inp, sizeof(inp));
 }
