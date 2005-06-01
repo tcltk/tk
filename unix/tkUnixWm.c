@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.5 2005/01/14 21:09:46 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.6 2005/06/01 00:07:29 mdejong Exp $
  */
 
 #include "tkPort.h"
@@ -326,6 +326,7 @@ static void		ReparentEvent _ANSI_ARGS_((WmInfo *wmPtr,
 			    XReparentEvent *eventPtr));
 static void		TkWmStackorderToplevelWrapperMap _ANSI_ARGS_((
 			    TkWindow *winPtr,
+			    Display *display,
 			    Tcl_HashTable *reparentTable));
 static void		TopLevelReqProc _ANSI_ARGS_((ClientData dummy,
 			    Tk_Window tkwin));
@@ -5618,8 +5619,9 @@ TkWmProtocolEventProc(winPtr, eventPtr)
  */
 
 static void
-TkWmStackorderToplevelWrapperMap(winPtr, table)
+TkWmStackorderToplevelWrapperMap(winPtr, display, table)
     TkWindow *winPtr;				/* TkWindow to recurse on */
+    Display *display;				/* X display of parent window */
     Tcl_HashTable *table;			/* Maps X id to TkWindow */
 {
     TkWindow *childPtr;
@@ -5628,7 +5630,7 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
     int newEntry;
 
     if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) &&
-            !Tk_IsEmbedded(winPtr)) {
+            !Tk_IsEmbedded(winPtr) && (winPtr->display == display)) {
         wrapper = (winPtr->wmInfoPtr->reparent != None)
             ? winPtr->wmInfoPtr->reparent
             : winPtr->wmInfoPtr->wrapperPtr->window;
@@ -5640,7 +5642,7 @@ TkWmStackorderToplevelWrapperMap(winPtr, table)
 
     for (childPtr = winPtr->childList; childPtr != NULL;
             childPtr = childPtr->nextPtr) {
-        TkWmStackorderToplevelWrapperMap(childPtr, table);
+        TkWmStackorderToplevelWrapperMap(childPtr, display, table);
     }
 }
 
@@ -5678,7 +5680,7 @@ TkWmStackorderToplevel(parentPtr)
      */
 
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
-    TkWmStackorderToplevelWrapperMap(parentPtr, &table);
+    TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
     window_ptr = windows = (TkWindow **) ckalloc((table.numEntries+1)
         * sizeof(TkWindow *));
