@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix.c,v 1.9 2005/06/01 18:14:40 rmax Exp $
+ * RCS: @(#) $Id: tkUnix.c,v 1.10 2005/06/02 10:08:07 rmax Exp $
  */
 
 #include <tkInt.h>
@@ -196,11 +196,17 @@ Tk_GetUserInactiveTime(dpy)
 #ifdef HAVE_XSS
     int eventBase, errorBase, major, minor;
 
+    /* Calling XScreenSaverQueryVersion seems to be needed to prevent
+     * a crash on some buggy versions of XFree86 */
     if (XScreenSaverQueryExtension(dpy, &eventBase, &errorBase) &&
-	XScreenSaverQueryVersion(dpy, &major, &minor) &&
-	major == 1 && minor == 0 ) {
-	
+	XScreenSaverQueryVersion(dpy, &major, &minor)) {
+
 	XScreenSaverInfo *info = XScreenSaverAllocInfo();
+
+	if (info == NULL) {
+	    /* we are out of memory */
+	    Tcl_Panic("Out of memory: XScreenSaverAllocInfo failed in Tk_GetUserInactiveTime");
+	}
 	if (XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info)) {
 	    inactiveTime = info->idle;
 	}
