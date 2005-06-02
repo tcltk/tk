@@ -1,3 +1,13 @@
+2005-06-02  Reinhard Max  <max@suse.de>
+
+	* unix/tkUnix.c (Tk_GetUserInactiveTime): Improvements to get it
+	working on Solaris, and panic if we run out of memory.
+	* unix/configure.in: Rework the searching for Xss, to make it work
+	on Solaris and provide more useful output. Use AC_HELP_STRING
+	where appropriate.
+	* unix/tcl.m4: synced from Tcl.
+	* unix/configure: regenerated with autoconf 2.59.
+	
 2005-06-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinInt.h: added private decls of Tk_GetEmbeddedMenuHWND,
