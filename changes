@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.19 2005/06/02 21:25:00 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.20 2005/06/02 23:18:11 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5764,17 +5764,18 @@ Unicode characters in wm titlebar on X11. (english)
 
 2005-01-31 (enhancement)[1111213] msg catalog for Spain's Spanish. (poser)
 
-2005-02-10 (platform support) correct gcc builds for AIX-4+, HP-UX-11 (hobbs)
+2005-02-10 (platform support) Correct gcc builds for AIX-4+, HP-UX-11 (hobbs)
 
-2005-02-11 (bug fix)[949792] error during panedwindow destroy (hobbs)
+2005-02-11 (bug fix)[949792] Fix error during panedwindow destroy (hobbs)
 
-2005-02-11 (bug fix)[1105738] [tk_messageBox -parent $button] segfault (hobbs)
+2005-02-11 (bug fix)[1105738] Fix [tk_messageBox -parent $nonToplevel]
+segfault (hobbs)
 
-2005-02-11 (bug fix)[1119460] disabled canvas bmap/bbox segfault (hobbs)
+2005-02-11 (bug fix)[1119460] Disabled canvas bmap/bbox segfault (hobbs)
 
 2005-02-22 (bug fix)[1146057] Aqua: [tk_getOpenFile] encoding (steffen)
 
-2005-02-28 (bug fix)[1118340] Mousewheel %A translation (davis,hobbs)
+2005-02-28 (bug fix)[1118340] Fix Mousewheel %A translation (davis,hobbs)
 
 2005-03-10 (bug fix)[1160025] Aqua: offset in mouse coords (davies,ingham)
 
@@ -5784,18 +5785,19 @@ Unicode characters in wm titlebar on X11. (english)
 
 2005-03-24 (enhancment) Aqua: native L&F for entry and spinbox (ingham)
 
-2005-03-29 (platform support) allow msys alone, no cugwin requirement (hobbs)
+2005-03-29 (platform support) Allow msys builds without cygwin (hobbs)
 
 2005-04-12 (bug fix)[1122671] font encoding alignment issue (brubaker,hobbs)
 
-2005-04-25 (platform support) builds on Mac OS X 10.1 (steffen)
+2005-04-25 (platform support) Fix builds on Mac OS X 10.1 (steffen)
 
-2005-05-06 (platform support) x86_64 Solarix cc and Solaris 10 builds (hobbs)
+2005-05-06 (platform support) Added x86_64 Solaris cc and Solaris 10 build
+support (hobbs)
 
 2005-05-10 (bug fix)[1191895] [text] hang on <Control-Key-Up> (vlasov,darley)
 
-2005-05-14 (enhancement)[1202052] Aqua: CFRunLoop notifier allows [load]able Tk 
-(steffen)
+2005-05-14 (enhancement)[1202052] Aqua: CFRunLoop notifier allows
+[load]able Tk (steffen)
 
 2005-05-15 (bug fix)[1012852] Aqua: check/radiobutton accelerator (kirkham)
 
@@ -5816,4 +5818,4 @@ display/resizing (south)
 
 Documentation improvements [1087842,1081527,1115907,etc.]
 
---- Released 8.4.10, June XX, 2005 --- See ChangeLog for details ---
+--- Released 8.4.10, June 4, 2005 --- See ChangeLog for details ---
