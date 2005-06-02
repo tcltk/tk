@@ -845,27 +845,32 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-man-symlinks   use symlinks for the manpages
+  --enable-man-symlinks   use symlinks for the manpages (default: off)
   --enable-man-compression=PROG
-                          compress the manpages with PROG
+                          compress the manpages with PROG (default: off)
   --enable-man-suffix=STRING
                           use STRING as a suffix to manpage file names
-                          (default: tk)
-  --enable-threads        build with threads
-  --enable-shared         build and link with shared libraries --enable-shared
-  --enable-64bit          enable 64bit support (where applicable)
-  --enable-64bit-vis      enable 64bit Sparc VIS support
-  --enable-corefoundation use CoreFoundation API --enable-corefoundation
+                          (default: no, tk if enabled without
+                          specifying STRING)
+  --enable-threads        build with threads (default: off)
+  --enable-shared         build and link with shared libraries (default: on)
+  --enable-64bit          enable 64bit support (default: off)
+  --enable-64bit-vis      enable 64bit Sparc VIS support (default: off)
+  --enable-corefoundation use CoreFoundation API on MacOSX (default: yes)
   --disable-load          disallow dynamic loading and "load" command
-  --enable-symbols        build with debugging symbols --disable-symbols
-  --enable-aqua           enable Aqua windowingsystem on Mac OS X --disable-aqua
-  --enable-xft         Use freetype/fontconfig/xft --disable-xft
-  --enable-framework      package shared libraries in MacOSX frameworks --disable-framework
+                          (default: enabled)
+  --enable-symbols        build with debugging symbols (default: off)
+  --enable-aqua           enable Aqua windowingsystem on Mac OS X (default:
+                          off)
+  --enable-xft            Use freetype/fontconfig/xft (default: off)
+  --enable-framework      package shared libraries in MacOSX frameworks
+                          (default: off)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-tcl              directory containing tcl configuration (tclConfig.sh)
+  --with-tcl              directory containing tcl configuration
+                          (tclConfig.sh)
   --with-x                use the X Window System
 
 Some influential environment variables:
@@ -1529,56 +1534,61 @@ TK_SRC_DIR=`cd $srcdir/..; pwd`
 # Compress and/or soft link the manpages?
 #------------------------------------------------------------------------
 
-
-	echo "$as_me:$LINENO: checking whether to use symlinks for manpages" >&5
+    echo "$as_me:$LINENO: checking whether to use symlinks for manpages" >&5
 echo $ECHO_N "checking whether to use symlinks for manpages... $ECHO_C" >&6
-	# Check whether --enable-man-symlinks or --disable-man-symlinks was given.
+    # Check whether --enable-man-symlinks or --disable-man-symlinks was given.
 if test "${enable_man_symlinks+set}" = set; then
   enableval="$enable_man_symlinks"
   test "$enableval" != "no" && MAN_FLAGS="$MAN_FLAGS --symlinks"
 else
   enableval="no"
 fi;
-	echo "$as_me:$LINENO: result: $enableval" >&5
+    echo "$as_me:$LINENO: result: $enableval" >&5
 echo "${ECHO_T}$enableval" >&6
 
-	echo "$as_me:$LINENO: checking whether to compress the manpages" >&5
+    echo "$as_me:$LINENO: checking whether to compress the manpages" >&5
 echo $ECHO_N "checking whether to compress the manpages... $ECHO_C" >&6
-	# Check whether --enable-man-compression or --disable-man-compression was given.
+    # Check whether --enable-man-compression or --disable-man-compression was given.
 if test "${enable_man_compression+set}" = set; then
   enableval="$enable_man_compression"
-  test "$enableval" = "yes" && { { echo "$as_me:$LINENO: error: missing argument to --enable-man-compression" >&5
+  case $enableval in
+	    yes) { { echo "$as_me:$LINENO: error: missing argument to --enable-man-compression" >&5
 echo "$as_me: error: missing argument to --enable-man-compression" >&2;}
-   { (exit 1); exit 1; }; }
-		test "$enableval" != "no" && MAN_FLAGS="$MAN_FLAGS --compress $enableval"
+   { (exit 1); exit 1; }; };;
+	    no)  ;;
+	    *)   MAN_FLAGS="$MAN_FLAGS --compress $enableval";;
+	esac
 else
   enableval="no"
 fi;
-	echo "$as_me:$LINENO: result: $enableval" >&5
+    echo "$as_me:$LINENO: result: $enableval" >&5
 echo "${ECHO_T}$enableval" >&6
-	if test "$enableval" != "no"; then
-		echo "$as_me:$LINENO: checking for compressed file suffix" >&5
+    if test "$enableval" != "no"; then
+	echo "$as_me:$LINENO: checking for compressed file suffix" >&5
 echo $ECHO_N "checking for compressed file suffix... $ECHO_C" >&6
-		touch TeST
-		$enableval TeST
-		Z=`ls TeST* | sed 's/^....//'`
-		rm -f TeST*
-		MAN_FLAGS="$MAN_FLAGS --extension $Z"
-		echo "$as_me:$LINENO: result: $Z" >&5
+	touch TeST
+	$enableval TeST
+	Z=`ls TeST* | sed 's/^....//'`
+	rm -f TeST*
+	MAN_FLAGS="$MAN_FLAGS --extension $Z"
+	echo "$as_me:$LINENO: result: $Z" >&5
 echo "${ECHO_T}$Z" >&6
-	fi
+    fi
 
-	echo "$as_me:$LINENO: checking whether to add a package name suffix for the manpages" >&5
+    echo "$as_me:$LINENO: checking whether to add a package name suffix for the manpages" >&5
 echo $ECHO_N "checking whether to add a package name suffix for the manpages... $ECHO_C" >&6
-	# Check whether --enable-man-suffix or --disable-man-suffix was given.
+    # Check whether --enable-man-suffix or --disable-man-suffix was given.
 if test "${enable_man_suffix+set}" = set; then
   enableval="$enable_man_suffix"
-  test "$enableval" = "yes" && enableval="tk"
-		test "$enableval" != "no" && MAN_FLAGS="$MAN_FLAGS --suffix $enableval"
+  case $enableval in
+	    yes) enableval="tk";;
+	    no)  ;;
+	    *)   MAN_FLAGS="$MAN_FLAGS --suffix $enableval";;
+	esac
 else
   enableval="no"
 fi;
-	echo "$as_me:$LINENO: result: $enableval" >&5
+    echo "$as_me:$LINENO: result: $enableval" >&5
 echo "${ECHO_T}$enableval" >&6
 
 
@@ -9281,28 +9291,120 @@ fi
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
-    echo "$as_me:$LINENO: checking for XScreenSaver support" >&5
-echo $ECHO_N "checking for XScreenSaver support... $ECHO_C" >&6
+
     tk_oldCFlags=$CFLAGS
     CFLAGS="$CFLAGS $XINCLUDES"
     tk_oldLibs=$LIBS
-    LIBS="$LIBS $XLIBSW -lXss -lXext"
-    cat >conftest.$ac_ext <<_ACEOF
+    LIBS="$tk_oldLibs $XLIBSW"
+    xss_header_found=no
+    echo "$as_me:$LINENO: checking for X11/extensions/scrnsaver.h" >&5
+echo $ECHO_N "checking for X11/extensions/scrnsaver.h... $ECHO_C" >&6
+if test "${ac_cv_header_X11_extensions_scrnsaver_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
+#include <X11/Xlib.h>
 
-        #include <X11/Xlib.h>
-        #include <X11/extensions/scrnsaver.h>
+#include <X11/extensions/scrnsaver.h>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_header_X11_extensions_scrnsaver_h=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_header_X11_extensions_scrnsaver_h=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_X11_extensions_scrnsaver_h" >&5
+echo "${ECHO_T}$ac_cv_header_X11_extensions_scrnsaver_h" >&6
+if test $ac_cv_header_X11_extensions_scrnsaver_h = yes; then
+
+	xss_header_found=yes
+
+fi
+
+
+    xss_lib_found=no
+    echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo" >&5
+echo $ECHO_N "checking for XScreenSaverQueryInfo... $ECHO_C" >&6
+if test "${ac_cv_func_XScreenSaverQueryInfo+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+/* Define XScreenSaverQueryInfo to an innocuous variant, in case <limits.h> declares XScreenSaverQueryInfo.
+   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
+#define XScreenSaverQueryInfo innocuous_XScreenSaverQueryInfo
+
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char XScreenSaverQueryInfo (); below.
+    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    <limits.h> exists even on freestanding compilers.  */
+
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+
+#undef XScreenSaverQueryInfo
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char XScreenSaverQueryInfo ();
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined (__stub_XScreenSaverQueryInfo) || defined (__stub___XScreenSaverQueryInfo)
+choke me
+#else
+char (*f) () = XScreenSaverQueryInfo;
+#endif
+#ifdef __cplusplus
+}
+#endif
 
 int
 main ()
 {
-
-        XScreenSaverAllocInfo();
-
+return f != XScreenSaverQueryInfo;
   ;
   return 0;
 }
@@ -9329,25 +9431,177 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
+  ac_cv_func_XScreenSaverQueryInfo=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
 
-        echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-        XLIBSW="$XLIBSW -lXss -lXext"
+ac_cv_func_XScreenSaverQueryInfo=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: $ac_cv_func_XScreenSaverQueryInfo" >&5
+echo "${ECHO_T}$ac_cv_func_XScreenSaverQueryInfo" >&6
+if test $ac_cv_func_XScreenSaverQueryInfo = yes; then
+  :
+else
+
+	echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo in -lXext" >&5
+echo $ECHO_N "checking for XScreenSaverQueryInfo in -lXext... $ECHO_C" >&6
+if test "${ac_cv_lib_Xext_XScreenSaverQueryInfo+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lXext  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char XScreenSaverQueryInfo ();
+int
+main ()
+{
+XScreenSaverQueryInfo ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_Xext_XScreenSaverQueryInfo=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_Xext_XScreenSaverQueryInfo=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_Xext_XScreenSaverQueryInfo" >&5
+echo "${ECHO_T}$ac_cv_lib_Xext_XScreenSaverQueryInfo" >&6
+if test $ac_cv_lib_Xext_XScreenSaverQueryInfo = yes; then
+
+	    XLIBSW="$XLIBSW -lXext"
+	    xss_lib_found=yes
+
+else
+
+	    echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo in -lXss" >&5
+echo $ECHO_N "checking for XScreenSaverQueryInfo in -lXss... $ECHO_C" >&6
+if test "${ac_cv_lib_Xss_XScreenSaverQueryInfo+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lXss -lXext $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char XScreenSaverQueryInfo ();
+int
+main ()
+{
+XScreenSaverQueryInfo ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_Xss_XScreenSaverQueryInfo=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_Xss_XScreenSaverQueryInfo=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_Xss_XScreenSaverQueryInfo" >&5
+echo "${ECHO_T}$ac_cv_lib_Xss_XScreenSaverQueryInfo" >&6
+if test $ac_cv_lib_Xss_XScreenSaverQueryInfo = yes; then
+
+		XLIBSW="$XLIBSW -lXss -lXext"
+		xss_lib_found=yes
+
+fi
+
+
+fi
+
+
+fi
+
+    if test $xss_lib_found = yes -a $xss_header_found = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_XSS 1
 _ACEOF
 
-
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
+    fi
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 fi
