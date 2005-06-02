@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.18 2004/12/06 19:42:10 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.19 2005/06/02 21:25:00 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5741,3 +5741,79 @@ on buttons on unix to avoid X error (hobbs, petasis)
 compositing of partially transparent areas.
 
 --- Released 8.4.9, December 6, 2004 --- See ChangeLog for details ---
+
+2004-12-09 (performance)[1081966] BMP, JPG image load speed (fellows)
+
+2004-12-29 (platform support)[1092952,1091967] MSVC7, gcc OPT compiles (hobbs)
+
+2005-01-11 (bug fix)[1098779] -pady accept all lists (fellows,kirkham)
+
+2005-01-14 (bug fix)[959973] Set _NET_WM_NAME and _NET_WM_ICON_NAME
+(freedesktop.org) in addition to WM_NAME and WM_ICON_NAME (ICCCM).  Allows
+Unicode characters in wm titlebar on X11. (english)
+
+2005-01-14 (bug fix)[742882] division by zero in gridded wm geometry (english)
+
+2005-01-14 (bug fix)[632816] cannot remove transient (english)
+
+2005-01-14 (bug fix)[568861] [wm minsize|maxsize] fix (dejong,english)
+
+2005-01-18 (bug fix) dialog visibility in demos (nash,fellows)
+
+2005-01-28 (platform support)[1021871] Solaris gcc 64-bit support (hobbs)
+
+2005-01-31 (enhancement)[1111213] msg catalog for Spain's Spanish. (poser)
+
+2005-02-10 (platform support) correct gcc builds for AIX-4+, HP-UX-11 (hobbs)
+
+2005-02-11 (bug fix)[949792] error during panedwindow destroy (hobbs)
+
+2005-02-11 (bug fix)[1105738] [tk_messageBox -parent $button] segfault (hobbs)
+
+2005-02-11 (bug fix)[1119460] disabled canvas bmap/bbox segfault (hobbs)
+
+2005-02-22 (bug fix)[1146057] Aqua: [tk_getOpenFile] encoding (steffen)
+
+2005-02-28 (bug fix)[1118340] Mousewheel %A translation (davis,hobbs)
+
+2005-03-10 (bug fix)[1160025] Aqua: offset in mouse coords (davies,ingham)
+
+2005-03-10 (bug fix)[1124237] Aqua: floating window focus (davies,ingham)
+
+2005-03-15 (platform support) OpenBSD ports patch (thoyts)
+
+2005-03-24 (enhancment) Aqua: native L&F for entry and spinbox (ingham)
+
+2005-03-29 (platform support) allow msys alone, no cugwin requirement (hobbs)
+
+2005-04-12 (bug fix)[1122671] font encoding alignment issue (brubaker,hobbs)
+
+2005-04-25 (platform support) builds on Mac OS X 10.1 (steffen)
+
+2005-05-06 (platform support) x86_64 Solarix cc and Solaris 10 builds (hobbs)
+
+2005-05-10 (bug fix)[1191895] [text] hang on <Control-Key-Up> (vlasov,darley)
+
+2005-05-14 (enhancement)[1202052] Aqua: CFRunLoop notifier allows [load]able Tk 
+(steffen)
+
+2005-05-15 (bug fix)[1012852] Aqua: check/radiobutton accelerator (kirkham)
+
+2005-05-15 (bug fix)[1202181] Aqua: scrollbar thumb position (kirkham)
+
+2005-05-15 (bug fix)[1202223] Aqua: [text] window -> scroll lock (kirkham)
+
+2005-05-24 (platform support) Darwin/Aqua builds merged into unix (steffen)
+
+2005-05-27 (behavior change) tk_popup menus now "sticky" (helfter)
+
+2005-05-30 (bug fix)[1161543,1010941,795869,690169] panedwindow
+display/resizing (south)
+
+2005-05-30 (bug fix)[1159367] [menu] creation segfault (schofield,hobbs)
+
+2005-05-31 (bug fix)[1152809] [wm stackorder] panic; multi-DISPLAY (dejong)
+
+Documentation improvements [1087842,1081527,1115907,etc.]
+
+--- Released 8.4.10, June XX, 2005 --- See ChangeLog for details ---
