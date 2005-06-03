@@ -1,5 +1,7 @@
 2005-06-02  Jim Ingham  <jingham@apple.com>
 
+	*** 8.4.10 TAGGED FOR RELEASE ***
+
         Another patch from M. Kirkham.
 	
 	* macosx/tkMacOSXScrlbr.c (ThumbActionProc, ScrollBarBindProc):
@@ -10,8 +12,6 @@
 	[Bug 1083728]
 	
 2005-06-02  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	*** 8.4.10 TAGGED FOR RELEASE ***
 
 	* changes: update for 8.4.10 release (porter)
 
