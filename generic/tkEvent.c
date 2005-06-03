@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.27 2005/03/14 01:59:04 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.28 2005/06/03 19:03:23 wolfsuit Exp $
  */
 
 #include "tkPort.h"
@@ -265,11 +265,16 @@ InvokeFocusHandlers(winPtrPtr, mask, eventPtr)
 	return 1;
     }
 
-    if (mask & (KeyPressMask|KeyReleaseMask|MouseWheelMask)) {
+#ifdef MAC_OSX_TK
+    /* MouseWheel events are not focus specific on Mac OS X */
+    if (mask & (KeyPressMask|KeyReleaseMask)) {
+#else
+      if (mask & (KeyPressMask|KeyReleaseMask|MouseWheelMask)) {
+#endif
 	(*winPtrPtr)->dispPtr->lastEventTime = eventPtr->xkey.time;
 	*winPtrPtr = TkFocusKeyEvent(*winPtrPtr, eventPtr);
 	if (*winPtrPtr == NULL) {
-	    return 1;
+	  return 1;
 	}
     }
 
