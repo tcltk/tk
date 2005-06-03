@@ -692,7 +692,7 @@
 2004-12-19  Chengye Mao  <chengye.geo@yahoo.com>
 
 	* win/tkWin.h, win/tkWinEmbed.h: Make embedding work better on Windows.
-	* win/tkWinWm.c, win/tkWinX.c:   [Bugs 222667, 831627, 842945, 1024364]
+	* win/tkWinWm.c, win/tkWinX.c:   [Bugs 222677, 831627, 842945, 1024364]
 
 2004-12-17  Chengye Mao  <chengye.geo@yahoo.com>
 
