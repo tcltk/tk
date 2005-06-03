@@ -1,3 +1,7 @@
+2005-06-03  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Makefile: fixed 'embedded' target.
+
 2005-06-02  Reinhard Max  <max@suse.de>
 
 	* unix/tkUnix.c (Tk_GetUserInactiveTime): Improvements to get it
