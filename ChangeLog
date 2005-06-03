@@ -1,3 +1,9 @@
+2005-06-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkConsole.c (Tk_CreateConsoleWindow, TkConsolePrint):
+	Transmit the ConsoleInfo through AssocData, so renaming [console]
+	won't make things break. [Bug 1016385]
+
 2005-06-03  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.10 TAGGED FOR RELEASE ***
