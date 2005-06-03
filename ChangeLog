@@ -1,13 +1,17 @@
 2005-06-02  Jim Ingham  <jingham@apple.com>
 
-	        Another patch from M. Kirkham.
+	* generic/tkEvent.c (InvokeFocusHandlers): On Mac OS X the
+	scrollwheel events are sent to the window under the mouse,
+	not to the focus window.
+	
+	Another patch from M. Kirkham.
 
-	        * macosx/tkMacOSXScrlbr.c (ThumbActionProc, ScrollBarBindProc):
-	        Record the first mouse down point, and compute differences from
-	        that, rather than getting the mouse down each time through the
-	        loop.  The old method would get fooled if you moved the mouse less
-	        than a text line height in the text widget.
-	        [Bug 1083728]
+	* macosx/tkMacOSXScrlbr.c (ThumbActionProc, ScrollBarBindProc):
+	Record the first mouse down point, and compute differences from
+	that, rather than getting the mouse down each time through the
+	loop.  The old method would get fooled if you moved the mouse less
+	than a text line height in the text widget.
+	[Bug 1083728]
 
 2005-06-03  Daniel Steffen  <das@users.sourceforge.net>
 
