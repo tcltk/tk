@@ -11,11 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.3 2005/05/15 20:57:08 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.4 2005/06/03 00:53:29 wolfsuit Exp $
  */
 
 #include "tkScrollbar.h"
 #include "tkMacOSXInt.h"
+#include "tclInt.h"
 
 #include <Carbon/Carbon.h>
 
@@ -97,9 +98,11 @@ static ControlActionUPP scrollActionProc = NULL; /* Pointer to func. */
 static ThumbActionUPP thumbActionProc = NULL;    /* Pointer to func. */
 static TkScrollbar *activeScrollPtr = NULL;      /* Non-null when in thumb */
                                                  /* proc. */
-static Point activePoint;                        /* Used when
-                                                  * activeScrollPtr is
-                                                  * non-NULL */
+static Point mouseDownPoint;	/* Used when activeScrollPtr is non-NULL   */
+				/* to store the coordinates where the      */
+				/* mouse was first pressed to begin        */
+				/* dragging the thumb, because             */
+				/* ThumbActionProc can't take any args.    */
 						 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -583,7 +586,7 @@ ThumbActionProc()
     register MacScrollbar *macScrollPtr = (MacScrollbar *) activeScrollPtr;
     Tcl_DString cmdString;
     int origValue;
-    double thumbWidth, newFirstFraction, trackBarSize;
+    double thumbWidth, oldFirstFraction, newFirstFraction, trackBarSize;
     char valueString[40];
     Point currentPoint = { 0, 0 };
     Rect trackRect;
@@ -626,8 +629,15 @@ ThumbActionProc()
     /*
      * Track the mouse while the button is held down.  If the mouse is moved,
      * we calculate the value that should be passed to the "command" part of
-     * the scrollbar.
+     * the scrollbar.  Since the mouse may move a distance too small to
+     * cause a change to the first fraction, each calculation must be done
+     * versus what the first fraction was when the mouse button was
+     * initially pressed.  Otherwise, moving the mouse too slowly will
+     * cause the calculated fraction delta to be zero and the scrollbar
+     * won't respond.
      */
+
+    oldFirstFraction = scrollPtr->firstFraction;
 
     do {
         err = TrackMouseLocationWithOptions(NULL,
@@ -640,18 +650,25 @@ ThumbActionProc()
         if ((err == noErr) 
                 && ((trackingResult == kMouseTrackingMouseDragged)
                 || (trackingResult == kMouseTrackingMouseMoved))) {
-        /*
-         * Calculate where the scrollbar should move to, and reset the
-         * activePoint to where we are now.
-         */
-	    newFirstFraction = scrollPtr->firstFraction;
+
+	   /*
+            * Calculate where the scrollbar should move to, based on
+            * where the mouse button was pressed and where the scrollbar
+	    * initially was at that time.  Note that PtInRect() will
+	    * return false if currentPoint or trackRect are not in
+	    * is not in current graphics port, which may happen if any
+            * of the waiting idle events change the port (e.g. with
+	    * SetPort()) but fail to restore it before returning and the
+	    * scrollbar will lock in place.
+            */
+	    newFirstFraction = oldFirstFraction;
             if (PtInRect(currentPoint, &trackRect)) {
 		double pixDiff;
 		double fracDelta;
                 if (scrollPtr->vertical == true) {
-		    pixDiff = (double)(currentPoint.v - activePoint.v);
+		    pixDiff = (double)(currentPoint.v - mouseDownPoint.v);
                 } else {
-		    pixDiff = (double)(currentPoint.h - activePoint.h);
+		    pixDiff = (double)(currentPoint.h - mouseDownPoint.h);
                 }
 		fracDelta = pixDiff/(trackBarSize);
 		newFirstFraction += fracDelta;
@@ -662,8 +679,13 @@ ThumbActionProc()
 		}
 	    }
             
-            activePoint = currentPoint;
-            
+	    /*
+	     * Move the scrollbar thumb to the new first fraction given
+	     * its position when initially pressed and how far the mouse
+	     * has moved.  Process waiting idle tasks afterward to allow
+	     * for the display to update.
+	     */
+
             sprintf(valueString, "%g", newFirstFraction);
             Tcl_DStringSetLength(&cmdString, 0);
             Tcl_DStringAppend(&cmdString, scrollPtr->command,
@@ -674,12 +696,8 @@ ThumbActionProc()
             Tcl_Preserve((ClientData) interp);
             Tcl_GlobalEval(interp, cmdString.string);
             Tcl_Release((ClientData) interp);
-            Tcl_DStringSetLength(&cmdString, 0);
-            Tcl_DStringAppend(&cmdString, "update idletasks",
-                strlen("update idletasks"));
-            Tcl_Preserve((ClientData) interp);
-            Tcl_GlobalEval(interp, cmdString.string);
-            Tcl_Release((ClientData) interp);
+
+	    TclServiceIdle();
         }
     } while ((err == noErr) && trackingResult != kMouseTrackingMouseReleased);
 
@@ -802,8 +820,8 @@ ScrollbarBindProc(
              * so the callback may have access to it.
              */
             activeScrollPtr = scrollPtr;
-	    activePoint.h = where.h;
-	    activePoint.v = where.v;
+	    mouseDownPoint.h = where.h;
+	    mouseDownPoint.v = where.v;
             part = TrackControl(macScrollPtr->sbHandle, where,
                     (ControlActionUPP) thumbActionProc);
             activeScrollPtr = NULL;
