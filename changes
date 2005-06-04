@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.87 2005/06/03 20:08:45 dgp Exp $
+RCS: @(#) $Id: changes,v 1.88 2005/06/04 20:53:17 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5943,12 +5943,12 @@ TkWinEmbeddedEventProc in tkWinEmbed.c; TkWinChildProc in tkWinX.c.
 2005-01-08 (bug fix)[1098625] Wrong toplevel geometry when created with a menu;
 [637653] Deleting a popup menu crashes wish (chengyemao)
 
-2005-01-09 (feature implementation of embedded/embedding Tk of Windows) Changed 
-FrameWidgetObjCmd (tkFrame.c), TkpUseWindow (tkMacOSXEmbed.c, tkUnixEmbed.c, 
-tkWinEmbed.c) to make implementation ready for a configurable toplevel -use
-option and completed the implementation for Windows (tkWinWm.c, tkWinEmbed.c, 
-tkWinInt.h). Embedding with a frame container needs further debugging
-(chengyemao).
+2005-01-09 (feature implementation of embedded/embedding Tk of Windows)
+Changed FrameWidgetObjCmd (tkFrame.c), TkpUseWindow (tkMacOSXEmbed.c,
+tkUnixEmbed.c, tkWinEmbed.c) to make implementation ready for a
+configurable toplevel -use option and completed the implementation for
+Windows (tkWinWm.c, tkWinEmbed.c, tkWinInt.h). Embedding with a frame
+container needs further debugging (chengyemao).
 
 2005-01-10 (enhancement)[1081595] stopped use of TK_DBGX (english)
 
@@ -5956,12 +5956,12 @@ tkWinInt.h). Embedding with a frame container needs further debugging
 
 2005-01-11 (bug fix)[1093631] [text] scroll long wrapped line (darley)
 
-2005-01-18 (feature implementation of embedded/embedding Tk of Windows) Simplified
-TkpUseWindow, added Tk_DetachEmbeddedWindow and got rid of code for saving an 
-embedded window object which is never used. Fixed a bug in TkWinHandleMenuEvent 
-for processing WM_MENUSELECT. Wish crashed due to an invalid index in a case 
-of MF_POPUP. The -use option of a toplevel can be configured after the toplevel
-is created.
+2005-01-18 (feature implementation of embedded/embedding Tk of Windows)
+Simplified TkpUseWindow, added Tk_DetachEmbeddedWindow and got rid of code
+for saving an embedded window object which is never used. Fixed a bug in
+TkWinHandleMenuEvent for processing WM_MENUSELECT. Wish crashed due to an
+invalid index in a case of MF_POPUP. The -use option of a toplevel can be
+configured after the toplevel is created.
 
 2005-01-18 (bug fix) dialog visibility in demos (nash,fellows)
 
@@ -5998,7 +5998,8 @@ segfault (hobbs)
 
 2005-03-14 (bug fix)[1124237] Aqua: (un)map of subwindows (ingham)
 
-2005-03-14 (bug fix)[700305] Aqua: child window updates before creation (ingham)
+2005-03-14 (bug fix)[700305] Aqua: child window updates before creation
+(ingham)
 
 2005-03-15 (platform support) OpenBSD ports patch (thoyts)
 
