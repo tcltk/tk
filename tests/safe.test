@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: safe.test,v 1.10.2.1 2004/10/26 23:23:13 dgp Exp $
+# RCS: @(#) $Id: safe.test,v 1.10.2.2 2005/06/06 22:46:51 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -44,6 +44,9 @@ if {"$tcl_platform(platform)" == "macintosh"} {
 } else {
     set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source toplevel wm}
 }
+
+set saveAutoPath $::auto_path
+set ::auto_path [list [info library] $::tk_library]
 
 test safe-1.1 {Safe Tk loading into an interpreter} {
     catch {safe::interpDelete a}
@@ -214,6 +217,7 @@ test safe-7.1 {canvas printing} {
 } 0
 
 # cleanup
+set ::auto_path $saveAutoPath
 unset hidden_cmds
 ::tcltest::cleanupTests
 return
