@@ -18,10 +18,10 @@ Initial MacOS X Port by Jim Ingham &lt;jingham@apple.com&gt; &amp; Ian Reid, Cop
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>8.5a3</string>
+	<string>8.5a4</string>
 	<key>CFBundleSignature</key>
 	<string>Tk  </string>
 	<key>CFBundleVersion</key>
-	<string>8.5a3</string>
+	<string>8.5a5</string>
 </dict>
 </plist>
