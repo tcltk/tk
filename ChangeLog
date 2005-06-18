@@ -1,6 +1,16 @@
-2005-06-18  Don Porter	<dgp@users.sourceforge.net>
+2005-06-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.11 TAGGED FOR RELEASE ***
+
+	* macosx/Makefile: for X11 build, add -X11 suffix to unversioned wish
+	symbolic link.
+
+	* unix/tcl.m4 (Darwin): add -headerpad_max_install_names to LDFLAGS to
+	ensure we can always relocate binaries with install_name_tool.
+
+	* unix/configure: autoconf-2.13
+
+2005-06-18  Don Porter	<dgp@users.sourceforge.net>
 
 	* changes:		Update changes for 8.4.11 release
 
