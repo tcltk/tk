@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: Makefile,v 1.18 2005/06/03 08:52:35 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.19 2005/06/18 21:46:02 das Exp $
 #
 ########################################################################################################
 
@@ -97,6 +97,7 @@ PRODUCT_NAME		:= Tk
 UNIX_DIR		:= ${CURDIR}/../unix
 VERSION			:= $(shell awk -F= '/^TK_VERSION/ {print $$2; nextfile}' ${UNIX_DIR}/configure.in)
 TCL_VERSION		:= ${VERSION}
+wish			:= wish
 WISH			= wish${VERSION}
 
 BUILD_TARGET		:= wish
@@ -117,6 +118,7 @@ ifeq (${TK_X11},)
 override CONFIGURE_ARGS := ${CONFIGURE_ARGS} --enable-aqua
 else
 VERSION			:= ${VERSION}-X11
+wish			:= ${wish}-X11
 endif
 
 INSTALL_TARGETS		= install-binaries install-libraries
@@ -216,7 +218,7 @@ else
 	if [ -n "$${RM_SYSTEM:-}" ]; then rm -f System; fi; \
 	if [ -n "$${RM_TCL:-}" ]; then rm -f ./${LIBDIR}/Tcl.framework; fi
 # install wish symbolic link
-	@ln -fs ${WISH} ${INSTALL_ROOT}${BINDIR}/wish
+	@ln -fs ${WISH} ${INSTALL_ROOT}${BINDIR}/${wish}
 endif
 endif
 ifeq (${BUILD_STYLE}_${EMBEDDED_BUILD},Development_)
