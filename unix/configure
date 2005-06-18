@@ -557,9 +557,9 @@ fi
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL=".10"
+TK_PATCH_LEVEL=".11"
 VERSION=${TK_VERSION}
-LOCALES="cs de el en en_gb es fr it nl ru"
+LOCALES="cs de el en en_gb eo es es_es fr it nl pl ru"
 
 #--------------------------------------------------------------------
 # Find and load the tclConfig.sh file
