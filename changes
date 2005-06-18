@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.20 2005/06/02 23:18:11 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.21 2005/06/18 19:55:46 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5819,3 +5819,9 @@ display/resizing (south)
 Documentation improvements [1087842,1081527,1115907,etc.]
 
 --- Released 8.4.10, June 4, 2005 --- See ChangeLog for details ---
+
+2005-06-03 (bug fix)[1016385] allow [rename console] (fellows)
+
+2005-06-04 (bug fix)[1114977] UID thread-safety in canvas (fellows)
+
+--- Released 8.4.11, June 24, 2005 --- See ChangeLog for details ---
