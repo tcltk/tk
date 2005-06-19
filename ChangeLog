@@ -1,3 +1,8 @@
+2005-06-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgGIF.c: Cleanse all static (i.e. non-thread-safe) data
+	at a miniscule performance hit.
+
 2005-06-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Makefile: for X11 build, add -X11 suffix to unversioned wish
