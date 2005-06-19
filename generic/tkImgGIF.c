@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.27 2005/06/19 21:49:08 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.28 2005/06/19 21:54:16 dkf Exp $
  */
 
 /*
@@ -1099,7 +1099,7 @@ GetCode(chan, code_size, flag, gifConfPtr)
 	     */
 	    gifConfPtr->reader.bytes =
 		    GetDataBlock(gifConfPtr, chan, gifConfPtr->workingBuffer);
-	    gifConfPtr->reader.c = gifConfPtr->reader.workingBuffer;
+	    gifConfPtr->reader.c = gifConfPtr->workingBuffer;
 	    if (gifConfPtr->reader.bytes <= 0) {
 		gifConfPtr->reader.done = 1;
 		break;
@@ -1462,7 +1462,7 @@ CommonWriteGIF(interp, handle, format, blockPtr)
     Tcl_Obj *format;
     Tk_PhotoImageBlock *blockPtr;
 {
-    GifWriteState state, *statePtr = &state;
+    GifWriterState state, *statePtr = &state;
     int resolution;
     long width, height, x;
     unsigned char c;
@@ -1826,11 +1826,11 @@ static void
 writeBlock(statePtr)
     miGIFState_t *statePtr;
 {
-    int i;
     unsigned char c;
 
 #ifdef MIGIF_DEBUGGING_ENVARS
     if (MIGIF_VERBOSE) {
+	int i;
 	printf("writeBlock %d:", statePtr->oblen);
 	for (i=0 ; i<statePtr->oblen ; i++) {
 	    printf(" %02x", statePtr->oblock[i]);
@@ -2083,7 +2083,7 @@ runlengthFlushWithTable(statePtr, count)
     }
     maxOutputClear(statePtr);
     for (; repmax>0 ; repmax--) {
-	outputPlain(statPtr,
+	outputPlain(statePtr,
 		statePtr->runlengthBaseCode + statePtr->runlengthTableMax - 2);
     }
     if (leftover) {
