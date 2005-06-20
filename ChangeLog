@@ -1,6 +1,11 @@
-2005-06-18  Daniel Steffen  <das@users.sourceforge.net>
+2005-06-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	*** 8.4.11 TAGGED FOR RELEASE ***
+
+	* generic/tkImgGIF.c (mInit,Mgetc,Fread): Stop anyone from reading
+	off the end of a buffer.
+
+2005-06-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Makefile: for X11 build, add -X11 suffix to unversioned wish
 	symbolic link.

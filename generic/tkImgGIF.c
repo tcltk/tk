@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.1 2004/07/27 20:31:02 das Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.2 2005/06/20 10:28:00 dkf Exp $
  */
 
 /*
@@ -55,6 +55,7 @@
 
 typedef struct mFile {
     unsigned char *data;	/* mmencoded source string */
+    int length;			/* Length of string in bytes */
     int c;			/* bits left over from previous character */
     int state;			/* decoder state (0-4 or GIF_DONE) */
 } MFile;
@@ -173,7 +174,7 @@ static int		Mread _ANSI_ARGS_((unsigned char *dst, size_t size,
 static int		Mgetc _ANSI_ARGS_((MFile *handle));
 static int		char64 _ANSI_ARGS_((int c));
 static void		mInit _ANSI_ARGS_((unsigned char *string,
-			    MFile *handle));
+			    int length, MFile *handle));
 
 
 /*
@@ -552,7 +553,7 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
 	/*
 	 * Try interpreting the data as Base64 encoded
 	 */
-	mInit((unsigned char *) data, &handle);
+	mInit((unsigned char *) data, length, &handle);
 	got = Mread(header, 10, 1, &handle);
 	if (got != 10
 		|| ((strncmp(GIF87a, (char *) header, 6) != 0)
@@ -599,7 +600,7 @@ StringReadGIF(interp, dataObj, format, imageHandle,
     int width, height;		/*   image to copy */
     int srcX, srcY;
 {
-    int result;
+    int result, length;
     MFile handle;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -609,14 +610,14 @@ StringReadGIF(interp, dataObj, format, imageHandle,
     /*
      * Check whether the data is Base64 encoded
      */
-    data = (char *) Tcl_GetByteArrayFromObj(dataObj, NULL);
+    data = (char *) Tcl_GetByteArrayFromObj(dataObj, &length);
     if ((strncmp(GIF87a, data, 6) != 0) && (strncmp(GIF89a, data, 6) != 0)) {
-	mInit((unsigned char *)data, &handle);
+	mInit((unsigned char *)data, length, &handle);
 	tsdPtr->fromData = 1;
 	dataSrc = (Tcl_Channel) &handle;
     } else {
 	tsdPtr->fromData = 2;
-	mInit((unsigned char *)data, &handle);
+	mInit((unsigned char *)data, length, &handle);
 	dataSrc = (Tcl_Channel) &handle;
     }
     result = FileReadGIF(interp, dataSrc, "inline data",
@@ -1123,13 +1124,15 @@ GetCode(chan, code_size, flag)
  */
 
 static void
-mInit(string, handle)
-   unsigned char *string;	/* string containing initial mmencoded data */
-   MFile *handle;		/* mmdecode "file" handle */
+mInit(string, length, handle)
+    unsigned char *string;	/* string containing initial mmencoded data */
+    int length;			/* Length of string */
+    MFile *handle;		/* mmdecode "file" handle */
 {
-   handle->data = string;
-   handle->state = 0;
-   handle->c = 0;
+    handle->data = string;
+    handle->length = length;
+    handle->state = 0;
+    handle->c = 0;
 }
 
 /*
@@ -1152,18 +1155,18 @@ mInit(string, handle)
 
 static int
 Mread(dst, chunkSize, numChunks, handle)  
-   unsigned char *dst;	/* where to put the result */
-   size_t chunkSize;	/* size of each transfer */
-   size_t numChunks;	/* number of chunks */
-   MFile *handle;	/* mmdecode "file" handle */
+    unsigned char *dst;	/* where to put the result */
+    size_t chunkSize;	/* size of each transfer */
+    size_t numChunks;	/* number of chunks */
+    MFile *handle;	/* mmdecode "file" handle */
 {
-   register int i, c;
-   int count = chunkSize * numChunks;
+    register int i, c;
+    int count = chunkSize * numChunks;
 
-   for(i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
+    for(i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
 	*dst++ = c;
-   }
-   return i;
+    }
+    return i;
 }
 
 /*
@@ -1201,6 +1204,10 @@ Mgetc(handle)
     }
 
     do {
+	if (handle->length-- <= 0) {
+	    handle->state = GIF_DONE;
+	    return GIF_DONE;
+	}
 	c = char64(*handle->data);
 	handle->data++;
     } while (c == GIF_SPACE);
@@ -1315,8 +1322,12 @@ Fread(dst, hunk, count, chan)
 	return Mread(dst, hunk, count, (MFile *) chan);
     case 2:
 	handle = (MFile *) chan;
+	if (handle->length <= 0 || (size_t)handle->length < (size_t) (hunk * count)) {
+	    return -1;
+	}
 	memcpy((VOID *)dst, (VOID *) handle->data, (size_t) (hunk * count));
 	handle->data += hunk * count;
+	handle->length -= hunk * count;
 	return (int)(hunk * count);
     default:
 	return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
