@@ -1,3 +1,7 @@
+2005-06-21  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/GetBitmap.3: Fix silly error in SYNOPSIS. [Bug 1224983]
+
 2005-06-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	*** 8.4.11 TAGGED FOR RELEASE ***
