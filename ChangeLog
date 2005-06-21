@@ -1,3 +1,7 @@
+2005-06-21  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/GetBitmap.3: Fix silly error in SYNOPSIS. [Bug 1224983]
+
 2005-06-19  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgGIF.c: Cleanse all static (i.e. non-thread-safe) data
