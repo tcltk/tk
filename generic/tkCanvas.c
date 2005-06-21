@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.21.2.1 2005/06/03 23:22:40 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.21.2.2 2005/06/21 17:29:16 dgp Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -211,7 +211,7 @@ static Tk_ConfigSpec configSpecs[] = {
 
 static Tk_ItemType *typeList = NULL;	/* NULL means initialization hasn't
 					 * been done yet. */
-TCL_DECLARE_MUTEX(typeListMutex);
+TCL_DECLARE_MUTEX(typeListMutex)
 
 #ifndef USE_OLD_TAG_SEARCH
 /*
