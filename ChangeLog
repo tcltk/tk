@@ -2,6 +2,10 @@
 
 	*** 8.4.11 TAGGED FOR RELEASE ***
 
+	* macosx/tkMacOSXDefault.h: change ENTRY_BORDER defaults to from 5 to 2
+	to make default entry widgets in TkAqua look like in other aqua apps
+	(and have same border dimensions as other platforms). [Bug 1176610]
+
 	* unix/Makefile.in (install-private-headers): rewrite tkPort.h when
 	installing private headers to remove ../unix relative #include path to
 	tkUnixPort.h (which is incorrect at the installed location).
