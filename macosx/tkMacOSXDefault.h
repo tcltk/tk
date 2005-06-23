@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.7 2005/03/24 07:16:13 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.8 2005/06/23 20:17:57 das Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -147,12 +147,12 @@
  */
  
 #define MAC_OSX_FOCUS_WIDTH 3
-#define MAC_OSX_ENTRY_BORDER 5
+#define MAC_OSX_ENTRY_BORDER 2
 #define MAC_OSX_ENTRY_RELEIF TK_RELIEF_SUNKEN
 
 #define DEF_ENTRY_BG_COLOR		NORMAL_BG
 #define DEF_ENTRY_BG_MONO		WHITE
-#define DEF_ENTRY_BORDER_WIDTH		"5"
+#define DEF_ENTRY_BORDER_WIDTH		"2"
 #define DEF_ENTRY_CURSOR		"xterm"
 #define DEF_ENTRY_DISABLED_BG_COLOR	NORMAL_BG
 #define DEF_ENTRY_DISABLED_BG_MONO	WHITE
