@@ -2,6 +2,11 @@
 
 	*** 8.4.11 TAGGED FOR RELEASE ***
 
+	* generic/tkConsole.c: backport fix for bug 756840 & sync whitespace
+	changes from HEAD.
+
+	* generic/tkConsole.c (TkConsolePrint): prevent potential NULL deref.
+
 	* macosx/tkMacOSXDefault.h: change ENTRY_BORDER defaults to from 5 to 2
 	to make default entry widgets in TkAqua look like in other aqua apps
 	(and have same border dimensions as other platforms). [Bug 1176610]
