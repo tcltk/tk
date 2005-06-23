@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.87.2.10 2005/05/25 17:46:40 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.87.2.11 2005/06/23 06:00:29 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -771,14 +771,14 @@ install-private-headers: libraries
 	    fi
 	@echo "Installing private header files";
 	@for i in $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
-		$(GENERIC_DIR)/tkIntPlatDecls.h $(GENERIC_DIR)/tkPort.h \
+		$(GENERIC_DIR)/tkIntPlatDecls.h \
 		$(@TK_WINDOWINGSYSTEM@_PRIVATE_HDRS); \
 	    do \
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
-	@if test -f tkConfig.h; then\
-	    $(INSTALL_DATA) tkConfig.h $(PRIVATE_INCLUDE_INSTALL_DIR); \
-	    fi;
+	@sed -e 's#\.\./unix/##' $(GENERIC_DIR)/tkPort.h > tkPort.h; \
+	    $(INSTALL_DATA) tkPort.h $(PRIVATE_INCLUDE_INSTALL_DIR); \
+	    rm -f tkPort.h
 
 Makefile: $(UNIX_DIR)/Makefile.in
 	$(SHELL) config.status
