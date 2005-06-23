@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.22 2005/03/19 08:02:57 dkf Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.23 2005/06/23 22:07:46 das Exp $
  */
 
 #include "tk.h"
@@ -803,7 +803,7 @@ TkConsolePrint(interp, devId, buffer, size)
     }
 
     info = (ConsoleInfo *) Tcl_GetAssocData(interp, TK_CONSOLE_INFO_KEY, NULL);
-    if (info->consoleInterp == NULL) {
+    if (info == NULL || info->consoleInterp == NULL) {
 	return;
     }
 
