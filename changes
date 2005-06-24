@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.24 2005/06/23 20:33:46 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.25 2005/06/24 13:51:39 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5827,5 +5827,7 @@ Documentation improvements [1087842,1081527,1115907,etc.]
 2005-06-20 (bug fix) Eliminate buffer overflow in GIF decoder (fellows)
 
 2005-06-23 (bug fix)[1176610] Aqua: default [entry] borderwidth (steffen)
+
+2005-06-23 (bug fix)[756840] Fix Tk console cleanup on exit/reinit (mistachkin)
 
 --- Released 8.4.11, June 28, 2005 --- See ChangeLog for details ---
