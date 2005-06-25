@@ -1,6 +1,10 @@
-2005-06-23  Daniel Steffen  <das@users.sourceforge.net>
+2005-06-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.11 TAGGED FOR RELEASE ***
+
+	* library/demos/menu.tcl: removed errant '}'.
+
+2005-06-23  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkConsole.c: backport fix for bug 756840 & sync whitespace
 	changes from HEAD.
