@@ -1,3 +1,7 @@
+2005-07-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/getOpenFile.n: correct -multiple docs (takes boolean)
+
 2005-06-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.11 TAGGED FOR RELEASE ***
