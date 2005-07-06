@@ -1,6 +1,10 @@
+2005-07-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/getOpenFile.n: correct -multiple docs (takes boolean)
+
 2005-07-05  Don Porter  <dgp@users.sourceforge.net>
 
-        * unix/Makefile.in:     Purged use of TCLTESTARGS [RFE 1161550].
+	* unix/Makefile.in:	Purged use of TCLTESTARGS [RFE 1161550].
 
 2005-06-23  Daniel Steffen  <das@users.sourceforge.net>
 
