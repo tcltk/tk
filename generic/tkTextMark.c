@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.13 2004/10/05 01:26:10 hobbs Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.14 2005/07/18 22:12:05 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -883,7 +883,7 @@ MarkFindPrev(interp, textPtr, string)
 		Tcl_SetResult(interp, "current", TCL_STATIC);
 	    } else if (prevPtr == textPtr->insertMarkPtr) {
 		Tcl_SetResult(interp, "insert", TCL_STATIC);
-	    } else if (segPtr->body.mark.textPtr != textPtr) {
+	    } else if (prevPtr->body.mark.textPtr != textPtr) {
 		/* Ignore widget-specific marks for the other widgets */
 		continue;
 	    } else {
