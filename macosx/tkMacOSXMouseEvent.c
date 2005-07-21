@@ -312,7 +312,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
                      break;
                  case inCollapseBox:
                      err = HandleInCollapse(medPtr->whichWin);
-                     if (err = noErr) {
+                     if (err == noErr) {
                          statusPtr->err = 1;
                      }
                      statusPtr->stopProcessing = 1;
