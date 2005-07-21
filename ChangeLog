@@ -1,3 +1,11 @@
+2005-07-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXEntry.c (TkpDrawEntryBorderAndFocus): set
+	oldWidth to avoid warning
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): 
+	corrected if expression error (use of = instead of ==)
+
 2005-07-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/getOpenFile.n: correct -multiple docs (takes boolean)

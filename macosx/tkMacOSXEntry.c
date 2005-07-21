@@ -151,7 +151,7 @@ TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable d, int isSpinbox)
     GC bgGC;
     Tk_Window tkwin = entryPtr->tkwin;
     ThemeDrawState drawState;
-    int oldWidth;
+    int oldWidth = 0;
 
     /* 
      * I use 6 as the borderwidth.  2 of the 5 go into the actual frame the
