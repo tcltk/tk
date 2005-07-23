@@ -1,3 +1,11 @@
+2005-07-22  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinX.c: Define _WIN32_WINNT with NT SP 3 data
+	to fix compiler error because SendInput was not defined.
+	The new msys_mingw7 release is now needed to compile
+	the HEAD with mingw gcc.
+	[Bug 1210712]
+
 2005-07-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent):
