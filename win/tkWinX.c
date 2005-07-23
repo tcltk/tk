@@ -10,15 +10,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.47 2005/06/01 17:52:57 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.48 2005/07/23 03:06:25 mdejong Exp $
  */
 
 /*
- * Make sure the SendInput API is available:
+ * Make sure the SendInput API is available (NT SP 3):
  */
 #if (_WIN32_WINNT <= 0x0400)
 #undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0401
+#define _WIN32_WINNT 0x0403
 #endif
 
 #include "tkWinInt.h"
