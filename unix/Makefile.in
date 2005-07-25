@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.87.2.11 2005/06/23 06:00:29 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.87.2.12 2005/07/25 01:33:51 mdejong Exp $
 
 # Current Tk version;  used in various names.
 
@@ -186,6 +186,21 @@ NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
 # determine which shell to use for executing commands:
 SHELL			= /bin/sh
 
+# BUILD_TCLSH is the fully qualified path name of the tclsh shell
+# in the Tcl build directory. Test that need to be run in the
+# version of tclsh that we are building against should use this
+# path. Targets that need an installed tclsh should not depend
+# on this variable.
+
+BUILD_TCLSH		= @BUILD_TCLSH@
+
+# TCL_EXE is the name of a tclsh executable that is available *BEFORE*
+# running make for the first time. Certain build targets (make genstubs)
+# need it to be available on the PATH. This executable should *NOT* be
+# required just to do a normal build although it can be required to run
+# make dist. This variable is set to "" if no tclsh is available.
+TCL_EXE			= @TCLSH_PROG@
+
 # Tk used to let the configure script choose which program to use
 # for installing, but there are just too many different versions of
 # "install" around;  better to use the install-sh script that comes
@@ -198,13 +213,6 @@ INSTALL			= @srcdir@/install-sh -c
 INSTALL_PROGRAM		= ${INSTALL}
 INSTALL_LIBRARY		= ${INSTALL}
 INSTALL_DATA		= ${INSTALL} -m 644
-
-# TCL_EXE is the name of a tclsh executable that is available *BEFORE*
-# running make for the first time. Certain build targets (make genstubs)
-# need it to be available on the PATH. This executable should *NOT* be
-# required just to do a normal build although it can be required to run
-# make dist.
-TCL_EXE			= tclsh
 
 # The symbol below provides support for dynamic loading and shared
 # libraries.  See configure.in for a description of what it means.
@@ -1455,13 +1463,10 @@ html-tk:
 	@EXTRA_BUILD_HTML@
 
 BUILD_HTML = \
-	@if test -f $(TCL_BIN_DIR)/tclsh; then \
-	@LD_LIBRARY_PATH_VAR@=$(TCL_BIN_DIR):$${@LD_LIBRARY_PATH_VAR@}; export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TCLSH="$(TCL_BIN_DIR)/tclsh"; else \
-	TCLSH="$(TCL_EXE)"; fi ;\
-	$${TCLSH} $(TOOL_DIR)/tcltk-man2html.tcl --htmldir=$(HTML_INSTALL_DIR) \
-		--srcdir=$(TOP_DIR)/..
+	@if test -f "$(TCL_EXE)"; then \
+	$(TCL_EXE) $(TOOL_DIR)/tcltk-man2html.tcl --htmldir=$(HTML_INSTALL_DIR) \
+		--srcdir=$(TOP_DIR)/.. ; \
+	fi
 
 #
 # Target to create a Macintosh version of the distribution.  This will

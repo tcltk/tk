@@ -1,3 +1,23 @@
+2005-07-24  Mo DeJong  <mdejong@users.sourceforge.net>
+	
+	* unix/Makefile.in: Subst TCLSH_PROG and
+	BUILD_TCLSH into Makefile. Rework html
+	target so that it depends on the tclsh
+	installed on the system PATH.
+	* unix/configure: Regen.
+	* unix/configure.in: Invoke SC_PROG_TCLSH
+	and SC_BUILD_TCLSH and subst into Makefile.
+	* unix/tcl.m4: Update from Tcl.
+	* win/Makefile.in: Subst TCLSH_PROG and
+	BUILD_TCLSH into Makefile. Rework winhelp
+	target so that it depends on the tclsh
+	installed on the system PATH.
+	* win/configure: Regen.
+	* win/configure.in: Invoke SC_BUILD_TCLSH
+	and subst into Makefile.
+	* win/tcl.m4: Update from Tcl.
+	[Tcl patch 1244153]
+
 2005-07-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXEntry.c (TkpDrawEntryBorderAndFocus): set
