@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.28 2005/05/31 04:59:38 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.29 2005/07/25 09:06:01 dkf Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -83,7 +83,7 @@ proc ::tk::ConsoleInit {} {
     AmpMenuArgs	.menubar.edit add command -label [mc P&aste] -accel "$mod+V"\
 	    -command {event generate .console <<Paste>>}
 
-    if {[string compare $tcl_platform(platform) "windows"]} {
+    if {$tcl_platform(platform) ne "windows"} {
 	AmpMenuArgs .menubar.edit add command -label [mc Cl&ear] \
 		-command {event generate .console <<Clear>>}
     } else {
@@ -169,7 +169,7 @@ proc ::tk::ConsoleSource {} {
 	    -filetypes [list \
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
-    if {[string compare $filename ""]} {
+    if {$filename ne ""} {
     	set cmd [list source $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
@@ -190,7 +190,7 @@ proc ::tk::ConsoleInvoke {args} {
     set cmd ""
     if {[llength $ranges]} {
 	set pos 0
-	while {[string compare [lindex $ranges $pos] ""]} {
+	while {[lindex $ranges $pos] ne ""} {
 	    set start [lindex $ranges $pos]
 	    set end [lindex $ranges [incr pos]]
 	    append cmd [.console get $start $end]
@@ -957,7 +957,7 @@ proc ::tk::console::ExpandProcname str {
 #		possible further matches
 
 proc ::tk::console::ExpandVariable str {
-    if {[regexp {([^\(]*)\((.*)} $str junk ary str]} {
+    if {[regexp {([^\(]*)\((.*)} $str -> ary str]} {
 	## Looks like they're trying to expand an array.
 	set match [EvalAttached [list array names $ary $str*]]
 	if {[llength $match] > 1} {

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.16 2005/04/12 20:33:12 hobbs Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.17 2005/07/25 09:06:01 dkf Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -27,9 +27,9 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     variable ::tk::Priv
     set dataName __tk_choosedir
     upvar ::tk::dialog::file::$dataName data
-    ::tk::dialog::file::chooseDir::Config $dataName $args
+    Config $dataName $args
 
-    if {[string equal $data(-parent) .]} {
+    if {$data(-parent) eq "."} {
         set w .$dataName
     } else {
         set w $data(-parent).$dataName
@@ -39,7 +39,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     #
     if {![winfo exists $w]} {
 	::tk::dialog::file::Create $w TkChooseDir
-    } elseif {[string compare [winfo class $w] TkChooseDir]} {
+    } elseif {[winfo class $w] ne "TkChooseDir"} {
 	destroy $w
 	::tk::dialog::file::Create $w TkChooseDir
     } else {
@@ -202,24 +202,24 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
     #       that directory.
 
     set selection [tk::IconList_Curselection $data(icons)]
-    if { [llength $selection] != 0 } {
+    if {[llength $selection] != 0} {
 	set iconText [tk::IconList_Get $data(icons) [lindex $selection 0]]
 	set iconText [file join $data(selectPath) $iconText]
-	::tk::dialog::file::chooseDir::Done $w $iconText
+	Done $w $iconText
     } else {
 	set text [$data(ent) get]
-	if { [string equal $text ""] } {
+	if {$text eq ""} {
 	    return
 	}
-	set text [eval file join [file split [string trim $text]]]
-	if { ![file exists $text] || ![file isdirectory $text] } {
+	set text [file join {expand}[file split [string trim $text]]]
+	if {![file exists $text] || ![file isdirectory $text]} {
 	    # Entry contains an invalid directory.  If it's the same as the
 	    # last time they came through here, reset the saved value and end
 	    # the dialog.  Otherwise, save the value (so we can do this test
 	    # next time).
-	    if { [string equal $text $data(previousEntryText)] } {
+	    if {$text eq $data(previousEntryText)} {
 		set data(previousEntryText) ""
-		::tk::dialog::file::chooseDir::Done $w $text
+		Done $w $text
 	    } else {
 		set data(previousEntryText) $text
 	    }
@@ -227,8 +227,8 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 	    # Entry contains a valid directory.  If it is the same as the
 	    # current directory, end the dialog.  Otherwise, change to that
 	    # directory.
-	    if { [string equal $text $data(selectPath)] } {
-		::tk::dialog::file::chooseDir::Done $w $text
+	    if {$text eq $data(selectPath)} {
+		Done $w $text
 	    } else {
 		set data(selectPath) $text
 	    }
@@ -240,7 +240,7 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 proc ::tk::dialog::file::chooseDir::DblClick {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
     set selection [tk::IconList_Curselection $data(icons)]
-    if { [llength $selection] != 0 } {
+    if {[llength $selection] != 0} {
 	set filenameFragment \
 		[tk::IconList_Get $data(icons) [lindex $selection 0]]
 	set file $data(selectPath)
@@ -257,7 +257,7 @@ proc ::tk::dialog::file::chooseDir::DblClick {w} {
 proc ::tk::dialog::file::chooseDir::ListBrowse {w text} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string equal $text ""]} {
+    if {$text eq ""} {
 	return
     }
 
@@ -278,12 +278,11 @@ proc ::tk::dialog::file::chooseDir::Done {w {selectFilePath ""}} {
     upvar ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
-    if {[string equal $selectFilePath ""]} {
+    if {$selectFilePath eq ""} {
 	set selectFilePath $data(selectPath)
     }
-    if { $data(-mustexist) } {
-	if { ![file exists $selectFilePath] || \
-		![file isdir $selectFilePath] } {
+    if {$data(-mustexist)} {
+	if {![file exists $selectFilePath] || ![file isdir $selectFilePath]} {
 	    return
 	}
     }

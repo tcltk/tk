@@ -3,7 +3,7 @@
 # This file defines several procedures for managing the input
 # focus.
 #
-# RCS: @(#) $Id: focus.tcl,v 1.9 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: focus.tcl,v 1.10 2005/07/25 09:06:00 dkf Exp $
 #
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 #
@@ -38,7 +38,7 @@ proc ::tk_focusNext w {
 	    incr i
 	    if {$i < [llength $children]} {
 		set cur [lindex $children $i]
-              if {[string equal [winfo toplevel $cur] $cur]} {
+		if {[winfo toplevel $cur] eq $cur} {
 		    continue
 		} else {
 		    break
@@ -50,14 +50,14 @@ proc ::tk_focusNext w {
 	    # look for its next sibling.
 
 	    set cur $parent
-	    if {[string equal [winfo toplevel $cur] $cur]} {
+	    if {[winfo toplevel $cur] eq $cur} {
 		break
 	    }
 	    set parent [winfo parent $parent]
 	    set children [winfo children $parent]
 	    set i [lsearch -exact $children $cur]
 	}
-	if {[string equal $w $cur] || [tk::FocusOK $cur]} {
+	if {$w eq $cur || [tk::FocusOK $cur]} {
 	    return $cur
 	}
     }
@@ -82,7 +82,7 @@ proc ::tk_focusPrev w {
 	# among its siblings.  Also, if the window is a top-level,
 	# then reposition to just after the last child of the window.
 
-	if {[string equal [winfo toplevel $cur] $cur]}  {
+	if {[winfo toplevel $cur] eq $cur}  {
 	    set parent $cur
 	    set children [winfo children $cur]
 	    set i [llength $children]
@@ -100,7 +100,7 @@ proc ::tk_focusPrev w {
 	while {$i > 0} {
 	    incr i -1
 	    set cur [lindex $children $i]
-	    if {[string equal [winfo toplevel $cur] $cur]} {
+	    if {[winfo toplevel $cur] eq $cur} {
 		continue
 	    }
 	    set parent $cur
@@ -108,7 +108,7 @@ proc ::tk_focusPrev w {
 	    set i [llength $children]
 	}
 	set cur $parent
-	if {[string equal $w $cur] || [tk::FocusOK $cur]} {
+	if {$w eq $cur || [tk::FocusOK $cur]} {
 	    return $cur
 	}
     }
@@ -146,7 +146,7 @@ proc ::tk::FocusOK w {
 	return 0
     }
     set code [catch {$w cget -state} value]
-    if {($code == 0) && [string equal $value "disabled"]} {
+    if {($code == 0) && $value eq "disabled"} {
 	return 0
     }
     regexp Key|Focus "[bind $w] [bind [winfo class $w]]"
@@ -165,15 +165,14 @@ proc ::tk::FocusOK w {
 proc ::tk_focusFollowsMouse {} {
     set old [bind all <Enter>]
     set script {
-	if {[string equal "%d" "NotifyAncestor"] \
-		|| [string equal "%d" "NotifyNonlinear"] \
-		|| [string equal "%d" "NotifyInferior"]} {
+	if {"%d" eq "NotifyAncestor" || "%d" eq "NotifyNonlinear" \
+		|| "%d" eq "NotifyInferior"} {
 	    if {[tk::FocusOK %W]} {
 		focus %W
 	    }
 	}
     }
-    if {[string compare $old ""]} {
+    if {$old ne ""} {
 	bind all <Enter> "$old; $script"
     } else {
 	bind all <Enter> $script

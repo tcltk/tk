@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# RCS: @(#) $Id: safetk.tcl,v 1.8 2000/10/31 01:11:51 hobbs Exp $
+# RCS: @(#) $Id: safetk.tcl,v 1.9 2005/07/25 09:06:00 dkf Exp $
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
@@ -126,7 +126,7 @@ proc ::safe::loadTk {} {}
 		set nDisplay $display
 	    }
 	}
-	if {[string compare $nDisplay $display]} {
+	if {$nDisplay ne $display} {
 	    if {$displayGiven} {
 		error "conflicting -display $display and -use\
 			$use -> $nDisplay"

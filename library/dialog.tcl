@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.17 2004/03/17 18:15:44 das Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.18 2005/07/25 09:06:01 dkf Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -39,7 +39,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	    return -code error "default button index greater than number of\
 		    buttons specified for tk_dialog"
 	}
-    } elseif {[string equal {} $default]} {
+    } elseif {"" eq $default} {
 	set default -1
     } else {
 	set default [lsearch -exact $args $default]
@@ -65,13 +65,13 @@ proc ::tk_dialog {w title text bitmap default args} {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }    
 
-    if {[string equal [tk windowingsystem] "aqua"]} {
+    if {[tk windowingsystem] eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w dBoxProc
     }
 
     frame $w.bot
     frame $w.top
-    if {[string equal [tk windowingsystem] "x11"]} {
+    if {[tk windowingsystem] eq "x11"} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -84,7 +84,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    if {[string equal [tk windowingsystem] "aqua"]} {
+    if {[tk windowingsystem] eq "aqua"} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
 	option add *Dialog.msg.font {Times 12} widgetDefault
@@ -92,9 +92,8 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     label $w.msg -justify left -text $text
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
-    if {[string compare $bitmap ""]} {
-	if {[string equal [tk windowingsystem] "aqua"] &&\
-		[string equal $bitmap "error"]} {
+    if {$bitmap ne ""} {
+	if {[tk windowingsystem] eq "aqua" && $bitmap eq "error"} {
 	    set bitmap "stop"
 	}
 	label $w.bitmap -bitmap $bitmap
@@ -115,9 +114,9 @@ proc ::tk_dialog {w title text bitmap default args} {
 		-padx 10 -pady 4
 	grid columnconfigure $w.bot $i
 	# We boost the size of some Mac buttons for l&f
-	if {[string equal [tk windowingsystem] "aqua"]} {
+	if {[tk windowingsystem] eq "aqua"} {
 	    set tmp [string tolower $but]
-	    if {[string equal $tmp "ok"] || [string equal $tmp "cancel"]} {
+	    if {$tmp eq "ok" || $tmp eq "cancel"} {
 		grid columnconfigure $w.bot $i -minsize [expr {59 + 20}]
 	    }
 	}
@@ -169,7 +168,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     set oldFocus [focus]
     set oldGrab [grab current $w]
-    if {[string compare $oldGrab ""]} {
+    if {$oldGrab ne ""} {
 	set grabStatus [grab status $oldGrab]
     }
     grab $w
@@ -195,8 +194,8 @@ proc ::tk_dialog {w title text bitmap default args} {
 	bind $w <Destroy> {}
 	destroy $w
     }
-    if {[string compare $oldGrab ""]} {
-	if {[string compare $grabStatus "global"]} {
+    if {$oldGrab ne ""} {
+	if {$grabStatus ne "global"} {
 	    grab $oldGrab
 	} else {
 	    grab -global $oldGrab
