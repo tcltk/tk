@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.54 2004/10/19 18:56:01 jenglish Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.55 2005/07/25 09:06:00 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -25,7 +25,7 @@ namespace eval ::tk {
             # The msgcat package is not available.  Supply our own
             # minimal replacement.
             proc mc {src args} {
-                return [eval [list format $src] $args]
+                return [format $src {expand}$args]
             }
             proc mcmax {args} {
                 set max 0
@@ -50,7 +50,7 @@ namespace eval ::tk {
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
 
-if {[info exists ::auto_path] && [string compare {} $::tk_library] && \
+if {[info exists ::auto_path] && $::tk_library ne "" && \
 	[lsearch -exact $::auto_path $::tk_library] < 0} {
     lappend ::auto_path $::tk_library
 }
@@ -174,13 +174,13 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 
     catch {focus $oldFocus}
     grab release $grab
-    if {[string equal $destroy "withdraw"]} {
+    if {$destroy eq "withdraw"} {
 	wm withdraw $grab
     } else {
 	destroy $grab
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
-	if {[string equal $oldStatus "global"]} {
+	if {$oldStatus eq "global"} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab
@@ -200,7 +200,7 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 # Results:
 #   Returns the selection, or an error if none could be found
 #
-if {[string equal $tcl_platform(platform) "unix"]} {
+if {$tcl_platform(platform) eq "unix"} {
     proc ::tk::GetSelection {w {sel PRIMARY}} {
 	if {[catch {selection get -displayof $w -selection $sel \
 		-type UTF8_STRING} txt] \
@@ -307,37 +307,37 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
 # using compiled code.
 #----------------------------------------------------------------------
 
-if {[string equal [info commands tk_chooseColor] ""]} {
+if {![llength [info commands tk_chooseColor]]} {
     proc ::tk_chooseColor {args} {
-	return [eval tk::dialog::color:: $args]
+	return [tk::dialog::color:: {expand}$args]
     }
 }
-if {[string equal [info commands tk_getOpenFile] ""]} {
+if {![llength [info commands tk_getOpenFile]]} {
     proc ::tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
-	    return [eval tk::MotifFDialog open $args]
+	    return [tk::MotifFDialog open {expand}$args]
 	} else {
-	    return [eval ::tk::dialog::file:: open $args]
+	    return [::tk::dialog::file:: open {expand}$args]
 	}
     }
 }
-if {[string equal [info commands tk_getSaveFile] ""]} {
+if {![llength [info commands tk_getSaveFile]]} {
     proc ::tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
-	    return [eval tk::MotifFDialog save $args]
+	    return [tk::MotifFDialog save {expand}$args]
 	} else {
-	    return [eval ::tk::dialog::file:: save $args]
+	    return [::tk::dialog::file:: save {expand}$args]
 	}
     }
 }
-if {[string equal [info commands tk_messageBox] ""]} {
+if {![llength [info commands tk_messageBox]]} {
     proc ::tk_messageBox {args} {
-	return [eval tk::MessageBox $args]
+	return [tk::MessageBox {expand}$args]
     }
 }
-if {[string equal [info command tk_chooseDirectory] ""]} {
+if {![llength [info command tk_chooseDirectory]]} {
     proc ::tk_chooseDirectory {args} {
-	return [eval ::tk::dialog::file::chooseDir:: $args]
+	return [::tk::dialog::file::chooseDir:: {expand}$args]
     }
 }
 	
@@ -345,7 +345,7 @@ if {[string equal [info command tk_chooseDirectory] ""]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
-switch [tk windowingsystem] {
+switch -- [tk windowingsystem] {
     "x11" {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
@@ -478,9 +478,8 @@ proc ::tk::UnderlineAmpersand {text} {
 # sets -text and -underline options for the widget
 #
 proc ::tk::SetAmpText {widget text} {
-    foreach {newtext under} [::tk::UnderlineAmpersand $text] {
-	$widget configure -text $newtext -underline $under
-    }
+    lassign [UnderlineAmpersand $text] newtext under
+    $widget configure -text $newtext -underline $under
 }
 
 # ::tk::AmpWidget --
@@ -488,21 +487,20 @@ proc ::tk::SetAmpText {widget text} {
 # -underline options, returned by ::tk::UnderlineAmpersand.
 #
 proc ::tk::AmpWidget {class path args} {
-    set wcmd [list $class $path]
+    set options {}
     foreach {opt val} $args {
-	if {[string equal $opt {-text}]} {
-	    foreach {newtext under} [::tk::UnderlineAmpersand $val] {
-		lappend wcmd -text $newtext -underline $under
-	    }
+	if {$opt eq "-text"} {
+	    lassign [UnderlineAmpersand $val] newtext under
+	    lappend options -text $newtext -underline $under
 	} else {
-	    lappend wcmd $opt $val
+	    lappend options $opt $val
 	}
     }
-    eval $wcmd
-    if {$class=="button"} {
+    set result [$class $path {expand}$options]
+    if {$class eq "button"} {
 	bind $path <<AltUnderlined>> [list $path invoke]
     }
-    return $path
+    return $result
 }
 
 # ::tk::AmpMenuArgs --
@@ -510,17 +508,16 @@ proc ::tk::AmpWidget {class path args} {
 # -label and -underline options, returned by ::tk::UnderlineAmpersand.
 #
 proc ::tk::AmpMenuArgs {widget add type args} {
-    set resultArgs [list $widget add $type]
+    set options {}
     foreach {opt val} $args {
-	if {[string equal $opt {-label}]} {
-	    foreach {newlabel under} [::tk::UnderlineAmpersand $val] {
-		lappend resultArgs -label $newlabel -underline $under
-	    }
+	if {$opt eq "-label"} {
+	    lassign [UnderlineAmpersand $val] newlabel under
+	    lappend options -label $newlabel -underline $under
 	} else {
-	    lappend resultArgs $opt $val
+	    lappend options $opt $val
 	}
     }
-    eval $resultArgs
+    $widget add $type {expand}$options
 }
 
 # ::tk::FindAltKeyTarget --
@@ -528,19 +525,21 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 # to find button or label which has $char as underlined character
 #
 proc ::tk::FindAltKeyTarget {path char} {
-    switch [winfo class $path] {
+    switch -- [winfo class $path] {
 	Button -
 	Label {
 	    if {[string equal -nocase $char \
-		[string index [$path cget -text] \
-		[$path cget -underline]]]} {return $path} else {return {}}
+		  [string index [$path cget -text] [$path cget -underline]]]} {
+		return $path
+	    } else {
+		return {}
+	    }
 	}
 	default {
-	    foreach child \
-		[concat [grid slaves $path] \
-		[pack slaves $path] \
-		[place slaves $path] ] {
-		if {""!=[set target [::tk::FindAltKeyTarget $child $char]]} {
+	    foreach child [concat [grid slaves $path] \
+		    [pack slaves $path] [place slaves $path]] {
+		set target [FindAltKeyTarget $child $char]
+		if {$target ne ""} {
 		    return $target
 		}
 	    }
@@ -554,7 +553,7 @@ proc ::tk::FindAltKeyTarget {path char} {
 # to button or label which has appropriate underlined character
 #
 proc ::tk::AltKeyInDialog {path key} {
-    set target [::tk::FindAltKeyTarget $path $key]
+    set target [FindAltKeyTarget $path $key]
     if { $target == ""} return
     event generate $target <<AltUnderlined>>
 }
@@ -566,8 +565,10 @@ proc ::tk::AltKeyInDialog {path key} {
 proc ::tk::mcmaxamp {args} {
     set maxlen 0
     foreach arg $args {
-	set length [string length [lindex [::tk::UnderlineAmpersand [mc $arg]] 0]]
-	if {$length>$maxlen} {
+	# Should we run [mc] in caller's namespace?
+	lassign [UnderlineAmpersand [mc $arg]] msg
+	set length [string length $msg]
+	if {$length > $maxlen} {
 	    set maxlen $length
 	}
     }
@@ -575,7 +576,7 @@ proc ::tk::mcmaxamp {args} {
 }
 # For now, turn off the custom mdef proc for the mac:
 
-if {[string equal [tk windowingsystem] "aqua"]} {
+if {[tk windowingsystem] eq "aqua"} {
     namespace eval ::tk::mac {
 	set useCustomMDEF 0
     }

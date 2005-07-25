@@ -1,3 +1,8 @@
+2005-07-25  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/*.tcl: Updated to use more 8.4 and 8.5 features as part
+	of resolving [Patch 1237759].
+
 2005-07-22  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinX.c: Define _WIN32_WINNT with NT SP 3 data
