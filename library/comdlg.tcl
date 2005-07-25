@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.11 2005/07/25 09:06:01 dkf Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.12 2005/07/25 15:31:11 dgp Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -205,7 +205,7 @@ proc ::tk::FocusGroup_In {t w detail} {
     variable FocusIn
     variable ::tk::Priv
 
-    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"]} {
+    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out&in of the window *or*
 	# ordinary keypresses some window managers (ie: CDE [Bug: 2960]).
 	return
