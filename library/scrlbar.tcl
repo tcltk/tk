@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.10 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.11 2005/07/25 09:06:00 dkf Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -17,7 +17,7 @@
 #-------------------------------------------------------------------------
 
 # Standard Motif bindings:
-if {[string equal [tk windowingsystem] "x11"]} {
+if {[tk windowingsystem] eq "x11"} {
 
 bind Scrollbar <Enter> {
     if {$tk_strictMotif} {
@@ -144,7 +144,7 @@ proc tk::ScrollButtonDown {w x y} {
     set Priv(relief) [$w cget -activerelief]
     $w configure -activerelief sunken
     set element [$w identify $x $y]
-    if {[string equal $element "slider"]} {
+    if {$element eq "slider"} {
 	ScrollStartDrag $w $x $y
     } else {
 	ScrollSelect $w $element initial
@@ -195,10 +195,10 @@ proc ::tk::ScrollSelect {w element repeat} {
 	"arrow2"	{ScrollByUnits $w hv 1}
 	default		{return}
     }
-    if {[string equal $repeat "again"]} {
+    if {$repeat eq "again"} {
 	set Priv(afterId) [after [$w cget -repeatinterval] \
 		[list tk::ScrollSelect $w $element again]]
-    } elseif {[string equal $repeat "initial"]} {
+    } elseif {$repeat eq "initial"} {
 	set delay [$w cget -repeatdelay]
 	if {$delay > 0} {
 	    set Priv(afterId) [after $delay \
@@ -218,7 +218,7 @@ proc ::tk::ScrollSelect {w element repeat} {
 proc ::tk::ScrollStartDrag {w x y} {
     variable ::tk::Priv
 
-    if {[string equal [$w cget -command] ""]} {
+    if {[$w cget -command] eq ""} {
 	return
     }
     set Priv(pressX) $x
@@ -248,7 +248,7 @@ proc ::tk::ScrollStartDrag {w x y} {
 proc ::tk::ScrollDrag {w x y} {
     variable ::tk::Priv
 
-    if {[string equal $Priv(initPos) ""]} {
+    if {$Priv(initPos) eq ""} {
 	return
     }
     set delta [$w delta [expr {$x - $Priv(pressX)}] [expr {$y - $Priv(pressY)}]]
@@ -278,7 +278,7 @@ proc ::tk::ScrollDrag {w x y} {
 proc ::tk::ScrollEndDrag {w x y} {
     variable ::tk::Priv
 
-    if {[string equal $Priv(initPos) ""]} {
+    if {$Priv(initPos) eq ""} {
 	return
     }
     if {[$w cget -jump]} {
@@ -302,7 +302,7 @@ proc ::tk::ScrollEndDrag {w x y} {
 
 proc ::tk::ScrollByUnits {w orient amount} {
     set cmd [$w cget -command]
-    if {[string equal $cmd ""] || ([string first \
+    if {$cmd eq "" || ([string first \
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
@@ -327,7 +327,7 @@ proc ::tk::ScrollByUnits {w orient amount} {
 
 proc ::tk::ScrollByPages {w orient amount} {
     set cmd [$w cget -command]
-    if {[string equal $cmd ""] || ([string first \
+    if {$cmd eq "" || ([string first \
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
@@ -351,7 +351,7 @@ proc ::tk::ScrollByPages {w orient amount} {
 
 proc ::tk::ScrollToPos {w pos} {
     set cmd [$w cget -command]
-    if {[string equal $cmd ""]} {
+    if {$cmd eq ""} {
 	return
     }
     set info [$w get]

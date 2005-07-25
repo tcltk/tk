@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: panedwindow.tcl,v 1.10 2005/02/12 00:48:33 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.tcl,v 1.11 2005/07/25 09:06:00 dkf Exp $
 #
 
 bind Panedwindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }
@@ -35,16 +35,21 @@ namespace eval ::tk::panedwindow {}
 #   None
 #
 proc ::tk::panedwindow::MarkSash {w x y proxy} {
-    if {[$w cget -opaqueresize]} { set proxy 0 }
+    variable ::tk::Priv
+    if {[$w cget -opaqueresize]} {
+	set proxy 0
+    }
     set what [$w identify $x $y]
     if { [llength $what] == 2 } {
-	foreach {index which} $what break
-	if { !$::tk_strictMotif || [string equal $which "handle"] } {
-	    if {!$proxy} { $w sash mark $index $x $y }
-	    set ::tk::Priv(sash) $index
-	    foreach {sx sy} [$w sash coord $index] break
-	    set ::tk::Priv(dx) [expr {$sx-$x}]
-	    set ::tk::Priv(dy) [expr {$sy-$y}]
+	lassign $what index which
+	if {!$::tk_strictMotif || $which eq "handle"} {
+	    if {!$proxy} {
+		$w sash mark $index $x $y
+	    }
+	    set Priv(sash) $index
+	    lassign [$w sash coord $index] sx sy
+	    set Priv(dx) [expr {$sx-$x}]
+	    set Priv(dy) [expr {$sy-$y}]
 	    # Do this to init the proxy location
 	    DragSash $w $x $y $proxy
 	}
@@ -64,14 +69,16 @@ proc ::tk::panedwindow::MarkSash {w x y proxy} {
 #   Moves sash
 #
 proc ::tk::panedwindow::DragSash {w x y proxy} {
-    if {[$w cget -opaqueresize]} { set proxy 0 }
-    if { [info exists ::tk::Priv(sash)] } {
+    variable ::tk::Priv
+    if {[$w cget -opaqueresize]} {
+	set proxy 0
+    }
+    if {[info exists Priv(sash)]} {
 	if {$proxy} {
-	    $w proxy place \
-		    [expr {$x+$::tk::Priv(dx)}] [expr {$y+$::tk::Priv(dy)}]
+	    $w proxy place [expr {$x+$Priv(dx)}] [expr {$y+$Priv(dy)}]
 	} else {
-	    $w sash place $::tk::Priv(sash) \
-		    [expr {$x+$::tk::Priv(dx)}] [expr {$y+$::tk::Priv(dy)}]
+	    $w sash place $Priv(sash) \
+		    [expr {$x+$Priv(dx)}] [expr {$y+$Priv(dy)}]
 	}
     }
 }
@@ -87,14 +94,17 @@ proc ::tk::panedwindow::DragSash {w x y proxy} {
 #   Returns ...
 #
 proc ::tk::panedwindow::ReleaseSash {w proxy} {
-    if {[$w cget -opaqueresize]} { set proxy 0 }
-    if { [info exists ::tk::Priv(sash)] } {
+    variable ::tk::Priv
+    if {[$w cget -opaqueresize]} {
+	set proxy 0
+    }
+    if {[info exists Priv(sash)]} {
 	if {$proxy} {
-	    foreach {x y} [$w proxy coord] break
-	    $w sash place $::tk::Priv(sash) $x $y
+	    lassign [$w proxy coord] x y
+	    $w sash place $Priv(sash) $x $y
 	    $w proxy forget
 	}
-	unset ::tk::Priv(sash) ::tk::Priv(dx) ::tk::Priv(dy)
+	unset Priv(sash) Priv(dx) Priv(dy)
     }
 }
 
@@ -115,17 +125,15 @@ proc ::tk::panedwindow::Motion {w x y} {
     variable ::tk::Priv
     set id [$w identify $x $y]
     if {([llength $id] == 2) && \
-	    (!$::tk_strictMotif || [string equal [lindex $id 1] "handle"])} {
-	if { ![info exists Priv($w,panecursor)] } {
+	    (!$::tk_strictMotif || [lindex $id 1] eq "handle")} {
+	if {![info exists Priv($w,panecursor)]} {
 	    set Priv($w,panecursor) [$w cget -cursor]
-	    if { [string equal [$w cget -sashcursor] ""] } {
-		if { [string equal [$w cget -orient] "horizontal"] } {
-		    $w configure -cursor sb_h_double_arrow
-		} else {
-		    $w configure -cursor sb_v_double_arrow
-		}
-	    } else {
+	    if {[$w cget -sashcursor] ne ""} {
 		$w configure -cursor [$w cget -sashcursor]
+	    } elseif {[$w cget -orient] eq "horizontal"} {
+		$w configure -cursor sb_h_double_arrow
+	    } else {
+		$w configure -cursor sb_v_double_arrow
 	    }
 	    if {[info exists Priv($w,pwAfterId)]} {
 		after cancel $Priv($w,pwAfterId)
@@ -135,7 +143,7 @@ proc ::tk::panedwindow::Motion {w x y} {
 	}
 	return
     }
-    if { [info exists Priv($w,panecursor)] } {
+    if {[info exists Priv($w,panecursor)]} {
 	$w configure -cursor $Priv($w,panecursor)
 	unset Priv($w,panecursor)
     }
@@ -181,8 +189,9 @@ proc ::tk::panedwindow::Cursor {w} {
 #   Restores the default cursor
 #
 proc ::tk::panedwindow::Leave {w} {
-    if {[info exists ::tk::Priv($w,panecursor)]} {
-        $w configure -cursor $::tk::Priv($w,panecursor)
-        unset ::tk::Priv($w,panecursor)
+    variable ::tk::Priv
+    if {[info exists Priv($w,panecursor)]} {
+        $w configure -cursor $Priv($w,panecursor)
+        unset Priv($w,panecursor)
     }
 }
