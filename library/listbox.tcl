@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.13 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.14 2005/07/25 09:06:00 dkf Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -136,7 +136,7 @@ bind Listbox <Shift-Control-End> {
     tk::ListboxDataExtend %W [%W index end]
 }
 bind Listbox <<Copy>> {
-    if {[string equal [selection own -displayof %W] "%W"]} {
+    if {[selection own -displayof %W] eq "%W"} {
 	clipboard clear -displayof %W
 	clipboard append -displayof %W [selection get -displayof %W]
     }
@@ -160,7 +160,7 @@ bind Listbox <Control-slash> {
     tk::ListboxSelectAll %W
 }
 bind Listbox <Control-backslash> {
-    if {[string compare [%W cget -selectmode] "browse"]} {
+    if {[%W cget -selectmode] ne "browse"} {
 	%W selection clear 0 end
 	event generate %W <<ListboxSelect>>
     }
@@ -183,7 +183,7 @@ bind Listbox <MouseWheel> {
     %W yview scroll [expr {- (%D / 120) * 4}] units
 }
 
-if {[string equal "x11" [tk windowingsystem]]} {
+if {"x11" eq [tk windowingsystem]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
@@ -214,7 +214,7 @@ if {[string equal "x11" [tk windowingsystem]]} {
 
 proc ::tk::ListboxBeginSelect {w el} {
     variable ::tk::Priv
-    if {[string equal [$w cget -selectmode] "multiple"]} {
+    if {[$w cget -selectmode] eq "multiple"} {
 	if {[$w selection includes $el]} {
 	    $w selection clear $el
 	} else {
@@ -255,7 +255,7 @@ proc ::tk::ListboxMotion {w el} {
 	}
 	extended {
 	    set i $Priv(listboxPrev)
-	    if {[string equal {} $i]} {
+	    if {$i eq ""} {
 		set i $el
 		$w selection set $el
 	    }
@@ -300,7 +300,7 @@ proc ::tk::ListboxMotion {w el} {
 #		one under the pointer).  Must be in numerical form.
 
 proc ::tk::ListboxBeginExtend {w el} {
-    if {[string equal [$w cget -selectmode] "extended"]} {
+    if {[$w cget -selectmode] eq "extended"} {
 	if {[$w selection includes anchor]} {
 	    ListboxMotion $w $el
 	} else {
@@ -324,7 +324,7 @@ proc ::tk::ListboxBeginExtend {w el} {
 
 proc ::tk::ListboxBeginToggle {w el} {
     variable ::tk::Priv
-    if {[string equal [$w cget -selectmode] "extended"]} {
+    if {[$w cget -selectmode] eq "extended"} {
 	set Priv(listboxSelection) [$w curselection]
 	set Priv(listboxPrev) $el
 	$w selection anchor $el
@@ -410,7 +410,7 @@ proc ::tk::ListboxUpDown {w amount} {
 
 proc ::tk::ListboxExtendUpDown {w amount} {
     variable ::tk::Priv
-    if {[string compare [$w cget -selectmode] "extended"]} {
+    if {[$w cget -selectmode] ne "extended"} {
 	return
     }
     set active [$w index active]
@@ -436,13 +436,13 @@ proc ::tk::ListboxExtendUpDown {w amount} {
 
 proc ::tk::ListboxDataExtend {w el} {
     set mode [$w cget -selectmode]
-    if {[string equal $mode "extended"]} {
+    if {$mode eq "extended"} {
 	$w activate $el
 	$w see $el
         if {[$w selection includes anchor]} {
 	    ListboxMotion $w $el
 	}
-    } elseif {[string equal $mode "multiple"]} {
+    } elseif {$mode eq "multiple"} {
 	$w activate $el
 	$w see $el
     }
@@ -460,12 +460,12 @@ proc ::tk::ListboxDataExtend {w el} {
 
 proc ::tk::ListboxCancel w {
     variable ::tk::Priv
-    if {[string compare [$w cget -selectmode] "extended"]} {
+    if {[$w cget -selectmode] ne "extended"} {
 	return
     }
     set first [$w index anchor]
     set last $Priv(listboxPrev)
-    if { [string equal $last ""] } {
+    if {$last eq ""} {
 	# Not actually doing any selection right now
 	return
     }
@@ -495,7 +495,7 @@ proc ::tk::ListboxCancel w {
 
 proc ::tk::ListboxSelectAll w {
     set mode [$w cget -selectmode]
-    if {[string equal $mode "single"] || [string equal $mode "browse"]} {
+    if {$mode eq "single" || $mode eq "browse"} {
 	$w selection clear 0 end
 	$w selection set active
     } else {

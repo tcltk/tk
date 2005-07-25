@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.10 2005/04/05 13:56:35 dgp Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.11 2005/07/25 09:06:01 dkf Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -121,7 +121,7 @@ proc tclListValidFlags {v} {
 #
 proc ::tk::FocusGroup_Create {t} {
     variable ::tk::Priv
-    if {[string compare [winfo toplevel $t] $t]} {
+    if {[winfo toplevel $t] ne $t} {
 	error "$t is not a toplevel window"
     }
     if {![info exists Priv(fg,$t)]} {
@@ -173,7 +173,7 @@ proc ::tk::FocusGroup_Destroy {t w} {
     variable FocusOut
     variable ::tk::Priv
 
-    if {[string equal $t $w]} {
+    if {$t eq $w} {
 	unset Priv(fg,$t)
 	unset Priv(focus,$t) 
 
@@ -184,8 +184,7 @@ proc ::tk::FocusGroup_Destroy {t w} {
 	    unset FocusOut($name)
 	}
     } else {
-	if {[info exists Priv(focus,$t)] && \
-		[string equal $Priv(focus,$t) $w]} {
+	if {[info exists Priv(focus,$t)] && ($Priv(focus,$t) eq $w)} {
 	    set Priv(focus,$t) ""
 	}
 	catch {
@@ -206,8 +205,7 @@ proc ::tk::FocusGroup_In {t w detail} {
     variable FocusIn
     variable ::tk::Priv
 
-    if {[string compare $detail NotifyNonlinear] && \
-	    [string compare $detail NotifyNonlinearVirtual]} {
+    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"]} {
 	# This is caused by mouse moving out&in of the window *or*
 	# ordinary keypresses some window managers (ie: CDE [Bug: 2960]).
 	return
@@ -219,7 +217,7 @@ proc ::tk::FocusGroup_In {t w detail} {
     if {![info exists Priv(focus,$t)]} {
 	return
     }
-    if {[string equal $Priv(focus,$t) $w]} {
+    if {$Priv(focus,$t) eq $w} {
 	# This is already in focus
 	#
 	return
@@ -240,8 +238,7 @@ proc ::tk::FocusGroup_Out {t w detail} {
     variable FocusOut
     variable ::tk::Priv
 
-    if {[string compare $detail NotifyNonlinear] && \
-	    [string compare $detail NotifyNonlinearVirtual]} {
+    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out of the window
 	return
     }
@@ -267,7 +264,7 @@ proc ::tk::FDGetFileTypes {string} {
 	if {[llength $t] < 2 || [llength $t] > 3} {
 	    error "bad file type \"$t\", should be \"typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?\""
 	}
-	eval lappend [list fileTypes([lindex $t 0])] [lindex $t 1]
+	lappend fileTypes([lindex $t 0]) {expand}[lindex $t 1]
     }
 
     set types {}
@@ -292,7 +289,7 @@ proc ::tk::FDGetFileTypes {string} {
 	set sep ""
 	set doAppend 1
 	foreach ext $fileTypes($label) {
-	    if {[string equal $ext ""]} {
+	    if {$ext eq ""} {
 		continue
 	    }
 	    regsub {^[.]} $ext "*." ext

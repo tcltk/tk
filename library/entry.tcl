@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.23 2004/10/19 18:56:01 jenglish Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.24 2005/07/25 09:06:00 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -50,7 +50,7 @@ bind Entry <<Copy>> {
 bind Entry <<Paste>> {
     global tcl_platform
     catch {
-	if {[string compare [tk windowingsystem] "x11"]} {
+	if {[tk windowingsystem] ne "x11"} {
 	    catch {
 		%W delete sel.first sel.last
 	    }
@@ -209,13 +209,13 @@ bind Entry <Escape> {# nothing}
 bind Entry <Return> {# nothing}
 bind Entry <KP_Enter> {# nothing}
 bind Entry <Tab> {# nothing}
-if {[string equal [tk windowingsystem] "aqua"]} {
-	bind Entry <Command-KeyPress> {# nothing}
+if {[tk windowingsystem] eq "aqua"} {
+    bind Entry <Command-KeyPress> {# nothing}
 }
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.
-if {[string compare $tcl_platform(platform) "windows"]} {
+if {$tcl_platform(platform) ne "windows"} {
     bind Entry <Insert> {
 	catch {tk::EntryInsert %W [::tk::GetSelection %W PRIMARY]}
     }
@@ -337,7 +337,9 @@ proc ::tk::EntryButton1 {w x} {
     set Priv(pressX) $x
     $w icursor [EntryClosestGap $w $x]
     $w selection from insert
-    if {[string compare "disabled" [$w cget -state]]} {focus $w}
+    if {"disabled" ne [$w cget -state]} {
+	focus $w
+    }
 }
 
 # ::tk::EntryMouseSelect --
@@ -408,7 +410,9 @@ proc ::tk::EntryMouseSelect {w x} {
 proc ::tk::EntryPaste {w x} {
     $w icursor [EntryClosestGap $w $x]
     catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
-    if {[string compare "disabled" [$w cget -state]]} {focus $w}
+    if {"disabled" ne [$w cget -state]} {
+	focus $w
+    }
 }
 
 # ::tk::EntryAutoScan --
@@ -424,7 +428,9 @@ proc ::tk::EntryPaste {w x} {
 proc ::tk::EntryAutoScan {w} {
     variable ::tk::Priv
     set x $Priv(x)
-    if {![winfo exists $w]} return
+    if {![winfo exists $w]} {
+	return
+    }
     if {$x >= [winfo width $w]} {
 	$w xview scroll 2 units
 	EntryMouseSelect $w $x
@@ -465,7 +471,7 @@ proc ::tk::EntryKeySelect {w new} {
 # s -		The string to insert (usually just a single character)
 
 proc ::tk::EntryInsert {w s} {
-    if {[string equal $s ""]} {
+    if {$s eq ""} {
 	return
     }
     catch {
@@ -492,7 +498,9 @@ proc ::tk::EntryBackspace w {
 	$w delete sel.first sel.last
     } else {
 	set x [expr {[$w index insert] - 1}]
-	if {$x >= 0} {$w delete $x}
+	if {$x >= 0} {
+	    $w delete $x
+	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
 	    set left [lindex $range 0]
@@ -567,7 +575,7 @@ proc ::tk::EntryTranspose w {
 # w -		The entry window in which the cursor is to move.
 # start -	Position at which to start search.
 
-if {[string equal $tcl_platform(platform) "windows"]}  {
+if {$tcl_platform(platform) eq "windows"}  {
     proc ::tk::EntryNextWord {w start} {
 	set pos [tcl_endOfWord [$w get] [$w index $start]]
 	if {$pos >= 0} {
@@ -649,7 +657,7 @@ proc ::tk::EntryScanDrag {w x} {
 proc ::tk::EntryGetSelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
 	    [expr {[$w index sel.last] - 1}]]
-    if {[string compare [$w cget -show] ""]} {
+    if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
 		[string length $entryString]]
     }

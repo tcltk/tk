@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.26 2004/08/11 21:24:25 dkf Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.27 2005/07/25 09:05:59 dkf Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -84,7 +84,7 @@ proc ::tk::MotifFDialog_Create {dataName type argList} {
 
     MotifFDialog_Config $dataName $type $argList
 
-    if {[string equal $data(-parent) .]} {
+    if {$data(-parent) eq "."} {
         set w .$dataName
     } else {
         set w $data(-parent).$dataName
@@ -94,7 +94,7 @@ proc ::tk::MotifFDialog_Create {dataName type argList} {
     #
     if {![winfo exists $w]} {
 	MotifFDialog_BuildUI $w
-    } elseif {[string compare [winfo class $w] TkMotifFDialog]} {
+    } elseif {[winfo class $w] ne "TkMotifFDialog"} {
 	destroy $w
 	MotifFDialog_BuildUI $w
     } else {
@@ -227,7 +227,7 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
 	{-parent "" "" "."}
 	{-title "" "" ""}
     }
-    if { [string equal $type "open"] } {
+    if {$type eq "open"} {
 	lappend specs {-multiple "" "" "0"}
     }
 
@@ -244,12 +244,12 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
     #
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
-    if {[string equal $data(-title) ""]} {
-	if {[string equal $type "open"]} {
+    if {$data(-title) eq ""} {
+	if {$type eq "open"} {
 	    if {$data(-multiple) != 0} {
 		set data(-title) "[mc {Open Multiple Files}]"
 	    } else {
-	    set data(-title) [mc "Open"]
+		set data(-title) [mc "Open"]
 	    }
 	} else {
 	    set data(-title) [mc "Save As"]
@@ -259,7 +259,7 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
-    if {[string compare $data(-initialdir) ""]} {
+    if {$data(-initialdir) ne ""} {
 	if {[file isdirectory $data(-initialdir)]} {
 	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
 	} else {
@@ -467,7 +467,7 @@ proc ::tk::MotifFDialog_InterpFilter {w} {
     # Perform tilde substitution
     #
     set badTilde 0
-    if {[string equal [string index $text 0] ~]} {
+    if {[string index $text 0] eq "~"} {
 	set list [file split $text]
 	set tilde [lindex $list 0]
 	if {[catch {set tilde [glob $tilde]}]} {
@@ -481,7 +481,7 @@ proc ::tk::MotifFDialog_InterpFilter {w} {
     # with the current selectPath.
 
     set relative 0
-    if {[string equal [file pathtype $text] "relative"]} {
+    if {[file pathtype $text] eq "relative"} {
 	set relative 1
     } elseif {$badTilde} {
 	set relative 1	
@@ -489,7 +489,7 @@ proc ::tk::MotifFDialog_InterpFilter {w} {
 
     if {$relative} {
 	tk_messageBox -icon warning -type ok \
-	    -message "\"$text\" must be an absolute pathname"
+		-message "\"$text\" must be an absolute pathname"
 
 	$data(fEnt) delete 0 end
 	$data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
@@ -577,12 +577,12 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
 	} else {
             foreach pat $data(filter) {
                 if {[string match $pat $f]} {
-		if {[string match .* $f]} {
-		    incr top
-		}
-		lappend flist $f
+		    if {[string match .* $f]} {
+			incr top
+		    }
+		    lappend flist $f
                     break
-	    }
+		}
             }
 	}
     }
@@ -611,11 +611,11 @@ proc ::tk::MotifFDialog_BrowseDList {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     focus $data(dList)
-    if {[string equal [$data(dList) curselection] ""]} {
+    if {[$data(dList) curselection] eq ""} {
 	return
     }
     set subdir [$data(dList) get [$data(dList) curselection]]
-    if {[string equal $subdir ""]} {
+    if {$subdir eq ""} {
 	return
     }
 
@@ -656,11 +656,11 @@ proc ::tk::MotifFDialog_BrowseDList {w} {
 proc ::tk::MotifFDialog_ActivateDList {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string equal [$data(dList) curselection] ""]} {
+    if {[$data(dList) curselection] eq ""} {
 	return
     }
     set subdir [$data(dList) get [$data(dList) curselection]]
-    if {[string equal $subdir ""]} {
+    if {$subdir eq ""} {
 	return
     }
 
@@ -681,7 +681,7 @@ proc ::tk::MotifFDialog_ActivateDList {w} {
     set data(selectPath) $newDir
     MotifFDialog_Update $w
 
-    if {[string compare $subdir ..]} {
+    if {$subdir ne ".."} {
 	$data(dList) selection set 0
 	$data(dList) activate 0
     } else {
@@ -727,7 +727,7 @@ proc ::tk::MotifFDialog_BrowseFList {w} {
 	$data(sEnt) insert 0 $data(selectFile)
     } else {
 	$data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
-				  [lindex $data(selectFile) 0]]
+		[lindex $data(selectFile) 0]]
     }
     $data(sEnt) xview end
 }
@@ -746,11 +746,11 @@ proc ::tk::MotifFDialog_BrowseFList {w} {
 proc ::tk::MotifFDialog_ActivateFList {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string equal [$data(fList) curselection] ""]} {
+    if {[$data(fList) curselection] eq ""} {
 	return
     }
     set data(selectFile) [$data(fList) get [$data(fList) curselection]]
-    if {[string equal $data(selectFile) ""]} {
+    if {$data(selectFile) eq ""} {
 	return
     } else {
 	MotifFDialog_ActivateSEnt $w
@@ -798,7 +798,7 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 
     set selectFilePath [string trim [$data(sEnt) get]]
 
-    if {[string equal $selectFilePath ""]} {
+    if {$selectFilePath eq ""} {
 	MotifFDialog_FilterCmd $w
 	return
     }
@@ -816,7 +816,7 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 
     set newFileList ""
     foreach item $selectFilePath {
-	if {[string compare [file pathtype $item] "absolute"]} {
+	if {[file pathtype $item] ne "absolute"} {
 	    set item [file join $data(selectPath) $item]
 	} elseif {![file exists [file dirname $item]]} {
 	    tk_messageBox -icon warning -type ok \
@@ -826,22 +826,19 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 	}
 
 	if {![file exists $item]} {
-	    if {[string equal $data(type) open]} {
+	    if {$data(type) eq "open"} {
 		tk_messageBox -icon warning -type ok \
 			-message [mc {File "%1$s" does not exist.} $item]
 		return
 	    }
-	} else {
-	    if {[string equal $data(type) save]} {
-		set message [format %s%s \
-			[mc "File \"%1\$s\" already exists.\n\n" \
-			$selectFilePath] \
-			[mc {Replace existing file?}]]
-		set answer [tk_messageBox -icon warning -type yesno \
-			-message $message]
-		if {[string equal $answer "no"]} {
-		    return
-		}
+	} elseif {$data(type) eq "save"} {
+	    set message [format %s%s \
+		    [mc "File \"%1\$s\" already exists.\n\n" $selectFilePath] \
+		    [mc {Replace existing file?}]]
+	    set answer [tk_messageBox -icon warning -type yesno \
+		    -message $message]
+	    if {$answer eq "no"} {
+		return
 	    }
 	}
 	

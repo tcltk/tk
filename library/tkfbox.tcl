@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.51 2005/04/12 20:33:13 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.52 2005/07/25 09:06:00 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -44,10 +44,10 @@ proc ::tk::IconList_Index {w i} {
     }
     switch -regexp -- $i {
 	"^-?[0-9]+$" {
-	    if { $i < 0 } {
+	    if {$i < 0} {
 		set i 0
 	    }
-	    if { $i >= [llength $data(list)] } {
+	    if {$i >= [llength $data(list)]} {
 		set i [expr {[llength $data(list)] - 1}]
 	    }
 	    return $i
@@ -76,18 +76,18 @@ proc ::tk::IconList_Selection {w op args} {
     upvar ::tk::$w data
     switch -exact -- $op {
 	"anchor" {
-	    if { [llength $args] == 1 } {
+	    if {[llength $args] == 1} {
 		set data(index,anchor) [tk::IconList_Index $w [lindex $args 0]]
 	    } else {
 		return $data(index,anchor)
 	    }
 	}
 	"clear" {
-	    if { [llength $args] == 2 } {
+	    if {[llength $args] == 2} {
 		foreach {first last} $args {
 		    break
 		}
-	    } elseif { [llength $args] == 1 } {
+	    } elseif {[llength $args] == 1} {
 		set first [set last [lindex $args 0]]
 	    } else {
 		error "wrong # args: should be [lindex [info level 0] 0] path\
@@ -95,7 +95,7 @@ proc ::tk::IconList_Selection {w op args} {
 	    }
 	    set first [IconList_Index $w $first]
 	    set last [IconList_Index $w $last]
-	    if { $first > $last } {
+	    if {$first > $last} {
 		set tmp $first
 		set first $last
 		set last $tmp
@@ -174,7 +174,7 @@ proc ::tk::IconList_DrawSelection {w} {
 	}
 
 	set bbox [$data(canvas) bbox $tTag]
-        $data(canvas) create rect $bbox -fill \#a0a0ff -outline \#a0a0ff \
+	$data(canvas) create rect $bbox -fill \#a0a0ff -outline \#a0a0ff \
 		-tags selection
     }
     $data(canvas) lower selection
@@ -500,7 +500,7 @@ proc ::tk::IconList_See {w rTag} {
 	return
     }
     set sRegion [$data(canvas) cget -scrollregion]
-    if {[string equal $sRegion {}]} {
+    if {$sRegion eq ""} {
 	return
     }
 
@@ -545,7 +545,9 @@ proc ::tk::IconList_Btn1 {w x y} {
 
     focus $data(canvas)
     set i [IconList_Index $w @$x,$y]
-    if {$i eq ""} return
+    if {$i eq ""} {
+	return
+    }
     IconList_Selection $w clear 0 end
     IconList_Selection $w set $i
     IconList_Selection $w anchor $i
@@ -557,7 +559,9 @@ proc ::tk::IconList_CtrlBtn1 {w x y} {
     if { $data(-multiple) } {
 	focus $data(canvas)
 	set i [IconList_Index $w @$x,$y]
-	if {$i eq ""} return
+	if {$i eq ""} {
+	    return
+	}
 	if { [IconList_Selection $w includes $i] } {
 	    IconList_Selection $w clear $i
 	} else {
@@ -573,9 +577,11 @@ proc ::tk::IconList_ShiftBtn1 {w x y} {
     if { $data(-multiple) } {
 	focus $data(canvas)
 	set i [IconList_Index $w @$x,$y]
-	if {$i eq ""} return
+	if {$i eq ""} {
+	    return
+	}
 	set a [IconList_Index $w anchor]
-	if { [string equal $a ""] } {
+	if {$a eq ""} {
 	    set a $i
 	}
 	IconList_Selection $w clear 0 end
@@ -590,7 +596,9 @@ proc ::tk::IconList_Motion1 {w x y} {
     set Priv(x) $x
     set Priv(y) $y
     set i [IconList_Index $w @$x,$y]
-    if {$i eq ""} return
+    if {$i eq ""} {
+	return
+    }
     IconList_Selection $w clear 0 end
     IconList_Selection $w set $i
 }
@@ -601,7 +609,9 @@ proc ::tk::IconList_ShiftMotion1 {w x y} {
     set Priv(x) $x
     set Priv(y) $y
     set i [IconList_Index $w @$x,$y]
-    if {$i eq ""} return
+    if {$i eq ""} {
+	return
+    }
     IconList_Selection $w clear 0 end
     IconList_Selection $w set anchor $i
 }
@@ -662,7 +672,9 @@ proc ::tk::IconList_UpDown {w amount} {
 	set i 0
     } else {
 	set i [tk::IconList_Index $w anchor]
-	if {$i eq ""} return
+	if {$i eq ""} {
+	    return
+	}
 	incr i $amount
     }
     IconList_Selection $w clear 0 end
@@ -691,7 +703,9 @@ proc ::tk::IconList_LeftRight {w amount} {
 	set i 0
     } else {
 	set i [IconList_Index $w anchor]
-	if {$i eq ""} return
+	if {$i eq ""} {
+	    return
+	}
 	incr i [expr {$amount*$data(itemsPerColumn)}]
     }
     IconList_Selection $w clear 0 end
@@ -727,7 +741,7 @@ proc ::tk::IconList_Goto {w text} {
 	return
     }
 
-    if {[string equal {} $text]} {
+    if {$text eq ""} {
 	return
     }
 
@@ -748,7 +762,7 @@ proc ::tk::IconList_Goto {w text} {
     # with $text
     while {1} {
 	set sub [string range $textList($i) 0 $len0]
-	if {[string equal $text $sub]} {
+	if {$text eq $sub} {
 	    set theIndex $i
 	    break
 	}
@@ -804,21 +818,21 @@ proc ::tk::dialog::file:: {type args} {
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
 
-    ::tk::dialog::file::Config $dataName $type $args
+    Config $dataName $type $args
 
-    if {[string equal $data(-parent) .]} {
-        set w .$dataName
+    if {$data(-parent) eq "."} {
+	set w .$dataName
     } else {
-        set w $data(-parent).$dataName
+	set w $data(-parent).$dataName
     }
 
     # (re)create the dialog box if necessary
     #
     if {![winfo exists $w]} {
-	::tk::dialog::file::Create $w TkFDialog
+	Create $w TkFDialog
     } elseif {[winfo class $w] ne "TkFDialog"} {
 	destroy $w
-	::tk::dialog::file::Create $w TkFDialog
+	Create $w TkFDialog
     } else {
 	set data(dirMenuBtn) $w.f1.menu
 	set data(dirMenu) $w.f1.menu.menu
@@ -831,7 +845,7 @@ proc ::tk::dialog::file:: {type args} {
 	set data(okBtn) $w.f2.ok
 	set data(cancelBtn) $w.f2.cancel
 	set data(hiddenBtn) $w.f2.hidden
-	::tk::dialog::file::SetSelectMode $w $data(-multiple)
+	SetSelectMode $w $data(-multiple)
     }
     if {$::tk::dialog::file::showHiddenBtn} {
 	$data(hiddenBtn) configure -state normal
@@ -870,9 +884,9 @@ proc ::tk::dialog::file:: {type args} {
 	    set title  [lindex $type 0]
 	    set filter [lindex $type 1]
 	    $data(typeMenu) add command -label $title \
-		-command [list ::tk::dialog::file::SetFilter $w $type]
+		    -command [list ::tk::dialog::file::SetFilter $w $type]
 	}
-	::tk::dialog::file::SetFilter $w [lindex $data(-filetypes) 0]
+	SetFilter $w [lindex $data(-filetypes) 0]
 	$data(typeMenuBtn) config -state normal
 	$data(typeMenuLab) config -state normal
     } else {
@@ -880,7 +894,7 @@ proc ::tk::dialog::file:: {type args} {
 	$data(typeMenuBtn) config -state disabled -takefocus 0
 	$data(typeMenuLab) config -state disabled
     }
-    ::tk::dialog::file::UpdateWhenIdle $w
+    UpdateWhenIdle $w
 
     # Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -948,7 +962,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 
     # The "-multiple" option is only available for the "open" file dialog.
     #
-    if { [string equal $type "open"] } {
+    if {$type eq "open"} {
 	lappend specs {-multiple "" "" "0"}
     }
 
@@ -965,7 +979,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
     if {$data(-title) eq ""} {
-	if {[string equal $type "open"]} {
+	if {$type eq "open"} {
 	    set data(-title) "[mc "Open"]"
 	} else {
 	    set data(-title) "[mc "Save As"]"
@@ -998,7 +1012,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 
     # Set -multiple to a one or zero value (not other boolean types
     # like "yes") so we can use it in tests more easily.
-    if {![string compare $type save]} {
+    if {$type eq "save"} {
 	set data(-multiple) 0
     } elseif {$data(-multiple)} { 
 	set data(-multiple) 1 
@@ -1019,7 +1033,7 @@ proc ::tk::dialog::file::Create {w class} {
     #
     set f1 [frame $w.f1]
     bind [::tk::AmpWidget label $f1.lab -text "[mc "&Directory:"]" ] \
-	<<AltUnderlined>> [list focus $f1.menu]
+	    <<AltUnderlined>> [list focus $f1.menu]
     
     set data(dirMenuBtn) $f1.menu
     set data(dirMenu) [tk_optionMenu $f1.menu [format %s(selectPath) ::tk::dialog::file::$dataName] ""]
@@ -1046,7 +1060,7 @@ static char updir_bits[] = {
 
     # data(icons): the IconList that list the files and directories.
     #
-    if { [string equal $class TkFDialog] } {
+    if {$class eq "TkFDialog"} {
 	if { $data(-multiple) } {
 	    set fNameCaption [mc "File &names:"]
 	} else {
@@ -1059,8 +1073,7 @@ static char updir_bits[] = {
 	set iconListCommand [list ::tk::dialog::file::chooseDir::DblClick $w]
     }
     set data(icons) [::tk::IconList $w.icons \
-	    -command	$iconListCommand \
-	    -multiple	$data(-multiple)]
+	    -command $iconListCommand -multiple $data(-multiple)]
     bind $data(icons) <<ListboxSelect>> \
 	    [list ::tk::dialog::file::ListBrowse $w]
 
@@ -1077,7 +1090,7 @@ static char updir_bits[] = {
     set ::tk::$w.icons(font) [$data(ent) cget -font]
 
     # Make the file types bits only if this is a File Dialog
-    if { [string equal $class TkFDialog] } {
+    if {$class eq "TkFDialog"} {
 	set data(typeMenuLab) [::tk::AmpWidget label $f2.lab2 \
 		-text $fTypeCaption -anchor e -pady [$f2.lab cget -pady]]
 	set data(typeMenuBtn) [menubutton $f2.menu -indicatoron 1 \
@@ -1085,7 +1098,7 @@ static char updir_bits[] = {
 	set data(typeMenu) [menu $data(typeMenuBtn).m -tearoff 0]
 	$data(typeMenuBtn) config -takefocus 1 -highlightthickness 2 \
 		-relief raised -bd 2 -anchor w
-        bind $data(typeMenuLab) <<AltUnderlined>> [list \
+	bind $data(typeMenuLab) <<AltUnderlined>> [list \
 		focus $data(typeMenuBtn)]
     }
 
@@ -1118,7 +1131,7 @@ static char updir_bits[] = {
     #
     grid $f2.lab $f2.ent $data(okBtn) -padx 4 -sticky ew
     grid configure $f2.ent -padx 2
-    if { [string equal $class TkFDialog] } {
+    if {$class eq "TkFDialog"} {
 	grid $data(typeMenuLab) $data(typeMenuBtn) $data(cancelBtn) \
 		-padx 4 -sticky ew
 	grid configure $data(typeMenuBtn) -padx 0
@@ -1145,11 +1158,11 @@ static char updir_bits[] = {
 
     # Set up event handlers specific to File or Directory Dialogs
     #
-    if { [string equal $class TkFDialog] } {
+    if {$class eq "TkFDialog"} {
 	bind $data(ent) <Return> [list ::tk::dialog::file::ActivateEnt $w]
 	$data(okBtn)     config -command [list ::tk::dialog::file::OkCmd $w]
 	bind $w <Alt-t> [format {
-	    if {[string equal [%s cget -state] "normal"]} {
+	    if {[%s cget -state] eq "normal"} {
 		focus %s
 	    }
 	} $data(typeMenuBtn) $data(typeMenuBtn)]
@@ -1256,7 +1269,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# we normally won't come to here. Anyways, give an error and abort
 	# action.
 	tk_messageBox -type ok -parent $w -icon warning -message \
-	    [mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]
+		[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]
 	cd $appPWD
 	return
     }
@@ -1293,10 +1306,12 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 	# but 'd'irectory type files.
 	#
 	set cmd [list glob -tails -directory [pwd] \
-		     -type {f b c l p s} -nocomplain]
-	if {[string equal $data(filter) *]} {
+		-type {f b c l p s} -nocomplain]
+	if {$data(filter) eq "*"} {
 	    lappend cmd *
-	    if {$showHidden} { lappend cmd .* }
+	    if {$showHidden} {
+		lappend cmd .*
+	    }
 	} else {
 	    eval [list lappend cmd] $data(filter)
 	}
@@ -1325,10 +1340,10 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     #
     cd $appPWD
 
-    if { [string equal $class TkFDialog] } {
+    if {$class eq "TkFDialog"} {
 	# Restore the Open/Save Button if this is a File Dialog
 	#
-	if {[string equal $data(type) open]} {
+	if {$data(type) eq "open"} {
 	    ::tk::SetAmpText $data(okBtn) [mc "&Open"]
 	} else {
 	    ::tk::SetAmpText $data(okBtn) [mc "&Save"]
@@ -1359,9 +1374,9 @@ proc ::tk::dialog::file::SetPathSilently {w path} {
 proc ::tk::dialog::file::SetPath {w name1 name2 op} {
     if {[winfo exists $w]} {
 	upvar ::tk::dialog::file::[winfo name $w] data
-	::tk::dialog::file::UpdateWhenIdle $w
+	UpdateWhenIdle $w
 	# On directory dialogs, we keep the entry in sync with the currentdir.
-	if { [string equal [winfo class $w] TkChooseDir] } {
+	if {[winfo class $w] eq "TkChooseDir"} {
 	    $data(ent) delete 0 end
 	    $data(ent) insert end $data(selectPath)
 	}
@@ -1402,7 +1417,7 @@ proc ::tk::dialog::file::SetFilter {w type} {
 
     $icons(sbar) set 0.0 0.0
     
-    ::tk::dialog::file::UpdateWhenIdle $w
+    UpdateWhenIdle $w
 }
 
 # tk::dialog::file::ResolveFile --
@@ -1443,7 +1458,7 @@ proc ::tk::dialog::file::SetFilter {w type} {
 proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
     set appPWD [pwd]
 
-    set path [::tk::dialog::file::JoinFile $context $text]
+    set path [JoinFile $context $text]
 
     # If the file has no extension, append the default.  Be careful not
     # to do this for directories, otherwise typing a dirname in the box
@@ -1528,16 +1543,16 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
 proc ::tk::dialog::file::EntFocusIn {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string compare [$data(ent) get] ""]} {
+    if {[$data(ent) get] ne ""} {
 	$data(ent) selection range 0 end
 	$data(ent) icursor end
     } else {
 	$data(ent) selection clear
     }
 
-    if { [string equal [winfo class $w] TkFDialog] } {
+    if {[winfo class $w] eq "TkFDialog"} {
 	# If this is a File Dialog, make sure the buttons are labeled right.
-	if {[string equal $data(type) open]} {
+	if {$data(type) eq "open"} {
 	    ::tk::SetAmpText $data(okBtn) [mc "&Open"]
 	} else {
 	    ::tk::SetAmpText $data(okBtn) [mc "&Save"]
@@ -1568,15 +1583,14 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 	if {[llength $selIcos] == 0 && $text ne ""} {
 	    # This assumes the user typed something in without selecting
 	    # files - so assume they only type in a single filename.
-	    ::tk::dialog::file::VerifyFileName $w $text
+	    VerifyFileName $w $text
 	} else {
 	    foreach item $selIcos {
-		::tk::dialog::file::VerifyFileName $w \
-		    [::tk::IconList_Get $data(icons) $item]
+		VerifyFileName $w [::tk::IconList_Get $data(icons) $item]
 	    }
 	}
     } else {
-	::tk::dialog::file::VerifyFileName $w $text
+	VerifyFileName $w $text
     }
 }
 
@@ -1585,26 +1599,25 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 proc ::tk::dialog::file::VerifyFileName {w filename} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    set list [::tk::dialog::file::ResolveFile $data(selectPath) $filename \
-	    $data(-defaultextension)]
+    set list [ResolveFile $data(selectPath) $filename $data(-defaultextension)]
     foreach {flag path file} $list {
 	break
     }
 
     switch -- $flag {
 	OK {
-	    if {[string equal $file ""]} {
+	    if {$file eq ""} {
 		# user has entered an existing (sub)directory
 		set data(selectPath) $path
 		$data(ent) delete 0 end
 	    } else {
-		::tk::dialog::file::SetPathSilently $w $path
+		SetPathSilently $w $path
 		if {$data(-multiple)} {
 		    lappend data(selectFile) $file
 		} else {
 		    set data(selectFile) $file
 		}
-		::tk::dialog::file::Done $w
+		Done $w
 	    }
 	}
 	PATTERN {
@@ -1612,38 +1625,37 @@ proc ::tk::dialog::file::VerifyFileName {w filename} {
 	    set data(filter) $file
 	}
 	FILE {
-	    if {[string equal $data(type) open]} {
+	    if {$data(type) eq "open"} {
 		tk_messageBox -icon warning -type ok -parent $w \
-		    -message "[mc "File \"%1\$s\"  does not exist." [file join $path $file]]"
+			-message [mc "File \"%1\$s\"  does not exist." \
+			[file join $path $file]]
 		$data(ent) selection range 0 end
 		$data(ent) icursor end
 	    } else {
-		::tk::dialog::file::SetPathSilently $w $path
+		SetPathSilently $w $path
 		if {$data(-multiple)} {
 		    lappend data(selectFile) $file
 		} else {
 		    set data(selectFile) $file
 		}
-		::tk::dialog::file::Done $w
+		Done $w
 	    }
 	}
 	PATH {
 	    tk_messageBox -icon warning -type ok -parent $w \
-		-message "[mc "Directory \"%1\$s\" does not exist." $path]"
+		    -message [mc "Directory \"%1\$s\" does not exist." $path]
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	CHDIR {
-	    tk_messageBox -type ok -parent $w -message \
-	       "[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $path]"\
-		-icon warning
+	    tk_messageBox -type ok -parent $w -message -icon warning \
+		    [mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $path]
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	ERROR {
-	    tk_messageBox -type ok -parent $w -message \
-	       "[mc "Invalid file name \"%1\$s\"." $path]"\
-		-icon warning
+	    tk_messageBox -type ok -parent $w -message -icon warning \
+		    [mc "Invalid file name \"%1\$s\"." $path]
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
@@ -1655,7 +1667,7 @@ proc ::tk::dialog::file::VerifyFileName {w filename} {
 proc ::tk::dialog::file::InvokeBtn {w key} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string equal [$data(okBtn) cget -text] $key]} {
+    if {[$data(okBtn) cget -text] eq $key} {
 	::tk::ButtonInvoke $data(okBtn)
     }
 }
@@ -1665,7 +1677,7 @@ proc ::tk::dialog::file::InvokeBtn {w key} {
 proc ::tk::dialog::file::UpDirCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string compare $data(selectPath) "/"]} {
+    if {$data(selectPath) ne "/"} {
 	set data(selectPath) [file dirname $data(selectPath)]
     }
 }
@@ -1694,14 +1706,14 @@ proc ::tk::dialog::file::OkCmd {w} {
     if {([llength $filenames] && !$data(-multiple)) || \
 	    ($data(-multiple) && ([llength $filenames] == 1))} {
 	set filename [lindex $filenames 0]
-	set file [::tk::dialog::file::JoinFile $data(selectPath) $filename]
+	set file [JoinFile $data(selectPath) $filename]
 	if {[file isdirectory $file]} {
-	    ::tk::dialog::file::ListInvoke $w [list $filename]
+	    ListInvoke $w [list $filename]
 	    return
 	}
     }
 
-    ::tk::dialog::file::ActivateEnt $w
+    ActivateEnt $w
 }
 
 # Gets called when user presses the "Cancel" button
@@ -1739,7 +1751,7 @@ proc ::tk::dialog::file::ListBrowse {w} {
     if { [llength $text] > 1 } {
 	set newtext {}
 	foreach file $text {
-	    set fullfile [::tk::dialog::file::JoinFile $data(selectPath) $file]
+	    set fullfile [JoinFile $data(selectPath) $file]
 	    if { ![file isdirectory $fullfile] } {
 		lappend newtext $file
 	    }
@@ -1748,24 +1760,22 @@ proc ::tk::dialog::file::ListBrowse {w} {
 	set isDir 0
     } else {
 	set text [lindex $text 0]
-	set file [::tk::dialog::file::JoinFile $data(selectPath) $text]
+	set file [JoinFile $data(selectPath) $text]
 	set isDir [file isdirectory $file]
     }
     if {!$isDir} {
 	$data(ent) delete 0 end
 	$data(ent) insert 0 $text
 
-	if { [string equal [winfo class $w] TkFDialog] } {
-	    if {[string equal $data(type) open]} {
+	if {[winfo class $w] eq "TkFDialog"} {
+	    if {$data(type) eq "open"} {
 		::tk::SetAmpText $data(okBtn) [mc "&Open"]
 	    } else {
 		::tk::SetAmpText $data(okBtn) [mc "&Save"]
 	    }
 	}
-    } else {
-	if { [string equal [winfo class $w] TkFDialog] } {
-	    ::tk::SetAmpText $data(okBtn) [mc "&Open"]
-	}
+    } elseif {[winfo class $w] eq "TkFDialog"} {
+	::tk::SetAmpText $data(okBtn) [mc "&Open"]
     }
 }
 
@@ -1779,16 +1789,14 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
 	return
     }
 
-    set file [::tk::dialog::file::JoinFile $data(selectPath) \
-	    [lindex $filenames 0]]
+    set file [JoinFile $data(selectPath) [lindex $filenames 0]]
     
     set class [winfo class $w]
-    if {[string equal $class TkChooseDir] || [file isdirectory $file]} {
+    if {$class eq "TkChooseDir" || [file isdirectory $file]} {
 	set appPWD [pwd]
 	if {[catch {cd $file}]} {
-	    tk_messageBox -type ok -parent $w -message \
-	       "[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $file]"\
-		-icon warning
+	    tk_messageBox -type ok -parent $w -message -icon warning \
+		    [mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $file]
 	} else {
 	    cd $appPWD
 	    set data(selectPath) $file
@@ -1799,7 +1807,7 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
 	} else {
 	    set data(selectFile) $file
 	}
-	::tk::dialog::file::Done $w
+	Done $w
     }
 }
 
@@ -1815,29 +1823,25 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
     upvar ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
-    if {[string equal $selectFilePath ""]} {
+    if {$selectFilePath eq ""} {
 	if {$data(-multiple)} {
 	    set selectFilePath {}
 	    foreach f $data(selectFile) {
-		lappend selectFilePath [::tk::dialog::file::JoinFile \
-		    $data(selectPath) $f]
+		lappend selectFilePath [JoinFile $data(selectPath) $f]
 	    }
 	} else {
-	    set selectFilePath [::tk::dialog::file::JoinFile \
-		    $data(selectPath) $data(selectFile)]
+	    set selectFilePath [JoinFile $data(selectPath) $data(selectFile)]
 	}
 	
-	set Priv(selectFile)     $data(selectFile)
-	set Priv(selectPath)     $data(selectPath)
+	set Priv(selectFile) $data(selectFile)
+	set Priv(selectPath) $data(selectPath)
 
-	if {[string equal $data(type) save]} {
-	    if {[file exists $selectFilePath]} {
-	    set reply [tk_messageBox -icon warning -type yesno\
-		    -parent $w -message \
-			"[mc "File \"%1\$s\" already exists.\nDo you want to overwrite it?" $selectFilePath]"]
-	    if {[string equal $reply "no"]} {
+	if {($data(type) eq "save") && [file exists $selectFilePath]} {
+	    set reply [tk_messageBox -icon warning -type yesno -parent $w \
+		    -message [mc "File \"%1\$s\" already exists.\nDo you want\
+		    to overwrite it?" $selectFilePath]]
+	    if {$reply eq "no"} {
 		return
-		}
 	    }
 	}
     }
