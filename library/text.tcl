@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.38 2005/07/21 15:42:20 dkf Exp $
+# RCS: @(#) $Id: text.tcl,v 1.39 2005/07/26 12:38:19 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -453,8 +453,8 @@ set ::tk::Priv(prevPos) {}
 # down to zero.
 
 # We must make sure that positive and negative movements are rounded
-# equally to integers, avoiding the problem that 
-#     (int)1/3 = 0, 
+# equally to integers, avoiding the problem that
+#     (int)1/3 = 0,
 # but
 #     (int)-1/3 = -1
 # The following code ensure equal +/- behaviour.
@@ -604,14 +604,14 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	    } elseif {[$w compare $cur > $last]} {
 		set last $cur
 	    }
-	    
+
 	    # Now find word boundaries
 	    set first [TextPrevPos $w "$first + 1c" tcl_wordBreakBefore]
 	    set last [TextNextPos $w "$last - 1c" tcl_wordBreakAfter]
 	}
 	line {
 	    # Set initial range based only on the anchor
-	    set first "tk::anchor$w linestart" 
+	    set first "tk::anchor$w linestart"
 	    set last "tk::anchor$w lineend"
 
 	    # Extend range (if necessary) based on the current point
@@ -862,8 +862,8 @@ proc ::tk::TextInsert {w s} {
     $w insert insert $s
     $w see insert
     if {$compound && $oldSeparator} {
-        $w edit separator
-        $w configure -autoseparators 1
+	$w edit separator
+	$w configure -autoseparators 1
     }
 }
 
