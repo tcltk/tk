@@ -1,3 +1,16 @@
+2005-07-27  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkInt.h: Swap TkUnsupported1Cmd for TkUnsupported1ObjCmd.
+	* generic/tkWindow.c: Ditto. (neil madden)
+	* macosx/tkMacOSXInt.h: Added TkMacOSXWindowClass decl
+	* macosx/tkMacOSXWm.c (TkMacOSXWinStyle) New function.
+	(TkUnsupported1ObjCmd): New function, replaces the un-objectified
+	version of the command, recognizes more classes and attributes.
+	(TkMacOSXWindowClass): private function to return OS X class of a
+	Tk window.
+	* macosx/tkMacOSXSubwindows.c (XMapWindow, XUnmapWindow):
+	recognize special show/hide functions for sheets
+
 2005-07-24  Mo DeJong  <mdejong@users.sourceforge.net>
 	
 	* unix/Makefile.in: Subst TCLSH_PROG and
@@ -19,6 +32,8 @@
 	[Tcl patch 1244153]
 
 2005-07-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/configure, unix/tcl.m4: sync'ed to Tcl's tcl.m4
 
 	* macosx/tkMacOSXEntry.c (TkpDrawEntryBorderAndFocus): set
 	oldWidth to avoid warning
