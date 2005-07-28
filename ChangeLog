@@ -1,5 +1,15 @@
 2005-07-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkFrame.c (DisplayFrame):
+	* generic/tkInt.decls:  add TkpDrawFrame to allow for
+	* generic/tkIntDecls.h: platform-specific drawing into the frame/
+	* generic/tkStubInit.c: toplevel area.  Currently only differs on
+	* generic/tkFrame.c:    OS X (Aqua), which will draw a themed bg
+	* win/tkWinDraw.c:      if tk::mac::useThemedToplevel == 1.
+	* unix/tkUnixDraw.c:    Normal frames left alone until we can
+	* mac/tkMacDraw.c:      better factor out frame drawing to be
+	* macosx/tkMacDraw.c:   widget-specific.
+
 	* generic/tkInt.h: Swap TkUnsupported1Cmd for TkUnsupported1ObjCmd.
 	* generic/tkWindow.c: Ditto. (neil madden)
 	* macosx/tkMacOSXInt.h: Added TkMacOSXWindowClass decl

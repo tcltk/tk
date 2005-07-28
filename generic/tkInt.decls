@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.33.2.3 2004/10/27 00:35:53 davygrvy Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.33.2.4 2005/07/28 04:57:38 hobbs Exp $
 
 library tk
 
@@ -676,6 +676,22 @@ declare 148 generic {
 declare 149 generic {
     CONST Tk_OptionSpec * TkGetOptionSpec (CONST char *name,
 					   Tk_OptionTable optionTable)
+}
+
+# TIP#168 - 8.5+
+#declare 150 generic {
+#    int TkMakeRawCurve (Tk_Canvas canvas,
+#	    double *pointPtr, int numPoints, int numSteps,
+#	    XPoint xPoints[], double dblPoints[])
+#}
+#declare 151 generic {
+#    void TkMakeRawCurvePostscript (Tcl_Interp *interp,
+#	    Tk_Canvas canvas, double *pointPtr, int numPoints)
+#}
+
+declare 152 generic {
+    void TkpDrawFrame(Tk_Window tkwin, Tk_3DBorder border,
+		      int highlightWidth, int borderWidth, int relief)
 }
 
 ##############################################################################
