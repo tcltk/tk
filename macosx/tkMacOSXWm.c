@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.10 2005/07/28 03:45:04 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.11 2005/07/28 08:00:57 hobbs Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -2330,11 +2330,11 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 
 static int
 WmResizableCmd(tkwin, winPtr, interp, objc, objv)
-Tk_Window tkwin;		/* Main window of the application. */
-TkWindow *winPtr;           /* Toplevel to work with */
-Tcl_Interp *interp;		/* Current interpreter. */
-int objc;			/* Number of arguments. */
-Tcl_Obj *CONST objv[];	/* Argument objects. */
+    Tk_Window tkwin;		/* Main window of the application. */
+    TkWindow *winPtr;           /* Toplevel to work with */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
@@ -2358,13 +2358,25 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     }
     if (width) {
         wmPtr->flags &= ~WM_WIDTH_NOT_RESIZABLE;
+        wmPtr->attributes |= kWindowHorizontalZoomAttribute;
     } else {
         wmPtr->flags |= WM_WIDTH_NOT_RESIZABLE;
+        wmPtr->attributes &= ~kWindowHorizontalZoomAttribute;
     }
     if (height) {
         wmPtr->flags &= ~WM_HEIGHT_NOT_RESIZABLE;
+        wmPtr->attributes |= kWindowVerticalZoomAttribute;
     } else {
         wmPtr->flags |= WM_HEIGHT_NOT_RESIZABLE;
+        wmPtr->attributes &= ~kWindowVerticalZoomAttribute;
+    }
+    /*
+     * XXX: Need a ChangeWindowAttributes
+     */
+    if (width || height) {
+        wmPtr->attributes |= kWindowResizableAttribute;
+    } else {
+        wmPtr->attributes &= ~kWindowResizableAttribute;
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (wmPtr->scrollWinPtr != NULL) {
@@ -5325,9 +5337,9 @@ TkpWmSetState(winPtr, state)
 	 * TODO: This approach causes flashing!
 	 */
 
-	if (IsWindowCollapsable(macWin)) {
+	if (IsWindowCollapsable(macWin) && !IsWindowCollapsed(macWin)) {
 	    ShowWindow(macWin);
-	    CollapseWindow( macWin, true);
+	    CollapseWindow(macWin, true);
 	}
     } else if (state == NormalState) {
 	Tk_MapWindow((Tk_Window) winPtr);
