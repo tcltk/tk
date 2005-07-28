@@ -1,3 +1,16 @@
+2005-07-28  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXWm.c (TkpWmSetState): add IsWindowCollapsed check
+	before calling CollapseWindow.
+	(WmResizableCmd): adjust kWindow*Attributes according to resize
+	parameters.
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): handle
+	inToolbarButton action (generates <<ToolbarButton>> virtual event)
+	and correct inCollapseBox to properly track the event (waiting for
+	buttonrelease) and generate the Unmap event (Map event on
+	redisplay still missing).
+
 2005-07-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkFrame.c (DisplayFrame):
