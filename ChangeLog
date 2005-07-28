@@ -1,5 +1,8 @@
 2005-07-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/bgerror.tcl (::tk::dialog::error::bgerror): use
+	zoomDocProc instead of dBoxProc for bgerror dialog
+
 	* macosx/tkMacOSXWm.c (TkpWmSetState): add IsWindowCollapsed check
 	before calling CollapseWindow.
 	(WmResizableCmd): adjust kWindow*Attributes according to resize
