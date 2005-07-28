@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.51 2005/07/25 23:56:54 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.52 2005/07/28 17:20:41 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -6178,7 +6178,7 @@ GetYView(interp, textPtr, report)
 	code = Tcl_VarEval(interp, textPtr->yScrollCmd, buf1, buf2, NULL);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
-		    "\n	   (vertical scrolling command executed by text)");
+		    "\n    (vertical scrolling command executed by text)");
 	    Tcl_BackgroundError(interp);
 	}
     }
