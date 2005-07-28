@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.4 2005/03/12 00:49:28 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.5 2005/07/28 03:45:03 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -20,6 +20,7 @@
 #include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXWm.h"
 
 /*
  * Temporary region that can be reused.
@@ -65,8 +66,7 @@ XDestroyWindow(
 
     TkPointerDeadWindow(macWin->winPtr);
     macWin->toplevel->referenceCount--;
-    
-    
+
     if (Tk_IsTopLevel(macWin->winPtr)) {
         WindowRef winRef;
         /*
@@ -199,7 +199,18 @@ XMapWindow(
     macWin->winPtr->flags |= TK_MAPPED;
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
-        	    ShowWindow(GetWindowFromPort(destPort));
+	    /*
+	     * XXX This should be ShowSheetWindow for kSheetWindowClass
+	     * XXX windows that have a wmPtr->master parent set.
+	     */
+	    WindowRef wRef = GetWindowFromPort(destPort);
+	    if ((TkMacOSXWindowClass(macWin->winPtr) == kSheetWindowClass)
+		    && (macWin->winPtr->wmInfoPtr->master != None)) {
+		ShowSheetWindow(wRef,
+			GetWindowFromPort(TkMacOSXGetDrawablePort(macWin->winPtr->wmInfoPtr->master)));
+	    } else {
+		ShowWindow(wRef);
+	    }
 	}
 
 	/* 
@@ -259,7 +270,17 @@ XUnmapWindow(
     macWin->winPtr->flags &= ~TK_MAPPED;
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
-	    HideWindow(GetWindowFromPort(destPort));
+	    /*
+	     * XXX This should be HideSheetWindow for kSheetWindowClass
+	     * XXX windows that have a wmPtr->master parent set.
+	     */
+	    WindowRef wref = GetWindowFromPort(destPort);
+	    if ((TkMacOSXWindowClass(macWin->winPtr) == kSheetWindowClass)
+		    && (macWin->winPtr->wmInfoPtr->master != None)) {
+		HideSheetWindow(wref);
+	    } else {
+		HideWindow(wref);
+	    }
 	}
 
 	/* 
@@ -269,7 +290,7 @@ XUnmapWindow(
 	event.xany.serial = display->request;
 	event.xany.send_event = False;
 	event.xany.display = display;
-	
+
 	event.xunmap.type = UnmapNotify;
 	event.xunmap.window = window;
 	event.xunmap.event = window;

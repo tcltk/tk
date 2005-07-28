@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.3 2005/03/12 00:49:28 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.4 2005/07/28 03:45:03 hobbs Exp $
  */
 
 #ifndef _TKMACINT
@@ -154,6 +154,7 @@ extern int TkMacOSXUseAntialiasedText(Tcl_Interp *interp, int enable);
 extern int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable, int antiAlias);
 extern void TkMacOSXDefaultStartupScript(void);
 extern int TkMacOSXGenerateFocusEvent( Window window, int activeFlag);
+extern WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 
 #include "tkIntPlatDecls.h"
 
