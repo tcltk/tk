@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.5 2004/09/18 00:48:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.6 2005/07/28 04:57:38 hobbs Exp $
  */
 
 #include "tclInt.h"
@@ -44,6 +44,9 @@ static PixPatHandle gPenPat = NULL;
 static int useCGDrawing = 1;
 static int tkMacOSXCGAntiAliasLimit = 1;
 
+static int useThemedToplevel = 0;
+static int useThemedFrame = 0;
+
 /*
  * Prototypes for functions used only in this file.
  */
@@ -62,7 +65,7 @@ TkMacOSXInitCGDrawing(interp, enable, limit)
         int limit;
 {
     static Boolean initialized = FALSE;
-    
+
     if (!initialized) {
         if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
             Tcl_ResetResult(interp);
@@ -73,13 +76,25 @@ TkMacOSXInitCGDrawing(interp, enable, limit)
             Tcl_ResetResult(interp);
         }
         useCGDrawing = enable;
-        
+
         if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
                 (char *) &tkMacOSXCGAntiAliasLimit, 
                 TCL_LINK_INT) != TCL_OK) {
             Tcl_ResetResult(interp);
         }
         tkMacOSXCGAntiAliasLimit = limit;
+
+	/*
+	 * Piggy-back the themed drawing var init here.
+	 */
+        if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
+		    (char *) &useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
+            Tcl_ResetResult(interp);
+        }
+        if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
+		    (char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
+            Tcl_ResetResult(interp);
+        }
     }
     return TCL_OK;
 }
@@ -188,7 +203,7 @@ XCopyArea(
         RgnHandle clipRgn = (RgnHandle)
                 ((TkpClipMask*)gc->clip_mask)->value.region;
  
-        int xOffset, yOffset;
+        int xOffset = 0, yOffset = 0;
         if (tmpRgn == NULL) {
             tmpRgn = NewRgn();
         }
@@ -1986,7 +2001,7 @@ InvertByte(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawpHighlightBorder --
+ * TkpDrawHighlightBorder --
  *
  *        This procedure draws a rectangular ring around the outside of
  *        a widget to indicate that it has received the input focus.
@@ -2023,5 +2038,73 @@ TkpDrawHighlightBorder (
             TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1, 
                     drawable, 0);
         }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawFrame --
+ *
+ *	This procedure draws the rectangular frame area.  If the user
+ *	has request themeing, it draws with a the background theme.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws inside the tkwin area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpDrawFrame (Tk_Window tkwin, Tk_3DBorder border,
+	int highlightWidth, int borderWidth, int relief)
+{
+    if (useThemedToplevel && Tk_IsTopLevel(tkwin)) {
+	/*
+	 * Currently only support themed toplevels, until we can better
+	 * factor this to handle individual windows (blanket theming of
+	 * frames will work for very few UIs).
+	 */
+	Rect bounds;
+	Point origin;
+	CGrafPtr saveWorld;
+	GDHandle saveDevice;
+	XGCValues gcValues;
+	GC gc;
+	Pixmap pixmap;
+	Display *display = Tk_Display(tkwin);
+
+	pixmap = Tk_GetPixmap(display, Tk_WindowId(tkwin),
+		Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+
+	gc = Tk_GetGC(tkwin, 0, &gcValues);
+	TkMacOSXWinBounds((TkWindow *) tkwin, &bounds);
+	origin.v = -bounds.top;
+	origin.h = -bounds.left;
+	bounds.top = bounds.left = 0;
+	bounds.right = Tk_Width(tkwin);
+	bounds.bottom = Tk_Height(tkwin);
+
+	GetGWorld(&saveWorld, &saveDevice);
+	SetGWorld(TkMacOSXGetDrawablePort(pixmap), 0);
+	ApplyThemeBackground(kThemeBackgroundWindowHeader, &bounds,
+		kThemeStateActive, 32 /* depth */, true /* inColor */);
+	QDSetPatternOrigin(origin);
+	EraseRect(&bounds);
+	SetGWorld(saveWorld, saveDevice);
+
+	XCopyArea(display, pixmap, Tk_WindowId(tkwin),
+		gc, 0, 0, bounds.right, bounds.bottom, 0, 0);
+	Tk_FreePixmap(display, pixmap);
+	Tk_FreeGC(display, gc);
+    } else {
+	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
+		border, highlightWidth, highlightWidth,
+		Tk_Width(tkwin) - 2 * highlightWidth,
+		Tk_Height(tkwin) - 2 * highlightWidth,
+		borderWidth, relief);
     }
 }
