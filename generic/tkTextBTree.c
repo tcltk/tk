@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.17 2005/07/29 13:35:07 dkf Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.18 2005/07/29 13:43:43 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -46,12 +46,12 @@
  */
 
 typedef struct Summary {
-    TkTextTag *tagPtr;			/* Handle for tag. */
-    int toggleCount;			/* Number of transitions into or out
-					 * of this tag that occur in the
-					 * subtree rooted at this node. */
-    struct Summary *nextPtr;		/* Next in list of all tags for same
-					 * node, or NULL if at end of list. */
+    TkTextTag *tagPtr;		/* Handle for tag. */
+    int toggleCount;		/* Number of transitions into or out of this
+				 * tag that occur in the subtree rooted at
+				 * this node. */
+    struct Summary *nextPtr;	/* Next in list of all tags for same node, or
+				 * NULL if at end of list. */
 } Summary;
 
 /*
@@ -59,28 +59,26 @@ typedef struct Summary {
  */
 
 typedef struct Node {
-    struct Node *parentPtr;		/* Pointer to parent node, or NULL if
-					 * this is the root. */
-    struct Node *nextPtr;		/* Next in list of siblings with the
-					 * same parent node, or NULL for end
-					 * of list. */
-    Summary *summaryPtr;		/* First in malloc-ed list of info
-					 * about tags in this subtree (NULL if
-					 * no tag info in the subtree). */
-    int level;				/* Level of this node in the B-tree.
-					 * 0 refers to the bottom of the tree
-					 * (children are lines, not nodes). */
-    union {				/* First in linked list of children. */
-	struct Node *nodePtr;		/* Used if level > 0. */
-	TkTextLine *linePtr;		/* Used if level == 0. */
+    struct Node *parentPtr;	/* Pointer to parent node, or NULL if this is
+				 * the root. */
+    struct Node *nextPtr;	/* Next in list of siblings with the same
+				 * parent node, or NULL for end of list. */
+    Summary *summaryPtr;	/* First in malloc-ed list of info about tags
+				 * in this subtree (NULL if no tag info in the
+				 * subtree). */
+    int level;			/* Level of this node in the B-tree.  0 refers
+				 * to the bottom of the tree (children are
+				 * lines, not nodes). */
+    union {			/* First in linked list of children. */
+	struct Node *nodePtr;	/* Used if level > 0. */
+	TkTextLine *linePtr;	/* Used if level == 0. */
     } children;
-    int numChildren;			/* Number of children of this node. */
-    int numLines;			/* Total number of lines (leaves) in
-					 * the subtree rooted here. */
-    int* numPixels;			/* Array containing total number of
-					 * vertical display pixels in the
-					 * subtree rooted here, one entry for
-					 * each peer widget. */
+    int numChildren;		/* Number of children of this node. */
+    int numLines;		/* Total number of lines (leaves) in the
+				 * subtree rooted here. */
+    int* numPixels;		/* Array containing total number of vertical
+				 * display pixels in the subtree rooted here,
+				 * one entry for each peer widget. */
 } Node;
 
 /*
@@ -106,14 +104,13 @@ typedef struct Node {
  */
 
 typedef struct BTree {
-    Node *rootPtr;			/* Pointer to root of B-tree. */
-    int clients;			/* Number of clients of this B-tree */
-    int pixelReferences;		/* Number of clients of this B-tree
-					 * which care about pixel heights. */
-    TkSharedText *sharedTextPtr;	/* Used to find tagTable in
-					 * consistency checking code, and to
-					 * access list of all B-tree
-					 * clients. */
+    Node *rootPtr;		/* Pointer to root of B-tree. */
+    int clients;		/* Number of clients of this B-tree. */
+    int pixelReferences;	/* Number of clients of this B-tree which care
+				 * about pixel heights. */
+    TkSharedText *sharedTextPtr;/* Used to find tagTable in consistency
+				 * checking code, and to access list of all
+				 * B-tree clients. */
     int startEndCount;
     TkTextLine **startEnd;
     TkText **startEndRef;
@@ -125,15 +122,13 @@ typedef struct BTree {
  */
 
 typedef struct TagInfo {
-    int numTags;			/* Number of tags for which there is
-					 * currently information in tags and
-					 * counts. */
-    int arraySize;			/* Number of entries allocated for
-					 * tags and counts. */
-    TkTextTag **tagPtrs;		/* Array of tags seen so far.
-					 * Malloc-ed. */
-    int *counts;			/* Toggle count (so far) for each
-					 * entry in tags. Malloc-ed. */
+    int numTags;		/* Number of tags for which there is currently
+				 * information in tags and counts. */
+    int arraySize;		/* Number of entries allocated for tags and
+				 * counts. */
+    TkTextTag **tagPtrs;	/* Array of tags seen so far. Malloc-ed. */
+    int *counts;		/* Toggle count (so far) for each entry in
+				 * tags. Malloc-ed. */
 } TagInfo;
 
 /*
@@ -450,7 +445,7 @@ TkBTreeClientRangeChanged(textPtr, defaultHeight)
     end = textPtr->end;
     if (end == NULL) {
 	end = TkBTreeFindLine(textPtr->sharedTextPtr->tree,
-		  NULL, TkBTreeNumLines(textPtr->sharedTextPtr->tree, NULL));
+		NULL, TkBTreeNumLines(textPtr->sharedTextPtr->tree, NULL));
     }
     AdjustPixelClient(treePtr, defaultHeight, treePtr->rootPtr,
 	    textPtr->start, end, useReference, treePtr->pixelReferences,
@@ -4618,8 +4613,8 @@ CharDeleteProc(segPtr, linePtr, treeGone)
 	/* ARGSUSED */
 static void
 CharCheckProc(segPtr, linePtr)
-    TkTextSegment *segPtr;		/* Segment to check. */
-    TkTextLine *linePtr;		/* Line containing segment. */
+    TkTextSegment *segPtr;	/* Segment to check. */
+    TkTextLine *linePtr;	/* Line containing segment. */
 {
     /*
      * Make sure that the segment contains the number of characters indicated
