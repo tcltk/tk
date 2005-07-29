@@ -1,5 +1,9 @@
 2005-07-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* macosx/tkMacOSXDraw.c (XDrawLines, XDrawSegments): correct
+	drawing of CoordModePrevious style (each point based on last).
+	Exposed by tktable -drawmode fast.
+
 	* library/bgerror.tcl (::tk::dialog::error::bgerror): use
 	zoomDocProc instead of dBoxProc for bgerror dialog
 
