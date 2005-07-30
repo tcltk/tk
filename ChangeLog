@@ -1,3 +1,9 @@
+2005-07-30  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/Makefile.in (html): reverted/amended changes of 2005-07-24
+	that broke TkAqua 'make install'; added BUILD_HTML_FLAGS
+	optional var like in tcl/unix/Makefile.in.
+
 2005-07-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXDraw.c (XDrawLines, XDrawSegments): correct
