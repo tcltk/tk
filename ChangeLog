@@ -1,3 +1,8 @@
+2005-08-04  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* doc/clipboard.n: Add example demonstrating custom types of
+	clipboard data.
+
 2005-07-25  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/*.tcl: Updated to use more 8.4 and 8.5 features as part
