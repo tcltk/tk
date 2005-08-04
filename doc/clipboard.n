@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.10 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.11 2005/08/04 10:01:59 dkf Exp $
 '\" 
 .so man.macros
 .TH clipboard n 8.4 Tk "Tk Built-In Commands"
@@ -97,9 +97,49 @@ Set the clipboard to contain a fixed string.
 \fBclipboard clear\fR
 \fBclipboard append\fR "some fixed string"
 .CE
+.PP
+You can put custom data into the clipboard by using a custom \fB\-type\fR
+option. This is not necessarily portable, but can be very useful. The
+method of passing Tcl scripts this way is effective, but should be mixed
+with safe interpreters in production code.
+.CS
+# This is a very simple canvas serializer;
+# it produces a script that recreates the item(s) when executed
+proc getItemConfig {canvas tag} {
+   set script {}
+   foreach item [$canvas find withtag $tag] {
+      append script {$canvas create } [$canvas type $item]
+      append script { } [$canvas coords $item] { }
+      foreach config [$canvas itemconf $item] {
+         lassign $config name - - - value
+         append script [list $name $value] { }
+      }
+      append script \\n
+   }
+   return [string trim $script]
+}
+
+# Set up a binding on a canvas to cut and paste an item
+set c [canvas .c]
+pack $c
+$c create text 150 30 -text "cut and paste me"
+bind $c <<Cut>> {
+   \fBclipboard clear\fR
+   \fBclipboard append -type\fR TkCanvasItem \\
+         [getItemConfig %W current]
+   # Delete because this is cut, not copy.
+   %W delete current
+}
+bind $c <<Paste>> {
+   catch {
+      set canvas %W
+      eval [\fBclipboard get -type\fR TkCanvasItem]
+   }
+}
+.CE
 
 .SH "SEE ALSO"
-selection(n)
+interp(n), selection(n)
 
 .SH KEYWORDS
 clear, format, clipboard, append, selection, type
