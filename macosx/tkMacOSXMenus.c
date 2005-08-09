@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.6 2004/09/03 14:09:05 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.7 2005/08/09 07:39:21 das Exp $
  */
 
 #include "tk.h"
@@ -104,7 +104,7 @@ TkMacOSXHandleMenuSelect(
                     break;
                 case kCloseItem:
                     /* Send close event */
-                    window = TkMacOSXGetXWindow(FrontNonFloatingWindow());
+                    window = TkMacOSXGetXWindow(ActiveNonFloatingWindow());
                     dispPtr = TkGetDisplayList();
                     tkwin = Tk_IdToWindow(dispPtr->display, window);
                     TkGenWMDestroyEvent(tkwin);
@@ -229,7 +229,7 @@ GenerateEditEvent(
     Window window;
     TkDisplay *dispPtr;
 
-    window = TkMacOSXGetXWindow(FrontNonFloatingWindow());
+    window = TkMacOSXGetXWindow(ActiveNonFloatingWindow());
     dispPtr = TkGetDisplayList();
     tkwin = Tk_IdToWindow(dispPtr->display, window);
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->dispPtr->focusPtr;
@@ -246,13 +246,13 @@ GenerateEditEvent(
     event.subwindow = None;
     event.time = TkpGetMS();
     
-    GetMouse(&where);
+    XQueryPointer(NULL, None, NULL, NULL,
+            &event.x_root, &event.y_root, NULL, NULL, &event.state);
+    where.h = event.x_root;
+    where.v = event.y_root;
+    GlobalToLocal(&where);
     tkwin = Tk_TopCoordsToWindow(tkwin, where.h, where.v, 
             &event.x, &event.y);
-    LocalToGlobal(&where);
-    event.x_root = where.h;
-    event.y_root = where.v;
-    event.state = TkMacOSXButtonKeyState();
     event.same_screen = true;
     event.user_data = NULL;
 

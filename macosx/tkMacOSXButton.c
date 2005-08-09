@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.12 2005/05/14 20:48:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.13 2005/08/09 07:39:19 das Exp $
  */
 
 #include "tkButton.h"
@@ -913,7 +913,6 @@ TkMacOSXDrawControl(
     Rect       paneRect;
     Rect       cntrRect;
 
-
     winPtr = (TkWindow *)butPtr->tkwin;
    
     paneRect.left   = winPtr->privatePtr->xOff;
@@ -971,15 +970,15 @@ TkMacOSXDrawControl(
         Tk_Font    font;
         int        len;
         
-	if ((mbPtr->info.image == NULL) && (mbPtr->info.bitmap == None) 
-	  || (mbPtr->info.compound != COMPOUND_NONE)) {
-	    len = TkFontGetFirstTextLayout(butPtr->textLayout, 
-					   &font, (char*) controlTitle);
-	    controlTitle[len] = 0;
-	} else {
-	    len = 0;
-	    controlTitle[0] = 0;
-	}
+        if (((mbPtr->info.image == NULL) && (mbPtr->info.bitmap == None))
+               || (mbPtr->info.compound != COMPOUND_NONE)) {
+            len = TkFontGetFirstTextLayout(butPtr->textLayout, 
+                    &font, (char*) controlTitle);
+            controlTitle[len] = 0;
+        } else {
+            len = 0;
+            controlTitle[0] = 0;
+        }
         if (bcmp(mbPtr->controlTitle, controlTitle, len+1)) {
             CFStringRef cf;    	    
             cf = CFStringCreateWithCString(NULL,

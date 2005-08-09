@@ -49,6 +49,8 @@
  *      acting in its behalf permission to use and distribute the
  *      software in accordance with the terms specified in this
  *      license.
+ *
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.10 2005/08/09 07:39:21 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -172,7 +174,9 @@ int TkMacOSXProcessKeyboardEvent(
      * handler.
      */
 
-    if (IsMenuKeyEvent(NULL, eventPtr->eventRef, 
+    if ((eventPtr->eKind == kEventRawKeyDown 
+            || eventPtr->eKind == kEventRawKeyRepeat) 
+            && IsMenuKeyEvent(NULL, eventPtr->eventRef, 
             kMenuEventQueryOnly, &menuRef, &menuItemIndex)) {
         MenuCommand menuCmd;
         
@@ -425,16 +429,19 @@ GenerateKeyEvent(
 static int 
 InitKeyData(KeyEventData * keyEventDataPtr)
 {
+    int x, y;
     memset (keyEventDataPtr, 0, sizeof(*keyEventDataPtr));
 
-    keyEventDataPtr->whichWindow = FrontNonFloatingWindow();
+    keyEventDataPtr->whichWindow = ActiveNonFloatingWindow();
     if (keyEventDataPtr->whichWindow == NULL) {
         return false;
     }
-    GetMouse(&keyEventDataPtr->local);
-    keyEventDataPtr->global = keyEventDataPtr->local;
-    LocalToGlobal(&keyEventDataPtr->global);
-    keyEventDataPtr->state = TkMacOSXButtonKeyState();
+    XQueryPointer(NULL, None, NULL, NULL, &x, &y, 
+            NULL, NULL, &keyEventDataPtr->state);
+    keyEventDataPtr->global.v = x;
+    keyEventDataPtr->global.v = y;
+    keyEventDataPtr->local = keyEventDataPtr->global;
+    GlobalToLocal(&keyEventDataPtr->local);
 
     return true;
 }

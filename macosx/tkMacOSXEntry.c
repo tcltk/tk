@@ -49,6 +49,8 @@
  *      acting in its behalf permission to use and distribute the
  *      software in accordance with the terms specified in this
  *      license.
+ *
+ * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.4 2005/08/09 07:39:20 das Exp $
  */
 
 #include "tk.h"
@@ -151,7 +153,7 @@ TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable d, int isSpinbox)
     GC bgGC;
     Tk_Window tkwin = entryPtr->tkwin;
     ThemeDrawState drawState;
-    int oldWidth;
+    int oldWidth = 0;
 
     /* 
      * I use 6 as the borderwidth.  2 of the 5 go into the actual frame the

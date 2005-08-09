@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.8 2005/03/15 02:11:56 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.9 2005/08/09 07:39:21 das Exp $
  */
 
 #include "tkInt.h"
@@ -20,6 +20,7 @@
 #include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXWm.h"
 
 /*
  * Temporary region that can be reused.
@@ -64,8 +65,7 @@ XDestroyWindow(
 
     TkPointerDeadWindow(macWin->winPtr);
     macWin->toplevel->referenceCount--;
-    
-    
+
     if (Tk_IsTopLevel(macWin->winPtr)) {
         WindowRef winRef;
         /*
@@ -85,7 +85,7 @@ XDestroyWindow(
                 if (TkpIsWindowFloating (winRef)) {
                     Window window;
                     
-                    window = TkMacOSXGetXWindow(FrontNonFloatingWindow());
+                    window = TkMacOSXGetXWindow(ActiveNonFloatingWindow());
                     if (window != None) {
                         TkMacOSXGenerateFocusEvent(window, 1);
                     }
@@ -251,7 +251,18 @@ XMapWindow(
     FixMappingFlags(macWin->winPtr, 1);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
-        	    ShowWindow(GetWindowFromPort(destPort));
+	    /*
+	     * XXX This should be ShowSheetWindow for kSheetWindowClass
+	     * XXX windows that have a wmPtr->master parent set.
+	     */
+	    WindowRef wRef = GetWindowFromPort(destPort);
+	    if ((TkMacOSXWindowClass(macWin->winPtr) == kSheetWindowClass)
+		    && (macWin->winPtr->wmInfoPtr->master != None)) {
+		ShowSheetWindow(wRef,
+			GetWindowFromPort(TkMacOSXGetDrawablePort(macWin->winPtr->wmInfoPtr->master)));
+	    } else {
+		ShowWindow(wRef);
+	    }
 	}
 
 	/* 
@@ -312,8 +323,19 @@ XUnmapWindow(
     macWin->flags &= ~TK_MAPPED_IN_PARENT;
     FixMappingFlags(macWin->winPtr, 0);
     if (Tk_IsTopLevel(macWin->winPtr)) {
-	if (!Tk_IsEmbedded(macWin->winPtr)) {
-	    HideWindow(GetWindowFromPort(destPort));
+	if (!Tk_IsEmbedded(macWin->winPtr)
+	        && macWin->winPtr->wmInfoPtr->hints.initial_state != IconicState) {
+	    /*
+	     * XXX This should be HideSheetWindow for kSheetWindowClass
+	     * XXX windows that have a wmPtr->master parent set.
+	     */
+	    WindowRef wref = GetWindowFromPort(destPort);
+	    if ((TkMacOSXWindowClass(macWin->winPtr) == kSheetWindowClass)
+		    && (macWin->winPtr->wmInfoPtr->master != None)) {
+		HideSheetWindow(wref);
+	    } else {
+		HideWindow(wref);
+	    }
 	}
 
 	/* 
@@ -323,7 +345,7 @@ XUnmapWindow(
 	event.xany.serial = display->request;
 	event.xany.send_event = False;
 	event.xany.display = display;
-	
+
 	event.xunmap.type = UnmapNotify;
 	event.xunmap.window = window;
 	event.xunmap.event = window;
@@ -380,7 +402,6 @@ XResizeWindow(
 	     * region.  It is currently assumed that Tk will need
 	     * to completely redraw anway.
 	     */
-             
             if (havePort) {
                 SetPort(destPort);
 	        SizeWindow(GetWindowFromPort(destPort),
@@ -401,7 +422,7 @@ XResizeWindow(
 	    
 	    if (contWinPtr != NULL) {
 	        MacDrawable *macParent = contWinPtr->privatePtr;
-                
+
                 if (havePort) {
                     SetPort(destPort);
 		    TkMacOSXInvalClipRgns(macParent->winPtr);	
@@ -574,13 +595,13 @@ XMoveResizeWindow(
 	        return; /* TODO: Probably should be a panic */
 	    }
 	}
-	 
-        if (havePort) {
-            SetPort( destPort);
+
+	if (havePort) {
+	    SetPort( destPort);
 	    TkMacOSXInvalClipRgns(macParent->winPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-        }
-        
+	}
+
 	deltaX = - macWin->xOff;
 	deltaY = - macWin->yOff;
 	
@@ -647,7 +668,6 @@ XMoveWindow(
 	 * region.  It is currently assumed that Tk will need
 	 * to completely redraw anway.
 	 */
-         
         if (havePort) { 
             SetPort(destPort);
 	    MoveWindowStructure( GetWindowFromPort(destPort), x, y);
@@ -871,7 +891,7 @@ TkMacOSXUpdateClipRgn(
     RgnHandle rgn;
     int x, y;
     TkWindow *win2Ptr;
-    
+
     if (winPtr == NULL) {
 	return;
     }
@@ -1015,7 +1035,6 @@ RgnHandle
 TkMacOSXVisableClipRgn(
     TkWindow *winPtr)
 {
-    
     if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(winPtr);
     }
@@ -1287,10 +1306,11 @@ TkMacOSXWinBounds(
     bounds->left = (short) winPtr->privatePtr->xOff;
     bounds->top = (short) winPtr->privatePtr->yOff;
     bounds->right = (short) (winPtr->privatePtr->xOff +
-            winPtr->changes.width);
+	    winPtr->changes.width);
     bounds->bottom = (short) (winPtr->privatePtr->yOff +
-            winPtr->changes.height);
-}
+	    winPtr->changes.height);
+}
+
 /*
  *----------------------------------------------------------------------
  *

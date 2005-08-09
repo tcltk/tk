@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.5 2004/11/11 01:24:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.6 2005/08/09 07:39:20 das Exp $
  */
 
 #include "tclInt.h"
@@ -44,6 +44,9 @@ static PixPatHandle gPenPat = NULL;
 static int useCGDrawing = 1;
 static int tkMacOSXCGAntiAliasLimit = 1;
 
+static int useThemedToplevel = 0;
+static int useThemedFrame = 0;
+
 /*
  * Prototypes for functions used only in this file.
  */
@@ -55,14 +58,14 @@ void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort,
         CGContextRef *context);
 static inline double radians(double degrees) { return degrees * PI / 180.0f; }
 
-int 
+MODULE_SCOPE int 
 TkMacOSXInitCGDrawing(interp, enable, limit)
         Tcl_Interp *interp;
         int enable;
         int limit;
 {
     static Boolean initialized = FALSE;
-    
+
     if (!initialized) {
         if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
             Tcl_ResetResult(interp);
@@ -73,13 +76,25 @@ TkMacOSXInitCGDrawing(interp, enable, limit)
             Tcl_ResetResult(interp);
         }
         useCGDrawing = enable;
-        
+
         if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
                 (char *) &tkMacOSXCGAntiAliasLimit, 
                 TCL_LINK_INT) != TCL_OK) {
             Tcl_ResetResult(interp);
         }
         tkMacOSXCGAntiAliasLimit = limit;
+
+	/*
+	 * Piggy-back the themed drawing var init here.
+	 */
+        if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
+		    (char *) &useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
+            Tcl_ResetResult(interp);
+        }
+        if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
+		    (char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
+            Tcl_ResetResult(interp);
+        }
     }
     return TCL_OK;
 }
@@ -152,7 +167,7 @@ XCopyArea(
     SetRect(&srcRect, (short) (srcDraw->xOff + src_x),
             (short) (srcDraw->yOff + src_y),
             (short) (srcDraw->xOff + src_x + width),
-            (short) (srcDraw->yOff + src_y + height));        
+            (short) (srcDraw->yOff + src_y + height));
     if (tkPictureIsOpen) {
         dstPtr = &srcRect;
     } else {
@@ -160,7 +175,7 @@ XCopyArea(
         SetRect(&dstRect, (short) (dstDraw->xOff + dest_x),
             (short) (dstDraw->yOff + dest_y), 
             (short) (dstDraw->xOff + dest_x + width),
-            (short) (dstDraw->yOff + dest_y + height));        
+            (short) (dstDraw->yOff + dest_y + height));
     }
     TkMacOSXSetUpClippingRgn(dst);
     /*
@@ -188,7 +203,7 @@ XCopyArea(
         RgnHandle clipRgn = (RgnHandle)
                 ((TkpClipMask*)gc->clip_mask)->value.region;
  
-        int xOffset, yOffset;
+        int xOffset = 0, yOffset = 0;
         if (tmpRgn == NULL) {
             tmpRgn = NewRgn();
         }
@@ -565,12 +580,12 @@ XFillRectangles(
 
 void 
 XDrawLines(
-    Display* display,                /* Display. */
-    Drawable d,                        /* Draw on this. */
-    GC gc,                        /* Use this GC. */
-    XPoint* points,                /* Array of points. */
-    int npoints,                /* Number of points. */
-    int mode)                        /* Line drawing mode. */
+    Display* display,		/* Display. */
+    Drawable d,			/* Draw on this. */
+    GC gc,			/* Use this GC. */
+    XPoint* points,		/* Array of points. */
+    int npoints,		/* Number of points. */
+    int mode)			/* Line drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     CGrafPtr saveWorld;
@@ -582,54 +597,56 @@ XDrawLines(
 
     display->request++;
     if (npoints < 2) {
-            return;  /* TODO: generate BadValue error. */
+	return;	 /* TODO: generate BadValue error. */
     }
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-    
+
     TkMacOSXSetUpClippingRgn(d);
 
     if (useCGDrawing) {
-        CGContextRef outContext;
-        
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-        
-        CGContextBeginPath(outContext);
-        CGContextMoveToPoint(outContext, (float)(macWin->xOff + points[0].x),
-                (float)(macWin->yOff + points[0].y));
+	CGContextRef outContext;
+	float prevx, prevy;
 
-        for (i = 1; i < npoints; i++) {
-	    if(mode==CoordModeOrigin) {
-                CGContextAddLineToPoint(outContext,
-                        (float) (macWin->xOff + points[i].x),
-                        (float) (macWin->yOff + points[i].y));
-	    } else {
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+
+	CGContextBeginPath(outContext);
+	prevx = (float) (macWin->xOff + points[0].x);
+	prevy = (float) (macWin->yOff + points[0].y);
+	CGContextMoveToPoint(outContext, prevx, prevy);
+
+	for (i = 1; i < npoints; i++) {
+	    if (mode == CoordModeOrigin) {
 		CGContextAddLineToPoint(outContext,
-                        (float)(macWin->xOff + points[i].x),
-                        (float)(macWin->yOff + points[i].y));
-            }
-        }
-        
-        CGContextStrokePath(outContext);
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+			(float) (macWin->xOff + points[i].x),
+			(float) (macWin->yOff + points[i].y));
+	    } else {
+		prevx += (float) points[i].x;
+		prevy += (float) points[i].y;
+		CGContextAddLineToPoint(outContext, prevx, prevy);
+	    }
+	}
+
+	CGContextStrokePath(outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
-    
-        ShowPen();
-    
-        PenPixPat(gPenPat);
-        MoveTo((short) (macWin->xOff + points[0].x),
-                (short) (macWin->yOff + points[0].y));
-        for (i = 1; i < npoints; i++) {
-            if (mode == CoordModeOrigin) {
-                LineTo((short) (macWin->xOff + points[i].x),
-                        (short) (macWin->yOff + points[i].y));
-            } else {
-                Line((short) (macWin->xOff + points[i].x),
-                        (short) (macWin->yOff + points[i].y));
-            }
-        }
-        HidePen();
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
+
+	ShowPen();
+
+	PenPixPat(gPenPat);
+	MoveTo((short) (macWin->xOff + points[0].x),
+		(short) (macWin->yOff + points[0].y));
+	for (i = 1; i < npoints; i++) {
+	    if (mode == CoordModeOrigin) {
+		LineTo((short) (macWin->xOff + points[i].x),
+			(short) (macWin->yOff + points[i].y));
+	    } else {
+		Line((short) (macWin->xOff + points[i].x),
+			(short) (macWin->yOff + points[i].y));
+	    }
+	}
+	HidePen();
 
     }
     SetGWorld(saveWorld, saveDevice);
@@ -726,13 +743,13 @@ void XDrawSegments(
 
 void 
 XFillPolygon(
-    Display* display,                /* Display. */
-    Drawable d,                        /* Draw on this. */
-    GC gc,                        /* Use this GC. */
-    XPoint* points,                /* Array of points. */
-    int npoints,                /* Number of points. */
-    int shape,                        /* Shape to draw. */
-    int mode)                        /* Drawing mode. */
+    Display* display,		/* Display. */
+    Drawable d,			/* Draw on this. */
+    GC gc,			/* Use this GC. */
+    XPoint* points,		/* Array of points. */
+    int npoints,		/* Number of points. */
+    int shape,			/* Shape to draw. */
+    int mode)			/* Drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     PolyHandle polygon;
@@ -748,51 +765,51 @@ XFillPolygon(
     SetGWorld(destPort, NULL);
 
     TkMacOSXSetUpClippingRgn(d);
-    
+
     if (useCGDrawing) {
-        CGContextRef outContext;
-        
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-        
-        CGContextBeginPath(outContext);
-        CGContextMoveToPoint(outContext, (float) (macWin->xOff + points[0].x),
-                (float) (macWin->yOff + points[0].y));
-        for (i = 1; i < npoints; i++) {
-            
-            if (mode == CoordModePrevious) {
-                CGContextAddLineToPoint(outContext, (float)points[i].x, 
-                        (float) points[i].y);
-            } else {
+	CGContextRef outContext;
+	float prevx, prevy;
+
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+
+	CGContextBeginPath(outContext);
+	prevx = (float) (macWin->xOff + points[0].x);
+	prevy = (float) (macWin->yOff + points[0].y);
+	CGContextMoveToPoint(outContext, prevx, prevy);
+	for (i = 1; i < npoints; i++) {
+	    if (mode == CoordModeOrigin) {
 		CGContextAddLineToPoint(outContext, 
-                        (float)(macWin->xOff + points[i].x),
-                        (float)(macWin->yOff + points[i].y));
-            }
-        }
+			(float)(macWin->xOff + points[i].x),
+			(float)(macWin->yOff + points[i].y));
+	    } else {
+		prevx += (float) points[i].x;
+		prevy += (float) points[i].y;
+		CGContextAddLineToPoint(outContext, prevx, prevy);
+	    }
+	}
 	CGContextEOFillPath(outContext);
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
-    
-        PenNormal();
-        polygon = OpenPoly();
-    
-        MoveTo((short) (macWin->xOff + points[0].x),
-                (short) (macWin->yOff + points[0].y));
-        for (i = 1; i < npoints; i++) {
-            if (mode == CoordModePrevious) {
-                Line((short) (macWin->xOff + points[i].x),
-                        (short) (macWin->yOff + points[i].y));
-            } else {
-                LineTo((short) (macWin->xOff + points[i].x),
-                        (short) (macWin->yOff + points[i].y));
-            }
-        }
-    
-        ClosePoly();
-    
-        FillCPoly(polygon, gPenPat);
-    
-        KillPoly(polygon);
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
+
+	PenNormal();
+	polygon = OpenPoly();
+
+	MoveTo((short) (macWin->xOff + points[0].x),
+		(short) (macWin->yOff + points[0].y));
+	for (i = 1; i < npoints; i++) {
+	    if (mode == CoordModeOrigin) {
+		LineTo((short) (macWin->xOff + points[i].x),
+			(short) (macWin->yOff + points[i].y));
+	    } else {
+		Line((short) (macWin->xOff + points[i].x),
+			(short) (macWin->yOff + points[i].y));
+	    }
+	}
+
+	ClosePoly();
+	FillCPoly(polygon, gPenPat);
+	KillPoly(polygon);
     }
     SetGWorld(saveWorld, saveDevice);
 }
@@ -1695,7 +1712,8 @@ TkMacOSXSetUpGraphicsPort(
          */
     }
 }
-/*
+
+/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXSetUpGraphicsPort --
@@ -1986,7 +2004,7 @@ InvertByte(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawpHighlightBorder --
+ * TkpDrawHighlightBorder --
  *
  *        This procedure draws a rectangular ring around the outside of
  *        a widget to indicate that it has received the input focus.
@@ -2023,5 +2041,73 @@ TkpDrawHighlightBorder (
             TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1, 
                     drawable, 0);
         }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawFrame --
+ *
+ *	This procedure draws the rectangular frame area.  If the user
+ *	has request themeing, it draws with a the background theme.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws inside the tkwin area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpDrawFrame (Tk_Window tkwin, Tk_3DBorder border,
+	int highlightWidth, int borderWidth, int relief)
+{
+    if (useThemedToplevel && Tk_IsTopLevel(tkwin)) {
+	/*
+	 * Currently only support themed toplevels, until we can better
+	 * factor this to handle individual windows (blanket theming of
+	 * frames will work for very few UIs).
+	 */
+	Rect bounds;
+	Point origin;
+	CGrafPtr saveWorld;
+	GDHandle saveDevice;
+	XGCValues gcValues;
+	GC gc;
+	Pixmap pixmap;
+	Display *display = Tk_Display(tkwin);
+
+	pixmap = Tk_GetPixmap(display, Tk_WindowId(tkwin),
+		Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+
+	gc = Tk_GetGC(tkwin, 0, &gcValues);
+	TkMacOSXWinBounds((TkWindow *) tkwin, &bounds);
+	origin.v = -bounds.top;
+	origin.h = -bounds.left;
+	bounds.top = bounds.left = 0;
+	bounds.right = Tk_Width(tkwin);
+	bounds.bottom = Tk_Height(tkwin);
+
+	GetGWorld(&saveWorld, &saveDevice);
+	SetGWorld(TkMacOSXGetDrawablePort(pixmap), 0);
+	ApplyThemeBackground(kThemeBackgroundWindowHeader, &bounds,
+		kThemeStateActive, 32 /* depth */, true /* inColor */);
+	QDSetPatternOrigin(origin);
+	EraseRect(&bounds);
+	SetGWorld(saveWorld, saveDevice);
+
+	XCopyArea(display, pixmap, Tk_WindowId(tkwin),
+		gc, 0, 0, bounds.right, bounds.bottom, 0, 0);
+	Tk_FreePixmap(display, pixmap);
+	Tk_FreeGC(display, gc);
+    } else {
+	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
+		border, highlightWidth, highlightWidth,
+		Tk_Width(tkwin) - 2 * highlightWidth,
+		Tk_Height(tkwin) - 2 * highlightWidth,
+		borderWidth, relief);
     }
 }

@@ -49,6 +49,8 @@
  *      acting in its behalf permission to use and distribute the
  *      software in accordance with the terms specified in this
  *      license.
+ *
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.6 2005/08/09 07:39:21 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -99,6 +101,16 @@ TkMacOSXProcessApplicationEvent(
         TkMacOSXEvent *eventPtr, 
         MacEventStatus *statusPtr)
 {
+    Tcl_CmdInfo dummy;
+    
+    /* 
+     * This is a bit of a hack.  We get "show" events both when we come back
+     * from being hidden, and whenever we are activated.  I only want to run the
+     * "show" proc when we have been hidden already, not as a substitute for
+     * <Activate>.  So I use this toggle...
+     */
+    static int toggleHide = 0;
+
     switch (eventPtr->eKind) {
         case kEventAppActivated:
             tkMacOSXAppInFront = true;
@@ -114,6 +126,34 @@ TkMacOSXProcessApplicationEvent(
         case kEventAppLaunched:
         case kEventAppTerminated:
         case kEventAppFrontSwitched:
+            break;
+        case kEventAppHidden:
+        /*
+         * Don't bother if we don't have an interp or
+         * the show preferences procedure doesn't exist.
+         */
+            toggleHide = 1;
+            if ((eventPtr->interp == NULL) || 
+                    (Tcl_GetCommandInfo(eventPtr->interp, 
+                    "::tk::mac::OnHide", &dummy)) == 0) {
+               break;
+            }
+            Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnHide");
+            statusPtr->stopProcessing = 1;
+            break;
+        case kEventAppShown:
+            if (toggleHide == 1) {
+                toggleHide = 0;
+                if ((eventPtr->interp == NULL) || 
+                        (Tcl_GetCommandInfo(eventPtr->interp, 
+                        "::tk::mac::OnShow", &dummy)) == 0) {
+                    break;
+                }
+                Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnShow");
+            }
+            statusPtr->stopProcessing = 1;
+            break;
+        default:
             break;
     }
     return 0;
@@ -150,6 +190,7 @@ TkMacOSXProcessWindowEvent(
         case kEventWindowActivated:
         case kEventWindowDeactivated:
         case kEventWindowUpdate:
+        case kEventWindowExpanded:
             break;
         default:
             return 0;
@@ -181,6 +222,16 @@ TkMacOSXProcessWindowEvent(
                 eventFound = true;
             }
             break;
+        case kEventWindowExpanded: {
+            TkDisplay *dispPtr;
+            TkWindow  *winPtr;
+            dispPtr = TkGetDisplayList();
+            winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
+            if (winPtr) {
+                TkpWmSetState(winPtr, NormalState);
+            }
+            break;
+        }
     }
     return 0;
 }
@@ -394,7 +445,7 @@ GenerateActivateEvents(
  *----------------------------------------------------------------------
  */     
 
-int
+MODULE_SCOPE int
 TkMacOSXGenerateFocusEvent(
     Window window,              /* Root X window for event. */
     int    activeFlag )

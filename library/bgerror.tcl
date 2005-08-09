@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.27 2004/04/17 03:53:55 hobbs Exp $
-# $Id: bgerror.tcl,v 1.27 2004/04/17 03:53:55 hobbs Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.28 2005/08/09 07:39:19 das Exp $
+# $Id: bgerror.tcl,v 1.28 2005/08/09 07:39:19 das Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -137,7 +137,7 @@ proc ::tk::dialog::error::bgerror err {
     wm protocol .bgerrorDialog WM_DELETE_WINDOW { }
 
     if {[tk windowingsystem] eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style .bgerrorDialog dBoxProc
+	::tk::unsupported::MacWindowStyle style .bgerrorDialog zoomDocProc
     }
 
     frame .bgerrorDialog.bot

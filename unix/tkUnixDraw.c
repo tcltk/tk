@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.7 2004/03/17 18:15:50 das Exp $
+ * RCS: @(#) $Id: tkUnixDraw.c,v 1.8 2005/08/09 07:39:22 das Exp $
  */
 
 #include "tkPort.h"
@@ -208,4 +208,31 @@ TkpDrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth, drawable)
     Drawable drawable;
 {
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawFrame --
+ *
+ *	This procedure draws the rectangular frame area.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws inside the tkwin area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpDrawFrame (Tk_Window tkwin, Tk_3DBorder border,
+	int highlightWidth, int borderWidth, int relief)
+{
+    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
+	    border, highlightWidth, highlightWidth,
+	    Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth,
+	    borderWidth, relief);
 }
