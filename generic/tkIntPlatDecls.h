@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.15.2.2 2004/10/27 00:35:53 davygrvy Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.15.2.3 2005/08/09 07:39:51 das Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -362,8 +362,7 @@ EXTERN void		TkSetWMName _ANSI_ARGS_((TkWindow * winPtr,
 EXTERN void		TkSuspendClipboard _ANSI_ARGS_((void));
 /* 41 */
 EXTERN int		TkMacOSXZoomToplevel _ANSI_ARGS_((
-				WindowPtr whichWindow, Point where, 
-				short zoomPart));
+				WindowPtr whichWindow, short zoomPart));
 /* 42 */
 EXTERN Tk_Window	Tk_TopCoordsToWindow _ANSI_ARGS_((Tk_Window tkwin, 
 				int rootX, int rootY, int * newX, int * newY));
@@ -577,7 +576,7 @@ typedef struct TkIntPlatStubs {
     int (*tkSetMacColor) _ANSI_ARGS_((unsigned long pixel, RGBColor * macColor)); /* 38 */
     void (*tkSetWMName) _ANSI_ARGS_((TkWindow * winPtr, Tk_Uid titleUid)); /* 39 */
     void (*tkSuspendClipboard) _ANSI_ARGS_((void)); /* 40 */
-    int (*tkMacOSXZoomToplevel) _ANSI_ARGS_((WindowPtr whichWindow, Point where, short zoomPart)); /* 41 */
+    int (*tkMacOSXZoomToplevel) _ANSI_ARGS_((WindowPtr whichWindow, short zoomPart)); /* 41 */
     Tk_Window (*tk_TopCoordsToWindow) _ANSI_ARGS_((Tk_Window tkwin, int rootX, int rootY, int * newX, int * newY)); /* 42 */
     MacDrawable * (*tkMacOSXContainerId) _ANSI_ARGS_((TkWindow * winPtr)); /* 43 */
     MacDrawable * (*tkMacOSXGetHostToplevel) _ANSI_ARGS_((TkWindow * winPtr)); /* 44 */
