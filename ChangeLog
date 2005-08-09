@@ -1,3 +1,7 @@
+2005-08-04  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* doc/text.n: Clarify behaviour of tab stops (as per [Bug 1247835])
+
 2005-08-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXCarbonEvents.c (AppEventHandlerProc): handle carbon
