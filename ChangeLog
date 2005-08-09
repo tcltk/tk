@@ -102,8 +102,6 @@
 	* macosx/tkMacOSXScale.c:
 	* macosx/tkMacOSXPort.h:
 
-	* library/demos/menu.tcl: removed errant '}'.
-
 2005-07-30  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/Makefile.in (html): reverted/amended changes of 2005-07-24
