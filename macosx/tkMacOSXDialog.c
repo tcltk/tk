@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.4 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.5 2005/08/09 07:39:54 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -883,13 +883,13 @@ NavServicesGetFile(
                             != noErr ) {
                         fprintf(stderr,"AEGetDescData failed %d\n", err );
                     } else {
-                        if (err = FSRefMakePath(&fsRef, (unsigned char*) pathPtr, 1024) ) {
+                        if ((err = FSRefMakePath(&fsRef, (unsigned char*) pathPtr, 1024))) {
                             fprintf(stderr,"FSRefMakePath failed, %d\n", err );
                         } else {
                             if (isOpen == SAVE_FILE) {
                                 CFStringRef saveNameRef;
                                 char saveName [1024];
-                                if (saveNameRef = NavDialogGetSaveFileName(dialogRef)) {
+                                if ((saveNameRef = NavDialogGetSaveFileName(dialogRef))) {
                                     if (CFStringGetCString(saveNameRef, saveName, 
                                             1024, kCFStringEncodingUTF8)) {
                                         if (strlen(pathPtr) + strlen(saveName) < 1023) {
@@ -1005,7 +1005,7 @@ OpenFileFilterProc(
                         fileName[len] = '\0';
                         fileNamePtr = (unsigned char*) fileName;
 
-                    } else if (theItem->descriptorType = typeFSRef) {
+                    } else if ((theItem->descriptorType = typeFSRef)) {
                         OSStatus err;
                         FSRef *theRef = (FSRef *) *theItem->dataHandle;
                         HFSUniStr255 uniFileName;
@@ -1080,7 +1080,7 @@ OpenEventProc(
         chosenItem = (NavMenuItemSpec *) callBackParams->eventData.eventDataParms.param;
         ofd->curType = chosenItem->menuType;
     } else if (callBackSelector == kNavCBAdjustRect 
-            || callBackSelector & otherEvent != 0) { 
+            || (callBackSelector & otherEvent) != 0) { 
         while (Tcl_DoOneEvent(TCL_IDLE_EVENTS
                 | TCL_DONT_WAIT 
                 | TCL_WINDOW_EVENTS)) {
@@ -1248,7 +1248,7 @@ TkAboutDlg()
     DisposeDialog(aboutDlog);
     aboutDlog = NULL;
         
-    SelectWindow(FrontNonFloatingWindow());
+    SelectWindow(ActiveNonFloatingWindow());
 
     return;
 }

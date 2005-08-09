@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.1 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.2 2005/08/09 07:39:55 das Exp $
  */
 
 #include <stdio.h>
@@ -29,8 +29,6 @@
  */ 
 
 static int TkMacOSXProcessAppleEvent(
-        TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr);
-static int TkMacOSXProcessEvent(
         TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr);
 
 static int ReceiveAndProcessEvent (void);
@@ -184,7 +182,7 @@ TkMacOSXProcessAppleEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
  *----------------------------------------------------------------------
  */
 
-static int  
+int  
 TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
 {
     switch (eventPtr->eClass) {
@@ -219,8 +217,7 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
             break;
     }   
     return 0;
-}   
-
+}
 
 /*
  *----------------------------------------------------------------------
@@ -260,6 +257,7 @@ ReceiveAndProcessEvent()
     } else {
         macEvent.eClass = GetEventClass(macEvent.eventRef);
         macEvent.eKind = GetEventKind(macEvent.eventRef);
+        macEvent.interp = NULL;
         bzero(&eventStatus, sizeof(eventStatus));
         TkMacOSXProcessEvent(&macEvent,&eventStatus);
         if (!eventStatus.stopProcessing) {
