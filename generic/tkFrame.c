@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.20 2005/01/10 04:15:02 chengyemao Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.21 2005/08/09 07:39:17 das Exp $
  */
 
 #include "default.h"
@@ -1439,14 +1439,12 @@ DisplayFrame(clientData)
 
     if (framePtr->type != TYPE_LABELFRAME) {
 	/*
-	 * There is no label so there is just a simple rectangle to draw.
+	 * Pass to platform specific draw function.  In general, it just
+	 * draws a simple rectangle, but it may "theme" the background.
 	 */
 
 	noLabel:
-	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
-		framePtr->border, hlWidth, hlWidth,
-		Tk_Width(tkwin) - 2 * hlWidth,
-		Tk_Height(tkwin) - 2 * hlWidth,
+	TkpDrawFrame(tkwin, framePtr->border, hlWidth,
 		framePtr->borderWidth, framePtr->relief);
     } else {
 	Labelframe *labelframePtr = (Labelframe *) framePtr;

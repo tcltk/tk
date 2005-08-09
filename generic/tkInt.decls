@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.38 2004/10/27 00:56:33 davygrvy Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.39 2005/08/09 07:39:17 das Exp $
 
 library tk
 
@@ -644,6 +644,11 @@ declare 151 generic {
 	    Tk_Canvas canvas, double *pointPtr, int numPoints)
 }
 
+declare 152 generic {
+    void TkpDrawFrame(Tk_Window tkwin, Tk_3DBorder border,
+		      int highlightWidth, int borderWidth, int relief)
+}
+
 ##############################################################################
 
 # Define the platform specific internal Tcl interface. These functions are
@@ -1031,7 +1036,7 @@ declare 40 aqua {
 }
 
 declare 41 aqua {
-    int  TkMacOSXZoomToplevel (WindowPtr whichWindow, Point where, short zoomPart)
+    int  TkMacOSXZoomToplevel (WindowPtr whichWindow, short zoomPart)
 }
 
 declare 42 aqua {

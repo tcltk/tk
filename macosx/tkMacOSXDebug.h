@@ -49,6 +49,8 @@
  *      acting in its behalf permission to use and distribute the
  *      software in accordance with the terms specified in this
  *      license.
+ *
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.3 2005/08/09 07:39:20 das Exp $
  */
 
 #ifndef _TKMACDEBUG
