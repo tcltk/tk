@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.8 2005/05/15 20:57:08 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.9 2005/08/09 07:40:00 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -1284,9 +1284,11 @@ ReconfigureMacintoshMenu(
 
     ReconfigureIndividualMenu(menuPtr, macMenuHdl, 0);
 
+    /* Not necessary in Carbon:
     if (menuPtr->menuFlags & MENU_APPLE_MENU) {
     	AppendResMenu(macMenuHdl, 'DRVR');
     }
+    */
     if (GetMenuID(macMenuHdl) == currentHelpMenuID) {
         MenuItemIndex helpIndex;
     	HMGetHelpMenu(&helpMenuHdl,&helpIndex);
@@ -1958,7 +1960,7 @@ TkpSetMainMenubar(
     }
     macWindowPtr = GetWindowFromPort(winPort);
     
-    frontNonFloating = FrontNonFloatingWindow();    
+    frontNonFloating = ActiveNonFloatingWindow();    
     if ((macWindowPtr == NULL) || (macWindowPtr != frontNonFloating)) {
     	return;
     }
@@ -3660,9 +3662,6 @@ MenuSelectEvent(
     TkMenu *menuPtr)		/* the menu we have selected. */
 {
     XVirtualEvent event;
-    Point where;
-    CGrafPtr port;
-    Rect     bounds;
    
     event.type = VirtualEvent;
     event.serial = menuPtr->display->request;
@@ -3674,12 +3673,8 @@ MenuSelectEvent(
     event.subwindow = None;
     event.time = TkpGetMS();
     
-    GetMouse(&where);
-    GetPort(&port);
-    GetPortBounds(port,&bounds);
-    event.x_root = where.h + bounds.left;
-    event.y_root = where.v + bounds.top;
-    event.state = TkMacOSXButtonKeyState();
+    XQueryPointer(NULL, None, NULL, NULL,
+            &event.x_root, &event.y_root, NULL, NULL, &event.state);
     event.same_screen = true;
     event.name = Tk_GetUid("MenuSelect");
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
