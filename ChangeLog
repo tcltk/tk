@@ -1,3 +1,117 @@
+2005-08-09  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXCarbonEvents.c (AppEventHandlerProc): handle carbon
+	events sent directly to application event target via the general
+	TkMacOSXProcessEvent() in the same way as events posted to the event
+	loop. Moved existing app event handlers to tkMacOSXWindowEvent.c.
+	(TkMacOSXInitCarbonEvents): register our application event handler for
+	kEventWindowExpanded events to deal with uncollapsing from the dock.
+
+	* macosx/tkMacOSXEvent.h: made TkMacOSXProcessEvent() non-static, added
+	* macosx/tkMacOSXEvent.c: new interp field to TkMacOSXEvent struct for
+	                          use by app event handler.
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): retrieve
+	current window, partCode, modifiers and local cursor position from
+	carbon mouse event if possible. Use new static GenerateButtonEvent()
+	taking a MouseEventData struct instead of TkGenerateButtonEvent() to
+	avoid recomputing already known values. Move process activation on
+	MouseDown into BringWindowForward() to allow clicking on window titlebar
+	widgets without activating process. Move code dealing with clicks in
+	window titelbar into separate function HandleWindowTitlebarMouseDown()
+	to avoid code duplication. Avoid repeated calls to TkMacOSXGetXWindow()
+	by storing result in MouseEventData struct.
+	(TkMacOSXButtonKeyState, XQueryPointer): try to get button and modifier
+	state from currently processed carbon event (to avoid unnecessary IPC
+	with the window server), otherwise use modern carbon API to get this
+	info instead of Button() and GetKeys(); only retrieve info caller asks
+	for (via non-NULL ptr passed to XQueryPointer).
+	(ButtonModifiers2State): new static function converting carbon button
+	and modifier state into tk state, allows detection of more than 3 mouse
+	buttons (tk supports up to 5) and of NumLock and Fn modifier keys
+	(NumLock is mapped to Mod3 and Fn to Mod4).
+
+	* macosx/tkMacOSXWindowEvent.c (TkMacOSXProcessApplicationEvent): handle
+	kEventWindowExpanded event to deal with window uncollapsing from the
+	dock by generating tk Map event, handle kEventAppHidden and
+	kEventAppShown events (moved here from tkMacOSXCarbonEvents.c).
+	
+	* macosx/tkMacOSXSubwindows.c (XUnmapWindow): only hide window when
+	it is not iconified to avoid window flashing on collapse.
+
+	* macosx/tkMacOSXWm.c: replaced Tk_DoWhenIdle() by Tcl_DoWhenIdle().
+	(TkMacOSXZoomToplevel): remove call to TrackBox(), now done in
+	HandleWindowTitlebarMouseDown() in tkMacOSXMouseEvent.c.
+	(TkpWmSetState): avoid window flashing on collapse by unmapping after
+	calling CollapseWindow(); only uncollapse window if it is collapsed.
+
+	* generic/tkInt.decls: changed TkMacOSXZoomToplevel() signature.
+	* generic/tkIntPlatDecls.h:
+
+	* macosx/tkMacOSXKeyEvent.c (TkMacOSXProcessKeyboardEvent): only call
+	GetMenuItemCommandID() on KeyDown or KeyRepeat events.
+
+	* macosx/tkMacOSXMenu.c (ReconfigureMacintoshMenu): remove call to
+	obsolete AppendResMenu() API.
+
+	* macosx/tkMacOSXKeyEvent.c: replaced all direct uses of expensive
+	* macosx/tkMacOSXMenu.c:     GetMouse() and TkMacOSXButtonKeyState()
+	* macosx/tkMacOSXMenus.c:    APIs by calls to XQueryPointer()
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXDialog.c:   replaced use of FrontNonFloatingWindow()
+	* macosx/tkMacOSXKeyEvent.c: by ActiveNonFloatingWindow() as
+	* macosx/tkMacOSXMenu.c:     recommended by Carbon docs.
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXDialog.c: fixed warnings
+	* macosx/tkMacOSXTest.c:
+
+	* macosx/tkMacOSXCarbonEvents.c: added CVS Id line to file header.
+	* macosx/tkMacOSXDebug.c:
+	* macosx/tkMacOSXDebug.h:
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXEvent.h:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.h:
+
+	* macosx/tkMacOSXInt.h: declare macosx internal procs as MODULE_SCOPE.
+	* macosx/tkMacOSXCarbonEvents.c:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXHLEvents.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXWindowEvent.c 
+
+	* library/bgerror.tcl: sync with core-8-4-branch changes of 2005-07-28.
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXMouseEvent.c:
+
+	* generic/tkFrame.c:   sync with core-8-4-branch changes of 2005-07-27.
+	* generic/tkIntDecls.h:
+	* generic/tkStubInit.c:
+	* generic/tkFrame.c:
+	* win/tkWinDraw.c:
+	* unix/tkUnixDraw.c:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXSubwindows.c:
+
+	* macosx/tkMacOSXButton.c: sync with core-8-4-branch.
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXScale.c:
+
+	* library/demos/menu.tcl: removed errant '}'.
+
 2005-08-04  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* doc/clipboard.n: Add example demonstrating custom types of
@@ -511,8 +625,8 @@
 	(XMapWindow): Call FixMappingFlags.
 	(XUnMapWindow): Ditto.
 
-	* tkMacOSXSubWindows.c (XMoveResizeWindow): Update the xOff & yOff 
-	data in the Macdrawable even if the native window hasn't been 
+	* macosx/tkMacOSXSubwindows.c (XMoveResizeWindow): Update the xOff &
+	yOff data in the Macdrawable even if the native window hasn't been
 	created yet.  [Bug 700305]
 	(XMoveWindow): Ditto.
 	(XResizeWindow): Ditto.

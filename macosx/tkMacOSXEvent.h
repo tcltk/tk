@@ -49,6 +49,8 @@
  *      acting in its behalf permission to use and distribute the
  *      software in accordance with the terms specified in this
  *      license.
+ *
+ * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.4 2005/08/09 07:39:20 das Exp $
  */
 
 #ifndef _TKMACEVENT
@@ -74,10 +76,12 @@ typedef struct {
     EventRef   eventRef;
     UInt32     eClass;	/* Defines the class of event : see CarbonEvents.h */
     UInt32     eKind;   /* Defines the kind of the event : see CarbonEvents.h */
+    Tcl_Interp *interp; /* Interp to handle events in */
 } TkMacOSXEvent;
 
 int TkMacOSXCountAndProcessMacEvents _ANSI_ARGS_(());
 void tkMacOSXFlushWindows _ANSI_ARGS_(()); 
+int TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr);
 int TkMacOSXProcessMouseEvent(TkMacOSXEvent * e, MacEventStatus * statusPtr);
 int TkMacOSXProcessWindowEvent(TkMacOSXEvent * e, MacEventStatus * statusPtr);
 int TkMacOSXProcessKeyboardEvent(TkMacOSXEvent * e, MacEventStatus * statusPtr);

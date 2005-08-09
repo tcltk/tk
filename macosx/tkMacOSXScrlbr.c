@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.13 2005/06/03 17:06:22 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.14 2005/08/09 07:39:21 das Exp $
  */
 
 #include "tkScrollbar.h"
@@ -269,7 +269,7 @@ TkpDisplayScrollbar(
          * If we are foremost then make us active.
          */
         
-        frontNonFloating = FrontNonFloatingWindow();
+        frontNonFloating = ActiveNonFloatingWindow();
         
         if ((windowRef == FrontWindow()) || TkpIsWindowFloating(windowRef)) {
             macScrollPtr->macFlags |= ACTIVE;
@@ -877,7 +877,6 @@ ScrollbarBindProc(
          * The TrackControl call will "eat" the ButtonUp event.  We now
          * generate a ButtonUp event so Tk will unset implicit grabs etc.
          */
-        GetMouse(&where);
         XQueryPointer(NULL, None, &window, &window, &x,
             &y, &dummy, &dummy, &state);
         window = Tk_WindowId(scrollPtr->tkwin);

@@ -52,10 +52,13 @@
  *      acting in its behalf permission to use and distribute the
  *      software in accordance with the terms specified in this
  *      license.
+ *
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3 2005/08/09 07:39:20 das Exp $
  */
 
 #include "tkInt.h"
 #include "tkMacOSXInt.h"
+#include "tkMacOSXEvent.h"
 
 static EventHandlerRef ApplicationCarbonEventHandler;
 
@@ -90,51 +93,22 @@ AppEventHandlerProc (
         EventRef inEvent,
         void *inUserData)
 {
-    Tcl_CmdInfo dummy;
-    Tcl_Interp *interp = (Tcl_Interp *) inUserData;
-    
-    /* 
-     * This is a bit of a hack.  We get "show" events both when we come back
-     * from being hidden, and whenever we are activated.  I only want to run the
-     * "show" proc when we have been hidden already, not as a substitute for
-     * <Activate>.  So I use this toggle...
-     */
-     
-    static int toggleHide = 0;
-    
-    switch(GetEventKind (inEvent))
-    {
-        case kEventAppHidden:
-        /*
-         * Don't bother if we don't have an interp or
-         * the show preferences procedure doesn't exist.
-         */
-            toggleHide = 1;
-     
-            if ((interp == NULL) || 
-                    (Tcl_GetCommandInfo(interp, 
-                    "::tk::mac::OnHide", &dummy)) == 0) {
-                return eventNotHandledErr;
-            }
-            Tcl_GlobalEval(interp, "::tk::mac::OnHide");
-            break;
-        case kEventAppShown:
-            if (toggleHide == 1) {
-                toggleHide = 0;
-                if ((interp == NULL) || 
-                        (Tcl_GetCommandInfo(interp, 
-                        "::tk::mac::OnShow", &dummy)) == 0) {
-                    return eventNotHandledErr;
-                }
-                Tcl_GlobalEval(interp, "::tk::mac::OnShow");
-            }
-            break;
-       default:
-            break;
-    }
-    return eventNotHandledErr;
-}
+    OSStatus         result = eventNotHandledErr;
+    TkMacOSXEvent    macEvent;
+    MacEventStatus   eventStatus;
 
+    macEvent.eventRef = inEvent;
+    macEvent.eClass = GetEventClass(macEvent.eventRef);
+    macEvent.eKind = GetEventKind(macEvent.eventRef);
+    macEvent.interp = (Tcl_Interp *) inUserData;
+    bzero(&eventStatus, sizeof(eventStatus));
+    TkMacOSXProcessEvent(&macEvent,&eventStatus);
+    if (!eventStatus.stopProcessing) {
+        result = noErr;
+    }
+    return result;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -152,18 +126,20 @@ AppEventHandlerProc (
  *----------------------------------------------------------------------
  */
 
-void
+MODULE_SCOPE void
 TkMacOSXInitCarbonEvents (
         Tcl_Interp *interp)
 {
     const EventTypeSpec inAppEventTypes[] = {
             {kEventClassApplication, kEventAppHidden},
-            {kEventClassApplication, kEventAppShown}};
-    int inNumTypes = sizeof (inAppEventTypes) / sizeof (EventTypeSpec);
+            {kEventClassApplication, kEventAppShown},
+            {kEventClassWindow, kEventWindowExpanded},
+    };
 
     InstallEventHandler(GetApplicationEventTarget(),
             NewEventHandlerUPP(AppEventHandlerProc),
-            inNumTypes, inAppEventTypes, (void *) interp, 
+            GetEventTypeCount(inAppEventTypes),
+            inAppEventTypes, (void *) interp, 
             &ApplicationCarbonEventHandler);
     
 }
