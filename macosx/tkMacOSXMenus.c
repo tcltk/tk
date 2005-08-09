@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.3 2004/11/11 01:26:43 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.4 2005/08/09 07:40:01 das Exp $
  */
 
 #include "tk.h"
@@ -104,7 +104,7 @@ TkMacOSXHandleMenuSelect(
                     break;
                 case kCloseItem:
                     /* Send close event */
-                    window = TkMacOSXGetXWindow(FrontNonFloatingWindow());
+                    window = TkMacOSXGetXWindow(ActiveNonFloatingWindow());
                     dispPtr = TkGetDisplayList();
                     tkwin = Tk_IdToWindow(dispPtr->display, window);
                     TkGenWMDestroyEvent(tkwin);
@@ -157,11 +157,11 @@ TkMacOSXInitMenus(
      */
 
     if (TkMacOSXUseMenuID(256) != TCL_OK) {
-            panic("Menu ID 256 is already in use!");
+	Tcl_Panic("Menu ID 256 is already in use!");
     }
     tkAppleMenu = NewMenu(256, "\p\024");
     if (tkAppleMenu == NULL) {
-        panic("memory - menus");
+        Tcl_Panic("memory - menus");
     }
     InsertMenu(tkAppleMenu, 0);
     AppendMenu(tkAppleMenu, "\pAbout Tcl & TkÉ");
@@ -171,11 +171,11 @@ TkMacOSXInitMenus(
     */
 
     if (TkMacOSXUseMenuID(kFileMenu) != TCL_OK) {
-            panic("Menu ID %d is already in use!", kFileMenu);
+	Tcl_Panic("Menu ID %d is already in use!", kFileMenu);
     }
     tkFileMenu = NewMenu(kFileMenu, "\pFile");
     if (tkFileMenu == NULL) {
-        panic("memory - menus");
+        Tcl_Panic("memory - menus");
     }
     InsertMenu(tkFileMenu, 0);
     AppendMenu(tkFileMenu, "\pSourceÉ");
@@ -183,11 +183,11 @@ TkMacOSXInitMenus(
 
 
     if (TkMacOSXUseMenuID(kEditMenu) != TCL_OK) {
-            panic("Menu ID %d is already in use!", kEditMenu);
+	Tcl_Panic("Menu ID %d is already in use!", kEditMenu);
     }
     tkEditMenu = NewMenu(kEditMenu, "\pEdit");
     if (tkEditMenu == NULL) {
-        panic("memory - menus");
+        Tcl_Panic("memory - menus");
     }
     InsertMenu(tkEditMenu, 0);
     AppendMenu(tkEditMenu, "\pCut/X");
@@ -195,7 +195,7 @@ TkMacOSXInitMenus(
     AppendMenu(tkEditMenu, "\pPaste/V");
     AppendMenu(tkEditMenu, "\pClear");
     if (TkMacOSXUseMenuID(kHMHelpMenuID) != TCL_OK) {
-            panic("Help menu ID %s is already in use!", kHMHelpMenuID);
+	Tcl_Panic("Help menu ID %s is already in use!", kHMHelpMenuID);
     }
     
     DrawMenuBar();
@@ -229,7 +229,7 @@ GenerateEditEvent(
     Window window;
     TkDisplay *dispPtr;
 
-    window = TkMacOSXGetXWindow(FrontNonFloatingWindow());
+    window = TkMacOSXGetXWindow(ActiveNonFloatingWindow());
     dispPtr = TkGetDisplayList();
     tkwin = Tk_IdToWindow(dispPtr->display, window);
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->dispPtr->focusPtr;
@@ -246,15 +246,15 @@ GenerateEditEvent(
     event.subwindow = None;
     event.time = TkpGetMS();
     
-    GetMouse(&where);
+    XQueryPointer(NULL, None, NULL, NULL,
+            &event.x_root, &event.y_root, NULL, NULL, &event.state);
+    where.h = event.x_root;
+    where.v = event.y_root;
+    GlobalToLocal(&where);
     tkwin = Tk_TopCoordsToWindow(tkwin, where.h, where.v, 
             &event.x, &event.y);
-    LocalToGlobal(&where);
-    event.x_root = where.h;
-    event.y_root = where.v;
-    event.state = TkMacOSXButtonKeyState();
     event.same_screen = true;
-    
+
     switch (flag) {
         case EDIT_CUT:
             event.name = Tk_GetUid("Cut");

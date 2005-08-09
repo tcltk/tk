@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.5 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.6 2005/08/09 07:40:00 das Exp $
  */
 
 #include "tkMacOSXPort.h"
@@ -45,58 +45,7 @@ static OSErr PrefsHandler (const AppleEvent * event, AppleEvent * reply, long ha
 static int MissedAnyParameters _ANSI_ARGS_((const AppleEvent *theEvent));
 static int ReallyKillMe _ANSI_ARGS_((Tcl_Event *eventPtr, int flags));
 static OSErr FSRefToDString _ANSI_ARGS_((const FSRef *fsref, Tcl_DString *ds));
-
-OSStatus ApplicationCarbonEventsHandler (EventHandlerCallRef inHandlerCallRef, 
-        EventRef inEvent, 
-        void *inUserData);
-OSStatus ApplicationCarbonEventsHandler (EventHandlerCallRef inHandlerCallRef, 
-        EventRef inEvent, 
-        void *inUserData)
-{
-    Tcl_CmdInfo dummy;
-    Tcl_Interp *interp = (Tcl_Interp *) inUserData;
-    
-    /* 
-     * This is a bit of a hack.  We get "show" events both when we come back
-     * from being hidden, and whenever we are activated.  I only want to run the
-     * "show" proc when we have been hidden already, not as a substitute for
-     * <Activate>.  So I use this toggle...
-     */
-     
-    static int toggleHide = 0;
-    
-    switch(GetEventKind (inEvent))
-    {
-        case kEventAppHidden:
-        /*
-         * Don't bother if we don't have an interp or
-         * the show preferences procedure doesn't exist.
-         */
-     
-            toggleHide = 1;
-            if ((interp == NULL) || 
-                    (Tcl_GetCommandInfo(interp, 
-                    "::tk::mac::OnHide", &dummy)) == 0) {
-                return eventNotHandledErr;
-            }
-            Tcl_GlobalEval(interp, "::tk::mac::OnHide");
-            break;
-        case kEventAppShown:
-            if (toggleHide == 1) {
-                toggleHide = 0;
-                if ((interp == NULL) || 
-                        (Tcl_GetCommandInfo(interp, 
-                        "::tk::mac::OnShow", &dummy)) == 0) {
-                    return eventNotHandledErr;
-                }
-                Tcl_GlobalEval(interp, "::tk::mac::OnShow");
-            }
-            break;
-       default:
-            break;
-    }
-    return eventNotHandledErr;
-}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -122,11 +71,7 @@ TkMacOSXInitAppleEvents(
     AEEventHandlerUPP        OappHandlerUPP, RappHandlerUPP, OdocHandlerUPP,
         PrintHandlerUPP, QuitHandlerUPP, ScriptHandlerUPP,
         PrefsHandlerUPP;
-    const EventTypeSpec inAppEventTypes[] = {
-            {kEventClassApplication, kEventAppHidden},
-            {kEventClassApplication, kEventAppShown}};
-    UInt32 inNumTypes = 2;
-    
+
     /*
      * Install event handlers for the core apple events.
      */
@@ -159,13 +104,6 @@ TkMacOSXInitAppleEvents(
         err = AEInstallEventHandler(kAEMiscStandards, kAEDoScript,
             ScriptHandlerUPP, (long) interp, false);
     }
-  
-    InstallEventHandler(GetApplicationEventTarget(),
-            NewEventHandlerUPP (ApplicationCarbonEventsHandler),
-            inNumTypes,
-            inAppEventTypes,
-            (void *) interp,
-            NULL);
 }
 
 /*

@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tkInt.decls,v 1.33.2.4 2005/07/28 04:57:38 hobbs Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.33.2.5 2005/08/09 07:39:51 das Exp $
 
 library tk
 
@@ -1322,7 +1322,7 @@ declare 40 aqua {
 }
 
 declare 41 aqua {
-    int  TkMacOSXZoomToplevel (WindowPtr whichWindow, Point where, short zoomPart)
+    int  TkMacOSXZoomToplevel (WindowPtr whichWindow, short zoomPart)
 }
 
 declare 42 aqua {

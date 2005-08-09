@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.6 2005/05/15 20:57:08 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.7 2005/08/09 07:40:02 das Exp $
  */
 
 #include "tkInt.h"
@@ -178,7 +178,7 @@ TkpCloseDisplay(
 {
     Display *display = displayPtr->display;
     if (gMacDisplay != displayPtr) {
-        panic("TkpCloseDisplay: tried to call TkpCloseDisplay on bad display");
+        Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on bad display");
     }
 
     gMacDisplay = NULL;
@@ -319,7 +319,7 @@ DefaultErrorHandler(
      * This call should never be called.  Tk replaces
      * it with its own error handler.
      */
-    panic("Warning hit bogus error handler!");
+    Tcl_Panic("Warning hit bogus error handler!");
     return 0;
 }
 

@@ -49,6 +49,8 @@
  *      acting in its behalf permission to use and distribute the
  *      software in accordance with the terms specified in this
  *      license.
+ *
+ * RCS: @(#) $Id: tkMacOSXWm.h,v 1.2.2.2 2005/08/09 07:40:02 das Exp $
  */
  
 #ifndef _TKMACWM

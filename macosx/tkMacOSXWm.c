@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.11 2005/07/28 08:00:57 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.12 2005/08/09 07:40:01 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -265,6 +265,7 @@ TkWmNewWindow(
     wmPtr->attributes = kWindowStandardDocumentAttributes;
     wmPtr->scrollWinPtr = NULL;
     winPtr->wmInfoPtr = wmPtr;
+
     UpdateVRootGeometry(wmPtr);
 
     /*
@@ -2492,7 +2493,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     if (objc == 3) {
         windows = TkWmStackorderToplevel(winPtr);
         if (windows == NULL) {
-            panic("TkWmStackorderToplevel failed");
+            Tcl_Panic("TkWmStackorderToplevel failed");
         } else {
             for (window_ptr = windows; *window_ptr ; window_ptr++) {
                 Tcl_AppendElement(interp, (*window_ptr)->pathName);
@@ -2547,9 +2548,9 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
                     index2 = (window_ptr - windows);
             }
             if (index1 == -1)
-                panic("winPtr window not found");
+                Tcl_Panic("winPtr window not found");
             if (index2 == -1)
-                panic("winPtr2 window not found");
+                Tcl_Panic("winPtr2 window not found");
 
             ckfree((char *) windows);
         }
@@ -2867,7 +2868,7 @@ WmInfo *wmPtr;
 TkWindow *winPtr;
 {
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-        Tk_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+        Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
         wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -2961,7 +2962,7 @@ Tk_SetGrid(
     wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tk_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -3019,7 +3020,7 @@ Tk_UnsetGrid(
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tk_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -3071,7 +3072,7 @@ TopLevelEventProc(
 	    printf("TopLevelEventProc: %s deleted\n", winPtr->pathName);
 	}
     } else if (eventPtr->type == ReparentNotify) {
-	panic("recieved unwanted reparent event");
+	Tcl_Panic("recieved unwanted reparent event");
     }
 }
 
@@ -3105,7 +3106,7 @@ TopLevelReqProc(
     wmPtr = winPtr->wmInfoPtr;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tk_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -3503,7 +3504,7 @@ ParseGeometry(
     wmPtr->flags = flags;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tk_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
     return TCL_OK;
@@ -3986,7 +3987,7 @@ Tk_MoveToplevelWindow(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	panic("Tk_MoveToplevelWindow called with non-toplevel window");
+	Tcl_Panic("Tk_MoveToplevelWindow called with non-toplevel window");
     }
     wmPtr->x = x;
     wmPtr->y = y;
@@ -4077,7 +4078,7 @@ TkWmRestackToplevel(
 	otherMacWindow = NULL;
     }
 
-    frontWindow = FrontNonFloatingWindow();
+    frontWindow = ActiveNonFloatingWindow();
 
     if (aboveBelow == Above) {
 	if (macWindow == frontWindow) {
@@ -4110,7 +4111,7 @@ TkWmRestackToplevel(
 	}
     } else {
 	/*
-	 * Send behind.	 If it was in front find another window to make active.
+	 * Send behind.  If it was in front find another window to make active.
 	 */
 	if (macWindow == frontWindow) {
 	    if ( ( tmpWindow = GetNextWindow ( macWindow )) != NULL) {
@@ -4311,12 +4312,7 @@ TkGetPointerCoords(
 				 * on which lookup is to be done. */
     int *xPtr, int *yPtr)	/* Store pointer coordinates here. */
 {
-    Point where;
-
-    GetMouse(&where);
-    LocalToGlobal(&where);
-    *xPtr = where.h;
-    *yPtr = where.v;
+    XQueryPointer(NULL, None, NULL, NULL, xPtr, yPtr, NULL, NULL, NULL);
 }
 
 /*
@@ -4621,7 +4617,6 @@ TkMacOSXGetXWindow(
 int
 TkMacOSXZoomToplevel(
     WindowRef whichWindow,	/* The Macintosh window to zoom. */
-    Point where,		/* The current mouse position. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
 {
     Window window;
@@ -4633,9 +4628,6 @@ TkMacOSXZoomToplevel(
     Rect       portRect;
 
     SetPort( GetWindowPort(whichWindow));
-    if (!TrackBox(whichWindow, where, zoomPart)) {
-	return false;
-    }
 
     /*
      * We should now zoom the window (as long as it's one of ours).  We 
@@ -5033,12 +5025,12 @@ TkMacOSXMakeRealWindowExist(
 	} else if (gMacEmbedHandler != NULL) {
 	    if (gMacEmbedHandler->containerExistProc != NULL) {
 		if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
-		    panic("ContainerExistProc could not make container");
+		    Tcl_Panic("ContainerExistProc could not make container");
 		}
 	    }
 	    return;
 	} else {
-	    panic("TkMacOSXMakeRealWindowExist could not find container");
+	    Tcl_Panic("TkMacOSXMakeRealWindowExist could not find container");
 	}
 
 	/*
@@ -5073,10 +5065,10 @@ TkMacOSXMakeRealWindowExist(
     }
 
     if (newWindow == NULL) {
-	panic("couldn't allocate new Mac window");
+	Tcl_Panic("couldn't allocate new Mac window");
     }
     if (CreateRootControl(newWindow,&rootControl) != noErr ) {
-	panic("couldn't create root control for new Mac window");
+        Tcl_Panic("couldn't create root control for new Mac window");
     }
 
     /*
@@ -5088,7 +5080,7 @@ TkMacOSXMakeRealWindowExist(
     listPtr->winPtr = winPtr;
     tkMacOSXWindowListPtr = listPtr;
 
-    macWin->grafPtr = GetWindowPort (newWindow);
+    macWin->grafPtr = GetWindowPort(newWindow);
     macWin->rootControl = rootControl;
     MoveWindowStructure(newWindow, geometry.left, geometry.top);
     SetPort(GetWindowPort(newWindow));
@@ -5111,7 +5103,7 @@ TkMacOSXMakeRealWindowExist(
     valueHashPtr = Tcl_CreateHashEntry(&windowTable,
 	    (char *) newWindow, &new);
     if (!new) {
-	panic("same macintosh window allocated twice!");
+	Tcl_Panic("same macintosh window allocated twice!");
     }
     Tcl_SetHashValue(valueHashPtr, macWin);
 
@@ -5155,7 +5147,7 @@ TkMacOSXRegisterOffScreenWindow(
     valueHashPtr = Tcl_CreateHashEntry(&windowTable,
 	    (char *) portPtr, &new);
     if (!new) {
-	panic("same macintosh window allocated twice!");
+	Tcl_Panic("same macintosh window allocated twice!");
     }
     Tcl_SetHashValue(valueHashPtr, macWin);
 }
@@ -5184,7 +5176,7 @@ TkMacOSXUnregisterMacWindow(
 {
     Tcl_HashEntry *entryPtr;
     if (!windowHashInit) {
-	panic("TkMacOSXUnregisterMacWindow: unmapping before inited");
+	Tcl_Panic("TkMacOSXUnregisterMacWindow: unmapping before inited");
     }
     entryPtr = Tcl_FindHashEntry(&windowTable,(char *) macWinPtr);
     if (!entryPtr) {
@@ -5328,22 +5320,19 @@ TkpWmSetState(winPtr, state)
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == IconicState) {
-	Tk_UnmapWindow((Tk_Window) winPtr);
 	/*
-	 * The window always gets unmapped.  However, if we can show the
-	 * icon version of the window (collapsed) we make the window visable
-	 * and then collapse it.
-	 *
-	 * TODO: This approach causes flashing!
+	 * The window always gets unmapped.  If we can show the
+	 * icon version of the window we also collapse it.
 	 */
-
 	if (IsWindowCollapsable(macWin) && !IsWindowCollapsed(macWin)) {
-	    ShowWindow(macWin);
 	    CollapseWindow(macWin, true);
 	}
+	Tk_UnmapWindow((Tk_Window) winPtr);
     } else if (state == NormalState) {
 	Tk_MapWindow((Tk_Window) winPtr);
-        CollapseWindow((WindowPtr) macWin, false);
+	if (IsWindowCollapsable(macWin) && IsWindowCollapsed(macWin)) {
+            CollapseWindow((WindowPtr) macWin, false);
+        }
     } else if (state == ZoomState) {
 	/* TODO: need to support zoomed windows */
     }
@@ -5693,7 +5682,7 @@ TkWmStackorderToplevel(parentPtr)
             frontWindow = GetNextWindow(frontWindow);
 	    }
         if (window_ptr != (windows-1))
-            panic("num matched toplevel windows does not equal num children");
+            Tcl_Panic("num matched toplevel windows does not equal num children");
     }
 
     done:

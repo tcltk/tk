@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScale.c,v 1.2.2.1 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXScale.c,v 1.2.2.2 2005/08/09 07:40:01 das Exp $
  */
 
 #include "tkScale.h"
@@ -147,12 +147,11 @@ TkpDisplayScale(clientData)
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     MacDrawable *macDraw;
-    SInt16       initialValue;
-    SInt16       minValue;
-    SInt16       maxValue;
-    SInt16       procID;
-    SInt32       controlReference;
-    Boolean      initiallyVisible = true;
+    SInt32       initialValue;
+    SInt32       minValue;
+    SInt32       maxValue;
+    UInt16       numTicks;
+    
 
     fprintf(stderr,"TkpDisplayScale\n");
     scalePtr->flags &= ~REDRAW_PENDING;
@@ -215,21 +214,58 @@ TkpDisplayScale(clientData)
     /*
      * Create Macintosh control.
      */
-    if (macScalePtr->scaleHandle == NULL) {
-        fprintf(stderr,"Initialising scale\n");
-        r.left = macDraw->xOff;
-        r.top = macDraw->yOff;
+
+#define MAC_OSX_SCROLL_WIDTH 10
+
+    if (scalePtr->orient == ORIENT_HORIZONTAL) {
+        int offset;
+        offset = (Tk_Height(tkwin) - MAC_OSX_SCROLL_WIDTH)/2;
+        if (offset < 0) {
+            offset = 0;
+        }
+        
+        r.left = macDraw->xOff + scalePtr->inset;
+        r.top = macDraw->yOff + offset;
         r.right = macDraw->xOff+Tk_Width(tkwin) - scalePtr->inset;
+        r.bottom = macDraw->yOff + offset + MAC_OSX_SCROLL_WIDTH/2;
+    } else {
+        int offset;
+    
+        offset = (Tk_Width(tkwin) - MAC_OSX_SCROLL_WIDTH)/2;
+        if (offset < 0) {
+            offset = 0;
+        }
+        
+        r.left = macDraw->xOff + offset;
+        r.top = macDraw->yOff + scalePtr->inset;
+        r.right = macDraw->xOff + offset + MAC_OSX_SCROLL_WIDTH/2;
         r.bottom = macDraw->yOff+Tk_Height(tkwin) - scalePtr->inset;
+    }
+
+    if (macScalePtr->scaleHandle == NULL) {
+        
+        fprintf(stderr,"Initialising scale\n");
 
         initialValue = scalePtr->value;
-        minValue = scalePtr->toValue;
-        maxValue = scalePtr->fromValue;
-        procID = kControlSliderProc;
-        controlReference = (SInt32) macScalePtr;
-	macScalePtr->scaleHandle = NewControl(windowRef, 
-		&r, "\p", initiallyVisible, initialValue,minValue,maxValue,
-		procID, controlReference);
+        if (scalePtr->orient == ORIENT_HORIZONTAL) {
+            minValue = scalePtr->fromValue;
+            maxValue = scalePtr->toValue;
+        } else {
+            minValue = scalePtr->fromValue;
+            maxValue = scalePtr->toValue;
+        }
+        
+        if (scalePtr->tickInterval == 0) {
+            numTicks = 0;
+        } else {
+            numTicks = (maxValue - minValue)/scalePtr->tickInterval;
+        }
+                
+        CreateSliderControl(windowRef, &r, initialValue, minValue, maxValue,
+                kControlSliderPointsDownOrRight, numTicks, 
+                1, scaleActionProc, 
+                &(macScalePtr->scaleHandle));
+        SetControlReference(macScalePtr->scaleHandle, (UInt32) scalePtr);
 
 	/*
 	 * If we are foremost than make us active.
@@ -237,6 +273,11 @@ TkpDisplayScale(clientData)
 	if (windowRef == FrontWindow()) {
 	    macScalePtr->flags |= ACTIVE;
 	}
+    } else {
+        SetControlBounds(macScalePtr->scaleHandle, &r);
+        SetControl32BitValue(macScalePtr->scaleHandle, scalePtr->value);
+        SetControl32BitMinimum(macScalePtr->scaleHandle, scalePtr->fromValue);
+        SetControl32BitMaximum(macScalePtr->scaleHandle, scalePtr->toValue);
     }
 
     /*
@@ -387,7 +428,6 @@ MacScaleEventProc(clientData, eventPtr)
      * The TrackControl call will "eat" the ButtonUp event.  We now
      * generate a ButtonUp event so Tk will unset implicit grabs etc.
      */
-    GetMouse(&where);
     XQueryPointer(NULL, None, &dummyWin, &dummyWin, &x,
 	&y, &dummy, &dummy, &state);
     TkGenerateButtonEvent(x, y, Tk_WindowId(macScalePtr->info.tkwin), state);
@@ -414,9 +454,9 @@ MacScaleEventProc(clientData, eventPtr)
  */
 
 static pascal void
-ScaleActionProc(ControlRef theControl, ControlPartCode partCode)
-    /* ControlRef theControl;	/* Handle to scrollbat control */
-    /* ControlPartCode partCode;	/* Part of scrollbar that was "hit" */
+ScaleActionProc(
+    ControlRef theControl,	/* Handle to scrollbat control */
+    ControlPartCode partCode)	/* Part of scrollbar that was "hit" */
 {
     int value;
     TkScale *scalePtr = (TkScale *) GetControlReference(theControl);
