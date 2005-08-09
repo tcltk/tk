@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.8 2005/05/29 10:32:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.9 2005/08/09 07:39:20 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -2260,7 +2260,8 @@ TkMacOSXAntialiasedTextVariableProc(clientData, interp, name1, name2, flags)
     return (char *) NULL;
 }
 
-int TkMacOSXUseAntialiasedText(interp, enable)
+MODULE_SCOPE int
+TkMacOSXUseAntialiasedText(interp, enable)
         Tcl_Interp *interp;
         int enable;
 {

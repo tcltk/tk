@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.25 2004/08/19 14:43:42 dkf Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.26 2005/08/09 07:39:18 das Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -959,6 +959,13 @@ EXTERN void		TkMakeRawCurvePostscript _ANSI_ARGS_((
 				Tcl_Interp * interp, Tk_Canvas canvas, 
 				double * pointPtr, int numPoints));
 #endif
+#ifndef TkpDrawFrame_TCL_DECLARED
+#define TkpDrawFrame_TCL_DECLARED
+/* 152 */
+EXTERN void		TkpDrawFrame _ANSI_ARGS_((Tk_Window tkwin, 
+				Tk_3DBorder border, int highlightWidth, 
+				int borderWidth, int relief));
+#endif
 
 typedef struct TkIntStubs {
     int magic;
@@ -1204,6 +1211,7 @@ typedef struct TkIntStubs {
     CONST Tk_OptionSpec * (*tkGetOptionSpec) _ANSI_ARGS_((CONST char * name, Tk_OptionTable optionTable)); /* 149 */
     int (*tkMakeRawCurve) _ANSI_ARGS_((Tk_Canvas canvas, double * pointPtr, int numPoints, int numSteps, XPoint xPoints[], double dblPoints[])); /* 150 */
     void (*tkMakeRawCurvePostscript) _ANSI_ARGS_((Tcl_Interp * interp, Tk_Canvas canvas, double * pointPtr, int numPoints)); /* 151 */
+    void (*tkpDrawFrame) _ANSI_ARGS_((Tk_Window tkwin, Tk_3DBorder border, int highlightWidth, int borderWidth, int relief)); /* 152 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1858,6 +1866,10 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkMakeRawCurvePostscript
 #define TkMakeRawCurvePostscript \
 	(tkIntStubsPtr->tkMakeRawCurvePostscript) /* 151 */
+#endif
+#ifndef TkpDrawFrame
+#define TkpDrawFrame \
+	(tkIntStubsPtr->tkpDrawFrame) /* 152 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

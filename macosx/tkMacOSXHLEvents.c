@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.8 2005/05/14 20:48:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.9 2005/08/09 07:39:20 das Exp $
  */
 
 #include "tkMacOSXPort.h"
@@ -71,7 +71,7 @@ TkMacOSXInitAppleEvents(
     AEEventHandlerUPP        OappHandlerUPP, RappHandlerUPP, OdocHandlerUPP,
         PrintHandlerUPP, QuitHandlerUPP, ScriptHandlerUPP,
         PrefsHandlerUPP;
-        
+
     /*
      * Install event handlers for the core apple events.
      */
