@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.17 2004/06/08 20:25:04 mdejong Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.18 2005/08/10 22:02:22 dkf Exp $
  */
 
 #include <stdio.h>
@@ -1247,28 +1247,28 @@ GetTextIndex(interp, canvas, itemPtr, obj, indexPtr)
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    size_t length;
+    int length;
     int c;
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    char *string = Tcl_GetStringFromObj(obj, (int *) &length);
+    char *string = Tcl_GetStringFromObj(obj, &length);
 
     c = string[0];
-    length = strlen(string);
 
-    if ((c == 'e') && (strncmp(string, "end", length) == 0)) {
+    if ((c == 'e') && (strncmp(string, "end", (unsigned) length) == 0)) {
 	*indexPtr = textPtr->numChars;
-    } else if ((c == 'i') && (strncmp(string, "insert", length) == 0)) {
+    } else if ((c == 'i')
+	    && (strncmp(string, "insert", (unsigned) length) == 0)) {
 	*indexPtr = textPtr->insertPos;
-    } else if ((c == 's') && (strncmp(string, "sel.first", length) == 0)
-	    && (length >= 5)) {
+    } else if ((c == 's') && (length >= 5)
+	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
 	    return TCL_ERROR;
 	}
 	*indexPtr = textInfoPtr->selectFirst;
-    } else if ((c == 's') && (strncmp(string, "sel.last", length) == 0)
-	    && (length >= 5)) {
+    } else if ((c == 's') && (length >= 5)
+	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
 	    return TCL_ERROR;

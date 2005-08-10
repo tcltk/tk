@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.12 2004/01/13 02:06:00 davygrvy Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.13 2005/08/10 22:02:22 dkf Exp $
  */
 
 #include <stdio.h>
@@ -1662,11 +1662,11 @@ GetPolygonIndex(interp, canvas, itemPtr, obj, indexPtr)
     int *indexPtr;		/* Where to store converted index. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    size_t length;
-    char *string = Tcl_GetStringFromObj(obj, (int *) &length);
+    int length;
+    char *string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == 'e') {
-	if (strncmp(string, "end", length) == 0) {
+	if (strncmp(string, "end", (unsigned)length) == 0) {
 	    *indexPtr = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 	} else {
 	    badIndex:
