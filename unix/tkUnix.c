@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix.c,v 1.10 2005/06/02 10:08:07 rmax Exp $
+ * RCS: @(#) $Id: tkUnix.c,v 1.11 2005/08/10 22:02:22 dkf Exp $
  */
 
 #include <tkInt.h>
@@ -115,8 +115,8 @@ Tk_UpdatePointer(tkwin, x, y, state)
  *
  * TkpBuildRegionFromAlphaData --
  *
- *	Set up a rectangle of the given region based on the supplied
- *	alpha data.
+ *	Set up a rectangle of the given region based on the supplied alpha
+ *	data.
  *
  * Results:
  *	None
@@ -130,14 +130,14 @@ Tk_UpdatePointer(tkwin, x, y, state)
 void
 TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
 	pixelStride, lineStride)
-    TkRegion region;
-    unsigned int x, y;			/* Where in region to update. */
-    unsigned int width, height;		/* Size of rectangle to update. */
-    unsigned char *dataPtr;		/* Data to read from. */
-    unsigned int pixelStride;		/* num bytes from one piece of alpha
-					 * data to the next in the line. */
-    unsigned int lineStride;		/* num bytes from one line of alpha
-					 * data to the next line. */
+     TkRegion region;		/* Region to be updated. */
+    unsigned int x, y;		/* Where in region to update. */
+    unsigned int width, height;	/* Size of rectangle to update. */
+    unsigned char *dataPtr;	/* Data to read from. */
+    unsigned int pixelStride;	/* Num bytes from one piece of alpha data to
+				 * the next in the line. */
+    unsigned int lineStride;	/* Num bytes from one line of alpha data to
+				 * the next line. */
 {
     unsigned char *lineDataPtr;
     unsigned int x1, y1, end;
@@ -146,13 +146,20 @@ TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
     for (y1 = 0; y1 < height; y1++) {
 	lineDataPtr = dataPtr;
 	for (x1 = 0; x1 < width; x1 = end) {
-	    /* search for first non-transparent pixel */
+	    /*
+	     * Search for first non-transparent pixel.
+	     */
+
 	    while ((x1 < width) && !*lineDataPtr) {
 		x1++;
 		lineDataPtr += pixelStride;
 	    }
 	    end = x1;
-	    /* search for first transparent pixel */
+
+	    /*
+	     * Search for first transparent pixel.
+	     */
+
 	    while ((end < width) && *lineDataPtr) {
 		end++;
 		lineDataPtr += pixelStride;

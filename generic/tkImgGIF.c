@@ -5,7 +5,7 @@
  *	At present, there only is a file write function. GIF images may be
  *	read using the -data option of the photo image. The data may be given
  *	as a binary string in a Tcl_Obj or by representing the data as BASE64
- *	encoded ascii.  Derived from the giftoppm code found in the pbmplus
+ *	encoded ascii. Derived from the giftoppm code found in the pbmplus
  *	package and tkImgFmtPPM.c in the tk4.0b2 distribution.
  *
  * Copyright (c) Reed Wade (wade@cs.utk.edu), University of Tennessee
@@ -25,22 +25,22 @@
  * |   and its documentation for any purpose and without fee is hereby	|
  * |   granted, provided that the above copyright notice appear in all	|
  * |   copies and that both that copyright notice and this permission	|
- * |   notice appear in supporting documentation.  This software is	|
+ * |   notice appear in supporting documentation. This software is	|
  * |   provided "as is" without express or implied warranty.		|
  * +--------------------------------------------------------------------+
  *
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.28 2005/06/19 21:54:16 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.29 2005/08/10 22:02:22 dkf Exp $
  */
 
 /*
- * GIF's are represented as data in either binary or base64 format.  base64
- * strings consist of 4 6-bit characters -> 3 8 bit bytes.  A-Z, a-z, 0-9, +
- * and / represent the 64 values (in order).  '=' is a trailing padding char
- * when the un-encoded data is not a multiple of 3 bytes.  We'll ignore white
- * space when encountered.  Any other invalid character is treated as an EOF
+ * GIF's are represented as data in either binary or base64 format. base64
+ * strings consist of 4 6-bit characters -> 3 8 bit bytes. A-Z, a-z, 0-9, +
+ * and / represent the 64 values (in order). '=' is a trailing padding char
+ * when the un-encoded data is not a multiple of 3 bytes. We'll ignore white
+ * space when encountered. Any other invalid character is treated as an EOF
  */
 
 #define GIF_SPECIAL	(256)
@@ -50,8 +50,8 @@
 #define GIF_DONE	(GIF_SPECIAL+4)
 
 /*
- * structure to "mimic" FILE for Mread, so we can look like fread.  The
- * decoder state keeps track of which byte we are about to read, or EOF.
+ * structure to "mimic" FILE for Mread, so we can look like fread. The decoder
+ * state keeps track of which byte we are about to read, or EOF.
  */
 
 typedef struct mFile {
@@ -88,7 +88,7 @@ static CONST char GIF89a[] = {			/* ASCII GIF89a */
 #define INLINE_DATA_BASE64	((const char *) 0x02)
 
 /*
- *			HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
+ *		HACK ALERT!!  HACK ALERT!!  HACK ALERT!!
  * This code is hard-wired for reading from files. In order to read from a
  * data stream, we'll trick fread so we can reuse the same code. 0==from file;
  * 1==from base64 encoded data; 2==from binary data
@@ -110,25 +110,23 @@ typedef struct {
  * The format record for the GIF file format:
  */
 
-static int	FileMatchGIF _ANSI_ARGS_((Tcl_Channel chan, CONST char *fileName,
-		    Tcl_Obj *format, int *widthPtr, int *heightPtr,
-		    Tcl_Interp *interp));
-static int	FileReadGIF _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Channel chan,
-		    CONST char *fileName, Tcl_Obj *format,
-		    Tk_PhotoHandle imageHandle, int destX, int destY,
-		    int width, int height, int srcX, int srcY));
-static int	StringMatchGIF _ANSI_ARGS_(( Tcl_Obj *dataObj, Tcl_Obj *format,
-		    int *widthPtr, int *heightPtr, Tcl_Interp *interp));
-static int	StringReadGIF _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *dataObj,
-		    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
-		    int destX, int destY, int width, int height,
-		    int srcX, int srcY));
-static int 	FileWriteGIF _ANSI_ARGS_((Tcl_Interp *interp,
-		    CONST char *filename, Tcl_Obj *format,
-		    Tk_PhotoImageBlock *blockPtr));
-static int	CommonWriteGIF _ANSI_ARGS_((Tcl_Interp *interp,
-		    Tcl_Channel handle, Tcl_Obj *format,
-		    Tk_PhotoImageBlock *blockPtr));
+static int		FileMatchGIF(Tcl_Channel chan, CONST char *fileName,
+			    Tcl_Obj *format, int *widthPtr, int *heightPtr,
+			    Tcl_Interp *interp);
+static int		FileReadGIF(Tcl_Interp *interp, Tcl_Channel chan,
+			    CONST char *fileName, Tcl_Obj *format,
+			    Tk_PhotoHandle imageHandle, int destX, int destY,
+			    int width, int height, int srcX, int srcY);
+static int		StringMatchGIF(Tcl_Obj *dataObj, Tcl_Obj *format,
+			    int *widthPtr, int *heightPtr, Tcl_Interp *interp);
+static int		StringReadGIF(Tcl_Interp *interp, Tcl_Obj *dataObj,
+			    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+			    int destX, int destY, int width, int height,
+			    int srcX, int srcY);
+static int		FileWriteGIF(Tcl_Interp *interp, CONST char *filename,
+			    Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr);
+static int		CommonWriteGIF(Tcl_Interp *interp, Tcl_Channel handle,
+			    Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr);
 
 Tk_PhotoImageFormat tkImgFmtGIF = {
     "gif",		/* name */
@@ -152,47 +150,47 @@ Tk_PhotoImageFormat tkImgFmtGIF = {
 #define LM_to_uint(a,b)		(((b)<<8)|(a))
 
 /*
- * Prototypes for local procedures defined in this file:
+ * Prototypes for local functions defined in this file:
  */
 
-static int	DoExtension _ANSI_ARGS_((GIFImageConfig *gifConfPtr,
-		    Tcl_Channel chan, int label, unsigned char *buffer,
-		    int *transparent));
-static int	GetCode _ANSI_ARGS_((Tcl_Channel chan, int code_size, int flag,
-		    GIFImageConfig *gifConfPtr));
-static int	GetDataBlock _ANSI_ARGS_((GIFImageConfig *gifConfPtr,
-		    Tcl_Channel chan, unsigned char *buf));
-static int	ReadColorMap _ANSI_ARGS_((GIFImageConfig *gifConfPtr,
-		    Tcl_Channel chan, int number,
-		    unsigned char buffer[MAXCOLORMAPSIZE][4]));
-static int	ReadGIFHeader _ANSI_ARGS_((GIFImageConfig *gifConfPtr,
-		    Tcl_Channel chan, int *widthPtr, int *heightPtr));
-static int	ReadImage _ANSI_ARGS_((GIFImageConfig *gifConfPtr,
-		    Tcl_Interp *interp, char *imagePtr, Tcl_Channel chan,
-		    int len, int rows, unsigned char cmap[MAXCOLORMAPSIZE][4],
-		    int width, int height, int srcX, int srcY, int interlace,
-		    int transparent));
+static int		DoExtension(GIFImageConfig *gifConfPtr,
+			    Tcl_Channel chan, int label, unsigned char *buffer,
+			    int *transparent);
+static int		GetCode(Tcl_Channel chan, int code_size, int flag,
+			    GIFImageConfig *gifConfPtr);
+static int		GetDataBlock(GIFImageConfig *gifConfPtr,
+			    Tcl_Channel chan, unsigned char *buf);
+static int		ReadColorMap(GIFImageConfig *gifConfPtr,
+			    Tcl_Channel chan, int number,
+			    unsigned char buffer[MAXCOLORMAPSIZE][4]);
+static int		ReadGIFHeader(GIFImageConfig *gifConfPtr,
+			    Tcl_Channel chan, int *widthPtr, int *heightPtr);
+static int		ReadImage(GIFImageConfig *gifConfPtr,
+			    Tcl_Interp *interp, char *imagePtr,
+			    Tcl_Channel chan, int len, int rows,
+			    unsigned char cmap[MAXCOLORMAPSIZE][4],
+			    int width, int height, int srcX, int srcY,
+			    int interlace, int transparent);
 
 /*
  * these are for the BASE64 image reader code only
  */
 
-static int	Fread _ANSI_ARGS_((GIFImageConfig *gifConfPtr,
-		    unsigned char *dst, size_t size, size_t count,
-		    Tcl_Channel chan));
-static int	Mread _ANSI_ARGS_((unsigned char *dst, size_t size,
-		    size_t count, MFile *handle));
-static int	Mgetc _ANSI_ARGS_((MFile *handle));
-static int	char64 _ANSI_ARGS_((int c));
-static void	mInit _ANSI_ARGS_((unsigned char *string, MFile *handle,
-		    int length));
+static int		Fread(GIFImageConfig *gifConfPtr, unsigned char *dst,
+			    size_t size, size_t count, Tcl_Channel chan);
+static int		Mread(unsigned char *dst, size_t size, size_t count,
+			    MFile *handle);
+static int		Mgetc(MFile *handle);
+static int		char64(int c);
+static void		mInit(unsigned char *string, MFile *handle,
+			    int length);
 
 /*
  *----------------------------------------------------------------------
  *
  * FileMatchGIF --
  *
- *	This procedure is invoked by the photo image type to see if a file
+ *	This function is invoked by the photo image type to see if a file
  *	contains image data in GIF format.
  *
  * Results:
@@ -225,12 +223,12 @@ FileMatchGIF(chan, fileName, format, widthPtr, heightPtr, interp)
  *
  * FileReadGIF --
  *
- *	This procedure is called by the photo image type to read GIF format
+ *	This function is called by the photo image type to read GIF format
  *	data from a file and write it into a given photo image.
  *
  * Results:
- *	A standard TCL completion code.  If TCL_ERROR is returned then an
- *	error message is left in the interp's result.
+ *	A standard TCL completion code. If TCL_ERROR is returned then an error
+ *	message is left in the interp's result.
  *
  * Side effects:
  *	The access position in file f is changed, and new data is added to the
@@ -298,7 +296,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	}
     }
     if (!ReadGIFHeader(gifConfPtr, chan, &fileWidth, &fileHeight)) {
-    	Tcl_AppendResult(interp, "couldn't read GIF header from file \"",
+	Tcl_AppendResult(interp, "couldn't read GIF header from file \"",
 		fileName, "\"", NULL);
 	return TCL_ERROR;
     }
@@ -393,6 +391,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    /*
 	     * Not a valid start character; ignore it.
 	     */
+
 	    continue;
 	}
 
@@ -412,6 +411,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    /*
 	     * This is not the image we want to read: skip it.
 	     */
+
 	    if (BitSet(buf[8], LOCALCOLORMAP)) {
 		if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 		    Tcl_AppendResult(interp,
@@ -423,13 +423,14 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    /*
 	     * If we've not yet allocated a trash buffer, do so now.
 	     */
+
 	    if (trashBuffer == NULL) {
 		nBytes = fileWidth * fileHeight * 3;
 		trashBuffer = (unsigned char *) ckalloc((unsigned int) nBytes);
 	    }
 
 	    /*
-	     * Slurp!  Process the data for this image and stuff it in a trash
+	     * Slurp! Process the data for this image and stuff it in a trash
 	     * buffer.
 	     *
 	     * Yes, it might be more efficient here to *not* store the data
@@ -455,7 +456,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 
 	if (BitSet(buf[8], LOCALCOLORMAP)) {
 	    if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
-		    Tcl_AppendResult(interp, "error reading color map", 
+		    Tcl_AppendResult(interp, "error reading color map",
 			    (char *) NULL);
 		    goto error;
 	    }
@@ -512,6 +513,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     /*
      * If a trash buffer has been allocated, free it now.
      */
+
     if (trashBuffer != NULL) {
 	ckfree((char *)trashBuffer);
     }
@@ -525,6 +527,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     /*
      * If a trash buffer has been allocated, free it now.
      */
+
     if (trashBuffer != NULL) {
 	ckfree((char *)trashBuffer);
     }
@@ -539,7 +542,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
  *
  * StringMatchGIF --
  *
- *	This procedure is invoked by the photo image type to see if an object
+ *	This function is invoked by the photo image type to see if an object
  *	contains image data in GIF format.
  *
  * Results:
@@ -569,6 +572,7 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
     /*
      * Header is a minimum of 10 bytes.
      */
+
     if (length < 10) {
 	return 0;
     }
@@ -577,15 +581,16 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
      * Check whether the data is Base64 encoded.
      */
 
-    if ((strncmp(GIF87a, (char *) data, 6) != 0) && 
+    if ((strncmp(GIF87a, (char *) data, 6) != 0) &&
 	    (strncmp(GIF89a, (char *) data, 6) != 0)) {
 	/*
 	 * Try interpreting the data as Base64 encoded
 	 */
+
 	mInit((unsigned char *) data, &handle, length);
 	got = Mread(header, 10, 1, &handle);
-	if (got != 10
-		|| ((strncmp(GIF87a, (char *) header, 6) != 0)
+	if (got != 10 ||
+		((strncmp(GIF87a, (char *) header, 6) != 0)
 		&& (strncmp(GIF89a, (char *) header, 6) != 0))) {
 	    return 0;
 	}
@@ -602,16 +607,16 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
  *
  * StringReadGIF --
  *
- *	This procedure is called by the photo image type to read GIF format
+ *	This function is called by the photo image type to read GIF format
  *	data from an object, optionally base64 encoded, and give it to the
  *	photo image.
  *
  * Results:
- *	A standard TCL completion code.  If TCL_ERROR is returned then an
- *	error message is left in the interp's result.
+ *	A standard TCL completion code. If TCL_ERROR is returned then an error
+ *	message is left in the interp's result.
  *
  * Side effects:
- *	New data is added to the image given by imageHandle.  This procedure
+ *	New data is added to the image given by imageHandle. This function
  *	calls FileReadGIF by redefining the operation of fprintf temporarily.
  *
  *----------------------------------------------------------------------
@@ -655,12 +660,12 @@ StringReadGIF(interp, dataObj, format, imageHandle,
  *
  * ReadGIFHeader --
  *
- *	This procedure reads the GIF header from the beginning of a GIF file
+ *	This function reads the GIF header from the beginning of a GIF file
  *	and returns the dimensions of the image.
  *
  * Results:
  *	The return value is 1 if file "f" appears to start with a valid GIF
- *	header, 0 otherwise.  If the header is valid, then *widthPtr and
+ *	header, 0 otherwise. If the header is valid, then *widthPtr and
  *	*heightPtr are modified to hold the dimensions of the image.
  *
  * Side effects:
@@ -845,6 +850,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
     /*
      * Initialize the decoder
      */
+
     if (Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) <= 0) {
 	Tcl_AppendResult(interp, "error reading GIF image: ",
 		Tcl_PosixError(interp), (char *) NULL);
@@ -868,13 +874,14 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
      * code size	size of the next code to retrieve
      * max code		next available table position
      */
+
     clearCode = 1 << (int) initialCodeSize;
     endCode = clearCode + 1;
     codeSize = (int) initialCodeSize + 1;
     maxCode = clearCode + 2;
     oldCode = -1;
     firstCode = -1;
-    
+
     memset((void *)prefix, 0, (1 << MAX_LWZ_BITS) * sizeof(short));
     memset((void *)append, 0, (1 << MAX_LWZ_BITS) * sizeof(char));
     for (i = 0; i < clearCode; i++) {
@@ -887,13 +894,15 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
     /*
      * Read until we finish the image
      */
+
     for (i = 0, ypos = 0; i < rows; i++) {
 	for (xpos = 0; xpos < len; ) {
 
 	    if (top == stack) {
 		/*
-		 * Bummer -- our stack is empty.  Now we have to work!
+		 * Bummer - our stack is empty. Now we have to work!
 		 */
+
 		code = GetCode(chan, codeSize, 0, gifConfPtr);
 		if (code < 0) {
 		    return TCL_OK;
@@ -902,12 +911,13 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		if (code > maxCode || code == endCode) {
 		    /*
 		     * If we're doing things right, we should never receive a
-		     * code that is greater than our current maximum code.  If
+		     * code that is greater than our current maximum code. If
 		     * we do, bail, because our decoder does not yet have that
 		     * code set up.
 		     *
 		     * If the code is the magic endCode value, quit.
 		     */
+
 		    return TCL_OK;
 		}
 
@@ -915,12 +925,13 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		    /*
 		     * Reset the decoder.
 		     */
+
 		    codeSize = initialCodeSize + 1;
 		    maxCode = clearCode + 2;
 		    oldCode = -1;
 		    continue;
 		}
-		
+
 		if (oldCode == -1) {
 		    /*
 		     * Last pass reset the decoder, so the first code we see
@@ -930,12 +941,13 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		     * clearCode test above, because at that point we have not
 		     * yet read the next code.
 		     */
+
 		    *top++ = append[code];
 		    oldCode = code;
 		    firstCode = code;
 		    continue;
 		}
-		
+
 		inCode = code;
 
 		if (code == maxCode) {
@@ -944,6 +956,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		     * code. If the code we see is equal to maxCode, then we
 		     * are about to add a new string to the table. ???
 		     */
+
 		    *top++ = firstCode;
 		    code = oldCode;
 		}
@@ -953,6 +966,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		     * Populate the stack by tracing the string in the string
 		     * table from its tail to its head
 		     */
+
 		    *top++ = append[code];
 		    code = prefix[code];
 		}
@@ -962,6 +976,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		 * If there's no more room in our string table, quit.
 		 * Otherwise, add a new string to the table
 		 */
+
 		if (maxCode >= (1 << MAX_LWZ_BITS)) {
 		    return TCL_OK;
 		}
@@ -969,11 +984,13 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		/*
 		 * Push the head of the string onto the stack.
 		 */
+
 		*top++ = firstCode;
 
 		/*
 		 * Add a new string to the string table
 		 */
+
 		prefix[maxCode] = oldCode;
 		append[maxCode] = firstCode;
 		maxCode++;
@@ -1001,7 +1018,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 		return TCL_OK;
 	    }
 
-	    /* 
+	    /*
 	     * If pixelPtr is null, we're skipping this image (presumably
 	     * there are more in the file and we will be called to read one of
 	     * them later)
@@ -1018,8 +1035,9 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 	}
 
 	/*
-	 * If interlacing, the next ypos is not just +1
+	 * If interlacing, the next ypos is not just +1.
 	 */
+
 	if (interlace) {
 	    ypos += interlaceStep[pass];
 	    while (ypos >= height) {
@@ -1042,7 +1060,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
  *
  * GetCode --
  *
- *	Extract the next compression code from the file.  In GIF's, the
+ *	Extract the next compression code from the file. In GIF's, the
  *	compression codes are between 3 and 12 bits long and are then packed
  *	into 8 bit bytes, left to right, for example:
  *		bbbaaaaa
@@ -1050,7 +1068,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
  *		eeeedddd
  *		...
  *	We use a byte buffer read from the file and a sliding window to unpack
- *	the bytes.  Thanks to ImageMagick for the sliding window idea.
+ *	the bytes. Thanks to ImageMagick for the sliding window idea.
  *	args:  chan	    the channel to read from
  *	       code_size    size of the code to extract
  *	       flag	    boolean indicating whether the extractor should be
@@ -1073,11 +1091,12 @@ GetCode(chan, code_size, flag, gifConfPtr)
     GIFImageConfig *gifConfPtr;
 {
     int ret;
-    
+
     if (flag) {
 	/*
 	 * Initialize the decoder.
 	 */
+
 	gifConfPtr->reader.bitsInWindow = 0;
 	gifConfPtr->reader.bytes = 0;
 	gifConfPtr->reader.window = 0;
@@ -1090,6 +1109,7 @@ GetCode(chan, code_size, flag, gifConfPtr)
 	/*
 	 * Not enough bits in our window to cover the request.
 	 */
+
 	if (gifConfPtr->reader.done) {
 	    return -1;
 	}
@@ -1097,6 +1117,7 @@ GetCode(chan, code_size, flag, gifConfPtr)
 	    /*
 	     * Not enough bytes in our buffer to add to the window.
 	     */
+
 	    gifConfPtr->reader.bytes =
 		    GetDataBlock(gifConfPtr, chan, gifConfPtr->workingBuffer);
 	    gifConfPtr->reader.c = gifConfPtr->workingBuffer;
@@ -1105,9 +1126,11 @@ GetCode(chan, code_size, flag, gifConfPtr)
 		break;
 	    }
 	}
+
 	/*
 	 * Tack another byte onto the window, see if that's enough.
 	 */
+
 	gifConfPtr->reader.window +=
 		(*gifConfPtr->reader.c) << gifConfPtr->reader.bitsInWindow;
 	gifConfPtr->reader.c++;
@@ -1118,11 +1141,13 @@ GetCode(chan, code_size, flag, gifConfPtr)
     /*
      * The next code will always be the last code_size bits of the window.
      */
+
     ret = gifConfPtr->reader.window & ((1 << code_size) - 1);
-    
+
     /*
      * Shift data in the window to put the next code at the end.
      */
+
     gifConfPtr->reader.window >>= code_size;
     gifConfPtr->reader.bitsInWindow -= code_size;
     return ret;
@@ -1133,7 +1158,7 @@ GetCode(chan, code_size, flag, gifConfPtr)
  *
  * Minit -- --
  *
- *	This procedure initializes a base64 decoder handle
+ *	This function initializes a base64 decoder handle
  *
  * Results:
  *	None
@@ -1161,7 +1186,7 @@ mInit(string, handle, length)
  *
  * Mread --
  *
- *	This procedure is invoked by the GIF file reader as a temporary
+ *	This function is invoked by the GIF file reader as a temporary
  *	replacement for "fread", to get GIF data out of a string (using
  *	Mgetc).
  *
@@ -1175,7 +1200,7 @@ mInit(string, handle, length)
  */
 
 static int
-Mread(dst, chunkSize, numChunks, handle)  
+Mread(dst, chunkSize, numChunks, handle)
    unsigned char *dst;	/* where to put the result */
    size_t chunkSize;	/* size of each transfer */
    size_t numChunks;	/* number of chunks */
@@ -1189,19 +1214,14 @@ Mread(dst, chunkSize, numChunks, handle)
    }
    return i;
 }
-
-/*
- * Get the next decoded character from an mmencode handle.
- * This causes at least 1 character to be "read" from the encoded string
- */
 
 /*
  *----------------------------------------------------------------------
  *
  * Mgetc --
  *
- *	This procedure decodes and returns the next byte from a base64 encoded
- *	string.
+ *	This function gets the next decoded character from an mmencode handle.
+ *	This causes at least 1 character to be "read" from the encoded string.
  *
  * Results:
  *	The next byte (or GIF_DONE) is returned.
@@ -1263,9 +1283,9 @@ Mgetc(handle)
  *
  * char64 --
  *
- *	This procedure converts a base64 ascii character into its binary
- *	equivalent.  This code is a slightly modified version of the char64
- *	proc in N. Borenstein's metamail decoder.
+ *	This function converts a base64 ascii character into its binary
+ *	equivalent. This code is a slightly modified version of the char64
+ *	function in N. Borenstein's metamail decoder.
  *
  * Results:
  *	The binary value, or an error code.
@@ -1320,7 +1340,7 @@ char64(c)
  *
  * Fread --
  *
- *	This procedure calls either fread or Mread to read data from a file or
+ *	This function calls either fread or Mread to read data from a file or
  *	a base64 encoded string.
  *
  * Results: - same as POSIX fread() or Tcl Tcl_Read()
@@ -1354,6 +1374,7 @@ Fread(gifConfPtr, dst, hunk, count, chan)
     /*
      * Otherwise we've got a real file to read.
      */
+
     return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
 }
 
@@ -1361,8 +1382,8 @@ Fread(gifConfPtr, dst, hunk, count, chan)
  * ChanWriteGIF - writes a image in GIF format.
  *-------------------------------------------------------------------------
  * Author:			Lolo
- *				Engeneering Projects Area 
- *				Department of Mining 
+ *				Engeneering Projects Area
+ *				Department of Mining
  *				University of Oviedo
  * e-mail			zz11425958@zeus.etsimo.uniovi.es
  *				lolo@pcsig22.etsimo.uniovi.es
@@ -1374,12 +1395,12 @@ Fread(gifConfPtr, dst, hunk, count, chan)
  *----------------------------------------------------------------------
  * FileWriteGIF-
  *
- *	This procedure is called by the photo image type to write GIF format
+ *	This function is called by the photo image type to write GIF format
  *	data from a photo image into a given file
  *
  * Results:
- *	A standard TCL completion code.  If TCL_ERROR is returned then an
- *	error message is left in interp->result.
+ *	A standard TCL completion code. If TCL_ERROR is returned then an error
+ *	message is left in interp->result.
  *
  *----------------------------------------------------------------------
  */
@@ -1388,13 +1409,13 @@ Fread(gifConfPtr, dst, hunk, count, chan)
  * Types, defines and variables needed to write and compress a GIF.
  */
 
-typedef int (* ifunptr) _ANSI_ARGS_((ClientData clientData));
+typedef int (* ifunptr) (ClientData clientData);
 
-#define LSB(a)			((unsigned char) (((short)(a)) & 0x00FF))
-#define MSB(a)			((unsigned char) (((short)(a)) >> 8))
+#define LSB(a)		((unsigned char) (((short)(a)) & 0x00FF))
+#define MSB(a)		((unsigned char) (((short)(a)) >> 8))
 
-#define GIFBITS 12
-#define HSIZE  5003		/* 80% occupancy */
+#define GIFBITS		12
+#define HSIZE		5003	/* 80% occupancy */
 
 typedef struct {
     int ssize;
@@ -1414,18 +1435,18 @@ typedef struct {
  * Definition of new functions to write GIFs
  */
 
-static int	color _ANSI_ARGS_((GifWriterState *statePtr,
-		    int red, int green, int blue,
-		    unsigned char mapa[MAXCOLORMAPSIZE][3]));
-static void	compress _ANSI_ARGS_((int initBits, Tcl_Channel handle,
-		    ifunptr readValue, ClientData clientData));
-static int	nuevo _ANSI_ARGS_((GifWriterState *statePtr,
-		    int red, int green, int blue,
-		    unsigned char mapa[MAXCOLORMAPSIZE][3]));
-static void	savemap _ANSI_ARGS_((GifWriterState *statePtr,
-		    Tk_PhotoImageBlock *blockPtr,
-		    unsigned char mapa[MAXCOLORMAPSIZE][3]));
-static int	ReadValue _ANSI_ARGS_((ClientData clientData));
+static int		color(GifWriterState *statePtr,
+			    int red, int green, int blue,
+			    unsigned char mapa[MAXCOLORMAPSIZE][3]);
+static void		compress(int initBits, Tcl_Channel handle,
+			    ifunptr readValue, ClientData clientData);
+static int		nuevo(GifWriterState *statePtr,
+			    int red, int green, int blue,
+			    unsigned char mapa[MAXCOLORMAPSIZE][3]);
+static void		savemap(GifWriterState *statePtr,
+			    Tk_PhotoImageBlock *blockPtr,
+			    unsigned char mapa[MAXCOLORMAPSIZE][3]);
+static int		ReadValue(ClientData clientData);
 
 static int
 FileWriteGIF(interp, filename, format, blockPtr)
@@ -1526,14 +1547,14 @@ CommonWriteGIF(interp, handle, format, blockPtr)
     statePtr->num = 1 << resolution;
 
     /*
-     * background color
+     * Background color
      */
 
     c = 0;
     Tcl_Write(handle, (char *) &c, 1);
 
     /*
-     * zero for future expansion.
+     * Zero for future expansion.
      */
 
     Tcl_Write(handle, (char *) &c, 1);
@@ -1587,12 +1608,12 @@ CommonWriteGIF(interp, handle, format, blockPtr)
     statePtr->csize = blockPtr->height;
     compress(resolution+1, handle, ReadValue, (ClientData) statePtr);
 
-    c = 0; 
+    c = 0;
     Tcl_Write(handle, (char *) &c, 1);
     c = GIF_TERMINATOR;
     Tcl_Write(handle, (char *) &c, 1);
 
-    return TCL_OK;	
+    return TCL_OK;
 }
 
 static int
@@ -1719,7 +1740,7 @@ ReadValue(clientData)
  * including but not limited to implied warranties of merchantability and
  * fitness for a particular purpose, with respect to this code and
  * accompanying documentation.
- * 
+ *
  * The miGIF compression routines do not, strictly speaking, generate files
  * conforming to the GIF spec, since the image data is not LZW-compressed
  * (this is the point: in order to avoid transgression of the Unisys patent on
@@ -1782,8 +1803,8 @@ typedef struct {
 
 static int verboseSet = 0;
 static int verbose;
-#define MIGIF_VERBOSE (verboseSet?verbose:setVerbose())
-#define DEBUGMSG(printfArgs) if (MIGIF_VERBOSE) { printf printfArgs; }
+#define MIGIF_VERBOSE		(verboseSet?verbose:setVerbose())
+#define DEBUGMSG(printfArgs)	if (MIGIF_VERBOSE) { printf printfArgs; }
 
 static int
 setVerbose(void)
@@ -2142,16 +2163,18 @@ compress(initBits, handle, readValue, clientData)
     statePtr->codeEOF = statePtr->codeClear + 1;
     statePtr->runlengthBaseCode = statePtr->codeEOF + 1;
     statePtr->outputBumpInit = (1 << (initBits - 1)) - 1;
+
     /*
      * For images with a lot of runs, making outputClearInit larger will give
      * better compression.
      */
+
     statePtr->outputClearInit =
 	    (initBits <= 3) ? 9 : (statePtr->outputBumpInit-1);
 #ifdef MIGIF_DEBUGGING_ENVARS
     {
-	const char *ocienv;
-	ocienv = getenv("MIGIF_OUT_CLEAR_INIT");
+	const char *ocienv = getenv("MIGIF_OUT_CLEAR_INIT");
+
 	if (ocienv) {
 	    statePtr->outputClearInit = atoi(ocienv);
 	    DEBUGMSG(("[overriding outputClearInit to %d]\n",
@@ -2187,7 +2210,15 @@ compress(initBits, handle, readValue, clientData)
 /*
  *-----------------------------------------------------------------------
  *
- * End of miGIF section  - See copyright notice at start of section.
+ * End of miGIF section - See copyright notice at start of section.
  *
  *-----------------------------------------------------------------------
+ */
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
  */

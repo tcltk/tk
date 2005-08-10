@@ -1,3 +1,9 @@
+2005-08-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkFrame.c (CreateFrame) and others: Don't use size_t
+	when working with Tcl_GetStringFromObj because it is not 64-bit
+	clean. [Bug 1252702]
+
 2005-08-04  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* doc/text.n: Clarify behaviour of tab stops (as per [Bug 1247835])

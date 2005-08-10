@@ -5,10 +5,10 @@
  *
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.37 2005/04/04 08:53:00 dkf Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.38 2005/08/10 22:02:22 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -22,17 +22,17 @@
 #endif
 #define MAX(x,y)	((x) > (y) ? (x) : (y))
 
-#define COLUMN	(1)		/* working on column offsets */
-#define ROW	(2)		/* working on row offsets */
+#define COLUMN		(1)	/* working on column offsets */
+#define ROW		(2)	/* working on row offsets */
 
 #define CHECK_ONLY	(1)	/* check max slot constraint */
 #define CHECK_SPACE	(2)	/* alloc more space, don't change max */
 
 /*
- * Pre-allocate enough row and column slots for "typical" sized tables
- * this value should be chosen so by the time the extra malloc's are
- * required, the layout calculations overwehlm them. [A "slot" contains
- * information for either a row or column, depending upon the context.]
+ * Pre-allocate enough row and column slots for "typical" sized tables this
+ * value should be chosen so by the time the extra malloc's are required, the
+ * layout calculations overwehlm them. [A "slot" contains information for
+ * either a row or column, depending upon the context.]
  */
 
 #define TYPICAL_SIZE	25  /* (arbitrary guess) */
@@ -45,9 +45,9 @@
 #define UNIFORM_PREALLOC 10
 
 /*
- * Data structures are allocated dynamically to support arbitrary sized tables.
- * However, the space is proportional to the highest numbered slot with
- * some non-default property.  This limit is used to head off mistakes and
+ * Data structures are allocated dynamically to support arbitrary sized
+ * tables. However, the space is proportional to the highest numbered slot
+ * with some non-default property. This limit is used to head off mistakes and
  * denial of service attacks by limiting the amount of storage required.
  */
 
@@ -68,8 +68,8 @@
 #define GRID_DEFAULT_ANCHOR TK_ANCHOR_NW
 
 /*
- *  Structure to hold information for grid masters.  A slot is either
- *  a row or column.
+ *  Structure to hold information for grid masters. A slot is either a row or
+ *  column.
  */
 
 typedef struct SlotInfo {
@@ -80,51 +80,49 @@ typedef struct SlotInfo {
 				 * this slot doesn't resize. Extra space in
 				 * the layout is given distributed among slots
 				 * inproportion to their weights. */
-    int pad;			/* Extra padding, in pixels, required for
-				 * this slot.  This amount is "added" to the
-				 * largest slave in the slot. */
+    int pad;			/* Extra padding, in pixels, required for this
+				 * slot. This amount is "added" to the largest
+				 * slave in the slot. */
     Tk_Uid uniform;		/* Value of -uniform option. It is used to
 				 * group slots that should have the same
 				 * size. */
     int offset;			/* This is a cached value used for
-				 * introspection.  It is the pixel
-				 * offset of the right or bottom edge
-				 * of this slot from the beginning of the
-				 * layout. */
+				 * introspection. It is the pixel offset of
+				 * the right or bottom edge of this slot from
+				 * the beginning of the layout. */
     int temp;			/* This is a temporary value used for
-				 * calculating adjusted weights when
-				 * shrinking the layout below its
-				 * nominal size. */
+				 * calculating adjusted weights when shrinking
+				 * the layout below its nominal size. */
 } SlotInfo;
 
 /*
- * Structure to hold information during layout calculations.  There
- * is one of these for each slot, an array for each of the rows or columns.
+ * Structure to hold information during layout calculations. There is one of
+ * these for each slot, an array for each of the rows or columns.
  */
 
 typedef struct GridLayout {
-    struct Gridder *binNextPtr;	/* The next slave window in this bin.
-    				 * Each bin contains a list of all
-    				 * slaves whose spans are >1 and whose
-    				 * right edges fall in this slot. */
-    int minSize;		/* Minimum size needed for this slot,
-    				 * in pixels.  This is the space required
-    				 * to hold any slaves contained entirely
-    				 * in this slot, adjusted for any slot
-    				 * constrants, such as size or padding. */
+    struct Gridder *binNextPtr;	/* The next slave window in this bin. Each bin
+    				 * contains a list of all slaves whose spans
+    				 * are >1 and whose right edges fall in this
+    				 * slot. */
+    int minSize;		/* Minimum size needed for this slot, in
+    				 * pixels. This is the space required to hold
+    				 * any slaves contained entirely in this slot,
+    				 * adjusted for any slot constrants, such as
+    				 * size or padding. */
     int pad;			/* Padding needed for this slot */
     int weight;			/* Slot weight, controls resizing. */
     Tk_Uid uniform;		/* Value of -uniform option. It is used to
 				 * group slots that should have the same
 				 * size. */
-    int minOffset;		/* The minimum offset, in pixels, from
-    				 * the beginning of the layout to the
-    				 * right/bottom edge of the slot calculated
-    				 * from top/left to bottom/right. */
-    int maxOffset;		/* The maximum offset, in pixels, from
-    				 * the beginning of the layout to the
-    				 * right-or-bottom edge of the slot calculated
-    				 * from bottom-or-right to top-or-left. */
+    int minOffset;		/* The minimum offset, in pixels, from the
+    				 * beginning of the layout to the bottom/right
+    				 * edge of the slot calculated from top/left
+    				 * to bottom/right. */
+    int maxOffset;		/* The maximum offset, in pixels, from the
+    				 * beginning of the layout to the bottom/right
+    				 * edge of the slot calculated from
+    				 * bottom/right to top/left. */
 } GridLayout;
 
 /*
@@ -140,83 +138,83 @@ typedef struct {
     				 * column constraints. */
     int rowEnd;			/* The last row occupied by any slave. */
     int rowMax;			/* The number of rows with constraints. */
-    int rowSpace;		/* The number of slots currently allocated
-    				 * for row constraints. */
+    int rowSpace;		/* The number of slots currently allocated for
+    				 * row constraints. */
     int startX;			/* Pixel offset of this layout within its
     				 * master. */
     int startY;			/* Pixel offset of this layout within its
     				 * master. */
-    Tk_Anchor anchor;		/* Value of anchor option: specifies where
-				 * a grid without weight should be placed. */
+    Tk_Anchor anchor;		/* Value of anchor option: specifies where a
+				 * grid without weight should be placed. */
 } GridMaster;
 
 /*
- * For each window that the grid cares about (either because
- * the window is managed by the grid or because the window
- * has slaves that are managed by the grid), there is a
- * structure of the following type:
+ * For each window that the grid cares about (either because the window is
+ * managed by the grid or because the window has slaves that are managed by
+ * the grid), there is a structure of the following type:
  */
 
 typedef struct Gridder {
-    Tk_Window tkwin;		/* Tk token for window.  NULL means that
-				 * the window has been deleted, but the
-				 * gridder hasn't had a chance to clean up
-				 * yet because the structure is still in
-				 * use. */
-    struct Gridder *masterPtr;	/* Master window within which this window
-				 * is managed (NULL means this window
-				 * isn't managed by the gridder). */
-    struct Gridder *nextPtr;	/* Next window managed within same
-				 * master.  List order doesn't matter. */
-    struct Gridder *slavePtr;	/* First in list of slaves managed
-				 * inside this window (NULL means
-				 * no grid slaves). */
+    Tk_Window tkwin;		/* Tk token for window. NULL means that the
+				 * window has been deleted, but the gridder
+				 * hasn't had a chance to clean up yet because
+				 * the structure is still in use. */
+    struct Gridder *masterPtr;	/* Master window within which this window is
+				 * managed (NULL means this window isn't
+				 * managed by the gridder). */
+    struct Gridder *nextPtr;	/* Next window managed within same master.
+				 * List order doesn't matter. */
+    struct Gridder *slavePtr;	/* First in list of slaves managed inside this
+				 * window (NULL means no grid slaves). */
     GridMaster *masterDataPtr;	/* Additional data for geometry master. */
-    int column, row;		/* Location in the grid (starting
-				 * from zero). */
+    int column, row;		/* Location in the grid (starting from
+				 * zero). */
     int numCols, numRows;	/* Number of columns or rows this slave spans.
 				 * Should be at least 1. */
     int padX, padY;		/* Total additional pixels to leave around the
-				 * window.  Some is of this space is on each
-				 * side.  This is space *outside* the window:
+				 * window. Some is of this space is on each
+				 * side. This is space *outside* the window:
 				 * we'll allocate extra space in frame but
 				 * won't enlarge window). */
-    int padLeft, padTop;	/* The part of padX or padY to use on the
-				 * left or top of the widget, respectively.
-				 * By default, this is half of padX or padY. */
+    int padLeft, padTop;	/* The part of padX or padY to use on the left
+				 * or top of the widget, respectively. By
+				 * default, this is half of padX or padY. */
     int iPadX, iPadY;		/* Total extra pixels to allocate inside the
 				 * window (half this amount will appear on
 				 * each side). */
     int sticky;			/* which sides of its cavity this window
 				 * sticks to. See below for definitions */
-    int doubleBw;		/* Twice the window's last known border
-				 * width.  If this changes, the window
-				 * must be re-arranged within its master. */
-    int *abortPtr;		/* If non-NULL, it means that there is a nested
-				 * call to ArrangeGrid already working on
-				 * this window.  *abortPtr may be set to 1 to
-				 * abort that nested call.  This happens, for
-				 * example, if tkwin or any of its slaves
+    int doubleBw;		/* Twice the window's last known border width.
+				 * If this changes, the window must be
+				 * re-arranged within its master. */
+    int *abortPtr;		/* If non-NULL, it means that there is a
+				 * nested call to ArrangeGrid already working
+				 * on this window. *abortPtr may be set to 1
+				 * to abort that nested call. This happens,
+				 * for example, if tkwin or any of its slaves
 				 * is deleted. */
-    int flags;			/* Miscellaneous flags;  see below
-				 * for definitions. */
+    int flags;			/* Miscellaneous flags; see below for
+				 * definitions. */
 
     /*
      * These fields are used temporarily for layout calculations only.
      */
 
     struct Gridder *binNextPtr;	/* Link to next span>1 slave in this bin. */
-    int size;			/* Nominal size (width or height) in pixels
-    				 * of the slave.  This includes the padding. */
+    int size;			/* Nominal size (width or height) in pixels of
+    				 * the slave. This includes the padding. */
 } Gridder;
 
-/* Flag values for "sticky"ness  The 16 combinations subsume the packer's
+/*
+ * Flag values for "sticky"ness. The 16 combinations subsume the packer's
  * notion of anchor and fill.
  *
- * STICK_NORTH  	This window sticks to the top of its cavity.
- * STICK_EAST		This window sticks to the right edge of its cavity.
- * STICK_SOUTH		This window sticks to the bottom of its cavity.
- * STICK_WEST		This window sticks to the left edge of its cavity.
+ * STICK_NORTH			This window sticks to the top of its cavity.
+ * STICK_EAST			This window sticks to the right edge of its
+ *				cavity.
+ * STICK_SOUTH			This window sticks to the bottom of its cavity.
+ * STICK_WEST			This window sticks to the left edge of its
+ *				cavity.
  */
 
 #define STICK_NORTH		1
@@ -237,14 +235,13 @@ typedef struct UniformGroup {
 /*
  * Flag values for Grid structures:
  *
- * REQUESTED_RELAYOUT:		1 means a Tcl_DoWhenIdle request
- *				has already been made to re-arrange
- *				all the slaves of this window.
- *
- * DONT_PROPAGATE:		1 means don't set this window's requested
- *				size.  0 means if this window is a master
- *				then Tk will set its requested size to fit
- *				the needs of its slaves.
+ * REQUESTED_RELAYOUT		1 means a Tcl_DoWhenIdle request has already
+ *				been made to re-arrange all the slaves of this
+ *				window.
+ * DONT_PROPAGATE		1 means don't set this window's requested
+ *				size. 0 means if this window is a master then
+ *				Tk will set its requested size to fit the
+ *				needs of its slaves.
  */
 
 #define REQUESTED_RELAYOUT	1
@@ -254,50 +251,53 @@ typedef struct UniformGroup {
  * Prototypes for procedures used only in this file:
  */
 
-static void	AdjustForSticky _ANSI_ARGS_((Gridder *slavePtr, int *xPtr,
-		    int *yPtr, int *widthPtr, int *heightPtr));
-static int	AdjustOffsets _ANSI_ARGS_((int width,
-			int elements, SlotInfo *slotPtr));
-static void	ArrangeGrid _ANSI_ARGS_((ClientData clientData));
-static int	CheckSlotData _ANSI_ARGS_((Gridder *masterPtr, int slot,
-			int slotType, int checkOnly));
-static int	ConfigureSlaves _ANSI_ARGS_((Tcl_Interp *interp,
-			Tk_Window tkwin, int objc, Tcl_Obj *CONST objv[]));
-static void	DestroyGrid _ANSI_ARGS_((char *memPtr));
-static Gridder *GetGrid _ANSI_ARGS_((Tk_Window tkwin));
-static int	GridAnchorCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridBboxCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridForgetRemoveCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridInfoCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridLocationCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridPropagateCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridRowColumnConfigureCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridSizeCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static int	GridSlavesCommand _ANSI_ARGS_((Tk_Window tkwin,
-			Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
-static void	GridStructureProc _ANSI_ARGS_((
-			ClientData clientData, XEvent *eventPtr));
-static void	GridLostSlaveProc _ANSI_ARGS_((ClientData clientData,
-			Tk_Window tkwin));
-static void	GridReqProc _ANSI_ARGS_((ClientData clientData,
-			Tk_Window tkwin));
-static void 	InitMasterData _ANSI_ARGS_((Gridder *masterPtr));
-static Tcl_Obj *NewPairObj _ANSI_ARGS_((Tcl_Interp*, int, int));
-static Tcl_Obj *NewQuadObj _ANSI_ARGS_((Tcl_Interp*, int, int, int, int));
-static int	ResolveConstraints _ANSI_ARGS_((Gridder *gridPtr,
-			int rowOrColumn, int maxOffset));
-static void	SetGridSize _ANSI_ARGS_((Gridder *gridPtr));
-static void	StickyToString _ANSI_ARGS_((int flags, char *result));
-static int	StringToSticky _ANSI_ARGS_((char *string));
-static void	Unlink _ANSI_ARGS_((Gridder *gridPtr));
+static void		AdjustForSticky(Gridder *slavePtr, int *xPtr,
+			    int *yPtr, int *widthPtr, int *heightPtr);
+static int		AdjustOffsets(int width, int elements,
+			    SlotInfo *slotPtr);
+static void		ArrangeGrid(ClientData clientData);
+static int		CheckSlotData(Gridder *masterPtr, int slot,
+			    int slotType, int checkOnly);
+static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
+			    int objc, Tcl_Obj *CONST objv[]);
+static void		DestroyGrid(char *memPtr);
+static Gridder *	GetGrid(Tk_Window tkwin);
+static int		GridAnchorCommand(Tk_Window tkwin, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[]);
+static int		GridBboxCommand(Tk_Window tkwin, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[]);
+static int		GridForgetRemoveCommand(Tk_Window tkwin,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]);
+static int		GridInfoCommand(Tk_Window tkwin, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[]);
+static int		GridLocationCommand(Tk_Window tkwin,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]);
+static int		GridPropagateCommand(Tk_Window tkwin,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]);
+static int		GridRowColumnConfigureCommand(Tk_Window tkwin,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]);
+static int		GridSizeCommand(Tk_Window tkwin, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[]);
+static int		GridSlavesCommand(Tk_Window tkwin, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *CONST objv[]);
+static void		GridStructureProc(ClientData clientData,
+			    XEvent *eventPtr);
+static void		GridLostSlaveProc(ClientData clientData,
+			    Tk_Window tkwin);
+static void		GridReqProc(ClientData clientData, Tk_Window tkwin);
+static void		InitMasterData(Gridder *masterPtr);
+static Tcl_Obj *	NewPairObj(int, int);
+static Tcl_Obj *	NewQuadObj(int, int, int, int);
+static int		ResolveConstraints(Gridder *gridPtr, int rowOrColumn,
+			    int maxOffset);
+static void		SetGridSize(Gridder *gridPtr);
+static void		StickyToString(int flags, char *result);
+static int		StringToSticky(char *string);
+static void		Unlink(Gridder *gridPtr);
 
 static Tk_GeomMgr gridMgrType = {
     "grid",			/* name */
@@ -310,8 +310,8 @@ static Tk_GeomMgr gridMgrType = {
  *
  * Tk_GridCmd --
  *
- *	This procedure is invoked to process the "grid" Tcl command.
- *	See the user documentation for details on what it does.
+ *	This procedure is invoked to process the "grid" Tcl command. See the
+ *	user documentation for details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -324,8 +324,7 @@ static Tk_GeomMgr gridMgrType = {
 
 int
 Tk_GridObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with
-				 * interpreter. */
+    ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
@@ -367,7 +366,8 @@ Tk_GridObjCmd(clientData, interp, objc, objv)
 	return GridBboxCommand(tkwin, interp, objc, objv);
     case GRID_CONFIGURE:
 	return ConfigureSlaves(interp, tkwin, objc-2, objv+2);
-    case GRID_FORGET: case GRID_REMOVE:
+    case GRID_FORGET:
+    case GRID_REMOVE:
 	return GridForgetRemoveCommand(tkwin, interp, objc, objv);
     case GRID_INFO:
 	return GridInfoCommand(tkwin, interp, objc, objv);
@@ -404,7 +404,7 @@ Tk_GridObjCmd(clientData, interp, objc, objv)
  *
  * GridAnchorCommand --
  *
- *	Implementation of the [grid anchor] subcommand.  See the user
+ *	Implementation of the [grid anchor] subcommand. See the user
  *	documentation for details on what it does.
  *
  * Results:
@@ -532,7 +532,7 @@ GridBboxCommand(tkwin, interp, objc, objv)
 
     gridPtr = masterPtr->masterDataPtr;
     if (gridPtr == NULL) {
-	Tcl_SetObjResult(interp, NewQuadObj(interp, 0, 0, 0, 0));
+	Tcl_SetObjResult(interp, NewQuadObj(0, 0, 0, 0));
 	return TCL_OK;
     }
 
@@ -541,7 +541,7 @@ GridBboxCommand(tkwin, interp, objc, objv)
     endY = MAX(gridPtr->rowEnd, gridPtr->rowMax);
 
     if ((endX == 0) || (endY == 0)) {
-	Tcl_SetObjResult(interp, NewQuadObj(interp, 0, 0, 0, 0));
+	Tcl_SetObjResult(interp, NewQuadObj(0, 0, 0, 0));
 	return TCL_OK;
     }
     if (objc == 3) {
@@ -590,7 +590,7 @@ GridBboxCommand(tkwin, interp, objc, objv)
 	height = gridPtr->rowPtr[row2].offset - y;
     }
 
-    Tcl_SetObjResult(interp, NewQuadObj(interp,
+    Tcl_SetObjResult(interp, NewQuadObj(
 	    x + gridPtr->startX, y + gridPtr->startY, width, height));
     return TCL_OK;
 }
@@ -600,8 +600,8 @@ GridBboxCommand(tkwin, interp, objc, objv)
  *
  * GridForgetRemoveCommand --
  *
- *	Implementation of the [grid forget]/[grid remove] subcommands.
- *	See the user documentation for details on what these do.
+ *	Implementation of the [grid forget]/[grid remove] subcommands. See the
+ *	user documentation for details on what these do.
  *
  * Results:
  *	Standard Tcl result.
@@ -673,7 +673,7 @@ GridForgetRemoveCommand(tkwin, interp, objc, objv)
  *
  * GridInfoCommand --
  *
- *	Implementation of the [grid info] subcommand.  See the user
+ *	Implementation of the [grid info] subcommand. See the user
  *	documentation for details on what it does.
  *
  * Results:
@@ -729,7 +729,7 @@ GridInfoCommand(tkwin, interp, objc, objv)
  *
  * GridLocationCommand --
  *
- *	Implementation of the [grid location] subcommand.  See the user
+ *	Implementation of the [grid location] subcommand. See the user
  *	documentation for details on what it does.
  *
  * Results:
@@ -752,8 +752,8 @@ GridLocationCommand(tkwin, interp, objc, objv)
     Gridder *masterPtr;		/* master grid record */
     GridMaster *gridPtr;	/* pointer to grid data */
     register SlotInfo *slotPtr;
-    int x, y;		/* Offset in pixels, from edge of master. */
-    int i, j;		/* Corresponding column and row indeces. */
+    int x, y;			/* Offset in pixels, from edge of master. */
+    int i, j;			/* Corresponding column and row indeces. */
     int endX, endY;		/* end of grid */
 
     if (objc != 5) {
@@ -774,15 +774,15 @@ GridLocationCommand(tkwin, interp, objc, objv)
 
     masterPtr = GetGrid(master);
     if (masterPtr->masterDataPtr == NULL) {
-	Tcl_SetObjResult(interp, NewPairObj(interp, -1, -1));
+	Tcl_SetObjResult(interp, NewPairObj(-1, -1));
 	return TCL_OK;
     }
     gridPtr = masterPtr->masterDataPtr;
 
     /*
-     * Update any pending requests.  This is not always the
-     * steady state value, as more configure events could be in
-     * the pipeline, but its as close as its easy to get.
+     * Update any pending requests. This is not always the steady state value,
+     * as more configure events could be in the pipeline, but its as close as
+     * its easy to get.
      */
 
     while (masterPtr->flags & REQUESTED_RELAYOUT) {
@@ -813,7 +813,7 @@ GridLocationCommand(tkwin, interp, objc, objv)
 	}
     }
 
-    Tcl_SetObjResult(interp, NewPairObj(interp, i, j));
+    Tcl_SetObjResult(interp, NewPairObj(i, j));
     return TCL_OK;
 }
 
@@ -822,7 +822,7 @@ GridLocationCommand(tkwin, interp, objc, objv)
  *
  * GridPropagateCommand --
  *
- *	Implementation of the [grid propagate] subcommand.  See the user
+ *	Implementation of the [grid propagate] subcommand. See the user
  *	documentation for details on what it does.
  *
  * Results:
@@ -863,7 +863,9 @@ GridPropagateCommand(tkwin, interp, objc, objv)
 	return TCL_ERROR;
     }
 
-    /* Only request a relayout if the propagation bit changes */
+    /*
+     * Only request a relayout if the propagation bit changes.
+     */
 
     old = !(masterPtr->flags & DONT_PROPAGATE);
     if (propagate != old) {
@@ -895,8 +897,7 @@ GridPropagateCommand(tkwin, interp, objc, objv)
  * GridRowColumnConfigureCommand --
  *
  *	Implementation of the [grid rowconfigure] and [grid columnconfigure]
- *	subcommands.  See the user documentation for details on what these
- *	do.
+ *	subcommands. See the user documentation for details on what these do.
  *
  * Results:
  *	Standard Tcl result.
@@ -971,8 +972,8 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	}
 
 	/*
-	 * Return all of the options for this row or column.  If the
-	 * request is out of range, return all 0's.
+	 * Return all of the options for this row or column. If the request is
+	 * out of range, return all 0's.
 	 */
 
 	if (objc == 4) {
@@ -1005,8 +1006,8 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	}
 
 	/*
-	 * If only one option is given, with no value, the
-	 * current value is returned.
+	 * If only one option is given, with no value, the current value is
+	 * returned.
 	 */
 
 	if (Tcl_GetIndexFromObj(interp, objv[4], optionStrings,
@@ -1045,7 +1046,10 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    allSlaves = 1;
 	} else if (TkGetWindowFromObj(interp, tkwin, lObjv[j], &slave)
 		== TCL_OK) {
-	    /* Is it gridded in this master? */
+	    /*
+	     * Is it gridded in this master?
+	     */
+
 	    slavePtr = GetGrid(slave);
 	    if (slavePtr->masterPtr != masterPtr) {
 		Tcl_ResetResult(interp);
@@ -1067,6 +1071,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	/*
 	 * The outer loop is only to handle "all".
 	 */
+
 	do {
 	    if (slavePtr != NULL) {
 		first = (slotType == COLUMN) ?
@@ -1146,8 +1151,8 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     }
 
     /*
-     * We changed a property, re-arrange the table,
-     * and check for constraint shrinkage.
+     * We changed a property, re-arrange the table, and check for constraint
+     * shrinkage.
      */
 
     if (slotType == ROW) {
@@ -1183,7 +1188,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
  *
  * GridSizeCommand --
  *
- *	Implementation of the [grid size] subcommand.  See the user
+ *	Implementation of the [grid size] subcommand. See the user
  *	documentation for details on what it does.
  *
  * Results:
@@ -1219,11 +1224,11 @@ GridSizeCommand(tkwin, interp, objc, objv)
     if (masterPtr->masterDataPtr != NULL) {
 	SetGridSize(masterPtr);
 	gridPtr = masterPtr->masterDataPtr;
-	Tcl_SetObjResult(interp, NewPairObj(interp,
+	Tcl_SetObjResult(interp, NewPairObj(
 		MAX(gridPtr->columnEnd, gridPtr->columnMax),
 		MAX(gridPtr->rowEnd, gridPtr->rowMax)));
     } else {
-	Tcl_SetObjResult(interp, NewPairObj(interp, 0, 0));
+	Tcl_SetObjResult(interp, NewPairObj(0, 0));
     }
     return TCL_OK;
 }
@@ -1233,15 +1238,15 @@ GridSizeCommand(tkwin, interp, objc, objv)
  *
  * GridSlavesCommand --
  *
- *	Implementation of the [grid slaves] subcommand.  See the user
+ *	Implementation of the [grid slaves] subcommand. See the user
  *	documentation for details on what it does.
  *
  * Results:
  *	Standard Tcl result.
  *
  * Side effects:
- *	Places a list of slaves of the specified window in the
- *	interpreter's result field.
+ *	Places a list of slaves of the specified window in the interpreter's
+ *	result field.
  *
  *----------------------------------------------------------------------
  */
@@ -1319,15 +1324,15 @@ GridSlavesCommand(tkwin, interp, objc, objv)
  *
  * GridReqProc --
  *
- *	This procedure is invoked by Tk_GeometryRequest for
- *	windows managed by the grid.
+ *	This procedure is invoked by Tk_GeometryRequest for windows managed by
+ *	the grid.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Arranges for tkwin, and all its managed siblings, to
- *	be re-arranged at the next idle point.
+ *	Arranges for tkwin, and all its managed siblings, to be re-arranged at
+ *	the next idle point.
  *
  *----------------------------------------------------------------------
  */
@@ -1354,8 +1359,8 @@ GridReqProc(clientData, tkwin)
  *
  * GridLostSlaveProc --
  *
- *	This procedure is invoked by Tk whenever some other geometry
- *	claims control over a slave that used to be managed by us.
+ *	This procedure is invoked by Tk whenever some other geometry claims
+ *	control over a slave that used to be managed by us.
  *
  * Results:
  *	None.
@@ -1368,8 +1373,8 @@ GridReqProc(clientData, tkwin)
 
 static void
 GridLostSlaveProc(clientData, tkwin)
-    ClientData clientData;	/* Grid structure for slave window that
-				 * was stolen away. */
+    ClientData clientData;	/* Grid structure for slave window that was
+				 * stolen away. */
     Tk_Window tkwin;		/* Tk's handle for the slave window. */
 {
     register Gridder *slavePtr = (Gridder *) clientData;
@@ -1386,11 +1391,11 @@ GridLostSlaveProc(clientData, tkwin)
  *
  * AdjustOffsets --
  *
- *	This procedure adjusts the size of the layout to fit in the
- *	space provided.  If it needs more space, the extra is added
- *	according to the weights.  If it needs less, the space is removed
- *	according to the weights, but at no time does the size drop below
- *	the minsize specified for that slot.
+ *	This procedure adjusts the size of the layout to fit in the space
+ *	provided. If it needs more space, the extra is added according to the
+ *	weights. If it needs less, the space is removed according to the
+ *	weights, but at no time does the size drop below the minsize specified
+ *	for that slot.
  *
  * Results:
  *	The size used by the layout.
@@ -1412,8 +1417,8 @@ AdjustOffsets(size, slots, slotPtr)
     int totalWeight;		/* Sum of the weights for all the slots. */
     int weight;			/* Sum of the weights so far. */
     int minSize;		/* Minimum possible layout size. */
-    int newDiff;		/* The most pixels that can be added on
-    				 * the current pass. */
+    int newDiff;		/* The most pixels that can be added on the
+    				 * current pass. */
 
     diff = size - slotPtr[slots-1].offset;
 
@@ -1439,7 +1444,7 @@ AdjustOffsets(size, slots, slotPtr)
     }
 
     /*
-     * Add extra space according to the slot weights.  This is done
+     * Add extra space according to the slot weights. This is done
      * cumulatively to prevent round-off error accumulation.
      */
 
@@ -1453,9 +1458,9 @@ AdjustOffsets(size, slots, slotPtr)
     }
 
     /*
-     * The layout must shrink below its requested size.  Compute the
-     * minimum possible size by looking at the slot minSizes.
-     * Store each slot's minimum size in temp.
+     * The layout must shrink below its requested size. Compute the minimum
+     * possible size by looking at the slot minSizes. Store each slot's
+     * minimum size in temp.
      */
 
     minSize = 0;
@@ -1471,8 +1476,8 @@ AdjustOffsets(size, slots, slotPtr)
     }
 
     /*
-     * If the requested size is less than the minimum required size,
-     * set the slot sizes to their minimum values.
+     * If the requested size is less than the minimum required size, set the
+     * slot sizes to their minimum values.
      */
 
     if (size <= minSize) {
@@ -1485,8 +1490,8 @@ AdjustOffsets(size, slots, slotPtr)
     }
 
     /*
-     * Remove space from slots according to their weights.  The weights
-     * get renormalized anytime a slot shrinks to its minimum size.
+     * Remove space from slots according to their weights. The weights get
+     * renormalized anytime a slot shrinks to its minimum size.
      */
 
     while (diff < 0) {
@@ -1515,9 +1520,9 @@ AdjustOffsets(size, slots, slotPtr)
 
 	newDiff = diff;
 	for (slot = 0; slot < slots; slot++) {
-	    int current;		/* current size of this slot */
-	    int maxDiff;		/* max diff that would cause
-	    				 * this slot to equal its minsize */
+	    int current;	/* Current size of this slot. */
+	    int maxDiff;	/* Maximum diff that would cause this slot to
+	    			 * equal its minsize. */
 	    if (slotPtr[slot].temp == 0) {
 	    	continue;
 	    }
@@ -1549,12 +1554,12 @@ AdjustOffsets(size, slots, slotPtr)
  *
  * AdjustForSticky --
  *
- *	This procedure adjusts the size of a slave in its cavity based
- *	on its "sticky" flags.
+ *	This procedure adjusts the size of a slave in its cavity based on its
+ *	"sticky" flags.
  *
  * Results:
- *	The input x, y, width, and height are changed to represent the
- *	desired coordinates of the slave.
+ *	The input x, y, width, and height are changed to represent the desired
+ *	coordinates of the slave.
  *
  * Side effects:
  *	None.
@@ -1608,10 +1613,10 @@ AdjustForSticky(slavePtr, xPtr, yPtr, widthPtr, heightPtr)
  *
  * ArrangeGrid --
  *
- *	This procedure is invoked (using the Tcl_DoWhenIdle mechanism)
- *	to re-layout a set of windows managed by the grid.  It is
- *	invoked at idle time so that a series of grid requests can be
- *	merged into a single layout operation.
+ *	This procedure is invoked (using the Tcl_DoWhenIdle mechanism) to
+ *	re-layout a set of windows managed by the grid. It is invoked at idle
+ *	time so that a series of grid requests can be merged into a single
+ *	layout operation.
  *
  * Results:
  *	None.
@@ -1631,17 +1636,17 @@ ArrangeGrid(clientData)
     register Gridder *slavePtr;
     GridMaster *slotPtr = masterPtr->masterDataPtr;
     int abort;
-    int width, height;		/* requested size of layout, in pixels */
-    int realWidth, realHeight;	/* actual size layout should take-up */
+    int width, height;		/* Requested size of layout, in pixels. */
+    int realWidth, realHeight;	/* Actual size layout should take-up. */
     int usedX, usedY;
 
     masterPtr->flags &= ~REQUESTED_RELAYOUT;
 
     /*
-     * If the master has no slaves anymore, then don't do anything
-     * at all:  just leave the master's size as-is.  Otherwise there is
-     * no way to "relinquish" control over the master so another geometry
-     * manager can take over.
+     * If the master has no slaves anymore, then don't do anything at all:
+     * just leave the master's size as-is. Otherwise there is no way to
+     * "relinquish" control over the master so another geometry manager can
+     * take over.
      */
 
     if (masterPtr->slavePtr == NULL) {
@@ -1653,9 +1658,9 @@ ArrangeGrid(clientData)
     }
 
     /*
-     * Abort any nested call to ArrangeGrid for this window, since
-     * we'll do everything necessary here, and set up so this call
-     * can be aborted if necessary.
+     * Abort any nested call to ArrangeGrid for this window, since we'll do
+     * everything necessary here, and set up so this call can be aborted if
+     * necessary.
      */
 
     if (masterPtr->abortPtr != NULL) {
@@ -1699,9 +1704,9 @@ ArrangeGrid(clientData)
 
     /*
      * If the currently requested layout size doesn't match the master's
-     * window size, then adjust the slot offsets according to the
-     * weights.  If all of the weights are zero, place the layout according
-     * to the anchor value.
+     * window size, then adjust the slot offsets according to the weights. If
+     * all of the weights are zero, place the layout according to the anchor
+     * value.
      */
 
     realWidth = Tk_Width(masterPtr->tkwin) -
@@ -1718,15 +1723,14 @@ ArrangeGrid(clientData)
 	    0, 0, usedX, usedY, &slotPtr->startX, &slotPtr->startY);
 
     /*
-     * Now adjust the actual size of the slave to its cavity by
-     * computing the cavity size, and adjusting the widget according
-     * to its stickyness.
+     * Now adjust the actual size of the slave to its cavity by computing the
+     * cavity size, and adjusting the widget according to its stickyness.
      */
 
     for (slavePtr = masterPtr->slavePtr; slavePtr != NULL && !abort;
 	    slavePtr = slavePtr->nextPtr) {
-	int x, y;			/* top left coordinate */
-	int width, height;		/* slot or slave size */
+	int x, y;			/* Top left coordinate */
+	int width, height;		/* Slot or slave size */
 	int col = slavePtr->column;
 	int row = slavePtr->row;
 
@@ -1742,9 +1746,9 @@ ArrangeGrid(clientData)
 	AdjustForSticky(slavePtr, &x, &y, &width, &height);
 
 	/*
-	 * Now put the window in the proper spot.  (This was taken directly
-	 * from tkPack.c.)  If the slave is a child of the master, then
-	 * do this here.  Otherwise let Tk_MaintainGeometry do the work.
+	 * Now put the window in the proper spot. (This was taken directly
+	 * from tkPack.c.) If the slave is a child of the master, then do this
+	 * here. Otherwise let Tk_MaintainGeometry do the work.
 	 */
 
 	if (masterPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
@@ -1762,8 +1766,8 @@ ArrangeGrid(clientData)
 		}
 
 		/*
-		 * Don't map the slave if the master isn't mapped: wait
-		 * until the master gets mapped later.
+		 * Don't map the slave if the master isn't mapped: wait until
+		 * the master gets mapped later.
 		 */
 
 		if (Tk_IsMapped(masterPtr->tkwin)) {
@@ -1790,9 +1794,9 @@ ArrangeGrid(clientData)
  *
  * ResolveConstraints --
  *
- *	Resolve all of the column and row boundaries.  Most of
- *	the calculations are identical for rows and columns, so this procedure
- *	is called twice, once for rows, and again for columns.
+ *	Resolve all of the column and row boundaries. Most of the calculations
+ *	are identical for rows and columns, so this procedure is called twice,
+ *	once for rows, and again for columns.
  *
  * Results:
  *	The offset (in pixels) from the left/top edge of this layout is
@@ -1809,16 +1813,16 @@ static int
 ResolveConstraints(masterPtr, slotType, maxOffset)
     Gridder *masterPtr;		/* The geometry master for this grid. */
     int slotType;		/* Either ROW or COLUMN. */
-    int maxOffset;		/* The actual maximum size of this layout
-				 * in pixels,  or 0 (not currently used). */
+    int maxOffset;		/* The actual maximum size of this layout in
+				 * pixels, or 0 (not currently used). */
 {
     register SlotInfo *slotPtr;	/* Pointer to row/col constraints. */
     register Gridder *slavePtr;	/* List of slave windows in this grid. */
     int constraintCount;	/* Count of rows or columns that have
 				 * constraints. */
     int slotCount;		/* Last occupied row or column. */
-    int gridCount;		/* The larger of slotCount and constraintCount.
-				 */
+    int gridCount;		/* The larger of slotCount and
+				 * constraintCount. */
     GridLayout *layoutPtr;	/* Temporary layout structure. */
     int requiredSize;		/* The natural size of the grid (pixels).
 				 * This is the minimum size needed to
@@ -1837,14 +1841,14 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
     UniformGroup *uniformGroupPtr;
 				/* Uniform groups data. */
     int uniformGroups;		/* Number of currently used uniform groups. */
-    int uniformGroupsAlloced;	/* Size of allocated space for uniform groups.
-				 */
+    int uniformGroupsAlloced;	/* Size of allocated space for uniform
+				 * groups. */
     int weight, minSize;
     int prevGrow, accWeight, grow;
 
     /*
-     * For typical sized tables, we'll use stack space for the layout data
-     * to avoid the overhead of a malloc and free for every layout.
+     * For typical sized tables, we'll use stack space for the layout data to
+     * avoid the overhead of a malloc and free for every layout.
      */
 
     GridLayout layoutData[TYPICAL_SIZE + 1];
@@ -1852,11 +1856,11 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
     if (slotType == COLUMN) {
 	constraintCount = masterPtr->masterDataPtr->columnMax;
 	slotCount = masterPtr->masterDataPtr->columnEnd;
-	slotPtr  = masterPtr->masterDataPtr->columnPtr;
+	slotPtr = masterPtr->masterDataPtr->columnPtr;
     } else {
 	constraintCount = masterPtr->masterDataPtr->rowMax;
 	slotCount = masterPtr->masterDataPtr->rowEnd;
-	slotPtr  = masterPtr->masterDataPtr->rowPtr;
+	slotPtr = masterPtr->masterDataPtr->rowPtr;
     }
 
     /*
@@ -1871,11 +1875,12 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
     }
 
     /*
-     * Allocate an extra layout slot to represent the left/top edge of
-     * the 0th slot to make it easier to calculate slot widths from
-     * offsets without special case code.
-     * Initialize the "dummy" slot to the left/top of the table.
-     * This slot avoids special casing the first slot.
+     * Allocate an extra layout slot to represent the left/top edge of the 0th
+     * slot to make it easier to calculate slot widths from offsets without
+     * special case code.
+     *
+     * Initialize the "dummy" slot to the left/top of the table. This slot
+     * avoids special casing the first slot.
      */
 
     layoutPtr->minOffset = 0;
@@ -1884,8 +1889,8 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     /*
      * Step 1.
-     * Copy the slot constraints into the layout structure,
-     * and initialize the rest of the fields.
+     * Copy the slot constraints into the layout structure, and initialize the
+     * rest of the fields.
      */
 
     for (slot=0; slot < constraintCount; slot++) {
@@ -1905,52 +1910,55 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     /*
      * Step 2.
-     * Slaves with a span of 1 are used to determine the minimum size of
-     * each slot.  Slaves whose span is two or more slots don't
-     * contribute to the minimum size of each slot directly, but can cause
-     * slots to grow if their size exceeds the the sizes of the slots they
-     * span.
+     * Slaves with a span of 1 are used to determine the minimum size of each
+     * slot. Slaves whose span is two or more slots don't contribute to the
+     * minimum size of each slot directly, but can cause slots to grow if
+     * their size exceeds the the sizes of the slots they span.
      *
-     * Bin all slaves whose spans are > 1 by their right edges.  This
-     * allows the computation on minimum and maximum possible layout
-     * sizes at each slot boundary, without the need to re-sort the slaves.
+     * Bin all slaves whose spans are > 1 by their right edges. This allows
+     * the computation on minimum and maximum possible layout sizes at each
+     * slot boundary, without the need to re-sort the slaves.
      */
 
     switch (slotType) {
-	case COLUMN:
-	    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
-		    slavePtr = slavePtr->nextPtr) {
-		int rightEdge = slavePtr->column + slavePtr->numCols - 1;
-		slavePtr->size = Tk_ReqWidth(slavePtr->tkwin) +
-			slavePtr->padX + slavePtr->iPadX + slavePtr->doubleBw;
-		if (slavePtr->numCols > 1) {
-		    slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
-		    layoutPtr[rightEdge].binNextPtr = slavePtr;
-		} else {
-		    int size = slavePtr->size + layoutPtr[rightEdge].pad;
-		    if (size > layoutPtr[rightEdge].minSize) {
-			layoutPtr[rightEdge].minSize = size;
-		    }
+    case COLUMN:
+	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+		slavePtr = slavePtr->nextPtr) {
+	    int rightEdge = slavePtr->column + slavePtr->numCols - 1;
+
+	    slavePtr->size = Tk_ReqWidth(slavePtr->tkwin) + slavePtr->padX
+		    + slavePtr->iPadX + slavePtr->doubleBw;
+	    if (slavePtr->numCols > 1) {
+		slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
+		layoutPtr[rightEdge].binNextPtr = slavePtr;
+	    } else {
+		int size = slavePtr->size + layoutPtr[rightEdge].pad;
+
+		if (size > layoutPtr[rightEdge].minSize) {
+		    layoutPtr[rightEdge].minSize = size;
 		}
 	    }
-	    break;
-	case ROW:
-	    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
-		    slavePtr = slavePtr->nextPtr) {
-		int rightEdge = slavePtr->row + slavePtr->numRows - 1;
-		slavePtr->size = Tk_ReqHeight(slavePtr->tkwin) +
-			slavePtr->padY + slavePtr->iPadY + slavePtr->doubleBw;
-		if (slavePtr->numRows > 1) {
-		    slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
-		    layoutPtr[rightEdge].binNextPtr = slavePtr;
-		} else {
-		    int size = slavePtr->size + layoutPtr[rightEdge].pad;
-		    if (size > layoutPtr[rightEdge].minSize) {
-			layoutPtr[rightEdge].minSize = size;
-		    }
+	}
+	break;
+    case ROW:
+	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
+		slavePtr = slavePtr->nextPtr) {
+	    int rightEdge = slavePtr->row + slavePtr->numRows - 1;
+
+	    slavePtr->size = Tk_ReqHeight(slavePtr->tkwin) + slavePtr->padY
+		    + slavePtr->iPadY + slavePtr->doubleBw;
+	    if (slavePtr->numRows > 1) {
+		slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
+		layoutPtr[rightEdge].binNextPtr = slavePtr;
+	    } else {
+		int size = slavePtr->size + layoutPtr[rightEdge].pad;
+
+		if (size > layoutPtr[rightEdge].minSize) {
+		    layoutPtr[rightEdge].minSize = size;
 		}
 	    }
-	    break;
+	}
+	break;
     }
 
     /*
@@ -1983,13 +1991,14 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 			    * sizeof(UniformGroup);
 		    size_t newSize = (uniformGroupsAlloced + UNIFORM_PREALLOC)
 			    * sizeof(UniformGroup);
-		    UniformGroup *new = (UniformGroup *) ckalloc(newSize);
-		    UniformGroup *old = uniformGroupPtr;
-		    memcpy((VOID *) new, (VOID *) old, oldSize);
-		    if (old != uniformPre) {
-			ckfree((char *) old);
+		    UniformGroup *newUG = (UniformGroup *) ckalloc(newSize);
+		    UniformGroup *oldUG = uniformGroupPtr;
+
+		    memcpy((VOID *) newUG, (VOID *) oldUG, oldSize);
+		    if (oldUG != uniformPre) {
+			ckfree((char *) oldUG);
 		    }
-		    uniformGroupPtr = new;
+		    uniformGroupPtr = newUG;
 		    uniformGroupsAlloced += UNIFORM_PREALLOC;
 		}
 		uniformGroups++;
@@ -2032,8 +2041,8 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     /*
      * Step 3.
-     * Determine the minimum slot offsets going from left to right
-     * that would fit all of the slaves.  This determines the minimum
+     * Determine the minimum slot offsets going from left to right that would
+     * fit all of the slaves. This determines the minimum
      */
 
     for (offset=0,slot=0; slot < gridCount; slot++) {
@@ -2043,6 +2052,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 	    int span = (slotType == COLUMN) ?
 		    slavePtr->numCols : slavePtr->numRows;
 	    int required = slavePtr->size + layoutPtr[slot - span].minOffset;
+
 	    if (required > layoutPtr[slot].minOffset) {
 		layoutPtr[slot].minOffset = required;
 	    }
@@ -2052,8 +2062,8 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     /*
      * At this point, we know the minimum required size of the entire layout.
-     * It might be prudent to stop here if our "master" will resize itself
-     * to this size.
+     * It might be prudent to stop here if our "master" will resize itself to
+     * this size.
      */
 
     requiredSize = offset;
@@ -2063,10 +2073,10 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     /*
      * Step 4.
-     * Determine the minimum slot offsets going from right to left,
-     * bounding the pixel range of each slot boundary.
-     * Pre-fill all of the right offsets with the actual size of the table;
-     * they will be reduced as required.
+     * Determine the minimum slot offsets going from right to left, bounding
+     * the pixel range of each slot boundary. Pre-fill all of the right
+     * offsets with the actual size of the table; they will be reduced as
+     * required.
      */
 
     for (slot=0; slot < gridCount; slot++) {
@@ -2079,6 +2089,7 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 		    slavePtr->numCols : slavePtr->numRows;
 	    int require = offset - slavePtr->size;
 	    int startSlot  = slot - span;
+
 	    if (startSlot >=0 && require < layoutPtr[startSlot].maxOffset) {
 		layoutPtr[startSlot].maxOffset = require;
 	    }
@@ -2094,30 +2105,29 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     /*
      * Step 5.
-     * At this point, each slot boundary has a range of values that
-     * will satisfy the overall layout size.
-     * Make repeated passes over the layout structure looking for
-     * spans of slot boundaries where the minOffsets are less than
-     * the maxOffsets, and adjust the offsets according to the slot
-     * weights.  At each pass, at least one slot boundary will have
-     * its range of possible values fixed at a single value.
+     * At this point, each slot boundary has a range of values that will
+     * satisfy the overall layout size. Make repeated passes over the layout
+     * structure looking for spans of slot boundaries where the minOffsets are
+     * less than the maxOffsets, and adjust the offsets according to the slot
+     * weights. At each pass, at least one slot boundary will have its range
+     * of possible values fixed at a single value.
      */
 
     for (start = 0; start < gridCount;) {
-	int totalWeight = 0;	/* Sum of the weights for all of the
-				 * slots in this span. */
-	int need = 0;		/* The minimum space needed to layout
+	int totalWeight = 0;	/* Sum of the weights for all of the slots in
 				 * this span. */
-	int have;		/* The actual amount of space that will
-				 * be taken up by this span. */
-	int weight;		/* Cumulative weights of the columns in
-				 * this span. */
+	int need = 0;		/* The minimum space needed to layout this
+				 * span. */
+	int have;		/* The actual amount of space that will be
+				 * taken up by this span. */
+	int weight;		/* Cumulative weights of the columns in this
+				 * span. */
 	int noWeights = 0;	/* True if the span has no weights. */
 
 	/*
-	 * Find a span by identifying ranges of slots whose edges are
-	 * already constrained at fixed offsets, but whose internal
-	 * slot boundaries have a range of possible positions.
+	 * Find a span by identifying ranges of slots whose edges are already
+	 * constrained at fixed offsets, but whose internal slot boundaries
+	 * have a range of possible positions.
 	 */
 
 	if (layoutPtr[start].minOffset == layoutPtr[start].maxOffset) {
@@ -2132,9 +2142,8 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 	}
 
 	/*
-	 * We found a span.  Compute the total weight, minumum space required,
-	 * for this span, and the actual amount of space the span should
-	 * use.
+	 * We found a span. Compute the total weight, minumum space required,
+	 * for this span, and the actual amount of space the span should use.
 	 */
 
 	for (slot = start; slot <= end; slot++) {
@@ -2144,8 +2153,8 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 	have = layoutPtr[end].maxOffset - layoutPtr[start-1].minOffset;
 
 	/*
-	 * If all the weights in the span are zero, then distribute the
-	 * extra space evenly.
+	 * If all the weights in the span are zero, then distribute the extra
+	 * space evenly.
 	 */
 
 	if (totalWeight == 0) {
@@ -2155,19 +2164,20 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
 	/*
 	 * It might not be possible to give the span all of the space
-	 * available on this pass without violating the size constraints
-	 * of one or more of the internal slot boundaries.
-	 * Try to determine the maximum amount of space that when added to
-	 * the entire span, would cause a slot boundary to have its possible
-	 * range reduced to one value, and reduce the amount of extra
-	 * space allocated on this pass accordingly.
+	 * available on this pass without violating the size constraints of
+	 * one or more of the internal slot boundaries. Try to determine the
+	 * maximum amount of space that when added to the entire span, would
+	 * cause a slot boundary to have its possible range reduced to one
+	 * value, and reduce the amount of extra space allocated on this pass
+	 * accordingly.
 	 *
-	 * The calculation is done cumulatively to avoid accumulating
-	 * roundoff errors.
+	 * The calculation is done cumulatively to avoid accumulating roundoff
+	 * errors.
 	 */
 
 	do {
 	    int prevMinOffset = layoutPtr[start - 1].minOffset;
+
 	    prevGrow = 0;
 	    accWeight = 0;
 	    for (slot = start; slot <= end; slot++) {
@@ -2180,10 +2190,11 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 			((prevMinOffset + layoutPtr[slot].minSize + grow)
 			> layoutPtr[slot].maxOffset)) {
 		    int newHave;
+
 		    /*
-		     * There is not enough room to grow that much.
-		     * Calculate how much this slot can grow and how much
-		     * "have" that corresponds to.
+		     * There is not enough room to grow that much. Calculate
+		     * how much this slot can grow and how much "have" that
+		     * corresponds to.
 		     */
 
 		    grow = layoutPtr[slot].maxOffset -
@@ -2191,36 +2202,43 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 		    newHave = grow * totalWeight / weight;
 		    if (newHave > totalWeight) {
 			/*
-			 * By distributing multiples of totalWeight
-			 * we minimize rounding errors since they will
-			 * only happen in the last loop(s).
+			 * By distributing multiples of totalWeight we
+			 * minimize rounding errors since they will only
+			 * happen in the last loop(s).
 			 */
 
 			newHave = newHave / totalWeight * totalWeight;
 		    }
 		    if (newHave <= 0) {
 			/*
-			 * We can end up with a "have" of 0 here if
-			 * the previous slots have taken all the space.
-			 * In that case we cannot guess an appropriate
-			 * "have" so we just try some lower "have" that
-			 * is >= 1, to make sure this terminates.
+			 * We can end up with a "have" of 0 here if the
+			 * previous slots have taken all the space. In that
+			 * case we cannot guess an appropriate "have" so we
+			 * just try some lower "have" that is >= 1, to make
+			 * sure this terminates.
 			 */
 
 			newHave = (have - need) - 1;
 			if (newHave > (3 * totalWeight)) {
-			    /* Go down 25% for large values */
+			    /*
+			     * Go down 25% for large values.
+			     */
 			    newHave = newHave * 3 / 4;
 			}
+
 			if (newHave > totalWeight) {
-			    /* Round down to a multiple of totalWeight. */
+			    /*
+			     * Round down to a multiple of totalWeight.
+			     */
 			    newHave = newHave / totalWeight * totalWeight;
 			}
+
 			if (newHave <= 0) {
 			    newHave = 1;
 			}
 		    }
 		    have = newHave + need;
+
 		    /*
 		     * Restart loop to check if the new "have" will fit.
 		     */
@@ -2232,14 +2250,15 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 		    prevMinOffset = layoutPtr[slot].minOffset;
 		}
 	    }
+
 	    /*
 	     * Quit the outer loop if the inner loop ran all the way.
 	     */
 	} while (slot <= end);
 
 	/*
-	 * Now distribute the extra space among the slots by
-	 * adjusting the minSizes and minOffsets.
+	 * Now distribute the extra space among the slots by adjusting the
+	 * minSizes and minOffsets.
 	 */
 
 	prevGrow = 0;
@@ -2257,13 +2276,16 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 	}
 
 	/*
-	 * Having pushed the top/left boundaries of the slots to
-	 * take up extra space, the bottom/right space is recalculated
-	 * to propagate the new space allocation.
+	 * Having pushed the top/left boundaries of the slots to take up extra
+	 * space, the bottom/right space is recalculated to propagate the new
+	 * space allocation.
 	 */
 
 	for (slot = end; slot > start; slot--) {
-	    /* maxOffset may not go up */
+	    /*
+	     * maxOffset may not go up.
+	     */
+
 	    if ((layoutPtr[slot].maxOffset-layoutPtr[slot].minSize)
 		    < layoutPtr[slot-1].maxOffset) {
 		layoutPtr[slot-1].maxOffset =
@@ -2274,8 +2296,8 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
 
     /*
      * Step 6.
-     * All of the space has been apportioned; copy the
-     * layout information back into the master.
+     * All of the space has been apportioned; copy the layout information back
+     * into the master.
      */
 
     for (slot=0; slot < gridCount; slot++) {
@@ -2294,24 +2316,24 @@ ResolveConstraints(masterPtr, slotType, maxOffset)
  *
  * GetGrid --
  *
- *	This internal procedure is used to locate a Grid structure for
- *	a given window, creating one if one doesn't exist already.
+ *	This internal procedure is used to locate a Grid structure for a given
+ *	window, creating one if one doesn't exist already.
  *
  * Results:
- *	The return value is a pointer to the Grid structure
- *	corresponding to tkwin.
+ *	The return value is a pointer to the Grid structure corresponding to
+ *	tkwin.
  *
  * Side effects:
- *	A new grid structure may be created.  If so, then a callback
- *	is set up to clean things up when the window is deleted.
+ *	A new grid structure may be created. If so, then a callback is set up
+ *	to clean things up when the window is deleted.
  *
  *----------------------------------------------------------------------
  */
 
 static Gridder *
 GetGrid(tkwin)
-    Tk_Window tkwin;		/* Token for window for which
-				 * grid structure is desired. */
+    Tk_Window tkwin;		/* Token for window for which grid structure
+				 * is desired. */
 {
     register Gridder *gridPtr;
     Tcl_HashEntry *hPtr;
@@ -2324,8 +2346,8 @@ GetGrid(tkwin)
     }
 
     /*
-     * See if there's already grid for this window.  If not,
-     * then create a new one.
+     * See if there's already grid for this window. If not, then create a new
+     * one.
      */
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->gridHashTable, (char *) tkwin, &new);
@@ -2368,25 +2390,24 @@ GetGrid(tkwin)
  *
  * SetGridSize --
  *
- *	This internal procedure sets the size of the grid occupied
- *	by slaves.
+ *	This internal procedure sets the size of the grid occupied by slaves.
  *
  * Results:
- *	none
+ *	None
  *
  * Side effects:
- *	The width and height arguments are filled in the master data structure.
- *	Additional space is allocated for the constraints to accomodate
- *	the offsets.
+ *	The width and height arguments are filled in the master data
+ *	structure. Additional space is allocated for the constraints to
+ *	accomodate the offsets.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 SetGridSize(masterPtr)
-    Gridder *masterPtr;			/* The geometry master for this grid. */
+    Gridder *masterPtr;		/* The geometry master for this grid. */
 {
-    register Gridder *slavePtr;		/* Current slave window. */
+    register Gridder *slavePtr;	/* Current slave window. */
     int maxX = 0, maxY = 0;
 
     for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
@@ -2405,30 +2426,30 @@ SetGridSize(masterPtr)
  *
  * CheckSlotData --
  *
- *	This internal procedure is used to manage the storage for
- *	row and column (slot) constraints.
+ *	This internal procedure is used to manage the storage for row and
+ *	column (slot) constraints.
  *
  * Results:
  *	TRUE if the index is OK, False otherwise.
  *
  * Side effects:
- *	A new master grid structure may be created.  If so, then
- *	it is initialized.  In addition, additional storage for
- *	a row or column constraints may be allocated, and the constraint
- *	maximums are adjusted.
+ *	A new master grid structure may be created. If so, then it is
+ *	initialized. In addition, additional storage for a row or column
+ *	constraints may be allocated, and the constraint maximums are
+ *	adjusted.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 CheckSlotData(masterPtr, slot, slotType, checkOnly)
-    Gridder *masterPtr;	/* the geometry master for this grid */
-    int slot;		/* which slot to look at */
-    int slotType;	/* ROW or COLUMN */
-    int checkOnly;	/* don't allocate new space if true */
+    Gridder *masterPtr;		/* The geometry master for this grid. */
+    int slot;			/* Which slot to look at. */
+    int slotType;		/* ROW or COLUMN. */
+    int checkOnly;		/* Don't allocate new space if true. */
 {
-    int numSlot;	/* number of slots already allocated (Space) */
-    int end;		/* last used constraint */
+    int numSlot;		/* Number of slots already allocated (Space) */
+    int end;			/* Last used constraint. */
 
     /*
      * If slot is out of bounds, return immediately.
@@ -2444,8 +2465,8 @@ CheckSlotData(masterPtr, slot, slotType, checkOnly)
 
     /*
      * If we need to allocate more space, allocate a little extra to avoid
-     * repeated re-alloc's for large tables.  We need enough space to
-     * hold all of the offsets as well.
+     * repeated re-alloc's for large tables. We need enough space to hold all
+     * of the offsets as well.
      */
 
     InitMasterData(masterPtr);
@@ -2457,22 +2478,23 @@ CheckSlotData(masterPtr, slot, slotType, checkOnly)
     	numSlot = (slotType == ROW) ? masterPtr->masterDataPtr->rowSpace
 		: masterPtr->masterDataPtr->columnSpace;
     	if (slot >= numSlot) {
-	    int newNumSlot = slot + PREALLOC ;
+	    int newNumSlot = slot + PREALLOC;
 	    size_t oldSize = numSlot * sizeof(SlotInfo);
 	    size_t newSize = newNumSlot * sizeof(SlotInfo);
-	    SlotInfo *new = (SlotInfo *) ckalloc(newSize);
-	    SlotInfo *old = (slotType == ROW) ?
-		    masterPtr->masterDataPtr->rowPtr :
-		    masterPtr->masterDataPtr->columnPtr;
-	    memcpy((VOID *) new, (VOID *) old, oldSize );
-	    memset((VOID *) (new+numSlot), 0, newSize - oldSize );
-	    ckfree((char *) old);
+	    SlotInfo *newSI = (SlotInfo *) ckalloc(newSize);
+	    SlotInfo *oldSI = (slotType == ROW)
+		    ? masterPtr->masterDataPtr->rowPtr
+		    : masterPtr->masterDataPtr->columnPtr;
+
+	    memcpy((VOID *) newSI, (VOID *) oldSI, oldSize);
+	    memset((VOID *) (newSI+numSlot), 0, newSize - oldSize);
+	    ckfree((char *) oldSI);
 	    if (slotType == ROW) {
-	 	masterPtr->masterDataPtr->rowPtr = new ;
-	    	masterPtr->masterDataPtr->rowSpace = newNumSlot ;
+	 	masterPtr->masterDataPtr->rowPtr = newSI;
+	    	masterPtr->masterDataPtr->rowSpace = newNumSlot;
 	    } else {
-	    	masterPtr->masterDataPtr->columnPtr = new;
-	    	masterPtr->masterDataPtr->columnSpace = newNumSlot ;
+	    	masterPtr->masterDataPtr->columnPtr = newSI;
+	    	masterPtr->masterDataPtr->columnSpace = newNumSlotSI;
 	    }
 	}
 	if (slot >= end && checkOnly != CHECK_SPACE) {
@@ -2491,16 +2513,15 @@ CheckSlotData(masterPtr, slot, slotType, checkOnly)
  *
  * InitMasterData --
  *
- *	This internal procedure is used to allocate and initialize
- *	the data for a geometry master, if the data
- *	doesn't exist already.
+ *	This internal procedure is used to allocate and initialize the data
+ *	for a geometry master, if the data doesn't exist already.
  *
  * Results:
  *	none
  *
  * Side effects:
- *	A new master grid structure may be created.  If so, then
- *	it is initialized.
+ *	A new master grid structure may be created. If so, then it is
+ *	initialized.
  *
  *----------------------------------------------------------------------
  */
@@ -2590,11 +2611,11 @@ Unlink(slavePtr)
  *
  * DestroyGrid --
  *
- *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release
- *	to clean up the internal structure of a grid at a safe time
- *	(when no-one is using it anymore).   Cleaning up the grid involves
- *	freeing the main structure for all windows. and the master structure
- *	for geometry managers.
+ *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release to
+ *	clean up the internal structure of a grid at a safe time (when no-one
+ *	is using it anymore). Cleaning up the grid involves freeing the main
+ *	structure for all windows and the master structure for geometry
+ *	managers.
  *
  * Results:
  *	None.
@@ -2628,25 +2649,24 @@ DestroyGrid(memPtr)
  *
  * GridStructureProc --
  *
- *	This procedure is invoked by the Tk event dispatcher in response
- *	to StructureNotify events.
+ *	This procedure is invoked by the Tk event dispatcher in response to
+ *	StructureNotify events.
  *
  * Results:
  *	None.
  *
  * Side effects:
  *	If a window was just deleted, clean up all its grid-related
- *	information.  If it was just resized, re-configure its slaves, if
- *	any.
+ *	information. If it was just resized, re-configure its slaves, if any.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 GridStructureProc(clientData, eventPtr)
-    ClientData clientData;		/* Our information about window
-					 * referred to by eventPtr. */
-    XEvent *eventPtr;			/* Describes what just happened. */
+    ClientData clientData;	/* Our information about window referred to by
+				 * eventPtr. */
+    XEvent *eventPtr;		/* Describes what just happened. */
 {
     register Gridder *gridPtr = (Gridder *) clientData;
     TkDisplay *dispPtr = ((TkWindow *) gridPtr->tkwin)->dispPtr;
@@ -2657,8 +2677,8 @@ GridStructureProc(clientData, eventPtr)
 	    gridPtr->flags |= REQUESTED_RELAYOUT;
 	    Tcl_DoWhenIdle(ArrangeGrid, (ClientData) gridPtr);
 	}
-	if ((gridPtr->masterPtr != NULL)
-		&& (gridPtr->doubleBw != 2*Tk_Changes(gridPtr->tkwin)->border_width)) {
+	if ((gridPtr->masterPtr != NULL) &&
+		(gridPtr->doubleBw != 2*Tk_Changes(gridPtr->tkwin)->border_width)) {
 	    if (!(gridPtr->masterPtr->flags & REQUESTED_RELAYOUT)) {
 		gridPtr->doubleBw = 2*Tk_Changes(gridPtr->tkwin)->border_width;
 		gridPtr->masterPtr->flags |= REQUESTED_RELAYOUT;
@@ -2706,15 +2726,14 @@ GridStructureProc(clientData, eventPtr)
  *
  * ConfigureSlaves --
  *
- *	This implements the guts of the "grid configure" command.  Given
- *	a list of slaves and configuration options, it arranges for the
- *	grid to manage the slaves and sets the specified options.
- *	arguments consist of windows or window shortcuts followed by
- *	"-option value" pairs.
+ *	This implements the guts of the "grid configure" command. Given a list
+ *	of slaves and configuration options, it arranges for the grid to
+ *	manage the slaves and sets the specified options. Arguments consist
+ *	of windows or window shortcuts followed by "-option value" pairs.
  *
  * Results:
- *	TCL_OK is returned if all went well.  Otherwise, TCL_ERROR is
- *	returned and the interp's result is set to contain an error message.
+ *	TCL_OK is returned if all went well. Otherwise, TCL_ERROR is returned
+ *	and the interp's result is set to contain an error message.
  *
  * Side effects:
  *	Slave windows get taken over by the grid.
@@ -2726,27 +2745,25 @@ static int
 ConfigureSlaves(interp, tkwin, objc, objv)
     Tcl_Interp *interp;		/* Interpreter for error reporting. */
     Tk_Window tkwin;		/* Any window in application containing
-				 * slaves.  Used to look up slave names. */
+				 * slaves. Used to look up slave names. */
     int objc;			/* Number of elements in argv. */
     Tcl_Obj *CONST objv[];	/* Argument objects: contains one or more
-				 * window names followed by any number
-				 * of "option value" pairs.  Caller must
-				 * make sure that there is at least one
-				 * window name. */
+				 * window names followed by any number of
+				 * "option value" pairs. Caller must make sure
+				 * that there is at least one window name. */
 {
     Gridder *masterPtr = NULL;
     Gridder *slavePtr;
     Tk_Window other, slave, parent, ancestor;
     int i, j, tmp;
-    int length;
     int numWindows;
     int width;
     int defaultRow = -1;
-    int defaultColumn = 0;	/* default column number */
-    int defaultColumnSpan = 1;	/* default number of columns */
-    char *lastWindow;		/* use this window to base current
-				 * Row/col on */
-    int numSkip;		/* number of 'x' found */
+    int defaultColumn = 0;	/* Default column number */
+    int defaultColumnSpan = 1;	/* Default number of columns */
+    char *lastWindow;		/* Use this window to base current row/col
+				 * on */
+    int numSkip;		/* Number of 'x' found */
     static CONST char *optionStrings[] = {
 	"-column", "-columnspan", "-in", "-ipadx", "-ipady",
 	"-padx", "-pady", "-row", "-rowspan", "-sticky", (char *) NULL
@@ -2756,7 +2773,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	CONF_PADX, CONF_PADY, CONF_ROW, CONF_ROWSPAN, CONF_STICKY };
     int index;
     char *string;
-    char firstChar, prevChar;
+    char firstChar;
     int positionGiven;
 
     /*
@@ -2765,8 +2782,10 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 
     firstChar = 0;
     for (numWindows=0, i=0; i < objc; i++) {
-	prevChar = firstChar;
-	string = Tcl_GetStringFromObj(objv[i], (int *) &length);
+	int length;
+	char prevChar = firstChar;
+
+	string = Tcl_GetStringFromObj(objv[i], &length);
     	firstChar = string[0];
 
 	if (firstChar == '.') {
@@ -2774,6 +2793,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	     * Check that windows are valid, and locate the first slave's
 	     * parent window (default for -in).
 	     */
+
 	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &slave) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -2828,12 +2848,11 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     }
 
     /*
-     * Go through all options looking for -in and -row, which are needed to
-     * be found first to handle the special case where ^ is used on a row
-     * without windows names, but with an -in option.
-     * Since all options are checked here, we do not need to handle the
-     * error case again later.
-     */ 
+     * Go through all options looking for -in and -row, which are needed to be
+     * found first to handle the special case where ^ is used on a row without
+     * windows names, but with an -in option. Since all options are checked
+     * here, we do not need to handle the error case again later.
+     */
 
     for (i = numWindows; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
@@ -2860,7 +2879,10 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
     }
 
-    /* If no -row is given, use the first unoccupied row of the master. */
+    /*
+     * If no -row is given, use the first unoccupied row of the master.
+     */
+
     if (defaultRow < 0) {
 	if (masterPtr != NULL && masterPtr->masterDataPtr != NULL) {
 	    SetGridSize(masterPtr);
@@ -2871,14 +2893,13 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     }
 
     /*
-     * Iterate over all of the slave windows and short-cuts, parsing
-     * options for each slave.  It's a bit wasteful to re-parse the
-     * options for each slave, but things get too messy if we try to
-     * parse the arguments just once at the beginning.  For example,
-     * if a slave already is managed we want to just change a few
-     * existing values without resetting everything.  If there are
-     * multiple windows, the -in option only gets processed for the
-     * first window.
+     * Iterate over all of the slave windows and short-cuts, parsing options
+     * for each slave. It's a bit wasteful to re-parse the options for each
+     * slave, but things get too messy if we try to parse the arguments just
+     * once at the beginning. For example, if a slave already is managed we
+     * want to just change a few existing values without resetting everything.
+     * If there are multiple windows, the -in option only gets processed for
+     * the first window.
      */
 
     positionGiven = 0;
@@ -2887,8 +2908,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     	firstChar = string[0];
 
 	/*
-	 * '^' and 'x' cause us to skip a column.  '-' is processed
-	 * as part of its preceeding slave.
+	 * '^' and 'x' cause us to skip a column. '-' is processed as part of
+	 * its preceeding slave.
 	 */
 
 	if ((firstChar == REL_VERT) || (firstChar == REL_SKIP)) {
@@ -2922,43 +2943,44 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	 * The following statement is taken from tkPack.c:
 	 *
 	 * "If the slave isn't currently managed, reset all of its
-	 * configuration information to default values (there could
-	 * be old values left from a previous packer)."
+	 * configuration information to default values (there could be old
+	 * values left from a previous packer)."
 	 *
-	 * I [D.S.] disagree with this statement. If a slave is disabled (using
-	 * "forget") and then re-enabled, I submit that 90% of the time the
-	 * programmer will want it to retain its old configuration information.
-	 * If the programmer doesn't want this behavior, then the
+	 * I [D.S.] disagree with this statement. If a slave is disabled
+	 * (using "forget") and then re-enabled, I submit that 90% of the time
+	 * the programmer will want it to retain its old configuration
+	 * information. If the programmer doesn't want this behavior, then the
 	 * defaults can be reestablished by hand, without having to worry
 	 * about keeping track of the old state.
 	 */
 
 	for (i = numWindows; i < objc; i += 2) {
-	    Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0, 
+	    Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
 		    &index);
-	    if (index == CONF_COLUMN) {
-		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK ||
-			tmp < 0) {
-		    Tcl_ResetResult(interp);
+	    switch ((enum options) index) {
+	    case CONF_COLUMN:
+		if (Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK
+			|| tmp < 0) {
 		    Tcl_AppendResult(interp, "bad column value \"",
 			    Tcl_GetString(objv[i+1]),
 			    "\": must be a non-negative integer", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->column = tmp;
-	    } else if (index == CONF_COLUMNSPAN) {
-		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK ||
-			tmp <= 0) {
-		    Tcl_ResetResult(interp);
+		break;
+	    case CONF_COLUMNSPAN:
+		if (Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK
+			|| tmp <= 0) {
 		    Tcl_AppendResult(interp, "bad columnspan value \"",
 			    Tcl_GetString(objv[i+1]),
 			    "\": must be a positive integer", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->numCols = tmp;
-	    } else if (index == CONF_IN) {
-		if (TkGetWindowFromObj(interp, tkwin, objv[i+1], &other) !=
-			TCL_OK) {
+		break;
+	    case CONF_IN:
+		if (TkGetWindowFromObj(interp, tkwin, objv[i+1],
+			&other) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		if (other == slave) {
@@ -2969,60 +2991,10 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		positionGiven = 1;
 		masterPtr = GetGrid(other);
 		InitMasterData(masterPtr);
-	    } else if (index == CONF_IPADX) {
-		if ((Tk_GetPixelsFromObj(interp, slave, objv[i+1], &tmp)
-			!= TCL_OK) || (tmp < 0)) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad ipadx value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be positive screen distance",
-			    (char *) NULL);
-		    return TCL_ERROR;
-		}
-		slavePtr->iPadX = tmp*2;
-	    } else if (index == CONF_IPADY) {
-		if ((Tk_GetPixelsFromObj(interp, slave, objv[i+1], &tmp)
-			!= TCL_OK) || (tmp < 0)) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad ipady value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be positive screen distance",
-			    (char *) NULL);
-		    return TCL_ERROR;
-		}
-		slavePtr->iPadY = tmp*2;
-	    } else if (index == CONF_PADX) {
-		if (TkParsePadAmount(interp, tkwin, objv[i+1],
-			&slavePtr->padLeft, &slavePtr->padX) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    } else if (index == CONF_PADY) {
-		if (TkParsePadAmount(interp, tkwin, objv[i+1],
-			&slavePtr->padTop, &slavePtr->padY) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    } else if (index == CONF_ROW) {
-		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK
-			|| tmp < 0) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad row value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be a non-negative integer", (char *)NULL);
-		    return TCL_ERROR;
-		}
-		slavePtr->row = tmp;
-	    } else if (index == CONF_ROWSPAN) {
-		if ((Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK)
-			|| tmp <= 0) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad rowspan value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be a positive integer", (char *)NULL);
-		    return TCL_ERROR;
-		}
-		slavePtr->numRows = tmp;
-	    } else if (index == CONF_STICKY) {
+		break;
+	    case CONF_STICKY: {
 		int sticky = StringToSticky(Tcl_GetString(objv[i+1]));
+
 		if (sticky == -1) {
 		    Tcl_AppendResult(interp, "bad stickyness value \"",
 			    Tcl_GetString(objv[i+1]),
@@ -3031,12 +3003,69 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		    return TCL_ERROR;
 		}
 		slavePtr->sticky = sticky;
+		break;
+	    }
+	    case CONF_IPADX:
+		if ((Tk_GetPixelsFromObj(NULL, slave, objv[i+1],
+			&tmp) != TCL_OK) || (tmp < 0)) {
+		    Tcl_AppendResult(interp, "bad ipadx value \"",
+			    Tcl_GetString(objv[i+1]),
+			    "\": must be positive screen distance",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+		slavePtr->iPadX = tmp*2;
+		break;
+	    case CONF_IPADY:
+		if ((Tk_GetPixelsFromObj(NULL, slave, objv[i+1],
+			&tmp) != TCL_OK) || (tmp < 0)) {
+		    Tcl_AppendResult(interp, "bad ipady value \"",
+			    Tcl_GetString(objv[i+1]),
+			    "\": must be positive screen distance",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+		slavePtr->iPadY = tmp*2;
+		break;
+	    case CONF_PADX:
+		if (TkParsePadAmount(interp, tkwin, objv[i+1],
+			&slavePtr->padLeft, &slavePtr->padX) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		break;
+	    case CONF_PADY:
+		if (TkParsePadAmount(interp, tkwin, objv[i+1],
+			&slavePtr->padTop, &slavePtr->padY) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		break;
+	    case CONF_ROW:
+		if (Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK
+			|| tmp < 0) {
+		    Tcl_AppendResult(interp, "bad row value \"",
+			    Tcl_GetString(objv[i+1]),
+			    "\": must be a non-negative integer",
+			    (char *) NULL);
+		    return TCL_ERROR;
+		}
+		slavePtr->row = tmp;
+		break;
+	    case CONF_ROWSPAN:
+		if ((Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK)
+			|| tmp <= 0) {
+		    Tcl_AppendResult(interp, "bad rowspan value \"",
+			    Tcl_GetString(objv[i+1]),
+			    "\": must be a positive integer", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		slavePtr->numRows = tmp;
+		break;
 	    }
 	}
 
 	/*
-	 * If no position was specified via -in and the slave is
-	 * already packed, then leave it in its current location.
+	 * If no position was specified via -in and the slave is already
+	 * packed, then leave it in its current location.
 	 */
 
     	if (!positionGiven && (slavePtr->masterPtr != NULL)) {
@@ -3045,8 +3074,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     	}
 
 	/*
-	 * If the same -in window is passed in again, then just
-	 * leave it in its current location.
+	 * If the same -in window is passed in again, then just leave it in
+	 * its current location.
 	 */
 
 	if (positionGiven && (masterPtr == slavePtr->masterPtr)) {
@@ -3054,7 +3083,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 
 	/*
-	 * Make sure we have a geometry master.  We look at:
+	 * Make sure we have a geometry master. We look at:
 	 *  1)   the -in flag
 	 *  2)   the parent of the first slave.
 	 */
@@ -3078,9 +3107,9 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 
 	/*
-	 * Make sure that the slave's parent is either the master or
-	 * an ancestor of the master, and that the master and slave
-	 * aren't the same.
+	 * Make sure that the slave's parent is either the master or an
+	 * ancestor of the master, and that the master and slave aren't the
+	 * same.
 	 */
 
 	for (ancestor = masterPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
@@ -3125,11 +3154,10 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	defaultColumnSpan = 1;
 
 	/*
-	 * Arrange for the master to be re-arranged at the first
-	 * idle moment.
+	 * Arrange for the master to be re-arranged at the first idle moment.
 	 */
 
-	scheduleLayout:
+    scheduleLayout:
 	if (masterPtr->abortPtr != NULL) {
 	    *masterPtr->abortPtr = 1;
 	}
@@ -3139,7 +3167,9 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
     }
 
-    /* Now look for all the "^"'s. */
+    /*
+     * Now look for all the "^"'s.
+     */
 
     lastWindow = NULL;
     numSkip = 0;
@@ -3168,9 +3198,13 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    return TCL_ERROR;
 	}
 
-	/* Count the number of consecutive ^'s starting from this position */
+	/*
+	 * Count the number of consecutive ^'s starting from this position.
+	 */
+
 	for (width = 1; width + j < numWindows; width++) {
 	    char *string = Tcl_GetString(objv[j+width]);
+
 	    if (*string != REL_VERT) {
 		break;
 	    }
@@ -3229,8 +3263,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
  *
  * StickyToString
  *
- *	Converts the internal boolean combination of "sticky" bits onto
- *	a TCL list element containing zero or mor of n, s, e, or w.
+ *	Converts the internal boolean combination of "sticky" bits onto a Tcl
+ *	list element containing zero or more of n, s, e, or w.
  *
  * Results:
  *	A string is placed into the "result" pointer.
@@ -3243,8 +3277,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 
 static void
 StickyToString(flags, result)
-    int flags;		/* the sticky flags */
-    char *result;	/* where to put the result */
+    int flags;			/* The sticky flags. */
+    char *result;		/* Where to put the result. */
 {
     int count = 0;
     if (flags&STICK_NORTH) {
@@ -3271,12 +3305,12 @@ StickyToString(flags, result)
  *
  * StringToSticky --
  *
- *	Converts an ascii string representing a widgets stickyness
- *	into the boolean result.
+ *	Converts an ascii string representing a widgets stickyness into the
+ *	boolean result.
  *
  * Results:
- *	The boolean combination of the "sticky" bits is retuned.  If an
- *	error occurs, such as an invalid character, -1 is returned instead.
+ *	The boolean combination of the "sticky" bits is retuned. If an error
+ *	occurs, such as an invalid character, -1 is returned instead.
  *
  * Side effects:
  *	none
@@ -3293,12 +3327,22 @@ StringToSticky(string)
 
     while ((c = *string++) != '\0') {
 	switch (c) {
-	    case 'n': case 'N': sticky |= STICK_NORTH; break;
-	    case 'e': case 'E': sticky |= STICK_EAST;  break;
-	    case 's': case 'S': sticky |= STICK_SOUTH; break;
-	    case 'w': case 'W': sticky |= STICK_WEST;  break;
-	    case ' ': case ',': case '\t': case '\r': case '\n': break;
-	    default: return -1;
+	case 'n': case 'N':
+	    sticky |= STICK_NORTH;
+	    break;
+	case 'e': case 'E':
+	    sticky |= STICK_EAST;
+	    break;
+	case 's': case 'S':
+	    sticky |= STICK_SOUTH;
+	    break;
+	case 'w': case 'W':
+	    sticky |= STICK_WEST;
+	    break;
+	case ' ': case ',': case '\t': case '\r': case '\n':
+	    break;
+	default:
+	    return -1;
 	}
     }
     return sticky;
@@ -3321,14 +3365,14 @@ StringToSticky(string)
  */
 
 static Tcl_Obj *
-NewPairObj(interp, val1, val2)
-    Tcl_Interp *interp;		/* Current interpreter. */
+NewPairObj(val1, val2)
     int val1, val2;
 {
-    Tcl_Obj *res = Tcl_NewListObj(0, NULL);
-    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(val1));
-    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(val2));
-    return res;
+    Tcl_Obj *ary[2];
+
+    ary[0] = Tcl_NewIntObj(val1);
+    ary[1] = Tcl_NewIntObj(val2);
+    return Tcl_NewListObj(2, ary);
 }
 
 /*
@@ -3348,14 +3392,22 @@ NewPairObj(interp, val1, val2)
  */
 
 static Tcl_Obj *
-NewQuadObj(interp, val1, val2, val3, val4)
-    Tcl_Interp *interp;		/* Current interpreter. */
+NewQuadObj(val1, val2, val3, val4)
     int val1, val2, val3, val4;
 {
-    Tcl_Obj *res = Tcl_NewListObj(0, NULL);
-    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(val1));
-    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(val2));
-    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(val3));
-    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(val4));
-    return res;
+    Tcl_Obj *ary[4];
+
+    ary[0] = Tcl_NewIntObj(val1);
+    ary[1] = Tcl_NewIntObj(val2);
+    ary[2] = Tcl_NewIntObj(val3);
+    ary[3] = Tcl_NewIntObj(val4);
+    return Tcl_NewListObj(4, ary);
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

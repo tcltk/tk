@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.35 2005/06/01 19:44:45 dgp Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.36 2005/08/10 22:02:22 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -556,7 +556,6 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];		/* Argument objects. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) clientData;
-    unsigned int length;
     int c, result;
     Tk_Item *itemPtr = NULL;		/* Initialization needed only to
 					 * prevent compiler warning. */
@@ -945,18 +944,19 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	char *arg;
+	int length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	arg = Tcl_GetStringFromObj(objv[2], (int *) &length);
+	arg = Tcl_GetStringFromObj(objv[2], &length);
 	c = arg[0];
 	Tcl_MutexLock(&typeListMutex);
 	for (typePtr = typeList; typePtr != NULL; typePtr = typePtr->nextPtr) {
 	    if ((c == typePtr->name[0])
-		    && (strncmp(arg, typePtr->name, length) == 0)) {
+		    && (strncmp(arg, typePtr->name, (unsigned)length) == 0)) {
 		if (matchPtr != NULL) {
 		    Tcl_MutexUnlock(&typeListMutex);
 		badType:
