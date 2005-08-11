@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.13 2004/12/09 10:05:38 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.14 2005/08/11 12:17:09 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -674,10 +674,9 @@ ImgPhotoCmd(clientData, interp, objc, objv)
     XColor color;
     Tk_PhotoImageFormat *imageFormat;
     int imageWidth, imageHeight;
-    int matched;
+    int length, matched;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
-    size_t length;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -717,12 +716,12 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    return TCL_ERROR;
 	}
-	arg = Tcl_GetStringFromObj(objv[2], (int *) &length);
-	if (strncmp(arg,"-data", length) == 0) {
+	arg = Tcl_GetStringFromObj(objv[2], &length);
+	if (strncmp(arg,"-data", (unsigned) length) == 0) {
 	    if (masterPtr->dataString) {
 		Tcl_SetObjResult(interp, masterPtr->dataString);
 	    }
-	} else if (strncmp(arg,"-format", length) == 0) {
+	} else if (strncmp(arg,"-format", (unsigned) length) == 0) {
 	    if (masterPtr->format) {
 		Tcl_SetObjResult(interp, masterPtr->format);
 	    }
@@ -765,8 +764,9 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	    return TCL_OK;
 	}
 	if (objc == 3) {
-	    char *arg = Tcl_GetStringFromObj(objv[2], (int *) &length);
-	    if (!strncmp(arg, "-data", length)) {
+	    char *arg = Tcl_GetStringFromObj(objv[2], &length);
+
+	    if (!strncmp(arg, "-data", (unsigned) length)) {
 		Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
 			"-data {} {} {}", (char *) NULL);
 		if (masterPtr->dataString) {
@@ -777,7 +777,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 			    " {}", (char *) NULL);
 		}
 		return TCL_OK;
-	    } else if (!strncmp(arg, "-format", length)) {
+	    } else if (!strncmp(arg, "-format", (unsigned) length)) {
 		Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
 			"-format {} {} {}", (char *) NULL);
 		if (masterPtr->format) {
@@ -5830,15 +5830,16 @@ PhotoOptionFind(interp, obj)
     Tcl_Interp *interp;		/* Interpreter that is being deleted. */
     Tcl_Obj *obj;			/* Name of option to be found. */
 {
-    size_t length;
-    char *name = Tcl_GetStringFromObj(obj, (int *) &length);
+    int length;
+    char *name = Tcl_GetStringFromObj(obj, &length);
     OptionAssocData *list;
     char *prevname = NULL;
     Tcl_ObjCmdProc *proc = (Tcl_ObjCmdProc *) NULL;
+
     list = (OptionAssocData *) Tcl_GetAssocData(interp, "photoOption",
 	    (Tcl_InterpDeleteProc **) NULL);
     while (list != (OptionAssocData *) NULL) {
-	if (strncmp(name, list->name, length) == 0) {
+	if (strncmp(name, list->name, (unsigned) length) == 0) {
 	    if (proc != (Tcl_ObjCmdProc *) NULL) {
 		Tcl_ResetResult(interp);
 		Tcl_AppendResult(interp, "ambiguous option \"", name,

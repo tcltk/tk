@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.16.2.2 2005/01/11 10:46:39 dkf Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.16.2.3 2005/08/11 12:17:09 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1143,24 +1143,24 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
 	packPtr->flags |= OLD_STYLE;
 	for (index = 0 ; index < optionCount; index++) {
 	    Tcl_Obj *curOptPtr = options[index];
-	    char *curOpt = Tcl_GetStringFromObj(curOptPtr, (int *) &length);
+	    char *curOpt = Tcl_GetStringFromObj(curOptPtr, &length);
 
 	    c = curOpt[0];
 
 	    if ((c == 't')
-		    && (strncmp(curOpt, "top", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "top", (unsigned) length)) == 0) {
 		packPtr->side = TOP;
 	    } else if ((c == 'b')
-		    && (strncmp(curOpt, "bottom", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "bottom", (unsigned) length)) == 0) {
 		packPtr->side = BOTTOM;
 	    } else if ((c == 'l')
-		    && (strncmp(curOpt, "left", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "left", (unsigned) length)) == 0) {
 		packPtr->side = LEFT;
 	    } else if ((c == 'r')
-		    && (strncmp(curOpt, "right", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "right", (unsigned) length)) == 0) {
 		packPtr->side = RIGHT;
 	    } else if ((c == 'e')
-		    && (strncmp(curOpt, "expand", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "expand", (unsigned) length)) == 0) {
 		packPtr->flags |= EXPAND;
 	    } else if ((c == 'f')
 		    && (strcmp(curOpt, "fill")) == 0) {
@@ -1198,7 +1198,7 @@ PackAfter(interp, prevPtr, masterPtr, objc, objv)
 		packPtr->iPadY = 0;
 		index++;
 	    } else if ((c == 'f') && (length > 1)
-		    && (strncmp(curOpt, "frame", (size_t) length) == 0)) {
+		    && (strncmp(curOpt, "frame", (unsigned) length) == 0)) {
 		if (optionCount < (index+2)) {
 		    Tcl_AppendResult(interp, "wrong # args: \"frame\" ",
 			    "option must be followed by anchor point",
