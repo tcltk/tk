@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.15.2.2 2005/07/28 04:57:37 hobbs Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.15.2.3 2005/08/11 12:17:09 dkf Exp $
  */
 
 #include "default.h"
@@ -485,8 +485,7 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
     Tk_OptionTable optionTable;
     Tk_Window new;
     CONST char *className, *screenName, *visualName, *colormapName, *arg, *useOption;
-    int i, c, depth;
-    size_t length;
+    int i, c, depth, length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
@@ -513,25 +512,25 @@ CreateFrame(clientData, interp, objc, objv, type, appName)
     className = colormapName = screenName = visualName = useOption = NULL;
     colormap = None;
     for (i = 2; i < objc; i += 2) {
-	arg = Tcl_GetStringFromObj(objv[i], (int *) &length);
+	arg = Tcl_GetStringFromObj(objv[i], &length);
 	if (length < 2) {
 	    continue;
 	}
 	c = arg[1];
-	if ((c == 'c') && (strncmp(arg, "-class", length) == 0)
+	if ((c == 'c') && (strncmp(arg, "-class", (unsigned) length) == 0)
 		&& (length >= 3)) {
 	    className = Tcl_GetString(objv[i+1]);
 	} else if ((c == 'c')
-		&& (strncmp(arg, "-colormap", length) == 0)) {
+		&& (strncmp(arg, "-colormap", (unsigned) length) == 0)) {
 	    colormapName = Tcl_GetString(objv[i+1]);
 	} else if ((c == 's') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-screen", length) == 0)) {
+		&& (strncmp(arg, "-screen", (unsigned) length) == 0)) {
 	    screenName = Tcl_GetString(objv[i+1]);
 	} else if ((c == 'u') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-use", length) == 0)) {
+		&& (strncmp(arg, "-use", (unsigned) length) == 0)) {
 	    useOption = Tcl_GetString(objv[i+1]);
 	} else if ((c == 'v')
-		&& (strncmp(arg, "-visual", length) == 0)) {
+		&& (strncmp(arg, "-visual", (unsigned) length) == 0)) {
 	    visualName = Tcl_GetString(objv[i+1]);
 	}
     }
@@ -735,8 +734,7 @@ FrameWidgetObjCmd(clientData, interp, objc, objv)
     };
     register Frame *framePtr = (Frame *) clientData;
     int result = TCL_OK, index;
-    size_t length;
-    int c, i;
+    int c, i, length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
@@ -784,25 +782,26 @@ FrameWidgetObjCmd(clientData, interp, objc, objv)
 	     */
 
 	    for (i = 2; i < objc; i++) {
-		char *arg = Tcl_GetStringFromObj(objv[i], (int *) &length);
+		char *arg = Tcl_GetStringFromObj(objv[i], &length);
 		if (length < 2) {
 		    continue;
 		}
 		c = arg[1];
-		if (((c == 'c') && (strncmp(arg, "-class", length) == 0)
+		if (((c == 'c')
+			&& (strncmp(arg, "-class", (unsigned) length) == 0)
 			&& (length >= 2))
 			|| ((c == 'c')
-			&& (strncmp(arg, "-colormap", length) == 0)
+			&& (strncmp(arg, "-colormap", (unsigned) length) == 0)
 			&& (length >= 3))
 			|| ((c == 'c')
-			&& (strncmp(arg, "-container", length) == 0)
+			&& (strncmp(arg, "-container", (unsigned) length) == 0)
 			&& (length >= 3))
 			|| ((c == 's') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-screen", length) == 0))
+			&& (strncmp(arg, "-screen", (unsigned) length) == 0))
 			|| ((c == 'u') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-use", length) == 0))
+			&& (strncmp(arg, "-use", (unsigned) length) == 0))
 			|| ((c == 'v')
-			&& (strncmp(arg, "-visual", length) == 0))) {
+			&& (strncmp(arg, "-visual", (unsigned) length) ==0))) {
 		    Tcl_AppendResult(interp, "can't modify ", arg,
 			    " option after widget is created", (char *) NULL);
 		    result = TCL_ERROR;

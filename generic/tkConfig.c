@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.18 2002/08/05 04:30:38 dgp Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.18.2.1 2005/08/11 12:17:09 dkf Exp $
  */
 
 /*
@@ -1158,7 +1158,7 @@ GetOptionFromObj(interp, objPtr, tablePtr)
      * The answer isn't cached.
      */
 
-    name = Tcl_GetStringFromObj(objPtr, (int *) NULL);
+    name = Tcl_GetStringFromObj(objPtr, NULL);
     bestPtr = GetOption(name, tablePtr);
     if (bestPtr == NULL) {
 	goto error;

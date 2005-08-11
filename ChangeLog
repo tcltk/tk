@@ -1,3 +1,12 @@
+2005-08-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkCanvLine.c, generic/tkCanvPoly.c, generic/tkCanvText.c: 
+	* generic/tkCanvas.c, generic/tkConfig.c, generic/tkFocus.c: 
+	* generic/tkFrame.c, generic/tkGrid.c, generic/tkImgPhoto.c: 
+	* generic/tkPack.c, generic/tkPanedWindow.c: Don't pass size_t
+	arguments to Tcl_GetStringFromObj, even with casting; it's not
+	portable to 64-bit systems. [Bug 1252702]
+
 2005-08-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXCarbonEvents.c (new): moved carbon events code into
