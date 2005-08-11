@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.24 2005/08/11 01:32:26 dgp Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.25 2005/08/11 02:02:34 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -428,9 +428,9 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	case IMAGE_WIDTH:
 	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->width);
 	    break;
-	}
 	default:
 	    Tcl_Panic("can't happen");
+	}
 	break;
     }
     return TCL_OK;
