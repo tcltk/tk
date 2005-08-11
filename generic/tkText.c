@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.58 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.59 2005/08/11 01:55:04 dgp Exp $
  */
 
 #include "default.h"
@@ -2042,7 +2042,7 @@ ConfigureText(interp, textPtr, objc, objv)
 		    &first);
 	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL,
 		    TkBTreeNumLines(textPtr->sharedTextPtr->tree, NULL),
-		    &last);
+		    0, &last);
 	    TkBTreeStartSearch(&first, &last, textPtr->selTagPtr, &search);
 	    if (!TkBTreeCharTagged(&first, textPtr->selTagPtr)
 		    && !TkBTreeNextTag(&search)) {
