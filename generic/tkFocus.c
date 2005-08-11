@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.10 2002/10/08 19:57:59 hobbs Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.10.2.1 2005/08/11 12:17:09 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -149,7 +149,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
      */
 
     if (objc == 2) {
-	windowName = Tcl_GetStringFromObj(objv[1], (int *) NULL);
+	windowName = Tcl_GetStringFromObj(objv[1], NULL);
 
 	/*
 	 * The empty string case exists for backwards compatibility.
@@ -180,7 +180,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
     }
     switch (index) {
         case 0: {        /* -displayof */
-	    windowName = Tcl_GetStringFromObj(objv[2], (int *) NULL);
+	    windowName = Tcl_GetStringFromObj(objv[2], NULL);
 	    newPtr = (TkWindow *) Tk_NameToWindow(interp, windowName, tkwin);
 	    if (newPtr == NULL) {
 		return TCL_ERROR;
@@ -192,7 +192,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
         case 1: {        /* -force */
-	    windowName = Tcl_GetStringFromObj(objv[2], (int *) NULL);
+	    windowName = Tcl_GetStringFromObj(objv[2], NULL);
 
 	    /*
 	     * The empty string case exists for backwards compatibility.
@@ -209,7 +209,7 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
 	    break;
 	}
         case 2: {        /* -lastfor */
-	    windowName = Tcl_GetStringFromObj(objv[2], (int *) NULL);
+	    windowName = Tcl_GetStringFromObj(objv[2], NULL);
 	    newPtr = (TkWindow *) Tk_NameToWindow(interp, windowName, tkwin);
 	    if (newPtr == NULL) {
 		return TCL_ERROR;

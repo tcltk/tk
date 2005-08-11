@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.8 2005/05/31 05:22:06 hobbs Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.13.2.9 2005/08/11 12:17:09 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -349,7 +349,7 @@ Tk_PanedWindowObjCmd(clientData, interp, objc, objv)
     }
 
     tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), 
-	    Tcl_GetStringFromObj(objv[1], NULL), (char *) NULL);
+	    Tcl_GetStringFromObj(objv[1], NULL), NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
