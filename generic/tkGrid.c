@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.38 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.39 2005/08/11 01:32:26 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -2494,7 +2494,7 @@ CheckSlotData(masterPtr, slot, slotType, checkOnly)
 	    	masterPtr->masterDataPtr->rowSpace = newNumSlot;
 	    } else {
 	    	masterPtr->masterDataPtr->columnPtr = newSI;
-	    	masterPtr->masterDataPtr->columnSpace = newNumSlotSI;
+	    	masterPtr->masterDataPtr->columnSpace = newNumSlot;
 	    }
 	}
 	if (slot >= end && checkOnly != CHECK_SPACE) {
