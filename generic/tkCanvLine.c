@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.13 2003/02/09 07:48:22 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.13.2.1 2005/08/11 12:17:09 dkf Exp $
  */
 
 #include <stdio.h>
@@ -1729,11 +1729,11 @@ GetLineIndex(interp, canvas, itemPtr, obj, indexPtr)
     int *indexPtr;		/* Where to store converted index. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    size_t length;
-    char *string = Tcl_GetStringFromObj(obj, (int *) &length);
+    int length;
+    char *string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == 'e') {
-	if (strncmp(string, "end", length) == 0) {
+	if (strncmp(string, "end", (unsigned) length) == 0) {
 	    *indexPtr = 2*linePtr->numPoints;
 	} else {
 	    badIndex:
