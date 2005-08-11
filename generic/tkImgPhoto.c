@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.56 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.57 2005/08/11 01:55:04 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -977,26 +977,24 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 	data = ImgGetPhoto(masterPtr, &block, &options);
 
 	if (oldformat) {
-	    typedef (int (*oldStringWriterProc) (Tcl_Interp *interp,
-		    Tcl_DString *dataPtr, char *formatString,
-		    Tk_PhotoImageBlock *blockPtr));
 	    Tcl_DString buffer;
 
 	    Tcl_DStringInit(&buffer);
-	    result = ((oldStringWriterProc) stringWriteProc) (interp, &buffer,
-		    Tcl_GetString(options.format), &block);
+	    result = ((int (*) (Tcl_Interp *interp,
+		    Tcl_DString *dataPtr, char *formatString,
+		    Tk_PhotoImageBlock *blockPtr)) stringWriteProc)
+		    (interp, &buffer, Tcl_GetString(options.format), &block);
 	    if (result == TCL_OK) {
 		Tcl_DStringResult(interp, &buffer);
 	    } else {
 		Tcl_DStringFree(&buffer);
 	    }
 	} else {
-	    typedef (int (*newStringWriterProc) (Tcl_Interp *interp,
-		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
-		    VOID *dummy));
 
-	    result = ((newStringWriterProc) stringWriteProc) (interp,
-		    options.format, &block, (VOID *) NULL);
+	    result = ((int (*) (Tcl_Interp *interp,
+		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
+		    VOID *dummy)) stringWriteProc)
+		    (interp, options.format, &block, (VOID *) NULL);
 	}
 	if (options.background) {
 	    Tk_FreeColor(options.background);
@@ -4859,7 +4857,6 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
      */
 
     if (alphaOffset) {
-	int x1, y1, end;
 
 	if (compRule != TK_PHOTO_COMPOSITE_OVERLAY) {
 	    /*
@@ -4879,7 +4876,7 @@ Tk_PhotoPutZoomedBlock(interp, handle, blockPtr, x, y, width, height,
 	    TkDestroyRegion(workRgn);
 	}
 
-	TkBuildRegionFromAlphaData(masterPtr->validRegion, x, y, width, height,
+	TkpBuildRegionFromAlphaData(masterPtr->validRegion, x, y, width, height,
 		&masterPtr->pix32[(y * masterPtr->width + x) * 4 + 3], 4,
 		masterPtr->width * 4);
     } else {
