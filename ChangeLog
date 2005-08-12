@@ -1,3 +1,9 @@
+2005-08-12  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkOldConfig.c (Tk_ConfigureWidget): Stop storing per-thread
+	data in global data structures. Store it in per-interpreter data (i.e.
+	per-thread data) instead. [Bug 749908]
+
 2005-08-10  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkFrame.c (CreateFrame) and others: Don't use size_t
