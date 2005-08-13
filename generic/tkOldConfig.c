@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.14 2005/08/12 15:24:07 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.15 2005/08/13 20:47:46 chengyemao Exp $
  */
 
 #include "tkPort.h"
@@ -209,7 +209,9 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 	    Tcl_AddErrorInfo(interp, msg);
 	    return TCL_ERROR;
 	}
-	specPtr->specFlags |= TK_CONFIG_OPTION_SPECIFIED;
+	if (!(flags & TK_CONFIG_ARGV_ONLY)) {
+	    specPtr->specFlags |= TK_CONFIG_OPTION_SPECIFIED;
+	}
     }
 
     /*
@@ -223,6 +225,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 	    if ((specPtr->specFlags & TK_CONFIG_OPTION_SPECIFIED)
 		    || (specPtr->argvName == NULL)
 		    || (specPtr->type == TK_CONFIG_SYNONYM)) {
+		specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
 		continue;
 	    }
 	    if (((specPtr->specFlags & needFlags) != needFlags)
