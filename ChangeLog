@@ -1,3 +1,9 @@
+2005-08-13 Chengye Mao <chengye.geo@yahoo.com>
+
+	* generic/tkOldConfig.c Fixed bug # 1258604.  This bug was
+	introduced into the modfied Tk_ConfigureWidget. It failed 
+	to properly handle the specFlags' bit TK_CONFIG_OPTION_SPECIFIED.
+
 2005-08-12  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* generic/tkOldConfig.c (Tk_ConfigureWidget): Stop storing per-thread
