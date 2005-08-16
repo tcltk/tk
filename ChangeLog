@@ -1,3 +1,10 @@
+2005-08-16  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkOldConfig.c (Tk_ConfigureWidget, Tk_ConfigureInfo): 
+	(Tk_ConfigureValue, DeleteSpecCacheTable): Keep per-interpreter (and
+	hence per-thread) copies of all the Tk_ConfigSpec tables so that
+	Tk_Uids do not leak across threads. [Bug 749908]
+
 2005-08-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkCanvLine.c, generic/tkCanvPoly.c, generic/tkCanvText.c: 
