@@ -1,3 +1,9 @@
+2005-08-16 George Peter Staplin <GeorgePS@XMission.com>
+
+	* doc/CrtItemType.3 prototypes were lacking [] after objv.  Thus
+	the man page was wrong about the actual prototypes.  This was verified
+	by studying tkCanvBmap.c.
+
 2005-08-13 Chengye Mao <chengye.geo@yahoo.com>
 
 	* generic/tkOldConfig.c Fixed bug # 1258604.  This bug was
