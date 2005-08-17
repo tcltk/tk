@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtItemType.3,v 1.8 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: CrtItemType.3,v 1.9 2005/08/17 06:20:25 georgeps Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateItemType 3 4.0 Tk "Tk Library Procedures"
@@ -186,7 +186,7 @@ typedef int Tk_ItemCreateProc(
     Tk_Canvas \fIcanvas\fR,
     Tk_Item *\fIitemPtr\fR,
     int \fIobjc\fR,
-    Tcl_Obj* CONST \fIobjv\fR);
+    Tcl_Obj* CONST \fIobjv\fR[]);
 .CE
 The \fIinterp\fR argument is the interpreter in which the canvas's
 \fBcreate\fR widget command was invoked, and \fIcanvas\fR is a
@@ -242,7 +242,7 @@ typedef int Tk_ItemConfigureProc(
     Tk_Canvas \fIcanvas\fR,
     Tk_Item *\fIitemPtr\fR,
     int \fIobjc\fR,
-    Tcl_Obj* CONST \fIobjv\fR,
+    Tcl_Obj* CONST \fIobjv\fR[],
     int \fIflags\fR);
 .CE
 The \fIinterp\fR objument identifies the interpreter in which the
@@ -277,7 +277,7 @@ typedef int Tk_ItemCoordProc(
     Tk_Canvas \fIcanvas\fR,
     Tk_Item *\fIitemPtr\fR,
     int \fIobjc\fR,
-    Tcl_Obj* CONST \fIobjv\fR);
+    Tcl_Obj* CONST \fIobjv\fR[]);
 .CE
 The arguments \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR
 all have the standard meanings, and \fIobjc\fR and \fIobjv\fR
