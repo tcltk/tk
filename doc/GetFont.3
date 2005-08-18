@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetFont.3,v 1.6 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: GetFont.3,v 1.7 2005/08/18 18:41:18 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocFontFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -37,8 +37,7 @@ void
 .SH ARGUMENTS
 .AS "const char" *tkfont
 .AP "Tcl_Interp" *interp in
-Interpreter to use for error reporting.  If NULL, then no error
-messages are left after errors.
+Interpreter to use for error reporting.  Must not be NULL.
 .AP Tk_Window tkwin in
 Token for window in which font will be used.
 .AP Tcl_Obj *objPtr in/out

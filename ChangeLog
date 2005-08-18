@@ -1,3 +1,7 @@
+2005-08-18  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* doc/GetFont.3: Reworded to reflect the truth. [Bug 1151523]
+
 2005-08-16 George Peter Staplin <GeorgePS@XMission.com>
 
 	* doc/CrtItemType.3 prototypes were lacking [] after objv.  Thus
@@ -7,7 +11,7 @@
 2005-08-13 Chengye Mao <chengye.geo@yahoo.com>
 
 	* generic/tkOldConfig.c Fixed bug # 1258604.  This bug was
-	introduced into the modfied Tk_ConfigureWidget. It failed 
+	introduced into the modfied Tk_ConfigureWidget. It failed
 	to properly handle the specFlags' bit TK_CONFIG_OPTION_SPECIFIED.
 
 2005-08-12  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
