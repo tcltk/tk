@@ -1,18 +1,18 @@
-/* 
+/*
  * tkCanvas.c --
  *
- *	This module implements canvas widgets for the Tk toolkit.
- *	A canvas displays a background and a collection of graphical
- *	objects such as rectangles, lines, and texts.
+ *	This module implements canvas widgets for the Tk toolkit. A canvas
+ *	displays a background and a collection of graphical objects such as
+ *	rectangles, lines, and texts.
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.36 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.37 2005/08/18 18:36:11 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -28,32 +28,29 @@
 
 #ifdef USE_OLD_TAG_SEARCH
 /*
- * The structure defined below is used to keep track of a tag search
- * in progress.  No field should be accessed by anyone other than
- * StartTagSearch and NextItem.
+ * The structure defined below is used to keep track of a tag search in
+ * progress. No field should be accessed by anyone other than StartTagSearch
+ * and NextItem.
  */
 
 typedef struct TagSearch {
     TkCanvas *canvasPtr;	/* Canvas widget being searched. */
-    Tk_Uid tag;			/* Tag to search for.   0 means return
-				 * all items. */
+    Tk_Uid tag;			/* Tag to search for. 0 means return all
+				 * items. */
     Tk_Item *currentPtr;	/* Pointer to last item returned. */
-    Tk_Item *lastPtr;		/* The item right before the currentPtr
-				 * is tracked so if the currentPtr is
-				 * deleted we don't have to start from the
-				 * beginning. */
+    Tk_Item *lastPtr;		/* The item right before the currentPtr is
+				 * tracked so if the currentPtr is deleted we
+				 * don't have to start from the beginning. */
     int searchOver;		/* Non-zero means NextItem should always
 				 * return NULL. */
 } TagSearch;
 
 #else /* USE_OLD_TAG_SEARCH */
 /*
- * The structure defined below is used to keep track of a tag search
- * in progress.  No field should be accessed by anyone other than
- * TagSearchScan, TagSearchFirst, TagSearchNext,
- * TagSearchScanExpr, TagSearchEvalExpr, 
- * TagSearchExprInit, TagSearchExprDestroy,
- * TagSearchDestroy.
+ * The structure defined below is used to keep track of a tag search in
+ * progress. No field should be accessed by anyone other than TagSearchScan,
+ * TagSearchFirst, TagSearchNext, TagSearchScanExpr, TagSearchEvalExpr,
+ * TagSearchExprInit, TagSearchExprDestroy, TagSearchDestroy.
  * (
  *   Not quite accurate: the TagSearch structure is also accessed from:
  *    CanvasWidgetCmd, FindItems, RelinkItems
@@ -69,23 +66,20 @@ typedef struct TagSearch {
 typedef struct TagSearch {
     TkCanvas *canvasPtr;	/* Canvas widget being searched. */
     Tk_Item *currentPtr;	/* Pointer to last item returned. */
-    Tk_Item *lastPtr;		/* The item right before the currentPtr
-				 * is tracked so if the currentPtr is
-				 * deleted we don't have to start from the
-				 * beginning. */
+    Tk_Item *lastPtr;		/* The item right before the currentPtr is
+				 * tracked so if the currentPtr is deleted we
+				 * don't have to start from the beginning. */
     int searchOver;		/* Non-zero means NextItem should always
 				 * return NULL. */
-    int type;			/* search type */
-    int id;			/* item id for searches by id */
-
-    char *string;		/* tag expression string */
-    int stringIndex;		/* current position in string scan */
-    int stringLength;		/* length of tag expression string */
-
-    char *rewritebuffer;	/* tag string (after removing escapes) */
-    unsigned int rewritebufferAllocated;	/* available space for rewrites */
-
-    TagSearchExpr *expr;	/* compiled tag expression */
+    int type;			/* Search type (see #defs below) */
+    int id;			/* Item id for searches by id */
+    char *string;		/* Tag expression string */
+    int stringIndex;		/* Current position in string scan */
+    int stringLength;		/* Length of tag expression string */
+    char *rewritebuffer;	/* Tag string (after removing escapes) */
+    unsigned int rewritebufferAllocated;
+				/* Available space for rewrites. */
+    TagSearchExpr *expr;	/* Compiled tag expression. */
 } TagSearch;
 
 /*
@@ -216,8 +210,8 @@ static Tk_ConfigSpec configSpecs[] = {
 };
 
 /*
- * List of all the item types known at present. This is *global* and
- * is protected by typeListMutex.
+ * List of all the item types known at present. This is *global* and is
+ * protected by typeListMutex.
  */
 
 static Tk_ItemType *typeList = NULL;	/* NULL means initialization hasn't
@@ -226,9 +220,10 @@ TCL_DECLARE_MUTEX(typeListMutex)
 
 #ifndef USE_OLD_TAG_SEARCH
 /*
- * Uids for operands in compiled advanced tag search expressions
+ * Uids for operands in compiled advanced tag search expressions.
  * Initialization is done by GetStaticUids()
  */
+
 typedef struct {
     Tk_Uid allUid;
     Tk_Uid currentUid;
@@ -255,95 +250,85 @@ extern Tk_ItemType tkOvalType, tkPolygonType;
 extern Tk_ItemType tkRectangleType, tkTextType, tkWindowType;
 
 /*
- * Prototypes for procedures defined later in this file:
+ * Prototypes for functions defined later in this file:
  */
 
-static void		CanvasBindProc _ANSI_ARGS_((ClientData clientData,
-			    XEvent *eventPtr));
-static void		CanvasBlinkProc _ANSI_ARGS_((ClientData clientData));
-static void		CanvasCmdDeletedProc _ANSI_ARGS_((
-			    ClientData clientData));
-static void		CanvasDoEvent _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    XEvent *eventPtr));
-static void		CanvasEventProc _ANSI_ARGS_((ClientData clientData,
-			    XEvent *eventPtr));
-static int		CanvasFetchSelection _ANSI_ARGS_((
-			    ClientData clientData, int offset,
-			    char *buffer, int maxBytes));
-static Tk_Item *	CanvasFindClosest _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    double coords[2]));
-static void		CanvasFocusProc _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    int gotFocus));
-static void		CanvasLostSelection _ANSI_ARGS_((
-			    ClientData clientData));
-static void		CanvasSelectTo _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    Tk_Item *itemPtr, int index));
-static void		CanvasSetOrigin _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    int xOrigin, int yOrigin));
-static void		CanvasUpdateScrollbars _ANSI_ARGS_((
-			    TkCanvas *canvasPtr));
-static int		CanvasWidgetCmd _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, int argc, Tcl_Obj *CONST *argv));
-static void		CanvasWorldChanged _ANSI_ARGS_((
-			    ClientData instanceData));
-static int		ConfigureCanvas _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkCanvas *canvasPtr, int argc, Tcl_Obj *CONST *argv,
-			    int flags));
-static void		DestroyCanvas _ANSI_ARGS_((char *memPtr));
-static void		DisplayCanvas _ANSI_ARGS_((ClientData clientData));
-static void		DoItem _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Item *itemPtr, Tk_Uid tag));
-static void		EventuallyRedrawItem _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr));
+static void		CanvasBindProc(ClientData clientData,
+			    XEvent *eventPtr);
+static void		CanvasBlinkProc(ClientData clientData);
+static void		CanvasCmdDeletedProc(ClientData clientData);
+static void		CanvasDoEvent(TkCanvas *canvasPtr, XEvent *eventPtr);
+static void		CanvasEventProc(ClientData clientData,
+			    XEvent *eventPtr);
+static int		CanvasFetchSelection(ClientData clientData, int offset,
+			    char *buffer, int maxBytes);
+static Tk_Item *	CanvasFindClosest(TkCanvas *canvasPtr,
+			    double coords[2]);
+static void		CanvasFocusProc(TkCanvas *canvasPtr, int gotFocus);
+static void		CanvasLostSelection(ClientData clientData);
+static void		CanvasSelectTo(TkCanvas *canvasPtr,
+			    Tk_Item *itemPtr, int index);
+static void		CanvasSetOrigin(TkCanvas *canvasPtr,
+			    int xOrigin, int yOrigin);
+static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
+static int		CanvasWidgetCmd(ClientData clientData,
+			    Tcl_Interp *interp, int argc,
+			    Tcl_Obj *CONST *argv);
+static void		CanvasWorldChanged(
+			    ClientData instanceData);
+static int		ConfigureCanvas(Tcl_Interp *interp,
+			    TkCanvas *canvasPtr, int argc,
+			    Tcl_Obj *CONST *argv, int flags);
+static void		DestroyCanvas(char *memPtr);
+static void		DisplayCanvas(ClientData clientData);
+static void		DoItem(Tcl_Interp *interp,
+			    Tk_Item *itemPtr, Tk_Uid tag);
+static void		EventuallyRedrawItem(Tk_Canvas canvas,
+			    Tk_Item *itemPtr);
 #ifdef USE_OLD_TAG_SEARCH
-static int		FindItems _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkCanvas *canvasPtr, int argc, Tcl_Obj *CONST *argv,
-			    Tcl_Obj *newTagObj, int first));
+static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
+			    int argc, Tcl_Obj *CONST *argv,
+			    Tcl_Obj *newTagObj, int first);
 #else /* USE_OLD_TAG_SEARCH */
-static int		FindItems _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkCanvas *canvasPtr, int argc, Tcl_Obj *CONST *argv,
+static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
+			    int argc, Tcl_Obj *CONST *argv,
 			    Tcl_Obj *newTagObj, int first,
-			    TagSearch **searchPtrPtr));
+			    TagSearch **searchPtrPtr);
 #endif /* USE_OLD_TAG_SEARCH */
-static int		FindArea _ANSI_ARGS_((Tcl_Interp *interp,
-			    TkCanvas *canvasPtr, Tcl_Obj *CONST *argv, Tk_Uid uid,
-			    int enclosed));
-static double		GridAlign _ANSI_ARGS_((double coord, double spacing));
-static CONST char**	TkGetStringsFromObjs _ANSI_ARGS_((int argc,
-			    Tcl_Obj *CONST *objv));
-static void		InitCanvas _ANSI_ARGS_((void));
+static int		FindArea(Tcl_Interp *interp, TkCanvas *canvasPtr,
+			    Tcl_Obj *CONST *argv, Tk_Uid uid, int enclosed);
+static double		GridAlign(double coord, double spacing);
+static CONST char**	TkGetStringsFromObjs(int argc, Tcl_Obj *CONST *objv);
+static void		InitCanvas(void);
 #ifdef USE_OLD_TAG_SEARCH
-static Tk_Item *	NextItem _ANSI_ARGS_((TagSearch *searchPtr));
+static Tk_Item *	NextItem(TagSearch *searchPtr);
 #endif /* USE_OLD_TAG_SEARCH */
-static void		PickCurrentItem _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    XEvent *eventPtr));
-static Tcl_Obj *	ScrollFractions _ANSI_ARGS_((int screen1,
-			    int screen2, int object1, int object2));
+static void		PickCurrentItem(TkCanvas *canvasPtr, XEvent *eventPtr);
+static Tcl_Obj *	ScrollFractions(int screen1,
+			    int screen2, int object1, int object2);
 #ifdef USE_OLD_TAG_SEARCH
-static void		RelinkItems _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    Tcl_Obj *tag, Tk_Item *prevPtr));
-static Tk_Item *	StartTagSearch _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    Tcl_Obj *tag, TagSearch *searchPtr));
+static void		RelinkItems(TkCanvas *canvasPtr,
+			    Tcl_Obj *tag, Tk_Item *prevPtr);
+static Tk_Item *	StartTagSearch(TkCanvas *canvasPtr,
+			    Tcl_Obj *tag, TagSearch *searchPtr);
 #else /* USE_OLD_TAG_SEARCH */
-static int		RelinkItems _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    Tcl_Obj *tag, Tk_Item *prevPtr,
-			    TagSearch **searchPtrPtr));
-static void 		TagSearchExprInit _ANSI_ARGS_ ((
-			    TagSearchExpr **exprPtrPtr));
-static void		TagSearchExprDestroy _ANSI_ARGS_((TagSearchExpr *expr));
-static void		TagSearchDestroy _ANSI_ARGS_((TagSearch *searchPtr));
-static int		TagSearchScan _ANSI_ARGS_((TkCanvas *canvasPtr,
-			    Tcl_Obj *tag, TagSearch **searchPtrPtr));
-static int		TagSearchScanExpr _ANSI_ARGS_((Tcl_Interp *interp,
-			    TagSearch *searchPtr, TagSearchExpr *expr));
-static int		TagSearchEvalExpr _ANSI_ARGS_((TagSearchExpr *expr,
-			    Tk_Item *itemPtr));
-static Tk_Item *	TagSearchFirst _ANSI_ARGS_((TagSearch *searchPtr));
-static Tk_Item *	TagSearchNext _ANSI_ARGS_((TagSearch *searchPtr));
+static int		RelinkItems(TkCanvas *canvasPtr, Tcl_Obj *tag,
+			    Tk_Item *prevPtr, TagSearch **searchPtrPtr);
+static void 		TagSearchExprInit(TagSearchExpr **exprPtrPtr);
+static void		TagSearchExprDestroy(TagSearchExpr *expr);
+static void		TagSearchDestroy(TagSearch *searchPtr);
+static int		TagSearchScan(TkCanvas *canvasPtr,
+			    Tcl_Obj *tag, TagSearch **searchPtrPtr);
+static int		TagSearchScanExpr(Tcl_Interp *interp,
+			    TagSearch *searchPtr, TagSearchExpr *expr);
+static int		TagSearchEvalExpr(TagSearchExpr *expr,
+			    Tk_Item *itemPtr);
+static Tk_Item *	TagSearchFirst(TagSearch *searchPtr);
+static Tk_Item *	TagSearchNext(TagSearch *searchPtr);
 #endif /* USE_OLD_TAG_SEARCH */
 
 /*
- * The structure below defines canvas class behavior by means of procedures
+ * The structure below defines canvas class behavior by means of functions
  * that can be invoked from generic window code.
  */
 
@@ -382,9 +367,8 @@ static Tk_ClassProcs canvasClass = {
  *
  * Tk_CanvasObjCmd --
  *
- *	This procedure is invoked to process the "canvas" Tcl
- *	command.  See the user documentation for details on what
- *	it does.
+ *	This function is invoked to process the "canvas" Tcl command. See the
+ *	user documentation for details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -397,8 +381,7 @@ static Tk_ClassProcs canvasClass = {
 
 int
 Tk_CanvasObjCmd(clientData, interp, argc, argv)
-    ClientData clientData;		/* Main window associated with
-				 * interpreter. */
+    ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
     Tcl_Obj *CONST argv[];	/* Argument objects. */
@@ -423,9 +406,9 @@ Tk_CanvasObjCmd(clientData, interp, argc, argv)
     }
 
     /*
-     * Initialize fields that won't be initialized by ConfigureCanvas,
-     * or which ConfigureCanvas expects to have reasonable values
-     * (e.g. resource pointers).
+     * Initialize fields that won't be initialized by ConfigureCanvas, or
+     * which ConfigureCanvas expects to have reasonable values (e.g. resource
+     * pointers).
      */
 
     canvasPtr = (TkCanvas *) ckalloc(sizeof(TkCanvas));
@@ -534,9 +517,9 @@ Tk_CanvasObjCmd(clientData, interp, argc, argv)
  *
  * CanvasWidgetCmd --
  *
- *	This procedure is invoked to process the Tcl command
- *	that corresponds to a widget managed by this module.
- *	See the user documentation for details on what it does.
+ *	This function is invoked to process the Tcl command that corresponds
+ *	to a widget managed by this module. See the user documentation for
+ *	details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -549,21 +532,20 @@ Tk_CanvasObjCmd(clientData, interp, argc, argv)
 
 static int
 CanvasWidgetCmd(clientData, interp, objc, objv)
-    ClientData clientData;		/* Information about canvas
-					 * widget. */
-    Tcl_Interp *interp;			/* Current interpreter. */
-    int objc;				/* Number of arguments. */
-    Tcl_Obj *CONST objv[];		/* Argument objects. */
+    ClientData clientData;	/* Information about canvas widget. */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) clientData;
     int c, result;
-    Tk_Item *itemPtr = NULL;		/* Initialization needed only to
-					 * prevent compiler warning. */
+    Tk_Item *itemPtr = NULL;	/* Initialization needed only to prevent
+				 * compiler warning. */
 #ifdef USE_OLD_TAG_SEARCH
     TagSearch search;
 #else /* USE_OLD_TAG_SEARCH */
-    TagSearch *searchPtr = NULL;	/* Allocated by first TagSearchScan
-					 * Freed by TagSearchDestroy */
+    TagSearch *searchPtr = NULL;/* Allocated by first TagSearchScan, freed by
+				 * TagSearchDestroy */
 #endif /* USE_OLD_TAG_SEARCH */
 
     int index;
@@ -616,9 +598,9 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 
     case CANV_BBOX: {
 	int i, gotAny;
-	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;	/* Initializations needed
-						 * only to prevent compiler
-						 * warnings. */
+	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;	/* Initializations needed only
+						 * to prevent overcautious
+						 * compiler warnings. */
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?tagOrId ...?");
@@ -656,7 +638,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 	if (gotAny) {
 	    char buf[TCL_INTEGER_SPACE * 4];
-	    
+
 	    sprintf(buf, "%d %d %d %d", x1, y1, x2, y2);
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	}
@@ -672,8 +654,8 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 
 	/*
-	 * Figure out what object to use for the binding (individual
-	 * item vs. tag).
+	 * Figure out what object to use for the binding (individual item vs.
+	 * tag).
 	 */
 
 	object = 0;
@@ -729,8 +711,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 #endif /* USE_OLD_TAG_SEARCH */
 
 	/*
-	 * Make a binding table if the canvas doesn't already have
-	 * one.
+	 * Make a binding table if the canvas doesn't already have one.
 	 */
 
 	if (canvasPtr->bindingTable == NULL) {
@@ -750,8 +731,9 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 #ifndef USE_OLD_TAG_SEARCH
 	    if (searchPtr->type == SEARCH_TYPE_EXPR) {
 		/*
-		 * if new tag expression, then insert in linked list
+		 * If new tag expression, then insert in linked list.
 		 */
+
 	    	TagSearchExpr *expr, **lastPtr;
 
 		lastPtr = &(canvasPtr->bindTagExprs);
@@ -763,15 +745,17 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 		}
 		if (!expr) {
 		    /*
-		     * transfer ownership of expr to bindTagExprs list
+		     * Transfer ownership of expr to bindTagExprs list.
 		     */
+
 		    *lastPtr = searchPtr->expr;
 		    searchPtr->expr->next = NULL;
 
 		    /*
-		     * flag in TagSearch that expr has changed ownership
-		     * so that TagSearchDestroy doesn't try to free it
+		     * Flag in TagSearch that expr has changed ownership so
+		     * that TagSearchDestroy doesn't try to free it.
 		     */
+
 		    searchPtr->expr = NULL;
 		}
 	    }
@@ -802,17 +786,18 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    }
 	} else if (objc == 4) {
 	    CONST char *command;
-    
+
 	    command = Tk_GetBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetString(objv[3]));
 	    if (command == NULL) {
 		CONST char *string;
 
-		string = Tcl_GetStringResult(interp); 
+		string = Tcl_GetStringResult(interp);
+
 		/*
-		 * Ignore missing binding errors.  This is a special hack
-		 * that relies on the error message returned by FindSequence
-		 * in tkBind.c.
+		 * Ignore missing binding errors. This is a special hack that
+		 * relies on the error message returned by FindSequence in
+		 * tkBind.c.
 		 */
 
 		if (string[0] != '\0') {
@@ -1076,10 +1061,10 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    }
 
 	    /*
-	     * Redraw both item's old and new areas:  it's possible
-	     * that a delete could result in a new area larger than
-	     * the old area. Except if the insertProc sets the
-	     * TK_ITEM_DONT_REDRAW flag, nothing more needs to be done.
+	     * Redraw both item's old and new areas: it's possible that a
+	     * delete could result in a new area larger than the old area.
+	     * Except if the insertProc sets the TK_ITEM_DONT_REDRAW flag,
+	     * nothing more needs to be done.
 	     */
 
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
@@ -1200,7 +1185,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	if (objc == 2) {
 	    if (itemPtr != NULL) {
 		char buf[TCL_INTEGER_SPACE];
-		
+
 		sprintf(buf, "%d", itemPtr->id);
 		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    }
@@ -1336,11 +1321,10 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    }
 
 	    /*
-	     * Redraw both item's old and new areas:  it's possible
-	     * that an insertion could result in a new area either
-	     * larger or smaller than the old area. Except if the
-	     * insertProc sets the TK_ITEM_DONT_REDRAW flag, nothing
-	     * more needs to be done.
+	     * Redraw both item's old and new areas: it's possible that an
+	     * insertion could result in a new area either larger or smaller
+	     * than the old area. Except if the insertProc sets the
+	     * TK_ITEM_DONT_REDRAW flag, nothing more needs to be done.
 	     */
 
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
@@ -1423,8 +1407,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 
 	/*
-	 * First find the item just after which we'll insert the
-	 * named items.
+	 * First find the item just after which we'll insert the named items.
 	 */
 
 	if (objc == 3) {
@@ -1487,8 +1470,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	}
 
 	/*
-	 * First find the item just after which we'll insert the
-	 * named items.
+	 * First find the item just after which we'll insert the named items.
 	 */
 
 	if (objc == 3) {
@@ -1803,7 +1785,8 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	break;
     }
     }
-    done:
+
+  done:
 #ifndef USE_OLD_TAG_SEARCH
     TagSearchDestroy(searchPtr);
 #endif /* not USE_OLD_TAG_SEARCH */
@@ -1816,9 +1799,9 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
  *
  * DestroyCanvas --
  *
- *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release
- *	to clean up the internal structure of a canvas at a safe time
- *	(when no-one is using it anymore).
+ *	This function is invoked by Tcl_EventuallyFree or Tcl_Release to clean
+ *	up the internal structure of a canvas at a safe time (when no-one is
+ *	using it anymore).
  *
  * Results:
  *	None.
@@ -1855,9 +1838,8 @@ DestroyCanvas(memPtr)
     }
 
     /*
-     * Free up all the stuff that requires special handling,
-     * then let Tk_FreeOptions handle all the standard option-related
-     * stuff.
+     * Free up all the stuff that requires special handling, then let
+     * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
     Tcl_DeleteHashTable(&canvasPtr->idTable);
@@ -1886,18 +1868,17 @@ DestroyCanvas(memPtr)
  *
  * ConfigureCanvas --
  *
- *	This procedure is called to process an objv/objc list, plus
- *	the Tk option database, in order to configure (or
- *	reconfigure) a canvas widget.
+ *	This function is called to process an objv/objc list, plus the Tk
+ *	option database, in order to configure (or reconfigure) a canvas
+ *	widget.
  *
  * Results:
- *	The return value is a standard Tcl result.  If TCL_ERROR is
- *	returned, then the interp's result contains an error message.
+ *	The return value is a standard Tcl result. If TCL_ERROR is returned,
+ *	then the interp's result contains an error message.
  *
  * Side effects:
- *	Configuration information, such as colors, border width,
- *	etc. get set for canvasPtr;  old resources get freed,
- *	if there were any.
+ *	Configuration information, such as colors, border width, etc. get set
+ *	for canvasPtr; old resources get freed, if there were any.
  *
  *----------------------------------------------------------------------
  */
@@ -1905,8 +1886,8 @@ DestroyCanvas(memPtr)
 static int
 ConfigureCanvas(interp, canvasPtr, objc, objv, flags)
     Tcl_Interp *interp;		/* Used for error reporting. */
-    TkCanvas *canvasPtr;	/* Information about widget;  may or may
-				 * not already have values for some fields. */
+    TkCanvas *canvasPtr;	/* Information about widget; may or may not
+				 * already have values for some fields. */
     int objc;			/* Number of valid entries in objv. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
     int flags;			/* Flags to pass to Tk_ConfigureWidget. */
@@ -1921,9 +1902,8 @@ ConfigureCanvas(interp, canvasPtr, objc, objv, flags)
     }
 
     /*
-     * A few options need special processing, such as setting the
-     * background from a 3-D border and creating a GC for copying
-     * bits to the screen.
+     * A few options need special processing, such as setting the background
+     * from a 3-D border and creating a GC for copying bits to the screen.
      */
 
     Tk_SetBackgroundFromBorder(canvasPtr->tkwin, canvasPtr->bgBorder);
@@ -1951,8 +1931,8 @@ ConfigureCanvas(interp, canvasPtr, objc, objv, flags)
 	    canvasPtr->height + 2*canvasPtr->inset);
 
     /*
-     * Restart the cursor timing sequence in case the on-time or off-time
-     * just changed.
+     * Restart the cursor timing sequence in case the on-time or off-time just
+     * changed.
      */
 
     if (canvasPtr->textInfo.gotFocus) {
@@ -2014,8 +1994,8 @@ ConfigureCanvas(interp, canvasPtr, objc, objv, flags)
     }
 
     /*
-     * Reset the canvas's origin (this is a no-op unless confine
-     * mode has just been turned on or the scroll region has changed).
+     * Reset the canvas's origin (this is a no-op unless confine mode has just
+     * been turned on or the scroll region has changed).
      */
 
     CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, canvasPtr->yOrigin);
@@ -2032,21 +2012,21 @@ ConfigureCanvas(interp, canvasPtr, objc, objv, flags)
  *
  * CanvasWorldChanged --
  *
- *	This procedure is called when the world has changed in some
- *	way and the widget needs to recompute all its graphics contexts
- *	and determine its new geometry.
+ *	This function is called when the world has changed in some way and the
+ *	widget needs to recompute all its graphics contexts and determine its
+ *	new geometry.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Configures all items in the canvas with a empty argc/argv, for
- *	the side effect of causing all the items to recompute their
- *	geometry and to be redisplayed.
+ *	Configures all items in the canvas with a empty argc/argv, for the
+ *	side effect of causing all the items to recompute their geometry and
+ *	to be redisplayed.
  *
  *---------------------------------------------------------------------------
  */
- 
+
 static void
 CanvasWorldChanged(instanceData)
     ClientData instanceData;	/* Information about widget. */
@@ -2077,9 +2057,9 @@ CanvasWorldChanged(instanceData)
  *
  * DisplayCanvas --
  *
- *	This procedure redraws the contents of a canvas window.
- *	It is invoked as a do-when-idle handler, so it only runs
- *	when there's nothing else for the application to do.
+ *	This function redraws the contents of a canvas window. It is invoked
+ *	as a do-when-idle handler, so it only runs when there's nothing else
+ *	for the application to do.
  *
  * Results:
  *	None.
@@ -2109,8 +2089,8 @@ DisplayCanvas(clientData)
     }
 
     /*
-     * Choose a new current item if that is needed (this could cause
-     * event handlers to be invoked).
+     * Choose a new current item if that is needed (this could cause event
+     * handlers to be invoked).
      */
 
     while (canvasPtr->flags & REPICK_NEEDED) {
@@ -2125,9 +2105,9 @@ DisplayCanvas(clientData)
     }
 
     /*
-     * Scan through the item list, registering the bounding box
-     * for all items that didn't do that for the final coordinates
-     * yet. This can be determined by the FORCE_REDRAW flag.
+     * Scan through the item list, registering the bounding box for all items
+     * that didn't do that for the final coordinates yet. This can be
+     * determined by the FORCE_REDRAW flag.
      */
 
     for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
@@ -2139,8 +2119,8 @@ DisplayCanvas(clientData)
 	}
     }
     /*
-     * Compute the intersection between the area that needs redrawing
-     * and the area that's visible on the screen.
+     * Compute the intersection between the area that needs redrawing and the
+     * area that's visible on the screen.
      */
 
     if ((canvasPtr->redrawX1 < canvasPtr->redrawX2)
@@ -2164,66 +2144,62 @@ DisplayCanvas(clientData)
 	if ((screenX1 >= screenX2) || (screenY1 >= screenY2)) {
 	    goto borders;
 	}
-    
+
 	/*
-	 * Redrawing is done in a temporary pixmap that is allocated
-	 * here and freed at the end of the procedure.  All drawing
-	 * is done to the pixmap, and the pixmap is copied to the
-	 * screen at the end of the procedure. The temporary pixmap
-	 * serves two purposes:
+	 * Redrawing is done in a temporary pixmap that is allocated here and
+	 * freed at the end of the function. All drawing is done to the
+	 * pixmap, and the pixmap is copied to the screen at the end of the
+	 * function. The temporary pixmap serves two purposes:
 	 *
-	 * 1. It provides a smoother visual effect (no clearing and
-	 *    gradual redraw will be visible to users).
-	 * 2. It allows us to redraw only the objects that overlap
-	 *    the redraw area.  Otherwise incorrect results could
-	 *	  occur from redrawing things that stick outside of
-	 *	  the redraw area (we'd have to redraw everything in
-	 *    order to make the overlaps look right).
+	 * 1. It provides a smoother visual effect (no clearing and gradual
+	 *    redraw will be visible to users).
+	 * 2. It allows us to redraw only the objects that overlap the redraw
+	 *    area. Otherwise incorrect results could occur from redrawing
+	 *    things that stick outside of the redraw area (we'd have to
+	 *    redraw everything in order to make the overlaps look right).
 	 *
 	 * Some tricky points about the pixmap:
 	 *
-	 * 1. We only allocate a large enough pixmap to hold the
-	 *    area that has to be redisplayed.  This saves time in
-	 *    in the X server for large objects that cover much
-	 *    more than the area being redisplayed:  only the area
-	 *    of the pixmap will actually have to be redrawn.
-	 * 2. Some X servers (e.g. the one for DECstations) have troubles
-	 *    with characters that overlap an edge of the pixmap (on the
-	 *    DEC servers, as of 8/18/92, such characters are drawn one
-	 *    pixel too far to the right).  To handle this problem,
-	 *    make the pixmap a bit larger than is absolutely needed
-	 *    so that for normal-sized fonts the characters that overlap
-	 *    the edge of the pixmap will be outside the area we care
-	 *    about.
+	 * 1. We only allocate a large enough pixmap to hold the area that has
+	 *    to be redisplayed. This saves time in in the X server for large
+	 *    objects that cover much more than the area being redisplayed:
+	 *    only the area of the pixmap will actually have to be redrawn.
+	 * 2. Some X servers (e.g. the one for DECstations) have troubles with
+	 *    with characters that overlap an edge of the pixmap (on the DEC
+	 *    servers, as of 8/18/92, such characters are drawn one pixel too
+	 *    far to the right). To handle this problem, make the pixmap a bit
+	 *    larger than is absolutely needed so that for normal-sized fonts
+	 *    the characters that overlap the edge of the pixmap will be
+	 *    outside the area we care about.
 	 */
-    
+
 	canvasPtr->drawableXOrigin = screenX1 - 30;
 	canvasPtr->drawableYOrigin = screenY1 - 30;
 	pixmap = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
 	    (screenX2 + 30 - canvasPtr->drawableXOrigin),
 	    (screenY2 + 30 - canvasPtr->drawableYOrigin),
 	    Tk_Depth(tkwin));
-    
+
 	/*
 	 * Clear the area to be redrawn.
 	 */
-    
+
 	width = screenX2 - screenX1;
 	height = screenY2 - screenY1;
-    
+
 	XFillRectangle(Tk_Display(tkwin), pixmap, canvasPtr->pixmapGC,
 		screenX1 - canvasPtr->drawableXOrigin,
 		screenY1 - canvasPtr->drawableYOrigin, (unsigned int) width,
 		(unsigned int) height);
-    
+
 	/*
-	 * Scan through the item list, redrawing those items that need it.
-	 * An item must be redraw if either (a) it intersects the smaller
+	 * Scan through the item list, redrawing those items that need it. An
+	 * item must be redraw if either (a) it intersects the smaller
 	 * on-screen area or (b) it intersects the full canvas area and its
-	 * type requests that it be redrawn always (e.g. so subwindows can
-	 * be unmapped when they move off-screen).
+	 * type requests that it be redrawn always (e.g. so subwindows can be
+	 * unmapped when they move off-screen).
 	 */
-    
+
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
 	    if ((itemPtr->x1 >= screenX2)
@@ -2247,12 +2223,12 @@ DisplayCanvas(clientData)
 		    canvasPtr->display, pixmap, screenX1, screenY1, width,
 		    height);
 	}
-    
+
 	/*
-	 * Copy from the temporary pixmap to the screen, then free up
-	 * the temporary pixmap.
+	 * Copy from the temporary pixmap to the screen, then free up the
+	 * temporary pixmap.
 	 */
-    
+
 	XCopyArea(Tk_Display(tkwin), pixmap, Tk_WindowId(tkwin),
 		canvasPtr->pixmapGC,
 		screenX1 - canvasPtr->drawableXOrigin,
@@ -2267,7 +2243,7 @@ DisplayCanvas(clientData)
      * Draw the window borders, if needed.
      */
 
-    borders:
+  borders:
     if (canvasPtr->flags & REDRAW_BORDERS) {
 	canvasPtr->flags &= ~REDRAW_BORDERS;
 	if (canvasPtr->borderWidth > 0) {
@@ -2295,7 +2271,7 @@ DisplayCanvas(clientData)
 	}
     }
 
-    done:
+  done:
     canvasPtr->flags &= ~(REDRAW_PENDING|BBOX_NOT_EMPTY);
     canvasPtr->redrawX1 = canvasPtr->redrawX2 = 0;
     canvasPtr->redrawY1 = canvasPtr->redrawY2 = 0;
@@ -2309,15 +2285,15 @@ DisplayCanvas(clientData)
  *
  * CanvasEventProc --
  *
- *	This procedure is invoked by the Tk dispatcher for various
- *	events on canvases.
+ *	This function is invoked by the Tk dispatcher for various events on
+ *	canvases.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	When the window gets deleted, internal structures get
- *	cleaned up.  When it gets exposed, it is redisplayed.
+ *	When the window gets deleted, internal structures get cleaned up.
+ *	When it gets exposed, it is redisplayed.
  *
  *--------------------------------------------------------------
  */
@@ -2360,8 +2336,8 @@ CanvasEventProc(clientData, eventPtr)
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 
 	/*
-	 * The call below is needed in order to recenter the canvas if
-	 * it's confined and its scroll region is smaller than the window.
+	 * The call below is needed in order to recenter the canvas if it's
+	 * confined and its scroll region is smaller than the window.
 	 */
 
 	CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, canvasPtr->yOrigin);
@@ -2382,9 +2358,9 @@ CanvasEventProc(clientData, eventPtr)
 	Tk_Item *itemPtr;
 
 	/*
-	 * Special hack:  if the canvas is unmapped, then must notify
-	 * all items with "alwaysRedraw" set, so that they know that
-	 * they are no longer displayed.
+	 * Special hack: if the canvas is unmapped, then must notify all items
+	 * with "alwaysRedraw" set, so that they know that they are no longer
+	 * displayed.
 	 */
 
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
@@ -2402,9 +2378,9 @@ CanvasEventProc(clientData, eventPtr)
  *
  * CanvasCmdDeletedProc --
  *
- *	This procedure is invoked when a widget command is deleted.  If
- *	the widget isn't already in the process of being destroyed,
- *	this command destroys it.
+ *	This function is invoked when a widget command is deleted. If the
+ *	widget isn't already in the process of being destroyed, this command
+ *	destroys it.
  *
  * Results:
  *	None.
@@ -2423,10 +2399,10 @@ CanvasCmdDeletedProc(clientData)
     Tk_Window tkwin = canvasPtr->tkwin;
 
     /*
-     * This procedure could be invoked either because the window was
-     * destroyed and the command was then deleted (in which case tkwin
-     * is NULL) or because the command was deleted, and then this procedure
-     * destroys the widget.
+     * This function could be invoked either because the window was destroyed
+     * and the command was then deleted (in which case tkwin is NULL) or
+     * because the command was deleted, and then this function destroys the
+     * widget.
      */
 
     if (tkwin != NULL) {
@@ -2440,8 +2416,8 @@ CanvasCmdDeletedProc(clientData)
  *
  * Tk_CanvasEventuallyRedraw --
  *
- *	Arrange for part or all of a canvas widget to redrawn at
- *	some convenient time in the future.
+ *	Arrange for part or all of a canvas widget to redrawn at some
+ *	convenient time in the future.
  *
  * Results:
  *	None.
@@ -2461,10 +2437,12 @@ Tk_CanvasEventuallyRedraw(canvas, x1, y1, x2, y2)
 				 * Pixels on edge are not redrawn. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
+
     /*
      * If tkwin is NULL, the canvas has been destroyed, so we can't really
      * redraw it.
      */
+
     if (canvasPtr->tkwin == NULL) {
 	return;
     }
@@ -2506,8 +2484,8 @@ Tk_CanvasEventuallyRedraw(canvas, x1, y1, x2, y2)
  *
  * EventuallyRedrawItem --
  *
- *	Arrange for part or all of a canvas widget to redrawn at
- *	some convenient time in the future.
+ *	Arrange for part or all of a canvas widget to redrawn at some
+ *	convenient time in the future.
  *
  * Results:
  *	None.
@@ -2521,7 +2499,7 @@ Tk_CanvasEventuallyRedraw(canvas, x1, y1, x2, y2)
 static void
 EventuallyRedrawItem(canvas, itemPtr)
     Tk_Canvas canvas;		/* Information about widget. */
-    Tk_Item *itemPtr;		/* item to be redrawn. */
+    Tk_Item *itemPtr;		/* Item to be redrawn. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
     if ((itemPtr->x1 >= itemPtr->x2) || (itemPtr->y1 >= itemPtr->y2) ||
@@ -2567,27 +2545,26 @@ EventuallyRedrawItem(canvas, itemPtr)
  *
  * Tk_CreateItemType --
  *
- *	This procedure may be invoked to add a new kind of canvas
- *	element to the core item types supported by Tk.
+ *	This function may be invoked to add a new kind of canvas element to
+ *	the core item types supported by Tk.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	From now on, the new item type will be useable in canvas
- *	widgets (e.g. typePtr->name can be used as the item type
- *	in "create" widget commands).  If there was already a
- *	type with the same name as in typePtr, it is replaced with
- *	the new type.
+ *	From now on, the new item type will be useable in canvas widgets
+ *	(e.g. typePtr->name can be used as the item type in "create" widget
+ *	commands). If there was already a type with the same name as in
+ *	typePtr, it is replaced with the new type.
  *
  *--------------------------------------------------------------
  */
 
 void
 Tk_CreateItemType(typePtr)
-    Tk_ItemType *typePtr;		/* Information about item type;
-					 * storage must be statically
-					 * allocated (must live forever). */
+    Tk_ItemType *typePtr;	/* Information about item type; storage must
+				 * be statically allocated (must live
+				 * forever). */
 {
     Tk_ItemType *typePtr2, *prevPtr;
 
@@ -2621,14 +2598,14 @@ Tk_CreateItemType(typePtr)
  *
  * Tk_GetItemTypes --
  *
- *	This procedure returns a pointer to the list of all item
- *	types. Note that this is inherently thread-unsafe, but since
- *	item types are only ever registered very rarely this is
- *	unlikely to be a problem in practice.
+ *	This function returns a pointer to the list of all item types. Note
+ *	that this is inherently thread-unsafe, but since item types are only
+ *	ever registered very rarely this is unlikely to be a problem in
+ *	practice.
  *
  * Results:
- *	The return value is a pointer to the first in the list
- *	of item types currently supported by canvases.
+ *	The return value is a pointer to the first in the list of item types
+ *	currently supported by canvases.
  *
  * Side effects:
  *	None.
@@ -2650,9 +2627,8 @@ Tk_GetItemTypes()
  *
  * InitCanvas --
  *
- *	This procedure is invoked to perform once-only-ever
- *	initialization for the module, such as setting up the type
- *	table.
+ *	This function is invoked to perform once-only-ever initialization for
+ *	the module, such as setting up the type table.
  *
  * Results:
  *	None.
@@ -2690,33 +2666,30 @@ InitCanvas()
  *
  * StartTagSearch --
  *
- *	This procedure is called to initiate an enumeration of
- *	all items in a given canvas that contain a given tag.
+ *	This function is called to initiate an enumeration of all items in a
+ *	given canvas that contain a given tag.
  *
  * Results:
- *	The return value is a pointer to the first item in
- *	canvasPtr that matches tag, or NULL if there is no
- *	such item.  The information at *searchPtr is initialized
- *	such that successive calls to NextItem will return
- *	successive items that match tag.
+ *	The return value is a pointer to the first item in canvasPtr that
+ *	matches tag, or NULL if there is no such item. The information at
+ *	*searchPtr is initialized such that successive calls to NextItem will
+ *	return successive items that match tag.
  *
  * Side effects:
- *	SearchPtr is linked into a list of searches in progress
- *	on canvasPtr, so that elements can safely be deleted
- *	while the search is in progress.  EndTagSearch must be
- *	called at the end of the search to unlink searchPtr from
- *	this list.
+ *	SearchPtr is linked into a list of searches in progress on canvasPtr,
+ *	so that elements can safely be deleted while the search is in
+ *	progress. EndTagSearch must be called at the end of the search to
+ *	unlink searchPtr from this list.
  *
  *--------------------------------------------------------------
  */
 
 static Tk_Item *
 StartTagSearch(canvasPtr, tagObj, searchPtr)
-    TkCanvas *canvasPtr;		/* Canvas whose items are to be
-					 * searched. */
-    Tcl_Obj *tagObj;			/* Object giving tag value. */
-    TagSearch *searchPtr;		/* Record describing tag search;
-					 * will be initialized here. */
+    TkCanvas *canvasPtr;	/* Canvas whose items are to be searched. */
+    Tcl_Obj *tagObj;		/* Object giving tag value. */
+    TagSearch *searchPtr;	/* Record describing tag search; will be
+				 * initialized here. */
 {
     int id;
     Tk_Item *itemPtr, *lastPtr;
@@ -2738,10 +2711,10 @@ StartTagSearch(canvasPtr, tagObj, searchPtr)
     searchPtr->searchOver = 0;
 
     /*
-     * Find the first matching item in one of several ways. If the tag
-     * is a number then it selects the single item with the matching
-     * identifier.  In this case see if the item being requested is the
-     * hot item, in which case the search can be skipped.
+     * Find the first matching item in one of several ways. If the tag is a
+     * number then it selects the single item with the matching identifier.
+     * In this case see if the item being requested is the hot item, in which
+     * case the search can be skipped.
      */
 
     if (isdigit(UCHAR(*tag))) {
@@ -2785,7 +2758,7 @@ StartTagSearch(canvasPtr, tagObj, searchPtr)
     }
 
     /*
-     * None of the above.  Search for an item with a matching tag.
+     * None of the above. Search for an item with a matching tag.
      */
 
     for (lastPtr = NULL, itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
@@ -2809,15 +2782,15 @@ StartTagSearch(canvasPtr, tagObj, searchPtr)
  *
  * NextItem --
  *
- *	This procedure returns successive items that match a given
- *	tag;  it should be called only after StartTagSearch has been
- *	used to begin a search.
+ *	This function returns successive items that match a given tag; it
+ *	should be called only after StartTagSearch has been used to begin a
+ *	search.
  *
  * Results:
- *	The return value is a pointer to the next item that matches
- *	the tag specified to StartTagSearch, or NULL if no such
- *	item exists.  *SearchPtr is updated so that the next call
- *	to this procedure will return the next item.
+ *	The return value is a pointer to the next item that matches the tag
+ *	specified to StartTagSearch, or NULL if no such item exists.
+ *	*SearchPtr is updated so that the next call to this function will
+ *	return the next item.
  *
  * Side effects:
  *	None.
@@ -2827,8 +2800,7 @@ StartTagSearch(canvasPtr, tagObj, searchPtr)
 
 static Tk_Item *
 NextItem(searchPtr)
-    TagSearch *searchPtr;		/* Record describing search in
-					 * progress. */
+    TagSearch *searchPtr;	/* Record describing search in progress. */
 {
     Tk_Item *itemPtr, *lastPtr;
     int count;
@@ -2836,8 +2808,8 @@ NextItem(searchPtr)
     Tk_Uid *tagPtr;
 
     /*
-     * Find next item in list (this may not actually be a suitable
-     * one to return), and return if there are no items left.
+     * Find next item in list (this may not actually be a suitable one to
+     * return), and return if there are no items left.
      */
 
     lastPtr = searchPtr->lastPtr;
@@ -2852,10 +2824,10 @@ NextItem(searchPtr)
     }
     if (itemPtr != searchPtr->currentPtr) {
 	/*
-	 * The structure of the list has changed.  Probably the
-	 * previously-returned item was removed from the list.
-	 * In this case, don't advance lastPtr;  just return
-	 * its new successor (i.e. do nothing here).
+	 * The structure of the list has changed. Probably the previously-
+	 * returned item was removed from the list. In this case, don't
+	 * advance lastPtr; just return its new successor (i.e. do nothing
+	 * here).
 	 */
     } else {
 	lastPtr = itemPtr;
@@ -2898,11 +2870,10 @@ NextItem(searchPtr)
  *
  * GetStaticUids --
  *
- *	This procedure is invoked to return a structure filled with
- *	the Uids used when doing tag searching. If it was never before
- *	called in the current thread, it initializes the structure for
- *	that thread (uids are only ever local to one thread [Bug
- *	1114977]).
+ *	This function is invoked to return a structure filled with the Uids
+ *	used when doing tag searching. If it was never before called in the
+ *	current thread, it initializes the structure for that thread (uids are
+ *	only ever local to one thread [Bug 1114977]).
  *
  * Results:
  *	None.
@@ -2939,7 +2910,7 @@ GetStaticUids()
  *
  * TagSearchExprInit --
  *
- *	This procedure allocates and initializes one TagSearchExpr struct.
+ *	This function allocates and initializes one TagSearchExpr struct.
  *
  * Results:
  *
@@ -2971,7 +2942,7 @@ TagSearchExpr **exprPtrPtr;
  *
  * TagSearchExprDestroy --
  *
- *	This procedure destroys one TagSearchExpr structure.
+ *	This function destroys one TagSearchExpr structure.
  *
  * Results:
  *
@@ -2997,32 +2968,29 @@ TagSearchExprDestroy(expr)
  *
  * TagSearchScan --
  *
- *	This procedure is called to initiate an enumeration of all
- *	items in a given canvas that contain a tag that matches the
- *	tagOrId expression.
+ *	This function is called to initiate an enumeration of all items in a
+ *	given canvas that contain a tag that matches the tagOrId expression.
  *
  * Results:
- *	The return value indicates if the tagOrId expression was
- *	successfully scanned (syntax).  The information at *searchPtr
- *	is initialized such that a call to TagSearchFirst, followed by
- *	successive calls to TagSearchNext will return items that match
- *	tag.
+ *	The return value indicates if the tagOrId expression was successfully
+ *	scanned (syntax). The information at *searchPtr is initialized such
+ *	that a call to TagSearchFirst, followed by successive calls to
+ *	TagSearchNext will return items that match tag.
  *
  * Side effects:
- *	SearchPtr is linked into a list of searches in progress on
- *	canvasPtr, so that elements can safely be deleted while the
- *	search is in progress.
+ *	SearchPtr is linked into a list of searches in progress on canvasPtr,
+ *	so that elements can safely be deleted while the search is in
+ *	progress.
  *
  *--------------------------------------------------------------
  */
 
 static int
 TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
-    TkCanvas *canvasPtr;		/* Canvas whose items are to be
-					 * searched. */
-    Tcl_Obj *tagObj;			/* Object giving tag value. */
-    TagSearch **searchPtrPtr;		/* Record describing tag search;
-					 * will be initialized here. */
+    TkCanvas *canvasPtr;	/* Canvas whose items are to be searched. */
+    Tcl_Obj *tagObj;		/* Object giving tag value. */
+    TagSearch **searchPtrPtr;	/* Record describing tag search; will be
+				 * initialized here. */
 {
     char *tag = Tcl_GetString(tagObj);
     int i;
@@ -3035,20 +3003,32 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
     if (*searchPtrPtr) {
 	searchPtr = *searchPtrPtr;
     } else {
-	/* Allocate primary search struct on first call */
+	/*
+	 * Allocate primary search struct on first call.
+	 */
+
 	*searchPtrPtr = searchPtr = (TagSearch *) ckalloc(sizeof(TagSearch));
 	searchPtr->expr = NULL;
 
-	/* Allocate buffer for rewritten tags (after de-escaping) */
+	/*
+	 * Allocate buffer for rewritten tags (after de-escaping).
+	 */
+
 	searchPtr->rewritebufferAllocated = 100;
 	searchPtr->rewritebuffer = ckalloc(searchPtr->rewritebufferAllocated);
     }
     TagSearchExprInit(&(searchPtr->expr));
 
-    /* How long is the tagOrId ? */
+    /*
+     * How long is the tagOrId?
+     */
+
     searchPtr->stringLength = strlen(tag);
 
-    /* Make sure there is enough buffer to hold rewritten tags */
+    /*
+     * Make sure there is enough buffer to hold rewritten tags.
+     */
+
     if ((unsigned int)searchPtr->stringLength >=
 	    searchPtr->rewritebufferAllocated) {
 	searchPtr->rewritebufferAllocated = searchPtr->stringLength + 100;
@@ -3057,16 +3037,19 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 		searchPtr->rewritebufferAllocated);
     }
 
-    /* Initialize search */
+    /*
+     * Initialize search.
+     */
+
     searchPtr->canvasPtr = canvasPtr;
     searchPtr->searchOver = 0;
     searchPtr->type = SEARCH_TYPE_EMPTY;
 
     /*
-     * Find the first matching item in one of several ways. If the tag
-     * is a number then it selects the single item with the matching
-     * identifier.  In this case see if the item being requested is the
-     * hot item, in which case the search can be skipped.
+     * Find the first matching item in one of several ways. If the tag is a
+     * number then it selects the single item with the matching identifier.
+     * In this case see if the item being requested is the hot item, in which
+     * case the search can be skipped.
      */
 
     if (searchPtr->stringLength && isdigit(UCHAR(*tag))) {
@@ -3080,13 +3063,16 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
     }
 
     /*
-     * For all other tags and tag expressions convert to a UID.
-     * This UID is kept forever, but this should be thought of
-     * as a cache rather than as a memory leak.
+     * For all other tags and tag expressions convert to a UID. This UID is
+     * kept forever, but this should be thought of as a cache rather than as a
+     * memory leak.
      */
     searchPtr->expr->uid = Tk_GetUid(tag);
 
-    /* short circuit impossible searches for null tags */
+    /*
+     * Short circuit impossible searches for null tags.
+     */
+
     if (searchPtr->stringLength == 0) {
 	return TCL_OK;
     }
@@ -3095,6 +3081,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
      * Pre-scan tag for at least one unquoted "&&" "||" "^" "!"
      *   if not found then use string as simple tag
      */
+
     for (i = 0; i < searchPtr->stringLength ; i++) {
 	if (tag[i] == '"') {
 	    i++;
@@ -3107,14 +3094,12 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 		    break;
 		}
 	    }
-	} else {
-	    if ((tag[i] == '&' && tag[i+1] == '&')
-		    || (tag[i] == '|' && tag[i+1] == '|')
-		    || (tag[i] == '^')
-		    || (tag[i] == '!')) {
-		searchPtr->type = SEARCH_TYPE_EXPR;
-		break;
-	    }
+	} else if ((tag[i] == '&' && tag[i+1] == '&')
+		|| (tag[i] == '|' && tag[i+1] == '|')
+		|| (tag[i] == '^')
+		|| (tag[i] == '!')) {
+	    searchPtr->type = SEARCH_TYPE_EXPR;
+	    break;
 	}
     }
 
@@ -3122,13 +3107,17 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
     searchPtr->stringIndex = 0;
     if (searchPtr->type == SEARCH_TYPE_EXPR) {
 	/*
-	 * an operator was found in the prescan, so
-	 * now compile the tag expression into array of Tk_Uid
-	 * flagging any syntax errors found
+	 * An operator was found in the prescan, so now compile the tag
+	 * expression into array of Tk_Uid flagging any syntax errors found.
 	 */
-	if (TagSearchScanExpr(canvasPtr->interp, searchPtr, searchPtr->expr) != TCL_OK) {
-	    /* Syntax error in tag expression */
-	    /* Result message set by TagSearchScanExpr */
+
+	if (TagSearchScanExpr(canvasPtr->interp, searchPtr,
+		searchPtr->expr) != TCL_OK) {
+	    /*
+	     * Syntax error in tag expression. The result message was set by
+	     * TagSearchScanExpr.
+	     */
+
 	    return TCL_ERROR;
 	}
 	searchPtr->expr->length = searchPtr->expr->index;
@@ -3136,11 +3125,13 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 	/*
 	 * All items match.
 	 */
+
 	searchPtr->type = SEARCH_TYPE_ALL;
     } else {
 	/*
 	 * Optimized single-tag search
 	 */
+
 	searchPtr->type = SEARCH_TYPE_TAG;
     }
     return TCL_OK;
@@ -3151,8 +3142,8 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
  *
  * TagSearchDestroy --
  *
- *	This procedure destroys any dynamic structures that may have
- *	been allocated by TagSearchScan.
+ *	This function destroys any dynamic structures that may have been
+ *	allocated by TagSearchScan.
  *
  * Results:
  *	None
@@ -3165,7 +3156,7 @@ TagSearchScan(canvasPtr, tagObj, searchPtrPtr)
 
 static void
 TagSearchDestroy(searchPtr)
-    TagSearch *searchPtr;		/* Record describing tag search */
+    TagSearch *searchPtr;	/* Record describing tag search */
 {
     if (searchPtr) {
 	TagSearchExprDestroy(searchPtr->expr);
@@ -3179,15 +3170,14 @@ TagSearchDestroy(searchPtr)
  *
  * TagSearchScanExpr --
  *
- *	This recursive procedure is called to scan a tag expression
- *	and compile it into an array of Tk_Uids.
+ *	This recursive function is called to scan a tag expression and compile
+ *	it into an array of Tk_Uids.
  *
  * Results:
- *	The return value indicates if the tagOrId expression was
- *	successfully scanned (syntax).  The information at *searchPtr
- *	is initialized such that a call to TagSearchFirst, followed by
- *	successive calls to TagSearchNext will return items that match
- *	tag.
+ *	The return value indicates if the tagOrId expression was successfully
+ *	scanned (syntax). The information at *searchPtr is initialized such
+ *	that a call to TagSearchFirst, followed by successive calls to
+ *	TagSearchNext will return items that match tag.
  *
  * Side effects:
  *
@@ -3200,13 +3190,12 @@ TagSearchScanExpr(interp, searchPtr, expr)
     TagSearch *searchPtr;	/* Search data */
     TagSearchExpr *expr;	/* compiled expression result */
 {
-    int looking_for_tag;	/* When true, scanner expects
-				 * next char(s) to be a tag,
-				 * else operand expected */
+    int looking_for_tag;	/* When true, scanner expects next char(s) to
+				 * be a tag, else operand expected */
     int found_tag;		/* One or more tags found */
     int found_endquote;		/* For quoted tag string parsing */
     int negate_result;		/* Pending negation of next tag value */
-    char *tag;			/* tag from tag expression string */
+    char *tag;			/* Tag from tag expression string */
     char c;
     SearchUids *searchUids;	/* Collection of uids for basic search
 				 * expression terms. */
@@ -3259,9 +3248,10 @@ TagSearchScanExpr(interp, searchPtr, expr)
 		}
 		if (TagSearchScanExpr(interp, searchPtr, expr) != TCL_OK) {
 		    /*
-		     * Result string should be already set by nested
-		     * call to tag_expr_scan()
+		     * Result string should be already set by nested call to
+		     * tag_expr_scan()
 		     */
+
 		    return TCL_ERROR;
 		}
 		looking_for_tag = 0;
@@ -3325,7 +3315,11 @@ TagSearchScanExpr(interp, searchPtr, expr)
 		}
 		tag = searchPtr->rewritebuffer;
 		*tag++ = c;
-		/* copy rest of tag, including any embedded whitespace */
+
+		/*
+		 * Copy rest of tag, including any embedded whitespace.
+		 */
+
 		while (searchPtr->stringIndex < searchPtr->stringLength) {
 		    c = searchPtr->string[searchPtr->stringIndex];
 		    if (c == '!' || c == '&' || c == '|' || c == '^'
@@ -3335,11 +3329,19 @@ TagSearchScanExpr(interp, searchPtr, expr)
 		    *tag++ = c;
 		    searchPtr->stringIndex++;
 		}
-		/* remove trailing whitespace */
+
+		/*
+		 * Remove trailing whitespace.
+		 */
+
 		while (1) {
 		    c = *--tag;
-		    /* there must have been one non-whitespace char,
-		     *  so this will terminate */
+
+		    /*
+		     * There must have been one non-whitespace char, so this
+		     * will terminate.
+		     */
+
 		    if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
 			break;
 		    }
@@ -3400,7 +3402,8 @@ TagSearchScanExpr(interp, searchPtr, expr)
 	    }
 	}
     }
-    breakwhile:
+
+  breakwhile:
     if (found_tag && ! looking_for_tag) {
 	return TCL_OK;
     }
@@ -3414,11 +3417,11 @@ TagSearchScanExpr(interp, searchPtr, expr)
  *
  * TagSearchEvalExpr --
  *
- *	This recursive procedure is called to eval a tag expression.
+ *	This recursive function is called to eval a tag expression.
  *
  * Results:
- *	The return value indicates if the tagOrId expression
- *	successfully matched the tags of the current item.
+ *	The return value indicates if the tagOrId expression successfully
+ *	matched the tags of the current item.
  *
  * Side effects:
  *
@@ -3430,9 +3433,8 @@ TagSearchEvalExpr(expr, itemPtr)
     TagSearchExpr *expr;	/* Search expression */
     Tk_Item *itemPtr;		/* Item being test for match */
 {
-    int looking_for_tag;	/* When true, scanner expects
-				 * next char(s) to be a tag,
-				 * else operand expected */
+    int looking_for_tag;	/* When true, scanner expects next char(s) to
+				 * be a tag, else operand expected. */
     int negate_result;		/* Pending negation of next tag value */
     Tk_Uid uid;
     Tk_Uid *tagPtr;
@@ -3456,11 +3458,13 @@ TagSearchEvalExpr(expr, itemPtr)
  */
 		uid = expr->uids[expr->index++];
 		result = 0;
+
 		/*
 		 * set result 1 if tag is found in item's tags
 		 */
+
 		for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
-		     count > 0; tagPtr++, count--) {
+			count > 0; tagPtr++, count--) {
 		    if (*tagPtr == uid) {
 			result = 1;
 			break;
@@ -3474,11 +3478,13 @@ TagSearchEvalExpr(expr, itemPtr)
  */
 		uid = expr->uids[expr->index++];
 		result = 0;
+
 		/*
 		 * set result 1 if tag is found in item's tags
 		 */
+
 		for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
-		     count > 0; tagPtr++, count--) {
+			count > 0; tagPtr++, count--) {
 		    if (*tagPtr == uid) {
 			result = 1;
 			break;
@@ -3487,15 +3493,18 @@ TagSearchEvalExpr(expr, itemPtr)
 
 	    } else if (uid == searchUids->parenUid) {
 		/*
-		 * evaluate subexpressions with recursion
+		 * Evaluate subexpressions with recursion
 		 */
+
 		result = TagSearchEvalExpr(expr, itemPtr);
 
 	    } else if (uid == searchUids->negparenUid) {
 		negate_result = ! negate_result;
+
 		/*
-		 * evaluate subexpressions with recursion
+		 * Evaluate subexpressions with recursion
 		 */
+
 		result = TagSearchEvalExpr(expr, itemPtr);
 /*
  *	    } else {
@@ -3511,11 +3520,11 @@ TagSearchEvalExpr(expr, itemPtr)
 	    if (((uid == searchUids->andUid) && (!result)) ||
 		    ((uid == searchUids->orUid) && result)) {
 		/*
-		 * short circuit expression evaluation
+		 * Short circuit expression evaluation.
 		 *
-		 * if result before && is 0, or result before || is 1,
-		 *   then the expression is decided and no further
-		 *   evaluation is needed.
+		 * if result before && is 0, or result before || is 1, then
+		 * the expression is decided and no further evaluation is
+		 * needed.
 		 */
 
 		parendepth = 0;
@@ -3530,7 +3539,7 @@ TagSearchEvalExpr(expr, itemPtr)
 			    uid == searchUids->negparenUid) {
 			parendepth++;
 			continue;
-		    } 
+		    }
 		    if (uid == searchUids->endparenUid) {
 			parendepth--;
 			if (parendepth < 0) {
@@ -3542,9 +3551,9 @@ TagSearchEvalExpr(expr, itemPtr)
 
 	    } else if (uid == searchUids->xorUid) {
 		/*
-		 * if the previous result was 1 then negate the next
-		 * result.
+		 * If the previous result was 1 then negate the next result.
 		 */
+
 		negate_result = result;
 
 	    } else if (uid == searchUids->endparenUid) {
@@ -3568,42 +3577,43 @@ TagSearchEvalExpr(expr, itemPtr)
  *
  * TagSearchFirst --
  *
- *	This procedure is called to get the first item item that
- *	matches a preestablished search predicate that was set by
- *	TagSearchScan.
+ *	This function is called to get the first item item that matches a
+ *	preestablished search predicate that was set by TagSearchScan.
  *
  * Results:
- *	The return value is a pointer to the first item, or NULL if
- *	there is no such item.  The information at *searchPtr is
- *	updated such that successive calls to TagSearchNext will
- *	return successive items.
+ *	The return value is a pointer to the first item, or NULL if there is
+ *	no such item. The information at *searchPtr is updated such that
+ *	successive calls to TagSearchNext will return successive items.
  *
  * Side effects:
- *	SearchPtr is linked into a list of searches in progress on
- *	canvasPtr, so that elements can safely be deleted while the
- *	search is in progress.
+ *	SearchPtr is linked into a list of searches in progress on canvasPtr,
+ *	so that elements can safely be deleted while the search is in
+ *	progress.
  *
  *--------------------------------------------------------------
  */
 
 static Tk_Item *
 TagSearchFirst(searchPtr)
-    TagSearch *searchPtr;		/* Record describing tag search */
+    TagSearch *searchPtr;	/* Record describing tag search */
 {
     Tk_Item *itemPtr, *lastPtr;
     Tk_Uid uid, *tagPtr;
     int count;
 
-    /* short circuit impossible searches for null tags */
+    /*
+     * Short circuit impossible searches for null tags.
+     */
+
     if (searchPtr->stringLength == 0) {
 	return NULL;
     }
 
     /*
-     * Find the first matching item in one of several ways. If the tag
-     * is a number then it selects the single item with the matching
-     * identifier.  In this case see if the item being requested is the
-     * hot item, in which case the search can be skipped.
+     * Find the first matching item in one of several ways. If the tag is a
+     * number then it selects the single item with the matching identifier.
+     * In this case see if the item being requested is the hot item, in which
+     * case the search can be skipped.
      */
 
     if (searchPtr->type == SEARCH_TYPE_ID) {
@@ -3659,7 +3669,7 @@ TagSearchFirst(searchPtr)
     } else {
 
 	/*
-	 * None of the above.  Search for an item matching the tag expression.
+	 * None of the above. Search for an item matching the tag expression.
 	 */
 
 	for (lastPtr = NULL, itemPtr = searchPtr->canvasPtr->firstItemPtr;
@@ -3682,15 +3692,15 @@ TagSearchFirst(searchPtr)
  *
  * TagSearchNext --
  *
- *	This procedure returns successive items that match a given
- *	tag;  it should be called only after TagSearchFirst has been
- *	used to begin a search.
+ *	This function returns successive items that match a given tag; it
+ *	should be called only after TagSearchFirst has been used to begin a
+ *	search.
  *
  * Results:
- *	The return value is a pointer to the next item that matches
- *	the tag expr specified to TagSearchScan, or NULL if no such
- *	item exists.  *SearchPtr is updated so that the next call
- *	to this procedure will return the next item.
+ *	The return value is a pointer to the next item that matches the tag
+ *	expr specified to TagSearchScan, or NULL if no such item exists.
+ *	*SearchPtr is updated so that the next call to this function will
+ *	return the next item.
  *
  * Side effects:
  *	None.
@@ -3700,16 +3710,15 @@ TagSearchFirst(searchPtr)
 
 static Tk_Item *
 TagSearchNext(searchPtr)
-    TagSearch *searchPtr;		/* Record describing search in
-					 * progress. */
+    TagSearch *searchPtr;	/* Record describing search in progress. */
 {
     Tk_Item *itemPtr, *lastPtr;
     Tk_Uid uid, *tagPtr;
     int count;
 
     /*
-     * Find next item in list (this may not actually be a suitable
-     * one to return), and return if there are no items left.
+     * Find next item in list (this may not actually be a suitable one to
+     * return), and return if there are no items left.
      */
 
     lastPtr = searchPtr->lastPtr;
@@ -3724,10 +3733,10 @@ TagSearchNext(searchPtr)
     }
     if (itemPtr != searchPtr->currentPtr) {
 	/*
-	 * The structure of the list has changed.  Probably the
-	 * previously-returned item was removed from the list.  In
-	 * this case, don't advance lastPtr; just return its new
-	 * successor (i.e. do nothing here).
+	 * The structure of the list has changed. Probably the previously-
+	 * returned item was removed from the list. In this case, don't
+	 * advance lastPtr; just return its new successor (i.e. do nothing
+	 * here).
 	 */
     } else {
 	lastPtr = itemPtr;
@@ -3788,29 +3797,27 @@ TagSearchNext(searchPtr)
  *
  * DoItem --
  *
- *	This is a utility procedure called by FindItems.  It
- *	either adds itemPtr's id to the result forming in interp,
- *	or it adds a new tag to itemPtr, depending on the value
- *	of tag.
+ *	This is a utility function called by FindItems. It either adds
+ *	itemPtr's id to the result forming in interp, or it adds a new tag to
+ *	itemPtr, depending on the value of tag.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	If tag is NULL then itemPtr's id is added as a list element
- *	to the interp's result;  otherwise tag is added to itemPtr's
- *	list of tags.
+ *	If tag is NULL then itemPtr's id is added as a list element to the
+ *	interp's result; otherwise tag is added to itemPtr's list of tags.
  *
  *--------------------------------------------------------------
  */
 
 static void
 DoItem(interp, itemPtr, tag)
-    Tcl_Interp *interp;			/* Interpreter in which to (possibly)
-					 * record item id. */
-    Tk_Item *itemPtr;			/* Item to (possibly) modify. */
-    Tk_Uid tag;				/* Tag to add to those already
-					 * present for item, or NULL. */
+    Tcl_Interp *interp;		/* Interpreter in which to (possibly) record
+				 * item id. */
+    Tk_Item *itemPtr;		/* Item to (possibly) modify. */
+    Tk_Uid tag;			/* Tag to add to those already present for
+				 * item, or NULL. */
 {
     Tk_Uid *tagPtr;
     int count;
@@ -3835,8 +3842,7 @@ DoItem(interp, itemPtr, tag)
     }
 
     /*
-     * Grow the tag space if there's no more room left in the current
-     * block.
+     * Grow the tag space if there's no more room left in the current block.
      */
 
     if (itemPtr->tagSpace == itemPtr->numTags) {
@@ -3867,22 +3873,20 @@ DoItem(interp, itemPtr, tag)
  *
  * FindItems --
  *
- *	This procedure does all the work of implementing the
- *	"find" and "addtag" options of the canvas widget command,
- *	which locate items that have certain features (location,
- *	tags, position in display list, etc.).
+ *	This function does all the work of implementing the "find" and
+ *	"addtag" options of the canvas widget command, which locate items that
+ *	have certain features (location, tags, position in display list, etc.)
  *
  * Results:
- *	A standard Tcl return value.  If newTag is NULL, then a
- *	list of ids from all the items that match objc/objv is
- *	returned in the interp's result.  If newTag is NULL, then
- *	the normal the interp's result is an empty string.  If an error
- *	occurs, then the interp's result will hold an error message.
+ *	A standard Tcl return value. If newTag is NULL, then a list of ids
+ *	from all the items that match objc/objv is returned in the interp's
+ *	result. If newTag is NULL, then the normal the interp's result is an
+ *	empty string. If an error occurs, then the interp's result will hold
+ *	an error message.
  *
  * Side effects:
- *	If newTag is non-NULL, then all the items that match the
- *	information in objc/objv have that tag added to their
- *	lists of tags.
+ *	If newTag is non-NULL, then all the items that match the information
+ *	in objc/objv have that tag added to their lists of tags.
  *
  *--------------------------------------------------------------
  */
@@ -3893,23 +3897,22 @@ FindItems(interp, canvasPtr, objc, objv, newTag, first)
 #else /* USE_OLD_TAG_SEARCH */
 FindItems(interp, canvasPtr, objc, objv, newTag, first, searchPtrPtr)
 #endif /* USE_OLD_TAG_SEARCH */
-    Tcl_Interp *interp;			/* Interpreter for error reporting. */
-    TkCanvas *canvasPtr;		/* Canvas whose items are to be
-					 * searched. */
-    int objc;				/* Number of entries in argv.  Must be
-					 * greater than zero. */
-    Tcl_Obj *CONST *objv;		/* Arguments that describe what items
-					 * to search for (see user doc on
-					 * "find" and "addtag" options). */
-    Tcl_Obj *newTag;			/* If non-NULL, gives new tag to set
-					 * on all found items;  if NULL, then
-					 * ids of found items are returned
-					 * in the interp's result. */
-    int first;				/* For error messages:  gives number
-					 * of elements of objv which are already
-					 * handled. */
+    Tcl_Interp *interp;		/* Interpreter for error reporting. */
+    TkCanvas *canvasPtr;	/* Canvas whose items are to be searched. */
+    int objc;			/* Number of entries in argv. Must be greater
+				 * than zero. */
+    Tcl_Obj *CONST *objv;	/* Arguments that describe what items to
+				 * search for (see user doc on "find" and
+				 * "addtag" options). */
+    Tcl_Obj *newTag;		/* If non-NULL, gives new tag to set on all
+				 * found items; if NULL, then ids of found
+				 * items are returned in the interp's
+				 * result. */
+    int first;			/* For error messages: gives number of
+				 * elements of objv which are already
+				 * handled. */
 #ifndef USE_OLD_TAG_SEARCH
-    TagSearch **searchPtrPtr;		/* From CanvasWidgetCmd local vars*/
+    TagSearch **searchPtrPtr;	/* From CanvasWidgetCmd local vars*/
 #endif /* not USE_OLD_TAG_SEARCH */
 {
 #ifdef USE_OLD_TAG_SEARCH
@@ -4021,11 +4024,11 @@ FindItems(interp, canvasPtr, objc, objv, newTag, first, searchPtrPtr)
 	}
 
 	/*
-	 * The code below is optimized so that it can eliminate most
-	 * items without having to call their item-specific procedures.
-	 * This is done by keeping a bounding box (x1, y1, x2, y2) that
-	 * an item's bbox must overlap if the item is to have any
-	 * chance of being closer than the closest so far.
+	 * The code below is optimized so that it can eliminate most items
+	 * without having to call their item-specific functions. This is done
+	 * by keeping a bounding box (x1, y1, x2, y2) that an item's bbox must
+	 * overlap if the item is to have any chance of being closer than the
+	 * closest so far.
 	 */
 
 	itemPtr = startPtr;
@@ -4046,8 +4049,8 @@ FindItems(interp, canvasPtr, objc, objv, newTag, first, searchPtrPtr)
 	    double newDist;
 
 	    /*
-	     * Update the bounding box using itemPtr, which is the
-	     * new closest item.
+	     * Update the bounding box using itemPtr, which is the new closest
+	     * item.
 	     */
 
 	    x1 = (int) (coords[0] - closestDist - halo - 1);
@@ -4057,9 +4060,9 @@ FindItems(interp, canvasPtr, objc, objv, newTag, first, searchPtrPtr)
 	    closestPtr = itemPtr;
 
 	    /*
-	     * Search for an item that beats the current closest one.
-	     * Work circularly through the canvas's item list until
-	     * getting back to the starting item.
+	     * Search for an item that beats the current closest one. Work
+	     * circularly through the canvas's item list until getting back to
+	     * the starting item.
 	     */
 
 	    while (1) {
@@ -4123,41 +4126,37 @@ FindItems(interp, canvasPtr, objc, objv, newTag, first, searchPtrPtr)
  *
  * FindArea --
  *
- *	This procedure implements area searches for the "find"
- *	and "addtag" options.
+ *	This function implements area searches for the "find" and "addtag"
+ *	options.
  *
  * Results:
- *	A standard Tcl return value.  If newTag is NULL, then a
- *	list of ids from all the items overlapping or enclosed
- *	by the rectangle given by objc is returned in the interp's result.
- *	If newTag is NULL, then the normal the interp's result is an
- *	empty string.  If an error occurs, then the interp's result will
- *	hold an error message.
+ *	A standard Tcl return value. If newTag is NULL, then a list of ids
+ *	from all the items overlapping or enclosed by the rectangle given by
+ *	objc is returned in the interp's result. If newTag is NULL, then the
+ *	normal the interp's result is an empty string. If an error occurs,
+ *	then the interp's result will hold an error message.
  *
  * Side effects:
- *	If uid is non-NULL, then all the items overlapping
- *	or enclosed by the area in objv have that tag added to
- *	their lists of tags.
+ *	If uid is non-NULL, then all the items overlapping or enclosed by the
+ *	area in objv have that tag added to their lists of tags.
  *
  *--------------------------------------------------------------
  */
 
 static int
 FindArea(interp, canvasPtr, objv, uid, enclosed)
-    Tcl_Interp *interp;			/* Interpreter for error reporting
-					 * and result storing. */
-    TkCanvas *canvasPtr;		/* Canvas whose items are to be
-					 * searched. */
-    Tcl_Obj *CONST *objv;		/* Array of four arguments that
-					 * give the coordinates of the
-					 * rectangular area to search. */
-    Tk_Uid uid;				/* If non-NULL, gives new tag to set
-					 * on all found items;  if NULL, then
-					 * ids of found items are returned
-					 * in the interp's result. */
-    int enclosed;			/* 0 means overlapping or enclosed
-					 * items are OK, 1 means only enclosed
-					 * items are OK. */
+    Tcl_Interp *interp;		/* Interpreter for error reporting and result
+				 * storing. */
+    TkCanvas *canvasPtr;	/* Canvas whose items are to be searched. */
+    Tcl_Obj *CONST *objv;	/* Array of four arguments that give the
+				 * coordinates of the rectangular area to
+				 * search. */
+    Tk_Uid uid;			/* If non-NULL, gives new tag to set on all
+				 * found items; if NULL, then ids of found
+				 * items are returned in the interp's
+				 * result. */
+    int enclosed;		/* 0 means overlapping or enclosed items are
+				 * OK, 1 means only enclosed items are OK. */
 {
     double rect[4], tmp;
     int x1, y1, x2, y2;
@@ -4181,8 +4180,8 @@ FindArea(interp, canvasPtr, objv, uid, enclosed)
     }
 
     /*
-     * Use an integer bounding box for a quick test, to avoid
-     * calling item-specific code except for items that are close.
+     * Use an integer bounding box for a quick test, to avoid calling
+     * item-specific code except for items that are close.
      */
 
     x1 = (int) (rect[0]-1.0);
@@ -4212,17 +4211,16 @@ FindArea(interp, canvasPtr, objv, uid, enclosed)
  *
  * RelinkItems --
  *
- *	Move one or more items to a different place in the
- *	display order for a canvas.
+ *	Move one or more items to a different place in the display order for a
+ *	canvas.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The items identified by "tag" are moved so that they
- *	are all together in the display list and immediately
- *	after prevPtr.  The order of the moved items relative
- *	to each other is not changed.
+ *	The items identified by "tag" are moved so that they are all together
+ *	in the display list and immediately after prevPtr. The order of the
+ *	moved items relative to each other is not changed.
  *
  *--------------------------------------------------------------
  */
@@ -4235,11 +4233,11 @@ static int
 RelinkItems(canvasPtr, tag, prevPtr, searchPtrPtr)
 #endif /* USE_OLD_TAG_SEARCH */
     TkCanvas *canvasPtr;	/* Canvas to be modified. */
-    Tcl_Obj *tag;		/* Tag identifying items to be moved
-				 * in the redisplay list. */
-    Tk_Item *prevPtr;		/* Reposition the items so that they
-				 * go just after this item (NULL means
-				 * put at beginning of list). */
+    Tcl_Obj *tag;		/* Tag identifying items to be moved in the
+				 * redisplay list. */
+    Tk_Item *prevPtr;		/* Reposition the items so that they go just
+				 * after this item (NULL means put at
+				 * beginning of list). */
 #ifndef USE_OLD_TAG_SEARCH
     TagSearch **searchPtrPtr;   /* From CanvasWidgetCmd local vars */
 #endif /* not USE_OLD_TAG_SEARCH */
@@ -4252,17 +4250,17 @@ RelinkItems(canvasPtr, tag, prevPtr, searchPtrPtr)
     int result;
 
     /*
-     * Find all of the items to be moved and remove them from
-     * the list, making an auxiliary list running from firstMovePtr
-     * to lastMovePtr.  Record their areas for redisplay.
+     * Find all of the items to be moved and remove them from the list, making
+     * an auxiliary list running from firstMovePtr to lastMovePtr. Record
+     * their areas for redisplay.
      */
 
     firstMovePtr = lastMovePtr = NULL;
     FOR_EVERY_CANVAS_ITEM_MATCHING(tag, searchPtrPtr, return TCL_ERROR) {
 	if (itemPtr == prevPtr) {
 	    /*
-	     * Item after which insertion is to occur is being
-	     * moved!  Switch to insert after its predecessor.
+	     * Item after which insertion is to occur is being moved! Switch
+	     * to insert after its predecessor.
 	     */
 
 	    prevPtr = prevPtr->prevPtr;
@@ -4294,8 +4292,8 @@ RelinkItems(canvasPtr, tag, prevPtr, searchPtrPtr)
     }
 
     /*
-     * Insert the list of to-be-moved items back into the canvas's
-     * at the desired position.
+     * Insert the list of to-be-moved items back into the canvas's at the
+     * desired position.
      */
 
     if (firstMovePtr == NULL) {
@@ -4334,24 +4332,23 @@ RelinkItems(canvasPtr, tag, prevPtr, searchPtrPtr)
  *
  * CanvasBindProc --
  *
- *	This procedure is invoked by the Tk dispatcher to handle
- *	events associated with bindings on items.
+ *	This function is invoked by the Tk dispatcher to handle events
+ *	associated with bindings on items.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Depends on the command invoked as part of the binding
- *	(if there was any).
+ *	Depends on the command invoked as part of the binding (if there was
+ *	any).
  *
  *--------------------------------------------------------------
  */
 
 static void
 CanvasBindProc(clientData, eventPtr)
-    ClientData clientData;		/* Pointer to canvas structure. */
-    XEvent *eventPtr;			/* Pointer to X event that just
-					 * happened. */
+    ClientData clientData;	/* Pointer to canvas structure. */
+    XEvent *eventPtr;		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) clientData;
 
@@ -4359,8 +4356,8 @@ CanvasBindProc(clientData, eventPtr)
 
     /*
      * This code below keeps track of the current modifier state in
-     * canvasPtr>state.  This information is used to defer repicks of
-     * the current item while buttons are down.
+     * canvasPtr>state. This information is used to defer repicks of the
+     * current item while buttons are down.
      */
 
     if ((eventPtr->type == ButtonPress) || (eventPtr->type == ButtonRelease)) {
@@ -4388,18 +4385,17 @@ CanvasBindProc(clientData, eventPtr)
 	}
 
 	/*
-	 * For button press events, repick the current item using the
-	 * button state before the event, then process the event.  For
-	 * button release events, first process the event, then repick
-	 * the current item using the button state *after* the event
-	 * (the button has logically gone up before we change the
-	 * current item).
+	 * For button press events, repick the current item using the button
+	 * state before the event, then process the event. For button release
+	 * events, first process the event, then repick the current item using
+	 * the button state *after* the event (the button has logically gone
+	 * up before we change the current item).
 	 */
 
 	if (eventPtr->type == ButtonPress) {
 	    /*
-	     * On a button press, first repick the current item using
-	     * the button state before the event, the process the event.
+	     * On a button press, first repick the current item using the
+	     * button state before the event, the process the event.
 	     */
 
 	    canvasPtr->state = eventPtr->xbutton.state;
@@ -4408,9 +4404,9 @@ CanvasBindProc(clientData, eventPtr)
 	    CanvasDoEvent(canvasPtr, eventPtr);
 	} else {
 	    /*
-	     * Button release: first process the event, with the button
-	     * still considered to be down.  Then repick the current
-	     * item under the assumption that the button is no longer down.
+	     * Button release: first process the event, with the button still
+	     * considered to be down. Then repick the current item under the
+	     * assumption that the button is no longer down.
 	     */
 
 	    canvasPtr->state = eventPtr->xbutton.state;
@@ -4441,34 +4437,31 @@ CanvasBindProc(clientData, eventPtr)
  *
  * PickCurrentItem --
  *
- *	Find the topmost item in a canvas that contains a given
- *	location and mark the the current item.  If the current
- *	item has changed, generate a fake exit event on the old
- *	current item, a fake enter event on the new current item
- *	item and force a redraw of the two items. Canvas items
+ *	Find the topmost item in a canvas that contains a given location and
+ *	mark the the current item. If the current item has changed, generate a
+ *	fake exit event on the old current item, a fake enter event on the new
+ *	current item item and force a redraw of the two items. Canvas items
  *	that are hidden or disabled are ignored.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The current item for canvasPtr may change.  If it does,
- *	then the commands associated with item entry and exit
- *	could do just about anything.  A binding script could
- *	delete the canvas, so callers should protect themselves
- *	with Tcl_Preserve and Tcl_Release.
+ *	The current item for canvasPtr may change. If it does, then the
+ *	commands associated with item entry and exit could do just about
+ *	anything. A binding script could delete the canvas, so callers should
+ *	protect themselves with Tcl_Preserve and Tcl_Release.
  *
  *--------------------------------------------------------------
  */
 
 static void
 PickCurrentItem(canvasPtr, eventPtr)
-    TkCanvas *canvasPtr;		/* Canvas widget in which to select
-					 * current item. */
-    XEvent *eventPtr;			/* Event describing location of
-					 * mouse cursor.  Must be EnterWindow,
-					 * LeaveWindow, ButtonRelease, or
-					 * MotionNotify. */
+    TkCanvas *canvasPtr;	/* Canvas widget in which to select current
+				 * item. */
+    XEvent *eventPtr;		/* Event describing location of mouse cursor.
+				 * Must be EnterWindow, LeaveWindow,
+				 * ButtonRelease, or MotionNotify. */
 {
     double coords[2];
     int buttonDown;
@@ -4478,10 +4471,10 @@ PickCurrentItem(canvasPtr, eventPtr)
 #endif
 
     /*
-     * Check whether or not a button is down.  If so, we'll log entry
-     * and exit into and out of the current item, but not entry into
-     * any other item.  This implements a form of grabbing equivalent
-     * to what the X server does for windows.
+     * Check whether or not a button is down. If so, we'll log entry and exit
+     * into and out of the current item, but not entry into any other item.
+     * This implements a form of grabbing equivalent to what the X server does
+     * for windows.
      */
 
     buttonDown = canvasPtr->state
@@ -4491,13 +4484,14 @@ PickCurrentItem(canvasPtr, eventPtr)
     }
 
     /*
-     * Save information about this event in the canvas.  The event in
-     * the canvas is used for two purposes:
+     * Save information about this event in the canvas. The event in the
+     * canvas is used for two purposes:
      *
      * 1. Event bindings: if the current item changes, fake events are
      *    generated to allow item-enter and item-leave bindings to trigger.
-     * 2. Reselection: if the current item gets deleted, can use the
-     *    saved event to find a new current item.
+     * 2. Reselection: if the current item gets deleted, can use the saved
+     *    event to find a new current item.
+     *
      * Translate MotionNotify events into EnterNotify events, since that's
      * what gets reported to item handlers.
      */
@@ -4530,10 +4524,10 @@ PickCurrentItem(canvasPtr, eventPtr)
     }
 
     /*
-     * If this is a recursive call (there's already a partially completed
-     * call pending on the stack;  it's in the middle of processing a
-     * Leave event handler for the old current item) then just return;
-     * the pending call will do everything that's needed.
+     * If this is a recursive call (there's already a partially completed call
+     * pending on the stack; it's in the middle of processing a Leave event
+     * handler for the old current item) then just return; the pending call
+     * will do everything that's needed.
      */
 
     if (canvasPtr->flags & REPICK_IN_PROGRESS) {
@@ -4541,8 +4535,8 @@ PickCurrentItem(canvasPtr, eventPtr)
     }
 
     /*
-     * A LeaveNotify event automatically means that there's no current
-     * object, so the check for closest item can be skipped.
+     * A LeaveNotify event automatically means that there's no current object,
+     * so the check for closest item can be skipped.
      */
 
     coords[0] = canvasPtr->pickEvent.xcrossing.x + canvasPtr->xOrigin;
@@ -4563,10 +4557,9 @@ PickCurrentItem(canvasPtr, eventPtr)
     }
 
     /*
-     * Simulate a LeaveNotify event on the previous current item and
-     * an EnterNotify event on the new current item.  Remove the "current"
-     * tag from the previous current item and place it on the new current
-     * item.
+     * Simulate a LeaveNotify event on the previous current item and an
+     * EnterNotify event on the new current item. Remove the "current" tag
+     * from the previous current item and place it on the new current item.
      */
 
     if ((canvasPtr->newCurrentPtr != canvasPtr->currentItemPtr)
@@ -4580,9 +4573,9 @@ PickCurrentItem(canvasPtr, eventPtr)
 	event.type = LeaveNotify;
 
 	/*
-	 * If the event's detail happens to be NotifyInferior the
-	 * binding mechanism will discard the event.  To be consistent,
-	 * always use NotifyAncestor.
+	 * If the event's detail happens to be NotifyInferior the binding
+	 * mechanism will discard the event. To be consistent, always use
+	 * NotifyAncestor.
 	 */
 
 	event.xcrossing.detail = NotifyAncestor;
@@ -4591,8 +4584,8 @@ PickCurrentItem(canvasPtr, eventPtr)
 	canvasPtr->flags &= ~REPICK_IN_PROGRESS;
 
 	/*
-	 * The check below is needed because there could be an event
-	 * handler for <LeaveNotify> that deletes the current item.
+	 * The check below is needed because there could be an event handler
+	 * for <LeaveNotify> that deletes the current item.
 	 */
 
 	if ((itemPtr == canvasPtr->currentItemPtr) && !buttonDown) {
@@ -4609,11 +4602,11 @@ PickCurrentItem(canvasPtr, eventPtr)
 		}
 	    }
 	}
-    
+
 	/*
-	 * Note:  during CanvasDoEvent above, it's possible that
-	 * canvasPtr->newCurrentPtr got reset to NULL because the
-	 * item was deleted.
+	 * Note: during CanvasDoEvent above, it's possible that
+	 * canvasPtr->newCurrentPtr got reset to NULL because the item was
+	 * deleted.
 	 */
     }
     if ((canvasPtr->newCurrentPtr != canvasPtr->currentItemPtr) && buttonDown) {
@@ -4622,9 +4615,9 @@ PickCurrentItem(canvasPtr, eventPtr)
     }
 
     /*
-     * Special note:  it's possible that canvasPtr->newCurrentPtr ==
-     * canvasPtr->currentItemPtr here.  This can happen, for example,
-     * if LEFT_GRABBED_ITEM was set.
+     * Special note: it's possible that canvasPtr->newCurrentPtr ==
+     * canvasPtr->currentItemPtr here. This can happen, for example, if
+     * LEFT_GRABBED_ITEM was set.
      */
 
     prevItemPtr = canvasPtr->currentItemPtr;
@@ -4641,7 +4634,7 @@ PickCurrentItem(canvasPtr, eventPtr)
 	XEvent event;
 
 #ifdef USE_OLD_TAG_SEARCH
-	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr, 
+	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr,
 		Tk_GetUid("current"));
 #else /* USE_OLD_TAG_SEARCH */
 	DoItem((Tcl_Interp *) NULL, canvasPtr->currentItemPtr,
@@ -4667,13 +4660,13 @@ PickCurrentItem(canvasPtr, eventPtr)
  *
  * CanvasFindClosest --
  *
- *	Given x and y coordinates, find the topmost canvas item that
- *	is "close" to the coordinates. Canvas items that are hidden
- *	or disabled are ignored.
+ *	Given x and y coordinates, find the topmost canvas item that is
+ *	"close" to the coordinates. Canvas items that are hidden or disabled
+ *	are ignored.
  *
  * Results:
- *	The return value is a pointer to the topmost item that is
- *	close to (x,y), or NULL if no item is close.
+ *	The return value is a pointer to the topmost item that is close to
+ *	(x,y), or NULL if no item is close.
  *
  * Side effects:
  *	None.
@@ -4683,9 +4676,9 @@ PickCurrentItem(canvasPtr, eventPtr)
 
 static Tk_Item *
 CanvasFindClosest(canvasPtr, coords)
-    TkCanvas *canvasPtr;		/* Canvas widget to search. */
-    double coords[2];			/* Desired x,y position in canvas,
-					 * not screen, coordinates.) */
+    TkCanvas *canvasPtr;	/* Canvas widget to search. */
+    double coords[2];		/* Desired x,y position in canvas, not screen,
+				 * coordinates.) */
 {
     Tk_Item *itemPtr;
     Tk_Item *bestPtr;
@@ -4721,27 +4714,25 @@ CanvasFindClosest(canvasPtr, coords)
  *
  * CanvasDoEvent --
  *
- *	This procedure is called to invoke binding processing
- *	for a new event that is associated with the current item
- *	for a canvas.
+ *	This function is called to invoke binding processing for a new event
+ *	that is associated with the current item for a canvas.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Depends on the bindings for the canvas.  A binding script
- *	could delete the canvas, so callers should protect themselves
- *	with Tcl_Preserve and Tcl_Release.
+ *	Depends on the bindings for the canvas. A binding script could delete
+ *	the canvas, so callers should protect themselves with Tcl_Preserve and
+ *	Tcl_Release.
  *
  *--------------------------------------------------------------
  */
 
 static void
 CanvasDoEvent(canvasPtr, eventPtr)
-    TkCanvas *canvasPtr;		/* Canvas widget in which event
-					 * occurred. */
-    XEvent *eventPtr;			/* Real or simulated X event that
-					 * is to be processed. */
+    TkCanvas *canvasPtr;	/* Canvas widget in which event occurred. */
+    XEvent *eventPtr;		/* Real or simulated X event that is to be
+				 * processed. */
 {
 #define NUM_STATIC 3
     ClientData staticObjects[NUM_STATIC];
@@ -4768,30 +4759,30 @@ CanvasDoEvent(canvasPtr, eventPtr)
 
 #ifdef USE_OLD_TAG_SEARCH
     /*
-     * Set up an array with all the relevant objects for processing
-     * this event.  The relevant objects are (a) the event's item,
-     * (b) the tags associated with the event's item, and (c) the
-     * tag "all".  If there are a lot of tags then malloc an array
-     * to hold all of the objects.
+     * Set up an array with all the relevant objects for processing this
+     * event. The relevant objects are (a) the event's item, (b) the tags
+     * associated with the event's item, and (c) the tag "all". If there are a
+     * lot of tags then malloc an array to hold all of the objects.
      */
 
     numObjects = itemPtr->numTags + 2;
 #else /* USE_OLD_TAG_SEARCH */
     /*
-     * Set up an array with all the relevant objects for processing
-     * this event.  The relevant objects are:
+     * Set up an array with all the relevant objects for processing this
+     * event. The relevant objects are:
      * (a) the event's item,
-     * (b) the tags associated with the event's item, 
+     * (b) the tags associated with the event's item,
      * (c) the expressions that are true for the event's item's tags, and
-     * (d) the tag "all". 
+     * (d) the tag "all".
      *
-     * If there are a lot of tags then malloc an array to hold all of
-     * the objects.
+     * If there are a lot of tags then malloc an array to hold all of the
+     * objects.
      */
 
     /*
-     * flag and count all expressions that match item's tags
+     * Flag and count all expressions that match item's tags.
      */
+
     numExprs = 0;
     expr = canvasPtr->bindTagExprs;
     while (expr) {
@@ -4820,10 +4811,12 @@ CanvasDoEvent(canvasPtr, eventPtr)
 	objectPtr[i+1] = (ClientData) itemPtr->tagPtr[i];
     }
     objectPtr[itemPtr->numTags+1] = (ClientData) itemPtr;
+
 #ifndef USE_OLD_TAG_SEARCH
     /*
-     * copy uids of matching expressions into object array
+     * Copy uids of matching expressions into object array
      */
+
     i = itemPtr->numTags+2;
     expr = canvasPtr->bindTagExprs;
     while (expr) {
@@ -4835,8 +4828,8 @@ CanvasDoEvent(canvasPtr, eventPtr)
 #endif /* not USE_OLD_TAG_SEARCH */
 
     /*
-     * Invoke the binding system, then free up the object array if
-     * it was malloc-ed.
+     * Invoke the binding system, then free up the object array if it was
+     * malloc-ed.
      */
 
     if (canvasPtr->tkwin != NULL) {
@@ -4853,15 +4846,15 @@ CanvasDoEvent(canvasPtr, eventPtr)
  *
  * CanvasBlinkProc --
  *
- *	This procedure is called as a timer handler to blink the
- *	insertion cursor off and on.
+ *	This function is called as a timer handler to blink the insertion
+ *	cursor off and on.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The cursor gets turned on or off, redisplay gets invoked,
- *	and this procedure reschedules itself.
+ *	The cursor gets turned on or off, redisplay gets invoked, and this
+ *	function reschedules itself.
  *
  *----------------------------------------------------------------------
  */
@@ -4897,9 +4890,9 @@ CanvasBlinkProc(clientData)
  *
  * CanvasFocusProc --
  *
- *	This procedure is called whenever a canvas gets or loses the
- *	input focus.  It's also called whenever the window is
- *	reconfigured while it has the focus.
+ *	This function is called whenever a canvas gets or loses the input
+ *	focus. It's also called whenever the window is reconfigured while it
+ *	has the focus.
  *
  * Results:
  *	None.
@@ -4948,8 +4941,8 @@ CanvasFocusProc(canvasPtr, gotFocus)
  *
  * CanvasSelectTo --
  *
- *	Modify the selection by moving its un-anchored end.  This could
- *	make the selection either larger or smaller.
+ *	Modify the selection by moving its un-anchored end. This could make
+ *	the selection either larger or smaller.
  *
  * Results:
  *	None.
@@ -5010,15 +5003,15 @@ CanvasSelectTo(canvasPtr, itemPtr, index)
  *
  * CanvasFetchSelection --
  *
- *	This procedure is invoked by Tk to return part or all of
- *	the selection, when the selection is in a canvas widget.
- *	This procedure always returns the selection as a STRING.
+ *	This function is invoked by Tk to return part or all of the selection,
+ *	when the selection is in a canvas widget. This function always returns
+ *	the selection as a STRING.
  *
  * Results:
- *	The return value is the number of non-NULL bytes stored
- *	at buffer.  Buffer is filled (or partially filled) with a
- *	NULL-terminated string containing part or all of the selection,
- *	as given by offset and maxBytes.
+ *	The return value is the number of non-NULL bytes stored at buffer.
+ *	Buffer is filled (or partially filled) with a NULL-terminated string
+ *	containing part or all of the selection, as given by offset and
+ *	maxBytes.
  *
  * Side effects:
  *	None.
@@ -5028,14 +5021,13 @@ CanvasSelectTo(canvasPtr, itemPtr, index)
 
 static int
 CanvasFetchSelection(clientData, offset, buffer, maxBytes)
-    ClientData clientData;		/* Information about canvas widget. */
-    int offset;				/* Offset within selection of first
-					 * character to be returned. */
-    char *buffer;			/* Location in which to place
-					 * selection. */
-    int maxBytes;			/* Maximum number of bytes to place
-					 * at buffer, not including terminating
-					 * NULL character. */
+    ClientData clientData;	/* Information about canvas widget. */
+    int offset;			/* Offset within selection of first character
+				 * to be returned. */
+    char *buffer;		/* Location in which to place selection. */
+    int maxBytes;		/* Maximum number of bytes to place at buffer,
+				 * not including terminating NULL
+				 * character. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) clientData;
 
@@ -5055,22 +5047,22 @@ CanvasFetchSelection(clientData, offset, buffer, maxBytes)
  *
  * CanvasLostSelection --
  *
- *	This procedure is called back by Tk when the selection is
- *	grabbed away from a canvas widget.
+ *	This function is called back by Tk when the selection is grabbed away
+ *	from a canvas widget.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The existing selection is unhighlighted, and the window is
- *	marked as not containing a selection.
+ *	The existing selection is unhighlighted, and the window is marked as
+ *	not containing a selection.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 CanvasLostSelection(clientData)
-    ClientData clientData;		/* Information about entry widget. */
+    ClientData clientData;	/* Information about entry widget. */
 {
     TkCanvas *canvasPtr = (TkCanvas *) clientData;
 
@@ -5086,13 +5078,11 @@ CanvasLostSelection(clientData)
  *
  * GridAlign --
  *
- *	Given a coordinate and a grid spacing, this procedure
- *	computes the location of the nearest grid line to the
- *	coordinate.
+ *	Given a coordinate and a grid spacing, this function computes the
+ *	location of the nearest grid line to the coordinate.
  *
  * Results:
- *	The return value is the location of the grid line nearest
- *	to coord.
+ *	The return value is the location of the grid line nearest to coord.
  *
  * Side effects:
  *	None.
@@ -5103,8 +5093,8 @@ CanvasLostSelection(clientData)
 static double
 GridAlign(coord, spacing)
     double coord;		/* Coordinate to grid-align. */
-    double spacing;		/* Spacing between grid lines.   If <= 0
-				 * then no alignment is done. */
+    double spacing;		/* Spacing between grid lines. If <= 0 then no
+				 * alignment is done. */
 {
     if (spacing <= 0.0) {
 	return coord;
@@ -5120,15 +5110,14 @@ GridAlign(coord, spacing)
  *
  * ScrollFractions --
  *
- *	Given the range that's visible in the window and the "100%
- *	range" for what's in the canvas, return a list of two
- *	doubles representing the scroll fractions.  This procedure
- *	is used for both x and y scrolling.
+ *	Given the range that's visible in the window and the "100% range" for
+ *	what's in the canvas, return a list of two doubles representing the
+ *	scroll fractions. This function is used for both x and y scrolling.
  *
  * Results:
- *	A List Tcl_Obj with two real numbers (Double Tcl_Objs)
- *	containing the scroll fractions (between 0 and 1)
- *	corresponding to the other arguments.
+ *	A List Tcl_Obj with two real numbers (Double Tcl_Objs) containing the
+ *	scroll fractions (between 0 and 1) corresponding to the other
+ *	arguments.
  *
  * Side effects:
  *	None.
@@ -5173,18 +5162,17 @@ ScrollFractions(screen1, screen2, object1, object2)
  *
  * CanvasUpdateScrollbars --
  *
- *	This procedure is invoked whenever a canvas has changed in
- *	a way that requires scrollbars to be redisplayed (e.g. the
- *	view in the canvas has changed).
+ *	This function is invoked whenever a canvas has changed in a way that
+ *	requires scrollbars to be redisplayed (e.g. the view in the canvas has
+ *	changed).
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	If there are scrollbars associated with the canvas, then
- *	their scrolling commands are invoked to cause them to
- *	redisplay.  If errors occur, additional Tcl commands may
- *	be invoked to process the errors.
+ *	If there are scrollbars associated with the canvas, then their
+ *	scrolling commands are invoked to cause them to redisplay. If errors
+ *	occur, additional Tcl commands may be invoked to process the errors.
  *
  *--------------------------------------------------------------
  */
@@ -5203,7 +5191,7 @@ CanvasUpdateScrollbars(canvasPtr)
      * Save all the relevant values from the canvasPtr, because it might be
      * deleted as part of either of the two calls to Tcl_VarEval below.
      */
-    
+
     interp = canvasPtr->interp;
     Tcl_Preserve((ClientData) interp);
     xScrollCmd = canvasPtr->xScrollCmd;
@@ -5227,8 +5215,8 @@ CanvasUpdateScrollbars(canvasPtr)
     if (canvasPtr->xScrollCmd != NULL) {
 	Tcl_Obj *fractions = ScrollFractions(xOrigin + inset,
 		xOrigin + width - inset, scrollX1, scrollX2);
-	result = Tcl_VarEval(interp, xScrollCmd, " ", 
-		Tcl_GetString(fractions), (char *) NULL);
+	result = Tcl_VarEval(interp, xScrollCmd, " ", Tcl_GetString(fractions),
+		(char *) NULL);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundError(interp);
@@ -5240,8 +5228,8 @@ CanvasUpdateScrollbars(canvasPtr)
     if (yScrollCmd != NULL) {
 	Tcl_Obj *fractions = ScrollFractions(yOrigin + inset,
 		yOrigin + height - inset, scrollY1, scrollY2);
-	result = Tcl_VarEval(interp, yScrollCmd, " ", 
-		Tcl_GetString(fractions), (char *) NULL);
+	result = Tcl_VarEval(interp, yScrollCmd, " ", Tcl_GetString(fractions),
+		(char *) NULL);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundError(interp);
@@ -5257,17 +5245,15 @@ CanvasUpdateScrollbars(canvasPtr)
  *
  * CanvasSetOrigin --
  *
- *	This procedure is invoked to change the mapping between
- *	canvas coordinates and screen coordinates in the canvas
- *	window.
+ *	This function is invoked to change the mapping between canvas
+ *	coordinates and screen coordinates in the canvas window.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The canvas will be redisplayed to reflect the change in
- *	view.  In addition, scrollbars will be updated if there
- *	are any.
+ *	The canvas will be redisplayed to reflect the change in view. In
+ *	addition, scrollbars will be updated if there are any.
  *
  *--------------------------------------------------------------
  */
@@ -5285,10 +5271,9 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
     int left, right, top, bottom, delta;
 
     /*
-     * If scroll increments have been set, round the window origin
-     * to the nearest multiple of the increments.  Remember, the
-     * origin is the place just inside the borders,  not the upper
-     * left corner.
+     * If scroll increments have been set, round the window origin to the
+     * nearest multiple of the increments. Remember, the origin is the place
+     * just inside the borders, not the upper left corner.
      */
 
     if (canvasPtr->xScrollIncrement > 0) {
@@ -5316,13 +5301,13 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
 
     /*
      * Adjust the origin if necessary to keep as much as possible of the
-     * canvas in the view.  The variables left, right, etc. keep track of
-     * how much extra space there is on each side of the view before it
-     * will stick out past the scroll region.  If one side sticks out past
-     * the edge of the scroll region, adjust the view to bring that side
-     * back to the edge of the scrollregion (but don't move it so much that
-     * the other side sticks out now).  If scroll increments are in effect,
-     * be sure to adjust only by full increments.
+     * canvas in the view. The variables left, right, etc. keep track of how
+     * much extra space there is on each side of the view before it will stick
+     * out past the scroll region.  If one side sticks out past the edge of
+     * the scroll region, adjust the view to bring that side back to the edge
+     * of the scrollregion (but don't move it so much that the other side
+     * sticks out now). If scroll increments are in effect, be sure to adjust
+     * only by full increments.
      */
 
     if ((canvasPtr->confine) && (canvasPtr->regionString != NULL)) {
@@ -5365,11 +5350,11 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
     }
 
     /*
-     * Tricky point: must redisplay not only everything that's visible
-     * in the window's final configuration, but also everything that was
-     * visible in the initial configuration.  This is needed because some
-     * item types, like windows, need to know when they move off-screen
-     * so they can explicitly undisplay themselves.
+     * Tricky point: must redisplay not only everything that's visible in the
+     * window's final configuration, but also everything that was visible in
+     * the initial configuration. This is needed because some item types, like
+     * windows, need to know when they move off-screen so they can explicitly
+     * undisplay themselves.
      */
 
     Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
@@ -5394,11 +5379,12 @@ CanvasSetOrigin(canvasPtr, xOrigin, yOrigin)
  *	Converts object list into string list.
  *
  * Side effects:
- *	Memory is allocated for the objv array, which must
- *	be freed using ckfree() when no longer needed.
+ *	Memory is allocated for the objv array, which must be freed using
+ *	ckfree() when no longer needed.
  *
  *----------------------------------------------------------------------
  */
+
 /* ARGSUSED */
 static CONST char **
 TkGetStringsFromObjs(objc, objv)
@@ -5423,16 +5409,15 @@ TkGetStringsFromObjs(objc, objv)
  *
  * Tk_CanvasPsColor --
  *
- *	This procedure is called by individual canvas items when
- *	they want to set a color value for output.  Given information
- *	about an X color, this procedure will generate Postscript
- *	commands to set up an appropriate color in Postscript.
+ *	This function is called by individual canvas items when they want to
+ *	set a color value for output. Given information about an X color, this
+ *	function will generate Postscript commands to set up an appropriate
+ *	color in Postscript.
  *
  * Results:
- *	Returns a standard Tcl return value.  If an error occurs
- *	then an error message will be left in interp->result.
- *	If no error occurs, then additional Postscript will be
- *	appended to interp->result.
+ *	Returns a standard Tcl return value. If an error occurs then an error
+ *	message will be left in interp->result. If no error occurs, then
+ *	additional Postscript will be appended to interp->result.
  *
  * Side effects:
  *	None.
@@ -5442,10 +5427,10 @@ TkGetStringsFromObjs(objc, objv)
 
 int
 Tk_CanvasPsColor(interp, canvas, colorPtr)
-    Tcl_Interp *interp;			/* Interpreter for returning Postscript
-					 * or error message. */
-    Tk_Canvas canvas;			/* Information about canvas. */
-    XColor *colorPtr;			/* Information about color. */
+    Tcl_Interp *interp;		/* Interpreter for returning Postscript or
+				 * error message. */
+    Tk_Canvas canvas;		/* Information about canvas. */
+    XColor *colorPtr;		/* Information about color. */
 {
     return Tk_PostscriptColor(interp, ((TkCanvas *) canvas)->psInfo,
 	    colorPtr);
@@ -5456,31 +5441,30 @@ Tk_CanvasPsColor(interp, canvas, colorPtr)
  *
  * Tk_CanvasPsFont --
  *
- *	This procedure is called by individual canvas items when
- *	they want to output text.  Given information about an X
- *	font, this procedure will generate Postscript commands
- *	to set up an appropriate font in Postscript.
+ *	This function is called by individual canvas items when they want to
+ *	output text. Given information about an X font, this function will
+ *	generate Postscript commands to set up an appropriate font in
+ *	Postscript.
  *
  * Results:
- *	Returns a standard Tcl return value.  If an error occurs
- *	then an error message will be left in interp->result.
- *	If no error occurs, then additional Postscript will be
- *	appended to the interp->result.
+ *	Returns a standard Tcl return value. If an error occurs then an error
+ *	message will be left in interp->result. If no error occurs, then
+ *	additional Postscript will be appended to the interp->result.
  *
  * Side effects:
- *	The Postscript font name is entered into psInfoPtr->fontTable
- *	if it wasn't already there.
+ *	The Postscript font name is entered into psInfoPtr->fontTable if it
+ *	wasn't already there.
  *
  *--------------------------------------------------------------
  */
 
 int
 Tk_CanvasPsFont(interp, canvas, tkfont)
-    Tcl_Interp *interp;			/* Interpreter for returning Postscript
-					 * or error message. */
-    Tk_Canvas canvas;			/* Information about canvas. */
-    Tk_Font tkfont;			/* Information about font in which text
-					 * is to be printed. */
+    Tcl_Interp *interp;		/* Interpreter for returning Postscript or
+				 * error message. */
+    Tk_Canvas canvas;		/* Information about canvas. */
+    Tk_Font tkfont;		/* Information about font in which text is to
+				 * be printed. */
 {
     return Tk_PostscriptFont(interp, ((TkCanvas *) canvas)->psInfo, tkfont);
 }
@@ -5490,16 +5474,14 @@ Tk_CanvasPsFont(interp, canvas, tkfont)
  *
  * Tk_CanvasPsBitmap --
  *
- *	This procedure is called to output the contents of a
- *	sub-region of a bitmap in proper image data format for
- *	Postscript (i.e. data between angle brackets, one bit
- *	per pixel).
+ *	This function is called to output the contents of a sub-region of a
+ *	bitmap in proper image data format for Postscript (i.e. data between
+ *	angle brackets, one bit per pixel).
  *
  * Results:
- *	Returns a standard Tcl return value.  If an error occurs
- *	then an error message will be left in interp->result.
- *	If no error occurs, then additional Postscript will be
- *	appended to interp->result.
+ *	Returns a standard Tcl return value. If an error occurs then an error
+ *	message will be left in interp->result. If no error occurs, then
+ *	additional Postscript will be appended to interp->result.
  *
  * Side effects:
  *	None.
@@ -5509,14 +5491,13 @@ Tk_CanvasPsFont(interp, canvas, tkfont)
 
 int
 Tk_CanvasPsBitmap(interp, canvas, bitmap, startX, startY, width, height)
-    Tcl_Interp *interp;			/* Interpreter for returning Postscript
-					 * or error message. */
-    Tk_Canvas canvas;			/* Information about canvas. */
-    Pixmap bitmap;			/* Bitmap for which to generate
-					 * Postscript. */
-    int startX, startY;			/* Coordinates of upper-left corner
-					 * of rectangular region to output. */
-    int width, height;			/* Height of rectangular region. */
+    Tcl_Interp *interp;		/* Interpreter for returning Postscript or
+				 * error message. */
+    Tk_Canvas canvas;		/* Information about canvas. */
+    Pixmap bitmap;		/* Bitmap for which to generate Postscript. */
+    int startX, startY;		/* Coordinates of upper-left corner of
+				 * rectangular region to output. */
+    int width, height;		/* Height of rectangular region. */
 {
     return Tk_PostscriptBitmap(interp, ((TkCanvas *) canvas)->tkwin,
 	    ((TkCanvas *) canvas)->psInfo, bitmap, startX, startY,
@@ -5528,18 +5509,16 @@ Tk_CanvasPsBitmap(interp, canvas, bitmap, startX, startY, width, height)
  *
  * Tk_CanvasPsStipple --
  *
- *	This procedure is called by individual canvas items when
- *	they have created a path that they'd like to be filled with
- *	a stipple pattern.  Given information about an X bitmap,
- *	this procedure will generate Postscript commands to fill
- *	the current clip region using a stipple pattern defined by the
- *	bitmap.
+ *	This function is called by individual canvas items when they have
+ *	created a path that they'd like to be filled with a stipple pattern.
+ *	Given information about an X bitmap, this function will generate
+ *	Postscript commands to fill the current clip region using a stipple
+ *	pattern defined by the bitmap.
  *
  * Results:
- *	Returns a standard Tcl return value.  If an error occurs
- *	then an error message will be left in interp->result.
- *	If no error occurs, then additional Postscript will be
- *	appended to interp->result.
+ *	Returns a standard Tcl return value. If an error occurs then an error
+ *	message will be left in interp->result. If no error occurs, then
+ *	additional Postscript will be appended to interp->result.
  *
  * Side effects:
  *	None.
@@ -5549,10 +5528,10 @@ Tk_CanvasPsBitmap(interp, canvas, bitmap, startX, startY, width, height)
 
 int
 Tk_CanvasPsStipple(interp, canvas, bitmap)
-    Tcl_Interp *interp;			/* Interpreter for returning Postscript
-					 * or error message. */
-    Tk_Canvas canvas;			/* Information about canvas. */
-    Pixmap bitmap;			/* Bitmap to use for stippling. */
+    Tcl_Interp *interp;		/* Interpreter for returning Postscript or
+				 * error message. */
+    Tk_Canvas canvas;		/* Information about canvas. */
+    Pixmap bitmap;		/* Bitmap to use for stippling. */
 {
     return Tk_PostscriptStipple(interp, ((TkCanvas *) canvas)->tkwin,
 	    ((TkCanvas *) canvas)->psInfo, bitmap);
@@ -5563,12 +5542,11 @@ Tk_CanvasPsStipple(interp, canvas, bitmap)
  *
  * Tk_CanvasPsY --
  *
- *	Given a y-coordinate in canvas coordinates, this procedure
- *	returns a y-coordinate to use for Postscript output.
+ *	Given a y-coordinate in canvas coordinates, this function returns a
+ *	y-coordinate to use for Postscript output.
  *
  * Results:
- *	Returns the Postscript coordinate that corresponds to
- *	"y".
+ *	Returns the Postscript coordinate that corresponds to "y".
  *
  * Side effects:
  *	None.
@@ -5578,9 +5556,9 @@ Tk_CanvasPsStipple(interp, canvas, bitmap)
 
 double
 Tk_CanvasPsY(canvas, y)
-    Tk_Canvas canvas;			/* Token for canvas on whose behalf
-					 * Postscript is being generated. */
-    double y;				/* Y-coordinate in canvas coords. */
+    Tk_Canvas canvas;		/* Token for canvas on whose behalf Postscript
+				 * is being generated. */
+    double y;			/* Y-coordinate in canvas coords. */
 {
     return Tk_PostscriptY(y, ((TkCanvas *) canvas)->psInfo);
 }
@@ -5590,8 +5568,8 @@ Tk_CanvasPsY(canvas, y)
  *
  * Tk_CanvasPsPath --
  *
- *	Given an array of points for a path, generate Postscript
- *	commands to create the path.
+ *	Given an array of points for a path, generate Postscript commands to
+ *	create the path.
  *
  * Results:
  *	Postscript commands get appended to what's in interp->result.
@@ -5604,15 +5582,22 @@ Tk_CanvasPsY(canvas, y)
 
 void
 Tk_CanvasPsPath(interp, canvas, coordPtr, numPoints)
-    Tcl_Interp *interp;			/* Put generated Postscript in this
-					 * interpreter's result field. */
-    Tk_Canvas canvas;			/* Canvas on whose behalf Postscript
-					 * is being generated. */
-    double *coordPtr;			/* Pointer to first in array of
-					 * 2*numPoints coordinates giving
-					 * points for path. */
-    int numPoints;			/* Number of points at *coordPtr. */
+    Tcl_Interp *interp;		/* Put generated Postscript in this
+				 * interpreter's result field. */
+    Tk_Canvas canvas;		/* Canvas on whose behalf Postscript is being
+				 * generated. */
+    double *coordPtr;		/* Pointer to first in array of 2*numPoints
+				 * coordinates giving points for path. */
+    int numPoints;		/* Number of points at *coordPtr. */
 {
     Tk_PostscriptPath(interp, ((TkCanvas *) canvas)->psInfo,
 	    coordPtr, numPoints);
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
