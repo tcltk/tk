@@ -1,3 +1,7 @@
+2005-08-20  Joe Mistachkin  <joe@mistachkin.com>
+
+	* win/tkWinX.c: Fixed bad cast. [Bug 1216006]
+
 2005-08-18  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* doc/GetFont.3: Reworded to reflect the truth. [Bug 1151523]
