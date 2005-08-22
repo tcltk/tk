@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.13 2005/08/09 07:39:19 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.14 2005/08/22 11:54:20 das Exp $
  */
 
 #include "tkButton.h"
@@ -204,7 +204,7 @@ TkpDisplayButton(
     int borderWidth;
     Pixmap pixmap;
     int wasUsingControl;
-    int imageWidth, imageHeight;
+    int imageWidth = 0, imageHeight = 0;
     int imageXOffset = 0, imageYOffset = 0; /* image information that will
 					     * be used to restrict disabled
 					     * pixmap as well */
