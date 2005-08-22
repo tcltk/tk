@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.14 2005/08/09 07:39:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.15 2005/08/22 11:54:20 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -1291,7 +1291,7 @@ Tk_MessageBoxObjCmd(
     int                     defaultNativeButtonIndex;    /* 1, 2, 3: right to left. */
     int                     typeIndex;
     int                     i;
-    int                     indexDefaultOption;
+    int                     indexDefaultOption = 0;
     int                     result = TCL_OK;
     
     static CONST char *movableAlertStrings[] = {
