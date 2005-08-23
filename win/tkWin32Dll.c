@@ -8,33 +8,27 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin32Dll.c,v 1.6.2.2 2004/10/28 20:11:20 mdejong Exp $
+ * RCS: @(#) $Id: tkWin32Dll.c,v 1.6.2.3 2005/08/23 18:34:49 mdejong Exp $
  */
 
 #include "tkWinInt.h"
 #ifndef STATIC_BUILD
 
-#if defined(HAVE_NO_SEH) && defined(TCL_MEM_DEBUG)
-static void *INITIAL_ESP,
-            *INITIAL_EBP,
-            *INITIAL_HANDLER,
-            *RESTORED_ESP,
-            *RESTORED_EBP,
-            *RESTORED_HANDLER;
-#endif /* HAVE_NO_SEH && TCL_MEM_DEBUG */
-
 #ifdef HAVE_NO_SEH
-static
-__attribute__ ((cdecl))
-EXCEPTION_DISPOSITION
-_except_dllmain_detach_handler(
-    struct _EXCEPTION_RECORD *ExceptionRecord,
-    void *EstablisherFrame,
-    struct _CONTEXT *ContextRecord,
-    void *DispatcherContext);
-#endif /* HAVE_NO_SEH */
+/*
+ * Unlike Borland and Microsoft, we don't register exception handlers by
+ * pushing registration records onto the runtime stack. Instead, we register
+ * them by creating an EXCEPTION_REGISTRATION within the activation record.
+ */
 
-#ifdef HAVE_NO_SEH
+typedef struct EXCEPTION_REGISTRATION {
+    struct EXCEPTION_REGISTRATION *link;
+    EXCEPTION_DISPOSITION (*handler)(
+	    struct _EXCEPTION_RECORD*, void*, struct _CONTEXT*, void*);
+    void *ebp;
+    void *esp;
+    int status;
+} EXCEPTION_REGISTRATION;
 
 /* Need to add noinline flag to DllMain declaration so that gcc -O3
  * does not inline asm code into DllEntryPoint and cause a
@@ -109,6 +103,10 @@ DllMain(hInstance, reason, reserved)
     DWORD reason;
     LPVOID reserved;
 {
+#ifdef HAVE_NO_SEH
+    EXCEPTION_REGISTRATION registration;
+#endif
+
     /*
      * If we are attaching to the DLL from a new process, tell Tk about
      * the hInstance to use.
@@ -128,26 +126,78 @@ DllMain(hInstance, reason, reserved)
 	 */
 
 #ifdef HAVE_NO_SEH
-# ifdef TCL_MEM_DEBUG
-    __asm__ __volatile__ (
-            "movl %%esp,  %0" "\n\t"
-            "movl %%ebp,  %1" "\n\t"
-            "movl %%fs:0, %2" "\n\t"
-            : "=m"(INITIAL_ESP),
-              "=m"(INITIAL_EBP),
-              "=r"(INITIAL_HANDLER) );
-# endif /* TCL_MEM_DEBUG */
-            
-    __asm__ __volatile__ (
-            "pushl %%ebp" "\n\t"
-            "pushl %0" "\n\t"
-            "pushl %%fs:0" "\n\t"
-            "movl  %%esp, %%fs:0"
-            :
-            : "r" (_except_dllmain_detach_handler) );
-#else
+	__asm__ __volatile__ (
+
+	    /*
+	     * Construct an EXCEPTION_REGISTRATION to protect the call to
+	     * TkFinalize
+	     */
+
+	    "leal	%[registration], %%edx"		"\n\t"
+	    "movl	%%fs:0,		%%eax"		"\n\t"
+	    "movl	%%eax,		0x0(%%edx)"	"\n\t" /* link */
+	    "leal	1f,		%%eax"		"\n\t"
+	    "movl	%%eax,		0x4(%%edx)"	"\n\t" /* handler */
+	    "movl	%%ebp,		0x8(%%edx)"	"\n\t" /* ebp */
+	    "movl	%%esp,		0xc(%%edx)"	"\n\t" /* esp */
+	    "movl	%[error],	0x10(%%edx)"	"\n\t" /* status */
+
+	    /*
+	     * Link the EXCEPTION_REGISTRATION on the chain
+	     */
+
+	    "movl	%%edx,		%%fs:0"		"\n\t"
+
+	    /*
+	     * Call TkFinalize
+	     */
+
+	    "movl	$0x0,		0x0(%%esp)"		"\n\t"
+	    "call	_TkFinalize"			"\n\t"
+
+	    /*
+	     * Come here on a normal exit. Recover the EXCEPTION_REGISTRATION
+	     * and store a TCL_OK status
+	     */
+
+	    "movl	%%fs:0,		%%edx"		"\n\t"
+	    "movl	%[ok],		%%eax"		"\n\t"
+	    "movl	%%eax,		0x10(%%edx)"	"\n\t"
+	    "jmp	2f"				"\n"
+
+	    /*
+	     * Come here on an exception. Get the EXCEPTION_REGISTRATION that
+	     * we previously put on the chain.
+	     */
+
+	    "1:"					"\t"
+	    "movl	%%fs:0,		%%edx"		"\n\t"
+	    "movl	0x8(%%edx),	%%edx"		"\n"
+
+
+	    /* 
+	     * Come here however we exited. Restore context from the
+	     * EXCEPTION_REGISTRATION in case the stack is unbalanced.
+	     */
+
+	    "2:"					"\t"
+	    "movl	0xc(%%edx),	%%esp"		"\n\t"
+	    "movl	0x8(%%edx),	%%ebp"		"\n\t"
+	    "movl	0x0(%%edx),	%%eax"		"\n\t"
+	    "movl	%%eax,		%%fs:0"		"\n\t"
+
+	    :
+	    /* No outputs */
+	    :
+	    [registration]	"m"	(registration),
+	    [ok]		"i"	(TCL_OK),
+	    [error]		"i"	(TCL_ERROR)
+	    :
+	    "%eax", "%ebx", "%ecx", "%edx", "%esi", "%edi", "memory"
+	    );
+
+#else /* HAVE_NO_SEH */
 	__try {
-#endif /* HAVE_NO_SEH */
 	    /*
 	     * Run and remove our exit handlers, if they haven't already
 	     * been run.  Just in case we are being unloaded prior to
@@ -156,76 +206,14 @@ DllMain(hInstance, reason, reserved)
 	     */
 
 	    TkFinalize(NULL);
-
-#ifdef HAVE_NO_SEH
-    __asm__ __volatile__ (
-            "jmp  dllmain_detach_pop" "\n"
-        "dllmain_detach_reentry:" "\n\t"
-            "movl %%fs:0, %%eax" "\n\t"
-            "movl 0x8(%%eax), %%esp" "\n\t"
-            "movl 0x8(%%esp), %%ebp" "\n"
-        "dllmain_detach_pop:" "\n\t"
-            "movl (%%esp), %%eax" "\n\t"
-            "movl %%eax, %%fs:0" "\n\t"
-            "add  $12, %%esp" "\n\t"
-            :
-            :
-            : "%eax");
-
-# ifdef TCL_MEM_DEBUG
-    __asm__ __volatile__ (
-            "movl  %%esp,  %0" "\n\t"
-            "movl  %%ebp,  %1" "\n\t"
-            "movl  %%fs:0, %2" "\n\t"
-            : "=m"(RESTORED_ESP),
-              "=m"(RESTORED_EBP),
-              "=r"(RESTORED_HANDLER) );
-
-    if (INITIAL_ESP != RESTORED_ESP)
-        Tcl_Panic("ESP restored incorrectly");
-    if (INITIAL_EBP != RESTORED_EBP)
-        Tcl_Panic("EBP restored incorrectly");
-    if (INITIAL_HANDLER != RESTORED_HANDLER)
-        Tcl_Panic("HANDLER restored incorrectly");
-# endif /* TCL_MEM_DEBUG */
-#else
 	} __except (EXCEPTION_EXECUTE_HANDLER) {
-	    /* empty handler body */
+	    /* empty handler body. */
 	}
-#endif /* HAVE_NO_SEH */
+#endif
+
 	break;
     }
     return TRUE;
 }
-/*
- *----------------------------------------------------------------------
- *
- * _except_dllmain_detach_handler --
- *
- *	SEH exception handler for DllMain.
- *
- * Results:
- *	See DllMain.
- *
- * Side effects:
- *	See DllMain.
- *
- *----------------------------------------------------------------------
- */
-#ifdef HAVE_NO_SEH
-static
-__attribute__ ((cdecl))
-EXCEPTION_DISPOSITION
-_except_dllmain_detach_handler(
-    struct _EXCEPTION_RECORD *ExceptionRecord,
-    void *EstablisherFrame,
-    struct _CONTEXT *ContextRecord,
-    void *DispatcherContext)
-{
-    __asm__ __volatile__ (
-            "jmp dllmain_detach_reentry");
-    return 0; /* Function does not return */
-}
-#endif /* HAVE_NO_SEH */
 
 #endif /* !STATIC_BUILD */
