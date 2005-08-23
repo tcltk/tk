@@ -1,3 +1,23 @@
+2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* unix/Makefile.in: Subst BUILD_TCLSH and TCL_EXE.
+	* unix/configure: Regen.
+	* unix/configure.in: Update minimum autoconf version
+	to 2.59. Invoke SC_PROG_TCLSH and SC_BUILD_TCLSH.
+	* unix/tcl.m4 (SC_PROG_TCLSH, SC_BUILD_TCLSH):
+	* win/Makefile.in: Subst BUILD_TCLSH and TCL_EXE.
+	* win/configure: Regen.
+	* win/configure.in: Update minimum autoconf version
+	to 2.59. Invoke SC_BUILD_TCLSH.
+	* win/tcl.m4 (SC_PROG_TCLSH, SC_BUILD_TCLSH):
+	Split confused search for tclsh on PATH and
+	build and install locations into two macros.
+	SC_PROG_TCLSH searches just the PATH.
+	SC_BUILD_TCLSH determines the name of the tclsh
+	executable in the Tcl build directory.
+	[Tcl bug 1160114]
+	[Tcl patch 1244153]
+
 2005-08-22  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXButton.c:
