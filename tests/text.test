@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.38 2005/04/04 21:59:00 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.39 2005/08/23 23:04:42 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -330,7 +330,7 @@ test text-8.17 {TextWidgetCmd procedure, "replace" option} {
 } {1 {wrong # args: should be ".t replace index1 index2 chars ?tagList chars tagList ...?"}}
 test text-8.18 {TextWidgetCmd procedure, "replace" option} {
     list [catch {.t replace 3.1 2.3 foo} err] $err
-} {1 {Index "2.3" before "3.1" in the text.}}
+} {1 {Index "2.3" before "3.1" in the text}}
 test text-8.19 {TextWidgetCmd procedure, "replace" option} {
     list [catch {.t replace 2.1 2.3 foo} err] $err
 } {0 {}}
