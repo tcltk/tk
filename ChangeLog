@@ -1,3 +1,8 @@
+2005-08-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXDialog.c: make dialogs ignore -initialfile "" and
+	-initialdir "" instead of error.
+
 2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWin32Dll.c (DllMain): Replace old asm SEH
