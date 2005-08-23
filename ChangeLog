@@ -1,3 +1,8 @@
+2005-08-24  Donal K. Fellows  <dkf@users.sf.net>
+
+	* tests/text.test (text-8.18): Fix punctuation of error message to
+	match good practice (actual message already fixed). [Bug 1267484]
+
 2005-08-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXDialog.c: make dialogs ignore -initialfile "" and
@@ -5,29 +10,25 @@
 
 2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* win/tkWin32Dll.c (DllMain): Replace old asm SEH
-	approach with Kenny's new SEH implementation.
-	[Tcl bug 1235544]
+	* win/tkWin32Dll.c (DllMain): Replace old asm SEH approach with
+	Kenny's new SEH implementation. [Tcl bug 1235544]
 
 2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* unix/Makefile.in: Subst BUILD_TCLSH and TCL_EXE.
 	* unix/configure: Regen.
-	* unix/configure.in: Update minimum autoconf version
-	to 2.59. Invoke SC_PROG_TCLSH and SC_BUILD_TCLSH.
+	* unix/configure.in: Update minimum autoconf version to 2.59. Invoke
+	SC_PROG_TCLSH and SC_BUILD_TCLSH.
 	* unix/tcl.m4 (SC_PROG_TCLSH, SC_BUILD_TCLSH):
 	* win/Makefile.in: Subst BUILD_TCLSH and TCL_EXE.
 	* win/configure: Regen.
-	* win/configure.in: Update minimum autoconf version
-	to 2.59. Invoke SC_BUILD_TCLSH.
-	* win/tcl.m4 (SC_PROG_TCLSH, SC_BUILD_TCLSH):
-	Split confused search for tclsh on PATH and
-	build and install locations into two macros.
-	SC_PROG_TCLSH searches just the PATH.
-	SC_BUILD_TCLSH determines the name of the tclsh
-	executable in the Tcl build directory.
-	[Tcl bug 1160114]
-	[Tcl patch 1244153]
+	* win/configure.in: Update minimum autoconf version to 2.59. Invoke
+	SC_BUILD_TCLSH.
+	* win/tcl.m4 (SC_PROG_TCLSH, SC_BUILD_TCLSH): Split confused
+	search for tclsh on PATH and build and install locations into two
+	macros.  SC_PROG_TCLSH searches just the PATH.  SC_BUILD_TCLSH
+	determines the name of the tclsh executable in the Tcl build
+	directory. [Tcl bug 1160114] [Tcl patch 1244153]
 
 2005-08-22  Daniel Steffen  <das@users.sourceforge.net>
 
