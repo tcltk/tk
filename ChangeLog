@@ -1,5 +1,11 @@
 2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* win/tkWin32Dll.c (DllMain): Replace old asm SEH
+	approach with Kenny's new SEH implementation.
+	[Tcl bug 1235544]
+
+2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* unix/Makefile.in: Subst BUILD_TCLSH and TCL_EXE.
 	* unix/configure: Regen.
 	* unix/configure.in: Update minimum autoconf version
