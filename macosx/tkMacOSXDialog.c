@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.15 2005/08/22 11:54:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.16 2005/08/23 22:10:57 hobbs Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -19,10 +19,10 @@
 #include "tkFileFilter.h"
 
 #ifndef StrLength
-#define StrLength(s)                 (*((unsigned char *) (s)))
+#define StrLength(s)	(*((unsigned char *) (s)))
 #endif
 #ifndef StrBody
-#define StrBody(s)                ((char *) (s) + 1)
+#define StrBody(s)	((char *) (s) + 1)
 #endif
 
 /*
@@ -47,14 +47,12 @@
  * information about the file dialog and the file filters.
  */
 typedef struct _OpenFileData {
-    FileFilterList fl;                        /* List of file filters. */
-    SInt16 curType;                        /* The filetype currently being
-                                         * listed. */
-    short popupItem;                        /* Item number of the popup in the
-                                         * dialog. */
-    int usePopup;                        /* True if we show the popup menu (this
-                                             * is an open operation and the
-                                         * -filetypes option is set). */
+    FileFilterList fl;		/* List of file filters. */
+    SInt16 curType;		/* The filetype currently being listed. */
+    short popupItem;		/* Item number of the popup in the dialog. */
+    int usePopup;		/* True if we show the popup menu (this is
+				 * an open operation and the -filetypes
+				 * option is set). */
 } OpenFileData;
 
 
@@ -87,7 +85,7 @@ static int              HandleInitialDirectory (Tcl_Interp *interp,
                                                 char *initialFile, char *initialDir,
                                                 FSRef *dirRef,
                                                 AEDescList *selectDescPtr,
-                                                AEDesc *dirDescPtr);                            
+                                                AEDesc *dirDescPtr);
 
 /*
  * Have we initialized the file dialog subsystem
@@ -273,15 +271,15 @@ Tk_GetOpenFileObjCmd(
     AEDescList selectDesc = {typeNull, NULL};
     char *initialFile = NULL, *initialDir = NULL;
     static CONST char *openOptionStrings[] = {
-            "-defaultextension", "-filetypes", 
-            "-initialdir", "-initialfile", 
+            "-defaultextension", "-filetypes",
+            "-initialdir", "-initialfile",
             "-message", "-multiple",
-            "-parent",        "-title",         NULL
+            "-parent", "-title", NULL
     };
     enum openOptions {
-            OPEN_DEFAULT, OPEN_FILETYPES,        
+            OPEN_DEFAULT, OPEN_FILETYPES,
             OPEN_INITDIR, OPEN_INITFILE,
-            OPEN_MESSAGE, OPEN_MULTIPLE, 
+            OPEN_MESSAGE, OPEN_MULTIPLE,
             OPEN_PARENT, OPEN_TITLE
     };
     
@@ -289,14 +287,14 @@ Tk_GetOpenFileObjCmd(
         InitFileDialogs();
     }
     
-    result = TCL_ERROR;    
-    parent = (Tk_Window) clientData; 
+    result = TCL_ERROR;
+    parent = (Tk_Window) clientData;
     multiple = false;
     title = NULL;
-    message = NULL;   
+    message = NULL;
 
     TkInitFileFilters(&ofd.fl);
-    
+
     ofd.curType                = 0;
     ofd.popupItem        = OPEN_POPUP_ITEM;
     ofd.usePopup         = 1;
@@ -330,10 +328,14 @@ Tk_GetOpenFileObjCmd(
                 }
                 break;
             case OPEN_INITDIR:
-                initialDir = Tcl_GetStringFromObj(objv[i + 1], NULL);
+                initialDir = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
+		/* empty strings should be like no selection given */
+		if (choiceLen == 0) { initialDir = NULL; }
                 break;
             case OPEN_INITFILE:
                 initialFile = Tcl_GetStringFromObj(objv[i + 1], NULL);
+		/* empty strings should be like no selection given */
+		if (choiceLen == 0) { initialFile = NULL; }
                 break;
             case OPEN_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -373,8 +375,7 @@ Tk_GetOpenFileObjCmd(
         initialPtr = &initialDesc;
     }
     result = NavServicesGetFile(interp, &ofd, initialPtr,
-            NULL, &selectDesc, 
-            title, message, multiple, OPEN_FILE);
+            NULL, &selectDesc, title, message, multiple, OPEN_FILE);
 
     end:
     TkFreeFileFilters(&ofd.fl);
@@ -433,11 +434,11 @@ Tk_GetSaveFileObjCmd(
     if (!fileDlgInited) {
         InitFileDialogs();
     }
-    
-    result = TCL_ERROR;    
-    parent = (Tk_Window) clientData;    
+
+    result = TCL_ERROR;
+    parent = (Tk_Window) clientData;
     title = NULL;
-    message = NULL;   
+    message = NULL;
 
     for (i = 1; i < objc; i += 2) {
         char *choice;
@@ -461,15 +462,19 @@ Tk_GetSaveFileObjCmd(
                 /* Currently unimplemented - what would we do here anyway? */
                 break;
             case SAVE_INITDIR:
-                choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
-                if (HandleInitialDirectory(interp, NULL, choice, &dirRef, 
-                        NULL, &initialDesc) != TCL_OK) {
+                choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
+		/* empty strings should be like no selection given */
+		if (choiceLen &&
+			HandleInitialDirectory(interp, NULL, choice, &dirRef, 
+				NULL, &initialDesc) != TCL_OK) {
                     result = TCL_ERROR;
                     goto end;
                 }
                 break;
             case SAVE_INITFILE:
-                initialFile = Tcl_GetStringFromObj(objv[i + 1], NULL);
+                initialFile = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
+		/* empty strings should be like no selection given */
+		if (choiceLen == 0) { initialFile = NULL; }
                 break;
             case SAVE_MESSAGE:
                 choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -548,14 +553,13 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     CFStringRef message, title;
     OpenFileData ofd;
     static CONST char *chooseOptionStrings[] = {
-            "-initialdir", "-message", "-mustexist", "-parent", "-title", NULL
+	"-initialdir", "-message", "-mustexist", "-parent", "-title", NULL
     };
     enum chooseOptions {
-            CHOOSE_INITDIR,        CHOOSE_MESSAGE, CHOOSE_MUSTEXIST, 
-            CHOOSE_PARENT, CHOOSE_TITLE
+	CHOOSE_INITDIR, CHOOSE_MESSAGE, CHOOSE_MUSTEXIST,
+	CHOOSE_PARENT, CHOOSE_TITLE
     };
-  
-    
+
     if (!NavServicesAvailable()) {
         return TCL_ERROR;
     }
@@ -563,10 +567,10 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     if (!fileDlgInited) {
         InitFileDialogs();
     }
-    result = TCL_ERROR;    
-    parent = (Tk_Window) clientData;    
+    result = TCL_ERROR;
+    parent = (Tk_Window) clientData;
     title = NULL;
-    message = NULL;   
+    message = NULL;
 
     for (i = 1; i < objc; i += 2) {
         char *choice;
@@ -585,9 +589,10 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
         }
         switch (index) {
             case CHOOSE_INITDIR:
-                choice = Tcl_GetStringFromObj(objv[i + 1], NULL);
-                if (HandleInitialDirectory(interp, NULL, choice, &dirRef,  
-                        NULL, &initialDesc) != TCL_OK) {
+                choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
+		if (choiceLen &&
+			HandleInitialDirectory(interp, NULL, choice, &dirRef,
+				NULL, &initialDesc) != TCL_OK) {
                     result = TCL_ERROR;
                     goto end;
                 }
@@ -612,11 +617,10 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
                 break;
         }
     }
-             
+
     TkInitFileFilters(&ofd.fl);
     ofd.usePopup = 0;
 
-        
     if (initialDesc.descriptorType == typeFSRef) {
         initialPtr = &initialDesc;
     }
@@ -657,7 +661,7 @@ HandleInitialDirectory (
         }
 
         err = FSPathMakeRef((unsigned char*) dirName,
-                dirRef, &isDirectory);     
+                dirRef, &isDirectory);
 
         if (err != noErr) {
             Tcl_AppendResult(interp, "bad directory \"",
@@ -748,24 +752,24 @@ NavServicesGetFile(
         diagOptions.optionFlags += kNavAllowMultipleFiles;
     }
     diagOptions.modality = kWindowModalityAppModal;
-            
+
     if (ofdPtr != NULL && ofdPtr->usePopup) {
         FileFilter *filterPtr;
-        
+
         filterPtr = ofdPtr->fl.filters;
         if (filterPtr == NULL) {
             ofdPtr->usePopup = 0;
         }
     }
-    
-    if (ofdPtr != NULL && ofdPtr->usePopup) {    
+
+    if (ofdPtr != NULL && ofdPtr->usePopup) {
         FileFilter *filterPtr;
         int index = 0;
         ofdPtr->curType = 0;
-        
+
         menuItemNames = (CFStringRef *)ckalloc(ofdPtr->fl.numFilters 
             * sizeof(CFStringRef));
-        
+
         for (filterPtr = ofdPtr->fl.filters; filterPtr != NULL; 
                 filterPtr = filterPtr->next, index++) {
             menuItemNames[index] = CFStringCreateWithCString(NULL, 
@@ -773,7 +777,7 @@ NavServicesGetFile(
         }
         diagOptions.popupExtension = CFArrayCreate(NULL, 
                 (const void **) menuItemNames, ofdPtr->fl.numFilters, NULL);
-    } else {        
+    } else {
         diagOptions.optionFlags += kNavNoTypePopup; 
         diagOptions.popupExtension = NULL;
     }
