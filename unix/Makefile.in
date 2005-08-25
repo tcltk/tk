@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.107 2005/08/23 18:25:34 mdejong Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.108 2005/08/25 04:13:42 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1481,10 +1481,13 @@ html-tk:
 	@EXTRA_BUILD_HTML@
 
 BUILD_HTML = \
-	@if test -f "$(TCL_EXE)"; then \
-	$(TCL_EXE) $(TOOL_DIR)/tcltk-man2html.tcl --htmldir=$(HTML_INSTALL_DIR) \
-		--srcdir=$(TOP_DIR)/.. ; \
-	fi
+	@if test -f "$(BUILD_TCLSH)"; then \
+	@LD_LIBRARY_PATH_VAR@=$(TCL_BIN_DIR):$${@LD_LIBRARY_PATH_VAR@}; export @LD_LIBRARY_PATH_VAR@; \
+	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TCLSH="$(BUILD_TCLSH)"; else \
+	TCLSH="$(TCL_EXE)"; fi ;\
+	$${TCLSH} $(TOOL_DIR)/tcltk-man2html.tcl --htmldir=$(HTML_INSTALL_DIR) \
+		--srcdir=$(TOP_DIR)/.. $(BUILD_HTML_FLAGS)
 
 #
 # Targets to build Solaris package of the distribution for the current
