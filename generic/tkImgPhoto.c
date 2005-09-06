@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.57 2005/08/11 01:55:04 dgp Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.58 2005/09/06 12:30:24 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -5835,7 +5835,7 @@ Tk_PhotoGetImage(handle, blockPtr)
     blockPtr->offset[3] = 3;
     return 1;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5895,7 +5895,7 @@ PhotoOptionFind(interp, obj)
     }
     return proc;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5927,7 +5927,7 @@ PhotoOptionCleanupProc(clientData, interp)
 	ckfree((char *) ptr);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
