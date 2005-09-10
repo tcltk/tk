@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.2.2.2 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.2.2.3 2005/09/10 15:11:29 das Exp $
  */
 
 #ifndef _TKMACDEBUG
@@ -73,10 +73,6 @@ void printWindowTitle(char * tag, WindowRef window );
 char * TkMacOSXMenuMessageToAscii(int msg, char * s);
 
 char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
-
-/* Declare Carbon-internal debugging routines (c.f. Technote 2124): */
-void _DebugPrintEvent(EventRef inEvent);
-void _TraceEventByName(CFStringRef eventName);
 
 #endif
 
