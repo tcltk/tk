@@ -50,12 +50,17 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.3 2005/08/09 07:39:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.4 2005/09/10 14:53:20 das Exp $
  */
 
 #ifndef _TKMACDEBUG
 #define _TKMACDEBUG
 #include <Carbon/Carbon.h>
+
+/* The following define enables printing of debug messages to stderr: */
+/* #define TK_MAC_DEBUG 1 */
+
+#ifdef TK_MAC_DEBUG
 
 char * CarbonEventToAscii(EventRef eventRef, char * buf );
 char * ClassicEventToAscii(EventRecord * eventPtr, char * buf );
@@ -68,4 +73,11 @@ void printWindowTitle(char * tag, WindowRef window );
 char * TkMacOSXMenuMessageToAscii(int msg, char * s);
 
 char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
+
+/* Declare Carbon-internal debugging routines (c.f. Technote 2124): */
+void _DebugPrintEvent(EventRef inEvent);
+void _TraceEventByName(CFStringRef eventName);
+
+#endif
+
 #endif

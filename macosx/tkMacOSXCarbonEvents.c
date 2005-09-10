@@ -53,30 +53,32 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3 2005/08/09 07:39:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.4 2005/09/10 14:53:20 das Exp $
  */
 
 #include "tkInt.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXEvent.h"
+#include "tkMacOSXDebug.h"
 
-static EventHandlerRef ApplicationCarbonEventHandler;
+/*
+#ifdef  TK_MAC_DEBUG
+#define TK_MAC_DEBUG_CARBON_EVENTS
+#endif
+*/
 
-/* Definitions of functions used only in this file */
-static OSStatus AppEventHandlerProc (
+/* Declarations of functions used only in this file */
+static OSStatus CarbonEventHandlerProc (
                               EventHandlerCallRef callRef,
                               EventRef inEvent,
                               void *userData);
 
-
 /*
  *----------------------------------------------------------------------
  *
- * AppEventHandlerProc --
+ * CarbonEventHandlerProc --
  *
- *        This procedure is the Application CarbonEvent
- *        handler.  Currently, it handles the Hide & Show
- *        events.
+ *        This procedure is the handler for all registered CarbonEvents.
  *
  * Results:
  *        None.
@@ -88,7 +90,7 @@ static OSStatus AppEventHandlerProc (
  */
 
 static OSStatus
-AppEventHandlerProc (
+CarbonEventHandlerProc (
         EventHandlerCallRef callRef,
         EventRef inEvent,
         void *inUserData)
@@ -97,15 +99,27 @@ AppEventHandlerProc (
     TkMacOSXEvent    macEvent;
     MacEventStatus   eventStatus;
 
+#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+    char buf [256];
+    CarbonEventToAscii(inEvent, buf);
+    fprintf(stderr, "CarbonEventHandlerProc started handling %s\n", buf);
+    _DebugPrintEvent(inEvent);
+#endif /* TK_MAC_DEBUG_CARBON_EVENTS */
+
     macEvent.eventRef = inEvent;
     macEvent.eClass = GetEventClass(macEvent.eventRef);
     macEvent.eKind = GetEventKind(macEvent.eventRef);
     macEvent.interp = (Tcl_Interp *) inUserData;
     bzero(&eventStatus, sizeof(eventStatus));
     TkMacOSXProcessEvent(&macEvent,&eventStatus);
-    if (!eventStatus.stopProcessing) {
+    if (eventStatus.stopProcessing) {
         result = noErr;
     }
+
+#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+    fprintf(stderr, "CarbonEventHandlerProc finished handling %s: %s handled\n", buf,
+                eventStatus.stopProcessing ? "   " : "not");
+#endif /* TK_MAC_DEBUG_CARBON_EVENTS */
     return result;
 }
 
@@ -114,14 +128,13 @@ AppEventHandlerProc (
  *
  * TkMacOSXInitCarbonEvents --
  *
- *        This procedure initializes the Application CarbonEvent
- *        handler.
+ *        This procedure initializes all CarbonEvent handlers.
  *
  * Results:
  *        None.
  *
  * Side effects:
- *        A handler for Application targeted Carbon Events is registered.
+ *        Handlers for Carbon Events are registered.
  *
  *----------------------------------------------------------------------
  */
@@ -130,17 +143,60 @@ MODULE_SCOPE void
 TkMacOSXInitCarbonEvents (
         Tcl_Interp *interp)
 {
-    const EventTypeSpec inAppEventTypes[] = {
-            {kEventClassApplication, kEventAppHidden},
-            {kEventClassApplication, kEventAppShown},
-            {kEventClassWindow, kEventWindowExpanded},
+    const EventTypeSpec dispatcherEventTypes[] = {
+            {kEventClassMouse,          kEventMouseDown},
+            {kEventClassMouse,          kEventMouseUp},
+            {kEventClassMouse,          kEventMouseMoved},
+            {kEventClassMouse,          kEventMouseDragged},
+            {kEventClassMouse,          kEventMouseWheelMoved},
+            {kEventClassWindow,         kEventWindowUpdate},
+            {kEventClassWindow,         kEventWindowActivated},
+            {kEventClassWindow,         kEventWindowDeactivated},
+            {kEventClassKeyboard,       kEventRawKeyDown},
+            {kEventClassKeyboard,       kEventRawKeyRepeat},
+            {kEventClassKeyboard,       kEventRawKeyUp},
+            {kEventClassKeyboard,       kEventRawKeyModifiersChanged},
+            {kEventClassKeyboard,       kEventRawKeyRepeat},
+            {kEventClassApplication,    kEventAppActivated},
+            {kEventClassApplication,    kEventAppDeactivated},
+            {kEventClassApplication,    kEventAppQuit},
+            {kEventClassAppleEvent,     kEventAppleEvent},
     };
+    const EventTypeSpec applicationEventTypes[] = {
+            {kEventClassWindow,         kEventWindowExpanded},
+            {kEventClassApplication,    kEventAppHidden},
+            {kEventClassApplication,    kEventAppShown},
+    };
+    EventHandlerUPP handler = NewEventHandlerUPP(CarbonEventHandlerProc);
 
-    InstallEventHandler(GetApplicationEventTarget(),
-            NewEventHandlerUPP(AppEventHandlerProc),
-            GetEventTypeCount(inAppEventTypes),
-            inAppEventTypes, (void *) interp, 
-            &ApplicationCarbonEventHandler);
-    
+    InstallEventHandler(GetEventDispatcherTarget(), handler,
+            GetEventTypeCount(dispatcherEventTypes), dispatcherEventTypes,
+            (void *) interp, NULL);
+    InstallEventHandler(GetApplicationEventTarget(), handler,
+            GetEventTypeCount(applicationEventTypes), applicationEventTypes,
+            (void *) interp, NULL);
+
+#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+    _TraceEventByName(CFSTR("kEventMouseDown"));
+    _TraceEventByName(CFSTR("kEventMouseUp"));
+    _TraceEventByName(CFSTR("kEventMouseMoved"));
+    _TraceEventByName(CFSTR("kEventMouseDragged"));
+    _TraceEventByName(CFSTR("kEventMouseWheelMoved"));
+    _TraceEventByName(CFSTR("kEventWindowUpdate"));
+    _TraceEventByName(CFSTR("kEventWindowActivated"));
+    _TraceEventByName(CFSTR("kEventWindowDeactivated"));
+    _TraceEventByName(CFSTR("kEventRawKeyDown"));
+    _TraceEventByName(CFSTR("kEventRawKeyRepeat"));
+    _TraceEventByName(CFSTR("kEventRawKeyUp"));
+    _TraceEventByName(CFSTR("kEventRawKeyModifiersChanged"));
+    _TraceEventByName(CFSTR("kEventRawKeyRepeat"));
+    _TraceEventByName(CFSTR("kEventAppActivated"));
+    _TraceEventByName(CFSTR("kEventAppDeactivated"));
+    _TraceEventByName(CFSTR("kEventAppQuit"));
+    _TraceEventByName(CFSTR("kEventAppleEvent"));
+    _TraceEventByName(CFSTR("kEventWindowExpanded"));
+    _TraceEventByName(CFSTR("kEventAppHidden"));
+    _TraceEventByName(CFSTR("kEventAppShown"));
+#endif /* TK_MAC_DEBUG_CARBON_EVENTS */
 }
 

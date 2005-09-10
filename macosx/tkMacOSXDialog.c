@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.16 2005/08/23 22:10:57 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.17 2005/09/10 14:53:20 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -467,9 +467,9 @@ Tk_GetSaveFileObjCmd(
 		if (choiceLen &&
 			HandleInitialDirectory(interp, NULL, choice, &dirRef, 
 				NULL, &initialDesc) != TCL_OK) {
-                    result = TCL_ERROR;
-                    goto end;
-                }
+		    result = TCL_ERROR;
+		    goto end;
+		}
                 break;
             case SAVE_INITFILE:
                 initialFile = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -496,7 +496,7 @@ Tk_GetSaveFileObjCmd(
                 break;
         }
     }
-         
+
     TkInitFileFilters(&ofd.fl);
     ofd.usePopup = 0;
 
@@ -507,7 +507,7 @@ Tk_GetSaveFileObjCmd(
         title, message, false, SAVE_FILE);
 
     end:
-    
+
     AEDisposeDesc(&initialDesc);
     if (title != NULL) {
         CFRelease(title);
@@ -515,7 +515,7 @@ Tk_GetSaveFileObjCmd(
     if (message != NULL) {
         CFRelease(message);
     }
-    
+
     return result;
 }
 
@@ -817,21 +817,27 @@ NavServicesGetFile(
             ofdPtr,
             &dialogRef);
         if (err != noErr) {
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavCreateGetFileDialog failed, %d\n", err );
+#endif
             dialogRef = NULL;
         }
     } else if (isOpen == SAVE_FILE) {
         err = NavCreatePutFileDialog(&diagOptions, 'TEXT', 'WIsH', 
                 openFileEventUPP, NULL, &dialogRef);
         if (err!=noErr){
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavCreatePutFileDialog failed, %d\n", err );
+#endif
             dialogRef = NULL;
         }
     } else if (isOpen == CHOOSE_FOLDER) {
         err = NavCreateChooseFolderDialog(&diagOptions, openFileEventUPP, 
                 openFileFilterUPP, NULL, &dialogRef);
         if (err!=noErr){
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavCreateChooseFolderDialog failed, %d\n", err );
+#endif
             dialogRef = NULL;
         }
     }
@@ -846,10 +852,14 @@ NavServicesGetFile(
         }
         
         if ((err = NavDialogRun(dialogRef)) != noErr ){
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavDialogRun failed, %d\n", err );
+#endif
         } else {
             if ((err = NavDialogGetReply(dialogRef, &theReply)) != noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"NavGetReply failed, %d\n", err );
+#endif
             }
         }
     }
@@ -884,10 +894,14 @@ NavServicesGetFile(
                 if (err == noErr) {
                     if ((err = AEGetDescData(&resultDesc, &fsRef, sizeof(fsRef))) 
                             != noErr ) {
+#ifdef TK_MAC_DEBUG
                         fprintf(stderr,"AEGetDescData failed %d\n", err );
+#endif
                     } else {
                         if ((err = FSRefMakePath(&fsRef, (unsigned char*) pathPtr, 1024))) {
+#ifdef TK_MAC_DEBUG
                             fprintf(stderr,"FSRefMakePath failed, %d\n", err );
+#endif
                         } else {
                             if (isOpen == SAVE_FILE) {
                                 CFStringRef saveNameRef;
@@ -900,13 +914,19 @@ NavServicesGetFile(
                                             strcat(pathPtr, saveName);
                                             pathValid = 1;
                                         } else {
+#ifdef TK_MAC_DEBUG
                                             fprintf(stderr, "Path name too long\n");                                        
+#endif
                                         }
                                     } else {
+#ifdef TK_MAC_DEBUG
                                         fprintf(stderr, "CFStringGetCString failed\n");
+#endif
                                     }
                                 } else {
+#ifdef TK_MAC_DEBUG
                                     fprintf(stderr, "NavDialogGetSaveFileName failed\n");
+#endif
                                 }
                             } else {
                                 pathValid = 1;

@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.10 2005/08/09 07:39:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.11 2005/09/10 14:53:21 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -135,7 +135,8 @@ static int KeycodeToUnicodeViaKCHRResource(
  *----------------------------------------------------------------------
  */
 
-int TkMacOSXProcessKeyboardEvent(
+MODULE_SCOPE int
+TkMacOSXProcessKeyboardEvent(
         TkMacOSXEvent * eventPtr, 
         MacEventStatus * statusPtr)
 {
@@ -201,7 +202,9 @@ int TkMacOSXProcessKeyboardEvent(
             sizeof(keyEventData.ch), NULL,
             &keyEventData.ch);
     if (status != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf (stderr, "Failed to retrieve KeyMacCharCodes\n");
+#endif
         statusPtr->err = 1;
         return false;
     } 
@@ -211,7 +214,9 @@ int TkMacOSXProcessKeyboardEvent(
             sizeof(keyEventData.keyCode), NULL,
             &keyEventData.keyCode);
     if (status != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf (stderr, "Failed to retrieve KeyCode\n");
+#endif
         statusPtr->err = 1;
         return false;
     }
@@ -221,7 +226,9 @@ int TkMacOSXProcessKeyboardEvent(
             sizeof(keyEventData.keyModifiers), NULL,
             &keyEventData.keyModifiers);
     if (status != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf (stderr, "Failed to retrieve KeyModifiers\n");
+#endif
         statusPtr->err = 1;
         return false;
     }
@@ -398,9 +405,11 @@ GenerateKeyEvent(
                     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
                     break;
                 default:
+#ifdef TK_MAC_DEBUG
                     fprintf (stderr,
                             "GenerateKeyEvent(): Invalid parameter eKind %d\n",
                             (int) eKind);
+#endif
                     return -1;
             } 
         }
@@ -950,10 +959,12 @@ KeycodeToUnicodeViaUnicodeResource(
             action = kUCKeyActionAutoKey;
             break;
         default:
+#ifdef TK_MAC_DEBUG
             fprintf (stderr,
                     "KeycodeToUnicodeViaUnicodeResource(): "
                     "Invalid parameter eKind %d\n",
                     (int) eKind);
+#endif
             return 0;
     }
 
@@ -978,7 +989,9 @@ KeycodeToUnicodeViaUnicodeResource(
     *deadKeyStatePtr = 0; 
 
     if (noErr != status) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"UCKeyTranslate failed: %d", (int) status);
+#endif
         actuallength = 0;
     }
 
@@ -1101,8 +1114,10 @@ KeycodeToUnicodeViaKCHRResource(
         cfString = CFStringCreateWithCStringNoCopy(
             NULL, macStr, encoding, kCFAllocatorNull);
         if (cfString == NULL) {
+#ifdef TK_MAC_DEBUG
             fprintf(stderr, "CFString: Can't convert with encoding %d\n",
                     (int) encoding);
+#endif
             return 0;
         }
 
@@ -1143,7 +1158,7 @@ KeycodeToUnicodeViaKCHRResource(
  *----------------------------------------------------------------------
  */
 
-int
+MODULE_SCOPE int
 TkMacOSXKeycodeToUnicode(
         UniChar * uniChars, int maxChars,
         EventKind eKind,

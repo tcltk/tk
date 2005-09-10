@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScale.c,v 1.5 2005/08/09 07:39:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScale.c,v 1.6 2005/09/10 14:53:21 das Exp $
  */
 
 #include "tkScale.h"
@@ -153,7 +153,9 @@ TkpDisplayScale(clientData)
     UInt16       numTicks;
     
 
+#ifdef TK_MAC_DEBUG
     fprintf(stderr,"TkpDisplayScale\n");
+#endif
     scalePtr->flags &= ~REDRAW_PENDING;
     if ((scalePtr->tkwin == NULL) || !Tk_IsMapped(scalePtr->tkwin)) {
 	goto done;
@@ -244,7 +246,9 @@ TkpDisplayScale(clientData)
 
     if (macScalePtr->scaleHandle == NULL) {
         
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"Initialising scale\n");
+#endif
 
         initialValue = scalePtr->value;
         if (scalePtr->orient == ORIENT_HORIZONTAL) {
@@ -323,7 +327,9 @@ TkpScaleElement(scalePtr, x, y)
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;        
+#ifdef TK_MAC_DEBUG
     fprintf(stderr,"TkpScaleElement\n");
+#endif
 
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(scalePtr->tkwin));
     GetGWorld(&saveWorld, &saveDevice);
@@ -341,7 +347,9 @@ TkpScaleElement(scalePtr, x, y)
     
     SetGWorld(saveWorld, saveDevice);
 
+#ifdef TK_MAC_DEBUG
     fprintf (stderr,"ScalePart %d, pos ( %d %d )\n", part, where.h, where.v );
+#endif
     
     switch (part) {
     	case inSlider:
@@ -396,7 +404,9 @@ MacScaleEventProc(clientData, eventPtr)
     GWorldPtr destPort;
     Window dummyWin;
 
+#ifdef TK_MAC_DEBUG
     fprintf(stderr,"MacScaleEventProc\n" );
+#endif
     /*
      * To call Macintosh control routines we must have the port
      * set to the window containing the control.  We will then test
@@ -410,7 +420,9 @@ MacScaleEventProc(clientData, eventPtr)
     TkMacOSXWinBounds((TkWindow *) macScalePtr->info.tkwin, &bounds);		
     where.h = eventPtr->xbutton.x + bounds.left;
     where.v = eventPtr->xbutton.y + bounds.top;
+#ifdef TK_MAC_DEBUG
     fprintf(stderr,"calling TestControl\n");
+#endif
     part = TestControl(macScalePtr->scaleHandle, where);
     if (part == 0) {
 	return;
@@ -461,7 +473,9 @@ ScaleActionProc(
     int value;
     TkScale *scalePtr = (TkScale *) GetControlReference(theControl);
 
+#ifdef TK_MAC_DEBUG
     fprintf(stderr,"ScaleActionProc\n");
+#endif
     value =  GetControlValue(theControl);
     TkScaleSetValue(scalePtr, value, 1, 1);
     Tcl_Preserve((ClientData) scalePtr);

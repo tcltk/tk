@@ -1,3 +1,59 @@
+2005-09-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): check if
+	process is in front on MouseDown, otherwise request process activation
+	from BringWindowForward() via new isFrontProcess param.
+
+	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents): register our
+	event handler on the dispatcher target for all carbon events of interest
+	to TkAqua; this replaces event processing directly from the event queue
+	and thus allows to capture events that are syntesized by Carbon and sent
+	directly to the dispatcher and not to the event queue.
+
+	* macosx/tkMacOSXEvent.c: remove TkMacOSXCountAndProcessMacEvents(),
+	rename ReceiveAndProcessEvent() to TkMacOSXReceiveAndProcessEvent().
+	(TkMacOSXReceiveAndProcessEvent): remove tk event processing before
+	sending events to the dispatcher, all events of interest are now
+	processed in our dispatcher target event handler.
+
+	* macosx/tkMacOSXNotify.c (CarbonEventsCheckProc): dispatch events
+	directly via TkMacOSXReceiveAndProcessEvent(), but dispatch no more than
+	four carbon events at one time to avoid starving other event sources.
+
+	* macosx/tkMacOSXEvent.c: formatting cleanup, move XSync() to XStubs,
+	* macosx/tkMacOSXEvent.h: removed obsolete kEventClassWish handling.
+	* macosx/tkMacOSXXStubs.c
+
+	* macosx/tkMacOSXEvent.h: declare macosx internal procs as MODULE_SCOPE.
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXWindowEvent.c:
+
+	* macosx/tkMacOSXButton.c: conditionalize all debug message printing to
+	* macosx/tkMacOSXCursor.c: stderr via TK_MAC_DEBUG define.
+	* macosx/tkMacOSXDebug.c:
+	* macosx/tkMacOSXDebug.h:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c: 
+
+	* unix/configure.in: define TK_MAC_DEBUG on aqua when symbols enabled.
+	* unix/configure: autoconf-2.59
+	* unix/tkConfig.h.in: autoheader-2.59
+
+	* library/listbox.tcl: synced aqua MouseWheel bindings with
+	* library/scrlbar.tcl: core-8-4-branch.
+	* library/text.tcl: 
+
+	* xlib/xcolors.c: fixed warning
+
 2005-08-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/Makefile.in (html): reverted/amended changes of 2005-08-23
