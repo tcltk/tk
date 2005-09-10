@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.9 2005/08/09 07:40:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.10 2005/09/10 14:54:17 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -576,7 +576,9 @@ TkpNewMenu(
         menuDefSpec.defType = kMenuDefProcPtr;
         menuDefSpec.u.defProc = MenuDefProc;
         if ((err = SetMenuDefinition(macMenuHdl, &menuDefSpec)) != noErr) {
+#ifdef TK_MAC_DEBUG
             fprintf(stderr, "SetMenuDefinition failed %d\n", err );
+#endif
         }
     }
     menuPtr->platformData = (TkMenuPlatformData) ckalloc(sizeof(MacMenu));
@@ -3458,7 +3460,9 @@ DrawMenuEntryLabel(
             
             GetThemeFont (kThemeMenuItemFont, smSystemScript, fontName, &fontSize, &fontStyle);
             if ((err = ATSUCreateStyle(&style)) != noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"ATSUCreateStyle failed, %d\n", err);
+#endif
                 return;
             }
             fixedSize = fontSize<<16;
@@ -3467,7 +3471,9 @@ DrawMenuEntryLabel(
             valuePtr = &fixedSize;
 	    err = ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr);
             if (err != noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"ATSUSetAttributes failed,%d\n", err );
+#endif
             }
 
 	    GetFNum(fontName, &iFONDNumber);
@@ -3477,7 +3483,9 @@ DrawMenuEntryLabel(
             valuePtr = &fontID;
 	    err = ATSUSetAttributes(style, 1, &tag, &valueSize, &valuePtr);
             if (err != noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"ATSUSetAttributes failed,%d\n", err );
+#endif
             }
 
 #endif
@@ -3489,13 +3497,17 @@ DrawMenuEntryLabel(
             stringRef = CFStringCreateWithCString(NULL, Tcl_DStringValue(&itemTextDString), 
 						  kCFStringEncodingUTF8);
             if (!stringRef) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"CFStringCreateWithCString failed\n");
+#endif
             }
 	    err = ATSUCreateTextLayoutWithTextPtr(CFStringGetCharactersPtr(stringRef), 
                     0, length, length,
 		    1, &runLengths, &style, &textLayout)
             if (err != noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"ATSUCreateTextLayoutWithTextPtr failed, %d\n", err);
+#endif
                 return;
             }
 #endif
@@ -4050,7 +4062,9 @@ HandleMenuHiliteMsg (MenuRef menu,
     
     err = GetMenuTrackingData(menu, mtdPtr);
     if (err !=noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"GetMenuTrackingData failed : %d\n", err );
+#endif
         return;
     }
     

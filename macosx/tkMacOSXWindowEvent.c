@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.3 2005/08/09 07:40:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.4 2005/09/10 14:54:18 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -122,10 +122,7 @@ TkMacOSXProcessApplicationEvent(
             HideFloatingWindows();
             break;
         case kEventAppQuit:
-        case kEventAppLaunchNotification:
-        case kEventAppLaunched:
-        case kEventAppTerminated:
-        case kEventAppFrontSwitched:
+            statusPtr->stopProcessing = 1;
             break;
         case kEventAppHidden:
         /*
@@ -202,7 +199,9 @@ TkMacOSXProcessWindowEvent(
             sizeof(whichWindow), NULL,
             &whichWindow);
     if (status != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf ( stderr, "TkMacOSXHandleWindowEvent:Failed to retrieve window" );
+#endif
         return 0;
     }
     

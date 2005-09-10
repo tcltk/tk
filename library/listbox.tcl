@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.13.2.2 2004/02/17 07:17:17 das Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.13.2.3 2005/09/10 14:54:17 das Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -175,9 +175,9 @@ bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
 
-# The MouseWheel will typically only fire on Windows.  However,
-# someone could use the "event generate" command to produce one
-# on other platforms.
+# The MouseWheel will typically only fire on Windows and Mac OS X.
+# However, someone could use the "event generate" command to produce
+# one on other platforms.
 
 if {[string equal [tk windowingsystem] "classic"]
 	|| [string equal [tk windowingsystem] "aqua"]} {

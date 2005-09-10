@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.2.2.2 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.2.2.3 2005/09/10 14:54:17 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -214,7 +214,9 @@ TkpDisplayMenuButton(
      }
      if (!mbPtr->userPane) {
          if (MenuButtonInitControl(mbPtr,&paneRect,&cntrRect ) ) {
+#ifdef TK_MAC_DEBUG
              fprintf(stderr,"Init Control failed\n" );
+#endif
              return;
          }
      }
@@ -248,7 +250,9 @@ TkpDisplayMenuButton(
             if (hasImageOrBitmap) {
 	      err = SetControlFontStyle(mbPtr->control,&titleParams.style);
                 if (err !=noErr) {
+#ifdef TK_MAC_DEBUG
                     fprintf(stderr,"SetControlFontStyle failed %d\n", err);
+#endif
                     return;
                 }
             }
@@ -268,7 +272,9 @@ TkpDisplayMenuButton(
         /* Set the flag to circumvent clipping and bounds problems with OS 10.0.4 */
         tkPictureIsOpen = 1;
         if (!(mbPtr->bevelButtonContent.u.picture = OpenCPicture(&mbPtr->picParams)) ) {
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"OpenCPicture failed\n");
+#endif
         }
         /*
          * TO DO - There is one case where XCopyPlane calls CopyDeepMask,
@@ -290,7 +296,9 @@ TkpDisplayMenuButton(
                     sizeof(ControlButtonContentInfo),
 			   (char *) &mbPtr->bevelButtonContent);
         if (err != noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"SetControlData BevelButtonContent failed, %d\n", err );
+#endif
         }
         switch (butPtr->anchor) {
             case TK_ANCHOR_N:
@@ -327,7 +335,9 @@ TkpDisplayMenuButton(
                 sizeof(ControlButtonGraphicAlignment),
 		(char *) &theAlignment);
         if (err != noErr ) {
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"SetControlData BevelButtonGraphicAlign failed, %d\n", err );
+#endif
         }
     }
     if (butPtr->flags & GOT_FOCUS) {
@@ -628,12 +638,16 @@ MenuButtonInitControl (
             procID,
             controlReference );
     if (!mbPtr->userPane) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"Failed to create user pane control\n");
+#endif
         return 1;
     }
     status = EmbedControl(mbPtr->userPane,rootControl);
     if (status != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"Failed to embed user pane control %d\n", status);
+#endif
         return 1;
     }
     SetUserPaneSetUpSpecialBackgroundProc(mbPtr->userPane,
@@ -652,12 +666,16 @@ MenuButtonInitControl (
         mbPtr->params.procID,
         controlReference );
     if (!mbPtr->control) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"failed to create control of type %d : line %d\n",mbPtr->params.procID, __LINE__);
+#endif
         return 1;
     }
     err = EmbedControl(mbPtr->control,mbPtr->userPane);
     if (err != noErr ) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"failed to embed control of type %d,%d\n",procID, err);
+#endif
         return 1;
     }
     if (mbPtr->params.isBevel) {
@@ -669,7 +687,9 @@ MenuButtonInitControl (
         if (mbPtr->titleParams.len) {
 	  err = SetControlFontStyle(mbPtr->control,&mbPtr->titleParams.style);
             if (err !=noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"SetControlFontStyle failed %d\n", err);
+#endif
                 return 1;
              }
         }

@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.6.2.7 2005/08/09 07:40:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.6.2.8 2005/09/10 14:54:17 das Exp $
  */
 
 #include "tkInt.h"
@@ -82,7 +82,7 @@ static int gEatButtonUp = 0;	   /* 1 if we need to eat the next * up event */
  * Declarations of functions used only in this file.
  */
 
-static void BringWindowForward _ANSI_ARGS_((WindowRef wRef));
+static void BringWindowForward(WindowRef wRef, Boolean isFrontProcess);
 static int GeneratePollingEvents(MouseEventData * medPtr);
 static int GenerateMouseWheelEvent(MouseEventData * medPtr);
 static int GenerateButtonEvent(MouseEventData * medPtr);
@@ -201,8 +201,10 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		typeLongInteger, NULL,
 		sizeof(long), NULL, &medPtr->delta);
 	if (status != noErr ) {
+#ifdef TK_MAC_DEBUG
 	     fprintf (stderr,
-		 "Failed to retrieve mouse wheel delta, %d\n", (int)status);
+		 "Failed to retrieve mouse wheel delta, %d\n", (int) status);
+#endif
 	     statusPtr->err = 1;
 	     return false;
 	 }
@@ -231,9 +233,18 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	 * the corresponding mouse-up to be reported to the application
 	 * or else it will mess up some Tk scripts.
 	 */
-	 
+
+	ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
+	Boolean		    isFrontProcess = true;
+
+	status = GetFrontProcess(&frontPsn);
+	if (status == noErr) {
+	    SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
+	}
+
 	if (!(TkpIsWindowFloating(medPtr->whichWin))
-		&& (medPtr->whichWin != medPtr->activeNonFloating)) {
+		&& (medPtr->whichWin != medPtr->activeNonFloating
+		|| !isFrontProcess)) {
 	    Tk_Window grabWin = TkMacOSXGetCapture();
 	    if ((grabWin == NULL)) {
 		int grabState = TkGrabState((TkWindow*)tkwin);
@@ -241,7 +252,9 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		    /* Now we want to set the focus to the local grabWin */
 		    TkMacOSXSetEatButtonUp(true);
 		    grabWin = (Tk_Window) (((TkWindow*)tkwin)->dispPtr->grabWinPtr);
-		    BringWindowForward(GetWindowFromPort(TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)));
+		    BringWindowForward(GetWindowFromPort(
+		            TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)),
+		            isFrontProcess);
 		    statusPtr->stopProcessing = 1;
 		    return false;
 		}
@@ -252,7 +265,9 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		grb = (TkWindow *)grabWin;
 		/* Now we want to set the focus to the global grabWin */
 		TkMacOSXSetEatButtonUp(true);
-		BringWindowForward(GetWindowFromPort(TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)));
+		BringWindowForward(GetWindowFromPort(
+			TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)),
+			isFrontProcess);
 		statusPtr->stopProcessing = 1;
 		return false;
 	    }
@@ -265,13 +280,12 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
                 return result;
             } else {
                 TkMacOSXSetEatButtonUp(true);
-                BringWindowForward(medPtr->whichWin);
+                BringWindowForward(medPtr->whichWin, isFrontProcess);
                 return false;
             }
 	}
     }
 
-    
     if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
         return result;
     }
@@ -488,32 +502,17 @@ GeneratePollingEvents(MouseEventData * medPtr)
  */
 
 static void
-BringWindowForward(WindowRef wRef)
+BringWindowForward(WindowRef wRef, Boolean isFrontProcess)
 {
-    do {
-	ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
-	Boolean		    flag;
-	int		    err;
-	
-	err = GetFrontProcess(&frontPsn);
-	if (err != noErr) {
-	    fprintf(stderr, "GetFrontProcess failed, %d\n", err);
-	    break;
+    if (!isFrontProcess) {
+	ProcessSerialNumber ourPsn = {0, kCurrentProcess};
+	OSStatus status = SetFrontProcess(&ourPsn);
+	if (status != noErr) {
+#ifdef TK_MAC_DEBUG
+	    fprintf(stderr,"SetFrontProcess failed, %d\n", (int) status);
+#endif
 	}
-	err = SameProcess(&frontPsn, &ourPsn, &flag);
-	if (err != noErr) {
-	    fprintf(stderr, "SameProcess failed, %d\n", err);
-	    break;
-	} else {
-	    if (!flag) {
-		err = SetFrontProcess(&ourPsn);
-		if (err != noErr) {
-		    fprintf(stderr,"SetFrontProcess failed,%d\n", err);
-		    break;
-		}
-	    }
-	}
-    } while (0);
+    }
     
     if (!TkpIsWindowFloating(wRef)) {
 	if (IsValidWindowPtr(wRef))

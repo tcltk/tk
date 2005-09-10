@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.10 2005/08/22 11:55:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.11 2005/09/10 14:54:17 das Exp $
  */
 
 #include "tkButton.h"
@@ -833,12 +833,16 @@ TkMacOSXInitControl (
         controlReference );
         
     if (!mbPtr->userPane) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"Failed to create user pane control\n");
+#endif
         return 1;
     }
     
     if ((status = EmbedControl(mbPtr->userPane,rootControl)) != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"Failed to embed user pane control %d\n", status);
+#endif
         return 1;
     }
     
@@ -857,12 +861,16 @@ TkMacOSXInitControl (
         controlReference );
         
     if (!mbPtr->control) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"failed to create control of type %d\n",procID);
+#endif
         return 1;
     }
     
     if (EmbedControl(mbPtr->control,mbPtr->userPane) != noErr ) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"failed to embed control of type %d\n",procID);
+#endif
         return 1;
     }
     
@@ -985,7 +993,9 @@ TkMacOSXDrawControl(
             TkMacOSXInitControlFontStyle(font, &fontStyle);
             if (bcmp(&mbPtr->fontStyle, &fontStyle, sizeof(fontStyle)) ) {
                 if (SetControlFontStyle(mbPtr->control, &fontStyle) != noErr) {
+#ifdef TK_MAC_DEBUG
                     fprintf(stderr,"SetControlFontStyle failed\n");
+#endif
                 }
                 bcopy(&fontStyle, &mbPtr->fontStyle, 
                         sizeof(fontStyle));
@@ -1113,7 +1123,9 @@ SetupBevelButton(
      
     if (!(mbPtr->bevelButtonContent.u.picture 
             = OpenCPicture(&mbPtr->picParams)) ) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"OpenCPicture failed\n");
+#endif
     }
     tkPictureIsOpen = 1;
     
@@ -1142,8 +1154,10 @@ SetupBevelButton(
             kControlBevelButtonContentTag,
             sizeof(ControlButtonContentInfo),
             (char *) &mbPtr->bevelButtonContent)) != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,
                 "SetControlData BevelButtonContent failed, %d\n", err );
+#endif
     }
             
     if (butPtr->anchor == TK_ANCHOR_N) {
@@ -1170,8 +1184,10 @@ SetupBevelButton(
             kControlBevelButtonGraphicAlignTag,
             sizeof(ControlButtonGraphicAlignment),
             (char *) &theAlignment)) != noErr) {
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,
                 "SetControlData BevelButtonGraphicAlign failed, %d\n", err );
+#endif
     }
 
     if (butPtr->compound != COMPOUND_NONE) {
@@ -1190,8 +1206,10 @@ SetupBevelButton(
                 kControlBevelButtonTextPlaceTag,
                 sizeof(ControlButtonTextPlacement),
                 (char *) &thePlacement)) != noErr) {
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,
                     "SetControlData BevelButtonTextPlace failed, %d\n", err );
+#endif
         }
     }
 }

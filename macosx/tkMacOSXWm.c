@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.12 2005/08/09 07:40:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.13 2005/09/10 14:54:18 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -5180,8 +5180,10 @@ TkMacOSXUnregisterMacWindow(
     }
     entryPtr = Tcl_FindHashEntry(&windowTable,(char *) macWinPtr);
     if (!entryPtr) {
+#ifdef TK_MAC_DEBUG
           fprintf(stderr,"Unregister:failed to find window %08x\n", 
                  (int) macWinPtr );
+#endif
     }
     else {
       Tcl_DeleteHashEntry(entryPtr);

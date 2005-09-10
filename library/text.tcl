@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.24.2.6 2005/05/13 13:48:21 vincentdarley Exp $
+# RCS: @(#) $Id: text.tcl,v 1.24.2.7 2005/09/10 14:54:17 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -454,9 +454,9 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows.  However,
-# someone could use the "event generate" command to produce one
-# on other platforms.
+# The MouseWheel will typically only fire on Windows and MacOS X.
+# However, someone could use the "event generate" command to produce
+# one on other platforms.
 
 if {[string equal [tk windowingsystem] "classic"]
 	|| [string equal [tk windowingsystem] "aqua"]} {

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.7 2005/08/09 07:40:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.8 2005/09/10 14:54:18 das Exp $
  */
 
 #include "tkInt.h"
@@ -706,6 +706,14 @@ Tk_FreeXId (
     XID xid)
 {
     /* no-op function needed for stubs implementation. */
+}
+
+int
+XSync (Display *display, Bool flag)
+{
+    TkMacOSXFlushWindows();
+    display->request++;
+    return 0;
 }
 
 /*
