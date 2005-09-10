@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.7 2005/08/23 22:08:27 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.8 2005/09/10 14:54:17 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -19,10 +19,10 @@
 #include "tkFileFilter.h"
 
 #ifndef StrLength
-#define StrLength(s)                 (*((unsigned char *) (s)))
+#define StrLength(s)	(*((unsigned char *) (s)))
 #endif
 #ifndef StrBody
-#define StrBody(s)                ((char *) (s) + 1)
+#define StrBody(s)	((char *) (s) + 1)
 #endif
 
 /*
@@ -47,14 +47,12 @@
  * information about the file dialog and the file filters.
  */
 typedef struct _OpenFileData {
-    FileFilterList fl;                        /* List of file filters. */
-    SInt16 curType;                        /* The filetype currently being
-                                         * listed. */
-    short popupItem;                        /* Item number of the popup in the
-                                         * dialog. */
-    int usePopup;                        /* True if we show the popup menu (this
-                                             * is an open operation and the
-                                         * -filetypes option is set). */
+    FileFilterList fl;		/* List of file filters. */
+    SInt16 curType;		/* The filetype currently being listed. */
+    short popupItem;		/* Item number of the popup in the dialog. */
+    int usePopup;		/* True if we show the popup menu (this is
+				 * an open operation and the -filetypes
+				 * option is set). */
 } OpenFileData;
 
 
@@ -755,24 +753,24 @@ NavServicesGetFile(
         diagOptions.optionFlags += kNavAllowMultipleFiles;
     }
     diagOptions.modality = kWindowModalityAppModal;
-            
+
     if (ofdPtr != NULL && ofdPtr->usePopup) {
         FileFilter *filterPtr;
-        
+
         filterPtr = ofdPtr->fl.filters;
         if (filterPtr == NULL) {
             ofdPtr->usePopup = 0;
         }
     }
-    
-    if (ofdPtr != NULL && ofdPtr->usePopup) {    
+
+    if (ofdPtr != NULL && ofdPtr->usePopup) {
         FileFilter *filterPtr;
         int index = 0;
         ofdPtr->curType = 0;
-        
+
         menuItemNames = (CFStringRef *)ckalloc(ofdPtr->fl.numFilters 
             * sizeof(CFStringRef));
-        
+
         for (filterPtr = ofdPtr->fl.filters; filterPtr != NULL; 
                 filterPtr = filterPtr->next, index++) {
             menuItemNames[index] = CFStringCreateWithCString(NULL, 
@@ -780,7 +778,7 @@ NavServicesGetFile(
         }
         diagOptions.popupExtension = CFArrayCreate(NULL, 
                 (const void **) menuItemNames, ofdPtr->fl.numFilters, NULL);
-    } else {        
+    } else {
         diagOptions.optionFlags += kNavNoTypePopup; 
         diagOptions.popupExtension = NULL;
     }
@@ -820,21 +818,27 @@ NavServicesGetFile(
             ofdPtr,
             &dialogRef);
         if (err != noErr) {
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavCreateGetFileDialog failed, %d\n", err );
+#endif
             dialogRef = NULL;
         }
     } else if (isOpen == SAVE_FILE) {
         err = NavCreatePutFileDialog(&diagOptions, 'TEXT', 'WIsH', 
                 openFileEventUPP, NULL, &dialogRef);
         if (err!=noErr){
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavCreatePutFileDialog failed, %d\n", err );
+#endif
             dialogRef = NULL;
         }
     } else if (isOpen == CHOOSE_FOLDER) {
         err = NavCreateChooseFolderDialog(&diagOptions, openFileEventUPP, 
                 openFileFilterUPP, NULL, &dialogRef);
         if (err!=noErr){
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavCreateChooseFolderDialog failed, %d\n", err );
+#endif
             dialogRef = NULL;
         }
     }
@@ -849,10 +853,14 @@ NavServicesGetFile(
         }
         
         if ((err = NavDialogRun(dialogRef)) != noErr ){
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"NavDialogRun failed, %d\n", err );
+#endif
         } else {
             if ((err = NavDialogGetReply(dialogRef, &theReply)) != noErr) {
+#ifdef TK_MAC_DEBUG
                 fprintf(stderr,"NavGetReply failed, %d\n", err );
+#endif
             }
         }
     }
@@ -887,10 +895,14 @@ NavServicesGetFile(
                 if (err == noErr) {
                     if ((err = AEGetDescData(&resultDesc, &fsRef, sizeof(fsRef))) 
                             != noErr ) {
+#ifdef TK_MAC_DEBUG
                         fprintf(stderr,"AEGetDescData failed %d\n", err );
+#endif
                     } else {
                         if ((err = FSRefMakePath(&fsRef, (unsigned char*) pathPtr, 1024))) {
+#ifdef TK_MAC_DEBUG
                             fprintf(stderr,"FSRefMakePath failed, %d\n", err );
+#endif
                         } else {
                             if (isOpen == SAVE_FILE) {
                                 CFStringRef saveNameRef;
@@ -903,13 +915,19 @@ NavServicesGetFile(
                                             strcat(pathPtr, saveName);
                                             pathValid = 1;
                                         } else {
+#ifdef TK_MAC_DEBUG
                                             fprintf(stderr, "Path name too long\n");                                        
+#endif
                                         }
                                     } else {
+#ifdef TK_MAC_DEBUG
                                         fprintf(stderr, "CFStringGetCString failed\n");
+#endif
                                     }
                                 } else {
+#ifdef TK_MAC_DEBUG
                                     fprintf(stderr, "NavDialogGetSaveFileName failed\n");
+#endif
                                 }
                             } else {
                                 pathValid = 1;
