@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.6 2005/08/09 07:39:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.7 2005/09/10 14:53:20 das Exp $
  */
 
 #include <stdio.h>
@@ -18,32 +18,17 @@
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 
-/*
- * Enable this define to get debug printing for events not handled.
- */
-
- /*#define TK_MAC_DEBUG 1 */
-
 /*   
  * Forward declarations of procedures used in this file.
  */ 
 
 static int TkMacOSXProcessAppleEvent(
         TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr);
-
-static int ReceiveAndProcessEvent (void);
-
-/*   
- * Global data used in this file.
- */ 
-
-static EventTargetRef targetRef;
-
 
 /*
  *----------------------------------------------------------------------
  *
- * tkMacOSXFlushWindows --
+ * TkMacOSXFlushWindows --
  *
  *      This routine flushes all the Carbon windows of the application.  It
  *      is called by the setup procedure for the Tcl/Carbon event source.
@@ -57,8 +42,8 @@ static EventTargetRef targetRef;
  *----------------------------------------------------------------------
  */
 
-void
-tkMacOSXFlushWindows ()
+MODULE_SCOPE void
+TkMacOSXFlushWindows ()
 {
     WindowRef wRef = GetWindowList();
     
@@ -70,53 +55,7 @@ tkMacOSXFlushWindows ()
         wRef = GetNextWindow(wRef);
     }
 }
-
-
-
-int
-XSync (Display *display, Bool flag)
-{
-    tkMacOSXFlushWindows();
-    display->request++;
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXCountAndProcessMacEvents --
- *
- *      This routine receives any Carbon events that are in the queue and
- *      converts them to Tk events.  It is called by the event set-up and
- *      check routines
- *
- * Results:
- *      The number of events in the queue.
- *
- * Side effects:
- *      Tells the Window Manager to deliver events to the event queue of the
- *      current thread.  Receives any Carbon events on the queue and converts
- *      them to Tk events.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXCountAndProcessMacEvents()
-{
-    EventQueueRef qPtr;
-    int           eventCount;
-    qPtr = GetMainEventQueue();
-    eventCount = GetNumEventsInQueue(qPtr);
-    if (eventCount) {
-        int n, err;
-        for (n = 0, err = 0;n<eventCount && !err;n++) {
-            err = ReceiveAndProcessEvent();
-        }
-    }
-    return eventCount;
-}
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -143,17 +82,21 @@ TkMacOSXProcessAppleEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
         &eventRecord )) {
         err = TkMacOSXDoHLEvent(&eventRecord);
         if (err != noErr) {
+#ifdef TK_MAC_DEBUG
             char buf1 [ 256 ];
             char buf2 [ 256 ];
             fprintf(stderr,
                 "TkMacOSXDoHLEvent failed : %s,%s,%d\n",
                 CarbonEventToAscii(eventPtr->eventRef, buf1),
                 ClassicEventToAscii(&eventRecord,buf2), err);
+#endif
             statusPtr->err = 1;
         }
     } else {
-        statusPtr->err = 1;
+#ifdef TK_MAC_DEBUG
         fprintf(stderr,"ConvertEventRefToEventRecord failed\n");
+#endif
+        statusPtr->err = 1;
     }
     return 0;
 }
@@ -182,7 +125,7 @@ TkMacOSXProcessAppleEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
  *----------------------------------------------------------------------
  */
 
-int  
+MODULE_SCOPE int  
 TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
 {
     switch (eventPtr->eClass) {
@@ -201,14 +144,10 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
         case kEventClassAppleEvent:
             TkMacOSXProcessAppleEvent(eventPtr, statusPtr);
             break;  
-        case kEventClassWish: 
-            statusPtr->stopProcessing = 1;
-            break;  
         default:
 #ifdef TK_MAC_DEBUG
-            if (0)
             {
-                char buf [ 256 ];
+                char buf [256];
                 fprintf(stderr,
                     "Unrecognised event : %s\n",
                     CarbonEventToAscii(eventPtr->eventRef, buf));
@@ -222,7 +161,7 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
 /*
  *----------------------------------------------------------------------
  *
- * ReceiveAndProcessEvent --
+ * TkMacOSXReceiveAndProcessEvent --
  *
  *      This receives a carbon event and converts it to a Tk event
  *
@@ -237,46 +176,35 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
  *----------------------------------------------------------------------
  */
 
-static int
-ReceiveAndProcessEvent()
+MODULE_SCOPE OSStatus
+TkMacOSXReceiveAndProcessEvent()
 {
-    TkMacOSXEvent       macEvent;
-    MacEventStatus   eventStatus;
-    int              err;
-    char             buf [ 256 ];
+    static EventTargetRef targetRef = NULL;
+    EventRef eventRef;
+    OSStatus err;
 
     /*
      * This is a poll, since we have already counted the events coming
      * into this routine, and are guaranteed to have one waiting.
      */
      
-    err = ReceiveNextEvent(0, NULL, kEventDurationNoWait, 
-            true, &macEvent.eventRef);
-    if (err != noErr) {
-        return err;
-    } else {
-        macEvent.eClass = GetEventClass(macEvent.eventRef);
-        macEvent.eKind = GetEventKind(macEvent.eventRef);
-        macEvent.interp = NULL;
-        bzero(&eventStatus, sizeof(eventStatus));
-        TkMacOSXProcessEvent(&macEvent,&eventStatus);
-        if (!eventStatus.stopProcessing) {
-            if (!targetRef) {
-                targetRef = GetEventDispatcherTarget();
-            }
-            
-            err = SendEventToEventTarget(macEvent.eventRef,targetRef);
-            if (err != noErr
-#if !TK_MAC_DEBUG
-                    && err != eventNotHandledErr
+    err = ReceiveNextEvent(0, NULL, kEventDurationNoWait, true, &eventRef);
+    if (err == noErr) {
+        if (!targetRef) {
+            targetRef = GetEventDispatcherTarget();
+        }
+        err = SendEventToEventTarget(eventRef,targetRef);
+#ifdef TK_MAC_DEBUG
+        if (err != noErr && err != eventLoopTimedOutErr
+                && err != eventNotHandledErr
+        ) {
+            char buf [256];
+            fprintf(stderr,
+                    "RCNE SendEventToEventTarget (%s) failed, %d\n",
+                    CarbonEventToAscii(eventRef, buf), (int)err);
+        }
 #endif
-                ) {
-                fprintf(stderr,
-                        "RCNE SendEventToEventTarget (%s) failed, %d\n",
-                        CarbonEventToAscii(macEvent.eventRef, buf),err);
-            }
-         }
-         ReleaseEvent(macEvent.eventRef);
-         return 0;
-     }
+        ReleaseEvent(eventRef);
+    }
+    return err;
 }

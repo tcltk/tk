@@ -50,10 +50,12 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.4 2005/08/09 07:39:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.5 2005/09/10 14:53:20 das Exp $
  */
 
 #include "tkMacOSXDebug.h"
+
+#ifdef TK_MAC_DEBUG
 
 typedef struct {
  EventKind kind;
@@ -439,3 +441,5 @@ char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf)
     sprintf(buf, "Unknown mouse tracking result : %d", r);
     return buf;
 }
+
+#endif /* TK_MAC_DEBUG */

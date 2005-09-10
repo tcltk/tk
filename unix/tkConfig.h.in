@@ -168,23 +168,14 @@
 /* Is Tk built as a framework? */
 #undef TK_FRAMEWORK
 
-/* Should we use <a.out.h> when doing dynamic loading? */
-#undef USE_A_OUT_H
+/* Are TkAqua debug messages enabled? */
+#undef TK_MAC_DEBUG
 
 /* Do we need a special AIX hack for timezones? */
 #undef USE_DELTA_FOR_TZ
 
-/* Should we use <sys/exec_aout.h> when doing dynamic loading? */
-#undef USE_SYS_EXEC_AOUT_H
-
-/* Should we use <sys/exec.h> when doing dynamic loading? */
-#undef USE_SYS_EXEC_H
-
 /* Do we want to use the threaded memory allocator? */
 #undef USE_THREAD_ALLOC
-
-/* Use the generic thread storage subsystem? */
-#undef USE_THREAD_STORAGE
 
 /* Should we use vfork() instead of fork()? */
 #undef USE_VFORK
