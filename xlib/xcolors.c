@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xcolors.c,v 1.5 2002/08/31 06:12:31 das Exp $
+ * RCS: @(#) $Id: xcolors.c,v 1.6 2005/09/10 14:53:21 das Exp $
  */
 
 #include <tkInt.h>
@@ -820,7 +820,7 @@ FindColor(name, colorPtr)
     const char *name;
     XColor *colorPtr;
 {
-    int l, u, r, i;
+    int l, u, r, i = 0;
 
     /*
      * Count the number of elements in the color array if we haven't

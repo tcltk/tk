@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.5 2004/07/15 05:27:59 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.6 2005/09/10 14:53:20 das Exp $
  */
 
 #include "tkPort.h"
@@ -370,9 +370,9 @@ TkMacOSXInstallCursor(
         if (cursor) {
             SetCursor(*cursor);
         } else {
-            /*
+#ifdef TK_MAC_DEBUG
             fprintf(stderr,"Resize cursor failed, %d\n", ResError());
-             */
+#endif
         }
     } else if (macCursorPtr == NULL) {
         SetThemeCursor(kThemeArrowCursor);

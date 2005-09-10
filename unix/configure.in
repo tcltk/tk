@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.110 2005/08/23 18:25:34 mdejong Exp $
+# RCS: @(#) $Id: configure.in,v 1.111 2005/09/10 14:53:21 das Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -235,6 +235,9 @@ if test $tk_aqua = yes; then
     LIBS="$LIBS -framework Carbon -framework IOKit"
     CFLAGS="$CFLAGS -fpascal-strings"
     TK_WINDOWINGSYSTEM=AQUA
+    if test "${enable_symbols+set}" = set; then
+        AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])
+    fi
 else
     #--------------------------------------------------------------------
     #	Locate the X11 header files and the X11 library archive.  Try
