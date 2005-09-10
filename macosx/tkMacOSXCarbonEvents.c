@@ -53,7 +53,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.4 2005/09/10 14:53:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.5 2005/09/10 15:11:15 das Exp $
  */
 
 #include "tkInt.h"
@@ -66,6 +66,12 @@
 #define TK_MAC_DEBUG_CARBON_EVENTS
 #endif
 */
+
+#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+/* Carbon-internal event debugging routines (c.f. Technote 2124): */
+void _DebugPrintEvent(EventRef inEvent);
+void _TraceEventByName(CFStringRef eventName);
+#endif /* TK_MAC_DEBUG_CARBON_EVENTS */
 
 /* Declarations of functions used only in this file */
 static OSStatus CarbonEventHandlerProc (
