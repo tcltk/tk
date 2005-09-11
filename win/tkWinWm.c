@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.99 2005/04/07 20:14:42 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.100 2005/09/11 01:05:39 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2281,7 +2281,7 @@ UpdateWrapper(winPtr)
     if (childStateInfo) {
 	if (wmPtr->numTransients > 0) {
 	    /*
-	     * Reset all transient children for whom this is the master
+	     * Reset all alive transient children for whom this is the master
 	     */
 	    WmInfo *wmPtr2;
 
@@ -2289,7 +2289,8 @@ UpdateWrapper(winPtr)
 	    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
 		 wmPtr2 = wmPtr2->nextPtr) {
 		if (wmPtr2->masterPtr == winPtr) {
-		    if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
+		    if (  !(wmPtr2->flags & WM_NEVER_MAPPED) 
+			&& (wmPtr2->winPtr->flags & TK_ALREADY_DEAD)) {
 			UpdateWrapper(wmPtr2->winPtr);
 			TkpWmSetState(wmPtr2->winPtr, childStateInfo[state++]);
 		    }
