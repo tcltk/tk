@@ -1,3 +1,12 @@
+2005-09-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkOldConfig.c (GetCachedSpecs): Split out the code to
+	manipulate the cached writable specs so that it can be reused from
+	all the public Tk_Configure* functions.
+	(Tk_ConfigureInfo, Tk_ConfigureWidget, Tk_ConfigureValue): Use the
+	factored out code everywhere, so we always manipulate the cache
+	correctly. [Bug 1288128]
+
 2005-09-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): check if
