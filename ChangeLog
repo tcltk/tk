@@ -1,3 +1,12 @@
+2005-09-14  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkOldConfig.c (GetCachedSpecs): Split out the code to
+	manipulate the cached writable specs so that it can be reused from
+	all the public Tk_Configure* functions.
+	(Tk_ConfigureInfo, Tk_ConfigureWidget, Tk_ConfigureValue): Use the
+	factored out code everywhere, so we always manipulate the cache
+	correctly. [Bug 1288128]
+
 2005-09-13  Don Porter	<dgp@users.sourceforge.net>
 
 	* win/winMain.c (WishPanic):	Replaced TCL_VARARGS* macros with
