@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.17 2005/09/14 22:47:00 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.18 2005/09/14 22:51:09 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1065,7 +1065,7 @@ GetCachedSpecs(
 				/* Value to cache a copy of; it is also used
 				 * as a key into the cache. */
 {
-    Tk_ConfigSpec *specPtr, *cachedSpecs;
+    Tk_ConfigSpec *cachedSpecs;
     Tcl_HashTable *specCacheTablePtr;
     Tcl_HashEntry *entryPtr;
     int isNew;
@@ -1094,13 +1094,16 @@ GetCachedSpecs(
 	    &isNew);
     if (isNew) {
 	unsigned int entrySpace = sizeof(Tk_ConfigSpec);
+	const Tk_ConfigSpec *staticSpecPtr;
+	Tk_ConfigSpec *specPtr;
 
 	/*
 	 * OK, no working copy in this interpreter so copy. Need to work out
 	 * how much space to allocate first.
 	 */
 
-	for (specPtr=staticSpecs ; specPtr->type!=TK_CONFIG_END ; specPtr++) {
+	for (staticSpecPtr=staticSpecs; staticSpecPtr->type!=TK_CONFIG_END;
+		staticSpecPtr++) {
 	    entrySpace += sizeof(Tk_ConfigSpec);
 	}
 
