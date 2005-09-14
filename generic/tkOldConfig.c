@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.15 2005/08/13 20:47:46 chengyemao Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.16 2005/09/14 22:43:30 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -43,6 +43,8 @@ static char *		FormatConfigInfo(Tcl_Interp *interp, Tk_Window tkwin,
 static CONST char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_ConfigSpec *specPtr, char *widgRec,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
+static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
+			    const Tk_ConfigSpec *staticSpecs);
 static void		DeleteSpecCacheTable(ClientData clientData,
 			    Tcl_Interp *interp);
 
@@ -61,8 +63,9 @@ static void		DeleteSpecCacheTable(ClientData clientData,
  * Side effects:
  *	The fields of widgRec get filled in with information from argc/argv
  *	and the option database. Old information in widgRec's fields gets
- *	recycled. char* fields in the Tk_ConfigSpec* argument will be
- *	converted into Tk_Uid fields.
+ *	recycled. A copy of the spec-table is taken with (some of) the char*
+ *	fields converted into Tk_Uid fields; this copy will be released when
+ *	the interpreter terminates.
  *
  *--------------------------------------------------------------
  */
@@ -88,10 +91,6 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 				 * else they are not considered. */
     int hateFlags;		/* If a spec contains any bits here, it's not
 				 * considered. */
-    Tk_ConfigSpec *cachedSpecPtr;
-    Tcl_HashTable *specCacheTablePtr;
-    Tcl_HashEntry *entryPtr;
-    int isNew;
 
     if (tkwin == NULL) {
 	/*
@@ -111,62 +110,10 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
     }
 
     /*
-     * Pass zero: see if we've got a build of the config for this interpreter.
+     * Get the build of the config for this interpreter.
      */
 
-    specCacheTablePtr = (Tcl_HashTable *)
-	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
-    if (specCacheTablePtr == NULL) {
-	specCacheTablePtr = (Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
-	Tcl_InitHashTable(specCacheTablePtr, TCL_ONE_WORD_KEYS);
-	Tcl_SetAssocData(interp, "tkConfigSpec.threadTable",
-		DeleteSpecCacheTable, (ClientData) specCacheTablePtr);
-    }
-    entryPtr = Tcl_CreateHashEntry(specCacheTablePtr, (char *) specs, &isNew);
-    if (isNew) {
-	unsigned int entrySpace = sizeof(Tk_ConfigSpec);
-
-	/*
-	 * OK, no working copy in this interpreter so copy. Need to work out
-	 * how much space to allocate first.
-	 */
-
-	for (specPtr=specs ; specPtr->type != TK_CONFIG_END ; specPtr++) {
-	    entrySpace += sizeof(Tk_ConfigSpec);
-	}
-
-	/*
-	 * Now allocate our working copy's space and copy over the contents
-	 * from the master copy.
-	 */
-
-	cachedSpecPtr = (Tk_ConfigSpec *) ckalloc(entrySpace);
-	memcpy((void *) cachedSpecPtr, (void *) specs, entrySpace);
-	Tcl_SetHashValue(entryPtr, (ClientData) cachedSpecPtr);
-
-	/*
-	 * Finally, go through and replace database names, database classes
-	 * and default values with Tk_Uids. This is the bit that has to be
-	 * per-thread.
-	 */
-
-	for (specPtr=cachedSpecPtr; specPtr->type!=TK_CONFIG_END; specPtr++) {
-	    if (specPtr->argvName != NULL) {
-		if (specPtr->dbName != NULL) {
-		    specPtr->dbName = Tk_GetUid(specPtr->dbName);
-		}
-		if (specPtr->dbClass != NULL) {
-		    specPtr->dbClass = Tk_GetUid(specPtr->dbClass);
-		}
-		if (specPtr->defValue != NULL) {
-		    specPtr->defValue = Tk_GetUid(specPtr->defValue);
-		}
-	    }
-	    specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
-	}
-    } else {
-	cachedSpecPtr = (Tk_ConfigSpec *) Tcl_GetHashValue(entryPtr);
-    }
+    specs = GetCachedSpecs(interp, specs);
 
     /*
      * Pass one: scan through all of the arguments, processing those that
@@ -181,8 +128,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 	} else {
 	    arg = *argv;
 	}
-	specPtr = FindConfigSpec(interp, cachedSpecPtr, arg, needFlags,
-		hateFlags);
+	specPtr = FindConfigSpec(interp, specs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
 	}
@@ -221,7 +167,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
      */
 
     if (!(flags & TK_CONFIG_ARGV_ONLY)) {
-	for (specPtr=cachedSpecPtr; specPtr->type!=TK_CONFIG_END; specPtr++) {
+	for (specPtr=specs; specPtr->type!=TK_CONFIG_END; specPtr++) {
 	    if ((specPtr->specFlags & TK_CONFIG_OPTION_SPECIFIED)
 		    || (specPtr->argvName == NULL)
 		    || (specPtr->type == TK_CONFIG_SYNONYM)) {
@@ -666,9 +612,6 @@ Tk_ConfigureInfo(interp, tkwin, specs, widgRec, argvName, flags)
     int needFlags, hateFlags;
     char *list;
     char *leader = "{";
-    Tcl_HashTable *specCacheTablePtr;
-    Tcl_HashEntry *entryPtr;
-    Tk_ConfigSpec *cachedSpecPtr;
 
     needFlags = flags & ~(TK_CONFIG_USER_BIT - 1);
     if (Tk_Depth(tkwin) <= 1) {
@@ -678,13 +621,10 @@ Tk_ConfigureInfo(interp, tkwin, specs, widgRec, argvName, flags)
     }
 
     /*
-     * Pass zero: see if we've got a build of the config for this interpreter.
+     * Get the build of the config for this interpreter.
      */
 
-    specCacheTablePtr = (Tcl_HashTable *)
-	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
-    entryPtr = Tcl_FindHashEntry(specCacheTablePtr, (char *) specs);
-    cachedSpecPtr = (Tk_ConfigSpec *) Tcl_GetHashValue(entryPtr);
+    specs = GetCachedSpecs(interp, specs);
 
     /*
      * If information is only wanted for a single configuration spec, then
@@ -693,8 +633,7 @@ Tk_ConfigureInfo(interp, tkwin, specs, widgRec, argvName, flags)
 
     Tcl_SetResult(interp, (char *) NULL, TCL_STATIC);
     if (argvName != NULL) {
-	specPtr = FindConfigSpec(interp, cachedSpecPtr, argvName, needFlags,
-		hateFlags);
+	specPtr = FindConfigSpec(interp, specs, argvName, needFlags,hateFlags);
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
 	}
@@ -709,7 +648,7 @@ Tk_ConfigureInfo(interp, tkwin, specs, widgRec, argvName, flags)
      * information.
      */
 
-    for (specPtr = cachedSpecPtr; specPtr->type != TK_CONFIG_END; specPtr++) {
+    for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {
 	if ((argvName != NULL) && (specPtr->argvName != argvName)) {
 	    continue;
 	}
@@ -985,9 +924,6 @@ Tk_ConfigureValue(interp, tkwin, specs, widgRec, argvName, flags)
     Tcl_FreeProc *freeProc;
     CONST char *result;
     char buffer[200];
-    Tcl_HashTable *specCacheTablePtr;
-    Tcl_HashEntry *entryPtr;
-    Tk_ConfigSpec *cachedSpecPtr;
 
     needFlags = flags & ~(TK_CONFIG_USER_BIT - 1);
     if (Tk_Depth(tkwin) <= 1) {
@@ -996,13 +932,13 @@ Tk_ConfigureValue(interp, tkwin, specs, widgRec, argvName, flags)
 	hateFlags = TK_CONFIG_MONO_ONLY;
     }
 
-    specCacheTablePtr = (Tcl_HashTable *)
-	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
-    entryPtr = Tcl_FindHashEntry(specCacheTablePtr, (char *) specs);
-    cachedSpecPtr = (Tk_ConfigSpec *) Tcl_GetHashValue(entryPtr);
+    /*
+     * Get the build of the config for this interpreter.
+     */
 
-    specPtr = FindConfigSpec(interp, cachedSpecPtr, argvName, needFlags,
-	    hateFlags);
+    specs = GetCachedSpecs(interp, specs);
+
+    specPtr = FindConfigSpec(interp, specs, argvName, needFlags, hateFlags);
     if (specPtr == NULL) {
 	return TCL_ERROR;
     }
@@ -1032,6 +968,10 @@ Tk_ConfigureValue(interp, tkwin, specs, widgRec, argvName, flags)
  * Side effects:
  *	Any resource in widgRec that is controlled by a configuration option
  *	(e.g. a Tk_3DBorder or XColor) is freed in the appropriate fashion.
+ *
+ * Notes:
+ *	Since this is not looking anything up, this uses the static version of
+ *	the config specs.
  *
  *----------------------------------------------------------------------
  */
@@ -1098,6 +1038,112 @@ Tk_FreeOptions(specs, widgRec, display, needFlags)
 /*
  *--------------------------------------------------------------
  *
+ * GetCachedSpecs --
+ *
+ *	Returns a writable per-interpreter (and hence thread-local) copy of
+ *	the given spec-table with (some of) the char* fields converted into
+ *	Tk_Uid fields; this copy will be released when the interpreter
+ *	terminates (during AssocData cleanup).
+ *
+ * Results:
+ *	A pointer to the copied table.
+ *
+ * Notes:
+ *	The conversion to Tk_Uid is only done the first time, when the table
+ *	copy is taken. After that, the table is assumed to have Tk_Uids where
+ *	they are needed. The time of deletion of the caches isn't very
+ *	important unless you've got a lot of code that uses Tk_ConfigureWidget
+ *	(or *Info or *Value} when the interpreter is being deleted.
+ *
+ *--------------------------------------------------------------
+ */
+
+static Tk_ConfigSpec *
+GetCachedSpecs(
+    Tcl_Interp *interp,		/* Interpreter in which to store the cache. */
+    const Tk_ConfigSpec *staticSpecs)
+				/* Value to cache a copy of; it is also used
+				 * as a key into the cache. */
+{
+    Tk_ConfigSpec *specsPtr, *cachedSpecPtr;
+    Tcl_HashTable *specCacheTablePtr;
+    Tcl_HashEntry *entryPtr;
+    int isNew;
+
+    /*
+     * Get (or allocate if it doesn't exist) the hash table that the writable
+     * copies of the widget specs are stored in. In effect, this is
+     * self-initializing code.
+     */
+
+    specCacheTablePtr = (Tcl_HashTable *)
+	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
+    if (specCacheTablePtr == NULL) {
+	specCacheTablePtr = (Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
+	Tcl_InitHashTable(specCacheTablePtr, TCL_ONE_WORD_KEYS);
+	Tcl_SetAssocData(interp, "tkConfigSpec.threadTable",
+		DeleteSpecCacheTable, (ClientData) specCacheTablePtr);
+    }
+
+    /*
+     * Look up or create the hash entry that the constant specs are mapped to,
+     * which will have the writable specs as its associated value.
+     */
+
+    entryPtr = Tcl_CreateHashEntry(specCacheTablePtr, (char *) staticTable,
+	    &isNew);
+    if (isNew) {
+	unsigned int entrySpace = sizeof(Tk_ConfigSpec);
+
+	/*
+	 * OK, no working copy in this interpreter so copy. Need to work out
+	 * how much space to allocate first.
+	 */
+
+	for (specPtr=staticTable ; specPtr->type != TK_CONFIG_END ;
+		specPtr++) {
+	    entrySpace += sizeof(Tk_ConfigSpec);
+	}
+
+	/*
+	 * Now allocate our working copy's space and copy over the contents
+	 * from the master copy.
+	 */
+
+	cachedSpecPtr = (Tk_ConfigSpec *) ckalloc(entrySpace);
+	memcpy((void *) cachedSpecPtr, (void *) staticSpecs, entrySpace);
+	Tcl_SetHashValue(entryPtr, (ClientData) cachedSpecPtr);
+
+	/*
+	 * Finally, go through and replace database names, database classes
+	 * and default values with Tk_Uids. This is the bit that has to be
+	 * per-thread.
+	 */
+
+	for (specPtr=cachedSpecPtr; specPtr->type!=TK_CONFIG_END; specPtr++) {
+	    if (specPtr->argvName != NULL) {
+		if (specPtr->dbName != NULL) {
+		    specPtr->dbName = Tk_GetUid(specPtr->dbName);
+		}
+		if (specPtr->dbClass != NULL) {
+		    specPtr->dbClass = Tk_GetUid(specPtr->dbClass);
+		}
+		if (specPtr->defValue != NULL) {
+		    specPtr->defValue = Tk_GetUid(specPtr->defValue);
+		}
+	    }
+	    specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
+	}
+    } else {
+	cachedSpecPtr = (Tk_ConfigSpec *) Tcl_GetHashValue(entryPtr);
+    }
+
+    return cachedSpecPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * DeleteSpecCacheTable --
  *
  *	Delete the per-interpreter copy of all the Tk_ConfigSpec tables which
@@ -1107,15 +1153,15 @@ Tk_FreeOptions(specs, widgRec, display, needFlags)
  *	None
  *
  * Side effects:
- *	None
+ *	None (does *not* use any Tk API).
  *
  *--------------------------------------------------------------
  */
 
 static void
-DeleteSpecCacheTable(clientData, interp)
-    ClientData clientData;
-    Tcl_Interp *interp;
+DeleteSpecCacheTable(
+    ClientData clientData,
+    Tcl_Interp *interp)
 {
     Tcl_HashTable *tablePtr = (Tcl_HashTable *) clientData;
     Tcl_HashEntry *entryPtr;
