@@ -1,3 +1,10 @@
+2005-09-21  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkEvent.c (TkCreateThreadExitHandler, TkFinalizeThread)
+	(TkDeleteThreadExitHandler): New internal API (from Joe Mistachkin)
+	to allow Tk to finalize itself correctly in a multi-threaded
+	environment. [Bug 749908]
+
 2005-09-14  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkOldConfig.c (GetCachedSpecs): Split out the code to
