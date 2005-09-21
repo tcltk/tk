@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.23 2005/08/09 07:39:18 das Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.24 2005/09/21 10:56:32 dkf Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -123,7 +123,7 @@ EXTERN COLORREF		TkWinGetBorderPixels _ANSI_ARGS_((Tk_Window tkwin,
 #define TkWinGetDrawableDC_TCL_DECLARED
 /* 16 */
 EXTERN HDC		TkWinGetDrawableDC _ANSI_ARGS_((Display * display, 
-				Drawable d, TkWinDCState* state));
+				Drawable d, TkWinDCState * state));
 #endif
 #ifndef TkWinGetModifierState_TCL_DECLARED
 #define TkWinGetModifierState_TCL_DECLARED
@@ -156,7 +156,7 @@ EXTERN int		TkWinIndexOfColor _ANSI_ARGS_((XColor * colorPtr));
 #define TkWinReleaseDrawableDC_TCL_DECLARED
 /* 22 */
 EXTERN void		TkWinReleaseDrawableDC _ANSI_ARGS_((Drawable d, 
-				HDC hdc, TkWinDCState* state));
+				HDC hdc, TkWinDCState * state));
 #endif
 #ifndef TkWinResendEvent_TCL_DECLARED
 #define TkWinResendEvent_TCL_DECLARED
@@ -590,13 +590,13 @@ typedef struct TkIntPlatStubs {
     LRESULT (*tkWinEmbeddedEventProc) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)); /* 13 */
     void (*tkWinFillRect) _ANSI_ARGS_((HDC dc, int x, int y, int width, int height, int pixel)); /* 14 */
     COLORREF (*tkWinGetBorderPixels) _ANSI_ARGS_((Tk_Window tkwin, Tk_3DBorder border, int which)); /* 15 */
-    HDC (*tkWinGetDrawableDC) _ANSI_ARGS_((Display * display, Drawable d, TkWinDCState* state)); /* 16 */
+    HDC (*tkWinGetDrawableDC) _ANSI_ARGS_((Display * display, Drawable d, TkWinDCState * state)); /* 16 */
     int (*tkWinGetModifierState) _ANSI_ARGS_((void)); /* 17 */
     HPALETTE (*tkWinGetSystemPalette) _ANSI_ARGS_((void)); /* 18 */
     HWND (*tkWinGetWrapperWindow) _ANSI_ARGS_((Tk_Window tkwin)); /* 19 */
     int (*tkWinHandleMenuEvent) _ANSI_ARGS_((HWND * phwnd, UINT * pMessage, WPARAM * pwParam, LPARAM * plParam, LRESULT * plResult)); /* 20 */
     int (*tkWinIndexOfColor) _ANSI_ARGS_((XColor * colorPtr)); /* 21 */
-    void (*tkWinReleaseDrawableDC) _ANSI_ARGS_((Drawable d, HDC hdc, TkWinDCState* state)); /* 22 */
+    void (*tkWinReleaseDrawableDC) _ANSI_ARGS_((Drawable d, HDC hdc, TkWinDCState * state)); /* 22 */
     LRESULT (*tkWinResendEvent) _ANSI_ARGS_((WNDPROC wndproc, HWND hwnd, XEvent * eventPtr)); /* 23 */
     HPALETTE (*tkWinSelectPalette) _ANSI_ARGS_((HDC dc, Colormap colormap)); /* 24 */
     void (*tkWinSetMenu) _ANSI_ARGS_((Tk_Window tkwin, HMENU hMenu)); /* 25 */
