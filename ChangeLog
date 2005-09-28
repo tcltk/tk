@@ -1,3 +1,14 @@
+2005-09-28  Don Porter	<dgp@users.sourceforge.net>
+
+	* unix/tkUnixPort.h:	Disabled inclusion of the private Tcl header
+	* win/tkWinPort.h:	file tclInt.h.  Tk ought to have a tiny and
+	shrinking number of calls of private Tcl routines.  Each Tk source
+	file doing this should follow the convention in the macosx port and
+	have its own #include "tclInt.h".
+
+	* generic/tkEvent.c:	Disabled calls to private Tcl routine
+	TclInExit().  See comment in TkCreateExitHandler() for full rationale.
+
 2005-09-21  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* generic/tkEvent.c (TkCreateThreadExitHandler, TkFinalizeThread)
