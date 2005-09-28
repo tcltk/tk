@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.9 2002/10/19 02:10:20 hobbs Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.10 2005/09/28 18:31:57 dgp Exp $
  */
 
 #ifndef _WINPORT
@@ -128,8 +128,13 @@ struct timezone {
     int tz_dsttime;
 };
 
+/*
+ * Disabled inclusion of Tcl's private header in hope of discovering we
+ * no longer need it.
+ *
 #ifndef _TCLINT
 #include <tclInt.h>
 #endif
+ */
 
 #endif /* _WINPORT */
