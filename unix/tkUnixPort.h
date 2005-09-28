@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.9 2003/10/14 23:11:03 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.10 2005/09/28 18:31:57 dgp Exp $
  */
 
 #ifndef _UNIXPORT
@@ -218,10 +218,12 @@ extern int errno;
 /*
  * The following declaration is used to get access to a private Tcl interface
  * that is needed for portability reasons.
- */
+ *
+ * Disabled for now to determined whether we really still need this.
 
 #ifndef _TCLINT
 #include <tclInt.h>
 #endif
+ */
 
 #endif /* _UNIXPORT */
