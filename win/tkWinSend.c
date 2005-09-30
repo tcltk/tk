@@ -11,11 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.8 2003/12/16 21:57:57 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.9 2005/09/30 16:07:21 dgp Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
+#include "tclInt.h"		/* TCL_TSD_INIT */
 #include "tkWinSendCom.h"
 
 /* Should be defined in WTypes.h but mingw 1.0 is missing them */
