@@ -65,7 +65,7 @@ namespace eval ::tk {
     ::msgcat::mcset el "Select a file to source" \
                                         "\u0395\u03c0\u03b9\u03bb\u03ad\u03be\u03c4\u03b5 \u03b1\u03c1\u03c7\u03b5\u03af\u03bf \u03b3\u03b9\u03b1 \u03b5\u03ba\u03c4\u03ad\u03bb\u03b5\u03c3\u03b7"
     ::msgcat::mcset el "&Selection:"         "\u0395\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae:"
-    ::msgcat::mcset el "Skip Messages"      "\u0391\u03c0\u03bf\u03c6\u03c5\u03b3\u03ae \u03bc\u03c5\u03bd\u03b7\u03bc\u03ac\u03c4\u03c9\u03bd"
+    ::msgcat::mcset el "Skip Messages"      "\u0391\u03c0\u03bf\u03c6\u03c5\u03b3\u03ae\u03bc\u03b7\u03bd\u03c5\u03bc\u03ac\u03c4\u03c9\u03bd"
     ::msgcat::mcset el "Source..."          "\u0395\u03ba\u03c4\u03ad\u03bb\u03b5\u03c3\u03b7..."
     ::msgcat::mcset el "Tcl Scripts"        "Tcl Scripts"
     ::msgcat::mcset el "Tcl for Windows"    "Tcl \u03b3\u03b9\u03b1 Windows"
