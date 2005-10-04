@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.8 2005/08/09 07:39:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.9 2005/10/04 21:46:31 hobbs Exp $
  */
 
 #ifndef _TKMACINT
@@ -32,6 +32,14 @@
 #endif
 
 #include <Carbon/Carbon.h>
+
+/*
+ * Should be defined by configure, but some extensions may access
+ * this file without setting it.
+ */
+#ifndef MODULE_SCOPE
+#define MODULE_SCOPE __private_extern__
+#endif
 
 struct TkWindowPrivate {
     TkWindow *winPtr;     	/* Ptr to tk window or NULL if Pixmap */
