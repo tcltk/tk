@@ -1,3 +1,9 @@
+2005-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXInt.h: add MODULE_SCOPE definition check for
+	extension writers that access private headers on OS X and don't
+	define it in configure.
+
 2005-09-28  Don Porter	<dgp@users.sourceforge.net>
 
 	* unix/tkUnixPort.h:	Disabled inclusion of the private Tcl header
