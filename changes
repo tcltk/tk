@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.88 2005/06/04 20:53:17 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.89 2005/10/05 00:49:36 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6062,3 +6062,6 @@ display/resizing (south)
 Documentation improvements [1087842,1081527,1115907,etc.]
 
 --- Released 8.5a3, June 4, 2005 --- See ChangeLog for details ---
+
+2005-10-04 (bug fix)[1311734] Fixed the problems that an embedded windows failed
+to respond to display changes (Windows platform) (chengyemao)
