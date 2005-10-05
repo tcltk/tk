@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.18 2005/07/25 09:06:01 dkf Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.19 2005/10/05 04:14:10 hobbs Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -63,7 +63,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     #
     if {[winfo viewable [winfo toplevel [winfo parent $w]]] } {
 	wm transient $w [winfo toplevel [winfo parent $w]]
-    }    
+    }
 
     if {[tk windowingsystem] eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w dBoxProc
@@ -163,6 +163,8 @@ proc ::tk_dialog {w title text bitmap default args} {
     wm maxsize $w [winfo screenwidth $w] [winfo screenheight $w]
     wm geometry $w +$x+$y
     wm deiconify $w
+
+    tkwait visibility $w
 
     # 7. Set a grab and claim the focus too.
 
