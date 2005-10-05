@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.38 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.39 2005/10/05 03:51:42 hobbs Exp $
  *
  */
 
@@ -22,12 +22,6 @@
 #include <dlgs.h>		/* includes common dialog template defines */
 #include <cderr.h>		/* includes the common dialog error codes */
 
-/*
- * This controls the use of the new style tk_chooseDirectory dialog.
- */
-
-#define USE_NEW_CHOOSEDIR 1
-#ifdef USE_NEW_CHOOSEDIR
 #include <shlobj.h>		/* includes SHBrowseForFolder */
 #ifdef _MSC_VER
 #   pragma comment (lib, "shell32.lib")
@@ -62,7 +56,6 @@ typedef struct ChooseDirData {
    int mustExist;		/* True if file must exist to return from
 				 * callback */
 } CHOOSEDIRDATA;
-#endif
 
 typedef struct ThreadSpecificData {
     int debugFlag;		/* Flags whether we should output debugging
@@ -165,13 +158,8 @@ typedef struct ChooseDir {
  * Definitions of functions used only in this file.
  */
 
-#ifdef USE_NEW_CHOOSEDIR
 static UINT APIENTRY	ChooseDirectoryValidateProc(HWND hdlg, UINT uMsg,
 			    LPARAM wParam, LPARAM lParam);
-#else
-static UINT APIENTRY	ChooseDirectoryHookProc(HWND hdlg, UINT uMsg,
-			    WPARAM wParam, LPARAM lParam);
-#endif
 static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static int 		GetFileNameA(ClientData clientData,
@@ -1640,7 +1628,6 @@ MakeFilter(interp, valuePtr, dsPtr)
     return TCL_OK;
 }
 
-#ifdef USE_NEW_CHOOSEDIR
 /*
  *----------------------------------------------------------------------
  *
@@ -1997,6 +1984,7 @@ ChooseDirectoryValidateProc (
 
 		wsprintf(selDir, TEXT("Directory '%.200s' does not exist,\nplease select or enter an existing directory."), chooseDirSharedData->utfRetDir);
 		MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
+		chooseDirSharedData->utfRetDir[0] = '\0';
 		return 1;
 	    }
 	} else {
@@ -2080,441 +2068,6 @@ ChooseDirectoryValidateProc (
     }
     return 0;
 }
-#else
-/*
- *----------------------------------------------------------------------
- *
- * Tk_ChooseDirectoryObjCmd --
- *
- *	This function implements the "tk_chooseDirectory" dialog box for the
- *	Windows platform. See the user documentation for details on what it
- *	does.
- *
- * Results:
- *	See user documentation.
- *
- * Side effects:
- *	A modal dialog window is created. Tcl_SetServiceMode() is called to
- *	allow background events to be processed
- *
- *----------------------------------------------------------------------
- */
-
-int
-Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
-{
-    OPENFILENAME ofn;
-    TCHAR path[MAX_PATH], savePath[MAX_PATH];
-    ChooseDir cd;
-    int result, mustExist, code, mode, i;
-    Tk_Window tkwin;
-    HWND hWnd;
-    char *utfTitle;
-    Tcl_DString utfDirString;
-    Tcl_DString titleString, dirString;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static CONST char *optionStrings[] = {
-	"-initialdir",	"-mustexist",	"-parent",	"-title",
-	NULL
-    };
-    enum options {
-	DIR_INITIAL,	DIR_EXIST,	DIR_PARENT,	FILE_TITLE
-    };
-
-    if (tsdPtr->WM_LBSELCHANGED == 0) {
-	tsdPtr->WM_LBSELCHANGED = RegisterWindowMessage(LBSELCHSTRING);
-    }
-
-    result = TCL_ERROR;
-    path[0] = '\0';
-
-    Tcl_DStringInit(&utfDirString);
-    mustExist = 0;
-    tkwin = (Tk_Window) clientData;
-    utfTitle = NULL;
-
-    for (i = 1; i < objc; i += 2) {
-	int index;
-	char *string;
-	Tcl_Obj *optionPtr, *valuePtr;
-
-	optionPtr = objv[i];
-	valuePtr = objv[i + 1];
-
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 0,
-		&index) != TCL_OK) {
-	    goto cleanup;
-	}
-	if (i + 1 == objc) {
-	    string = Tcl_GetString(optionPtr);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    (char *) NULL);
-	    goto cleanup;
-	}
-
-	string = Tcl_GetString(valuePtr);
-	switch ((enum options) index) {
-	case DIR_INITIAL:
-	    Tcl_DStringFree(&utfDirString);
-	    if (Tcl_TranslateFileName(interp, string, &utfDirString) == NULL) {
-		goto cleanup;
-	    }
-	    break;
-	case DIR_EXIST:
-	    if (Tcl_GetBooleanFromObj(interp,valuePtr,&mustExist) != TCL_OK) {
-		goto cleanup;
-	    }
-	    break;
-	case DIR_PARENT:
-	    tkwin = Tk_NameToWindow(interp, string, tkwin);
-	    if (tkwin == NULL) {
-		goto cleanup;
-	    }
-	    break;
-	case FILE_TITLE:
-	    utfTitle = string;
-	    break;
-	}
-    }
-
-    Tk_MakeWindowExist(tkwin);
-    hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
-
-    cd.interp = interp;
-    cd.ofnPtr = &ofn;
-
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = hWnd;
-#ifdef _WIN64
-    ofn.hInstance = (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner,GWLP_HINSTANCE);
-#else
-    ofn.hInstance = (HINSTANCE) GetWindowLong(ofn.hwndOwner, GWL_HINSTANCE);
-#endif
-    ofn.lpstrFilter = NULL;
-    ofn.lpstrCustomFilter = NULL;
-    ofn.nMaxCustFilter = 0;
-    ofn.nFilterIndex = 0;
-    ofn.lpstrFile = NULL; //(TCHAR *) path;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.lpstrTitle = NULL;
-    ofn.Flags = OFN_HIDEREADONLY | OFN_ENABLEHOOK | OFN_ENABLETEMPLATE;
-    ofn.nFileOffset = 0;
-    ofn.nFileExtension = 0;
-    ofn.lpstrDefExt = NULL;
-    ofn.lCustData = (LPARAM) &cd;
-    ofn.lpfnHook = (LPOFNHOOKPROC) ChooseDirectoryHookProc;
-    ofn.lpTemplateName = MAKEINTRESOURCE(FILEOPENORD);
-
-    if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
-	Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfDirString),
-		Tcl_DStringLength(&utfDirString), &dirString);
-    } else {
-	/*
-	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have to ensure
-	 * that we set the [pwd] if the user didn't specify anything else.
-	 */
-
-	Tcl_DString cwd;
-
-	Tcl_DStringFree(&utfDirString);
-	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
-		(Tcl_TranslateFileName(interp,
-			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
-	    Tcl_ResetResult(interp);
-	} else {
-	    Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&cwd),
-		    Tcl_DStringLength(&cwd), &dirString);
-	}
-	Tcl_DStringFree(&cwd);
-    }
-    ofn.lpstrInitialDir = (LPTSTR) Tcl_DStringValue(&dirString);
-
-    if (mustExist) {
-	ofn.Flags |= OFN_PATHMUSTEXIST;
-    }
-    if (utfTitle != NULL) {
-	Tcl_UtfToExternalDString(NULL, utfTitle, -1, &titleString);
-	ofn.lpstrTitle = (LPTSTR) Tcl_DStringValue(&titleString);
-    }
-
-    /*
-     * Display dialog. The choose directory dialog doesn't preserve the
-     * current directory, so it must be saved and restored here.
-     */
-
-    GetCurrentDirectory(MAX_PATH, savePath);
-    mode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-    code = GetOpenFileName(&ofn);
-    Tcl_SetServiceMode(mode);
-    SetCurrentDirectory(savePath);
-
-    /*
-     * Ensure that hWnd is enabled, because it can happen that we have updated
-     * the wrapper of the parent, which causes us to leave this child disabled
-     * (Windows loses sync).
-     */
-
-    EnableWindow(hWnd, 1);
-
-    Tcl_ResetResult(interp);
-    if (code != 0) {
-	/*
-	 * Change the pathname to the Tcl "normalized" pathname, where back
-	 * slashes are used instead of forward slashes
-	 */
-
-	char *p;
-	Tcl_DString ds;
-
-	Tcl_ExternalToUtfDString(NULL, (char *) cd.path, -1, &ds);
-	for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-	    if (*p == '\\') {
-		*p = '/';
-	    }
-	}
-	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
-	Tcl_DStringFree(&ds);
-    }
-
-    if (ofn.lpstrTitle != NULL) {
-	Tcl_DStringFree(&titleString);
-    }
-    if (ofn.lpstrInitialDir != NULL) {
-	Tcl_DStringFree(&dirString);
-    }
-    result = TCL_OK;
-
-  cleanup:
-    Tcl_DStringFree(&utfDirString);
-
-    return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ChooseDirectoryHookProc --
- *
- *	Hook function called by the ChooseDirectory dialog to modify its
- *	default behavior. The ChooseDirectory dialog is really an OpenFile
- *	dialog with certain controls rearranged and certain behaviors changed.
- *	For instance, typing a name in the ChooseDirectory dialog selects a
- *	directory, rather than selecting a file.
- *
- * Results:
- *	Returns 0 to allow default processing of message, or 1 to tell default
- *	dialog function not to process the message.
- *
- * Side effects:
- *	A dialog window is created the first this function is called. This
- *	window is not destroyed and will be reused the next time the
- *	application invokes the "tk_getOpenFile" or "tk_getSaveFile" command.
- *
- *----------------------------------------------------------------------
- */
-
-static UINT APIENTRY
-ChooseDirectoryHookProc(
-    HWND hwnd,
-    UINT message,
-    WPARAM wParam,
-    LPARAM lParam)
-{
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    OPENFILENAME *ofnPtr;
-    ChooseDir *cdPtr;
-
-    if (message == WM_INITDIALOG) {
-	ofnPtr = (OPENFILENAME *) lParam;
-	cdPtr = (ChooseDir *) ofnPtr->lCustData;
-	cdPtr->lastCtrl = 0;
-	cdPtr->lastIdx = 1000;
-	cdPtr->path[0] = '\0';
-#ifdef _WIN64
-	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) cdPtr);
-#else
-	SetWindowLong(hwnd, GWL_USERDATA, (LONG) cdPtr);
-#endif
-
-	if (ofnPtr->lpstrInitialDir == NULL) {
-	    GetCurrentDirectory(MAX_PATH, cdPtr->path);
-	} else {
-	    lstrcpy(cdPtr->path, ofnPtr->lpstrInitialDir);
-	}
-	SetDlgItemText(hwnd, edt10, cdPtr->path);
-	SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);
-	if (tsdPtr->debugFlag) {
-	    tsdPtr->debugInterp = cdPtr->interp;
-	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hwnd);
-	}
-	return 0;
-    }
-
-    /*
-     * GWL_USERDATA keeps track of cdPtr.
-     */
-
-#ifdef _WIN64
-    cdPtr = (ChooseDir *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
-#else
-    cdPtr = (ChooseDir *) GetWindowLong(hwnd, GWL_USERDATA);
-#endif
-    if (cdPtr == NULL) {
-	return 0;
-    }
-    ofnPtr = cdPtr->ofnPtr;
-
-    if (message == tsdPtr->WM_LBSELCHANGED) {
-	/*
-	 * Called when double-clicking on directory. If directory wasn't
-	 * already open, browse that directory. If directory was already open,
-	 * return selected directory.
-	 */
-
-	int idCtrl, thisItem;
-
-	idCtrl = (int) wParam;
-	thisItem = LOWORD(lParam);
-
-	GetCurrentDirectory(MAX_PATH, cdPtr->path);
-	if (idCtrl == lst2) {
-	    if (cdPtr->lastIdx == thisItem) {
-		EndDialog(hwnd, IDOK);
-		return 1;
-	    }
-	    cdPtr->lastIdx = thisItem;
-	}
-	SetDlgItemText(hwnd, edt10, cdPtr->path);
-	SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);
-    } else if (message == WM_COMMAND) {
-	int idCtrl, notifyCode;
-
-	idCtrl = LOWORD(wParam);
-	notifyCode = HIWORD(wParam);
-
-	if ((idCtrl != IDOK) || (notifyCode != BN_CLICKED)) {
-	    /*
-	     * OK Button wasn't clicked.  Do the default.
-	     */
-
-	    if ((idCtrl == lst2) || (idCtrl == edt10)) {
-		cdPtr->lastCtrl = idCtrl;
-	    }
-	    return 0;
-	}
-
-	/*
-	 * Dialogs also get the message that OK was clicked when Enter is
-	 * pressed in some other control. Find out what window we were really
-	 * in when we got the supposed "OK", because the behavior is
-	 * different.
-	 */
-
-	if (cdPtr->lastCtrl == edt10) {
-	    /*
-	     * Hit Enter or clicked OK while typing a directory name in the
-	     * edit control. If it's a new name, try to go to that directory.
-	     * If the name hasn't changed since last time, return selected
-	     * directory.
-	     */
-
-	    int changed;
-	    TCHAR tmp[MAX_PATH];
-
-	    if (GetDlgItemText(hwnd, edt10, tmp, MAX_PATH) == 0) {
-		return 0;
-	    }
-
-	    changed = lstrcmp(cdPtr->path, tmp);
-	    lstrcpy(cdPtr->path, tmp);
-
-	    if (SetCurrentDirectory(cdPtr->path) == 0) {
-		/*
-		 * Non-existent directory.
-		 */
-
-		if (ofnPtr->Flags & OFN_PATHMUSTEXIST) {
-		    /*
-		     * Directory must exist. Complain, then rehighlight text.
-		     */
-
-		    wsprintf(tmp, _T("Cannot change directory to \"%.200s\"."),
-			    cdPtr->path);
-		    MessageBox(hwnd, tmp, NULL, MB_OK);
-		    SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);
-		    return 0;
-		}
-		if (changed) {
-		    /*
-		     * Directory was invalid, but we want to keep displaying
-		     * this name. Don't update the listbox that displays the
-		     * current directory heirarchy, or it'll erase the name.
-		     */
-
-		    SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);
-		    return 0;
-		}
-	    }
-	    if (changed == 0) {
-		/*
-		 * Name hasn't changed since the last time we hit return or
-		 * double-clicked on a directory, so return this.
-		 */
-
-		EndDialog(hwnd, IDOK);
-		return 1;
-	    }
-
-	    cdPtr->lastCtrl = IDOK;
-
-	    /*
-	     * The following is the magic code, determined by running Spy++ on
-	     * some other directory chooser, that it takes to get this dialog
-	     * to update the listbox to display the current directory.
-	     */
-
-	    SetDlgItemText(hwnd, edt1, cdPtr->path);
-	    SendMessage(hwnd, WM_COMMAND, (WPARAM) MAKELONG(cmb2, 0x8003),
-		    (LPARAM) GetDlgItem(hwnd, cmb2));
-	    return 0;
-	} else if (idCtrl == lst2) {
-	    /*
-	     * Enter key was pressed while in listbox. If it's a new
-	     * directory, allow default behavior to open dir. If the directory
-	     * hasn't changed, return selected directory.
-	     */
-
-	    int thisItem;
-
-	    thisItem = (int) SendDlgItemMessage(hwnd, lst2, LB_GETCURSEL, 0, 0);
-	    if (cdPtr->lastIdx == thisItem) {
-		GetCurrentDirectory(MAX_PATH, cdPtr->path);
-		EndDialog(hwnd, IDOK);
-		return 1;
-	    }
-	} else if (idCtrl == IDOK) {
-	    /*
-	     * The OK button was clicked. Return the value currently selected
-	     * in the entry.
-	     */
-
-	    GetCurrentDirectory(MAX_PATH, cdPtr->path);
-	    EndDialog(hwnd, IDOK);
-	    return 1;
-	}
-    }
-    return 0;
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
