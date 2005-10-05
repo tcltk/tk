@@ -1,3 +1,8 @@
+2005-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinDialog.c (ChooseDirectoryValidateProc): reset stored
+	path to "" if it doesn't exist and -mustexist is true. [Bug 1309218]
+
 2005-09-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkOldConfig.c (GetCachedSpecs): Split out the code to

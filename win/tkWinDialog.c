@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.30.2.4 2004/08/20 01:14:20 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.30.2.5 2005/10/05 03:51:09 hobbs Exp $
  *
  */
 
@@ -1954,6 +1954,7 @@ ChooseDirectoryValidateProc (
 
             if (SetCurrentDirectory((char *)string) == 0) {
                 LPTSTR lpFilePart[MAX_PATH];
+
                 /*
                  * Get the full path name to the user entry,
                  * at this point it doesn't exist so see if
@@ -1967,6 +1968,7 @@ ChooseDirectoryValidateProc (
                      */
                     wsprintf(selDir, TEXT("Directory '%.200s' does not exist,\nplease select or enter an existing directory."), chooseDirSharedData->utfRetDir);
                     MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
+		    chooseDirSharedData->utfRetDir[0] = '\0';
                     return 1;
                 }
             } else {
