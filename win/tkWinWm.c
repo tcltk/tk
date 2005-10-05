@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.101 2005/09/11 01:37:15 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.102 2005/10/05 00:43:45 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -7226,11 +7226,11 @@ InvalidateSubTreeDepth(winPtr)
     for (childPtr = winPtr->childList; childPtr != NULL;
 	 childPtr = childPtr->nextPtr) {
 	/*
-	 * We can stop the descent when we hit a toplevel window, as it
-	 * should get its own message.
+	 * We can stop the descent when we hit a non-embedded toplevel window, 
+	 * as it should get its own message.
 	 */
 
-	if (!Tk_TopWinHierarchy(childPtr)) {
+	if (childPtr->flags & TK_EMBEDDED || !Tk_TopWinHierarchy(childPtr)) {
 	    InvalidateSubTreeDepth(childPtr);
 	}
     }
