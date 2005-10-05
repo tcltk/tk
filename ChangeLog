@@ -1,5 +1,8 @@
 2005-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/dialog.tcl (::tk_dialog): add tkwait visibility before
+	grab. [Bug 1216775]
+
 	* win/tkWinDialog.c (ChooseDirectoryValidateProc): reset stored
 	path to "" if it doesn't exist and -mustexist is true. [Bug 1309218]
 
