@@ -1,3 +1,10 @@
+2005-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkMenu.c (TkSetWindowMenuBar): do not call TkMenuInit if
+	the winPtr indicates TK_ALREADY_DEAD.  This prevents reinit that
+	creates a Tk exit handler after all exit handlers should be
+	called.  [Bug 749908, 1322294]
+
 2005-10-10  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* doc/text.n

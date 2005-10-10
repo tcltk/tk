@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.28 2005/10/10 19:28:27 hobbs Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.29 2005/10/10 20:26:31 hobbs Exp $
  */
 
 /*
@@ -3118,11 +3118,19 @@ TkSetWindowMenuBar(interp, tkwin, oldMenuName, menuName)
 				 * toplevel needs to be set to. NULL means
 				 * that their is no menu now. */
 {
+    TkWindow *winPtr = (TkWindow *)tkwin;
     TkMenuTopLevelList *topLevelListPtr, *prevTopLevelPtr;
     TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
 
-    TkMenuInit();
+    /*
+     * Avoid reinitialization if we are just cleaning up dead windows.
+     * Perhaps knowing when Tcl was really exiting would be better than
+     * just checking for this winPtr being dead. [Bug 749908]
+     */
+    if (!(winPtr->flags & TK_ALREADY_DEAD)) {
+	TkMenuInit();
+    }
 
     /*
      * Destroy the menubar instances of the old menu. Take this window
