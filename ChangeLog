@@ -1,3 +1,8 @@
+2005-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkConfig.c (Tk_DeleteOptionTable, Tk_CreateOptionTable):
+	properly alloc/delete one more option. [Bug 1319720] (melbardis)
+
 2005-10-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/winfo.test: Wait until child window is visible
@@ -26,11 +31,12 @@
 	process is in front on MouseDown, otherwise request process activation
 	from BringWindowForward() via new isFrontProcess param.
 
-	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents): register our
-	event handler on the dispatcher target for all carbon events of interest
-	to TkAqua; this replaces event processing directly from the event queue
-	and thus allows to capture events that are syntesized by Carbon and sent
-	directly to the dispatcher and not to the event queue.
+	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents):
+	register our event handler on the dispatcher target for all carbon
+	events of interest to TkAqua; this replaces event processing
+	directly from the event queue and thus allows to capture events
+	that are syntesized by Carbon and sent directly to the dispatcher
+	and not to the event queue.
 
 	* macosx/tkMacOSXEvent.c: remove TkMacOSXCountAndProcessMacEvents(),
 	rename ReceiveAndProcessEvent() to TkMacOSXReceiveAndProcessEvent().
@@ -39,8 +45,9 @@
 	processed in our dispatcher target event handler.
 
 	* macosx/tkMacOSXNotify.c (CarbonEventsCheckProc): dispatch events
-	directly via TkMacOSXReceiveAndProcessEvent(), but dispatch no more than
-	four carbon events at one time to avoid starving other event sources.
+	directly via TkMacOSXReceiveAndProcessEvent(), but dispatch no
+	more than four carbon events at one time to avoid starving other
+	event sources.
 
 	* macosx/tkMacOSXEvent.c: formatting cleanup, move XSync() to XStubs,
 	* macosx/tkMacOSXEvent.h: removed obsolete kEventClassWish handling.
