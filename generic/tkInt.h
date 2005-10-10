@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.56.2.5 2005/07/28 03:45:03 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.56.2.6 2005/10/10 21:27:33 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -25,6 +25,45 @@
 #endif
 #ifndef _TKPORT
 #include <tkPort.h>
+#endif
+
+/*
+ * Ensure WORDS_BIGENDIAN is defined correcly:
+ * Needs to happen here in addition to configure to work with fat compiles on
+ * Darwin (i.e. ppc and i386 at the same time).
+ */
+
+#ifdef HAVE_SYS_TYPES_H
+#    include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_PARAM_H
+#    include <sys/param.h>
+#endif
+#ifdef BYTE_ORDER
+#    ifdef BIG_ENDIAN
+#	 if BYTE_ORDER == BIG_ENDIAN
+#	     undef WORDS_BIGENDIAN
+#	     define WORDS_BIGENDIAN
+#	 endif
+#    endif
+#    ifdef LITTLE_ENDIAN
+#	 if BYTE_ORDER == LITTLE_ENDIAN
+#	     undef WORDS_BIGENDIAN
+#	 endif
+#    endif
+#endif
+
+/*
+ * Used to tag functions that are only to be visible within the module being
+ * built and not outside it (where this is supported by the linker).
+ */
+
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
+#   endif
 #endif
 
 /*
