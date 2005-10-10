@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.22 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.23 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -2303,11 +2303,3 @@ StartEnd(textPtr, string, indexPtr)
   done:
     return p;
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */

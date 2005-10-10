@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.52 2005/07/28 17:20:41 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.53 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "tkPort.h"
@@ -100,6 +100,7 @@ typedef struct StyleValues {
     int spacing3;		/* Spacing below last dline in text line. */
     TkTextTabArray *tabArrayPtr;/* Locations and types of tab stops (may be
 				 * NULL). */
+    int tabStyle;               /* One of TABULAR or WORDPROCESSOR. */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
     int elide;			/* Zero means draw text, otherwise not */
@@ -482,8 +483,8 @@ static void		YScrollByLines _ANSI_ARGS_((TkText *textPtr,
 static void		YScrollByPixels _ANSI_ARGS_((TkText *textPtr,
 			    int offset));
 static int		SizeOfTab _ANSI_ARGS_((TkText *textPtr,
-			    TkTextTabArray *tabArrayPtr, int *indexPtr,
-			    int x, int maxX));
+			    int tabStyle, TkTextTabArray *tabArrayPtr, 
+			    int *indexPtr, int x, int maxX));
 static void		TextChanged _ANSI_ARGS_((TkText *textPtr,
 			    CONST TkTextIndex *index1Ptr,
 			    CONST TkTextIndex *index2Ptr));
@@ -685,7 +686,7 @@ GetStyle(textPtr, indexPtr)
     int underlinePrio, elidePrio, justifyPrio, offsetPrio;
     int lMargin1Prio, lMargin2Prio, rMarginPrio;
     int spacing1Prio, spacing2Prio, spacing3Prio;
-    int overstrikePrio, tabPrio, wrapPrio;
+    int overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
     /*
      * Find out what tags are present for the character, then compute a
@@ -699,7 +700,7 @@ GetStyle(textPtr, indexPtr)
     underlinePrio = elidePrio = justifyPrio = offsetPrio = -1;
     lMargin1Prio = lMargin2Prio = rMarginPrio = -1;
     spacing1Prio = spacing2Prio = spacing3Prio = -1;
-    overstrikePrio = tabPrio = wrapPrio = -1;
+    overstrikePrio = tabPrio = tabStylePrio = wrapPrio = -1;
     memset((VOID *) &styleValues, 0, sizeof(StyleValues));
     styleValues.relief = TK_RELIEF_FLAT;
     styleValues.fgColor = textPtr->fgColor;
@@ -709,6 +710,7 @@ GetStyle(textPtr, indexPtr)
     styleValues.spacing2 = textPtr->spacing2;
     styleValues.spacing3 = textPtr->spacing3;
     styleValues.tabArrayPtr = textPtr->tabArrayPtr;
+    styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.elide = 0;
 
@@ -816,6 +818,11 @@ GetStyle(textPtr, indexPtr)
 		&& (tagPtr->priority > tabPrio)) {
 	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
 	    tabPrio = tagPtr->priority;
+	}
+	if ((tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE)
+		&& (tagPtr->priority > tabStylePrio)) {
+	    styleValues.tabStyle = tagPtr->tabStyle;
+	    tabStylePrio = tagPtr->priority;
 	}
 	if ((tagPtr->underlineString != NULL)
 		&& (tagPtr->priority > underlinePrio)) {
@@ -979,6 +986,10 @@ LayoutDLine(textPtr, indexPtr)
     int noCharsYet;			/* Non-zero means that no characters
 					 * have been placed on the line
 					 * yet. */
+    int paragraphStart;                 /* Non-zero means that we are 
+                                         * on the first line of a 
+                                         * paragraph  (Used to choose 
+                                         * between lmargin1, lmargin2). */
     int justify;			/* How to justify line: taken from
 					 * style for the first character in
 					 * line. */
@@ -1001,6 +1012,7 @@ LayoutDLine(textPtr, indexPtr)
     TkTextTabArray *tabArrayPtr;	/* Tab stops for line; taken from
 					 * style for the first character on
 					 * line. */
+    int tabStyle;                       /* One of TABULAR or WORDPROCESSOR. */
     int tabSize;			/* Number of pixels consumed by
 					 * current tab stop. */
     TkTextDispChunk *lastCharChunkPtr;	/* Pointer to last chunk in display
@@ -1027,12 +1039,19 @@ LayoutDLine(textPtr, indexPtr)
     dlPtr->flags = NEW_LAYOUT | OLD_Y_INVALID;
     dlPtr->logicalLinesMerged = 0;
 
+    /* 
+     * This is not necessarily totally correct, where we have merged
+     * logical lines.  Fixing this would require a quite significant
+     * overhaul, though, so currently we make do with this.
+     */
+    paragraphStart = (indexPtr->byteIndex == 0);
+    
     /*
      * Special case entirely elide line as there may be 1000s or more
      */
 
     elide = TkTextIsElided(textPtr, indexPtr, &info);
-    if (elide && indexPtr->byteIndex==0) {
+    if (elide && indexPtr->byteIndex == 0) {
 	maxBytes = 0;
 	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
 	    if (segPtr->size > 0) {
@@ -1141,6 +1160,7 @@ LayoutDLine(textPtr, indexPtr)
     tabIndex = -1;
     tabChunkPtr = NULL;
     tabArrayPtr = NULL;
+    tabStyle = TK_TEXT_TABSTYLE_TABULAR;
     rMargin = 0;
     wrapMode = TEXT_WRAPMODE_CHAR;
     tabSize = 0;
@@ -1194,7 +1214,8 @@ LayoutDLine(textPtr, indexPtr)
 
 	if (elide && (lastChunkPtr != NULL)
 		&& (lastChunkPtr->displayProc == NULL /*ElideDisplayProc*/)) {
-	    if ((elidesize = segPtr->size - byteOffset) > 0) {
+	    elidesize = segPtr->size - byteOffset;
+	    if (elidesize > 0) {
 		curIndex.byteIndex += elidesize;
 		lastChunkPtr->numBytes += elidesize;
 		breakByteOffset = lastChunkPtr->breakIndex
@@ -1262,14 +1283,26 @@ LayoutDLine(textPtr, indexPtr)
 	 * information for the rest of the line.
 	 */
 
-	if (noCharsYet) {
+	if (!elide && noCharsYet) {
 	    tabArrayPtr = chunkPtr->stylePtr->sValuePtr->tabArrayPtr;
+	    tabStyle = chunkPtr->stylePtr->sValuePtr->tabStyle;
 	    justify = chunkPtr->stylePtr->sValuePtr->justify;
 	    rMargin = chunkPtr->stylePtr->sValuePtr->rMargin;
 	    wrapMode = chunkPtr->stylePtr->sValuePtr->wrapMode;
-	    x = ((curIndex.byteIndex == 0)
-		    ? chunkPtr->stylePtr->sValuePtr->lMargin1
-		    : chunkPtr->stylePtr->sValuePtr->lMargin2);
+	    
+	    /* 
+	     * See above - this test may not be entirely correct where
+	     * we have partially elided lines (and therefore merged
+	     * logical lines).  In such a case a byteIndex of zero
+	     * doesn't necessarily mean the beginning of a logical line.
+	     */
+	    if (paragraphStart) {
+		/* Beginning of logical line */
+	        x = chunkPtr->stylePtr->sValuePtr->lMargin1;
+	    } else {
+		/* Beginning of display line */
+		x = chunkPtr->stylePtr->sValuePtr->lMargin2;
+	    }
 	    if (wrapMode == TEXT_WRAPMODE_NONE) {
 		maxX = -1;
 	    } else {
@@ -1302,7 +1335,7 @@ LayoutDLine(textPtr, indexPtr)
 	    }
 	}
 	chunkPtr->x = x;
-	if (elide && maxBytes) {
+	if (elide /*&& maxBytes*/) {
 	    /*
 	     * Don't free style here, as other code expects to be able to do
 	     * that.
@@ -1349,6 +1382,16 @@ LayoutDLine(textPtr, indexPtr)
 	    }
 	    break;
 	}
+	/* 
+	 * We currently say we have some characters (and therefore
+	 * something from which to examine tag values for the first
+	 * character of the line) even if those characters are actually
+	 * elided.  This behaviour is not well documented, and it might
+	 * be more consistent to completely ignore such elided
+	 * characters and their tags.  To do so change this to:
+	 * 
+	 * if (!elide && chunkPtr->numBytes > 0).
+	 */
 	if (!elide && chunkPtr->numBytes > 0) {
 	    noCharsYet = 0;
 	    lastCharChunkPtr = chunkPtr;
@@ -1382,7 +1425,8 @@ LayoutDLine(textPtr, indexPtr)
 		x = chunkPtr->x + chunkPtr->width;
 	    }
 	    tabChunkPtr = chunkPtr;
-	    tabSize = SizeOfTab(textPtr, tabArrayPtr, &tabIndex, x, maxX);
+	    tabSize = SizeOfTab(textPtr, tabStyle, tabArrayPtr, 
+				&tabIndex, x, maxX);
 	    if ((maxX >= 0) && (tabSize >= maxX - x)) {
 		break;
 	    }
@@ -6588,15 +6632,15 @@ DlineXOfIndex(textPtr, dlPtr, byteIndex)
 /*
  *----------------------------------------------------------------------
  *
- * TkTextCharBbox --
+ * TkTextIndexBbox --
  *
  *	Given an index, find the bounding box of the screen area occupied by
- *	that character.
+ *	the entity (character, window, image) at that index.
  *
  * Results:
- *	Zero is returned if the character is on the screen. -1 means the
- *	character isn't on the screen. If the return value is 0, then the
- *	bounding box of the part of the character that's visible on the screen
+ *	Zero is returned if the index is on the screen. -1 means the
+ *	index isn't on the screen. If the return value is 0, then the
+ *	bounding box of the part of the index that's visible on the screen
  *	is returned to *xPtr, *yPtr, *widthPtr, and *heightPtr.
  *
  * Side effects:
@@ -6606,17 +6650,17 @@ DlineXOfIndex(textPtr, dlPtr, byteIndex)
  */
 
 int
-TkTextCharBbox(textPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr, charWidthPtr)
+TkTextIndexBbox(textPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr, charWidthPtr)
     TkText *textPtr;		/* Widget record for text widget. */
-    CONST TkTextIndex *indexPtr;/* Index of character whose bounding box is
-				 * desired. */
-    int *xPtr, *yPtr;		/* Filled with character's upper-left
+    CONST TkTextIndex *indexPtr;/* Index whose bounding box is desired. */
+    int *xPtr, *yPtr;		/* Filled with index's upper-left
 				 * coordinate. */
-    int *widthPtr, *heightPtr;	/* Filled in with character's dimensions. */
-    int *charWidthPtr;		/* If the 'character' isn't really a character
-				 * (e.g. end of a line) and therefore takes up
-				 * a very large width, this is used to return
-				 * a smaller width */
+    int *widthPtr, *heightPtr;	/* Filled in with index's dimensions. */
+    int *charWidthPtr;		/* If the 'index' is at the end of
+                      		 * a display line and therefore takes
+                      		 * up a very large width, this is
+                      		 * used to return the smaller width
+                      		 * actually desired by the index.  */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
@@ -6686,8 +6730,19 @@ TkTextCharBbox(textPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr, charWidthPtr)
 	    *charWidthPtr = *widthPtr;
 	}
     }
-    if ((*xPtr + *widthPtr) <= dInfoPtr->x) {
-	return -1;
+    if (*widthPtr == 0) {
+	/* 
+	 * With zero width (e.g. elided text) we just need to
+	 * make sure it is onscreen, where the '=' case here is
+	 * ok.
+	 */
+	if (*xPtr < dInfoPtr->x) {
+	    return -1;
+	}
+    } else {
+	if ((*xPtr + *widthPtr) <= dInfoPtr->x) {
+	    return -1;
+	}
     }
     if ((*xPtr + *widthPtr) > dInfoPtr->maxX) {
 	*widthPtr = dInfoPtr->maxX - *xPtr;
@@ -7248,19 +7303,31 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
 	return;
     }
 
+    x = chunkPtr->nextPtr->x;
+
     /*
-     * If no tab information has been given, do the usual thing: round up to
-     * the next boundary of 8 average-sized characters.
+     * If no tab information has been given, assuming tab stops are
+     * at 8 average-sized characters.  Still ensure we respect the
+     * tabular versus wordprocessor tab style.
      */
 
-    x = chunkPtr->nextPtr->x;
     if ((tabArrayPtr == NULL) || (tabArrayPtr->numTabs == 0)) {
 	/*
 	 * No tab information has been given, so use the default
 	 * interpretation of tabs.
 	 */
 
-	desired = NextTabStop(textPtr->tkfont, x, 0);
+	if (textPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR) {
+	    int tabWidth = Tk_TextWidth(textPtr->tkfont, "0", 1) * 8;
+	    if (tabWidth == 0) {
+		tabWidth = 1;
+	    }
+
+	    desired = tabWidth * (index + 1);
+	} else {
+	    desired = NextTabStop(textPtr->tkfont, x, 0);
+	}
+	
 	goto update;
     }
 
@@ -7399,9 +7466,11 @@ AdjustForTab(textPtr, tabArrayPtr, index, chunkPtr)
  */
 
 static int
-SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
+SizeOfTab(textPtr, tabStyle, tabArrayPtr, indexPtr, x, maxX)
     TkText *textPtr;		/* Information about the text widget as a
 				 * whole. */
+    int tabStyle;               /* One of TK_TEXT_TABSTYLE_TABULAR 
+                                 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     TkTextTabArray *tabArrayPtr;/* Information about the tab stops that apply
 				 * to this line. NULL means use default
 				 * tabbing (every 8 chars.) */
@@ -7412,29 +7481,33 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
     int maxX;			/* X-location of pixel just past the right
 				 * edge of the line. */
 {
-    int tabX, result, index, spaceWidth;
+    int tabX, result, index, spaceWidth, tabWidth;
     TkTextTabAlign alignment;
 
     index = *indexPtr;
 
     if ((tabArrayPtr == NULL) || (tabArrayPtr->numTabs == 0)) {
-	tabX = NextTabStop(textPtr->tkfont, x, 0);
-
-	/*
-	 * We used up one tab stop.
-	 */
-
-	*indexPtr = index+1;
-	return tabX - x;
+	/* We're using a default tab spacing of 8 characters */
+	tabWidth = Tk_TextWidth(textPtr->tkfont, "0", 1) * 8;
+	if (tabWidth == 0) {
+	    tabWidth = 1;
+	}
+    } else {
+	tabWidth = 0; /* Avoid compiler error */
     }
-
+    
     do {
 	/*
 	 * We were given the count before this tab, so increment it first.
 	 */
 
 	index++;
-	if (index < tabArrayPtr->numTabs) {
+	
+	if ((tabArrayPtr == NULL) || (tabArrayPtr->numTabs == 0)) {
+	    /* We're using a default tab spacing calculated above */
+	    tabX = tabWidth * (index + 1);
+	    alignment = LEFT;
+	} else if (index < tabArrayPtr->numTabs) {
 	    tabX = tabArrayPtr->tabs[index].location;
 	    alignment = tabArrayPtr->tabs[index].alignment;
 	} else {
@@ -7449,10 +7522,16 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
 	}
 
 	/*
-	 * If this tab stop is before the current x position, then we must
-	 * obviously continue until we reach the text tab stop.
+	 * If this tab stop is before the current x position, then we
+	 * have two cases:
+	 * 
+	 * With 'wordprocessor' style tabs, we must obviously continue
+	 * until we reach the text tab stop.
+	 * 
+	 * With 'tabular' style tabs, we always use the index'th tab
+	 * stop.
 	 */
-    } while (tabX < x);
+    } while (tabX < x && (tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR));
 
     /*
      * Inform our caller of how many tab stops we've used up.
@@ -7506,7 +7585,8 @@ SizeOfTab(textPtr, tabArrayPtr, indexPtr, x, maxX)
  *	Given the current position, determine where the next default tab stop
  *	would be located. This function is called when the current chunk in
  *	the text has no tabs defined and so the default tab spacing for the
- *	font should be used.
+ *	font should be used, provided we are using wordprocessor 
+ *	style tabs.
  *
  * Results:
  *	The location in pixels of the next tab stop.
@@ -7733,11 +7813,3 @@ TextGetScrollInfoObj(interp, textPtr, objc, objv, dblPtr, intPtr)
 	    "\": must be moveto or scroll", (char *) NULL);
     return TKTEXT_SCROLL_ERROR;
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */

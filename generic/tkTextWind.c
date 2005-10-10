@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.14 2004/10/05 01:26:10 hobbs Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.15 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -331,7 +331,7 @@ TkTextWindowCmd(textPtr, interp, objc, objv)
 		TkTextIndex index2;
 
 		TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
-		TkBTreeDeleteChars(textPtr->sharedTextPtr->tree, &index, &index2);
+		TkBTreeDeleteIndexRange(textPtr->sharedTextPtr->tree, &index, &index2);
 		return TCL_ERROR;
 	    }
 	    TkTextInvalidateLineMetrics(textPtr->sharedTextPtr, NULL, 

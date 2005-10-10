@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.37 2005/05/10 22:26:16 dgp Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.38 2005/10/10 10:36:35 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2992,6 +2992,15 @@ test textDisp-26.1 {AdjustForTab procedure, no tabs} {textfonts} {
     .t insert 1.0 a\tbcdefghij\tc\td
     list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.12] 0] \
 	    [lindex [.t bbox 1.14] 0]
+} [list 56 126 168]
+test textDisp-26.1.2 {AdjustForTab procedure, no tabs} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 a\tbcdefghij\tc\td
+    .t configure -tabstyle wordprocessor
+    set res [list [lindex [.t bbox 1.2] 0] [lindex [.t bbox 1.12] 0] \
+      [lindex [.t bbox 1.14] 0]]
+    .t configure -tabstyle tabular
+    set res
 } [list 56 168 224]
 test textDisp-26.2 {AdjustForTab procedure, not enough tabs specified} {
     .t delete 1.0 end
@@ -3111,6 +3120,17 @@ test textDisp-26.13 {AdjustForTab procedure, not enough space} {textfonts} {
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.4] 0] [lindex [.t bbox 1.8] 0] \
 	    [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]
+} [list 28 56 84 120]
+test textDisp-26.13.2 {AdjustForTab procedure, not enough space} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 "abc\txyz\tqrs\txyz\t0"
+    .t tag delete x
+    .t tag configure x -tabs {10 30 center 50 right 120} -tabstyle wordprocessor
+    .t tag add x 1.0 end
+    set res [list [lindex [.t bbox 1.4] 0] [lindex [.t bbox 1.8] 0] \
+      [lindex [.t bbox 1.12] 0] [lindex [.t bbox 1.16] 0]]
+    .t tag configure x -tabstyle tabular
+    set res
 } [list 28 56 120 190]
 test textDisp-26.14 {AdjustForTab procedure, not enough space} {textfonts} {
     .t delete 1.0 end
@@ -3120,6 +3140,18 @@ test textDisp-26.14 {AdjustForTab procedure, not enough space} {textfonts} {
     .t insert end "Watch the \tX and the \t\t\tY\n" moop
     list [lindex [.t bbox 2.11] 0] [lindex [.t bbox 2.24] 0] \
 	    [lindex [.t bbox 3.11] 0] [lindex [.t bbox 3.24] 0]
+} [list 77 224 77 224]
+test textDisp-26.14.2 {AdjustForTab procedure, not enough space} {textfonts} {
+    .t delete 1.0 end
+    .t configure -tabstyle wordprocessor
+    .t insert end "a \tb \tc \td \te \tf \tg\n"
+    .t insert end "Watch the \tX and the \t\t\tY\n"
+    .t tag configure moop -tabs [expr {8*$fixedWidth}]
+    .t insert end "Watch the \tX and the \t\t\tY\n" moop
+    set res [list [lindex [.t bbox 2.11] 0] [lindex [.t bbox 2.24] 0] \
+      [lindex [.t bbox 3.11] 0] [lindex [.t bbox 3.24] 0]]
+    .t configure -tabstyle tabular
+    set res
 } [list 112 56 112 56]
 
 .t configure -width 20 -bd 2 -highlightthickness 2 -relief sunken -tabs {} \
@@ -3129,6 +3161,14 @@ test textDisp-27.1 {SizeOfTab procedure, old-style tabs} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 a\tbcdefghij\tc\td
     list [.t bbox 1.2] [.t bbox 1.10] [.t bbox 1.12]
+} [list [list 60 5 7 $fixedHeight] [list 116 5 7 $fixedHeight] [list 130 5 7 $fixedHeight]]
+test textDisp-27.1.1 {SizeOfTab procedure, old-style tabs} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 a\tbcdefghij\tc\td
+    .t configure -tabstyle wordprocessor
+    set res [list [.t bbox 1.2] [.t bbox 1.10] [.t bbox 1.12]]
+    .t configure -tabstyle tabular
+    set res
 } [list [list 60 5 7 $fixedHeight] [list 116 5 7 $fixedHeight] [list 4 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
 test textDisp-27.2 {SizeOfTab procedure, choosing tabX and alignment} {textfonts} {
     .t delete 1.0 end
@@ -3189,8 +3229,30 @@ test textDisp-27.7 {SizeOfTab procedure, center alignment, wrap -none (potential
     set res [.t bbox 2.23]
     lset res 0 [expr {[lindex $res 0] - $tab}]
     set res
+} [list -28 [expr {$fixedDiff + 18}] 7 $fixedHeight]
+test textDisp-27.7.1 {SizeOfTab procedure, center alignment, wrap -none (potential numerical problems)} {textfonts} {
+    .t delete 1.0 end
+    .t configure -tabstyle wordprocessor
+    set cm [winfo fpixels .t 1c]
+    .t configure -tabs {1c 2c center 3c 4c 5c 6c 7c 8c} -wrap none -width 40
+    .t insert 1.0 a\tb\tc\td\te\n012345678934567890a\tbb\tcc\tdd
+    set width [expr {$fixedWidth * 19}]
+    set tab $cm
+    while {$tab < $width} {
+	set tab [expr {$tab + $cm}]
+    }
+    # Now we've calculated to the end of the tab after 'a', add one
+    # more for 'bb\t' and we're there, with 4 for the border.  Since
+    # Tk_GetPixelsFromObj uses the standard 'int(0.5 + float)' rounding,
+    # so must we.
+    set tab [expr {4 + int(0.5 + $tab + $cm)}]
+    update
+    set res [.t bbox 2.23]
+    .t configure -tabstyle tabular
+    lset res 0 [expr {[lindex $res 0] - $tab}]
+    set res
 } [list 0 [expr {$fixedDiff + 18}] 7 $fixedHeight]
-test textDisp-27.7.1 {SizeOfTab procedure, fractional tab interpolation problem} {
+test textDisp-27.7.2 {SizeOfTab procedure, fractional tab interpolation problem} {
     .t delete 1.0 end
     set interpolatetab {1c 2c}
     set precisetab {}
@@ -3570,6 +3632,88 @@ test textDisp-32.1 {everything elided} {
     update ; update ; update ; update
     destroy .tt
 } {}
+
+test textDisp-32.2 {elide and tags} {
+    pack [text .tt -height 30 -width 100 -bd 0 \
+      -highlightthickness 0 -padx 0]
+    .tt insert end \
+      {test text using tags 1 and 3 } \
+      {testtag1 testtag3} \
+      {[this bit here uses tags 2 and 3]} \
+      {testtag2 testtag3}
+    update
+    # indent left margin of tag 1 by 20 pixels
+    # text should be indented
+    .tt tag configure testtag1 -lmargin1 20 ; update
+    #1
+    set res {}
+    lappend res [list [.tt index "1.0 + 0 displaychars"] \
+      [lindex [.tt bbox 1.0] 0] \
+      [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
+    
+    # hide tag 1, remaining text should not be indented, since
+    # the indented tag and character is hidden.
+    .tt tag configure testtag1 -elide 1 ; update
+    #2
+    lappend res [list [.tt index "1.0 + 0 displaychars"] \
+      [lindex [.tt bbox 1.0] 0] \
+      [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
+    
+    # reset
+    .tt tag configure testtag1 -lmargin1 0
+    .tt tag configure testtag1 -elide 0
+
+    # indent left margin of tag 2 by 20 pixels
+    # text should not be indented, since tag1 has lmargin1 of 0.
+    .tt tag configure testtag2 -lmargin1 20 ; update
+    #3
+    lappend res [list [.tt index "1.0 + 0 displaychars"] \
+      [lindex [.tt bbox 1.0] 0] \
+      [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
+    
+    # hide tag 1, remaining text should now be indented, but
+    # the bbox of 1.0 should have zero width and zero indent,
+    # since it is elided at that position.
+    .tt tag configure testtag1 -elide 1 ; update
+    #4
+    lappend res [list [.tt index "1.0 + 0 displaychars"] \
+      [lindex [.tt bbox 1.0] 0] \
+      [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
+    
+    # reset
+    .tt tag configure testtag2 -lmargin1 {}
+    .tt tag configure testtag1 -elide 0
+
+    # indent left margin of tag 3 by 20 pixels
+    # text should be indented, since this tag takes
+    # precedence over testtag1, and is applied to the
+    # start of the text.
+    .tt tag configure testtag3 -lmargin1 20 ; update
+    #5
+    lappend res [list [.tt index "1.0 + 0 displaychars"] \
+      [lindex [.tt bbox 1.0] 0] \
+      [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
+    
+    # hide tag 1, remaining text should still be indented,
+    # since it still has testtag3 on it.  Again the
+    # bbox of 1.0 should have 0.
+    .tt tag configure testtag1 -elide 1 ; update
+    #6
+    lappend res [list [.tt index "1.0 + 0 displaychars"] \
+      [lindex [.tt bbox 1.0] 0] \
+      [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
+    
+    .tt tag configure testtag3 -lmargin1 {} -elide 0
+    .tt tag configure testtag1 -elide 1 -lmargin1 20
+    #7
+    lappend res [list [.tt index "1.0 + 0 displaychars"] \
+      [lindex [.tt bbox 1.0] 0] \
+      [lindex [.tt bbox "1.0 + 0 displaychars"] 0]]
+    
+    destroy .tt
+    set res
+} {{1.0 20 20} {1.29 0 0} {1.0 0 0} {1.29 0 20}\
+  {1.0 20 20} {1.29 0 20} {1.0 20 20}}
 
 test textDisp-33.0 {one line longer than fits in the widget} {
     pack [text .tt -wrap char]

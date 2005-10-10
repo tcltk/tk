@@ -1,3 +1,27 @@
+2005-10-10  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* doc/text.n
+	* generic/tkText.c
+	* generic/tkText.h
+	* generic/tkTextBTree.c
+	* generic/tkTextDisp.c
+	* generic/tkTextImage.c
+	* generic/tkTextIndex.c
+	* generic/tkTextMark.c
+	* generic/tkTextTag.c
+	* generic/tkTextWind.c
+	* macosx/tkMacOSXDefault.h
+	* tests/text.test
+	* tests/textDisp.test
+	* unix/tkUnixDefault.h
+	* win/tkWinDefault.h: Implementation of TIP#256, adding a new
+	text widget configuration option '-tabstyle', with new tests
+	and documentation.
+
+	Also a fix for [Bug 1281228] (documentation and full implementation
+	of -strictlimits), and [Bug 1288677] (corrected elide behaviour),
+	again with more tests.
+
 2005-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/dialog.tcl (::tk_dialog): add tkwait visibility before

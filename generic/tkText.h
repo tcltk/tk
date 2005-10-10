@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.26 2005/02/14 23:00:44 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.27 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #ifndef _TKTEXT
@@ -421,6 +421,8 @@ typedef struct TkTextTag {
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed)
 				 * or NULL.  Corresponds to tabString. */
+    int tabStyle;               /* One of TABULAR or WORDPROCESSOR or
+                                 * NONE (if not specified). */
     char *underlineString;	/* -underline option string (malloc-ed).
 				 * NULL means option not specified. */
     int underline;		/* Non-zero means draw underline underneath
@@ -492,6 +494,17 @@ typedef struct TkTextSearch {
  */
 
 typedef enum {LEFT, RIGHT, CENTER, NUMERIC} TkTextTabAlign;
+
+/*
+ * The following are the supported styles of tabbing, used for the
+ * -tabstyle option of the text widget.  The last element is only
+ * used for tag options.
+ */
+typedef enum {
+    TK_TEXT_TABSTYLE_TABULAR, 
+    TK_TEXT_TABSTYLE_WORDPROCESSOR, 
+    TK_TEXT_TABSTYLE_NONE
+} TkTextTabStyle;
 
 typedef struct TkTextTab {
     int location;			/* Offset in pixels of this tab stop
@@ -695,6 +708,7 @@ typedef struct TkText {
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
 				 * behavior. */
+    int tabStyle;               /* One of TABULAR or WORDPROCESSOR. */
 
     /*
      * Additional information used for displaying:
@@ -1014,7 +1028,7 @@ EXTERN void             TkBTreeClientRangeChanged  _ANSI_ARGS_((TkText *textPtr,
 EXTERN void		TkBTreeRemoveClient _ANSI_ARGS_((TkTextBTree tree,
 							 TkText *textPtr));
 EXTERN void		TkBTreeDestroy _ANSI_ARGS_((TkTextBTree tree));
-EXTERN void		TkBTreeDeleteChars _ANSI_ARGS_((TkTextBTree tree, 
+EXTERN void		TkBTreeDeleteIndexRange _ANSI_ARGS_((TkTextBTree tree, 
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr));
 EXTERN TkTextLine *	TkBTreeFindLine _ANSI_ARGS_((TkTextBTree tree, 
 			    CONST TkText *textPtr, int line));
@@ -1058,7 +1072,7 @@ EXTERN void		TkTextChanged _ANSI_ARGS_((TkSharedText *sharedTextPtr,
 			    TkText *textPtr,
 			    CONST TkTextIndex *index1Ptr, 
 			    CONST TkTextIndex *index2Ptr));
-EXTERN int		TkTextCharBbox _ANSI_ARGS_((TkText *textPtr,
+EXTERN int		TkTextIndexBbox _ANSI_ARGS_((TkText *textPtr,
 			    CONST TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr));
 EXTERN int		TkTextCharLayoutProc _ANSI_ARGS_((TkText *textPtr,

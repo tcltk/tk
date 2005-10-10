@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.14 2005/07/18 22:12:05 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.15 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -595,7 +595,7 @@ TkTextInsertDisplayProc(textPtr, chunkPtr, x, y, height, baseline, display,
       
     if(textPtr->insertCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	TkTextCharBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
+	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
 	rightSideWidth = charWidth + halfWidth;
     } else {
 	rightSideWidth = halfWidth;

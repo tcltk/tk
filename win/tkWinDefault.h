@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.19 2004/10/24 17:22:55 dkf Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.20 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #ifndef _TKWINDEFAULT
@@ -502,6 +502,7 @@
 #define DEF_TEXT_SPACING3		"0"
 #define DEF_TEXT_STATE			"normal"
 #define DEF_TEXT_TABS			""
+#define DEF_TEXT_TABSTYLE		"tabular"
 #define DEF_TEXT_TAKE_FOCUS		(char *) NULL
 #define DEF_TEXT_UNDO    		"0"
 #define DEF_TEXT_WIDTH			"80"

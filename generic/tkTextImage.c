@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.15 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.16 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "tk.h"
@@ -268,7 +268,7 @@ TkTextImageCmd(textPtr, interp, objc, objv)
 	    TkTextIndex index2;
 
 	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
-	    TkBTreeDeleteChars(textPtr->sharedTextPtr->tree, &index, &index2);
+	    TkBTreeDeleteIndexRange(textPtr->sharedTextPtr->tree, &index, &index2);
 	    return TCL_ERROR;
 	}
 	TkTextInvalidateLineMetrics(textPtr->sharedTextPtr, NULL,
@@ -834,11 +834,3 @@ EmbImageProc(clientData, x, y, width, height, imgWidth, imgHeight)
     TkTextInvalidateLineMetrics(eiPtr->body.ei.sharedTextPtr, NULL,
 	    index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */

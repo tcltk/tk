@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.20 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.21 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -28,6 +28,17 @@
 
 static char *wrapStrings[] = {
     "char", "none", "word", "", (char *) NULL
+};
+
+/*
+ * The 'TkTextTabStyle' enum in tkText.h is used to define a type for
+ * the -tabstyle option of the Text widget.  These values are used as
+ * indices into the string table below.  Tags are allowed an empty wrap
+ * value, but the widget as a whole is not.
+ */
+
+static char *tabStyleStrings[] = {
+    "tabular", "wordprocessor", "", (char *) NULL
 };
 
 static Tk_OptionSpec tagOptionSpecs[] = {
@@ -70,6 +81,9 @@ static Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, spacing3String), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-tabs", (char *) NULL, (char *) NULL,
 	NULL, Tk_Offset(TkTextTag, tabStringPtr), -1, TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING_TABLE, "-tabstyle", (char *) NULL, (char *) NULL,
+	(char *) NULL, -1, Tk_Offset(TkTextTag, tabStyle),
+	TK_OPTION_NULL_OK, (ClientData) tabStyleStrings, 0},
     {TK_OPTION_STRING, "-underline", (char *) NULL, (char *) NULL,
 	(char *) NULL, -1, Tk_Offset(TkTextTag, underlineString),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -483,6 +497,7 @@ TkTextTagCmd(textPtr, interp, objc, objv)
 		    || (tagPtr->spacing2String != NULL)
 		    || (tagPtr->spacing3String != NULL)
 		    || (tagPtr->tabStringPtr != NULL)
+		    || (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE)
 		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 		tagPtr->affectsDisplay = 1;
 		tagPtr->affectsDisplayGeometry = 1;
@@ -996,6 +1011,7 @@ TkTextCreateTag(textPtr, tagName, newTag)
     tagPtr->spacing3 = 0;
     tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
+    tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
     tagPtr->underlineString = NULL;
     tagPtr->underline = 0;
     tagPtr->elideString = NULL;
@@ -1723,11 +1739,3 @@ TagBindEvent(textPtr, eventPtr, numTags, tagArrayPtr)
 	ckfree((char*)nameArrPtr);
     }
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
