@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.18 2005/07/29 13:43:43 dkf Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.19 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "tkInt.h"
@@ -1269,7 +1269,7 @@ CleanupLine(linePtr)
 /*
  *----------------------------------------------------------------------
  *
- * TkBTreeDeleteChars --
+ * TkBTreeDeleteIndexRange --
  *
  *	Delete a range of characters from a B-tree. The caller must make sure
  *	that the final newline of the B-tree is never deleted.
@@ -1287,7 +1287,7 @@ CleanupLine(linePtr)
  */
 
 void
-TkBTreeDeleteChars(tree, index1Ptr, index2Ptr)
+TkBTreeDeleteIndexRange(tree, index1Ptr, index2Ptr)
     TkTextBTree tree;		/* Tree to delete from */
     register TkTextIndex *index1Ptr;
 				/* Indicates first character that is to be
@@ -4832,11 +4832,3 @@ ToggleCheckProc(segPtr, linePtr)
 	}
     }
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */

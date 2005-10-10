@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.38 2005/08/09 09:46:02 vincentdarley Exp $
+'\" RCS: @(#) $Id: text.n,v 1.39 2005/10/10 10:36:34 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -114,13 +114,10 @@ following the tab character is positioned at the tab position, and
 at the tab position;  if there is no decimal point then the least
 significant digit of the number is positioned just to the left of the
 tab position;  if there is no number in the text then the text is
-right-justified at the tab position.
+right-justified at the tab position. 
 For example, \fB\-tabs {2c left 4c 6c center}\fR creates three
 tab stops at two-centimeter intervals;  the first two use left
-justification and the third uses center justification.  Note that
-tabs are interpreted as they are encountered in the text.  Any tab
-character being laid out will use (and be defined by) the first tab stop 
-to the right of the preceding characters already laid out on that line.
+justification and the third uses center justification.  
 If the list of tab stops does not have enough elements to cover all
 of the tabs in a text line, then Tk extrapolates new tab stops using
 the spacing and alignment from the last tab stop in the list.  Tab
@@ -133,6 +130,19 @@ an empty list, then Tk uses default tabs spaced every eight
 (average size) characters.  To achieve a different standard spacing,
 for example every 4 characters, simply configure the widget with 
 \fB\-tabs "[expr {4 * [font measure $font 0]}] left"\fR.
+.OP \-tabstyle tabStyle TabStyle
+Specifies how to interpret the relationship between tab stops on a line
+and tabs in the text of that line.  The value must be \fBtabular\fR (the
+default) or \fBwordprocessor\fR. Note that tabs are interpreted as they
+are encountered in the text.  If the tab style is \fBtabular\fR then the
+n'th tab character in the line's text will be associated with the n'th
+tab stop defined for that line.  If the tab character's x coordinate
+falls to the right of the n'th tab stop, then a gap of a single space
+will be inserted as a fallback.  If the tab style is \fBwordprocessor\fR
+then any tab character being laid out will use (and be defined by) the
+first tab stop to the right of the preceding characters already laid out
+on that line.  The value of the \fBtabstyle\fR option may be overridden
+by \fB\-tabstyle\fR options in tags.
 .OP \-undo undo Undo
 Specifies a boolean that says whether the undo mechanism is active or
 not.
@@ -369,16 +379,16 @@ lines are not wrapped, then these two methods of counting are equivalent.
 .TP
 ?\fIsubmodifier\fR? \fBlinestart\fR
 .VS 8.5
-Adjust the index to refer to the first character on the line.  If the 
-\fBdisplay\fR submodifier is given, this is the first character on the 
+Adjust the index to refer to the first index on the line.  If the 
+\fBdisplay\fR submodifier is given, this is the first index on the 
 display line, otherwise on the logical line.
 .VE 8.5
 .TP
 ?\fIsubmodifier\fR? \fBlineend\fR
 .VS 8.5
-Adjust the index to refer to the last character on the line (the
+Adjust the index to refer to the last index on the line (the
 newline).  If the \fBdisplay\fR submodifier is given, this is the last
-character on the display line, otherwise on the logical line.
+index on the display line, otherwise on the logical line.
 .VE 8.5
 .TP
 ?\fIsubmodifier\fR? \fBwordstart\fR
@@ -468,10 +478,11 @@ option to give a 3-D appearance to the background for characters;
 it is ignored unless the \fB\-background\fR option
 has been set for the tag.
 .TP
-\fB\-elide \fIboolean\fR
-\fIElide\fR specifies whether the data should be elided.
-Elided data is not displayed and takes no space on screen, but further
-on behaves just as normal data.
+\fB\-elide \fIboolean\fR 
+\fIElide\fR specifies whether the data should
+be elided.  Elided data (characters, images, embedded windows, etc) is
+not displayed and takes no space on screen, but further on behaves just
+as normal data.
 .TP
 \fB\-fgstipple \fIbitmap\fR
 \fIBitmap\fR specifies a bitmap that is used as a stipple pattern
@@ -491,15 +502,15 @@ foreground information such as underlines.
 It may have any of the forms accepted by \fBTk_GetColor\fR.
 .TP
 \fB\-justify \fIjustify\fR
-If the first character of a display line has a tag for which this
+If the first non-elided character of a display line has a tag for which this
 option has been specified, then \fIjustify\fR determines how to
 justify the line.
 It must be one of \fBleft\fR, \fBright\fR, or \fBcenter\fR.
 If a line wraps, then the justification for each line on the
-display is determined by the first character of that display line.
+display is determined by the first non-elided character of that display line.
 .TP
 \fB\-lmargin1 \fIpixels\fR
-If the first character of a text line has a tag for which this
+If the first non-elided character of a text line has a tag for which this
 option has been specified, then \fIpixels\fR specifies how
 much the line should be indented from the left edge of the
 window.
@@ -510,7 +521,7 @@ first line on the display;  the \fB\-lmargin2\fR option controls
 the indentation for subsequent lines.
 .TP
 \fB\-lmargin2 \fIpixels\fR
-If the first character of a display line has a tag for which this
+If the first non-elided character of a display line has a tag for which this
 option has been specified, and if the display line is not the
 first for its text line (i.e., the text line has wrapped), then
 \fIpixels\fR specifies how much the line should be indented from
@@ -543,7 +554,7 @@ it is ignored unless the \fB\-background\fR option
 has been set for the tag.
 .TP
 \fB\-rmargin \fIpixels\fR
-If the first character of a display line has a tag for which this
+If the first non-elided character of a display line has a tag for which this
 option has been specified, then \fIpixels\fR specifies how wide
 a margin to leave between the end of the line and the right
 edge of the window.
@@ -551,7 +562,7 @@ edge of the window.
 distances.
 This option is only used when wrapping is enabled.
 If a text line wraps, the right margin for each line on the
-display is determined by the first character of that display
+display is determined by the first non-elided character of that display
 line.
 .TP
 \fB\-spacing1 \fIpixels\fR
@@ -578,13 +589,21 @@ line on the display.
 \fITabList\fR specifies a set of tab stops in the same form
 as for the \fB\-tabs\fR option for the text widget.  This
 option only applies to a display line if it applies to the
-first character on that display line.
+first non-elided character on that display line.
 If this option is specified as an empty string, it cancels
 the option, leaving it unspecified for the tag (the default).
 If the option is specified as a non-empty string that is
 an empty list, such as \fB\-tags\0{\0}\fR, then it requests
 default 8-character tabs as described for the \fBtags\fR
 widget option.
+.TP
+\fB\-tabstyle \fIstyle\fR
+\fIStyle\fR specifies either the \fItabular\fR or 
+\fIwordprocessor\fR style of tabbing to use for the text widget.
+This option only applies to a display line if it applies to the
+first non-elided character on that display line.
+If this option is specified as an empty string, it cancels
+the option, leaving it unspecified for the tag (the default).
 .TP
 \fB\-underline \fIboolean\fR
 \fIBoolean\fR specifies whether or not to draw an underline underneath
@@ -1551,6 +1570,15 @@ enclosed within another match are returned.  For example, applying an
 just match twice (i.e. no different to just \fB\-all\fR),
 but matching 'Z[a\-z]+Z' against 'ZooZooZoo' will now match twice.  
 An error will be thrown if this switch is used without \fB\-all\fR.
+.VE 8.5
+.TP
+\fB\-strictlimits\fR 
+.VS 8.5
+When performing any search, the normal behaviour is that
+the start and stop limits are checked with respect to the
+start of the matching text.  With the \fB\-strictlimits\fR flag,
+the entire matching range must lie inside the start and stop
+limits specified for the match to be valid.
 .VE 8.5
 .TP
 \fB\-elide\fR

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.59 2005/08/11 01:55:04 dgp Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.60 2005/10/10 10:36:35 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -63,6 +63,16 @@ static char *stateStrings[] = {
 
 static char *wrapStrings[] = {
     "char", "none", "word", (char *) NULL
+};
+
+/*
+ * The 'TkTextTabStyle' enum in tkText.h is used to define a type for
+ * the -tabstyle option of the Text widget.  These values are used as
+ * indices into the string table below.
+ */
+
+static char *tabStyleStrings[] = {
+    "tabular", "wordprocessor", (char *) NULL
 };
 
 /*
@@ -214,6 +224,9 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, Tk_Offset(TkText, tabOptionPtr), -1,
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
+    {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
+	DEF_TEXT_TABSTYLE, -1, Tk_Offset(TkText, tabStyle),
+	0, (ClientData) tabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_TEXT_TAKE_FOCUS, -1, Tk_Offset(TkText, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -323,7 +336,7 @@ int tkTextDebug = 0;
 
 static int		ConfigureText(Tcl_Interp *interp,
 			    TkText *textPtr, int objc, Tcl_Obj *CONST objv[]);
-static int		DeleteChars(TkSharedText *sharedPtr, TkText *textPtr,
+static int		DeleteIndexRange(TkSharedText *sharedPtr, TkText *textPtr,
 			    CONST TkTextIndex *indexPtr1,
 			    CONST TkTextIndex *indexPtr2, int viewUpdate);
 static int		CountIndices(CONST TkText *textPtr,
@@ -714,7 +727,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextCharBbox(textPtr, indexPtr, &x, &y, &width, &height,
+	if (TkTextIndexBbox(textPtr, indexPtr, &x, &y, &width, &height,
 		NULL) == 0) {
 	    Tcl_Obj *listObj = Tcl_NewListObj(0, NULL);
 
@@ -1063,7 +1076,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 		} else {
 		    indexPtr2 = NULL;
 		}
-		DeleteChars(NULL, textPtr, indexPtr1, indexPtr2, 1);
+		DeleteIndexRange(NULL, textPtr, indexPtr1, indexPtr2, 1);
 	    } else {
 		/*
 		 * Multi-index pair case requires that we prevalidate the
@@ -1168,7 +1181,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 			 * indices are preparsed above.
 			 */
 
-			DeleteChars(NULL, textPtr, &indices[i], &indices[i+1],
+			DeleteIndexRange(NULL, textPtr, &indices[i], &indices[i+1],
 				1);
 		    }
 		}
@@ -1563,9 +1576,9 @@ SharedTextObjCmd(clientData, interp, objc, objv)
 		if (result != TCL_OK) {
 		    return result;
 		}
-		DeleteChars(sharedPtr, NULL, &index1, &index2, 1);
+		DeleteIndexRange(sharedPtr, NULL, &index1, &index2, 1);
 	    } else {
-		DeleteChars(sharedPtr, NULL, &index1, NULL, 1);
+		DeleteIndexRange(sharedPtr, NULL, &index1, NULL, 1);
 	    }
 	    return TCL_OK;
 	} else {
@@ -1702,7 +1715,7 @@ TextReplaceCmd(textPtr, interp, indexFromPtr, indexToPtr, objc, objv,
     /*
      * Perform the deletion and insertion, but ensure no undo-separator is
      * placed between the two operations. Since we are using the helper
-     * functions 'DeleteChars' and 'TextInsertCmd' we have to pretend that the
+     * functions 'DeleteIndexRange' and 'TextInsertCmd' we have to pretend that the
      * autoSeparators setting is off, so that we don't get an undo-separator
      * between the delete and insert.
      */
@@ -1718,7 +1731,7 @@ TextReplaceCmd(textPtr, interp, indexFromPtr, indexToPtr, objc, objv,
 	}
     }
 
-    DeleteChars(NULL, textPtr, indexFromPtr, indexToPtr, viewUpdate);
+    DeleteIndexRange(NULL, textPtr, indexFromPtr, indexToPtr, viewUpdate);
     result = TextInsertCmd(NULL, textPtr, interp, objc-4, objv+4,
 	    indexFromPtr, viewUpdate);
 
@@ -2857,7 +2870,7 @@ CountIndices(textPtr, indexPtr1, indexPtr2, type)
 /*
  *----------------------------------------------------------------------
  *
- * DeleteChars --
+ * DeleteIndexRange --
  *
  *	This function implements most of the functionality of the "delete"
  *	widget command.
@@ -2866,7 +2879,8 @@ CountIndices(textPtr, indexPtr1, indexPtr2, type)
  *	Returns a standard Tcl result, currently always TCL_OK.
  *
  * Side effects:
- *	Characters get deleted from the text.
+ *	Characters and other entities (windows, images) get deleted 
+ *	from the text.
  *
  *	If 'viewUpdate' is true, we may adjust the window contents'
  *	y-position, and scrollbar setting.
@@ -2882,16 +2896,17 @@ CountIndices(textPtr, indexPtr1, indexPtr2, type)
  */
 
 static int
-DeleteChars(sharedTextPtr, textPtr, indexPtr1, indexPtr2, viewUpdate)
+DeleteIndexRange(sharedTextPtr, textPtr, indexPtr1, indexPtr2, viewUpdate)
     TkSharedText *sharedTextPtr;/* Shared portion of peer widgets. */
     TkText *textPtr;		/* Overall information about text widget. */
     CONST TkTextIndex *indexPtr1;
 				/* Index describing location of first
-				 * character to delete. */
+				 * character (or other entity) to delete. */
     CONST TkTextIndex *indexPtr2;
-				/* Index describing location of last character
-				 * to delete. NULL means just delete the one
-				 * character given by indexPtr1. */
+				/* Index describing location of last
+				 * character (or other entity) to delete.
+				 * NULL means just delete the one character
+				 * given by indexPtr1.  */
     int viewUpdate;		/* Update vertical view if set. */
 {
     int line1, line2;
@@ -3086,7 +3101,7 @@ DeleteChars(sharedTextPtr, textPtr, indexPtr1, indexPtr2, viewUpdate)
 
     sharedTextPtr->stateEpoch++;
 
-    TkBTreeDeleteChars(sharedTextPtr->tree, &index1, &index2);
+    TkBTreeDeleteIndexRange(sharedTextPtr->tree, &index1, &index2);
 
     resetViewCount = 0;
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
@@ -3409,7 +3424,7 @@ TextBlinkProc(clientData)
     }
   redrawInsert:
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-    if (TkTextCharBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
+    if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
 	if (textPtr->insertCursorType) {
 	    /* Block cursor */
 	    TkTextRedrawRegion(textPtr, x - textPtr->width / 2, y,
@@ -4033,6 +4048,18 @@ TextSearchFoundMatch(lineNum, searchSpecPtr, clientData, theLine, matchOffset,
     }
 
     /*
+     * If we're using strict limits checking, ensure that the match with
+     * its full length fits inside the given range.
+     */
+    
+    if (searchSpecPtr->strictLimits && lineNum == searchSpecPtr->stopLine) {
+	if (searchSpecPtr->backwards ^
+		((matchOffset + numChars) > searchSpecPtr->stopOffset)) {
+	    return 0;
+	}
+    }
+
+    /*
      * The index information returned by the regular expression parser only
      * considers textual information: it doesn't account for embedded windows,
      * elided text (when we are not searching elided text) or any other
@@ -4253,7 +4280,8 @@ TkTextGetTabs(interp, textPtr, stringPtr)
     tabArrayPtr->numTabs = 0;
     prevStop = 0.0;
     lastStop = 0.0;
-    for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i < objc; i++, tabPtr++) {
+    for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i < objc;
+      i++, tabPtr++) {
 	int index;
 
 	/*
@@ -5528,7 +5556,9 @@ SearchCore(interp, searchSpecPtr, patObj)
 			 * We've found a multi-line match.
 			 */
 
-			extraLinesSearched = extraLines - 1;
+			if (extraLines > 0) {
+			    extraLinesSearched = extraLines - 1;
+			}
 		    }
 		}
 
@@ -5756,7 +5786,9 @@ SearchCore(interp, searchSpecPtr, patObj)
 			}
 			if (match && ((firstOffset + info.matches[0].end)
 				>= prevFullLine)) {
-			    extraLinesSearched = extraLines - 1;
+			    if (extraLines > 0) {
+			        extraLinesSearched = extraLines - 1;
+			    }
 			    lastFullLine = prevFullLine;
 			}
 
@@ -6309,11 +6341,3 @@ ObjectIsEmpty(objPtr)
     Tcl_GetStringFromObj(objPtr, &length);
     return (length == 0);
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
