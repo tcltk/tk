@@ -1,5 +1,9 @@
 2005-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* macosx/tkMacOSXInt.h: Move MODULE_SCOPE defn to tkInt.h and add
+	* generic/tkInt.h:      WORDS_BIGENDIAN checks that will work with
+	OS X universal binary compiles. (steffen)
+
 	* generic/tkMenu.c (TkSetWindowMenuBar): do not call TkMenuInit if
 	the winPtr indicates TK_ALREADY_DEAD.  This prevents reinit that
 	creates a Tk exit handler after all exit handlers should be
