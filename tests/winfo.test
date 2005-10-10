@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.9 2002/07/13 21:52:34 dgp Exp $
+# RCS: @(#) $Id: winfo.test,v 1.9.2.1 2005/10/10 15:19:41 patthoyts Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -115,7 +115,8 @@ toplevel .t -width 550 -height 400
 frame .t.f -width 80 -height 60 -bd 2 -relief raised
 place .t.f -x 50 -y 50
 wm geom .t +0+0
-update
+tkwait visibility .t.f
+
 test winfo-4.1 {"winfo containing" command} {
     list [catch {winfo containing 22} msg] $msg
 } {1 {wrong # args: should be "winfo containing ?-displayof window? rootX rootY"}}
