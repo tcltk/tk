@@ -1,5 +1,8 @@
 2005-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkInt.h: add MODULE_SCOPE and WORDS_BIGENDIAN checks
+	that will work with OS X universal binary compiles. (steffen)
+
 	* generic/tkConfig.c (Tk_DeleteOptionTable, Tk_CreateOptionTable):
 	properly alloc/delete one more option. [Bug 1319720] (melbardis)
 
