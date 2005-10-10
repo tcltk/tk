@@ -1,3 +1,8 @@
+2005-10-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/winfo.test: Wait until child window is visible
+	* tests/wm.test:    Modified test to match actual error output.
+
 2005-10-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/dialog.tcl (::tk_dialog): add tkwait visibility before
