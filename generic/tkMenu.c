@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.30 2005/10/12 09:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.31 2005/10/12 09:43:37 dkf Exp $
  */
 
 /*
@@ -1323,10 +1323,6 @@ TkDestroyMenu(menuPtr)
  *	This entry is removed from the list of entries that point to the
  *	cascade menu. This is done in preparation for changing the menu
  *	that this entry points to.
- *
- *	At the end of this function, the menu entry no longer contains
- *	a reference to a 'TkMenuReferences' structure, and therefore
- *	no such structure contains a reference to this menu entry either.
  *
  *	At the end of this function, the menu entry no longer contains
  *	a reference to a 'TkMenuReferences' structure, and therefore
