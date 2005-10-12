@@ -1,3 +1,11 @@
+2005-10-12  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* tests/canvPs.test, tests/canvPsBmap.tcl, tests/canvPsImg.tcl: 
+	* tests/imgPhoto.test, tests/menu.test: Arrange for the test suite to
+	only ever refer to images in the same directory as the tests. This
+	makes it possible to package the test suite itself as a starkit.
+	Thanks to David Zolli for suggesting this.
+
 2005-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkConfig.c (Tk_DeleteOptionTable, Tk_CreateOptionTable):

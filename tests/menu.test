@@ -5,11 +5,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.16 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: menu.test,v 1.17 2005/10/12 09:29:21 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+# find the earth.gif file for use in these tests
+set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+testConstraint hasEarthPhoto [file exists $earthPhotoFile]
 
 test menu-1.1 {Tk_MenuCmd procedure} {
     list [catch menu msg] $msg
@@ -195,7 +199,9 @@ menu .m2
 .m1 add separator
 .m1 add checkbutton -label "checkbutton" -variable check -onvalue on -offvalue off
 .m1 add radiobutton -label "radiobutton" -variable radio
-image create photo image1 -file [file join $tk_library demos images earth.gif]
+if {[tcltest::testConstraint hasEarthPhoto]} {
+    image create photo image1 -file $earthPhotoFile
+}
 
 foreach configTest {
     {-activebackground 
@@ -488,7 +494,9 @@ foreach configTest {
     	set options [lindex $attempt 1]
     	foreach item {0 1 2 3 4 5} {
     	    catch {unset msg}
-    	    test menu-2.$i [list entry configuration options $name $item $value [.m1 type $item]] {
+	    # OK, it's an overeager constraint, but it should also
+	    # normally hold anyway
+    	    test menu-2.$i [list entry configuration options $name $item $value [.m1 type $item]] hasEarthPhoto {
             	set result [catch {.m1 entryconfigure $item $name $value} msg]
                 if {$result == 1} {
             	    set msg
@@ -501,7 +509,9 @@ foreach configTest {
     }
 }
 
-image delete image1
+if {[tcltest::testConstraint hasEarthPhoto]} {
+    image delete image1
+}
 destroy .m1
 destroy .m2
 
@@ -1344,10 +1354,10 @@ test menu-8.1 {DestroyMenuEntry} {
     .m1 add cascade -menu .m2
     list [catch {.m1 delete 1} msg] $msg [destroy .m1 .m2]
 } {0 {} {}}
-test menu-8.2 {DestroyMenuEntry} {
+test menu-8.2 {DestroyMenuEntry} hasEarthPhoto {
     catch {image delete image1a}
     catch {destroy .m1}
-    image create photo image1a -file [file join $tk_library demos images earth.gif]
+    image create photo image1a -file $earthPhotoFile
     menu .m1
     .m1 add command -image image1a
     list [catch {.m1 delete 1} msg] $msg [destroy .m1] [image delete image1a]
@@ -1596,32 +1606,32 @@ test menu-11.18 {ConfigureMenuEntry} testImageType {
     image create test image1
     list [catch {.m1 entryconfigure 1 -image image1} msg] $msg [destroy .m1] [image delete image1]
 } {0 {} {} {}}
-test menu-11.19 {ConfigureMenuEntry} testImageType {
+test menu-11.19 {ConfigureMenuEntry} {testImageType hasEarthPhoto} {
     catch {destroy .m1}
     catch {image delete image1}
     catch {image delete image2}
     image create test image1
-    image create photo image2 -file [file join $tk_library demos images earth.gif]
+    image create photo image2 -file $earthPhotoFile
     menu .m1
     .m1 add command -image image1
     list [catch {.m1 entryconfigure 1 -image image2} msg] $msg [destroy .m1] [image delete image1] [image delete image2]
 } {0 {} {} {} {}}
-test menu-11.20 {ConfigureMenuEntry} testImageType {
+test menu-11.20 {ConfigureMenuEntry} {testImageType hasEarthPhoto} {
     catch {destroy .m1}
     catch {image delete image1}
     catch {image delete image2}
-    image create photo image1 -file [file join $tk_library demos images earth.gif]
+    image create photo image1 -file $earthPhotoFile
     image create test image2
     menu .m1
     .m1 add checkbutton -image image1
     list [catch {.m1 entryconfigure 1 -selectimage image2} msg] $msg [destroy .m1] [image delete image1] [image delete image2]
 } {0 {} {} {} {}}
-test menu-11.21 {ConfigureMenuEntry} testImageType {
+test menu-11.21 {ConfigureMenuEntry} {testImageType hasEarthPhoto} {
     catch {destroy .m1}
     catch {image delete image1}
     catch {image delete image2}
     catch {image delete image3}
-    image create photo image1 -file [file join $tk_library demos images earth.gif]
+    image create photo image1 -file $earthPhotoFile
     image create test image2
     image create test image3
     menu .m1
