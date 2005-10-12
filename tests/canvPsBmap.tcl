@@ -2,7 +2,7 @@
 # for bitmaps in canvases.  It is part of the Tk visual test suite,
 # which is invoked via the "visual" script.
 #
-# RCS: @(#) $Id: canvPsBmap.tcl,v 1.4 2004/10/19 15:25:08 dkf Exp $
+# RCS: @(#) $Id: canvPsBmap.tcl,v 1.5 2005/10/12 09:29:21 dkf Exp $
 
 catch {destroy .t}
 toplevel .t
@@ -25,48 +25,50 @@ pack .t.bot.print .t.bot.quit -side left -pady 1m -expand 1
 canvas $c -width 6i -height 6i -bd 2 -relief sunken
 pack $c -expand yes -fill both -padx 2m -pady 2m
 
+set canvPsBmapImageDir [file join [file dirname [info script]] images]
+
 $c create bitmap 0.5i 0.5i \
-    -bitmap @[file join $tk_library demos/images/flagdown.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir flagdown.xbm] \
     -background {} -foreground black -anchor nw
 $c create rect 0.47i 0.47i 0.53i 0.53i -fill {} -outline black
 
 $c create bitmap 3.0i 0.5i \
-    -bitmap @[file join $tk_library demos/images/flagdown.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir flagdown.xbm] \
     -background {} -foreground black -anchor n
 $c create rect 2.97i 0.47i 3.03i 0.53i -fill {} -outline black
 
 $c create bitmap 5.5i 0.5i \
-    -bitmap @[file join $tk_library demos/images/flagdown.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir flagdown.xbm] \
     -background black -foreground white -anchor ne
 $c create rect 5.47i 0.47i 5.53i 0.53i -fill {} -outline black
 
 $c create bitmap 0.5i 3.0i \
-    -bitmap @[file join $tk_library demos/images/face.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir face.xbm] \
     -background {} -foreground black -anchor w
 $c create rect 0.47i 2.97i 0.53i 3.03i -fill {} -outline black
 
 $c create bitmap 3.0i 3.0i \
-    -bitmap @[file join $tk_library demos/images/face.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir face.xbm] \
     -background {} -foreground black -anchor center
 $c create rect 2.97i 2.97i 3.03i 3.03i -fill {} -outline black
 
 $c create bitmap 5.5i 3.0i \
-    -bitmap @[file join $tk_library demos/images/face.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir face.xbm] \
     -background blue -foreground black -anchor e
 $c create rect 5.47i 2.97i 5.53i 3.03i -fill {} -outline black
 
 $c create bitmap 0.5i 5.5i \
-    -bitmap @[file join $tk_library demos/images/flagup.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir flagup.xbm] \
     -background black -foreground white -anchor sw
 $c create rect 0.47i 5.47i 0.53i 5.53i -fill {} -outline black
 
 $c create bitmap 3.0i 5.5i \
-    -bitmap @[file join $tk_library demos/images/flagup.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir flagup.xbm] \
     -background green -foreground white -anchor s
 $c create rect 2.97i 5.47i 3.03i 5.53i -fill {} -outline black
 
 $c create bitmap 5.5i 5.5i \
-    -bitmap @[file join $tk_library demos/images/flagup.xbm] \
+    -bitmap @[file join $canvPsBmapImageDir flagup.xbm] \
     -background {} -foreground black -anchor se
 $c create rect 5.47i 5.47i 5.53i 5.53i -fill {} -outline black
 

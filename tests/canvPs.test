@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvPs.test,v 1.10 2004/12/08 03:02:53 dgp Exp $
+# RCS: @(#) $Id: canvPs.test,v 1.11 2005/10/12 09:29:21 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -140,7 +140,7 @@ test canvPs-3.1 {test ps generation with an embedded window} -setup {
 	    -dash {4 4} -stipple question -outline red -fill green
 
     image create photo logo \
-	    -file [file join $tk_library images pwrdLogo150.gif]
+	-file [file join [file dirname [info script]] pwrdLogo150.gif]
     .c create image 200 50 -image logo -anchor nw
 
     entry .c.e -background pink -foreground blue -width 14
