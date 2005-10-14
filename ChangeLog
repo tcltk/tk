@@ -1,3 +1,9 @@
+2005-10-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinSend.c:    Avoid using tcl internal headers and fix to 
+	* win/tkWinSendCom.h: correctly link on all types of build (was
+	* win/tkWinSendCom.c: broken in static,msvcrt builds).
+
 2005-10-12  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* tests/canvPs.test, tests/canvPsBmap.tcl, tests/canvPsImg.tcl:

@@ -11,12 +11,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.9 2005/09/30 16:07:21 dgp Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.10 2005/10/14 11:59:19 patthoyts Exp $
  */
 
-#include "tkPort.h"
-#include "tkInt.h"
-#include "tclInt.h"		/* TCL_TSD_INIT */
 #include "tkWinSendCom.h"
 
 /* Should be defined in WTypes.h but mingw 1.0 is missing them */
@@ -113,19 +110,21 @@ Tk_SetAppName(tkwin, name)
 				 * "send" commands.  Must be globally
 				 * unique. */
 {
-    ThreadSpecificData *tsdPtr;
+    ThreadSpecificData *tsdPtr = NULL;
     TkWindow *winPtr = (TkWindow *)tkwin;
     RegisteredInterp *riPtr = NULL;
     Tcl_Interp *interp;
     HRESULT hr = S_OK;
 
-    tsdPtr = TCL_TSD_INIT(&dataKey);
     interp = winPtr->mainPtr->interp;
 
     /*
      * Temporarily disabled for bug #858822
      */
     return name;
+
+    tsdPtr = (ThreadSpecificData *)
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /* 
      * Initialise the COM library for this interpreter just once.

@@ -10,16 +10,20 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.h,v 1.1 2003/09/26 23:59:26 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSendCom.h,v 1.2 2005/10/14 11:59:19 patthoyts Exp $
  */
 
 #ifndef _tkWinSendCom_h_INCLUDE
 #define _tkWinSendCom_h_INCLUDE
 
-#include "tkPort.h"
-#include "tkInt.h"
-
+#include "tkWinInt.h"
 #include <ole2.h>
+
+#ifdef _MSC_VER
+#   pragma comment (lib, "ole32.lib")
+#   pragma comment (lib, "oleaut32.lib")
+#   pragma comment (lib, "uuid.lib")
+#endif
 
 /*
  * TkWinSendCom CoClass structure 
