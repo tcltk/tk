@@ -1,3 +1,8 @@
+2005-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/menu.tcl (::tk::MenuUnpost): remove leftover ] from
+	string equal mods of 2005-07-25. (sowadsky)
+
 2005-10-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinSend.c:    Avoid using tcl internal headers and fix to 
