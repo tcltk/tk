@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.22 2005/07/25 09:06:00 dkf Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.23 2005/10/16 02:36:45 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -426,7 +426,7 @@ proc ::tk::MenuUnpost menu {
 		$parent postcascade none
 		GenerateMenuSelect $parent
 		set type [$parent cget -type]
-		if {$type eq "menubar" || $type eq "tearoff"]} {
+		if {$type eq "menubar" || $type eq "tearoff"} {
 		    break
 		}
 		set menu $parent
