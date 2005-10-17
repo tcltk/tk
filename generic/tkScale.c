@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.19 2005/10/17 21:39:45 dkf Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.20 2005/10/17 21:41:54 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -632,8 +632,8 @@ ConfigureScale(
 	 */
 
 	if ((scalePtr->tickInterval < 0)
-		^ ((scalePtr->toValue - scalePtr->fromValue) <  0)) {
-	  scalePtr->tickInterval = -scalePtr->tickInterval;
+		^ ((scalePtr->toValue - scalePtr->fromValue) < 0)) {
+	    scalePtr->tickInterval = -scalePtr->tickInterval;
 	}
 
 	ComputeFormat(scalePtr);
@@ -807,7 +807,7 @@ ComputeFormat(
 
     numDigits = scalePtr->digits;
     if (numDigits <= 0) {
-	if  (scalePtr->resolution > 0) {
+	if (scalePtr->resolution > 0) {
 	    /*
 	     * A resolution was specified for the scale, so just use it.
 	     */
@@ -1404,7 +1404,7 @@ TkScaleValueToPixel(
 	y = 0;
     } else {
 	y = (int) ((value - scalePtr->fromValue) * pixelRange
-		  / valueRange + 0.5);
+		/ valueRange + 0.5);
 	if (y < 0) {
 	    y = 0;
 	} else if (y > pixelRange) {
