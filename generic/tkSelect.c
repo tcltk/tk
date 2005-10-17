@@ -1,26 +1,25 @@
-/* 
+/*
  * tkSelect.c --
  *
- *	This file manages the selection for the Tk toolkit,
- *	translating between the standard X ICCCM conventions
- *	and Tcl commands.
+ *	This file manages the selection for the Tk toolkit, translating
+ *	between the standard X ICCCM conventions and Tcl commands.
  *
  * Copyright (c) 1990-1993 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.15 2004/03/17 18:15:44 das Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.16 2005/10/17 22:02:44 dkf Exp $
  */
 
 #include "tkInt.h"
 #include "tkSelect.h"
 
 /*
- * When a selection handler is set up by invoking "selection handle",
- * one of the following data structures is set up to hold information
- * about the command to invoke and its interpreter.
+ * When a selection handler is set up by invoking "selection handle", one of
+ * the following data structures is set up to hold information about the
+ * command to invoke and its interpreter.
  */
 
 typedef struct {
@@ -30,109 +29,105 @@ typedef struct {
     int byteOffset;		/* The expected byte offset of the next
 				 * chunk. */
     char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
-				 * that is split across chunks.*/
-    char command[4];		/* Command to invoke.  Actual space is
-				 * allocated as large as necessary.  This
-				 * must be the last entry in the structure. */
+				 * that is split across chunks. */
+    char command[4];		/* Command to invoke. Actual space is
+				 * allocated as large as necessary. This must
+				 * be the last entry in the structure. */
 } CommandInfo;
 
 /*
  * When selection ownership is claimed with the "selection own" Tcl command,
- * one of the following structures is created to record the Tcl command
- * to be executed when the selection is lost again.
+ * one of the following structures is created to record the Tcl command to be
+ * executed when the selection is lost again.
  */
 
 typedef struct LostCommand {
     Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
-    char command[4];		/* Command to invoke.  Actual space is
-				 * allocated as large as necessary.  This
-				 * must be the last entry in the structure. */
+    char command[4];		/* Command to invoke. Actual space is
+				 * allocated as large as necessary. This must
+				 * be the last entry in the structure. */
 } LostCommand;
 
 /*
- * The structure below is used to keep each thread's pending list
- * separate.
+ * The structure below is used to keep each thread's pending list separate.
  */
 
 typedef struct ThreadSpecificData {
     TkSelInProgress *pendingPtr;
-				/* Topmost search in progress, or
-				 * NULL if none. */
+				/* Topmost search in progress, or NULL if
+				 * none. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
 /*
- * Forward declarations for procedures defined in this file:
+ * Forward declarations for functions defined in this file:
  */
 
-static int		HandleTclCommand _ANSI_ARGS_((ClientData clientData,
-			    int offset, char *buffer, int maxBytes));
-static void		LostSelection _ANSI_ARGS_((ClientData clientData));
-static int		SelGetProc _ANSI_ARGS_((ClientData clientData,
-			    Tcl_Interp *interp, char *portion));
+static int		HandleTclCommand(ClientData clientData,
+			    int offset, char *buffer, int maxBytes);
+static void		LostSelection(ClientData clientData);
+static int		SelGetProc(ClientData clientData,
+			    Tcl_Interp *interp, char *portion);
 
 /*
  *--------------------------------------------------------------
  *
  * Tk_CreateSelHandler --
  *
- *	This procedure is called to register a procedure
- *	as the handler for selection requests of a particular
- *	target type on a particular window for a particular
- *	selection.
+ *	This function is called to register a function as the handler for
+ *	selection requests of a particular target type on a particular window
+ *	for a particular selection.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	In the future, whenever the selection is in tkwin's
- *	window and someone requests the selection in the
- *	form given by target, proc will be invoked to provide
- *	part or all of the selection in the given form.  If
- *	there was already a handler declared for the given
- *	window, target and selection type, then it is replaced.
- *	Proc should have the following form:
+
+ *	In the future, whenever the selection is in tkwin's window and someone
+ *	requests the selection in the form given by target, proc will be
+ *	invoked to provide part or all of the selection in the given form. If
+ *	there was already a handler declared for the given window, target and
+ *	selection type, then it is replaced. Proc should have the following
+ *	form:
  *
  *	int
- *	proc(clientData, offset, buffer, maxBytes)
- *	    ClientData clientData;
- *	    int offset;
- *	    char *buffer;
- *	    int maxBytes;
+ *	proc(
+ *	    ClientData clientData,
+ *	    int offset,
+ *	    char *buffer,
+ *	    int maxBytes)
  *	{
  *	}
  *
- *	The clientData argument to proc will be the same as
- *	the clientData argument to this procedure.  The offset
- *	argument indicates which portion of the selection to
- *	return:  skip the first offset bytes.  Buffer is a
- *	pointer to an area in which to place the converted
- *	selection, and maxBytes gives the number of bytes
- *	available at buffer.  Proc should place the selection
- *	in buffer as a string, and return a count of the number
- *	of bytes of selection actually placed in buffer (not
- *	including the terminating NULL character).  If the
- *	return value equals maxBytes, this is a sign that there
- *	is probably still more selection information available.
+ *	The clientData argument to proc will be the same as the clientData
+ *	argument to this function. The offset argument indicates which portion
+ *	of the selection to return: skip the first offset bytes. Buffer is a
+ *	pointer to an area in which to place the converted selection, and
+ *	maxBytes gives the number of bytes available at buffer. Proc should
+ *	place the selection in buffer as a string, and return a count of the
+ *	number of bytes of selection actually placed in buffer (not including
+ *	the terminating NULL character). If the return value equals maxBytes,
+ *	this is a sign that there is probably still more selection information
+ *	available.
  *
  *--------------------------------------------------------------
  */
 
 void
-Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
-    Tk_Window tkwin;		/* Token for window. */
-    Atom selection;		/* Selection to be handled. */
-    Atom target;		/* The kind of selection conversions
-				 * that can be handled by proc,
-				 * e.g. TARGETS or STRING. */
-    Tk_SelectionProc *proc;	/* Procedure to invoke to convert
-				 * selection to type "target". */
-    ClientData clientData;	/* Value to pass to proc. */
-    Atom format;		/* Format in which the selection
-				 * information should be returned to
-				 * the requestor. XA_STRING is best by
-				 * far, but anything listed in the ICCCM
-				 * will be tolerated (blech). */
+Tk_CreateSelHandler(
+    Tk_Window tkwin,		/* Token for window. */
+    Atom selection,		/* Selection to be handled. */
+    Atom target,		/* The kind of selection conversions that can
+				 * be handled by proc, e.g. TARGETS or
+				 * STRING. */
+    Tk_SelectionProc *proc,	/* Function to invoke to convert selection to
+				 * type "target". */
+    ClientData clientData,	/* Value to pass to proc. */
+    Atom format)		/* Format in which the selection information
+				 * should be returned to the requestor.
+				 * XA_STRING is best by far, but anything
+				 * listed in the ICCCM will be tolerated
+				 * (blech). */
 {
     register TkSelHandler *selPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -142,8 +137,8 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
     }
 
     /*
-     * See if there's already a handler for this target and selection on
-     * this window.  If so, re-use it.  If not, create a new one.
+     * See if there's already a handler for this target and selection on this
+     * window. If so, re-use it. If not, create a new one.
      */
 
     for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
@@ -154,11 +149,10 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
 	    break;
 	}
 	if ((selPtr->selection == selection) && (selPtr->target == target)) {
-
 	    /*
-	     * Special case:  when replacing handler created by
-	     * "selection handle", free up memory.  Should there be a
-	     * callback to allow other clients to do this too?
+	     * Special case: when replacing handler created by "selection
+	     * handle", free up memory. Should there be a callback to allow
+	     * other clients to do this too?
 	     */
 
 	    if (selPtr->proc == HandleTclCommand) {
@@ -185,8 +179,7 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
 	 */
 
 	target = winPtr->dispPtr->utf8Atom;
-	for (selPtr = winPtr->selHandlerList; ;
-	     selPtr = selPtr->nextPtr) {
+	for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
 	    if (selPtr == NULL) {
 		selPtr = (TkSelHandler *) ckalloc(sizeof(TkSelHandler));
 		selPtr->nextPtr = winPtr->selHandlerList;
@@ -197,11 +190,13 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
 		selPtr->proc = proc;
 		if (selPtr->proc == HandleTclCommand) {
 		    /*
-		     * The clientData is selection controlled memory, so
-		     * we should make a copy for this selPtr.
+		     * The clientData is selection controlled memory, so we
+		     * should make a copy for this selPtr.
 		     */
-		    unsigned cmdInfoLen = sizeof(CommandInfo) + 
+
+		    unsigned cmdInfoLen = sizeof(CommandInfo) +
 			    ((CommandInfo*)clientData)->cmdLength - 3;
+
 		    selPtr->clientData = (ClientData)ckalloc(cmdInfoLen);
 		    memcpy(selPtr->clientData, clientData, cmdInfoLen);
 		} else {
@@ -210,10 +205,9 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
 		selPtr->size = 8;
 		break;
 	    }
-	    if ((selPtr->selection == selection)
-		    && (selPtr->target == target)) {
+	    if (selPtr->selection==selection && selPtr->target==target) {
 		/*
-		 * Looks like we had a utf-8 target already.  Leave it alone.
+		 * Looks like we had a utf-8 target already. Leave it alone.
 		 */
 
 		break;
@@ -234,30 +228,30 @@ Tk_CreateSelHandler(tkwin, selection, target, proc, clientData, format)
  *	None.
  *
  * Side effects:
- *	The selection handler for tkwin and target is removed.  If there
- *	is no such handler then nothing happens.
+ *	The selection handler for tkwin and target is removed. If there is no
+ *	such handler then nothing happens.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_DeleteSelHandler(tkwin, selection, target)
-    Tk_Window tkwin;			/* Token for window. */
-    Atom selection;			/* The selection whose handler
-					 * is to be removed. */
-    Atom target;			/* The target whose selection
-					 * handler is to be removed. */
+Tk_DeleteSelHandler(
+    Tk_Window tkwin,		/* Token for window. */
+    Atom selection,		/* The selection whose handler is to be
+				 * removed. */
+    Atom target)		/* The target whose selection handler is to be
+				 * removed. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     register TkSelHandler *selPtr, *prevPtr;
     register TkSelInProgress *ipPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the selection handler to be deleted, or return if it doesn't
      * exist.
-     */ 
+     */
 
     for (selPtr = winPtr->selHandlerList, prevPtr = NULL; ;
 	    prevPtr = selPtr, selPtr = selPtr->nextPtr) {
@@ -274,8 +268,8 @@ Tk_DeleteSelHandler(tkwin, selection, target)
      * handler is dead.
      */
 
-    for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL; 
-            ipPtr = ipPtr->nextPtr) {
+    for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL;
+	    ipPtr = ipPtr->nextPtr) {
 	if (ipPtr->selPtr == selPtr) {
 	    ipPtr->selPtr = NULL;
 	}
@@ -295,13 +289,14 @@ Tk_DeleteSelHandler(tkwin, selection, target)
 	/*
 	 * If the user asked for a STRING handler and we understand
 	 * UTF8_STRING, we may have implicitly created a UTF8_STRING handler
-	 * for them.  Look for it and delete it as necessary.
+	 * for them. Look for it and delete it as necessary.
 	 */
+
 	TkSelHandler *utf8selPtr;
 
 	target = winPtr->dispPtr->utf8Atom;
 	for (utf8selPtr = winPtr->selHandlerList; utf8selPtr != NULL;
-	     utf8selPtr = utf8selPtr->nextPtr) {
+		utf8selPtr = utf8selPtr->nextPtr) {
 	    if ((utf8selPtr->selection == selection)
 		    && (utf8selPtr->target == target)) {
 		break;
@@ -312,9 +307,10 @@ Tk_DeleteSelHandler(tkwin, selection, target)
 		    && (utf8selPtr->proc == selPtr->proc)
 		    && (utf8selPtr->size == selPtr->size)) {
 		/*
-		 * This recursive call is OK, because we've
-		 * changed the value of 'target'
+		 * This recursive call is OK, because we've changed the value
+		 * of 'target'.
 		 */
+
 		Tk_DeleteSelHandler(tkwin, selection, target);
 	    }
 	}
@@ -342,49 +338,45 @@ Tk_DeleteSelHandler(tkwin, selection, target)
  *	None.
  *
  * Side effects:
- *	From now on, requests for the selection will be directed
- *	to procedures associated with tkwin (they must have been
- *	declared with calls to Tk_CreateSelHandler).  When the
- *	selection is lost by this window, proc will be invoked
- *	(see the manual entry for details).  This procedure may
- *	invoke callbacks, including Tcl scripts, so any calling
- *	function should be reentrant at the point where
- *	Tk_OwnSelection is invoked.
+ *	From now on, requests for the selection will be directed to functions
+ *	associated with tkwin (they must have been declared with calls to
+ *	Tk_CreateSelHandler). When the selection is lost by this window, proc
+ *	will be invoked (see the manual entry for details). This function may
+ *	invoke callbacks, including Tcl scripts, so any calling function
+ *	should be reentrant at the point where Tk_OwnSelection is invoked.
  *
  *--------------------------------------------------------------
  */
 
 void
-Tk_OwnSelection(tkwin, selection, proc, clientData)
-    Tk_Window tkwin;		/* Window to become new selection
-				 * owner. */
-    Atom selection;		/* Selection that window should own. */
-    Tk_LostSelProc *proc;	/* Procedure to call when selection
-				 * is taken away from tkwin. */
-    ClientData clientData;	/* Arbitrary one-word argument to
-				 * pass to proc. */
+Tk_OwnSelection(
+    Tk_Window tkwin,		/* Window to become new selection owner. */
+    Atom selection,		/* Selection that window should own. */
+    Tk_LostSelProc *proc,	/* Function to call when selection is taken
+				 * away from tkwin. */
+    ClientData clientData)	/* Arbitrary one-word argument to pass to
+				 * proc. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkSelectionInfo *infoPtr;
     Tk_LostSelProc *clearProc = NULL;
-    ClientData clearData = NULL;	/* Initialization needed only to
-					 * prevent compiler warning. */
-    
-    
+    ClientData clearData = NULL;/* Initialization needed only to prevent
+				 * compiler warning. */
+
     if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
     }
     Tk_MakeWindowExist(tkwin);
 
     /*
-     * This code is somewhat tricky.  First, we find the specified selection
-     * on the selection list.  If the previous owner is in this process, and
-     * is a different window, then we need to invoke the clearProc.  However,
-     * it's dangerous to call the clearProc right now, because it could
-     * invoke a Tcl script that wrecks the current state (e.g. it could
-     * delete the window).  To be safe, defer the call until the end of the
-     * procedure when we no longer care about the state.
+     * This code is somewhat tricky. First, we find the specified selection on
+     * the selection list. If the previous owner is in this process, and is a
+     * different window, then we need to invoke the clearProc. However, it's
+     * dangerous to call the clearProc right now, because it could invoke a
+     * Tcl script that wrecks the current state (e.g. it could delete the
+     * window). To be safe, defer the call until the end of the function when
+     * we no longer care about the state.
      */
 
     for (infoPtr = dispPtr->selectionInfoPtr; infoPtr != NULL;
@@ -404,9 +396,9 @@ Tk_OwnSelection(tkwin, selection, proc, clientData)
 	    clearData = infoPtr->clearData;
 	} else if (infoPtr->clearProc == LostSelection) {
 	    /*
-	     * If the selection handler is one created by "selection own",
-	     * be sure to free the record for it;  otherwise there will be
-	     * a memory leak.
+	     * If the selection handler is one created by "selection own", be
+	     * sure to free the record for it; otherwise there will be a
+	     * memory leak.
 	     */
 
 	    ckfree((char *) infoPtr->clearData);
@@ -419,10 +411,10 @@ Tk_OwnSelection(tkwin, selection, proc, clientData)
     infoPtr->clearData = clientData;
 
     /*
-     * Note that we are using CurrentTime, even though ICCCM recommends against
-     * this practice (the problem is that we don't necessarily have a valid
-     * time to use).  We will not be able to retrieve a useful timestamp for
-     * the TIMESTAMP target later.
+     * Note that we are using CurrentTime, even though ICCCM recommends
+     * against this practice (the problem is that we don't necessarily have a
+     * valid time to use). We will not be able to retrieve a useful timestamp
+     * for the TIMESTAMP target later.
      */
 
     infoPtr->time = CurrentTime;
@@ -458,18 +450,19 @@ Tk_OwnSelection(tkwin, selection, proc, clientData)
  *	None.
  *
  * Side effects:
- *	The specified selection is cleared, so that future requests to retrieve
- *	it will fail until some application owns it again.  This procedure
- *	invokes callbacks, possibly including Tcl scripts, so any calling
- *	function should be reentrant at the point Tk_ClearSelection is invoked.
+ *	The specified selection is cleared, so that future requests to
+ *	retrieve it will fail until some application owns it again. This
+ *	function invokes callbacks, possibly including Tcl scripts, so any
+ *	calling function should be reentrant at the point Tk_ClearSelection is
+ *	invoked.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_ClearSelection(tkwin, selection)
-    Tk_Window tkwin;		/* Window that selects a display. */
-    Atom selection;		/* Selection to be cancelled. */
+Tk_ClearSelection(
+    Tk_Window tkwin,		/* Window that selects a display. */
+    Atom selection)		/* Selection to be cancelled. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
@@ -477,15 +470,15 @@ Tk_ClearSelection(tkwin, selection)
     TkSelectionInfo *prevPtr;
     TkSelectionInfo *nextPtr;
     Tk_LostSelProc *clearProc = NULL;
-    ClientData clearData = NULL;	/* Initialization needed only to
-					 * prevent compiler warning. */
+    ClientData clearData = NULL;/* Initialization needed only to prevent
+				 * compiler warning. */
 
     if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
     }
 
     for (infoPtr = dispPtr->selectionInfoPtr, prevPtr = NULL;
-	     infoPtr != NULL; infoPtr = nextPtr) {
+	    infoPtr != NULL; infoPtr = nextPtr) {
 	nextPtr = infoPtr->nextPtr;
 	if (infoPtr->selection == selection) {
 	    if (prevPtr == NULL) {
@@ -497,7 +490,7 @@ Tk_ClearSelection(tkwin, selection)
 	}
 	prevPtr = infoPtr;
     }
-    
+
     if (infoPtr != NULL) {
 	clearProc = infoPtr->clearProc;
 	clearData = infoPtr->clearData;
@@ -515,80 +508,77 @@ Tk_ClearSelection(tkwin, selection)
  *
  * Tk_GetSelection --
  *
- *	Retrieve the value of a selection and pass it off (in
- *	pieces, possibly) to a given procedure.
+ *	Retrieve the value of a selection and pass it off (in pieces,
+ *	possibly) to a given function.
  *
  * Results:
- *	The return value is a standard Tcl return value.
- *	If an error occurs (such as no selection exists)
- *	then an error message is left in the interp's result.
+ *	The return value is a standard Tcl return value. If an error occurs
+ *	(such as no selection exists) then an error message is left in the
+ *	interp's result.
  *
  * Side effects:
- *	The standard X11 protocols are used to retrieve the
- *	selection.  When it arrives, it is passed to proc.  If
- *	the selection is very large, it will be passed to proc
- *	in several pieces.  Proc should have the following
+ *	The standard X11 protocols are used to retrieve the selection. When it
+ *	arrives, it is passed to proc. If the selection is very large, it will
+ *	be passed to proc in several pieces. Proc should have the following
  *	structure:
  *
  *	int
- *	proc(clientData, interp, portion)
- *	    ClientData clientData;
- *	    Tcl_Interp *interp;
- *	    char *portion;
+ *	proc(
+ *	    ClientData clientData,
+ *	    Tcl_Interp *interp,
+ *	    char *portion)
  *	{
  *	}
  *
- *	The interp and clientData arguments to proc will be the
- *	same as the corresponding arguments to Tk_GetSelection.
- *	The portion argument points to a character string
- *	containing part of the selection, and numBytes indicates
- *	the length of the portion, not including the terminating
- *	NULL character.  If the selection arrives in several pieces,
- *	the "portion" arguments in separate calls will contain
- *	successive parts of the selection.  Proc should normally
- *	return TCL_OK.  If it detects an error then it should return
- *	TCL_ERROR and leave an error message in the interp's result; the
- *	remainder of the selection retrieval will be aborted.
+ *	The interp and clientData arguments to proc will be the same as the
+ *	corresponding arguments to Tk_GetSelection. The portion argument
+ *	points to a character string containing part of the selection, and
+ *	numBytes indicates the length of the portion, not including the
+ *	terminating NULL character. If the selection arrives in several
+ *	pieces, the "portion" arguments in separate calls will contain
+ *	successive parts of the selection. Proc should normally return TCL_OK.
+ *	If it detects an error then it should return TCL_ERROR and leave an
+ *	error message in the interp's result; the remainder of the selection
+ *	retrieval will be aborted.
  *
  *--------------------------------------------------------------
  */
 
 int
-Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting
-				 * errors. */
-    Tk_Window tkwin;		/* Window on whose behalf to retrieve
-				 * the selection (determines display
-				 * from which to retrieve). */
-    Atom selection;		/* Selection to retrieve. */
-    Atom target;		/* Desired form in which selection
-				 * is to be returned. */
-    Tk_GetSelProc *proc;	/* Procedure to call to process the
-				 * selection, once it has been retrieved. */
-    ClientData clientData;	/* Arbitrary value to pass to proc. */
+Tk_GetSelection(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tk_Window tkwin,		/* Window on whose behalf to retrieve the
+				 * selection (determines display from which to
+				 * retrieve). */
+    Atom selection,		/* Selection to retrieve. */
+    Atom target,		/* Desired form in which selection is to be
+				 * returned. */
+    Tk_GetSelProc *proc,	/* Function to call to process the selection,
+				 * once it has been retrieved. */
+    ClientData clientData)	/* Arbitrary value to pass to proc. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkSelectionInfo *infoPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
     }
 
     /*
-     * If the selection is owned by a window managed by this
-     * process, then call the retrieval procedure directly,
-     * rather than going through the X server (it's dangerous
-     * to go through the X server in this case because it could
-     * result in deadlock if an INCR-style selection results).
+     * If the selection is owned by a window managed by this process, then
+     * call the retrieval function directly, rather than going through the X
+     * server (it's dangerous to go through the X server in this case because
+     * it could result in deadlock if an INCR-style selection results).
      */
 
     for (infoPtr = dispPtr->selectionInfoPtr; infoPtr != NULL;
 	    infoPtr = infoPtr->nextPtr) {
-	if (infoPtr->selection == selection)
+	if (infoPtr->selection == selection) {
 	    break;
+	}
     }
     if (infoPtr != NULL) {
 	register TkSelHandler *selPtr;
@@ -597,9 +587,8 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
 	TkSelInProgress ip;
 
 	for (selPtr = ((TkWindow *) infoPtr->owner)->selHandlerList;
-	     selPtr != NULL; selPtr = selPtr->nextPtr) {
-	    if  ((selPtr->target == target)
-		    && (selPtr->selection == selection)) {
+		selPtr != NULL; selPtr = selPtr->nextPtr) {
+	    if (selPtr->target==target && selPtr->selection==selection) {
 		break;
 	    }
 	}
@@ -652,10 +641,10 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
     return TkSelGetSelection(interp, tkwin, selection, target, proc,
 	    clientData);
 
-    cantget:
+  cantget:
     Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
-	" selection doesn't exist or form \"", Tk_GetAtomName(tkwin, target),
-	"\" not defined", (char *) NULL);
+	    " selection doesn't exist or form \"",
+	    Tk_GetAtomName(tkwin, target), "\" not defined", (char *) NULL);
     return TCL_ERROR;
 }
 
@@ -664,9 +653,8 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
  *
  * Tk_SelectionObjCmd --
  *
- *	This procedure is invoked to process the "selection" Tcl
- *	command.  See the user documentation for details on what
- *	it does.
+ *	This function is invoked to process the "selection" Tcl command. See
+ *	the user documentation for details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -678,12 +666,12 @@ Tk_GetSelection(interp, tkwin, selection, target, proc, clientData)
  */
 
 int
-Tk_SelectionObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with
+Tk_SelectionObjCmd(
+    ClientData clientData,	/* Main window associated with
 				 * interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     char *path = NULL;
@@ -694,9 +682,10 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
     static CONST char *optionStrings[] = {
 	"clear", "get", "handle", "own", (char *) NULL
     };
-    enum options { SELECTION_CLEAR, SELECTION_GET, SELECTION_HANDLE,
-		       SELECTION_OWN };
-    
+    enum options {
+	SELECTION_CLEAR, SELECTION_GET, SELECTION_HANDLE, SELECTION_OWN
+    };
+
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
@@ -708,319 +697,324 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
     }
 
     switch ((enum options) index) {
-	case SELECTION_CLEAR: {
-	    static CONST char *clearOptionStrings[] = {
-		"-displayof", "-selection", (char *) NULL
-	    };
-	    enum clearOptions { CLEAR_DISPLAYOF, CLEAR_SELECTION };
-	    int clearIndex;
-	    
-	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
-		 count-=2, objs+=2) {
-		string = Tcl_GetString(objs[0]);
-		if (string[0] != '-') {
-		    break;
-		}
-		if (count < 2) {
-		    Tcl_AppendResult(interp, "value for \"", string,
-			    "\" missing", (char *) NULL);
-		    return TCL_ERROR;
-		}
+    case SELECTION_CLEAR: {
+	static CONST char *clearOptionStrings[] = {
+	    "-displayof", "-selection", (char *) NULL
+	};
+	enum clearOptions { CLEAR_DISPLAYOF, CLEAR_SELECTION };
+	int clearIndex;
 
-		if (Tcl_GetIndexFromObj(interp, objs[0], clearOptionStrings,
-			"option", 0, &clearIndex) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		switch ((enum clearOptions) clearIndex) {
-		    case CLEAR_DISPLAYOF:
-			path = Tcl_GetString(objs[1]);
-			break;
-		    case CLEAR_SELECTION:
-			selName = Tcl_GetString(objs[1]);
-			break;
-		}
+	for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
+		count-=2, objs+=2) {
+	    string = Tcl_GetString(objs[0]);
+	    if (string[0] != '-') {
+		break;
 	    }
-	    if (count == 1) {
-		path = Tcl_GetString(objs[0]);
-	    } else if (count > 1) {
-		Tcl_WrongNumArgs(interp, 2, objv, "?options?");
+	    if (count < 2) {
+		Tcl_AppendResult(interp, "value for \"", string,
+			"\" missing", (char *) NULL);
 		return TCL_ERROR;
 	    }
-	    if (path != NULL) {
-		tkwin = Tk_NameToWindow(interp, path, tkwin);
-	    }
-	    if (tkwin == NULL) {
+
+	    if (Tcl_GetIndexFromObj(interp, objs[0], clearOptionStrings,
+		    "option", 0, &clearIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (selName != NULL) {
-		selection = Tk_InternAtom(tkwin, selName);
-	    } else {
-		selection = XA_PRIMARY;
+	    switch ((enum clearOptions) clearIndex) {
+	    case CLEAR_DISPLAYOF:
+		path = Tcl_GetString(objs[1]);
+		break;
+	    case CLEAR_SELECTION:
+		selName = Tcl_GetString(objs[1]);
+		break;
 	    }
-	    
-	    Tk_ClearSelection(tkwin, selection);
-	    break;
 	}
 
-	case SELECTION_GET: {
-	    Atom target;
-	    char *targetName = NULL;
-	    Tcl_DString selBytes;
-	    int result;
-	    static CONST char *getOptionStrings[] = {
-		"-displayof", "-selection", "-type", (char *) NULL
-	    };
-	    enum getOptions { GET_DISPLAYOF, GET_SELECTION, GET_TYPE };
-	    int getIndex;
-	    
-	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count>0;
-		 count-=2, objs+=2) {
-		string = Tcl_GetString(objs[0]);
-		if (string[0] != '-') {
-		    break;
-		}
-		if (count < 2) {
-		    Tcl_AppendResult(interp, "value for \"", string,
-			    "\" missing", (char *) NULL);
-		    return TCL_ERROR;
-		}
-		
-		if (Tcl_GetIndexFromObj(interp, objs[0], getOptionStrings,
-			"option", 0, &getIndex) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-
-		switch ((enum getOptions) getIndex) {
-		    case GET_DISPLAYOF:
-			path = Tcl_GetString(objs[1]);
-			break;
-		    case GET_SELECTION:
-			selName = Tcl_GetString(objs[1]);
-			break;
-		    case GET_TYPE:
-			targetName = Tcl_GetString(objs[1]);
-			break;
-		}
-	    }
-	    if (path != NULL) {
-		tkwin = Tk_NameToWindow(interp, path, tkwin);
-	    }
-	    if (tkwin == NULL) {
-		return TCL_ERROR;
-	    }
-	    if (selName != NULL) {
-		selection = Tk_InternAtom(tkwin, selName);
-	    } else {
-		selection = XA_PRIMARY;
-	    }
-	    if (count > 1) {
-		Tcl_WrongNumArgs(interp, 2, objv, "?options?");
-		return TCL_ERROR;
-	    } else if (count == 1) {
-		target = Tk_InternAtom(tkwin, Tcl_GetString(objs[0]));
-	    } else if (targetName != NULL) {
-		target = Tk_InternAtom(tkwin, targetName);
-	    } else {
-		target = XA_STRING;
-	    }
-
-	    Tcl_DStringInit(&selBytes);
-	    result = Tk_GetSelection(interp, tkwin, selection, target,
-		    SelGetProc,	(ClientData) &selBytes);
-	    if (result == TCL_OK) {
-		Tcl_DStringResult(interp, &selBytes);
-	    } else {
-		Tcl_DStringFree(&selBytes);
-	    }
-	    return result;
+	if (count == 1) {
+	    path = Tcl_GetString(objs[0]);
+	} else if (count > 1) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?options?");
+	    return TCL_ERROR;
+	}
+	if (path != NULL) {
+	    tkwin = Tk_NameToWindow(interp, path, tkwin);
+	}
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+	if (selName != NULL) {
+	    selection = Tk_InternAtom(tkwin, selName);
+	} else {
+	    selection = XA_PRIMARY;
 	}
 
-	case SELECTION_HANDLE: {
-	    Atom target, format;
-	    char *targetName = NULL;
-	    char *formatName = NULL;
-	    register CommandInfo *cmdInfoPtr;
-	    int cmdLength;
-	    static CONST char *handleOptionStrings[] = {
-		"-format", "-selection", "-type", (char *) NULL
-	    };
-	    enum handleOptions { HANDLE_FORMAT, HANDLE_SELECTION,
-				     HANDLE_TYPE };
-	    int handleIndex;
-	    
-	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
-		 count-=2, objs+=2) {
-		string = Tcl_GetString(objs[0]);
-		if (string[0] != '-') {
-		    break;
-		}
-		if (count < 2) {
-		    Tcl_AppendResult(interp, "value for \"", string,
-			    "\" missing", (char *) NULL);
-		    return TCL_ERROR;
-		}
+	Tk_ClearSelection(tkwin, selection);
+	break;
+    }
 
-		if (Tcl_GetIndexFromObj(interp, objs[0],handleOptionStrings,
-			"option", 0, &handleIndex) != TCL_OK) {
-		    return TCL_ERROR;
-		}
+    case SELECTION_GET: {
+	Atom target;
+	char *targetName = NULL;
+	Tcl_DString selBytes;
+	int result;
+	static CONST char *getOptionStrings[] = {
+	    "-displayof", "-selection", "-type", (char *) NULL
+	};
+	enum getOptions { GET_DISPLAYOF, GET_SELECTION, GET_TYPE };
+	int getIndex;
 
-		switch ((enum handleOptions) handleIndex) {
-		    case HANDLE_FORMAT:
-			formatName = Tcl_GetString(objs[1]);
-			break;
-		    case HANDLE_SELECTION:
-			selName = Tcl_GetString(objs[1]);
-			break;
-		    case HANDLE_TYPE:
-			targetName = Tcl_GetString(objs[1]);
-			break;
-		}
+	for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count>0;
+		count-=2, objs+=2) {
+	    string = Tcl_GetString(objs[0]);
+	    if (string[0] != '-') {
+		break;
 	    }
-
-	    if ((count < 2) || (count > 4)) {
-		Tcl_WrongNumArgs(interp, 2, objv, "?options? window command");
+	    if (count < 2) {
+		Tcl_AppendResult(interp, "value for \"", string,
+			"\" missing", (char *) NULL);
 		return TCL_ERROR;
 	    }
-	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objs[0]), tkwin);
-	    if (tkwin == NULL) {
+
+	    if (Tcl_GetIndexFromObj(interp, objs[0], getOptionStrings,
+		    "option", 0, &getIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (selName != NULL) {
-		selection = Tk_InternAtom(tkwin, selName);
-	    } else {
-		selection = XA_PRIMARY;
+
+	    switch ((enum getOptions) getIndex) {
+	    case GET_DISPLAYOF:
+		path = Tcl_GetString(objs[1]);
+		break;
+	    case GET_SELECTION:
+		selName = Tcl_GetString(objs[1]);
+		break;
+	    case GET_TYPE:
+		targetName = Tcl_GetString(objs[1]);
+		break;
 	    }
-	    
-	    if (count > 2) {
-		target = Tk_InternAtom(tkwin, Tcl_GetString(objs[2]));
-	    } else if (targetName != NULL) {
-		target = Tk_InternAtom(tkwin, targetName);
-	    } else {
-		target = XA_STRING;
+	}
+
+	if (path != NULL) {
+	    tkwin = Tk_NameToWindow(interp, path, tkwin);
+	}
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+	if (selName != NULL) {
+	    selection = Tk_InternAtom(tkwin, selName);
+	} else {
+	    selection = XA_PRIMARY;
+	}
+	if (count > 1) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?options?");
+	    return TCL_ERROR;
+	} else if (count == 1) {
+	    target = Tk_InternAtom(tkwin, Tcl_GetString(objs[0]));
+	} else if (targetName != NULL) {
+	    target = Tk_InternAtom(tkwin, targetName);
+	} else {
+	    target = XA_STRING;
+	}
+
+	Tcl_DStringInit(&selBytes);
+	result = Tk_GetSelection(interp, tkwin, selection, target,
+		SelGetProc, (ClientData) &selBytes);
+	if (result == TCL_OK) {
+	    Tcl_DStringResult(interp, &selBytes);
+	} else {
+	    Tcl_DStringFree(&selBytes);
+	}
+	return result;
+    }
+
+    case SELECTION_HANDLE: {
+	Atom target, format;
+	char *targetName = NULL;
+	char *formatName = NULL;
+	register CommandInfo *cmdInfoPtr;
+	int cmdLength;
+	static CONST char *handleOptionStrings[] = {
+	    "-format", "-selection", "-type", (char *) NULL
+	};
+	enum handleOptions {
+	    HANDLE_FORMAT, HANDLE_SELECTION, HANDLE_TYPE
+	};
+	int handleIndex;
+
+	for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
+		count-=2, objs+=2) {
+	    string = Tcl_GetString(objs[0]);
+	    if (string[0] != '-') {
+		break;
 	    }
-	    if (count > 3) {
-		format = Tk_InternAtom(tkwin, Tcl_GetString(objs[3]));
-	    } else if (formatName != NULL) {
-		format = Tk_InternAtom(tkwin, formatName);
-	    } else {
-		format = XA_STRING;
+	    if (count < 2) {
+		Tcl_AppendResult(interp, "value for \"", string,
+			"\" missing", (char *) NULL);
+		return TCL_ERROR;
 	    }
-	    string = Tcl_GetStringFromObj(objs[1], &cmdLength);
-	    if (cmdLength == 0) {
-		Tk_DeleteSelHandler(tkwin, selection, target);
-	    } else {
-		cmdInfoPtr = (CommandInfo *) ckalloc((unsigned) (
+
+	    if (Tcl_GetIndexFromObj(interp, objs[0],handleOptionStrings,
+		    "option", 0, &handleIndex) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+
+	    switch ((enum handleOptions) handleIndex) {
+	    case HANDLE_FORMAT:
+		formatName = Tcl_GetString(objs[1]);
+		break;
+	    case HANDLE_SELECTION:
+		selName = Tcl_GetString(objs[1]);
+		break;
+	    case HANDLE_TYPE:
+		targetName = Tcl_GetString(objs[1]);
+		break;
+	    }
+	}
+
+	if ((count < 2) || (count > 4)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?options? window command");
+	    return TCL_ERROR;
+	}
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objs[0]), tkwin);
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+	if (selName != NULL) {
+	    selection = Tk_InternAtom(tkwin, selName);
+	} else {
+	    selection = XA_PRIMARY;
+	}
+
+	if (count > 2) {
+	    target = Tk_InternAtom(tkwin, Tcl_GetString(objs[2]));
+	} else if (targetName != NULL) {
+	    target = Tk_InternAtom(tkwin, targetName);
+	} else {
+	    target = XA_STRING;
+	}
+	if (count > 3) {
+	    format = Tk_InternAtom(tkwin, Tcl_GetString(objs[3]));
+	} else if (formatName != NULL) {
+	    format = Tk_InternAtom(tkwin, formatName);
+	} else {
+	    format = XA_STRING;
+	}
+	string = Tcl_GetStringFromObj(objs[1], &cmdLength);
+	if (cmdLength == 0) {
+	    Tk_DeleteSelHandler(tkwin, selection, target);
+	} else {
+	    cmdInfoPtr = (CommandInfo *) ckalloc((unsigned) (
 		    sizeof(CommandInfo) - 3 + cmdLength));
-		cmdInfoPtr->interp = interp;
-		cmdInfoPtr->charOffset = 0;
-		cmdInfoPtr->byteOffset = 0;
-		cmdInfoPtr->buffer[0] = '\0';
-		cmdInfoPtr->cmdLength = cmdLength;
-		strcpy(cmdInfoPtr->command, string);
-		Tk_CreateSelHandler(tkwin, selection, target, HandleTclCommand,
-			(ClientData) cmdInfoPtr, format);
-	    }
-	    return TCL_OK;
+	    cmdInfoPtr->interp = interp;
+	    cmdInfoPtr->charOffset = 0;
+	    cmdInfoPtr->byteOffset = 0;
+	    cmdInfoPtr->buffer[0] = '\0';
+	    cmdInfoPtr->cmdLength = cmdLength;
+	    strcpy(cmdInfoPtr->command, string);
+	    Tk_CreateSelHandler(tkwin, selection, target, HandleTclCommand,
+		    (ClientData) cmdInfoPtr, format);
 	}
-	
-	case SELECTION_OWN: {
-	    register LostCommand *lostPtr;
-	    char *script = NULL;
-	    int cmdLength;
-	    static CONST char *ownOptionStrings[] = {
-		"-command", "-displayof", "-selection", (char *) NULL
-	    };
-	    enum ownOptions { OWN_COMMAND, OWN_DISPLAYOF, OWN_SELECTION };
-	    int ownIndex;
-	    
-	    for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
-		 count-=2, objs+=2) {
-		string = Tcl_GetString(objs[0]);
-		if (string[0] != '-') {
-		    break;
-		}
-		if (count < 2) {
-		    Tcl_AppendResult(interp, "value for \"", string,
-			    "\" missing", (char *) NULL);
-		    return TCL_ERROR;
-		}
+	return TCL_OK;
+    }
 
-		if (Tcl_GetIndexFromObj(interp, objs[0], ownOptionStrings,
-			"option", 0, &ownIndex) != TCL_OK) {
-		    return TCL_ERROR;
-		}
+    case SELECTION_OWN: {
+	register LostCommand *lostPtr;
+	char *script = NULL;
+	int cmdLength;
+	static CONST char *ownOptionStrings[] = {
+	    "-command", "-displayof", "-selection", (char *) NULL
+	};
+	enum ownOptions { OWN_COMMAND, OWN_DISPLAYOF, OWN_SELECTION };
+	int ownIndex;
 
-		switch ((enum ownOptions) ownIndex) {
-		    case OWN_COMMAND:
-			script = Tcl_GetString(objs[1]);
-			break;
-		    case OWN_DISPLAYOF:
-			path = Tcl_GetString(objs[1]);
-			break;
-		    case OWN_SELECTION:
-			selName = Tcl_GetString(objs[1]);
-			break;
-		}
+	for (count = objc-2, objs = ((Tcl_Obj **)objv)+2; count > 0;
+		count-=2, objs+=2) {
+	    string = Tcl_GetString(objs[0]);
+	    if (string[0] != '-') {
+		break;
 	    }
-	    
-	    if (count > 2) {
-		Tcl_WrongNumArgs(interp, 2, objv, "?options? ?window?");
+	    if (count < 2) {
+		Tcl_AppendResult(interp, "value for \"", string,
+			"\" missing", (char *) NULL);
 		return TCL_ERROR;
 	    }
-	    if (selName != NULL) {
-		selection = Tk_InternAtom(tkwin, selName);
-	    } else {
-		selection = XA_PRIMARY;
+
+	    if (Tcl_GetIndexFromObj(interp, objs[0], ownOptionStrings,
+		    "option", 0, &ownIndex) != TCL_OK) {
+		return TCL_ERROR;
 	    }
-	    if (count == 0) {
-		TkSelectionInfo *infoPtr;
-		TkWindow *winPtr;
-		if (path != NULL) {
-		    tkwin = Tk_NameToWindow(interp, path, tkwin);
-		}
-		if (tkwin == NULL) {
-		    return TCL_ERROR;
-		}
-		winPtr = (TkWindow *)tkwin;
-		for (infoPtr = winPtr->dispPtr->selectionInfoPtr;
-		     infoPtr != NULL; infoPtr = infoPtr->nextPtr) {
-		    if (infoPtr->selection == selection)
-			break;
-		}
-		
-		/*
-		 * Ignore the internal clipboard window.
-		 */
-		
-		if ((infoPtr != NULL)
-			&& (infoPtr->owner != winPtr->dispPtr->clipWindow)) {
-		    Tcl_SetResult(interp, Tk_PathName(infoPtr->owner),
-			    TCL_STATIC);
-		}
-		return TCL_OK;
+
+	    switch ((enum ownOptions) ownIndex) {
+	    case OWN_COMMAND:
+		script = Tcl_GetString(objs[1]);
+		break;
+	    case OWN_DISPLAYOF:
+		path = Tcl_GetString(objs[1]);
+		break;
+	    case OWN_SELECTION:
+		selName = Tcl_GetString(objs[1]);
+		break;
 	    }
-	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objs[0]), tkwin);
+	}
+
+	if (count > 2) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?options? ?window?");
+	    return TCL_ERROR;
+	}
+	if (selName != NULL) {
+	    selection = Tk_InternAtom(tkwin, selName);
+	} else {
+	    selection = XA_PRIMARY;
+	}
+
+	if (count == 0) {
+	    TkSelectionInfo *infoPtr;
+	    TkWindow *winPtr;
+
+	    if (path != NULL) {
+		tkwin = Tk_NameToWindow(interp, path, tkwin);
+	    }
 	    if (tkwin == NULL) {
 		return TCL_ERROR;
 	    }
-	    if (count == 2) {
-		script = Tcl_GetString(objs[1]);
+	    winPtr = (TkWindow *)tkwin;
+	    for (infoPtr = winPtr->dispPtr->selectionInfoPtr;
+		    infoPtr != NULL; infoPtr = infoPtr->nextPtr) {
+		if (infoPtr->selection == selection) {
+		    break;
+		}
 	    }
-	    if (script == NULL) {
-		Tk_OwnSelection(tkwin, selection, (Tk_LostSelProc *) NULL,
-			(ClientData) NULL);
-		return TCL_OK;
+
+	    /*
+	     * Ignore the internal clipboard window.
+	     */
+
+	    if ((infoPtr != NULL)
+		    && (infoPtr->owner != winPtr->dispPtr->clipWindow)) {
+		Tcl_SetResult(interp, Tk_PathName(infoPtr->owner), TCL_STATIC);
 	    }
-	    cmdLength = strlen(script);
-	    lostPtr = (LostCommand *) ckalloc((unsigned) (sizeof(LostCommand)
-		    -3 + cmdLength));
-	    lostPtr->interp = interp;
-	    strcpy(lostPtr->command, script);
-	    Tk_OwnSelection(tkwin, selection, LostSelection,
-		    (ClientData) lostPtr);
 	    return TCL_OK;
 	}
+
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objs[0]), tkwin);
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+	if (count == 2) {
+	    script = Tcl_GetString(objs[1]);
+	}
+	if (script == NULL) {
+	    Tk_OwnSelection(tkwin, selection, (Tk_LostSelProc *) NULL,
+		    (ClientData) NULL);
+	    return TCL_OK;
+	}
+	cmdLength = strlen(script);
+	lostPtr = (LostCommand *) ckalloc((unsigned) (sizeof(LostCommand)
+		-3 + cmdLength));
+	lostPtr->interp = interp;
+	strcpy(lostPtr->command, script);
+	Tk_OwnSelection(tkwin, selection, LostSelection, (ClientData) lostPtr);
+	return TCL_OK;
+    }
     }
     return TCL_OK;
 }
@@ -1030,12 +1024,12 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
  *
  * TkSelGetInProgress --
  *
- *	This procedure returns a pointer to the thread-local
- *      list of pending searches.
+ *	This function returns a pointer to the thread-local list of pending
+ *	searches.
  *
  * Results:
- *	The return value is a pointer to the first search in progress, 
- *      or NULL if there are none. 
+ *	The return value is a pointer to the first search in progress, or NULL
+ *	if there are none.
  *
  * Side effects:
  *	None.
@@ -1044,10 +1038,10 @@ Tk_SelectionObjCmd(clientData, interp, objc, objv)
  */
 
 TkSelInProgress *
-TkSelGetInProgress _ANSI_ARGS_((void))
+TkSelGetInProgress(void)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->pendingPtr;
 }
@@ -1057,9 +1051,9 @@ TkSelGetInProgress _ANSI_ARGS_((void))
  *
  * TkSelSetInProgress --
  *
- *	This procedure is used to set the thread-local list of pending 
- *      searches.  It is required because the pending list is kept
- *      in thread local storage.
+ *	This function is used to set the thread-local list of pending
+ *	searches. It is required because the pending list is kept in thread
+ *	local storage.
  *
  * Results:
  *	None.
@@ -1070,13 +1064,13 @@ TkSelGetInProgress _ANSI_ARGS_((void))
  *----------------------------------------------------------------------
  */
 void
-TkSelSetInProgress(pendingPtr)
-    TkSelInProgress *pendingPtr;
+TkSelSetInProgress(
+    TkSelInProgress *pendingPtr)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-   tsdPtr->pendingPtr = pendingPtr;
+    tsdPtr->pendingPtr = pendingPtr;
 }
 
 /*
@@ -1084,8 +1078,8 @@ TkSelSetInProgress(pendingPtr)
  *
  * TkSelDeadWindow --
  *
- *	This procedure is invoked just before a TkWindow is deleted.
- *	It performs selection-related cleanup.
+ *	This function is invoked just before a TkWindow is deleted. It
+ *	performs selection-related cleanup.
  *
  * Results:
  *	None.
@@ -1097,14 +1091,14 @@ TkSelSetInProgress(pendingPtr)
  */
 
 void
-TkSelDeadWindow(winPtr)
-    register TkWindow *winPtr;	/* Window that's being deleted. */
+TkSelDeadWindow(
+    register TkWindow *winPtr)	/* Window that's being deleted. */
 {
     register TkSelHandler *selPtr;
     register TkSelInProgress *ipPtr;
     TkSelectionInfo *infoPtr, *prevPtr, *nextPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * While deleting all the handlers, be careful to check whether
@@ -1115,8 +1109,8 @@ TkSelDeadWindow(winPtr)
     while (winPtr->selHandlerList != NULL) {
 	selPtr = winPtr->selHandlerList;
 	winPtr->selHandlerList = selPtr->nextPtr;
-	for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL; 
-                ipPtr = ipPtr->nextPtr) {
+	for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL;
+		ipPtr = ipPtr->nextPtr) {
 	    if (ipPtr->selPtr == selPtr) {
 		ipPtr->selPtr = NULL;
 	    }
@@ -1137,7 +1131,7 @@ TkSelDeadWindow(winPtr)
      */
 
     for (infoPtr = winPtr->dispPtr->selectionInfoPtr, prevPtr = NULL;
-	     infoPtr != NULL; infoPtr = nextPtr) {
+	    infoPtr != NULL; infoPtr = nextPtr) {
 	nextPtr = infoPtr->nextPtr;
 	if (infoPtr->owner == (Tk_Window) winPtr) {
 	    if (infoPtr->clearProc == LostSelection) {
@@ -1172,9 +1166,9 @@ TkSelDeadWindow(winPtr)
  */
 
 void
-TkSelInit(tkwin)
-    Tk_Window tkwin;		/* Window token (used to find
-				 * display to initialize). */
+TkSelInit(
+    Tk_Window tkwin)		/* Window token (used to find display to
+				 * initialize). */
 {
     register TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
@@ -1193,11 +1187,10 @@ TkSelInit(tkwin)
     dispPtr->clipboardAtom	= Tk_InternAtom(tkwin, "CLIPBOARD");
 
     /*
-     * Using UTF8_STRING instead of the XA_UTF8_STRING macro allows us
-     * to support older X servers that didn't have UTF8_STRING yet.
-     * This is necessary on Unix systems.
-     * For more information, see:
-     *    http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
+     * Using UTF8_STRING instead of the XA_UTF8_STRING macro allows us to
+     * support older X servers that didn't have UTF8_STRING yet. This is
+     * necessary on Unix systems. For more information, see:
+     *	  http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
      */
 
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK))
@@ -1212,22 +1205,22 @@ TkSelInit(tkwin)
  *
  * TkSelClearSelection --
  *
- *	This procedure is invoked to process a SelectionClear event.
+ *	This function is invoked to process a SelectionClear event.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Invokes the clear procedure for the window which lost the
+ *	Invokes the clear function for the window which lost the
  *	selection.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkSelClearSelection(tkwin, eventPtr)
-    Tk_Window tkwin;		/* Window for which event was targeted. */
-    register XEvent *eventPtr;	/* X SelectionClear event. */
+TkSelClearSelection(
+    Tk_Window tkwin,		/* Window for which event was targeted. */
+    register XEvent *eventPtr)	/* X SelectionClear event. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
@@ -1235,24 +1228,24 @@ TkSelClearSelection(tkwin, eventPtr)
     TkSelectionInfo *prevPtr;
 
     /*
-     * Invoke clear procedure for window that just lost the selection.  This
+     * Invoke clear function for window that just lost the selection. This
      * code is a bit tricky, because any callbacks due to selection changes
-     * between windows managed by the process have already been made.  Thus,
+     * between windows managed by the process have already been made. Thus,
      * ignore the event unless it refers to the window that's currently the
      * selection owner and the event was generated after the server saw the
      * SetSelectionOwner request.
      */
 
     for (infoPtr = dispPtr->selectionInfoPtr, prevPtr = NULL;
-	 infoPtr != NULL; infoPtr = infoPtr->nextPtr) {
+	    infoPtr != NULL; infoPtr = infoPtr->nextPtr) {
 	if (infoPtr->selection == eventPtr->xselectionclear.selection) {
 	    break;
 	}
 	prevPtr = infoPtr;
     }
 
-    if (infoPtr != NULL && (infoPtr->owner == tkwin)
-	    && (eventPtr->xselectionclear.serial >= (unsigned) infoPtr->serial)) {
+    if (infoPtr != NULL && (infoPtr->owner == tkwin) &&
+	    (eventPtr->xselectionclear.serial >= (unsigned) infoPtr->serial)) {
 	if (prevPtr == NULL) {
 	    dispPtr->selectionInfoPtr = infoPtr->nextPtr;
 	} else {
@@ -1261,9 +1254,9 @@ TkSelClearSelection(tkwin, eventPtr)
 
 	/*
 	 * Because of reentrancy problems, calling clearProc must be done
-	 * after the infoPtr has been removed from the selectionInfoPtr
-	 * list (clearProc could modify the list, e.g. by creating
-	 * a new selection).
+	 * after the infoPtr has been removed from the selectionInfoPtr list
+	 * (clearProc could modify the list, e.g. by creating a new
+	 * selection).
 	 */
 
 	if (infoPtr->clearProc != NULL) {
@@ -1278,27 +1271,27 @@ TkSelClearSelection(tkwin, eventPtr)
  *
  * SelGetProc --
  *
- *	This procedure is invoked to process pieces of the selection
- *	as they arrive during "selection get" commands.
+ *	This function is invoked to process pieces of the selection as they
+ *	arrive during "selection get" commands.
  *
  * Results:
  *	Always returns TCL_OK.
  *
  * Side effects:
- *	Bytes get appended to the dynamic string pointed to by the
- *	clientData argument.
+ *	Bytes get appended to the dynamic string pointed to by the clientData
+ *	argument.
  *
  *--------------------------------------------------------------
  */
 
 	/* ARGSUSED */
 static int
-SelGetProc(clientData, interp, portion)
-    ClientData clientData;	/* Dynamic string holding partially
-				 * assembled selection. */
-    Tcl_Interp *interp;		/* Interpreter used for error
-				 * reporting (not used). */
-    char *portion;		/* New information to be appended. */
+SelGetProc(
+    ClientData clientData,	/* Dynamic string holding partially assembled
+				 * selection. */
+    Tcl_Interp *interp,		/* Interpreter used for error reporting (not
+				 * used). */
+    char *portion)		/* New information to be appended. */
 {
     Tcl_DStringAppend((Tcl_DString *) clientData, portion, -1);
     return TCL_OK;
@@ -1309,14 +1302,14 @@ SelGetProc(clientData, interp, portion)
  *
  * HandleTclCommand --
  *
- *	This procedure acts as selection handler for handlers created
- *	by the "selection handle" command.  It invokes a Tcl command to
- *	retrieve the selection.
+ *	This function acts as selection handler for handlers created by the
+ *	"selection handle" command. It invokes a Tcl command to retrieve the
+ *	selection.
  *
  * Results:
- *	The return value is a count of the number of bytes actually
- *	stored at buffer, or -1 if an error occurs while executing
- *	the Tcl command to retrieve the selection.
+ *	The return value is a count of the number of bytes actually stored at
+ *	buffer, or -1 if an error occurs while executing the Tcl command to
+ *	retrieve the selection.
  *
  * Side effects:
  *	None except for things done by the Tcl command.
@@ -1325,12 +1318,12 @@ SelGetProc(clientData, interp, portion)
  */
 
 static int
-HandleTclCommand(clientData, offset, buffer, maxBytes)
-    ClientData clientData;	/* Information about command to execute. */
-    int offset;			/* Return selection bytes starting at this
+HandleTclCommand(
+    ClientData clientData,	/* Information about command to execute. */
+    int offset,			/* Return selection bytes starting at this
 				 * offset. */
-    char *buffer;		/* Place to store converted selection. */
-    int maxBytes;		/* Maximum # of bytes to store at buffer. */
+    char *buffer,		/* Place to store converted selection. */
+    int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     CommandInfo *cmdInfoPtr = (CommandInfo *) clientData;
     int spaceNeeded, length;
@@ -1344,16 +1337,16 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     CONST char *p;
 
     /*
-     * We must also protect the interpreter and the command from being
-     * deleted too soon.
+     * We must also protect the interpreter and the command from being deleted
+     * too soon.
      */
 
     Tcl_Preserve(clientData);
     Tcl_Preserve((ClientData) interp);
 
     /*
-     * Compute the proper byte offset in the case where the last chunk
-     * split a character.
+     * Compute the proper byte offset in the case where the last chunk split a
+     * character.
      */
 
     if (offset == cmdInfoPtr->byteOffset) {
@@ -1372,8 +1365,8 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     }
 
     /*
-     * First, generate a command by taking the command string
-     * and appending the offset and maximum # of bytes.
+     * First, generate a command by taking the command string and appending
+     * the offset and maximum # of bytes.
      */
 
     spaceNeeded = cmdInfoPtr->cmdLength + 30;
@@ -1385,8 +1378,8 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
     sprintf(command, "%s %d %d", cmdInfoPtr->command, charOffset, maxBytes);
 
     /*
-     * Execute the command.  Be sure to restore the state of the
-     * interpreter after executing the command.
+     * Execute the command. Be sure to restore the state of the interpreter
+     * after executing the command.
      */
 
     Tcl_DStringInit(&oldResult);
@@ -1399,8 +1392,8 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
 	buffer[count] = '\0';
 
 	/*
-	 * Update the partial character information for the next
-	 * retrieval if the command has not been deleted.
+	 * Update the partial character information for the next retrieval if
+	 * the command has not been deleted.
 	 */
 
 	if (cmdInfoPtr->interp != NULL) {
@@ -1421,7 +1414,7 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
 		    strncpy(cmdInfoPtr->buffer, string, (size_t) length);
 		}
 		cmdInfoPtr->buffer[length] = '\0';
-	    }		
+	    }
 	    cmdInfoPtr->byteOffset += count + extraBytes;
 	}
 	count += extraBytes;
@@ -1434,7 +1427,6 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
 	ckfree(command);
     }
 
-
     Tcl_Release(clientData);
     Tcl_Release((ClientData) interp);
     return count;
@@ -1445,20 +1437,18 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
  *
  * TkSelDefaultSelection --
  *
- *	This procedure is called to generate selection information
- *	for a few standard targets such as TIMESTAMP and TARGETS.
- *	It is invoked only if no handler has been declared by the
- *	application.
+ *	This function is called to generate selection information for a few
+ *	standard targets such as TIMESTAMP and TARGETS. It is invoked only if
+ *	no handler has been declared by the application.
  *
  * Results:
- *	If "target" is a standard target understood by this procedure,
- *	the selection is converted to that form and stored as a
- *	character string in buffer.  The type of the selection (e.g.
- *	STRING or ATOM) is stored in *typePtr, and the return value is
- *	a count of the # of non-NULL bytes at buffer.  If the target
- *	wasn't understood, or if there isn't enough space at buffer
- *	to hold the entire selection (no INCR-mode transfers for this
- *	stuff!), then -1 is returned.
+ *	If "target" is a standard target understood by this function, the
+ *	selection is converted to that form and stored as a character string
+ *	in buffer. The type of the selection (e.g. STRING or ATOM) is stored
+ *	in *typePtr, and the return value is a count of the # of non-NULL
+ *	bytes at buffer. If the target wasn't understood, or if there isn't
+ *	enough space at buffer to hold the entire selection (no INCR-mode
+ *	transfers for this stuff!), then -1 is returned.
  *
  * Side effects:
  *	None.
@@ -1467,13 +1457,13 @@ HandleTclCommand(clientData, offset, buffer, maxBytes)
  */
 
 int
-TkSelDefaultSelection(infoPtr, target, buffer, maxBytes, typePtr)
-    TkSelectionInfo *infoPtr;	/* Info about selection being retrieved. */
-    Atom target;		/* Desired form of selection. */
-    char *buffer;		/* Place to put selection characters. */
-    int maxBytes;		/* Maximum # of bytes to store at buffer. */
-    Atom *typePtr;		/* Store here the type of the selection,
-				 * for use in converting to proper X format. */
+TkSelDefaultSelection(
+    TkSelectionInfo *infoPtr,	/* Info about selection being retrieved. */
+    Atom target,		/* Desired form of selection. */
+    char *buffer,		/* Place to put selection characters. */
+    int maxBytes,		/* Maximum # of bytes to store at buffer. */
+    Atom *typePtr)		/* Store here the type of the selection, for
+				 * use in converting to proper X format. */
 {
     register TkWindow *winPtr = (TkWindow *) infoPtr->owner;
     TkDisplay *dispPtr = winPtr->dispPtr;
@@ -1550,22 +1540,22 @@ TkSelDefaultSelection(infoPtr, target, buffer, maxBytes, typePtr)
  *
  * LostSelection --
  *
- *	This procedure is invoked when a window has lost ownership of
- *	the selection and the ownership was claimed with the command
- *	"selection own".
+ *	This function is invoked when a window has lost ownership of the
+ *	selection and the ownership was claimed with the command "selection
+ *	own".
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	A Tcl script is executed;  it can do almost anything.
+ *	A Tcl script is executed; it can do almost anything.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-LostSelection(clientData)
-    ClientData clientData;		/* Pointer to LostCommand structure. */
+LostSelection(
+    ClientData clientData)	/* Pointer to LostCommand structure. */
 {
     LostCommand *lostPtr = (LostCommand *) clientData;
     Tcl_Obj *objPtr;
@@ -1573,10 +1563,10 @@ LostSelection(clientData)
 
     interp = lostPtr->interp;
     Tcl_Preserve((ClientData) interp);
-    
+
     /*
-     * Execute the command.  Save the interpreter's result, if any, and
-     * restore it after executing the command.
+     * Execute the command. Save the interpreter's result, if any, and restore
+     * it after executing the command.
      */
 
     objPtr = Tcl_GetObjResult(interp);
@@ -1591,10 +1581,18 @@ LostSelection(clientData)
     Tcl_DecrRefCount(objPtr);
 
     Tcl_Release((ClientData) interp);
-    
+
     /*
      * Free the storage for the command, since we're done with it now.
      */
 
     ckfree((char *) lostPtr);
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
