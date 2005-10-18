@@ -1,3 +1,10 @@
+2005-10-18  Don Porter	<dgp@users.sourceforge.net>
+
+	* generic/tkMain.c:	Rewrote code that sets the ::argv value
+	to be sure conversion from the system encoding is complete before
+	any processing sensitive to list-special characters is done.
+	[Bug 1328926].
+
 2005-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXScrlbr.c (UpdateControlValues): check geomMgrPtr
