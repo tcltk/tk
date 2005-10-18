@@ -1,3 +1,8 @@
+2005-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXScrlbr.c (UpdateControlValues): check geomMgrPtr
+	is valid before checking type
+
 2005-10-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkInt.h: add MODULE_SCOPE and WORDS_BIGENDIAN checks
