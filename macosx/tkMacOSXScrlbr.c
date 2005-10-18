@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.5 2005/08/09 07:40:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.6 2005/10/18 00:41:19 hobbs Exp $
  */
 
 #include "tkScrollbar.h"
@@ -976,14 +976,14 @@ UpdateControlValues(
      * NOTE: changing the control record directly may not work when
      * Apple releases the Copland version of the MacOS (or when hell is cold).
      */
-     
+
     contrlRect.left   = macDraw->xOff + scrollPtr->inset;
     contrlRect.top    = macDraw->yOff + scrollPtr->inset;
     contrlRect.right  = macDraw->xOff + Tk_Width(tkwin) - scrollPtr->inset;
     contrlRect.bottom = macDraw->yOff + Tk_Height(tkwin) - scrollPtr->inset;
-        
+
     SetControlBounds(macScrollPtr->sbHandle, &contrlRect );
-    
+
     /*
      * To make Tk applications look more like Macintosh applications without 
      * requiring additional work by the Tk developer we do some cute tricks.
@@ -993,7 +993,8 @@ UpdateControlValues(
      * it covers the area of the grow region ao the scrollbar can also draw
      * the grow region if need be.
      */
-    if (!strcmp(macDraw->winPtr->geomMgrPtr->name, "place")) {
+    if ((macDraw->winPtr->geomMgrPtr != NULL)
+	    && !strcmp(macDraw->winPtr->geomMgrPtr->name, "place")) {
         macScrollPtr->macFlags &= ~AUTO_ADJUST;
     } else {
         macScrollPtr->macFlags |= AUTO_ADJUST;
@@ -1016,7 +1017,7 @@ UpdateControlValues(
             TkpComputeScrollbarGeometry(scrollPtr);
         }
     }
-    
+
     if (portRect.top == contrlRect.top) {
         if (macScrollPtr->macFlags & AUTO_ADJUST) {
             contrlRect.top--;
@@ -1033,7 +1034,7 @@ UpdateControlValues(
             TkpComputeScrollbarGeometry(scrollPtr);
         }
     }
-        
+
     if (portRect.right == contrlRect.right) {
         flushRight = true;
         if (macScrollPtr->macFlags & AUTO_ADJUST) {
@@ -1051,7 +1052,7 @@ UpdateControlValues(
             TkpComputeScrollbarGeometry(scrollPtr);
         }
     }
-        
+
     if (portRect.bottom == contrlRect.bottom) {
         flushBottom = true;
         if (macScrollPtr->macFlags & AUTO_ADJUST) {
@@ -1090,7 +1091,7 @@ UpdateControlValues(
     } else {
         TkMacOSXSetScrollbarGrow((TkWindow *) tkwin, false);
     }
-    
+
     /*
      * Given the Tk parameters for the fractions of the start and
      * end of the thumb, the following calculation determines the
@@ -1102,11 +1103,10 @@ UpdateControlValues(
      * the content area less the size of the view area.
      * Since these values are all integers, and Tk gives the thumb position
      * as fractions, we have introduced a scaling factor.
-     *   
      */
     dViewSize =  (scrollPtr->lastFraction - scrollPtr->firstFraction)
             * SCROLLBAR_SCALING_DVALUE;
-    
+
     viewSize = (SInt32) dViewSize;
     controlMax = (SInt32) (SCROLLBAR_SCALING_DVALUE - dViewSize);
     controlValue = (SInt32) (SCROLLBAR_SCALING_DVALUE * scrollPtr->firstFraction);
@@ -1114,19 +1114,18 @@ UpdateControlValues(
     SetControlViewSize(macScrollPtr->sbHandle,viewSize);
     SetControl32BitMaximum(macScrollPtr->sbHandle, controlMax);
 
-#if 0             
+#if 0
     middle = scrollPtr->firstFraction /
 	    (1.0 - (scrollPtr->lastFraction - scrollPtr->firstFraction));
-    
+
     viewSize = (SInt32) ((scrollPtr->lastFraction - scrollPtr->firstFraction) 
             * SCROLLBAR_SCALING_DVALUE
 	    / (1.0 - (scrollPtr->lastFraction - scrollPtr->firstFraction)));
 
-  
     SetControlViewSize(macScrollPtr->sbHandle,viewSize);
-    SetControl32BitValue(macScrollPtr->sbHandle, 
+    SetControl32BitValue(macScrollPtr->sbHandle,
 			 (middle) );
-#endif  
+#endif
     contrlHilite = GetControlHilite(macScrollPtr->sbHandle);
     SetControl32BitMinimum(macScrollPtr->sbHandle, 0);
     if ( contrlHilite == 0 || contrlHilite == 255) {
@@ -1138,7 +1137,7 @@ UpdateControlValues(
         }
     }
     SetControl32BitValue(macScrollPtr->sbHandle, controlValue);
-    
+
     if ( !IsControlVisible (macScrollPtr -> sbHandle) ) {
         SetControlVisibility(macScrollPtr->sbHandle,TRUE,FALSE);
     }
