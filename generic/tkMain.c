@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.18 2004/11/11 01:24:31 das Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.19 2005/10/18 14:51:58 dgp Exp $
  */
 
 #include <ctype.h>
@@ -98,17 +98,15 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 					 * to execute commands. */
     Tcl_Interp *interp;
 {
-    Tcl_Obj *path;
+    Tcl_Obj *path, *argvPtr;
     CONST char *encodingName;
-    char *args;
-    char buf[TCL_INTEGER_SPACE];
     int code;
     Tcl_Channel inChannel, outChannel;
-    Tcl_DString argString;
     ThreadSpecificData *tsdPtr;
 #ifdef __WIN32__
     HANDLE handle;
 #endif
+    Tcl_DString appName;
 
     /*
      * Ensure that we are getting the matching version of Tcl.  This is
@@ -173,32 +171,34 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 	    argv += 2;
 	}
     }
-    
-    /*
-     * Make command-line arguments available in the Tcl variables "argc"
-     * and "argv".
-     */
-
-    args = Tcl_Merge(argc-1, (CONST char **)argv+1);
-    Tcl_ExternalToUtfDString(NULL, args, -1, &argString);
-    Tcl_SetVar(interp, "argv", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
-    Tcl_DStringFree(&argString);
-    ckfree(args);
-    sprintf(buf, "%d", argc-1);
 
     path = Tcl_GetStartupScript(&encodingName);
     if (NULL == path) {
-	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &argString);
+	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &appName);
     } else {
 	int numBytes;
         CONST char *pathName = Tcl_GetStringFromObj(path, &numBytes);
-        Tcl_ExternalToUtfDString(NULL, pathName, numBytes, &argString);
-        path = Tcl_NewStringObj(Tcl_DStringValue(&argString), -1);
+        Tcl_ExternalToUtfDString(NULL, pathName, numBytes, &appName);
+        path = Tcl_NewStringObj(Tcl_DStringValue(&appName), -1);
         Tcl_SetStartupScript(path, encodingName);
     }
-    Tcl_SetVar(interp, "argc", buf, TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
+    Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&appName), TCL_GLOBAL_ONLY);
+    Tcl_DStringFree(&appName);
+    argc--;
+    argv++;
 
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewIntObj(argc), TCL_GLOBAL_ONLY);
+
+    argvPtr = Tcl_NewListObj(0, NULL);
+    while (argc--) {
+	Tcl_DString ds;
+	Tcl_ExternalToUtfDString(NULL, *argv++, -1, &ds);
+	Tcl_ListObjAppendElement(NULL, argvPtr, Tcl_NewStringObj(
+		Tcl_DStringValue(&ds), Tcl_DStringLength(&ds)));
+	Tcl_DStringFree(&ds);
+    }
+    Tcl_SetVar2Ex(interp, "argv", NULL, argvPtr, TCL_GLOBAL_ONLY);
+  
     /*
      * Set the "tcl_interactive" variable.
      */
@@ -289,7 +289,6 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 	    Prompt(interp, 0);
 	}
     }
-    Tcl_DStringFree(&argString);
 
     outChannel = Tcl_GetStdChannel(TCL_STDOUT);
     if (outChannel) {
