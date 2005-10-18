@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.15.2.1 2004/11/11 01:26:42 das Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.15.2.2 2005/10/18 15:16:01 dgp Exp $
  */
 
 #include <ctype.h>
@@ -102,12 +102,11 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 					 * to execute commands. */
     Tcl_Interp *interp;
 {
-    char *args;
-    char buf[TCL_INTEGER_SPACE];
+    Tcl_Obj *argvPtr;
     int code;
     size_t length;
     Tcl_Channel inChannel, outChannel;
-    Tcl_DString argString;
+    Tcl_DString appName;
     ThreadSpecificData *tsdPtr;
 #ifdef __WIN32__
     HANDLE handle;
@@ -169,21 +168,28 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      * and "argv".
      */
 
-    args = Tcl_Merge(argc-1, (CONST char **)argv+1);
-    Tcl_ExternalToUtfDString(NULL, args, -1, &argString);
-    Tcl_SetVar(interp, "argv", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
-    Tcl_DStringFree(&argString);
-    ckfree(args);
-    sprintf(buf, "%d", argc-1);
-
     if (TclGetStartupScriptFileName() == NULL) {
-	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &argString);
+	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &appName);
     } else {
 	TclSetStartupScriptFileName(Tcl_ExternalToUtfDString(NULL,
-		TclGetStartupScriptFileName(), -1, &argString));
+		TclGetStartupScriptFileName(), -1, &appName));
     }
-    Tcl_SetVar(interp, "argc", buf, TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&argString), TCL_GLOBAL_ONLY);
+    Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&appName), TCL_GLOBAL_ONLY);
+    Tcl_DStringFree(&appName);
+    argc--;
+    argv++;
+
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewIntObj(argc), TCL_GLOBAL_ONLY);
+
+    argvPtr = Tcl_NewListObj(0, NULL);
+    while (argc--) {
+	Tcl_DString ds;
+	Tcl_ExternalToUtfDString(NULL, *argv++, -1, &ds);
+	Tcl_ListObjAppendElement(NULL, argvPtr, Tcl_NewStringObj(
+		Tcl_DStringValue(&ds), Tcl_DStringLength(&ds)));
+	Tcl_DStringFree(&ds);
+    }
+    Tcl_SetVar2Ex(interp, "argv", NULL, argvPtr, TCL_GLOBAL_ONLY);
 
     /*
      * Set the "tcl_interactive" variable.
@@ -274,7 +280,6 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 	    Prompt(interp, 0);
 	}
     }
-    Tcl_DStringFree(&argString);
 
     outChannel = Tcl_GetStdChannel(TCL_STDOUT);
     if (outChannel) {
