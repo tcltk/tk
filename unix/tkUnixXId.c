@@ -1,12 +1,11 @@
-/* 
+/*
  * tkUnixXId.c --
  *
- *	This file provides a replacement function for the default X
- *	resource allocator (_XAllocID).  The problem with the default
- *	allocator is that it never re-uses ids, which causes long-lived
- *	applications to crash when X resource identifiers wrap around.
- *	The replacement functions in this file re-use old identifiers
- *	to prevent this problem.
+ *	This file provides a replacement function for the default X resource
+ *	allocator (_XAllocID). The problem with the default allocator is that
+ *	it never re-uses ids, which causes long-lived applications to crash
+ *	when X resource identifiers wrap around. The replacement functions in
+ *	this file re-use old identifiers to prevent this problem.
  *
  *	The code in this file is based on similar implementations by
  *	George C. Kaplan and Michael Hoegeman.
@@ -14,16 +13,16 @@
  * Copyright (c) 1993 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixXId.c,v 1.7 2002/04/12 10:06:09 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.8 2005/10/21 01:51:45 dkf Exp $
  */
 
 /*
- * The definition below is needed on some systems so that we can access
- * the resource_alloc field of Display structures in order to replace
- * the resource allocator.
+ * The definition below is needed on some systems so that we can access the
+ * resource_alloc field of Display structures in order to replace the resource
+ * allocator.
  */
 
 #define XLIB_ILLEGAL_ACCESS 1
@@ -32,38 +31,37 @@
 #include "tkPort.h"
 
 /*
- * A structure of the following type is used to hold one or more
- * available resource identifiers.  There is a list of these structures
- * for each display.
+ * A structure of the following type is used to hold one or more available
+ * resource identifiers. There is a list of these structures for each display.
  */
 
 #define IDS_PER_STACK 10
 typedef struct TkIdStack {
-    XID ids[IDS_PER_STACK];		/* Array of free identifiers. */
-    int numUsed;			/* Indicates how many of the entries
-					 * in ids are currently in use. */
-    TkDisplay *dispPtr;			/* Display to which ids belong. */
-    struct TkIdStack *nextPtr;		/* Next bunch of free identifiers
-					 * for the same display. */
+    XID ids[IDS_PER_STACK];	/* Array of free identifiers. */
+    int numUsed;		/* Indicates how many of the entries in ids
+				 * are currently in use. */
+    TkDisplay *dispPtr;		/* Display to which ids belong. */
+    struct TkIdStack *nextPtr;	/* Next bunch of free identifiers for the same
+				 * display. */
 } TkIdStack;
 
 /*
- * Forward declarations for procedures defined in this file:
+ * Forward declarations for functions defined in this file:
  */
 
-static XID		AllocXId _ANSI_ARGS_((Display *display));
-static Tk_RestrictAction CheckRestrictProc _ANSI_ARGS_((
-			    ClientData clientData, XEvent *eventPtr));
-static void		WindowIdCleanup _ANSI_ARGS_((ClientData clientData));
-static void		WindowIdCleanup2 _ANSI_ARGS_((ClientData clientData));
+static XID		AllocXId(Display *display);
+static Tk_RestrictAction CheckRestrictProc(ClientData clientData,
+			    XEvent *eventPtr);
+static void		WindowIdCleanup(ClientData clientData);
+static void		WindowIdCleanup2(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------
  *
  * TkInitXId --
  *
- *	This procedure is called to initialize the id allocator for
- *	a given display.
+ *	This function is called to initialize the id allocator for a given
+ *	display.
  *
  * Results:
  *	None.
@@ -75,13 +73,12 @@ static void		WindowIdCleanup2 _ANSI_ARGS_((ClientData clientData));
  */
 
 void
-TkInitXId(dispPtr)
-    TkDisplay *dispPtr;			/* Tk's information about the
-					 * display. */
+TkInitXId(
+    TkDisplay *dispPtr)		/* Tk's information about the display. */
 {
     dispPtr->idStackPtr = NULL;
-    dispPtr->defaultAllocProc = (XID (*) _ANSI_ARGS_((Display *display))) 
-            dispPtr->display->resource_alloc;
+    dispPtr->defaultAllocProc = (XID (*) _ANSI_ARGS_((Display *display)))
+	    dispPtr->display->resource_alloc;
     dispPtr->display->resource_alloc = AllocXId;
     dispPtr->windowStackPtr = NULL;
     dispPtr->idCleanupScheduled = (Tcl_TimerToken) 0;
@@ -92,8 +89,8 @@ TkInitXId(dispPtr)
  *
  * TkFreeXId --
  *
- *	This procedure is called to free resources for the id allocator
- *	for a given display.
+ *	This function is called to free resources for the id allocator for a
+ *	given display.
  *
  * Results:
  *	None.
@@ -105,9 +102,8 @@ TkInitXId(dispPtr)
  */
 
 void
-TkFreeXId(dispPtr)
-    TkDisplay *dispPtr;			/* Tk's information about the
-					 * display. */
+TkFreeXId(
+    TkDisplay *dispPtr)		/* Tk's information about the display. */
 {
     TkIdStack *stackPtr, *freePtr;
 
@@ -135,23 +131,23 @@ TkFreeXId(dispPtr)
  *
  * AllocXId --
  *
- *	This procedure is invoked by Xlib as the resource allocator
- *	for a display.
+ *	This function is invoked by Xlib as the resource allocator for a
+ *	display.
  *
  * Results:
- *	The return value is an X resource identifier that isn't currently
- *	in use.
+ *	The return value is an X resource identifier that isn't currently in
+ *	use.
  *
  * Side effects:
- *	The identifier is removed from the stack of free identifiers,
- *	if it was previously on the stack.
+ *	The identifier is removed from the stack of free identifiers, if it
+ *	was previously on the stack.
  *
  *----------------------------------------------------------------------
  */
 
 static XID
-AllocXId(display)
-    Display *display;			/* Display for which to allocate. */
+AllocXId(
+    Display *display)		/* Display for which to allocate. */
 {
     TkDisplay *dispPtr;
     TkIdStack *stackPtr;
@@ -161,10 +157,10 @@ AllocXId(display)
      */
 
     dispPtr = TkGetDisplay(display);
-    
+
     /*
-     * If the topmost chunk on the stack is empty then free it.  Then
-     * check for a free id on the stack and return it if it exists.
+     * If the topmost chunk on the stack is empty then free it. Then check for
+     * a free id on the stack and return it if it exists.
      */
 
     stackPtr = dispPtr->idStackPtr;
@@ -182,11 +178,10 @@ AllocXId(display)
     }
 
     /*
-     * No free ids in the stack:  just get one from the default
-     * allocator.
+     * No free ids in the stack: just get one from the default allocator.
      */
 
-    defAlloc:
+  defAlloc:
     return (*dispPtr->defaultAllocProc)(display);
 }
 
@@ -195,8 +190,8 @@ AllocXId(display)
  *
  * Tk_FreeXId --
  *
- *	This procedure is called to indicate that an X resource identifier
- *	is now free.
+ *	This function is called to indicate that an X resource identifier is
+ *	now free.
  *
  * Results:
  *	None.
@@ -209,11 +204,9 @@ AllocXId(display)
  */
 
 void
-Tk_FreeXId(display, xid)
-    Display *display;			/* Display for which xid was
-					 * allocated. */
-    XID xid;				/* Identifier that is no longer
-					 * in use. */
+Tk_FreeXId(
+    Display *display,		/* Display for which xid was allocated. */
+    XID xid)			/* Identifier that is no longer in use. */
 {
     TkDisplay *dispPtr;
     TkIdStack *stackPtr;
@@ -227,7 +220,7 @@ Tk_FreeXId(display, xid)
     /*
      * Add a new chunk to the stack if the current chunk is full.
      */
-    
+
     stackPtr = dispPtr->idStackPtr;
     if ((stackPtr == NULL) || (stackPtr->numUsed >= IDS_PER_STACK)) {
 	stackPtr = (TkIdStack *) ckalloc(sizeof(TkIdStack));
@@ -250,68 +243,64 @@ Tk_FreeXId(display, xid)
  *
  * TkFreeWindowId --
  *
- *	This procedure is invoked instead of TkFreeXId for window ids.
- *	See below for the reason why.
+ *	This function is invoked instead of TkFreeXId for window ids. See
+ *	below for the reason why.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The id given by w will eventually be freed, so that it can be
- *	reused for other resources.
+ *	The id given by w will eventually be freed, so that it can be reused
+ *	for other resources.
  *
  * Design:
- *	Freeing window ids is very tricky because there could still be
- *	events pending for a window in the event queue (or even in the
- *	server) at the time the window is destroyed.  If the window
- *	id were to get reused immediately for another window, old
- *	events could "drop in" on the new window, causing unexpected
- *	behavior.
+ *	Freeing window ids is very tricky because there could still be events
+ *	pending for a window in the event queue (or even in the server) at the
+ *	time the window is destroyed. If the window id were to get reused
+ *	immediately for another window, old events could "drop in" on the new
+ *	window, causing unexpected behavior.
  *
- *	Thus we have to wait to re-use a window id until we know that
- *	there are no events left for it.  Right now this is done in
- *	two steps.  First, we wait until we know that the server
- *	has seen the XDestroyWindow request, so we can be sure that
- *	it won't generate more events for the window and that any
- *	existing events are in our queue.  Second, we make sure that
- *	there are no events whatsoever in our queue (this is conservative
- *	but safe).
+ *	Thus we have to wait to re-use a window id until we know that there
+ *	are no events left for it. Right now this is done in two steps. First,
+ *	we wait until we know that the server has seen the XDestroyWindow
+ *	request, so we can be sure that it won't generate more events for the
+ *	window and that any existing events are in our queue. Second, we make
+ *	sure that there are no events whatsoever in our queue (this is
+ *	conservative but safe).
  *
- * 	The first step is done by remembering the request id of the
- *	XDestroyWindow request and using LastKnownRequestProcessed to
- *	see what events the server has processed.  If multiple windows
- *	get destroyed at about the same time, we just remember the
- *	most recent request number for any of them (again, conservative
- *	but safe).
+ *	The first step is done by remembering the request id of the
+ *	XDestroyWindow request and using LastKnownRequestProcessed to see what
+ *	events the server has processed. If multiple windows get destroyed at
+ *	about the same time, we just remember the most recent request number
+ *	for any of them (again, conservative but safe).
  *
- *	There are a few other complications as well.  When Tk destroys a
- *	sub-tree of windows, it only issues a single XDestroyWindow call,
- *	at the very end for the root of the subtree.  We can't free any of
- *	the window ids until the final XDestroyWindow call.  To make sure
- *	that this happens, we have to keep track of deletions in progress,
- *	hence the need for the "destroyCount" field of the display.
+ *	There are a few other complications as well. When Tk destroys a
+ *	sub-tree of windows, it only issues a single XDestroyWindow call, at
+ *	the very end for the root of the subtree. We can't free any of the
+ *	window ids until the final XDestroyWindow call. To make sure that this
+ *	happens, we have to keep track of deletions in progress, hence the
+ *	need for the "destroyCount" field of the display.
  *
- *	One final problem.  Some servers, like Sun X11/News servers still
- *	seem to have problems with ids getting reused too quickly.  I'm
- *	not completely sure why this is a problem, but delaying the
- *	recycling of ids appears to eliminate it.  Therefore, we wait
- *	an additional few seconds, even after "the coast is clear"
- *	before reusing the ids.
+ *	One final problem. Some servers, like Sun X11/News servers still seem
+ *	to have problems with ids getting reused too quickly. I'm not
+ *	completely sure why this is a problem, but delaying the recycling of
+ *	ids appears to eliminate it. Therefore, we wait an additional few
+ *	seconds, even after "the coast is clear" before reusing the ids.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkFreeWindowId(dispPtr, w)
-    TkDisplay *dispPtr;		/* Display that w belongs to. */
-    Window w;			/* X identifier for window on dispPtr. */
+TkFreeWindowId(
+    TkDisplay *dispPtr,		/* Display that w belongs to. */
+    Window w)			/* X identifier for window on dispPtr. */
 {
     TkIdStack *stackPtr;
 
     /*
-     * Put the window id on a separate stack of window ids, rather
-     * than the main stack, so it won't get reused right away.  Add
-     * a new chunk to the stack if the current chunk is full.
+     * Put the window id on a separate stack of window ids, rather than the
+     * main stack, so it won't get reused right away. Add a new chunk to the
+     * stack if the current chunk is full.
      */
 
     stackPtr = dispPtr->windowStackPtr;
@@ -331,13 +320,12 @@ TkFreeWindowId(dispPtr, w)
     stackPtr->numUsed++;
 
     /*
-     * Schedule a call to WindowIdCleanup if one isn't already
-     * scheduled.
+     * Schedule a call to WindowIdCleanup if one isn't already scheduled.
      */
 
     if (!dispPtr->idCleanupScheduled) {
-	dispPtr->idCleanupScheduled =
-	    Tcl_CreateTimerHandler(100, WindowIdCleanup, (ClientData) dispPtr);
+	dispPtr->idCleanupScheduled = Tcl_CreateTimerHandler(100,
+		WindowIdCleanup, (ClientData) dispPtr);
     }
 }
 
@@ -346,24 +334,23 @@ TkFreeWindowId(dispPtr, w)
  *
  * WindowIdCleanup --
  *
- *	See if we can now free up all the accumulated ids of
- *	deleted windows.
+ *	See if we can now free up all the accumulated ids of deleted windows.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	If it's safe to move the window ids back to the main free
- *	list, we schedule this to happen after a few mores seconds
- *	of delay.  If it's not safe to move them yet, a timer handler
- *	gets invoked to try again later.
+ *	If it's safe to move the window ids back to the main free list, we
+ *	schedule this to happen after a few mores seconds of delay. If it's
+ *	not safe to move them yet, a timer handler gets invoked to try again
+ *	later.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-WindowIdCleanup(clientData)
-    ClientData clientData;	/* Pointer to TkDisplay for display */
+WindowIdCleanup(
+    ClientData clientData)	/* Pointer to TkDisplay for display */
 {
     TkDisplay *dispPtr = (TkDisplay *) clientData;
     int anyEvents, delta;
@@ -374,14 +361,14 @@ WindowIdCleanup(clientData)
     dispPtr->idCleanupScheduled = (Tcl_TimerToken) 0;
 
     /*
-     * See if it's safe to recycle the window ids.  It's safe if:
+     * See if it's safe to recycle the window ids. It's safe if:
      * (a) no deletions are in progress.
      * (b) the server has seen all of the requests up to the last
      *     XDestroyWindow request.
-     * (c) there are no events in the event queue; the only way to
-     *     test for this right now is to create a restrict proc that
-     *     will filter the events, then call Tcl_DoOneEvent to see if
-     *	   the procedure gets invoked.
+     * (c) there are no events in the event queue; the only way to test for
+     *     this right now is to create a restrict proc that will filter the
+     *     events, then call Tcl_DoOneEvent to see if the function gets
+     *     invoked.
      */
 
     if (dispPtr->destroyCount > 0) {
@@ -402,8 +389,8 @@ WindowIdCleanup(clientData)
     }
 
     /*
-     * These ids look safe to recycle, but we still need to delay a bit
-     * more (see comments for TkFreeWindowId).  Schedule the final freeing.
+     * These ids look safe to recycle, but we still need to delay a bit more
+     * (see comments for TkFreeWindowId). Schedule the final freeing.
      */
 
     if (dispPtr->windowStackPtr != NULL) {
@@ -414,12 +401,12 @@ WindowIdCleanup(clientData)
     return;
 
     /*
-     * It's still not safe to free up the ids.  Try again a bit later.
+     * It's still not safe to free up the ids. Try again a bit later.
      */
 
-    tryAgain:
-    dispPtr->idCleanupScheduled =
-	Tcl_CreateTimerHandler(500, WindowIdCleanup, (ClientData) dispPtr);
+  tryAgain:
+    dispPtr->idCleanupScheduled = Tcl_CreateTimerHandler(500,
+	    WindowIdCleanup, (ClientData) dispPtr);
 }
 
 /*
@@ -427,9 +414,9 @@ WindowIdCleanup(clientData)
  *
  * WindowIdCleanup2 --
  *
- *	This procedure is the last one in the chain that recycles
- *	window ids.  It takes all of the ids indicated by its
- *	argument and adds them back to the main id free list.
+ *	This function is the last one in the chain that recycles window ids.
+ *	It takes all of the ids indicated by its argument and adds them back
+ *	to the main id free list.
  *
  * Results:
  *	None.
@@ -441,8 +428,8 @@ WindowIdCleanup(clientData)
  */
 
 static void
-WindowIdCleanup2(clientData)
-    ClientData clientData;	/* Pointer to TkIdStack list. */
+WindowIdCleanup2(
+    ClientData clientData)	/* Pointer to TkIdStack list. */
 {
     TkIdStack *stackPtr = (TkIdStack *) clientData;
     TkIdStack *lastPtr;
@@ -460,9 +447,9 @@ WindowIdCleanup2(clientData)
  *
  * CheckRestrictProc --
  *
- *	This procedure is a restrict procedure, called by Tcl_DoOneEvent
- *	to filter X events.  All it does is to set a flag to indicate
- *	that there are X events present.
+ *	This function is a restrict function, called by Tcl_DoOneEvent to
+ *	filter X events. All it does is to set a flag to indicate that there
+ *	are X events present.
  *
  * Results:
  *	Sets the integer pointed to by the argument, then returns
@@ -475,9 +462,9 @@ WindowIdCleanup2(clientData)
  */
 
 static Tk_RestrictAction
-CheckRestrictProc(clientData, eventPtr)
-    ClientData clientData;	/* Pointer to flag to set. */
-    XEvent *eventPtr;		/* Event to filter;  not used. */
+CheckRestrictProc(
+    ClientData clientData,	/* Pointer to flag to set. */
+    XEvent *eventPtr)		/* Event to filter; not used. */
 {
     int *flag = (int *) clientData;
     *flag = 1;
@@ -489,8 +476,8 @@ CheckRestrictProc(clientData, eventPtr)
  *
  * Tk_GetPixmap --
  *
- *	Same as the XCreatePixmap procedure except that it manages
- *	resource identifiers better.
+ *	Same as the XCreatePixmap function except that it manages resource
+ *	identifiers better.
  *
  * Results:
  *	Returns a new pixmap.
@@ -502,11 +489,11 @@ CheckRestrictProc(clientData, eventPtr)
  */
 
 Pixmap
-Tk_GetPixmap(display, d, width, height, depth)
-    Display *display;		/* Display for new pixmap. */
-    Drawable d;			/* Drawable where pixmap will be used. */
-    int width, height;		/* Dimensions of pixmap. */
-    int depth;			/* Bits per pixel for pixmap. */
+Tk_GetPixmap(
+    Display *display,		/* Display for new pixmap. */
+    Drawable d,			/* Drawable where pixmap will be used. */
+    int width, int height,	/* Dimensions of pixmap. */
+    int depth)			/* Bits per pixel for pixmap. */
 {
     return XCreatePixmap(display, d, (unsigned) width, (unsigned) height,
 	    (unsigned) depth);
@@ -517,23 +504,23 @@ Tk_GetPixmap(display, d, width, height, depth)
  *
  * Tk_FreePixmap --
  *
- *	Same as the XFreePixmap procedure except that it also marks
- *	the resource identifier as free.
+ *	Same as the XFreePixmap function except that it also marks the
+ *	resource identifier as free.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The pixmap is freed in the X server and its resource identifier
- *	is saved for re-use.
+ *	The pixmap is freed in the X server and its resource identifier is
+ *	saved for re-use.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_FreePixmap(display, pixmap)
-    Display *display;		/* Display for which pixmap was allocated. */
-    Pixmap pixmap;		/* Identifier for pixmap. */
+Tk_FreePixmap(
+    Display *display,		/* Display for which pixmap was allocated. */
+    Pixmap pixmap)		/* Identifier for pixmap. */
 {
     XFreePixmap(display, pixmap);
     Tk_FreeXId(display, (XID) pixmap);
@@ -544,10 +531,10 @@ Tk_FreePixmap(display, pixmap)
  *
  * TkpWindowWasRecentlyDeleted --
  *
- *	Checks whether the window was recently deleted. This is called
- *	by the generic error handler to detect asynchronous notification
- *	of errors due to operations by Tk on a window that was already
- *	deleted by the server.
+ *	Checks whether the window was recently deleted. This is called by the
+ *	generic error handler to detect asynchronous notification of errors
+ *	due to operations by Tk on a window that was already deleted by the
+ *	server.
  *
  * Results:
  *	1 if the window was deleted recently, 0 otherwise.
@@ -559,21 +546,20 @@ Tk_FreePixmap(display, pixmap)
  */
 
 int
-TkpWindowWasRecentlyDeleted(win, dispPtr)
-    Window win;		/* The window to check for. */
-    TkDisplay *dispPtr;	/* The window belongs to this display. */
+TkpWindowWasRecentlyDeleted(
+    Window win,			/* The window to check for. */
+    TkDisplay *dispPtr)		/* The window belongs to this display. */
 {
     TkIdStack *stackPtr;
     int i;
 
-    for (stackPtr = dispPtr->windowStackPtr;
-         stackPtr != NULL;
-         stackPtr = stackPtr->nextPtr) {
-        for (i = 0; i < stackPtr->numUsed; i++) {
-            if ((Window) stackPtr->ids[i] == win) {
-                return 1;
-            }
-        }
+    for (stackPtr = dispPtr->windowStackPtr; stackPtr != NULL;
+	    stackPtr = stackPtr->nextPtr) {
+	for (i = 0; i < stackPtr->numUsed; i++) {
+	    if ((Window) stackPtr->ids[i] == win) {
+		return 1;
+	    }
+	}
     }
     return 0;
 }
@@ -586,10 +572,10 @@ TkpWindowWasRecentlyDeleted(win, dispPtr)
  *	Given a string, produce the corresponding Window Id.
  *
  * Results:
- *      The return value is normally TCL_OK;  in this case *idPtr
- *      will be set to the Window value equivalent to string.  If
- *      string is improperly formed then TCL_ERROR is returned and
- *      an error message will be left in the interp's result.
+ *	The return value is normally TCL_OK; in this case *idPtr will be set
+ *	to the Window value equivalent to string. If string is improperly
+ *	formed then TCL_ERROR is returned and an error message will be left in
+ *	the interp's result.
  *
  * Side effects:
  *	None.
@@ -598,16 +584,24 @@ TkpWindowWasRecentlyDeleted(win, dispPtr)
  */
 
 int
-TkpScanWindowId(interp, string, idPtr)
-    Tcl_Interp *interp;	
-    CONST char *string;
-    Window *idPtr;
+TkpScanWindowId(
+    Tcl_Interp *interp,
+    CONST char *string,
+    Window *idPtr)
 {
     int value;
+
     if (Tcl_GetInt(interp, string, &value) != TCL_OK) {
 	return TCL_ERROR;
     }
     *idPtr = (Window) value;
     return TCL_OK;
 }
-
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
