@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.60 2005/10/10 10:36:35 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.61 2005/10/31 23:21:08 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -904,6 +904,15 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 		 */
 
 		index = *indexFromPtr;
+		index.byteIndex = 0;
+		
+		/*
+		 * We're going to count up all display lines in the
+		 * logical line of 'indexFromPtr' up to, but not
+		 * including the logical line of 'indexToPtr', and
+		 * then subtract off what we didn't what from 'from'
+		 * and add on what we didn't count from 'to.
+		 */
 		while (index.linePtr != indexToPtr->linePtr) {
 		    value += TkTextUpdateOneLine(textPtr, fromPtr, 0,&index,0);
 
