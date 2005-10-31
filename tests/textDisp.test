@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.38 2005/10/10 10:36:35 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.39 2005/10/31 23:21:08 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2603,6 +2603,31 @@ test textDisp-21.3 {TkTextPixelIndex, horizontal scrolling} {textfonts} {
     .t xview scroll 2 units
     list [.t index @-5,7] [.t index @5,7] [.t index @33,20]
 } {1.2 1.2 2.6}
+test textDisp-21.4 {count -displaylines regression} {
+    set message {
+   QOTW:  "C/C++, which is used by 16% of users, is the most popular programming language, but Tcl, used by 0%, seems to be the language of choice for the highest scoring users."
+(new line)
+Use the Up (cursor) key to scroll up one line at a time.  At the second press, the cursor either gets locked or jumps several lines.
+
+Connect with Tkcon.  The command
+.u count -displaylines \ 
+3.10 2.173
+should give answer -1; it gives me 5.
+
+Using 8.5a4 (ActiveState beta 4) under Linux.  No problem with ActiveState beta 3.
+}
+
+toplevel .tt
+pack [text .tt.u] -side right
+.tt.u configure -width 30 -height 27 -wrap word -bg #FFFFFF
+.tt.u insert end $message
+.tt.u mark set insert 3.10
+tkwait visibility .tt.u
+set res [.tt.u count -displaylines 3.10 2.173]
+destroy .tt
+unset message
+set res
+} {-1}
 
 .t delete 1.0 end
 .t insert end "Line 1"
