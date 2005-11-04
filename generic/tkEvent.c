@@ -1,4 +1,4 @@
-/* 
+/*
  * tkEvent.c --
  *
  *	This file provides basic low-level facilities for managing X events in
@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.30 2005/09/28 18:31:57 dgp Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.31 2005/11/04 11:52:50 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1290,7 +1290,7 @@ Tk_HandleEvent(
     TkWindow *winPtr;
     unsigned long mask;
     InProgress ip;
-    Tcl_Interp *interp = (Tcl_Interp *) NULL;
+    Tcl_Interp *interp = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -1431,7 +1431,7 @@ Tk_HandleEvent(
      */
 
   releaseInterpreter:
-    if (interp != (Tcl_Interp *) NULL) {
+    if (interp != NULL) {
 	Tcl_Release((ClientData) interp);
     }
 
