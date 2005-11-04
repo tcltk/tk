@@ -1,4 +1,4 @@
-/* 
+/*
  * tkCanvBmap.c --
  *
  *	This file implements bitmap items for canvas widgets.
@@ -6,10 +6,10 @@
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.11 2005/02/11 19:30:09 hobbs Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.12 2005/11/04 15:23:05 dkf Exp $
  */
 
 #include <stdio.h>
@@ -23,11 +23,10 @@
 
 typedef struct BitmapItem  {
     Tk_Item header;		/* Generic stuff that's the same for all
-				 * types.  MUST BE FIRST IN STRUCTURE. */
+				 * types. MUST BE FIRST IN STRUCTURE. */
     double x, y;		/* Coordinates of positioning point for
 				 * bitmap. */
-    Tk_Anchor anchor;		/* Where to anchor bitmap relative to
-				 * (x,y). */
+    Tk_Anchor anchor;		/* Where to anchor bitmap relative to (x,y) */
     Pixmap bitmap;		/* Bitmap to display in window. */
     Pixmap activeBitmap;	/* Bitmap to display in window. */
     Pixmap disabledBitmap;	/* Bitmap to display in window. */
@@ -37,8 +36,8 @@ typedef struct BitmapItem  {
     XColor *bgColor;		/* Background color to use for bitmap. */
     XColor *activeBgColor;	/* Background color to use for bitmap. */
     XColor *disabledBgColor;	/* Background color to use for bitmap. */
-    GC gc;			/* Graphics context to use for drawing
-				 * bitmap on screen. */
+    GC gc;			/* Graphics context to use for drawing bitmap
+				 * on screen. */
 } BitmapItem;
 
 /*
@@ -55,96 +54,95 @@ static Tk_CustomOption tagsOption = {
 };
 
 static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_COLOR, "-activebackground", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, activeBgColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-activebitmap", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, activeBitmap), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-activeforeground", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, activeFgColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_ANCHOR, "-anchor", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-activebackground", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, activeBgColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-activebitmap", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, activeBitmap), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_COLOR, "-activeforeground", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, activeFgColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
 	"center", Tk_Offset(BitmapItem, anchor), TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_COLOR, "-background", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, bgColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-bitmap", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, bitmap), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-disabledbackground", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, disabledBgColor),
+    {TK_CONFIG_COLOR, "-background", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, bgColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-bitmap", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, bitmap), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_COLOR, "-disabledbackground", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, disabledBgColor),
 	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-disabledbitmap", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, disabledBitmap),
+    {TK_CONFIG_BITMAP, "-disabledbitmap", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, disabledBitmap),
 	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-disabledforeground", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(BitmapItem, disabledFgColor),
+    {TK_CONFIG_COLOR, "-disabledforeground", NULL, NULL,
+	NULL, Tk_Offset(BitmapItem, disabledFgColor),
 	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-foreground", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-foreground", NULL, NULL,
 	"black", Tk_Offset(BitmapItem, fgColor), 0},
-    {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
+    {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
+	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
 	&stateOption},
-    {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+    {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
+	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
 };
 
 /*
- * Prototypes for procedures defined in this file:
+ * Prototypes for functions defined in this file:
  */
 
-static int		BitmapCoords _ANSI_ARGS_((Tcl_Interp *interp,
+static int		BitmapCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
-			    Tcl_Obj *CONST objv[]));
-static int		BitmapToArea _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, double *rectPtr));
-static double		BitmapToPoint _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, double *coordPtr));
-static int		BitmapToPostscript _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass));
-static void		ComputeBitmapBbox _ANSI_ARGS_((Tk_Canvas canvas,
-			    BitmapItem *bmapPtr));
-static int		ConfigureBitmap _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tcl_Obj *CONST objv[]);
+static int		BitmapToArea(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, double *rectPtr);
+static double		BitmapToPoint(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, double *coordPtr);
+static int		BitmapToPostscript(Tcl_Interp *interp,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		ComputeBitmapBbox(Tk_Canvas canvas,
+			    BitmapItem *bmapPtr);
+static int		ConfigureBitmap(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
-			    Tcl_Obj *CONST objv[], int flags));
-static int		TkcCreateBitmap _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tcl_Obj *CONST objv[], int flags);
+static int		TkcCreateBitmap(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *CONST objv[]));
-static void		DeleteBitmap _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, Display *display));
-static void		DisplayBitmap _ANSI_ARGS_((Tk_Canvas canvas,
+			    int objc, Tcl_Obj *CONST objv[]);
+static void		DeleteBitmap(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, Display *display);
+static void		DisplayBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
-			    int x, int y, int width, int height));
-static void		ScaleBitmap _ANSI_ARGS_((Tk_Canvas canvas,
+			    int x, int y, int width, int height);
+static void		ScaleBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
-			    double scaleX, double scaleY));
-static void		TranslateBitmap _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, double deltaX, double deltaY));
+			    double scaleX, double scaleY);
+static void		TranslateBitmap(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double deltaX, double deltaY);
 
 /*
- * The structures below defines the bitmap item type in terms of
- * procedures that can be invoked by generic item code.
+ * The structures below defines the bitmap item type in terms of functions
+ * that can be invoked by generic item code.
  */
 
 Tk_ItemType tkBitmapType = {
-    "bitmap",				/* name */
-    sizeof(BitmapItem),			/* itemSize */
-    TkcCreateBitmap,			/* createProc */
-    configSpecs,			/* configSpecs */
-    ConfigureBitmap,			/* configureProc */
-    BitmapCoords,			/* coordProc */
-    DeleteBitmap,			/* deleteProc */
-    DisplayBitmap,			/* displayProc */
-    TK_CONFIG_OBJS,			/* flags */
-    BitmapToPoint,			/* pointProc */
-    BitmapToArea,			/* areaProc */
-    BitmapToPostscript,			/* postscriptProc */
-    ScaleBitmap,			/* scaleProc */
-    TranslateBitmap,			/* translateProc */
-    (Tk_ItemIndexProc *) NULL,		/* indexProc */
-    (Tk_ItemCursorProc *) NULL,		/* icursorProc */
-    (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
-    (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL,		/* nextPtr */
+    "bitmap",			/* name */
+    sizeof(BitmapItem),		/* itemSize */
+    TkcCreateBitmap,		/* createProc */
+    configSpecs,		/* configSpecs */
+    ConfigureBitmap,		/* configureProc */
+    BitmapCoords,		/* coordProc */
+    DeleteBitmap,		/* deleteProc */
+    DisplayBitmap,		/* displayProc */
+    TK_CONFIG_OBJS,		/* flags */
+    BitmapToPoint,		/* pointProc */
+    BitmapToArea,		/* areaProc */
+    BitmapToPostscript,		/* postscriptProc */
+    ScaleBitmap,		/* scaleProc */
+    TranslateBitmap,		/* translateProc */
+    NULL,			/* indexProc */
+    NULL,			/* icursorProc */
+    NULL,			/* selectionProc */
+    NULL,			/* insertProc */
+    NULL,			/* dTextProc */
+    NULL,			/* nextPtr */
 };
 
 /*
@@ -152,14 +150,13 @@ Tk_ItemType tkBitmapType = {
  *
  * TkcCreateBitmap --
  *
- *	This procedure is invoked to create a new bitmap
- *	item in a canvas.
+ *	This function is invoked to create a new bitmap item in a canvas.
  *
  * Results:
- *	A standard Tcl return value.  If an error occurred in
- *	creating the item, then an error message is left in
- *	the interp's result;  in this case itemPtr is left uninitialized,
- *	so it can be safely freed by the caller.
+ *	A standard Tcl return value. If an error occurred in creating the
+ *	item, then an error message is left in the interp's result; in this
+ *	case itemPtr is left uninitialized, so it can be safely freed by the
+ *	caller.
  *
  * Side effects:
  *	A new bitmap item is created.
@@ -168,13 +165,13 @@ Tk_ItemType tkBitmapType = {
  */
 
 static int
-TkcCreateBitmap(interp, canvas, itemPtr, objc, objv)
-    Tcl_Interp *interp;			/* Interpreter for error reporting. */
-    Tk_Canvas canvas;			/* Canvas to hold new item. */
-    Tk_Item *itemPtr;			/* Record to hold new item;  header
-					 * has been initialized by caller. */
-    int objc;				/* Number of arguments in objv. */
-    Tcl_Obj *CONST objv[];		/* Arguments describing rectangle. */
+TkcCreateBitmap(
+    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    Tk_Canvas canvas,		/* Canvas to hold new item. */
+    Tk_Item *itemPtr,		/* Record to hold new item; header has been
+				 * initialized by caller. */
+    int objc,			/* Number of arguments in objv. */
+    Tcl_Obj *CONST objv[])	/* Arguments describing rectangle. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     int i;
@@ -200,8 +197,8 @@ TkcCreateBitmap(interp, canvas, itemPtr, objc, objv)
     bmapPtr->gc = None;
 
     /*
-     * Process the arguments to fill in the item record.
-     * Only 1 (list) or 2 (x y) coords are allowed.
+     * Process the arguments to fill in the item record. Only 1 (list) or 2 (x
+     * y) coords are allowed.
      */
 
     if (objc == 1) {
@@ -221,7 +218,7 @@ TkcCreateBitmap(interp, canvas, itemPtr, objc, objv)
 	return TCL_OK;
     }
 
-    error:
+  error:
     DeleteBitmap(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
     return TCL_ERROR;
 }
@@ -231,9 +228,8 @@ TkcCreateBitmap(interp, canvas, itemPtr, objc, objv)
  *
  * BitmapCoords --
  *
- *	This procedure is invoked to process the "coords" widget
- *	command on bitmap items.  See the user documentation for
- *	details on what it does.
+ *	This function is invoked to process the "coords" widget command on
+ *	bitmap items. See the user documentation for details on what it does.
  *
  * Results:
  *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
@@ -245,20 +241,19 @@ TkcCreateBitmap(interp, canvas, itemPtr, objc, objv)
  */
 
 static int
-BitmapCoords(interp, canvas, itemPtr, objc, objv)
-    Tcl_Interp *interp;			/* Used for error reporting. */
-    Tk_Canvas canvas;			/* Canvas containing item. */
-    Tk_Item *itemPtr;			/* Item whose coordinates are to be
-					 * read or modified. */
-    int objc;				/* Number of coordinates supplied in
-					 * objv. */
-    Tcl_Obj *CONST objv[];		/* Array of coordinates: x1, y1,
-					 * x2, y2, ... */
+BitmapCoords(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
+				 * modified. */
+    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Obj *CONST objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
 
     if (objc == 0) {
 	Tcl_Obj *obj = Tcl_NewObj();
+
 	Tcl_Obj *subobj = Tcl_NewDoubleObj(bmapPtr->x);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	subobj = Tcl_NewDoubleObj(bmapPtr->y);
@@ -299,12 +294,12 @@ BitmapCoords(interp, canvas, itemPtr, objc, objv)
  *
  * ConfigureBitmap --
  *
- *	This procedure is invoked to configure various aspects
- *	of a bitmap item, such as its anchor position.
+ *	This function is invoked to configure various aspects of a bitmap
+ *	item, such as its anchor position.
  *
  * Results:
- *	A standard Tcl result code.  If an error occurs, then
- *	an error message is left in the interp's result.
+ *	A standard Tcl result code. If an error occurs, then an error message
+ *	is left in the interp's result.
  *
  * Side effects:
  *	Configuration information may be set for itemPtr.
@@ -313,13 +308,13 @@ BitmapCoords(interp, canvas, itemPtr, objc, objv)
  */
 
 static int
-ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
-    Tcl_Interp *interp;		/* Used for error reporting. */
-    Tk_Canvas canvas;		/* Canvas containing itemPtr. */
-    Tk_Item *itemPtr;		/* Bitmap item to reconfigure. */
-    int objc;			/* Number of elements in objv.  */
-    Tcl_Obj *CONST objv[];	/* Arguments describing things to configure. */
-    int flags;			/* Flags to pass to Tk_ConfigureWidget. */
+ConfigureBitmap(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tk_Canvas canvas,		/* Canvas containing itemPtr. */
+    Tk_Item *itemPtr,		/* Bitmap item to reconfigure. */
+    int objc,			/* Number of elements in objv.  */
+    Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
+    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     XGCValues gcValues;
@@ -338,8 +333,8 @@ ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
     }
 
     /*
-     * A few of the options require additional processing, such as those
-     * that determine the graphics context.
+     * A few of the options require additional processing, such as those that
+     * determine the graphics context.
      */
 
     state = itemPtr->state;
@@ -412,8 +407,8 @@ ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
  *
  * DeleteBitmap --
  *
- *	This procedure is called to clean up the data structure
- *	associated with a bitmap item.
+ *	This function is called to clean up the data structure associated with
+ *	a bitmap item.
  *
  * Results:
  *	None.
@@ -425,11 +420,10 @@ ConfigureBitmap(interp, canvas, itemPtr, objc, objv, flags)
  */
 
 static void
-DeleteBitmap(canvas, itemPtr, display)
-    Tk_Canvas canvas;			/* Info about overall canvas widget. */
-    Tk_Item *itemPtr;			/* Item that is being deleted. */
-    Display *display;			/* Display containing window for
-					 * canvas. */
+DeleteBitmap(
+    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    Tk_Item *itemPtr,		/* Item that is being deleted. */
+    Display *display)		/* Display containing window for canvas. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
 
@@ -470,27 +464,24 @@ DeleteBitmap(canvas, itemPtr, display)
  *
  * ComputeBitmapBbox --
  *
- *	This procedure is invoked to compute the bounding box of
- *	all the pixels that may be drawn as part of a bitmap item.
- *	This procedure is where the child bitmap's placement is
- *	computed.
+ *	This function is invoked to compute the bounding box of all the pixels
+ *	that may be drawn as part of a bitmap item. This function is where the
+ *	child bitmap's placement is computed.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The fields x1, y1, x2, and y2 are updated in the header
- *	for itemPtr.
+ *	The fields x1, y1, x2, and y2 are updated in the header for itemPtr.
  *
  *--------------------------------------------------------------
  */
 
 	/* ARGSUSED */
 static void
-ComputeBitmapBbox(canvas, bmapPtr)
-    Tk_Canvas canvas;			/* Canvas that contains item. */
-    BitmapItem *bmapPtr;		/* Item whose bbox is to be
-					 * recomputed. */
+ComputeBitmapBbox(
+    Tk_Canvas canvas,		/* Canvas that contains item. */
+    BitmapItem *bmapPtr)	/* Item whose bbox is to be recomputed. */
 {
     int width, height;
     int x, y;
@@ -527,36 +518,36 @@ ComputeBitmapBbox(canvas, bmapPtr)
     Tk_SizeOfBitmap(Tk_Display(Tk_CanvasTkwin(canvas)), bitmap,
 	    &width, &height);
     switch (bmapPtr->anchor) {
-	case TK_ANCHOR_N:
-	    x -= width/2;
-	    break;
-	case TK_ANCHOR_NE:
-	    x -= width;
-	    break;
-	case TK_ANCHOR_E:
-	    x -= width;
-	    y -= height/2;
-	    break;
-	case TK_ANCHOR_SE:
-	    x -= width;
-	    y -= height;
-	    break;
-	case TK_ANCHOR_S:
-	    x -= width/2;
-	    y -= height;
-	    break;
-	case TK_ANCHOR_SW:
-	    y -= height;
-	    break;
-	case TK_ANCHOR_W:
-	    y -= height/2;
-	    break;
-	case TK_ANCHOR_NW:
-	    break;
-	case TK_ANCHOR_CENTER:
-	    x -= width/2;
-	    y -= height/2;
-	    break;
+    case TK_ANCHOR_N:
+	x -= width/2;
+	break;
+    case TK_ANCHOR_NE:
+	x -= width;
+	break;
+    case TK_ANCHOR_E:
+	x -= width;
+	y -= height/2;
+	break;
+    case TK_ANCHOR_SE:
+	x -= width;
+	y -= height;
+	break;
+    case TK_ANCHOR_S:
+	x -= width/2;
+	y -= height;
+	break;
+    case TK_ANCHOR_SW:
+	y -= height;
+	break;
+    case TK_ANCHOR_W:
+	y -= height/2;
+	break;
+    case TK_ANCHOR_NW:
+	break;
+    case TK_ANCHOR_CENTER:
+	x -= width/2;
+	y -= height/2;
+	break;
     }
 
     /*
@@ -574,28 +565,27 @@ ComputeBitmapBbox(canvas, bmapPtr)
  *
  * DisplayBitmap --
  *
- *	This procedure is invoked to draw a bitmap item in a given
- *	drawable.
+ *	This function is invoked to draw a bitmap item in a given drawable.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	ItemPtr is drawn in drawable using the transformation
- *	information in canvas.
+ *	ItemPtr is drawn in drawable using the transformation information in
+ *	canvas.
  *
  *--------------------------------------------------------------
  */
 
 static void
-DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
-    Tk_Canvas canvas;			/* Canvas that contains item. */
-    Tk_Item *itemPtr;			/* Item to be displayed. */
-    Display *display;			/* Display on which to draw item. */
-    Drawable drawable;			/* Pixmap or window in which to draw
-					 * item. */
-    int x, y, width, height;		/* Describes region of canvas that
-					 * must be redisplayed (not used). */
+DisplayBitmap(
+    Tk_Canvas canvas,		/* Canvas that contains item. */
+    Tk_Item *itemPtr,		/* Item to be displayed. */
+    Display *display,		/* Display on which to draw item. */
+    Drawable drawable,		/* Pixmap or window in which to draw item. */
+    int x, int y, int width, int height)
+				/* Describes region of canvas that must be
+				 * redisplayed (not used). */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     int bmapX, bmapY, bmapWidth, bmapHeight;
@@ -604,9 +594,8 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
     Tk_State state = itemPtr->state;
 
     /*
-     * If the area being displayed doesn't cover the whole bitmap,
-     * then only redisplay the part of the bitmap that needs
-     * redisplay.
+     * If the area being displayed doesn't cover the whole bitmap, then only
+     * redisplay the part of the bitmap that needs redisplay.
      */
 
     if (state == TK_STATE_NULL) {
@@ -652,9 +641,9 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
 		&drawableX, &drawableY);
 
 	/*
-	 * Must modify the mask origin within the graphics context
-	 * to line up with the bitmap's origin (in order to make
-	 * bitmaps with "-background {}" work right).
+	 * Must modify the mask origin within the graphics context to line up
+	 * with the bitmap's origin (in order to make bitmaps with
+	 * "-background {}" work right).
 	 */
 
 	XSetClipOrigin(display, bmapPtr->gc, drawableX - bmapX,
@@ -671,14 +660,14 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
  *
  * BitmapToPoint --
  *
- *	Computes the distance from a given point to a given
- *	rectangle, in canvas units.
+ *	Computes the distance from a given point to a given rectangle, in
+ *	canvas units.
  *
  * Results:
- *	The return value is 0 if the point whose x and y coordinates
- *	are coordPtr[0] and coordPtr[1] is inside the bitmap.  If the
- *	point isn't inside the bitmap then the return value is the
- *	distance from the point to the bitmap.
+ *	The return value is 0 if the point whose x and y coordinates are
+ *	coordPtr[0] and coordPtr[1] is inside the bitmap. If the point isn't
+ *	inside the bitmap then the return value is the distance from the point
+ *	to the bitmap.
  *
  * Side effects:
  *	None.
@@ -688,10 +677,10 @@ DisplayBitmap(canvas, itemPtr, display, drawable, x, y, width, height)
 
 	/* ARGSUSED */
 static double
-BitmapToPoint(canvas, itemPtr, coordPtr)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item to check against point. */
-    double *coordPtr;		/* Pointer to x and y coordinates. */
+BitmapToPoint(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against point. */
+    double *coordPtr)		/* Pointer to x and y coordinates. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
@@ -729,14 +718,13 @@ BitmapToPoint(canvas, itemPtr, coordPtr)
  *
  * BitmapToArea --
  *
- *	This procedure is called to determine whether an item
- *	lies entirely inside, entirely outside, or overlapping
- *	a given rectangle.
+ *	This function is called to determine whether an item lies entirely
+ *	inside, entirely outside, or overlapping a given rectangle.
  *
  * Results:
- *	-1 is returned if the item is entirely outside the area
- *	given by rectPtr, 0 if it overlaps, and 1 if it is entirely
- *	inside the given area.
+ *	-1 is returned if the item is entirely outside the area given by
+ *	rectPtr, 0 if it overlaps, and 1 if it is entirely inside the given
+ *	area.
  *
  * Side effects:
  *	None.
@@ -746,12 +734,12 @@ BitmapToPoint(canvas, itemPtr, coordPtr)
 
 	/* ARGSUSED */
 static int
-BitmapToArea(canvas, itemPtr, rectPtr)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item to check against rectangle. */
-    double *rectPtr;		/* Pointer to array of four coordinates
-				 * (x1, y1, x2, y2) describing rectangular
-				 * area.  */
+BitmapToArea(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against rectangle. */
+    double *rectPtr)		/* Pointer to array of four coordinates
+				 * (x1,y1,x2,y2) describing rectangular
+				 * area. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
 
@@ -775,16 +763,16 @@ BitmapToArea(canvas, itemPtr, rectPtr)
  *
  * ScaleBitmap --
  *
- *	This procedure is invoked to rescale a bitmap item in a
- *	canvas.  It is one of the standard item procedures for
- *	bitmap items, and is invoked by the generic canvas code.
+ *	This function is invoked to rescale a bitmap item in a canvas. It is
+ *	one of the standard item functions for bitmap items, and is invoked by
+ *	the generic canvas code.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The item referred to by itemPtr is rescaled so that the
- *	following transformation is applied to all point coordinates:
+ *	The item referred to by itemPtr is rescaled so that the following
+ *	transformation is applied to all point coordinates:
  *		x' = originX + scaleX*(x-originX)
  *		y' = originY + scaleY*(y-originY)
  *
@@ -792,12 +780,13 @@ BitmapToArea(canvas, itemPtr, rectPtr)
  */
 
 static void
-ScaleBitmap(canvas, itemPtr, originX, originY, scaleX, scaleY)
-    Tk_Canvas canvas;			/* Canvas containing rectangle. */
-    Tk_Item *itemPtr;			/* Rectangle to be scaled. */
-    double originX, originY;		/* Origin about which to scale item. */
-    double scaleX;			/* Amount to scale in X direction. */
-    double scaleY;			/* Amount to scale in Y direction. */
+ScaleBitmap(
+    Tk_Canvas canvas,		/* Canvas containing rectangle. */
+    Tk_Item *itemPtr,		/* Rectangle to be scaled. */
+    double originX, double originY,
+				/* Origin about which to scale item. */
+    double scaleX,		/* Amount to scale in X direction. */
+    double scaleY)		/* Amount to scale in Y direction. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
 
@@ -811,25 +800,24 @@ ScaleBitmap(canvas, itemPtr, originX, originY, scaleX, scaleY)
  *
  * TranslateBitmap --
  *
- *	This procedure is called to move an item by a given amount.
+ *	This function is called to move an item by a given amount.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The position of the item is offset by (xDelta, yDelta), and
- *	the bounding box is updated in the generic part of the item
- *	structure.
+ *	The position of the item is offset by (xDelta, yDelta), and the
+ *	bounding box is updated in the generic part of the item structure.
  *
  *--------------------------------------------------------------
  */
 
 static void
-TranslateBitmap(canvas, itemPtr, deltaX, deltaY)
-    Tk_Canvas canvas;			/* Canvas containing item. */
-    Tk_Item *itemPtr;			/* Item that is being moved. */
-    double deltaX, deltaY;		/* Amount by which item is to be
-					 * moved. */
+TranslateBitmap(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double deltaX, double deltaY)
+				/* Amount by which item is to be moved. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
 
@@ -843,15 +831,13 @@ TranslateBitmap(canvas, itemPtr, deltaX, deltaY)
  *
  * BitmapToPostscript --
  *
- *	This procedure is called to generate Postscript for
- *	bitmap items.
+ *	This function is called to generate Postscript for bitmap items.
  *
  * Results:
- *	The return value is a standard Tcl result.  If an error
- *	occurs in generating Postscript then an error message is
- *	left in the interp's result, replacing whatever used to be there.
- *	If no error occurs, then Postscript for the item is appended
- *	to the result.
+ *	The return value is a standard Tcl result. If an error occurs in
+ *	generating Postscript then an error message is left in the interp's
+ *	result, replacing whatever used to be there. If no error occurs, then
+ *	Postscript for the item is appended to the result.
  *
  * Side effects:
  *	None.
@@ -860,15 +846,13 @@ TranslateBitmap(canvas, itemPtr, deltaX, deltaY)
  */
 
 static int
-BitmapToPostscript(interp, canvas, itemPtr, prepass)
-    Tcl_Interp *interp;			/* Leave Postscript or error message
-					 * here. */
-    Tk_Canvas canvas;			/* Information about overall canvas. */
-    Tk_Item *itemPtr;			/* Item for which Postscript is
-					 * wanted. */
-    int prepass;			/* 1 means this is a prepass to
-					 * collect font information;  0 means
-					 * final Postscript is being created. */
+BitmapToPostscript(
+    Tcl_Interp *interp,		/* Leave Postscript or error message here. */
+    Tk_Canvas canvas,		/* Information about overall canvas. */
+    Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
+    int prepass)		/* 1 means this is a prepass to collect font
+				 * information; 0 means final Postscript is
+				 * being created. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     double x, y;
@@ -913,8 +897,8 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
     }
 
     /*
-     * Compute the coordinates of the lower-left corner of the bitmap,
-     * taking into account the anchor position for the bitmp.
+     * Compute the coordinates of the lower-left corner of the bitmap, taking
+     * into account the anchor position for the bitmp.
      */
 
     x = bmapPtr->x;
@@ -922,15 +906,15 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
     Tk_SizeOfBitmap(Tk_Display(Tk_CanvasTkwin(canvas)), bitmap,
 	    &width, &height);
     switch (bmapPtr->anchor) {
-	case TK_ANCHOR_NW:			y -= height;		break;
-	case TK_ANCHOR_N:	x -= width/2.0; y -= height;		break;
-	case TK_ANCHOR_NE:	x -= width;	y -= height;		break;
-	case TK_ANCHOR_E:	x -= width;	y -= height/2.0;	break;
-	case TK_ANCHOR_SE:	x -= width;				break;
-	case TK_ANCHOR_S:	x -= width/2.0;				break;
-	case TK_ANCHOR_SW:						break;
-	case TK_ANCHOR_W:			y -= height/2.0;	break;
-	case TK_ANCHOR_CENTER:	x -= width/2.0; y -= height/2.0;	break;
+    case TK_ANCHOR_NW:			   y -= height;		break;
+    case TK_ANCHOR_N:	   x -= width/2.0; y -= height;		break;
+    case TK_ANCHOR_NE:	   x -= width;	   y -= height;		break;
+    case TK_ANCHOR_E:	   x -= width;	   y -= height/2.0;	break;
+    case TK_ANCHOR_SE:	   x -= width;				break;
+    case TK_ANCHOR_S:	   x -= width/2.0;			break;
+    case TK_ANCHOR_SW:						break;
+    case TK_ANCHOR_W:			   y -= height/2.0;	break;
+    case TK_ANCHOR_CENTER: x -= width/2.0; y -= height/2.0;	break;
     }
 
     /*
@@ -941,18 +925,18 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
 	sprintf(buffer,
 		"%.15g %.15g moveto %d 0 rlineto 0 %d rlineto %d %s\n",
 		x, y, width, height, -width, "0 rlineto closepath");
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	Tcl_AppendResult(interp, buffer, NULL);
 	if (Tk_CanvasPsColor(interp, canvas, bgColor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_AppendResult(interp, "fill\n", (char *) NULL);
+	Tcl_AppendResult(interp, "fill\n", NULL);
     }
 
     /*
-     * Draw the bitmap, if there is a foreground color.  If the bitmap
-     * is very large, then chop it up into multiple bitmaps, each
-     * consisting of one or more rows.  This is needed because Postscript
-     * can't handle single strings longer than 64 KBytes long.
+     * Draw the bitmap, if there is a foreground color. If the bitmap is very
+     * large, then chop it up into multiple bitmaps, each consisting of one or
+     * more rows. This is needed because Postscript can't handle single
+     * strings longer than 64 KBytes long.
      */
 
     if (fgColor != NULL) {
@@ -962,8 +946,7 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
 	if (width > 60000) {
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, "can't generate Postscript",
-		    " for bitmaps more than 60000 pixels wide",
-		    (char *) NULL);
+		    " for bitmaps more than 60000 pixels wide", NULL);
 	    return TCL_ERROR;
 	}
 	rowsAtOnce = 60000/width;
@@ -971,7 +954,7 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
 	    rowsAtOnce = 1;
 	}
 	sprintf(buffer, "%.15g %.15g translate\n", x, y+height);
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	Tcl_AppendResult(interp, buffer, NULL);
 	for (curRow = 0; curRow < height; curRow += rowsAtOnce) {
 	    rowsThisTime = rowsAtOnce;
 	    if (rowsThisTime > (height - curRow)) {
@@ -979,13 +962,21 @@ BitmapToPostscript(interp, canvas, itemPtr, prepass)
 	    }
 	    sprintf(buffer, "0 -%.15g translate\n%d %d true matrix {\n",
 		    (double) rowsThisTime, width, rowsThisTime);
-	    Tcl_AppendResult(interp, buffer, (char *) NULL);
+	    Tcl_AppendResult(interp, buffer, NULL);
 	    if (Tk_CanvasPsBitmap(interp, canvas, bitmap,
 		    0, curRow, width, rowsThisTime) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    Tcl_AppendResult(interp, "\n} imagemask\n", (char *) NULL);
+	    Tcl_AppendResult(interp, "\n} imagemask\n", NULL);
 	}
     }
     return TCL_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

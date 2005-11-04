@@ -1,7 +1,7 @@
 /*
  * tkCanvUtil.c --
  *
- *	This procedure contains a collection of utility procedures used by the
+ *	This file contains a collection of utility functions used by the
  *	implementations of various canvas item types.
  *
  * Copyright (c) 1994 Sun Microsystems, Inc.
@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.13 2005/10/17 20:23:29 dkf Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.14 2005/11/04 15:23:05 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -60,7 +60,7 @@ static void		TranslateAndAppendCoords(TkCanvas *canvPtr,
  *
  * Tk_CanvasTkwin --
  *
- *	Given a token for a canvas, this procedure returns the widget that
+ *	Given a token for a canvas, this function returns the widget that
  *	represents the canvas.
  *
  * Results:
@@ -85,7 +85,7 @@ Tk_CanvasTkwin(
  *
  * Tk_CanvasDrawableCoords --
  *
- *	Given an (x,y) coordinate pair within a canvas, this procedure
+ *	Given an (x,y) coordinate pair within a canvas, this function
  *	returns the corresponding coordinates at which the point should
  *	be drawn in the drawable used for display.
  *
@@ -146,7 +146,7 @@ Tk_CanvasDrawableCoords(
  *
  * Tk_CanvasWindowCoords --
  *
- *	Given an (x,y) coordinate pair within a canvas, this procedure returns
+ *	Given an (x,y) coordinate pair within a canvas, this function returns
  *	the corresponding coordinates in the canvas's window.
  *
  * Results:
@@ -282,7 +282,7 @@ Tk_CanvasGetCoordFromObj(
  *
  * Tk_CanvasSetStippleOrigin --
  *
- *	This procedure sets the stipple origin in a graphics context so that
+ *	This function sets the stipple origin in a graphics context so that
  *	stipples drawn with the GC will line up with other stipples previously
  *	drawn in the canvas.
  *
@@ -313,7 +313,7 @@ Tk_CanvasSetStippleOrigin(
  *
  * Tk_CanvasSetOffset--
  *
- *	This procedure sets the stipple offset in a graphics context so that
+ *	This function sets the stipple offset in a graphics context so that
  *	stipples drawn with the GC will line up with other stipples with the
  *	same offset.
  *
@@ -357,7 +357,7 @@ Tk_CanvasSetOffset(
  *
  * Tk_CanvasGetTextInfo --
  *
- *	This procedure returns a pointer to a structure containing information
+ *	This function returns a pointer to a structure containing information
  *	about the selection and insertion cursor for a canvas widget. Items
  *	such as text items save the pointer and use it to share access to the
  *	information with the generic canvas code.
@@ -386,7 +386,7 @@ Tk_CanvasGetTextInfo(
  *
  * Tk_CanvasTagsParseProc --
  *
- *	This procedure is invoked during option processing to handle "-tags"
+ *	This function is invoked during option processing to handle "-tags"
  *	options for canvas items.
  *
  * Results:
@@ -449,14 +449,14 @@ Tk_CanvasTagsParseProc(
  *
  * Tk_CanvasTagsPrintProc --
  *
- *	This procedure is invoked by the Tk configuration code to produce a
+ *	This function is invoked by the Tk configuration code to produce a
  *	printable string for the "-tags" configuration option for canvas
  *	items.
  *
  * Results:
  *	The return value is a string describing all the tags for the item
  *	referred to by "widgRec". In addition, *freeProcPtr is filled in with
- *	the address of a procedure to call to free the result string when it's
+ *	the address of a function to call to free the result string when it's
  *	no longer needed (or NULL to indicate that the string doesn't need to
  *	be freed).
  *
@@ -479,11 +479,11 @@ Tk_CanvasTagsPrintProc(
     register Tk_Item *itemPtr = (Tk_Item *) widgRec;
 
     if (itemPtr->numTags == 0) {
-	*freeProcPtr = (Tcl_FreeProc *) NULL;
+	*freeProcPtr = NULL;
 	return "";
     }
     if (itemPtr->numTags == 1) {
-	*freeProcPtr = (Tcl_FreeProc *) NULL;
+	*freeProcPtr = NULL;
 	return (char *) itemPtr->tagPtr[0];
     }
     *freeProcPtr = TCL_DYNAMIC;
@@ -495,7 +495,7 @@ Tk_CanvasTagsPrintProc(
  *
  * TkCanvasDashParseProc --
  *
- *	This procedure is invoked during option processing to handle "-dash",
+ *	This function is invoked during option processing to handle "-dash",
  *	"-activedash" and "-disableddash" options for canvas objects.
  *
  * Results:
@@ -525,14 +525,14 @@ TkCanvasDashParseProc(
  *
  * TkCanvasDashPrintProc --
  *
- *	This procedure is invoked by the Tk configuration code to produce a
+ *	This function is invoked by the Tk configuration code to produce a
  *	printable string for the "-dash", "-activedash" and "-disableddash"
  *	configuration options for canvas items.
  *
  * Results:
  *	The return value is a string describing all the dash list for the item
  *	referred to by "widgRec"and "offset". In addition, *freeProcPtr is
- *	filled in with the address of a procedure to call to free the result
+ *	filled in with the address of a function to call to free the result
  *	string when it's no longer needed (or NULL to indicate that the string
  *	doesn't need to be freed).
  *
@@ -566,7 +566,7 @@ TkCanvasDashPrintProc(
 	buffer[i] = 0;
 	return buffer;
     } else if (!i) {
-	*freeProcPtr = (Tcl_FreeProc *) NULL;
+	*freeProcPtr = NULL;
 	return "";
     }
     buffer = (char *)ckalloc((unsigned int) (4*i));
@@ -585,7 +585,7 @@ TkCanvasDashPrintProc(
  *
  * InitSmoothMethods --
  *
- *	This procedure is invoked to set up the initial state of the list of
+ *	This function is invoked to set up the initial state of the list of
  *	"-smooth" methods. It should only be called when the list installed
  *	in the interpreter is NULL.
  *
@@ -628,7 +628,7 @@ InitSmoothMethods(
  *
  * Tk_CreateSmoothMethod --
  *
- *	This procedure is invoked to add additional values for the "-smooth"
+ *	This function is invoked to add additional values for the "-smooth"
  *	option to the list.
  *
  * Results:
@@ -648,7 +648,7 @@ Tk_CreateSmoothMethod(
 {
     SmoothAssocData *methods, *typePtr2, *prevPtr, *ptr;
     methods = (SmoothAssocData *) Tcl_GetAssocData(interp, "smoothMethod",
-	    (Tcl_InterpDeleteProc **) NULL);
+	    NULL);
 
     /*
      * Initialize if we were not previously initialized.
@@ -687,7 +687,7 @@ Tk_CreateSmoothMethod(
  *
  * SmoothMethodCleanupProc --
  *
- *	This procedure is invoked whenever an interpreter is deleted to
+ *	This function is invoked whenever an interpreter is deleted to
  *	cleanup the smooth methods.
  *
  * Results:
@@ -717,7 +717,7 @@ SmoothMethodCleanupProc(
  *
  * TkSmoothParseProc --
  *
- *	This procedure is invoked during option processing to handle the
+ *	This function is invoked during option processing to handle the
  *	"-smooth" option.
  *
  * Results:
@@ -747,12 +747,12 @@ TkSmoothParseProc(
     SmoothAssocData *methods;
 
     if (value == NULL || *value == 0) {
-	*smoothPtr = (Tk_SmoothMethod *) NULL;
+	*smoothPtr = NULL;
 	return TCL_OK;
     }
     length = strlen(value);
     methods = (SmoothAssocData *) Tcl_GetAssocData(interp, "smoothMethod",
-	    (Tcl_InterpDeleteProc **) NULL);
+	    NULL);
 
     /*
      * Not initialized yet; fix that now.
@@ -774,11 +774,11 @@ TkSmoothParseProc(
      * Search the list of installed smooth methods.
      */
 
-    while (methods != (SmoothAssocData *) NULL) {
+    while (methods != NULL) {
 	if (strncmp(value, methods->smooth.name, length) == 0) {
-	    if (smooth != (Tk_SmoothMethod *) NULL) {
+	    if (smooth != NULL) {
 		Tcl_AppendResult(interp, "ambiguous smooth method \"", value,
-			"\"", (char *) NULL);
+			"\"", NULL);
 		return TCL_ERROR;
 	    }
 	    smooth = &methods->smooth;
@@ -797,7 +797,7 @@ TkSmoothParseProc(
     if (Tcl_GetBoolean(interp, (char *) value, &b) != TCL_OK) {
 	return TCL_ERROR;
     }
-    *smoothPtr = b ? &tkBezierSmoothMethod : (Tk_SmoothMethod*) NULL;
+    *smoothPtr = b ? &tkBezierSmoothMethod : NULL;
     return TCL_OK;
 }
 /*
@@ -805,13 +805,13 @@ TkSmoothParseProc(
  *
  * TkSmoothPrintProc --
  *
- *	This procedure is invoked by the Tk configuration code to produce a
+ *	This function is invoked by the Tk configuration code to produce a
  *	printable string for the "-smooth" configuration option.
  *
  * Results:
  *	The return value is a string describing the smooth option for the item
  *	referred to by "widgRec". In addition, *freeProcPtr is filled in with
- *	the address of a procedure to call to free the result string when it's
+ *	the address of a function to call to free the result string when it's
  *	no longer needed (or NULL to indicate that the string doesn't need to
  *	be freed).
  *
@@ -841,7 +841,7 @@ TkSmoothPrintProc(
  *
  * Tk_GetDash
  *
- *	This procedure is used to parse a string, assuming it is dash
+ *	This function is used to parse a string, assuming it is dash
  *	information.
  *
  * Results:
@@ -865,7 +865,7 @@ Tk_GetDash(
     CONST char **largv, **argv = NULL;
     char *pt;
 
-    if ((value==(char *) NULL) || (*value==0) ) {
+    if ((value==NULL) || (*value==0) ) {
 	dash->number = 0;
 	return TCL_OK;
     }
@@ -876,7 +876,7 @@ Tk_GetDash(
 
     switch (*value) {
     case '.': case ',': case '-': case '_':
-	i = DashConvert((char *) NULL, value, -1, 0.0);
+	i = DashConvert(NULL, value, -1, 0.0);
 	if (i>0) {
 	    i = strlen(value);
 	} else {
@@ -913,7 +913,7 @@ Tk_GetDash(
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp,
 		    "expected integer in the range 1..255 but got \"",
-		    *largv, "\"", (char *) NULL);
+		    *largv, "\"", NULL);
 	    goto syntaxError;
 	}
 	*pt++ = i;
@@ -933,7 +933,7 @@ Tk_GetDash(
   badDashList:
     Tcl_AppendResult(interp, "bad dash list \"", value,
 	    "\": must be a list of integers or a format like \"-..\"",
-	    (char *) NULL);
+	    NULL);
   syntaxError:
     if (argv != NULL) {
 	ckfree((char *) argv);
@@ -950,7 +950,7 @@ Tk_GetDash(
  *
  * Tk_CreateOutline
  *
- *	This procedure initializes the Tk_Outline structure with default
+ *	This function initializes the Tk_Outline structure with default
  *	values.
  *
  * Results:
@@ -990,7 +990,7 @@ Tk_CreateOutline(
  *
  * Tk_DeleteOutline
  *
- *	This procedure frees all memory that might be allocated and referenced
+ *	This function frees all memory that might be allocated and referenced
  *	in the Tk_Outline structure.
  *
  * Results:
@@ -1044,7 +1044,7 @@ Tk_DeleteOutline(
  *
  * Tk_ConfigOutlineGC
  *
- *	This procedure should be called in the canvas object during the
+ *	This function should be called in the canvas object during the
  *	configure command. The graphics context description in gcValues is
  *	updated according to the information in the dash structure, as far as
  *	possible.
@@ -1437,7 +1437,7 @@ Tk_CanvasPsOutline(
 	}
     }
     sprintf(string, "%.15g setlinewidth\n", width);
-    Tcl_AppendResult(interp, string, (char *) NULL);
+    Tcl_AppendResult(interp, string, NULL);
 
     if (dash->number > 10) {
 	str = (char *)ckalloc((unsigned int) (1 + 4*dash->number));
@@ -1455,12 +1455,12 @@ Tk_CanvasPsOutline(
 	while (i--) {
 	    sprintf(str+strlen(str), " %d", *ptr++ & 0xff);
 	}
-	Tcl_AppendResult(interp, str, (char *)NULL);
+	Tcl_AppendResult(interp, str, NULL);
 	if (dash->number&1) {
-	    Tcl_AppendResult(interp, " ", str+1, (char *)NULL);
+	    Tcl_AppendResult(interp, " ", str+1, NULL);
 	}
 	sprintf(str, "] %d setdash\n", outline->offset);
-	Tcl_AppendResult(interp, str, (char *)NULL);
+	Tcl_AppendResult(interp, str, NULL);
 	ptr = ptr0;
     } else if (dash->number < 0) {
 	if ((i = DashConvert(lptr, ptr, -dash->number, width)) != 0) {
@@ -1470,15 +1470,15 @@ Tk_CanvasPsOutline(
 	    while (--i) {
 		sprintf(str+strlen(str), " %d", *lptr++ & 0xff);
 	    }
-	    Tcl_AppendResult(interp, str, (char *)NULL);
+	    Tcl_AppendResult(interp, str, NULL);
 	    sprintf(str, "] %d setdash\n", outline->offset);
-	    Tcl_AppendResult(interp, str, (char *)NULL);
+	    Tcl_AppendResult(interp, str, NULL);
 	    lptr = lptr0;
 	} else {
-	    Tcl_AppendResult(interp, "[] 0 setdash\n", (char *)NULL);
+	    Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
 	}
     } else {
-	Tcl_AppendResult(interp, "[] 0 setdash\n", (char *)NULL);
+	Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
     }
     if (str != string) {
 	ckfree(str);
@@ -1490,12 +1490,12 @@ Tk_CanvasPsOutline(
 	return TCL_ERROR;
     }
     if (stipple != None) {
-	Tcl_AppendResult(interp, "StrokeClip ", (char *) NULL);
+	Tcl_AppendResult(interp, "StrokeClip ", NULL);
 	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
-	Tcl_AppendResult(interp, "stroke\n", (char *) NULL);
+	Tcl_AppendResult(interp, "stroke\n", NULL);
     }
 
     return TCL_OK;
@@ -1579,10 +1579,10 @@ DashConvert(
  *
  *	This is a helper routine for TkCanvTranslatePath() below.
  *
- *	Given an (x,y) coordinate pair within a canvas, this procedure
- *	computes the corresponding coordinates at which the point should be
- *	drawn in the drawable used for display. Those coordinates are then
- *	written into outArr[numOut*2] and outArr[numOut*2+1].
+ *	Given an (x,y) coordinate pair within a canvas, this function computes
+ *	the corresponding coordinates at which the point should be drawn in
+ *	the drawable used for display. Those coordinates are then written into
+ *	outArr[numOut*2] and outArr[numOut*2+1].
  *
  * Results:
  *	There is no return value.
