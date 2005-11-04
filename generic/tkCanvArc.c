@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.13 2005/10/17 21:24:36 dkf Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.14 2005/11/04 23:41:56 dkf Exp $
  */
 
 #include <stdio.h>
@@ -113,83 +113,72 @@ static Tk_CustomOption pixelOption = {
 };
 
 static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_CUSTOM, "-activedash", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.activeDash),
+    {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_COLOR, "-activefill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, activeFillColor),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-activeoutline", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.activeColor),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-activeoutlinestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.activeStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-activestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, activeFillStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-activewidth", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, activeFillColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_COLOR, "-activeoutline", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.activeColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-activeoutlinestipple", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.activeStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, activeFillStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
 	"0.0", Tk_Offset(ArcItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    {TK_CONFIG_CUSTOM, "-dash", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.dash),
+    {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_PIXELS, "-dashoffset", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
 	"0", Tk_Offset(ArcItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_CUSTOM, "-disableddash", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.disabledDash),
+    {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_COLOR, "-disabledfill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, disabledFillColor),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-disabledoutline", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.disabledColor),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-disabledoutlinestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.disabledStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-disabledstipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, disabledFillStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-disabledwidth", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, disabledFillColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_COLOR, "-disabledoutline", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.disabledColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-disabledoutlinestipple", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.disabledStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, disabledFillStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", Tk_Offset(ArcItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    {TK_CONFIG_DOUBLE, "-extent", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_DOUBLE, "-extent", NULL, NULL,
 	"90", Tk_Offset(ArcItem, extent), TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_COLOR, "-fill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, fillColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-offset", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-fill", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, fillColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
 	"0,0", Tk_Offset(ArcItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
-    {TK_CONFIG_COLOR, "-outline", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-outline", NULL, NULL,
 	"black", Tk_Offset(ArcItem, outline.color), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-outlineoffset", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
 	"0,0", Tk_Offset(ArcItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
-    {TK_CONFIG_BITMAP, "-outlinestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, outline.stipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_DOUBLE, "-start", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_BITMAP, "-outlinestipple", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, outline.stipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_DOUBLE, "-start", NULL, NULL,
 	"0", Tk_Offset(ArcItem, start), TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
-	&stateOption},
-    {TK_CONFIG_BITMAP, "-stipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, fillStipple), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-style", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(ArcItem, style), TK_CONFIG_DONT_SET_DEFAULT,
+    {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
+	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+    {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, fillStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-style", NULL, NULL,
+	NULL, Tk_Offset(ArcItem, style), TK_CONFIG_DONT_SET_DEFAULT,
 	&styleOption},
-    {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
-    {TK_CONFIG_CUSTOM, "-width", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
+	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+    {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
 	"1.0", Tk_Offset(ArcItem, outline.width), TK_CONFIG_DONT_SET_DEFAULT,
 	&pixelOption},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
 };
 
 /*
- * Prototypes for procedures defined in this file:
+ * Prototypes for functions defined in this file:
  */
 
 static void		ComputeArcBbox(Tk_Canvas canvas, ArcItem *arcPtr);
@@ -228,31 +217,31 @@ static int		VertLineToArc(double x, double y1,
 			    double start, double extent);
 
 /*
- * The structures below defines the arc item types by means of procedures that
+ * The structures below defines the arc item types by means of functions that
  * can be invoked by generic item code.
  */
 
 Tk_ItemType tkArcType = {
-    "arc",				/* name */
-    sizeof(ArcItem),			/* itemSize */
-    CreateArc,				/* createProc */
-    configSpecs,			/* configSpecs */
-    ConfigureArc,			/* configureProc */
-    ArcCoords,				/* coordProc */
-    DeleteArc,				/* deleteProc */
-    DisplayArc,				/* displayProc */
-    TK_CONFIG_OBJS,			/* flags */
-    ArcToPoint,				/* pointProc */
-    ArcToArea,				/* areaProc */
-    ArcToPostscript,			/* postscriptProc */
-    ScaleArc,				/* scaleProc */
-    TranslateArc,			/* translateProc */
-    (Tk_ItemIndexProc *) NULL,		/* indexProc */
-    (Tk_ItemCursorProc *) NULL,		/* icursorProc */
-    (Tk_ItemSelectionProc *) NULL,	/* selectionProc */
-    (Tk_ItemInsertProc *) NULL,		/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,		/* dTextProc */
-    (Tk_ItemType *) NULL,		/* nextPtr */
+    "arc",			/* name */
+    sizeof(ArcItem),		/* itemSize */
+    CreateArc,			/* createProc */
+    configSpecs,		/* configSpecs */
+    ConfigureArc,		/* configureProc */
+    ArcCoords,			/* coordProc */
+    DeleteArc,			/* deleteProc */
+    DisplayArc,			/* displayProc */
+    TK_CONFIG_OBJS,		/* flags */
+    ArcToPoint,			/* pointProc */
+    ArcToArea,			/* areaProc */
+    ArcToPostscript,		/* postscriptProc */
+    ScaleArc,			/* scaleProc */
+    TranslateArc,		/* translateProc */
+    NULL,			/* indexProc */
+    NULL,			/* icursorProc */
+    NULL,			/* selectionProc */
+    NULL,			/* insertProc */
+    NULL,			/* dTextProc */
+    NULL,			/* nextPtr */
 };
 
 #ifndef PI
@@ -264,7 +253,7 @@ Tk_ItemType tkArcType = {
  *
  * CreateArc --
  *
- *	This procedure is invoked to create a new arc item in a canvas.
+ *	This function is invoked to create a new arc item in a canvas.
  *
  * Results:
  *	A standard Tcl return value. If an error occurred in creating the
@@ -296,7 +285,7 @@ CreateArc(
 
     /*
      * Carry out initialization that is needed in order to clean up after
-     * errors during the the remainder of this procedure.
+     * errors during the the remainder of this function.
      */
 
     Tk_CreateOutline(&(arcPtr->outline));
@@ -344,7 +333,7 @@ CreateArc(
  *
  * ArcCoords --
  *
- *	This procedure is invoked to process the "coords" widget command on
+ *	This function is invoked to process the "coords" widget command on
  *	arcs. See the user documentation for details on what it does.
  *
  * Results:
@@ -418,7 +407,7 @@ ArcCoords(
  *
  * ConfigureArc --
  *
- *	This procedure is invoked to configure various aspects of a arc item,
+ *	This function is invoked to configure various aspects of a arc item,
  *	such as its outline and fill colors.
  *
  * Results:
@@ -590,8 +579,8 @@ ConfigureArc(
  *
  * DeleteArc --
  *
- *	This procedure is called to clean up the data structure associated
- *	with a arc item.
+ *	This function is called to clean up the data structure associated with
+ *	an arc item.
  *
  * Results:
  *	None.
@@ -642,8 +631,8 @@ DeleteArc(
  *
  * ComputeArcBbox --
  *
- *	This procedure is invoked to compute the bounding box of all the
- *	pixels that may be drawn as part of an arc.
+ *	This function is invoked to compute the bounding box of all the pixels
+ *	that may be drawn as part of an arc.
  *
  * Results:
  *	None.
@@ -779,7 +768,7 @@ ComputeArcBbox(
  *
  * DisplayArc --
  *
- *	This procedure is invoked to draw an arc item in a given drawable.
+ *	This function is invoked to draw an arc item in a given drawable.
  *
  * Results:
  *	None.
@@ -1121,7 +1110,7 @@ ArcToPoint(
  *
  * ArcToArea --
  *
- *	This procedure is called to determine whether an item lies entirely
+ *	This function is called to determine whether an item lies entirely
  *	inside, entirely outside, or overlapping a given area.
  *
  * Results:
@@ -1373,7 +1362,7 @@ ArcToArea(
  *
  * ScaleArc --
  *
- *	This procedure is invoked to rescale an arc item.
+ *	This function is invoked to rescale an arc item.
  *
  * Results:
  *	None.
@@ -1410,7 +1399,7 @@ ScaleArc(
  *
  * TranslateArc --
  *
- *	This procedure is called to move an arc by a given amount.
+ *	This function is called to move an arc by a given amount.
  *
  * Results:
  *	None.
@@ -1443,7 +1432,7 @@ TranslateArc(
  *
  * ComputeArcOutline --
  *
- *	This procedure creates a polygon describing everything in the outline
+ *	This function creates a polygon describing everything in the outline
  *	for an arc except what's in the curved part. For a "pie slice" arc
  *	this is a V-shaped chunk, and for a "chord" arc this is a linear chunk
  *	(with cutaway corners). For "arc" arcs, this stuff isn't relevant.
@@ -1824,7 +1813,7 @@ AngleInRange(
  *
  * ArcToPostscript --
  *
- *	This procedure is called to generate Postscript for arc items.
+ *	This function is called to generate Postscript for arc items.
  *
  * Results:
  *	The return value is a standard Tcl result. If an error occurs in
@@ -1909,7 +1898,7 @@ ArcToPostscript(
 	sprintf(buffer, "matrix currentmatrix\n%.15g %.15g translate %.15g %.15g scale\n",
 		(arcPtr->bbox[0] + arcPtr->bbox[2])/2, (y1 + y2)/2,
 		(arcPtr->bbox[2] - arcPtr->bbox[0])/2, (y1 - y2)/2);
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	Tcl_AppendResult(interp, buffer, NULL);
 	if (arcPtr->style == CHORD_STYLE) {
 	    sprintf(buffer, "0 0 1 %.15g %.15g arc closepath\nsetmatrix\n",
 		    ang1, ang2);
@@ -1918,20 +1907,20 @@ ArcToPostscript(
 		    "0 0 moveto 0 0 1 %.15g %.15g arc closepath\nsetmatrix\n",
 		    ang1, ang2);
 	}
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	Tcl_AppendResult(interp, buffer, NULL);
 	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (fillStipple != None) {
-	    Tcl_AppendResult(interp, "clip ", (char *) NULL);
+	    Tcl_AppendResult(interp, "clip ", NULL);
 	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (arcPtr->outline.gc != None) {
-		Tcl_AppendResult(interp, "grestore gsave\n", (char *) NULL);
+		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
 	    }
 	} else {
-	    Tcl_AppendResult(interp, "fill\n", (char *) NULL);
+	    Tcl_AppendResult(interp, "fill\n", NULL);
 	}
     }
 
@@ -1943,15 +1932,15 @@ ArcToPostscript(
 	sprintf(buffer, "matrix currentmatrix\n%.15g %.15g translate %.15g %.15g scale\n",
 		(arcPtr->bbox[0] + arcPtr->bbox[2])/2, (y1 + y2)/2,
 		(arcPtr->bbox[2] - arcPtr->bbox[0])/2, (y1 - y2)/2);
-	Tcl_AppendResult(interp, buffer, (char *) NULL);
+	Tcl_AppendResult(interp, buffer, NULL);
 	sprintf(buffer, "0 0 1 %.15g %.15g", ang1, ang2);
 	Tcl_AppendResult(interp, buffer,
-		" arc\nsetmatrix\n0 setlinecap\n", (char *) NULL);
+		" arc\nsetmatrix\n0 setlinecap\n", NULL);
 	if (Tk_CanvasPsOutline(canvas, itemPtr, &(arcPtr->outline)) != TCL_OK){
 	    return TCL_ERROR;
 	}
 	if (arcPtr->style != ARC_STYLE) {
-	    Tcl_AppendResult(interp, "grestore gsave\n", (char *) NULL);
+	    Tcl_AppendResult(interp, "grestore gsave\n", NULL);
 	    if (arcPtr->style == CHORD_STYLE) {
 		Tk_CanvasPsPath(interp, canvas, arcPtr->outlinePtr,
 			CHORD_OUTLINE_PTS);
@@ -1963,14 +1952,14 @@ ArcToPostscript(
 		    return TCL_ERROR;
 		}
 		if (stipple != None) {
-		    Tcl_AppendResult(interp, "clip ", (char *) NULL);
+		    Tcl_AppendResult(interp, "clip ", NULL);
 		    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK){
 			return TCL_ERROR;
 		    }
 		} else {
-		    Tcl_AppendResult(interp, "fill\n", (char *) NULL);
+		    Tcl_AppendResult(interp, "fill\n", NULL);
 		}
-		Tcl_AppendResult(interp, "grestore gsave\n", (char *) NULL);
+		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
 		Tk_CanvasPsPath(interp, canvas,
 			arcPtr->outlinePtr + 2*PIE_OUTLINE1_PTS,
 			PIE_OUTLINE2_PTS);
@@ -1980,12 +1969,12 @@ ArcToPostscript(
 		return TCL_ERROR;
 	    }
 	    if (stipple != None) {
-		Tcl_AppendResult(interp, "clip ", (char *) NULL);
+		Tcl_AppendResult(interp, "clip ", NULL);
 		if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 	    } else {
-		Tcl_AppendResult(interp, "fill\n", (char *) NULL);
+		Tcl_AppendResult(interp, "fill\n", NULL);
 	    }
 	}
     }
@@ -1998,7 +1987,7 @@ ArcToPostscript(
  *
  * StyleParseProc --
  *
- *	This procedure is invoked during option processing to handle the
+ *	This function is invoked during option processing to handle the
  *	"-style" option.
  *
  * Results:
@@ -2047,7 +2036,7 @@ StyleParseProc(
     }
 
     Tcl_AppendResult(interp, "bad -style option \"", value,
-	    "\": must be arc, chord, or pieslice", (char *) NULL);
+	    "\": must be arc, chord, or pieslice", NULL);
     *stylePtr = PIESLICE_STYLE;
     return TCL_ERROR;
 }
@@ -2057,13 +2046,13 @@ StyleParseProc(
  *
  * StylePrintProc --
  *
- *	This procedure is invoked by the Tk configuration code to produce a
+ *	This function is invoked by the Tk configuration code to produce a
  *	printable string for the "-style" configuration option.
  *
  * Results:
  *	The return value is a string describing the state for the item
  *	referred to by "widgRec". In addition, *freeProcPtr is filled in with
- *	the address of a procedure to call to free the result string when it's
+ *	the address of a function to call to free the result string when it's
  *	no longer needed (or NULL to indicate that the string doesn't need to
  *	be freed).
  *
