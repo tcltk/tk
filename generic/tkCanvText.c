@@ -1,4 +1,4 @@
-/* 
+/*
  * tkCanvText.c --
  *
  *	This file implements text items for canvas widgets.
@@ -6,10 +6,10 @@
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.18 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.19 2005/11/04 15:23:05 dkf Exp $
  */
 
 #include <stdio.h>
@@ -24,17 +24,17 @@
 
 typedef struct TextItem  {
     Tk_Item header;		/* Generic stuff that's the same for all
-				 * types.  MUST BE FIRST IN STRUCTURE. */
+				 * types. MUST BE FIRST IN STRUCTURE. */
     Tk_CanvasTextInfo *textInfoPtr;
 				/* Pointer to a structure containing
 				 * information about the selection and
-				 * insertion cursor.  The structure is owned
-				 * by (and shared with) the generic canvas
+				 * insertion cursor. The structure is owned by
+				 * (and shared with) the generic canvas
 				 * code. */
     /*
      * Fields that are set by widget commands other than "configure".
      */
-     
+
     double x, y;		/* Positioning point for text. */
     int insertPos;		/* Character index of character just before
 				 * which the insertion cursor is displayed. */
@@ -54,8 +54,8 @@ typedef struct TextItem  {
     Pixmap activeStipple;	/* Stipple bitmap for text, or None. */
     Pixmap disabledStipple;	/* Stipple bitmap for text, or None. */
     char *text;			/* Text for item (malloc-ed). */
-    int width;			/* Width of lines for word-wrap, pixels.
-				 * Zero means no word-wrap. */
+    int width;			/* Width of lines for word-wrap, pixels. Zero
+				 * means no word-wrap. */
 
     /*
      * Fields whose values are derived from the current values of the
@@ -65,17 +65,17 @@ typedef struct TextItem  {
     int numChars;		/* Length of text in characters. */
     int numBytes;		/* Length of text in bytes. */
     Tk_TextLayout textLayout;	/* Cached text layout information. */
-    int leftEdge;		/* Pixel location of the left edge of the
-				 * text item; where the left border of the
-				 * text layout is drawn. */
-    int rightEdge;		/* Pixel just to right of right edge of
-				 * area of text item.  Used for selecting up
-				 * to end of line. */
+    int leftEdge;		/* Pixel location of the left edge of the text
+				 * item; where the left border of the text
+				 * layout is drawn. */
+    int rightEdge;		/* Pixel just to right of right edge of area
+				 * of text item. Used for selecting up to end
+				 * of line. */
     GC gc;			/* Graphics context for drawing text. */
     GC selTextGC;		/* Graphics context for selected text. */
     GC cursorOffGC;		/* If not None, this gives a graphics context
 				 * to use to draw the insertion cursor when
-				 * it's off.  Used if the selection and
+				 * it's off. Used if the selection and
 				 * insertion cursor colors are the same.  */
 } TextItem;
 
@@ -97,89 +97,84 @@ static Tk_CustomOption offsetOption = {
 };
 
 static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_COLOR, "-activefill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-activestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TextItem, activeStipple), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_ANCHOR, "-anchor", (char *) NULL, (char *) NULL,
-	"center", Tk_Offset(TextItem, anchor),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_COLOR, "-disabledfill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TextItem, disabledColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-disabledstipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TextItem, disabledStipple), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-fill", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
+	NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
+	NULL, Tk_Offset(TextItem, activeStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
+	"center", Tk_Offset(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT},
+    {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
+	NULL, Tk_Offset(TextItem, disabledColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
+	NULL, Tk_Offset(TextItem, disabledStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_COLOR, "-fill", NULL, NULL,
 	"black", Tk_Offset(TextItem, color), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_FONT, "-font", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_FONT, "-font", NULL, NULL,
 	DEF_CANVTEXT_FONT, Tk_Offset(TextItem, tkfont), 0},
-    {TK_CONFIG_JUSTIFY, "-justify", (char *) NULL, (char *) NULL,
-	"left", Tk_Offset(TextItem, justify),
-	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_CUSTOM, "-offset", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_JUSTIFY, "-justify", NULL, NULL,
+	"left", Tk_Offset(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT},
+    {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
 	"0,0", Tk_Offset(TextItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
-    {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
-	&stateOption},
-    {TK_CONFIG_BITMAP, "-stipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(TextItem, stipple), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
-    {TK_CONFIG_STRING, "-text", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
+	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+    {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
+	NULL, Tk_Offset(TextItem, stipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
+	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+    {TK_CONFIG_STRING, "-text", NULL, NULL,
 	"", Tk_Offset(TextItem, text), 0},
-    {TK_CONFIG_PIXELS, "-width", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_PIXELS, "-width", NULL, NULL,
 	"0", Tk_Offset(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
 };
 
 /*
- * Prototypes for procedures defined in this file:
+ * Prototypes for functions defined in this file:
  */
 
-static void		ComputeTextBbox _ANSI_ARGS_((Tk_Canvas canvas,
-			    TextItem *textPtr));
-static int		ConfigureText _ANSI_ARGS_((Tcl_Interp *interp,
+static void		ComputeTextBbox(Tk_Canvas canvas, TextItem *textPtr);
+static int		ConfigureText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST objv[], int flags));
-static int		CreateText _ANSI_ARGS_((Tcl_Interp *interp,
+			    Tcl_Obj *CONST objv[], int flags);
+static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *CONST objv[]));
-static void		DeleteText _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, Display *display));
-static void		DisplayCanvText _ANSI_ARGS_((Tk_Canvas canvas,
+			    int argc, Tcl_Obj *CONST objv[]);
+static void		DeleteText(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, Display *display);
+static void		DisplayCanvText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
-			    int x, int y, int width, int height));
-static int		GetSelText _ANSI_ARGS_((Tk_Canvas canvas,
+			    int x, int y, int width, int height);
+static int		GetSelText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int offset, char *buffer,
-			    int maxBytes));
-static int		GetTextIndex _ANSI_ARGS_((Tcl_Interp *interp,
+			    int maxBytes);
+static int		GetTextIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr));
-static void		ScaleText _ANSI_ARGS_((Tk_Canvas canvas,
+			    Tcl_Obj *obj, int *indexPtr);
+static void		ScaleText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
-			    double scaleX, double scaleY));
-static void		SetTextCursor _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int index));
-static int		TextCoords _ANSI_ARGS_((Tcl_Interp *interp,
+			    double scaleX, double scaleY);
+static void		SetTextCursor(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, int index);
+static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *CONST objv[]));
-static void		TextDeleteChars _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int first, int last));
-static void		TextInsert _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, char *string));
-static int		TextToArea _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, double *rectPtr));
-static double		TextToPoint _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, double *pointPtr));
-static int		TextToPostscript _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass));
-static void		TranslateText _ANSI_ARGS_((Tk_Canvas canvas,
-			    Tk_Item *itemPtr, double deltaX, double deltaY));
+			    int argc, Tcl_Obj *CONST objv[]);
+static void		TextDeleteChars(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, int first, int last);
+static void		TextInsert(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, int beforeThis, char *string);
+static int		TextToArea(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, double *rectPtr);
+static double		TextToPoint(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, double *pointPtr);
+static int		TextToPostscript(Tcl_Interp *interp,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		TranslateText(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, double deltaX, double deltaY);
 
 /*
- * The structures below defines the rectangle and oval item types
- * by means of procedures that can be invoked by generic item code.
+ * The structures below defines the rectangle and oval item types by means of
+ * functions that can be invoked by generic item code.
  */
 
 Tk_ItemType tkTextType = {
@@ -202,7 +197,7 @@ Tk_ItemType tkTextType = {
     GetSelText,			/* selectionProc */
     TextInsert,			/* insertProc */
     TextDeleteChars,		/* dTextProc */
-    (Tk_ItemType *) NULL,	/* nextPtr */
+    NULL,			/* nextPtr */
 };
 
 /*
@@ -210,14 +205,12 @@ Tk_ItemType tkTextType = {
  *
  * CreateText --
  *
- *	This procedure is invoked to create a new text item
- *	in a canvas.
+ *	This function is invoked to create a new text item in a canvas.
  *
  * Results:
- *	A standard Tcl return value.  If an error occurred in
- *	creating the item then an error message is left in
- *	the interp's result;  in this case itemPtr is left uninitialized
- *	so it can be safely freed by the caller.
+ *	A standard Tcl return value. If an error occurred in creating the item
+ *	then an error message is left in the interp's result; in this case
+ *	itemPtr is left uninitialized so it can be safely freed by the caller.
  *
  * Side effects:
  *	A new text item is created.
@@ -226,13 +219,13 @@ Tk_ItemType tkTextType = {
  */
 
 static int
-CreateText(interp, canvas, itemPtr, objc, objv)
-    Tcl_Interp *interp;		/* Interpreter for error reporting. */
-    Tk_Canvas canvas;		/* Canvas to hold new item. */
-    Tk_Item *itemPtr;		/* Record to hold new item; header has been
+CreateText(
+    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    Tk_Canvas canvas,		/* Canvas to hold new item. */
+    Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc;			/* Number of arguments in objv. */
-    Tcl_Obj *CONST objv[];	/* Arguments describing rectangle. */
+    int objc,			/* Number of arguments in objv. */
+    Tcl_Obj *CONST objv[])	/* Arguments describing rectangle. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int i;
@@ -243,7 +236,7 @@ CreateText(interp, canvas, itemPtr, objc, objv)
 
     /*
      * Carry out initialization that is needed in order to clean up after
-     * errors during the the remainder of this procedure.
+     * errors during the the remainder of this function.
      */
 
     textPtr->textInfoPtr = Tk_CanvasGetTextInfo(canvas);
@@ -275,8 +268,8 @@ CreateText(interp, canvas, itemPtr, objc, objv)
     textPtr->cursorOffGC = None;
 
     /*
-     * Process the arguments to fill in the item record.
-     * Only 1 (list) or 2 (x y) coords are allowed.
+     * Process the arguments to fill in the item record. Only 1 (list) or 2 (x
+     * y) coords are allowed.
      */
 
     if (objc == 1) {
@@ -295,7 +288,7 @@ CreateText(interp, canvas, itemPtr, objc, objv)
 	return TCL_OK;
     }
 
-    error:
+  error:
     DeleteText(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
     return TCL_ERROR;
 }
@@ -305,9 +298,8 @@ CreateText(interp, canvas, itemPtr, objc, objv)
  *
  * TextCoords --
  *
- *	This procedure is invoked to process the "coords" widget
- *	command on text items.  See the user documentation for
- *	details on what it does.
+ *	This function is invoked to process the "coords" widget command on
+ *	text items. See the user documentation for details on what it does.
  *
  * Results:
  *	Returns TCL_OK or TCL_ERROR, and sets the interp's result.
@@ -319,18 +311,19 @@ CreateText(interp, canvas, itemPtr, objc, objv)
  */
 
 static int
-TextCoords(interp, canvas, itemPtr, objc, objv)
-    Tcl_Interp *interp;		/* Used for error reporting. */
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item whose coordinates are to be read or
+TextCoords(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc;			/* Number of coordinates supplied in objv. */
-    Tcl_Obj *CONST objv[];	/* Array of coordinates: x1, y1, x2, y2, ... */
+    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Obj *CONST objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
     if (objc == 0) {
 	Tcl_Obj *obj = Tcl_NewObj();
+
 	Tcl_Obj *subobj = Tcl_NewDoubleObj(textPtr->x);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	subobj = Tcl_NewDoubleObj(textPtr->y);
@@ -357,7 +350,7 @@ TextCoords(interp, canvas, itemPtr, objc, objv)
 	ComputeTextBbox(canvas, textPtr);
     } else {
 	char buf[64 + TCL_INTEGER_SPACE];
-	
+
 	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", objc);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;
@@ -370,28 +363,28 @@ TextCoords(interp, canvas, itemPtr, objc, objv)
  *
  * ConfigureText --
  *
- *	This procedure is invoked to configure various aspects
- *	of a text item, such as its border and background colors.
+ *	This function is invoked to configure various aspects of a text item,
+ *	such as its border and background colors.
  *
  * Results:
- *	A standard Tcl result code.  If an error occurs, then
- *	an error message is left in the interp's result.
+ *	A standard Tcl result code. If an error occurs, then an error message
+ *	is left in the interp's result.
  *
  * Side effects:
- *	Configuration information, such as colors and stipple
- *	patterns, may be set for itemPtr.
+ *	Configuration information, such as colors and stipple patterns, may be
+ *	set for itemPtr.
  *
  *--------------------------------------------------------------
  */
 
 static int
-ConfigureText(interp, canvas, itemPtr, objc, objv, flags)
-    Tcl_Interp *interp;		/* Interpreter for error reporting. */
-    Tk_Canvas canvas;		/* Canvas containing itemPtr. */
-    Tk_Item *itemPtr;		/* Rectangle item to reconfigure. */
-    int objc;			/* Number of elements in objv.  */
-    Tcl_Obj *CONST objv[];	/* Arguments describing things to configure. */
-    int flags;			/* Flags to pass to Tk_ConfigureWidget. */
+ConfigureText(
+    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    Tk_Canvas canvas,		/* Canvas containing itemPtr. */
+    Tk_Item *itemPtr,		/* Rectangle item to reconfigure. */
+    int objc,			/* Number of elements in objv.  */
+    Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
+    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     XGCValues gcValues;
@@ -411,8 +404,8 @@ ConfigureText(interp, canvas, itemPtr, objc, objv, flags)
     }
 
     /*
-     * A few of the options require additional processing, such as
-     * graphics contexts.
+     * A few of the options require additional processing, such as graphics
+     * contexts.
      */
 
     state = itemPtr->state;
@@ -497,14 +490,14 @@ ConfigureText(interp, canvas, itemPtr, objc, objv, flags)
 
 
     /*
-     * If the text was changed, move the selection and insertion indices
-     * to keep them inside the item.
+     * If the text was changed, move the selection and insertion indices to
+     * keep them inside the item.
      */
 
     textPtr->numBytes = strlen(textPtr->text);
     textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
-	
+
 	if (textInfoPtr->selectFirst >= textPtr->numChars) {
 	    textInfoPtr->selItemPtr = NULL;
 	} else {
@@ -530,8 +523,8 @@ ConfigureText(interp, canvas, itemPtr, objc, objv, flags)
  *
  * DeleteText --
  *
- *	This procedure is called to clean up the data structure
- *	associated with a text item.
+ *	This function is called to clean up the data structure associated with
+ *	a text item.
  *
  * Results:
  *	None.
@@ -543,10 +536,10 @@ ConfigureText(interp, canvas, itemPtr, objc, objv, flags)
  */
 
 static void
-DeleteText(canvas, itemPtr, display)
-    Tk_Canvas canvas;		/* Info about overall canvas widget. */
-    Tk_Item *itemPtr;		/* Item that is being deleted. */
-    Display *display;		/* Display containing window for canvas. */
+DeleteText(
+    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    Tk_Item *itemPtr,		/* Item that is being deleted. */
+    Display *display)		/* Display containing window for canvas. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
@@ -590,26 +583,25 @@ DeleteText(canvas, itemPtr, display)
  *
  * ComputeTextBbox --
  *
- *	This procedure is invoked to compute the bounding box of
- *	all the pixels that may be drawn as part of a text item.
- *	In addition, it recomputes all of the geometry information
- *	used to display a text item or check for mouse hits.
+ *	This function is invoked to compute the bounding box of all the pixels
+ *	that may be drawn as part of a text item. In addition, it recomputes
+ *	all of the geometry information used to display a text item or check
+ *	for mouse hits.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The fields x1, y1, x2, and y2 are updated in the header
- *	for itemPtr, and the linePtr structure is regenerated
- *	for itemPtr.
+ *	The fields x1, y1, x2, and y2 are updated in the header for itemPtr,
+ *	and the linePtr structure is regenerated for itemPtr.
  *
  *--------------------------------------------------------------
  */
 
 static void
-ComputeTextBbox(canvas, textPtr)
-    Tk_Canvas canvas;		/* Canvas that contains item. */
-    TextItem *textPtr;		/* Item whose bbox is to be recomputed. */
+ComputeTextBbox(
+    Tk_Canvas canvas,		/* Canvas that contains item. */
+    TextItem *textPtr)		/* Item whose bbox is to be recomputed. */
 {
     Tk_CanvasTextInfo *textInfoPtr;
     int leftX, topY, width, height, fudge;
@@ -629,57 +621,56 @@ ComputeTextBbox(canvas, textPtr)
     }
 
     /*
-     * Use overall geometry information to compute the top-left corner
-     * of the bounding box for the text item.
+     * Use overall geometry information to compute the top-left corner of the
+     * bounding box for the text item.
      */
 
     leftX = (int) floor(textPtr->x + 0.5);
     topY = (int) floor(textPtr->y + 0.5);
     switch (textPtr->anchor) {
-	case TK_ANCHOR_NW:
-	case TK_ANCHOR_N:
-	case TK_ANCHOR_NE:
-	    break;
+    case TK_ANCHOR_NW:
+    case TK_ANCHOR_N:
+    case TK_ANCHOR_NE:
+	break;
 
-	case TK_ANCHOR_W:
-	case TK_ANCHOR_CENTER:
-	case TK_ANCHOR_E:
-	    topY -= height / 2;
-	    break;
+    case TK_ANCHOR_W:
+    case TK_ANCHOR_CENTER:
+    case TK_ANCHOR_E:
+	topY -= height / 2;
+	break;
 
-	case TK_ANCHOR_SW:
-	case TK_ANCHOR_S:
-	case TK_ANCHOR_SE:
-	    topY -= height;
-	    break;
+    case TK_ANCHOR_SW:
+    case TK_ANCHOR_S:
+    case TK_ANCHOR_SE:
+	topY -= height;
+	break;
     }
     switch (textPtr->anchor) {
-	case TK_ANCHOR_NW:
-	case TK_ANCHOR_W:
-	case TK_ANCHOR_SW:
-	    break;
+    case TK_ANCHOR_NW:
+    case TK_ANCHOR_W:
+    case TK_ANCHOR_SW:
+	break;
 
-	case TK_ANCHOR_N:
-	case TK_ANCHOR_CENTER:
-	case TK_ANCHOR_S:
-	    leftX -= width / 2;
-	    break;
+    case TK_ANCHOR_N:
+    case TK_ANCHOR_CENTER:
+    case TK_ANCHOR_S:
+	leftX -= width / 2;
+	break;
 
-	case TK_ANCHOR_NE:
-	case TK_ANCHOR_E:
-	case TK_ANCHOR_SE:
-	    leftX -= width;
-	    break;
+    case TK_ANCHOR_NE:
+    case TK_ANCHOR_E:
+    case TK_ANCHOR_SE:
+	leftX -= width;
+	break;
     }
 
     textPtr->leftEdge  = leftX;
     textPtr->rightEdge = leftX + width;
 
     /*
-     * Last of all, update the bounding box for the item.  The item's
-     * bounding box includes the bounding box of all its lines, plus
-     * an extra fudge factor for the cursor border (which could
-     * potentially be quite large).
+     * Last of all, update the bounding box for the item. The item's bounding
+     * box includes the bounding box of all its lines, plus an extra fudge
+     * factor for the cursor border (which could potentially be quite large).
      */
 
     textInfoPtr = textPtr->textInfoPtr;
@@ -698,26 +689,26 @@ ComputeTextBbox(canvas, textPtr)
  *
  * DisplayCanvText --
  *
- *	This procedure is invoked to draw a text item in a given
- *	drawable.
+ *	This function is invoked to draw a text item in a given drawable.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	ItemPtr is drawn in drawable using the transformation
- *	information in canvas.
+ *	ItemPtr is drawn in drawable using the transformation information in
+ *	canvas.
  *
  *--------------------------------------------------------------
  */
 
 static void
-DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
-    Tk_Canvas canvas;		/* Canvas that contains item. */
-    Tk_Item *itemPtr;		/* Item to be displayed. */
-    Display *display;		/* Display on which to draw item. */
-    Drawable drawable;		/* Pixmap or window in which to draw item. */
-    int x, y, width, height;	/* Describes region of canvas that must be
+DisplayCanvText(
+    Tk_Canvas canvas,		/* Canvas that contains item. */
+    Tk_Item *itemPtr,		/* Item to be displayed. */
+    Display *display,		/* Display on which to draw item. */
+    Drawable drawable,		/* Pixmap or window in which to draw item. */
+    int x, int y, int width, int height)
+				/* Describes region of canvas that must be
 				 * redisplayed (not used). */
 {
     TextItem *textPtr;
@@ -749,8 +740,8 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
     }
 
     /*
-     * If we're stippling, then modify the stipple offset in the GC.  Be
-     * sure to reset the offset when done, since the GC is supposed to be
+     * If we're stippling, then modify the stipple offset in the GC. Be sure
+     * to reset the offset when done, since the GC is supposed to be
      * read-only.
      */
 
@@ -792,7 +783,7 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 	    for (y = yFirst ; y <= yLast; y += height) {
 		if (y == yLast) {
 		    width = xLast + wLast - x;
-		} else {	    
+		} else {
 		    width = textPtr->rightEdge - textPtr->leftEdge - x;
 		}
 		Tk_CanvasDrawableCoords(canvas,
@@ -811,11 +802,11 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 
     /*
      * If the insertion point should be displayed, then draw a special
-     * background for the cursor before drawing the text.  Note:  if
-     * we're the cursor item but the cursor is turned off, then redraw
-     * background over the area of the cursor.  This guarantees that
-     * the selection won't make the cursor invisible on mono displays,
-     * where both are drawn in the same color.
+     * background for the cursor before drawing the text. Note: if we're the
+     * cursor item but the cursor is turned off, then redraw background over
+     * the area of the cursor. This guarantees that the selection won't make
+     * the cursor invisible on mono displays, where both are drawn in the same
+     * color.
      */
 
     if ((textInfoPtr->focusItemPtr == itemPtr) && (textInfoPtr->gotFocus)) {
@@ -836,11 +827,10 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 			textInfoPtr->insertBorderWidth, TK_RELIEF_RAISED);
 	    } else if (textPtr->cursorOffGC != None) {
 		/*
-		 * Redraw the background over the area of the cursor,
-		 * even though the cursor is turned off.  This
-		 * guarantees that the selection won't make the cursor
-		 * invisible on mono displays, where both may be drawn
-		 * in the same color.
+		 * Redraw the background over the area of the cursor, even
+		 * though the cursor is turned off. This guarantees that the
+		 * selection won't make the cursor invisible on mono displays,
+		 * where both may be drawn in the same color.
 		 */
 
 		XFillRectangle(display, drawable, textPtr->cursorOffGC,
@@ -851,16 +841,14 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
 	}
     }
 
-
     /*
-     * If there is no selected text or the selected text foreground
-     * is the same as the regular text foreground, then draw one
-     * text string. If there is selected text and the foregrounds
-     * differ, draw the regular text up to the selection, draw
-     * the selection, then draw the rest of the regular text.
-     * Drawing the regular text and then the selected text over
-     * it would causes problems with anti-aliased text because the
-     * two anti-aliasing colors would blend together.
+     * If there is no selected text or the selected text foreground is the
+     * same as the regular text foreground, then draw one text string. If
+     * there is selected text and the foregrounds differ, draw the regular
+     * text up to the selection, draw the selection, then draw the rest of the
+     * regular text. Drawing the regular text and then the selected text over
+     * it would causes problems with anti-aliased text because the two
+     * anti-aliasing colors would blend together.
      */
 
     Tk_CanvasDrawableCoords(canvas, (double) textPtr->leftEdge,
@@ -895,20 +883,19 @@ DisplayCanvText(canvas, itemPtr, display, drawable, x, y, width, height)
  *	None.
  *
  * Side effects:
- *	The text in the given item is modified.  The cursor and
- *	selection positions are also modified to reflect the
- *	insertion.
+ *	The text in the given item is modified. The cursor and selection
+ *	positions are also modified to reflect the insertion.
  *
  *--------------------------------------------------------------
  */
 
 static void
-TextInsert(canvas, itemPtr, index, string)
-    Tk_Canvas canvas;		/* Canvas containing text item. */
-    Tk_Item *itemPtr;		/* Text item to be modified. */
-    int index;			/* Character index before which string is
-				 * to be inserted. */
-    char *string;		/* New characters to be inserted. */
+TextInsert(
+    Tk_Canvas canvas,		/* Canvas containing text item. */
+    Tk_Item *itemPtr,		/* Text item to be modified. */
+    int index,			/* Character index before which string is to
+				 * be inserted. */
+    char *string)		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteIndex, byteCount, charsAdded;
@@ -944,7 +931,7 @@ TextInsert(canvas, itemPtr, index, string)
 
     /*
      * Inserting characters invalidates indices such as those for the
-     * selection and cursor.  Update the indices appropriately.
+     * selection and cursor. Update the indices appropriately.
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
@@ -976,21 +963,20 @@ TextInsert(canvas, itemPtr, index, string)
  *	None.
  *
  * Side effects:
- *	Characters between "first" and "last", inclusive, get
- *	deleted from itemPtr, and things like the selection
- *	position get updated.
+ *	Characters between "first" and "last", inclusive, get deleted from
+ *	itemPtr, and things like the selection position get updated.
  *
  *--------------------------------------------------------------
  */
 
 static void
-TextDeleteChars(canvas, itemPtr, first, last)
-    Tk_Canvas canvas;		/* Canvas containing itemPtr. */
-    Tk_Item *itemPtr;		/* Item in which to delete characters. */
-    int first;			/* Character index of first character to
+TextDeleteChars(
+    Tk_Canvas canvas,		/* Canvas containing itemPtr. */
+    Tk_Item *itemPtr,		/* Item in which to delete characters. */
+    int first,			/* Character index of first character to
 				 * delete. */
-    int last;			/* Character index of last character to
-				 * delete (inclusive). */
+    int last)			/* Character index of last character to delete
+				 * (inclusive). */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteIndex, byteCount, charsRemoved;
@@ -1012,7 +998,7 @@ TextDeleteChars(canvas, itemPtr, first, last)
     byteIndex = Tcl_UtfAtIndex(text, first) - text;
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
-    
+
     new = (char *) ckalloc((unsigned) (textPtr->numBytes + 1 - byteCount));
     memcpy(new, text, (size_t) byteIndex);
     strcpy(new + byteIndex, text + byteIndex + byteCount);
@@ -1023,8 +1009,8 @@ TextDeleteChars(canvas, itemPtr, first, last)
     textPtr->numBytes -= byteCount;
 
     /*
-     * Update indexes for the selection and cursor to reflect the
-     * renumbering of the remaining characters.
+     * Update indexes for the selection and cursor to reflect the renumbering
+     * of the remaining characters.
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
@@ -1066,14 +1052,14 @@ TextDeleteChars(canvas, itemPtr, first, last)
  *
  * TextToPoint --
  *
- *	Computes the distance from a given point to a given
- *	text item, in canvas units.
+ *	Computes the distance from a given point to a given text item, in
+ *	canvas units.
  *
  * Results:
- *	The return value is 0 if the point whose x and y coordinates
- *	are pointPtr[0] and pointPtr[1] is inside the text item.  If
- *	the point isn't inside the text item then the return value
- *	is the distance from the point to the text item.
+ *	The return value is 0 if the point whose x and y coordinates are
+ *	pointPtr[0] and pointPtr[1] is inside the text item. If the point
+ *	isn't inside the text item then the return value is the distance from
+ *	the point to the text item.
  *
  * Side effects:
  *	None.
@@ -1082,10 +1068,10 @@ TextDeleteChars(canvas, itemPtr, first, last)
  */
 
 static double
-TextToPoint(canvas, itemPtr, pointPtr)
-    Tk_Canvas canvas;		/* Canvas containing itemPtr. */
-    Tk_Item *itemPtr;		/* Item to check against point. */
-    double *pointPtr;		/* Pointer to x and y coordinates. */
+TextToPoint(
+    Tk_Canvas canvas,		/* Canvas containing itemPtr. */
+    Tk_Item *itemPtr,		/* Item to check against point. */
+    double *pointPtr)		/* Pointer to x and y coordinates. */
 {
     TextItem *textPtr;
     Tk_State state = itemPtr->state;
@@ -1111,14 +1097,13 @@ TextToPoint(canvas, itemPtr, pointPtr)
  *
  * TextToArea --
  *
- *	This procedure is called to determine whether an item
- *	lies entirely inside, entirely outside, or overlapping
- *	a given rectangle.
+ *	This function is called to determine whether an item lies entirely
+ *	inside, entirely outside, or overlapping a given rectangle.
  *
  * Results:
- *	-1 is returned if the item is entirely outside the area
- *	given by rectPtr, 0 if it overlaps, and 1 if it is entirely
- *	inside the given area.
+ *	-1 is returned if the item is entirely outside the area given by
+ *	rectPtr, 0 if it overlaps, and 1 if it is entirely inside the given
+ *	area.
  *
  * Side effects:
  *	None.
@@ -1127,11 +1112,11 @@ TextToPoint(canvas, itemPtr, pointPtr)
  */
 
 static int
-TextToArea(canvas, itemPtr, rectPtr)
-    Tk_Canvas canvas;		/* Canvas containing itemPtr. */
-    Tk_Item *itemPtr;		/* Item to check against rectangle. */
-    double *rectPtr;		/* Pointer to array of four coordinates
-				 * (x1, y1, x2, y2) describing rectangular
+TextToArea(
+    Tk_Canvas canvas,		/* Canvas containing itemPtr. */
+    Tk_Item *itemPtr,		/* Item to check against rectangle. */
+    double *rectPtr)		/* Pointer to array of four coordinates
+				 * (x1,y1,x2,y2) describing rectangular
 				 * area.  */
 {
     TextItem *textPtr;
@@ -1154,26 +1139,27 @@ TextToArea(canvas, itemPtr, rectPtr)
  *
  * ScaleText --
  *
- *	This procedure is invoked to rescale a text item.
+ *	This function is invoked to rescale a text item.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Scales the position of the text, but not the size
- *	of the font for the text.
+ *	Scales the position of the text, but not the size of the font for the
+ *	text.
  *
  *--------------------------------------------------------------
  */
 
 	/* ARGSUSED */
 static void
-ScaleText(canvas, itemPtr, originX, originY, scaleX, scaleY)
-    Tk_Canvas canvas;		/* Canvas containing rectangle. */
-    Tk_Item *itemPtr;		/* Rectangle to be scaled. */
-    double originX, originY;	/* Origin about which to scale rect. */
-    double scaleX;		/* Amount to scale in X direction. */
-    double scaleY;		/* Amount to scale in Y direction. */
+ScaleText(
+    Tk_Canvas canvas,		/* Canvas containing rectangle. */
+    Tk_Item *itemPtr,		/* Rectangle to be scaled. */
+    double originX, double originY,
+				/* Origin about which to scale rect. */
+    double scaleX,		/* Amount to scale in X direction. */
+    double scaleY)		/* Amount to scale in Y direction. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
@@ -1188,25 +1174,24 @@ ScaleText(canvas, itemPtr, originX, originY, scaleX, scaleY)
  *
  * TranslateText --
  *
- *	This procedure is called to move a text item by a
- *	given amount.
+ *	This function is called to move a text item by a given amount.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The position of the text item is offset by (xDelta, yDelta),
- *	and the bounding box is updated in the generic part of the
- *	item structure.
+ *	The position of the text item is offset by (xDelta, yDelta), and the
+ *	bounding box is updated in the generic part of the item structure.
  *
  *--------------------------------------------------------------
  */
 
 static void
-TranslateText(canvas, itemPtr, deltaX, deltaY)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item that is being moved. */
-    double deltaX, deltaY;	/* Amount by which item is to be moved. */
+TranslateText(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double deltaX, double deltaY)
+				/* Amount by which item is to be moved. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
@@ -1220,14 +1205,13 @@ TranslateText(canvas, itemPtr, deltaX, deltaY)
  *
  * GetTextIndex --
  *
- *	Parse an index into a text item and return either its value
- *	or an error.
+ *	Parse an index into a text item and return either its value or an
+ *	error.
  *
  * Results:
- *	A standard Tcl result.  If all went well, then *indexPtr is
- *	filled in with the index (into itemPtr) corresponding to
- *	string.  Otherwise an error message is left in
- *	the interp's result.
+ *	A standard Tcl result. If all went well, then *indexPtr is filled in
+ *	with the index (into itemPtr) corresponding to string. Otherwise an
+ *	error message is left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -1236,14 +1220,14 @@ TranslateText(canvas, itemPtr, deltaX, deltaY)
  */
 
 static int
-GetTextIndex(interp, canvas, itemPtr, obj, indexPtr)
-    Tcl_Interp *interp;		/* Used for error reporting. */
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item for which the index is being
+GetTextIndex(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
-    Tcl_Obj *obj;		/* Specification of a particular character
-				 * in itemPtr's text. */
-    int *indexPtr;		/* Where to store converted character
+    Tcl_Obj *obj,		/* Specification of a particular character in
+				 * itemPtr's text. */
+    int *indexPtr)		/* Where to store converted character
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -1294,7 +1278,7 @@ GetTextIndex(interp, canvas, itemPtr, obj, indexPtr)
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
 		x + canvasPtr->scrollX1 - textPtr->leftEdge,
 		y + canvasPtr->scrollY1 - textPtr->header.y1);
-    } else if (Tcl_GetIntFromObj((Tcl_Interp *)NULL, obj, indexPtr) == TCL_OK) {
+    } else if (Tcl_GetIntFromObj(NULL, obj, indexPtr) == TCL_OK) {
 	if (*indexPtr < 0){
 	    *indexPtr = 0;
 	} else if (*indexPtr > textPtr->numChars) {
@@ -1302,14 +1286,13 @@ GetTextIndex(interp, canvas, itemPtr, obj, indexPtr)
 	}
     } else {
 	/*
-	 * Some of the paths here leave messages in the interp's result,
-	 * so we have to clear it out before storing our own message.
+	 * Some of the paths here leave messages in the interp's result, so we
+	 * have to clear it out before storing our own message.
 	 */
 
-	badIndex:
-	Tcl_SetResult(interp, (char *) NULL, TCL_STATIC);
-	Tcl_AppendResult(interp, "bad index \"", string, "\"",
-		(char *) NULL);
+    badIndex:
+	Tcl_SetResult(interp, NULL, TCL_STATIC);
+	Tcl_AppendResult(interp, "bad index \"", string, "\"", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1333,11 +1316,11 @@ GetTextIndex(interp, canvas, itemPtr, obj, indexPtr)
 
 	/* ARGSUSED */
 static void
-SetTextCursor(canvas, itemPtr, index)
-    Tk_Canvas canvas;		/* Record describing canvas widget. */
-    Tk_Item *itemPtr;		/* Text item in which cursor position is to
-				 * be set. */
-    int index;			/* Character index of character just before
+SetTextCursor(
+    Tk_Canvas canvas,		/* Record describing canvas widget. */
+    Tk_Item *itemPtr,		/* Text item in which cursor position is to be
+				 * set. */
+    int index)			/* Character index of character just before
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -1356,15 +1339,14 @@ SetTextCursor(canvas, itemPtr, index)
  *
  * GetSelText --
  *
- *	This procedure is invoked to return the selected portion
- *	of a text item.  It is only called when this item has
- *	the selection.
+ *	This function is invoked to return the selected portion of a text
+ *	item. It is only called when this item has the selection.
  *
  * Results:
- *	The return value is the number of non-NULL bytes stored
- *	at buffer.  Buffer is filled (or partially filled) with a
- *	NULL-terminated string containing part or all of the selection,
- *	as given by offset and maxBytes.
+ *	The return value is the number of non-NULL bytes stored at buffer.
+ *	Buffer is filled (or partially filled) with a NULL-terminated string
+ *	containing part or all of the selection, as given by offset and
+ *	maxBytes.
  *
  * Side effects:
  *	None.
@@ -1373,18 +1355,18 @@ SetTextCursor(canvas, itemPtr, index)
  */
 
 static int
-GetSelText(canvas, itemPtr, offset, buffer, maxBytes)
-    Tk_Canvas canvas;		/* Canvas containing selection. */
-    Tk_Item *itemPtr;		/* Text item containing selection. */
-    int offset;			/* Byte offset within selection of first
+GetSelText(
+    Tk_Canvas canvas,		/* Canvas containing selection. */
+    Tk_Item *itemPtr,		/* Text item containing selection. */
+    int offset,			/* Byte offset within selection of first
 				 * character to be returned. */
-    char *buffer;		/* Location in which to place selection. */
-    int maxBytes;		/* Maximum number of bytes to place at
-				 * buffer, not including terminating NULL
+    char *buffer,		/* Location in which to place selection. */
+    int maxBytes)		/* Maximum number of bytes to place at buffer,
+				 * not including terminating NULL
 				 * character. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteCount; 
+    int byteCount;
     char *text;
     CONST char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1414,15 +1396,13 @@ GetSelText(canvas, itemPtr, offset, buffer, maxBytes)
  *
  * TextToPostscript --
  *
- *	This procedure is called to generate Postscript for
- *	text items.
+ *	This function is called to generate Postscript for text items.
  *
  * Results:
- *	The return value is a standard Tcl result.  If an error
- *	occurs in generating Postscript then an error message is
- *	left in the interp's result, replacing whatever used
- *	to be there.  If no error occurs, then Postscript for the
- *	item is appended to the result.
+ *	The return value is a standard Tcl result. If an error occurs in
+ *	generating Postscript then an error message is left in the interp's
+ *	result, replacing whatever used to be there. If no error occurs, then
+ *	Postscript for the item is appended to the result.
  *
  * Side effects:
  *	None.
@@ -1431,13 +1411,13 @@ GetSelText(canvas, itemPtr, offset, buffer, maxBytes)
  */
 
 static int
-TextToPostscript(interp, canvas, itemPtr, prepass)
-    Tcl_Interp *interp;		/* Leave Postscript or error message here. */
-    Tk_Canvas canvas;		/* Information about overall canvas. */
-    Tk_Item *itemPtr;		/* Item for which Postscript is wanted. */
-    int prepass;		/* 1 means this is a prepass to collect
-				 * font information; 0 means final Postscript
-				 * is being created. */
+TextToPostscript(
+    Tcl_Interp *interp,		/* Leave Postscript or error message here. */
+    Tk_Canvas canvas,		/* Information about overall canvas. */
+    Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
+    int prepass)		/* 1 means this is a prepass to collect font
+				 * information; 0 means final Postscript is
+				 * being created. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int x, y;
@@ -1448,7 +1428,7 @@ TextToPostscript(interp, canvas, itemPtr, prepass)
     Pixmap stipple;
     Tk_State state = itemPtr->state;
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
     color = textPtr->color;
@@ -1482,41 +1462,48 @@ TextToPostscript(interp, canvas, itemPtr, prepass)
 	return TCL_ERROR;
     }
     if (stipple != None) {
-	Tcl_AppendResult(interp, "/StippleText {\n    ",
-		(char *) NULL);
+	Tcl_AppendResult(interp, "/StippleText {\n    ", NULL);
 	Tk_CanvasPsStipple(interp, canvas, stipple);
-	Tcl_AppendResult(interp, "} bind def\n", (char *) NULL);
+	Tcl_AppendResult(interp, "} bind def\n", NULL);
     }
 
     sprintf(buffer, "%.15g %.15g [\n", textPtr->x,
 	    Tk_CanvasPsY(canvas, textPtr->y));
-    Tcl_AppendResult(interp, buffer, (char *) NULL);
+    Tcl_AppendResult(interp, buffer, NULL);
 
     Tk_TextLayoutToPostscript(interp, textPtr->textLayout);
 
     x = 0;  y = 0;  justify = NULL;	/* lint. */
     switch (textPtr->anchor) {
-	case TK_ANCHOR_NW:	x = 0; y = 0;	break;
-	case TK_ANCHOR_N:	x = 1; y = 0;	break;
-	case TK_ANCHOR_NE:	x = 2; y = 0;	break;
-	case TK_ANCHOR_E:	x = 2; y = 1;	break;
-	case TK_ANCHOR_SE:	x = 2; y = 2;	break;
-	case TK_ANCHOR_S:	x = 1; y = 2;	break;
-	case TK_ANCHOR_SW:	x = 0; y = 2;	break;
-	case TK_ANCHOR_W:	x = 0; y = 1;	break;
-	case TK_ANCHOR_CENTER:	x = 1; y = 1;	break;
+    case TK_ANCHOR_NW:	   x = 0; y = 0; break;
+    case TK_ANCHOR_N:	   x = 1; y = 0; break;
+    case TK_ANCHOR_NE:	   x = 2; y = 0; break;
+    case TK_ANCHOR_E:	   x = 2; y = 1; break;
+    case TK_ANCHOR_SE:	   x = 2; y = 2; break;
+    case TK_ANCHOR_S:	   x = 1; y = 2; break;
+    case TK_ANCHOR_SW:	   x = 0; y = 2; break;
+    case TK_ANCHOR_W:	   x = 0; y = 1; break;
+    case TK_ANCHOR_CENTER: x = 1; y = 1; break;
     }
     switch (textPtr->justify) {
-        case TK_JUSTIFY_LEFT:	justify = "0";	break;
-	case TK_JUSTIFY_CENTER: justify = "0.5";break;
-	case TK_JUSTIFY_RIGHT:  justify = "1";	break;
+    case TK_JUSTIFY_LEFT:   justify = "0";   break;
+    case TK_JUSTIFY_CENTER: justify = "0.5"; break;
+    case TK_JUSTIFY_RIGHT:  justify = "1";   break;
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);
     sprintf(buffer, "] %d %g %g %s %s DrawText\n",
 	    fm.linespace, x / -2.0, y / 2.0, justify,
 	    ((stipple == None) ? "false" : "true"));
-    Tcl_AppendResult(interp, buffer, (char *) NULL);
+    Tcl_AppendResult(interp, buffer, NULL);
 
     return TCL_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
