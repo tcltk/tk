@@ -1,3 +1,7 @@
+2005-11-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* unix/tcl.m4: Add missing LIBS for OpenBSD shared libary
+
 2005-10-18  Don Porter  <dgp@users.sourceforge.net>
 
         * generic/tkMain.c:     Rewrote code that sets the ::argv value
