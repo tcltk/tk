@@ -1,3 +1,8 @@
+2005-11-06  Pat Thoyts  <pat@zsplat.freeserve.co.uk>
+
+	* unix/tcl.m4:    Fix SHLIB_LD_LIBS for building tclkit on OpenBSD.
+	* unix/configure: regenerated
+
 2005-10-31  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c
