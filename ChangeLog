@@ -3,6 +3,9 @@
 	* win/tkWinDialog.c (ConvertExternalFilename): Factored out the
 	encoding conversion and de-backslash-ing code that is used in many
 	places in this file.
+	(GetFileNameW, GetFileNameA, ChooseDirectoryValidateProc): Make sure
+	that data is freed correctly and that certain (hopefully impossible)
+	failure modes won't cause crashes. [Bug 1353022]
 
 2005-11-06  Pat Thoyts  <pat@zsplat.freeserve.co.uk>
 
