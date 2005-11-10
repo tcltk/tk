@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.39 2005/10/05 03:51:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.40 2005/11/10 11:12:07 dkf Exp $
  *
  */
 
@@ -176,6 +176,8 @@ static UINT APIENTRY	OFNHookProcW(HWND hdlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
+static char *		ConvertExternalFilename(Tcl_Encoding encoding,
+			    char *filename, Tcl_DString *dsPtr);
 
 /*
  *-------------------------------------------------------------------------
@@ -209,7 +211,8 @@ static void		SetTkDialog(ClientData clientData);
  *-------------------------------------------------------------------------
  */
 
-static void EatSpuriousMessageBugFix(void)
+static void
+EatSpuriousMessageBugFix(void)
 {
     MSG msg;
     DWORD nTime = GetTickCount() + 250;
@@ -271,11 +274,11 @@ TkWinDialogDebug(
  */
 
 int
-Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+Tk_ChooseColorObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     Tk_Window tkwin, parent;
     HWND hWnd;
@@ -335,7 +338,7 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
 	if (i + 1 == objc) {
 	    string = Tcl_GetString(optionPtr);
 	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    (char *) NULL);
+		    NULL);
 	    return TCL_ERROR;
 	}
 
@@ -429,21 +432,18 @@ Tk_ChooseColorObjCmd(clientData, interp, objc, objv)
  */
 
 static UINT CALLBACK
-ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
-    HWND hDlg;			/* Handle to the color dialog. */
-    UINT uMsg;			/* Type of message. */
-    WPARAM wParam;		/* First message parameter. */
-    LPARAM lParam;		/* Second message parameter. */
+ColorDlgHookProc(
+    HWND hDlg,			/* Handle to the color dialog. */
+    UINT uMsg,			/* Type of message. */
+    WPARAM wParam,		/* First message parameter. */
+    LPARAM lParam)		/* Second message parameter. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    const char *title;
+    CHOOSECOLOR *ccPtr;
 
     switch (uMsg) {
-    case WM_INITDIALOG: {
-	const char *title;
-	CHOOSECOLOR *ccPtr;
-	Tcl_DString ds;
-
 	/*
 	 * Set the title string of the dialog.
 	 */
@@ -451,7 +451,10 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
 	ccPtr = (CHOOSECOLOR *) lParam;
 	title = (const char *) ccPtr->lCustData;
 	if ((title != NULL) && (title[0] != '\0')) {
-	    (*tkWinProcs->setWindowText)(hDlg,Tcl_WinUtfToTChar(title,-1,&ds));
+	    Tcl_DString ds;
+
+	    (*tkWinProcs->setWindowText)(hDlg,
+		    Tcl_WinUtfToTChar(title, -1, &ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -459,7 +462,6 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hDlg);
 	}
 	return TRUE;
-    }
     }
     return FALSE;
 }
@@ -482,11 +484,11 @@ ColorDlgHookProc(hDlg, uMsg, wParam, lParam)
  */
 
 int
-Tk_GetOpenFileObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+Tk_GetOpenFileObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	return GetFileNameW(clientData, interp, objc, objv, 1);
@@ -513,11 +515,11 @@ Tk_GetOpenFileObjCmd(clientData, interp, objc, objv)
  */
 
 int
-Tk_GetSaveFileObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+Tk_GetSaveFileObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	return GetFileNameW(clientData, interp, objc, objv, 0);
@@ -543,12 +545,12 @@ Tk_GetSaveFileObjCmd(clientData, interp, objc, objv)
  */
 
 static int
-GetFileNameW(clientData, interp, objc, objv, open)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
-    int open;			/* 1 to call GetOpenFileName(), 0 to call
+GetFileNameW(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[],	/* Argument objects. */
+    int open)			/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
 {
     OPENFILENAMEW ofn;
@@ -628,7 +630,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	if (i + 1 == objc) {
 	    string = Tcl_GetString(optionPtr);
 	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    (char *) NULL);
+		    NULL);
 	    goto end;
 	}
 
@@ -743,7 +745,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	Tcl_DString cwd;
 
 	Tcl_DStringFree(&utfDirString);
-	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+	if ((Tcl_GetCwd(interp, &utfDirString) == NULL) ||
 		(Tcl_TranslateFileName(interp,
 			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
 	    Tcl_ResetResult(interp);
@@ -800,12 +802,8 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	     * The first element is the directory path.
 	     */
 
-	    char *dir;
-	    char *p;
-	    char *file;
 	    WCHAR *files;
-	    Tcl_DString ds;
-	    Tcl_DString fullname, filename;
+	    Tcl_DString dirBuf;
 	    Tcl_Obj *returnList;
 	    int count = 0;
 
@@ -813,23 +811,13 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	    Tcl_IncrRefCount(returnList);
 
 	    files = ofn.lpstrFile;
-	    Tcl_ExternalToUtfDString(unicodeEncoding, (char *) files, -1, &ds);
 
 	    /*
 	     * Get directory.
 	     */
 
-	    dir = Tcl_DStringValue(&ds);
-	    for (p = dir; p && *p; p++) {
-		/*
-		 * Change the pathname to the Tcl "normalized" pathname, where
-		 * back slashes are used instead of forward slashes
-		 */
-
-		if (*p == '\\') {
-		    *p = '/';
-		}
-	    }
+	    (void) ConvertExternalFilename(unicodeEncoding, (char *) files,
+		    &dirBuf);
 
 	    while (*files != '\0') {
 		while (*files != '\0') {
@@ -837,23 +825,20 @@ GetFileNameW(clientData, interp, objc, objv, open)
 		}
 		files++;
 		if (*files != '\0') {
+		    Tcl_Obj *fullnameObj;
+		    Tcl_DString filenameBuf;
+
 		    count++;
-		    Tcl_ExternalToUtfDString(unicodeEncoding,
-			    (char *)files, -1, &filename);
-		    file = Tcl_DStringValue(&filename);
-		    for (p = file; *p != '\0'; p++) {
-			if (*p == '\\') {
-			    *p = '/';
-			}
-		    }
-		    Tcl_DStringInit(&fullname);
-		    Tcl_DStringAppend(&fullname, dir, -1);
-		    Tcl_DStringAppend(&fullname, "/", -1);
-		    Tcl_DStringAppend(&fullname, file, -1);
-		    Tcl_ListObjAppendElement(interp, returnList,
-			    Tcl_NewStringObj(Tcl_DStringValue(&fullname), -1));
-		    Tcl_DStringFree(&fullname);
-		    Tcl_DStringFree(&filename);
+		    (void) ConvertExternalFilename(unicodeEncoding,
+			    (char *) files, &filenameBuf);
+
+		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&dirBuf),
+			    Tcl_DStringLength(&dirBuf));
+		    Tcl_AppendToObj(fullnameObj, "/", -1);
+		    Tcl_AppendToObj(Tcl_DStringValue(&filenameBuf),
+			    Tcl_DStringLength(&filenameBuf));
+		    Tcl_DStringFree(&filenameBuf);
+		    Tcl_ListObjAppendElement(NULL, returnList, fullnameObj);
 		}
 	    }
 
@@ -862,28 +847,18 @@ GetFileNameW(clientData, interp, objc, objv, open)
 		 * Only one file was returned.
 		 */
 
-		Tcl_ListObjAppendElement(interp, returnList,
-			Tcl_NewStringObj(dir, -1));
+		Tcl_ListObjAppendElement(NULL, returnList,
+			Tcl_NewStringObj(Tcl_DStringValue(&dirBuf),
+				Tcl_DStringLength(&dirBuf)));
 	    }
 	    Tcl_SetObjResult(interp, returnList);
 	    Tcl_DecrRefCount(returnList);
-	    Tcl_DStringFree(&ds);
+	    Tcl_DStringFree(&dirBuf);
 	} else {
-	    char *p;
 	    Tcl_DString ds;
 
-	    Tcl_ExternalToUtfDString(unicodeEncoding,
-		    (char *) ofn.lpstrFile, -1, &ds);
-	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-		/*
-		 * Change the pathname to the Tcl "normalized" pathname, where
-		 * back slashes are used instead of forward slashes
-		 */
-		if (*p == '\\') {
-		    *p = '/';
-		}
-	    }
-	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	    Tcl_AppendResult(interp, ConvertExternalFilename(unicodeEncoding,
+		    (char *) ofn.lpstrFile, &ds), NULL);
 	    Tcl_DStringFree(&ds);
 	}
 	result = TCL_OK;
@@ -901,23 +876,11 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	 */
 
 	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
-	    char *p;
 	    Tcl_DString ds;
 
-	    Tcl_ExternalToUtfDString(unicodeEncoding,
-		    (char *) ofn.lpstrFile, -1, &ds);
-	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-		/*
-		 * Change the pathname to the Tcl "normalized" pathname, where
-		 * back slashes are used instead of forward slashes
-		 */
-
-		if (*p == '\\') {
-		    *p = '/';
-		}
-	    }
 	    Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
-	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
+	    Tcl_AppendResult(interp, ConvertExternalFilename(unicodeEncoding,
+		    (char *) ofn.lpstrFile, &ds), "\"", NULL);
 	    Tcl_DStringFree(&ds);
 	} else {
 	    result = TCL_OK;
@@ -1019,12 +982,12 @@ OFNHookProcW(
  */
 
 static int
-GetFileNameA(clientData, interp, objc, objv, open)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
-    int open;			/* 1 to call GetOpenFileName(), 0 to call
+GetFileNameA(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[],	/* Argument objects. */
+    int open)			/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
 {
     OPENFILENAME ofn;
@@ -1103,7 +1066,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	if (i + 1 == objc) {
 	    string = Tcl_GetString(optionPtr);
 	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    (char *) NULL);
+		    NULL);
 	    goto end;
 	}
 
@@ -1225,7 +1188,7 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	Tcl_DString cwd;
 
 	Tcl_DStringFree(&utfDirString);
-	if ((Tcl_GetCwd(interp, &utfDirString) == (char *) NULL) ||
+	if ((Tcl_GetCwd(interp, &utfDirString) == NULL) ||
 		(Tcl_TranslateFileName(interp,
 			Tcl_DStringValue(&utfDirString), &cwd) == NULL)) {
 	    Tcl_ResetResult(interp);
@@ -1281,15 +1244,13 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	    /*
 	     * The result in custData->szFile contains many items, separated
 	     * with null characters. It is terminated with two nulls in a row.
-	     * The first element is the directory path.
+	     * The first element is the directory path (if multiple files are
+	     * selected) or the only returned file (if only a single file has
+	     * been chosen).
 	     */
 
-	    char *dir;
-	    char *p;
-	    char *file;
 	    char *files;
 	    Tcl_DString ds;
-	    Tcl_DString fullname, filename;
 	    Tcl_Obj *returnList;
 	    int count = 0;
 
@@ -1297,23 +1258,12 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	    Tcl_IncrRefCount(returnList);
 
 	    files = ofn.lpstrFile;
-	    Tcl_ExternalToUtfDString(NULL, (char *) files, -1, &ds);
 
 	    /*
 	     * Get directory.
 	     */
 
-	    dir = Tcl_DStringValue(&ds);
-	    for (p = dir; p && *p; p++) {
-		/*
-		 * Change the pathname to the Tcl "normalized" pathname, where
-		 * back slashes are used instead of forward slashes
-		 */
-
-		if (*p == '\\') {
-		    *p = '/';
-		}
-	    }
+	    (void) ConvertExternalFilename(NULL, (char *) files, &ds);
 
 	    while (*files != '\0') {
 		while (*files != '\0') {
@@ -1321,23 +1271,19 @@ GetFileNameA(clientData, interp, objc, objv, open)
 		}
 		files++;
 		if (*files != '\0') {
+		    Tcl_Obj *fullnameObj;
+		    Tcl_DString filename;
+
 		    count++;
-		    Tcl_ExternalToUtfDString(NULL,
-			    (char *)files, -1, &filename);
-		    file = Tcl_DStringValue(&filename);
-		    for (p = file; *p != '\0'; p++) {
-			if (*p == '\\') {
-			    *p = '/';
-			}
-		    }
-		    Tcl_DStringInit(&fullname);
-		    Tcl_DStringAppend(&fullname, dir, -1);
-		    Tcl_DStringAppend(&fullname, "/", -1);
-		    Tcl_DStringAppend(&fullname, file, -1);
-		    Tcl_ListObjAppendElement(interp, returnList,
-			    Tcl_NewStringObj(Tcl_DStringValue(&fullname), -1));
-		    Tcl_DStringFree(&fullname);
+		    (void) ConvertExternalFilename(NULL, (char *) files,
+			    &filename);
+		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
+			    Tcl_DStringLength(&ds));
+		    Tcl_AppendToObj(fullnameObj, "/", -1);
+		    Tcl_AppendToObj(Tcl_DStringValue(&filename),
+			    Tcl_DStringLength(&filename));
 		    Tcl_DStringFree(&filename);
+		    Tcl_ListObjAppendElement(NULL, returnList, fullnameObj);
 		}
 	    }
 	    if (count == 0) {
@@ -1345,28 +1291,17 @@ GetFileNameA(clientData, interp, objc, objv, open)
 		 * Only one file was returned.
 		 */
 
-		Tcl_ListObjAppendElement(interp, returnList,
-			Tcl_NewStringObj(dir, -1));
+		Tcl_ListObjAppendElement(NULL, returnList, Tcl_NewStringObj(
+			Tcl_DStringValue(&ds), Tcl_DStringLength(&ds)));
 	    }
 	    Tcl_SetObjResult(interp, returnList);
 	    Tcl_DecrRefCount(returnList);
 	    Tcl_DStringFree(&ds);
 	} else {
-	    char *p;
 	    Tcl_DString ds;
 
-	    Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
-	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-		/*
-		 * Change the pathname to the Tcl "normalized" pathname, where
-		 * back slashes are used instead of forward slashes
-		 */
-
-		if (*p == '\\') {
-		    *p = '/';
-		}
-	    }
-	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	    Tcl_AppendResult(interp, ConvertExternalFilename(NULL,
+		    (char *) ofn.lpstrFile, &ds), NULL);
 	    Tcl_DStringFree(&ds);
 	}
 	result = TCL_OK;
@@ -1384,22 +1319,11 @@ GetFileNameA(clientData, interp, objc, objv, open)
 	 */
 
 	if (CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
-	    char *p;
 	    Tcl_DString ds;
 
-	    Tcl_ExternalToUtfDString(NULL, (char *) ofn.lpstrFile, -1, &ds);
-	    for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-		/*
-		 * Change the pathname to the Tcl "normalized" pathname, where
-		 * back slashes are used instead of forward slashes
-		 */
-
-		if (*p == '\\') {
-		    *p = '/';
-		}
-	    }
 	    Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
-	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), "\"", NULL);
+	    Tcl_AppendResult(interp, ConvertExternalFilename(NULL,
+		    (char *) ofn.lpstrFile, &ds), "\"", NULL);
 	    Tcl_DStringFree(&ds);
 	} else {
 	    result = TCL_OK;
@@ -1505,10 +1429,10 @@ OFNHookProc(
  */
 
 static int
-MakeFilter(interp, valuePtr, dsPtr)
-    Tcl_Interp *interp;		/* Current interpreter. */
-    Tcl_Obj *valuePtr;		/* Value of the -filetypes option */
-    Tcl_DString *dsPtr;		/* Filled with windows filter string. */
+MakeFilter(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Obj *valuePtr,		/* Value of the -filetypes option */
+    Tcl_DString *dsPtr)		/* Filled with windows filter string. */
 {
     char *filterStr;
     char *p;
@@ -1703,11 +1627,11 @@ MakeFilter(interp, valuePtr, dsPtr)
  */
 
 int
-Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+Tk_ChooseDirectoryObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     char path[MAX_PATH];
     int oldMode, result, i;
@@ -1723,7 +1647,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
     Tcl_DString titleString;	/* UTF Title */
     Tcl_DString initDirString;	/* Initial directory */
     static CONST char *optionStrings[] = {
-	"-initialdir", "-mustexist",  "-parent",  "-title", (char *) NULL
+	"-initialdir", "-mustexist",  "-parent",  "-title", NULL
     };
     enum options {
 	DIR_INITIAL,   DIR_EXIST,  DIR_PARENT, FILE_TITLE
@@ -1761,7 +1685,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 	if (i + 1 == objc) {
 	    string = Tcl_GetString(optionPtr);
 	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    (char *) NULL);
+		    NULL);
 	    goto cleanup;
 	}
 
@@ -1884,16 +1808,10 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
 
     Tcl_ResetResult(interp);
     if (*path) {
-	char *p;
 	Tcl_DString ds;
 
-	Tcl_ExternalToUtfDString(NULL, (char *) path, -1, &ds);
-	for (p = Tcl_DStringValue(&ds); *p != '\0'; p++) {
-	    if (*p == '\\') {
-		*p = '/';
-	    }
-	}
-	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	Tcl_AppendResult(interp, ConvertExternalFilename(NULL, (char *) path,
+		&ds), NULL);
 	Tcl_DStringFree(&ds);
     }
 
@@ -1924,7 +1842,7 @@ Tk_ChooseDirectoryObjCmd(clientData, interp, objc, objv)
  */
 
 static UINT APIENTRY
-ChooseDirectoryValidateProc (
+ChooseDirectoryValidateProc(
     HWND hwnd,
     UINT message,
     LPARAM lParam,
@@ -2088,11 +2006,11 @@ ChooseDirectoryValidateProc (
  */
 
 int
-Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+Tk_MessageBoxObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     Tk_Window tkwin, parent;
     HWND hWnd;
@@ -2138,7 +2056,7 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
 	if (i + 1 == objc) {
 	    string = Tcl_GetString(optionPtr);
 	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    (char *) NULL);
+		    NULL);
 	    return TCL_ERROR;
 	}
 
@@ -2272,9 +2190,12 @@ Tk_MessageBoxObjCmd(clientData, interp, objc, objv)
     Tcl_SetResult(interp, TkFindStateString(buttonMap, winCode), TCL_STATIC);
     return TCL_OK;
 }
-
+
 static LRESULT CALLBACK
-MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam)
+MsgBoxCBTProc(
+    int nCode,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -2304,9 +2225,10 @@ MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam)
 
     return CallNextHookEx(tsdPtr->hMsgBoxHook, nCode, wParam, lParam);
 }
-
+
 static void
-SetTkDialog(ClientData clientData)
+SetTkDialog(
+    ClientData clientData)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -2314,6 +2236,30 @@ SetTkDialog(ClientData clientData)
 
     sprintf(buf, "0x%p", (HWND) clientData);
     Tcl_SetVar(tsdPtr->debugInterp, "tk_dialog", buf, TCL_GLOBAL_ONLY);
+}
+
+/*
+ * Factored out a common pattern in use in this file.
+ */
+static char *
+ConvertExternalFilename(
+    Tcl_Encoding encoding,
+    char *filename,
+    Tcl_DString *dsPtr)
+{
+    char *p;
+
+    Tcl_ExternalToUtfDString(encoding, filename, -1, dsPtr);
+    for (p = Tcl_DStringValue(dsPtr); *p != '\0'; p++) {
+	/*
+	 * Change the pathname to the Tcl "normalized" pathname, where back
+	 * slashes are used instead of forward slashes
+	 */
+	if (*p == '\\') {
+	    *p = '/';
+	}
+    }
+    return Tcl_DStringValue(dsPtr);
 }
 
 /*
