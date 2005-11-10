@@ -1,3 +1,9 @@
+2005-11-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* win/tkWinDialog.c (ConvertExternalFilename): Factored out the
+	encoding conversion and de-backslash-ing code that is used in many
+	places in this file.
+
 2005-11-06  Pat Thoyts  <pat@zsplat.freeserve.co.uk>
 
 	* unix/tcl.m4:    Fix SHLIB_LD_LIBS for building tclkit on OpenBSD.
@@ -6,7 +12,7 @@
 2005-10-31  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c
-	* tests/textDisp.test: fix and test for [Bug 1333951] in 
+	* tests/textDisp.test: fix and test for [Bug 1333951] in
 	'.text count -displaylines'.
 
 2005-10-18  Don Porter	<dgp@users.sourceforge.net>
@@ -28,7 +34,7 @@
 
 2005-10-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinSend.c:    Avoid using tcl internal headers and fix to 
+	* win/tkWinSend.c:    Avoid using tcl internal headers and fix to
 	* win/tkWinSendCom.h: correctly link on all types of build (was
 	* win/tkWinSendCom.c: broken in static,msvcrt builds).
 
