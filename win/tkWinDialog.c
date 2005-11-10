@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.40 2005/11/10 11:12:07 dkf Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.41 2005/11/10 11:22:21 dkf Exp $
  *
  */
 
@@ -665,6 +665,7 @@ GetFileNameW(
 	    Tcl_UtfToExternal(NULL, unicodeEncoding, Tcl_DStringValue(&ds),
 		    Tcl_DStringLength(&ds), 0, NULL, (char *) file,
 		    sizeof(file), NULL, NULL, NULL);
+	    Tcl_DStringFree(&ds);
 	    break;
 	}
 	case FILE_MULTIPLE:
@@ -1100,6 +1101,7 @@ GetFileNameA(
 	    Tcl_UtfToExternal(NULL, NULL, Tcl_DStringValue(&ds),
 		    Tcl_DStringLength(&ds), 0, NULL, (char *) file,
 		    sizeof(file), NULL, NULL, NULL);
+	    Tcl_DStringFree(&ds);
 	    break;
 	}
 	case FILE_MULTIPLE:
@@ -1879,9 +1881,16 @@ ChooseDirectoryValidateProc(
 	 * like ~ are converted correctly.
 	 */
 
-	Tcl_TranslateFileName(chooseDirSharedData->interp,
-		(char *)lParam, &initDirString);
-	lstrcpyn (string, Tcl_DStringValue(&initDirString), MAX_PATH);
+	if (Tcl_TranslateFileName(chooseDirSharedData->interp,
+		(char *)lParam, &initDirString) == NULL) {
+	    /*
+	     * Should we expose the error (in the interp result) to the user
+	     * at this point?
+	     */
+	    chooseDirSharedData->utfRetDir[0] = '\0';
+	    return 1;
+	}
+	lstrcpyn(string, Tcl_DStringValue(&initDirString), MAX_PATH);
 	Tcl_DStringFree(&initDirString);
 
 	if (SetCurrentDirectory((char *)string) == 0) {
