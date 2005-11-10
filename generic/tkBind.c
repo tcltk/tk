@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.37 2005/11/04 11:52:50 dkf Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.38 2005/11/10 11:38:29 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -2691,7 +2691,9 @@ ChangeScreen(
     Tcl_DStringAppend(&cmd, dispName, -1);
     sprintf(screen, ".%d", screenIndex);
     Tcl_DStringAppend(&cmd, screen, -1);
-    code = Tcl_GlobalEval(interp, Tcl_DStringValue(&cmd));
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&cmd), Tcl_DStringLength(&cmd),
+	    TCL_EVAL_GLOBAL);
+    Tcl_DStringFree(&cmd);
     if (code != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (changing screen in event binding)");
