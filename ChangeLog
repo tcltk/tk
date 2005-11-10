@@ -1,5 +1,9 @@
 2005-11-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* generic/tkBind.c (ChangeScreen):		More DString fixes from
+	* generic/tkTextWind.c (EmbWinLayoutProc):	[Bug 1353022]
+	* win/tkWinMenu.c (SetDefaults):
+
 	* win/tkWinDialog.c (ConvertExternalFilename): Factored out the
 	encoding conversion and de-backslash-ing code that is used in many
 	places in this file.

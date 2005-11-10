@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.15 2005/10/10 10:36:35 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.16 2005/11/10 11:38:29 dkf Exp $
  */
 
 #include "tk.h"
@@ -926,6 +926,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
 	Tcl_ResetResult(textPtr->interp);
 	ewPtr->body.ew.tkwin = Tk_NameToWindow(textPtr->interp,
 		Tcl_DStringValue(&name), textPtr->tkwin);
+	Tcl_DStringFree(&name);
 	if (ewPtr->body.ew.tkwin == NULL) {
 	    goto createError;
 	}
