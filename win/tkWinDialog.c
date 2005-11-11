@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.41 2005/11/10 11:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.42 2005/11/11 05:13:44 chengyemao Exp $
  *
  */
 
@@ -836,7 +836,7 @@ GetFileNameW(
 		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&dirBuf),
 			    Tcl_DStringLength(&dirBuf));
 		    Tcl_AppendToObj(fullnameObj, "/", -1);
-		    Tcl_AppendToObj(Tcl_DStringValue(&filenameBuf),
+		    Tcl_AppendToObj(fullnameObj, Tcl_DStringValue(&filenameBuf),
 			    Tcl_DStringLength(&filenameBuf));
 		    Tcl_DStringFree(&filenameBuf);
 		    Tcl_ListObjAppendElement(NULL, returnList, fullnameObj);
@@ -1282,7 +1282,7 @@ GetFileNameA(
 		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 			    Tcl_DStringLength(&ds));
 		    Tcl_AppendToObj(fullnameObj, "/", -1);
-		    Tcl_AppendToObj(Tcl_DStringValue(&filename),
+		    Tcl_AppendToObj(fullnameObj, Tcl_DStringValue(&filename),
 			    Tcl_DStringLength(&filename));
 		    Tcl_DStringFree(&filename);
 		    Tcl_ListObjAppendElement(NULL, returnList, fullnameObj);
