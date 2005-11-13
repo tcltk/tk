@@ -1,5 +1,8 @@
 2005-11-13  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* unix/tkUnixSelect.c (SelCvtFromX): Generate string forms of the
+	advanced selection types in a Tcl_DString. This makes fixing [Bug
+	1353414] trivial, and simplifies the code at the same time.
 	* tests/select.test (select-9.5): Added test for [Bug 1353414]
 
 2005-11-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
