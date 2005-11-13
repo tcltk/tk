@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.14 2005/10/21 01:51:45 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.15 2005/11/13 22:32:58 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -93,8 +93,8 @@ static TkSelRetrievalInfo *pendingRetrievals = NULL;
 static void		ConvertSelection(TkWindow *winPtr,
 			    XSelectionRequestEvent *eventPtr);
 static void		IncrTimeoutProc(ClientData clientData);
-static char *		SelCvtFromX(long *propPtr, int numValues, Atom type,
-			    Tk_Window tkwin);
+static void		SelCvtFromX(long *propPtr, int numValues, Atom type,
+			    Tk_Window tkwin, Tcl_DString *dsPtr);
 static long *		SelCvtToX(char *string, Atom type, Tk_Window tkwin,
 			    int *numLongsPtr);
 static int		SelectionSize(TkSelHandler *selPtr);
@@ -666,7 +666,7 @@ TkSelEventProc(
 	    Tk_DeleteEventHandler(tkwin, PropertyChangeMask, SelRcvIncrProc,
 		    (ClientData) retrPtr);
 	} else {
-	    char *string;
+	    Tcl_DString ds;
 
 	    if (format != 32) {
 		char buf[64 + TCL_INTEGER_SPACE];
@@ -678,14 +678,15 @@ TkSelEventProc(
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
-	    string = SelCvtFromX((long *) propInfo, (int) numItems, type,
-		    (Tk_Window) winPtr);
+	    Tcl_DStringInit(&ds);
+	    SelCvtFromX((long *) propInfo, (int) numItems, type,
+		    (Tk_Window) winPtr, &ds);
 	    interp = retrPtr->interp;
 	    Tcl_Preserve((ClientData) interp);
 	    retrPtr->result = (*retrPtr->proc)(retrPtr->clientData,
-		    interp, string);
+		    interp, Tcl_DStringValue(&ds));
 	    Tcl_Release((ClientData) interp);
-	    ckfree(string);
+	    Tcl_DStringFree(&ds);
 	}
 	XFree(propInfo);
 	return;
@@ -1241,7 +1242,7 @@ SelRcvIncrProc(
     } else if (numItems == 0) {
 	retrPtr->result = TCL_OK;
     } else {
-	char *string;
+	Tcl_DString ds;
 
 	if (format != 32) {
 	    char buf[64 + TCL_INTEGER_SPACE];
@@ -1253,16 +1254,18 @@ SelRcvIncrProc(
 	    retrPtr->result = TCL_ERROR;
 	    goto done;
 	}
-	string = SelCvtFromX((long *) propInfo, (int) numItems, type,
-		(Tk_Window) retrPtr->winPtr);
+	Tcl_DStringInit(&ds);
+	SelCvtFromX((long *) propInfo, (int) numItems, type,
+		(Tk_Window) retrPtr->winPtr, &ds);
 	interp = retrPtr->interp;
 	Tcl_Preserve((ClientData) interp);
-	result = (*retrPtr->proc)(retrPtr->clientData, interp, string);
+	result = (*retrPtr->proc)(retrPtr->clientData, interp,
+		Tcl_DStringValue(&ds));
 	Tcl_Release((ClientData) interp);
+	Tcl_DStringFree(&ds);
 	if (result != TCL_OK) {
 	    retrPtr->result = result;
 	}
-	ckfree(string);
     }
 
   done:
@@ -1457,8 +1460,8 @@ SelCvtToX(
  *	of SelCvtToX.
  *
  * Results:
- *	The return value is the string equivalent of "property". It is
- *	malloc-ed and should be freed by the caller when no longer needed.
+ *	The return value (stored in a Tcl_DString) is the string equivalent of
+ *	"property". It is up to the caller to initialize and free the DString.
  *
  * Side effects:
  *	None.
@@ -1466,62 +1469,36 @@ SelCvtToX(
  *----------------------------------------------------------------------
  */
 
-static char *
+static void
 SelCvtFromX(
     register long *propPtr,	/* Property value from X. */
     int numValues,		/* Number of 32-bit values in property. */
     Atom type,			/* Type of property Should not be XA_STRING
 				 * (if so, don't bother calling this function
 				 * at all). */
-    Tk_Window tkwin)		/* Window to use for atom conversion. */
+    Tk_Window tkwin,		/* Window to use for atom conversion. */
+    Tcl_DString *dsPtr)		/* Where to store the converted string. */
 {
-    char *result;
-    int resultSpace, curSize, fieldSize;
-    CONST char *atomName;
-
     /*
      * Convert each long in the property to a string value, which is either
-     * the name of an atom (if type is XA_ATOM) or a hexadecimal string. Make
-     * an initial guess about the size of the result, but be prepared to
-     * enlarge the result if necessary.
+     * the name of an atom (if type is XA_ATOM) or a hexadecimal string. We
+     * build the list in a Tcl_DString because this is easier than trying to
+     * get the quoting correct ourselves; this is tricky because atoms can
+     * contain spaces in their names (encountered when the atoms are really
+     * MIME types). [Bug 1353414]
      */
 
-    resultSpace = 12*numValues+1;
-    curSize = 0;
-    atomName = "";	/* Not needed, but eliminates compiler warning. */
-    result = (char *) ckalloc((unsigned) resultSpace);
-    *result  = '\0';
     for ( ; numValues > 0; propPtr++, numValues--) {
 	if (type == XA_ATOM) {
-	    atomName = Tk_GetAtomName(tkwin, (Atom) *propPtr);
-	    fieldSize = strlen(atomName) + 1;
+	    Tcl_DStringAppendElement(dsPtr,
+		    Tk_GetAtomName(tkwin, (Atom) *propPtr));
 	} else {
-	    fieldSize = 12;
-	}
-	if (curSize+fieldSize >= resultSpace) {
-	    char *newResult;
+	    char buf[12];
 
-	    resultSpace *= 2;
-	    if (curSize+fieldSize >= resultSpace) {
-		resultSpace = curSize + fieldSize + 1;
-	    }
-	    newResult = (char *) ckalloc((unsigned) resultSpace);
-	    strncpy(newResult, result, (unsigned) curSize);
-	    ckfree(result);
-	    result = newResult;
+	    sprintf(buf, "0x%x", (unsigned int) *propPtr);
+	    Tcl_DStringAppendElement(dsPtr, buf);
 	}
-	if (curSize != 0) {
-	    result[curSize] = ' ';
-	    curSize++;
-	}
-	if (type == XA_ATOM) {
-	    strcpy(result+curSize, atomName);
-	} else {
-	    sprintf(result+curSize, "0x%x", (unsigned int) *propPtr);
-	}
-	curSize += strlen(result+curSize);
     }
-    return result;
 }
 
 /*
