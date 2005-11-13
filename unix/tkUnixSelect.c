@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.16 2005/11/13 23:16:11 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.17 2005/11/13 23:40:04 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1396,7 +1396,7 @@ SelCvtToX(
     int *numLongsPtr)		/* Number of 32-bit words contained in the
 				 * result. */
 {
-    char **field;
+    const char **field;
     int numFields, i;
     long *propPtr;
 
