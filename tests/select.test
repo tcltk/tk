@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.15 2004/06/24 12:45:43 dkf Exp $
+# RCS: @(#) $Id: select.test,v 1.16 2005/11/13 21:58:16 dkf Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -182,7 +182,7 @@ test select-1.7.1 {Tk_CreateSelHandler procedure} unix {
     selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
     selection handle -selection PRIMARY .f1 {handler TEST2} STRING
     list [lsort [selection get -selection PRIMARY TARGETS]] \
-	[lsort [selection get -selection CLIPBOARD TARGETS]] 
+	[lsort [selection get -selection CLIPBOARD TARGETS]]
 } {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-1.7.2 {Tk_CreateSelHandler procedure} win {
     setup
@@ -190,7 +190,7 @@ test select-1.7.2 {Tk_CreateSelHandler procedure} win {
     selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
     selection handle -selection PRIMARY .f1 {handler TEST2} STRING
     list [lsort [selection get -selection PRIMARY TARGETS]] \
-	[lsort [selection get -selection CLIPBOARD TARGETS]] 
+	[lsort [selection get -selection CLIPBOARD TARGETS]]
 } {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-1.8 {Tk_CreateSelHandler procedure} {
     setup
@@ -202,18 +202,18 @@ test select-1.8 {Tk_CreateSelHandler procedure} {
 
 test select-2.1 {Tk_DeleteSelHandler procedure} unix {
     setup
-    selection handle .f1 {handler STRING} 
-    selection handle -type TEST .f1 {handler TEST} 
-    selection handle -type USER .f1 {handler USER} 
+    selection handle .f1 {handler STRING}
+    selection handle -type TEST .f1 {handler TEST}
+    selection handle -type USER .f1 {handler USER}
     set result [list [lsort [selection get TARGETS]]]
     selection handle -type TEST .f1 {}
     lappend result [lsort [selection get TARGETS]]
 } {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING} {MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW USER UTF8_STRING}}
 test select-2.2 {Tk_DeleteSelHandler procedure} unix {
     setup
-    selection handle .f1 {handler STRING} 
-    selection handle -type TEST .f1 {handler TEST} 
-    selection handle -type USER .f1 {handler USER} 
+    selection handle .f1 {handler STRING}
+    selection handle -type TEST .f1 {handler TEST}
+    selection handle -type USER .f1 {handler USER}
     set result [list [lsort [selection get TARGETS]]]
     selection handle -type USER .f1 {}
     lappend result [lsort [selection get TARGETS]]
@@ -221,26 +221,26 @@ test select-2.2 {Tk_DeleteSelHandler procedure} unix {
 test select-2.3 {Tk_DeleteSelHandler procedure} unix {
     setup
     selection own -selection CLIPBOARD .f1
-    selection handle -selection PRIMARY .f1 {handler STRING} 
-    selection handle -selection CLIPBOARD .f1 {handler STRING} 
+    selection handle -selection PRIMARY .f1 {handler STRING}
+    selection handle -selection CLIPBOARD .f1 {handler STRING}
     selection handle -selection CLIPBOARD .f1 {}
     list [lsort [selection get TARGETS]] \
 	[lsort [selection get -selection CLIPBOARD TARGETS]]
 } {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-2.4 {Tk_DeleteSelHandler procedure} win {
     setup
-    selection handle .f1 {handler STRING} 
-    selection handle -type TEST .f1 {handler TEST} 
-    selection handle -type USER .f1 {handler USER} 
+    selection handle .f1 {handler STRING}
+    selection handle -type TEST .f1 {handler TEST}
+    selection handle -type USER .f1 {handler USER}
     set result [list [lsort [selection get TARGETS]]]
     selection handle -type TEST .f1 {}
     lappend result [lsort [selection get TARGETS]]
 } {{MULTIPLE STRING TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW USER} {MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW USER}}
 test select-2.5 {Tk_DeleteSelHandler procedure} win {
     setup
-    selection handle .f1 {handler STRING} 
-    selection handle -type TEST .f1 {handler TEST} 
-    selection handle -type USER .f1 {handler USER} 
+    selection handle .f1 {handler STRING}
+    selection handle -type TEST .f1 {handler TEST}
+    selection handle -type USER .f1 {handler USER}
     set result [list [lsort [selection get TARGETS]]]
     selection handle -type USER .f1 {}
     lappend result [lsort [selection get TARGETS]]
@@ -248,8 +248,8 @@ test select-2.5 {Tk_DeleteSelHandler procedure} win {
 test select-2.6 {Tk_DeleteSelHandler procedure} win {
     setup
     selection own -selection CLIPBOARD .f1
-    selection handle -selection PRIMARY .f1 {handler STRING} 
-    selection handle -selection CLIPBOARD .f1 {handler STRING} 
+    selection handle -selection PRIMARY .f1 {handler STRING}
+    selection handle -selection CLIPBOARD .f1 {handler STRING}
     selection handle -selection CLIPBOARD .f1 {}
     list [lsort [selection get TARGETS]] \
 	[lsort [selection get -selection CLIPBOARD TARGETS]]
@@ -258,7 +258,7 @@ test select-2.7 {Tk_DeleteSelHandler procedure} {
     setup
     selection handle .f1 {handler STRING}
     list [selection handle .f1 {}] [selection handle .f1 {}]
-} {{} {}}   
+} {{} {}}
 
 ##############################################################################
 
@@ -331,7 +331,6 @@ test select-3.9 {Tk_OwnSelection procedure} {
     selection own -selection CLIPBOARD -command { destroy .f2 } .f1
     selection own -selection CLIPBOARD .f2
 } {}
-
 # multiple display tests
 test select-3.10 {Tk_OwnSelection procedure} {altDisplay} {
     setup .f1
@@ -382,7 +381,6 @@ test select-4.4 {Tk_ClearSelection procedure} unix {
     cleanupbg
     lappend result [selection own]
 } {{} {}}
-
 # multiple display tests
 test select-4.5 {Tk_ClearSelection procedure} {altDisplay} {
     global lostSel lostSel2
@@ -501,9 +499,7 @@ test select-5.10 {Tk_GetSelection procedure} unix {
     cleanupbg
     lappend result $selInfo
 } {{selection owner didn't respond} {}}
-
 # multiple display tests
-
 test select-5.11 {Tk_GetSelection procedure} {altDisplay} {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
@@ -572,7 +568,6 @@ test select-5.14 {Tk_GetSelection procedure} {unix altDisplay} {
 test select-6.1 {Tk_SelectionCmd procedure} {
     list [catch {selection} cmd] $cmd
 } {1 {wrong # args: should be "selection option ?arg arg ...?"}}
-
 # selection clear
 test select-6.2 {Tk_SelectionCmd procedure} {
     list [catch {selection clear -selection} cmd] $cmd
@@ -628,7 +623,6 @@ test select-6.11 {Tk_SelectionCmd procedure} {
 test select-6.12 {Tk_SelectionCmd procedure} {
     list [catch {selection clear foo bar} cmd] $cmd
 } {1 {wrong # args: should be "selection clear ?options?"}}
-
 # selection get
 test select-6.13 {Tk_SelectionCmd procedure} {
     list [catch {selection get -selection} cmd] $cmd
@@ -682,7 +676,6 @@ test select-6.21 {Tk_SelectionCmd procedure} {
     set selInfo ""
     list [selection get TEST] $selInfo
 } {{Test value} {TEST 0 4000}}
-
 # selection handle
 # most of the handle section has been covered earlier
 test select-6.22 {Tk_SelectionCmd procedure} {
@@ -714,7 +707,6 @@ test select-6.29 {Tk_SelectionCmd procedure} {
     catch { destroy .f2 }
     list [catch {selection handle .f2 dummy} cmd] $cmd
 } {1 {bad window path name ".f2"}}
-
 # selection own
 test select-6.30 {Tk_SelectionCmd procedure} {
     list [catch {selection own -selection} cmd] $cmd
@@ -757,7 +749,6 @@ test select-6.37 {Tk_SelectionCmd procedure} {
 test select-6.38 {Tk_SelectionCmd procedure} {
     list [catch {selection own foo bar baz} cmd] $cmd
 } {1 {wrong # args: should be "selection own ?options? ?window?"}}
-
 test select-6.39 {Tk_SelectionCmd procedure} {
     list [catch {selection foo} cmd] $cmd
 } {1 {bad option "foo": must be clear, get, handle, or own}}
@@ -767,7 +758,6 @@ test select-6.39 {Tk_SelectionCmd procedure} {
 # This test is non-portable because some old X11/News servers ignore
 # a selection request when the window doesn't exist, which causes a
 # different error message.
-
 test select-7.1 {TkSelDeadWindow procedure} nonPortable {
     setup
     selection handle .f1 { handler TEST }
@@ -843,6 +833,21 @@ test select-9.4 {SelCvtToX and SelCvtFromX procedures} unix {
     cleanupbg
     lappend result $selInfo
 } {{0x10 0x0 0x20} {TEST 0 4000}}
+test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
+    setup
+    setupbg
+} -constraints unix -body {
+    # Ensure that lists of atoms are constructed correctly, even when the
+    # atom names have spaces in. [Bug 1353414]
+    set selValue "foo bar"
+    set selInfo ""
+    set selType {text/x-tk-test;detail="foo bar"}
+    selection handle -selection PRIMARY -format STRING -type $selType \
+	.f1 [list handler $selType]
+    lsort [dobg {selection get TARGETS}]
+} -cleanup {
+    cleanupbg
+} -result {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW {text/x-tk-test;detail="foo bar"}}
 
 ##############################################################################
 
