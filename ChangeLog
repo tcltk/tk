@@ -1,5 +1,9 @@
 2005-11-13  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* unix/tkUnixSelect.c (SelCvtToX): Arrange for the parsing code to
+	use Tcl's list parsing code, another simplification that enables
+	testing of the [Bug 1353414] fix.
+
 	* unix/tkUnixSelect.c (SelCvtFromX): Generate string forms of the
 	advanced selection types in a Tcl_DString. This makes fixing [Bug
 	1353414] trivial, and simplifies the code at the same time.
