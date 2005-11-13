@@ -1,3 +1,7 @@
+2005-11-13  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* tests/select.test (select-9.5): Added test for [Bug 1353414]
+
 2005-11-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* generic/tkBind.c (ChangeScreen):		More DString fixes from
