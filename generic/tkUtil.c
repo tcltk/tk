@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.13 2005/11/13 00:45:47 dkf Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.14 2005/11/13 20:42:54 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -781,7 +781,7 @@ TkComputeAnchor(
     Tk_Window tkwin,		/* Anchored with respect to this window. */
     int padX, int padY,		/* Use this extra padding inside window, in
 				 * addition to the internal border. */
-    int innerWidth, int innerHeight;
+    int innerWidth, int innerHeight,
 				/* Size of rectangle to anchor in window. */
     int *xPtr, int *yPtr)	/* Returns upper-left corner of anchored
 				 * rectangle. */
