@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.15 2005/11/13 22:32:58 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.16 2005/11/13 23:16:11 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -453,11 +453,14 @@ TkSelPropProc(eventPtr)
 			formatType, (Tk_Window) incrPtr->winPtr,
 			&numItems);
 
-		XChangeProperty(eventPtr->xproperty.display,
-			eventPtr->xproperty.window, eventPtr->xproperty.atom,
-			formatType, 32, PropModeReplace,
-			(unsigned char *) propPtr, numItems);
-		ckfree(propPtr);
+		if (propPtr != NULL) {
+		    XChangeProperty(eventPtr->xproperty.display,
+			    eventPtr->xproperty.window,
+			    eventPtr->xproperty.atom, formatType, 32,
+			    PropModeReplace, (unsigned char *) propPtr,
+			    numItems);
+		    ckfree(propPtr);
+		}
 	    }
 	    Tk_DeleteErrorHandler(errorHandler);
 
@@ -986,11 +989,13 @@ ConvertSelection(
 	} else {
 	    propPtr = (char *) SelCvtToX((char *) buffer,
 		    type, (Tk_Window) winPtr, &numItems);
-	    format = 32;
-	    XChangeProperty(reply.display, reply.requestor, property, type,
-		    format, PropModeReplace, (unsigned char *) propPtr,
-		    numItems);
-	    ckfree(propPtr);
+	    if (propPtr != NULL) {
+		format = 32;
+		XChangeProperty(reply.display, reply.requestor, property, type,
+			format, PropModeReplace, (unsigned char *) propPtr,
+			numItems);
+		ckfree(propPtr);
+	    }
 	}
     }
 
@@ -1371,7 +1376,8 @@ IncrTimeoutProc(
  *	"string", but formatted as for "type". It is the caller's
  *	responsibility to free the string when done with it. The word at
  *	*numLongsPtr is filled in with the number of 32-bit words returned in
- *	the result.
+ *	the result. If NULL is returned, the input list was not actually a
+ *	list.
  *
  * Side effects:
  *	None.
@@ -1390,12 +1396,9 @@ SelCvtToX(
     int *numLongsPtr)		/* Number of 32-bit words contained in the
 				 * result. */
 {
-    register char *p;
-    char *field;
-    int numFields;
-    long *propPtr, *longPtr;
-#define MAX_ATOM_NAME_LENGTH 100
-    char atomName[MAX_ATOM_NAME_LENGTH+1];
+    char **field;
+    int numFields, i;
+    long *propPtr;
 
     /*
      * The string is assumed to consist of fields separated by spaces. The
@@ -1406,11 +1409,8 @@ SelCvtToX(
      *    a 32-bit binary number.
      */
 
-    numFields = 1;
-    for (p = string; *p != 0; p++) {
-	if (isspace(UCHAR(*p))) {
-	    numFields++;
-	}
+    if (Tcl_SplitList(NULL, string, &numFields, &field) != TCL_OK) {
+	return NULL;
     }
     propPtr = (long *) ckalloc((unsigned) numFields*sizeof(long));
 
@@ -1418,34 +1418,27 @@ SelCvtToX(
      * Convert the fields one-by-one.
      */
 
-    for (longPtr = propPtr, *numLongsPtr = 0, p = string;
-	    ; longPtr++, (*numLongsPtr)++) {
-	while (isspace(UCHAR(*p))) {
-	    p++;
-	}
-	if (*p == 0) {
-	    break;
-	}
-	field = p;
-	while ((*p != 0) && !isspace(UCHAR(*p))) {
-	    p++;
-	}
+    for (i=0 ; i<numFields ; i++) {
 	if (type == XA_ATOM) {
-	    int length;
-
-	    length = p - field;
-	    if (length > MAX_ATOM_NAME_LENGTH) {
-		length = MAX_ATOM_NAME_LENGTH;
-	    }
-	    strncpy(atomName, field, (unsigned) length);
-	    atomName[length] = 0;
-	    *longPtr = (long) Tk_InternAtom(tkwin, atomName);
+	    propPtr[i] = (long) Tk_InternAtom(tkwin, field[i]);
 	} else {
 	    char *dummy;
 
-	    *longPtr = strtol(field, &dummy, 0);
+	    /*
+	     * If this fails to parse a number, we just plunge on regardless
+	     * anyway.
+	     */
+
+	    propPtr[i] = strtol(field[i], &dummy, 0);
 	}
     }
+
+    /*
+     * Release the parsed list.
+     */
+
+    ckfree((char *) &field);
+    *numLongsPtr = i;
     return propPtr;
 }
 
