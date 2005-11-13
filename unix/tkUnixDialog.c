@@ -8,27 +8,30 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDialog.c,v 1.3 2001/08/01 16:21:12 dgp Exp $
+ * RCS: @(#) $Id: tkUnixDialog.c,v 1.4 2005/11/13 21:00:17 dkf Exp $
  *
  */
- 
+
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkUnixInt.h"
 
 /*
+ * The wrapper code for Unix is actually set up in library/tk.tcl these days;
+ * the procedure names used here are probably wrong too...
+ */
+
+#ifdef TK_OBSOLETE_UNIX_DIALOG_WRAPPERS
+
+/*
  *----------------------------------------------------------------------
  *
- * EvalArgv --
+ * EvalObjv --
  *
- *	Invokes the Tcl procedure with the arguments. argv[0] is set by
- *	the caller of this function. It may be different than cmdName.
- *	The TCL command will see argv[0], not cmdName, as its name if it
- *	invokes [lindex [info level 0] 0]
+ *	Invokes the Tcl procedure with the arguments.
  *
  * Results:
- *	TCL_ERROR if the command does not exist and cannot be autoloaded.
- *	Otherwise, return the result of the evaluation of the command.
+ *	Returns the result of the evaluation of the command.
  *
  * Side effects:
  *	The command may be autoloaded.
@@ -36,54 +39,37 @@
  *----------------------------------------------------------------------
  */
 
-static int EvalArgv(interp, cmdName, argc, argv)
-    Tcl_Interp *interp;		/* Current interpreter. */
-    char * cmdName;		/* Name of the TCL command to call */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+static int
+EvalObjv(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    char *cmdName,		/* Name of the TCL command to call */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST *objv)	/* Arguments. */
 {
-    Tcl_CmdInfo cmdInfo;
+    Tcl_Obj *cmdObj, **objs;
+    int result;
 
-    if (!Tcl_GetCommandInfo(interp, cmdName, &cmdInfo)) {
-	char * cmdArgv[2];
+    cmdObj = Tcl_NewStringObj(cmdName, -1);
+    Tcl_IncrRefCount(cmdObj);
+    objs = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj*) * (unsigned)(objc+1));
+    objs[0] = cmdObj;
+    memcpy(objs+1, objv, sizeof(Tcl_Obj *) * (unsigned)objc);
 
-	/*
-	 * This comand is not in the interpreter yet -- looks like we
-	 * have to auto-load it
-	 */
-	if (!Tcl_GetCommandInfo(interp, "auto_load", &cmdInfo)) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "cannot execute command \"auto_load\"",
-		NULL);
-	    return TCL_ERROR;
-	}
+    result = Tcl_EvalObjv(interp, objc+1, objs, 0);
 
-	cmdArgv[0] = "auto_load";
-	cmdArgv[1] = cmdName;
+    Tcl_DecrRefCount(cmdObj);
+    ckfree((char *) objs);
 
-	if ((*cmdInfo.proc)(cmdInfo.clientData, interp, 2, cmdArgv)!= TCL_OK){ 
-	    return TCL_ERROR;
-	}
-
-	if (!Tcl_GetCommandInfo(interp, cmdName, &cmdInfo)) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "cannot auto-load command \"",
-		cmdName, "\"",NULL);
-	    return TCL_ERROR;
-	}
-    }
-
-    return (*cmdInfo.proc)(cmdInfo.clientData, interp, argc, argv);
+    return result;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * Tk_ChooseColorCmd --
+ * Tk_ChooseColorObjCmd --
  *
- *	This procedure implements the color dialog box for the Unix
- *	platform. See the user documentation for details on what it
- *	does.
+ *	This procedure implements the color dialog box for the Unix platform.
+ *	See the user documentation for details on what it does.
  *
  * Results:
  *	See user documentation.
@@ -97,13 +83,13 @@ static int EvalArgv(interp, cmdName, argc, argv)
  */
 
 int
-Tk_ChooseColorCmd(clientData, interp, argc, argv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+Tk_ChooseColorObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST *objv)	/* Arguments. */
 {
-    return EvalArgv(interp, "tk::ColorDialog", argc, argv);
+    return EvalObjv(interp, "tk::ColorDialog", objc-1, objv+1);
 }
 
 /*
@@ -111,35 +97,33 @@ Tk_ChooseColorCmd(clientData, interp, argc, argv)
  *
  * Tk_GetOpenFileCmd --
  *
- *	This procedure implements the "open file" dialog box for the
- *	Unix platform. See the user documentation for details on what
- *	it does.
+ *	This procedure implements the "open file" dialog box for the Unix
+ *	platform. See the user documentation for details on what it does.
  *
  * Results:
  *	See user documentation.
  *
  * Side effects:
- *	A dialog window is created the first this procedure is called.
- *	This window is not destroyed and will be reused the next time
- *	the application invokes the "tk_getOpenFile" or
- *	"tk_getSaveFile" command.
+ *	A dialog window is created the first this procedure is called. This
+ *	window is not destroyed and will be reused the next time the
+ *	application invokes the "tk_getOpenFile" or "tk_getSaveFile" command.
  *
  *----------------------------------------------------------------------
  */
 
 int
-Tk_GetOpenFileCmd(clientData, interp, argc, argv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+Tk_GetOpenFileObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST *objv)	/* Arguments. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
 
     if (Tk_StrictMotif(tkwin)) {
-	return EvalArgv(interp, "tk::MotifFDialog", argc, argv);
+	return EvalObjv(interp, "tk::MotifOpenFDialog", objc-1, objv+1);
     } else {
-	return EvalArgv(interp, "tk::FDialog", argc, argv);
+	return EvalObjv(interp, "tk::OpenFDialog", objc-1, objv+1);
     }
 }
 
@@ -148,8 +132,7 @@ Tk_GetOpenFileCmd(clientData, interp, argc, argv)
  *
  * Tk_GetSaveFileCmd --
  *
- *	Same as Tk_GetOpenFileCmd but opens a "save file" dialog box
- *	instead
+ *	Same as Tk_GetOpenFileCmd but opens a "save file" dialog box instead.
  *
  * Results:
  *	Same as Tk_GetOpenFileCmd.
@@ -161,18 +144,18 @@ Tk_GetOpenFileCmd(clientData, interp, argc, argv)
  */
 
 int
-Tk_GetSaveFileCmd(clientData, interp, argc, argv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+Tk_GetSaveFileObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST *objv)	/* Arguments. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
 
     if (Tk_StrictMotif(tkwin)) {
-	return EvalArgv(interp, "tk::MotifFDialog", argc, argv);
+	return EvalObjv(interp, "tk::MotifSaveFDialog", objc-1, objv+1);
     } else {
-	return EvalArgv(interp, "tk::FDialog", argc, argv);
+	return EvalObjv(interp, "tk::SaveFDialog", objc-1, objv+1);
     }
 }
 
@@ -181,9 +164,8 @@ Tk_GetSaveFileCmd(clientData, interp, argc, argv)
  *
  * Tk_MessageBoxCmd --
  *
- *	This procedure implements the MessageBox window for the
- *	Unix platform. See the user documentation for details on what
- *	it does.
+ *	This procedure implements the MessageBox window for the Unix
+ *	platform. See the user documentation for details on what it does.
  *
  * Results:
  *	See user documentation.
@@ -196,12 +178,21 @@ Tk_GetSaveFileCmd(clientData, interp, argc, argv)
  */
 
 int
-Tk_MessageBoxCmd(clientData, interp, argc, argv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+Tk_MessageBoxCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST *objv)	/* Arguments. */
 {
-    return EvalArgv(interp, "tk::MessageBox", argc, argv);
+    return EvalObjv(interp, "tk::MessageBox", objc-1, objv+1);
 }
 
+#endif /* TK_OBSOLETE_UNIX_DIALOG_WRAPPERS */
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
