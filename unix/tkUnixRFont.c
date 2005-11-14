@@ -5,10 +5,10 @@
  *
  * Copyright (c) 2002-2003 Keith Packard
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.9 2005/04/19 05:50:06 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.10 2005/11/14 11:54:21 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -16,32 +16,40 @@
 #include <X11/Xft/Xft.h>
 #include <ctype.h>
 
-typedef struct _UnixFtFace {
-    XftFont	    *ftFont;
-    FcPattern	    *source;
-    FcCharSet	    *charset;
+typedef struct {
+    XftFont *ftFont;
+    FcPattern *source;
+    FcCharSet *charset;
 } UnixFtFace;
 
-typedef struct _UnixFtFont {
-    TkFont	    font;    	/* Stuff used by generic font package.  Must
-				 * be first in structure. */
-    UnixFtFace	    *faces;
-    int		    nfaces;
-    FcCharSet	    *charset;
-    FcPattern	    *pattern;
-    
-    Display	    *display;
-    int		    screen;
-    XftDraw	    *ftDraw;
-    Drawable	    drawable;
-    XftColor	    color;
+typedef struct {
+    TkFont font;	    	/* Stuff used by generic font package. Must be
+				 * first in structure. */
+    UnixFtFace *faces;
+    int nfaces;
+    FcCharSet *charset;
+    FcPattern *pattern;
+
+    Display *display;
+    int screen;
+    XftDraw *ftDraw;
+    Drawable drawable;
+    XftColor color;
 } UnixFtFont;
 
+/*
+ * Forward declarations...
+ */
 
+static XftFont *	GetFont(UnixFtFont *fontPtr, FcChar32 ucs4);
+static UnixFtFont *	InitFont(Tk_Window tkwin, FcPattern *pattern,
+			    UnixFtFont *fontPtr);
+static void		FinishedWithFont(UnixFtFont *fontPtr);
+
 /*
  * Package initialization:
- * 	Nothing to do here except register the fact that we're using Xft
- * 	in the TIP 59 configuration database. 
+ * 	Nothing to do here except register the fact that we're using Xft in
+ * 	the TIP 59 configuration database.
  */
 
 #ifndef TCL_CFGVAL_ENCODING
@@ -54,16 +62,16 @@ static Tcl_Config cfg[] = {
 };
 
 void
-TkpFontPkgInit(mainPtr)
-    TkMainInfo *mainPtr;	/* The application being created. */
+TkpFontPkgInit(
+    TkMainInfo *mainPtr)	/* The application being created. */
 {
     Tcl_RegisterConfig(mainPtr->interp, "tk", cfg, TCL_CFGVAL_ENCODING);
 }
 
 static XftFont *
-GetFont(fontPtr, ucs4)
-    UnixFtFont *fontPtr;
-    FcChar32 ucs4;
+GetFont(
+    UnixFtFont *fontPtr,
+    FcChar32 ucs4)
 {
     int i;
 
@@ -94,21 +102,20 @@ GetFont(fontPtr, ucs4)
  *
  * InitFont --
  *
- *	Initializes the fields of a UnixFtFont structure.
- *	If fontPtr is NULL, also allocates a new UnixFtFont.
- * 
+ *	Initializes the fields of a UnixFtFont structure. If fontPtr is NULL,
+ *	also allocates a new UnixFtFont.
+ *
  * Results:
- * 	On error, frees fontPtr and returns NULL, otherwise
- * 	returns fontPtr.
+ * 	On error, frees fontPtr and returns NULL, otherwise returns fontPtr.
  *
  *---------------------------------------------------------------------------
  */
 
 static UnixFtFont *
-InitFont(tkwin, pattern, fontPtr)
-    Tk_Window tkwin;
-    FcPattern *pattern;
-    UnixFtFont *fontPtr;
+InitFont(
+    Tk_Window tkwin,
+    FcPattern *pattern,
+    UnixFtFont *fontPtr)
 {
     TkFontAttributes *faPtr;
     TkFontMetrics *fmPtr;
@@ -119,20 +126,21 @@ InitFont(tkwin, pattern, fontPtr)
     FcCharSet *charset;
     FcResult result;
     XftFont *ftFont;
-    
+
     if (!fontPtr) {
 	fontPtr = (UnixFtFont *) ckalloc(sizeof(UnixFtFont));
     }
     if (!fontPtr) {
 	return NULL; /* Never called? */
     }
-    
+
     FcConfigSubstitute(0, pattern, FcMatchPattern);
     XftDefaultSubstitute(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), pattern);
 
     /*
      * Generate the list of fonts
      */
+
     set = FcFontSort(0, pattern, FcTrue, &charset, &result);
 
     if (!set) {
@@ -143,7 +151,7 @@ InitFont(tkwin, pattern, fontPtr)
 
     fontPtr->charset = charset;
     fontPtr->pattern = pattern;
-    
+
     fontPtr->faces = (UnixFtFace *) ckalloc(set->nfont * sizeof(UnixFtFace));
     if (!fontPtr->faces) {
 	FcFontSetDestroy(set);
@@ -153,10 +161,11 @@ InitFont(tkwin, pattern, fontPtr)
 	return NULL;
     }
     fontPtr->nfaces = set->nfont;
-    
+
     /*
      * Fill in information about each returned font
      */
+
     for (i = 0; i < set->nfont; i++) {
 	fontPtr->faces[i].ftFont = 0;
 	fontPtr->faces[i].source = set->fonts[i];
@@ -184,11 +193,12 @@ InitFont(tkwin, pattern, fontPtr)
     /*
      * Build the Tk font structure
      */
+
     if (XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0,
 	    &family) != XftResultMatch) {
 	family = "Unknown";
     }
-    
+
     if (XftPatternGetInteger(ftFont->pattern, XFT_WEIGHT, 0,
 	    &weight) != XftResultMatch) {
 	weight = XFT_WEIGHT_MEDIUM;
@@ -198,7 +208,7 @@ InitFont(tkwin, pattern, fontPtr)
     } else {
 	weight = TK_FW_BOLD;
     }
-    
+
     if (XftPatternGetInteger(ftFont->pattern, XFT_SLANT, 0,
 	    &slant) != XftResultMatch) {
 	slant = XFT_SLANT_ROMAN;
@@ -208,12 +218,12 @@ InitFont(tkwin, pattern, fontPtr)
     } else {
 	slant = TK_FS_ITALIC;
     }
-    
+
     if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
 	    &size) != XftResultMatch) {
 	size = 12.0;
     }
-    
+
     if (XftPatternGetInteger(ftFont->pattern, XFT_SPACING, 0,
 	    &spacing) != XftResultMatch) {
 	spacing = XFT_PROPORTIONAL;
@@ -226,7 +236,7 @@ InitFont(tkwin, pattern, fontPtr)
 #if DEBUG_FONTSEL
     printf("family %s size %g weight %d slant %d\n",
 	    family, size, weight, slant);
-#endif
+#endif /* DEBUG_FONTSEL */
 
     faPtr = &fontPtr->font.fa;
     faPtr->family = family;
@@ -246,15 +256,15 @@ InitFont(tkwin, pattern, fontPtr)
 }
 
 static void
-FiniFont(fontPtr)
-    UnixFtFont *fontPtr;
+FinishedWithFont(
+    UnixFtFont *fontPtr)
 {
     Display *display = fontPtr->display;
     Tk_ErrorHandler handler;
     int i;
 
     handler = Tk_CreateErrorHandler(display, -1, -1, -1,
-	    (Tk_ErrorProc *) NULL, (ClientData) NULL);
+	    NULL, (ClientData) NULL);
     for (i = 0; i < fontPtr->nfaces; i++) {
 	if (fontPtr->faces[i].ftFont) {
 	    XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
@@ -276,15 +286,15 @@ FiniFont(fontPtr)
 }
 
 TkFont *
-TkpGetNativeFont(tkwin, name)
-    Tk_Window tkwin;		/* For display where font will be used. */
-    CONST char *name;		/* Platform-specific font name. */
+TkpGetNativeFont(
+    Tk_Window tkwin,		/* For display where font will be used. */
+    CONST char *name)		/* Platform-specific font name. */
 {
     UnixFtFont *fontPtr;
     FcPattern *pattern;
 #if DEBUG_FONTSEL
     printf("TkpGetNativeFont %s\n", name);
-#endif
+#endif /* DEBUG_FONTSEL */
 
     pattern = XftXlfdParse(name, FcFalse, FcFalse);
     if (!pattern) {
@@ -292,9 +302,8 @@ TkpGetNativeFont(tkwin, name)
     }
 
     /*
-     * Should also try: pattern = FcNameParse(name);
-     * but generic/tkFont.c expects TkpGetNativeFont() to only
-     * work on XLFD names under Unix.
+     * Should also try: pattern = FcNameParse(name); but generic/tkFont.c
+     * expects TkpGetNativeFont() to only work on XLFD names under Unix.
      */
 
     fontPtr = InitFont(tkwin, pattern, NULL);
@@ -305,15 +314,15 @@ TkpGetNativeFont(tkwin, name)
 }
 
 TkFont *
-TkpGetFontFromAttributes(tkFontPtr, tkwin, faPtr)
-    TkFont *tkFontPtr;		/* If non-NULL, store the information in
-				 * this existing TkFont structure, rather than
+TkpGetFontFromAttributes(
+    TkFont *tkFontPtr,		/* If non-NULL, store the information in this
+				 * existing TkFont structure, rather than
 				 * allocating a new structure to hold the
 				 * font; the existing contents of the font
-				 * will be released.  If NULL, a new TkFont
+				 * will be released. If NULL, a new TkFont
 				 * structure is allocated. */
-    Tk_Window tkwin;		/* For display where font will be used. */
-    CONST TkFontAttributes *faPtr;
+    Tk_Window tkwin,		/* For display where font will be used. */
+    CONST TkFontAttributes *faPtr)
 				/* Set of attributes to match. */
 {
     XftPattern *pattern;
@@ -323,7 +332,7 @@ TkpGetFontFromAttributes(tkFontPtr, tkwin, faPtr)
 #if DEBUG_FONTSEL
     printf("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
 	    faPtr->size, faPtr->weight, faPtr->slant);
-#endif
+#endif /* DEBUG_FONTSEL */
     pattern = XftPatternCreate();
     if (faPtr->family) {
 	XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
@@ -361,7 +370,7 @@ TkpGetFontFromAttributes(tkFontPtr, tkwin, faPtr)
 
     fontPtr = (UnixFtFont *) tkFontPtr;
     if (fontPtr != NULL) {
-	FiniFont(fontPtr);
+	FinishedWithFont(fontPtr);
     }
     fontPtr = InitFont(tkwin, pattern, fontPtr);
     if (!fontPtr) {
@@ -371,12 +380,12 @@ TkpGetFontFromAttributes(tkFontPtr, tkwin, faPtr)
 }
 
 void
-TkpDeleteFont(tkFontPtr)
-    TkFont *tkFontPtr;		/* Token of font to be deleted. */
+TkpDeleteFont(
+    TkFont *tkFontPtr)		/* Token of font to be deleted. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkFontPtr;
 
-    FiniFont(fontPtr);
+    FinishedWithFont(fontPtr);
     /* XXX tkUnixFont.c doesn't free tkFontPtr... */
 }
 
@@ -385,8 +394,8 @@ TkpDeleteFont(tkFontPtr)
  *
  * TkpGetFontFamilies --
  *
- *	Return information about the font families that are available
- *	on the display of the given window.
+ *	Return information about the font families that are available on the
+ *	display of the given window.
  *
  * Results:
  *	Modifies interp's result object to hold a list of all the available
@@ -396,9 +405,9 @@ TkpDeleteFont(tkFontPtr)
  */
 
 void
-TkpGetFontFamilies(interp, tkwin)
-    Tcl_Interp *interp;		/* Interp to hold result. */
-    Tk_Window tkwin;		/* For display to query. */
+TkpGetFontFamilies(
+    Tcl_Interp *interp,		/* Interp to hold result. */
+    Tk_Window tkwin)		/* For display to query. */
 {
     Tcl_Obj *resultPtr, *strPtr;
     XftFontSet *list;
@@ -425,6 +434,7 @@ TkpGetFontFamilies(interp, tkwin)
  *-------------------------------------------------------------------------
  *
  * TkpGetSubFonts --
+ *
  *	Called by [testfont subfonts] in the Tk testing package.
  *
  * Results:
@@ -434,9 +444,9 @@ TkpGetFontFamilies(interp, tkwin)
  */
 
 void
-TkpGetSubFonts(interp, tkfont)
-    Tcl_Interp *interp;
-    Tk_Font tkfont;
+TkpGetSubFonts(
+    Tcl_Interp *interp,
+    Tk_Font tkfont)
 {
     Tcl_Obj *objv[3], *listPtr, *resultPtr;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -472,26 +482,26 @@ TkpGetSubFonts(interp, tkfont)
 }
 
 int
-Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
-    Tk_Font tkfont;		/* Font in which characters will be drawn. */
-    CONST char *source;		/* UTF-8 string to be displayed.  Need not be
+Tk_MeasureChars(
+    Tk_Font tkfont,		/* Font in which characters will be drawn. */
+    CONST char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes;		/* Maximum number of bytes to consider
-				 * from source string. */
-    int maxLength;		/* If >= 0, maxLength specifies the longest
+    int numBytes,		/* Maximum number of bytes to consider from
+				 * source string. */
+    int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length in pixels; don't
 				 * consider any character that would cross
-				 * this x-position.  If < 0, then line length
+				 * this x-position. If < 0, then line length
 				 * is unbounded and the flags argument is
 				 * ignored. */
-    int flags;			/* Various flag bits OR-ed together:
+    int flags,			/* Various flag bits OR-ed together:
 				 * TK_PARTIAL_OK means include the last char
 				 * which only partially fit on this line.
 				 * TK_WHOLE_WORDS means stop on a word
-				 * boundary, if possible.
-				 * TK_AT_LEAST_ONE means return at least one
-				 * character even if no characters fit. */
-    int *lengthPtr;		/* Filled with x-location just after the
+				 * boundary, if possible. TK_AT_LEAST_ONE
+				 * means return at least one character even if
+				 * no characters fit. */
+    int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -502,11 +512,11 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
     int curX, newX;
     int termByte = 0, termX = 0;
     int curByte, newByte, sawNonSpace;
-#if 0
+#if DEBUG_FONTSEL
     char string[256];
     int len = 0;
-#endif
-    
+#endif /* DEBUG_FONTSEL */
+
     curX = 0;
     curByte = 0;
     sawNonSpace = 0;
@@ -517,7 +527,10 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 	c = (FcChar32)unichar;
 
 	if (clen <= 0) {
-	    /* This can't happen (but see #1185640) */
+	    /*
+	     * This can't happen (but see #1185640)
+	     */
+
 	    *lengthPtr = curX;
 	    return curByte;
 	}
@@ -534,9 +547,9 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 	    sawNonSpace = 1;
 	}
 
-#if 0
+#if DEBUG_FONTSEL
 	string[len++] = (char) c;
-#endif
+#endif /* DEBUG_FONTSEL */
 	ftFont = GetFont(fontPtr, c);
 
 	XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
@@ -558,10 +571,10 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 	curX = newX;
 	curByte = newByte;
     }
-#if 0
+#if DEBUG_FONTSEL
     string[len] = '\0';
     printf("MeasureChars %s length %d bytes %d\n", string, curX, curByte);
-#endif
+#endif /* DEBUG_FONTSEL */
     *lengthPtr = curX;
     return curByte;
 }
@@ -569,21 +582,21 @@ Tk_MeasureChars(tkfont, source, numBytes, maxLength, flags, lengthPtr)
 #define NUM_SPEC    1024
 
 void
-Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
-    Display *display;		/* Display on which to draw. */
-    Drawable drawable;		/* Window or pixmap in which to draw. */
-    GC gc;			/* Graphics context for drawing characters. */
-    Tk_Font tkfont;		/* Font in which characters will be drawn;
+Tk_DrawChars(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
-    CONST char *source;		/* UTF-8 string to be displayed.  Need not be
-				 * '\0' terminated.  All Tk meta-characters
+    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
 				 * (tabs, control characters, and newlines)
 				 * should be stripped out of the string that
-				 * is passed to this function.  If they are
-				 * not stripped out, they will be displayed as
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes;		/* Number of bytes in string. */
-    int x, y;			/* Coordinates at which to place origin of
+    int numBytes,		/* Number of bytes in string. */
+    int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
     const int maxCoord = 0x7FFF;	/* Xft coordinates are 16 bit values */
@@ -596,9 +609,9 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     XGlyphInfo metrics;
 
     if (fontPtr->ftDraw == 0) {
-#if 0
+#if DEBUG_FONTSEL
 	printf("Switch to drawable 0x%x\n", drawable);
-#endif
+#endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),
 		DefaultColormap(display, fontPtr->screen));
@@ -607,7 +620,7 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 	Tk_ErrorHandler handler;
 
         handler = Tk_CreateErrorHandler(display, -1, -1, -1,
-		(Tk_ErrorProc *) NULL, (ClientData) NULL);
+		NULL, (ClientData) NULL);
 	XftDrawChange(fontPtr->ftDraw, drawable);
 	fontPtr->drawable = drawable;
 	Tk_DeleteErrorHandler(handler);
@@ -627,10 +640,13 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
     while (numBytes > 0 && x <= maxCoord && y <= maxCoord) {
 	XftFont *ftFont;
 	FcChar32 c;
-	
+
 	clen = FcUtf8ToUcs4((FcChar8 *) source, &c, numBytes);
 	if (clen <= 0) {
-	    /* This should not happen, but it can. */
+	    /*
+	     * This should not happen, but it can.
+	     */
+
 	    return;
 	}
 	source += clen;
@@ -658,3 +674,11 @@ Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y)
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, &fontPtr->color, specs, nspec);
     }
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

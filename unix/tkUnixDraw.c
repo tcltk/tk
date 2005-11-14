@@ -1,14 +1,14 @@
-/* 
+/*
  * tkUnixDraw.c --
  *
  *	This file contains X specific drawing routines.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.8 2005/08/09 07:39:22 das Exp $
+ * RCS: @(#) $Id: tkUnixDraw.c,v 1.9 2005/11/14 11:54:21 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -19,8 +19,8 @@
 #endif
 
 /*
- * The following structure is used to pass information to
- * ScrollRestrictProc from TkScrollWindow.
+ * The following structure is used to pass information to ScrollRestrictProc
+ * from TkScrollWindow.
  */
 
 typedef struct ScrollInfo {
@@ -32,46 +32,46 @@ typedef struct ScrollInfo {
 } ScrollInfo;
 
 /*
- * Forward declarations for procedures declared later in this file:
+ * Forward declarations for functions declared later in this file:
  */
 
-static Tk_RestrictAction	ScrollRestrictProc _ANSI_ARGS_((
-    				    ClientData arg, XEvent *eventPtr));
+static Tk_RestrictAction ScrollRestrictProc(ClientData arg, XEvent *eventPtr);
 
 /*
  *----------------------------------------------------------------------
  *
  * TkScrollWindow --
  *
- *	Scroll a rectangle of the specified window and accumulate
- *	damage information in the specified Region.
+ *	Scroll a rectangle of the specified window and accumulate damage
+ *	information in the specified Region.
  *
  * Results:
- *	Returns 0 if no damage additional damage was generated.  Sets
- *	damageRgn to contain the damaged areas and returns 1 if
- *	GraphicsExpose events were detected.
+ *	Returns 0 if no damage additional damage was generated. Sets damageRgn
+ *	to contain the damaged areas and returns 1 if GraphicsExpose events
+ *	were detected.
  *
  * Side effects:
- *	Scrolls the bits in the window and enters the event loop
- *	looking for damage events.
+ *	Scrolls the bits in the window and enters the event loop looking for
+ *	damage events.
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkScrollWindow(tkwin, gc, x, y, width, height, dx, dy, damageRgn)
-    Tk_Window tkwin;		/* The window to be scrolled. */
-    GC gc;			/* GC for window to be scrolled. */
-    int x, y, width, height;	/* Position rectangle to be scrolled. */
-    int dx, dy;			/* Distance rectangle should be moved. */
-    TkRegion damageRgn;		/* Region to accumulate damage in. */
+TkScrollWindow(
+    Tk_Window tkwin,		/* The window to be scrolled. */
+    GC gc,			/* GC for window to be scrolled. */
+    int x, int y, int width, int height,
+				/* Position rectangle to be scrolled. */
+    int dx, int dy,		/* Distance rectangle should be moved. */
+    TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     Tk_RestrictProc *oldProc;
     ClientData oldArg, dummy;
     ScrollInfo info;
-    
+
     XCopyArea(Tk_Display(tkwin), Tk_WindowId(tkwin), Tk_WindowId(tkwin), gc,
-	    x, y, (unsigned int) width, (unsigned int) height, x + dx, y + dy);
+	    x, y, (unsigned) width, (unsigned) height, x+dx, y+dy);
 
     info.done = 0;
     info.window = Tk_WindowId(tkwin);
@@ -81,9 +81,9 @@ TkScrollWindow(tkwin, gc, x, y, width, height, dx, dy, damageRgn)
     info.dy = dy;
 
     /*
-     * Sync the event stream so all of the expose events will be on the
-     * Tk event queue before we start filtering.  This avoids busy waiting
-     * while we filter events.
+     * Sync the event stream so all of the expose events will be on the Tk
+     * event queue before we start filtering. This avoids busy waiting while
+     * we filter events.
      */
 
     TkpSync(info.display);
@@ -107,9 +107,9 @@ TkScrollWindow(tkwin, gc, x, y, width, height, dx, dy, damageRgn)
  * ScrollRestrictProc --
  *
  *	A Tk_RestrictProc used by TkScrollWindow to gather up Expose
- *	information into a single damage region.  It accumulates damage
- *	events on the specified window until a NoExpose or the last
- *	GraphicsExpose event is detected.
+ *	information into a single damage region. It accumulates damage events
+ *	on the specified window until a NoExpose or the last GraphicsExpose
+ *	event is detected.
  *
  * Results:
  *	None.
@@ -122,9 +122,9 @@ TkScrollWindow(tkwin, gc, x, y, width, height, dx, dy, damageRgn)
  */
 
 static Tk_RestrictAction
-ScrollRestrictProc(arg, eventPtr)
-    ClientData arg;
-    XEvent *eventPtr;
+ScrollRestrictProc(
+    ClientData arg,
+    XEvent *eventPtr)
 {
     ScrollInfo *info = (ScrollInfo *) arg;
     XRectangle rect;
@@ -152,13 +152,12 @@ ScrollRestrictProc(arg, eventPtr)
 	    info->done = 1;
 	}
     } else if (eventPtr->type == Expose) {
-
 	/*
-	 * This case is tricky.  This event was already queued before
-	 * the XCopyArea was issued.  If this area overlaps the area
-	 * being copied, then some of the copied area may be invalid.
-	 * The easiest way to handle this case is to mark both the
-	 * original area and the shifted area as damaged.
+	 * This case is tricky. This event was already queued before the
+	 * XCopyArea was issued. If this area overlaps the area being copied,
+	 * then some of the copied area may be invalid. The easiest way to
+	 * handle this case is to mark both the original area and the shifted
+	 * area as damaged.
 	 */
 
 	rect.x = eventPtr->xexpose.x;
@@ -182,30 +181,30 @@ ScrollRestrictProc(arg, eventPtr)
  *
  * TkpDrawHighlightBorder --
  *
- *	This procedure draws a rectangular ring around the outside of
- *	a widget to indicate that it has received the input focus.
+ *	This function draws a rectangular ring around the outside of a widget
+ *	to indicate that it has received the input focus.
  *
- *      On Unix, we just draw the simple inset ring.  On other sytems,
- *      e.g. the Mac, the focus ring is a little more complicated, so we
- *      need this abstraction.
+ *      On Unix, we just draw the simple inset ring. On other sytems, e.g. the
+ *      Mac, the focus ring is a little more complicated, so we need this
+ *      abstraction.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	A rectangle "width" pixels wide is drawn in "drawable",
- *	corresponding to the outer area of "tkwin".
+ *	A rectangle "width" pixels wide is drawn in "drawable", corresponding
+ *	to the outer area of "tkwin".
  *
  *----------------------------------------------------------------------
  */
 
-void 
-TkpDrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth, drawable)
-    Tk_Window tkwin;
-    GC fgGC;
-    GC bgGC;
-    int highlightWidth;
-    Drawable drawable;
+void
+TkpDrawHighlightBorder(
+    Tk_Window tkwin,
+    GC fgGC,
+    GC bgGC,
+    int highlightWidth,
+    Drawable drawable)
 {
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
@@ -215,7 +214,7 @@ TkpDrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth, drawable)
  *
  * TkpDrawFrame --
  *
- *	This procedure draws the rectangular frame area.
+ *	This function draws the rectangular frame area.
  *
  * Results:
  *	None.
@@ -227,12 +226,22 @@ TkpDrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth, drawable)
  */
 
 void
-TkpDrawFrame (Tk_Window tkwin, Tk_3DBorder border,
-	int highlightWidth, int borderWidth, int relief)
+TkpDrawFrame(
+    Tk_Window tkwin,
+    Tk_3DBorder border,
+    int highlightWidth,
+    int borderWidth,
+    int relief)
 {
-    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
-	    border, highlightWidth, highlightWidth,
-	    Tk_Width(tkwin) - 2 * highlightWidth,
-	    Tk_Height(tkwin) - 2 * highlightWidth,
-	    borderWidth, relief);
+    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, highlightWidth,
+	    highlightWidth, Tk_Width(tkwin) - 2*highlightWidth,
+	    Tk_Height(tkwin) - 2*highlightWidth, borderWidth, relief);
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

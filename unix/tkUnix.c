@@ -1,16 +1,16 @@
-/* 
+/*
  * tkUnix.c --
  *
- *	This file contains procedures that are UNIX/X-specific, and
- *	will probably have to be written differently for Windows or
- *	Macintosh platforms.
+ *	This file contains procedures that are UNIX/X-specific, and will
+ *	probably have to be written differently for Windows or Macintosh
+ *	platforms.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix.c,v 1.11 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkUnix.c,v 1.12 2005/11/14 11:54:21 dkf Exp $
  */
 
 #include <tkInt.h>
@@ -23,9 +23,9 @@
  *
  * TkGetServerInfo --
  *
- *	Given a window, this procedure returns information about
- *	the window server for that window.  This procedure provides
- *	the guts of the "winfo server" command.
+ *	Given a window, this procedure returns information about the window
+ *	server for that window. This procedure provides the guts of the "winfo
+ *	server" command.
  *
  * Results:
  *	None.
@@ -37,11 +37,11 @@
  */
 
 void
-TkGetServerInfo(interp, tkwin)
-    Tcl_Interp *interp;		/* The server information is returned in
-				 * this interpreter's result. */
-    Tk_Window tkwin;		/* Token for window;  this selects a
-				 * particular display and server. */
+TkGetServerInfo(
+    Tcl_Interp *interp,		/* The server information is returned in this
+				 * interpreter's result. */
+    Tk_Window tkwin)		/* Token for window; this selects a particular
+				 * display and server. */
 {
     char buffer[8 + TCL_INTEGER_SPACE * 2];
     char buffer2[TCL_INTEGER_SPACE];
@@ -62,8 +62,8 @@ TkGetServerInfo(interp, tkwin)
  *	initialization.
  *
  * Results:
- *	Returns the argument or a string that should not be freed by
- *	the caller.
+ *	Returns the argument or a string that should not be freed by the
+ *	caller.
  *
  * Side effects:
  *	None.
@@ -72,9 +72,10 @@ TkGetServerInfo(interp, tkwin)
  */
 
 CONST char *
-TkGetDefaultScreenName(interp, screenName)
-    Tcl_Interp *interp;		/* Interp used to find environment variables. */
-    CONST char *screenName;	/* Screen name from command line, or NULL. */
+TkGetDefaultScreenName(
+    Tcl_Interp *interp,		/* Interp used to find environment
+				 * variables. */
+    CONST char *screenName)	/* Screen name from command line, or NULL. */
 {
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY);
@@ -99,11 +100,11 @@ TkGetDefaultScreenName(interp, screenName)
  */
 
 void
-Tk_UpdatePointer(tkwin, x, y, state)
-    Tk_Window tkwin;		/* Window to which pointer event
-				 * is reported. May be NULL. */
-    int x, y;			/* Pointer location in root coords. */
-    int state;			/* Modifier state mask. */
+Tk_UpdatePointer(
+    Tk_Window tkwin,		/* Window to which pointer event is reported.
+				 * May be NULL. */
+    int x, int y,		/* Pointer location in root coords. */
+    int state)			/* Modifier state mask. */
 {
   /*
    * This function intentionally left blank
@@ -128,15 +129,15 @@ Tk_UpdatePointer(tkwin, x, y, state)
  */
 
 void
-TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
-	pixelStride, lineStride)
-     TkRegion region;		/* Region to be updated. */
-    unsigned int x, y;		/* Where in region to update. */
-    unsigned int width, height;	/* Size of rectangle to update. */
-    unsigned char *dataPtr;	/* Data to read from. */
-    unsigned int pixelStride;	/* Num bytes from one piece of alpha data to
+TkpBuildRegionFromAlphaData(
+    TkRegion region,		/* Region to be updated. */
+    unsigned x, unsigned y,	/* Where in region to update. */
+    unsigned width, unsigned height,
+				/* Size of rectangle to update. */
+    unsigned char *dataPtr,	/* Data to read from. */
+    unsigned pixelStride,	/* Num bytes from one piece of alpha data to
 				 * the next in the line. */
-    unsigned int lineStride;	/* Num bytes from one line of alpha data to
+    unsigned lineStride)	/* Num bytes from one line of alpha data to
 				 * the next line. */
 {
     unsigned char *lineDataPtr;
@@ -178,16 +179,16 @@ TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
 
 /*
  *----------------------------------------------------------------------
- * 
+ *
  * Tk_GetUserInactiveTime --
  *
  *	Return the number of milliseconds the user was inactive.
  *
  * Results:
- *	The number of milliseconds since the user's latest interaction
- *	with the system on the given display, or -1 if the
- *	XScreenSaver extension is not supported by the client
- *	libraries or the X server implementation.
+ *	The number of milliseconds since the user's latest interaction with
+ *	the system on the given display, or -1 if the XScreenSaver extension
+ *	is not supported by the client libraries or the X server
+ *	implementation.
  *
  * Side effects:
  *	None.
@@ -195,23 +196,29 @@ TkpBuildRegionFromAlphaData(region, x, y, width, height, dataPtr,
  */
 
 long
-Tk_GetUserInactiveTime(dpy)
-    Display *dpy;			/* The display for which to query the
-					 * inactive time. */
+Tk_GetUserInactiveTime(
+    Display *dpy)		/* The display for which to query the inactive
+				 * time. */
 {
     long inactiveTime = -1;
 #ifdef HAVE_XSS
     int eventBase, errorBase, major, minor;
 
-    /* Calling XScreenSaverQueryVersion seems to be needed to prevent
-     * a crash on some buggy versions of XFree86 */
+    /*
+     * Calling XScreenSaverQueryVersion seems to be needed to prevent a crash
+     * on some buggy versions of XFree86.
+     */
+
     if (XScreenSaverQueryExtension(dpy, &eventBase, &errorBase) &&
 	XScreenSaverQueryVersion(dpy, &major, &minor)) {
 
 	XScreenSaverInfo *info = XScreenSaverAllocInfo();
 
 	if (info == NULL) {
-	    /* we are out of memory */
+	    /*
+	     * We are out of memory.
+	     */
+
 	    Tcl_Panic("Out of memory: XScreenSaverAllocInfo failed in Tk_GetUserInactiveTime");
 	}
 	if (XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info)) {
@@ -234,15 +241,23 @@ Tk_GetUserInactiveTime(dpy)
  *	none
  *
  * Side effects:
- *	The user inactivity timer of the underlaying windowing system
- *	is reset to zero.
+ *	The user inactivity timer of the underlaying windowing system is reset
+ *	to zero.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_ResetUserInactiveTime(dpy)
-    Display *dpy;
+Tk_ResetUserInactiveTime(
+    Display *dpy)
 {
     XResetScreenSaver(dpy);
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
