@@ -1,33 +1,32 @@
-/* 
+/*
  * tkUnixScale.c --
  *
- *	This file implements the X specific portion of the scrollbar
- *	widget.
+ *	This file implements the X specific portion of the scrollbar widget.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
  * Copyright (c) 1998-2000 by Scriptics Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.9 2004/10/28 15:06:27 patthoyts Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.10 2005/11/14 11:54:21 dkf Exp $
  */
 
 #include "tkScale.h"
 #include "tkInt.h"
 
 /*
- * Forward declarations for procedures defined later in this file:
+ * Forward declarations for functions defined later in this file:
  */
 
-static void		DisplayHorizontalScale _ANSI_ARGS_((TkScale *scalePtr,
-			    Drawable drawable, XRectangle *drawnAreaPtr));
-static void		DisplayHorizontalValue _ANSI_ARGS_((TkScale *scalePtr,
-			    Drawable drawable, double value, int top));
-static void		DisplayVerticalScale _ANSI_ARGS_((TkScale *scalePtr,
-			    Drawable drawable, XRectangle *drawnAreaPtr));
-static void		DisplayVerticalValue _ANSI_ARGS_((TkScale *scalePtr,
-			    Drawable drawable, double value, int rightEdge));
+static void		DisplayHorizontalScale(TkScale *scalePtr,
+			    Drawable drawable, XRectangle *drawnAreaPtr);
+static void		DisplayHorizontalValue(TkScale *scalePtr,
+			    Drawable drawable, double value, int top);
+static void		DisplayVerticalScale(TkScale *scalePtr,
+			    Drawable drawable, XRectangle *drawnAreaPtr);
+static void		DisplayVerticalValue(TkScale *scalePtr,
+			    Drawable drawable, double value, int rightEdge);
 
 /*
  *----------------------------------------------------------------------
@@ -46,8 +45,8 @@ static void		DisplayVerticalValue _ANSI_ARGS_((TkScale *scalePtr,
  */
 
 TkScale *
-TkpCreateScale(tkwin)
-    Tk_Window tkwin;
+TkpCreateScale(
+    Tk_Window tkwin)
 {
     return (TkScale *) ckalloc(sizeof(TkScale));
 }
@@ -57,9 +56,9 @@ TkpCreateScale(tkwin)
  *
  * TkpDestroyScale --
  *
- *	Destroy a TkScale structure.  It's necessary to do this with
- *	Tcl_EventuallyFree to allow the Tcl_Preserve(scalePtr) to work
- *	as expected in TkpDisplayScale. (hobbs)
+ *	Destroy a TkScale structure. It's necessary to do this with
+ *	Tcl_EventuallyFree to allow the Tcl_Preserve(scalePtr) to work as
+ *	expected in TkpDisplayScale. (hobbs)
  *
  * Results:
  *	None
@@ -71,8 +70,8 @@ TkpCreateScale(tkwin)
  */
 
 void
-TkpDestroyScale(scalePtr)
-    TkScale *scalePtr;
+TkpDestroyScale(
+    TkScale *scalePtr)
 {
     Tcl_EventuallyFree((ClientData) scalePtr, TCL_DYNAMIC);
 }
@@ -82,14 +81,14 @@ TkpDestroyScale(scalePtr)
  *
  * DisplayVerticalScale --
  *
- *	This procedure redraws the contents of a vertical scale
- *	window.  It is invoked as a do-when-idle handler, so it only
- *	runs when there's nothing else for the application to do.
+ *	This function redraws the contents of a vertical scale window. It is
+ *	invoked as a do-when-idle handler, so it only runs when there's
+ *	nothing else for the application to do.
  *
  * Results:
- *	There is no return value.  If only a part of the scale needs
- *	to be redrawn, then drawnAreaPtr is modified to reflect the
- *	area that was actually modified.
+ *	There is no return value. If only a part of the scale needs to be
+ *	redrawn, then drawnAreaPtr is modified to reflect the area that was
+ *	actually modified.
  *
  * Side effects:
  *	Information appears on the screen.
@@ -98,15 +97,14 @@ TkpDestroyScale(scalePtr)
  */
 
 static void
-DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
-    TkScale *scalePtr;			/* Widget record for scale. */
-    Drawable drawable;			/* Where to display scale (window
-					 * or pixmap). */
-    XRectangle *drawnAreaPtr;		/* Initally contains area of window;
-					 * if only a part of the scale is
-					 * redrawn, gets modified to reflect
-					 * the part of the window that was
-					 * redrawn. */
+DisplayVerticalScale(
+    TkScale *scalePtr,		/* Widget record for scale. */
+    Drawable drawable,		/* Where to display scale (window or
+				 * pixmap). */
+    XRectangle *drawnAreaPtr)	/* Initally contains area of window; if only a
+				 * part of the scale is redrawn, gets modified
+				 * to reflect the part of the window that was
+				 * redrawn. */
 {
     Tk_Window tkwin = scalePtr->tkwin;
     int x, y, width, height, shadowWidth;
@@ -136,18 +134,19 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
 	    double ticks, maxTicks;
 
 	    /*
-	     * Ensure that we will only draw enough of the tick values
-	     * such that they don't overlap
+	     * Ensure that we will only draw enough of the tick values such
+	     * that they don't overlap
 	     */
+
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
 		    / tickInterval);
 	    maxTicks = (double) Tk_Height(tkwin)
-		/ (double) scalePtr->fontHeight;
+		    / (double) scalePtr->fontHeight;
 	    if (ticks > maxTicks) {
 		tickInterval *= (ticks / maxTicks);
 	    }
 	    for (tickValue = scalePtr->fromValue; ;
-		 tickValue += tickInterval) {
+		    tickValue += tickInterval) {
 		/*
 		 * The TkRoundToResolution call gets rid of accumulated
 		 * round-off errors, if any.
@@ -226,7 +225,7 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, scalePtr->label, 
+		scalePtr->tkfont, scalePtr->label,
                 scalePtr->labelLength, scalePtr->vertLabelX,
                 scalePtr->inset + (3*fm.ascent)/2);
     }
@@ -237,30 +236,30 @@ DisplayVerticalScale(scalePtr, drawable, drawnAreaPtr)
  *
  * DisplayVerticalValue --
  *
- *	This procedure is called to display values (scale readings)
- *	for vertically-oriented scales.
+ *	This function is called to display values (scale readings) for
+ *	vertically-oriented scales.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The numerical value corresponding to value is displayed with
- *	its right edge at "rightEdge", and at a vertical position in
- *	the scale that corresponds to "value".
+ *	The numerical value corresponding to value is displayed with its right
+ *	edge at "rightEdge", and at a vertical position in the scale that
+ *	corresponds to "value".
  *
  *----------------------------------------------------------------------
  */
 
 static void
-DisplayVerticalValue(scalePtr, drawable, value, rightEdge)
-    register TkScale *scalePtr;	/* Information about widget in which to
+DisplayVerticalValue(
+    register TkScale *scalePtr,	/* Information about widget in which to
 				 * display value. */
-    Drawable drawable;		/* Pixmap or window in which to draw
-				 * the value. */
-    double value;		/* Y-coordinate of number to display,
-				 * specified in application coords, not
-				 * in pixels (we'll compute pixels). */
-    int rightEdge;		/* X-coordinate of right edge of text,
+    Drawable drawable,		/* Pixmap or window in which to draw the
+				 * value. */
+    double value,		/* Y-coordinate of number to display,
+				 * specified in application coords, not in
+				 * pixels (we'll compute pixels). */
+    int rightEdge)		/* X-coordinate of right edge of text,
 				 * specified in pixels. */
 {
     register Tk_Window tkwin = scalePtr->tkwin;
@@ -275,8 +274,8 @@ DisplayVerticalValue(scalePtr, drawable, value, rightEdge)
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*
-     * Adjust the y-coordinate if necessary to keep the text entirely
-     * inside the window.
+     * Adjust the y-coordinate if necessary to keep the text entirely inside
+     * the window.
      */
 
     if ((y - fm.ascent) < (scalePtr->inset + SPACING)) {
@@ -294,14 +293,14 @@ DisplayVerticalValue(scalePtr, drawable, value, rightEdge)
  *
  * DisplayHorizontalScale --
  *
- *	This procedure redraws the contents of a horizontal scale
- *	window.  It is invoked as a do-when-idle handler, so it only
- *	runs when there's nothing else for the application to do.
+ *	This function redraws the contents of a horizontal scale window. It is
+ *	invoked as a do-when-idle handler, so it only runs when there's
+ *	nothing else for the application to do.
  *
  * Results:
- *	There is no return value.  If only a part of the scale needs
- *	to be redrawn, then drawnAreaPtr is modified to reflect the
- *	area that was actually modified.
+ *	There is no return value. If only a part of the scale needs to be
+ *	redrawn, then drawnAreaPtr is modified to reflect the area that was
+ *	actually modified.
  *
  * Side effects:
  *	Information appears on the screen.
@@ -310,15 +309,14 @@ DisplayVerticalValue(scalePtr, drawable, value, rightEdge)
  */
 
 static void
-DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
-    TkScale *scalePtr;			/* Widget record for scale. */
-    Drawable drawable;			/* Where to display scale (window
-					 * or pixmap). */
-    XRectangle *drawnAreaPtr;		/* Initally contains area of window;
-					 * if only a part of the scale is
-					 * redrawn, gets modified to reflect
-					 * the part of the window that was
-					 * redrawn. */
+DisplayHorizontalScale(
+    TkScale *scalePtr,		/* Widget record for scale. */
+    Drawable drawable,		/* Where to display scale (window or
+				 * pixmap). */
+    XRectangle *drawnAreaPtr)	/* Initally contains area of window; if only a
+				 * part of the scale is redrawn, gets modified
+				 * to reflect the part of the window that was
+				 * redrawn. */
 {
     register Tk_Window tkwin = scalePtr->tkwin;
     int x, y, width, height, shadowWidth;
@@ -349,15 +347,16 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
 	    double ticks, maxTicks;
 
 	    /*
-	     * Ensure that we will only draw enough of the tick values
-	     * such that they don't overlap.  We base this off the width that
-	     * fromValue would take.  Not exact, but better than no constraint.
+	     * Ensure that we will only draw enough of the tick values such
+	     * that they don't overlap. We base this off the width that
+	     * fromValue would take. Not exact, but better than no constraint.
 	     */
+
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
 		    / tickInterval);
 	    sprintf(valueString, scalePtr->format, scalePtr->fromValue);
 	    maxTicks = (double) Tk_Width(tkwin)
-		/ (double) Tk_TextWidth(scalePtr->tkfont, valueString, -1);
+		    / (double) Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 	    if (ticks > maxTicks) {
 		tickInterval *= (ticks / maxTicks);
 	    }
@@ -442,8 +441,8 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
 
 	Tk_GetFontMetrics(scalePtr->tkfont, &fm);
 	Tk_DrawChars(scalePtr->display, drawable, scalePtr->textGC,
-		scalePtr->tkfont, scalePtr->label, 
-                scalePtr->labelLength, scalePtr->inset + fm.ascent/2, 
+		scalePtr->tkfont, scalePtr->label,
+                scalePtr->labelLength, scalePtr->inset + fm.ascent/2,
                 scalePtr->horizLabelY + fm.ascent);
     }
 }
@@ -453,31 +452,31 @@ DisplayHorizontalScale(scalePtr, drawable, drawnAreaPtr)
  *
  * DisplayHorizontalValue --
  *
- *	This procedure is called to display values (scale readings)
- *	for horizontally-oriented scales.
+ *	This function is called to display values (scale readings) for
+ *	horizontally-oriented scales.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The numerical value corresponding to value is displayed with
- *	its bottom edge at "bottom", and at a horizontal position in
- *	the scale that corresponds to "value".
+ *	The numerical value corresponding to value is displayed with its
+ *	bottom edge at "bottom", and at a horizontal position in the scale
+ *	that corresponds to "value".
  *
  *----------------------------------------------------------------------
  */
 
 static void
-DisplayHorizontalValue(scalePtr, drawable, value, top)
-    register TkScale *scalePtr;	/* Information about widget in which to
+DisplayHorizontalValue(
+    register TkScale *scalePtr,	/* Information about widget in which to
 				 * display value. */
-    Drawable drawable;		/* Pixmap or window in which to draw
-				 * the value. */
-    double value;		/* X-coordinate of number to display,
-				 * specified in application coords, not
-				 * in pixels (we'll compute pixels). */
-    int top;			/* Y-coordinate of top edge of text,
-				 * specified in pixels. */
+    Drawable drawable,		/* Pixmap or window in which to draw the
+				 * value. */
+    double value,		/* X-coordinate of number to display,
+				 * specified in application coords, not in
+				 * pixels (we'll compute pixels). */
+    int top)			/* Y-coordinate of top edge of text, specified
+				 * in pixels. */
 {
     register Tk_Window tkwin = scalePtr->tkwin;
     int x, y, length, width;
@@ -492,18 +491,19 @@ DisplayHorizontalValue(scalePtr, drawable, value, top)
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*
-     * Adjust the x-coordinate if necessary to keep the text entirely
-     * inside the window.
+     * Adjust the x-coordinate if necessary to keep the text entirely inside
+     * the window.
      */
 
     x -= (width)/2;
     if (x < (scalePtr->inset + SPACING)) {
 	x = scalePtr->inset + SPACING;
     }
+
     /*
-     * Check the right border so use starting point +text width
-     * for the check.
+     * Check the right border so use starting point +text width for the check.
      */
+
     if (x + width >= (Tk_Width(tkwin) - scalePtr->inset)) {
 	x = Tk_Width(tkwin) - scalePtr->inset - SPACING - width;
     }
@@ -516,8 +516,8 @@ DisplayHorizontalValue(scalePtr, drawable, value, top)
  *
  * TkpDisplayScale --
  *
- *	This procedure is invoked as an idle handler to redisplay
- *	the contents of a scale widget.
+ *	This function is invoked as an idle handler to redisplay the contents
+ *	of a scale widget.
  *
  * Results:
  *	None.
@@ -529,8 +529,8 @@ DisplayHorizontalValue(scalePtr, drawable, value, top)
  */
 
 void
-TkpDisplayScale(clientData)
-    ClientData clientData;	/* Widget record for scale. */
+TkpDisplayScale(
+    ClientData clientData)	/* Widget record for scale. */
 {
     TkScale *scalePtr = (TkScale *) clientData;
     Tk_Window tkwin = scalePtr->tkwin;
@@ -548,6 +548,7 @@ TkpDisplayScale(clientData)
     /*
      * Invoke the scale's command if needed.
      */
+
     Tcl_Preserve((ClientData) scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve((ClientData) interp);
@@ -568,10 +569,10 @@ TkpDisplayScale(clientData)
     Tcl_Release((ClientData) scalePtr);
 
     /*
-     * In order to avoid screen flashes, this procedure redraws
-     * the scale in a pixmap, then copies the pixmap to the
-     * screen in a single operation.  This means that there's no
-     * point in time where the on-sreen image has been cleared.
+     * In order to avoid screen flashes, this function redraws the scale in a
+     * pixmap, then copies the pixmap to the screen in a single operation.
+     * This means that there's no point in time where the on-sreen image has
+     * been cleared.
      */
 
     pixmap = Tk_GetPixmap(scalePtr->display, Tk_WindowId(tkwin),
@@ -582,9 +583,8 @@ TkpDisplayScale(clientData)
     drawnArea.height = Tk_Height(tkwin);
 
     /*
-     * Much of the redisplay is done totally differently for
-     * horizontal and vertical scales.  Handle the part that's
-     * different.
+     * Much of the redisplay is done totally differently for horizontal and
+     * vertical scales. Handle the part that's different.
      */
 
     if (scalePtr->orient == ORIENT_VERTICAL) {
@@ -594,9 +594,8 @@ TkpDisplayScale(clientData)
     }
 
     /*
-     * Now handle the part of redisplay that is the same for
-     * horizontal and vertical scales:  border and traversal
-     * highlight.
+     * Now handle the part of redisplay that is the same for horizontal and
+     * vertical scales: border and traversal highlight.
      */
 
     if (scalePtr->flags & REDRAW_OTHER) {
@@ -609,7 +608,7 @@ TkpDisplayScale(clientData)
 	}
 	if (scalePtr->highlightWidth != 0) {
 	    GC gc;
-    
+
 	    if (scalePtr->flags & GOT_FOCUS) {
 		gc = Tk_GCForColor(scalePtr->highlightColorPtr, pixmap);
 	    } else {
@@ -621,8 +620,8 @@ TkpDisplayScale(clientData)
     }
 
     /*
-     * Copy the information from the off-screen pixmap onto the screen,
-     * then delete the pixmap.
+     * Copy the information from the off-screen pixmap onto the screen, then
+     * delete the pixmap.
      */
 
     XCopyArea(scalePtr->display, pixmap, Tk_WindowId(tkwin),
@@ -630,7 +629,7 @@ TkpDisplayScale(clientData)
 	    drawnArea.height, drawnArea.x, drawnArea.y);
     Tk_FreePixmap(scalePtr->display, pixmap);
 
-    done:
+  done:
     scalePtr->flags &= ~REDRAW_ALL;
 }
 
@@ -639,13 +638,12 @@ TkpDisplayScale(clientData)
  *
  * TkpScaleElement --
  *
- *	Determine which part of a scale widget lies under a given
- *	point.
+ *	Determine which part of a scale widget lies under a given point.
  *
  * Results:
- *	The return value is either TROUGH1, SLIDER, TROUGH2, or
- *	OTHER, depending on which of the scale's active elements
- *	(if any) is under the point at (x,y).
+ *	The return value is either TROUGH1, SLIDER, TROUGH2, or OTHER,
+ *	depending on which of the scale's active elements (if any) is under
+ *	the point at (x,y).
  *
  * Side effects:
  *	None.
@@ -654,9 +652,9 @@ TkpDisplayScale(clientData)
  */
 
 int
-TkpScaleElement(scalePtr, x, y)
-    TkScale *scalePtr;		/* Widget record for scale. */
-    int x, y;			/* Coordinates within scalePtr's window. */
+TkpScaleElement(
+    TkScale *scalePtr,		/* Widget record for scale. */
+    int x, int y)		/* Coordinates within scalePtr's window. */
 {
     int sliderFirst;
 
@@ -700,3 +698,11 @@ TkpScaleElement(scalePtr, x, y)
     }
     return TROUGH2;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
