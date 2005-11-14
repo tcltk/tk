@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.17 2005/11/13 23:40:04 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.18 2005/11/14 15:55:02 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -453,12 +453,14 @@ TkSelPropProc(eventPtr)
 			formatType, (Tk_Window) incrPtr->winPtr,
 			&numItems);
 
+		if (propPtr == NULL) {
+		    numItems = 0;
+		}
+		XChangeProperty(eventPtr->xproperty.display,
+			eventPtr->xproperty.window, eventPtr->xproperty.atom,
+			formatType, 32, PropModeReplace,
+			(unsigned char *) propPtr, numItems);
 		if (propPtr != NULL) {
-		    XChangeProperty(eventPtr->xproperty.display,
-			    eventPtr->xproperty.window,
-			    eventPtr->xproperty.atom, formatType, 32,
-			    PropModeReplace, (unsigned char *) propPtr,
-			    numItems);
 		    ckfree(propPtr);
 		}
 	    }
@@ -989,13 +991,14 @@ ConvertSelection(
 	} else {
 	    propPtr = (char *) SelCvtToX((char *) buffer,
 		    type, (Tk_Window) winPtr, &numItems);
-	    if (propPtr != NULL) {
-		format = 32;
-		XChangeProperty(reply.display, reply.requestor, property, type,
-			format, PropModeReplace, (unsigned char *) propPtr,
-			numItems);
-		ckfree(propPtr);
+	    if (propPtr == NULL) {
+		goto refuse;
 	    }
+	    format = 32;
+	    XChangeProperty(reply.display, reply.requestor, property, type,
+		    format, PropModeReplace, (unsigned char *) propPtr,
+		    numItems);
+	    ckfree(propPtr);
 	}
     }
 
@@ -1437,7 +1440,7 @@ SelCvtToX(
      * Release the parsed list.
      */
 
-    ckfree((char *) &field);
+    ckfree((char *) field);
     *numLongsPtr = i;
     return propPtr;
 }
