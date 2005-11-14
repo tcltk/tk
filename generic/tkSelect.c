@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.16 2005/10/17 22:02:44 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.17 2005/11/14 16:29:15 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1479,29 +1479,31 @@ TkSelDefaultSelection(
 
     if (target == dispPtr->targetsAtom) {
 	register TkSelHandler *selPtr;
-	CONST char *atomString;
-	int length, atomLength;
+	int length;
+	Tcl_DString ds;
 
 	if (maxBytes < 50) {
 	    return -1;
 	}
-	strcpy(buffer, "MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW");
-	length = strlen(buffer);
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds,
+		"MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW", -1);
 	for (selPtr = winPtr->selHandlerList; selPtr != NULL;
 		selPtr = selPtr->nextPtr) {
 	    if ((selPtr->selection == infoPtr->selection)
 		    && (selPtr->target != dispPtr->applicationAtom)
 		    && (selPtr->target != dispPtr->windowAtom)) {
-		atomString = Tk_GetAtomName((Tk_Window) winPtr,
+		CONST char *atomString = Tk_GetAtomName((Tk_Window) winPtr,
 			selPtr->target);
-		atomLength = strlen(atomString) + 1;
-		if ((length + atomLength) >= maxBytes) {
-		    return -1;
-		}
-		sprintf(buffer+length, " %s", atomString);
-		length += atomLength;
+		Tcl_DStringAppendElement(&ds, atomString);
 	    }
 	}
+	length = Tcl_DStringLength(&ds);
+	if (length >= maxBytes) {
+	    return -1;
+	}
+	memcpy(buffer, Tcl_DStringValue(&ds), (unsigned) (1+length));
+	Tcl_DStringFree(&ds);
 	*typePtr = XA_ATOM;
 	return length;
     }
