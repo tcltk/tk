@@ -1,18 +1,18 @@
-/* 
+/*
  * tkMessage.c --
  *
- *	This module implements a message widgets for the Tk
- *	toolkit.  A message widget displays a multi-line string
- *	in a window according to a particular aspect ratio.
+ *	This module implements a message widgets for the Tk toolkit. A message
+ *	widget displays a multi-line string in a window according to a
+ *	particular aspect ratio.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright (c) 1998-2000 by Ajuba Solutions.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.14 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.15 2005/11/14 22:44:11 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -20,18 +20,18 @@
 #include "tkInt.h"
 
 /*
- * A data structure of the following type is kept for each message
- * widget managed by this file:
+ * A data structure of the following type is kept for each message widget
+ * managed by this file:
  */
 
 typedef struct {
-    Tk_Window tkwin;		/* Window that embodies the message.  NULL
+    Tk_Window tkwin;		/* Window that embodies the message. NULL
 				 * means that the window has been destroyed
 				 * but the data structures haven't yet been
 				 * cleaned up.*/
     Tk_OptionTable optionTable;	/* Table that defines options available for
 				 * this widget. */
-    Display *display;		/* Display containing widget.  Used, among
+    Display *display;		/* Display containing widget. Used, among
 				 * other things, so that resources can be
 				 * freed even after tkwin has gone away. */
     Tcl_Interp *interp;		/* Interpreter associated with message. */
@@ -48,8 +48,8 @@ typedef struct {
 				 * If non-NULL, message displays the contents
 				 * of this variable. */
     Tk_3DBorder border;		/* Structure used to draw 3-D border and
-				 * background.  NULL means a border hasn't
-				 * been created yet. */
+				 * background. NULL means a border hasn't been
+				 * created yet. */
     int borderWidth;		/* Width of border. */
     int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
     int highlightWidth;		/* Width in pixels of highlight to draw
@@ -63,7 +63,7 @@ typedef struct {
     XColor *fgColorPtr;		/* Foreground color in normal mode. */
     Tcl_Obj *padXPtr, *padYPtr;	/* Tcl_Obj rep's of padX, padY values. */
     int padX, padY;		/* User-requested extra space around text. */
-    int width;			/* User-requested width, in pixels.  0 means
+    int width;			/* User-requested width, in pixels. 0 means
 				 * compute width using aspect ratio below. */
     int aspect;			/* Desired aspect ratio for window
 				 * (100*width/height). */
@@ -84,10 +84,10 @@ typedef struct {
      */
 
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
-    char *takeFocus;		/* Value of -takefocus option;  not used in
-				 * the C code, but used by keyboard traversal
-				 * scripts.  Malloc'ed, but may be NULL. */
-    int flags;			/* Various flags;  see below for
+    char *takeFocus;		/* Value of -takefocus option; not used in the
+				 * C code, but used by keyboard traversal
+				 * scripts. Malloc'ed, but may be NULL. */
+    int flags;			/* Various flags; see below for
 				 * definitions. */
 } Message;
 
@@ -118,9 +118,9 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_MESSAGE_BG_COLOR, -1, Tk_Offset(Message, border), 0,
 	 (ClientData) DEF_MESSAGE_BG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL, (char *) NULL,
+    {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL,
 	 0, -1, 0, (ClientData) "-borderwidth", 0},
-    {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL, (char *) NULL,
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL,
 	 0, -1, 0, (ClientData) "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_MESSAGE_BORDER_WIDTH, -1,
@@ -128,7 +128,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	 DEF_MESSAGE_CURSOR, -1, Tk_Offset(Message, cursor),
 	 TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_SYNONYM, "-fg", (char *) NULL, (char *) NULL, (char *) NULL,
+    {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL,
 	 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MESSAGE_FONT, -1, Tk_Offset(Message, tkfont), 0, 0, 0},
@@ -163,35 +163,31 @@ static Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_MESSAGE_WIDTH, -1, Tk_Offset(Message, width), 0, 0 ,0},
-    {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0}
 };
 
 /*
- * Forward declarations for procedures defined later in this file:
+ * Forward declarations for functions defined later in this file:
  */
 
-static void		MessageCmdDeletedProc _ANSI_ARGS_((
-			    ClientData clientData));
-static void		MessageEventProc _ANSI_ARGS_((ClientData clientData,
-			    XEvent *eventPtr));
-static char *		MessageTextVarProc _ANSI_ARGS_((ClientData clientData,
+static void		MessageCmdDeletedProc(ClientData clientData);
+static void		MessageEventProc(ClientData clientData,
+			    XEvent *eventPtr);
+static char *		MessageTextVarProc(ClientData clientData,
 			    Tcl_Interp *interp, CONST char *name1,
-			    CONST char *name2, int flags));
-static int		MessageWidgetObjCmd _ANSI_ARGS_((ClientData clientData,
+			    CONST char *name2, int flags);
+static int		MessageWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-	                    Tcl_Obj *CONST objv[]));
-static void		MessageWorldChanged _ANSI_ARGS_((
-			    ClientData instanceData));
-static void		ComputeMessageGeometry _ANSI_ARGS_((Message *msgPtr));
-static int		ConfigureMessage _ANSI_ARGS_((Tcl_Interp *interp,
-			    Message *msgPtr, int objc, Tcl_Obj *CONST objv[],
-			    int flags));
-static void		DestroyMessage _ANSI_ARGS_((char *memPtr));
-static void		DisplayMessage _ANSI_ARGS_((ClientData clientData));
+			    Tcl_Obj *CONST objv[]);
+static void		MessageWorldChanged(ClientData instanceData);
+static void		ComputeMessageGeometry(Message *msgPtr);
+static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
+			    int objc, Tcl_Obj *CONST objv[], int flags);
+static void		DestroyMessage(char *memPtr);
+static void		DisplayMessage(ClientData clientData);
 
 /*
- * The structure below defines message class behavior by means of procedures
+ * The structure below defines message class behavior by means of functions
  * that can be invoked from generic window code.
  */
 
@@ -199,16 +195,14 @@ static Tk_ClassProcs messageClass = {
     sizeof(Tk_ClassProcs),	/* size */
     MessageWorldChanged,	/* worldChangedProc */
 };
-
 
 /*
  *--------------------------------------------------------------
  *
  * Tk_MessageObjCmd --
  *
- *	This procedure is invoked to process the "message" Tcl
- *	command.  See the user documentation for details on what
- *	it does.
+ *	This function is invoked to process the "message" Tcl command. See the
+ *	user documentation for details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -220,11 +214,11 @@ static Tk_ClassProcs messageClass = {
  */
 
 int
-Tk_MessageObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* NULL. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument strings. */
+Tk_MessageObjCmd(
+    ClientData clientData,	/* NULL. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument strings. */
 {
     register Message *msgPtr;
     Tk_OptionTable optionTable;
@@ -236,14 +230,14 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
     }
 
     tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-	    Tcl_GetString(objv[1]), (char *) NULL);
+	    Tcl_GetString(objv[1]), NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
 
     /*
-     * Create the option table for this widget class.  If it has already
-     * been created, the cached pointer will be returned.
+     * Create the option table for this widget class. If it has already been
+     * created, the cached pointer will be returned.
      */
 
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -254,19 +248,20 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
     /*
      * Set values for those fields that don't take a 0 or NULL value.
      */
-    msgPtr->tkwin		= tkwin;
-    msgPtr->display		= Tk_Display(tkwin);
-    msgPtr->interp		= interp;
-    msgPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+
+    msgPtr->tkwin = tkwin;
+    msgPtr->display = Tk_Display(tkwin);
+    msgPtr->interp = interp;
+    msgPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(msgPtr->tkwin), MessageWidgetObjCmd,
 	    (ClientData) msgPtr, MessageCmdDeletedProc);
-    msgPtr->optionTable		= optionTable;
-    msgPtr->relief		= TK_RELIEF_FLAT;
-    msgPtr->textGC		= None;
-    msgPtr->anchor		= TK_ANCHOR_CENTER;
-    msgPtr->aspect		= 150;
-    msgPtr->justify		= TK_JUSTIFY_LEFT;
-    msgPtr->cursor		= None;
+    msgPtr->optionTable = optionTable;
+    msgPtr->relief = TK_RELIEF_FLAT;
+    msgPtr->textGC = None;
+    msgPtr->anchor = TK_ANCHOR_CENTER;
+    msgPtr->aspect = 150;
+    msgPtr->justify = TK_JUSTIFY_LEFT;
+    msgPtr->cursor = None;
 
     Tk_SetClass(msgPtr->tkwin, "Message");
     Tk_SetClassProcs(msgPtr->tkwin, &messageClass, (ClientData) msgPtr);
@@ -292,9 +287,9 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
  *
  * MessageWidgetObjCmd --
  *
- *	This procedure is invoked to process the Tcl command
- *	that corresponds to a widget managed by this module.
- *	See the user documentation for details on what it does.
+ *	This function is invoked to process the Tcl command that corresponds
+ *	to a widget managed by this module. See the user documentation for
+ *	details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -306,19 +301,19 @@ Tk_MessageObjCmd(clientData, interp, objc, objv)
  */
 
 static int
-MessageWidgetObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Information about message widget. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument strings. */
+MessageWidgetObjCmd(
+    ClientData clientData,	/* Information about message widget. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument strings. */
 {
     register Message *msgPtr = (Message *) clientData;
-    static CONST char *optionStrings[] = { "cget", "configure", (char *) NULL };
+    static CONST char *optionStrings[] = { "cget", "configure", NULL };
     enum options { MESSAGE_CGET, MESSAGE_CONFIGURE };
     int index;
     int result = TCL_OK;
     Tcl_Obj *objPtr;
-    
+
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
 	return TCL_ERROR;
@@ -330,42 +325,39 @@ MessageWidgetObjCmd(clientData, interp, objc, objv)
     }
 
     Tcl_Preserve((ClientData) msgPtr);
-    
+
     switch ((enum options) index) {
-	case MESSAGE_CGET: {
-	    if (objc != 3) {
-		Tcl_WrongNumArgs(interp, 2, objv, "option");
-		return TCL_ERROR;
-	    }
-	    objPtr = Tk_GetOptionValue(interp, (char *) msgPtr,
-		    msgPtr->optionTable, objv[2], msgPtr->tkwin);
+    case MESSAGE_CGET:
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "option");
+	    return TCL_ERROR;
+	}
+	objPtr = Tk_GetOptionValue(interp, (char *) msgPtr,
+		msgPtr->optionTable, objv[2], msgPtr->tkwin);
+	if (objPtr == NULL) {
+	    result = TCL_ERROR;
+	} else {
+	    Tcl_SetObjResult(interp, objPtr);
+	    result = TCL_OK;
+	}
+	break;
+    case MESSAGE_CONFIGURE:
+	if (objc <= 3) {
+	    objPtr = Tk_GetOptionInfo(interp, (char *) msgPtr,
+		    msgPtr->optionTable, (objc == 3) ? objv[2] : NULL,
+		    msgPtr->tkwin);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
 	    } else {
 		Tcl_SetObjResult(interp, objPtr);
 		result = TCL_OK;
 	    }
-	    break;
+	} else {
+	    result = ConfigureMessage(interp, msgPtr, objc-2, objv+2, 0);
 	}
-	case MESSAGE_CONFIGURE: {
-	    if (objc <= 3) {
-		objPtr = Tk_GetOptionInfo(interp, (char *) msgPtr,
-			msgPtr->optionTable,
-			(objc == 3) ? objv[2] : (Tcl_Obj *) NULL,
-			msgPtr->tkwin);
-		if (objPtr == NULL) {
-		    result = TCL_ERROR;
-		} else {
-		    Tcl_SetObjResult(interp, objPtr);
-		    result = TCL_OK;
-		}
-	    } else {
-		result = ConfigureMessage(interp, msgPtr, objc-2, objv+2, 0);
-	    }
-	    break;
-	}
+	break;
     }
-    
+
     Tcl_Release((ClientData) msgPtr);
     return result;
 }
@@ -375,9 +367,9 @@ MessageWidgetObjCmd(clientData, interp, objc, objv)
  *
  * DestroyMessage --
  *
- *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release
- *	to clean up the internal structure of a message at a safe time
- *	(when no-one is using it anymore).
+ *	This function is invoked by Tcl_EventuallyFree or Tcl_Release to clean
+ *	up the internal structure of a message at a safe time (when no-one is
+ *	using it anymore).
  *
  * Results:
  *	None.
@@ -389,8 +381,8 @@ MessageWidgetObjCmd(clientData, interp, objc, objv)
  */
 
 static void
-DestroyMessage(memPtr)
-    char *memPtr;		/* Info about message widget. */
+DestroyMessage(
+    char *memPtr)		/* Info about message widget. */
 {
     register Message *msgPtr = (Message *) memPtr;
 
@@ -400,11 +392,10 @@ DestroyMessage(memPtr)
     if (msgPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(DisplayMessage, (ClientData) msgPtr);
     }
-   
+
     /*
-     * Free up all the stuff that requires special handling, then
-     * let Tk_FreeConfigOptions handle all the standard option-related
-     * stuff.
+     * Free up all the stuff that requires special handling, then let
+     * Tk_FreeConfigOptions handle all the standard option-related stuff.
      */
 
     if (msgPtr->textGC != None) {
@@ -428,30 +419,29 @@ DestroyMessage(memPtr)
  *
  * ConfigureMessage --
  *
- *	This procedure is called to process an argv/argc list, plus
- *	the Tk option database, in order to configure (or
- *	reconfigure) a message widget.
+ *	This function is called to process an argv/argc list, plus the Tk
+ *	option database, in order to configure (or reconfigure) a message
+ *	widget.
  *
  * Results:
- *	The return value is a standard Tcl result.  If TCL_ERROR is
- *	returned, then the interp's result contains an error message.
+ *	The return value is a standard Tcl result. If TCL_ERROR is returned,
+ *	then the interp's result contains an error message.
  *
  * Side effects:
- *	Configuration information, such as text string, colors, font,
- *	etc. get set for msgPtr;  old resources get freed, if there
- *	were any.
+ *	Configuration information, such as text string, colors, font, etc. get
+ *	set for msgPtr; old resources get freed, if there were any.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-ConfigureMessage(interp, msgPtr, objc, objv, flags)
-    Tcl_Interp *interp;		/* Used for error reporting. */
-    register Message *msgPtr;	/* Information about widget;  may or may
-				 * not already have values for some fields. */
-    int objc;			/* Number of valid entries in argv. */
-    Tcl_Obj *CONST objv[];	/* Arguments. */
-    int flags;			/* Flags to pass to Tk_ConfigureWidget. */
+ConfigureMessage(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    register Message *msgPtr,	/* Information about widget; may or may not
+				 * already have values for some fields. */
+    int objc,			/* Number of valid entries in argv. */
+    Tcl_Obj *CONST objv[],	/* Arguments. */
+    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
 
@@ -460,22 +450,21 @@ ConfigureMessage(interp, msgPtr, objc, objv, flags)
      */
 
     if (msgPtr->textVarName != NULL) {
-	Tcl_UntraceVar(interp, msgPtr->textVarName, 
+	Tcl_UntraceVar(interp, msgPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, (ClientData) msgPtr);
     }
 
     if (Tk_SetOptions(interp, (char *) msgPtr, msgPtr->optionTable, objc, objv,
-	    msgPtr->tkwin, &savedOptions, (int *)NULL) != TCL_OK) {
+	    msgPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;
     }
-	    
-    
+
     /*
-     * If the message is to display the value of a variable, then set up
-     * a trace on the variable's value, create the variable if it doesn't
-     * exist, and fetch its current value.
+     * If the message is to display the value of a variable, then set up a
+     * trace on the variable's value, create the variable if it doesn't exist,
+     * and fetch its current value.
      */
 
     if (msgPtr->textVarName != NULL) {
@@ -497,9 +486,9 @@ ConfigureMessage(interp, msgPtr, objc, objv, flags)
     }
 
     /*
-     * A few other options need special processing, such as setting
-     * the background from a 3-D border or handling special defaults
-     * that couldn't be specified to Tk_ConfigureWidget.
+     * A few other options need special processing, such as setting the
+     * background from a 3-D border or handling special defaults that couldn't
+     * be specified to Tk_ConfigureWidget.
      */
 
     msgPtr->numChars = Tcl_NumUtfChars(msgPtr->string, -1);
@@ -518,22 +507,22 @@ ConfigureMessage(interp, msgPtr, objc, objv, flags)
  *
  * MessageWorldChanged --
  *
- *      This procedure is called when the world has changed in some
- *      way and the widget needs to recompute all its graphics contexts
- *	and determine its new geometry.
+ *	This function is called when the world has changed in some way and the
+ *	widget needs to recompute all its graphics contexts and determine its
+ *	new geometry.
  *
  * Results:
- *      None.
+ *	None.
  *
  * Side effects:
- *      Message will be relayed out and redisplayed.
+ *	Message will be relayed out and redisplayed.
  *
  *---------------------------------------------------------------------------
  */
- 
+
 static void
-MessageWorldChanged(instanceData)
-    ClientData instanceData;	/* Information about widget. */
+MessageWorldChanged(
+    ClientData instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
     GC gc = None;
@@ -563,8 +552,8 @@ MessageWorldChanged(instanceData)
     }
 
     /*
-     * Recompute the desired geometry for the window, and arrange for
-     * the window to be redisplayed.
+     * Recompute the desired geometry for the window, and arrange for the
+     * window to be redisplayed.
      */
 
     ComputeMessageGeometry(msgPtr);
@@ -580,23 +569,22 @@ MessageWorldChanged(instanceData)
  *
  * ComputeMessageGeometry --
  *
- *	Compute the desired geometry for a message window,
- *	taking into account the desired aspect ratio for the
- *	window.
+ *	Compute the desired geometry for a message window, taking into account
+ *	the desired aspect ratio for the window.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Tk_GeometryRequest is called to inform the geometry
- *	manager of the desired geometry for this window.
+ *	Tk_GeometryRequest is called to inform the geometry manager of the
+ *	desired geometry for this window.
  *
  *--------------------------------------------------------------
  */
 
 static void
-ComputeMessageGeometry(msgPtr)
-    register Message *msgPtr;	/* Information about window. */
+ComputeMessageGeometry(
+    register Message *msgPtr)	/* Information about window. */
 {
     int width, inc, height;
     int thisWidth, thisHeight, maxWidth;
@@ -618,12 +606,11 @@ ComputeMessageGeometry(msgPtr)
     upperBound = msgPtr->aspect + aspect;
 
     /*
-     * Do the computation in multiple passes:  start off with
-     * a very wide window, and compute its height.  Then change
-     * the width and try again.  Reduce the size of the change
-     * and iterate until dimensions are found that approximate
-     * the desired aspect ratio.  Or, if the user gave an explicit
-     * width then just use that.
+     * Do the computation in multiple passes: start off with a very wide
+     * window, and compute its height. Then change the width and try again.
+     * Reduce the size of the change and iterate until dimensions are found
+     * that approximate the desired aspect ratio. Or, if the user gave an
+     * explicit width then just use that.
      */
 
     if (msgPtr->width > 0) {
@@ -666,7 +653,7 @@ ComputeMessageGeometry(msgPtr)
  *
  * DisplayMessage --
  *
- *	This procedure redraws the contents of a message window.
+ *	This function redraws the contents of a message window.
  *
  * Results:
  *	None.
@@ -678,8 +665,8 @@ ComputeMessageGeometry(msgPtr)
  */
 
 static void
-DisplayMessage(clientData)
-    ClientData clientData;	/* Information about window. */
+DisplayMessage(
+    ClientData clientData)	/* Information about window. */
 {
     register Message *msgPtr = (Message *) clientData;
     register Tk_Window tkwin = msgPtr->tkwin;
@@ -703,8 +690,8 @@ DisplayMessage(clientData)
 	    0, TK_RELIEF_FLAT);
 
     /*
-     * Compute starting y-location for message based on message size
-     * and anchor option.
+     * Compute starting y-location for message based on message size and
+     * anchor option.
      */
 
     TkComputeAnchor(msgPtr->anchor, tkwin, msgPtr->padX, msgPtr->padY,
@@ -724,7 +711,7 @@ DisplayMessage(clientData)
 
 	bgGC = Tk_GCForColor(msgPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
 	if (msgPtr->flags & GOT_FOCUS) {
-	    fgGC = Tk_GCForColor(msgPtr->highlightColorPtr, Tk_WindowId(tkwin));
+	    fgGC = Tk_GCForColor(msgPtr->highlightColorPtr,Tk_WindowId(tkwin));
 	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, msgPtr->highlightWidth,
 		    Tk_WindowId(tkwin));
 	} else {
@@ -739,23 +726,23 @@ DisplayMessage(clientData)
  *
  * MessageEventProc --
  *
- *	This procedure is invoked by the Tk dispatcher for various
- *	events on messages.
+ *	This function is invoked by the Tk dispatcher for various events on
+ *	messages.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	When the window gets deleted, internal structures get
- *	cleaned up.  When it gets exposed, it is redisplayed.
+ *	When the window gets deleted, internal structures get cleaned up.
+ *	When it gets exposed, it is redisplayed.
  *
  *--------------------------------------------------------------
  */
 
 static void
-MessageEventProc(clientData, eventPtr)
-    ClientData clientData;	/* Information about window. */
-    XEvent *eventPtr;		/* Information about event. */
+MessageEventProc(
+    ClientData clientData,	/* Information about window. */
+    XEvent *eventPtr)		/* Information about event. */
 {
     Message *msgPtr = (Message *) clientData;
 
@@ -781,7 +768,7 @@ MessageEventProc(clientData, eventPtr)
     }
     return;
 
-    redraw:
+  redraw:
     if ((msgPtr->tkwin != NULL) && !(msgPtr->flags & REDRAW_PENDING)) {
 	Tcl_DoWhenIdle(DisplayMessage, (ClientData) msgPtr);
 	msgPtr->flags |= REDRAW_PENDING;
@@ -793,9 +780,9 @@ MessageEventProc(clientData, eventPtr)
  *
  * MessageCmdDeletedProc --
  *
- *	This procedure is invoked when a widget command is deleted.  If
- *	the widget isn't already in the process of being destroyed,
- *	this command destroys it.
+ *	This function is invoked when a widget command is deleted. If the
+ *	widget isn't already in the process of being destroyed, this command
+ *	destroys it.
  *
  * Results:
  *	None.
@@ -807,16 +794,16 @@ MessageEventProc(clientData, eventPtr)
  */
 
 static void
-MessageCmdDeletedProc(clientData)
-    ClientData clientData;	/* Pointer to widget record for widget. */
+MessageCmdDeletedProc(
+    ClientData clientData)	/* Pointer to widget record for widget. */
 {
     Message *msgPtr = (Message *) clientData;
 
     /*
-     * This procedure could be invoked either because the window was
-     * destroyed and the command was then deleted (in which case tkwin
-     * is NULL) or because the command was deleted, and then this procedure
-     * destroys the widget.
+     * This function could be invoked either because the window was destroyed
+     * and the command was then deleted (in which case tkwin is NULL) or
+     * because the command was deleted, and then this function destroys the
+     * widget.
      */
 
     if (!(msgPtr->flags & MESSAGE_DELETED)) {
@@ -829,34 +816,33 @@ MessageCmdDeletedProc(clientData)
  *
  * MessageTextVarProc --
  *
- *	This procedure is invoked when someone changes the variable
- *	whose contents are to be displayed in a message.
+ *	This function is invoked when someone changes the variable whose
+ *	contents are to be displayed in a message.
  *
  * Results:
  *	NULL is always returned.
  *
  * Side effects:
- *	The text displayed in the message will change to match the
- *	variable.
+ *	The text displayed in the message will change to match the variable.
  *
  *--------------------------------------------------------------
  */
 
 	/* ARGSUSED */
 static char *
-MessageTextVarProc(clientData, interp, name1, name2, flags)
-    ClientData clientData;	/* Information about message. */
-    Tcl_Interp *interp;		/* Interpreter containing variable. */
-    CONST char *name1;		/* Name of variable. */
-    CONST char *name2;		/* Second part of variable name. */
-    int flags;			/* Information about what happened. */
+MessageTextVarProc(
+    ClientData clientData,	/* Information about message. */
+    Tcl_Interp *interp,		/* Interpreter containing variable. */
+    CONST char *name1,		/* Name of variable. */
+    CONST char *name2,		/* Second part of variable name. */
+    int flags)			/* Information about what happened. */
 {
     register Message *msgPtr = (Message *) clientData;
     CONST char *value;
 
     /*
-     * If the variable is unset, then immediately recreate it unless
-     * the whole interpreter is going away.
+     * If the variable is unset, then immediately recreate it unless the whole
+     * interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
@@ -867,7 +853,7 @@ MessageTextVarProc(clientData, interp, name1, name2, flags)
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MessageTextVarProc, clientData);
 	}
-	return (char *) NULL;
+	return NULL;
     }
 
     value = Tcl_GetVar(interp, msgPtr->textVarName, TCL_GLOBAL_ONLY);
@@ -887,5 +873,13 @@ MessageTextVarProc(clientData, interp, name1, name2, flags)
 	Tcl_DoWhenIdle(DisplayMessage, (ClientData) msgPtr);
 	msgPtr->flags |= REDRAW_PENDING;
     }
-    return (char *) NULL;
+    return NULL;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
