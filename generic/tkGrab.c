@@ -1,15 +1,15 @@
-/* 
+/*
  * tkGrab.c --
  *
- *	This file provides procedures that implement grabs for Tk.
+ *	This file provides functions that implement grabs for Tk.
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.10 2004/03/17 18:15:43 das Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.11 2005/11/14 22:44:11 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -20,28 +20,26 @@
 #endif
 
 /*
- * The grab state machine has four states: ungrabbed, button pressed,
- * grabbed, and button pressed while grabbed.  In addition, there are
- * three pieces of grab state information: the current grab window,
- * the current restrict window, and whether the mouse is captured.
+ * The grab state machine has four states: ungrabbed, button pressed, grabbed,
+ * and button pressed while grabbed. In addition, there are three pieces of
+ * grab state information: the current grab window, the current restrict
+ * window, and whether the mouse is captured.
  *
- * The current grab window specifies the point in the Tk window
- * heirarchy above which pointer events will not be reported.  Any
- * window within the subtree below the grab window will continue to
- * receive events as normal.  Events outside of the grab tree will be
- * reported to the grab window.
+ * The current grab window specifies the point in the Tk window heirarchy
+ * above which pointer events will not be reported. Any window within the
+ * subtree below the grab window will continue to receive events as normal.
+ * Events outside of the grab tree will be reported to the grab window.
  *
- * If the current restrict window is set, then all pointer events will
- * be reported only to the restrict window.  The restrict window is
- * normally set during an automatic button grab.
+ * If the current restrict window is set, then all pointer events will be
+ * reported only to the restrict window. The restrict window is normally set
+ * during an automatic button grab.
  *
- * The mouse capture state specifies whether the window system will
- * report mouse events outside of any Tk toplevels.  This is set
- * during a global grab or an automatic button grab.
+ * The mouse capture state specifies whether the window system will report
+ * mouse events outside of any Tk toplevels. This is set during a global grab
+ * or an automatic button grab.
  *
- * The transitions between different states is given in the following
- * table:
- * 
+ * The transitions between different states is given in the following table:
+ *
  * Event\State	U	B	G	GB
  * -----------	--	--	--	--
  * FirstPress	B	B	GB	GB
@@ -62,15 +60,14 @@
  * Grabbed		 1		0		b/g
  * Grab and Button	 1		1		1
  *
- * Note: 0 means variable is set to NULL, 1 means variable is set to
- * some window, b/g means the variable is set to a window if a button
- * is currently down or a global grab is in effect.
+ * Note: 0 means variable is set to NULL, 1 means variable is set to some
+ * window, b/g means the variable is set to a window if a button is currently
+ * down or a global grab is in effect.
  *
- * The final complication to all of this is enter and leave events.
- * In order to correctly handle all of the various cases, Tk cannot
- * rely on X enter/leave events in all situations.  The following
- * describes the correct sequence of enter and leave events that
- * should be observed by Tk scripts:
+ * The final complication to all of this is enter and leave events. In order
+ * to correctly handle all of the various cases, Tk cannot rely on X
+ * enter/leave events in all situations. The following describes the correct
+ * sequence of enter and leave events that should be observed by Tk scripts:
  *
  * Event(state)		Enter/Leave From -> To
  * ------------		----------------------
@@ -82,13 +79,13 @@
  * Ungrab(G):		anc(grab window, event window) -> event window
  * Ungrab(GB):		restrict window -> event window
  *
- * Note: anc(x,y) returns the least ancestor of y that is in the tree
- * of x, terminating at toplevels.
+ * Note: anc(x,y) returns the least ancestor of y that is in the tree of x,
+ * terminating at toplevels.
  */
 
 /*
- * The following structure is used to pass information to 
- * GrabRestrictProc from EatGrabEvents.
+ * The following structure is used to pass information to GrabRestrictProc
+ * from EatGrabEvents.
  */
 
 typedef struct {
@@ -101,47 +98,46 @@ typedef struct {
  *
  * GRAB_GLOBAL			1 means this is a global grab (we grabbed via
  *				the server so all applications are locked out).
- *				0 means this is a local grab that affects
- *				only this application.
+ *				0 means this is a local grab that affects only
+ *				this application.
  * GRAB_TEMP_GLOBAL		1 means we've temporarily grabbed via the
- *				server because a button is down and we want
- *				to make sure that we get the button-up
- *				event.  The grab will be released when the
- *				last mouse button goes up.
+ *				server because a button is down and we want to
+ *				make sure that we get the button-up event. The
+ *				grab will be released when the last mouse
+ *				button goes up.
  */
 
 #define GRAB_GLOBAL		1
 #define GRAB_TEMP_GLOBAL	4
 
 /*
- * The following structure is a Tcl_Event that triggers a change in
- * the grabWinPtr field of a display.  This event guarantees that
- * the change occurs in the proper order relative to enter and leave
- * events.
+ * The following structure is a Tcl_Event that triggers a change in the
+ * grabWinPtr field of a display. This event guarantees that the change occurs
+ * in the proper order relative to enter and leave events.
  */
 
 typedef struct NewGrabWinEvent {
     Tcl_Event header;		/* Standard information for all Tcl events. */
     TkDisplay *dispPtr;		/* Display whose grab window is to change. */
-    Window grabWindow;		/* New grab window for display.  This is
+    Window grabWindow;		/* New grab window for display. This is
 				 * recorded instead of a (TkWindow *) because
-				 * it will allow us to detect cases where
-				 * the window is destroyed before this event
-				 * is processed. */
+				 * it will allow us to detect cases where the
+				 * window is destroyed before this event is
+				 * processed. */
 } NewGrabWinEvent;
 
 /*
  * The following magic value is stored in the "send_event" field of
- * EnterNotify and LeaveNotify events that are generated in this
- * file.  This allows us to separate "real" events coming from the
- * server from those that we generated.
+ * EnterNotify and LeaveNotify events that are generated in this file. This
+ * allows us to separate "real" events coming from the server from those that
+ * we generated.
  */
 
 #define GENERATED_EVENT_MAGIC ((Bool) 0x147321ac)
 
 /*
- * Mask that selects any of the state bits corresponding to buttons,
- * plus masks that select individual buttons' bits:
+ * Mask that selects any of the state bits corresponding to buttons, plus
+ * masks that select individual buttons' bits:
  */
 
 #define ALL_BUTTONS \
@@ -151,32 +147,27 @@ static unsigned int buttonStates[] = {
 };
 
 /*
- * Forward declarations for procedures declared later in this file:
+ * Forward declarations for functions declared later in this file:
  */
 
-static void		EatGrabEvents _ANSI_ARGS_((TkDisplay *dispPtr,
-			    unsigned int serial));
-static TkWindow *	FindCommonAncestor _ANSI_ARGS_((TkWindow *winPtr1,
-			    TkWindow *winPtr2, int *countPtr1,
-			    int *countPtr2));
-static Tk_RestrictAction GrabRestrictProc _ANSI_ARGS_((ClientData arg,
-			    XEvent *eventPtr));
-static int		GrabWinEventProc _ANSI_ARGS_((Tcl_Event *evPtr,
-			    int flags));
-static void		MovePointer2 _ANSI_ARGS_((TkWindow *sourcePtr,
-			    TkWindow *destPtr, int mode, int leaveEvents,
-			    int EnterEvents));
-static void		QueueGrabWindowChange _ANSI_ARGS_((TkDisplay *dispPtr,
-			    TkWindow *grabWinPtr));
-static void		ReleaseButtonGrab _ANSI_ARGS_((TkDisplay *dispPtr));
+static void		EatGrabEvents(TkDisplay *dispPtr, unsigned int serial);
+static TkWindow *	FindCommonAncestor(TkWindow *winPtr1,
+			    TkWindow *winPtr2, int *countPtr1, int *countPtr2);
+static Tk_RestrictAction GrabRestrictProc(ClientData arg, XEvent *eventPtr);
+static int		GrabWinEventProc(Tcl_Event *evPtr, int flags);
+static void		MovePointer2(TkWindow *sourcePtr, TkWindow *destPtr,
+			    int mode, int leaveEvents, int EnterEvents);
+static void		QueueGrabWindowChange(TkDisplay *dispPtr,
+			    TkWindow *grabWinPtr);
+static void		ReleaseButtonGrab(TkDisplay *dispPtr);
 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_GrabObjCmd --
  *
- *	This procedure is invoked to process the "grab" Tcl command.
- *	See the user documentation for details on what it does.
+ *	This function is invoked to process the "grab" Tcl command. See the
+ *	user documentation for details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -189,12 +180,11 @@ static void		ReleaseButtonGrab _ANSI_ARGS_((TkDisplay *dispPtr));
 
 	/* ARGSUSED */
 int
-Tk_GrabObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with
-				 * interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+Tk_GrabObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     int globalGrab;
     Tk_Window tkwin;
@@ -202,14 +192,16 @@ Tk_GrabObjCmd(clientData, interp, objc, objv)
     char *arg;
     int index;
     int len;
-    static CONST char *optionStrings[] = { "current", "release",
-					 "set", "status", (char *) NULL };
-  
-    static CONST char *flagStrings[] = { "-global", (char *) NULL };
+    static CONST char *optionStrings[] = {
+	"current", "release", "set", "status", NULL
+    };
+    static CONST char *flagStrings[] = {
+	"-global", NULL
+    };
+    enum options {
+	GRABCMD_CURRENT, GRABCMD_RELEASE, GRABCMD_SET, GRABCMD_STATUS
+    };
 
-    enum options { GRABCMD_CURRENT, GRABCMD_RELEASE,
-		       GRABCMD_SET, GRABCMD_STATUS };
-    
     if (objc < 2) {
 	/*
 	 * Can't use Tcl_WrongNumArgs here because we want the message to
@@ -223,8 +215,7 @@ Tk_GrabObjCmd(clientData, interp, objc, objv)
 	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
 		Tcl_GetString(objv[0]), " ?-global? window\" or \"",
-		Tcl_GetString(objv[0]), " option ?arg arg ...?\"",
-		(char *) NULL);
+		Tcl_GetString(objv[0]), " option ?arg arg ...?\"", NULL);
 	return TCL_ERROR;
     }
 
@@ -264,115 +255,114 @@ Tk_GrabObjCmd(clientData, interp, objc, objv)
     }
 
     /*
-     * First argument is not a window name and not "-global", find out
-     * which option it is.
+     * First argument is not a window name and not "-global", find out which
+     * option it is.
      */
 
     if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
 	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    
+
     switch ((enum options) index) {
-	case GRABCMD_CURRENT: {
-	    /* [grab current ?window?] */
-	    if (objc > 3) {
-		Tcl_WrongNumArgs(interp, 1, objv, "current ?window?");
+    case GRABCMD_CURRENT:
+	/* [grab current ?window?] */
+	if (objc > 3) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "current ?window?");
+	    return TCL_ERROR;
+	}
+	if (objc == 3) {
+	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
+		    (Tk_Window) clientData);
+	    if (tkwin == NULL) {
 		return TCL_ERROR;
 	    }
-	    if (objc == 3) {
-		tkwin = Tk_NameToWindow(interp,
-			Tcl_GetString(objv[2]), (Tk_Window) clientData);
-		if (tkwin == NULL) {
-		    return TCL_ERROR;
-		}
-		dispPtr = ((TkWindow *) tkwin)->dispPtr;
+	    dispPtr = ((TkWindow *) tkwin)->dispPtr;
+	    if (dispPtr->eventualGrabWinPtr != NULL) {
+		Tcl_SetResult(interp, dispPtr->eventualGrabWinPtr->pathName,
+			TCL_STATIC);
+	    }
+	} else {
+	    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
+		    dispPtr = dispPtr->nextPtr) {
 		if (dispPtr->eventualGrabWinPtr != NULL) {
-		    Tcl_SetResult(interp,
-			    dispPtr->eventualGrabWinPtr->pathName, TCL_STATIC);
-		}
-	    } else {
-		for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
-		     dispPtr = dispPtr->nextPtr) {
-		    if (dispPtr->eventualGrabWinPtr != NULL) {
-			Tcl_AppendElement(interp,
-				dispPtr->eventualGrabWinPtr->pathName);
-		    }
+		    Tcl_AppendElement(interp,
+			    dispPtr->eventualGrabWinPtr->pathName);
 		}
 	    }
-	    return TCL_OK;
 	}
+	return TCL_OK;
 
-	case GRABCMD_RELEASE: {
-	    /* [grab release window] */
-	    if (objc != 3) {
-		Tcl_WrongNumArgs(interp, 1, objv, "release window");
-		return TCL_ERROR;
-	    }
-	    tkwin = Tk_NameToWindow(interp,
-		    Tcl_GetString(objv[2]), (Tk_Window) clientData);
-	    if (tkwin == NULL) {
-		Tcl_ResetResult(interp);
-	    } else {
-		Tk_Ungrab(tkwin);
-	    }
-	    break;
+    case GRABCMD_RELEASE:
+	/* [grab release window] */
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "release window");
+	    return TCL_ERROR;
 	}
-	
-	case GRABCMD_SET: {
-	    /* [grab set ?-global? window] */
-	    if ((objc != 3) && (objc != 4)) {
-		Tcl_WrongNumArgs(interp, 1, objv, "set ?-global? window");
-		return TCL_ERROR;
-	    }
-	    if (objc == 3) {
-		globalGrab = 0;
-		tkwin = Tk_NameToWindow(interp,
-			Tcl_GetString(objv[2]), (Tk_Window) clientData);
-	    } else {
-		globalGrab = 1;
-		/*
-		 * We could just test the argument by hand instead of using
-		 * Tcl_GetIndexFromObj; the benefit of using the function is
-		 * that it sets up the error message for us, so we are
-		 * certain to be consistant with the rest of Tcl.
-		 */
-		if (Tcl_GetIndexFromObj(interp, objv[2], flagStrings, "option",
-			0, &index) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		tkwin = Tk_NameToWindow(interp,
-			Tcl_GetString(objv[3]), (Tk_Window) clientData);
-	    }
-	    if (tkwin == NULL) {
-		return TCL_ERROR;
-	    }
-	    return Tk_Grab(interp, tkwin, globalGrab);
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
+		(Tk_Window) clientData);
+	if (tkwin == NULL) {
+	    Tcl_ResetResult(interp);
+	} else {
+	    Tk_Ungrab(tkwin);
 	}
+	break;
 
-	case GRABCMD_STATUS: {
-	    /* [grab status window] */
-	    TkWindow *winPtr;
-
-	    if (objc != 3) {
-		Tcl_WrongNumArgs(interp, 1, objv, "status window");
-		return TCL_ERROR;
-	    }
-	    winPtr = (TkWindow *) Tk_NameToWindow(interp,
-		    Tcl_GetString(objv[2]), (Tk_Window) clientData);
-	    if (winPtr == NULL) {
-		return TCL_ERROR;
-	    }
-	    dispPtr = winPtr->dispPtr;
-	    if (dispPtr->eventualGrabWinPtr != winPtr) {
-		Tcl_SetResult(interp, "none", TCL_STATIC);
-	    } else if (dispPtr->grabFlags & GRAB_GLOBAL) {
-		Tcl_SetResult(interp, "global", TCL_STATIC);
-	    } else {
-		Tcl_SetResult(interp, "local", TCL_STATIC);
-	    }
-	    break;
+    case GRABCMD_SET:
+	/* [grab set ?-global? window] */
+	if ((objc != 3) && (objc != 4)) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "set ?-global? window");
+	    return TCL_ERROR;
 	}
+	if (objc == 3) {
+	    globalGrab = 0;
+	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
+		    (Tk_Window) clientData);
+	} else {
+	    globalGrab = 1;
+
+	    /*
+	     * We could just test the argument by hand instead of using
+	     * Tcl_GetIndexFromObj; the benefit of using the function is that
+	     * it sets up the error message for us, so we are certain to be
+	     * consistant with the rest of Tcl.
+	     */
+
+	    if (Tcl_GetIndexFromObj(interp, objv[2], flagStrings, "option",
+		    0, &index) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[3]),
+		    (Tk_Window) clientData);
+	}
+	if (tkwin == NULL) {
+	    return TCL_ERROR;
+	}
+	return Tk_Grab(interp, tkwin, globalGrab);
+
+    case GRABCMD_STATUS: {
+	/* [grab status window] */
+	TkWindow *winPtr;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "status window");
+	    return TCL_ERROR;
+	}
+	winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
+		(Tk_Window) clientData);
+	if (winPtr == NULL) {
+	    return TCL_ERROR;
+	}
+	dispPtr = winPtr->dispPtr;
+	if (dispPtr->eventualGrabWinPtr != winPtr) {
+	    Tcl_SetResult(interp, "none", TCL_STATIC);
+	} else if (dispPtr->grabFlags & GRAB_GLOBAL) {
+	    Tcl_SetResult(interp, "global", TCL_STATIC);
+	} else {
+	    Tcl_SetResult(interp, "local", TCL_STATIC);
+	}
+	break;
+    }
     }
 
     return TCL_OK;
@@ -383,34 +373,32 @@ Tk_GrabObjCmd(clientData, interp, objc, objv)
  *
  * Tk_Grab --
  *
- *	Grabs the pointer and keyboard, so that mouse-related events are
- *	only reported relative to a given window and its descendants.
+ *	Grabs the pointer and keyboard, so that mouse-related events are only
+ *	reported relative to a given window and its descendants.
  *
  * Results:
- *	A standard Tcl result is returned.  TCL_OK is the normal return
- *	value;  if the grab could not be set then TCL_ERROR is returned
- *	and the interp's result will hold an error message.
+ *	A standard Tcl result is returned. TCL_OK is the normal return value;
+ *	if the grab could not be set then TCL_ERROR is returned and the
+ *	interp's result will hold an error message.
  *
  * Side effects:
- *	Once this call completes successfully, no window outside the
- *	tree rooted at tkwin will receive pointer- or keyboard-related
- *	events until the next call to Tk_Ungrab.  If a previous grab was
- *	in effect within this application, then it is replaced with a new
- *	one.
+ *	Once this call completes successfully, no window outside the tree
+ *	rooted at tkwin will receive pointer- or keyboard-related events until
+ *	the next call to Tk_Ungrab. If a previous grab was in effect within
+ *	this application, then it is replaced with a new one.
  *
  *----------------------------------------------------------------------
  */
 
 int
-Tk_Grab(interp, tkwin, grabGlobal)
-    Tcl_Interp *interp;			/* Used for error reporting. */
-    Tk_Window tkwin;			/* Window on whose behalf the pointer
-					 * is to be grabbed. */
-    int grabGlobal;			/* Non-zero means issue a grab to the
-					 * server so that no other application
-					 * gets mouse or keyboard events.
-					 * Zero means the grab only applies
-					 * within this application. */
+Tk_Grab(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tk_Window tkwin,		/* Window on whose behalf the pointer is to be
+				 * grabbed. */
+    int grabGlobal)		/* Non-zero means issue a grab to the server
+				 * so that no other application gets mouse or
+				 * keyboard events. Zero means the grab only
+				 * applies within this application. */
 {
     int grabResult, numTries;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -425,7 +413,7 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	    return TCL_OK;
 	}
 	if (dispPtr->eventualGrabWinPtr->mainPtr != winPtr->mainPtr) {
-	    alreadyGrabbed:
+	alreadyGrabbed:
 	    Tcl_SetResult(interp, "grab failed: another application has grab",
 		    TCL_STATIC);
 	    return TCL_ERROR;
@@ -440,11 +428,11 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	unsigned int state;
 
 	/*
-	 * Local grab.  However, if any mouse buttons are down, turn
-	 * it into a global grab temporarily, until the last button
-	 * goes up.  This does two things: (a) it makes sure that we
-	 * see the button-up event;  and (b) it allows us to track mouse
-	 * motion among all of the windows of this application.
+	 * Local grab. However, if any mouse buttons are down, turn it into a
+	 * global grab temporarily, until the last button goes up. This does
+	 * two things: (a) it makes sure that we see the button-up event; and
+	 * (b) it allows us to track mouse motion among all of the windows of
+	 * this application.
 	 */
 
 	dispPtr->grabFlags &= ~(GRAB_GLOBAL|GRAB_TEMP_GLOBAL);
@@ -456,30 +444,28 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	}
     } else {
 	dispPtr->grabFlags |= GRAB_GLOBAL;
-	setGlobalGrab:
+    setGlobalGrab:
 
 	/*
-	 * Tricky point: must ungrab before grabbing.  This is needed
-	 * in case there is a button auto-grab already in effect.  If
-	 * there is, and the mouse has moved to a different window, X
-	 * won't generate enter and leave events to move the mouse if
-	 * we grab without ungrabbing.
+	 * Tricky point: must ungrab before grabbing. This is needed in case
+	 * there is a button auto-grab already in effect. If there is, and the
+	 * mouse has moved to a different window, X won't generate enter and
+	 * leave events to move the mouse if we grab without ungrabbing.
 	 */
 
 	XUngrabPointer(dispPtr->display, CurrentTime);
 	serial = NextRequest(dispPtr->display);
 
 	/*
-	 * Another tricky point: there are races with some window
-	 * managers that can cause grabs to fail because the window
-	 * manager hasn't released its grab quickly enough.  To work
-	 * around this problem, retry a few times after AlreadyGrabbed
-	 * errors to give the grab release enough time to register with
-	 * the server.
+	 * Another tricky point: there are races with some window managers
+	 * that can cause grabs to fail because the window manager hasn't
+	 * released its grab quickly enough. To work around this problem,
+	 * retry a few times after AlreadyGrabbed errors to give the grab
+	 * release enough time to register with the server.
 	 */
 
-	grabResult = 0;			/* Needed only to prevent gcc
-					 * compiler warnings. */
+	grabResult = 0;			/* Needed only to prevent gcc compiler
+					 * warnings. */
 	for (numTries = 0; numTries < 10; numTries++) {
 	    grabResult = XGrabPointer(dispPtr->display, winPtr->window,
 		    True, ButtonPressMask|ButtonReleaseMask|ButtonMotionMask
@@ -491,7 +477,7 @@ Tk_Grab(interp, tkwin, grabGlobal)
 	    Tcl_Sleep(100);
 	}
 	if (grabResult != 0) {
-	    grabError:
+	grabError:
 	    if (grabResult == GrabNotViewable) {
 		Tcl_SetResult(interp, "grab failed: window not viewable",
 			TCL_STATIC);
@@ -505,10 +491,10 @@ Tk_Grab(interp, tkwin, grabGlobal)
 			TCL_STATIC);
 	    } else {
 		char msg[64 + TCL_INTEGER_SPACE];
-	
+
 		sprintf(msg, "grab failed for unknown reason (code %d)",
 			grabResult);
-		Tcl_AppendResult(interp, msg, (char *) NULL);
+		Tcl_AppendResult(interp, msg, NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -521,13 +507,13 @@ Tk_Grab(interp, tkwin, grabGlobal)
 
 	/*
 	 * Eat up any grab-related events generated by the server for the
-	 * grab.  There are several reasons for doing this:
+	 * grab. There are several reasons for doing this:
 	 *
 	 * 1. We have to synthesize the events for local grabs anyway, since
 	 *    the server doesn't participate in them.
 	 * 2. The server doesn't always generate the right events for global
-	 *    grabs (e.g. it generates events even if the current window is
-	 *    in the grab tree, which we don't want).
+	 *    grabs (e.g. it generates events even if the current window is in
+	 *    the grab tree, which we don't want).
 	 * 3. We want all the grab-related events to be processed immediately
 	 *    (before other events that are already queued); events coming
 	 *    from the server will be in the wrong place, but events we
@@ -538,8 +524,8 @@ Tk_Grab(interp, tkwin, grabGlobal)
     }
 
     /*
-     * Synthesize leave events to move the pointer from its current window
-     * up to the lowest ancestor that it has in common with the grab window.
+     * Synthesize leave events to move the pointer from its current window up
+     * to the lowest ancestor that it has in common with the grab window.
      * However, only do this if the pointer is outside the grab window's
      * subtree but inside the grab window's application.
      */
@@ -565,8 +551,8 @@ Tk_Grab(interp, tkwin, grabGlobal)
  *
  * Tk_Ungrab --
  *
- *	Releases a grab on the mouse pointer and keyboard, if there
- *	is one set on the specified window.
+ *	Releases a grab on the mouse pointer and keyboard, if there is one set
+ *	on the specified window.
  *
  * Results:
  *	None.
@@ -579,9 +565,8 @@ Tk_Grab(interp, tkwin, grabGlobal)
  */
 
 void
-Tk_Ungrab(tkwin)
-    Tk_Window tkwin;			/* Window whose grab should be
-					 * released. */
+Tk_Ungrab(
+    Tk_Window tkwin)		/* Window whose grab should be released. */
 {
     TkDisplay *dispPtr;
     TkWindow *grabWinPtr, *winPtr;
@@ -593,7 +578,7 @@ Tk_Ungrab(tkwin)
 	return;
     }
     ReleaseButtonGrab(dispPtr);
-    QueueGrabWindowChange(dispPtr, (TkWindow *) NULL);
+    QueueGrabWindowChange(dispPtr, NULL);
     if (dispPtr->grabFlags & (GRAB_GLOBAL|GRAB_TEMP_GLOBAL)) {
 	dispPtr->grabFlags &= ~(GRAB_GLOBAL|GRAB_TEMP_GLOBAL);
 	serial = NextRequest(dispPtr->display);
@@ -603,17 +588,17 @@ Tk_Ungrab(tkwin)
     }
 
     /*
-     * Generate events to move the pointer back to the window where it
-     * really is.  Some notes:
-     * 1. As with grabs, only do this if the "real" window is not a
-     *    descendant of the grab window, since in this case the pointer
-     *    is already where it's supposed to be.
+     * Generate events to move the pointer back to the window where it really
+     * is. Some notes:
+     * 1. As with grabs, only do this if the "real" window is not a descendant
+     *    of the grab window, since in this case the pointer is already where
+     *    it's supposed to be.
      * 2. If the "real" window is in some other application then don't
-     *    generate any events at all, since everything's already been
-     *    reported correctly.
-     * 3. Only generate enter events.  Don't generate leave events,
-     *    because we never told the lower-level windows that they
-     *    had the pointer in the first place.
+     *    generate any events at all, since everything's already been reported
+     *    correctly.
+     * 3. Only generate enter events. Don't generate leave events, because we
+     *    never told the lower-level windows that they had the pointer in the
+     *    first place.
      */
 
     for (winPtr = dispPtr->serverWinPtr; ; winPtr = winPtr->parentPtr) {
@@ -636,26 +621,26 @@ Tk_Ungrab(tkwin)
  *
  * ReleaseButtonGrab --
  *
- *	This procedure is called to release a simulated button grab, if
- *	there is one in effect.  A button grab is present whenever
- *	dispPtr->buttonWinPtr is non-NULL or when the GRAB_TEMP_GLOBAL
- *	flag is set.
+ *	This function is called to release a simulated button grab, if there
+ *	is one in effect. A button grab is present whenever
+ *	dispPtr->buttonWinPtr is non-NULL or when the GRAB_TEMP_GLOBAL flag is
+ *	set.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	DispPtr->buttonWinPtr is reset to NULL, and enter and leave
- *	events are generated if necessary to move the pointer from
- *	the button grab window to its current window.
+ *	DispPtr->buttonWinPtr is reset to NULL, and enter and leave events are
+ *	generated if necessary to move the pointer from the button grab window
+ *	to its current window.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-ReleaseButtonGrab(dispPtr)
-    register TkDisplay *dispPtr;	/* Display whose button grab is to be
-					 * released. */
+ReleaseButtonGrab(
+    register TkDisplay *dispPtr)/* Display whose button grab is to be
+				 * released. */
 {
     unsigned int serial;
 
@@ -680,64 +665,64 @@ ReleaseButtonGrab(dispPtr)
  *
  * TkPointerEvent --
  *
- *	This procedure is called for each pointer-related event, before
- *	the event has been processed.  It does various things to make
- *	grabs work correctly.
+ *	This function is called for each pointer-related event, before the
+ *	event has been processed. It does various things to make grabs work
+ *	correctly.
  *
  * Results:
- *	If the return value is 1 it means the event should be processed
- *	(event handlers should be invoked).  If the return value is 0
- *	it means the event should be ignored in order to make grabs
- *	work correctly.  In some cases this procedure modifies the event.
+ *	If the return value is 1 it means the event should be processed (event
+ *	handlers should be invoked). If the return value is 0 it means the
+ *	event should be ignored in order to make grabs work correctly. In some
+ *	cases this function modifies the event.
  *
  * Side effects:
- *	Grab state information may be updated.  New events may also be
- *	pushed back onto the event queue to replace or augment the
- *	one passed in here.
+ *	Grab state information may be updated. New events may also be pushed
+ *	back onto the event queue to replace or augment the one passed in
+ *	here.
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkPointerEvent(eventPtr, winPtr)
-    register XEvent *eventPtr;		/* Pointer to the event. */
-    TkWindow *winPtr;			/* Tk's information for window
-					 * where event was reported. */
+TkPointerEvent(
+    register XEvent *eventPtr,	/* Pointer to the event. */
+    TkWindow *winPtr)		/* Tk's information for window where event was
+				 * reported. */
 {
     register TkWindow *winPtr2;
     TkDisplay *dispPtr = winPtr->dispPtr;
     unsigned int serial;
     int outsideGrabTree = 0;
     int ancestorOfGrab = 0;
-    int appGrabbed = 0;			/* Non-zero means event is being
-					 * reported to an application that is
-					 * affected by the grab. */
+    int appGrabbed = 0;		/* Non-zero means event is being reported to
+				 * an application that is affected by the
+				 * grab. */
 
     /*
      * Collect information about the grab (if any).
      */
 
     switch (TkGrabState(winPtr)) {
-	case TK_GRAB_IN_TREE:
-	    appGrabbed = 1;
-	    break;
-	case TK_GRAB_ANCESTOR:
-	    appGrabbed = 1;
-	    outsideGrabTree = 1;
-	    ancestorOfGrab = 1;
-	    break;
-	case TK_GRAB_EXCLUDED:
-	    appGrabbed = 1;
-	    outsideGrabTree = 1;
-	    break;
+    case TK_GRAB_IN_TREE:
+	appGrabbed = 1;
+	break;
+    case TK_GRAB_ANCESTOR:
+	appGrabbed = 1;
+	outsideGrabTree = 1;
+	ancestorOfGrab = 1;
+	break;
+    case TK_GRAB_EXCLUDED:
+	appGrabbed = 1;
+	outsideGrabTree = 1;
+	break;
     }
 
     if ((eventPtr->type == EnterNotify) || (eventPtr->type == LeaveNotify)) {
 	/*
-	 * Keep track of what window the mouse is *really* over.
-	 * Any events that we generate have a special send_event value,
-	 * which is detected below and used to ignore the event for
-	 * purposes of setting serverWinPtr.
+	 * Keep track of what window the mouse is *really* over. Any events
+	 * that we generate have a special send_event value, which is detected
+	 * below and used to ignore the event for purposes of setting
+	 * serverWinPtr.
 	 */
 
 	if (eventPtr->xcrossing.send_event != GENERATED_EVENT_MAGIC) {
@@ -750,13 +735,13 @@ TkPointerEvent(eventPtr, winPtr)
 	}
 
 	/*
-	 * When a grab is active, X continues to report enter and leave
-	 * events for windows outside the tree of the grab window:
-	 * 1. Detect these events and ignore them except for
-	 *    windows above the grab window.
-	 * 2. Allow Enter and Leave events to pass through the
-	 *    windows above the grab window, but never let them
-	 *    end up with the pointer *in* one of those windows.
+	 * When a grab is active, X continues to report enter and leave events
+	 * for windows outside the tree of the grab window:
+	 * 1. Detect these events and ignore them except for windows above the
+	 *    grab window.
+	 * 2. Allow Enter and Leave events to pass through the windows above
+	 *    the grab window, but never let them end up with the pointer *in*
+	 *    one of those windows.
 	 */
 
 	if (dispPtr->grabWinPtr != NULL) {
@@ -765,22 +750,21 @@ TkPointerEvent(eventPtr, winPtr)
 		    return 0;
 		}
 		switch (eventPtr->xcrossing.detail) {
-		    case NotifyInferior:
-			return 0;
-		    case NotifyAncestor:
-			eventPtr->xcrossing.detail = NotifyVirtual;
-			break;
-		    case NotifyNonlinear:
-			eventPtr->xcrossing.detail = NotifyNonlinearVirtual;
-			break;
+		case NotifyInferior:
+		    return 0;
+		case NotifyAncestor:
+		    eventPtr->xcrossing.detail = NotifyVirtual;
+		    break;
+		case NotifyNonlinear:
+		    eventPtr->xcrossing.detail = NotifyNonlinearVirtual;
+		    break;
 		}
 	    }
 
 	    /*
-	     * Make buttons have the same grab-like behavior inside a grab
-	     * as they do outside a grab:  do this by ignoring enter and
-	     * leave events except for the window in which the button was
-	     * pressed.
+	     * Make buttons have the same grab-like behavior inside a grab as
+	     * they do outside a grab: do this by ignoring enter and leave
+	     * events except for the window in which the button was pressed.
 	     */
 
 	    if ((dispPtr->buttonWinPtr != NULL)
@@ -798,12 +782,12 @@ TkPointerEvent(eventPtr, winPtr)
     if (eventPtr->type == MotionNotify) {
 	/*
 	 * When grabs are active, X reports motion events relative to the
-	 * window under the pointer.  Instead, it should report the events
+	 * window under the pointer. Instead, it should report the events
 	 * relative to the window the button went down in, if there is a
-	 * button down.  Otherwise, if the pointer window is outside the
-	 * subtree of the grab window, the events should be reported
-	 * relative to the grab window.  Otherwise, the event should be
-	 * reported to the pointer window.
+	 * button down. Otherwise, if the pointer window is outside the
+	 * subtree of the grab window, the events should be reported relative
+	 * to the grab window. Otherwise, the event should be reported to the
+	 * pointer window.
 	 */
 
 	winPtr2 = winPtr;
@@ -822,32 +806,32 @@ TkPointerEvent(eventPtr, winPtr)
 
     /*
      * Process ButtonPress and ButtonRelease events:
-     * 1. Keep track of whether a button is down and what window it
-     *    went down in.
-     * 2. If the first button goes down outside the grab tree, pretend
-     *    it went down in the grab window.  Note: it's important to
-     *    redirect events to the grab window like this in order to make
-     *    things like menus work, where button presses outside the
-     *    grabbed menu need to be seen.  An application can always
-     *    ignore the events if they occur outside its window.
-     * 3. If a button press or release occurs outside the window where
-     *    the first button was pressed, retarget the event so it's reported
-     *    to the window where the first button was pressed.
-     * 4. If the last button is released in a window different than where
-     *    the first button was pressed, generate Enter/Leave events to
-     *    move the mouse from the button window to its current window.
-     * 5. If the grab is set at a time when a button is already down, or
-     *    if the window where the button was pressed was deleted, then
-     *    dispPtr->buttonWinPtr will stay NULL.  Just forget about the
-     *    auto-grab for the button press;  events will go to whatever
-     *    window contains the pointer.  If this window isn't in the grab
-     *    tree then redirect events to the grab window.
-     * 6. When a button is pressed during a local grab, the X server sets
-     *    a grab of its own, since it doesn't even know about our local
-     *    grab.  This causes enter and leave events no longer to be
-     *    generated in the same way as for global grabs.  To eliminate this
-     *    problem, set a temporary global grab when the first button goes
-     *    down and release it when the last button comes up.
+     * 1. Keep track of whether a button is down and what window it went down
+     *    in.
+     * 2. If the first button goes down outside the grab tree, pretend it went
+     *    down in the grab window. Note: it's important to redirect events to
+     *    the grab window like this in order to make things like menus work,
+     *    where button presses outside the grabbed menu need to be seen. An
+     *    application can always ignore the events if they occur outside its
+     *    window.
+     * 3. If a button press or release occurs outside the window where the
+     *    first button was pressed, retarget the event so it's reported to the
+     *    window where the first button was pressed.
+     * 4. If the last button is released in a window different than where the
+     *    first button was pressed, generate Enter/Leave events to move the
+     *    mouse from the button window to its current window.
+     * 5. If the grab is set at a time when a button is already down, or if
+     *    the window where the button was pressed was deleted, then
+     *    dispPtr->buttonWinPtr will stay NULL. Just forget about the
+     *    auto-grab for the button press; events will go to whatever window
+     *    contains the pointer. If this window isn't in the grab tree then
+     *    redirect events to the grab window.
+     * 6. When a button is pressed during a local grab, the X server sets a
+     *    grab of its own, since it doesn't even know about our local grab.
+     *    This causes enter and leave events no longer to be generated in the
+     *    same way as for global grabs. To eliminate this problem, set a
+     *    temporary global grab when the first button goes down and release it
+     *    when the last button comes up.
      */
 
     if ((eventPtr->type == ButtonPress) || (eventPtr->type == ButtonRelease)) {
@@ -908,12 +892,12 @@ TkPointerEvent(eventPtr, winPtr)
  * TkChangeEventWindow --
  *
  *	Given an event and a new window to which the event should be
- *	retargeted, modify fields of the event so that the event is
- *	properly retargeted to the new window.
+ *	retargeted, modify fields of the event so that the event is properly
+ *	retargeted to the new window.
  *
  * Results:
- *	The following fields of eventPtr are modified:  window,
- *	subwindow, x, y, same_screen.
+ *	The following fields of eventPtr are modified: window, subwindow, x,
+ *	y, same_screen.
  *
  * Side effects:
  *	None.
@@ -922,12 +906,12 @@ TkPointerEvent(eventPtr, winPtr)
  */
 
 void
-TkChangeEventWindow(eventPtr, winPtr)
-    register XEvent *eventPtr;	/* Event to retarget.  Must have
-				 * type ButtonPress, ButtonRelease, KeyPress,
-				 * KeyRelease, MotionNotify, EnterNotify,
-				 * or LeaveNotify. */
-    TkWindow *winPtr;		/* New target window for event. */
+TkChangeEventWindow(
+    register XEvent *eventPtr,	/* Event to retarget. Must have type
+				 * ButtonPress, ButtonRelease, KeyPress,
+				 * KeyRelease, MotionNotify, EnterNotify, or
+				 * LeaveNotify. */
+    TkWindow *winPtr)		/* New target window for event. */
 {
     int x, y, sameScreen, bd;
     register TkWindow *childPtr;
@@ -972,44 +956,44 @@ TkChangeEventWindow(eventPtr, winPtr)
  *
  * TkInOutEvents --
  *
- *	This procedure synthesizes EnterNotify and LeaveNotify events
- *	to correctly transfer the pointer from one window to another.
- *	It can also be used to generate FocusIn and FocusOut events
- *	to move the input focus.
+ *	This function synthesizes EnterNotify and LeaveNotify events to
+ *	correctly transfer the pointer from one window to another. It can also
+ *	be used to generate FocusIn and FocusOut events to move the input
+ *	focus.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Synthesized events may be pushed back onto the event queue.
- *	The event pointed to by eventPtr is modified.
+ *	Synthesized events may be pushed back onto the event queue. The event
+ *	pointed to by eventPtr is modified.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
-    XEvent *eventPtr;		/* A template X event.  Must have all fields
+TkInOutEvents(
+    XEvent *eventPtr,		/* A template X event. Must have all fields
 				 * properly set except for type, window,
-				 * subwindow, x, y, detail, and same_screen
+				 * subwindow, x, y, detail, and same_screen.
 				 * (Not all of these fields are valid for
-				 * FocusIn/FocusOut events;  x_root and y_root
+				 * FocusIn/FocusOut events; x_root and y_root
 				 * must be valid for Enter/Leave events, even
 				 * though x and y needn't be valid). */
-    TkWindow *sourcePtr;	/* Window that used to have the pointer or
+    TkWindow *sourcePtr,	/* Window that used to have the pointer or
 				 * focus (NULL means it was not in a window
 				 * managed by this process). */
-    TkWindow *destPtr;		/* Window that is to end up with the pointer
+    TkWindow *destPtr,		/* Window that is to end up with the pointer
 				 * or focus (NULL means it's not one managed
 				 * by this process). */
-    int leaveType;		/* Type of events to generate for windows
-				 * being left (LeaveNotify or FocusOut).  0
+    int leaveType,		/* Type of events to generate for windows
+				 * being left (LeaveNotify or FocusOut). 0
 				 * means don't generate leave events. */
-    int enterType;		/* Type of events to generate for windows
-				 * being entered (EnterNotify or FocusIn).  0
+    int enterType,		/* Type of events to generate for windows
+				 * being entered (EnterNotify or FocusIn). 0
 				 * means don't generate enter events. */
-    Tcl_QueuePosition position;	/* Position at which events are added to
-				 * the system event queue. */
+    Tcl_QueuePosition position)	/* Position at which events are added to the
+				 * system event queue. */
 {
     register TkWindow *winPtr;
     int upLevels, downLevels, i, j, focus;
@@ -1017,17 +1001,15 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
     /*
      * There are four possible cases to deal with:
      *
-     * 1. SourcePtr and destPtr are the same.  There's nothing to do in
-     *    this case.
-     * 2. SourcePtr is an ancestor of destPtr in the same top-level
-     *    window.  Must generate events down the window tree from source
-     *    to dest.
-     * 3. DestPtr is an ancestor of sourcePtr in the same top-level
-     *    window.  Must generate events up the window tree from sourcePtr
-     *    to destPtr.
-     * 4. All other cases.  Must first generate events up the window tree
-     *    from sourcePtr to its top-level, then down from destPtr's
-     *    top-level to destPtr. This form is called "non-linear."
+     * 1. SourcePtr and destPtr are the same. There's nothing to do in this
+     *    case.
+     * 2. SourcePtr is an ancestor of destPtr in the same top-level window.
+     *    Must generate events down the window tree from source to dest.
+     * 3. DestPtr is an ancestor of sourcePtr in the same top-level window.
+     *    Must generate events up the window tree from sourcePtr to destPtr.
+     * 4. All other cases. Must first generate events up the window tree from
+     *    sourcePtr to its top-level, then down from destPtr's top-level to
+     *    destPtr. This form is called "non-linear."
      *
      * The call to FindCommonAncestor separates these four cases and decides
      * how many levels up and down events have to be generated for.
@@ -1047,7 +1029,6 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
      * Generate enter/leave events and add them to the grab event queue.
      */
 
-
 #define QUEUE(w, t, d)					\
     if (w->window != None) {				\
 	eventPtr->type = t;				\
@@ -1062,7 +1043,6 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
     }
 
     if (downLevels == 0) {
-    
 	/*
 	 * SourcePtr is an inferior of destPtr.
 	 */
@@ -1078,7 +1058,6 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
 	    QUEUE(destPtr, enterType, NotifyInferior);
 	}
     } else if (upLevels == 0) {
-
 	/*
 	 * DestPtr is an inferior of sourcePtr.
 	 */
@@ -1090,6 +1069,7 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
 	    for (i = downLevels-1; i > 0; i--) {
 		for (winPtr = destPtr->parentPtr, j = 1; j < i;
 			winPtr = winPtr->parentPtr, j++) {
+		    /* empty */
 		}
 		QUEUE(winPtr, enterType, NotifyVirtual);
 	    }
@@ -1098,9 +1078,8 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
 	    }
 	}
     } else {
-
 	/*
-	 * Non-linear:  neither window is an inferior of the other.
+	 * Non-linear: neither window is an inferior of the other.
 	 */
 
 	if (leaveType != 0) {
@@ -1129,11 +1108,11 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
  *
  * MovePointer2 --
  *
- *	This procedure synthesizes  EnterNotify and LeaveNotify events
- *	to correctly transfer the pointer from one window to another.
- *	It is different from TkInOutEvents in that no template X event
- *	needs to be supplied;  this procedure generates the template
- *	event and calls TkInOutEvents.
+ *	This function synthesizes EnterNotify and LeaveNotify events to
+ *	correctly transfer the pointer from one window to another. It is
+ *	different from TkInOutEvents in that no template X event needs to be
+ *	supplied; this function generates the template event and calls
+ *	TkInOutEvents.
  *
  * Results:
  *	None.
@@ -1145,20 +1124,20 @@ TkInOutEvents(eventPtr, sourcePtr, destPtr, leaveType, enterType, position)
  */
 
 static void
-MovePointer2(sourcePtr, destPtr, mode, leaveEvents, enterEvents)
-    TkWindow *sourcePtr;	/* Window currently containing pointer (NULL
+MovePointer2(
+    TkWindow *sourcePtr,	/* Window currently containing pointer (NULL
 				 * means it's not one managed by this
 				 * process). */
-    TkWindow *destPtr;		/* Window that is to end up containing the
-				 * pointer (NULL means it's not one managed
-				 * by this process). */
-    int mode;			/* Mode for enter/leave events, such as
+    TkWindow *destPtr,		/* Window that is to end up containing the
+				 * pointer (NULL means it's not one managed by
+				 * this process). */
+    int mode,			/* Mode for enter/leave events, such as
 				 * NotifyNormal or NotifyUngrab. */
-    int leaveEvents;		/* Non-zero means generate leave events for the
-				 * windows being left.  Zero means don't
+    int leaveEvents,		/* Non-zero means generate leave events for
+				 * the windows being left. Zero means don't
 				 * generate leave events. */
-    int enterEvents;		/* Non-zero means generate enter events for the
-				 * windows being entered.  Zero means don't
+    int enterEvents)		/* Non-zero means generate enter events for
+				 * the windows being entered. Zero means don't
 				 * generate enter events. */
 {
     XEvent event;
@@ -1174,12 +1153,10 @@ MovePointer2(sourcePtr, destPtr, mode, leaveEvents, enterEvents)
 	}
     }
 
-    event.xcrossing.serial = LastKnownRequestProcessed(
-	winPtr->display);
+    event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display);
     event.xcrossing.send_event = GENERATED_EVENT_MAGIC;
     event.xcrossing.display = winPtr->display;
-    event.xcrossing.root = RootWindow(winPtr->display,
-	    winPtr->screenNum);
+    event.xcrossing.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xcrossing.time = TkCurrentTime(winPtr->dispPtr);
     XQueryPointer(winPtr->display, winPtr->window, &dummy1, &dummy2,
 	    &event.xcrossing.x_root, &event.xcrossing.y_root,
@@ -1195,30 +1172,30 @@ MovePointer2(sourcePtr, destPtr, mode, leaveEvents, enterEvents)
  *
  * TkGrabDeadWindow --
  *
- *	This procedure is invoked whenever a window is deleted, so that
+ *	This function is invoked whenever a window is deleted, so that
  *	grab-related cleanup can be performed.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Various cleanups happen, such as generating events to move the
- *	pointer back to its "natural" window as if an ungrab had been
- *	done.  See the code.
+ *	Various cleanups happen, such as generating events to move the pointer
+ *	back to its "natural" window as if an ungrab had been done. See the
+ *	code.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkGrabDeadWindow(winPtr)
-    register TkWindow *winPtr;		/* Window that is in the process
-					 * of being deleted. */
+TkGrabDeadWindow(
+    register TkWindow *winPtr)	/* Window that is in the process of being
+				 * deleted. */
 {
     TkDisplay *dispPtr = winPtr->dispPtr;
 
     if (dispPtr->eventualGrabWinPtr == winPtr) {
 	/*
-	 * Grab window was deleted.  Release the grab.
+	 * Grab window was deleted. Release the grab.
 	 */
 
 	Tk_Ungrab((Tk_Window) dispPtr->eventualGrabWinPtr);
@@ -1242,26 +1219,25 @@ TkGrabDeadWindow(winPtr)
  *
  * EatGrabEvents --
  *
- *	This procedure is called to eliminate any Enter, Leave,
- *	FocusIn, or FocusOut events in the event queue for a
- *	display that have mode NotifyGrab or NotifyUngrab and
- *	have a serial number no less than a given value and are not
- *	generated by the grab module.
+ *	This function is called to eliminate any Enter, Leave, FocusIn, or
+ *	FocusOut events in the event queue for a display that have mode
+ *	NotifyGrab or NotifyUngrab and have a serial number no less than a
+ *	given value and are not generated by the grab module.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	DispPtr's display gets sync-ed, and some of the events get
- *	removed from the Tk event queue.
+ *	DispPtr's display gets sync-ed, and some of the events get removed
+ *	from the Tk event queue.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-EatGrabEvents(dispPtr, serial)
-    TkDisplay *dispPtr;		/* Display from which to consume events. */
-    unsigned int serial;	/* Only discard events that have a serial
+EatGrabEvents(
+    TkDisplay *dispPtr,		/* Display from which to consume events. */
+    unsigned int serial)	/* Only discard events that have a serial
 				 * number at least this great. */
 {
     Tk_RestrictProc *oldProc;
@@ -1282,10 +1258,10 @@ EatGrabEvents(dispPtr, serial)
  *
  * GrabRestrictProc --
  *
- *	A Tk_RestrictProc used by EatGrabEvents to eliminate any
- *	Enter, Leave, FocusIn, or FocusOut events in the event queue
- *	for a display that has mode NotifyGrab or NotifyUngrab and
- *	have a serial number no less than a given value.
+ *	A Tk_RestrictProc used by EatGrabEvents to eliminate any Enter, Leave,
+ *	FocusIn, or FocusOut events in the event queue for a display that has
+ *	mode NotifyGrab or NotifyUngrab and have a serial number no less than
+ *	a given value.
  *
  * Results:
  *	Returns either TK_DISCARD_EVENT or TK_DEFER_EVENT.
@@ -1297,17 +1273,17 @@ EatGrabEvents(dispPtr, serial)
  */
 
 static Tk_RestrictAction
-GrabRestrictProc(arg, eventPtr)
-    ClientData arg;
-    XEvent *eventPtr;
+GrabRestrictProc(
+    ClientData arg,
+    XEvent *eventPtr)
 {
     GrabInfo *info = (GrabInfo *) arg;
     int mode, diff;
 
     /*
-     * The diff caculation is trickier than it may seem.  Don't forget
-     * that serial numbers can wrap around, so can't compare the two
-     * serial numbers directly.
+     * The diff caculation is trickier than it may seem. Don't forget that
+     * serial numbers can wrap around, so can't compare the two serial numbers
+     * directly.
      */
 
     diff = eventPtr->xany.serial - info->serial;
@@ -1333,29 +1309,28 @@ GrabRestrictProc(arg, eventPtr)
  *
  * QueueGrabWindowChange --
  *
- *	This procedure queues a special event in the Tcl event queue,
- *	which will cause the "grabWinPtr" field for the display to get
- *	modified when the event is processed.  This is needed to make
- *	sure that the grab window changes at the proper time relative
- *	to grab-related enter and leave events that are also in the
- *	queue.  In particular, this approach works even when multiple
- *	grabs and ungrabs happen back-to-back.
+ *	This function queues a special event in the Tcl event queue, which
+ *	will cause the "grabWinPtr" field for the display to get modified when
+ *	the event is processed. This is needed to make sure that the grab
+ *	window changes at the proper time relative to grab-related enter and
+ *	leave events that are also in the queue. In particular, this approach
+ *	works even when multiple grabs and ungrabs happen back-to-back.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	DispPtr->grabWinPtr will be modified later (by GrabWinEventProc)
- *	when the event is removed from the grab event queue.
+ *	DispPtr->grabWinPtr will be modified later (by GrabWinEventProc) when
+ *	the event is removed from the grab event queue.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-QueueGrabWindowChange(dispPtr, grabWinPtr)
-    TkDisplay *dispPtr;		/* Display on which to change the grab
+QueueGrabWindowChange(
+    TkDisplay *dispPtr,		/* Display on which to change the grab
 				 * window. */
-    TkWindow *grabWinPtr;	/* Window that is to become the new grab
+    TkWindow *grabWinPtr)	/* Window that is to become the new grab
 				 * window (may be NULL). */
 {
     NewGrabWinEvent *grabEvPtr;
@@ -1377,25 +1352,25 @@ QueueGrabWindowChange(dispPtr, grabWinPtr)
  *
  * GrabWinEventProc --
  *
- *	This procedure is invoked as a handler for Tcl_Events of type
- *	NewGrabWinEvent.  It updates the current grab window field in
- *	a display.
+ *	This function is invoked as a handler for Tcl_Events of type
+ *	NewGrabWinEvent. It updates the current grab window field in a
+ *	display.
  *
  * Results:
- *	Returns 1 if the event was processed, 0 if it should be deferred
- *	for processing later.
+ *	Returns 1 if the event was processed, 0 if it should be deferred for
+ *	processing later.
  *
  * Side effects:
- *	The grabWinPtr field is modified in the display associated with
- *	the event.
+ *	The grabWinPtr field is modified in the display associated with the
+ *	event.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-GrabWinEventProc(evPtr, flags)
-    Tcl_Event *evPtr;		/* Event of type NewGrabWinEvent. */
-    int flags;			/* Flags argument to Tk_DoOneEvent: indicates
+GrabWinEventProc(
+    Tcl_Event *evPtr,		/* Event of type NewGrabWinEvent. */
+    int flags)			/* Flags argument to Tk_DoOneEvent: indicates
 				 * what kinds of events are being processed
 				 * right now. */
 {
@@ -1411,19 +1386,19 @@ GrabWinEventProc(evPtr, flags)
  *
  * FindCommonAncestor --
  *
- *	Given two windows, this procedure finds their least common
- *	ancestor and also computes how many levels up this ancestor
- *	is from each of the original windows.
+ *	Given two windows, this function finds their least common ancestor and
+ *	also computes how many levels up this ancestor is from each of the
+ *	original windows.
  *
  * Results:
- *	If the windows are in different applications or top-level
- *	windows, then NULL is returned and *countPtr1 and *countPtr2
- *	are set to the depths of the two windows in their respective
- *	top-level windows (1 means the window is a top-level, 2 means
- *	its parent is a top-level, and so on).  Otherwise, the return
- *	value is a pointer to the common ancestor and the counts are
- *	set to the distance of winPtr1 and winPtr2 from this ancestor
- *	(1 means they're children, 2 means grand-children, etc.).
+ *	If the windows are in different applications or top-level windows,
+ *	then NULL is returned and *countPtr1 and *countPtr2 are set to the
+ *	depths of the two windows in their respective top-level windows (1
+ *	means the window is a top-level, 2 means its parent is a top-level,
+ *	and so on). Otherwise, the return value is a pointer to the common
+ *	ancestor and the counts are set to the distance of winPtr1 and winPtr2
+ *	from this ancestor (1 means they're children, 2 means grand-children,
+ *	etc.).
  *
  * Side effects:
  *	None.
@@ -1432,12 +1407,12 @@ GrabWinEventProc(evPtr, flags)
  */
 
 static TkWindow *
-FindCommonAncestor(winPtr1, winPtr2, countPtr1, countPtr2)
-    TkWindow *winPtr1;		/* First window.   May be NULL. */
-    TkWindow *winPtr2;		/* Second window.  May be NULL. */
-    int *countPtr1;		/* Store nesting level of winPtr1 within
+FindCommonAncestor(
+    TkWindow *winPtr1,		/* First window. May be NULL. */
+    TkWindow *winPtr2,		/* Second window. May be NULL. */
+    int *countPtr1,		/* Store nesting level of winPtr1 within
 				 * common ancestor here. */
-    int *countPtr2;		/* Store nesting level of winPtr2 within
+    int *countPtr2)		/* Store nesting level of winPtr2 within
 				 * common ancestor here. */
 {
     register TkWindow *winPtr;
@@ -1458,8 +1433,8 @@ FindCommonAncestor(winPtr1, winPtr2, countPtr1, countPtr2)
     }
 
     /*
-     * Search upwards from winPtr2 until an ancestor of winPtr1 is
-     * found or a top-level window is reached.
+     * Search upwards from winPtr2 until an ancestor of winPtr1 is found or a
+     * top-level window is reached.
      */
 
     winPtr = winPtr2;
@@ -1512,15 +1487,13 @@ FindCommonAncestor(winPtr1, winPtr2, countPtr1, countPtr2)
  *
  * TkPositionInTree --
  *
- *	Compute where the given window is relative to a particular
- *	subtree of the window hierarchy.
+ *	Compute where the given window is relative to a particular subtree of
+ *	the window hierarchy.
  *
  * Results:
- *
- *	Returns TK_GRAB_IN_TREE if the window is contained in the
- *	subtree.  Returns TK_GRAB_ANCESTOR if the window is an
- *	ancestor of the subtree, in the same toplevel.  Otherwise
- *	it returns TK_GRAB_EXCLUDED.
+ *	Returns TK_GRAB_IN_TREE if the window is contained in the subtree.
+ *	Returns TK_GRAB_ANCESTOR if the window is an ancestor of the subtree,
+ *	in the same toplevel. Otherwise it returns TK_GRAB_EXCLUDED.
  *
  * Side effects:
  *	None.
@@ -1529,9 +1502,9 @@ FindCommonAncestor(winPtr1, winPtr2, countPtr1, countPtr2)
  */
 
 int
-TkPositionInTree(winPtr, treePtr)
-    TkWindow *winPtr;		/* Window to be checked. */
-    TkWindow *treePtr;		/* Root of tree to compare against. */
+TkPositionInTree(
+    TkWindow *winPtr,		/* Window to be checked. */
+    TkWindow *treePtr)		/* Root of tree to compare against. */
 {
     TkWindow *winPtr2;
 
@@ -1558,21 +1531,20 @@ TkPositionInTree(winPtr, treePtr)
  *
  * TkGrabState --
  *
- *	Given a window, this procedure returns a value that indicates
- *	the grab state of the application relative to the window.
+ *	Given a window, this function returns a value that indicates the grab
+ *	state of the application relative to the window.
  *
  * Results:
  *	The return value is one of three things:
  *	    TK_GRAB_NONE -	no grab is in effect.
- *	    TK_GRAB_IN_TREE -   there is a grab in effect, and winPtr
- *				is in the grabbed subtree.
- *	    TK_GRAB_ANCESTOR -  there is a grab in effect;  winPtr is
- *				an ancestor of the grabbed window, in
- *				the same toplevel.
- *	    TK_GRAB_EXCLUDED -	there is a grab in effect; winPtr is
- *				outside the tree of the grab and is not
- *				an ancestor of the grabbed window in the
- *				same toplevel.
+ *	    TK_GRAB_IN_TREE -   there is a grab in effect, and winPtr is in
+ *				the grabbed subtree.
+ *	    TK_GRAB_ANCESTOR -  there is a grab in effect; winPtr is an
+ *				ancestor of the grabbed window, in the same
+ *				toplevel.
+ *	    TK_GRAB_EXCLUDED -	there is a grab in effect; winPtr is outside
+ *				the tree of the grab and is not an ancestor of
+ *				the grabbed window in the same toplevel.
  *
  * Side effects:
  *	None.
@@ -1581,8 +1553,8 @@ TkPositionInTree(winPtr, treePtr)
  */
 
 int
-TkGrabState(winPtr)
-    TkWindow *winPtr;		/* Window for which grab information is
+TkGrabState(
+    TkWindow *winPtr)		/* Window for which grab information is
 				 * needed. */
 {
     TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
@@ -1597,3 +1569,11 @@ TkGrabState(winPtr)
 
     return TkPositionInTree(winPtr, grabWinPtr);
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
