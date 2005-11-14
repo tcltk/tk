@@ -1,3 +1,8 @@
+2005-11-14  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkSelect.c (TkSelDefaultSelection): Test select-9.5
+	highlighted further brokenness in this function.
+
 2005-11-13  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* unix/tkUnixSelect.c (SelCvtToX): Arrange for the parsing code to
