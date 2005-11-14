@@ -1,4 +1,4 @@
-/* 
+/*
  * tkMacWinMenu.c --
  *
  *	This module implements the common elements of the Mac and Windows
@@ -6,10 +6,10 @@
  *
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWinMenu.c,v 1.3 1999/04/16 01:51:19 stanton Exp $
+ * RCS: @(#) $Id: tkMacWinMenu.c,v 1.4 2005/11/14 22:44:11 dkf Exp $
  */
 
 #include "tkMenu.h"
@@ -19,9 +19,7 @@ typedef struct ThreadSpecificData {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-
-static int			PreprocessMenu _ANSI_ARGS_((TkMenu *menuPtr));
-
+static int		PreprocessMenu(TkMenu *menuPtr);
 
 /*
  *----------------------------------------------------------------------
@@ -31,8 +29,8 @@ static int			PreprocessMenu _ANSI_ARGS_((TkMenu *menuPtr));
  *	The guts of the preprocessing. Recursive.
  *
  * Results:
- *	The return value is a standard Tcl result (errors can occur
- *	while the postcommands are being processed).
+ *	The return value is a standard Tcl result (errors can occur while the
+ *	postcommands are being processed).
  *
  * Side effects:
  *	Since commands can get executed while this routine is being executed,
@@ -42,61 +40,59 @@ static int			PreprocessMenu _ANSI_ARGS_((TkMenu *menuPtr));
  */
 
 static int
-PreprocessMenu(menuPtr)
-    TkMenu *menuPtr;
+PreprocessMenu(
+    TkMenu *menuPtr)
 {
     int index, result, finished;
-    TkMenu *cascadeMenuPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-   
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
     Tcl_Preserve((ClientData) menuPtr);
-    
+
     /*
      * First, let's process the post command on ourselves. If this command
      * destroys this menu, or if there was an error, we are done.
      */
-     
+
     result = TkPostCommand(menuPtr);
     if ((result != TCL_OK) || (menuPtr->tkwin == NULL)) {
-    	goto done;
+	goto done;
     }
-    
+
     /*
-     * Now, we go through structure and process all of the commands.
-     * Since the structure is changing, we stop after we do one command,
-     * and start over. When we get through without doing any, we are done.
+     * Now, we go through structure and process all of the commands. Since the
+     * structure is changing, we stop after we do one command, and start over.
+     * When we get through without doing any, we are done.
      */
-    
-    
+
     do {
-    	finished = 1;
-        for (index = 0; index < menuPtr->numEntries; index++) {
-            if ((menuPtr->entries[index]->type == CASCADE_ENTRY)
-            	    && (menuPtr->entries[index]->namePtr != NULL)) {
-            	if ((menuPtr->entries[index]->childMenuRefPtr != NULL)
-            		&& (menuPtr->entries[index]->childMenuRefPtr->menuPtr
-            		!= NULL)) {
-            	    cascadeMenuPtr =
-            	    	    menuPtr->entries[index]->childMenuRefPtr->menuPtr;
-            	    if (cascadeMenuPtr->postCommandGeneration != 
-            	    	    tsdPtr->postCommandGeneration) {
-            	    	cascadeMenuPtr->postCommandGeneration = 
-            	    		tsdPtr->postCommandGeneration;
-            	        result = PreprocessMenu(cascadeMenuPtr);
-            	        if (result != TCL_OK) {
-            	            goto done;
-            	        }
-            	        finished = 0;
-            	        break;
-            	    }
-            	}
-            }
-        }
+	finished = 1;
+	for (index = 0; index < menuPtr->numEntries; index++) {
+	    register TkMenuEntry *entryPtr = menuPtr->entries[index];
+
+	    if ((entryPtr->type == CASCADE_ENTRY)
+		    && (entryPtr->namePtr != NULL)
+		    && (entryPtr->childMenuRefPtr != NULL)
+		    && (entryPtr->childMenuRefPtr->menuPtr != NULL)) {
+		TkMenu *cascadeMenuPtr = entryPtr->childMenuRefPtr->menuPtr;
+
+		if (cascadeMenuPtr->postCommandGeneration !=
+			tsdPtr->postCommandGeneration) {
+		    cascadeMenuPtr->postCommandGeneration =
+			    tsdPtr->postCommandGeneration;
+		    result = PreprocessMenu(cascadeMenuPtr);
+		    if (result != TCL_OK) {
+			goto done;
+		    }
+		    finished = 0;
+		    break;
+		}
+	    }
+	}
     } while (!finished);
-    
-    done:
-    Tcl_Release((ClientData)menuPtr);
+
+  done:
+    Tcl_Release((ClientData) menuPtr);
     return result;
 }
 
@@ -105,23 +101,23 @@ PreprocessMenu(menuPtr)
  *
  * TkPreprocessMenu --
  *
- *	On the Mac and on Windows, all of the postcommand processing has
- *	to be done on the entire tree underneath the main window to be
- *	posted. This means that we have to traverse the menu tree and
- *	issue the postcommands for all of the menus that have cascades
- *	attached. Since the postcommands can change the menu structure while
- *	we are traversing, we have to be extremely careful. Basically, the
- *	idea is to traverse the structure until we succesfully process
- *	one postcommand. Then we start over, and do it again until
- *	we traverse the whole structure without processing any postcommands.
+ *	On the Mac and on Windows, all of the postcommand processing has to be
+ *	done on the entire tree underneath the main window to be posted. This
+ *	means that we have to traverse the menu tree and issue the
+ *	postcommands for all of the menus that have cascades attached. Since
+ *	the postcommands can change the menu structure while we are
+ *	traversing, we have to be extremely careful. Basically, the idea is to
+ *	traverse the structure until we succesfully process one postcommand.
+ *	Then we start over, and do it again until we traverse the whole
+ *	structure without processing any postcommands.
  *
- *	We are also going to set up the cascade back pointers in here
- *	since we have to traverse the entire structure underneath the menu
- *	anyway, We can clear the postcommand marks while we do that.
+ *	We are also going to set up the cascade back pointers in here since we
+ *	have to traverse the entire structure underneath the menu anyway. We
+ *	can clear the postcommand marks while we do that.
  *
  * Results:
- *	The return value is a standard Tcl result (errors can occur
- *	while the postcommands are being processed).
+ *	The return value is a standard Tcl result (errors can occur while the
+ *	postcommands are being processed).
  *
  * Side effects:
  *	Since commands can get executed while this routine is being executed,
@@ -131,13 +127,21 @@ PreprocessMenu(menuPtr)
  */
 
 int
-TkPreprocessMenu(menuPtr)
-    TkMenu *menuPtr;
+TkPreprocessMenu(
+    TkMenu *menuPtr)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->postCommandGeneration++;
     menuPtr->postCommandGeneration = tsdPtr->postCommandGeneration;
     return PreprocessMenu(menuPtr);
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
