@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.12 2005/11/13 21:00:17 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.13 2005/11/14 10:32:36 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1184,17 +1184,17 @@ TkpComputeMenubarGeometry(
  */
 
 static void
-DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
-    TkMenu *menuPtr;			/* The menu we are drawing */
-    TkMenuEntry *mePtr;			/* The entry we are drawing */
-    Drawable d;				/* The drawable we are drawing into */
-    GC gc;				/* The gc we are drawing with */
-    Tk_Font tkfont;			/* The font we are drawing with */
-    CONST Tk_FontMetrics *fmPtr;	/* The metrics we are drawing with */
-    int x;
-    int y;
-    int width;
-    int height;
+DrawTearoffEntry(
+    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenuEntry *mePtr,		/* The entry we are drawing */
+    Drawable d,			/* The drawable we are drawing into */
+    GC gc,			/* The gc we are drawing with */
+    Tk_Font tkfont,		/* The font we are drawing with */
+    CONST Tk_FontMetrics *fmPtr,/* The metrics we are drawing with */
+    int x,
+    int y,
+    int width,
+    int height)
 {
     XPoint points[2];
     int segmentWidth, maxX;
@@ -1227,24 +1227,25 @@ DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
  *
  * TkpInitializeMenuBindings --
  *
- *	For every interp, initializes the bindings for Windows
- *	menus. Does nothing on Mac or XWindows.
+ *	For every interp, initializes the bindings for Windows menus. Does
+ *	nothing on Mac or XWindows.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	C-level bindings are setup for the interp which will
- *	handle Alt-key sequences for menus without beeping
- *	or interfering with user-defined Alt-key bindings.
+ *	C-level bindings are setup for the interp which will handle Alt-key
+ *	sequences for menus without beeping or interfering with user-defined
+ *	Alt-key bindings.
  *
  *--------------------------------------------------------------
  */
 
 void
-TkpInitializeMenuBindings(interp, bindingTable)
-    Tcl_Interp *interp;		    /* The interpreter to set. */
-    Tk_BindingTable bindingTable;   /* The table to add to. */
+TkpInitializeMenuBindings(
+    Tcl_Interp *interp,		/* The interpreter to set. */
+    Tk_BindingTable bindingTable)
+				/* The table to add to. */
 {
     /*
      * Nothing to do.
@@ -1256,9 +1257,9 @@ TkpInitializeMenuBindings(interp, bindingTable)
  *
  * SetHelpMenu --
  *
- *	Given a menu, check to see whether or not it is a help menu
- *	cascade in a menubar. If it is, the entry that points to
- *	this menu will be marked.
+ *	Given a menu, check to see whether or not it is a help menu cascade in
+ *	a menubar. If it is, the entry that points to this menu will be
+ *	marked.
  *
  * RESULTS:
  *	None.
@@ -1270,8 +1271,8 @@ TkpInitializeMenuBindings(interp, bindingTable)
  */
 
 static void
-SetHelpMenu(menuPtr)
-     TkMenu *menuPtr;		/* The menu we are checking */
+SetHelpMenu(
+     TkMenu *menuPtr)		/* The menu we are checking */
 {
     TkMenuEntry *cascadeEntryPtr;
 
@@ -1303,8 +1304,8 @@ SetHelpMenu(menuPtr)
  *
  * TkpDrawMenuEntry --
  *
- *	Draws the given menu entry at the given coordinates with the
- *	given attributes.
+ *	Draws the given menu entry at the given coordinates with the given
+ *	attributes.
  *
  * Results:
  *	None.
@@ -1316,19 +1317,18 @@ SetHelpMenu(menuPtr)
  */
 
 void
-TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
-	strictMotif, drawArrow)
-    TkMenuEntry *mePtr;		    /* The entry to draw */
-    Drawable d;			    /* What to draw into */
-    Tk_Font tkfont;		    /* Precalculated font for menu */
-    CONST Tk_FontMetrics *menuMetricsPtr;
+TkpDrawMenuEntry(
+    TkMenuEntry *mePtr,		    /* The entry to draw */
+    Drawable d,			    /* What to draw into */
+    Tk_Font tkfont,		    /* Precalculated font for menu */
+    CONST Tk_FontMetrics *menuMetricsPtr,
 				    /* Precalculated metrics for menu */
-    int x;			    /* X-coordinate of topleft of entry */
-    int y;			    /* Y-coordinate of topleft of entry */
-    int width;			    /* Width of the entry rectangle */
-    int height;			    /* Height of the current rectangle */
-    int strictMotif;		    /* Boolean flag */
-    int drawArrow;		    /* Whether or not to draw the cascade
+    int x,			    /* X-coordinate of topleft of entry */
+    int y,			    /* Y-coordinate of topleft of entry */
+    int width,			    /* Width of the entry rectangle */
+    int height,			    /* Height of the current rectangle */
+    int strictMotif,		    /* Boolean flag */
+    int drawArrow)		    /* Whether or not to draw the cascade
 				     * arrow for cascade items. Only applies
 				     * to Windows. */
 {
@@ -1360,8 +1360,7 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
     		cascadeEntryPtr != NULL;
     		cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	    if (cascadeEntryPtr->namePtr != NULL) {
-		char *name = Tcl_GetStringFromObj(cascadeEntryPtr->namePtr,
-			NULL);
+		char *name = Tcl_GetString(cascadeEntryPtr->namePtr);
 
 		if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
 		    if (cascadeEntryPtr->state == ENTRY_DISABLED) {
@@ -1422,9 +1421,9 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
     }
 
     /*
-     * Need to draw the entire background, including padding. On Unix,
-     * for menubars, we have to draw the rest of the entry taking
-     * into account the padding.
+     * Need to draw the entire background, including padding. On Unix, for
+     * menubars, we have to draw the rest of the entry taking into account the
+     * padding.
      */
 
     DrawMenuEntryBackground(menuPtr, mePtr, d, activeBorder,
@@ -1470,14 +1469,13 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
  */
 
 static void
-GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
-    TkMenuEntry *mePtr;			/* The entry we are computing */
-    Tk_Font tkfont;			/* The precalculated font */
-    CONST Tk_FontMetrics *fmPtr;	/* The precalculated metrics */
-    int *widthPtr;			/* The resulting width of the label
-					 * portion */
-    int *heightPtr;			/* The resulting height of the label
-					 * portion */
+GetMenuLabelGeometry(
+    TkMenuEntry *mePtr,		/* The entry we are computing */
+    Tk_Font tkfont,		/* The precalculated font */
+    CONST Tk_FontMetrics *fmPtr,/* The precalculated metrics */
+    int *widthPtr,		/* The resulting width of the label portion */
+    int *heightPtr)		/* The resulting height of the label
+				 * portion */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
     int haveImage = 0;
@@ -1495,9 +1493,14 @@ GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
     }
 
     if (haveImage && (mePtr->compound == COMPOUND_NONE)) {
-	/* We don't care about the text in this case */
+	/*
+	 * We don't care about the text in this case.
+	 */
     } else {
-	/* Either it is compound or we don't have an image */
+	/*
+	 * Either it is compound or we don't have an image.
+	 */
+
     	if (mePtr->labelPtr != NULL) {
 	    int textWidth;
 	    char *label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
@@ -1505,42 +1508,54 @@ GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
 
 	    if ((mePtr->compound != COMPOUND_NONE) && haveImage) {
 		switch ((enum compound) mePtr->compound) {
-		    case COMPOUND_TOP:
-		    case COMPOUND_BOTTOM: {
-			if (textWidth > *widthPtr) {
-			    *widthPtr = textWidth;
-			}
-			/* Add text and padding */
-			*heightPtr += fmPtr->linespace + 2;
-			break;
+		case COMPOUND_TOP:
+		case COMPOUND_BOTTOM:
+		    if (textWidth > *widthPtr) {
+			*widthPtr = textWidth;
 		    }
-		    case COMPOUND_LEFT:
-		    case COMPOUND_RIGHT: {
-			if (fmPtr->linespace > *heightPtr) {
-			    *heightPtr = fmPtr->linespace;
-			}
-			/* Add text and padding */
-			*widthPtr += textWidth + 2;
-			break;
+
+		    /*
+		     * Add text and padding.
+		     */
+
+		    *heightPtr += fmPtr->linespace + 2;
+		    break;
+		case COMPOUND_LEFT:
+		case COMPOUND_RIGHT:
+		    if (fmPtr->linespace > *heightPtr) {
+			*heightPtr = fmPtr->linespace;
 		    }
-		    case COMPOUND_CENTER: {
-			if (fmPtr->linespace > *heightPtr) {
-			    *heightPtr = fmPtr->linespace;
-			}
-			if (textWidth > *widthPtr) {
-			    *widthPtr = textWidth;
-			}
-			break;
+
+		    /*
+		     * Add text and padding.
+		     */
+
+		    *widthPtr += textWidth + 2;
+		    break;
+		case COMPOUND_CENTER:
+		    if (fmPtr->linespace > *heightPtr) {
+			*heightPtr = fmPtr->linespace;
 		    }
-		    case COMPOUND_NONE: {break;}
+		    if (textWidth > *widthPtr) {
+			*widthPtr = textWidth;
+		    }
+		    break;
+		case COMPOUND_NONE:
+		    break;
 		}
-    	} else {
-		/* We don't have an image or we're not compound */
+	    } else {
+		/*
+		 * We don't have an image or we're not compound.
+		 */
+
 		*heightPtr = fmPtr->linespace;
 		*widthPtr = textWidth;
 	    }
 	} else {
-	    /* An empty entry still has this height */
+	    /*
+	     * An empty entry still has this height.
+	     */
+
 	    *heightPtr = fmPtr->linespace;
     	}
     }
@@ -1552,24 +1567,22 @@ GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
  *
  * TkpComputeStandardMenuGeometry --
  *
- *	This procedure is invoked to recompute the size and
- *	layout of a menu that is not a menubar clone.
+ *	This procedure is invoked to recompute the size and layout of a menu
+ *	that is not a menubar clone.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Fields of menu entries are changed to reflect their
- *	current positions, and the size of the menu window
- *	itself may be changed.
+ *	Fields of menu entries are changed to reflect their current positions,
+ *	and the size of the menu window itself may be changed.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkpComputeStandardMenuGeometry(
-    menuPtr)		/* Structure describing menu. */
-    TkMenu *menuPtr;
+    TkMenu *menuPtr)		/* Structure describing menu. */
 {
     Tk_Font tkfont, menuFont;
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
@@ -1592,14 +1605,13 @@ TkpComputeStandardMenuGeometry(
     windowHeight = windowWidth = 0;
 
     /*
-     * On the Mac especially, getting font metrics can be quite slow,
-     * so we want to do it intelligently. We are going to precalculate
-     * them and pass them down to all of the measuring and drawing
-     * routines. We will measure the font metrics of the menu once.
-     * If an entry does not have its own font set, then we give
-     * the geometry/drawing routines the menu's font and metrics.
-     * If an entry has its own font, we will measure that font and
-     * give all of the geometry/drawing the entry's font and metrics.
+     * On the Mac especially, getting font metrics can be quite slow, so we
+     * want to do it intelligently. We are going to precalculate them and pass
+     * them down to all of the measuring and drawing routines. We will measure
+     * the font metrics of the menu once. If an entry does not have its own
+     * font set, then we give the geometry/drawing routines the menu's font
+     * and metrics. If an entry has its own font, we will measure that font
+     * and give all of the geometry/drawing the entry's font and metrics.
      */
 
     menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
@@ -1638,28 +1650,25 @@ TkpComputeStandardMenuGeometry(
 	}
 
 	if (mePtr->type == SEPARATOR_ENTRY) {
-	    GetMenuSeparatorGeometry(menuPtr, mePtr, tkfont,
-	    	    fmPtr, &width, &height);
+	    GetMenuSeparatorGeometry(menuPtr, mePtr, tkfont, fmPtr,
+		    &width, &height);
 	    mePtr->height = height;
 	} else if (mePtr->type == TEAROFF_ENTRY) {
-	    GetTearoffEntryGeometry(menuPtr, mePtr, tkfont,
-	    	    fmPtr, &width, &height);
+	    GetTearoffEntryGeometry(menuPtr, mePtr, tkfont, fmPtr,
+		    &width, &height);
 	    mePtr->height = height;
 	    labelWidth = width;
 	} else {
-
 	    /*
-	     * For each entry, compute the height required by that
-	     * particular entry, plus three widths:  the width of the
-	     * label, the width to allow for an indicator to be displayed
-	     * to the left of the label (if any), and the width of the
-	     * accelerator to be displayed to the right of the label
-	     * (if any).  These sizes depend, of course, on the type
-	     * of the entry.
+	     * For each entry, compute the height required by that particular
+	     * entry, plus three widths: the width of the label, the width to
+	     * allow for an indicator to be displayed to the left of the label
+	     * (if any), and the width of the accelerator to be displayed to
+	     * the right of the label (if any). These sizes depend, of course,
+	     * on the type of the entry.
 	     */
 
-	    GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width,
-	    	    &height);
+	    GetMenuLabelGeometry(mePtr, tkfont, fmPtr, &width, &height);
 	    mePtr->height = height;
 	    if (!mePtr->hideMargin) {
 		width += MENU_MARGIN_WIDTH;
@@ -1715,12 +1724,11 @@ TkpComputeStandardMenuGeometry(
     windowWidth = x + indicatorSpace + labelWidth + accelWidth
 	    + 2 * activeBorderWidth + 2 * borderWidth;
 
-
     windowHeight += borderWidth;
 
     /*
-     * The X server doesn't like zero dimensions, so round up to at least
-     * 1 (a zero-sized menu should never really occur, anyway).
+     * The X server doesn't like zero dimensions, so round up to at least 1 (a
+     * zero-sized menu should never really occur, anyway).
      */
 
     if (windowWidth <= 0) {
@@ -1739,8 +1747,8 @@ TkpComputeStandardMenuGeometry(
  * TkpMenuNotifyToplevelCreate --
  *
  *	This routine reconfigures the menu and the clones indicated by
- *	menuName becuase a toplevel has been created and any system
- *	menus need to be created. Not applicable to UNIX.
+ *	menuName becuase a toplevel has been created and any system menus need
+ *	to be created. Not applicable to UNIX.
  *
  * Results:
  *	None.
@@ -1752,10 +1760,9 @@ TkpComputeStandardMenuGeometry(
  */
 
 void
-TkpMenuNotifyToplevelCreate(interp, menuName)
-    Tcl_Interp *interp;			/* The interp the menu lives in. */
-    char *menuName;			/* The name of the menu to
-					 * reconfigure. */
+TkpMenuNotifyToplevelCreate(
+    Tcl_Interp *interp,		/* The interp the menu lives in. */
+    char *menuName)		/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.
@@ -1779,7 +1786,7 @@ TkpMenuNotifyToplevelCreate(interp, menuName)
  */
 
 void
-TkpMenuInit()
+TkpMenuInit(void)
 {
     /*
      * Nothing to do.
@@ -1792,8 +1799,7 @@ TkpMenuInit()
  *
  * TkpMenuThreadInit --
  *
- *	Does platform-specific initialization of thread-specific
- *      menu state.
+ *	Does platform-specific initialization of thread-specific menu state.
  *
  * Results:
  *	None.
@@ -1805,7 +1811,7 @@ TkpMenuInit()
  */
 
 void
-TkpMenuThreadInit()
+TkpMenuThreadInit(void)
 {
     /*
      * Nothing to do.
