@@ -1,4 +1,4 @@
-/* 
+/*
  * tkStubImg.c --
  *
  *	Stub object that will be statically linked into extensions that wish
@@ -7,10 +7,10 @@
  * Copyright (c) 1999 Jan Nijtmans.
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubImg.c,v 1.3 2003/01/09 01:00:36 dgp Exp $
+ * RCS: @(#) $Id: tkStubImg.c,v 1.4 2005/11/15 15:18:22 dkf Exp $
  */
 
 #include "tcl.h"
@@ -21,14 +21,13 @@
  *
  * Tk_InitImageArgs --
  *
- *	Performs the necessary conversion from Tcl_Obj's to strings
- *      in the createProc for Tcl_CreateImageType. If running under
- *      Tk 8.2 or earlier without the Img-patch, this function has
- *      no effect.
+ *	Performs the necessary conversion from Tcl_Obj's to strings in the
+ *	createProc for Tcl_CreateImageType. If running under Tk 8.2 or earlier
+ *	without the Img-patch, this function has no effect.
  *
  * Results:
- *	argvPtr will point to an argument list which is guaranteed to
- *	contain strings, no matter what Tk version is running.
+ *	argvPtr will point to an argument list which is guaranteed to contain
+ *	strings, no matter what Tk version is running.
  *
  * Side effects:
  *	None
@@ -41,10 +40,10 @@
 #endif
 
 void
-Tk_InitImageArgs(interp, argc, argvPtr)
-    Tcl_Interp *interp;
-    int argc;
-    char ***argvPtr;
+Tk_InitImageArgs(
+    Tcl_Interp *interp,
+    int argc,
+    char ***argvPtr)
 {
     static int useNewImage = -1;
     static char **argv = NULL;
@@ -56,7 +55,13 @@ Tk_InitImageArgs(interp, argc, argvPtr)
 
     if (useNewImage < 0) {
 	Tcl_CmdInfo cmdInfo;
-	if (!tclStubsPtr->tcl_GetCommandInfo(interp,"image", &cmdInfo)) {
+
+	/*
+	 * Note that this is *not* safe; users are free to rename the [image]
+	 * command. Sometime should fix to use assocData instead?
+	 */
+
+	if (!tclStubsPtr->tcl_GetCommandInfo(interp, "image", &cmdInfo)) {
 	    tclStubsPtr->tcl_Panic("cannot find the \"image\" command");
 	}
 	if (cmdInfo.isNativeObjectProc == 1) {
@@ -67,6 +72,7 @@ Tk_InitImageArgs(interp, argc, argvPtr)
     }
     if (useNewImage && (argc > 0)) {
 	int i;
+
 	argv = (char **) tclStubsPtr->tcl_Alloc(argc * sizeof(char *));
 	for (i = 0; i < argc; i++) {
 	    argv[i] = tclStubsPtr->tcl_GetString((Tcl_Obj *)(*argvPtr)[i]);
@@ -74,3 +80,11 @@ Tk_InitImageArgs(interp, argc, argvPtr)
 	*argvPtr = (char **) argv;
     }
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
