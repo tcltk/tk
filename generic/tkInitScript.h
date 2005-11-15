@@ -1,24 +1,22 @@
-/* 
+/*
  * tkInitScript.h --
  *
  *	This file contains Unix & Windows common init script
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkInitScript.h,v 1.9 2004/03/17 18:15:43 das Exp $
+ * RCS: @(#) $Id: tkInitScript.h,v 1.10 2005/11/15 15:18:21 dkf Exp $
  */
 
-
-
 /*
- * In order to find tk.tcl during initialization, the following script
- * is invoked by Tk_Init().  It looks in several different directories:
+ * In order to find tk.tcl during initialization, the following script is
+ * invoked by Tk_Init(). It looks in several different directories:
  *
- *	$tk_library		- can specify a primary location, if set
- *				  no other locations will be checked
+ *	$tk_library		- can specify a primary location, if set no
+ *				  other locations will be checked
  *
  *	$env(TK_LIBRARY)	- highest priority so user can always override
  *				  the search path unless the application has
@@ -29,18 +27,18 @@
  *				  lib directory (e.g. /usr/local)
  *
  *	<executable directory>/../lib/tk$tk_version
- *				- look for a lib/tk<ver> in a sibling of
- *				  the bin directory (e.g. /usr/local)
+ *				- look for a lib/tk<ver> in a sibling of the
+ *				  bin directory (e.g. /usr/local)
  *
  *	<executable directory>/../library
  *				- look in Tk build directory
  *
  *	<executable directory>/../../tk$tk_patchLevel/library
- *				- look for Tk build directory relative
- *				  to a parallel build directory
+ *				- look for Tk build directory relative to a
+ *				  parallel build directory
  *
- * The first directory on this path that contains a valid tk.tcl script
- * will be set ast the value of tk_library.
+ * The first directory on this path that contains a valid tk.tcl script will
+ * be set ast the value of tk_library.
  *
  * Note that this entire search mechanism can be bypassed by defining an
  * alternate tkInit procedure before calling Tk_Init().
@@ -54,4 +52,3 @@ static char initScript[] = "if {[info proc tkInit]==\"\"} {\n\
   }\n\
 }\n\
 tkInit";
-

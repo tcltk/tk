@@ -1,31 +1,31 @@
-/* 
+/*
  * tkVisual.c --
  *
- *	This file contains library procedures for allocating and
- *	freeing visuals and colormaps.  This code is based on a
- *	prototype implementation by Paul Mackerras.
+ *	This file contains library procedures for allocating and freeing
+ *	visuals and colormaps. This code is based on a prototype
+ *	implementation by Paul Mackerras.
  *
  * Copyright (c) 1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.6 2004/05/23 17:27:55 dkf Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.7 2005/11/15 15:18:22 dkf Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
 
 /*
- * The table below maps from symbolic names for visual classes
- * to the associated X class symbols.
+ * The table below maps from symbolic names for visual classes to the
+ * associated X class symbols.
  */
 
 typedef struct VisualDictionary {
     char *name;			/* Textual name of class. */
-    int minLength;		/* Minimum # characters that must be
-				 * specified for an unambiguous match. */
+    int minLength;		/* Minimum # characters that must be specified
+				 * for an unambiguous match. */
     int class;			/* X symbol for class. */
 } VisualDictionary;
 static VisualDictionary visualNames[] = {
@@ -48,17 +48,16 @@ static VisualDictionary visualNames[] = {
 
 struct TkColormap {
     Colormap colormap;		/* X's identifier for the colormap. */
-    Visual *visual;		/* Visual for which colormap was
-				 * allocated. */
+    Visual *visual;		/* Visual for which colormap was allocated. */
     int refCount;		/* How many uses of the colormap are still
-				 * outstanding (calls to Tk_GetColormap
-				 * minus calls to Tk_FreeColormap). */
-    int shareable;		/* 0 means this colormap was allocated by
-				 * a call to Tk_GetColormap with "new",
-				 * implying that the window wants it all
-				 * for itself.  1 means that the colormap
-				 * was allocated as a default for a particular
-				 * visual, so it can be shared. */
+				 * outstanding (calls to Tk_GetColormap minus
+				 * calls to Tk_FreeColormap). */
+    int shareable;		/* 0 means this colormap was allocated by a
+				 * call to Tk_GetColormap with "new", implying
+				 * that the window wants it all for itself.  1
+				 * means that the colormap was allocated as a
+				 * default for a particular visual, so it can
+				 * be shared. */
     struct TkColormap *nextPtr;	/* Next in list of colormaps for this display,
 				 * or NULL for end of list. */
 };
@@ -68,17 +67,17 @@ struct TkColormap {
  *
  * Tk_GetVisual --
  *
- *	Given a string identifying a particular kind of visual, this
- *	procedure returns a visual and depth that matches the specification.
+ *	Given a string identifying a particular kind of visual, this procedure
+ *	returns a visual and depth that matches the specification.
  *
  * Results:
- *	The return value is normally a pointer to a visual.  If an
- *	error occurred in looking up the visual, NULL is returned and
- *	an error message is left in the interp's result.  The depth of the
- *	visual is returned to *depthPtr under normal returns.  If
- *	colormapPtr is non-NULL, then this procedure also finds a
- *	suitable colormap for use with the visual in tkwin, and it
- *	returns that colormap in *colormapPtr unless an error occurs.
+ *	The return value is normally a pointer to a visual. If an error
+ *	occurred in looking up the visual, NULL is returned and an error
+ *	message is left in the interp's result. The depth of the visual is
+ *	returned to *depthPtr under normal returns. If colormapPtr is
+ *	non-NULL, then this procedure also finds a suitable colormap for use
+ *	with the visual in tkwin, and it returns that colormap in *colormapPtr
+ *	unless an error occurs.
  *
  * Side effects:
  *	A new colormap may be allocated.
@@ -87,19 +86,17 @@ struct TkColormap {
  */
 
 Visual *
-Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
-    Tcl_Interp *interp;			/* Interpreter to use for error
-					 * reporting. */
-    Tk_Window tkwin;			/* Window in which visual will be
-					 * used. */
-    CONST char *string;			/* String describing visual.  See
-					 * manual entry for details. */
-    int *depthPtr;			/* The depth of the returned visual
-					 * is stored here. */
-    Colormap *colormapPtr;		/* If non-NULL, then a suitable
-					 * colormap for visual is placed here.
-					 * This colormap must eventually be
-					 * freed by calling Tk_FreeColormap. */
+Tk_GetVisual(
+    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
+    Tk_Window tkwin,		/* Window in which visual will be used. */
+    CONST char *string,		/* String describing visual. See manual entry
+				 * for details. */
+    int *depthPtr,		/* The depth of the returned visual is stored
+				 * here. */
+    Colormap *colormapPtr)	/* If non-NULL, then a suitable colormap for
+				 * visual is placed here. This colormap must
+				 * eventually be freed by calling
+				 * Tk_FreeColormap. */
 {
     Tk_Window tkwin2;
     XVisualInfo template, *visInfoList, *bestPtr;
@@ -112,17 +109,16 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     /*
-     * Parse string and set up a template for use in searching for
-     * an appropriate visual.
+     * Parse string and set up a template for use in searching for an
+     * appropriate visual.
      */
 
     c = string[0];
     if (c == '.') {
 	/*
-	 * The string must be a window name.  If the window is on the
-	 * same screen as tkwin, then just use its visual.  Otherwise
-	 * use the information about the visual as a template for the
-	 * search.
+	 * The string must be a window name. If the window is on the same
+	 * screen as tkwin, then just use its visual. Otherwise use the
+	 * information about the visual as a template for the search.
 	 */
 
 	tkwin2 = Tk_NameToWindow(interp, string, tkwin);
@@ -134,8 +130,8 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
 	    *depthPtr = Tk_Depth(tkwin2);
 	    if (colormapPtr != NULL) {
 		/*
-		 * Use the colormap from the other window too (but be sure
-		 * to increment its reference count if it's one of the ones
+		 * Use the colormap from the other window too (but be sure to
+		 * increment its reference count if it's one of the ones
 		 * allocated here).
 		 */
 
@@ -181,15 +177,15 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
 	if (Tcl_GetInt(interp, string, &visualId) == TCL_ERROR) {
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, "bad X identifier for visual: \"",
-		    string, "\"", (char *) NULL);
+		    string, "\"", NULL);
 	    return NULL;
 	}
 	template.visualid = visualId;
 	mask = VisualIDMask;
     } else {
 	/*
-	 * Parse the string into a class name (or "best") optionally
-	 * followed by whitespace and a depth.
+	 * Parse the string into a class name (or "best") optionally followed
+	 * by whitespace and a depth.
 	 */
 
 	for (p = string; *p != 0; p++) {
@@ -209,11 +205,11 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
 	}
 	if (template.class == -1) {
 	    Tcl_AppendResult(interp, "unknown or ambiguous visual name \"",
-		    string, "\": class must be ", (char *) NULL);
+		    string, "\": class must be ", NULL);
 	    for (dictPtr = visualNames; dictPtr->name != NULL; dictPtr++) {
-		Tcl_AppendResult(interp, dictPtr->name, ", ", (char *) NULL);
+		Tcl_AppendResult(interp, dictPtr->name, ", ", NULL);
 	    }
-	    Tcl_AppendResult(interp, "or default", (char *) NULL);
+	    Tcl_AppendResult(interp, "or default", NULL);
 	    return NULL;
 	}
 	while (isspace(UCHAR(*p))) {
@@ -234,8 +230,8 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
     }
 
     /*
-     * Find all visuals that match the template we've just created,
-     * and return an error if there are none that match.
+     * Find all visuals that match the template we've just created, and return
+     * an error if there are none that match.
      */
 
     template.screen = Tk_ScreenNumber(tkwin);
@@ -249,31 +245,37 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
     }
 
     /*
-     * Search through the visuals that were returned to find the best
-     * one.  The choice is based on the following criteria, in decreasing
-     * order of importance:
+     * Search through the visuals that were returned to find the best one.
+     * The choice is based on the following criteria, in decreasing order of
+     * importance:
      *
-     * 1. Depth: choose a visual with exactly the desired depth,
-     *	  else one with more bits than requested but as few bits
-     *	  as possible, else one with fewer bits but as many as
-     *    possible.
-     * 2. Class: some visual classes are more desirable than others;
-     *    pick the visual with the most desirable class.
-     * 3. Default: the default visual for the screen gets preference
-     *    over other visuals, all else being equal.
+     * 1. Depth: choose a visual with exactly the desired depth, else one with
+     *	  more bits than requested but as few bits as possible, else one with
+     *	  fewer bits but as many as possible.
+     * 2. Class: some visual classes are more desirable than others; pick the
+     *    visual with the most desirable class.
+     * 3. Default: the default visual for the screen gets preference over
+     *    other visuals, all else being equal.
      */
 
     bestPrio = 0;
     bestPtr = NULL;
     for (i = 0; i < numVisuals; i++) {
 	switch (visInfoList[i].class) {
-	    case DirectColor:	prio = 5; break;
-	    case GrayScale:	prio = 1; break;
-	    case PseudoColor:	prio = 7; break;
-	    case StaticColor:	prio = 3; break;
-	    case StaticGray:	prio = 1; break;
-	    case TrueColor:	prio = 5; break;
-	    default:		prio = 0; break;
+	case DirectColor:
+	    prio = 5; break;
+	case GrayScale:
+	    prio = 1; break;
+	case PseudoColor:
+	    prio = 7; break;
+	case StaticColor:
+	    prio = 3; break;
+	case StaticGray:
+	    prio = 1; break;
+	case TrueColor:
+	    prio = 5; break;
+	default:
+	    prio = 0; break;
 	}
 	if (visInfoList[i].visual
 		== DefaultVisualOfScreen(Tk_Screen(tkwin))) {
@@ -297,7 +299,7 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
 	}
 	continue;
 
-	newBest:
+    newBest:
 	bestPtr = &visInfoList[i];
 	bestPrio = prio;
     }
@@ -306,11 +308,10 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
     XFree((char *) visInfoList);
 
     /*
-     * If we need to find a colormap for this visual, do it now.
-     * If the visual is the default visual for the screen, then
-     * use the default colormap.  Otherwise search for an existing
-     * colormap that's shareable.  If all else fails, create a new
-     * colormap.
+     * If we need to find a colormap for this visual, do it now. If the visual
+     * is the default visual for the screen, then use the default colormap.
+     * Otherwise search for an existing colormap that's shareable. If all else
+     * fails, create a new colormap.
      */
 
     if (colormapPtr != NULL) {
@@ -338,7 +339,7 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
 	}
     }
 
-    done:
+  done:
     return visual;
 }
 
@@ -347,31 +348,28 @@ Tk_GetVisual(interp, tkwin, string, depthPtr, colormapPtr)
  *
  * Tk_GetColormap --
  *
- *	Given a string identifying a colormap, this procedure finds
- *	an appropriate colormap.
+ *	Given a string identifying a colormap, this procedure finds an
+ *	appropriate colormap.
  *
  * Results:
  *	The return value is normally the X resource identifier for the
- *	colormap.  If an error occurs, None is returned and an error
- *	message is placed in the interp's result.
+ *	colormap. If an error occurs, None is returned and an error message is
+ *	placed in the interp's result.
  *
  * Side effects:
- *	A reference count is incremented for the colormap, so
- *	Tk_FreeColormap must eventually be called exactly once for
- *	each call to Tk_GetColormap.
+ *	A reference count is incremented for the colormap, so Tk_FreeColormap
+ *	must eventually be called exactly once for each call to
+ *	Tk_GetColormap.
  *
  *----------------------------------------------------------------------
  */
 
 Colormap
-Tk_GetColormap(interp, tkwin, string)
-    Tcl_Interp *interp;			/* Interpreter to use for error
-					 * reporting. */
-    Tk_Window tkwin;			/* Window where colormap will be
-					 * used. */
-    CONST char *string;			/* String that identifies colormap:
-					 * either "new" or the name of
-					 * another window. */
+Tk_GetColormap(
+    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
+    Tk_Window tkwin,		/* Window where colormap will be used. */
+    CONST char *string)		/* String that identifies colormap: either
+				 * "new" or the name of another window. */
 {
     Colormap colormap;
     TkColormap *cmapPtr;
@@ -396,9 +394,9 @@ Tk_GetColormap(interp, tkwin, string)
     }
 
     /*
-     * Use a colormap from an existing window.  It must have the same
-     * visual as tkwin (which means, among other things, that the
-     * other window must be on the same screen).
+     * Use a colormap from an existing window. It must have the same visual as
+     * tkwin (which means, among other things, that the other window must be
+     * on the same screen).
      */
 
     other = Tk_NameToWindow(interp, string, tkwin);
@@ -407,12 +405,12 @@ Tk_GetColormap(interp, tkwin, string)
     }
     if (Tk_Screen(other) != Tk_Screen(tkwin)) {
 	Tcl_AppendResult(interp, "can't use colormap for ", string,
-		": not on same screen", (char *) NULL);
+		": not on same screen", NULL);
 	return None;
     }
     if (Tk_Visual(other) != Tk_Visual(tkwin)) {
 	Tcl_AppendResult(interp, "can't use colormap for ", string,
-		": incompatible visuals", (char *) NULL);
+		": incompatible visuals", NULL);
 	return None;
     }
     colormap = Tk_Colormap(other);
@@ -436,36 +434,35 @@ Tk_GetColormap(interp, tkwin, string)
  *
  * Tk_FreeColormap --
  *
- *	This procedure is called to release a colormap that was
- *	previously allocated by Tk_GetColormap.
+ *	This procedure is called to release a colormap that was previously
+ *	allocated by Tk_GetColormap.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The colormap's reference count is decremented.  If this was the
- *	last reference to the colormap, then the colormap is freed.
+ *	The colormap's reference count is decremented. If this was the last
+ *	reference to the colormap, then the colormap is freed.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_FreeColormap(display, colormap)
-    Display *display;			/* Display for which colormap was
-					 * allocated. */
-    Colormap colormap;			/* Colormap that is no longer needed.
-					 * Must have been returned by previous
-					 * call to Tk_GetColormap, or
-					 * preserved by a previous call to
-					 * Tk_PreserveColormap. */
+Tk_FreeColormap(
+    Display *display,		/* Display for which colormap was
+				 * allocated. */
+    Colormap colormap)		/* Colormap that is no longer needed. Must
+				 * have been returned by previous call to
+				 * Tk_GetColormap, or preserved by a previous
+				 * call to Tk_PreserveColormap. */
 {
     TkDisplay *dispPtr;
     TkColormap *cmapPtr, *prevPtr;
 
     /*
-     * Find Tk's information about the display, then see if this
-     * colormap is a non-default one (if it's a default one, there
-     * won't be an entry for it in the display's list).
+     * Find Tk's information about the display, then see if this colormap is a
+     * non-default one (if it's a default one, there won't be an entry for it
+     * in the display's list).
      */
 
     dispPtr = TkGetDisplay(display);
@@ -487,7 +484,7 @@ Tk_FreeColormap(display, colormap)
 	    }
 	    return;
 	}
-    } 
+    }
 }
 
 /*
@@ -495,36 +492,35 @@ Tk_FreeColormap(display, colormap)
  *
  * Tk_PreserveColormap --
  *
- *	This procedure is called to indicate to Tk that the specified
- *	colormap is being referenced from another location and should
- *	not be freed until all extra references are eliminated.  The
- *	colormap must have been returned by Tk_GetColormap.
+ *	This procedure is called to indicate to Tk that the specified colormap
+ *	is being referenced from another location and should not be freed
+ *	until all extra references are eliminated. The colormap must have been
+ *	returned by Tk_GetColormap.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The colormap's reference count is incremented, so
- *	Tk_FreeColormap must eventually be called exactly once for
- *	each call to Tk_PreserveColormap.
+ *	The colormap's reference count is incremented, so Tk_FreeColormap must
+ *	eventually be called exactly once for each call to
+ *	Tk_PreserveColormap.
  *
  *----------------------------------------------------------------------
  */
 
 void
-Tk_PreserveColormap(display, colormap)
-    Display *display;			/* Display for which colormap was
-					 * allocated. */
-    Colormap colormap;			/* Colormap that should be
-					 * preserved. */
+Tk_PreserveColormap(
+    Display *display,		/* Display for which colormap was
+				 * allocated. */
+    Colormap colormap)		/* Colormap that should be preserved. */
 {
     TkDisplay *dispPtr;
     TkColormap *cmapPtr;
 
     /*
-     * Find Tk's information about the display, then see if this
-     * colormap is a non-default one (if it's a default one, there
-     * won't be an entry for it in the display's list).
+     * Find Tk's information about the display, then see if this colormap is a
+     * non-default one (if it's a default one, there won't be an entry for it
+     * in the display's list).
      */
 
     dispPtr = TkGetDisplay(display);
@@ -537,5 +533,13 @@ Tk_PreserveColormap(display, colormap)
 	    cmapPtr->refCount += 1;
 	    return;
 	}
-    } 
+    }
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
