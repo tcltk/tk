@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.28 2005/08/09 07:39:19 das Exp $
-# $Id: bgerror.tcl,v 1.28 2005/08/09 07:39:19 das Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.29 2005/11/15 03:12:18 jenglish Exp $
+# $Id: bgerror.tcl,v 1.29 2005/11/15 03:12:18 jenglish Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -101,14 +101,15 @@ proc ::tk::dialog::error::bgerror err {
     }
 
 
-    # Truncate the message if it is too wide (longer than 30 characacters) or
-    # too tall (more than 4 newlines).  Truncation occurs at the first point at
+    # Truncate the message if it is too wide (>maxLine characters) or
+    # too tall (>4 lines).  Truncation occurs at the first point at
     # which one of those conditions is met.
     set displayedErr ""
     set lines 0
+    set maxLine 45
     foreach line [split $err \n] {
-	if { [string length $line] > 30 } {
-	    append displayedErr "[string range $line 0 29]..."
+	if { [string length $line] > $maxLine } {
+	    append displayedErr "[string range $line 0 [expr {$maxLine-3}]]..."
 	    break
 	}
 	if { $lines > 4 } {
