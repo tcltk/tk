@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.15.2.3 2005/05/12 22:50:59 dgp Exp $
+'\" RCS: @(#) $Id: text.n,v 1.15.2.4 2005/11/16 09:51:18 vincentdarley Exp $
 '\" 
 .so man.macros
 .TH text n 8.4 Tk "Tk Built-In Commands"
@@ -291,7 +291,11 @@ If more than one modifier is present then they are applied in
 left-to-right order.  For example, the index ``\fBend \- 1 chars\fR''
 refers to the next-to-last character in the text and
 ``\fBinsert wordstart \- 1 c\fR'' refers to the character just before
-the first one in the word containing the insertion cursor.
+the first one in the word containing the insertion cursor.  Modifiers
+are applied one by one in this left to right order, and after each step
+the resulting index is constrained to be a valid index in the text 
+widget.  So, for example, the index ''\fB1.0 -1c +1c\fR'' refers to the 
+index ''\fB2.0\fR''.
 .SH TAGS
 .PP
 The first form of annotation in text widgets is a tag.
