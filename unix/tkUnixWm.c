@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.49 2005/10/21 01:51:45 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.50 2005/11/16 02:51:38 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -41,6 +41,26 @@ typedef struct ProtocolHandler {
 
 #define HANDLER_SIZE(cmdLength) \
     ((unsigned) (sizeof(ProtocolHandler) - 3 + cmdLength))
+
+/*
+ * Data for [wm attributes] command:
+ */
+typedef struct {
+    double 	alpha;		/* Transparency; 0.0=transparent, 1.0=opaque */
+    int 	topmost;	/* Flag: true=>stay-on-top */
+    int 	zoomed;		/* Flag: true=>maximized */
+    int 	fullscreen;	/* Flag: true=>fullscreen */
+} WmAttributes;
+
+typedef enum { 
+    WMATT_ALPHA, WMATT_TOPMOST, WMATT_ZOOMED, WMATT_FULLSCREEN, 
+    _WMATT_LAST_ATTRIBUTE
+} WmAttribute;
+
+static const char *WmAttributeNames[] = {
+    "-alpha", "-topmost", "-zoomed", "-fullscreen",
+    NULL
+};
 
 /*
  * A data structure of the following type holds window-manager-related
@@ -184,6 +204,8 @@ typedef struct TkWmInfo {
      * Miscellaneous information.
      */
 
+    WmAttributes attributes;	/* Current state of [wm attributes] */
+    WmAttributes reqState;	/* Requested state of [wm attributes] */
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for this
 				 * window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
@@ -312,6 +334,7 @@ static void		MenubarDestroyProc(ClientData clientData,
 static int		ParseGeometry(Tcl_Interp *interp, char *string,
 			    TkWindow *winPtr);
 static void		ReparentEvent(WmInfo *wmPtr, XReparentEvent *eventPtr);
+static void		PropertyEvent(WmInfo *wmPtr, XPropertyEvent *eventPtr);
 static void		TkWmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *reparentTable);
 static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
@@ -324,6 +347,9 @@ static void		UpdateTitle(TkWindow *winPtr);
 static void		UpdatePhotoIcon(TkWindow *winPtr);
 static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
+static void 		SetNetWmState(TkWindow*, const char *atomName, int on);
+static void 		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
+static void 		UpdateNetWmState(WmInfo *);
 static void		WaitForConfigureNotify(TkWindow *winPtr,
 			    unsigned long serial);
 static int		WaitForEvent(Display *display,
@@ -535,6 +561,15 @@ TkWmNewWindow(
     wmPtr->hints.window_group = None;
 
     /*
+     * Initialize attributes.
+     */
+    wmPtr->attributes.alpha = 1.0;
+    wmPtr->attributes.topmost = 0;
+    wmPtr->attributes.zoomed = 0;
+    wmPtr->attributes.fullscreen = 0;
+    wmPtr->reqState = wmPtr->attributes;
+
+    /*
      * Default the maximum dimensions to the size of the display, minus a
      * guess about how space is needed for window manager decorations.
      */
@@ -679,6 +714,11 @@ TkWmMapWindow(
     }
     UpdateGeometryInfo((ClientData) winPtr);
     wmPtr->flags &= ~WM_ABOUT_TO_MAP;
+
+    /*
+     * Update _NET_WM_STATE hints:
+     */
+    UpdateNetWmState(wmPtr);
 
     /*
      * Map the window, then wait to be sure that the window manager has
@@ -927,14 +967,7 @@ TkWmSetClass(
  *
  * Tk_WmObjCmd --
  *
- *	This function is invoked to process the "wm" Tcl command. See the user
- *	documentation for details on what it does.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	See the user documentation.
+ *	This function is invoked to process the "wm" Tcl command. 
  *
  *----------------------------------------------------------------------
  */
@@ -1164,16 +1197,139 @@ WmAspectCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * WmSetAttribute --
+ *
+ * 	Helper routine for WmAttributesCmd.  Sets the value
+ * 	of the specified attribute.
+ *
+ * Returns:
+ *
+ * 	TCL_OK if successful, TCL_ERROR otherwise.  In case of an
+ * 	error, leaves a message in the interpreter's result.
+ *
+ *----------------------------------------------------------------------
+ */
+static int WmSetAttribute(
+    TkWindow *winPtr,           /* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter */
+    WmAttribute attribute,	/* Code of attribute to set */
+    Tcl_Obj *value)		/* New value */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    switch (attribute) {
+	case WMATT_ALPHA:
+	{
+	    unsigned long opacity;	/* 0=transparent, 0xFFFFFFFF=opaque */
+
+	    if (TCL_OK != Tcl_GetDoubleFromObj(
+		    interp, value, &wmPtr->reqState.alpha)) {
+		return TCL_ERROR;
+	    }
+	    if (wmPtr->reqState.alpha < 0.0) {
+		wmPtr->reqState.alpha = 0.0;
+	    }
+	    if (wmPtr->reqState.alpha > 1.0) {
+		wmPtr->reqState.alpha = 1.0;
+	    }
+
+	    if (!wmPtr->wrapperPtr) {
+		break;
+	    }
+
+	    opacity = 0xFFFFFFFFul * wmPtr->reqState.alpha;
+	    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window, 
+		    Tk_InternAtom((Tk_Window)winPtr, "_NET_WM_WINDOW_OPACITY"),
+		    XA_CARDINAL, 32, PropModeReplace,
+		    (unsigned char *)&opacity, 1L);
+	    wmPtr->attributes.alpha = wmPtr->reqState.alpha;
+
+	    break;
+	}
+	case WMATT_TOPMOST:
+	    if (TCL_OK != Tcl_GetBooleanFromObj(
+		    interp, value, &wmPtr->reqState.topmost)) {
+		return TCL_ERROR;
+	    }
+	    SetNetWmState(winPtr, 
+		"_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
+	    break;
+	case WMATT_ZOOMED:
+	    if (TCL_OK != Tcl_GetBooleanFromObj(
+		    interp, value, &wmPtr->reqState.zoomed)) {
+		return TCL_ERROR;
+	    }
+	    SetNetWmState(winPtr,
+		"_NET_WM_STATE_MAXIMIZED_VERT", wmPtr->reqState.zoomed);
+	    SetNetWmState(winPtr,
+		"_NET_WM_STATE_MAXIMIZED_HORZ", wmPtr->reqState.zoomed);
+	    break;
+	case WMATT_FULLSCREEN:
+	    if (TCL_OK != Tcl_GetBooleanFromObj(
+		    interp, value, &wmPtr->reqState.fullscreen)) {
+		return TCL_ERROR;
+	    }
+	    SetNetWmState(winPtr,
+		"_NET_WM_STATE_FULLSCREEN", wmPtr->reqState.fullscreen);
+	    break;
+	case _WMATT_LAST_ATTRIBUTE:	/* NOTREACHED */
+	    return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmGetAttribute --
+ *
+ * 	Helper routine for WmAttributesCmd.  Returns the current value
+ * 	of the specified attribute.
+ *
+ * See also: CheckNetWmState().
+ *
+ *----------------------------------------------------------------------
+ */
+static Tcl_Obj *WmGetAttribute(
+    TkWindow *winPtr,           /* Toplevel to work with */
+    WmAttribute attribute)	/* Code of attribute to get */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    switch (attribute) {
+	case WMATT_ALPHA:
+	    return Tcl_NewDoubleObj(wmPtr->attributes.alpha);
+	case WMATT_TOPMOST:
+	    return Tcl_NewBooleanObj(wmPtr->attributes.topmost);
+	case WMATT_ZOOMED:
+	    return Tcl_NewBooleanObj(wmPtr->attributes.zoomed);
+	case WMATT_FULLSCREEN:
+	    return Tcl_NewBooleanObj(wmPtr->attributes.fullscreen);
+	case _WMATT_LAST_ATTRIBUTE:	/*NOTREACHED*/
+	    break;
+    }
+    /*NOTREACHED*/
+    return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WmAttributesCmd --
  *
  *	This function is invoked to process the "wm attributes" Tcl command.
- *	See the user documentation for details on what it does.
  *
- * Results:
- *	A standard Tcl result.
+ * Syntax:
  *
- * Side effects:
- *	See the user documentation.
+ * 	wm attributes $win ?-attribute ?value attribute value...??
+ *
+ * Notes:
+ *
+ *	Attributes of mapped windows are set by sending a _NET_WM_STATE
+ *	ClientMessage to the root window (see SetNetWmState).
+ *	For withdrawn windows, we keep track of the requested attribute
+ *	state, and set the _NET_WM_STATE property ourselves immediately
+ *	prior to mapping the window.
+ *
+ * See also: TIP#231, EWMH.
  *
  *----------------------------------------------------------------------
  */
@@ -1186,8 +1342,39 @@ WmAttributesCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "window");
+    int attribute = 0;
+    if (objc == 3) {		/* wm attributes $win */
+	Tcl_Obj *result = Tcl_NewListObj(0,0);
+	for (attribute = 0; attribute < _WMATT_LAST_ATTRIBUTE; ++attribute) {
+	    Tcl_ListObjAppendElement(interp, result,
+		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
+	    Tcl_ListObjAppendElement(interp, result,
+		    WmGetAttribute(winPtr, attribute));
+	}
+	Tcl_SetObjResult(interp, result);
+	return TCL_OK;
+    } else if (objc == 4)  {	/* wm attributes $win -attribute */
+	if (Tcl_GetIndexFromObj(interp, objv[3], WmAttributeNames,
+		    "attribute", 0, &attribute) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	Tcl_SetObjResult(interp, 
+		WmGetAttribute(winPtr, attribute));
+	return TCL_OK;
+    } else if ((objc - 3) % 2 == 0) {	/* wm attributes $win -att value... */
+	int i;
+	for (i = 3; i < objc; i += 2) {
+	    if (Tcl_GetIndexFromObj(interp, objv[i], WmAttributeNames,
+			"attribute", 0, &attribute) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    if (WmSetAttribute(winPtr,interp,attribute,objv[i+1]) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	}
+	return TCL_OK;
+    } else {
+	Tcl_WrongNumArgs(interp, 2, objv, "window ?-attribute ?value ...??");
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -3909,6 +4096,48 @@ ComputeReparentGeometry(
 /*
  *----------------------------------------------------------------------
  *
+ * PropertyEvent --
+ *
+ *	Handle PropertyNotify events on wrapper windows.
+ *	The following properties are of interest:
+ *
+ *	_NET_WM_STATE:
+ *		Used to keep wmPtr->attributes up to date.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+PropertyEvent(
+    WmInfo *wmPtr,		/* Information about toplevel window. */
+    XPropertyEvent *eventPtr)	/* PropertyNotify event structure */
+{
+    TkWindow *wrapperPtr = wmPtr->wrapperPtr;
+    Atom _NET_WM_STATE =
+	Tk_InternAtom((Tk_Window)wmPtr->winPtr, "_NET_WM_STATE");
+
+    if (eventPtr->atom == _NET_WM_STATE) {
+	Atom actualType;
+	int actualFormat;
+	unsigned long numItems, bytesAfter;
+	unsigned char *propertyValue = 0;
+	long maxLength = 1024;
+
+	if (XGetWindowProperty(
+		wrapperPtr->display, wrapperPtr->window, _NET_WM_STATE,
+		0l, maxLength, False, XA_ATOM,
+		&actualType, &actualFormat, &numItems, &bytesAfter, 
+		&propertyValue) == Success
+	) {
+	    CheckNetWmState(wmPtr, (Atom*)propertyValue, (int)numItems);
+	    XFree(propertyValue);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WrapperEventProc --
  *
  *	This function is invoked by the event loop when a wrapper window is
@@ -3923,6 +4152,9 @@ ComputeReparentGeometry(
  *
  *----------------------------------------------------------------------
  */
+
+static const unsigned int WrapperEventMask = 
+    (StructureNotifyMask | PropertyChangeMask);
 
 static void
 WrapperEventProc(
@@ -3979,6 +4211,8 @@ WrapperEventProc(
 	goto doMapEvent;
     } else if (eventPtr->type == ReparentNotify) {
 	ReparentEvent(wmPtr, &eventPtr->xreparent);
+    } else if (eventPtr->type == PropertyNotify) {
+	PropertyEvent(wmPtr, &eventPtr->xproperty);
     }
     return;
 
@@ -4509,6 +4743,128 @@ UpdatePhotoIcon(
     }
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetNetWmState --
+ *
+ * 	Sets the specified state property by sending a _NET_WM_STATE
+ * 	ClientMessage to the root window.
+ *
+ * Preconditions: 
+ *
+ * 	Wrapper window must be created.
+ *
+ * See also:
+ * 	UpdateNetWmState; EWMH spec, section _NET_WM_STATE.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define _NET_WM_STATE_REMOVE    0l
+#define _NET_WM_STATE_ADD       1l
+#define _NET_WM_STATE_TOGGLE    2l
+
+static void SetNetWmState(TkWindow *winPtr, const char *atomName, int on)
+{
+    Tk_Window tkwin = (Tk_Window)winPtr;
+    Atom messageType = Tk_InternAtom(tkwin, "_NET_WM_STATE");
+    Atom action = on ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
+    Atom property = Tk_InternAtom(tkwin, atomName);
+    XEvent e;
+
+    if (!winPtr->wmInfoPtr->wrapperPtr) {
+	return;
+    }
+
+    e.xany.type = ClientMessage;
+    e.xany.window = winPtr->wmInfoPtr->wrapperPtr->window;
+    e.xclient.message_type = messageType;
+    e.xclient.format = 32;
+    e.xclient.data.l[0] = action;
+    e.xclient.data.l[1] = property;
+    e.xclient.data.l[2] = e.xclient.data.l[3] = e.xclient.data.l[4] = 0l;
+
+    XSendEvent(winPtr->display,
+	RootWindow(winPtr->display, winPtr->screenNum), 0,
+	SubstructureNotifyMask|SubstructureRedirectMask, &e);
+}
+
+/*
+ * CheckNetWmState --
+ *
+ * 	Updates the window attributes whenever the _NET_WM_STATE
+ * 	property changes.
+ *
+ * Notes:
+ * 	
+ * 	Tk uses a single -zoomed state, while the EWMH spec supports 
+ * 	separate vertical and horizontal maximization.  We consider
+ * 	the window to be "zoomed" if _NET_WM_STATE_MAXIMIZED_VERT 
+ * 	and _NET_WM_STATE_MAXIMIZED_HORZ are both set.
+ */
+static void CheckNetWmState(WmInfo *wmPtr, Atom *atoms, int numAtoms)
+{
+    Tk_Window tkwin = (Tk_Window)wmPtr->wrapperPtr;
+    int i;
+    Atom _NET_WM_STATE_ABOVE
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_ABOVE"),
+	_NET_WM_STATE_MAXIMIZED_VERT 
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_MAXIMIZED_VERT"),
+	_NET_WM_STATE_MAXIMIZED_HORZ 
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_MAXIMIZED_HORZ"),
+	_NET_WM_STATE_FULLSCREEN 
+	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
+
+    wmPtr->attributes.topmost = 0;
+    wmPtr->attributes.zoomed = 0;
+    wmPtr->attributes.fullscreen = 0;
+    for (i = 0; i < numAtoms; ++i) {
+	if (atoms[i] == _NET_WM_STATE_ABOVE) {
+	    wmPtr->attributes.topmost = 1;
+	} else if (atoms[i] == _NET_WM_STATE_MAXIMIZED_VERT) {
+	    wmPtr->attributes.zoomed |= 1;
+	} else if (atoms[i] == _NET_WM_STATE_MAXIMIZED_HORZ) {
+	    wmPtr->attributes.zoomed |= 2;
+	} else if (atoms[i] == _NET_WM_STATE_FULLSCREEN) {
+	    wmPtr->attributes.fullscreen = 1;
+	}
+    }
+
+    wmPtr->attributes.zoomed = (wmPtr->attributes.zoomed == 3);
+
+    return;
+}
+
+/*
+ * UpdateNetWmState --
+ *
+ * 	Sets the _NET_WM_STATE property to match the requested attribute state
+ * 	just prior to mapping a withdrawn window.
+ */
+#define NET_WM_STATE_MAX_ATOMS 4
+static void UpdateNetWmState(WmInfo *wmPtr)
+{
+    Tk_Window tkwin = (Tk_Window)wmPtr->wrapperPtr;
+    Atom atoms[NET_WM_STATE_MAX_ATOMS];
+    long numAtoms = 0;
+
+    if (wmPtr->reqState.topmost) {
+	atoms[numAtoms++] = Tk_InternAtom(tkwin,"_NET_WM_STATE_ABOVE");
+    }
+    if (wmPtr->reqState.zoomed) {
+	atoms[numAtoms++] = Tk_InternAtom(tkwin,"_NET_WM_STATE_MAXIMIZED_VERT");
+	atoms[numAtoms++] = Tk_InternAtom(tkwin,"_NET_WM_STATE_MAXIMIZED_HORZ");
+    } 
+    if (wmPtr->reqState.fullscreen) {
+	atoms[numAtoms++] = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
+    }
+
+    XChangeProperty(Tk_Display(tkwin), wmPtr->wrapperPtr->window, 
+	    Tk_InternAtom(tkwin, "_NET_WM_STATE"), XA_ATOM, 32, 
+	    PropModeReplace, (unsigned char *)atoms, numAtoms);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -6209,8 +6565,8 @@ CreateWrapper(
      * etc..
      */
 
-    Tk_CreateEventHandler((Tk_Window) wmPtr->wrapperPtr, StructureNotifyMask,
-	    WrapperEventProc, (ClientData) wmPtr);
+    Tk_CreateEventHandler((Tk_Window) wmPtr->wrapperPtr, 
+	    WrapperEventMask, WrapperEventProc, (ClientData) wmPtr);
 }
 
 /*
@@ -6567,11 +6923,3 @@ TkpWmSetState(
 
     return 1;
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */

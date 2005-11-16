@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.23 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.24 2005/11/16 02:51:38 jenglish Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -82,7 +82,31 @@ finder icon). \fB\-alpha\fR sets the alpha transparency level of the window,
 it accepts a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque),
 values outside that range will be constrained.
 .PP
-On Unix, there are currently no special attribute values.
+On X11, the following attributes may be set.
+These are not supported by all window managers,
+and will have no effect under older WMs.
+.\" See http://www.freedesktop.org/Standards/wm-spec
+.RS
+.TP
+\fB-topmost\fP
+Requests that this window should be kept above
+all other windows that do not also have the \fB-topmost\fP
+attribute set.
+.TP
+\fB-zoomed\fP
+Requests that the window should be maximized.
+This is the same as \fB[wm state zoomed]\fP on Windows.
+.TP
+\fB-fullscreen\fP
+Requests that the window should fill the entire screen 
+and have no window decorations.
+.RE
+.PP
+On X11, changes to window attributes are performed asynchronously.
+Querying the value of an attribute returns the current state,
+which will not be the same as the value most recently set
+if the window manager has not yet processed the request
+or if it does not support the attribute.
 .RE
 .TP
 \fBwm client \fIwindow\fR ?\fIname\fR?
