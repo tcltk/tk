@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.12 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.13 2005/11/16 09:28:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -91,12 +91,11 @@ typedef struct TkDisplayFocusInfo {
  * Forward declarations for functions defined in this file:
  */
 
-static DisplayFocusInfo *FindDisplayFocusInfo _ANSI_ARGS_((TkMainInfo *mainPtr,
-			    TkDisplay *dispPtr));
-static void		FocusMapProc _ANSI_ARGS_((ClientData clientData,
-			    XEvent *eventPtr));
-static void		GenerateFocusEvents _ANSI_ARGS_((TkWindow *sourcePtr,
-			    TkWindow *destPtr));
+static DisplayFocusInfo*FindDisplayFocusInfo(TkMainInfo *mainPtr,
+			    TkDisplay *dispPtr);
+static void		FocusMapProc(ClientData clientData, XEvent *eventPtr);
+static void		GenerateFocusEvents(TkWindow *sourcePtr,
+			    TkWindow *destPtr);
 
 /*
  *--------------------------------------------------------------
@@ -116,14 +115,14 @@ static void		GenerateFocusEvents _ANSI_ARGS_((TkWindow *sourcePtr,
  */
 
 int
-Tk_FocusObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+Tk_FocusObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     static CONST char *focusOptions[] = {
-	"-displayof", "-force", "-lastfor", (char *) NULL
+	"-displayof", "-force", "-lastfor", NULL
     };
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr = (TkWindow *) clientData;
@@ -260,9 +259,9 @@ Tk_FocusObjCmd(clientData, interp, objc, objv)
  */
 
 int
-TkFocusFilterEvent(winPtr, eventPtr)
-    TkWindow *winPtr;		/* Window that focus event is directed to. */
-    XEvent *eventPtr;		/* FocusIn, FocusOut, Enter, or Leave
+TkFocusFilterEvent(
+    TkWindow *winPtr,		/* Window that focus event is directed to. */
+    XEvent *eventPtr)		/* FocusIn, FocusOut, Enter, or Leave
 				 * event. */
 {
     /*
@@ -462,7 +461,7 @@ TkFocusFilterEvent(winPtr, eventPtr)
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
-	GenerateFocusEvents(displayFocusPtr->focusWinPtr, (TkWindow *) NULL);
+	GenerateFocusEvents(displayFocusPtr->focusWinPtr, NULL);
 
 	/*
 	 * Reset dispPtr->focusPtr, but only if it currently is the same as
@@ -515,8 +514,7 @@ TkFocusFilterEvent(winPtr, eventPtr)
 	if ((dispPtr->implicitWinPtr != NULL)
 		&& !(winPtr->flags & TK_EMBEDDED)) {
 	    DEBUG(dispPtr, ("Defocussed implicit Async\n"));
-	    GenerateFocusEvents(displayFocusPtr->focusWinPtr,
-		    (TkWindow *) NULL);
+	    GenerateFocusEvents(displayFocusPtr->focusWinPtr, NULL);
 	    XSetInputFocus(dispPtr->display, PointerRoot, RevertToPointerRoot,
 		    CurrentTime);
 	    displayFocusPtr->focusWinPtr = NULL;
@@ -545,10 +543,10 @@ TkFocusFilterEvent(winPtr, eventPtr)
  */
 
 void
-TkSetFocusWin(winPtr, force)
-    TkWindow *winPtr;		/* Window that is to be the new focus for its
+TkSetFocusWin(
+    TkWindow *winPtr,		/* Window that is to be the new focus for its
 				 * display and application. */
-    int force;			/* If non-zero, set the X focus to this window
+    int force)			/* If non-zero, set the X focus to this window
 				 * even if the application doesn't currently
 				 * have the X focus. */
 {
@@ -685,14 +683,14 @@ TkSetFocusWin(winPtr, force)
  */
 
 TkWindow *
-TkGetFocusWin(winPtr)
-    TkWindow *winPtr;		/* Window that selects an application and a
+TkGetFocusWin(
+    TkWindow *winPtr)		/* Window that selects an application and a
 				 * display. */
 {
     DisplayFocusInfo *displayFocusPtr;
 
     if (winPtr == NULL) {
-	return (TkWindow *) NULL;
+	return NULL;
     }
 
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
@@ -722,10 +720,10 @@ TkGetFocusWin(winPtr)
  */
 
 TkWindow *
-TkFocusKeyEvent(winPtr, eventPtr)
-    TkWindow *winPtr;		/* Window that selects an application and a
+TkFocusKeyEvent(
+    TkWindow *winPtr,		/* Window that selects an application and a
 				 * display. */
-    XEvent *eventPtr;		/* X event to redirect (should be KeyPress or
+    XEvent *eventPtr)		/* X event to redirect (should be KeyPress or
 				 * KeyRelease). */
 {
     DisplayFocusInfo *displayFocusPtr;
@@ -780,7 +778,7 @@ TkFocusKeyEvent(winPtr, eventPtr)
      */
 
     TkpRedirectKeyEvent(winPtr, eventPtr);
-    return (TkWindow *) NULL;
+    return NULL;
 }
 
 /*
@@ -801,8 +799,8 @@ TkFocusKeyEvent(winPtr, eventPtr)
  */
 
 void
-TkFocusDeadWindow(winPtr)
-    register TkWindow *winPtr;	/* Information about the window that is being
+TkFocusDeadWindow(
+    register TkWindow *winPtr)	/* Information about the window that is being
 				 * deleted. */
 {
     ToplevelFocusInfo *tlFocusPtr, *prevPtr;
@@ -895,12 +893,11 @@ TkFocusDeadWindow(winPtr)
  */
 
 static void
-GenerateFocusEvents(sourcePtr, destPtr)
-    TkWindow *sourcePtr;	/* Window that used to have the focus (may be
+GenerateFocusEvents(
+    TkWindow *sourcePtr,	/* Window that used to have the focus (may be
 				 * NULL). */
-    TkWindow *destPtr;		/* New window to have the focus (may be
+    TkWindow *destPtr)		/* New window to have the focus (may be
 				 * NULL). */
-
 {
     XEvent event;
     TkWindow *winPtr;
@@ -943,9 +940,9 @@ GenerateFocusEvents(sourcePtr, destPtr)
  */
 
 static void
-FocusMapProc(clientData, eventPtr)
-    ClientData clientData;	/* Toplevel window. */
-    XEvent *eventPtr;		/* Information about event. */
+FocusMapProc(
+    ClientData clientData,	/* Toplevel window. */
+    XEvent *eventPtr)		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *) clientData;
     DisplayFocusInfo *displayFocusPtr;
@@ -981,10 +978,10 @@ FocusMapProc(clientData, eventPtr)
  */
 
 static DisplayFocusInfo *
-FindDisplayFocusInfo(mainPtr, dispPtr)
-    TkMainInfo *mainPtr;	/* Record that identifies a particular
+FindDisplayFocusInfo(
+    TkMainInfo *mainPtr,	/* Record that identifies a particular
 				 * application. */
-    TkDisplay *dispPtr;		/* Display whose focus information is
+    TkDisplay *dispPtr)		/* Display whose focus information is
 				 * needed. */
 {
     DisplayFocusInfo *displayFocusPtr;
@@ -1029,8 +1026,8 @@ FindDisplayFocusInfo(mainPtr, dispPtr)
  */
 
 void
-TkFocusFree(mainPtr)
-    TkMainInfo *mainPtr;	/* Record that identifies a particular
+TkFocusFree(
+    TkMainInfo *mainPtr)	/* Record that identifies a particular
 				 * application. */
 {
     while (mainPtr->displayFocusPtr != NULL) {
