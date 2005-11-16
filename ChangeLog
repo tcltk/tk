@@ -1,3 +1,9 @@
+2005-11-16  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* doc/text.n: clarify left to right interpretation of index
+	modifiers, including the fact that validation occurs after
+	each step [Bug 1357575]
+
 2005-11-15  Joe English  <jenglish@users.sourceforge.net>
 	* unix/tkUnixWm.c, tests/unixWm.test, doc/wm.n:
 	Support for [wm attributes] on X11 [TIP#231, patch#1062022].
