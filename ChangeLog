@@ -1,3 +1,9 @@
+2005-11-16  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* doc/text.n: clarify left to right interpretation of index
+	modifiers, including the fact that validation occurs after
+	each step [Bug 1357575]
+
 2005-11-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* unix/tcl.m4: Add missing LIBS for OpenBSD shared libary
