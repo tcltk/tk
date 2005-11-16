@@ -2,6 +2,16 @@
 
 	* changes:	Update changes for 8.4.12 release
 
+	* README:		Bump version number to 8.4.12
+	* generic/tk.h:
+	* macosx/Wish.pbproj/project.pbxproc:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf
+	* win/configure:
+
 2005-11-16  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* doc/text.n: clarify left to right interpretation of index
