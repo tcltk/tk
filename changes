@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.25 2005/06/24 13:51:39 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.26 2005/11/16 16:21:21 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5831,3 +5831,27 @@ Documentation improvements [1087842,1081527,1115907,etc.]
 2005-06-23 (bug fix)[756840] Fix Tk console cleanup on exit/reinit (mistachkin)
 
 --- Released 8.4.11, June 28, 2005 --- See ChangeLog for details ---
+
+2005-07-24 (enhancement)[1244153] use SC_PROG_TCLSH, SC_BUILD_TCLSH (dejong)
+
+2005-08-09 (Aqua enhancement) Carbon events (steffen)
+
+2005-08-11 (bug fix)[1252702] portable Tcl_GetStringFromObj() calls (fellows)
+
+2005-08-16 (bug fix)[749908] per-thread Tk_ConfigSpec tables (fellows)
+
+2005-08-23 (bug fix)[1235544] adopt Tcl's SEH implementation (kenny,dejong)
+
+2005-08-23 (Aqua bug fix) dialogs ignore -initial* options (hobbs)
+
+2005-10-04 (bug fix)[1216775] [tk_dialog] failing [grab] (fontana,hobbs)
+
+2005-10-04 (bug fix)[1216775] [tk_chooseDirectory -mustexist] (lemburg,hobbs)
+
+2005-10-10 (bug fix)[1319720] Tk_DeleteOptionTable() mem leak (melbardis)
+
+2005-10-18 (bug fix)[1328926] $argv encoding and list formatting (porter)
+
+2005-11-06 (platform support) OpenBSD missing LIBS (thoyts)
+
+--- Released 8.4.12, November 30, 2005 --- See ChangeLog for details ---
