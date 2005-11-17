@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.19 2005/10/10 10:36:35 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.20 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1751,7 +1751,7 @@ TkBTreeNextLine(textPtr, linePtr)
 	    break;
 	}
 	if (nodePtr->parentPtr == NULL) {
-	    return (TkTextLine *) NULL;
+	    return NULL;
 	}
     }
     while (nodePtr->level > 0) {
@@ -1803,7 +1803,7 @@ TkBTreePreviousLine(textPtr, linePtr)
 	    return prevPtr;
 	}
 	prevPtr = prevPtr->nextPtr;
-	if (prevPtr == (TkTextLine *) NULL) {
+	if (prevPtr == NULL) {
 	    Tcl_Panic("TkBTreePreviousLine ran out of lines");
 	}
     }
@@ -1815,8 +1815,8 @@ TkBTreePreviousLine(textPtr, linePtr)
      */
 
     for (nodePtr = linePtr->parentPtr; ; nodePtr = nodePtr->parentPtr) {
-	if (nodePtr == (Node *) NULL || nodePtr->parentPtr == (Node *) NULL) {
-	    return (TkTextLine *) NULL;
+	if (nodePtr == NULL || nodePtr->parentPtr == NULL) {
+	    return NULL;
 	}
 	if (nodePtr != nodePtr->parentPtr->children.nodePtr) {
 	    break;
@@ -1830,10 +1830,10 @@ TkBTreePreviousLine(textPtr, linePtr)
 	if (node2Ptr->level == 0) {
 	    break;
 	}
-	nodePtr = (Node *)NULL;
+	nodePtr = NULL;
     }
     for (prevPtr = node2Ptr->children.linePtr ; ; prevPtr = prevPtr->nextPtr) {
-	if (prevPtr->nextPtr == (TkTextLine *) NULL) {
+	if (prevPtr->nextPtr == NULL) {
 	    return prevPtr;
 	}
     }
@@ -2242,7 +2242,7 @@ ChangeNodeToggleCount(nodePtr, tagPtr, delta)
     int rootLevel;		/* Level of original tag root */
 
     tagPtr->toggleCount += delta;
-    if (tagPtr->tagRootPtr == (Node *) NULL) {
+    if (tagPtr->tagRootPtr == NULL) {
 	tagPtr->tagRootPtr = nodePtr;
 	return;
     }
@@ -2344,7 +2344,7 @@ ChangeNodeToggleCount(nodePtr, tagPtr, delta)
 	return;
     }
     if (tagPtr->toggleCount == 0) {
-	tagPtr->tagRootPtr = (Node *) NULL;
+	tagPtr->tagRootPtr = NULL;
 	return;
     }
     nodePtr = tagPtr->tagRootPtr;
@@ -2355,7 +2355,7 @@ ChangeNodeToggleCount(nodePtr, tagPtr, delta)
 	 */
 
 	for (node2Ptr = nodePtr->children.nodePtr;
-		node2Ptr != (Node *)NULL ;
+		node2Ptr != NULL ;
 		node2Ptr = node2Ptr->nextPtr) {
 	    for (prevPtr = NULL, summaryPtr = node2Ptr->summaryPtr;
 		    summaryPtr != NULL;
@@ -2424,7 +2424,7 @@ FindTagStart(tree, tagPtr, indexPtr)
     int offset;
 
     nodePtr = tagPtr->tagRootPtr;
-    if (nodePtr == (Node *) NULL) {
+    if (nodePtr == NULL) {
 	return NULL;
     }
 
@@ -2434,7 +2434,7 @@ FindTagStart(tree, tagPtr, indexPtr)
      */
 
     while (nodePtr->level > 0) {
-	for (nodePtr = nodePtr->children.nodePtr ; nodePtr != (Node *) NULL;
+	for (nodePtr = nodePtr->children.nodePtr ; nodePtr != NULL;
 		nodePtr = nodePtr->nextPtr) {
 	    for (summaryPtr = nodePtr->summaryPtr ; summaryPtr != NULL;
 		    summaryPtr = summaryPtr->nextPtr) {
@@ -2451,7 +2451,7 @@ FindTagStart(tree, tagPtr, indexPtr)
      * Work through the lines attached to the level-0 node.
      */
 
-    for (linePtr = nodePtr->children.linePtr; linePtr != (TkTextLine *) NULL;
+    for (linePtr = nodePtr->children.linePtr; linePtr != NULL;
 	    linePtr = linePtr->nextPtr) {
 	for (offset = 0, segPtr = linePtr->segPtr ; segPtr != NULL;
 		offset += segPtr->size, segPtr = segPtr->nextPtr) {
@@ -2505,7 +2505,7 @@ FindTagEnd(tree, tagPtr, indexPtr)
     int lastoffset, lastoffset2, offset;
 
     nodePtr = tagPtr->tagRootPtr;
-    if (nodePtr == (Node *) NULL) {
+    if (nodePtr == NULL) {
 	return NULL;
     }
 
@@ -2516,7 +2516,7 @@ FindTagEnd(tree, tagPtr, indexPtr)
 
     while (nodePtr->level > 0) {
 	for (lastNodePtr = NULL, nodePtr = nodePtr->children.nodePtr ;
-		nodePtr != (Node *) NULL; nodePtr = nodePtr->nextPtr) {
+		nodePtr != NULL; nodePtr = nodePtr->nextPtr) {
 	    for (summaryPtr = nodePtr->summaryPtr ; summaryPtr != NULL;
 		    summaryPtr = summaryPtr->nextPtr) {
 		if (summaryPtr->tagPtr == tagPtr) {
@@ -2536,7 +2536,7 @@ FindTagEnd(tree, tagPtr, indexPtr)
     lastoffset2 = 0;
     lastoffset = 0;
     for (lastLinePtr = NULL, linePtr = nodePtr->children.linePtr;
-	    linePtr != (TkTextLine *) NULL; linePtr = linePtr->nextPtr) {
+	    linePtr != NULL; linePtr = linePtr->nextPtr) {
 	for (offset = 0, lastSegPtr = NULL, segPtr = linePtr->segPtr ;
 		segPtr != NULL;
 		offset += segPtr->size, segPtr = segPtr->nextPtr) {
@@ -2604,7 +2604,7 @@ TkBTreeStartSearch(index1Ptr, index2Ptr, tagPtr, searchPtr)
      */
 
     seg0Ptr = FindTagStart(index1Ptr->tree, tagPtr, &index0);
-    if (seg0Ptr == (TkTextSegment *) NULL) {
+    if (seg0Ptr == NULL) {
 	/*
 	 * Even though there are no toggles, the display code still uses the
 	 * search curIndex, so initialize that anyway.
@@ -2631,7 +2631,7 @@ TkBTreeStartSearch(index1Ptr, index2Ptr, tagPtr, searchPtr)
 	searchPtr->nextPtr = TkTextIndexToSeg(index1Ptr, &offset);
 	searchPtr->curIndex.byteIndex -= offset;
     }
-    searchPtr->lastPtr = TkTextIndexToSeg(index2Ptr, (int *) NULL);
+    searchPtr->lastPtr = TkTextIndexToSeg(index2Ptr, NULL);
     searchPtr->tagPtr = tagPtr;
     searchPtr->linesLeft = TkBTreeLinesTo(NULL, index2Ptr->linePtr) + 1
 	    - TkBTreeLinesTo(NULL, index1Ptr->linePtr);
@@ -2701,7 +2701,7 @@ TkBTreeStartSearchBack(index1Ptr, index2Ptr, tagPtr, searchPtr)
      */
 
     seg0Ptr = FindTagEnd(index1Ptr->tree, tagPtr, &index0);
-    if (seg0Ptr == (TkTextSegment *) NULL) {
+    if (seg0Ptr == NULL) {
 	/*
 	 * Even though there are no toggles, the display code still uses the
 	 * search curIndex, so initialize that anyway.
@@ -2741,7 +2741,7 @@ TkBTreeStartSearchBack(index1Ptr, index2Ptr, tagPtr, searchPtr)
 	searchPtr->lastPtr = NULL;	/* Signals special case for 1.0 */
     } else {
 	TkTextIndexBackChars(NULL, index2Ptr, 1, &backOne, COUNT_INDICES);
-	searchPtr->lastPtr = TkTextIndexToSeg(&backOne, (int *) NULL);
+	searchPtr->lastPtr = TkTextIndexToSeg(&backOne, NULL);
     }
     searchPtr->tagPtr = tagPtr;
     searchPtr->linesLeft = TkBTreeLinesTo(NULL, index1Ptr->linePtr) + 1
@@ -3727,7 +3727,7 @@ TkBTreeCheck(tree)
 	    entryPtr != NULL ; entryPtr = Tcl_NextHashEntry(&search)) {
 	tagPtr = (TkTextTag *) Tcl_GetHashValue(entryPtr);
 	nodePtr = tagPtr->tagRootPtr;
-	if (nodePtr == (Node *) NULL) {
+	if (nodePtr == NULL) {
 	    if (tagPtr->toggleCount != 0) {
 		Tcl_Panic("TkBTreeCheck found \"%s\" with toggles (%d) but no root",
 			tagPtr->name, tagPtr->toggleCount);

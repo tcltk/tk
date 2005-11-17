@@ -9,12 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.c,v 1.7 2005/10/17 20:52:01 dkf Exp $
+ * RCS: @(#) $Id: tkUndo.c,v 1.8 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkUndo.h"
 
-static int EvaluateActionList(Tcl_Interp *interp, TkUndoSubAtom *action);
+static int		EvaluateActionList(Tcl_Interp *interp,
+			    TkUndoSubAtom *action);
 
 /*
  *----------------------------------------------------------------------

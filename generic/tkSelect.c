@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.17 2005/11/14 16:29:15 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.18 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -644,7 +644,7 @@ Tk_GetSelection(
   cantget:
     Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
 	    " selection doesn't exist or form \"",
-	    Tk_GetAtomName(tkwin, target), "\" not defined", (char *) NULL);
+	    Tk_GetAtomName(tkwin, target), "\" not defined", NULL);
     return TCL_ERROR;
 }
 
@@ -680,7 +680,7 @@ Tk_SelectionObjCmd(
     int count, index;
     Tcl_Obj **objs;
     static CONST char *optionStrings[] = {
-	"clear", "get", "handle", "own", (char *) NULL
+	"clear", "get", "handle", "own", NULL
     };
     enum options {
 	SELECTION_CLEAR, SELECTION_GET, SELECTION_HANDLE, SELECTION_OWN
@@ -699,7 +699,7 @@ Tk_SelectionObjCmd(
     switch ((enum options) index) {
     case SELECTION_CLEAR: {
 	static CONST char *clearOptionStrings[] = {
-	    "-displayof", "-selection", (char *) NULL
+	    "-displayof", "-selection", NULL
 	};
 	enum clearOptions { CLEAR_DISPLAYOF, CLEAR_SELECTION };
 	int clearIndex;
@@ -712,7 +712,7 @@ Tk_SelectionObjCmd(
 	    }
 	    if (count < 2) {
 		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", (char *) NULL);
+			"\" missing", NULL);
 		return TCL_ERROR;
 	    }
 
@@ -758,7 +758,7 @@ Tk_SelectionObjCmd(
 	Tcl_DString selBytes;
 	int result;
 	static CONST char *getOptionStrings[] = {
-	    "-displayof", "-selection", "-type", (char *) NULL
+	    "-displayof", "-selection", "-type", NULL
 	};
 	enum getOptions { GET_DISPLAYOF, GET_SELECTION, GET_TYPE };
 	int getIndex;
@@ -771,7 +771,7 @@ Tk_SelectionObjCmd(
 	    }
 	    if (count < 2) {
 		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", (char *) NULL);
+			"\" missing", NULL);
 		return TCL_ERROR;
 	    }
 
@@ -833,7 +833,7 @@ Tk_SelectionObjCmd(
 	register CommandInfo *cmdInfoPtr;
 	int cmdLength;
 	static CONST char *handleOptionStrings[] = {
-	    "-format", "-selection", "-type", (char *) NULL
+	    "-format", "-selection", "-type", NULL
 	};
 	enum handleOptions {
 	    HANDLE_FORMAT, HANDLE_SELECTION, HANDLE_TYPE
@@ -848,7 +848,7 @@ Tk_SelectionObjCmd(
 	    }
 	    if (count < 2) {
 		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", (char *) NULL);
+			"\" missing", NULL);
 		return TCL_ERROR;
 	    }
 
@@ -921,7 +921,7 @@ Tk_SelectionObjCmd(
 	char *script = NULL;
 	int cmdLength;
 	static CONST char *ownOptionStrings[] = {
-	    "-command", "-displayof", "-selection", (char *) NULL
+	    "-command", "-displayof", "-selection", NULL
 	};
 	enum ownOptions { OWN_COMMAND, OWN_DISPLAYOF, OWN_SELECTION };
 	int ownIndex;
@@ -934,7 +934,7 @@ Tk_SelectionObjCmd(
 	    }
 	    if (count < 2) {
 		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", (char *) NULL);
+			"\" missing", NULL);
 		return TCL_ERROR;
 	    }
 
@@ -1003,8 +1003,7 @@ Tk_SelectionObjCmd(
 	    script = Tcl_GetString(objs[1]);
 	}
 	if (script == NULL) {
-	    Tk_OwnSelection(tkwin, selection, (Tk_LostSelProc *) NULL,
-		    (ClientData) NULL);
+	    Tk_OwnSelection(tkwin, selection, NULL, (ClientData) NULL);
 	    return TCL_OK;
 	}
 	cmdLength = strlen(script);

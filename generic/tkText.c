@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.62 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.63 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "default.h"
@@ -52,7 +52,7 @@
  */
 
 static char *stateStrings[] = {
-    "disabled", "normal", (char *) NULL
+    "disabled", "normal", NULL
 };
 
 /*
@@ -62,7 +62,7 @@ static char *stateStrings[] = {
  */
 
 static char *wrapStrings[] = {
-    "char", "none", "word", (char *) NULL
+    "char", "none", "word", NULL
 };
 
 /*
@@ -72,7 +72,7 @@ static char *wrapStrings[] = {
  */
 
 static char *tabStyleStrings[] = {
-    "tabular", "wordprocessor", (char *) NULL
+    "tabular", "wordprocessor", NULL
 };
 
 /*
@@ -99,11 +99,11 @@ static void		RestoreLineStartEnd(ClientData clientData,
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 
 static Tk_ObjCustomOption lineOption = {
-    "line",				/* name */
-    SetLineStartEnd,			/* setProc */
-    GetLineStartEnd,			/* getProc */
-    RestoreLineStartEnd,		/* restoreProc */
-    (Tk_CustomOptionFreeProc *)NULL,	/* freeProc */
+    "line",			/* name */
+    SetLineStartEnd,		/* setProc */
+    GetLineStartEnd,		/* getProc */
+    RestoreLineStartEnd,	/* restoreProc */
+    NULL,			/* freeProc */
     0
 };
 
@@ -118,11 +118,11 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_TEXT_BG_COLOR, -1, Tk_Offset(TkText, border),
 	0, (ClientData) DEF_TEXT_BG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, -1, 0, (ClientData) "-borderwidth",
+    {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
+	NULL, 0, -1, 0, (ClientData) "-borderwidth",
 	TK_TEXT_LINE_GEOMETRY},
-    {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
+	NULL, 0, -1, 0, (ClientData) "-background", 0},
     {TK_OPTION_BOOLEAN, "-blockcursor", "blockCursor",
 	"BlockCursor", DEF_TEXT_BLOCK_CURSOR, -1,
 	Tk_Offset(TkText, insertCursorType), 0, 0, 0},
@@ -132,14 +132,14 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_TEXT_CURSOR, -1, Tk_Offset(TkText, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_CUSTOM, "-endline", (char *) NULL, (char *) NULL,
+    {TK_OPTION_CUSTOM, "-endline", NULL, NULL,
 	 NULL, -1, Tk_Offset(TkText, end), TK_OPTION_NULL_OK,
 	 (ClientData) &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_TEXT_EXPORT_SELECTION, -1,
 	Tk_Offset(TkText, exportSelection), 0, 0, 0},
-    {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
-	(char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
+	NULL, 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_TEXT_FONT, -1, Tk_Offset(TkText, tkfont), 0, 0,
 	TK_TEXT_LINE_GEOMETRY},
@@ -215,7 +215,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-spacing3", "spacing3", "Spacing",
 	DEF_TEXT_SPACING3, -1, Tk_Offset(TkText, spacing3),
 	TK_OPTION_DONT_SET_DEFAULT, 0 , TK_TEXT_LINE_GEOMETRY },
-    {TK_OPTION_CUSTOM, "-startline", (char *) NULL, (char *) NULL,
+    {TK_OPTION_CUSTOM, "-startline", NULL, NULL,
 	 NULL, -1, Tk_Offset(TkText, start), TK_OPTION_NULL_OK,
 	 (ClientData) &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
@@ -496,7 +496,7 @@ CreateWidget(sharedPtr, tkwin, interp, parent, objc, objv)
      */
 
     newWin = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(objv[1]),
-	    (char *) NULL);
+	    NULL);
     if (newWin == NULL) {
 	return TCL_ERROR;
     }
@@ -691,7 +691,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 	"bbox", "cget", "compare", "configure", "count", "debug",
 	"delete", "dlineinfo", "dump", "edit", "get", "image", "index",
 	"insert", "mark", "peer", "replace", "scan", "search", "see",
-	"tag", "window", "xview", "yview", (char *) NULL
+	"tag", "window", "xview", "yview", NULL
     };
     enum options {
 	TEXT_BBOX, TEXT_CGET, TEXT_COMPARE, TEXT_CONFIGURE, TEXT_COUNT,
@@ -783,8 +783,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
 	    compareError:
 		Tcl_AppendResult(interp, "bad comparison operator \"",
 			Tcl_GetString(objv[3]),
-			"\": must be <, <=, ==, >=, >, or !=",
-			(char *) NULL);
+			"\": must be <, <=, ==, >=, >, or !=", NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -808,8 +807,7 @@ TextWidgetObjCmd(clientData, interp, objc, objv)
     case TEXT_CONFIGURE:
 	if (objc <= 3) {
 	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp, (char *) textPtr,
-		    textPtr->optionTable,
-		    ((objc == 3) ? objv[2] : (Tcl_Obj *) NULL),
+		    textPtr->optionTable, ((objc == 3) ? objv[2] : NULL),
 		    textPtr->tkwin);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
@@ -1539,7 +1537,7 @@ SharedTextObjCmd(clientData, interp, objc, objv)
     int index;
 
     static CONST char *optionStrings[] = {
-	"delete", "insert", (char *) NULL
+	"delete", "insert", NULL
     };
     enum options {
 	TEXT_DELETE, TEXT_INSERT
@@ -1644,7 +1642,7 @@ TextPeerCmd(textPtr, interp, objc, objv)
     int index;
 
     static CONST char *peerOptionStrings[] = {
-	"create", "names", (char *) NULL
+	"create", "names", NULL
     };
     enum peerOptions {
 	PEER_CREATE, PEER_NAMES
@@ -2168,8 +2166,7 @@ ConfigureText(interp, textPtr, objc, objv)
 	    || (textPtr->selTagPtr->underlineString != NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
     }
-    TkTextRedrawTag(NULL, textPtr, (TkTextIndex *) NULL, (TkTextIndex *) NULL,
-	    textPtr->selTagPtr, 1);
+    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, 1);
 
     /*
      * Claim the selection if we've suddenly started exporting it and there
@@ -3611,8 +3608,7 @@ TextSearchCmd(textPtr, interp, objc, objv)
 	    Tcl_AppendResult(interp, "bad switch \"", Tcl_GetString(objv[i]),
 		    "\": must be --, -all, -backward, -count, -elide, ",
 		    "-exact, -forward, -nocase, -nolinestop, -overlap, ",
-		    "-regexp, or -strictlimits",
-		    (char *) NULL);
+		    "-regexp, or -strictlimits", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -4261,7 +4257,7 @@ TkTextGetTabs(interp, textPtr, stringPtr)
      * Map these strings to TkTextTabAlign values.
      */
     static CONST char *tabOptionStrings[] = {
-	"left", "right", "center", "numeric", (char *) NULL
+	"left", "right", "center", "numeric", NULL
     };
 
     if (Tcl_ListObjGetElements(interp, stringPtr, &objc, &objv) != TCL_OK) {
@@ -4584,7 +4580,7 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
      */
 
     for (offset = 0, segPtr = linePtr->segPtr ;
-	    (offset < endByte) && (segPtr != (TkTextSegment *)NULL) ;
+	    (offset < endByte) && (segPtr != NULL) ;
 	    offset += segPtr->size, segPtr = segPtr->nextPtr) {
 	if ((what & TK_DUMP_TEXT) && (segPtr->typePtr == &tkTextCharType) &&
 		(offset + segPtr->size > startByte)) {
@@ -4709,7 +4705,7 @@ DumpSegment(textPtr, interp, key, value, command, index, what)
 	argv[2] = buffer;
 	argv[3] = NULL;
 	list = Tcl_Merge(3, argv);
-	result = Tcl_VarEval(interp, command, " ", list, (char *) NULL);
+	result = Tcl_VarEval(interp, command, " ", list, NULL);
 	ckfree(list);
 	return result;
     }
@@ -4825,7 +4821,7 @@ TextEditCmd(textPtr, interp, objc, objv)
     int index;
 
     static CONST char *editOptionStrings[] = {
-	"modified", "redo", "reset", "separator", "undo", (char *) NULL
+	"modified", "redo", "reset", "separator", "undo", NULL
     };
     enum editOptions {
 	EDIT_MODIFIED, EDIT_REDO, EDIT_RESET, EDIT_SEPARATOR, EDIT_UNDO
@@ -4891,7 +4887,7 @@ TextEditCmd(textPtr, interp, objc, objv)
 	    return TCL_ERROR;
 	}
 	if (TextEditRedo(textPtr)) {
-	    Tcl_AppendResult(interp, "nothing to redo", (char *) NULL);
+	    Tcl_AppendResult(interp, "nothing to redo", NULL);
 	    return TCL_ERROR;
 	}
 	break;
@@ -4915,7 +4911,7 @@ TextEditCmd(textPtr, interp, objc, objv)
 	    return TCL_ERROR;
 	}
 	if (TextEditUndo(textPtr)) {
-	    Tcl_AppendResult(interp, "nothing to undo", (char *) NULL);
+	    Tcl_AppendResult(interp, "nothing to undo", NULL);
 	    return TCL_ERROR;
 	}
 	break;

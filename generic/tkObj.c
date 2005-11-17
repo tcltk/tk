@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.14 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.15 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -512,7 +512,7 @@ UpdateStringOfMM(
 	Tcl_Panic("UpdateStringOfMM: false precondition");
     }
 
-    Tcl_PrintDouble((Tcl_Interp *) NULL, mmPtr->value, buffer);
+    Tcl_PrintDouble(NULL, mmPtr->value, buffer);
     len = strlen(buffer);
 
     objPtr->bytes = (char *) ckalloc((unsigned) len + 1);
@@ -594,7 +594,7 @@ SetMMFromAny(
 
 	error:
 	    Tcl_AppendResult(interp, "bad screen distance \"", string,
-		    "\"", (char *) NULL);
+		    "\"", NULL);
 	    return TCL_ERROR;
 	}
 	while ((*rest != '\0') && isspace(UCHAR(*rest))) {
@@ -859,7 +859,7 @@ TkParsePadAmount(
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, "bad pad value \"",
 		    Tcl_GetString(specObj),
-		    "\": must be positive screen distance", (char *) NULL);
+		    "\": must be positive screen distance", NULL);
 	    return TCL_ERROR;
 	}
 	secondInt = firstInt;
@@ -888,7 +888,7 @@ TkParsePadAmount(
 	    (firstInt < 0)) {
 	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "bad pad value \"", Tcl_GetString(objv[0]),
-		"\": must be positive screen distance", (char *) NULL);
+		"\": must be positive screen distance", NULL);
 	return TCL_ERROR;
     }
 
@@ -904,7 +904,7 @@ TkParsePadAmount(
 	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "bad 2nd pad value \"",
 		Tcl_GetString(objv[1]),
-		"\": must be positive screen distance", (char *) NULL);
+		"\": must be positive screen distance", NULL);
 	return TCL_ERROR;
     }
 

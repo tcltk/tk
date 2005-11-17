@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.26 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.27 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -90,8 +90,8 @@ static Tk_ImageType imageType = {
     ImageDisplay,		/* displayProc */
     ImageFree,			/* freeProc */
     ImageDelete,		/* deleteProc */
-    (Tk_ImagePostscriptProc *) NULL,/* postscriptPtr */
-    (Tk_ImageType *) NULL	/* nextPtr */
+    NULL,			/* postscriptPtr */
+    NULL			/* nextPtr */
 };
 
 /*

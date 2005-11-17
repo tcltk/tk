@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.26 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.27 2005/11/17 16:21:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -159,7 +159,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 {
     static CONST char *imageOptions[] = {
 	"create", "delete", "height", "inuse", "names", "type", "types",
-	"width", (char *) NULL
+	"width", NULL
     };
     enum options {
 	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_NAMES,
@@ -220,7 +220,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	}
 	if (typePtr == NULL) {
 	    Tcl_AppendResult(interp, "image type \"", arg, "\" doesn't exist",
-		    (char *) NULL);
+		    NULL);
 	    return TCL_ERROR;
 	}
 
@@ -252,7 +252,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	    topWin = (TkWindow *) TkToplevelWindowForCommand(interp, name);
 	    if (topWin != NULL && winPtr->mainPtr->winPtr == topWin) {
 		Tcl_AppendResult(interp, "images may not be named the ",
-			"same as the main window", (char *) NULL);
+			"same as the main window", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -436,7 +436,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
     return TCL_OK;
 
   alreadyDeleted:
-    Tcl_AppendResult(interp, "image \"",arg,"\" doesn't exist", (char *) NULL);
+    Tcl_AppendResult(interp, "image \"", arg, "\" doesn't exist", NULL);
     return TCL_ERROR;
 }
 
@@ -574,8 +574,7 @@ Tk_GetImage(interp, tkwin, name, changeProc, clientData)
     return (Tk_Image) imagePtr;
 
   noSuchImage:
-    Tcl_AppendResult(interp, "image \"", name, "\" doesn't exist",
-	    (char *) NULL);
+    Tcl_AppendResult(interp, "image \"", name, "\" doesn't exist", NULL);
     return NULL;
 }
 

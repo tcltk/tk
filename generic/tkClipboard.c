@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.14 2005/10/17 22:14:32 dkf Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.15 2005/11/17 16:21:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -373,7 +373,7 @@ Tk_ClipboardAppend(
 	Tcl_AppendResult(interp, "format \"", Tk_GetAtomName(tkwin, format),
 		"\" does not match current format \"",
 		Tk_GetAtomName(tkwin, targetPtr->format),"\" for ",
-		Tk_GetAtomName(tkwin, type), (char *) NULL);
+		Tk_GetAtomName(tkwin, type), NULL);
 	return TCL_ERROR;
     }
 
@@ -478,7 +478,7 @@ Tk_ClipboardObjCmd(
 	    i++;
 	    if (i >= objc) {
 		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", (char *) NULL);
+			"\" missing", NULL);
 		return TCL_ERROR;
 	    }
 	    switch ((enum appendOptions) subIndex) {
@@ -567,7 +567,7 @@ Tk_ClipboardObjCmd(
 	    i++;
 	    if (i >= objc) {
 		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", (char *) NULL);
+			"\" missing", NULL);
 		return TCL_ERROR;
 	    }
 	    switch ((enum getOptions) subIndex) {

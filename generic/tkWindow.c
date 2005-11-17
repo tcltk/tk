@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.70 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.71 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -179,7 +179,7 @@ static TkCmd commands[] = {
     {"::tk::unsupported::MacWindowStyle",
 			NULL,			TkUnsupported1ObjCmd,	1, 1},
 #endif
-    {(char *) NULL,	NULL,			NULL,			0, 0}
+    {NULL,		NULL,			NULL,			0, 0}
 };
 
 /*
@@ -197,24 +197,23 @@ static char *visual = NULL;
 static int rest = 0;
 
 static Tk_ArgvInfo argTable[] = {
-    {"-colormap", TK_ARGV_STRING, (char *) NULL, (char *) &colormap,
+    {"-colormap", TK_ARGV_STRING, NULL, (char *) &colormap,
 	"Colormap for main window"},
-    {"-display", TK_ARGV_STRING, (char *) NULL, (char *) &display,
+    {"-display", TK_ARGV_STRING, NULL, (char *) &display,
 	"Display to use"},
-    {"-geometry", TK_ARGV_STRING, (char *) NULL, (char *) &geometry,
+    {"-geometry", TK_ARGV_STRING, NULL, (char *) &geometry,
 	"Initial geometry for window"},
-    {"-name", TK_ARGV_STRING, (char *) NULL, (char *) &name,
+    {"-name", TK_ARGV_STRING, NULL, (char *) &name,
 	"Name to use for application"},
     {"-sync", TK_ARGV_CONSTANT, (char *) 1, (char *) &synchronize,
 	"Use synchronous mode for display server"},
-    {"-visual", TK_ARGV_STRING, (char *) NULL, (char *) &visual,
+    {"-visual", TK_ARGV_STRING, NULL, (char *) &visual,
 	"Visual for main window"},
-    {"-use", TK_ARGV_STRING, (char *) NULL, (char *) &use,
+    {"-use", TK_ARGV_STRING, NULL, (char *) &use,
 	"Id of window in which to embed application"},
     {"--", TK_ARGV_REST, (char *) 1, (char *) &rest,
 	"Pass all remaining arguments through to script"},
-    {(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
-	(char *) NULL}
+    {NULL, TK_ARGV_END, NULL, NULL, NULL}
 };
 
 /*
@@ -447,7 +446,7 @@ GetScreen(interp, screenName, screenPtr)
 	Tcl_SetResult(interp,
 		"no display name and no $DISPLAY environment variable",
 		TCL_STATIC);
-	return (TkDisplay *) NULL;
+	return NULL;
     }
     length = strlen(screenName);
     screenId = 0;
@@ -457,7 +456,7 @@ GetScreen(interp, screenName, screenPtr)
     }
     if ((*p == '.') && (p[1] != '\0')) {
 	length = p - screenName;
-	screenId = strtoul(p+1, (char **) NULL, 10);
+	screenId = strtoul(p+1, NULL, 10);
     }
 
     /*
@@ -476,8 +475,8 @@ GetScreen(interp, screenName, screenPtr)
 	    if (dispPtr == NULL) {
 		Tcl_ResetResult(interp);
 		Tcl_AppendResult(interp, "couldn't connect to display \"",
-			screenName, "\"", (char *) NULL);
-		return (TkDisplay *) NULL;
+			screenName, "\"", NULL);
+		return NULL;
 	    }
 	    dispPtr->nextPtr = tsdPtr->displayList; /* TkGetDisplayList(); */
 	    tsdPtr->displayList = dispPtr;
@@ -514,7 +513,7 @@ GetScreen(interp, screenName, screenPtr)
 
 	sprintf(buf, "bad screen number \"%d\"", screenId);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	return (TkDisplay *) NULL;
+	return NULL;
     }
     *screenPtr = screenId;
     return dispPtr;
@@ -766,7 +765,7 @@ NameWindow(interp, winPtr, parentPtr, name)
     if (isupper(UCHAR(name[0]))) {
 	Tcl_AppendResult(interp,
 		"window name starts with an upper-case letter: \"",
-		name, "\"", (char *) NULL);
+		name, "\"", NULL);
 	return TCL_ERROR;
     }
 
@@ -995,14 +994,12 @@ Tk_CreateWindow(interp, parent, name, screenName)
 
     if ((parentPtr != NULL) && (parentPtr->flags & TK_ALREADY_DEAD)) {
 	Tcl_AppendResult(interp,
-		"can't create window: parent has been destroyed",
-		(char *) NULL);
+		"can't create window: parent has been destroyed", NULL);
 	return NULL;
     } else if ((parentPtr != NULL) &&
 	    (parentPtr->flags & TK_CONTAINER)) {
 	Tcl_AppendResult(interp,
-		"can't create window: its parent has -container = yes",
-		(char *) NULL);
+		"can't create window: its parent has -container = yes", NULL);
 	return NULL;
     }
     if (screenName == NULL) {
@@ -1060,14 +1057,12 @@ Tk_CreateAnonymousWindow(interp, parent, screenName)
 
     if ((parentPtr != NULL) && (parentPtr->flags & TK_ALREADY_DEAD)) {
 	Tcl_AppendResult(interp,
-		"can't create window: parent has been destroyed",
-		(char *) NULL);
+		"can't create window: parent has been destroyed", NULL);
 	return NULL;
     } else if ((parentPtr != NULL) &&
 	    (parentPtr->flags & TK_CONTAINER)) {
 	Tcl_AppendResult(interp,
-		"can't create window: its parent has -container = yes",
-		(char *) NULL);
+		"can't create window: its parent has -container = yes", NULL);
 	return NULL;
     }
     if (screenName == NULL) {
@@ -1079,13 +1074,13 @@ Tk_CreateAnonymousWindow(interp, parent, screenName)
 	 */
 
 	winPtr->flags |= TK_ANONYMOUS_WINDOW;
-	if (NameWindow(interp, winPtr, parentPtr, (char *)NULL) != TCL_OK) {
+	if (NameWindow(interp, winPtr, parentPtr, NULL) != TCL_OK) {
 	    Tk_DestroyWindow((Tk_Window) winPtr);
 	    return NULL;
 	}
 	return (Tk_Window) winPtr;
     } else {
-	return CreateTopLevelWindow(interp, parent, (char *)NULL, screenName,
+	return CreateTopLevelWindow(interp, parent, NULL, screenName,
 		TK_ANONYMOUS_WINDOW);
     }
 }
@@ -1145,7 +1140,7 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
     p = strrchr(pathName, '.');
     if (p == NULL) {
 	Tcl_AppendResult(interp, "bad window path name \"", pathName,
-		"\"", (char *) NULL);
+		"\"", NULL);
 	return NULL;
     }
     numChars = (int) (p-pathName);
@@ -1175,13 +1170,11 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
     }
     if (((TkWindow *) parent)->flags & TK_ALREADY_DEAD) {
 	Tcl_AppendResult(interp,
-		"can't create window: parent has been destroyed",
-		(char *) NULL);
+		"can't create window: parent has been destroyed", NULL);
 	return NULL;
     } else if (((TkWindow *) parent)->flags & TK_CONTAINER) {
 	Tcl_AppendResult(interp,
-		"can't create window: its parent has -container = yes",
-		(char *) NULL);
+		"can't create window: its parent has -container = yes", NULL);
 	return NULL;
     }
 
@@ -2289,7 +2282,7 @@ Tk_NameToWindow(interp, pathName, tkwin)
 	 * we're on our way out of the application.
 	 */
 
-	Tcl_AppendResult(interp, "NULL main window", (char *)NULL);
+	Tcl_AppendResult(interp, "NULL main window", NULL);
 	return NULL;
     }
 
@@ -2297,7 +2290,7 @@ Tk_NameToWindow(interp, pathName, tkwin)
 	    pathName);
     if (hPtr == NULL) {
 	Tcl_AppendResult(interp, "bad window path name \"",
-		pathName, "\"", (char *) NULL);
+		pathName, "\"", NULL);
 	return NULL;
     }
     return (Tk_Window) Tcl_GetHashValue(hPtr);
@@ -2923,7 +2916,7 @@ Initialize(interp)
 	while (1) {
 	    master = Tcl_GetMaster(master);
 	    if (master == NULL) {
-		Tcl_AppendResult(interp, "NULL master", (char *) NULL);
+		Tcl_AppendResult(interp, "NULL master", NULL);
 		Tcl_MutexUnlock(&windowMutex);
 		return TCL_ERROR;
 	    }
@@ -2938,8 +2931,7 @@ Initialize(interp)
 	 */
 
 	if (Tcl_GetInterpPath(master, interp) != TCL_OK) {
-	    Tcl_AppendResult(interp, "error in Tcl_GetInterpPath",
-		    (char *) NULL);
+	    Tcl_AppendResult(interp, "error in Tcl_GetInterpPath", NULL);
 	    Tcl_MutexUnlock(&windowMutex);
 	    return TCL_ERROR;
 	}
@@ -2965,8 +2957,7 @@ Initialize(interp)
 
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp,
-		    "not allowed to start Tk by master's safe::TkInit",
-		    (char *) NULL);
+		    "not allowed to start Tk by master's safe::TkInit", NULL);
 	    Tcl_MutexUnlock(&windowMutex);
 	    return TCL_ERROR;
 	}
@@ -2986,7 +2977,7 @@ Initialize(interp)
 	 * that we used.
 	 */
 
-	argString = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
+	argString = Tcl_GetVar2(interp, "argv", NULL, TCL_GLOBAL_ONLY);
     }
     argv = NULL;
     if (argString != NULL) {
@@ -3006,9 +2997,9 @@ Initialize(interp)
 	    goto argError;
 	}
 	p = Tcl_Merge(argc, argv);
-	Tcl_SetVar2(interp, "argv", (char *) NULL, p, TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, "argv", NULL, p, TCL_GLOBAL_ONLY);
 	sprintf(buffer, "%d", argc);
-	Tcl_SetVar2(interp, "argc", (char *) NULL, buffer, TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, "argc", NULL, buffer, TCL_GLOBAL_ONLY);
 	ckfree(p);
     }
 
@@ -3095,7 +3086,7 @@ Initialize(interp)
 
     if (geometry != NULL) {
 	Tcl_SetVar(interp, "geometry", geometry, TCL_GLOBAL_ONLY);
-	code = Tcl_VarEval(interp, "wm geometry . ", geometry, (char *) NULL);
+	code = Tcl_VarEval(interp, "wm geometry . ", geometry, NULL);
 	if (code != TCL_OK) {
 	    goto done;
 	}

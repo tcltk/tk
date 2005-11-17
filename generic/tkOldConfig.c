@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.19 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.20 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -98,7 +98,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 	 * we're on our way out of the application
 	 */
 
-	Tcl_AppendResult(interp, "NULL main window", (char *)NULL);
+	Tcl_AppendResult(interp, "NULL main window", NULL);
 	return TCL_ERROR;
     }
 
@@ -138,8 +138,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 	 */
 
 	if (argc < 2) {
-	    Tcl_AppendResult(interp, "value for \"", arg,
-		    "\" missing", (char *) NULL);
+	    Tcl_AppendResult(interp, "value for \"", arg, "\" missing", NULL);
 	    return TCL_ERROR;
 	}
 	if (flags & TK_CONFIG_OBJS) {
@@ -277,16 +276,15 @@ FindConfigSpec(interp, specs, argvName, needFlags, hateFlags)
 	}
 	if (matchPtr != NULL) {
 	    Tcl_AppendResult(interp, "ambiguous option \"", argvName,
-		    "\"", (char *) NULL);
-	    return (Tk_ConfigSpec *) NULL;
+		    "\"", NULL);
+	    return NULL;
 	}
 	matchPtr = specPtr;
     }
 
     if (matchPtr == NULL) {
-	Tcl_AppendResult(interp, "unknown option \"", argvName,
-		"\"", (char *) NULL);
-	return (Tk_ConfigSpec *) NULL;
+	Tcl_AppendResult(interp, "unknown option \"", argvName, "\"", NULL);
+	return NULL;
     }
 
     /*
@@ -299,10 +297,9 @@ FindConfigSpec(interp, specs, argvName, needFlags, hateFlags)
     if (specPtr->type == TK_CONFIG_SYNONYM) {
 	for (specPtr = specs; ; specPtr++) {
 	    if (specPtr->type == TK_CONFIG_END) {
-		Tcl_AppendResult(interp,
-			"couldn't find synonym for option \"",
-			argvName, "\"", (char *) NULL);
-		return (Tk_ConfigSpec *) NULL;
+		Tcl_AppendResult(interp, "couldn't find synonym for option \"",
+			argvName, "\"", NULL);
+		return NULL;
 	    }
 	    if ((specPtr->dbName == matchPtr->dbName)
 		    && (specPtr->type != TK_CONFIG_SYNONYM)
@@ -631,7 +628,7 @@ Tk_ConfigureInfo(interp, tkwin, specs, widgRec, argvName, flags)
      * handle that one spec specially.
      */
 
-    Tcl_SetResult(interp, (char *) NULL, TCL_STATIC);
+    Tcl_SetResult(interp, NULL, TCL_STATIC);
     if (argvName != NULL) {
 	specPtr = FindConfigSpec(interp, specs, argvName, needFlags,hateFlags);
 	if (specPtr == NULL) {
@@ -660,7 +657,7 @@ Tk_ConfigureInfo(interp, tkwin, specs, widgRec, argvName, flags)
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_AppendResult(interp, leader, list, "}", (char *) NULL);
+	Tcl_AppendResult(interp, leader, list, "}", NULL);
 	ckfree(list);
 	leader = " {";
     }
@@ -699,7 +696,7 @@ FormatConfigInfo(interp, tkwin, specPtr, widgRec)
     CONST char *argv[6];
     char *result;
     char buffer[200];
-    Tcl_FreeProc *freeProc = (Tcl_FreeProc *) NULL;
+    Tcl_FreeProc *freeProc = NULL;
 
     argv[0] = specPtr->argvName;
     argv[1] = specPtr->dbName;
