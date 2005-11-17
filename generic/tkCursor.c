@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.13 2005/11/11 23:51:27 dkf Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.14 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -232,7 +232,7 @@ TkcGetCursor(
     Tcl_HashEntry *nameHashPtr;
     register TkCursor *cursorPtr;
     TkCursor *existingCursorPtr = NULL;
-    int new;
+    int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (!dispPtr->cursorInit) {
@@ -240,8 +240,8 @@ TkcGetCursor(
     }
 
     nameHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorNameTable,
-            string, &new);
-    if (!new) {
+            string, &isNew);
+    if (!isNew) {
 	existingCursorPtr = (TkCursor *) Tcl_GetHashValue(nameHashPtr);
 	for (cursorPtr = existingCursorPtr; cursorPtr != NULL;
 		cursorPtr = cursorPtr->nextPtr) {
@@ -257,7 +257,7 @@ TkcGetCursor(
     cursorPtr = TkGetCursorByName(interp, tkwin, string);
 
     if (cursorPtr == NULL) {
-	if (new) {
+	if (isNew) {
 	    Tcl_DeleteHashEntry(nameHashPtr);
 	}
 	return NULL;
@@ -274,8 +274,8 @@ TkcGetCursor(
     cursorPtr->hashPtr = nameHashPtr;
     cursorPtr->nextPtr = existingCursorPtr;
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable,
-            (char *) cursorPtr->cursor, &new);
-    if (!new) {
+            (char *) cursorPtr->cursor, &isNew);
+    if (!isNew) {
 	Tcl_Panic("cursor already registered in Tk_GetCursor");
     }
     Tcl_SetHashValue(nameHashPtr, cursorPtr);
@@ -322,7 +322,7 @@ Tk_GetCursorFromData(
     DataKey dataKey;
     Tcl_HashEntry *dataHashPtr;
     register TkCursor *cursorPtr;
-    int new;
+    int isNew;
     XColor fgColor, bgColor;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
@@ -340,8 +340,8 @@ Tk_GetCursorFromData(
     dataKey.bg = bg;
     dataKey.display = Tk_Display(tkwin);
     dataHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorDataTable,
-            (char *) &dataKey, &new);
-    if (!new) {
+            (char *) &dataKey, &isNew);
+    if (!isNew) {
 	cursorPtr = (TkCursor *) Tcl_GetHashValue(dataHashPtr);
 	cursorPtr->resourceRefCount++;
 	return cursorPtr->cursor;
@@ -373,10 +373,10 @@ Tk_GetCursorFromData(
     cursorPtr->hashPtr = dataHashPtr;
     cursorPtr->objRefCount = 0;
     cursorPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->cursorIdTable,
-            (char *) cursorPtr->cursor, &new);
+            (char *) cursorPtr->cursor, &isNew);
     cursorPtr->nextPtr = NULL;
 
-    if (!new) {
+    if (!isNew) {
 	Tcl_Panic("cursor already registered in Tk_GetCursorFromData");
     }
     Tcl_SetHashValue(dataHashPtr, cursorPtr);
