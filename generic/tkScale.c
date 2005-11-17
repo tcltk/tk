@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.21 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.22 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -30,7 +30,7 @@
  */
 
 static char *orientStrings[] = {
-    "horizontal", "vertical", (char *) NULL
+    "horizontal", "vertical", NULL
 };
 
 /*
@@ -39,7 +39,7 @@ static char *orientStrings[] = {
  */
 
 static char *stateStrings[] = {
-    "active", "disabled", "normal", (char *) NULL
+    "active", "disabled", "normal", NULL
 };
 
 static Tk_OptionSpec optionSpecs[] = {
@@ -52,10 +52,10 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-bigincrement", "bigIncrement", "BigIncrement",
         DEF_SCALE_BIG_INCREMENT, -1, Tk_Offset(TkScale, bigIncrement),
         0, 0, 0},
-    {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
-    {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
+    {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
+	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
+	NULL, 0, -1, 0, (ClientData) "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_SCALE_BORDER_WIDTH, -1, Tk_Offset(TkScale, borderWidth),
         0, 0, 0},
@@ -68,8 +68,8 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-digits", "digits", "Digits",
 	DEF_SCALE_DIGITS, -1, Tk_Offset(TkScale, digits),
         0, 0, 0},
-    {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
-	(char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
+	NULL, 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_SCALE_FONT, -1, Tk_Offset(TkScale, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
@@ -134,8 +134,7 @@ static Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_SCALE_WIDTH, -1, Tk_Offset(TkScale, width), 0, 0, 0},
-    {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, -1, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
 };
 
 /*
@@ -145,7 +144,7 @@ static Tk_OptionSpec optionSpecs[] = {
  */
 
 static CONST char *commandNames[] = {
-    "cget", "configure", "coords", "get", "identify", "set", (char *) NULL
+    "cget", "configure", "coords", "get", "identify", "set", NULL
 };
 
 enum command {
@@ -218,7 +217,7 @@ Tk_ScaleObjCmd(
     }
 
     tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-            Tcl_GetString(objv[1]), (char *) NULL);
+            Tcl_GetString(objv[1]), NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
@@ -367,7 +366,7 @@ ScaleWidgetObjCmd(
 	if (objc <= 3) {
 	    objPtr = Tk_GetOptionInfo(interp, (char *) scalePtr,
 		    scalePtr->optionTable,
-		    (objc == 3) ? objv[2] : (Tcl_Obj *) NULL, scalePtr->tkwin);
+		    (objc == 3) ? objv[2] : NULL, scalePtr->tkwin);
 	    if (objPtr == NULL) {
 		goto error;
 	    } else {
@@ -584,7 +583,7 @@ ConfigureScale(
 
 	    if (Tk_SetOptions(interp, (char *) scalePtr,
 		    scalePtr->optionTable, objc, objv,
-		    scalePtr->tkwin, &savedOptions, (int *) NULL) != TCL_OK) {
+		    scalePtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
 	    }
 	} else {
@@ -1192,7 +1191,7 @@ ScaleVarProc(
 	    scalePtr->flags |= NEVER_SET;
 	    TkScaleSetValue(scalePtr, scalePtr->value, 1, 0);
 	}
-	return (char *) NULL;
+	return NULL;
     }
 
     /*
@@ -1202,7 +1201,7 @@ ScaleVarProc(
      */
 
     if (scalePtr->flags & SETTING_VAR) {
-	return (char *) NULL;
+	return NULL;
     }
     resultStr = NULL;
     valuePtr = Tcl_ObjGetVar2(interp, scalePtr->varNamePtr, NULL,

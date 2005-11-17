@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.21 2005/10/10 21:21:00 hobbs Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.22 2005/11/17 16:21:55 dkf Exp $
  */
 
 /*
@@ -139,11 +139,11 @@ static int		SetOptionFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
  */
 
 Tcl_ObjType tkOptionObjType = {
-    "option",				/* name */
-    (Tcl_FreeInternalRepProc *) NULL,	/* freeIntRepProc */
-    (Tcl_DupInternalRepProc *) NULL,	/* dupIntRepProc */
-    (Tcl_UpdateStringProc *) NULL,	/* updateStringProc */
-    SetOptionFromAny			/* setFromAnyProc */
+    "option",			/* name */
+    NULL,			/* freeIntRepProc */
+    NULL,			/* dupIntRepProc */
+    NULL,			/* updateStringProc */
+    SetOptionFromAny		/* setFromAnyProc */
 };
 
 /*
@@ -553,7 +553,7 @@ Tk_InitOptions(interp, recordPtr, optionTable, tkwin)
 	Tcl_IncrRefCount(valuePtr);
 
 	if (DoObjConfig(interp, recordPtr, optionPtr, valuePtr, tkwin,
-		(Tk_SavedOption *) NULL) != TCL_OK) {
+		NULL) != TCL_OK) {
 	    if (interp != NULL) {
 		char msg[200];
 
@@ -1158,7 +1158,7 @@ GetOptionFromObj(interp, objPtr, tablePtr)
 
   error:
     if (interp != NULL) {
-	Tcl_AppendResult(interp, "unknown option \"",name,"\"", (char *) NULL);
+	Tcl_AppendResult(interp, "unknown option \"", name, "\"", NULL);
     }
     return NULL;
 }
@@ -1311,7 +1311,7 @@ Tk_SetOptions(interp, recordPtr, optionTable, objc, objv, tkwin, savePtr,
 	    if (interp != NULL) {
 		Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
 			"value for \"", Tcl_GetStringFromObj(*objv, NULL),
-			"\" missing", (char *) NULL);
+			"\" missing", NULL);
 		goto error;
 	    }
 	}
@@ -1332,7 +1332,7 @@ Tk_SetOptions(interp, recordPtr, optionTable, objc, objv, tkwin, savePtr,
 	}
 	if (DoObjConfig(interp, recordPtr, optionPtr, objv[1], tkwin,
 		(savePtr != NULL) ? &lastSavePtr->items[lastSavePtr->numItems]
-		: (Tk_SavedOption *) NULL) != TCL_OK) {
+		: NULL) != TCL_OK) {
 	    char msg[100];
 
 	    sprintf(msg, "\n    (processing \"%.40s\" option)",
@@ -1795,7 +1795,7 @@ Tk_GetOptionInfo(interp, recordPtr, optionTable, namePtr, tkwin)
     if (namePtr != NULL) {
 	optionPtr = GetOptionFromObj(interp, namePtr, tablePtr);
 	if (optionPtr == NULL) {
-	    return (Tcl_Obj *) NULL;
+	    return NULL;
 	}
 	if (optionPtr->specPtr->type == TK_OPTION_SYNONYM) {
 	    optionPtr = optionPtr->extra.synonymPtr;
@@ -1808,7 +1808,7 @@ Tk_GetOptionInfo(interp, recordPtr, optionTable, namePtr, tkwin)
      * information.
      */
 
-    resultPtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
+    resultPtr = Tcl_NewListObj(0, NULL);
     for (; tablePtr != NULL; tablePtr = tablePtr->nextPtr) {
 	for (optionPtr = tablePtr->options, count = tablePtr->numOptions;
 		count > 0; optionPtr++, count--) {
@@ -1847,28 +1847,28 @@ GetConfigList(recordPtr, optionPtr, tkwin)
 {
     Tcl_Obj *listPtr, *elementPtr;
 
-    listPtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
-    Tcl_ListObjAppendElement((Tcl_Interp *) NULL, listPtr,
+    listPtr = Tcl_NewListObj(0, NULL);
+    Tcl_ListObjAppendElement(NULL, listPtr,
 	    Tcl_NewStringObj(optionPtr->specPtr->optionName, -1));
 
     if (optionPtr->specPtr->type == TK_OPTION_SYNONYM) {
 	elementPtr = Tcl_NewStringObj(
 		optionPtr->extra.synonymPtr->specPtr->optionName, -1);
-	Tcl_ListObjAppendElement((Tcl_Interp *) NULL, listPtr, elementPtr);
+	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
     } else {
 	if (optionPtr->dbNameUID == NULL) {
 	    elementPtr = Tcl_NewObj();
 	} else {
 	    elementPtr = Tcl_NewStringObj(optionPtr->dbNameUID, -1);
 	}
-	Tcl_ListObjAppendElement((Tcl_Interp *) NULL, listPtr, elementPtr);
+	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
 	if (optionPtr->dbClassUID == NULL) {
 	    elementPtr = Tcl_NewObj();
 	} else {
 	    elementPtr = Tcl_NewStringObj(optionPtr->dbClassUID, -1);
 	}
-	Tcl_ListObjAppendElement((Tcl_Interp *) NULL, listPtr, elementPtr);
+	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
 	if ((tkwin != NULL) && ((optionPtr->specPtr->type == TK_OPTION_COLOR)
 		|| (optionPtr->specPtr->type == TK_OPTION_BORDER))
@@ -1880,7 +1880,7 @@ GetConfigList(recordPtr, optionPtr, tkwin)
 	} else {
 	    elementPtr = Tcl_NewObj();
 	}
-	Tcl_ListObjAppendElement((Tcl_Interp *) NULL, listPtr, elementPtr);
+	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
 	if (optionPtr->specPtr->objOffset >= 0) {
 	    elementPtr = *((Tcl_Obj **) (recordPtr
@@ -1891,7 +1891,7 @@ GetConfigList(recordPtr, optionPtr, tkwin)
 	} else {
 	    elementPtr = GetObjectForOption(recordPtr, optionPtr, tkwin);
 	}
-	Tcl_ListObjAppendElement((Tcl_Interp *) NULL, listPtr, elementPtr);
+	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
     }
     return listPtr;
 }
@@ -2148,13 +2148,12 @@ TkDebugConfig(interp, table)
 	    hashEntryPtr = Tcl_NextHashEntry(&search)) {
 	if (tablePtr == (OptionTable *) Tcl_GetHashValue(hashEntryPtr)) {
 	    for ( ; tablePtr != NULL; tablePtr = tablePtr->nextPtr) {
-		Tcl_ListObjAppendElement((Tcl_Interp *) NULL, objPtr,
+		Tcl_ListObjAppendElement(NULL, objPtr,
 			Tcl_NewIntObj(tablePtr->refCount));
-		Tcl_ListObjAppendElement((Tcl_Interp *) NULL, objPtr,
+		Tcl_ListObjAppendElement(NULL, objPtr,
 			Tcl_NewIntObj(tablePtr->numOptions));
-		Tcl_ListObjAppendElement((Tcl_Interp *) NULL, objPtr,
-			Tcl_NewStringObj(
-				tablePtr->options[0].specPtr->optionName, -1));
+		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(
+			tablePtr->options[0].specPtr->optionName, -1));
 	    }
 	    break;
 	}

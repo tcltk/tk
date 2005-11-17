@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.29 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.30 2005/11/17 16:21:55 dkf Exp $
  */
 
 /*
@@ -204,13 +204,14 @@ static void		mInit(unsigned char *string, MFile *handle,
  */
 
 static int
-FileMatchGIF(chan, fileName, format, widthPtr, heightPtr, interp)
-    Tcl_Channel chan;		/* The image file, open for reading. */
-    CONST char *fileName;	/* The name of the image file. */
-    Tcl_Obj *format;		/* User-specified format object, or NULL. */
-    int *widthPtr, *heightPtr;	/* The dimensions of the image are returned
+FileMatchGIF(
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    CONST char *fileName,	/* The name of the image file. */
+    Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    int *widthPtr, int *heightPtr,
+				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Interp *interp;		/* not used */
+    Tcl_Interp *interp)		/* not used */
 {
     GIFImageConfig gifConf;
 
@@ -238,18 +239,17 @@ FileMatchGIF(chan, fileName, format, widthPtr, heightPtr, interp)
  */
 
 static int
-FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    Tcl_Channel chan;		/* The image file, open for reading. */
-    CONST char *fileName;	/* The name of the image file. */
-    Tcl_Obj *format;		/* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in photo
+FileReadGIF(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    CONST char *fileName,	/* The name of the image file. */
+    Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in photo
 				 * image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to be
+    int width, int height,	/* Dimensions of block of photo image to be
 				 * written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used in
+    int srcX, int srcY)		/* Coordinates of top-left pixel to be used in
 				 * image being read. */
 {
     int fileWidth, fileHeight;
@@ -262,7 +262,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
     static CONST char *optionStrings[] = {
-	"-index",	NULL
+	"-index", NULL
     };
     GIFImageConfig gifConf, *gifConfPtr = &gifConf;
 
@@ -288,7 +288,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	}
 	if (i == (argc-1)) {
 	    Tcl_AppendResult(interp, "no value given for \"",
-		    Tcl_GetString(objv[i]), "\" option", (char *) NULL);
+		    Tcl_GetString(objv[i]), "\" option", NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[++i], &index) != TCL_OK) {
@@ -302,7 +302,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_AppendResult(interp, "GIF image file \"", fileName,
-		"\" has dimension(s) <= 0", (char *) NULL);
+		"\" has dimension(s) <= 0", NULL);
 	return TCL_ERROR;
     }
 
@@ -313,8 +313,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 
     if (BitSet(buf[0], LOCALCOLORMAP)) {	/* Global Colormap */
 	if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
-	    Tcl_AppendResult(interp, "error reading color map",
-		    (char *) NULL);
+	    Tcl_AppendResult(interp, "error reading color map", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -352,8 +351,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	     */
 
 	    Tcl_AppendResult(interp,
-		    "premature end of image data for this index",
-		    (char *) NULL);
+		    "premature end of image data for this index", NULL);
 	    goto error;
 	}
 
@@ -362,8 +360,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	     * GIF terminator.
 	     */
 
-	    Tcl_AppendResult(interp, "no image data for this index",
-		    (char *) NULL);
+	    Tcl_AppendResult(interp, "no image data for this index", NULL);
 	    goto error;
 	}
 
@@ -414,8 +411,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 
 	    if (BitSet(buf[8], LOCALCOLORMAP)) {
 		if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
-		    Tcl_AppendResult(interp,
-			    "error reading color map", (char *) NULL);
+		    Tcl_AppendResult(interp, "error reading color map", NULL);
 		    goto error;
 		}
 	    }
@@ -456,9 +452,8 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 
 	if (BitSet(buf[8], LOCALCOLORMAP)) {
 	    if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
-		    Tcl_AppendResult(interp, "error reading color map",
-			    (char *) NULL);
-		    goto error;
+		Tcl_AppendResult(interp, "error reading color map", NULL);
+		goto error;
 	    }
 	}
 
@@ -520,7 +515,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     if (block.pixelPtr) {
 	ckfree((char *) block.pixelPtr);
     }
-    Tcl_AppendResult(interp, tkImgFmtGIF.name, (char *) NULL);
+    Tcl_AppendResult(interp, tkImgFmtGIF.name, NULL);
     return TCL_OK;
 
   error:
@@ -556,12 +551,12 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
  */
 
 static int
-StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
-    Tcl_Obj *dataObj;		/* the object containing the image data */
-    Tcl_Obj *format;		/* the image format object, or NULL */
-    int *widthPtr;		/* where to put the string width */
-    int *heightPtr;		/* where to put the string height */
-    Tcl_Interp *interp;		/* not used */
+StringMatchGIF(
+    Tcl_Obj *dataObj,		/* the object containing the image data */
+    Tcl_Obj *format,		/* the image format object, or NULL */
+    int *widthPtr,		/* where to put the string width */
+    int *heightPtr,		/* where to put the string height */
+    Tcl_Interp *interp)		/* not used */
 {
     unsigned char *data, header[10];
     int got, length;
@@ -595,7 +590,7 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
 	    return 0;
 	}
     } else {
-	memcpy((VOID *) header, (VOID *) data, 10);
+	memcpy((void *) header, (void *) data, 10);
     }
     *widthPtr = LM_to_uint(header[6], header[7]);
     *heightPtr = LM_to_uint(header[8], header[9]);
@@ -623,15 +618,14 @@ StringMatchGIF(dataObj, format, widthPtr, heightPtr, interp)
  */
 
 static int
-StringReadGIF(interp, dataObj, format, imageHandle,
-	destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* interpreter for reporting errors in */
-    Tcl_Obj *dataObj;		/* object containing the image */
-    Tcl_Obj *format;		/* format object, or NULL */
-    Tk_PhotoHandle imageHandle;	/* the image to write this data into */
-    int destX, destY;		/* The rectangular region of the */
-    int width, height;		/* image to copy */
-    int srcX, srcY;
+StringReadGIF(
+    Tcl_Interp *interp,		/* interpreter for reporting errors in */
+    Tcl_Obj *dataObj,		/* object containing the image */
+    Tcl_Obj *format,		/* format object, or NULL */
+    Tk_PhotoHandle imageHandle,	/* the image to write this data into */
+    int destX, int destY,	/* The rectangular region of the */
+    int width, int height,	/* image to copy */
+    int srcX, int srcY)
 {
     MFile handle;
     int length;
@@ -675,10 +669,11 @@ StringReadGIF(interp, dataObj, format, imageHandle,
  */
 
 static int
-ReadGIFHeader(gifConfPtr, chan, widthPtr, heightPtr)
-    GIFImageConfig *gifConfPtr;
-    Tcl_Channel chan;		/* Image file to read the header from */
-    int *widthPtr, *heightPtr;	/* The dimensions of the image are returned
+ReadGIFHeader(
+    GIFImageConfig *gifConfPtr,
+    Tcl_Channel chan,		/* Image file to read the header from */
+    int *widthPtr, int *heightPtr)
+				/* The dimensions of the image are returned
 				 * here. */
 {
     unsigned char buf[7];
@@ -706,11 +701,11 @@ ReadGIFHeader(gifConfPtr, chan, widthPtr, heightPtr)
  */
 
 static int
-ReadColorMap(gifConfPtr, chan, number, buffer)
-    GIFImageConfig *gifConfPtr;
-    Tcl_Channel chan;
-    int number;
-    unsigned char buffer[MAXCOLORMAPSIZE][4];
+ReadColorMap(
+    GIFImageConfig *gifConfPtr,
+    Tcl_Channel chan,
+    int number,
+    unsigned char buffer[MAXCOLORMAPSIZE][4])
 {
     int i;
     unsigned char rgb[3];
@@ -731,12 +726,12 @@ ReadColorMap(gifConfPtr, chan, number, buffer)
 }
 
 static int
-DoExtension(gifConfPtr, chan, label, buf, transparent)
-    GIFImageConfig *gifConfPtr;
-    Tcl_Channel chan;
-    int label;
-    unsigned char *buf;
-    int *transparent;
+DoExtension(
+    GIFImageConfig *gifConfPtr,
+    Tcl_Channel chan,
+    int label,
+    unsigned char *buf,
+    int *transparent)
 {
     int count;
 
@@ -749,12 +744,12 @@ DoExtension(gifConfPtr, chan, label, buf, transparent)
 
     case 0xfe:		/* Comment Extension */
 	do {
-	    count = GetDataBlock(gifConfPtr, chan, (unsigned char*) buf);
+	    count = GetDataBlock(gifConfPtr, chan, buf);
 	} while (count > 0);
 	return count;
 
     case 0xf9:		/* Graphic Control Extension */
-	count = GetDataBlock(gifConfPtr, chan, (unsigned char*) buf);
+	count = GetDataBlock(gifConfPtr, chan, buf);
 	if (count < 0) {
 	    return 1;
 	}
@@ -763,22 +758,22 @@ DoExtension(gifConfPtr, chan, label, buf, transparent)
 	}
 
 	do {
-	    count = GetDataBlock(gifConfPtr, chan, (unsigned char*) buf);
+	    count = GetDataBlock(gifConfPtr, chan, buf);
 	} while (count > 0);
 	return count;
     }
 
     do {
-	count = GetDataBlock(gifConfPtr, chan, (unsigned char*) buf);
+	count = GetDataBlock(gifConfPtr, chan, buf);
     } while (count > 0);
     return count;
 }
 
 static int
-GetDataBlock(gifConfPtr, chan, buf)
-    GIFImageConfig *gifConfPtr;
-    Tcl_Channel chan;
-    unsigned char *buf;
+GetDataBlock(
+    GIFImageConfig *gifConfPtr,
+    Tcl_Channel chan,
+    unsigned char *buf)
 {
     unsigned char count;
 
@@ -821,21 +816,19 @@ GetDataBlock(gifConfPtr, chan, buf)
  */
 
 static int
-ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
-	width, height, srcX, srcY, interlace, transparent)
-    GIFImageConfig *gifConfPtr;
-    Tcl_Interp *interp;
-    char *imagePtr;
-    Tcl_Channel chan;
-    int len, rows;
-    unsigned char cmap[MAXCOLORMAPSIZE][4];
-    int width, height;
-    int srcX, srcY;
-    int interlace;
-    int transparent;
+ReadImage(
+    GIFImageConfig *gifConfPtr,
+    Tcl_Interp *interp,
+    char *imagePtr,
+    Tcl_Channel chan,
+    int len, int rows,
+    unsigned char cmap[MAXCOLORMAPSIZE][4],
+    int width, int height,
+    int srcX, int srcY,
+    int interlace,
+    int transparent)
 {
     unsigned char initialCodeSize;
-    int v;
     int xpos = 0, ypos = 0, pass = 0, i;
     register char *pixelPtr;
     CONST static int interlaceStep[] = { 8, 8, 4, 2 };
@@ -845,7 +838,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
     unsigned char stack[(1 << MAX_LWZ_BITS)*2];
     register unsigned char *top;
     int codeSize, clearCode, inCode, endCode, oldCode, maxCode;
-    int code, firstCode;
+    int code, firstCode, v;
 
     /*
      * Initialize the decoder
@@ -853,7 +846,7 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 
     if (Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) <= 0) {
 	Tcl_AppendResult(interp, "error reading GIF image: ",
-		Tcl_PosixError(interp), (char *) NULL);
+		Tcl_PosixError(interp), NULL);
 	return TCL_ERROR;
     }
     if (transparent != -1) {
@@ -897,7 +890,6 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
 
     for (i = 0, ypos = 0; i < rows; i++) {
 	for (xpos = 0; xpos < len; ) {
-
 	    if (top == stack) {
 		/*
 		 * Bummer - our stack is empty. Now we have to work!
@@ -1084,11 +1076,11 @@ ReadImage(gifConfPtr, interp, imagePtr, chan, len, rows, cmap,
  */
 
 static int
-GetCode(chan, code_size, flag, gifConfPtr)
-    Tcl_Channel chan;
-    int code_size;
-    int flag;
-    GIFImageConfig *gifConfPtr;
+GetCode(
+    Tcl_Channel chan,
+    int code_size,
+    int flag,
+    GIFImageConfig *gifConfPtr)
 {
     int ret;
 
@@ -1170,15 +1162,15 @@ GetCode(chan, code_size, flag, gifConfPtr)
  */
 
 static void
-mInit(string, handle, length)
-   unsigned char *string;	/* string containing initial mmencoded data */
-   MFile *handle;		/* mmdecode "file" handle */
-   int length;			/* Number of bytes in string */
+mInit(
+    unsigned char *string,	/* string containing initial mmencoded data */
+    MFile *handle,		/* mmdecode "file" handle */
+    int length)			/* Number of bytes in string */
 {
-   handle->data = string;
-   handle->state = 0;
-   handle->c = 0;
-   handle->length = length;
+    handle->data = string;
+    handle->state = 0;
+    handle->c = 0;
+    handle->length = length;
 }
 
 /*
@@ -1200,19 +1192,19 @@ mInit(string, handle, length)
  */
 
 static int
-Mread(dst, chunkSize, numChunks, handle)
-   unsigned char *dst;	/* where to put the result */
-   size_t chunkSize;	/* size of each transfer */
-   size_t numChunks;	/* number of chunks */
-   MFile *handle;	/* mmdecode "file" handle */
+Mread(
+    unsigned char *dst,		/* where to put the result */
+    size_t chunkSize,		/* size of each transfer */
+    size_t numChunks,		/* number of chunks */
+    MFile *handle)		/* mmdecode "file" handle */
 {
-   register int i, c;
-   int count = chunkSize * numChunks;
+    register int i, c;
+    int count = chunkSize * numChunks;
 
-   for (i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
-       *dst++ = c;
-   }
-   return i;
+    for (i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
+	*dst++ = c;
+    }
+    return i;
 }
 
 /*
@@ -1233,8 +1225,8 @@ Mread(dst, chunkSize, numChunks, handle)
  */
 
 static int
-Mgetc(handle)
-    MFile *handle;		/* Handle containing decoder data and state */
+Mgetc(
+    MFile *handle)		/* Handle containing decoder data and state */
 {
     int c;
     int result = 0;		/* Initialization needed only to prevent gcc
@@ -1297,8 +1289,8 @@ Mgetc(handle)
  */
 
 static int
-char64(c)
-    int c;
+char64(
+    int c)
 {
     switch(c) {
     case 'A': return 0;  case 'B': return 1;  case 'C': return 2;
@@ -1349,11 +1341,11 @@ char64(c)
  */
 
 static int
-Fread(gifConfPtr, dst, hunk, count, chan)
-    GIFImageConfig *gifConfPtr;
-    unsigned char *dst;		/* where to put the result */
-    size_t hunk, count;		/* how many */
-    Tcl_Channel chan;
+Fread(
+    GIFImageConfig *gifConfPtr,
+    unsigned char *dst,		/* where to put the result */
+    size_t hunk, size_t count,	/* how many */
+    Tcl_Channel chan)
 {
     MFile *handle;
 
@@ -1366,7 +1358,7 @@ Fread(gifConfPtr, dst, hunk, count, chan)
 	if (handle->length <= 0 || (size_t)handle->length < hunk*count) {
 	    return -1;
 	}
-	memcpy((VOID *)dst, (VOID *) handle->data, (size_t) (hunk * count));
+	memcpy((void *)dst, (void *) handle->data, (size_t) (hunk * count));
 	handle->data += hunk * count;
 	return (int)(hunk * count);
     }
@@ -1381,13 +1373,13 @@ Fread(gifConfPtr, dst, hunk, count, chan)
 /*
  * ChanWriteGIF - writes a image in GIF format.
  *-------------------------------------------------------------------------
- * Author:			Lolo
- *				Engeneering Projects Area
- *				Department of Mining
- *				University of Oviedo
- * e-mail			zz11425958@zeus.etsimo.uniovi.es
- *				lolo@pcsig22.etsimo.uniovi.es
- * Date:			Fri September 20 1996
+ * Author:		Lolo
+ *			Engeneering Projects Area
+ *			Department of Mining
+ *			University of Oviedo
+ * e-mail		zz11425958@zeus.etsimo.uniovi.es
+ *			lolo@pcsig22.etsimo.uniovi.es
+ * Date:		Fri September 20 1996
  *
  * Modified for transparency handling (gif89a) and miGIF compression
  * by Jan Nijtmans <j.nijtmans@chello.nl>
@@ -1449,11 +1441,11 @@ static void		savemap(GifWriterState *statePtr,
 static int		ReadValue(ClientData clientData);
 
 static int
-FileWriteGIF(interp, filename, format, blockPtr)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    CONST char	*filename;
-    Tcl_Obj	*format;
-    Tk_PhotoImageBlock *blockPtr;
+FileWriteGIF(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    CONST char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan = NULL;
     int result;
@@ -1477,11 +1469,11 @@ FileWriteGIF(interp, filename, format, blockPtr)
 }
 
 static int
-CommonWriteGIF(interp, handle, format, blockPtr)
-    Tcl_Interp *interp;
-    Tcl_Channel handle;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
+CommonWriteGIF(
+    Tcl_Interp *interp,
+    Tcl_Channel handle,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr)
 {
     GifWriterState state, *statePtr = &state;
     int resolution;
@@ -1515,14 +1507,13 @@ CommonWriteGIF(interp, handle, format, blockPtr)
 	statePtr->mapa[x][CM_BLUE] = 255;
     }
 
-
     width = blockPtr->width;
     height = blockPtr->height;
     statePtr->pixelo = blockPtr->pixelPtr + blockPtr->offset[0];
     statePtr->pixelPitch = blockPtr->pitch;
     savemap(statePtr, blockPtr, statePtr->mapa);
     if (statePtr->num >= MAXCOLORMAPSIZE) {
-	Tcl_AppendResult(interp, "too many colors", (char *) NULL);
+	Tcl_AppendResult(interp, "too many colors", NULL);
 	return TCL_ERROR;
     }
     if (statePtr->num<2) {
@@ -1617,12 +1608,10 @@ CommonWriteGIF(interp, handle, format, blockPtr)
 }
 
 static int
-color(statePtr, red, green, blue, mapa)
-    GifWriterState *statePtr;
-    int red;
-    int green;
-    int blue;
-    unsigned char mapa[MAXCOLORMAPSIZE][3];
+color(
+    GifWriterState *statePtr,
+    int red, int green, int blue,
+    unsigned char mapa[MAXCOLORMAPSIZE][3])
 {
     int x;
     for (x=(statePtr->alphaOffset != 0) ; x<=MAXCOLORMAPSIZE ; x++) {
@@ -1635,10 +1624,10 @@ color(statePtr, red, green, blue, mapa)
 }
 
 static int
-nuevo(statePtr, red, green, blue, mapa)
-    GifWriterState *statePtr;
-    int red, green, blue;
-    unsigned char mapa[MAXCOLORMAPSIZE][3];
+nuevo(
+    GifWriterState *statePtr,
+    int red, int green, int blue,
+    unsigned char mapa[MAXCOLORMAPSIZE][3])
 {
     int x = (statePtr->alphaOffset != 0);
     for (; x<=statePtr->num ; x++) {
@@ -1651,10 +1640,10 @@ nuevo(statePtr, red, green, blue, mapa)
 }
 
 static void
-savemap(statePtr, blockPtr, mapa)
-    GifWriterState *statePtr;
-    Tk_PhotoImageBlock *blockPtr;
-    unsigned char mapa[MAXCOLORMAPSIZE][3];
+savemap(
+    GifWriterState *statePtr,
+    Tk_PhotoImageBlock *blockPtr,
+    unsigned char mapa[MAXCOLORMAPSIZE][3])
 {
     unsigned char *colores;
     int x, y;
@@ -1693,8 +1682,8 @@ savemap(statePtr, blockPtr, mapa)
 }
 
 static int
-ReadValue(clientData)
-    ClientData clientData;
+ReadValue(
+    ClientData clientData)
 {
     GifWriterState *statePtr = (GifWriterState *) clientData;
     unsigned int col;
@@ -1815,9 +1804,9 @@ setVerbose(void)
 }
 
 static const char *
-binformat(v, nbits)
-    unsigned int v;
-    int nbits;
+binformat(
+    unsigned int v,
+    int nbits)
 {
     static char bufs[8][64];
     static int bhand = 0;
@@ -1844,8 +1833,8 @@ binformat(v, nbits)
 #endif
 
 static void
-writeBlock(statePtr)
-    miGIFState_t *statePtr;
+writeBlock(
+    miGIFState_t *statePtr)
 {
     unsigned char c;
 
@@ -1866,9 +1855,9 @@ writeBlock(statePtr)
 }
 
 static void
-blockOut(statePtr, c)
-    miGIFState_t *statePtr;
-    unsigned char c;
+blockOut(
+    miGIFState_t *statePtr,
+    unsigned char c)
 {
     DEBUGMSG(("blockOut %s\n", binformat(c, 8)));
     statePtr->oblock[statePtr->oblen++] = c;
@@ -1878,8 +1867,8 @@ blockOut(statePtr, c)
 }
 
 static void
-blockFlush(statePtr)
-    miGIFState_t *statePtr;
+blockFlush(
+    miGIFState_t *statePtr)
 {
     DEBUGMSG(("blockFlush\n"));
     if (statePtr->oblen > 0) {
@@ -1888,9 +1877,9 @@ blockFlush(statePtr)
 }
 
 static void
-output(statePtr, val)
-    miGIFState_t *statePtr;
-    int val;
+output(
+    miGIFState_t *statePtr,
+    int val)
 {
     DEBUGMSG(("output %s [%s %d %d]\n", binformat(val, statePtr->outputBits),
 	    binformat(statePtr->obuf, statePtr->obits), statePtr->obits,
@@ -1907,8 +1896,8 @@ output(statePtr, val)
 }
 
 static void
-outputFlush(statePtr)
-    miGIFState_t *statePtr;
+outputFlush(
+    miGIFState_t *statePtr)
 {
     DEBUGMSG(("outputFlush\n"));
     if (statePtr->obits > 0) {
@@ -1918,8 +1907,8 @@ outputFlush(statePtr)
 }
 
 static void
-didClear(statePtr)
-    miGIFState_t *statePtr;
+didClear(
+    miGIFState_t *statePtr)
 {
     DEBUGMSG(("didClear\n"));
     statePtr->outputBits = statePtr->outputBitsInit;
@@ -1931,9 +1920,9 @@ didClear(statePtr)
 }
 
 static void
-outputPlain(statePtr, c)
-    miGIFState_t *statePtr;
-    int c;
+outputPlain(
+    miGIFState_t *statePtr,
+    int c)
 {
     DEBUGMSG(("outputPlain %s\n", binformat(c, statePtr->outputBits)));
     statePtr->justCleared = 0;
@@ -1950,8 +1939,8 @@ outputPlain(statePtr, c)
 }
 
 static unsigned int
-isqrt(x)
-    unsigned int x;
+isqrt(
+    unsigned int x)
 {
     unsigned int r;
     unsigned int v;
@@ -1970,9 +1959,9 @@ isqrt(x)
 }
 
 static unsigned int
-computeTriangleCount(count, nrepcodes)
-    unsigned int count;
-    unsigned int nrepcodes;
+computeTriangleCount(
+    unsigned int count,
+    unsigned int nrepcodes)
 {
     unsigned int perrep;
     unsigned int cost;
@@ -1998,15 +1987,15 @@ computeTriangleCount(count, nrepcodes)
 }
 
 static void
-maxOutputClear(statePtr)
-    miGIFState_t *statePtr;
+maxOutputClear(
+    miGIFState_t *statePtr)
 {
     statePtr->outputClear = statePtr->maxOcodes;
 }
 
 static void
-resetOutputClear(statePtr)
-    miGIFState_t *statePtr;
+resetOutputClear(
+    miGIFState_t *statePtr)
 {
     statePtr->outputClear = statePtr->outputClearInit;
     if (statePtr->outputCount >= statePtr->outputClear) {
@@ -2016,9 +2005,9 @@ resetOutputClear(statePtr)
 }
 
 static void
-runlengthFlushFromClear(statePtr, count)
-    miGIFState_t *statePtr;
-    int count;
+runlengthFlushFromClear(
+    miGIFState_t *statePtr,
+    int count)
 {
     int n;
 
@@ -2056,9 +2045,9 @@ runlengthFlushFromClear(statePtr, count)
 }
 
 static void
-runlengthFlushClearOrRep(statePtr, count)
-    miGIFState_t *statePtr;
-    int count;
+runlengthFlushClearOrRep(
+    miGIFState_t *statePtr,
+    int count)
 {
     int withclr;
 
@@ -2076,9 +2065,9 @@ runlengthFlushClearOrRep(statePtr, count)
 }
 
 static void
-runlengthFlushWithTable(statePtr, count)
-    miGIFState_t *statePtr;
-    int count;
+runlengthFlushWithTable(
+    miGIFState_t *statePtr,
+    int count)
 {
     int repmax;
     int repleft;
@@ -2120,8 +2109,8 @@ runlengthFlushWithTable(statePtr, count)
 }
 
 static void
-runlengthFlush(statePtr)
-    miGIFState_t *statePtr;
+runlengthFlush(
+    miGIFState_t *statePtr)
 {
     DEBUGMSG(("runlengthFlush [ %d %d\n", statePtr->runlengthCount,
 	    statePtr->runlengthPixel));
@@ -2144,11 +2133,11 @@ runlengthFlush(statePtr)
 }
 
 static void
-compress(initBits, handle, readValue, clientData)
-    int initBits;
-    Tcl_Channel handle;
-    ifunptr readValue;
-    ClientData clientData;
+compress(
+    int initBits,
+    Tcl_Channel handle,
+    ifunptr readValue,
+    ClientData clientData)
 {
     int c;
     miGIFState_t state, *statePtr = &state;
