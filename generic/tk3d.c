@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.15 2005/11/04 11:52:50 dkf Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.16 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tk3d.h"
@@ -189,7 +189,7 @@ Tk_Get3DBorder(
 {
     Tcl_HashEntry *hashPtr;
     TkBorder *borderPtr, *existingBorderPtr;
-    int new;
+    int isNew;
     XGCValues gcValues;
     XColor *bgColorPtr;
     TkDisplay *dispPtr;
@@ -200,8 +200,8 @@ Tk_Get3DBorder(
 	BorderInit(dispPtr);
     }
 
-    hashPtr = Tcl_CreateHashEntry(&dispPtr->borderTable, colorName, &new);
-    if (!new) {
+    hashPtr = Tcl_CreateHashEntry(&dispPtr->borderTable, colorName, &isNew);
+    if (!isNew) {
 	existingBorderPtr = (TkBorder *) Tcl_GetHashValue(hashPtr);
 	for (borderPtr = existingBorderPtr; borderPtr != NULL;
 		borderPtr = borderPtr->nextPtr) {
@@ -221,7 +221,7 @@ Tk_Get3DBorder(
 
     bgColorPtr = Tk_GetColor(interp, tkwin, colorName);
     if (bgColorPtr == NULL) {
-	if (new) {
+	if (isNew) {
 	    Tcl_DeleteHashEntry(hashPtr);
 	}
 	return NULL;

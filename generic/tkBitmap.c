@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.13 2005/11/04 11:52:50 dkf Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.14 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -305,7 +305,7 @@ GetBitmap(
     Tcl_HashEntry *nameHashPtr, *predefHashPtr;
     TkBitmap *bitmapPtr, *existingBitmapPtr;
     TkPredefBitmap *predefPtr;
-    int new;
+    int isNew;
     Pixmap bitmap;
     int width, height;
     int dummy2;
@@ -317,8 +317,9 @@ GetBitmap(
 	BitmapInit(dispPtr);
     }
 
-    nameHashPtr = Tcl_CreateHashEntry(&dispPtr->bitmapNameTable, string, &new);
-    if (!new) {
+    nameHashPtr = Tcl_CreateHashEntry(&dispPtr->bitmapNameTable, string,
+	    &isNew);
+    if (!isNew) {
 	existingBitmapPtr = (TkBitmap *) Tcl_GetHashValue(nameHashPtr);
 	for (bitmapPtr = existingBitmapPtr; bitmapPtr != NULL;
 		bitmapPtr = bitmapPtr->nextPtr) {
@@ -423,8 +424,8 @@ GetBitmap(
     bitmapPtr->objRefCount = 0;
     bitmapPtr->nameHashPtr = nameHashPtr;
     bitmapPtr->idHashPtr = Tcl_CreateHashEntry(&dispPtr->bitmapIdTable,
-            (char *) bitmap, &new);
-    if (!new) {
+            (char *) bitmap, &isNew);
+    if (!isNew) {
 	Tcl_Panic("bitmap already registered in Tk_GetBitmap");
     }
     bitmapPtr->nextPtr = existingBitmapPtr;
@@ -433,7 +434,7 @@ GetBitmap(
     return bitmapPtr;
 
   error:
-    if (new) {
+    if (isNew) {
 	Tcl_DeleteHashEntry(nameHashPtr);
     }
     return NULL;
@@ -468,7 +469,7 @@ Tk_DefineBitmap(
     int width,			/* Width of bitmap. */
     int height)			/* Height of bitmap. */
 {
-    int new;
+    int isNew;
     Tcl_HashEntry *predefHashPtr;
     TkPredefBitmap *predefPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -487,8 +488,8 @@ Tk_DefineBitmap(
     }
 
     predefHashPtr = Tcl_CreateHashEntry(&tsdPtr->predefBitmapTable,
-            name, &new);
-    if (!new) {
+            name, &isNew);
+    if (!isNew) {
         Tcl_AppendResult(interp, "bitmap \"", name,
 		"\" is already defined", NULL);
 	return TCL_ERROR;
@@ -804,7 +805,7 @@ Tk_GetBitmapFromData(
 {
     DataKey nameKey;
     Tcl_HashEntry *dataHashPtr;
-    int new;
+    int isNew;
     char string[16 + TCL_INTEGER_SPACE];
     char *name;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -815,8 +816,8 @@ Tk_GetBitmapFromData(
     nameKey.width = width;
     nameKey.height = height;
     dataHashPtr = Tcl_CreateHashEntry(&dispPtr->bitmapDataTable,
-            (char *) &nameKey, &new);
-    if (!new) {
+            (char *) &nameKey, &isNew);
+    if (!isNew) {
 	name = (char *) Tcl_GetHashValue(dataHashPtr);
     } else {
 	dispPtr->bitmapAutoNumber++;

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.25 2005/05/24 02:32:42 das Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.26 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -2462,7 +2462,7 @@ CustomOptionSet(clientData,interp, tkwin, value, recordPtr, internalOffset,
     int flags;
 {
     int objEmpty, length;
-    char *new, *string, *internalPtr;
+    char *newStr, *string, *internalPtr;
     
     objEmpty = 0;
 
@@ -2500,13 +2500,13 @@ CustomOptionSet(clientData,interp, tkwin, value, recordPtr, internalOffset,
     if (internalPtr != NULL) {
 	if ((*value) != NULL) {
 	    string = Tcl_GetStringFromObj((*value), &length);
-	    new = ckalloc((size_t) (length + 1));
-	    strcpy(new, string);
+	    newStr = ckalloc((size_t) (length + 1));
+	    strcpy(newStr, string);
 	} else {
-	    new = NULL;
+	    newStr = NULL;
 	}
 	*((char **) saveInternalPtr) = *((char **) internalPtr);
-	*((char **) internalPtr) = new;
+	*((char **) internalPtr) = newStr;
     }
 
     return TCL_OK;

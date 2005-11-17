@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.20 2005/10/17 21:41:54 dkf Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.21 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1125,24 +1125,24 @@ TkRoundToResolution(
     TkScale *scalePtr,		/* Information about scale widget. */
     double value)		/* Value to round. */
 {
-    double rem, new, tick;
+    double rem, rounded, tick;
 
     if (scalePtr->resolution <= 0) {
 	return value;
     }
     tick = floor(value/scalePtr->resolution);
-    new = scalePtr->resolution * tick;
-    rem = value - new;
+    rounded = scalePtr->resolution * tick;
+    rem = value - rounded;
     if (rem < 0) {
 	if (rem <= -scalePtr->resolution/2) {
-	    new = (tick - 1.0) * scalePtr->resolution;
+	    rounded = (tick - 1.0) * scalePtr->resolution;
 	}
     } else {
 	if (rem >= scalePtr->resolution/2) {
-	    new = (tick + 1.0) * scalePtr->resolution;
+	    rounded = (tick + 1.0) * scalePtr->resolution;
 	}
     }
-    return new;
+    return rounded;
 }
 
 /*

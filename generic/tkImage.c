@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.25 2005/08/11 02:02:34 dgp Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.26 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -166,7 +166,7 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *) clientData;
-    int i, new, firstOption,  index;
+    int i, isNew, firstOption,  index;
     Tk_ImageType *typePtr;
     ImageMaster *masterPtr;
     Image *imagePtr;
@@ -261,8 +261,8 @@ Tk_ImageObjCmd(clientData, interp, objc, objv)
 	 * Create the data structure for the new image.
 	 */
 
-	hPtr = Tcl_CreateHashEntry(&winPtr->mainPtr->imageTable, name, &new);
-	if (new) {
+	hPtr = Tcl_CreateHashEntry(&winPtr->mainPtr->imageTable, name, &isNew);
+	if (isNew) {
 	    masterPtr = (ImageMaster *) ckalloc(sizeof(ImageMaster));
 	    masterPtr->typePtr = NULL;
 	    masterPtr->masterData = NULL;

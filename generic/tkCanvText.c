@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.19 2005/11/04 15:23:05 dkf Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.20 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include <stdio.h>
@@ -899,7 +899,7 @@ TextInsert(
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteIndex, byteCount, charsAdded;
-    char *new, *text;
+    char *newStr, *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     string = Tcl_GetStringFromObj((Tcl_Obj *) string, &byteCount);
@@ -918,13 +918,13 @@ TextInsert(
 	return;
     }
 
-    new = (char *) ckalloc((unsigned) textPtr->numBytes + byteCount + 1);
-    memcpy(new, text, (size_t) byteIndex);
-    strcpy(new + byteIndex, string);
-    strcpy(new + byteIndex + byteCount, text + byteIndex);
+    newStr = (char *) ckalloc((unsigned) textPtr->numBytes + byteCount + 1);
+    memcpy(newStr, text, (size_t) byteIndex);
+    strcpy(newStr + byteIndex, string);
+    strcpy(newStr + byteIndex + byteCount, text + byteIndex);
 
     ckfree(text);
-    textPtr->text = new;
+    textPtr->text = newStr;
     charsAdded = Tcl_NumUtfChars(string, byteCount);
     textPtr->numChars += charsAdded;
     textPtr->numBytes += byteCount;
@@ -980,7 +980,7 @@ TextDeleteChars(
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteIndex, byteCount, charsRemoved;
-    char *new, *text;
+    char *newStr, *text;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     text = textPtr->text;
@@ -999,12 +999,12 @@ TextDeleteChars(
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
 
-    new = (char *) ckalloc((unsigned) (textPtr->numBytes + 1 - byteCount));
-    memcpy(new, text, (size_t) byteIndex);
-    strcpy(new + byteIndex, text + byteIndex + byteCount);
+    newStr = (char *) ckalloc((unsigned) (textPtr->numBytes + 1 - byteCount));
+    memcpy(newStr, text, (size_t) byteIndex);
+    strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
     ckfree(text);
-    textPtr->text = new;
+    textPtr->text = newStr;
     textPtr->numChars -= charsRemoved;
     textPtr->numBytes -= byteCount;
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.23 2005/11/07 15:50:35 dkf Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.24 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "default.h"
@@ -459,7 +459,7 @@ CreateFrame(
     Tk_Window tkwin;
     Frame *framePtr;
     Tk_OptionTable optionTable;
-    Tk_Window new;
+    Tk_Window newWin;
     CONST char *className, *screenName, *visualName, *colormapName, *arg, *useOption;
     int i, c, length, depth;
     unsigned int mask;
@@ -536,7 +536,7 @@ CreateFrame(
 
     tkwin = Tk_MainWindow(interp);
     if (tkwin != NULL) {
-	new = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(objv[1]),
+	newWin = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(objv[1]),
 		screenName);
     } else if (appName == NULL) {
 	/*
@@ -546,55 +546,55 @@ CreateFrame(
 
 	Tcl_AppendResult(interp, "unable to create widget \"",
 		Tcl_GetString(objv[1]), "\"", NULL);
-	new = NULL;
+	newWin = NULL;
     } else {
 	/*
 	 * We were called from Tk_Init; create a new application.
 	 */
 
-	new = TkCreateMainWindow(interp, screenName, appName);
+	newWin = TkCreateMainWindow(interp, screenName, appName);
     }
-    if (new == NULL) {
+    if (newWin == NULL) {
 	goto error;
     }
     if (className == NULL) {
-	className = Tk_GetOption(new, "class", "Class");
+	className = Tk_GetOption(newWin, "class", "Class");
 	if (className == NULL) {
 	    className = classNames[type];
 	}
     }
-    Tk_SetClass(new, className);
+    Tk_SetClass(newWin, className);
     if (useOption == NULL) {
-	useOption = Tk_GetOption(new, "use", "Use");
+	useOption = Tk_GetOption(newWin, "use", "Use");
     }
     if ((useOption != NULL) && (*useOption != 0)) {
-	if (TkpUseWindow(interp, new, useOption) != TCL_OK) {
+	if (TkpUseWindow(interp, newWin, useOption) != TCL_OK) {
 	    goto error;
 	}
     }
     if (visualName == NULL) {
-	visualName = Tk_GetOption(new, "visual", "Visual");
+	visualName = Tk_GetOption(newWin, "visual", "Visual");
     }
     if (colormapName == NULL) {
-	colormapName = Tk_GetOption(new, "colormap", "Colormap");
+	colormapName = Tk_GetOption(newWin, "colormap", "Colormap");
     }
     if ((colormapName != NULL) && (*colormapName == 0)) {
 	colormapName = NULL;
     }
     if (visualName != NULL) {
-	visual = Tk_GetVisual(interp, new, visualName, &depth,
+	visual = Tk_GetVisual(interp, newWin, visualName, &depth,
 		(colormapName == NULL) ? &colormap : NULL);
 	if (visual == NULL) {
 	    goto error;
 	}
-	Tk_SetWindowVisual(new, visual, depth, colormap);
+	Tk_SetWindowVisual(newWin, visual, depth, colormap);
     }
     if (colormapName != NULL) {
-	colormap = Tk_GetColormap(interp, new, colormapName);
+	colormap = Tk_GetColormap(interp, newWin, colormapName);
 	if (colormap == None) {
 	    goto error;
 	}
-	Tk_SetWindowColormap(new, colormap);
+	Tk_SetWindowColormap(newWin, colormap);
     }
 
     /*
@@ -604,7 +604,7 @@ CreateFrame(
      */
 
     if (type == TYPE_TOPLEVEL) {
-	Tk_GeometryRequest(new, 200, 200);
+	Tk_GeometryRequest(newWin, 200, 200);
     }
 
     /*
@@ -620,11 +620,11 @@ CreateFrame(
 	framePtr = (Frame *) ckalloc(sizeof(Frame));
 	memset((void *) framePtr, 0, (sizeof(Frame)));
     }
-    framePtr->tkwin		= new;
-    framePtr->display		= Tk_Display(new);
+    framePtr->tkwin		= newWin;
+    framePtr->display		= Tk_Display(newWin);
     framePtr->interp		= interp;
     framePtr->widgetCmd		= Tcl_CreateObjCommand(interp,
-	    Tk_PathName(new), FrameWidgetObjCmd,
+	    Tk_PathName(newWin), FrameWidgetObjCmd,
 	    (ClientData) framePtr, FrameCmdDeletedProc);
     framePtr->optionTable = optionTable;
     framePtr->type = type;
@@ -642,14 +642,14 @@ CreateFrame(
      * Store backreference to frame widget in window structure.
      */
 
-    Tk_SetClassProcs(new, &frameClass, (ClientData) framePtr);
+    Tk_SetClassProcs(newWin, &frameClass, (ClientData) framePtr);
 
     mask = ExposureMask | StructureNotifyMask | FocusChangeMask;
     if (type == TYPE_TOPLEVEL) {
 	mask |= ActivateMask;
     }
-    Tk_CreateEventHandler(new, mask, FrameEventProc, (ClientData) framePtr);
-    if ((Tk_InitOptions(interp, (char *) framePtr, optionTable, new)
+    Tk_CreateEventHandler(newWin, mask, FrameEventProc, (ClientData) framePtr);
+    if ((Tk_InitOptions(interp, (char *) framePtr, optionTable, newWin)
 	    != TCL_OK) ||
 	    (ConfigureFrame(interp, framePtr, objc-2, objv+2) != TCL_OK)) {
 	goto error;
@@ -666,12 +666,12 @@ CreateFrame(
     if (type == TYPE_TOPLEVEL) {
 	Tcl_DoWhenIdle(MapFrame, (ClientData) framePtr);
     }
-    Tcl_SetResult(interp, Tk_PathName(new), TCL_STATIC);
+    Tcl_SetResult(interp, Tk_PathName(newWin), TCL_STATIC);
     return TCL_OK;
 
   error:
-    if (new != NULL) {
-	Tk_DestroyWindow(new);
+    if (newWin != NULL) {
+	Tk_DestroyWindow(newWin);
     }
     return TCL_ERROR;
 }

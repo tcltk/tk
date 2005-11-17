@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.14 2005/11/04 15:23:05 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.15 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include <stdio.h>
@@ -1016,7 +1016,7 @@ PolygonInsert(
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     int length, objc, i;
     Tcl_Obj **objv;
-    double *new;
+    double *newCoordPtr;
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
@@ -1034,25 +1034,27 @@ PolygonInsert(
     while (beforeThis<0) {
 	beforeThis += length;
     }
-    new = (double *) ckalloc((unsigned)(sizeof(double) * (length + 2 + objc)));
+    newCoordPtr = (double *)
+	    ckalloc(sizeof(double) * (unsigned)(length + 2 + objc));
     for (i=0; i<beforeThis; i++) {
-	new[i] = polyPtr->coordPtr[i];
+	newCoordPtr[i] = polyPtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
-	if (Tcl_GetDoubleFromObj(NULL, objv[i], new+(i+beforeThis)) != TCL_OK){
-	    ckfree((char *) new);
+	if (Tcl_GetDoubleFromObj(NULL, objv[i],
+		&newCoordPtr[i+beforeThis]) != TCL_OK){
+	    ckfree((char *) newCoordPtr);
 	    return;
 	}
     }
 
     for (i=beforeThis; i<length; i++) {
-	new[i+objc] = polyPtr->coordPtr[i];
+	newCoordPtr[i+objc] = polyPtr->coordPtr[i];
     }
     if (polyPtr->coordPtr) {
 	ckfree((char *) polyPtr->coordPtr);
     }
     length += objc;
-    polyPtr->coordPtr = new;
+    polyPtr->coordPtr = newCoordPtr;
     polyPtr->numPoints = (length/2) + polyPtr->autoClosed;
 
     /*
@@ -1061,19 +1063,21 @@ PolygonInsert(
      */
 
     if (polyPtr->autoClosed) {
-	if ((new[length-2] == new[0]) && (new[length-1] == new[1])) {
+	if ((newCoordPtr[length-2] == newCoordPtr[0])
+		&& (newCoordPtr[length-1] == newCoordPtr[1])) {
 	    polyPtr->autoClosed = 0;
 	    polyPtr->numPoints--;
 	}
     } else {
-	if ((new[length-2] != new[0]) || (new[length-1] != new[1])) {
+	if ((newCoordPtr[length-2] != newCoordPtr[0])
+		|| (newCoordPtr[length-1] != newCoordPtr[1])) {
 	    polyPtr->autoClosed = 1;
 	    polyPtr->numPoints++;
 	}
     }
 
-    new[length] = new[0];
-    new[length+1] = new[1];
+    newCoordPtr[length] = newCoordPtr[0];
+    newCoordPtr[length+1] = newCoordPtr[1];
     if (((length-objc)>3) && (state != TK_STATE_HIDDEN)) {
 	/*
 	 * This is some optimizing code that will result that only the part of

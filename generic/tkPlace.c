@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.17 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.18 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -376,11 +376,11 @@ CreateSlave(
 {
     Tcl_HashEntry *hPtr;
     register Slave *slavePtr;
-    int new;
+    int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_CreateHashEntry(&dispPtr->slaveTable, (char *) tkwin, &new);
-    if (new) {
+    hPtr = Tcl_CreateHashEntry(&dispPtr->slaveTable, (char *) tkwin, &isNew);
+    if (isNew) {
 	slavePtr = (Slave *) ckalloc(sizeof(Slave));
 	memset(slavePtr, 0, sizeof(Slave));
 	slavePtr->tkwin = tkwin;
@@ -523,11 +523,11 @@ CreateMaster(
 {
     Tcl_HashEntry *hPtr;
     register Master *masterPtr;
-    int new;
+    int isNew;
     TkDisplay * dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_CreateHashEntry(&dispPtr->masterTable, (char *) tkwin, &new);
-    if (new) {
+    hPtr = Tcl_CreateHashEntry(&dispPtr->masterTable, (char *) tkwin, &isNew);
+    if (isNew) {
 	masterPtr = (Master *) ckalloc(sizeof(Master));
 	masterPtr->tkwin = tkwin;
 	masterPtr->slavePtr = NULL;

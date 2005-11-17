@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.39 2005/08/11 01:32:26 dgp Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.40 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -2337,7 +2337,7 @@ GetGrid(tkwin)
 {
     register Gridder *gridPtr;
     Tcl_HashEntry *hPtr;
-    int new;
+    int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (!dispPtr->gridInit) {
@@ -2350,8 +2350,8 @@ GetGrid(tkwin)
      * one.
      */
 
-    hPtr = Tcl_CreateHashEntry(&dispPtr->gridHashTable, (char *) tkwin, &new);
-    if (!new) {
+    hPtr = Tcl_CreateHashEntry(&dispPtr->gridHashTable, (char*) tkwin, &isNew);
+    if (!isNew) {
 	return (Gridder *) Tcl_GetHashValue(hPtr);
     }
     gridPtr = (Gridder *) ckalloc(sizeof(Gridder));

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGC.c,v 1.6 2005/11/13 00:45:47 dkf Exp $
+ * RCS: @(#) $Id: tkGC.c,v 1.7 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -80,7 +80,7 @@ Tk_GetGC(
     ValueKey valueKey;
     Tcl_HashEntry *valueHashPtr, *idHashPtr;
     register TkGC *gcPtr;
-    int new;
+    int isNew;
     Drawable d, freeDrawable;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
@@ -219,8 +219,8 @@ Tk_GetGC(
     valueKey.screenNum = Tk_ScreenNumber(tkwin);
     valueKey.depth = Tk_Depth(tkwin);
     valueHashPtr = Tcl_CreateHashEntry(&dispPtr->gcValueTable,
-            (char *) &valueKey, &new);
-    if (!new) {
+            (char *) &valueKey, &isNew);
+    if (!isNew) {
 	gcPtr = (TkGC *) Tcl_GetHashValue(valueHashPtr);
 	gcPtr->refCount++;
 	return gcPtr->gc;
@@ -257,8 +257,8 @@ Tk_GetGC(
     gcPtr->refCount = 1;
     gcPtr->valueHashPtr = valueHashPtr;
     idHashPtr = Tcl_CreateHashEntry(&dispPtr->gcIdTable,
-            (char *) gcPtr->gc, &new);
-    if (!new) {
+            (char *) gcPtr->gc, &isNew);
+    if (!isNew) {
 	Tcl_Panic("GC already registered in Tk_GetGC");
     }
     Tcl_SetHashValue(valueHashPtr, gcPtr);

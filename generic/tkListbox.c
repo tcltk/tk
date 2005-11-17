@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.32 2005/09/08 23:52:53 dkf Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.33 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1386,12 +1386,12 @@ ListboxGetItemAttributes(interp, listPtr, index)
     int index;			/* Index of the item to retrieve attributes
 				 * for. */
 {
-    int new;
+    int isNew;
     Tcl_HashEntry *entry;
     ItemAttr *attrs;
 
-    entry = Tcl_CreateHashEntry(listPtr->itemAttrTable, (char *)index, &new);
-    if (new) {
+    entry = Tcl_CreateHashEntry(listPtr->itemAttrTable, (char *)index, &isNew);
+    if (isNew) {
 	attrs = (ItemAttr *) ckalloc(sizeof(ItemAttr));
 	attrs->border = NULL;
 	attrs->selBorder = NULL;
@@ -3020,7 +3020,7 @@ ListboxSelect(listPtr, first, last, select)
 {
     int i, firstRedisplay, oldCount;
     Tcl_HashEntry *entry;
-    int new;
+    int isNew;
 
     if (last < first) {
 	i = first;
@@ -3057,8 +3057,8 @@ ListboxSelect(listPtr, first, last, select)
 	    }
 	} else {
 	    if (select) {
-		entry = Tcl_CreateHashEntry(listPtr->selection,
-			(char *)i, &new);
+		entry = Tcl_CreateHashEntry(listPtr->selection, (char *)i,
+			&isNew);
 		Tcl_SetHashValue(entry, (ClientData) NULL);
 		listPtr->numSelected++;
 		if (firstRedisplay < 0) {
@@ -3506,7 +3506,7 @@ MigrateHashEntries(table, first, last, offset)
     int last;
     int offset;
 {
-    int i, new;
+    int i, isNew;
     Tcl_HashEntry *entry;
     ClientData clientData;
 
@@ -3526,7 +3526,8 @@ MigrateHashEntries(table, first, last, offset)
 	    if (entry != NULL) {
 		clientData = Tcl_GetHashValue(entry);
 		Tcl_DeleteHashEntry(entry);
-		entry = Tcl_CreateHashEntry(table, (char *)(i + offset), &new);
+		entry = Tcl_CreateHashEntry(table, (char *)(i + offset),
+			&isNew);
 		Tcl_SetHashValue(entry, clientData);
 	    }
 	}
@@ -3536,7 +3537,8 @@ MigrateHashEntries(table, first, last, offset)
 	    if (entry != NULL) {
 		clientData = Tcl_GetHashValue(entry);
 		Tcl_DeleteHashEntry(entry);
-		entry = Tcl_CreateHashEntry(table, (char *)(i + offset), &new);
+		entry = Tcl_CreateHashEntry(table, (char *)(i + offset),
+			&isNew);
 		Tcl_SetHashValue(entry, clientData);
 	    }
 	}
