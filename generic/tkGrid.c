@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.40 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.41 2005/11/17 16:21:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -333,7 +333,7 @@ Tk_GridObjCmd(clientData, interp, objc, objv)
     static CONST char *optionStrings[] = {
 	"anchor", "bbox", "columnconfigure", "configure",
 	"forget", "info", "location", "propagate", "remove",
-	"rowconfigure", "size",	"slaves", (char *) NULL
+	"rowconfigure", "size",	"slaves", NULL
     };
     enum options {
 	GRID_ANCHOR, GRID_BBOX, GRID_COLUMNCONFIGURE, GRID_CONFIGURE,
@@ -655,8 +655,7 @@ GridForgetRemoveCommand(tkwin, interp, objc, objv)
 		slavePtr->flags = 0;
 		slavePtr->sticky = 0;
 	    }
-	    Tk_ManageGeometry(slave, (Tk_GeomMgr *) NULL,
-		    (ClientData) NULL);
+	    Tk_ManageGeometry(slave, NULL, (ClientData) NULL);
 	    if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 		Tk_UnmaintainGeometry(slavePtr->tkwin,
 			slavePtr->masterPtr->tkwin);
@@ -714,13 +713,13 @@ GridInfoCommand(tkwin, interp, objc, objv)
     sprintf(buffer, " -column %d -row %d -columnspan %d -rowspan %d",
 	    slavePtr->column, slavePtr->row,
 	    slavePtr->numCols, slavePtr->numRows);
-    Tcl_AppendResult(interp, buffer, (char *) NULL);
+    Tcl_AppendResult(interp, buffer, NULL);
     TkPrintPadAmount(interp, "ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
     TkPrintPadAmount(interp, "ipady", slavePtr->iPadY/2, slavePtr->iPadY);
     TkPrintPadAmount(interp, "padx", slavePtr->padLeft, slavePtr->padX);
     TkPrintPadAmount(interp, "pady", slavePtr->padTop, slavePtr->padY);
     StickyToString(slavePtr->sticky, buffer);
-    Tcl_AppendResult(interp, " -sticky ", buffer, (char *) NULL);
+    Tcl_AppendResult(interp, " -sticky ", buffer, NULL);
     return TCL_OK;
 }
 
@@ -928,7 +927,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     int i, j, first, last;
     char *string;
     static CONST char *optionStrings[] = {
-	"-minsize", "-pad", "-uniform", "-weight", (char *) NULL
+	"-minsize", "-pad", "-uniform", "-weight", NULL
     };
     enum options { ROWCOL_MINSIZE, ROWCOL_PAD, ROWCOL_UNIFORM, ROWCOL_WEIGHT };
     int index;
@@ -955,13 +954,13 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {
 	    Tcl_AppendResult(interp, Tcl_GetString(objv[3]),
-		    " must be a single element.", (char *) NULL);
+		    " must be a single element.", NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
 		    " (when retreiving options only integer indices are allowed)",
-		    (char *) NULL);
+		    NULL);
 	    return TCL_ERROR;
 	}
 	ok = CheckSlotData(masterPtr, slot, slotType, /* checkOnly */ 1);
@@ -1055,16 +1054,15 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		Tcl_ResetResult(interp);
 		Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
 			Tcl_GetString(objv[1]), ": the window \"",
-			Tcl_GetString(lObjv[j]),
-			"\" is not managed by \"", Tcl_GetString(objv[2]),
-			"\"", (char *) NULL);
+			Tcl_GetString(lObjv[j]), "\" is not managed by \"",
+			Tcl_GetString(objv[2]), "\"", NULL);
 		return TCL_ERROR;
 	    }
 	} else {
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
 		    Tcl_GetString(objv[1]), ": illegal index \"",
-		    Tcl_GetString(lObjv[j]), "\"", (char *) NULL);
+		    Tcl_GetString(lObjv[j]), "\"", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1086,7 +1084,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
 			    Tcl_GetString(objv[1]), ": \"",
 			    Tcl_GetString(lObjv[j]),
-			    "\" is out of range", (char *) NULL);
+			    "\" is out of range", NULL);
 		    return TCL_ERROR;
 		}
 		slotPtr = (slotType == COLUMN) ?
@@ -1117,7 +1115,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 			} else if (wt < 0) {
 			    Tcl_AppendResult(interp, "invalid arg \"",
 				    Tcl_GetString(objv[i]),
-				    "\": should be non-negative", (char *) NULL);
+				    "\": should be non-negative", NULL);
 			    return TCL_ERROR;
 			} else {
 			    slotPtr[slot].weight = wt;
@@ -1136,7 +1134,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 			} else if (size < 0) {
 			    Tcl_AppendResult(interp, "invalid arg \"",
 				    Tcl_GetString(objv[i]),
-				    "\": should be non-negative", (char *) NULL);
+				    "\": should be non-negative", NULL);
 			    return TCL_ERROR;
 			} else {
 			    slotPtr[slot].pad = size;
@@ -1264,7 +1262,7 @@ GridSlavesCommand(tkwin, interp, objc, objv)
     int i, value;
     int row = -1, column = -1;
     static CONST char *optionStrings[] = {
-	"-column", "-row", (char *) NULL
+	"-column", "-row", NULL
     };
     enum options { SLAVES_COLUMN, SLAVES_ROW };
     int index;
@@ -1285,8 +1283,7 @@ GridSlavesCommand(tkwin, interp, objc, objv)
 	}
 	if (value < 0) {
 	    Tcl_AppendResult(interp, Tcl_GetString(objv[i]),
-		    " is an invalid value: should NOT be < 0",
-		    (char *) NULL);
+		    " is an invalid value: should NOT be < 0", NULL);
 	    return TCL_ERROR;
 	}
 	if (index == SLAVES_COLUMN) {
@@ -2766,7 +2763,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     int numSkip;		/* Number of 'x' found */
     static CONST char *optionStrings[] = {
 	"-column", "-columnspan", "-in", "-ipadx", "-ipady",
-	"-padx", "-pady", "-row", "-rowspan", "-sticky", (char *) NULL
+	"-padx", "-pady", "-row", "-rowspan", "-sticky", NULL
     };
     enum options {
 	CONF_COLUMN, CONF_COLUMNSPAN, CONF_IN, CONF_IPADX, CONF_IPADY,
@@ -2809,7 +2806,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
     	}
 	if (length > 1 && i == 0) {
 	    Tcl_AppendResult(interp, "bad argument \"", string,
-		    "\": must be name of window", (char *) NULL);
+		    "\": must be name of window", NULL);
 	    return TCL_ERROR;
 	}
     	if (length > 1 && firstChar == '-') {
@@ -2818,15 +2815,14 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	if (length > 1) {
 	    Tcl_AppendResult(interp, "unexpected parameter, \"",
 		    string, "\", in configure list. ",
-		    "Should be window name or option", (char *) NULL);
+		    "Should be window name or option", NULL);
 	    return TCL_ERROR;
 	}
 
 	if ((firstChar == REL_HORIZ) && ((numWindows == 0) ||
 		(prevChar == REL_SKIP) || (prevChar == REL_VERT))) {
 	    Tcl_AppendResult(interp,
-		    "Must specify window before shortcut '-'.",
-		    (char *) NULL);
+		    "Must specify window before shortcut '-'.", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -2836,14 +2832,13 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 
 	Tcl_AppendResult(interp, "invalid window shortcut, \"",
-		string, "\" should be '-', 'x', or '^'", (char *) NULL);
+		string, "\" should be '-', 'x', or '^'", NULL);
 	return TCL_ERROR;
     }
     numWindows = i;
 
     if ((objc - numWindows) & 1) {
-	Tcl_AppendResult(interp, "extra option or",
-		" option with no value", (char *) NULL);
+	Tcl_AppendResult(interp, "extra option or option with no value", NULL);
 	return TCL_ERROR;
     }
 
@@ -2872,7 +2867,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		Tcl_ResetResult(interp);
 		Tcl_AppendResult(interp, "bad row value \"",
 			Tcl_GetString(objv[i+1]),
-			"\": must be a non-negative integer", (char *) NULL);
+			"\": must be a non-negative integer", NULL);
 		return TCL_ERROR;
 	    }
 	    defaultRow = tmp;
@@ -2934,7 +2929,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 
 	if (Tk_TopWinHierarchy(slave)) {
 	    Tcl_AppendResult(interp, "can't manage \"", Tcl_GetString(objv[j]),
-		    "\": it's a top-level window", (char *) NULL);
+		    "\": it's a top-level window", NULL);
 	    return TCL_ERROR;
 	}
 	slavePtr = GetGrid(slave);
@@ -2963,7 +2958,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			|| tmp < 0) {
 		    Tcl_AppendResult(interp, "bad column value \"",
 			    Tcl_GetString(objv[i+1]),
-			    "\": must be a non-negative integer", (char *)NULL);
+			    "\": must be a non-negative integer", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->column = tmp;
@@ -2973,7 +2968,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			|| tmp <= 0) {
 		    Tcl_AppendResult(interp, "bad columnspan value \"",
 			    Tcl_GetString(objv[i+1]),
-			    "\": must be a positive integer", (char *)NULL);
+			    "\": must be a positive integer", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->numCols = tmp;
@@ -2999,7 +2994,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		    Tcl_AppendResult(interp, "bad stickyness value \"",
 			    Tcl_GetString(objv[i+1]),
 			    "\": must be a string containing n, e, s, and/or w",
-			    (char *)NULL);
+			    NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->sticky = sticky;
@@ -3010,8 +3005,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			&tmp) != TCL_OK) || (tmp < 0)) {
 		    Tcl_AppendResult(interp, "bad ipadx value \"",
 			    Tcl_GetString(objv[i+1]),
-			    "\": must be positive screen distance",
-			    (char *) NULL);
+			    "\": must be positive screen distance", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->iPadX = tmp*2;
@@ -3021,8 +3015,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			&tmp) != TCL_OK) || (tmp < 0)) {
 		    Tcl_AppendResult(interp, "bad ipady value \"",
 			    Tcl_GetString(objv[i+1]),
-			    "\": must be positive screen distance",
-			    (char *) NULL);
+			    "\": must be positive screen distance", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->iPadY = tmp*2;
@@ -3044,8 +3037,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			|| tmp < 0) {
 		    Tcl_AppendResult(interp, "bad row value \"",
 			    Tcl_GetString(objv[i+1]),
-			    "\": must be a non-negative integer",
-			    (char *) NULL);
+			    "\": must be a non-negative integer", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->row = tmp;
@@ -3055,7 +3047,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			|| tmp <= 0) {
 		    Tcl_AppendResult(interp, "bad rowspan value \"",
 			    Tcl_GetString(objv[i+1]),
-			    "\": must be a positive integer", (char *) NULL);
+			    "\": must be a positive integer", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->numRows = tmp;
@@ -3118,8 +3110,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_AppendResult(interp, "can't put ", Tcl_GetString(objv[j]),
-			" inside ", Tk_PathName(masterPtr->tkwin),
-			(char *) NULL);
+			" inside ", Tk_PathName(masterPtr->tkwin), NULL);
 		Unlink(slavePtr);
 		return TCL_ERROR;
 	    }
@@ -3132,7 +3123,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
      	if (masterPtr->masterPtr == slavePtr) {
 	    Tcl_AppendResult(interp, "can't put ", Tcl_GetString(objv[j]),
 		    " inside ", Tk_PathName(masterPtr->tkwin),
-		    ", would cause management loop.", (char *) NULL);
+		    ", would cause management loop.", NULL);
 	    Unlink(slavePtr);
 	    return TCL_ERROR;
      	}
@@ -3193,8 +3184,7 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 
 	if (masterPtr == NULL) {
-	    Tcl_AppendResult(interp, "can't use '^', cant find master",
-		    (char *) NULL);
+	    Tcl_AppendResult(interp, "can't use '^', cant find master", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3244,14 +3234,13 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 	if (!match) {
 	    Tcl_AppendResult(interp, "can't find slave to extend with \"^\".",
-		    (char *) NULL);
+		    NULL);
 	    return TCL_ERROR;
 	}
     }
 
     if (masterPtr == NULL) {
-	Tcl_AppendResult(interp, "can't determine master window",
-		(char *) NULL);
+	Tcl_AppendResult(interp, "can't determine master window", NULL);
 	return TCL_ERROR;
     }
     SetGridSize(masterPtr);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.23 2005/10/10 10:36:35 vincentdarley Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.24 2005/11/17 16:21:56 dkf Exp $
  */
 
 #include "default.h"
@@ -839,7 +839,7 @@ GetIndex(interp, sharedPtr, textPtr, string, indexPtr, canCachePtr)
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp,
 		    "text doesn't contain any characters tagged with \"",
-		    tagName, "\"", (char *) NULL);
+		    tagName, "\"", NULL);
 	    Tcl_DStringFree(&copy);
 	    return TCL_ERROR;
 	}
@@ -1003,7 +1003,7 @@ GetIndex(interp, sharedPtr, textPtr, string, indexPtr, canCachePtr)
   error:
     Tcl_DStringFree(&copy);
     Tcl_ResetResult(interp);
-    Tcl_AppendResult(interp, "bad text index \"", string, "\"", (char *)NULL);
+    Tcl_AppendResult(interp, "bad text index \"", string, "\"", NULL);
     return TCL_ERROR;
 }
 

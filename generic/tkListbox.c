@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.33 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.34 2005/11/17 16:21:55 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -214,7 +214,7 @@ enum state {
 };
 
 static char *stateStrings[] = {
-    "disabled", "normal", (char *) NULL
+    "disabled", "normal", NULL
 };
 
 enum activeStyle {
@@ -222,7 +222,7 @@ enum activeStyle {
 };
 
 static char *activeStyleStrings[] = {
-    "dotbox", "none", "underline", (char *) NULL
+    "dotbox", "none", "underline", NULL
 };
 
 /*
@@ -237,10 +237,10 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_LISTBOX_BG_COLOR, -1, Tk_Offset(Listbox, normalBorder),
 	 0, (ClientData) DEF_LISTBOX_BG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
-	 (char *) NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
-    {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
-	 (char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
+    {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
+	 NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
+	 NULL, 0, -1, 0, (ClientData) "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_LISTBOX_BORDER_WIDTH, -1, Tk_Offset(Listbox, borderWidth),
 	 0, 0, 0},
@@ -253,8 +253,8 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	 "ExportSelection", DEF_LISTBOX_EXPORT_SELECTION, -1,
 	 Tk_Offset(Listbox, exportSelection), 0, 0, 0},
-    {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
-	 (char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
+	 NULL, 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	 DEF_LISTBOX_FONT, -1, Tk_Offset(Listbox, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
@@ -303,8 +303,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-listvariable", "listVariable", "Variable",
 	 DEF_LISTBOX_LIST_VARIABLE, -1, Tk_Offset(Listbox, listVarName),
 	 TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	 (char *) NULL, 0, -1, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
 };
 
 /*
@@ -314,26 +313,25 @@ static Tk_OptionSpec optionSpecs[] = {
 
 static Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-     (char *)NULL, -1, Tk_Offset(ItemAttr, border),
+     NULL, -1, Tk_Offset(ItemAttr, border),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_BG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-bg", (char *) NULL, (char *) NULL,
-     (char *) NULL, 0, -1, 0, (ClientData) "-background", 0},
-    {TK_OPTION_SYNONYM, "-fg", "foreground", (char *) NULL,
-     (char *) NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
+     NULL, 0, -1, 0, (ClientData) "-background", 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
+     NULL, 0, -1, 0, (ClientData) "-foreground", 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-     (char *) NULL, -1, Tk_Offset(ItemAttr, fgColor),
+     NULL, -1, Tk_Offset(ItemAttr, fgColor),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
-     (char *) NULL, -1, Tk_Offset(ItemAttr, selBorder),
+     NULL, -1, Tk_Offset(ItemAttr, selBorder),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
-     (char *) NULL, -1, Tk_Offset(ItemAttr, selFgColor),
+     NULL, -1, Tk_Offset(ItemAttr, selFgColor),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
-    {TK_OPTION_END, (char *) NULL, (char *) NULL, (char *) NULL,
-     (char *) NULL, 0, -1, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
 };
 
 /*
@@ -345,8 +343,7 @@ static Tk_OptionSpec itemAttrOptionSpecs[] = {
 static CONST char *commandNames[] = {
     "activate", "bbox", "cget", "configure", "curselection", "delete", "get",
     "index", "insert", "itemcget", "itemconfigure", "nearest", "scan",
-    "see", "selection", "size", "xview", "yview",
-    (char *) NULL
+    "see", "selection", "size", "xview", "yview", NULL
 };
 enum command {
     COMMAND_ACTIVATE, COMMAND_BBOX, COMMAND_CGET, COMMAND_CONFIGURE,
@@ -357,21 +354,21 @@ enum command {
 };
 
 static CONST char *selCommandNames[] = {
-    "anchor", "clear", "includes", "set", (char *) NULL
+    "anchor", "clear", "includes", "set", NULL
 };
 enum selcommand {
     SELECTION_ANCHOR, SELECTION_CLEAR, SELECTION_INCLUDES, SELECTION_SET
 };
 
 static CONST char *scanCommandNames[] = {
-    "mark", "dragto", (char *) NULL
+    "mark", "dragto", NULL
 };
 enum scancommand {
     SCAN_MARK, SCAN_DRAGTO
 };
 
 static CONST char *indexNames[] = {
-    "active", "anchor", "end", (char *)NULL
+    "active", "anchor", "end", NULL
 };
 enum indices {
     INDEX_ACTIVE, INDEX_ANCHOR, INDEX_END
@@ -478,7 +475,7 @@ Tk_ListboxObjCmd(clientData, interp, objc, objv)
     }
 
     tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-	    Tcl_GetString(objv[1]), (char *) NULL);
+	    Tcl_GetString(objv[1]), NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }
@@ -692,7 +689,7 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	if (objc <= 3) {
 	    objPtr = Tk_GetOptionInfo(interp, (char *) listPtr,
 		    listPtr->optionTable,
-		    (objc == 3) ? objv[2] : (Tcl_Obj *) NULL, listPtr->tkwin);
+		    (objc == 3) ? objv[2] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
 		break;
@@ -879,7 +876,7 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 
 	if (index < 0 || index >= listPtr->nElements) {
 	    Tcl_AppendResult(interp, "item number \"",
-		    Tcl_GetString(objv[2]), "\" out of range", (char *)NULL);
+		    Tcl_GetString(objv[2]), "\" out of range", NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -915,7 +912,7 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 
 	if (index < 0 || index >= listPtr->nElements) {
 	    Tcl_AppendResult(interp, "item number \"", Tcl_GetString(objv[2]),
-		    "\" out of range", (char *) NULL);
+		    "\" out of range", NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -924,7 +921,7 @@ ListboxWidgetObjCmd(clientData, interp, objc, objv)
 	if (objc <= 4) {
 	    objPtr = Tk_GetOptionInfo(interp, (char *)attrPtr,
 		    listPtr->itemAttrOptionTable,
-		    (objc == 4) ? objv[3] : (Tcl_Obj *) NULL, listPtr->tkwin);
+		    (objc == 4) ? objv[3] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
 		break;
@@ -1562,7 +1559,7 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 
 	    if (Tk_SetOptions(interp, (char *) listPtr,
 		    listPtr->optionTable, objc, objv,
-		    listPtr->tkwin, &savedOptions, (int *) NULL) != TCL_OK) {
+		    listPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
 	    }
 	} else {
@@ -1618,12 +1615,12 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 	oldListObj = listPtr->listObj;
 	if (listPtr->listVarName != NULL) {
 	    Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
-		    (char *) NULL, TCL_GLOBAL_ONLY);
+		    NULL, TCL_GLOBAL_ONLY);
 	    int dummy;
 
 	    if (listVarObj == NULL) {
 		listVarObj = (oldListObj ? oldListObj : Tcl_NewObj());
-		if (Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *) NULL,
+		if (Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 			listVarObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    if (oldListObj == NULL) {
@@ -1639,7 +1636,7 @@ ConfigureListbox(interp, listPtr, objc, objv, flags)
 	    if (Tcl_ListObjLength(listPtr->interp, listVarObj, &dummy)
 		    != TCL_OK) {
 		Tcl_AppendResult(listPtr->interp,
-			": invalid -listvariable value", (char *) NULL);
+			": invalid -listvariable value", NULL);
 		continue;
 	    }
 
@@ -1709,7 +1706,7 @@ ConfigureListboxItem(interp, listPtr, attrs, objc, objv)
 
     if (Tk_SetOptions(interp, (char *)attrs,
 	    listPtr->itemAttrOptionTable, objc, objv, listPtr->tkwin,
-	    &savedOptions, (int *)NULL) != TCL_OK) {
+	    &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;
     }
@@ -2344,7 +2341,7 @@ ListboxInsertSubCmd(listPtr, index, objc, objv)
 
     if (listPtr->listVarName != NULL) {
 	if (Tcl_SetVar2Ex(listPtr->interp, listPtr->listVarName,
-		(char *)NULL, newListObj, TCL_GLOBAL_ONLY) == NULL) {
+		NULL, newListObj, TCL_GLOBAL_ONLY) == NULL) {
 	    Tcl_DecrRefCount(newListObj);
 	    return TCL_ERROR;
 	}
@@ -2524,7 +2521,7 @@ ListboxDeleteSubCmd(listPtr, first, last)
 
     if (listPtr->listVarName != NULL) {
 	if (Tcl_SetVar2Ex(listPtr->interp, listPtr->listVarName,
-		(char *)NULL, newListObj, TCL_GLOBAL_ONLY) == NULL) {
+		NULL, newListObj, TCL_GLOBAL_ONLY) == NULL) {
 	    Tcl_DecrRefCount(newListObj);
 	    return TCL_ERROR;
 	}
@@ -2759,7 +2756,7 @@ GetListboxIndex(interp, listPtr, indexObj, endIsSize, indexPtr)
 	if ((start == end) || (*end != ',')) {
 	    Tcl_AppendResult(interp, "bad listbox index \"", stringRep,
 		    "\": must be active, anchor, end, @x,y, or a number",
-		    (char *)NULL);
+		    NULL);
 	    return TCL_ERROR;
 	}
 	start = end+1;
@@ -2767,7 +2764,7 @@ GetListboxIndex(interp, listPtr, indexObj, endIsSize, indexPtr)
 	if ((start == end) || (*end != '\0')) {
 	    Tcl_AppendResult(interp, "bad listbox index \"", stringRep,
 		    "\": must be active, anchor, end, @x,y, or a number",
-		    (char *)NULL);
+		    NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = NearestListboxElement(listPtr, y);
@@ -2789,7 +2786,7 @@ GetListboxIndex(interp, listPtr, indexObj, endIsSize, indexPtr)
     Tcl_ResetResult(interp);
     Tcl_AppendResult(interp, "bad listbox index \"",
 	    Tcl_GetString(indexObj), "\": must be active, anchor, ",
-	    "end, @x,y, or a number", (char *) NULL);
+	    "end, @x,y, or a number", NULL);
     return TCL_ERROR;
 }
 
@@ -3290,8 +3287,7 @@ ListboxUpdateVScrollbar(listPtr)
 
     interp = listPtr->interp;
     Tcl_Preserve((ClientData) interp);
-    result = Tcl_VarEval(interp, listPtr->yScrollCmd, string,
-	    (char *) NULL);
+    result = Tcl_VarEval(interp, listPtr->yScrollCmd, string, NULL);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (vertical scrolling command executed by listbox)");
@@ -3354,8 +3350,7 @@ ListboxUpdateHScrollbar(listPtr)
 
     interp = listPtr->interp;
     Tcl_Preserve((ClientData) interp);
-    result = Tcl_VarEval(interp, listPtr->xScrollCmd, string,
-	    (char *) NULL);
+    result = Tcl_VarEval(interp, listPtr->xScrollCmd, string, NULL);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (horizontal scrolling command executed by listbox)");
@@ -3400,17 +3395,17 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
 
     if (flags & TCL_TRACE_UNSETS) {
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_SetVar2Ex(interp, listPtr->listVarName,
-		    (char *)NULL, listPtr->listObj, TCL_GLOBAL_ONLY);
+	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
+		    listPtr->listObj, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar(interp, listPtr->listVarName,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ListboxListVarProc, clientData);
-	    return (char *)NULL;
+	    return NULL;
 	}
     } else {
 	oldListObj = listPtr->listObj;
 	varListObj = Tcl_GetVar2Ex(listPtr->interp, listPtr->listVarName,
-		(char *)NULL, TCL_GLOBAL_ONLY);
+		NULL, TCL_GLOBAL_ONLY);
 
 	/*
 	 * Make sure the new value is a good list; if it's not, disallow the
@@ -3419,15 +3414,23 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
 	 */
 
 	if (Tcl_ListObjLength(listPtr->interp, varListObj, &i) != TCL_OK) {
-	    Tcl_SetVar2Ex(interp, listPtr->listVarName, (char *)NULL,
-		    oldListObj, TCL_GLOBAL_ONLY);
-	    return("invalid listvar value");
+	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL, oldListObj,
+		    TCL_GLOBAL_ONLY);
+	    return "invalid listvar value";
 	}
 
 	listPtr->listObj = varListObj;
-	/* Incr the obj ref count so it doesn't vanish if the var is unset */
+
+	/*
+	 * Incr the obj ref count so it doesn't vanish if the var is unset.
+	 */
+
 	Tcl_IncrRefCount(listPtr->listObj);
-	/* Clean up the ref to our old list obj */
+
+	/*
+	 * Clean up the ref to our old list obj.
+	 */
+
 	Tcl_DecrRefCount(oldListObj);
     }
 
@@ -3477,7 +3480,7 @@ ListboxListVarProc(clientData, interp, name1, name2, flags)
     listPtr->flags |= MAXWIDTH_IS_STALE;
 
     EventuallyRedrawRange(listPtr, 0, listPtr->nElements-1);
-    return (char*)NULL;
+    return NULL;
 }
 
 /*
