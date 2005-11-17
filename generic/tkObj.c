@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.13 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.14 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -58,6 +58,7 @@ typedef struct MMRep {
  * A WindowRep caches name-to-window lookups. The cache is invalid if tkwin is
  * NULL or if mainPtr->deletionEpoch does not match epoch.
  */
+
 typedef struct WindowRep {
     Tk_Window tkwin;		/* Cached window; NULL if not found. */
     TkMainInfo *mainPtr;	/* MainWindow associated with tkwin. */
@@ -143,11 +144,11 @@ static Tcl_ObjType windowObjType = {
  */
 
 int
-Tk_GetPixelsFromObj(interp, tkwin, objPtr, intPtr)
-    Tcl_Interp *interp; 	/* Used for error reporting if not NULL. */
-    Tk_Window tkwin;
-    Tcl_Obj *objPtr;		/* The object from which to get pixels. */
-    int *intPtr;		/* Place to store resulting pixels. */
+Tk_GetPixelsFromObj(
+    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tk_Window tkwin,
+    Tcl_Obj *objPtr,		/* The object from which to get pixels. */
+    int *intPtr)		/* Place to store resulting pixels. */
 {
     int result;
     double d;
@@ -204,8 +205,8 @@ Tk_GetPixelsFromObj(interp, tkwin, objPtr, intPtr)
  */
 
 static void
-FreePixelInternalRep(objPtr)
-    Tcl_Obj *objPtr;		/* Pixel object with internal rep to free. */
+FreePixelInternalRep(
+    Tcl_Obj *objPtr)		/* Pixel object with internal rep to free. */
 {
     PixelRep *pixelPtr;
 
@@ -236,9 +237,9 @@ FreePixelInternalRep(objPtr)
  */
 
 static void
-DupPixelInternalRep(srcPtr, copyPtr)
-    register Tcl_Obj *srcPtr;	/* Object with internal rep to copy. */
-    register Tcl_Obj *copyPtr;	/* Object with internal rep to set. */
+DupPixelInternalRep(
+    register Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
+    register Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
 {
     PixelRep *oldPtr, *newPtr;
 
@@ -277,9 +278,9 @@ DupPixelInternalRep(srcPtr, copyPtr)
  */
 
 static int
-SetPixelFromAny(interp, objPtr)
-    Tcl_Interp *interp;		/* Used for error reporting if not NULL. */
-    Tcl_Obj *objPtr;		/* The object to convert. */
+SetPixelFromAny(
+    Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
+    Tcl_Obj *objPtr)		/* The object to convert. */
 {
     Tcl_ObjType *typePtr;
     char *string, *rest;
@@ -379,11 +380,11 @@ SetPixelFromAny(interp, objPtr)
  */
 
 int
-Tk_GetMMFromObj(interp, tkwin, objPtr, doublePtr)
-    Tcl_Interp *interp; 	/* Used for error reporting if not NULL. */
-    Tk_Window tkwin;
-    Tcl_Obj *objPtr;		/* The object from which to get mms. */
-    double *doublePtr;		/* Place to store resulting millimeters. */
+Tk_GetMMFromObj(
+    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tk_Window tkwin,
+    Tcl_Obj *objPtr,		/* The object from which to get mms. */
+    double *doublePtr)		/* Place to store resulting millimeters. */
 {
     int result;
     double d;
@@ -435,8 +436,8 @@ Tk_GetMMFromObj(interp, tkwin, objPtr, doublePtr)
  */
 
 static void
-FreeMMInternalRep(objPtr)
-    Tcl_Obj *objPtr;		/* MM object with internal rep to free. */
+FreeMMInternalRep(
+    Tcl_Obj *objPtr)		/* MM object with internal rep to free. */
 {
     ckfree((char *) objPtr->internalRep.otherValuePtr);
     objPtr->internalRep.otherValuePtr = NULL;
@@ -462,9 +463,9 @@ FreeMMInternalRep(objPtr)
  */
 
 static void
-DupMMInternalRep(srcPtr, copyPtr)
-    register Tcl_Obj *srcPtr;	/* Object with internal rep to copy. */
-    register Tcl_Obj *copyPtr;	/* Object with internal rep to set. */
+DupMMInternalRep(
+    register Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
+    register Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
 {
     MMRep *oldPtr, *newPtr;
 
@@ -498,8 +499,8 @@ DupMMInternalRep(srcPtr, copyPtr)
  */
 
 static void
-UpdateStringOfMM(objPtr)
-    register Tcl_Obj *objPtr;   /* pixel obj with string rep to update. */
+UpdateStringOfMM(
+    register Tcl_Obj *objPtr)   /* pixel obj with string rep to update. */
 {
     MMRep *mmPtr;
     char buffer[TCL_DOUBLE_SPACE];
@@ -539,9 +540,9 @@ UpdateStringOfMM(objPtr)
  */
 
 static int
-SetMMFromAny(interp, objPtr)
-    Tcl_Interp *interp;		/* Used for error reporting if not NULL. */
-    Tcl_Obj *objPtr;		/* The object to convert. */
+SetMMFromAny(
+    Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
+    Tcl_Obj *objPtr)		/* The object to convert. */
 {
     Tcl_ObjType *typePtr;
     char *string, *rest;
@@ -665,11 +666,11 @@ SetMMFromAny(interp, objPtr)
  */
 
 int
-TkGetWindowFromObj(interp, tkwin, objPtr, windowPtr)
-    Tcl_Interp *interp; 	/* Used for error reporting if not NULL. */
-    Tk_Window tkwin;		/* A token to get the main window from. */
-    Tcl_Obj *objPtr;		/* The object from which to get window. */
-    Tk_Window *windowPtr;	/* Place to store resulting window. */
+TkGetWindowFromObj(
+    Tcl_Interp *interp, 	/* Used for error reporting if not NULL. */
+    Tk_Window tkwin,		/* A token to get the main window from. */
+    Tcl_Obj *objPtr,		/* The object from which to get window. */
+    Tk_Window *windowPtr)	/* Place to store resulting window. */
 {
     TkMainInfo *mainPtr = ((TkWindow *)tkwin)->mainPtr;
     register WindowRep *winPtr;
@@ -724,9 +725,9 @@ TkGetWindowFromObj(interp, tkwin, objPtr, windowPtr)
  */
 
 static int
-SetWindowFromAny(interp, objPtr)
-    Tcl_Interp *interp;		/* Used for error reporting if not NULL. */
-    register Tcl_Obj *objPtr;	/* The object to convert. */
+SetWindowFromAny(
+    Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
+    register Tcl_Obj *objPtr)	/* The object to convert. */
 {
     Tcl_ObjType *typePtr;
     WindowRep *winPtr;
@@ -771,9 +772,9 @@ SetWindowFromAny(interp, objPtr)
  */
 
 static void
-DupWindowInternalRep(srcPtr, copyPtr)
-    register Tcl_Obj *srcPtr;
-    register Tcl_Obj *copyPtr;
+DupWindowInternalRep(
+    register Tcl_Obj *srcPtr,
+    register Tcl_Obj *copyPtr)
 {
     register WindowRep *oldPtr, *newPtr;
 
@@ -805,8 +806,8 @@ DupWindowInternalRep(srcPtr, copyPtr)
  */
 
 static void
-FreeWindowInternalRep(objPtr)
-    Tcl_Obj *objPtr;		/* Window object with internal rep to free. */
+FreeWindowInternalRep(
+    Tcl_Obj *objPtr)		/* Window object with internal rep to free. */
 {
     ckfree((char *) objPtr->internalRep.otherValuePtr);
     objPtr->internalRep.otherValuePtr = NULL;
@@ -836,13 +837,13 @@ FreeWindowInternalRep(objPtr)
  */
 
 int
-TkParsePadAmount(interp, tkwin, specObj, halfPtr, allPtr)
-    Tcl_Interp *interp;		/* Interpreter for error reporting. */
-    Tk_Window tkwin;		/* A window.  Needed by Tk_GetPixels() */
-    Tcl_Obj *specObj;		/* The argument to "-padx", "-pady", "-ipadx",
+TkParsePadAmount(
+    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    Tk_Window tkwin,		/* A window.  Needed by Tk_GetPixels() */
+    Tcl_Obj *specObj,		/* The argument to "-padx", "-pady", "-ipadx",
 				 * or "-ipady". The thing to be parsed. */
-    int *halfPtr;		/* Write the left/top part of padding here */
-    int *allPtr;		/* Write the total padding here */
+    int *halfPtr,		/* Write the left/top part of padding here */
+    int *allPtr)		/* Write the total padding here */
 {
     int firstInt, secondInt;    /* The two components of the padding */
     int objc;			/* The length of the list (should be 1 or 2) */
@@ -937,7 +938,7 @@ TkParsePadAmount(interp, tkwin, specObj, halfPtr, allPtr)
  */
 
 void
-TkRegisterObjTypes()
+TkRegisterObjTypes(void)
 {
     Tcl_RegisterObjType(&tkBorderObjType);
     Tcl_RegisterObjType(&tkBitmapObjType);

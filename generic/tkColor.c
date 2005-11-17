@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.11 2005/11/04 11:52:50 dkf Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.12 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkColor.h"
@@ -189,7 +189,7 @@ Tk_GetColor(
 				 * suitable for passing to XParseColor). */
 {
     Tcl_HashEntry *nameHashPtr;
-    int new;
+    int isNew;
     TkColor *tkColPtr;
     TkColor *existingColPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -202,8 +202,8 @@ Tk_GetColor(
      * First, check to see if there's already a mapping for this color name.
      */
 
-    nameHashPtr = Tcl_CreateHashEntry(&dispPtr->colorNameTable, name, &new);
-    if (!new) {
+    nameHashPtr = Tcl_CreateHashEntry(&dispPtr->colorNameTable, name, &isNew);
+    if (!isNew) {
 	existingColPtr = (TkColor *) Tcl_GetHashValue(nameHashPtr);
 	for (tkColPtr = existingColPtr; tkColPtr != NULL;
 		tkColPtr = tkColPtr->nextPtr) {
@@ -232,7 +232,7 @@ Tk_GetColor(
 			"\"", NULL);
 	    }
 	}
-	if (new) {
+	if (isNew) {
 	    Tcl_DeleteHashEntry(nameHashPtr);
 	}
 	return NULL;
@@ -289,7 +289,7 @@ Tk_GetColorByValue(
 {
     ValueKey valueKey;
     Tcl_HashEntry *valueHashPtr;
-    int new;
+    int isNew;
     TkColor *tkColPtr;
     Display *display = Tk_Display(tkwin);
     TkDisplay *dispPtr = TkGetDisplay(display);
@@ -308,8 +308,8 @@ Tk_GetColorByValue(
     valueKey.colormap = Tk_Colormap(tkwin);
     valueKey.display = display;
     valueHashPtr = Tcl_CreateHashEntry(&dispPtr->colorValueTable,
-	    (char *) &valueKey, &new);
-    if (!new) {
+	    (char *) &valueKey, &isNew);
+    if (!isNew) {
 	tkColPtr = (TkColor *) Tcl_GetHashValue(valueHashPtr);
 	tkColPtr->resourceRefCount++;
 	return &tkColPtr->color;

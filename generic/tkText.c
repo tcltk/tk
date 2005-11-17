@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.61 2005/10/31 23:21:08 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.62 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "default.h"
@@ -489,15 +489,15 @@ CreateWidget(sharedPtr, tkwin, interp, parent, objc, objv)
     register TkText *textPtr;
     Tk_OptionTable optionTable;
     TkTextIndex startIndex;
-    Tk_Window new;
+    Tk_Window newWin;
 
     /*
      * Create the window.
      */
 
-    new = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(objv[1]),
+    newWin = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(objv[1]),
 	    (char *) NULL);
-    if (new == NULL) {
+    if (newWin == NULL) {
 	return TCL_ERROR;
     }
 
@@ -510,8 +510,8 @@ CreateWidget(sharedPtr, tkwin, interp, parent, objc, objv)
     textPtr = (TkText *) ckalloc(sizeof(TkText));
     memset((VOID *) textPtr, 0, sizeof(TkText));
 
-    textPtr->tkwin = new;
-    textPtr->display = Tk_Display(new);
+    textPtr->tkwin = newWin;
+    textPtr->display = Tk_Display(newWin);
     textPtr->interp = interp;
     textPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(textPtr->tkwin), TextWidgetObjCmd,
@@ -581,8 +581,8 @@ CreateWidget(sharedPtr, tkwin, interp, parent, objc, objv)
     textPtr->charWidth = 1;
     textPtr->charHeight = 10;
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
-    textPtr->prevWidth = Tk_Width(new);
-    textPtr->prevHeight = Tk_Height(new);
+    textPtr->prevWidth = Tk_Width(newWin);
+    textPtr->prevHeight = Tk_Height(newWin);
 
     /*
      * This will add refCounts to textPtr.

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.16 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.17 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -57,24 +57,24 @@
  */
 
 typedef struct Element {
-    Tk_Uid nameUid;			/* Name or class from one element of
-					 * an option spec. */
+    Tk_Uid nameUid;		/* Name or class from one element of an option
+				 * spec. */
     union {
-	struct ElArray *arrayPtr;	/* If this is an intermediate node, a
-					 * pointer to a structure describing
-					 * the remaining elements of all
-					 * options whose prefixes are the same
-					 * up through this element. */
-	Tk_Uid valueUid;		/* For leaf nodes, this is the string
-					 * value of the option. */
+	struct ElArray *arrayPtr;
+				/* If this is an intermediate node, a pointer
+				 * to a structure describing the remaining
+				 * elements of all options whose prefixes are
+				 * the same up through this element. */
+	Tk_Uid valueUid;	/* For leaf nodes, this is the string value of
+				 * the option. */
     } child;
-    int priority;			/* Used to select among matching
-					 * options. Includes both the priority
-					 * level and a serial #. Greater value
-					 * means higher priority. Irrelevant
-					 * except in leaf nodes. */
-    int flags;				/* OR-ed combination of bits. See
-					 * below for values. */
+    int priority;		/* Used to select among matching options.
+				 * Includes both the priority level and a
+				 * serial #. Greater value means higher
+				 * priority. Irrelevant except in leaf
+				 * nodes. */
+    int flags;			/* OR-ed combination of bits. See below for
+				 * values. */
 } Element;
 
 /*
@@ -247,12 +247,12 @@ static void		SetupStacks(TkWindow *winPtr, int leaf);
  */
 
 void
-Tk_AddOption(tkwin, name, value, priority)
-    Tk_Window tkwin;		/* Window token; option will be associated
+Tk_AddOption(
+    Tk_Window tkwin,		/* Window token; option will be associated
 				 * with main window for this window. */
-    CONST char *name;		/* Multi-element name of option. */
-    CONST char *value;		/* String value for option. */
-    int priority;		/* Overall priority level to use for this
+    CONST char *name,		/* Multi-element name of option. */
+    CONST char *value,		/* String value for option. */
+    int priority)		/* Overall priority level to use for this
 				 * option, such as TK_USER_DEFAULT_PRIO or
 				 * TK_INTERACTIVE_PRIO. Must be between 0 and
 				 * TK_MAX_PRIO. */
@@ -399,11 +399,11 @@ Tk_AddOption(tkwin, name, value, priority)
  */
 
 Tk_Uid
-Tk_GetOption(tkwin, name, className)
-    Tk_Window tkwin;		/* Token for window that option is associated
+Tk_GetOption(
+    Tk_Window tkwin,		/* Token for window that option is associated
 				 * with. */
-    CONST char *name;		/* Name of option. */
-    CONST char *className;	/* Class of option. NULL means there is no
+    CONST char *name,		/* Name of option. */
+    CONST char *className)	/* Class of option. NULL means there is no
 				 * class for this option: just check for
 				 * name. */
 {
@@ -610,11 +610,11 @@ Tk_GetOption(tkwin, name, className)
  */
 
 int
-Tk_OptionObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Main window associated with interpreter. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of Tcl_Obj arguments. */
-    Tcl_Obj *CONST objv[];	/* Tcl_Obj arguments. */
+Tk_OptionObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of Tcl_Obj arguments. */
+    Tcl_Obj *CONST objv[])	/* Tcl_Obj arguments. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     int index, result;
@@ -740,8 +740,8 @@ Tk_OptionObjCmd(clientData, interp, objc, objv)
  */
 
 void
-TkOptionDeadWindow(winPtr)
-    register TkWindow *winPtr;		/* Window to be cleaned up. */
+TkOptionDeadWindow(
+    register TkWindow *winPtr)	/* Window to be cleaned up. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -790,8 +790,8 @@ TkOptionDeadWindow(winPtr)
  */
 
 void
-TkOptionClassChanged(winPtr)
-    TkWindow *winPtr;			/* Window whose class changed. */
+TkOptionClassChanged(
+    TkWindow *winPtr)		/* Window whose class changed. */
 {
     int i, j, *basePtr;
     ElArray *arrayPtr;
@@ -848,9 +848,9 @@ TkOptionClassChanged(winPtr)
  */
 
 static int
-ParsePriority(interp, string)
-    Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
-    char *string;		/* Describes a priority level, either
+ParsePriority(
+    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
+    char *string)		/* Describes a priority level, either
 				 * symbolically or numerically. */
 {
     int priority, c;
@@ -878,8 +878,7 @@ ParsePriority(interp, string)
 		|| (priority > 100)) {
 	    Tcl_AppendResult(interp,  "bad priority level \"", string,
 		    "\": must be widgetDefault, startupFile, userDefault, ",
-		    "interactive, or a number between 0 and 100",
-		    (char *) NULL);
+		    "interactive, or a number between 0 and 100", NULL);
 	    return -1;
 	}
     }
@@ -910,12 +909,12 @@ ParsePriority(interp, string)
  */
 
 static int
-AddFromString(interp, tkwin, string, priority)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting results. */
-    Tk_Window tkwin;		/* Token for window: options are entered for
+AddFromString(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting results. */
+    Tk_Window tkwin,		/* Token for window: options are entered for
 				 * this window's main window. */
-    char *string;		/* String containing option specifiers. */
-    int priority;		/* Priority level to use for options in this
+    char *string,		/* String containing option specifiers. */
+    int priority)		/* Priority level to use for options in this
 				 * string, such as TK_USER_DEFAULT_PRIO or
 				 * TK_INTERACTIVE_PRIO. Must be between 0 and
 				 * TK_MAX_PRIO. */
@@ -1060,12 +1059,12 @@ AddFromString(interp, tkwin, string, priority)
  */
 
 static int
-ReadOptionFile(interp, tkwin, fileName, priority)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting results. */
-    Tk_Window tkwin;		/* Token for window: options are entered for
+ReadOptionFile(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting results. */
+    Tk_Window tkwin,		/* Token for window: options are entered for
 				 * this window's main window. */
-    char *fileName;		/* Name of file containing options. */
-    int priority;		/* Priority level to use for options in this
+    char *fileName,		/* Name of file containing options. */
+    int priority)		/* Priority level to use for options in this
 				 * file, such as TK_USER_DEFAULT_PRIO or
 				 * TK_INTERACTIVE_PRIO. Must be between 0 and
 				 * TK_MAX_PRIO. */
@@ -1082,7 +1081,7 @@ ReadOptionFile(interp, tkwin, fileName, priority)
 
     if (Tcl_IsSafe(interp)) {
         Tcl_AppendResult(interp, "can't read options from a file in a",
-                " safe interpreter", (char *) NULL);
+                " safe interpreter", NULL);
         return TCL_ERROR;
     }
 
@@ -1095,7 +1094,7 @@ ReadOptionFile(interp, tkwin, fileName, priority)
     if (chan == NULL) {
         Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "couldn't open \"", fileName,
-		"\": ", Tcl_PosixError(interp), (char *) NULL);
+		"\": ", Tcl_PosixError(interp), NULL);
 	return TCL_ERROR;
     }
 
@@ -1109,7 +1108,7 @@ ReadOptionFile(interp, tkwin, fileName, priority)
 
     if (bufferSize < 0) {
 	Tcl_AppendResult(interp, "error seeking to end of file \"",
-		fileName, "\":", Tcl_PosixError(interp), (char *) NULL);
+		fileName, "\":", Tcl_PosixError(interp), NULL);
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
 
@@ -1118,7 +1117,7 @@ ReadOptionFile(interp, tkwin, fileName, priority)
     bufferSize = Tcl_Read(chan, buffer, bufferSize);
     if (bufferSize < 0) {
 	Tcl_AppendResult(interp, "error reading file \"", fileName, "\":",
-		Tcl_PosixError(interp), (char *) NULL);
+		Tcl_PosixError(interp), NULL);
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
@@ -1147,8 +1146,8 @@ ReadOptionFile(interp, tkwin, fileName, priority)
  */
 
 static ElArray *
-NewArray(numEls)
-    int numEls;			/* How many elements of space to allocate. */
+NewArray(
+    int numEls)			/* How many elements of space to allocate. */
 {
     register ElArray *arrayPtr;
 
@@ -1177,9 +1176,9 @@ NewArray(numEls)
  */
 
 static ElArray *
-ExtendArray(arrayPtr, elPtr)
-    register ElArray *arrayPtr;	/* Array to be extended. */
-    register Element *elPtr;	/* Element to be copied into array. */
+ExtendArray(
+    register ElArray *arrayPtr,	/* Array to be extended. */
+    register Element *elPtr)	/* Element to be copied into array. */
 {
     /*
      * If the current array has filled up, make it bigger.
@@ -1223,10 +1222,10 @@ ExtendArray(arrayPtr, elPtr)
  */
 
 static void
-SetupStacks(winPtr, leaf)
-    TkWindow *winPtr;		/* Window for which information is to be
+SetupStacks(
+    TkWindow *winPtr,		/* Window for which information is to be
 				 * cached. */
-    int leaf;			/* Non-zero means this is the leaf window
+    int leaf)			/* Non-zero means this is the leaf window
 				 * being probed. Zero means this is an
 				 * ancestor of the desired leaf. */
 {
@@ -1388,9 +1387,9 @@ SetupStacks(winPtr, leaf)
  */
 
 static void
-ExtendStacks(arrayPtr, leaf)
-    ElArray *arrayPtr;		/* Array of elements to copy onto stacks. */
-    int leaf;			/* If zero, then don't copy exact leaf
+ExtendStacks(
+    ElArray *arrayPtr,		/* Array of elements to copy onto stacks. */
+    int leaf)			/* If zero, then don't copy exact leaf
 				 * elements. */
 {
     register int count;
@@ -1425,14 +1424,15 @@ ExtendStacks(arrayPtr, leaf)
  */
 
 static void
-OptionThreadExitProc(clientData)
-    ClientData clientData;	/* not used */
+OptionThreadExitProc(
+    ClientData clientData)	/* not used */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->initialized) {
 	int i;
+
 	for (i = 0; i < NUM_STACKS; i++) {
 	    ckfree((char *) tsdPtr->stacks[i]);
 	}
@@ -1458,8 +1458,8 @@ OptionThreadExitProc(clientData)
  */
 
 static void
-OptionInit(mainPtr)
-    register TkMainInfo *mainPtr;
+OptionInit(
+    register TkMainInfo *mainPtr)
 				/* Top-level information about window that
 				 * isn't initialized yet. */
 {
@@ -1524,8 +1524,8 @@ OptionInit(mainPtr)
  */
 
 static void
-ClearOptionTree(arrayPtr)
-    ElArray *arrayPtr;		/* Array of options; delete everything
+ClearOptionTree(
+    ElArray *arrayPtr)		/* Array of options; delete everything
 				 * referred to recursively by this. */
 {
     register Element *elPtr;
@@ -1560,9 +1560,9 @@ ClearOptionTree(arrayPtr)
  */
 
 static int
-GetDefaultOptions(interp, winPtr)
-    Tcl_Interp *interp;		/* Interpreter to use for error reporting. */
-    TkWindow *winPtr;		/* Fetch option defaults for main window
+GetDefaultOptions(
+    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
+    TkWindow *winPtr)		/* Fetch option defaults for main window
 				 * associated with this. */
 {
     char *regProp;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.38 2005/11/10 11:38:29 dkf Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.39 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -962,7 +962,7 @@ Tk_CreateBinding(
     BindingTable *bindPtr = (BindingTable *) bindingTable;
     PatSeq *psPtr;
     unsigned long eventMask;
-    char *new, *old;
+    char *newStr, *oldStr;
 
     psPtr = FindSequence(interp, &bindPtr->patternTable, object, eventString,
 	    1, 1, &eventMask);
@@ -970,7 +970,7 @@ Tk_CreateBinding(
 	return 0;
     }
     if (psPtr->eventProc == NULL) {
-	int new;
+	int isNew;
 	Tcl_HashEntry *hPtr;
 
 	/*
@@ -980,8 +980,8 @@ Tk_CreateBinding(
 	 */
 
 	hPtr = Tcl_CreateHashEntry(&bindPtr->objectTable, (char *) object,
-		&new);
-	if (new) {
+		&isNew);
+	if (isNew) {
 	    psPtr->nextObjPtr = NULL;
 	} else {
 	    psPtr->nextObjPtr = (PatSeq *) Tcl_GetHashValue(hPtr);
@@ -999,23 +999,23 @@ Tk_CreateBinding(
 	append = 0;
     }
 
-    old = (char *) psPtr->clientData;
-    if ((append != 0) && (old != NULL)) {
+    oldStr = (char *) psPtr->clientData;
+    if ((append != 0) && (oldStr != NULL)) {
 	int length;
 
-	length = strlen(old) + strlen(command) + 2;
-	new = (char *) ckalloc((unsigned) length);
-	sprintf(new, "%s\n%s", old, command);
+	length = strlen(oldStr) + strlen(command) + 2;
+	newStr = (char *) ckalloc((unsigned) length);
+	sprintf(newStr, "%s\n%s", oldStr, command);
     } else {
-	new = (char *) ckalloc((unsigned) strlen(command) + 1);
-	strcpy(new, command);
+	newStr = (char *) ckalloc((unsigned) strlen(command) + 1);
+	strcpy(newStr, command);
     }
-    if (old != NULL) {
-	ckfree(old);
+    if (oldStr != NULL) {
+	ckfree(oldStr);
     }
     psPtr->eventProc = EvalTclBinding;
     psPtr->freeProc = FreeTclBinding;
-    psPtr->clientData = (ClientData) new;
+    psPtr->clientData = (ClientData) newStr;
     return eventMask;
 }
 
@@ -1068,7 +1068,7 @@ TkCreateBindingProcedure(
 	return 0;
     }
     if (psPtr->eventProc == NULL) {
-	int new;
+	int isNew;
 	Tcl_HashEntry *hPtr;
 
 	/*
@@ -1078,8 +1078,8 @@ TkCreateBindingProcedure(
 	 */
 
 	hPtr = Tcl_CreateHashEntry(&bindPtr->objectTable, (char *) object,
-		&new);
-	if (new) {
+		&isNew);
+	if (isNew) {
 	    psPtr->nextObjPtr = NULL;
 	} else {
 	    psPtr->nextObjPtr = (PatSeq *) Tcl_GetHashValue(hPtr);
@@ -1638,7 +1638,7 @@ Tk_BindEvent(
 			eventPtr, detail.keySym, &scripts);
 	    } else {
 		if (matchCount >= matchSpace) {
-		    PendingBinding *new;
+		    PendingBinding *newPtr;
 		    unsigned int oldSize, newSize;
 
 		    oldSize = sizeof(staticPending)
@@ -1648,12 +1648,12 @@ Tk_BindEvent(
 		    newSize = sizeof(staticPending)
 			    - sizeof(staticPending.matchArray)
 			    + matchSpace * sizeof(PatSeq*);
-		    new = (PendingBinding *) ckalloc(newSize);
-		    memcpy((void *) new, (void *) pendingPtr, oldSize);
+		    newPtr = (PendingBinding *) ckalloc(newSize);
+		    memcpy((void *) newPtr, (void *) pendingPtr, oldSize);
 		    if (pendingPtr != &staticPending) {
 			ckfree((char *) pendingPtr);
 		    }
-		    pendingPtr = new;
+		    pendingPtr = newPtr;
 		}
 		sourcePtr->refCount++;
 		pendingPtr->matchArray[matchCount] = sourcePtr;
@@ -3998,7 +3998,7 @@ FindSequence(
     Pattern *patPtr;
     PatSeq *psPtr;
     Tcl_HashEntry *hPtr;
-    int flags, count, new;
+    int flags, count, isNew;
     size_t sequenceSize;
     unsigned long eventMask;
     PatternTableKey key;
@@ -4074,9 +4074,9 @@ FindSequence(
     key.object = object;
     key.type = patPtr->eventType;
     key.detail = patPtr->detail;
-    hPtr = Tcl_CreateHashEntry(patternTablePtr, (char *) &key, &new);
+    hPtr = Tcl_CreateHashEntry(patternTablePtr, (char *) &key, &isNew);
     sequenceSize = numPats*sizeof(Pattern);
-    if (!new) {
+    if (!isNew) {
 	for (psPtr = (PatSeq *) Tcl_GetHashValue(hPtr); psPtr != NULL;
 		psPtr = psPtr->nextSeqPtr) {
 	    if ((numPats == psPtr->numPats)
@@ -4088,7 +4088,7 @@ FindSequence(
 	}
     }
     if (!create) {
-	if (new) {
+	if (isNew) {
 	    Tcl_DeleteHashEntry(hPtr);
 	}
 
