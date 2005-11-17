@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.18 2005/09/14 22:51:09 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.19 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -373,19 +373,19 @@ DoConfig(interp, tkwin, specPtr, value, valueIsUid, widgRec)
 	    }
 	    break;
 	case TK_CONFIG_STRING: {
-	    char *old, *new;
+	    char *oldStr, *newStr;
 
 	    if (nullValue) {
-		new = NULL;
+		newStr = NULL;
 	    } else {
-		new = (char *) ckalloc((unsigned) (strlen(value) + 1));
-		strcpy(new, value);
+		newStr = (char *) ckalloc((unsigned) (strlen(value) + 1));
+		strcpy(newStr, value);
 	    }
-	    old = *((char **) ptr);
-	    if (old != NULL) {
-		ckfree(old);
+	    oldStr = *((char **) ptr);
+	    if (oldStr != NULL) {
+		ckfree(oldStr);
 	    }
-	    *((char **) ptr) = new;
+	    *((char **) ptr) = newStr;
 	    break;
 	}
 	case TK_CONFIG_UID:
@@ -416,56 +416,56 @@ DoConfig(interp, tkwin, specPtr, value, valueIsUid, widgRec)
 	    break;
 	}
 	case TK_CONFIG_FONT: {
-	    Tk_Font new;
+	    Tk_Font newFont;
 
 	    if (nullValue) {
-		new = NULL;
+		newFont = NULL;
 	    } else {
-		new = Tk_GetFont(interp, tkwin, value);
-		if (new == NULL) {
+		newFont = Tk_GetFont(interp, tkwin, value);
+		if (newFont == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
 	    Tk_FreeFont(*((Tk_Font *) ptr));
-	    *((Tk_Font *) ptr) = new;
+	    *((Tk_Font *) ptr) = newFont;
 	    break;
 	}
 	case TK_CONFIG_BITMAP: {
-	    Pixmap new, old;
+	    Pixmap newBmp, oldBmp;
 
 	    if (nullValue) {
-		new = None;
+		newBmp = None;
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		new = Tk_GetBitmap(interp, tkwin, uid);
-		if (new == None) {
+		newBmp = Tk_GetBitmap(interp, tkwin, uid);
+		if (newBmp == None) {
 		    return TCL_ERROR;
 		}
 	    }
-	    old = *((Pixmap *) ptr);
-	    if (old != None) {
-		Tk_FreeBitmap(Tk_Display(tkwin), old);
+	    oldBmp = *((Pixmap *) ptr);
+	    if (oldBmp != None) {
+		Tk_FreeBitmap(Tk_Display(tkwin), oldBmp);
 	    }
-	    *((Pixmap *) ptr) = new;
+	    *((Pixmap *) ptr) = newBmp;
 	    break;
 	}
 	case TK_CONFIG_BORDER: {
-	    Tk_3DBorder new, old;
+	    Tk_3DBorder newBorder, oldBorder;
 
 	    if (nullValue) {
-		new = NULL;
+		newBorder = NULL;
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		new = Tk_Get3DBorder(interp, tkwin, uid);
-		if (new == NULL) {
+		newBorder = Tk_Get3DBorder(interp, tkwin, uid);
+		if (newBorder == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
-	    old = *((Tk_3DBorder *) ptr);
-	    if (old != NULL) {
-		Tk_Free3DBorder(old);
+	    oldBorder = *((Tk_3DBorder *) ptr);
+	    if (oldBorder != NULL) {
+		Tk_Free3DBorder(oldBorder);
 	    }
-	    *((Tk_3DBorder *) ptr) = new;
+	    *((Tk_3DBorder *) ptr) = newBorder;
 	    break;
 	}
 	case TK_CONFIG_RELIEF:
@@ -476,24 +476,24 @@ DoConfig(interp, tkwin, specPtr, value, valueIsUid, widgRec)
 	    break;
 	case TK_CONFIG_CURSOR:
 	case TK_CONFIG_ACTIVE_CURSOR: {
-	    Tk_Cursor new, old;
+	    Tk_Cursor newCursor, oldCursor;
 
 	    if (nullValue) {
-		new = None;
+		newCursor = None;
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		new = Tk_GetCursor(interp, tkwin, uid);
-		if (new == None) {
+		newCursor = Tk_GetCursor(interp, tkwin, uid);
+		if (newCursor == None) {
 		    return TCL_ERROR;
 		}
 	    }
-	    old = *((Tk_Cursor *) ptr);
-	    if (old != None) {
-		Tk_FreeCursor(Tk_Display(tkwin), old);
+	    oldCursor = *((Tk_Cursor *) ptr);
+	    if (oldCursor != None) {
+		Tk_FreeCursor(Tk_Display(tkwin), oldCursor);
 	    }
-	    *((Tk_Cursor *) ptr) = new;
+	    *((Tk_Cursor *) ptr) = newCursor;
 	    if (specPtr->type == TK_CONFIG_ACTIVE_CURSOR) {
-		Tk_DefineCursor(tkwin, new);
+		Tk_DefineCursor(tkwin, newCursor);
 	    }
 	    break;
 	}

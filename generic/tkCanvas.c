@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.38 2005/11/04 11:52:50 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.39 2005/11/17 10:57:35 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -385,7 +385,7 @@ Tk_CanvasObjCmd(
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     TkCanvas *canvasPtr;
-    Tk_Window new;
+    Tk_Window newWin;
 
     if (typeList == NULL) {
 	InitCanvas();
@@ -396,8 +396,8 @@ Tk_CanvasObjCmd(
 	return TCL_ERROR;
     }
 
-    new = Tk_CreateWindowFromPath(interp, tkwin, Tcl_GetString(argv[1]), NULL);
-    if (new == NULL) {
+    newWin = Tk_CreateWindowFromPath(interp,tkwin,Tcl_GetString(argv[1]),NULL);
+    if (newWin == NULL) {
 	return TCL_ERROR;
     }
 
@@ -408,8 +408,8 @@ Tk_CanvasObjCmd(
      */
 
     canvasPtr = (TkCanvas *) ckalloc(sizeof(TkCanvas));
-    canvasPtr->tkwin = new;
-    canvasPtr->display = Tk_Display(new);
+    canvasPtr->tkwin = newWin;
+    canvasPtr->display = Tk_Display(newWin);
     canvasPtr->interp = interp;
     canvasPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(canvasPtr->tkwin), CanvasWidgetCmd,
@@ -471,8 +471,8 @@ Tk_CanvasObjCmd(
     canvasPtr->hotPrevPtr = NULL;
     canvasPtr->cursor = None;
     canvasPtr->takeFocus = NULL;
-    canvasPtr->pixelsPerMM = WidthOfScreen(Tk_Screen(new));
-    canvasPtr->pixelsPerMM /= WidthMMOfScreen(Tk_Screen(new));
+    canvasPtr->pixelsPerMM = WidthOfScreen(Tk_Screen(newWin));
+    canvasPtr->pixelsPerMM /= WidthMMOfScreen(Tk_Screen(newWin));
     canvasPtr->flags = 0;
     canvasPtr->nextId = 1;
     canvasPtr->psInfo = NULL;
@@ -1888,7 +1888,7 @@ ConfigureCanvas(
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     XGCValues gcValues;
-    GC new;
+    GC newGC;
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
 	    objc, (CONST char **) objv, (char *) canvasPtr,
@@ -1911,12 +1911,12 @@ ConfigureCanvas(
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;
     gcValues.foreground = Tk_3DBorderColor(canvasPtr->bgBorder)->pixel;
-    new = Tk_GetGC(canvasPtr->tkwin,
+    newGC = Tk_GetGC(canvasPtr->tkwin,
 	    GCFunction|GCGraphicsExposures|GCForeground, &gcValues);
     if (canvasPtr->pixmapGC != None) {
 	Tk_FreeGC(canvasPtr->display, canvasPtr->pixmapGC);
     }
-    canvasPtr->pixmapGC = new;
+    canvasPtr->pixmapGC = newGC;
 
     /*
      * Reset the desired dimensions for the window.

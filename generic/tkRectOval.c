@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.13 2005/08/10 22:02:22 dkf Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.14 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include <stdio.h>
@@ -69,73 +69,65 @@ static Tk_CustomOption pixelOption = {
 };
 
 static Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_CUSTOM, "-activedash", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.activeDash),
+    {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_COLOR, "-activefill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, activeFillColor),
+    {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, activeFillColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_COLOR, "-activeoutline", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.activeColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_BITMAP, "-activeoutlinestipple", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.activeStipple),
 	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-activeoutline", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.activeColor),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-activeoutlinestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.activeStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-activestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, activeFillStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-activewidth", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, activeFillStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
 	"0.0", Tk_Offset(RectOvalItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    {TK_CONFIG_CUSTOM, "-dash", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.dash),
+    {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_PIXELS, "-dashoffset", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
 	"0", Tk_Offset(RectOvalItem, outline.offset),
 	TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_CUSTOM, "-disableddash", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.disabledDash),
+    {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_COLOR, "-disabledfill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, disabledFillColor),
+    {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, disabledFillColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_COLOR, "-disabledoutline", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.disabledColor),
 	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_COLOR, "-disabledoutline", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.disabledColor),
+    {TK_CONFIG_BITMAP, "-disabledoutlinestipple", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.disabledStipple),
 	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-disabledoutlinestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.disabledStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_BITMAP, "-disabledstipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, disabledFillStipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_PIXELS, "-disabledwidth", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, disabledFillStipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_PIXELS, "-disabledwidth", NULL, NULL,
 	"0.0", Tk_Offset(RectOvalItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    {TK_CONFIG_COLOR, "-fill", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, fillColor), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-offset", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-fill", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, fillColor), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
 	"0,0", Tk_Offset(RectOvalItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
-    {TK_CONFIG_COLOR, "-outline", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_COLOR, "-outline", NULL, NULL,
 	"black", Tk_Offset(RectOvalItem, outline.color), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-outlineoffset", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
 	"0,0", Tk_Offset(RectOvalItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
-    {TK_CONFIG_BITMAP, "-outlinestipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, outline.stipple),
-	TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-state", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(Tk_Item, state),TK_CONFIG_NULL_OK,
-	&stateOption},
-    {TK_CONFIG_BITMAP, "-stipple", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(RectOvalItem, fillStipple),TK_CONFIG_NULL_OK},
-    {TK_CONFIG_CUSTOM, "-tags", (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
-    {TK_CONFIG_CUSTOM, "-width", (char *) NULL, (char *) NULL,
+    {TK_CONFIG_BITMAP, "-outlinestipple", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, outline.stipple), TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
+	NULL, Tk_Offset(Tk_Item, state),TK_CONFIG_NULL_OK, &stateOption},
+    {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
+	NULL, Tk_Offset(RectOvalItem, fillStipple),TK_CONFIG_NULL_OK},
+    {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
+	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
+    {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
 	"1.0", Tk_Offset(RectOvalItem, outline.width),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
-	(char *) NULL, 0, 0}
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
 };
 
 /*
@@ -192,12 +184,12 @@ Tk_ItemType tkRectangleType = {
     RectOvalToPostscript,	/* postscriptProc */
     ScaleRectOval,		/* scaleProc */
     TranslateRectOval,		/* translateProc */
-    (Tk_ItemIndexProc *) NULL,	/* indexProc */
-    (Tk_ItemCursorProc *) NULL,	/* icursorProc */
-    (Tk_ItemSelectionProc *) NULL, /* selectionProc */
-    (Tk_ItemInsertProc *) NULL,	/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,	/* dTextProc */
-    (Tk_ItemType *) NULL,	/* nextPtr */
+    NULL,			/* indexProc */
+    NULL,			/* icursorProc */
+    NULL,			/* selectionProc */
+    NULL,			/* insertProc */
+    NULL,			/* dTextProc */
+    NULL,			/* nextPtr */
 };
 
 Tk_ItemType tkOvalType = {
@@ -215,12 +207,12 @@ Tk_ItemType tkOvalType = {
     RectOvalToPostscript,	/* postscriptProc */
     ScaleRectOval,		/* scaleProc */
     TranslateRectOval,		/* translateProc */
-    (Tk_ItemIndexProc *) NULL,	/* indexProc */
-    (Tk_ItemCursorProc *) NULL,	/* cursorProc */
-    (Tk_ItemSelectionProc *) NULL, /* selectionProc */
-    (Tk_ItemInsertProc *) NULL,	/* insertProc */
-    (Tk_ItemDCharsProc *) NULL,	/* dTextProc */
-    (Tk_ItemType *) NULL,	/* nextPtr */
+    NULL,			/* indexProc */
+    NULL,			/* cursorProc */
+    NULL,			/* selectionProc */
+    NULL,			/* insertProc */
+    NULL,			/* dTextProc */
+    NULL,			/* nextPtr */
 };
 
 /*
@@ -244,13 +236,13 @@ Tk_ItemType tkOvalType = {
  */
 
 static int
-CreateRectOval(interp, canvas, itemPtr, objc, objv)
-    Tcl_Interp *interp;		/* For error reporting. */
-    Tk_Canvas canvas;		/* Canvas to hold new item. */
-    Tk_Item *itemPtr;		/* Record to hold new item; header has been
+CreateRectOval(
+    Tcl_Interp *interp,		/* For error reporting. */
+    Tk_Canvas canvas,		/* Canvas to hold new item. */
+    Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc;			/* Number of arguments in objv. */
-    Tcl_Obj *CONST objv[];	/* Arguments describing rectangle. */
+    int objc,			/* Number of arguments in objv. */
+    Tcl_Obj *CONST objv[])	/* Arguments describing rectangle. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
     int i;
@@ -282,6 +274,7 @@ CreateRectOval(interp, canvas, itemPtr, objc, objv)
 
     for (i = 1; i < objc; i++) {
 	char *arg = Tcl_GetString(objv[i]);
+
 	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
 	    break;
 	}
@@ -318,13 +311,13 @@ CreateRectOval(interp, canvas, itemPtr, objc, objv)
  */
 
 static int
-RectOvalCoords(interp, canvas, itemPtr, objc, objv)
-    Tcl_Interp *interp;		/* Used for error reporting. */
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item whose coordinates are to be read or
+RectOvalCoords(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc;			/* Number of coordinates supplied in objv. */
-    Tcl_Obj *CONST objv[];	/* Array of coordinates: x1,y1,x2,y2,... */
+    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Obj *CONST objv[])	/* Array of coordinates: x1,y1,x2,y2,... */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
 
@@ -408,13 +401,13 @@ RectOvalCoords(interp, canvas, itemPtr, objc, objv)
  */
 
 static int
-ConfigureRectOval(interp, canvas, itemPtr, objc, objv, flags)
-    Tcl_Interp *interp;		/* Used for error reporting. */
-    Tk_Canvas canvas;		/* Canvas containing itemPtr. */
-    Tk_Item *itemPtr;		/* Rectangle item to reconfigure. */
-    int objc;			/* Number of elements in objv. */
-    Tcl_Obj *CONST objv[];	/* Arguments describing things to configure. */
-    int flags;			/* Flags to pass to Tk_ConfigureWidget. */
+ConfigureRectOval(
+    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tk_Canvas canvas,		/* Canvas containing itemPtr. */
+    Tk_Item *itemPtr,		/* Rectangle item to reconfigure. */
+    int objc,			/* Number of elements in objv. */
+    Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
+    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
     XGCValues gcValues;
@@ -577,10 +570,10 @@ ConfigureRectOval(interp, canvas, itemPtr, objc, objv, flags)
  */
 
 static void
-DeleteRectOval(canvas, itemPtr, display)
-    Tk_Canvas canvas;		/* Info about overall widget. */
-    Tk_Item *itemPtr;		/* Item that is being deleted. */
-    Display *display;		/* Display containing window for canvas. */
+DeleteRectOval(
+    Tk_Canvas canvas,		/* Info about overall widget. */
+    Tk_Item *itemPtr,		/* Item that is being deleted. */
+    Display *display)		/* Display containing window for canvas. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
 
@@ -627,9 +620,9 @@ DeleteRectOval(canvas, itemPtr, display)
 
 	/* ARGSUSED */
 static void
-ComputeRectOvalBbox(canvas, rectOvalPtr)
-    Tk_Canvas canvas;		/* Canvas that contains item. */
-    RectOvalItem *rectOvalPtr;	/* Item whose bbox is to be recomputed. */
+ComputeRectOvalBbox(
+    Tk_Canvas canvas,		/* Canvas that contains item. */
+    RectOvalItem *rectOvalPtr)	/* Item whose bbox is to be recomputed. */
 {
     int bloat, tmp;
     double dtmp, width;
@@ -743,12 +736,13 @@ ComputeRectOvalBbox(canvas, rectOvalPtr)
  */
 
 static void
-DisplayRectOval(canvas, itemPtr, display, drawable, x, y, width, height)
-    Tk_Canvas canvas;		/* Canvas that contains item. */
-    Tk_Item *itemPtr;		/* Item to be displayed. */
-    Display *display;		/* Display on which to draw item. */
-    Drawable drawable;		/* Pixmap or window in which to draw item. */
-    int x, y, width, height;	/* Describes region of canvas that must be
+DisplayRectOval(
+    Tk_Canvas canvas,		/* Canvas that contains item. */
+    Tk_Item *itemPtr,		/* Item to be displayed. */
+    Display *display,		/* Display on which to draw item. */
+    Drawable drawable,		/* Pixmap or window in which to draw item. */
+    int x, int y, int width, int height)
+				/* Describes region of canvas that must be
 				 * redisplayed (not used). */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
@@ -874,10 +868,10 @@ DisplayRectOval(canvas, itemPtr, display, drawable, x, y, width, height)
 
 	/* ARGSUSED */
 static double
-RectToPoint(canvas, itemPtr, pointPtr)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item to check against point. */
-    double *pointPtr;		/* Pointer to x and y coordinates. */
+RectToPoint(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against point. */
+    double *pointPtr)		/* Pointer to x and y coordinates. */
 {
     RectOvalItem *rectPtr = (RectOvalItem *) itemPtr;
     double xDiff, yDiff, x1, y1, x2, y2, inc, tmp;
@@ -994,10 +988,10 @@ RectToPoint(canvas, itemPtr, pointPtr)
 
 	/* ARGSUSED */
 static double
-OvalToPoint(canvas, itemPtr, pointPtr)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item to check against point. */
-    double *pointPtr;		/* Pointer to x and y coordinates. */
+OvalToPoint(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against point. */
+    double *pointPtr)		/* Pointer to x and y coordinates. */
 {
     RectOvalItem *ovalPtr = (RectOvalItem *) itemPtr;
     double width;
@@ -1049,10 +1043,10 @@ OvalToPoint(canvas, itemPtr, pointPtr)
 
 	/* ARGSUSED */
 static int
-RectToArea(canvas, itemPtr, areaPtr)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item to check against rectangle. */
-    double *areaPtr;		/* Pointer to array of four coordinates (x1,
+RectToArea(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against rectangle. */
+    double *areaPtr)		/* Pointer to array of four coordinates (x1,
 				 * y1, x2, y2) describing rectangular area. */
 {
     RectOvalItem *rectPtr = (RectOvalItem *) itemPtr;
@@ -1123,10 +1117,10 @@ RectToArea(canvas, itemPtr, areaPtr)
 
 	/* ARGSUSED */
 static int
-OvalToArea(canvas, itemPtr, areaPtr)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item to check against oval. */
-    double *areaPtr;		/* Pointer to array of four coordinates (x1,
+OvalToArea(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against oval. */
+    double *areaPtr)		/* Pointer to array of four coordinates (x1,
 				 * y1, x2, y2) describing rectangular area. */
 {
     RectOvalItem *ovalPtr = (RectOvalItem *) itemPtr;
@@ -1219,12 +1213,13 @@ OvalToArea(canvas, itemPtr, areaPtr)
  */
 
 static void
-ScaleRectOval(canvas, itemPtr, originX, originY, scaleX, scaleY)
-    Tk_Canvas canvas;		/* Canvas containing rectangle. */
-    Tk_Item *itemPtr;		/* Rectangle to be scaled. */
-    double originX, originY;	/* Origin about which to scale rect. */
-    double scaleX;		/* Amount to scale in X direction. */
-    double scaleY;		/* Amount to scale in Y direction. */
+ScaleRectOval(
+    Tk_Canvas canvas,		/* Canvas containing rectangle. */
+    Tk_Item *itemPtr,		/* Rectangle to be scaled. */
+    double originX, double originY,
+				/* Origin about which to scale rect. */
+    double scaleX,		/* Amount to scale in X direction. */
+    double scaleY)		/* Amount to scale in Y direction. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
 
@@ -1254,10 +1249,11 @@ ScaleRectOval(canvas, itemPtr, originX, originY, scaleX, scaleY)
  */
 
 static void
-TranslateRectOval(canvas, itemPtr, deltaX, deltaY)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item that is being moved. */
-    double deltaX, deltaY;	/* Amount by which item is to be moved. */
+TranslateRectOval(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double deltaX, double deltaY)
+				/* Amount by which item is to be moved. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
 
@@ -1289,11 +1285,11 @@ TranslateRectOval(canvas, itemPtr, deltaX, deltaY)
  */
 
 static int
-RectOvalToPostscript(interp, canvas, itemPtr, prepass)
-    Tcl_Interp *interp;		/* Interpreter for error reporting. */
-    Tk_Canvas canvas;		/* Information about overall canvas. */
-    Tk_Item *itemPtr;		/* Item for which Postscript is wanted. */
-    int prepass;		/* 1 means this is a prepass to collect font
+RectOvalToPostscript(
+    Tcl_Interp *interp,		/* Interpreter for error reporting. */
+    Tk_Canvas canvas,		/* Information about overall canvas. */
+    Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
+    int prepass)		/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -1357,20 +1353,20 @@ RectOvalToPostscript(interp, canvas, itemPtr, prepass)
      */
 
     if (fillColor != NULL) {
-	Tcl_AppendResult(interp, pathCmd, (char *) NULL);
+	Tcl_AppendResult(interp, pathCmd, NULL);
 	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (fillStipple != None) {
-	    Tcl_AppendResult(interp, "clip ", (char *) NULL);
+	    Tcl_AppendResult(interp, "clip ", NULL);
 	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (color != NULL) {
-		Tcl_AppendResult(interp, "grestore gsave\n", (char *) NULL);
+		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
 	    }
 	} else {
-	    Tcl_AppendResult(interp, "fill\n", (char *) NULL);
+	    Tcl_AppendResult(interp, "fill\n", NULL);
 	}
     }
 
@@ -1380,7 +1376,7 @@ RectOvalToPostscript(interp, canvas, itemPtr, prepass)
 
     if (color != NULL) {
 	Tcl_AppendResult(interp, pathCmd, "0 setlinejoin 2 setlinecap\n",
-		(char *) NULL);
+		NULL);
 	if (Tk_CanvasPsOutline(canvas, itemPtr,
 		&(rectOvalPtr->outline))!= TCL_OK) {
 	    return TCL_ERROR;

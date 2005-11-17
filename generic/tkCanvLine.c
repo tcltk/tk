@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.17 2005/11/04 15:23:05 dkf Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.18 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include <stdio.h>
@@ -955,11 +955,11 @@ LineInsert(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     int length, objc, i;
-    double *new, *coordPtr;
+    double *newCoordPtr, *coordPtr;
     Tk_State state = itemPtr->state;
     Tcl_Obj **objv;
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
 
@@ -982,24 +982,27 @@ LineInsert(
 	linePtr->coordPtr[length-2] = linePtr->lastArrowPtr[0];
 	linePtr->coordPtr[length-1] = linePtr->lastArrowPtr[1];
     }
-    new = (double *) ckalloc((unsigned)(sizeof(double) * (length + objc)));
-    for(i=0; i<beforeThis; i++) {
-	new[i] = linePtr->coordPtr[i];
+    newCoordPtr = (double *)
+	    ckalloc(sizeof(double) * (unsigned)(length + objc));
+    for (i=0; i<beforeThis; i++) {
+	newCoordPtr[i] = linePtr->coordPtr[i];
     }
-    for(i=0; i<objc; i++) {
-	if (Tcl_GetDoubleFromObj(NULL,objv[i],
-		new+(i+beforeThis))!=TCL_OK) {
+    for (i=0; i<objc; i++) {
+	if (Tcl_GetDoubleFromObj(NULL, objv[i],
+		&newCoordPtr[i + beforeThis]) != TCL_OK) {
 	    Tcl_ResetResult(((TkCanvas *)canvas)->interp);
-	    ckfree((char *) new);
+	    ckfree((char *) newCoordPtr);
 	    return;
 	}
     }
 
-    for(i=beforeThis; i<length; i++) {
-	new[i+objc] = linePtr->coordPtr[i];
+    for (i=beforeThis; i<length; i++) {
+	newCoordPtr[i+objc] = linePtr->coordPtr[i];
     }
-    if(linePtr->coordPtr) ckfree((char *)linePtr->coordPtr);
-    linePtr->coordPtr = new;
+    if (linePtr->coordPtr) {
+	ckfree((char *)linePtr->coordPtr);
+    }
+    linePtr->coordPtr = newCoordPtr;
     linePtr->numPoints = (length + objc)/2;
 
     if ((length>3) && (state != TK_STATE_HIDDEN)) {
@@ -1047,9 +1050,9 @@ LineInsert(
 	    }
 	}
 	coordPtr = linePtr->coordPtr+beforeThis+2;
-	for(i=2; i<objc; i+=2) {
+	for (i=2; i<objc; i+=2) {
 	    TkIncludePoint(itemPtr, coordPtr);
-		coordPtr+=2;
+	    coordPtr+=2;
 	}
     }
     if (linePtr->firstArrowPtr != NULL) {
@@ -1061,12 +1064,13 @@ LineInsert(
 	linePtr->lastArrowPtr = NULL;
     }
     if (linePtr->arrow != ARROWS_NONE) {
-	    ConfigureArrows(canvas, linePtr);
+	ConfigureArrows(canvas, linePtr);
     }
 
-    if(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW) {
+    if (itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW) {
 	double width;
 	int intWidth;
+
 	if ((linePtr->firstArrowPtr != NULL) && (beforeThis>2)) {
 	    /*
 	     * Include new first arrow.

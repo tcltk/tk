@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.24 2005/11/07 15:40:18 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.25 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -890,14 +890,14 @@ CreateNamedFont(
 {
     TkFontInfo *fiPtr;
     Tcl_HashEntry *namedHashPtr;
-    int new;
+    int isNew;
     NamedFont *nfPtr;
 
     fiPtr = ((TkWindow *) tkwin)->mainPtr->fontInfoPtr;
 
-    namedHashPtr = Tcl_CreateHashEntry(&fiPtr->namedTable, name, &new);
+    namedHashPtr = Tcl_CreateHashEntry(&fiPtr->namedTable, name, &isNew);
 
-    if (new == 0) {
+    if (!isNew) {
 	nfPtr = (NamedFont *) Tcl_GetHashValue(namedHashPtr);
 	if (nfPtr->deletePending == 0) {
 	    Tcl_ResetResult(interp);
@@ -998,7 +998,7 @@ Tk_AllocFontFromObj(
     TkFontInfo *fiPtr;
     Tcl_HashEntry *cacheHashPtr, *namedHashPtr;
     TkFont *fontPtr, *firstFontPtr, *oldFontPtr;
-    int new, descent;
+    int isNew, descent;
     NamedFont *nfPtr;
 
     fiPtr = ((TkWindow *) tkwin)->mainPtr->fontInfoPtr;
@@ -1028,13 +1028,13 @@ Tk_AllocFontFromObj(
      * one of them is for the right screen.
      */
 
-    new = 0;
+    isNew = 0;
     if (oldFontPtr != NULL) {
 	cacheHashPtr = oldFontPtr->cacheHashPtr;
 	FreeFontObjProc(objPtr);
     } else {
 	cacheHashPtr = Tcl_CreateHashEntry(&fiPtr->fontCache,
-		Tcl_GetString(objPtr), &new);
+		Tcl_GetString(objPtr), &isNew);
     }
     firstFontPtr = (TkFont *) Tcl_GetHashValue(cacheHashPtr);
     for (fontPtr = firstFontPtr; (fontPtr != NULL);
@@ -1073,7 +1073,7 @@ Tk_AllocFontFromObj(
 	    Tcl_Obj *dupObjPtr = Tcl_DuplicateObj(objPtr);
 
 	    if (ParseFontNameObj(interp, tkwin, dupObjPtr, &fa) != TCL_OK) {
-		if (new) {
+		if (isNew) {
 		    Tcl_DeleteHashEntry(cacheHashPtr);
 		}
 		Tcl_DecrRefCount(dupObjPtr);

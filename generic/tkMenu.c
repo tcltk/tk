@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.31 2005/10/12 09:43:37 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.32 2005/11/17 10:57:35 dkf Exp $
  */
 
 /*
@@ -460,13 +460,13 @@ MenuCmd(clientData, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument strings. */
 {
     Tk_Window tkwin = Tk_MainWindow(interp);
-    Tk_Window new;
+    Tk_Window newWin;
     register TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
     int i, index;
     int toplevel;
     char *windowName;
-    static CONST char *typeStringList[] = {"-type", (char *) NULL};
+    static CONST char *typeStringList[] = {"-type", NULL};
     TkMenuOptionTables *optionTablesPtr = (TkMenuOptionTables *) clientData;
 
     if (objc < 2) {
@@ -489,9 +489,9 @@ MenuCmd(clientData, interp, objc, objv)
     }
 
     windowName = Tcl_GetStringFromObj(objv[1], NULL);
-    new = Tk_CreateWindowFromPath(interp, tkwin, windowName, toplevel ? ""
-	    : NULL);
-    if (new == NULL) {
+    newWin = Tk_CreateWindowFromPath(interp, tkwin, windowName,
+	    toplevel ? "" : NULL);
+    if (newWin == NULL) {
 	return TCL_ERROR;
     }
 
@@ -503,8 +503,8 @@ MenuCmd(clientData, interp, objc, objv)
 
     menuPtr = (TkMenu *) ckalloc(sizeof(TkMenu));
     memset(menuPtr, 0, sizeof(TkMenu));
-    menuPtr->tkwin = new;
-    menuPtr->display = Tk_Display(new);
+    menuPtr->tkwin = newWin;
+    menuPtr->display = Tk_Display(newWin);
     menuPtr->interp = interp;
     menuPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd,
@@ -518,7 +518,8 @@ MenuCmd(clientData, interp, objc, objv)
 
     Tk_SetClass(menuPtr->tkwin, "Menu");
     Tk_SetClassProcs(menuPtr->tkwin, &menuClass, (ClientData) menuPtr);
-    Tk_CreateEventHandler(new, ExposureMask|StructureNotifyMask|ActivateMask,
+    Tk_CreateEventHandler(newWin,
+	    ExposureMask|StructureNotifyMask|ActivateMask,
 	    TkMenuEventProc, (ClientData) menuPtr);
     if (Tk_InitOptions(interp, (char *) menuPtr,
 	    menuPtr->optionTablesPtr->menuOptionTable, menuPtr->tkwin)

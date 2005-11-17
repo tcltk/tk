@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.69 2005/09/21 10:54:40 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.70 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -721,7 +721,7 @@ NameWindow(interp, winPtr, parentPtr, name)
 #define FIXED_SIZE 200
     char staticSpace[FIXED_SIZE];
     char *pathName;
-    int new;
+    int isNew;
     Tcl_HashEntry *hPtr;
     int length1, length2;
 
@@ -791,13 +791,14 @@ NameWindow(interp, winPtr, parentPtr, name)
 	pathName[length1] = '.';
 	strcpy(pathName+length1+1, name);
     }
-    hPtr = Tcl_CreateHashEntry(&parentPtr->mainPtr->nameTable, pathName, &new);
+    hPtr = Tcl_CreateHashEntry(&parentPtr->mainPtr->nameTable, pathName,
+	    &isNew);
     if (pathName != staticSpace) {
 	ckfree(pathName);
     }
-    if (!new) {
+    if (!isNew) {
 	Tcl_AppendResult(interp, "window name \"", name,
-		"\" already exists in parent", (char *) NULL);
+		"\" already exists in parent", NULL);
 	return TCL_ERROR;
     }
     Tcl_SetHashValue(hPtr, winPtr);
@@ -1668,7 +1669,7 @@ Tk_MakeWindowExist(tkwin)
     Window parent;
     Tcl_HashEntry *hPtr;
     Tk_ClassCreateProc *createProc;
-    int new;
+    int isNew;
 
     if (winPtr->window != None) {
 	return;
@@ -1691,7 +1692,7 @@ Tk_MakeWindowExist(tkwin)
     }
 
     hPtr = Tcl_CreateHashEntry(&winPtr->dispPtr->winTable,
-	    (char *) winPtr->window, &new);
+	    (char *) winPtr->window, &isNew);
     Tcl_SetHashValue(hPtr, winPtr);
     winPtr->dirtyAtts = 0;
     winPtr->dirtyChanges = 0;

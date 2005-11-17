@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.6 2005/09/08 23:52:52 dkf Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.7 2005/11/17 10:57:35 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -341,7 +341,7 @@ Tk_MaintainGeometry(slave, master, x, y, width, height)
     Tcl_HashEntry *hPtr;
     MaintainMaster *masterPtr;
     register MaintainSlave *slavePtr;
-    int new, map;
+    int isNew, map;
     Tk_Window ancestor, parent;
     TkDisplay *dispPtr = ((TkWindow *) master)->dispPtr;
 
@@ -379,8 +379,8 @@ Tk_MaintainGeometry(slave, master, x, y, width, height)
 
     parent = Tk_Parent(slave);
     hPtr = Tcl_CreateHashEntry(&dispPtr->maintainHashTable,
-	    (char *) master, &new);
-    if (!new) {
+	    (char *) master, &isNew);
+    if (!isNew) {
 	masterPtr = (MaintainMaster *) Tcl_GetHashValue(hPtr);
     } else {
 	masterPtr = (MaintainMaster *) ckalloc(sizeof(MaintainMaster));
