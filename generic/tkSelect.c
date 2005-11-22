@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.18 2005/11/17 16:21:56 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.19 2005/11/22 11:16:25 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1499,6 +1499,7 @@ TkSelDefaultSelection(
 	}
 	length = Tcl_DStringLength(&ds);
 	if (length >= maxBytes) {
+	    Tcl_DStringFree(&ds);
 	    return -1;
 	}
 	memcpy(buffer, Tcl_DStringValue(&ds), (unsigned) (1+length));
