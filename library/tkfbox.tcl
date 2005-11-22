@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.53 2005/11/22 10:57:50 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.54 2005/11/22 13:22:49 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -157,7 +157,7 @@ proc ::tk::IconList_Selection {w op args} {
     }
 }
 
-proc ::tk::IconList_Curselection {w} {
+proc ::tk::IconList_CurSelection {w} {
     upvar ::tk::$w data
     return $data(selection)
 }
@@ -237,7 +237,6 @@ proc ::tk::IconList_Create {w} {
     set data(maxTW) 1
     set data(maxTH) 1
     set data(numItems) 0
-    set data(curItem)  {}
     set data(noScroll) 1
     set data(selection) {}
     set data(index,anchor) ""
@@ -336,7 +335,6 @@ proc ::tk::IconList_DeleteAll {w} {
     set data(maxTW) 1
     set data(maxTH) 1
     set data(numItems) 0
-    set data(curItem)  {}
     set data(noScroll) 1
     set data(selection) {}
     set data(index,anchor) ""
@@ -471,9 +469,6 @@ proc ::tk::IconList_Arrange {w} {
 	set data(itemsPerColumn) 1
     }
 
-    if {$data(curItem) != ""} {
-	IconList_Select $w [lindex [lindex $data(list) $data(curItem)] 2] 0
-    }
     IconList_DrawSelection $w
 }
 
@@ -667,7 +662,7 @@ proc ::tk::IconList_UpDown {w amount} {
 	return
     }
 
-    set curr [tk::IconList_Curselection $w]
+    set curr [tk::IconList_CurSelection $w]
     if { [llength $curr] == 0 } {
 	set i 0
     } else {
@@ -698,7 +693,7 @@ proc ::tk::IconList_LeftRight {w amount} {
 	return
     }
 
-    set curr [IconList_Curselection $w]
+    set curr [IconList_CurSelection $w]
     if { [llength $curr] == 0 } {
 	set i 0
     } else {
@@ -743,12 +738,6 @@ proc ::tk::IconList_Goto {w text} {
 
     if {$text eq ""} {
 	return
-    }
-
-    if {$data(curItem) eq "" || $data(curItem) == 0} {
-	set start  0
-    } else {
-	set start  $data(curItem)
     }
 
     set text [string tolower $text]
@@ -1582,7 +1571,7 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 	# names as a true list, watching out for a single file with a
 	# space in the name.  Thus we query the IconList directly.
 
-	set selIcos [::tk::IconList_Curselection $data(icons)]
+	set selIcos [::tk::IconList_CurSelection $data(icons)]
 	set data(selectFile) ""
 	if {[llength $selIcos] == 0 && $text ne ""} {
 	    # This assumes the user typed something in without selecting
@@ -1703,7 +1692,7 @@ proc ::tk::dialog::file::OkCmd {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     set filenames {}
-    foreach item [::tk::IconList_Curselection $data(icons)] {
+    foreach item [::tk::IconList_CurSelection $data(icons)] {
 	lappend filenames [::tk::IconList_Get $data(icons) $item]
     }
 
@@ -1746,7 +1735,7 @@ proc ::tk::dialog::file::ListBrowse {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     set text {}
-    foreach item [::tk::IconList_Curselection $data(icons)] {
+    foreach item [::tk::IconList_CurSelection $data(icons)] {
 	lappend text [::tk::IconList_Get $data(icons) $item]
     }
     if {[llength $text] == 0} {
