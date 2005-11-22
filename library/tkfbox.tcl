@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.8 2005/04/12 20:33:35 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.9 2005/11/22 11:00:38 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -848,7 +848,7 @@ proc ::tk::dialog::file:: {type args} {
     # Add traces on the selectPath variable
     #
 
-    trace variable data(selectPath) w "::tk::dialog::file::SetPath $w"
+    trace variable data(selectPath) w [list ::tk::dialog::file::SetPath $w]
     $data(dirMenuBtn) configure \
 	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
 
