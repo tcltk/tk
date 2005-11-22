@@ -1,5 +1,10 @@
 2005-11-22  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* doc/GetFont.3: Revert previous fix; a NULL interp is now legal.
+	* generic/tkFont.c (ParseFontNameObj, GetAttributeInfoObj): Allow
+        these functions to work with a NULL interp by making them check when
+        generating error messages. [Bug 1151523]
+
 	* library/tkfbox.tcl (::tk::dialog::file::): Correct the quoting of
 	the script used in variable traces so that widget names with spaces in
 	will work. [Bug 1335485]
