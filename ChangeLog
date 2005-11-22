@@ -5,12 +5,14 @@
 	each step [Bug 1357575]
 
 2005-11-15  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixWm.c, tests/unixWm.test, doc/wm.n:
-	Support for [wm attributes] on X11 [TIP#231, patch#1062022].
+	Support for [wm attributes] on X11 [TIP#231, Patch 1062022].
 
 2005-11-14  Joe English  <jenglish@users.sourceforge.net>
+
 	* library/bgerror.tcl: Truncate error messages at 45 characters
-	instead of 30 [#1224235].
+	instead of 30 [Bug 1224235].
 
 2005-11-14  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
