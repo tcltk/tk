@@ -1,5 +1,9 @@
 2005-11-22  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* generic/tkFont.c (ParseFontNameObj, ConfigAttributesObj): Allow
+	these functions to work with a NULL interp by making them check when
+	generating error messages. [Bug 1151523]
+
 	* unix/tkUnixSelect.c (SelCvtToX, SelCvtFromX): Backport of fixes for
 	* generic/tkSelect.c (TkSelDefaultSelection):	"spaces in atom names"
 	* tests/select.test (select-9.5):		problems. [Bug 1353414]
