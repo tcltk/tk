@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.9 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: select.test,v 1.9.2.1 2005/11/22 11:32:37 dkf Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -848,6 +848,21 @@ test select-9.4 {SelCvtToX and SelCvtFromX procedures} {unixOnly} {
     cleanupbg
     lappend result $selInfo
 } {{0x10 0x0 0x20} {TEST 0 4000}}
+test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
+    setup
+    setupbg
+} -constraints unix -body {
+    # Ensure that lists of atoms are constructed correctly, even when the
+    # atom names have spaces in. [Bug 1353414]
+    set selValue "foo bar"
+    set selInfo ""
+    set selType {text/x-tk-test;detail="foo bar"}
+    selection handle -selection PRIMARY -format STRING -type $selType \
+	.f1 [list handler $selType]
+    lsort [dobg {selection get TARGETS}]
+} -cleanup {
+    cleanupbg
+} -result {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW {text/x-tk-test;detail="foo bar"}}
 
 ##############################################################################
 
