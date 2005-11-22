@@ -1,8 +1,14 @@
+2005-11-22  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/tkfbox.tcl (::tk::dialog::file::): Correct the quoting of
+	the script used in variable traces so that widget names with spaces in
+	will work. [Bug 1335485]
+
 2005-11-16  Vince Darley <vincentdarley@users.sourceforge.net>
 
-	* doc/text.n: clarify left to right interpretation of index
-	modifiers, including the fact that validation occurs after
-	each step [Bug 1357575]
+	* doc/text.n: clarify left to right interpretation of index modifiers,
+	including the fact that validation occurs after each step. [Bug
+	1357575]
 
 2005-11-15  Joe English  <jenglish@users.sourceforge.net>
 
