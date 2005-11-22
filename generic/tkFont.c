@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.25 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.26 2005/11/22 11:59:04 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -2893,8 +2893,10 @@ ConfigAttributesObj(
 	     * bad option, rather than that the value for "-xyz" is missing.
 	     */
 
-	    Tcl_AppendResult(interp, "value for \"",
-		    Tcl_GetString(optionPtr), "\" option missing", NULL);
+	    if (interp != NULL) {
+		Tcl_AppendResult(interp, "value for \"",
+			Tcl_GetString(optionPtr), "\" option missing", NULL);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -3056,8 +3058,7 @@ GetAttributeInfoObj(
 
 static int
 ParseFontNameObj(
-    Tcl_Interp *interp,		/* Interp for error return. Must not be
-				 * NULL. */
+    Tcl_Interp *interp,		/* Interp for error return. */
     Tk_Window tkwin,		/* For display on which font is used. */
     Tcl_Obj *objPtr,		/* Parseable font description object. */
     TkFontAttributes *faPtr)	/* Filled with attributes parsed from font
@@ -3119,7 +3120,10 @@ ParseFontNameObj(
 
     if ((Tcl_ListObjGetElements(NULL, objPtr, &objc, &objv) != TCL_OK)
 	    || (objc < 1)) {
-	Tcl_AppendResult(interp, "font \"", string, "\" doesn't exist", NULL);
+	if (interp != NULL) {
+	    Tcl_AppendResult(interp, "font \"", string, "\" doesn't exist",
+		    NULL);
+	}
 	return TCL_ERROR;
     }
 
@@ -3164,8 +3168,10 @@ ParseFontNameObj(
 	 * Unknown style.
 	 */
 
-	Tcl_AppendResult(interp, "unknown font style \"",
-		Tcl_GetString(objv[i]), "\"", NULL);
+	if (interp != NULL) {
+	    Tcl_AppendResult(interp, "unknown font style \"",
+		    Tcl_GetString(objv[i]), "\"", NULL);
+	}
 	return TCL_ERROR;
     }
     return TCL_OK;

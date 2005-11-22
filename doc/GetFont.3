@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetFont.3,v 1.7 2005/08/18 18:41:18 dkf Exp $
+'\" RCS: @(#) $Id: GetFont.3,v 1.8 2005/11/22 11:59:04 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocFontFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -37,7 +37,8 @@ void
 .SH ARGUMENTS
 .AS "const char" *tkfont
 .AP "Tcl_Interp" *interp in
-Interpreter to use for error reporting.  Must not be NULL.
+Interpreter to use for error reporting.  If \fBNULL\fR, then no error
+messages are left after errors.
 .AP Tk_Window tkwin in
 Token for window in which font will be used.
 .AP Tcl_Obj *objPtr in/out
@@ -63,7 +64,7 @@ the documentation for the \fBfont\fR command for a description of the
 valid formats.  If \fBTk_AllocFontFromObj\fR is unsuccessful (because,
 for example, \fIobjPtr\fR did not contain a valid font specification) then it
 returns \fBNULL\fR and leaves an error message in \fIinterp\fR's result
-if \fIinterp\fR isn't NULL.  \fBTk_AllocFontFromObj\fR caches
+if \fIinterp\fR isn't \fBNULL\fR.  \fBTk_AllocFontFromObj\fR caches
 information about the return
 value in \fIobjPtr\fR, which speeds up future calls to procedures
 such as \fBTk_AllocFontFromObj\fR and \fBTk_GetFontFromObj\fR.
