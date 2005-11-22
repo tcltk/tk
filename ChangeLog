@@ -1,5 +1,9 @@
 2005-11-22  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* library/tkfbox.tcl: Remove all references to data(curItem), as it is
+	no longer used. [Bug 600313]
+	(::tk::IconList_CurSelection): Renamed for clarity.
+
 	* doc/GetFont.3: Revert previous fix; a NULL interp is now legal.
 	* generic/tkFont.c (ParseFontNameObj, GetAttributeInfoObj): Allow
         these functions to work with a NULL interp by making them check when
