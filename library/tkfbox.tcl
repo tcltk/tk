@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.52 2005/07/25 09:06:00 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.53 2005/11/22 10:57:50 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -23,7 +23,7 @@
 #
 #		      I C O N   L I S T
 #
-# This is a pseudo-widget that implements the icon list inside the 
+# This is a pseudo-widget that implements the icon list inside the
 # ::tk::dialog::file:: dialog box.
 #
 #----------------------------------------------------------------------
@@ -359,7 +359,7 @@ proc ::tk::IconList_Add {w image items} {
 		-tags [list text $data(numItems) item$data(numItems)]]
 	set rTag [$data(canvas) create rect  0 0 0 0 -fill "" -outline "" \
 		-tags [list rect $data(numItems) item$data(numItems)]]
-	
+
 	foreach {x1 y1 x2 y2} [$data(canvas) bbox $iTag] {
 	    break
 	}
@@ -371,7 +371,7 @@ proc ::tk::IconList_Add {w image items} {
 	if {$data(maxIH) < $iH} {
 	    set data(maxIH) $iH
 	}
-    
+
 	foreach {x1 y1 x2 y2} [$data(canvas) bbox $tTag] {
 	    break
 	}
@@ -383,7 +383,7 @@ proc ::tk::IconList_Add {w image items} {
 	if {$data(maxTH) < $tH} {
 	    set data(maxTH) $tH
 	}
-    
+
 	lappend data(list) [list $iTag $tTag $rTag $iW $iH $tW \
 		$tH $data(numItems)]
 	set itemList($rTag) [list $iTag $tTag $text $data(numItems)]
@@ -555,7 +555,7 @@ proc ::tk::IconList_Btn1 {w x y} {
 
 proc ::tk::IconList_CtrlBtn1 {w x y} {
     upvar ::tk::$w data
-    
+
     if { $data(-multiple) } {
 	focus $data(canvas)
 	set i [IconList_Index $w @$x,$y]
@@ -573,7 +573,7 @@ proc ::tk::IconList_CtrlBtn1 {w x y} {
 
 proc ::tk::IconList_ShiftBtn1 {w x y} {
     upvar ::tk::$w data
-    
+
     if { $data(-multiple) } {
 	focus $data(canvas)
 	set i [IconList_Index $w @$x,$y]
@@ -736,7 +736,7 @@ proc ::tk::IconList_KeyPress {w key} {
 proc ::tk::IconList_Goto {w text} {
     upvar ::tk::$w data
     upvar ::tk::$w:textList textList
-    
+
     if {![info exists data(list)]} {
 	return
     }
@@ -872,7 +872,8 @@ proc ::tk::dialog::file:: {type args} {
     # Add traces on the selectPath variable
     #
 
-    trace variable data(selectPath) w "::tk::dialog::file::SetPath $w"
+    trace variable data(selectPath) w \
+	    [list ::tk::dialog::file::SetPath $w]
     $data(dirMenuBtn) configure \
 	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
 
@@ -980,9 +981,9 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 
     if {$data(-title) eq ""} {
 	if {$type eq "open"} {
-	    set data(-title) "[mc "Open"]"
+	    set data(-title) [mc "Open"]
 	} else {
-	    set data(-title) "[mc "Save As"]"
+	    set data(-title) [mc "Save As"]
 	}
     }
 
@@ -1014,8 +1015,8 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     # like "yes") so we can use it in tests more easily.
     if {$type eq "save"} {
 	set data(-multiple) 0
-    } elseif {$data(-multiple)} { 
-	set data(-multiple) 1 
+    } elseif {$data(-multiple)} {
+	set data(-multiple) 1
     } else {
 	set data(-multiple) 0
     }
@@ -1032,11 +1033,12 @@ proc ::tk::dialog::file::Create {w class} {
     # f1: the frame with the directory option menu
     #
     set f1 [frame $w.f1]
-    bind [::tk::AmpWidget label $f1.lab -text "[mc "&Directory:"]" ] \
+    bind [::tk::AmpWidget label $f1.lab -text [mc "&Directory:"]] \
 	    <<AltUnderlined>> [list focus $f1.menu]
-    
+
     set data(dirMenuBtn) $f1.menu
-    set data(dirMenu) [tk_optionMenu $f1.menu [format %s(selectPath) ::tk::dialog::file::$dataName] ""]
+    set data(dirMenu) [tk_optionMenu $f1.menu \
+	    [format %s(selectPath) ::tk::dialog::file::$dataName] ""]
     set data(upBtn) [button $f1.up]
     if {![info exists Priv(updirImage)]} {
 	set Priv(updirImage) [image create bitmap -data {
@@ -1178,8 +1180,10 @@ static char updir_bits[] = {
     # Build the focus group for all the entries
     #
     ::tk::FocusGroup_Create $w
-    ::tk::FocusGroup_BindIn $w  $data(ent) [list ::tk::dialog::file::EntFocusIn $w]
-    ::tk::FocusGroup_BindOut $w $data(ent) [list ::tk::dialog::file::EntFocusOut $w]
+    ::tk::FocusGroup_BindIn $w  $data(ent) [list \
+	    ::tk::dialog::file::EntFocusIn $w]
+    ::tk::FocusGroup_BindOut $w $data(ent) [list \
+	    ::tk::dialog::file::EntFocusOut $w]
 }
 
 # ::tk::dialog::file::SetSelectMode --
@@ -1197,12 +1201,12 @@ proc ::tk::dialog::file::SetSelectMode {w multi} {
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
     if { $multi } {
-	set fNameCaption "[mc {File &names:}]"
+	set fNameCaption [mc "File &names:"]
     } else {
-	set fNameCaption "[mc {File &name:}]"
+	set fNameCaption [mc "File &name:"]
     }
     set iconListCommand [list ::tk::dialog::file::OkCmd $w]
-    ::tk::SetAmpText $w.f2.lab $fNameCaption 
+    ::tk::SetAmpText $w.f2.lab $fNameCaption
     ::tk::IconList_Config $data(icons) \
 	    [list -multiple $multi -command $iconListCommand]
     return
@@ -1362,7 +1366,7 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 #
 proc ::tk::dialog::file::SetPathSilently {w path} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    
+
     trace vdelete  data(selectPath) w [list ::tk::dialog::file::SetPath $w]
     set data(selectPath) $path
     trace variable data(selectPath) w [list ::tk::dialog::file::SetPath $w]
@@ -1416,7 +1420,7 @@ proc ::tk::dialog::file::SetFilter {w type} {
     }
 
     $icons(sbar) set 0.0 0.0
-    
+
     UpdateWhenIdle $w
 }
 
@@ -1537,7 +1541,7 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
 
 
 # Gets called when the entry box gets keyboard focus. We clear the selection
-# from the icon list . This way the user can be certain that the input in the 
+# from the icon list . This way the user can be certain that the input in the
 # entry box is the selection.
 #
 proc ::tk::dialog::file::EntFocusIn {w} {
@@ -1779,7 +1783,7 @@ proc ::tk::dialog::file::ListBrowse {w} {
     }
 }
 
-# Gets called when user invokes the IconList widget (double-click, 
+# Gets called when user invokes the IconList widget (double-click,
 # Return key, etc)
 #
 proc ::tk::dialog::file::ListInvoke {w filenames} {
@@ -1790,7 +1794,7 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
     }
 
     set file [JoinFile $data(selectPath) [lindex $filenames 0]]
-    
+
     set class [winfo class $w]
     if {$class eq "TkChooseDir" || [file isdirectory $file]} {
 	set appPWD [pwd]
@@ -1832,7 +1836,7 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	} else {
 	    set selectFilePath [JoinFile $data(selectPath) $data(selectFile)]
 	}
-	
+
 	set Priv(selectFile) $data(selectFile)
 	set Priv(selectPath) $data(selectPath)
 
