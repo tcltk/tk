@@ -3,7 +3,7 @@
 # Commands provided by Tk without official support.  Use them at your
 # own risk.  They may change or go away without notice.
 #
-# RCS: @(#) $Id: unsupported.tcl,v 1.4 2002/07/17 16:51:53 rmax Exp $
+# RCS: @(#) $Id: unsupported.tcl,v 1.5 2005/11/25 15:58:15 dkf Exp $
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -95,7 +95,7 @@ namespace eval ::tk::unsupported {
 	tkIconList_Config		::tk::IconList_Config
 	tkIconList_Create		::tk::IconList_Create
 	tkIconList_CtrlBtn1		::tk::IconList_CtrlBtn1
-	tkIconList_Curselection		::tk::IconList_Curselection
+	tkIconList_Curselection		::tk::IconList_CurSelection
 	tkIconList_DeleteAll		::tk::IconList_DeleteAll
 	tkIconList_Double1		::tk::IconList_Double1
 	tkIconList_DrawSelection	::tk::IconList_DrawSelection
