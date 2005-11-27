@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.8 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.9 2005/11/27 06:53:13 das Exp $
  */
 
 #include "tk.h"
@@ -23,6 +23,12 @@
  */
 #undef Status
 #include <Carbon/Carbon.h>
+
+#if !defined(MAC_OS_X_VERSION_10_3) || \
+        (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+    /* Define constants only available on Mac OS X 10.3 or later */
+    #define kMenuAttrDoNotUseUserCommandKeys (1 << 7)
+#endif
 
 #define kAppleMenu              256
 #define kAppleAboutItem         1
