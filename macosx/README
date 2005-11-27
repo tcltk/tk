@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.6.2.9 2005/11/27 02:36:46 das Exp $
+RCS: @(#) $Id: README,v 1.6.2.10 2005/11/27 06:44:16 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -174,6 +174,8 @@ Note that while Tcl can be built for the ppc64 architecture, neither TkAqua nor
 TkX11 can be built with -arch ppc64 as the corresponding GUI libraries are not
 available for 64bit at present. However, linking a universal 'ppc i386' Tk
 binary against a universal 'ppc ppc64 i386' Tcl binary works just fine.
+The Tk configure script automatically removes '-arch ppc64' from CFLAGS to
+facilitate universal building of both Tcl and Tk with the same CFLAGS setting.
 
 Detailed Instructions for building with macosx/GNUmakefile
 ----------------------------------------------------------
