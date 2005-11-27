@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.23 2005/11/16 22:07:37 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.24 2005/11/27 02:44:26 das Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -62,7 +62,25 @@ fi
 
 AC_PROG_CC
 
-AC_HAVE_HEADERS([unistd.h limits.h])
+# limits header checks must come early to prevent
+# an autoconf bug that throws errors on configure
+AC_CHECK_HEADER(limits.h,
+    [AC_DEFINE(HAVE_LIMITS_H)], [AC_DEFINE(NO_LIMITS_H)])
+AC_HAVE_HEADERS(unistd.h)
+
+#--------------------------------------------------------------------
+# Supply a substitute for stdlib.h if it doesn't define strtol,
+# strtoul, or strtod (which it doesn't in some versions of SunOS).
+#--------------------------------------------------------------------
+
+AC_MSG_CHECKING(stdlib.h)
+AC_EGREP_HEADER(strtol, stdlib.h, tk_ok=yes, tk_ok=no)
+AC_EGREP_HEADER(strtoul, stdlib.h, , tk_ok=no)
+AC_EGREP_HEADER(strtod, stdlib.h, , tk_ok=no)
+if test $tk_ok = no; then
+    AC_DEFINE(NO_STDLIB_H)
+fi
+AC_MSG_RESULT($tk_ok)
 
 #------------------------------------------------------------------------
 # If we're using GCC, see if the compiler understands -pipe.  If so, use it.
@@ -86,6 +104,17 @@ fi
 #------------------------------------------------------------------------
 
 SC_ENABLE_THREADS
+
+#--------------------------------------------------------------------
+# On a few very rare systems, all of the libm.a stuff is
+# already in libc.a.  Set compiler flags accordingly.
+# Also, Linux requires the "ieee" library for math to work
+# right (and it must appear before "-lm").
+#--------------------------------------------------------------------
+
+MATH_LIBS=""
+AC_CHECK_FUNC(sin, , MATH_LIBS="-lm")
+AC_CHECK_LIB(ieee, main, [MATH_LIBS="-lieee $MATH_LIBS"])
 
 # Add the threads support libraries
 LIBS="$LIBS$THREADS_LIBS"
@@ -131,77 +160,60 @@ fi
 
 if test "$TCL_PREFIX" != "$prefix"; then
     AC_MSG_WARN([
-	Different --prefix selected for Tk and Tcl!
-	[[package require Tk]] may not work correctly in tclsh.])
+        Different --prefix selected for Tk and Tcl!
+        [[package require Tk]] may not work correctly in tclsh.])
 fi
 
 #--------------------------------------------------------------------
-# On a few very rare systems, all of the libm.a stuff is
-# already in libc.a.  Set compiler flags accordingly.
-# Also, Linux requires the "ieee" library for math to work
-# right (and it must appear before "-lm").
+#	Include sys/select.h if it exists and if it supplies things
+#	that appear to be useful and aren't already in sys/types.h.
+#	This appears to be true only on the RS/6000 under AIX.  Some
+#	systems like OSF/1 have a sys/select.h that's of no use, and
+#	other systems like SCO UNIX have a sys/select.h that's
+#	pernicious.  If "fd_set" isn't defined anywhere then set a
+#	special flag.
 #--------------------------------------------------------------------
 
-MATH_LIBS=""
-AC_CHECK_FUNC(sin, , MATH_LIBS="-lm")
-AC_CHECK_LIB(ieee, main, [MATH_LIBS="-lieee $MATH_LIBS"])
-
-#--------------------------------------------------------------------
-# On AIX systems, libbsd.a has to be linked in to support
-# non-blocking file IO.  This library has to be linked in after
-# the MATH_LIBS or it breaks the pow() function.  The way to
-# insure proper sequencing, is to add it to the tail of MATH_LIBS.
-# This library also supplies gettimeofday.
-#--------------------------------------------------------------------
-libbsd=no
-if test "`uname -s`" = "AIX" ; then
-    AC_CHECK_LIB(bsd, gettimeofday, libbsd=yes)
-    if test $libbsd = yes; then
-	MATH_LIBS="$MATH_LIBS -lbsd"
-    fi
-fi
-
-#--------------------------------------------------------------------
-# Supply a substitute for stdlib.h if it doesn't define strtol,
-# strtoul, or strtod (which it doesn't in some versions of SunOS).
-#--------------------------------------------------------------------
-
-AC_MSG_CHECKING(stdlib.h)
-AC_HEADER_EGREP(strtol, stdlib.h, tk_ok=yes, tk_ok=no)
-AC_HEADER_EGREP(strtoul, stdlib.h, , tk_ok=no)
-AC_HEADER_EGREP(strtod, stdlib.h, , tk_ok=no)
-if test $tk_ok = no; then
-    AC_DEFINE(NO_STDLIB_H)
-fi
-AC_MSG_RESULT($tk_ok)
-
-#--------------------------------------------------------------------
-# Include sys/select.h if it exists and if it supplies things
-# that appear to be useful and aren't already in sys/types.h.
-# This appears to be true only on the RS/6000 under AIX.  Some
-# systems like OSF/1 have a sys/select.h that's of no use, and
-# other systems like SCO UNIX have a sys/select.h that's
-# pernicious.  If "fd_set" isn't defined anywhere then set a
-# special flag.
-#--------------------------------------------------------------------
-
-AC_MSG_CHECKING([fd_set and sys/select])
-AC_TRY_COMPILE([#include <sys/types.h>],
-	[fd_set readMask, writeMask;], tk_ok=yes, tk_ok=no)
-if test $tk_ok = no; then
-    AC_HEADER_EGREP(fd_mask, sys/select.h, tk_ok=yes)
-    if test $tk_ok = yes; then
+AC_MSG_CHECKING([for fd_set in sys/types])
+AC_CACHE_VAL(tcl_cv_type_fd_set,
+    AC_TRY_COMPILE([#include <sys/types.h>],[fd_set readMask, writeMask;],
+	tcl_cv_type_fd_set=yes, tcl_cv_type_fd_set=no))
+AC_MSG_RESULT($tcl_cv_type_fd_set)
+tk_ok=$tcl_cv_type_fd_set
+if test $tcl_cv_type_fd_set = no; then
+    AC_MSG_CHECKING([for fd_mask in sys/select])
+    AC_CACHE_VAL(tcl_cv_grep_fd_mask,
+	AC_EGREP_HEADER(fd_mask, sys/select.h,
+	     tcl_cv_grep_fd_mask=present, tcl_cv_grep_fd_mask=missing))
+    AC_MSG_RESULT($tcl_cv_grep_fd_mask)
+    if test $tcl_cv_grep_fd_mask = present; then
 	AC_DEFINE(HAVE_SYS_SELECT_H)
+	tk_ok=yes
     fi
 fi
-AC_MSG_RESULT($tk_ok)
 if test $tk_ok = no; then
     AC_DEFINE(NO_FD_SET)
 fi
 
+#------------------------------------------------------------------------------
+#       Find out all about time handling differences.
+#------------------------------------------------------------------------------
+
+AC_CHECK_HEADERS(sys/time.h)
+AC_HEADER_TIME
+
 #--------------------------------------------------------------------
-# Check for various typedefs and provide substitutes if
-# they don't exist.
+#	Under Solaris 2.4, strtod returns the wrong value for the
+#	terminating character under some conditions.  Check for this
+#	and if the problem exists use a substitute procedure
+#	"fixstrtod" (provided by Tcl) that corrects the error.
+#--------------------------------------------------------------------
+
+SC_BUGGY_STRTOD
+
+#--------------------------------------------------------------------
+#	Check for various typedefs and provide substitutes if
+#	they don't exist.
 #--------------------------------------------------------------------
 
 AC_TYPE_MODE_T
@@ -209,22 +221,17 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 
-#------------------------------------------------------------------------------
-#       Find out about time handling differences.
-#------------------------------------------------------------------------------
-
-AC_CHECK_HEADERS(sys/time.h)
-AC_HEADER_TIME
-
 #-------------------------------------------
 #     In OS/390 struct pwd has no pw_gecos field
 #-------------------------------------------
 
 AC_MSG_CHECKING([pw_gecos in struct pwd])
-AC_TRY_COMPILE([#include <pwd.h>],
-      [struct passwd pwd; pwd.pw_gecos;], tk_ok=yes, tk_ok=no)
-AC_MSG_RESULT($tk_ok)
-if test $tk_ok = yes; then
+AC_CACHE_VAL(tcl_cv_pwd_pw_gecos,
+    AC_TRY_COMPILE([#include <pwd.h>],
+	    [struct passwd pwd; pwd.pw_gecos;],
+	    tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no))
+AC_MSG_RESULT($tcl_cv_pwd_pw_gecos)
+if test $tcl_cv_pwd_pw_gecos = yes; then
     AC_DEFINE(HAVE_PW_GECOS)
 fi
 
@@ -370,15 +377,6 @@ fi
 AC_C_CHAR_UNSIGNED
 
 #--------------------------------------------------------------------
-#	Under Solaris 2.4, strtod returns the wrong value for the
-#	terminating character under some conditions.  Check for this
-#	and if the problem exists use a substitute procedure
-#	"fixstrtod" (provided by Tcl) that corrects the error.
-#--------------------------------------------------------------------
-
-SC_BUGGY_STRTOD
-
-#--------------------------------------------------------------------
 #	The statements below define a collection of symbols related to
 #	building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------
@@ -414,7 +412,7 @@ WISH_RSRC_FILE='wish$(VERSION).rsrc'
 if test "`uname -s`" = "Darwin" ; then
     SC_ENABLE_FRAMEWORK
     TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk ['{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}']`"
-    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | tail +3 > $$f && echo $$f)'
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_ > $$f && echo $$f)'
 fi
 
 if test "$FRAMEWORK_BUILD" = "1" ; then
