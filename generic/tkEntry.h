@@ -296,9 +296,9 @@ enum selelement {
  * the Entry widget.
  */
 
-int			TkpDrawEntryBorderAndFocus(Entry *entryPtr,
+MODULE_SCOPE int	TkpDrawEntryBorderAndFocus(Entry *entryPtr,
 			    Drawable d, int isSpinbox);
-int			TkpDrawSpinboxButtons(Spinbox *sbPtr, Drawable d);
+MODULE_SCOPE int	TkpDrawSpinboxButtons(Spinbox *sbPtr, Drawable d);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

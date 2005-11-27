@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.7 2002/08/14 15:31:21 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.8 2005/11/27 02:36:16 das Exp $
  */
 
 #include "tkWinInt.h"
@@ -22,7 +22,6 @@ HWND tkWinCurrentDialog;
  * Forward declarations of procedures defined later in this file:
  */
 
-int			TkplatformtestInit(Tcl_Interp *interp);
 static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
