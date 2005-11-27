@@ -139,8 +139,8 @@
 				INCLUDEDIR = "${PREFIX}/include";
 				INSTALL_PATH = "${BINDIR}";
 				LIBDIR = "${PREFIX}/lib";
-				MANDIR = "${PREFIX}/man";
 				MACOSX_DEPLOYMENT_TARGET = 10.3;
+				MANDIR = "${PREFIX}/man";
 				OTHER_CFLAGS = "-imacros ${DERIVED_FILE_DIR}/tcl/tclConfig.h";
 				OTHER_LDFLAGS = "-headerpad_max_install_names -sectcreate __TEXT __tk_rsrc ${REZ_COLLECTOR_DIR}/${PRODUCT_NAME}.rsrc";
 				PREFIX = /usr/local;
