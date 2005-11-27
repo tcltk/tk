@@ -8668,6 +8668,11 @@ echo "$as_me: WARNING: \"Aqua can only be used when Carbon is available\"" >&2;}
             tk_aqua=no
         fi
     fi
+    if test $do64bit_ok = no ; then
+	# remove -arch ppc64 from CFLAGS for fat builds as neither Aqua nor X11
+	# can be built for 64bit at present (no 64bit GUI libraries).
+	CFLAGS="`echo "$CFLAGS" | sed -e 's/-arch ppc64/-arch ppc/'`"
+    fi
 else
     tk_aqua=no
 fi
