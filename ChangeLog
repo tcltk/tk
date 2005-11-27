@@ -47,6 +47,7 @@
 	utf8 aware menu manager API, remove obsolete code, add error handling.
 
 	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenus.c:
 	* macosx/tkMacOSXMenubutton.c:
 	* macosx/tkMacOSXMouseEvent.c: define OSX 10.3 or later only constants
 	if necessary to allow compilation on OSX 10.2
