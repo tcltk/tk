@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.17 2005/09/10 14:53:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.18 2005/11/27 02:36:14 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -73,7 +73,7 @@ static Boolean                MatchOneType _ANSI_ARGS_((StringPtr fileNamePtr, O
 static pascal Boolean   OpenFileFilterProc(AEDesc* theItem, void* info, 
                             NavCallBackUserData callBackUD,
                             NavFilterModes filterMode );
-pascal void             OpenEventProc(NavEventCallbackMessage callBackSelector,
+static pascal void      OpenEventProc(NavEventCallbackMessage callBackSelector,
                             NavCBRecPtr callBackParms,
                             NavCallBackUserData callBackUD );
 static void             InitFileDialogs();
@@ -98,8 +98,8 @@ static int fileDlgInited = 0;
  * commands.
  */
 
-NavObjectFilterUPP openFileFilterUPP;
-NavEventUPP openFileEventUPP;
+static NavObjectFilterUPP openFileFilterUPP;
+static NavEventUPP openFileEventUPP;
 
 
 /*

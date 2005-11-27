@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.40 2005/09/21 10:54:40 dkf Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.41 2005/11/27 02:36:13 das Exp $
 
 library tk
 
@@ -510,6 +510,16 @@ declare 154 generic {
     void TkDeleteThreadExitHandler(Tcl_ExitProc *proc, ClientData clientData)
 }
 
+# entries needed only by tktest:
+declare 156 generic {
+    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+	    CONST char **argv)
+}
+declare 157 generic {
+    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int argc,
+	    CONST char **argv)
+}
+
 ##############################################################################
 
 # Define the platform specific internal Tcl interface. These functions are
@@ -558,6 +568,11 @@ declare 11 x11 {
 }
 declare 12 x11 {
     int TkpWmSetState(TkWindow *winPtr, int state)
+}
+# only needed by tktest:
+declare 13 x11 {
+    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+	    CONST char **argv)
 }
 
 ############################
@@ -678,6 +693,10 @@ declare 34 win {
 declare 35 win {
     int TkWinGetPlatformTheme(void)
 }
+# only needed by tktest:
+declare 36 win {
+    int TkplatformtestInit(Tcl_Interp *interp)
+}
 
 ########################
 # Mac OS X specific functions
@@ -747,7 +766,7 @@ declare 17 aqua {
     int TkMacOSXGrowToplevel(WindowRef whichWindow, Point start)
 }
 declare 18 aqua {
-    void TkMacOSXHandleMenuSelect(long mResult, int optionKeyPressed)
+    void TkMacOSXHandleMenuSelect(MenuID theMenu, MenuItemIndex theItem, int optionKeyPressed)
 }
 
 # removed duplicates from tkPlat table(tk.decls)
@@ -859,6 +878,10 @@ declare 51 aqua {
 
 declare 53 aqua {
     unsigned long TkpGetMS(void)
+}
+# only needed by tktest:
+declare 54 aqua {
+    int TkplatformtestInit(Tcl_Interp *interp)
 }
 
 ##############################################################################
@@ -1560,4 +1583,7 @@ declare 89 {aqua} {
 declare 90 {aqua} {
     Status XQueryTree(Display *d, Window w1, Window *w2, Window *w3,
 	    Window **w4, unsigned int *ui)
+}
+declare 91 {aqua} {
+    int XSync(Display *display, Bool flag)
 }

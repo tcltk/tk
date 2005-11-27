@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.4 2005/08/09 07:39:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.5 2005/11/27 02:36:15 das Exp $
  */
 
 #include "tk.h"
@@ -59,7 +59,7 @@
 #include "tkMacOSXDefault.h"
 #include "tkEntry.h"
 
-ThemeButtonKind ComputeIncDecParameters (int height, int *width);
+static ThemeButtonKind ComputeIncDecParameters (int height, int *width);
 
 /*
  *--------------------------------------------------------------
@@ -78,7 +78,7 @@ ThemeButtonKind ComputeIncDecParameters (int height, int *width);
  *
  *--------------------------------------------------------------
  */
-ThemeButtonKind
+static ThemeButtonKind
 ComputeIncDecParameters (int height, int *width)
 {
     static int version = 0;

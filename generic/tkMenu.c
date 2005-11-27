@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.33 2005/11/17 16:21:55 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.34 2005/11/27 02:36:14 das Exp $
  */
 
 /*
@@ -114,7 +114,7 @@ static char *compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", NULL
 };
 
-Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
+static Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", NULL, NULL,
 	DEF_MENU_ENTRY_ACTIVE_BG, Tk_Offset(TkMenuEntry, activeBorderPtr), -1,
 	TK_OPTION_NULL_OK},
@@ -163,14 +163,14 @@ Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_END}
 };
 
-Tk_OptionSpec tkSeparatorEntryConfigSpecs[] = {
+static Tk_OptionSpec tkSeparatorEntryConfigSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	DEF_MENU_ENTRY_BG,
 	Tk_Offset(TkMenuEntry, borderPtr), -1, TK_OPTION_NULL_OK},
     {TK_OPTION_END}
 };
 
-Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
+static Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
 	-1, Tk_Offset(TkMenuEntry, indicatorOn)},
@@ -193,7 +193,7 @@ Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
 	NULL, 0, -1, 0, (ClientData) tkBasicMenuEntryConfigSpecs}
 };
 
-Tk_OptionSpec tkRadioButtonEntryConfigSpecs[] = {
+static Tk_OptionSpec tkRadioButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
 	-1, Tk_Offset(TkMenuEntry, indicatorOn)},
@@ -213,7 +213,7 @@ Tk_OptionSpec tkRadioButtonEntryConfigSpecs[] = {
 	NULL, 0, -1, 0, (ClientData) tkBasicMenuEntryConfigSpecs}
 };
 
-Tk_OptionSpec tkCascadeEntryConfigSpecs[] = {
+static Tk_OptionSpec tkCascadeEntryConfigSpecs[] = {
     {TK_OPTION_STRING, "-menu", NULL, NULL,
 	DEF_MENU_ENTRY_MENU,
 	Tk_Offset(TkMenuEntry, namePtr), -1, TK_OPTION_NULL_OK},
@@ -221,7 +221,7 @@ Tk_OptionSpec tkCascadeEntryConfigSpecs[] = {
 	NULL, 0, -1, 0, (ClientData) tkBasicMenuEntryConfigSpecs}
 };
 
-Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
+static Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	DEF_MENU_ENTRY_BG,
 	Tk_Offset(TkMenuEntry, borderPtr), -1, TK_OPTION_NULL_OK},
@@ -245,7 +245,7 @@ static CONST char *menuTypeStrings[] = {
     "normal", "tearoff", "menubar", NULL
 };
 
-Tk_OptionSpec tkMenuConfigSpecs[] = {
+static Tk_OptionSpec tkMenuConfigSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground",
 	"Foreground", DEF_MENU_ACTIVE_BG_COLOR,
 	Tk_Offset(TkMenu, activeBorderPtr), -1, 0,

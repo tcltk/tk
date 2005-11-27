@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.6 2005/11/07 15:43:51 dkf Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.7 2005/11/27 02:36:13 das Exp $
  */
 
 #ifndef _TKFONT
@@ -195,26 +195,26 @@ typedef struct TkXLFDAttributes {
 #define TkInitFontAttributes(fa)   memset((fa), 0, sizeof(TkFontAttributes));
 #define TkInitXLFDAttributes(xa)   memset((xa), 0, sizeof(TkXLFDAttributes));
 
-EXTERN int		TkFontParseXLFD(CONST char *string,
+MODULE_SCOPE int	TkFontParseXLFD(CONST char *string,
 			    TkFontAttributes *faPtr, TkXLFDAttributes *xaPtr);
-EXTERN char **		TkFontGetAliasList(CONST char *faceName);
-EXTERN char ***		TkFontGetFallbacks(void);
-EXTERN int		TkFontGetPixels(Tk_Window tkwin, int size);
-EXTERN int		TkFontGetPoints(Tk_Window tkwin, int size);
-EXTERN char **		TkFontGetGlobalClass(void);
-EXTERN char **		TkFontGetSymbolClass(void);
+MODULE_SCOPE char **	TkFontGetAliasList(CONST char *faceName);
+MODULE_SCOPE char ***	TkFontGetFallbacks(void);
+MODULE_SCOPE int	TkFontGetPixels(Tk_Window tkwin, int size);
+MODULE_SCOPE int	TkFontGetPoints(Tk_Window tkwin, int size);
+MODULE_SCOPE char **	TkFontGetGlobalClass(void);
+MODULE_SCOPE char **	TkFontGetSymbolClass(void);
 
 /*
  * Low-level API exported by platform-specific code to generic code.
  */
 
-EXTERN void		TkpDeleteFont(TkFont *tkFontPtr);
-EXTERN void		TkpFontPkgInit(TkMainInfo *mainPtr);
-EXTERN TkFont *		TkpGetFontFromAttributes(TkFont *tkFontPtr,
+MODULE_SCOPE void	TkpDeleteFont(TkFont *tkFontPtr);
+MODULE_SCOPE void	TkpFontPkgInit(TkMainInfo *mainPtr);
+MODULE_SCOPE TkFont *	TkpGetFontFromAttributes(TkFont *tkFontPtr,
 			    Tk_Window tkwin, CONST TkFontAttributes *faPtr);
-EXTERN void		TkpGetFontFamilies(Tcl_Interp *interp,
+MODULE_SCOPE void	TkpGetFontFamilies(Tcl_Interp *interp,
 			    Tk_Window tkwin);
-EXTERN TkFont *		TkpGetNativeFont(Tk_Window tkwin, CONST char *name);
+MODULE_SCOPE TkFont *	TkpGetNativeFont(Tk_Window tkwin, CONST char *name);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.12 2005/11/04 15:23:05 dkf Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.13 2005/11/27 02:36:13 das Exp $
  */
 
 #ifndef _TKBUTTON
@@ -297,25 +297,25 @@ typedef struct {
  * Declaration of variables shared between the files in the button module.
  */
 
-extern Tk_ClassProcs tkpButtonProcs;
+MODULE_SCOPE Tk_ClassProcs tkpButtonProcs;
 
 /*
  * Declaration of functions used in the implementation of the button widget.
  */
 
 #ifndef TkpButtonSetDefaults
-EXTERN void		TkpButtonSetDefaults(Tk_OptionSpec *specPtr);
+MODULE_SCOPE void	TkpButtonSetDefaults(Tk_OptionSpec *specPtr);
 #endif
-EXTERN void		TkButtonWorldChanged(ClientData instanceData);
-EXTERN void		TkpComputeButtonGeometry(TkButton *butPtr);
-EXTERN TkButton *	TkpCreateButton(Tk_Window tkwin);
+MODULE_SCOPE void	TkButtonWorldChanged(ClientData instanceData);
+MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);
+MODULE_SCOPE TkButton	*TkpCreateButton(Tk_Window tkwin);
 #ifndef TkpDestroyButton
-EXTERN void 		TkpDestroyButton(TkButton *butPtr);
+MODULE_SCOPE void 	TkpDestroyButton(TkButton *butPtr);
 #endif
 #ifndef TkpDisplayButton
-EXTERN void		TkpDisplayButton(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayButton(ClientData clientData);
 #endif
-EXTERN int		TkInvokeButton(TkButton *butPtr);
+MODULE_SCOPE int	TkInvokeButton(TkButton *butPtr);
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

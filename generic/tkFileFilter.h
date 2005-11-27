@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.h,v 1.7 2005/11/15 15:18:21 dkf Exp $
+ * RCS: @(#) $Id: tkFileFilter.h,v 1.8 2005/11/27 02:36:13 das Exp $
  *
  */
 
@@ -77,9 +77,9 @@ typedef struct FileFilterList {
     int numFilters;		/* number of filters in the list */
 } FileFilterList;
 
-EXTERN void		TkFreeFileFilters(FileFilterList *flistPtr);
-EXTERN void		TkInitFileFilters(FileFilterList *flistPtr);
-EXTERN int		TkGetFileFilters(Tcl_Interp *interp,
+MODULE_SCOPE void	TkFreeFileFilters(FileFilterList *flistPtr);
+MODULE_SCOPE void	TkInitFileFilters(FileFilterList *flistPtr);
+MODULE_SCOPE int	TkGetFileFilters(Tcl_Interp *interp,
     			    FileFilterList *flistPtr, Tcl_Obj *valuePtr,
 			    int isWindows);
 

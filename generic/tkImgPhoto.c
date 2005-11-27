@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.59 2005/11/17 16:21:55 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.60 2005/11/27 02:36:13 das Exp $
  */
 
 #include "tkInt.h"
@@ -5929,7 +5929,7 @@ PhotoOptionCleanupProc(
  *--------------------------------------------------------------
  */
 
-void
+MODULE_SCOPE void
 Tk_CreatePhotoOption(
     Tcl_Interp *interp,		/* Interpreter */
     CONST char *name,		/* Option name */

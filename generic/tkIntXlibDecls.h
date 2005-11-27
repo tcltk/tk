@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.19 2005/09/21 10:56:33 dkf Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.20 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -1250,6 +1250,11 @@ EXTERN Status		XQueryTree _ANSI_ARGS_((Display * d, Window w1,
 				Window * w2, Window * w3, Window ** w4, 
 				unsigned int * ui));
 #endif
+#ifndef XSync_TCL_DECLARED
+#define XSync_TCL_DECLARED
+/* 91 */
+EXTERN int		XSync _ANSI_ARGS_((Display * display, Bool flag));
+#endif
 #endif /* MAC_OSX_TK */
 
 typedef struct TkIntXlibStubs {
@@ -1457,6 +1462,7 @@ typedef struct TkIntXlibStubs {
     void (*xQueryColor) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * def_in_out)); /* 88 */
     void (*xQueryColors) _ANSI_ARGS_((Display * display, Colormap colormap, XColor * defs_in_out, int ncolors)); /* 89 */
     Status (*xQueryTree) _ANSI_ARGS_((Display * d, Window w1, Window * w2, Window * w3, Window ** w4, unsigned int * ui)); /* 90 */
+    int (*xSync) _ANSI_ARGS_((Display * display, Bool flag)); /* 91 */
 #endif /* MAC_OSX_TK */
 } TkIntXlibStubs;
 
@@ -2265,6 +2271,10 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifndef XQueryTree
 #define XQueryTree \
 	(tkIntXlibStubsPtr->xQueryTree) /* 90 */
+#endif
+#ifndef XSync
+#define XSync \
+	(tkIntXlibStubsPtr->xSync) /* 91 */
 #endif
 #endif /* MAC_OSX_TK */
 

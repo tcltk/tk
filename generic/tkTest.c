@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.28 2005/11/18 10:18:27 dkf Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.29 2005/11/27 02:36:14 das Exp $
  */
 
 #include "tkInt.h"
@@ -25,6 +25,7 @@
 #endif
 
 #if defined(MAC_OSX_TK)
+#include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
 #endif
 
@@ -173,8 +174,10 @@ static int		TestfontObjCmd(ClientData dummy,
 			    Tcl_Obj *CONST objv[]);
 static int		TestmakeexistCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv);
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int		TestmenubarCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv);
+#endif
 #if defined(__WIN32__) || defined(MAC_OSX_TK)
 static int		TestmetricsCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv);
@@ -197,10 +200,6 @@ static void		CustomOptionFree(ClientData clientData,
 			    Tk_Window tkwin, char *internalPtr);
 static int		TestpropCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv);
-static int		TestsendCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, CONST char **argv);
-static int		TesttextCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, CONST char **argv);
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int		TestwrapperCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv);
@@ -215,8 +214,6 @@ static void		TrivialEventProc(ClientData clientData,
 /*
  * External (platform specific) initialization routine:
  */
-
-extern int		TkplatformtestInit(Tcl_Interp *interp);
 
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
@@ -277,7 +274,7 @@ Tktest_Init(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateCommand(interp, "testprop", TestpropCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testtext", TesttextCmd,
+    Tcl_CreateCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 
 #if defined(__WIN32__) || defined(MAC_OSX_TK)
@@ -286,7 +283,7 @@ Tktest_Init(
 #else
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testsend", TestsendCmd,
+    Tcl_CreateCommand(interp, "testsend", TkpTestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateCommand(interp, "testwrapper", TestwrapperCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
@@ -1835,6 +1832,7 @@ TestmakeexistCmd(
  */
 
 	/* ARGSUSED */
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int
 TestmenubarCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1884,6 +1882,7 @@ TestmenubarCmd(
     return TCL_ERROR;
 #endif
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1902,7 +1901,7 @@ TestmenubarCmd(
  *----------------------------------------------------------------------
  */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(MAC_OSX_TK)
 static int
 TestmetricsCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1911,38 +1910,17 @@ TestmetricsCmd(
     CONST char **argv)		/* Argument strings. */
 {
     char buf[TCL_INTEGER_SPACE];
+    int val;
 
+#ifdef __WIN32__
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
 		" option ?arg ...?\"", NULL);
 	return TCL_ERROR;
     }
-
-    if (strcmp(argv[1], "cyvscroll") == 0) {
-	sprintf(buf, "%d", GetSystemMetrics(SM_CYVSCROLL));
-	Tcl_AppendResult(interp, buf, NULL);
-    } else  if (strcmp(argv[1], "cxhscroll") == 0) {
-	sprintf(buf, "%d", GetSystemMetrics(SM_CXHSCROLL));
-	Tcl_AppendResult(interp, buf, NULL);
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be cxhscroll or cyvscroll", NULL);
-	return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-#endif
-#if defined(MAC_OSX_TK)
-static int
-TestmetricsCmd(
-    ClientData clientData,	/* Main window for application. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
-{
+#else
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;
-    char buf[TCL_INTEGER_SPACE];
 
     if (argc != 3) {
 	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
@@ -1954,18 +1932,27 @@ TestmetricsCmd(
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
+#endif
 
     if (strcmp(argv[1], "cyvscroll") == 0) {
-	sprintf(buf, "%d", ((TkScrollbar *) winPtr->instanceData)->width);
-	Tcl_AppendResult(interp, buf, NULL);
+#ifdef __WIN32__
+	val = GetSystemMetrics(SM_CYVSCROLL);
+#else
+	val = ((TkScrollbar *) winPtr->instanceData)->width;
+#endif
     } else  if (strcmp(argv[1], "cxhscroll") == 0) {
-	sprintf(buf, "%d", ((TkScrollbar *) winPtr->instanceData)->width);
-	Tcl_AppendResult(interp, buf, NULL);
+#ifdef __WIN32__
+	val = GetSystemMetrics(SM_CXHSCROLL);
+#else
+	val = ((TkScrollbar *) winPtr->instanceData)->width;
+#endif
     } else {
 	Tcl_AppendResult(interp, "bad option \"", argv[1],
 		"\": must be cxhscroll or cyvscroll", NULL);
 	return TCL_ERROR;
     }
+    sprintf(buf, "%d", val);
+    Tcl_AppendResult(interp, buf, NULL);
     return TCL_OK;
 }
 #endif
@@ -2044,201 +2031,6 @@ TestpropCmd(
     if (property != NULL) {
 	XFree(property);
     }
-    return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TestsendCmd --
- *
- *	This function implements the "testsend" command. It provides a set of
- *	functions for testing the "send" command and support function in
- *	tkSend.c.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	Depends on option;  see below.
- *
- *----------------------------------------------------------------------
- */
-
-	/* ARGSUSED */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
-static int
-TestsendCmd(
-    ClientData clientData,	/* Main window for application. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
-{
-    TkWindow *winPtr = (TkWindow *) clientData;
-
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		" option ?arg ...?\"", NULL);
-	return TCL_ERROR;
-    }
-
-    if (strcmp(argv[1], "bogus") == 0) {
-	XChangeProperty(winPtr->dispPtr->display,
-		RootWindow(winPtr->dispPtr->display, 0),
-		winPtr->dispPtr->registryProperty, XA_INTEGER, 32,
-		PropModeReplace,
-		(unsigned char *) "This is bogus information", 6);
-    } else if (strcmp(argv[1], "prop") == 0) {
-	int result, actualFormat;
-	unsigned long length, bytesAfter;
-	Atom actualType, propName;
-	char *property, *p, *end;
-	Window w;
-
-	if ((argc != 4) && (argc != 5)) {
-	    Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		    " prop window name ?value ?\"", NULL);
-	    return TCL_ERROR;
-	}
-	if (strcmp(argv[2], "root") == 0) {
-	    w = RootWindow(winPtr->dispPtr->display, 0);
-	} else if (strcmp(argv[2], "comm") == 0) {
-	    w = Tk_WindowId(winPtr->dispPtr->commTkwin);
-	} else {
-	    w = strtoul(argv[2], &end, 0);
-	}
-	propName = Tk_InternAtom((Tk_Window) winPtr, argv[3]);
-	if (argc == 4) {
-	    property = NULL;
-	    result = XGetWindowProperty(winPtr->dispPtr->display,
-		    w, propName, 0, 100000, False, XA_STRING,
-		    &actualType, &actualFormat, &length,
-		    &bytesAfter, (unsigned char **) &property);
-	    if ((result == Success) && (actualType != None)
-		    && (actualFormat == 8) && (actualType == XA_STRING)) {
-		for (p = property; (p-property) < length; p++) {
-		    if (*p == 0) {
-			*p = '\n';
-		    }
-		}
-		Tcl_SetResult(interp, property, TCL_VOLATILE);
-	    }
-	    if (property != NULL) {
-		XFree(property);
-	    }
-	} else if (argv[4][0] == 0) {
-	    XDeleteProperty(winPtr->dispPtr->display, w, propName);
-	} else {
-	    Tcl_DString tmp;
-
-	    Tcl_DStringInit(&tmp);
-	    for (p = Tcl_DStringAppend(&tmp, argv[4],
-		    (int) strlen(argv[4])); *p != 0; p++) {
-		if (*p == '\n') {
-		    *p = 0;
-		}
-	    }
-
-	    XChangeProperty(winPtr->dispPtr->display, w, propName, XA_STRING,
-		    8, PropModeReplace, (unsigned char*)Tcl_DStringValue(&tmp),
-		    p-Tcl_DStringValue(&tmp));
-	    Tcl_DStringFree(&tmp);
-	}
-    } else if (strcmp(argv[1], "serial") == 0) {
-	char buf[TCL_INTEGER_SPACE];
-
-	sprintf(buf, "%d", tkSendSerial+1);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
-    } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
-		"\": must be bogus, prop, or serial", NULL);
-	return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-#endif
-
-/*
- *----------------------------------------------------------------------
- *
- * TesttextCmd --
- *
- *	This function implements the "testtext" command. It provides a set of
- *	functions for testing text widgets and the associated functions in
- *	tkText*.c.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	Depends on option; see below.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-TesttextCmd(
-    ClientData clientData,	/* Main window for application. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
-{
-    TkText *textPtr;
-    size_t len;
-    int lineIndex, byteIndex, byteOffset;
-    TkTextIndex index;
-    char buf[64];
-    Tcl_CmdInfo info;
-
-    if (argc < 3) {
-	return TCL_ERROR;
-    }
-
-    if (Tcl_GetCommandInfo(interp, argv[1], &info) == 0) {
-	return TCL_ERROR;
-    }
-    if (info.isNativeObjectProc) {
-	textPtr = (TkText *) info.objClientData;
-    } else {
-        textPtr = (TkText *) info.clientData;
-    }
-    len = strlen(argv[2]);
-    if (strncmp(argv[2], "byteindex", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	lineIndex = atoi(argv[3]) - 1;
-	byteIndex = atoi(argv[4]);
-
-	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex,
-		byteIndex, &index);
-    } else if (strncmp(argv[2], "forwbytes", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	byteOffset = atoi(argv[4]);
-	TkTextIndexForwBytes(textPtr, &index, byteOffset, &index);
-    } else if (strncmp(argv[2], "backbytes", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	byteOffset = atoi(argv[4]);
-	TkTextIndexBackBytes(textPtr, &index, byteOffset, &index);
-    } else {
-	return TCL_ERROR;
-    }
-
-    TkTextSetMark(textPtr, "insert", &index);
-    TkTextPrintIndex(textPtr, &index, buf);
-    sprintf(buf + strlen(buf), " %d", index.byteIndex);
-    Tcl_AppendResult(interp, buf, NULL);
-
     return TCL_OK;
 }
 

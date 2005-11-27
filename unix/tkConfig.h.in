@@ -1,13 +1,20 @@
-/* tkConfig.h.in.  Generated from configure.in by autoheader.  */
+/* ../unix/tkConfig.h.in.  Generated from configure.ac by autoheader.  */
 
-#ifndef _TKCONFIG
-#define _TKCONFIG
+
+    #ifndef _TKCONFIG
+    #define _TKCONFIG
 
 /* Is pthread_attr_get_np() declared in <pthread.h>? */
 #undef ATTRGETNP_NOT_DECLARED
 
 /* Is pthread_getattr_np declared in <pthread.h>? */
 #undef GETATTRNP_NOT_DECLARED
+
+/* Define to 1 if you have the `copyfile' function. */
+#undef HAVE_COPYFILE
+
+/* Define to 1 if you have the <copyfile.h> header file. */
+#undef HAVE_COPYFILE_H
 
 /* Do we have access to Darwin CoreFoundation.framework ? */
 #undef HAVE_COREFOUNDATION
@@ -18,7 +25,7 @@
 /* Define to 1 if you have the <libkern/OSAtomic.h> header file. */
 #undef HAVE_LIBKERN_OSATOMIC_H
 
-/* Define to 1 if you have the <limits.h> header file. */
+/* Do we have <limits.h>? */
 #undef HAVE_LIMITS_H
 
 /* Define to 1 if you have the `lseek64' function. */
@@ -96,10 +103,13 @@
 /* Linker support for module scope symbols */
 #undef MODULE_SCOPE
 
-/* Do we have access to the fd_set type? */
+/* Do we have fd_set? */
 #undef NO_FD_SET
 
-/* Do we have a working <stdlib.h> to include? */
+/* Do we have <limits.h>? */
+#undef NO_LIMITS_H
+
+/* Do we have <stdlib.h>? */
 #undef NO_STDLIB_H
 
 /* Define to the address where bug reports for this package should be sent. */
@@ -143,6 +153,10 @@
 
 /* Are we to override what our default encoding is? */
 #undef TCL_DEFAULT_ENCODING
+
+/* Use better emulation of non-blocking channels for channels without
+   BlockModeProc? */
+#undef TCL_IO_TRACK_OS_FOR_DRIVER_WITH_BAD_BLOCKING
 
 /* Can this platform load code from memory? */
 #undef TCL_LOAD_FROM_MEMORY
@@ -190,6 +204,9 @@
 /* Add the _LARGEFILE64_SOURCE flag when building */
 #undef _LARGEFILE64_SOURCE
 
+/* Add the _LARGEFILE_SOURCE64 flag when building */
+#undef _LARGEFILE_SOURCE64
+
 /* # needed in sys/socket.h Should OS/390 do the right thing with sockets? */
 #undef _OE_SOCKETS
 
@@ -231,4 +248,10 @@
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef uid_t
 
-#endif /* _TKCONFIG */
+
+    /* Undef unused package specific autoheader defines so that we can
+     * include both tclConfig.h and tkConfig.h at the same time: */
+    /* override */ #undef PACKAGE_NAME
+    /* override */ #undef PACKAGE_STRING
+    /* override */ #undef PACKAGE_TARNAME
+    #endif /* _TKCONFIG */

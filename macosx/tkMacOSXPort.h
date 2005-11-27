@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.5 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.6 2005/11/27 02:36:15 das Exp $
  */
 
 #ifndef _TKMACPORT
@@ -157,8 +157,6 @@ extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 #define XUngrabServer(display)
 #define XSynchronize(display, bool) {display->request++;}
 #define XVisualIDFromVisual(visual) (visual->visualid)
-
-int XSync(Display *display, Bool discard);
 
 /*
  * The following functions are not used on the Mac, so we stub them out.

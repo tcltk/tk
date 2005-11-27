@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: GNUmakefile,v 1.1 2005/11/22 20:23:33 das Exp $
+# RCS: @(#) $Id: GNUmakefile,v 1.2 2005/11/27 02:36:14 das Exp $
 #
 ########################################################################################################
 
@@ -100,7 +100,7 @@ TCL_VERSION		:= ${VERSION}
 wish			:= wish
 WISH			= wish${VERSION}
 
-BUILD_TARGET		:= wish
+BUILD_TARGET		:= all tktest
 INSTALL_TARGET		:= install
 
 ifneq ($(wildcard ${TCL_BUILD_DIR}/tclConfig.sh),)
@@ -135,7 +135,7 @@ endif
 MAKE_VARS		+= INSTALL_ROOT INSTALL_TARGETS VERSION
 MAKE_ARGS_V		= $(foreach v,${MAKE_VARS},$v='${$v}')
 
-build-${PROJECT}:	target = ${TARGET}
+build-${PROJECT}:	target = ${BUILD_TARGET}
 install-${PROJECT}:	target = ${INSTALL_TARGET}
 clean-${PROJECT} distclean-${PROJECT} test-${PROJECT}: \
 			target = $*
@@ -164,12 +164,14 @@ TK_FMWK_DIR		:= ${FMWK_DIR}/${PRODUCT_NAME}.framework/Versions/${VERSION}
 ${PROJECT}:
 	${MAKE} install-${PROJECT} INSTALL_ROOT=${OBJ_DIR}/
 
-${OBJ_DIR}/Makefile: ${UNIX_DIR}/Makefile.in ${UNIX_DIR}/configure
-	mkdir -p ${OBJ_DIR} && cd ${OBJ_DIR} && ${UNIX_DIR}/configure -C \
+${OBJ_DIR}/Makefile: ${UNIX_DIR}/Makefile.in ${UNIX_DIR}/configure \
+                     ${UNIX_DIR}/tkConfig.sh.in Tk-Info.plist.in Wish-Info.plist.in
+	mkdir -p ${OBJ_DIR} && cd ${OBJ_DIR} && \
+	if [ ${UNIX_DIR}/configure -nt config.status ]; then ${UNIX_DIR}/configure -C \
 	--prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} \
 	--mandir=${MANDIR} --enable-threads --enable-framework \
 	--with-tcl=${TCL_DIR} \
-	${CONFIGURE_ARGS} ${EXTRA_CONFIGURE_ARGS}
+	${CONFIGURE_ARGS} ${EXTRA_CONFIGURE_ARGS}; else ./config.status; fi
 ifneq (${TK_X11},)
 	@cd ${OBJ_DIR} && sed -e 's#/Versions/${TCL_VERSION}#/Versions/${VERSION}#' \
 	tkConfig.sh > tkConfig.sh.1 && mv -f tkConfig.sh.1 tkConfig.sh

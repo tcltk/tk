@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.27 2005/09/21 10:56:32 dkf Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.28 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -978,6 +978,21 @@ EXTERN void		TkCreateThreadExitHandler _ANSI_ARGS_((
 EXTERN void		TkDeleteThreadExitHandler _ANSI_ARGS_((
 				Tcl_ExitProc * proc, ClientData clientData));
 #endif
+/* Slot 155 is reserved */
+#ifndef TkpTestembedCmd_TCL_DECLARED
+#define TkpTestembedCmd_TCL_DECLARED
+/* 156 */
+EXTERN int		TkpTestembedCmd _ANSI_ARGS_((ClientData clientData, 
+				Tcl_Interp * interp, int argc, 
+				CONST char ** argv));
+#endif
+#ifndef TkpTesttextCmd_TCL_DECLARED
+#define TkpTesttextCmd_TCL_DECLARED
+/* 157 */
+EXTERN int		TkpTesttextCmd _ANSI_ARGS_((ClientData dummy, 
+				Tcl_Interp * interp, int argc, 
+				CONST char ** argv));
+#endif
 
 typedef struct TkIntStubs {
     int magic;
@@ -1226,6 +1241,9 @@ typedef struct TkIntStubs {
     void (*tkpDrawFrame) _ANSI_ARGS_((Tk_Window tkwin, Tk_3DBorder border, int highlightWidth, int borderWidth, int relief)); /* 152 */
     void (*tkCreateThreadExitHandler) _ANSI_ARGS_((Tcl_ExitProc * proc, ClientData clientData)); /* 153 */
     void (*tkDeleteThreadExitHandler) _ANSI_ARGS_((Tcl_ExitProc * proc, ClientData clientData)); /* 154 */
+    void *reserved155;
+    int (*tkpTestembedCmd) _ANSI_ARGS_((ClientData clientData, Tcl_Interp * interp, int argc, CONST char ** argv)); /* 156 */
+    int (*tkpTesttextCmd) _ANSI_ARGS_((ClientData dummy, Tcl_Interp * interp, int argc, CONST char ** argv)); /* 157 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1892,6 +1910,15 @@ extern TkIntStubs *tkIntStubsPtr;
 #ifndef TkDeleteThreadExitHandler
 #define TkDeleteThreadExitHandler \
 	(tkIntStubsPtr->tkDeleteThreadExitHandler) /* 154 */
+#endif
+/* Slot 155 is reserved */
+#ifndef TkpTestembedCmd
+#define TkpTestembedCmd \
+	(tkIntStubsPtr->tkpTestembedCmd) /* 156 */
+#endif
+#ifndef TkpTesttextCmd
+#define TkpTesttextCmd \
+	(tkIntStubsPtr->tkpTesttextCmd) /* 157 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

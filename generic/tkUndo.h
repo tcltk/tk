@@ -8,14 +8,14 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.h,v 1.4 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkUndo.h,v 1.5 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKUNDO
 #define _TKUNDO
 
-#ifndef _TK
-#include "tk.h"
+#ifndef _TKINT
+#include "tkInt.h"
 #endif
 
 #ifdef BUILD_tk
@@ -92,29 +92,29 @@ typedef struct TkUndoRedoStack {
  * Basic functions.
  */
 
-EXTERN void		TkUndoPushStack(TkUndoAtom **stack, TkUndoAtom *elem);
-EXTERN TkUndoAtom *	TkUndoPopStack(TkUndoAtom **stack);
-EXTERN int		TkUndoInsertSeparator(TkUndoAtom **stack);
-EXTERN void		TkUndoClearStack(TkUndoAtom **stack);
+MODULE_SCOPE void	TkUndoPushStack(TkUndoAtom **stack, TkUndoAtom *elem);
+MODULE_SCOPE TkUndoAtom *TkUndoPopStack(TkUndoAtom **stack);
+MODULE_SCOPE int	TkUndoInsertSeparator(TkUndoAtom **stack);
+MODULE_SCOPE void	TkUndoClearStack(TkUndoAtom **stack);
 
 /*
  * Functions for working on an undo/redo stack.
  */
 
-EXTERN TkUndoRedoStack *TkUndoInitStack(Tcl_Interp *interp, int maxdepth);
-EXTERN void		TkUndoSetDepth(TkUndoRedoStack *stack, int maxdepth);
-EXTERN void		TkUndoClearStacks(TkUndoRedoStack *stack);
-EXTERN void		TkUndoFreeStack(TkUndoRedoStack *stack);
-EXTERN void		TkUndoInsertUndoSeparator(TkUndoRedoStack *stack);
-EXTERN TkUndoSubAtom *	TkUndoMakeCmdSubAtom(Tcl_Command command,
+MODULE_SCOPE TkUndoRedoStack *TkUndoInitStack(Tcl_Interp *interp, int maxdepth);
+MODULE_SCOPE void	TkUndoSetDepth(TkUndoRedoStack *stack, int maxdepth);
+MODULE_SCOPE void	TkUndoClearStacks(TkUndoRedoStack *stack);
+MODULE_SCOPE void	TkUndoFreeStack(TkUndoRedoStack *stack);
+MODULE_SCOPE void	TkUndoInsertUndoSeparator(TkUndoRedoStack *stack);
+MODULE_SCOPE TkUndoSubAtom *TkUndoMakeCmdSubAtom(Tcl_Command command,
 			    Tcl_Obj *actionScript, TkUndoSubAtom *subAtomList);
-EXTERN TkUndoSubAtom *	TkUndoMakeSubAtom(TkUndoProc *funcPtr,
+MODULE_SCOPE TkUndoSubAtom *TkUndoMakeSubAtom(TkUndoProc *funcPtr,
 			    ClientData clientData, Tcl_Obj *actionScript,
 			    TkUndoSubAtom *subAtomList);
-EXTERN void		TkUndoPushAction(TkUndoRedoStack *stack,
+MODULE_SCOPE void	TkUndoPushAction(TkUndoRedoStack *stack,
 			    TkUndoSubAtom *apply, TkUndoSubAtom *revert);
-EXTERN int		TkUndoRevert(TkUndoRedoStack *stack);
-EXTERN int		TkUndoApply(TkUndoRedoStack *stack);
+MODULE_SCOPE int	TkUndoRevert(TkUndoRedoStack *stack);
+MODULE_SCOPE int	TkUndoApply(TkUndoRedoStack *stack);
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.24 2005/09/21 10:56:32 dkf Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.25 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -230,6 +230,11 @@ EXTERN void		TkWinSetHINSTANCE _ANSI_ARGS_((HINSTANCE hInstance));
 /* 35 */
 EXTERN int		TkWinGetPlatformTheme _ANSI_ARGS_((void));
 #endif
+#ifndef TkplatformtestInit_TCL_DECLARED
+#define TkplatformtestInit_TCL_DECLARED
+/* 36 */
+EXTERN int		TkplatformtestInit _ANSI_ARGS_((Tcl_Interp * interp));
+#endif
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
 #ifndef TkGenerateActivateEvents_TCL_DECLARED
@@ -315,8 +320,8 @@ EXTERN int		TkMacOSXGrowToplevel _ANSI_ARGS_((
 #ifndef TkMacOSXHandleMenuSelect_TCL_DECLARED
 #define TkMacOSXHandleMenuSelect_TCL_DECLARED
 /* 18 */
-EXTERN void		TkMacOSXHandleMenuSelect _ANSI_ARGS_((long mResult, 
-				int optionKeyPressed));
+EXTERN void		TkMacOSXHandleMenuSelect _ANSI_ARGS_((MenuID theMenu, 
+				MenuItemIndex theItem, int optionKeyPressed));
 #endif
 /* Slot 19 is reserved */
 /* Slot 20 is reserved */
@@ -495,6 +500,11 @@ EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
 /* 53 */
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
 #endif
+#ifndef TkplatformtestInit_TCL_DECLARED
+#define TkplatformtestInit_TCL_DECLARED
+/* 54 */
+EXTERN int		TkplatformtestInit _ANSI_ARGS_((Tcl_Interp * interp));
+#endif
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
 #ifndef TkCreateXEventSource_TCL_DECLARED
@@ -567,6 +577,13 @@ EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay * dispPtr));
 EXTERN int		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
 				int state));
 #endif
+#ifndef TkpTestsendCmd_TCL_DECLARED
+#define TkpTestsendCmd_TCL_DECLARED
+/* 13 */
+EXTERN int		TkpTestsendCmd _ANSI_ARGS_((ClientData clientData, 
+				Tcl_Interp * interp, int argc, 
+				CONST char ** argv));
+#endif
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {
@@ -610,6 +627,7 @@ typedef struct TkIntPlatStubs {
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
     void (*tkWinSetHINSTANCE) _ANSI_ARGS_((HINSTANCE hInstance)); /* 34 */
     int (*tkWinGetPlatformTheme) _ANSI_ARGS_((void)); /* 35 */
+    int (*tkplatformtestInit) _ANSI_ARGS_((Tcl_Interp * interp)); /* 36 */
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
@@ -630,7 +648,7 @@ typedef struct TkIntPlatStubs {
     void *reserved15;
     Window (*tkMacOSXGetXWindow) _ANSI_ARGS_((WindowRef macWinPtr)); /* 16 */
     int (*tkMacOSXGrowToplevel) _ANSI_ARGS_((WindowRef whichWindow, Point start)); /* 17 */
-    void (*tkMacOSXHandleMenuSelect) _ANSI_ARGS_((long mResult, int optionKeyPressed)); /* 18 */
+    void (*tkMacOSXHandleMenuSelect) _ANSI_ARGS_((MenuID theMenu, MenuItemIndex theItem, int optionKeyPressed)); /* 18 */
     void *reserved19;
     void *reserved20;
     void (*tkMacOSXInvalidateWindow) _ANSI_ARGS_((MacDrawable * macWin, int flag)); /* 21 */
@@ -666,6 +684,7 @@ typedef struct TkIntPlatStubs {
     void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 51 */
     void *reserved52;
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 53 */
+    int (*tkplatformtestInit) _ANSI_ARGS_((Tcl_Interp * interp)); /* 54 */
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 0 */
@@ -681,6 +700,7 @@ typedef struct TkIntPlatStubs {
     void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 10 */
     void (*tkFreeXId) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 11 */
     int (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 12 */
+    int (*tkpTestsendCmd) _ANSI_ARGS_((ClientData clientData, Tcl_Interp * interp, int argc, CONST char ** argv)); /* 13 */
 #endif /* X11 */
 } TkIntPlatStubs;
 
@@ -839,6 +859,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkWinGetPlatformTheme
 #define TkWinGetPlatformTheme \
 	(tkIntPlatStubsPtr->tkWinGetPlatformTheme) /* 35 */
+#endif
+#ifndef TkplatformtestInit
+#define TkplatformtestInit \
+	(tkIntPlatStubsPtr->tkplatformtestInit) /* 36 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
@@ -1034,6 +1058,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpGetMS \
 	(tkIntPlatStubsPtr->tkpGetMS) /* 53 */
 #endif
+#ifndef TkplatformtestInit
+#define TkplatformtestInit \
+	(tkIntPlatStubsPtr->tkplatformtestInit) /* 54 */
+#endif
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
 #ifndef TkCreateXEventSource
@@ -1087,6 +1115,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkpWmSetState
 #define TkpWmSetState \
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
+#endif
+#ifndef TkpTestsendCmd
+#define TkpTestsendCmd \
+	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 13 */
 #endif
 #endif /* X11 */
 

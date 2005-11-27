@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.h,v 1.5 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.h,v 1.6 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKSELECT
@@ -156,17 +156,17 @@ typedef struct TkSelInProgress {
  * but shouldn't be used anywhere else in Tk (or by Tk clients):
  */
 
-extern TkSelInProgress *TkSelGetInProgress(void);
-extern void             TkSelSetInProgress(TkSelInProgress *pendingPtr);
-extern void		TkSelClearSelection(Tk_Window tkwin, XEvent *eventPtr);
-extern int		TkSelDefaultSelection(TkSelectionInfo *infoPtr,
+MODULE_SCOPE TkSelInProgress *TkSelGetInProgress(void);
+MODULE_SCOPE void	TkSelSetInProgress(TkSelInProgress *pendingPtr);
+MODULE_SCOPE void	TkSelClearSelection(Tk_Window tkwin, XEvent *eventPtr);
+MODULE_SCOPE int	TkSelDefaultSelection(TkSelectionInfo *infoPtr,
 			    Atom target, char *buffer, int maxBytes,
 			    Atom *typePtr);
-extern int		TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
+MODULE_SCOPE int	TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
 			    Atom selection, Atom target, Tk_GetSelProc *proc,
 			    ClientData clientData);
 #ifndef TkSelUpdateClipboard
-extern void		TkSelUpdateClipboard(TkWindow *winPtr,
+MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr,
 			    TkClipboardTarget *targetPtr);
 #endif
 

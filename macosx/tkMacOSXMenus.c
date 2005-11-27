@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.7 2005/08/09 07:39:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.8 2005/11/27 02:36:15 das Exp $
  */
 
 #include "tk.h"
@@ -64,16 +64,15 @@ static void SourceDialog _ANSI_ARGS_((void));
 
 void 
 TkMacOSXHandleMenuSelect(
-    long mResult,
+    MenuID theMenu,
+    MenuItemIndex theItem,
     int optionKeyPressed)
 {
-    short theItem = LoWord(mResult);
-    short theMenu = HiWord(mResult);
     Tk_Window tkwin;
     Window window;
     TkDisplay *dispPtr;
 
-    if (mResult == 0) {
+    if (theItem == 0) {
         TkMacOSXHandleTearoffMenu();
         TkMacOSXClearMenubarActive();
         return;
@@ -150,45 +149,44 @@ void
 TkMacOSXInitMenus(
     Tcl_Interp *interp)
 {
+    OSStatus err;
     gInterp = interp;
 
-    /* 
-     * At this point, InitMenus() should have already been called. 
-     */
-
-    if (TkMacOSXUseMenuID(256) != TCL_OK) {
-	Tcl_Panic("Menu ID 256 is already in use!");
+    if (TkMacOSXUseMenuID(kAppleMenu) != TCL_OK) {
+	Tcl_Panic("Menu ID %d is already in use!", kAppleMenu);
     }
-    tkAppleMenu = NewMenu(256, "\p\024");
-    if (tkAppleMenu == NULL) {
-        Tcl_Panic("memory - menus");
+    err = CreateNewMenu(kAppleMenu, kMenuAttrDoNotUseUserCommandKeys,
+            &tkAppleMenu);
+    if (err != noErr) {
+        Tcl_Panic("CreateNewMenu failed !");
     }
+    SetMenuTitle(tkAppleMenu, "\p\024");
     InsertMenu(tkAppleMenu, 0);
     AppendMenu(tkAppleMenu, "\pAbout Tcl & Tk…");
     AppendMenu(tkAppleMenu, "\p(-");
-    /* Not necessary in Carbon:
-    AppendResMenu(tkAppleMenu, 'DRVR');
-    */
 
     if (TkMacOSXUseMenuID(kFileMenu) != TCL_OK) {
 	Tcl_Panic("Menu ID %d is already in use!", kFileMenu);
     }
-    tkFileMenu = NewMenu(kFileMenu, "\pFile");
-    if (tkFileMenu == NULL) {
-        Tcl_Panic("memory - menus");
+    err = CreateNewMenu(kFileMenu, kMenuAttrDoNotUseUserCommandKeys,
+            &tkFileMenu);
+    if (err != noErr) {
+        Tcl_Panic("CreateNewMenu failed !");
     }
+    SetMenuTitle(tkFileMenu, "\pFile");
     InsertMenu(tkFileMenu, 0);
     AppendMenu(tkFileMenu, "\pSource…");
     AppendMenu(tkFileMenu, "\pClose/W");
 
-
     if (TkMacOSXUseMenuID(kEditMenu) != TCL_OK) {
 	Tcl_Panic("Menu ID %d is already in use!", kEditMenu);
     }
-    tkEditMenu = NewMenu(kEditMenu, "\pEdit");
-    if (tkEditMenu == NULL) {
-        Tcl_Panic("memory - menus");
+    err = CreateNewMenu(kEditMenu, kMenuAttrDoNotUseUserCommandKeys,
+            &tkEditMenu);
+    if (err != noErr) {
+        Tcl_Panic("CreateNewMenu failed !");
     }
+    SetMenuTitle(tkEditMenu, "\pEdit");
     InsertMenu(tkEditMenu, 0);
     AppendMenu(tkEditMenu, "\pCut/X");
     AppendMenu(tkEditMenu, "\pCopy/C");

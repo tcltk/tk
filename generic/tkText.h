@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.28 2005/11/17 16:21:56 dkf Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.29 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKTEXT
@@ -940,13 +940,13 @@ typedef struct TkTextElideInfo {
  * Declarations for variables shared among the text-related files:
  */
 
-EXTERN int		tkBTreeDebug;
-EXTERN int		tkTextDebug;
-EXTERN Tk_SegType	tkTextCharType;
-EXTERN Tk_SegType	tkTextLeftMarkType;
-EXTERN Tk_SegType	tkTextRightMarkType;
-EXTERN Tk_SegType	tkTextToggleOnType;
-EXTERN Tk_SegType	tkTextToggleOffType;
+MODULE_SCOPE int	tkBTreeDebug;
+MODULE_SCOPE int	tkTextDebug;
+MODULE_SCOPE Tk_SegType tkTextCharType;
+MODULE_SCOPE Tk_SegType tkTextLeftMarkType;
+MODULE_SCOPE Tk_SegType tkTextRightMarkType;
+MODULE_SCOPE Tk_SegType tkTextToggleOnType;
+MODULE_SCOPE Tk_SegType tkTextToggleOffType;
 
 /*
  * Convenience macros for use by B-tree clients which want to access pixel
@@ -963,194 +963,194 @@ EXTERN Tk_SegType	tkTextToggleOffType;
  * shouldn't be used anywhere else in Tk (or by Tk clients):
  */
 
-EXTERN int		TkBTreeAdjustPixelHeight(CONST TkText *textPtr,
+MODULE_SCOPE int	TkBTreeAdjustPixelHeight(CONST TkText *textPtr,
 			    TkTextLine *linePtr, int newPixelHeight,
 			    int mergedLogicalLines);
-EXTERN int		TkBTreeCharTagged(CONST TkTextIndex *indexPtr,
+MODULE_SCOPE int	TkBTreeCharTagged(CONST TkTextIndex *indexPtr,
 			    TkTextTag *tagPtr);
-EXTERN void		TkBTreeCheck(TkTextBTree tree);
-EXTERN TkTextBTree	TkBTreeCreate(TkSharedText *sharedTextPtr);
-EXTERN void             TkBTreeAddClient(TkTextBTree tree, TkText *textPtr,
+MODULE_SCOPE void	TkBTreeCheck(TkTextBTree tree);
+MODULE_SCOPE TkTextBTree TkBTreeCreate(TkSharedText *sharedTextPtr);
+MODULE_SCOPE void	TkBTreeAddClient(TkTextBTree tree, TkText *textPtr,
 			    int defaultHeight);
-EXTERN void             TkBTreeClientRangeChanged(TkText *textPtr,
+MODULE_SCOPE void	TkBTreeClientRangeChanged(TkText *textPtr,
 			    int defaultHeight);
-EXTERN void		TkBTreeRemoveClient(TkTextBTree tree,
+MODULE_SCOPE void	TkBTreeRemoveClient(TkTextBTree tree,
 			    TkText *textPtr);
-EXTERN void		TkBTreeDestroy(TkTextBTree tree);
-EXTERN void		TkBTreeDeleteIndexRange(TkTextBTree tree,
+MODULE_SCOPE void	TkBTreeDestroy(TkTextBTree tree);
+MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkTextBTree tree,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr);
-EXTERN TkTextLine *	TkBTreeFindLine(TkTextBTree tree,
+MODULE_SCOPE TkTextLine *TkBTreeFindLine(TkTextBTree tree,
 			    CONST TkText *textPtr, int line);
-EXTERN TkTextLine *	TkBTreeFindPixelLine(TkTextBTree tree,
+MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,
 			    CONST TkText *textPtr, int pixels,
 			    int *pixelOffset);
-EXTERN TkTextTag **	TkBTreeGetTags(CONST TkTextIndex *indexPtr,
+MODULE_SCOPE TkTextTag **TkBTreeGetTags(CONST TkTextIndex *indexPtr,
 			    CONST TkText *textPtr, int *numTagsPtr);
-EXTERN void		TkBTreeInsertChars(TkTextBTree tree,
+MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree,
 			    TkTextIndex *indexPtr, CONST char *string);
-EXTERN int		TkBTreeLinesTo(CONST TkText *textPtr,
+MODULE_SCOPE int	TkBTreeLinesTo(CONST TkText *textPtr,
 			    TkTextLine *linePtr);
-EXTERN int		TkBTreePixelsTo(CONST TkText *textPtr,
+MODULE_SCOPE int	TkBTreePixelsTo(CONST TkText *textPtr,
 			    TkTextLine *linePtr);
-EXTERN void		TkBTreeLinkSegment(TkTextSegment *segPtr,
+MODULE_SCOPE void	TkBTreeLinkSegment(TkTextSegment *segPtr,
 			    TkTextIndex *indexPtr);
-EXTERN TkTextLine *	TkBTreeNextLine(CONST TkText *textPtr,
+MODULE_SCOPE TkTextLine *TkBTreeNextLine(CONST TkText *textPtr,
 			    TkTextLine *linePtr);
-EXTERN int		TkBTreeNextTag(TkTextSearch *searchPtr);
-EXTERN int		TkBTreeNumLines(TkTextBTree tree,
+MODULE_SCOPE int	TkBTreeNextTag(TkTextSearch *searchPtr);
+MODULE_SCOPE int	TkBTreeNumLines(TkTextBTree tree,
 			    CONST TkText *textPtr);
-EXTERN int		TkBTreeNumPixels(TkTextBTree tree,
+MODULE_SCOPE int	TkBTreeNumPixels(TkTextBTree tree,
 			    CONST TkText *textPtr);
-EXTERN TkTextLine *	TkBTreePreviousLine(TkText *textPtr,
+MODULE_SCOPE TkTextLine *TkBTreePreviousLine(TkText *textPtr,
 			    TkTextLine *linePtr);
-EXTERN int		TkBTreePrevTag(TkTextSearch *searchPtr);
-EXTERN void		TkBTreeStartSearch(TkTextIndex *index1Ptr,
+MODULE_SCOPE int	TkBTreePrevTag(TkTextSearch *searchPtr);
+MODULE_SCOPE void	TkBTreeStartSearch(TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
 			    TkTextSearch *searchPtr);
-EXTERN void		TkBTreeStartSearchBack(TkTextIndex *index1Ptr,
+MODULE_SCOPE void	TkBTreeStartSearchBack(TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
 			    TkTextSearch *searchPtr);
-EXTERN int		TkBTreeTag(TkTextIndex *index1Ptr,
+MODULE_SCOPE int	TkBTreeTag(TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
 			    int add);
-EXTERN void		TkBTreeUnlinkSegment(TkTextSegment *segPtr,
+MODULE_SCOPE void	TkBTreeUnlinkSegment(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
-EXTERN void		TkTextBindProc(ClientData clientData,
+MODULE_SCOPE void	TkTextBindProc(ClientData clientData,
 			    XEvent *eventPtr);
-EXTERN void		TkTextSelectionEvent(TkText *textPtr);
-EXTERN void		TkTextChanged(TkSharedText *sharedTextPtr,
+MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
+MODULE_SCOPE void	TkTextChanged(TkSharedText *sharedTextPtr,
 			    TkText *textPtr, CONST TkTextIndex *index1Ptr,
 			    CONST TkTextIndex *index2Ptr);
-EXTERN int		TkTextIndexBbox(TkText *textPtr,
+MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    CONST TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
-EXTERN int		TkTextCharLayoutProc(TkText *textPtr,
+MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, int noBreakYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
-EXTERN void		TkTextCreateDInfo(TkText *textPtr);
-EXTERN int		TkTextDLineInfo(TkText *textPtr,
+MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
+MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
 			    CONST TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *basePtr);
-EXTERN void		TkTextEmbWinDisplayProc(TkText *textPtr,
+MODULE_SCOPE void	TkTextEmbWinDisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int lineHeight, int baseline, Display *display,
 			    Drawable dst, int screenY);
-EXTERN TkTextTag *	TkTextCreateTag(TkText *textPtr,
+MODULE_SCOPE TkTextTag *TkTextCreateTag(TkText *textPtr,
 			    CONST char *tagName, int *newTag);
-EXTERN void		TkTextFreeDInfo(TkText *textPtr);
-EXTERN void		TkTextDeleteTag(TkText *textPtr, TkTextTag *tagPtr);
-EXTERN void		TkTextFreeTag(TkText *textPtr, TkTextTag *tagPtr);
-EXTERN int		TkTextGetIndex(Tcl_Interp *interp, TkText *textPtr,
+MODULE_SCOPE void	TkTextFreeDInfo(TkText *textPtr);
+MODULE_SCOPE void	TkTextDeleteTag(TkText *textPtr, TkTextTag *tagPtr);
+MODULE_SCOPE void	TkTextFreeTag(TkText *textPtr, TkTextTag *tagPtr);
+MODULE_SCOPE int	TkTextGetIndex(Tcl_Interp *interp, TkText *textPtr,
 			    CONST char *string, TkTextIndex *indexPtr);
-EXTERN int		TkTextGetObjIndex(Tcl_Interp *interp, TkText *textPtr,
+MODULE_SCOPE int	TkTextGetObjIndex(Tcl_Interp *interp, TkText *textPtr,
 			    Tcl_Obj *idxPtr, TkTextIndex *indexPtr);
-EXTERN int		TkTextSharedGetObjIndex(Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextSharedGetObjIndex(Tcl_Interp *interp,
 			    TkSharedText *sharedTextPtr, Tcl_Obj *idxPtr,
 			    TkTextIndex *indexPtr);
-EXTERN CONST TkTextIndex* TkTextGetIndexFromObj(Tcl_Interp *interp,
+MODULE_SCOPE CONST TkTextIndex *TkTextGetIndexFromObj(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *objPtr);
-EXTERN TkTextTabArray *	TkTextGetTabs(Tcl_Interp *interp,
+MODULE_SCOPE TkTextTabArray *TkTextGetTabs(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *stringPtr);
-EXTERN void             TkTextFindDisplayLineEnd(TkText *textPtr,
+MODULE_SCOPE void	TkTextFindDisplayLineEnd(TkText *textPtr,
 			    TkTextIndex *indexPtr, int end, int *xOffset);
-EXTERN int		TkTextIndexBackBytes(CONST TkText *textPtr,
+MODULE_SCOPE int	TkTextIndexBackBytes(CONST TkText *textPtr,
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr);
-EXTERN void		TkTextIndexBackChars(CONST TkText *textPtr,
+MODULE_SCOPE void	TkTextIndexBackChars(CONST TkText *textPtr,
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
-EXTERN int		TkTextIndexCmp(CONST TkTextIndex *index1Ptr,
+MODULE_SCOPE int	TkTextIndexCmp(CONST TkTextIndex *index1Ptr,
 			    CONST TkTextIndex *index2Ptr);
-EXTERN int              TkTextIndexCount(CONST TkText *textPtr,
+MODULE_SCOPE int	TkTextIndexCount(CONST TkText *textPtr,
 			    CONST TkTextIndex *index1Ptr,
 			    CONST TkTextIndex *index2Ptr,
 			    TkTextCountType type);
-EXTERN int		TkTextIndexForwBytes(CONST TkText *textPtr,
+MODULE_SCOPE int	TkTextIndexForwBytes(CONST TkText *textPtr,
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr);
-EXTERN void		TkTextIndexForwChars(CONST TkText *textPtr,
+MODULE_SCOPE void	TkTextIndexForwChars(CONST TkText *textPtr,
 			    CONST TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
-EXTERN void             TkTextIndexOfX(TkText *textPtr, int x,
+MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x,
 			    TkTextIndex *indexPtr);
-EXTERN int      	TkTextIndexYPixels(TkText *textPtr,
+MODULE_SCOPE int      TkTextIndexYPixels(TkText *textPtr,
 			    CONST TkTextIndex *indexPtr);
-EXTERN TkTextSegment *	TkTextIndexToSeg(CONST TkTextIndex *indexPtr,
+MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(CONST TkTextIndex *indexPtr,
 			    int *offsetPtr);
-EXTERN void		TkTextInsertDisplayProc(TkText *textPtr,
+MODULE_SCOPE void	TkTextInsertDisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int height, int baseline, Display *display,
 			    Drawable dst, int screenY);
-EXTERN void		TkTextLostSelection(ClientData clientData);
-EXTERN TkTextIndex *	TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
+MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
+MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 			    int lineIndex, int charIndex,
 			    TkTextIndex *indexPtr);
-EXTERN int		TkTextMeasureDown(TkText *textPtr,
+MODULE_SCOPE int	TkTextMeasureDown(TkText *textPtr,
 			    TkTextIndex *srcPtr, int distance);
-EXTERN void		TkTextFreeElideInfo(TkTextElideInfo *infoPtr);
-EXTERN int		TkTextIsElided(CONST TkText *textPtr,
+MODULE_SCOPE void	TkTextFreeElideInfo(TkTextElideInfo *infoPtr);
+MODULE_SCOPE int	TkTextIsElided(CONST TkText *textPtr,
 			    CONST TkTextIndex *indexPtr,
 			    TkTextElideInfo *infoPtr);
-EXTERN TkTextIndex *	TkTextMakeByteIndex(TkTextBTree tree,
+MODULE_SCOPE TkTextIndex *TkTextMakeByteIndex(TkTextBTree tree,
 			    CONST TkText *textPtr, int lineIndex,
 			    int byteIndex, TkTextIndex *indexPtr);
-EXTERN int      	TkTextMakePixelIndex(TkText *textPtr,
+MODULE_SCOPE int      TkTextMakePixelIndex(TkText *textPtr,
 			    int pixelIndex, TkTextIndex *indexPtr);
-EXTERN void             TkTextInvalidateLineMetrics(
+MODULE_SCOPE void	TkTextInvalidateLineMetrics(
 			    TkSharedText *sharedTextPtr, TkText *textPtr,
 			    TkTextLine *linePtr, int lineCount, int action);
-EXTERN int              TkTextUpdateLineMetrics(TkText *textPtr, int lineNum,
+MODULE_SCOPE int	TkTextUpdateLineMetrics(TkText *textPtr, int lineNum,
 			    int endLine, int doThisMuch);
-EXTERN int              TkTextUpdateOneLine(TkText *textPtr,
+MODULE_SCOPE int	TkTextUpdateOneLine(TkText *textPtr,
 			    TkTextLine *linePtr, int pixelHeight,
 			    TkTextIndex *indexPtr, int partialCalc);
-EXTERN int		TkTextMarkCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextMarkCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN int		TkTextMarkNameToIndex(TkText *textPtr,
+MODULE_SCOPE int	TkTextMarkNameToIndex(TkText *textPtr,
 			    CONST char *name, TkTextIndex *indexPtr);
-EXTERN void		TkTextMarkSegToIndex(TkText *textPtr,
+MODULE_SCOPE void	TkTextMarkSegToIndex(TkText *textPtr,
 			    TkTextSegment *markPtr, TkTextIndex *indexPtr);
-EXTERN void		TkTextEventuallyRepick(TkText *textPtr);
-EXTERN void		TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
-EXTERN void		TkTextPixelIndex(TkText *textPtr, int x, int y,
+MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
+MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
+MODULE_SCOPE void	TkTextPixelIndex(TkText *textPtr, int x, int y,
 			    TkTextIndex *indexPtr, int *nearest);
-EXTERN int		TkTextPrintIndex(CONST TkText *textPtr,
+MODULE_SCOPE int	TkTextPrintIndex(CONST TkText *textPtr,
 			    CONST TkTextIndex *indexPtr, char *string);
-EXTERN Tcl_Obj*		TkTextNewIndexObj(TkText *textPtr,
+MODULE_SCOPE Tcl_Obj*	TkTextNewIndexObj(TkText *textPtr,
 			    CONST TkTextIndex *indexPtr);
-EXTERN void		TkTextRedrawRegion(TkText *textPtr, int x, int y,
+MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y,
 			    int width, int height);
-EXTERN void		TkTextRedrawTag(TkSharedText *sharedTextPtr,
+MODULE_SCOPE void	TkTextRedrawTag(TkSharedText *sharedTextPtr,
 			    TkText *textPtr, TkTextIndex *index1Ptr,
 			    TkTextIndex *index2Ptr, TkTextTag *tagPtr,
 			    int withTag);
-EXTERN void		TkTextRelayoutWindow(TkText *textPtr, int mask);
-EXTERN int		TkTextScanCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE void	TkTextRelayoutWindow(TkText *textPtr, int mask);
+MODULE_SCOPE int	TkTextScanCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN int		TkTextSeeCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextSeeCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN int		TkTextSegToOffset(CONST TkTextSegment *segPtr,
+MODULE_SCOPE int	TkTextSegToOffset(CONST TkTextSegment *segPtr,
 			    CONST TkTextLine *linePtr);
-EXTERN TkTextSegment *	TkTextSetMark(TkText *textPtr,
+MODULE_SCOPE TkTextSegment *TkTextSetMark(TkText *textPtr,
 			    CONST char *name, TkTextIndex *indexPtr);
-EXTERN void		TkTextSetYView(TkText *textPtr,
+MODULE_SCOPE void	TkTextSetYView(TkText *textPtr,
 			    TkTextIndex *indexPtr, int pickPlace);
-EXTERN int		TkTextTagCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextTagCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN int		TkTextImageCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextImageCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN int		TkTextImageIndex(TkText *textPtr,
+MODULE_SCOPE int	TkTextImageIndex(TkText *textPtr,
 			    CONST char *name, TkTextIndex *indexPtr);
-EXTERN int		TkTextWindowCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextWindowCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN int		TkTextWindowIndex(TkText *textPtr, CONST char *name,
+MODULE_SCOPE int	TkTextWindowIndex(TkText *textPtr, CONST char *name,
 			    TkTextIndex *indexPtr);
-EXTERN int		TkTextXviewCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextXviewCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN int		TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
+MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-EXTERN void             TkTextWinFreeClient(Tcl_HashEntry *hPtr,
+MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
 
 # undef TCL_STORAGE_CLASS

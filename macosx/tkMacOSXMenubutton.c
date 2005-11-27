@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.5 2005/09/10 14:53:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.6 2005/11/27 02:36:15 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -26,8 +26,8 @@
 
 #define TK_POPUP_OFFSET 32      /* size of popup marker */
 
-int TkMacOSXGetNewMenuID _ANSI_ARGS_((Tcl_Interp *interp, TkMenu *menuInstPtr, int cascade, short *menuIDPtr));
-void TkMacOSXFreeMenuID _ANSI_ARGS_((short menuID));
+MODULE_SCOPE int TkMacOSXGetNewMenuID _ANSI_ARGS_((Tcl_Interp *interp, TkMenu *menuInstPtr, int cascade, short *menuIDPtr));
+MODULE_SCOPE void TkMacOSXFreeMenuID _ANSI_ARGS_((short menuID));
 
 typedef struct {
     SInt16 initialValue;
@@ -84,10 +84,8 @@ static void CompareControlTitleParams(
     int * styleChanged
 );
 
-extern int TkFontGetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst); 
-extern void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
-
-extern int tkPictureIsOpen;
+MODULE_SCOPE int TkFontGetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst); 
+MODULE_SCOPE void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
 
 /*
  * The structure below defines menubutton class behavior by means of
@@ -603,7 +601,7 @@ MenuButtonInitControl (
     Rect      *cntrRect
 )
 {
-    OSErr      status;
+    OSStatus   err;
     TkMenuButton * butPtr = ( TkMenuButton * )mbPtr;
     ControlRef rootControl;
     SInt16     procID;
@@ -612,10 +610,7 @@ MenuButtonInitControl (
     SInt16     minValue;
     SInt16     maxValue;
     SInt32     controlReference;
-    int        err;
     short      menuID;
-    int        length;
-    Str255     itemText;
 
     rootControl = TkMacOSXGetRootControl(Tk_WindowId(butPtr->tkwin));
     mbPtr->windowRef = GetWindowFromPort(TkMacOSXGetDrawablePort(Tk_WindowId(butPtr->tkwin)));
@@ -643,10 +638,10 @@ MenuButtonInitControl (
 #endif
         return 1;
     }
-    status = EmbedControl(mbPtr->userPane,rootControl);
-    if (status != noErr) {
+    err = EmbedControl(mbPtr->userPane,rootControl);
+    if (err != noErr) {
 #ifdef TK_MAC_DEBUG
-        fprintf(stderr,"Failed to embed user pane control %d\n", status);
+        fprintf(stderr,"Failed to embed user pane control %d\n", (int) err);
 #endif
         return 1;
     }
@@ -674,7 +669,7 @@ MenuButtonInitControl (
     err = EmbedControl(mbPtr->control,mbPtr->userPane);
     if (err != noErr ) {
 #ifdef TK_MAC_DEBUG
-        fprintf(stderr,"failed to embed control of type %d,%d\n",procID, err);
+        fprintf(stderr,"failed to embed control of type %d,%d\n",procID, (int) err);
 #endif
         return 1;
     }
@@ -688,30 +683,47 @@ MenuButtonInitControl (
 	  err = SetControlFontStyle(mbPtr->control,&mbPtr->titleParams.style);
             if (err !=noErr) {
 #ifdef TK_MAC_DEBUG
-                fprintf(stderr,"SetControlFontStyle failed %d\n", err);
+                fprintf(stderr,"SetControlFontStyle failed %d\n", (int) err);
 #endif
                 return 1;
              }
         }
     } else {
-        CFStringRef cf;    	    
+        CFStringRef cfStr;
         err = TkMacOSXGetNewMenuID(mbPtr->info.interp, (TkMenu *)mbPtr, 0, &menuID);
         if (err != TCL_OK) {
-            return err;
+            return 1;
         }       
-        length = strlen(Tk_PathName(mbPtr->info.tkwin));
-        memmove(&itemText[1], Tk_PathName(mbPtr->info.tkwin),
-                (length > 230) ? 230 : length);
-        itemText[0] = (length > 230) ? 230 : length;
-        if (!(mbPtr->menuRef = NewMenu(menuID,itemText))) {
+        err = CreateNewMenu(menuID, kMenuAttrDoNotUseUserCommandKeys,
+                &(mbPtr->menuRef));
+        if (err != noErr) {
+#ifdef TK_MAC_DEBUG
+            fprintf(stderr,"CreateNewMenu failed, %d.\n", (int) err);
+#endif
             return 1;
         }
-        cf = CFStringCreateWithCString(NULL,
+        cfStr = CFStringCreateWithCString(NULL, Tk_PathName(mbPtr->info.tkwin),
+                kCFStringEncodingUTF8);
+        if (!cfStr) {
+#ifdef TK_MAC_DEBUG
+            fprintf(stderr,"CFStringCreateWithCString failed.\n");
+#endif
+            return 1;
+        }
+        err = SetMenuTitleWithCFString(mbPtr->menuRef, cfStr);
+        CFRelease(cfStr);
+        if (err != noErr) {
+#ifdef TK_MAC_DEBUG
+            fprintf(stderr,"SetMenuTitleWithCFString failed, %d.\n", (int) err);
+#endif
+            return 1;
+        }
+        cfStr = CFStringCreateWithCString(NULL,
                 (char*) mbPtr->titleParams.title, kCFStringEncodingUTF8);
         AppendMenuItemText(mbPtr->menuRef, "\px");
-        if (cf != NULL) {
-        SetMenuItemTextWithCFString(mbPtr->menuRef, 1, cf);
-        CFRelease(cf);
+        if (cfStr) {
+            SetMenuItemTextWithCFString(mbPtr->menuRef, 1, cfStr);
+            CFRelease(cfStr);
         }
         err = SetControlData(mbPtr->control,
                 kControlNoPart,

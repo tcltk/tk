@@ -32,7 +32,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.3 2005/11/27 02:36:15 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -42,7 +42,7 @@
 #include "tkPort.h"
 #include "tkInt.h"
 
-EXTERN int		Tk_SendObjCmd _ANSI_ARGS_((ClientData clientData,
+MODULE_SCOPE int	Tk_SendObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 
      /* 
