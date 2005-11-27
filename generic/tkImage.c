@@ -10,11 +10,16 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.27 2005/11/17 16:21:55 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.28 2005/11/27 02:36:13 das Exp $
  */
 
 #include "tkInt.h"
 #include "tkPort.h"
+
+#ifndef USE_OLD_IMAGE
+MODULE_SCOPE void Tk_CreateOldImageType(Tk_ImageType *typePtr);
+MODULE_SCOPE void Tk_CreateOldPhotoImageFormat(Tk_PhotoImageFormat *formatPtr);
+#endif
 
 /*
  * Each call to Tk_GetImage returns a pointer to one of the following

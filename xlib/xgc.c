@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.7 2004/03/17 18:15:50 das Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.8 2005/11/27 02:36:16 das Exp $
  */
 
 #include <tkInt.h>
@@ -67,7 +67,7 @@ XCreateGC(display, d, mask, values)
     gp->plane_mask = 	(mask & GCPlaneMask) 	?values->plane_mask 	:~0;
     gp->foreground = 	(mask & GCForeground) 	?values->foreground 	:0;
     gp->background = 	(mask & GCBackground) 	?values->background 	:0xffffff;
-    gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:0;	
+    gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:1;	
     gp->line_style = 	(mask & GCLineStyle)	?values->line_style	:LineSolid;
     gp->cap_style =  	(mask & GCCapStyle)	?values->cap_style	:0;
     gp->join_style = 	(mask & GCJoinStyle)	?values->join_style	:0;
@@ -392,6 +392,7 @@ XSetClipMask(display, gc, pixmap)
  * Some additional dummy functions (hopefully implemented soon).
  */
 
+#if 0
 Cursor
 XCreateFontCursor(display, shape)
     Display* display;
@@ -411,6 +412,7 @@ XDrawImageString(display, d, gc, x, y, string, length)
     int length;
 {
 }
+#endif
 
 void
 XDrawPoint(display, d, gc, x, y)
@@ -451,6 +453,7 @@ XDrawSegments(display, d, gc, segments, nsegments)
 }
 #endif
 
+#if 0
 char *
 XFetchBuffer(display, nbytes_return, buffer)
     Display* display;
@@ -498,7 +501,8 @@ XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height)
 {
 }
 
-void XQueryTextExtents(display, font_ID, string, nchars, direction_return,
+void
+XQueryTextExtents(display, font_ID, string, nchars, direction_return,
 	font_ascent_return, font_descent_return, overall_return)
     Display* display;
     XID font_ID;
@@ -543,3 +547,4 @@ XUndefineCursor(display, w)
     Window w;
 {
 }
+#endif

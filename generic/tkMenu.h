@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.h,v 1.10 2005/11/14 22:44:11 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.h,v 1.11 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKMENU
@@ -241,7 +241,7 @@ typedef struct TkMenuEntry {
  * Menu states
  */
 
-EXTERN char *tkMenuStateStrings[];
+MODULE_SCOPE char *tkMenuStateStrings[];
 
 #define ENTRY_ACTIVE 0
 #define ENTRY_NORMAL 1
@@ -491,70 +491,70 @@ typedef struct TkMenuOptionTables {
  * the outside world:
  */
 
-EXTERN int		TkActivateMenuEntry(TkMenu *menuPtr, int index);
-EXTERN void		TkBindMenu(Tk_Window tkwin, TkMenu *menuPtr);
-EXTERN TkMenuReferences*TkCreateMenuReferences(Tcl_Interp *interp,
+MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, int index);
+MODULE_SCOPE void	TkBindMenu(Tk_Window tkwin, TkMenu *menuPtr);
+MODULE_SCOPE TkMenuReferences*TkCreateMenuReferences(Tcl_Interp *interp,
 			    char *name);
-EXTERN void		TkDestroyMenu(TkMenu *menuPtr);
-EXTERN void             TkEventuallyRecomputeMenu(TkMenu *menuPtr);
-EXTERN void		TkEventuallyRedrawMenu(TkMenu *menuPtr,
+MODULE_SCOPE void	TkDestroyMenu(TkMenu *menuPtr);
+MODULE_SCOPE void	TkEventuallyRecomputeMenu(TkMenu *menuPtr);
+MODULE_SCOPE void	TkEventuallyRedrawMenu(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr);
-EXTERN TkMenuReferences*TkFindMenuReferences(Tcl_Interp *interp, char *name);
-EXTERN TkMenuReferences*TkFindMenuReferencesObj(Tcl_Interp *interp,
+MODULE_SCOPE TkMenuReferences*TkFindMenuReferences(Tcl_Interp *interp, char *name);
+MODULE_SCOPE TkMenuReferences*TkFindMenuReferencesObj(Tcl_Interp *interp,
 			    Tcl_Obj *namePtr);
-EXTERN int		TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
-EXTERN Tcl_HashTable *	TkGetMenuHashTable(Tcl_Interp *interp);
-EXTERN int		TkGetMenuIndex(Tcl_Interp *interp, TkMenu *menuPtr,
+MODULE_SCOPE int	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
+MODULE_SCOPE Tcl_HashTable *TkGetMenuHashTable(Tcl_Interp *interp);
+MODULE_SCOPE int	TkGetMenuIndex(Tcl_Interp *interp, TkMenu *menuPtr,
 			    Tcl_Obj *objPtr, int lastOK, int *indexPtr);
-EXTERN void		TkMenuInitializeDrawingFields(TkMenu *menuPtr);
-EXTERN void		TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);
-EXTERN int		TkInvokeMenu(Tcl_Interp *interp, TkMenu *menuPtr,
+MODULE_SCOPE void	TkMenuInitializeDrawingFields(TkMenu *menuPtr);
+MODULE_SCOPE void	TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);
+MODULE_SCOPE int	TkInvokeMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    int index);
-EXTERN void		TkMenuConfigureDrawOptions(TkMenu *menuPtr);
-EXTERN int		TkMenuConfigureEntryDrawOptions(
+MODULE_SCOPE void	TkMenuConfigureDrawOptions(TkMenu *menuPtr);
+MODULE_SCOPE int	TkMenuConfigureEntryDrawOptions(
 			    TkMenuEntry *mePtr, int index);
-EXTERN void		TkMenuFreeDrawOptions(TkMenu *menuPtr);
-EXTERN void		TkMenuEntryFreeDrawOptions(TkMenuEntry *mePtr);
-EXTERN void		TkMenuEventProc(ClientData clientData,
+MODULE_SCOPE void	TkMenuFreeDrawOptions(TkMenu *menuPtr);
+MODULE_SCOPE void	TkMenuEntryFreeDrawOptions(TkMenuEntry *mePtr);
+MODULE_SCOPE void	TkMenuEventProc(ClientData clientData,
     			    XEvent *eventPtr);
-EXTERN void		TkMenuImageProc(ClientData clientData, int x, int y,
+MODULE_SCOPE void	TkMenuImageProc(ClientData clientData, int x, int y,
 			    int width, int height, int imgWidth,
 			    int imgHeight);
-EXTERN void		TkMenuInit(void);
-EXTERN void		TkMenuSelectImageProc(ClientData clientData, int x,
+MODULE_SCOPE void	TkMenuInit(void);
+MODULE_SCOPE void	TkMenuSelectImageProc(ClientData clientData, int x,
 			    int y, int width, int height, int imgWidth,
 			    int imgHeight);
-EXTERN Tcl_Obj *	TkNewMenuName(Tcl_Interp *interp,
+MODULE_SCOPE Tcl_Obj *	TkNewMenuName(Tcl_Interp *interp,
 			    Tcl_Obj *parentNamePtr, TkMenu *menuPtr);
-EXTERN int		TkPostCommand(TkMenu *menuPtr);
-EXTERN int		TkPostSubmenu(Tcl_Interp *interp, TkMenu *menuPtr,
+MODULE_SCOPE int	TkPostCommand(TkMenu *menuPtr);
+MODULE_SCOPE int	TkPostSubmenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    TkMenuEntry *mePtr);
-EXTERN int		TkPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
+MODULE_SCOPE int	TkPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    int x, int y);
-EXTERN int		TkPreprocessMenu(TkMenu *menuPtr);
-EXTERN void             TkRecomputeMenu(TkMenu *menuPtr);
+MODULE_SCOPE int	TkPreprocessMenu(TkMenu *menuPtr);
+MODULE_SCOPE void	TkRecomputeMenu(TkMenu *menuPtr);
 
 /*
  * These routines are the platform-dependent routines called by the common
  * code.
  */
 
-EXTERN void		TkpComputeMenubarGeometry(TkMenu *menuPtr);
-EXTERN void		TkpComputeStandardMenuGeometry(TkMenu *menuPtr);
-EXTERN int		TkpConfigureMenuEntry(TkMenuEntry *mePtr);
-EXTERN void		TkpDestroyMenu(TkMenu *menuPtr);
-EXTERN void		TkpDestroyMenuEntry(TkMenuEntry *mEntryPtr);
-EXTERN void		TkpDrawMenuEntry(TkMenuEntry *mePtr,
+MODULE_SCOPE void	TkpComputeMenubarGeometry(TkMenu *menuPtr);
+MODULE_SCOPE void	TkpComputeStandardMenuGeometry(TkMenu *menuPtr);
+MODULE_SCOPE int	TkpConfigureMenuEntry(TkMenuEntry *mePtr);
+MODULE_SCOPE void	TkpDestroyMenu(TkMenu *menuPtr);
+MODULE_SCOPE void	TkpDestroyMenuEntry(TkMenuEntry *mEntryPtr);
+MODULE_SCOPE void	TkpDrawMenuEntry(TkMenuEntry *mePtr,
 			    Drawable d, Tk_Font tkfont,
 			    CONST Tk_FontMetrics *menuMetricsPtr, int x,
 			    int y, int width, int height, int strictMotif,
 			    int drawArrow);
-EXTERN void		TkpMenuInit(void);
-EXTERN int		TkpMenuNewEntry(TkMenuEntry *mePtr);
-EXTERN int		TkpNewMenu(TkMenu *menuPtr);
-EXTERN int		TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
+MODULE_SCOPE void	TkpMenuInit(void);
+MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
+MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
+MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    int x, int y);
-EXTERN void		TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
+MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

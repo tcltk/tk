@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.11 2005/09/10 14:53:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.12 2005/11/27 02:36:15 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -61,7 +61,7 @@ typedef struct {
     WindowRef   whichWindow;
     Point       global;
     Point       local;
-    int         state;
+    unsigned int state;
     unsigned char ch;
     UInt32      keyCode;
     UInt32      keyModifiers;
@@ -96,8 +96,6 @@ static int GenerateKeyEvent (
         UInt32 savedKeyCode,
         UInt32 savedModifiers,
         const UniChar * chars, int numChars);
-
-static void KLSInit(void);
 
 static int GetKeyboardLayout (
         Ptr * resourcePtr, TextEncoding * encodingPtr);
@@ -558,23 +556,6 @@ InitKeyEvent(
 
 
 /*
- *----------------------------------------------------------------------
- *
- * KLSInit --
- *
- *      Dynamically initialize Keyboard Layout Services bindings.
- *
- * Side effects:
- *      Sets some function pointers (hopefully).
- *
- *----------------------------------------------------------------------
- */
-
-#include <mach-o/dyld.h>
-
-static int KLSIsInitialized = false;
-
-/*
  * If we have old headers, we need to define these types and constants
  * ourself.  We use preprocessor macros instead of enums and typedefs,
  * because macros work even in case of version misunderstandings, while
@@ -590,35 +571,6 @@ static int KLSIsInitialized = false;
 #define kKLIdentifier 2
 #endif
 
-static OSStatus (*KLGetCurrentKeyboardLayoutPtr)(
-    KeyboardLayoutRef *         oKeyboardLayout)    = NULL;
-static OSStatus (*KLGetKeyboardLayoutPropertyPtr)(
-    KeyboardLayoutRef           iKeyboardLayout,
-    KeyboardLayoutPropertyTag   iPropertyTag,
-    const void **               oValue)             = NULL;
-
-static void
-KLSInit(void)
-{
-    static const char MODULE[] = "HIToolbox";
-    static const char GET_LAYOUT[] = "_KLGetCurrentKeyboardLayout";
-    static const char GET_PROP[] = "_KLGetKeyboardLayoutProperty";
-
-    NSSymbol symbol;
-
-    if (NSIsSymbolNameDefinedWithHint(GET_LAYOUT, MODULE)) {
-        symbol = NSLookupAndBindSymbolWithHint(GET_LAYOUT, MODULE);
-        KLGetCurrentKeyboardLayoutPtr = NSAddressOfSymbol(symbol);
-    }
-    if (NSIsSymbolNameDefinedWithHint(GET_PROP, MODULE)) {
-        symbol = NSLookupAndBindSymbolWithHint(GET_PROP, MODULE);
-        KLGetKeyboardLayoutPropertyPtr = NSAddressOfSymbol(symbol);
-    }
-
-    KLSIsInitialized = true;
-}
-
-
 /*
  *----------------------------------------------------------------------
  *
@@ -662,18 +614,18 @@ GetKeyboardLayout (Ptr * resourcePtr, TextEncoding * encodingPtr)
 
     currentKeyScript = GetScriptManagerVariable(smKeyScript);
 
-    if (!KLSIsInitialized) {
-        KLSInit();
-    }
-
-    if (KLGetCurrentKeyboardLayoutPtr != NULL) {
+    TkMacOSXInitNamedSymbol(HIToolbox, OSStatus, KLGetCurrentKeyboardLayout,
+            KeyboardLayoutRef*);
+    TkMacOSXInitNamedSymbol(HIToolbox, OSStatus, KLGetKeyboardLayoutProperty,
+            KeyboardLayoutRef, KeyboardLayoutPropertyTag, const void**);
+    if (KLGetCurrentKeyboardLayout && KLGetKeyboardLayoutProperty) {
 
         /*
          * Use the Keyboard Layout Services (these functions only exist since
          * 10.2).
          */
 
-        (*KLGetCurrentKeyboardLayoutPtr)(&currentLayout);
+        KLGetCurrentKeyboardLayout(&currentLayout);
 
         if (currentLayout != NULL) {
 
@@ -684,7 +636,7 @@ GetKeyboardLayout (Ptr * resourcePtr, TextEncoding * encodingPtr)
              * also change and it could still be the same layoutid.
              */
 
-            (*KLGetKeyboardLayoutPropertyPtr)(currentLayout, kKLIdentifier,
+            KLGetKeyboardLayoutProperty(currentLayout, kKLIdentifier,
                     (const void**)&currentLayoutId);
 
             if ((lastLayout != currentLayout)
@@ -705,12 +657,12 @@ GetKeyboardLayout (Ptr * resourcePtr, TextEncoding * encodingPtr)
                 uchr = NULL;
                 KCHR = NULL;
 
-                if (((*KLGetKeyboardLayoutPropertyPtr)(currentLayout,
+                if ((KLGetKeyboardLayoutProperty(currentLayout,
                                         kKLuchrData, (const void**)&uchr)
                                 == noErr)
                         && (uchr != NULL)) {
                     /* done */
-                } else if (((*KLGetKeyboardLayoutPropertyPtr)(currentLayout,
+                } else if ((KLGetKeyboardLayoutProperty(currentLayout,
                                         kKLKCHRData, (const void**)&KCHR)
                                 == noErr)
                         && (KCHR != NULL)) {

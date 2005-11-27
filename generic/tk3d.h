@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.h,v 1.6 2005/11/04 15:23:05 dkf Exp $
+ * RCS: @(#) $Id: tk3d.h,v 1.7 2005/11/27 02:36:13 das Exp $
  */
 
 #ifndef _TK3D
@@ -86,9 +86,9 @@ typedef struct TkBorder {
  * Declarations for platform specific interfaces used by this module.
  */
 
-EXTERN TkBorder *	TkpGetBorder(void);
-EXTERN void		TkpGetShadows(TkBorder *borderPtr, Tk_Window tkwin);
-EXTERN void		TkpFreeBorder(TkBorder *borderPtr);
+MODULE_SCOPE TkBorder	*TkpGetBorder(void);
+MODULE_SCOPE void	TkpGetShadows(TkBorder *borderPtr, Tk_Window tkwin);
+MODULE_SCOPE void	TkpFreeBorder(TkBorder *borderPtr);
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

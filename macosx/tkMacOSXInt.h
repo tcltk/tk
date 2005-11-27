@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.10 2005/10/10 20:29:49 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.11 2005/11/27 02:36:15 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -94,7 +94,7 @@ typedef struct {
 	Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc;
 } TkMacOSXEmbedHandler;
 
-extern TkMacOSXEmbedHandler *gMacEmbedHandler;
+MODULE_SCOPE TkMacOSXEmbedHandler *gMacEmbedHandler;
 
 /*
  * Defines used for TkMacOSXInvalidateWindow
@@ -127,17 +127,17 @@ extern TkMacOSXEmbedHandler *gMacEmbedHandler;
  * Globals shared among Macintosh Tk
  */
  
-extern MenuHandle tkAppleMenu;		/* Handle to the Apple Menu */
-extern MenuHandle tkFileMenu;		/* Handles to menus */
-extern MenuHandle tkEditMenu;		/* Handles to menus */
-extern RgnHandle tkMenuCascadeRgn;	/* A region to clip with. */
-extern int tkUseMenuCascadeRgn;		/* If this is 1, clipping code
+MODULE_SCOPE MenuHandle tkAppleMenu;	/* Handle to the Apple Menu */
+MODULE_SCOPE MenuHandle tkFileMenu;	/* Handles to menus */
+MODULE_SCOPE MenuHandle tkEditMenu;	/* Handles to menus */
+MODULE_SCOPE RgnHandle tkMenuCascadeRgn;/* A region to clip with. */
+MODULE_SCOPE int tkUseMenuCascadeRgn;	/* If this is 1, clipping code
 					 * should intersect tkMenuCascadeRgn
 					 * before drawing occurs.
 					 * tkMenuCascadeRgn will only
 					 * be valid when the value of this
 					 * variable is 1. */
-extern int tkPictureIsOpen;             /* If this is 1, we are drawing to a picture
+MODULE_SCOPE int tkPictureIsOpen;            /* If this is 1, we are drawing to a picture
                                          * The clipping should then be done relative
                                          * to the bounds of the picture rather than the window
                                          * As of OS X.0.4, something is seriously wrong:
@@ -146,10 +146,10 @@ extern int tkPictureIsOpen;             /* If this is 1, we are drawing to a pic
                                          * The destination rectangle for CopyBits
                                          * should also have top,left values of 0,0
                                          */
-extern TkMacOSXWindowList *tkMacOSXWindowListPtr;
+MODULE_SCOPE TkMacOSXWindowList *tkMacOSXWindowListPtr;
 					/* The list of toplevels */
 
-extern Tcl_Encoding TkMacOSXCarbonEncoding;
+MODULE_SCOPE Tcl_Encoding TkMacOSXCarbonEncoding;
 
 MODULE_SCOPE int TkMacOSXUseAntialiasedText(Tcl_Interp *interp, int enable);
 MODULE_SCOPE void TkMacOSXInitCarbonEvents(Tcl_Interp *interp);
@@ -157,6 +157,14 @@ MODULE_SCOPE int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable, int antiA
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE int TkMacOSXGenerateFocusEvent( Window window, int activeFlag);
 MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
+MODULE_SCOPE void* TkMacOSXGetNamedSymbol(const char* module, const char* symbol);
+
+/* Macro to abstract common use of TkMacOSXGetNamedSymbol to initialize named symbols */
+#define TkMacOSXInitNamedSymbol(module, ret, symbol, ...) \
+    static ret (* symbol)(__VA_ARGS__) = (void*)(-1L); \
+    if (symbol == (void*)(-1L)) { \
+        symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), STRINGIFY(_##symbol));\
+    }
 
 #include "tkIntPlatDecls.h"
 

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.39 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.40 2005/11/27 02:36:13 das Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -237,14 +237,6 @@ typedef struct {
 static Tcl_ThreadDataKey dataKey;
 static SearchUids *	GetStaticUids(void);
 #endif /* USE_OLD_TAG_SEARCH */
-
-/*
- * Standard item types provided by Tk:
- */
-
-extern Tk_ItemType tkArcType, tkBitmapType, tkImageType, tkLineType;
-extern Tk_ItemType tkOvalType, tkPolygonType;
-extern Tk_ItemType tkRectangleType, tkTextType, tkWindowType;
 
 /*
  * Prototypes for functions defined later in this file:

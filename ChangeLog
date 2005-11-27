@@ -1,3 +1,168 @@
+2005-11-27  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/tcl.m4 (Darwin): add 64bit support, check for Tiger copyfile(),
+	add CFLAGS to SHLIB_LD to support passing -isysroot in env(CFLAGS) to
+	configure (flag can't be present twice, so can't be in both CFLAGS and
+	LDFLAGS during configure), don't use -prebind when deploying on 10.4,
+	define TCL_IO_TRACK_OS_FOR_DRIVER_WITH_BAD_BLOCKING (rdar://3171542).
+	(SC_ENABLE_LANGINFO, SC_TIME_HANDLER): add/fix caching, fix obsolete
+	autoconf macros. Sync with tcl/unix/tcl.m4.
+
+	* unix/configure.in: fix obsolete autoconf macros, sync gratuitous
+	formatting/ordering differences with tcl/unix/configure.in.
+
+	* unix/Makefile.in: add CFLAGS to wish/tktest link to make executable
+	linking the same as during configure (needed to avoid loosing any linker
+	relevant flags in CFLAGS, in particular flags that can't be in LDFLAGS).
+	Avoid concurrent linking of wish and compiling of tkTestInit.o during
+	parallel make, fix dependencies and flags for building tkMacOSXInit.o
+	(checkstubs, checkexports): dependency and Darwin fixes
+	(dist): add new macosx files.
+
+	* macosx/tkMacOSXEvent.c (TkMacOSXProcessEvent):
+	* macosx/tkMacOSXEvent.h:
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent):
+	* macosx/tkMacOSXCarbonEvents.c: install standard application event
+	handler, add & call functions to start and stop carbon even timer that
+	runs the tcl event loop periodically during a nested carbon event loop
+	in the toolbox (e.g. during menutracking) to ensure tcl timers etc
+	continue to fire, register app event handler for menu tracking and HI
+	command carbon events, move menu event handling to new handlers for
+	those carbon events, no longer register for/handle appleevent carbon
+	event (now dealt with by standard application event handler), event
+	debugging code dynamically acquires carbon event debugging functions to
+	allow use on Tiger where they are no longer exported from HIToolbox.
+
+	* macosx/tkMacOSXFont.c (TkMacOSXUseAntialiasedText):
+	* macosx/tkMacOSXKeyEvent.c (GetKeyboardLayout):
+	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents):
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h: abstract common code to dynamically acquire
+	address of a named symbol (from a loaded dynamic library) into new
+	function TkMacOSXGetNamedSymbol() and macro TkMacOSXInitNamedSymbol.
+
+	* macosx/tkMacOSXMenu.c (TkpNewMenu):
+	* macosx/tkMacOSXMenubutton.c (MenuButtonInitControl):
+	* macosx/tkMacOSXMenus.c (TkMacOSXHandleMenuSelect): switch to  modern
+	utf8 aware menu manager API, remove obsolete code, add error handling.
+
+	* macosx/tkMacOSXMouseEvent.c: define OSX 10.3 or later only constants
+	if necessary to allow compilation on OSX 10.2
+
+	* macosx/tkMacOSXWm.c (UpdateSizeHints): remove code that is never
+	executed.
+
+	* xlib/xgc.c (XCreateGC): sync with core-8-4-branch change.
+
+	* generic/tk.h: add/correct location of version numbers in macosx files.
+
+	* generic/tkInt.h: clarify fat compile comment.
+
+	* macosx/Wish.pbproj/default.pbxuser (new file):
+	* macosx/Wish.pbproj/jingham.pbxuser:
+	* macosx/Wish.pbproj/project.pbxproj:
+	* macosx/Wish.xcode/default.pbxuser:
+	* macosx/Wish.xcode/project.pbxproj:
+	* macosx/Wish.xcodeproj/default.pbxuser (new file):
+	* macosx/Wish.xcodeproj/project.pbxproj (new file): new/updated projects
+	for Xcode 2.2 on 10.4, Xcode 1.5 on 10.3 & ProjectBuilder on 10.2, with
+	native tktest targets and support for universal (fat) compiles.
+
+	* macosx/Tk-Info.plist (removed):
+	* macosx/Wish-Info.plist (removed):
+	* macosx/buildTkConfig.tcl (removed): remove obsolete build files.
+
+	* macosx/README: clarification/cleanup, document new Xcode projects and
+	universal (fat) builds via CFLAGS (i.e. ppc and i386 at the same time).
+
+	* unix/Makefile.in:
+	* unix/aclocal.m4:
+	* unix/configure.in:
+	* macosx/configure.ac (new file): add support for inclusion of
+	unix/configure.in by macosx/configure.ac, allows generation of a config
+	headers enabled configure script in macosx (required by Xcode projects).
+
+	* macosx/GNUmakefile: rename from Makefile to avoid overwriting by
+	configure run in tk/macosx, add support for reusing configure cache,
+	build target fixes.
+
+	* generic/tk3d.h:
+	* generic/tkButton.h:
+	* generic/tkCanvas.c:
+	* generic/tkCanvas.h:
+	* generic/tkColor.h:
+	* generic/tkEntry.h:
+	* generic/tkFileFilter.h:
+	* generic/tkFont.c:
+	* generic/tkFont.h:
+	* generic/tkImage.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkInt.h:
+	* generic/tkMenu.c:
+	* generic/tkMenu.h:
+	* generic/tkMenubutton.h:
+	* generic/tkScale.h:
+	* generic/tkScrollbar.h:
+	* generic/tkSelect.h:
+	* generic/tkStubInit.c:
+	* generic/tkStubLib.c:
+	* generic/tkText.h:
+	* generic/tkUndo.h:
+	* macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXDebug.c:
+	* macosx/tkMacOSXDebug.h:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXSend.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c:
+	* unix/tkUnixButton.c:
+	* unix/tkUnixMenu.c:
+	* xlib/xgc.c: ensure externally visible symbols not contained in stubs
+	table are declared as MODULE_SCOPE (or as static if not used outside of
+	own source file), #ifdef out a few Xlib and aqua functions that are
+	never called. These changes allow 'make checkstubs' to complete without
+	error on Darwin with gcc 4.
+
+	* macosx/tkMacOSXTest.c:
+	* macosx/tkMacOSXPort.h:
+	* win/tkWinTest.c:
+	* generic/tkInt.decls: add functions needed by tktest to internal stubs
+	table, correct signature of TkMacOSXHandleMenuSelect, add XSync to aqua
+	Xlib stubs.
+
+	* unix/tkUnixSend.c:
+	* generic/tkText.c:
+	* generic/tkTest.c: #ifdef unix only declarations.
+	(TestmetricsCmd): unify win and mac implementation.
+	(TestsendCmd): move to tkUnixSend.c to avoid access to global var.
+	(TesttextCmd): move to tkText.c to avoid having to put all the internal
+	text functions it uses into the stubs table.
+
+	* generic/tkTextDisp.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXXStubs.c: fix gcc 4 warnings.
+
+	* macosx/tkMacOSXNotify.c:
+	* macosx/tkMacOSXScrlbr.c: sync with core-8-4-branch.
+
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkStubInit.c:
+	* unix/configure:
+	* unix/tkConfig.h.in: regen.
+
 2005-11-22  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/tkfbox.tcl: Remove all references to data(curItem), as it is

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.26 2005/11/22 11:59:04 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.27 2005/11/27 02:36:13 das Exp $
  */
 
 #include "tkPort.h"
@@ -343,6 +343,8 @@ static int		SetFontFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static void		TheWorldHasChanged(ClientData clientData);
 static void		UpdateDependentFonts(TkFontInfo *fiPtr,
 			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr);
+MODULE_SCOPE int	TkFontGetFirstTextLayout(Tk_TextLayout layout,
+			    Tk_Font *font, char *dst);
 
 /*
  * The following structure defines the implementation of the "font" Tcl
