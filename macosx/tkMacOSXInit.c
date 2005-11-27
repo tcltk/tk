@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.10 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.11 2005/11/27 02:36:46 das Exp $
  */
 
 #include "tkInt.h"
@@ -170,9 +170,9 @@ TkpInit(interp)
             if (rsrc) {
                 ReleaseResource(rsrc);
             } else {
-                struct mach_header *image;
+                const struct mach_header *image;
                 char *data = NULL;
-                unsigned long size;
+                uint32_t size;
                 int fd = -1;
                 char fileName[L_tmpnam + 15];
                 int i, n;
@@ -204,7 +204,7 @@ TkpInit(interp)
                     if (fd == -1) break;
                     fcntl(fd, F_SETFD, FD_CLOEXEC);
                     if (write(fd, data, size) == -1) break;
-                    err = FSPathMakeRef(fileName, &ref, NULL);
+                    err = FSPathMakeRef((unsigned char*)fileName, &ref, NULL);
                     if (err != noErr) break;
                     err = FSOpenResourceFile(&ref, 0, NULL, fsRdPerm, &refNum);
 #ifdef TK_MAC_DEBUG
@@ -286,22 +286,14 @@ TkpInit(interp)
                  * Load the CPS SPI symbol dynamically, so that we don't break
                  * if it every disappears or changes its name.
                  */
-                OSErr (*cpsEnableForegroundOperation)(ProcessSerialNumberPtr) = NULL;
-                NSSymbol nsSymbol;
-                if(NSIsSymbolNameDefinedWithHint(
-                        "_CPSEnableForegroundOperation", "CoreGraphics")) {
-                    nsSymbol = NSLookupAndBindSymbolWithHint(
-                        "_CPSEnableForegroundOperation", "CoreGraphics");
-                    if(nsSymbol) {
-                        cpsEnableForegroundOperation = NSAddressOfSymbol(nsSymbol);
-                    }
-                }
-                if (cpsEnableForegroundOperation) {
+                TkMacOSXInitNamedSymbol(CoreGraphics, OSErr, \
+                        CPSEnableForegroundOperation, ProcessSerialNumberPtr);
+                if (CPSEnableForegroundOperation) {
                     ProcessSerialNumber psn = { 0, kCurrentProcess };
                     /*
                      * Let the window server know that we are a foregroundable app
                      */
-                    cpsEnableForegroundOperation(&psn);
+                    CPSEnableForegroundOperation(&psn);
                 }
             }
         }
@@ -441,5 +433,46 @@ TkMacOSXDefaultStartupScript(void)
             }
             CFRelease(appMainURL);
         }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetNamedSymbol --
+ *
+ *
+ *        Dynamically acquire address of a named symbol from a loaded
+ *        dynamic library, so that we can use API that may not be
+ *        available on all OS versions.
+ *        If module is non-NULL and not the empty string, use twolevel
+ *        namespace lookup.
+ *       
+ * Results:
+ *        Address of given symbol or NULL if unavailable.
+ *
+ * Side effects:
+ *        None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void*
+TkMacOSXGetNamedSymbol(const char* module, const char* symbol)
+{
+    NSSymbol nsSymbol = NULL;
+    if (module && *module) {
+	if(NSIsSymbolNameDefinedWithHint(symbol, module)) {
+	    nsSymbol = NSLookupAndBindSymbolWithHint(symbol, module);
+	}
+    } else {
+        if(NSIsSymbolNameDefined(symbol)) {
+            nsSymbol = NSLookupAndBindSymbol(symbol);
+        }
+    }
+    if(nsSymbol) {
+	return NSAddressOfSymbol(nsSymbol);
+    } else {
+        return NULL;
     }
 }

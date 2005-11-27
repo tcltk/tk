@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.11 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.12 2005/11/27 02:36:46 das Exp $
  */
 
 #include "tkButton.h"
@@ -789,7 +789,7 @@ TkpDestroyButton(
  *----------------------------------------------------------------------
  */
 
-int
+static int
 TkMacOSXInitControl (
     MacButton *mbPtr,                /* Mac button. */
     GWorldPtr  destPort,

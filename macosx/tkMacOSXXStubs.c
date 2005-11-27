@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.8 2005/09/10 14:54:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.9 2005/11/27 02:36:46 das Exp $
  */
 
 #include "tkInt.h"
@@ -61,13 +61,13 @@ static int DefaultErrorHandler _ANSI_ARGS_((Display* display,
  * Other declarations
  */
 
-int TkMacOSXXDestroyImage _ANSI_ARGS_((XImage *image));
-unsigned long TkMacOSXXGetPixel _ANSI_ARGS_((XImage *image, int x, int y));
-int TkMacOSXXPutPixel _ANSI_ARGS_((XImage *image, int x, int y,
+static int TkMacOSXXDestroyImage _ANSI_ARGS_((XImage *image));
+static unsigned long TkMacOSXXGetPixel _ANSI_ARGS_((XImage *image, int x, int y));
+static int TkMacOSXXPutPixel _ANSI_ARGS_((XImage *image, int x, int y,
 	unsigned long pixel));
-XImage *TkMacOSXXSubImage _ANSI_ARGS_((XImage *image, int x, int y, 
+static XImage *TkMacOSXXSubImage _ANSI_ARGS_((XImage *image, int x, int y, 
 	unsigned int width, unsigned int height));
-int TkMacOSXXAddPixel _ANSI_ARGS_((XImage *image, long value));
+static int TkMacOSXXAddPixel _ANSI_ARGS_((XImage *image, long value));
 int _XInitImageFuncPtrs _ANSI_ARGS_((XImage *image));
 
 
@@ -475,6 +475,7 @@ XBell(
     SysBeep(percent);
 }
 
+#if 0
 void
 XSetWMNormalHints(
     Display* display,
@@ -496,6 +497,7 @@ XAllocSizeHints()
     
     return NULL;
 }
+#endif
 
 XImage * 
 XCreateImage(
@@ -754,7 +756,7 @@ TkGetServerInfo(
  * Image stuff 
  */
 
-int 
+static int 
 TkMacOSXXDestroyImage(
     XImage *image)
 {
@@ -763,7 +765,7 @@ TkMacOSXXDestroyImage(
     return 0;
 }
 
-unsigned long 
+static unsigned long 
 TkMacOSXXGetPixel(
     XImage *image,
     int x,
@@ -791,7 +793,7 @@ TkMacOSXXGetPixel(
     return c;
 }
 
-int 
+static int 
 TkMacOSXXPutPixel(
     XImage *image,
     int x,
@@ -822,7 +824,7 @@ TkMacOSXXPutPixel(
     return 0;
 }
 
-XImage *
+static XImage *
 TkMacOSXXSubImage(
     XImage *image,
     int x,
@@ -834,7 +836,7 @@ TkMacOSXXSubImage(
     return NULL;
 }
 
-int 
+static int 
 TkMacOSXXAddPixel(
     XImage *image,
     long value)

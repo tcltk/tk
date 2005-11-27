@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.87.2.14 2005/08/09 07:40:03 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.87.2.15 2005/11/27 02:44:26 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -522,8 +522,7 @@ objs: ${OBJS}
 
 
 wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
-	$(CC) $(LDFLAGS) $(WISH_OBJS) \
-		@TK_BUILD_LIB_SPEC@ \
+	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o wish
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
@@ -536,7 +535,7 @@ tktest: $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR=`pwd`:$(TCL_BIN_DIR)
 
 tktest-real:
-	${CC} $(LDFLAGS) $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ \
+	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o tktest
 
 # FIXME: This xttest rule seems to be broken in a number of ways.
@@ -544,7 +543,7 @@ tktest-real:
 # lib location logic from tktest, and it is not clear where this
 # test.o object file comes from.
 xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
-	${CC} $(LDFLAGS) test.o tkTest.o tkSquare.o \
+	${CC} ${CFLAGS} ${LDFLAGS} test.o tkTest.o tkSquare.o \
 		@TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(LD_SEARCH_FLAGS) -lXt -o xttest
 
@@ -806,8 +805,12 @@ depend:
 # Test binaries.  The rule for tkTestInit.o is complicated because
 # it is is compiled from tkAppInit.c.  Can't use the "-o" option
 # because this doesn't work on some strange compilers (e.g. UnixWare).
+# To enable concurrent parallel make of wish and tktest, this target has to
+# depend on wish, this ensures that linking of wish with tkTestInit.o does not
+# execute concurrently with the renaming and recompiling of that same object
+# file in the target below.
 
-tkTestInit.o: $(UNIX_DIR)/tkAppInit.c
+tkTestInit.o: $(UNIX_DIR)/tkAppInit.c wish
 	@if test -f tkAppInit.o ; then \
 	    rm -f tkAppInit.sav; \
 	    mv tkAppInit.o tkAppInit.sav; \
@@ -1153,8 +1156,9 @@ tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 
-tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c
-	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXInit.c
+tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c $(GENERIC_DIR)/tkInitScript.h tkConfig.sh
+	$(CC) -c $(CC_SWITCHES)  -DTK_LIBRARY=\"${TK_LIBRARY}\" \
+	    $(MAC_OSX_DIR)/tkMacOSXInit.c
 
 tkMacOSXKeyboard.o: $(MAC_OSX_DIR)/tkMacOSXKeyboard.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXKeyboard.c
@@ -1247,12 +1251,13 @@ genstubs:
 # tables.
 #
 
-checkstubs:
-	-@for i in `nm -p $(TK_LIB_FILE) | awk '$$2 ~ /T/ { print $$3 }' \
+checkstubs: $(TK_LIB_FILE)
+	-@for i in `nm -p $(TK_LIB_FILE) \
+		| awk '$$2 ~ /^[TDBCS]$$/ { sub("^_", "", $$3); print $$3 }' \
 		| sort -n`; do \
 		match=0; \
 		for j in $(TK_DECLS); do \
-		    if [ `grep -c $$i $$j` -gt 0 ]; then \
+		    if [ `grep -c "$$i *(" $$j` -gt 0 ]; then \
 			match=1; \
 		    fi; \
 		done; \
@@ -1272,7 +1277,9 @@ checkuchar:
 #
 
 checkexports: $(TK_LIB_FILE)
-	-nm -p $(TK_LIB_FILE) | awk '$$2 ~ /[TDB]/ { print $$3 }' | sort -n | grep -v '^[Tt]k'
+	-@nm -p $(TK_LIB_FILE) \
+	| awk '$$2 ~ /^[TDBCS]$$/ { sub("^_", "", $$3); print $$3 }' \
+	| sort -n | grep -E -v '^([Tt]k|_?X)' || true
 
 #
 # Target to create a Tk RPM for Linux.  Requires that you be on a Linux
@@ -1362,13 +1369,12 @@ dist:
 	cp -p $(TOP_DIR)/mac/*.doc $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.tcl $(DISTDIR)/mac
 	mkdir $(DISTDIR)/macosx
-	cp -p $(TOP_DIR)/macosx/Makefile $(TOP_DIR)/macosx/Wish.icns \
-		$(TOP_DIR)/macosx/*.c $(TOP_DIR)/macosx/*.h $(TOP_DIR)/macosx/*.in \
-		$(TOP_DIR)/macosx/*.r $(TOP_DIR)/macosx/*.tcl $(DISTDIR)/macosx
+	cp -p $(TOP_DIR)/macosx/Makefile $(TOP_DIR)/macosx/README \
+		$(TOP_DIR)/macosx/Wish.icns $(TOP_DIR)/macosx/*.c \
+		$(TOP_DIR)/macosx/*.h $(TOP_DIR)/macosx/*.in \
+		$(TOP_DIR)/macosx/*.r $(DISTDIR)/macosx
 	mkdir $(DISTDIR)/macosx/Wish.pbproj
-	cp -p $(TOP_DIR)/macosx/Wish.pbproj/*.pbx* \
-		$(DISTDIR)/macosx/Wish.pbproj
-	cp -p $(TOP_DIR)/macosx/README $(DISTDIR)/macosx
+	cp -p $(TOP_DIR)/macosx/Wish.pbproj/*.pbx* $(DISTDIR)/macosx/Wish.pbproj
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
 		$(TCLDIR)/compat/stdlib.h $(TCLDIR)/compat/limits.h \

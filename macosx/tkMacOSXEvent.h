@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.3.2.2 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.3.2.3 2005/11/27 02:36:46 das Exp $
  */
 
 #ifndef _TKMACEVENT
@@ -87,12 +87,17 @@ int TkMacOSXProcessKeyboardEvent(TkMacOSXEvent *e,
         MacEventStatus *statusPtr);
 int TkMacOSXProcessApplicationEvent(TkMacOSXEvent *e,
         MacEventStatus *statusPtr);
-
+int TkMacOSXProcessMenuEvent(TkMacOSXEvent *e,
+        MacEventStatus *statusPtr);
+int TkMacOSXProcessCommandEvent(TkMacOSXEvent *e,
+        MacEventStatus *statusPtr);
 int TkMacOSXKeycodeToUnicode(
         UniChar * uniChars, int maxChars,
         EventKind eKind,
         UInt32 keycode, UInt32 modifiers,
         UInt32 * deadKeyStatePtr);
+OSStatus TkMacOSXStartTclEventLoopCarbonTimer();
+OSStatus TkMacOSXStopTclEventLoopCarbonTimer();
 
 
 #endif

@@ -10,11 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXTest.c,v 1.2.2.1 2005/08/09 07:40:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXTest.c,v 1.2.2.2 2005/11/27 02:36:46 das Exp $
  */
 
-#include <tcl.h>
-#include <Carbon/Carbon.h>
+#include "tkMacOSXInt.h"
 
 /*
  * Forward declarations of procedures defined later in this file:

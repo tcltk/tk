@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.2.2.3 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.2.2.4 2005/11/27 02:36:46 das Exp $
  */
 
 #include "tkMacOSXDebug.h"
@@ -230,7 +230,7 @@ static MyEventNameList eventNameList [] = {
 };
 
 
-MyEventName classicEventNames [] = {
+static MyEventName classicEventNames [] = {
  { nullEvent,"nullEvent" },
  { mouseDown,"mouseDown" },
  { mouseUp,"mouseUp" },
@@ -289,7 +289,8 @@ CarbonEventToAscii(EventRef eventRef, char * buf)
     return iBuf;
 }
 
-char * CarbonEventKindToAscii(EventRef eventRef, char * buf )
+char *
+CarbonEventKindToAscii(EventRef eventRef, char * buf )
 {     
    EventClass eventClass;
    EventKind  eventKind;
@@ -324,7 +325,8 @@ char * CarbonEventKindToAscii(EventRef eventRef, char * buf )
      return buf;
 }
 
-char * ClassicEventToAscii(EventRecord * eventPtr, char * buf )
+char *
+ClassicEventToAscii(EventRecord * eventPtr, char * buf )
 {
     MyEventName     * names = NULL;
     int found = 0;
@@ -353,27 +355,31 @@ char * ClassicEventToAscii(EventRecord * eventPtr, char * buf )
  
 }
 
-void printPoint(char * tag, Point * p )
+void
+printPoint(char * tag, Point * p )
 {
     fprintf(stderr,"%s %4d %4d\n",
         tag,p->h,p->v );
 }
 
-void printRect(char * tag, Rect * r )
+void
+printRect(char * tag, Rect * r )
 {
     fprintf(stderr,"%s %4d %4d %4d %4d (%dx%d)\n",
         tag, r->left, r->top, r->right, r->bottom,
         r->right - r->left + 1, r->bottom - r->top + 1);
 }
 
-void printRegion(char * tag, RgnHandle rgn )
+void
+printRegion(char * tag, RgnHandle rgn )
 {
     Rect r;
     GetRegionBounds(rgn,&r);
     printRect(tag,&r);
 }
 
-void printWindowTitle(char * tag, WindowRef window )
+void
+printWindowTitle(char * tag, WindowRef window )
 {
     Str255 title;
     GetWTitle(window,title);
@@ -386,7 +392,7 @@ typedef struct {
  char * name;
 } MsgName;
 
-MsgName msgNames [] = {
+static MsgName msgNames [] = {
     { kMenuDrawMsg,       "Draw"},
     { kMenuSizeMsg,       "Size"},
     { kMenuPopUpMsg,      "PopUp"},
@@ -399,7 +405,6 @@ MsgName msgNames [] = {
     { kMenuDrawItemsMsg,  "DrawItems" },
     { -1, NULL }
 };
-
 
 char *
 TkMacOSXMenuMessageToAscii(int msg, char * s)
@@ -417,20 +422,21 @@ TkMacOSXMenuMessageToAscii(int msg, char * s)
     return s;
 }
 
+static MsgName trackingNames [] = {
+    { kMouseTrackingMousePressed  , "MousePressed  " },
+    { kMouseTrackingMouseReleased , "MouseReleased " },
+    { kMouseTrackingMouseExited   , "MouseExited   " },
+    { kMouseTrackingMouseEntered  , "MouseEntered  " },
+    { kMouseTrackingMouseMoved    , "MouseMoved    " },
+    { kMouseTrackingKeyModifiersChanged, "KeyModifiersChanged" },
+    { kMouseTrackingUserCancelled , "UserCancelled " },
+    { kMouseTrackingTimedOut      , "TimedOut      " },
+    { -1, NULL }
+};
 
-char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf) 
+char *
+MouseTrackingResultToAscii(MouseTrackingResult r, char * buf) 
 {
-    MsgName trackingNames [] = {
-        { kMouseTrackingMousePressed  , "MousePressed  " },
-        { kMouseTrackingMouseReleased , "MouseReleased " },
-        { kMouseTrackingMouseExited   , "MouseExited   " },
-        { kMouseTrackingMouseEntered  , "MouseEntered  " },
-        { kMouseTrackingMouseMoved    , "MouseMoved    " },
-        { kMouseTrackingKeyModifiersChanged, "KeyModifiersChanged" },
-        { kMouseTrackingUserCancelled , "UserCancelled " },
-        { kMouseTrackingTimedOut      , "TimedOut      " },
-        { -1, NULL }
-    };
     MsgName * namePtr;
     for (namePtr = trackingNames; namePtr->name; namePtr++) {
         if (namePtr->msg == r) {

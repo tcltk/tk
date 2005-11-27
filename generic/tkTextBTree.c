@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.6 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.6.2.1 2005/11/27 02:44:25 das Exp $
  */
 
 #include "tkInt.h"
@@ -2466,7 +2466,7 @@ TkTextIsElided(textPtr, indexPtr)
     register Node *nodePtr;
     register TkTextLine *siblingLinePtr;
     register TkTextSegment *segPtr;
-    register TkTextTag *tagPtr;
+    register TkTextTag *tagPtr = NULL; /* silence gcc 4 warning */
     register int i, index;
 
 	/* almost always avoid malloc, so stay out of system calls */

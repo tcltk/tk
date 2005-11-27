@@ -1,3 +1,109 @@
+2005-11-27  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/tcl.m4 (Darwin): add 64bit support, check for Tiger copyfile(),
+	add CFLAGS to SHLIB_LD to support passing -isysroot in env(CFLAGS) to
+	configure (flag can't be present twice, so can't be in both CFLAGS and
+	LDFLAGS during configure), don't use -prebind when deploying on 10.4,
+	define TCL_IO_TRACK_OS_FOR_DRIVER_WITH_BAD_BLOCKING (rdar://3171542).
+	(SC_ENABLE_LANGINFO, SC_TIME_HANDLER): add/fix caching, fix obsolete
+	autoconf macros. Sync with tk/unix/tcl.m4, sync whitespace with HEAD.
+
+	* unix/configure.in: fix obsolete autoconf macros, sync gratuitous
+	formatting/ordering differences with tcl/unix/configure.in.
+
+	* unix/Makefile.in: add CFLAGS to wish/tktest link to make executable
+	linking the same as during configure (needed to avoid loosing any linker
+	relevant flags in CFLAGS, in particular flags that can't be in LDFLAGS).
+	Avoid concurrent linking of wish and compiling of tkTestInit.o during
+	parallel make, fix dependencies and flags for building tkMacOSXInit.o
+	(checkstubs, checkexports): dependency and Darwin fixes
+
+	* macosx/tkMacOSXEvent.c (TkMacOSXProcessEvent):
+	* macosx/tkMacOSXEvent.h:
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent):
+	* macosx/tkMacOSXCarbonEvents.c: install standard application event
+	handler, add & call functions to start and stop carbon even timer that
+	runs the tcl event loop periodically during a nested carbon event loop
+	in the toolbox (e.g. during menutracking) to ensure tcl timers etc
+	continue to fire, register app event handler for menu tracking and HI
+	command carbon events, move menu event handling to new handlers for
+	those carbon events, no longer register for/handle appleevent carbon
+	event (now dealt with by standard application event handler), event
+	debugging code dynamically acquires carbon event debugging functions to
+	allow use on Tiger where they are no longer exported from HIToolbox.
+
+	* macosx/tkMacOSXFont.c (TkMacOSXUseAntialiasedText):
+	* macosx/tkMacOSXKeyEvent.c (GetKeyboardLayout):
+	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents):
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h: abstract common code to dynamically acquire
+	address of a named symbol (from a loaded dynamic library) into new
+	function TkMacOSXGetNamedSymbol() and macro TkMacOSXInitNamedSymbol.
+
+	* macosx/tkMacOSXMenu.c (TkpNewMenu):
+	* macosx/tkMacOSXMenubutton.c (MenuButtonInitControl):
+	* macosx/tkMacOSXMenus.c (TkMacOSXHandleMenuSelect): switch to  modern
+	utf8 aware menu manager API, remove obsolete code, add error handling.
+
+	* macosx/tkMacOSXMouseEvent.c: define OSX 10.3 or later only constants
+	if necessary to allow compilation on OSX 10.2
+
+	* macosx/tkMacOSXWm.c (UpdateSizeHints): remove code that is never
+	executed.
+
+	* generic/tk.h: add/correct location of version numbers in macosx files.
+
+	* generic/tkInt.h: clarify fat compile comment.
+
+	* macosx/Wish.pbproj/default.pbxuser (new file):
+	* macosx/Wish.pbproj/jingham.pbxuser:
+	* macosx/Wish.pbproj/project.pbxproj: sync with HEAD.
+
+	* macosx/buildTkConfig.tcl (removed): remove obsolete build files.
+
+	* macosx/README: clarification/cleanup, sync with HEAD, document
+	universal (fat) builds via CFLAGS (i.e. ppc and i386 at the same time).
+
+	* macosx/Makefile: add support for reusing configure cache, build target
+	fixes.
+
+	* generic/tkMenu.c:
+	* macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXDebug.c:
+	* macosx/tkMacOSXDebug.h:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXXStubs.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* xlib/xgc.c: declare functions and globals used only in own file as
+	static, #ifdef out a few Xlib and aqua functions that are never called
+	(sync with HEAD).
+
+	* macosx/tkMacOSXPort.h:
+	* generic/tkInt.decls: correct signature of TkMacOSXHandleMenuSelect,
+	add XSync to aqua Xlib stubs.
+
+	* generic/tkTest.c: #ifdef unix only declarations.
+	(TestmetricsCmd): unify win and mac implementation.
+
+	* generic/tkTextDisp.c:
+	* generic/tkTextBTree.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXXStubs.c: fix gcc 4 warnings.
+
+	* macosx/tkMacOSXNotify.c:
+	* macosx/tkMacOSXTest.c: sync with HEAD.
+
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkStubInit.c:
+	* unix/configure: regen.
+
 2005-11-22  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkFont.c (ParseFontNameObj, ConfigAttributesObj): Allow
@@ -18,7 +124,7 @@
 
 	* README:		Bump version number to 8.4.12
 	* generic/tk.h:
-	* macosx/Wish.pbproj/project.pbxproc:
+	* macosx/Wish.pbproj/project.pbxproj:
 	* unix/configure.in:
 	* unix/tk.spec:
 	* win/configure.in:
@@ -203,7 +309,7 @@
 	kEventWindowExpanded event to deal with window uncollapsing from the
 	dock by generating tk Map event, handle kEventAppHidden and
 	kEventAppShown events (moved here from tkMacOSXCarbonEvents.c).
-	
+
 	* macosx/tkMacOSXSubwindows.c (XUnmapWindow): only hide window when
 	it is not iconified to avoid window flashing on collapse.
 
@@ -314,7 +420,7 @@
 	recognize special show/hide functions for sheets
 
 2005-07-24  Mo DeJong  <mdejong@users.sourceforge.net>
-	
+
 	* unix/Makefile.in: Subst TCLSH_PROG and
 	BUILD_TCLSH into Makefile. Rework html
 	target so that it depends on the tclsh

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.5 2005/08/09 07:40:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.6 2005/11/27 02:36:46 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -157,6 +157,14 @@ extern int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable, int antiAlias);
 extern void TkMacOSXDefaultStartupScript(void);
 extern int TkMacOSXGenerateFocusEvent( Window window, int activeFlag);
 extern WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
+extern void* TkMacOSXGetNamedSymbol(const char* module, const char* symbol);
+
+/* Macro to abstract common use of TkMacOSXGetNamedSymbol to initialize named symbols */
+#define TkMacOSXInitNamedSymbol(module, ret, symbol, ...) \
+    static ret (* symbol)(__VA_ARGS__) = (void*)(-1L); \
+    if (symbol == (void*)(-1L)) { \
+        symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), STRINGIFY(_##symbol));\
+    }
 
 #include "tkIntPlatDecls.h"
 

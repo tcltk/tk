@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.4 2005/08/09 07:39:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.5 2005/11/27 02:36:46 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -255,6 +255,8 @@ static int GetFamilyOrAliasNum(CONST char *faceName, short *familyPtr);
 static Tcl_Encoding GetFontEncoding(int faceNum, int allowSymbol, int *isSymbolPtr);
 static Tk_Uid GetUtfFaceName(StringPtr faceNameStr);
 
+void TkMacOSXInitControlFontStyle(Tk_Font tkfont,
+	ControlFontStylePtr fsPtr);
 
 /*
  *-------------------------------------------------------------------------
@@ -2239,8 +2241,6 @@ TkMacOSXInitControlFontStyle(Tk_Font tkfont, ControlFontStylePtr fsPtr)
  *----------------------------------------------------------------------
  */
 
-#include <mach-o/dyld.h>
-
 /* define constants from 10.2 Quickdraw.h to enable compilation in 10.1 */
 #define kQDUseTrueTypeScalerGlyphs      (1 << 0)
 #define kQDUseCGTextRendering           (1 << 1)
@@ -2269,14 +2269,9 @@ TkMacOSXUseAntialiasedText(interp, enable)
     static UInt32 (*swaptextflags)(UInt32) = NULL;
     
     if(!initialized) {
-        NSSymbol nsSymbol = NULL;
-        if(NSIsSymbolNameDefinedWithHint("_QDSwapTextFlags", "QD")) {
-            nsSymbol = NSLookupAndBindSymbolWithHint("_QDSwapTextFlags", "QD");
-        } else if(NSIsSymbolNameDefinedWithHint("_SwapQDTextFlags", "QD")) {
-            nsSymbol = NSLookupAndBindSymbolWithHint("_SwapQDTextFlags", "QD");
-        }
-        if(nsSymbol) {
-            swaptextflags = NSAddressOfSymbol(nsSymbol);
+        swaptextflags = TkMacOSXGetNamedSymbol("QD", "_QDSwapTextFlags");
+        if (!swaptextflags) {
+            swaptextflags = TkMacOSXGetNamedSymbol("QD", "_SwapQDTextFlags");
         }
         initialized = TRUE;
 
