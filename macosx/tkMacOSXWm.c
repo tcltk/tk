@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.13 2005/09/10 14:54:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.14 2005/11/27 02:36:46 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -3307,82 +3307,10 @@ UpdateSizeHints(
     TkWindow *winPtr)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    XSizeHints *hintsPtr;
 
     wmPtr->flags &= ~WM_UPDATE_SIZE_HINTS;
 
-    hintsPtr = XAllocSizeHints();
-    if (hintsPtr == NULL) {
-	return;
-    }
-
-    /*
-     * Compute the pixel-based sizes for the various fields in the
-     * size hints structure, based on the grid-based sizes in
-     * our structure.
-     */
-
-    if (wmPtr->gridWin != NULL) {
-	hintsPtr->base_width = winPtr->reqWidth
-		- (wmPtr->reqGridWidth * wmPtr->widthInc);
-	if (hintsPtr->base_width < 0) {
-	    hintsPtr->base_width = 0;
-	}
-	hintsPtr->base_height = winPtr->reqHeight
-		- (wmPtr->reqGridHeight * wmPtr->heightInc);
-	if (hintsPtr->base_height < 0) {
-	    hintsPtr->base_height = 0;
-	}
-	hintsPtr->min_width = hintsPtr->base_width
-		+ (wmPtr->minWidth * wmPtr->widthInc);
-	hintsPtr->min_height = hintsPtr->base_height
-		+ (wmPtr->minHeight * wmPtr->heightInc);
-	hintsPtr->max_width = hintsPtr->base_width
-		+ (wmPtr->maxWidth * wmPtr->widthInc);
-	hintsPtr->max_height = hintsPtr->base_height
-		+ (wmPtr->maxHeight * wmPtr->heightInc);
-    } else {
-	hintsPtr->min_width = wmPtr->minWidth;
-	hintsPtr->min_height = wmPtr->minHeight;
-	hintsPtr->max_width = wmPtr->maxWidth;
-	hintsPtr->max_height = wmPtr->maxHeight;
-	hintsPtr->base_width = 0;
-	hintsPtr->base_height = 0;
-    }
-    hintsPtr->width_inc = wmPtr->widthInc;
-    hintsPtr->height_inc = wmPtr->heightInc;
-    hintsPtr->min_aspect.x = wmPtr->minAspect.x;
-    hintsPtr->min_aspect.y = wmPtr->minAspect.y;
-    hintsPtr->max_aspect.x = wmPtr->maxAspect.x;
-    hintsPtr->max_aspect.y = wmPtr->maxAspect.y;
-    hintsPtr->win_gravity = wmPtr->gravity;
-    hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize | PMaxSize;
-
-    /*
-     * If the window isn't supposed to be resizable, then set the
-     * minimum and maximum dimensions to be the same.
-     */
-
-    if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
-	if (wmPtr->width >= 0) {
-	    hintsPtr->min_width = wmPtr->width;
-	} else {
-	    hintsPtr->min_width = winPtr->reqWidth;
-	}
-	hintsPtr->max_width = hintsPtr->min_width;
-    }
-    if (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
-	if (wmPtr->height >= 0) {
-	    hintsPtr->min_height = wmPtr->height;
-	} else {
-	    hintsPtr->min_height = winPtr->reqHeight;
-	}
-	hintsPtr->max_height = hintsPtr->min_height;
-    }
-
-    XSetWMNormalHints(winPtr->display, winPtr->window, hintsPtr);
-
-    XFree((char *) hintsPtr);
+    return;
 }
 
 /*
