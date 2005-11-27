@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.6 2005/08/09 07:40:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.7 2005/11/27 02:36:46 das Exp $
  */
 
 #include "tkInt.h"
@@ -176,7 +176,7 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
-void
+static void
 FixMappingFlags (TkWindow *winPtr, int on)
 {
     TkWindow *childPtr;
@@ -770,6 +770,7 @@ XRaiseWindow(
     }
 }
 
+#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -800,6 +801,7 @@ XLowerWindow(
     	/* TODO: this should generate damage */
     }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.10 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.11 2005/11/27 02:36:46 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -333,7 +333,7 @@ static void		AppearanceEntryDrawWrapper _ANSI_ARGS_((TkMenuEntry *mePtr,
 			    Rect * menuRectPtr, MenuTrackingData *mtdPtr,     
 			    Drawable d, Tk_FontMetrics *fmPtr, Tk_Font tkfont,
 			    int x, int y, int width, int height));
-pascal void 		tkThemeMenuItemDrawingProc _ANSI_ARGS_ ((const Rect *inBounds,
+static pascal void 	ThemeMenuItemDrawingProc _ANSI_ARGS_ ((const Rect *inBounds,
 			    SInt16 inDepth, Boolean inIsColorDevice, 
 			    SInt32 inUserData));
 
@@ -543,25 +543,38 @@ TkpNewMenu(
     				 * platform structure for. */
 {
     short menuID;
-    Str255 itemText;
-    int length;
     MenuRef macMenuHdl;
     MenuDefSpec menuDefSpec;
     Tcl_Obj *useMDEFObjPtr;
     int useMDEF;
     int error = TCL_OK;
-    int err;
-
+    OSStatus err;
+    CFStringRef cfStr;
     
     error = TkMacOSXGetNewMenuID(menuPtr->interp, menuPtr, 0, &menuID);
     if (error != TCL_OK) {
     	return error;
     }
-    length = strlen(Tk_PathName(menuPtr->tkwin));
-    memmove(&itemText[1], Tk_PathName(menuPtr->tkwin), 
-    	    (length > 230) ? 230 : length);
-    itemText[0] = (length > 230) ? 230 : length;
-    macMenuHdl = NewMenu(menuID, itemText);
+    err = CreateNewMenu(menuID, kMenuAttrDoNotUseUserCommandKeys, &macMenuHdl);
+    if (err != noErr) {
+        Tcl_AppendResult(menuPtr->interp, "CreateNewMenu failed.",
+                (char *) NULL);
+        return TCL_ERROR;
+    }
+    cfStr = CFStringCreateWithCString(NULL, Tk_PathName(menuPtr->tkwin),
+            kCFStringEncodingUTF8);
+    if (!cfStr) {
+        Tcl_AppendResult(menuPtr->interp, "CFStringCreateWithCString failed.",
+                (char *) NULL);
+        return TCL_ERROR;
+    }
+    err = SetMenuTitleWithCFString(macMenuHdl, cfStr);
+    CFRelease(cfStr);
+    if (err != noErr) {
+        Tcl_AppendResult(menuPtr->interp, "SetMenuTitleWithCFString failed.",
+                (char *) NULL);
+        return TCL_ERROR;
+    }
     
     /*
      * Check whether we want to use the custom mdef or not.  For now
@@ -577,7 +590,7 @@ TkpNewMenu(
         menuDefSpec.u.defProc = MenuDefProc;
         if ((err = SetMenuDefinition(macMenuHdl, &menuDefSpec)) != noErr) {
 #ifdef TK_MAC_DEBUG
-            fprintf(stderr, "SetMenuDefinition failed %d\n", err );
+            fprintf(stderr, "SetMenuDefinition failed %d\n", (int) err);
 #endif
         }
     }
@@ -2747,7 +2760,7 @@ AppearanceEntryDrawWrapper(
 /*
  *----------------------------------------------------------------------
  *
- *  tkThemeMenuItemDrawingProc --
+ *  ThemeMenuItemDrawingProc --
  *
  *	This routine is called from the Appearance DrawThemeMenuEntry
  *
@@ -2759,8 +2772,8 @@ AppearanceEntryDrawWrapper(
  *
  *----------------------------------------------------------------------
  */
-pascal void
-tkThemeMenuItemDrawingProc (
+static pascal void
+ThemeMenuItemDrawingProc (
     const Rect *inBounds,
     SInt16 inDepth, 
     Boolean inIsColorDevice, 
@@ -3875,7 +3888,7 @@ TkpMenuInit(void)
     windowListPtr = NULL;
 
     tkThemeMenuItemDrawingUPP 
-            = NewMenuItemDrawingUPP(tkThemeMenuItemDrawingProc);
+            = NewMenuItemDrawingUPP(ThemeMenuItemDrawingProc);
             				
     /* 
      * We should just hardcode the utf-8 ellipsis character into 

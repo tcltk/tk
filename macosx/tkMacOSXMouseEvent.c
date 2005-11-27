@@ -4,7 +4,11 @@
  *	This file implements functions that decode & handle mouse events
  *	on MacOS X.
  *
- *      Copyright 2001, Apple Computer, Inc.
+ * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2005 Daniel A. Steffen <das@users.sourceforge.net>
+ *
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  *      The following terms apply to all files originating from Apple
  *      Computer, Inc. ("Apple") and associated with the software
@@ -50,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.6.2.8 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.6.2.9 2005/11/27 02:36:46 das Exp $
  */
 
 #include "tkInt.h"
@@ -60,6 +64,13 @@
 #include "tkMacOSXInt.h"
 #include "tkPort.h"
 #include "tkMacOSXDebug.h"
+
+#if !defined(MAC_OS_X_VERSION_10_3) || \
+        (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+    /* Define constants only available on Mac OS X 10.3 or later */
+    #define kEventParamWindowPartCode 'wpar'
+    #define typeWindowPartCode        'wpar'
+#endif
 
 typedef struct {
     WindowRef	   whichWin;
@@ -76,7 +87,7 @@ typedef struct {
  * Declarations of static variables used in this file.
  */
 
-static int gEatButtonUp = 0;	   /* 1 if we need to eat the next * up event */
+static int gEatButtonUp = 0;	   /* 1 if we need to eat the next up event */
 
 /*
  * Declarations of functions used only in this file.
@@ -90,8 +101,8 @@ static int GenerateToolbarButtonEvent(MouseEventData * medPtr);
 static int HandleWindowTitlebarMouseDown(MouseEventData * medPtr, Tk_Window tkwin);
 static unsigned int ButtonModifiers2State(UInt32 buttonState, UInt32 keyModifiers);
 
-extern int TkMacOSXGetEatButtonUp();
-extern void TkMacOSXSetEatButtonUp(int f);
+static int TkMacOSXGetEatButtonUp();
+static void TkMacOSXSetEatButtonUp(int f);
 
 /*
  *----------------------------------------------------------------------
@@ -332,23 +343,6 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		return GenerateButtonEvent(medPtr);
 	    }
 	    break;
-	case inMenuBar: {
-	    int oldMode;
-
-	    oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	    TkMacOSXClearMenubarActive();
-
-	    /*
-	     * Handle -postcommand
-	     */
-
-	    TkMacOSXPreprocessMenu();
-	    TkMacOSXHandleMenuSelect(MenuSelect(where),
-		    medPtr->state & Mod2Mask);
-	    Tcl_SetServiceMode(oldMode);
-	    return true; /* TODO: may not be on event on queue. */
-	    break;
-	}
 	default:
 	    return false;
 	    break;
@@ -600,7 +594,7 @@ GenerateMouseWheelEvent(MouseEventData * medPtr)
  *
  *----------------------------------------------------------------------
  */
-int
+static int
 TkMacOSXGetEatButtonUp()
 {
     return gEatButtonUp;
@@ -620,7 +614,7 @@ TkMacOSXGetEatButtonUp()
  *
  *----------------------------------------------------------------------
  */
-void
+static void
 TkMacOSXSetEatButtonUp(int f)
 {
     gEatButtonUp = f;

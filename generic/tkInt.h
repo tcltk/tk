@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.56.2.6 2005/10/10 21:27:33 hobbs Exp $ 
+ * RCS: $Id: tkInt.h,v 1.56.2.7 2005/11/27 02:44:25 das Exp $ 
  */
 
 #ifndef _TKINT
@@ -24,13 +24,13 @@
 #include "tcl.h"
 #endif
 #ifndef _TKPORT
-#include <tkPort.h>
+#include "tkPort.h"
 #endif
 
 /*
  * Ensure WORDS_BIGENDIAN is defined correcly:
  * Needs to happen here in addition to configure to work with fat compiles on
- * Darwin (i.e. ppc and i386 at the same time).
+ * Darwin (where configure runs only once for multiple architectures).
  */
 
 #ifdef HAVE_SYS_TYPES_H

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.14 2002/11/22 23:25:19 hobbs Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.14.2.1 2005/11/27 02:44:26 das Exp $
  */
 
 #include "tkPort.h"
@@ -3210,7 +3210,8 @@ MeasureUp(textPtr, srcPtr, distance, dstPtr)
     int lineNum;		/* Number of current line. */
     int bytesToCount;		/* Maximum number of bytes to measure in
 				 * current line. */
-    TkTextIndex bestIndex;	/* Best candidate seen so far for result. */
+    TkTextIndex bestIndex = {NULL, NULL, 0}; /* Best candidate seen so far for
+					      * result. Silence gcc 4 warning */
     TkTextIndex index;
     DLine *dlPtr, *lowestPtr;
     int noBestYet;		/* 1 means bestIndex hasn't been set. */
