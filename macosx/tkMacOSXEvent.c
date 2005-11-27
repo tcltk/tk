@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.3 2005/09/10 14:54:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.4 2005/11/27 02:36:46 das Exp $
  */
 
 #include <stdio.h>
@@ -18,13 +18,6 @@
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 
-/*   
- * Forward declarations of procedures used in this file.
- */ 
-
-static int TkMacOSXProcessAppleEvent(
-        TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr);
-
 /*
  *----------------------------------------------------------------------
  *
@@ -55,52 +48,6 @@ TkMacOSXFlushWindows ()
         wRef = GetNextWindow(wRef);
     }
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXProcessAppleEvent --
- *
- *      This processes Apple events
- *
- * Results:
- *      0 on success
- *      -1 on failure
- *
- * Side effects:
- *      Calls the Tk high-level event handler
- *
- *----------------------------------------------------------------------
- */
-
-static int
-TkMacOSXProcessAppleEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
-{
-    int  err;
-    EventRecord eventRecord;
-    if (ConvertEventRefToEventRecord(eventPtr->eventRef,
-        &eventRecord )) {
-        err = TkMacOSXDoHLEvent(&eventRecord);
-        if (err != noErr) {
-#ifdef TK_MAC_DEBUG
-            char buf1 [ 256 ];
-            char buf2 [ 256 ];
-            fprintf(stderr,
-                "TkMacOSXDoHLEvent failed : %s,%s,%d\n",
-                CarbonEventToAscii(eventPtr->eventRef, buf1),
-                ClassicEventToAscii(&eventRecord,buf2), err);
-#endif
-            statusPtr->err = 1;
-        }
-    } else {
-#ifdef TK_MAC_DEBUG
-        fprintf(stderr,"ConvertEventRefToEventRecord failed\n");
-#endif
-        statusPtr->err = 1;
-    }
-    return 0;
-}
-
 
 /*      
  *----------------------------------------------------------------------
@@ -141,8 +88,11 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
         case kEventClassApplication:
             TkMacOSXProcessApplicationEvent(eventPtr, statusPtr);
             break;
-        case kEventClassAppleEvent:
-            TkMacOSXProcessAppleEvent(eventPtr, statusPtr);
+        case kEventClassMenu:
+            TkMacOSXProcessMenuEvent(eventPtr, statusPtr);
+            break;  
+        case kEventClassCommand:
+            TkMacOSXProcessCommandEvent(eventPtr, statusPtr);
             break;  
         default:
 #ifdef TK_MAC_DEBUG
@@ -155,6 +105,113 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
 #endif
             break;
     }   
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXProcessMenuEvent --
+ *
+ *	  This routine processes the event in eventPtr, and
+ *	  generates the appropriate Tk events from it.
+ *
+ * Results:
+ *	  True if event(s) are generated - false otherwise.
+ *
+ * Side effects:
+ *	  Additional events may be place on the Tk event queue.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMacOSXProcessMenuEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
+{
+    int		    menuContext;
+    OSStatus	    status;
+
+    switch (eventPtr->eKind) {
+	case kEventMenuBeginTracking:
+	case kEventMenuEndTracking:
+	    break;
+	default:
+	    return 0;
+	    break;
+    }
+    status = GetEventParameter(eventPtr->eventRef, 
+	    kEventParamMenuContext,
+	    typeUInt32, NULL, 
+	    sizeof(menuContext), NULL,
+	    &menuContext);
+    if (status == noErr && (menuContext & kMenuContextMenuBar)) {
+        static int oldMode = TCL_SERVICE_ALL;
+        if (eventPtr->eKind == kEventMenuBeginTracking) {
+            oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+            TkMacOSXClearMenubarActive();
+        
+            /*
+             * Handle -postcommand
+             */
+        
+            TkMacOSXPreprocessMenu();
+        } else {
+            Tcl_SetServiceMode(oldMode);   
+        }
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXProcessCommandEvent --
+ *
+ *	  This routine processes the event in eventPtr, and
+ *	  generates the appropriate Tk events from it.
+ *
+ * Results:
+ *	  True if event(s) are generated - false otherwise.
+ *
+ * Side effects:
+ *	  Additional events may be place on the Tk event queue.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMacOSXProcessCommandEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
+{
+    HICommand       command;
+    int		    menuContext;
+    OSStatus	    status;
+
+    switch (eventPtr->eKind) {
+	case kEventCommandProcess:
+	    break;
+	default:
+	    return 0;
+	    break;
+    }
+    status = GetEventParameter(eventPtr->eventRef, 
+	    kEventParamDirectObject,
+	    typeHICommand, NULL, 
+	    sizeof(command), NULL,
+	    &command);
+    if (status == noErr && (command.attributes & kHICommandFromMenu)) {
+        status = GetEventParameter(eventPtr->eventRef, 
+                kEventParamMenuContext,
+                typeUInt32, NULL, 
+                sizeof(menuContext), NULL,
+                &menuContext);
+        if (status == noErr && (menuContext & kMenuContextMenuBar) &&
+                (menuContext & kMenuContextMenuBarTracking)) {
+            TkMacOSXHandleMenuSelect(GetMenuID(command.menu.menuRef),
+                    command.menu.menuItemIndex,
+                    GetCurrentEventKeyModifiers() & optionKey);
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -193,7 +250,9 @@ TkMacOSXReceiveAndProcessEvent()
         if (!targetRef) {
             targetRef = GetEventDispatcherTarget();
         }
+        TkMacOSXStartTclEventLoopCarbonTimer();
         err = SendEventToEventTarget(eventRef,targetRef);
+        TkMacOSXStopTclEventLoopCarbonTimer();
 #ifdef TK_MAC_DEBUG
         if (err != noErr && err != eventLoopTimedOutErr
                 && err != eventNotHandledErr
