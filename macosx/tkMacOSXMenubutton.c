@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.6 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.7 2005/11/27 06:37:31 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -18,6 +18,12 @@
 #include "tkMenubutton.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
+
+#if !defined(MAC_OS_X_VERSION_10_3) || \
+        (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+    /* Define constants only available on Mac OS X 10.3 or later */
+    #define kMenuAttrDoNotUseUserCommandKeys = (1 << 7)
+#endif
 
 #define kShadowOffset   (3)     /* amount to offset shadow from frame */
 #define kTriangleWidth  (11)    /* width of the triangle */
