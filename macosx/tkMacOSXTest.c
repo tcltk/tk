@@ -10,17 +10,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXTest.c,v 1.3 2005/08/09 07:39:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXTest.c,v 1.4 2005/11/27 02:36:15 das Exp $
  */
 
-#include <tcl.h>
-#include <Carbon/Carbon.h>
+#include "tkMacOSXInt.h"
 
 /*
  * Forward declarations of procedures defined later in this file:
  */
 
-int			TkplatformtestInit _ANSI_ARGS_((Tcl_Interp *interp));
 static int		DebuggerCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
 

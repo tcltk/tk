@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.15 2005/09/10 14:53:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.16 2005/11/27 02:36:14 das Exp $
  */
 
 #include "tkButton.h"
@@ -109,8 +109,8 @@ static void SetupBevelButton _ANSI_ARGS_((MacButton *butPtr,
         ControlRef controlHandle, 
         GWorldPtr destPort, GC gc, Pixmap pixmap));
 
-extern int TkFontGetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst); 
-extern void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
+MODULE_SCOPE int TkFontGetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst); 
+MODULE_SCOPE void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
 
 /*
  * The class procedure table for the button widgets.
@@ -797,7 +797,7 @@ TkpDestroyButton(
  *----------------------------------------------------------------------
  */
 
-int
+static int
 TkMacOSXInitControl (
     MacButton *mbPtr,                /* Mac button. */
     GWorldPtr  destPort,

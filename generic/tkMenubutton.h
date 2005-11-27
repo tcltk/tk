@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.h,v 1.10 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.11 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -209,17 +209,17 @@ typedef struct {
  * Declaration of variables shared between the files in the button module.
  */
 
-extern Tk_ClassProcs tkpMenubuttonClass;
+MODULE_SCOPE Tk_ClassProcs tkpMenubuttonClass;
 
 /*
  * Declaration of procedures used in the implementation of the button widget.
  */
 
-EXTERN void		TkpComputeMenuButtonGeometry(TkMenuButton *mbPtr);
-EXTERN TkMenuButton *	TkpCreateMenuButton(Tk_Window tkwin);
-EXTERN void		TkpDisplayMenuButton(ClientData clientData);
-EXTERN void 		TkpDestroyMenuButton(TkMenuButton *mbPtr);
-EXTERN void		TkMenuButtonWorldChanged(ClientData instanceData);
+MODULE_SCOPE void	TkpComputeMenuButtonGeometry(TkMenuButton *mbPtr);
+MODULE_SCOPE TkMenuButton *TkpCreateMenuButton(Tk_Window tkwin);
+MODULE_SCOPE void	TkpDisplayMenuButton(ClientData clientData);
+MODULE_SCOPE void 	TkpDestroyMenuButton(TkMenuButton *mbPtr);
+MODULE_SCOPE void	TkMenuButtonWorldChanged(ClientData instanceData);
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT

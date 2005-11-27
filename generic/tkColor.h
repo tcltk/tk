@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.h,v 1.7 2005/11/11 23:51:27 dkf Exp $
+ * RCS: @(#) $Id: tkColor.h,v 1.8 2005/11/27 02:36:13 das Exp $
  */
 
 #ifndef _TKCOLOR
@@ -74,10 +74,10 @@ typedef struct TkColor {
  */
 
 #ifndef TkpFreeColor
-EXTERN void		TkpFreeColor(TkColor *tkColPtr);
+MODULE_SCOPE void	TkpFreeColor(TkColor *tkColPtr);
 #endif
-EXTERN TkColor *	TkpGetColor(Tk_Window tkwin, Tk_Uid name);
-EXTERN TkColor *	TkpGetColorByValue(Tk_Window tkwin, XColor *colorPtr);
+MODULE_SCOPE TkColor *	TkpGetColor(Tk_Window tkwin, Tk_Uid name);
+MODULE_SCOPE TkColor *	TkpGetColorByValue(Tk_Window tkwin, XColor *colorPtr);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

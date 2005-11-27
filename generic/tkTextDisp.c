@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.54 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.55 2005/11/27 02:36:14 das Exp $
  */
 
 #include "tkPort.h"
@@ -5590,7 +5590,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, type;
     int pixels, count;
-    size_t switchLength;
+    int switchLength;
     double fraction;
     TkTextIndex index;
 

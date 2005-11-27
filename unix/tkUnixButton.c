@@ -8,11 +8,21 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.21 2005/11/14 11:54:21 dkf Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.22 2005/11/27 02:36:16 das Exp $
  */
 
 #include "tkButton.h"
 #include "tk3d.h"
+
+/*
+ * Shared with menu widget.
+ */
+
+MODULE_SCOPE void	TkpDrawCheckIndicator(Tk_Window tkwin,
+			    Display *display, Drawable d, int x, int y,
+			    Tk_3DBorder bgBorder, XColor *indicatorColor,
+			    XColor *selectColor, XColor *disColor, int on,
+			    int disabled, int mode);
 
 /*
  * Declaration of Unix specific button structure.

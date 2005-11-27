@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.13 2005/10/21 01:51:45 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.14 2005/11/27 02:36:16 das Exp $
  */
 
 #include "tkPort.h"
@@ -188,10 +188,10 @@ static Tcl_ThreadDataKey dataKey;
 
 /*
  * The following variable is the serial number that was used in the last
- * "send" command. It is exported only for testing purposes.
+ * "send" command.
  */
 
-int tkSendSerial = 0;
+static int tkSendSerial = 0;
 
 /*
  * Maximum size property that can be read at one time by this module:
@@ -1858,6 +1858,115 @@ UpdateCommWindow(
     Tcl_DStringFree(&names);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpTestsendCmd --
+ *
+ *	This function implements the "testsend" command. It provides a set of
+ *	functions for testing the "send" command and support function in
+ *	tkSend.c.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	Depends on option;  see below.
+ *
+ *----------------------------------------------------------------------
+ */
+
+	/* ARGSUSED */
+int
+TkpTestsendCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int argc,			/* Number of arguments. */
+    CONST char **argv)		/* Argument strings. */
+{
+    TkWindow *winPtr = (TkWindow *) clientData;
+
+    if (argc < 2) {
+	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
+		" option ?arg ...?\"", NULL);
+	return TCL_ERROR;
+    }
+
+    if (strcmp(argv[1], "bogus") == 0) {
+	XChangeProperty(winPtr->dispPtr->display,
+		RootWindow(winPtr->dispPtr->display, 0),
+		winPtr->dispPtr->registryProperty, XA_INTEGER, 32,
+		PropModeReplace,
+		(unsigned char *) "This is bogus information", 6);
+    } else if (strcmp(argv[1], "prop") == 0) {
+	int result, actualFormat;
+	unsigned long length, bytesAfter;
+	Atom actualType, propName;
+	char *property, *p, *end;
+	Window w;
+
+	if ((argc != 4) && (argc != 5)) {
+	    Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
+		    " prop window name ?value ?\"", NULL);
+	    return TCL_ERROR;
+	}
+	if (strcmp(argv[2], "root") == 0) {
+	    w = RootWindow(winPtr->dispPtr->display, 0);
+	} else if (strcmp(argv[2], "comm") == 0) {
+	    w = Tk_WindowId(winPtr->dispPtr->commTkwin);
+	} else {
+	    w = strtoul(argv[2], &end, 0);
+	}
+	propName = Tk_InternAtom((Tk_Window) winPtr, argv[3]);
+	if (argc == 4) {
+	    property = NULL;
+	    result = XGetWindowProperty(winPtr->dispPtr->display,
+		    w, propName, 0, 100000, False, XA_STRING,
+		    &actualType, &actualFormat, &length,
+		    &bytesAfter, (unsigned char **) &property);
+	    if ((result == Success) && (actualType != None)
+		    && (actualFormat == 8) && (actualType == XA_STRING)) {
+		for (p = property; (p-property) < length; p++) {
+		    if (*p == 0) {
+			*p = '\n';
+		    }
+		}
+		Tcl_SetResult(interp, property, TCL_VOLATILE);
+	    }
+	    if (property != NULL) {
+		XFree(property);
+	    }
+	} else if (argv[4][0] == 0) {
+	    XDeleteProperty(winPtr->dispPtr->display, w, propName);
+	} else {
+	    Tcl_DString tmp;
+
+	    Tcl_DStringInit(&tmp);
+	    for (p = Tcl_DStringAppend(&tmp, argv[4],
+		    (int) strlen(argv[4])); *p != 0; p++) {
+		if (*p == '\n') {
+		    *p = 0;
+		}
+	    }
+
+	    XChangeProperty(winPtr->dispPtr->display, w, propName, XA_STRING,
+		    8, PropModeReplace, (unsigned char*)Tcl_DStringValue(&tmp),
+		    p-Tcl_DStringValue(&tmp));
+	    Tcl_DStringFree(&tmp);
+	}
+    } else if (strcmp(argv[1], "serial") == 0) {
+	char buf[TCL_INTEGER_SPACE];
+
+	sprintf(buf, "%d", tkSendSerial+1);
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    } else {
+	Tcl_AppendResult(interp, "bad option \"", argv[1],
+		"\": must be bogus, prop, or serial", NULL);
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
 /*
  * Local Variables:
  * mode: c

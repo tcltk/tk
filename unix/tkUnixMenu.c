@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.13 2005/11/14 10:32:36 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.14 2005/11/27 02:36:16 das Exp $
  */
 
 #include "tkPort.h"
@@ -34,7 +34,7 @@
  * Shared with button widget.
  */
 
-extern void		TkpDrawCheckIndicator(Tk_Window tkwin,
+MODULE_SCOPE void	TkpDrawCheckIndicator(Tk_Window tkwin,
 			    Display *display, Drawable d, int x, int y,
 			    Tk_3DBorder bgBorder, XColor *indicatorColor,
 			    XColor *selectColor, XColor *disColor, int on,
