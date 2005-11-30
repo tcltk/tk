@@ -1,3 +1,8 @@
+2005-11-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXEvent.h: define
+	kEventAppAvailableWindowBoundsChanged for OS X < 10.3.
+
 2005-11-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/console.tcl (::tk::ConsoleInit): improve work-around to
