@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.17.2.6 2004/10/26 16:39:01 rmax Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.17.2.7 2005/11/30 21:13:12 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -983,11 +983,11 @@ Tk_HandleEvent(eventPtr)
 		    Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS")) {
 		TkWmProtocolEventProc(winPtr, eventPtr);
 	    } else {
-		/* 
+		/*
 		 * Finally, invoke any ClientMessage event handlers.
 		 */
 
-		for (genPrevPtr = NULL, genericPtr = tsdPtr->cmList;  
+		for (genPrevPtr = NULL, genericPtr = tsdPtr->cmList;
 		     genericPtr != NULL; ) {
 		    if (genericPtr->deleteFlag) {
 			if (!tsdPtr->handlersActive) {
@@ -1006,7 +1006,7 @@ Tk_HandleEvent(eventPtr)
 				genPrevPtr->nextPtr = tmpPtr;
 			    }
 			    if (tmpPtr == NULL) {
-				tsdPtr->lastGenericPtr = genPrevPtr;
+				tsdPtr->lastCmPtr = genPrevPtr;
 			    }
 			    (void) ckfree((char *) genericPtr);
 			    genericPtr = tmpPtr;
