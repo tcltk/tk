@@ -1,5 +1,12 @@
 2005-11-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* macosx/tkMacOSXXStubs.c (TkpOpenDisplay, TkMacOSXDisplayChanged):
+	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents):
+	* macosx/tkMacOSXWindowEvent.c (TkMacOSXProcessApplicationEvent):
+	* macosx/tkMacOSXInt.h: Trap kEventAppAvailableWindowBoundsChanged
+	event to watch for change in display size and adjust internal
+	state appropriately.
+
 	* win/tcl.m4:      Add build support for Windows-x64 builds.
 	* win/configure:   --enable-64bit now accepts =amd64|ia64 for
 	* win/Makefile.in: Windows 64-bit build variants (default: amd64)
@@ -21,11 +28,12 @@
 	* unix/configure.in: fix obsolete autoconf macros, sync gratuitous
 	formatting/ordering differences with tcl/unix/configure.in.
 
-	* unix/Makefile.in: add CFLAGS to wish/tktest link to make executable
-	linking the same as during configure (needed to avoid loosing any linker
-	relevant flags in CFLAGS, in particular flags that can't be in LDFLAGS).
-	Avoid concurrent linking of wish and compiling of tkTestInit.o during
-	parallel make, fix dependencies and flags for building tkMacOSXInit.o
+	* unix/Makefile.in: add CFLAGS to wish/tktest link to make
+	executable linking the same as during configure (needed to avoid
+	loosing any linker relevant flags in CFLAGS, in particular flags
+	that can't be in LDFLAGS).  Avoid concurrent linking of wish and
+	compiling of tkTestInit.o during parallel make, fix dependencies
+	and flags for building tkMacOSXInit.o
 	(checkstubs, checkexports): dependency and Darwin fixes
 
 	* macosx/tkMacOSXEvent.c (TkMacOSXProcessEvent):
@@ -64,7 +72,8 @@
 	* macosx/tkMacOSXWm.c (UpdateSizeHints): remove code that is never
 	executed.
 
-	* generic/tk.h: add/correct location of version numbers in macosx files.
+	* generic/tk.h: add/correct location of version numbers in macosx
+	files.
 
 	* generic/tkInt.h: clarify fat compile comment.
 
@@ -77,8 +86,8 @@
 	* macosx/README: clarification/cleanup, sync with HEAD, document
 	universal (fat) builds via CFLAGS (i.e. ppc and i386 at the same time).
 
-	* macosx/Makefile: add support for reusing configure cache, build target
-	fixes.
+	* macosx/Makefile: add support for reusing configure cache, build
+	target fixes.
 
 	* generic/tkMenu.c:
 	* macosx/tkMacOSXButton.c:

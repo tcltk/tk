@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.6 2005/11/27 02:36:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.7 2005/11/30 01:02:55 hobbs Exp $
  */
 
 #ifndef _TKMACINT
@@ -137,15 +137,15 @@ extern int tkUseMenuCascadeRgn;		/* If this is 1, clipping code
 					 * tkMenuCascadeRgn will only
 					 * be valid when the value of this
 					 * variable is 1. */
-extern int tkPictureIsOpen;             /* If this is 1, we are drawing to a picture
-                                         * The clipping should then be done relative
-                                         * to the bounds of the picture rather than the window
-                                         * As of OS X.0.4, something is seriously wrong:
-                                         * The clipping bounds only seem to work if the
-                                         * top,left values are 0,0
-                                         * The destination rectangle for CopyBits
-                                         * should also have top,left values of 0,0
-                                         */
+extern int tkPictureIsOpen;	/* If this is 1, we are drawing to a picture
+				 * The clipping should then be done relative
+				 * to the bounds of the picture rather than
+				 * the window As of OS X.0.4, something is
+				 * seriously wrong: The clipping bounds only
+				 * seem to work if the top,left values are 0,0
+				 * The destination rectangle for CopyBits
+				 * should also have top,left values of 0,0
+				 */
 extern TkMacOSXWindowList *tkMacOSXWindowListPtr;
 					/* The list of toplevels */
 
@@ -165,6 +165,8 @@ extern void* TkMacOSXGetNamedSymbol(const char* module, const char* symbol);
     if (symbol == (void*)(-1L)) { \
         symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), STRINGIFY(_##symbol));\
     }
+
+extern void TkMacOSXDisplayChanged(Display *display);
 
 #include "tkIntPlatDecls.h"
 
