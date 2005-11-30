@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.20 2005/06/01 00:07:30 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.21 2005/11/30 22:58:07 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2123,7 +2123,9 @@ UpdateWrapper(winPtr)
 	wmPtr->x = place.rcNormalPosition.left;
 	wmPtr->y = place.rcNormalPosition.top;
 
-	TkInstallFrameMenu((Tk_Window) winPtr);
+	if (!(winPtr->flags & TK_ALREADY_DEAD)) {
+	    TkInstallFrameMenu((Tk_Window) winPtr);
+	}
 
 	if (oldWrapper && (oldWrapper != wmPtr->wrapper)
 		&& !(wmPtr->exStyle & WS_EX_TOPMOST)) {
