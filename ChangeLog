@@ -1,5 +1,8 @@
 2005-11-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/console.tcl (::tk::ConsoleInit): improve work-around to
+	avoid '% ' from tclMain.c [Bug 1252259]
+
 	* macosx/tkMacOSXXStubs.c (TkpOpenDisplay, TkMacOSXDisplayChanged):
 	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents):
 	* macosx/tkMacOSXWindowEvent.c (TkMacOSXProcessApplicationEvent):
