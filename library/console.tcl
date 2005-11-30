@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.22.2.3 2005/05/31 04:58:00 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.22.2.4 2005/11/30 01:22:55 hobbs Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -153,7 +153,9 @@ proc ::tk::ConsoleInit {} {
 
     if {$tcl_platform(platform) eq "windows"} {
 	# Subtle work-around to erase the '% ' that tclMain.c prints out
-	after idle [list $con delete 1.0 output]
+	after idle [subst -nocommand {
+	    if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
+	}]
     }
 }
 
