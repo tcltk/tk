@@ -1,5 +1,8 @@
 2005-11-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinWm.c (UpdateWrapper): Don't install frame menu on dead
+	window.  Backport of 1233635
+
 	* generic/tkEvent.c: fix handling of ClientMessage handlers.
 	[Bug 1289565 983920]
 
