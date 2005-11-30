@@ -1,3 +1,8 @@
+2005-11-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/console.tcl (::tk::ConsoleInit): improve work-around to
+	avoid '% ' from tclMain.c [Bug 1252259]
+
 2005-11-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4 (Darwin): add 64bit support, check for Tiger copyfile(),
@@ -11,11 +16,12 @@
 	* unix/configure.in: fix obsolete autoconf macros, sync gratuitous
 	formatting/ordering differences with tcl/unix/configure.in.
 
-	* unix/Makefile.in: add CFLAGS to wish/tktest link to make executable
-	linking the same as during configure (needed to avoid loosing any linker
-	relevant flags in CFLAGS, in particular flags that can't be in LDFLAGS).
-	Avoid concurrent linking of wish and compiling of tkTestInit.o during
-	parallel make, fix dependencies and flags for building tkMacOSXInit.o
+	* unix/Makefile.in: add CFLAGS to wish/tktest link to make
+	executable linking the same as during configure (needed to avoid
+	loosing any linker relevant flags in CFLAGS, in particular flags
+	that can't be in LDFLAGS).  Avoid concurrent linking of wish and
+	compiling of tkTestInit.o during parallel make, fix dependencies
+	and flags for building tkMacOSXInit.o
 	(checkstubs, checkexports): dependency and Darwin fixes
 	(dist): add new macosx files.
 
@@ -57,19 +63,21 @@
 
 	* xlib/xgc.c (XCreateGC): sync with core-8-4-branch change.
 
-	* generic/tk.h: add/correct location of version numbers in macosx files.
+	* generic/tk.h: add/correct location of version numbers in macosx
+	files.
 
 	* generic/tkInt.h: clarify fat compile comment.
 
-	* macosx/Wish.pbproj/default.pbxuser (new file):
+	* macosx/Wish.pbproj/default.pbxuser (new):
 	* macosx/Wish.pbproj/jingham.pbxuser:
 	* macosx/Wish.pbproj/project.pbxproj:
 	* macosx/Wish.xcode/default.pbxuser:
 	* macosx/Wish.xcode/project.pbxproj:
-	* macosx/Wish.xcodeproj/default.pbxuser (new file):
-	* macosx/Wish.xcodeproj/project.pbxproj (new file): new/updated projects
-	for Xcode 2.2 on 10.4, Xcode 1.5 on 10.3 & ProjectBuilder on 10.2, with
-	native tktest targets and support for universal (fat) compiles.
+	* macosx/Wish.xcodeproj/default.pbxuser (new):
+	* macosx/Wish.xcodeproj/project.pbxproj (new): new/updated
+	projects for Xcode 2.2 on 10.4, Xcode 1.5 on 10.3 & ProjectBuilder
+	on 10.2, with native tktest targets and support for universal
+	(fat) compiles.
 
 	* macosx/Tk-Info.plist (removed):
 	* macosx/Wish-Info.plist (removed):
@@ -81,9 +89,10 @@
 	* unix/Makefile.in:
 	* unix/aclocal.m4:
 	* unix/configure.in:
-	* macosx/configure.ac (new file): add support for inclusion of
-	unix/configure.in by macosx/configure.ac, allows generation of a config
-	headers enabled configure script in macosx (required by Xcode projects).
+	* macosx/configure.ac (new): add support for inclusion of
+	unix/configure.in by macosx/configure.ac, allows generation of a
+	config headers enabled configure script in macosx (required by
+	Xcode projects).
 
 	* macosx/GNUmakefile: rename from Makefile to avoid overwriting by
 	configure run in tk/macosx, add support for reusing configure cache,
