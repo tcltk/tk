@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.9 2005/11/27 02:36:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.10 2005/11/30 01:02:55 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -74,6 +74,46 @@ int _XInitImageFuncPtrs _ANSI_ARGS_((XImage *image));
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXDisplayChanged --
+ *
+ *	Called to set up initial screen info or when an event indicated
+ *	display (screen) change.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May change info regarding the screen.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXDisplayChanged(Display *display)
+{
+    GDHandle graphicsDevice;
+    Screen *screen;
+
+    if (display == NULL || display->screens == NULL) {
+	return;
+    }
+    screen = display->screens;
+
+    graphicsDevice = GetMainDevice();
+    screen->root_depth  = (*(*graphicsDevice)->gdPMap)->cmpSize *
+                               (*(*graphicsDevice)->gdPMap)->cmpCount;
+    screen->height      = (*graphicsDevice)->gdRect.bottom -
+	(*graphicsDevice)->gdRect.top;
+    screen->width       = (*graphicsDevice)->gdRect.right -
+	(*graphicsDevice)->gdRect.left;
+
+    screen->mwidth      = (screen->width * 254 + 360) / 720;
+    screen->mheight     = (screen->height * 254 + 360) / 720;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpOpenDisplay --
  *
  *	Create the Display structure and fill it with device
@@ -94,8 +134,8 @@ TkpOpenDisplay(
 {
     Display *display;
     Screen *screen;
-    GDHandle graphicsDevice;
     int      fd = 0;
+
     if (gMacDisplay != NULL) {
 	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
 	    return gMacDisplay;
@@ -104,54 +144,57 @@ TkpOpenDisplay(
 	}
     }
     InitCursor();
-     
-    graphicsDevice = GetMainDevice();
+
     display = (Display *) ckalloc(sizeof(Display));
+    screen  = (Screen *) ckalloc(sizeof(Screen));
+    bzero(display, sizeof(Display));
+    bzero(screen, sizeof(Screen));
+
     display->resource_alloc = MacXIdAlloc;
-    screen = (Screen *) ckalloc(sizeof(Screen) * 2);
+    display->request        = 0;
+    display->qlen           = 0;
+    display->fd             = fd;
+    display->screens        = screen;
+    display->nscreens       = 1;
     display->default_screen = 0;
-    display->request = 0;
-    display->nscreens = 1;
-    display->screens = screen;
-    display->display_name = macScreenName;
-    display->qlen = 0;
-    display->fd = fd;
-    display->proto_major_version = 10;
+    display->display_name   = macScreenName;
+
     Gestalt(gestaltQuickdrawVersion, (long*)&display->proto_minor_version);
+    display->proto_major_version = 10;
     display->proto_minor_version -= gestaltMacOSXQD;
     display->vendor = "Apple";
     Gestalt(gestaltSystemVersion, (long*)&display->release);
-    
-    screen->root = ROOT_ID;
-    screen->display = display;
-    screen->root_depth = (*(*graphicsDevice)->gdPMap)->cmpSize *
-                               (*(*graphicsDevice)->gdPMap)->cmpCount;	
-    screen->height = (*graphicsDevice)->gdRect.bottom -
-	(*graphicsDevice)->gdRect.top;
-    screen->width = (*graphicsDevice)->gdRect.right -
-	(*graphicsDevice)->gdRect.left;
-    
-    screen->mwidth = (screen->width * 254 + 360) / 720;
-    screen->mheight = (screen->height * 254 + 360) / 720;
+
+    /*
+     * These screen bits never change
+     */
+    screen->root        = ROOT_ID;
+    screen->display     = display;
     screen->black_pixel = 0x00000000;
     screen->white_pixel = 0x00FFFFFF;
+
     screen->root_visual = (Visual *) ckalloc(sizeof(Visual));
-    screen->root_visual->visualid = 0;
-    screen->root_visual->class = TrueColor;
-    screen->root_visual->red_mask = 0x00FF0000;
-    screen->root_visual->green_mask = 0x0000FF00;
-    screen->root_visual->blue_mask = 0x000000FF;
+    screen->root_visual->visualid     = 0;
+    screen->root_visual->class        = TrueColor;
+    screen->root_visual->red_mask     = 0x00FF0000;
+    screen->root_visual->green_mask   = 0x0000FF00;
+    screen->root_visual->blue_mask    = 0x000000FF;
     screen->root_visual->bits_per_rgb = 24;
-    screen->root_visual->map_entries = 256;
+    screen->root_visual->map_entries  = 256;
+
+    /*
+     * Initialize screen bits that may change
+     */
+    TkMacOSXDisplayChanged(display);
 
     gMacDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
-    
+
     /*
      * This is the quickest way to make sure that all the *Init
      * flags get properly initialized
      */
-    
-    bzero (gMacDisplay, sizeof (TkDisplay));
+
+    bzero(gMacDisplay, sizeof(TkDisplay));
     gMacDisplay->display = display;
     return gMacDisplay;
 }
@@ -931,7 +974,7 @@ XStringListToTextProperty(
     Debugger();
     return (Status) 0;
 }
-void		
+void
 XSetWMClientMachine(
     Display* display, 
     Window w, 
@@ -939,7 +982,7 @@ XSetWMClientMachine(
 {
     Debugger();
 }
-XIC		
+XIC
 XCreateIC(
     void)
 {

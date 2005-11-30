@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.5 2005/11/27 02:36:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.6 2005/11/30 01:02:55 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -196,6 +196,7 @@ TkMacOSXInitCarbonEvents (
 	    {kEventClassWindow,		kEventWindowExpanded},
 	    {kEventClassApplication,	kEventAppHidden},
 	    {kEventClassApplication,	kEventAppShown},
+	    {kEventClassApplication,    kEventAppAvailableWindowBoundsChanged},
     };
     EventHandlerUPP handler = NewEventHandlerUPP(CarbonEventHandlerProc);
 
