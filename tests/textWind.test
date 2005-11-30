@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.5 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: textWind.test,v 1.5.2.1 2005/11/30 23:42:49 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -20,11 +20,7 @@ tcltest::loadTestedCommands
 
 option add *Text.borderWidth 2
 option add *Text.highlightThickness 2
-if {$tcl_platform(platform) == "windows"} {
-    option add *Text.font {Courier -14}
-} else {   
-    option add *Text.font {Courier -12}
-}
+option add *Text.font {Courier -12}
 
 text .t -width 30 -height 6 -bd 2 -highlightthickness 2
 pack append . .t {top expand fill}
@@ -36,7 +32,7 @@ if {[winfo depth .t] > 1} {
 } else {
     set color black
 }
-  
+
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
 
