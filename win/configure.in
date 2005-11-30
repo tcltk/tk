@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.49.2.16 2005/11/16 22:07:39 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.49.2.17 2005/11/30 00:19:01 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -196,6 +196,17 @@ else
     TK_RES='tk.$(RES)'
 fi
 
+# The wish.exe.manifest requires these
+# TK_WIN_VERSION is the 4 dotted pair Windows version format
+case "$TK_PATCH_LEVEL" in
+     a*) TK_WIN_VERSION="$TK_VERSION.0.`echo $TK_PATCH_LEVEL | tr -d a`" ;;
+     b*) TK_WIN_VERSION="$TK_VERSION.1.`echo $TK_PATCH_LEVEL | tr -d b`" ;;
+     .*) TK_WIN_VERSION="$TK_VERSION.2$TK_PATCH_LEVEL" ;;
+esac
+AC_SUBST(TK_WIN_VERSION)
+# X86|AMD64|IA64 for manifest
+AC_SUBST(MACHINE)
+
 AC_SUBST(TK_VERSION)
 AC_SUBST(TK_MAJOR_VERSION)
 AC_SUBST(TK_MINOR_VERSION)
@@ -275,4 +286,4 @@ AC_SUBST(TK_BUILD_STUB_LIB_PATH)
 AC_SUBST(TK_CC_SEARCH_FLAGS)
 AC_SUBST(TK_LD_SEARCH_FLAGS)
 
-AC_OUTPUT(Makefile tkConfig.sh)
+AC_OUTPUT([Makefile tkConfig.sh wish.exe.manifest])
