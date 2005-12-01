@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.11 2005/12/01 17:51:30 kennykb Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.12 2005/12/01 18:00:00 kennykb Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -831,21 +831,13 @@ RCSTATIC = -d STATIC_BUILD
 RCSTATIC =
 !endif
 
-$(TMP_DIR)\tk.res: $(RCDIR)\tk.rc $(TMP_DIR)\wish.exe.manifest
+{$(RCDIR)}.rc{$(TMP_DIR)}.res:
 	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" $(TCL_INCLUDES) \
 		$(RCDEBUG) $(RCTHREADS) $(RCSTATIC) \
-		$(RCDIR)\tk.rc
+		$<
 
-$(TMP_DIR)\tk_base.res: $(RCDIR)\tk_base.rc $(TMP_DIR)\wish.exe.manifest
-	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
-		$(RCDEBUG) $(RCTHREADS) $(RCSTATIC) \
-		-d MANIFEST_FILE="$(TMP_DIR)\wish.exe.manifest"
-		$(RCDIR)\tk_base.rc
-
-$(TMP_DIR)\wish.res: $(RCDIR)\wish.rc $(TMP_DIR)\wish.exe.manifest
-	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) -i "$(TMP_DIR)" \
-		$(RCDEBUG) $(RCTHREADS) $(RCSTATIC) \
-		$(RCDIR)\wish.rc
+$(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
+$(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
 
 #---------------------------------------------------------------------
 # Clean up
