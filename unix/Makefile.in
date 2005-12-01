@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.87.2.15 2005/11/27 02:44:26 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.87.2.16 2005/12/01 19:03:14 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1353,12 +1353,12 @@ dist:
 	cp -p $(TOP_DIR)/win/lamp.bmp $(DISTDIR)/win
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
-	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest $(DISTDIR)/win/rc/
+	cp -p $(TOP_DIR)/win/rc/wish.exe.manifest.in $(DISTDIR)/win/rc/
 	cp -p $(TOP_DIR)/win/rc/*.rc $(TOP_DIR)/win/rc/*.cur \
 		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
 		$(DISTDIR)/win/rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
-	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/wish.exe.manifest
+	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/wish.exe.manifest.in
 	mkdir $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/tkMacProjects.sea.hqx $(DISTDIR)/mac
 	cp -p $(TOP_DIR)/mac/*.c $(TOP_DIR)/mac/*.h $(TOP_DIR)/mac/*.r \
