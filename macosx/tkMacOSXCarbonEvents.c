@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.6 2005/11/30 01:02:55 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.7 2005/12/01 02:15:46 das Exp $
  */
 
 #include "tkInt.h"
@@ -248,6 +248,7 @@ TkMacOSXInitCarbonEvents (
 	_TraceEventByName(CFSTR("kEventWindowExpanded"));
 	_TraceEventByName(CFSTR("kEventAppHidden"));
 	_TraceEventByName(CFSTR("kEventAppShown"));
+	_TraceEventByName(CFSTR("kEventAppAvailableWindowBoundsChanged"));
     }
 #endif /* TK_MAC_DEBUG_CARBON_EVENTS */
 }
