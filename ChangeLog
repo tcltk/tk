@@ -1,3 +1,14 @@
+2005-11-16  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.4.12 TAGGED FOR RELEASE ***
+
+	* changes:	Update changes for 8.4.12 release
+
+	* mac/tkMacWm.c:	Restored consistent error checking and
+	* macosx/tkMacOSXWm.c:	messages among different platform's
+	* tests/wm.test:	[wm grid] commands.  [Bug 1323972].
+	* win/tkWinWm.c:
+
 2005-12-01  Kevin Kenny  <kennykb@acm.org>
 
 	* win/makefile.vc: restored buildability.
