@@ -2,6 +2,8 @@
 
 	* win/Makefile.in: place TCL_BIN_DIR first in PATH for targets to
 	get Tcl built dll first.
+	Add tkWinTest.obj to tk84.dll to handle some needed test functions
+	being defined in stubs (TkplatformtestInit).
 
 	* tests/scrollbar.test (6.22): fix rounding-error sensitive test
 
