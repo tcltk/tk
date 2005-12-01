@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.11 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.12 2005/12/01 06:24:16 hobbs Exp $
  */
 
 #ifndef _TKMACINT
@@ -73,9 +73,10 @@ typedef struct TkMacOSXWindowList {
 /*
  * I am reserving TK_EMBEDDED = 0x100 in the MacDrawable flags
  * This is defined in tk.h. We need to duplicate the TK_EMBEDDED flag in the
- * TkWindow structure for the window,  but in the MacWin.  This way we can still tell
- * what the correct port is after the TKWindow  structure has been freed.  This 
- * actually happens when you bind destroy of a toplevel to Destroy of a child.
+ * TkWindow structure for the window, but in the MacWin.  This way we can
+ * still tell what the correct port is after the TKWindow structure has been
+ * freed.  This actually happens when you bind destroy of a toplevel to
+ * Destroy of a child.
  */
 
 /*
@@ -106,14 +107,14 @@ MODULE_SCOPE TkMacOSXEmbedHandler *gMacEmbedHandler;
 /*
  * Accessor for the privatePtr flags field for the TK_HOST_EXISTS field
  */
- 
+
 #define TkMacOSXHostToplevelExists(tkwin) \
     (((TkWindow *) (tkwin))->privatePtr->toplevel->flags & TK_HOST_EXISTS)
 
 /*
  * Defines use for the flags argument to TkGenWMConfigureEvent.
  */
- 
+
 #define TK_LOCATION_CHANGED	1
 #define TK_SIZE_CHANGED		2
 #define TK_BOTH_CHANGED		3
@@ -122,11 +123,11 @@ MODULE_SCOPE TkMacOSXEmbedHandler *gMacEmbedHandler;
  * Variables shared among various Mac Tk modules but are not
  * exported to the outside world.
  */
- 
+
 /*
  * Globals shared among Macintosh Tk
  */
- 
+
 MODULE_SCOPE MenuHandle tkAppleMenu;	/* Handle to the Apple Menu */
 MODULE_SCOPE MenuHandle tkFileMenu;	/* Handles to menus */
 MODULE_SCOPE MenuHandle tkEditMenu;	/* Handles to menus */
@@ -137,20 +138,23 @@ MODULE_SCOPE int tkUseMenuCascadeRgn;	/* If this is 1, clipping code
 					 * tkMenuCascadeRgn will only
 					 * be valid when the value of this
 					 * variable is 1. */
-MODULE_SCOPE int tkPictureIsOpen;            /* If this is 1, we are drawing to a picture
-                                         * The clipping should then be done relative
-                                         * to the bounds of the picture rather than the window
-                                         * As of OS X.0.4, something is seriously wrong:
-                                         * The clipping bounds only seem to work if the
-                                         * top,left values are 0,0
-                                         * The destination rectangle for CopyBits
-                                         * should also have top,left values of 0,0
-                                         */
+MODULE_SCOPE int tkPictureIsOpen;	/* If this is 1, we are drawing to a
+					 * picture The clipping should then be
+					 * done relative to the bounds of the
+					 * picture rather than the window As
+					 * of OS X.0.4, something is seriously
+					 * wrong: The clipping bounds only
+					 * seem to work if the top,left values
+					 * are 0,0 The destination rectangle
+					 * for CopyBits should also have
+					 * top,left values of 0,0
+					 */
 MODULE_SCOPE TkMacOSXWindowList *tkMacOSXWindowListPtr;
 					/* The list of toplevels */
 
 MODULE_SCOPE Tcl_Encoding TkMacOSXCarbonEncoding;
 
+MODULE_SCOPE void TkMacOSXDisplayChanged(Display *display);
 MODULE_SCOPE int TkMacOSXUseAntialiasedText(Tcl_Interp *interp, int enable);
 MODULE_SCOPE void TkMacOSXInitCarbonEvents(Tcl_Interp *interp);
 MODULE_SCOPE int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable, int antiAlias);
