@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.30 2005/11/17 16:21:55 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.31 2005/12/01 03:21:37 hobbs Exp $
  */
 
 /*
@@ -1887,7 +1887,7 @@ output(
     statePtr->obuf |= val << statePtr->obits;
     statePtr->obits += statePtr->outputBits;
     while (statePtr->obits >= 8) {
-	blockOut(statePtr, statePtr->obuf&0xff);
+	blockOut(statePtr, UCHAR(statePtr->obuf & 0xff));
 	statePtr->obuf >>= 8;
 	statePtr->obits -= 8;
     }
@@ -1901,7 +1901,7 @@ outputFlush(
 {
     DEBUGMSG(("outputFlush\n"));
     if (statePtr->obits > 0) {
-	blockOut(statePtr, statePtr->obuf);
+	blockOut(statePtr, UCHAR(statePtr->obuf));
     }
     blockFlush(statePtr);
 }
