@@ -8,6 +8,9 @@
 
 2005-11-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinWm.c (WmAttributesCmd): set (no)topmost window aspect
+	before rewrapping.  [Bug 1086049]
+
 	* generic/tkImgGIF.c: cast calls to block_out
 
 	* win/Makefile.in: place TCL_BIN_DIR first in PATH for targets to

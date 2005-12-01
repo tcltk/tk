@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.21 2005/11/30 22:58:07 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.22 2005/12/01 07:34:54 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -2959,7 +2959,8 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 		} else {
 		    *stylePtr &= ~styleBit;
 		}
-		if (setLayeredWindowAttributesProc != NULL) {
+		if ((setLayeredWindowAttributesProc != NULL)
+			&& (wmPtr->wrapper != NULL)) {
 		    /*
 		     * Set the window directly regardless of UpdateWrapper.
 		     * The user supplies a double from [0..1], but Windows
@@ -2985,6 +2986,17 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 	    } else {
 		*stylePtr &= ~styleBit;
 	    }
+	}
+	if ((styleBit == WS_EX_TOPMOST) && (wmPtr->wrapper != NULL)) {
+	    /*
+	     * Force the topmost position aspect to ensure that switching
+	     * between (no)topmost reflects properly when rewrapped.
+	     */
+	    SetWindowPos(wmPtr->wrapper,
+		    ((exStyle & WS_EX_TOPMOST) ?
+			    HWND_TOPMOST : HWND_NOTOPMOST), 0, 0, 0, 0,
+		    SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOSENDCHANGING
+		    |SWP_NOOWNERZORDER);
 	}
     }
     if (wmPtr->styleConfig != style) {
