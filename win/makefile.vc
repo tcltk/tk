@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.10 2005/11/30 00:19:01 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.11 2005/12/01 17:51:30 kennykb Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -730,17 +730,18 @@ $(TMP_DIR)\tkStubImg.obj : $(GENERICDIR)\tkStubImg.c
 
 $(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
 	$(TCLSH) <<
-puts "Creating wish.exe.manifest ..."
-set f [open "$(WINDIR:\=/)/wish.exe.manifest.in" r]
+set f [open {$(WINDIR:\=/)/wish.exe.manifest.in} r]
 set data [read $$f]
 close $$f
-set f [open "$(TMPDIR:\=/)/wish.exe.manifest" w]
-set mach "$(MACHINE)"
-if {[regexp -nocase {^(|IX86)$$} $$mach]} { set mach "X86" }
-# Exact version is not critical in the manifest
+set mach {$(MACHINE)}
+if {[regexp -nocase {$(IX86)$$} $mach ]} {set mach X86}
 set winver "$(DOTVERSION).0.0"
-puts $$f -nonewline [string map [list @MACHINE@ $$mach @TK_WIN_VERSION@	$$winver] $$data]
+set data [string map [list @MACHINE@ $$mach @TK_WIN_VERSION@ $$winver] $$data]
+puts {Creating $(TMP_DIR:\=/)/wish.exe.manifest}
+set f [open {$(TMP_DIR:\=/)/wish.exe.manifest} w]
+puts -nonewline $$f $$data
 close $$f
+exit
 <<
 
 $(TMP_DIR)\tk.res: \
@@ -814,18 +815,37 @@ $<
 $<
 <<
 
-{$(RCDIR)}.rc{$(TMP_DIR)}.res: $(TMP_DIR)\wish.exe.manifest
-	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
 !if $(DEBUG)
-		-d DEBUG \
+RCDEBUG = -d DEBUG
+!else
+RCDEBUG = 
 !endif
 !if $(TCL_THREADS)
-		-d TCL_THREADS \
+RCTHREADS = -d TCL_THREADS
+!else
+RCTHREADS =
 !endif
 !if $(STATIC_BUILD)
-		-d STATIC_BUILD \
+RCSTATIC = -d STATIC_BUILD
+!else
+RCSTATIC =
 !endif
-		$<
+
+$(TMP_DIR)\tk.res: $(RCDIR)\tk.rc $(TMP_DIR)\wish.exe.manifest
+	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" $(TCL_INCLUDES) \
+		$(RCDEBUG) $(RCTHREADS) $(RCSTATIC) \
+		$(RCDIR)\tk.rc
+
+$(TMP_DIR)\tk_base.res: $(RCDIR)\tk_base.rc $(TMP_DIR)\wish.exe.manifest
+	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
+		$(RCDEBUG) $(RCTHREADS) $(RCSTATIC) \
+		-d MANIFEST_FILE="$(TMP_DIR)\wish.exe.manifest"
+		$(RCDIR)\tk_base.rc
+
+$(TMP_DIR)\wish.res: $(RCDIR)\wish.rc $(TMP_DIR)\wish.exe.manifest
+	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) -i "$(TMP_DIR)" \
+		$(RCDEBUG) $(RCTHREADS) $(RCSTATIC) \
+		$(RCDIR)\wish.rc
 
 #---------------------------------------------------------------------
 # Clean up
