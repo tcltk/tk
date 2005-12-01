@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.18.2.2 2005/05/27 18:00:59 tmh Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.18.2.3 2005/12/01 17:47:14 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -1187,7 +1187,7 @@ proc ::tk::MenuFindName {menu s} {
 proc ::tk::PostOverPoint {menu x y {entry {}}}  {
     global tcl_platform
     
-    if {[string compare $entry {}]} {
+    if {$entry ne ""} {
 	if {$entry == [$menu index last]} {
 	    incr y [expr {-([$menu yposition $entry] \
 		    + [winfo reqheight $menu])/2}]
@@ -1197,10 +1197,14 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	}
 	incr x [expr {-[winfo reqwidth $menu]/2}]
     }
-    if {$tcl_platform(platform) == "windows"} {
-	# We need to fix some problems with menu posting on Windows.
+    if {$tcl_platform(platform) eq "windows"} {
+	# We need to fix some problems with menu posting on Windows,
+	# where, if the menu would overlap top or bottom of screen,
+	# Windows puts it in the wrong place for us.  We must also
+	# subtract an extra amount for half the height of the current
+	# entry.  To be safe we subtract an extra 10.
 	set yoffset [expr {[winfo screenheight $menu] \
-		- $y - [winfo reqheight $menu]}]
+		- $y - [winfo reqheight $menu] - 10}]
 	if {$yoffset < 0} {
 	    # The bottom of the menu is offscreen, so adjust upwards
 	    incr y $yoffset
@@ -1265,7 +1269,7 @@ proc ::tk_menuSetFocus {menu} {
     }
     focus $menu
 }
-    
+
 proc ::tk::GenerateMenuSelect {menu} {
     variable ::tk::Priv
 
