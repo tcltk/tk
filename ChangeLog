@@ -1,3 +1,7 @@
+2005-12-01  Kevin Kenny  <kennykb@acm.org>
+
+	* win/makefile.vc: restored buildability.
+	
 2005-12-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/menu.tcl (::tk::PostOverPoint): correct menu post near
