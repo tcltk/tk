@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.9 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.9.2.1 2005/12/01 00:03:04 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -510,8 +510,8 @@ test scrollbar-6.21 {ScrollbarPosition procedure} {macOrUnix nonPortable} {
     .s identify 8 83
 } {slider}
 test scrollbar-6.22 {ScrollbarPosition procedure} {testmetrics pcOnly} {
-    .s identify [expr [winfo width .s] / 2] [expr int(.2 / [.s delta 0 1]) \
-						+ [testmetrics cyvscroll]]
+    .s identify [expr [winfo width .s] / 2] \
+	[expr int(.2 / [.s delta 0 1] + 0.5) + [testmetrics cyvscroll]]
 } {slider}
 test scrollbar-6.23 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \

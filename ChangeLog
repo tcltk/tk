@@ -1,5 +1,7 @@
 2005-11-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/scrollbar.test (6.22): fix rounding-error sensitive test
+
 	* tests/textWind.test: use "Courier -12" on all platforms.
 	Reduces Windows XP test errors in that file from 9 to 2 (13.2 and
 	13.9 still off-by-one pixel).
