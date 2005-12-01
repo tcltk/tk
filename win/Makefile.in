@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.59.2.2 2005/11/30 00:19:01 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.59.2.3 2005/12/01 02:13:33 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -377,14 +377,14 @@ $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c
 test: binaries $(TKTEST)
 	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
-	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
+	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH; \
 	./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" $(TESTFLAGS) \
 	| ./$(CAT32)
 
 runtest: binaries $(TKTEST)
 	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
-	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
+	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH; \
 	./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
 
 # This target can be used to run wish from the build directory
@@ -392,14 +392,14 @@ runtest: binaries $(TKTEST)
 shell: binaries
 	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
-	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
+	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH; \
 	./$(WISH) $(SCRIPT)
 
 # This target can be used to run wish inside either gdb or insight
 gdb: binaries
 	@echo "set env TCL_LIBRARY=$(TCL_SRC_DIR_NATIVE)/library" > gdb.run
 	@echo "set env TK_LIBRARY=$(ROOT_DIR_NATIVE)/library" >> gdb.run
-	PATH="$(PATH):$(TCL_BIN_DIR)"; export PATH; \
+	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH; \
 	gdb ./$(WISH) --command=gdb.run
 	@$(RM) gdb.run
 
