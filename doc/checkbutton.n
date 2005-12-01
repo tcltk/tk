@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: checkbutton.n,v 1.10 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: checkbutton.n,v 1.11 2005/12/01 03:54:06 hobbs Exp $
 '\" 
 .so man.macros
 .TH checkbutton n 4.4 Tk "Tk Built-In Commands"
@@ -67,9 +67,8 @@ alternative relief is used when the mouse cursor is over the checkbutton.
 The empty string is the default value.
 .OP \-selectcolor selectColor Background
 Specifies a background color to use when the button is selected.
-If \fBindicatorOn\fR is true then the color applies to the indicator.
-Under Windows, this color is used as the background for the indicator
-regardless of the select state.
+If \fBindicatorOn\fR is true then the color is used as the background for
+the indicator regardless of the select state.
 If \fBindicatorOn\fR is false, this color is used as the background
 for the entire widget, in place of \fBbackground\fR or \fBactiveBackground\fR,
 whenever the widget is selected.

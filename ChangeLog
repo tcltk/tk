@@ -1,5 +1,7 @@
 2005-11-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* doc/checkbutton.n: fix -selectcolor docs [Bug 1083838]
+
 	* generic/tkImgGIF.c: cast calls to blockOut
 
 	* win/Makefile.in: place TCL_BIN_DIR first in PATH for targets to
