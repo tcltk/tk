@@ -1,3 +1,8 @@
+2005-12-01  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/menu.tcl (::tk::PostOverPoint): correct menu post near
+	bottom of screen on Windows. [Bug 1353416]
+
 2005-12-01  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4 (Darwin): fixed error when MACOSX_DEPLOYMENT_TARGET unset
