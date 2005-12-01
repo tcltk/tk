@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.15 2005/11/27 06:44:05 das Exp $
+RCS: @(#) $Id: README,v 1.16 2005/12/01 05:47:17 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -176,7 +176,7 @@ take care to only use the project matching your DevTools and OS version:
 	'ReleaseUniversal'configuration which builds both the 'Tk' and the
 	'tktest' targets as universal binaries for ppc and i386. 
 Notes about the native targets of the Xcode projects:
-    * the Xcode projects refer to the tcl and source directories with a relative
+    * the Xcode projects refer to the tcl and tk source dirs with a relative
 	path of ../../tcl and ../../tk to the project location, if your source
 	directories are named differently you'll need to enter the correct path
 	in the info panel of the 'Tcl Sources' and 'Tk Sources' groups.
