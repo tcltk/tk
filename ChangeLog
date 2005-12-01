@@ -1,12 +1,14 @@
 2005-12-01  Daniel Steffen  <das@users.sourceforge.net>
 
-	* unix/tcl.m4 (Darwin): fixed error when MACOSX_DEPLOYMENT_TARGET unset.
+	* unix/tcl.m4 (Darwin): fixed error when MACOSX_DEPLOYMENT_TARGET unset
 	* unix/configure: regen.
 
 	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents): added newly
 	registered kEventAppAvailableWindowBoundsChanged to debugging code.
 
 2005-11-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImgGIF.c: cast calls to block_out
 
 	* win/Makefile.in: place TCL_BIN_DIR first in PATH for targets to
 	get Tcl built dll first.
