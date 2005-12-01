@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.2 2005/06/20 10:28:00 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.3 2005/12/01 03:22:10 hobbs Exp $
  */
 
 /*
@@ -1838,7 +1838,7 @@ output(val)
     obuf |= val << obits;
     obits += out_bits;
     while (obits >= 8) {
-	block_out(obuf&0xff);
+	block_out(UCHAR(obuf&0xff));
 	obuf >>= 8;
 	obits -= 8;
     }
@@ -1850,7 +1850,7 @@ output_flush()
 {
     DEBUGMSG(("output_flush\n"));
     if (obits > 0) {
-	block_out(obuf);
+	block_out(UCHAR(obuf));
     }
     block_flush();
 }
