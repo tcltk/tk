@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.29 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.30 2005/12/02 13:42:29 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -74,12 +74,12 @@ TkWinCleanupContainerList(void)
 {
     Container *nextPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (; tsdPtr->firstContainerPtr != (Container *) NULL;
 	    tsdPtr->firstContainerPtr = nextPtr) {
-        nextPtr = tsdPtr->firstContainerPtr->nextPtr;
-        ckfree((char *) tsdPtr->firstContainerPtr);
+	nextPtr = tsdPtr->firstContainerPtr->nextPtr;
+	ckfree((char *) tsdPtr->firstContainerPtr);
     }
     tsdPtr->firstContainerPtr = (Container *) NULL;
 }
@@ -241,7 +241,7 @@ TkpUseWindow(
     int id;
     HWND hwnd;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
 /*
     if (winPtr->window != None) {
@@ -258,7 +258,7 @@ TkpUseWindow(
     }
 
     if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
     hwnd = (HWND) id;
     if ((HWND)winPtr->privatePtr == hwnd) {
@@ -272,33 +272,34 @@ TkpUseWindow(
      */
 
     if (!IsWindow(hwnd)) {
-        if (interp != NULL) {
+	if (interp != NULL) {
 	    Tcl_AppendResult(interp, "window \"", string,
 		    "\" doesn't exist", NULL);
-        }
-        return TCL_ERROR;
+	}
+	return TCL_ERROR;
     }
 
     id = SendMessage(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
     if (id == (long)hwnd) {
-        if (!SendMessage(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
+	if (!SendMessage(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
     	    Tcl_AppendResult(interp, "The container is already in use", NULL);
 	    return TCL_ERROR;
 	}
     } else if (id == -(long)hwnd) {
-        Tcl_AppendResult(interp, "the window to use is not a Tk container",
+	Tcl_AppendResult(interp, "the window to use is not a Tk container",
 		NULL);
 	return TCL_ERROR;
     } else {
-        /*
-         * Proceed if the user decide to do so because it can be a legacy
-         * container application. However we may have to return a TCL_ERROR in
-         * order to avoid bug 1096074 in future.
-         */
+	/*
+	 * Proceed if the user decide to do so because it can be a legacy
+	 * container application. However we may have to return a TCL_ERROR in
+	 * order to avoid bug 1096074 in future.
+	 */
 
-        char msg[256];
-        sprintf(msg, "Unable to get information of window \"%s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
-        if (IDCANCEL == MessageBox(hwnd, msg, "Tk Warning",
+	char msg[256];
+
+	sprintf(msg, "Unable to get information of window \"%.80s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
+	if (IDCANCEL == MessageBox(hwnd, msg, "Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
     	    Tcl_SetResult(interp, "Operation has been canceled", TCL_STATIC);
 	    return TCL_ERROR;
@@ -353,7 +354,7 @@ TkpMakeContainer(
     TkWindow *winPtr = (TkWindow *) tkwin;
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Register the window as a container so that, for example, we can find
@@ -446,7 +447,7 @@ TkWinEmbeddedEventProc(
     int result = 1;
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the Container structure associated with the parent window.
@@ -920,7 +921,7 @@ TkpGetOtherWindow(
 {
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (containerPtr = tsdPtr->firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
@@ -957,7 +958,7 @@ Tk_GetEmbeddedHWnd(
 {
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (containerPtr = tsdPtr->firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
@@ -992,7 +993,7 @@ Tk_GetEmbeddedMenuHWND(
     TkWindow *winPtr = (TkWindow*)tkwin;
     Container *containerPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (containerPtr = tsdPtr->firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
@@ -1091,7 +1092,7 @@ EmbedWindowDeleted(
 {
     Container *containerPtr, *prevPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Find the Container structure for this window work. Delete the

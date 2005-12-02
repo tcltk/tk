@@ -6,10 +6,10 @@
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.15 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.16 2005/12/02 13:42:29 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -24,6 +24,7 @@
  */
 
 #define MAX_KEYCODE 145 /* VK_SCROLL is the last entry in our table below */
+
 static KeySym keymap[] = {
     NoSymbol, NoSymbol, NoSymbol, XK_Cancel, NoSymbol,
     NoSymbol, NoSymbol, NoSymbol, XK_BackSpace, XK_Tab,
@@ -58,7 +59,7 @@ static KeySym keymap[] = {
 };
 
 /*
- * Prototypes for local procedures defined in this file:
+ * Prototypes for local functions defined in this file:
  */
 
 static KeySym		KeycodeToKeysym(unsigned int keycode,
@@ -93,27 +94,27 @@ TkpGetString(
 
     Tcl_DStringInit(dsPtr);
     if (eventPtr->xkey.send_event == -1) {
-        if (eventPtr->xkey.nbytes > 0) {
+	if (eventPtr->xkey.nbytes > 0) {
 	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
-                    eventPtr->xkey.trans_chars, eventPtr->xkey.nbytes, dsPtr);
-        }
+		    eventPtr->xkey.trans_chars, eventPtr->xkey.nbytes, dsPtr);
+	}
     } else if (eventPtr->xkey.send_event == -2) {
-        /*
-         * Special case for win2000 multi-lingal IME input.
-         * xkey.trans_chars[] already contains a UNICODE char.
-         */
+	/*
+	 * Special case for win2000 multi-lingal IME input.
+	 * xkey.trans_chars[] already contains a UNICODE char.
+	 */
 
-        int unichar;
-        char buf[TCL_UTF_MAX];
-        int len;
+	int unichar;
+	char buf[TCL_UTF_MAX];
+	int len;
 
-        unichar = (eventPtr->xkey.trans_chars[1] & 0xff);
-        unichar <<= 8;
-        unichar |= (eventPtr->xkey.trans_chars[0] & 0xff);
+	unichar = (eventPtr->xkey.trans_chars[1] & 0xff);
+	unichar <<= 8;
+	unichar |= (eventPtr->xkey.trans_chars[0] & 0xff);
 
-        len = Tcl_UniCharToUtf((Tcl_UniChar) unichar, buf);
+	len = Tcl_UniCharToUtf((Tcl_UniChar) unichar, buf);
 
-        Tcl_DStringAppend(dsPtr, buf, len);
+	Tcl_DStringAppend(dsPtr, buf, len);
     } else {
 	/*
 	 * This is an event generated from generic code. It has no nchars or
@@ -202,27 +203,31 @@ KeycodeToKeysym(
 
     if (noascii || keycode == VK_CAPITAL || keycode == VK_SCROLL ||
 	    keycode == VK_NUMLOCK) {
-        goto skipToAscii;
+	goto skipToAscii;
     }
 
     /*
      * Use MapVirtualKey() to detect some dead keys.
      */
 
-    if (MapVirtualKey(keycode, 2) > 0x7fffUL)
-        return XK_Multi_key;
+    if (MapVirtualKey(keycode, 2) > 0x7fffUL) {
+	return XK_Multi_key;
+    }
 
     /*
      * Set up a keyboard with correct modifiers
      */
 
     memset(keys, 0, 256);
-    if (state & ShiftMask)
-        keys[VK_SHIFT] = 0x80;
-    if (state & ControlMask)
+    if (state & ShiftMask) {
+	keys[VK_SHIFT] = 0x80;
+    }
+    if (state & ControlMask) {
 	keys[VK_CONTROL] = 0x80;
-    if (state & Mod2Mask)
+    }
+    if (state & Mod2Mask) {
 	keys[VK_MENU] = 0x80;
+    }
 
     /*
      * Make sure all lock button info is correct so we don't mess up the
@@ -242,46 +247,47 @@ KeycodeToKeysym(
     result = ToAscii(keycode, scancode, keys, (LPWORD) buf, 0);
 
     if (result < 0) {
-        /*
-         * Win95/98: This was a dead char, which is now remembered by the
-         * keyboard. Call ToAscii() again to forget it.
-         * WinNT: This was a dead char, overwriting any previously remembered
-         * key. Calling ToAscii() again does not affect anything.
-         */
+	/*
+	 * Win95/98: This was a dead char, which is now remembered by the
+	 * keyboard. Call ToAscii() again to forget it.
+	 * WinNT: This was a dead char, overwriting any previously remembered
+	 * key. Calling ToAscii() again does not affect anything.
+	 */
 
-        ToAscii(keycode, scancode, keys, (LPWORD) buf, 0);
-        return XK_Multi_key;
+	ToAscii(keycode, scancode, keys, (LPWORD) buf, 0);
+	return XK_Multi_key;
     }
+
     if (result == 2) {
-        /*
-         * This was a dead char, and there were one previously remembered by
-         * the keyboard. Call ToAscii() again with proper parameters to
-         * restore it.
-         *
+	/*
+	 * This was a dead char, and there were one previously remembered by
+	 * the keyboard. Call ToAscii() again with proper parameters to
+	 * restore it.
+	 *
 	 * Get information about the old char
 	 */
 
-        deadkey = VkKeyScan(buf[0]);
-        shift = deadkey >> 8;
-        deadkey &= 255;
-        scancode = MapVirtualKey(deadkey, 0);
+	deadkey = VkKeyScan(buf[0]);
+	shift = deadkey >> 8;
+	deadkey &= 255;
+	scancode = MapVirtualKey(deadkey, 0);
 
-        /*
+	/*
 	 * Set up a keyboard with proper modifier keys
 	 */
 
-        memset(keys, 0, 256);
-        if (shift & 1) {
-            keys[VK_SHIFT] = 0x80;
+	memset(keys, 0, 256);
+	if (shift & 1) {
+	    keys[VK_SHIFT] = 0x80;
 	}
-        if (shift & 2) {
-            keys[VK_CONTROL] = 0x80;
+	if (shift & 2) {
+	    keys[VK_CONTROL] = 0x80;
 	}
-        if (shift & 4) {
-            keys[VK_MENU] = 0x80;
+	if (shift & 4) {
+	    keys[VK_MENU] = 0x80;
 	}
-        ToAscii(deadkey, scancode, keys, (LPWORD) buf, 0);
-        return XK_Multi_key;
+	ToAscii(deadkey, scancode, keys, (LPWORD) buf, 0);
+	return XK_Multi_key;
     }
 
     /*
@@ -301,7 +307,7 @@ KeycodeToKeysym(
      * considered "more correct" (although the correctness would be dependant
      * on whether you believe that ToAscii is doing the right thing in that
      * case); however, this would break backwards compatibility, and worse, it
-     * would limit application programmers -- they would effectively be unable
+     * would limit application programmers; they would effectively be unable
      * to bind to <Control-Backspace> on Windows. We therefore chose instead
      * to return XK_BackSpace (handled here by letting the code "fall-through"
      * to the return statement below, which works because the keycode for this
@@ -332,6 +338,7 @@ KeycodeToKeysym(
 	 * appropriate keycode. Otherwise, we fall through and rely on the
 	 * keymap table to hold the correct keysym value.
 	 */
+
     case VK_CONTROL:
 	if (GetKeyState(VK_RCONTROL) & 0x80) {
 	    return XK_Control_R;
@@ -394,12 +401,12 @@ TkpGetKeySym(
      */
 
     if ((sym == NoSymbol) && ((state & ControlMask) || (state & Mod2Mask))) {
-        state &= ~(ControlMask | Mod2Mask);
-        sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
+	state &= ~(ControlMask | Mod2Mask);
+	sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
     }
     if ((sym == NoSymbol) && (state & ShiftMask)) {
-        state &= ~ShiftMask;
-        sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
+	state &= ~ShiftMask;
+	sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
     }
     return sym;
 }
@@ -409,9 +416,9 @@ TkpGetKeySym(
  *
  * TkpInitKeymapInfo --
  *
- *	This procedure is invoked to scan keymap information to recompute
- *	stuff that's important for binding, such as the modifier key (if any)
- *	that corresponds to "mode switch".
+ *	This function is invoked to scan keymap information to recompute stuff
+ *	that's important for binding, such as the modifier key (if any) that
+ *	corresponds to "mode switch".
  *
  * Results:
  *	None.
@@ -521,7 +528,7 @@ TkpInitKeymapInfo(
 	    arraySize *= 2;
 	    new = (KeyCode *) ckalloc((unsigned)
 		    (arraySize * sizeof(KeyCode)));
-	    memcpy((VOID *) new, (VOID *) dispPtr->modKeyCodes,
+	    memcpy((void *) new, (void *) dispPtr->modKeyCodes,
 		    (dispPtr->numModKeyCodes * sizeof(KeyCode)));
 	    ckfree((char *) dispPtr->modKeyCodes);
 	    dispPtr->modKeyCodes = new;
@@ -551,7 +558,7 @@ TkpSetKeycodeAndState(
 
     eventPtr->xkey.keycode = 0;
     if (keySym == NoSymbol) {
-        return;
+	return;
     }
 
     /*
@@ -562,21 +569,21 @@ TkpSetKeycodeAndState(
 
     for (i = 0; i <= MAX_KEYCODE; i++) {
 	if (keymap[i] == keySym) {
-            eventPtr->xkey.keycode = i;
-            return;
+	    eventPtr->xkey.keycode = i;
+	    return;
 	}
     }
     if (keySym >= 0x20) {
 	result = VkKeyScan((char) keySym);
 	if (result != -1) {
-            shift = result >> 8;
-            if (shift & 1)
-                eventPtr->xkey.state |= ShiftMask;
-            if (shift & 2)
-                eventPtr->xkey.state |= ControlMask;
-            if (shift & 4)
-                eventPtr->xkey.state |= Mod2Mask;
-            eventPtr->xkey.keycode = (KeyCode) (result & 0xff);
+	    shift = result >> 8;
+	    if (shift & 1)
+		eventPtr->xkey.state |= ShiftMask;
+	    if (shift & 2)
+		eventPtr->xkey.state |= ControlMask;
+	    if (shift & 4)
+		eventPtr->xkey.state |= Mod2Mask;
+	    eventPtr->xkey.keycode = (KeyCode) (result & 0xff);
 	}
     }
 }

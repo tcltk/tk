@@ -9,20 +9,20 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.11 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.12 2005/12/02 13:42:29 dkf Exp $
  */
 
 #include "tkWinInt.h"
 
 typedef struct ThreadSpecificData {
-    int initialized;            /* 0 means table below needs initializing. */
-    Tcl_HashTable windowTable;  /* The windowTable maps from HWND to
-				 * Tk_Window handles. */
+    int initialized;		/* 0 means table below needs initializing. */
+    Tcl_HashTable windowTable;  /* The windowTable maps from HWND to Tk_Window
+				 * handles. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
 /*
- * Forward declarations for procedures defined in this file:
+ * Forward declarations for functions defined in this file:
  */
 
 static void		NotifyVisibility(XEvent *eventPtr, TkWindow *winPtr);
@@ -32,8 +32,8 @@ static void		NotifyVisibility(XEvent *eventPtr, TkWindow *winPtr);
  *
  * Tk_AttachHWND --
  *
- *	This function binds an HWND and a reflection procedure to the
- *	specified Tk_Window.
+ *	This function binds an HWND and a reflection function to the specified
+ *	Tk_Window.
  *
  * Results:
  *	Returns an X Window that encapsulates the HWND.
@@ -54,7 +54,7 @@ Tk_AttachHWND(
     Tcl_HashEntry *entryPtr;
     TkWinDrawable *twdPtr = (TkWinDrawable *) Tk_WindowId(tkwin);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
@@ -110,13 +110,13 @@ Tk_HWNDToWindow(
 {
     Tcl_HashEntry *entryPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
 	tsdPtr->initialized = 1;
     }
-    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char*)hwnd);
+    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char *) hwnd);
     if (entryPtr != NULL) {
 	return (Tk_Window) Tcl_GetHashValue(entryPtr);
     }
@@ -217,7 +217,7 @@ TkpScanWindowId(
 
     if (
 #ifdef _WIN64
-	(sscanf(string, "0x%p", &number) != 1) &&
+	    (sscanf(string, "0x%p", &number) != 1) &&
 #endif
 	    Tcl_GetInt(interp, string, (int *) &number) != TCL_OK) {
 	return TCL_ERROR;
@@ -306,7 +306,7 @@ XDestroyWindow(
     TkWindow *winPtr = TkWinGetWinPtr(w);
     HWND hwnd = Tk_GetHWND(w);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     display->request++;
 
@@ -372,7 +372,7 @@ XMapWindow(
 
     if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	for (parentPtr = winPtr->parentPtr; ;
-	        parentPtr = parentPtr->parentPtr) {
+		parentPtr = parentPtr->parentPtr) {
 	    if ((parentPtr == NULL) || !(parentPtr->flags & TK_MAPPED)) {
 		return;
 	    }
@@ -535,7 +535,7 @@ void
 XMoveWindow(
     Display *display,
     Window w,
-    int x, int y)
+    int x, int y)		/* Position relative to parent */
 {
     TkWindow *winPtr = TkWinGetWinPtr(w);
 
@@ -625,7 +625,7 @@ void
 XConfigureWindow(
     Display *display,
     Window w,
-    unsigned int value_mask,
+    unsigned int valueMask,
     XWindowChanges *values)
 {
     TkWindow *winPtr = TkWinGetWinPtr(w);
@@ -637,7 +637,7 @@ XConfigureWindow(
      * Change the shape and/or position of the window.
      */
 
-    if (value_mask & (CWX|CWY|CWWidth|CWHeight)) {
+    if (valueMask & (CWX|CWY|CWWidth|CWHeight)) {
 	MoveWindow(hwnd, winPtr->changes.x, winPtr->changes.y,
 		winPtr->changes.width, winPtr->changes.height, TRUE);
     }
@@ -646,9 +646,10 @@ XConfigureWindow(
      * Change the stacking order of the window.
      */
 
-    if (value_mask & CWStackMode) {
+    if (valueMask & CWStackMode) {
 	HWND sibling;
-	if ((value_mask & CWSibling) && (values->sibling != None)) {
+
+	if ((valueMask & CWSibling) && (values->sibling != None)) {
 	    sibling = Tk_GetHWND(values->sibling);
 	} else {
 	    sibling = NULL;

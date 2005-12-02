@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.25 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.26 2005/12/02 13:42:29 dkf Exp $
  */
 
 #ifndef _TKWININT
@@ -141,7 +141,7 @@ extern int tkpWinBltModes[];
 #define TK_3D_DARK2 TK_3D_DARK_GC+2
 
 /*
- * Internal procedures used by more than one source file.
+ * Internal functions used by more than one source file.
  */
 
 #include "tkIntPlatDecls.h"

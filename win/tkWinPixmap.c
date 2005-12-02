@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.5 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.6 2005/12/02 13:42:29 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -169,30 +169,30 @@ XGetGeometry(
 	BITMAPINFO info;
 
 	if (twdPtr->bitmap.handle == NULL) {
-            Tcl_Panic("XGetGeometry: invalid pixmap");
-        }
-        dc = GetDC(NULL);
-        info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        info.bmiHeader.biBitCount = 0;
-        if (!GetDIBits(dc, twdPtr->bitmap.handle, 0, 0, NULL, &info,
-                DIB_RGB_COLORS)) {
-            Tcl_Panic("XGetGeometry: unable to get bitmap size");
-        }
-        ReleaseDC(NULL, dc);
+	    Tcl_Panic("XGetGeometry: invalid pixmap");
+	}
+	dc = GetDC(NULL);
+	info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	info.bmiHeader.biBitCount = 0;
+	if (!GetDIBits(dc, twdPtr->bitmap.handle, 0, 0, NULL, &info,
+		DIB_RGB_COLORS)) {
+	    Tcl_Panic("XGetGeometry: unable to get bitmap size");
+	}
+	ReleaseDC(NULL, dc);
 
-        *width_return = info.bmiHeader.biWidth;
-        *height_return = info.bmiHeader.biHeight;
+	*width_return = info.bmiHeader.biWidth;
+	*height_return = info.bmiHeader.biHeight;
     } else if (twdPtr->type == TWD_WINDOW) {
 	RECT rect;
 
-        if (twdPtr->window.handle == NULL) {
-            Tcl_Panic("XGetGeometry: invalid window");
-        }
-        GetClientRect(twdPtr->window.handle, &rect);
-        *width_return = rect.right - rect.left;
-        *height_return = rect.bottom - rect.top;
+	if (twdPtr->window.handle == NULL) {
+	    Tcl_Panic("XGetGeometry: invalid window");
+	}
+	GetClientRect(twdPtr->window.handle, &rect);
+	*width_return = rect.right - rect.left;
+	*height_return = rect.bottom - rect.top;
     } else {
-        Tcl_Panic("XGetGeometry: invalid window");
+	Tcl_Panic("XGetGeometry: invalid window");
     }
     return 1;
 }
