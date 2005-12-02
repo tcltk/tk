@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.8 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.9 2005/12/02 00:29:59 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -431,7 +431,7 @@ XAllocColor(
 void
 XFreeColors(
     Display *display,
-    Colormap colormap;,
+    Colormap colormap,
     unsigned long *pixels,
     int npixels,
     unsigned long planes)

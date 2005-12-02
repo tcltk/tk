@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.104 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.105 2005/12/02 00:29:59 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -3084,12 +3084,12 @@ Tk_WmObjCmd(
  */
 
 static int
-WmAspectCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmAspectCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int numer1, denom1, numer2, denom2;
@@ -3153,12 +3153,12 @@ WmAspectCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmAttributesCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     LONG style, exStyle, styleBit, *stylePtr;
@@ -3388,12 +3388,12 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmClientCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmClientCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
@@ -3458,12 +3458,12 @@ WmClientCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmColormapwindowsCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmColormapwindowsCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow **cmapList;
@@ -3552,12 +3552,12 @@ WmColormapwindowsCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmCommandCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmCommandCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
@@ -3619,12 +3619,12 @@ WmCommandCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmDeiconifyCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
@@ -3667,12 +3667,12 @@ WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmFocusmodelCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmFocusmodelCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static CONST char *optionStrings[] = {
@@ -3723,12 +3723,12 @@ WmFocusmodelCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmFrameCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmFrameCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     HWND hwnd;
@@ -3768,12 +3768,12 @@ WmFrameCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmGeometryCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmGeometryCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char xSign, ySign;
@@ -3838,12 +3838,12 @@ WmGeometryCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmGridCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmGridCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int reqWidth, reqHeight, widthInc, heightInc;
@@ -3927,12 +3927,12 @@ WmGridCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmGroupCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmGroupCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
@@ -3990,12 +3990,12 @@ WmGroupCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmIconbitmapCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
@@ -4124,12 +4124,12 @@ WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmIconifyCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmIconifyCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     if (objc != 3) {
@@ -4180,12 +4180,12 @@ WmIconifyCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmIconmaskCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmIconmaskCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Pixmap pixmap;
@@ -4238,12 +4238,12 @@ WmIconmaskCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmIconnameCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmIconnameCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
@@ -4290,12 +4290,12 @@ WmIconnameCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmIconphotoCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
@@ -4405,12 +4405,12 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmIconpositionCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmIconpositionCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y;
@@ -4461,12 +4461,12 @@ WmIconpositionCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmIconwindowCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmIconwindowCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
@@ -4568,12 +4568,12 @@ WmIconwindowCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmMaxsizeCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmMaxsizeCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
@@ -4618,12 +4618,12 @@ WmMaxsizeCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmMinsizeCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmMinsizeCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
@@ -4668,12 +4668,12 @@ WmMinsizeCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmOverrideredirectCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int boolean, curValue;
@@ -4738,12 +4738,12 @@ WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmPositionfromCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmPositionfromCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static CONST char *optionStrings[] = {
@@ -4801,12 +4801,12 @@ WmPositionfromCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmProtocolCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmProtocolCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     register ProtocolHandler *protPtr, *prevPtr;
@@ -4893,12 +4893,12 @@ WmProtocolCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmResizableCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmResizableCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int width, height;
@@ -4956,12 +4956,12 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmSizefromCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmSizefromCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static CONST char *optionStrings[] = {
@@ -5022,12 +5022,12 @@ WmSizefromCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmStackorderCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     TkWindow **windows, **window_ptr;
     static CONST char *optionStrings[] = {
@@ -5137,12 +5137,12 @@ WmStackorderCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmStateCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmStateCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     static CONST char *optionStrings[] = {
@@ -5275,12 +5275,12 @@ WmStateCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmTitleCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmTitleCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
@@ -5348,12 +5348,12 @@ WmTitleCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmTransientCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmTransientCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow *masterPtr = wmPtr->masterPtr;
@@ -5469,12 +5469,12 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
  */
 
 static int
-WmWithdrawCmd(tkwin, winPtr, interp, objc, objv)
-    Tk_Window tkwin;		/* Main window of the application. */
-    TkWindow *winPtr;           /* Toplevel to work with */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+WmWithdrawCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
@@ -7843,6 +7843,7 @@ WmProc(
     case WM_ENTERIDLE:
     case WM_INITMENUPOPUP: {
 	HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window)winPtr);
+
 	if (hMenuHWnd) {
 	    if (SendMessage(hMenuHWnd, message, wParam, lParam)) {
 		goto done;
@@ -7852,6 +7853,7 @@ WmProc(
 	    goto done;
 	}
 	break;
+    }
     }
 
     if (winPtr && winPtr->window) {
