@@ -1,4 +1,4 @@
-/* 
+/*
  * tkWinColor.c --
  *
  *	Functions to map color names to system color values.
@@ -6,10 +6,10 @@
  * Copyright (c) 1995 Sun Microsystems, Inc.
  * Copyright (c) 1994 Software Research Associates, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.7 2004/01/13 02:06:01 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.8 2005/12/02 00:19:04 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -22,22 +22,20 @@
 
 typedef struct WinColor {
     TkColor info;		/* Generic color information. */
-    int index;			/* Index for GetSysColor(), -1 if color
-				 * is not a "live" system color. */
+    int index;			/* Index for GetSysColor(), -1 if color is not
+				 * a "live" system color. */
 } WinColor;
 
 /*
- * The sysColors array contains the names and index values for the
- * Windows indirect system color names.  In use, all of the names
- * will have the string "System" prepended, but we omit it in the table
- * to save space.
+ * The sysColors array contains the names and index values for the Windows
+ * indirect system color names. In use, all of the names will have the string
+ * "System" prepended, but we omit it in the table to save space.
  */
 
 typedef struct {
     char *name;
     int index;
 } SystemColorEntry;
-
 
 static SystemColorEntry sysColors[] = {
     "3dDarkShadow",		COLOR_3DDKSHADOW,
@@ -69,7 +67,7 @@ static SystemColorEntry sysColors[] = {
     NULL,			0
 };
 
-typedef struct ThreadSpecificData { 
+typedef struct ThreadSpecificData {
     int ncolors;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -78,20 +76,20 @@ static Tcl_ThreadDataKey dataKey;
  * Forward declarations for functions defined later in this file.
  */
 
-static int	FindSystemColor _ANSI_ARGS_((const char *name,
-		    XColor *colorPtr, int *indexPtr));
+static int		FindSystemColor(const char *name, XColor *colorPtr,
+			    int *indexPtr);
 
 /*
  *----------------------------------------------------------------------
  *
  * FindSystemColor --
  *
- *	This routine finds the color entry that corresponds to the
- *	specified color.
+ *	This routine finds the color entry that corresponds to the specified
+ *	color.
  *
  * Results:
- *	Returns non-zero on success.  The RGB values of the XColor
- *	will be initialized to the proper values on success.
+ *	Returns non-zero on success. The RGB values of the XColor will be
+ *	initialized to the proper values on success.
  *
  * Side effects:
  *	None.
@@ -100,18 +98,18 @@ static int	FindSystemColor _ANSI_ARGS_((const char *name,
  */
 
 static int
-FindSystemColor(name, colorPtr, indexPtr)
-    const char *name;		/* Color name. */
-    XColor *colorPtr;		/* Where to store results. */
-    int *indexPtr;		/* Out parameter to store color index. */
+FindSystemColor(
+    const char *name,		/* Color name. */
+    XColor *colorPtr,		/* Where to store results. */
+    int *indexPtr)		/* Out parameter to store color index. */
 {
     int l, u, r, i;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
-     * Count the number of elements in the color array if we haven't
-     * done so yet.
+     * Count the number of elements in the color array if we haven't done so
+     * yet.
      */
 
     if (tsdPtr->ncolors == 0) {
@@ -154,10 +152,12 @@ FindSystemColor(name, colorPtr, indexPtr)
 
     *indexPtr = sysColors[i].index;
     colorPtr->pixel = GetSysColor(sysColors[i].index);
+
     /*
-     * x257 is (value<<8 + value) to get the properly bit shifted
-     * and padded value.  [Bug: 4919]
+     * x257 is (value<<8 + value) to get the properly bit shifted and padded
+     * value. [Bug: 4919]
      */
+
     colorPtr->red = GetRValue(colorPtr->pixel) * 257;
     colorPtr->green = GetGValue(colorPtr->pixel) * 257;
     colorPtr->blue = GetBValue(colorPtr->pixel) * 257;
@@ -178,27 +178,26 @@ FindSystemColor(name, colorPtr, indexPtr)
  *
  * Side effects:
  *	May invalidate the colormap cache associated with tkwin upon
- *	allocating a new colormap entry.  Allocates a new TkColor
- *	structure.
+ *	allocating a new colormap entry. Allocates a new TkColor structure.
  *
  *----------------------------------------------------------------------
  */
 
 TkColor *
-TkpGetColor(tkwin, name)
-    Tk_Window tkwin;		/* Window in which color will be used. */
-    Tk_Uid name;		/* Name of color to allocated (in form
+TkpGetColor(
+    Tk_Window tkwin,		/* Window in which color will be used. */
+    Tk_Uid name)		/* Name of color to allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     WinColor *winColPtr;
     XColor color;
     int index = -1;		/* -1 indicates that this is not an indirect
-				 * sytem color. */
+				 * system color. */
 
     /*
-     * Check to see if it is a system color or an X color string.  If the
-     * color is found, allocate a new WinColor and store the XColor and the
-     * system color index.
+     * Check to see if it is a system color or an X color string. If the color
+     * is found, allocate a new WinColor and store the XColor and the system
+     * color index.
      */
 
     if (((strncasecmp(name, "system", 6) == 0)
@@ -211,7 +210,7 @@ TkpGetColor(tkwin, name)
 
 	XAllocColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
 		&winColPtr->info.color);
- 	return (TkColor *) winColPtr; 
+ 	return (TkColor *) winColPtr;
     }
     return (TkColor *) NULL;
 }
@@ -221,27 +220,26 @@ TkpGetColor(tkwin, name)
  *
  * TkpGetColorByValue --
  *
- *	Given a desired set of red-green-blue intensities for a color,
- *	locate a pixel value to use to draw that color in a given
- *	window.
+ *	Given a desired set of red-green-blue intensities for a color, locate
+ *	a pixel value to use to draw that color in a given window.
  *
  * Results:
- *	The return value is a pointer to an TkColor structure that
- *	indicates the closest red, blue, and green intensities available
- *	to those specified in colorPtr, and also specifies a pixel
- *	value to use to draw in that color.
+ *	The return value is a pointer to an TkColor structure that indicates
+ *	the closest red, blue, and green intensities available to those
+ *	specified in colorPtr, and also specifies a pixel value to use to draw
+ *	in that color.
  *
  * Side effects:
- *	May invalidate the colormap cache for the specified window.
- *	Allocates a new TkColor structure.
+ *	May invalidate the colormap cache for the specified window. Allocates
+ *	a new TkColor structure.
  *
  *----------------------------------------------------------------------
  */
 
 TkColor *
-TkpGetColorByValue(tkwin, colorPtr)
-    Tk_Window tkwin;		/* Window in which color will be used. */
-    XColor *colorPtr;		/* Red, green, and blue fields indicate
+TkpGetColorByValue(
+    Tk_Window tkwin,		/* Window in which color will be used. */
+    XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
     WinColor *tkColPtr = (WinColor *) ckalloc(sizeof(WinColor));
@@ -266,15 +264,15 @@ TkpGetColorByValue(tkwin, colorPtr)
  *	None
  *
  * Side effects:
- *	Invalidates the colormap cache for the colormap associated with
- *	the given color.
+ *	Invalidates the colormap cache for the colormap associated with the
+ *	given color.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkpFreeColor(tkColPtr)
-    TkColor *tkColPtr;		/* Color to be released.  Must have been
+TkpFreeColor(
+    TkColor *tkColPtr)		/* Color to be released. Must have been
 				 * allocated by TkpGetColor or
 				 * TkpGetColorByValue. */
 {
@@ -289,13 +287,13 @@ TkpFreeColor(tkColPtr)
  *
  * TkWinIndexOfColor --
  *
- *	Given a color, return the system color index that was used
- *	to create the color.
+ *	Given a color, return the system color index that was used to create
+ *	the color.
  *
  * Results:
- *	If the color was allocated using a system indirect color name,
- *	then the corresponding GetSysColor() index is returned.
- *	Otherwise, -1 is returned.
+ *	If the color was allocated using a system indirect color name, then
+ *	the corresponding GetSysColor() index is returned. Otherwise, -1 is
+ *	returned.
  *
  * Side effects:
  *	None.
@@ -304,13 +302,13 @@ TkpFreeColor(tkColPtr)
  */
 
 int
-TkWinIndexOfColor(colorPtr)
-    XColor *colorPtr;
+TkWinIndexOfColor(
+    XColor *colorPtr)
 {
     register WinColor *winColPtr = (WinColor *) colorPtr;
     if (winColPtr->info.magic == COLOR_MAGIC) {
 	return winColPtr->index;
-    }    
+    }
     return -1;
 }
 
@@ -322,8 +320,8 @@ TkWinIndexOfColor(colorPtr)
  *	Find the closest available color to the specified XColor.
  *
  * Results:
- *	Updates the color argument and returns 1 on success.  Otherwise
- *	returns 0.
+ *	Updates the color argument and returns 1 on success. Otherwise returns
+ *	0.
  *
  * Side effects:
  *	Allocates a new color in the palette.
@@ -332,10 +330,10 @@ TkWinIndexOfColor(colorPtr)
  */
 
 int
-XAllocColor(display, colormap, color)
-    Display* display;
-    Colormap colormap;
-    XColor* color;
+XAllocColor(
+    Display *display,
+    Colormap colormap,
+    XColor *color)
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     PALETTEENTRY entry, closeEntry;
@@ -356,7 +354,7 @@ XAllocColor(display, colormap, color)
 	/*
 	 * Find the nearest existing palette entry.
 	 */
-	
+
 	newPixel = RGB(entry.peRed, entry.peGreen, entry.peBlue);
 	index = GetNearestPaletteIndex(cmap->palette, newPixel);
 	GetPaletteEntries(cmap->palette, index, 1, &closeEntry);
@@ -364,15 +362,14 @@ XAllocColor(display, colormap, color)
 		closeEntry.peBlue);
 
 	/*
-	 * If this is not a duplicate, allocate a new entry.  Note that
-	 * we may get values for index that are above the current size
-	 * of the palette.  This happens because we don't shrink the size of
-	 * the palette object when we deallocate colors so there may be
-	 * stale values that match in the upper slots.  We should ignore
-	 * those values and just put the new color in as if the colors
-	 * had not matched.
+	 * If this is not a duplicate, allocate a new entry. Note that we may
+	 * get values for index that are above the current size of the
+	 * palette. This happens because we don't shrink the size of the
+	 * palette object when we deallocate colors so there may be stale
+	 * values that match in the upper slots. We should ignore those values
+	 * and just put the new color in as if the colors had not matched.
 	 */
-	
+
 	if ((index >= cmap->size) || (newPixel != closePixel)) {
 	    if (cmap->size == sizePalette) {
 		color->red   = closeEntry.peRed * 257;
@@ -399,11 +396,10 @@ XAllocColor(display, colormap, color)
 	}
 	Tcl_SetHashValue(entryPtr, (ClientData)refCount);
     } else {
-	
 	/*
 	 * Determine what color will actually be used on non-colormap systems.
 	 */
-	
+
 	color->pixel = GetNearestColor(dc,
 		RGB(entry.peRed, entry.peGreen, entry.peBlue));
 	color->red    = GetRValue(color->pixel) * 257;
@@ -426,19 +422,19 @@ XAllocColor(display, colormap, color)
  *	None.
  *
  * Side effects:
- *	Removes entries for the current palette and compacts the
- *	remaining set.
+ *	Removes entries for the current palette and compacts the remaining
+ *	set.
  *
  *----------------------------------------------------------------------
  */
 
 void
-XFreeColors(display, colormap, pixels, npixels, planes)
-    Display* display;
-    Colormap colormap;
-    unsigned long* pixels;
-    int npixels;
-    unsigned long planes;
+XFreeColors(
+    Display *display,
+    Colormap colormap;,
+    unsigned long *pixels,
+    int npixels,
+    unsigned long planes)
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     COLORREF cref;
@@ -451,16 +447,14 @@ XFreeColors(display, colormap, pixels, npixels, planes)
     /*
      * We don't have to do anything for non-palette devices.
      */
-    
-    if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 
+    if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	/*
 	 * This is really slow for large values of npixels.
 	 */
 
 	for (i = 0; i < npixels; i++) {
-	    entryPtr = Tcl_FindHashEntry(&cmap->refCounts,
-		    (char *) pixels[i]);
+	    entryPtr = Tcl_FindHashEntry(&cmap->refCounts, (char *) pixels[i]);
 	    if (!entryPtr) {
 		Tcl_Panic("Tried to free a color that isn't allocated.");
 	    }
@@ -471,8 +465,8 @@ XFreeColors(display, colormap, pixels, npixels, planes)
 		GetPaletteEntries(cmap->palette, index, 1, &entry);
 		if (cref == RGB(entry.peRed, entry.peGreen, entry.peBlue)) {
 		    count = cmap->size - index;
-		    entries = (PALETTEENTRY *) ckalloc(sizeof(PALETTEENTRY)
-			    * count);
+		    entries = (PALETTEENTRY *)
+			    ckalloc(sizeof(PALETTEENTRY) * count);
 		    GetPaletteEntries(cmap->palette, index+1, count, entries);
 		    SetPaletteEntries(cmap->palette, index, count, entries);
 		    ckfree((char *) entries);
@@ -506,11 +500,11 @@ XFreeColors(display, colormap, pixels, npixels, planes)
  */
 
 Colormap
-XCreateColormap(display, w, visual, alloc)
-    Display* display;
-    Window w;
-    Visual* visual;
-    int alloc;
+XCreateColormap(
+    Display *display,
+    Window w,
+    Visual *visual,
+    int alloc)
 {
     char logPalBuf[sizeof(LOGPALETTE) + 256 * sizeof(PALETTEENTRY)];
     LOGPALETTE *logPalettePtr;
@@ -544,7 +538,7 @@ XCreateColormap(display, w, visual, alloc)
     for (i = 0; i < logPalettePtr->palNumEntries; i++) {
 	entryPtr = logPalettePtr->palPalEntry + i;
 	hashPtr = Tcl_CreateHashEntry(&cmap->refCounts, (char*) PALETTERGB(
-	    entryPtr->peRed, entryPtr->peGreen, entryPtr->peBlue), &new);
+		entryPtr->peRed, entryPtr->peGreen, entryPtr->peBlue), &new);
 	Tcl_SetHashValue(hashPtr, (ClientData)1);
     }
 
@@ -562,19 +556,19 @@ XCreateColormap(display, w, visual, alloc)
  *	None.
  *
  * Side effects:
- *	Deletes the palette associated with the colormap.  Note that
- *	the palette must not be selected into a device context when
- *	this occurs.
+ *	Deletes the palette associated with the colormap. Note that the
+ *	palette must not be selected into a device context when this occurs.
  *
  *----------------------------------------------------------------------
  */
 
 void
-XFreeColormap(display, colormap)
-    Display* display;
-    Colormap colormap;
+XFreeColormap(
+    Display *display,
+    Colormap colormap)
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
+
     if (!DeleteObject(cmap->palette)) {
 	Tcl_Panic("Unable to free colormap, palette is still selected.");
     }
@@ -587,10 +581,9 @@ XFreeColormap(display, colormap)
  *
  * TkWinSelectPalette --
  *
- *	This function sets up the specified device context with a
- *	given palette.  If the palette is stale, it realizes it in
- *	the background unless the palette is the current global
- *	palette.
+ *	This function sets up the specified device context with a given
+ *	palette. If the palette is stale, it realizes it in the background
+ *	unless the palette is the current global palette.
  *
  * Results:
  *	Returns the previous palette selected into the device context.
@@ -602,9 +595,9 @@ XFreeColormap(display, colormap)
  */
 
 HPALETTE
-TkWinSelectPalette(dc, colormap)
-    HDC dc;
-    Colormap colormap;
+TkWinSelectPalette(
+    HDC dc,
+    Colormap colormap)
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     HPALETTE oldPalette;
@@ -614,3 +607,11 @@ TkWinSelectPalette(dc, colormap)
     RealizePalette(dc);
     return oldPalette;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

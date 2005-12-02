@@ -2,16 +2,15 @@
  * tkWinInt.h --
  *
  *	This file contains declarations that are shared among the
- *	Windows-specific parts of Tk, but aren't used by the rest of
- *	Tk.
+ *	Windows-specific parts of Tk, but aren't used by the rest of Tk.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 1998-2000 by Scriptics Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.24 2005/06/01 17:54:16 hobbs Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.25 2005/12/02 00:19:04 dkf Exp $
  */
 
 #ifndef _TKWININT
@@ -33,18 +32,17 @@
 #include "tkPort.h"
 #endif
 
-
 /*
  * Define constants missing from older Win32 SDK header files.
  */
 
 #ifndef WS_EX_TOOLWINDOW
-#define WS_EX_TOOLWINDOW	0x00000080L 
+#define WS_EX_TOOLWINDOW	0x00000080L
 #endif
 
 /*
- * The TkWinDCState is used to save the state of a device context
- * so that it can be restored later.
+ * The TkWinDCState is used to save the state of a device context so that it
+ * can be restored later.
  */
 
 typedef struct TkWinDCState {
@@ -53,8 +51,8 @@ typedef struct TkWinDCState {
 } TkWinDCState;
 
 /*
- * The TkWinDrawable is the internal implementation of an X Drawable (either
- * a Window or a Pixmap).  The following constants define the valid Drawable
+ * The TkWinDrawable is the internal implementation of an X Drawable (either a
+ * Window or a Pixmap). The following constants define the valid Drawable
  * types.
  */
 
@@ -105,11 +103,11 @@ typedef struct {
     HPALETTE palette;		/* Palette handle used when drawing. */
     UINT size;			/* Number of entries in the palette. */
     int stale;			/* 1 if palette needs to be realized,
-				 * otherwise 0.  If the palette is stale,
-				 * then an idle handler is scheduled to
-				 * realize the palette. */
-    Tcl_HashTable refCounts;	/* Hash table of palette entry reference counts
-				 * indexed by pixel value. */
+				 * otherwise 0. If the palette is stale, then
+				 * an idle handler is scheduled to realize the
+				 * palette. */
+    Tcl_HashTable refCounts;	/* Hash table of palette entry reference
+				 * counts indexed by pixel value. */
 } TkWinColormap;
 
 /*
@@ -135,8 +133,8 @@ extern int tkpWinRopModes[];
 extern int tkpWinBltModes[];
 
 /*
- * The following defines are used with TkWinGetBorderPixels to get the
- * extra 2 border colors from a Tk_3DBorder.
+ * The following defines are used with TkWinGetBorderPixels to get the extra 2
+ * border colors from a Tk_3DBorder.
  */
 
 #define TK_3D_LIGHT2 TK_3D_DARK_GC+1
@@ -152,46 +150,51 @@ extern int tkpWinBltModes[];
  * We need to specially add the TkWinChildProc because of the special
  * prototype it has (doesn't fit into stubs schema)
  */
+
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
-EXTERN LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
-			    WPARAM wParam, LPARAM lParam));
+EXTERN LRESULT CALLBACK	TkWinChildProc(HWND hwnd, UINT message,
+			    WPARAM wParam, LPARAM lParam);
 
 /*
  * Special proc needed as tsd accessor function between
  * tkWinX.c:GenerateXEvent and tkWinClipboard.c:UpdateClipboard
  */
-EXTERN void	TkWinUpdatingClipboard(int mode);
+
+EXTERN void		TkWinUpdatingClipboard(int mode);
 
 /*
  * Used by tkWinDialog.c to associate the right icon with tk_messageBox
  */
-EXTERN HICON	TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
+
+EXTERN HICON		TkWinGetIcon(Tk_Window tkw, DWORD iconsize);
 
 /*
- * Used by tkWinX.c on for certain system display change messages
- * and cleanup up containers
+ * Used by tkWinX.c on for certain system display change messages and cleanup
+ * up containers
  */
-EXTERN void	TkWinDisplayChanged(Display *display);
-void	TkWinCleanupContainerList(void);
+
+EXTERN void		TkWinDisplayChanged(Display *display);
+void			TkWinCleanupContainerList(void);
 
 /*
- * Used by tkWinWm.c for embedded menu handling.  May become public.
+ * Used by tkWinWm.c for embedded menu handling. May become public.
  */
-EXTERN HWND	Tk_GetMenuHWND(Tk_Window tkwin);
-EXTERN HWND	Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
+
+EXTERN HWND		Tk_GetMenuHWND(Tk_Window tkwin);
+EXTERN HWND		Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
 
 /*
- * The following structure keeps track of whether we are using the 
- * multi-byte or the wide-character interfaces to the operating system.
- * System calls should be made through the following function table.
+ * The following structure keeps track of whether we are using the multi-byte
+ * or the wide-character interfaces to the operating system. System calls
+ * should be made through the following function table.
  *
  * While some system calls need to use this A/W jump-table, it is not
- * necessary for all calls to do it, which is why you won't see this
- * used throughout the Tk code, but only in key areas. -- hobbs
+ * necessary for all calls to do it, which is why you won't see this used
+ * throughout the Tk code, but only in key areas. -- hobbs
  */
 
 typedef struct TkWinProcs {
@@ -221,24 +224,28 @@ EXTERN TkWinProcs *tkWinProcs;
  */
 
 
-extern Tcl_Encoding TkWinGetKeyInputEncoding _ANSI_ARGS_((void));
-extern Tcl_Encoding TkWinGetUnicodeEncoding _ANSI_ARGS_((void));
+extern Tcl_Encoding	TkWinGetKeyInputEncoding(void);
+extern Tcl_Encoding	TkWinGetUnicodeEncoding(void);
 
 /*
  * Values returned by TkWinGetPlatformTheme.
  */
+
 #define TK_THEME_WIN_CLASSIC    1
 #define TK_THEME_WIN_XP         2
 
 /*
- *  The following is implemented in tkWinWm and used by tkWinEmbed.c
+ * The following is implemented in tkWinWm and used by tkWinEmbed.c
  */
-void	TkpWinToplevelWithDraw		_ANSI_ARGS_((TkWindow *winPtr));
-void	TkpWinToplevelIconify		_ANSI_ARGS_((TkWindow *winPtr));
-void	TkpWinToplevelDeiconify		_ANSI_ARGS_((TkWindow *winPtr));
-long	TkpWinToplevelIsControlledByWm	_ANSI_ARGS_((TkWindow *winPtr));
-long	TkpWinToplevelMove		_ANSI_ARGS_((TkWindow *winPtr, int x, int y));
-long	TkpWinToplevelOverrideRedirect	_ANSI_ARGS_((TkWindow *winPtr, int reqValue));
-void	TkpWinToplevelDetachWindow	_ANSI_ARGS_((TkWindow *winPtr));
-int	TkpWmGetState			_ANSI_ARGS_((TkWindow *winPtr));
+
+void			TkpWinToplevelWithDraw(TkWindow *winPtr);
+void			TkpWinToplevelIconify(TkWindow *winPtr);
+void			TkpWinToplevelDeiconify(TkWindow *winPtr);
+long			TkpWinToplevelIsControlledByWm(TkWindow *winPtr);
+long			TkpWinToplevelMove(TkWindow *winPtr, int x, int y);
+long			TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
+			    int reqValue);
+void			TkpWinToplevelDetachWindow(TkWindow *winPtr);
+int			TkpWmGetState(TkWindow *winPtr);
+
 #endif /* _TKWININT */

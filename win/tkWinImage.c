@@ -1,4 +1,4 @@
-/* 
+/*
  * tkWinImage.c --
  *
  *	This file contains routines for manipulation full-color images.
@@ -8,23 +8,23 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.8 2003/10/28 22:52:01 hobbs Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.9 2005/12/02 00:19:04 dkf Exp $
  */
 
 #include "tkWinInt.h"
 
-static int		DestroyImage _ANSI_ARGS_((XImage* data));
-static unsigned long	ImageGetPixel _ANSI_ARGS_((XImage *image, int x, int y));
-static int		PutPixel _ANSI_ARGS_((XImage *image, int x, int y,
-			    unsigned long pixel));
+static int		DestroyImage(XImage* data);
+static unsigned long	ImageGetPixel(XImage *image, int x, int y);
+static int		PutPixel(XImage *image, int x, int y,
+			    unsigned long pixel);
 
 /*
  *----------------------------------------------------------------------
  *
  * DestroyImage --
  *
- *	This is a trivial wrapper around ckfree to make it possible to
- *	pass ckfree as a pointer.
+ *	This is a trivial wrapper around ckfree to make it possible to pass
+ *	ckfree as a pointer.
  *
  * Results:
  *	None.
@@ -36,8 +36,8 @@ static int		PutPixel _ANSI_ARGS_((XImage *image, int x, int y,
  */
 
 static int
-DestroyImage(imagePtr)
-     XImage *imagePtr;		/* image to free */
+DestroyImage(
+    XImage *imagePtr)		/* Image to free. */
 {
     if (imagePtr) {
 	if (imagePtr->data) {
@@ -65,33 +65,33 @@ DestroyImage(imagePtr)
  */
 
 static unsigned long
-ImageGetPixel(image, x, y)
-    XImage *image;
-    int x, y;
+ImageGetPixel(
+    XImage *image,
+    int x, int y)
 {
     unsigned long pixel = 0;
     unsigned char *srcPtr = &(image->data[(y * image->bytes_per_line)
 	    + ((x * image->bits_per_pixel) / NBBY)]);
 
     switch (image->bits_per_pixel) {
-	case 32:
-	case 24:
-	    pixel = RGB(srcPtr[2], srcPtr[1], srcPtr[0]);
-	    break;
-	case 16:
-	    pixel = RGB(((((WORD*)srcPtr)[0]) >> 7) & 0xf8,
-		    ((((WORD*)srcPtr)[0]) >> 2) & 0xf8,
-		    ((((WORD*)srcPtr)[0]) << 3) & 0xf8);
-	    break;
-	case 8:
-	    pixel = srcPtr[0];
-	    break;
-	case 4:
-	    pixel = ((x%2) ? (*srcPtr) : ((*srcPtr) >> 4)) & 0x0f;
-	    break;
-	case 1:
-	    pixel = ((*srcPtr) & (0x80 >> (x%8))) ? 1 : 0;
-	    break;
+    case 32:
+    case 24:
+	pixel = RGB(srcPtr[2], srcPtr[1], srcPtr[0]);
+	break;
+    case 16:
+	pixel = RGB(((((WORD*)srcPtr)[0]) >> 7) & 0xf8,
+		((((WORD*)srcPtr)[0]) >> 2) & 0xf8,
+		((((WORD*)srcPtr)[0]) << 3) & 0xf8);
+	break;
+    case 8:
+	pixel = srcPtr[0];
+	break;
+    case 4:
+	pixel = ((x%2) ? (*srcPtr) : ((*srcPtr) >> 4)) & 0x0f;
+	break;
+    case 1:
+	pixel = ((*srcPtr) & (0x80 >> (x%8))) ? 1 : 0;
+	break;
     }
     return pixel;
 }
@@ -113,72 +113,73 @@ ImageGetPixel(image, x, y)
  */
 
 static int
-PutPixel(image, x, y, pixel)
-    XImage *image;
-    int x, y;
-    unsigned long pixel;
+PutPixel(
+    XImage *image,
+    int x, int y,
+    unsigned long pixel)
 {
     unsigned char *destPtr = &(image->data[(y * image->bytes_per_line)
 	    + ((x * image->bits_per_pixel) / NBBY)]);
 
     switch  (image->bits_per_pixel) {
-	case 32:
-	    /*
-	     * Pixel is DWORD: 0x00BBGGRR
-	     */
+    case 32:
+	/*
+	 * Pixel is DWORD: 0x00BBGGRR
+	 */
 
-	    destPtr[3] = 0;
-	case 24:
-	    /*
-	     * Pixel is triplet: 0xBBGGRR.
-	     */
+	destPtr[3] = 0;
+    case 24:
+	/*
+	 * Pixel is triplet: 0xBBGGRR.
+	 */
 
-	    destPtr[0] = (unsigned char) GetBValue(pixel);
-	    destPtr[1] = (unsigned char) GetGValue(pixel);
-	    destPtr[2] = (unsigned char) GetRValue(pixel);
-	    break;
-	case 16:
-	    /*
-	     * Pixel is WORD: 5-5-5 (R-G-B)
-	     */
+	destPtr[0] = (unsigned char) GetBValue(pixel);
+	destPtr[1] = (unsigned char) GetGValue(pixel);
+	destPtr[2] = (unsigned char) GetRValue(pixel);
+	break;
+    case 16:
+	/*
+	 * Pixel is WORD: 5-5-5 (R-G-B)
+	 */
 
-	    (*(WORD*)destPtr) = 
-		((GetRValue(pixel) & 0xf8) << 7)
+	(*(WORD*)destPtr) = ((GetRValue(pixel) & 0xf8) << 7)
 		| ((GetGValue(pixel) & 0xf8) <<2)
 		| ((GetBValue(pixel) & 0xf8) >> 3);
-	    break;
-	case 8:
-	    /*
-	     * Pixel is 8-bit index into color table.
-	     */
+	break;
+    case 8:
+	/*
+	 * Pixel is 8-bit index into color table.
+	 */
 
-	    (*destPtr) = (unsigned char) pixel;
-	    break;
-	case 4:
-	    /*
-	     * Pixel is 4-bit index in MSBFirst order.
-	     */
-	    if (x%2) {
-		(*destPtr) = (unsigned char) (((*destPtr) & 0xf0)
+	(*destPtr) = (unsigned char) pixel;
+	break;
+    case 4:
+	/*
+	 * Pixel is 4-bit index in MSBFirst order.
+	 */
+
+	if (x%2) {
+	    (*destPtr) = (unsigned char) (((*destPtr) & 0xf0)
 		    | (pixel & 0x0f));
-	    } else {
-		(*destPtr) = (unsigned char) (((*destPtr) & 0x0f)
+	} else {
+	    (*destPtr) = (unsigned char) (((*destPtr) & 0x0f)
 		    | ((pixel << 4) & 0xf0));
-	    }
-	    break;
-	case 1: {
-	    /*
-	     * Pixel is bit in MSBFirst order.
-	     */
-
-	    int mask = (0x80 >> (x%8));
-	    if (pixel) {
-		(*destPtr) |= mask;
-	    } else {
-		(*destPtr) &= ~mask;
-	    }
 	}
 	break;
+    case 1: {
+	/*
+	 * Pixel is bit in MSBFirst order.
+	 */
+
+	int mask = (0x80 >> (x%8));
+
+	if (pixel) {
+	    (*destPtr) |= mask;
+	} else {
+	    (*destPtr) &= ~mask;
+	}
+	break;
+    }
     }
     return 0;
 }
@@ -200,18 +201,17 @@ PutPixel(image, x, y, pixel)
  */
 
 XImage *
-XCreateImage(display, visual, depth, format, offset, data, width, height,
-	bitmap_pad, bytes_per_line)
-    Display* display;
-    Visual* visual;
-    unsigned int depth;
-    int format;
-    int offset;
-    char* data;
-    unsigned int width;
-    unsigned int height;
-    int bitmap_pad;
-    int bytes_per_line;
+XCreateImage(
+    Display *display,
+    Visual *visual,
+    unsigned int depth,
+    int format,
+    int offset,
+    char *data,
+    unsigned int width,
+    unsigned int height,
+    int bitmap_pad,
+    int bytes_per_line)
 {
     XImage* imagePtr = (XImage *) ckalloc(sizeof(XImage));
     imagePtr->width = width;
@@ -255,40 +255,39 @@ XCreateImage(display, visual, depth, format, offset, data, width, height,
     imagePtr->f.create_image = NULL;
     imagePtr->f.sub_image = NULL;
     imagePtr->f.add_pixel = NULL;
-    
+
     return imagePtr;
 }
 
 /*
  *----------------------------------------------------------------------
+ *
  * XGetImageZPixmap --
  *
- *	This function copies data from a pixmap or window into an
- *	XImage.  This handles the ZPixmap case only.
+ *	This function copies data from a pixmap or window into an XImage. This
+ *	handles the ZPixmap case only.
  *
  * Results:
- *	Returns a newly allocated image containing the data from the
- *	given rectangle of the given drawable.
+ *	Returns a newly allocated image containing the data from the given
+ *	rectangle of the given drawable.
  *
  * Side effects:
  *	None.
  *
- * This procedure is adapted from the XGetImage implementation in TkNT.
- * That code is Copyright (c) 1994 Software Research Associates, Inc.
+ * This procedure is adapted from the XGetImage implementation in TkNT. That
+ * code is Copyright (c) 1994 Software Research Associates, Inc.
  *
  *----------------------------------------------------------------------
  */
 
 static XImage *
-XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
-    Display* display;
-    Drawable d;
-    int x;
-    int y;
-    unsigned int width;
-    unsigned int height;
-    unsigned long plane_mask;
-    int	format;
+XGetImageZPixmap(
+    Display *display,
+    Drawable d,
+    int x, int y,
+    unsigned int width, unsigned int height,
+    unsigned long plane_mask,
+    int	format)
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
     XImage *ret_image;
@@ -305,29 +304,32 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 
     if (format != ZPixmap) {
 	TkpDisplayWarning(
-	    "XGetImageZPixmap: only ZPixmap types are implemented",
-	    "XGetImageZPixmap Failure");
+		"XGetImageZPixmap: only ZPixmap types are implemented",
+		"XGetImageZPixmap Failure");
 	return NULL;
     }
 
     hdc = TkWinGetDrawableDC(display, d, &state);
 
-    /* Need to do a Blt operation to copy into a new bitmap */
+    /*
+     * Need to do a Blt operation to copy into a new bitmap.
+     */
+
     hbmp = CreateCompatibleBitmap(hdc, width, height);
     hdcMem = CreateCompatibleDC(hdc);
     hbmpPrev = SelectObject(hdcMem, hbmp);
     hPal = state.palette;
     if (hPal) {
-        hPalPrev1 = SelectPalette(hdcMem, hPal, FALSE);
-        n = RealizePalette(hdcMem);
-        if (n > 0) {
-            UpdateColors (hdcMem);
-        }
+	hPalPrev1 = SelectPalette(hdcMem, hPal, FALSE);
+	n = RealizePalette(hdcMem);
+	if (n > 0) {
+	    UpdateColors (hdcMem);
+	}
 	hPalPrev2 = SelectPalette(hdc, hPal, FALSE);
-        n = RealizePalette(hdc);
-        if (n > 0) {
-            UpdateColors (hdc);
-        }
+	n = RealizePalette(hdc);
+	if (n > 0) {
+	    UpdateColors (hdc);
+	}
     }
 
     ret = BitBlt(hdcMem, 0, 0, width, height, hdc, x, y, SRCCOPY);
@@ -351,20 +353,21 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
     }
     bmInfo = (BITMAPINFO *) ckalloc(size);
 
-    bmInfo->bmiHeader.biSize               = sizeof(BITMAPINFOHEADER);
-    bmInfo->bmiHeader.biWidth              = width;
-    bmInfo->bmiHeader.biHeight             = -(int) height;
-    bmInfo->bmiHeader.biPlanes             = 1;
-    bmInfo->bmiHeader.biBitCount           = depth;
-    bmInfo->bmiHeader.biCompression        = BI_RGB;
-    bmInfo->bmiHeader.biSizeImage          = 0;
-    bmInfo->bmiHeader.biXPelsPerMeter      = 0;
-    bmInfo->bmiHeader.biYPelsPerMeter      = 0;
-    bmInfo->bmiHeader.biClrUsed            = 0;
-    bmInfo->bmiHeader.biClrImportant       = 0;
+    bmInfo->bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
+    bmInfo->bmiHeader.biWidth		= width;
+    bmInfo->bmiHeader.biHeight		= -(int) height;
+    bmInfo->bmiHeader.biPlanes		= 1;
+    bmInfo->bmiHeader.biBitCount	= depth;
+    bmInfo->bmiHeader.biCompression	= BI_RGB;
+    bmInfo->bmiHeader.biSizeImage	= 0;
+    bmInfo->bmiHeader.biXPelsPerMeter	= 0;
+    bmInfo->bmiHeader.biYPelsPerMeter	= 0;
+    bmInfo->bmiHeader.biClrUsed		= 0;
+    bmInfo->bmiHeader.biClrImportant	= 0;
 
     if (depth == 1) {
 	unsigned char *p, *pend;
+
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
 	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
@@ -379,7 +382,10 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	    goto cleanup;
 	}
 
-	/* Get the BITMAP info into the Image. */
+	/*
+	 * Get the BITMAP info into the Image.
+	 */
+
 	if (GetDIBits(hdcMem, hbmp, 0, height, data, bmInfo,
 		DIB_PAL_COLORS) == 0) {
 	    ckfree((char *) ret_image->data);
@@ -412,7 +418,10 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	    goto cleanup;
 	}
 
-	/* Get the BITMAP info into the Image. */
+	/*
+	 * Get the BITMAP info into the Image.
+	 */
+
 	if (GetDIBits(hdcMem, hbmp, 0, height, data, bmInfo,
 		DIB_PAL_COLORS) == 0) {
 	    ckfree((char *) ret_image->data);
@@ -440,7 +449,10 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	    goto cleanup;
 	}
 
-	/* Get the BITMAP info directly into the Image. */
+	/*
+	 * Get the BITMAP info directly into the Image.
+	 */
+
 	if (GetDIBits(hdcMem, hbmp, 0, height, ret_image->data, bmInfo,
 		    DIB_RGB_COLORS) == 0) {
 	    ckfree((char *) ret_image->data);
@@ -465,9 +477,10 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 
 	if (depth <= 24) {
 	    /*
-	     * This used to handle 16 and 24 bpp, but now just handles 24.
-	     * It can likely be optimized for that. -- hobbs
+	     * This used to handle 16 and 24 bpp, but now just handles 24. It
+	     * can likely be optimized for that. -- hobbs
 	     */
+
 	    unsigned char *smallBitData, *smallBitBase, *bigBitData;
 	    unsigned int byte_width, h, w;
 
@@ -481,7 +494,10 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	    }
 	    smallBitData = smallBitBase;
 
-	    /* Get the BITMAP info into the Image. */
+	    /*
+	     * Get the BITMAP info into the Image.
+	     */
+
 	    if (GetDIBits(hdcMem, hbmp, 0, height, smallBitData, bmInfo,
 		    DIB_RGB_COLORS) == 0) {
 		ckfree((char *) ret_image->data);
@@ -491,11 +507,14 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 		goto cleanup;
 	    }
 
-	    /* Copy the 24 Bit Pixmap to a 32-Bit one. */
+	    /*
+	     * Copy the 24 Bit Pixmap to a 32-Bit one.
+	     */
+
 	    for (h = 0; h < height; h++) {
 		bigBitData   = ret_image->data + h * ret_image->bytes_per_line;
 		smallBitData = smallBitBase + h * byte_width;
-		
+
 		for (w = 0; w < width; w++) {
 		    *bigBitData++ = ((*smallBitData++));
 		    *bigBitData++ = ((*smallBitData++));
@@ -503,10 +522,17 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 		    *bigBitData++ = 0;
 		}
 	    }
-	    /* Free the Device contexts, and the Bitmap */
+
+	    /*
+	     * Free the Device contexts, and the Bitmap.
+	     */
+
 	    ckfree((char *) smallBitBase);
 	} else {
-	    /* Get the BITMAP info directly into the Image. */
+	    /*
+	     * Get the BITMAP info directly into the Image.
+	     */
+
 	    if (GetDIBits(hdcMem, hbmp, 0, height, ret_image->data, bmInfo,
 		    DIB_RGB_COLORS) == 0) {
 		ckfree((char *) ret_image->data);
@@ -535,12 +561,11 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
  *
  * XGetImage --
  *
- *	This function copies data from a pixmap or window into an
- *	XImage.
+ *	This function copies data from a pixmap or window into an XImage.
  *
  * Results:
- *	Returns a newly allocated image containing the data from the
- *	given rectangle of the given drawable.
+ *	Returns a newly allocated image containing the data from the given
+ *	rectangle of the given drawable.
  *
  * Side effects:
  *	None.
@@ -549,15 +574,13 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
  */
 
 XImage *
-XGetImage(display, d, x, y, width, height, plane_mask, format)
-    Display* display;
-    Drawable d;
-    int x;
-    int y;
-    unsigned int width;
-    unsigned int height;
-    unsigned long plane_mask;
-    int	format;
+XGetImage(
+    Display* display,
+    Drawable d,
+    int x, int y,
+    unsigned int width, unsigned int height,
+    unsigned long plane_mask,
+    int	format)
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
     XImage *imagePtr;
@@ -569,26 +592,28 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 	/*
 	 * Avoid unmapped windows or bad drawables
 	 */
+
 	return NULL;
     }
 
     if (twdPtr->type != TWD_BITMAP) {
 	/*
 	 * This handles TWD_WINDOW or TWD_WINDC, always creating a 32bit
-	 * image.  If the window being copied isn't visible (unmapped or
-	 * obscured), we quietly stop copying (no user error).
-	 * The user will see black where the widget should be.
-	 * This branch is likely followed in favor of XGetImageZPixmap as
-	 * postscript printed widgets require RGB data.
+	 * image. If the window being copied isn't visible (unmapped or
+	 * obscured), we quietly stop copying (no user error). The user will
+	 * see black where the widget should be. This branch is likely
+	 * followed in favor of XGetImageZPixmap as postscript printed widgets
+	 * require RGB data.
 	 */
+
 	TkWinDCState state;
 	unsigned int xx, yy, size;
 	COLORREF pixel;
 
 	dc = TkWinGetDrawableDC(display, d, &state);
 
-	imagePtr = XCreateImage(display, NULL, 32,
-		format, 0, NULL, width, height, 32, 0);
+	imagePtr = XCreateImage(display, NULL, 32, format, 0, NULL,
+		width, height, 32, 0);
 	size = imagePtr->bytes_per_line * imagePtr->height;
 	imagePtr->data = ckalloc(size);
 	ZeroMemory(imagePtr->data, size);
@@ -606,11 +631,12 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 	TkWinReleaseDrawableDC(d, dc, &state);
     } else if (format == ZPixmap) {
 	/*
-	 * This actually handles most TWD_WINDOW requests, but it varies
-	 * from the above in that it really does a screen capture of
-	 * an area, which is consistent with the Unix behavior, but does
-	 * not appear to handle all bit depths correctly. -- hobbs
+	 * This actually handles most TWD_WINDOW requests, but it varies from
+	 * the above in that it really does a screen capture of an area, which
+	 * is consistent with the Unix behavior, but does not appear to handle
+	 * all bit depths correctly. -- hobbs
 	 */
+
 	imagePtr = XGetImageZPixmap(display, d, x, y,
 		width, height, plane_mask, format);
     } else {
@@ -629,6 +655,7 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 	    /*
 	     * Do a soft warning for the unsupported XGetImage types.
 	     */
+
 	    TkpDisplayWarning(errMsg, "XGetImage Failure");
 	    return NULL;
 	}
@@ -661,3 +688,11 @@ XGetImage(display, d, x, y, width, height, plane_mask, format)
 
     return imagePtr;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

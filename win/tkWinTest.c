@@ -1,41 +1,40 @@
-/* 
+/*
  * tkWinTest.c --
  *
- *	Contains commands for platform specific tests for
- *	the Windows platform.
+ *	Contains commands for platform specific tests for the Windows
+ *	platform.
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
  * Copyright (c) 2000 by Scriptics Corporation.
  * Copyright (c) 2001 by ActiveState Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.8 2005/11/27 02:36:16 das Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.9 2005/12/02 00:19:04 dkf Exp $
  */
 
 #include "tkWinInt.h"
 
 HWND tkWinCurrentDialog;
- 
+
 /*
- * Forward declarations of procedures defined later in this file:
+ * Forward declarations of functions defined later in this file:
  */
 
 static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
-static int		TestwineventCmd(ClientData clientData, 
+static int		TestwineventCmd(ClientData clientData,
 			    Tcl_Interp *interp, int argc, CONST char **argv);
-
 
 /*
  *----------------------------------------------------------------------
  *
  * TkplatformtestInit --
  *
- *	Defines commands that test platform specific functionality for
- *	Unix platforms.
+ *	Defines commands that test platform specific functionality for Windows
+ *	platforms.
  *
  * Results:
  *	A standard Tcl result.
@@ -53,11 +52,11 @@ TkplatformtestInit(
     /*
      * Add commands for platform specific tests on MacOS here.
      */
-    
+
     Tcl_CreateObjCommand(interp, "testclipboard", TestclipboardObjCmd,
-	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateCommand(interp, "testwinevent", TestwineventCmd,
-            (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+            (ClientData) Tk_MainWindow(interp), NULL);
 
     return TCL_OK;
 }
@@ -67,8 +66,8 @@ TkplatformtestInit(
  *
  * AppendSystemError --
  *
- *	This routine formats a Windows system error message and places
- *	it into the interpreter result.  Originally from tclWinReg.c.
+ *	This routine formats a Windows system error message and places it into
+ *	the interpreter result. Originally from tclWinReg.c.
  *
  * Results:
  *	None.
@@ -129,6 +128,7 @@ AppendSystemError(
 	/*
 	 * Trim the trailing CR/LF from the system message.
 	 */
+
 	if (msg[length-1] == '\n') {
 	    msg[--length] = 0;
 	}
@@ -151,8 +151,8 @@ AppendSystemError(
  *
  * TestclipboardObjCmd --
  *
- *	This procedure implements the testclipboard command. It provides
- *	a way to determine the actual contents of the Windows clipboard.
+ *	This function implements the testclipboard command. It provides a way
+ *	to determine the actual contents of the Windows clipboard.
  *
  * Results:
  *	A standard Tcl result.
@@ -164,11 +164,11 @@ AppendSystemError(
  */
 
 static int
-TestclipboardObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;		/* Main window for application. */
-    Tcl_Interp *interp;			/* Current interpreter. */
-    int objc;				/* Number of arguments. */
-    Tcl_Obj *CONST objv[];		/* Argument values. */
+TestclipboardObjCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument values. */
 {
     TkWindow *winPtr = (TkWindow *) clientData;
     HGLOBAL handle;
@@ -176,29 +176,29 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
     int code = TCL_OK;
 
     if (objc != 1) {
-	Tcl_WrongNumArgs(interp, 1, objv, (char *) NULL);
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
     if (OpenClipboard(NULL)) {
 	/*
-	 * We could consider using CF_UNICODETEXT on NT, but then we
-	 * would have to convert it from External.  Instead we'll just
-	 * take this and do "bytestring" at the Tcl level for Unicode
-	 * inclusive text
+	 * We could consider using CF_UNICODETEXT on NT, but then we would
+	 * have to convert it from External. Instead we'll just take this and
+	 * do "bytestring" at the Tcl level for Unicode inclusive text
 	 */
+
 	handle = GetClipboardData(CF_TEXT);
 	if (handle != NULL) {
 	    data = GlobalLock(handle);
-	    Tcl_AppendResult(interp, data, (char *) NULL);
+	    Tcl_AppendResult(interp, data, NULL);
 	    GlobalUnlock(handle);
 	} else {
-	    Tcl_AppendResult(interp, "null clipboard handle", (char *) NULL);
+	    Tcl_AppendResult(interp, "null clipboard handle", NULL);
 	    code = TCL_ERROR;
 	}
 	CloseClipboard();
 	return code;
     } else {
-	Tcl_AppendResult(interp, "couldn't open clipboard: ", (char *) NULL);
+	Tcl_AppendResult(interp, "couldn't open clipboard: ", NULL);
 	AppendSystemError(interp, GetLastError());
 	return TCL_ERROR;
     }
@@ -210,8 +210,8 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
  *
  * TestwineventCmd --
  *
- *	This procedure implements the testwinevent command. It provides
- *	a way to send messages to windows dialogs.
+ *	This function implements the testwinevent command. It provides a way
+ *	to send messages to windows dialogs.
  *
  * Results:
  *	A standard Tcl result.
@@ -223,11 +223,11 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
  */
 
 static int
-TestwineventCmd(clientData, interp, argc, argv)
-    ClientData clientData;		/* Main window for application. */
-    Tcl_Interp *interp;			/* Current interpreter. */
-    int argc;				/* Number of arguments. */
-    CONST char **argv;			/* Argument strings. */
+TestwineventCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int argc,			/* Number of arguments. */
+    CONST char **argv)		/* Argument strings. */
 {
     HWND hwnd = 0;
     int id;
@@ -262,9 +262,9 @@ TestwineventCmd(clientData, interp, argc, argv)
     TkpScanWindowId(interp, argv[1], &id);
     if (
 #ifdef _WIN64
-	(sscanf(string, "0x%p", &number) != 1) &&
-#endif
-	Tcl_GetInt(interp, string, (int *)&number) != TCL_OK) {
+	    (sscanf(string, "0x%p", &number) != 1) &&
+#endif /* _WIN64 */
+	    Tcl_GetInt(interp, string, (int *)&number) != TCL_OK) {
 	return TCL_ERROR;
     }
 #endif
@@ -311,35 +311,40 @@ TestwineventCmd(clientData, interp, argc, argv)
     }
 
     switch (message) {
-	case WM_GETTEXT: {
-	    Tcl_DString ds;
-	    char buf[256];
+    case WM_GETTEXT: {
+	Tcl_DString ds;
+	char buf[256];
 
-	    GetDlgItemText(hwnd, id, buf, 256);
-	    Tcl_ExternalToUtfDString(NULL, buf, -1, &ds);
-	    Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
-	    Tcl_DStringFree(&ds);
-	    break;
-	}
-	case WM_SETTEXT: {
-	    Tcl_DString ds;
+	GetDlgItemText(hwnd, id, buf, 256);
+	Tcl_ExternalToUtfDString(NULL, buf, -1, &ds);
+	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	Tcl_DStringFree(&ds);
+	break;
+    }
+    case WM_SETTEXT: {
+	Tcl_DString ds;
 
-	    Tcl_UtfToExternalDString(NULL, argv[4], -1, &ds);
-	    SetDlgItemText(hwnd, id, Tcl_DStringValue(&ds));
-	    Tcl_DStringFree(&ds);
-	    break;
-	}
-	default: {
-	    char buf[TCL_INTEGER_SPACE];
-	    
-	    sprintf(buf, "%d", 
-		    SendDlgItemMessage(hwnd, id, message, wParam, lParam));
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	    break;
-	}
+	Tcl_UtfToExternalDString(NULL, argv[4], -1, &ds);
+	SetDlgItemText(hwnd, id, Tcl_DStringValue(&ds));
+	Tcl_DStringFree(&ds);
+	break;
+    }
+    default: {
+	char buf[TCL_INTEGER_SPACE];
+
+	sprintf(buf, "%d",
+		SendDlgItemMessage(hwnd, id, message, wParam, lParam));
+	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	break;
+    }
     }
     return TCL_OK;
 }
-    
-
-
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
