@@ -1,5 +1,5 @@
 This directory contains Tk source files that work on all the platforms
 where Tk runs (e.g. UNIX, PCs, and Macintoshes).  Platform-specific
-sources are in the directories ../unix, ../win, and ../mac.
+sources are in the directories ../unix, ../win, ../macosx, and ../mac.
 
-RCS ID: @(#) $Id: README,v 1.2 1998/09/14 18:23:02 stanton Exp $
+RCS ID: @(#) $Id: README,v 1.2.26.1 2005/12/02 21:13:39 dgp Exp $
