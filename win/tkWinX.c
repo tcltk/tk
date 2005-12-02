@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.50 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.51 2005/12/02 00:37:20 dkf Exp $
  */
 
 /*
@@ -190,7 +190,7 @@ TkGetServerInfo(
  */
 
 HINSTANCE
-Tk_GetHINSTANCE(vpod)
+Tk_GetHINSTANCE(void)
 {
     if (tkInstance == NULL) {
 	tkInstance = GetModuleHandle(NULL);
@@ -367,7 +367,7 @@ TkWinXCleanup(
  */
 
 int
-TkWinGetPlatformId(vpod
+TkWinGetPlatformId(void)
 {
     if (tkPlatformId == 0) {
 	OSVERSIONINFO os;
