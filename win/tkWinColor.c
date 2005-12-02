@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.9 2005/12/02 00:29:59 dkf Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.10 2005/12/02 13:42:29 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -105,7 +105,7 @@ FindSystemColor(
 {
     int l, u, r, i;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Count the number of elements in the color array if we haven't done so
