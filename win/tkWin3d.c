@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin3d.c,v 1.8 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWin3d.c,v 1.9 2005/12/02 13:42:29 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -455,9 +455,9 @@ TkpGetShadows(
 	    lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
 	}
 
-       /*
-        * Allocate the light shadow color and its GC
-        */
+	/*
+	 * Allocate the light shadow color and its GC
+	 */
 
 	borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
 	gcValues.foreground = borderPtr->lightColorPtr->pixel;

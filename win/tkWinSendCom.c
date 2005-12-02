@@ -1,23 +1,24 @@
-/* 
- * tkWinSend.c --
+/*
+ * tkWinSendCom.c --
  *
- *	This file provides procedures that implement the Windows "send"
- *	command, allowing commands to be passed from interpreter
- *	to interpreter.
+ *	This file provides support functions that implement the Windows "send"
+ *	command using COM interfaces, allowing commands to be passed from
+ *	interpreter to interpreter. See also tkWinSend.c, where most of the
+ *	interesting functions are.
  *
- *  We implement a COM class for use in registering Tcl interpreters
- *  with the system's Running Object Table.
- *  This class implements an IDispatch interface with the following method:
- *   Send(String cmd) As String 
- *  In other words the Send methods takes a string and evaluates this in
- *  the Tcl interpreter. The result is returned as another string.
+ * We implement a COM class for use in registering Tcl interpreters with the
+ * system's Running Object Table. This class implements an IDispatch interface
+ * with the following method:
+ *	Send(String cmd) As String
+ * In other words the Send methods takes a string and evaluates this in the
+ * Tcl interpreter. The result is returned as another string.
  *
  * Copyright (C) 2002 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.c,v 1.5 2005/10/14 11:59:19 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSendCom.c,v 1.6 2005/12/02 13:42:29 dkf Exp $
  */
 
 #include "tkWinSendCom.h"
@@ -26,45 +27,44 @@
  * ----------------------------------------------------------------------
  * Non-public prototypes.
  *
- *    These are the interface methods for IUnknown, IDispatch and 
- *    ISupportErrorInfo.
+ *	These are the interface methods for IUnknown, IDispatch and
+ *	ISupportErrorInfo.
  *
  * ----------------------------------------------------------------------
  */
 
-static void TkWinSendCom_Destroy(LPDISPATCH pdisp);
+static void		TkWinSendCom_Destroy(LPDISPATCH pdisp);
 
-static STDMETHODIMP WinSendCom_QueryInterface(IDispatch *This,
-                                              REFIID riid, void **ppvObject);
-static STDMETHODIMP_(ULONG) WinSendCom_AddRef(IDispatch *This);
-static STDMETHODIMP_(ULONG) WinSendCom_Release(IDispatch *This);
-static STDMETHODIMP WinSendCom_GetTypeInfoCount(IDispatch *This,
-                                                UINT *pctinfo);
-static STDMETHODIMP WinSendCom_GetTypeInfo(IDispatch *This, UINT iTInfo,
-                                           LCID lcid, ITypeInfo **ppTI);
-static STDMETHODIMP WinSendCom_GetIDsOfNames(IDispatch *This, REFIID riid,
-                                             LPOLESTR *rgszNames,
-                                             UINT cNames, LCID lcid,
-                                             DISPID *rgDispId);
-static STDMETHODIMP WinSendCom_Invoke(IDispatch *This, DISPID dispidMember,
-                                      REFIID riid, LCID lcid, WORD wFlags,
-                                      DISPPARAMS *pDispParams,
-                                      VARIANT *pvarResult,
-                                      EXCEPINFO *pExcepInfo,
-                                      UINT *puArgErr);
-
-static STDMETHODIMP ISupportErrorInfo_QueryInterface(ISupportErrorInfo *This,
-                                                     REFIID riid, void **ppvObject);
-static STDMETHODIMP_(ULONG) ISupportErrorInfo_AddRef(ISupportErrorInfo *This);
-static STDMETHODIMP_(ULONG) ISupportErrorInfo_Release(ISupportErrorInfo *This);
-static STDMETHODIMP ISupportErrorInfo_InterfaceSupportsErrorInfo(ISupportErrorInfo *This,
-                                                                 REFIID riid);
-
-static HRESULT Send(TkWinSendCom* obj, VARIANT vCmd, VARIANT* pvResult,
-                    EXCEPINFO* pExcepInfo, UINT *puArgErr);
-static HRESULT Async(TkWinSendCom* obj, VARIANT Cmd,
-                     EXCEPINFO *pExcepInfo, UINT *puArgErr);
-
+static STDMETHODIMP	WinSendCom_QueryInterface(IDispatch *This,
+			    REFIID riid, void **ppvObject);
+static STDMETHODIMP_(ULONG)	WinSendCom_AddRef(IDispatch *This);
+static STDMETHODIMP_(ULONG)	WinSendCom_Release(IDispatch *This);
+static STDMETHODIMP	WinSendCom_GetTypeInfoCount(IDispatch *This,
+			    UINT *pctinfo);
+static STDMETHODIMP	WinSendCom_GetTypeInfo(IDispatch *This, UINT iTInfo,
+			    LCID lcid, ITypeInfo **ppTI);
+static STDMETHODIMP	WinSendCom_GetIDsOfNames(IDispatch *This, REFIID riid,
+			    LPOLESTR *rgszNames, UINT cNames, LCID lcid,
+			    DISPID *rgDispId);
+static STDMETHODIMP	WinSendCom_Invoke(IDispatch *This, DISPID dispidMember,
+			    REFIID riid, LCID lcid, WORD wFlags,
+			    DISPPARAMS *pDispParams, VARIANT *pvarResult,
+			    EXCEPINFO *pExcepInfo, UINT *puArgErr);
+static STDMETHODIMP	ISupportErrorInfo_QueryInterface(
+			    ISupportErrorInfo *This, REFIID riid,
+			    void **ppvObject);
+static STDMETHODIMP_(ULONG)	ISupportErrorInfo_AddRef(
+				    ISupportErrorInfo *This);
+static STDMETHODIMP_(ULONG)	ISupportErrorInfo_Release(
+				    ISupportErrorInfo *This);
+static STDMETHODIMP	ISupportErrorInfo_InterfaceSupportsErrorInfo(
+			    ISupportErrorInfo *This, REFIID riid);
+static HRESULT		Send(TkWinSendCom *obj, VARIANT vCmd,
+			    VARIANT *pvResult, EXCEPINFO *pExcepInfo,
+			    UINT *puArgErr);
+static HRESULT		Async(TkWinSendCom *obj, VARIANT Cmd,
+			    EXCEPINFO *pExcepInfo, UINT *puArgErr);
+
 /*
  * ----------------------------------------------------------------------
  *
@@ -77,49 +77,55 @@ static HRESULT Async(TkWinSendCom* obj, VARIANT Cmd,
  */
 
 HRESULT
-TkWinSendCom_CreateInstance(Tcl_Interp *interp, REFIID riid, void **ppv)
+TkWinSendCom_CreateInstance(
+    Tcl_Interp *interp,
+    REFIID riid,
+    void **ppv)
 {
-    /* construct v-tables for each interface */
+    /*
+     * Construct v-tables for each interface.
+     */
+
     static IDispatchVtbl vtbl = {
-        WinSendCom_QueryInterface,
-        WinSendCom_AddRef,
-        WinSendCom_Release,
-        WinSendCom_GetTypeInfoCount,
-        WinSendCom_GetTypeInfo,
-        WinSendCom_GetIDsOfNames,
-        WinSendCom_Invoke,
+	WinSendCom_QueryInterface,
+	WinSendCom_AddRef,
+	WinSendCom_Release,
+	WinSendCom_GetTypeInfoCount,
+	WinSendCom_GetTypeInfo,
+	WinSendCom_GetIDsOfNames,
+	WinSendCom_Invoke,
     };
-    
     static ISupportErrorInfoVtbl vtbl2 = {
-        ISupportErrorInfo_QueryInterface,
-        ISupportErrorInfo_AddRef,
-        ISupportErrorInfo_Release,
-        ISupportErrorInfo_InterfaceSupportsErrorInfo,
+	ISupportErrorInfo_QueryInterface,
+	ISupportErrorInfo_AddRef,
+	ISupportErrorInfo_Release,
+	ISupportErrorInfo_InterfaceSupportsErrorInfo,
     };
-    
     HRESULT hr = S_OK;
     TkWinSendCom *obj = NULL;
-    
+
     /*
-     * This had probably better always be globally visible memory so
-     * we shall use the COM Task allocator.
+     * This had probably better always be globally visible memory so we shall
+     * use the COM Task allocator.
      */
-    
-    obj = (TkWinSendCom*)CoTaskMemAlloc(sizeof(TkWinSendCom));
+
+    obj = (TkWinSendCom *) CoTaskMemAlloc(sizeof(TkWinSendCom));
     if (obj == NULL) {
-        *ppv = NULL;
-        hr = E_OUTOFMEMORY;
+	*ppv = NULL;
+	hr = E_OUTOFMEMORY;
     } else {
-        obj->lpVtbl = &vtbl;
-        obj->lpVtbl2 = &vtbl2;
-        obj->refcount = 0;
-        obj->interp = interp;
-	
-        /* lock the interp? Tcl_AddRef/Retain? */
-	
-        hr = obj->lpVtbl->QueryInterface((IDispatch*)obj, riid, ppv);
+	obj->lpVtbl = &vtbl;
+	obj->lpVtbl2 = &vtbl2;
+	obj->refcount = 0;
+	obj->interp = interp;
+
+	/*
+	 * lock the interp? Tcl_AddRef/Retain?
+	 */
+
+	hr = obj->lpVtbl->QueryInterface((IDispatch*)obj, riid, ppv);
     }
-    
+
     return hr;
 }
 
@@ -139,7 +145,8 @@ TkWinSendCom_CreateInstance(Tcl_Interp *interp, REFIID riid, void **ppv)
  * ----------------------------------------------------------------------
  */
 static void
-TkWinSendCom_Destroy(LPDISPATCH pdisp)
+TkWinSendCom_Destroy(
+    LPDISPATCH pdisp)
 {
     CoTaskMemFree((void*)pdisp);
 }
@@ -150,139 +157,145 @@ TkWinSendCom_Destroy(LPDISPATCH pdisp)
  * IDispatch --
  *
  *	The IDispatch interface implements the 'late-binding' COM methods
- *	typically used by scripting COM clients.
- *	The Invoke method is the most important one.
+ *	typically used by scripting COM clients. The Invoke method is the most
+ *	important one.
  *
  * ----------------------------------------------------------------------
  */
 
 static STDMETHODIMP
 WinSendCom_QueryInterface(
-			  IDispatch *This,
-	                  REFIID riid,
-	                  void **ppvObject)
+    IDispatch *This,
+    REFIID riid,
+    void **ppvObject)
 {
     HRESULT hr = E_NOINTERFACE;
     TkWinSendCom *this = (TkWinSendCom*)This;
     *ppvObject = NULL;
-    
+
     if (memcmp(riid, &IID_IUnknown, sizeof(IID)) == 0
 	    || memcmp(riid, &IID_IDispatch, sizeof(IID)) == 0) {
-        *ppvObject = (void**)this;
-        this->lpVtbl->AddRef(This);
-        hr = S_OK;
+	*ppvObject = (void**)this;
+	this->lpVtbl->AddRef(This);
+	hr = S_OK;
     } else if (memcmp(riid, &IID_ISupportErrorInfo, sizeof(IID)) == 0) {
-        *ppvObject = (void**)(this + 1);
-        this->lpVtbl2->AddRef((ISupportErrorInfo*)(this + 1));
-        hr = S_OK;
+	*ppvObject = (void**)(this + 1);
+	this->lpVtbl2->AddRef((ISupportErrorInfo*)(this + 1));
+	hr = S_OK;
     }
     return hr;
 }
 
 static STDMETHODIMP_(ULONG)
-WinSendCom_AddRef(IDispatch *This)
+WinSendCom_AddRef(
+    IDispatch *This)
 {
     TkWinSendCom *this = (TkWinSendCom*)This;
+
     return InterlockedIncrement(&this->refcount);
 }
 
 static STDMETHODIMP_(ULONG)
-WinSendCom_Release(IDispatch *This)
+WinSendCom_Release(
+    IDispatch *This)
 {
     long r = 0;
     TkWinSendCom *this = (TkWinSendCom*)This;
+
     if ((r = InterlockedDecrement(&this->refcount)) == 0) {
-        TkWinSendCom_Destroy(This);
+	TkWinSendCom_Destroy(This);
     }
     return r;
 }
 
 static STDMETHODIMP
-WinSendCom_GetTypeInfoCount(IDispatch *This, UINT *pctinfo)
+WinSendCom_GetTypeInfoCount(
+    IDispatch *This,
+    UINT *pctinfo)
 {
     HRESULT hr = E_POINTER;
+
     if (pctinfo != NULL) {
-        *pctinfo = 0;
-        hr = S_OK;
+	*pctinfo = 0;
+	hr = S_OK;
     }
     return hr;
 }
 
-static STDMETHODIMP 
+static STDMETHODIMP
 WinSendCom_GetTypeInfo(
-		       IDispatch *This,
-		       UINT iTInfo,
-		       LCID lcid,
-		       ITypeInfo **ppTI)
+    IDispatch *This,
+    UINT iTInfo,
+    LCID lcid,
+    ITypeInfo **ppTI)
 {
     HRESULT hr = E_POINTER;
-    if (ppTI)
-    {
-        *ppTI = NULL;
-        hr = E_NOTIMPL;
+
+    if (ppTI) {
+	*ppTI = NULL;
+	hr = E_NOTIMPL;
     }
     return hr;
 }
 
-static STDMETHODIMP 
+static STDMETHODIMP
 WinSendCom_GetIDsOfNames(
-			 IDispatch *This,
-			 REFIID riid,
-                         LPOLESTR *rgszNames,
-                         UINT cNames,
-			 LCID lcid,
-                         DISPID *rgDispId)
+    IDispatch *This,
+    REFIID riid,
+    LPOLESTR *rgszNames,
+    UINT cNames,
+    LCID lcid,
+    DISPID *rgDispId)
 {
     HRESULT hr = E_POINTER;
-    if (rgDispId)
-    {
-        hr = DISP_E_UNKNOWNNAME;
-        if (_wcsicmp(*rgszNames, L"Send") == 0)
-            *rgDispId = TKWINSENDCOM_DISPID_SEND, hr = S_OK;
-        else if (_wcsicmp(*rgszNames, L"Async") == 0)
-            *rgDispId = TKWINSENDCOM_DISPID_ASYNC, hr = S_OK;
+
+    if (rgDispId) {
+	hr = DISP_E_UNKNOWNNAME;
+	if (_wcsicmp(*rgszNames, L"Send") == 0) {
+	    *rgDispId = TKWINSENDCOM_DISPID_SEND, hr = S_OK;
+	} else if (_wcsicmp(*rgszNames, L"Async") == 0) {
+	    *rgDispId = TKWINSENDCOM_DISPID_ASYNC, hr = S_OK;
+	}
     }
     return hr;
 }
 
-static STDMETHODIMP 
+static STDMETHODIMP
 WinSendCom_Invoke(
-		  IDispatch *This,
-		  DISPID dispidMember,
-                  REFIID riid,
-		  LCID lcid,
-		  WORD wFlags,
-                  DISPPARAMS *pDispParams,
-                  VARIANT *pvarResult,
-                  EXCEPINFO *pExcepInfo,
-                  UINT *puArgErr)
+    IDispatch *This,
+    DISPID dispidMember,
+    REFIID riid,
+    LCID lcid,
+    WORD wFlags,
+    DISPPARAMS *pDispParams,
+    VARIANT *pvarResult,
+    EXCEPINFO *pExcepInfo,
+    UINT *puArgErr)
 {
     HRESULT hr = DISP_E_MEMBERNOTFOUND;
     TkWinSendCom *this = (TkWinSendCom*)This;
-    
+
     switch (dispidMember) {
-	case TKWINSENDCOM_DISPID_SEND:
-	    if (wFlags | DISPATCH_METHOD) {
-		if (pDispParams->cArgs != 1) {
-		    hr = DISP_E_BADPARAMCOUNT;
-		} else {
-		    hr = Send(this, pDispParams->rgvarg[0],
-			    pvarResult, pExcepInfo, puArgErr);
-		}
+    case TKWINSENDCOM_DISPID_SEND:
+	if (wFlags | DISPATCH_METHOD) {
+	    if (pDispParams->cArgs != 1) {
+		hr = DISP_E_BADPARAMCOUNT;
+	    } else {
+		hr = Send(this, pDispParams->rgvarg[0], pvarResult,
+			pExcepInfo, puArgErr);
 	    }
-	    break;
-	    
-	case TKWINSENDCOM_DISPID_ASYNC:
-	    if (wFlags | DISPATCH_METHOD) {
-		if (pDispParams->cArgs != 1) {
-		    hr = DISP_E_BADPARAMCOUNT;
-		} else {
-		    hr = Async(this, pDispParams->rgvarg[0],
-			    pExcepInfo, puArgErr);
-		}
+	}
+	break;
+
+    case TKWINSENDCOM_DISPID_ASYNC:
+	if (wFlags | DISPATCH_METHOD) {
+	    if (pDispParams->cArgs != 1) {
+		hr = DISP_E_BADPARAMCOUNT;
+	    } else {
+		hr = Async(this, pDispParams->rgvarg[0], pExcepInfo, puArgErr);
 	    }
-	    break;
-	    
+	}
+	break;
     }
     return hr;
 }
@@ -292,37 +305,45 @@ WinSendCom_Invoke(
  *
  * ISupportErrorInfo --
  *
- *	This interface provides rich error information to COM clients.
- *	Used by VB and scripting COM clients.
+ *	This interface provides rich error information to COM clients. Used by
+ *	VB and scripting COM clients.
  *
  * ----------------------------------------------------------------------
  */
 
-static STDMETHODIMP 
-ISupportErrorInfo_QueryInterface(ISupportErrorInfo *This,
-                                 REFIID riid, void **ppvObject)
+static STDMETHODIMP
+ISupportErrorInfo_QueryInterface(
+    ISupportErrorInfo *This,
+    REFIID riid,
+    void **ppvObject)
 {
     TkWinSendCom *this = (TkWinSendCom*)(This - 1);
+
     return this->lpVtbl->QueryInterface((IDispatch*)this, riid, ppvObject);
 }
 
 static STDMETHODIMP_(ULONG)
-ISupportErrorInfo_AddRef(ISupportErrorInfo *This)
+ISupportErrorInfo_AddRef(
+    ISupportErrorInfo *This)
 {
     TkWinSendCom *this = (TkWinSendCom*)(This - 1);
+
     return InterlockedIncrement(&this->refcount);
 }
 
 static STDMETHODIMP_(ULONG)
-ISupportErrorInfo_Release(ISupportErrorInfo *This)
+ISupportErrorInfo_Release(
+    ISupportErrorInfo *This)
 {
     TkWinSendCom *this = (TkWinSendCom*)(This - 1);
+
     return this->lpVtbl->Release((IDispatch*)this);
 }
 
 static STDMETHODIMP
-ISupportErrorInfo_InterfaceSupportsErrorInfo(ISupportErrorInfo *This,
-                                             REFIID riid)
+ISupportErrorInfo_InterfaceSupportsErrorInfo(
+    ISupportErrorInfo *This,
+    REFIID riid)
 {
     /*TkWinSendCom *this = (TkWinSendCom*)(This - 1);*/
     return S_OK; /* or S_FALSE */
@@ -345,33 +366,36 @@ ISupportErrorInfo_InterfaceSupportsErrorInfo(ISupportErrorInfo *This,
  */
 
 static HRESULT
-Async(TkWinSendCom* obj, VARIANT Cmd, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+Async(
+    TkWinSendCom *obj,
+    VARIANT Cmd,
+    EXCEPINFO *pExcepInfo,
+    UINT *puArgErr)
 {
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT vCmd;
-    
+
     VariantInit(&vCmd);
-    
+
     hr = VariantChangeType(&vCmd, &Cmd, 0, VT_BSTR);
     if (FAILED(hr)) {
-        Tcl_SetStringObj(Tcl_GetObjResult(obj->interp),
+	Tcl_SetStringObj(Tcl_GetObjResult(obj->interp),
 		"invalid args: Async(command)", -1);
-        SetExcepInfo(obj->interp, pExcepInfo);
-        hr = DISP_E_EXCEPTION;
+	SetExcepInfo(obj->interp, pExcepInfo);
+	hr = DISP_E_EXCEPTION;
     }
-    
-    
+
     if (SUCCEEDED(hr)) {
-        if (obj->interp) {
-            Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(vCmd.bstrVal,
+	if (obj->interp) {
+	    Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(vCmd.bstrVal,
 		    (int)SysStringLen(vCmd.bstrVal));
-            result = TkWinSend_QueueCommand(obj->interp, scriptPtr);
-        }
+	    result = TkWinSend_QueueCommand(obj->interp, scriptPtr);
+	}
     }
-    
+
     VariantClear(&vCmd);
-    
+
     return hr;
 }
 
@@ -380,13 +404,13 @@ Async(TkWinSendCom* obj, VARIANT Cmd, EXCEPINFO *pExcepInfo, UINT *puArgErr)
  *
  * Send --
  *
- *	Evaluates the string in the assigned interpreter. If the result
- *	is a valid address then set it to the result returned by the
- *	evaluation. Tcl exceptions are converted into COM exceptions.
+ *	Evaluates the string in the assigned interpreter. If the result is a
+ *	valid address then set it to the result returned by the evaluation.
+ *	Tcl exceptions are converted into COM exceptions.
  *
  * Results:
- *	A standard COM HRESULT is returned. The Tcl result is set as
- *	the method calls result.
+ *	A standard COM HRESULT is returned. The Tcl result is set as the
+ *	method calls result.
  *
  * Side effects:
  *	The interpreters state and result will be modified.
@@ -395,34 +419,46 @@ Async(TkWinSendCom* obj, VARIANT Cmd, EXCEPINFO *pExcepInfo, UINT *puArgErr)
  */
 
 static HRESULT
-Send(TkWinSendCom* obj, VARIANT vCmd,
-     VARIANT* pvResult, EXCEPINFO* pExcepInfo, UINT *puArgErr)
+Send(
+    TkWinSendCom *obj,
+    VARIANT vCmd,
+    VARIANT *pvResult,
+    EXCEPINFO *pExcepInfo,
+    UINT *puArgErr)
 {
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT v;
-    
+
     VariantInit(&v);
     hr = VariantChangeType(&v, &vCmd, 0, VT_BSTR);
     if (SUCCEEDED(hr)) {
-        if (obj->interp) {
-            Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(v.bstrVal,
+	if (obj->interp) {
+	    Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(v.bstrVal,
 		    (int)SysStringLen(v.bstrVal));
-            
-            result = Tcl_EvalObjEx(obj->interp, scriptPtr,
+
+	    result = Tcl_EvalObjEx(obj->interp, scriptPtr,
 		    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
-            if (pvResult) {
-                VariantInit(pvResult);
-                pvResult->vt = VT_BSTR;
-                pvResult->bstrVal = SysAllocString(Tcl_GetUnicode(Tcl_GetObjResult(obj->interp)));
-            }
-            if (result == TCL_ERROR) {
-                hr = DISP_E_EXCEPTION;
-                SetExcepInfo(obj->interp, pExcepInfo);
-            }
-        }
-        VariantClear(&v);        
+	    if (pvResult) {
+		VariantInit(pvResult);
+		pvResult->vt = VT_BSTR;
+		pvResult->bstrVal = SysAllocString(
+			Tcl_GetUnicode(Tcl_GetObjResult(obj->interp)));
+	    }
+	    if (result == TCL_ERROR) {
+		hr = DISP_E_EXCEPTION;
+		SetExcepInfo(obj->interp, pExcepInfo);
+	    }
+	}
+	VariantClear(&v);
     }
     return hr;
 }
 
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
