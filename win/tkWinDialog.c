@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.42 2005/11/11 05:13:44 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.43 2005/12/02 00:19:04 dkf Exp $
  *
  */
 
@@ -119,6 +119,26 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
 };
 
 #define NUM_TYPES (sizeof(allowedTypes) / sizeof(allowedTypes[0]))
+
+/*
+ * Abstract trivial differences between Win32 and Win64.
+ */
+
+#ifdef _WIN64
+#define TkWinGetHInstance(from) \
+	((HINSTANCE) GetWindowLongPtr((from), GWLP_HINSTANCE))
+#define TkWinGetUserData(from) \
+	GetWindowLongPtr((from), GWLP_USERDATA)
+#define TkWinSetUserData(to,what) \
+	SetWindowLongPtr((to), GWLP_USERDATA, (LPARAM)(what))
+#else
+#define TkWinGetHInstance(from) \
+	((HINSTANCE) GetWindowLong((from), GWL_HINSTANCE))
+#define TkWinGetUserData(from) \
+	GetWindowLong((from), GWL_USERDATA)
+#define TkWinSetUserData(to,what) \
+	SetWindowLong((to), GWL_USERDATA, (LPARAM)(what))
+#endif
 
 /*
  * The value of TK_MULTI_MAX_PATH dictactes how many files can be retrieved
@@ -697,11 +717,7 @@ GetFileNameW(
     ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
     ofn.lStructSize = sizeof(OPENFILENAMEW);
     ofn.hwndOwner = hWnd;
-#ifdef _WIN64
-    ofn.hInstance = (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner,GWLP_HINSTANCE);
-#else
-    ofn.hInstance = (HINSTANCE) GetWindowLong(ofn.hwndOwner, GWL_HINSTANCE);
-#endif
+    ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
     ofn.lpstrFile = (WCHAR *) file;
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR
@@ -935,11 +951,7 @@ OFNHookProcW(
     OPENFILENAMEW *ofnPtr;
 
     if (uMsg == WM_INITDIALOG) {
-#ifdef _WIN64
-	SetWindowLongPtr(hdlg, GWLP_USERDATA, lParam);
-#else
-	SetWindowLong(hdlg, GWL_USERDATA, lParam);
-#endif
+	TkWinSetUserData(hdlg, lParam);
     } else if (uMsg == WM_WINDOWPOSCHANGED) {
 	/*
 	 * This message is delivered at the right time to enable Tk to set the
@@ -947,20 +959,12 @@ OFNHookProcW(
 	 * information every time it gets a WM_WINDOWPOSCHANGED message.
 	 */
 
-#ifdef _WIN64
-	ofnPtr = (OPENFILENAMEW *) GetWindowLongPtr(hdlg, GWLP_USERDATA);
-#else
-	ofnPtr = (OPENFILENAMEW *) GetWindowLong(hdlg, GWL_USERDATA);
-#endif
+	ofnPtr = (OPENFILENAMEW *) TkWinGetUserData(hdlg);
 	if (ofnPtr != NULL) {
 	    hdlg = GetParent(hdlg);
 	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
-#ifdef _WIN64
-	    SetWindowLongPtr(hdlg, GWLP_USERDATA, (LPARAM) NULL);
-#else
-	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
-#endif
+	    TkWinSetUserData(hdlg, NULL);
 	}
     }
     return 0;
@@ -1132,11 +1136,7 @@ GetFileNameA(
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hWnd;
-#ifdef _WIN64
-    ofn.hInstance = (HINSTANCE) GetWindowLongPtr(ofn.hwndOwner,GWLP_HINSTANCE);
-#else
-    ofn.hInstance = (HINSTANCE) GetWindowLong(ofn.hwndOwner, GWL_HINSTANCE);
-#endif
+    ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
     ofn.lpstrFilter = NULL;
     ofn.lpstrCustomFilter = NULL;
     ofn.nMaxCustFilter = 0;
@@ -1379,11 +1379,7 @@ OFNHookProc(
     OPENFILENAME *ofnPtr;
 
     if (uMsg == WM_INITDIALOG) {
-#ifdef _WIN64
-	SetWindowLongPtr(hdlg, GWLP_USERDATA, lParam);
-#else
-	SetWindowLong(hdlg, GWL_USERDATA, lParam);
-#endif
+	TkWinSetUserData(hdlg, lParam);
     } else if (uMsg == WM_WINDOWPOSCHANGED) {
 	/*
 	 * This message is delivered at the right time to both old-style and
@@ -1392,22 +1388,14 @@ OFNHookProc(
 	 * every time it gets a WM_WINDOWPOSCHANGED message.
 	 */
 
-#ifdef _WIN64
-	ofnPtr = (OPENFILENAME *) GetWindowLongPtr(hdlg, GWLP_USERDATA);
-#else
-	ofnPtr = (OPENFILENAME *) GetWindowLong(hdlg, GWL_USERDATA);
-#endif
+	ofnPtr = (OPENFILENAME *) TkWinGetUserData(hdlg);
 	if (ofnPtr != NULL) {
 	    if (ofnPtr->Flags & OFN_EXPLORER) {
 		hdlg = GetParent(hdlg);
 	    }
 	    tsdPtr->debugInterp = (Tcl_Interp *) ofnPtr->lCustData;
 	    Tcl_DoWhenIdle(SetTkDialog, (ClientData) hdlg);
-#ifdef _WIN64
-	    SetWindowLongPtr(hdlg, GWLP_USERDATA, (LPARAM) NULL);
-#else
-	    SetWindowLong(hdlg, GWL_USERDATA, (LPARAM) NULL);
-#endif
+	    TkWinSetUserData(hdlg, NULL);
 	}
     }
     return 0;
@@ -1859,11 +1847,7 @@ ChooseDirectoryValidateProc(
 
     chooseDirSharedData = (CHOOSEDIRDATA *)lpData;
 
-#ifdef _WIN64
-    SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
-#else
-    SetWindowLong(hwnd, GWL_USERDATA, lpData);
-#endif
+    TkWinSetUserData(hwnd, lpData);
 
     if (tsdPtr->debugFlag) {
 	tsdPtr->debugInterp = (Tcl_Interp *) chooseDirSharedData->interp;
@@ -2264,6 +2248,7 @@ ConvertExternalFilename(
 	 * Change the pathname to the Tcl "normalized" pathname, where back
 	 * slashes are used instead of forward slashes
 	 */
+
 	if (*p == '\\') {
 	    *p = '/';
 	}
