@@ -1,4 +1,4 @@
-/* 
+/*
  * winMain.c --
  *
  *	Main entry point for wish and other Tk-based applications.
@@ -6,10 +6,10 @@
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.22 2005/09/13 21:25:21 dgp Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.23 2005/12/02 00:19:04 dkf Exp $
  */
 
 #include <tk.h>
@@ -21,16 +21,15 @@
 #include "tkInt.h"
 
 /*
- * The following declarations refer to internal Tk routines.  These
- * interfaces are available for use, but are not supported.
+ * The following declarations refer to internal Tk routines. These interfaces
+ * are available for use, but are not supported.
  */
-
 
 /*
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		WishPanic _ANSI_ARGS_((CONST char *format, ...));
+static void		WishPanic(CONST char *format, ...);
 #ifdef TK_TEST
 extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
@@ -38,27 +37,25 @@ extern int		Tktest_Init(Tcl_Interp *interp);
 static BOOL consoleRequired = TRUE;
 
 /*
- * The following #if block allows you to change the AppInit
- * function by using a #define of TCL_LOCAL_APPINIT instead
- * of rewriting this entire file.  The #if checks for that
- * #define and uses Tcl_AppInit if it doesn't exist.
+ * The following #if block allows you to change the AppInit function by using
+ * a #define of TCL_LOCAL_APPINIT instead of rewriting this entire file. The
+ * #if checks for that #define and uses Tcl_AppInit if it doesn't exist.
  */
-    
+
 #ifndef TK_LOCAL_APPINIT
-#define TK_LOCAL_APPINIT Tcl_AppInit    
+#define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
-extern int TK_LOCAL_APPINIT _ANSI_ARGS_((Tcl_Interp *interp));
-    
+extern int TK_LOCAL_APPINIT(Tcl_Interp *interp);
+
 /*
  * The following #if block allows you to change how Tcl finds the startup
- * script, prime the library or encoding paths, fiddle with the argv,
- * etc., without needing to rewrite Tk_Main()
+ * script, prime the library or encoding paths, fiddle with the argv, etc.,
+ * without needing to rewrite Tk_Main()
  */
 
 #ifdef TK_LOCAL_MAIN_HOOK
-extern int TK_LOCAL_MAIN_HOOK _ANSI_ARGS_((int *argc, char ***argv));
+extern int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
 #endif
-
 
 /*
  *----------------------------------------------------------------------
@@ -68,8 +65,7 @@ extern int TK_LOCAL_MAIN_HOOK _ANSI_ARGS_((int *argc, char ***argv));
  *	Main entry point from Windows.
  *
  * Results:
- *	Returns false if initialization fails, otherwise it never
- *	returns. 
+ *	Returns false if initialization fails, otherwise it never returns.
  *
  * Side effects:
  *	Just about anything, since from here we call arbitrary Tcl code.
@@ -78,11 +74,11 @@ extern int TK_LOCAL_MAIN_HOOK _ANSI_ARGS_((int *argc, char ***argv));
  */
 
 int APIENTRY
-WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
-    HINSTANCE hInstance;
-    HINSTANCE hPrevInstance;
-    LPSTR lpszCmdLine;
-    int nCmdShow;
+WinMain(
+    HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpszCmdLine,
+    int nCmdShow)
 {
     char **argv;
     int argc;
@@ -91,22 +87,22 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     Tcl_SetPanicProc(WishPanic);
 
     /*
-     * Create the console channels and install them as the standard
-     * channels.  All I/O will be discarded until Tk_CreateConsoleWindow is
-     * called to attach the console to a text widget.
+     * Create the console channels and install them as the standard channels.
+     * All I/O will be discarded until Tk_CreateConsoleWindow is called to
+     * attach the console to a text widget.
      */
 
     consoleRequired = TRUE;
 
     /*
-     * Set up the default locale to be standard "C" locale so parsing
-     * is performed correctly.
+     * Set up the default locale to be standard "C" locale so parsing is
+     * performed correctly.
      */
 
     setlocale(LC_ALL, "C");
 
     /*
-     *  Get our args from the c-runtime.  Ignore lpszCmdLine.
+     * Get our args from the c-runtime. Ignore lpszCmdLine.
      */
 
     argc = __argc;
@@ -129,20 +125,19 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
     return 1;
 }
-
 
 /*
  *----------------------------------------------------------------------
  *
  * Tcl_AppInit --
  *
- *	This procedure performs application-specific initialization.
- *	Most applications, especially those that incorporate additional
- *	packages, will have their own version of this procedure.
+ *	This procedure performs application-specific initialization. Most
+ *	applications, especially those that incorporate additional packages,
+ *	will have their own version of this procedure.
  *
  * Results:
- *	Returns a standard Tcl completion code, and leaves an error
- *	message in the interp's result if an error occurs.
+ *	Returns a standard Tcl completion code, and leaves an error message in
+ *	the interp's result if an error occurs.
  *
  * Side effects:
  *	Depends on the startup script.
@@ -151,8 +146,8 @@ WinMain(hInstance, hPrevInstance, lpszCmdLine, nCmdShow)
  */
 
 int
-Tcl_AppInit(interp)
-    Tcl_Interp *interp;		/* Interpreter for application. */
+Tcl_AppInit(
+    Tcl_Interp *interp)		/* Interpreter for application. */
 {
     if (Tcl_Init(interp) == TCL_ERROR) {
 	goto error;
@@ -193,8 +188,7 @@ Tcl_AppInit(interp)
     if (Tktest_Init(interp) == TCL_ERROR) {
 	goto error;
     }
-    Tcl_StaticPackage(interp, "Tktest", Tktest_Init,
-            (Tcl_PackageInitProc *) NULL);
+    Tcl_StaticPackage(interp, "Tktest", Tktest_Init, NULL);
 #endif /* TK_TEST */
 
     Tcl_SetVar(interp, "tcl_rcFileName", "~/wishrc.tcl", TCL_GLOBAL_ONLY);
@@ -205,7 +199,11 @@ error:
     MessageBox(NULL, Tcl_GetStringResult(interp), "Error in Wish",
 	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
     ExitProcess(1);
-    /* we won't reach this, but we need the return */
+
+    /*
+     * We won't reach this, but we need the return.
+     */
+
     return TCL_ERROR;
 }
 
@@ -226,11 +224,12 @@ error:
  */
 
 void
-WishPanic(CONST char *format, ...)
+WishPanic(
+    CONST char *format, ...)
 {
     va_list argList;
     char buf[1024];
-    
+
     va_start(argList, format);
     vsprintf(buf, format, argList);
 
@@ -252,8 +251,8 @@ WishPanic(CONST char *format, ...)
  *	Main entry point from the console.
  *
  * Results:
- *	None: Tk_Main never returns here, so this procedure never
- *      returns either.
+ *	None: Tk_Main never returns here, so this procedure never returns
+ *	either.
  *
  * Side effects:
  *	Whatever the applications does.
@@ -261,21 +260,24 @@ WishPanic(CONST char *format, ...)
  *----------------------------------------------------------------------
  */
 
-int main(int argc, char **argv)
+int
+main(
+    int argc,
+    char **argv)
 {
     Tcl_SetPanicProc(WishPanic);
 
     /*
-     * Set up the default locale to be standard "C" locale so parsing
-     * is performed correctly.
+     * Set up the default locale to be standard "C" locale so parsing is
+     * performed correctly.
      */
 
     setlocale(LC_ALL, "C");
 
     /*
-     * Create the console channels and install them as the standard
-     * channels.  All I/O will be discarded until Tk_CreateConsoleWindow is
-     * called to attach the console to a text widget.
+     * Create the console channels and install them as the standard channels.
+     * All I/O will be discarded until Tk_CreateConsoleWindow is called to
+     * attach the console to a text widget.
      */
 
     consoleRequired = FALSE;
@@ -284,3 +286,11 @@ int main(int argc, char **argv)
     return 0;
 }
 #endif /* !__GNUC__ || TK_TEST */
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
