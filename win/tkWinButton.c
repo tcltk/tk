@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.27 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.28 2005/12/02 13:42:29 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -131,7 +131,7 @@ InitBoxes(void)
     LPBITMAPINFOHEADER newBitmap;
     DWORD size;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hrsrc = FindResource(module, "buttons", RT_BITMAP);
     if (hrsrc) {
@@ -146,14 +146,14 @@ InitBoxes(void)
     if (tsdPtr->boxesPtr != NULL && !(tsdPtr->boxesPtr->biWidth % 4)
 	    && !(tsdPtr->boxesPtr->biHeight % 2)) {
 	size = tsdPtr->boxesPtr->biSize + (1 << tsdPtr->boxesPtr->biBitCount)
-                * sizeof(RGBQUAD) + tsdPtr->boxesPtr->biSizeImage;
+		* sizeof(RGBQUAD) + tsdPtr->boxesPtr->biSizeImage;
 	newBitmap = (LPBITMAPINFOHEADER) ckalloc(size);
 	memcpy(newBitmap, tsdPtr->boxesPtr, size);
 	tsdPtr->boxesPtr = newBitmap;
 	tsdPtr->boxWidth = tsdPtr->boxesPtr->biWidth / 4;
 	tsdPtr->boxHeight = tsdPtr->boxesPtr->biHeight / 2;
 	tsdPtr->boxesPalette = (DWORD*) (((LPSTR) tsdPtr->boxesPtr)
-                + tsdPtr->boxesPtr->biSize);
+		+ tsdPtr->boxesPtr->biSize);
 	tsdPtr->boxesBits = ((LPSTR) tsdPtr->boxesPalette)
 	    + ((1 << tsdPtr->boxesPtr->biBitCount) * sizeof(RGBQUAD));
     } else {
@@ -187,7 +187,7 @@ TkpButtonSetDefaults(
 {
     int width;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->defWidth[0] == 0) {
 	width = GetSystemMetrics(SM_CXEDGE);
@@ -363,7 +363,7 @@ TkpDisplayButton(
     DWORD *boxesPalette;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     boxesPalette= tsdPtr->boxesPalette;
     butPtr->flags &= ~REDRAW_PENDING;
@@ -722,10 +722,9 @@ TkpDisplayButton(
 		border, TK_3D_FLAT_GC));
 
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-	StretchDIBits(dc, x, y, tsdPtr->boxWidth, tsdPtr->boxHeight,
-                xSrc, ySrc, tsdPtr->boxWidth, tsdPtr->boxHeight,
-                tsdPtr->boxesBits, (LPBITMAPINFO) tsdPtr->boxesPtr,
-                DIB_RGB_COLORS, SRCCOPY);
+	StretchDIBits(dc, x, y, tsdPtr->boxWidth, tsdPtr->boxHeight, xSrc,
+		ySrc, tsdPtr->boxWidth, tsdPtr->boxHeight, tsdPtr->boxesBits,
+		(LPBITMAPINFO) tsdPtr->boxesPtr, DIB_RGB_COLORS, SRCCOPY);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
@@ -1118,16 +1117,16 @@ TkpComputeButtonGeometry(
 	    height = imgHeight;
 	}
     } else {
-        /*
+	/*
 	 * No image. May or may not be text. May or may not be compound.
 	 */
 
-        /*
+	/*
 	 * butPtr->width is in characters. We need to allow for that many
 	 * characters on the face, not in the over-all button width
 	 */
 
-        if (butPtr->width > 0) {
+	if (butPtr->width > 0) {
 	    width = butPtr->width * avgWidth;
 	}
 
@@ -1170,14 +1169,14 @@ TkpComputeButtonGeometry(
 	if (butPtr->indicatorOn) {
 	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
 
-            /*
-             * Make sure we can see the whole indicator, even if the text or
-             * image is very small.
-             */
+	    /*
+	     * Make sure we can see the whole indicator, even if the text or
+	     * image is very small.
+	     */
 
-            if (height < butPtr->indicatorDiameter) {
-                height = butPtr->indicatorDiameter;
-            }
+	    if (height < butPtr->indicatorDiameter) {
+		height = butPtr->indicatorDiameter;
+	    }
 
 	    /*
 	     * There is no rule for space between the indicator and the text

@@ -1,16 +1,16 @@
-/* 
+/*
  * tkWinSendCom.h --
  *
  *	This file provides procedures that implement the Windows "send"
- *	command, allowing commands to be passed from interpreter
- *	to interpreter.
+ *	command, allowing commands to be passed from interpreter to
+ *	interpreter.
  *
  * Copyright (C) 2002 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.h,v 1.2 2005/10/14 11:59:19 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinSendCom.h,v 1.3 2005/12/02 13:42:29 dkf Exp $
  */
 
 #ifndef _tkWinSendCom_h_INCLUDE
@@ -26,14 +26,14 @@
 #endif
 
 /*
- * TkWinSendCom CoClass structure 
+ * TkWinSendCom CoClass structure
  */
 
 typedef struct {
-    IDispatchVtbl         *lpVtbl;
+    IDispatchVtbl *lpVtbl;
     ISupportErrorInfoVtbl *lpVtbl2;
-    long                   refcount;
-    Tcl_Interp            *interp;
+    long refcount;
+    Tcl_Interp *interp;
 } TkWinSendCom;
 
 /*
@@ -47,16 +47,17 @@ typedef struct {
  * TkWinSendCom public functions
  */
 
-HRESULT TkWinSendCom_CreateInstance(Tcl_Interp *interp,
-                                    REFIID riid, void **ppv);
-int TkWinSend_QueueCommand(Tcl_Interp *interp, Tcl_Obj *cmdPtr);
-void SetExcepInfo(Tcl_Interp* interp, EXCEPINFO *pExcepInfo);
+HRESULT                 TkWinSendCom_CreateInstance(Tcl_Interp *interp,
+                            REFIID riid, void **ppv);
+int                     TkWinSend_QueueCommand(Tcl_Interp *interp,
+                            Tcl_Obj *cmdPtr);
+void                    SetExcepInfo(Tcl_Interp *interp,
+                            EXCEPINFO *pExcepInfo);
 
 #endif /* _tkWinSendCom_h_INCLUDE */
 
 /*
  * Local Variables:
- *  mode: c
- *  indent-tabs-mode: nil
+ * mode: c
  * End:
  */
