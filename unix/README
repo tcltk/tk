@@ -21,7 +21,7 @@ a PC running Windows, see the README file in the directory ../win.  To
 compile for Mac OS X, see the README file in the directory ../macosx.  To
 compile for a classic Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.19.2.1 2005/12/02 21:13:39 dgp Exp $
+RCS: @(#) $Id: README,v 1.19.2.2 2005/12/03 00:36:51 das Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -73,6 +73,11 @@ How To Compile And Install Tk:
 				should be reachable under several names.
 	--enable-man-compression=PROG
 				Compress the manpages using PROG.
+    Mac OS X only: 
+	--enable-framework	package Tk as a framework.
+	--disable-corefoundation disable use of CoreFoundation API.
+	--enable-aqua		use Aqua windowingsystem rather than X11,
+				requires --enable-corefoundation with tcl & tk.
 
     Note: by default gcc will be used if it can be located on the PATH.
     if you want to use cc instead of gcc, set the CC environment variable
