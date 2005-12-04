@@ -1,6 +1,10 @@
-2005-12-01  Don Porter  <dgp@users.sourceforge.net>
+2005-12-04  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.12 TAGGED FOR RELEASE ***
+
+	* mac/README: add note that mac classic port is no longer supported.
+
+2005-12-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Update changes for 8.4.12 release
 
