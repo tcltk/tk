@@ -3,7 +3,19 @@ Tk 8.4 for Macintosh
 Originally by Ray Johnson while at Sun Microsystems Labs
 with major help from Jim Ingham while at Cygnus Solutions
 
-RCS: @(#) $Id: README,v 1.17 2002/03/04 23:31:45 hobbs Exp $
+RCS: @(#) $Id: README,v 1.17.2.1 2005/12/04 00:51:29 das Exp $
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Note that Tk on Mac OS Classic is no longer supported and likely no longer
+compiles, the last release known to work is 8.4.2. The 'mac' source
+directory and all other Mac Classic code have been removed from Tk 8.5.
+
+The Mac OS X port of Tk can be found in the 'macosx' source directory.
+
+The information and URLs below are known to be outdated and incorrect.
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 1. Introduction
 ---------------
