@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.12.2.2 2005/09/14 23:27:02 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.12.2.3 2005/12/05 22:42:42 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -75,11 +75,11 @@ static void		DeleteSpecCacheTable _ANSI_ARGS_((
  */
 
 int
-Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
+Tk_ConfigureWidget(interp, tkwin, origSpecs, argc, argv, widgRec, flags)
     Tcl_Interp *interp;		/* Interpreter for error reporting. */
     Tk_Window tkwin;		/* Window containing widget (needed to
 				 * set up X resources). */
-    Tk_ConfigSpec *specs;	/* Describes legal options. */
+    Tk_ConfigSpec *origSpecs;	/* Describes legal options. */
     int argc;			/* Number of elements in argv. */
     CONST char **argv;		/* Command-line options. */
     char *widgRec;		/* Record whose fields are to be
@@ -90,7 +90,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 				 * for them to be considered.  Also,
 				 * may have TK_CONFIG_ARGV_ONLY set. */
 {
-    register Tk_ConfigSpec *specPtr;
+    register Tk_ConfigSpec *specs, *specPtr, *origSpecPtr;
     Tk_Uid value;		/* Value of option from database. */
     int needFlags;		/* Specs must contain this set of flags
 				 * or else they are not considered. */
@@ -114,10 +114,15 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
     }
 
     /*
-     * Get the build of the config for this interpreter.
+     * Get the build of the config for this interpreter and reset any
+     * indication of changed options.
      */
 
-    specs = GetCachedSpecs(interp, specs);
+    specs = GetCachedSpecs(interp, origSpecs);
+
+    for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {
+	specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
+    }
 
     /*
      * Pass one:  scan through all of the arguments, processing those
@@ -159,9 +164,18 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 	    Tcl_AddErrorInfo(interp, msg);
 	    return TCL_ERROR;
 	}
-	if (!(flags & TK_CONFIG_ARGV_ONLY)) {
-	    specPtr->specFlags |= TK_CONFIG_OPTION_SPECIFIED;
-	}
+	specPtr->specFlags |= TK_CONFIG_OPTION_SPECIFIED;
+    }
+
+    /*
+     * Thread Unsafe!  For compatibility through 8.4.x, we set the original
+     * specPtr flags to indicate changed options.  This has been removed
+     * from 8.5.  Switch to Tcl_Obj-based options instead. [Bug 749908]
+     */
+
+    for (origSpecPtr = origSpecs, specPtr = specs;
+	 specPtr->type != TK_CONFIG_END; origSpecPtr++, specPtr++) {
+	origSpecPtr->specFlags = specPtr->specFlags;
     }
 
     /*
@@ -176,7 +190,6 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 	    if ((specPtr->specFlags & TK_CONFIG_OPTION_SPECIFIED)
 		    || (specPtr->argvName == NULL)
 		    || (specPtr->type == TK_CONFIG_SYNONYM)) {
-		specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
 		continue;
 	    }
 	    if (((specPtr->specFlags & needFlags) != needFlags)
@@ -191,7 +204,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 		if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=
 			TCL_OK) {
 		    char msg[200];
-    
+
 		    sprintf(msg, "\n    (%s \"%.50s\" in widget \"%.50s\")",
 			    "database entry for",
 			    specPtr->dbName, Tk_PathName(tkwin));
@@ -209,7 +222,7 @@ Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags)
 		    if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=
 			    TCL_OK) {
 			char msg[200];
-	
+
 			sprintf(msg,
 				"\n    (%s \"%.50s\" in widget \"%.50s\")",
 				"default value for",
@@ -1136,7 +1149,6 @@ GetCachedSpecs(interp, staticSpecs)
 		    specPtr->defValue = Tk_GetUid(specPtr->defValue);
 		}
 	    }
-	    specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
 	}
     } else {
 	cachedSpecs = (Tk_ConfigSpec *) Tcl_GetHashValue(entryPtr);
