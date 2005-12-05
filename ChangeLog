@@ -1,3 +1,10 @@
+2005-12-05  Reinhard Max  <max@suse.de>
+
+	* unix/tkUnixEvent.c (OpenIM): Added a workaround to allow at
+	least ASCII and the Compose key when typing into text and entry
+	widgets on a system that uses SCIM. This has to be taken out again
+	once the SCIM problems have been fixed.
+
 2005-12-01  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4 (Darwin): fixed error when MACOSX_DEPLOYMENT_TARGET unset
