@@ -1,3 +1,10 @@
+2005-12-05  Reinhard Max  <max@tclers.tk>
+
+	* unix/tkUnixEvent.c (OpenIM): Added a workaround to allow at
+	least ASCII and the Compose key when typing into text and entry
+	widgets on a system that uses SCIM. This has to be taken out again
+	once the SCIM problems have been fixed.
+
 2005-12-04  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.12 TAGGED FOR RELEASE ***
