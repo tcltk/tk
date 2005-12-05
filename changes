@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.18.2.3 2005/01/19 02:32:06 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.64.2.18.2.4 2005/12/05 03:11:46 chengyemao Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5753,3 +5753,15 @@ implementation for embedding/embedded Tk (Windows). See Tk 8.5 changes
 tkStubInit.c, tkMacEmbed.c, tkMacOSXEmbed.c, tkUnixEmbed.c,	tkWin.h,
 tkWinEmbed.c, tkWinInt.h, tkWinMenu.c, tkWinWm.c and tkWinX.c. See Tk 8.5 
 changes (2005-01-07 to 2005-01-18) for details. (chengyemao)
+
+2005-11-30 Bug fixe back ported from Tk85 #1283635 crash manipulating transient
+windows (Windows): caused by calling TkInstallFrameMenu to a dead window in the
+function UpdateWrapper of tkWinWm.c
+
+2005-11-30 Bug fixe back ported from Tk85 #1311734 an embedded windows failed 
+to respond to display changes (Windows platform): need to recursively call
+InvalidateSubTreeDepth and InvalidateSubTree for an embedded window 
+int functions InvalidateSubTreeDepth and InvalidateSubTree of tkWinWm.c
+
+2005-11-30 Modified WmIconifyCmd to iconfy an embedded window properly.
+
