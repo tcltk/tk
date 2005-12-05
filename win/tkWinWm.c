@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.16.2.3 2005/01/31 04:09:49 chengyemao Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.16.2.4 2005/12/05 03:10:26 chengyemao Exp $
  */
 
 #include "tkWinInt.h"
@@ -2112,7 +2112,8 @@ UpdateWrapper(winPtr)
 	wmPtr->x = place.rcNormalPosition.left;
 	wmPtr->y = place.rcNormalPosition.top;
 
-	TkInstallFrameMenu((Tk_Window) winPtr);
+	if( !(winPtr->flags & TK_ALREADY_DEAD) ) 
+	    TkInstallFrameMenu((Tk_Window) winPtr);
 
 	if (oldWrapper && (oldWrapper != wmPtr->wrapper)
 		&& !(wmPtr->exStyle & WS_EX_TOPMOST)) {
@@ -3791,6 +3792,13 @@ WmIconifyCmd(tkwin, winPtr, interp, objc, objv)
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
     }
+    if (winPtr->flags & TK_EMBEDDED) {
+	if(!SendMessage(wmPtr->wrapper, TK_ICONIFY, 0, 0)) {
+	    Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
+		": the container does not support the request", (char *) NULL);
+	    return TCL_ERROR;
+	}
+    }
     if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
 	Tcl_AppendResult(interp, "can't iconify \"", winPtr->pathName,
 		"\": override-redirect flag is set", (char *) NULL);
@@ -3806,13 +3814,6 @@ WmIconifyCmd(tkwin, winPtr, interp, objc, objv)
 		": it is an icon for ", Tk_PathName(wmPtr->iconFor),
 		(char *) NULL);
 	return TCL_ERROR;
-    }
-    if (winPtr->flags & TK_EMBEDDED) {
-	if(!SendMessage(wmPtr->wrapper, TK_ICONIFY, 0, 0)) {
-	    Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
-		": the container does not support the request", (char *) NULL);
-	    return TCL_ERROR;
-	}
     }
     TkpWmSetState(winPtr, IconicState);
     return TCL_OK;
@@ -7058,7 +7059,7 @@ InvalidateSubTree(winPtr, colormap)
 	 * toplevel window.
 	 */
 
-	if (!Tk_TopWinHierarchy(childPtr) && Tk_IsMapped(childPtr)) {
+	if (childPtr->flags & TK_EMBEDDED || !Tk_TopWinHierarchy(childPtr) && Tk_IsMapped(childPtr)) {
 	    InvalidateSubTree(childPtr, colormap);
 	}
     }
@@ -7114,7 +7115,7 @@ InvalidateSubTreeDepth(winPtr)
 	 * should get its own message.
 	 */
 
-	if (!Tk_TopWinHierarchy(childPtr)) {
+	if (childPtr->flags & TK_EMBEDDED || !Tk_TopWinHierarchy(childPtr)) {
 	    InvalidateSubTreeDepth(childPtr);
 	}
     }
