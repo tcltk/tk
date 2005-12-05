@@ -1,3 +1,12 @@
+2005-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	*** 8.4.12 TAGGED FOR RELEASE ***
+
+	* generic/tkOldConfig.c (Tk_ConfigureWidget): fix the handling of
+	TK_CONFIG_OPTION_SPECIFIED to be flagged appropriately in original
+	Tk_ConfigSpec.  This is *not* thread safe, but will be retained
+	for 8.4.x and left out of 8.5.x. [Bug 749908]
+
 2005-12-05  Reinhard Max  <max@tclers.tk>
 
 	* unix/tkUnixEvent.c (OpenIM): Added a workaround to allow at
@@ -6,8 +15,6 @@
 	once the SCIM problems have been fixed.
 
 2005-12-04  Daniel Steffen  <das@users.sourceforge.net>
-
-	*** 8.4.12 TAGGED FOR RELEASE ***
 
 	* mac/README: add note that mac classic port is no longer supported.
 
