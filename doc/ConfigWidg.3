@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.13 2005/04/06 21:11:53 dkf Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.14 2005/12/06 09:16:10 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -415,12 +415,14 @@ once, save the value, and provide it before calling
 \fBTk_ConfigureWidget\fR.
 .TP
 \fBTK_CONFIG_OPTION_SPECIFIED\fR
-This bit is set and cleared by \fBTk_ConfigureWidget\fR.  Whenever
-\fBTk_ConfigureWidget\fR returns, this bit will be set in all the
-entries where a value was specified in \fIargv\fR.
-It will be zero in all other entries.
-This bit provides a way for clients to determine which values
-actually changed in a call to \fBTk_ConfigureWidget\fR.
+This bit is
+.VS 8.5
+deprecated. It used to be set and cleared by \fBTk_ConfigureWidget\fR
+so that callers could detect what entries were specified in
+\fIargv\fR, but it was removed because it was inherently
+thread-unsafe. Code that wishes to detect what options were specified
+should use \fBTk_SetOptions\fR instead.
+.VE 8.5
 .PP
 The \fBTK_CONFIG_MONO_ONLY\fR and \fBTK_CONFIG_COLOR_ONLY\fR flags are typically
 used to specify different default values for
