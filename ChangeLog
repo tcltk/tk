@@ -1,3 +1,7 @@
+2005-12-07  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixEvent.c (OpenIM): remove extraneous const
+
 2005-12-06  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* doc/ConfigWidg.3 (TK_CONFIG_OPTION_SPECIFIED): Mentioned that the

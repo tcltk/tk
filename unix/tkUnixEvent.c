@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.18 2005/12/05 17:02:02 rmax Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.19 2005/12/07 17:32:52 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -650,7 +650,7 @@ OpenIM(
     while ((modifiers = strchr(modifiers, '@')) != NULL) {
 	if (strncmp(modifiers, "@im=", 4) == 0) {
 	    /* The first "@im=" entry wins */
-	    const char const *scim = "@im=SCIM";
+	    const char *scim = "@im=SCIM";
 	    if (strncmp(modifiers, scim, strlen(scim)) == 0) {
 		/* If it is SCIM, we override it */
 		if (XSetLocaleModifiers("@im=local") == NULL) {
