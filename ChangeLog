@@ -1,11 +1,16 @@
+2005-12-08  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkTextTag.c (TkTextTagCmd): use correct arraySize for
+	peered text widgets in [$text tag names]. [Bug 1375069 1374935]
+
 2005-12-08  Daniel Steffen  <das@users.sourceforge.net>
 
-        * macosx/tkMacOSXDraw.c:   remove inclusion of tclInt.h and use of tcl
-        * macosx/tkMacOSXFont.c:   internals wherever possible in tk/macosx, the
-        * macosx/tkMacOSXInit.c:   only remaining tcl internals in TkAqua are
-        * macosx/tkMacOSXNotify.c: TclServiceIdle() in tkMacOSXScrlbr.c and
-        * macosx/tkMacOSXScrlbr.c: Tcl_Get/SetStartupScript() in tkMacOSXInit.c
-	                           [Bug 1336531].
+	* macosx/tkMacOSXDraw.c:  remove inclusion of tclInt.h and use of tcl
+	* macosx/tkMacOSXFont.c:  internals wherever possible in tk/macosx, the
+	* macosx/tkMacOSXInit.c:  only remaining tcl internals in TkAqua are
+	* macosx/tkMacOSXNotify.c: TclServiceIdle() in tkMacOSXScrlbr.c and
+	* macosx/tkMacOSXScrlbr.c: Tcl_Get/SetStartupScript() in tkMacOSXInit.c
+				   [Bug 1336531].
 
 	* macosx/tkMacOSXInt.h: sync comments with core-8-4-branch.
 
