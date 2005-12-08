@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.12 2005/12/01 06:24:16 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.13 2005/12/08 05:04:15 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -141,7 +141,7 @@ MODULE_SCOPE int tkUseMenuCascadeRgn;	/* If this is 1, clipping code
 MODULE_SCOPE int tkPictureIsOpen;	/* If this is 1, we are drawing to a
 					 * picture The clipping should then be
 					 * done relative to the bounds of the
-					 * picture rather than the window As
+					 * picture rather than the window. As
 					 * of OS X.0.4, something is seriously
 					 * wrong: The clipping bounds only
 					 * seem to work if the top,left values
