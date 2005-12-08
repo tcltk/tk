@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.22 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.23 2005/12/08 18:17:32 hobbs Exp $
  */
 
 #include "default.h"
@@ -624,7 +624,7 @@ TkTextTagCmd(
 	     */
 
 	    arrayPtr[i] = textPtr->selTagPtr;
-	    arraySize = textPtr->sharedTextPtr->numTags;
+	    arraySize = ++i;
 	} else {
 	    if (TkTextGetObjIndex(interp, textPtr, objv[3],
 		    &index1) != TCL_OK) {
