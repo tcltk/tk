@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.64 2005/12/01 02:03:58 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.65 2005/12/08 20:25:42 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -563,7 +563,7 @@ cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 $(CAT32): cat32.${OBJEXT}
-	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LDFLAGS_CONSOLE)
+	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LIBS) $(LDFLAGS_CONSOLE)
 
 # The following targets are configured by autoconf to generate either
 # a shared library or static library
@@ -622,7 +622,8 @@ clean: cleanhelp
 	$(RM) *.pch *.ilk *.pdb
 
 distclean: clean
-	$(RM) Makefile config.status config.cache config.log tkConfig.sh
+	$(RM) Makefile config.status config.cache config.log tkConfig.sh \
+		wish.exe.manifest
 
 Makefile: $(SRC_DIR)/Makefile.in
 	./config.status
