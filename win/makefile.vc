@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.89 2005/03/08 21:55:49 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.90 2005/12/08 20:25:42 hobbs Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -113,7 +113,7 @@ the build instructions.
 #		fullwarn = Builds with full compiler and link warnings enabled.
 #			    Very verbose.
 #
-#	MACHINE=(IX86|IA64|ALPHA)
+#	MACHINE=(IX86|IA64|AMD64|ALPHA)
 #		Set the machine type used for the compiler, linker, and
 #		resource compiler.  This hook is needed to tell the tools
 #		when alternate platforms are requested.  IX86 is the default
@@ -465,6 +465,11 @@ conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
 
 baselibs  = kernel32.lib user32.lib
+# Avoid 'unresolved external symbol __security_cookie' errors.
+# c.f. http://support.microsoft.com/?id=894573
+!if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
+baselibs   = $(baselibs) bufferoverflowU.lib
+!endif
 guilibs	  = $(baselibs) gdi32.lib
 
 
@@ -721,6 +726,22 @@ $(TMP_DIR)\tkStubImg.obj : $(GENERICDIR)\tkStubImg.c
 # Dedependency rules
 #---------------------------------------------------------------------
 
+$(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
+       $(TCLSH) <<
+set f [open {$(WINDIR:\=/)/wish.exe.manifest.in} r]
+set data [read $$f]
+close $$f
+set mach {$(MACHINE)}
+if {[regexp -nocase {$(IX86)$$} $mach ]} {set mach X86}
+set winver "$(DOTVERSION).0.0"
+set data [string map [list @MACHINE@ $$mach @TK_WIN_VERSION@ $$winver] $$data]
+puts {Creating $(TMP_DIR:\=/)/wish.exe.manifest}
+set f [open {$(TMP_DIR:\=/)/wish.exe.manifest} w]
+puts -nonewline $$f $$data
+close $$f
+exit
+<<
+
 $(TMP_DIR)\tk.res: \
     $(RCDIR)\buttons.bmp \
     $(RCDIR)\cursor*.cur \
@@ -794,11 +815,14 @@ $<
 <<
 
 {$(RCDIR)}.rc{$(TMP_DIR)}.res:
-	$(rc32) -fo $@ -r -i "$(GENERICDIR)" $(TCL_INCLUDES) \
+	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" $(TCL_INCLUDES) \
 	    -d DEBUG=$(DEBUG) -d UNCHECKED=$(UNCHECKED) \
 	    -d TCL_THREADS=$(TCL_THREADS) \
 	    -d STATIC_BUILD=$(STATIC_BUILD) \
 	    $<
+
+$(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
+$(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
 
 .SUFFIXES:
 .SUFFIXES:.c .rc

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
 <assemblyIdentity
-	version="8.5.0.0"
-	processorArchitecture="X86"
+	version="@TK_WIN_VERSION@"
+	processorArchitecture="@MACHINE@"
 	name="Tcl.Tk.wish"
 	type="win32"
 />
@@ -13,7 +13,7 @@
 	type="win32"
 	name="Microsoft.Windows.Common-Controls"
 	version="6.0.0.0"
-	processorArchitecture="X86"
+	processorArchitecture="@MACHINE@"
 	publicKeyToken="6595b64144ccf1df"
 	language="*"
 />
