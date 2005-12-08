@@ -11,11 +11,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.10 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.11 2005/12/08 07:50:14 das Exp $
  */
 #include <Carbon/Carbon.h>
-
-#include "tclInt.h"
 
 #include "tkMacOSXInt.h"
 #include "tkFont.h"
