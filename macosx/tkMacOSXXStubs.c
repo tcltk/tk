@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.10 2005/11/30 01:02:55 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.11 2005/12/08 05:04:35 das Exp $
  */
 
 #include "tkInt.h"
@@ -854,11 +854,11 @@ TkMacOSXXPutPixel(
     b  = (pixel & image->blue_mask);
     if (image->obdata) {
         /* Image from XGetImage, 16 bit color values */
-        cPix . red = r << 8;  
+        cPix . red = r << 8;
         cPix . green = g << 8;
         cPix . blue = b << 8;
     } else {
-        cPix . red = r;  
+        cPix . red = r;
         cPix . green = g;
         cPix . blue = b;
     }
@@ -965,7 +965,7 @@ XSetWindowColormap(
     Debugger();
 }
 
-Status		
+Status
 XStringListToTextProperty(
     char** list, 
     int count, 

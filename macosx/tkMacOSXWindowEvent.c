@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.6 2005/11/30 01:02:55 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.7 2005/12/08 05:04:35 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -129,10 +129,10 @@ TkMacOSXProcessApplicationEvent(
             statusPtr->stopProcessing = 1;
             break;
         case kEventAppHidden:
-	    /*
-	     * Don't bother if we don't have an interp or
-	     * the show preferences procedure doesn't exist.
-	     */
+        /*
+         * Don't bother if we don't have an interp or
+         * the show preferences procedure doesn't exist.
+         */
             toggleHide = 1;
             if ((eventPtr->interp == NULL) || 
                     (Tcl_GetCommandInfo(eventPtr->interp, 
@@ -247,11 +247,11 @@ TkMacOSXProcessWindowEvent(
     return 0;
 }
 
-/*         
+/*
  *----------------------------------------------------------------------
- *                      
+ *
  * GenerateUpdateEvent --
- *                      
+ *
  *      Given a Macintosh window update event this function generates all the
  *      X update events needed by Tk.
  *
