@@ -12,10 +12,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5.2.7 2005/11/27 02:36:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.5.2.8 2005/12/08 07:50:30 das Exp $
  */
 
-#include "tclInt.h"
 #include "tkInt.h"
 #include "tkMacOSXEvent.h"
 #include <pthread.h>
@@ -54,7 +53,8 @@ static void CarbonEventsCheckProc(ClientData clientData, int flags);
 void
 Tk_MacOSXSetupTkNotifier()
 {
-    ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
+    ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey,
+	    sizeof(ThreadSpecificData));
     
     if (!tsdPtr->initialized) {
         /* HACK ALERT: There is a bug in Jaguar where when it goes to make
@@ -107,7 +107,8 @@ static void
 TkMacOSXNotifyExitHandler(clientData)
     ClientData clientData;	/* Not used. */
 {
-    ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
+    ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey,
+	    sizeof(ThreadSpecificData));
 
     Tcl_DeleteEventSource(CarbonEventsSetupProc, 
             CarbonEventsCheckProc, GetMainEventQueue());
