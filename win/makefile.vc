@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.90 2005/12/08 20:25:42 hobbs Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.91 2005/12/08 22:14:15 hobbs Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -229,8 +229,7 @@ WISHOBJS = \
 TKTESTOBJS = \
 	$(TMP_DIR)\tkTest.obj \
 	$(TMP_DIR)\tkSquare.obj \
-	$(TMP_DIR)\testMain.obj \
-	$(TMP_DIR)\tkWinTest.obj
+	$(TMP_DIR)\testMain.obj
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
@@ -265,6 +264,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinScrlbr.obj \
 	$(TMP_DIR)\tkWinSend.obj \
 	$(TMP_DIR)\tkWinSendCom.obj \
+	$(TMP_DIR)\tkWinTest.obj \
 	$(TMP_DIR)\tkWinWindow.obj \
 	$(TMP_DIR)\tkWinWm.obj \
 	$(TMP_DIR)\tkWinX.obj \
@@ -698,9 +698,6 @@ $(TMP_DIR)\testMain.obj: $(WINDIR)\winMain.c
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
-
-$(TMP_DIR)\tkWinTest.obj: $(WINDIR)\tkWinTest.c
 	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
 
 $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
