@@ -11,10 +11,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.7 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.8 2005/12/08 07:50:13 das Exp $
  */
 
-#include "tclInt.h"
 #include "tkInt.h"
 #include "X11/X.h"
 #include "X11/Xlib.h"
