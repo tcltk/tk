@@ -11,12 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.6 2005/10/18 00:41:19 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.7 2005/12/08 07:50:30 das Exp $
  */
 
 #include "tkScrollbar.h"
 #include "tkMacOSXInt.h"
-#include "tclInt.h"
+#include "tclInt.h" /* for TclServiceIdle() */
 
 #include <Carbon/Carbon.h>
 
