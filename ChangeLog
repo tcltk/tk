@@ -1,5 +1,13 @@
 2005-12-08  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tcl.m4:       Add build support for Windows-x64 builds.
+	* win/configure:    --enable-64bit now accepts =amd64|ia64 for
+	* win/Makefile.in:  Windows 64-bit build variants (default: amd64)
+	* win/makefile.vc:  [Bug 1369597]
+	* win/configure.in: Add CE build support (some C code fixes needed)
+	* win/wish.exe.manifest.in (new):     manifest must map in MACHINE
+	* win/rc/wish.exe.manifest (removed): and VERSION to be correct.
+
 	* generic/tkTextTag.c (TkTextTagCmd): use correct arraySize for
 	peered text widgets in [$text tag names]. [Bug 1375069 1374935]
 
