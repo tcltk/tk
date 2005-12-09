@@ -1,3 +1,16 @@
+2005-12-09  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkInt.decls:   move all platform test sources from tk lib into
+	* generic/tkTest.c:      tktest directly, removes requirement to export
+	* macosx/tkMacOSXTest.c: TkplatformtestInit from internal stubs table.
+	* unix/Makefile.in:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/tkWinTest.c:
+	
+	* generic/tkIntPlatDecls.h:
+	* generic/tkStubInit.c: regen.
+
 2005-12-08  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tcl.m4:       Add build support for Windows-x64 builds.
@@ -16,9 +29,9 @@
 
 2005-12-08  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXDraw.c:  remove inclusion of tclInt.h and use of tcl
-	* macosx/tkMacOSXFont.c:  internals wherever possible in tk/macosx, the
-	* macosx/tkMacOSXInit.c:  only remaining tcl internals in TkAqua are
+	* macosx/tkMacOSXDraw.c:   remove inclusion of tclInt.h and use of tcl
+	* macosx/tkMacOSXFont.c:   internals wherever possible in tk/macosx, the
+	* macosx/tkMacOSXInit.c:   only remaining tcl internals in TkAqua are
 	* macosx/tkMacOSXNotify.c: TclServiceIdle() in tkMacOSXScrlbr.c and
 	* macosx/tkMacOSXScrlbr.c: Tcl_Get/SetStartupScript() in tkMacOSXInit.c
 				   [Bug 1336531].

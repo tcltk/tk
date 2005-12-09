@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.29 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.30 2005/12/09 00:48:54 das Exp $
  */
 
 #include "tkInt.h"
@@ -217,6 +217,8 @@ static void		TrivialEventProc(ClientData clientData,
 
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
+#else
+MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
 
 /*

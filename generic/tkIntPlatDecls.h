@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.25 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.26 2005/12/09 00:48:54 das Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -229,11 +229,6 @@ EXTERN void		TkWinSetHINSTANCE _ANSI_ARGS_((HINSTANCE hInstance));
 #define TkWinGetPlatformTheme_TCL_DECLARED
 /* 35 */
 EXTERN int		TkWinGetPlatformTheme _ANSI_ARGS_((void));
-#endif
-#ifndef TkplatformtestInit_TCL_DECLARED
-#define TkplatformtestInit_TCL_DECLARED
-/* 36 */
-EXTERN int		TkplatformtestInit _ANSI_ARGS_((Tcl_Interp * interp));
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
@@ -500,11 +495,6 @@ EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
 /* 53 */
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
 #endif
-#ifndef TkplatformtestInit_TCL_DECLARED
-#define TkplatformtestInit_TCL_DECLARED
-/* 54 */
-EXTERN int		TkplatformtestInit _ANSI_ARGS_((Tcl_Interp * interp));
-#endif
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
 #ifndef TkCreateXEventSource_TCL_DECLARED
@@ -627,7 +617,6 @@ typedef struct TkIntPlatStubs {
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
     void (*tkWinSetHINSTANCE) _ANSI_ARGS_((HINSTANCE hInstance)); /* 34 */
     int (*tkWinGetPlatformTheme) _ANSI_ARGS_((void)); /* 35 */
-    int (*tkplatformtestInit) _ANSI_ARGS_((Tcl_Interp * interp)); /* 36 */
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
@@ -684,7 +673,6 @@ typedef struct TkIntPlatStubs {
     void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 51 */
     void *reserved52;
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 53 */
-    int (*tkplatformtestInit) _ANSI_ARGS_((Tcl_Interp * interp)); /* 54 */
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 0 */
@@ -859,10 +847,6 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkWinGetPlatformTheme
 #define TkWinGetPlatformTheme \
 	(tkIntPlatStubsPtr->tkWinGetPlatformTheme) /* 35 */
-#endif
-#ifndef TkplatformtestInit
-#define TkplatformtestInit \
-	(tkIntPlatStubsPtr->tkplatformtestInit) /* 36 */
 #endif
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
@@ -1057,10 +1041,6 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkpGetMS
 #define TkpGetMS \
 	(tkIntPlatStubsPtr->tkpGetMS) /* 53 */
-#endif
-#ifndef TkplatformtestInit
-#define TkplatformtestInit \
-	(tkIntPlatStubsPtr->tkplatformtestInit) /* 54 */
 #endif
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
