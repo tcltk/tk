@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.41 2005/11/27 02:36:13 das Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.42 2005/12/09 00:48:52 das Exp $
 
 library tk
 
@@ -693,10 +693,6 @@ declare 34 win {
 declare 35 win {
     int TkWinGetPlatformTheme(void)
 }
-# only needed by tktest:
-declare 36 win {
-    int TkplatformtestInit(Tcl_Interp *interp)
-}
 
 ########################
 # Mac OS X specific functions
@@ -878,10 +874,6 @@ declare 51 aqua {
 
 declare 53 aqua {
     unsigned long TkpGetMS(void)
-}
-# only needed by tktest:
-declare 54 aqua {
-    int TkplatformtestInit(Tcl_Interp *interp)
 }
 
 ##############################################################################
