@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.10 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.11 2005/12/09 00:48:54 das Exp $
  */
 
 #include "tkWinInt.h"
@@ -27,7 +27,9 @@ static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Obj *CONST objv[]);
 static int		TestwineventCmd(ClientData clientData,
 			    Tcl_Interp *interp, int argc, CONST char **argv);
+MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 
+
 /*
  *----------------------------------------------------------------------
  *

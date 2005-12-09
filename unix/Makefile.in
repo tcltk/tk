@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.110 2005/12/08 21:13:17 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.111 2005/12/09 00:48:54 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -332,7 +332,7 @@ ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
 
 WISH_OBJS = tkAppInit.o
 
-TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o
+TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o $(@TK_WINDOWINGSYSTEM@_TKTEST_OBJS)
 
 WIDG_OBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
 	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o \
@@ -374,10 +374,12 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXKeyboard.o tkMacOSXKeyEvent.o tkMacOSXMenu.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
-	tkMacOSXSubwindows.o tkMacOSXTest.o tkMacOSXWindowEvent.o \
+	tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
 	tkMacOSXWm.o tkMacOSXXStubs.o tkMacOSXCarbonEvents.o \
 	tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o tkUnixScale.o \
 	xcolors.o xdraw.o xgc.o ximage.o xutil.o
+
+AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(@TK_WINDOWINGSYSTEM@_OBJS) @PLAT_OBJS@
@@ -1213,7 +1215,7 @@ tkMacOSXSubwindows.o: $(MAC_OSX_DIR)/tkMacOSXSubwindows.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSubwindows.c
 
 tkMacOSXTest.o: $(MAC_OSX_DIR)/tkMacOSXTest.c
-	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXTest.c
+	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(MAC_OSX_DIR)/tkMacOSXTest.c
 
 tkMacOSXWindowEvent.o: $(MAC_OSX_DIR)/tkMacOSXWindowEvent.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXWindowEvent.c

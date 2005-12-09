@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.65 2005/12/08 20:25:42 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.66 2005/12/09 00:48:54 das Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -233,7 +233,8 @@ WISH_OBJS = \
 TKTEST_OBJS = \
 	testMain.$(OBJEXT) \
 	tkSquare.$(OBJEXT) \
-	tkTest.$(OBJEXT)
+	tkTest.$(OBJEXT) \
+	tkWinTest.$(OBJEXT)
 
 XLIB_OBJS = \
 	xcolors.$(OBJEXT) \
@@ -268,7 +269,6 @@ TK_OBJS = \
 	tkWinScrlbr.$(OBJEXT) \
 	tkWinSend.$(OBJEXT) \
 	tkWinSendCom.$(OBJEXT) \
-	tkWinTest.$(OBJEXT) \
 	tkWinWindow.$(OBJEXT) \
 	tkWinWm.$(OBJEXT) \
 	tkWinX.$(OBJEXT) \
@@ -591,6 +591,9 @@ testMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ -DTK_TEST $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
+
+tkWinTest.$(OBJEXT): tkWinTest.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkSquare.$(OBJEXT): tkSquare.c

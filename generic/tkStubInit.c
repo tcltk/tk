@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.54 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.55 2005/12/09 00:48:54 das Exp $
  */
 
 #include "tkInt.h"
@@ -348,7 +348,6 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkWinGetPlatformId, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
     TkWinGetPlatformTheme, /* 35 */
-    TkplatformtestInit, /* 36 */
 #endif /* __WIN32__ */
 #ifdef MAC_OSX_TK
     TkGenerateActivateEvents, /* 0 */
@@ -405,7 +404,6 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkGenWMDestroyEvent, /* 51 */
     NULL, /* 52 */
     TkpGetMS, /* 53 */
-    TkplatformtestInit, /* 54 */
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
