@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.106 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.107 2005/12/10 01:42:01 mdejong Exp $
  */
 
 #include "tkWinInt.h"
@@ -1091,41 +1091,24 @@ WinSetIcon(
 	    }
 	} else {
 	    ThreadSpecificData *tsdPtr;
-
-	    if (
+	    /*
+	     * Don't check return result of SetClassLong() or
+	     * SetClassLongPtr() since they return the previously
+	     * set value which is zero on the initial call or in
+	     * an error case. The MSDN documentation does not
+	     * indicate that the result needs to be checked.
+	     */
 #ifdef _WIN64
-		    !SetClassLongPtr(hwnd, GCLP_HICONSM,
-			    (LPARAM)GetIcon(titlebaricon, ICON_SMALL))
+	    SetClassLongPtr(hwnd, GCLP_HICONSM,
+	        (LPARAM)GetIcon(titlebaricon, ICON_SMALL));
+	    SetClassLongPtr(hwnd, GCLP_HICON,
+	        (LPARAM)GetIcon(titlebaricon, ICON_BIG));
 #else
-		    !SetClassLong(hwnd, GCL_HICONSM,
-			    (LPARAM)GetIcon(titlebaricon, ICON_SMALL))
+	    SetClassLong(hwnd, GCL_HICONSM,
+	        (LPARAM)GetIcon(titlebaricon, ICON_SMALL));
+	    SetClassLong(hwnd, GCL_HICON,
+	        (LPARAM)GetIcon(titlebaricon, ICON_BIG));
 #endif
-		    ) {
-		/*
-		 * For some reason this triggers, even though it seems to be
-		 * successful. This is probably related to the WNDCLASS vs
-		 * WNDCLASSEX difference. Anyway it seems we have to ignore
-		 * errors returned here.
-		 */
-
-		/*
-		Tcl_AppendResult(interp,"Unable to set new small icon",NULL);
-		return TCL_ERROR;
-		*/
-	    }
-
-	    if (
-#ifdef _WIN64
-		    !SetClassLongPtr(hwnd, GCLP_HICON,
-			    (LPARAM)GetIcon(titlebaricon, ICON_BIG))
-#else
-		    !SetClassLong(hwnd, GCL_HICON,
-			    (LPARAM)GetIcon(titlebaricon, ICON_BIG))
-#endif
-		    ) {
-		Tcl_AppendResult(interp, "Unable to set new icon", NULL);
-		return TCL_ERROR;
-	    }
 	    tsdPtr = (ThreadSpecificData *)
 		    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 	    if (tsdPtr->iconPtr != NULL) {

@@ -1,5 +1,13 @@
 2005-12-09  Mo DeJong  <mdejong@users.sourceforge.net>
 
+	* win/tkWinWm.c (WinSetIcon): Don't check result
+	of SetClassLong() or SetClassLongPtr() since
+	it was generating an incorrect error and
+	the MSDN docs indicate that the result need
+	not be checked.
+
+2005-12-09  Mo DeJong  <mdejong@users.sourceforge.net>
+
 	* win/configure: Regen.
 	* win/tcl.m4 (SC_CONFIG_CFLAGS): Define MACHINE
 	for gcc builds. The lack of a definition of this
