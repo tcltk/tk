@@ -1,14 +1,19 @@
+2005-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tcl.m4, unix/configure: Fix sh quoting error reported in
+	bash-3.1+ [Bug 1377619] (schafer)
+
 2005-12-08  Daniel Steffen  <das@users.sourceforge.net>
 
-        * macosx/tkMacOSXDraw.c:   remove inclusion of tclInt.h and use of tcl
-        * macosx/tkMacOSXFont.c:   internals wherever possible in tk/macosx, the
-        * macosx/tkMacOSXInit.c:   only remaining tcl internals in TkAqua are
-        * macosx/tkMacOSXNotify.c: TclServiceIdle() in tkMacOSXScrlbr.c and
-        * macosx/tkMacOSXScrlbr.c: Tcl_Get/SetStartupScript() in tkMacOSXInit.c
-	                           [Bug 1336531].
-        * macosx/tkMacOSXInt.h:
-        * macosx/tkMacOSXWindowEvent.c:
-        * macosx/tkMacOSXXStubs.c: sync comments/whitespace with HEAD.
+	* macosx/tkMacOSXDraw.c:  remove inclusion of tclInt.h and use of tcl
+	* macosx/tkMacOSXFont.c:  internals wherever possible in tk/macosx, the
+	* macosx/tkMacOSXInit.c:  only remaining tcl internals in TkAqua are
+	* macosx/tkMacOSXNotify.c: TclServiceIdle() in tkMacOSXScrlbr.c and
+	* macosx/tkMacOSXScrlbr.c: Tcl_Get/SetStartupScript() in tkMacOSXInit.c
+				   [Bug 1336531].
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXXStubs.c: sync comments/whitespace with HEAD.
 
 2005-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
