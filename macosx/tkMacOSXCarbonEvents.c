@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.7 2005/12/01 06:24:16 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.8 2005/12/13 03:44:34 das Exp $
  */
 
 #include "tkInt.h"
@@ -193,6 +193,7 @@ TkMacOSXInitCarbonEvents (
 	    {kEventClassMenu,		kEventMenuBeginTracking},
 	    {kEventClassMenu,		kEventMenuEndTracking},
 	    {kEventClassCommand,	kEventCommandProcess},
+	    {kEventClassMouse,		kEventMouseWheelMoved},
 	    {kEventClassWindow,		kEventWindowExpanded},
 	    {kEventClassApplication,	kEventAppHidden},
 	    {kEventClassApplication,	kEventAppShown},
@@ -231,6 +232,7 @@ TkMacOSXInitCarbonEvents (
 	_TraceEventByName(CFSTR("kEventMouseDown"));
 	_TraceEventByName(CFSTR("kEventMouseUp"));
 	_TraceEventByName(CFSTR("kEventMouseWheelMoved"));
+	_TraceEventByName(CFSTR("kEventMouseScroll"));
 	_TraceEventByName(CFSTR("kEventWindowUpdate"));
 	_TraceEventByName(CFSTR("kEventWindowActivated"));
 	_TraceEventByName(CFSTR("kEventWindowDeactivated"));
