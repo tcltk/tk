@@ -1,3 +1,16 @@
+2005-12-13  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/demos/cscroll.tcl: add MouseWheel bindings for aqua.
+
+	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents):
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent,
+	GenerateMouseWheelEvent): add support for kEventMouseScroll events
+	(smooth mouse wheel scrolling from mighty mouse or scrolling trackpad)
+	by handling kEventMouseWheelMoved on application target as well as on
+	dispatcher, in order to pick up synthesized MouseWheel events from
+	HIObject handler (c.f. QA1453); add support for horizontal scrolling
+	events by generating MouseWheel XEvent with Shift modifier.
+
 2005-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tcl.m4, unix/configure: Fix sh quoting error reported in
@@ -10,7 +23,7 @@
 	* macosx/tkMacOSXInit.c:  only remaining tcl internals in TkAqua are
 	* macosx/tkMacOSXNotify.c: TclServiceIdle() in tkMacOSXScrlbr.c and
 	* macosx/tkMacOSXScrlbr.c: Tcl_Get/SetStartupScript() in tkMacOSXInit.c
-				   [Bug 1336531].
+				   [RFE 1336531].
 	* macosx/tkMacOSXInt.h:
 	* macosx/tkMacOSXWindowEvent.c:
 	* macosx/tkMacOSXXStubs.c: sync comments/whitespace with HEAD.
