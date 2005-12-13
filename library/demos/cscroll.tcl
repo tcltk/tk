@@ -3,7 +3,7 @@
 # This demonstration script creates a simple canvas that can be
 # scrolled in two dimensions.
 #
-# RCS: @(#) $Id: cscroll.tcl,v 1.5 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: cscroll.tcl,v 1.6 2005/12/13 03:44:34 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -60,6 +60,20 @@ $c bind all <Any-Leave> "scrollLeave $c"
 $c bind all <1> "scrollButton $c"
 bind $c <2> "$c scan mark %x %y"
 bind $c <B2-Motion> "$c scan dragto %x %y"
+if {[tk windowingsystem] eq "aqua"} {
+    bind $c <MouseWheel> {
+        %W yview scroll [expr {- (%D)}] units
+    }
+    bind $c <Option-MouseWheel> {
+        %W yview scroll [expr {-10 * (%D)}] units
+    }
+    bind $c <Shift-MouseWheel> {
+        %W xview scroll [expr {- (%D)}] units
+    }
+    bind $c <Shift-Option-MouseWheel> {
+        %W xview scroll [expr {-10 * (%D)}] units
+    }
+}
 
 proc scrollEnter canvas {
     global oldFill

@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.15 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.16 2005/12/13 03:44:34 das Exp $
  */
 
 #include "tkInt.h"
@@ -128,7 +128,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     Point	   where, where2;
     int		   xOffset, yOffset, result;
     TkDisplay *	   dispPtr;
-    OSStatus	    status;
+    OSStatus	   status;
     MouseEventData mouseEventData, * medPtr = &mouseEventData;
 
     switch (eventPtr->eKind) {
@@ -208,17 +208,24 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     }
     if (eventPtr->eKind == kEventMouseWheelMoved) {
 	status = GetEventParameter(eventPtr->eventRef,
-		kEventParamMouseWheelDelta,
-		typeLongInteger, NULL,
+		kEventParamMouseWheelDelta, typeLongInteger, NULL,
 		sizeof(long), NULL, &medPtr->delta);
 	if (status != noErr ) {
 #ifdef TK_MAC_DEBUG
-	     fprintf (stderr,
-		 "Failed to retrieve mouse wheel delta, %d\n", (int) status);
+	    fprintf (stderr,
+		"Failed to retrieve mouse wheel delta, %d\n", (int) status);
 #endif
-	     statusPtr->err = 1;
-	     return false;
-	 }
+	    statusPtr->err = 1;
+	    return false;
+	} else {
+	    EventMouseWheelAxis axis;
+	    status = GetEventParameter(eventPtr->eventRef,
+		    kEventParamMouseWheelAxis, typeMouseWheelAxis, NULL,
+		    sizeof(EventMouseWheelAxis), NULL, &axis);
+	    if (status == noErr && axis == kEventMouseWheelAxisX) {
+		 medPtr->state |= ShiftMask;
+	    }
+	}
     }
 
     dispPtr = TkGetDisplayList();
@@ -226,11 +233,15 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 
     if (eventPtr->eKind != kEventMouseDown) {
 	/*
-	 * MouseMoved, MouseDragged or kEventMouseWheelMoved 
+	 * MouseMoved, MouseDragged or MouseWheelMoved 
 	 */
 
 	if (eventPtr->eKind == kEventMouseWheelMoved) {
-	    return GenerateMouseWheelEvent(medPtr);
+	    int res = GenerateMouseWheelEvent(medPtr);
+	    if (res) {
+		 statusPtr->stopProcessing = 1;
+	    }
+	    return res;
 	} else {
 	    return GeneratePollingEvents(medPtr);
 	}
@@ -534,7 +545,6 @@ static int
 GenerateMouseWheelEvent(MouseEventData * medPtr)
 {
     Tk_Window tkwin, rootwin, grabWin;
-    int local_x, local_y;
     TkDisplay *dispPtr;
     TkWindow  *winPtr;
     XEvent     xEvent;
@@ -550,7 +560,7 @@ GenerateMouseWheelEvent(MouseEventData * medPtr)
 	} else {
 	    tkwin = Tk_TopCoordsToWindow(rootwin, 
 		    medPtr->local.h, medPtr->local.v, 
-		    &local_x, &local_y);
+		    &xEvent.xbutton.x, &xEvent.xbutton.y);
 	}
     }
     
@@ -565,12 +575,14 @@ GenerateMouseWheelEvent(MouseEventData * medPtr)
 	tkwin = grabWin;
     }
     if (!tkwin) {
-       return true;
+       return false;
     }
     winPtr = (TkWindow *) tkwin;
     xEvent.type = MouseWheelEvent;
     xEvent.xkey.keycode = medPtr->delta;
-    xEvent.xbutton.state = TkMacOSXButtonKeyState();
+    xEvent.xbutton.x_root = medPtr->global.h;
+    xEvent.xbutton.y_root = medPtr->global.v;
+    xEvent.xbutton.state = medPtr->state;
     xEvent.xany.serial = LastKnownRequestProcessed(winPtr->display);
     xEvent.xany.send_event = false;
     xEvent.xany.display = winPtr->display;
