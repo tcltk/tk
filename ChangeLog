@@ -1,3 +1,8 @@
+2005-12-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcode/project.pbxproj:
+	* macosx/Wish.xcodeproj/project.pbxproj: add new tclTomMath* files.
+
 2005-12-13  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/demos/cscroll.tcl: add MouseWheel bindings for aqua.
