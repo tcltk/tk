@@ -1,3 +1,8 @@
+2005-12-28  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkUndo.c (TkUndoSetDepth): Apply [Patch 1391939] from
+	Ludwig Callewaert to fix [Bug 1380427].
+
 2005-12-14  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcode/project.pbxproj:
@@ -8,8 +13,8 @@
 	* library/demos/cscroll.tcl: add MouseWheel bindings for aqua.
 
 	* macosx/tkMacOSXCarbonEvents.c (TkMacOSXInitCarbonEvents):
-	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent,
-	GenerateMouseWheelEvent): add support for kEventMouseScroll events
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent)
+	(GenerateMouseWheelEvent): add support for kEventMouseScroll events
 	(smooth mouse wheel scrolling from mighty mouse or scrolling trackpad)
 	by handling kEventMouseWheelMoved on application target as well as on
 	dispatcher, in order to pick up synthesized MouseWheel events from
@@ -23,19 +28,16 @@
 
 2005-12-09  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* win/tkWinWm.c (WinSetIcon): Don't check result
-	of SetClassLong() or SetClassLongPtr() since
-	it was generating an incorrect error and
-	the MSDN docs indicate that the result need
-	not be checked.
+	* win/tkWinWm.c (WinSetIcon): Don't check result of SetClassLong() or
+	SetClassLongPtr() since it was generating an incorrect error and the
+	MSDN docs indicate that the result need not be checked.
 
 2005-12-09  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/configure: Regen.
-	* win/tcl.m4 (SC_CONFIG_CFLAGS): Define MACHINE
-	for gcc builds. The lack of a definition of this
-	variable in the manifest file was causing a
-	runtime error in wish built with gcc.
+	* win/tcl.m4 (SC_CONFIG_CFLAGS): Define MACHINE for gcc builds. The
+	lack of a definition of this variable in the manifest file was causing
+	a runtime error in wish built with gcc.
 
 2005-12-09  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -46,7 +48,7 @@
 	* win/Makefile.in:
 	* win/makefile.vc:
 	* win/tkWinTest.c:
-	
+
 	* generic/tkIntPlatDecls.h:
 	* generic/tkStubInit.c: regen.
 
@@ -88,10 +90,10 @@
 
 2005-12-05  Reinhard Max  <max@suse.de>
 
-	* unix/tkUnixEvent.c (OpenIM): Added a workaround to allow at
-	least ASCII and the Compose key when typing into text and entry
-	widgets on a system that uses SCIM. This has to be taken out again
-	once the SCIM problems have been fixed.
+	* unix/tkUnixEvent.c (OpenIM): Added a workaround to allow at least
+	ASCII and the Compose key when typing into text and entry widgets on a
+	system that uses SCIM. This has to be taken out again once the SCIM
+	problems have been fixed.
 
 2005-12-01  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -114,8 +116,8 @@
 
 	* generic/tkImgGIF.c: cast calls to blockOut
 
-	* win/Makefile.in: place TCL_BIN_DIR first in PATH for targets to
-	get Tcl built dll first.
+	* win/Makefile.in: place TCL_BIN_DIR first in PATH for targets to get
+	Tcl built dll first.
 	Add tkWinTest.obj to tk84.dll to handle some needed test functions
 	being defined in stubs (TkplatformtestInit).
 
@@ -139,12 +141,12 @@
 	* unix/configure.in: fix obsolete autoconf macros, sync gratuitous
 	formatting/ordering differences with tcl/unix/configure.in.
 
-	* unix/Makefile.in: add CFLAGS to wish/tktest link to make
-	executable linking the same as during configure (needed to avoid
-	loosing any linker relevant flags in CFLAGS, in particular flags
-	that can't be in LDFLAGS).  Avoid concurrent linking of wish and
-	compiling of tkTestInit.o during parallel make, fix dependencies
-	and flags for building tkMacOSXInit.o
+	* unix/Makefile.in: add CFLAGS to wish/tktest link to make executable
+	linking the same as during configure (needed to avoid loosing any
+	linker relevant flags in CFLAGS, in particular flags that can't be in
+	LDFLAGS). Avoid concurrent linking of wish and compiling of
+	tkTestInit.o during parallel make, fix dependencies and flags for
+	building tkMacOSXInit.o
 	(checkstubs, checkexports): dependency and Darwin fixes
 	(dist): add new macosx files.
 
@@ -197,10 +199,9 @@
 	* macosx/Wish.xcode/default.pbxuser:
 	* macosx/Wish.xcode/project.pbxproj:
 	* macosx/Wish.xcodeproj/default.pbxuser (new):
-	* macosx/Wish.xcodeproj/project.pbxproj (new): new/updated
-	projects for Xcode 2.2 on 10.4, Xcode 1.5 on 10.3 & ProjectBuilder
-	on 10.2, with native tktest targets and support for universal
-	(fat) compiles.
+	* macosx/Wish.xcodeproj/project.pbxproj (new): new/updated projects
+	for Xcode 2.2 on 10.4, Xcode 1.5 on 10.3 & ProjectBuilder on 10.2,
+	with native tktest targets and support for universal (fat) compiles.
 
 	* macosx/Tk-Info.plist (removed):
 	* macosx/Wish-Info.plist (removed):
@@ -214,8 +215,8 @@
 	* unix/configure.in:
 	* macosx/configure.ac (new): add support for inclusion of
 	unix/configure.in by macosx/configure.ac, allows generation of a
-	config headers enabled configure script in macosx (required by
-	Xcode projects).
+	config headers enabled configure script in macosx (required by Xcode
+	projects).
 
 	* macosx/GNUmakefile: rename from Makefile to avoid overwriting by
 	configure run in tk/macosx, add support for reusing configure cache,
