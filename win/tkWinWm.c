@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.107 2005/12/10 01:42:01 mdejong Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.108 2005/12/29 10:46:46 vincentdarley Exp $
  */
 
 #include "tkWinInt.h"
@@ -1648,7 +1648,7 @@ ReadIconOrCursorFromFile(
     Tcl_Obj *fileName,
     BOOL isIcon)
 {
-    BlockOfIconImagesPtr lpIR, lpNew;
+    BlockOfIconImagesPtr lpIR;
     Tcl_Channel channel;
     int i;
     DWORD dwBytesRead;
