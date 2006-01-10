@@ -24,13 +24,15 @@
 		);
 	};
 	F944EB8F08F798100049FDD4 = {
-		activeArgIndex = 2147483647;
+		activeArgIndex = 0;
 		activeArgIndices = (
+			YES,
 			NO,
 			NO,
 			NO,
 		);
 		argumentStrings = (
+			"${SRCROOT}/../../tk/library/demos/widget",
 			"${SRCROOT}/../../tcl/tests/all.tcl",
 			"${SRCROOT}/../../tk/tests/all.tcl",
 			"-verbose \"\"",
@@ -118,10 +120,12 @@
 		activeExec = 0;
 	};
 	F9E61D1C090A4282002B3151 = {
-		activeArgIndex = 2147483647;
+		activeArgIndex = 0;
 		activeArgIndices = (
+			YES,
 		);
 		argumentStrings = (
+			"${SRCROOT}/../../tk/library/demos/widget",
 		);
 		configStateDict = {
 			"PBXLSLaunchAction-0" = {

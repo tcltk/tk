@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.8 2005/12/13 03:44:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.9 2006/01/10 05:37:51 das Exp $
  */
 
 #include "tkInt.h"
@@ -119,13 +119,13 @@ CarbonEventHandlerProc (
     macEvent.interp = (Tcl_Interp *) userData;
     bzero(&eventStatus, sizeof(eventStatus));
 
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
     char buf [256];
     if (macEvent.eKind != kEventMouseMoved &&
 	    macEvent.eKind != kEventMouseDragged) {
 	CarbonEventToAscii(event, buf);
 	fprintf(stderr, "CarbonEventHandlerProc started handling %s\n", buf);
-	TkMacOSXInitNamedSymbol(HIToolbox, void, _DebugPrintEvent,
+	TkMacOSXInitNamedDebugSymbol(HIToolbox, void, _DebugPrintEvent,
 		EventRef inEvent);
 	if (_DebugPrintEvent) {
 	    /* Carbon-internal event debugging (c.f. Technote 2124) */
@@ -139,7 +139,7 @@ CarbonEventHandlerProc (
 	result = noErr;
     }
 
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
     if (macEvent.eKind != kEventMouseMoved &&
 	    macEvent.eKind != kEventMouseDragged) {
 	fprintf(stderr,
@@ -225,32 +225,32 @@ TkMacOSXInitCarbonEvents (
 #endif
     }
 
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
-    TkMacOSXInitNamedSymbol(HIToolbox, void, _TraceEventByName, CFStringRef);
-    if (_TraceEventByName) {
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
+    TkMacOSXInitNamedDebugSymbol(HIToolbox, void, TraceEventByName, char*);
+    if (TraceEventByName) {
 	/* Carbon-internal event debugging (c.f. Technote 2124) */
-	_TraceEventByName(CFSTR("kEventMouseDown"));
-	_TraceEventByName(CFSTR("kEventMouseUp"));
-	_TraceEventByName(CFSTR("kEventMouseWheelMoved"));
-	_TraceEventByName(CFSTR("kEventMouseScroll"));
-	_TraceEventByName(CFSTR("kEventWindowUpdate"));
-	_TraceEventByName(CFSTR("kEventWindowActivated"));
-	_TraceEventByName(CFSTR("kEventWindowDeactivated"));
-	_TraceEventByName(CFSTR("kEventRawKeyDown"));
-	_TraceEventByName(CFSTR("kEventRawKeyRepeat"));
-	_TraceEventByName(CFSTR("kEventRawKeyUp"));
-	_TraceEventByName(CFSTR("kEventRawKeyModifiersChanged"));
-	_TraceEventByName(CFSTR("kEventRawKeyRepeat"));
-	_TraceEventByName(CFSTR("kEventAppActivated"));
-	_TraceEventByName(CFSTR("kEventAppDeactivated"));
-	_TraceEventByName(CFSTR("kEventAppQuit"));
-	_TraceEventByName(CFSTR("kEventMenuBeginTracking"));
-	_TraceEventByName(CFSTR("kEventMenuEndTracking"));
-	_TraceEventByName(CFSTR("kEventCommandProcess"));
-	_TraceEventByName(CFSTR("kEventWindowExpanded"));
-	_TraceEventByName(CFSTR("kEventAppHidden"));
-	_TraceEventByName(CFSTR("kEventAppShown"));
-	_TraceEventByName(CFSTR("kEventAppAvailableWindowBoundsChanged"));
+	TraceEventByName("kEventMouseDown");
+	TraceEventByName("kEventMouseUp");
+	TraceEventByName("kEventMouseWheelMoved");
+	TraceEventByName("kEventMouseScroll");
+	TraceEventByName("kEventWindowUpdate");
+	TraceEventByName("kEventWindowActivated");
+	TraceEventByName("kEventWindowDeactivated");
+	TraceEventByName("kEventRawKeyDown");
+	TraceEventByName("kEventRawKeyRepeat");
+	TraceEventByName("kEventRawKeyUp");
+	TraceEventByName("kEventRawKeyModifiersChanged");
+	TraceEventByName("kEventRawKeyRepeat");
+	TraceEventByName("kEventAppActivated");
+	TraceEventByName("kEventAppDeactivated");
+	TraceEventByName("kEventAppQuit");
+	TraceEventByName("kEventMenuBeginTracking");
+	TraceEventByName("kEventMenuEndTracking");
+	TraceEventByName("kEventCommandProcess");
+	TraceEventByName("kEventWindowExpanded");
+	TraceEventByName("kEventAppHidden");
+	TraceEventByName("kEventAppShown");
+	TraceEventByName("kEventAppAvailableWindowBoundsChanged");
     }
 #endif /* TK_MAC_DEBUG_CARBON_EVENTS */
 }
@@ -380,7 +380,7 @@ CarbonTimerProc (
 {
     while(carbonTimerEnabled && Tcl_DoOneEvent(
 	    TCL_FILE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
 	fprintf(stderr, "Processed tcl event from carbon timer\n");
 #endif /* TK_MAC_DEBUG_CARBON_EVENTS */
     }

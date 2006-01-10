@@ -26,13 +26,15 @@
 	};
 	F944EB8F08F798100049FDD4 /* tktest */ = {
 		isa = PBXExecutable;
-		activeArgIndex = 2147483647;
+		activeArgIndex = 0;
 		activeArgIndices = (
+			YES,
 			NO,
 			NO,
 			NO,
 		);
 		argumentStrings = (
+			"${SRCROOT}/../../tk/library/demos/widget",
 			"${SRCROOT}/../../tcl/tests/all.tcl",
 			"${SRCROOT}/../../tk/tests/all.tcl",
 			"-verbose \"\"",
@@ -111,10 +113,12 @@
 	};
 	F9E61D1C090A4282002B3151 /* Wish */ = {
 		isa = PBXExecutable;
-		activeArgIndex = 2147483647;
+		activeArgIndex = 0;
 		activeArgIndices = (
+			YES,
 		);
 		argumentStrings = (
+			"${SRCROOT}/../../tk/library/demos/widget",
 		);
 		autoAttachOnCrash = 1;
 		configStateDict = {
