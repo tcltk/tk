@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.14 2005/11/27 06:53:36 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.15 2006/01/10 05:38:20 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -24,6 +24,12 @@
 #include <Carbon/Carbon.h>
 #include "tkMacOSXDebug.h"
 #include <CoreFoundation/CFString.h>
+
+/*
+#ifdef	TK_MAC_DEBUG
+#define TK_MAC_DEBUG_MENUS
+#endif
+*/
 
 #if !defined(MAC_OS_X_VERSION_10_3) || \
         (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
@@ -1066,6 +1072,14 @@ ReconfigureIndividualMenu(
     TkMenuEntry *mePtr;
     int parentDisabled = 0;
 
+#ifdef TK_MAC_DEBUG_MENUS
+    /* Carbon-internal menu debugging (c.f. Technote 2124) */
+    TkMacOSXInitNamedDebugSymbol(HIToolbox, void, DebugPrintMenu, MenuRef menu);
+    if (DebugPrintMenu) {
+        DebugPrintMenu(macMenuHdl);
+    }
+#endif
+
     for (mePtr = menuPtr->menuRefPtr->parentEntryPtr; mePtr != NULL;
     	    mePtr = mePtr->nextCascadePtr) {
     	char *name = (mePtr->namePtr == NULL) ? ""
@@ -1150,10 +1164,6 @@ ReconfigureIndividualMenu(
 	    	    	    ((MacMenu *) mePtr->childMenuRefPtr
 			    ->menuPtr->platformData)->menuHdl;
 
-		    if (childMenuHdl == NULL) {
-		        childMenuHdl = ((MacMenu *) mePtr->childMenuRefPtr
-			    	->menuPtr->platformData)->menuHdl;
-		    }
 		    if (childMenuHdl != NULL) {
 		        {
 		            SetMenuItemHierarchicalID(macMenuHdl, base + index,

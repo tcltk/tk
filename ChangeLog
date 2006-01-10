@@ -1,3 +1,25 @@
+2006-01-10  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDraw.c: re-added inclusion of tclInt.h to allow access
+	* macosx/tkMacOSXFont.c: to 8.4-internal Tcl_CreateNamespace().
+
+	* macosx/tkMacOSXDebug.c: add TkMacOSXGetNamedDebugSymbol() function
+	* macosx/tkMacOSXDebug.h: that finds unexported symbols in loaded
+	libraries by manually walking their symbol table; only to be used for
+	debugging purposes, may break unexpectedly in the future. Needed to get
+	access to private_extern internal debugging functions in HIToolbox.
+
+	* macosx/tkMacOSXCarbonEvents.c: fix debug event tracing on Tiger.
+	* macosx/tkMacOSXMenu.c: add debug menu printing during reconfigure.
+	* macosx/tkMacOSXInit.c: conditionalize 64bit-unsafe dyld code.
+	* macosx/Makefile: add 'wish8.x' symlink to SYMROOT.
+
+	* unix/configure:    add caching, use AC_CACHE_CHECK instead of
+	* unix/configure.in: AC_CACHE_VAL where possible, consistent message
+	* unix/tcl.m4:       quoting, sync relevant tclconfig/tcl.m4 changes and
+	gratuitous formatting differences, fix SC_CONFIG_MANPAGES with default
+	argument, Darwin improvements to SC_LOAD_*CONFIG.
+
 2005-12-13  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/demos/cscroll.tcl: add MouseWheel bindings for aqua.

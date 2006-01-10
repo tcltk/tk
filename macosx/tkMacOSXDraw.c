@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.9 2005/12/08 07:50:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.10 2006/01/10 05:38:20 das Exp $
  */
 
 #include "tkInt.h"
@@ -23,6 +23,7 @@
 #include "tkMacOSXInt.h"
 #include "tkPort.h"
 #include "tkMacOSXDebug.h"
+#include "tclInt.h" /* for Tcl_CreateNamespace() */
 
 #ifndef PI
 #    define PI 3.14159265358979323846

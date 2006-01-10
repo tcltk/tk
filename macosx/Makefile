@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: Makefile,v 1.7.2.12 2005/11/27 02:36:46 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7.2.13 2006/01/10 05:38:19 das Exp $
 #
 ########################################################################################################
 
@@ -186,7 +186,8 @@ build-${PROJECT}: ${OBJ_DIR}/Makefile
 	rm -rf ./${LIBDIR} ./${BINDIR} && ln -fs ${SYMROOT} ./${LIBDIR} && \
 	ln -fs ${SYMROOT} ./${BINDIR} && ln -fs ${OBJ_DIR}/tktest ${SYMROOT}
 ifeq (${TK_X11},)
-	@rm -f ${OBJ_DIR}/${BINDIR}
+	@rm -f ${OBJ_DIR}/${BINDIR} && \
+	ln -fs Wish.app/Contents/MacOS/Wish ${SYMROOT}/${WISH}
 endif
 # Create symbolic link to Tcl.framework in ${SYMROOT}if necessary
 	@cd ${SYMROOT} && if [ ! -e Tcl.framework -o -L Tcl.framework ]; then \

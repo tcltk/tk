@@ -11,12 +11,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.6 2005/12/08 07:50:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.7 2006/01/10 05:38:20 das Exp $
  */
 #include <Carbon/Carbon.h>
 
 #include "tkMacOSXInt.h"
 #include "tkFont.h"
+#include "tclInt.h" /* for Tcl_CreateNamespace() */
 
 /*
  * For doing things with Mac strings and Fixed numbers.  This probably should move 
