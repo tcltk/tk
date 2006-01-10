@@ -3358,7 +3358,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "touch -t $(date -r $(expr $(date '+%s') + 5) '+%Y%m%d%H%M.%S') \"${TEMP_DIR}/stamp\"\n\n## Xcode bug workaround: Rezzing does not take place for commandline tool targets\n## even when a ResourceManager Resources phase is present, but this script phase's\n## input dependency on the final merged resource file forces the Rezzing.\n\nif [ \"${ZERO_LINK}\" = \"YES\" ]; then\n    ## ZeroLinking ignores OTHER_LDFLAGS, so our resource file doesn't get linked into the executable.\n    ## workaround: copy resource data into resource fork of zerolink launcher (will only work on HFS+).\n    cp -f \"${SCRIPT_INPUT_FILE_1}\" \"${SCRIPT_INPUT_FILE_0}/rsrc\"\nfi\n";
+			shellScript = "touch -t $(date -r $(expr $(date '+%s') + 5) '+%Y%m%d%H%M.%S') \"${TEMP_DIR}/stamp\"\n\n## Xcode bug workaround: Rezzing does not take place for commandline tool targets\n## even when a ResourceManager Resources phase is present, but this script phase's\n## input dependency on the final merged resource file forces the Rezzing.\n\nif [ \"${ZERO_LINK}\" = \"YES\" ]; then\n    ## ZeroLinking ignores OTHER_LDFLAGS, so our resource file doesn't get linked into the executable.\n    ## workaround: copy resource data into resource fork of zerolink launcher (will only work on HFS+).\n    cp -f \"${SCRIPT_INPUT_FILE_1}\" \"${SCRIPT_INPUT_FILE_0}/..namedfork/rsrc\"\nfi\n";
 		};
 		F9A5C5F508F651A2008AE941 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
