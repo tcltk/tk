@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.6 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.7 2006/01/10 05:37:51 das Exp $
  */
 
 #ifndef _TKMACDEBUG
@@ -78,6 +78,15 @@ MODULE_SCOPE void printWindowTitle(char * tag, WindowRef window );
 MODULE_SCOPE char * TkMacOSXMenuMessageToAscii(int msg, char * s);
 
 MODULE_SCOPE char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
+
+MODULE_SCOPE void* TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol);
+
+/* Macro to abstract common use of TkMacOSXGetNamedDebugSymbol to initialize named symbols */
+#define TkMacOSXInitNamedDebugSymbol(module, ret, symbol, ...) \
+    static ret (* symbol)(__VA_ARGS__) = (void*)(-1L); \
+    if (symbol == (void*)(-1L)) { \
+        symbol = TkMacOSXGetNamedDebugSymbol(STRINGIFY(module), STRINGIFY(_##symbol));\
+    }
 
 #endif
 
