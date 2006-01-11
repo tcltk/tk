@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.9 2006/01/10 05:38:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.10 2006/01/11 05:57:41 das Exp $
  */
 
 #include "tkInt.h"
@@ -119,7 +119,7 @@ CarbonEventHandlerProc (
     macEvent.interp = (Tcl_Interp *) userData;
     bzero(&eventStatus, sizeof(eventStatus));
 
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
     char buf [256];
     if (macEvent.eKind != kEventMouseMoved &&
 	    macEvent.eKind != kEventMouseDragged) {
@@ -139,7 +139,7 @@ CarbonEventHandlerProc (
 	result = noErr;
     }
 
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
     if (macEvent.eKind != kEventMouseMoved &&
 	    macEvent.eKind != kEventMouseDragged) {
 	fprintf(stderr,
@@ -225,7 +225,7 @@ TkMacOSXInitCarbonEvents (
 #endif
     }
 
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
     TkMacOSXInitNamedDebugSymbol(HIToolbox, void, TraceEventByName, char*);
     if (TraceEventByName) {
 	/* Carbon-internal event debugging (c.f. Technote 2124) */
@@ -380,7 +380,7 @@ CarbonTimerProc (
 {
     while(carbonTimerEnabled && Tcl_DoOneEvent(
 	    TCL_FILE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {
-#ifdef TK_MAC_DEBUG_CARBON_EVENTS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
 	fprintf(stderr, "Processed tcl event from carbon timer\n");
 #endif /* TK_MAC_DEBUG_CARBON_EVENTS */
     }

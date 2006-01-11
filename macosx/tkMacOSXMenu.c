@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.15 2006/01/10 05:38:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.16 2006/01/11 05:57:41 das Exp $
  */
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
@@ -1072,7 +1072,7 @@ ReconfigureIndividualMenu(
     TkMenuEntry *mePtr;
     int parentDisabled = 0;
 
-#ifdef TK_MAC_DEBUG_MENUS
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_MENUS)
     /* Carbon-internal menu debugging (c.f. Technote 2124) */
     TkMacOSXInitNamedDebugSymbol(HIToolbox, void, DebugPrintMenu, MenuRef menu);
     if (DebugPrintMenu) {
