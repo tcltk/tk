@@ -1,3 +1,8 @@
+2006-01-11  Peter Spjuth  <peter.spjuth@space.se>
+
+	* generic/tkGrid.c: Removed a lingering error message from
+	TIP#147 implementation.
+
 2006-01-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDebug.c: add TkMacOSXGetNamedDebugSymbol() function
