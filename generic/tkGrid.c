@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.41 2005/11/17 16:21:55 dkf Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.42 2006/01/11 19:53:47 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -1065,6 +1065,12 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		    Tcl_GetString(lObjv[j]), "\"", NULL);
 	    return TCL_ERROR;
 	}
+
+	/*
+	 * Reset any lingering error from e.g GetInt.
+	 */
+
+	Tcl_ResetResult(interp);
 
 	/*
 	 * The outer loop is only to handle "all".
