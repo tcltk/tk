@@ -1,3 +1,12 @@
+2006-01-13  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
+
+	* generic/tkUndo.c (TkUndoSetDepth): Don't free
+	TkUndoSubAtoms for separator entries that are deleted:
+	there is some unpredictable garbage instead of subatoms.
+
+	Free both 'apply' and 'revert' action chains for 
+	non-separator entries.
+
 2006-01-12  Donal K. Fellows  <dkf@users.sf.net>
 
 	TIP #260 IMPLEMENTATION

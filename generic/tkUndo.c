@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.c,v 1.9 2005/12/28 17:26:22 dkf Exp $
+ * RCS: @(#) $Id: tkUndo.c,v 1.10 2006/01/12 23:29:36 a_kovalenko Exp $
  */
 
 #include "tkUndo.h"
@@ -395,19 +395,29 @@ TkUndoSetDepth(
 	}
 	prevelem->next = NULL;
 	while (elem != NULL) {
-	    TkUndoSubAtom *sub = elem->apply;
 	    prevelem = elem;
+	    if (elem->type != TK_UNDO_SEPARATOR) {
+		TkUndoSubAtom *sub = elem->apply;
+		while (sub->next != NULL) {
+		    TkUndoSubAtom *next = sub->next;
 
-	    while (sub->next != NULL) {
-		TkUndoSubAtom *next = sub->next;
-
-		if (sub->action != NULL) {
-		    Tcl_DecrRefCount(sub->action);
+		    if (sub->action != NULL) {
+			Tcl_DecrRefCount(sub->action);
+		    }
+		    ckfree((char *)sub);
+		    sub = next;
 		}
-		ckfree((char *)sub);
-		sub = next;
-	    }
+		sub = elem->revert;
+		while (sub->next != NULL) {
+		    TkUndoSubAtom *next = sub->next;
 
+		    if (sub->action != NULL) {
+			Tcl_DecrRefCount(sub->action);
+		    }
+		    ckfree((char *)sub);
+		    sub = next;
+		}
+	    }
 	    elem = elem->next;
 	    ckfree((char *) prevelem);
 	}
