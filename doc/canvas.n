@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.20 2005/05/12 22:51:03 dgp Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.21 2006/01/12 13:38:22 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1673,6 +1673,15 @@ Newline characters cause line breaks.
 The characters in the item may also be changed with the
 \fBinsert\fR and \fBdelete\fR widget commands.
 This option defaults to an empty string.
+.VS 8.5
+.TP
+\fB\-underline \fI\fR
+Specifies the integer index of a character within the text to be
+underlined. 0 corresponds to the first character of the text
+displayed, 1 to the next character, and so on. \-1 means that no
+underline should be drawn (if the whole text item is to be underlined,
+the appropriate font should be used instead).
+.VE 8.5
 .TP
 \fB\-width \fIlineLength\fR
 Specifies a maximum line length for the text, in any of the forms

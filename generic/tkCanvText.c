@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.20 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.21 2006/01/12 13:38:22 dkf Exp $
  */
 
 #include <stdio.h>
@@ -56,6 +56,8 @@ typedef struct TextItem  {
     char *text;			/* Text for item (malloc-ed). */
     int width;			/* Width of lines for word-wrap, pixels. Zero
 				 * means no word-wrap. */
+    int underline;		/* Index of character to put underline beneath
+				 * or -1 for no underlining. */
 
     /*
      * Fields whose values are derived from the current values of the
@@ -124,6 +126,8 @@ static Tk_ConfigSpec configSpecs[] = {
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
 	"", Tk_Offset(TextItem, text), 0},
+    {TK_CONFIG_INT, "-underline", NULL, NULL,
+	"-1", Tk_Offset(TextItem, underline), 0},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
 	"0", Tk_Offset(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
@@ -257,6 +261,7 @@ CreateText(
     textPtr->disabledStipple = None;
     textPtr->text	= NULL;
     textPtr->width	= 0;
+    textPtr->underline	= -1;
 
     textPtr->numChars	= 0;
     textPtr->numBytes	= 0;
@@ -866,6 +871,8 @@ DisplayCanvText(
 	Tk_DrawTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
 	    drawableX, drawableY, 0, -1);
     }
+    Tk_UnderlineTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
+	    drawableX, drawableY, textPtr->underline);
 
     if (stipple != None) {
 	XSetTSOrigin(display, textPtr->gc, 0, 0);

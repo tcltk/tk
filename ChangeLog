@@ -1,3 +1,11 @@
+2006-01-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	TIP #260 IMPLEMENTATION
+
+	* generic/tkCanvText.c (TextItem, CreateText, DisplayCanvText):
+	* doc/canvas.n:		Code, docs and tests to implement an -underline
+	* tests/canvText.test:	option for canvases' text items.
+
 2006-01-11  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkGrid.c: Removed a lingering error message from
