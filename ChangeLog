@@ -1,3 +1,10 @@
+2006-01-20  Joe English  <jenglish@users.sourceforge.net>
+	* generic/tkEvent.c, unix/tkUnixEvent.c:  XIM fixes 
+	[See #905830, patch tk84-xim-fixes.patch].
+	+ Revert 2005-12-05 patch disabling XIM when SCIM in use;
+	+ Make sure all X events get passed to XFilterEvent,
+	including those without a corresponding Tk window.
+
 2006-01-13  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
 	* generic/tkUndo.c (TkUndoSetDepth): Don't free

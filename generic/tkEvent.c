@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.31 2005/11/04 11:52:50 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.32 2006/01/20 18:58:55 jenglish Exp $
  */
 
 #include "tkPort.h"
@@ -449,8 +449,10 @@ InvokeInputMethods(
 		XSetICFocus(winPtr->inputContext);
 	    }
 	}
-	if (XFilterEvent(eventPtr, None)) {
-	    return 1;
+	if (eventPtr->type == KeyPress || eventPtr->type == KeyRelease) {
+	    if (XFilterEvent(eventPtr, None)) {
+		return 1;
+	    }
 	}
     }
     return 0;
