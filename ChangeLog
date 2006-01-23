@@ -1,4 +1,10 @@
+2006-01-23  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/configure:    minor fix to Darwin specific code removing
+	* unix/configure.in: 64bit flags from CFLAGS for Tk build.
+
 2006-01-20  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/tkEvent.c, unix/tkUnixEvent.c:  XIM fixes 
 	[See #905830, patch tk84-xim-fixes.patch].
 	+ Revert 2005-12-05 patch disabling XIM when SCIM in use;
