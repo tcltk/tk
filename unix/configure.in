@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.114 2006/01/10 05:37:53 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.115 2006/01/23 00:53:03 das Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -253,7 +253,7 @@ if test "`uname -s`" = "Darwin" ; then
     if test $do64bit_ok = no ; then
 	# remove -arch ppc64 from CFLAGS for fat builds as neither Aqua nor X11
 	# can be built for 64bit at present (no 64bit GUI libraries).
-	CFLAGS="`echo "$CFLAGS" | sed -e 's/-arch ppc64/-arch ppc/'`"
+	CFLAGS="`echo "$CFLAGS" | sed -e 's/-arch ppc64/-arch ppc/g'`"
     fi
 else
     tk_aqua=no
