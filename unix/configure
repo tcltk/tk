@@ -5065,7 +5065,7 @@ fi
     if test $do64bit_ok = no ; then
 	# remove -arch ppc64 from CFLAGS for fat builds as neither Aqua nor X11
 	# can be built for 64bit at present (no 64bit GUI libraries).
-	CFLAGS="`echo "$CFLAGS" | sed -e 's/-arch ppc64/-arch ppc/'`"
+	CFLAGS="`echo "$CFLAGS" | sed -e 's/-arch ppc64/-arch ppc/g'`"
     fi
 else
     tk_aqua=no
