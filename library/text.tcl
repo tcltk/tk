@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.24.2.7 2005/09/10 14:54:17 das Exp $
+# RCS: @(#) $Id: text.tcl,v 1.24.2.8 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -180,7 +180,7 @@ bind Text <Control-Shift-End> {
 }
 
 bind Text <Tab> {
-    if { [string equal [%W cget -state] "normal"] } {
+    if { [%W cget -state] eq "normal" } {
 	tk::TextInsert %W \t
 	focus %W
 	break
@@ -276,8 +276,8 @@ bind Text <Meta-KeyPress> {# nothing}
 bind Text <Control-KeyPress> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {[string equal [tk windowingsystem] "classic"]
-	|| [string equal [tk windowingsystem] "aqua"]} {
+
+if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
     bind Text <Command-KeyPress> {# nothing}
 }
 
@@ -394,8 +394,7 @@ bind Text <Meta-Delete> {
 # Macintosh only bindings:
 
 # if text black & highlight black -> text white, other text the same
-if {[string equal [tk windowingsystem] "classic"]
-	|| [string equal [tk windowingsystem] "aqua"]} {
+if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
 bind Text <FocusIn> {
     %W tag configure sel -borderwidth 0
     %W configure -selectbackground systemHighlight -selectforeground systemHighlightText
@@ -458,8 +457,7 @@ set ::tk::Priv(prevPos) {}
 # However, someone could use the "event generate" command to produce
 # one on other platforms.
 
-if {[string equal [tk windowingsystem] "classic"]
-	|| [string equal [tk windowingsystem] "aqua"]} {
+if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
     bind Text <MouseWheel> {
         %W yview scroll [expr {- (%D)}] units
     }
@@ -478,7 +476,7 @@ if {[string equal [tk windowingsystem] "classic"]
     }
 }
 
-if {[string equal "x11" [tk windowingsystem]]} {
+if {"x11" eq [tk windowingsystem]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
@@ -508,7 +506,7 @@ if {[string equal "x11" [tk windowingsystem]]} {
 proc ::tk::TextClosestGap {w x y} {
     set pos [$w index @$x,$y]
     set bbox [$w bbox $pos]
-    if {[string equal $bbox ""]} {
+    if {$bbox eq ""} {
 	return $pos
     }
     if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
@@ -537,8 +535,7 @@ proc ::tk::TextButton1 {w x y} {
     $w mark set anchor insert
     # Allow focus in any case on Windows, because that will let the
     # selection be displayed even for state disabled text widgets.
-    if {[string equal $::tcl_platform(platform) "windows"] \
-	    || [string equal [$w cget -state] "normal"]} {focus $w}
+    if {$::tcl_platform(platform) eq "windows" || [$w cget -state] eq "normal"} {focus $w}
     if {[$w cget -autoseparators]} {$w edit separator}
 }
 
@@ -662,7 +659,7 @@ proc ::tk::TextPasteSelection {w x y} {
 	    $w configure -autoseparators 1
 	}
     }
-    if {[string equal [$w cget -state] "normal"]} {focus $w}
+    if {[$w cget -state] eq "normal"} {focus $w}
 }
 
 # ::tk::TextAutoScan --
@@ -727,7 +724,7 @@ proc ::tk::TextSetCursor {w pos} {
 
 proc ::tk::TextKeySelect {w new} {
 
-    if {[string equal [$w tag nextrange sel 1.0 end] ""]} {
+    if {[$w tag nextrange sel 1.0 end] eq ""} {
 	if {[$w compare $new < insert]} {
 	    $w tag add sel $new insert
 	} else {
@@ -767,7 +764,7 @@ proc ::tk::TextKeySelect {w new} {
 
 proc ::tk::TextResetAnchor {w index} {
 
-    if {[string equal [$w tag ranges sel] ""]} {
+    if {[$w tag ranges sel] eq ""} {
 	# Don't move the anchor if there is no selection now; this makes
 	# the widget behave "correctly" when the user clicks once, then
 	# shift-clicks somewhere -- ie, the area between the two clicks will be
@@ -817,7 +814,7 @@ proc ::tk::TextResetAnchor {w index} {
 # s -		The string to insert (usually just a single character)
 
 proc ::tk::TextInsert {w s} {
-    if {[string equal $s ""] || [string equal [$w cget -state] "disabled"]} {
+    if {$s eq "" || [$w cget -state] eq "disabled"} {
 	return
     }
     set compound 0
@@ -882,8 +879,8 @@ proc ::tk::TextUpDownLine {w n} {
 proc ::tk::TextPrevPara {w pos} {
     set pos [$w index "$pos linestart"]
     while {1} {
-	if {([string equal [$w get "$pos - 1 line"] "\n"] \
-		 && [$w get $pos] ne "\n") || [string equal $pos 1.0]} {
+	if {([$w get "$pos - 1 line"] eq "\n" \
+		 && [$w get $pos] ne "\n") || $pos eq "1.0"} {
 	    if {[regexp -indices {^[ 	]+(.)} [$w get $pos "$pos lineend"] \
 		    dummy index]} {
 		set pos [$w index "$pos + [lindex $index 0] chars"]
@@ -941,7 +938,7 @@ proc ::tk::TextNextPara {w start} {
 proc ::tk::TextScrollPages {w count} {
     set bbox [$w bbox insert]
     $w yview scroll $count pages
-    if {[string equal $bbox ""]} {
+    if {$bbox eq ""} {
 	return [$w index @[expr {[winfo height $w]/2}],0]
     }
     return [$w index @[lindex $bbox 0],[lindex $bbox 1]]
@@ -1048,7 +1045,7 @@ proc ::tk_textPaste w {
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 
-if {[string equal $tcl_platform(platform) "windows"]}  {
+if {$tcl_platform(platform) eq "windows"}  {
     proc ::tk::TextNextWord {w start} {
 	TextNextPos $w [TextNextPos $w $start tcl_endOfWord] \
 	    tcl_startOfNextWord
