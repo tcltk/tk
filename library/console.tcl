@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.22.2.4 2005/11/30 01:22:55 hobbs Exp $
+# RCS: @(#) $Id: console.tcl,v 1.22.2.5 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -49,8 +49,8 @@ proc ::tk::ConsoleInit {} {
 	wm withdraw .
     }
 
-    if {[string equal $tcl_platform(platform) "macintosh"]
-	    || [string equal [tk windowingsystem] "aqua"]} {
+    if {$tcl_platform(platform) eq "macintosh"
+	    || [tk windowingsystem] eq "aqua"} {
 	set mod "Cmd"
     } else {
 	set mod "Ctrl"
@@ -67,8 +67,8 @@ proc ::tk::ConsoleInit {} {
 	    -underline 0 -command {wm withdraw .}
     .menubar.file add command -label [mc "Clear Console"] \
 	    -underline 0 -command {.console delete 1.0 "promptEnd linestart"}
-   if {[string equal $tcl_platform(platform) "macintosh"]
-	   || [string equal [tk windowingsystem] "aqua"]} {
+   if {$tcl_platform(platform) eq "macintosh"
+	    || [tk windowingsystem] eq "aqua"} {
 	.menubar.file add command -label [mc "Quit"] \
 		-command exit -accel Cmd-Q
     } else {
@@ -84,7 +84,7 @@ proc ::tk::ConsoleInit {} {
     .menubar.edit add command -label [mc "Paste"] -underline 1 \
 	    -command { event generate .console <<Paste>> } -accel "$mod+V"
 
-    if {[string compare $tcl_platform(platform) "windows"]} {
+    if {$tcl_platform(platform) ne "windows"} {
 	.menubar.edit add command -label [mc "Clear"] -underline 2 \
 		-command { event generate .console <<Clear>> }
     } else {
@@ -111,7 +111,7 @@ proc ::tk::ConsoleInit {} {
 	    $con configure -font systemfixed
 	}
 	"unix" {
-	    if {[string equal [tk windowingsystem] "aqua"]} {
+	    if {[tk windowingsystem] eq "aqua"} {
 		$con configure -font {Monaco 9 normal} -highlightthickness 0
 	    }
 	}
@@ -172,7 +172,7 @@ proc ::tk::ConsoleSource {} {
 	    -filetypes [list \
 	    [list [mc "Tcl Scripts"] .tcl] \
 	    [list [mc "All Files"] *]]]
-    if {[string compare $filename ""]} {
+    if {$filename ne ""} {
     	set cmd [list source $filename]
 	if {[catch {consoleinterp eval $cmd} result]} {
 	    ConsoleOutput stderr "$result\n"
@@ -193,20 +193,20 @@ proc ::tk::ConsoleInvoke {args} {
     set cmd ""
     if {[llength $ranges]} {
 	set pos 0
-	while {[string compare [lindex $ranges $pos] ""]} {
+	while {[lindex $ranges $pos] ne ""} {
 	    set start [lindex $ranges $pos]
 	    set end [lindex $ranges [incr pos]]
 	    append cmd [.console get $start $end]
 	    incr pos
 	}
     }
-    if {[string equal $cmd ""]} {
+    if {$cmd eq ""} {
 	ConsolePrompt
     } elseif {[info complete $cmd]} {
 	.console mark set output end
 	.console tag delete input
 	set result [consoleinterp record $cmd]
-	if {[string compare $result ""]} {
+	if {$result ne ""} {
 	    puts $result
 	}
 	ConsoleHistory reset
@@ -255,7 +255,7 @@ proc ::tk::ConsoleHistory {cmd} {
 	    } else {
 		set cmd "history event $HistNum"
 	    }
-	    if {[string compare $cmd ""]} {
+	    if {$cmd ne ""} {
 		catch {consoleinterp eval $cmd} cmd
 	    }
 	    .console delete promptEnd end
@@ -277,7 +277,7 @@ proc ::tk::ConsoleHistory {cmd} {
 
 proc ::tk::ConsolePrompt {{partial normal}} {
     set w .console
-    if {[string equal $partial "normal"]} {
+    if {$partial eq "normal"} {
 	set temp [$w index "end - 1 char"]
 	$w mark set output end
     	if {[consoleinterp eval "info exists tcl_prompt1"]} {
@@ -379,8 +379,7 @@ proc ::tk::ConsoleBind {w} {
 	break
     }
     bind Console <Delete> {
-	if {[string compare {} [%W tag nextrange sel 1.0 end]] \
-		&& [%W compare sel.first >= promptEnd]} {
+	if {[%W tag nextrange sel 1.0 end] ne "" && [%W compare sel.first >= promptEnd]} {
 	    %W delete sel.first sel.last
 	} elseif {[%W compare insert >= promptEnd]} {
 	    %W delete insert
@@ -388,8 +387,7 @@ proc ::tk::ConsoleBind {w} {
 	}
     }
     bind Console <BackSpace> {
-	if {[string compare {} [%W tag nextrange sel 1.0 end]] \
-		&& [%W compare sel.first >= promptEnd]} {
+	if {[%W tag nextrange sel 1.0 end] ne "" && [%W compare sel.first >= promptEnd]} {
 	    %W delete sel.first sel.last
 	} elseif {[%W compare insert != 1.0] && \
 		[%W compare insert > promptEnd]} {
@@ -470,14 +468,13 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <F9> {
 	eval destroy [winfo child .]
-	if {[string equal $tcl_platform(platform) "macintosh"]} {
+	if {$tcl_platform(platform) eq "macintosh"} {
 	    if {[catch {source [file join $tk_library console.tcl]}]} {source -rsrc console}
 	} else {
 	    source [file join $tk_library console.tcl]
 	}
     }
-    if {[string equal $::tcl_platform(platform) "macintosh"]
-	   || [string equal [tk windowingsystem] "aqua"]} {
+    if {$::tcl_platform(platform) eq "macintosh" || [tk windowingsystem] eq "aqua"} {
 	    bind Console <Command-q> {
 		exit
 	    }
@@ -513,28 +510,28 @@ proc ::tk::ConsoleBind {w} {
     ## Bindings for doing special things based on certain keys
     ##
     bind PostConsole <Key-parenright> {
-	if {[string compare \\ [%W get insert-2c]]} {
+	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \( \) promptEnd
 	}
     }
     bind PostConsole <Key-bracketright> {
-	if {[string compare \\ [%W get insert-2c]]} {
+	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \[ \] promptEnd
 	}
     }
     bind PostConsole <Key-braceright> {
-	if {[string compare \\ [%W get insert-2c]]} {
+	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \{ \} promptEnd
 	}
     }
     bind PostConsole <Key-quotedbl> {
-	if {[string compare \\ [%W get insert-2c]]} {
+	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchQuote %W promptEnd
 	}
     }
 
     bind PostConsole <KeyPress> {
-	if {"%A" != ""} {
+	if {"%A" ne ""} {
 	    ::tk::console::TagProc %W
 	}
 	break
@@ -552,7 +549,7 @@ proc ::tk::ConsoleBind {w} {
 # s -		The string to insert (usually just a single character)
 
 proc ::tk::ConsoleInsert {w s} {
-    if {[string equal $s ""]} {
+    if {$s eq ""} {
 	return
     }
     catch {
@@ -625,7 +622,7 @@ proc ::tk::console::TagProc w {
     if {!$::tk::console::magicKeys} { return }
     set exp "\[^\\\\\]\[\[ \t\n\r\;{}\"\$\]"
     set i [$w search -backwards -regexp $exp insert-1c promptEnd-1c]
-    if {$i == ""} {set i promptEnd} else {append i +2c}
+    if {$i eq ""} {set i promptEnd} else {append i +2c}
     regsub -all "\[\[\\\\\\?\\*\]" [$w get $i "insert-1c wordend"] {\\\0} c
     if {[llength [EvalAttached [list info commands $c]]]} {
 	$w tag add proc $i "insert-1c wordend"
@@ -658,24 +655,23 @@ proc ::tk::console::TagProc w {
  
 proc ::tk::console::MatchPair {w c1 c2 {lim 1.0}} {
     if {!$::tk::console::magicKeys} { return }
-    if {[string compare {} [set ix [$w search -back $c1 insert $lim]]]} {
+    if {[set ix [$w search -back $c1 insert $lim]] ne ""} {
 	while {
 	    [string match {\\} [$w get $ix-1c]] &&
-	    [string compare {} [set ix [$w search -back $c1 $ix-1c $lim]]]
+	    [set ix [$w search -back $c1 $ix-1c $lim]] ne ""
 	} {}
 	set i1 insert-1c
-	while {[string compare {} $ix]} {
+	while {$ix ne ""} {
 	    set i0 $ix
 	    set j 0
-	    while {[string compare {} [set i0 [$w search $c2 $i0 $i1]]]} {
+	    while {[set i0 [$w search $c2 $i0 $i1]] ne ""} {
 		append i0 +1c
 		if {[string match {\\} [$w get $i0-2c]]} continue
 		incr j
 	    }
 	    if {!$j} break
 	    set i1 $ix
-	    while {$j && [string compare {} \
-		    [set ix [$w search -back $c1 $ix $lim]]]} {
+	    while {$j && [set ix [$w search -back $c1 $ix $lim]] ne ""} {
 		if {[string match {\\} [$w get $ix-1c]]} continue
 		incr j -1
 	    }
@@ -704,7 +700,7 @@ proc ::tk::console::MatchQuote {w {lim 1.0}} {
     if {!$::tk::console::magicKeys} { return }
     set i insert-1c
     set j 0
-    while {[string compare [set i [$w search -back \" $i $lim]] {}]} {
+    while {[set i [$w search -back \" $i $lim]] ne ""} {
 	if {[string match {\\} [$w get $i-1c]]} continue
 	if {!$j} {set i0 $i}
 	incr j
@@ -774,7 +770,7 @@ proc ::tk::console::ConstrainBuffer {w size} {
 proc ::tk::console::Expand {w {type ""}} {
     set exp "\[^\\\\\]\[\[ \t\n\r\\\{\"\\\\\$\]"
     set tmp [$w search -backwards -regexp $exp insert-1c promptEnd-1c]
-    if {$tmp == ""} {set tmp promptEnd} else {append tmp +2c}
+    if {$tmp eq ""} {set tmp promptEnd} else {append tmp +2c}
     if {[$w compare $tmp >= insert]} { return }
     set str [$w get $tmp insert]
     switch -glob $type {
@@ -784,7 +780,7 @@ proc ::tk::console::Expand {w {type ""}} {
 	default {
 	    set res {}
 	    foreach t {Pathname Procname Variable} {
-		if {![catch {Expand$t $str} res] && ($res != "")} { break }
+		if {![catch {Expand$t $str} res] && ($res ne "")} { break }
 	    }
 	}
     }
@@ -793,8 +789,7 @@ proc ::tk::console::Expand {w {type ""}} {
 	set repl [lindex $res 0]
 	$w delete $tmp insert
 	$w insert $tmp $repl {input stdin}
-	if {($len > 1) && $::tk::console::showMatches \
-		&& [string equal $repl $str]} {
+	if {($len > 1) && $::tk::console::showMatches && $repl eq $str} {
 	    puts stdout [lsort [lreplace $res 0 0]]
 	}
     } else { bell }
@@ -959,4 +954,4 @@ proc ::tk::console::ExpandBestMatch {l {e {}}} {
 }
 
 # now initialize the console
-::tk::ConsoleInit
+::tk::ConsoleInit 
