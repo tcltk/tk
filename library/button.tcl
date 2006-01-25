@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.17 2002/09/04 02:05:52 hobbs Exp $
+# RCS: @(#) $Id: button.tcl,v 1.17.2.1 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -18,8 +18,7 @@
 # The code below creates the default class bindings for buttons.
 #-------------------------------------------------------------------------
 
-if {[string equal [tk windowingsystem] "classic"]
-	|| [string equal [tk windowingsystem] "aqua"]} {
+if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
     bind Radiobutton <Enter> {
 	tk::ButtonEnter %W
     }
@@ -39,7 +38,7 @@ if {[string equal [tk windowingsystem] "classic"]
 	tk::ButtonUp %W
     }
 }
-if {[string equal "windows" $tcl_platform(platform)]} {
+if {"windows" eq $tcl_platform(platform)} {
     bind Checkbutton <equal> {
 	tk::CheckRadioInvoke %W select
     }
@@ -69,7 +68,7 @@ if {[string equal "windows" $tcl_platform(platform)]} {
 	tk::CheckRadioEnter %W
     }
 }
-if {[string equal "x11" [tk windowingsystem]]} {
+if {"x11" eq [tk windowingsystem]} {
     bind Checkbutton <Return> {
 	if {!$tk_strictMotif} {
 	    tk::CheckRadioInvoke %W
@@ -128,7 +127,7 @@ bind Radiobutton <Leave> {
     tk::ButtonLeave %W
 }
 
-if {[string equal "windows" $tcl_platform(platform)]} {
+if {"windows" eq $tcl_platform(platform)} {
 
 #########################
 # Windows implementation 
@@ -309,7 +308,7 @@ proc ::tk::CheckRadioDown w {
 
 }
 
-if {[string equal "x11" [tk windowingsystem]]} {
+if {"x11" eq [tk windowingsystem]} {
 
 #####################
 # Unix implementation
@@ -417,7 +416,7 @@ proc ::tk::ButtonDown w {
 
 proc ::tk::ButtonUp w {
     variable ::tk::Priv
-    if {[string equal $w $Priv(buttonWindow)]} {
+    if {$w eq $Priv(buttonWindow)} {
 	set Priv(buttonWindow) ""
 
 	# Restore the button's relief if it was cached.
@@ -445,8 +444,7 @@ proc ::tk::ButtonUp w {
 
 }
 
-if {[string equal [tk windowingsystem] "classic"]
-	|| [string equal [tk windowingsystem] "aqua"]} {
+if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
 
 ####################
 # Mac implementation

@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.15.2.1 2005/04/12 20:33:35 hobbs Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.15.2.2 2006/01/25 18:21:41 dgp Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -29,7 +29,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     upvar ::tk::dialog::file::$dataName data
     ::tk::dialog::file::chooseDir::Config $dataName $args
 
-    if {[string equal $data(-parent) .]} {
+    if {$data(-parent) eq "."} {
         set w .$dataName
     } else {
         set w $data(-parent).$dataName
@@ -39,7 +39,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     #
     if {![winfo exists $w]} {
 	::tk::dialog::file::Create $w TkChooseDir
-    } elseif {[string compare [winfo class $w] TkChooseDir]} {
+    } elseif {[winfo class $w] ne "TkChooseDir"} {
 	destroy $w
 	::tk::dialog::file::Create $w TkChooseDir
     } else {
@@ -71,7 +71,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
 	wm transient $w $data(-parent)
     }
 
-    trace variable data(selectPath) w [list ::tk::dialog::file::SetPath $w]
+    trace add variable data(selectPath) write [list ::tk::dialog::file::SetPath $w]
     $data(dirMenuBtn) configure \
 	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
 
@@ -107,8 +107,8 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     # Cleanup traces on selectPath variable
     #
 
-    foreach trace [trace vinfo data(selectPath)] {
-	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    foreach trace [trace info variable data(selectPath)] {
+	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
     $data(dirMenuBtn) configure -textvariable {}
 
@@ -129,8 +129,8 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     # last time the file dialog is used. The traces may cause troubles
     # if the dialog is now used with a different -parent option.
     #
-    foreach trace [trace vinfo data(selectPath)] {
-	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    foreach trace [trace info variable data(selectPath)] {
+	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
 
     # 1: the configuration specs
@@ -153,7 +153,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     #
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
-    if {$data(-title) == ""} {
+    if {$data(-title) eq ""} {
 	set data(-title) "[mc "Choose Directory"]"
     }
     
@@ -165,7 +165,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
-    if {$data(-initialdir) != ""} {
+    if {$data(-initialdir) ne ""} {
 	# Ensure that initialdir is an absolute path name.
 	if {[file isdirectory $data(-initialdir)]} {
 	    set old [pwd]
@@ -208,7 +208,7 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 	::tk::dialog::file::chooseDir::Done $w $iconText
     } else {
 	set text [$data(ent) get]
-	if { [string equal $text ""] } {
+	if { $text eq "" } {
 	    return
 	}
 	set text [eval file join [file split [string trim $text]]]
@@ -217,7 +217,7 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 	    # last time they came through here, reset the saved value and end
 	    # the dialog.  Otherwise, save the value (so we can do this test
 	    # next time).
-	    if { [string equal $text $data(previousEntryText)] } {
+	    if { $text eq $data(previousEntryText) } {
 		set data(previousEntryText) ""
 		::tk::dialog::file::chooseDir::Done $w $text
 	    } else {
@@ -227,7 +227,7 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 	    # Entry contains a valid directory.  If it is the same as the
 	    # current directory, end the dialog.  Otherwise, change to that
 	    # directory.
-	    if { [string equal $text $data(selectPath)] } {
+	    if { $text eq $data(selectPath) } {
 		::tk::dialog::file::chooseDir::Done $w $text
 	    } else {
 		set data(selectPath) $text
@@ -257,7 +257,7 @@ proc ::tk::dialog::file::chooseDir::DblClick {w} {
 proc ::tk::dialog::file::chooseDir::ListBrowse {w text} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    if {[string equal $text ""]} {
+    if {$text eq ""} {
 	return
     }
 
@@ -278,7 +278,7 @@ proc ::tk::dialog::file::chooseDir::Done {w {selectFilePath ""}} {
     upvar ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
-    if {[string equal $selectFilePath ""]} {
+    if {$selectFilePath eq ""} {
 	set selectFilePath $data(selectPath)
     }
     if { $data(-mustexist) } {

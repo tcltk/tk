@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.2 2004/05/13 23:28:34 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.3 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -157,8 +157,10 @@ proc ::tk::MessageBox {args} {
     if {[lsearch -exact {info warning error question} $data(-icon)] == -1} {
 	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
-    if {[string equal [tk windowingsystem] "classic"]
-	    || [string equal [tk windowingsystem] "aqua"]} {
+
+    # Store tk windowingsystem to avoid too many calls
+    set windowingsystem [tk windowingsystem]
+    if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	switch -- $data(-icon) {
 	    "error"     {set data(-icon) "stop"}
 	    "warning"   {set data(-icon) "caution"}
@@ -210,13 +212,13 @@ proc ::tk::MessageBox {args} {
     # If no default button was specified, the default default is the 
     # first button (Bug: 2218).
 
-    if {$data(-default) == ""} {
+    if {$data(-default) eq ""} {
 	set data(-default) [lindex [lindex $buttons 0] 0]
     }
 
     set valid 0
     foreach btn $buttons {
-	if {[string equal [lindex $btn 0] $data(-default)]} {
+	if {[lindex $btn 0] eq $data(-default)} {
 	    set valid 1
 	    break
 	}
@@ -228,7 +230,7 @@ proc ::tk::MessageBox {args} {
     # 2. Set the dialog to be a child window of $parent
     #
     #
-    if {[string compare $data(-parent) .]} {
+    if {$data(-parent) ne "."} {
 	set w $data(-parent).__tk__messagebox
     } else {
 	set w .__tk__messagebox
@@ -237,7 +239,7 @@ proc ::tk::MessageBox {args} {
     # 3. Create the top-level window and divide it into top
     # and bottom parts.
 
-    catch {destroy $w}
+    destroy $w
     toplevel $w -class Dialog
     wm title $w $data(-title)
     wm iconname $w Dialog
@@ -256,8 +258,7 @@ proc ::tk::MessageBox {args} {
 	wm transient $w $data(-parent)
     }    
 
-    if {[string equal [tk windowingsystem] "classic"]
-	    || [string equal [tk windowingsystem] "aqua"]} {
+    if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	unsupported::MacWindowStyle style $w dBoxProc
     }
 
@@ -265,8 +266,7 @@ proc ::tk::MessageBox {args} {
     pack $w.bot -side bottom -fill both
     frame $w.top -background $bg
     pack $w.top -side top -fill both -expand 1
-    if {![string equal [tk windowingsystem] "classic"]
-	    && ![string equal [tk windowingsystem] "aqua"]} {
+    if {$windowingsystem ne "classic" && $windowingsystem ne "aqua"} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -276,8 +276,7 @@ proc ::tk::MessageBox {args} {
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    if {[string equal [tk windowingsystem] "classic"]
-	    || [string equal [tk windowingsystem] "aqua"]} {
+    if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
 	option add *Dialog.msg.font {Times 14} widgetDefault
@@ -285,9 +284,8 @@ proc ::tk::MessageBox {args} {
 
     label $w.msg -anchor nw -justify left -text $data(-message) \
 	    -background $bg
-    if {[string compare $data(-icon) ""]} {
-	if {([string equal [tk windowingsystem] "classic"]
-		|| [string equal [tk windowingsystem] "aqua"])
+    if {$data(-icon) ne ""} {
+	if {($windowingsystem eq "classic" || $windowingsystem eq "aqua")
 		|| ([winfo depth $w] < 4) || $tk_strictMotif} {
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
@@ -345,7 +343,7 @@ proc ::tk::MessageBox {args} {
 	eval [list tk::AmpWidget button $w.$name -padx 3m] $opts \
 		[list -command [list set tk::Priv(button) $name]]
 
-	if {[string equal $name $data(-default)]} {
+	if {$name eq $data(-default)} {
 	    $w.$name configure -default active
 	} else {
 	    $w.$name configure -default normal
@@ -365,14 +363,14 @@ proc ::tk::MessageBox {args} {
     }
     bind $w <Alt-Key> [list ::tk::AltKeyInDialog $w %A]
 
-    if {[string compare {} $data(-default)]} {
+    if {$data(-default) ne ""} {
 	bind $w <FocusIn> {
-	    if {[string equal Button [winfo class %W]]} {
+	    if {"Button" eq [winfo class %W]} {
 		%W configure -default active
 	    }
 	}
 	bind $w <FocusOut> {
-	    if {[string equal Button [winfo class %W]]} {
+	    if {"Button" eq [winfo class %W]} {
 		%W configure -default normal
 	    }
 	}
@@ -381,7 +379,7 @@ proc ::tk::MessageBox {args} {
     # 6. Create a binding for <Return> on the dialog
 
     bind $w <Return> {
-	if {[string equal Button [winfo class %W]]} {
+	if {"Button" eq [winfo class %W]} {
 	    tk::ButtonInvoke %W
 	}
     }
@@ -394,7 +392,7 @@ proc ::tk::MessageBox {args} {
 
     # 8. Set a grab and claim the focus too.
 
-    if {[string compare $data(-default) ""]} {
+    if {$data(-default) ne ""} {
 	set focus $w.$data(-default)
     } else {
 	set focus $w

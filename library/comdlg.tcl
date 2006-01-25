@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.9 2003/02/21 13:32:14 dkf Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.9.2.1 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -121,7 +121,7 @@ proc tclListValidFlags {v} {
 #
 proc ::tk::FocusGroup_Create {t} {
     variable ::tk::Priv
-    if {[string compare [winfo toplevel $t] $t]} {
+    if {[winfo toplevel $t] ne $t} {
 	error "$t is not a toplevel window"
     }
     if {![info exists Priv(fg,$t)]} {
@@ -173,7 +173,7 @@ proc ::tk::FocusGroup_Destroy {t w} {
     variable FocusOut
     variable ::tk::Priv
 
-    if {[string equal $t $w]} {
+    if {$t eq $w} {
 	unset Priv(fg,$t)
 	unset Priv(focus,$t) 
 
@@ -184,16 +184,10 @@ proc ::tk::FocusGroup_Destroy {t w} {
 	    unset FocusOut($name)
 	}
     } else {
-	if {[info exists Priv(focus,$t)] && \
-		[string equal $Priv(focus,$t) $w]} {
+	if {[info exists Priv(focus,$t)] && $Priv(focus,$t) eq $w} {
 	    set Priv(focus,$t) ""
 	}
-	catch {
-	    unset FocusIn($t,$w)
-	}
-	catch {
-	    unset FocusOut($t,$w)
-	}
+	unset -nocomplain FocusIn($t,$w) FocusOut($t,$w)
     }
 }
 
@@ -206,8 +200,7 @@ proc ::tk::FocusGroup_In {t w detail} {
     variable FocusIn
     variable ::tk::Priv
 
-    if {[string compare $detail NotifyNonlinear] && \
-	    [string compare $detail NotifyNonlinearVirtual]} {
+    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out&in of the window *or*
 	# ordinary keypresses some window managers (ie: CDE [Bug: 2960]).
 	return
@@ -219,7 +212,7 @@ proc ::tk::FocusGroup_In {t w detail} {
     if {![info exists Priv(focus,$t)]} {
 	return
     }
-    if {[string equal $Priv(focus,$t) $w]} {
+    if {$Priv(focus,$t) eq $w} {
 	# This is already in focus
 	#
 	return
@@ -240,8 +233,7 @@ proc ::tk::FocusGroup_Out {t w detail} {
     variable FocusOut
     variable ::tk::Priv
 
-    if {[string compare $detail NotifyNonlinear] && \
-	    [string compare $detail NotifyNonlinearVirtual]} {
+    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out of the window
 	return
     }
@@ -279,11 +271,11 @@ proc ::tk::FDGetFileTypes {string} {
 	    continue
 	}
 
-	set name "$label ("
+	set name "$label \("
 	set sep ""
 	set doAppend 1
 	foreach ext $fileTypes($label) {
-	    if {[string equal $ext ""]} {
+	    if {$ext eq ""} {
 		continue
 	    }
 	    regsub {^[.]} $ext "*." ext
@@ -299,9 +291,9 @@ proc ::tk::FDGetFileTypes {string} {
 		lappend exts $ext
 		set hasGotExt($label,$ext) 1
 	    }
-	    set sep ,
+	    set sep ","
 	}
-	append name ")"
+	append name "\)"
 	lappend types [list $name $exts]
 
 	set hasDoneType($label) 1

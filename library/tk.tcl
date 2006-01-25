@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.46.2.2 2004/10/29 11:16:37 patthoyts Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.46.2.3 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -50,7 +50,7 @@ namespace eval ::tk {
 # Add Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
 
-if {[info exists ::auto_path] && [string compare {} $::tk_library] && \
+if {[info exists ::auto_path] && $::tk_library ne "" && \
 	[lsearch -exact $::auto_path $::tk_library] < 0} {
     lappend ::auto_path $::tk_library
 }
@@ -79,20 +79,21 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     wm withdraw $w
     update idletasks
     set checkBounds 1
+    set place_len [string length $place]
     if {$place eq ""} {
 	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
 	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
 	set checkBounds 0
-    } elseif {[string equal -len [string length $place] $place "pointer"]} {
+    } elseif {[string equal -length $place_len $place "pointer"]} {
 	## place at POINTER (centered if $anchor == center)
-	if {[string equal -len [string length $anchor] $anchor "center"]} {
+	if {[string equal -length [string length $anchor] $anchor "center"]} {
 	    set x [expr {[winfo pointerx $w]-[winfo reqwidth $w]/2}]
 	    set y [expr {[winfo pointery $w]-[winfo reqheight $w]/2}]
 	} else {
 	    set x [winfo pointerx $w]
 	    set y [winfo pointery $w]
 	}
-    } elseif {[string equal -len [string length $place] $place "widget"] && \
+    } elseif {[string equal -length $place_len $place "widget"] && \
 	    [winfo exists $anchor] && [winfo ismapped $anchor]} {
 	## center about WIDGET $anchor, widget must be mapped
 	set x [expr {[winfo rootx $anchor] + \
@@ -104,7 +105,10 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
 	set checkBounds 0
     }
-    if {[tk windowingsystem] eq "win32"} {
+
+    set windowingsystem [tk windowingsystem]
+
+    if {$windowingsystem eq "win32"} {
         # Bug 533519: win32 multiple desktops may produce negative geometry.
         set checkBounds 0
     }
@@ -119,8 +123,7 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	} elseif {$y > ([winfo screenheight $w]-[winfo reqheight $w])} {
 	    set y [expr {[winfo screenheight $w]-[winfo reqheight $w]}]
 	}
-	if {[tk windowingsystem] eq "macintosh" \
-		|| [tk windowingsystem] eq "aqua"} {
+	if {$windowingsystem eq "macintosh" || $windowingsystem eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
 	    if {$y < 20} { set y 20 }
 	}
@@ -175,13 +178,13 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 
     catch {focus $oldFocus}
     grab release $grab
-    if {[string equal $destroy "withdraw"]} {
+    if {$destroy eq "withdraw"} {
 	wm withdraw $grab
     } else {
 	destroy $grab
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
-	if {[string equal $oldStatus "global"]} {
+	if {$oldStatus eq "global"} {
 	    grab -global $oldGrab
 	} else {
 	    grab $oldGrab
@@ -201,7 +204,7 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 # Results:
 #   Returns the selection, or an error if none could be found
 #
-if {[string equal $tcl_platform(platform) "unix"]} {
+if {$tcl_platform(platform) eq "unix"} {
     proc ::tk::GetSelection {w {sel PRIMARY}} {
 	if {[catch {selection get -displayof $w -selection $sel \
 		-type UTF8_STRING} txt] \
@@ -308,12 +311,12 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
 # using compiled code.
 #----------------------------------------------------------------------
 
-if {[string equal [info commands tk_chooseColor] ""]} {
+if {[info commands tk_chooseColor] eq ""} {
     proc ::tk_chooseColor {args} {
 	return [eval tk::dialog::color:: $args]
     }
 }
-if {[string equal [info commands tk_getOpenFile] ""]} {
+if {[info commands tk_getOpenFile] eq ""} {
     proc ::tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
 	    return [eval tk::MotifFDialog open $args]
@@ -322,7 +325,7 @@ if {[string equal [info commands tk_getOpenFile] ""]} {
 	}
     }
 }
-if {[string equal [info commands tk_getSaveFile] ""]} {
+if {[info commands tk_getSaveFile] eq ""} {
     proc ::tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
 	    return [eval tk::MotifFDialog save $args]
@@ -331,12 +334,12 @@ if {[string equal [info commands tk_getSaveFile] ""]} {
 	}
     }
 }
-if {[string equal [info commands tk_messageBox] ""]} {
+if {[info commands tk_messageBox] eq ""} {
     proc ::tk_messageBox {args} {
 	return [eval tk::MessageBox $args]
     }
 }
-if {[string equal [info command tk_chooseDirectory] ""]} {
+if {[info command tk_chooseDirectory] eq ""} {
     proc ::tk_chooseDirectory {args} {
 	return [eval ::tk::dialog::file::chooseDir:: $args]
     }
@@ -364,7 +367,7 @@ switch [tk windowingsystem] {
 	# This seems to be correct on *some* HP systems.
 	catch { event add <<PrevWindow>> <hpBackTab> }
 
-	trace variable ::tk_strictMotif w ::tk::EventMotifBindings
+	trace add variable ::tk_strictMotif write ::tk::EventMotifBindings
 	set ::tk_strictMotif $::tk_strictMotif
     }
     "win32" {
@@ -399,7 +402,7 @@ switch [tk windowingsystem] {
 # ----------------------------------------------------------------------
 
 if {$::tk_library ne ""} {
-    if {[string equal $tcl_platform(platform) "macintosh"]} {
+    if {$tcl_platform(platform) eq "macintosh"} {
 	proc ::tk::SourceLibFile {file} {
 	    if {[catch {
 		namespace eval :: \
@@ -456,8 +459,9 @@ proc ::tk::CancelRepeat {} {
 # w - Window to which focus should be set.
 
 proc ::tk::TabToWindow {w} {
-    if {[string equal [winfo class $w] Entry] \
-	    || [string equal [winfo class $w] Spinbox]} {
+    set wclass [winfo class $w]
+
+    if {$wclass eq "Entry" || $wclass eq "Spinbox"} {
 	$w selection range 0 end
 	$w icursor end
     }
@@ -509,7 +513,7 @@ proc ::tk::SetAmpText {widget text} {
 proc ::tk::AmpWidget {class path args} {
     set wcmd [list $class $path]
     foreach {opt val} $args {
-	if {[string equal $opt {-text}]} {
+	if {$opt eq "-text"} {
 	    foreach {newtext under} [::tk::UnderlineAmpersand $val] {
 		lappend wcmd -text $newtext -underline $under
 	    }
@@ -518,7 +522,7 @@ proc ::tk::AmpWidget {class path args} {
 	}
     }
     eval $wcmd
-    if {$class=="button"} {
+    if {$class eq "button"} {
 	bind $path <<AltUnderlined>> [list $path invoke]
     }
     return $path
@@ -541,7 +545,7 @@ proc ::tk::FindAltKeyTarget {path char} {
 		[concat [grid slaves $path] \
 		[pack slaves $path] \
 		[place slaves $path] ] {
-		if {""!=[set target [::tk::FindAltKeyTarget $child $char]]} {
+		if {"" ne [set target [::tk::FindAltKeyTarget $child $char]]} {
 		    return $target
 		}
 	    }
@@ -556,7 +560,7 @@ proc ::tk::FindAltKeyTarget {path char} {
 #
 proc ::tk::AltKeyInDialog {path key} {
     set target [::tk::FindAltKeyTarget $path $key]
-    if { $target == ""} return
+    if { $target eq ""} return
     event generate $target <<AltUnderlined>>
 }
 
@@ -576,7 +580,7 @@ proc ::tk::mcmaxamp {args} {
 }
 # For now, turn off the custom mdef proc for the mac:
 
-if {[string equal [tk windowingsystem] "aqua"]} {
+if {[tk windowingsystem] eq "aqua"} {
     namespace eval ::tk::mac {
 	set useCustomMDEF 0
     }

@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# RCS: @(#) $Id: palette.tcl,v 1.8 2001/11/29 10:54:21 dkf Exp $
+# RCS: @(#) $Id: palette.tcl,v 1.8.2.1 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
@@ -52,9 +52,13 @@ proc ::tk_setPalette {args} {
 	    set new(foreground) white
 	}
     }
-    set fg [winfo rgb . $new(foreground)]
-    set darkerBg [format #%02x%02x%02x [expr {(9*[lindex $bg 0])/2560}] \
-	    [expr {(9*[lindex $bg 1])/2560}] [expr {(9*[lindex $bg 2])/2560}]]
+
+    # To avoir too many lindex...
+    foreach {fg_r fg_g fg_b} [winfo rgb . $new(foreground)] {break}
+    foreach {bg_r bg_g bg_b} $bg {break}
+
+    set darkerBg [format #%02x%02x%02x [expr {(9*$bg_r)/2560}] \
+	    [expr {(9*$bg_g)/2560}] [expr {(9*$bg_b)/2560}]]
     foreach i {activeForeground insertBackground selectForeground \
 	    highlightColor} {
 	if {![info exists new($i)]} {
@@ -63,9 +67,9 @@ proc ::tk_setPalette {args} {
     }
     if {![info exists new(disabledForeground)]} {
 	set new(disabledForeground) [format #%02x%02x%02x \
-		[expr {(3*[lindex $bg 0] + [lindex $fg 0])/1024}] \
-		[expr {(3*[lindex $bg 1] + [lindex $fg 1])/1024}] \
-		[expr {(3*[lindex $bg 2] + [lindex $fg 2])/1024}]]
+		[expr {(3*$bg_r + $fg_r)/1024}] \
+		[expr {(3*$bg_g + $fg_g)/1024}] \
+		[expr {(3*$bg_b + $fg_b)/1024}]]
     }
     if {![info exists new(highlightBackground)]} {
 	set new(highlightBackground) $new(background)
@@ -76,8 +80,8 @@ proc ::tk_setPalette {args} {
 	# up by 15% or 1/3 of the way to full white, whichever is
 	# greater.
 
-	foreach i {0 1 2} {
-	    set light($i) [expr {[lindex $bg $i]/256}]
+	foreach i {0 1 2} color "$bg_r $bg_g $bg_b" {
+	    set light($i) [expr {$color/256}]
 	    set inc1 [expr {($light($i)*15)/100}]
 	    set inc2 [expr {(255-$light($i))/3}]
 	    if {$inc1 > $inc2} {
@@ -128,7 +132,7 @@ proc ::tk_setPalette {args} {
 
     eval [tk::RecolorTree . new]
 
-    catch {destroy .___tk_set_palette}
+    destroy .___tk_set_palette
 
     # Change the option database so that future windows will get the
     # same colors.
