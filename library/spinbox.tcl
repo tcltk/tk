@@ -4,7 +4,7 @@
 # procedures that help in implementing those bindings.  The spinbox builds
 # off the entry widget, so it can reuse Entry bindings and procedures.
 #
-# RCS: @(#) $Id: spinbox.tcl,v 1.6 2002/08/31 06:12:28 das Exp $
+# RCS: @(#) $Id: spinbox.tcl,v 1.6.2.1 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -212,14 +212,14 @@ bind Spinbox <Escape> {# nothing}
 bind Spinbox <Return> {# nothing}
 bind Spinbox <KP_Enter> {# nothing}
 bind Spinbox <Tab> {# nothing}
-if {[string equal [tk windowingsystem] "classic"]
-	|| [string equal [tk windowingsystem] "aqua"]} {
+
+if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
 	bind Spinbox <Command-KeyPress> {# nothing}
 }
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.
-if {[string compare $tcl_platform(platform) "windows"]} {
+if {$tcl_platform(platform) ne "windows"} {
     bind Spinbox <Insert> {
 	catch {::tk::EntryInsert %W [::tk::GetSelection %W PRIMARY]}
     }
@@ -496,7 +496,7 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 proc ::tk::spinbox::Paste {w x} {
     $w icursor [::tk::spinbox::ClosestGap $w $x]
     catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
-    if {[string equal "disabled" [$w cget -state]]} {focus $w}
+    if {"disabled" eq [$w cget -state]} {focus $w}
 }
 
 # ::tk::spinbox::Motion --

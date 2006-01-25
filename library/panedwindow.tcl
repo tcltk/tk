@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: panedwindow.tcl,v 1.6.2.3 2005/02/12 00:48:05 hobbs Exp $
+# RCS: @(#) $Id: panedwindow.tcl,v 1.6.2.4 2006/01/25 18:21:41 dgp Exp $
 #
 
 bind Panedwindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }
@@ -39,7 +39,7 @@ proc ::tk::panedwindow::MarkSash {w x y proxy} {
     set what [$w identify $x $y]
     if { [llength $what] == 2 } {
 	foreach {index which} $what break
-	if { !$::tk_strictMotif || [string equal $which "handle"] } {
+	if { !$::tk_strictMotif || $which eq "handle" } {
 	    if {!$proxy} { $w sash mark $index $x $y }
 	    set ::tk::Priv(sash) $index
 	    foreach {sx sy} [$w sash coord $index] break
@@ -115,11 +115,11 @@ proc ::tk::panedwindow::Motion {w x y} {
     variable ::tk::Priv
     set id [$w identify $x $y]
     if {([llength $id] == 2) && \
-	    (!$::tk_strictMotif || [string equal [lindex $id 1] "handle"])} {
+	    (!$::tk_strictMotif || [lindex $id 1] eq "handle")} {
 	if { ![info exists Priv($w,panecursor)] } {
 	    set Priv($w,panecursor) [$w cget -cursor]
-	    if { [string equal [$w cget -sashcursor] ""] } {
-		if { [string equal [$w cget -orient] "horizontal"] } {
+	    if { [$w cget -sashcursor] eq "" } {
+		if { [$w cget -orient] eq "horizontal" } {
 		    $w configure -cursor sb_h_double_arrow
 		} else {
 		    $w configure -cursor sb_v_double_arrow

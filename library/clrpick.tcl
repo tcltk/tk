@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.20 2003/02/21 14:40:26 dkf Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.20.2.1 2006/01/25 18:21:41 dgp Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -69,7 +69,7 @@ proc ::tk::dialog::color:: {args} {
 
     set sc [winfo screen $data(-parent)]
     set winExists [winfo exists $w]
-    if {!$winExists || [string compare $sc [winfo screen $w]]} {
+    if {!$winExists || $sc ne [winfo screen $w]} {
 	if {$winExists} {
 	    destroy $w
 	}
@@ -171,8 +171,7 @@ proc ::tk::dialog::color::Config {dataName argList} {
 
     # 1: the configuration specs
     #
-    if {[info exists Priv(selectColor)] && \
-	    [string compare $Priv(selectColor) ""]} {
+    if {[info exists Priv(selectColor)] && $Priv(selectColor) ne ""} {
 	set defaultColor $Priv(selectColor)
     } else {
 	set defaultColor [. cget -background]
@@ -188,7 +187,7 @@ proc ::tk::dialog::color::Config {dataName argList} {
     #
     tclParseConfigSpec ::tk::dialog::color::$dataName $specs "" $argList
 
-    if {[string equal $data(-title) ""]} {
+    if {$data(-title) eq ""} {
 	set data(-title) " "
     }
     if {[catch {winfo rgb . $data(-initialcolor)} err]} {
@@ -429,12 +428,12 @@ proc ::tk::dialog::color::DrawColorScale {w c {create 0}} {
     for {set i 0} { $i < $data(NUM_COLORBARS)} { incr i} {
 	set intensity [expr {$i * $data(intensityIncr)}]
 	set startx [expr {$i * $data(colorbarWidth) + $highlightW}]
-	if {[string equal $c "red"]} {
+	if {$c eq "red"} {
 	    set color [format "#%02x%02x%02x" \
 			   $intensity \
 			   $data(green,intensity) \
 			   $data(blue,intensity)]
-	} elseif {[string equal $c "green"]} {
+	} elseif {$c eq "green"} {
 	    set color [format "#%02x%02x%02x" \
 			   $data(red,intensity) \
 			   $intensity \
