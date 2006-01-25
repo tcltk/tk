@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.18 2005/11/25 15:58:15 dkf Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.19 2006/01/25 18:22:04 dgp Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -71,7 +71,8 @@ proc ::tk::dialog::file::chooseDir:: {args} {
 	wm transient $w $data(-parent)
     }
 
-    trace variable data(selectPath) w [list ::tk::dialog::file::SetPath $w]
+    trace add variable data(selectPath) write \
+	    [list ::tk::dialog::file::SetPath $w]
     $data(dirMenuBtn) configure \
 	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
 
@@ -107,8 +108,8 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     # Cleanup traces on selectPath variable
     #
 
-    foreach trace [trace vinfo data(selectPath)] {
-	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    foreach trace [trace info variable data(selectPath)] {
+	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
     $data(dirMenuBtn) configure -textvariable {}
 
@@ -129,8 +130,8 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     # last time the file dialog is used. The traces may cause troubles
     # if the dialog is now used with a different -parent option.
     #
-    foreach trace [trace vinfo data(selectPath)] {
-	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    foreach trace [trace info variable data(selectPath)] {
+	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
 
     # 1: the configuration specs
@@ -153,7 +154,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     #
     tclParseConfigSpec ::tk::dialog::file::$dataName $specs "" $argList
 
-    if {$data(-title) == ""} {
+    if {$data(-title) eq ""} {
 	set data(-title) "[mc "Choose Directory"]"
     }
     
@@ -165,7 +166,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
-    if {$data(-initialdir) != ""} {
+    if {$data(-initialdir) ne ""} {
 	# Ensure that initialdir is an absolute path name.
 	if {[file isdirectory $data(-initialdir)]} {
 	    set old [pwd]
