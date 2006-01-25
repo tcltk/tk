@@ -3,7 +3,7 @@
 #	Some functions needed for the common dialog boxes. Probably need to go
 #	in a different file.
 #
-# RCS: @(#) $Id: comdlg.tcl,v 1.12 2005/07/25 15:31:11 dgp Exp $
+# RCS: @(#) $Id: comdlg.tcl,v 1.13 2006/01/25 18:22:04 dgp Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -187,12 +187,7 @@ proc ::tk::FocusGroup_Destroy {t w} {
 	if {[info exists Priv(focus,$t)] && ($Priv(focus,$t) eq $w)} {
 	    set Priv(focus,$t) ""
 	}
-	catch {
-	    unset FocusIn($t,$w)
-	}
-	catch {
-	    unset FocusOut($t,$w)
-	}
+	unset -nocomplain FocusIn($t,$w) FocusOut($t,$w)
     }
 }
 
@@ -285,7 +280,7 @@ proc ::tk::FDGetFileTypes {string} {
 	    }
 	}
 	
-	set name "$label ("
+	set name "$label \("
 	set sep ""
 	set doAppend 1
 	foreach ext $fileTypes($label) {
@@ -305,9 +300,9 @@ proc ::tk::FDGetFileTypes {string} {
 		lappend exts $ext
 		set hasGotExt($label,$ext) 1
 	    }
-	    set sep ,
+	    set sep ","
 	}
-	append name ")"
+	append name "\)"
 	lappend types [list $name $exts]
 
 	set hasDoneType($label) 1

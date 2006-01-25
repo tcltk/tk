@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.54 2005/11/22 13:22:49 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.55 2006/01/25 18:22:04 dgp Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -326,10 +326,7 @@ proc ::tk::IconList_DeleteAll {w} {
     upvar ::tk::$w:itemList itemList
 
     $data(canvas) delete all
-    catch {unset data(selected)}
-    catch {unset data(rect)}
-    catch {unset data(list)}
-    catch {unset itemList}
+    unset -nocomplain data(selected) data(rect) data(list) itemList
     set data(maxIW) 1
     set data(maxIH) 1
     set data(maxTW) 1
@@ -478,7 +475,7 @@ proc ::tk::IconList_Arrange {w} {
 proc ::tk::IconList_Invoke {w} {
     upvar ::tk::$w data
 
-    if {$data(-command) != "" && [llength $data(selection)]} {
+    if {$data(-command) ne "" && [llength $data(selection)]} {
 	uplevel #0 $data(-command)
     }
 }
@@ -529,7 +526,7 @@ proc ::tk::IconList_See {w rTag} {
 	set dispX $x1
     }
 
-    if {$oldDispX != $dispX} {
+    if {$oldDispX ne $dispX} {
 	set fraction [expr {double($dispX)/double($scrollW)}]
 	$data(canvas) xview moveto $fraction
     }
@@ -775,7 +772,7 @@ proc ::tk::IconList_Goto {w text} {
 proc ::tk::IconList_Reset {w} {
     variable ::tk::Priv
 
-    catch {unset Priv(ILAccel,$w)}
+    unset -nocomplain Priv(ILAccel,$w)
 }
 
 #----------------------------------------------------------------------
@@ -845,7 +842,7 @@ proc ::tk::dialog::file:: {type args} {
     }
 
     # Make sure subseqent uses of this dialog are independent [Bug 845189]
-    catch {unset data(extUsed)}
+    unset -nocomplain data(extUsed)
 
     # Dialog boxes should be transient with respect to their parent,
     # so that they will always stay on top of their parent window.  However,
@@ -861,7 +858,7 @@ proc ::tk::dialog::file:: {type args} {
     # Add traces on the selectPath variable
     #
 
-    trace variable data(selectPath) w \
+    trace add variable data(selectPath) write \
 	    [list ::tk::dialog::file::SetPath $w]
     $data(dirMenuBtn) configure \
 	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
@@ -914,8 +911,8 @@ proc ::tk::dialog::file:: {type args} {
     # Cleanup traces on selectPath variable
     #
 
-    foreach trace [trace vinfo data(selectPath)] {
-	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    foreach trace [trace info variable data(selectPath)] {
+	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
     $data(dirMenuBtn) configure -textvariable {}
 
@@ -935,8 +932,8 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     # last time the file dialog is used. The traces may cause troubles
     # if the dialog is now used with a different -parent option.
 
-    foreach trace [trace vinfo data(selectPath)] {
-	trace vdelete data(selectPath) [lindex $trace 0] [lindex $trace 1]
+    foreach trace [trace info variable data(selectPath)] {
+	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
 
     # 1: the configuration specs
@@ -979,7 +976,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     # 4: set the default directory and selection according to the -initial
     #    settings
     #
-    if {$data(-initialdir) != ""} {
+    if {$data(-initialdir) ne ""} {
 	# Ensure that initialdir is an absolute path name.
 	if {[file isdirectory $data(-initialdir)]} {
 	    set old [pwd]
@@ -1240,7 +1237,7 @@ proc ::tk::dialog::file::Update {w} {
     upvar ::tk::dialog::file::$dataName data
     variable ::tk::Priv
     global tk_library
-    catch {unset data(updateId)}
+    unset -nocomplain data(updateId)
 
     if {![info exists Priv(folderImage)]} {
 	set Priv(folderImage) [image create photo -data {
@@ -1356,9 +1353,9 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 proc ::tk::dialog::file::SetPathSilently {w path} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    trace vdelete  data(selectPath) w [list ::tk::dialog::file::SetPath $w]
+    trace remove variable data(selectPath) write [list ::tk::dialog::file::SetPath $w]
     set data(selectPath) $path
-    trace variable data(selectPath) w [list ::tk::dialog::file::SetPath $w]
+    trace add variable data(selectPath) write [list ::tk::dialog::file::SetPath $w]
 }
 
 

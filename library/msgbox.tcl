@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.29 2004/08/05 10:04:36 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.30 2006/01/25 18:22:04 dgp Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -158,7 +158,8 @@ proc ::tk::MessageBox {args} {
     if {[lsearch -exact {info warning error question} $data(-icon)] == -1} {
 	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
-    if {[tk windowingsystem] eq "aqua"} {
+    set windowingsystem [tk windowingsystem]
+    if {$windowingsystem eq "aqua"} {
 	switch -- $data(-icon) {
 	    "error"     {set data(-icon) "stop"}
 	    "warning"   {set data(-icon) "caution"}
@@ -216,7 +217,7 @@ proc ::tk::MessageBox {args} {
     # If no default button was specified, the default default is the 
     # first button (Bug: 2218).
 
-    if {$data(-default) == ""} {
+    if {$data(-default) eq ""} {
 	set data(-default) [lindex [lindex $buttons 0] 0]
     }
 
@@ -262,7 +263,7 @@ proc ::tk::MessageBox {args} {
 	wm transient $w $data(-parent)
     }    
 
-    if {[tk windowingsystem] eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	unsupported::MacWindowStyle style $w dBoxProc
     }
 
@@ -271,7 +272,7 @@ proc ::tk::MessageBox {args} {
     pack $w.bot -side bottom -fill both
     frame $w.top -background $bg
     pack $w.top -side top -fill both -expand 1
-    if {[tk windowingsystem] ne "aqua"} {
+    if {$windowingsystem ne "aqua"} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -282,7 +283,7 @@ proc ::tk::MessageBox {args} {
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
     option add *Dialog.dtl.wrapLength 3i widgetDefault
-    if {[tk windowingsystem] eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	option add *Dialog.msg.font system widgetDefault
 	option add *Dialog.dtl.font system widgetDefault
     } else {
@@ -297,7 +298,7 @@ proc ::tk::MessageBox {args} {
 		-background $bg
     }
     if {$data(-icon) ne ""} {
-	if {[tk windowingsystem] eq "aqua"
+	if {$windowingsystem eq "aqua"
 		|| ([winfo depth $w] < 4) || $tk_strictMotif} {
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {

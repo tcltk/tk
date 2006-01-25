@@ -1,3 +1,17 @@
+2006-01-25  Don Porter	<dgp@users.sourceforge.net>
+
+	* library/bgerror.tcl:	Updates to use Tcl 8.4 features. [Patch 1237759]
+	* library/choosedir.tcl:
+	* library/comdlg.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/focus.tcl:
+	* library/msgbox.tcl:
+	* library/palette.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl:
+
 2006-01-23  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure:    minor fix to Darwin specific code removing
