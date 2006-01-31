@@ -1,6 +1,11 @@
+2006-01-31  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/bgerror.tcl (::tk::dialog::error::bgerror): Finish the
+	internationalization of the error dialog. [Bug 1409264]
+
 2006-01-25  Don Porter	<dgp@users.sourceforge.net>
 
-	* library/bgerror.tcl:	Updates to use Tcl 8.4 features. [Patch 1237759]
+	* library/bgerror.tcl: Updates to use Tcl 8.4 features. [Patch 1237759]
 	* library/choosedir.tcl:
 	* library/comdlg.tcl:
 	* library/console.tcl:
@@ -19,20 +24,19 @@
 
 2006-01-20  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkEvent.c, unix/tkUnixEvent.c:  XIM fixes 
-	[See #905830, patch tk84-xim-fixes.patch].
-	+ Revert 2005-12-05 patch disabling XIM when SCIM in use;
-	+ Make sure all X events get passed to XFilterEvent,
+	* generic/tkEvent.c, unix/tkUnixEvent.c: XIM fixes [See 905830, patch
+	tk84-xim-fixes.patch], and revert 2005-12-05 patch disabling XIM when
+	SCIM in use, and make sure all X events get passed to XFilterEvent,
 	including those without a corresponding Tk window.
 
 2006-01-13  Anton Kovalenko <a_kovalenko@users.sourceforge.net>
 
-	* generic/tkUndo.c (TkUndoSetDepth): Don't free
-	TkUndoSubAtoms for separator entries that are deleted:
-	there is some unpredictable garbage instead of subatoms.
+	* generic/tkUndo.c (TkUndoSetDepth): Don't free TkUndoSubAtoms for
+	separator entries that are deleted: there is some unpredictable
+	garbage instead of subatoms.
 
-	Free both 'apply' and 'revert' action chains for 
-	non-separator entries.
+	Free both 'apply' and 'revert' action chains for non-separator
+	entries.
 
 2006-01-12  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -44,8 +48,8 @@
 
 2006-01-11  Peter Spjuth  <peter.spjuth@space.se>
 
-	* generic/tkGrid.c: Removed a lingering error message from
-	TIP#147 implementation.
+	* generic/tkGrid.c: Removed a lingering error message from TIP#147
+	implementation.
 
 2006-01-10  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -68,14 +72,14 @@
 
 	* unix/configure:    add caching, use AC_CACHE_CHECK instead of
 	* unix/configure.in: AC_CACHE_VAL where possible, consistent message
-	* unix/tcl.m4:       quoting, sync relevant tclconfig/tcl.m4 changes and
-	gratuitous formatting differences, fix SC_CONFIG_MANPAGES with default
-	argument, Darwin improvements to SC_LOAD_*CONFIG.
+	* unix/tcl.m4:       quoting, sync relevant tclconfig/tcl.m4 changes
+	and gratuitous formatting differences, fix SC_CONFIG_MANPAGES with
+	default argument, Darwin improvements to SC_LOAD_*CONFIG.
 
 2005-12-28  Donal K. Fellows  <dkf@users.sf.net>
 
-	* generic/tkUndo.c (TkUndoSetDepth): Apply [Patch 1391939] from
-	Ludwig Callewaert to fix [Bug 1380427].
+	* generic/tkUndo.c (TkUndoSetDepth): Apply [Patch 1391939] from Ludwig
+	Callewaert to fix [Bug 1380427].
 
 2005-12-14  Daniel Steffen  <das@users.sourceforge.net>
 
