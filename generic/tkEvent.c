@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.32 2006/01/20 18:58:55 jenglish Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.33 2006/02/03 22:40:34 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1884,23 +1884,24 @@ TkCreateExitHandler(
     Tcl_MutexLock(&exitMutex);
 
     /*
-     * The call to TclInExit() is disabled here.  That's a private
-     * Tcl routine, and calling it is causing some trouble with portability
-     * of building Tk.  We should avoid private Tcl routines generally.
+     * The call to TclInExit() is disabled here. That's a private Tcl routine,
+     * and calling it is causing some trouble with portability of building Tk.
+     * We should avoid private Tcl routines generally.
      *
-     * In this case, the TclInExit() call is being used only to prevent
-     * a Tcl_CreateExitHandler() call when Tcl finalization is in progress.
-     * That's a situation that shouldn't happen anyway.  Recent changes
-     * within Tcl_Finalize now cause a Tcl_Panic() to happen if exit
-     * handlers get added after exit handling is complete.  By disabling
-     * the guard here, that panic will serve to help us find the buggy
-     * conditions and correct them.
+     * In this case, the TclInExit() call is being used only to prevent a
+     * Tcl_CreateExitHandler() call when Tcl finalization is in progress.
+     * That's a situation that shouldn't happen anyway. Recent changes within
+     * Tcl_Finalize now cause a Tcl_Panic() to happen if exit handlers get
+     * added after exit handling is complete. By disabling the guard here,
+     * that panic will serve to help us find the buggy conditions and correct
+     * them.
      *
-     * We can restore this guard if we find we must (hopefully getting
-     * public access to TclInExit() if we discover extensions really do
-     * need this), but during alpha development, this is a good time to
-     * dig in and find the root causes of finalization bugs.
+     * We can restore this guard if we find we must (hopefully getting public
+     * access to TclInExit() if we discover extensions really do need this),
+     * but during alpha development, this is a good time to dig in and find
+     * the root causes of finalization bugs.
      */
+
     if (firstExitPtr == NULL/* && !TclInExit()*/) {
 	Tcl_CreateExitHandler(TkFinalize, NULL);
     }
@@ -1979,7 +1980,11 @@ TkCreateThreadExitHandler(
     exitPtr = (ExitHandler *) ckalloc(sizeof(ExitHandler));
     exitPtr->proc = proc;
     exitPtr->clientData = clientData;
-    /* See comments in TkCreateExitHandler */
+
+    /*
+     * See comments in TkCreateExitHandler().
+     */
+
     if (tsdPtr->firstExitPtr == NULL/* && !TclInExit()*/) {
 	Tcl_CreateThreadExitHandler(TkFinalizeThread, NULL);
     }
