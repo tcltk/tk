@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.11 2006/02/07 11:25:26 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.12 2006/02/07 11:33:18 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -41,10 +41,10 @@ typedef struct {
  * Forward declarations...
  */
 
+static void		FinishedWithFont(UnixFtFont *fontPtr);
 static XftFont *	GetFont(UnixFtFont *fontPtr, FcChar32 ucs4);
 static UnixFtFont *	InitFont(Tk_Window tkwin, FcPattern *pattern,
 			    UnixFtFont *fontPtr);
-static void		FinishedWithFont(UnixFtFont *fontPtr);
 
 /*
  * Package initialization:
@@ -56,15 +56,15 @@ static void		FinishedWithFont(UnixFtFont *fontPtr);
 #define TCL_CFGVAL_ENCODING "ascii"
 #endif
 
-static Tcl_Config cfg[] = {
-    { "fontsystem", 	"xft" },
-    { 0,0 }
-};
-
 void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
+    static Tcl_Config cfg[] = {
+	{ "fontsystem", "xft" },
+	{ 0,0 }
+    };
+
     Tcl_RegisterConfig(mainPtr->interp, "tk", cfg, TCL_CFGVAL_ENCODING);
 }
 
