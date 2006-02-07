@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.25 2005/11/14 14:30:56 dgp Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.26 2006/02/07 11:20:01 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -161,7 +161,7 @@ typedef struct ThreadSpecificData {
 				 * loaded, this list grows to hold information
 				 * about what characters exist in each font
 				 * family. */
-    FontFamily controlFamily;   /* FontFamily used to handle control character
+    FontFamily controlFamily;	/* FontFamily used to handle control character
 				 * expansions. The encoding of this FontFamily
 				 * converts UTF-8 to backslashed escape
 				 * sequences. */
@@ -276,7 +276,7 @@ FontPkgCleanup(
     ClientData clientData)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->controlFamily.encoding != NULL) {
 	FontFamily *familyPtr = &tsdPtr->controlFamily;
@@ -315,7 +315,7 @@ TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_EncodingType type;
     SubFont dummy;
     int i;
@@ -603,7 +603,7 @@ UtfToUcs2beProc(
 	if (wDst > wDstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
-        }
+	}
 	src += Tcl_UtfToUniChar(src, wDst);
 
 	/*
@@ -905,7 +905,7 @@ TkpGetSubFonts(
 /*
  *---------------------------------------------------------------------------
  *
- *  Tk_MeasureChars --
+ * Tk_MeasureChars --
  *
  *	Determine the number of characters from the string that will fit in
  *	the given horizontal span. The measurement is done under the
@@ -1004,7 +1004,7 @@ Tk_MeasureChars(
 	    p = next;
 	}
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, source,  p - source,
+	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
 		&runString);
 	if (familyPtr->isTwoByteFont) {
 	    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
@@ -1198,7 +1198,7 @@ Tk_DrawChars(
 	if ((thisSubFontPtr != lastSubFontPtr)
 		|| (p == end) || (p-source > 200)) {
 	    if (p > source) {
-	        do_width = (needWidth || (p != end)) ? 1 : 0;
+		do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
 
 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
@@ -1228,7 +1228,7 @@ Tk_DrawChars(
 	    source = p;
 	    XSetFont(display, gc, lastSubFontPtr->fontStructPtr->fid);
 	    if (x > window_width) {
-	        break;
+		break;
 	    }
 	}
 	p = next;
@@ -1417,7 +1417,7 @@ InitFont(
 				 * the above arguments. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     unsigned long value;
     int minHi, maxHi, minLo, maxLo, fixed, width, limit, i, n;
     FontAttributes fa;
@@ -1670,7 +1670,7 @@ AllocFontFamily(
     FontAttributes fa;
     Tcl_Encoding encoding;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     GetFontAttributes(display, fontStructPtr, &fa);
     encoding = Tcl_GetEncoding(NULL, GetEncodingAlias(fa.xa.charset));
@@ -1744,11 +1744,11 @@ FreeFontFamily(
 {
     FontFamily **familyPtrPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     int i;
 
     if (familyPtr == NULL) {
-        return;
+	return;
     }
     familyPtr->refCount--;
     if (familyPtr->refCount > 0) {
@@ -1756,9 +1756,9 @@ FreeFontFamily(
     }
     Tcl_FreeEncoding(familyPtr->encoding);
     for (i = 0; i < FONTMAP_PAGES; i++) {
-        if (familyPtr->fontMap[i] != NULL) {
-            ckfree(familyPtr->fontMap[i]);
-        }
+	if (familyPtr->fontMap[i] != NULL) {
+	    ckfree(familyPtr->fontMap[i]);
+	}
     }
 
     /*
@@ -1766,8 +1766,8 @@ FreeFontFamily(
      */
 
     for (familyPtrPtr = &tsdPtr->fontFamilyList; ; ) {
-        if (*familyPtrPtr == familyPtr) {
-  	    *familyPtrPtr = familyPtr->nextPtr;
+	if (*familyPtrPtr == familyPtr) {
+	    *familyPtrPtr = familyPtr->nextPtr;
 	    break;
 	}
 	familyPtrPtr = &(*familyPtrPtr)->nextPtr;
@@ -2049,7 +2049,7 @@ FontMapLoadPage(
     XFontStruct *fontStructPtr;
     XCharStruct *widths;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     subFontPtr->fontMap[row] = (char *) ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
@@ -2081,7 +2081,7 @@ FontMapLoadPage(
 	int hi, lo;
 
 	if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i, src),
-        	TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
+		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
 	}
