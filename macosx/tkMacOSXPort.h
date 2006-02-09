@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.3.2.3 2005/11/27 02:36:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.3.2.4 2006/02/09 19:09:43 das Exp $
  */
 
 #ifndef _TKMACPORT
@@ -145,6 +145,13 @@ extern int		strcasecmp _ANSI_ARGS_((CONST char *s1,
 extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
 			    CONST char *s2, size_t n));
 #endif
+
+/*
+ * The following define causes Tk to use its internal keysym hash table
+ */
+
+#define REDO_KEYSYM_LOOKUP
+
 /*
  * Defines for X functions that are used by Tk but are treated as
  * no-op functions on the Macintosh.
