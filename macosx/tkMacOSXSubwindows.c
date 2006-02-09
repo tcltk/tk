@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.10 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.11 2006/02/09 19:08:50 das Exp $
  */
 
 #include "tkInt.h"
@@ -144,7 +144,7 @@ XDestroyWindow(
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 	if (macWin->winPtr->parentPtr != NULL) {
-	    TkMacOSXInvalClipRgns(macWin->winPtr->parentPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
 	}
 	DisposeRgn(macWin->clipRgn);
 	DisposeRgn(macWin->aboveClipRgn);
@@ -279,7 +279,7 @@ XMapWindow(
 	event.xmap.override_redirect = macWin->winPtr->atts.override_redirect;
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
-	TkMacOSXInvalClipRgns(macWin->winPtr->parentPtr);
+	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
     }
 
     /* 
@@ -357,7 +357,7 @@ XUnmapWindow(
 	 */
 	SetGWorld(destPort, NULL);
 	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW); /* TODO: may not be valid */
-	TkMacOSXInvalClipRgns(macWin->winPtr->parentPtr);
+	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
     }
 }
 
@@ -407,7 +407,7 @@ XResizeWindow(
 	        SizeWindow(GetWindowFromPort(destPort),
 		        (short) width, (short) height, false);
 	        TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
-	        TkMacOSXInvalClipRgns(macWin->winPtr);
+	        TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
             }
 	} else {
 	    int deltaX, deltaY;
@@ -425,7 +425,7 @@ XResizeWindow(
 
                 if (havePort) {
                     SetPort(destPort);
-		    TkMacOSXInvalClipRgns(macParent->winPtr);	
+		    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);	
 		    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 		}
 		deltaX = macParent->xOff +
@@ -459,7 +459,7 @@ XResizeWindow(
 	
         if (havePort) {
             SetPort(destPort);
-	    TkMacOSXInvalClipRgns(macParent->winPtr);	
+	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);	
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
         }
 	deltaX = - macWin->xOff;
@@ -563,7 +563,7 @@ XMoveResizeWindow(
 	
 	    /* TODO: is the following right? */
 	    TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
-	    TkMacOSXInvalClipRgns(macWin->winPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
         }
     } else {
 	int deltaX, deltaY, parentBorderwidth;
@@ -598,7 +598,7 @@ XMoveResizeWindow(
 
 	if (havePort) {
 	    SetPort( destPort);
-	    TkMacOSXInvalClipRgns(macParent->winPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 
@@ -674,7 +674,7 @@ XMoveWindow(
 
 	    /* TODO: is the following right? */
 	    TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
-	    TkMacOSXInvalClipRgns(macWin->winPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
         }
     } else {
 	int deltaX, deltaY, parentBorderwidth;
@@ -708,7 +708,7 @@ XMoveWindow(
 
         if (havePort) {
             SetPort(destPort);
-	    TkMacOSXInvalClipRgns(macParent->winPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
         }
         
@@ -857,7 +857,7 @@ XConfigureWindow(
 	destPort = TkMacOSXGetDrawablePort(w);
 	if (destPort != NULL) {
 	    SetPort( destPort);
-	    TkMacOSXInvalClipRgns(winPtr->parentPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
 	    TkMacOSXWinBounds(winPtr, &bounds);
 	    InvalWindowRect(GetWindowFromPort(destPort),&bounds);
 	}
@@ -1237,8 +1237,9 @@ TkMacOSXGetRootControl(
 
 void
 TkMacOSXInvalClipRgns(
-    TkWindow *winPtr)
+    Tk_Window tkwin)
 {
+    TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *childPtr;
 	
     /* 
@@ -1258,7 +1259,7 @@ TkMacOSXInvalClipRgns(
     childPtr = winPtr->childList;
     while (childPtr != NULL) {
 	if (!Tk_IsTopLevel(childPtr) && Tk_IsMapped(childPtr)) {
-	    TkMacOSXInvalClipRgns(childPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) childPtr);
 	}
 	childPtr = childPtr->nextPtr;
     }
@@ -1271,7 +1272,7 @@ TkMacOSXInvalClipRgns(
 	childPtr = TkpGetOtherWindow(winPtr);
 
 	if (childPtr != NULL && Tk_IsMapped(childPtr)) {
-	    TkMacOSXInvalClipRgns(childPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) childPtr);
 	}
 	
 	/*

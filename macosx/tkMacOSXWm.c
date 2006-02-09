@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.21 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.22 2006/02/09 19:08:50 das Exp $
  */
 #include <Carbon/Carbon.h>
 
@@ -4501,7 +4501,7 @@ TkMacOSXGrowToplevel(
 		    LoWord(growResult), HiWord(growResult), true);
 	    SetPort( GetWindowPort(whichWindow));
 	    InvalWindowRect(whichWindow,&portRect); /* TODO: may not be needed */
-	    TkMacOSXInvalClipRgns(winPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 	    TkGenWMConfigureEvent((Tk_Window) winPtr, -1, -1, 
 		    (int) LoWord(growResult), (int) HiWord(growResult),
 		    TK_SIZE_CHANGED);
@@ -4690,7 +4690,7 @@ TkMacOSXZoomToplevel(
     
     ZoomWindow(whichWindow, zoomPart, false);
     InvalWindowRect(whichWindow,&portRect);
-    TkMacOSXInvalClipRgns((TkWindow *) tkwin);
+    TkMacOSXInvalClipRgns(tkwin);
 
     LocalToGlobal(&location);
     TkMacOSXWindowOffset(whichWindow, &xOffset, &yOffset);
