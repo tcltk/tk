@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.85 2005/11/27 02:36:13 das Exp $
+ * RCS: @(#) $Id: tk.h,v 1.86 2006/02/09 19:08:51 das Exp $
  */
 
 #ifndef _TK
@@ -54,17 +54,6 @@ extern "C" {
 
 #define TK_VERSION	"8.5"
 #define TK_PATCH_LEVEL	"8.5a4"
-
-/*
- * The following definitions set up the proper options for Macintosh
- * compilers.  We use this method because there is no autoconf equivalent.
- */
-
-#if defined(MAC_OSX_TK)
-#   ifndef REDO_KEYSYM_LOOKUP
-#	define REDO_KEYSYM_LOOKUP
-#   endif
-#endif
 
 #ifndef _TCL
 #   include <tcl.h>

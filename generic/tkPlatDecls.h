@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.11 2005/05/29 06:47:04 das Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.12 2006/02/09 19:08:51 das Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -108,7 +108,7 @@ EXTERN void		TkGenWMConfigureEvent _ANSI_ARGS_((Tk_Window tkwin,
 #ifndef TkMacOSXInvalClipRgns_TCL_DECLARED
 #define TkMacOSXInvalClipRgns_TCL_DECLARED
 /* 6 */
-EXTERN void		TkMacOSXInvalClipRgns _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkMacOSXInvalClipRgns _ANSI_ARGS_((Tk_Window tkwin));
 #endif
 #ifndef TkMacOSXGetDrawablePort_TCL_DECLARED
 #define TkMacOSXGetDrawablePort_TCL_DECLARED
@@ -153,7 +153,7 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInitMenus) _ANSI_ARGS_((Tcl_Interp * interp)); /* 3 */
     void (*tkMacOSXInitAppleEvents) _ANSI_ARGS_((Tcl_Interp * interp)); /* 4 */
     void (*tkGenWMConfigureEvent) _ANSI_ARGS_((Tk_Window tkwin, int x, int y, int width, int height, int flags)); /* 5 */
-    void (*tkMacOSXInvalClipRgns) _ANSI_ARGS_((TkWindow * winPtr)); /* 6 */
+    void (*tkMacOSXInvalClipRgns) _ANSI_ARGS_((Tk_Window tkwin)); /* 6 */
     GWorldPtr (*tkMacOSXGetDrawablePort) _ANSI_ARGS_((Drawable drawable)); /* 7 */
     ControlRef (*tkMacOSXGetRootControl) _ANSI_ARGS_((Drawable drawable)); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) _ANSI_ARGS_((void)); /* 9 */

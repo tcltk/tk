@@ -1,3 +1,14 @@
+2006-02-09  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tk.decls:             fix signature of TkMacOSXInvalClipRgns
+	* generic/tkPlatDecls.h:        to use Tk_Window instead of internal	
+	* macosx/tkMacOSXSubwindows.c:  type TkWindow (which led to any include 
+	* macosx/tkMacOSXWindowEvent.c: of public header tkMacOSX.h requiring
+	* macosx/tkMacOSXWm.c:          prior include of tkInt.h).
+	
+	* generic/tk.h:          move TkAqua specific REDO_KEYSYM_LOOKUP define
+	* macosx/tkMacOSXPort.h: out of tk.h into platform header.
+
 2006-01-31  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/bgerror.tcl (::tk::dialog::error::bgerror): Finish the
