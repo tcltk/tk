@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.7 2005/12/08 05:04:35 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.8 2006/02/09 19:09:43 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -623,7 +623,7 @@ TkGenWMConfigureEvent(
     winPtr->changes.y = y;
     winPtr->changes.width = width;
     winPtr->changes.height = height;
-    TkMacOSXInvalClipRgns(winPtr);
+    TkMacOSXInvalClipRgns(tkwin);
 }
 
 /*
