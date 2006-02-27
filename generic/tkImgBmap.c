@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.17 2005/11/15 15:18:21 dkf Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.18 2006/02/27 10:36:08 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -345,7 +345,7 @@ ImgBmapConfigureInstance(
     XGCValues gcValues;
     GC gc;
     unsigned int mask;
-    Pixmap oldMask;
+    Pixmap oldBitmap, oldMask;
 
     /*
      * For each of the options in masterPtr, translate the string form into an
@@ -376,10 +376,18 @@ ImgBmapConfigureInstance(
     }
     instancePtr->fg = colorPtr;
 
-    if (instancePtr->bitmap != None) {
-	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), instancePtr->bitmap);
-	instancePtr->bitmap = None;
-    }
+    /*
+     * Careful: We have to allocate new Pixmaps before deleting the old ones.
+     * Otherwise, The XID allocator will always return the same XID for the
+     * new Pixmaps as was used for the old Pixmaps. And that will prevent the
+     * data and/or mask from changing in the GC below.
+     */
+
+    oldBitmap = instancePtr->bitmap;
+    instancePtr->bitmap = None;
+    oldMask = instancePtr->mask;
+    instancePtr->mask = None;
+
     if (masterPtr->data != NULL) {
 	instancePtr->bitmap = XCreateBitmapFromData(
 		Tk_Display(instancePtr->tkwin),
@@ -387,16 +395,6 @@ ImgBmapConfigureInstance(
 		masterPtr->data, (unsigned) masterPtr->width,
 		(unsigned) masterPtr->height);
     }
-
-    /*
-     * Careful: We have to allocate a new mask Pixmap before deleting the old
-     * one. Otherwise, The XID allocator will always return the same XID for
-     * the new Pixmap as was used for the old Pixmap. And that will prevent
-     * the mask from changing in the GC below.
-     */
-
-    oldMask = instancePtr->mask;
-    instancePtr->mask = None;
     if (masterPtr->maskData != NULL) {
 	instancePtr->mask = XCreateBitmapFromData(
 		Tk_Display(instancePtr->tkwin),
@@ -404,8 +402,12 @@ ImgBmapConfigureInstance(
 		masterPtr->maskData, (unsigned) masterPtr->width,
 		(unsigned) masterPtr->height);
     }
+
     if (oldMask != None) {
 	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), oldMask);
+    }
+    if (oldBitmap != None) {
+	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), oldBitmap);
     }
 
     if (masterPtr->data != NULL) {
