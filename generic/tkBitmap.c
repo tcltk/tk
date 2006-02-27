@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.14 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.15 2006/02/27 11:34:49 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -809,8 +809,12 @@ Tk_GetBitmapFromData(
     char string[16 + TCL_INTEGER_SPACE];
     char *name;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    BitmapInit(dispPtr);
+    if (!tsdPtr->initialized) {
+	BitmapInit(dispPtr);
+    }
 
     nameKey.source = source;
     nameKey.width = width;
