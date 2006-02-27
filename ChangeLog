@@ -1,3 +1,9 @@
+2006-02-27  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkImgBmap.c (ImgBmapConfigureInstance): Force creation of
+	new Pixmaps before deletion of old ones to prevent stupid caching
+	problems. [Bug 480862]
+
 2006-02-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tk.decls:             fix signature of TkMacOSXInvalClipRgns
