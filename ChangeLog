@@ -1,5 +1,8 @@
 2006-02-27  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* generic/tkBitmap.c (Tk_GetBitmapFromData): Improve thread-safety.
+	[Bug 470322]
+
 	* generic/tkImgBmap.c (ImgBmapConfigureInstance): Force creation of
 	new Pixmaps before deletion of old ones to prevent stupid caching
 	problems. [Bug 480862]
