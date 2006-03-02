@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.8 2005/12/08 07:50:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.9 2006/03/02 20:45:20 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -381,18 +381,18 @@ XCopyPlane(
 
 void 
 TkPutImage(
-    unsigned long *colors,        /* Unused on Macintosh. */
-    int ncolors,                /* Unused on Macintosh. */
-    Display* display,                /* Display. */
-    Drawable d,                        /* Drawable to place image on. */
-    GC gc,                        /* GC to use. */
-    XImage* image,                /* Image to place. */
-    int src_x,                        /* Source X & Y. */
+    unsigned long *colors,	/* Unused on Macintosh. */
+    int ncolors,		/* Unused on Macintosh. */
+    Display* display,		/* Display. */
+    Drawable d,			/* Drawable to place image on. */
+    GC gc,			/* GC to use. */
+    XImage* image,		/* Image to place. */
+    int src_x,			/* Source X & Y. */
     int src_y,
-    int dest_x,                        /* Destination X & Y. */
+    int dest_x,			/* Destination X & Y. */
     int dest_y,
-    unsigned int width,                /* Same width & height for both */
-    unsigned int height)        /* distination and source. */
+    unsigned int width,		/* Same width & height for both */
+    unsigned int height)	/* distination and source. */
 {
     CGrafPtr saveWorld;
     GDHandle saveDevice;
@@ -422,9 +422,8 @@ TkPutImage(
                 GetPortBitMapForCopyBits(destPort),
                 &srcRect, &destRect, srcCopy, NULL);
     } else if (image->depth == 1) {
-
-        /* 
-         * This code assumes a pixel depth of 1 
+        /*
+         * This code assumes a pixel depth of 1
          */
 
         bitmap.bounds.top = bitmap.bounds.left = 0;
@@ -441,8 +440,8 @@ TkPutImage(
                     *newPtr = InvertByte((unsigned char) *oldPtr);
                     newPtr++, oldPtr++;
                 }
-            *newPtr = 0;
-            newPtr++;
+		*newPtr = 0;
+		newPtr++;
             }
             bitmap.baseAddr = newData;
             bitmap.rowBytes = image->bytes_per_line + 1;
@@ -450,21 +449,18 @@ TkPutImage(
             newData = (char *) ckalloc(image->height * image->bytes_per_line);
             for (i = 0; i < image->height * image->bytes_per_line; i++) {
                 newData[i] = InvertByte((unsigned char) image->data[i]);
-            }                
+            }
             bitmap.baseAddr = newData;
             bitmap.rowBytes = image->bytes_per_line;
         }
         destBits = GetPortBitMapForCopyBits(destPort);
-        CopyBits(&bitmap, destBits, 
-                &srcRect, &destRect, srcCopy, NULL);
-
+        CopyBits(&bitmap, destBits, &srcRect, &destRect, srcCopy, NULL);
     } else {
-        /* 
-         * Color image 
+        /*
+         * Color image
          */
-
         PixMap pixmap;
-            
+
         pixmap.bounds.left = 0;
         pixmap.bounds.top = 0;
         pixmap.bounds.right = (short) image->width;
@@ -478,16 +474,20 @@ TkPutImage(
         pixmap.pixelSize = 32;
         pixmap.cmpCount = 3;
         pixmap.cmpSize = 8;
+#ifdef WORDS_BIGENDIAN
         pixmap.pixelFormat = k32ARGBPixelFormat;
+#else
+        pixmap.pixelFormat = k32BGRAPixelFormat;
+#endif
         pixmap.pmTable = NULL;
         pixmap.pmExt = 0;
         pixmap.baseAddr = image->data;
         pixmap.rowBytes = image->bytes_per_line | 0x8000;
-        
+
         CopyBits((BitMap *) &pixmap, GetPortBitMapForCopyBits(destPort), 
             &srcRect, &destRect, srcCopy, NULL);
     }
-    
+
     if (newData != NULL) {
         ckfree(newData);
     }
