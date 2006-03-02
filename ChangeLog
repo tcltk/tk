@@ -1,3 +1,10 @@
+2006-03-02  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXDraw.c (TkPutImage): fix endian issue on OS X x86
+	displaying images.  Bitmap images still have a black/white
+	reversal issue, appears to be a general OS X issue (as seen in
+	frogger demo).
+
 2006-03-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* unix/tcl.m4:    Fix for tk bug #1334613 to sort out shared library
@@ -25,29 +32,29 @@
 
 2006-01-25  Don Porter  <dgp@users.sourceforge.net>
 
-        * library/bgerror.tcl:  Updates to use Tcl 8.4 features. [Patch 1237759]
-        * library/button.tcl:
-        * library/choosedir.tcl:
-        * library/clrpick.tcl:
-        * library/comdlg.tcl:
-        * library/console.tcl:
-        * library/dialog.tcl:
-        * library/entry.tcl:
-        * library/focus.tcl:
-        * library/listbox.tcl:
-        * library/menu.tcl:
-        * library/msgbox.tcl:
-        * library/palette.tcl:
-        * library/panedwindow.tcl:
-        * library/safetk.tcl:
-        * library/scale.tcl:
-        * library/scrlbar.tcl:
-        * library/spinbox.tcl:
-        * library/tearoff.tcl:
-        * library/text.tcl:
-        * library/tk.tcl:
-        * library/tkfbox.tcl:
-        * library/xmfbox.tcl:
+	* library/bgerror.tcl:	Updates to use Tcl 8.4 features. [Patch 1237759]
+	* library/button.tcl:
+	* library/choosedir.tcl:
+	* library/clrpick.tcl:
+	* library/comdlg.tcl:
+	* library/console.tcl:
+	* library/dialog.tcl:
+	* library/entry.tcl:
+	* library/focus.tcl:
+	* library/listbox.tcl:
+	* library/menu.tcl:
+	* library/msgbox.tcl:
+	* library/palette.tcl:
+	* library/panedwindow.tcl:
+	* library/safetk.tcl:
+	* library/scale.tcl:
+	* library/scrlbar.tcl:
+	* library/spinbox.tcl:
+	* library/tearoff.tcl:
+	* library/text.tcl:
+	* library/tk.tcl:
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl:
 
 2006-01-23  Daniel Steffen  <das@users.sourceforge.net>
 
