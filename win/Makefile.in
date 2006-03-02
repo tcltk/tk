@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.59.2.3 2005/12/01 02:13:33 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.59.2.4 2006/03/02 21:07:30 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -89,8 +89,8 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR	= @TCL_SRC_DIR@/generic
-TCL_TOOL_DIR = @TCL_SRC_DIR@/tools
+TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
+TCL_TOOL_DIR		= @TCL_SRC_DIR@/tools
 
 # Converts a POSIX path to a Windows native path.
 CYGPATH			= @CYGPATH@
@@ -108,14 +108,14 @@ BITMAP_DIR		= $(ROOT_DIR)/bitmaps
 XLIB_DIR		= $(ROOT_DIR)/xlib
 RC_DIR			= $(WIN_DIR)/rc
 
-ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(ROOT_DIR)')
-WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(WIN_DIR)')
-GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) '$(GENERIC_DIR)')
-BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) '$(ROOT_DIR)/bitmaps')
-XLIB_DIR_NATIVE		= $(shell $(CYGPATH) '$(ROOT_DIR)/xlib')
-TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)')
-TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
-RC_DIR_NATIVE      	= $(shell $(CYGPATH) '$(RC_DIR)')
+ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(ROOT_DIR)' | sed 's!\\!/!g')
+WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(WIN_DIR)' | sed 's!\\!/!g')
+GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) '$(GENERIC_DIR)' | sed 's!\\!/!g')
+BITMAP_DIR_NATIVE	= $(ROOT_DIR_NATIVE)/bitmaps
+XLIB_DIR_NATIVE		= $(ROOT_DIR_NATIVE)/xlib
+RC_DIR_NATIVE      	= $(WIN_DIR_NATIVE)/rc
+TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)' | sed 's!\\!/!g')
+TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)' | sed 's!\\!/!g')
 
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
