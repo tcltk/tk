@@ -1,9 +1,15 @@
+2006-03-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/canvas.n: Added note that stipples are not well-supported on
+	non-X11 platforms. [Bug 220787] It's not a great solution, but it does
+	indicate the state of affairs that has existed for years anyway; not
+	much modern software uses stipples anyway.
+
 2006-03-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXDraw.c (TkPutImage): fix endian issue on OS X x86
-	displaying images.  Bitmap images still have a black/white
-	reversal issue, appears to be a general OS X issue (as seen in
-	frogger demo).
+	displaying images.  Bitmap images still have a black/white reversal
+	issue, appears to be a general OS X issue (as seen in frogger demo).
 
 2006-02-27  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
