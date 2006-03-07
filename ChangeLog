@@ -1,3 +1,10 @@
+2006-03-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/canvas.n: Added note that stipples are not well-supported on
+	non-X11 platforms. [Bug 220787] It's not a great solution, but it does
+	indicate the state of affairs that has existed for years anyway; not
+	much modern software uses stipples anyway.
+
 2006-03-07  Don Porter  <dgp@users.sourceforge.net>
 
 	* READNE:		Bump version number to 8.4.13 and update
