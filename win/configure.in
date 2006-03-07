@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.49.2.17 2005/11/30 00:19:01 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.49.2.18 2006/03/07 05:35:35 dgp Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -11,7 +11,7 @@ AC_PREREQ(2.13)
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL=".12"
+TK_PATCH_LEVEL=".13"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------

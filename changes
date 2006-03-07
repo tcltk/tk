@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.28 2005/12/05 22:47:47 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.64.2.29 2006/03/07 05:35:33 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5871,4 +5871,20 @@ Documentation improvements [1087842,1081527,1115907,etc.]
 2005-12-01 (workaround)[905830] Disable SCIM usage by Tk until properly
 handled (max)
 
---- Released 8.4.12, Decemeber 5, 2005 --- See ChangeLog for details ---
+--- Released 8.4.12, December 5, 2005 --- See ChangeLog for details ---
+
+2005-12-12 (bug fix)[1377619] configure syntax error exposed in bash-3.1 (hobbs)
+
+2005-12-13 (Aqua) MouseWheel bindings; kEventMouseScroll events (steffen) 
+
+2006-01-20 (bug fix)[905830] all events to XFilterEvent (SCIM compat) (english)
+
+2006-01-25 (feature enhance)[1237759] update script lib to 8.4 (fradin,porter)
+
+2006-02-27 (bug fix)[480862] [$img configure -data] no display change (fellows)
+
+2006-02-27 (bug fix)[470322] BitmapInit() thread safety (griffin,fellows)
+
+2006-03-02 (Aqua bug fix) image endian issue on OS X/x86 (hobbs)
+
+--- Released 8.4.13, March 17, 2006 --- See ChangeLog for details ---

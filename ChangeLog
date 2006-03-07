@@ -1,3 +1,12 @@
+2006-03-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* READNE:		Bump version number to 8.4.13 and update
+	* changes:		changes to start prep for an 8.4.13 release.
+	* generic/tk.h:
+	* unix/configure{.in}:
+	* unix/tk.spec:
+	* win/configure{.in}:
+
 2006-03-02  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/Makefile.in: convert _NATIVE paths to use / to avoid ".\"
