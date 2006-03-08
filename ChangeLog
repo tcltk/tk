@@ -1,5 +1,9 @@
 2006-03-08  Don Porter	<dgp@users.sourceforge.net>
 
+	* unix/Makefile.in:	Update `make dist` to copy the image files
+	needed by the test suite into the source distro.  This was overlooked
+	in the 2005-10-12 commit.
+
 	* changes:	Update in prep. for 8.5a4 release.
 
 2006-03-07  Joe English  <jenglish@users.sourceforge.net>
