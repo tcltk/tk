@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.89 2005/10/05 00:49:36 chengyemao Exp $
+RCS: @(#) $Id: changes,v 1.90 2006/03/08 20:14:27 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6063,5 +6063,82 @@ Documentation improvements [1087842,1081527,1115907,etc.]
 
 --- Released 8.5a3, June 4, 2005 --- See ChangeLog for details ---
 
+2005-06-23 (bug fix)[1176610] Aqua: default [entry] borderwidth (steffen)
+
+2005-07-18 (bug fix)[1240221] [$text mark prev] crash (darley)
+
+2005-07-22 (platform support) msys build now requires msys_mingw7.zip (dejong)
+
+2005-08-09 (Aqua enhancement) Carbon events (steffen)
+
+2005-08-10 (bug fix)[1252702] portable Tcl_GetStringFromObj() calls (fellows)
+
+2005-08-12 (bug fix)[749908] per-thread Tk_ConfigSpec tables (fellows)
+
+2005-08-23 (enhancement)[1244153] use SC_PROG_TCLSH, SC_BUILD_TCLSH (dejong)
+
+2005-08-23 (bug fix)[1235544] adopt Tcl's SEH implementation (kenny,dejong)
+
+2005-08-23 (Aqua bug fix) dialogs ignore -initial* options (hobbs)
+
+2005-10-04 (bug fix)[1216775] [tk_dialog] failing [grab] (fontana,hobbs)
+
+2005-10-04 (bug fix)[1309218] [tk_chooseDirectory -mustexist] (lemburg,hobbs)
+
 2005-10-04 (bug fix)[1311734] Fixed the problems that an embedded windows failed
 to respond to display changes (Windows platform) (chengyemao)
+
+2005-10-10 (new feature)[TIP 256] [$text config -tabstyle] (darley)
+
+2005-10-10 (bug fix)[1319720] Tk_DeleteOptionTable() mem leak (melbardis)
+
+2005-10-12 (new feature) one directory test suite (starpackable) (zolli,fellows)
+
+2005-10-18 (bug fix)[1328926] $argv encoding and list formatting (porter)
+
+2005-11-06 (platform support) OpenBSD missing LIBS (thoyts)
+
+2005-11-10 (bug fix)[1353022] minor potential memleaks (fellows)
+
+2005-11-22 (bug fix)[1353414] [selection get] compat w/OpenOffice.org (fellows)
+
+2005-11-14 (feature change) [bgerror] msg truncation at 45 chars (english)
+
+2005-11-15 (new feature)[TIP 231] [wm attributes] on X11 (english)
+
+2005-11-22 (bug fix)[1335485] dialog and space in widget name (taylor,fellows)
+
+2005-11-27 (platform support) Darwin 64bit, Tiger copyfile(), and
+Max OSX universal binaries support (steffen)
+
+2005-11-29 (bug fix)[1252259] clear initial % from console (lawlor,hobbs)
+
+2005-11-30 (bug fix)[1086049] [wm attributes -topmost] fix (courtney,hobbs)
+
+2005-12-08 (enhancement)[1369597] Win 64: --enable-64bit=amd64|ia64 (hobbs)
+
+2005-12-08 (bug fix)[1374935] [$text tag names] crash with peer (hobbs)
+
+2005-12-12 (bug fix)[1377619] configure syntax error exposed in bash-3.1 (hobbs)
+
+2005-12-13 (Aqua) MouseWheel bindings; kEventMouseScroll events (steffen)
+
+2005-12-28 (bug fix)[1380427] text widget undo/redo crash (callewaert)
+
+2006-01-12 (new feature)[TIP 260] canvas text item -underline option (fellows)
+
+2006-01-20 (bug fix)[905830] all events to XFilterEvent (SCIM compat) (english)
+
+2006-01-25 (feature enhance)[1237759] update script lib to 8.4 (fradin,porter)
+
+2006-01-25 (feature enhance)[1409264] I10N of [bgerror] dialog (fellows)
+
+2006-02-27 (bug fix)[480862] [$img configure -data] no display change (fellows)
+
+2006-02-27 (bug fix)[470322] BitmapInit() thread safety (griffin,fellows)
+
+2006-03-02 (Aqua bug fix) image endian issue on OS X/x86 (hobbs)
+
+Documentation improvements [1224983,1247835,1151523,1357575,1083838]
+
+--- Released 8.5a4, March 17, 2006 --- See ChangeLog for details ---
