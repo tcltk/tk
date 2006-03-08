@@ -1,3 +1,9 @@
+2006-03-07  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tcl.m4: Set SHLIB_LD_FLAGS='${LIBS}' on NetBSD,
+	as per the other *BSD variants [Bug 1334613].
+	* unix/configure: Regenerated.
+
 2006-03-07  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/canvas.n: Added note that stipples are not well-supported on
