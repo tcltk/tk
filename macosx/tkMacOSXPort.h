@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.7 2006/02/09 19:08:51 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.8 2006/03/13 18:19:18 dgp Exp $
  */
 
 #ifndef _TKMACPORT
@@ -35,18 +35,10 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
-#ifdef HAVE_LIMITS_H
-#   include <limits.h>
-#else
-#   include "../compat/limits.h"
-#endif
+#include <limits.h>
 #include <math.h>
 #include <pwd.h>
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -67,11 +59,7 @@
 #       include <time.h>
 #   endif
 #endif
-#ifdef HAVE_UNISTD_H
-#   include <unistd.h>
-#else
-#   include "../compat/unistd.h"
-#endif
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -116,13 +104,6 @@
 #   define NFDBITS NBBY*sizeof(fd_mask)
 #endif
 #define MASK_SIZE howmany(FD_SETSIZE, NFDBITS)
-
-/*
- * Not all systems declare the errno variable in errno.h. so this
- * file does it explicitly.
- */
-
-extern int errno;
 
 /*
  * Define "NBBY" (number of bits per byte) if it's not already defined.
