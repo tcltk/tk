@@ -11,12 +11,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.37 2005/11/11 23:51:27 dkf Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.38 2006/03/13 18:19:18 dgp Exp $
  */
 
 #include "tkPort.h"
 #include "tkInt.h"
-#include <errno.h>
 
 #if defined(WIN32)
 #include "tkWinInt.h"
