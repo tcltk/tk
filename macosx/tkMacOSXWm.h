@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWm.h,v 1.2.2.2 2005/08/09 07:40:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.h,v 1.2.2.3 2006/03/13 18:19:01 dgp Exp $
  */
  
 #ifndef _TKMACWM
@@ -60,7 +60,6 @@
 #include "tkPort.h"
 #include "tkInt.h"
 #include "tkMacOSXInt.h"
-#include <errno.h>
 #include "tkScrollbar.h"
 
 /*
