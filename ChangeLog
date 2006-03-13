@@ -1,3 +1,11 @@
+2006-03-13  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkCmds.c:		Purged remaining references to
+	* macosx/tkMacOSXPort.h:	errno, and errno.h.  Standardized
+	* macosx/tkMacOSXWm.c:		the logic for using header files from
+	* macosx/tkMacOSXWm.h:		the compat directory.  Thanks Joe
+	* unix/tkUnixPort.h:		English for the patch. [Patch 1445404]
+
 2006-03-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/bgerror.tcl (::tk::dialog::error::bgerror): Truncated error

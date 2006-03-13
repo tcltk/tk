@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.8 2002/06/14 13:35:49 dkf Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.8.2.1 2006/03/13 18:19:01 dgp Exp $
  */
 
 #ifndef _UNIXPORT
@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
-#ifdef HAVE_LIMITS_H
+#ifndef NO_LIMITS_H
 #   include <limits.h>
 #else
 #   include "../compat/limits.h"
@@ -69,7 +69,7 @@
 #       include <time.h>
 #   endif
 #endif
-#ifdef HAVE_UNISTD_H
+#ifndef NO_UNISTD_H
 #   include <unistd.h>
 #else
 #   include "../compat/unistd.h"
@@ -118,13 +118,6 @@
 #   define NFDBITS NBBY*sizeof(fd_mask)
 #endif
 #define MASK_SIZE howmany(FD_SETSIZE, NFDBITS)
-
-/*
- * Not all systems declare the errno variable in errno.h. so this
- * file does it explicitly.
- */
-
-extern int errno;
 
 /*
  * Define "NBBY" (number of bits per byte) if it's not already defined.
