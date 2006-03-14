@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.9.2.1 2005/12/01 00:03:04 hobbs Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.9.2.2 2006/03/14 06:03:57 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -30,9 +30,9 @@ proc scroll args {
 proc getTroughSize {w} {
     if {[testConstraint testmetrics]} {
 	if [string match v* [$w cget -orient]] {
-	    return [expr [winfo height $w] - 2*[testmetrics cyvscroll]]
+	    return [expr [winfo height $w] - 2*[testmetrics cyvscroll $w]]
 	} else {
-	    return [expr [winfo width $w] - 2*[testmetrics cxhscroll]]
+	    return [expr [winfo width $w] - 2*[testmetrics cxhscroll $w]]
 	}	    
     } else {
 	if [string match v* [$w cget -orient]] {
@@ -286,7 +286,7 @@ test scrollbar-3.41 {ScrollbarWidgetCmd procedure, "fraction" option} {
     .t.s fraction 100 0
 } {0.5}
 if {[testConstraint testmetrics]} {
-    place configure .t.s -width [expr 2*[testmetrics cxhscroll]+1]
+    place configure .t.s -width [expr 2*[testmetrics cxhscroll .t.s]+1]
 } else {
     place configure .t.s -width [expr [winfo reqwidth .t.s] - 4]
 }
@@ -482,7 +482,7 @@ test scrollbar-6.14 {ScrollbarPosition procedure} {pcOnly} {
     .s identify [expr [winfo width .s] / 2] 0 
 } {arrow1}
 test scrollbar-6.15 {ScrollbarPosition procedure} {testmetrics pcOnly} {
-    .s identify [expr [winfo width .s] / 2] [expr [testmetrics cyvscroll] - 1]
+    .s identify [expr [winfo width .s] / 2] [expr [testmetrics cyvscroll .s] - 1]
 } {arrow1}
 
 test scrollbar-6.16 {ScrollbarPosition procedure} {macOrUnix} {
@@ -494,11 +494,11 @@ test scrollbar-6.17 {ScrollbarPosition procedure} {macOrUnix nonPortable} {
     .s identify 8 51
 } {trough1}
 test scrollbar-6.18 {ScrollbarPosition procedure} {testmetrics pcOnly} {
-    .s identify [expr [winfo width .s] / 2] [testmetrics cyvscroll]
+    .s identify [expr [winfo width .s] / 2] [testmetrics cyvscroll .s]
 } {trough1}
 test scrollbar-6.19 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr int(.2 / [.s delta 0 1]) \
-						+ [testmetrics cyvscroll] - 1]
+						+ [testmetrics cyvscroll .s] - 1]
 } {trough1}
 
 test scrollbar-6.20 {ScrollbarPosition procedure} {macOrUnix} {
@@ -511,11 +511,11 @@ test scrollbar-6.21 {ScrollbarPosition procedure} {macOrUnix nonPortable} {
 } {slider}
 test scrollbar-6.22 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] \
-	[expr int(.2 / [.s delta 0 1] + 0.5) + [testmetrics cyvscroll]]
+	[expr int(.2 / [.s delta 0 1] + 0.5) + [testmetrics cyvscroll .s]]
 } {slider}
 test scrollbar-6.23 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
-						 + [testmetrics cyvscroll] - 1]
+						 + [testmetrics cyvscroll -s] - 1]
 } {slider}
 
 test scrollbar-6.24 {ScrollbarPosition procedure} {macOrUnix} {
@@ -533,11 +533,11 @@ test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics pcOnly knownBug} 
     # that is larger than the thumb displayed, skewing the ability to
     # calculate the trough2 area correctly (Win2k).  -- hobbs
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
-						 + [testmetrics cyvscroll]]
+						 + [testmetrics cyvscroll .s]]
 } {trough2}
 test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] \
-						 - [testmetrics cyvscroll] - 1]
+						 - [testmetrics cyvscroll .s] - 1]
 } {trough2}
 
 test scrollbar-6.29 {ScrollbarPosition procedure} {macOrUnix} {
@@ -551,7 +551,7 @@ test scrollbar-6.31 {ScrollbarPosition procedure} {macOnly} {
 } {}
 test scrollbar-6.32 {ScrollbarPosition procedure} {testmetrics pcOnly} {
     .s identify [expr [winfo width .s] / 2]  [expr [winfo height .s] \
-						  - [testmetrics cyvscroll]]
+						  - [testmetrics cyvscroll .s]]
 } {arrow2}
 test scrollbar-6.33 {ScrollbarPosition procedure} {pcOnly} {
     .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] - 1]
@@ -593,7 +593,7 @@ test scrollbar-6.42 {ScrollbarPosition procedure} {macOnly} {
     .t.s identify 82 8
 } {}
 test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics pcOnly} {
-    .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll] \
+    .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s] \
 		       - 1] [expr [winfo height .t.s] / 2] 
 } {slider}
 test scrollbar-6.44 {ScrollbarPosition procedure} {unixOnly} {
