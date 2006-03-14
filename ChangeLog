@@ -1,5 +1,9 @@
 2006-03-13  Don Porter  <dgp@users.sourceforge.net>
 
+	* tests/constraints.tcl:	Added notAqua constraint to canvPs-3.1
+	* tests/canvPs.test:		to stop test suite crash on Mac OSX.
+					[Bug 1088807]
+
 	* generic/tkCmds.c:		Purged remaining references to
 	* macosx/tkMacOSXPort.h:	errno, and errno.h.  Standardized
 	* macosx/tkMacOSXWm.c:		the logic for using header files from
