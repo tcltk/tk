@@ -1,3 +1,10 @@
+2006-03-15  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock): Try
+	to squelch performance issue with code that writes to large images by
+	single pixels. Masses of thanks to George Staplin for helping to trace
+	this down to the COMPLEX_ALPHA flag handling code. [Bug 1409140]
+
 006-03-13  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/scrollbar.test: Corrected several broken calls to [testmetrics]
@@ -7,24 +14,24 @@
 	* tests/canvPs.test:            to stop test suite crash on Mac OSX.
 					[Bug 1088807]
 
-	* generic/tkCmds.c:             Purged remaining references to
-	* macosx/tkMacOSXPort.h:        errno, and errno.h.  Standardized
-	* macosx/tkMacOSXWm.c:          the logic for using header files from
-	* macosx/tkMacOSXWm.h:          the compat directory.  Thanks Joe
-	* unix/tkUnixPort.h:            English for the patch. [Patch 1445404]
+	* generic/tkCmds.c:		Purged remaining references to errno,
+	* macosx/tkMacOSXPort.h:	and errno.h. Standardized the logic
+	* macosx/tkMacOSXWm.c:		for using header files from the compat
+	* macosx/tkMacOSXWm.h:		directory. Thanks Joe English for the
+	* unix/tkUnixPort.h:		patch. [Patch 1445404]
 
 2006-03-08  Don Porter	<dgp@users.sourceforge.net>
 
-	* unix/Makefile.in:	Update `make dist` to copy the image files
-	needed by the test suite into the source distro.  This was overlooked
-	in the 2005-10-12 commit.
+	* unix/Makefile.in: Update `make dist` to copy the image files needed
+	by the test suite into the source distro. This was overlooked in the
+	2005-10-12 commit.
 
 	* changes:	Update in prep. for 8.5a4 release.
 
 2006-03-07  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tcl.m4: Set SHLIB_LD_FLAGS='${LIBS}' on NetBSD,
-	as per the other *BSD variants [Bug 1334613].
+	* unix/tcl.m4: Set SHLIB_LD_FLAGS='${LIBS}' on NetBSD, as per the
+	other *BSD variants [Bug 1334613].
 	* unix/configure: Regenerated.
 
 2006-03-07  Donal K. Fellows  <dkf@users.sf.net>
@@ -52,11 +59,11 @@
 2006-02-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tk.decls:             fix signature of TkMacOSXInvalClipRgns
-	* generic/tkPlatDecls.h:        to use Tk_Window instead of internal	
-	* macosx/tkMacOSXSubwindows.c:  type TkWindow (which led to any include 
+	* generic/tkPlatDecls.h:        to use Tk_Window instead of internal
+	* macosx/tkMacOSXSubwindows.c:  type TkWindow (which led to any include
 	* macosx/tkMacOSXWindowEvent.c: of public header tkMacOSX.h requiring
 	* macosx/tkMacOSXWm.c:          prior include of tkInt.h).
-	
+
 	* generic/tk.h:          move TkAqua specific REDO_KEYSYM_LOOKUP define
 	* macosx/tkMacOSXPort.h: out of tk.h into platform header.
 
@@ -181,9 +188,9 @@
 
 2005-12-09  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkInt.decls:   move all platform test sources from tk lib into
-	* generic/tkTest.c:      tktest directly, removes requirement to export
-	* macosx/tkMacOSXTest.c: TkplatformtestInit from internal stubs table.
+	* generic/tkInt.decls:  Move all platform test sources from tk lib into
+	* generic/tkTest.c:     tktest directly, removes requirement to export
+	* macosx/tkMacOSXTest.c:TkplatformtestInit from internal stubs table.
 	* unix/Makefile.in:
 	* win/Makefile.in:
 	* win/makefile.vc:
@@ -205,17 +212,17 @@
 	* win/rc/wish.exe.manifest (removed): and VERSION to be correct.
 	* unix/Makefile.in: fix dist target for manifest dir change
 
-	* generic/tkTextTag.c (TkTextTagCmd): use correct arraySize for
-	peered text widgets in [$text tag names]. [Bug 1375069 1374935]
+	* generic/tkTextTag.c (TkTextTagCmd): use correct arraySize for peered
+	text widgets in [$text tag names]. [Bug 1375069 1374935]
 
 2005-12-08  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXDraw.c:   remove inclusion of tclInt.h and use of tcl
-	* macosx/tkMacOSXFont.c:   internals wherever possible in tk/macosx, the
-	* macosx/tkMacOSXInit.c:   only remaining tcl internals in TkAqua are
-	* macosx/tkMacOSXNotify.c: TclServiceIdle() in tkMacOSXScrlbr.c and
-	* macosx/tkMacOSXScrlbr.c: Tcl_Get/SetStartupScript() in tkMacOSXInit.c
-				   [RFE 1336531].
+	* macosx/tkMacOSXDraw.c:  Remove inclusion of tclInt.h and use of tcl
+	* macosx/tkMacOSXFont.c:  internals wherever possible in tk/macosx, the
+	* macosx/tkMacOSXInit.c:  only remaining tcl internals in TkAqua are
+	* macosx/tkMacOSXNotify.c:TclServiceIdle() in tkMacOSXScrlbr.c and
+	* macosx/tkMacOSXScrlbr.c:Tcl_Get/SetStartupScript() in tkMacOSXInit.c
+				  [RFE 1336531].
 
 	* macosx/tkMacOSXInt.h: sync comments with core-8-4-branch.
 
@@ -462,8 +469,8 @@
 
 2005-11-15  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tkUnixWm.c, tests/unixWm.test, doc/wm.n:
-	Support for [wm attributes] on X11 [TIP#231, Patch 1062022].
+	* unix/tkUnixWm.c, tests/unixWm.test, doc/wm.n: Support for [wm
+	attributes] on X11 [TIP#231, Patch 1062022].
 
 2005-11-14  Joe English  <jenglish@users.sourceforge.net>
 
@@ -477,9 +484,9 @@
 
 2005-11-13  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
-	* unix/tkUnixSelect.c (SelCvtToX): Arrange for the parsing code to
-	use Tcl's list parsing code, another simplification that enables
-	testing of the [Bug 1353414] fix.
+	* unix/tkUnixSelect.c (SelCvtToX): Arrange for the parsing code to use
+	Tcl's list parsing code, another simplification that enables testing
+	of the [Bug 1353414] fix.
 
 	* unix/tkUnixSelect.c (SelCvtFromX): Generate string forms of the
 	advanced selection types in a Tcl_DString. This makes fixing [Bug
@@ -512,20 +519,19 @@
 
 2005-10-18  Don Porter	<dgp@users.sourceforge.net>
 
-	* generic/tkMain.c:	Rewrote code that sets the ::argv value
-	to be sure conversion from the system encoding is complete before
-	any processing sensitive to list-special characters is done.
-	[Bug 1328926].
+	* generic/tkMain.c: Rewrote code that sets the ::argv value to be sure
+	conversion from the system encoding is complete before any processing
+	sensitive to list-special characters is done. [Bug 1328926].
 
 2005-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* macosx/tkMacOSXScrlbr.c (UpdateControlValues): check geomMgrPtr
-	is valid before checking type
+	* macosx/tkMacOSXScrlbr.c (UpdateControlValues): check geomMgrPtr is
+	valid before checking type
 
 2005-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* library/menu.tcl (::tk::MenuUnpost): remove leftover ] from
-	string equal mods of 2005-07-25. (sowadsky)
+	* library/menu.tcl (::tk::MenuUnpost): remove leftover ] from string
+	equal mods of 2005-07-25. (sowadsky)
 
 2005-10-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
