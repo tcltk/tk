@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.60 2005/11/27 02:36:13 das Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.61 2006/03/15 23:20:27 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -495,6 +495,7 @@ PhotoFormatThreadExitProc(
  *
  *----------------------------------------------------------------------
  */
+
 void
 Tk_CreateOldPhotoImageFormat(
     Tk_PhotoImageFormat *formatPtr)
@@ -586,7 +587,7 @@ ImgPhotoCreate(
      */
 
     masterPtr = (PhotoMaster *) ckalloc(sizeof(PhotoMaster));
-    memset((void *) masterPtr, 0, sizeof(PhotoMaster));
+    memset(masterPtr, 0, sizeof(PhotoMaster));
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
     masterPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgPhotoCmd,
@@ -783,7 +784,7 @@ ImgPhotoCmd(
 	 */
 
 	index = 2;
-	memset((VOID *) &options, 0, sizeof(options));
+	memset(&options, 0, sizeof(options));
 	options.zoomX = options.zoomY = 1;
 	options.subsampleX = options.subsampleY = 1;
 	options.name = NULL;
@@ -889,7 +890,7 @@ ImgPhotoCmd(
 	Tk_ImageStringWriteProc *stringWriteProc = NULL;
 
 	index = 2;
-	memset((VOID *) &options, 0, sizeof(options));
+	memset(&options, 0, sizeof(options));
 	options.name = NULL;
 	options.format = NULL;
 	options.fromX = 0;
@@ -986,7 +987,7 @@ ImgPhotoCmd(
 
 	    result = ((int (*) (Tcl_Interp *interp,
 		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
-		    VOID *dummy)) stringWriteProc)
+		    void *dummy)) stringWriteProc)
 		    (interp, options.format, &block, NULL);
 	}
 	if (options.background) {
@@ -1037,7 +1038,7 @@ ImgPhotoCmd(
 	 */
 
 	index = 2;
-	memset((VOID *) &options, 0, sizeof(options));
+	memset(&options, 0, sizeof(options));
 	options.name = NULL;
 	if (ParseSubcommandOptions(&options, interp, OPT_TO|OPT_FORMAT,
 		&index, objc, objv) != TCL_OK) {
@@ -1209,7 +1210,7 @@ ImgPhotoCmd(
 	 */
 
 	index = 2;
-	memset((VOID *) &options, 0, sizeof(options));
+	memset(&options, 0, sizeof(options));
 	options.name = NULL;
 	options.format = NULL;
 	if (ParseSubcommandOptions(&options, interp,
@@ -1430,20 +1431,24 @@ ImgPhotoCmd(
 		/*
 		 * Make pixel transparent.
 		 */
+
 		TkRegion clearRegion = TkCreateRegion();
 
 		TkUnionRectWithRegion(&setBox, clearRegion, clearRegion);
 		TkSubtractRegion(masterPtr->validRegion, clearRegion,
 			masterPtr->validRegion);
 		TkDestroyRegion(clearRegion);
+
 		/*
 		 * Set the alpha value correctly.
 		 */
+
 		pixelPtr[3] = 0;
 	    } else {
 		/*
 		 * Make pixel opaque.
 		 */
+
 		TkUnionRectWithRegion(&setBox, masterPtr->validRegion,
 			masterPtr->validRegion);
 		pixelPtr[3] = 255;
@@ -1483,7 +1488,7 @@ ImgPhotoCmd(
 	 */
 
 	index = 2;
-	memset((VOID *) &options, 0, sizeof(options));
+	memset(&options, 0, sizeof(options));
 	options.name = NULL;
 	options.format = NULL;
 	if (ParseSubcommandOptions(&options, interp,
@@ -2040,9 +2045,11 @@ ImgPhotoConfigureMaster(
 	if (chan == NULL) {
 	    goto errorExit;
 	}
+
 	/*
 	 * -translation binary also sets -encoding binary
 	 */
+
         if ((Tcl_SetChannelOption(interp, chan,
 		"-translation", "binary") != TCL_OK) ||
 		(MatchFileFormat(interp, chan, masterPtr->fileString,
@@ -3061,15 +3068,14 @@ ImgPhotoSetSize(
 	if ((masterPtr->pix32 != NULL)
 	    && ((width == masterPtr->width) || (width == validBox.width))) {
 	    if (validBox.y > 0) {
-		memset((VOID *) newPix32, 0, (size_t) (validBox.y * pitch));
+		memset(newPix32, 0, (size_t) (validBox.y * pitch));
 	    }
 	    h = validBox.y + validBox.height;
 	    if (h < height) {
-		memset((VOID *) (newPix32 + h * pitch), 0,
-			(size_t) ((height - h) * pitch));
+		memset(newPix32 + h*pitch, 0, (size_t) ((height - h) * pitch));
 	    }
 	} else {
-	    memset((VOID *) newPix32, 0, (size_t) (height * pitch));
+	    memset(newPix32, 0, (size_t) (height * pitch));
 	}
 
 	if (masterPtr->pix32 != NULL) {
@@ -3085,8 +3091,7 @@ ImgPhotoSetSize(
 		 */
 
 		offset = validBox.y * pitch;
-		memcpy((VOID *) (newPix32 + offset),
-			(VOID *) (masterPtr->pix32 + offset),
+		memcpy(newPix32 + offset, masterPtr->pix32 + offset,
 			(size_t) (validBox.height * pitch));
 
 	    } else if ((validBox.width > 0) && (validBox.height > 0)) {
@@ -3098,8 +3103,7 @@ ImgPhotoSetSize(
 		srcPtr = masterPtr->pix32 + (validBox.y * masterPtr->width
 			+ validBox.x) * 4;
 		for (h = validBox.height; h > 0; h--) {
-		    memcpy((VOID *) destPtr, (VOID *) srcPtr,
-			    (size_t) (validBox.width * 4));
+		    memcpy(destPtr, srcPtr, (size_t) (validBox.width * 4));
 		    destPtr += width * 4;
 		    srcPtr += masterPtr->width * 4;
 		}
@@ -3233,17 +3237,17 @@ ImgPhotoInstanceSetSize(
 		    && ((instancePtr->width == masterPtr->width)
 		    || (validBox.width == masterPtr->width))) {
 		if (validBox.y > 0) {
-		    memset((VOID *) newError, 0, (size_t)
+		    memset(newError, 0, (size_t)
 			    validBox.y * masterPtr->width * 3 * sizeof(schar));
 		}
 		h = validBox.y + validBox.height;
 		if (h < masterPtr->height) {
-		    memset((VOID *) (newError + h * masterPtr->width * 3), 0,
+		    memset(newError + h*masterPtr->width*3, 0,
 			    (size_t) (masterPtr->height - h)
 			    * masterPtr->width * 3 * sizeof(schar));
 		}
 	    } else {
-		memset((VOID *) newError, 0, (size_t)
+		memset(newError, 0, (size_t)
 			masterPtr->height * masterPtr->width *3*sizeof(schar));
 	    }
 	} else {
@@ -3258,8 +3262,7 @@ ImgPhotoInstanceSetSize(
 
 	    if (masterPtr->width == instancePtr->width) {
 		offset = validBox.y * masterPtr->width * 3;
-		memcpy((VOID *) (newError + offset),
-			(VOID *) (instancePtr->error + offset),
+		memcpy(newError + offset, instancePtr->error + offset,
 			(size_t) (validBox.height
 			* masterPtr->width * 3 * sizeof(schar)));
 
@@ -3270,7 +3273,7 @@ ImgPhotoInstanceSetSize(
 			(validBox.y * instancePtr->width + validBox.x) * 3;
 
 		for (h = validBox.height; h > 0; --h) {
-		    memcpy((VOID *) errDestPtr, (VOID *) errSrcPtr,
+		    memcpy(errDestPtr, errSrcPtr,
 			    validBox.width * 3 * sizeof(schar));
 		    errDestPtr += masterPtr->width * 3;
 		    errSrcPtr += instancePtr->width * 3;
@@ -3435,7 +3438,7 @@ GetColorTable(
      * Look for an existing ColorTable in the hash table.
      */
 
-    memset((VOID *) &id, 0, sizeof(id));
+    memset(&id, 0, sizeof(id));
     id.display = instancePtr->display;
     id.colormap = instancePtr->colormap;
     id.palette = instancePtr->palette;
@@ -3469,7 +3472,7 @@ GetColorTable(
 	 * in imgPhotoColorHash, and can result in core dumps.
 	 */
 
-	memset((VOID *) &colorPtr->id, 0, sizeof(ColorTableId));
+	memset(&colorPtr->id, 0, sizeof(ColorTableId));
 	colorPtr->id = id;
 	Tk_PreserveColormap(colorPtr->id.display, colorPtr->id.colormap);
 	colorPtr->flags = 0;
@@ -3699,6 +3702,7 @@ AllocateColors(
 		    /*
 		     * Still can't allocate the color.
 		     */
+
 		    break;
 		}
 	    }
@@ -4418,8 +4422,7 @@ Tk_PhotoPutBlock(
 	    && ((height == 1) || ((x == 0) && (width == masterPtr->width)
 		&& (blockPtr->pitch == pitch)))
 	    && (compRule == TK_PHOTO_COMPOSITE_SET)) {
-	memcpy((VOID *) destLinePtr,
-		(VOID *) (blockPtr->pixelPtr + blockPtr->offset[0]),
+	memcpy(destLinePtr, blockPtr->pixelPtr + blockPtr->offset[0],
 		(size_t) (height * width * 4));
 
 	/*
@@ -4449,8 +4452,7 @@ Tk_PhotoPutBlock(
 		    && (blueOffset == 2) && (alphaOffset == 3)
 		    && (width <= blockPtr->width)
 		    && (compRule == TK_PHOTO_COMPOSITE_SET)) {
-		memcpy((VOID *) destLinePtr, (VOID *) srcLinePtr,
-			(size_t) (width * 4));
+		memcpy(destLinePtr, srcLinePtr, (size_t) (width * 4));
 		srcLinePtr += blockPtr->pitch;
 		destLinePtr += pitch;
 		continue;
@@ -4599,7 +4601,24 @@ Tk_PhotoPutBlock(
      */
 
     if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
-	ToggleComplexAlphaIfNeeded(masterPtr);
+	/*
+	 * Note that we skip in the single pixel case if we can. This speeds
+	 * up code that builds up large simple-alpha images by single pixels,
+	 * which seems to be a common use-case. [Bug 1409140]
+	 */
+
+	if (width == 1 && height == 1 && !(masterPtr->flags & COMPLEX_ALPHA)) {
+	    unsigned char newAlpha;
+
+	    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
+	    newAlpha = destLinePtr[3];
+
+	    if (newAlpha > 0 && newAlpha < 255) {
+		masterPtr->flags |= COMPLEX_ALPHA;
+	    }
+	} else {
+	    ToggleComplexAlphaIfNeeded(masterPtr);
+	}
     }
 
     /*
@@ -4842,7 +4861,6 @@ Tk_PhotoPutZoomedBlock(
      */
 
     if (alphaOffset) {
-
 	if (compRule != TK_PHOTO_COMPOSITE_OVERLAY) {
 	    /*
 	     * Don't need this when using the OVERLAY compositing rule, which
@@ -4861,7 +4879,7 @@ Tk_PhotoPutZoomedBlock(
 	    TkDestroyRegion(workRgn);
 	}
 
-	TkpBuildRegionFromAlphaData(masterPtr->validRegion, x, y, width, height,
+	TkpBuildRegionFromAlphaData(masterPtr->validRegion, x,y, width,height,
 		&masterPtr->pix32[(y * masterPtr->width + x) * 4 + 3], 4,
 		masterPtr->width * 4);
     } else {
@@ -4878,7 +4896,24 @@ Tk_PhotoPutZoomedBlock(
      */
 
     if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
-	ToggleComplexAlphaIfNeeded(masterPtr);
+	/*
+	 * Note that we skip in the single pixel case if we can. This speeds
+	 * up code that builds up large simple-alpha images by single pixels,
+	 * which seems to be a common use-case. [Bug 1409140]
+	 */
+
+	if (width == 1 && height == 1 && !(masterPtr->flags & COMPLEX_ALPHA)) {
+	    unsigned char newAlpha;
+
+	    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
+	    newAlpha = destLinePtr[3];
+
+	    if (newAlpha > 0 && newAlpha < 255) {
+		masterPtr->flags |= COMPLEX_ALPHA;
+	    }
+	} else {
+	    ToggleComplexAlphaIfNeeded(masterPtr);
+	}
     }
 
     /*
@@ -5360,12 +5395,12 @@ Tk_PhotoBlank(
      * arrays for each instance.
      */
 
-    memset((VOID *) masterPtr->pix32, 0,
+    memset(masterPtr->pix32, 0,
 	    (size_t) (masterPtr->width * masterPtr->height * 4));
     for (instancePtr = masterPtr->instancePtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextPtr) {
 	if (instancePtr->error) {
-	    memset((VOID *) instancePtr->error, 0,
+	    memset(instancePtr->error, 0,
 		    (size_t) (masterPtr->width * masterPtr->height
 		    * 3 * sizeof(schar)));
 	}
