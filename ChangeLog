@@ -1,3 +1,10 @@
+2006-03-15  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock): Try
+	to squelch performance issue with code that writes to large images by
+	single pixels. Masses of thanks to George Staplin for helping to trace
+	this down to the COMPLEX_ALPHA flag handling code. [Bug 1409140]
+
 2006-03-13  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/scrollbar.test:	Corrected several broken calls to [testmetrics]

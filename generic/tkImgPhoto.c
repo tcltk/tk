@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.14 2005/08/11 12:17:09 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.15 2006/03/15 23:11:01 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4587,7 +4587,24 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
      */
 
     if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
-	ToggleComplexAlphaIfNeeded(masterPtr);
+	/*
+	 * Note that we skip in the single pixel case if we can. This speeds
+	 * up code that builds up large simple-alpha images by single pixels,
+	 * which seems to be a common use-case. [Bug 1409140]
+	 */
+
+	if (width == 1 && height == 1 && !(masterPtr->flags & COMPLEX_ALPHA)) {
+	    unsigned char newAlpha;
+
+	    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
+	    newAlpha = destLinePtr[3];
+
+	    if (newAlpha > 0 && newAlpha < 255) {
+		masterPtr->flags |= COMPLEX_ALPHA;
+	    }
+	} else {
+	    ToggleComplexAlphaIfNeeded(masterPtr);
+	}
     }
 
     /*
@@ -4881,7 +4898,24 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
      */
 
     if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
-	ToggleComplexAlphaIfNeeded(masterPtr);
+	/*
+	 * Note that we skip in the single pixel case if we can. This speeds
+	 * up code that builds up large simple-alpha images by single pixels,
+	 * which seems to be a common use-case. [Bug 1409140]
+	 */
+
+	if (width == 1 && height == 1 && !(masterPtr->flags & COMPLEX_ALPHA)) {
+	    unsigned char newAlpha;
+
+	    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
+	    newAlpha = destLinePtr[3];
+
+	    if (newAlpha > 0 && newAlpha < 255) {
+		masterPtr->flags |= COMPLEX_ALPHA;
+	    }
+	} else {
+	    ToggleComplexAlphaIfNeeded(masterPtr);
+	}
     }
 
     /*
