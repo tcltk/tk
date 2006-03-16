@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.25 2006/03/16 17:32:27 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.26 2006/03/16 22:47:52 dgp Exp $
  */
 
 #include "tk.h"
@@ -337,16 +337,24 @@ Tk_CreateConsoleWindow(
     Tcl_Interp *interp)		/* Interpreter to use for prompting. */
 {
     Tcl_Channel chan;
-    ChannelData *data;
     ConsoleInfo *info;
-    Tcl_Interp *consoleInterp = NULL;
     Tk_Window mainWindow;
     Tcl_Command token;
     int result = TCL_OK;
+    int haveConsoleChannel = 1;
+
+    /* Init an interp with Tcl and Tk */
+    Tcl_Interp *consoleInterp = Tcl_CreateInterp();
+    if (Tcl_Init(consoleInterp) != TCL_OK) {
+	goto error;
+    }
+    if (Tk_Init(consoleInterp) != TCL_OK) {
+	goto error;
+    }
 
     /*
      * Fetch the instance data from whatever std channel is a
-     * console channel.  If none is, we're here by mistake!
+     * console channel.  If none, create fresh instance data.
      */
 
     if (Tcl_GetChannelType(chan = Tcl_GetStdChannel(TCL_STDIN))
@@ -356,31 +364,24 @@ Tk_CreateConsoleWindow(
     } else if (Tcl_GetChannelType(chan = Tcl_GetStdChannel(TCL_STDERR))
 	    == &consoleChannelType) {
     } else {
-	/* TODO: consider creating window anyway */
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("no console channels", -1));
-	goto error;
+	haveConsoleChannel = 0;
     }
 
-    data = (ChannelData *)Tcl_GetChannelInstanceData(chan);
-    info = data->info;
-
-    /*
-     * Initialized Tcl and Tk.
-     */
-
-    consoleInterp = Tcl_CreateInterp();
-    if (Tcl_Init(consoleInterp) != TCL_OK) {
-	goto error;
-    }
-    if (Tk_Init(consoleInterp) != TCL_OK) {
-	goto error;
-    }
-
-    if (info->consoleInterp) {
-	/* The console channels are already connected to a console window.
-	 * Move channels to this new one, but leave the old one functioning. */
+    if (haveConsoleChannel) {
+	ChannelData *data = (ChannelData *)Tcl_GetChannelInstanceData(chan);
+	info = data->info;
+	if (info->consoleInterp) {
+	    /*
+	     * TODO: The console channels are already connected to a console
+	     * window.  Move channels to this new one, but leave the old one
+	     * functioning.
+	     */
 
 
+	}
+    } else {
+	info = (ConsoleInfo *) ckalloc(sizeof(ConsoleInfo));
+	info->refCount = 0;
     }
 
     info->consoleInterp = consoleInterp;
@@ -438,7 +439,7 @@ Tk_CreateConsoleWindow(
 
     error:
     Tcl_AddErrorInfo(interp, "\n    (creating console window)");
-    if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {
+    if (!Tcl_InterpDeleted(consoleInterp)) {
 	Tcl_DeleteInterp(consoleInterp);
     }
     return TCL_ERROR;
