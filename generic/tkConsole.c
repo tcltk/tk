@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.26 2006/03/16 22:47:52 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.27 2006/03/16 22:51:15 dgp Exp $
  */
 
 #include "tk.h"
@@ -300,7 +300,7 @@ Tk_InitConsoleChannels(
 	data->info = info;
 	data->info->refCount++;
 	data->type = TCL_STDERR;
-	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
+	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
 		(ClientData) data, TCL_WRITABLE);
 	if (consoleChannel != NULL) {
 	    Tcl_SetChannelOption(NULL, consoleChannel,
