@@ -1,3 +1,11 @@
+2006-03-16  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd, Tk_PhotoPutBlock)
+	(Tk_PhotoPutZoomedBlock): Added hack to detect copying of a photo with
+	a simple alpha channel and skip calling ToggleComplexAlphaIfNeeded.
+	This should speed up many photo-to-photo copies, keeping the cost of
+	the alpha channel down.
+
 2006-03-15  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock): Try
