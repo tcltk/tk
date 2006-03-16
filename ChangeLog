@@ -1,3 +1,11 @@
+2006-03-16  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConsole.c:	Substantial rewrite of [console] support.
+	* generic/tkInt.h:	Included Obj-ification of the [console] and
+	[consoleinterp] commands, and reworking of all the supporting data
+	structures for cleaner sharing and lifetime management especially
+	in multi-threaded configurations.
+
 2006-03-16  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/msgs/pt.msg: Messages for Portuguese (strictly just for
@@ -18,7 +26,7 @@
 	single pixels. Masses of thanks to George Staplin for helping to trace
 	this down to the COMPLEX_ALPHA flag handling code. [Bug 1409140]
 
-006-03-13  Don Porter  <dgp@users.sourceforge.net>
+2006-03-13  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/scrollbar.test: Corrected several broken calls to [testmetrics]
         that were crashing the test suite.
