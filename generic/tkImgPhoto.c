@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.62 2006/03/16 00:31:13 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.63 2006/03/16 00:38:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4712,6 +4712,7 @@ Tk_PhotoPutZoomedBlock(
     }
 
     sourceIsSimplePhoto = compRule & SOURCE_IS_SIMPLE_ALPHA_PHOTO;
+    compRule &= ~SOURCE_IS_SIMPLE_ALPHA_PHOTO;
     masterPtr = (PhotoMaster *) handle;
 
     if (zoomX <= 0 || zoomY <= 0) {
