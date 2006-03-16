@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.61 2006/03/15 23:20:27 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.62 2006/03/16 00:31:13 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -184,6 +184,13 @@ typedef struct PhotoMaster {
 #define COLOR_IMAGE		1
 #define IMAGE_CHANGED		2
 #define COMPLEX_ALPHA		4
+
+/*
+ * Flag to OR with the compositing rule to indicate that the source, despite
+ * having an alpha channel, has simple alpha.
+ */
+
+#define SOURCE_IS_SIMPLE_ALPHA_PHOTO 0x10000000
 
 /*
  * The following data structure represents all of the instances of a photo
@@ -819,6 +826,15 @@ ImgPhotoCmd(
 	    Tcl_AppendResult(interp, "coordinates for -from option extend ",
 		    "outside source image", NULL);
 	    return TCL_ERROR;
+	}
+
+	/*
+	 * Hack to pass through the message that the place we're coming from
+	 * has a simple alpha channel.
+	 */
+
+	if (!(((PhotoMaster *) srcHandle)->flags & COMPLEX_ALPHA)) {
+	    options.compositingRule |= SOURCE_IS_SIMPLE_ALPHA_PHOTO;
 	}
 
 	/*
@@ -4341,9 +4357,11 @@ Tk_PhotoPutBlock(
     unsigned char *srcPtr, *srcLinePtr;
     unsigned char *destPtr, *destLinePtr;
     int pitch;
+    int sourceIsSimplePhoto = compRule & SOURCE_IS_SIMPLE_ALPHA_PHOTO;
     XRectangle rect;
 
     masterPtr = (PhotoMaster *) handle;
+    compRule &= ~SOURCE_IS_SIMPLE_ALPHA_PHOTO;
 
     if ((masterPtr->userWidth != 0) && ((x + width) > masterPtr->userWidth)) {
 	width = masterPtr->userWidth - x;
@@ -4395,6 +4413,7 @@ Tk_PhotoPutBlock(
     alphaOffset = blockPtr->offset[3];
     if ((alphaOffset >= blockPtr->pixelSize) || (alphaOffset < 0)) {
 	alphaOffset = 0;
+	sourceIsSimplePhoto = 1;
     } else {
 	alphaOffset -= blockPtr->offset[0];
     }
@@ -4600,7 +4619,7 @@ Tk_PhotoPutBlock(
      * Check if display code needs alpha blending...
      */
 
-    if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
+    if (!sourceIsSimplePhoto || masterPtr->flags & COMPLEX_ALPHA) {
 	/*
 	 * Note that we skip in the single pixel case if we can. This speeds
 	 * up code that builds up large simple-alpha images by single pixels,
@@ -4684,7 +4703,7 @@ Tk_PhotoPutZoomedBlock(
     unsigned char *destPtr, *destLinePtr;
     int pitch;
     int xRepeat, yRepeat;
-    int blockXSkip, blockYSkip;
+    int blockXSkip, blockYSkip, sourceIsSimplePhoto;
     XRectangle rect;
 
     if (zoomX==1 && zoomY==1 && subsampleX==1 && subsampleY==1) {
@@ -4692,6 +4711,7 @@ Tk_PhotoPutZoomedBlock(
 		compRule);
     }
 
+    sourceIsSimplePhoto = compRule & SOURCE_IS_SIMPLE_ALPHA_PHOTO;
     masterPtr = (PhotoMaster *) handle;
 
     if (zoomX <= 0 || zoomY <= 0) {
@@ -4746,6 +4766,7 @@ Tk_PhotoPutZoomedBlock(
     alphaOffset = blockPtr->offset[3];
     if ((alphaOffset >= blockPtr->pixelSize) || (alphaOffset < 0)) {
 	alphaOffset = 0;
+	sourceIsSimplePhoto = 1;
     } else {
 	alphaOffset -= blockPtr->offset[0];
     }
@@ -4895,7 +4916,7 @@ Tk_PhotoPutZoomedBlock(
      * Check if display code needs alpha blending...
      */
 
-    if (alphaOffset != 0 || masterPtr->flags & COMPLEX_ALPHA) {
+    if (!sourceIsSimplePhoto || masterPtr->flags & COMPLEX_ALPHA) {
 	/*
 	 * Note that we skip in the single pixel case if we can. This speeds
 	 * up code that builds up large simple-alpha images by single pixels,
