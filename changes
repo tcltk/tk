@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.30 2006/03/08 18:24:43 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.31 2006/03/16 13:55:47 dkf Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5886,5 +5886,9 @@ handled (max)
 2006-02-27 (bug fix)[470322] BitmapInit() thread safety (griffin,fellows)
 
 2006-03-02 (Aqua bug fix) image endian issue on OS X/x86 (hobbs)
+
+2006-03-15 (bug fix)[1409140] speed up photo image updates (fellows)
+
+2006-03-16 (enhancement)[1405069] added Portuguese l10n. (ricardoj,silasj)
 
 --- Released 8.4.13, March 17, 2006 --- See ChangeLog for details ---
