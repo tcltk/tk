@@ -1,5 +1,10 @@
 2006-03-16  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* library/msgs/pt.msg: Messages for Portuguese (strictly just for
+	Brazilian Portuguese, but they'll do until we get other Portuguese
+	speakers localize) from Ricardo Jorge <ricardoj@users.sf.net> and
+	Silas Justiano <silasj@users.sf.net>. Many thanks! [Bug 1405069]
+
 	* generic/tkImgPhoto.c (ImgPhotoCmd, Tk_PhotoPutBlock)
 	(Tk_PhotoPutZoomedBlock): Added hack to detect copying of a photo with
 	a simple alpha channel and skip calling ToggleComplexAlphaIfNeeded.
