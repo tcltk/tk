@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.69 2005/11/27 02:36:14 das Exp $
+ * RCS: $Id: tkInt.h,v 1.70 2006/03/16 17:32:28 dgp Exp $
  */
 
 #ifndef _TKINT
@@ -1085,8 +1085,6 @@ MODULE_SCOPE int	Tk_WinfoObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
 
-MODULE_SCOPE void	TkConsolePrint(Tcl_Interp *interp,
-			    int devId, CONST char *buffer, long size);
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE int	TkCreateMenuCmd(Tcl_Interp *interp);
