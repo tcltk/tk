@@ -32,7 +32,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.3 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.4 2006/03/16 10:04:49 das Exp $
  */
 
 #include <Carbon/Carbon.h>
@@ -172,13 +172,6 @@ static RegisteredInterp *interpListPtr = NULL;
       * present.  As with commands, there may be additional options besides
       * these;  unknown options are ignored.
       */
-
-     /*
-      * The following variable is the serial number that was used in the
-      * last "send" command.  It is exported only for testing purposes.
-      */
-
-int tkSendSerial = 0;
 
      /*
       * Maximum size property that can be read at one time by
