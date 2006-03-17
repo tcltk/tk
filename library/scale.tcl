@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scale widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scale.tcl,v 1.13 2005/07/25 09:06:00 dkf Exp $
+# RCS: @(#) $Id: scale.tcl,v 1.14 2006/03/17 11:13:15 patthoyts Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -21,7 +21,7 @@
 bind Scale <Enter> {
     if {$tk_strictMotif} {
 	set tk::Priv(activeBg) [%W cget -activebackground]
-	%W config -activebackground [%W cget -background]
+	%W configure -activebackground [%W cget -background]
     }
     tk::ScaleActivate %W %x %y
 }
@@ -30,7 +30,7 @@ bind Scale <Motion> {
 }
 bind Scale <Leave> {
     if {$tk_strictMotif} {
-	%W config -activebackground $tk::Priv(activeBg)
+	%W configure -activebackground $tk::Priv(activeBg)
     }
     if {[%W cget -state] eq "active"} {
 	%W configure -state normal

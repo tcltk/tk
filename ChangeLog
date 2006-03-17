@@ -1,3 +1,12 @@
+2006-03-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/clrpick.tcl:   bug #1451587: avoid using abbreviated
+	* library/palette.tcl:   sub-commands in core scripts as this
+	* library/scale.tcl:     can cause problems with mega-widget 
+	* library/scrlbar.tcl:   libraries like snit.
+	* library/tkfbox.tcl:
+	* library/xmfbox.tcl:
+
 2006-03-16  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConsole.c:	Substantial rewrite of [console] support.

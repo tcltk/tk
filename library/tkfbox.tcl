@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.55 2006/01/25 18:22:04 dgp Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.56 2006/03/17 11:13:15 patthoyts Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -227,8 +227,8 @@ proc ::tk::IconList_Create {w} {
     pack $data(sbar) -side bottom -fill x -padx 2
     pack $data(canvas) -expand yes -fill both
 
-    $data(sbar) config -command [list $data(canvas) xview]
-    $data(canvas) config -xscrollcommand [list $data(sbar) set]
+    $data(sbar) configure -command [list $data(canvas) xview]
+    $data(canvas) configure -xscrollcommand [list $data(sbar) set]
 
     # Initializes the max icon/text width and height and other variables
     #
@@ -395,7 +395,7 @@ proc ::tk::IconList_Arrange {w} {
     if {![info exists data(list)]} {
 	if {[info exists data(canvas)] && [winfo exists $data(canvas)]} {
 	    set data(noScroll) 1
-	    $data(sbar) config -command ""
+	    $data(sbar) configure -command ""
 	}
 	return
     }
@@ -451,13 +451,13 @@ proc ::tk::IconList_Arrange {w} {
     }
 
     if {$sW < $W} {
-	$data(canvas) config -scrollregion [list $pad $pad $sW $H]
-	$data(sbar) config -command ""
+	$data(canvas) configure -scrollregion [list $pad $pad $sW $H]
+	$data(sbar) configure -command ""
 	$data(canvas) xview moveto 0
 	set data(noScroll) 1
     } else {
-	$data(canvas) config -scrollregion [list $pad $pad $sW $H]
-	$data(sbar) config -command [list $data(canvas) xview]
+	$data(canvas) configure -scrollregion [list $pad $pad $sW $H]
+	$data(sbar) configure -command [list $data(canvas) xview]
 	set data(noScroll) 0
     }
 
@@ -874,12 +874,12 @@ proc ::tk::dialog::file:: {type args} {
 		    -command [list ::tk::dialog::file::SetFilter $w $type]
 	}
 	SetFilter $w [lindex $data(-filetypes) 0]
-	$data(typeMenuBtn) config -state normal
-	$data(typeMenuLab) config -state normal
+	$data(typeMenuBtn) configure -state normal
+	$data(typeMenuLab) configure -state normal
     } else {
 	set data(filter) "*"
-	$data(typeMenuBtn) config -state disabled -takefocus 0
-	$data(typeMenuLab) config -state disabled
+	$data(typeMenuBtn) configure -state disabled -takefocus 0
+	$data(typeMenuLab) configure -state disabled
     }
     UpdateWhenIdle $w
 
@@ -1038,9 +1038,9 @@ static char updir_bits[] = {
    0x10, 0xfe, 0x07, 0x01, 0x10, 0x00, 0x00, 0x01, 0x10, 0x00, 0x00, 0x01,
    0xf0, 0xff, 0xff, 0x01};}]
     }
-    $data(upBtn) config -image $Priv(updirImage)
+    $data(upBtn) configure -image $Priv(updirImage)
 
-    $f1.menu config -takefocus 1 -highlightthickness 2
+    $f1.menu configure -takefocus 1 -highlightthickness 2
 
     pack $data(upBtn) -side right -padx 4 -fill both
     pack $f1.lab -side left -padx 4 -fill both
@@ -1084,7 +1084,7 @@ static char updir_bits[] = {
 	set data(typeMenuBtn) [menubutton $f2.menu -indicatoron 1 \
 		-menu $f2.menu.m]
 	set data(typeMenu) [menu $data(typeMenuBtn).m -tearoff 0]
-	$data(typeMenuBtn) config -takefocus 1 -highlightthickness 2 \
+	$data(typeMenuBtn) configure -takefocus 1 -highlightthickness 2 \
 		-relief raised -bd 2 -anchor w
 	bind $data(typeMenuLab) <<AltUnderlined>> [list \
 		focus $data(typeMenuBtn)]
@@ -1139,8 +1139,8 @@ static char updir_bits[] = {
     #
 
     wm protocol $w WM_DELETE_WINDOW [list ::tk::dialog::file::CancelCmd $w]
-    $data(upBtn)     config -command [list ::tk::dialog::file::UpDirCmd $w]
-    $data(cancelBtn) config -command [list ::tk::dialog::file::CancelCmd $w]
+    $data(upBtn)     configure -command [list ::tk::dialog::file::UpDirCmd $w]
+    $data(cancelBtn) configure -command [list ::tk::dialog::file::CancelCmd $w]
     bind $w <KeyPress-Escape> [list tk::ButtonInvoke $data(cancelBtn)]
     bind $w <Alt-Key> [list tk::AltKeyInDialog $w %A]
 
@@ -1148,7 +1148,7 @@ static char updir_bits[] = {
     #
     if {$class eq "TkFDialog"} {
 	bind $data(ent) <Return> [list ::tk::dialog::file::ActivateEnt $w]
-	$data(okBtn)     config -command [list ::tk::dialog::file::OkCmd $w]
+	$data(okBtn)     configure -command [list ::tk::dialog::file::OkCmd $w]
 	bind $w <Alt-t> [format {
 	    if {[%s cget -state] eq "normal"} {
 		focus %s
@@ -1157,7 +1157,7 @@ static char updir_bits[] = {
     } else {
 	set okCmd [list ::tk::dialog::file::chooseDir::OkCmd $w]
 	bind $data(ent) <Return> $okCmd
-	$data(okBtn) config -command $okCmd
+	$data(okBtn) configure -command $okCmd
 	bind $w <Alt-s> [list focus $data(ent)]
 	bind $w <Alt-o> [list tk::ButtonInvoke $data(okBtn)]
     }
@@ -1269,8 +1269,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     #
     set entCursor [$data(ent) cget -cursor]
     set dlgCursor [$w         cget -cursor]
-    $data(ent) config -cursor watch
-    $w         config -cursor watch
+    $data(ent) configure -cursor watch
+    $w         configure -cursor watch
     update idletasks
 
     ::tk::IconList_DeleteAll $data(icons)
@@ -1342,8 +1342,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     # turn off the busy cursor.
     #
-    $data(ent) config -cursor $entCursor
-    $w         config -cursor $dlgCursor
+    $data(ent) configure -cursor $entCursor
+    $w         configure -cursor $dlgCursor
 }
 
 # ::tk::dialog::file::SetPathSilently --
@@ -1380,7 +1380,7 @@ proc ::tk::dialog::file::SetFilter {w type} {
     upvar ::tk::$data(icons) icons
 
     set data(filter) [lindex $type 1]
-    $data(typeMenuBtn) config -text [lindex $type 0] -indicatoron 1
+    $data(typeMenuBtn) configure -text [lindex $type 0] -indicatoron 1
 
     # If we aren't using a default extension, use the one suppled
     # by the filter.
