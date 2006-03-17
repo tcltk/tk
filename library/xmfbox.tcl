@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.28 2006/01/25 18:22:04 dgp Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.29 2006/03/17 11:13:15 patthoyts Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -327,9 +327,9 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 	-sticky news
     grid $f2b -row 0 -column 1 -rowspan 1 -columnspan 1 -padx 4 -pady 4 \
 	-sticky news
-    grid rowconfig $f2 0    -minsize 0   -weight 1
-    grid columnconfig $f2 0 -minsize 0   -weight 1
-    grid columnconfig $f2 1 -minsize 150 -weight 2
+    grid rowconfigure $f2 0    -minsize 0   -weight 1
+    grid columnconfigure $f2 0 -minsize 0   -weight 1
+    grid columnconfigure $f2 1 -minsize 150 -weight 2
 
     # The Filter box
     #
@@ -425,9 +425,9 @@ proc ::tk::MotifFDialog_MakeSList {w f label cmdPrefix} {
     grid $f.v -row 1 -column 1 -rowspan 1 -columnspan 1 -sticky news
     grid $f.h -row 2 -column 0 -rowspan 1 -columnspan 1 -sticky news
 
-    grid rowconfig    $f 0 -weight 0 -minsize 0
-    grid rowconfig    $f 1 -weight 1 -minsize 0
-    grid columnconfig $f 0 -weight 1 -minsize 0
+    grid rowconfigure    $f 0 -weight 0 -minsize 0
+    grid rowconfigure    $f 1 -weight 1 -minsize 0
+    grid columnconfigure $f 0 -weight 1 -minsize 0
 
     # bindings for the listboxes
     #
