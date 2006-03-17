@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# RCS: @(#) $Id: palette.tcl,v 1.10 2006/01/25 18:22:04 dgp Exp $
+# RCS: @(#) $Id: palette.tcl,v 1.11 2006/03/17 11:13:15 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
@@ -171,7 +171,7 @@ proc ::tk::RecolorTree {w colors} {
 	set option -[string tolower $dbOption]
 	set class [string replace $dbOption 0 0 [string toupper \
 		[string index $dbOption 0]]]
-	if {![catch {$w config $option} value]} {
+	if {![catch {$w configure $option} value]} {
 	    # if the option database has a preference for this
 	    # dbOption, then use it, otherwise use the defaults
 	    # for the widget.
