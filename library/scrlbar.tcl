@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.10.2.2 2006/01/25 18:21:41 dgp Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.10.2.3 2006/03/17 10:50:11 patthoyts Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -22,7 +22,7 @@ if {[tk windowingsystem] eq "x11"} {
 bind Scrollbar <Enter> {
     if {$tk_strictMotif} {
 	set tk::Priv(activeBg) [%W cget -activebackground]
-	%W config -activebackground [%W cget -background]
+	%W configure -activebackground [%W cget -background]
     }
     %W activate [%W identify %x %y]
 }
@@ -37,7 +37,7 @@ bind Scrollbar <Motion> {
 
 bind Scrollbar <Leave> {
     if {$tk_strictMotif && [info exists tk::Priv(activeBg)]} {
-	%W config -activebackground $tk::Priv(activeBg)
+	%W configure -activebackground $tk::Priv(activeBg)
     }
     %W activate {}
 }
