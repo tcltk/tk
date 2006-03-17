@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.20.2.1 2006/01/25 18:21:41 dgp Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.20.2.2 2006/03/17 10:50:11 patthoyts Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -667,7 +667,7 @@ proc ::tk::dialog::color::HandleRGBEntry {w} {
 proc ::tk::dialog::color::EnterColorBar {w color} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
-    $data($color,sel) itemconfig $data($color,index) -fill red
+    $data($color,sel) itemconfigure $data($color,index) -fill red
 }
 
 # mouse leaves enters a color bar
@@ -675,7 +675,7 @@ proc ::tk::dialog::color::EnterColorBar {w color} {
 proc ::tk::dialog::color::LeaveColorBar {w color} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
-    $data($color,sel) itemconfig $data($color,index) -fill black
+    $data($color,sel) itemconfigure $data($color,index) -fill black
 }
 
 # user hits OK button
