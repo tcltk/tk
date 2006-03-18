@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.64 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.65 2006/03/18 15:52:32 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -2548,24 +2548,28 @@ InsertChars(sharedTextPtr, textPtr, indexPtr, stringPtr, viewUpdate)
     TkBTreeInsertChars(sharedTextPtr->tree, indexPtr, string);
 
     /*
-     * Push the insertion on the undo stack
+     * Push the insertion on the undo stack, and update
+     * the modified status of the widget
      */
 
-    if (sharedTextPtr->undo) {
-	TkTextIndex toIndex;
-
-	if (sharedTextPtr->autoSeparators &&
-	    sharedTextPtr->lastEditMode != TK_TEXT_EDIT_INSERT) {
-	    TkUndoInsertUndoSeparator(sharedTextPtr->undoStack);
+    if (length > 0) {
+	if (sharedTextPtr->undo) {
+	    TkTextIndex toIndex;
+	    
+	    if (sharedTextPtr->autoSeparators &&
+		sharedTextPtr->lastEditMode != TK_TEXT_EDIT_INSERT) {
+		TkUndoInsertUndoSeparator(sharedTextPtr->undoStack);
+	    }
+	    
+	    sharedTextPtr->lastEditMode = TK_TEXT_EDIT_INSERT;
+	    
+	    TkTextIndexForwBytes(textPtr, indexPtr, length, &toIndex);
+	    TextPushUndoAction(textPtr, stringPtr, 1, indexPtr, &toIndex);
 	}
 
-	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_INSERT;
-
-	TkTextIndexForwBytes(textPtr, indexPtr, length, &toIndex);
-	TextPushUndoAction(textPtr, stringPtr, 1, indexPtr, &toIndex);
+	UpdateDirtyFlag(sharedTextPtr);
     }
-
-    UpdateDirtyFlag(sharedTextPtr);
+    
 
     resetViewCount = 0;
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {

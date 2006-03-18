@@ -1,3 +1,8 @@
+2006-03-18  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.c: fix for undo/modified status of text
+	widgets when empty strings are inserted and undone.
+
 2006-03-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/clrpick.tcl:   bug #1451587: avoid using abbreviated
