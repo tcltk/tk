@@ -1,9 +1,15 @@
+2006-03-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkUndo.c (TkUndoSetDepth): Fix a crash in the undo stack
+	code. [Bug 1380427, Patch 1391939] Thanks to <lz_ufo@tin.it> for
+	reporting and Ludwig Callewaert for the fix.
+
 2006-03-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/clrpick.tcl:   bug #1451587: avoid using abbreviated
-	* library/palette.tcl:   sub-commands in core scripts as this
-	* library/scale.tcl:     can cause problems with mega-widget 
-	* library/scrlbar.tcl:   libraries like snit.
+	* library/palette.tcl:   sub-commands in core scripts as this can
+	* library/scale.tcl:     cause problems with mega-widget libraries
+	* library/scrlbar.tcl:   like snit.
 	* library/tkfbox.tcl:
 	* library/xmfbox.tcl:
 
