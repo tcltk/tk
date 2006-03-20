@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.17 2005/10/12 09:29:21 dkf Exp $
+# RCS: @(#) $Id: menu.test,v 1.18 2006/03/20 15:27:47 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -199,7 +199,7 @@ menu .m2
 .m1 add separator
 .m1 add checkbutton -label "checkbutton" -variable check -onvalue on -offvalue off
 .m1 add radiobutton -label "radiobutton" -variable radio
-if {[tcltest::testConstraint hasEarthPhoto]} {
+if {[testConstraint hasEarthPhoto]} {
     image create photo image1 -file $earthPhotoFile
 }
 
@@ -509,7 +509,7 @@ foreach configTest {
     }
 }
 
-if {[tcltest::testConstraint hasEarthPhoto]} {
+if {[testConstraint hasEarthPhoto]} {
     image delete image1
 }
 destroy .m1
