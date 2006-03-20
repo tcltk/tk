@@ -1,3 +1,8 @@
+2006-03-20  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConsole.c:	Added exit handler to clean up the interp
+	where the console window lives.
+
 2006-03-18  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: fix for undo/modified status of text
