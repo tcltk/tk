@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.28 2006/03/20 22:58:46 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.29 2006/03/21 03:01:27 dgp Exp $
  */
 
 #include "tk.h"
@@ -372,13 +372,32 @@ Tk_CreateConsoleWindow(
 	ChannelData *data = (ChannelData *)Tcl_GetChannelInstanceData(chan);
 	info = data->info;
 	if (info->consoleInterp) {
-	    /*
-	     * TODO: The console channels are already connected to a console
-	     * window.  Move channels to this new one, but leave the old one
-	     * functioning.
-	     */
+	    /* New ConsoleInfo for a new console window */
+	    info = (ConsoleInfo *) ckalloc(sizeof(ConsoleInfo));
+	    info->refCount = 0;
 
-
+	    /* Update any console channels to make use of the new console */
+	    if (Tcl_GetChannelType(chan = Tcl_GetStdChannel(TCL_STDIN))
+		    == &consoleChannelType) {
+		data = (ChannelData *)Tcl_GetChannelInstanceData(chan);
+		data->info->refCount--;
+		data->info = info;
+		data->info->refCount++;
+	    }
+	    if (Tcl_GetChannelType(chan = Tcl_GetStdChannel(TCL_STDOUT))
+		    == &consoleChannelType) {
+		data = (ChannelData *)Tcl_GetChannelInstanceData(chan);
+		data->info->refCount--;
+		data->info = info;
+		data->info->refCount++;
+	    }
+	    if (Tcl_GetChannelType(chan = Tcl_GetStdChannel(TCL_STDERR))
+		    == &consoleChannelType) {
+		data = (ChannelData *)Tcl_GetChannelInstanceData(chan);
+		data->info->refCount--;
+		data->info = info;
+		data->info->refCount++;
+	    }
 	}
     } else {
 	info = (ConsoleInfo *) ckalloc(sizeof(ConsoleInfo));
