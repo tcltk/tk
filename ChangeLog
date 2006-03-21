@@ -1,7 +1,10 @@
 2006-03-20  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConsole.c:	Added exit handler to clean up the interp
-	where the console window lives.
+	where the console window lives.  Also added code to handle 
+	multiple calls to Tk_CreateConsoleWindow so that the console
+	channels connect to the last console window opened, in compatibility
+	with the previous implementation.
 
 2006-03-18  Vince Darley <vincentdarley@users.sourceforge.net>
 
