@@ -27,7 +27,7 @@
 			buildSettings = {
 				BUILD_STYLE = Deployment;
 				CONFIGURE_ARGS = "$(value) --disable-symbols";
-				DEAD_CODE_STRIPPING = YES;
+				DEAD_CODE_STRIPPING = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				GCC_DEBUGGING_SYMBOLS = full;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -466,6 +466,14 @@
 //F92
 //F93
 //F94
+		F93E5EFD09CF8711008FA367 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = tkMacOSXFont.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
 		F966BA0308F27A37005CB29B = {
 			children = (
 				F966BA0408F27A37005CB29B,
@@ -3699,6 +3707,7 @@
 				F966BBD408F27A3B005CB29B,
 				F966BBD508F27A3B005CB29B,
 				F966BBD608F27A3B005CB29B,
+				F93E5EFD09CF8711008FA367,
 				F966BBD708F27A3B005CB29B,
 				F966BBD808F27A3B005CB29B,
 				F966BBDA08F27A3B005CB29B,

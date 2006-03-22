@@ -10,11 +10,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.16 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.17 2006/03/22 00:21:17 das Exp $
  */
 
 #include "tkButton.h"
 #include "tkMacOSXInt.h"
+#include "tkMacOSXFont.h"
 #include "tkMacOSXDebug.h"
 
 #define DEFAULT_USE_TK_TEXT 0
@@ -108,9 +109,6 @@ static void TkMacOSXDrawControl _ANSI_ARGS_((MacButton *butPtr,
 static void SetupBevelButton _ANSI_ARGS_((MacButton *butPtr,
         ControlRef controlHandle, 
         GWorldPtr destPort, GC gc, Pixmap pixmap));
-
-MODULE_SCOPE int TkFontGetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst); 
-MODULE_SCOPE void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
 
 /*
  * The class procedure table for the button widgets.

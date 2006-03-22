@@ -80,6 +80,11 @@
 				value = "${SRCROOT}/../../tk/library";
 			},
 			{
+				active = YES;
+				name = TCLLIBPATH;
+				value = /Library/Tcl;
+			},
+			{
 				active = NO;
 				name = DYLD_PRINT_LIBRARIES;
 			},
