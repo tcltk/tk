@@ -1,3 +1,10 @@
+2006-03-21  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/configure.in: fix detection of symbols build when enabling
+	TkAqua debug code; filter nm output of libtclstub better to avoid
+	error on intel macs [Bug 1415789].
+	* unix/configure: autoconf-2.13
+
 2006-03-20  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkUndo.c (TkUndoSetDepth): Fix a crash in the undo stack
