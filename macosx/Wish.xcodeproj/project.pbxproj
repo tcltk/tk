@@ -300,6 +300,7 @@
 
 /* Begin PBXFileReference section */
 		8DD76FB20486AB0100D96B5E /* tktest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tktest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXFont.h; sourceTree = "<group>"; };
 		F966BA0408F27A37005CB29B /* error.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = error.xbm; sourceTree = "<group>"; };
 		F966BA0508F27A37005CB29B /* gray12.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray12.xbm; sourceTree = "<group>"; };
 		F966BA0608F27A37005CB29B /* gray25.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray25.xbm; sourceTree = "<group>"; };
@@ -2087,6 +2088,7 @@
 				F966BBD408F27A3B005CB29B /* tkMacOSXEvent.c */,
 				F966BBD508F27A3B005CB29B /* tkMacOSXEvent.h */,
 				F966BBD608F27A3B005CB29B /* tkMacOSXFont.c */,
+				F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */,
 				F966BBD708F27A3B005CB29B /* tkMacOSXHLEvents.c */,
 				F966BBD808F27A3B005CB29B /* tkMacOSXInit.c */,
 				F966BBDA08F27A3B005CB29B /* tkMacOSXInt.h */,
@@ -3704,7 +3706,7 @@
 				);
 				BINDIR = "${PREFIX}/bin";
 				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
-				DEAD_CODE_STRIPPING = YES;
+				DEAD_CODE_STRIPPING = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				GCC_DEBUGGING_SYMBOLS = full;
 				GCC_DYNAMIC_NO_PIC = YES;
@@ -3906,7 +3908,7 @@
 			buildSettings = {
 				BINDIR = "${PREFIX}/bin";
 				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
-				DEAD_CODE_STRIPPING = YES;
+				DEAD_CODE_STRIPPING = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				GCC_DEBUGGING_SYMBOLS = full;
 				GCC_DYNAMIC_NO_PIC = YES;

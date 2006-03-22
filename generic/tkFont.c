@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.27 2005/11/27 02:36:13 das Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.28 2006/03/22 00:21:16 das Exp $
  */
 
 #include "tkPort.h"
@@ -343,8 +343,6 @@ static int		SetFontFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static void		TheWorldHasChanged(ClientData clientData);
 static void		UpdateDependentFonts(TkFontInfo *fiPtr,
 			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr);
-MODULE_SCOPE int	TkFontGetFirstTextLayout(Tk_TextLayout layout,
-			    Tk_Font *font, char *dst);
 
 /*
  * The following structure defines the implementation of the "font" Tcl
@@ -1721,14 +1719,15 @@ Tk_TextWidth(
 /*
  *---------------------------------------------------------------------------
  *
- * Tk_UnderlineChars --
+ * Tk_UnderlineChars, TkUnderlineCharsInContext --
  *
- *	This function draws an underline for a given range of characters in a
- *	given string. It doesn't draw the characters (which are assumed to
- *	have been displayed previously); it just draws the underline. This
- *	function would mainly be used to quickly underline a few characters
- *	without having to construct an underlined font. To produce properly
- *	underlined text, the appropriate underlined font should be constructed
+ *	These procedures draw an underline for a given range of
+ *	characters in a given string.  They don't draw the characters
+ *	(which are assumed to have been displayed previously); they
+ *	just draw the underline.  These procedures would mainly be
+ *	used to quickly underline a few characters without having to
+ *	construct an underlined font.  To produce properly underlined
+ *	text, the appropriate underlined font should be constructed
  *	and used.
  *
  * Results:
@@ -1758,12 +1757,42 @@ Tk_UnderlineChars(
 				 * character. */
 {
     TkFont *fontPtr;
-    int startX, endX;
 
     fontPtr = (TkFont *) tkfont;
 
-    Tk_MeasureChars(tkfont, string, firstByte, -1, 0, &startX);
-    Tk_MeasureChars(tkfont, string, lastByte, -1, 0, &endX);
+    TkUnderlineCharsInContext(display, drawable, gc, tkfont, string,
+	    lastByte, x, y, firstByte, lastByte);
+}
+
+void
+TkUnderlineCharsInContext(display, drawable, gc, tkfont, string, numBytes,
+	x, y, firstByte, lastByte)
+
+    Display *display;		/* Display on which to draw. */
+    Drawable drawable;		/* Window or pixmap in which to draw. */
+    GC gc;			/* Graphics context for actually drawing
+				 * line. */
+    Tk_Font tkfont;		/* Font used in GC;  must have been allocated
+				 * by Tk_GetFont().  Used for character
+				 * dimensions, etc. */
+    CONST char *string;		/* String containing characters to be
+				 * underlined or overstruck. */
+    int numBytes;		/* Number of bytes in string. */
+    int x, y;			/* Coordinates at which the first character
+				 * of the whole string would be drawn. */
+    int firstByte;		/* Index of first byte of first character. */
+    int lastByte;		/* Index of first byte after the last
+				 * character. */
+{
+    TkFont *fontPtr;
+    int startX, endX;
+  
+    fontPtr = (TkFont *) tkfont;
+      
+    TkpMeasureCharsInContext(tkfont, string, numBytes, 0, firstByte, -1, 0,
+	    &startX);
+    TkpMeasureCharsInContext(tkfont, string, numBytes, 0, lastByte, -1, 0,
+	    &endX);
 
     XFillRectangle(display, drawable, gc, x + startX,
 	    y + fontPtr->underlinePos, (unsigned int) (endX - startX),

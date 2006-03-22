@@ -1339,7 +1339,7 @@ TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=5
 TK_PATCH_LEVEL="a4"
 VERSION=${TK_VERSION}
-LOCALES="cs de el en en_gb es fr it nl ru"
+LOCALES="cs de el en en_gb eo es es_ES fr it nl pl pt ru"
 
 #--------------------------------------------------------------------
 # Find and load the tclConfig.sh file
@@ -8744,7 +8744,7 @@ _ACEOF
     LIBS="$LIBS -framework Carbon -framework IOKit"
     CFLAGS="$CFLAGS -fpascal-strings"
     TK_WINDOWINGSYSTEM=AQUA
-    if test "${enable_symbols+set}" = set; then
+    if test "${enable_symbols}" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define TK_MAC_DEBUG 1
@@ -9900,7 +9900,7 @@ echo "${ECHO_T}standard shared library" >&6
     fi
 
     TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk '{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}'`"
-    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_ > $$f && echo $$f)'
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_[^_] > $$f && echo $$f)'
 fi
 
 if test "$FRAMEWORK_BUILD" = "1" ; then
