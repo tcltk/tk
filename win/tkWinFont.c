@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.26 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.27 2006/03/22 00:21:20 das Exp $
  */
 
 #include "tkWinInt.h"
@@ -787,6 +787,64 @@ Tk_MeasureChars(
 /*
  *---------------------------------------------------------------------------
  *
+ *  TkpMeasureCharsInContext --
+ *
+ *	Determine the number of bytes from the string that will fit in the
+ *	given horizontal span.	The measurement is done under the assumption
+ *	that TkpDrawCharsInContext() will be used to actually display the
+ *	characters.
+ *
+ *	This one is almost the same as Tk_MeasureChars(), but with access to
+ *	all the characters on the line for context.  On Windows this context
+ *	isn't consulted, so we just call Tk_MeasureChars().
+ *
+ * Results:
+ *	The return value is the number of bytes from source that
+ *	fit into the span that extends from 0 to maxLength.  *lengthPtr is
+ *	filled with the x-coordinate of the right edge of the last
+ *	character that did fit.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkpMeasureCharsInContext(
+    Tk_Font tkfont,	    /* Font in which characters will be drawn. */
+    CONST char * source,    /* UTF-8 string to be displayed.  Need not be
+			     * '\0' terminated. */
+    int numBytes,	    /* Maximum number of bytes to consider from
+			     * source string in all. */
+    int rangeStart,	    /* Index of first byte to measure. */
+    int rangeLength,	    /* Length of range to measure in bytes. */
+    int maxLength,	    /* If >= 0, maxLength specifies the longest
+			     * permissible line length; don't consider any
+			     * character that would cross this x-position.
+			     * If < 0, then line length is unbounded and the
+			     * flags argument is ignored. */
+    int flags,		    /* Various flag bits OR-ed together:
+			     * TK_PARTIAL_OK means include the last char
+			     * which only partially fit on this line.
+			     * TK_WHOLE_WORDS means stop on a word boundary,
+			     * if possible.  TK_AT_LEAST_ONE means return at
+			     * least one character even if no characters fit.
+			     * TK_ISOLATE_END means that the last character
+			     * should not be considered in context with the
+			     * rest of the string (used for breaking
+			     * lines).	*/
+    int * lengthPtr)	    /* Filled with x-location just after the
+			     * terminating character. */
+{
+    (void) numBytes; /*unused*/
+    return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
+	    maxLength, flags, lengthPtr);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * Tk_DrawChars --
  *
  *	Draw a string of characters on the screen.
@@ -944,6 +1002,50 @@ Tk_DrawChars(
 	DeleteDC(dcMem);
     }
     TkWinReleaseDrawableDC(drawable, dc, &state);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpDrawCharsInContext --
+ *
+ *	Draw a string of characters on the screen like Tk_DrawChars(), but
+ *	with access to all the characters on the line for context.  On
+ *	Windows this context isn't consulted, so we just call Tk_DrawChars().
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information gets drawn on the screen.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkpDrawCharsInContext(
+    Display * display,	    /* Display on which to draw. */
+    Drawable drawable,	    /* Window or pixmap in which to draw. */
+    GC gc,		    /* Graphics context for drawing characters. */
+    Tk_Font tkfont,	    /* Font in which characters will be drawn; must
+			     * be the same as font used in GC. */
+    CONST char * source,    /* UTF-8 string to be displayed.  Need not be
+			     * '\0' terminated.	 All Tk meta-characters
+			     * (tabs, control characters, and newlines)
+			     * should be stripped out of the string that is
+			     * passed to this function.	 If they are not
+			     * stripped out, they will be displayed as
+			     * regular printing characters. */
+    int numBytes,	    /* Number of bytes in string. */
+    int rangeStart,	    /* Index of first byte to draw. */
+    int rangeLength,	    /* Length of range to draw in bytes. */
+    int x, int y)	    /* Coordinates at which to place origin of the
+			     * whole (not just the range) string when
+			     * drawing. */
+{
+    (void) numBytes; /*unused*/
+    Tk_DrawChars(display, drawable, gc, tkfont,
+	    source + rangeStart, rangeLength, x, y);
 }
 
 /*

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.70 2006/03/16 17:32:28 dgp Exp $
+ * RCS: $Id: tkInt.h,v 1.71 2006/03/22 00:21:16 das Exp $
  */
 
 #ifndef _TKINT
@@ -881,6 +881,14 @@ extern TkDisplay *tkDisplayList;
 #define TK_GRAB_ANCESTOR	2
 #define TK_GRAB_EXCLUDED	3
 
+/* 
+ * An additional flag for TkpMeasureCharsInContext().  Coordinate with
+ * the other flags for this routine, but don't make public until
+ * TkpMeasureCharsInContext() is made public, too.
+ */
+
+#define TK_ISOLATE_END		32
+
 /*
  * The macro below is used to modify a "char" value (e.g. by casting it to an
  * unsigned character) so that it can be used safely with macros such as
@@ -1156,6 +1164,18 @@ MODULE_SCOPE void	TkPrintPadAmount(Tcl_Interp *interp,
 MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    int *pad1Ptr, int *pad2Ptr);
+MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    CONST char * source, int numBytes, int rangeStart,
+			    int rangeLength, int x, int y);
+MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
+			    CONST char * source, int numBytes, int rangeStart,
+			    int rangeLength, int maxLength, int flags,
+			    int * lengthPtr);
+MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    CONST char *string, int numBytes, int x, int y,
+			    int firstByte, int lastByte);
 
 /*
  * Unsupported commands.

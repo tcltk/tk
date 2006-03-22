@@ -3,7 +3,7 @@
 # This demonstration script shows how you can produce output (in label
 # widgets) using many different alphabets.
 #
-# RCS: @(#) $Id: unicodeout.tcl,v 1.4 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: unicodeout.tcl,v 1.5 2006/03/22 00:21:17 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -55,17 +55,33 @@ set oldCursor [$w cget -cursor]
 $w conf -cursor watch
 update
 
-addSample $w Arabic \
-	 "\uFE94\uFEF4\uFE91\uFEAE\uFECC\uFEDF\uFE8D\uFE94" \
-	 "\uFEE4\uFEE0\uFEDC\uFEDF\uFE8D"
+if {[tk windowingsystem] eq "x11"} {
+	# Using presentation forms (pre-layouted)
+	addSample $w Arabic \
+		"\uFE94\uFEF4\uFE91\uFEAE\uFECC\uFEDF\uFE8D " \
+		"\uFE94\uFEE4\uFEE0\uFEDC\uFEDF\uFE8D"
+} else {
+	# Using standard text characters
+	addSample $w Arabic \
+		"\u0627\u0644\u0643\u0644\u0645\u0629 " \
+		"\u0627\u0644\u0639\u0631\u0628\u064A\u0629"
+}
 addSample $w "Trad. Chinese" "\u4E2D\u570B\u7684\u6F22\u5B57"
 addSample $w "Simpl. Chinese" "\u6C49\u8BED"
 addSample $w Greek \
 	 "\u0395\u03BB\u03BB\u03B7\u03BD\u03B9\u03BA\u03AE " \
 	 "\u03B3\u03BB\u03CE\u03C3\u03C3\u03B1"
-addSample $w Hebrew \
-	 "\u05DD\u05D9\u05DC\u05E9\u05D5\u05E8\u05D9 " \
-	 "\u05DC\u05D9\u05D0\u05E8\u05E9\u05D9"
+if {[tk windowingsystem] eq "x11"} {
+	# Visual order (pre-layouted)
+	addSample $w Hebrew \
+		"\u05DD\u05D9\u05DC\u05E9\u05D5\u05E8\u05D9 " \
+		"\u05DC\u05D9\u05D0\u05E8\u05E9\u05D9"
+} else {
+	# Standard logical order
+	addSample $w Hebrew \
+		"\u05D9\u05E9\u05E8\u05D0\u05D9\u05DC " \
+		"\u05D9\u05E8\u05D5\u05E9\u05DC\u05D9\u05DD"
+}
 addSample $w Japanese \
 	 "\u65E5\u672C\u8A9E\u306E\u3072\u3089\u304C\u306A, " \
 	 "\u6F22\u5B57\u3068\u30AB\u30BF\u30AB\u30CA"

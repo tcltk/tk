@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.12 2004/06/24 12:45:42 dkf Exp $
+# RCS: @(#) $Id: font.test,v 1.13 2006/03/22 00:21:18 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -48,10 +48,14 @@ proc csetup {{str ""}} {
 
 setup
 
-case $tcl_platform(platform) {
-    unix	{set fixed "fixed"}
-    windows	{set fixed "courier 12"}
+case [tk windowingsystem] {
+    x11	 	{set fixed "fixed"}
+    win32	{set fixed "courier 12"}
+    classic -
+    aqua	{set fixed "monaco 9"}
 }
+
+
 set times [font actual {times 0} -family]
 
 test font-1.1 {TkFontPkgInit} {
