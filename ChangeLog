@@ -1,3 +1,33 @@
+2006-03-21  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkFont.c:             implementation of ATSUI text rendering
+	* generic/tkInt.h:              in TkAqua provided by Benjamin
+	* generic/tkTextDisp.c:         Riefenstahl. [Patch 638966]
+	* library/demos/unicodeout.tcl:
+	* macosx/tkMacOSXFont.h (new file):
+	* macosx/tkMacOSXFont.c:
+	* tests/font.test:
+	* unix/tkUnixFont.c:
+	* win/tkWinFont.c:
+
+	* generic/tkFont.c:             moved MODULE_SCOPE declarations of 
+	* generic/tkFont.h:             font helper procs into header files.
+	* macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXFont.h:
+	* macosx/tkMacOSXMenubutton.c:
+
+	* macosx/Wish.xcode/project.pbxproj:     add new tkMacOSXFont.h file,
+	* macosx/Wish.xcodeproj/project.pbxproj: turn off dead code stripping
+	as it interferes with -sectcreate (rdar://4486223).
+
+	* macosx/Wish.xcode/default.pbxuser:     add TCLLIBPATH=/Library/Tcl
+	* macosx/Wish.xcodeproj/default.pbxuser: env var setting to tktest.
+
+	* unix/configure.in: fix detection of symbols build when enabling
+	TkAqua debug code; filter nm output of libtclstub better to avoid
+	error on intel macs [Bug 1415789].
+	* unix/configure: autoconf-2.59
+
 2006-03-20  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConsole.c:	Added exit handler to clean up the interp
