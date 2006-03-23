@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textDisp.test,v 1.39 2005/10/31 23:21:08 vincentdarley Exp $
+# RCS: @(#) $Id: textDisp.test,v 1.40 2006/03/23 16:26:12 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1686,10 +1686,10 @@ test textDisp-14.14 {TkTextXviewCmd procedure} {
 } {2.21 2.20 2.99 2.84}
 test textDisp-14.15 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll 14 globs} msg] $msg
-} {1 {bad argument "globs": must be units, pages or pixels}}
+} {1 {bad argument "globs": must be units, pages, or pixels}}
 test textDisp-14.16 {TkTextXviewCmd procedure} {
     list [catch {.t xview flounder} msg] $msg
-} {1 {unknown option "flounder": must be moveto or scroll}}
+} {1 {bad option "flounder": must be moveto or scroll}}
 
 .t configure -wrap char
 .t delete 1.0 end
@@ -1790,7 +1790,7 @@ test textDisp-16.1 {TkTextYviewCmd procedure} {
 } {9 14}
 test textDisp-16.2 {TkTextYviewCmd procedure} {
     list [catch {.t yview 2 3} msg] $msg
-} {1 {unknown option "2": must be moveto or scroll}}
+} {1 {bad option "2": must be moveto or scroll}}
 test textDisp-16.3 {TkTextYviewCmd procedure} {
     list [catch {.t yview -pickplace} msg] $msg
 } {1 {wrong # args: should be ".t yview -pickplace lineNum|index"}}
@@ -1799,7 +1799,7 @@ test textDisp-16.4 {TkTextYviewCmd procedure} {
 } {1 {wrong # args: should be ".t yview -pickplace lineNum|index"}}
 test textDisp-16.5 {TkTextYviewCmd procedure} {
     list [catch {.t yview -bogus 2} msg] $msg
-} {1 {unknown option "-bogus": must be moveto or scroll}}
+} {1 {bad option "-bogus": must be moveto or scroll}}
 test textDisp-16.6 {TkTextYviewCmd procedure, integer position} {
     .t yview 100.0
     update
@@ -1872,7 +1872,7 @@ test textDisp-16.20 {TkTextYviewCmd procedure, "scroll" option} {
 } {1 {wrong # args: should be ".t yview scroll number units|pages|pixels"}}
 test textDisp-16.21 {TkTextYviewCmd procedure, "scroll" option} {
     list [catch {.t yview scroll badInt bogus} msg] $msg
-} {1 {bad argument "bogus": must be units, pages or pixels}}
+} {1 {bad argument "bogus": must be units, pages, or pixels}}
 test textDisp-16.21.2 {TkTextYviewCmd procedure, "scroll" option} {
     list [catch {.t yview scroll badInt units} msg] $msg
 } {1 {expected integer but got "badInt"}}
@@ -1884,7 +1884,7 @@ test textDisp-16.22 {TkTextYviewCmd procedure, "scroll" option, back pages} {
 } {42.0}
 test textDisp-16.22.1 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     list [catch {.t yview scroll -3 p} res] $res
-} {1 {ambiguous argument "p": must be units, pages or pixels}}
+} {1 {ambiguous argument "p": must be units, pages, or pixels}}
 test textDisp-16.23 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview 50.0
     update
@@ -1955,10 +1955,10 @@ test textDisp-16.31 {TkTextYviewCmd procedure, "scroll units" option} {
 } {151.40}
 test textDisp-16.32 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 12 bogoids} msg] $msg
-} {1 {bad argument "bogoids": must be units, pages or pixels}}
+} {1 {bad argument "bogoids": must be units, pages, or pixels}}
 test textDisp-16.33 {TkTextYviewCmd procedure} {
     list [catch {.t yview bad_arg 1 2} msg] $msg
-} {1 {unknown option "bad_arg": must be moveto or scroll}}
+} {1 {bad option "bad_arg": must be moveto or scroll}}
 test textDisp-16.34 {TkTextYviewCmd procedure} {
     set res {}
     .t yview 1.0
