@@ -1,8 +1,10 @@
-2006-03-23  Reinhard Max  <max@suse.de>
+2006-03-23  Reinhard Max  <max@tclers.tk>
 
-	* unix/tk.spec: Cleaned up and completed the spec file.
-			An RPM can now be built from the tk source
-			distribution with "rpmbuild -tb <tarball>".
+	* unix/tkUnixRFont.c (TkpMeasureCharsInContext): Copied over from
+	tkUnixFont.c to fix compiling with --enable-xft .
+
+	* unix/tk.spec: Cleaned up and completed.  An RPM can now be built
+	from the tk source distribution with "rpmbuild -tb <tarball>".
 
 2006-03-23  Don Porter  <dgp@users.sourceforge.net>
 
