@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.12 2006/02/07 11:33:18 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.13 2006/03/23 22:08:51 rmax Exp $
  */
 
 #include "tkUnixInt.h"
@@ -565,6 +565,16 @@ Tk_MeasureChars(
 #endif /* DEBUG_FONTSEL */
     *lengthPtr = curX;
     return curByte;
+}
+
+int
+TkpMeasureCharsInContext(Tk_Font tkfont, CONST char * source, int numBytes,
+			 int rangeStart, int rangeLength, int maxLength,
+			 int flags, int * lengthPtr)
+{
+    (void) numBytes; /*unused*/
+    return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
+	    maxLength, flags, lengthPtr);
 }
 
 #define NUM_SPEC    1024
