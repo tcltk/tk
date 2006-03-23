@@ -1,3 +1,9 @@
+2006-03-23  Reinhard Max  <max@suse.de>
+
+	* unix/tk.spec: Cleaned up and completed the spec file.
+			An RPM can now be built from the tk source
+			distribution with "rpmbuild -tb <tarball>".
+
 2006-03-23  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/textDisp.test:	Updated expected error messages to match the
