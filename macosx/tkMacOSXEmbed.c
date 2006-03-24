@@ -14,16 +14,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.4 2005/01/09 18:28:06 chengyemao Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.5 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tkInt.h"
-#include "tkPort.h"
-#include "X11/X.h"
-#include "X11/Xlib.h"
-#include <stdio.h>
-
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
 
 /*

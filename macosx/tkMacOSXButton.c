@@ -10,11 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.17 2006/03/22 00:21:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.18 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tkButton.h"
 #include "tkMacOSXInt.h"
+#include "tkButton.h"
 #include "tkMacOSXFont.h"
 #include "tkMacOSXDebug.h"
 
@@ -27,8 +27,6 @@
 #define DEF_INSET_RIGHT 2
 #define DEF_INSET_TOP 2
 #define DEF_INSET_BOTTOM 4
-
-#include <Carbon/Carbon.h>
 
 /*
  * Some defines used to control what type of control is drawn.

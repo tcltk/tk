@@ -54,11 +54,10 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.10 2006/02/09 19:08:50 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.11 2006/03/24 14:58:01 das Exp $
  */
 
 #include "tkMacOSXInt.h"
-#include "tkPort.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"

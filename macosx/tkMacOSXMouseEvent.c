@@ -54,15 +54,11 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.16 2005/12/13 03:44:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.17 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tkInt.h"
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include "tkMacOSXEvent.h"
 #include "tkMacOSXInt.h"
-#include "tkPort.h"
+#include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 
 #if !defined(MAC_OS_X_VERSION_10_3) || \

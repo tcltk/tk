@@ -9,13 +9,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.h,v 1.1 2006/03/22 00:21:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.h,v 1.2 2006/03/24 14:58:01 das Exp $
  */
 
 #ifndef	TKMACOSXFONT_H
 #define	TKMACOSXFONT_H	1
 
 #include "tkFont.h"
+
+#include <Carbon/Carbon.h>
 
 /*
  * Switches

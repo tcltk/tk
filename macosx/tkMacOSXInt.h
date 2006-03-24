@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.13 2005/12/08 05:04:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.14 2006/03/24 14:58:01 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -19,6 +19,10 @@
 #include "tkInt.h"
 #endif
 
+#define TextStyle MacTextStyle
+#include <Carbon/Carbon.h>
+#undef TextStyle
+
 /*
  * Include platform specific public interfaces.
  */
@@ -26,12 +30,6 @@
 #ifndef _TKMAC
 #include "tkMacOSX.h"
 #endif
-
-#ifndef _TKPORT
-#include "tkPort.h"
-#endif
-
-#include <Carbon/Carbon.h>
 
 struct TkWindowPrivate {
     TkWindow *winPtr;     	/* Ptr to tk window or NULL if Pixmap */
@@ -120,6 +118,13 @@ MODULE_SCOPE TkMacOSXEmbedHandler *gMacEmbedHandler;
 #define TK_BOTH_CHANGED		3
 
 /*
+ * Defines for tkTextDisp.c
+ */
+
+#define TK_LAYOUT_WITH_BASE_CHUNKS 1
+#define TK_DRAW_IN_CONTEXT 1
+
+/*
  * Variables shared among various Mac Tk modules but are not
  * exported to the outside world.
  */
@@ -162,6 +167,7 @@ MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE int TkMacOSXGenerateFocusEvent( Window window, int activeFlag);
 MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 MODULE_SCOPE void* TkMacOSXGetNamedSymbol(const char* module, const char* symbol);
+MODULE_SCOPE int TkMacOSXCompareColors(unsigned long c1, unsigned long c2);
 
 /* Macro to abstract common use of TkMacOSXGetNamedSymbol to initialize named symbols */
 #define TkMacOSXInitNamedSymbol(module, ret, symbol, ...) \

@@ -50,11 +50,9 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.5 2005/11/27 02:36:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.6 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tk.h"
-#include "tkInt.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDefault.h"
 #include "tkEntry.h"

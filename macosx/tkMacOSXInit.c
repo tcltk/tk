@@ -10,12 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.18 2006/01/10 05:37:51 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.19 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tkInt.h"
 #include "tkMacOSXInt.h"
+
 #include "tclInt.h" /* for Tcl_GetStartupScript() & Tcl_SetStartupScript() */
+
 #include <sys/stat.h>
 #include <mach-o/dyld.h>
 #include <mach-o/getsect.h>
