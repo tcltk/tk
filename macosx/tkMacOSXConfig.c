@@ -10,10 +10,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXConfig.c,v 1.2 2002/08/31 06:12:29 das Exp $
+ * RCS: @(#) $Id: tkMacOSXConfig.c,v 1.3 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tk.h"
 #include "tkInt.h"
 
 

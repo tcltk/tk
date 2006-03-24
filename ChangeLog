@@ -1,3 +1,43 @@
+2006-03-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkTextDisp.c:   moved #ifdef MAC_OSX_TK code added by
+	* macosx/tkMacOSXColor.c: Patch #638966 into platform specific
+	* macosx/tkMacOSXInt.h:   files.
+
+	* macosx/tkMacOSX.h:             cleaned up & rationalized order of
+	* macosx/tkMacOSXBitmap.c:       #includes of tk and carbon headers.
+	* macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXCarbonEvents.c:
+	* macosx/tkMacOSXClipboard.c:
+	* macosx/tkMacOSXColor.c:
+	* macosx/tkMacOSXConfig.c:
+	* macosx/tkMacOSXCursor.c:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXEmbed.c:
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXEvent.h:
+	* macosx/tkMacOSXFont.h:
+	* macosx/tkMacOSXHLEvents.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXKeyboard.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXRegion.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXSend.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXWm.h:
+	* macosx/tkMacOSXXStubs.c:
+
 2006-03-23  Reinhard Max  <max@tclers.tk>
 
 	* unix/tkUnixRFont.c (TkpMeasureCharsInContext): Copied over from
