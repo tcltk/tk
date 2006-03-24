@@ -9,17 +9,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.5 2004/02/16 00:19:42 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.6 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tkInt.h"
-#include "tkPort.h"
 #include "tkMacOSXInt.h"
 #include "tkSelect.h"
 
-#include <Carbon/Carbon.h>
 
-
 /*
  *----------------------------------------------------------------------
  *

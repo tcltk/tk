@@ -12,22 +12,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.14 2005/12/01 06:24:16 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.15 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tkInt.h"
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <sys/types.h>
-
-#include <X11/Xatom.h>
-
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
-#include "tkPort.h"
 #include "tkMacOSXEvent.h"
 
 #include <IOKit/IOKitLib.h>

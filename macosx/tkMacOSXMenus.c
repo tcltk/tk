@@ -10,19 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.9 2005/11/27 06:53:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.10 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tk.h"
-#include "tkInt.h"
 #include "tkMacOSXInt.h"
-
-/*
- * The define Status defined by Xlib.h conflicts with the function Status
- * defined by Devices.h.  We undefine it here to compile.
- */
-#undef Status
-#include <Carbon/Carbon.h>
 
 #if !defined(MAC_OS_X_VERSION_10_3) || \
         (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)

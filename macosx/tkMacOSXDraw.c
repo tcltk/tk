@@ -11,17 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.9 2006/03/02 20:45:20 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.10 2006/03/24 14:58:01 das Exp $
  */
 
-#include "tkInt.h"
-#include "X11/X.h"
-#include "X11/Xlib.h"
-#include <stdio.h>
-
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
-#include "tkPort.h"
 #include "tkMacOSXDebug.h"
 
 #ifndef PI

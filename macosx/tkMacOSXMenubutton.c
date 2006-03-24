@@ -10,13 +10,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.9 2006/03/22 00:21:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.10 2006/03/24 14:58:01 das Exp $
  */
 
-#include <Carbon/Carbon.h>
+#include "tkMacOSXInt.h"
 #include "tkMenu.h"
 #include "tkMenubutton.h"
-#include "tkMacOSXInt.h"
 #include "tkMacOSXFont.h"
 #include "tkMacOSXDebug.h"
 
