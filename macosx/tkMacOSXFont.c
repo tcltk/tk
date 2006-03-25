@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.12 2006/03/22 00:21:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.13 2006/03/25 06:02:43 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1076,6 +1076,9 @@ TkpDrawCharsInContext(
 }
 
 #if TK_MAC_USE_QUARZ
+#define RGBFLOATRED(c)   (float)((float)(c.red)   / 65535.0f)
+#define RGBFLOATGREEN(c) (float)((float)(c.green) / 65535.0f)
+#define RGBFLOATBLUE(c)  (float)((float)(c.blue)  / 65535.0f)
 /*
  *-------------------------------------------------------------------------
  *
@@ -1111,37 +1114,41 @@ TkMacOSXQuarzStartDraw(
                                              * by this function. */
 {
     GDHandle currentDevice;
-    RgnHandle clipRgn;
-    RGBColor qdColor;
-    double red, green, blue;
+    CGrafPtr destPort;
+    RGBColor macColor;
+    CGContextRef outContext;
+    OSStatus err;
+    Rect boundsRect;
+    static RgnHandle clipRgn = NULL;
+
+    GetGWorld(&destPort, &currentDevice);
+
+    err = QDBeginCGContext(destPort, &outContext);
 
     /*
-     * Create the CGContext.
+     * Now clip the CG Context to the port. We also have to intersect our clip
+     * region with the port visible region so we don't overwrite the window
+     * decoration.
      */
 
-    GetGWorld(&drawingContextPtr->graphPort, &currentDevice);
-    QDBeginCGContext(
-            drawingContextPtr->graphPort,
-            &drawingContextPtr->cgContext);
-    CGContextSaveGState(
-            drawingContextPtr->cgContext);
+    if (!clipRgn) {
+	clipRgn = NewRgn();
+    }
+
+    GetPortBounds(destPort, &boundsRect);
+
+    RectRgn(clipRgn, &boundsRect);
+    SectRegionWithPortClipRegion(destPort, clipRgn);
+    SectRegionWithPortVisibleRegion(destPort, clipRgn);
+    ClipCGContextToRegion(outContext, &boundsRect, clipRgn);
+    SetEmptyRgn(clipRgn);
 
     /*
-     * Sync some parameters, most notably the clipping region. I'm not sure
-     * if that part of the code is right, as the coordinate systems of the
-     * graphPort and the cgContext are different.
+     * Note: You have to call SyncCGContextOriginWithPort
+     * AFTER all the clip region manipulations.
      */
 
-    SyncCGContextOriginWithPort(
-            drawingContextPtr->cgContext, drawingContextPtr->graphPort);
-    GetPortBounds(drawingContextPtr->graphPort, &drawingContextPtr->portRect);
-
-    clipRgn = NewRgn();
-    GetPortClipRegion(drawingContextPtr->graphPort, clipRgn);
-    ClipCGContextToRegion(
-            drawingContextPtr->cgContext,
-            &drawingContextPtr->portRect, clipRgn);
-    DisposeRgn(clipRgn);
+    SyncCGContextOriginWithPort(outContext, destPort);
 
     /*
      * Scale the color values, as QD uses UInt16 with the range [0..2^16-1]
@@ -1149,18 +1156,19 @@ TkMacOSXQuarzStartDraw(
      * CGContextSetRGBFillColor() seems to be actually used by ATSU.
      */
 
-    GetForeColor(&qdColor);
-    red =   (double) qdColor.red   / (double) 0xFFFF;
-    green = (double) qdColor.green / (double) 0xFFFF;
-    blue =  (double) qdColor.blue  / (double) 0xFFFF;
-    CGContextSetRGBFillColor(
-            drawingContextPtr->cgContext, red, green, blue, 1.0);
-/*     CGContextSetRGBStrokeColor( */
-/*             drawingContextPtr->cgContext, red, green, blue, 1.0); */
+    GetForeColor(&macColor);
+    CGContextSetRGBFillColor(outContext,
+            RGBFLOATRED(macColor), 
+            RGBFLOATGREEN(macColor), 
+            RGBFLOATBLUE(macColor),
+            1.0f);
+
+    drawingContextPtr->graphPort = destPort;
+    drawingContextPtr->cgContext = outContext;
+    drawingContextPtr->portRect = boundsRect;
+
 }
-#endif /* TK_MAC_USE_QUARZ */
 
-#if TK_MAC_USE_QUARZ
 /*
  *-------------------------------------------------------------------------
  *
@@ -1184,8 +1192,6 @@ void
 TkMacOSXQuarzEndDraw(
     DrawingContext * drawingContextPtr)
 {
-    CGContextRestoreGState(
-            drawingContextPtr->cgContext);
     QDEndCGContext(
             drawingContextPtr->graphPort,
             &drawingContextPtr->cgContext);
