@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.11 2006/03/25 06:02:43 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.12 2006/03/25 06:08:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1745,7 +1745,7 @@ TkMacOSXSetUpCGContext(
 
     err = QDBeginCGContext(destPort, contextPtr);
     outContext = *contextPtr;
- 
+
     /*
      * Now clip the CG Context to the port.  Note, we have already
      * set up the port with our clip region, so we can just get
@@ -1755,7 +1755,7 @@ TkMacOSXSetUpCGContext(
      * We also have to intersect our clip region with the port
      * visible region so we don't overwrite the window decoration.
      */
-     
+
     if (!clipRgn) {
 	clipRgn = NewRgn();
     }
