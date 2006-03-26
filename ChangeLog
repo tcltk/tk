@@ -1,3 +1,12 @@
+2006-03-26  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.c: 
+	* generic/tkText.h:
+	* generic/tkTextBTree.c:
+	* tests/text.test: Fix for [Bug 1414171] for '$text dump
+	-command <script>' where 'script' actually modifies the
+	widget during the process.
+
 2006-03-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDraw.c (TkMacOSXSetUpCGContext): 

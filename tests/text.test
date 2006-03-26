@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.41 2005/12/02 17:23:44 dgp Exp $
+# RCS: @(#) $Id: text.test,v 1.42 2006/03/26 17:52:40 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3711,6 +3711,19 @@ test text-32.1 {peer widget -start, -end and selection} {
     lappend res [.t tag ranges sel]
     set res
 } {{10.0 20.0} {6.0 16.0} {6.0 11.0} {1.0 6.0} {1.0 2.0} {} {10.0 20.0}}
+
+test text-33.1 {widget dump -command alters tags} {
+    .t delete 1.0 end
+    .t insert end "abc\n" a "---" {} "def" b "   \n" {} "ghi\n" c
+    .t tag configure b -background red
+
+    proc Dumpy {key value index} {
+      #puts "KK: $key, $value"
+      .t tag add $value [list $index linestart] [list $index lineend]
+    }
+    .t dump -all -command Dumpy 1.0 end
+    set result "ok"
+} {ok}
 
 deleteWindows
 option clear

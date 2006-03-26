@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.65 2006/03/18 15:52:32 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.66 2006/03/26 17:52:39 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -379,12 +379,12 @@ static void		TextWorldChangedCallback(ClientData instanceData);
 static void		TextWorldChanged(TkText *textPtr, int mask);
 static int		TextDumpCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *CONST objv[]);
-static void		DumpLine(Tcl_Interp *interp, TkText *textPtr, int what,
+static int		DumpLine(Tcl_Interp *interp, TkText *textPtr, int what,
 			    TkTextLine *linePtr, int start, int end,
-			    int lineno, CONST char *command);
+			    int lineno, Tcl_Obj *command);
 static int		DumpSegment(TkText *textPtr, Tcl_Interp *interp,
 			    CONST char *key, CONST char *value,
-			    CONST char *command, CONST TkTextIndex *index,
+			    Tcl_Obj *command, CONST TkTextIndex *index,
 			    int what);
 static int		TextEditUndo(TkText *textPtr);
 static int		TextEditRedo(TkText *textPtr);
@@ -4425,7 +4425,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
     int what = 0;		/* bitfield to select segment types */
     int atEnd;			/* True if dumping up to logical end */
     TkTextLine *linePtr;
-    CONST char *command = NULL;	/* Script callback to apply to segments */
+    Tcl_Obj *command = NULL;	/* Script callback to apply to segments */
 #define TK_DUMP_TEXT	0x1
 #define TK_DUMP_MARK	0x2
 #define TK_DUMP_TAG	0x4
@@ -4477,7 +4477,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
 			"?-command script? index ?index2?", NULL);
 		return TCL_ERROR;
 	    }
-	    command = Tcl_GetString(objv[arg]);
+	    command = objv[arg];
 	    break;
 	default:
 	    Tcl_Panic("unexpected switch fallthrough");
@@ -4495,11 +4495,10 @@ TextDumpCmd(textPtr, interp, objc, objv)
     if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index1) != TCL_OK) {
 	return TCL_ERROR;
     }
-    lineno = TkBTreeLinesTo(textPtr, index1.linePtr);
     arg++;
     atEnd = 0;
     if (objc == arg) {
-	TkTextIndexForwChars(NULL,&index1, 1, &index2, COUNT_INDICES);
+	TkTextIndexForwChars(NULL, &index1, 1, &index2, COUNT_INDICES);
     } else {
 	int length;
 	char *str;
@@ -4515,23 +4514,41 @@ TextDumpCmd(textPtr, interp, objc, objv)
     if (TkTextIndexCmp(&index1, &index2) >= 0) {
 	return TCL_OK;
     }
+    lineno = TkBTreeLinesTo(textPtr, index1.linePtr);
     if (index1.linePtr == index2.linePtr) {
 	DumpLine(interp, textPtr, what, index1.linePtr,
 		index1.byteIndex, index2.byteIndex, lineno, command);
     } else {
-	DumpLine(interp, textPtr, what, index1.linePtr,
+	int textChanged;
+	int lineend = TkBTreeLinesTo(textPtr, index2.linePtr);
+	int endByteIndex = index2.byteIndex;
+	
+	textChanged = DumpLine(interp, textPtr, what, index1.linePtr,
 		index1.byteIndex, 32000000, lineno, command);
-	linePtr = index1.linePtr;
+	if (textChanged) {
+	    linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, 
+				      textPtr, lineno);
+	    textChanged = 0;
+	} else {
+	    linePtr = index1.linePtr;
+	}
 	while ((linePtr = TkBTreeNextLine(textPtr, linePtr)) != NULL) {
 	    lineno++;
-	    if (linePtr == index2.linePtr) {
+	    if (lineno == lineend) {
 		break;
 	    }
-	    DumpLine(interp, textPtr, what, linePtr, 0, 32000000,
+	    textChanged = DumpLine(interp, textPtr, what, linePtr, 0, 32000000,
 		    lineno, command);
+	    if (textChanged) {
+		linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, 
+					  textPtr, lineno);
+		textChanged = 0;
+	    }
 	}
-	DumpLine(interp, textPtr, what, index2.linePtr, 0,
-		index2.byteIndex, lineno, command);
+	if (linePtr != NULL) {
+	    DumpLine(interp, textPtr, what, linePtr, 0,
+		     endByteIndex, lineno, command);
+	}
     }
 
     /*
@@ -4539,6 +4556,10 @@ TextDumpCmd(textPtr, interp, objc, objv)
      */
 
     if (atEnd) {
+	/* Re-get the end index, in case it has changed */
+	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 	DumpLine(interp, textPtr, what & ~TK_DUMP_TEXT, index2.linePtr,
 		0, 1, lineno, command);
     }
@@ -4554,14 +4575,17 @@ TextDumpCmd(textPtr, interp, objc, objv)
  *	"start" up to, but not including, "end".
  *
  * Results:
- *	A standard Tcl result.
+ *	Returns 1 if the command callback made any changes to the text
+ *	widget which will have invalidated internal structures such as
+ *	TkTextSegment, TkTextIndex, pointers.  Our caller can then take
+ *	action to recompute such entities.  Returns 0 otherwise.
  *
  * Side effects:
- *	None, but see DumpSegment.
+ *	None, but see DumpSegment which can have arbitrary side-effects
  *
  *----------------------------------------------------------------------
  */
-static void
+static int
 DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
     Tcl_Interp *interp;
     TkText *textPtr;
@@ -4569,9 +4593,9 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
     TkTextLine *linePtr;	/* The current line */
     int startByte, endByte;	/* Byte range to dump */
     int lineno;			/* Line number for indices dump */
-    CONST char *command;	/* Script to apply to the segment */
+    Tcl_Obj *command;   	/* Script to apply to the segment */
 {
-    int offset;
+    int offset = 0;
     TkTextSegment *segPtr;
     TkTextIndex index;
     /*
@@ -4583,13 +4607,16 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
      * window
      */
 
-    for (offset = 0, segPtr = linePtr->segPtr ;
-	    (offset < endByte) && (segPtr != NULL) ;
-	    offset += segPtr->size, segPtr = segPtr->nextPtr) {
+    int textChanged = 0;
+    
+    segPtr = linePtr->segPtr;
+    while ((offset < endByte) && (segPtr != NULL)) {
+	int lineChanged = 0;
+	int currentSize = segPtr->size;
+	
 	if ((what & TK_DUMP_TEXT) && (segPtr->typePtr == &tkTextCharType) &&
 		(offset + segPtr->size > startByte)) {
-	    char savedChar;		/* Last char used in the seg */
-	    int last = segPtr->size;	/* Index of savedChar */
+	    int last = segPtr->size;	/* Index of last char in seg */
 	    int first = 0;		/* Index of first char in seg */
 
 	    if (offset + segPtr->size > endByte) {
@@ -4598,14 +4625,30 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 	    if (startByte > offset) {
 		first = startByte - offset;
 	    }
-	    savedChar = segPtr->body.chars[last];
-	    segPtr->body.chars[last] = '\0';
+	    if (last != segPtr->size) {
+		/*
+		 * To avoid modifying the string in place we copy over
+		 * just the segment that we want.  Since DumpSegment can
+		 * modify the text, we could not confidently revert the
+		 * modification here.
+		 */
+		int length = last - first;
+		
+		char *range = (char*) ckalloc((length + 1) * sizeof(char));
+		memcpy(range, segPtr->body.chars + first, length * sizeof(char));
+		range[length] = '\0';
 
-	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineno,
-		    offset + first, &index);
-	    DumpSegment(textPtr, interp, "text", segPtr->body.chars + first,
-		    command, &index, what);
-	    segPtr->body.chars[last] = savedChar;
+		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineno,
+			offset + first, &index);
+		lineChanged = DumpSegment(textPtr, interp, "text", range,
+			command, &index, what);
+		ckfree(range);
+	    } else {
+		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineno,
+			offset + first, &index);
+		lineChanged = DumpSegment(textPtr, interp, "text", segPtr->body.chars + first,
+			command, &index, what);
+	    }
 	} else if ((offset >= startByte)) {
 	    if ((what & TK_DUMP_MARK) && (segPtr->typePtr->name[0] == 'm')) {
 		char *name;
@@ -4621,19 +4664,19 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 		}
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);
-		DumpSegment(textPtr, interp, "mark", name, command, &index, what);
+		lineChanged = DumpSegment(textPtr, interp, "mark", name, command, &index, what);
 	    } else if ((what & TK_DUMP_TAG) &&
 		    (segPtr->typePtr == &tkTextToggleOnType)) {
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);
-		DumpSegment(textPtr, interp, "tagon",
+		lineChanged = DumpSegment(textPtr, interp, "tagon",
 			segPtr->body.toggle.tagPtr->name, command, &index,
 			what);
 	    } else if ((what & TK_DUMP_TAG) &&
 		    (segPtr->typePtr == &tkTextToggleOffType)) {
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);
-		DumpSegment(textPtr, interp, "tagoff",
+		lineChanged = DumpSegment(textPtr, interp, "tagoff",
 			segPtr->body.toggle.tagPtr->name, command, &index,
 			what);
 	    } else if ((what & TK_DUMP_IMG) &&
@@ -4643,7 +4686,7 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);
-		DumpSegment(textPtr, interp, "image", name, command, &index,
+		lineChanged = DumpSegment(textPtr, interp, "image", name, command, &index,
 			what);
 	    } else if ((what & TK_DUMP_WIN) &&
 		    (segPtr->typePtr->name[0] == 'w')) {
@@ -4657,11 +4700,25 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 		}
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);
-		DumpSegment(textPtr, interp, "window", pathname, command,
+		lineChanged = DumpSegment(textPtr, interp, "window", pathname, command,
 			&index, what);
 	    }
 	}
+	offset += currentSize;
+	if (lineChanged) {
+	    int newOffset = 0;
+	    textChanged = 1;
+	    /* Our indices are no longer valid */
+	    linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, textPtr, lineno);
+	    segPtr = linePtr->segPtr;
+	    while ((newOffset < endByte) && (newOffset < offset) && (segPtr != NULL)) {
+	        segPtr = segPtr->nextPtr;
+	    }
+	} else {
+	    segPtr = segPtr->nextPtr;
+	}
     }
+    return textChanged;
 }
 
 /*
@@ -4673,10 +4730,14 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
  *	make a script callback with that information as arguments.
  *
  * Results:
- *	None
+ *	Returns 1 if the command callback made any changes to the text
+ *	widget which will have invalidated internal structures such as
+ *	TkTextSegment, TkTextIndex, pointers.  Our caller can then take
+ *	action to recompute such entities.  Returns 0 otherwise.
  *
  * Side effects:
  *	Either evals the callback or appends elements to the result string.
+ *	The callback can have arbitrary side-effects.
  *
  *----------------------------------------------------------------------
  */
@@ -4687,7 +4748,7 @@ DumpSegment(textPtr, interp, key, value, command, index, what)
     Tcl_Interp *interp;
     CONST char *key;		/* Segment type key */
     CONST char *value;		/* Segment value */
-    CONST char *command;	/* Script callback */
+    Tcl_Obj *command;   	/* Script callback */
     CONST TkTextIndex *index;	/* index with line/byte position info */
     int what;			/* Look for TK_DUMP_INDEX bit */
 {
@@ -4698,20 +4759,24 @@ DumpSegment(textPtr, interp, key, value, command, index, what)
 	Tcl_AppendElement(interp, key);
 	Tcl_AppendElement(interp, value);
 	Tcl_AppendElement(interp, buffer);
-	return TCL_OK;
+	return 0;
     } else {
 	CONST char *argv[4];
 	char *list;
-	int result;
-
+	int oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+	
 	argv[0] = key;
 	argv[1] = value;
 	argv[2] = buffer;
 	argv[3] = NULL;
 	list = Tcl_Merge(3, argv);
-	result = Tcl_VarEval(interp, command, " ", list, NULL);
+	Tcl_VarEval(interp, Tcl_GetString(command), " ", list, NULL);
 	ckfree(list);
-	return result;
+	if (TkBTreeEpoch(textPtr->sharedTextPtr->tree) != oldStateEpoch) {
+	    return 1;
+	} else {
+	    return 0;
+	}
     }
 }
 
