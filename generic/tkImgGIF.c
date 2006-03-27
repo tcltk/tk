@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.3 2005/12/01 03:22:10 hobbs Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.4 2006/03/27 12:13:56 dkf Exp $
  */
 
 /*
@@ -243,7 +243,7 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
     int srcX, srcY;		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
 {
-    int fileWidth, fileHeight;
+    int fileWidth, fileHeight, imageWidth, imageHeight;
     int nBytes, index = 0, argc = 0, i;
     Tcl_Obj **objv;
     Tk_PhotoImageBlock block;
@@ -376,8 +376,8 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    goto error;
 	}
 
-	fileWidth = LM_to_uint(buf[4],buf[5]);
-	fileHeight = LM_to_uint(buf[6],buf[7]);
+	imageWidth = LM_to_uint(buf[4],buf[5]);
+	imageHeight = LM_to_uint(buf[6],buf[7]);
 
 	bitPixel = 1<<((buf[8]&0x07)+1);
 
@@ -419,8 +419,8 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	     * of the less frequent case, I chose to maintain high
 	     * performance for the common case.
 	     */
-	    if (ReadImage(interp, (char *) trashBuffer, chan, fileWidth,
-		    fileHeight, colorMap, 0, 0, 0, 0, 0, -1) != TCL_OK) {
+	    if (ReadImage(interp, (char *) trashBuffer, chan, imageWidth,
+		    imageHeight, colorMap, 0, 0, 0, 0, 0, -1) != TCL_OK) {
 		goto error;
 	    }
 	    continue;
@@ -441,8 +441,8 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    srcX = 0;
 	}
 
-	if (width > fileWidth) {
-	    width = fileWidth;
+	if (width > imageWidth) {
+	    width = imageWidth;
 	}
 
 	index = LM_to_uint(buf[2],buf[3]);
@@ -451,8 +451,8 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	    destY -= srcY; height += srcY;
 	    srcY = 0;
 	}
-	if (height > fileHeight) {
-	    height = fileHeight;
+	if (height > imageHeight) {
+	    height = imageHeight;
 	}
 
 	if ((width <= 0) || (height <= 0)) {
@@ -464,12 +464,12 @@ FileReadGIF(interp, chan, fileName, format, imageHandle, destX, destY,
 	block.height = height;
 	block.pixelSize = (transparent>=0) ? 4 : 3;
 	block.offset[3] = (transparent>=0) ? 3 : 0;
-	block.pitch = block.pixelSize * fileWidth;
-	nBytes = block.pitch * fileHeight;
+	block.pitch = block.pixelSize * imageWidth;
+	nBytes = block.pitch * imageHeight;
 	block.pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
 
-	if (ReadImage(interp, (char *) block.pixelPtr, chan, fileWidth,
-		fileHeight, colorMap, fileWidth, fileHeight, srcX, srcY,
+	if (ReadImage(interp, (char *) block.pixelPtr, chan, imageWidth,
+		imageHeight, colorMap, fileWidth, fileHeight, srcX, srcY,
 		BitSet(buf[8], INTERLACE), transparent) != TCL_OK) {
 	    goto error;
 	}
