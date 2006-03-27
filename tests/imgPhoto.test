@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.15.2.2 2004/02/17 20:40:41 dgp Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.15.2.3 2006/03/27 12:13:56 dkf Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -653,6 +653,19 @@ hciva9/Ovbv37+BzBgEEADs=
     catch {file delete -force $filename}
     set result
 } 1
+test imgPhoto-14.2 {GIF -index handler buffer sizing} {
+    # Bug 1458234 makes this crash when trying to access buffers of the
+    # wrong size, caused when the initial frame is not the largest frame.
+    set data {
+        R0lGODlhIAAgAKEAAPkOSQsi7////////yH/C05FVFNDQVBFMi4wAwEAAAAh
+        +QQJMgAAACwGAAYAFAAUAAACEYyPqcvtD6OctNqLs968+68VACH5BAkyAAEA
+        LAMAAwAaABoAAAI0jH+gq+gfmFzQzUsr3gBybn1gIm5kaUaoubbuC8fyTNel
+        Ohv1CSO533u8KrgbUfc5Ci/EAgA7
+    }
+    set i [image create photo]
+    $i configure -data $data -format {gif -index 2}
+    image delete $i
+} {}
 
 test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} \
 	{nonPortable} {
