@@ -1,11 +1,16 @@
+2006-03-27  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgGIF.c (FileReadGIF): Stop crashes when the first GIF
+	frame does not define the overall size of the image. [Bug 1458234]
+
 2006-03-26  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: 
 	* generic/tkText.h:
 	* generic/tkTextBTree.c:
-	* tests/text.test: Fix for [Bug 1414171] for '$text dump
-	-command <script>' where 'script' actually modifies the
-	widget during the process.
+	* tests/text.test: Fix for [Bug 1414171] for '$text dump -command
+	<script>' where 'script' actually modifies the widget during the
+	process.
 
 2006-03-25  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -15,11 +20,11 @@
 
 2006-03-24  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkTextDisp.c:   moved #ifdef MAC_OSX_TK code added by
-	* macosx/tkMacOSXColor.c: Patch #638966 into platform specific
-	* macosx/tkMacOSXInt.h:   files.
+	* generic/tkTextDisp.c:   Moved #ifdef MAC_OSX_TK code added by
+	* macosx/tkMacOSXColor.c: [Patch 638966] into platform specific files.
+	* macosx/tkMacOSXInt.h:
 
-	* macosx/tkMacOSX.h:             cleaned up & rationalized order of
+	* macosx/tkMacOSX.h:             Cleaned up & rationalized order of
 	* macosx/tkMacOSXBitmap.c:       #includes of tk and carbon headers.
 	* macosx/tkMacOSXButton.c:
 	* macosx/tkMacOSXCarbonEvents.c:
@@ -117,7 +122,7 @@
 
 2006-03-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/clrpick.tcl:   bug #1451587: avoid using abbreviated
+	* library/clrpick.tcl:   [Bug 1451587] Avoid using abbreviated
 	* library/palette.tcl:   sub-commands in core scripts as this
 	* library/scale.tcl:     can cause problems with mega-widget 
 	* library/scrlbar.tcl:   libraries like snit.

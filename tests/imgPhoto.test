@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.22 2005/10/12 09:29:21 dkf Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.23 2006/03/27 10:55:49 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -558,7 +558,7 @@ test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} hasTeapotPhoto {
 } {{19 92 192} {169 117 90} 512 512 {19 92 192}}
 
 test imgPhoto-13.1 {check separation of images in different interpreters} {
-    eval image delete [image names]
+    image delete {expand}[image names]
     set data {
 	R0lGODlhQgBkAPUAANbWxs7Wxs7OxsbOxsbGxsbGvb3Gvca9vcDAwL21vbW1vbW1tbWtta2t
 	ta2ltaWltaWlraWctaWcrZycrZyUrZSUrZSMrZSMpYyMrYyMpYyEpYSEpYR7pYR7nHp7pYRz
@@ -601,7 +601,6 @@ test imgPhoto-13.1 {check separation of images in different interpreters} {
     interp delete x2
 } {}
 
-
 test imgPhoto-14.1 {GIF writes work correctly} {
     set data "R0lGODlhYwA5APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgAysnGy8hKzM
 hASs3MTcjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
@@ -638,6 +637,19 @@ hciva9/Ovbv37+BzBgEEADs=
     catch {file delete -force $filename}
     set result
 } 1
+test imgPhoto-14.2 {GIF -index handler buffer sizing} {
+    # Bug 1458234 makes this crash when trying to access buffers of the
+    # wrong size, caused when the initial frame is not the largest frame.
+    set data {
+	R0lGODlhIAAgAKEAAPkOSQsi7////////yH/C05FVFNDQVBFMi4wAwEAAAAh
+	+QQJMgAAACwGAAYAFAAUAAACEYyPqcvtD6OctNqLs968+68VACH5BAkyAAEA
+	LAMAAwAaABoAAAI0jH+gq+gfmFzQzUsr3gBybn1gIm5kaUaoubbuC8fyTNel
+	Ohv1CSO533u8KrgbUfc5Ci/EAgA7
+    }
+    set i [image create photo]
+    $i configure -data $data -format {gif -index 2}
+    image delete $i
+} {}
 
 test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} \
 	{nonPortable} {
