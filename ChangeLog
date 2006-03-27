@@ -1,3 +1,9 @@
+2006-03-27  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5a4 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for next RC
+
 2006-03-27  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
 	* generic/tkTextDisp.c (MeasureChars): Fix calculations of start and
@@ -77,8 +83,6 @@
 	standardized formats established on 2005-11-17.  [Bug 1370296]
 
 2006-03-22  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.5a4 TAGGED FOR RELEASE ***
 
 	* changes:	Updates for next RC
 

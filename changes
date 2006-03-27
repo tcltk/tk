@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.92 2006/03/22 15:15:37 dgp Exp $
+RCS: @(#) $Id: changes,v 1.93 2006/03/27 16:20:12 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6146,6 +6146,12 @@ Max OSX universal binaries support (steffen)
 2006-03-17 (bug fix)[1451587] no abbreviations in script library (thoyts)
 
 2006-03-21 (enhancement)[638966] Aqua: ATSUI text render (reifenstahl,steffen)
+
+2006-03-23 (platform support) new tk.spec file (max)
+
+2006-03-26 (bug fix)[1414171] crash in [$text dump -command] (macdonald,darley)
+
+2006-03-27 (bug fix)[1458234] crash in animated GIFs (bron,fellows)
 
 Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
