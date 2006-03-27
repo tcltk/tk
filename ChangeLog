@@ -1,3 +1,8 @@
+2006-03-27  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
+
+	* generic/tkTextDisp.c (MeasureChars): Fix calculations of start and
+	end of string.  [Bugs 1325998, 1456157]
+
 2006-03-27  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgGIF.c (FileReadGIF): Stop crashes when the first GIF

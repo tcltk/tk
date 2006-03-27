@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.57 2006/03/24 14:58:00 das Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.58 2006/03/27 13:43:15 cc_benny Exp $
  */
 
 #include "tkPort.h"
@@ -8061,9 +8061,10 @@ MeasureChars(
 
     ch = 0;			/* lint. */
     curX = startX;
-    special = source + rangeStart;
-    end = source + rangeLength;
-    for (start = source; start < end; ) {
+    start = source + rangeStart;
+    end = start + rangeLength;
+    special = start;
+    while (start < end) {
 	if (start >= special) {
 	    /*
 	     * Find the next special character in the string.
