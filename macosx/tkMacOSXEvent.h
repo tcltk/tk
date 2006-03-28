@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.8 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.9 2006/03/28 02:43:24 das Exp $
  */
 
 #ifndef _TKMACEVENT
@@ -59,8 +59,6 @@
 #ifndef _TK
 #include "tk.h"
 #endif
-
-#include <Carbon/Carbon.h>
 
 typedef struct {
     int stopProcessing;

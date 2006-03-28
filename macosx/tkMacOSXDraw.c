@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.12 2006/03/25 06:08:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.13 2006/03/28 02:43:24 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -425,7 +425,7 @@ TkPutImage(
         if ((image->bytes_per_line % 2) == 1) {
             char *newPtr, *oldPtr;
             newData = (char *) ckalloc(image->height *
-                    (image->bytes_per_line + 1));
+		    (image->bytes_per_line + 1));
             newPtr = newData;
             oldPtr = image->data;
             for (i = 0; i < image->height; i++) {
@@ -439,8 +439,9 @@ TkPutImage(
             bitmap.baseAddr = newData;
             bitmap.rowBytes = image->bytes_per_line + 1;
         } else {
-            newData = (char *) ckalloc(image->height * image->bytes_per_line);
-            for (i = 0; i < image->height * image->bytes_per_line; i++) {
+	    size_t size = image->height * image->bytes_per_line;
+            newData = (char *) ckalloc((int) size);
+            for (i = 0; i < size; i++) {
                 newData[i] = InvertByte((unsigned char) image->data[i]);
             }
             bitmap.baseAddr = newData;

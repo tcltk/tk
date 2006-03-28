@@ -1,3 +1,11 @@
+2006-03-28  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDraw.c:   sync whitespace & minor changes
+	* macosx/tkMacOSXEvent.h:  with core-8-4-branch.
+	* macosx/tkMacOSXFont.h:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXNotify.c:
+
 2006-03-27  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5a4 TAGGED FOR RELEASE ***

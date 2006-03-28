@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.h,v 1.2 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.h,v 1.3 2006/03/28 02:43:24 das Exp $
  */
 
 #ifndef	TKMACOSXFONT_H
@@ -102,7 +102,7 @@ MODULE_SCOPE void	TkMacOSXLayoutSetString(const TkMacOSXFont * fontPtr,
 			    const UniChar * uchars, int ulen);
 MODULE_SCOPE void	TkMacOSXInitControlFontStyle(Tk_Font tkfont,
 			    ControlFontStylePtr fsPtr);
-			     
+
 #if TK_MAC_USE_QUARZ
 MODULE_SCOPE void	TkMacOSXQuarzStartDraw(
 			    TkMacOSXFontDrawingContext * contextPtr);
@@ -112,4 +112,3 @@ MODULE_SCOPE void	TkMacOSXQuarzEndDraw(
 
 
 #endif	/*TKMACOSXFONT_H*/
-
