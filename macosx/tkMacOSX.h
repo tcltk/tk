@@ -9,16 +9,17 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSX.h,v 1.2.2.1 2005/02/24 00:41:08 das Exp $
+ * RCS: @(#) $Id: tkMacOSX.h,v 1.2.2.2 2006/03/28 02:44:12 das Exp $
  */
 
 #ifndef _TKMAC
 #define _TKMAC
 
-#include <Carbon/Carbon.h>
 #ifndef _TK
 #include "tk.h"
 #endif
+
+#include <Carbon/Carbon.h>
 
 /*
  * Structures and function types for handling Netscape-type in process

@@ -32,15 +32,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.2 2002/08/31 06:12:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.2.2.1 2006/03/28 02:44:14 das Exp $
  */
 
-#include <Carbon/Carbon.h>
-/*
-#include <Gestalt.h>
-*/
-#include "tkPort.h"
-#include "tkInt.h"
+#include "tkMacOSXInt.h"
 
 EXTERN int		Tk_SendObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
@@ -172,13 +167,6 @@ static RegisteredInterp *interpListPtr = NULL;
       * present.  As with commands, there may be additional options besides
       * these;  unknown options are ignored.
       */
-
-     /*
-      * The following variable is the serial number that was used in the
-      * last "send" command.  It is exported only for testing purposes.
-      */
-
-int tkSendSerial = 0;
 
      /*
       * Maximum size property that can be read at one time by

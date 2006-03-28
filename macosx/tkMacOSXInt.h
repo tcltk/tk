@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.8 2005/12/08 05:04:35 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.9 2006/03/28 02:44:13 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -19,6 +19,10 @@
 #include "tkInt.h"
 #endif
 
+#define TextStyle MacTextStyle
+#include <Carbon/Carbon.h>
+#undef TextStyle
+
 /*
  * Include platform specific public interfaces.
  */
@@ -26,12 +30,6 @@
 #ifndef _TKMAC
 #include "tkMacOSX.h"
 #endif
-
-#ifndef _TKPORT
-#include "tkPort.h"
-#endif
-
-#include <Carbon/Carbon.h>
 
 struct TkWindowPrivate {
     TkWindow *winPtr;     	/* Ptr to tk window or NULL if Pixmap */
