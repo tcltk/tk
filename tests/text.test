@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.42 2006/03/26 17:52:40 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.43 2006/03/28 19:26:52 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3720,6 +3720,32 @@ test text-33.1 {widget dump -command alters tags} {
     proc Dumpy {key value index} {
       #puts "KK: $key, $value"
       .t tag add $value [list $index linestart] [list $index lineend]
+    }
+    .t dump -all -command Dumpy 1.0 end
+    set result "ok"
+} {ok}
+
+test text-33.2 {widget dump -command makes massive changes} {
+    .t delete 1.0 end
+    .t insert end "abc\n" a "---" {} "def" b "   \n" {} "ghi\n" c
+    .t tag configure b -background red
+
+    proc Dumpy {key value index} {
+      #puts "KK: $key, $value"
+      .t delete 1.0 end
+    }
+    .t dump -all -command Dumpy 1.0 end
+    set result "ok"
+} {ok}
+
+test text-33.3 {widget dump -command destroys widget} {
+    .t delete 1.0 end
+    .t insert end "abc\n" a "---" {} "def" b "   \n" {} "ghi\n" c
+    .t tag configure b -background red
+
+    proc Dumpy {key value index} {
+      #puts "KK: $key, $value"
+      destroy .t
     }
     .t dump -all -command Dumpy 1.0 end
     set result "ok"
