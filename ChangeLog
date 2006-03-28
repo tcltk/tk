@@ -1,3 +1,7 @@
+2006-03-28  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tcl.m4, win/tcl.m4: []-quote AC_DEFUN functions.
+
 2006-03-26  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: 
