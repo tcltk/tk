@@ -148,7 +148,7 @@
 				REZ_RESOURCE_MAP_READ_ONLY = YES;
 				REZ_SEARCH_PATHS = "${TK_SRCROOT}/generic ${TCL_SRCROOT}/generic";
 				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR} ${PREFIX}/share\"";
+				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
 				TCL_SRCROOT = "${SRCROOT}/../../tcl";
 				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
 				TK_SRCROOT = "${SRCROOT}/../../tk";
