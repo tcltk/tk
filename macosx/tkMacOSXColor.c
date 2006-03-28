@@ -12,12 +12,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.1 2004/02/16 00:42:34 wolfsuit Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.2 2006/03/28 02:44:13 das Exp $
  */
 
-#include <tkColor.h>
 #include "tkMacOSXInt.h"
-#include <Carbon/Carbon.h>
+#include "tkColor.h"
 
 /*
  * Default Auxillary Control Record for all controls.  This is cached once

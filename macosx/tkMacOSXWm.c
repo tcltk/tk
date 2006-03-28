@@ -12,12 +12,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.17 2006/03/13 18:19:00 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.18 2006/03/28 02:44:14 das Exp $
  */
-#include <Carbon/Carbon.h>
 
-#include "tkPort.h"
-#include "tkInt.h"
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
 #include "tkMacOSXWm.h"
