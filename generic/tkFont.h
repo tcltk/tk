@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.5 1999/04/16 01:51:14 stanton Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.5.20.1 2006/03/28 02:43:45 das Exp $
  */
 
 #ifndef _TKFONT
@@ -205,6 +205,8 @@ EXTERN int		TkFontGetPoints _ANSI_ARGS_((Tk_Window tkwin,
 			    int size));
 EXTERN char **		TkFontGetGlobalClass _ANSI_ARGS_((void));
 EXTERN char **		TkFontGetSymbolClass _ANSI_ARGS_((void));
+EXTERN int		TkFontGetFirstTextLayout _ANSI_ARGS_((
+			    Tk_TextLayout layout, Tk_Font *font, char *dst));
 
 /*
  * Low-level API exported by platform-specific code to generic code. 
