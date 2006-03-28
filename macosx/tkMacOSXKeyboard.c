@@ -9,13 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5.2.4 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5.2.5 2006/03/28 02:44:13 das Exp $
  */
 
-#include "tkInt.h"
-#include "X11/Xlib.h"
-#include "X11/keysym.h"
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
 #include "tkMacOSXEvent.h"      /* TkMacOSXKeycodeToUnicode() FIXME: That
                                  * function should probably move here. */

@@ -9,15 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.8 2006/02/09 19:09:43 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.9 2006/03/28 02:44:14 das Exp $
  */
 
-#include "tkInt.h"
-#include "X11/X.h"
-#include "X11/Xlib.h"
-#include <stdio.h>
-
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXWm.h"

@@ -10,13 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.2.2.6 2005/11/27 06:47:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.2.2.7 2006/03/28 02:44:13 das Exp $
  */
 
-#include <Carbon/Carbon.h>
+#include "tkMacOSXInt.h"
 #include "tkMenu.h"
 #include "tkMenubutton.h"
-#include "tkMacOSXInt.h"
+#include "tkMacOSXFont.h"
 #include "tkMacOSXDebug.h"
 
 #if !defined(MAC_OS_X_VERSION_10_3) || \
@@ -89,9 +89,6 @@ static void CompareControlTitleParams(
     int * titleChanged,
     int * styleChanged
 );
-
-extern int TkFontGetFirstTextLayout(Tk_TextLayout layout, Tk_Font * font, char * dst); 
-extern void TkMacOSXInitControlFontStyle(Tk_Font tkfont,ControlFontStylePtr fsPtr);
 
 /*
  * The structure below defines menubutton class behavior by means of

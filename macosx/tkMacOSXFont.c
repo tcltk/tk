@@ -1,4 +1,4 @@
-/* 
+/*
  * tkMacOSXFont.c --
  *
  *        Contains the Macintosh implementation of the platform-independant
@@ -11,12 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.7 2006/01/10 05:38:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.8 2006/03/28 02:44:13 das Exp $
  */
-#include <Carbon/Carbon.h>
 
 #include "tkMacOSXInt.h"
-#include "tkFont.h"
+#include "tkMacOSXFont.h"
+
 #include "tclInt.h" /* for Tcl_CreateNamespace() */
 
 /*
@@ -254,9 +254,6 @@ static int GetFamilyOrAliasNum(CONST char *faceName, short *familyPtr);
 static Tcl_Encoding GetFontEncoding(int faceNum, int allowSymbol, int *isSymbolPtr);
 static Tk_Uid GetUtfFaceName(StringPtr faceNameStr);
 
-void TkMacOSXInitControlFontStyle(Tk_Font tkfont,
-	ControlFontStylePtr fsPtr);
-
 /*
  *-------------------------------------------------------------------------
  * 

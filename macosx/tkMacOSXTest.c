@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXTest.c,v 1.2.2.2 2005/11/27 02:36:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXTest.c,v 1.2.2.3 2006/03/28 02:44:14 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -19,9 +19,9 @@
  * Forward declarations of procedures defined later in this file:
  */
 
-int			TkplatformtestInit _ANSI_ARGS_((Tcl_Interp *interp));
-static int		DebuggerCmd _ANSI_ARGS_((ClientData dummy,
-			    Tcl_Interp *interp, int argc, CONST char **argv));
+static int		DebuggerCmd (ClientData dummy, Tcl_Interp *interp,
+			    int argc, CONST char **argv);
+int			TkplatformtestInit (Tcl_Interp *interp);
 
 /*
  *----------------------------------------------------------------------

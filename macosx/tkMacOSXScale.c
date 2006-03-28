@@ -10,13 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScale.c,v 1.2.2.3 2005/09/10 14:54:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScale.c,v 1.2.2.4 2006/03/28 02:44:14 das Exp $
  */
 
-#include "tkScale.h"
-#include "tkInt.h"
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
+#include "tkScale.h"
 
 /*
  * Defines used in this file.

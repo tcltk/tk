@@ -9,20 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.2.2.1 2005/05/14 20:53:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.2.2.2 2006/03/28 02:44:12 das Exp $
  */
 
-#include "tkPort.h"
-#include "tk.h"
 #include "tkMacOSXInt.h"
-
-#include <Carbon/Carbon.h>
-/*
-#include <Icons.h>
-#include <Dialogs.h>
-#include <Resources.h>
-#include <Strings.h>
-*/
 
 /*
  * Depending on the resource type there are different ways to
