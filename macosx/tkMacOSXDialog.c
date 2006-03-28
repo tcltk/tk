@@ -9,12 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.9 2005/11/27 02:36:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.10 2006/03/28 02:44:13 das Exp $
  */
-#include <Carbon/Carbon.h>
 
-#include "tkPort.h"
-#include "tkInt.h"
 #include "tkMacOSXInt.h"
 #include "tkFileFilter.h"
 

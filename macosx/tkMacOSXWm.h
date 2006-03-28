@@ -50,17 +50,13 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWm.h,v 1.2.2.3 2006/03/13 18:19:01 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.h,v 1.2.2.4 2006/03/28 02:44:14 das Exp $
  */
  
 #ifndef _TKMACWM
 #define _TKMACWM
 
-#include <Carbon/Carbon.h>
-#include "tkPort.h"
-#include "tkInt.h"
 #include "tkMacOSXInt.h"
-#include "tkScrollbar.h"
 
 /*
  * A data structure of the following type holds information for

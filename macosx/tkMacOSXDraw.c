@@ -11,26 +11,20 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.11 2006/03/02 20:44:25 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.12 2006/03/28 02:44:13 das Exp $
  */
 
-#include "tkInt.h"
-#include "X11/X.h"
-#include "X11/Xlib.h"
-#include <stdio.h>
-
-#include <Carbon/Carbon.h>
 #include "tkMacOSXInt.h"
-#include "tkPort.h"
 #include "tkMacOSXDebug.h"
+
 #include "tclInt.h" /* for Tcl_CreateNamespace() */
 
 #ifndef PI
 #    define PI 3.14159265358979323846
 #endif
-#define RGBFLOATRED(c)	(float)((float)(c.red) / 65535.0f)
-#define RGBFLOATGREEN(c)	(float)((float)(c.green) / 65535.0f)
-#define RGBFLOATBLUE(c)	(float)((float)(c.blue) / 65535.0f)
+#define RGBFLOATRED(c)   (float)((float)(c.red)   / 65535.0f)
+#define RGBFLOATGREEN(c) (float)((float)(c.green) / 65535.0f)
+#define RGBFLOATBLUE(c)  (float)((float)(c.blue)  / 65535.0f)
 
 /*
  * Temporary regions that can be reused.
@@ -1725,15 +1719,15 @@ TkMacOSXSetUpGraphicsPort(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetUpGraphicsPort --
+ * TkMacOSXSetUpCGContext --
  *
- *        Set up the graphics port from the given GC.
+ *        Set up a CGContext for the given graphics port.
  *
  * Results:
  *        None.
  *
  * Side effects:
- *        The current port is adjusted.
+ *        None.
  *
  *----------------------------------------------------------------------
  */
@@ -1743,18 +1737,18 @@ TkMacOSXSetUpCGContext(
     MacDrawable *macWin,
     CGrafPtr destPort,
     GC gc,
-    CGContextRef *contextPtr)                /* GC to apply to current port. */
+    CGContextRef *contextPtr)
 {
     RGBColor macColor;
     CGContextRef outContext;
     OSStatus err;
     Rect boundsRect;
-    CGAffineTransform coordsTransform;        
+    CGAffineTransform coordsTransform;
     static RgnHandle clipRgn = NULL;
 
     err = QDBeginCGContext(destPort, contextPtr);
     outContext = *contextPtr;
- 
+
     /*
      * Now clip the CG Context to the port.  Note, we have already
      * set up the port with our clip region, so we can just get
@@ -1764,39 +1758,43 @@ TkMacOSXSetUpCGContext(
      * We also have to intersect our clip region with the port
      * visible region so we don't overwrite the window decoration.
      */
-     
+
     if (!clipRgn) {
-        clipRgn = NewRgn();
+	clipRgn = NewRgn();
     }
 
     GetPortBounds(destPort, &boundsRect);
-    
+
     RectRgn(clipRgn, &boundsRect);
     SectRegionWithPortClipRegion(destPort, clipRgn);
     SectRegionWithPortVisibleRegion(destPort, clipRgn);
     ClipCGContextToRegion(outContext, &boundsRect, clipRgn);
     SetEmptyRgn(clipRgn);
-    
+
     /*
      * Note: You have to call SyncCGContextOriginWithPort
      * AFTER all the clip region manipulations.
      */
-     
+
     SyncCGContextOriginWithPort(outContext, destPort);
 
-    coordsTransform = CGAffineTransformMake(1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 
-            (float) (boundsRect.bottom - boundsRect.top));
+    coordsTransform = CGAffineTransformMake(1.0f, 0.0f, 0.0f, -1.0f, 0.0f,
+	    (float) (boundsRect.bottom - boundsRect.top));
     CGContextConcatCTM(outContext, coordsTransform);
     
     /* Now offset the CTM to the subwindow offset */
 
-    if (TkSetMacColor(gc->foreground, &macColor) == true) {                
-        CGContextSetRGBFillColor(outContext, RGBFLOATRED(macColor), 
-               RGBFLOATGREEN(macColor), 
-               RGBFLOATBLUE(macColor), 1.0f);
-	CGContextSetRGBStrokeColor(outContext, RGBFLOATRED(macColor),
-               RGBFLOATGREEN(macColor),
-               RGBFLOATBLUE(macColor), 1.0f);
+    if (TkSetMacColor(gc->foreground, &macColor) == true) {
+	CGContextSetRGBFillColor(outContext,
+		RGBFLOATRED(macColor), 
+		RGBFLOATGREEN(macColor), 
+		RGBFLOATBLUE(macColor),
+		1.0f);
+	CGContextSetRGBStrokeColor(outContext,
+		RGBFLOATRED(macColor),
+		RGBFLOATGREEN(macColor),
+		RGBFLOATBLUE(macColor),
+		1.0f);
     }
     
     if(gc->function == GXxor) {
@@ -1812,22 +1810,22 @@ TkMacOSXSetUpCGContext(
     }
 
     if (gc->line_style != LineSolid) { 
-        int num = 0;
-        char *p = &(gc->dashes);
-        float dashOffset = (float) gc->dash_offset;
-        float lengths[10];
+	int num = 0;
+	char *p = &(gc->dashes);
+	float dashOffset = (float) gc->dash_offset;
+	float lengths[10];
 
-        while (p[num] != '\0') {
-            lengths[num] = (float) (p[num]);
-            num++;
-        }
-        CGContextSetLineDash(outContext, dashOffset, lengths, num);
+	while (p[num] != '\0') {
+	    lengths[num] = (float) (p[num]);
+	    num++;
+	}
+	CGContextSetLineDash(outContext, dashOffset, lengths, num);
     }
     
-    if (gc->cap_style == CapButt) {	
-        /*
-         *  What about CapNotLast, CapProjecting?
-         */
+    if (gc->cap_style == CapButt) {
+	/*
+	 *  What about CapNotLast, CapProjecting?
+	 */
 
 	CGContextSetLineCap(outContext, kCGLineCapButt);
     } else if (gc->cap_style == CapRound) {
@@ -1844,6 +1842,22 @@ TkMacOSXSetUpCGContext(
 	CGContextSetLineJoin(outContext, kCGLineJoinBevel);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXReleaseCGContext --
+ *
+ *        Release the CGContext for the given graphics port.
+ *
+ * Results:
+ *        None.
+ *
+ * Side effects:
+ *        None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static void
 TkMacOSXReleaseCGContext(
