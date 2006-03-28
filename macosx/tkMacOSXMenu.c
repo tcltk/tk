@@ -9,13 +9,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.26 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.27 2006/03/28 02:43:24 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkMenubutton.h"
 #include "tkMenu.h"
 #include "tkColor.h"
+#include "tkMacOSXDebug.h"
 
 #define USE_TK_MDEF
 //#define USE_ATSU
