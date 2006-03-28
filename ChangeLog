@@ -1,3 +1,10 @@
+2006-03-26  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* generic/tkText.c: 
+	* tests/text.test: Fix for elaborations of [Bug 1414171] for 
+	'$text dump -command <script>' where script deletes large
+	portions of the text widget, or even destroys the widget.
+
 2006-03-28  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcode/default.pbxuser:     add '-singleproc 1' cli arg to
