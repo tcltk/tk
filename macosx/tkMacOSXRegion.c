@@ -9,19 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.2.2.1 2004/11/11 01:26:43 das Exp $
+ * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.2.2.2 2006/03/28 02:44:14 das Exp $
  */
 
-#include "tkInt.h"
 #include "tkMacOSXInt.h"
-#include "X11/X.h"
-#include "X11/Xlib.h"
-
-#include <Carbon/Carbon.h>
-/*
-#include <Windows.h>
-#include <QDOffscreen.h>
-*/
 
 /*
  * Temporary region that can be reused.

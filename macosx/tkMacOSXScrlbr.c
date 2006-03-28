@@ -11,16 +11,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.7 2005/12/08 07:50:30 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.8 2006/03/28 02:44:14 das Exp $
  */
 
-#include "tkScrollbar.h"
 #include "tkMacOSXInt.h"
+#include "tkScrollbar.h"
+#include "tkMacOSXDebug.h"
+
 #include "tclInt.h" /* for TclServiceIdle() */
 
-#include <Carbon/Carbon.h>
-
-#include "tkMacOSXDebug.h"
 /*
  * The following definitions should really be in MacOS
  * header files.  They are included here as this is the only
