@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.66 2006/03/26 17:52:39 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.67 2006/03/28 19:26:52 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -4526,6 +4526,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
 	textChanged = DumpLine(interp, textPtr, what, index1.linePtr,
 		index1.byteIndex, 32000000, lineno, command);
 	if (textChanged) {
+	    if (textPtr->flags & DESTROYED) return TCL_OK;
 	    linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, 
 				      textPtr, lineno);
 	    textChanged = 0;
@@ -4540,6 +4541,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
 	    textChanged = DumpLine(interp, textPtr, what, linePtr, 0, 32000000,
 		    lineno, command);
 	    if (textChanged) {
+		if (textPtr->flags & DESTROYED) return TCL_OK;
 		linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, 
 					  textPtr, lineno);
 		textChanged = 0;
@@ -4548,6 +4550,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
 	if (linePtr != NULL) {
 	    DumpLine(interp, textPtr, what, linePtr, 0,
 		     endByteIndex, lineno, command);
+	    if (textPtr->flags & DESTROYED) return TCL_OK;
 	}
     }
 
@@ -4556,6 +4559,7 @@ TextDumpCmd(textPtr, interp, objc, objv)
      */
 
     if (atEnd) {
+	if (textPtr->flags & DESTROYED) return TCL_OK;
 	/* Re-get the end index, in case it has changed */
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;
@@ -4706,13 +4710,40 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 	}
 	offset += currentSize;
 	if (lineChanged) {
+	    TkTextSegment * newSegPtr;
 	    int newOffset = 0;
 	    textChanged = 1;
 	    /* Our indices are no longer valid */
-	    linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, textPtr, lineno);
-	    segPtr = linePtr->segPtr;
-	    while ((newOffset < endByte) && (newOffset < offset) && (segPtr != NULL)) {
-	        segPtr = segPtr->nextPtr;
+	    if (textPtr->flags & DESTROYED) {
+		return textChanged;
+	    }
+	    linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, 
+				      textPtr, lineno);
+	    newSegPtr = linePtr->segPtr;
+	    if (segPtr == newSegPtr) {
+		segPtr = segPtr->nextPtr;
+	    } else {
+		while ((newOffset < endByte) && (newOffset < offset) 
+		  && (newSegPtr != NULL)) {
+		    newOffset += segPtr->size;
+		    newSegPtr = newSegPtr->nextPtr;
+		    if (segPtr == newSegPtr) break;
+		}
+		if (segPtr != newSegPtr && newOffset == offset 
+		  && currentSize == 0) {
+		    TkTextSegment *searchPtr = newSegPtr;
+		    while (searchPtr != NULL && searchPtr->size == 0) {
+			if (searchPtr == segPtr) {
+			    newSegPtr = searchPtr;
+			    break;
+			}
+			searchPtr = searchPtr->nextPtr;
+		    }
+		}
+		segPtr = newSegPtr;
+		if (segPtr != NULL) {
+		    segPtr = segPtr->nextPtr;
+		}
 	    }
 	} else {
 	    segPtr = segPtr->nextPtr;
