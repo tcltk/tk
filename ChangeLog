@@ -1,3 +1,7 @@
+2006-03-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc:   Avoid pipe problems on win98.
+
 2006-03-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure, win/tcl.m4: define MACHINE for gcc builds as well.
