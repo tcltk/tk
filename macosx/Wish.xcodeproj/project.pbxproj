@@ -3757,7 +3757,7 @@
 				);
 				SEPARATE_STRIP = YES;
 				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR} ${PREFIX}/share\"";
+				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
 				TCL_SRCROOT = "${SRCROOT}/../../tcl";
 				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
 				TK_SRCROOT = "${SRCROOT}/../../tk";
@@ -3890,7 +3890,7 @@
 				);
 				SEPARATE_STRIP = YES;
 				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR} ${PREFIX}/share\"";
+				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
 				TCL_SRCROOT = "${SRCROOT}/../../tcl";
 				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
 				TK_SRCROOT = "${SRCROOT}/../../tk";
@@ -3959,7 +3959,7 @@
 				);
 				SEPARATE_STRIP = YES;
 				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR} ${PREFIX}/share\"";
+				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
 				TCL_SRCROOT = "${SRCROOT}/../../tcl";
 				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
 				TK_SRCROOT = "${SRCROOT}/../../tk";
@@ -4028,7 +4028,7 @@
 				);
 				SEPARATE_STRIP = YES;
 				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR} ${PREFIX}/share\"";
+				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
 				TCL_SRCROOT = "${SRCROOT}/../../tcl";
 				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
 				TK_SRCROOT = "${SRCROOT}/../../tk";
