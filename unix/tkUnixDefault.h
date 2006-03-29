@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.16 2002/06/21 23:09:54 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.16.2.1 2006/03/29 16:27:53 dgp Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -26,8 +26,8 @@
  * DISABLED -		Foreground color when widget is disabled.
  */
 
-#define BLACK		"Black"
-#define WHITE		"White"
+#define BLACK		"#000000"
+#define WHITE		"#ffffff"
 
 #define NORMAL_BG	"#d9d9d9"
 #define ACTIVE_BG	"#ececec"
