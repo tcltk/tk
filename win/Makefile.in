@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.66 2005/12/09 00:48:54 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.67 2006/03/29 23:05:30 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 VERSION			= @TK_VERSION@
@@ -116,15 +116,15 @@ BITMAP_DIR		= $(ROOT_DIR)/bitmaps
 XLIB_DIR		= $(ROOT_DIR)/xlib
 RC_DIR			= $(WIN_DIR)/rc
 
-ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(ROOT_DIR)')
-WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(WIN_DIR)')
-GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) '$(GENERIC_DIR)')
-BITMAP_DIR_NATIVE	= $(shell $(CYGPATH) '$(ROOT_DIR)/bitmaps')
-XLIB_DIR_NATIVE		= $(shell $(CYGPATH) '$(ROOT_DIR)/xlib')
-TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)')
-TCL_PLATFORM_NATIVE	= $(shell $(CYGPATH) '$(TCL_PLATFORM_DIR)')
-TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
-RC_DIR_NATIVE      	= $(shell $(CYGPATH) '$(RC_DIR)')
+ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(ROOT_DIR)' | sed 's!\\!/!g')
+WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(WIN_DIR)' | sed 's!\\!/!g')
+GENERIC_DIR_NATIVE 	= $(shell $(CYGPATH) '$(GENERIC_DIR)' | sed 's!\\!/!g')
+BITMAP_DIR_NATIVE	= $(ROOT_DIR_NATIVE)/bitmaps
+XLIB_DIR_NATIVE		= $(ROOT_DIR_NATIVE)/xlib
+RC_DIR_NATIVE      	= $(WIN_DIR_NATIVE)/rc
+TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)' | sed 's!\\!/!g')
+TCL_PLATFORM_NATIVE	= $(shell $(CYGPATH) '$(TCL_PLATFORM_DIR)' | sed 's!\\!/!g')
+TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)' | sed 's!\\!/!g')
 
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
