@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.93 2006/03/27 16:20:12 dgp Exp $
+RCS: @(#) $Id: changes,v 1.94 2006/03/29 16:37:28 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6153,6 +6153,9 @@ Max OSX universal binaries support (steffen)
 
 2006-03-27 (bug fix)[1458234] crash in animated GIFs (bron,fellows)
 
+2006-03-29 (platform support)[917322] tolerate X servers that do not
+accept the color names "Black" and "White" (porter)
+
 Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
----- Released 8.5a4, March 17, 2006 --- See ChangeLog for details ---
+---- Released 8.5a4, March 30, 2006 --- See ChangeLog for details ---
