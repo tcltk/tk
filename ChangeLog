@@ -1,5 +1,9 @@
 2006-03-29  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.5a4 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for next RC
+
 	* unix/tkUnixDefault.h:	Changed "Black" to "#000000" and "White" to
 	"#ffffff" to work around the (broken?) X servers that do not accept
 	those color names.  [Bug 917433]
@@ -31,8 +35,6 @@
 	* macosx/tkMacOSXNotify.c:
 
 2006-03-27  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.5a4 TAGGED FOR RELEASE ***
 
 	* changes:	Updates for next RC
 
