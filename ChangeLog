@@ -1,8 +1,14 @@
+2006-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkWindow.c (DeleteWindowsExitProc): added comments
+	* generic/tkOption.c (TkOptionDeadWindow): handle
+	OptionThreadExitProc being called before DeleteWindowsExitProc.
+
 2006-03-29  Don Porter  <dgp@users.sourceforge.net>
 
-        * unix/tkUnixDefault.h: Changed "Black" to "#000000" and "White" to
-        "#ffffff" to work around the (broken?) X servers that do not accept
-        those color names.  [Bug 917433]
+	* unix/tkUnixDefault.h: Changed "Black" to "#000000" and "White" to
+	"#ffffff" to work around the (broken?) X servers that do not accept
+	those color names.  [Bug 917433]
 
 2006-03-28  Jeff Hobbs  <jeffh@ActiveState.com>
 

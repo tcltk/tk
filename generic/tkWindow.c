@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56.2.7 2006/03/29 05:38:14 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56.2.8 2006/03/30 01:38:39 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -357,7 +357,9 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
 
 	/*
 	 * Create exit handler to delete all windows when the application
-	 * exits.  This must be a thread exit handler.
+	 * exits.  This must be a thread exit handler, but there may be
+	 * ordering issues with other exit handlers
+	 * (i.e. OptionThreadExitProc).
 	 */
 
 	Tcl_CreateThreadExitHandler(DeleteWindowsExitProc,

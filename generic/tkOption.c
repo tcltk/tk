@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.15 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.15.2.1 2006/03/30 01:38:39 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -770,9 +770,13 @@ TkOptionDeadWindow(winPtr)
 
     /*
      * If this window is in the option stacks, then clear the stacks.
+     *
+     * XXX: OptionThreadExitProc will be invoked before DeleteWindowsExitProc
+     * XXX: if it is thread-specific (which it should be), invalidating the
+     * XXX: tsd.  Tk shutdown needs to be verified to handle this correctly.
      */
 
-    if (winPtr->optionLevel != -1) {
+    if (tsdPtr->initialized && (winPtr->optionLevel != -1)) {
 	int i;
 
 	for (i = 1; i <= tsdPtr->curLevel; i++) {
