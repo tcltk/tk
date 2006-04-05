@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.20 2005/07/18 22:12:11 vincentdarley Exp $
+# RCS: @(#) $Id: textWind.test,v 1.21 2006/04/05 20:57:08 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -504,7 +504,8 @@ test textWind-10.6.1 {EmbWinLayoutProc procedure, error in creating window} {
     }
     set msg {}
     update
-    while {[llength $msg] == 1} { update }
+    set i 0
+    while {[llength $msg] == 1 && [incr i] < 200} { update }
     set msg
 } {{{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}}}
 
