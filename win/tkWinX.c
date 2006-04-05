@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.52 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.53 2006/04/05 20:58:09 hobbs Exp $
  */
 
 /*
@@ -245,6 +245,8 @@ TkWinXInit(
     HINSTANCE hInstance)
 {
     INITCOMMONCONTROLSEX comctl;
+    CHARSETINFO lpCs;
+    DWORD lpCP;
 
     if (childClassInitialized != 0) {
 	return;
@@ -295,6 +297,17 @@ TkWinXInit(
 
     if (!RegisterClass(&childClass)) {
 	Tcl_Panic("Unable to register TkChild class");
+    }
+
+    /*
+     * Initialize input language info
+     */
+
+    if (GetLocaleInfo(LANGIDFROMLCID(GetKeyboardLayout(0)),
+	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
+	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
+	    && TranslateCharsetInfo((DWORD *)lpCP, &lpCs, TCI_SRCCODEPAGE)) {
+	UpdateInputLanguage(lpCs.ciCharset);
     }
 
     /*
@@ -1386,7 +1399,7 @@ GetTranslatedKey(
  *
  * UpdateInputLanguage --
  *
- *	Gets called when a WM_INPUTLANGCHANGE message is received by the TK
+ *	Gets called when a WM_INPUTLANGCHANGE message is received by the Tk
  *	child window function. This message is sent by the Input Method Editor
  *	system when the user chooses a different input method. All subsequent
  *	WM_CHAR messages will contain characters in the new encoding. We
