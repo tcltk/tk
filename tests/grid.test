@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.17.2.1 2004/02/18 20:10:34 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.17.2.2 2006/04/05 19:49:20 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -689,6 +689,29 @@ test grid-10.20 {column/row configure} {
 	grid columnconfigure . 0 -uniform
 } {foo}
 grid_reset 10.20
+
+test grid-10.30 {column/row configure - no indices} {
+    # Bug 1422430
+    set t [toplevel .test]
+    set res [list [catch {grid columnconfigure $t "" -weight 1} msg] $msg]
+    destroy $t
+    set res
+} {1 {no column indices specified}}
+
+test grid-10.31 {column/row configure - no indices} {
+    set t [toplevel .test]
+    set res [list [catch {grid rowconfigure $t "" -weight 1} msg] $msg]
+    destroy $t
+    set res
+} {1 {no row indices specified}}
+
+test grid-10.32 {column/row configure - invalid indices} {
+    list [catch {grid columnconfigure . {0 1 2} -weight} msg] $msg
+} {1 {grid columnconfigure: must specify a single element on retrieval}}
+
+test grid-10.33 {column/row configure - invalid indices} {
+    list [catch {grid rowconfigure . {0 1 2} -weight} msg] $msg
+} {1 {grid rowconfigure: must specify a single element on retrieval}}
 
 # auto-placement tests
 

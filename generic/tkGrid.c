@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.25.2.3 2005/08/11 12:17:09 dkf Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.25.2.4 2006/04/05 19:49:21 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -846,27 +846,35 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	"-minsize", "-pad", "-uniform", "-weight", (char *) NULL };
     enum options { ROWCOL_MINSIZE, ROWCOL_PAD, ROWCOL_UNIFORM, ROWCOL_WEIGHT };
     int index;
-    
+
     if (((objc % 2 != 0) && (objc > 6)) || (objc < 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "master index ?-option value...?");
 	return TCL_ERROR;
     }
-    
+
     if (TkGetWindowFromObj(interp, tkwin, objv[2], &master) != TCL_OK) {
 	return TCL_ERROR;
     }
-    
+
     if (Tcl_ListObjGetElements(interp, objv[3], &lObjc, &lObjv) != TCL_OK) {
 	return TCL_ERROR;
     }
-    
+
     string = Tcl_GetString(objv[1]);
+    slotType = (*string == 'c') ? COLUMN : ROW;
+    if (lObjc == 0) {
+	Tcl_AppendResult(interp, "no ",
+		(slotType == COLUMN) ? "column" : "row",
+		" indices specified", (char *) NULL);
+	return TCL_ERROR;
+    }
+
     checkOnly = ((objc == 4) || (objc == 5));
     masterPtr = GetGrid(master);
-    slotType = (*string == 'c') ? COLUMN : ROW;
-    if (checkOnly && lObjc > 1) {
-	Tcl_AppendResult(interp, Tcl_GetString(objv[3]),
-		" must be a single element.", (char *) NULL);
+    if (checkOnly && (lObjc > 1)) {
+	Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
+		Tcl_GetString(objv[1]),
+		": must specify a single element on retrieval", (char *) NULL);
 	return TCL_ERROR;
     }
     for (j = 0; j < lObjc; j++) {
@@ -884,24 +892,24 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		    masterPtr->masterDataPtr->columnPtr :
 		    masterPtr->masterDataPtr->rowPtr;
 	}
-	
+
 	/*
 	 * Return all of the options for this row or column.  If the
 	 * request is out of range, return all 0's.
 	 */
-	
+
 	if (objc == 4) {
 	    int minsize = 0, pad = 0, weight = 0;
 	    Tk_Uid uniform = NULL;
 	    Tcl_Obj *res = Tcl_NewListObj(0, NULL);
-	 
+
 	    if (ok == TCL_OK) {
 		minsize = slotPtr[slot].minSize;
 		pad     = slotPtr[slot].pad;
 		weight  = slotPtr[slot].weight;
 		uniform = slotPtr[slot].uniform;
 	    }
-	    
+
 	    Tcl_ListObjAppendElement(interp, res,
 		    Tcl_NewStringObj("-minsize", -1));
 	    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(minsize));
@@ -918,16 +926,16 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    Tcl_SetObjResult(interp, res);
 	    return TCL_OK;
 	}
-	
+
 	/*
 	 * Loop through each option value pair, setting the values as
 	 * required.  If only one option is given, with no value, the
 	 * current value is returned.
 	 */
-	
+
 	for (i = 4; i < objc; i += 2) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
-		    &index) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option",
+			0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (index == ROWCOL_MINSIZE) {
@@ -940,8 +948,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		} else {
 		    slotPtr[slot].minSize = size;
 		}
-	    }
-	    else if (index == ROWCOL_WEIGHT) {
+	    } else if (index == ROWCOL_WEIGHT) {
 		int wt;
 		if (objc == 5) {
 		    Tcl_SetObjResult(interp, Tcl_NewIntObj(
@@ -957,8 +964,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		} else {
 		    slotPtr[slot].weight = wt;
 		}
-	    }
-	    else if (index == ROWCOL_UNIFORM) {
+	    } else if (index == ROWCOL_UNIFORM) {
 		if (objc == 5) {
 		    Tk_Uid value;
 		    value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
@@ -973,8 +979,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 			slotPtr[slot].uniform = NULL;
 		    }
 		}
-	    }
-	    else if (index == ROWCOL_PAD) {
+	    } else if (index == ROWCOL_PAD) {
 		if (objc == 5) {
 		    Tcl_SetObjResult(interp, Tcl_NewIntObj(
 			    (ok == TCL_OK) ? slotPtr[slot].pad : 0));
@@ -992,12 +997,12 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    }
 	}
     }
-    
+
     /*
      * If we changed a property, re-arrange the table,
      * and check for constraint shrinkage.
      */
-    
+
     if (objc != 5) {
 	if (slotType == ROW) {
 	    int last = masterPtr->masterDataPtr->rowMax - 1;
@@ -1018,7 +1023,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    }
 	    masterPtr->masterDataPtr->columnMax = last + 1;
 	}
-	
+
 	if (masterPtr->abortPtr != NULL) {
 	    *masterPtr->abortPtr = 1;
 	}
