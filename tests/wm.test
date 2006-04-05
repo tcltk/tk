@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.34 2005/02/17 00:06:08 mdejong Exp $
+# RCS: @(#) $Id: wm.test,v 1.35 2006/04/05 20:54:27 hobbs Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -115,17 +115,21 @@ test wm-attributes-1.1 {usage} {
     list [catch {wm attributes} err] $err
 } {1 {wrong # args: should be "wm option window ?arg ...?"}}
 test wm-attributes-1.2.1 {usage} win {
+    # This is the wrong error to output - unix has it right, but it's
+    # not critical.
     list [catch {wm attributes . _} err] $err
 } {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 test wm-attributes-1.2.2 {usage} win {
     list [catch {wm attributes . -alpha 1.0 -disabled} err] $err
 } {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 test wm-attributes-1.2.3 {usage} win {
+    # This is the wrong error to output - unix has it right, but it's
+    # not critical.
     list [catch {wm attributes . -to} err] $err
 } {1 {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}}
 test wm-attributes-1.2.4 {usage} unix {
     list [catch {wm attributes . _} err] $err
-} {1 {wrong # args: should be "wm attributes window"}}
+} {1 {bad attribute "_": must be -alpha, -topmost, -zoomed, or -fullscreen}}
 
 
 ### wm client ###
