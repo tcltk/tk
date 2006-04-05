@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.108 2005/12/29 10:46:46 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.109 2006/04/05 20:56:40 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -7807,6 +7807,22 @@ WmProc(
 	}
 	result = MA_NOACTIVATE;
 	goto done;
+    }
+
+    case WM_QUERYENDSESSION: {
+	XEvent event;
+
+	/*
+	 * Synthesize WM_SAVE_YOURSELF wm protocol message on Windows logout
+	 * or restart.
+	 */
+	winPtr = GetTopLevel(hwnd);
+	event.xclient.message_type =
+	    Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS");
+	event.xclient.data.l[0] =
+	    Tk_InternAtom((Tk_Window) winPtr, "WM_SAVE_YOURSELF");
+	TkWmProtocolEventProc(winPtr, &event);
+	break;
     }
 
     default:
