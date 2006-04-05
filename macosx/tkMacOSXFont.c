@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.13 2006/03/25 06:02:43 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.14 2006/04/05 01:59:07 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -232,17 +232,6 @@ static char * TkMacOSXAntialiasedTextVariableProc(
     const char * name1, const char * name2,
     int flag);
 
-/*
- * For doing things with Fixed numbers.  FIXME: This probably should move to
- * tkMacOSXInt.h.
- */
-
-#ifndef Fixed2Int
-#define Fixed2Int(f) ((f+0x8000) >> 16)
-#define Int2Fixed(i) ((i) << 16)
-#endif
-
-
 /*
  *-------------------------------------------------------------------------
  *
@@ -639,7 +628,7 @@ TkpMeasureCharsInContext(
 
     Tcl_DStringInit(&ucharBuffer);
     uchars = Tcl_UtfToUniCharDString(source, numBytes, &ucharBuffer);
-    ulen = Tcl_DStringLength(&ucharBuffer) / sizeof(uchars[0]);
+    ulen = Tcl_DStringLength(&ucharBuffer) / sizeof(Tcl_UniChar);
     TkMacOSXLayoutSetString(fontPtr, &drawingContext, uchars, ulen);
 
     urstart = Tcl_NumUtfChars(source, rangeStart);
@@ -675,15 +664,15 @@ TkpMeasureCharsInContext(
              * Somehow ATSUBreakLine seems to assume that it needs at least
              * one pixel padding.  So we add one to the limit.  Note also
              * that ATSUBreakLine sometimes runs into an endless loop when
-             * the third parameter is equal or less than Int2Fixed(2), so we
-             * need at least Int2Fixed(3) (at least that's the current state
+             * the third parameter is equal or less than IntToFixed(2), so we
+             * need at least IntToFixed(3) (at least that's the current state
              * of my knowledge).
              */
 
             err = ATSUBreakLine(
                 fontPtr->atsuLayout,
                 urstart,
-                Int2Fixed(maxLength+1),
+                IntToFixed(maxLength+1),
                 false, /* !iUseAsSoftLineBreak */
                 &offset);
 
@@ -1249,9 +1238,9 @@ MacFontDrawText(
      */
 
     y = drawingContext.portRect.bottom - drawingContext.portRect.top - y;
-    fy = Int2Fixed(y);
+    fy = IntToFixed(y);
 #else
-    fy = Int2Fixed(y);
+    fy = IntToFixed(y);
 #endif
 
 
@@ -1259,13 +1248,13 @@ MacFontDrawText(
     UpdateLineBuffer(
             fontPtr, &drawingContext, source, numBytes, x, y, &lineOffset);
 
-    fx = Int2Fixed(currentLeft);
+    fx = IntToFixed(currentLeft);
 
     uchars = (const Tcl_UniChar*) Tcl_DStringValue(&currentLine);
     ulen = Tcl_DStringLength(&currentLine) / sizeof(uchars[0]);
 #else
     lineOffset = 0;
-    fx = Int2Fixed(x);
+    fx = IntToFixed(x);
 
     Tcl_DStringInit(&runString);
     uchars = Tcl_UtfToUniCharDString(source, numBytes, &runString);
@@ -1402,7 +1391,7 @@ MeasureStringWidth(
     }
 #endif
 
-    return Fixed2Int(bounds.upperRight.x - bounds.upperLeft.x);
+    return FixedToInt(bounds.upperRight.x - bounds.upperLeft.x);
 
 #else /* ! TK_MAC_USE_GETGLYPHBOUNDS */
 
@@ -1448,7 +1437,7 @@ MeasureStringWidth(
         }
     }
 
-    return Fixed2Int(mainCaretEnd.fX - mainCaretStart.fX);
+    return FixedToInt(mainCaretEnd.fX - mainCaretStart.fX);
 
 #endif /* ? TK_MAC_USE_GETGLYPHBOUNDS */
 }
@@ -1748,7 +1737,7 @@ InitATSUStyle(
      * Attributes for the style.
      */
 
-    Fixed fsize = Int2Fixed(ptSize);
+    Fixed fsize = IntToFixed(ptSize);
     Boolean
         isBold = (qdStyles&bold) != 0,
         isUnderline = (qdStyles&underline) != 0,
