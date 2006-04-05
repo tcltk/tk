@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.25.2.6 2005/02/28 22:10:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.25.2.7 2006/04/05 19:48:23 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -226,6 +226,9 @@ void
 TkWinXInit(hInstance)
     HINSTANCE hInstance;
 {
+    CHARSETINFO lpCs;
+    DWORD lpCP;
+
     if (childClassInitialized != 0) {
 	return;
     }
@@ -278,6 +281,17 @@ TkWinXInit(hInstance)
 
     if (!RegisterClass(&childClass)) {
 	panic("Unable to register TkChild class");
+    }
+
+    /*
+     * Initialize input language info
+     */
+
+    if (GetLocaleInfo(LANGIDFROMLCID(GetKeyboardLayout(0)),
+	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
+	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
+	    && TranslateCharsetInfo((DWORD *)lpCP, &lpCs, TCI_SRCCODEPAGE)) {
+	UpdateInputLanguage(lpCs.ciCharset);
     }
 
     /*
@@ -1355,13 +1369,12 @@ GetTranslatedKey(xkey)
  *
  * UpdateInputLanguage --
  *
- *	Gets called when a WM_INPUTLANGCHANGE message is received
- *      by the TK child window procedure. This message is sent
- *      by the Input Method Editor system when the user chooses
- *      a different input method. All subsequent WM_CHAR
- *      messages will contain characters in the new encoding. We record
- *      the new encoding so that TkpGetString() knows how to
- *      correctly translate the WM_CHAR into unicode.
+ *	Gets called when a WM_INPUTLANGCHANGE message is received by the Tk
+ *	child window procedure. This message is sent by the Input Method
+ *	Editor system when the user chooses a different input method. All
+ *	subsequent WM_CHAR messages will contain characters in the new
+ *	encoding. We record the new encoding so that TkpGetString() knows how
+ *	to correctly translate the WM_CHAR into unicode.
  *
  * Results:
  *	Records the new encoding in keyInputEncoding.
