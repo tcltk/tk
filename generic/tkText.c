@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.67 2006/03/28 19:26:52 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.68 2006/04/05 17:16:29 vincentdarley Exp $
  */
 
 #include "default.h"
@@ -4803,7 +4803,8 @@ DumpSegment(textPtr, interp, key, value, command, index, what)
 	list = Tcl_Merge(3, argv);
 	Tcl_VarEval(interp, Tcl_GetString(command), " ", list, NULL);
 	ckfree(list);
-	if (TkBTreeEpoch(textPtr->sharedTextPtr->tree) != oldStateEpoch) {
+	if ((textPtr->flags & DESTROYED) 
+	  || (TkBTreeEpoch(textPtr->sharedTextPtr->tree) != oldStateEpoch)) {
 	    return 1;
 	} else {
 	    return 0;
