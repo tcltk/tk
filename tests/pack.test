@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: pack.test,v 1.10 2002/07/13 20:28:35 dgp Exp $
+# RCS: @(#) $Id: pack.test,v 1.10.2.1 2006/04/05 17:51:04 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -799,8 +799,8 @@ test pack-12.25 {command options and errors} {
 } {1 {extra option "-padx" (option with no value?)}}
 test pack-12.26 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
-    list [catch {pack .pack.a {} 22} msg] $msg
-} {1 {bad option "": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
+    list [catch {pack .pack.a ? 22} msg] $msg
+} {1 {bad option "?": must be -after, -anchor, -before, -expand, -fill, -in, -ipadx, -ipady, -padx, -pady, or -side}}
 test pack-12.27 {command options and errors} {
     pack forget .pack.a .pack.b .pack.c .pack.d
     list [catch {pack .pack.a -in .} msg] $msg
