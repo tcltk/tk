@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.4 2004/10/27 00:37:38 davygrvy Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.5 2006/04/05 19:47:39 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -54,8 +54,6 @@ static int indicatorDimensions[2];
 				 * time to save time. */
 
 typedef struct ThreadSpecificData {
-    Tcl_HashTable commandTable;
-				/* A map of command ids to menu entries */
     int inPostMenu;		/* We cannot be re-entrant like X Windows. */
     WORD lastCommandID;	        /* The last command ID we allocated. */
     HWND menuHWND;		/* A window to service popup-menu messages
@@ -69,8 +67,8 @@ typedef struct ThreadSpecificData {
 				 * active items when menus go away since
 				 * Windows does not see fit to give this
 				 * to us when it sends its WM_MENUSELECT. */
-    Tcl_HashTable winMenuTable;
-				/* Need this to map HMENUs back to menuPtrs */
+    Tcl_HashTable commandTable;	/* A map of command ids to menu entries */
+    Tcl_HashTable winMenuTable;	/* Need this to map HMENUs back to menuPtrs */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -251,11 +249,16 @@ FreeID(commandID)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
-	    (char *) commandID);
-    
-    if (entryPtr != NULL) {
-    	 Tcl_DeleteHashEntry(entryPtr);
+    /*
+     * If the menuHWND is NULL, this table has been finalized already.
+     */
+
+    if (tsdPtr->menuHWND != NULL) {
+	Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
+		(char *) commandID);
+	if (entryPtr != NULL) {
+	    Tcl_DeleteHashEntry(entryPtr);
+	}
     }
 }
 
@@ -289,7 +292,7 @@ TkpNewMenu(menuPtr)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     winMenuHdl = CreatePopupMenu();
-    
+
     if (winMenuHdl == NULL) {
     	Tcl_AppendResult(menuPtr->interp, "No more menus can be allocated.",
     		(char *) NULL);
@@ -301,8 +304,8 @@ TkpNewMenu(menuPtr)
      * back when dispatch messages.
      */
 
-    hashEntryPtr = Tcl_CreateHashEntry(&tsdPtr->winMenuTable, (char *) winMenuHdl,
-	    &newEntry);
+    hashEntryPtr = Tcl_CreateHashEntry(&tsdPtr->winMenuTable,
+	    (char *) winMenuHdl, &newEntry);
     Tcl_SetHashValue(hashEntryPtr, (char *) menuPtr);
 
     menuPtr->platformData = (TkMenuPlatformData) winMenuHdl;
@@ -370,16 +373,17 @@ TkpDestroyMenu(menuPtr)
 	    }
 	}
     } else {
-	Tcl_HashEntry *hashEntryPtr;
- 
 	/*
 	 * Remove the menu from the menu hash table, then destroy the handle.
+	 * If the menuHWND is NULL, this table has been finalized already.
 	 */
 
-	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable, 
-                (char *) winMenuHdl);
-	if (hashEntryPtr != NULL) {
-	    Tcl_DeleteHashEntry(hashEntryPtr);
+	if (tsdPtr->menuHWND != NULL) {
+	    Tcl_HashEntry *hashEntryPtr =
+		Tcl_FindHashEntry(&tsdPtr->winMenuTable, (char *) winMenuHdl);
+	    if (hashEntryPtr != NULL) {
+		Tcl_DeleteHashEntry(hashEntryPtr);
+	    }
 	}
  	DestroyMenu(winMenuHdl);
     }
@@ -2806,8 +2810,7 @@ TkpMenuNotifyToplevelCreate(
  *
  * MenuExitHandler --
  *
- *	Throws away the utility window needed for menus and unregisters
- *	the class.
+ *	Unregisters the class of utility windows.
  *
  * Results:
  *	None.
@@ -2822,11 +2825,38 @@ static void
 MenuExitHandler(
     ClientData clientData)	    /* Not used */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    UnregisterClass(MENU_CLASS_NAME, Tk_GetHINSTANCE());
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MenuExitHandler --
+ *
+ *	Throws away the utility window needed for menus and delete hash
+ *	tables.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Menus have to be reinitialized next time.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+MenuThreadExitHandler(
+    ClientData clientData)	    /* Not used */
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     DestroyWindow(tsdPtr->menuHWND);
-    UnregisterClass(MENU_CLASS_NAME, Tk_GetHINSTANCE());
+    tsdPtr->menuHWND = NULL;
+
+    Tcl_DeleteHashTable(&tsdPtr->winMenuTable);
+    Tcl_DeleteHashTable(&tsdPtr->commandTable);
 }
 
 /*
@@ -2996,8 +3026,6 @@ void
 TkpMenuInit()
 {
     WNDCLASS wndClass;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     wndClass.style = CS_OWNDC;
     wndClass.lpfnWndProc = TkWinMenuProc;
@@ -3010,9 +3038,6 @@ TkpMenuInit()
     wndClass.lpszMenuName = NULL;
     wndClass.lpszClassName = MENU_CLASS_NAME;
     RegisterClass(&wndClass);
-
-    tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, "MenuWindow", WS_POPUP,
-	0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     TkCreateExitHandler(MenuExitHandler, (ClientData) NULL);
     SetDefaults(1);
@@ -3040,6 +3065,11 @@ TkpMenuThreadInit()
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+    tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, "MenuWindow", WS_POPUP,
+	0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
+
     Tcl_InitHashTable(&tsdPtr->winMenuTable, TCL_ONE_WORD_KEYS);
     Tcl_InitHashTable(&tsdPtr->commandTable, TCL_ONE_WORD_KEYS);
+
+    Tcl_CreateThreadExitHandler(MenuThreadExitHandler, (ClientData) NULL);
 }
