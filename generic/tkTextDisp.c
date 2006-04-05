@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.14.2.1 2005/11/27 02:44:26 das Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.14.2.2 2006/04/05 19:48:07 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -4176,6 +4176,15 @@ TkTextPixelIndex(textPtr, x, y, indexPtr)
     }
     if (dlPtr->chunkPtr == NULL) dlPtr = validdlPtr;
 
+    *indexPtr = dlPtr->index;
+
+    /*
+     * If it is still empty, we have nothing to access. [Bug 1442102]
+     */
+
+    if (dlPtr->chunkPtr == NULL) {
+	return;
+    }
 
     /*
      * Scan through the line's chunks to find the one that contains
@@ -4184,7 +4193,6 @@ TkTextPixelIndex(textPtr, x, y, indexPtr)
      * coordinate system of the line (to take account of x-scrolling).
      */
 
-    *indexPtr = dlPtr->index;
     x = x - dInfoPtr->x + dInfoPtr->curPixelOffset;
     for (chunkPtr = dlPtr->chunkPtr; x >= (chunkPtr->x + chunkPtr->width);
 	    indexPtr->byteIndex += chunkPtr->numBytes,
