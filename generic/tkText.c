@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33 2003/02/18 21:53:59 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.1 2006/04/05 19:48:43 hobbs Exp $
  */
 
 #include "default.h"
@@ -1367,6 +1367,14 @@ InsertChars(textPtr, indexPtr, string)
     char indexBuffer[TK_POS_CHARS];
 
     /*
+     * Don't do anything for an empty string [Bug 1275237]
+     */
+
+    if (*string == '\0') {
+	return;
+    }
+
+    /*
      * Don't allow insertions on the last (dummy) line of the text.
      */
 
@@ -1398,60 +1406,60 @@ InsertChars(textPtr, indexPtr, string)
      * Push the insertion on the undo stack
      */
 
-    if ( textPtr->undo ) {
-        TkTextIndex     toIndex;
+    if (textPtr->undo) {
+	CONST char *cmdName;
+	TkTextIndex toIndex;
 
-        Tcl_DString actionCommand;
-        Tcl_DString revertCommand;
-        
-        if (textPtr->autoSeparators &&
-            textPtr->lastEditMode != TK_TEXT_EDIT_INSERT) {
-            TkUndoInsertUndoSeparator(textPtr->undoStack);
-        }
-        
-        textPtr->lastEditMode = TK_TEXT_EDIT_INSERT;
-        
-        Tcl_DStringInit(&actionCommand);
-        Tcl_DStringInit(&revertCommand);
-        
-        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&actionCommand," insert ",-1);
-        TkTextPrintIndex(indexPtr,indexBuffer);
-        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&actionCommand," ",-1);
-        Tcl_DStringAppendElement(&actionCommand,string);
-        Tcl_DStringAppend(&actionCommand,";",-1);
-        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&actionCommand," mark set insert ",-1);
-        TkTextIndexForwBytes(indexPtr, (int) strlen(string),
-			&toIndex);
-        TkTextPrintIndex(&toIndex, indexBuffer);
-        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&actionCommand,"; ",-1);
-        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&actionCommand," see insert",-1);
-        
-        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&revertCommand," delete ",-1);
-        TkTextPrintIndex(indexPtr,indexBuffer);
-        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&revertCommand," ",-1);
-        TkTextPrintIndex(&toIndex, indexBuffer);
-        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&revertCommand," ;",-1);
-        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&revertCommand," mark set insert ",-1);
-        TkTextPrintIndex(indexPtr,indexBuffer);
-        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&revertCommand,"; ",-1);
-        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&revertCommand," see insert",-1);
-        
-        TkUndoPushAction(textPtr->undoStack,&actionCommand, &revertCommand);
+	Tcl_DString actionCommand;
+	Tcl_DString revertCommand;
 
-     	Tcl_DStringFree(&actionCommand);
-     	Tcl_DStringFree(&revertCommand);
+	if (textPtr->autoSeparators &&
+		textPtr->lastEditMode != TK_TEXT_EDIT_INSERT) {
+	    TkUndoInsertUndoSeparator(textPtr->undoStack);
+	}
 
+	textPtr->lastEditMode = TK_TEXT_EDIT_INSERT;
+	cmdName = Tcl_GetCommandName(textPtr->interp, textPtr->widgetCmd);
+
+	Tcl_DStringInit(&actionCommand);
+	Tcl_DStringInit(&revertCommand);
+
+	Tcl_DStringAppendElement(&actionCommand, cmdName);
+	Tcl_DStringAppend(&actionCommand, " insert ", -1);
+	TkTextPrintIndex(indexPtr,indexBuffer);
+	Tcl_DStringAppend(&actionCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&actionCommand, " ", -1);
+	Tcl_DStringAppendElement(&actionCommand, string);
+	Tcl_DStringAppend(&actionCommand, ";", -1);
+	Tcl_DStringAppendElement(&actionCommand, cmdName);
+	Tcl_DStringAppend(&actionCommand, " mark set insert ", -1);
+	TkTextIndexForwBytes(indexPtr, (int) strlen(string), &toIndex);
+	TkTextPrintIndex(&toIndex, indexBuffer);
+	Tcl_DStringAppend(&actionCommand, indexBuffer,-1);
+	Tcl_DStringAppend(&actionCommand, "; ", -1);
+	Tcl_DStringAppendElement(&actionCommand, cmdName);
+	Tcl_DStringAppend(&actionCommand, " see insert", -1);
+
+	Tcl_DStringAppendElement(&revertCommand, cmdName);
+	Tcl_DStringAppend(&revertCommand, " delete ", -1);
+	TkTextPrintIndex(indexPtr, indexBuffer);
+	Tcl_DStringAppend(&revertCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&revertCommand, " ", -1);
+	TkTextPrintIndex(&toIndex, indexBuffer);
+	Tcl_DStringAppend(&revertCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&revertCommand, " ;", -1);
+	Tcl_DStringAppendElement(&revertCommand, cmdName);
+	Tcl_DStringAppend(&revertCommand, " mark set insert ", -1);
+	TkTextPrintIndex(indexPtr,indexBuffer);
+	Tcl_DStringAppend(&revertCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&revertCommand, "; ", -1);
+	Tcl_DStringAppendElement(&revertCommand, cmdName);
+	Tcl_DStringAppend(&revertCommand," see insert", -1);
+
+	TkUndoPushAction(textPtr->undoStack, &actionCommand, &revertCommand);
+
+	Tcl_DStringFree(&actionCommand);
+	Tcl_DStringFree(&revertCommand);
     }
     updateDirtyFlag(textPtr);
 
@@ -1632,59 +1640,60 @@ DeleteChars(textPtr, index1String, index2String, indexPtr1, indexPtr2)
      */
 
     if (textPtr->undo) {
+	CONST char *cmdName;
 	Tcl_DString ds;
-        Tcl_DString actionCommand;
-        Tcl_DString revertCommand;
-    
+	Tcl_DString actionCommand;
+	Tcl_DString revertCommand;
+
 	if (textPtr->autoSeparators
 		&& (textPtr->lastEditMode != TK_TEXT_EDIT_DELETE)) {
 	   TkUndoInsertUndoSeparator(textPtr->undoStack);
 	}
 
 	textPtr->lastEditMode = TK_TEXT_EDIT_DELETE;
+	cmdName = Tcl_GetCommandName(textPtr->interp, textPtr->widgetCmd);
 
-        Tcl_DStringInit(&actionCommand);
-        Tcl_DStringInit(&revertCommand);
+	Tcl_DStringInit(&actionCommand);
+	Tcl_DStringInit(&revertCommand);
 
-        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&actionCommand," delete ",-1);
-        TkTextPrintIndex(&index1,indexBuffer);
-        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&actionCommand," ",-1);
-        TkTextPrintIndex(&index2, indexBuffer);
-        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&actionCommand,"; ",-1);
-        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&actionCommand," mark set insert ",-1);
-        TkTextPrintIndex(&index1,indexBuffer);
-        Tcl_DStringAppend(&actionCommand,indexBuffer,-1);
+	Tcl_DStringAppendElement(&actionCommand, cmdName);
+	Tcl_DStringAppend(&actionCommand, " delete ", -1);
+	TkTextPrintIndex(&index1, indexBuffer);
+	Tcl_DStringAppend(&actionCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&actionCommand, " ", -1);
+	TkTextPrintIndex(&index2, indexBuffer);
+	Tcl_DStringAppend(&actionCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&actionCommand, "; ", -1);
+	Tcl_DStringAppendElement(&actionCommand, cmdName);
+	Tcl_DStringAppend(&actionCommand, " mark set insert ", -1);
+	TkTextPrintIndex(&index1, indexBuffer);
+	Tcl_DStringAppend(&actionCommand,indexBuffer, -1);
 
-        Tcl_DStringAppend(&actionCommand,"; ",-1);
-        Tcl_DStringAppend(&actionCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&actionCommand," see insert",-1);
+	Tcl_DStringAppend(&actionCommand, "; ", -1);
+	Tcl_DStringAppendElement(&actionCommand, cmdName);
+	Tcl_DStringAppend(&actionCommand, " see insert", -1);
 
 	TextGetText(&index1, &index2, &ds);
 
-        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&revertCommand," insert ",-1);
-        TkTextPrintIndex(&index1,indexBuffer);
-        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&revertCommand," ",-1);
-        Tcl_DStringAppendElement(&revertCommand,Tcl_DStringValue(&ds));
-        Tcl_DStringAppend(&revertCommand,"; ",-1);
-        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&revertCommand," mark set insert ",-1);
-        TkTextPrintIndex(&index2, indexBuffer);
-        Tcl_DStringAppend(&revertCommand,indexBuffer,-1);
-        Tcl_DStringAppend(&revertCommand,"; ",-1);
-        Tcl_DStringAppend(&revertCommand,Tcl_GetCommandName(textPtr->interp,textPtr->widgetCmd),-1);
-        Tcl_DStringAppend(&revertCommand," see insert",-1);
+	Tcl_DStringAppendElement(&revertCommand, cmdName);
+	Tcl_DStringAppend(&revertCommand, " insert ", -1);
+	TkTextPrintIndex(&index1, indexBuffer);
+	Tcl_DStringAppend(&revertCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&revertCommand, " ", -1);
+	Tcl_DStringAppendElement(&revertCommand, Tcl_DStringValue(&ds));
+	Tcl_DStringAppend(&revertCommand, "; ", -1);
+	Tcl_DStringAppendElement(&revertCommand, cmdName);
+	Tcl_DStringAppend(&revertCommand, " mark set insert ", -1);
+	TkTextPrintIndex(&index2, indexBuffer);
+	Tcl_DStringAppend(&revertCommand, indexBuffer, -1);
+	Tcl_DStringAppend(&revertCommand, "; ", -1);
+	Tcl_DStringAppendElement(&revertCommand, cmdName);
+	Tcl_DStringAppend(&revertCommand, " see insert", -1);
 
-        TkUndoPushAction(textPtr->undoStack,&actionCommand, &revertCommand);
+	TkUndoPushAction(textPtr->undoStack, &actionCommand, &revertCommand);
 
-        Tcl_DStringFree(&actionCommand);
-        Tcl_DStringFree(&revertCommand);
-
+	Tcl_DStringFree(&actionCommand);
+	Tcl_DStringFree(&revertCommand);
     }
     updateDirtyFlag(textPtr);
 
@@ -2618,7 +2627,7 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
     CONST char *command;	/* Script to apply to the segment */
 {
     int offset;
-    TkTextSegment *segPtr;
+    TkTextSegment *segPtr, *nextPtr;
     TkTextIndex index;
     /*
      * Must loop through line looking at its segments.
@@ -2631,7 +2640,8 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 
     for (offset = 0, segPtr = linePtr->segPtr ;
 	    (offset < endByte) && (segPtr != (TkTextSegment *)NULL) ;
-	    offset += segPtr->size, segPtr = segPtr->nextPtr) {
+	    offset += segPtr->size, segPtr = nextPtr) {
+	nextPtr = segPtr->nextPtr;
 	if ((what & TK_DUMP_TEXT) && (segPtr->typePtr == &tkTextCharType) &&
 		(offset + segPtr->size > startByte)) {
 	    char savedChar;		/* Last char used in the seg */
@@ -2689,6 +2699,13 @@ DumpLine(interp, textPtr, what, linePtr, startByte, endByte, lineno, command)
 		DumpSegment(interp, "window", pathname,
 			command, &index, what);
 	    }
+	}
+	if (nextPtr != segPtr->nextPtr) {
+	    /*
+	     * Someone modified the text widget while we were dumping.
+	     * Just stop dumping. [Bug 1414171]
+	     */
+	    break;
 	}
     }
 }
