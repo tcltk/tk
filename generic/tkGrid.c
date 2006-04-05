@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.42 2006/01/11 19:53:47 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.43 2006/04/05 20:54:58 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -946,15 +946,24 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
     }
 
     string = Tcl_GetString(objv[1]);
-    masterPtr = GetGrid(master);
     slotType = (*string == 'c') ? COLUMN : ROW;
+    if (lObjc == 0) {
+	Tcl_AppendResult(interp, "no ",
+		(slotType == COLUMN) ? "column" : "row",
+		" indices specified", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    masterPtr = GetGrid(master);
     first = 0; /* lint */
     last = 0; /* lint */
 
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {
-	    Tcl_AppendResult(interp, Tcl_GetString(objv[3]),
-		    " must be a single element.", NULL);
+	    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
+		    Tcl_GetString(objv[1]),
+		    ": must specify a single element on retrieval",
+		    (char *) NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
@@ -1038,6 +1047,10 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    last = slot;
 	    slavePtr = NULL;
 	} else if (strcmp(Tcl_GetString(lObjv[j]), "all") == 0) {
+	    /*
+	     * Reset any lingering error from e.g GetInt.
+	     */
+	    Tcl_ResetResult(interp);
 	    slavePtr = masterPtr->slavePtr;
 	    if (slavePtr == NULL) {
 		continue;
@@ -1049,9 +1062,9 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	     * Is it gridded in this master?
 	     */
 
+	    Tcl_ResetResult(interp);
 	    slavePtr = GetGrid(slave);
 	    if (slavePtr->masterPtr != masterPtr) {
-		Tcl_ResetResult(interp);
 		Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
 			Tcl_GetString(objv[1]), ": the window \"",
 			Tcl_GetString(lObjv[j]), "\" is not managed by \"",
@@ -1065,12 +1078,6 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		    Tcl_GetString(lObjv[j]), "\"", NULL);
 	    return TCL_ERROR;
 	}
-
-	/*
-	 * Reset any lingering error from e.g GetInt.
-	 */
-
-	Tcl_ResetResult(interp);
 
 	/*
 	 * The outer loop is only to handle "all".
@@ -1156,25 +1163,27 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 
     /*
      * We changed a property, re-arrange the table, and check for constraint
-     * shrinkage.
+     * shrinkage.  A null slotPtr will occur for 'all' checks.
      */
 
-    if (slotType == ROW) {
-	int last = masterPtr->masterDataPtr->rowMax - 1;
-	while ((last >= 0) && (slotPtr[last].weight == 0)
-		&& (slotPtr[last].pad == 0) && (slotPtr[last].minSize == 0)
-		&& (slotPtr[last].uniform == NULL)) {
-	    last--;
+    if (slotPtr != NULL) {
+	if (slotType == ROW) {
+	    int last = masterPtr->masterDataPtr->rowMax - 1;
+	    while ((last >= 0) && (slotPtr[last].weight == 0)
+		    && (slotPtr[last].pad == 0) && (slotPtr[last].minSize == 0)
+		    && (slotPtr[last].uniform == NULL)) {
+		last--;
+	    }
+	    masterPtr->masterDataPtr->rowMax = last+1;
+	} else {
+	    int last = masterPtr->masterDataPtr->columnMax - 1;
+	    while ((last >= 0) && (slotPtr[last].weight == 0)
+		    && (slotPtr[last].pad == 0) && (slotPtr[last].minSize == 0)
+		    && (slotPtr[last].uniform == NULL)) {
+		last--;
+	    }
+	    masterPtr->masterDataPtr->columnMax = last + 1;
 	}
-	masterPtr->masterDataPtr->rowMax = last+1;
-    } else {
-	int last = masterPtr->masterDataPtr->columnMax - 1;
-	while ((last >= 0) && (slotPtr[last].weight == 0)
-		&& (slotPtr[last].pad == 0) && (slotPtr[last].minSize == 0)
-		&& (slotPtr[last].uniform == NULL)) {
-	    last--;
-	}
-	masterPtr->masterDataPtr->columnMax = last + 1;
     }
 
     if (masterPtr->abortPtr != NULL) {
