@@ -1,3 +1,27 @@
+2006-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (FreeID, TkpNewMenu, MenuExitHandler) 
+	(MenuThreadExitHandler, TkpMenuInit, TkpMenuThreadInit): rework
+	Windows menu init/finalization to better respect per-process and
+	per-thread boundaries.
+
+	* win/tkWinWm.c (WmProc): pass WM_QUERYENDSESSION message to Tk as
+	WM_SAVE_YOURSELF wm protocol callback.
+
+	* generic/tkTextDisp.c (TkTextPixelIndex): Don't segfault on full
+	-elide text. [Bug 1442102]
+
+	* win/tkWinX.c (TkWinXInit): init default keyboard charset
+	correctly. [Bug 1374119] (pajas)
+
+	* generic/tkText.c (DumpLine): stop dumping if we detect that the
+	text widget state has changed while dumping. [Bug 1414171]
+	(InsertChars, DeleteChars): fix undo with space-based path.
+	* tests/text.test (text-25.14): [Bug 1452419]
+
+	* tests/grid.test: fix segfault on empty index list
+	* generic/tkGrid.c (GridRowColumnConfigureCommand):  [Bug 1422430]
+
 2006-03-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (DeleteWindowsExitProc): added comments
@@ -525,10 +549,10 @@
 
 2005-10-18  Don Porter  <dgp@users.sourceforge.net>
 
-        * generic/tkMain.c:     Rewrote code that sets the ::argv value
-        to be sure conversion from the system encoding is complete before
-        any processing sensitive to list-special characters is done.
-        [Bug 1328926].
+	* generic/tkMain.c:	Rewrote code that sets the ::argv value
+	to be sure conversion from the system encoding is complete before
+	any processing sensitive to list-special characters is done.
+	[Bug 1328926].
 
 2005-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
