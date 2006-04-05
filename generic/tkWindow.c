@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.71 2005/11/17 16:21:56 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.72 2006/04/05 21:00:00 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3135,11 +3135,10 @@ Initialize(interp)
 
     /*
      * Create exit handlers to delete all windows when the application or
-     * thread exits. These handler need to be invoked before other platform
+     * thread exits. The handler need to be invoked before other platform
      * specific cleanups take place to avoid panics in finalization.
      */
 
-    TkCreateExitHandler(DeleteWindowsExitProc, (ClientData) NULL);
     TkCreateThreadExitHandler(DeleteWindowsExitProc, (ClientData) tsdPtr);
 
   done:
