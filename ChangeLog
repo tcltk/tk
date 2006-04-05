@@ -30,7 +30,7 @@
 2006-03-28  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcode/default.pbxuser:     add '-singleproc 1' cli arg to
-	* macosx/Wish.xcodeproj/default.pbxuser: tcltest to ease test debugging.
+	* macosx/Wish.xcodeproj/default.pbxuser: tktest to ease test debugging.
 	
 	* macosx/Wish.xcode/project.pbxproj:     removed $prefix/share from
 	* macosx/Wish.xcodeproj/project.pbxproj: TCL_PACKAGE_PATH as per change
