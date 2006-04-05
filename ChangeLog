@@ -1,3 +1,31 @@
+2006-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkWindow.c (Initialize): remove impotent use of
+	DeleteWindowsExitProc as a global exit handler.
+
+	* generic/tkMenu.c (TkSetWindowMenuBar): remove extra TkMenuInit
+	call that caused finalization panic. [Bug 1456851]
+	* win/tkWinMenu.c (FreeID, TkpNewMenu, MenuExitHandler) 
+	(MenuThreadExitHandler, TkpMenuInit, TkpMenuThreadInit): rework
+	Windows menu init/finalization to better respect per-process and
+	per-thread boundaries. [Bug 1456851]
+	(TkWinMenuKeyObjCmd): Do not error when unknown window is passed
+	in. [Bug 1236306]
+
+	* win/tkWinX.c (TkWinXInit): init default keyboard charset
+	correctly. [Bug 1374119] (pajas)
+
+	* win/tkWinWm.c (WmProc): pass WM_QUERYENDSESSION message to Tk as
+	WM_SAVE_YOURSELF wm protocol callback.
+
+	* tests/textWind.test (textWind-10.6.1): prevent infinite update
+	loop in case of test failure
+
+	* tests/wm.test (wm-attributes-1.2.4): correct expected result.
+
+	* tests/grid.test: fix segfault on empty or "all" index list
+	* generic/tkGrid.c (GridRowColumnConfigureCommand): [Bug 1422430]
+
 2006-04-05  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* generic/tkText.c: fix to crash caused on some platforms
