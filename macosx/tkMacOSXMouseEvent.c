@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.17 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.18 2006/04/06 22:15:14 vincentdarley Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -164,6 +164,24 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     medPtr->window = TkMacOSXGetXWindow(medPtr->whichWin);
     if (medPtr->whichWin != NULL && medPtr->window == None) {
 	return 0;
+    }
+    if (eventPtr->eKind == kEventMouseDown) {
+	if (IsWindowPathSelectEvent(medPtr->whichWin, eventPtr->eventRef)) {
+	    SInt32 result;
+	    return WindowPathSelect(medPtr->whichWin, NULL, &result);
+	}
+	if (medPtr->windowPart == inProxyIcon) {
+	    OSStatus status = TrackWindowProxyDrag(medPtr->whichWin, where);
+	
+	    if (status == errUserWantsToDragWindow) {
+		medPtr->windowPart = inDrag;
+	    } else {
+		if (status == noErr) {
+		    printf("drag successful");
+		}
+		return status;
+	    }
+	}
     }
     medPtr->state = ButtonModifiers2State(GetCurrentEventButtonState(),
             GetCurrentEventKeyModifiers());
