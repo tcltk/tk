@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.18 2006/04/06 22:15:14 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.19 2006/04/06 22:16:09 vincentdarley Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -177,7 +177,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		medPtr->windowPart = inDrag;
 	    } else {
 		if (status == noErr) {
-		    printf("drag successful");
+		    /* drag successful */
 		}
 		return status;
 	    }
