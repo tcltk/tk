@@ -1,3 +1,9 @@
+2006-04-06  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXMouseEvent.c: now that [wm attributes -titlepath]
+	works correctly, add OS support for dragging proxy icons and 
+	using the titlepath menu.
+
 2006-04-06  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (WmAttributesCmd, WmIconbitmapCmd): fix errors
