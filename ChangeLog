@@ -1,3 +1,13 @@
+2006-04-06  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (WmAttributesCmd, WmIconbitmapCmd): fix errors
+	in setting/removing window proxy icons via [wm attributes -titlepath]
+	and [wm iconbitmap], use HIWindow API on Tiger or later. [Bug 1455241]
+	
+	* unix/tcl.m4: remove TCL_IO_TRACK_OS_FOR_DRIVER_WITH_BAD_BLOCKING
+	define on Darwin. [Tcl Bug 1457515]
+	* unix/configure: autoconf-2.13
+
 2006-04-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinMenu.c (FreeID, TkpNewMenu, MenuExitHandler) 
