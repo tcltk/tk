@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.24 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.25 2006/04/06 09:28:32 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -801,6 +801,12 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	return TCL_ERROR;
     }
 
+    if (winPtr->window == None) {
+	Tk_MakeWindowExist((Tk_Window) winPtr);
+    }
+    if (!TkMacOSXHostToplevelExists(winPtr)) {
+	TkMacOSXMakeRealWindowExist(winPtr);
+    }
     macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
 
     if (objc == 3) {
@@ -847,10 +853,8 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     }
     for (i = 3; i < objc; i += 2) {
 	int boolean;
+	const char *path;
 	OSErr err;
-	FSRef ref;
-	AliasHandle alias;
-	Boolean isDirectory;
 	double dval;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], optionTable, "option", 0,
@@ -867,14 +871,32 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		SetWindowModified(macWindow, boolean);
 		break;
 	    case WmAttrTitlePathIdx:
-                err = FSPathMakeRef(
-		    (unsigned char*) Tcl_GetStringFromObj(objv[i+1], NULL), 
-		    &ref, &isDirectory);
-                if (err == noErr) {
-		    err = FSNewAlias(NULL, &ref, &alias);
-                }
-		if (err == noErr) {
-		    err = SetWindowProxyAlias(macWindow, alias);
+                path = Tcl_FSGetNativePath(objv[i+1]);
+		if (path && *path) {
+		    FSRef ref;
+		    Boolean d;
+		    err = FSPathMakeRef((unsigned char*) path, &ref, &d);
+		    if (err == noErr) {
+#if defined(MAC_OS_X_VERSION_10_4) && \
+	(MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
+			err = HIWindowSetProxyFSRef(macWindow, &ref);
+#else
+			AliasHandle alias;
+			err = FSNewAlias(NULL, &ref, &alias);
+			if (err == noErr) {
+			    err = SetWindowProxyAlias(macWindow, alias);
+			    DisposeHandle(alias);
+			}
+#endif
+		    }
+		} else {
+		    int len;
+		    Tcl_GetStringFromObj(objv[i+1], &len);
+		    if (len == 0) {
+			err = RemoveWindowProxy(macWindow);
+		    } else {
+			err = fnfErr;
+		    }
 		}
 		if (err != noErr) {
 		    Tcl_SetObjResult(interp,
@@ -1659,8 +1681,11 @@ int objc;			/* Number of arguments. */
 Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
     Pixmap pixmap;
+    const char *path;
+    int len = -1;
+    OSErr err = fnfErr;
+    FSRef ref;
 
     if ((objc != 3) && (objc != 4)) {
         Tcl_WrongNumArgs(interp, 2, objv, "window ?bitmap?");
@@ -1674,28 +1699,43 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
         }
         return TCL_OK;
     }
-    argv3 = Tcl_GetString(objv[3]);
-    if (*argv3 == '\0') {
-        if (wmPtr->hints.icon_pixmap != None) {
-            Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
-            wmPtr->hints.icon_pixmap = None;
-        }
-        wmPtr->hints.flags &= ~IconPixmapHint;
+    path = Tcl_FSGetNativePath(objv[3]);
+    if (path && *path) {
+	Boolean d;
+	err = FSPathMakeRef((unsigned char*) path, &ref, &d);
     } else {
-        OSErr err;
-        AliasHandle alias;
-        FSRef ref;
-        Boolean isDirectory;
-        err = FSPathMakeRef((unsigned char*) Tcl_GetStringFromObj(objv[3], NULL), &ref, &isDirectory);
-        if (err == noErr) {
-            err = FSNewAlias(NULL, &ref, &alias);
-            if (err == noErr) {
-                WindowRef macWin
-                        = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
-                SetWindowProxyAlias(macWin, alias);
-                return TCL_OK;
-            }
-        }
+	Tcl_GetStringFromObj(objv[3], &len);
+    }
+    if (err == noErr || len == 0) {
+	WindowRef macWindow;
+	if (winPtr->window == None) {
+	    Tk_MakeWindowExist((Tk_Window) winPtr);
+	}
+	if (!TkMacOSXHostToplevelExists(winPtr)) {
+	    TkMacOSXMakeRealWindowExist(winPtr);
+	}
+	macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+	if (len) {
+#if defined(MAC_OS_X_VERSION_10_4) && \
+	    (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
+	    err = HIWindowSetProxyFSRef(macWindow, &ref);
+#else
+	    AliasHandle alias;
+	    err = FSNewAlias(NULL, &ref, &alias);
+	    if (err == noErr) {
+		err = SetWindowProxyAlias(macWindow, alias);
+		DisposeHandle(alias);
+	    }
+#endif
+	} else {
+	    err = RemoveWindowProxy(macWindow);
+	    if (wmPtr->hints.icon_pixmap != None) {
+		Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
+		wmPtr->hints.icon_pixmap = None;
+	    }
+	    wmPtr->hints.flags &= ~IconPixmapHint;
+	}
+    } else {
         pixmap = Tk_GetBitmap(interp, (Tk_Window) winPtr,
                               Tk_GetUid(Tcl_GetStringFromObj(objv[3], NULL)));
         if (pixmap == None) {
@@ -4092,7 +4132,7 @@ TkWmRestackToplevel(
 	if (otherPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
 	    TkWmMapWindow(otherPtr);
 	}
-	otherMacWindow =GetWindowFromPort(TkMacOSXGetDrawablePort(otherPtr->window));
+	otherMacWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(otherPtr->window));
     } else {
 	otherMacWindow = NULL;
     }
