@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.6.2.11 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.6.2.12 2006/04/07 06:16:03 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -126,6 +126,8 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     TkDisplay *	   dispPtr;
     OSStatus	   status;
     MouseEventData mouseEventData, * medPtr = &mouseEventData;
+    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
+    Boolean	   isFrontProcess = true;
 
     switch (eventPtr->eKind) {
 	case kEventMouseUp:
@@ -135,7 +137,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	case kEventMouseWheelMoved:
 	    break;
 	default:
-	    return 0;
+	    return false;
 	    break;
     }
     status = GetEventParameter(eventPtr->eventRef, 
@@ -163,10 +165,33 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     }
     medPtr->window = TkMacOSXGetXWindow(medPtr->whichWin);
     if (medPtr->whichWin != NULL && medPtr->window == None) {
-	return 0;
+	return false;
     }
-    medPtr->state = ButtonModifiers2State(GetCurrentEventButtonState(),
-            GetCurrentEventKeyModifiers());
+    if (eventPtr->eKind == kEventMouseDown) {
+	if (IsWindowPathSelectEvent(medPtr->whichWin, eventPtr->eventRef)) {
+	    status = WindowPathSelect(medPtr->whichWin, NULL, NULL);
+	    return false;
+	}
+	if (medPtr->windowPart == inProxyIcon) {
+	    status = TrackWindowProxyDrag(medPtr->whichWin, where);
+	    if (status == errUserWantsToDragWindow) {
+		medPtr->windowPart = inDrag;
+	    } else {
+		return false;
+	    }
+	}
+    }
+    status = GetFrontProcess(&frontPsn);
+    if (status == noErr) {
+	SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
+    }
+    if (isFrontProcess) {
+	medPtr->state = ButtonModifiers2State(GetCurrentEventButtonState(),
+		GetCurrentEventKeyModifiers());
+    } else {
+	medPtr->state = ButtonModifiers2State(GetCurrentButtonState(),
+		GetCurrentKeyModifiers());
+    }
     medPtr->global = where;
     status = GetEventParameter(eventPtr->eventRef, 
 	    kEventParamWindowMouseLocation,
@@ -201,6 +226,9 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	    return false;
 	}
 	return GenerateButtonEvent(medPtr);
+    }
+    if (eventPtr->eKind == kEventMouseDown) {
+	TkMacOSXSetEatButtonUp(false);
     }
     if (eventPtr->eKind == kEventMouseWheelMoved) {
 	status = GetEventParameter(eventPtr->eventRef,
@@ -252,14 +280,6 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	 * or else it will mess up some Tk scripts.
 	 */
 
-	ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
-	Boolean		    isFrontProcess = true;
-
-	status = GetFrontProcess(&frontPsn);
-	if (status == noErr) {
-	    SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
-	}
-
 	if (!(TkpIsWindowFloating(medPtr->whichWin))
 		&& (medPtr->whichWin != medPtr->activeNonFloating
 		|| !isFrontProcess)) {
@@ -291,70 +311,74 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	    }
 
 	    /*
-	     * Clicks in the stoplights on a MacOS X title bar are processed
-	     * directly even for background windows.  Do that here.
+	     * Clicks in the titlebar widgets are handled without bringing the
+	     * window forward.
 	     */
             if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
                 return result;
             } else {
-                TkMacOSXSetEatButtonUp(true);
-                BringWindowForward(medPtr->whichWin, isFrontProcess);
-                return false;
+		/*
+		 * Allow background window dragging & growing with Command down
+		 */
+                if (!((medPtr->windowPart == inDrag ||
+			medPtr->windowPart == inGrow) &&
+			medPtr->state & Mod1Mask)) {
+		    TkMacOSXSetEatButtonUp(true);
+		    BringWindowForward(medPtr->whichWin, isFrontProcess);
+                }
+                /*
+                 * Allow dragging & growing of windows that were/are in the
+                 * background.
+                 */
+                if (!(medPtr->windowPart == inDrag ||
+			medPtr->windowPart == inGrow)) {
+		    return false;
+                }
             }
-	}
-    }
-
-    if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
-        return result;
-    }
-    switch (medPtr->windowPart) {
-	case inDrag: {
-	    CGrafPtr saveWorld;
-	    GDHandle saveDevice;
-	    GWorldPtr dstPort;
-
-	    GetGWorld(&saveWorld, &saveDevice);
-	    dstPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
-	    SetGWorld(dstPort, NULL);
-
-	    DragWindow(medPtr->whichWin, where, NULL);
-	    where2.h = where2.v = 0;
-	    LocalToGlobal(&where2);
-	    if (EqualPt(where, where2)) {
-		SetGWorld (saveWorld, saveDevice);
-		return false;
+	} else {
+	    if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
+		return result;
 	    }
-	    TkMacOSXWindowOffset(medPtr->whichWin, &xOffset, &yOffset);
-	    where2.h -= xOffset;
-	    where2.v -= yOffset;
-	    TkGenWMConfigureEvent(tkwin, where2.h, where2.v,
-		    -1, -1, TK_LOCATION_CHANGED);
-	    SetGWorld(saveWorld, saveDevice);
-	    return true;
-	    break;
 	}
-	case inContent:
-	    return GenerateButtonEvent(medPtr);
-	    break;
-	case inGrow:
-	    /*
-	     * Generally the content region is the domain of Tk
-	     * sub-windows.  However, one exception is the grow	  
-	     * region.	A button down in this area will be handled
-	     * by the window manager.  Note: this means that Tk
-	     * may not get button down events in this area!
-	     */
-	    if (TkMacOSXGrowToplevel(medPtr->whichWin, where) == true) {
+	switch (medPtr->windowPart) {
+	    case inDrag:
+		SetPort(GetWindowPort(medPtr->whichWin));
+		DragWindow(medPtr->whichWin, where, NULL);
+		where2.h = where2.v = 0;
+		LocalToGlobal(&where2);
+		if (EqualPt(where, where2)) {
+		    return false;
+		}
+		TkMacOSXWindowOffset(medPtr->whichWin, &xOffset, &yOffset);
+		where2.h -= xOffset;
+		where2.v -= yOffset;
+		TkGenWMConfigureEvent(tkwin, where2.h, where2.v,
+			-1, -1, TK_LOCATION_CHANGED);
 		return true;
-	    } else {
+		break;
+	    case inGrow:
+		/*
+		 * Generally the content region is the domain of Tk
+		 * sub-windows.  However, one exception is the grow	  
+		 * region.	A button down in this area will be handled
+		 * by the window manager.  Note: this means that Tk
+		 * may not get button down events in this area!
+		 */
+		if (TkMacOSXGrowToplevel(medPtr->whichWin, where) == true) {
+		    return true;
+		} else {
+		    return GenerateButtonEvent(medPtr);
+		}
+		break;
+	    case inContent:
 		return GenerateButtonEvent(medPtr);
-	    }
-	    break;
-	default:
-	    return false;
-	    break;
+		break;
+	    default:
+		return false;
+		break;
+	}
     }
-    return 0;
+    return false;
 }
 
 /*
@@ -650,12 +674,22 @@ unsigned int
 TkMacOSXButtonKeyState()
 {
     UInt32 buttonState = 0, keyModifiers;
-    EventRef ev = GetCurrentEvent();
+    Boolean isFrontProcess = false;
+    
+    if (GetCurrentEvent()) {
+	ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
+	OSStatus status = GetFrontProcess(&frontPsn);
+	if (status == noErr) {
+	    SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
+	}
+    }
     
     if (!gEatButtonUp) {
-	buttonState = ev ? GetCurrentEventButtonState() : GetCurrentButtonState();
+	buttonState = isFrontProcess ? GetCurrentEventButtonState() :
+		GetCurrentButtonState();
     }
-    keyModifiers = ev ? GetCurrentEventKeyModifiers() : GetCurrentKeyModifiers();
+    keyModifiers = isFrontProcess ? GetCurrentEventKeyModifiers() :
+	    GetCurrentKeyModifiers();
     
     return ButtonModifiers2State(buttonState, keyModifiers);
 }
