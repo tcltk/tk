@@ -1,3 +1,19 @@
+2006-04-07  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): fix return
+	values, implement window dragging & growing in background (with Command
+	key down) and by fronting clicks, use correct button & modifier state
+	API when application is in background (also in TkMacOSXButtonKeyState).
+
+	* macosx/tkMacOSXWm.c (TkMacOSXGrowToplevel): ensure QD port is set
+	correctly before using API relying on it.
+	
+2006-04-06  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXMouseEvent.c: now that [wm attributes -titlepath]
+	works correctly, add OS support for dragging proxy icons and 
+	using the titlepath menu.
+
 2006-04-06  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (WmAttributesCmd, WmIconbitmapCmd): fix errors
