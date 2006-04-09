@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.20 2006/04/07 06:16:03 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.21 2006/04/09 22:07:27 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -321,10 +321,10 @@ TkWmMapWindow(
 	/*
 	 * Create the underlying Mac window for this Tk window.
 	 */
-	macWin = (MacDrawable *) winPtr->window;
 	if (!TkMacOSXHostToplevelExists(winPtr)) {
 	    TkMacOSXMakeRealWindowExist(winPtr);
 	}
+	macWin = (MacDrawable *) winPtr->window;
 
 	/*
 	 * Generate configure event when we first map the window.
@@ -2368,7 +2368,7 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int width, height;
+    int width, height, oldAttributes;
 
     if ((objc != 3) && (objc != 5)) {
         Tcl_WrongNumArgs(interp, 2, objv, "window ?width height?");
@@ -2387,6 +2387,7 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
         || (Tcl_GetBooleanFromObj(interp, objv[4], &height) != TCL_OK)) {
         return TCL_ERROR;
     }
+    oldAttributes = wmPtr->attributes;
     if (width) {
         wmPtr->flags &= ~WM_WIDTH_NOT_RESIZABLE;
         wmPtr->attributes |= kWindowHorizontalZoomAttribute;
@@ -2401,9 +2402,6 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
         wmPtr->flags |= WM_HEIGHT_NOT_RESIZABLE;
         wmPtr->attributes &= ~kWindowVerticalZoomAttribute;
     }
-    /*
-     * XXX: Need a ChangeWindowAttributes
-     */
     if (width || height) {
         wmPtr->attributes |= kWindowResizableAttribute;
     } else {
@@ -2415,6 +2413,18 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
 		wmPtr->scrollWinPtr->instanceData);
     }
     WmUpdateGeom(wmPtr, winPtr);
+    if (wmPtr->attributes != oldAttributes) {
+	if (winPtr->window == None) {
+	    Tk_MakeWindowExist((Tk_Window) winPtr);
+	}
+	if (!TkMacOSXHostToplevelExists(winPtr)) {
+	    TkMacOSXMakeRealWindowExist(winPtr);
+	}
+	ChangeWindowAttributes(
+		GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window)),
+		wmPtr->attributes & (wmPtr->attributes ^ oldAttributes),
+		oldAttributes & (wmPtr->attributes ^ oldAttributes));
+    }
     return TCL_OK;
 }
 
