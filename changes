@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.32 2006/03/22 15:11:33 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.33 2006/04/10 17:44:16 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5895,4 +5895,19 @@ handled (max)
 
 2006-03-20 (bug fix)[1380427] crash in undo stack (lz_ufo,callewaert,fellows)
 
---- Released 8.4.13, March 17, 2006 --- See ChangeLog for details ---
+2006-03-27 (bug fix)[1458234] crash in animated GIFs (bron,fellows)
+
+2006-03-29 (platform support)[917322] tolerate X servers that do not
+accept the color names "Black" and "White" (porter)
+
+2006-04-05 (bug fix) several finalization issues corrected (hobbs)
+
+2006-04-05 (bug fix)[1442102] crash on full -elide [text] (hobbs)
+
+2006-04-05 (bug fix)[1374119] default keyboard charset init (hobbs)
+
+2006-04-05 (bug fix)[1414171] stop $text dump if change detected (hobbs)
+
+2006-04-05 (bug fix)[1422430] [grid] empty index list crash (hobbs)
+
+--- Released 8.4.13, April 14, 2006 --- See ChangeLog for details ---
