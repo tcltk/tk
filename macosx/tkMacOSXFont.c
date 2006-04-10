@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.14 2006/04/05 01:59:07 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.15 2006/04/10 20:52:37 cc_benny Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -43,7 +43,7 @@
 
 /*
 #ifdef	TK_MAC_DEBUG
-#define TK_MAC_DEBUG_FONTS
+#define TK_MAC_DEBUG_FONTS 1
 #endif
 */
 
@@ -57,7 +57,7 @@ typedef TkMacOSXFontDrawingContext DrawingContext;
 
 /* #define TK_MAC_COALESCE_LINE 1 */
 /* #define TK_MAC_USE_MEASURETEXTIMAGE 1 */
-/* #define TK_MAC_USE_GETGLYPHBOUNDS 1 */
+#define TK_MAC_USE_GETGLYPHBOUNDS 1
 
 
 /*
@@ -262,7 +262,7 @@ TkpFontPkgInit(
 
 #ifdef TK_MAC_DEBUG_FONTS
     fprintf(stderr, "tkMacOSXFont.c (ATSU version) intialized "
-            "(" __TIME__ ")\n");*/
+            "(" __TIME__ ")\n");
 #endif
 }
 
@@ -600,7 +600,7 @@ TkpMeasureCharsInContext(
      */
 
     if ((rangeStart < 0) || ((rangeStart+rangeLength) > numBytes)) {
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
         fprintf(stderr, "MeasureChars: bad parameters\n");
 #endif
         *lengthPtr = 0;
@@ -682,12 +682,12 @@ TkpMeasureCharsInContext(
              * possibility.
              */
 
+#ifdef TK_MAC_DEBUG_FONTS
             if ((err != noErr) && (err != kATSULineBreakInWord)) {
-#ifdef TK_MAC_DEBUG
                 fprintf(stderr, "ATSUBreakLine(): Error %d for '%.*s'\n",
                         (int) err, rangeLength, source+rangeStart);
-#endif
             }
+#endif
 
 #ifdef TK_MAC_DEBUG_FONTS
             fprintf(stderr, "measure: '%.*s', break offset=%d, errcode=%d\n",
@@ -836,14 +836,14 @@ TkpMeasureCharsInContext(
                     kATSUByCluster,
                     &nextoffset);
                 if (err != noErr) {
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
                     fprintf(stderr, "ATSUNextCursorPosition(): "
                             "Error %d\n", (int) err);
 #endif
                     break;
                 }
                 if (nextoffset <= offset) {
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
                     fprintf(stderr, "ATSUNextCursorPosition(): "
                             "Can't move further "
                             "(shouldn't happen, bad data?)\n");
@@ -1270,11 +1270,11 @@ MacFontDrawText(
             fontPtr->atsuLayout,
             lineOffset+urstart, urlen,
             fx, fy);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUDrawText(): Error %d\n", (int) err);
-#endif
     }
+#endif
 
 #if !TK_MAC_COALESCE_LINE
     Tcl_DStringFree(&runString);
@@ -1341,11 +1341,11 @@ MeasureStringWidth(
         start, end-start,
         0, 0,
         &size);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUMeasureTextImage(): Error %d\n", (int) err);
-#endif
     }
+#endif
 
     return size.right - size.left;
 
@@ -1379,9 +1379,9 @@ MeasureStringWidth(
             fontPtr->atsuLayout,
             0, 0,
             start, end-start,
-            kATSUseDeviceOrigins,
+            kATSUseFractionalOrigins,
             1, &bounds, &numBounds);
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
         fprintf(stderr, "ATSUGetGlyphBounds(): Error %d\n", (int) err);
     } else if (numBounds < 1) {
@@ -1418,11 +1418,11 @@ MeasureStringWidth(
             fontPtr->atsuLayout,
             start, false,
             &mainCaretStart, &secCaretStart, &isSplit);
+#ifdef TK_MAC_DEBUG_FONTS
         if (err != noErr) {
-#ifdef TK_MAC_DEBUG
             fprintf(stderr, "ATSUOffsetToPosition(): Error %d\n", (int) err);
-#endif
         }
+#endif
     }
 
     if (end != 0) {
@@ -1430,11 +1430,11 @@ MeasureStringWidth(
             fontPtr->atsuLayout,
             end, false,
             &mainCaretEnd, &secCaretEnd, &isSplit);
+#ifdef TK_MAC_DEBUG_FONTS
         if (err != noErr) {
-#ifdef TK_MAC_DEBUG
             fprintf(stderr, "ATSUOffsetToPosition(): Error %d\n", (int) err);
-#endif
         }
+#endif
     }
 
     return FixedToInt(mainCaretEnd.fX - mainCaretStart.fX);
@@ -1544,7 +1544,7 @@ InitFont(
     TkFontAttributes * faPtr;
     TkFontMetrics * fmPtr;
     short points;
-    int iWidth, wWidth;
+    int periodWidth, wWidth;
 
     if (size == 0) {
             size = GetDefFontSize();
@@ -1552,11 +1552,11 @@ InitFont(
     points = (short) TkFontGetPoints(tkwin, size);
 
     err = FetchFontInfo(familyId, points, qdStyle, &fi);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "FetchFontInfo(): Error %d\n", (int) err);
-#endif
     }
+#endif
 
     if (familyName == NULL) {
         char name[256] = "";
@@ -1574,7 +1574,7 @@ InitFont(
             if (familyPtr != NULL) {
                 familyName = familyPtr->name;
             } else {
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
                 fprintf(stderr, "Font family '%s': Not found\n", name);
 #endif
             }
@@ -1613,9 +1613,9 @@ InitFont(
             familyId, points, qdStyle,
             &fontPtr->atsuFontId, &fontPtr->atsuLayout, &fontPtr->atsuStyle);
 
-    Tk_MeasureChars((Tk_Font)fontPtr, "i", 1, -1, 0, &iWidth);
-    Tk_MeasureChars((Tk_Font)fontPtr, "w", 1, -1, 0, &wWidth);
-    fmPtr->fixed = iWidth == wWidth;
+    Tk_MeasureChars((Tk_Font)fontPtr, ".", 1, -1, 0, &periodWidth);
+    Tk_MeasureChars((Tk_Font)fontPtr, "W", 1, -1, 0, &wWidth);
+    fmPtr->fixed = periodWidth == wWidth;
 
     SetFontFeatures(fontPtr->atsuFontId, fmPtr->fixed, fontPtr->atsuStyle);
 
@@ -1668,12 +1668,12 @@ InitATSUObjects(
 
     err = FMGetFontFromFontFamilyInstance(
             familyId, qdStyles, fontIdPtr, &stylesDone);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "FMGetFontFromFontFamilyInstance(): Error %d\n",
                 (int) err);
-#endif
     }
+#endif
 
     /*
      * We see what style bits are left and tell ATSU to synthesize what's
@@ -1687,11 +1687,11 @@ InitATSUObjects(
      */
 
     err = ATSUCreateStyle(stylePtr);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUCreateStyle(): Error %d\n", (int) err);
-#endif
     }
+#endif
     InitATSUStyle(*fontIdPtr, ptSize, stylesLeft, *stylePtr);
 
     /*
@@ -1700,11 +1700,11 @@ InitATSUObjects(
      */
 
     err = ATSUCreateTextLayout(layoutPtr);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUCreateTextLayout(): Error %d\n", (int) err);
-#endif
     }
+#endif
     /*InitATSULayout(*layoutPtr);*/
 }
 
@@ -1770,11 +1770,11 @@ InitATSUStyle(
         style,
         sizeof(styleTags)/sizeof(styleTags[0]),
         styleTags, styleSizes, styleValues);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUSetAttributes(): Error %d\n", (int) err);
-#endif
     }
+#endif
 }
 
 
@@ -1822,11 +1822,11 @@ SetFontFeatures(
             style,
             sizeof(fixed_featureTypes)/sizeof(fixed_featureTypes[0]),
             fixed_featureTypes, fixed_featureSelectors);
+#ifdef TK_MAC_DEBUG_FONTS
         if (err != noErr) {
-#ifdef TK_MAC_DEBUG
             fprintf(stderr, "ATSUSetFontFeatures(): Error %d\n", (int) err);
-#endif
         }
+#endif
     }
 }
 
@@ -1897,7 +1897,7 @@ AdjustFontHeight(
 #endif
 
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
         fprintf(stderr, "ATSUMeasureTextImage(): Error %d\n", (int) err);
 #endif
     } else {
@@ -1999,19 +1999,19 @@ InitATSULayout(
             layout,
             sizeof(layoutTags)/sizeof(layoutTags[0]),
             layoutTags, layoutSizes, layoutValues);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUSetLayoutControls(): Error %d\n", (int) err);
-#endif
     }
+#endif
 
     err = ATSUSetTransientFontMatching(layout, true);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUSetTransientFontMatching(): Error %d\n",
                 (int) err);
-#endif
     }
+#endif
 }
 
 /*
@@ -2046,11 +2046,11 @@ TkMacOSXLayoutSetString(
             fontPtr->atsuLayout,
             uchars, kATSUFromTextBeginning, ulen,
             ulen);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUSetTextPointerLocation(): Error %d\n", (int) err);
-#endif
     }
+#endif
 
     /*
      * Styles can only be set after the text is set.
@@ -2059,11 +2059,11 @@ TkMacOSXLayoutSetString(
     err = ATSUSetRunStyle(
             fontPtr->atsuLayout, fontPtr->atsuStyle,
             kATSUFromTextBeginning, kATSUToTextEnd);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "ATSUSetRunStyle(): Error %d\n", (int) err);
-#endif
     }
+#endif
 
     /*
      * Layout attributes can only be set after the styles are set.
@@ -2201,7 +2201,7 @@ FindFontFamilyOrAliasOrFallback(
      * of the app.  Similar problem with fonts removed.
      */
 
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
     fprintf(stderr, "Font family '%s': Not found\n", name);
 #endif
 
@@ -2232,12 +2232,20 @@ InitFontFamilies(void)
 {
     OSStatus err;
 
-    err = ATSFontFamilyApplyFunction(FontFamilyEnumCallback,NULL);
-    if (err != noErr) {
-#ifdef TK_MAC_DEBUG
-        fprintf(stderr, "ATSFontFamilyApplyFunction(): Error %d\n", (int) err);
-#endif
+    /*
+     * Has this been called before?
+     */
+
+    if (familyListNextFree > 0) {
+        return;
     }
+
+    err = ATSFontFamilyApplyFunction(FontFamilyEnumCallback,NULL);
+#ifdef TK_MAC_DEBUG_FONTS
+    if (err != noErr) {
+        fprintf(stderr, "ATSFontFamilyApplyFunction(): Error %d\n", (int) err);
+    }
+#endif
 
     AddFontFamily(APPLFONT_NAME, GetAppFont());
     AddFontFamily(SYSTEMFONT_NAME, GetSysFont());
@@ -2305,7 +2313,7 @@ GetFontFamilyName(
 
     err = FMGetFontFamilyName(fontFamily, nativeName);
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_FONTS
         fprintf(stderr, "FMGetFontFamilyName(): Error %d\n", (int) err);
 #endif
         return err;
@@ -2318,20 +2326,20 @@ GetFontFamilyName(
 
     encoding = kTextEncodingMacRoman;
     err = FMGetFontFamilyTextEncoding(fontFamily, &encoding);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "FMGetFontFamilyTextEncoding(): Error %d\n", (int) err);
-#endif
     }
+#endif
 
     nameencoding = encoding;
     err = RevertTextEncodingToScriptInfo(encoding, &nameencoding, NULL, NULL);
+#ifdef TK_MAC_DEBUG_FONTS
     if (err != noErr) {
-#ifdef TK_MAC_DEBUG
         fprintf(stderr, "RevertTextEncodingToScriptInfo(): Error %d\n",
                 (int) err);
-#endif
     }
+#endif
 
     /*
      * Note: We could use Tcl facilities to do the re-encoding here.  We'd
