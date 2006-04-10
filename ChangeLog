@@ -2,6 +2,8 @@
 
 	* macosx/tkMacOSXWm.c (WmResizableCmd): propagate window attribute
 	changes to Carbon window manager. [FR 1467004]
+	(TkSetWMName, TkMacOSXMakeRealWindowExist): allow empty name for
+	toplevels, remove bogus initial window name. [Bug 1450800]
 
 2006-04-07  Daniel Steffen  <das@users.sourceforge.net>
 
