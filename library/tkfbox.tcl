@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.56 2006/03/17 11:13:15 patthoyts Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.57 2006/04/10 21:33:45 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -737,18 +737,22 @@ proc ::tk::IconList_Goto {w text} {
 	return
     }
 
-    set text [string tolower $text]
+    if {[llength [IconList_CurSelection $w]]} {
+	set start [IconList_Index $w anchor]
+    } else {
+	set start 0
+    }
+
     set theIndex -1
     set less 0
     set len [string length $text]
     set len0 [expr {$len-1}]
     set i $start
 
-    # Search forward until we find a filename whose prefix is an exact match
-    # with $text
+    # Search forward until we find a filename whose prefix is a
+    # case-insensitive match with $text
     while {1} {
-	set sub [string range $textList($i) 0 $len0]
-	if {$text eq $sub} {
+	if {[string equal -nocase -length $len0 $textList($i) $text]} {
 	    set theIndex $i
 	    break
 	}

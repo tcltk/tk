@@ -1,8 +1,14 @@
+2006-04-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/tkfbox.tcl (::tk::IconList_Goto): Fix prefix searching so
+	that the start location is reasonable, and the prefix matching is
+	using the correct Tcl command for this. [Bug 1467938]
+
 2006-04-10  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
 	* macosx/tkMacOSXFont.c (MeasureStringWidth): Use implementation
 	based on ATSUGetGlyphBounds (TK_MAC_USE_GETGLYPHBOUNDS), so we can
-	use kATSUseFractionalOrigins.  This in turn corrects bug #1461650.
+	use kATSUseFractionalOrigins.  This in turn corrects [Bug 1461650].
 	* (InitFont): Use "." and "W" instead of "i" and "w" to determine the
 	"-fixed" attribute.  This prevents "Apple Chancery" from being
 	classified as fixed.
