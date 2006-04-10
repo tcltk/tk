@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.27 2006/04/09 22:07:21 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.28 2006/04/10 09:25:34 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -4587,19 +4587,12 @@ TkSetWMName(
         return;
     }
     
-    if (strlen(titleUid) > 0) {
-        title = CFStringCreateWithBytes(NULL, (unsigned char*) titleUid, strlen(titleUid), 
-                kCFStringEncodingUTF8, false); 
-    } else {
-    	title = NULL;
-    }
-    
-    macWin = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
-
-    SetWindowTitleWithCFString(macWin, title);
-    
-    if (title != NULL) {
-        CFRelease(title);
+    title = CFStringCreateWithBytes(NULL, (unsigned char*) titleUid,
+	    strlen(titleUid), kCFStringEncodingUTF8, false); 
+    if (title) {
+	macWin = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+	SetWindowTitleWithCFString(macWin, title);
+	CFRelease(title);
     }
 }
 
@@ -5129,7 +5122,7 @@ TkMacOSXMakeRealWindowExist(
 	}
 
     } else {
-	newWindow = NewCWindow(NULL, &geometry, "\ptemp", false,
+	newWindow = NewCWindow(NULL, &geometry, "\p", false,
 		(short) wmPtr->style, (WindowRef) -1, true, 0);
     }
 
