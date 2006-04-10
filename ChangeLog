@@ -1,4 +1,11 @@
+2006-04-10  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.4.13 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for next RC.
+
 2006-04-09  Daniel Steffen  <das@users.sourceforge.net>
+
 
 	* macosx/tkMacOSXWm.c (WmResizableCmd): propagate window attribute
 	changes to Carbon window manager. [FR 1467004]
@@ -130,8 +137,6 @@
 	frame does not define the overall size of the image. [Bug 1458234]
 
 2006-03-22  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.4.13 TAGGED FOR RELEASE ***
 
 	* changes:	Updates for next RC.
 
