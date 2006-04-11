@@ -1,3 +1,10 @@
+2006-04-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXInt.h:         Implemented 'zoomed' window state
+	* macosx/tkMacOSXWindowEvent.c: handling for TkAqua, via titlebar
+	* macosx/tkMacOSXWm.c:          widget clicks as well as [wm state].
+	* doc/wm.n:                     [Bug 1073456]
+
 2006-04-10  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.4.13 TAGGED FOR RELEASE ***
@@ -5,7 +12,6 @@
 	* changes:	Updates for next RC.
 
 2006-04-09  Daniel Steffen  <das@users.sourceforge.net>
-
 
 	* macosx/tkMacOSXWm.c (WmResizableCmd): propagate window attribute
 	changes to Carbon window manager. [FR 1467004]
