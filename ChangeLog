@@ -4,6 +4,9 @@
 
 	* changes: added latest aqua bug fixes.
 
+	* macosx/tkMacOSXDialog.c (Tk_MessageBoxObjCmd): added standard Escape
+	key binding for msgbox cancel buttons [Patch 1193614], whitespace.
+
 	* macosx/tkMacOSXCarbonEvents.c: handle kEventCommandUpdateStatus
 	* macosx/tkMacOSXEvent.c:        carbon event to dynamically enable
 	the 'Preferences' app menu item when proc [::tk::mac::ShowPreferences]

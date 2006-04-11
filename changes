@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.34 2006/04/11 10:23:34 das Exp $
+RCS: @(#) $Id: changes,v 1.64.2.35 2006/04/11 12:05:18 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5921,6 +5921,8 @@ accept the color names "Black" and "White" (porter)
 2006-04-11 (bug fix)[1073456] Aqua: implement toplevel zoom (steffen)
 
 2006-04-11 (bug fix)[700316]  Aqua: enable 'Preferences' app menu item (steffen)
+
+2006-04-11 (bug fix)[1193614] Aqua: tk_messageBox escape key binding (steffen)
 
 2006-04-11 (enhancement)[1105284] Aqua: call ::tk::mac::* procs for all
 registered applevents (steffen)
