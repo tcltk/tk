@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.24 2006/04/05 19:47:49 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.25 2006/04/11 20:23:45 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -5582,10 +5582,13 @@ UpdateGeometryInfo(clientData)
      */
 
     if (winPtr->flags & TK_BOTH_HALVES) {
+	TkWindow *childPtr = TkpGetOtherWindow(winPtr);
+
 	wmPtr->x = wmPtr->y = 0;
 	wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
-	Tk_GeometryRequest((Tk_Window) TkpGetOtherWindow(winPtr),
-		width, height);
+	if (childPtr != NULL) {
+	    Tk_GeometryRequest((Tk_Window) childPtr, width, height);
+	}
 	return;
     }
 

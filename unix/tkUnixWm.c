@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.6 2005/06/01 00:07:29 mdejong Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.7 2006/04/11 20:23:45 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -4254,6 +4254,7 @@ UpdateGeometryInfo(clientData)
 
     if ((winPtr->flags & (TK_EMBEDDED|TK_BOTH_HALVES))
 	    == (TK_EMBEDDED|TK_BOTH_HALVES)) {
+	TkWindow *childPtr = TkpGetOtherWindow(winPtr);
 	/*
 	 * This window is embedded and the container is also in this
 	 * process, so we don't need to do anything special about the
@@ -4264,11 +4265,13 @@ UpdateGeometryInfo(clientData)
 
 	wmPtr->x = wmPtr->y = 0;
 	wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
-	height += wmPtr->menuHeight;
-	Tk_GeometryRequest((Tk_Window) TkpGetOtherWindow(winPtr),
-		width, height);
+	if (childPtr != NULL) {
+	    height += wmPtr->menuHeight;
+	    Tk_GeometryRequest((Tk_Window) childPtr, width, height);
+	}
 	return;
     }
+
     serial = NextRequest(winPtr->display);
     height += wmPtr->menuHeight;
     if (wmPtr->flags & WM_MOVE_PENDING) {
@@ -5261,6 +5264,9 @@ Tk_CoordsToWindow(rootX, rootY, tkwin)
 	     */
 
 	    winPtr = TkpGetOtherWindow(winPtr);
+	    if (winPtr == NULL) {
+		return NULL;
+	    }
 	    wmPtr = winPtr->wmInfoPtr;
 	    childX = x;
 	    childY = y;
