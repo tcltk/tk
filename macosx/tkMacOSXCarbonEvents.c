@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.11 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.12 2006/04/11 10:22:57 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -192,6 +192,7 @@ TkMacOSXInitCarbonEvents (
 	    {kEventClassMenu,		kEventMenuBeginTracking},
 	    {kEventClassMenu,		kEventMenuEndTracking},
 	    {kEventClassCommand,	kEventCommandProcess},
+	    {kEventClassCommand,	kEventCommandUpdateStatus},
 	    {kEventClassMouse,		kEventMouseWheelMoved},
 	    {kEventClassWindow,		kEventWindowExpanded},
 	    {kEventClassApplication,	kEventAppHidden},
@@ -246,6 +247,7 @@ TkMacOSXInitCarbonEvents (
 	TraceEventByName("kEventMenuBeginTracking");
 	TraceEventByName("kEventMenuEndTracking");
 	TraceEventByName("kEventCommandProcess");
+	TraceEventByName("kEventCommandUpdateStatus");
 	TraceEventByName("kEventWindowExpanded");
 	TraceEventByName("kEventAppHidden");
 	TraceEventByName("kEventAppShown");
