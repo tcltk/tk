@@ -10,20 +10,20 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.10 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.11 2006/04/11 10:21:28 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 
 /*
  * This is a Tcl_Event structure that the Quit AppleEvent handler
- * uses to schedule the tkReallyKillMe function.
+ * uses to schedule the ReallyKillMe function.
  */
  
 typedef struct KillEvent {
-    Tcl_Event header;                /* Information that is standard for
+    Tcl_Event header;           /* Information that is standard for
                                  * all events. */
-    Tcl_Interp *interp;                /* Interp that was passed to the
+    Tcl_Interp *interp;         /* Interp that was passed to the
                                  * Quit AppleEvent */
 } KillEvent;
 
@@ -31,17 +31,24 @@ typedef struct KillEvent {
  * Static functions used only in this file.
  */
 
-static OSErr QuitHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
-static OSErr OappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
-static OSErr RappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
-static OSErr OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
-static OSErr PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
-static OSErr ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
-static OSErr PrefsHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon);
+static OSErr QuitHandler(const AppleEvent * event, AppleEvent * reply,
+	long handlerRefcon);
+static OSErr OappHandler(const AppleEvent * event, AppleEvent * reply,
+	long handlerRefcon);
+static OSErr RappHandler(const AppleEvent * event, AppleEvent * reply,
+	long handlerRefcon);
+static OSErr OdocHandler(const AppleEvent * event, AppleEvent * reply,
+	long handlerRefcon);
+static OSErr PrintHandler(const AppleEvent * event, AppleEvent * reply,
+	long handlerRefcon);
+static OSErr ScriptHandler(const AppleEvent * event, AppleEvent * reply,
+	long handlerRefcon);
+static OSErr PrefsHandler(const AppleEvent * event, AppleEvent * reply,
+	long handlerRefcon);
 
-static int MissedAnyParameters _ANSI_ARGS_((const AppleEvent *theEvent));
-static int ReallyKillMe _ANSI_ARGS_((Tcl_Event *eventPtr, int flags));
-static OSErr FSRefToDString _ANSI_ARGS_((const FSRef *fsref, Tcl_DString *ds));
+static int MissedAnyParameters(const AppleEvent *theEvent);
+static int ReallyKillMe(Tcl_Event *eventPtr, int flags);
+static OSErr FSRefToDString(const FSRef *fsref, Tcl_DString *ds);
 
 /*
  *----------------------------------------------------------------------
@@ -68,38 +75,44 @@ TkMacOSXInitAppleEvents(
     AEEventHandlerUPP        OappHandlerUPP, RappHandlerUPP, OdocHandlerUPP,
         PrintHandlerUPP, QuitHandlerUPP, ScriptHandlerUPP,
         PrefsHandlerUPP;
+    static Boolean initialized = FALSE;
 
-    /*
-     * Install event handlers for the core apple events.
-     */
-    QuitHandlerUPP = NewAEEventHandlerUPP(QuitHandler);
-    err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
-            QuitHandlerUPP, (long) interp, false);
+    if (!initialized) {
+        initialized = TRUE;
 
-    OappHandlerUPP = NewAEEventHandlerUPP(OappHandler);
-    err = AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
-            OappHandlerUPP, (long) interp, false);
+	/*
+	 * Install event handlers for the core apple events.
+	 */
+	QuitHandlerUPP = NewAEEventHandlerUPP(QuitHandler);
+	err = AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+		QuitHandlerUPP, (long) interp, false);
 
-    RappHandlerUPP = NewAEEventHandlerUPP(RappHandler);
-    err = AEInstallEventHandler(kCoreEventClass, kAEReopenApplication,
-            RappHandlerUPP, (long) interp, false);
+	OappHandlerUPP = NewAEEventHandlerUPP(OappHandler);
+	err = AEInstallEventHandler(kCoreEventClass, kAEOpenApplication,
+		OappHandlerUPP, (long) interp, false);
 
-    OdocHandlerUPP = NewAEEventHandlerUPP(OdocHandler);
-    err = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
-            OdocHandlerUPP, (long) interp, false);
+	RappHandlerUPP = NewAEEventHandlerUPP(RappHandler);
+	err = AEInstallEventHandler(kCoreEventClass, kAEReopenApplication,
+		RappHandlerUPP, (long) interp, false);
 
-    PrintHandlerUPP = NewAEEventHandlerUPP(PrintHandler);
-    err = AEInstallEventHandler(kCoreEventClass, kAEPrintDocuments,
-            PrintHandlerUPP, (long) interp, false);
+	OdocHandlerUPP = NewAEEventHandlerUPP(OdocHandler);
+	err = AEInstallEventHandler(kCoreEventClass, kAEOpenDocuments,
+		OdocHandlerUPP, (long) interp, false);
 
-    PrefsHandlerUPP = NewAEEventHandlerUPP(PrefsHandler);
-    err = AEInstallEventHandler(kCoreEventClass, kAEShowPreferences,
-            PrefsHandlerUPP, (long) interp, false);
+	PrintHandlerUPP = NewAEEventHandlerUPP(PrintHandler);
+	err = AEInstallEventHandler(kCoreEventClass, kAEPrintDocuments,
+		PrintHandlerUPP, (long) interp, false);
 
-    if (interp != NULL) {
-        ScriptHandlerUPP = NewAEEventHandlerUPP(ScriptHandler);
-        err = AEInstallEventHandler(kAEMiscStandards, kAEDoScript,
-            ScriptHandlerUPP, (long) interp, false);
+	PrefsHandlerUPP = NewAEEventHandlerUPP(PrefsHandler);
+	err = AEInstallEventHandler(kCoreEventClass, kAEShowPreferences,
+		PrefsHandlerUPP, (long) interp, false);
+
+	if (interp) {
+	    ScriptHandlerUPP = NewAEEventHandlerUPP(ScriptHandler);
+	    err = AEInstallEventHandler(kAEMiscStandards, kAEDoScript,
+		ScriptHandlerUPP, (long) interp, false);
+	}
+
     }
 }
 
@@ -120,7 +133,8 @@ TkMacOSXInitAppleEvents(
  */
 
 int
-TkMacOSXDoHLEvent(EventRecord *theEvent)
+TkMacOSXDoHLEvent(
+    EventRecord *theEvent)
 {
     return AEProcessAppleEvent(theEvent);
 }
@@ -130,8 +144,7 @@ TkMacOSXDoHLEvent(EventRecord *theEvent)
  *
  * QuitHandler, OappHandler, etc. --
  *
- *        These are the core Apple event handlers.  Only the Quit event does
- *        anything interesting.
+ *        These are the core Apple event handlers.
  *
  * Results:
  *        None.
@@ -141,61 +154,88 @@ TkMacOSXDoHLEvent(EventRecord *theEvent)
  *
  *----------------------------------------------------------------------
  */
-OSErr QuitHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+static OSErr
+QuitHandler (
+    const AppleEvent * event,
+    AppleEvent * reply,
+    long handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     KillEvent *eventPtr;
     
-    /*
-     * Call the exit command from the event loop, since you are not supposed
-     * to call ExitToShell in an Apple Event Handler.  We put this at the head
-     * of Tcl's event queue because this message usually comes when the Mac is
-     * shutting down, and we want to kill the shell as quickly as possible.
-     */
-    
-    eventPtr = (KillEvent *) ckalloc(sizeof(KillEvent));
-    eventPtr->header.proc = ReallyKillMe;
-    eventPtr->interp = interp;
-     
-    Tcl_QueueEvent((Tcl_Event *) eventPtr, TCL_QUEUE_HEAD);
-
+    if (interp) {
+	/*
+	 * Call the exit command from the event loop, since you are not supposed
+	 * to call ExitToShell in an Apple Event Handler.  We put this at the head
+	 * of Tcl's event queue because this message usually comes when the Mac is
+	 * shutting down, and we want to kill the shell as quickly as possible.
+	 */
+	
+	eventPtr = (KillEvent *) ckalloc(sizeof(KillEvent));
+	eventPtr->header.proc = ReallyKillMe;
+	eventPtr->interp = interp;
+	 
+	Tcl_QueueEvent((Tcl_Event *) eventPtr, TCL_QUEUE_HEAD);
+    }
     return noErr;
 }
-
+
 static OSErr 
-OappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
-{
-    return noErr;
-}
-
-static OSErr 
-RappHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
-{
-    ProcessSerialNumber thePSN = {0, kCurrentProcess};
-    return SetFrontProcess(&thePSN);
-}
-
-/* Called when the user selects 'Preferences...' in MacOS X */
-static OSErr 
-PrefsHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+OappHandler (
+    const AppleEvent * event,
+    AppleEvent * reply,
+    long handlerRefcon)
 {
     Tcl_CmdInfo dummy;
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
-    /*
-     * Don't bother if we don't have an interp or
-     * the show preferences procedure doesn't exist.
-     */
 
-    if ((interp == NULL) || 
-            (Tcl_GetCommandInfo(interp, "::tk::mac::ShowPreferences", &dummy)) == 0) {
-            return noErr;
+    if (interp &&
+	    Tcl_GetCommandInfo(interp, "::tk::mac::OpenApplication", &dummy)) {
+	Tcl_GlobalEval(interp, "::tk::mac::OpenApplication");
     }
-    Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences");
     return noErr;
 }
-
+
 static OSErr 
-OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+RappHandler (
+    const AppleEvent * event,
+    AppleEvent * reply,
+    long handlerRefcon)
+{
+    Tcl_CmdInfo dummy;
+    Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
+    ProcessSerialNumber thePSN = {0, kCurrentProcess};
+    OSStatus status = SetFrontProcess(&thePSN);
+    
+    if (interp &&
+	    Tcl_GetCommandInfo(interp, "::tk::mac::ReopenApplication", &dummy)) {
+	Tcl_GlobalEval(interp, "::tk::mac::ReopenApplication");
+    }
+    return status;
+}
+
+/* Called when the user selects 'Preferences...' in MacOS X */
+static OSErr 
+PrefsHandler (
+    const AppleEvent * event,
+    AppleEvent * reply,
+    long handlerRefcon)
+{
+    Tcl_CmdInfo dummy;
+    Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
+
+    if (interp &&
+	    Tcl_GetCommandInfo(interp, "::tk::mac::ShowPreferences", &dummy)) {
+	Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences");
+    }
+    return noErr;
+}
+
+static OSErr 
+OdocHandler (
+    const AppleEvent * event,
+    AppleEvent * reply,
+    long handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     AEDescList fileSpecList;
@@ -262,10 +302,76 @@ OdocHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
     Tcl_DStringFree(&command);
     return noErr;
 }
-
+
 static OSErr 
-PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+PrintHandler (
+    const AppleEvent * event,
+    AppleEvent * reply,
+    long handlerRefcon)
 {
+    Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
+    AEDescList fileSpecList;
+    FSRef file;
+    OSErr err;
+    DescType type;
+    Size actual;
+    long count;
+    AEKeyword keyword;
+    long index;
+    Tcl_DString command;
+    Tcl_DString pathName;
+    Tcl_CmdInfo dummy;
+
+    /*
+     * Don't bother if we don't have an interp or
+     * the print document procedure doesn't exist.
+     */
+
+    if ((interp == NULL) || 
+            (Tcl_GetCommandInfo(interp, "::tk::mac::PrintDocument", &dummy)) == 0) {
+            return noErr;
+    }
+    
+    /*
+     * If we get any errors wil retrieving our parameters
+     * we just return with no error.
+     */
+
+    err = AEGetParamDesc(event, keyDirectObject,
+            typeAEList, &fileSpecList);
+    if (err != noErr) {
+        return noErr;
+    }
+
+    err = MissedAnyParameters(event);
+    if (err != noErr) {
+        return noErr;
+    }
+
+    err = AECountItems(&fileSpecList, &count);
+    if (err != noErr) {
+        return noErr;
+    }
+
+    Tcl_DStringInit(&command);
+    Tcl_DStringAppend(&command, "::tk::mac::PrintDocument", -1);
+    for (index = 1; index <= count; index++) {
+        err = AEGetNthPtr(&fileSpecList, index, typeFSRef,
+                &keyword, &type, (Ptr) &file, sizeof(FSRef), &actual);
+        if ( err != noErr ) {
+            continue;
+        }
+
+        err = FSRefToDString(&file, &pathName);
+        if (err == noErr) {
+            Tcl_DStringAppendElement(&command, Tcl_DStringValue(&pathName));
+            Tcl_DStringFree(&pathName);
+        }
+    }
+    
+    Tcl_GlobalEval(interp, Tcl_DStringValue(&command));
+
+    Tcl_DStringFree(&command);
     return noErr;
 }
 
@@ -286,7 +392,10 @@ PrintHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
  */
 
 static OSErr 
-ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
+ScriptHandler (
+    const AppleEvent * event,
+    AppleEvent * reply,
+    long handlerRefcon)
 {
     OSErr theErr;
     AEDescList theDesc;
@@ -415,13 +524,17 @@ ScriptHandler (const AppleEvent * event, AppleEvent * reply, long handlerRefcon)
  */
 
 static int 
-ReallyKillMe(Tcl_Event *eventPtr, int flags) 
+ReallyKillMe(
+    Tcl_Event *eventPtr,
+    int flags) 
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
-    if (interp != NULL) {
-        Tcl_GlobalEval(interp, "exit");
+    Tcl_CmdInfo dummy;
+    if (Tcl_GetCommandInfo(interp, "::tk::mac::Quit", &dummy)) {
+	 Tcl_GlobalEval(interp, "::tk::mac::Quit");
+    } else {
+	Tcl_GlobalEval(interp, "exit");
     }
-    
     return 1;
 }
 
@@ -472,7 +585,9 @@ MissedAnyParameters(
  */
 
 static OSErr
-FSRefToDString(const FSRef *fsref, Tcl_DString *ds)
+FSRefToDString(
+    const FSRef *fsref,
+    Tcl_DString *ds)
 {
     UInt8 fileName[PATH_MAX+1];
     OSErr err;
