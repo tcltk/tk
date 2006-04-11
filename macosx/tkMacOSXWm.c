@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.28 2006/04/10 09:25:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.29 2006/04/11 07:36:36 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1318,7 +1318,6 @@ int objc;			/* Number of arguments. */
 Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-
     if (objc != 3) {
         Tcl_WrongNumArgs(interp, 2, objv, "window");
         return TCL_ERROR;
@@ -1334,12 +1333,8 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
                          ": it is an embedded window", (char *) NULL);
         return TCL_ERROR;
     }
-
-    /*
-     * TODO: may not want to call this function - look at Map events gened.
-     */
-
-    TkpWmSetState(winPtr, NormalState);
+    TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
+	    ZoomState : NormalState);
     return TCL_OK;
 }
 
@@ -2786,6 +2781,11 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
         if (wmPtr->iconFor != NULL) {
             Tcl_SetResult(interp, "icon", TCL_STATIC);
         } else {
+	    if (wmPtr->hints.initial_state == NormalState ||
+		    wmPtr->hints.initial_state == ZoomState) {
+		wmPtr->hints.initial_state = (TkMacOSXIsWindowZoomed(winPtr) ?
+			ZoomState : NormalState);
+	    }
             switch (wmPtr->hints.initial_state) {
                 case NormalState:
                     Tcl_SetResult(interp, "normal", TCL_STATIC);
@@ -4509,7 +4509,7 @@ TkMacOSXGrowToplevel(
 
     SetPort(GetWindowPort(whichWindow));
     GlobalToLocal(&where);
-    GetPortBounds(GetWindowPort(whichWindow), &portRect );
+    GetPortBounds(GetWindowPort(whichWindow), &portRect);
     if (where.h > (portRect.right - 16) &&
 	    where.v > (portRect.bottom - 16)) {
 	Window window;
@@ -4546,7 +4546,7 @@ TkMacOSXGrowToplevel(
 	if (growResult != 0) {
 	    SizeWindow(whichWindow,
 		    LoWord(growResult), HiWord(growResult), true);
-	    InvalWindowRect(whichWindow,&portRect); /* TODO: may not be needed */
+	    InvalWindowRect(whichWindow, &portRect); /* TODO: may not be needed */
 	    TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 	    TkGenWMConfigureEvent((Tk_Window) winPtr, -1, -1, 
 		    (int) LoWord(growResult), (int) HiWord(growResult),
@@ -4659,11 +4659,57 @@ TkMacOSXGetXWindow(
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXIsWindowZoomed --
+ *
+ *	Ask Carbon if the given window is in the zoomed out state.
+ *	Because dragging & growing a window can change the Carbon
+ *	zoom state, we cannot rely on wmInfoPtr->hints.initial_state
+ *	for this information.
+ *
+ * Results:
+ *	True if window is zoomed out, false otherwise.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkMacOSXIsWindowZoomed(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    Point idealSize;
+    
+    if ((wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) &&
+	    (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE)) {
+	return false;
+    }
+    if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	idealSize.h = winPtr->changes.width;
+    } else {
+	idealSize.h = wmPtr->maxWidth;
+    }
+    if (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	idealSize.v = winPtr->changes.height;
+    } else {
+	idealSize.v = wmPtr->maxHeight;
+    }
+
+    return IsWindowInStandardState(
+	    GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window)),
+	    &idealSize, NULL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMacOSXZoomToplevel --
  *
  *	The function is invoked when the user clicks in the zoom region
- *	of a Tk window.  The function will handle the mouse tracking
- *	for the interaction.  If the window is to be zoomed the window
+ *	of a Tk window or when the window state is set/unset to "zoomed"
+ *	manually. If the window is to be zoomed (in or out), the window
  *	size is changed and events are generated to let Tk know what
  *	happened.
  *
@@ -4682,65 +4728,60 @@ TkMacOSXZoomToplevel(
     short zoomPart)		/* Either inZoomIn or inZoomOut */
 {
     Window window;
-    Tk_Window tkwin;
-    Point location = {0, 0};
-    int xOffset, yOffset;
-    WmInfo *wmPtr;
     TkDisplay *dispPtr;
-    Rect       portRect;
+    TkWindow *winPtr;
+    WmInfo *wmPtr;
+    Point location = {0, 0}, idealSize;
+    Rect portRect;
+    int xOffset, yOffset;
+    OSStatus status;
 
-    SetPort(GetWindowPort(whichWindow));
-
-    /*
-     * We should now zoom the window (as long as it's one of ours).  We 
-     * also need to generate an event to let Tk know that the window size 
-     * has changed.
-     */
     window = TkMacOSXGetXWindow(whichWindow);
     dispPtr = TkGetDisplayList();
-    tkwin = Tk_IdToWindow(dispPtr->display, window);
-    if (tkwin == NULL) {
+    winPtr = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
+    wmPtr = winPtr->wmInfoPtr;
+    
+    if ((wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) &&
+	    (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE)) {
+	return false;
+    }
+    if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	idealSize.h = winPtr->changes.width;
+    } else {
+	idealSize.h = wmPtr->maxWidth;
+    }
+    if (wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	idealSize.v = winPtr->changes.height;
+    } else {
+	idealSize.v = wmPtr->maxHeight;
+    }
+
+    /* Do nothing if already in desired zoom state */
+    if (!IsWindowInStandardState(whichWindow, &idealSize, NULL) == 
+	    (zoomPart == inZoomIn)) {
 	return false;
     }
 
-    /*
-     * The following block of code works around a bug in the window
-     * definition for Apple's floating windows.  The zoom behavior is
-     * broken - we must manually set the standard state (by default
-     * it's something like 1x1) and we must swap the zoomPart manually
-     * otherwise we always get the same zoomPart and nothing happens.
-     */
-    wmPtr = ((TkWindow *) tkwin)->wmInfoPtr;
-    if (wmPtr->style >= floatProc && wmPtr->style <= floatSideZoomGrowProc) {
-	if (zoomPart == inZoomIn) {
-            BitMap screenBits;
-            Rect   zoomRect;
-            GetQDGlobalsScreenBits(&screenBits);
-	    zoomRect = screenBits.bounds;
-	    InsetRect(&zoomRect, 60, 60);
-	    SetWindowStandardState(whichWindow, &zoomRect);
-	    zoomPart = inZoomOut;
-	} else {
-	    zoomPart = inZoomIn;
-	}
+    SetPort(GetWindowPort(whichWindow));
+    GetPortBounds(GetWindowPort(whichWindow), &portRect);
+    status = ZoomWindowIdeal(whichWindow, zoomPart, &idealSize);
+    if (status == noErr) {
+	wmPtr->hints.initial_state =
+		(zoomPart == inZoomIn ? NormalState : ZoomState);
+	InvalWindowRect(whichWindow, &portRect);
+	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
+	LocalToGlobal(&location);
+	TkMacOSXWindowOffset(whichWindow, &xOffset, &yOffset);
+	location.h -= xOffset;
+	location.v -= yOffset;
+	GetPortBounds(GetWindowPort(whichWindow), &portRect);
+	TkGenWMConfigureEvent((Tk_Window) winPtr, location.h, location.v, 
+		portRect.right - portRect.left, portRect.bottom - portRect.top,
+		TK_BOTH_CHANGED);
+	return true;
     } else {
-        zoomPart = inZoomIn;
+	return false;
     }
-    
-    ZoomWindow(whichWindow, zoomPart, false);
-    InvalWindowRect(whichWindow,&portRect);
-    TkMacOSXInvalClipRgns(tkwin);
-
-    LocalToGlobal(&location);
-    TkMacOSXWindowOffset(whichWindow, &xOffset, &yOffset);
-    location.h -= xOffset;
-    location.v -= yOffset;
-    GetPortBounds ( GetWindowPort(whichWindow), &portRect );
-    TkGenWMConfigureEvent(tkwin, location.h, location.v, 
-	    portRect.right - portRect.left,
-	    portRect.bottom - portRect.top,
-	    TK_BOTH_CHANGED);
-    return true;
 }
 
 /*
@@ -5157,6 +5198,7 @@ TkMacOSXMakeRealWindowExist(
 	    SetWindowGroup(newWindow, group);
 	}
     }
+    SetWindowModified(newWindow, false);
 
     if (!windowHashInit) {
 	Tcl_InitHashTable(&windowTable, TCL_ONE_WORD_KEYS);
@@ -5395,10 +5437,15 @@ TkpWmSetState(winPtr, state)
     } else if (state == NormalState) {
 	Tk_MapWindow((Tk_Window) winPtr);
 	if (IsWindowCollapsable(macWin) && IsWindowCollapsed(macWin)) {
-            CollapseWindow((WindowPtr) macWin, false);
-        }
+	    CollapseWindow(macWin, false);
+	}
+	TkMacOSXZoomToplevel(macWin, inZoomIn);
     } else if (state == ZoomState) {
-	/* TODO: need to support zoomed windows */
+	Tk_MapWindow((Tk_Window) winPtr);
+	if (IsWindowCollapsable(macWin) && IsWindowCollapsed(macWin)) {
+	    CollapseWindow(macWin, false);
+	}
+	TkMacOSXZoomToplevel(macWin, inZoomOut);
     }
 }
 
@@ -5753,8 +5800,3 @@ TkWmStackorderToplevel(parentPtr)
     Tcl_DeleteHashTable(&table);
     return windows;
 }
-
-
-
-
-

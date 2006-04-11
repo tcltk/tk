@@ -1,3 +1,10 @@
+2006-04-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXInt.h:         Implemented 'zoomed' window state
+	* macosx/tkMacOSXWindowEvent.c: handling for TkAqua, via titlebar
+	* macosx/tkMacOSXWm.c:          widget clicks as well as [wm state].
+	* doc/wm.n:                     [Bug 1073456]
+
 2006-04-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/tkfbox.tcl (::tk::IconList_Goto): Fix prefix searching so
@@ -6,13 +13,13 @@
 
 2006-04-10  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
-	* macosx/tkMacOSXFont.c (MeasureStringWidth): Use implementation
-	based on ATSUGetGlyphBounds (TK_MAC_USE_GETGLYPHBOUNDS), so we can
-	use kATSUseFractionalOrigins.  This in turn corrects [Bug 1461650].
-	* (InitFont): Use "." and "W" instead of "i" and "w" to determine the
+	* macosx/tkMacOSXFont.c (MeasureStringWidth): Use implementation based
+	on ATSUGetGlyphBounds (TK_MAC_USE_GETGLYPHBOUNDS), so we can use
+	kATSUseFractionalOrigins.  This in turn corrects [Bug 1461650].
+	(InitFont): Use "." and "W" instead of "i" and "w" to determine the
 	"-fixed" attribute.  This prevents "Apple Chancery" from being
 	classified as fixed.
-	* (InitFontFamilies): Only get the font families once.
+	(InitFontFamilies): Only get the font families once.
 
 2006-04-09  Daniel Steffen  <das@users.sourceforge.net>
 

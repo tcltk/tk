@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.11 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.12 2006/04/11 07:36:36 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -238,7 +238,8 @@ TkMacOSXProcessWindowEvent(
             dispPtr = TkGetDisplayList();
             winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
             if (winPtr) {
-                TkpWmSetState(winPtr, NormalState);
+		TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
+			ZoomState : NormalState);
             }
             break;
         }
