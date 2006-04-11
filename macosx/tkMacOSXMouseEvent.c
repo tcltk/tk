@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.20 2006/04/07 06:15:42 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.21 2006/04/11 05:42:01 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -415,7 +415,7 @@ HandleWindowTitlebarMouseDown(MouseEventData * medPtr, Tk_Window tkwin)
         case inCollapseBox:
             if (TrackBox(medPtr->whichWin, medPtr->global, medPtr->windowPart)) {
                 if (tkwin) {
-                    TkpWmSetState((TkWindow *)tkwin, IconicState);;
+                    TkpWmSetState((TkWindow *)tkwin, IconicState);
                     result = 1;
                 }
             }
