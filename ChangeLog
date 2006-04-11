@@ -1,6 +1,18 @@
-2006-04-11  Daniel Steffen  <das@users.sourceforge.net>
+2006-04-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.4.13 TAGGED FOR RELEASE ***
+
+	* changes: update for bug fix.
+
+	* generic/tkBind.c (Tk_BindEvent, ChangeScreen): replace
+	Tcl_GlobalEval with more efficient Tcl_EvalEx.
+
+	* win/tkWinEmbed.c (TkpGetOtherWindow):   do not panic if no window
+	* win/tkWinWm.c (UpdateGeometryInfo):     is found - handle it in
+	* unix/tkUnixEmbed.c (TkpGetOtherWindow): the caller. [Bug 1212056]
+	* unix/tkUnixWm.c (Tk_CoordsToWindow, UpdateGeometryInfo): 
+
+2006-04-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* changes: added latest aqua bug fixes.
 
