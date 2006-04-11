@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.16 2006/04/11 05:42:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.17 2006/04/11 10:19:51 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -47,18 +47,21 @@
 #endif
 */
 
+/*
+ * Problem: The sum of two parts is not the same as the whole.  In particular
+ * the width of two separately measured strings will usually be larger than
+ * the width of them pasted together.  Tk has a design bug here, because it
+ * generally assumes that this kind of arithmetic works.
+ * To workaround this, #define TK_MAC_COALESCE_LINE to 1 below, we then avoid
+ * lines that tremble and shiver while the cursor passes through them by
+ * undercutting the system and behind the scenes pasting strings together that
+ * look like they are on the same line and adjacent and that are drawn with
+ * the same font. To do this we need some global data.
+ */
+#define TK_MAC_COALESCE_LINE 0
+
 typedef TkMacOSXFont MacFont;
 typedef TkMacOSXFontDrawingContext DrawingContext;
-
-/*
- * Features that we still may want to disable again.  See first occurrance of
- * these macros in #if statements for respective general discussions.
- */
-
-/* #define TK_MAC_COALESCE_LINE 1 */
-/* #define TK_MAC_USE_MEASURETEXTIMAGE 1 */
-#define TK_MAC_USE_GETGLYPHBOUNDS 1
-
 
 /*
  * Information about font families, initialized at startup time.  Font
@@ -104,18 +107,6 @@ static StringBlock * stringMemory = NULL;
 
 
 #if TK_MAC_COALESCE_LINE
-
-/*
- * Problem: The sum of two parts is not the same as the whole.  In particular
- * the width of two separately measured strings will usually be larger than
- * the width of them pasted together.  Tk has a design bug here, because it
- * generally assumes that this kind of arithmetic works.  To avoid lines that
- * tremble and shiver while the cursor passes through them, we undercut the
- * system and behind the scenes paste strings together that look like they
- * are on the same line and adjacent and that are drawn with the same font.
- * To do this we need some global data.
- */
-
 static Tcl_DString currentLine; /* The current line as seen so far.  This
                                  * contains a Tcl_UniChar DString. */
 static int
@@ -127,10 +118,9 @@ static int
                                  * line. */
 static const MacFont * currentFontPtr = NULL;
                                 /* The font of the current line. */
-
 #endif /* TK_MAC_COALESCE_LINE */
 
-static int TkMacOSXAntialiasedTextEnabled = -1;
+static int antialiasedTextEnabled;
 
 /*
  * The names for our two "native" fonts.
@@ -223,15 +213,7 @@ static void SortFontFamilies(void);
 static int CompareFontFamilies(const void * vp1, const void * vp2);
 static const char * AddString(const char * in);
 
-/*
- * Trace interface for configuring anti-aliasing through a global variable.
- */
-
-static char * TkMacOSXAntialiasedTextVariableProc(
-    ClientData clientData, Tcl_Interp * interp,
-    const char * name1, const char * name2,
-    int flag);
-
+
 /*
  *-------------------------------------------------------------------------
  *
@@ -265,7 +247,6 @@ TkpFontPkgInit(
             "(" __TIME__ ")\n");
 #endif
 }
-
 
 /*
  *---------------------------------------------------------------------------
@@ -1314,43 +1295,6 @@ MeasureStringWidth(
     int start, int end)         /* Start and end positions to measure in that
                                  * string. */
 {
-#if TK_MAC_USE_MEASURETEXTIMAGE
-
-    /*
-     * This implementation of measuring via ATSUMeasureTextImage() does not
-     * quite conform with the specification given for [font measure]:
-     *
-     *     The return value is the total width in pixels of text, not
-     *     including the extra pixels used by highly exagerrated characters
-     *     such as cursive "f".
-     *
-     * Instead ATSUMeasureTextImage() *does* include these "extra pixels."
-     * Also ATSUMeasureTextImage() has the important property that it will
-     * measure 'a' and 'a-umlaut' the same, even when expressed as decomposed
-     * characters, while the other implementations use some strange
-     * interpolation instead, possibly to generate some cute intermediate
-     * cursor positions automatically.
-     */
-
-    OSStatus err;
-    Rect size;
-
-    size.left = size.right = 0;
-    err = ATSUMeasureTextImage(
-        fontPtr->atsuLayout,
-        start, end-start,
-        0, 0,
-        &size);
-#ifdef TK_MAC_DEBUG_FONTS
-    if (err != noErr) {
-        fprintf(stderr, "ATSUMeasureTextImage(): Error %d\n", (int) err);
-    }
-#endif
-
-    return size.right - size.left;
-
-#elif TK_MAC_USE_GETGLYPHBOUNDS
-
     /*
      * This implementation of measuring via ATSUGetGlyphBounds() does not
      * quite conform with the specification given for [font measure]:
@@ -1359,11 +1303,8 @@ MeasureStringWidth(
      *     including the extra pixels used by highly exagerrated characters
      *     such as cursive "f".
      *
-     * Instead I would assume that ATSUGetGlyphBounds() *does* include these
-     * "extra pixels."  Still this implementation works slightly better with
-     * the main page of demos/widgets than the one via
-     * ATSUOffsetToPosition(), so I prefer this one if we use
-     * TK_MAC_COALESCE_LINE locally.
+     * Instead the result of ATSUGetGlyphBounds() *does* include these
+     * "extra pixels".
      */
 
     ATSTrapezoid bounds;
@@ -1392,54 +1333,6 @@ MeasureStringWidth(
 #endif
 
     return FixedToInt(bounds.upperRight.x - bounds.upperLeft.x);
-
-#else /* ! TK_MAC_USE_GETGLYPHBOUNDS */
-
-    /*
-     * This implementation via ATSUOffsetToPosition() is in principle the
-     * right thing to do.  But with TK_MAC_COALESCE_LINE and this, the
-     * "tremble and shiver" (see discussion of TK_MAC_COALESCE_LINE at the
-     * top) on the main page of demos/widgets is quite a bit more noticable
-     * than with the ATSUGetGlyphBounds() implementation.
-     */
-
-    ATSUCaret mainCaretStart, secCaretStart, mainCaretEnd, secCaretEnd;
-    Boolean isSplit;
-    OSStatus err;
-
-    if (end <= start) {
-        return 0;
-    }
-
-    mainCaretStart.fX = mainCaretEnd.fX = 0;
-
-    if (start != 0) {
-        err = ATSUOffsetToPosition(
-            fontPtr->atsuLayout,
-            start, false,
-            &mainCaretStart, &secCaretStart, &isSplit);
-#ifdef TK_MAC_DEBUG_FONTS
-        if (err != noErr) {
-            fprintf(stderr, "ATSUOffsetToPosition(): Error %d\n", (int) err);
-        }
-#endif
-    }
-
-    if (end != 0) {
-        err = ATSUOffsetToPosition(
-            fontPtr->atsuLayout,
-            end, false,
-            &mainCaretEnd, &secCaretEnd, &isSplit);
-#ifdef TK_MAC_DEBUG_FONTS
-        if (err != noErr) {
-            fprintf(stderr, "ATSUOffsetToPosition(): Error %d\n", (int) err);
-        }
-#endif
-    }
-
-    return FixedToInt(mainCaretEnd.fX - mainCaretStart.fX);
-
-#endif /* ? TK_MAC_USE_GETGLYPHBOUNDS */
 }
 
 #if TK_MAC_COALESCE_LINE
@@ -1744,9 +1637,9 @@ InitATSUStyle(
         isItalic = (qdStyles&italic) != 0;
 
     ATSStyleRenderingOptions options =
-        TkMacOSXAntialiasedTextEnabled == -1 ? kATSStyleNoOptions :
-        TkMacOSXAntialiasedTextEnabled == 0  ? kATSStyleNoAntiAliasing :
-                                               kATSStyleApplyAntiAliasing;
+        antialiasedTextEnabled == -1 ? kATSStyleNoOptions :
+        antialiasedTextEnabled == 0  ? kATSStyleNoAntiAliasing :
+                                       kATSStyleApplyAntiAliasing;
 
     static const ATSUAttributeTag styleTags[] = {
         kATSUFontTag, kATSUSizeTag,
@@ -2676,22 +2569,14 @@ TkMacOSXInitControlFontStyle(
  * TkMacOSXUseAntialiasedText --
  *
  *      Enables or disables application-wide use of antialiased text (where
- *      available).  Sets up a linked Tcl global boolean variable with write
- *      trace to allow disabling of antialiased text from tcl.  The possible
- *      values for this variable are:
+ *      available).  Sets up a linked Tcl global variable to allow
+ *      disabling of antialiased text from tcl.
+ *      The possible values for this variable are:
  *
  *      -1 - Use system default as configurable in "System Preferences" ->
  *           "General".
  *       0 - Unconditionally disable antialiasing.
  *       1 - Unconditionally enable antialiasing.
- *
- *      This function is also called once from tkMacOSXInit.c:TkpInit() to
- *      install the trace in an interpreter.  The value given in TkpInit()
- *      determines the actual default value.
- *
- *      FIXME: Initialization should be a separate function, so that the
- *      default given here (see variable declaration above) remains the real
- *      default.
  *
  * Results:
  *
@@ -2718,31 +2603,12 @@ TkMacOSXUseAntialiasedText(
         if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
             Tcl_ResetResult(interp);
         }
-        if (Tcl_TraceVar(interp, "::tk::mac::antialiasedtext",
-                TCL_GLOBAL_ONLY | TCL_TRACE_WRITES,
-                TkMacOSXAntialiasedTextVariableProc, NULL) != TCL_OK) {
-            Tcl_ResetResult(interp);
-        }
         if (Tcl_LinkVar(interp, "::tk::mac::antialiasedtext",
-                (char *) &TkMacOSXAntialiasedTextEnabled,
+                (char *) &antialiasedTextEnabled,
                 TCL_LINK_INT) != TCL_OK) {
             Tcl_ResetResult(interp);
         }
     }
-
-    TkMacOSXAntialiasedTextEnabled = enable;
-
+    antialiasedTextEnabled = enable;
     return TCL_OK;
-}
-
-static char *
-TkMacOSXAntialiasedTextVariableProc(
-    ClientData clientData,
-    Tcl_Interp * interp,
-    const char * name1,
-    const char * name2,
-    int flags)
-{
-    TkMacOSXUseAntialiasedText(interp, TkMacOSXAntialiasedTextEnabled);
-    return NULL;
 }

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.19 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.20 2006/04/11 10:19:51 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -135,7 +135,7 @@ TkpInit(interp)
         TkMacOSXInitAppleEvents(interp);
         TkMacOSXInitCarbonEvents(interp);
         TkMacOSXInitMenus(interp);
-        TkMacOSXUseAntialiasedText(interp, TRUE);
+        TkMacOSXUseAntialiasedText(interp, -1);
         TkMacOSXInitCGDrawing(interp, TRUE, 3);
 	
 	encoding = CFStringGetSystemEncoding();
