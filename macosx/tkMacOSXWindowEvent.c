@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.10 2006/04/11 07:36:40 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.11 2006/04/11 10:21:53 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -128,28 +128,22 @@ TkMacOSXProcessApplicationEvent(
             statusPtr->stopProcessing = 1;
             break;
         case kEventAppHidden:
-        /*
-         * Don't bother if we don't have an interp or
-         * the show preferences procedure doesn't exist.
-         */
-            toggleHide = 1;
-            if ((eventPtr->interp == NULL) || 
-                    (Tcl_GetCommandInfo(eventPtr->interp, 
-                    "::tk::mac::OnHide", &dummy)) == 0) {
-               break;
+            if (toggleHide == 0) {
+                toggleHide = 1;
+                if (eventPtr->interp && Tcl_GetCommandInfo(eventPtr->interp, 
+                        "::tk::mac::OnHide", &dummy)) {
+                    Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnHide");
+                }
             }
-            Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnHide");
             statusPtr->stopProcessing = 1;
             break;
         case kEventAppShown:
             if (toggleHide == 1) {
                 toggleHide = 0;
-                if ((eventPtr->interp == NULL) || 
-                        (Tcl_GetCommandInfo(eventPtr->interp, 
-                        "::tk::mac::OnShow", &dummy)) == 0) {
-                    break;
+                if (eventPtr->interp && Tcl_GetCommandInfo(eventPtr->interp, 
+                        "::tk::mac::OnShow", &dummy)) {
+                    Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnShow");
                 }
-                Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnShow");
             }
             statusPtr->stopProcessing = 1;
             break;
