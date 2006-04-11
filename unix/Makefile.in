@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.113 2006/03/08 22:54:05 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.114 2006/04/11 18:09:07 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1424,6 +1424,7 @@ dist:   $(UNIX_DIR)/configure
 	done;)
 	mkdir $(DISTDIR)/library/demos
 	cp -pr $(TOP_DIR)/library/demos/*.tcl \
+		$(TOP_DIR)/library/demos/*.msg \
 		$(TOP_DIR)/library/demos/tclIndex \
 		$(TOP_DIR)/library/demos/browse \
 		$(TOP_DIR)/library/demos/hello $(TOP_DIR)/library/demos/ixset \
