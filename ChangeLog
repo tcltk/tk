@@ -1,13 +1,26 @@
 2006-04-11  Daniel Steffen  <das@users.sourceforge.net>
 
+	*** 8.4.13 TAGGED FOR RELEASE ***
+
+	* changes: added latest aqua bug fixes.
+
+	* macosx/tkMacOSXCarbonEvents.c: handle kEventCommandUpdateStatus
+	* macosx/tkMacOSXEvent.c:        carbon event to dynamically enable
+	the 'Preferences' app menu item when proc [::tk::mac::ShowPreferences]
+	is defined. [Bug 700316]
+
+	* macosx/tkMacOSXHLEvents.c:    call ::tk::mac::* procs for all
+	* macosx/tkMacOSXWindowEvent.c: registered appleevents [FR 1105284],
+	implement print applevent handling, style/whitespace cleanup. 
+
+	* macosx/tkMacOSXDraw.c (TkMacOSXInitCGDrawing): prevent multiple init.
+
 	* macosx/tkMacOSXInt.h:         Implemented 'zoomed' window state
 	* macosx/tkMacOSXWindowEvent.c: handling for TkAqua, via titlebar
 	* macosx/tkMacOSXWm.c:          widget clicks as well as [wm state].
 	* doc/wm.n:                     [Bug 1073456]
 
 2006-04-10  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.4.13 TAGGED FOR RELEASE ***
 
 	* changes:	Updates for next RC.
 
