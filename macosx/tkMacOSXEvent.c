@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.5 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.6 2006/04/11 10:22:57 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -180,12 +180,13 @@ TkMacOSXProcessMenuEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 int
 TkMacOSXProcessCommandEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 {
-    HICommand       command;
-    int		    menuContext;
+    HICommand	    command;
+    int 	    menuContext;
     OSStatus	    status;
 
     switch (eventPtr->eKind) {
 	case kEventCommandProcess:
+	case kEventCommandUpdateStatus:
 	    break;
 	default:
 	    return 0;
@@ -197,18 +198,39 @@ TkMacOSXProcessCommandEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	    sizeof(command), NULL,
 	    &command);
     if (status == noErr && (command.attributes & kHICommandFromMenu)) {
-        status = GetEventParameter(eventPtr->eventRef, 
-                kEventParamMenuContext,
-                typeUInt32, NULL, 
-                sizeof(menuContext), NULL,
-                &menuContext);
-        if (status == noErr && (menuContext & kMenuContextMenuBar) &&
-                (menuContext & kMenuContextMenuBarTracking)) {
-            TkMacOSXHandleMenuSelect(GetMenuID(command.menu.menuRef),
-                    command.menu.menuItemIndex,
-                    GetCurrentEventKeyModifiers() & optionKey);
-            return 1;
-        }
+	if (eventPtr->eKind == kEventCommandProcess) {
+	    status = GetEventParameter(eventPtr->eventRef, 
+		    kEventParamMenuContext,
+		    typeUInt32, NULL, 
+		    sizeof(menuContext), NULL,
+		    &menuContext);
+	    if (status == noErr && (menuContext & kMenuContextMenuBar) &&
+		    (menuContext & kMenuContextMenuBarTracking)) {
+		TkMacOSXHandleMenuSelect(GetMenuID(command.menu.menuRef),
+			command.menu.menuItemIndex,
+			GetCurrentEventKeyModifiers() & optionKey);
+		return 1;
+	    }
+	} else {
+	    Tcl_CmdInfo dummy;
+	    if (command.commandID == kHICommandPreferences && eventPtr->interp) {
+		if (Tcl_GetCommandInfo(eventPtr->interp, 
+			"::tk::mac::ShowPreferences", &dummy)) {
+		    if (!IsMenuItemEnabled(command.menu.menuRef, 
+			    command.menu.menuItemIndex)) {
+			EnableMenuItem(command.menu.menuRef,
+				command.menu.menuItemIndex);
+		    }
+		} else {
+		    if (IsMenuItemEnabled(command.menu.menuRef, 
+			    command.menu.menuItemIndex)) {
+			DisableMenuItem(command.menu.menuRef,
+				command.menu.menuItemIndex);
+		    }
+		}
+		return 1;
+	    }
+	}
     }
     return 0;
 }
