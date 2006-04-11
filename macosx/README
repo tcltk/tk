@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.16 2005/12/01 05:47:17 das Exp $
+RCS: @(#) $Id: README,v 1.17 2006/04/11 10:19:51 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -110,9 +110,10 @@ putting:
 in your script before drawing, in which case only lines thinner that <limit>
 pixels will not be antialiased.
 
-- Quickdraw text antialiasing is enabled by default when available (from 10.1.5
-onwards). Changing the global boolean variable '::tk::mac::antialiasedtext'
-allows to dis/enable antialiasing on the fly from Tcl (even for existing text).
+- ATSUI text antialiasing by default uses the standard OS antialising settings.
+Setting the global variable '::tk::mac::antialiasedtext' allows to control text
+antialiasing from Tcl: a value of 1 enables AA, 0 disables AA and -1 restores
+the default behaviour of respecting the OS settings.
 
 - Scrollbars: There are two scrollbar variants in Aqua, normal & small. The
 normal scrollbar has a small dimension of 16, the small variant 12. Access to
