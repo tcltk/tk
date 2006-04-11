@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.13 2006/03/28 02:43:24 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.14 2006/04/11 10:20:33 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -45,9 +45,9 @@ static int useThemedFrame = 0;
 static unsigned char    InvertByte _ANSI_ARGS_((unsigned char data));
 
 static void TkMacOSXSetUpCGContext(MacDrawable *macWin,
-    CGrafPtr destPort, GC gc,  CGContextRef *contextPtr);
+	CGrafPtr destPort, GC gc,  CGContextRef *contextPtr);
 static void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort, 
-        CGContextRef *context);
+	CGContextRef *context);
 static inline double radians(double degrees) { return degrees * PI / 180.0f; }
 
 MODULE_SCOPE int 
@@ -59,19 +59,19 @@ TkMacOSXInitCGDrawing(interp, enable, limit)
     static Boolean initialized = FALSE;
 
     if (!initialized) {
+        initialized = TRUE;
+        
         if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
             Tcl_ResetResult(interp);
         }
         if (Tcl_LinkVar(interp, "::tk::mac::useCGDrawing",
-                (char *) &useCGDrawing, 
-                TCL_LINK_BOOLEAN) != TCL_OK) {
+                (char *) &useCGDrawing, TCL_LINK_BOOLEAN) != TCL_OK) {
             Tcl_ResetResult(interp);
         }
         useCGDrawing = enable;
 
         if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
-                (char *) &tkMacOSXCGAntiAliasLimit, 
-                TCL_LINK_INT) != TCL_OK) {
+                (char *) &tkMacOSXCGAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
             Tcl_ResetResult(interp);
         }
         tkMacOSXCGAntiAliasLimit = limit;
