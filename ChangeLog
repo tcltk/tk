@@ -1,3 +1,9 @@
+2006-04-11  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/Makefile.in:	Updated `make dist` target to be sure the
+	message catalogs for the widget demo get packaged into the source
+	code distribution.  [Bug 1466509]
+
 2006-04-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* changes: added latest aqua bug fixes.
