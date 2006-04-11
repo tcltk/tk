@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.72 2006/04/05 21:00:00 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.73 2006/04/11 21:52:20 pspjuth Exp $
  */
 
 #include "tkPort.h"
@@ -2259,7 +2259,8 @@ Tk_SetClassProcs(tkwin, procs, instanceData)
  * Results:
  *	The return result is either a token for the window corresponding to
  *	"name", or else NULL to indicate that there is no such window. In this
- *	case, an error message is left in the interp's result.
+ *	case, an error message is left in the interp's result, unless interp
+ *      is NULL.
  *
  * Side effects:
  *	None.
@@ -2282,15 +2283,19 @@ Tk_NameToWindow(interp, pathName, tkwin)
 	 * we're on our way out of the application.
 	 */
 
-	Tcl_AppendResult(interp, "NULL main window", NULL);
+	if (interp != NULL) {
+	    Tcl_AppendResult(interp, "NULL main window", NULL);
+	}
 	return NULL;
     }
 
     hPtr = Tcl_FindHashEntry(&((TkWindow *) tkwin)->mainPtr->nameTable,
 	    pathName);
     if (hPtr == NULL) {
-	Tcl_AppendResult(interp, "bad window path name \"",
-		pathName, "\"", NULL);
+	if (interp != NULL) {
+	    Tcl_AppendResult(interp, "bad window path name \"",
+		    pathName, "\"", NULL);
+	}
 	return NULL;
     }
     return (Tk_Window) Tcl_GetHashValue(hPtr);
