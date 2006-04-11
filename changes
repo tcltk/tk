@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.94 2006/03/29 16:37:28 dgp Exp $
+RCS: @(#) $Id: changes,v 1.95 2006/04/11 10:23:20 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6155,6 +6155,21 @@ Max OSX universal binaries support (steffen)
 
 2006-03-29 (platform support)[917322] tolerate X servers that do not
 accept the color names "Black" and "White" (porter)
+
+2006-04-06 (bug fix)[1455241] Aqua: [wm attributes -titlepath] fix (steffen)
+
+2006-04-07 (bug fix)[934524]  Aqua: background window dragging/growing (steffen)
+
+2006-04-09 (bug fix)[1467004] Aqua: [wm resizable] fix (steffen)
+
+2006-04-09 (bug fix)[1450800] Aqua: allow empty toplevel names (steffen)
+
+2006-04-11 (bug fix)[1073456] Aqua: implement toplevel zoom (steffen)
+
+2006-04-11 (bug fix)[700316]  Aqua: enable 'Preferences' app menu item (steffen)
+
+2006-04-11 (enhancement)[1105284] Aqua: call ::tk::mac::* procs for all
+registered applevents (steffen)
 
 Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
