@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.27 2006/04/05 20:54:57 hobbs Exp $
+# RCS: @(#) $Id: grid.test,v 1.28 2006/04/11 21:52:20 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -780,6 +780,76 @@ test grid-10.34 {column/row configure - empty 'all' configure} {
     grid rowconfigure $t all -weight 1
     destroy $t
 } {}
+
+test grid-10.35 {column/row configure} {
+    # Test that no lingering message is there
+    frame .f
+    set res    [grid columnconfigure .f all -weight 1]
+    append res [grid columnconfigure .f {0 all} -weight 1]
+    frame .f.f
+    grid .f.f
+    append res [grid columnconfigure .f {.f.f} -weight 1]
+    append res [grid columnconfigure .f {.f.f 1} -weight 1]
+    append res [grid columnconfigure .f {2 .f.f} -weight 1]
+    destroy .f
+    set res
+} {}
+grid_reset 10.35
+
+test grid-10.36 {column/row configure} {
+    list [catch {grid columnconfigure . all} msg] $msg
+} {1 {expected integer but got "all" (when retreiving options only integer indices are allowed)}}
+grid_reset 10.36
+
+test grid-10.37 {column/row configure} {
+    list [catch {grid columnconfigure . 100000} msg] $msg
+} {0 {-minsize 0 -pad 0 -uniform {} -weight 0}}
+grid_reset 10.37
+
+test grid-10.38 {column/row configure} -body {
+    # This is a test for bug 1423666 where a column >= 10000 caused
+    # a crash in layout.  The update is needed to reach the layout stage.
+    # Test different combinations of row/column overflow
+    frame .f
+    set res {}
+    lappend res [catch {grid .f -row 10 -column 9999} msg] $msg ; update
+    lappend res [catch {grid .f -row 9999 -column 10} msg] $msg ; update
+    lappend res [catch {grid .f -columnspan 2 -column 9998} msg] $msg ; update
+    lappend res [catch {grid .f -rowspan 2 -row 9998} msg] $msg ; update
+    lappend res [catch {grid .f -column 9998 -columnspan 2} msg] $msg ; update
+    lappend res [catch {grid .f -row 9998 -rowspan 2} msg] $msg ; update
+    set res
+} -cleanup {destroy .f} -result [lrange {
+    1 {Column out of bounds}
+    1 {Row out of bounds}
+    1 {Column out of bounds}
+    1 {Row out of bounds}
+    1 {Column out of bounds}
+    1 {Row out of bounds}
+} 0 end]
+grid_reset 10.38
+
+test grid-10.39 {column/row configure} -body {
+    # Additional tests for row/column overflow
+    frame .f
+    frame .g
+    set res {}
+    grid .f -row 9998 -column 0
+    lappend res [catch {grid ^ -in .} msg] $msg  ; update
+    lappend res [catch {grid .g} msg] $msg  ; update
+    grid forget .f .g
+    lappend res [catch {grid .f - -column 9998} msg] $msg ; update
+    grid forget .f .g
+    lappend res [catch {eval grid [string repeat " x " 9999] .f} msg] $msg
+    update
+    set res
+} -cleanup {destroy .f .g} -result [lrange {
+    1 {Row out of bounds}
+    1 {Row out of bounds}
+    1 {Column out of bounds}
+    1 {Column out of bounds}
+} 0 end]
+grid_reset 10.39
 
 # auto-placement tests
 
