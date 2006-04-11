@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.15 2006/04/10 20:52:37 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.16 2006/04/11 05:42:02 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -43,7 +43,7 @@
 
 /*
 #ifdef	TK_MAC_DEBUG
-#define TK_MAC_DEBUG_FONTS 1
+#define TK_MAC_DEBUG_FONTS
 #endif
 */
 
@@ -2237,7 +2237,7 @@ InitFontFamilies(void)
      */
 
     if (familyListNextFree > 0) {
-        return;
+	return;
     }
 
     err = ATSFontFamilyApplyFunction(FontFamilyEnumCallback,NULL);
