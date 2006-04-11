@@ -1,5 +1,23 @@
 2006-04-11  Daniel Steffen  <das@users.sourceforge.net>
 
+	* changes: added latest aqua bug fixes.
+
+	* macosx/tkMacOSXCarbonEvents.c: handle kEventCommandUpdateStatus
+	* macosx/tkMacOSXEvent.c:        carbon event to dynamically enable
+	the 'Preferences' app menu item when proc [::tk::mac::ShowPreferences]
+	is defined. [Bug 700316]
+
+	* macosx/tkMacOSXHLEvents.c:    call ::tk::mac::* procs for all
+	* macosx/tkMacOSXWindowEvent.c: registered appleevents [FR 1105284],
+	implement print applevent handling, style/whitespace cleanup. 
+
+	* macosx/tkMacOSXDraw.c (TkMacOSXInitCGDrawing): prevent multiple init.
+
+	* macosx/tkMacOSXFont.c: remove #ifdef'd text measuring codepaths now
+	* macosx/tkMacOSXInit.c: known to be incorrect, cleanup obsolete text
+	* macosx/README:         antialiasing control code, document ATSUI
+	                         text antialiasing changes.
+
 	* macosx/tkMacOSXInt.h:         Implemented 'zoomed' window state
 	* macosx/tkMacOSXWindowEvent.c: handling for TkAqua, via titlebar
 	* macosx/tkMacOSXWm.c:          widget clicks as well as [wm state].
