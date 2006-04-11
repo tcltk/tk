@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.28.2.2 2004/05/13 14:29:22 dgp Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.28.2.3 2006/04/11 20:25:43 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1803,8 +1803,9 @@ Tk_BindEvent(bindingTable, eventPtr, tkwin, numObjects, objectPtr)
 		ckfree((char *) psPtr);
 	    }
 	} else {
-	    code = Tcl_GlobalEval(interp, p);
-	    p += strlen(p);
+	    int len = (int) strlen(p);
+	    code = Tcl_EvalEx(interp, p, len, TCL_EVAL_GLOBAL);
+	    p += len;
 	}
 	p++;
 
@@ -2715,7 +2716,8 @@ ChangeScreen(interp, dispName, screenIndex)
     Tcl_DStringAppend(&cmd, dispName, -1);
     sprintf(screen, ".%d", screenIndex);
     Tcl_DStringAppend(&cmd, screen, -1);
-    code = Tcl_GlobalEval(interp, Tcl_DStringValue(&cmd));
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&cmd), Tcl_DStringLength(&cmd),
+	    TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (changing screen in event binding)");
@@ -4667,7 +4669,7 @@ TkKeysymToString(keysym)
  *
  * TkCopyAndGlobalEval --
  *
- *	This procedure makes a copy of a script then calls Tcl_GlobalEval
+ *	This procedure makes a copy of a script then passes to Tcl
  *	to evaluate it.  It's used in situations where the execution of
  *	a command may cause the original command string to be reallocated.
  *
@@ -4692,7 +4694,8 @@ TkCopyAndGlobalEval(interp, script)
 
     Tcl_DStringInit(&buffer);
     Tcl_DStringAppend(&buffer, script, -1);
-    code = Tcl_GlobalEval(interp, Tcl_DStringValue(&buffer));
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buffer),
+	    Tcl_DStringLength(&buffer), TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buffer);
     return code;
 }
