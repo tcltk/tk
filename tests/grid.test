@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.17.2.3 2006/04/12 17:35:21 dgp Exp $
+# RCS: @(#) $Id: grid.test,v 1.17.2.4 2006/04/12 22:31:01 pspjuth Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -724,11 +724,14 @@ test grid-10.38 {column/row configure} -body {
     # Test different combinations of row/column overflow
     frame .f
     set res {}
+    grid .f -column 0 -columnspan 1 -row 0 -rowspan 1
     lappend res [catch {grid .f -row 10 -column 9999} msg] $msg ; update
     lappend res [catch {grid .f -row 9999 -column 10} msg] $msg ; update
     lappend res [catch {grid .f -columnspan 2 -column 9998} msg] $msg ; update
     lappend res [catch {grid .f -rowspan 2 -row 9998} msg] $msg ; update
+    grid .f -column 0 -columnspan 1 -row 0 -rowspan 1
     lappend res [catch {grid .f -column 9998 -columnspan 2} msg] $msg ; update
+    grid .f -column 0 -columnspan 1 -row 0 -rowspan 1
     lappend res [catch {grid .f -row 9998 -rowspan 2} msg] $msg ; update
     set res
 } -cleanup {destroy .f} -result [lrange {

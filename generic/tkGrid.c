@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.25.2.5 2006/04/12 17:35:21 dgp Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.25.2.6 2006/04/12 22:31:01 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -2835,7 +2835,6 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			    "\": must be a positive integer", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		slavePtr->numRows = tmp;
 		if (SetSlaveRow(interp, slavePtr, -1, tmp) != TCL_OK) {
 		    return TCL_ERROR;
 		}
@@ -2929,12 +2928,8 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	}
 	if (slavePtr->row == -1) {
 	    if (masterPtr->masterDataPtr == NULL) {
-		if (SetSlaveRow(interp, slavePtr, 0, -1) != TCL_OK) {
-		    return TCL_ERROR;
-		}
 	    	slavePtr->row = 0;
 	    } else {
-	    	slavePtr->row = masterPtr->masterDataPtr->rowEnd;
 		if (SetSlaveRow(interp, slavePtr, 
 			masterPtr->masterDataPtr->rowEnd, -1) != TCL_OK) {
 		    return TCL_ERROR;
