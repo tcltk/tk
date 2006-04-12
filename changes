@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.37 2006/04/12 15:30:27 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.38 2006/04/12 17:36:25 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5928,5 +5928,7 @@ accept the color names "Black" and "White" (porter)
 registered applevents (steffen)
 
 2006-04-11 (bug fix)[1212056] fix panic on safe window exit on Windows (hobbs)
+
+2006-04-12 (bug fix)[1432666] grid row/col out of bounds crash (spjuth)
 
 --- Released 8.4.13, April 19, 2006 --- See ChangeLog for details ---

@@ -2,6 +2,9 @@
 
 	*** 8.4.13 TAGGED FOR RELEASE ***
 
+        * generic/tkGrid.c: Fixed handling of out of bounds row or column.
+        * tests/grid.test:  [Bug 1432666]
+
 	* changes:	Updates for next RC.
 
 2006-04-11  Jeff Hobbs  <jeffh@ActiveState.com>
