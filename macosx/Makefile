@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: Makefile,v 1.7.2.13 2006/01/10 05:38:19 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7.2.14 2006/04/12 00:58:44 das Exp $
 #
 ########################################################################################################
 
@@ -179,6 +179,7 @@ endif
 
 build-${PROJECT}: ${OBJ_DIR}/Makefile
 	${DO_MAKE}
+ifeq (${INSTALL_BUILD},)
 # symolic link hackery to trick
 # 'make install INSTALL_ROOT=${OBJ_DIR}'
 # into building Tk.framework and wish in ${SYMROOT}
@@ -192,6 +193,7 @@ endif
 # Create symbolic link to Tcl.framework in ${SYMROOT}if necessary
 	@cd ${SYMROOT} && if [ ! -e Tcl.framework -o -L Tcl.framework ]; then \
 	rm -f Tcl.framework && ln -s ${TCL_FRAMEWORK_DIR}/Tcl.framework . ; fi
+endif
 
 install-${PROJECT}: build-${PROJECT}
 ifeq (${EMBEDDED_BUILD}_${INSTALL_ROOT},1_)
@@ -248,8 +250,8 @@ else
 	ln -fsh Wish.app "./${APP_DIR}/Wish Shell.app" && \
 	rm -rf "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
 	mkdir -p "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
-	mv -f "./${FMWK_DIR}"/T{cl,k}.framework "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
-	rmdir -p "./${FMWK_DIR}" 2>&- || true && cd "./${APP_DIR}/Wish.app/Contents" && \
+	${CPPROG} -RH "./${FMWK_DIR}"/T{cl,k}.framework "./${APP_DIR}/Wish.app/Contents/Frameworks" && \
+	cd "./${APP_DIR}/Wish.app/Contents" && \
 	rm -rf Frameworks/Tcl.framework/{,/Versions/$(TCL_VERSION)}/{Headers,PrivateHeaders,*_debug,lib*.a,*Config.sh} && \
 	rm -rf Frameworks/Tk.framework/{,/Versions/$(VERSION)}/{Headers,PrivateHeaders,*_debug,lib*.a,*Config.sh} && \
 	fix_install_id ( ) { \
@@ -264,6 +266,9 @@ else
 	} && \
 	fix_install_id Frameworks/Tcl.framework/Tcl Tcl && fix_install_id Frameworks/Tk.framework/Tk Tk && \
 	fix_install_name MacOS/Wish Tcl && fix_install_name MacOS/Wish Tk
+ifeq (${INSTALL_BUILD},1)
+	@cd ${TOP_DIR} && rm -rf "./${FMWK_DIR}"/T{cl,k}.framework && rmdir -p "./${FMWK_DIR}" 2>&- || true
+endif
 endif
 endif
 
