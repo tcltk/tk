@@ -1,6 +1,10 @@
-2006-04-11  Jeff Hobbs  <jeffh@ActiveState.com>
+2006-04-12  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.4.13 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for next RC.
+
+2006-04-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* changes: update for bug fix.
 
