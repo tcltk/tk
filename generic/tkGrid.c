@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.25.2.4 2006/04/05 19:49:21 hobbs Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.25.2.5 2006/04/12 17:35:21 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -289,6 +289,10 @@ static Tcl_Obj *NewQuadObj _ANSI_ARGS_((Tcl_Interp*, int, int, int, int));
 static int	ResolveConstraints _ANSI_ARGS_((Gridder *gridPtr,
 			int rowOrColumn, int maxOffset));
 static void	SetGridSize _ANSI_ARGS_((Gridder *gridPtr));
+static int	SetSlaveColumn _ANSI_ARGS_((Tcl_Interp *interp,
+			Gridder *slavePtr, int column, int numCols));
+static int	SetSlaveRow _ANSI_ARGS_((Tcl_Interp *interp,
+			Gridder *slavePtr, int row, int numRows));
 static void	StickyToString _ANSI_ARGS_((int flags, char *result));
 static int	StringToSticky _ANSI_ARGS_((char *string));
 static void	Unlink _ANSI_ARGS_((Gridder *gridPtr));
@@ -2185,6 +2189,86 @@ SetGridSize(masterPtr)
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * SetSlaveColumn --
+ *
+ *     Update column data for a slave, checking that MAX_ELEMENT bound
+ *      is not passed.
+ *
+ * Results:
+ *     TCL_ERROR if out of bounds, TCL_OK otherwise
+ *
+ * Side effects:
+ *     Slave fields are updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+SetSlaveColumn(
+    Tcl_Interp *interp, /* Interp for error message */
+    Gridder *slavePtr,  /* Slave to be updated */
+    int column,         /* New column or -1 to be unchanged */
+    int numCols)        /* New columnspan or -1 to be unchanged */
+{
+    int newColumn, newNumCols, lastCol;
+
+    newColumn  = (column  >= 0) ? column  : slavePtr->column;
+    newNumCols = (numCols >= 1) ? numCols : slavePtr->numCols;
+
+    lastCol    = ((newColumn >= 0) ? newColumn : 0) + newNumCols;
+    if (lastCol >= MAX_ELEMENT) {
+       Tcl_SetResult(interp, "Column out of bounds", TCL_STATIC);
+       return TCL_ERROR;
+    }
+
+    slavePtr->column  = newColumn;
+    slavePtr->numCols = newNumCols;
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetSlaveRow --
+ *
+ *     Update row data for a slave, checking that MAX_ELEMENT bound
+ *      is not passed.
+ *
+ * Results:
+ *     TCL_ERROR if out of bounds, TCL_OK otherwise
+ *
+ * Side effects:
+ *     Slave fields are updated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+SetSlaveRow(
+    Tcl_Interp *interp, /* Interp for error message */
+    Gridder *slavePtr,  /* Slave to be updated */
+    int row,            /* New row or -1 to be unchanged */
+    int numRows)        /* New rowspan or -1 to be unchanged */
+{
+    int newRow, newNumRows, lastRow;
+
+    newRow     = (row     >= 0) ? row     : slavePtr->row;
+    newNumRows = (numRows >= 1) ? numRows : slavePtr->numRows;
+
+    lastRow    = ((newRow >= 0) ? newRow : 0) + newNumRows;
+    if (lastRow >= MAX_ELEMENT) {
+       Tcl_SetResult(interp, "Row out of bounds", TCL_STATIC);
+       return TCL_ERROR;
+    }
+
+    slavePtr->row     = newRow;
+    slavePtr->numRows = newNumRows;
+    return TCL_OK;
+}
+
+/*
  *--------------------------------------------------------------
  *
  * CheckSlotData --
@@ -2669,7 +2753,9 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			    "\": must be a non-negative integer", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		slavePtr->column = tmp;
+		if (SetSlaveColumn(interp, slavePtr, tmp, -1) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    } else if (index == CONF_COLUMNSPAN) {
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK ||
 			tmp <= 0) {
@@ -2679,7 +2765,9 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			    "\": must be a positive integer", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		slavePtr->numCols = tmp;
+		if (SetSlaveColumn(interp, slavePtr, -1, tmp) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    } else if (index == CONF_IN) {
 		if (TkGetWindowFromObj(interp, tkwin, objv[i+1], &other) !=
 			TCL_OK) {
@@ -2735,7 +2823,9 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 			    "\": must be a non-negative integer", (char *)NULL);
 		    return TCL_ERROR;
 		}
-		slavePtr->row = tmp;
+		if (SetSlaveRow(interp, slavePtr, tmp, -1) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    } else if (index == CONF_ROWSPAN) {
 		if ((Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK)
 			|| tmp <= 0) {
@@ -2746,6 +2836,9 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 		    return TCL_ERROR;
 		}
 		slavePtr->numRows = tmp;
+		if (SetSlaveRow(interp, slavePtr, -1, tmp) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    } else if (index == CONF_STICKY) {
 		int sticky = StringToSticky(Tcl_GetString(objv[i+1]));
 		if (sticky == -1) {
@@ -2826,14 +2919,26 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	 */
 
 	if (slavePtr->column == -1) {
-	    slavePtr->column = defaultColumn;
+	    if (SetSlaveColumn(interp, slavePtr, defaultColumn, -1) != TCL_OK) {
+		return TCL_ERROR;
+	    }
 	}
-	slavePtr->numCols += defaultColumnSpan - 1;
+	if (SetSlaveColumn(interp, slavePtr, -1,
+		slavePtr->numCols + defaultColumnSpan - 1) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 	if (slavePtr->row == -1) {
 	    if (masterPtr->masterDataPtr == NULL) {
+		if (SetSlaveRow(interp, slavePtr, 0, -1) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    	slavePtr->row = 0;
 	    } else {
 	    	slavePtr->row = masterPtr->masterDataPtr->rowEnd;
+		if (SetSlaveRow(interp, slavePtr, 
+			masterPtr->masterDataPtr->rowEnd, -1) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 	    }
 	}
 	defaultColumn += slavePtr->numCols;
@@ -2915,7 +3020,11 @@ ConfigureSlaves(interp, tkwin, objc, objv)
 	    if (slavePtr->column == lastColumn
 		    && slavePtr->row + slavePtr->numRows - 1 == lastRow) {
 		if (slavePtr->numCols <= width) {
-		    slavePtr->numRows++;
+
+		    if (SetSlaveRow(interp, slavePtr, -1,
+			    slavePtr->numRows + 1) != TCL_OK) {
+			return TCL_ERROR;
+		    }
 		    match++;
 		    j += slavePtr->numCols - 1;
 		    lastWindow = Tk_PathName(slavePtr->tkwin);
