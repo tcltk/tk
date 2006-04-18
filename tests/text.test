@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.43 2006/03/28 19:26:52 vincentdarley Exp $
+# RCS: @(#) $Id: text.test,v 1.44 2006/04/18 22:57:21 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -135,6 +135,8 @@ test text-2.4 {Tk_TextCmd procedure} {
 } {0 .t2 2 red}
 if {$tcl_platform(platform) == "windows"} {
     set relief flat
+} elseif {[tk windowingsystem] eq "aqua"} {
+    set relief solid
 } else {
     set relief raised
 }

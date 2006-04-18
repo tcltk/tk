@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.30 2006/04/18 22:32:41 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.31 2006/04/18 23:15:11 vincentdarley Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -2933,6 +2933,12 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
             return TCL_ERROR;
         }
 
+	if (master == winPtr) {
+	    Tcl_AppendResult(interp, "can't make \"", Tk_PathName(winPtr),
+		    "\" its own master", NULL);
+	    return TCL_ERROR;
+	}
+	
         argv3 = Tcl_GetStringFromObj(objv[3], &length);
         wmPtr->master = Tk_WindowId(master);
         wmPtr->masterWindowName = ckalloc((unsigned) length+1);
@@ -3281,6 +3287,7 @@ UpdateGeometryInfo(
     TkWindow *winPtr = (TkWindow *) clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height;
+    int min, max;
     unsigned long serial;
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -3307,6 +3314,30 @@ UpdateGeometryInfo(
     if (width <= 0) {
 	width = 1;
     }
+
+    /*
+     * Account for window max/min width
+     */
+
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqWidth
+		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	if (wmPtr->maxWidth > 0) {
+	    max = winPtr->reqWidth
+		    + (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minWidth;
+	max = wmPtr->maxWidth;
+    }
+    if (width < min) {
+	width = min;
+    } else if ((max > 0) && (width > max)) {
+	width = max;
+    }
+
     if (wmPtr->height == -1) {
 	height = winPtr->reqHeight;
     } else if (wmPtr->gridWin != NULL) {
@@ -3317,6 +3348,29 @@ UpdateGeometryInfo(
     }
     if (height <= 0) {
 	height = 1;
+    }
+
+    /*
+     * Account for window max/min height
+     */
+
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqHeight
+		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+	if (wmPtr->maxHeight > 0) {
+	    max = winPtr->reqHeight
+		    + (wmPtr->maxHeight-wmPtr->reqGridHeight)*wmPtr->heightInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minHeight;
+	max = wmPtr->maxHeight;
+    }
+    if (height < min) {
+	height = min;
+    } else if ((max > 0) && (height > max)) {
+	height = max;
     }
 
     /*
