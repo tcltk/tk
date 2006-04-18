@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.29 2006/04/11 07:36:36 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.30 2006/04/18 22:32:41 vincentdarley Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -781,17 +781,17 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     WindowRef macWindow;
     Tcl_Obj *result = NULL;
     const char *optionTable[] = {
-	"-modified",
-	"-titlepath",
 	"-alpha",
+	"-modified",
 	"-notify",
+	"-titlepath",
 	(char *)NULL
     };
     enum optionIdx {
-	WmAttrModifiedIdx,
-	WmAttrTitlePathIdx,
 	WmAttrAlphaIdx,
+	WmAttrModifiedIdx,
 	WmAttrNotifyIdx,
+	WmAttrTitlePathIdx,
     };
 
     /* Must have objc >= 3 at this point. */
@@ -811,19 +811,19 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 
     if (objc == 3) {
 	result = Tcl_NewObj();
-	Tcl_AppendToObj(result, "-modified ", -1);
-	WmAttrGetModifiedStatus(macWindow, result);
-	Tcl_AppendToObj(result, " -titlepath ", -1);
-	WmAttrGetTitlePath(macWindow, result);
 	Tcl_AppendToObj(result, " -alpha ", -1);
 	WmAttrGetAlpha(macWindow, result);
+	Tcl_AppendToObj(result, "-modified ", -1);
+	WmAttrGetModifiedStatus(macWindow, result);
 	Tcl_AppendToObj(result, " -notify ", -1);
 	WmAttrGetNotifyStatus(result);
+	Tcl_AppendToObj(result, " -titlepath ", -1);
+	WmAttrGetTitlePath(macWindow, result);
 	Tcl_SetObjResult(interp, result);
         return TCL_OK;
     }
     if (objc == 4) {
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionTable, "option", 0,
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionTable, "attribute", 0,
 	    &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -857,7 +857,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	OSErr err;
 	double dval;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], optionTable, "option", 0,
+	if (Tcl_GetIndexFromObj(interp, objv[i], optionTable, "attribute", 0,
 	    &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
