@@ -1,3 +1,8 @@
+2006-04-18  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* macosx/tkMacOSXEmbed.c: fix to [Bug 1088814] test failures in
+	embed.test
+
 2006-04-11  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkWindow.c (Tk_NameToWindow): Allow NULL interp to
