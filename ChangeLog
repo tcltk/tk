@@ -3,6 +3,10 @@
 	* macosx/tkMacOSXEmbed.c: fix to [Bug 1088814] test failures in
 	embed.test
 
+	* macosx/tkMacOSXWm.c:
+	* tests/constraints.tcl:
+	* tests/wm.test: fix to 'wm attributes' test for TkAqua
+
 2006-04-11  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkWindow.c (Tk_NameToWindow): Allow NULL interp to
