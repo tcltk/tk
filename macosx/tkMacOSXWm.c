@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.31 2006/04/18 23:15:11 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.32 2006/04/22 04:12:02 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -2933,7 +2933,7 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
             return TCL_ERROR;
         }
 
-	if (master == winPtr) {
+	if ((TkWindow *) master == winPtr) {
 	    Tcl_AppendResult(interp, "can't make \"", Tk_PathName(winPtr),
 		    "\" its own master", NULL);
 	    return TCL_ERROR;
