@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.6 2006/04/18 22:16:02 vincentdarley Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.7 2006/04/22 04:12:02 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -233,7 +233,6 @@ TkpUseWindow(
     MacDrawable *parent, *macWin;
     Container *containerPtr;
     XEvent event;
-    int result;
 
     if (winPtr->window != None) {
 	Tcl_AppendResult(interp, "can't modify container after widget is created", (char *) NULL);
@@ -250,13 +249,11 @@ TkpUseWindow(
      *
      */
      
-    if (Tcl_GetInt(interp, string, &result) != TCL_OK) {
+    if (Tcl_GetInt(interp, string, (int*) &parent) != TCL_OK) {
         return TCL_ERROR;
     }
 
-    parent = (MacDrawable *) result;
-
-    usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, parent);
+    usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, (Window) parent);
     if (usePtr != NULL) {
 	if (!(usePtr->flags & TK_CONTAINER)) {
 	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
@@ -340,7 +337,8 @@ TkpUseWindow(
          */
         
         if (gMacEmbedHandler == NULL ||
-                gMacEmbedHandler->registerWinProc(result, (Tk_Window) winPtr) != TCL_OK) {
+                gMacEmbedHandler->registerWinProc((int) parent,
+                (Tk_Window) winPtr) != TCL_OK) {
             Tcl_AppendResult(interp, "The window ID ", string,
                     " does not correspond to a valid Tk Window.",
                      (char *) NULL);
