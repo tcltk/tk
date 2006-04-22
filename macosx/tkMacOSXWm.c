@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.23 2006/04/11 07:36:40 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.24 2006/04/22 04:12:25 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -773,15 +773,15 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     WindowRef macWindow;
     Tcl_Obj *result = NULL;
     const char *optionTable[] = {
+	"-alpha",
 	"-modified",
 	"-titlepath",
-	"-alpha",
 	(char *)NULL
     };
     enum optionIdx {
+	WmAttrAlphaIdx,
 	WmAttrModifiedIdx,
 	WmAttrTitlePathIdx,
-	WmAttrAlphaIdx,
     };
 
     /* Must have objc >= 3 at this point. */
@@ -801,17 +801,17 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 
     if (objc == 3) {
 	result = Tcl_NewObj();
+	Tcl_AppendToObj(result, " -alpha ", -1);
+	WmAttrGetAlpha(macWindow, result);
 	Tcl_AppendToObj(result, "-modified ", -1);
 	WmAttrGetModifiedStatus(macWindow, result);
 	Tcl_AppendToObj(result, " -titlepath ", -1);
 	WmAttrGetTitlePath(macWindow, result);
-	Tcl_AppendToObj(result, " -alpha ", -1);
-	WmAttrGetAlpha(macWindow, result);
 	Tcl_SetObjResult(interp, result);
         return TCL_OK;
     }
     if (objc == 4) {
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionTable, "option", 0,
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionTable, "attribute", 0,
 	    &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -842,7 +842,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	OSErr err;
 	double dval;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], optionTable, "option", 0,
+	if (Tcl_GetIndexFromObj(interp, objv[i], optionTable, "attribute", 0,
 	    &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -2849,6 +2849,12 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
             return TCL_ERROR;
         }
 
+	if ((TkWindow *) master == winPtr) {
+	    Tcl_AppendResult(interp, "can't make \"", Tk_PathName(winPtr),
+		    "\" its own master", NULL);
+	    return TCL_ERROR;
+	}
+	
         argv3 = Tcl_GetStringFromObj(objv[3], &length);
         wmPtr->master = Tk_WindowId(master);
         wmPtr->masterWindowName = ckalloc((unsigned) length+1);
@@ -3186,6 +3192,7 @@ UpdateGeometryInfo(
     TkWindow *winPtr = (TkWindow *) clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height;
+    int min, max;
     unsigned long serial;
 
     wmPtr->flags &= ~WM_UPDATE_PENDING;
@@ -3212,6 +3219,30 @@ UpdateGeometryInfo(
     if (width <= 0) {
 	width = 1;
     }
+
+    /*
+     * Account for window max/min width
+     */
+
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqWidth
+		+ (wmPtr->minWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	if (wmPtr->maxWidth > 0) {
+	    max = winPtr->reqWidth
+		    + (wmPtr->maxWidth - wmPtr->reqGridWidth)*wmPtr->widthInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minWidth;
+	max = wmPtr->maxWidth;
+    }
+    if (width < min) {
+	width = min;
+    } else if ((max > 0) && (width > max)) {
+	width = max;
+    }
+
     if (wmPtr->height == -1) {
 	height = winPtr->reqHeight;
     } else if (wmPtr->gridWin != NULL) {
@@ -3222,6 +3253,29 @@ UpdateGeometryInfo(
     }
     if (height <= 0) {
 	height = 1;
+    }
+
+    /*
+     * Account for window max/min height
+     */
+
+    if (wmPtr->gridWin != NULL) {
+	min = winPtr->reqHeight
+		+ (wmPtr->minHeight - wmPtr->reqGridHeight)*wmPtr->heightInc;
+	if (wmPtr->maxHeight > 0) {
+	    max = winPtr->reqHeight
+		    + (wmPtr->maxHeight-wmPtr->reqGridHeight)*wmPtr->heightInc;
+	} else {
+	    max = 0;
+	}
+    } else {
+	min = wmPtr->minHeight;
+	max = wmPtr->maxHeight;
+    }
+    if (height < min) {
+	height = min;
+    } else if ((max > 0) && (height > max)) {
+	height = max;
     }
 
     /*
