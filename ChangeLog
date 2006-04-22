@@ -1,3 +1,10 @@
+2006-04-22  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXEmbed.c:
+	* macosx/tkMacOSXWm.c:
+	* tests/constraints.tcl:
+	* tests/wm.test: sync with 2006-04-18 commit to HEAD. (darley)
+
 2006-04-12  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.4.13 TAGGED FOR RELEASE ***
