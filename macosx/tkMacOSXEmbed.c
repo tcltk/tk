@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.2 2006/03/28 02:44:13 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.3 2006/04/22 04:12:25 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -229,10 +229,10 @@ TkpUseWindow(
                                  * for tkwin;  must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *usePtr;
     MacDrawable *parent, *macWin;
     Container *containerPtr;
     XEvent event;
-    int result;
 
     if (winPtr->window != None) {
 	Tcl_AppendResult(interp, "can't modify container after widget is created", (char *) NULL);
@@ -249,11 +249,23 @@ TkpUseWindow(
      *
      */
      
-    if (Tcl_GetInt(interp, string, &result) != TCL_OK) {
+    if (Tcl_GetInt(interp, string, (int*) &parent) != TCL_OK) {
         return TCL_ERROR;
     }
 
-    parent = (MacDrawable *) result;
+    usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, (Window) parent);
+    if (usePtr != NULL) {
+	if (!(usePtr->flags & TK_CONTAINER)) {
+	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
+		    "\" doesn't have -container option set", NULL);
+	    return TCL_ERROR;
+	}
+    }
+    
+    /* 
+     * The code below can probably be simplified given we have already
+     * discovered 'usePtr' above.
+     */
 
     /*
      * Save information about the container and the embedded window
@@ -325,7 +337,8 @@ TkpUseWindow(
          */
         
         if (gMacEmbedHandler == NULL ||
-                gMacEmbedHandler->registerWinProc(result, (Tk_Window) winPtr) != TCL_OK) {
+                gMacEmbedHandler->registerWinProc((int) parent,
+                (Tk_Window) winPtr) != TCL_OK) {
             Tcl_AppendResult(interp, "The window ID ", string,
                     " does not correspond to a valid Tk Window.",
                      (char *) NULL);
