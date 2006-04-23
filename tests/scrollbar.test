@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.17 2006/03/14 06:04:46 dgp Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.18 2006/04/23 21:51:38 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -166,15 +166,21 @@ scrollbar .s2
 test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} win {
     list [catch {.s2 cget -bd} msg] $msg
 } {0 0}
-test scrollbar-3.12 {ScrollbarWidgetCmd procedure, "cget" option} unix {
+test scrollbar-3.12 {ScrollbarWidgetCmd procedure, "cget" option} {unix notAqua} {
     list [catch {.s2 cget -bd} msg] $msg
 } {0 2}
+test scrollbar-3.12.1 {ScrollbarWidgetCmd procedure, "cget" option} aqua {
+    list [catch {.s2 cget -bd} msg] $msg
+} {0 0}
 test scrollbar-3.13 {ScrollbarWidgetCmd procedure, "cget" option} win {
     list [catch {.s2 cget -highlightthickness} msg] $msg
 } {0 0}
-test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} unix {
+test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} {unix notAqua} {
     list [catch {.s2 cget -highlightthickness} msg] $msg
 } {0 1}
+test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} aqua {
+    list [catch {.s2 cget -highlightthickness} msg] $msg
+} {0 0}
 destroy .s2
 test scrollbar-3.15 {ScrollbarWidgetCmd procedure, "configure" option} {
     llength [.s configure]
@@ -580,6 +586,7 @@ wm geometry .t +0+0
 test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} {
     proc doit {args} { destroy .t.f }
     proc bgerror {args} {}
+    destroy .t.f
     frame .t.f
     scrollbar .t.f.s -command doit
     pack .t.f -fill both -expand 1
@@ -598,6 +605,7 @@ test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} {
 test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} {
     proc doit {args} { destroy .t.f.s }
     proc bgerror {args} {}
+    destroy .t.f
     frame .t.f
     scrollbar .t.f.s -command doit
     pack .t.f -fill both -expand 1
