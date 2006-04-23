@@ -1,3 +1,7 @@
+2006-04-23  Vince Darley <vincentdarley@users.sourceforge.net>
+
+	* tests/scrollbar.test: fix to tkAqua test failures
+
 2006-04-18  Vince Darley <vincentdarley@users.sourceforge.net>
 
 	* macosx/tkMacOSXEmbed.c: fix to [Bug 1088814] test failures in
