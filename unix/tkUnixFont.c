@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.18.2.4 2005/04/12 22:05:47 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.18.2.5 2006/04/25 08:29:36 dkf Exp $
  */
  
 #include "tkUnixInt.h"
@@ -850,8 +850,26 @@ TkpGetFontFamilies(interp, tkwin)
     Tcl_InitHashTable(&familyTable, TCL_STRING_KEYS);
     nameList = ListFonts(Tk_Display(tkwin), "*", &numNames);
     for (i = 0; i < numNames; i++) {
+	char *familyEnd;
+
+	family = strchr(nameList[i] + 1, '-');
+	if (family == NULL) {
+	    /*
+	     * Apparently, sometimes ListFonts() can return a font name with
+	     * zero or one '-' character in it. This is probably indicative of
+	     * a server misconfiguration, but crashing because of it is a very
+	     * bad idea anyway. [Bug 1475865]
+	     */
+
+	    continue;
+	}
+	family++;			/* Advance to char after '-'. */
+	familyEnd = strchr(family, '-');
+	if (familyEnd == NULL) {
+	    continue;			/* See comment above. */
+	}
+	*familyEnd = '\0';
 	family = strchr(nameList[i] + 1, '-') + 1;
-	strchr(family, '-')[0] = '\0';
 	Tcl_CreateHashEntry(&familyTable, family, &new);
     }
     XFreeFontNames(nameList);
