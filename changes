@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.97 2006/04/17 18:06:43 dgp Exp $
+RCS: @(#) $Id: changes,v 1.98 2006/04/26 13:58:40 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6173,6 +6173,10 @@ accept the color names "Black" and "White" (porter)
 2006-04-11 (enhancement)[1105284] Aqua: call ::tk::mac::* procs for all
 registered applevents (steffen)
 
+2006-04-12 (bug fix)[1432666] grid row/col out of bounds crash (spjuth)
+
+2006-04-25 (bug fix)[1475865] crash on invalid font name (fellows)
+
 Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
----- Released 8.5a4, March 30, 2006 --- See ChangeLog for details ---
+---- Released 8.5a4, April 27, 2006 --- See ChangeLog for details ---
