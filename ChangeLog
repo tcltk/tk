@@ -1,3 +1,9 @@
+2006-04-26  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5a4 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for next RC
+
 2006-04-25  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* unix/tkUnixFont.c (TkpGetFontFamilies): Fix crash caused when the
@@ -83,8 +89,6 @@
 	toplevels, remove bogus initial window name. [Bug 1450800]
 
 2006-04-07  Daniel Steffen  <das@users.sourceforge.net>
-
-	*** 8.5a4 TAGGED FOR RELEASE ***
 
 	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): fix return
 	values, implement window dragging & growing in background (with Command
