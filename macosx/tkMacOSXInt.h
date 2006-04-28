@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.15 2006/04/11 07:36:36 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.16 2006/04/28 06:02:48 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -167,6 +167,7 @@ MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE int TkMacOSXGenerateFocusEvent( Window window, int activeFlag);
 MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 MODULE_SCOPE int TkMacOSXIsWindowZoomed(TkWindow *winPtr);
+MODULE_SCOPE int TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE int TkMacOSXCompareColors(unsigned long c1, unsigned long c2);
 
 MODULE_SCOPE void* TkMacOSXGetNamedSymbol(const char* module, const char* symbol);
