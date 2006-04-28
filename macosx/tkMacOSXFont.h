@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.h,v 1.3 2006/03/28 02:43:24 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.h,v 1.4 2006/04/28 06:02:48 das Exp $
  */
 
 #ifndef	TKMACOSXFONT_H
@@ -17,7 +17,9 @@
 
 #include "tkFont.h"
 
-#include <Carbon/Carbon.h>
+#ifndef _TKMACINT
+#include "tkMacOSXInt.h"
+#endif
 
 /*
  * Switches
@@ -92,7 +94,6 @@ typedef struct {} DrawingContext;
 
 #endif /* ? TK_MAC_USE_QUARZ */
 
-
 /*
  * Function prototypes
  */
@@ -109,6 +110,5 @@ MODULE_SCOPE void	TkMacOSXQuarzStartDraw(
 MODULE_SCOPE void	TkMacOSXQuarzEndDraw(
 			    TkMacOSXFontDrawingContext * contextPtr);
 #endif /* TK_MAC_USE_QUARZ */
-
 
 #endif	/*TKMACOSXFONT_H*/

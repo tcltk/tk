@@ -50,14 +50,14 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.9 2006/03/28 02:43:24 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.10 2006/04/28 06:02:48 das Exp $
  */
 
 #ifndef _TKMACEVENT
 #define _TKMACEVENT
 
-#ifndef _TK
-#include "tk.h"
+#ifndef _TKMACINT
+#include "tkMacOSXInt.h"
 #endif
 
 typedef struct {
