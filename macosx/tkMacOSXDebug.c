@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.2.2.5 2006/01/10 05:38:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.2.2.6 2006/04/28 06:02:59 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -249,7 +249,7 @@ static MyEventName classicEventNames [] = {
  { 0, NULL }
 };
 
-char * 
+MODULE_SCOPE char * 
 CarbonEventToAscii(EventRef eventRef, char * buf)
 {     
     EventClass eventClass;
@@ -293,7 +293,7 @@ CarbonEventToAscii(EventRef eventRef, char * buf)
     return iBuf;
 }
 
-char *
+MODULE_SCOPE char *
 CarbonEventKindToAscii(EventRef eventRef, char * buf )
 {     
    EventClass eventClass;
@@ -329,7 +329,7 @@ CarbonEventKindToAscii(EventRef eventRef, char * buf )
      return buf;
 }
 
-char *
+MODULE_SCOPE char *
 ClassicEventToAscii(EventRecord * eventPtr, char * buf )
 {
     MyEventName     * names = NULL;
@@ -359,14 +359,14 @@ ClassicEventToAscii(EventRecord * eventPtr, char * buf )
  
 }
 
-void
+MODULE_SCOPE void
 printPoint(char * tag, Point * p )
 {
     fprintf(stderr,"%s %4d %4d\n",
         tag,p->h,p->v );
 }
 
-void
+MODULE_SCOPE void
 printRect(char * tag, Rect * r )
 {
     fprintf(stderr,"%s %4d %4d %4d %4d (%dx%d)\n",
@@ -374,7 +374,7 @@ printRect(char * tag, Rect * r )
         r->right - r->left + 1, r->bottom - r->top + 1);
 }
 
-void
+MODULE_SCOPE void
 printRegion(char * tag, RgnHandle rgn )
 {
     Rect r;
@@ -382,7 +382,7 @@ printRegion(char * tag, RgnHandle rgn )
     printRect(tag,&r);
 }
 
-void
+MODULE_SCOPE void
 printWindowTitle(char * tag, WindowRef window )
 {
     Str255 title;
@@ -410,7 +410,7 @@ static MsgName msgNames [] = {
     { -1, NULL }
 };
 
-char *
+MODULE_SCOPE char *
 TkMacOSXMenuMessageToAscii(int msg, char * s)
 {
     MsgName * msgNamePtr;
@@ -438,7 +438,7 @@ static MsgName trackingNames [] = {
     { -1, NULL }
 };
 
-char *
+MODULE_SCOPE char *
 MouseTrackingResultToAscii(MouseTrackingResult r, char * buf) 
 {
     MsgName * namePtr;
@@ -480,7 +480,7 @@ MouseTrackingResultToAscii(MouseTrackingResult r, char * buf)
  *----------------------------------------------------------------------
  */
 
-void *
+MODULE_SCOPE void *
 TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol)
 {
     void* addr = TkMacOSXGetNamedSymbol(module, symbol);

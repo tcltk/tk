@@ -50,36 +50,34 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.2.2.5 2006/01/10 05:38:20 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.2.2.6 2006/04/28 06:02:59 das Exp $
  */
 
 #ifndef _TKMACDEBUG
 #define _TKMACDEBUG
 
-#ifndef _TKINT
-#include "tkInt.h"
+#ifndef _TKMACINT
+#include "tkMacOSXInt.h"
 #endif
-
-#include <Carbon/Carbon.h>
 
 /* The following define enables printing of debug messages to stderr: */
 /* #define TK_MAC_DEBUG 1 */
 
 #ifdef TK_MAC_DEBUG
 
-char * CarbonEventToAscii(EventRef eventRef, char * buf );
-char * ClassicEventToAscii(EventRecord * eventPtr, char * buf );
+MODULE_SCOPE char * CarbonEventToAscii(EventRef eventRef, char * buf );
+MODULE_SCOPE char * ClassicEventToAscii(EventRecord * eventPtr, char * buf );
 
-void printRect(char * tag, Rect * r );
-void printPoint(char * tag, Point * p );
+MODULE_SCOPE void printRect(char * tag, Rect * r );
+MODULE_SCOPE void printPoint(char * tag, Point * p );
 
-void printRegion(char * tag, RgnHandle rgn );
-void printWindowTitle(char * tag, WindowRef window );
-char * TkMacOSXMenuMessageToAscii(int msg, char * s);
+MODULE_SCOPE void printRegion(char * tag, RgnHandle rgn );
+MODULE_SCOPE void printWindowTitle(char * tag, WindowRef window );
+MODULE_SCOPE char * TkMacOSXMenuMessageToAscii(int msg, char * s);
 
-char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
+MODULE_SCOPE char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
 
-void * TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol);
+MODULE_SCOPE void* TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol);
 
 /* Macro to abstract common use of TkMacOSXGetNamedDebugSymbol to initialize named symbols */
 #define TkMacOSXInitNamedDebugSymbol(module, ret, symbol, ...) \

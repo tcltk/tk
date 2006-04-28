@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.12 2006/04/11 10:22:57 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.13 2006/04/28 06:02:58 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -165,7 +165,7 @@ CarbonEventHandlerProc (
  *----------------------------------------------------------------------
  */
 
-void
+MODULE_SCOPE void
 TkMacOSXInitCarbonEvents (
 	Tcl_Interp *interp)
 {
@@ -407,7 +407,7 @@ CarbonTimerProc (
  *----------------------------------------------------------------------
  */
 
-OSStatus
+MODULE_SCOPE OSStatus
 TkMacOSXStartTclEventLoopCarbonTimer()
 {
     OSStatus err;
@@ -451,7 +451,7 @@ TkMacOSXStartTclEventLoopCarbonTimer()
  *----------------------------------------------------------------------
  */
 
-OSStatus
+MODULE_SCOPE OSStatus
 TkMacOSXStopTclEventLoopCarbonTimer()
 {
     OSStatus err = noErr;

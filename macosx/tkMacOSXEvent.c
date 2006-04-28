@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.6 2006/04/11 10:22:57 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.7 2006/04/28 06:02:59 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -33,7 +33,7 @@
  *----------------------------------------------------------------------
  */
 
-void
+MODULE_SCOPE void
 TkMacOSXFlushWindows ()
 {
     WindowRef wRef = GetWindowList();
@@ -70,7 +70,7 @@ TkMacOSXFlushWindows ()
  *----------------------------------------------------------------------
  */
 
-int  
+MODULE_SCOPE int  
 TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
 {
     switch (eventPtr->eClass) {
@@ -123,7 +123,7 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
  *----------------------------------------------------------------------
  */
 
-int
+MODULE_SCOPE int
 TkMacOSXProcessMenuEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 {
     int		    menuContext;
@@ -177,7 +177,7 @@ TkMacOSXProcessMenuEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
  *----------------------------------------------------------------------
  */
 
-int
+MODULE_SCOPE int
 TkMacOSXProcessCommandEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 {
     HICommand	    command;
@@ -253,7 +253,7 @@ TkMacOSXProcessCommandEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
  *----------------------------------------------------------------------
  */
 
-OSStatus
+MODULE_SCOPE OSStatus
 TkMacOSXReceiveAndProcessEvent()
 {
     static EventTargetRef targetRef = NULL;

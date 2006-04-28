@@ -32,12 +32,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.2.2.1 2006/03/28 02:44:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.2.2.2 2006/04/28 06:03:00 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 
-EXTERN int		Tk_SendObjCmd _ANSI_ARGS_((ClientData clientData,
+MODULE_SCOPE int	Tk_SendObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[]));
 
      /* 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.2.2.7 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.2.2.8 2006/04/28 06:03:00 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -32,8 +32,8 @@
 
 #define TK_POPUP_OFFSET 32      /* size of popup marker */
 
-int TkMacOSXGetNewMenuID _ANSI_ARGS_((Tcl_Interp *interp, TkMenu *menuInstPtr, int cascade, short *menuIDPtr));
-void TkMacOSXFreeMenuID _ANSI_ARGS_((short menuID));
+MODULE_SCOPE int TkMacOSXGetNewMenuID _ANSI_ARGS_((Tcl_Interp *interp, TkMenu *menuInstPtr, int cascade, short *menuIDPtr));
+MODULE_SCOPE void TkMacOSXFreeMenuID _ANSI_ARGS_((short menuID));
 
 typedef struct {
     SInt16 initialValue;

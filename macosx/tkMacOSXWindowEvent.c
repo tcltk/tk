@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.11 2006/04/11 10:21:53 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.12 2006/04/28 06:03:00 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -99,7 +99,7 @@ static int GenerateActivateEvents( Window window, int activeFlag);
  *----------------------------------------------------------------------
  */
  
-int
+MODULE_SCOPE int
 TkMacOSXProcessApplicationEvent(
         TkMacOSXEvent *eventPtr, 
         MacEventStatus *statusPtr)
@@ -178,7 +178,7 @@ TkMacOSXProcessApplicationEvent(
  *----------------------------------------------------------------------
  */
 
-int
+MODULE_SCOPE int
 TkMacOSXProcessWindowEvent(
         TkMacOSXEvent * eventPtr, 
         MacEventStatus * statusPtr)
@@ -450,7 +450,7 @@ GenerateActivateEvents(
  *----------------------------------------------------------------------
  */     
 
-int
+MODULE_SCOPE int
 TkMacOSXGenerateFocusEvent(
     Window window,              /* Root X window for event. */
     int    activeFlag )

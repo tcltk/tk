@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.7 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.8 2006/04/28 06:03:00 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -219,7 +219,7 @@ GenerateEditEvent(
     int flag)
 {
     XVirtualEvent event;
-    Point where;
+    int x, y;
     Tk_Window tkwin;
     Window window;
     TkDisplay *dispPtr;
@@ -242,12 +242,8 @@ GenerateEditEvent(
     event.time = TkpGetMS();
     
     XQueryPointer(NULL, None, NULL, NULL,
-            &event.x_root, &event.y_root, NULL, NULL, &event.state);
-    where.h = event.x_root;
-    where.v = event.y_root;
-    GlobalToLocal(&where);
-    tkwin = Tk_TopCoordsToWindow(tkwin, where.h, where.v, 
-            &event.x, &event.y);
+            &event.x_root, &event.y_root, &x, &y, &event.state);
+    tkwin = Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
     event.same_screen = true;
 
     switch (flag) {

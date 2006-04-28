@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.13 2006/04/11 10:20:37 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.14 2006/04/28 06:02:59 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -52,7 +52,7 @@ static void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort,
 	CGContextRef *context);
 static inline double radians(double degrees) { return degrees * PI / 180.0f; }
 
-int 
+MODULE_SCOPE int 
 TkMacOSXInitCGDrawing(interp, enable, limit)
         Tcl_Interp *interp;
         int enable;
