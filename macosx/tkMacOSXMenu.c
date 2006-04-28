@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.27 2006/03/28 02:43:24 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.28 2006/04/28 06:02:49 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1409,9 +1409,6 @@ TkpPostMenu(
 		(char *) NULL);
     	result = TCL_ERROR;
     } else {
-    	Window dummyWin;
-    	unsigned int state;
-    	int dummy, mouseX, mouseY;
     	short menuID;
 	Window window;
 	int oldWidth = menuPtr->totalWidth;
@@ -1480,10 +1477,8 @@ TkpPostMenu(
 	 * Simulate the mouse up.
 	 */
 	 
-	XQueryPointer(NULL, None, &dummyWin, &dummyWin, &mouseX,
-	    &mouseY, &dummy, &dummy, &state);
 	window = Tk_WindowId(menuPtr->tkwin);
-	TkGenerateButtonEvent(mouseX, mouseY, window, state);
+	TkGenerateButtonEventForXPointer(window);
 	
 	/*
 	 * Dispatch the command.

@@ -50,17 +50,15 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.7 2006/01/10 05:37:51 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.8 2006/04/28 06:02:48 das Exp $
  */
 
 #ifndef _TKMACDEBUG
 #define _TKMACDEBUG
 
-#ifndef _TKINT
-#include "tkInt.h"
+#ifndef _TKMACINT
+#include "tkMacOSXInt.h"
 #endif
-
-#include <Carbon/Carbon.h>
 
 /* The following define enables printing of debug messages to stderr: */
 /* #define TK_MAC_DEBUG 1 */
