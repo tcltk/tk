@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAboutDlg.r,v 1.3.2.3 2005/05/24 04:20:42 das Exp $
+ * RCS: @(#) $Id: tkAboutDlg.r,v 1.3.2.4 2006/04/28 06:02:58 das Exp $
  */
 
 /*
@@ -33,7 +33,7 @@
  */
  
 resource 'DLOG' (128, "About Box", purgeable) {
-    {60, 40, 300, 404},
+    {60, 40, 332, 404},
     movableDBoxProc,
     visible,
     noGoAway,
@@ -45,10 +45,11 @@ resource 'DLOG' (128, "About Box", purgeable) {
 
 resource 'DITL' (128, "About Box", purgeable) {
     {
-	{200, 147, 220, 217}, Button	    {enabled, "Ok"},
-	{ 20, 108, 180, 344}, StaticText    {disabled, 
+	{232, 147, 252, 217}, Button	    {enabled, "Ok"},
+	{ 20, 108, 212, 344}, StaticText    {disabled, 
 	    "Tcl " TCL_PATCH_LEVEL " & Tk " TK_PATCH_LEVEL "\n\n" 
-	    "© 2005 Tcl Core Team." "\n\n" 
+	    "© 2002-2006 Tcl Core Team." "\n\n" 
+	    "© 2002-2006 Daniel A. Steffen." "\n\n" 
 	    "Jim Ingham & Ian Reid" "\n"
 	    "© 2001-2002 Apple Computer, Inc." "\n\n" 
 	    "Jim Ingham & Ray Johnson" "\n"
