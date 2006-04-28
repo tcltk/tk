@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.14 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.15 2006/04/28 06:02:59 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -405,7 +405,7 @@ TkpDisplayWarning(msg, title)
  *----------------------------------------------------------------------
  */
 
-void
+MODULE_SCOPE void
 TkMacOSXDefaultStartupScript(void)
 {
     CFBundleRef bundleRef;

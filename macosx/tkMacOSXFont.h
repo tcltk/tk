@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.h,v 1.3.2.2 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.h,v 1.3.2.3 2006/04/28 06:02:59 das Exp $
  */
 
 #ifndef	TKMACOSXFONT_H
@@ -19,13 +19,15 @@
 
 #include "tkFont.h"
 
-#include <Carbon/Carbon.h>
+#ifndef _TKMACINT
+#include "tkMacOSXInt.h"
+#endif
 
 /*
  * Function prototypes
  */
 
-extern void	TkMacOSXInitControlFontStyle(Tk_Font tkfont,
+MODULE_SCOPE void	TkMacOSXInitControlFontStyle(Tk_Font tkfont,
 			    ControlFontStylePtr fsPtr);
 
 #endif	/*TKMACOSXFONT_H*/

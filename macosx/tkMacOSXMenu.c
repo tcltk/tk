@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.17 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.18 2006/04/28 06:03:00 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -226,11 +226,11 @@ static Tcl_Obj *useMDEFVar;
  * Forward declarations for procedures defined later in this file:
  */
 
-int TkMacOSXGetNewMenuID _ANSI_ARGS_((Tcl_Interp *interp, 
+MODULE_SCOPE int TkMacOSXGetNewMenuID _ANSI_ARGS_((Tcl_Interp *interp, 
         TkMenu *menuInstPtr, 
         int cascade, 
         short *menuIDPtr));
-void TkMacOSXFreeMenuID _ANSI_ARGS_((short menuID));
+MODULE_SCOPE void TkMacOSXFreeMenuID _ANSI_ARGS_((short menuID));
  
 static void CompleteIdlers _ANSI_ARGS_((TkMenu *menuPtr));
 static void DrawMenuBarWhenIdle _ANSI_ARGS_((
@@ -1409,9 +1409,6 @@ TkpPostMenu(
 		(char *) NULL);
     	result = TCL_ERROR;
     } else {
-    	Window dummyWin;
-    	unsigned int state;
-    	int dummy, mouseX, mouseY;
     	short menuID;
 	Window window;
 	int oldWidth = menuPtr->totalWidth;
@@ -1480,10 +1477,8 @@ TkpPostMenu(
 	 * Simulate the mouse up.
 	 */
 	 
-	XQueryPointer(NULL, None, &dummyWin, &dummyWin, &mouseX,
-	    &mouseY, &dummy, &dummy, &state);
 	window = Tk_WindowId(menuPtr->tkwin);
-	TkGenerateButtonEvent(mouseX, mouseY, window, state);
+	TkGenerateButtonEventForXPointer(window);
 	
 	/*
 	 * Dispatch the command.

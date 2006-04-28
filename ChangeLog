@@ -1,3 +1,45 @@
+2006-04-28  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (TkWmMapWindow, InitialWindowBounds): fix use of
+	potentially stale window position in initial configure event on first
+	map of a window. [Bug 1476443]
+	(TkMacOSXWindowOffset): use modern GetWindowStructureWidths API.
+
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXMouseEvent.c (TkGenerateButtonEventForXPointer): new
+	internal function to generate button events for current pointer
+	directly, without requiring prior call to XQueryPointer().
+
+	* macosx/tkMacOSXMouseEvent.c (XQueryPointer): implement return of
+	window-local pointer position.
+
+	* macosx/tkMacOSXInt.h:      use improvements above to avoid calls to
+	* macosx/tkMacOSXKeyEvent.c: GlobalToLocal() when the current port might
+	* macosx/tkMacOSXMenu.c:     not be set correctly. May fix [Bug 1243318]
+	* macosx/tkMacOSXMenus.c:    
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXScrlbr.c:
+
+	* tkAboutDlg.r: update copyright.
+
+	* macosx/tkMacOSXCarbonEvents.c: sync with HEAD
+	* macosx/tkMacOSXDebug.c:
+	* macosx/tkMacOSXDebug.h:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXEvent.h:
+	* macosx/tkMacOSXFont.h:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXSend.c:
+	* macosx/tkMacOSXTest.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+
 2006-04-25  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* unix/tkUnixFont.c (TkpGetFontFamilies): Fix crash caused when the

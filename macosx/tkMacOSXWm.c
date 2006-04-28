@@ -8,11 +8,12 @@
  *
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.24 2006/04/22 04:12:25 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.25 2006/04/28 06:03:00 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -309,14 +310,9 @@ TkWmMapWindow(
 				 * be mapped. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    Point where = {0, 0};
-    int xOffset, yOffset;
-    int firstMap = false;
-    MacDrawable *macWin;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->flags &= ~WM_NEVER_MAPPED;
-	firstMap = true;
 
 	/*
 	 * Create the underlying Mac window for this Tk window.
@@ -324,18 +320,12 @@ TkWmMapWindow(
 	if (!TkMacOSXHostToplevelExists(winPtr)) {
 	    TkMacOSXMakeRealWindowExist(winPtr);
 	}
-	macWin = (MacDrawable *) winPtr->window;
 
 	/*
 	 * Generate configure event when we first map the window.
 	 */
-	LocalToGlobal(&where);
-	TkMacOSXWindowOffset( GetWindowFromPort(TkMacOSXGetDrawablePort((Drawable) macWin)),
-		&xOffset, &yOffset);
-	where.h -= xOffset;
-	where.v -= yOffset;
-	TkGenWMConfigureEvent((Tk_Window) winPtr, 
-		where.h, where.v, -1, -1, TK_LOCATION_CHANGED);
+	TkGenWMConfigureEvent((Tk_Window) winPtr, wmPtr->x, wmPtr->y, -1, -1,
+		TK_LOCATION_CHANGED);
 
 	/*
 	 * This is the first time this window has ever been mapped.
@@ -4367,11 +4357,11 @@ InitialWindowBounds(
     TkWindow *winPtr,		/* Window to get initial bounds for. */
     Rect *geometry)		/* On return the initial bounds. */
 {
-    int x, y;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
     static int defaultX = 5;
     static int defaultY = 45;
 
-    if (!(winPtr->wmInfoPtr->sizeHintsFlags & (USPosition | PPosition))) {
+    if (!(wmPtr->sizeHintsFlags & (USPosition | PPosition))) {
 	/* 
 	 * We will override the program & hopefully place the
 	 * window in a "better" location.
@@ -4383,19 +4373,16 @@ InitialWindowBounds(
 	    defaultX = 5;
 	    defaultY = 45;
 	}
-	x = defaultX;
-	y = defaultY;
+	wmPtr->x = defaultX;
+	wmPtr->y = defaultY;
 	defaultX += 20;
 	defaultY += 20;
-    } else {
-	x = winPtr->wmInfoPtr->x;
-	y = winPtr->wmInfoPtr->y;
     }
 
-    geometry->left = x;
-    geometry->top = y;
-    geometry->right = x + winPtr->changes.width;
-    geometry->bottom = y + winPtr->changes.height;
+    geometry->left = wmPtr->x;
+    geometry->top = wmPtr->y;
+    geometry->right = wmPtr->x + winPtr->changes.width;
+    geometry->bottom = wmPtr->y + winPtr->changes.height;
 }
 
 /*
@@ -4634,7 +4621,7 @@ TkMacOSXGetXWindow(
  *----------------------------------------------------------------------
  */
 
-int
+MODULE_SCOPE int
 TkMacOSXIsWindowZoomed(
     TkWindow *winPtr)
 {
@@ -5453,7 +5440,7 @@ TkpIsWindowFloating(WindowRef wRef)
  *----------------------------------------------------------------------
  */
 
-WindowClass
+MODULE_SCOPE WindowClass
 TkMacOSXWindowClass(TkWindow *winPtr)
 {
     WindowRef wRef;
@@ -5495,32 +5482,11 @@ TkMacOSXWindowOffset(
     int *xOffset,
     int *yOffset)
 {
-    OSErr err = noErr;
-    static RgnHandle strucRgn = NULL;
-    static RgnHandle contRgn  = NULL;
-    Rect strucRect, contRect;
+    Rect widths;
 
-    if (!strucRgn) {
-        if(!(strucRgn = NewRgn())) {
-           err = MemError();
-        }
-    }
-    if (!contRgn) {
-        if(!(contRgn = NewRgn())) {
-           err = MemError();
-        }
-    }
-    if (err == noErr) {
-        GetWindowRegion(wRef, kWindowStructureRgn, strucRgn);
-        GetWindowRegion(wRef, kWindowContentRgn, contRgn);
-        GetRegionBounds(strucRgn,&strucRect);
-        GetRegionBounds(contRgn,&contRect);
-        *xOffset = contRect.left - strucRect.left;
-        *yOffset = contRect.top - strucRect.top;
-    } else {
-        *xOffset = 0;
-        *yOffset = 0;
-    }
+    GetWindowStructureWidths(wRef, &widths);
+    *xOffset = widths.left;
+    *yOffset = widths.top;
     return;
 }
 
