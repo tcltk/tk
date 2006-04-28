@@ -5,7 +5,7 @@
  *	on MacOS X.
  *
  * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2005 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2005-2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.21 2006/04/11 05:42:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.22 2006/04/28 06:02:49 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -775,29 +775,112 @@ XQueryPointer(
     int* win_y_return,
     unsigned int* mask_return)
 {
-    if (root_x_return && root_y_return) {
-	Point where;
-	EventRef ev;
+    int getGlobal = (root_x_return && root_y_return);
+    int getLocal = (win_x_return && win_y_return);
+
+    if (getGlobal || getLocal) {
+	Point where, local;
 	OSStatus status;
+	int gotMouseLoc = 0;
+	EventRef ev = GetCurrentEvent();
 
-	if ((ev = GetCurrentEvent())) {
+	if (ev && getLocal) {
 	    status = GetEventParameter(ev, 
-		    kEventParamMouseLocation,
+		    kEventParamWindowMouseLocation,
 		    typeQDPoint, NULL, 
-		    sizeof(where), NULL,
-		    &where);
+		    sizeof(Point), NULL,
+		    &local);
+	    gotMouseLoc = (status == noErr);
 	}
-	if (!ev || status != noErr) {
-	    GetGlobalMouse(&where);
+	if (getGlobal || !gotMouseLoc) {
+	    if (ev) {
+		status = GetEventParameter(ev, 
+			kEventParamMouseLocation,
+			typeQDPoint, NULL, 
+			sizeof(Point), NULL,
+			&where);
+	    }
+	    if (!ev || status != noErr) {
+		GetGlobalMouse(&where);
+	    }
 	}
-
-	*root_x_return = where.h;
-	*root_y_return = where.v;
+	if (getLocal) {
+	    WindowRef whichWin;
+	    if (ev) {
+		status = GetEventParameter(ev, 
+			kEventParamWindowRef,
+			typeWindowRef, NULL, 
+			sizeof(WindowRef), NULL,
+			&whichWin);
+	    }
+	    if (!ev || status != noErr) {
+		FindWindow(where, &whichWin);
+	    }
+	    if (gotMouseLoc) {
+		if (whichWin) {
+		    Rect widths;
+		    GetWindowStructureWidths(whichWin, &widths);
+		    local.h -= widths.left;
+		    local.v -= widths.top;	   
+		}
+	    } else {
+		local = where;
+		if (whichWin) {
+		    QDGlobalToLocalPoint(GetWindowPort(whichWin), &local);
+		}
+	    }
+	}
+	if (getGlobal) {
+	    *root_x_return = where.h;
+	    *root_y_return = where.v;
+	}
+	if (getLocal) {
+	    *win_x_return = local.h;
+	    *win_y_return = local.v;
+	}
     }
     if (mask_return) {
 	*mask_return = TkMacOSXButtonKeyState();
     }
     return True;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGenerateButtonEventForXPointer --
+ *
+ *	  This procedure generates an X button event for the current
+ *	  pointer state as reported by XQueryPointer().
+ *
+ * Results:
+ *	  True if event(s) are generated - false otherwise.
+ *
+ * Side effects:
+ *	  Additional events may be place on the Tk event queue.
+ *	  Grab state may also change.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE int
+TkGenerateButtonEventForXPointer(
+    Window window)	  /* X Window containing button event. */
+{
+    MouseEventData med;
+    int global_x, global_y, local_x, local_y;
+    
+    bzero(&med, sizeof(MouseEventData));
+    XQueryPointer(NULL, None, NULL, NULL, &global_x, &global_y,
+	    &local_x, &local_y, &med.state);
+    med.global.h = global_x;
+    med.global.v = global_y;
+    med.local.h = local_x;
+    med.local.v = local_y;
+    med.window = window;
+    med.activeNonFloating = ActiveNonFloatingWindow();
+
+    return GenerateButtonEvent(&med);
 }
 
 /*
@@ -859,7 +942,7 @@ TkGenerateButtonEvent(
  *----------------------------------------------------------------------
  */
 
-static int
+static int
 GenerateButtonEvent(MouseEventData * medPtr)
 {
     Tk_Window tkwin;

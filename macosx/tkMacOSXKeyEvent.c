@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.13 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.14 2006/04/28 06:02:49 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -58,8 +58,8 @@
 
 typedef struct {
     WindowRef   whichWindow;
-    Point       global;
-    Point       local;
+    int         global_x, global_y;
+    int         local_x, local_y;
     unsigned int state;
     unsigned char ch;
     UInt32      keyCode;
@@ -435,19 +435,18 @@ GenerateKeyEvent(
 static int 
 InitKeyData(KeyEventData * keyEventDataPtr)
 {
-    int x, y;
     memset (keyEventDataPtr, 0, sizeof(*keyEventDataPtr));
 
     keyEventDataPtr->whichWindow = ActiveNonFloatingWindow();
     if (keyEventDataPtr->whichWindow == NULL) {
         return false;
     }
-    XQueryPointer(NULL, None, NULL, NULL, &x, &y, 
-            NULL, NULL, &keyEventDataPtr->state);
-    keyEventDataPtr->global.v = x;
-    keyEventDataPtr->global.v = y;
-    keyEventDataPtr->local = keyEventDataPtr->global;
-    GlobalToLocal(&keyEventDataPtr->local);
+    XQueryPointer(NULL, None, NULL, NULL,
+            &keyEventDataPtr->global_x,
+            &keyEventDataPtr->global_y,
+            &keyEventDataPtr->local_x,
+            &keyEventDataPtr->local_y,
+            &keyEventDataPtr->state);
 
     return true;
 }
@@ -534,8 +533,8 @@ InitKeyEvent(
     eventPtr->xkey.same_screen = true;
     eventPtr->xkey.subwindow = None;
     eventPtr->xkey.time = TkpGetMS();
-    eventPtr->xkey.x_root = e->global.h;
-    eventPtr->xkey.y_root = e->global.v;
+    eventPtr->xkey.x_root = e->global_x;
+    eventPtr->xkey.y_root = e->global_y;
     eventPtr->xkey.window = Tk_WindowId(tkwin);
     eventPtr->xkey.display = Tk_Display(tkwin);
     eventPtr->xkey.root = XRootWindow(Tk_Display(tkwin), 0);
@@ -543,7 +542,7 @@ InitKeyEvent(
     eventPtr->xkey.trans_chars[0] = 0;
 
     Tk_TopCoordsToWindow(
-            tkwin, e->local.h, e->local.v, 
+            tkwin, e->local_x, e->local_y, 
             &eventPtr->xkey.x, &eventPtr->xkey.y);
 
     eventPtr->xkey.keycode = e->ch |

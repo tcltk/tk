@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.18 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.19 2006/04/28 06:02:49 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -790,8 +790,7 @@ ScrollbarBindProc(
     if (eventPtr->type == ButtonPress) {
 	Point where;
 	Rect bounds;
-	int part, x, y, dummy;
-	unsigned int state;
+	int part;
         CGrafPtr saveWorld;
         GDHandle saveDevice;
         GWorldPtr destPort;
@@ -876,10 +875,8 @@ ScrollbarBindProc(
          * The TrackControl call will "eat" the ButtonUp event.  We now
          * generate a ButtonUp event so Tk will unset implicit grabs etc.
          */
-        XQueryPointer(NULL, None, &window, &window, &x,
-            &y, &dummy, &dummy, &state);
         window = Tk_WindowId(scrollPtr->tkwin);
-        TkGenerateButtonEvent(x, y, window, state);
+        TkGenerateButtonEventForXPointer(window);
 
         SetGWorld(saveWorld, saveDevice);
     }
