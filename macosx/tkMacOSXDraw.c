@@ -7,15 +7,22 @@
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.14 2006/04/11 10:20:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.15 2006/05/12 18:17:48 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
+
+/*
+#ifdef	TK_MAC_DEBUG
+#define TK_MAC_DEBUG_DRAWING
+#endif
+*/
 
 #ifndef PI
 #    define PI 3.14159265358979323846
@@ -272,15 +279,11 @@ XCopyPlane(
     srcPort = TkMacOSXGetDrawablePort(src);
     dstPort = TkMacOSXGetDrawablePort(dst);
     
-    if (tmpRgn == NULL) {
-        tmpRgn = NewRgn();
-    }
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(dstPort, NULL);
 
     TkMacOSXSetUpClippingRgn(dst);
-
 
     srcBit = GetPortBitMapForCopyBits(srcPort);
     dstBit = GetPortBitMapForCopyBits(dstPort);
@@ -395,12 +398,9 @@ TkPutImage(
     int i, j;
     BitMap bitmap;
     char *newData = NULL;
-    Rect destRect, srcRect;
+    Rect destRect, srcRect, *destPtr, *srcPtr;
 
     destPort = TkMacOSXGetDrawablePort(d);
-    SetRect(&destRect, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y, 
-            dstDraw->xOff + dest_x + width, dstDraw->yOff + dest_y + height);
-    SetRect(&srcRect, src_x, src_y, src_x + width, src_y + height);
 
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
@@ -408,12 +408,32 @@ TkPutImage(
 
     TkMacOSXSetUpClippingRgn(d);
 
+    srcPtr = &srcRect;
+    SetRect(srcPtr, src_x, src_y, src_x + width, src_y + height);
+    if (tkPictureIsOpen) {
+	/*
+	 * When rendering into a picture, after a call to "OpenCPicture"
+	 * the clipping is seriously WRONG and also INCONSISTENT with the
+	 * clipping for single plane bitmaps.
+	 * To circumvent this problem,	we clip to the whole window 
+	 */
+
+	Rect clpRect;
+	GetPortBounds(destPort,&clpRect);
+	ClipRect(&clpRect);
+	destPtr = srcPtr;
+    } else {
+	destPtr = &destRect;
+	SetRect(destPtr, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y, 
+	    dstDraw->xOff + dest_x + width, dstDraw->yOff + dest_y + height);
+    }
+
     if (image->obdata) {
         /* Image from XGetImage, copy from containing GWorld directly */
         GWorldPtr srcPort = TkMacOSXGetDrawablePort((Drawable)image->obdata);
         CopyBits(GetPortBitMapForCopyBits(srcPort),
                 GetPortBitMapForCopyBits(destPort),
-                &srcRect, &destRect, srcCopy, NULL);
+                srcPtr, destPtr, srcCopy, NULL);
     } else if (image->depth == 1) {
         /*
          * This code assumes a pixel depth of 1
@@ -448,7 +468,7 @@ TkPutImage(
             bitmap.rowBytes = image->bytes_per_line;
         }
         destBits = GetPortBitMapForCopyBits(destPort);
-        CopyBits(&bitmap, destBits, &srcRect, &destRect, srcCopy, NULL);
+        CopyBits(&bitmap, destBits, srcPtr, destPtr, srcCopy, NULL);
     } else {
         /*
          * Color image
@@ -479,7 +499,7 @@ TkPutImage(
         pixmap.rowBytes = image->bytes_per_line | 0x8000;
 
         CopyBits((BitMap *) &pixmap, GetPortBitMapForCopyBits(destPort), 
-            &srcRect, &destRect, srcCopy, NULL);
+            srcPtr, destPtr, srcCopy, NULL);
     }
 
     if (newData != NULL) {
@@ -1894,6 +1914,16 @@ TkMacOSXSetUpClippingRgn(
         if (macDraw->flags & TK_CLIP_INVALID) {
             TkMacOSXUpdateClipRgn(macDraw->winPtr);
         }
+
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_DRAWING)
+	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
+				     CGrafPtr port, RgnHandle region);
+	if (QDDebugFlashRegion) {
+	    CGrafPtr grafPtr = TkMacOSXGetDrawablePort(drawable);
+	    /* Carbon-internal region flashing SPI (c.f. Technote 2124) */
+	    QDDebugFlashRegion(grafPtr, macDraw->clipRgn);
+	}
+#endif /* TK_MAC_DEBUG_DRAWING */
 
         /*
          * When a menu is up, the Mac does not expect drawing to occur and
