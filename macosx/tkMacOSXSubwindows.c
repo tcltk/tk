@@ -5,16 +5,23 @@
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.9 2006/03/28 02:44:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.10 2006/05/12 18:17:55 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXWm.h"
+
+/*
+#ifdef	TK_MAC_DEBUG
+#define TK_MAC_DEBUG_CLIP_REGIONS
+#endif
+*/
 
 /*
  * Temporary region that can be reused.
@@ -149,57 +156,6 @@ XDestroyWindow(
 	ckfree((char *) macWin);
     }
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * FixMappingFlags --
- *
- *  If on is 0, mark the child windows of the window passed in in winPtr 
- *  as unmapped, but remember whether they were originally mapped in their
- *  parent.
- *  If on is 1, set all the child windows of winPtr that WERE mapped in
- *  their parent before the parent was unmapped back to mapped. 
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The TkWindow and MacDrawable flags may be adjusted.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FixMappingFlags (TkWindow *winPtr, int on)
-{
-    TkWindow *childPtr;
-    childPtr = winPtr->childList;
-    
-    while (childPtr != NULL) {
-        /*
-         * We might get called before the Mac OS X side of the widget
-         * is created yet.  If so, wait till later...  
-         */
-     
-        if (childPtr->privatePtr != NULL) {
-    
-            if (((MacDrawable *)childPtr->privatePtr)->flags 
-                     & TK_MAPPED_IN_PARENT) {
-                if (on) {
-                    childPtr->flags |= TK_MAPPED;
-                } else {
-                    childPtr->flags &= ~TK_MAPPED;
-                }
-            }
-	    if (!Tk_TopWinHierarchy(childPtr)) {
-	        FixMappingFlags (childPtr, on);
-	    }
-        }
-	childPtr = childPtr->nextPtr;
-    }
-    
-}
 
 /*
  *----------------------------------------------------------------------
@@ -237,12 +193,10 @@ XMapWindow(
     if (!TkMacOSXHostToplevelExists(macWin->toplevel->winPtr)) {
 	TkMacOSXMakeRealWindowExist(macWin->toplevel->winPtr);
     }
-    destPort = TkMacOSXGetDrawablePort (window);
 
     display->request++;
     macWin->winPtr->flags |= TK_MAPPED;
-    macWin->flags |= TK_MAPPED_IN_PARENT;
-    FixMappingFlags(macWin->winPtr, 1);
+    destPort = TkMacOSXGetDrawablePort (window);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    /*
@@ -273,15 +227,13 @@ XMapWindow(
 	event.xmap.override_redirect = macWin->winPtr->atts.override_redirect;
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
+	/* 
+	 * Generate damage for that area of the window 
+	 */
+	SetGWorld(destPort, NULL);
+	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
     }
-
-    /* 
-     * Generate damage for that area of the window 
-     */
-    SetGWorld (destPort, NULL);
-    TkMacOSXUpdateClipRgn(macWin->winPtr);
-    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 }
 
 /*
@@ -310,15 +262,12 @@ XUnmapWindow(
     XEvent event;
     CGrafPtr destPort;
 
-    destPort = TkMacOSXGetDrawablePort(window);
-
     display->request++;
     macWin->winPtr->flags &= ~TK_MAPPED;
-    macWin->flags &= ~TK_MAPPED_IN_PARENT;
-    FixMappingFlags(macWin->winPtr, 0);
+    destPort = TkMacOSXGetDrawablePort(window);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)
-	        && macWin->winPtr->wmInfoPtr->hints.initial_state != IconicState) {
+		&& macWin->winPtr->wmInfoPtr->hints.initial_state != IconicState) {
 	    /*
 	     * XXX This should be HideSheetWindow for kSheetWindowClass
 	     * XXX windows that have a wmPtr->master parent set.
@@ -350,7 +299,7 @@ XUnmapWindow(
 	 * Generate damage for that area of the window.
 	 */
 	SetGWorld(destPort, NULL);
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW); /* TODO: may not be valid */
+	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
     }
 }
@@ -892,41 +841,85 @@ TkMacOSXUpdateClipRgn(
 	return;
     }
 
-    if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
-	rgn = winPtr->privatePtr->aboveClipRgn;
-	if (tmpRgn == NULL) {
-	    tmpRgn = NewRgn();
-	}
-	
-	/* 
-	 * Start with a region defined by the window bounds.  
-	 */
+    if (winPtr->privatePtr && winPtr->privatePtr->flags & TK_CLIP_INVALID) {
+	if (Tk_IsMapped(winPtr)) {
+	    rgn = winPtr->privatePtr->aboveClipRgn;
+	    if (tmpRgn == NULL) {
+		tmpRgn = NewRgn();
+	    }
 
-        x = winPtr->privatePtr->xOff;
-        y = winPtr->privatePtr->yOff;
-        SetRectRgn(rgn, (short) x, (short) y,
-	    (short) (winPtr->changes.width  + x), 
-	    (short) (winPtr->changes.height + y));
-	    
-	/* 
-	 * Clip away the area of any windows that may obscure this
-	 * window.  
-	 * For a non-toplevel window, first, clip to the parents visable
-	 * clip region.
-	 * Second, clip away any siblings that are higher in the
-	 * stacking order.
-	 * For an embedded toplevel, just clip to the container's visible
-	 * clip region.  Remember, we only allow one contained window 
-	 * in a frame, and don't support any other widgets in the frame either.
-	 * This is not currently enforced, however.
-	 */
-	
-	if (!Tk_IsTopLevel(winPtr)) { 
-	    TkMacOSXUpdateClipRgn(winPtr->parentPtr);
-	    SectRgn(rgn, 
-		    winPtr->parentPtr->privatePtr->aboveClipRgn, rgn);
-				
-	    win2Ptr = winPtr->nextPtr;
+	    /* 
+	     * Start with a region defined by the window bounds.
+	     */
+
+	    x = winPtr->privatePtr->xOff;
+	    y = winPtr->privatePtr->yOff;
+	    SetRectRgn(rgn, (short) x, (short) y,
+		(short) (winPtr->changes.width  + x), 
+		(short) (winPtr->changes.height + y));
+
+	    /* 
+	     * Clip away the area of any windows that may obscure this
+	     * window.
+	     * For a non-toplevel window, first, clip to the parents visible
+	     * clip region.
+	     * Second, clip away any siblings that are higher in the
+	     * stacking order.
+	     * For an embedded toplevel, just clip to the container's visible
+	     * clip region.  Remember, we only allow one contained window
+	     * in a frame, and don't support any other widgets in the frame
+	     * either. This is not currently enforced, however.
+	     */
+
+	    if (!Tk_IsTopLevel(winPtr)) { 
+		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
+		SectRgn(rgn, 
+			winPtr->parentPtr->privatePtr->aboveClipRgn, rgn);
+
+		win2Ptr = winPtr->nextPtr;
+		while (win2Ptr != NULL) {
+		    if (Tk_IsTopLevel(win2Ptr) || !Tk_IsMapped(win2Ptr)) {
+			win2Ptr = win2Ptr->nextPtr;
+			continue;
+		    }
+		    x = win2Ptr->privatePtr->xOff;
+		    y = win2Ptr->privatePtr->yOff;
+		    SetRectRgn(tmpRgn, (short) x, (short) y,
+			    (short) (win2Ptr->changes.width  + x), 
+			    (short) (win2Ptr->changes.height + y));
+		    DiffRgn(rgn, tmpRgn, rgn);
+
+		    win2Ptr = win2Ptr->nextPtr;
+		}
+	    } else if (Tk_IsEmbedded(winPtr)) {
+		TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
+
+		if (contWinPtr != NULL) {
+		    TkMacOSXUpdateClipRgn(contWinPtr);
+		    SectRgn(rgn, 
+			    contWinPtr->privatePtr->aboveClipRgn, rgn);
+		} else if (gMacEmbedHandler != NULL) {
+		    gMacEmbedHandler->getClipProc((Tk_Window) winPtr, tmpRgn);
+		    SectRgn(rgn, tmpRgn, rgn);
+		}
+
+		/*
+		 * NOTE: Here we should handle out of process embedding.
+		 */
+
+	    }
+
+	    /* 
+	     * The final clip region is the aboveClip region (or visible
+	     * region) minus all the children of this window.
+	     * Alternatively, if the window is a container, we must also 
+	     * subtract the region of the embedded window.
+	     */
+
+	    rgn = winPtr->privatePtr->clipRgn;
+	    CopyRgn(winPtr->privatePtr->aboveClipRgn, rgn);
+
+	    win2Ptr = winPtr->childList;
 	    while (win2Ptr != NULL) {
 		if (Tk_IsTopLevel(win2Ptr) || !Tk_IsMapped(win2Ptr)) {
 		    win2Ptr = win2Ptr->nextPtr;
@@ -938,75 +931,61 @@ TkMacOSXUpdateClipRgn(
 			(short) (win2Ptr->changes.width  + x), 
 			(short) (win2Ptr->changes.height + y));
 		DiffRgn(rgn, tmpRgn, rgn);
-							  
+
 		win2Ptr = win2Ptr->nextPtr;
 	    }
-	} else if (Tk_IsEmbedded(winPtr)) {
-            TkWindow *contWinPtr;
-        
-	    contWinPtr = TkpGetOtherWindow(winPtr);
-    	     
-    	    if (contWinPtr != NULL) {
- 	        TkMacOSXUpdateClipRgn(contWinPtr);
-	        SectRgn(rgn, 
-		        contWinPtr->privatePtr->aboveClipRgn, rgn);
-   	    } else if (gMacEmbedHandler != NULL) {
-   	        gMacEmbedHandler->getClipProc((Tk_Window) winPtr, tmpRgn);
-   	        SectRgn(rgn, tmpRgn, rgn);
-   	    }
-	    
+
+	    if (Tk_IsContainer(winPtr)) {
+		win2Ptr = TkpGetOtherWindow(winPtr);
+		if (win2Ptr != NULL) {
+		    if (Tk_IsMapped(win2Ptr)) {
+			x = win2Ptr->privatePtr->xOff;
+			y = win2Ptr->privatePtr->yOff;
+			SetRectRgn(tmpRgn, (short) x, (short) y,
+				(short) (win2Ptr->changes.width  + x), 
+				(short) (win2Ptr->changes.height + y));
+			DiffRgn(rgn, tmpRgn, rgn);
+		    }
+		} 
+
+		/*
+		 * NOTE: Here we should handle out of process embedding.
+		 */
+
+	    }
+	} else {
 	    /*
-	     * NOTE: Here we should handle out of process embedding.
+	     * An unmapped window has empty clip regions to prevent any
+	     * (erroneous) drawing into it or its children from becoming
+	     * visible. [Bug 940117]
 	     */
-		    
-	}
-	
-	/* 
-	 * The final clip region is the aboveClip region (or visable
-	 * region) minus all the children of this window.
-	 * Alternatively, if the window is a container, we must also 
-	 * subtract the region of the embedded window.
-	 */
-	 
-	rgn = winPtr->privatePtr->clipRgn;
-	CopyRgn(winPtr->privatePtr->aboveClipRgn, rgn);
-		
-	win2Ptr = winPtr->childList;
-	while (win2Ptr != NULL) {
-	    if (Tk_IsTopLevel(win2Ptr) || !Tk_IsMapped(win2Ptr)) {
-		win2Ptr = win2Ptr->nextPtr;
-		continue;
-	    }
-	    x = win2Ptr->privatePtr->xOff;
-	    y = win2Ptr->privatePtr->yOff;
-	    SetRectRgn(tmpRgn, (short) x, (short) y,
-		    (short) (win2Ptr->changes.width  + x), 
-		    (short) (win2Ptr->changes.height + y));
-	    DiffRgn(rgn, tmpRgn, rgn);
-							  
-	    win2Ptr = win2Ptr->nextPtr;
-	}
-	
-	if (Tk_IsContainer(winPtr)) {
-	    win2Ptr = TkpGetOtherWindow(winPtr);
-	    if (win2Ptr != NULL) {
-		if (Tk_IsMapped(win2Ptr)) {
-		    x = win2Ptr->privatePtr->xOff;
-		    y = win2Ptr->privatePtr->yOff;
-		    SetRectRgn(tmpRgn, (short) x, (short) y,
-			    (short) (win2Ptr->changes.width  + x), 
-			    (short) (win2Ptr->changes.height + y));
-		    DiffRgn(rgn, tmpRgn, rgn);
+
+	    if (!Tk_IsTopLevel(winPtr)) { 
+		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
+	    } else if (Tk_IsEmbedded(winPtr)) {
+		TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
+
+		if (contWinPtr != NULL) {
+		    TkMacOSXUpdateClipRgn(contWinPtr);
 		}
-	    } 
-	    
-	    /*
-	     * NOTE: Here we should handle out of process embedding.
-	     */
-		    
+	    }
+	    SetEmptyRgn(winPtr->privatePtr->aboveClipRgn);
+	    SetEmptyRgn(winPtr->privatePtr->clipRgn);
 	}
-		
+
 	winPtr->privatePtr->flags &= ~TK_CLIP_INVALID;
+
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CLIP_REGIONS)
+	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
+				     CGrafPtr port, RgnHandle region);
+	if (QDDebugFlashRegion) {
+	    MacDrawable *macDraw = (MacDrawable *) winPtr->privatePtr;
+	    CGrafPtr grafPtr = TkMacOSXGetDrawablePort((Drawable) macDraw);
+	    /* Carbon-internal region flashing SPI (c.f. Technote 2124) */
+	    QDDebugFlashRegion(grafPtr, macDraw->clipRgn);
+	}
+#endif /* TK_MAC_DEBUG_CLIP_REGIONS */
+
     }
 }
 
@@ -1066,13 +1045,23 @@ TkMacOSXInvalidateWindow(
 
     grafPtr = TkMacOSXGetDrawablePort((Drawable)macWin);
     windowRef = GetWindowFromPort(grafPtr);
-    
+
     if (flag == TK_WINDOW_ONLY) {
 	InvalWindowRgn(windowRef,macWin->clipRgn);
     } else {
 	if (!EmptyRgn(macWin->aboveClipRgn)) {
-	    InvalWindowRgn(windowRef,macWin->aboveClipRgn);
+	    InvalWindowRgn(windowRef, macWin->aboveClipRgn);
 	}
+
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CLIP_REGIONS)
+	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
+				     CGrafPtr port, RgnHandle region);
+	if (QDDebugFlashRegion) {
+	    /* Carbon-internal region flashing SPI (c.f. Technote 2124) */
+	    QDDebugFlashRegion(grafPtr, macWin->aboveClipRgn);
+	}
+#endif /* TK_MAC_DEBUG_CLIP_REGIONS */
+
     }
 }
 
@@ -1217,7 +1206,7 @@ TkMacOSXGetRootControl(
  *	This function invalidates the clipping regions for a given
  *	window and all of its children.  This function should be
  *	called whenever changes are made to subwindows that would
- *	effect the size or position of windows.
+ *	affect the size or position of windows.
  *
  * Results:
  *	None.
@@ -1235,45 +1224,47 @@ TkMacOSXInvalClipRgns(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *childPtr;
-	
+
     /* 
      * If already marked we can stop because all 
      * decendants will also already be marked.
      */
-    if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
+    if (!winPtr->privatePtr || winPtr->privatePtr->flags & TK_CLIP_INVALID) {
 	return;
     }
-	
+
     winPtr->privatePtr->flags |= TK_CLIP_INVALID;
-	
+    SetEmptyRgn(winPtr->privatePtr->aboveClipRgn);
+    SetEmptyRgn(winPtr->privatePtr->clipRgn);
+
     /* 
      * Invalidate clip regions for all children & 
      * their decendants - unless the child is a toplevel.
      */
     childPtr = winPtr->childList;
-    while (childPtr != NULL) {
-	if (!Tk_IsTopLevel(childPtr) && Tk_IsMapped(childPtr)) {
+    while (childPtr) {
+	if (!Tk_IsTopLevel(childPtr)) {
 	    TkMacOSXInvalClipRgns((Tk_Window) childPtr);
 	}
 	childPtr = childPtr->nextPtr;
     }
-    
+
     /*
      * Also, if the window is a container, mark its embedded window
      */
-     
+
     if (Tk_IsContainer(winPtr)) {
 	childPtr = TkpGetOtherWindow(winPtr);
 
-	if (childPtr != NULL && Tk_IsMapped(childPtr)) {
+	if (childPtr) {
 	    TkMacOSXInvalClipRgns((Tk_Window) childPtr);
 	}
-	
+
 	/*
 	 * NOTE: Here we should handle out of process embedding.
 	 */
-		    	
-    }     	    
+
+    }
 }
 
 /*
