@@ -1,13 +1,44 @@
+2006-05-13  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkCanvWind.c (DisplayWinItem, WinItemRequestProc): ensure
+	canvas window items are unmapped when canvas is unmapped. [Bug 940117]
+
+	* macosx/tkMacOSXSubwindows.c (TkMacOSXUpdateClipRgn): empty clip region
+	of unmapped windows to prevent any drawing into them or into their
+	children from becoming visible. [Bug 940117]
+
+	* macosx/tkMacOSXInt.h:         revert Jim's attempt of 2005-03-14 to
+	* macosx/tkMacOSXSubwindows.c:  fix Bug 940117 as it disables Map/Unmap
+	event propagation to children.  [Bug 1480105]
+
+	* macosx/tkMacOSXDraw.c (TkPutImage): handle tkPictureIsOpen flag, fixes
+	incorrect positioning of images with complex alpha on native buttons;
+	actual alpha blending is still broken in this situation. [Bug 1155596]
+
+	* macosx/tkMacOSXEvent.c (TkMacOSXProcessCommandEvent):
+	* macosx/tkMacOSXMenus.c (TkMacOSXInitMenus): workaround carbon bug with
+	key shortcut for 'Preferences' app menu item. [Bug 1481503]
+
+	* macosx/tkMacOSXKeyEvent.c (TkMacOSXProcessKeyboardEvent): only check
+	for HICommand menu item shortcuts in the application menu.
+
+	* macosx/tkMacOSXInt.h:       initialize keyboard layout setup in
+	* macosx/tkMacOSXInit.c:      TkpInit() rather than during handling of
+	* macosx/tkMacOSXKeyEvent.c:  first key down event.
+
+	* macosx/tkMacOSXDraw.c:        add optional debug code to flash clip
+	* macosx/tkMacOSXSubwindows.c:  regions during update or draw.
+
 2006-05-04  Don Porter  <dgp@users.sourceforge.net>
 
-        * README:               Bump version number to 8.5a4
-        * generic/tk.h:
-        * unix/configure.in:
-        * unix/tk.spec:
-        * win/configure.in:
+	* README:		Bump version number to 8.5a4
+	* generic/tk.h:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
 
-        * unix/configure:       autoconf-2.59
-        * win/configure:
+	* unix/configure:	autoconf-2.59
+	* win/configure:
 
 2006-04-28  Daniel Steffen  <das@users.sourceforge.net>
 
