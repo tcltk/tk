@@ -5,11 +5,12 @@
  *
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2005-2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.18 2006/04/28 06:03:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.19 2006/05/12 18:18:52 das Exp $
  */
 
 #include "tkMacOSXInt.h"
