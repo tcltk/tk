@@ -5,11 +5,12 @@
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2005-2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.10 2006/04/11 10:22:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.11 2006/05/12 18:17:48 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -228,6 +229,7 @@ TkMacOSXProcessCommandEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 				command.menu.menuItemIndex);
 		    }
 		}
+		statusPtr->stopProcessing = 1;
 		return 1;
 	    }
 	}
