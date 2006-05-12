@@ -4,7 +4,11 @@
  *      This file implements functions that decode & handle keyboard events
  *      on MacOS X.
  *
- *      Copyright 2001, Apple Computer, Inc.
+ * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
+ *
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  *      The following terms apply to all files originating from Apple
  *      Computer, Inc. ("Apple") and associated with the software
@@ -50,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.6.2.8 2006/04/28 06:02:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.6.2.9 2006/05/12 18:17:55 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -173,24 +177,23 @@ TkMacOSXProcessKeyboardEvent(
      */
 
     if ((eventPtr->eKind == kEventRawKeyDown 
-            || eventPtr->eKind == kEventRawKeyRepeat) 
-            && IsMenuKeyEvent(NULL, eventPtr->eventRef, 
-            kMenuEventQueryOnly, &menuRef, &menuItemIndex)) {
-        MenuCommand menuCmd;
-        
-        GetMenuItemCommandID (menuRef, menuItemIndex, &menuCmd);
-        
-        switch (menuCmd) {
-            case kHICommandHide:
-            case kHICommandHideOthers:
-            case kHICommandShowAll:
-            case kHICommandPreferences:
-                statusPtr->stopProcessing = 0;
-                return 0; /* TODO: may not be on event on queue. */
-                break;
-            default:
-                break;
-        }
+	    || eventPtr->eKind == kEventRawKeyRepeat)
+	    && IsMenuKeyEvent(tkAppleMenu, eventPtr->eventRef, 
+		    kMenuEventQueryOnly, &menuRef, &menuItemIndex)) {
+	MenuCommand menuCmd;
+
+	GetMenuItemCommandID (menuRef, menuItemIndex, &menuCmd);
+	switch (menuCmd) {
+	    case kHICommandHide:
+	    case kHICommandHideOthers:
+	    case kHICommandShowAll:
+	    case kHICommandPreferences:
+		statusPtr->stopProcessing = 0;
+		return 0; /* TODO: may not be on event on queue. */
+		break;
+	    default:
+		break;
+	}
     }
 
     status = GetEventParameter(eventPtr->eventRef, 
@@ -1187,7 +1190,7 @@ XUngrabKeyboard(
 {
     gKeyboardWinPtr = NULL;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1204,7 +1207,7 @@ TkMacOSXGetCapture()
 {
     return gGrabWinPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1233,7 +1236,7 @@ TkpSetCapture(
     }
     gGrabWinPtr = (Tk_Window) winPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1259,4 +1262,30 @@ Tk_SetCaretPos(tkwin, x, y, height)
     int       y;
     int       height;
 {
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInitKeyboard --
+ *
+ *	  This procedure initializes the keyboard layout.
+ *
+ * Results:
+ *	  None.
+ *
+ * Side effects:
+ *	  None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkMacOSXInitKeyboard (
+	Tcl_Interp *interp)
+{
+    Ptr resource;
+    TextEncoding encoding;
+    
+    GetKeyboardLayout(&resource,&encoding);
 }

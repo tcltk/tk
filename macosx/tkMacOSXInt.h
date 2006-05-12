@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.11 2006/04/28 06:02:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.12 2006/05/12 18:17:55 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -29,11 +29,6 @@
 
 #ifndef _TKMAC
 #include "tkMacOSX.h"
-#endif
-
-/* for source code parity with tk HEAD */
-#ifndef MODULE_SCOPE
-#define MODULE_SCOPE extern
 #endif
 
 struct TkWindowPrivate {
@@ -71,7 +66,6 @@ typedef struct TkMacOSXWindowList {
 #define TK_CLIP_INVALID		2
 #define TK_HOST_EXISTS		4
 #define TK_DRAWN_UNDER_MENU	8
-#define TK_MAPPED_IN_PARENT	16
 
 /*
  * I am reserving TK_EMBEDDED = 0x100 in the MacDrawable flags
@@ -161,6 +155,7 @@ MODULE_SCOPE void TkMacOSXDisplayChanged(Display *display);
 MODULE_SCOPE int TkMacOSXUseAntialiasedText(Tcl_Interp *interp, int enable);
 MODULE_SCOPE void TkMacOSXInitCarbonEvents(Tcl_Interp *interp);
 MODULE_SCOPE int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable, int antiAlias);
+MODULE_SCOPE void TkMacOSXInitKeyboard(Tcl_Interp *interp);
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE int TkMacOSXGenerateFocusEvent( Window window, int activeFlag);
 MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
