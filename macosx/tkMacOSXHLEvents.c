@@ -6,11 +6,12 @@
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.11 2006/04/11 10:21:28 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.12 2006/05/12 18:18:36 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -112,7 +113,6 @@ TkMacOSXInitAppleEvents(
 	    err = AEInstallEventHandler(kAEMiscStandards, kAEDoScript,
 		ScriptHandlerUPP, (long) interp, false);
 	}
-
     }
 }
 

@@ -4,7 +4,11 @@
  *	Implementation of Macintosh specific functions for debugging MacOS events,
  *      regions, etc...
  *
- *      Copyright 2001, Apple Computer, Inc.
+ * Copyright 2001, Apple Computer, Inc.
+ * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
+ *
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  *      The following terms apply to all files originating from Apple
  *      Computer, Inc. ("Apple") and associated with the software
@@ -50,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.7 2006/01/10 05:37:51 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.8 2006/05/12 18:18:36 das Exp $
  */
 
 #include "tkMacOSXInt.h"
