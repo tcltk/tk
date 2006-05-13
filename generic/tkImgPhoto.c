@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.16 2006/03/16 00:42:55 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.17 2006/05/13 00:48:37 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -4605,25 +4605,30 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
      * Check if display code needs alpha blending...
      */
 
-    if (!sourceIsSimplePhoto || masterPtr->flags & COMPLEX_ALPHA) {
+    if (!sourceIsSimplePhoto && (width == 1) && (height == 1)) {
 	/*
-	 * Note that we skip in the single pixel case if we can. This speeds
-	 * up code that builds up large simple-alpha images by single pixels,
-	 * which seems to be a common use-case. [Bug 1409140]
+	 * Optimize the single pixel case if we can. This speeds up code that
+	 * builds up large simple-alpha images by single pixels.  We don't
+	 * negate COMPLEX_ALPHA in this case. [Bug 1409140]
 	 */
-
-	if (width == 1 && height == 1 && !(masterPtr->flags & COMPLEX_ALPHA)) {
+	if (!(masterPtr->flags & COMPLEX_ALPHA)) {
 	    unsigned char newAlpha;
 
 	    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
 	    newAlpha = destLinePtr[3];
 
-	    if (newAlpha > 0 && newAlpha < 255) {
+	    if (newAlpha && newAlpha != 255) {
 		masterPtr->flags |= COMPLEX_ALPHA;
 	    }
-	} else {
-	    ToggleComplexAlphaIfNeeded(masterPtr);
 	}
+    } else if ((alphaOffset != 0) || (masterPtr->flags & COMPLEX_ALPHA)) {
+	/*
+	 * Check for partial transparency if alpha pixels are specified, or
+	 * rescan if we already knew such pixels existed.  To restrict this
+	 * Toggle to only checking the changed pixels requires knowing where
+	 * the alpha pixels are.
+	 */
+	ToggleComplexAlphaIfNeeded(masterPtr);
     }
 
     /*
@@ -4919,25 +4924,30 @@ Tk_PhotoPutZoomedBlock(handle, blockPtr, x, y, width, height, zoomX, zoomY,
      * Check if display code needs alpha blending...
      */
 
-    if (!sourceIsSimplePhoto || masterPtr->flags & COMPLEX_ALPHA) {
+    if (!sourceIsSimplePhoto && (width == 1) && (height == 1)) {
 	/*
-	 * Note that we skip in the single pixel case if we can. This speeds
-	 * up code that builds up large simple-alpha images by single pixels,
-	 * which seems to be a common use-case. [Bug 1409140]
+	 * Optimize the single pixel case if we can. This speeds up code that
+	 * builds up large simple-alpha images by single pixels.  We don't
+	 * negate COMPLEX_ALPHA in this case. [Bug 1409140]
 	 */
-
-	if (width == 1 && height == 1 && !(masterPtr->flags & COMPLEX_ALPHA)) {
+	if (!(masterPtr->flags & COMPLEX_ALPHA)) {
 	    unsigned char newAlpha;
 
 	    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
 	    newAlpha = destLinePtr[3];
 
-	    if (newAlpha > 0 && newAlpha < 255) {
+	    if (newAlpha && newAlpha != 255) {
 		masterPtr->flags |= COMPLEX_ALPHA;
 	    }
-	} else {
-	    ToggleComplexAlphaIfNeeded(masterPtr);
 	}
+    } else if ((alphaOffset != 0) || (masterPtr->flags & COMPLEX_ALPHA)) {
+	/*
+	 * Check for partial transparency if alpha pixels are specified, or
+	 * rescan if we already knew such pixels existed.  To restrict this
+	 * Toggle to only checking the changed pixels requires knowing where
+	 * the alpha pixels are.
+	 */
+	ToggleComplexAlphaIfNeeded(masterPtr);
     }
 
     /*
