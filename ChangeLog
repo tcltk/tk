@@ -1,3 +1,9 @@
+2006-05-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
+	Fix opt added 2006-03 that caused slowdown for some common cases.
+	[Bug 1409140] 
+
 2006-05-13  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkCanvWind.c (DisplayWinItem, WinItemRequestProc): ensure
