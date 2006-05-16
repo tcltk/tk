@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.25 2006/04/28 06:03:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.26 2006/05/16 06:55:14 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -2166,12 +2166,22 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
      * FIX: We need an UpdateWrapper equivalent to make this 100% correct
      */
     if (boolean) {
-	wmPtr->style = plainDBox;
+	if (wmPtr->macClass == kDocumentWindowClass || (wmPtr->master != None && 
+		wmPtr->macClass == kFloatingWindowClass)) {
+	    wmPtr->macClass = kSimpleWindowClass;
+	    wmPtr->attributes = kWindowNoAttributes;
+	}
+	wmPtr->attributes |= kWindowNoActivatesAttribute;
     } else {
-	if (wmPtr->master != None) {
-	    wmPtr->style = floatZoomGrowProc; // override && transient
-	} else {
-	    wmPtr->style = documentProc;
+	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
+	if (wmPtr->macClass == kSimpleWindowClass) {
+	    if (wmPtr->master != None) {
+		wmPtr->macClass = kFloatingWindowClass; // override && transient
+		wmPtr->attributes = kWindowStandardFloatingAttributes;
+	    } else {
+		wmPtr->macClass = kDocumentWindowClass;
+		wmPtr->attributes = kWindowStandardDocumentAttributes;
+	    }
 	}
     }
     return TCL_OK;
@@ -2808,9 +2818,11 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
         wmPtr->masterWindowName = NULL;
 	/* XXX UpdateWrapper */
 	if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-	    wmPtr->style = plainDBox;
+	    wmPtr->macClass = kSimpleWindowClass;
+	    wmPtr->attributes = kWindowNoActivatesAttribute;
 	} else {
-	    wmPtr->style = documentProc;
+	    wmPtr->macClass = kDocumentWindowClass;
+	    wmPtr->attributes = kWindowStandardDocumentAttributes;
 	}
     } else {
         if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
@@ -2851,9 +2863,11 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
         strcpy(wmPtr->masterWindowName, argv3);
 	/* XXX UpdateWrapper */
 	if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-	    wmPtr->style = plainDBox;
+	    wmPtr->macClass = kSimpleWindowClass;
+	    wmPtr->attributes = kWindowNoActivatesAttribute;
 	} else {
-	    wmPtr->style = floatZoomGrowProc;
+	    wmPtr->macClass = kFloatingWindowClass;
+	    wmPtr->attributes = kWindowStandardFloatingAttributes;
 	}
     }
     return TCL_OK;
@@ -4829,6 +4843,16 @@ TkMacOSXWinStyle(
 	char *strValue;
 	int  intValue;
     };
+#if !defined(MAC_OS_X_VERSION_10_3) || \
+	(MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+    #define kSimpleWindowClass 18
+    #define kWindowDoesNotCycleAttribute (1L << 15)
+#endif
+#if !defined(MAC_OS_X_VERSION_10_4) || \
+	(MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4)
+    #define kWindowNoTitleBarAttribute (1L << 9)
+    #define kWindowMetalNoContentSeparatorAttribute (1L << 11)
+#endif
     static CONST struct StrIntMap styleMap[] = {
 	{ "documentProc",	    documentProc	  },
 	{ "noGrowDocProc",	    documentProc	  },
@@ -4863,6 +4887,7 @@ TkMacOSXWinStyle(
 	{ "overlay",	    kOverlayWindowClass	     },
 	{ "sheetAlert",	    kSheetAlertWindowClass   },
 	{ "altPlain",	    kAltPlainWindowClass     },
+	{ "simple",	    kSimpleWindowClass	     },
 	{ "drawer",	    kDrawerWindowClass	     },
 	{ NULL,		    0			     }
     };
@@ -4874,16 +4899,20 @@ TkMacOSXWinStyle(
     };
     static CONST struct StrIntMap attrMap[] = {
 	{ "closeBox",	      kWindowCloseBoxAttribute	       },
-	{ "fullZoom",	      kWindowHorizontalZoomAttribute | kWindowVerticalZoomAttribute	},
 	{ "horizontalZoom",   kWindowHorizontalZoomAttribute   },
 	{ "verticalZoom",     kWindowVerticalZoomAttribute     },
+	{ "fullZoom",	      kWindowFullZoomAttribute	       },
 	{ "collapseBox",      kWindowCollapseBoxAttribute      },
 	{ "resizable",	      kWindowResizableAttribute	       },
 	{ "sideTitlebar",     kWindowSideTitlebarAttribute     },
 	{ "toolbarButton",    kWindowToolbarButtonAttribute    },
 	{ "metal",	      kWindowMetalAttribute	       },
-	{ "noActivates",      kWindowNoActivatesAttribute      },
+	{ "noTitleBar",	      kWindowNoTitleBarAttribute       },
+	{ "metalNoContentSeparator", kWindowMetalNoContentSeparatorAttribute },
+	{ "doesNotCycle",     kWindowDoesNotCycleAttribute     },
 	{ "noUpdates",	      kWindowNoUpdatesAttribute	       },
+	{ "noActivates",      kWindowNoActivatesAttribute      },
+	{ "opaqueForEvents",  kWindowOpaqueForEventsAttribute  },
 	{ "compositing",      kWindowCompositingAttribute      },
 	{ "noShadow",	      kWindowNoShadowAttribute	       },
 	{ "hideOnSuspend",    kWindowHideOnSuspendAttribute    },
@@ -4891,6 +4920,7 @@ TkMacOSXWinStyle(
 	{ "hideOnFullScreen", kWindowHideOnFullScreenAttribute },
 	{ "inWindowMenu",     kWindowInWindowMenuAttribute     },
 	{ "ignoreClicks",     kWindowIgnoreClicksAttribute     },
+	{ "noConstrain",      kWindowNoConstrainAttribute      },
 	{ "standardDocument", kWindowStandardDocumentAttributes },
 	{ "standardFloating", kWindowStandardFloatingAttributes },
 	{ NULL,		      0				       }
@@ -5014,9 +5044,11 @@ TkpMakeMenuWindow(
 				 * floating menu. */
 {
     if (transient) {
-	((TkWindow *) tkwin)->wmInfoPtr->style = plainDBox;
+	((TkWindow *) tkwin)->wmInfoPtr->macClass = kSimpleWindowClass;
+	((TkWindow *) tkwin)->wmInfoPtr->attributes = kWindowNoActivatesAttribute;
     } else {
-	((TkWindow *) tkwin)->wmInfoPtr->style = floatProc;
+	((TkWindow *) tkwin)->wmInfoPtr->macClass = kFloatingWindowClass;
+	((TkWindow *) tkwin)->wmInfoPtr->attributes = kWindowStandardFloatingAttributes;
 	((TkWindow *) tkwin)->wmInfoPtr->flags |= WM_WIDTH_NOT_RESIZABLE;
 	((TkWindow *) tkwin)->wmInfoPtr->flags |= WM_HEIGHT_NOT_RESIZABLE;
     }
@@ -5133,6 +5165,15 @@ TkMacOSXMakeRealWindowExist(
     macWin->rootControl = rootControl;
     MoveWindowStructure(newWindow, geometry.left, geometry.top);
     SetPort(GetWindowPort(newWindow));
+
+    /*
+     * overrideredirect windows are not activated by the window server and
+     * don't receive activate events.
+     */
+    if (winPtr->atts.override_redirect) {
+	SetWindowActivationScope(newWindow, kWindowActivationScopeNone);
+	ChangeWindowAttributes(newWindow, kWindowNoActivatesAttribute, 0);
+    }
 
     if ((wmPtr->master != None) && winPtr->atts.override_redirect) {
 	/*
