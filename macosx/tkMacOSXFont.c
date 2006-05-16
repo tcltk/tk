@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.17 2006/04/11 10:19:51 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.18 2006/05/16 07:58:09 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -46,6 +46,14 @@
 #define TK_MAC_DEBUG_FONTS
 #endif
 */
+
+/* Define macros only available on Mac OS X 10.3 or later */
+#ifndef FixedToInt
+#define FixedToInt(a)       ((short)(((Fixed)(a) + fixed1/2) >> 16))
+#endif
+#ifndef IntToFixed
+#define IntToFixed(a)       ((Fixed)(a) << 16)
+#endif
 
 /*
  * Problem: The sum of two parts is not the same as the whole.  In particular
