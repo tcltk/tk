@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.9 2006/05/12 18:17:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.10 2006/05/16 06:54:04 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -195,7 +195,7 @@ TkMacOSXInitMenus(
     }
 
     /*
-     * Workarund a Carbon bug with kHICommandPreferences: the first call to
+     * Workaround a Carbon bug with kHICommandPreferences: the first call to
      * IsMenuKeyEvent returns false for the preferences menu item key shorcut
      * event (even if the corresponding menu item is dynamically enabled by a
      * kEventCommandUpdateStatus handler), unless the kHICommandPreferences
