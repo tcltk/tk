@@ -12,11 +12,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.15 2006/05/12 18:17:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.16 2006/05/16 07:33:50 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
+
+#include "tclInt.h" /* for Tcl_CreateNamespace() */
 
 /*
 #ifdef	TK_MAC_DEBUG
