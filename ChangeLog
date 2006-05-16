@@ -1,3 +1,17 @@
+2006-05-16  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWindowEvent.c (TkMacOSXGenerateFocusEvent): don't send
+	focus events to windows of class help or to overrideredirect windows.
+	[Bug 1472624]
+
+	* macosx/tkMacOSXWm.c: set overrideredirect windows to not become
+	activated by the window manager and to not receive OS activate events
+	(should make them behave more like on other platforms); use modern
+	window class API for overrideredirect and transient windows; set the
+	default class of overrideredirect windows to 'simple' rather than
+	'plain' (i.e. no window frame); add missing Panther and Tiger window
+	attributes to [::tk::unsupported::MacWindowStyle].
+
 2006-05-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
