@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.20.2.6 2005/11/27 02:44:25 das Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.20.2.7 2006/05/25 23:51:37 hobbs Exp $
  */
 
 /*
@@ -3489,7 +3489,7 @@ DeleteMenuCloneEntries(menuPtr, first, last)
 {
 
     TkMenu *menuListPtr;
-    int numDeleted, i;
+    int numDeleted, i, j;
 
     numDeleted = last + 1 - first;
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
@@ -3499,9 +3499,10 @@ DeleteMenuCloneEntries(menuPtr, first, last)
 		    DestroyMenuEntry);
 	}
 	for (i = last + 1; i < menuListPtr->numEntries; i++) {
-	    menuListPtr->entries[i - numDeleted] = menuListPtr->entries[i];
-	    menuListPtr->entries[i - numDeleted]->index = i - numDeleted;
-	}
+	    j = i - numDeleted;
+	    menuListPtr->entries[j] = menuListPtr->entries[i];
+	    menuListPtr->entries[j]->index = j;
+	  }
 	menuListPtr->numEntries -= numDeleted;
 	if (menuListPtr->numEntries == 0) {
 	    ckfree((char *) menuListPtr->entries);
