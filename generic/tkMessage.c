@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.15 2005/11/14 22:44:11 dkf Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.16 2006/05/25 23:50:00 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -330,15 +330,16 @@ MessageWidgetObjCmd(
     case MESSAGE_CGET:
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
-	    return TCL_ERROR;
-	}
-	objPtr = Tk_GetOptionValue(interp, (char *) msgPtr,
-		msgPtr->optionTable, objv[2], msgPtr->tkwin);
-	if (objPtr == NULL) {
 	    result = TCL_ERROR;
 	} else {
-	    Tcl_SetObjResult(interp, objPtr);
-	    result = TCL_OK;
+	    objPtr = Tk_GetOptionValue(interp, (char *) msgPtr,
+		    msgPtr->optionTable, objv[2], msgPtr->tkwin);
+	    if (objPtr == NULL) {
+		result = TCL_ERROR;
+	    } else {
+		Tcl_SetObjResult(interp, objPtr);
+		result = TCL_OK;
+	    }
 	}
 	break;
     case MESSAGE_CONFIGURE:
