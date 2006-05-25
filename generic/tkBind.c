@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.39 2005/11/17 10:57:35 dkf Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.40 2006/05/25 23:49:32 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -1768,8 +1768,9 @@ Tk_BindEvent(
 		ckfree((char *) psPtr);
 	    }
 	} else {
-	    code = Tcl_GlobalEval(interp, p);
-	    p += strlen(p);
+	    int len = (int) strlen(p);
+	    code = Tcl_EvalEx(interp, p, len, TCL_EVAL_GLOBAL);
+	    p += len;
 	}
 	p++;
 
@@ -4655,7 +4656,8 @@ TkCopyAndGlobalEval(
 
     Tcl_DStringInit(&buffer);
     Tcl_DStringAppend(&buffer, script, -1);
-    code = Tcl_GlobalEval(interp, Tcl_DStringValue(&buffer));
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buffer),
+	    Tcl_DStringLength(&buffer), TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buffer);
     return code;
 }
