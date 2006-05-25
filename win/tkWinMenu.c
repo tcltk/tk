@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.47 2006/04/05 20:59:04 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.48 2006/05/25 23:50:31 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1935,8 +1935,6 @@ TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
 	return TCL_ERROR;
     }
 
-    eventPtr = TkpGetBindingXEvent(interp);
-
     tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[1]),
 	    Tk_MainWindow(interp));
 
@@ -1947,6 +1945,8 @@ TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
 	 */
 	return TCL_OK;
     }
+
+    eventPtr = TkpGetBindingXEvent(interp);
 
     winPtr = (TkWindow *)tkwin;
 
