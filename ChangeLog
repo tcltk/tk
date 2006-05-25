@@ -1,3 +1,20 @@
+2006-05-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkWinMenuKeyObjCmd): get eventPtr after we know
+	the window is still alive. [AS bug 45987] [Bug 1236306]
+
+	* generic/tkMenu.c (DeleteMenuCloneEntries): Modify entry index
+	changes to work around VC6 optimization bug. [Bug 1224330]
+
+	* generic/tkMessage.c (MessageWidgetObjCmd): Correct msgPtr
+	preserve/release pairing. [Bug 1485750] (afredd)
+
+	* generic/tkWindow.c (Initialize): Correct mutex (un)lock
+	pairing. [Bug 1479587] (loewis)
+
+	* generic/tkBind.c (Tk_BindEvent, TkCopyAndGlobalEval): use
+	Tcl_EvalEx instead of Tcl_GlobalEval.
+
 2006-05-16  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWindowEvent.c (TkMacOSXGenerateFocusEvent): don't send
