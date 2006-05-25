@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.73 2006/04/11 21:52:20 pspjuth Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.74 2006/05/25 23:49:48 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2894,6 +2894,7 @@ Initialize(interp)
     use = NULL;
     visual = NULL;
     rest = 0;
+    argv = NULL;
 
     /*
      * We start by resetting the result because it might not be clean
@@ -2922,8 +2923,8 @@ Initialize(interp)
 	    master = Tcl_GetMaster(master);
 	    if (master == NULL) {
 		Tcl_AppendResult(interp, "NULL master", NULL);
-		Tcl_MutexUnlock(&windowMutex);
-		return TCL_ERROR;
+		code = TCL_ERROR;
+		goto done;
 	    }
 	    if (!Tcl_IsSafe(master)) {
 		/* Found the trusted master. */
@@ -2935,10 +2936,9 @@ Initialize(interp)
 	 * Construct the name (rewalk...)
 	 */
 
-	if (Tcl_GetInterpPath(master, interp) != TCL_OK) {
+	if ((code = Tcl_GetInterpPath(master, interp)) != TCL_OK) {
 	    Tcl_AppendResult(interp, "error in Tcl_GetInterpPath", NULL);
-	    Tcl_MutexUnlock(&windowMutex);
-	    return TCL_ERROR;
+	    goto done;
 	}
 
 	/*
@@ -2954,7 +2954,7 @@ Initialize(interp)
 	 * path of the slave.
 	 */
 
-	if (Tcl_Eval(master, Tcl_DStringValue(&ds)) != TCL_OK) {
+	if ((code = Tcl_Eval(master, Tcl_DStringValue(&ds))) != TCL_OK) {
 	    /*
 	     * We might want to transfer the error message or not. We don't.
 	     * (No API to do it and maybe security reasons).
@@ -2963,8 +2963,7 @@ Initialize(interp)
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp,
 		    "not allowed to start Tk by master's safe::TkInit", NULL);
-	    Tcl_MutexUnlock(&windowMutex);
-	    return TCL_ERROR;
+	    goto done;
 	}
 	Tcl_DStringFree(&ds);
 
@@ -2984,7 +2983,6 @@ Initialize(interp)
 
 	argString = Tcl_GetVar2(interp, "argv", NULL, TCL_GLOBAL_ONLY);
     }
-    argv = NULL;
     if (argString != NULL) {
 	char buffer[TCL_INTEGER_SPACE];
 
@@ -2992,8 +2990,8 @@ Initialize(interp)
 	argError:
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (processing arguments in argv variable)");
-	    Tcl_MutexUnlock(&windowMutex);
-	    return TCL_ERROR;
+	    code = TCL_ERROR;
+	    goto done;
 	}
 	if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv,
 		argTable, TK_ARGV_DONT_SKIP_FIRST_ARG|TK_ARGV_NO_DEFAULTS)
@@ -3097,7 +3095,6 @@ Initialize(interp)
 	}
 	geometry = NULL;
     }
-    Tcl_MutexUnlock(&windowMutex);
 
     if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 1) == NULL) {
 	code = TCL_ERROR;
@@ -3134,19 +3131,18 @@ Initialize(interp)
      */
 
     code = TkpInit(interp);
-    if (code != TCL_OK) {
-	goto done;
+    if (code == TCL_OK) {
+	/*
+	 * Create exit handlers to delete all windows when the application or
+	 * thread exits. The handler need to be invoked before other platform
+	 * specific cleanups take place to avoid panics in finalization.
+	 */
+
+	TkCreateThreadExitHandler(DeleteWindowsExitProc, (ClientData) tsdPtr);
     }
 
-    /*
-     * Create exit handlers to delete all windows when the application or
-     * thread exits. The handler need to be invoked before other platform
-     * specific cleanups take place to avoid panics in finalization.
-     */
-
-    TkCreateThreadExitHandler(DeleteWindowsExitProc, (ClientData) tsdPtr);
-
   done:
+    Tcl_MutexUnlock(&windowMutex);
     if (argv != NULL) {
 	ckfree((char *) argv);
     }
