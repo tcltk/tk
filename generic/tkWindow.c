@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56.2.8 2006/03/30 01:38:39 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56.2.9 2006/05/25 23:51:02 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -2932,6 +2932,7 @@ Initialize(interp)
     use = NULL;
     visual = NULL;
     rest = 0;
+    argv = NULL;
 
     /*
      * We start by resetting the result because it might not be clean
@@ -2944,7 +2945,7 @@ Initialize(interp)
 	 * from the master.
 	 */
 	Tcl_DString ds;
-	
+
 	/*
 	 * Step 1 : find the master and construct the interp name
 	 * (could be a function if new APIs were ok).
@@ -2957,8 +2958,8 @@ Initialize(interp)
 	    master = Tcl_GetMaster(master);
 	    if (master == NULL) {
 		Tcl_AppendResult(interp, "NULL master", (char *) NULL);
-		Tcl_MutexUnlock(&windowMutex);
-		return TCL_ERROR;
+		code = TCL_ERROR;
+		goto done;
 	    }
 	    if (!Tcl_IsSafe(master)) {
 		/* Found the trusted master. */
@@ -2968,11 +2969,10 @@ Initialize(interp)
 	/*
 	 * Construct the name (rewalk...)
 	 */
-	if (Tcl_GetInterpPath(master, interp) != TCL_OK) {
+	if ((code = Tcl_GetInterpPath(master, interp)) != TCL_OK) {
 	    Tcl_AppendResult(interp, "error in Tcl_GetInterpPath",
 		    (char *) NULL);
-	    Tcl_MutexUnlock(&windowMutex);
-	    return TCL_ERROR;
+	    goto done;
 	}
 	/*
 	 * Build the string to eval.
@@ -2980,13 +2980,13 @@ Initialize(interp)
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppendElement(&ds, "::safe::TkInit");
 	Tcl_DStringAppendElement(&ds, Tcl_GetStringResult(master));
-	
+
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed*
 	 * interp path of the slave.
 	 */
-	
-	if (Tcl_Eval(master, Tcl_DStringValue(&ds)) != TCL_OK) {
+
+	if ((code = Tcl_Eval(master, Tcl_DStringValue(&ds))) != TCL_OK) {
 	    /*
 	     * We might want to transfer the error message or not.
 	     * We don't. (no API to do it and maybe security reasons).
@@ -2995,8 +2995,7 @@ Initialize(interp)
 	    Tcl_AppendResult(interp, 
 		    "not allowed to start Tk by master's safe::TkInit",
 		    (char *) NULL);
-	    Tcl_MutexUnlock(&windowMutex);
-	    return TCL_ERROR;
+	    goto done;
 	}
 	Tcl_DStringFree(&ds);
 	/* 
@@ -3015,7 +3014,6 @@ Initialize(interp)
 
 	argString = Tcl_GetVar2(interp, "argv", (char *) NULL, TCL_GLOBAL_ONLY);
     }
-    argv = NULL;
     if (argString != NULL) {
 	char buffer[TCL_INTEGER_SPACE];
 
@@ -3023,8 +3021,8 @@ Initialize(interp)
 	    argError:
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (processing arguments in argv variable)");
-	    Tcl_MutexUnlock(&windowMutex);
-	    return TCL_ERROR;
+	    code = TCL_ERROR;
+	    goto done;
 	}
 	if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv,
 		argTable, TK_ARGV_DONT_SKIP_FIRST_ARG|TK_ARGV_NO_DEFAULTS)
@@ -3128,7 +3126,6 @@ Initialize(interp)
 	}
         geometry = NULL;
     }
-    Tcl_MutexUnlock(&windowMutex);
 
     if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 1) == NULL) {
 	code = TCL_ERROR;
@@ -3167,6 +3164,7 @@ Initialize(interp)
     code = TkpInit(interp);
 
     done:
+    Tcl_MutexUnlock(&windowMutex);
     if (argv != NULL) {
 	ckfree((char *) argv);
     }
