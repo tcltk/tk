@@ -283,21 +283,6 @@
 		F9EA4AF408FA3BDB00B1F5F0 /* tkAboutDlg.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBC108F27A3B005CB29B /* tkAboutDlg.r */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXBuildStyle section */
-		014CEA520018CE5811CA2923 /* Development */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-			};
-			name = Development;
-		};
-		014CEA530018CE5811CA2923 /* Deployment */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-			};
-			name = Deployment;
-		};
-/* End PBXBuildStyle section */
-
 /* Begin PBXFileReference section */
 		8DD76FB20486AB0100D96B5E /* tktest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tktest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXFont.h; sourceTree = "<group>"; };
@@ -3272,8 +3257,6 @@
 			buildConfigurationList = F95CC8AB09158F3100EA5ACE /* Build configuration list for PBXLegacyTarget "Tk" */;
 			buildPhases = (
 			);
-			buildSettings = {
-			};
 			buildToolPath = /bin/bash;
 			buildWorkingDirectory = "${SRCROOT}";
 			dependencies = (
@@ -3298,8 +3281,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-			};
 			dependencies = (
 			);
 			name = tktest;
@@ -3314,12 +3295,6 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = F95CC8B509158F3100EA5ACE /* Build configuration list for PBXProject "Wish" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				014CEA520018CE5811CA2923 /* Development */,
-				014CEA530018CE5811CA2923 /* Deployment */,
-			);
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* Wish */;
 			projectDirPath = "";
@@ -3356,11 +3331,11 @@
 				"${REZ_COLLECTOR_DIR}/${PRODUCT_NAME}.rsrc",
 			);
 			outputPaths = (
-				"${TEMP_DIR}/stamp",
+				"${TARGET_TEMP_DIR}/stamp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "touch -t $(date -r $(expr $(date '+%s') + 5) '+%Y%m%d%H%M.%S') \"${TEMP_DIR}/stamp\"\n\n## Xcode bug workaround: Rezzing does not take place for commandline tool targets\n## even when a ResourceManager Resources phase is present, but this script phase's\n## input dependency on the final merged resource file forces the Rezzing.\n\nif [ \"${ZERO_LINK}\" = \"YES\" ]; then\n    ## ZeroLinking ignores OTHER_LDFLAGS, so our resource file doesn't get linked into the executable.\n    ## workaround: copy resource data into resource fork of zerolink launcher (will only work on HFS+).\n    cp -f \"${SCRIPT_INPUT_FILE_1}\" \"${SCRIPT_INPUT_FILE_0}/..namedfork/rsrc\"\nfi\n";
+			shellScript = "touch -t $(date -r $(expr $(date '+%s') + 5) '+%Y%m%d%H%M.%S') \"${TARGET_TEMP_DIR}/stamp\"\n\n## Xcode bug workaround: Rezzing does not take place for commandline tool targets\n## even when a ResourceManager Resources phase is present, but this script phase's\n## input dependency on the final merged resource file forces the Rezzing.\n\nif [ \"${ZERO_LINK}\" = \"YES\" ]; then\n    ## ZeroLinking ignores OTHER_LDFLAGS, so our resource file doesn't get linked into the executable.\n    ## workaround: copy resource data into resource fork of zerolink launcher (will only work on HFS+).\n    cp -f \"${SCRIPT_INPUT_FILE_1}\" \"${SCRIPT_INPUT_FILE_0}/..namedfork/rsrc\"\nfi\n";
 		};
 		F9A5C5F508F651A2008AE941 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3840,6 +3815,7 @@
 				BINDIR = "${PREFIX}/bin";
 				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
 				DEAD_CODE_STRIPPING = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_DEBUGGING_SYMBOLS = default;
 				GCC_DYNAMIC_NO_PIC = YES;
@@ -3978,6 +3954,7 @@
 				BINDIR = "${PREFIX}/bin";
 				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
 				DEAD_CODE_STRIPPING = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_DEBUGGING_SYMBOLS = default;
 				GCC_DYNAMIC_NO_PIC = YES;
