@@ -1,3 +1,8 @@
+2006-05-26  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXButton.c (TkMacOSXDrawControl): correct redraw
+	for direct transition from disabled to active state. [Bug 706446]
+
 2006-05-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenu.c (DeleteMenuCloneEntries): Modify entry index
