@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.25 2004/12/08 03:03:06 dgp Exp $
+# RCS: @(#) $Id: listbox.test,v 1.26 2006/05/29 21:53:16 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1107,6 +1107,18 @@ test listbox-6.14 {InsertEls procedure, check selection update} {
     .l2 insert 0 a
     .l2 curselection
 } [list 3 4 5]
+test listbox-6.15 {InsertEls procedure, lost namespaced listvar} {
+    destroy .l2
+    namespace eval test { variable foo {a b} }
+    listbox .l2 -listvar ::test::foo
+    namespace delete test
+    .l2 insert end c d
+    .l2 delete end
+    .l2 insert end e f
+    catch {set ::test::foo} result
+    list [.l2 get 0 end] [.l2 cget -listvar] $result
+} [list [list a b c e f] ::test::foo \
+	{can't read "::test::foo": no such variable}]
 
 
 test listbox-7.1 {DeleteEls procedure} {
