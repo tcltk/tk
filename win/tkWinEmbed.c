@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.30 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.31 2006/05/29 22:21:40 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -931,7 +931,6 @@ TkpGetOtherWindow(
 	    return containerPtr->embeddedPtr;
 	}
     }
-    Tcl_Panic("TkpGetOtherWindow couldn't find window");
     return NULL;
 }
 

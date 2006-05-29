@@ -1,5 +1,10 @@
 2006-05-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinEmbed.c (TkpGetOtherWindow):   [Bug 1212056] do not panic
+	* unix/tkUnixEmbed.c (TkpGetOtherWindow): if no window is found -
+	* unix/tkUnixWm.c (Tk_CoordsToWindow, UpdateGeometryInfo): handle it
+	in the caller
+
 	* tests/entry.test (entry-22.1):
 	* tests/listbox.test (listbox-6.15):
 	* generic/tkListbox.c (ListboxInsertSubCmd, ListboxDeleteSubCmd):
