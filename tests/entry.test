@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.14 2003/02/25 00:46:41 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.14.2.1 2006/05/29 21:52:47 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -1612,6 +1612,18 @@ test entry-21.1 {selection present while disabled, bug 637828} {
     .e select to 9
     lappend out [.e selection present] [selection get]
 } {1 1 345}
+
+test entry-22.1 {lost namespaced textvar} {
+    destroy .e
+    namespace eval test { variable foo {a b} }
+    entry .e -textvariable ::test::foo
+    namespace delete test
+    .e insert end "more stuff"
+    .e delete 5 end
+    catch {set ::test::foo} result
+    list [.e get] [.e cget -textvar] $result
+} [list "a bmo" ::test::foo \
+	{can't read "::test::foo": no such variable}]
 
 destroy .e
 
