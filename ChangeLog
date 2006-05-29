@@ -1,3 +1,11 @@
+2006-05-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/entry.test (entry-22.1):
+	* tests/listbox.test (listbox-6.15):
+	* generic/tkListbox.c (ListboxInsertSubCmd, ListboxDeleteSubCmd):
+	Ignore Tcl_SetVar2Ex failure of listVarName, similar to entry
+	widget handling. [Bug 1424513]
+
 2006-05-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXButton.c (TkMacOSXDrawControl): correct redraw
