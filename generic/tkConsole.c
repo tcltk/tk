@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.18.2.2 2005/06/23 22:07:13 das Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.18.2.3 2006/06/01 18:21:41 dgp Exp $
  */
 
 #include "tk.h"
@@ -81,7 +81,7 @@ static int	ConsoleHandle _ANSI_ARGS_((ClientData instanceData,
 
 static Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
-    NULL,			/* Always non-blocking.*/
+    TCL_CHANNEL_VERSION_4,	/* v4 channel */
     ConsoleClose,		/* Close proc. */
     ConsoleInput,		/* Input proc. */
     ConsoleOutput,		/* Output proc. */
@@ -90,6 +90,12 @@ static Tcl_ChannelType consoleChannelType = {
     NULL,			/* Get option proc. */
     ConsoleWatch,		/* Watch for events on console. */
     ConsoleHandle,		/* Get a handle from the device. */
+    NULL,			/* close2proc. */
+    NULL,			/* Always non-blocking.*/
+    NULL,			/* flush proc. */
+    NULL,			/* handler proc. */
+    NULL,                       /* wide seek proc */
+    NULL,                       /* thread action proc */
 };
 
 
@@ -273,6 +279,7 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDIN);
+	    Tcl_RegisterChannel(NULL, consoleChannel);
 	}
 
 	/*
@@ -291,6 +298,7 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
+	    Tcl_RegisterChannel(NULL, consoleChannel);
 	}
 	
 	/*
@@ -309,6 +317,7 @@ Tk_InitConsoleChannels(interp)
 			"-encoding", "utf-8");
 	    }
 	    Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
+	    Tcl_RegisterChannel(NULL, consoleChannel);
 	}
     }
     Tcl_MutexUnlock(&consoleMutex);
