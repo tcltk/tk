@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.56.2.7 2005/11/27 02:44:25 das Exp $ 
+ * RCS: $Id: tkInt.h,v 1.56.2.8 2006/06/05 18:06:47 dgp Exp $ 
  */
 
 #ifndef _TKINT
@@ -1127,9 +1127,6 @@ EXTERN int		Tk_WinfoObjCmd _ANSI_ARGS_((ClientData clientData,
 EXTERN int		Tk_WmObjCmd _ANSI_ARGS_((ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]));
-
-EXTERN void		TkConsolePrint _ANSI_ARGS_((Tcl_Interp *interp,
-			    int devId, CONST char *buffer, long size));
 
 EXTERN void		TkEventInit _ANSI_ARGS_((void));
 
