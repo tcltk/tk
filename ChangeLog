@@ -1,3 +1,8 @@
+2006-06-05  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkInt.h:	Thread safety for the data structures of 
+	* generic/tkConsole.c:	the wish [console].  [Bug 1188340].
+
 2006-06-01  Don Porter  <dgp@users.sourceforge.net>
 
         * generic/tkConsole.c:  Added Tcl_RegisterChannel() calls to bump
