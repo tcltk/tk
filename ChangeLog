@@ -1,3 +1,9 @@
+2006-06-09  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkMain.c:	Added Tcl_Preserve() call on the master
+	interp as crash protection against any Tcl_DeleteInterp() call
+	that might happen.
+
 2006-06-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConsole.c:	Added Tcl_RegisterChannel() calls to bump
