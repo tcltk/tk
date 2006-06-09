@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.15.2.2 2005/10/18 15:16:01 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.15.2.3 2006/06/09 15:41:29 dgp Exp $
  */
 
 #include <ctype.h>
@@ -126,6 +126,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     
     Tcl_FindExecutable(argv[0]);
     tsdPtr->interp = interp;
+    Tcl_Preserve((ClientData) interp);
 
 #if (defined(__WIN32__) || defined(MAC_TCL))
     Tk_InitConsoleChannels(interp);
@@ -296,6 +297,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 
     Tk_MainLoop();
     Tcl_DeleteInterp(interp);
+    Tcl_Release((ClientData) interp);
     Tcl_Exit(0);
 }
 
