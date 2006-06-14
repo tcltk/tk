@@ -1,3 +1,9 @@
+2006-06-14  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkScale.c:	Revised variable writing logic to account
+	for [scale]'s design that it deals with its value as a formatted
+	string, and not as a double.	[Bug 891141].
+
 2006-06-14  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXSubwindows.c (TkMacOSXInvalidateWindow): ensure invalid
