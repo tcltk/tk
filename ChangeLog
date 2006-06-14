@@ -1,3 +1,9 @@
+2006-06-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc:  Sync with tcl to enable building with 
+	* win/rules.vc:     VC8 (VS2005 C compiler)
+	* win/nmakehlp.c:
+
 2006-06-14  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkScale.c:	Revised variable writing logic to account
