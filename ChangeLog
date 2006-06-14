@@ -1,3 +1,14 @@
+2006-06-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXSubwindows.c (TkMacOSXInvalidateWindow): ensure invalid
+	clip regions are recreated via TkMacOSXUpdateClipRgn() before they are
+	used; correct call order of TkMacOSXInvalidateWindow() and
+	TkMacOSXInvalClipRgns() throughout. [Bug 1501922]
+
+	* macosx/tkMacOSXDraw.c (TkPutImage): implement drawing of very wide
+	images in slices of less than 4096 pixels to workaround CopyBits
+	limitation. [Bug 950121]
+
 2006-06-09  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkMain.c:	Added Tcl_Preserve() call on the master
