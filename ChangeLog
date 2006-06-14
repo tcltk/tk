@@ -1,19 +1,30 @@
+2006-06-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXSubwindows.c (TkMacOSXInvalidateWindow): ensure invalid
+	clip regions are recreated via TkMacOSXUpdateClipRgn() before they are
+	used; correct call order of TkMacOSXInvalidateWindow() and
+	TkMacOSXInvalClipRgns() throughout. [Bug 1501922]
+
+	* macosx/tkMacOSXDraw.c (TkPutImage): implement drawing of very wide
+	images in slices of less than 4096 pixels to workaround CopyBits
+	limitation. [Bug 950121]
+
 2006-06-09  Don Porter  <dgp@users.sourceforge.net>
 
-        * generic/tkMain.c:     Added Tcl_Preserve() call on the master
-        interp as crash protection against any Tcl_DeleteInterp() call
-        that might happen.
+	* generic/tkMain.c:     Added Tcl_Preserve() call on the master
+	interp as crash protection against any Tcl_DeleteInterp() call
+	that might happen.
 
-2006-06-05  Don Porter  <dgp@users.sourceforge.net>
+2006-06-05  Don Porter	<dgp@users.sourceforge.net>
 
-	* generic/tkInt.h:	Thread safety for the data structures of 
-	* generic/tkConsole.c:	the wish [console].  [Bug 1188340].
+	* generic/tkInt.h:      Thread safety for the data structures of 
+	* generic/tkConsole.c:  the wish [console].  [Bug 1188340].
 
-2006-06-01  Don Porter  <dgp@users.sourceforge.net>
+2006-06-01  Don Porter	<dgp@users.sourceforge.net>
 
-        * generic/tkConsole.c:  Added Tcl_RegisterChannel() calls to bump
-        the refcount of channels passed to Tcl_SetStdChannel().  This prevents
-        early free-ing of the channels that leads to crashes.  [Bug 912571].
+	* generic/tkConsole.c:  Added Tcl_RegisterChannel() calls to bump
+	the refcount of channels passed to Tcl_SetStdChannel().  This prevents
+	early free-ing of the channels that leads to crashes.  [Bug 912571].
 
 2006-05-29  Jeff Hobbs  <jeffh@ActiveState.com>
 

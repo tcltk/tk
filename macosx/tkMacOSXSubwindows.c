@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.10 2006/05/12 18:17:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.11 2006/06/14 21:20:12 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -231,8 +231,8 @@ XMapWindow(
 	 * Generate damage for that area of the window 
 	 */
 	SetGWorld(destPort, NULL);
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
+	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
     }
 }
 
@@ -368,8 +368,8 @@ XResizeWindow(
 
                 if (havePort) {
                     SetPort(destPort);
-		    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);	
 		    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+		    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);	
 		}
 		deltaX = macParent->xOff +
 		    macWin->winPtr->changes.x - macWin->xOff;
@@ -402,8 +402,8 @@ XResizeWindow(
 	
         if (havePort) {
             SetPort(destPort);
-	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);	
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);	
         }
 	deltaX = - macWin->xOff;
 	deltaY = - macWin->yOff;
@@ -497,14 +497,12 @@ XMoveResizeWindow(
 	 * region.  It is currently assumed that Tk will need
 	 * to completely redraw anway.
 	 */
-	
         if (havePort) {
             SetPort( destPort);
 	    SizeWindow(GetWindowFromPort(destPort),
 		    (short) width, (short) height, false);
 	    MoveWindowStructure(GetWindowFromPort(destPort), x, y);
 	
-	    /* TODO: is the following right? */
 	    TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
 	    TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
         }
@@ -541,8 +539,8 @@ XMoveResizeWindow(
 
 	if (havePort) {
 	    SetPort( destPort);
-	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);
 	}
 
 	deltaX = - macWin->xOff;
@@ -615,7 +613,6 @@ XMoveWindow(
             SetPort(destPort);
 	    MoveWindowStructure( GetWindowFromPort(destPort), x, y);
 
-	    /* TODO: is the following right? */
 	    TkMacOSXInvalidateWindow(macWin, TK_WINDOW_ONLY);
 	    TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
         }
@@ -651,8 +648,8 @@ XMoveWindow(
 
         if (havePort) {
             SetPort(destPort);
-	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	    TkMacOSXInvalClipRgns((Tk_Window) macParent->winPtr);
         }
         
 	deltaX = - macWin->xOff;
@@ -1046,8 +1043,11 @@ TkMacOSXInvalidateWindow(
     grafPtr = TkMacOSXGetDrawablePort((Drawable)macWin);
     windowRef = GetWindowFromPort(grafPtr);
 
+    if (macWin->flags & TK_CLIP_INVALID) {
+	TkMacOSXUpdateClipRgn(macWin->winPtr);
+    }
     if (flag == TK_WINDOW_ONLY) {
-	InvalWindowRgn(windowRef,macWin->clipRgn);
+	InvalWindowRgn(windowRef, macWin->clipRgn);
     } else {
 	if (!EmptyRgn(macWin->aboveClipRgn)) {
 	    InvalWindowRgn(windowRef, macWin->aboveClipRgn);

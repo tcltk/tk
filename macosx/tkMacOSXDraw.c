@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.16 2006/05/16 07:33:50 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.17 2006/06/14 21:20:12 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -398,16 +398,17 @@ TkPutImage(
     const BitMap * destBits;
     MacDrawable *dstDraw = (MacDrawable *) d;
     int i, j;
-    BitMap bitmap;
     char *newData = NULL;
     Rect destRect, srcRect, *destPtr, *srcPtr;
-
-    destPort = TkMacOSXGetDrawablePort(d);
+    char *dataPtr, *newPtr, *oldPtr;
+    int rowBytes = image->bytes_per_line;
+    int slices, sliceRowBytes, lastSliceRowBytes, sliceWidth, lastSliceWidth;
 
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
+    destPort = TkMacOSXGetDrawablePort(d);
     SetGWorld(destPort, NULL);
-
+    destBits = GetPortBitMapForCopyBits(destPort);
     TkMacOSXSetUpClippingRgn(d);
 
     srcPtr = &srcRect;
@@ -431,81 +432,136 @@ TkPutImage(
     }
 
     if (image->obdata) {
-        /* Image from XGetImage, copy from containing GWorld directly */
-        GWorldPtr srcPort = TkMacOSXGetDrawablePort((Drawable)image->obdata);
-        CopyBits(GetPortBitMapForCopyBits(srcPort),
-                GetPortBitMapForCopyBits(destPort),
-                srcPtr, destPtr, srcCopy, NULL);
+	/* Image from XGetImage, copy from containing GWorld directly */
+	GWorldPtr srcPort = TkMacOSXGetDrawablePort((Drawable)image->obdata);
+	CopyBits(GetPortBitMapForCopyBits(srcPort),
+		destBits, srcPtr, destPtr, srcCopy, NULL);
     } else if (image->depth == 1) {
-        /*
-         * This code assumes a pixel depth of 1
-         */
+	/*
+	 * BW image
+	 */
+	const int maxRowBytes = 0x3ffe;
+	BitMap bitmap;
+	int odd;
 
-        bitmap.bounds.top = bitmap.bounds.left = 0;
-        bitmap.bounds.right = (short) image->width;
-        bitmap.bounds.bottom = (short) image->height;
-        if ((image->bytes_per_line % 2) == 1) {
-            char *newPtr, *oldPtr;
-            newData = (char *) ckalloc(image->height *
-		    (image->bytes_per_line + 1));
-            newPtr = newData;
-            oldPtr = image->data;
-            for (i = 0; i < image->height; i++) {
-                for (j = 0; j < image->bytes_per_line; j++) {
-                    *newPtr = InvertByte((unsigned char) *oldPtr);
-                    newPtr++, oldPtr++;
-                }
-		*newPtr = 0;
-		newPtr++;
-            }
-            bitmap.baseAddr = newData;
-            bitmap.rowBytes = image->bytes_per_line + 1;
-        } else {
-	    size_t size = image->height * image->bytes_per_line;
-            newData = (char *) ckalloc((int) size);
-            for (i = 0; i < size; i++) {
-                newData[i] = InvertByte((unsigned char) image->data[i]);
-            }
-            bitmap.baseAddr = newData;
-            bitmap.rowBytes = image->bytes_per_line;
-        }
-        destBits = GetPortBitMapForCopyBits(destPort);
-        CopyBits(&bitmap, destBits, srcPtr, destPtr, srcCopy, NULL);
+	if (rowBytes > maxRowBytes) {
+	    slices = rowBytes / maxRowBytes;
+	    sliceRowBytes = maxRowBytes;
+	    lastSliceRowBytes = rowBytes - (slices * maxRowBytes);
+	    if (!lastSliceRowBytes) {
+		slices--;
+		lastSliceRowBytes = maxRowBytes;
+	    }
+	    sliceWidth = (long) image->width * maxRowBytes / rowBytes;
+	    lastSliceWidth = image->width - (sliceWidth * slices);
+	} else {
+	    slices = 0;
+	    sliceRowBytes = lastSliceRowBytes = rowBytes;
+	    sliceWidth = lastSliceWidth = image->width;
+	}
+	bitmap.bounds.top = bitmap.bounds.left = 0;
+	bitmap.bounds.bottom = (short) image->height;
+	dataPtr = image->data;
+	do {
+	    if (slices) {
+		bitmap.bounds.right = bitmap.bounds.left + sliceWidth;
+	    } else {
+		sliceRowBytes = lastSliceRowBytes;
+		bitmap.bounds.right = bitmap.bounds.left + lastSliceWidth;
+	    }
+	    oldPtr = dataPtr;
+	    odd = sliceRowBytes % 2;
+	    if (!newData) {
+		newData = (char *) ckalloc(image->height * (sliceRowBytes + odd));
+	    }
+	    newPtr = newData;
+	    for (i = 0; i < image->height; i++) {
+		for (j = 0; j < sliceRowBytes; j++) {
+		    *newPtr = InvertByte((unsigned char) *oldPtr);
+		    newPtr++; oldPtr++;
+		}
+		if (odd) {
+		    *newPtr++ = 0;
+		}
+		oldPtr += rowBytes - sliceRowBytes;
+	    }
+	    bitmap.baseAddr = newData;
+	    bitmap.rowBytes = sliceRowBytes + odd;
+	    CopyBits(&bitmap, destBits, srcPtr, destPtr, srcCopy, NULL);
+	    if (slices) {
+		bitmap.bounds.left = bitmap.bounds.right;
+		dataPtr += sliceRowBytes;
+	    }
+	} while (slices--);
     } else {
-        /*
-         * Color image
-         */
-        PixMap pixmap;
+	/*
+	 * Color image
+	 */
+	const int maxRowBytes = 0x3ffc;
+	PixMap pixmap;
 
-        pixmap.bounds.left = 0;
-        pixmap.bounds.top = 0;
-        pixmap.bounds.right = (short) image->width;
-        pixmap.bounds.bottom = (short) image->height;
-        pixmap.pixelType = RGBDirect;
-        pixmap.pmVersion = baseAddr32;        /* 32bit clean */
-        pixmap.packType = 0;
-        pixmap.packSize = 0;
-        pixmap.hRes = 0x00480000;
-        pixmap.vRes = 0x00480000;
-        pixmap.pixelSize = 32;
-        pixmap.cmpCount = 3;
-        pixmap.cmpSize = 8;
+	pixmap.bounds.left = 0;
+	pixmap.bounds.top = 0;
+	pixmap.bounds.bottom = (short) image->height;
+	pixmap.pixelType = RGBDirect;
+	pixmap.pmVersion = baseAddr32;	      /* 32bit clean */
+	pixmap.packType = 0;
+	pixmap.packSize = 0;
+	pixmap.hRes = 0x00480000;
+	pixmap.vRes = 0x00480000;
+	pixmap.pixelSize = 32;
+	pixmap.cmpCount = 3;
+	pixmap.cmpSize = 8;
 #ifdef WORDS_BIGENDIAN
-        pixmap.pixelFormat = k32ARGBPixelFormat;
+	pixmap.pixelFormat = k32ARGBPixelFormat;
 #else
-        pixmap.pixelFormat = k32BGRAPixelFormat;
+	pixmap.pixelFormat = k32BGRAPixelFormat;
 #endif
-        pixmap.pmTable = NULL;
-        pixmap.pmExt = 0;
-        pixmap.baseAddr = image->data;
-        pixmap.rowBytes = image->bytes_per_line | 0x8000;
-
-        CopyBits((BitMap *) &pixmap, GetPortBitMapForCopyBits(destPort), 
-            srcPtr, destPtr, srcCopy, NULL);
+	pixmap.pmTable = NULL;
+	pixmap.pmExt = 0;
+	if (rowBytes > maxRowBytes) {
+	    slices = rowBytes / maxRowBytes;
+	    sliceRowBytes = maxRowBytes;
+	    lastSliceRowBytes = rowBytes - (slices * maxRowBytes);
+	    if (!lastSliceRowBytes) {
+		slices--;
+		lastSliceRowBytes = maxRowBytes;
+	    }
+	    sliceWidth = (long) image->width * maxRowBytes / rowBytes;
+	    lastSliceWidth = image->width - (sliceWidth * slices);
+	    dataPtr = image->data;
+	    newData = (char *) ckalloc(image->height * sliceRowBytes);
+	    do {
+		if (slices) {
+		    pixmap.bounds.right = pixmap.bounds.left + sliceWidth;
+		} else {
+		    sliceRowBytes = lastSliceRowBytes;
+		    pixmap.bounds.right = pixmap.bounds.left + lastSliceWidth;
+		}
+		oldPtr = dataPtr;
+		newPtr = newData;
+		for (i = 0; i < image->height; i++) {
+		    memcpy(newPtr, oldPtr, sliceRowBytes);
+		    oldPtr += rowBytes;
+		    newPtr += sliceRowBytes;
+		}
+		pixmap.baseAddr = newData;
+		pixmap.rowBytes = sliceRowBytes | 0x8000;
+		CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr, srcCopy, NULL);
+		if (slices) {
+		    pixmap.bounds.left = pixmap.bounds.right;
+		    dataPtr += sliceRowBytes;
+		}
+	    } while (slices--);
+	} else {
+	    pixmap.bounds.right = (short) image->width;
+	    pixmap.baseAddr = image->data;
+	    pixmap.rowBytes = rowBytes | 0x8000;
+	    CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr, srcCopy, NULL);
+	}
     }
-
     if (newData != NULL) {
-        ckfree(newData);
+	ckfree(newData);
     }
     SetGWorld(saveWorld, saveDevice);
 }
