@@ -9,27 +9,25 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * ----------------------------------------------------------------------------
- * RCS: @(#) $Id: nmakehlp.c,v 1.1.6.1 2004/10/27 00:36:34 davygrvy Exp $
+ * RCS: @(#) $Id: nmakehlp.c,v 1.1.6.2 2006/06/14 23:52:01 patthoyts Exp $
  * ----------------------------------------------------------------------------
  */
+
+#define _CRT_SECURE_NO_DEPRECATE
 #include <windows.h>
 #pragma comment (lib, "user32.lib")
 #pragma comment (lib, "kernel32.lib")
-#include <stdio.h>
 
 /* protos */
 int CheckForCompilerFeature (const char *option);
 int CheckForLinkerFeature (const char *option);
 int IsIn (const char *string, const char *substring);
-int GrepForDefine (const char *file, const char *string);
 DWORD WINAPI ReadFromPipe (LPVOID args);
 
 /* globals */
-#define CHUNK	25
-#define STATICBUFFERSIZE    1000
 typedef struct {
     HANDLE pipe;
-    char buffer[STATICBUFFERSIZE];
+    char buffer[1000];
 } pipeinfo;
 
 pipeinfo Out = {INVALID_HANDLE_VALUE, '\0'};
@@ -45,10 +43,16 @@ main (int argc, char *argv[])
     DWORD dwWritten;
     int chars;
 
-    /* make sure children (cl.exe and link.exe) are kept quiet. */
+    /*
+     * Make sure children (cl.exe and link.exe) are kept quiet.
+     */
+
     SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX);
 
-    /* Make sure the compiler and linker aren't effected by the outside world. */
+    /*
+     * Make sure the compiler and linker aren't affected by the outside world.
+     */
+
     SetEnvironmentVariable("CL", "");
     SetEnvironmentVariable("LINK", "");
 
@@ -85,15 +89,6 @@ main (int argc, char *argv[])
 	    } else {
 		return IsIn(argv[2], argv[3]);
 	    }
-	case 'g':
-	    if (argc == 2) {
-		chars = wsprintf(msg, "usage: %s -g <file> <string>\n"
-		    "grep for a #define\n"
-		    "exitcodes: integer of the found string (no decimals)\n", argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars, &dwWritten, NULL);
-		return 2;
-	    }
-	    return GrepForDefine(argv[2], argv[3]);
 	}
     }
     chars = wsprintf(msg, "usage: %s -c|-l|-f ...\n"
@@ -110,11 +105,11 @@ CheckForCompilerFeature (const char *option)
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     SECURITY_ATTRIBUTES sa;
-    DWORD threadID;
+    DWORD threadID, n;
     char msg[300];
     BOOL ok;
     HANDLE hProcess, h, pipeThreads[2];
-    char cmdline[100];
+    char cmdline[256];
 
     hProcess = GetCurrentProcess();
 
@@ -142,7 +137,12 @@ CheckForCompilerFeature (const char *option)
 	    0, TRUE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
 
     /* base command line */
-    strcpy(cmdline, "cl.exe -nologo -c -TC -Zs -X ");
+    n = GetEnvironmentVariable("CC", cmdline, 255);
+    cmdline[n] = 0;
+    if (n == 0)
+	strcpy(cmdline, "cl.exe");
+    strncat(cmdline, " -nologo -c -TC -Zs -X ", 255);
+
     /* append our option for testing */
     strcat(cmdline, option);
     /* filename to compile, which exists, but is nothing and empty. */
@@ -186,13 +186,37 @@ CheckForCompilerFeature (const char *option)
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
 
+    /* clean up temporary files before returning */
+    DeleteFile("temp.idb");
+    DeleteFile("temp.pdb");
+
     /* wait for our pipe to get done reading, should it be a little slow. */
     WaitForMultipleObjects(2, pipeThreads, TRUE, 500);
     CloseHandle(pipeThreads[0]);
     CloseHandle(pipeThreads[1]);
 
-    /* look for the commandline warning code in both streams. */
-    return !(strstr(Out.buffer, "D4002") != NULL || strstr(Err.buffer, "D4002") != NULL);
+#ifdef _DEBUG
+    {
+	DWORD err = 0;
+	strcat(cmdline, "\n");
+	WriteFile(GetStdHandle(STD_ERROR_HANDLE), cmdline, 
+	    strlen(cmdline), &err, NULL);
+	WriteFile(GetStdHandle(STD_ERROR_HANDLE), Out.buffer, 
+	    strlen(Out.buffer), &err,NULL);
+	WriteFile(GetStdHandle(STD_ERROR_HANDLE), Err.buffer,
+	    strlen(Err.buffer), &err,NULL);
+    }
+#endif
+
+    /*
+     * Look for the commandline warning code in both streams.
+     *  - in MSVC 6 & 7 we get D4002, in MSVC 8 we get D9002.
+     */
+    
+    return !(strstr(Out.buffer, "D4002") != NULL
+             || strstr(Err.buffer, "D4002") != NULL
+             || strstr(Out.buffer, "D9002") != NULL
+             || strstr(Err.buffer, "D9002") != NULL);
 }
 
 int
@@ -236,6 +260,8 @@ CheckForLinkerFeature (const char *option)
     strcpy(cmdline, "link.exe -nologo ");
     /* append our option for testing */
     strcat(cmdline, option);
+    /* filename to compile, which exists, but is nothing and empty. */
+//    strcat(cmdline, " nul");
 
     ok = CreateProcess(
 	    NULL,	    /* Module name. */
@@ -293,11 +319,7 @@ ReadFromPipe (LPVOID args)
     BOOL ok;
 
 again:
-    if (lastBuf - pi->buffer + CHUNK > STATICBUFFERSIZE) {
-	CloseHandle(pi->pipe);
-	return -1;
-    }
-    ok = ReadFile(pi->pipe, lastBuf, CHUNK, &dwRead, 0L);
+    ok = ReadFile(pi->pipe, lastBuf, 25, &dwRead, 0L);
     if (!ok || dwRead == 0) {
 	CloseHandle(pi->pipe);
 	return 0;
@@ -312,44 +334,4 @@ int
 IsIn (const char *string, const char *substring)
 {
     return (strstr(string, substring) != NULL);
-}
-
-/*
- *  Find a specified #define by name.
- *
- *  If the line is '#define TCL_VERSION "8.5"', it returns
- *  85 as the result.
- */
-
-int
-GrepForDefine (const char *file, const char *string)
-{
-    FILE *f;
-    char s1[51], s2[51], s3[51];
-    int r = 0;
-    double d1;
-
-    f = fopen(file, "rt");
-    if (f == NULL) {
-	return 0;
-    }
-
-    do {
-	r = fscanf(f, "%50s", s1);
-	if (r == 1 && !strcmp(s1, "#define")) {
-	    /* get next two words */
-	    r = fscanf(f, "%50s %50s", s2, s3);
-	    if (r != 2) continue;
-	    /* is the first word what we're looking for? */
-	    if (!strcmp(s2, string)) {
-		fclose(f);
-		/* add 1 past first double quote char. "8.5" */
-		d1 = atof(s3 + 1);		  /*    8.5  */
-		return ((int) (d1 * 10) & 0xFF);  /*    85   */
-	    }
-	}
-    } while (!feof(f));
-
-    fclose(f);
-    return 0;
 }
