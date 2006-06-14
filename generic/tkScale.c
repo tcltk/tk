@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.22 2005/11/17 16:21:56 dkf Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.23 2006/06/14 22:17:06 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -563,7 +563,7 @@ ConfigureScale(
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
     int error;
-    double oldValue = scalePtr->value;
+    double varValue;
 
     /*
      * Eliminate any existing trace on a variable monitored by the scale.
@@ -674,10 +674,17 @@ ConfigureScale(
 
 	valuePtr = Tcl_ObjGetVar2(interp, scalePtr->varNamePtr, NULL,
 		TCL_GLOBAL_ONLY);
-	if ((valuePtr == NULL) || (scalePtr->value != oldValue)
-		|| (Tcl_GetDoubleFromObj(NULL, valuePtr, &oldValue) != TCL_OK)
-		|| (scalePtr->value != oldValue)) {
+	if ((valuePtr == NULL) || (Tcl_GetDoubleFromObj(NULL,
+		valuePtr, &varValue) != TCL_OK)) {
 	    ScaleSetVariable(scalePtr);
+	} else {
+	    char varString[TCL_DOUBLE_SPACE];
+	    char scaleString[TCL_DOUBLE_SPACE];
+	    sprintf(varString, scalePtr->format, varValue);
+	    sprintf(scaleString, scalePtr->format, scalePtr->value);
+	    if (strcmp(varString, scaleString)) {
+		ScaleSetVariable(scalePtr);
+	    }
 	}
         Tcl_TraceVar(interp, Tcl_GetString(scalePtr->varNamePtr),
 	        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
