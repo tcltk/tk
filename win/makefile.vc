@@ -12,12 +12,13 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.13 2006/03/28 22:23:53 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.14 2006/06/14 23:52:01 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
-# or with the MS Platform SDK (MSSDK)
-!if !defined(MSDEVDIR) && !defined(MSVCDIR) && !defined(MSSDK)
+# or with the MS Platform SDK (MSSDK). Visual Studio .NET 2003 and 2005 define
+# VCINSTALLDIR instead.
+!if !defined(MSDEVDIR) && !defined(MSVCDIR) && !defined(MSSDK) && !defined(VCINSTALLDIR)
 MSG = ^
 You need to run vcvars32.bat from Developer Studio or setenv.bat from the^
 Platform SDK first to setup the environment.  Jump to this line to read^
@@ -156,7 +157,7 @@ the build instructions.
 MSG = ^
 You must run this makefile only from the directory it is in.^
 Please `cd` to its location first.
-!error $(MSG) 
+!error $(MSG)
 !endif
 
 PROJECT	= tk
@@ -169,19 +170,7 @@ PROJECT	= tk
 !endif
 
 STUBPREFIX = $(PROJECT)stub
-!if [nmakehlp -g ../generic/tk.h TK_VERSION] == 84
-DOTVERSION	= 8.4
-!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 85
-DOTVERSION	= 8.5
-!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 86
-DOTVERSION	= 8.6
-!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 90
-DOTVERSION	= 9.0
-!elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 0
-MSG =^
-Can't get version string from ../generic/tk.h
-!error $(MSG)
-!endif
+DOTVERSION = 8.4
 VERSION = $(DOTVERSION:.=)
 WISHNAMEPREFIX = wish
 
@@ -221,7 +210,8 @@ TKTESTOBJS = \
 	$(TMP_DIR)\tkTest.obj \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\testMain.obj \
-	$(TMP_DIR)\tkWinTest.obj
+	$(TMP_DIR)\tkWinTest.obj \
+        $(TMP_DIR)\wish.res
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
@@ -363,28 +353,23 @@ TK_DEFINES	= $(OPTDEFINES)
 # Compile flags
 #---------------------------------------------------------------------
 
-!if $(DEBUG)
-!if "$(MACHINE)" == "IA64"
-cdebug = -Od -Zi
+!if !$(DEBUG)
+!if $(OPTIMIZING)
+### This cranks the optimization level to maximize speed
+cdebug	= -O2 $(OPTIMIZATIONS)
 !else
-cdebug = -Z7 -Od -WX
+cdebug	=
 !endif
+!else if "$(MACHINE)" == "IA64"
+### Warnings are too many, can't support warnings into errors.
+cdebug	= -Z7 -Od $(DEBUGFLAGS)
 !else
-# This cranks the optimization level up.  We can't use -02 because sometimes
-# it causes problems.
-cdebug = -Oti
+cdebug	= -Z7 -WX $(DEBUGFLAGS)
 !endif
 
-# declarations common to all compiler options
-cflags = -nologo -c -W3 -YX -Fp$(TMP_DIR)^\
-
-!if $(PENT_0F_ERRATA)
-cflags = $(cflags) -QI0f
-!endif
-
-!if $(ITAN_B_ERRATA)
-cflags = $(cflags) -QIA64_Bx
-!endif
+### Declarations common to all compiler options
+cwarn = -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
+cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
 
 !if $(MSVCRT)
 !if "$(DBGX)" == ""
@@ -416,7 +401,7 @@ ldebug	= -debug:full -debugtype:cv
 ldebug	= -release -opt:ref -opt:icf,3
 !endif
 
-# declarations common to all linker options
+### Declarations common to all linker options
 lflags	= -nologo -machine:$(MACHINE) $(ldebug)
 
 !if $(PROFILE)
@@ -424,10 +409,10 @@ lflags	= $(lflags) -profile
 !endif
 
 !if $(ALIGN98_HACK) && !$(STATIC_BUILD)
-# align sections for PE size savings.
+### Align sections for PE size savings.
 lflags	= $(lflags) -opt:nowin98
 !else if !$(ALIGN98_HACK) && $(STATIC_BUILD)
-# align sections for speed in loading by choosing the virtual page size.
+### Align sections for speed in loading by choosing the virtual page size.
 lflags	= $(lflags) -align:4096
 !endif
 
@@ -521,6 +506,7 @@ $**
 		$(TCLSTUBLIB) @<<
 $**
 <<
+	$(_VC_MANIFEST_EMBED_DLL)
 	-@del $*.exp
 !endif
 
@@ -531,17 +517,20 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
 
 $(WISH): $(WISHOBJS) $(TKIMPLIB)
 	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(_VC_MANIFEST_EMBED_EXE)
 
 $(WISHC): $(WISHOBJS) $(TKIMPLIB)
 	$(link32) $(conlflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(_VC_MANIFEST_EMBED_EXE)
 
 $(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
 	$(link32) $(guilflags) -out:$@ $(guilibs) $(TCLIMPLIB) $**
-
+	$(_VC_MANIFEST_EMBED_EXE)
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(CON_CFLAGS) -Fo$(TMP_DIR)\ $?
 	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMP_DIR)\cat.obj $(baselibs)
+	$(_VC_MANIFEST_EMBED_EXE)
 
 install-binaries:
 	@$(CPY) "$(WISH)" "$(BIN_INSTALL_DIR)\"
