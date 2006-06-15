@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.39 2006/04/17 18:06:56 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.40 2006/06/15 20:04:46 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5932,3 +5932,23 @@ registered applevents (steffen)
 2006-04-12 (bug fix)[1432666] grid row/col out of bounds crash (spjuth)
 
 --- Released 8.4.13, April 19, 2006 --- See ChangeLog for details ---
+
+2006-04-25 (bug fix)[1475865] crash on invalid font name from XServer (fellows)
+
+2006-05-12 (performance)[1409140] restore perf lost in 2006-03-15 change (hobbs)
+
+2006-05-29 (bug fix)[1472624] Aqua: balloon help don't steal focus (steffen)
+
+2006-05-29 (bug fix)[706446] Aqua: active [button] highlight (hobbs)
+
+2006-05-29 (bug fix)[1424513] [listbox] crash with namespace var (hobbs)
+
+2006-06-01 (bug fix)[1188340] [console] std chan refcount (mistachkin,hobbs)
+
+2006-06-05 (bug fix)[1188340] [console] thread safety (porter)
+
+2006-06-14 (bug fix)[891141] excess variable writes by [scale] (porter)
+
+2006-06-15 (platform support)[1424909] MS VS2005 support (thoyts)
+
+--- Released 8.4.14, June XX, 2006 --- See ChangeLog for details ---

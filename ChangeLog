@@ -1,3 +1,7 @@
+2006-06-15  Don Porter  <dgp@users.sourceforge.net>
+
+        * changes:              changes to start prep for an 8.4.14 release.
+
 2006-06-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc:  Sync with tcl to enable building with 
