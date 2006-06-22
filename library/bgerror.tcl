@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.5 2006/03/11 22:50:51 dkf Exp $
-# $Id: bgerror.tcl,v 1.23.2.5 2006/03/11 22:50:51 dkf Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.6 2006/06/22 00:37:01 hobbs Exp $
+# $Id: bgerror.tcl,v 1.23.2.6 2006/06/22 00:37:01 hobbs Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -155,7 +155,6 @@ proc ::tk::dialog::error::bgerror err {
 
     set W [frame $w.top.info]
     text $W.text				\
-	    -bd 2				\
 	    -yscrollcommand [list $W.scroll set]\
 	    -setgrid true			\
 	    -width 40				\
@@ -165,7 +164,7 @@ proc ::tk::dialog::error::bgerror err {
 	    -highlightthickness $textHilight	\
 	    -wrap char
 
-    scrollbar $W.scroll -relief sunken -command [list $W.text yview]
+    scrollbar $W.scroll -command [list $W.text yview]
     pack $W.scroll -side right -fill y
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
