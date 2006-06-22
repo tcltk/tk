@@ -1,6 +1,11 @@
+2006-06-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/bgerror.tcl (::tk::dialog::error::bgerror): remove a
+	couple of unnecessary hardcoded options
+
 2006-06-15  Don Porter  <dgp@users.sourceforge.net>
 
-        * changes:              changes to start prep for an 8.4.14 release.
+	* changes: changes to start prep for an 8.4.14 release.
 
 2006-06-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -38,8 +43,8 @@
 
 2006-06-01  Don Porter	<dgp@users.sourceforge.net>
 
-	* generic/tkConsole.c:  Added Tcl_RegisterChannel() calls to bump
-	the refcount of channels passed to Tcl_SetStdChannel().  This prevents
+	* generic/tkConsole.c:	Added Tcl_RegisterChannel() calls to bump
+	the refcount of channels passed to Tcl_SetStdChannel().	 This prevents
 	early free-ing of the channels that leads to crashes.  [Bug 912571].
 
 2006-05-29  Jeff Hobbs  <jeffh@ActiveState.com>
@@ -186,8 +191,8 @@
 
 	*** 8.4.13 TAGGED FOR RELEASE ***
 
-        * generic/tkGrid.c: Fixed handling of out of bounds row or column.
-        * tests/grid.test:  [Bug 1432666]
+	* generic/tkGrid.c: Fixed handling of out of bounds row or column.
+	* tests/grid.test:  [Bug 1432666]
 
 	* changes:	Updates for next RC.
 
