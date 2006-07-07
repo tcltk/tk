@@ -1,3 +1,7 @@
+2006-07-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/tkfbox.tcl: catch scrollbar use of highlightthickness
+
 2006-06-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/bgerror.tcl (::tk::dialog::error::bgerror): remove a
