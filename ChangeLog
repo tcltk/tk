@@ -1,3 +1,10 @@
+2006-07-14  Andreas Kupries  <andreask@activestate.com>
+
+	* generic/tkWindow.c (Initialize): Modify change of 2006-05-25
+	  (jeffh). Release mutex a bit earlier, to prevent lock when OS X
+	  creates its console windows (recursively enters Tk_Init). Patch
+	  by JeffH.
+
 2006-07-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/tkfbox.tcl: catch scrollbar use of highlightthickness
