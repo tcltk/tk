@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56.2.9 2006/05/25 23:51:02 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56.2.10 2006/07/14 18:24:09 andreas_kupries Exp $
  */
 
 #include "tkPort.h"
@@ -3159,9 +3159,15 @@ Initialize(interp)
 
     /*
      * Invoke platform-specific initialization.
+     * Unlock mutex before entering TkpInit, as that may run through the
+     * Tk_Init routine again for the console window interpreter.
      */
 
-    code = TkpInit(interp);
+    Tcl_MutexUnlock(&windowMutex);
+    if (argv != NULL) {
+	ckfree((char *) argv);
+    }
+    return TkpInit(interp);
 
     done:
     Tcl_MutexUnlock(&windowMutex);
