@@ -10,20 +10,11 @@
 /* Is pthread_getattr_np declared in <pthread.h>? */
 #undef GETATTRNP_NOT_DECLARED
 
-/* Define to 1 if you have the `copyfile' function. */
-#undef HAVE_COPYFILE
-
-/* Define to 1 if you have the <copyfile.h> header file. */
-#undef HAVE_COPYFILE_H
-
-/* Do we have access to Darwin CoreFoundation.framework ? */
+/* Do we have access to Darwin CoreFoundation.framework? */
 #undef HAVE_COREFOUNDATION
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
-
-/* Define to 1 if you have the <libkern/OSAtomic.h> header file. */
-#undef HAVE_LIBKERN_OSATOMIC_H
 
 /* Do we have <limits.h>? */
 #undef HAVE_LIMITS_H
@@ -36,12 +27,6 @@
 
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
-
-/* Define to 1 if you have the `OSSpinLockLock' function. */
-#undef HAVE_OSSPINLOCKLOCK
-
-/* Define to 1 if you have the `pthread_atfork' function. */
-#undef HAVE_PTHREAD_ATFORK
 
 /* Do we want a BSD-like thread-attribute interface? */
 #undef HAVE_PTHREAD_ATTR_GET_NP
@@ -154,12 +139,6 @@
 /* Are bytecode statistics enabled? */
 #undef TCL_COMPILE_STATS
 
-/* Are we to override what our default encoding is? */
-#undef TCL_DEFAULT_ENCODING
-
-/* Can this platform load code from memory? */
-#undef TCL_LOAD_FROM_MEMORY
-
 /* Is memory debugging enabled? */
 #undef TCL_MEM_DEBUG
 
@@ -189,9 +168,6 @@
 
 /* Do we want to use the threaded memory allocator? */
 #undef USE_THREAD_ALLOC
-
-/* Should we use vfork() instead of fork()? */
-#undef USE_VFORK
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
