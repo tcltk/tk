@@ -54,15 +54,14 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.22 2006/04/28 06:02:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.23 2006/07/20 06:25:19 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 
-#if !defined(MAC_OS_X_VERSION_10_3) || \
-        (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
     /* Define constants only available on Mac OS X 10.3 or later */
     #define kEventParamWindowPartCode 'wpar'
     #define typeWindowPartCode        'wpar'

@@ -11,13 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.13 2006/05/16 06:53:58 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.14 2006/07/20 06:25:19 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 
-#if !defined(MAC_OS_X_VERSION_10_3) || \
-        (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
     /* Define constants only available on Mac OS X 10.3 or later */
     #define kMenuAttrDoNotUseUserCommandKeys (1 << 7)
 #endif

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.14 2005/11/27 02:36:16 das Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.15 2006/07/20 06:25:20 das Exp $
  */
 
 #include "tkPort.h"
@@ -1926,7 +1926,7 @@ TkpTestsendCmd(
 		    &bytesAfter, (unsigned char **) &property);
 	    if ((result == Success) && (actualType != None)
 		    && (actualFormat == 8) && (actualType == XA_STRING)) {
-		for (p = property; (p-property) < length; p++) {
+		for (p = property; (unsigned long)(p-property) < length; p++) {
 		    if (*p == 0) {
 			*p = '\n';
 		    }

@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: GNUmakefile,v 1.4 2006/04/12 00:58:41 das Exp $
+# RCS: @(#) $Id: GNUmakefile,v 1.5 2006/07/20 06:25:18 das Exp $
 #
 ########################################################################################################
 
@@ -117,6 +117,7 @@ export CPPROG		:= cp -p
 ifeq (${TK_X11},)
 override CONFIGURE_ARGS := ${CONFIGURE_ARGS} --enable-aqua
 else
+override CONFIGURE_ARGS := ${CONFIGURE_ARGS} --enable-xft
 VERSION			:= ${VERSION}-X11
 wish			:= ${wish}-X11
 endif

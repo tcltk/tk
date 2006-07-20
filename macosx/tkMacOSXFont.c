@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.18 2006/05/16 07:58:09 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.19 2006/07/20 06:25:19 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -690,7 +690,7 @@ TkpMeasureCharsInContext(
              * also something we like to decide for ourself.
              */
 
-            while ((offset > urstart) && (uchars[offset-1] == ' ')) {
+            while ((offset > (UniCharArrayOffset)urstart) && (uchars[offset-1] == ' ')) {
                 offset--;
             }
 
@@ -708,8 +708,8 @@ TkpMeasureCharsInContext(
                      * forward.
                      */
 
-                    if ((offset == urstart) || (uchars[offset] != ' ')) {
-                        while ((offset < urend)
+                    if ((offset == (UniCharArrayOffset)urstart) || (uchars[offset] != ' ')) {
+                        while ((offset < (UniCharArrayOffset)urend)
                                 && (uchars[offset] != ' ')) {
                             offset++;
                         }
@@ -721,12 +721,12 @@ TkpMeasureCharsInContext(
                      * backward.
                      */
 
-                    if ((offset != urend) && (uchars[offset] != ' ')) {
-                        while ((offset > urstart)
+                    if ((offset != (UniCharArrayOffset)urend) && (uchars[offset] != ' ')) {
+                        while ((offset > (UniCharArrayOffset)urstart)
                                 && (uchars[offset-1] != ' ')) {
                             offset--;
                         }
-                        while ((offset > urstart)
+                        while ((offset > (UniCharArrayOffset)urstart)
                                 && (uchars[offset-1] == ' ')) {
                             offset--;
                         }
@@ -735,7 +735,7 @@ TkpMeasureCharsInContext(
             }
         }
 
-        if (offset > urend) {
+        if (offset > (UniCharArrayOffset)urend) {
             offset = urend;
         }
 
@@ -747,14 +747,14 @@ TkpMeasureCharsInContext(
 
         if ((err != kATSULineBreakInWord)
                 && !(flags & TK_WHOLE_WORDS)
-                && (offset <= urend)) {
+                && (offset <= (UniCharArrayOffset)urend)) {
 
             UniCharArrayOffset lastOffset = offset;
             UniCharArrayOffset nextoffset;
             int lastX = -1;
             int wantonemorechar = -1; /* undecided */
 
-            while (offset <= urend) {
+            while (offset <= (UniCharArrayOffset)urend) {
 
                 if (flags & TK_ISOLATE_END) {
                     TkMacOSXLayoutSetString(fontPtr, &drawingContext,
@@ -778,7 +778,7 @@ TkpMeasureCharsInContext(
                     if (wantonemorechar == -1) {
                         wantonemorechar = 
                                 ((flags & TK_AT_LEAST_ONE)
-                                        && (lastOffset == urstart))
+                                        && (lastOffset == (UniCharArrayOffset)urstart))
                                 ||
                                 ((flags & TK_PARTIAL_OK) 
                                         && (lastX != maxLength))
@@ -811,7 +811,7 @@ TkpMeasureCharsInContext(
                  * into account.
                  */
 
-                if (offset >= urend) {
+                if (offset >= (UniCharArrayOffset)urend) {
                     break;
                 }
                 nextoffset = 0;
@@ -1103,43 +1103,49 @@ TkMacOSXQuarzStartDraw(
 
     err = QDBeginCGContext(destPort, &outContext);
 
-    /*
-     * Now clip the CG Context to the port. We also have to intersect our clip
-     * region with the port visible region so we don't overwrite the window
-     * decoration.
-     */
+    if (err == noErr && outContext) {
+	/*
+	 * Now clip the CG Context to the port. We also have to intersect our clip
+	 * region with the port visible region so we don't overwrite the window
+	 * decoration.
+	 */
 
-    if (!clipRgn) {
-	clipRgn = NewRgn();
+	if (!clipRgn) {
+	    clipRgn = NewRgn();
+	}
+
+	GetPortBounds(destPort, &boundsRect);
+
+	RectRgn(clipRgn, &boundsRect);
+	SectRegionWithPortClipRegion(destPort, clipRgn);
+	SectRegionWithPortVisibleRegion(destPort, clipRgn);
+	ClipCGContextToRegion(outContext, &boundsRect, clipRgn);
+	SetEmptyRgn(clipRgn);
+
+	/*
+	 * Note: You have to call SyncCGContextOriginWithPort
+	 * AFTER all the clip region manipulations.
+	 */
+
+	SyncCGContextOriginWithPort(outContext, destPort);
+
+	/*
+	 * Scale the color values, as QD uses UInt16 with the range [0..2^16-1]
+	 * while Quarz uses float with [0..1].  NB: Only
+	 * CGContextSetRGBFillColor() seems to be actually used by ATSU.
+	 */
+
+	GetForeColor(&macColor);
+	CGContextSetRGBFillColor(outContext,
+		RGBFLOATRED(macColor),
+		RGBFLOATGREEN(macColor),
+		RGBFLOATBLUE(macColor),
+		1.0f);
+ #ifdef TK_MAC_DEBUG_FONTS
+    } else {
+	fprintf(stderr, "QDBeginCGContext(): Error %d\n", (int) err);
+ #endif
     }
-
-    GetPortBounds(destPort, &boundsRect);
-
-    RectRgn(clipRgn, &boundsRect);
-    SectRegionWithPortClipRegion(destPort, clipRgn);
-    SectRegionWithPortVisibleRegion(destPort, clipRgn);
-    ClipCGContextToRegion(outContext, &boundsRect, clipRgn);
-    SetEmptyRgn(clipRgn);
-
-    /*
-     * Note: You have to call SyncCGContextOriginWithPort
-     * AFTER all the clip region manipulations.
-     */
-
-    SyncCGContextOriginWithPort(outContext, destPort);
-
-    /*
-     * Scale the color values, as QD uses UInt16 with the range [0..2^16-1]
-     * while Quarz uses float with [0..1].  NB: Only
-     * CGContextSetRGBFillColor() seems to be actually used by ATSU.
-     */
-
-    GetForeColor(&macColor);
-    CGContextSetRGBFillColor(outContext,
-            RGBFLOATRED(macColor), 
-            RGBFLOATGREEN(macColor), 
-            RGBFLOATBLUE(macColor),
-            1.0f);
 
     drawingContextPtr->graphPort = destPort;
     drawingContextPtr->cgContext = outContext;
@@ -1170,9 +1176,11 @@ void
 TkMacOSXQuarzEndDraw(
     DrawingContext * drawingContextPtr)
 {
-    QDEndCGContext(
-            drawingContextPtr->graphPort,
-            &drawingContextPtr->cgContext);
+    if (drawingContextPtr->cgContext) {
+	QDEndCGContext(
+		drawingContextPtr->graphPort,
+		&drawingContextPtr->cgContext);
+    }
 }
 #endif /* TK_MAC_USE_QUARZ */
 
