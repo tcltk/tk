@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.4.2.3 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.4.2.4 2006/07/20 06:26:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -37,7 +37,7 @@ typedef struct {
     int type;                        /* Type of Mac cursor: for theme cursors
                                       * this is the theme cursor constant,
                                       * otherwise one of crsr or CURS */
-    unsigned int count;              /* For animating cursors, the count for the
+    int count;                       /* For animating cursors, the count for the
                                         cursor. */
 } TkMacOSXCursor;
 
