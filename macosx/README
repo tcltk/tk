@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.17 2006/04/11 10:19:51 das Exp $
+RCS: @(#) $Id: README,v 1.18 2006/07/20 06:25:19 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -43,9 +43,12 @@ TkAqua and TkX11 can be distinguished at runtime via [tk windowingsystem].
 required to run TkAqua. However OS X 10.3 or higher is recommended (certain
 [file] operations behave incorrectly on earlier releases).
 
-- Tcl/Tk built on Mac OS X 10.x will not run on 10.y for y < x, on the other
-hand Tcl/Tk built on 10.y will run on 10.x for y < x (but without any of the
-fixes and optimizations that would be available in a binary built on 10.x).
+- Unless weak-linking is used, Tcl/Tk built on Mac OS X 10.x will not run on
+10.y with y < x; on the other hand Tcl/Tk built on 10.y will always run on 10.x
+with y <= x (but without any of the fixes and optimizations that would be
+available in a binary built on 10.x).
+Weak-linking is available on OS X 10.2 or later, it additionally allows Tcl/Tk
+built on 10.x to run on any 10.y with x > y >= z (for a chosen z >= 2).
 
 - Wish checks the Resources/Scripts directory in its application bundle for a
 file called AppMain.tcl, if found it is used as the startup script and the
@@ -158,11 +161,10 @@ tcl/macosx and tk/macosx (see below for details), but can also be built with the
 standard unix configure and make buildsystem in tcl/unix resp. tk/unix as on any
 other unix platform (indeed, the Makefiles are just wrappers around the unix
 buildsystem).
-The Mac OS X specifc configure flags are --enable-aqua, --enable-framework and
+The Mac OS X specific configure flags are --enable-aqua, --enable-framework and
 --disable-corefoundation (which disables CF and notably reverts to the standard
-select based notifier, you will only need this if your require use of naked fork
-(i.e. not followed by execve) in an unthreaded core). Note that --enable-aqua is
-incompatible with --disable-corefoundation (for both Tcl and Tk configure).
+select based notifier). Note that --enable-aqua is incompatible with
+--disable-corefoundation (for both Tcl and Tk configure).
 
 - It is also possible to build with Apple's IDE via the projects in tk/macosx,
 take care to only use the project matching your DevTools and OS version:
@@ -199,7 +201,7 @@ Notes about the native targets of the Xcode projects:
     export CFLAGS="-arch ppc -arch i386 \
 	-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4"
 This requires Mac OS X 10.4 and Xcode 2.2 (_not_ Xcode 2.1) and will work on
-any of the architectures (on i386 DTKs, the -isysroot is not required).
+any of the architectures (on intel Macs, the -isysroot is not required).
 Note that it is not possible to configure correctly if the current architecture
 is not present in CFLAGS (i.e. -arch `arch` must always be there).
 Universal builds of Tk TEA extensions are also possible with CFLAGS set as
@@ -209,7 +211,18 @@ TkX11 can be built with -arch ppc64 as the corresponding GUI libraries are not
 available for 64bit at present. However, linking a universal 'ppc i386' Tk
 binary against a universal 'ppc ppc64 i386' Tcl binary works just fine.
 The Tk configure script automatically removes '-arch ppc64' from CFLAGS to
-facilitate universal building of both Tcl and Tk with the same CFLAGS setting.
+facilitate universal building of both Tcl and Tk with the same CFLAGS setting;
+the same happens with configure in Tk extensions based on TEA 3.5 or later.
+
+- To enable weak-linking, set the MACOSX_DEPLOYMENT_TARGET environment variable
+to the minimal OS version (>= 10.2) the binaries should be able to run on, e.g:
+    export MACOSX_DEPLOYMENT_TARGET=10.2
+This requires Mac OS X 10.2 and gcc 3.1; if you have gcc 4 or later you can set
+CFLAGS instead:
+    export CFLAGS="-mmacosx-version-min=10.2"
+The Wish.xcodeproj is setup to produce binaires that can run on 10.2 or later,
+except for the 'ReleaseUniversal'configuration, where they require 10.4.
+Support for weak-linking was added to the code for 8.4.14/8.5a5.
 
 Detailed Instructions for building with macosx/Makefile
 -------------------------------------------------------
@@ -250,8 +263,8 @@ instead by passing an INSTALL_ROOT argument to make:
 - The default Makefile targets will build _both_ debug and optimized versions of
 the Tcl and Tk frameworks with the standard convention of naming the debug
 library Tcl.framework/Tcl_debug resp. Tk.framework/Tk_debug.
-This allows you to dynamically link to the debug libraries at runtime by setting
-	setenv DYLD_IMAGE_SUFFIX _debug
+This allows switching to the debug libraries at runtime by setting
+	export DYLD_IMAGE_SUFFIX=_debug
 (c.f. man dyld for more details)
 
 If you only want to build and install the debug or optimized build, use the
