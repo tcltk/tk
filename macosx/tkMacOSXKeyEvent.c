@@ -54,11 +54,17 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.6.2.9 2006/05/12 18:17:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.6.2.10 2006/07/20 06:27:34 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXEvent.h"
+
+/*
+#ifdef	TK_MAC_DEBUG
+#define TK_MAC_DEBUG_KEYBOARD
+#endif
+*/
 
 typedef struct {
     WindowRef   whichWindow;
@@ -563,8 +569,7 @@ InitKeyEvent(
  * duplicate enums and typedefs would give errrors.
  */
 
-#if !defined(MAC_OS_X_VERSION_10_2) || \
-    (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_2)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1020
 #define KeyboardLayoutRef Ptr
 #define KeyboardLayoutPropertyTag UInt32
 #define kKLKCHRData 0
@@ -643,7 +648,7 @@ GetKeyboardLayout (Ptr * resourcePtr, TextEncoding * encodingPtr)
             if ((lastLayout != currentLayout)
                     || (lastLayoutId != currentLayoutId)) {
 
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_KEYBOARD
                 fprintf (stderr, "GetKeyboardLayout(): Use KLS\n");
 #endif
 
@@ -684,7 +689,7 @@ GetKeyboardLayout (Ptr * resourcePtr, TextEncoding * encodingPtr)
 
         if ((lastLayout == NULL) || (lastLayoutId != currentLayoutId)) {
 
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_KEYBOARD
             fprintf (stderr, "GetKeyboardLayout(): Use GetResource()\n");
 #endif
 
@@ -719,7 +724,7 @@ GetKeyboardLayout (Ptr * resourcePtr, TextEncoding * encodingPtr)
 
     if (hasLayoutChanged) {
 
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_KEYBOARD
         if (KCHR != NULL) {
             fprintf (stderr, "GetKeyboardLayout(): New 'KCHR' layout %d\n",
                     (int) (short) currentLayoutId);
@@ -747,7 +752,7 @@ GetKeyboardLayout (Ptr * resourcePtr, TextEncoding * encodingPtr)
 
         if (KCHR != NULL) {
             lastEncoding = GetKCHREncoding(currentKeyScript, currentLayoutId);
-#ifdef TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG_KEYBOARD
             fprintf (stderr, "GetKeyboardLayout(): New 'KCHR' encoding %lu "
                     "(%lu + 0x%lX)\n",
                     lastEncoding, lastEncoding & 0xFFFFL,
