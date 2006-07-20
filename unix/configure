@@ -5295,7 +5295,7 @@ _ACEOF
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 
-	   SHLIB_LD="${CC} -shared"
+	    SHLIB_LD="${CC} -shared"
 	    DL_OBJS=""
 	    DL_LIBS="-ldl"
 	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
