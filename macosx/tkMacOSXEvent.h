@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.3.2.6 2006/04/28 06:02:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.3.2.7 2006/07/20 06:27:34 das Exp $
  */
 
 #ifndef _TKMACEVENT
@@ -100,10 +100,9 @@ MODULE_SCOPE int TkMacOSXKeycodeToUnicode(
 MODULE_SCOPE OSStatus TkMacOSXStartTclEventLoopCarbonTimer();
 MODULE_SCOPE OSStatus TkMacOSXStopTclEventLoopCarbonTimer();
 
-#if !defined(MAC_OS_X_VERSION_10_3) || \
-        (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
 /* Define constants only available on Mac OS X 10.3 or later */
-enum { kEventAppAvailableWindowBoundsChanged = 110 };
+#define kEventAppAvailableWindowBoundsChanged 110
 #endif
 
 #endif
