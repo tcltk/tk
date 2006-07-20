@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.35 2006/05/16 07:37:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.36 2006/07/20 06:25:19 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -22,14 +22,12 @@
 #include "tkMacOSXEvent.h"
 
 /* Define constants only available on Mac OS X 10.3 or later */
-#if !defined(MAC_OS_X_VERSION_10_3) || \
-	(MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
     #define kSimpleWindowClass 18
     #define kWindowDoesNotCycleAttribute (1L << 15)
 #endif
 /* Define constants only available on Mac OS X 10.4 or later */
-#if !defined(MAC_OS_X_VERSION_10_4) || \
-	(MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040
     #define kWindowNoTitleBarAttribute (1L << 9)
     #define kWindowMetalNoContentSeparatorAttribute (1L << 11)
 #endif
@@ -880,17 +878,19 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		    Boolean d;
 		    err = FSPathMakeRef((unsigned char*) path, &ref, &d);
 		    if (err == noErr) {
-#if defined(MAC_OS_X_VERSION_10_4) && \
-	(MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
-			err = HIWindowSetProxyFSRef(macWindow, &ref);
-#else
-			AliasHandle alias;
-			err = FSNewAlias(NULL, &ref, &alias);
-			if (err == noErr) {
-			    err = SetWindowProxyAlias(macWindow, alias);
-			    DisposeHandle((Handle) alias);
-			}
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+			if (HIWindowSetProxyFSRef != NULL) {
+			    err = HIWindowSetProxyFSRef(macWindow, &ref);
+			} else
 #endif
+			{
+			    AliasHandle alias;
+			    err = FSNewAlias(NULL, &ref, &alias);
+			    if (err == noErr) {
+				err = SetWindowProxyAlias(macWindow, alias);
+				DisposeHandle((Handle) alias);
+			    }
+			}
 		    }
 		} else {
 		    int len;
@@ -1714,17 +1714,19 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	}
 	macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
 	if (len) {
-#if defined(MAC_OS_X_VERSION_10_4) && \
-	    (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
-	    err = HIWindowSetProxyFSRef(macWindow, &ref);
-#else
-	    AliasHandle alias;
-	    err = FSNewAlias(NULL, &ref, &alias);
-	    if (err == noErr) {
-		err = SetWindowProxyAlias(macWindow, alias);
-		DisposeHandle((Handle) alias);
-	    }
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+	    if (HIWindowSetProxyFSRef != NULL) {
+		err = HIWindowSetProxyFSRef(macWindow, &ref);
+	    } else
 #endif
+	    {
+		AliasHandle alias;
+		err = FSNewAlias(NULL, &ref, &alias);
+		if (err == noErr) {
+		    err = SetWindowProxyAlias(macWindow, alias);
+		    DisposeHandle((Handle) alias);
+		}
+	    }
 	} else {
 	    err = RemoveWindowProxy(macWindow);
 	    if (wmPtr->hints.icon_pixmap != None) {
