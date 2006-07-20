@@ -1,3 +1,29 @@
+2006-07-20  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (WmAttributesCmd, WmIconbitmapCmd): add support
+	for weakly importing symbols not available on OSX 10.2 or 10.3, enables
+	binaires built on later OSX versions to run on earlier ones.
+	* macosx/README: document how to enable weak-linking; cleanup.
+	* unix/configure.in: enforce requirement of OSX 10.2 for TkAqua; move
+	* unix/tcl.m4:       Darwin specific checks & defines that are only
+	relevant to the tcl build out of tcl.m4; restrict framework option to
+	Darwin; cleanup quoting.
+	* unix/configure: autoconf-2.13
+
+	* macosx/tkMacOSXKeyEvent.c: ifdef out diagnostic messages to stderr.
+
+	* macosx/tkMacOSXEvent.h:      standardize MAC_OS_X_VERSION_MAX_ALLOWED
+	* macosx/tkMacOSXMenu.c:       checks per QA1316, ensure define can be
+	* macosx/tkMacOSXMenubutton.c: overriden on command line (from default
+	* macosx/tkMacOSXMenus.c:      of current OS version).
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXCursor.c (TkMacOSXCursor):
+	* macosx/tkMacOSXDebug.c (TkMacOSXGetNamedDebugSymbol):
+	* macosx/tkMacOSXInit.c (Map): fix signed-with-unsigned comparison and
+	other warnings from gcc4 -Wextra.
+
 2006-07-14  Andreas Kupries  <andreask@activestate.com>
 
 	* generic/tkWindow.c (Initialize): Modify change of 2006-05-25
