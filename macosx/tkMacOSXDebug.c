@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.8 2006/05/12 18:18:36 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.9 2006/07/20 06:24:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -565,7 +565,7 @@ TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol)
 			strx = sym->n_un.n_strx;
 			if ((sym->n_type & N_TYPE) == N_SECT &&
 				sym->n_sect == txtsectx &&
-				strx > 0 && strx < strsize &&
+				strx > 0 && (uint32_t) strx < strsize &&
 				strcmp(strings + strx, symbol) == 0) {
 			    addr = (void*) sym->n_value + slide;
 			    break;

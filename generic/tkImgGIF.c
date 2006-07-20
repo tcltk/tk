@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.32 2006/03/27 10:55:49 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.33 2006/07/20 06:24:16 das Exp $
  */
 
 /*
@@ -831,8 +831,8 @@ ReadImage(
     unsigned char initialCodeSize;
     int xpos = 0, ypos = 0, pass = 0, i;
     register char *pixelPtr;
-    CONST static int interlaceStep[] = { 8, 8, 4, 2 };
-    CONST static int interlaceStart[] = { 0, 4, 2, 1 };
+    static CONST int interlaceStep[] = { 8, 8, 4, 2 };
+    static CONST int interlaceStart[] = { 0, 4, 2, 1 };
     unsigned short prefix[(1 << MAX_LWZ_BITS)];
     unsigned char append[(1 << MAX_LWZ_BITS)];
     unsigned char stack[(1 << MAX_LWZ_BITS)*2];

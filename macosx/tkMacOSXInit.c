@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.21 2006/05/12 18:17:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.22 2006/07/20 06:24:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -45,7 +45,7 @@
  */
 
 typedef struct Map {
-    int numKey;
+    CFStringEncoding numKey;
     char *strKey;
 } Map;
 
