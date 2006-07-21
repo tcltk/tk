@@ -33,7 +33,7 @@
 
 	* macosx/tkMacOSXEvent.h:      standardize MAC_OS_X_VERSION_MAX_ALLOWED
 	* macosx/tkMacOSXMenu.c:       checks per QA1316, ensure define can be
-	* macosx/tkMacOSXMenubutton.c: overriden on command line (from default
+	* macosx/tkMacOSXMenubutton.c: overridden on command line (from default
 	* macosx/tkMacOSXMenus.c:      of current OS version).
 	* macosx/tkMacOSXMouseEvent.c:
 	* macosx/tkMacOSXWm.c:
