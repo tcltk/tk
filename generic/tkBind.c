@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.28.2.3 2006/04/11 20:25:43 hobbs Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.28.2.4 2006/07/21 06:26:54 das Exp $
  */
 
 #include "tkPort.h"
@@ -761,7 +761,7 @@ TkBindInit(mainPtr)
 	    Tcl_HashEntry *hPtr;
 	    ModInfo *modPtr;
 	    EventInfo *eiPtr;
-	    int dummy;
+	    int newEntry;
 
 #ifdef REDO_KEYSYM_LOOKUP
 	    KeySymInfo *kPtr;
@@ -769,23 +769,25 @@ TkBindInit(mainPtr)
 	    Tcl_InitHashTable(&keySymTable, TCL_STRING_KEYS);
 	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
 	    for (kPtr = keyArray; kPtr->name != NULL; kPtr++) {
-	        hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &dummy);
+	        hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &newEntry);
 		Tcl_SetHashValue(hPtr, kPtr->value);
 		hPtr = Tcl_CreateHashEntry(&nameTable, (char *) kPtr->value,
-		        &dummy);
-		Tcl_SetHashValue(hPtr, kPtr->name);
+		        &newEntry);
+		if (newEntry) {
+		    Tcl_SetHashValue(hPtr, kPtr->name);
+		}
 	    }
 #endif /* REDO_KEYSYM_LOOKUP */
 
 	    Tcl_InitHashTable(&modTable, TCL_STRING_KEYS);
 	    for (modPtr = modArray; modPtr->name != NULL; modPtr++) {
-	        hPtr = Tcl_CreateHashEntry(&modTable, modPtr->name, &dummy);
+	        hPtr = Tcl_CreateHashEntry(&modTable, modPtr->name, &newEntry);
 		Tcl_SetHashValue(hPtr, modPtr);
 	    }
     
 	    Tcl_InitHashTable(&eventTable, TCL_STRING_KEYS);
 	    for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
-	        hPtr = Tcl_CreateHashEntry(&eventTable, eiPtr->name, &dummy);
+	        hPtr = Tcl_CreateHashEntry(&eventTable, eiPtr->name, &newEntry);
 		Tcl_SetHashValue(hPtr, eiPtr);
 	    }
 	    initialized = 1;

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5.2.5 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.5.2.6 2006/07/21 06:26:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -19,15 +19,14 @@
 /*
  * A couple of simple definitions to make code a bit more self-explaining.
  *
- * For the assignments of Mod1==alt==command and Mod2==meta==option, see also
+ * For the assignments of Mod1==meta==command and Mod2==alt==option, see also
  * tkMacOSXMouseEvent.c.
  */
 
 #define LATIN1_MAX       255
 #define MAC_KEYCODE_MAX  0x7F
 #define MAC_KEYCODE_MASK 0x7F
-#undef ALT_MASK
-#define ALT_MASK         Mod1Mask
+#define COMMAND_MASK     Mod1Mask
 #define OPTION_MASK      Mod2Mask
 
 
@@ -63,7 +62,7 @@ static KeyInfo keyArray[] = {
     {0x35,      XK_Escape},
 
     {0x47,      XK_Clear},
-    {0x4C,      XK_Return},
+    {0x4C,      XK_KP_Enter},
 
     {0x72,      XK_Help},
     {0x73,      XK_Home},
@@ -677,19 +676,23 @@ TkpGetKeySym(
     if (eventPtr->xany.send_event == -1) {
         int modifier = eventPtr->xkey.keycode;
         if (modifier == cmdKey) {
-            return XK_Alt_L;
+            return XK_Meta_L;
         } else if (modifier == shiftKey) {
             return XK_Shift_L;
         } else if (modifier == alphaLock) {
             return XK_Caps_Lock;
         } else if (modifier == optionKey) {
-            return XK_Meta_L;
+            return XK_Alt_L;
         } else if (modifier == controlKey) {
             return XK_Control_L;
+        } else if (modifier == kEventKeyModifierNumLockMask) {
+            return XK_Num_Lock;
+        } else if (modifier == kEventKeyModifierFnMask) {
+            return XK_Super_L;
         } else if (modifier == rightShiftKey) {
             return XK_Shift_R;
         } else if (modifier == rightOptionKey) {
-            return XK_Meta_R;
+            return XK_Alt_R;
         } else if (modifier == rightControlKey) {
             return XK_Control_R;
         } else {
@@ -812,8 +815,8 @@ TkpInitKeymapInfo(
      * some changes in those scripts.  See also bug #700311.
      */
 
-    dispPtr->altModMask = ALT_MASK;
-    dispPtr->metaModMask = OPTION_MASK;
+    dispPtr->altModMask = OPTION_MASK;
+    dispPtr->metaModMask = COMMAND_MASK;
 #else
     dispPtr->altModMask = 0;
     dispPtr->metaModMask = 0;
