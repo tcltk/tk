@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.6.2.11 2006/07/20 06:27:34 das Exp $
+RCS: @(#) $Id: README,v 1.6.2.12 2006/07/21 06:03:24 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -163,7 +163,7 @@ select based notifier). Note that --enable-aqua is incompatible with
 project, this simply calls through to the tk/macosx/GNUMakefile. It requires a
 build of the tcl/macosx/Tcl.pbproj project.
 
-- To build universal binaires, set CFLAGS as follows:
+- To build universal binaries, set CFLAGS as follows:
     export CFLAGS="-arch ppc -arch i386 \
 	-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4"
 This requires Mac OS X 10.4 and Xcode 2.2 (_not_ Xcode 2.1) and will work on
@@ -186,8 +186,6 @@ to the minimal OS version (>= 10.2) the binaries should be able to run on, e.g:
 This requires Mac OS X 10.2 and gcc 3.1; if you have gcc 4 or later you can set
 CFLAGS instead:
     export CFLAGS="-mmacosx-version-min=10.2"
-The Wish.xcodeproj is setup to produce binaires that can run on 10.2 or later,
-except for the 'ReleaseUniversal'configuration, where they require 10.4.
 Support for weak-linking was added to the code for 8.4.14/8.5a5.
 
 Detailed Instructions for building with macosx/GNUmakefile
