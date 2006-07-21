@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.18 2006/07/20 06:25:19 das Exp $
+RCS: @(#) $Id: README,v 1.19 2006/07/21 06:03:20 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -197,7 +197,7 @@ Notes about the native targets of the Xcode projects:
 	and /usr/local/bin/autoheader-2.59, set the env vars AUTOCONF and
 	AUTOHEADER to their true locations if necessary.
 
-- To build universal binaires outside of Wish.xcodeproj, set CFLAGS as follows:
+- To build universal binaries outside of Wish.xcodeproj, set CFLAGS as follows:
     export CFLAGS="-arch ppc -arch i386 \
 	-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4"
 This requires Mac OS X 10.4 and Xcode 2.2 (_not_ Xcode 2.1) and will work on
@@ -220,7 +220,7 @@ to the minimal OS version (>= 10.2) the binaries should be able to run on, e.g:
 This requires Mac OS X 10.2 and gcc 3.1; if you have gcc 4 or later you can set
 CFLAGS instead:
     export CFLAGS="-mmacosx-version-min=10.2"
-The Wish.xcodeproj is setup to produce binaires that can run on 10.2 or later,
+The Wish.xcodeproj is setup to produce binaries that can run on 10.2 or later,
 except for the 'ReleaseUniversal'configuration, where they require 10.4.
 Support for weak-linking was added to the code for 8.4.14/8.5a5.
 
