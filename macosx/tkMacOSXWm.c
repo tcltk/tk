@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.28 2006/07/20 06:27:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.29 2006/07/24 04:45:59 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -321,6 +321,7 @@ TkWmMapWindow(
 				 * be mapped. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
+    Rect widths;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->flags &= ~WM_NEVER_MAPPED;
@@ -389,12 +390,16 @@ TkWmMapWindow(
     XMapWindow(winPtr->display, winPtr->window);
     
     /*
-     * Now that the window is visable we can determine the offset
+     * Now that the window is visible we can determine the offset
      * from the window's content orgin to the window's decorative
      * orgin (structure orgin).
      */
-    TkMacOSXWindowOffset( GetWindowFromPort(TkMacOSXGetDrawablePort(Tk_WindowId(winPtr))), 
-	&wmPtr->xInParent, &wmPtr->yInParent);
+    GetWindowStructureWidths(GetWindowFromPort(TkMacOSXGetDrawablePort(
+	    Tk_WindowId(winPtr))), &widths);
+    wmPtr->xInParent = widths.left;
+    wmPtr->yInParent = widths.top;
+    wmPtr->parentWidth = winPtr->changes.width + widths.left + widths.right;
+    wmPtr->parentHeight = winPtr->changes.height + widths.top + widths.bottom;
 }
 
 /*
@@ -3508,14 +3513,22 @@ ParseGeometry(
 	} else if (*p != '+') {
 	    goto error;
 	}
-	x = strtol(p+1, &end, 10);
+	p++;
+	if (!isdigit(UCHAR(*p)) && (*p != '-')) {
+	    goto error;
+	}
+	x = strtol(p, &end, 10);
 	p = end;
 	if (*p == '-') {
 	    flags |= WM_NEGATIVE_Y;
 	} else if (*p != '+') {
 	    goto error;
 	}
-	y = strtol(p+1, &end, 10);
+	p++;
+	if (!isdigit(UCHAR(*p)) && (*p != '-')) {
+	    goto error;
+	}
+	y = strtol(p, &end, 10);
 	if (*end != '\0') {
 	    goto error;
 	}
@@ -3556,9 +3569,8 @@ ParseGeometry(
     }
     return TCL_OK;
 
-    error:
-    Tcl_AppendResult(interp, "bad geometry specifier \"",
-	    string, "\"", (char *) NULL);
+  error:
+    Tcl_AppendResult(interp, "bad geometry specifier \"", string, "\"", NULL);
     return TCL_ERROR;
 }
 
@@ -4134,7 +4146,7 @@ TkWmRestackToplevel(
 	     */
 	} else if (otherMacWindow == frontWindow || otherMacWindow == NULL) {
 	    /*
-	     * Raise the window to the top.  If the window is visable then
+	     * Raise the window to the top.  If the window is visible then
 	     * we also make it the active window.
 	     */
 
