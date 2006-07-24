@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.14 2006/06/14 21:18:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.15 2006/07/24 04:45:23 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -992,7 +992,7 @@ TkMacOSXUpdateClipRgn(
  * TkMacOSXVisableClipRgn --
  *
  *	This function returnd the Macintosh cliping region for the 
- *	given window.  A NULL Rgn means the window is not visable.
+ *	given window.  A NULL Rgn means the window is not visible.
  *
  * Results:
  *	The region.
