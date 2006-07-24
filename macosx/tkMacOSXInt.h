@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.17 2006/05/12 18:17:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.18 2006/07/24 04:45:23 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -37,8 +37,8 @@ struct TkWindowPrivate {
     ControlRef rootControl;
     int xOff;	       		/* X offset from toplevel window */
     int yOff;		       	/* Y offset from toplevel window */
-    RgnHandle clipRgn;		/* Visable region of window */
-    RgnHandle aboveClipRgn;	/* Visable region of window & it's children */
+    RgnHandle clipRgn;		/* Visible region of window */
+    RgnHandle aboveClipRgn;	/* Visible region of window & it's children */
     int referenceCount;		/* Don't delete toplevel until children are
 				 * gone. */
     struct TkWindowPrivate *toplevel;	/* Pointer to the toplevel
