@@ -1,3 +1,10 @@
+2006-07-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (TkWmMapWindow): fix incorrect values of wmInfo
+	parentWidth/Height for toplevels by recalculating them once the window
+	is mapped (i.e. once the window&structure sizes are known). [Bug 1358663]
+	(ParseGeometry): sync with ParseGeometry in tkUnixWm.c/tkWinWm.c.
+
 2006-07-21  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkBind.c (TkBindInit): for REDO_KEYSYM_LOOKUP, change
