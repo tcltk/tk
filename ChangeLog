@@ -1,3 +1,9 @@
+2006-07-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXKeyEvent.c (TkMacOSXProcessKeyboardEvent): handle key
+	shortcut for kHICommandQuit in the same way as other application menu
+	item key shortcuts. [Bug 1516950]
+
 2006-07-24  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (TkWmMapWindow): fix incorrect values of wmInfo
