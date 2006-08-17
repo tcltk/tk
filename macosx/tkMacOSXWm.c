@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.37 2006/07/24 04:45:51 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.38 2006/08/17 01:07:22 hobbs Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -102,12 +102,10 @@ static int 		WmAspectCmd _ANSI_ARGS_((Tk_Window tkwin,
 static int 		WmAttributesCmd _ANSI_ARGS_((Tk_Window tkwin,
                                           TkWindow *winPtr, Tcl_Interp *interp, int objc,
                                           Tcl_Obj *CONST objv[]));
-static void		WmAttrGetModifiedStatus(WindowRef macWindow, Tcl_Obj
-				    *result);
-static void		WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj
-				    *result);
-static void		WmAttrGetAlpha(WindowRef macWindow, Tcl_Obj *result);
-static void		WmAttrGetNotifyStatus(Tcl_Obj *result);
+static Tcl_Obj *	WmAttrGetModifiedStatus(WindowRef macWindow);
+static Tcl_Obj *	WmAttrGetTitlePath(WindowRef macWindow);
+static Tcl_Obj *	WmAttrGetAlpha(WindowRef macWindow);
+static Tcl_Obj *	WmAttrGetNotifyStatus(void);
 static void		WmAttrSetNotifyStatus(int state);
 static int 		WmClientCmd _ANSI_ARGS_((Tk_Window tkwin,
                                       TkWindow *winPtr, Tcl_Interp *interp, int objc,
@@ -785,7 +783,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     int i;
     int index;
     WindowRef macWindow;
-    Tcl_Obj *result = NULL;
+    Tcl_Obj *objPtr = NULL;
     const char *optionTable[] = {
 	"-alpha",
 	"-modified",
@@ -816,16 +814,21 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
 
     if (objc == 3) {
-	result = Tcl_NewObj();
-	Tcl_AppendToObj(result, " -alpha ", -1);
-	WmAttrGetAlpha(macWindow, result);
-	Tcl_AppendToObj(result, "-modified ", -1);
-	WmAttrGetModifiedStatus(macWindow, result);
-	Tcl_AppendToObj(result, " -notify ", -1);
-	WmAttrGetNotifyStatus(result);
-	Tcl_AppendToObj(result, " -titlepath ", -1);
-	WmAttrGetTitlePath(macWindow, result);
-	Tcl_SetObjResult(interp, result);
+	objPtr = Tcl_NewObj();
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-alpha", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr, WmAttrGetAlpha(macWindow));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-modified", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		WmAttrGetModifiedStatus(macWindow));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-notify", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr, WmAttrGetNotifyStatus());
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-titlepath", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr, WmAttrGetTitlePath(macWindow));
+	Tcl_SetObjResult(interp, objPtr);
         return TCL_OK;
     }
     if (objc == 4) {
@@ -833,22 +836,20 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	    &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	result = Tcl_NewObj();
 	switch (index) {
 	    case WmAttrModifiedIdx:
-		WmAttrGetModifiedStatus(macWindow, result);
+		objPtr = WmAttrGetModifiedStatus(macWindow);
 		break;
 	    case WmAttrTitlePathIdx:
-		WmAttrGetTitlePath(macWindow, result);
+		objPtr = WmAttrGetTitlePath(macWindow);
 		break;
 	    case WmAttrAlphaIdx:
-		WmAttrGetAlpha(macWindow, result);
-		break;
+		objPtr = WmAttrGetAlpha(macWindow);
 	    case WmAttrNotifyIdx:
-	      WmAttrGetNotifyStatus(result);
+		objPtr = WmAttrGetNotifyStatus();
 	      break;
 	}
-	Tcl_SetObjResult(interp, result);
+	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
     }
 
@@ -873,7 +874,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		    TCL_OK) {
 		    return TCL_ERROR;
 		}
-		result = objv[i+1];
+		objPtr = objv[i+1];
 		SetWindowModified(macWindow, boolean);
 		break;
 	    case WmAttrTitlePathIdx:
@@ -912,7 +913,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 			-1));
 		    return TCL_ERROR;
 		} else {
-		    result = objv[i+1];
+		    objPtr = objv[i+1];
 		}
 		break;
 	    case WmAttrAlphaIdx:
@@ -928,7 +929,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		} else if (dval > 1.0) {
 		    dval = 1.0;
 		}
-		result = Tcl_NewDoubleObj(dval);
+		objPtr = Tcl_NewDoubleObj(dval);
 		SetWindowAlpha(macWindow, dval);
 		break;
 	    case WmAttrNotifyIdx:
@@ -936,12 +937,12 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		    TCL_OK) {
 		    return TCL_ERROR;
 		}
-		result = Tcl_NewBooleanObj(boolean);
+		objPtr = Tcl_NewBooleanObj(boolean);
 	        WmAttrSetNotifyStatus(boolean);
                 break;
 	}
     }
-    Tcl_SetObjResult(interp, result);
+    Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
 }
 
@@ -953,18 +954,17 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
  *	attributes command.
  *
  * Results:
- *	Nothing.
- * 
+ *	Returns value in unrefcounted Tcl_Obj.
+ *
  * Side effects:
- *	Appends the modified status of the given window to the Tcl_Obj 
- * 	passed in.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
-static void WmAttrGetModifiedStatus(WindowRef macWindow, Tcl_Obj *result)
+static Tcl_Obj *
+WmAttrGetModifiedStatus(WindowRef macWindow)
 {
-    Tcl_AppendObjToObj(result, Tcl_NewBooleanObj(
-	(IsWindowModified(macWindow) == true)));
+    return Tcl_NewBooleanObj((IsWindowModified(macWindow) == true));
 }
 
 /*
@@ -975,15 +975,15 @@ static void WmAttrGetModifiedStatus(WindowRef macWindow, Tcl_Obj *result)
  *	attributes command.
  *
  * Results:
- *	Nothing.
- * 
+ *	Returns value in unrefcounted Tcl_Obj.
+ *
  * Side effects:
- *	Appends the proxy file path of the given window to the Tcl_Obj 
- *	passed in.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
-static void WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj *result)
+static Tcl_Obj *
+WmAttrGetTitlePath(WindowRef macWindow)
 {
     FSRef ref;
     AliasHandle alias;
@@ -999,9 +999,9 @@ static void WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj *result)
 	err = FSRefMakePath(&ref, path, 2048);
     }
     if (err == noErr) {
-	Tcl_AppendToObj(result, (char*) path, -1);
+	return Tcl_NewStringObj((char*) path, -1);
     } else {
-	Tcl_AppendToObj(result, "{}", -1);
+	return Tcl_NewStringObj("", 0);
     }
 }
 
@@ -1013,22 +1013,21 @@ static void WmAttrGetTitlePath(WindowRef macWindow, Tcl_Obj *result)
  *	attributes command.
  *
  * Results:
- *	Nothing.
- * 
+ *	Returns value in unrefcounted Tcl_Obj.
+ *
  * Side effects:
- *	Appends the alpha value of the given window to the Tcl_Obj 
- * 	passed in.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
-static void
-WmAttrGetAlpha(WindowRef macWindow, Tcl_Obj *result)
+static Tcl_Obj *
+WmAttrGetAlpha(WindowRef macWindow)
 {
     float fval;
     if (GetWindowAlpha(macWindow, &fval) != noErr) {
         fval = 1.0;
     }
-    Tcl_AppendObjToObj(result, Tcl_NewDoubleObj(fval));
+    return Tcl_NewDoubleObj(fval);
 }
 
 /*
@@ -1039,19 +1038,17 @@ WmAttrGetAlpha(WindowRef macWindow, Tcl_Obj *result)
  *	attributes command.
  *
  * Results:
- *	Nothing.
- * 
+ *	Returns value in unrefcounted Tcl_Obj.
+ *
  * Side effects:
- *	Appends the notify status of the given window to the Tcl_Obj 
- * 	passed in.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
-static void
-WmAttrGetNotifyStatus(Tcl_Obj *result)
+static Tcl_Obj *
+WmAttrGetNotifyStatus()
 {
-    Tcl_AppendObjToObj(result, 
-            Tcl_NewBooleanObj((tkMacOSXWmAttrNotifyVal != 0)));
+    reutrn Tcl_NewBooleanObj((tkMacOSXWmAttrNotifyVal != 0));
 }
 
 /*
