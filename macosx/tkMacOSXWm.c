@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.38 2006/08/17 01:07:22 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.39 2006/08/17 01:10:21 hobbs Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1048,7 +1048,7 @@ WmAttrGetAlpha(WindowRef macWindow)
 static Tcl_Obj *
 WmAttrGetNotifyStatus()
 {
-    reutrn Tcl_NewBooleanObj((tkMacOSXWmAttrNotifyVal != 0));
+    return Tcl_NewBooleanObj((tkMacOSXWmAttrNotifyVal != 0));
 }
 
 /*
