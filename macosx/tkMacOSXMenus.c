@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.14 2006/07/20 06:25:19 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.15 2006/08/18 07:47:11 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -241,6 +241,7 @@ GenerateEditEvent(
         return;
     }
 
+    bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = Tk_Display(tkwin)->request;
     event.send_event = false;
@@ -254,7 +255,6 @@ GenerateEditEvent(
             &event.x_root, &event.y_root, &x, &y, &event.state);
     tkwin = Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
     event.same_screen = true;
-    event.user_data = NULL;
 
     switch (flag) {
         case EDIT_CUT:
