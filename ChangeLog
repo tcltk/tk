@@ -1,3 +1,26 @@
+2006-08-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/tcl.m4 (Darwin): add support for --enable-64bit on x86_64, for
+	universal builds including x86_64, for 64-bit CoreFoundation on Leopard
+	and for use of -mmacosx-version-min instead of MACOSX_DEPLOYMENT_TARGET.
+	* unix/configure.in (Darwin): remove 64-bit arch flags from CFLAGS for
+	combined 32-bit and 64-bit universal builds, as neither TkAqua nor TkX11
+	can be built for 64-bit at present.
+	* unix/configure: autoconf-2.13
+
+	* macosx/README: updates for x86_64 support in Tcl.
+
+	* macosx/tkMacOSXInit.c (TkpInit): when available, use public
+	TransformProcessType() API instead of CPSEnableForegroundOperation() SPI
+	to notify the window server that we are a GUI application.
+
+	* macosx/tkMacOSXWm.c (WmAttrGetTitlePath): use HIWindow API on >=Tiger.
+
+	* macosx/tkMacOSXMouseEvent.c (GenerateToolbarButtonEvent):
+	* macosx/tkMacOSXMenus.c (GenerateEditEvent):
+	* macosx/tkMacOSXMenu.c (MenuSelectEvent): bzero XVirtualEvent structure
+	before use to ensure all fields are initialized. [Bug 1542205]
+
 2006-08-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXWm.c (WmAttributesCmd): correct OS X result for
@@ -13,7 +36,7 @@
 
 	* macosx/tkMacOSXWm.c (TkWmMapWindow): fix incorrect values of wmInfo
 	parentWidth/Height for toplevels by recalculating them once the window
-	is mapped (i.e. once the window&structure sizes are known). [Bug 1358663]
+	is mapped (i.e once the window&structure sizes are known). [Bug 1358663]
 	(ParseGeometry): sync with ParseGeometry in tkUnixWm.c/tkWinWm.c.
 
 2006-07-21  Daniel Steffen  <das@users.sourceforge.net>

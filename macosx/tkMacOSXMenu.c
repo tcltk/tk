@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.20 2006/07/20 06:27:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.21 2006/08/18 07:47:25 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -3695,6 +3695,7 @@ MenuSelectEvent(
 {
     XVirtualEvent event;
    
+    bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = menuPtr->display->request;
     event.send_event = false;
