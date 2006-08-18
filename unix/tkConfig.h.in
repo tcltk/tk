@@ -91,6 +91,9 @@
 /* Linker support for module scope symbols */
 #undef MODULE_SCOPE
 
+/* Is Darwin CoreFoundation unavailable for 64-bit? */
+#undef NO_COREFOUNDATION_64
+
 /* Do we have fd_set? */
 #undef NO_FD_SET
 

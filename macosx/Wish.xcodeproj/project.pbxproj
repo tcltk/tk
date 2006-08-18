@@ -3298,6 +3298,7 @@
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* Wish */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				F9E61D16090A3E94002B3151 /* Tk */,
 				8DD76FA90486AB0100D96B5E /* tktest */,
@@ -3354,7 +3355,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "## tcl configure shell script phase\n\ncd \"${TCL_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tcl/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-/usr/bin/autoconf} && ${AUTOHEADER:-/usr/bin/autoheader}\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tcl && cd tcl &&\nif [ \"${TCL_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring tcl\"\n    \"${TCL_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi\n";
+			shellScript = "## tcl configure shell script phase\n\ncd \"${TCL_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tcl/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-/usr/bin/autoconf} && ${AUTOHEADER:-/usr/bin/autoheader}\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tcl && cd tcl &&\nif [ \"${TCL_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring Tcl\"\n    \"${TCL_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi\n";
 		};
 		F9A5C5F608F651AB008AE941 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3373,7 +3374,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "## tk configure shell script phase\n\ncd \"${TK_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tk/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-/usr/bin/autoconf} && ${AUTOHEADER:-/usr/bin/autoheader}\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tk && cd tk &&\nif [ \"${TK_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring tk\"\n    \"${TK_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared --enable-aqua --with-tcl=../tcl ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi";
+			shellScript = "## tk configure shell script phase\n\ncd \"${TK_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tk/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-/usr/bin/autoconf} && ${AUTOHEADER:-/usr/bin/autoheader}\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tk && cd tk &&\nif [ \"${TK_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring Tk\"\n    \"${TK_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared --enable-aqua --with-tcl=../tcl ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -3682,6 +3683,7 @@
 				BINDIR = "${PREFIX}/bin";
 				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
 				DEAD_CODE_STRIPPING = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_POSTPROCESSING = YES;
 				GCC_DEBUGGING_SYMBOLS = full;
 				GCC_DYNAMIC_NO_PIC = YES;
@@ -3890,6 +3892,7 @@
 				BINDIR = "${PREFIX}/bin";
 				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
 				DEAD_CODE_STRIPPING = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_POSTPROCESSING = YES;
 				GCC_DEBUGGING_SYMBOLS = full;
 				GCC_DYNAMIC_NO_PIC = YES;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.22 2006/07/20 06:24:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.23 2006/08/18 07:47:10 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -255,12 +255,12 @@ TkpInit(interp)
 		}
 	    }
 	}
-#if MAC_OSX_TK_USE_CPS_SPI
+
 	/*
 	 * If we are loaded into an executable that is not a bundled application,
 	 * the window server does not let us come to the foreground.
-	 * For such an executable, we attempt to use an undocumented SPI to
-	 * notify the window server that we are now a full GUI application.
+	 * For such an executable, notify the window server that we are now a
+	 * full GUI application.
 	 */
 	{
 	    /* Check whether we are a bundled executable: */
@@ -294,24 +294,34 @@ TkpInit(interp)
 		CFRelease(bundleUrl);
 	    }
 
-	    /* If we are not a bundled executable, attempt to use the CPS SPI: */
+	    /* If we are not a bundled executable, notify the window server that
+	     * we are a foregroundable app. */
 	    if (!bundledExecutable) {
-		/*
-		 * Load the CPS SPI symbol dynamically, so that we don't break
-		 * if it every disappears or changes its name.
-		 */
-		TkMacOSXInitNamedSymbol(CoreGraphics, OSErr, \
-			CPSEnableForegroundOperation, ProcessSerialNumberPtr);
-		if (CPSEnableForegroundOperation) {
-		    ProcessSerialNumber psn = { 0, kCurrentProcess };
-		    /*
-		     * Let the window server know that we are a foregroundable app
-		     */
-		    CPSEnableForegroundOperation(&psn);
+		OSStatus err = procNotFound;
+		ProcessSerialNumber psn = { 0, kCurrentProcess };
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
+		if (TransformProcessType != NULL) {
+		    err = TransformProcessType(&psn,
+			    kProcessTransformToForegroundApplication);
 		}
+#endif
+#if MAC_OSX_TK_USE_CPS_SPI
+		if (err != noErr) {
+		    /*
+		     * When building or running on 10.2 or when the above fails,
+		     * attempt to use undocumented CPS SPI to notify the window
+		     * server. Load the SPI symbol dynamically, so that we don't
+		     * break if it ever disappears or changes its name.
+		     */
+		    TkMacOSXInitNamedSymbol(CoreGraphics, OSErr,
+			    CPSEnableForegroundOperation, ProcessSerialNumberPtr);
+		    if (CPSEnableForegroundOperation) {
+			CPSEnableForegroundOperation(&psn);
+		    }
+		}
+#endif /* MAC_OSX_TK_USE_CPS_SPI */
 	    }
 	}
-#endif /* MAC_OSX_TK_USE_CPS_SPI */
     }
 
     if (tkLibPath[0] != '\0') {
