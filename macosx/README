@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.6.2.12 2006/07/21 06:03:24 das Exp $
+RCS: @(#) $Id: README,v 1.6.2.13 2006/08/18 07:47:25 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -166,19 +166,19 @@ build of the tcl/macosx/Tcl.pbproj project.
 - To build universal binaries, set CFLAGS as follows:
     export CFLAGS="-arch ppc -arch i386 \
 	-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4"
-This requires Mac OS X 10.4 and Xcode 2.2 (_not_ Xcode 2.1) and will work on
-any of the architectures (on intel Macs, the -isysroot is not required).
-Note that it is not possible to configure correctly if the current architecture
-is not present in CFLAGS (i.e. -arch `arch` must always be there).
+This requires Mac OS X 10.4 and Xcode 2.2 (_not_ Xcode 2.1) and will work on any
+of the architectures (on intel Macs, the -isysroot may not be required). Note
+that it is not possible to configure universal builds correctly if the current
+architecture is not present in CFLAGS (i.e. -arch `arch` must be there).
 Universal builds of Tk TEA extensions are also possible with CFLAGS set as
 above, they will be [load]able by universal as well as thin binaries of Tk.
-Note that while Tcl can be built for the ppc64 architecture, neither TkAqua nor
-TkX11 can be built with -arch ppc64 as the corresponding GUI libraries are not
+Note that while Tcl can be built for 64-bit architectures, neither TkAqua nor
+TkX11 can be built for 64-bit as the corresponding GUI libraries are not
 available for 64bit at present. However, linking a universal 'ppc i386' Tk
-binary against a universal 'ppc ppc64 i386' Tcl binary works just fine.
-The Tk configure script automatically removes '-arch ppc64' from CFLAGS to
-facilitate universal building of both Tcl and Tk with the same CFLAGS setting;
-the same happens with configure in Tk extensions based on TEA 3.5 or later.
+binary against a universal 'ppc ppc64 i386 x86_64' Tcl binary works just fine.
+The Tk configure script automatically removes the 64-bit -arch flags from CFLAGS
+to facilitate universal building of both Tcl and Tk with the same CFLAGS; the
+same happens with configure in Tk extensions based on TEA 3.5 or later.
 
 - To enable weak-linking, set the MACOSX_DEPLOYMENT_TARGET environment variable
 to the minimal OS version (>= 10.2) the binaries should be able to run on, e.g:
