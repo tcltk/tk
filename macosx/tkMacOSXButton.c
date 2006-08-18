@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.19 2006/05/26 21:42:37 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.20 2006/08/18 07:30:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1049,7 +1049,7 @@ TkMacOSXDrawControl(
     }
     UpdateControlColors(mbPtr);
 
-    if ((butPtr->type == TYPE_BUTTON) ) {
+    if (butPtr->type == TYPE_BUTTON) {
         Boolean isDefault;
 
         if (butPtr->defaultState == STATE_ACTIVE) {
@@ -1059,7 +1059,7 @@ TkMacOSXDrawControl(
         }
         if ((err=SetControlData(mbPtr->control, kControlNoPart, 
                 kControlPushButtonDefaultTag,
-                sizeof(isDefault), (Ptr) &isDefault)) != noErr ) {
+                sizeof(isDefault), (Ptr) &isDefault)) != noErr) {
         }
     }
 
@@ -1071,10 +1071,10 @@ TkMacOSXDrawControl(
         SetControlVisibility(mbPtr->control, true, true);
         Draw1Control(mbPtr->userPane);
     }
- 
+
     if (mbPtr->params.isBevel) {
         KillPicture(mbPtr->bevelButtonContent.u.picture);
-    }         
+    }
 }
 
 /*
