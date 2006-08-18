@@ -1,5 +1,8 @@
 2006-08-18  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* tests/text.test (text-25.15): Added test suggested by Sam
+	<baudinm@yahoo.com> on comp.lang.tcl
+
 	* generic/tk.h, generic/tkInt.h: Stylistic improvements. No API change.
 
 2006-08-18  Daniel Steffen  <das@users.sourceforge.net>
