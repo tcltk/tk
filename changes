@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.41 2006/06/15 22:36:31 das Exp $
+RCS: @(#) $Id: changes,v 1.64.2.42 2006/08/21 02:39:22 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5955,7 +5955,7 @@ registered applevents (steffen)
 
 2006-05-29 (bug fix)[1424513] [listbox] crash with namespace var (hobbs)
 
-2006-06-01 (bug fix)[1188340] [console] std chan refcount (mistachkin,hobbs)
+2006-06-01 (bug fix)[912571] [console] std chan refcount (mistachkin,hobbs)
 
 2006-06-05 (bug fix)[1188340] [console] thread safety (porter)
 
@@ -5966,5 +5966,17 @@ registered applevents (steffen)
 2006-06-14 (bug fix)[891141] excess variable writes by [scale] (porter)
 
 2006-06-15 (platform support)[1424909] MS VS2005 support (thoyts)
+
+2006-07-20 (platform support) Mac OS X weak linking (steffen)
+
+2006-07-21 (bug fix)[700311, 1525905] Aqua: pure modifier keysyms (steffen)
+
+2006-07-24 (bug fix)[1358663] Aqua: [wm geometry -x-y] (steffen)
+
+2006-07-25 (bug fix)[1516950] Aqua: cmd-Q app menu key shortcut (steffen)
+
+2006-08-18 (bug fix)[1542205] Aqua: toplevel toolbar button crash (steffen)
+
+2006-08-21 (bug fix) Aqua: recursively called event loop (steffen)
 
 --- Released 8.4.14, June XX, 2006 --- See ChangeLog for details ---
