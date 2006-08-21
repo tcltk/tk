@@ -24,7 +24,7 @@
 
 	* macosx/Wish.xcodeproj/project.pbxproj: switch native release targets
 	to use DWARF with dSYM, Xcode 3.0 changes.
-	* macosx/README: updates for x86_64 and Xcode 2.3.
+	* macosx/README: updates for x86_64 support in Tcl.
 
 	* macosx/tkMacOSXInit.c (TkpInit): when available, use public
 	TransformProcessType() API instead of CPSEnableForegroundOperation()
