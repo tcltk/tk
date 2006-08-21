@@ -1,3 +1,9 @@
+2006-08-21  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXCarbonEvents.c (CarbonTimerProc): avoid starving main
+	event loop: limit the number of tcl events processed per invocation.
+	Fixes bug reported on tcl-mac by Kevan Hashemi.
+
 2006-08-18  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* tests/text.test (text-25.15): Added test suggested by Sam
