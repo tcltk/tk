@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.13 2006/04/28 06:02:58 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.14 2006/08/21 01:09:32 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -379,11 +379,15 @@ CarbonTimerProc (
 	EventLoopTimerRef timer,
 	void *userData)
 {
-    while(carbonTimerEnabled && Tcl_DoOneEvent(
-	    TCL_FILE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {
+    if(carbonTimerEnabled) {
+	/* Avoid starving main event loop: process at most 4 events. */
+	int i = 4;
+	while(--i && Tcl_DoOneEvent(
+		TCL_FILE_EVENTS|TCL_TIMER_EVENTS|TCL_DONT_WAIT)) {
 #if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CARBON_EVENTS)
-	fprintf(stderr, "Processed tcl event from carbon timer\n");
+	    fprintf(stderr, "Processed tcl event from carbon timer\n");
 #endif /* TK_MAC_DEBUG_CARBON_EVENTS */
+	}
     }
 }
 
