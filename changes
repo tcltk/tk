@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.98 2006/04/26 13:58:40 dgp Exp $
+RCS: @(#) $Id: changes,v 1.99 2006/08/21 02:39:28 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6180,3 +6180,45 @@ registered applevents (steffen)
 Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
 ---- Released 8.5a4, April 27, 2006 --- See ChangeLog for details ---
+
+2006-04-28 (bug fix)[1243318] Aqua: incorrect cursor pos in bindings (steffen)
+
+2006-04-28 (bug fix)[1476443] Aqua: incorrect toplevel pos on 1st map (steffen)
+
+2006-05-12 (performance)[1409140] restore perf lost in 2006-03-15 change (hobbs)
+
+2006-05-13 (bug fix)[1481503] Aqua: key shortcut for 'Preferences' (steffen)
+
+2006-05-13 (bug fix)[1155596] Aqua: images with alpha on native btns (steffen)
+
+2006-05-13 (bug fix)[1480105] Aqua: Map/Unmap propagation to children (steffen)
+
+2006-05-13 (bug fix)[940117] Unmap canvas window items on canvas Unmap (steffen)
+
+2006-05-16 (bug fix)[1472624] Aqua: balloon help don't steal focus (steffen)
+
+2006-05-29 (bug fix)[706446] Aqua: active [button] highlight (hobbs)
+
+2006-05-29 (bug fix)[1424513] [listbox] crash with namespace var (hobbs)
+
+2006-06-01 (bug fix)[912571] [console] std chan refcount (mistachkin,hobbs)
+
+2006-06-14 (bug fix)[950121] Aqua: crash in draw of very wide images (steffen)
+
+2006-06-14 (bug fix)[1501922] Aqua: invalid clip regions on redraw (steffen)
+
+2006-06-14 (bug fix)[891141] excess variable writes by [scale] (porter)
+
+2006-07-20 (platform support) Mac OS X weak linking (steffen)
+
+2006-07-21 (bug fix)[700311, 1525905] Aqua: pure modifier keysyms (steffen)
+
+2006-07-24 (bug fix)[1358663] Aqua: [wm geometry -x-y] (steffen)
+
+2006-07-25 (bug fix)[1516950] Aqua: cmd-Q app menu key shortcut (steffen)
+
+2006-08-18 (bug fix)[1542205] Aqua: toplevel toolbar button crash (steffen)
+
+2006-08-21 (bug fix) Aqua: recursively called event loop (steffen)
+
+---- Released 8.5a5, June XX, 2006 --- See ChangeLog for details ---
