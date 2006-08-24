@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.19 2006/04/28 06:02:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.20 2006/08/24 05:22:27 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -968,17 +968,12 @@ UpdateControlValues(
      * flicker.  To avoid this we adjust the control record directly.  The
      * Draw1Control command appears to just draw where ever the control says to
      * draw so this seems right.
-     *
-     * NOTE: changing the control record directly may not work when
-     * Apple releases the Copland version of the MacOS (or when hell is cold).
      */
 
     contrlRect.left   = macDraw->xOff + scrollPtr->inset;
     contrlRect.top    = macDraw->yOff + scrollPtr->inset;
     contrlRect.right  = macDraw->xOff + Tk_Width(tkwin) - scrollPtr->inset;
     contrlRect.bottom = macDraw->yOff + Tk_Height(tkwin) - scrollPtr->inset;
-
-    SetControlBounds(macScrollPtr->sbHandle, &contrlRect );
 
     /*
      * To make Tk applications look more like Macintosh applications without 
@@ -999,7 +994,6 @@ UpdateControlValues(
     if ( portRect.left == contrlRect.left ) {
         if (macScrollPtr->macFlags & AUTO_ADJUST) {
             contrlRect.left--;
-            SetControlBounds ( macScrollPtr->sbHandle, &contrlRect );
         }
         if (!(macScrollPtr->macFlags & FLUSH_LEFT)) {
             macScrollPtr->macFlags |= FLUSH_LEFT;
@@ -1087,6 +1081,13 @@ UpdateControlValues(
     } else {
         TkMacOSXSetScrollbarGrow((TkWindow *) tkwin, false);
     }
+
+    /*
+     * Ensure we set scrollbar control bounds only once all size
+     * adjustments have been computed.
+     */
+
+    SetControlBounds(macScrollPtr->sbHandle, &contrlRect);
 
     /*
      * Given the Tk parameters for the fractions of the start and
