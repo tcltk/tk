@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.25.2.7 2006/04/05 19:48:23 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.25.2.8 2006/08/30 21:53:47 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -38,6 +38,15 @@
  */
 
 #include <imm.h>
+
+/*
+ * WM_UNICHAR is a message for Unicode input on all windows systems.
+ * Perhaps this definition should be moved in another file.
+ */
+#ifndef WM_UNICHAR
+#define WM_UNICHAR     0x0109
+#define UNICODE_NOCHAR 0xFFFF
+#endif
 
 static TkWinProcs asciiProcs = {
     0,
@@ -839,6 +848,22 @@ TkWinChildProc(hwnd, message, wParam, lParam)
 	    result =  TkWinEmbeddedEventProc(hwnd, message, wParam, lParam);
 	    break;
 
+	case WM_UNICHAR: 
+	    if (wParam == UNICODE_NOCHAR) {
+		/* If wParam is UNICODE_NOCHAR and the application processes
+		 * this message, then return TRUE. */
+		result = 1;
+	    } else {
+		/* If the event was translated, we must return 0 */
+		if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam,
+			    &result)) {
+		    result = 0;
+		} else {
+		    result = 1;
+		}
+	    }
+	    break;
+
 	default:
 	    if (!Tk_TranslateWinEvent(hwnd, message, wParam, lParam,
 		    &result)) {
@@ -928,6 +953,7 @@ Tk_TranslateWinEvent(hwnd, message, wParam, lParam, resultPtr)
 	case WM_SETFOCUS:
 	case WM_KILLFOCUS:
 	case WM_DESTROYCLIPBOARD:
+	case WM_UNICHAR:
 	case WM_CHAR:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
@@ -1075,6 +1101,7 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 	     */
 
 	case WM_CHAR:
+	case WM_UNICHAR:
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 	case WM_KEYDOWN:
@@ -1215,6 +1242,21 @@ GenerateXEvent(hwnd, message, wParam, lParam)
 		    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 		    event.type = KeyRelease;
 		    break;
+
+		case WM_UNICHAR: {
+		    char buffer[TCL_UTF_MAX+1];
+		    int i;
+		    event.type = KeyPress;
+		    event.xany.send_event = -3;
+		    event.xkey.keycode = wParam;
+		    event.xkey.nbytes = Tcl_UniCharToUtf(wParam, buffer);
+		    for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
+			event.xkey.trans_chars[i] = buffer[i];
+		    }
+		    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+		    event.type = KeyRelease;
+		    break;
+		}
 	    }
 	    break;
 	}
