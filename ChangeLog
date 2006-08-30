@@ -1,3 +1,8 @@
+2006-08-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinKey.c: Add WM_UNICHAR window message support (used by
+	* win/tkWinX.c:   virtual keyboard apps). [Bug 1518677] (petasis)
+
 2006-08-24  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXScrlbr.c (UpdateControlValues): set native scrollbar
