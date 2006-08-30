@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.14 2001/05/30 22:41:11 hobbs Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.14.4.1 2006/08/30 21:53:46 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -112,6 +112,13 @@ TkpGetString(winPtr, eventPtr, dsPtr)
         len = Tcl_UniCharToUtf((Tcl_UniChar) unichar, buf);
 
         Tcl_DStringAppend(dsPtr, buf, len);
+    } else if (eventPtr->xkey.send_event == -3) {
+	/*
+	 * Special case for WM_UNICHAR.
+	 * xkey.trans_chars[] already contains a UTF-8 char.
+	 */
+	Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars,
+		eventPtr->xkey.nbytes);
     } else  {
 	/*
 	 * This is an event generated from generic code.  It has no
