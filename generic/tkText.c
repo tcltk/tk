@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.68 2006/04/05 17:16:29 vincentdarley Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.69 2006/09/06 22:39:28 hobbs Exp $
  */
 
 #include "default.h"
@@ -160,11 +160,7 @@ static Tk_OptionSpec optionSpecs[] = {
 	Tk_Offset(TkText, highlightWidth), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BORDER, "-inactiveselectbackground", "inactiveSelectBackground",
 	"Foreground",
-#ifdef ALWAYS_SHOW_SELECTION
-	DEF_TEXT_SELECT_COLOR,
-#else
-	NULL,
-#endif
+	DEF_TEXT_INACTIVE_SELECT_COLOR,
 	-1, Tk_Offset(TkText, inactiveSelBorder),
 	TK_OPTION_NULL_OK, (ClientData) DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
@@ -3316,25 +3312,28 @@ TkTextLostSelection(clientData)
     ClientData clientData;	/* Information about text widget. */
 {
     register TkText *textPtr = (TkText *) clientData;
-#ifdef ALWAYS_SHOW_SELECTION
-    TkTextIndex start, end;
 
-    if (!textPtr->exportSelection) {
-	return;
+    if (TkpAlwaysShowSelection(textPtr->tkwin)) {
+	TkTextIndex start, end;
+
+	if (!textPtr->exportSelection) {
+	    return;
+	}
+
+	/*
+	 * On Windows and Mac systems, we want to remember the selection for
+	 * the next time the focus enters the window. On Unix, just remove the
+	 * "sel" tag from everything in the widget.
+	 */
+
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
+		0, 0, &start);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
+		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr),
+		0, &end);
+	TkTextRedrawTag(NULL, textPtr, &start, &end, textPtr->selTagPtr, 1);
+	TkBTreeTag(&start, &end, textPtr->selTagPtr, 0);
     }
-
-    /*
-     * On Windows and Mac systems, we want to remember the selection for the
-     * next time the focus enters the window. On Unix, just remove the "sel"
-     * tag from everything in the widget.
-     */
-
-    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, 0, 0, &start);
-    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
-	    TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), 0, &end);
-    TkTextRedrawTag(NULL, textPtr, &start, &end, textPtr->selTagPtr, 1);
-    TkBTreeTag(&start, &end, textPtr->selTagPtr, 0);
-#endif
 
     /*
      * Send an event that the selection changed. This is equivalent to:

@@ -1,3 +1,15 @@
+2006-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkEntry.c:   move hard-coded ALWAYS_SHOW_SELECTION
+	* generic/tkInt.h:     control of entry/text selection display
+	* generic/tkText.c:    based on focus to the Tcl level,
+	* generic/tkWindow.c:  controlled by ::tk::AlwaysShowSelection
+	* library/tk.tcl:      (boolean, private).  [Bug 1553691]
+	* macosx/tkMacOSXDefault.h:
+	* unix/tkUnixDefault.h:
+	* unix/tkUnixPort.h:
+	* win/tkWinDefault.h:
+
 2006-08-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinKey.c: Add WM_UNICHAR window message support (used by

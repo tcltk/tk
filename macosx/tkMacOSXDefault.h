@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.9 2005/10/10 10:36:35 vincentdarley Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.10 2006/09/06 22:39:28 hobbs Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -511,6 +511,7 @@
 #define DEF_TEXT_PADX			"1"
 #define DEF_TEXT_PADY			"1"
 #define DEF_TEXT_RELIEF			"flat"
+#define DEF_TEXT_INACTIVE_SELECT_COLOR	NULL
 #define DEF_TEXT_SELECT_COLOR		SELECT_BG
 #define DEF_TEXT_SELECT_MONO		BLACK
 #define DEF_TEXT_SELECT_BD_COLOR	"1"

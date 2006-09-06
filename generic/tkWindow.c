@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.75 2006/07/14 18:25:14 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.76 2006/09/06 22:39:28 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -888,8 +888,17 @@ TkCreateMainWindow(interp, screenName, baseName)
     mainPtr->optionRootPtr = NULL;
     Tcl_InitHashTable(&mainPtr->imageTable, TCL_STRING_KEYS);
     mainPtr->strictMotif = 0;
+    mainPtr->alwaysShowSelection = 0;
     if (Tcl_LinkVar(interp, "tk_strictMotif", (char *) &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
+	Tcl_ResetResult(interp);
+    }
+    if (Tcl_CreateNamespace(interp, "::tk", NULL, NULL) == NULL) {
+	Tcl_ResetResult(interp);
+    }
+    if (Tcl_LinkVar(interp, "::tk::AlwaysShowSelection",
+		(char *) &mainPtr->alwaysShowSelection,
+		TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
     }
     mainPtr->nextPtr = tsdPtr->mainWindowList;
@@ -1502,6 +1511,8 @@ Tk_DestroyWindow(tkwin)
 			TkDeadAppCmd, (ClientData) NULL,
 			(void (*) _ANSI_ARGS_((ClientData))) NULL);
 		Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
+                Tcl_UnlinkVar(winPtr->mainPtr->interp,
+			"::tk::AlwaysShowSelection");
 	    }
 
 	    Tcl_DeleteHashTable(&winPtr->mainPtr->nameTable);
@@ -2647,6 +2658,34 @@ Tk_GetNumMainWindows()
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpAlwaysShowSelection --
+ *
+ *	Indicates whether text/entry widgets should always display
+ *	their selection, regardless of window focus.
+ *
+ * Results:
+ *	The return value is 1 if always showing the selection has been
+ *	requested for tkwin's application by setting the
+ *	::tk::AlwaysShowSelection variable in its interpreter to a true value.
+ *	0 is returned if it has a false value.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpAlwaysShowSelection(tkwin)
+    Tk_Window tkwin;			/* Window whose application is
+					 * to be checked. */
+{
+    return ((TkWindow *) tkwin)->mainPtr->alwaysShowSelection;
 }
 
 /*
