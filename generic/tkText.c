@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33.2.1 2006/04/05 19:48:43 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.2 2006/09/06 19:53:22 hobbs Exp $
  */
 
 #include "default.h"
@@ -1582,6 +1582,25 @@ DeleteChars(textPtr, index1String, index2String, indexPtr1, indexPtr2)
 		TkBTreeTag(&index2, &oldIndex2, arrayPtr[i], 0);
 	    }
 	    ckfree((char *) arrayPtr);
+	}
+    }
+
+    if (line1 < line2) {
+	/*
+	 * We are deleting more than one line. For speed, we remove all tags
+	 * from the range first. If we don't do this, the code below can (when
+	 * there are many tags) grow non-linearly in execution time.
+	 * [Bug 1456342]
+	 */
+
+	Tcl_HashSearch search;
+	Tcl_HashEntry *hPtr;
+
+	for (hPtr=Tcl_FirstHashEntry(&textPtr->tagTable, &search);
+	     hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
+	    TkTextTag *tagPtr = (TkTextTag *) Tcl_GetHashValue(hPtr);
+
+	    TkBTreeTag(&index1, &index2, tagPtr, 0);
 	}
     }
 
