@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.23 2006/03/29 16:27:20 dgp Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.24 2006/09/06 22:39:28 hobbs Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
@@ -502,6 +502,7 @@
 #define DEF_TEXT_PADX			"1"
 #define DEF_TEXT_PADY			"1"
 #define DEF_TEXT_RELIEF			"sunken"
+#define DEF_TEXT_INACTIVE_SELECT_COLOR	SELECT_BG
 #define DEF_TEXT_SELECT_COLOR		SELECT_BG
 #define DEF_TEXT_SELECT_MONO		BLACK
 #define DEF_TEXT_SELECT_BD_COLOR	"1"
