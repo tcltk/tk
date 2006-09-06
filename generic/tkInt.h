@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.56.2.8 2006/06/05 18:06:47 dgp Exp $ 
+ * RCS: $Id: tkInt.h,v 1.56.2.9 2006/09/06 22:01:25 hobbs Exp $ 
  */
 
 #ifndef _TKINT
@@ -676,6 +676,8 @@ typedef struct TkMainInfo {
 				 * structures.  Managed by tkImage.c. */
     int strictMotif;		/* This is linked to the tk_strictMotif
 				 * global variable. */
+    int alwaysShowSelection;	/* This is linked to the
+				 * ::tk::AlwaysShowSelection variable. */
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
 } TkMainInfo;
@@ -1212,6 +1214,7 @@ EXTERN void		TkPrintPadAmount _ANSI_ARGS_((Tcl_Interp *interp,
 EXTERN int		TkParsePadAmount _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    int *pad1Ptr, int *pad2Ptr));
+EXTERN int		TkpAlwaysShowSelection _ANSI_ARGS_((Tk_Window tkwin));
 
 /*
  * Unsupported commands.
