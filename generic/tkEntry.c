@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.35.2.1 2005/03/25 04:34:16 wolfsuit Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.35.2.2 2006/09/06 22:01:25 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -1658,11 +1658,11 @@ DisplayEntry(clientData)
      * don't have the focus.
      */
 
-#ifdef ALWAYS_SHOW_SELECTION
-    showSelection = 1;
-#else
-    showSelection = (entryPtr->flags & GOT_FOCUS);
-#endif
+    if (TkpAlwaysShowSelection(entryPtr->tkwin)) {
+	showSelection = 1;
+    } else {
+	showSelection = (entryPtr->flags & GOT_FOCUS);
+    }
 
     /*
      * Draw the background in three layers.  From bottom to top the
@@ -2838,16 +2838,16 @@ EntryLostSelection(clientData)
     /*
      * On Windows and Mac systems, we want to remember the selection
      * for the next time the focus enters the window.  On Unix, we need
-     * to clear the selection since it is always visible.
+     * to clear the selection since it is always visible.  This is
+     * controlled by ::tk::AlwaysShowSelection.
      */
 
-#ifdef ALWAYS_SHOW_SELECTION
-    if ((entryPtr->selectFirst >= 0) && entryPtr->exportSelection) {
+    if (TkpAlwaysShowSelection(entryPtr->tkwin)
+	    && (entryPtr->selectFirst >= 0) && entryPtr->exportSelection) {
 	entryPtr->selectFirst = -1;
 	entryPtr->selectLast = -1;
 	EventuallyRedraw(entryPtr);
     }
-#endif
 }
 
 /*
