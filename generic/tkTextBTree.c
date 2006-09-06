@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.6.2.1 2005/11/27 02:44:25 das Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.6.2.2 2006/09/06 22:01:25 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -2550,13 +2550,12 @@ TkTextIsElided(textPtr, indexPtr)
 
     for (i = numTags-1; i >=0; i--) {
 	if (tagCnts[i] & 1) {
-#ifndef ALWAYS_SHOW_SELECTION
 	    /* who would make the selection elided? */
-	    if ((tagPtr == textPtr->selTagPtr)
+	    if (!TkpAlwaysShowSelection(textPtr->tkwin)
+		    && (tagPtr == textPtr->selTagPtr)
 		    && !(textPtr->flags & GOT_FOCUS)) {
 		continue;
 	    }
-#endif
 	    elide = tagPtrs[i]->elide;
 	    break;
 	}

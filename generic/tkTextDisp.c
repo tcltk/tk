@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.14.2.2 2006/04/05 19:48:07 hobbs Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.14.2.3 2006/09/06 22:01:26 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -546,15 +546,15 @@ GetStyle(textPtr, indexPtr)
 	tagPtr = tagPtrs[i];
 
 	/*
-	 * On Windows and Mac, we need to skip the selection tag if
-	 * we don't have focus.
+	 * Skip the selection tag if we don't have focus,
+	 * unless we always want to show the selection.
 	 */
 
-#ifndef ALWAYS_SHOW_SELECTION
-	if ((tagPtr == textPtr->selTagPtr) && !(textPtr->flags & GOT_FOCUS)) {
+	if (!TkpAlwaysShowSelection(textPtr->tkwin)
+		&& (tagPtr == textPtr->selTagPtr)
+		&& !(textPtr->flags & GOT_FOCUS)) {
 	    continue;
 	}
-#endif
 
 	if ((tagPtr->border != NULL) && (tagPtr->priority > borderPrio)) {
 	    styleValues.border = tagPtr->border;

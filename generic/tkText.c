@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33.2.2 2006/09/06 19:53:22 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.3 2006/09/06 22:01:25 hobbs Exp $
  */
 
 #include "default.h"
@@ -1281,9 +1281,9 @@ TextEventProc(clientData, eventPtr)
 		textPtr->flags &= ~(GOT_FOCUS | INSERT_ON);
 		textPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
 	    }
-#ifndef ALWAYS_SHOW_SELECTION
-	    TkTextRedrawTag(textPtr, NULL, NULL, textPtr->selTagPtr, 1);
-#endif
+	    if (!TkpAlwaysShowSelection(textPtr->tkwin)) {
+		TkTextRedrawTag(textPtr, NULL, NULL, textPtr->selTagPtr, 1);
+	    }
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(&index, 1, &index2);
 	    TkTextChanged(textPtr, &index, &index2);
@@ -1896,24 +1896,25 @@ TkTextLostSelection(clientData)
 {
     register TkText *textPtr = (TkText *) clientData;
     XEvent event;
-#ifdef ALWAYS_SHOW_SELECTION
-    TkTextIndex start, end;
 
-    if (!textPtr->exportSelection) {
-	return;
+    if (TkpAlwaysShowSelection(textPtr->tkwin)) {
+	TkTextIndex start, end;
+
+	if (!textPtr->exportSelection) {
+	    return;
+	}
+
+	/*
+	 * On Windows and Mac systems, we want to remember the selection
+	 * for the next time the focus enters the window.  On Unix, 
+	 * just remove the "sel" tag from everything in the widget.
+	 */
+
+	TkTextMakeByteIndex(textPtr->tree, 0, 0, &start);
+	TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree), 0, &end);
+	TkTextRedrawTag(textPtr, &start, &end, textPtr->selTagPtr, 1);
+	TkBTreeTag(&start, &end, textPtr->selTagPtr, 0);
     }
-
-    /*
-     * On Windows and Mac systems, we want to remember the selection
-     * for the next time the focus enters the window.  On Unix, 
-     * just remove the "sel" tag from everything in the widget.
-     */
-
-    TkTextMakeByteIndex(textPtr->tree, 0, 0, &start);
-    TkTextMakeByteIndex(textPtr->tree, TkBTreeNumLines(textPtr->tree), 0, &end);
-    TkTextRedrawTag(textPtr, &start, &end, textPtr->selTagPtr, 1);
-    TkBTreeTag(&start, &end, textPtr->selTagPtr, 0);
-#endif
 
     /*
      * Send an event that the selection changed.  This is equivalent to
