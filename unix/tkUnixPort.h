@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.11 2006/03/13 18:19:19 dgp Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.12 2006/09/06 22:39:28 hobbs Exp $
  */
 
 #ifndef _UNIXPORT
@@ -200,13 +200,6 @@
 
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))
-
-/*
- * This macro indicates that entry and text widgets should display
- * the selection highlight regardless of which window has the focus.
- */
-
-#define ALWAYS_SHOW_SELECTION
 
 /*
  * The following declaration is used to get access to a private Tcl interface

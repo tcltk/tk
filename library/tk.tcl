@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.56 2006/01/25 18:22:04 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.57 2006/09/06 22:39:28 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -20,7 +20,7 @@ package require -exact Tcl 8.5
 namespace eval ::tk {
     # Set up the msgcat commands
     namespace eval msgcat {
-	namespace export mc mcmax        
+	namespace export mc mcmax
         if {[interp issafe] || [catch {package require msgcat}]} {
             # The msgcat package is not available.  Supply our own
             # minimal replacement.
@@ -340,7 +340,7 @@ if {![llength [info command tk_chooseDirectory]]} {
 	return [::tk::dialog::file::chooseDir:: {expand}$args]
     }
 }
-	
+
 #----------------------------------------------------------------------
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
@@ -365,6 +365,9 @@ switch -- [tk windowingsystem] {
 
 	trace add variable ::tk_strictMotif write ::tk::EventMotifBindings
 	set ::tk_strictMotif $::tk_strictMotif
+	# On unix, we want to always display entry/text selection,
+	# regardless of which window has focus
+	set ::tk::AlwaysShowSelection 1
     }
     "win32" {
 	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete>
