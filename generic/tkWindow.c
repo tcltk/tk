@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56.2.11 2006/09/06 22:01:26 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56.2.12 2006/09/07 06:37:29 das Exp $
  */
 
 #include "tkPort.h"
@@ -21,6 +21,8 @@
 #if !( defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
 #include "tkUnixInt.h"
 #endif
+
+#include "tclInt.h" /* for Tcl_CreateNamespace() */
 
 /* 
  * Type used to keep track of Window objects that were
