@@ -1,3 +1,8 @@
+2006-09-07  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkWindow.c: add #include "tclInt.h" now required due to use
+	of tcl internal Tcl_CreateNamespace() in previous commit.
+
 2006-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkEntry.c:     move hard-coded ALWAYS_SHOW_SELECTION
