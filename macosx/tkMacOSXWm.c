@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.40 2006/08/18 07:47:11 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.41 2006/09/10 17:02:19 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -2274,7 +2274,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
      * FIX: We need an UpdateWrapper equivalent to make this 100% correct
      */
     if (boolean) {
-	if (wmPtr->macClass == kDocumentWindowClass || (wmPtr->master != None && 
+	if (wmPtr->macClass == kDocumentWindowClass || (wmPtr->master != None &&
 		wmPtr->macClass == kFloatingWindowClass)) {
 	    wmPtr->macClass = kSimpleWindowClass;
 	    wmPtr->attributes = kWindowNoAttributes;
