@@ -8203,7 +8203,7 @@ echo "$as_me: WARNING: Aqua requires Mac OS X 10.2 or later" >&2;}
     echo "$as_me:$LINENO: result: $tk_aqua" >&5
 echo "${ECHO_T}$tk_aqua" >&6
     # remove 64-bit arch flags from CFLAGS for combined 32-bit and 64-bit fat
-    # builds as neither TkAqua nor TkX11 can be built for 64-bit at present.
+    # builds, as neither TkAqua nor TkX11 can be built for 64-bit at present.
     test "$fat_32_64" = yes && \
 	CFLAGS="`echo "$CFLAGS " | sed -e 's/-arch ppc64 / /g' -e 's/-arch x86_64 / /g'`"
     if test $tk_aqua = no; then
