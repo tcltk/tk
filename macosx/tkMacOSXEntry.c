@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.6 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.7 2006/09/10 17:06:32 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -161,7 +161,7 @@ TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable d, int isSpinbox)
      
     if (entryPtr->borderWidth != MAC_OSX_ENTRY_BORDER 
             || entryPtr->highlightWidth != MAC_OSX_FOCUS_WIDTH
-            ||entryPtr->relief != MAC_OSX_ENTRY_RELEIF) {
+            || entryPtr->relief != MAC_OSX_ENTRY_RELIEF) {
         return 0;
     }
     

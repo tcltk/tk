@@ -281,6 +281,7 @@
 		F9EA4AF208FA3BD800B1F5F0 /* tkMacOSXCursors.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBCC08F27A3B005CB29B /* tkMacOSXCursors.r */; };
 		F9EA4AF308FA3BDA00B1F5F0 /* tkMacOSXAETE.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBC408F27A3B005CB29B /* tkMacOSXAETE.r */; };
 		F9EA4AF408FA3BDB00B1F5F0 /* tkAboutDlg.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBC108F27A3B005CB29B /* tkAboutDlg.r */; };
+		F9FC77B80AB29E9100B7077D /* tclUnixCompat.c in Sources */ = {isa = PBXBuildFile; fileRef = F9FC77B70AB29E9100B7077D /* tclUnixCompat.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -1621,6 +1622,7 @@
 		F9A3082D08F2D4AB00BAE1AB /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = ../Tk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9A3084B08F2D4CE00BAE1AB /* Wish.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = Wish.app; path = ../Wish.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9A3084E08F2D4F400BAE1AB /* Tcl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tcl.framework; path = ../Tcl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9FC77B70AB29E9100B7077D /* tclUnixCompat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclUnixCompat.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3165,6 +3167,7 @@
 				F96D445D08F272B9004A47F5 /* tclLoadOSF.c */,
 				F96D445E08F272B9004A47F5 /* tclLoadShl.c */,
 				F96D445F08F272B9004A47F5 /* tclUnixChan.c */,
+				F9FC77B70AB29E9100B7077D /* tclUnixCompat.c */,
 				F96D446008F272B9004A47F5 /* tclUnixEvent.c */,
 				F96D446108F272B9004A47F5 /* tclUnixFCmd.c */,
 				F96D446208F272B9004A47F5 /* tclUnixFile.c */,
@@ -3525,6 +3528,7 @@
 				F96D49AE08F272C4004A47F5 /* tclMacOSXNotify.c in Sources */,
 				F96D4AC608F272C9004A47F5 /* tclLoadDyld.c in Sources */,
 				F96D4ACA08F272C9004A47F5 /* tclUnixChan.c in Sources */,
+				F9FC77B80AB29E9100B7077D /* tclUnixCompat.c in Sources */,
 				F96D4ACB08F272C9004A47F5 /* tclUnixEvent.c in Sources */,
 				F96D4ACC08F272C9004A47F5 /* tclUnixFCmd.c in Sources */,
 				F96D4ACD08F272C9004A47F5 /* tclUnixFile.c in Sources */,

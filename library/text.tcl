@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.40 2005/09/10 14:53:20 das Exp $
+# RCS: @(#) $Id: text.tcl,v 1.41 2006/09/10 17:06:32 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -386,16 +386,7 @@ bind Text <Meta-Delete> {
 
 # Macintosh only bindings:
 
-# if text black & highlight black -> text white, other text the same
 if {[tk windowingsystem] eq "aqua"} {
-bind Text <FocusIn> {
-    %W tag configure sel -borderwidth 0
-    %W configure -selectbackground systemHighlight -selectforeground systemHighlightText
-}
-bind Text <FocusOut> {
-    %W tag configure sel -borderwidth 1
-    %W configure -selectbackground white -selectforeground black
-}
 bind Text <Option-Left> {
     tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
 }
