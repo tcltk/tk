@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.8 2006/03/13 18:19:18 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.9 2006/09/10 17:06:32 das Exp $
  */
 
 #ifndef _TKMACPORT
@@ -189,7 +189,9 @@ extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
  */
 
 #define HIGHLIGHT_PIXEL			31
+#define HIGHLIGHT_SECONDARY_PIXEL	32
 #define HIGHLIGHT_TEXT_PIXEL		33
+#define HIGHLIGHT_ALTERNATE_PIXEL	34
 #define CONTROL_TEXT_PIXEL		35
 #define CONTROL_BODY_PIXEL		37
 #define CONTROL_FRAME_PIXEL		39

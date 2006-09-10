@@ -54,10 +54,11 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.24 2006/08/18 07:47:11 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.25 2006/09/10 17:06:32 das Exp $
  */
 
 #include "tkMacOSXInt.h"
+#include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 
@@ -315,7 +316,13 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	     */
             if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
                 return result;
-            } else {
+            } else
+		    /*
+		     * Only windows with the kWindowNoActivatesAttribute can
+		     * receive mouse events in the background.
+		     */
+		    if (!(((TkWindow *)tkwin)->wmInfoPtr->attributes &
+			    kWindowNoActivatesAttribute)) {
 		/*
 		 * Allow background window dragging & growing with Command down
 		 */

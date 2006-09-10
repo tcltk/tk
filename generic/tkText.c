@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.69 2006/09/06 22:39:28 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.70 2006/09/10 17:06:32 das Exp $
  */
 
 #include "default.h"
@@ -614,7 +614,7 @@ CreateWidget(sharedPtr, tkwin, interp, parent, objc, objv)
     textPtr->selTagPtr->reliefString = (char *)
 	    ckalloc(sizeof(DEF_TEXT_SELECT_RELIEF));
     strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
-    textPtr->selTagPtr->relief = TK_RELIEF_RAISED;
+    Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &(textPtr->selTagPtr->relief));
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
 
