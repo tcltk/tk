@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.58 2006/03/27 13:43:15 cc_benny Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.59 2006/09/10 17:06:32 das Exp $
  */
 
 #include "tkPort.h"
@@ -815,12 +815,17 @@ GetStyle(
 
 	/*
 	 * If this is the selection tag, and inactiveSelBorder is NULL (the
-	 * default on Windows and Mac), then we need to skip it if we don't
+	 * default on Windows), then we need to skip it if we don't
 	 * have focus.
 	 */
 
 	if ((tagPtr == textPtr->selTagPtr) && !(textPtr->flags & GOT_FOCUS)) {
-	    if (textPtr->inactiveSelBorder == NULL) {
+	    if (textPtr->inactiveSelBorder == NULL
+#ifdef MAC_OSX_TK
+		    /* Don't show inactive selection in disabled widgets. */
+		    || textPtr->state == TK_TEXT_STATE_DISABLED
+#endif
+	    ) {
 		continue;
 	    }
 	    border = textPtr->inactiveSelBorder;

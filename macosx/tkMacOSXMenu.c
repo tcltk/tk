@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.31 2006/08/18 07:47:10 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.32 2006/09/10 17:06:32 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -3561,6 +3561,7 @@ DrawMenuEntryLabel(
 		    Tcl_DStringLength(&itemTextDString),
 		    leftEdge, baseline); */
 		    
+	    Tcl_DStringFree(&convertedTextDString);
 	    Tcl_DStringFree(&itemTextDString);
     	}
     }

@@ -1,3 +1,49 @@
+2006-09-10  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXColor.c (TkSetMacColor, TkpGetColor): use AppearanceMgr
+	* macosx/tkMacOSXDefault.h: to retrieve platform std colors for text
+	* macosx/tkMacOSXPort.h:    selections, add "systemHighlightSecondary"
+	color name for standard color of inactive selections, use this color as
+	default for text widget -inactiveselectbackground to implement platform
+	standard look for inactive text selections.
+
+	* library/text.tcl (aqua): remove focus bindings to set selection color.
+
+	* generic/tkTextBTree.c (TkTextIsElided): on TkAqua, don't show inactive
+	* generic/tkTextDisp.c (GetStyle):        text selection when text
+	                                          widget is in disabled state.
+
+	* generic/tkEntry.c (DisplayEntry): change default TkAqua selection
+	* macosx/tkMacOSXDefault.h:         relief to "flat" (platform std).
+
+	* generic/tkText.c (CreateWidget): fix bug leading to default text
+	selection relief string DEF_TEXT_SELECT_RELIEF being ignored.
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): allow mouse
+	event delivery to background windows with kWindowNoActivatesAttribute
+	(e.g. overrideredirect windows), as these never come to the foreground
+	they would not receive any mouse events otherwise. [Bug 1472624]
+
+	* macosx/tkMacOSXWindowEvent.c (TkMacOSXGenerateFocusEvent): do not
+	send focus events to any windows with kWindowNoActivatesAttribute.
+
+	* macosx/tkMacOSXXStubs.c (XQueryColor, XQueryColors): implement basic
+	XColor computation from pixel values, enough to make tkImg's window.c
+	happy, fixes img::window failures reported on tcl-mac.
+
+	* macosx/tkMacOSXMenu.c (DrawMenuEntryLabel): fix leak. [Bug 1554672]
+
+	* macosx/GNUmakefile: workaround bug in 'cp -pRH' on Darwin 6 and
+	earlier, fixes 'make embedded' failure reported on tcl-mac; fix error
+	from 'make deploy' with same build tree as previous 'make embedded'.
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new tclUnixCompat.c file.
+
+	* macosx/tkMacOSXEntry.c (TkpDrawEntryBorderAndFocus): fix typo.
+
+	* unix/tcl.m4: sync with tcl/unix/tcl.m4.
+	* unix/configure: autoconf-2.59
+
 2006-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkEntry.c:   move hard-coded ALWAYS_SHOW_SELECTION
