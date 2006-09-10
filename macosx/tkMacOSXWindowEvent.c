@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.14 2006/07/24 04:45:26 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.15 2006/09/10 17:07:36 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -467,10 +467,11 @@ TkMacOSXGenerateFocusEvent(
 
     /*
      * Don't send focus events to windows of class help or to
-     * overrideredirect windows.
+     * windows with the kWindowNoActivatesAttribute.
      */
     if (((TkWindow *)tkwin)->wmInfoPtr->macClass == kHelpWindowClass ||
-	    Tk_Attributes(tkwin)->override_redirect) {
+	    ((TkWindow *)tkwin)->wmInfoPtr->attributes &
+		    kWindowNoActivatesAttribute) {
 	return false;
     }
 

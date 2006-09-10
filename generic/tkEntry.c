@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.35.2.2 2006/09/06 22:01:25 hobbs Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.35.2.3 2006/09/10 17:07:35 das Exp $
  */
 
 #include "tkInt.h"
@@ -1700,7 +1700,13 @@ DisplayEntry(clientData)
 		    baseY - fm.ascent - entryPtr->selBorderWidth,
 		    (selEndX - selStartX) + 2*entryPtr->selBorderWidth,
 		    (fm.ascent + fm.descent) + 2*entryPtr->selBorderWidth,
-		    entryPtr->selBorderWidth, TK_RELIEF_RAISED);
+		    entryPtr->selBorderWidth, 
+#ifndef MAC_OSX_TK
+		    TK_RELIEF_RAISED
+#else
+		    MAC_OSX_ENTRY_SELECT_RELIEF
+#endif
+		    );
 	} 
     }
 

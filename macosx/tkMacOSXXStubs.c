@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.12 2006/03/28 02:44:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.13 2006/09/10 17:07:36 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -654,6 +654,19 @@ XQueryColor(
     Colormap colormap,
     XColor* def_in_out)
 {
+    unsigned long p;
+    unsigned char r, g, b;
+    XColor *d = def_in_out;
+
+    p       	= d->pixel;
+    r       	= (p & 0x00FF0000) >> 16;
+    g       	= (p & 0x0000FF00) >> 8;
+    b       	= (p & 0x000000FF);
+    d->red  	= (r << 8) | r;
+    d->green	= (g << 8) | g;
+    d->blue 	= (b << 8) | b;
+    d->flags	= DoRed|DoGreen|DoBlue;
+    d->pad  	= 0;
 }
 
 void
@@ -663,6 +676,22 @@ XQueryColors(
     XColor* defs_in_out,
     int ncolors)
 {
+    int i;
+    unsigned long p;
+    unsigned char r, g, b;
+    XColor *d = defs_in_out;
+
+    for (i = 0; i < ncolors; i++, d++) {
+	p       	= d->pixel;
+	r       	= (p & 0x00FF0000) >> 16;
+	g       	= (p & 0x0000FF00) >> 8;
+	b       	= (p & 0x000000FF);
+	d->red  	= (r << 8) | r;
+	d->green	= (g << 8) | g;
+	d->blue 	= (b << 8) | b;
+	d->flags	= DoRed|DoGreen|DoBlue;
+	d->pad  	= 0;
+    }
 }
 
 int   

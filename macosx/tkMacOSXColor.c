@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.2 2006/03/28 02:44:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.3 2006/09/10 17:07:36 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -58,12 +58,36 @@ TkSetMacColor(
     unsigned long pixel,        /* Pixel value to convert. */
     RGBColor *macColor)                /* Mac color struct to modify. */
 {
+    OSStatus err;
+
     switch (pixel >> 24) {
         case HIGHLIGHT_PIXEL:
-            LMGetHiliteRGB(macColor);
+            err = GetThemeBrushAsColor(kThemeBrushPrimaryHighlightColor,
+		    32, true, macColor);
+	    if (err != noErr) {
+		LMGetHiliteRGB(macColor);
+	    }
+            return true;
+        case HIGHLIGHT_SECONDARY_PIXEL:
+            err = GetThemeBrushAsColor(kThemeBrushSecondaryHighlightColor,
+		    32, true, macColor);
+	    if (err != noErr) {
+		LMGetHiliteRGB(macColor);
+	    }
+            return true;
+        case HIGHLIGHT_ALTERNATE_PIXEL:
+            err = GetThemeBrushAsColor(kThemeBrushAlternatePrimaryHighlightColor,
+		    32, true, macColor);
+	    if (err != noErr) {
+		LMGetHiliteRGB(macColor);
+	    }
             return true;
         case HIGHLIGHT_TEXT_PIXEL:
-            LMGetHiliteRGB(macColor);
+            err = GetThemeBrushAsColor(kThemeBrushPrimaryHighlightColor,
+		    32, true, macColor);
+	    if (err != noErr) {
+		LMGetHiliteRGB(macColor);
+	    }
             if ((macColor->red == 0) && (macColor->green == 0)
                     && (macColor->blue == 0)) {
                 macColor->red = macColor->green = macColor->blue = 0xFFFF;
@@ -199,16 +223,41 @@ TkpGetColor(
      * will do all the work.
      */
     if (strncasecmp(name, "system", 6) == 0) {
-        int foundSystemColor = false;
+        OSStatus err;
+	int foundSystemColor = false;
         RGBColor rgbValue;
         char pixelCode = 0;
         
         if (!strcasecmp(name+6, "Highlight")) {
-            LMGetHiliteRGB(&rgbValue);
+            err = GetThemeBrushAsColor(kThemeBrushPrimaryHighlightColor,
+		    32, true, &rgbValue);
+	    if (err != noErr) {
+		LMGetHiliteRGB(&rgbValue);
+	    }
             pixelCode = HIGHLIGHT_PIXEL;
             foundSystemColor = true;
+        } else if (!strcasecmp(name+6, "HighlightSecondary")) {
+            err = GetThemeBrushAsColor(kThemeBrushSecondaryHighlightColor,
+		    32, true, &rgbValue);
+	    if (err != noErr) {
+		LMGetHiliteRGB(&rgbValue);
+	    }
+            pixelCode = HIGHLIGHT_SECONDARY_PIXEL;
+            foundSystemColor = true;
+        } else if (!strcasecmp(name+6, "HighlightAlternate")) {
+            err = GetThemeBrushAsColor(kThemeBrushAlternatePrimaryHighlightColor,
+		    32, true, &rgbValue);
+	    if (err != noErr) {
+		LMGetHiliteRGB(&rgbValue);
+	    }
+            pixelCode = HIGHLIGHT_ALTERNATE_PIXEL;
+            foundSystemColor = true;
         } else if (!strcasecmp(name+6, "HighlightText")) {
-            LMGetHiliteRGB(&rgbValue);
+            err = GetThemeBrushAsColor(kThemeBrushPrimaryHighlightColor,
+		    32, true, &rgbValue);
+	    if (err != noErr) {
+		LMGetHiliteRGB(&rgbValue);
+	    }
             if ((rgbValue.red == 0) && (rgbValue.green == 0)
                     && (rgbValue.blue == 0)) {
                 rgbValue.red = rgbValue.green = rgbValue.blue = 0xFFFF;

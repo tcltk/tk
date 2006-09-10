@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: Makefile,v 1.7.2.14 2006/04/12 00:58:44 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7.2.15 2006/09/10 17:07:36 das Exp $
 #
 ########################################################################################################
 
@@ -203,6 +203,11 @@ ifeq (${EMBEDDED_BUILD},1)
 	@rm -rf "${INSTALL_ROOT}/${LIBDIR}/Tk.framework"
 endif
 	${DO_MAKE}
+ifeq (${EMBEDDED_BUILD}_${TK_X11},1_)
+# workaround bug with 'cp -pRH' on Darwin 6 and earlier
+	@if [ "`uname -r | awk -F. '{print $$1}'`" -lt 7 ]; then \
+	mkdir -p ${TOP_DIR}/{"${TCL_FMWK_DIR}","${TK_FMWK_DIR}"}/PrivateHeaders; fi
+endif
 ifeq (${INSTALL_BUILD},1)
 ifeq (${EMBEDDED_BUILD},1)
 # if we are embedding frameworks, don't install wish
@@ -237,7 +242,7 @@ endif
 ifeq (${TK_X11},)
 ifeq (${EMBEDDED_BUILD},)
 # install Wish.app link in APPLICATION_INSTALL_PATH and setup 'Wish Shell' compatibility links
-	@cd ${TOP_DIR} && if [ -n "${APP_DIR}" ]; then mkdir -p "./${APP_DIR}" && \
+	@cd ${TOP_DIR} && if [ -n "${APP_DIR}" ]; then mkdir -p "./${APP_DIR}" && rm -rf "./${APP_DIR}/Wish.app" && \
 	ln -fsh "./$$(echo ${APP_DIR} | sed -e 's#/[^/][^/]*#/..#g')/${FMWK_DIR}/${PRODUCT_NAME}.framework/Resources/Wish.app" "./${APP_DIR}" && \
 	ln -fsh Wish.app "./${APP_DIR}/Wish Shell.app"; fi && \
 	ln -fsh Wish.app "./${TK_FMWK_DIR}/Resources/Wish Shell.app" && \

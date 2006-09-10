@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2.2.3 2005/06/23 20:15:22 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2.2.4 2006/09/10 17:07:36 das Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -35,6 +35,7 @@
 #define ACTIVE_BG	"#ececec"
 #define SELECT_BG	"systemHighlight"
 #define SELECT_FG	"systemHighlightText"
+#define INACTIVE_SELECT_BG "systemHighlightSecondary"
 #define TROUGH		"#c3c3c3"
 #define INDICATOR	"#b03060"
 #define DISABLED	"#a3a3a3"
@@ -145,9 +146,10 @@
  * won't get the native widget by default.
  */
  
-#define MAC_OSX_FOCUS_WIDTH 3
-#define MAC_OSX_ENTRY_BORDER 2
-#define MAC_OSX_ENTRY_RELEIF TK_RELIEF_SUNKEN
+#define MAC_OSX_FOCUS_WIDTH		3
+#define MAC_OSX_ENTRY_BORDER		2
+#define MAC_OSX_ENTRY_RELIEF		TK_RELIEF_SUNKEN
+#define MAC_OSX_ENTRY_SELECT_RELIEF	TK_RELIEF_FLAT
 
 #define DEF_ENTRY_BG_COLOR		NORMAL_BG
 #define DEF_ENTRY_BG_MONO		WHITE
@@ -513,7 +515,7 @@
 #define DEF_TEXT_SELECT_BD_MONO		"0"
 #define DEF_TEXT_SELECT_FG_COLOR	SELECT_FG
 #define DEF_TEXT_SELECT_FG_MONO		WHITE
-#define DEF_TEXT_SELECT_RELIEF		"solid"
+#define DEF_TEXT_SELECT_RELIEF		"flat"
 #define DEF_TEXT_SET_GRID		"0"
 #define DEF_TEXT_SPACING1		"0"
 #define DEF_TEXT_SPACING2		"0"
