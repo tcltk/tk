@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.6.2.2 2006/09/06 22:01:25 hobbs Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.6.2.3 2006/09/10 17:07:35 das Exp $
  */
 
 #include "tkInt.h"
@@ -2551,7 +2551,13 @@ TkTextIsElided(textPtr, indexPtr)
     for (i = numTags-1; i >=0; i--) {
 	if (tagCnts[i] & 1) {
 	    /* who would make the selection elided? */
-	    if (!TkpAlwaysShowSelection(textPtr->tkwin)
+	    if (
+#ifndef MAC_OSX_TK
+		    !TkpAlwaysShowSelection(textPtr->tkwin)
+#else
+		    /* Don't show inactive selection in disabled widgets. */
+		    textPtr->state == TK_STATE_DISABLED
+#endif
 		    && (tagPtr == textPtr->selTagPtr)
 		    && !(textPtr->flags & GOT_FOCUS)) {
 		continue;
