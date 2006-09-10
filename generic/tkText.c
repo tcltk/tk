@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33.2.3 2006/09/06 22:01:25 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.4 2006/09/10 17:07:35 das Exp $
  */
 
 #include "default.h"
@@ -426,7 +426,7 @@ Tk_TextCmd(clientData, interp, argc, argv)
     textPtr->selTagPtr->reliefString =
 	    (char *) ckalloc(sizeof(DEF_TEXT_SELECT_RELIEF));
     strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
-    textPtr->selTagPtr->relief = TK_RELIEF_RAISED;
+    Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &(textPtr->selTagPtr->relief));
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
 
@@ -1281,7 +1281,14 @@ TextEventProc(clientData, eventPtr)
 		textPtr->flags &= ~(GOT_FOCUS | INSERT_ON);
 		textPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
 	    }
-	    if (!TkpAlwaysShowSelection(textPtr->tkwin)) {
+	    if (
+#ifndef MAC_OSX_TK
+		    !TkpAlwaysShowSelection(textPtr->tkwin)
+#else
+		    /* Don't show inactive selection in disabled widgets. */
+		    textPtr->state != TK_STATE_DISABLED
+#endif
+	    ) {
 		TkTextRedrawTag(textPtr, NULL, NULL, textPtr->selTagPtr, 1);
 	    }
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
