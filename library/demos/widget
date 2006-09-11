@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.9.2.1 2003/09/25 05:37:48 das Exp $
+# RCS: @(#) $Id: widget,v 1.9.2.2 2006/09/11 14:41:16 das Exp $
 
 eval destroy [winfo child .]
 wm title . "Widget Demonstration"
@@ -43,24 +43,24 @@ set font $widgetFont(main)
 #----------------------------------------------------------------
 
 menu .menuBar -tearoff 0
-.menuBar add cascade -menu .menuBar.file -label "File" -underline 0
-menu .menuBar.file -tearoff 0
 
-# On the Mac use the specia .apple menu for the about item
+# On the Mac use the special .apple menu for the about item
 if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
     .menuBar add cascade -menu .menuBar.apple
     menu .menuBar.apple -tearoff 0
     .menuBar.apple add command -label "About..." -command "aboutBox"
 } else {
+    .menuBar add cascade -menu .menuBar.file -label "File" -underline 0
+    menu .menuBar.file -tearoff 0
     .menuBar.file add command -label "About..." -command "aboutBox" \
 	-underline 0 -accelerator "<F1>"
     .menuBar.file add sep
+    .menuBar.file add command -label "Quit" -command "exit" -underline 0 \
+	-accelerator "Meta-Q"
+    bind . <F1> aboutBox
 }
 
-.menuBar.file add command -label "Quit" -command "exit" -underline 0 \
-    -accelerator "Meta-Q"
 . configure -menu .menuBar
-bind . <F1> aboutBox
 
 frame .statusBar
 label .statusBar.lab -text "   " -relief sunken -bd 1 \

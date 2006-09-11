@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.32 2006/09/10 17:02:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.33 2006/09/11 14:41:17 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -80,7 +80,7 @@ static int		ParseGeometry _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *string, TkWindow *winPtr));
 static void		TopLevelEventProc _ANSI_ARGS_((ClientData clientData,
 			    XEvent *eventPtr));
-static void             TkWmStackorderToplevelWrapperMap _ANSI_ARGS_((
+static void             WmStackorderToplevelWrapperMap _ANSI_ARGS_((
                             TkWindow *winPtr,
                             Display *display,
                             Tcl_HashTable *table));
@@ -185,9 +185,12 @@ static int 		WmWithdrawCmd _ANSI_ARGS_((Tk_Window tkwin,
                                         Tcl_Obj *CONST objv[]));
 static void		WmUpdateGeom _ANSI_ARGS_((WmInfo *wmPtr,
                                        TkWindow *winPtr));
-static int 		TkMacOSXWinStyle _ANSI_ARGS_((Tcl_Interp *interp,
+static int 		WmWinStyle _ANSI_ARGS_((Tcl_Interp *interp,
 				    TkWindow *winPtr, int objc,
 				    Tcl_Obj * CONST objv[]));
+static void 		ApplyWindowAttributeChanges _ANSI_ARGS_((
+				    TkWindow *winPtr, int newAttributes,
+				    int oldAttributes, int create));
 
 /*
  *--------------------------------------------------------------
@@ -2172,6 +2175,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int boolean;
     XSetWindowAttributes atts;
+    int oldAttributes = wmPtr->attributes;
 
     if ((objc != 3) && (objc != 4)) {
         Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -2210,6 +2214,7 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 	    }
 	}
     }
+    ApplyWindowAttributeChanges(winPtr, wmPtr->attributes, oldAttributes, 0);
     return TCL_OK;
 }
 
@@ -2395,7 +2400,8 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int width, height, oldAttributes;
+    int width, height;
+    int oldAttributes = wmPtr->attributes;
 
     if ((objc != 3) && (objc != 5)) {
         Tcl_WrongNumArgs(interp, 2, objv, "window ?width height?");
@@ -2414,7 +2420,6 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
         || (Tcl_GetBooleanFromObj(interp, objv[4], &height) != TCL_OK)) {
         return TCL_ERROR;
     }
-    oldAttributes = wmPtr->attributes;
     if (width) {
         wmPtr->flags &= ~WM_WIDTH_NOT_RESIZABLE;
         wmPtr->attributes |= kWindowHorizontalZoomAttribute;
@@ -2440,18 +2445,7 @@ WmResizableCmd(tkwin, winPtr, interp, objc, objv)
 		wmPtr->scrollWinPtr->instanceData);
     }
     WmUpdateGeom(wmPtr, winPtr);
-    if (wmPtr->attributes != oldAttributes) {
-	if (winPtr->window == None) {
-	    Tk_MakeWindowExist((Tk_Window) winPtr);
-	}
-	if (!TkMacOSXHostToplevelExists(winPtr)) {
-	    TkMacOSXMakeRealWindowExist(winPtr);
-	}
-	ChangeWindowAttributes(
-		GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window)),
-		wmPtr->attributes & (wmPtr->attributes ^ oldAttributes),
-		oldAttributes & (wmPtr->attributes ^ oldAttributes));
-    }
+    ApplyWindowAttributeChanges(winPtr, wmPtr->attributes, oldAttributes, 1);
     return TCL_OK;
 }
 
@@ -2825,6 +2819,7 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
     WmInfo *wmPtr2;
     char *argv3;
     int length;
+    int oldAttributes = wmPtr->attributes;
 
     if ((objc != 3) && (objc != 4)) {
         Tcl_WrongNumArgs(interp, 2, objv, "window ?master?");
@@ -2896,6 +2891,7 @@ WmTransientCmd(tkwin, winPtr, interp, objc, objv)
 	    wmPtr->attributes = kWindowStandardFloatingAttributes;
 	}
     }
+    ApplyWindowAttributeChanges(winPtr, wmPtr->attributes, oldAttributes, 0);
     return TCL_OK;
 }
 
@@ -4841,7 +4837,7 @@ TkUnsupported1ObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "window ?class attributes?");
 	    return TCL_ERROR;
 	}
-	return TkMacOSXWinStyle(interp, winPtr, objc, objv);
+	return WmWinStyle(interp, winPtr, objc, objv);
     }
     /* won't be reached */
     return TCL_ERROR;
@@ -4850,7 +4846,7 @@ TkUnsupported1ObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXWinStyle --
+ * WmWinStyle --
  *
  *	This procedure is invoked to process the 
  *	"::tk::unsupported::MacWindowStyle style" subcommand.
@@ -4865,8 +4861,8 @@ TkUnsupported1ObjCmd(
  *
  *----------------------------------------------------------------------
  */
-int
-TkMacOSXWinStyle(
+static int
+WmWinStyle(
     Tcl_Interp *interp,		/* Current interpreter. */
     TkWindow *winPtr,		/* Window to be manipulated. */
     int objc,			/* Number of arguments. */
@@ -5035,6 +5031,8 @@ TkMacOSXWinStyle(
 		return TCL_ERROR;
 	    }
 	}
+	ApplyWindowAttributeChanges(winPtr, wmPtr->attributes,
+		oldAttributes, 0);
 	wmPtr->style = -1;
     }
 
@@ -5188,15 +5186,6 @@ TkMacOSXMakeRealWindowExist(
     macWin->rootControl = rootControl;
     MoveWindowStructure(newWindow, geometry.left, geometry.top);
     SetPort(GetWindowPort(newWindow));
-
-    /*
-     * overrideredirect windows are not activated by the window server and
-     * don't receive activate events.
-     */
-    if (winPtr->atts.override_redirect) {
-	SetWindowActivationScope(newWindow, kWindowActivationScopeNone);
-	ChangeWindowAttributes(newWindow, kWindowNoActivatesAttribute, 0);
-    }
 
     if ((wmPtr->master != None) && winPtr->atts.override_redirect) {
 	/*
@@ -5669,7 +5658,7 @@ TkpChangeFocus(winPtr, force)
 /*
  *----------------------------------------------------------------------
  *
- * TkWmStackorderToplevelWrapperMap --
+ * WmStackorderToplevelWrapperMap --
  *
  *	This procedure will create a table that maps the reparent wrapper
  *	X id for a toplevel to the TkWindow structure that is wraps.
@@ -5688,7 +5677,7 @@ TkpChangeFocus(winPtr, force)
  *----------------------------------------------------------------------
  */
 static void
-TkWmStackorderToplevelWrapperMap(winPtr, display, table)
+WmStackorderToplevelWrapperMap(winPtr, display, table)
     TkWindow *winPtr;				/* TkWindow to recurse on */
     Display *display;                           /* X display of parent window */
     Tcl_HashTable *table;			/* Maps mac window to TkWindow */
@@ -5708,7 +5697,7 @@ TkWmStackorderToplevelWrapperMap(winPtr, display, table)
 
     for (childPtr = winPtr->childList; childPtr != NULL;
             childPtr = childPtr->nextPtr) {
-        TkWmStackorderToplevelWrapperMap(childPtr, display, table);
+        WmStackorderToplevelWrapperMap(childPtr, display, table);
     }
 }
 
@@ -5744,7 +5733,7 @@ TkWmStackorderToplevel(parentPtr)
      */
 
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
-    TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
+    WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
     windows = (TkWindow **) ckalloc((table.numEntries+1)
         * sizeof(TkWindow *));
@@ -5788,4 +5777,42 @@ TkWmStackorderToplevel(parentPtr)
     done:
     Tcl_DeleteHashTable(&table);
     return windows;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ApplyWindowAttributeChanges --
+ *
+ *	This procedure applies carbon window attribute changes.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ApplyWindowAttributeChanges(TkWindow *winPtr, int newAttributes,
+    int oldAttributes, int create)
+{
+    if (newAttributes != oldAttributes) {
+	if (winPtr->window == None && create) {
+	    Tk_MakeWindowExist((Tk_Window) winPtr);
+	} else {
+	    return;
+	}
+	if (!TkMacOSXHostToplevelExists(winPtr) && create) {
+	    TkMacOSXMakeRealWindowExist(winPtr);
+	} else {
+	    return;
+	}
+	ChangeWindowAttributes(
+		GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window)),
+		newAttributes & (newAttributes ^ oldAttributes),
+		oldAttributes & (newAttributes ^ oldAttributes));
+    }
 }
