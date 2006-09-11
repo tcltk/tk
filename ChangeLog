@@ -1,3 +1,20 @@
+2006-09-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (TkMacOSXMakeRealWindowExist): revert part of
+	2006-05-16 change that had set overrideredirect windows to not become
+	activated by the window manager, as this prevented interaction with
+	native widgets in such windows [Bug 1472624]; apply changes to carbon
+	window attributes even if native window has already been created.
+
+	* macosx/tkMacOSXKeyEvent.c (TkMacOSXProcessKeyboardEvent): fix app
+	* macosx/tkMacOSXMenu.c (DrawMenuBarWhenIdle): menu item key shortcuts
+	* macosx/tkMacOSXInt.h: when custom ".apple" menu is installed.
+
+	* library/demos/widget: on TkAqua, don't install file menu with single
+	quit menu item, as the application menu already has a quit item.
+
+	* macosx/tkMacOSXColor.c: fix building on Mac OS X 10.2.
+
 2006-09-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXColor.c (TkSetMacColor, TkpGetColor): use AppearanceMgr
