@@ -38,7 +38,7 @@
 	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): allow mouse
 	event delivery to background windows with kWindowNoActivatesAttribute
 	(e.g. overrideredirect windows), as these never come to the foreground
-	they would not receive any mouse events otherwise. [Bug 1472624]
+	they would never receive any mouse events otherwise. [Bug 1472624]
 
 	* macosx/tkMacOSXWindowEvent.c (TkMacOSXGenerateFocusEvent): do not
 	send focus events to any windows with kWindowNoActivatesAttribute.
