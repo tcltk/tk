@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.17 2006/07/25 12:08:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.18 2006/09/11 14:41:04 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -184,7 +184,7 @@ TkMacOSXProcessKeyboardEvent(
 
     if ((eventPtr->eKind == kEventRawKeyDown 
 	    || eventPtr->eKind == kEventRawKeyRepeat)
-	    && IsMenuKeyEvent(tkAppleMenu, eventPtr->eventRef, 
+	    && IsMenuKeyEvent(tkCurrentAppleMenu, eventPtr->eventRef, 
 		    kMenuEventQueryOnly, &menuRef, &menuItemIndex)) {
 	MenuCommand menuCmd;
 

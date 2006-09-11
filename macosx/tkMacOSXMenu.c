@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.32 2006/09/10 17:06:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.33 2006/09/11 14:41:04 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -221,7 +221,9 @@ static TopLevelMenubarList *windowListPtr;
 static MenuItemDrawingUPP tkThemeMenuItemDrawingUPP; 
 				/* Points to the UPP for theme Item drawing. */
 static Tcl_Obj *useMDEFVar;
-				
+
+MenuRef tkCurrentAppleMenu = NULL;
+			
 /*
  * Forward declarations for procedures defined later in this file:
  */
@@ -1733,6 +1735,7 @@ DrawMenuBarWhenIdle(
 	    if (appleIndex == -1) {
 	    	InsertMenu(tkAppleMenu, 0);
 	    	currentAppleMenuID = 0;
+		tkCurrentAppleMenu = tkAppleMenu;
 	    } else {
     		short appleID;
     	    	appleMenuPtr = menuBarPtr->entries[appleIndex]
@@ -1757,6 +1760,7 @@ DrawMenuBarWhenIdle(
     	    	InsertMenu(macMenuHdl, 0);
     	    	RecursivelyInsertMenu(appleMenuPtr);
     	    	currentAppleMenuID = appleID;
+		tkCurrentAppleMenu = macMenuHdl;
 	    }
 	    if (helpIndex == -1) {
 	    	currentHelpMenuID = 0;
