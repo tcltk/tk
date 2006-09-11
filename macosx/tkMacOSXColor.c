@@ -12,11 +12,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.3 2006/09/10 17:07:36 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.4 2006/09/11 14:41:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkColor.h"
+
+/* Define constants only available on Mac OS X 10.3 or later */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
+    #define kThemeBrushAlternatePrimaryHighlightColor -5
+#endif
 
 /*
  * Default Auxillary Control Record for all controls.  This is cached once
