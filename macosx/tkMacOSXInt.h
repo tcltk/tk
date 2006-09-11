@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.13 2006/07/24 04:45:26 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.14 2006/09/11 14:41:16 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -125,7 +125,8 @@ MODULE_SCOPE TkMacOSXEmbedHandler *gMacEmbedHandler;
  * Globals shared among Macintosh Tk
  */
 
-MODULE_SCOPE MenuHandle tkAppleMenu;	/* Handle to the Apple Menu */
+MODULE_SCOPE MenuHandle tkCurrentAppleMenu; /* Handle to current Apple Menu */
+MODULE_SCOPE MenuHandle tkAppleMenu;	/* Handle to default Apple Menu */
 MODULE_SCOPE MenuHandle tkFileMenu;	/* Handles to menus */
 MODULE_SCOPE MenuHandle tkEditMenu;	/* Handles to menus */
 MODULE_SCOPE RgnHandle tkMenuCascadeRgn;/* A region to clip with. */
