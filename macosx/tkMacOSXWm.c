@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.42 2006/09/11 14:41:04 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.43 2006/09/11 16:12:39 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -5892,15 +5892,19 @@ ApplyWindowAttributeChanges(TkWindow *winPtr, int newAttributes,
     int oldAttributes, int create)
 {
     if (newAttributes != oldAttributes) {
-	if (winPtr->window == None && create) {
-	    Tk_MakeWindowExist((Tk_Window) winPtr);
-	} else {
-	    return;
+	if (winPtr->window == None) {
+	    if (create) {
+		Tk_MakeWindowExist((Tk_Window) winPtr);
+	    } else {
+		return;
+	    }
 	}
-	if (!TkMacOSXHostToplevelExists(winPtr) && create) {
-	    TkMacOSXMakeRealWindowExist(winPtr);
-	} else {
-	    return;
+	if (!TkMacOSXHostToplevelExists(winPtr)) {
+	    if (create) {
+		TkMacOSXMakeRealWindowExist(winPtr);
+	    } else {
+		return;
+	    }
 	}
 	ChangeWindowAttributes(
 		GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window)),
