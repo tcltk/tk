@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.18 2006/02/27 10:36:08 dkf Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.19 2006/09/21 00:01:05 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1232,11 +1232,11 @@ ImgBmapPostscript(
 
     if (x!=0 || y!=0) {
 	sprintf(buffer, "%d %d moveto\n", x, y);
-	Tcl_AppendResult(interp, buffer, 0);
+	Tcl_AppendResult(interp, buffer, NULL);
     }
     if (width!=1 || height!=1) {
 	sprintf(buffer, "%d %d scale\n", width, height);
- 	Tcl_AppendResult(interp, buffer, 0);
+ 	Tcl_AppendResult(interp, buffer, NULL);
     }
 
     /*
