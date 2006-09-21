@@ -1,3 +1,8 @@
+2006-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkpPostMenu): disable menu animation in menus
+	with images to avoid clipping bug.  [Bug 1329198]
+
 2006-09-21  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgBmap.c (ImgBmapPostscript): Change 0 to NULL, since
