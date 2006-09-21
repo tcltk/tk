@@ -1,3 +1,8 @@
+2006-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkpPostMenu): disable menu animation in menus
+	with images to avoid clipping bug.  [Bug 1329198]
+
 2006-09-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (TkMacOSXMakeRealWindowExist): revert part of
