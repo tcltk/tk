@@ -1,3 +1,9 @@
+2006-09-21  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgBmap.c (ImgBmapPostscript): Change 0 to NULL, since
+	they are not interchangable on all platforms in all circumstances.
+	[Tcl Bug 1562528]
+
 2006-09-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (TkMacOSXMakeRealWindowExist): revert part of
