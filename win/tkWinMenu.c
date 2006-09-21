@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.5 2006/04/05 19:47:39 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.6 2006/09/21 00:13:54 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -32,6 +32,10 @@
 #define ALIGN_BITMAP_RIGHT  0x00000002
 #define ALIGN_BITMAP_TOP    0x00000004
 #define ALIGN_BITMAP_BOTTOM 0x00000008
+
+#ifndef TPM_NOANIMATION
+#define TPM_NOANIMATION 0x4000L
+#endif
 
 /*
  * Platform-specific menu flags:
@@ -735,11 +739,12 @@ TkpPostMenu(interp, menuPtr, x, y)
     int y;
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
-    int result, flags;
+    int i, result, flags;
     RECT noGoawayRect;
     POINT point;
     Tk_Window parentWindow = Tk_Parent(menuPtr->tkwin);
     int oldServiceMode = Tcl_GetServiceMode();
+    TkMenuEntry *mePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -760,7 +765,7 @@ TkpPostMenu(interp, menuPtr, x, y)
      * The post commands could have deleted the menu, which means
      * we are dead and should go away.
      */
-    
+
     if (menuPtr->tkwin == NULL) {
 	tsdPtr->inPostMenu--;
     	return TCL_OK;
@@ -781,7 +786,7 @@ TkpPostMenu(interp, menuPtr, x, y)
     }
 
     Tcl_SetServiceMode(TCL_SERVICE_NONE);
-    
+
     /*
      * Make an assumption here. If the right button is down,
      * then we want to track it. Otherwise, track the left mouse button.
@@ -799,6 +804,18 @@ TkpPostMenu(interp, menuPtr, x, y)
 	    flags |= TPM_RIGHTBUTTON;
 	} else {
 	    flags |= TPM_LEFTBUTTON;
+	}
+    }
+
+    /*
+     * Disable menu animation if an image is present, as clipping isn't
+     * handled correctly with temp DCs.  [Bug 1329198]
+     */
+    for (i = 0; i < menuPtr->numEntries; i++) {
+	mePtr = menuPtr->entries[i];
+	if (mePtr->image != NULL) {
+	    flags |= TPM_NOANIMATION;
+	    break;
 	}
     }
 
