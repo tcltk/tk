@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.76 2006/09/06 22:39:28 hobbs Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.77 2006/09/22 19:02:07 andreas_kupries Exp $
  */
 
 #include "tkPort.h"
@@ -956,7 +956,7 @@ TkCreateMainWindow(interp, screenName, baseName)
      */
 
     Tcl_SetVar(interp, "tk_patchLevel", TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "tk_version", TK_VERSION, TCL_GLOBAL_ONLY);
+    Tcl_SetVar(interp, "tk_version",    TK_VERSION,     TCL_GLOBAL_ONLY);
 
     tsdPtr->numMainWindows++;
     return tkwin;
@@ -2905,7 +2905,7 @@ Initialize(interp)
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_PATCH_LEVEL, 1) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3135,7 +3135,7 @@ Initialize(interp)
 	geometry = NULL;
     }
 
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 1) == NULL) {
+    if (Tcl_PkgRequire(interp, "Tcl", TCL_PATCH_LEVEL, 1) == NULL) {
 	code = TCL_ERROR;
 	goto done;
     }
@@ -3144,7 +3144,7 @@ Initialize(interp)
      * Provide Tk and its stub table.
      */
 
-    code = Tcl_PkgProvideEx(interp, "Tk", TK_VERSION, (ClientData) &tkStubs);
+    code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL, (ClientData) &tkStubs);
     if (code != TCL_OK) {
 	goto done;
     } else {
