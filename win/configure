@@ -1712,6 +1712,7 @@ echo "configure:1677: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
     
     
     
+    
 
     
     
@@ -1726,14 +1727,14 @@ echo "configure:1677: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh in Tcl build directory""... $ac_c" 1>&6
-echo "configure:1730: checking for tclsh in Tcl build directory" >&5
+echo "configure:1731: checking for tclsh in Tcl build directory" >&5
     BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}${TCL_DBGX}${EXEEXT}
     echo "$ac_t""$BUILD_TCLSH" 1>&6
     
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:1737: checking for tclsh" >&5
+echo "configure:1738: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -2082,6 +2083,7 @@ s%@MAN2TCLFLAGS@%$MAN2TCLFLAGS%g
 s%@CFLAGS_DEFAULT@%$CFLAGS_DEFAULT%g
 s%@LDFLAGS_DEFAULT@%$LDFLAGS_DEFAULT%g
 s%@TCL_VERSION@%$TCL_VERSION%g
+s%@TCL_PATCH_LEVEL@%$TCL_PATCH_LEVEL%g
 s%@TCL_BIN_DIR@%$TCL_BIN_DIR%g
 s%@TCL_SRC_DIR@%$TCL_SRC_DIR%g
 s%@TCL_LIB_FILE@%$TCL_LIB_FILE%g
@@ -2109,7 +2111,6 @@ s%@TK_SRC_DIR@%$TK_SRC_DIR%g
 s%@TK_BIN_DIR@%$TK_BIN_DIR%g
 s%@TCL_MAJOR_VERSION@%$TCL_MAJOR_VERSION%g
 s%@TCL_MINOR_VERSION@%$TCL_MINOR_VERSION%g
-s%@TCL_PATCH_LEVEL@%$TCL_PATCH_LEVEL%g
 s%@TCL_DLL_FILE@%$TCL_DLL_FILE%g
 s%@TCL_BUILD_STUB_LIB_SPEC@%$TCL_BUILD_STUB_LIB_SPEC%g
 s%@TCL_DBGX@%$TCL_DBGX%g

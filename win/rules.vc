@@ -11,7 +11,7 @@
 # Copyright (c) 2003 Patrick Thoyts
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.5.2.3 2006/06/14 23:52:01 patthoyts Exp $
+# RCS: @(#) $Id: rules.vc,v 1.5.2.4 2006/09/22 19:01:52 andreas_kupries Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -408,6 +408,7 @@ Failed to find tcl.h.  The TCLDIR macro does not appear correct.
 #!endif
 
 TCL_DOTVERSION	= 8.4
+TCL_PATCHLEVEL  = .14
 TCL_VERSION	= $(TCL_DOTVERSION:.=)
 
 !if $(TCLINSTALL)

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.18.2.4 2006/06/05 18:06:47 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.18.2.5 2006/09/22 19:01:50 andreas_kupries Exp $
  *    
  */
 
@@ -240,7 +240,7 @@ Tk_InitConsoleChannels(interp)
      * really only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_PATCH_LEVEL, 1) == NULL) {
         return;
     }
 
