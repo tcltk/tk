@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.15.2.1 2006/02/27 11:12:29 dkf Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.15.2.2 2006/09/22 14:53:06 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1183,21 +1183,21 @@ ImgBmapPsImagemask(interp, width, height, data)
     if (width*height > 60000) {
 	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "unable to generate postscript for bitmaps "
-		"larger than 60000 pixels", 0);
+		"larger than 60000 pixels", NULL);
 	return TCL_ERROR;
     }
     sprintf(buffer, "0 0 moveto %d %d true [%d 0 0 %d 0 %d] {<\n",
       width, height, width, -height, height);
-    Tcl_AppendResult(interp, buffer, 0);
+    Tcl_AppendResult(interp, buffer, NULL);
     nBytePerRow = (width+7)/8;
     for(i=0; i<height; i++){
       for(j=0; j<nBytePerRow; j++){
         sprintf(buffer, " %02x", bit_reverse[0xff & data[i*nBytePerRow + j]]);
-        Tcl_AppendResult(interp, buffer, 0);
+        Tcl_AppendResult(interp, buffer, NULL);
       }
-      Tcl_AppendResult(interp, "\n", 0);
+      Tcl_AppendResult(interp, "\n", NULL);
     }
-    Tcl_AppendResult(interp, ">} imagemask \n", 0);
+    Tcl_AppendResult(interp, ">} imagemask \n", NULL);
     return TCL_OK;
 }
 
@@ -1252,11 +1252,11 @@ ImgBmapPostscript(clientData, interp, tkwin, psinfo, x, y, width, height,
      */
     if( x!=0 || y!=0 ){
 	sprintf(buffer, "%d %d moveto\n", x, y);
-	Tcl_AppendResult(interp, buffer, 0);
+	Tcl_AppendResult(interp, buffer, NULL);
     }
     if( width!=1 || height!=1 ){
 	sprintf(buffer, "%d %d scale\n", width, height);
- 	Tcl_AppendResult(interp, buffer, 0);
+ 	Tcl_AppendResult(interp, buffer, NULL);
     }
 
     /*
@@ -1276,8 +1276,7 @@ ImgBmapPostscript(clientData, interp, tkwin, psinfo, x, y, width, height,
 	if (masterPtr->maskData == NULL) {
 	    Tcl_AppendResult(interp,
 		"0 0 moveto 1 0 rlineto 0 1 rlineto -1 0 rlineto "
-		"closepath fill\n", 0
-	    );
+		"closepath fill\n", NULL);
 	} else if (ImgBmapPsImagemask(interp, masterPtr->width,
 		     masterPtr->height, masterPtr->maskData) != TCL_OK) {
 	    return TCL_ERROR;
