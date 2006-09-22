@@ -1,3 +1,18 @@
+2006-09-22  Andreas Kupries  <andreask@activestate.com>
+
+	* generic/tkConsole.c: TIP #268 update regarding registered package
+	* generic/tkMain.c:    version, now using full patchlevel instead of
+	* generic/tkWindow.c:  major.minor
+	* library/tk.tcl:
+	* unix/configure:
+	* unix/Makefile.in:
+	* unix/tcl.m4:
+	* win/configure:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/rules.vc:
+	* win/tcl.m4:
+
 2006-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinMenu.c (TkpPostMenu): disable menu animation in menus
