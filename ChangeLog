@@ -1,3 +1,18 @@
+2006-09-25  Andreas Kupries  <andreask@activestate.com>
+
+	* generic/tkConsole.c: Complete reversal of the changes of Sep 22.
+	* generic/tkMain.c:    For compat reason the Tcl core will not change
+	* generic/tkWindow.c:  the registered version to include the patchlevel,
+	* library/tk.tcl:      making the changes to Tk unnecessary.
+	* unix/configure:
+	* unix/Makefile.in:
+	* unix/tcl.m4:
+	* win/configure:
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/rules.vc:
+	* win/tcl.m4:
+
 2006-09-22  Andreas Kupries  <andreask@activestate.com>
 
 	* generic/tkConsole.c: TIP #268 update regarding registered package
