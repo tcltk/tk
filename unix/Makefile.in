@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.87.2.18 2006/09/22 19:01:51 andreas_kupries Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.87.2.19 2006/09/25 17:28:20 andreas_kupries Exp $
 
 # Current Tk version;  used in various names.
 
@@ -631,10 +631,9 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f $(PKG_INDEX); \
 	    (\
-	    echo "if {[package vcompare [package provide Tcl]\
-		$(TCLVERSION)$(TCLPATCHL)] != 0} { return }";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
-	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(TCLPATCHL)\
+	    echo "if {[package vcompare [package provide Tcl] $(TCLVERSION)] != 0} { return }";\
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)\
 		[list load [file join \$$dir $${relative}$(TK_LIB_FILE)] Tk]";\
 	    ) > $(PKG_INDEX); \
 	    fi
