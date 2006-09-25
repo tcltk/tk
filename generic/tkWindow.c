@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56.2.13 2006/09/22 19:01:50 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56.2.14 2006/09/25 17:28:20 andreas_kupries Exp $
  */
 
 #include "tkPort.h"
@@ -2945,7 +2945,7 @@ Initialize(interp)
      * really only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_PATCH_LEVEL, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
         return TCL_ERROR;
     }
 
@@ -3167,7 +3167,7 @@ Initialize(interp)
         geometry = NULL;
     }
 
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_PATCH_LEVEL, 1) == NULL) {
+    if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 1) == NULL) {
 	code = TCL_ERROR;
 	goto done;
     }
@@ -3176,7 +3176,7 @@ Initialize(interp)
      * Provide Tk and its stub table.
      */
 
-    code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL, (ClientData) &tkStubs);
+    code = Tcl_PkgProvideEx(interp, "Tk", TK_VERSION, (ClientData) &tkStubs);
     if (code != TCL_OK) {
 	goto done;
     } else {
