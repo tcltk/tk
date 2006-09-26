@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.16 2006/09/25 17:28:21 andreas_kupries Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.17 2006/09/26 23:55:50 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -371,6 +371,12 @@ cdebug	= -Z7 -WX $(DEBUGFLAGS)
 cwarn = -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
 cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
 
+!if $(FULLWARNINGS)
+cflags = $(cflags) -W4
+!else
+cflags = $(cflags) -W3
+!endif
+
 !if $(MSVCRT)
 !if "$(DBGX)" == ""
 crt = -MD
@@ -385,10 +391,10 @@ crt = -MTd
 !endif
 !endif
 
-BASE_CLFAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
-TK_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
+BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
+TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
 CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
-WISH_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES)
+WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
 
 
 #---------------------------------------------------------------------
@@ -402,7 +408,11 @@ ldebug	= -release -opt:ref -opt:icf,3
 !endif
 
 ### Declarations common to all linker options
-lflags	= -nologo -machine:$(MACHINE) $(ldebug)
+lflags	= -nologo -machine:$(MACHINE) $(LINKERFLAGS) $(ldebug)
+
+!if $(FULLWARNINGS)
+lflags = $(lflags) -warn:3
+!endif
 
 !if $(PROFILE)
 lflags	= $(lflags) -profile
@@ -719,6 +729,12 @@ $(TMP_DIR)\tkStubImg.obj : $(GENERICDIR)\tkStubImg.c
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
+!if ![sed "1d" < NUL > NUL]
+        sed -f << $** > $@
+s/@MACHINE@/$(MACHINE:IX86=X86)/
+s/@TK_WIN_VERSION@/$(DOTVERSION).0.0/
+<<
+!else
 	$(TCLSH) <<
 set f [open {$(WINDIR:\=/)/wish.exe.manifest.in} r]
 set data [read $$f]
@@ -733,6 +749,7 @@ puts -nonewline $$f $$data
 close $$f
 exit
 <<
+!endif
 
 $(TMP_DIR)\tk.res: \
     $(RCDIR)\buttons.bmp \

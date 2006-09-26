@@ -1,3 +1,9 @@
+2006-09-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc:  Support MSVC8 and AMD64 target. Also try using
+	* win/rules.vc:     sed to generate the manifest (cross-compile cannot
+	* win/nmakehlp.c:   execute tclsh). If no sed, use the tclsh exe.
+
 2006-09-25  Andreas Kupries  <andreask@activestate.com>
 
 	* generic/tkConsole.c: Complete reversal of the changes of Sep 22.
