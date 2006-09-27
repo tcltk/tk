@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.93 2006/09/22 19:02:08 andreas_kupries Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.94 2006/09/27 18:43:35 andreas_kupries Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -842,7 +842,8 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo Creating package index "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
 	-del "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
-	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)$(TCL_PATCHLEVEL)] != 0} { return } > "$(OUT_DIR)\pkgIndex.tcl"
+	echo if {![package vsatisfies [package provide Tcl] $(TCL_DOTVERSION)]} { return } > "$(OUT_DIR)\pkgIndex.tcl"
+	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)$(TCL_PATCHLEVEL)] != 0} { return } >>"$(OUT_DIR)\pkgIndex.tcl"
 	echo package ifneeded Tk $(DOTVERSION)$(TCL_PATCHLEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk] >>"$(OUT_DIR)\pkgIndex.tcl"
 	$(CPY) "$(OUT_DIR)\pkgIndex.tcl" "$(SCRIPT_INSTALL_DIR)\"
 !endif
