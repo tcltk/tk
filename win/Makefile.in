@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.68 2006/09/22 19:02:08 andreas_kupries Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.69 2006/09/27 18:43:35 andreas_kupries Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -436,6 +436,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)"; 
 	@$(RM) $(PKG_INDEX);
 	@(\
+	echo "if {![package vsatisfies [package provide Tcl] $(TCLVERSION)]} { return }";\
 	echo "if {[package vcompare [package provide Tcl]\
 		$(TCLVERSION)$(TCLPATCHL)] != 0} { return }";\
 	echo "package ifneeded Tk $(VERSION)$(TCLPATCHL)\
