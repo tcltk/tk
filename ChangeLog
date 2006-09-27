@@ -1,3 +1,12 @@
+2006-09-27  Andreas Kupries  <andreask@activestate.com>
+
+	* unix/Makefile.in (install-binaries): Added a second guard to the
+	* win/Makefile.in: package index file to prevent older versions of
+	* win/makefile.vc: Tcl from seeing version numbers which may
+	  contain a/b information, and then balking on them. This could
+	  otherwise happen when Tcl/Tk 8.4 and 8.5 are installed in the
+	  same directory, seeing each other. [SF Tk Bug 1566418].
+
 2006-09-22  Andreas Kupries  <andreask@activestate.com>
 
 	* generic/tkConsole.c: TIP #268 update regarding registered package
