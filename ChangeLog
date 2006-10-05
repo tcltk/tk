@@ -1,3 +1,10 @@
+2006-10-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tkUnixFont.c (Ucs2beToUtfProc, UtfToUcs2beProc):
+	(TkpFontPkgInit, encodingAliases): Correct alignment issues in
+	encoding conversion.  Call ucs-2be "unicode" on big-endian
+	systems. [Bug 1122671]
+
 2006-09-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc:  Support MSVC8 and AMD64 target. Also try using
