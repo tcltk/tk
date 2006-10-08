@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.28 2006/02/09 19:08:51 das Exp $
+# RCS: @(#) $Id: tk.decls,v 1.29 2006/10/08 21:47:11 patthoyts Exp $
 
 library tk
 
@@ -1268,6 +1268,11 @@ declare 269 generic {
 }
 declare 270 generic {
     void Tk_ResetUserInactiveTime(Display *dpy)
+}
+
+# TIP #264
+declare 271 generic {
+    Tcl_Interp * Tk_Interp (Tk_Window tkwin)
 }
 
 # Define the platform specific public Tk interface.  These functions are
