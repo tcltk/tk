@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.77 2006/09/22 19:02:07 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.78 2006/10/08 21:47:12 patthoyts Exp $
  */
 
 #include "tkPort.h"
@@ -2377,6 +2377,31 @@ Tk_DisplayName(tkwin)
     Tk_Window tkwin;		/* Window whose display name is desired. */
 {
     return ((TkWindow *) tkwin)->dispPtr->name;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_Interp --
+ *
+ *	Get the Tcl interpreter from a Tk window.
+ *
+ * Results:
+ *	A pointer to the interpreter or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tcl_Interp *
+Tk_Interp(Tk_Window tkwin)
+{
+    if (tkwin != NULL && ((TkWindow *)tkwin)->mainPtr != NULL) {
+	return ((TkWindow *)tkwin)->mainPtr->interp;
+    }
+    return NULL;
 }
 
 /*

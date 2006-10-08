@@ -1,3 +1,11 @@
+2006-10-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkWindow.c:  Implemented tip #264 - Tk_Interp function.
+	* doc/WindowId.3:      Documented Tk_Interp.
+	* generic/tk.decls:    Added to the stubs interface and 
+	* generic/tkDecls.h:   regenerated.
+	* generic/tkStubsInit.c:
+
 2006-10-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tkUnixFont.c (Ucs2beToUtfProc, UtfToUcs2beProc):
