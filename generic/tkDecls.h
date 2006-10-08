@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.26 2005/05/29 06:47:04 das Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.27 2006/10/08 21:47:12 patthoyts Exp $
  */
 
 #ifndef _TKDECLS
@@ -1745,6 +1745,11 @@ EXTERN long		Tk_GetUserInactiveTime _ANSI_ARGS_((Display * dpy));
 /* 270 */
 EXTERN void		Tk_ResetUserInactiveTime _ANSI_ARGS_((Display * dpy));
 #endif
+#ifndef Tk_Interp_TCL_DECLARED
+#define Tk_Interp_TCL_DECLARED
+/* 271 */
+EXTERN Tcl_Interp *	Tk_Interp _ANSI_ARGS_((Tk_Window tkwin));
+#endif
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -2028,6 +2033,7 @@ typedef struct TkStubs {
     int (*tk_PhotoSetSize) _ANSI_ARGS_((Tcl_Interp * interp, Tk_PhotoHandle handle, int width, int height)); /* 268 */
     long (*tk_GetUserInactiveTime) _ANSI_ARGS_((Display * dpy)); /* 269 */
     void (*tk_ResetUserInactiveTime) _ANSI_ARGS_((Display * dpy)); /* 270 */
+    Tcl_Interp * (*tk_Interp) _ANSI_ARGS_((Tk_Window tkwin)); /* 271 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -3121,6 +3127,10 @@ extern TkStubs *tkStubsPtr;
 #ifndef Tk_ResetUserInactiveTime
 #define Tk_ResetUserInactiveTime \
 	(tkStubsPtr->tk_ResetUserInactiveTime) /* 270 */
+#endif
+#ifndef Tk_Interp
+#define Tk_Interp \
+	(tkStubsPtr->tk_Interp) /* 271 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
