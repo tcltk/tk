@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.42 2006/08/21 02:39:22 das Exp $
+RCS: @(#) $Id: changes,v 1.64.2.43 2006/10/10 19:19:32 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -5979,4 +5979,15 @@ registered applevents (steffen)
 
 2006-08-21 (bug fix) Aqua: recursively called event loop (steffen)
 
---- Released 8.4.14, June XX, 2006 --- See ChangeLog for details ---
+2006-08-30 (new feature)[1518677] WM_UNICHAR window message (hobbs,petasis)
+
+2006-09-06 (bug fix)[1456342] speedier [text] delete (hobbs)
+
+2006-09-22 (bug fix)[1562528] NULL terminates variadic calls (fellows,ryazanov)
+
+2006-09-26 (platform support) MSVC8 AMD64 support (thoyts)
+
+2006-10-05 (bug fix)[1122671] alignment fixes in ucs-2be encoding routines
+(hobbs,staplin)
+
+--- Released 8.4.14, October XX, 2006 --- See ChangeLog for details ---
