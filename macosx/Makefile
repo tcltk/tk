@@ -4,7 +4,7 @@
 #	uses the standard unix build system in tk/unix (which can be used directly instead of this
 #	if you are not using the tk/macosx projects).
 #
-# RCS: @(#) $Id: Makefile,v 1.7.2.15 2006/09/10 17:07:36 das Exp $
+# RCS: @(#) $Id: Makefile,v 1.7.2.16 2006/10/16 17:35:20 das Exp $
 #
 ########################################################################################################
 
@@ -214,8 +214,11 @@ ifeq (${EMBEDDED_BUILD},1)
 	@rm -f "${INSTALL_ROOT}${BINDIR}/${WISH}" && \
 	rmdir -p "${INSTALL_ROOT}${BINDIR}" 2>&- || true
 else
-# redo prebinding
-	@cd ${INSTALL_ROOT}/ && \
+# redo prebinding (when not building for Mac OS X 10.4 or later only)
+	@if [ "`echo "$${MACOSX_DEPLOYMENT_TARGET}" | \
+	awk -F '10\\.' '{print int($$2)}'`" -lt 4 -a "`echo "$${CFLAGS}" | \
+	awk -F '-mmacosx-version-min=10\\.' '{print int($$2)}'`" -lt 4 ]; \
+	then cd ${INSTALL_ROOT}/; \
 	if [ ! -d usr/lib ]; then mkdir -p usr && ln -fs /usr/lib usr/ && RM_USRLIB=1; fi; \
 	if [ -n "${TK_X11}" -a ! -d usr/X11R6 ]; then mkdir -p usr && ln -fs /usr/X11R6 usr/ && RM_USRX11=1; fi; \
 	if [ ! -d System ]; then ln -fs /System . && RM_SYSTEM=1; fi; \
@@ -226,7 +229,7 @@ else
 	if [ -n "$${RM_USRLIB:-}" ]; then rm -f usr/lib; rmdir -p usr 2>&-; fi; \
 	if [ -n "$${RM_USRX11:-}" ]; then rm -f usr/X11R6; rmdir -p usr 2>&-; fi; \
 	if [ -n "$${RM_SYSTEM:-}" ]; then rm -f System; fi; \
-	if [ -n "$${RM_TCL:-}" ]; then rm -f ./${LIBDIR}/Tcl.framework; fi
+	if [ -n "$${RM_TCL:-}" ]; then rm -f ./${LIBDIR}/Tcl.framework; fi; fi
 # install wish symbolic link
 	@ln -fs ${WISH} ${INSTALL_ROOT}${BINDIR}/${wish}
 endif
