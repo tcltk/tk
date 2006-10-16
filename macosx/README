@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README 
 ----------------------
 
-RCS: @(#) $Id: README,v 1.6.2.13 2006/08/18 07:47:25 das Exp $
+RCS: @(#) $Id: README,v 1.6.2.14 2006/10/16 15:57:13 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -101,17 +101,16 @@ and not those set by your shell configuration files).
 the CoreGraphics routines - the code is primarily due to James Tittle.  There
 were numerous problems with the QD version, mostly due to the different drawing
 model of QD & Tk. CG also trivially supports dashed lines, and the various end
-caps & miters. So this is a great improvement.
-The old QD code is retained for now, just in case there are any compatibility
-problems. To switch back to the QD drawing, just put:
+caps & miters. The old QD code is retained for now, just in case there are any
+compatibility problems. To switch back to the QD drawing, put
     set tk::mac::useCGDrawing 0
-in your script before you do drawing. Also the CG drawing can anti-alias line
-drawing. However, anti-aliased thin lines look washed out, so the threshold for
-antialiasing is set to 3 pixel width lines. You can change this if you want by
-putting:
-    set tk::mac::CGAntialiasLimit <limit>
-in your script before drawing, in which case only lines thinner that <limit>
-pixels will not be antialiased.
+in your script before you do drawing.
+All CG drawing is antialiased by default, but (outline) linewidth can be used to
+control whether a line/shape is drawn antialiased. The antialiasing threshold is
+0 by default (i.e. antialias everything), it can be changed by setting
+	set tk::mac::CGAntialiasLimit <limit>
+in your script before drawing, in which case lines (or shapes with outlines)
+thinner that <limit> pixels will not be antialiased.
 
 - Quickdraw text antialiasing is enabled by default when available (from 10.1.5
 onwards). Changing the global boolean variable '::tk::mac::antialiasedtext'
