@@ -16,6 +16,8 @@
 	* generic/tkCanvPoly.c (ConfigurePolygon):  linewidth in gc even for
 	* generic/tkRectOval.c (ConfigureRectOval): fills (as it controls AA).
 
+	* macosx/Makefile: don't redo prebinding of non-prebound binaires.
+
 2006-10-10  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:		changes updated for 8.4.14 release.
