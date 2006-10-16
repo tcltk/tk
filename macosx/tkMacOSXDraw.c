@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.18 2006/10/16 15:35:50 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.19 2006/10/16 16:25:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -651,7 +651,7 @@ XDrawLines(
 	CGContextStrokePath(outContext);
 	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-	int o = - (lw / 2);
+	int o = -lw/2;
 
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	ShowPen();
@@ -727,7 +727,7 @@ void XDrawSegments(
 	}
 	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-	int o = - (lw / 2);
+	int o = -lw/2;
 
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	ShowPen();
@@ -1359,7 +1359,7 @@ XFillArc(
     } else {
 	Rect theRect;
 	short start, extent;
-	int o = - (lw / 2);
+	int o = -lw/2;
 	PolyHandle polygon;
 	double sin1, cos1, sin2, cos2, angle;
 	double boxWidth, boxHeight;
@@ -1501,7 +1501,7 @@ XFillArcs(
     } else {
 	Rect theRect;
 	short start, extent;
-	int o = - (lw / 2);
+	int o = -lw/2;
 	PolyHandle polygon;
 	double sin1, cos1, sin2, cos2, angle;
 	double boxWidth, boxHeight;
