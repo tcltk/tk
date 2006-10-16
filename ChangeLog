@@ -1,3 +1,10 @@
+2006-10-16  Andreas Kupries <andreask@activestate.com>
+
+	* doc/WindowId.3: Pat's commit on 2006-10-08 broke the .SH NAME
+	  information across several lines, breaking the cross-linking of
+	  manpages during installation for this one. Put everything back
+	  on a single line, unbreaking it.
+
 2006-10-16  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.5a5 TAGGED FOR RELEASE ***
