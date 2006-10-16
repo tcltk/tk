@@ -11,12 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.18 2006/08/18 07:47:25 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.19 2006/10/16 15:35:51 das Exp $
  */
 
 #include "tkMacOSXInt.h"
 
-#include "tclInt.h" /* for TclGetStartupScript() & TclSetStartupScript() */
+#include "tclInt.h" /* for Tcl{G,S}etStartupScriptFileName() */
 
 #include <sys/stat.h>
 #include <mach-o/dyld.h>
@@ -137,7 +137,7 @@ TkpInit(interp)
 	TkMacOSXInitCarbonEvents(interp);
 	TkMacOSXInitMenus(interp);
 	TkMacOSXUseAntialiasedText(interp, TRUE);
-	TkMacOSXInitCGDrawing(interp, TRUE, 3);
+	TkMacOSXInitCGDrawing(interp, TRUE, 0);
 	TkMacOSXInitKeyboard(interp);
 
 	encoding = CFStringGetSystemEncoding();

@@ -1,6 +1,21 @@
-2006-10-10  Don Porter  <dgp@users.sourceforge.net>
+2006-10-16  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.14 TAGGED FOR RELEASE ***
+
+	* changes: updates for 8.4.14 release.
+
+	* macosx/tkMacOSXDraw.c: fix numerous issues in CG and QD drawing procs
+	so that they now match X11 drawing much more closely [Bug 1558051];
+	use Tiger ellipse drawing API when available; fix comments & whitespace.
+
+	* macosx/tkMacOSXInit.c: set default linewidth limit for CG
+	antialiasing to 0 as thin horizontal/vertical lines look good now.
+
+	* generic/tkCanvLine.c (ConfigureLine):     on TkAqua, pass outline
+	* generic/tkCanvPoly.c (ConfigurePolygon):  linewidth in gc even for
+	* generic/tkRectOval.c (ConfigureRectOval): fills (as it controls AA).
+
+2006-10-10  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:		changes updated for 8.4.14 release.
 

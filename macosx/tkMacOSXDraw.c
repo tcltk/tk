@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.17 2006/06/14 21:20:12 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.18 2006/10/16 15:35:50 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -26,12 +26,16 @@
 #endif
 */
 
-#ifndef PI
-#    define PI 3.14159265358979323846
-#endif
-#define RGBFLOATRED(c)   (float)((float)(c.red)   / 65535.0f)
-#define RGBFLOATGREEN(c) (float)((float)(c.green) / 65535.0f)
-#define RGBFLOATBLUE(c)  (float)((float)(c.blue)  / 65535.0f)
+#define RGBFLOATRED(c)   ((c).red   / 65535.0)
+#define RGBFLOATGREEN(c) ((c).green / 65535.0)
+#define RGBFLOATBLUE(c)  ((c).blue  / 65535.0)
+#define radians(d)       ((d) * (M_PI/180.0))
+
+/*
+ * Non-antialiased CG drawing looks better and more like X11 drawing when using
+ * very fine lines, so decrease all linewidths by the following constant.
+ */
+#define NON_AA_CG_OFFSET .999
 
 /*
  * Temporary regions that can be reused.
@@ -39,11 +43,11 @@
 
 static RgnHandle tmpRgn = NULL;
 static RgnHandle tmpRgn2 = NULL;
-
 static PixPatHandle gPenPat = NULL;
 
 static int useCGDrawing = 1;
-static int tkMacOSXCGAntiAliasLimit = 1;
+static int tkMacOSXCGAntiAliasLimit = 0;
+#define notAA(w) ((w) < tkMacOSXCGAntiAliasLimit)
 
 static int useThemedToplevel = 0;
 static int useThemedFrame = 0;
@@ -51,13 +55,27 @@ static int useThemedFrame = 0;
 /*
  * Prototypes for functions used only in this file.
  */
-static unsigned char    InvertByte _ANSI_ARGS_((unsigned char data));
-
-static void TkMacOSXSetUpCGContext(MacDrawable *macWin,
-	CGrafPtr destPort, GC gc,  CGContextRef *contextPtr);
+static unsigned char InvertByte(unsigned char data);
+static void TkMacOSXSetUpCGContext(MacDrawable *macWin, CGrafPtr destPort,
+	GC gc, CGContextRef *contextPtr);
 static void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort, 
 	CGContextRef *context);
-static inline double radians(double degrees) { return degrees * PI / 180.0f; }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXInitCGDrawing --
+ *
+ *        Initializes link vars that control CG drawing.
+ *
+ * Results:
+ *        None.
+ *
+ * Side effects:
+ *        None.
+ *
+ *----------------------------------------------------------------------
+ */
 
 MODULE_SCOPE int 
 TkMacOSXInitCGDrawing(interp, enable, limit)
@@ -284,7 +302,6 @@ XCopyPlane(
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(dstPort, NULL);
-
     TkMacOSXSetUpClippingRgn(dst);
 
     srcBit = GetPortBitMapForCopyBits(srcPort);
@@ -472,7 +489,7 @@ TkPutImage(
 	    oldPtr = dataPtr;
 	    odd = sliceRowBytes % 2;
 	    if (!newData) {
-		newData = (char *) ckalloc(image->height * (sliceRowBytes + odd));
+		newData = (char *) ckalloc(image->height * (sliceRowBytes+odd));
 	    }
 	    newPtr = newData;
 	    for (i = 0; i < image->height; i++) {
@@ -547,7 +564,8 @@ TkPutImage(
 		}
 		pixmap.baseAddr = newData;
 		pixmap.rowBytes = sliceRowBytes | 0x8000;
-		CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr, srcCopy, NULL);
+		CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr,
+			srcCopy, NULL);
 		if (slices) {
 		    pixmap.bounds.left = pixmap.bounds.right;
 		    dataPtr += sliceRowBytes;
@@ -557,77 +575,12 @@ TkPutImage(
 	    pixmap.bounds.right = (short) image->width;
 	    pixmap.baseAddr = image->data;
 	    pixmap.rowBytes = rowBytes | 0x8000;
-	    CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr, srcCopy, NULL);
+	    CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr,
+		    srcCopy, NULL);
 	}
     }
     if (newData != NULL) {
 	ckfree(newData);
-    }
-    SetGWorld(saveWorld, saveDevice);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XFillRectangles --
- *
- *        Fill multiple rectangular areas in the given drawable.
- *
- * Results:
- *        None.
- *
- * Side effects:
- *        Draws onto the specified drawable.
- *
- *----------------------------------------------------------------------
- */
-void 
-XFillRectangles(
-    Display* display,                /* Display. */
-    Drawable d,                        /* Draw on this. */
-    GC gc,                        /* Use this GC. */
-    XRectangle *rectangles,        /* Rectangle array. */
-    int n_rectangles)                /* Number of rectangles. */
-{
-    MacDrawable *macWin = (MacDrawable *) d;
-    CGrafPtr saveWorld;
-    GDHandle saveDevice;
-    GWorldPtr destPort;
-    Rect theRect;
-    int i;
-
-    destPort = TkMacOSXGetDrawablePort(d);
-
-    display->request++;
-    GetGWorld(&saveWorld, &saveDevice);
-    SetGWorld(destPort, NULL);
-
-    TkMacOSXSetUpClippingRgn(d);
-    if (useCGDrawing) {
-        CGContextRef outContext;
-	CGRect	rect;
-        
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-
-	for (i = 0; i < n_rectangles; i++) {
-	    rect = CGRectMake((float)(macWin->xOff + rectangles[i].x),
-				(float)(macWin->yOff + rectangles[i].y),
-				(float)rectangles[i].width,
-				(float)rectangles[i].height);
-	    
-	    CGContextFillRect(outContext, rect);
-	}
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
-    } else {
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
-
-	for (i = 0; i < n_rectangles; i++) {
-            theRect.left = (short) (macWin->xOff + rectangles[i].x);
-            theRect.top = (short) (macWin->yOff + rectangles[i].y);
-            theRect.right = (short) (theRect.left + rectangles[i].width);
-            theRect.bottom = (short) (theRect.top + rectangles[i].height);
-            FillCRect(&theRect, gPenPat);
-        }
     }
 
     SetGWorld(saveWorld, saveDevice);
@@ -662,64 +615,63 @@ XDrawLines(
     CGrafPtr saveWorld;
     GWorldPtr destPort;
     GDHandle saveDevice;
-    int i;
+    int i, lw = gc->line_width;
 
-    destPort = TkMacOSXGetDrawablePort(d);
-
-    display->request++;
     if (npoints < 2) {
 	return;	 /* TODO: generate BadValue error. */
     }
+
+    destPort = TkMacOSXGetDrawablePort(d);
+    display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(d);
 
     if (useCGDrawing) {
 	CGContextRef outContext;
 	float prevx, prevy;
+	float o = (lw % 2) ? .5 : 0;
 
 	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-
 	CGContextBeginPath(outContext);
-	prevx = (float) (macWin->xOff + points[0].x);
-	prevy = (float) (macWin->yOff + points[0].y);
+	prevx = macWin->xOff + points[0].x + o;
+	prevy = macWin->yOff + points[0].y + o;
 	CGContextMoveToPoint(outContext, prevx, prevy);
-
 	for (i = 1; i < npoints; i++) {
 	    if (mode == CoordModeOrigin) {
 		CGContextAddLineToPoint(outContext,
-			(float) (macWin->xOff + points[i].x),
-			(float) (macWin->yOff + points[i].y));
+			macWin->xOff + points[i].x + o,
+			macWin->yOff + points[i].y + o);
 	    } else {
-		prevx += (float) points[i].x;
-		prevy += (float) points[i].y;
+		prevx += points[i].x;
+		prevy += points[i].y;
 		CGContextAddLineToPoint(outContext, prevx, prevy);
 	    }
 	}
-
 	CGContextStrokePath(outContext);
 	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
+	int o = - (lw / 2);
+
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
-
 	ShowPen();
-
 	PenPixPat(gPenPat);
-	MoveTo((short) (macWin->xOff + points[0].x),
-		(short) (macWin->yOff + points[0].y));
+	/* This is broken for fat lines, it is not possible to correctly
+	 * imitate X11 drawing of oblique fat lines with QD line drawing,
+	 * we should draw a filled polygon instead. */
+	MoveTo((short) (macWin->xOff + points[0].x + o),
+	       (short) (macWin->yOff + points[0].y + o));
 	for (i = 1; i < npoints; i++) {
 	    if (mode == CoordModeOrigin) {
-		LineTo((short) (macWin->xOff + points[i].x),
-			(short) (macWin->yOff + points[i].y));
+		LineTo((short) (macWin->xOff + points[i].x + o),
+		       (short) (macWin->yOff + points[i].y + o));
 	    } else {
-		Line((short) (macWin->xOff + points[i].x),
-			(short) (macWin->yOff + points[i].y));
+		Line((short) points[i].x, (short) points[i].y);
 	    }
 	}
 	HidePen();
-
     }
+
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -750,45 +702,44 @@ void XDrawSegments(
     CGrafPtr saveWorld;
     GWorldPtr destPort;
     GDHandle saveDevice;
-    int i;
+    int i, lw = gc->line_width;
 
     destPort = TkMacOSXGetDrawablePort(d);
-
     display->request++;
-
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-    
     TkMacOSXSetUpClippingRgn(d);
 
     if (useCGDrawing) {
-        CGContextRef outContext;
+	CGContextRef outContext;
+	float o = (lw % 2) ? .5 : 0;
 
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
         for (i = 0; i < nsegments; i++) {
 	    CGContextBeginPath(outContext);
             CGContextMoveToPoint(outContext,
-                    (float)(macWin->xOff + segments[i].x1),
-                    (float)(macWin->yOff + segments[i].y1));
-            CGContextAddLineToPoint (outContext,
-                    (float)(macWin->xOff + segments[i].x2),
-                    (float)(macWin->yOff + segments[i].y2));
-            CGContextStrokePath(outContext);
-
-        }
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+		    macWin->xOff + segments[i].x1 + o,
+		    macWin->yOff + segments[i].y1 + o);
+	    CGContextAddLineToPoint(outContext,
+		    macWin->xOff + segments[i].x2 + o,
+		    macWin->yOff + segments[i].y2 + o);
+	    CGContextStrokePath(outContext);
+	}
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
+	int o = - (lw / 2);
 
-        ShowPen();
-
-        PenPixPat(gPenPat);
-        for (i = 0; i < nsegments; i++) {
-            MoveTo((short) (macWin->xOff + segments[i].x1),
-                   (short) (macWin->yOff + segments[i].y1));
-            LineTo((short) (macWin->xOff + segments[i].x2),
-                   (short) (macWin->yOff + segments[i].y2));
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
+	ShowPen();
+	PenPixPat(gPenPat);
+	/* This is broken for fat lines, it is not possible to correctly
+	 * imitate X11 drawing of oblique fat lines with QD line drawing,
+	 * we should draw a filled polygon instead. */
+	for (i = 0; i < nsegments; i++) {
+	    MoveTo((short) (macWin->xOff + segments[i].x1 + o),
+		   (short) (macWin->yOff + segments[i].y1 + o));
+	    LineTo((short) (macWin->xOff + segments[i].x2 + o),
+		   (short) (macWin->yOff + segments[i].y2 + o));
         }
         HidePen();
     }
@@ -823,49 +774,46 @@ XFillPolygon(
     int mode)			/* Drawing mode. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
-    PolyHandle polygon;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
     int i;
 
     destPort = TkMacOSXGetDrawablePort(d);
-
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(d);
 
     if (useCGDrawing) {
 	CGContextRef outContext;
 	float prevx, prevy;
+	float o = (gc->line_width % 2) ? .5 : 0;
 
 	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-
 	CGContextBeginPath(outContext);
-	prevx = (float) (macWin->xOff + points[0].x);
-	prevy = (float) (macWin->yOff + points[0].y);
+	prevx = macWin->xOff + points[0].x + o;
+	prevy = macWin->yOff + points[0].y + o;
 	CGContextMoveToPoint(outContext, prevx, prevy);
 	for (i = 1; i < npoints; i++) {
 	    if (mode == CoordModeOrigin) {
-		CGContextAddLineToPoint(outContext, 
-			(float)(macWin->xOff + points[i].x),
-			(float)(macWin->yOff + points[i].y));
+		CGContextAddLineToPoint(outContext,
+			macWin->xOff + points[i].x + o,
+			macWin->yOff + points[i].y + o);
 	    } else {
-		prevx += (float) points[i].x;
-		prevy += (float) points[i].y;
+		prevx += points[i].x;
+		prevy += points[i].y;
 		CGContextAddLineToPoint(outContext, prevx, prevy);
 	    }
 	}
 	CGContextEOFillPath(outContext);
 	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-	TkMacOSXSetUpGraphicsPort(gc, destPort);
+	PolyHandle polygon;
 
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	PenNormal();
 	polygon = OpenPoly();
-
 	MoveTo((short) (macWin->xOff + points[0].x),
 		(short) (macWin->yOff + points[0].y));
 	for (i = 1; i < npoints; i++) {
@@ -873,15 +821,14 @@ XFillPolygon(
 		LineTo((short) (macWin->xOff + points[i].x),
 			(short) (macWin->yOff + points[i].y));
 	    } else {
-		Line((short) (macWin->xOff + points[i].x),
-			(short) (macWin->yOff + points[i].y));
+		Line((short) points[i].x, (short) points[i].y);
 	    }
 	}
-
 	ClosePoly();
 	FillCPoly(polygon, gPenPat);
 	KillPoly(polygon);
     }
+
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -912,47 +859,52 @@ XDrawRectangle(
     unsigned int height)
 {
     MacDrawable *macWin = (MacDrawable *) d;
-    Rect theRect;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
+    int lw = gc->line_width;
+
+    if (width == 0 || height == 0) {
+	return;
+    }
 
     destPort = TkMacOSXGetDrawablePort(d);
-
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(d);
+
     if (useCGDrawing) {
-        CGContextRef outContext;
+	CGContextRef outContext;
 	CGRect	rect;
-        
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+	float o = (lw % 2) ? .5 : 0;
 
-	rect = CGRectMake((float) ((float) macWin->xOff + (float) x),
-	        (float) ((float) macWin->yOff + (float) y),
-	        (float) width,
-		(float) height);
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+	rect = CGRectMake(
+		macWin->xOff + x + o,
+		macWin->yOff + y + o,
+		width, height);
 	CGContextStrokeRect(outContext, rect);
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
+	Rect theRect;
+	int o = -lw/2;
 
-        theRect.left = (short) (macWin->xOff + x);
-        theRect.top = (short) (macWin->yOff + y);
-        theRect.right = (short) (theRect.left + width);
-        theRect.bottom = (short) (theRect.top + height);
-        
-        ShowPen();
-        PenPixPat(gPenPat);
-        FrameRect(&theRect);
-        HidePen();
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
+	ShowPen();
+	PenPixPat(gPenPat);
+	theRect.left =   (short) (macWin->xOff + x + o);
+	theRect.top =    (short) (macWin->yOff + y + o);
+	theRect.right =  (short) (theRect.left + width  + lw);
+	theRect.bottom = (short) (theRect.top  + height + lw);
+	FrameRect(&theRect);
+	HidePen();
     }
+
     SetGWorld(saveWorld, saveDevice);
 }
 
-#if 0
+#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -988,54 +940,123 @@ XDrawRectangles(
     int nRects)
 {
     MacDrawable *macWin = (MacDrawable *) drawable;
-    Rect     theRect;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
     XRectangle * rectPtr;
-    int       i;
+    int i, lw = gc->line_width;
 
     destPort = TkMacOSXGetDrawablePort(drawable);
-
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(drawable);
 
     if (useCGDrawing) {
         CGContextRef outContext;
 	CGRect	rect;
+	float o = (lw % 2) ? .5 : 0;
 
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
         for (i = 0, rectPtr = rectArr; i < nRects; i++, rectPtr++) {
-	    rect = CGRectMake((float) ((float) macWin->xOff 
-                    + (float) rectPtr->x),
-		    (float) ((float) macWin->yOff + (float) rectPtr->y),
-		    (float) rectPtr->width,
-		    (float) rectPtr->height);
+	    if (rectPtr->width == 0 || rectPtr->height == 0) {
+		continue;
+	    }
+	    rect = CGRectMake(
+		    macWin->xOff + rectPtr->x + o,
+		    macWin->yOff + rectPtr->y + o,
+		    rectPtr->width, rectPtr->height);
 	    CGContextStrokeRect(outContext, rect);
 	}
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
+	Rect theRect;
+	int o = -lw/2;
+
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
-
-        ShowPen();
-        PenPixPat(gPenPat);
-
-        for (i = 0, rectPtr = rectArr; i < nRects;i++, rectPtr++) {
-            theRect.left = (short) (macWin->xOff + rectPtr->x);
-            theRect.top = (short) (macWin->yOff + rectPtr->y);
-            theRect.right = (short) (theRect.left + rectPtr->width);
-            theRect.bottom = (short) (theRect.top + rectPtr->height);
-            FrameRect(&theRect);
-        }
-        HidePen();
+	ShowPen();
+	PenPixPat(gPenPat);
+	for (i = 0, rectPtr = rectArr; i < nRects;i++, rectPtr++) {
+	    theRect.left =   (short) (macWin->xOff + rectPtr->x + o);
+	    theRect.top =    (short) (macWin->yOff + rectPtr->y + o);
+	    theRect.right =  (short) (theRect.left + rectPtr->width  + lw);
+	    theRect.bottom = (short) (theRect.top  + rectPtr->height + lw);
+	    FrameRect(&theRect);
+	}
+	HidePen();
     }
+
     SetGWorld(saveWorld, saveDevice);
 }
 #endif
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XFillRectangles --
+ *
+ *        Fill multiple rectangular areas in the given drawable.
+ *
+ * Results:
+ *        None.
+ *
+ * Side effects:
+ *        Draws onto the specified drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+void 
+XFillRectangles(
+    Display* display,                /* Display. */
+    Drawable d,                        /* Draw on this. */
+    GC gc,                        /* Use this GC. */
+    XRectangle *rectangles,        /* Rectangle array. */
+    int n_rectangles)                /* Number of rectangles. */
+{
+    MacDrawable *macWin = (MacDrawable *) d;
+    CGrafPtr saveWorld;
+    GDHandle saveDevice;
+    GWorldPtr destPort;
+    XRectangle * rectPtr;
+    int i;
+
+    destPort = TkMacOSXGetDrawablePort(d);
+    display->request++;
+    GetGWorld(&saveWorld, &saveDevice);
+    SetGWorld(destPort, NULL);
+    TkMacOSXSetUpClippingRgn(d);
+
+    if (useCGDrawing) {
+	CGContextRef outContext;
+	CGRect rect;
+
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+	for (i = 0, rectPtr = rectangles; i < n_rectangles; i++, rectPtr++) {
+	    if (rectPtr->width == 0 || rectPtr->height == 0) {
+		continue;
+	    }
+	    rect = CGRectMake(
+		    macWin->xOff + rectPtr->x,
+		    macWin->yOff + rectPtr->y,
+		    rectPtr->width, rectPtr->height);
+	    CGContextFillRect(outContext, rect);
+	}
+        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+    } else {
+	Rect theRect;
+
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
+	for (i = 0, rectPtr = rectangles; i < n_rectangles; i++, rectPtr++) {
+	    theRect.left =   (short) (macWin->xOff + rectPtr->x);
+	    theRect.top =    (short) (macWin->yOff + rectPtr->y);
+	    theRect.right =  (short) (theRect.left + rectPtr->width);
+	    theRect.bottom = (short) (theRect.top  + rectPtr->height);
+            FillCRect(&theRect, gPenPat);
+        }
+    }
+
+    SetGWorld(saveWorld, saveDevice);
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1063,91 +1084,80 @@ XDrawArc(
     unsigned int width,                /* Width & height. */
     unsigned int height,
     int angle1,                        /* Staring angle of arc. */
-    int angle2)                        /* Ending angle of arc. */
+    int angle2)                        /* Extent of arc. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
-    Rect theRect;
-    short start, extent;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
+    int lw = gc->line_width;
 
-    if (width == 0 || height == 0) {
-        return;
+    if (width == 0 || height == 0 || angle2 == 0) {
+	return;
     }
-    
-    destPort = TkMacOSXGetDrawablePort(d);
 
+    destPort = TkMacOSXGetDrawablePort(d);
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(d);
 
     if (useCGDrawing) {
-        CGContextRef outContext;
-	CGRect	boundingRect;
-        int clockwise;
-	float a,b;
-	CGPoint	center;
-	float arc1, arc2;
+	CGContextRef outContext;
+	CGRect rect;
+	float o = (lw % 2) ? .5 : 0;
 
-	if (angle2 > 0) {
-	    clockwise = 1;
-	} else {
-	    clockwise = 0;
-        }
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+	rect = CGRectMake(
+		macWin->xOff + x + o,
+		macWin->yOff + y + o,
+		width, height);
 
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+	if (angle1 == 0 && angle2 == 23040 &&
+		CGContextStrokeEllipseInRect != NULL) {
+	    CGContextStrokeEllipseInRect(outContext, rect);
+	} else
+#endif
+	{
+	    CGMutablePathRef p = CGPathCreateMutable();
+	    CGAffineTransform t = CGAffineTransformIdentity;
+	    CGPoint c = CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
+	    float w = CGRectGetWidth(rect);
 
-        /*
-         * If we are drawing an oval, we have to squash the coordinate
-         * system before drawing, since CGContextAddArcToPoint only draws
-         * circles.
-         */
-
-        CGContextSaveGState(outContext);
-	boundingRect = CGRectMake(	(float)(macWin->xOff + x),
-					(float)(macWin->yOff + y),
-					(float)(width),
-					(float)(height));
-
-	center = CGPointMake(CGRectGetMidX(boundingRect), 
-                CGRectGetMidY(boundingRect));
-	a = CGRectGetWidth(boundingRect)/2;
-	b = CGRectGetHeight(boundingRect)/2;
-
-	CGContextTranslateCTM(outContext, center.x, center.y);
-	CGContextBeginPath(outContext);
-	CGContextScaleCTM(outContext, a, b);
-	arc1 = radians(-(angle1/64));
-	arc2 = radians(-(angle2/64)) + arc1;
-	CGContextAddArc(outContext, 0.0, 0.0, 1, arc1, arc2, clockwise);
-
-	CGContextRestoreGState(outContext);
-        CGContextStrokePath(outContext);
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	    if (width != height) {
+		t = CGAffineTransformMakeScale(1, CGRectGetHeight(rect)/w);
+		c = CGPointApplyAffineTransform(c, CGAffineTransformInvert(t));
+	    }
+	    CGPathAddArc(p, &t, c.x, c.y, w/2, radians(-angle1/64.0),
+		    radians(-(angle1 + angle2)/64.0), angle2 > 0);
+	    CGContextAddPath(outContext, p);
+	    CGPathRelease(p);
+	    CGContextStrokePath(outContext);
+	}
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
+	Rect theRect;
+	short start, extent;
+	int o = -lw/2;
 
-
-        theRect.left = (short) (macWin->xOff + x);
-        theRect.top = (short) (macWin->yOff + y);
-        theRect.right = (short) (theRect.left + width);
-        theRect.bottom = (short) (theRect.top + height);
-        start = (short) (90 - (angle1 / 64));
-        extent = (short) (-(angle2 / 64));
-
-        ShowPen();
-        PenPixPat(gPenPat);
-        FrameArc(&theRect, start, extent);
-        HidePen();
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
+	ShowPen();
+	PenPixPat(gPenPat);
+	theRect.left =   (short) (macWin->xOff + x + o);
+	theRect.top =    (short) (macWin->yOff + y + o);
+	theRect.right =  (short) (theRect.left + width + lw);
+	theRect.bottom = (short) (theRect.top + height + lw);
+	start =  (short) (90 - (angle1/64));
+	extent = (short) (-(angle2/64));
+	FrameArc(&theRect, start, extent);
+	HidePen();
     }
-    
+
     SetGWorld(saveWorld, saveDevice);
 }
 
-#if 0
+#ifdef TK_MACOSXDRAW_UNUSED
 /* 
  *----------------------------------------------------------------------
  * 
@@ -1180,81 +1190,82 @@ XDrawArcs(
 {
 
     MacDrawable *macWin = (MacDrawable *) d;
-    Rect rect;
-    short start, extent;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
-    XArc *    arcPtr;
-    int       i;
+    XArc * arcPtr;
+    int i, lw = gc->line_width;
 
     destPort = TkMacOSXGetDrawablePort(d);
-
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(d);
+
     if (useCGDrawing) {
-        CGContextRef outContext;
+	CGContextRef outContext;
+	CGRect rect;
+	float o = (lw % 2) ? .5 : 0;
 
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
 	for (i=0, arcPtr = arcArr; i < nArcs; i++, arcPtr++) {
-	    CGRect	boundingRect;
-	    int clockwise;
-	    float a,b, arc1, arc2;
-	    CGPoint center;
-	   
-	    if (arcPtr[i].angle2 > 0) {
-		clockwise = 1;
-	    } else {
-		clockwise = 0;
+	    if (arcPtr->width == 0 || arcPtr->height == 0
+		    || arcPtr->angle2 == 0) {
+		continue;
 	    }
+	    rect = CGRectMake(
+		    macWin->xOff + arcPtr->x + o,
+		    macWin->yOff + arcPtr->y + o,
+		    arcPtr->width, arcPtr->height);
 
-        /*
-         * If we are drawing an oval, we have to squash the coordinate
-         * system before drawing, since CGContextAddArcToPoint only draws
-         * circles.
-         */
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+	    if (arcPtr->angle1 == 0 && arcPtr->angle2 == 23040 &&
+		    CGContextStrokeEllipseInRect != NULL) {
+		CGContextStrokeEllipseInRect(outContext, rect);
+	    } else
+#endif
+	    {
+		CGMutablePathRef p = CGPathCreateMutable();
+		CGAffineTransform t = CGAffineTransformIdentity;
+		CGPoint c = CGPointMake(CGRectGetMidX(rect),
+					CGRectGetMidY(rect));
+		float w = CGRectGetWidth(rect);
 
-	    CGContextSaveGState(outContext);
-	    CGContextBeginPath(outContext);
-	    boundingRect = CGRectMake(	(float)(macWin->xOff + arcPtr[i].x),
-					(float)(macWin->yOff + arcPtr[i].y),
-					(float)arcPtr[i].width,
-					(float)arcPtr[i].height);
-	    
-	    center = CGPointMake(CGRectGetMidX(boundingRect), 
-                    CGRectGetMidY(boundingRect));
-	    a = CGRectGetWidth(boundingRect)/2;
-	    b = CGRectGetHeight(boundingRect)/2;
-	    
-	    CGContextTranslateCTM(outContext, center.x, center.y);
-	    CGContextScaleCTM(outContext, a, b);
-	    arc1 = radians(-(arcPtr[i].angle1/64));
-	    arc2 = radians(-(arcPtr[i].angle2/64)) + arc1;
-	    CGContextAddArc(outContext, 0.0, 0.0, 1, arc1, arc2, clockwise);
-	    CGContextRestoreGState(outContext);
-	    CGContextStrokePath(outContext);
+		if (arcPtr->width != arcPtr->height) {
+		    t = CGAffineTransformMakeScale(1, CGRectGetHeight(rect)/w);
+		    c = CGPointApplyAffineTransform(c,
+						    CGAffineTransformInvert(t));
+		}
+		CGPathAddArc(p, &t, c.x, c.y, w/2,
+			radians(-arcPtr->angle1/64.0),
+			radians(-(arcPtr->angle1 + arcPtr->angle2)/64.0),
+			arcPtr->angle2 > 0);
+		CGContextAddPath(outContext, p);
+		CGPathRelease(p);
+		CGContextStrokePath(outContext);
+	    }
 	}
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-	TkMacOSXSetUpGraphicsPort(gc, destPort);
+	Rect theRect;
+	short start, extent;
+	int o = -lw/2;
 
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
         ShowPen();
         PenPixPat(gPenPat);
         for (i = 0, arcPtr = arcArr;i < nArcs;i++, arcPtr++) {
-            rect.left = (short) (macWin->xOff + arcPtr->x);
-            rect.top = (short) (macWin->yOff + arcPtr->y);
-            rect.right = (short) (rect.left + arcPtr->width);
-            rect.bottom = (short) (rect.top + arcPtr->height);
-            start = (short) (90 - (arcPtr->angle1 / 64));
-            extent = (short) (-(arcPtr->angle2 / 64));
-            FrameArc(&rect, start, extent);
-        }
-        HidePen();
+	    theRect.left =   (short) (macWin->xOff + arcPtr->x + o);
+	    theRect.top =    (short) (macWin->yOff + arcPtr->y + o);
+	    theRect.right =  (short) (theRect.left + arcPtr->width + lw);
+	    theRect.bottom = (short) (theRect.top + arcPtr->height + lw);
+	    start =  (short) (90 - (arcPtr->angle1/64));
+	    extent = (short) (-(arcPtr->angle2/64));
+	    FrameArc(&theRect, start, extent);
+	}
+	HidePen();
     }
+
     SetGWorld(saveWorld, saveDevice);
 }
 #endif
@@ -1285,125 +1296,120 @@ XFillArc(
     unsigned int width,                /* Width & height. */
     unsigned int height,
     int angle1,                        /* Staring angle of arc. */
-    int angle2)                        /* Ending angle of arc. */
+    int angle2)                        /* Extent of arc. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
-    Rect theRect;
-    short start, extent;
-    PolyHandle polygon;
-    double sin1, cos1, sin2, cos2, angle;
-    double boxWidth, boxHeight;
-    double vertex[2], center1[2], center2[2];
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
+    int lw = gc->line_width;
+
+    if (width == 0 || height == 0 || angle2 == 0) {
+	return;
+    }
 
     destPort = TkMacOSXGetDrawablePort(d);
-
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(d);
 
     if (useCGDrawing) {
-        CGContextRef outContext;
-	CGRect	boundingRect;
-        int clockwise;
-	float a,b;
-	CGPoint	center;
+	CGContextRef outContext;
+	CGRect rect;
+	float o = (lw % 2) ? .5 : 0, u = 0;
 
-	if (angle2 > 0) {
-            clockwise = 1;
-	} else {
-            clockwise = 0;
-        }
+	if (notAA(lw)) {
+	    o += NON_AA_CG_OFFSET/2;
+	    u += NON_AA_CG_OFFSET;
+	}
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+	rect = CGRectMake(
+		macWin->xOff + x + o,
+		macWin->yOff + y + o,
+		width - u, height - u);
 
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-	
-	boundingRect = CGRectMake((float) (macWin->xOff + x),
-	        (float) (macWin->yOff + y),
-		(float) width,
-		(float) height);
-	center = CGPointMake(CGRectGetMidX(boundingRect), 
-                CGRectGetMidY(boundingRect));
-	a = CGRectGetWidth(boundingRect)/2;
-	b = CGRectGetHeight(boundingRect)/2;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+	if (angle1 == 0 && angle2 == 23040 &&
+		CGContextFillEllipseInRect != NULL) {
+	    CGContextFillEllipseInRect(outContext, rect);
+	} else
+#endif
+	{
+	    CGMutablePathRef p = CGPathCreateMutable();
+	    CGAffineTransform t = CGAffineTransformIdentity;
+	    CGPoint c = CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
+	    float w = CGRectGetWidth(rect);
 
-	if (gc->arc_mode == ArcChord) {
-	  float arc1, arc2;
-
-	    CGContextBeginPath(outContext);
-	    CGContextTranslateCTM(outContext, center.x, center.y);
-	    CGContextScaleCTM(outContext, a, b);
-	    arc1 = radians(-(angle1/64));
-	    arc2 = radians(-(angle2/64)) + arc1;
-	    CGContextAddArc(outContext, 0.0, 0.0, 1, arc1, arc2, clockwise);
-	    CGContextFillPath(outContext);
-	} else if (gc->arc_mode == ArcPieSlice) {
-            float arc1, arc2;
-
-	    CGContextTranslateCTM(outContext, center.x, center.y);
-	    CGContextScaleCTM(outContext,a,b);
-	    arc1 = radians(-(angle1/64));
-	    arc2 = radians(-(angle2/64)) + arc1;
-	    CGContextAddArc(outContext, 0.0, 0.0, 1, arc1, arc2, clockwise);
-	    CGContextAddLineToPoint(outContext, 0.0f, 0.0f);
-	    CGContextClosePath(outContext);
+	    if (width != height) {
+		t = CGAffineTransformMakeScale(1, CGRectGetHeight(rect)/w);
+		c = CGPointApplyAffineTransform(c, CGAffineTransformInvert(t));
+	    }
+	    if (gc->arc_mode == ArcPieSlice) {
+		CGPathMoveToPoint(p, &t, c.x, c.y);
+	    }
+	    CGPathAddArc(p, &t, c.x, c.y, w/2, radians(-angle1/64.0),
+		    radians(-(angle1 + angle2)/64.0), angle2 > 0);
+	    CGPathCloseSubpath(p);
+	    CGContextAddPath(outContext, p);
+	    CGPathRelease(p);
 	    CGContextFillPath(outContext);
 	}
-	
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
+	Rect theRect;
+	short start, extent;
+	int o = - (lw / 2);
+	PolyHandle polygon;
+	double sin1, cos1, sin2, cos2, angle;
+	double boxWidth, boxHeight;
+	double vertex[2], center1[2], center2[2];
 
-        theRect.left = (short) (macWin->xOff + x);
-        theRect.top = (short) (macWin->yOff + y);
-        theRect.right = (short) (theRect.left + width);
-        theRect.bottom = (short) (theRect.top + height);
-        start = (short) (90 - (angle1 / 64));
-        extent = (short) (- (angle2 / 64));
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
+	theRect.left =   (short) (macWin->xOff + x + o);
+	theRect.top =    (short) (macWin->yOff + y + o);
+	theRect.right =  (short) (theRect.left + width + lw);
+	theRect.bottom = (short) (theRect.top + height + lw);
+	start = (short) (90 - (angle1/64));
+	extent = (short) (-(angle2/64));
+	if (gc->arc_mode == ArcChord) {
+	    boxWidth = theRect.right - theRect.left;
+	    boxHeight = theRect.bottom - theRect.top;
+	    angle = radians(-angle1/64.0);
+	    sin1 = sin(angle);
+	    cos1 = cos(angle);
+	    angle -= radians(angle2/64.0);
+	    sin2 = sin(angle);
+	    cos2 = cos(angle);
+	    vertex[0] = (theRect.left + theRect.right)/2.0;
+	    vertex[1] = (theRect.top + theRect.bottom)/2.0;
+	    center1[0] = vertex[0] + cos1*boxWidth/2.0;
+	    center1[1] = vertex[1] + sin1*boxHeight/2.0;
+	    center2[0] = vertex[0] + cos2*boxWidth/2.0;
+	    center2[1] = vertex[1] + sin2*boxHeight/2.0;
 
-        if (gc->arc_mode == ArcChord) {
-            boxWidth = theRect.right - theRect.left;
-            boxHeight = theRect.bottom - theRect.top;
-            angle = -(angle1/64.0)*PI/180.0;
-            sin1 = sin(angle);
-            cos1 = cos(angle);
-            angle -= (angle2/64.0)*PI/180.0;
-            sin2 = sin(angle);
-            cos2 = cos(angle);
-            vertex[0] = (theRect.left + theRect.right)/2.0;
-            vertex[1] = (theRect.top + theRect.bottom)/2.0;
-            center1[0] = vertex[0] + cos1*boxWidth/2.0;
-            center1[1] = vertex[1] + sin1*boxHeight/2.0;
-            center2[0] = vertex[0] + cos2*boxWidth/2.0;
-            center2[1] = vertex[1] + sin2*boxHeight/2.0;
-
-            polygon = OpenPoly();
-            MoveTo((short) ((theRect.left + theRect.right)/2),
-                    (short) ((theRect.top + theRect.bottom)/2));
-        
-            LineTo((short) (center1[0] + 0.5), (short) (center1[1] + 0.5));
-            LineTo((short) (center2[0] + 0.5), (short) (center2[1] + 0.5));
-            ClosePoly();
-
-            ShowPen();
-            FillCArc(&theRect, start, extent, gPenPat);
-            FillCPoly(polygon, gPenPat);
-            HidePen();
-
-            KillPoly(polygon);
-        } else {
-            ShowPen();
-            FillCArc(&theRect, start, extent, gPenPat);
-            HidePen();
-        }
+	    polygon = OpenPoly();
+	    MoveTo((short) ((theRect.left + theRect.right)/2),
+		   (short) ((theRect.top + theRect.bottom)/2));
+	    LineTo((short) (center1[0] + .5), (short) (center1[1] + .5));
+	    LineTo((short) (center2[0] + .5), (short) (center2[1] + .5));
+	    ClosePoly();
+	    ShowPen();
+	    FillCArc(&theRect, start, extent, gPenPat);
+	    FillCPoly(polygon, gPenPat);
+	    HidePen();
+	    KillPoly(polygon);
+	} else {
+	    ShowPen();
+	    FillCArc(&theRect, start, extent, gPenPat);
+	    HidePen();
+	}
     }
+
     SetGWorld(saveWorld, saveDevice);
 }
 
-#if 0
+#ifdef TK_MACOSXDRAW_UNUSED
 /*  
  *----------------------------------------------------------------------
  *  
@@ -1428,166 +1434,128 @@ XFillArcs(
     int nArcs)
 {
     MacDrawable *macWin = (MacDrawable *) d;
-    Rect rect;
-    short start, extent;
-    PolyHandle polygon;
-    double sin1, cos1, sin2, cos2, angle;
-    double boxWidth, boxHeight;
-    double vertex[2], center1[2], center2[2];
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
-    int       i;
-    XArc      * arcPtr;
+    XArc * arcPtr;
+    int i, lw = gc->line_width;
 
     destPort = TkMacOSXGetDrawablePort(d);
-
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(d);
 
     if (useCGDrawing) {
-        CGContextRef outContext;
-        
+	CGContextRef outContext;
+	CGRect rect;
+	float o = (lw % 2) ? .5 : 0, u = 0;
+
+	if (notAA(lw)) {
+	    o += NON_AA_CG_OFFSET/2;
+	    u += NON_AA_CG_OFFSET;
+	}
         TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
 	for (i = 0, arcPtr = arcArr; i < nArcs; i++, arcPtr++) {
-	    CGRect	boundingRect;
-	    int clockwise = arcPtr[i].angle1;
-	    float a,b;
-	    CGPoint center;
-	    
-	    if (arcPtr[i].angle2 > 0) {
-		clockwise = 1;
-	    } else {
-		clockwise = 0;
-            }
+	    if (arcPtr->width == 0 || arcPtr->height == 0
+		    || arcPtr->angle2 == 0) {
+		continue;
+	    }
+	    rect = CGRectMake(
+		    macWin->xOff + arcPtr->x + o,
+		    macWin->yOff + arcPtr->y + o,
+		    arcPtr->width - u, arcPtr->height - u);
 
-	    /*
-	     * If we are drawing an oval, we have to squash the coordinate
-	     * system before drawing, since CGContextAddArcToPoint only draws
-	     * circles.
-	     */
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+	    if (arcPtr->angle1 == 0 && arcPtr->angle2 == 23040 &&
+		    CGContextFillEllipseInRect != NULL) {
+		CGContextFillEllipseInRect(outContext, rect);
+	    } else
+#endif
+	    {
+		CGMutablePathRef p = CGPathCreateMutable();
+		CGAffineTransform t = CGAffineTransformIdentity;
+		CGPoint c = CGPointMake(CGRectGetMidX(rect),
+					CGRectGetMidY(rect));
+		float w = CGRectGetWidth(rect);
 
-	    if (gc->arc_mode == ArcChord) {
-	    
-		CGContextBeginPath(outContext);
-		boundingRect = CGRectMake((float)(macWin->xOff + arcPtr[i].x),
-	                (float)(macWin->yOff + arcPtr[i].y),
-			(float)arcPtr[i].width,
-			(float)arcPtr[i].height);
-		center = CGPointMake(CGRectGetMidX(boundingRect), 
-                        CGRectGetMidY(boundingRect));
-		a = CGRectGetWidth(boundingRect)/2.0;
-		b = CGRectGetHeight(boundingRect)/2.0;
-		
-		angle = -(arcPtr->angle1/64.0)*PI/180.0;
-		sin1 = sin(angle);
-		cos1 = cos(angle);
-		angle -= (arcPtr->angle2/64.0)*PI/180.0;
-		sin2 = sin(angle);
-		cos2 = cos(angle);
-		vertex[0] = (CGRectGetMinX(boundingRect) 
-                        + CGRectGetMaxX(boundingRect))/2.0;
-		vertex[1] = (CGRectGetMaxY(boundingRect) 
-                        + CGRectGetMinY(boundingRect))/2.0;
-		center1[0] = vertex[0] + cos1*a;
-		center1[1] = vertex[1] + sin1*b;
-		center2[0] = vertex[0] + cos2*a;
-		center2[1] = vertex[1] + sin2*b;
-
-		CGContextScaleCTM(outContext, a, b);
-		
-		CGContextBeginPath(outContext);
-		CGContextMoveToPoint(outContext, (float) vertex[0],
-		        (float) vertex[1]);
-		CGContextAddLineToPoint(outContext,
-			(float) (center1[0] + 0.5),
-			(float) (center1[1] + 0.5));
-		CGContextAddLineToPoint(outContext,
-			(float) (center2[0] + 0.5),
-		        (float) (center2[1] + 0.5));
-		CGContextFillPath(outContext);
-	    } else if (gc->arc_mode == ArcPieSlice) {
-	        float arc1, arc2;
-		CGContextBeginPath(outContext);
-		boundingRect = CGRectMake((float)(macWin->xOff + arcPtr[i].x),
-		        (float)(macWin->yOff + arcPtr[i].y),
-			(float)arcPtr[i].width,
-			(float)arcPtr[i].height);
-		center = CGPointMake(CGRectGetMidX(boundingRect), 
-                        CGRectGetMidY(boundingRect));
-		a = CGRectGetWidth(boundingRect)/2;
-		b = CGRectGetHeight(boundingRect)/2;
-		
-		CGContextTranslateCTM(outContext, center.x, center.y);
-		CGContextScaleCTM(outContext, a, b);
-		arc1 = radians(-(arcPtr[i].angle1/64));
-		arc2 = radians(-(arcPtr[i].angle2/64)) + arc1;
-		CGContextAddArc(outContext, 0.0, 0.0, 1, 
-                        arc1, arc2, clockwise);
-		CGContextAddLineToPoint(outContext, 0.0f, 0.0f);
-		CGContextClosePath(outContext);
+		if (arcPtr->width != arcPtr->height) {
+		    t = CGAffineTransformMakeScale(1, CGRectGetHeight(rect)/w);
+		    c = CGPointApplyAffineTransform(c,
+						    CGAffineTransformInvert(t));
+		}
+		if (gc->arc_mode == ArcPieSlice) {
+		    CGPathMoveToPoint(p, &t, c.x, c.y);
+		}
+		CGPathAddArc(p, &t, c.x, c.y, w/2,
+			radians(-arcPtr->angle1/64.0),
+			radians(-(arcPtr->angle1 + arcPtr->angle2)/64.0),
+			arcPtr->angle2 > 0);
+		CGPathCloseSubpath(p);
+		CGContextAddPath(outContext, p);
+		CGPathRelease(p);
 		CGContextFillPath(outContext);
 	    }
 	}
-        
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
-    
-        TkMacOSXSetUpGraphicsPort(gc, destPort);
+	Rect theRect;
+	short start, extent;
+	int o = - (lw / 2);
+	PolyHandle polygon;
+	double sin1, cos1, sin2, cos2, angle;
+	double boxWidth, boxHeight;
+	double vertex[2], center1[2], center2[2];
 
+	TkMacOSXSetUpGraphicsPort(gc, destPort);
         for (i = 0, arcPtr = arcArr;i<nArcs;i++, arcPtr++) {
-            rect.left = (short) (macWin->xOff + arcPtr->x);
-            rect.top = (short) (macWin->yOff + arcPtr->y);
-            rect.right = (short) (rect.left + arcPtr->width);
-            rect.bottom = (short) (rect.top + arcPtr->height);
-            start = (short) (90 - (arcPtr->angle1 / 64));
-            extent = (short) (- (arcPtr->angle2 / 64));
+	    theRect.left =   (short) (macWin->xOff + arcPtr->x + o);
+	    theRect.top =    (short) (macWin->yOff + arcPtr->y + o);
+	    theRect.right =  (short) (theRect.left + arcPtr->width + lw);
+	    theRect.bottom = (short) (theRect.top + arcPtr->height + lw);
+	    start = (short) (90 - (arcPtr->angle1/64));
+	    extent = (short) (- (arcPtr->angle2/64));
 
-            if (gc->arc_mode == ArcChord) {
-                boxWidth = rect.right - rect.left;
-                boxHeight = rect.bottom - rect.top;
-                angle = -(arcPtr->angle1/64.0)*PI/180.0;
-                sin1 = sin(angle);
-                cos1 = cos(angle);
-                angle -= (arcPtr->angle2/64.0)*PI/180.0;
-                sin2 = sin(angle);
-                cos2 = cos(angle);
-                vertex[0] = (rect.left + rect.right)/2.0;
-                vertex[1] = (rect.top + rect.bottom)/2.0;
-                center1[0] = vertex[0] + cos1*boxWidth/2.0;
-                center1[1] = vertex[1] + sin1*boxHeight/2.0;
-                center2[0] = vertex[0] + cos2*boxWidth/2.0;
-                center2[1] = vertex[1] + sin2*boxHeight/2.0;
-    
-                polygon = OpenPoly();
-                MoveTo((short) ((rect.left + rect.right)/2),
-                        (short) ((rect.top + rect.bottom)/2));
-    
-                LineTo((short) (center1[0] + 0.5), (short) (center1[1] + 0.5));
-                LineTo((short) (center2[0] + 0.5), (short) (center2[1] + 0.5));
-                ClosePoly();
-    
-                ShowPen();
-                FillCArc(&rect, start, extent, gPenPat);
-                FillCPoly(polygon, gPenPat);
-                HidePen();
+	    if (gc->arc_mode == ArcChord) {
+		boxWidth = theRect.right - theRect.left;
+		boxHeight = theRect.bottom - theRect.top;
+		angle = radians(-arcPtr->angle1/64.0);
+		sin1 = sin(angle);
+		cos1 = cos(angle);
+		angle -= radians(arcPtr->angle2/64.0);
+		sin2 = sin(angle);
+		cos2 = cos(angle);
+		vertex[0] = (theRect.left + theRect.right)/2.0;
+		vertex[1] = (theRect.top + theRect.bottom)/2.0;
+		center1[0] = vertex[0] + cos1*boxWidth/2.0;
+		center1[1] = vertex[1] + sin1*boxHeight/2.0;
+		center2[0] = vertex[0] + cos2*boxWidth/2.0;
+		center2[1] = vertex[1] + sin2*boxHeight/2.0;
 
-                KillPoly(polygon);
-            } else {
-                ShowPen();
-                FillCArc(&rect, start, extent, gPenPat);
-                HidePen();
-            }
-        }
+		polygon = OpenPoly();
+		MoveTo((short) ((theRect.left + theRect.right)/2),
+		       (short) ((theRect.top + theRect.bottom)/2));
+		LineTo((short) (center1[0] + .5), (short) (center1[1] + .5));
+		LineTo((short) (center2[0] + .5), (short) (center2[1] + .5));
+		ClosePoly();
+		ShowPen();
+		FillCArc(&theRect, start, extent, gPenPat);
+		FillCPoly(polygon, gPenPat);
+		HidePen();
+		KillPoly(polygon);
+	    } else {
+		ShowPen();
+		FillCArc(&theRect, start, extent, gPenPat);
+		HidePen();
+	    }
+	}
     }
+
     SetGWorld(saveWorld, saveDevice);
 }
 #endif
 
-#if 0
+#ifdef TK_MACOSXDRAW_UNUSED
 /* 
  *----------------------------------------------------------------------
  * 
@@ -1642,10 +1610,8 @@ TkScrollWindow(
     RgnHandle visRgn, clipRgn;
     
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
-
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
-
     TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     /*
@@ -1821,6 +1787,7 @@ TkMacOSXSetUpCGContext(
     Rect boundsRect;
     CGAffineTransform coordsTransform;
     static RgnHandle clipRgn = NULL;
+    float w;
 
     err = QDBeginCGContext(destPort, contextPtr);
     outContext = *contextPtr;
@@ -1854,8 +1821,8 @@ TkMacOSXSetUpCGContext(
 
     SyncCGContextOriginWithPort(outContext, destPort);
 
-    coordsTransform = CGAffineTransformMake(1.0f, 0.0f, 0.0f, -1.0f, 0.0f,
-	    (float) (boundsRect.bottom - boundsRect.top));
+    coordsTransform = CGAffineTransformMake(1, 0, 0, -1, 0,
+	    boundsRect.bottom - boundsRect.top);
     CGContextConcatCTM(outContext, coordsTransform);
     
     /* Now offset the CTM to the subwindow offset */
@@ -1865,34 +1832,36 @@ TkMacOSXSetUpCGContext(
 		RGBFLOATRED(macColor), 
 		RGBFLOATGREEN(macColor), 
 		RGBFLOATBLUE(macColor),
-		1.0f);
+		1);
 	CGContextSetRGBStrokeColor(outContext,
 		RGBFLOATRED(macColor),
 		RGBFLOATGREEN(macColor),
 		RGBFLOATBLUE(macColor),
-		1.0f);
+		1);
     }
-    
+
     if(gc->function == GXxor) {
     }
-    
-    CGContextSetLineWidth(outContext, (float) gc->line_width);
 
+    w = gc->line_width;
     /* When should we antialias? */
-    if (gc->line_width < tkMacOSXCGAntiAliasLimit) {
+    if (notAA(gc->line_width)) {
+	/* Make non-antialiased CG drawing look more like X11 */
+	w -= (gc->line_width ? NON_AA_CG_OFFSET : 0);
 	CGContextSetShouldAntialias(outContext, 0);
     } else {
 	CGContextSetShouldAntialias(outContext, 1);
     }
+    CGContextSetLineWidth(outContext, w);
 
     if (gc->line_style != LineSolid) { 
 	int num = 0;
 	char *p = &(gc->dashes);
-	float dashOffset = (float) gc->dash_offset;
+	float dashOffset = gc->dash_offset;
 	float lengths[10];
 
 	while (p[num] != '\0') {
-	    lengths[num] = (float) (p[num]);
+	    lengths[num] = p[num];
 	    num++;
 	}
 	CGContextSetLineDash(outContext, dashOffset, lengths, num);
