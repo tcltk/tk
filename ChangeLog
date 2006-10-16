@@ -10,6 +10,7 @@
 
 	* macosx/tkMacOSXInit.c: set default linewidth limit for CG
 	antialiasing to 0 as thin horizontal/vertical lines look good now.
+	* macosx/README: document CG antialiasing limit changes.
 
 	* generic/tkCanvLine.c (ConfigureLine):     on TkAqua, pass outline
 	* generic/tkCanvPoly.c (ConfigurePolygon):  linewidth in gc even for
