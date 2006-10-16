@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.10.2.2 2005/08/11 12:17:09 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.10.2.3 2006/10/16 15:35:50 das Exp $
  */
 
 #include <stdio.h>
@@ -529,6 +529,15 @@ ConfigurePolygon(interp, canvas, itemPtr, objc, objv, flags)
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
 	}
+#ifdef MAC_OSX_TK
+	/*
+	 * Mac OS X CG drawing needs access to the outline linewidth
+	 * even for fills (as linewidth controls antialiasing).
+	 */
+	gcValues.line_width = polyPtr->outline.gc != None ? 
+		polyPtr->outline.gc->line_width : 0;
+	mask |= GCLineWidth;
+#endif
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
     if (polyPtr->fillGC != None) {
