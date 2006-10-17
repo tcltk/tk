@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.59 2006/09/10 17:06:32 das Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.60 2006/10/17 23:44:45 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -7925,7 +7925,7 @@ SizeOfTab(
 	 *
 	 * With 'tabular' style tabs, we always use the index'th tab stop.
 	 */
-    } while (tabX < x && (tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR));
+    } while (tabX <= x && (tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR));
 
     /*
      * Inform our caller of how many tab stops we've used up.
