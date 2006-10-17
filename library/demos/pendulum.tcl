@@ -3,7 +3,7 @@
 # This demonstration illustrates how Tcl/Tk can be used to construct
 # simulations of physical systems.
 #
-# RCS: @(#) $Id: pendulum.tcl,v 1.2 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: pendulum.tcl,v 1.3 2006/10/17 05:52:40 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -14,7 +14,7 @@ package require Tk
 set w .pendulum
 catch {destroy $w}
 toplevel $w
-wm title . "Pendulum Animation Demonstration"
+wm title $w "Pendulum Animation Demonstration"
 wm iconname $w "pendulum"
 positionWindow $w
 

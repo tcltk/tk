@@ -1,13 +1,13 @@
 2006-10-16  Andreas Kupries <andreask@activestate.com>
 
+	*** 8.5a5 TAGGED FOR RELEASE ***
+
 	* doc/WindowId.3: Pat's commit on 2006-10-08 broke the .SH NAME
 	  information across several lines, breaking the cross-linking of
 	  manpages during installation for this one. Put everything back
 	  on a single line, unbreaking it.
 
 2006-10-16  Daniel Steffen  <das@users.sourceforge.net>
-
-	*** 8.5a5 TAGGED FOR RELEASE ***
 
 	* changes: updates for 8.5a5 release.
 
@@ -24,6 +24,8 @@
 	* generic/tkRectOval.c (ConfigureRectOval): fills (as it controls AA).
 
 	* macosx/GNUmakefile: don't redo prebinding of non-prebound binaires.
+
+	* library/demos/pendulum.tcl: fix incorrect setting of toplevel title.
 
 2006-10-10  Don Porter  <dgp@users.sourceforge.net>
 
