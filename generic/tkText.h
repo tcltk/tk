@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.13 2002/12/27 23:43:38 davygrvy Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.13.2.1 2006/10/17 05:38:48 dgp Exp $
  */
 
 #ifndef _TKTEXT
@@ -282,7 +282,7 @@ typedef enum {	TEXT_WRAPMODE_NULL, TEXT_WRAPMODE_NONE,
 		TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_WORD
 } TkWrapMode;
 
-EXTERN Tk_CustomOption textWrapModeOption;
+EXTERN Tk_CustomOption TkTextWrapModeOption;
 
 typedef struct TkTextTag {
     char *name;			/* Name of this tag.  This field is actually
