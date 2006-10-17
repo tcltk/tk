@@ -1,3 +1,10 @@
+2006-10-17  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkPanedWindow.c:	Cleaned up some code flagged by a
+	* generic/tkText.c:		`make checkexports` test.
+	* generic/tkText.h
+	* generic/tkTextTag.c:
+
 2006-10-16  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.14 TAGGED FOR RELEASE ***
