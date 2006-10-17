@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33.2.4 2006/09/10 17:07:35 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.5 2006/10/17 05:38:48 dgp Exp $
  */
 
 #include "default.h"
@@ -140,7 +140,7 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_INT, "-width", "width", "Width",
 	DEF_TEXT_WIDTH, Tk_Offset(TkText, width), 0},
     {TK_CONFIG_CUSTOM, "-wrap", "wrap", "Wrap",
-	DEF_TEXT_WRAP, Tk_Offset(TkText, wrapMode), 0, &textWrapModeOption},
+	DEF_TEXT_WRAP, Tk_Offset(TkText, wrapMode), 0, &TkTextWrapModeOption},
     {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, Tk_Offset(TkText, xScrollCmd),
 	TK_CONFIG_NULL_OK},
@@ -169,7 +169,7 @@ static char *		WrapModePrintProc _ANSI_ARGS_((ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr));
 
-Tk_CustomOption textWrapModeOption = {
+Tk_CustomOption TkTextWrapModeOption = {
     WrapModeParseProc,
     WrapModePrintProc,
     (ClientData) NULL
