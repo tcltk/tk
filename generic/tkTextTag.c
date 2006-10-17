@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.8 2002/08/05 04:30:40 dgp Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.8.2.1 2006/10/17 05:38:48 dgp Exp $
  */
 
 #include "default.h"
@@ -64,7 +64,7 @@ static Tk_ConfigSpec tagConfigSpecs[] = {
 	TK_CONFIG_NULL_OK},
     {TK_CONFIG_CUSTOM, "-wrap", (char *) NULL, (char *) NULL,
 	(char *) NULL, Tk_Offset(TkTextTag, wrapMode),
-	TK_CONFIG_NULL_OK, &textWrapModeOption},
+	TK_CONFIG_NULL_OK, &TkTextWrapModeOption},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, 0}
 };
