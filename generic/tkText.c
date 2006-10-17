@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.70 2006/09/10 17:06:32 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.71 2006/10/17 10:21:49 patthoyts Exp $
  */
 
 #include "default.h"
@@ -2956,6 +2956,8 @@ DeleteIndexRange(sharedTextPtr, textPtr, indexPtr1, indexPtr2, viewUpdate)
      * are present on the newline that isn't going to be deleted after all
      * (this simulates deleting the newline and then adding a "clean" one back
      * again).
+     * Note that index1 and index2 might now be equal again which means that
+     * no text will be deleted but tags might be removed.
      */
 
     line1 = TkBTreeLinesTo(textPtr, index1.linePtr);
@@ -3087,27 +3089,29 @@ DeleteIndexRange(sharedTextPtr, textPtr, indexPtr1, indexPtr2, viewUpdate)
     }
 
     /*
-     * Push the deletion on the undo stack
+     * Push the deletion on the undo stack if something was actually deleted
      */
 
-    if (sharedTextPtr->undo) {
-	Tcl_Obj *get;
-
-	if (sharedTextPtr->autoSeparators
+    if (TkTextIndexCmp(&index1, &index2) < 0) {
+	if (sharedTextPtr->undo) {
+	    Tcl_Obj *get;
+	    
+	    if (sharedTextPtr->autoSeparators
 		&& (sharedTextPtr->lastEditMode != TK_TEXT_EDIT_DELETE)) {
-	    TkUndoInsertUndoSeparator(sharedTextPtr->undoStack);
+		TkUndoInsertUndoSeparator(sharedTextPtr->undoStack);
+	    }
+	    
+	    sharedTextPtr->lastEditMode = TK_TEXT_EDIT_DELETE;
+	    
+	    get = TextGetText(textPtr, &index1, &index2, 0);
+	    TextPushUndoAction(textPtr, get, 0, &index1, &index2);
 	}
-
-	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_DELETE;
-
-	get = TextGetText(textPtr, &index1, &index2, 0);
-	TextPushUndoAction(textPtr, get, 0, &index1, &index2);
+	UpdateDirtyFlag(sharedTextPtr);
+	
+	sharedTextPtr->stateEpoch++;
+	
+	TkBTreeDeleteIndexRange(sharedTextPtr->tree, &index1, &index2);
     }
-    UpdateDirtyFlag(sharedTextPtr);
-
-    sharedTextPtr->stateEpoch++;
-
-    TkBTreeDeleteIndexRange(sharedTextPtr->tree, &index1, &index2);
 
     resetViewCount = 0;
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {

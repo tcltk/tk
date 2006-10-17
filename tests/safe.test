@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: safe.test,v 1.15 2004/12/06 22:54:12 dgp Exp $
+# RCS: @(#) $Id: safe.test,v 1.16 2006/10/17 10:21:50 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -34,8 +34,8 @@ tcltest::loadTestedCommands
 
 # The set of hidden commands is platform dependent:
 
-if {"$tcl_platform(platform)" == "windows"} {
-    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
+if {[string equal $tcl_platform(platform) "windows"]} {
+    set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source tk_chooseColor tk_chooseDirectory tk_getOpenFile tk_getSaveFile tk_messageBox toplevel wm}
 } else {
     set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection send socket source toplevel wm}
 }

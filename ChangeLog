@@ -1,3 +1,12 @@
+2006-10-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkText.c: Applied suggested patch from #1536735
+	* tests/text.test:  Update test for above patch.
+	* tests/textWind.test:  Corrected test to catch all messages
+	* tests/safe.test: Silence spurious win32 failure awaiting TIP150
+	* tests/winDialog.test: Updated test for file name length check.
+	* test/winWm.test: Corrected test expectation for menu wrapping.
+
 2006-10-16  Andreas Kupries <andreask@activestate.com>
 
 	*** 8.5a5 TAGGED FOR RELEASE ***

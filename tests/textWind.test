@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textWind.test,v 1.21 2006/04/05 20:57:08 hobbs Exp $
+# RCS: @(#) $Id: textWind.test,v 1.22 2006/10/17 10:21:50 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -446,11 +446,13 @@ test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} {textf
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     catch {destroy .t.f}
-    .t window create 1.5 -create {
-	frame .t.f
-	frame .t.f.f -width 10 -height 20 -bg $color
-    }
     set msg {}
+    after idle {
+        .t window create 1.5 -create {
+            frame .t.f
+            frame .t.f.f -width 10 -height 20 -bg $color
+        }
+    }
     set count 0
     while {([llength $msg] < 2) && ($count < 100)} {
 	update ; incr count; .t bbox 1.5 ; after 10
