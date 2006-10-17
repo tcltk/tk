@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.45 2006/08/18 10:49:34 dkf Exp $
+# RCS: @(#) $Id: text.test,v 1.46 2006/10/17 10:21:50 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3068,10 +3068,12 @@ test text-25.13 {-maxundo configuration option} {
 test text-25.15 {bug fix 1536735 - undo with empty text} {
     catch {destroy .t}
     text .t -undo 1
+    set r [.t edit modified]
     .t delete 1.0
-    .t edit undo
-    .t edit modified
-} {0}
+    lappend r [.t edit modified]
+    lappend r [catch {.t edit undo}]
+    lappend r [.t edit modified]
+} {0 0 1 0}
 
 test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
     destroy .t
