@@ -1,3 +1,8 @@
+2006-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkTextDisp.c (SizeOfTab): fix -tabstyle wordprocessor
+	tab alignment to correct tab edge case. [Bug 1578858]
+
 2006-10-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkText.c: Applied suggested patch from #1536735
