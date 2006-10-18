@@ -2,6 +2,8 @@
 
 	*** 8.5a5 TAGGED FOR RELEASE ***
 
+	* changes:		8.5a5 release date set.
+
 2006-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/text.n: fix docs to not correct -tabs usage case.

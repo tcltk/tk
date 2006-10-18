@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.101 2006/10/16 15:35:27 das Exp $
+RCS: @(#) $Id: changes,v 1.102 2006/10/18 19:04:47 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6242,4 +6242,4 @@ Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
 2006-10-16 (bug fix)[1558051] Aqua: CG drawing matches X11 (steffen)
 
----- Released 8.5a5, October XX, 2006 --- See ChangeLog for details ---
+---- Released 8.5a5, October 20, 2006 --- See ChangeLog for details ---
