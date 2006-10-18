@@ -1,5 +1,7 @@
 2006-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* doc/text.n: fix docs to not correct -tabs usage case.
+
 	* generic/tkTextDisp.c (SizeOfTab): fix -tabstyle wordprocessor
 	tab alignment to correct tab edge case. [Bug 1578858]
 
