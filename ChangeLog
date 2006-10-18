@@ -1,3 +1,7 @@
+2006-10-18  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5a5 TAGGED FOR RELEASE ***
+
 2006-10-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/text.n: fix docs to not correct -tabs usage case.
@@ -15,8 +19,6 @@
 	* test/winWm.test: Corrected test expectation for menu wrapping.
 
 2006-10-16  Andreas Kupries <andreask@activestate.com>
-
-	*** 8.5a5 TAGGED FOR RELEASE ***
 
 	* doc/WindowId.3: Pat's commit on 2006-10-08 broke the .SH NAME
 	  information across several lines, breaking the cross-linking of
