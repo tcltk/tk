@@ -12,12 +12,13 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.94 2006/09/27 18:43:35 andreas_kupries Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.95 2006/10/19 00:48:25 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
-# or with the MS Platform SDK (MSSDK)
-!if !defined(MSDEVDIR) && !defined(MSVCDIR) && !defined(MSSDK)
+# or with the MS Platform SDK (MSSDK). Visual Studio .NET 2003 and 2005 define
+# VCINSTALLDIR instead.
+!if !defined(MSDEVDIR) && !defined(MSVCDIR) && !defined(MSSDK) && !defined(VCINSTALLDIR)
 MSG = ^
 You need to run vcvars32.bat from Developer Studio or setenv.bat from the^
 Platform SDK first to setup the environment.  Jump to this line to read^
@@ -167,7 +168,7 @@ the build instructions.
 MSG = ^
 You must run this makefile only from the directory it is in.^
 Please `cd` to its location first.
-!error $(MSG) 
+!error $(MSG)
 !endif
 
 PROJECT	= tk
@@ -188,7 +189,7 @@ DOTVERSION	= 8.6
 DOTVERSION	= 9.0
 !elseif [nmakehlp -g ../generic/tk.h TK_VERSION] == 0
 MSG =^
-Can't get version string from ../generic/tk.h
+Cannot get version string from ../generic/tk.h
 !error $(MSG)
 !endif
 VERSION = $(DOTVERSION:.=)
@@ -375,35 +376,27 @@ TK_DEFINES	= $(OPTDEFINES)
 
 !if !$(DEBUG)
 !if $(OPTIMIZING)
-### This cranks the optimization level up.  We can't use -02 because
-### sometimes it causes problems.
-cdebug	= -Oti
+### This cranks the optimization level to maximize speed
+###  We can't use -O2 because sometimes it causes problems.
+cdebug	= $(OPTIMIZATIONS)
 !else
 cdebug	=
 !endif
 !else if "$(MACHINE)" == "IA64"
-### Warnings are too many, can't support warnings into errors for
-### an IA64 build.
-cdebug	= -Z7 -Od -GZ
+### Warnings are too many, can't support warnings into errors.
+cdebug	= -Z7 -Od $(DEBUGFLAGS)
 !else
-cdebug	= -Z7 -WX -Od -GZ
+cdebug	= -Z7 -WX $(DEBUGFLAGS)
 !endif
 
-# declarations common to all compiler options
-cflags = -nologo -c -YX -Fp$(TMP_DIR)^\
+### Declarations common to all compiler options
+cwarn = -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
+cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
 
 !if $(FULLWARNINGS)
 cflags = $(cflags) -W4
 !else
 cflags = $(cflags) -W3
-!endif
-
-!if $(PENT_0F_ERRATA)
-cflags = $(cflags) -QI0f
-!endif
-
-!if $(ITAN_B_ERRATA)
-cflags = $(cflags) -QIA64_Bx
 !endif
 
 !if $(MSVCRT)
@@ -420,10 +413,10 @@ crt = -MT
 !endif
 !endif
 
-BASE_CLFAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
-TK_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
+BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
+TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
 CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
-WISH_CFLAGS	= $(BASE_CLFAGS) $(TK_DEFINES)
+WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
 STUB_CFLAGS     = $(cflags) $(cdebug) $(TK_DEFINES)
 
 
@@ -437,8 +430,8 @@ ldebug	= -debug:full -debugtype:cv
 ldebug	= -release -opt:ref -opt:icf,3
 !endif
 
-# declarations common to all linker options
-lflags	= -nologo -machine:$(MACHINE) $(ldebug)
+### Declarations common to all linker options
+lflags	= -nologo -machine:$(MACHINE) $(LINKERFLAGS) $(ldebug)
 
 !if $(FULLWARNINGS)
 lflags = $(lflags) -warn:3
@@ -449,10 +442,10 @@ lflags	= $(lflags) -profile
 !endif
 
 !if $(ALIGN98_HACK) && !$(STATIC_BUILD)
-# align sections for PE size savings.
+### Align sections for PE size savings.
 lflags	= $(lflags) -opt:nowin98
 !else if !$(ALIGN98_HACK) && $(STATIC_BUILD)
-# align sections for speed in loading by choosing the virtual page size.
+### Align sections for speed in loading by choosing the virtual page size.
 lflags	= $(lflags) -align:4096
 !endif
 
@@ -464,7 +457,7 @@ dlllflags = $(lflags) -dll
 conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
 
-baselibs  = kernel32.lib user32.lib
+baselibs   = kernel32.lib user32.lib
 # Avoid 'unresolved external symbol __security_cookie' errors.
 # c.f. http://support.microsoft.com/?id=894573
 !if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
@@ -478,7 +471,7 @@ guilibs	  = $(baselibs) gdi32.lib
 #---------------------------------------------------------------------
 
 !if "$(TESTPAT)" != ""
-TESTFLAGS   = -file $(TESTPAT)
+TESTFLAGS   = $(TESTFLAGS) -file $(TESTPAT)
 !endif
 
 
@@ -727,6 +720,12 @@ $(TMP_DIR)\tkStubImg.obj : $(GENERICDIR)\tkStubImg.c
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
+!if ![sed "1d" < NUL > NUL]
+        sed -f << $** > $@
+s/@MACHINE@/$(MACHINE:IX86=X86)/
+s/@TK_WIN_VERSION@/$(DOTVERSION).0.0/
+<<
+!else
        $(TCLSH) <<
 set f [open {$(WINDIR:\=/)/wish.exe.manifest.in} r]
 set data [read $$f]
@@ -741,6 +740,7 @@ puts -nonewline $$f $$data
 close $$f
 exit
 <<
+!endif
 
 $(TMP_DIR)\tk.res: \
     $(RCDIR)\buttons.bmp \
