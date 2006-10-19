@@ -1,3 +1,10 @@
+2006-10-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkImgBmap.c: Fixed line endings.
+	* win/makefile.vc:  Patched up build system to manage
+	* win/rules.vc:     AMD64 with MSVC8
+	* win/nmakehlp.c:   Ensure operation without Platform SDK.
+
 2006-10-18  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5a5 TAGGED FOR RELEASE ***
