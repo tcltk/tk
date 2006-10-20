@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.10 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.11 2006/10/20 22:39:57 nijtmans Exp $
  */
 
 
@@ -94,7 +94,7 @@ TkIntXlibStubs *tkIntXlibStubsPtr;
 MODULE_SCOPE CONST char *
 Tk_InitStubs(interp, version, exact)
     Tcl_Interp *interp;
-    char *version;
+    CONST char *version;
     int exact;
 {
     CONST char *actualVersion;
