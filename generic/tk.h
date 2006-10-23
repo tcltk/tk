@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.90 2006/10/23 19:46:13 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.91 2006/10/23 20:31:48 dgp Exp $
  */
 
 #ifndef _TK
@@ -30,7 +30,7 @@ extern "C" {
  * When version numbers change here, you must also go into the following files
  * and update the version numbers:
  *
- * library/tk.tcl	(only if Major.minor changes, not patchlevel)
+ * library/tk.tcl	(2 LOC patch)
  * unix/configure.in	(2 LOC Major, 2 LOC minor, 1 LOC patch)
  * win/configure.in	(as above)
  * README		(sections 0 and 1)
