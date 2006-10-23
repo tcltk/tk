@@ -1,7 +1,8 @@
-2006-10-18  Don Porter  <dgp@users.sourceforge.net>
+2006-10-23  Don Porter  <dgp@users.sourceforge.net>
 
 	* README:		Bump version number to 8.5a6
 	* generic/tk.h:
+	* library/tk.tcl:
 	* unix/configure.in:
 	* unix/tk.spec:
 	* win/configure.in:
