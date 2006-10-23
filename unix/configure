@@ -557,7 +557,7 @@ fi
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL=".14"
+TK_PATCH_LEVEL=".15"
 VERSION=${TK_VERSION}
 LOCALES="cs de el en en_gb eo es es_ES fr it nl pl pt ru"
 
