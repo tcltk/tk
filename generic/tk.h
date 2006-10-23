@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.89 2006/10/20 22:39:57 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.90 2006/10/23 19:46:13 dgp Exp $
  */
 
 #ifndef _TK
@@ -50,10 +50,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	5
 #define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	5
+#define TK_RELEASE_SERIAL	6
 
 #define TK_VERSION		"8.5"
-#define TK_PATCH_LEVEL		"8.5a5"
+#define TK_PATCH_LEVEL		"8.5a6"
 
 #ifndef _TCL
 #   include <tcl.h>
