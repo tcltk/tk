@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.33 2006/09/11 14:41:04 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.34 2006/10/31 22:26:06 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -223,7 +223,7 @@ static MenuItemDrawingUPP tkThemeMenuItemDrawingUPP;
 static Tcl_Obj *useMDEFVar;
 
 MenuRef tkCurrentAppleMenu = NULL;
-			
+
 /*
  * Forward declarations for procedures defined later in this file:
  */
