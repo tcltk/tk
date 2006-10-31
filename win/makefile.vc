@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.96 2006/10/31 14:45:04 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.97 2006/10/31 22:26:19 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -79,25 +79,27 @@ the build instructions.
 #		Any combination of the above may be used (comma separated).
 #		'none' will over-ride everything to nothing.
 #
-#		static  =  Builds a static library of the core instead of a
+#		static   = Builds a static library of the core instead of a
 #			   dll.  The shell will be static (and large), as well.
-#		msvcrt  =  Effects the static option only to switch it from
+#		msvcrt   = Effects the static option only to switch it from
 #			   using libcmt(d) as the C runtime [by default] to
 #			   msvcrt(d). This is useful for static embedding
 #			   support.
-#		staticpkg = Affects the static option only to switch wishXX.exe
+#		staticpkg= Affects the static option only to switch wishXX.exe
 #			   to have the dde and reg extension linked inside it.
-#		threads =  Turns on full multithreading support.
-#		thrdalloc = Use the thread allocator (shared global free pool).
-#		symbols =  Adds symbols for step debugging.
-#		profile =  Adds profiling hooks.  Map file is assumed.
-#		loimpact =  Adds a flag for how NT treats the heap to keep memory
-#			   in use, low.  This is said to impact alloc performance.
-#		unchecked = Allows a symbols build to not use the debug
+#		threads  = Turns on full multithreading support.
+#		thrdalloc= Use the thread allocator (shared global free pool).
+#		symbols  = Adds symbols for step debugging.
+#		profile  = Adds profiling hooks.  Map file is assumed.
+#		loimpact = Adds a flag for how NT treats the heap to keep
+#			   memory in use, low.  This is said to impact alloc
+#			   performance.
+#		unchecked= Allows a symbols build to not use the debug
 #			   enabled runtime (msvcrt.dll not msvcrtd.dll
 #			   or libcmt.lib not libcmtd.lib).
-#               noxp =    If you do not have the uxtheme.h header then you cannot
-#                         include support for XP themeing.
+#               noxp     = If you do not have the uxtheme.h header then you
+#                          cannot include support for XP themeing.
+#		square   = Include the demo square widget.
 #
 #	STATS=memdbg,compdbg,none
 #		Sets optional memory and bytecode compiler debugging code added
@@ -411,7 +413,10 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 		 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 \
 		 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 \
 !if $(HAVE_UXTHEME_H)
-		 -DHAVE_UXTHEME_H=1
+		 -DHAVE_UXTHEME_H=1 \
+!endif
+!if [nmakehlp -f "$(OPTS)" "square"]
+		 -DTTK_SQUARE_WIDGET=1 \
 !endif
 
 TK_DEFINES	=-DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS)
@@ -460,7 +465,8 @@ crt = -MT
 !endif
 !endif
 
-BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
+BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES) \
+                  -DTK_SEND_ENABLED_ON_WINDOWS
 TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
 CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
 WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
@@ -568,6 +574,13 @@ rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 !endif
 	$(TKTEST) $(ROOT)\library\demos\widget
 
+shell: setup $(WISH)
+	set TCL_LIBRARY=$(TCL_LIBRARY)
+	set TK_LIBRARY=$(TK_LIBRARY)
+        $(WISH) <<
+        console show
+<<
+
 setup:
 	@if not exist $(OUT_DIR)\nul mkdir $(OUT_DIR)
 	@if not exist $(TMP_DIR)\nul mkdir $(TMP_DIR)
@@ -586,6 +599,7 @@ $**
 		$(TCLSTUBLIB) @<<
 $**
 <<
+	$(_VC_MANIFEST_EMBED_DLL)
 	-@del $*.exp
 !endif
 
@@ -596,17 +610,23 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
 
 $(WISH): $(WISHOBJS) $(TKIMPLIB)
 	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(_VC_MANIFEST_EMBED_EXE)
+
 
 $(WISHC): $(WISHOBJS) $(TKIMPLIB)
 	$(link32) $(conlflags) -stack:2300000 -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(_VC_MANIFEST_EMBED_EXE)
+
 
 $(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
 	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(TCLIMPLIB) $**
+	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(CON_CFLAGS) -Fo$(TMP_DIR)\ $?
 	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMP_DIR)\cat.obj $(baselibs)
+	$(_VC_MANIFEST_EMBED_EXE)
 
 
 #---------------------------------------------------------------------
