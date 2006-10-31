@@ -124,6 +124,38 @@
 		F966C07508F2820D005CB29B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F966C07408F2820D005CB29B /* CoreFoundation.framework */; };
 		F966C07708F2821B005CB29B /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F966C07608F2821B005CB29B /* Carbon.framework */; };
 		F966C07908F28233005CB29B /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F966C07808F28233005CB29B /* IOKit.framework */; };
+		F96888050AF786D5000797B5 /* ttkBlink.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E10AF786D5000797B5 /* ttkBlink.c */; };
+		F96888060AF786D5000797B5 /* ttkButton.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E20AF786D5000797B5 /* ttkButton.c */; };
+		F96888070AF786D5000797B5 /* ttkCache.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E30AF786D5000797B5 /* ttkCache.c */; };
+		F96888080AF786D5000797B5 /* ttkClamTheme.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E40AF786D5000797B5 /* ttkClamTheme.c */; };
+		F96888090AF786D5000797B5 /* ttkClassicTheme.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E50AF786D5000797B5 /* ttkClassicTheme.c */; };
+		F968880A0AF786D5000797B5 /* ttkDefaultTheme.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E70AF786D5000797B5 /* ttkDefaultTheme.c */; };
+		F968880B0AF786D5000797B5 /* ttkElements.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E80AF786D5000797B5 /* ttkElements.c */; };
+		F968880C0AF786D5000797B5 /* ttkEntry.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887E90AF786D5000797B5 /* ttkEntry.c */; };
+		F968880D0AF786D5000797B5 /* ttkFrame.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887EA0AF786D5000797B5 /* ttkFrame.c */; };
+		F968880E0AF786D5000797B5 /* ttkImage.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887EB0AF786D5000797B5 /* ttkImage.c */; };
+		F968880F0AF786D5000797B5 /* ttkInit.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887EC0AF786D5000797B5 /* ttkInit.c */; };
+		F96888100AF786D5000797B5 /* ttkLabel.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887ED0AF786D5000797B5 /* ttkLabel.c */; };
+		F96888110AF786D5000797B5 /* ttkLayout.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887EE0AF786D5000797B5 /* ttkLayout.c */; };
+		F96888120AF786D5000797B5 /* ttkManager.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887EF0AF786D5000797B5 /* ttkManager.c */; };
+		F96888130AF786D5000797B5 /* ttkNotebook.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F10AF786D5000797B5 /* ttkNotebook.c */; };
+		F96888140AF786D5000797B5 /* ttkPanedwindow.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F20AF786D5000797B5 /* ttkPanedwindow.c */; };
+		F96888150AF786D5000797B5 /* ttkProgress.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F30AF786D5000797B5 /* ttkProgress.c */; };
+		F96888160AF786D5000797B5 /* ttkScale.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F40AF786D5000797B5 /* ttkScale.c */; };
+		F96888170AF786D5000797B5 /* ttkScroll.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F50AF786D5000797B5 /* ttkScroll.c */; };
+		F96888180AF786D5000797B5 /* ttkScrollbar.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F60AF786D5000797B5 /* ttkScrollbar.c */; };
+		F96888190AF786D5000797B5 /* ttkSeparator.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F70AF786D5000797B5 /* ttkSeparator.c */; };
+		F968881A0AF786D5000797B5 /* ttkSquare.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F80AF786D5000797B5 /* ttkSquare.c */; };
+		F968881B0AF786D5000797B5 /* ttkState.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887F90AF786D5000797B5 /* ttkState.c */; };
+		F968881C0AF786D5000797B5 /* ttkStubInit.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887FA0AF786D5000797B5 /* ttkStubInit.c */; };
+		F968881D0AF786D5000797B5 /* ttkStubLib.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887FB0AF786D5000797B5 /* ttkStubLib.c */; };
+		F968881E0AF786D5000797B5 /* ttkTagSet.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887FC0AF786D5000797B5 /* ttkTagSet.c */; };
+		F968881F0AF786D5000797B5 /* ttkTheme.c in Sources */ = {isa = PBXBuildFile; fileRef = F96887FD0AF786D5000797B5 /* ttkTheme.c */; };
+		F96888200AF786D5000797B5 /* ttkTrace.c in Sources */ = {isa = PBXBuildFile; fileRef = F96888000AF786D5000797B5 /* ttkTrace.c */; };
+		F96888210AF786D5000797B5 /* ttkTrack.c in Sources */ = {isa = PBXBuildFile; fileRef = F96888010AF786D5000797B5 /* ttkTrack.c */; };
+		F96888220AF786D5000797B5 /* ttkTreeview.c in Sources */ = {isa = PBXBuildFile; fileRef = F96888020AF786D5000797B5 /* ttkTreeview.c */; };
+		F96888230AF786D5000797B5 /* ttkWidget.c in Sources */ = {isa = PBXBuildFile; fileRef = F96888030AF786D5000797B5 /* ttkWidget.c */; };
+		F96888850AF78938000797B5 /* ttkMacOSXTheme.c in Sources */ = {isa = PBXBuildFile; fileRef = F96888840AF78938000797B5 /* ttkMacOSXTheme.c */; };
 		F96D456F08F272BB004A47F5 /* regcomp.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3ED008F272A7004A47F5 /* regcomp.c */; };
 		F96D457208F272BB004A47F5 /* regerror.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3ED308F272A7004A47F5 /* regerror.c */; };
 		F96D457508F272BB004A47F5 /* regexec.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3ED608F272A7004A47F5 /* regexec.c */; };
@@ -897,6 +929,114 @@
 		F966C07408F2820D005CB29B /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		F966C07608F2821B005CB29B /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		F966C07808F28233005CB29B /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
+		F96887E00AF786D5000797B5 /* ttk.decls */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk.decls; sourceTree = "<group>"; };
+		F96887E10AF786D5000797B5 /* ttkBlink.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkBlink.c; sourceTree = "<group>"; };
+		F96887E20AF786D5000797B5 /* ttkButton.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkButton.c; sourceTree = "<group>"; };
+		F96887E30AF786D5000797B5 /* ttkCache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkCache.c; sourceTree = "<group>"; };
+		F96887E40AF786D5000797B5 /* ttkClamTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkClamTheme.c; sourceTree = "<group>"; };
+		F96887E50AF786D5000797B5 /* ttkClassicTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkClassicTheme.c; sourceTree = "<group>"; };
+		F96887E60AF786D5000797B5 /* ttkDecls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ttkDecls.h; sourceTree = "<group>"; };
+		F96887E70AF786D5000797B5 /* ttkDefaultTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkDefaultTheme.c; sourceTree = "<group>"; };
+		F96887E80AF786D5000797B5 /* ttkElements.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkElements.c; sourceTree = "<group>"; };
+		F96887E90AF786D5000797B5 /* ttkEntry.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkEntry.c; sourceTree = "<group>"; };
+		F96887EA0AF786D5000797B5 /* ttkFrame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkFrame.c; sourceTree = "<group>"; };
+		F96887EB0AF786D5000797B5 /* ttkImage.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkImage.c; sourceTree = "<group>"; };
+		F96887EC0AF786D5000797B5 /* ttkInit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkInit.c; sourceTree = "<group>"; };
+		F96887ED0AF786D5000797B5 /* ttkLabel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkLabel.c; sourceTree = "<group>"; };
+		F96887EE0AF786D5000797B5 /* ttkLayout.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkLayout.c; sourceTree = "<group>"; };
+		F96887EF0AF786D5000797B5 /* ttkManager.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkManager.c; sourceTree = "<group>"; };
+		F96887F00AF786D5000797B5 /* ttkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ttkManager.h; sourceTree = "<group>"; };
+		F96887F10AF786D5000797B5 /* ttkNotebook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkNotebook.c; sourceTree = "<group>"; };
+		F96887F20AF786D5000797B5 /* ttkPanedwindow.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkPanedwindow.c; sourceTree = "<group>"; };
+		F96887F30AF786D5000797B5 /* ttkProgress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkProgress.c; sourceTree = "<group>"; };
+		F96887F40AF786D5000797B5 /* ttkScale.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkScale.c; sourceTree = "<group>"; };
+		F96887F50AF786D5000797B5 /* ttkScroll.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkScroll.c; sourceTree = "<group>"; };
+		F96887F60AF786D5000797B5 /* ttkScrollbar.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkScrollbar.c; sourceTree = "<group>"; };
+		F96887F70AF786D5000797B5 /* ttkSeparator.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkSeparator.c; sourceTree = "<group>"; };
+		F96887F80AF786D5000797B5 /* ttkSquare.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkSquare.c; sourceTree = "<group>"; };
+		F96887F90AF786D5000797B5 /* ttkState.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkState.c; sourceTree = "<group>"; };
+		F96887FA0AF786D5000797B5 /* ttkStubInit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkStubInit.c; sourceTree = "<group>"; };
+		F96887FB0AF786D5000797B5 /* ttkStubLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkStubLib.c; sourceTree = "<group>"; };
+		F96887FC0AF786D5000797B5 /* ttkTagSet.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkTagSet.c; sourceTree = "<group>"; };
+		F96887FD0AF786D5000797B5 /* ttkTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkTheme.c; sourceTree = "<group>"; };
+		F96887FE0AF786D5000797B5 /* ttkTheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ttkTheme.h; sourceTree = "<group>"; };
+		F96887FF0AF786D5000797B5 /* ttkThemeInt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ttkThemeInt.h; sourceTree = "<group>"; };
+		F96888000AF786D5000797B5 /* ttkTrace.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkTrace.c; sourceTree = "<group>"; };
+		F96888010AF786D5000797B5 /* ttkTrack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkTrack.c; sourceTree = "<group>"; };
+		F96888020AF786D5000797B5 /* ttkTreeview.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkTreeview.c; sourceTree = "<group>"; };
+		F96888030AF786D5000797B5 /* ttkWidget.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkWidget.c; sourceTree = "<group>"; };
+		F96888040AF786D5000797B5 /* ttkWidget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ttkWidget.h; sourceTree = "<group>"; };
+		F96888370AF787B3000797B5 /* altTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = altTheme.tcl; sourceTree = "<group>"; };
+		F96888380AF787B3000797B5 /* aquaTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = aquaTheme.tcl; sourceTree = "<group>"; };
+		F96888390AF787B3000797B5 /* button.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = button.tcl; sourceTree = "<group>"; };
+		F968883A0AF787B3000797B5 /* clamTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = clamTheme.tcl; sourceTree = "<group>"; };
+		F968883B0AF787B3000797B5 /* classicTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = classicTheme.tcl; sourceTree = "<group>"; };
+		F968883C0AF787B3000797B5 /* combobox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = combobox.tcl; sourceTree = "<group>"; };
+		F968883D0AF787B3000797B5 /* cursors.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = cursors.tcl; sourceTree = "<group>"; };
+		F968883E0AF787B3000797B5 /* defaults.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = defaults.tcl; sourceTree = "<group>"; };
+		F968883F0AF787B3000797B5 /* dialog.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = dialog.tcl; sourceTree = "<group>"; };
+		F96888400AF787B3000797B5 /* entry.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = entry.tcl; sourceTree = "<group>"; };
+		F96888410AF787B3000797B5 /* fonts.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = fonts.tcl; sourceTree = "<group>"; };
+		F96888420AF787B3000797B5 /* icons.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = icons.tcl; sourceTree = "<group>"; };
+		F96888430AF787B3000797B5 /* keynav.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = keynav.tcl; sourceTree = "<group>"; };
+		F96888440AF787B3000797B5 /* menubutton.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = menubutton.tcl; sourceTree = "<group>"; };
+		F96888450AF787B3000797B5 /* notebook.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = notebook.tcl; sourceTree = "<group>"; };
+		F96888460AF787B3000797B5 /* panedwindow.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = panedwindow.tcl; sourceTree = "<group>"; };
+		F96888470AF787B3000797B5 /* progress.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = progress.tcl; sourceTree = "<group>"; };
+		F96888480AF787B3000797B5 /* scale.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = scale.tcl; sourceTree = "<group>"; };
+		F96888490AF787B3000797B5 /* scrollbar.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = scrollbar.tcl; sourceTree = "<group>"; };
+		F968884A0AF787B3000797B5 /* sizegrip.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = sizegrip.tcl; sourceTree = "<group>"; };
+		F968884B0AF787B3000797B5 /* treeview.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = treeview.tcl; sourceTree = "<group>"; };
+		F968884C0AF787B3000797B5 /* ttk.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk.tcl; sourceTree = "<group>"; };
+		F968884D0AF787B3000797B5 /* utils.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = utils.tcl; sourceTree = "<group>"; };
+		F968884E0AF787B3000797B5 /* winTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = winTheme.tcl; sourceTree = "<group>"; };
+		F968884F0AF787B3000797B5 /* xpTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = xpTheme.tcl; sourceTree = "<group>"; };
+		F96888540AF7880C000797B5 /* all.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = all.tcl; sourceTree = "<group>"; };
+		F96888550AF7880C000797B5 /* bwidget.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = bwidget.test; sourceTree = "<group>"; };
+		F96888560AF7880C000797B5 /* combobox.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = combobox.test; sourceTree = "<group>"; };
+		F96888570AF7880C000797B5 /* entry.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = entry.test; sourceTree = "<group>"; };
+		F96888580AF7880C000797B5 /* image.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = image.test; sourceTree = "<group>"; };
+		F96888590AF7880C000797B5 /* labelframe.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = labelframe.test; sourceTree = "<group>"; };
+		F968885A0AF7880C000797B5 /* layout.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = layout.test; sourceTree = "<group>"; };
+		F968885B0AF7880C000797B5 /* misc.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = misc.test; sourceTree = "<group>"; };
+		F968885C0AF7880C000797B5 /* notebook.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = notebook.test; sourceTree = "<group>"; };
+		F968885D0AF7880C000797B5 /* panedwindow.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = panedwindow.test; sourceTree = "<group>"; };
+		F968885E0AF7880C000797B5 /* progressbar.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = progressbar.test; sourceTree = "<group>"; };
+		F968885F0AF7880C000797B5 /* scrollbar.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = scrollbar.test; sourceTree = "<group>"; };
+		F96888600AF7880C000797B5 /* treetags.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = treetags.test; sourceTree = "<group>"; };
+		F96888610AF7880C000797B5 /* treeview.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = treeview.test; sourceTree = "<group>"; };
+		F96888620AF7880C000797B5 /* ttk.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk.test; sourceTree = "<group>"; };
+		F96888630AF7880C000797B5 /* validate.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = validate.test; sourceTree = "<group>"; };
+		F96888660AF788A6000797B5 /* ttk_demo.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk_demo.tcl; sourceTree = "<group>"; };
+		F96888670AF788A6000797B5 /* ttk_iconlib.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk_iconlib.tcl; sourceTree = "<group>"; };
+		F96888680AF788A6000797B5 /* ttk_repeater.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk_repeater.tcl; sourceTree = "<group>"; };
+		F968886B0AF788F6000797B5 /* ttk_button.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_button.n; sourceTree = "<group>"; };
+		F968886C0AF788F6000797B5 /* ttk_checkbutton.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_checkbutton.n; sourceTree = "<group>"; };
+		F968886D0AF788F6000797B5 /* ttk_combobox.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_combobox.n; sourceTree = "<group>"; };
+		F968886E0AF788F6000797B5 /* ttk_dialog.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_dialog.n; sourceTree = "<group>"; };
+		F968886F0AF788F6000797B5 /* ttk_entry.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_entry.n; sourceTree = "<group>"; };
+		F96888700AF788F6000797B5 /* ttk_frame.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_frame.n; sourceTree = "<group>"; };
+		F96888710AF788F6000797B5 /* ttk_Geometry.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_Geometry.3; sourceTree = "<group>"; };
+		F96888720AF788F6000797B5 /* ttk_image.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_image.n; sourceTree = "<group>"; };
+		F96888730AF788F6000797B5 /* ttk_intro.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_intro.n; sourceTree = "<group>"; };
+		F96888740AF788F6000797B5 /* ttk_label.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_label.n; sourceTree = "<group>"; };
+		F96888750AF788F6000797B5 /* ttk_labelframe.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_labelframe.n; sourceTree = "<group>"; };
+		F96888760AF788F6000797B5 /* ttk_menubutton.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_menubutton.n; sourceTree = "<group>"; };
+		F96888770AF788F6000797B5 /* ttk_notebook.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_notebook.n; sourceTree = "<group>"; };
+		F96888780AF788F6000797B5 /* ttk_panedwindow.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_panedwindow.n; sourceTree = "<group>"; };
+		F96888790AF788F6000797B5 /* ttk_progressbar.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_progressbar.n; sourceTree = "<group>"; };
+		F968887A0AF788F6000797B5 /* ttk_radiobutton.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_radiobutton.n; sourceTree = "<group>"; };
+		F968887B0AF788F6000797B5 /* ttk_scrollbar.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_scrollbar.n; sourceTree = "<group>"; };
+		F968887C0AF788F6000797B5 /* ttk_separator.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_separator.n; sourceTree = "<group>"; };
+		F968887D0AF788F6000797B5 /* ttk_sizegrip.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_sizegrip.n; sourceTree = "<group>"; };
+		F968887E0AF788F6000797B5 /* ttk_style.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_style.n; sourceTree = "<group>"; };
+		F968887F0AF788F6000797B5 /* ttk_Theme.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_Theme.3; sourceTree = "<group>"; };
+		F96888800AF788F6000797B5 /* ttk_treeview.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_treeview.n; sourceTree = "<group>"; };
+		F96888810AF788F6000797B5 /* ttk_widget.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_widget.n; sourceTree = "<group>"; };
+		F96888840AF78938000797B5 /* ttkMacOSXTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkMacOSXTheme.c; sourceTree = "<group>"; };
+		F96888860AF78953000797B5 /* ttkWinMonitor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkWinMonitor.c; sourceTree = "<group>"; };
+		F96888870AF78953000797B5 /* ttkWinTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkWinTheme.c; sourceTree = "<group>"; };
+		F96888880AF78953000797B5 /* ttkWinXPTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkWinXPTheme.c; sourceTree = "<group>"; };
 		F96D3DFA08F272A4004A47F5 /* ChangeLog */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = ChangeLog; sourceTree = "<group>"; };
 		F96D3DFB08F272A4004A47F5 /* changes */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = changes; sourceTree = "<group>"; };
 		F96D3DFD08F272A4004A47F5 /* Access.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = Access.3; sourceTree = "<group>"; };
@@ -1825,6 +1965,29 @@
 				F966BA9E08F27A38005CB29B /* tkvars.n */,
 				F966BA9F08F27A38005CB29B /* tkwait.n */,
 				F966BAA008F27A38005CB29B /* toplevel.n */,
+				F968886B0AF788F6000797B5 /* ttk_button.n */,
+				F968886C0AF788F6000797B5 /* ttk_checkbutton.n */,
+				F968886D0AF788F6000797B5 /* ttk_combobox.n */,
+				F968886E0AF788F6000797B5 /* ttk_dialog.n */,
+				F968886F0AF788F6000797B5 /* ttk_entry.n */,
+				F96888700AF788F6000797B5 /* ttk_frame.n */,
+				F96888710AF788F6000797B5 /* ttk_Geometry.3 */,
+				F96888720AF788F6000797B5 /* ttk_image.n */,
+				F96888730AF788F6000797B5 /* ttk_intro.n */,
+				F96888740AF788F6000797B5 /* ttk_label.n */,
+				F96888750AF788F6000797B5 /* ttk_labelframe.n */,
+				F96888760AF788F6000797B5 /* ttk_menubutton.n */,
+				F96888770AF788F6000797B5 /* ttk_notebook.n */,
+				F96888780AF788F6000797B5 /* ttk_panedwindow.n */,
+				F96888790AF788F6000797B5 /* ttk_progressbar.n */,
+				F968887A0AF788F6000797B5 /* ttk_radiobutton.n */,
+				F968887B0AF788F6000797B5 /* ttk_scrollbar.n */,
+				F968887C0AF788F6000797B5 /* ttk_separator.n */,
+				F968887D0AF788F6000797B5 /* ttk_sizegrip.n */,
+				F968887E0AF788F6000797B5 /* ttk_style.n */,
+				F968887F0AF788F6000797B5 /* ttk_Theme.3 */,
+				F96888800AF788F6000797B5 /* ttk_treeview.n */,
+				F96888810AF788F6000797B5 /* ttk_widget.n */,
 				F966BAA108F27A38005CB29B /* WindowId.3 */,
 				F966BAA208F27A38005CB29B /* winfo.n */,
 				F966BAA308F27A38005CB29B /* wish.1 */,
@@ -1942,6 +2105,7 @@
 				F966BB1008F27A39005CB29B /* tkUtil.c */,
 				F966BB1108F27A39005CB29B /* tkVisual.c */,
 				F966BB1208F27A39005CB29B /* tkWindow.c */,
+				F96887DF0AF786D5000797B5 /* ttk */,
 			);
 			path = generic;
 			sourceTree = "<group>";
@@ -1977,6 +2141,7 @@
 				F966BB9108F27A3B005CB29B /* text.tcl */,
 				F966BB9208F27A3B005CB29B /* tk.tcl */,
 				F966BB9308F27A3B005CB29B /* tkfbox.tcl */,
+				F96888360AF787B3000797B5 /* ttk */,
 				F966BB9408F27A3B005CB29B /* unsupported.tcl */,
 				F966BB9508F27A3B005CB29B /* xmfbox.tcl */,
 			);
@@ -2039,6 +2204,9 @@
 				F966BB5B08F27A3A005CB29B /* tcolor */,
 				F966BB5C08F27A3A005CB29B /* text.tcl */,
 				F966BB5D08F27A3A005CB29B /* timer */,
+				F96888660AF788A6000797B5 /* ttk_demo.tcl */,
+				F96888670AF788A6000797B5 /* ttk_iconlib.tcl */,
+				F96888680AF788A6000797B5 /* ttk_repeater.tcl */,
 				F966BB5E08F27A3A005CB29B /* twind.tcl */,
 				F966BB5F08F27A3A005CB29B /* unicodeout.tcl */,
 				F966BB6008F27A3A005CB29B /* vscale.tcl */,
@@ -2099,6 +2267,7 @@
 				F966BBF308F27A3C005CB29B /* tkMacOSXWm.h */,
 				F966BBF408F27A3C005CB29B /* tkMacOSXXCursors.r */,
 				F966BBF508F27A3C005CB29B /* tkMacOSXXStubs.c */,
+				F96888840AF78938000797B5 /* ttkMacOSXTheme.c */,
 				F966BBF708F27A3C005CB29B /* Wish-Info.plist.in */,
 				F966BBF808F27A3C005CB29B /* Wish.icns */,
 			);
@@ -2190,6 +2359,7 @@
 				F966BC5408F27A3D005CB29B /* textTag.test */,
 				F966BC5508F27A3D005CB29B /* textWind.test */,
 				F966BC5608F27A3D005CB29B /* tk.test */,
+				F96888530AF7880C000797B5 /* ttk */,
 				F966BC5708F27A3D005CB29B /* unixButton.test */,
 				F966BC5808F27A3D005CB29B /* unixEmbed.test */,
 				F966BC5908F27A3D005CB29B /* unixFont.test */,
@@ -2308,6 +2478,9 @@
 				F966BD1508F27A3F005CB29B /* tkWinWindow.c */,
 				F966BD1608F27A3F005CB29B /* tkWinWm.c */,
 				F966BD1708F27A3F005CB29B /* tkWinX.c */,
+				F96888860AF78953000797B5 /* ttkWinMonitor.c */,
+				F96888870AF78953000797B5 /* ttkWinTheme.c */,
+				F96888880AF78953000797B5 /* ttkWinXPTheme.c */,
 				F966BD1808F27A3F005CB29B /* winMain.c */,
 			);
 			path = win;
@@ -2361,6 +2534,105 @@
 				F966C07808F28233005CB29B /* IOKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F96887DF0AF786D5000797B5 /* ttk */ = {
+			isa = PBXGroup;
+			children = (
+				F96887E00AF786D5000797B5 /* ttk.decls */,
+				F96887E10AF786D5000797B5 /* ttkBlink.c */,
+				F96887E20AF786D5000797B5 /* ttkButton.c */,
+				F96887E30AF786D5000797B5 /* ttkCache.c */,
+				F96887E40AF786D5000797B5 /* ttkClamTheme.c */,
+				F96887E50AF786D5000797B5 /* ttkClassicTheme.c */,
+				F96887E60AF786D5000797B5 /* ttkDecls.h */,
+				F96887E70AF786D5000797B5 /* ttkDefaultTheme.c */,
+				F96887E80AF786D5000797B5 /* ttkElements.c */,
+				F96887E90AF786D5000797B5 /* ttkEntry.c */,
+				F96887EA0AF786D5000797B5 /* ttkFrame.c */,
+				F96887EB0AF786D5000797B5 /* ttkImage.c */,
+				F96887EC0AF786D5000797B5 /* ttkInit.c */,
+				F96887ED0AF786D5000797B5 /* ttkLabel.c */,
+				F96887EE0AF786D5000797B5 /* ttkLayout.c */,
+				F96887EF0AF786D5000797B5 /* ttkManager.c */,
+				F96887F00AF786D5000797B5 /* ttkManager.h */,
+				F96887F10AF786D5000797B5 /* ttkNotebook.c */,
+				F96887F20AF786D5000797B5 /* ttkPanedwindow.c */,
+				F96887F30AF786D5000797B5 /* ttkProgress.c */,
+				F96887F40AF786D5000797B5 /* ttkScale.c */,
+				F96887F50AF786D5000797B5 /* ttkScroll.c */,
+				F96887F60AF786D5000797B5 /* ttkScrollbar.c */,
+				F96887F70AF786D5000797B5 /* ttkSeparator.c */,
+				F96887F80AF786D5000797B5 /* ttkSquare.c */,
+				F96887F90AF786D5000797B5 /* ttkState.c */,
+				F96887FA0AF786D5000797B5 /* ttkStubInit.c */,
+				F96887FB0AF786D5000797B5 /* ttkStubLib.c */,
+				F96887FC0AF786D5000797B5 /* ttkTagSet.c */,
+				F96887FD0AF786D5000797B5 /* ttkTheme.c */,
+				F96887FE0AF786D5000797B5 /* ttkTheme.h */,
+				F96887FF0AF786D5000797B5 /* ttkThemeInt.h */,
+				F96888000AF786D5000797B5 /* ttkTrace.c */,
+				F96888010AF786D5000797B5 /* ttkTrack.c */,
+				F96888020AF786D5000797B5 /* ttkTreeview.c */,
+				F96888030AF786D5000797B5 /* ttkWidget.c */,
+				F96888040AF786D5000797B5 /* ttkWidget.h */,
+			);
+			path = ttk;
+			sourceTree = "<group>";
+		};
+		F96888360AF787B3000797B5 /* ttk */ = {
+			isa = PBXGroup;
+			children = (
+				F96888370AF787B3000797B5 /* altTheme.tcl */,
+				F96888380AF787B3000797B5 /* aquaTheme.tcl */,
+				F96888390AF787B3000797B5 /* button.tcl */,
+				F968883A0AF787B3000797B5 /* clamTheme.tcl */,
+				F968883B0AF787B3000797B5 /* classicTheme.tcl */,
+				F968883C0AF787B3000797B5 /* combobox.tcl */,
+				F968883D0AF787B3000797B5 /* cursors.tcl */,
+				F968883E0AF787B3000797B5 /* defaults.tcl */,
+				F968883F0AF787B3000797B5 /* dialog.tcl */,
+				F96888400AF787B3000797B5 /* entry.tcl */,
+				F96888410AF787B3000797B5 /* fonts.tcl */,
+				F96888420AF787B3000797B5 /* icons.tcl */,
+				F96888430AF787B3000797B5 /* keynav.tcl */,
+				F96888440AF787B3000797B5 /* menubutton.tcl */,
+				F96888450AF787B3000797B5 /* notebook.tcl */,
+				F96888460AF787B3000797B5 /* panedwindow.tcl */,
+				F96888470AF787B3000797B5 /* progress.tcl */,
+				F96888480AF787B3000797B5 /* scale.tcl */,
+				F96888490AF787B3000797B5 /* scrollbar.tcl */,
+				F968884A0AF787B3000797B5 /* sizegrip.tcl */,
+				F968884B0AF787B3000797B5 /* treeview.tcl */,
+				F968884C0AF787B3000797B5 /* ttk.tcl */,
+				F968884D0AF787B3000797B5 /* utils.tcl */,
+				F968884E0AF787B3000797B5 /* winTheme.tcl */,
+				F968884F0AF787B3000797B5 /* xpTheme.tcl */,
+			);
+			path = ttk;
+			sourceTree = "<group>";
+		};
+		F96888530AF7880C000797B5 /* ttk */ = {
+			isa = PBXGroup;
+			children = (
+				F96888540AF7880C000797B5 /* all.tcl */,
+				F96888550AF7880C000797B5 /* bwidget.test */,
+				F96888560AF7880C000797B5 /* combobox.test */,
+				F96888570AF7880C000797B5 /* entry.test */,
+				F96888580AF7880C000797B5 /* image.test */,
+				F96888590AF7880C000797B5 /* labelframe.test */,
+				F968885A0AF7880C000797B5 /* layout.test */,
+				F968885B0AF7880C000797B5 /* misc.test */,
+				F968885C0AF7880C000797B5 /* notebook.test */,
+				F968885D0AF7880C000797B5 /* panedwindow.test */,
+				F968885E0AF7880C000797B5 /* progressbar.test */,
+				F968885F0AF7880C000797B5 /* scrollbar.test */,
+				F96888600AF7880C000797B5 /* treetags.test */,
+				F96888610AF7880C000797B5 /* treeview.test */,
+				F96888620AF7880C000797B5 /* ttk.test */,
+				F96888630AF7880C000797B5 /* validate.test */,
+			);
+			path = ttk;
 			sourceTree = "<group>";
 		};
 		F96D3DF608F27169004A47F5 /* Tcl Sources */ = {
@@ -3653,6 +3925,38 @@
 				F966C02C08F27A42005CB29B /* xgc.c in Sources */,
 				F966C02D08F27A42005CB29B /* ximage.c in Sources */,
 				F966C02E08F27A42005CB29B /* xutil.c in Sources */,
+				F96888050AF786D5000797B5 /* ttkBlink.c in Sources */,
+				F96888060AF786D5000797B5 /* ttkButton.c in Sources */,
+				F96888070AF786D5000797B5 /* ttkCache.c in Sources */,
+				F96888080AF786D5000797B5 /* ttkClamTheme.c in Sources */,
+				F96888090AF786D5000797B5 /* ttkClassicTheme.c in Sources */,
+				F968880A0AF786D5000797B5 /* ttkDefaultTheme.c in Sources */,
+				F968880B0AF786D5000797B5 /* ttkElements.c in Sources */,
+				F968880C0AF786D5000797B5 /* ttkEntry.c in Sources */,
+				F968880D0AF786D5000797B5 /* ttkFrame.c in Sources */,
+				F968880E0AF786D5000797B5 /* ttkImage.c in Sources */,
+				F968880F0AF786D5000797B5 /* ttkInit.c in Sources */,
+				F96888100AF786D5000797B5 /* ttkLabel.c in Sources */,
+				F96888110AF786D5000797B5 /* ttkLayout.c in Sources */,
+				F96888120AF786D5000797B5 /* ttkManager.c in Sources */,
+				F96888130AF786D5000797B5 /* ttkNotebook.c in Sources */,
+				F96888140AF786D5000797B5 /* ttkPanedwindow.c in Sources */,
+				F96888150AF786D5000797B5 /* ttkProgress.c in Sources */,
+				F96888160AF786D5000797B5 /* ttkScale.c in Sources */,
+				F96888170AF786D5000797B5 /* ttkScroll.c in Sources */,
+				F96888180AF786D5000797B5 /* ttkScrollbar.c in Sources */,
+				F96888190AF786D5000797B5 /* ttkSeparator.c in Sources */,
+				F968881A0AF786D5000797B5 /* ttkSquare.c in Sources */,
+				F968881B0AF786D5000797B5 /* ttkState.c in Sources */,
+				F968881C0AF786D5000797B5 /* ttkStubInit.c in Sources */,
+				F968881D0AF786D5000797B5 /* ttkStubLib.c in Sources */,
+				F968881E0AF786D5000797B5 /* ttkTagSet.c in Sources */,
+				F968881F0AF786D5000797B5 /* ttkTheme.c in Sources */,
+				F96888200AF786D5000797B5 /* ttkTrace.c in Sources */,
+				F96888210AF786D5000797B5 /* ttkTrack.c in Sources */,
+				F96888220AF786D5000797B5 /* ttkTreeview.c in Sources */,
+				F96888230AF786D5000797B5 /* ttkWidget.c in Sources */,
+				F96888850AF78938000797B5 /* ttkMacOSXTheme.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3707,6 +4011,7 @@
 				);
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
+					"${TK_SRCROOT}/generic",
 					"${TK_SRCROOT}/xlib",
 					"${DERIVED_FILE_DIR}/tcl",
 					"${DERIVED_FILE_DIR}/tk",
@@ -3844,6 +4149,7 @@
 				);
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
+					"${TK_SRCROOT}/generic",
 					"${TK_SRCROOT}/xlib",
 					"${DERIVED_FILE_DIR}/tcl",
 					"${DERIVED_FILE_DIR}/tk",
@@ -3916,6 +4222,7 @@
 				);
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
+					"${TK_SRCROOT}/generic",
 					"${TK_SRCROOT}/xlib",
 					"${DERIVED_FILE_DIR}/tcl",
 					"${DERIVED_FILE_DIR}/tk",
@@ -3988,6 +4295,7 @@
 				);
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
+					"${TK_SRCROOT}/generic",
 					"${TK_SRCROOT}/xlib",
 					"${DERIVED_FILE_DIR}/tcl",
 					"${DERIVED_FILE_DIR}/tk",

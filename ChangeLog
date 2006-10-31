@@ -1,3 +1,14 @@
+2006-10-31  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new Ttk files.
+
+	* macosx/ttkMacOSXTheme.c: standardize header #includes.
+
+	* unix/Makefile (checkstubs, checkexports): check ttk.decls, allow
+	export of Ttk prefixed symbols.
+
+	* generic/ttk/tkDefaultTheme.c: fix warnings.
+
 2006-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/ttk_Geometry.3, doc/ttk_Theme.3, doc/ttk_button.n:
