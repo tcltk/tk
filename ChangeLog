@@ -1,7 +1,7 @@
 2006-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/makefile.vc: Added ttk files to msvc build.
-	* win/rules.vc:
+	* win/makefile.vc: Added ttk files to msvc build and add manifest
+	* win/rules.vc:    files to binaries with MSVC8.
 
 2006-10-31  Daniel Steffen  <das@users.sourceforge.net>
 
