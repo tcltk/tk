@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.12 2006/07/24 04:45:26 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.13 2006/10/31 22:33:38 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -895,8 +895,8 @@ TkMacOSXUpdateClipRgn(
 		    TkMacOSXUpdateClipRgn(contWinPtr);
 		    SectRgn(rgn, 
 			    contWinPtr->privatePtr->aboveClipRgn, rgn);
-		} else if (gMacEmbedHandler != NULL) {
-		    gMacEmbedHandler->getClipProc((Tk_Window) winPtr, tmpRgn);
+		} else if (tkMacOSXEmbedHandler != NULL) {
+		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr, tmpRgn);
 		    SectRgn(rgn, tmpRgn, rgn);
 		}
 
@@ -1126,8 +1126,8 @@ TkMacOSXGetDrawablePort(
     	if (contWinPtr != NULL) {
     	    resultPort = TkMacOSXGetDrawablePort(
 		(Drawable) contWinPtr->privatePtr);
-    	} else if (gMacEmbedHandler != NULL) {
-	    resultPort = gMacEmbedHandler->getPortProc(
+    	} else if (tkMacOSXEmbedHandler != NULL) {
+	    resultPort = tkMacOSXEmbedHandler->getPortProc(
                     (Tk_Window) macWin->winPtr);
     	} 
 	
@@ -1191,7 +1191,7 @@ TkMacOSXGetRootControl(
         if (contWinPtr != NULL) {
             result = TkMacOSXGetRootControl(
                 (Drawable) contWinPtr->privatePtr);
-        } else if (gMacEmbedHandler != NULL) {
+        } else if (tkMacOSXEmbedHandler != NULL) {
             result = NULL;
         }
    }

@@ -1,3 +1,14 @@
+2006-11-01  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDebug.c: add TkMacOSX prefix to leftover macosx-private
+	* macosx/tkMacOSXDebug.h: global symbols without Tk prefix; ifdef out
+	* macosx/tkMacOSXEmbed.c: currently unused debug procs.
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXCarbonEvents.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWm.c:
+
 2006-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* rules.vc: Fix bug #1582769 build with VC2003 and correct i386 arch.
