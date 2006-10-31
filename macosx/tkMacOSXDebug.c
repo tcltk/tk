@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.9 2006/07/20 06:24:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.10 2006/10/31 22:33:34 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -219,7 +219,6 @@ static MyEventName controlEventNames [] = {
  { 0, NULL }
 };
 
-
 static MyEventName commandEventNames [] = {
  { kEventCommandProcess, "Process" },
  { kEventCommandUpdateStatus, "UpdateStatus" },
@@ -237,7 +236,7 @@ static MyEventNameList eventNameList [] = {
  { 0, NULL}
 };
 
-
+#ifdef TK_MACOSXDEBUG_UNUSED
 static MyEventName classicEventNames [] = {
  { nullEvent,"nullEvent" },
  { mouseDown,"mouseDown" },
@@ -252,9 +251,10 @@ static MyEventName classicEventNames [] = {
  { kHighLevelEvent,"kHighLevelEvent" },
  { 0, NULL }
 };
+#endif /* TK_MACOSXDEBUG_UNUSED */
 
 MODULE_SCOPE char * 
-CarbonEventToAscii(EventRef eventRef, char * buf)
+TkMacOSXCarbonEventToAscii(EventRef eventRef, char * buf)
 {     
     EventClass eventClass;
     EventKind  eventKind;
@@ -297,8 +297,9 @@ CarbonEventToAscii(EventRef eventRef, char * buf)
     return iBuf;
 }
 
+#ifdef TK_MACOSXDEBUG_UNUSED
 MODULE_SCOPE char *
-CarbonEventKindToAscii(EventRef eventRef, char * buf )
+TkMacOSXCarbonEventKindToAscii(EventRef eventRef, char * buf )
 {     
    EventClass eventClass;
    EventKind  eventKind;
@@ -334,7 +335,7 @@ CarbonEventKindToAscii(EventRef eventRef, char * buf )
 }
 
 MODULE_SCOPE char *
-ClassicEventToAscii(EventRecord * eventPtr, char * buf )
+TkMacOSXClassicEventToAscii(EventRecord * eventPtr, char * buf )
 {
     MyEventName     * names = NULL;
     int found = 0;
@@ -364,14 +365,14 @@ ClassicEventToAscii(EventRecord * eventPtr, char * buf )
 }
 
 MODULE_SCOPE void
-printPoint(char * tag, Point * p )
+TkMacOSXPrintPoint(char * tag, Point * p )
 {
     fprintf(stderr,"%s %4d %4d\n",
         tag,p->h,p->v );
 }
 
 MODULE_SCOPE void
-printRect(char * tag, Rect * r )
+TkMacOSXPrintRect(char * tag, Rect * r )
 {
     fprintf(stderr,"%s %4d %4d %4d %4d (%dx%d)\n",
         tag, r->left, r->top, r->right, r->bottom,
@@ -379,15 +380,15 @@ printRect(char * tag, Rect * r )
 }
 
 MODULE_SCOPE void
-printRegion(char * tag, RgnHandle rgn )
+TkMacOSXPrintRegion(char * tag, RgnHandle rgn )
 {
     Rect r;
     GetRegionBounds(rgn,&r);
-    printRect(tag,&r);
+    TkMacOSXPrintRect(tag,&r);
 }
 
 MODULE_SCOPE void
-printWindowTitle(char * tag, WindowRef window )
+TkMacOSXPrintWindowTitle(char * tag, WindowRef window )
 {
     Str255 title;
     GetWTitle(window,title);
@@ -443,7 +444,7 @@ static MsgName trackingNames [] = {
 };
 
 MODULE_SCOPE char *
-MouseTrackingResultToAscii(MouseTrackingResult r, char * buf) 
+TkMacOSXMouseTrackingResultToAscii(MouseTrackingResult r, char * buf) 
 {
     MsgName * namePtr;
     for (namePtr = trackingNames; namePtr->name; namePtr++) {
@@ -455,6 +456,7 @@ MouseTrackingResultToAscii(MouseTrackingResult r, char * buf)
     sprintf(buf, "Unknown mouse tracking result : %d", r);
     return buf;
 }
+#endif /* TK_MACOSXDEBUG_UNUSED */
 
 /*
  *----------------------------------------------------------------------

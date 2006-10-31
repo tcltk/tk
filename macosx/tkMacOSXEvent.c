@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.11 2006/05/12 18:17:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.12 2006/10/31 22:33:34 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -99,7 +99,7 @@ TkMacOSXProcessEvent(TkMacOSXEvent * eventPtr, MacEventStatus * statusPtr)
                 char buf [256];
                 fprintf(stderr,
                     "Unrecognised event : %s\n",
-                    CarbonEventToAscii(eventPtr->eventRef, buf));
+                    TkMacOSXCarbonEventToAscii(eventPtr->eventRef, buf));
             }
 #endif
             break;
@@ -282,7 +282,7 @@ TkMacOSXReceiveAndProcessEvent()
             char buf [256];
             fprintf(stderr,
                     "RCNE SendEventToEventTarget (%s) failed, %d\n",
-                    CarbonEventToAscii(eventRef, buf), (int)err);
+                    TkMacOSXCarbonEventToAscii(eventRef, buf), (int)err);
         }
 #endif
         ReleaseEvent(eventRef);

@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.8 2006/04/28 06:02:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.9 2006/10/31 22:33:34 das Exp $
  */
 
 #ifndef _TKMACDEBUG
@@ -65,17 +65,21 @@
 
 #ifdef TK_MAC_DEBUG
 
-MODULE_SCOPE char * CarbonEventToAscii(EventRef eventRef, char * buf );
-MODULE_SCOPE char * ClassicEventToAscii(EventRecord * eventPtr, char * buf );
+MODULE_SCOPE char* TkMacOSXCarbonEventToAscii(EventRef eventRef, char * buf );
 
-MODULE_SCOPE void printRect(char * tag, Rect * r );
-MODULE_SCOPE void printPoint(char * tag, Point * p );
+#ifdef TK_MACOSXDEBUG_UNUSED
+MODULE_SCOPE char* TkMacOSXCarbonEventKindToAscii(EventRef eventRef, char * buf );
+MODULE_SCOPE char* TkMacOSXClassicEventToAscii(EventRecord * eventPtr, char * buf );
 
-MODULE_SCOPE void printRegion(char * tag, RgnHandle rgn );
-MODULE_SCOPE void printWindowTitle(char * tag, WindowRef window );
-MODULE_SCOPE char * TkMacOSXMenuMessageToAscii(int msg, char * s);
+MODULE_SCOPE void TkMacOSXPrintRect(char * tag, Rect * r );
+MODULE_SCOPE void TkMacOSXPrintPoint(char * tag, Point * p );
 
-MODULE_SCOPE char * MouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
+MODULE_SCOPE void TkMacOSXPrintRegion(char * tag, RgnHandle rgn );
+MODULE_SCOPE void TkMacOSXPrintWindowTitle(char * tag, WindowRef window );
+MODULE_SCOPE char* TkMacOSXMenuMessageToAscii(int msg, char * s);
+
+MODULE_SCOPE char* TkMacOSXMouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
+#endif
 
 MODULE_SCOPE void* TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol);
 
@@ -86,6 +90,6 @@ MODULE_SCOPE void* TkMacOSXGetNamedDebugSymbol(const char* module, const char* s
         symbol = TkMacOSXGetNamedDebugSymbol(STRINGIFY(module), STRINGIFY(_##symbol));\
     }
 
-#endif
+#endif /* TK_MAC_DEBUG */
 
 #endif
