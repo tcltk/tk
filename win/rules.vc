@@ -11,7 +11,7 @@
 # Copyright (c) 2003-2006 Patrick Thoyts
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.5.2.7 2006/10/18 08:56:21 patthoyts Exp $
+# RCS: @(#) $Id: rules.vc,v 1.5.2.8 2006/10/31 15:18:28 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -31,7 +31,7 @@ _INSTALLDIR	= $(INSTALLDIR:/=\)
 !endif
 
 !ifndef MACHINE
-!if "$(CPU)" == ""
+!if "$(CPU)" == "" || "$(CPU)" == "i386"
 MACHINE		= IX86
 !else
 MACHINE         = $(CPU)
@@ -131,8 +131,11 @@ DEBUGFLAGS     = $(DEBUGFLAGS) -GZ
 
 COMPILERFLAGS  =-W3
 
+# In v13 -GL and -YX are incompatible.
 !if [nmakehlp -c -YX]
+!if ![nmakehlp -c -GL]
 OPTIMIZATIONS  = $(OPTIMIZATIONS) -YX
+!endif
 !endif
 
 !if "$(MACHINE)" == "IX86"
@@ -497,7 +500,7 @@ TCLTOOLSDIR	= $(_TCLDIR)\tools
 !message *** Output directory will be '$(OUT_DIR)'
 !message *** Suffix for binaries will be '$(SUFX)'
 !message *** Optional defines are '$(OPTDEFINES)'
-!message *** Compiler version $(VCVER), arch is $(MACHINE)
+!message *** Compiler version $(VCVER)
 !message *** Compiler options '$(OPTIMIZATIONS) $(DEBUGFLAGS)'
 !message *** Link options '$(LINKERFLAGS)'
 
