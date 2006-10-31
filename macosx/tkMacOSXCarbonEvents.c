@@ -60,7 +60,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.14 2006/08/21 01:09:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.3.2.15 2006/10/31 22:33:38 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -122,7 +122,7 @@ CarbonEventHandlerProc (
     char buf [256];
     if (macEvent.eKind != kEventMouseMoved &&
 	    macEvent.eKind != kEventMouseDragged) {
-	CarbonEventToAscii(event, buf);
+	TkMacOSXCarbonEventToAscii(event, buf);
 	fprintf(stderr, "CarbonEventHandlerProc started handling %s\n", buf);
 	TkMacOSXInitNamedDebugSymbol(HIToolbox, void, _DebugPrintEvent,
 		EventRef inEvent);
