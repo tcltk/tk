@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.78 2006/10/08 21:47:12 patthoyts Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.79 2006/10/31 01:42:26 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -137,7 +137,7 @@ static TkCmd commands[] = {
     {"wm",		NULL,			Tk_WmObjCmd,		0, 1},
 
     /*
-     * Widget class commands.
+     * Default widget class commands.
      */
 
     {"button",		NULL,			Tk_ButtonObjCmd,	1, 0},
@@ -157,6 +157,28 @@ static TkCmd commands[] = {
     {"spinbox",		NULL,			Tk_SpinboxObjCmd,	1, 0},
     {"text",		NULL,			Tk_TextObjCmd,		1, 1},
     {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 0},
+
+    /*
+     * Classic widget class commands.
+     */
+
+    {"::tk::button",	NULL,			Tk_ButtonObjCmd,	1, 0},
+    {"::tk::canvas",	NULL,			Tk_CanvasObjCmd,	1, 1},
+    {"::tk::checkbutton",NULL,			Tk_CheckbuttonObjCmd,	1, 0},
+    {"::tk::entry",	NULL,			Tk_EntryObjCmd,		1, 0},
+    {"::tk::frame",	NULL,			Tk_FrameObjCmd,		1, 0},
+    {"::tk::label",	NULL,			Tk_LabelObjCmd,		1, 0},
+    {"::tk::labelframe",NULL,			Tk_LabelframeObjCmd,	1, 0},
+    {"::tk::listbox",	NULL,			Tk_ListboxObjCmd,	1, 0},
+    {"::tk::menubutton",NULL,			Tk_MenubuttonObjCmd,	1, 0},
+    {"::tk::message",	NULL,			Tk_MessageObjCmd,	1, 0},
+    {"::tk::panedwindow",NULL,			Tk_PanedWindowObjCmd,	1, 0},
+    {"::tk::radiobutton",NULL,			Tk_RadiobuttonObjCmd,	1, 0},
+    {"::tk::scale",	NULL,			Tk_ScaleObjCmd,		1, 0},
+    {"::tk::scrollbar",	Tk_ScrollbarCmd,	NULL,			1, 1},
+    {"::tk::spinbox",	NULL,			Tk_SpinboxObjCmd,	1, 0},
+    {"::tk::text",	NULL,			Tk_TextObjCmd,		1, 1},
+    {"::tk::toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 0},
 
     /*
      * Standard dialog support. Note that the Unix/X11 platform implements
@@ -3189,6 +3211,15 @@ Initialize(interp)
 #endif
 
     Tk_InitStubs(interp, TK_VERSION, 1);
+
+    /*
+     * Initialized the themed widget set
+     */
+
+    code = Ttk_Init(interp);
+    if (code != TCL_OK) {
+	goto done;
+    }
 
     /*
      * Invoke platform-specific initialization.
