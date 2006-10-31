@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.117 2006/10/31 01:42:27 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.118 2006/10/31 13:56:59 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1439,7 +1439,7 @@ checkstubs: $(TK_LIB_FILE)
 		| awk '$$2 ~ /^[TDBCS]$$/ { sub("^_", "", $$3); print $$3 }' \
 		| sort -n`; do \
 		match=0; \
-		for j in $(TK_DECLS); do \
+		for j in $(TK_DECLS) $(TTK_DECLS); do \
 		    if [ `grep -c "$$i *(" $$j` -gt 0 ]; then \
 			match=1; \
 		    fi; \
@@ -1455,14 +1455,14 @@ checkuchar:
 	-egrep isalnum\|isalpha\|iscntrl\|isdigit\|islower\|isprint\|ispunct\|isspace\|isupper\|isxdigit\|toupper\|tolower $(SRCS) | grep -v UCHAR
 
 #
-# Target to make sure that only symbols with "Tk" prefixes are
-# exported.
+# Target to make sure that only symbols with "Tk", "tk", "Ttk", "ttk" or "X"
+# prefixes are exported.
 #
 
 checkexports: $(TK_LIB_FILE)
 	-@nm -p $(TK_LIB_FILE) \
 	| awk '$$2 ~ /^[TDBCS]$$/ { sub("^_", "", $$3); print $$3 }' \
-	| sort -n | grep -E -v '^([Tt]k|_?X)' || true
+	| sort -n | grep -E -v '^([Tt]t?k|_?X)' || true
 
 #
 # Target to create a Tk RPM for Linux.  Requires that you be on a Linux
