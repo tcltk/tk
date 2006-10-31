@@ -11,7 +11,7 @@
 # Copyright (c) 2003-2006 Patrick Thoyts
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.13 2006/10/19 00:48:26 patthoyts Exp $
+# RCS: @(#) $Id: rules.vc,v 1.14 2006/10/31 14:45:04 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -31,7 +31,7 @@ _INSTALLDIR	= $(INSTALLDIR:/=\)
 !endif
 
 !ifndef MACHINE
-!if "$(CPU)" == ""
+!if "$(CPU)" == "" || "$(CPU)" == "i386"
 MACHINE		= IX86
 !else
 MACHINE         = $(CPU)
@@ -131,8 +131,11 @@ DEBUGFLAGS     = $(DEBUGFLAGS) -GZ
 
 COMPILERFLAGS  =-W3
 
+# In v13 -GL and -YX are incompatible.
 !if [nmakehlp -c -YX]
+!if ![nmakehlp -c -GL]
 OPTIMIZATIONS  = $(OPTIMIZATIONS) -YX
+!endif
 !endif
 
 !if "$(MACHINE)" == "IX86"
@@ -207,6 +210,7 @@ LOIMPACT	= 0
 TCL_USE_STATIC_PACKAGES	= 0
 USE_THREAD_ALLOC = 0
 UNCHECKED	= 0
+HAVE_UXTHEME_H  = 1
 !else
 !if [nmakehlp -f $(OPTS) "static"]
 !message *** Doing static
@@ -261,6 +265,12 @@ USE_THREAD_ALLOC = 0
 UNCHECKED = 1
 !else
 UNCHECKED = 0
+!endif
+!if [nmakehlp -f $(OPTS) "noxp"]
+!message *** Exclude support for XP theme
+HAVE_UXTHEME_H  = 0
+!else
+HAVE_UXTHEME_H  = 1
 !endif
 !endif
 

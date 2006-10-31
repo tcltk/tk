@@ -1,3 +1,8 @@
+2006-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc: Added ttk files to msvc build.
+	* win/rules.vc:
+
 2006-10-31  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcodeproj/project.pbxproj: add new Ttk files.
