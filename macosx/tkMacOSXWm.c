@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.34 2006/09/11 16:12:58 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.35 2006/10/31 22:33:38 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -3644,7 +3644,7 @@ Tk_GetRootCoords(
 		} else {
 		    Point theOffset;
 		    
-		    if (gMacEmbedHandler->getOffsetProc != NULL) {
+		    if (tkMacOSXEmbedHandler->getOffsetProc != NULL) {
 		        /*
 		         * We do not require that the changes.x & changes.y for 
 		         * a non-Tk master window be kept up to date.  So we
@@ -3657,7 +3657,7 @@ Tk_GetRootCoords(
 	                x -= winPtr->changes.x + winPtr->changes.border_width;
 	                y -= winPtr->changes.y + winPtr->changes.border_width;
 	                
-		        gMacEmbedHandler->getOffsetProc((Tk_Window) winPtr, &theOffset);
+		        tkMacOSXEmbedHandler->getOffsetProc((Tk_Window) winPtr, &theOffset);
 		        
 		        x += theOffset.h;
 		        y += theOffset.v;
@@ -5124,9 +5124,9 @@ TkMacOSXMakeRealWindowExist(
 	    TkMacOSXMakeRealWindowExist(contWinPtr->privatePtr->toplevel->winPtr);
 	    macWin->flags |= TK_HOST_EXISTS;
 	    return;
-	} else if (gMacEmbedHandler != NULL) {
-	    if (gMacEmbedHandler->containerExistProc != NULL) {
-		if (gMacEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
+	} else if (tkMacOSXEmbedHandler != NULL) {
+	    if (tkMacOSXEmbedHandler->containerExistProc != NULL) {
+		if (tkMacOSXEmbedHandler->containerExistProc((Tk_Window) winPtr) != TCL_OK) {
 		    Tcl_Panic("ContainerExistProc could not make container");
 		}
 	    }
