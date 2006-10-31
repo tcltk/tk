@@ -1,0 +1,101 @@
+#
+# Test BWidget / Ttk compatibility.
+#
+# NOTE: This part of the test suite is no longer operative:
+#	[namespace import -force ttk::*] is not expected or intended to work.
+#
+#	Keeping the file around for now since it contains some historical
+#	information about how ttk *tried* to make it work, and what
+#	sort of things went wrong.
+#
+
+package require Tk 8.5
+package require tcltest
+tcltest::cleanupTests ; return
+
+loadTestedCommands
+
+set have_compat 0
+if {![catch {ttk::pkgconfig get compat} compat]} {set have_compat $compat}
+testConstraint bwidget [expr {$have_compat && ![catch {package require BWidget}]}]
+
+test bwidget-1.0 "Setup for BWidget test" -constraints bwidget -body {
+    namespace import -force ttk::*
+    puts "Loaded BWidget version [package provide BWidget]"
+}
+
+test bwidget-1.1 "Make Label widget" -constraints bwidget -body {
+    pack [Label .w]
+} -cleanup {destroy .w}
+
+test bwidget-1.2 "Make ScrolledWindow widget" -constraints bwidget -body {
+    pack [ScrolledWindow .w -auto both -scrollbar vertical]
+} -cleanup {destroy .w}
+
+test bwidget-1.3 "Make PagesManager widget" -constraints bwidget -body {
+    pack [PagesManager .w]
+} -cleanup {destroy .w}
+
+#
+# ProgressBar: this one fails with 'unknown color name "xxx"',
+# where "xxx" is the default value of some other option 
+# (variously, "4m", "100", something else).
+# 
+# Update: fixed now.  Source of problem: widgets were using "unused"
+# as the resource database name for compatibility options;
+# BWidgets keys off the db name instead of the option name.
+#
+test bwidget-1.4 "Make ProgressBar widget" -constraints bwidget -body {
+    pack [ProgressBar .w]
+} -cleanup {destroy .w}
+
+# @@@ TODO: full BWidget coverage,
+# @@@ not just the ones people have reported problems with.
+
+
+#
+# <<NOTE-NULLOPTIONS>>: 
+#
+# TK_OPTION_NULL_OK doesn't work for TK_OPTION_INT (among others);
+# see Bug #967209.
+#
+# This means that [.l configure -width [.l cget -width]] -- which is 
+# essentially what BWidgets does -- will raise an error if -width has 
+# a NULL default.
+# 
+# Temporary workaround: declare -width, etc. as TK_OPTION_STRING instead.
+# This disables typechecking in the 'configure' method, but it seems
+# to be the best way to avoid the BWidget incompatibility for now.
+#
+test nulloptions-1.1 "Test null options" -body {
+    ttk::label .tl
+    .tl configure -width [.tl cget -width]
+} -cleanup { destroy .tl }
+
+#
+# <<NOTE-NULLOPTIONS-2>> This also means we have to (partially) disable 
+# the widget option / element option consistency checks.
+#
+test nulloptions-1.2 "Ensure workaround doesn't break -width" -body {
+    ttk::label .tl -text "x" -width 0
+    set w1 [winfo reqwidth .tl]
+    .tl configure -width 10
+    set w2 [winfo reqwidth .tl]
+    expr {$w2 > $w1}
+} -result 1 -cleanup { destroy .tl }
+
+test nulloptions-1.3 "Exhaustive test" -body {
+    set readonlyOpts [list -class]
+    foreach widget $::ttk::widgets {
+	#puts "$widget"
+	ttk::$widget .w
+	foreach configspec [.w configure] {
+	    set option [lindex $configspec 0]
+	    if {[lsearch -exact $readonlyOpts $option] >= 0} { continue }
+	    .w configure $option [.w cget $option]
+	}
+	destroy .w
+    }
+}
+
+tcltest::cleanupTests

@@ -1,0 +1,64 @@
+'\" Copyright (c) 2005 Joe English
+.so man.macros
+.TH ttk_labelframe n 8.5 Tk "Tk Themed Widget"
+.BS
+.SH NAME
+ttk::labelframe \- Container widget with optional label
+.SH SYNOPSIS
+\fBttk::labelframe\fR \fIpathName \fR?\fIoptions\fR?
+.BE
+.SH DESCRIPTION
+A \fBlabelframe\fP widget is a container used to group other widgets together.
+It has an optional label, which may be a plain text string or another widget. 
+.SO
+\-class	\-cursor	\-takefocus	\-style
+.SE
+.SH "WIDGET-SPECIFIC OPTIONS"
+'\" XXX: Currently included, but may go away: 
+'\" XXX: .OP -borderwidth borderWidth BorderWidth
+'\" XXX: The desired width of the widget border.  Default is theme-dependent.
+'\" XXX: .OP -relief relief Relief
+'\" XXX: One of the standard Tk border styles:
+'\" XXX: \fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR,
+'\" XXX: \fBsolid\fR, or \fBsunken\fP.
+'\" XXX: Default is theme-dependent.
+.OP -labelanchor labelAnchor LabelAnchor
+Specifies where to place the label.  
+Allowed values are (clockwise from the top upper left corner):
+\fBnw\fR, \fBn\fR, \fBne\fR, \fBen\fR, \fBe\fR, \fBes\fR,
+\fBse\fR, \fBs\fR,\fBsw\fR, \fBws\fR, \fBw\fR and \fBwn\fR.
+The default value is theme-dependent.
+'\" Alternate explanation: The first character must be one of n, s, e, or w
+'\" and specifies which side the label should be placed on;
+'\" the remaining characters specify how the label is aligned on that side.
+'\" NOTE: Now allows other values as well; leave this undocumented for now
+.OP -text text Text
+Specifies the text of the label.
+.OP -underline underline Underline
+If set, specifies the integer index (0-based) of a character to 
+underline in the text string.
+The underlined character is used for mnemonic activation
+(see \fIkeynav(n)\fR).  
+Mnemonic activation for a \fBttk::labelframe\fP 
+sets the keyboard focus to the first child of the \fBttk::labelframe\fP widget.
+.OP -padding padding Padding
+Additional padding to include inside the border.
+.OP -labelwidget labelWidget LabelWidget
+The name of a widget to use for the label.
+If set, overrides the \fB-text\fP option.
+The \fB-labelwidget\fP must be a child of the \fBlabelframe\fP widget
+or one of the \fBlabelframe\fP's ancestors, and must belong to the
+same top-level widget as the \fBlabelframe\fP.
+.OP -width width Width
+If specified, the widget's requested width in pixels.
+.OP -height height Height
+If specified, the widget's requested height in pixels.
+(See \fIttk::frame\fP for further notes on \fB-width\fP and \fB-height\fP).
+.SH "WIDGET COMMAND"
+Supports the standard widget commands
+\fBconfigure\fP, \fBcget\fP, \fBinstate\fP, and \fBstate\fP;
+see \fIwidget(n)\fP.
+.SH "SEE ALSO"
+widget(n), frame(n)
+.SH "KEYWORDS"
+widget, frame, container, label, groupbox

@@ -1,0 +1,75 @@
+'\"
+'\" Copyright (c) 2004 Joe English
+'\"
+.so man.macros
+.TH ttk_button n 8.5 Tk "Tk Themed Widget"
+.BS
+.SH NAME
+ttk::button \- Widget that issues a command when pressed
+.SH SYNOPSIS
+\fBttk::button\fR \fIpathName \fR?\fIoptions\fR?
+.BE
+.SH DESCRIPTION
+A \fBbutton\fP widget displays a textual label and/or image,
+and evaluates a command when pressed.
+.SO
+\-class	\-compound	\-cursor	\-image
+\-state	\-style	\-takefocus	\-text	
+\-textvariable	\-underline	\-width
+.SE
+.SH "WIDGET-SPECIFIC OPTIONS"
+.OP \-command command Command
+A script to evaluate when the widget is invoked.
+.OP \-default default Default
+May be set to one of  \fBnormal\fP, \fBactive\fP, or \fBdisabled\fP.
+In a dialog box, one button may be designated the "default" button
+(meaning, roughly, "the one that gets invoked when the user presses <Enter>").
+\fBactive\fP indicates that this is currently the default button;
+\fBnormal\fP means that it may become the default button, and
+\fBdisabled\fP means that it is not defaultable.
+The default is \fBnormal\fP.
+.br
+Depending on the theme, the default button may be displayed 
+with an extra highlight ring, or with a different border color.
+See also: \fIkeynav(n)\fP.
+.OP \-width width Width
+If greater than zero, specifies how much space, in character widths, 
+to allocate for the text label.  
+If less than zero, specifies a minimum width.
+If zero or unspecified, the natural width of the text label is used.
+Note that some themes may specify a non-zero \fB-width\fP
+in the style.
+'\" Not documented -- may go away
+'\" .OP \-padding padding Padding
+'\" .OP \-foreground foreground Foreground
+'\" .OP \-font font Font
+'\" .OP \-anchor anchor Anchor
+'\" .OP \-padding padding Padding
+'\" .OP \-relief relief Relief
+
+.SH "WIDGET COMMAND"
+.TP
+\fIpathName \fBinvoke\fR
+Invokes the command associated with the button.
+.TP
+\fIpathName \fBcget\fR \fIoption\fR
+.TP
+\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+.TP
+\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
+.TP
+\fIpathName \fBstate\fR ?\fIstateSpec\fR?
+See \fIwidget(n)\fP
+
+.SH "COMPATIBILITY OPTIONS"
+.OP \-state state State
+May be set to \fBnormal\fP or \fBdisabled\fP
+to control the \fBdisabled\fP state bit.
+This is a ``write-only'' option: setting it changes the
+widget state, but the \fBstate\fP widget command does
+not affect the state option.
+
+.SH "SEE ALSO"
+widget(n), keynav(n)
+.SH "KEYWORDS"
+widget, button, default, command

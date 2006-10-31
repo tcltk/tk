@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.59 2006/10/23 20:31:48 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.60 2006/10/31 01:42:26 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -46,13 +46,20 @@ namespace eval ::tk {
     }
     namespace import ::tk::msgcat::*
 }
+# and a ::ttk namespace
+namespace eval ::ttk {
+    if {$::tk_library ne ""} {
+	# avoid file join to work in safe interps, but this is also x-plat ok
+	variable library $::tk_library/ttk
+    }
+}
 
-# Add Tk's directory to the end of the auto-load search path, if it
+# Add Ttk & Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
 
-if {[info exists ::auto_path] && $::tk_library ne "" && \
-	[lsearch -exact $::auto_path $::tk_library] < 0} {
-    lappend ::auto_path $::tk_library
+if {[info exists ::auto_path] && ($::tk_library ne "")
+    && ($::tk_library ni $::auto_path)} {
+    lappend ::auto_path $::tk_library $::ttk::library
 }
 
 # Turn off strict Motif look and feel as a default.
@@ -394,7 +401,7 @@ switch -- [tk windowingsystem] {
 if {$::tk_library ne ""} {
     proc ::tk::SourceLibFile {file} {
         namespace eval :: [list source [file join $::tk_library $file.tcl]]
-    }	
+    }
     namespace eval ::tk {
 	SourceLibFile button
 	SourceLibFile entry
@@ -472,7 +479,7 @@ proc ::tk::UnderlineAmpersand {text} {
     }
     if {$idx >= 0} {
 	regsub -all -- {&([^&])} $text {\1} text
-    } 
+    }
     return [list $text $idx]
 }
 
@@ -583,4 +590,9 @@ if {[tk windowingsystem] eq "aqua"} {
     namespace eval ::tk::mac {
 	set useCustomMDEF 0
     }
+}
+
+# Run the Ttk themed widget set initialization
+if {$::ttk::library ne ""} {
+    uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
