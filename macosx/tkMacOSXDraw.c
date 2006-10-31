@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.19 2006/10/16 16:25:45 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.20 2006/10/31 22:26:10 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -21,7 +21,7 @@
 #include "tclInt.h" /* for Tcl_CreateNamespace() */
 
 /*
-#ifdef	TK_MAC_DEBUG
+#ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_DRAWING
 #endif
 */
@@ -58,7 +58,7 @@ static int useThemedFrame = 0;
 static unsigned char InvertByte(unsigned char data);
 static void TkMacOSXSetUpCGContext(MacDrawable *macWin, CGrafPtr destPort,
 	GC gc, CGContextRef *contextPtr);
-static void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort, 
+static void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort,
 	CGContextRef *context);
 
 /*
@@ -77,47 +77,47 @@ static void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort,
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE int 
+MODULE_SCOPE int
 TkMacOSXInitCGDrawing(interp, enable, limit)
-        Tcl_Interp *interp;
-        int enable;
-        int limit;
+	Tcl_Interp *interp;
+	int enable;
+	int limit;
 {
     static Boolean initialized = FALSE;
 
     if (!initialized) {
-        initialized = TRUE;
-        
-        if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
-            Tcl_ResetResult(interp);
-        }
-        if (Tcl_LinkVar(interp, "::tk::mac::useCGDrawing",
-                (char *) &useCGDrawing, TCL_LINK_BOOLEAN) != TCL_OK) {
-            Tcl_ResetResult(interp);
-        }
-        useCGDrawing = enable;
+	initialized = TRUE;
 
-        if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
-                (char *) &tkMacOSXCGAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
-            Tcl_ResetResult(interp);
-        }
-        tkMacOSXCGAntiAliasLimit = limit;
+	if (Tcl_CreateNamespace(interp, "::tk::mac", NULL, NULL) == NULL) {
+	    Tcl_ResetResult(interp);
+	}
+	if (Tcl_LinkVar(interp, "::tk::mac::useCGDrawing",
+		(char *) &useCGDrawing, TCL_LINK_BOOLEAN) != TCL_OK) {
+	    Tcl_ResetResult(interp);
+	}
+	useCGDrawing = enable;
+
+	if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
+		(char *) &tkMacOSXCGAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
+	    Tcl_ResetResult(interp);
+	}
+	tkMacOSXCGAntiAliasLimit = limit;
 
 	/*
 	 * Piggy-back the themed drawing var init here.
 	 */
-        if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
+	if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
 		    (char *) &useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
-            Tcl_ResetResult(interp);
-        }
-        if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
+	    Tcl_ResetResult(interp);
+	}
+	if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
 		    (char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
-            Tcl_ResetResult(interp);
-        }
+	    Tcl_ResetResult(interp);
+	}
     }
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -136,7 +136,7 @@ TkMacOSXInitCGDrawing(interp, enable, limit)
  *----------------------------------------------------------------------
  */
 
-void 
+void
 XCopyArea(
     Display* display,                /* Display. */
     Drawable src,                /* Source drawable. */
@@ -178,65 +178,65 @@ XCopyArea(
     blackColor.blue = 0xFFFF;
     blackColor.green = 0xFFFF;
     RGBBackColor(&blackColor);
-    
+
     if (tmpRgn2 == NULL) {
-        tmpRgn2 = NewRgn();
+	tmpRgn2 = NewRgn();
     }
     srcPtr = &srcRect;
     SetRect(&srcRect, (short) (srcDraw->xOff + src_x),
-            (short) (srcDraw->yOff + src_y),
-            (short) (srcDraw->xOff + src_x + width),
-            (short) (srcDraw->yOff + src_y + height));
+	    (short) (srcDraw->yOff + src_y),
+	    (short) (srcDraw->xOff + src_x + width),
+	    (short) (srcDraw->yOff + src_y + height));
     if (tkPictureIsOpen) {
-        dstPtr = &srcRect;
+	dstPtr = &srcRect;
     } else {
-        dstPtr = &dstRect;
-        SetRect(&dstRect, (short) (dstDraw->xOff + dest_x),
-            (short) (dstDraw->yOff + dest_y), 
-            (short) (dstDraw->xOff + dest_x + width),
-            (short) (dstDraw->yOff + dest_y + height));
+	dstPtr = &dstRect;
+	SetRect(&dstRect, (short) (dstDraw->xOff + dest_x),
+	    (short) (dstDraw->yOff + dest_y),
+	    (short) (dstDraw->xOff + dest_x + width),
+	    (short) (dstDraw->yOff + dest_y + height));
     }
     TkMacOSXSetUpClippingRgn(dst);
     /*
-     *  We will change the clip rgn in this routine, so we need to 
+     *  We will change the clip rgn in this routine, so we need to
      *  be able to restore it when we exit.
      */
- 
+
     GetClip(tmpRgn2);
     if (tkPictureIsOpen) {
-        /*
-         * When rendering into a picture, after a call to "OpenCPicture"
-         * the clipping is seriously WRONG and also INCONSISTENT with the
-         * clipping for single plane bitmaps.
-         * To circumvent this problem,  we clip to the whole window 
-         * In this case, would have also clipped to the srcRect
-         * ClipRect(&srcRect);
-         */
+	/*
+	 * When rendering into a picture, after a call to "OpenCPicture"
+	 * the clipping is seriously WRONG and also INCONSISTENT with the
+	 * clipping for single plane bitmaps.
+	 * To circumvent this problem,  we clip to the whole window
+	 * In this case, would have also clipped to the srcRect
+	 * ClipRect(&srcRect);
+	 */
 
-        GetPortBounds(dstPort,&clpRect);
-        dstPtr = &srcRect;
-        ClipRect(&clpRect);
+	GetPortBounds(dstPort,&clpRect);
+	dstPtr = &srcRect;
+	ClipRect(&clpRect);
     }
-    if (!gc->clip_mask) { 
+    if (!gc->clip_mask) {
     } else if (((TkpClipMask*)gc->clip_mask)->type == TKP_CLIP_REGION) {
-        RgnHandle clipRgn = (RgnHandle)
-                ((TkpClipMask*)gc->clip_mask)->value.region;
- 
-        int xOffset = 0, yOffset = 0;
-        if (tmpRgn == NULL) {
-            tmpRgn = NewRgn();
-        }
-        if (!tkPictureIsOpen) {
-            xOffset = dstDraw->xOff + gc->clip_x_origin;
-            yOffset = dstDraw->yOff + gc->clip_y_origin;
-            OffsetRgn(clipRgn, xOffset, yOffset);
-        }
-        GetClip(tmpRgn);
-        SectRgn(tmpRgn, clipRgn, tmpRgn);
-        SetClip(tmpRgn);
-        if (!tkPictureIsOpen) {
-             OffsetRgn(clipRgn, -xOffset, -yOffset);
-        }
+	RgnHandle clipRgn = (RgnHandle)
+		((TkpClipMask*)gc->clip_mask)->value.region;
+
+	int xOffset = 0, yOffset = 0;
+	if (tmpRgn == NULL) {
+	    tmpRgn = NewRgn();
+	}
+	if (!tkPictureIsOpen) {
+	    xOffset = dstDraw->xOff + gc->clip_x_origin;
+	    yOffset = dstDraw->yOff + gc->clip_y_origin;
+	    OffsetRgn(clipRgn, xOffset, yOffset);
+	}
+	GetClip(tmpRgn);
+	SectRgn(tmpRgn, clipRgn, tmpRgn);
+	SetClip(tmpRgn);
+	if (!tkPictureIsOpen) {
+	    OffsetRgn(clipRgn, -xOffset, -yOffset);
+	}
     }
     srcBit = GetPortBitMapForCopyBits(srcPort);
     dstBit = GetPortBitMapForCopyBits(dstPort);
@@ -292,13 +292,13 @@ XCopyPlane(
     GWorldPtr srcPort, dstPort, mskPort;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
-    RGBColor macColor; 
+    RGBColor macColor;
     TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
     short tmode;
 
     srcPort = TkMacOSXGetDrawablePort(src);
     dstPort = TkMacOSXGetDrawablePort(dst);
-    
+
     display->request++;
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(dstPort, NULL);
@@ -307,71 +307,71 @@ XCopyPlane(
     srcBit = GetPortBitMapForCopyBits(srcPort);
     dstBit = GetPortBitMapForCopyBits(dstPort);
     SetRect(&srcRect, (short) (srcDraw->xOff + src_x),
-            (short) (srcDraw->yOff + src_y),
-            (short) (srcDraw->xOff + src_x + width),
-            (short) (srcDraw->yOff + src_y + height));
+	    (short) (srcDraw->yOff + src_y),
+	    (short) (srcDraw->xOff + src_x + width),
+	    (short) (srcDraw->yOff + src_y + height));
     srcPtr = &srcRect;
     if (tkPictureIsOpen) {
-        /*
-         * When rendering into a picture, after a call to "OpenCPicture"
-         * the clipping is seriously WRONG and also INCONSISTENT with the
-         * clipping for color bitmaps.
-         * To circumvent this problem,  we clip to the whole window 
-         */
+	/*
+	 * When rendering into a picture, after a call to "OpenCPicture"
+	 * the clipping is seriously WRONG and also INCONSISTENT with the
+	 * clipping for color bitmaps.
+	 * To circumvent this problem,  we clip to the whole window
+	 */
 
-        Rect clpRect;
-        GetPortBounds(dstPort,&clpRect);
-        ClipRect(&clpRect);
-        dstPtr = &srcRect;
+	Rect clpRect;
+	GetPortBounds(dstPort,&clpRect);
+	ClipRect(&clpRect);
+	dstPtr = &srcRect;
     } else {
-        dstPtr = &dstRect;
-        SetRect(&dstRect, (short) (dstDraw->xOff + dest_x),
-                (short) (dstDraw->yOff + dest_y), 
-                (short) (dstDraw->xOff + dest_x + width),
-                (short) (dstDraw->yOff + dest_y + height));
+	dstPtr = &dstRect;
+	SetRect(&dstRect, (short) (dstDraw->xOff + dest_x),
+		(short) (dstDraw->yOff + dest_y),
+		(short) (dstDraw->xOff + dest_x + width),
+		(short) (dstDraw->yOff + dest_y + height));
     }
     tmode = srcOr;
     tmode = srcCopy + transparent;
 
     if (TkSetMacColor(gc->foreground, &macColor) == true) {
-        RGBForeColor(&macColor);
+	RGBForeColor(&macColor);
     }
 
     if (clipPtr == NULL || clipPtr->type == TKP_CLIP_REGION) {
-        /*
-         * Case 1: opaque bitmaps.
-         */
+	/*
+	 * Case 1: opaque bitmaps.
+	 */
 
-        TkSetMacColor(gc->background, &macColor);
-        RGBBackColor(&macColor);
-        tmode = srcCopy;
-        CopyBits(srcBit, dstBit, srcPtr, dstPtr, tmode, NULL);
+	TkSetMacColor(gc->background, &macColor);
+	RGBBackColor(&macColor);
+	tmode = srcCopy;
+	CopyBits(srcBit, dstBit, srcPtr, dstPtr, tmode, NULL);
     } else if (clipPtr->type == TKP_CLIP_PIXMAP) {
-        if (clipPtr->value.pixmap == src) {
-            PixMapHandle pm;
-            /*
-             * Case 2: transparent bitmaps.  If it's color we ignore
-             * the forecolor.
-             */
+	if (clipPtr->value.pixmap == src) {
+	    PixMapHandle pm;
+	    /*
+	     * Case 2: transparent bitmaps.  If it's color we ignore
+	     * the forecolor.
+	     */
 
-            pm = GetPortPixMap(srcPort);
-            if (GetPixDepth(pm) == 1) {
-                tmode = srcOr;
-            } else {
-                tmode = transparent;
-            }
-            CopyBits(srcBit, dstBit, srcPtr, dstPtr, tmode, NULL);
-        } else {
-            /*
-             * Case 3: two arbitrary bitmaps.         
-             */
+	    pm = GetPortPixMap(srcPort);
+	    if (GetPixDepth(pm) == 1) {
+		tmode = srcOr;
+	    } else {
+		tmode = transparent;
+	    }
+	    CopyBits(srcBit, dstBit, srcPtr, dstPtr, tmode, NULL);
+	} else {
+	    /*
+	     * Case 3: two arbitrary bitmaps.
+	     */
 
-            tmode = srcCopy;
-            mskPort = TkMacOSXGetDrawablePort(clipPtr->value.pixmap);
-            mskBit = GetPortBitMapForCopyBits(mskPort);
-            CopyDeepMask(srcBit, mskBit, dstBit,
-                srcPtr, srcPtr, dstPtr, tmode, NULL);
-        }
+	    tmode = srcCopy;
+	    mskPort = TkMacOSXGetDrawablePort(clipPtr->value.pixmap);
+	    mskBit = GetPortBitMapForCopyBits(mskPort);
+	    CopyDeepMask(srcBit, mskBit, dstBit,
+		srcPtr, srcPtr, dstPtr, tmode, NULL);
+	}
     }
 
     SetGWorld(saveWorld, saveDevice);
@@ -394,7 +394,7 @@ XCopyPlane(
  *----------------------------------------------------------------------
  */
 
-void 
+void
 TkPutImage(
     unsigned long *colors,	/* Unused on Macintosh. */
     int ncolors,		/* Unused on Macintosh. */
@@ -435,7 +435,7 @@ TkPutImage(
 	 * When rendering into a picture, after a call to "OpenCPicture"
 	 * the clipping is seriously WRONG and also INCONSISTENT with the
 	 * clipping for single plane bitmaps.
-	 * To circumvent this problem,	we clip to the whole window 
+	 * To circumvent this problem,	we clip to the whole window
 	 */
 
 	Rect clpRect;
@@ -444,7 +444,7 @@ TkPutImage(
 	destPtr = srcPtr;
     } else {
 	destPtr = &destRect;
-	SetRect(destPtr, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y, 
+	SetRect(destPtr, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y,
 	    dstDraw->xOff + dest_x + width, dstDraw->yOff + dest_y + height);
     }
 
@@ -602,7 +602,7 @@ TkPutImage(
  *----------------------------------------------------------------------
  */
 
-void 
+void
 XDrawLines(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -618,7 +618,7 @@ XDrawLines(
     int i, lw = gc->line_width;
 
     if (npoints < 2) {
-	return;	 /* TODO: generate BadValue error. */
+	return; /* TODO: generate BadValue error. */
     }
 
     destPort = TkMacOSXGetDrawablePort(d);
@@ -715,9 +715,9 @@ void XDrawSegments(
 	float o = (lw % 2) ? .5 : 0;
 
 	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-        for (i = 0; i < nsegments; i++) {
+	for (i = 0; i < nsegments; i++) {
 	    CGContextBeginPath(outContext);
-            CGContextMoveToPoint(outContext,
+	    CGContextMoveToPoint(outContext,
 		    macWin->xOff + segments[i].x1 + o,
 		    macWin->yOff + segments[i].y1 + o);
 	    CGContextAddLineToPoint(outContext,
@@ -740,10 +740,10 @@ void XDrawSegments(
 		   (short) (macWin->yOff + segments[i].y1 + o));
 	    LineTo((short) (macWin->xOff + segments[i].x2 + o),
 		   (short) (macWin->yOff + segments[i].y2 + o));
-        }
-        HidePen();
+	}
+	HidePen();
     }
-    
+
     SetGWorld(saveWorld, saveDevice);
 }
 
@@ -763,7 +763,7 @@ void XDrawSegments(
  *----------------------------------------------------------------------
  */
 
-void 
+void
 XFillPolygon(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -815,11 +815,11 @@ XFillPolygon(
 	PenNormal();
 	polygon = OpenPoly();
 	MoveTo((short) (macWin->xOff + points[0].x),
-		(short) (macWin->yOff + points[0].y));
+	       (short) (macWin->yOff + points[0].y));
 	for (i = 1; i < npoints; i++) {
 	    if (mode == CoordModeOrigin) {
 		LineTo((short) (macWin->xOff + points[i].x),
-			(short) (macWin->yOff + points[i].y));
+		       (short) (macWin->yOff + points[i].y));
 	    } else {
 		Line((short) points[i].x, (short) points[i].y);
 	    }
@@ -848,7 +848,7 @@ XFillPolygon(
  *----------------------------------------------------------------------
  */
 
-void 
+void
 XDrawRectangle(
     Display* display,                /* Display. */
     Drawable d,                        /* Draw on this. */
@@ -876,7 +876,7 @@ XDrawRectangle(
 
     if (useCGDrawing) {
 	CGContextRef outContext;
-	CGRect	rect;
+	CGRect rect;
 	float o = (lw % 2) ? .5 : 0;
 
 	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
@@ -953,12 +953,12 @@ XDrawRectangles(
     TkMacOSXSetUpClippingRgn(drawable);
 
     if (useCGDrawing) {
-        CGContextRef outContext;
-	CGRect	rect;
+	CGContextRef outContext;
+	CGRect rect;
 	float o = (lw % 2) ? .5 : 0;
 
 	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-        for (i = 0, rectPtr = rectArr; i < nRects; i++, rectPtr++) {
+	for (i = 0, rectPtr = rectArr; i < nRects; i++, rectPtr++) {
 	    if (rectPtr->width == 0 || rectPtr->height == 0) {
 		continue;
 	    }
@@ -1005,7 +1005,7 @@ XDrawRectangles(
  *
  *----------------------------------------------------------------------
  */
-void 
+void
 XFillRectangles(
     Display* display,                /* Display. */
     Drawable d,                        /* Draw on this. */
@@ -1041,7 +1041,7 @@ XFillRectangles(
 		    rectPtr->width, rectPtr->height);
 	    CGContextFillRect(outContext, rect);
 	}
-        TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
+	TkMacOSXReleaseCGContext(macWin, destPort, &outContext);
     } else {
 	Rect theRect;
 
@@ -1051,8 +1051,8 @@ XFillRectangles(
 	    theRect.top =    (short) (macWin->yOff + rectPtr->y);
 	    theRect.right =  (short) (theRect.left + rectPtr->width);
 	    theRect.bottom = (short) (theRect.top  + rectPtr->height);
-            FillCRect(&theRect, gPenPat);
-        }
+	    FillCRect(&theRect, gPenPat);
+	}
     }
 
     SetGWorld(saveWorld, saveDevice);
@@ -1074,7 +1074,7 @@ XFillRectangles(
  *----------------------------------------------------------------------
  */
 
-void 
+void
 XDrawArc(
     Display* display,                /* Display. */
     Drawable d,                        /* Draw on this. */
@@ -1158,11 +1158,11 @@ XDrawArc(
 }
 
 #ifdef TK_MACOSXDRAW_UNUSED
-/* 
+/*
  *----------------------------------------------------------------------
- * 
+ *
  * XDrawArcs --
- * 
+ *
  *      Draws multiple circular or elliptical arcs.  Each arc is
  *      specified by a rectangle and two angles.  The center of the
  *      circle or ellipse is the center of the rect- angle, and the
@@ -1174,12 +1174,12 @@ XDrawArc(
  *
  * Results:
  *      None.
- * 
+ *
  * Side effects:
  *      Draws an arc for each array element on the specified drawable.
- *  
+ *
  *----------------------------------------------------------------------
- */ 
+ */
 void
 XDrawArcs(
     Display *display,
@@ -1252,9 +1252,9 @@ XDrawArcs(
 	int o = -lw/2;
 
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
-        ShowPen();
-        PenPixPat(gPenPat);
-        for (i = 0, arcPtr = arcArr;i < nArcs;i++, arcPtr++) {
+	ShowPen();
+	PenPixPat(gPenPat);
+	for (i = 0, arcPtr = arcArr;i < nArcs;i++, arcPtr++) {
 	    theRect.left =   (short) (macWin->xOff + arcPtr->x + o);
 	    theRect.top =    (short) (macWin->yOff + arcPtr->y + o);
 	    theRect.right =  (short) (theRect.left + arcPtr->width + lw);
@@ -1410,22 +1410,22 @@ XFillArc(
 }
 
 #ifdef TK_MACOSXDRAW_UNUSED
-/*  
+/*
  *----------------------------------------------------------------------
- *  
- * XFillArcs --  
+ *
+ * XFillArcs --
  *
  *      Draw a filled arc.
- *  
+ *
  * Results:
  *      None.
  *
  * Side effects:
  *      Draws a filled arc for each array element on the specified drawable.
- *      
+ *
  *----------------------------------------------------------------------
- */     
-void 
+ */
+void
 XFillArcs(
     Display *display,
     Drawable d,
@@ -1455,7 +1455,7 @@ XFillArcs(
 	    o += NON_AA_CG_OFFSET/2;
 	    u += NON_AA_CG_OFFSET;
 	}
-        TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
+	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
 	for (i = 0, arcPtr = arcArr; i < nArcs; i++, arcPtr++) {
 	    if (arcPtr->width == 0 || arcPtr->height == 0
 		    || arcPtr->angle2 == 0) {
@@ -1508,7 +1508,7 @@ XFillArcs(
 	double vertex[2], center1[2], center2[2];
 
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
-        for (i = 0, arcPtr = arcArr;i<nArcs;i++, arcPtr++) {
+	for (i = 0, arcPtr = arcArr;i<nArcs;i++, arcPtr++) {
 	    theRect.left =   (short) (macWin->xOff + arcPtr->x + o);
 	    theRect.top =    (short) (macWin->yOff + arcPtr->y + o);
 	    theRect.right =  (short) (theRect.left + arcPtr->width + lw);
@@ -1556,11 +1556,11 @@ XFillArcs(
 #endif
 
 #ifdef TK_MACOSXDRAW_UNUSED
-/* 
+/*
  *----------------------------------------------------------------------
- * 
+ *
  * XMaxRequestSize --
- * 
+ *
  *----------------------------------------------------------------------
  */
 long
@@ -1608,7 +1608,7 @@ TkScrollWindow(
     GWorldPtr destPort;
     Rect srcRect, scrollRect;
     RgnHandle visRgn, clipRgn;
-    
+
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
@@ -1616,28 +1616,28 @@ TkScrollWindow(
 
     /*
      * Due to the implementation below the behavior may be differnt
-     * than X in certain cases that should never occur in Tk.  The 
-     * scrollRect is the source rect extended by the offset (the union 
+     * than X in certain cases that should never occur in Tk.  The
+     * scrollRect is the source rect extended by the offset (the union
      * of the source rect and the offset rect).  Everything
      * in the extended scrollRect is scrolled.  On X, it's possible
      * to "skip" over an area if the offset makes the source and
      * destination rects disjoint and non-aligned.
      */
-       
+
     SetRect(&srcRect, (short) (destDraw->xOff + x),
-            (short) (destDraw->yOff + y),
-            (short) (destDraw->xOff + x + width),
-            (short) (destDraw->yOff + y + height));
+	    (short) (destDraw->yOff + y),
+	    (short) (destDraw->xOff + x + width),
+	    (short) (destDraw->yOff + y + height));
     scrollRect = srcRect;
     if (dx < 0) {
-        scrollRect.left += dx;
+	scrollRect.left += dx;
     } else {
-        scrollRect.right += dx;
+	scrollRect.right += dx;
     }
     if (dy < 0) {
-        scrollRect.top += dy;
+	scrollRect.top += dy;
     } else {
-        scrollRect.bottom += dy;
+	scrollRect.bottom += dy;
     }
 
     /*
@@ -1654,7 +1654,7 @@ TkScrollWindow(
     DiffRgn(clipRgn, rgn, clipRgn);
     SetPortClipRegion(destPort, clipRgn);
     SetEmptyRgn(rgn);
-    
+
     /*
      * When a menu is up, the Mac does not expect drawing to occur and
      * does not clip out the menu. We have to do it ourselves. This
@@ -1662,22 +1662,22 @@ TkScrollWindow(
      */
 
     if (tkUseMenuCascadeRgn == 1) {
-            Point scratch = {0, 0};
-            MacDrawable *macDraw = (MacDrawable *) Tk_WindowId(tkwin);
+	    Point scratch = {0, 0};
+	    MacDrawable *macDraw = (MacDrawable *) Tk_WindowId(tkwin);
 
-        LocalToGlobal(&scratch);
-        CopyRgn(tkMenuCascadeRgn, rgn);
-        OffsetRgn(rgn, -scratch.h, -scratch.v);
-        DiffRgn(clipRgn, rgn, clipRgn);
-        SetPortClipRegion(destPort, clipRgn);
-        SetEmptyRgn(rgn);
-        macDraw->toplevel->flags |= TK_DRAWN_UNDER_MENU;
+	LocalToGlobal(&scratch);
+	CopyRgn(tkMenuCascadeRgn, rgn);
+	OffsetRgn(rgn, -scratch.h, -scratch.v);
+	DiffRgn(clipRgn, rgn, clipRgn);
+	SetPortClipRegion(destPort, clipRgn);
+	SetEmptyRgn(rgn);
+	macDraw->toplevel->flags |= TK_DRAWN_UNDER_MENU;
     }
-        
+
     ScrollRect(&scrollRect, dx, dy, rgn);
-    
+
     SetGWorld(saveWorld, saveDevice);
-    
+
     DisposeRgn(clipRgn);
     DisposeRgn(visRgn);
     /*
@@ -1687,9 +1687,9 @@ TkScrollWindow(
      * created.
      */
     if (EmptyRgn(rgn)) {
-        return 0;
+	return 0;
     } else {
-        return 1;
+	return 1;
     }
 }
 
@@ -1717,44 +1717,44 @@ TkMacOSXSetUpGraphicsPort(
     RGBColor macColor;
 
     if (gPenPat == NULL) {
-        gPenPat = NewPixPat();
+	gPenPat = NewPixPat();
     }
-    
+
     if (TkSetMacColor(gc->foreground, &macColor) == true) {
-        /* TODO: cache RGBPats for preformace - measure gains...  */
-        MakeRGBPat(gPenPat, &macColor);
+	/* TODO: cache RGBPats for preformace - measure gains...  */
+	MakeRGBPat(gPenPat, &macColor);
     }
-    
+
     PenNormal();
     if(gc->function == GXxor) {
-        PenMode(patXor);
+	PenMode(patXor);
     }
     if (gc->line_width > 1) {
-        PenSize(gc->line_width, gc->line_width);
+	PenSize(gc->line_width, gc->line_width);
     }
     if (gc->line_style != LineSolid) {
-        /*
-         * Here the dash pattern should be set in the drawing,
-         * environment, but I don't know how to do that for the Mac.
-         *
-         * p[] is an array of unsigned chars containing the dash list.
-         * A '\0' indicates the end of this list.
-         *
-         * Someone knows how to implement this? If you have a more
-         * complete implementation of SetUpGraphicsPort() for
-         * the Mac (or for Windows), please let me know.
-         *
-         *        Jan Nijtmans
-         *        CMG Arnhem, B.V.
-         *        email: j.nijtmans@chello.nl (private)
-         *               jan.nijtmans@cmg.nl (work)
-         *        url:   http://purl.oclc.org/net/nijtmans/
-         *
-         * FIXME:
-         * This is not possible with QuickDraw line drawing.  As of
-         * Tk 8.4.7 we have a complete set of drawing routines using
-         * CG, so there is no reason to support this here.
-         */
+	/*
+	 * Here the dash pattern should be set in the drawing,
+	 * environment, but I don't know how to do that for the Mac.
+	 *
+	 * p[] is an array of unsigned chars containing the dash list.
+	 * A '\0' indicates the end of this list.
+	 *
+	 * Someone knows how to implement this? If you have a more
+	 * complete implementation of SetUpGraphicsPort() for
+	 * the Mac (or for Windows), please let me know.
+	 *
+	 *        Jan Nijtmans
+	 *        CMG Arnhem, B.V.
+	 *        email: j.nijtmans@chello.nl (private)
+	 *               jan.nijtmans@cmg.nl (work)
+	 *        url:   http://purl.oclc.org/net/nijtmans/
+	 *
+	 * FIXME:
+	 * This is not possible with QuickDraw line drawing.  As of
+	 * Tk 8.4.7 we have a complete set of drawing routines using
+	 * CG, so there is no reason to support this here.
+	 */
     }
 }
 
@@ -1797,7 +1797,7 @@ TkMacOSXSetUpCGContext(
      * set up the port with our clip region, so we can just get
      * the clip back out of there.  If we use the macWin->clipRgn
      * directly at this point, we get some odd drawing effects.
-     * 
+     *
      * We also have to intersect our clip region with the port
      * visible region so we don't overwrite the window decoration.
      */
@@ -1824,13 +1824,13 @@ TkMacOSXSetUpCGContext(
     coordsTransform = CGAffineTransformMake(1, 0, 0, -1, 0,
 	    boundsRect.bottom - boundsRect.top);
     CGContextConcatCTM(outContext, coordsTransform);
-    
+
     /* Now offset the CTM to the subwindow offset */
 
     if (TkSetMacColor(gc->foreground, &macColor) == true) {
 	CGContextSetRGBFillColor(outContext,
-		RGBFLOATRED(macColor), 
-		RGBFLOATGREEN(macColor), 
+		RGBFLOATRED(macColor),
+		RGBFLOATGREEN(macColor),
 		RGBFLOATBLUE(macColor),
 		1);
 	CGContextSetRGBStrokeColor(outContext,
@@ -1854,7 +1854,7 @@ TkMacOSXSetUpCGContext(
     }
     CGContextSetLineWidth(outContext, w);
 
-    if (gc->line_style != LineSolid) { 
+    if (gc->line_style != LineSolid) {
 	int num = 0;
 	char *p = &(gc->dashes);
 	float dashOffset = gc->dash_offset;
@@ -1866,7 +1866,7 @@ TkMacOSXSetUpCGContext(
 	}
 	CGContextSetLineDash(outContext, dashOffset, lengths, num);
     }
-    
+
     if (gc->cap_style == CapButt) {
 	/*
 	 *  What about CapNotLast, CapProjecting?
@@ -1878,7 +1878,7 @@ TkMacOSXSetUpCGContext(
     } else if (gc->cap_style == CapProjecting) {
 	CGContextSetLineCap(outContext, kCGLineCapSquare);
     }
-   
+
     if (gc->join_style == JoinMiter) {
 	CGContextSetLineJoin(outContext, kCGLineJoinMiter);
     } else if (gc->join_style == JoinRound) {
@@ -1906,14 +1906,14 @@ TkMacOSXSetUpCGContext(
 
 static void
 TkMacOSXReleaseCGContext(
-        MacDrawable *macWin,
-        CGrafPtr destPort, 
-        CGContextRef *outContext)
+	MacDrawable *macWin,
+	CGrafPtr destPort,
+	CGContextRef *outContext)
 {
     CGContextSynchronize(*outContext);
     QDEndCGContext(destPort, outContext);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1938,9 +1938,9 @@ TkMacOSXSetUpClippingRgn(
     MacDrawable *macDraw = (MacDrawable *) drawable;
 
     if (macDraw->winPtr != NULL) {
-        if (macDraw->flags & TK_CLIP_INVALID) {
-            TkMacOSXUpdateClipRgn(macDraw->winPtr);
-        }
+	if (macDraw->flags & TK_CLIP_INVALID) {
+	    TkMacOSXUpdateClipRgn(macDraw->winPtr);
+	}
 
 #if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_DRAWING)
 	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
@@ -1952,34 +1952,34 @@ TkMacOSXSetUpClippingRgn(
 	}
 #endif /* TK_MAC_DEBUG_DRAWING */
 
-        /*
-         * When a menu is up, the Mac does not expect drawing to occur and
-         * does not clip out the menu. We have to do it ourselves. This
-         * is pretty gross.
-         */
+	/*
+	 * When a menu is up, the Mac does not expect drawing to occur and
+	 * does not clip out the menu. We have to do it ourselves. This
+	 * is pretty gross.
+	 */
 
-        if (macDraw->clipRgn != NULL) {
-            if (tkUseMenuCascadeRgn == 1) {
-                    Point scratch = {0, 0};
-                    GDHandle saveDevice;
-                    GWorldPtr saveWorld;
-                    
-                    GetGWorld(&saveWorld, &saveDevice);
-                    SetGWorld(TkMacOSXGetDrawablePort(drawable), NULL);
-                    LocalToGlobal(&scratch);
-                    SetGWorld(saveWorld, saveDevice);
-                    if (tmpRgn == NULL) {
-                        tmpRgn = NewRgn();
-                    }
-                    CopyRgn(tkMenuCascadeRgn, tmpRgn);
-                    OffsetRgn(tmpRgn, -scratch.h, -scratch.v);
-                    DiffRgn(macDraw->clipRgn, tmpRgn, tmpRgn);
-                    SetClip(tmpRgn);
-                    macDraw->toplevel->flags |= TK_DRAWN_UNDER_MENU;
-            } else {
-                    SetClip(macDraw->clipRgn);
-            }
-        }
+	if (macDraw->clipRgn != NULL) {
+	    if (tkUseMenuCascadeRgn == 1) {
+		    Point scratch = {0, 0};
+		    GDHandle saveDevice;
+		    GWorldPtr saveWorld;
+
+		    GetGWorld(&saveWorld, &saveDevice);
+		    SetGWorld(TkMacOSXGetDrawablePort(drawable), NULL);
+		    LocalToGlobal(&scratch);
+		    SetGWorld(saveWorld, saveDevice);
+		    if (tmpRgn == NULL) {
+			tmpRgn = NewRgn();
+		    }
+		    CopyRgn(tkMenuCascadeRgn, tmpRgn);
+		    OffsetRgn(tmpRgn, -scratch.h, -scratch.v);
+		    DiffRgn(macDraw->clipRgn, tmpRgn, tmpRgn);
+		    SetClip(tmpRgn);
+		    macDraw->toplevel->flags |= TK_DRAWN_UNDER_MENU;
+	    } else {
+		    SetClip(macDraw->clipRgn);
+	    }
+	}
     }
 }
 
@@ -2016,11 +2016,11 @@ TkMacOSXMakeStippleMap(
     Rect bounds;
 
     destPort = TkMacOSXGetDrawablePort(drawable);
-    
+
     GetPortBounds (destPort, &portRect);
     width = portRect.right - portRect.left;
     height = portRect.bottom - portRect.top;
-    
+
     bitmapPtr = (BitMap *) ckalloc(sizeof(BitMap));
     data = (char *) ckalloc(height * ((width / 8) + 1));
     bitmapPtr->bounds.top = bitmapPtr->bounds.left = 0;
@@ -2034,15 +2034,15 @@ TkMacOSXMakeStippleMap(
     stippleHeight = portRect.bottom - portRect.top;
 
     for (i = 0; i < height; i += stippleHeight) {
-        for (j = 0; j < width; j += stippleWidth) {
-            bounds.left = j;
-            bounds.top = i;
-            bounds.right = j + stippleWidth;
-            bounds.bottom = i + stippleHeight;
-            
-            CopyBits(GetPortBitMapForCopyBits(destPort), bitmapPtr, 
-                &portRect, &bounds, srcCopy, NULL);
-        }
+	for (j = 0; j < width; j += stippleWidth) {
+	    bounds.left = j;
+	    bounds.top = i;
+	    bounds.right = j + stippleWidth;
+	    bounds.bottom = i + stippleHeight;
+
+	    CopyBits(GetPortBitMapForCopyBits(destPort), bitmapPtr,
+		&portRect, &bounds, srcCopy, NULL);
+	}
     }
     return bitmapPtr;
 }
@@ -2069,12 +2069,12 @@ InvertByte(
 {
     unsigned char i;
     unsigned char mask = 1, result = 0;
- 
+
     for (i = (1 << 7); i != 0; i /= 2) {
-        if (data & mask) {
-            result |= i;
-        }
-        mask = mask << 1;
+	if (data & mask) {
+	    result |= i;
+	}
+	mask = mask << 1;
     }
     return result;
 }
@@ -2088,7 +2088,7 @@ InvertByte(
  *        a widget to indicate that it has received the input focus.
  *
  *      On the Macintosh, this puts a 1 pixel border in the bgGC color
- *      between the widget and the focus ring, except in the case where 
+ *      between the widget and the focus ring, except in the case where
  *      highlightWidth is 1, in which case the border is left out.
  *
  *      For proper Mac L&F, use highlightWidth of 3.
@@ -2103,22 +2103,22 @@ InvertByte(
  *----------------------------------------------------------------------
  */
 
-void 
+void
 TkpDrawHighlightBorder (
-        Tk_Window tkwin, 
-        GC fgGC, 
-        GC bgGC, 
-        int highlightWidth,
-        Drawable drawable)
+	Tk_Window tkwin,
+	GC fgGC,
+	GC bgGC,
+	int highlightWidth,
+	Drawable drawable)
 {
     if (highlightWidth == 1) {
-        TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+	TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
     } else {
-        TkDrawInsetFocusHighlight (tkwin, bgGC, highlightWidth, drawable, 0);
-        if (fgGC != bgGC) {
-            TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1, 
-                    drawable, 0);
-        }
+	TkDrawInsetFocusHighlight (tkwin, bgGC, highlightWidth, drawable, 0);
+	if (fgGC != bgGC) {
+	    TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1,
+		    drawable, 0);
+	}
     }
 }
 
