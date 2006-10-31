@@ -1,5 +1,5 @@
 /*
- * $Id: ttkMacOSXTheme.c,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+ * $Id: ttkMacOSXTheme.c,v 1.2 2006/10/31 13:56:58 das Exp $
  *
  * Tk theme engine for Mac OSX, using the Appearance Manager API.
  *
@@ -28,8 +28,7 @@
  *	we don't need to account for this.
  */
 
-#include <Carbon/Carbon.h>
-#include <tkMacOSXInt.h>
+#include "tkMacOSXInt.h"
 #include "ttk/ttkTheme.h"
 
 /*----------------------------------------------------------------------
