@@ -1,0 +1,96 @@
+'\"
+'\" Copyright (c) 2004 Joe English
+'\"
+.so man.macros
+.TH ttk_combobox n 8.5 Tk "Tk Themed Widget"
+.BS
+.SH NAME
+ttk::combobox \- text field with popdown selection list
+.SH SYNOPSIS
+\fBttk::combobox\fR \fIpathName \fR?\fIoptions\fR?
+.SO
+\-class	\-cursor	\-takefocus	\-style
+.SE
+.\" ALSO: Other entry widget options
+.SH "WIDGET-SPECIFIC OPTIONS"
+.OP \-exportselection exportSelection ExportSelection
+Boolean value.
+If set, the widget selection is linked to the X selection.
+.OP \-justify justify Justify
+Specifies how the text is aligned within the widget.
+One of \fBleft\fP, \fBcenter\fP, or \fBright\fP.
+.OP \-postcommand postCommand PostCommand
+A Tcl script to evaluate immediately before displaying the listbox.
+The \fB-postcommand\fP script may specify the \fB-values\fP to display.
+.OP \-state state State
+One of \fBnormal\fR, \fBreadonly\fR, or \fBdisabled\fP.
+In the \fBreadonly\fP state,
+the value may not be edited directly, and 
+the user can only select one of the \fB-values\fP from the
+dropdown list.
+In the \fBnormal\fP state, 
+the text field is directly editable.
+In the \fBdisabled\fP state, no interaction is possible.
+.OP \-textvariable textVariable TextVariable
+Specifies the name of a variable whose value is linked 
+to the widget value.
+Whenever the variable changes value the widget value is updated,
+and vice versa.
+.OP \-values values Values
+Specifies the list of values to display in the drop-down listbox.
+.OP \-width width Width
+Specifies an integer value indicating the desired width of the entry window,
+in average-size characters of the widget's font.
+.BE
+.SH DESCRIPTION
+A combobox combines a text field with a pop-down list of values;
+the user may select the value of the text field from among the 
+values in the list.
+.SH "WIDGET COMMAND"
+.TP
+\fIpathName \fBcget\fR \fIoption\fR
+Returns the current value of the specified \fIoption\fP.
+See \fIwidget(n)\fP.
+.TP
+\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+Modify or query widget options.
+See \fIwidget(n)\fP.
+.TP
+\fIpathName \fBcurrent\fR ?\fInewIndex\fR?
+If \fInewIndex\fP is supplied, sets the combobox value 
+to the element at position \fInewIndex\fR in the list of \fB-values\fR.
+Otherwise, returns the index of the current value in the list of \fB-values\fR
+or \fB-1\fR if the current value does not appear in the list.
+.TP
+\fIpathName \fBget\fR
+Returns the current value of the combobox.
+.TP
+\fIpathName \fBidentify \fIx y\fR
+Returns the name of the element at position \fIx\fP, \fIy\fP,
+or the empty string if the coordinates are outside the window.
+.TP
+\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
+Test the widget state.
+See \fIwidget(n)\fP.
+.TP
+\fIpathName \fBset\fR \fIvalue\fR
+Sets the value of the combobox to \fIvalue\fP.
+.TP
+\fIpathName \fBstate\fR ?\fIstateSpec\fR?
+Modify or query the widget state.
+See \fIwidget(n)\fP.
+.PP
+The combobox widget also supports the following \fIentry\fP
+widget commands (see \fIentry(n)\fP for details):
+.DS
+.ta 5.5c 11c
+bbox	delete	icursor
+index	insert	selection
+xview
+.DE
+.SH "VIRTUAL EVENTS"
+The combobox widget generates a \fB<<ComboboxSelected>>\fP virtual event
+when the user selects an element from the list of values.
+This event is generated after the listbox is unposted.
+.SH "SEE ALSO"
+widget(n), entry(n)

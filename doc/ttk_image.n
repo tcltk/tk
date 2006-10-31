@@ -1,0 +1,73 @@
+'\"
+'\" Copyright (c) 2004 Joe English
+'\" $Id: ttk_image.n,v 1.1 2006/10/31 01:42:25 hobbs Exp $
+'\" 
+.so man.macros
+.TH ttk_image n 8.5 Tk "Tk Themed Widget"
+.BS
+.SH NAME
+ttk_image \- Define an element based on an image
+.SH SYNOPSIS
+\fBttk::style create element \fIname\fR \fBimage\fR \fIimageName\fR ?\fIoptions\fR?
+.BE
+.SH DESCRIPTION
+The \fIimage\fP element factory creates a new element
+in the current theme whose visual appearance is determined
+by a Tk image.
+.SH OPTIONS
+Valid  \fIoptions\fR are:
+.TP
+\fB-border\fP \fIpadding\fP
+\fIpadding\fP is a list of up to four integers, specifying
+the left, top, right, and bottom borders, respectively.
+See \fBIMAGE STRETCHING\fP, below.
+.TP
+\fB-height \fIheight\fP
+Specifies a minimum height for the element.
+If less than zero, the base image's height is used as a default.
+.TP
+\fB-map { \fIstatespec\fP \fIimage\fP.. }
+Specifies auxilliary images to use in different states.
+Each \fIstatespec\fP is a list of state names optionally
+prefixed by an exclamation point, as in \fBttk::style map\fP.
+Each \fIimageName\fP is the name of a Tk image 
+defined with \fBimage create ...\fP.
+When the element is displayed, each \fIstatespec\fP is
+tested in order, and the \fIimage\fP corresponding to
+the first matching \fIstatespec\fP is used.  
+If none match, the base \fIimageName\fP is used.
+.TP
+\fB-padding\fP \fIpadding\fP
+Specifies the element's interior padding.  Defaults to 
+\fI-border\fP if not specified.
+.TP
+\fB-sticky\fP \fIspec\fP
+Specifies how the image is placed within the final parcel.
+\fIspec\fP contains zero or more characters "n", "s", "w", or "e".
+.TP
+\fB-width \fIwidth\fP
+Specifies a minimum width for the element.
+If less than zero, the base image's width is used as a default.
+
+.SH "IMAGE STRETCHING"
+If the element's allocated parcel is larger than the image, 
+the image will be placed in the parcel based on the \fB-sticky\fP option.
+If the image needs to stretch horizontally (i.e., \fB-sticky ew\fP)
+or vertically (\fB-sticky ns\fP),
+subregions of the image are replicated to fill the parcel
+based on the \fB-border\fP option.
+The \fB-border\fP divides the image into 9 regions: 
+four fixed corners, top and left edges (which may be tiled horizontally),
+left and right edges (which may be tiled vertically),
+and the central area (which may be tiled in both directions).
+.SH "EXAMPLE"
+.CS
+set button(normal) [image create photo -file button.png]
+set button(pressed) [image create photo -file button-pressed.png]
+ttk::style element create Button.button image $button(normal) \e
+   -border {2 4} -map [list pressed $button(pressed)] -sticky nswe
+.CE
+.SH "SEE ALSO"
+image(n), photo(n)
+.SH KEYWORDS
+pixmap theme, image

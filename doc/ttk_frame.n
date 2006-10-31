@@ -1,0 +1,43 @@
+'\" Copyright (c) 2005 Joe English
+.so man.macros
+.TH ttk_frame n 8.5 Tk "Tk Themed Widget"
+.BS
+.SH NAME
+ttk::frame \- Simple container widget
+.SH SYNOPSIS
+\fBttk::frame\fR \fIpathName \fR?\fIoptions\fR?
+.BE
+.SH DESCRIPTION
+A \fBframe\fP widget is a container, used to group other widgets together.
+.SO
+\-class	\-cursor	\-takefocus	\-style
+.SE
+.SH "WIDGET-SPECIFIC OPTIONS"
+.OP -borderwidth borderWidth BorderWidth
+The desired width of the widget border.  Defaults to 0. 
+.OP -relief relief Relief
+One of the standard Tk border styles: 
+\fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR,
+\fBsolid\fR, or \fBsunken\fP.
+Defaults to \fBflat\fP.
+.OP -padding padding Padding
+Additional padding to include inside the border.
+.OP -width width Width
+If specified, the widget's requested width in pixels.
+.OP -height height Height
+If specified, the widget's requested height in pixels.
+.SH "WIDGET COMMAND"
+Supports the standard widget commands
+\fBconfigure\fP, \fBcget\fP, \fBinstate\fP, and \fBstate\fP;
+see \fIwidget(n)\fP.
+.SH "NOTES"
+Note that if the \fBpack\fP, \fBgrid\fP, or other geometry managers
+are used to manage the children of the \fBframe\fP,
+by the GM's requested size will normally take precedence
+over the \fBframe\fP widget's \fB-width\fP and \fB-height\fP options.
+[\fBpack propagate\fP] and [\fBgrid propagate\fP] can be used
+to change this.
+.SH "SEE ALSO"
+widget(n), labelframe(n)
+.SH "KEYWORDS"
+widget, frame, container
