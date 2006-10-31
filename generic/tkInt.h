@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.73 2006/09/06 22:39:28 hobbs Exp $
+ * RCS: $Id: tkInt.h,v 1.74 2006/10/31 01:42:25 hobbs Exp $
  */
 
 #ifndef _TKINT
@@ -945,6 +945,12 @@ MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
 #endif
+
+/*
+ * Themed widget set init function:
+ */
+
+MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
 
 /*
  * Internal functions shared among Tk modules but not exported to the outside

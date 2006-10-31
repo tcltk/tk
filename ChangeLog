@@ -1,3 +1,64 @@
+2006-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/ttk_Geometry.3, doc/ttk_Theme.3, doc/ttk_button.n:
+	* doc/ttk_checkbutton.n, doc/ttk_combobox.n, doc/ttk_dialog.n:
+	* doc/ttk_entry.n, doc/ttk_frame.n, doc/ttk_image.n:
+	* doc/ttk_intro.n, doc/ttk_label.n, doc/ttk_labelframe.n:
+	* doc/ttk_menubutton.n, doc/ttk_notebook.n, doc/ttk_panedwindow.n:
+	* doc/ttk_progressbar.n, doc/ttk_radiobutton.n, doc/ttk_scrollbar.n:
+	* doc/ttk_separator.n, doc/ttk_sizegrip.n, doc/ttk_style.n:
+	* doc/ttk_treeview.n, doc/ttk_widget.n,:
+	* generic/ttk/ttk.decls, generic/ttk/ttkBlink.c:
+	* generic/ttk/ttkButton.c, generic/ttk/ttkCache.c:
+	* generic/ttk/ttkClamTheme.c, generic/ttk/ttkClassicTheme.c:
+	* generic/ttk/ttkDecls.h, generic/ttk/ttkDefaultTheme.c:
+	* generic/ttk/ttkElements.c, generic/ttk/ttkEntry.c:
+	* generic/ttk/ttkFrame.c, generic/ttk/ttkImage.c:
+	* generic/ttk/ttkInit.c, generic/ttk/ttkLabel.c:
+	* generic/ttk/ttkLayout.c, generic/ttk/ttkManager.c:
+	* generic/ttk/ttkManager.h, generic/ttk/ttkNotebook.c:
+	* generic/ttk/ttkPanedwindow.c, generic/ttk/ttkProgress.c:
+	* generic/ttk/ttkScale.c, generic/ttk/ttkScroll.c:
+	* generic/ttk/ttkScrollbar.c, generic/ttk/ttkSeparator.c:
+	* generic/ttk/ttkSquare.c, generic/ttk/ttkState.c:
+	* generic/ttk/ttkStubInit.c, generic/ttk/ttkStubLib.c:
+	* generic/ttk/ttkTagSet.c, generic/ttk/ttkTheme.c:
+	* generic/ttk/ttkTheme.h, generic/ttk/ttkThemeInt.h:
+	* generic/ttk/ttkTrace.c, generic/ttk/ttkTrack.c:
+	* generic/ttk/ttkTreeview.c, generic/ttk/ttkWidget.c:
+	* generic/ttk/ttkWidget.h:
+	* library/demos/ttk_demo.tcl, library/demos/ttk_iconlib.tcl:
+	* library/demos/ttk_repeater.tcl:
+	* library/ttk/altTheme.tcl, library/ttk/aquaTheme.tcl:
+	* library/ttk/button.tcl, library/ttk/clamTheme.tcl:
+	* library/ttk/classicTheme.tcl, library/ttk/combobox.tcl:
+	* library/ttk/cursors.tcl, library/ttk/defaults.tcl:
+	* library/ttk/dialog.tcl, library/ttk/entry.tcl:
+	* library/ttk/fonts.tcl, library/ttk/icons.tcl:
+	* library/ttk/keynav.tcl, library/ttk/menubutton.tcl:
+	* library/ttk/notebook.tcl, library/ttk/panedwindow.tcl:
+	* library/ttk/progress.tcl, library/ttk/scale.tcl:
+	* library/ttk/scrollbar.tcl, library/ttk/sizegrip.tcl:
+	* library/ttk/treeview.tcl, library/ttk/ttk.tcl:
+	* library/ttk/utils.tcl, library/ttk/winTheme.tcl:
+	* library/ttk/xpTheme.tcl:
+	* macosx/ttkMacOSXTheme.c:
+	* tests/ttk/all.tcl, tests/ttk/bwidget.test, tests/ttk/combobox.test:
+	* tests/ttk/entry.test, tests/ttk/image.test:
+	* tests/ttk/labelframe.test, tests/ttk/layout.test:
+	* tests/ttk/misc.test, tests/ttk/notebook.test:
+	* tests/ttk/panedwindow.test, tests/ttk/progressbar.test:
+	* tests/ttk/scrollbar.test, tests/ttk/treetags.test:
+	* tests/ttk/treeview.test, tests/ttk/ttk.test, tests/ttk/validate.test:
+	* win/ttkWinMonitor.c, win/ttkWinTheme.c, win/ttkWinXPTheme.c:
+	First import of Ttk themed Tk widgets as branched from tile 0.7.8
+
+	* generic/tkInt.h, generic/tkWindow.c: add Ttk_Init call, copy
+	tk classic widgets to ::tk namespace.
+	* library/tk.tcl: add source of ttk/ttk.tcl, define $::ttk::library.
+	* unix/Makefile.in, win/Makefile.in: add Ttk build bits
+	* win/configure, win/configure.in: check for uxtheme.h (XP theme).
+
 2006-10-23  Don Porter  <dgp@users.sourceforge.net>
 
 	* README:		Bump version number to 8.5a6
