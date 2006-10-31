@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.7 2006/04/22 04:12:02 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.8 2006/10/31 22:33:34 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -50,7 +50,7 @@ static Container *firstContainerPtr = NULL;
  * Globals defined in this file
  */
 
-TkMacOSXEmbedHandler *gMacEmbedHandler = NULL;
+TkMacOSXEmbedHandler *tkMacOSXEmbedHandler = NULL;
 
 /*
  * Prototypes for static procedures defined in this file:
@@ -98,14 +98,14 @@ Tk_MacOSXSetEmbedHandler(
     Tk_MacOSXEmbedGetClipProc *getClipProc,
     Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 {
-    if (gMacEmbedHandler == NULL) {
-            gMacEmbedHandler = (TkMacOSXEmbedHandler *) ckalloc(sizeof(TkMacOSXEmbedHandler));
+    if (tkMacOSXEmbedHandler == NULL) {
+            tkMacOSXEmbedHandler = (TkMacOSXEmbedHandler *) ckalloc(sizeof(TkMacOSXEmbedHandler));
     }
-    gMacEmbedHandler->registerWinProc = registerWinProc;
-    gMacEmbedHandler->getPortProc = getPortProc;
-    gMacEmbedHandler->containerExistProc = containerExistProc;
-    gMacEmbedHandler->getClipProc = getClipProc;
-    gMacEmbedHandler->getOffsetProc = getOffsetProc;    
+    tkMacOSXEmbedHandler->registerWinProc = registerWinProc;
+    tkMacOSXEmbedHandler->getPortProc = getPortProc;
+    tkMacOSXEmbedHandler->containerExistProc = containerExistProc;
+    tkMacOSXEmbedHandler->getClipProc = getClipProc;
+    tkMacOSXEmbedHandler->getOffsetProc = getOffsetProc;    
 }
 
 
@@ -336,8 +336,8 @@ TkpUseWindow(
          * see if it can handle this window...
          */
         
-        if (gMacEmbedHandler == NULL ||
-                gMacEmbedHandler->registerWinProc((int) parent,
+        if (tkMacOSXEmbedHandler == NULL ||
+                tkMacOSXEmbedHandler->registerWinProc((int) parent,
                 (Tk_Window) winPtr) != TCL_OK) {
             Tcl_AppendResult(interp, "The window ID ", string,
                     " does not correspond to a valid Tk Window.",

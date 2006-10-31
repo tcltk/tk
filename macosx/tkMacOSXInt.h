@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.19 2006/09/11 14:41:04 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.20 2006/10/31 22:33:34 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -81,7 +81,7 @@ typedef struct TkMacOSXWindowList {
  * embedding where Tk does not control the top-level.  It contains
  * various functions that are needed by Mac specific routines, like
  * TkMacOSXGetDrawablePort.  The definitions of the function types
- * are in tclMac.h.
+ * are in tkMacOSX.h.
  */
 
 typedef struct {
@@ -92,7 +92,7 @@ typedef struct {
 	Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc;
 } TkMacOSXEmbedHandler;
 
-MODULE_SCOPE TkMacOSXEmbedHandler *gMacEmbedHandler;
+MODULE_SCOPE TkMacOSXEmbedHandler *tkMacOSXEmbedHandler;
 
 /*
  * Defines used for TkMacOSXInvalidateWindow
