@@ -1,3 +1,10 @@
+2006-11-02  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWindowEvent.c (GenerateUpdateEvent): fix handling of
+	Carbon Update events: the QuickDraw window update region was being
+	ignored and all child TkWindows were sent an Expose XEvent even when
+	they did not need to be redrawn. [Patch 1589226]
+
 2006-11-01  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDebug.c: add TkMacOSX prefix to leftover macosx-private

@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.16 2006/09/10 17:06:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.17 2006/11/02 12:24:41 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -70,15 +70,14 @@ static int tkMacOSXAppInFront = true;	/* Boolean variable for determining if
 					 * we are the frontmost app.  Only set 
 					 * in TkMacOSXProcessApplicationEvent
 					 */
-static RgnHandle gDamageRgn;
-static RgnHandle visRgn;
+static RgnHandle gDamageRgn = NULL;
 
 /*
  * Declaration of functions used only in this file
  */
  
 static int GenerateUpdateEvent( Window window);
-static void GenerateUpdates( RgnHandle updateRgn, TkWindow *winPtr);
+static int GenerateUpdates( RgnHandle updateRgn, TkWindow *winPtr);
 static int GenerateActivateEvents( Window window, int activeFlag);
 
 
@@ -246,8 +245,8 @@ TkMacOSXProcessWindowEvent(
  *
  * GenerateUpdateEvent --
  *
- *      Given a Macintosh window update event this function generates all the
- *      X update events needed by Tk.
+ *      Given a Macintosh window update event this function generates
+ *      all the the Expose XEvents needed by Tk.
  *
  * Results:     
  *      True if event(s) are generated - false otherwise.
@@ -260,41 +259,48 @@ TkMacOSXProcessWindowEvent(
 static int
 GenerateUpdateEvent(Window window)
 {
+    CGrafPtr    destPort;
     WindowRef   macWindow;
     TkDisplay * dispPtr;
     TkWindow  * winPtr;
-    Rect        bounds;
+    int         result = 0;
+    static RgnHandle updtRgn = NULL, visRgn = NULL;
     
     dispPtr = TkGetDisplayList();
     winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
  
     if (winPtr ==NULL ){
-        return false;
+        return result;
     }
     if (gDamageRgn == NULL) {
         gDamageRgn = NewRgn();
     }
+    if (updtRgn == NULL) {
+        updtRgn = NewRgn();
+    }
     if (visRgn == NULL) {
         visRgn = NewRgn();
     }
-    macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(window));
+    destPort = TkMacOSXGetDrawablePort(window);
+    macWindow = GetWindowFromPort(destPort);
+    GetWindowRegion(macWindow, kWindowUpdateRgn, updtRgn);
+    visRgn = QDGlobalToLocalRegion(destPort, updtRgn);
+    SectRegionWithPortVisibleRegion(destPort, visRgn);
+#if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_CLIP_REGIONS)
+    TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
+				 CGrafPtr port, RgnHandle region);
+    if (QDDebugFlashRegion) {
+	/* Carbon-internal region flashing SPI (c.f. Technote 2124) */
+	QDDebugFlashRegion(destPort, visRgn);
+    }
+#endif /* TK_MAC_DEBUG_CLIP_REGIONS */
     BeginUpdate(macWindow);
-    /*
-     * In the Classic version of the code, this was the "visRgn" field of the WindowRec
-     * This no longer exists in OS X, so retrieve the content region instead
-     * Note that this is in screen coordinates
-     * We therefore convert it to window relative coordinates
-     */
-    GetWindowRegion (macWindow, kWindowContentRgn, visRgn );
-    GetRegionBounds(visRgn,&bounds);
-    bounds.right -= bounds.left;
-    bounds.bottom -= bounds.top;
-    bounds.left = 0;
-    bounds.top=0;
-    RectRgn(visRgn, &bounds);
-    GenerateUpdates(visRgn, winPtr);
+    result = GenerateUpdates(visRgn, winPtr);
     EndUpdate(macWindow);
-    return true;
+    SetEmptyRgn(visRgn);
+    SetEmptyRgn(updtRgn);
+    SetEmptyRgn(gDamageRgn);
+    return result;
  }
 
 /*
@@ -303,12 +309,12 @@ GenerateUpdateEvent(Window window)
  * GenerateUpdates --
  *
  *        Given a Macintosh update region and a Tk window this function
- *        geneates a X damage event for the window if it is within the
+ *        geneates a X Expose event for the window if it is within the
  *        update region.  The function will then recursivly have each
- *        damaged window generate damage events for its child windows.
+ *        damaged window generate Expose events for its child windows.
  *
  * Results:
- *        None.
+ *        True if event(s) are generated - false otherwise.
  *
  * Side effects:
  *        Additional events may be place on the Tk event queue.
@@ -316,7 +322,7 @@ GenerateUpdateEvent(Window window)
  *----------------------------------------------------------------------
  */
 
-static void
+static int
 GenerateUpdates(
     RgnHandle updateRgn,
     TkWindow *winPtr)
@@ -333,10 +339,10 @@ GenerateUpdates(
         bounds.left > updateBounds.right ||
         updateBounds.left > bounds.right ||
         !RectInRgn(&bounds, updateRgn)) {
-        return;
+        return 0;
     }
     if (!RectInRgn(&bounds, updateRgn)) {
-        return;
+        return 0;
     }
 
     event.xany.serial = Tk_Display(winPtr)->request;
@@ -395,7 +401,7 @@ GenerateUpdates(
                     
     }        
 
-    return;
+    return 1;
 }
 
 /*         
