@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.17 2006/11/02 12:24:41 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.18 2006/11/02 15:18:13 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -246,7 +246,7 @@ TkMacOSXProcessWindowEvent(
  * GenerateUpdateEvent --
  *
  *      Given a Macintosh window update event this function generates
- *      all the the Expose XEvents needed by Tk.
+ *      all the Expose XEvents needed by Tk.
  *
  * Results:     
  *      True if event(s) are generated - false otherwise.
