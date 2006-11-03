@@ -1,5 +1,5 @@
 /*
- * $Id: ttkTreeview.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkTreeview.c,v 1.2 2006/11/03 03:06:22 das Exp $
  * Copyright (c) 2004, Joe English
  *
  * Ttk widget set: treeview widget.
@@ -9,6 +9,8 @@
 #include <tk.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
+
+#ifdef TTK_TREEVIEW_WIDGET
 
 #define DEF_TREE_ROWS		"10"
 #define DEF_TREE_PADDING	"4"
@@ -439,7 +441,7 @@ static Tk_OptionSpec TreeviewOptionSpecs[] =
 	NULL, -1, Tk_Offset(Treeview, tree.yscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /*------------------------------------------------------------------------
@@ -739,7 +741,7 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
 
 static TreeItem *IdentifyItem(Treeview *tv,int y,Ttk_Box *itemPos); /*forward*/
 
-const unsigned int TreeviewBindEventMask =
+static const unsigned int TreeviewBindEventMask =
       KeyPressMask|KeyReleaseMask
     | ButtonPressMask|ButtonReleaseMask
     | PointerMotionMask|ButtonMotionMask
@@ -853,7 +855,7 @@ static int TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 
     /* Scroll handles:
      */
-    tv->tree.yscrollHandle = CreateScrollHandle(&tv->core, &tv->tree.yscroll);
+    tv->tree.yscrollHandle = TtkCreateScrollHandle(&tv->core, &tv->tree.yscroll);
 
     return TCL_OK;
 }
@@ -880,7 +882,7 @@ static void TreeviewCleanup(void *recordPtr)
     foreachHashEntry(&tv->tree.items, FreeItemCB);
     Tcl_DeleteHashTable(&tv->tree.items);
 
-    FreeScrollHandle(tv->tree.yscrollHandle);
+    TtkFreeScrollHandle(tv->tree.yscrollHandle);
 }
 
 /* + TreeviewConfigure --
@@ -905,7 +907,7 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	    return TCL_ERROR;
     }
     if (mask & SCROLLCMD_CHANGED) {
-	ScrollbarUpdateRequired(tv->tree.yscrollHandle);
+	TtkScrollbarUpdateRequired(tv->tree.yscrollHandle);
     }
 
     if (  (mask & SHOW_CHANGED)
@@ -915,7 +917,7 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	return TCL_ERROR;
     }
 
-    if (CoreConfigure(interp, recordPtr, mask) != TCL_OK) {
+    if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -951,10 +953,10 @@ static int ConfigureItem(
      */
     if (item->imageObj) {
 	Tk_Image *images = NULL;
-	if (GetImageList(interp, &tv->core, item->imageObj, &images) != TCL_OK)
+	if (TtkGetImageList(interp, &tv->core, item->imageObj, &images) != TCL_OK)
 	    goto error;
 	if (images)
-	    FreeImageList(images);
+	    TtkFreeImageList(images);
     }
 
     /* Keep TTK_STATE_OPEN flag in sync with item->openObj.
@@ -1274,7 +1276,7 @@ static Ttk_Layout TreeviewGetLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr)
 {
     Treeview *tv = recordPtr;
-    Ttk_Layout treeLayout = WidgetGetLayout(interp, themePtr, recordPtr);
+    Ttk_Layout treeLayout = TtkWidgetGetLayout(interp, themePtr, recordPtr);
 
     if (!(
 	GetSublayout(interp, themePtr, treeLayout, ".Item",
@@ -1321,7 +1323,7 @@ static void TreeviewDoLayout(void *clientData)
     }
 
     tv->tree.root->state |= TTK_STATE_OPEN;
-    Scrolled(tv->tree.yscrollHandle,
+    TtkScrolled(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first,
 	    tv->tree.yscroll.first + (tv->tree.treeArea.height / ROWHEIGHT),
 	    CountRows(tv->tree.root) - 1);
@@ -2105,10 +2107,10 @@ static int TreeviewItemCommand(
     }
 
     if (objc == 3) {
-	return EnumerateOptions(interp, item, ItemOptionSpecs,
+	return TtkEnumerateOptions(interp, item, ItemOptionSpecs,
 	    tv->tree.itemOptionTable,  tv->core.tkwin);
     } else if (objc == 4) {
-	return GetOptionValue(interp, item, objv[3],
+	return TtkGetOptionValue(interp, item, objv[3],
 	    tv->tree.itemOptionTable, tv->core.tkwin);
     } else {
 	return ConfigureItem(interp, tv, item, objc-3, objv+3);
@@ -2133,10 +2135,10 @@ static int TreeviewColumnCommand(
     }
 
     if (objc == 3) {
-	return EnumerateOptions(interp, column, ColumnOptionSpecs,
+	return TtkEnumerateOptions(interp, column, ColumnOptionSpecs,
 	    tv->tree.columnOptionTable, tv->core.tkwin);
     } else if (objc == 4) {
-	return GetOptionValue(interp, column, objv[3],
+	return TtkGetOptionValue(interp, column, objv[3],
 	    tv->tree.columnOptionTable, tv->core.tkwin);
     } else {
 	return ConfigureColumn(interp, tv, column, objc-3, objv+3);
@@ -2163,10 +2165,10 @@ static int TreeviewHeadingCommand(
     }
 
     if (objc == 3) {
-	return EnumerateOptions(
+	return TtkEnumerateOptions(
 	    interp, column, HeadingOptionSpecs, optionTable, tkwin);
     } else if (objc == 4) {
-	return GetOptionValue(
+	return TtkGetOptionValue(
 	    interp, column, objv[3], optionTable, tkwin);
     } else {
 	return ConfigureHeading(interp, tv, column, objc-3,objv+3);
@@ -2497,7 +2499,7 @@ static int TreeviewYViewCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Treeview *tv = recordPtr;
-    return ScrollviewCommand(interp, objc, objv, tv->tree.yscrollHandle);
+    return TtkScrollviewCommand(interp, objc, objv, tv->tree.yscrollHandle);
 }
 
 /* $tree see $item --
@@ -2533,9 +2535,9 @@ static int TreeviewSeeCommand(
      */
     rowNumber = RowNumber(tv, item);
     if (rowNumber < tv->tree.yscroll.first) {
-	ScrollTo(tv->tree.yscrollHandle, rowNumber);
+	TtkScrollTo(tv->tree.yscrollHandle, rowNumber);
     } else if (rowNumber >= tv->tree.yscroll.last) {
-	ScrollTo(tv->tree.yscrollHandle,
+	TtkScrollTo(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last));
     }
 
@@ -2638,7 +2640,7 @@ static int TreeviewSelectionCommand(
     }
 
     ckfree((ClientData)items);
-    SendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
     TtkRedisplayWidget(&tv->core);
 
     return TCL_OK;
@@ -2714,10 +2716,10 @@ static int TreeviewTagConfigureCommand(
     tagRecord = Ttk_TagRecord(tag);
 
     if (objc == 4) {
-	return EnumerateOptions(interp, tagRecord, TagOptionSpecs,
+	return TtkEnumerateOptions(interp, tagRecord, TagOptionSpecs,
 		tv->tree.tagOptionTable, tv->core.tkwin);
     } else if (objc == 5) {
-	return GetOptionValue(interp, tagRecord, objv[4],
+	return TtkGetOptionValue(interp, tagRecord, objv[4],
 		tv->tree.tagOptionTable, tv->core.tkwin);
     }
     /* else */
@@ -2738,7 +2740,7 @@ static int TreeviewTagCommand(
 	{ "configure",	TreeviewTagConfigureCommand },
 	{0,0}
     };
-    return WidgetEnsembleCommand(
+    return TtkWidgetEnsembleCommand(
 	    TreeviewTagCommands, 2, interp, objc, objv, recordPtr);
 }
 
@@ -2749,9 +2751,9 @@ static WidgetCommandSpec TreeviewCommands[] =
 {
     { "bbox",  		TreeviewBBoxCommand },
     { "children",	TreeviewChildrenCommand },
-    { "cget",		WidgetCgetCommand },
+    { "cget",		TtkWidgetCgetCommand },
     { "column", 	TreeviewColumnCommand },
-    { "configure",	WidgetConfigureCommand },
+    { "configure",	TtkWidgetConfigureCommand },
     { "delete", 	TreeviewDeleteCommand },
     { "detach", 	TreeviewDetachCommand },
     { "exists", 	TreeviewExistsCommand },
@@ -2759,7 +2761,7 @@ static WidgetCommandSpec TreeviewCommands[] =
     { "heading", 	TreeviewHeadingCommand },
     { "identify",  	TreeviewIdentifyCommand },
     { "index",  	TreeviewIndexCommand },
-    { "instate",	WidgetInstateCommand },
+    { "instate",	TtkWidgetInstateCommand },
     { "insert", 	TreeviewInsertCommand },
     { "item", 		TreeviewItemCommand },
     { "move", 		TreeviewMoveCommand },
@@ -2769,7 +2771,7 @@ static WidgetCommandSpec TreeviewCommands[] =
     { "see", 		TreeviewSeeCommand },
     { "selection" ,	TreeviewSelectionCommand },
     { "set",  		TreeviewSetCommand },
-    { "state",  	WidgetStateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { "tag",    	TreeviewTagCommand },
     { "yview",  	TreeviewYViewCommand },
     { NULL, NULL }
@@ -2779,7 +2781,7 @@ static WidgetCommandSpec TreeviewCommands[] =
  * +++ Widget definition.
  */
 
-WidgetSpec TreeviewWidgetSpec =
+static WidgetSpec TreeviewWidgetSpec =
 {
     "Treeview",			/* className */
     sizeof(Treeview),   	/* recordSize */
@@ -2788,7 +2790,7 @@ WidgetSpec TreeviewWidgetSpec =
     TreeviewInitialize,   	/* initializeProc */
     TreeviewCleanup,		/* cleanupProc */
     TreeviewConfigure,    	/* configureProc */
-    NullPostConfigure,  	/* postConfigureProc */
+    TtkNullPostConfigure,  	/* postConfigureProc */
     TreeviewGetLayout, 		/* getLayoutProc */
     TreeviewSize, 		/* sizeProc */
     TreeviewDoLayout,		/* layoutProc */
@@ -2892,7 +2894,7 @@ static void TreeitemIndicatorDraw(
     mask = GCForeground | GCLineWidth;
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
 
-    DrawArrow(Tk_Display(tkwin), d, gc, b, direction);
+    TtkDrawArrow(Tk_Display(tkwin), d, gc, b, direction);
 
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
@@ -2941,14 +2943,14 @@ static Ttk_ElementSpec RowElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(RowElement),
     RowElementOptions,
-    NullElementGeometry,
+    TtkNullElementGeometry,
     RowElementDraw
 };
 
 /*------------------------------------------------------------------------
  * +++ Initialisation.
  */
-DLLEXPORT int Treeview_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkTreeview_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme = Ttk_GetDefaultTheme(interp);
 
@@ -2969,5 +2971,7 @@ DLLEXPORT int Treeview_Init(Tcl_Interp *interp)
 
     return TCL_OK;
 }
+
+#endif /* TTK_TREEVIEW_WIDGET */
 
 /*EOF*/

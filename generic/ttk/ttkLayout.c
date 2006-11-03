@@ -1,11 +1,11 @@
 /*
- * layout.c --
+ * ttkLayout.c --
  *
  * Generic layout processing.
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkLayout.c,v 1.2 2006/11/03 03:06:22 das Exp $
  */
 
 #include <string.h>
