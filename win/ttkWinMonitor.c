@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkWinMonitor.c,v 1.3 2006/11/03 14:42:09 das Exp $
  */
 
 #ifdef _MSC_VER
@@ -8,7 +8,7 @@
 #include <windows.h>
 #include <tcl.h>
 #include <tk.h>
-#include <tkPlatDecls.h>
+#include <tkWinInt.h>
 #include "ttk/ttkTheme.h"
 
 #if !defined(WM_THEMECHANGED)
