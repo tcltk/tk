@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.97 2006/10/31 22:26:19 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.98 2006/11/03 11:22:22 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -465,8 +465,7 @@ crt = -MT
 !endif
 !endif
 
-BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES) \
-                  -DTK_SEND_ENABLED_ON_WINDOWS
+BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
 TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
 CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
 WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
