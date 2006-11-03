@@ -1,4 +1,4 @@
-/* $Id: ttkSeparator.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkSeparator.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (c) 2004, Joe English
  *
@@ -29,9 +29,9 @@ static Tk_OptionSpec SeparatorOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	Tk_Offset(Separator,separator.orientObj),
 	Tk_Offset(Separator,separator.orient),
-	0,(ClientData)TTKOrientStrings,STYLE_CHANGED },
+	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /*
@@ -42,7 +42,7 @@ static Ttk_Layout SeparatorGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
     Separator *sep = recordPtr;
-    return WidgetGetOrientedLayout(
+    return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, sep->separator.orientObj);
 }
 
@@ -51,31 +51,32 @@ static Ttk_Layout SeparatorGetLayout(
  */
 static WidgetCommandSpec SeparatorCommands[] =
 {
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
-    { "identify",	WidgetIdentifyCommand },
-    { "instate",	WidgetInstateCommand },
-    { "state",  	WidgetStateCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
+    { "identify",	TtkWidgetIdentifyCommand },
+    { "instate",	TtkWidgetInstateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { NULL, NULL }
 };
 
 /*
  * Widget specification:
  */
-WidgetSpec SeparatorWidgetSpec =
+MODULE_SCOPE WidgetSpec ttkSeparatorWidgetSpec;
+WidgetSpec ttkSeparatorWidgetSpec =
 {
     "TSeparator",		/* className */
     sizeof(Separator),		/* recordSize */
     SeparatorOptionSpecs,	/* optionSpecs */
     SeparatorCommands,		/* subcommands */
-    NullInitialize,		/* initializeProc */
-    NullCleanup,		/* cleanupProc */
-    CoreConfigure,		/* configureProc */
-    NullPostConfigure,		/* postConfigureProc */
+    TtkNullInitialize,		/* initializeProc */
+    TtkNullCleanup,		/* cleanupProc */
+    TtkCoreConfigure,		/* configureProc */
+    TtkNullPostConfigure,		/* postConfigureProc */
     SeparatorGetLayout,		/* getLayoutProc */
-    WidgetSize, 		/* sizeProc */
-    WidgetDoLayout,		/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetDoLayout,		/* layoutProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 
 /* +++ Sizegrip widget:
@@ -84,28 +85,29 @@ WidgetSpec SeparatorWidgetSpec =
 
 static WidgetCommandSpec SizegripCommands[] =
 {
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
-    { "identify",	WidgetIdentifyCommand },
-    { "instate",	WidgetInstateCommand },
-    { "state",  	WidgetStateCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
+    { "identify",	TtkWidgetIdentifyCommand },
+    { "instate",	TtkWidgetInstateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { NULL, NULL }
 };
 
-WidgetSpec SizegripWidgetSpec =
+MODULE_SCOPE WidgetSpec ttkSizegripWidgetSpec;
+WidgetSpec ttkSizegripWidgetSpec =
 {
     "TSizegrip",		/* className */
     sizeof(WidgetCore),		/* recordSize */
-    CoreOptionSpecs, 		/* optionSpecs */
+    ttkCoreOptionSpecs, 		/* optionSpecs */
     SizegripCommands,		/* subcommands */
-    NullInitialize,		/* initializeProc */
-    NullCleanup,		/* cleanupProc */
-    CoreConfigure,		/* configureProc */
-    NullPostConfigure,		/* postConfigureProc */
-    WidgetGetLayout, 		/* getLayoutProc */
-    WidgetSize, 		/* sizeProc */
-    WidgetDoLayout,		/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkNullInitialize,		/* initializeProc */
+    TtkNullCleanup,		/* cleanupProc */
+    TtkCoreConfigure,		/* configureProc */
+    TtkNullPostConfigure,		/* postConfigureProc */
+    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetSize, 		/* sizeProc */
+    TtkWidgetDoLayout,		/* layoutProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 
 /*EOF*/

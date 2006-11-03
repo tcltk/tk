@@ -1,4 +1,4 @@
-/* $Id: ttkScale.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkScale.c,v 1.2 2006/11/03 03:06:22 das Exp $
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * Ttk widget set: scale widget.
@@ -56,7 +56,7 @@ static Tk_OptionSpec ScaleOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	Tk_Offset(Scale,scale.orientObj),
 	Tk_Offset(Scale,scale.orient), 0, 
-	(ClientData)TTKOrientStrings, STYLE_CHANGED },
+	(ClientData)ttkOrientStrings, STYLE_CHANGED },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
 	Tk_Offset(Scale,scale.fromObj), -1, 0, 0, 0},
@@ -68,7 +68,7 @@ static Tk_OptionSpec ScaleOptionSpecs[] =
 	DEF_SCALE_LENGTH, Tk_Offset(Scale,scale.lengthObj), -1, 0, 0, 
     	GEOMETRY_CHANGED},
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 static XPoint ValueToPoint(Scale *scalePtr, double value);
@@ -86,13 +86,13 @@ static void ScaleVariableChanged(void *recordPtr, const char *value)
     double v;
 
     if (value == NULL || Tcl_GetDouble(0, value, &v) != TCL_OK) {
-	WidgetChangeState(&scale->core, TTK_STATE_INVALID, 0);
+	TtkWidgetChangeState(&scale->core, TTK_STATE_INVALID, 0);
     } else {
 	Tcl_Obj *valueObj = Tcl_NewDoubleObj(v);
 	Tcl_IncrRefCount(valueObj);
 	Tcl_DecrRefCount(scale->scale.valueObj);
 	scale->scale.valueObj = valueObj;
-	WidgetChangeState(&scale->core, 0, TTK_STATE_INVALID);
+	TtkWidgetChangeState(&scale->core, 0, TTK_STATE_INVALID);
     }
     TtkRedisplayWidget(&scale->core);
 }
@@ -104,7 +104,7 @@ static int ScaleInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Scale *scalePtr = recordPtr;
 
-    TrackElementState(&scalePtr->core);
+    TtkTrackElementState(&scalePtr->core);
     return TCL_OK;
 }
 
@@ -132,7 +132,7 @@ static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	if (!vt) return TCL_ERROR;
     }
 
-    if (CoreConfigure(interp, recordPtr, mask) != TCL_OK) {
+    if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
 	if (vt) Ttk_UntraceVariable(vt);
 	return TCL_ERROR;
     }
@@ -179,7 +179,7 @@ static Ttk_Layout
 ScaleGetLayout(Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
     Scale *scalePtr = recordPtr;
-    return WidgetGetOrientedLayout(
+    return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, scalePtr->scale.orientObj);
 }
 
@@ -474,18 +474,19 @@ ValueToPoint(Scale *scalePtr, double value)
 
 static WidgetCommandSpec ScaleCommands[] =
 {
-    { "configure",   WidgetConfigureCommand },
-    { "cget",        WidgetCgetCommand },
-    { "state",       WidgetStateCommand },
-    { "instate",     WidgetInstateCommand },
-    { "identify",    WidgetIdentifyCommand },
+    { "configure",   TtkWidgetConfigureCommand },
+    { "cget",        TtkWidgetCgetCommand },
+    { "state",       TtkWidgetStateCommand },
+    { "instate",     TtkWidgetInstateCommand },
+    { "identify",    TtkWidgetIdentifyCommand },
     { "set",         ScaleSetCommand },
     { "get",         ScaleGetCommand },
     { "coords",      ScaleCoordsCommand },
     { 0, 0 }
 };
 
-WidgetSpec ScaleWidgetSpec = 
+MODULE_SCOPE WidgetSpec ttkScaleWidgetSpec;
+WidgetSpec ttkScaleWidgetSpec = 
 {
     "TScale",			/* Class name */
     sizeof(Scale),		/* record size */
@@ -498,6 +499,6 @@ WidgetSpec ScaleWidgetSpec =
     ScaleGetLayout, 		/* getLayoutProc */
     ScaleSize,			/* sizeProc */
     ScaleDoLayout,		/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 

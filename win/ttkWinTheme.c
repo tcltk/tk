@@ -1,6 +1,6 @@
 /* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
  *
- * $Id: ttkWinTheme.c,v 1.1 2006/10/31 01:42:28 hobbs Exp $
+ * $Id: ttkWinTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
  */
 
 #ifdef _MSC_VER
@@ -155,7 +155,7 @@ static Ttk_ElementSpec FrameControlElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     FrameControlElementGeometry,
     FrameControlElementDraw
 };
@@ -392,7 +392,7 @@ static Ttk_ElementSpec FocusElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     FocusElementGeometry,
     FocusElementDraw
 };
@@ -519,8 +519,8 @@ static Ttk_ElementSpec TroughElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
-    NullElementGeometry,
+    TtkNullElementOptions,
+    TtkNullElementGeometry,
     TroughElementDraw
 };
 
@@ -665,7 +665,7 @@ static Ttk_ElementSpec ClientElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     ClientElementGeometry,
     ClientElementDraw
 };
@@ -691,7 +691,7 @@ TTK_END_LAYOUT
 
 /* ---------------------------------------------------------------------- */
 
-int WinTheme_Init(Tcl_Interp *interp, HWND hwnd)
+MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     Ttk_Theme themePtr, parentPtr;
     FrameControlElementData *fce = FrameControlElements;

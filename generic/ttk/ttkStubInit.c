@@ -1,5 +1,5 @@
 /*
- * $Id: ttkStubInit.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkStubInit.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  * It is compiled and linked in with the ttk package proper.
@@ -7,6 +7,8 @@
 
 #include "tk.h"
 #include "ttkTheme.h"
+
+MODULE_SCOPE TtkStubs ttkStubs;
 
 /* !BEGIN!: Do not edit below this line. */
 

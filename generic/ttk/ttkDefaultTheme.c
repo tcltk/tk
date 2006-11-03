@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.2 2006/10/31 13:56:58 das Exp $
+/* $Id: ttkDefaultTheme.c,v 1.3 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -54,7 +54,7 @@ static int shadowColors[6][4] =
 };
 
 /* top-left, bottom-right */
-int thinShadowColors[6][4] =
+static int thinShadowColors[6][4] =
 {
     { FLAT, FLAT },	/* TK_RELIEF_FLAT   = 0*/
     { DARK, LITE },	/* TK_RELIEF_GROOVE = 1*/
@@ -194,7 +194,7 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection dir, XPoint points[4])
 }
 
 /*public*/
-void ArrowSize(int h, ArrowDirection dir, int *widthPtr, int *heightPtr)
+void TtkArrowSize(int h, ArrowDirection dir, int *widthPtr, int *heightPtr)
 {
     switch (dir) {
 	case ARROW_UP:
@@ -205,11 +205,11 @@ void ArrowSize(int h, ArrowDirection dir, int *widthPtr, int *heightPtr)
 }
 
 /*
- * DrawArrow, FillArrow --
+ * TtkDrawArrow, TtkFillArrow --
  * 	Draw an arrow in the indicated direction inside the specified box.
  */
 /*public*/ 
-void FillArrow(
+void TtkFillArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection dir)
 {
     XPoint points[4];
@@ -219,7 +219,7 @@ void FillArrow(
 }
 
 /*public*/ 
-void DrawArrow(
+void TtkDrawArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection dir)
 {
     XPoint points[4];
@@ -405,7 +405,7 @@ static char *button_images[] = {
 };
 #endif
 
-Ttk_StateTable checkbutton_states[] =
+static Ttk_StateTable checkbutton_states[] =
 {
     { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
     { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
@@ -429,14 +429,14 @@ static char *checkbutton_pixels[] = {
     "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 };
 
-IndicatorSpec checkbutton_spec =
+static IndicatorSpec checkbutton_spec =
 {
     13, 13, 4,		/* width, height, nimages */
     checkbutton_pixels,
     checkbutton_states
 };
 
-Ttk_StateTable radiobutton_states[] =
+static Ttk_StateTable radiobutton_states[] =
 {
     { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
     { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
@@ -461,7 +461,7 @@ static char *radiobutton_pixels[] = {
     "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 };
 
-IndicatorSpec radiobutton_spec =
+static IndicatorSpec radiobutton_spec =
 {
     13, 13, 4,		/* width, height, nimages */
     radiobutton_pixels,
@@ -653,7 +653,7 @@ static void ArrowElementSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &width);
     width -= Ttk_PaddingWidth(ArrowPadding);
-    ArrowSize(width/2, direction, widthPtr, heightPtr);
+    TtkArrowSize(width/2, direction, widthPtr, heightPtr);
     *paddingPtr = ArrowPadding;
 }
 
@@ -675,7 +675,7 @@ static void ArrowElementDraw(
 	tkwin, d, border, b.x, b.y, b.width, b.height, 0, TK_RELIEF_FLAT);
     DrawBorder(tkwin,d,border,borderColor,b,borderWidth,relief);
 
-    FillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
+    TtkFillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
 	Ttk_PadBox(b, ArrowPadding), direction);
 }
 
@@ -755,10 +755,10 @@ static void MenubuttonArrowElementDraw(
 	case POST_FLUSH:	arrowDirection = ARROW_DOWN; break;
     }
 
-    ArrowSize(size, arrowDirection, &width, &height);
+    TtkArrowSize(size, arrowDirection, &width, &height);
     b = Ttk_PadBox(b, MenubuttonArrowPadding);
     b = Ttk_AnchorBox(b, width, height, TK_ANCHOR_CENTER);
-    FillArrow(Tk_Display(tkwin), d, gc, b, arrowDirection);
+    TtkFillArrow(Tk_Display(tkwin), d, gc, b, arrowDirection);
 }
 
 static Ttk_ElementSpec MenubuttonArrowElementSpec =
@@ -1113,10 +1113,10 @@ static Ttk_ElementSpec TreeitemIndicatorElementSpec =
 
 
 /*------------------------------------------------------------------------
- * AltTheme_Init --
+ * TtkAltTheme_Init --
  * 	Install alternate theme.
  */
-int AltTheme_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "alt", NULL);
 

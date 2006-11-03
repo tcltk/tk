@@ -1,4 +1,4 @@
-/* $Id: ttkScrollbar.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkScrollbar.c,v 1.2 2006/11/03 03:06:22 das Exp $
  * Copyright (c) 2003, Joe English
  * Ttk widget set: scrollbar widget implementation.
  */
@@ -40,9 +40,9 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	Tk_Offset(Scrollbar,scrollbar.orientObj),
 	Tk_Offset(Scrollbar,scrollbar.orient),
-	0,(ClientData)TTKOrientStrings,STYLE_CHANGED },
+	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /*------------------------------------------------------------------------
@@ -56,7 +56,7 @@ ScrollbarInitialize(Tcl_Interp *interp, void *recordPtr)
     sb->scrollbar.first = 0.0;
     sb->scrollbar.last = 1.0;
 
-    TrackElementState(&sb->core);
+    TtkTrackElementState(&sb->core);
 
     return TCL_OK;
 }
@@ -65,7 +65,7 @@ static Ttk_Layout ScrollbarGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
     Scrollbar *sb = recordPtr;
-    return WidgetGetOrientedLayout(
+    return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, sb->scrollbar.orientObj);
 }
 
@@ -282,35 +282,36 @@ ScrollbarFractionCommand(
 
 static WidgetCommandSpec ScrollbarCommands[] =
 {
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
     { "delta",    	ScrollbarDeltaCommand },
     { "fraction",    	ScrollbarFractionCommand },
     { "get",    	ScrollbarGetCommand },
-    { "identify",	WidgetIdentifyCommand },
-    { "instate",	WidgetInstateCommand },
+    { "identify",	TtkWidgetIdentifyCommand },
+    { "instate",	TtkWidgetInstateCommand },
     { "set",  		ScrollbarSetCommand },
-    { "state",  	WidgetStateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { 0,0 }
 };
 
 /*------------------------------------------------------------------------
  * +++ Widget specification.
  */
-WidgetSpec ScrollbarWidgetSpec =
+MODULE_SCOPE WidgetSpec ttkScrollbarWidgetSpec;
+WidgetSpec ttkScrollbarWidgetSpec =
 {
     "TScrollbar",		/* className */
     sizeof(Scrollbar),		/* recordSize */
     ScrollbarOptionSpecs,	/* optionSpecs */
     ScrollbarCommands,		/* subcommands */
     ScrollbarInitialize,	/* initializeProc */
-    NullCleanup,		/* cleanupProc */
-    CoreConfigure,		/* configureProc */
-    NullPostConfigure,		/* postConfigureProc */
+    TtkNullCleanup,		/* cleanupProc */
+    TtkCoreConfigure,		/* configureProc */
+    TtkNullPostConfigure,		/* postConfigureProc */
     ScrollbarGetLayout,		/* getLayoutProc */
-    WidgetSize, 		/* sizeProc */
+    TtkWidgetSize, 		/* sizeProc */
     ScrollbarDoLayout,		/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 
 /*EOF*/

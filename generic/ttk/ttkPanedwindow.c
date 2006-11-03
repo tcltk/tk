@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkPanedwindow.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -78,9 +78,9 @@ typedef struct {
 static Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	Tk_Offset(Paned,paned.orientObj), Tk_Offset(Paned,paned.orient),
-	0,(ClientData)TTKOrientStrings,READONLY_OPTION|STYLE_CHANGED },
+	0,(ClientData)ttkOrientStrings,READONLY_OPTION|STYLE_CHANGED },
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /*------------------------------------------------------------------------
@@ -406,7 +406,7 @@ static void PanedEventProc(ClientData clientData, XEvent *eventPtr)
     if (   eventPtr->type == LeaveNotify
 	&& eventPtr->xcrossing.detail == NotifyInferior)
     {
-	SendVirtualEvent(corePtr->tkwin, "EnteredChild");
+	TtkSendVirtualEvent(corePtr->tkwin, "EnteredChild");
     }
 }
 
@@ -445,7 +445,7 @@ static Ttk_Layout PanedGetLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr)
 {
     Paned *pw = recordPtr;
-    Ttk_Layout panedLayout = WidgetGetLayout(interp, themePtr, recordPtr);
+    Ttk_Layout panedLayout = TtkWidgetGetLayout(interp, themePtr, recordPtr);
     int horizontal = pw->paned.orient == TTK_ORIENT_HORIZONTAL;
     const char *layoutName = horizontal ? ".Vertical.Sash" : ".Horizontal.Sash";
     Ttk_Layout sashLayout = Ttk_CreateSublayout(interp, themePtr, panedLayout,
@@ -483,7 +483,7 @@ static void PanedDisplay(void *recordPtr, Drawable d)
     int nPanes = Ttk_NumberSlaves(pw->paned.mgr);
     int i;
 
-    WidgetDisplay(recordPtr, d);
+    TtkWidgetDisplay(recordPtr, d);
 
     /* Draw sashes:
      */
@@ -652,10 +652,10 @@ static int PanedPaneCommand(
 
     switch (objc) {
 	case 3:
-	    return EnumerateOptions(interp, slave->slaveData, PaneOptionSpecs,
+	    return TtkEnumerateOptions(interp, slave->slaveData, PaneOptionSpecs,
 			pw->paned.mgr->slaveOptionTable, slave->slaveWindow);
 	case 4:
-	    return GetOptionValue(interp, slave->slaveData,objv[3],
+	    return TtkGetOptionValue(interp, slave->slaveData,objv[3],
 			pw->paned.mgr->slaveOptionTable, slave->slaveWindow);
 	default:
 	    return Ttk_ConfigureSlave(
@@ -715,15 +715,15 @@ static int PanedSashposCommand(
 static WidgetCommandSpec PanedCommands[] =
 {
     { "add", 		PanedAddCommand },
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
     { "forget", 	PanedForgetCommand },
     { "identify", 	PanedIdentifyCommand },
     { "insert", 	PanedInsertCommand },
-    { "instate",	WidgetInstateCommand },
+    { "instate",	TtkWidgetInstateCommand },
     { "pane",   	PanedPaneCommand },
     { "sashpos",  	PanedSashposCommand },
-    { "state",  	WidgetStateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { 0,0 }
 };
 
@@ -739,11 +739,11 @@ static WidgetSpec PanedWidgetSpec =
     PanedCommands,		/* subcommands */
     PanedInitialize,		/* initializeProc */
     PanedCleanup,		/* cleanupProc */
-    CoreConfigure,		/* configureProc */
-    NullPostConfigure,		/* postConfigureProc */
+    TtkCoreConfigure,		/* configureProc */
+    TtkNullPostConfigure,		/* postConfigureProc */
     PanedGetLayout,		/* getLayoutProc */
     PanedSize, 			/* sizeProc */
-    WidgetDoLayout,		/* layoutProc */
+    TtkWidgetDoLayout,		/* layoutProc */
     PanedDisplay		/* displayProc */
 };
 
@@ -776,7 +776,7 @@ static Ttk_ElementSpec SashElementSpec = {
     sizeof(SashElement),
     SashElementOptions,
     SashElementSize,
-    NullElementDraw
+    TtkNullElementDraw
 };
 
 TTK_BEGIN_LAYOUT(PanedLayout)
@@ -794,7 +794,7 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Registration routine.
  */
-void Paned_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkPaned_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
     RegisterWidget(interp, "ttk::panedwindow", &PanedWidgetSpec);
@@ -805,5 +805,7 @@ void Paned_Init(Tcl_Interp *interp)
     Ttk_RegisterLayout(themePtr, "TPanedwindow", PanedLayout);
     Ttk_RegisterLayout(themePtr, "Horizontal.Sash", HorizontalSashLayout);
     Ttk_RegisterLayout(themePtr, "Vertical.Sash", VerticalSashLayout);
+    
+    return TCL_OK;
 }
 

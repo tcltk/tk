@@ -1,5 +1,32 @@
 2006-11-02  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/ttk/ttkBlink.c, generic/ttk/ttkButton.c:
+	* generic/ttk/ttkClamTheme.c, generic/ttk/ttkClassicTheme.c:
+	* generic/ttk/ttkDecls.h, generic/ttk/ttkDefaultTheme.c:
+	* generic/ttk/ttkElements.c, generic/ttk/ttkEntry.c:
+	* generic/ttk/ttkFrame.c, generic/ttk/ttkImage.c:
+	* generic/ttk/ttkInit.c, generic/ttk/ttkLabel.c:
+	* generic/ttk/ttkLayout.c, generic/ttk/ttkManager.h:
+	* generic/ttk/ttkNotebook.c, generic/ttk/ttkPanedwindow.c:
+	* generic/ttk/ttkProgress.c, generic/ttk/ttkScale.c:
+	* generic/ttk/ttkScroll.c, generic/ttk/ttkScrollbar.c:
+	* generic/ttk/ttkSeparator.c, generic/ttk/ttkSquare.c:
+	* generic/ttk/ttkStubInit.c, generic/ttk/ttkStubLib.c:
+	* generic/ttk/ttkTheme.c, generic/ttk/ttkTheme.h:
+	* generic/ttk/ttkThemeInt.h, generic/ttk/ttkTrack.c:
+	* generic/ttk/ttkTreeview.c, generic/ttk/ttkWidget.c:
+	* generic/ttk/ttkWidget.h, macosx/ttkMacOSXTheme.c:
+	* win/ttkWinMonitor.c, win/ttkWinTheme.c, win/ttkWinXPTheme.c: ensure
+	all global Ttk symbols have Ttk or ttk prefix; declare all externally
+	visible Ttk symbols not contained in stubs table as MODULE_SCOPE (or as
+	static when possible); so that 'make check{exports,stubs}' once again
+	complete without errors.
+
+	* macosx/tkMacOSXColor.c (TkMacOSXCompareColors): ifdef out when unused.
+	
+	* macosx/Wish.xcodeproj/project.pbxproj: check autoconf/autoheader exit
+	status and stop build if they fail.
+
 	* macosx/tkMacOSXWindowEvent.c (GenerateUpdateEvent): fix handling of
 	Carbon Update events: the QuickDraw window update region was being
 	ignored and all child TkWindows were sent an Expose XEvent even when

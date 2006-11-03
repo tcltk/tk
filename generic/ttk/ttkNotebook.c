@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkNotebook.c,v 1.2 2006/11/03 03:06:22 das Exp $
  * Copyright (c) 2004, Joe English
  *
  * NOTE-ACTIVE: activeTabIndex is not always correct (it's
@@ -73,7 +73,7 @@ static Tk_OptionSpec TabOptionSpecs[] =
 	Tk_Offset(Tab,imageObj), -1, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	"none", Tk_Offset(Tab,compoundObj), -1,
-	0,(ClientData)TTKCompoundStrings,GEOMETRY_CHANGED },
+	0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
 	Tk_Offset(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END}
@@ -128,7 +128,7 @@ static Tk_OptionSpec NotebookOptionSpecs[] =
 	Tk_Offset(Notebook,notebook.paddingObj),-1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /* Notebook style options:
@@ -546,7 +546,7 @@ static void SelectTab(Notebook *nb, int index)
     nb->notebook.currentIndex = index;
     TtkRedisplayWidget(&nb->core);
 
-    SendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
+    TtkSendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
 }
 
 /* NextTab --
@@ -599,7 +599,7 @@ static void SelectNearestTab(Notebook *nb)
 	 */
 	if (nb->notebook.currentIndex >= 0) {
 	    Ttk_UnmapSlave(nb->notebook.mgr, nb->notebook.currentIndex);
-	    SendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
+	    TtkSendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
 	}
 	nb->notebook.currentIndex = -1;
     }
@@ -638,7 +638,7 @@ static int TabConfigured(
     Tk_Window tkwin = mgr->masterWindow;
 
     /* Check options:
-     * @@@ TODO: validate -image option with GetImageList()
+     * @@@ TODO: validate -image option with TtkGetImageList()
      */
     if (Ttk_GetStickyFromObj(interp, tab->stickyObj, &sticky) != TCL_OK) {
 	return TCL_ERROR;
@@ -1054,10 +1054,10 @@ static int NotebookTabCommand(
     tab = Ttk_SlaveData(mgr, index);
 
     if (objc == 3) {
-	return EnumerateOptions(interp, tab,
+	return TtkEnumerateOptions(interp, tab,
 	    PaneOptionSpecs, nb->notebook.paneOptionTable, nb->core.tkwin);
     } else if (objc == 4) {
-	return GetOptionValue(interp, tab, objv[3],
+	return TtkGetOptionValue(interp, tab, objv[3],
 	    nb->notebook.paneOptionTable, nb->core.tkwin);
     } /* else */
 
@@ -1081,15 +1081,15 @@ static int NotebookTabCommand(
 static WidgetCommandSpec NotebookCommands[] =
 {
     { "add",    	NotebookAddCommand },
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
     { "forget",		NotebookForgetCommand },
     { "identify",	NotebookIdentifyCommand },
     { "index",		NotebookIndexCommand },
     { "insert",  	NotebookInsertCommand },
-    { "instate",	WidgetInstateCommand },
+    { "instate",	TtkWidgetInstateCommand },
     { "select",		NotebookSelectCommand },
-    { "state",  	WidgetStateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { "tab",   		NotebookTabCommand },
     { "tabs",   	NotebookTabsCommand },
     { 0,0 }
@@ -1150,7 +1150,7 @@ static int NotebookConfigure(Tcl_Interp *interp, void *clientData, int mask)
 	}
     }
 
-    return CoreConfigure(interp, clientData, mask);
+    return TtkCoreConfigure(interp, clientData, mask);
 }
 
 /* NotebookGetLayout  --
@@ -1160,7 +1160,7 @@ static Ttk_Layout NotebookGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
     Notebook *nb = recordPtr;
-    Ttk_Layout notebookLayout = WidgetGetLayout(interp, theme, recordPtr);
+    Ttk_Layout notebookLayout = TtkWidgetGetLayout(interp, theme, recordPtr);
     Ttk_Layout tabLayout;
 
     if (!notebookLayout) {
@@ -1231,7 +1231,7 @@ static WidgetSpec NotebookWidgetSpec =
     NotebookInitialize,		/* initializeProc */
     NotebookCleanup,		/* cleanupProc */
     NotebookConfigure,		/* configureProc */
-    NullPostConfigure,		/* postConfigureProc */
+    TtkNullPostConfigure,		/* postConfigureProc */
     NotebookGetLayout, 		/* getLayoutProc */
     NotebookSize,		/* geometryProc */
     NotebookDoLayout,		/* layoutProc */
@@ -1249,7 +1249,7 @@ TTK_BEGIN_LAYOUT(TabLayout)
 		TTK_NODE("Notebook.label", TTK_PACK_TOP))))
 TTK_END_LAYOUT
 
-int Notebook_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkNotebook_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
 

@@ -1,9 +1,11 @@
 /*
- * $Id: ttkDecls.h,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkDecls.h,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  */
 
+#ifndef _TTKDECLS
+#define _TTKDECLS
 
 #if defined(USE_TTK_STUBS)
 
@@ -334,3 +336,5 @@ extern const TtkStubs *ttkStubsPtr;
 #endif /* defined(USE_TTK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#endif /* _TTKDECLS */
