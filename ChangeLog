@@ -1,5 +1,7 @@
 2006-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/safetk.tcl (::safe::tkTopLevel): Theme it.
+
 	* generic/ttk/ttkLayout.c:     We do not want to require tkInt in
 	* generic/ttk/ttkMananager.h:  all the ttk files so added the
 	* generic/ttk/ttkTheme.h:      definition of MODULE_SCOPE to 
