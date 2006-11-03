@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.6 2006/09/11 14:41:04 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.7 2006/11/03 03:05:03 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -129,6 +129,7 @@ TkSetMacColor(
     }
 }
 
+#if !TK_DRAW_IN_CONTEXT
 /*
  *----------------------------------------------------------------------
  *
@@ -157,6 +158,7 @@ TkMacOSXCompareColors(
 	    TkSetMacColor(c1,&col2) &&
 	    !memcmp(&col1,&col2,sizeof(col1));
 }
+#endif /* !TK_DRAW_IN_CONTEXT */
 
 /*
  *----------------------------------------------------------------------
