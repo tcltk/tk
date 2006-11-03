@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkLayout.c,v 1.3 2006/11/03 15:42:42 patthoyts Exp $
  */
 
 #include <string.h>
@@ -255,7 +255,7 @@ Ttk_Box Ttk_PlaceBox(
  * Ttk_PositionBox --
  * 	Pack and stick a box according to PositionSpec flags.
  */
-TTKAPI Ttk_Box
+MODULE_SCOPE Ttk_Box
 Ttk_PositionBox(Ttk_Box *cavity, int width, int height, Ttk_PositionSpec flags)
 {
     Ttk_Box parcel;

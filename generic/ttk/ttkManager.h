@@ -1,4 +1,4 @@
-/* $Id: ttkManager.h,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkManager.h,v 1.3 2006/11/03 15:42:42 patthoyts Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -9,6 +9,8 @@
 
 #ifndef _TTKMANAGER
 #define _TTKMANAGER
+
+#include "ttkTheme.h"
 
 typedef struct TtkManager_ Ttk_Manager; /* forward */
 typedef struct TtkSlave_ Ttk_Slave; /* forward */
