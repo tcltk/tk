@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkTheme.h,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkTheme.h,v 1.3 2006/11/03 15:42:42 patthoyts Exp $
  */
 
 #ifndef _TTKTHEME
@@ -19,6 +19,14 @@ extern "C" {
 #	undef USE_TTK_STUBS
 #else
 #	define TTKAPI DLLIMPORT
+#endif
+
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
+#   endif
 #endif
 
 /* Ttk syncs to the Tk version & patchlevel */
