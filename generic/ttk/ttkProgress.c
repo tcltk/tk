@@ -1,4 +1,4 @@
-/* $Id: ttkProgress.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkProgress.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
@@ -49,7 +49,7 @@ static Tk_OptionSpec ProgressbarOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	"horizontal", Tk_Offset(Progressbar,progress.orientObj), -1,
-	0, (ClientData)TTKOrientStrings, STYLE_CHANGED },
+	0, (ClientData)ttkOrientStrings, STYLE_CHANGED },
     {TK_OPTION_PIXELS, "-length", "length", "Length",
         DEF_PROGRESSBAR_LENGTH, Tk_Offset(Progressbar,progress.lengthObj), -1,
 	0, 0, GEOMETRY_CHANGED },
@@ -69,7 +69,7 @@ static Tk_OptionSpec ProgressbarOptionSpecs[] =
     {TK_OPTION_INT, "-phase", "phase", "Phase",
 	"0", Tk_Offset(Progressbar,progress.phaseObj), -1,
 	0, 0, 0 },
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /*------------------------------------------------------------------------
@@ -162,18 +162,18 @@ static void VariableChanged(void *recordPtr, const char *value)
 
     if (!value) {
 	/* Linked variable is unset -- disable widget */
-	WidgetChangeState(&pb->core, TTK_STATE_DISABLED, 0);
+	TtkWidgetChangeState(&pb->core, TTK_STATE_DISABLED, 0);
 	return;
     }
-    WidgetChangeState(&pb->core, 0, TTK_STATE_DISABLED);
+    TtkWidgetChangeState(&pb->core, 0, TTK_STATE_DISABLED);
 
     newValue = Tcl_NewStringObj(value, -1);
     Tcl_IncrRefCount(newValue);
     if (Tcl_GetDoubleFromObj(NULL, newValue, &scratch) != TCL_OK) {
-	WidgetChangeState(&pb->core, TTK_STATE_INVALID, 0);
+	TtkWidgetChangeState(&pb->core, TTK_STATE_INVALID, 0);
 	return;
     }
-    WidgetChangeState(&pb->core, 0, TTK_STATE_INVALID);
+    TtkWidgetChangeState(&pb->core, 0, TTK_STATE_INVALID);
     Tcl_DecrRefCount(pb->progress.valueObj);
     pb->progress.valueObj = newValue;
 
@@ -218,7 +218,7 @@ static int ProgressbarConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	if (!vt) return TCL_ERROR;
     }
 
-    if (CoreConfigure(interp, recordPtr, mask) != TCL_OK) {
+    if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
 	if (vt) Ttk_UntraceVariable(vt);
 	return TCL_ERROR;
     }
@@ -269,7 +269,7 @@ static int ProgressbarSize(void *recordPtr, int *widthPtr, int *heightPtr)
     Progressbar *pb = recordPtr;
     int length = 100, orient = TTK_ORIENT_HORIZONTAL;
 
-    WidgetSize(recordPtr, widthPtr, heightPtr);
+    TtkWidgetSize(recordPtr, widthPtr, heightPtr);
 
     /* Override requested width (height) based on -length and -orient
      */
@@ -372,7 +372,7 @@ static Ttk_Layout ProgressbarGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
     Progressbar *pb = recordPtr;
-    Ttk_Layout layout = WidgetGetOrientedLayout(
+    Ttk_Layout layout = TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, pb->progress.orientObj);
 
     /*
@@ -488,12 +488,12 @@ static int ProgressbarStopCommand(
 
 static WidgetCommandSpec ProgressbarCommands[] =
 {
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
-    { "identify",	WidgetIdentifyCommand },
-    { "instate",	WidgetInstateCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
+    { "identify",	TtkWidgetIdentifyCommand },
+    { "instate",	TtkWidgetInstateCommand },
     { "start", 		ProgressbarStartCommand },
-    { "state",  	WidgetStateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { "step", 		ProgressbarStepCommand },
     { "stop", 		ProgressbarStopCommand },
     { NULL, NULL }
@@ -515,7 +515,7 @@ static WidgetSpec ProgressbarWidgetSpec =
     ProgressbarGetLayout,	/* getLayoutProc */
     ProgressbarSize, 		/* sizeProc */
     ProgressbarDoLayout,	/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 
 /*
@@ -534,7 +534,7 @@ TTK_END_LAYOUT
 /*
  * Initialization:
  */
-int Progressbar_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkProgressbar_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
 

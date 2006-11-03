@@ -1,5 +1,5 @@
 /*
- * $Id: ttkMacOSXTheme.c,v 1.2 2006/10/31 13:56:58 das Exp $
+ * $Id: ttkMacOSXTheme.c,v 1.3 2006/11/03 03:06:22 das Exp $
  *
  * Tk theme engine for Mac OSX, using the Appearance Manager API.
  *
@@ -189,7 +189,7 @@ static Ttk_ElementSpec ButtonElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     ButtonElementGeometry,
     ButtonElementDraw
 };
@@ -242,7 +242,7 @@ static Ttk_ElementSpec TabElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     TabElementGeometry,
     TabElementDraw
 };
@@ -272,7 +272,7 @@ static Ttk_ElementSpec PaneElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     PaneElementGeometry,
     PaneElementDraw
 };
@@ -308,7 +308,7 @@ static Ttk_ElementSpec GroupElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     GroupElementGeometry,
     GroupElementDraw
 };
@@ -425,7 +425,7 @@ static Ttk_ElementSpec PopupArrowElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     PopupArrowElementGeometry,
     PopupArrowElementDraw
 };
@@ -549,9 +549,9 @@ static void SliderElementGeometry(
 static Ttk_ElementSpec SliderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     SliderElementGeometry,
-    NullElementDraw
+    TtkNullElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -670,7 +670,7 @@ static Ttk_ElementSpec SeparatorElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     SeparatorElementSize,
     SeparatorElementDraw
 };
@@ -716,7 +716,7 @@ static Ttk_ElementSpec SizegripElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     SizegripElementSize,
     SizegripElementDraw
 };
@@ -781,8 +781,8 @@ static Ttk_ElementSpec BackgroundElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
-    NullElementGeometry,
+    TtkNullElementOptions,
+    TtkNullElementGeometry,
     BackgroundElementDraw
 };
 
@@ -823,8 +823,8 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
-    NullElementGeometry,
+    TtkNullElementOptions,
+    TtkNullElementGeometry,
     ToolbarBackgroundElementDraw
 };
 
@@ -861,7 +861,7 @@ static Ttk_ElementSpec TreeHeaderElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     ButtonElementGeometryNoPadding,
     TreeHeaderElementDraw
 };
@@ -920,7 +920,7 @@ TTK_END_LAYOUT
  * +++ Initialization.
  */
 
-int AquaTheme_Init(Tcl_Interp *interp)
+static int AquaTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_CreateTheme(interp, "aqua", NULL);
 
@@ -988,7 +988,7 @@ int AquaTheme_Init(Tcl_Interp *interp)
     return TCL_OK;
 }
 
-int Ttk_MacPlatformInit(Tcl_Interp *interp)
+MODULE_SCOPE int Ttk_MacOSXPlatformInit(Tcl_Interp *interp)
 {
     return AquaTheme_Init(interp);
 }

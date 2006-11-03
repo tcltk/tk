@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkWidget.c,v 1.2 2006/11/03 03:06:22 das Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk widget implementation, core widget utilities.
@@ -120,10 +120,10 @@ void TtkResizeWidget(WidgetCore *corePtr)
     TtkRedisplayWidget(corePtr);
 }
 
-/* WidgetEnsembleCommand --
+/* TtkWidgetEnsembleCommand --
  * 	Invoke an ensemble defined by a WidgetCommandSpec.
  */
-int WidgetEnsembleCommand(
+int TtkWidgetEnsembleCommand(
     WidgetCommandSpec *commands,	/* Ensemble definition */
     int cmdIndex,			/* Index of command word */
     Tcl_Interp *interp,			/* Interpreter to use */
@@ -160,7 +160,7 @@ WidgetInstanceObjCmd(
     int status = TCL_OK;
 
     Tcl_Preserve(clientData);
-    status = WidgetEnsembleCommand(commands, 1, interp, objc, objv, clientData);
+    status = TtkWidgetEnsembleCommand(commands, 1, interp, objc, objv, clientData);
     Tcl_Release(clientData);
 
     return status;
@@ -328,11 +328,11 @@ static struct Tk_ClassProcs widgetClassProcs = {
 };
 
 /*
- * WidgetConstructorObjCmd --
+ * TtkWidgetConstructorObjCmd --
  *	General-purpose widget constructor command implementation.
  *	ClientData is a WidgetSpec *.
  */
-int WidgetConstructorObjCmd(
+int TtkWidgetConstructorObjCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[])
 {
     WidgetSpec *widgetSpec = (WidgetSpec *)clientData;
@@ -434,10 +434,10 @@ error:
 }
 
 /*
- * WidgetChangeState --
+ * TtkWidgetChangeState --
  * 	Set / clear the specified bits in the 'state' flag,
  */
-void WidgetChangeState(WidgetCore *corePtr,
+void TtkWidgetChangeState(WidgetCore *corePtr,
     unsigned int setBits, unsigned int clearBits)
 {
     Ttk_State oldState = corePtr->state;
@@ -448,12 +448,12 @@ void WidgetChangeState(WidgetCore *corePtr,
 }
 
 /*
- * WidgetGetLayout --
+ * TtkWidgetGetLayout --
  * 	Default getLayoutProc.
  *	Looks up the layout based on the -style resource (if specified),
  *	otherwise use the widget class.
  */
-Ttk_Layout WidgetGetLayout(
+Ttk_Layout TtkWidgetGetLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr)
 {
     WidgetCore *corePtr = recordPtr;
@@ -470,12 +470,12 @@ Ttk_Layout WidgetGetLayout(
 }
 
 /*
- * WidgetGetOrientedLayout --
- * 	Helper routine.  Same as WidgetGetLayout, but prefixes 
+ * TtkWidgetGetOrientedLayout --
+ * 	Helper routine.  Same as TtkWidgetGetLayout, but prefixes 
  * 	"Horizontal." or "Vertical." to the style name, depending 
  * 	on the value of the 'orient' option.
  */
-Ttk_Layout WidgetGetOrientedLayout(
+Ttk_Layout TtkWidgetGetOrientedLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr, Tcl_Obj *orientObj)
 {
     WidgetCore *corePtr = recordPtr;
@@ -515,27 +515,27 @@ Ttk_Layout WidgetGetOrientedLayout(
 }
 
 /*
- * NullInitialize --
+ * TtkNullInitialize --
  * 	Default widget initializeProc (no-op)
  */
-int  NullInitialize(Tcl_Interp *interp, void *recordPtr)
+int  TtkNullInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     return TCL_OK;
 }
 
 /*
- * NullPostConfigure --
+ * TtkNullPostConfigure --
  * 	Default widget postConfigureProc (no-op)
  */
-int NullPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
+int TtkNullPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
 {
     return TCL_OK;
 }
 
-/* CoreConfigure --
+/* TtkCoreConfigure --
  * 	Default widget configureProc.
  */
-int CoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
+int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 {
     WidgetCore *corePtr = clientData;
     
@@ -557,39 +557,39 @@ int CoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 }
 
 /*
- * NullCleanup --
+ * TtkNullCleanup --
  * 	Default widget cleanupProc (no-op)
  */
-void NullCleanup(void *recordPtr)
+void TtkNullCleanup(void *recordPtr)
 {
     return;
 }
 
 /*
- * WidgetDoLayout --
+ * TtkWidgetDoLayout --
  * 	Default widget layoutProc.
  */
-void WidgetDoLayout(void *clientData)
+void TtkWidgetDoLayout(void *clientData)
 {
     WidgetCore *corePtr = clientData;
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
 }
 
 /*
- * WidgetDisplay --
+ * TtkWidgetDisplay --
  * 	Default widget displayProc.
  */
-void WidgetDisplay(void *recordPtr, Drawable d)
+void TtkWidgetDisplay(void *recordPtr, Drawable d)
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_DrawLayout(corePtr->layout, corePtr->state, d);
 }
 
 /*
- * WidgetSize --
+ * TtkWidgetSize --
  * 	Default widget sizeProc()
  */
-int WidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
+int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_LayoutSize(corePtr->layout, corePtr->state, widthPtr, heightPtr);
@@ -604,7 +604,7 @@ int WidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 
 /* Default implementations for widget subcommands:
 */
-int WidgetCgetCommand(
+int TtkWidgetCgetCommand(
 Tcl_Interp *interp, int objc, Tcl_Obj * CONST objv[], void *recordPtr)
 {
     WidgetCore *corePtr = recordPtr;
@@ -622,7 +622,7 @@ Tcl_Interp *interp, int objc, Tcl_Obj * CONST objv[], void *recordPtr)
     return TCL_OK;
 }
 
-int WidgetConfigureCommand(
+int TtkWidgetConfigureCommand(
 Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
 {
     WidgetCore *corePtr = recordPtr;
@@ -688,7 +688,7 @@ Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
  * 	Otherwise, return a statespec matching all the currently-set bits.
  */
 
-int WidgetStateCommand(
+int TtkWidgetStateCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
 {
     WidgetCore *corePtr = recordPtr;
@@ -728,7 +728,7 @@ int WidgetStateCommand(
  *	Otherwise, return true/false
  */
 
-int WidgetInstateCommand(
+int TtkWidgetInstateCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
 {
     WidgetCore *corePtr = recordPtr;
@@ -758,7 +758,7 @@ int WidgetInstateCommand(
 /* $w identify $x $y
  * 	Returns: name of element at $x, $y
  */
-int WidgetIdentifyCommand(
+int TtkWidgetIdentifyCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
 {
     WidgetCore *corePtr = recordPtr;

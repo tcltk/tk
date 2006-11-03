@@ -1,4 +1,4 @@
-/* $Id: ttkElements.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkElements.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -10,6 +10,7 @@
 #include <tk.h>
 #include <string.h>
 #include "ttkTheme.h"
+#include "ttkWidget.h"
 
 #define DEFAULT_BORDERWIDTH "2"
 #define DEFAULT_ARROW_SIZE "15"
@@ -21,29 +22,29 @@
  * and may be used in other engines.
  */
 
-/* public */ Ttk_ElementOptionSpec NullElementOptions[] = { {NULL} };
+/* public */ Ttk_ElementOptionSpec TtkNullElementOptions[] = { {NULL} };
 
 /* public */ void
-NullElementGeometry(
+TtkNullElementGeometry(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
 }
 
 /* public */ void
-NullElementDraw(
+TtkNullElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
 }
 
-/* public */ Ttk_ElementSpec NullElementSpec =
+/* public */ Ttk_ElementSpec ttkNullElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
-    NullElementGeometry,
-    NullElementDraw
+    TtkNullElementOptions,
+    TtkNullElementGeometry,
+    TtkNullElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -767,7 +768,7 @@ ArrowElementGeometry(
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &width);
     width -= Ttk_PaddingWidth(ArrowPadding);
-    ArrowSize(width/2, direction, widthPtr, heightPtr);
+    TtkArrowSize(width/2, direction, widthPtr, heightPtr);
     *paddingPtr = ArrowPadding;
 }
 
@@ -788,7 +789,7 @@ ArrowElementDraw(
     Tk_Fill3DRectangle(
 	tkwin, d, border, b.x, b.y, b.width, b.height, borderWidth, relief);
 
-    FillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
+    TtkFillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
 	Ttk_PadBox(b, ArrowPadding), direction);
 }
 
@@ -1357,17 +1358,17 @@ TTK_BEGIN_LAYOUT(SizegripLayout)
 TTK_END_LAYOUT
 
 /*----------------------------------------------------------------------
- * RegisterElements --
+ * TtkRegisterElements --
  *
  *	Register all elements and layouts defined in this package.
  */
 
-extern Ttk_ElementSpec TextElementSpec;
-extern Ttk_ElementSpec ImageElementSpec;
-extern Ttk_ElementSpec ImageTextElementSpec;
-extern Ttk_ElementSpec LabelElementSpec;
+extern Ttk_ElementSpec ttkTextElementSpec;
+extern Ttk_ElementSpec ttkImageElementSpec;
+extern Ttk_ElementSpec ttkImageTextElementSpec;
+extern Ttk_ElementSpec ttkLabelElementSpec;
 
-void RegisterElements(Tcl_Interp *interp)
+void TtkRegisterElements(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
@@ -1382,11 +1383,11 @@ void RegisterElements(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "focus", &FocusElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "padding", &PaddingElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "text", &TextElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "text", &ttkTextElementSpec, NULL);
     Ttk_RegisterElement(interp, theme,
-	    "Labelframe.text",&ImageTextElementSpec,NULL);
-    Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, interp);
-    Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, interp);
+	    "Labelframe.text",&ttkImageTextElementSpec,NULL);
+    Ttk_RegisterElement(interp, theme, "image", &ttkImageElementSpec, interp);
+    Ttk_RegisterElement(interp, theme, "label", &ttkLabelElementSpec, interp);
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
 	    &CheckbuttonIndicatorElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
@@ -1394,7 +1395,7 @@ void RegisterElements(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
 	    &MenuIndicatorElementSpec, NULL);
 
-    Ttk_RegisterElement(interp, theme, "indicator", &NullElementSpec,NULL);
+    Ttk_RegisterElement(interp, theme, "indicator", &ttkNullElementSpec,NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, &ArrowElements[0]);

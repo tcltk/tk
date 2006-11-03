@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClamTheme.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkClamTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (C) 2004 Joe English
  *
@@ -424,7 +424,7 @@ static void MenuIndicatorElementSize(
     MenuIndicatorElement *indicator = elementRecord;
     int size = MENUBUTTON_ARROW_SIZE;
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    ArrowSize(size, ARROW_DOWN, widthPtr, heightPtr);
+    TtkArrowSize(size, ARROW_DOWN, widthPtr, heightPtr);
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, paddingPtr);
 }
 
@@ -440,9 +440,9 @@ static void MenuIndicatorElementDraw(
 
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
 
-    ArrowSize(size, ARROW_DOWN, &width, &height);
+    TtkArrowSize(size, ARROW_DOWN, &width, &height);
     b = Ttk_StickBox(b, width, height, 0);
-    FillArrow(Tk_Display(tkwin), d, gc, b, ARROW_DOWN);
+    TtkFillArrow(Tk_Display(tkwin), d, gc, b, ARROW_DOWN);
 }
 
 static Ttk_ElementSpec MenuIndicatorElementSpec =
@@ -594,7 +594,7 @@ static Ttk_ElementSpec TroughElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
-    NullElementGeometry,
+    TtkNullElementGeometry,
     TroughElementDraw
 };
 
@@ -762,10 +762,10 @@ static void ArrowElementDraw(
 
     b = Ttk_PadBox(b, Ttk_UniformPadding(3));
     h = b.width < b.height ? b.width : b.height;
-    ArrowSize(h/2, dir, &cx, &cy);
+    TtkArrowSize(h/2, dir, &cx, &cy);
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
-    FillArrow(Tk_Display(tkwin), d, gc, b, dir);
+    TtkFillArrow(Tk_Display(tkwin), d, gc, b, dir);
 }
 
 static Ttk_ElementSpec ArrowElementSpec = {
@@ -914,8 +914,8 @@ TTK_END_LAYOUT
  * +++ Initialization.
  */
 
-int DLLEXPORT
-ClamTheme_Init(Tcl_Interp *interp)
+MODULE_SCOPE int
+TtkClamTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme = Ttk_CreateTheme(interp, "clam", 0);
 

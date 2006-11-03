@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClassicTheme.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkClassicTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (c) 2004, Joe English
  *
@@ -475,11 +475,11 @@ TTK_END_LAYOUT
  */
 
 /*------------------------------------------------------------------------
- * ClassicTheme_Init --
+ * TtkClassicTheme_Init --
  * 	Install classic theme.
  */
 
-int ClassicTheme_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "classic", NULL);
 

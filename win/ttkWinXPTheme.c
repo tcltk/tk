@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.1 2006/10/31 01:42:28 hobbs Exp $
+ * $Id: ttkWinXPTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -535,7 +535,7 @@ static Ttk_ElementSpec GenericElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     GenericElementGeometry,
     GenericElementDraw
 };
@@ -574,7 +574,7 @@ static Ttk_ElementSpec ThumbElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     GenericElementGeometry,
     ThumbElementDraw
 };
@@ -606,7 +606,7 @@ static Ttk_ElementSpec PbarElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     PbarElementGeometry,
     GenericElementDraw
 };
@@ -647,7 +647,7 @@ static Ttk_ElementSpec TabElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     GenericElementGeometry,
     TabElementDraw
 };
@@ -687,7 +687,7 @@ static Ttk_ElementSpec TreeIndicatorElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
-    NullElementOptions,
+    TtkNullElementOptions,
     GenericElementGeometry,
     TreeIndicatorElementDraw
 };
@@ -933,7 +933,7 @@ static ElementInfo ElementInfoTable[] = {
  * +++ Initialization routine:
  */
 
-int XPTheme_Init(Tcl_Interp *interp, HWND hwnd)
+MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     XPThemeData *themeData;
     XPThemeProcs *procs;
@@ -976,7 +976,7 @@ int XPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
     }
 
-    Ttk_RegisterElementSpec(themePtr, "Scale.trough", &NullElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Scale.trough", &ttkNullElementSpec, 0);
 
     /*
      * Layouts:

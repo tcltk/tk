@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkEntry.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -204,7 +204,7 @@ static Tk_OptionSpec EntryOptionSpecs[] =
 	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /*------------------------------------------------------------------------
@@ -642,9 +642,9 @@ static int EntryRevalidate(Tcl_Interp *interp, Entry *entryPtr, VREASON reason)
 		    entryPtr, entryPtr->entry.string, -1,0, reason);
 
     if (code == TCL_BREAK) {
-	WidgetChangeState(&entryPtr->core, TTK_STATE_INVALID, 0);
+	TtkWidgetChangeState(&entryPtr->core, TTK_STATE_INVALID, 0);
     } else if (code == TCL_OK) {
-	WidgetChangeState(&entryPtr->core, 0, TTK_STATE_INVALID);
+	TtkWidgetChangeState(&entryPtr->core, 0, TTK_STATE_INVALID);
     }
 
     return code;
@@ -927,7 +927,7 @@ EntryInitialize(Tcl_Interp *interp, void *recordPtr)
 	entryPtr->core.tkwin, EntryEventMask, EntryEventProc, entryPtr);
     Tk_CreateSelHandler(entryPtr->core.tkwin, XA_PRIMARY, XA_STRING,
 	EntryFetchSelection, (ClientData) entryPtr, XA_STRING);
-    BlinkCursor(&entryPtr->core);
+    TtkBlinkCursor(&entryPtr->core);
 
     entryPtr->entry.string		= ckalloc(1);
     *entryPtr->entry.string 		= '\0';
@@ -938,7 +938,7 @@ EntryInitialize(Tcl_Interp *interp, void *recordPtr)
     EntryInitStyleDefaults(&entryPtr->entry.styleDefaults);
 
     entryPtr->entry.xscrollHandle =
-	CreateScrollHandle(&entryPtr->core, &entryPtr->entry.xscroll);
+	TtkCreateScrollHandle(&entryPtr->core, &entryPtr->entry.xscroll);
 
     entryPtr->entry.insertPos		= 0;
     entryPtr->entry.selectFirst 	= -1;
@@ -955,7 +955,7 @@ EntryCleanup(void *recordPtr)
     if (entryPtr->entry.textVariableTrace)
 	Ttk_UntraceVariable(entryPtr->entry.textVariableTrace);
 
-    FreeScrollHandle(entryPtr->entry.xscrollHandle);
+    TtkFreeScrollHandle(entryPtr->entry.xscrollHandle);
 
     EntryFreeStyleDefaults(&entryPtr->entry.styleDefaults);
 
@@ -984,7 +984,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	}
     }
 
-    if (CoreConfigure(interp, recordPtr, mask) != TCL_OK) {
+    if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
 	if (vt) Ttk_UntraceVariable(vt);
 	return TCL_ERROR;
     }
@@ -1006,13 +1006,13 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     /* Handle -state compatibility option:
      */
     if (mask & STATE_CHANGED) {
-	CheckStateOption(&entryPtr->core, entryPtr->entry.stateObj);
+	TtkCheckStateOption(&entryPtr->core, entryPtr->entry.stateObj);
     }
 
     /* Force scrollbar update if needed:
      */
     if (mask & SCROLLCMD_CHANGED) {
-	ScrollbarUpdateRequired(entryPtr->entry.xscrollHandle);
+	TtkScrollbarUpdateRequired(entryPtr->entry.xscrollHandle);
     }
 
     /* Recompute the displayString, in case showChar changed:
@@ -1139,7 +1139,7 @@ EntryDoLayout(void *recordPtr)
 	entryPtr->entry.layoutX = textarea.x - leftX;
     }
 
-    Scrolled(entryPtr->entry.xscrollHandle,
+    TtkScrolled(entryPtr->entry.xscrollHandle,
 	    leftIndex, rightIndex, entryPtr->entry.numChars);
 }
 
@@ -1581,7 +1581,7 @@ static int EntrySelectionCommand(
 	{ "range", EntrySelectionRangeCommand },
 	{0,0}
     };
-    return WidgetEnsembleCommand(
+    return TtkWidgetEnsembleCommand(
 	    EntrySelectionCommands, 2, interp, objc, objv, recordPtr);
 }
 
@@ -1630,23 +1630,23 @@ static int EntryXViewCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Entry *entryPtr = recordPtr;
-    return ScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
+    return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
 }
 
 static WidgetCommandSpec EntryCommands[] =
 {
     { "bbox", 		EntryBBoxCommand },
-    { "cget", 		WidgetCgetCommand },
-    { "configure", 	WidgetConfigureCommand },
+    { "cget", 		TtkWidgetCgetCommand },
+    { "configure", 	TtkWidgetConfigureCommand },
     { "delete", 	EntryDeleteCommand },
     { "get", 		EntryGetCommand },
     { "icursor", 	EntryICursorCommand },
-    { "identify",	WidgetIdentifyCommand },
+    { "identify",	TtkWidgetIdentifyCommand },
     { "index", 		EntryIndexCommand },
     { "insert", 	EntryInsertCommand },
-    { "instate",	WidgetInstateCommand },
+    { "instate",	TtkWidgetInstateCommand },
     { "selection", 	EntrySelectionCommand },
-    { "state",  	WidgetStateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { "validate", 	EntryValidateCommand },
     { "xview", 		EntryXViewCommand },
     {0,0}
@@ -1656,7 +1656,7 @@ static WidgetCommandSpec EntryCommands[] =
  * +++ Entry widget definition.
  */
 
-WidgetSpec EntryWidgetSpec =
+static WidgetSpec EntryWidgetSpec =
 {
     "TEntry",			/* className */
     sizeof(Entry), 		/* recordSize */
@@ -1666,8 +1666,8 @@ WidgetSpec EntryWidgetSpec =
     EntryCleanup,		/* cleanupProc */
     EntryConfigure,		/* configureProc */
     EntryPostConfigure,  	/* postConfigureProc */
-    WidgetGetLayout, 		/* getLayoutProc */
-    WidgetSize, 		/* sizeProc */
+    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetSize, 		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
 };
@@ -1707,7 +1707,7 @@ ComboboxInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Combobox *cb = recordPtr;
     cb->combobox.currentIndex = -1;
-    TrackElementState(&cb->core);
+    TtkTrackElementState(&cb->core);
     return EntryInitialize(interp, recordPtr);
 }
 
@@ -1795,24 +1795,24 @@ static int ComboboxCurrentCommand(
 static WidgetCommandSpec ComboboxCommands[] =
 {
     { "bbox", 		EntryBBoxCommand },
-    { "cget", 		WidgetCgetCommand },
-    { "configure", 	WidgetConfigureCommand },
+    { "cget", 		TtkWidgetCgetCommand },
+    { "configure", 	TtkWidgetConfigureCommand },
     { "current", 	ComboboxCurrentCommand },
     { "delete", 	EntryDeleteCommand },
     { "get", 		EntryGetCommand },
     { "icursor", 	EntryICursorCommand },
-    { "identify",	WidgetIdentifyCommand },
+    { "identify",	TtkWidgetIdentifyCommand },
     { "index", 		EntryIndexCommand },
     { "insert", 	EntryInsertCommand },
-    { "instate",	WidgetInstateCommand },
+    { "instate",	TtkWidgetInstateCommand },
     { "selection", 	EntrySelectionCommand },
-    { "state",  	WidgetStateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { "set", 		EntrySetCommand },
     { "xview", 		EntryXViewCommand },
     {0,0}
 };
 
-WidgetSpec ComboboxWidgetSpec =
+static WidgetSpec ComboboxWidgetSpec =
 {
     "TCombobox",		/* className */
     sizeof(Combobox), 		/* recordSize */
@@ -1822,8 +1822,8 @@ WidgetSpec ComboboxWidgetSpec =
     EntryCleanup,		/* cleanupProc */
     ComboboxConfigure,		/* configureProc */
     EntryPostConfigure,  	/* postConfigureProc */
-    WidgetGetLayout, 		/* getLayoutProc */
-    WidgetSize, 		/* sizeProc */
+    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetSize, 		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
 };
@@ -1872,7 +1872,7 @@ static Ttk_ElementSpec TextareaElementSpec = {
     sizeof(TextareaElement),
     TextareaElementOptions,
     TextareaElementGeometry,
-    NullElementDraw
+    TtkNullElementDraw
 };
 
 TTK_BEGIN_LAYOUT(EntryLayout)
@@ -1888,10 +1888,10 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
 	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 
-/* EntryWidget_Init --
+/* TtkEntryWidget_Init --
  * 	Register entry-based widgets and related resources.
  */
-int EntryWidget_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkEntryWidget_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr =  Ttk_GetDefaultTheme(interp);
 

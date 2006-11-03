@@ -2,12 +2,14 @@
  *
  * Minimal sample ttk widget.
  *
- * $Id: ttkSquare.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkSquare.c,v 1.2 2006/11/03 03:06:22 das Exp $
  */
 
 #include <tk.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
+
+#ifdef TTK_SQUARE_WIDGET
 
 #ifndef DEFAULT_BORDERWIDTH
 #define DEFAULT_BORDERWIDTH "2"
@@ -76,7 +78,7 @@ static Tk_OptionSpec SquareOptionSpecs[] =
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
      NULL, Tk_Offset(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
     
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 /*
@@ -131,11 +133,11 @@ SquareDoLayout(void *clientData)
 
 static WidgetCommandSpec SquareCommands[] =
 {
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
-    { "identify",	WidgetIdentifyCommand },
-    { "instate",	WidgetInstateCommand },
-    { "state",  	WidgetStateCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
+    { "identify",	TtkWidgetIdentifyCommand },
+    { "instate",	TtkWidgetInstateCommand },
+    { "state",  	TtkWidgetStateCommand },
     { NULL, NULL }
 };
 
@@ -145,20 +147,20 @@ static WidgetCommandSpec SquareCommands[] =
  * with Tk in the package initialization code (see bottom).
  */
 
-WidgetSpec SquareWidgetSpec =
+static WidgetSpec SquareWidgetSpec =
 {
     "TSquare",			/* className */
     sizeof(Square),		/* recordSize */
     SquareOptionSpecs,		/* optionSpecs */
     SquareCommands,		/* subcommands */
-    NullInitialize,		/* initializeProc */
-    NullCleanup,		/* cleanupProc */
-    CoreConfigure,		/* configureProc */
-    NullPostConfigure,		/* postConfigureProc */
-    WidgetGetLayout,		/* getLayoutProc */
-    WidgetSize, 		/* sizeProc */
+    TtkNullInitialize,		/* initializeProc */
+    TtkNullCleanup,		/* cleanupProc */
+    TtkCoreConfigure,		/* configureProc */
+    TtkNullPostConfigure,		/* postConfigureProc */
+    TtkWidgetGetLayout,		/* getLayoutProc */
+    TtkWidgetSize, 		/* sizeProc */
     SquareDoLayout,		/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 
 /* ---------------------------------------------------------------------- 
@@ -284,8 +286,8 @@ TTK_END_LAYOUT
  * free to specify a new style using completely different elements.
  */
 
-/* public */ int
-SquareWidget_Init(Tcl_Interp *interp)
+/* public */ MODULE_SCOPE int
+TtkSquareWidget_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme = Ttk_GetDefaultTheme(interp);
 
@@ -300,4 +302,6 @@ SquareWidget_Init(Tcl_Interp *interp)
 
     return TCL_OK;
 }
+
+#endif /* TTK_SQUARE_WIDGET */
 
