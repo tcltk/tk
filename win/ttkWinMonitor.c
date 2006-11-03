@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.3 2006/11/03 14:42:09 das Exp $
+/* $Id: ttkWinMonitor.c,v 1.4 2006/11/03 15:42:42 patthoyts Exp $
  */
 
 #ifdef _MSC_VER
@@ -146,8 +146,8 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
  * Windows-specific platform initialization:
  */
 
-extern int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
-extern int TtkXPTheme_Init(Tcl_Interp *, HWND hwnd);
+MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
+MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *, HWND hwnd);
 
 MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
 {
@@ -156,8 +156,8 @@ MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
     hwnd = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
     Ttk_RegisterCleanup(interp, (ClientData)hwnd, DestroyThemeMonitorWindow);
 
-    WinTheme_Init(interp, hwnd);
-    XPTheme_Init(interp, hwnd);
+    TtkWinTheme_Init(interp, hwnd);
+    TtkXPTheme_Init(interp, hwnd);
 
     return TCL_OK;
 }
