@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkFrame.c,v 1.2 2006/11/03 03:06:22 das Exp $
  * Copyright (c) 2004, Joe English
  *
  * Ttk widget set: frame and labelframe widgets
@@ -47,16 +47,16 @@ static Tk_OptionSpec FrameOptionSpecs[] =
 	Tk_Offset(Frame,frame.heightObj), -1,
 	0,0,GEOMETRY_CHANGED },
 
-    WIDGET_INHERIT_OPTIONS(CoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
 static WidgetCommandSpec FrameCommands[] =
 {
-    { "configure",	WidgetConfigureCommand },
-    { "cget",		WidgetCgetCommand },
-    { "instate",	WidgetInstateCommand },
-    { "state",  	WidgetStateCommand },
-    { "identify",   WidgetIdentifyCommand },
+    { "configure",	TtkWidgetConfigureCommand },
+    { "cget",		TtkWidgetCgetCommand },
+    { "instate",	TtkWidgetInstateCommand },
+    { "state",  	TtkWidgetStateCommand },
+    { "identify",   TtkWidgetIdentifyCommand },
     { NULL, NULL }
 };
 
@@ -146,24 +146,25 @@ static int FrameConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	Tk_GeometryRequest(framePtr->core.tkwin, width, height);
     }
 
-    return CoreConfigure(interp, recordPtr, mask);
+    return TtkCoreConfigure(interp, recordPtr, mask);
 }
 
 /* public */
-WidgetSpec FrameWidgetSpec =
+MODULE_SCOPE WidgetSpec ttkFrameWidgetSpec;
+WidgetSpec ttkFrameWidgetSpec =
 {
     "TFrame",			/* className */
     sizeof(Frame),		/* recordSize */
     FrameOptionSpecs,		/* optionSpecs */
     FrameCommands,		/* subcommands */
-    NullInitialize,		/* initializeProc */
-    NullCleanup,		/* cleanupProc */
+    TtkNullInitialize,		/* initializeProc */
+    TtkNullCleanup,		/* cleanupProc */
     FrameConfigure,		/* configureProc */
-    NullPostConfigure,		/* postConfigureProc */
-    WidgetGetLayout, 		/* getLayoutProc */
+    TtkNullPostConfigure,		/* postConfigureProc */
+    TtkWidgetGetLayout, 		/* getLayoutProc */
     FrameSize,			/* sizeProc */
-    WidgetDoLayout,		/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkWidgetDoLayout,		/* layoutProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 
 /* ======================================================================
@@ -602,7 +603,8 @@ static int LabelframeConfigure(Tcl_Interp *interp,void *recordPtr,int mask)
 }
 
 /* public */
-WidgetSpec LabelframeWidgetSpec =
+MODULE_SCOPE WidgetSpec ttkLabelframeWidgetSpec;
+WidgetSpec ttkLabelframeWidgetSpec =
 {
     "TLabelframe",		/* className */
     sizeof(Labelframe),		/* recordSize */
@@ -611,10 +613,10 @@ WidgetSpec LabelframeWidgetSpec =
     LabelframeInitialize,	/* initializeProc */
     LabelframeCleanup,		/* cleanupProc */
     LabelframeConfigure,	/* configureProc */
-    NullPostConfigure,  	/* postConfigureProc */
-    WidgetGetLayout, 		/* getLayoutProc */
+    TtkNullPostConfigure,  	/* postConfigureProc */
+    TtkWidgetGetLayout, 		/* getLayoutProc */
     LabelframeSize,		/* sizeProc */
     LabelframeDoLayout,		/* layoutProc */
-    WidgetDisplay		/* displayProc */
+    TtkWidgetDisplay		/* displayProc */
 };
 

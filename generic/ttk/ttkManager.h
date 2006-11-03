@@ -1,4 +1,4 @@
-/* $Id: ttkManager.h,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkManager.h,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -7,8 +7,8 @@
  * TODO: opacify data structures.
  */
 
-#ifndef TTK_MANAGER_H
-#define TTK_MANAGER_H 1
+#ifndef _TTKMANAGER
+#define _TTKMANAGER
 
 typedef struct TtkManager_ Ttk_Manager; /* forward */
 typedef struct TtkSlave_ Ttk_Slave; /* forward */
@@ -44,8 +44,8 @@ typedef struct {			/* Manager hooks */
 /*
  * Default implementations for Tk_GeomMgr hooks:
  */
-extern void Ttk_GeometryRequestProc(ClientData, Tk_Window slave);
-extern void Ttk_LostSlaveProc(ClientData, Tk_Window slave);
+MODULE_SCOPE void Ttk_GeometryRequestProc(ClientData, Tk_Window slave);
+MODULE_SCOPE void Ttk_LostSlaveProc(ClientData, Tk_Window slave);
 
 struct TtkSlave_
 {
@@ -69,54 +69,54 @@ struct TtkManager_
 /*
  * Public API:
  */
-extern Ttk_Manager *Ttk_CreateManager(
+MODULE_SCOPE Ttk_Manager *Ttk_CreateManager(
 	Ttk_ManagerSpec *, void *managerData, Tk_Window masterWindow);
-extern void Ttk_DeleteManager(Ttk_Manager *);
+MODULE_SCOPE void Ttk_DeleteManager(Ttk_Manager *);
 
-extern int Ttk_AddSlave(
+MODULE_SCOPE int Ttk_AddSlave(
     Tcl_Interp *, Ttk_Manager *, Tk_Window, int position,
     int objc, Tcl_Obj *CONST objv[]);
 
-extern void Ttk_ForgetSlave(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE void Ttk_ForgetSlave(Ttk_Manager *, int slaveIndex);
 
-extern int Ttk_ConfigureSlave(
+MODULE_SCOPE int Ttk_ConfigureSlave(
     Tcl_Interp *interp, Ttk_Manager *, Ttk_Slave *,
     int objc, Tcl_Obj *CONST objv[]);
 
-extern void Ttk_ReorderSlave(Ttk_Manager *, int fromIndex, int toIndex);
+MODULE_SCOPE void Ttk_ReorderSlave(Ttk_Manager *, int fromIndex, int toIndex);
     /* Rearrange slave positions */
 
-extern void Ttk_PlaceSlave(
+MODULE_SCOPE void Ttk_PlaceSlave(
     Ttk_Manager *, int slaveIndex, int x, int y, int width, int height);
     /* Position and map the slave */
 
-extern void Ttk_UnmapSlave(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE void Ttk_UnmapSlave(Ttk_Manager *, int slaveIndex);
     /* Unmap the slave */
 
-extern void Ttk_ManagerSizeChanged(Ttk_Manager *);
-extern void Ttk_ManagerLayoutChanged(Ttk_Manager *);
+MODULE_SCOPE void Ttk_ManagerSizeChanged(Ttk_Manager *);
+MODULE_SCOPE void Ttk_ManagerLayoutChanged(Ttk_Manager *);
     /* Notify manager that size (resp. layout) needs to be recomputed */
 
 /* Utilities:
  */
-extern int Ttk_SlaveIndex(Ttk_Manager *, Tk_Window);
+MODULE_SCOPE int Ttk_SlaveIndex(Ttk_Manager *, Tk_Window);
     /* Returns: index in slave array of specified window, -1 if not found */
 
-extern Ttk_Slave *Ttk_GetSlaveFromObj(
+MODULE_SCOPE Ttk_Slave *Ttk_GetSlaveFromObj(
     Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, int *indexPtr);
 
 /* Accessor functions:
  */
-extern int Ttk_NumberSlaves(Ttk_Manager *);
+MODULE_SCOPE int Ttk_NumberSlaves(Ttk_Manager *);
     /* Returns: number of managed slaves */
 
-extern void *Ttk_SlaveData(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE void *Ttk_SlaveData(Ttk_Manager *, int slaveIndex);
     /* Returns: private data associated with slave */
 
-extern Tk_Window Ttk_SlaveWindow(Ttk_Manager *, int slaveIndex);
+MODULE_SCOPE Tk_Window Ttk_SlaveWindow(Ttk_Manager *, int slaveIndex);
     /* Returns: slave window */
 
-extern int Ttk_Maintainable(Tcl_Interp *, Tk_Window slave, Tk_Window master);
+MODULE_SCOPE int Ttk_Maintainable(Tcl_Interp *, Tk_Window slave, Tk_Window master);
     /* Returns: 1 if master can manage slave; 0 otherwise leaving error msg */
 
-#endif
+#endif /* _TTKMANAGER */

@@ -1,4 +1,4 @@
-/* $Id: ttkScroll.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkScroll.c,v 1.2 2006/11/03 03:06:22 das Exp $
  *
  * Copyright 2004, Joe English
  *
@@ -17,22 +17,22 @@
  *
  * 	1. User adjusts scrollbar, scrollbar widget calls its -command
  * 	2. Scrollbar -command invokes the scrollee [xy]view widget method
- * 	3. ScrollviewCommand calls ScrollTo(), which updates 
+ * 	3. TtkScrollviewCommand calls TtkScrollTo(), which updates 
  * 	   'first' and schedules a redisplay.
  * 	4. Once the scrollee knows 'total' and 'last' (typically in 
- * 	   the LayoutProc), call Scrolled(h,first,last,total) to 
+ * 	   the LayoutProc), call TtkScrolled(h,first,last,total) to 
  * 	   synchronize the scrollbar.
  * 	5. The scrollee -[xy]scrollcommand is called (in an idle callback)
  * 	6. Which calls the scrollbar 'set' method and redisplays the scrollbar.
  *
  * If the scrollee has internal scrolling (e.g., a 'see' method), 
- * it should ScrollTo() directly (step 2).
+ * it should TtkScrollTo() directly (step 2).
  *
- * If the widget value changes, it should call Scrolled() (step 4).
+ * If the widget value changes, it should call TtkScrolled() (step 4).
  * (This usually happens automatically when the widget is redisplayed).
  *
  * If the scrollee's -[xy]scrollcommand changes, it should call
- * ScrollbarUpdateRequired, which will invoke step (5) (@@@ Fix this)
+ * TtkScrollbarUpdateRequired, which will invoke step (5) (@@@ Fix this)
  */
 
 #include <tk.h>
@@ -51,10 +51,10 @@ struct ScrollHandleRec
     Scrollable	*scrollPtr;
 };
 
-/* CreateScrollHandle --
+/* TtkCreateScrollHandle --
  * 	Initialize scroll handle.
  */
-ScrollHandle CreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
+ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 {
     ScrollHandle h = (ScrollHandle)ckalloc(sizeof(*h));
 
@@ -68,7 +68,7 @@ ScrollHandle CreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
     return h;
 }
 
-void FreeScrollHandle(ScrollHandle h)
+void TtkFreeScrollHandle(ScrollHandle h)
 {
     Tcl_EventuallyFree((ClientData)h, TCL_DYNAMIC);
 }
@@ -137,10 +137,10 @@ static void UpdateScrollbarBG(ClientData clientData)
     Tcl_Release(clientData);
 }
 
-/* Scrolled --
+/* TtkScrolled --
  * 	Update scroll info, schedule scrollbar update.
  */
-void Scrolled(ScrollHandle h, int first, int last, int total)
+void TtkScrolled(ScrollHandle h, int first, int last, int total)
 {
     Scrollable *s = h->scrollPtr;
     
@@ -167,18 +167,18 @@ void Scrolled(ScrollHandle h, int first, int last, int total)
     }
 }
 
-/* ScrollbarUpdateRequired --
- * 	Force a scrollbar update at the next call to Scrolled(),
+/* TtkScrollbarUpdateRequired --
+ * 	Force a scrollbar update at the next call to TtkScrolled(),
  * 	even if scroll parameters haven't changed (e.g., if
  * 	-yscrollcommand has changed).
  */
 
-void ScrollbarUpdateRequired(ScrollHandle h)
+void TtkScrollbarUpdateRequired(ScrollHandle h)
 {
     h->flags |= SCROLL_UPDATE_REQUIRED;
 }
 
-/* ScrollviewCommand --
+/* TtkScrollviewCommand --
  * 	Widget [xy]view command implementation.
  *
  *  $w [xy]view -- return current view region
@@ -186,7 +186,7 @@ void ScrollbarUpdateRequired(ScrollHandle h)
  *  $w [xy]view moveto $fraction
  *  $w [xy]view scroll $number $what -- scrollbar interface
  */
-int ScrollviewCommand(
+int TtkScrollviewCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
@@ -224,12 +224,12 @@ int ScrollviewCommand(
 	}
     }
 
-    ScrollTo(h, newFirst);
+    TtkScrollTo(h, newFirst);
 
     return TCL_OK;
 }
 
-void ScrollTo(ScrollHandle h, int newFirst)
+void TtkScrollTo(ScrollHandle h, int newFirst)
 {
     Scrollable *s = h->scrollPtr;
 

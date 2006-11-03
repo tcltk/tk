@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkWidget.h,v 1.2 2006/11/03 03:06:22 das Exp $
  * Copyright (c) 2003, Joe English
  *
  * Helper routines for widget implementations.
@@ -6,8 +6,8 @@
  * Require: ttkTheme.h.
  */
 
-#ifndef WIDGET_H
-#define WIDGET_H 1
+#ifndef _TTKWIDGET
+#define _TTKWIDGET
 
 /* State flags for 'flags' field.
  * @@@ todo: distinguish:
@@ -16,7 +16,7 @@
 #define WIDGET_DESTROYED	0x0001
 #define REDISPLAY_PENDING 	0x0002	/* scheduled call to RedisplayWidget */
 #define WIDGET_REALIZED		0x0010	/* set at first ConfigureNotify */
-#define CURSOR_ON 		0x0020	/* See BlinkCursor() */
+#define CURSOR_ON 		0x0020	/* See TtkBlinkCursor() */
 #define WIDGET_USER_FLAG        0x0100  /* 0x0100 - 0x8000 for user flags */
 
 /*
@@ -63,7 +63,7 @@ typedef struct {
     WidgetSubcommandProc command;
 } WidgetCommandSpec;
 
-extern int WidgetEnsembleCommand(	/* Run an ensemble command */
+MODULE_SCOPE int TtkWidgetEnsembleCommand(	/* Run an ensemble command */
     WidgetCommandSpec *commands, int cmdIndex,
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr);
 
@@ -93,34 +93,34 @@ struct WidgetSpec_
 /*
  * Common factors for widget implementations:
  */
-extern int  NullInitialize(Tcl_Interp *, void *);
-extern int  NullPostConfigure(Tcl_Interp *, void *, int);
-extern void NullCleanup(void *recordPtr);
-extern Ttk_Layout WidgetGetLayout(Tcl_Interp *, Ttk_Theme, void *recordPtr);
-extern Ttk_Layout WidgetGetOrientedLayout(
+MODULE_SCOPE int  TtkNullInitialize(Tcl_Interp *, void *);
+MODULE_SCOPE int  TtkNullPostConfigure(Tcl_Interp *, void *, int);
+MODULE_SCOPE void TtkNullCleanup(void *recordPtr);
+MODULE_SCOPE Ttk_Layout TtkWidgetGetLayout(Tcl_Interp *, Ttk_Theme, void *recordPtr);
+MODULE_SCOPE Ttk_Layout TtkWidgetGetOrientedLayout(
     Tcl_Interp *, Ttk_Theme, void *recordPtr, Tcl_Obj *orientObj);
-extern int  WidgetSize(void *recordPtr, int *w, int *h);
-extern void WidgetDoLayout(void *recordPtr);
-extern void WidgetDisplay(void *recordPtr, Drawable);
+MODULE_SCOPE int  TtkWidgetSize(void *recordPtr, int *w, int *h);
+MODULE_SCOPE void TtkWidgetDoLayout(void *recordPtr);
+MODULE_SCOPE void TtkWidgetDisplay(void *recordPtr, Drawable);
 
-extern int CoreConfigure(Tcl_Interp*, void *, int mask);
+MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 
 /* Commands present in all widgets:
  */
-extern int WidgetConfigureCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
-extern int WidgetCgetCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
-extern int WidgetInstateCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
-extern int WidgetStateCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
+MODULE_SCOPE int TtkWidgetConfigureCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
+MODULE_SCOPE int TtkWidgetCgetCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
+MODULE_SCOPE int TtkWidgetInstateCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
+MODULE_SCOPE int TtkWidgetStateCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
 
 /* Common widget commands:
  */
-extern int WidgetIdentifyCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
+MODULE_SCOPE int TtkWidgetIdentifyCommand(Tcl_Interp *, int, Tcl_Obj*const[], void *);
 
-extern int WidgetConstructorObjCmd(ClientData,Tcl_Interp*,int,Tcl_Obj*CONST[]);
+MODULE_SCOPE int TtkWidgetConstructorObjCmd(ClientData,Tcl_Interp*,int,Tcl_Obj*CONST[]);
 
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand(interp, name, \
-	WidgetConstructorObjCmd, (ClientData)specPtr,NULL)
+	TtkWidgetConstructorObjCmd, (ClientData)specPtr,NULL)
 
 /* WIDGET_TAKES_FOCUS --
  * Add this to the OptionSpecs table of widgets that
@@ -141,22 +141,22 @@ extern int WidgetConstructorObjCmd(ClientData,Tcl_Interp*,int,Tcl_Obj*CONST[]);
 /*
  * Useful routines for use inside widget implementations:
  */
-extern int WidgetDestroyed(WidgetCore *);
+/* extern int WidgetDestroyed(WidgetCore *); */
 #define WidgetDestroyed(corePtr) ((corePtr)->flags & WIDGET_DESTROYED)
 
-extern void WidgetChangeState(WidgetCore *,
+MODULE_SCOPE void TtkWidgetChangeState(WidgetCore *,
 	unsigned int setBits, unsigned int clearBits);
 
-extern void TtkRedisplayWidget(WidgetCore *);
-extern void TtkResizeWidget(WidgetCore *);
+MODULE_SCOPE void TtkRedisplayWidget(WidgetCore *);
+MODULE_SCOPE void TtkResizeWidget(WidgetCore *);
 
-extern void TrackElementState(WidgetCore *);
-extern void BlinkCursor(WidgetCore *);
+MODULE_SCOPE void TtkTrackElementState(WidgetCore *);
+MODULE_SCOPE void TtkBlinkCursor(WidgetCore *);
 
 /*
  * -state option values (compatibility)
  */
-extern void CheckStateOption(WidgetCore *, Tcl_Obj *);
+MODULE_SCOPE void TtkCheckStateOption(WidgetCore *, Tcl_Obj *);
 
 /*
  * Variable traces:
@@ -164,29 +164,29 @@ extern void CheckStateOption(WidgetCore *, Tcl_Obj *);
 typedef void (*Ttk_TraceProc)(void *recordPtr, const char *value);
 typedef struct TtkTraceHandle_ Ttk_TraceHandle;
 
-extern Ttk_TraceHandle *Ttk_TraceVariable(
+MODULE_SCOPE Ttk_TraceHandle *Ttk_TraceVariable(
     Tcl_Interp*, Tcl_Obj *varnameObj, Ttk_TraceProc callback, void *clientData);
-extern void Ttk_UntraceVariable(Ttk_TraceHandle *);
-extern int Ttk_FireTrace(Ttk_TraceHandle *);
+MODULE_SCOPE void Ttk_UntraceVariable(Ttk_TraceHandle *);
+MODULE_SCOPE int Ttk_FireTrace(Ttk_TraceHandle *);
 
 /*
  * Utility routines for managing -image option:
  */
-extern int GetImageList(
+MODULE_SCOPE int TtkGetImageList(
     Tcl_Interp *, WidgetCore *, Tcl_Obj *imageOption, Tk_Image **imageListPtr);
-extern void FreeImageList(Tk_Image *);
+MODULE_SCOPE void TtkFreeImageList(Tk_Image *);
 
 /*
  * Virtual events:
  */
-extern void SendVirtualEvent(Tk_Window tgtWin, const char *eventName);
+MODULE_SCOPE void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
 
 /*
  * Helper routines for data accessor commands:
  */
-extern int EnumerateOptions(
+MODULE_SCOPE int TtkEnumerateOptions(
     Tcl_Interp *, void *recordPtr, Tk_OptionSpec *, Tk_OptionTable, Tk_Window);
-extern int GetOptionValue(
+MODULE_SCOPE int TtkGetOptionValue(
     Tcl_Interp *, void *recordPtr, Tcl_Obj *optName, Tk_OptionTable, Tk_Window);
 
 /*
@@ -201,15 +201,15 @@ typedef struct {
 
 typedef struct ScrollHandleRec *ScrollHandle;
 
-extern ScrollHandle CreateScrollHandle(WidgetCore *, Scrollable *);
-extern void FreeScrollHandle(ScrollHandle);
+MODULE_SCOPE ScrollHandle TtkCreateScrollHandle(WidgetCore *, Scrollable *);
+MODULE_SCOPE void TtkFreeScrollHandle(ScrollHandle);
 
-extern int ScrollviewCommand(
+MODULE_SCOPE int TtkScrollviewCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle);
 
-extern void ScrollTo(ScrollHandle, int newFirst);
-extern void Scrolled(ScrollHandle, int first, int last, int total);
-extern void ScrollbarUpdateRequired(ScrollHandle);
+MODULE_SCOPE void TtkScrollTo(ScrollHandle, int newFirst);
+MODULE_SCOPE void TtkScrolled(ScrollHandle, int first, int last, int total);
+MODULE_SCOPE void TtkScrollbarUpdateRequired(ScrollHandle);
 
 /*
  * Tag sets (work in progress, half-baked)
@@ -218,52 +218,52 @@ extern void ScrollbarUpdateRequired(ScrollHandle);
 typedef struct TtkTag *Ttk_Tag;
 typedef struct TtkTagTable *Ttk_TagTable;
 
-extern Ttk_TagTable Ttk_CreateTagTable(Tk_OptionTable, int tagRecSize);
-extern void Ttk_DeleteTagTable(Ttk_TagTable);
+MODULE_SCOPE Ttk_TagTable Ttk_CreateTagTable(Tk_OptionTable, int tagRecSize);
+MODULE_SCOPE void Ttk_DeleteTagTable(Ttk_TagTable);
 
-extern Ttk_Tag Ttk_GetTag(Ttk_TagTable, const char *tagName);
-extern Ttk_Tag Ttk_GetTagFromObj(Ttk_TagTable, Tcl_Obj *);
+MODULE_SCOPE Ttk_Tag Ttk_GetTag(Ttk_TagTable, const char *tagName);
+MODULE_SCOPE Ttk_Tag Ttk_GetTagFromObj(Ttk_TagTable, Tcl_Obj *);
 
-extern Tcl_Obj **Ttk_TagRecord(Ttk_Tag);
+MODULE_SCOPE Tcl_Obj **Ttk_TagRecord(Ttk_Tag);
 
-extern int Ttk_GetTagListFromObj(
+MODULE_SCOPE int Ttk_GetTagListFromObj(
     Tcl_Interp *interp, Ttk_TagTable, Tcl_Obj *objPtr,
     int *nTags_rtn, void **taglist_rtn);
 
-extern void Ttk_FreeTagList(void **taglist);
+MODULE_SCOPE void Ttk_FreeTagList(void **taglist);
 
 
 /*
  * Useful widget base classes:
  */
-extern Tk_OptionSpec CoreOptionSpecs[];
+MODULE_SCOPE Tk_OptionSpec ttkCoreOptionSpecs[];
 
 /*
  * String tables for widget resource specifications:
  */
 
-extern const char *TTKOrientStrings[];
-extern const char *TTKCompoundStrings[];
-extern const char *TTKDefaultStrings[];
+MODULE_SCOPE const char *ttkOrientStrings[];
+MODULE_SCOPE const char *ttkCompoundStrings[];
+MODULE_SCOPE const char *ttkDefaultStrings[];
 
 /*
  * ... other option types...
  */
-extern int TtkGetLabelAnchorFromObj(Tcl_Interp*,Tcl_Obj*,Ttk_PositionSpec *);
+MODULE_SCOPE int TtkGetLabelAnchorFromObj(Tcl_Interp*,Tcl_Obj*,Ttk_PositionSpec *);
 
 /*
  * Package initialiation routines:
  */
-extern void RegisterElements(Tcl_Interp *);
+MODULE_SCOPE void TtkRegisterElements(Tcl_Interp *);
 
 #if defined(__WIN32__)
 #define Ttk_PlatformInit Ttk_WinPlatformInit
-extern int Ttk_WinPlatformInit(Tcl_Interp *);
+MODULE_SCOPE int Ttk_PlatformInit(Tcl_Interp *);
 #elif defined(MAC_OSX_TK)
-#define Ttk_PlatformInit Ttk_MacPlatformInit
-extern int Ttk_MacPlatformInit(Tcl_Interp *);
+#define Ttk_PlatformInit Ttk_MacOSXPlatformInit
+MODULE_SCOPE int Ttk_PlatformInit(Tcl_Interp *);
 #else
 #define Ttk_PlatformInit(interp) /* TTK_X11PlatformInit() */
 #endif
 
-#endif /* WIDGET_H */
+#endif /* _TTKWIDGET */

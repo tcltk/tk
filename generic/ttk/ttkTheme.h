@@ -4,11 +4,11 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkTheme.h,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkTheme.h,v 1.2 2006/11/03 03:06:22 das Exp $
  */
 
-#ifndef TKTHEME_H
-#define TKTHEME_H 1
+#ifndef _TTKTHEME
+#define _TTKTHEME
 
 #ifdef __cplusplus
 extern "C" {
@@ -170,7 +170,7 @@ typedef unsigned int Ttk_Sticky;
 #define TTK_FILL_BOTH	(0xF)	/* -sticky nswe */
 
 TTKAPI int Ttk_GetStickyFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_Sticky *);
-TTKAPI Tcl_Obj *Ttk_NewStickyObj(Ttk_Sticky);
+MODULE_SCOPE Tcl_Obj *Ttk_NewStickyObj(Ttk_Sticky);
 
 /*
  * Extra bits for position specifications (combine -side and -sticky)
@@ -202,12 +202,12 @@ TTKAPI Ttk_Box Ttk_AnchorBox(Ttk_Box parcel, int w, int h, Tk_Anchor anchor);
 TTKAPI Ttk_Box Ttk_PadBox(Ttk_Box b, Ttk_Padding p);
 TTKAPI Ttk_Box Ttk_ExpandBox(Ttk_Box b, Ttk_Padding p);
 TTKAPI Ttk_Box Ttk_PlaceBox(Ttk_Box *cavity, int w,int h, Ttk_Side,Ttk_Sticky);
-TTKAPI Ttk_Box Ttk_PositionBox(Ttk_Box *cavity, int w, int h, Ttk_PositionSpec);
+MODULE_SCOPE Ttk_Box Ttk_PositionBox(Ttk_Box *cavity, int w, int h, Ttk_PositionSpec);
 
 /*------------------------------------------------------------------------
  * +++ Themes.
  */
-extern void Ttk_StylePkgInit(Tcl_Interp *);
+MODULE_SCOPE void Ttk_StylePkgInit(Tcl_Interp *);
 
 typedef struct Ttk_Theme_ *Ttk_Theme;
 typedef struct Ttk_ElementImpl_ *Ttk_Element;
@@ -222,9 +222,9 @@ TTKAPI Ttk_Theme Ttk_CreateTheme(
     Tcl_Interp *interp, const char *name, Ttk_Theme parent);
 
 typedef int (Ttk_ThemeEnabledProc)(Ttk_Theme theme, void *clientData);
-extern void Ttk_SetThemeEnabledProc(Ttk_Theme, Ttk_ThemeEnabledProc, void *);
+MODULE_SCOPE void Ttk_SetThemeEnabledProc(Ttk_Theme, Ttk_ThemeEnabledProc, void *);
 
-extern int Ttk_UseTheme(Tcl_Interp *, Ttk_Theme);
+MODULE_SCOPE int Ttk_UseTheme(Tcl_Interp *, Ttk_Theme);
 
 typedef void (Ttk_CleanupProc)(void *clientData);
 TTKAPI void Ttk_RegisterCleanup(
@@ -279,12 +279,12 @@ typedef struct {
     Tcl_Obj	*unused;
 } NullElement;
 
-extern void NullElementGeometry
+MODULE_SCOPE void TtkNullElementGeometry
 	(void *, void *, Tk_Window, int *, int *, Ttk_Padding *);
-extern void NullElementDraw
+MODULE_SCOPE void TtkNullElementDraw
 	(void *, void *, Tk_Window, Drawable, Ttk_Box, Ttk_State);
-extern Ttk_ElementOptionSpec NullElementOptions[];
-extern Ttk_ElementSpec NullElementSpec;
+MODULE_SCOPE Ttk_ElementOptionSpec TtkNullElementOptions[];
+MODULE_SCOPE Ttk_ElementSpec ttkNullElementSpec;
 
 /*------------------------------------------------------------------------
  * +++ Layout templates.
@@ -309,35 +309,35 @@ TTKAPI void Ttk_RegisterLayout(
  * +++ Layout instances.
  */
 
-extern Ttk_Layout Ttk_CreateLayout(
+MODULE_SCOPE Ttk_Layout Ttk_CreateLayout(
     Tcl_Interp *, Ttk_Theme, const char *name,
     void *recordPtr, Tk_OptionTable, Tk_Window tkwin);
 
-extern Ttk_Layout Ttk_CreateSublayout(
+MODULE_SCOPE Ttk_Layout Ttk_CreateSublayout(
     Tcl_Interp *, Ttk_Theme, Ttk_Layout, const char *name, Tk_OptionTable);
 
-extern void Ttk_FreeLayout(Ttk_Layout);
+MODULE_SCOPE void Ttk_FreeLayout(Ttk_Layout);
 
-extern void Ttk_LayoutSize(Ttk_Layout,Ttk_State,int *widthPtr,int *heightPtr);
-extern void Ttk_PlaceLayout(Ttk_Layout, Ttk_State, Ttk_Box);
-extern void Ttk_DrawLayout(Ttk_Layout, Ttk_State, Drawable);
+MODULE_SCOPE void Ttk_LayoutSize(Ttk_Layout,Ttk_State,int *widthPtr,int *heightPtr);
+MODULE_SCOPE void Ttk_PlaceLayout(Ttk_Layout, Ttk_State, Ttk_Box);
+MODULE_SCOPE void Ttk_DrawLayout(Ttk_Layout, Ttk_State, Drawable);
 
-extern void Ttk_RebindSublayout(Ttk_Layout, void *recordPtr);
+MODULE_SCOPE void Ttk_RebindSublayout(Ttk_Layout, void *recordPtr);
 
-extern Ttk_LayoutNode *Ttk_LayoutIdentify(Ttk_Layout, int x, int y);
-extern Ttk_LayoutNode *Ttk_LayoutFindNode(Ttk_Layout, const char *nodeName);
+MODULE_SCOPE Ttk_LayoutNode *Ttk_LayoutIdentify(Ttk_Layout, int x, int y);
+MODULE_SCOPE Ttk_LayoutNode *Ttk_LayoutFindNode(Ttk_Layout, const char *nodeName);
 
-extern const char *Ttk_LayoutNodeName(Ttk_LayoutNode *);
-extern Ttk_Box Ttk_LayoutNodeParcel(Ttk_LayoutNode *);
-extern Ttk_Box Ttk_LayoutNodeInternalParcel(Ttk_Layout,Ttk_LayoutNode *);
-extern Ttk_Padding Ttk_LayoutNodeInternalPadding(Ttk_Layout,Ttk_LayoutNode *);
-extern void Ttk_LayoutNodeReqSize(Ttk_Layout, Ttk_LayoutNode *, int *w, int *h);
+MODULE_SCOPE const char *Ttk_LayoutNodeName(Ttk_LayoutNode *);
+MODULE_SCOPE Ttk_Box Ttk_LayoutNodeParcel(Ttk_LayoutNode *);
+MODULE_SCOPE Ttk_Box Ttk_LayoutNodeInternalParcel(Ttk_Layout,Ttk_LayoutNode *);
+MODULE_SCOPE Ttk_Padding Ttk_LayoutNodeInternalPadding(Ttk_Layout,Ttk_LayoutNode *);
+MODULE_SCOPE void Ttk_LayoutNodeReqSize(Ttk_Layout, Ttk_LayoutNode *, int *w, int *h);
 
-extern void Ttk_LayoutNodeSetParcel(Ttk_LayoutNode *node, Ttk_Box parcel);
-extern void Ttk_PlaceLayoutNode(Ttk_Layout,Ttk_LayoutNode *, Ttk_Box);
-extern void Ttk_ChangeElementState(Ttk_LayoutNode *,unsigned set,unsigned clr);
+MODULE_SCOPE void Ttk_LayoutNodeSetParcel(Ttk_LayoutNode *node, Ttk_Box parcel);
+MODULE_SCOPE void Ttk_PlaceLayoutNode(Ttk_Layout,Ttk_LayoutNode *, Ttk_Box);
+MODULE_SCOPE void Ttk_ChangeElementState(Ttk_LayoutNode *,unsigned set,unsigned clr);
 
-extern Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);
+MODULE_SCOPE Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Resource cache.
@@ -345,16 +345,16 @@ extern Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);
  */
 
 typedef struct Ttk_ResourceCache_ *Ttk_ResourceCache;
-extern Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *);
-extern void Ttk_FreeResourceCache(Ttk_ResourceCache);
+MODULE_SCOPE Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *);
+MODULE_SCOPE void Ttk_FreeResourceCache(Ttk_ResourceCache);
 
-extern Ttk_ResourceCache Ttk_GetResourceCache(Tcl_Interp*);
-extern Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
-extern Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
-extern Tcl_Obj *Ttk_UseBorder(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
-extern Tk_Image Ttk_UseImage(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
+MODULE_SCOPE Ttk_ResourceCache Ttk_GetResourceCache(Tcl_Interp*);
+MODULE_SCOPE Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
+MODULE_SCOPE Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
+MODULE_SCOPE Tcl_Obj *Ttk_UseBorder(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
+MODULE_SCOPE Tk_Image Ttk_UseImage(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
 
-extern void Ttk_RegisterNamedColor(Ttk_ResourceCache, const char *, XColor *);
+MODULE_SCOPE void Ttk_RegisterNamedColor(Ttk_ResourceCache, const char *, XColor *);
 
 /*------------------------------------------------------------------------
  * +++ Miscellaneous enumerations.
@@ -367,7 +367,7 @@ typedef enum 			/* -default option values */
     TTK_BUTTON_DEFAULT_DISABLED	/* not defaultable */
 } Ttk_ButtonDefaultState;
 
-extern int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, int *);
+MODULE_SCOPE int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, int *);
 
 typedef enum 			/* -compound option values */
 {
@@ -381,7 +381,7 @@ typedef enum 			/* -compound option values */
     TTK_COMPOUND_RIGHT  	/* image to right of text */
 } Ttk_Compound;
 
-extern int Ttk_GetCompoundFromObj(Tcl_Interp *, Tcl_Obj *, int *);
+MODULE_SCOPE int Ttk_GetCompoundFromObj(Tcl_Interp *, Tcl_Obj *, int *);
 
 typedef enum { 		/* -orient option values */
     TTK_ORIENT_HORIZONTAL,
@@ -399,11 +399,11 @@ typedef enum { 		/* -orient option values */
  * (@@@ find a better home for this)
  */
 typedef enum { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT } ArrowDirection;
-extern void ArrowSize(int h, ArrowDirection, int *widthPtr, int *heightPtr);
-extern void DrawArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
-extern void FillArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
+MODULE_SCOPE void TtkArrowSize(int h, ArrowDirection, int *widthPtr, int *heightPtr);
+MODULE_SCOPE void TtkDrawArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
+MODULE_SCOPE void TtkFillArrow(Display *, Drawable, GC, Ttk_Box, ArrowDirection);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* TKTHEME_H */
+#endif /* _TTKTHEME */
