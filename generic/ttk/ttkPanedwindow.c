@@ -1,8 +1,8 @@
-/* $Id: ttkPanedwindow.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkPanedwindow.c,v 1.3 2006/11/07 03:45:28 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
- * Ttk widget set: ttk::panedwindow widget.
+ * ttk::panedwindow widget implementation.
  *
  * TODO: track active/pressed sash.
  */
@@ -378,7 +378,7 @@ static void PanedGeometryRequestProc(
 }
 
 static Ttk_ManagerSpec PanedManagerSpec = {
-    { "paned", PanedGeometryRequestProc, Ttk_LostSlaveProc },
+    { "panedwindow", PanedGeometryRequestProc, Ttk_LostSlaveProc },
     PaneOptionSpecs, sizeof(Pane),
     PanedSize,
     PanedPlaceSlaves,
@@ -390,6 +390,7 @@ static Ttk_ManagerSpec PanedManagerSpec = {
 /*------------------------------------------------------------------------
  * +++ Event handler.
  *
+ * <<NOTE-PW-LEAVE-NOTIFYINFERIOR>>
  * Tk does not execute binding scripts for <Leave> events when
  * the pointer crosses from a parent to a child.  This widget
  * needs to know when that happens, though, so it can reset
@@ -780,7 +781,7 @@ static Ttk_ElementSpec SashElementSpec = {
 };
 
 TTK_BEGIN_LAYOUT(PanedLayout)
-    TTK_NODE("Paned.background", 0)	/* @@@ BUG: empty layouts don't work */
+    TTK_NODE("Panedwindow.background", 0)/* @@@ BUG: empty layouts don't work */
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalSashLayout)

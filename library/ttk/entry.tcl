@@ -1,5 +1,5 @@
 #
-# $Id: entry.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: entry.tcl,v 1.2 2006/11/07 03:45:28 jenglish Exp $
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #
@@ -409,7 +409,7 @@ proc ttk::entry::DragTo {w x} {
 #	according to the current selection mode.
 #
 # TODO: AutoScroll should repeat faster (50ms) than normal autorepeat.
-# TODO: Need a way for ttk::Repeat scripts to cancel themselves.
+# TODO: Need a way for Repeat scripts to cancel themselves.
 #
 proc ttk::entry::AutoScroll {w} {
     variable State
