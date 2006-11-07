@@ -1,4 +1,10 @@
+2006-11-07  Kevin Kenny  <kennykb@acm.org>
+
+	* unix/configure.in: Made --enable-xft the default.
+	* unix/configure: Regen.
+	
 2006-11-06  Joe English  <jenglish@users.sourceforge.net>
+	
 	* generic/ttk/ttkClassicTheme.c, generic/ttk/ttkPanedwindow.c,
 	generic/ttk/ttkTheme.c, generic/ttk/ttkTreeview.c,
 	win/ttkWinXPTheme.c, library/ttk/entry.tcl,
