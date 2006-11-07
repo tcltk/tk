@@ -1,5 +1,5 @@
 #
-# $Id: notebook.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: notebook.tcl,v 1.2 2006/11/07 03:45:28 jenglish Exp $
 #
 # Bindings for TNotebook widget
 #
@@ -37,24 +37,6 @@ proc ttk::notebook::ActivateTab {w tab} {
 	    tk::TabToWindow $f
 	}
     }
-}
-
-# ttk::focusFirst $w --
-#	Return the first descendant of $w, in preorder traversal order,
-#	that can take keyboard focus, "" if none do.
-#
-# See also: tk_focusNext
-#
-proc ttk::focusFirst {w} {
-    if {[ttk::takesFocus $w]} {
-	return $w
-    }
-    foreach child [winfo children $w] {
-	if {[set c [ttk::focusFirst $child]] ne ""} {
-	    return $c
-	}
-    }
-    return ""
 }
 
 # Press $nb $x $y --

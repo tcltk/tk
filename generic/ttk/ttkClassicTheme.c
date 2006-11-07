@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClassicTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkClassicTheme.c,v 1.3 2006/11/07 03:45:27 jenglish Exp $
  *
  * Copyright (c) 2004, Joe English
  *
@@ -288,12 +288,11 @@ static Ttk_ElementSpec ArrowElementSpec =
 
 
 /*------------------------------------------------------------------------
- * +++ Sash element (for ttk::paned window)
+ * +++ Sash element (for ttk::panedwindow)
  *
  * NOTES: 
  *
- * Paned windows with -orient horizontal use vertical sashes,
- * and vice versa.
+ * panedwindows with -orient horizontal use vertical sashes, and vice versa.
  *
  * Interpretation of -sashrelief 'groove' and 'ridge' are
  * swapped wrt. the core panedwindow, which (I think) has them backwards.

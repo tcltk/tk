@@ -1,5 +1,5 @@
 /*
- * $Id: ttkTreeview.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkTreeview.c,v 1.3 2006/11/07 03:45:28 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * Ttk widget set: treeview widget.
@@ -2966,8 +2966,6 @@ MODULE_SCOPE int TtkTreeview_Init(Tcl_Interp *interp)
     Ttk_RegisterLayout(theme, "Cell", CellLayout);
     Ttk_RegisterLayout(theme, "Heading", HeadingLayout);
     Ttk_RegisterLayout(theme, "Row", RowLayout);
-
-    Tcl_PkgProvide(interp, "ttk::treeview", TTK_VERSION);
 
     return TCL_OK;
 }
