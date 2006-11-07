@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkTheme.c,v 1.3 2006/11/07 03:45:28 jenglish Exp $
  */
 
 #include <stdlib.h>
@@ -504,7 +504,7 @@ void Ttk_RegisterCleanup(
  * 	Scheduled as an idle callback; clientData is a StylePackageData *.
  *
  * 	Sends a <<ThemeChanged>> event to every widget in the hierarchy.
- * 	Ttk widgets respond to this by calling the  WorldChanged class proc,
+ * 	Widgets respond to this by calling the  WorldChanged class proc,
  * 	which in turn recreates the layout.
  *
  * 	The Tk C API doesn't doesn't provide an easy way to traverse
@@ -516,8 +516,7 @@ static void ThemeChangedProc(ClientData clientData)
     static char ThemeChangedScript[] = "ttk::ThemeChanged";
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
 
-    if (Tcl_EvalEx(pkgPtr->interp, ThemeChangedScript, -1, TCL_EVAL_GLOBAL)
-	    != TCL_OK) {
+    if (Tcl_GlobalEval(pkgPtr->interp, ThemeChangedScript) != TCL_OK) {
 	Tcl_BackgroundError(pkgPtr->interp);
     }
     pkgPtr->themeChangePending = 0;
@@ -1629,8 +1628,6 @@ static struct Ensemble StyleEnsemble[] = {
     { "layout", StyleLayoutCmd, 0 },
     { "theme", 0, StyleThemeEnsemble },
     { "element", 0, StyleElementEnsemble },
-
-    { "default", StyleConfigureCmd, 0 }, /* TEMP: for pre-0.7 compatibility */
     { NULL, 0, 0 }
 };
 
