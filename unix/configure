@@ -861,7 +861,7 @@ Optional Features:
                           on)
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua           use Aqua windowingsystem on Mac OS X (default: off)
-  --enable-xft            use freetype/fontconfig/xft (default: off)
+  --enable-xft            use freetype/fontconfig/xft (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
 
@@ -9265,7 +9265,7 @@ if test "${enable_xft+set}" = set; then
   enableval="$enable_xft"
   enable_xft=$enableval
 else
-  enable_xft="no"
+  enable_xft="yes"
 fi;
     XFT_CFLAGS=""
     XFT_LIBS=""
