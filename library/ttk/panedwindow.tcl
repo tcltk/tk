@@ -1,7 +1,7 @@
 #
-# $Id: panedwindow.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: panedwindow.tcl,v 1.2 2006/11/07 03:45:28 jenglish Exp $
 #
-# Ttk widget set: bindings for TPanedwindow widget.
+# Bindings for ttk::panedwindow widget.
 #
 
 namespace eval ttk::panedwindow {
@@ -24,7 +24,7 @@ bind TPanedwindow <ButtonRelease-1> 	{ ttk::panedwindow::Release %W %x %y }
 bind TPanedwindow <Motion> 		{ ttk::panedwindow::SetCursor %W %x %y }
 bind TPanedwindow <Enter> 		{ ttk::panedwindow::SetCursor %W %x %y }
 bind TPanedwindow <Leave> 		{ ttk::panedwindow::ResetCursor %W }
-# See PanedEventProc in ttkPanedwindow.c:
+# See <<NOTE-PW-LEAVE-NOTIFYINFERIOR>>
 bind TPanedwindow <<EnteredChild>>	{ ttk::panedwindow::ResetCursor %W }
 
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkWinXPTheme.c,v 1.3 2006/11/07 03:45:28 jenglish Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -622,7 +622,7 @@ static Ttk_ElementSpec PbarElementSpec =
  *	not if it's simply the rightmost tab.  This information
  * 	is not available.
  *
- *	The TIS_* and TTKS_* definitions are identical, so 
+ *	The TIS_* and TILES_* definitions are identical, so 
  * 	we can use the same statemap no matter what the partId.
  */
 static void TabElementDraw(

@@ -1,3 +1,14 @@
+2006-11-06  Joe English  <jenglish@users.sourceforge.net>
+	* generic/ttk/ttkClassicTheme.c, generic/ttk/ttkPanedwindow.c,
+	generic/ttk/ttkTheme.c, generic/ttk/ttkTreeview.c,
+	win/ttkWinXPTheme.c, library/ttk/entry.tcl,
+	library/ttk/notebook.tcl, library/ttk/panedwindow.tcl,
+	library/ttk/utils.tcl, tests/ttk/entry.test, tests/ttk/bwidget.test:
+	Miscellaneous minor changes to re-sync Ttk codebase with Tile CVS:
+	fix comments damaged by overzealous search-and-destroy;
+	removed obsolete [style default] synonym for [ttk::style configure];
+	removed other dead code.
+
 2006-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/safetk.tcl (::safe::tkTopLevel): Theme it.
