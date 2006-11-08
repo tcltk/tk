@@ -1,3 +1,9 @@
+2006-11-08  Kevin Kenny  <kennykb@acm.org>
+
+	* unix/configure.in: Silenced warnings about missing Xft
+	configuration unless --enable-xft is requested explicitly.
+	* unix/configure: Regen.
+	
 2006-11-07  Kevin Kenny  <kennykb@acm.org>
 
 	* unix/configure.in: Made --enable-xft the default.
