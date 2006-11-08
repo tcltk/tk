@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.126 2006/11/08 15:50:14 kennykb Exp $
+# RCS: @(#) $Id: configure.in,v 1.127 2006/11/08 18:40:46 kennykb Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -432,6 +432,8 @@ if test $tk_aqua = no; then
         AC_MSG_RESULT([$enable_xft])
     else
         found_xft="yes"
+	dnl make sure package configurator (xft-config or pkg-config
+	dnl says that xft is present.
         XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
         XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
         if test "$found_xft" = "no" ; then
@@ -440,9 +442,34 @@ if test $tk_aqua = no; then
             XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
         fi
 	AC_MSG_RESULT([$found_xft])
+	dnl make sure that compiling against Xft header file doesn't bomb
+        if test "$found_xft" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
+                found_xft=no
+            ],[#include <X11/Xlib.h>])
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+        fi
+	dnl make sure that linking against Xft libraries finds freetype
+        if test "$found_xft" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    AC_CHECK_LIB(Xft, FT_New_Face, [], [
+                found_xft=no
+            ])
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+        fi
+	dnl print a warning if xft is unusable and was specifically requested
         if test "$found_xft" = "no" ; then
             if test "$enable_xft" = "yes" ; then
-                AC_MSG_WARN([Can't find xft configuration])
+                AC_MSG_WARN([Can't find xft configuration, or xft is unusable])
             fi
             enable_xft=no
         fi
