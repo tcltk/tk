@@ -2,6 +2,8 @@
 
 	* unix/configure.in: Silenced warnings about missing Xft
 	configuration unless --enable-xft is requested explicitly.
+	Also added a few basic checks that we can actually compile
+	and link against Xft headers and libraries. [Bug 1592667]
 	* unix/configure: Regen.
 	
 2006-11-07  Kevin Kenny  <kennykb@acm.org>
