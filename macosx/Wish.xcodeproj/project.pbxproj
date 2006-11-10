@@ -202,7 +202,6 @@
 		F96D45AC08F272BC004A47F5 /* tclObj.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F0D08F272A7004A47F5 /* tclObj.c */; };
 		F96D45AD08F272BC004A47F5 /* tclPanic.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F0E08F272A7004A47F5 /* tclPanic.c */; };
 		F96D45AE08F272BC004A47F5 /* tclParse.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F0F08F272A7004A47F5 /* tclParse.c */; };
-		F96D45AF08F272BC004A47F5 /* tclParseExpr.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1008F272A7004A47F5 /* tclParseExpr.c */; };
 		F96D45B008F272BC004A47F5 /* tclPathObj.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1108F272A7004A47F5 /* tclPathObj.c */; };
 		F96D45B108F272BC004A47F5 /* tclPipe.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1208F272A7004A47F5 /* tclPipe.c */; };
 		F96D45B208F272BC004A47F5 /* tclPkg.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1308F272A7004A47F5 /* tclPkg.c */; };
@@ -992,7 +991,6 @@
 		F968884E0AF787B3000797B5 /* winTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = winTheme.tcl; sourceTree = "<group>"; };
 		F968884F0AF787B3000797B5 /* xpTheme.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = xpTheme.tcl; sourceTree = "<group>"; };
 		F96888540AF7880C000797B5 /* all.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = all.tcl; sourceTree = "<group>"; };
-		F96888550AF7880C000797B5 /* bwidget.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = bwidget.test; sourceTree = "<group>"; };
 		F96888560AF7880C000797B5 /* combobox.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = combobox.test; sourceTree = "<group>"; };
 		F96888570AF7880C000797B5 /* entry.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = entry.test; sourceTree = "<group>"; };
 		F96888580AF7880C000797B5 /* image.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = image.test; sourceTree = "<group>"; };
@@ -1313,7 +1311,6 @@
 		F96D3F0D08F272A7004A47F5 /* tclObj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclObj.c; sourceTree = "<group>"; };
 		F96D3F0E08F272A7004A47F5 /* tclPanic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclPanic.c; sourceTree = "<group>"; };
 		F96D3F0F08F272A7004A47F5 /* tclParse.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclParse.c; sourceTree = "<group>"; };
-		F96D3F1008F272A7004A47F5 /* tclParseExpr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclParseExpr.c; sourceTree = "<group>"; };
 		F96D3F1108F272A7004A47F5 /* tclPathObj.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclPathObj.c; sourceTree = "<group>"; };
 		F96D3F1208F272A7004A47F5 /* tclPipe.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclPipe.c; sourceTree = "<group>"; };
 		F96D3F1308F272A7004A47F5 /* tclPkg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclPkg.c; sourceTree = "<group>"; };
@@ -2616,7 +2613,6 @@
 			isa = PBXGroup;
 			children = (
 				F96888540AF7880C000797B5 /* all.tcl */,
-				F96888550AF7880C000797B5 /* bwidget.test */,
 				F96888560AF7880C000797B5 /* combobox.test */,
 				F96888570AF7880C000797B5 /* entry.test */,
 				F96888580AF7880C000797B5 /* image.test */,
@@ -2961,7 +2957,6 @@
 				F96D3F0D08F272A7004A47F5 /* tclObj.c */,
 				F96D3F0E08F272A7004A47F5 /* tclPanic.c */,
 				F96D3F0F08F272A7004A47F5 /* tclParse.c */,
-				F96D3F1008F272A7004A47F5 /* tclParseExpr.c */,
 				F96D3F1108F272A7004A47F5 /* tclPathObj.c */,
 				F96D3F1208F272A7004A47F5 /* tclPipe.c */,
 				F96D3F1308F272A7004A47F5 /* tclPkg.c */,
@@ -3704,7 +3699,6 @@
 				F96D45AC08F272BC004A47F5 /* tclObj.c in Sources */,
 				F96D45AD08F272BC004A47F5 /* tclPanic.c in Sources */,
 				F96D45AE08F272BC004A47F5 /* tclParse.c in Sources */,
-				F96D45AF08F272BC004A47F5 /* tclParseExpr.c in Sources */,
 				F96D45B008F272BC004A47F5 /* tclPathObj.c in Sources */,
 				F96D45B108F272BC004A47F5 /* tclPipe.c in Sources */,
 				F96D45B208F272BC004A47F5 /* tclPkg.c in Sources */,
