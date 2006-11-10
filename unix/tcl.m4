@@ -708,6 +708,10 @@ AC_DEFUN([SC_ENABLE_THREADS], [
 		fi
 	    fi
 	fi
+	if test $tcl_ok = no; then
+	    # Darwin thread stacksize API
+	    AC_CHECK_FUNCS(pthread_get_stacksize_np)
+	fi
 	LIBS=$ac_saved_libs
     else
 	TCL_THREADS=0
@@ -1645,6 +1649,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		    if test $tcl_cv_lib_corefoundation_64 = no; then
 			AC_DEFINE(NO_COREFOUNDATION_64, 1,
 			    [Is Darwin CoreFoundation unavailable for 64-bit?])
+                        LDFLAGS="$LDFLAGS -Wl,-no_arch_warnings"
 		    fi
 		fi
 	    fi
