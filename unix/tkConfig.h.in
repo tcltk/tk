@@ -16,6 +16,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `Xft' library (-lXft). */
+#undef HAVE_LIBXFT
+
 /* Do we have <limits.h>? */
 #undef HAVE_LIMITS_H
 
@@ -36,6 +39,9 @@
 
 /* Do we want a Linux-like thread-attribute interface? */
 #undef HAVE_PTHREAD_GETATTR_NP
+
+/* Define to 1 if you have the `pthread_get_stacksize_np' function. */
+#undef HAVE_PTHREAD_GET_STACKSIZE_NP
 
 /* Does struct password have a pw_gecos field? */
 #undef HAVE_PW_GECOS
