@@ -96,7 +96,7 @@ test ttk-6.9 "Bad font spec in styles" -setup {
 } -cleanup {
     ttk::style theme use default
 } -body {
-    pack [ttk::label .l -text Hi!]
+    pack [ttk::label .l -text Hi! -font {}]
     event generate .l <Expose>
     update
     destroy .l
