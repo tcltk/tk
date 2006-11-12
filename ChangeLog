@@ -1,3 +1,10 @@
+2006-11-12  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttkScroll.c: Reworked cleanup procedure --
+	"self-cancelling" idle call is not robust, call
+	Tcl_CancelIdleCall() in TtkFreeScrollHandle instead.
+	[fixes #1588251]
+
 2006-11-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcodeproj/project.pbxproj: remove tclParseExpr.c and
