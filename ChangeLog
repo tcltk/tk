@@ -1,5 +1,9 @@
 2006-11-12  Joe English  <jenglish@users.sourceforge.net>
 
+	* generic/ttkScroll.c: *correct* fix for #1588251.
+
+2006-11-12  Joe English  <jenglish@users.sourceforge.net>
+
 	* tests/ttk/ttk.test(ttk-6.9): Workaround for #1583038
 
 2006-11-12  Joe English  <jenglish@users.sourceforge.net>
