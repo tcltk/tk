@@ -1,4 +1,4 @@
-/* $Id: ttkScroll.c,v 1.3 2006/11/12 20:35:38 jenglish Exp $
+/* $Id: ttkScroll.c,v 1.4 2006/11/13 00:22:40 jenglish Exp $
  *
  * Copyright 2004, Joe English
  *
@@ -75,25 +75,27 @@ ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
+    WidgetCore *corePtr = h->corePtr;
     char args[TCL_DOUBLE_SPACE * 2];
     int code;
 
     h->flags &= ~SCROLL_UPDATE_REQUIRED;
 
-    if (s->scrollCmd == NULL)
+    if (s->scrollCmd == NULL) {
 	return TCL_OK;
+    }
 
     sprintf(args, " %g %g",
 		(double)s->first / s->total,
 		(double)s->last / s->total);
 
-    Tcl_Preserve(h->corePtr);
+    Tcl_Preserve(corePtr);
     code = Tcl_VarEval(interp, s->scrollCmd, args, NULL);
-    if (WidgetDestroyed(h->corePtr)) {
-	Tcl_Release(h->corePtr);
+    if (WidgetDestroyed(corePtr)) {
+	Tcl_Release(corePtr);
 	return TCL_ERROR;
     }
-    Tcl_Release(h->corePtr);
+    Tcl_Release(corePtr);
 
     if (code != TCL_OK && !Tcl_InterpDeleted(interp)) {
 	/* Disable the -scrollcommand, add to stack trace:
@@ -240,6 +242,6 @@ void TtkFreeScrollHandle(ScrollHandle h)
     if (h->flags & SCROLL_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateScrollbarBG, (ClientData)h);
     }
-    Tcl_Free((ClientData)h);
+    ckfree((ClientData)h);
 }
 
