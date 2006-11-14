@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.3 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkDefaultTheme.c,v 1.4 2006/11/14 22:44:30 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -1051,7 +1051,7 @@ static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] =
     { "-foreground", TK_OPTION_COLOR,
 	Tk_Offset(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-diameter", TK_OPTION_PIXELS,
-	Tk_Offset(TreeitemIndicator,diameterObj), "6" },
+	Tk_Offset(TreeitemIndicator,diameterObj), "9" },
     { "-indicatormargins", TK_OPTION_STRING,
 	Tk_Offset(TreeitemIndicator,marginObj), "0 2 4 2" },
     {NULL}
@@ -1088,15 +1088,15 @@ static void TreeitemIndicatorDraw(
     b = Ttk_PadBox(b, padding);
 
     XDrawRectangle(Tk_Display(tkwin), d, gc,
-	    b.x, b.y, b.width, b.height);
+	    b.x, b.y, b.width - 1, b.height - 1);
 
-    cx = b.x + b.width / 2;
-    cy = b.y + b.height / 2;
-    XDrawLine(Tk_Display(tkwin), d, gc, b.x+2, cy, b.x+b.width-2+w, cy);
+    cx = b.x + (b.width - 1) / 2;
+    cy = b.y + (b.height - 1) / 2;
+    XDrawLine(Tk_Display(tkwin), d, gc, b.x+2, cy, b.x+b.width-3+w, cy);
 
     if (!(state & TTK_STATE_OPEN)) {
 	/* turn '-' into a '+' */
-	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+2, cx, b.y+b.height-2+w);
+	XDrawLine(Tk_Display(tkwin), d, gc, cx, b.y+2, cx, b.y+b.height-3+w);
     }
 }
 
