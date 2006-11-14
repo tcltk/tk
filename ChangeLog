@@ -1,3 +1,9 @@
+2006-11-14  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkDefaultTheme.c: Fix off-by-one bug in 
+	tree indicator size computation [#1596021, patch from Tim Baker].
+	Increased default size from 7 to 9 pixels.
+
 2006-11-12  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttkScroll.c: *correct* fix for #1588251.
