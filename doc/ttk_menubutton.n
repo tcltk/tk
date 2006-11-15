@@ -10,7 +10,7 @@ ttk::menubutton \- Widget that pops down a menu when pressed
 \fBttk::menubutton\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
-A \fBmenubutton\fP widget displays a textual label and/or image,
+A \fBmenubutton\fR widget displays a textual label and/or image,
 and displays a menu when pressed.
 .SO
 \-class	\-compound	\-cursor	\-image

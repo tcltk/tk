@@ -8,7 +8,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" $Id: ttk_scrollbar.n,v 1.1 2006/10/31 01:42:25 hobbs Exp $
+'\" $Id: ttk_scrollbar.n,v 1.2 2006/11/15 13:29:17 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_scrollbar n 8.5 Tk "Tk Themed Widget"
@@ -25,15 +25,15 @@ ttk::scrollbar \- Control the viewport of a scrollable widget
 A Tcl script prefix to evaluate 
 to change the view in the widget associated with the scrollbar.
 Additional arguments are appended to the value of this option,
-as described in \fBSCROLLING COMMANDS\fP below,
+as described in \fBSCROLLING COMMANDS\fR below,
 whenever the user requests a view change by manipulating the scrollbar.
 .br
 This option typically consists of a two-element list,
 containing the name of a scrollable widget followed by
-either \fBxview\fP (for horizontal scrollbars)
-or \fByview\fP (for vertical scrollbars).
+either \fBxview\fR (for horizontal scrollbars)
+or \fByview\fR (for vertical scrollbars).
 .OP \-orient orient Orient
-One of \fBhorizontal\fP or \fBvertical\fP.
+One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the scrollbar.
 .BE
 
@@ -53,26 +53,26 @@ these are used to scroll the visible region in discrete units.
 .SH "WIDGET COMMAND"
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
-Returns the current value of the specified \fIoption\fP; see \fIwidget(n)\fP.
+Returns the current value of the specified \fIoption\fR; see \fIwidget(n)\fR.
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIwidget(n)\fP.
+Modify or query widget options; see \fIwidget(n)\fR.
 .TP
 \fIpathName \fBget\fR
 Returns the scrollbar settings in the form of a list whose
 elements are the arguments to the most recent \fBset\fR widget command.
 .TP
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIwidget(n)\fP.
+Test the widget state; see \fIwidget(n)\fR.
 .TP
 \fIpathName \fBset\fR \fIfirst last\fR
 This command is normally invoked by the scrollbar's associated widget 
-from an \fB-xscrollcommand\fP or \fB-yscrollcommand\fP callback.
+from an \fB-xscrollcommand\fR or \fB-yscrollcommand\fR callback.
 Specifies the visible range to be displayed.
 \fIfirst\fR and \fIlast\fR are real fractions between 0 and 1.
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIwidget(n)\fP.
+Modify or query the widget state; see \fIwidget(n)\fR.
 .SH "INTERNAL COMMANDS"
 The following widget commands are used internally
 by the TScrollbar widget class bindings.
@@ -139,10 +139,10 @@ is a slight overlap between the old and new views.
 become visible, or \-1, which means that the previous page should
 become visible.
 .SH "WIDGET STATES"
-The scrollbar automatically sets the \fBdisabled\fP state bit.
+The scrollbar automatically sets the \fBdisabled\fR state bit.
 when the entire range is visible (range is 0.0 to 1.0),
 and clears it otherwise.
-It also sets the \fBactive\fP and \fBpressed\fP state flags
+It also sets the \fBactive\fR and \fBpressed\fR state flags
 of individual elements, based on the position and state of the mouse pointer.
 .SH EXAMPLE
 .CS
