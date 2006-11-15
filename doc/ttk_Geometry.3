@@ -1,7 +1,7 @@
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
-'\" RCS: @(#) $Id: ttk_Geometry.3,v 1.1 2006/10/31 01:42:25 hobbs Exp $
+'\" RCS: @(#) $Id: ttk_Geometry.3,v 1.2 2006/11/15 13:29:17 dkf Exp $
 '\" 
 .so man.macros
 .TH Geometry 3 8.5 Tk "Tk Themed Widget"
@@ -139,7 +139,7 @@ wide, \fIheight\fR pixels tall, at the specified \fIx, y\fR coordinates.
 shrunken according to the left, top, right, and bottom margins 
 specified by \fIpadding\fR.
 .PP
-\fBTtk_ExpandBox\fR is the inverse of \fBTtk_PadBox\fP:
+\fBTtk_ExpandBox\fR is the inverse of \fBTtk_PadBox\fR:
 it returns a new box surrounding the specified \fIparcel\fR,
 expanded  according to the left, top, right, and bottom margins 
 specified by \fIpadding\fR.
@@ -152,10 +152,10 @@ and shrinks the \fIcavity\fR accordingly.
 and \fIheight\fR inside the \fIparcel\fR according to the 
 \fIsticky\fR bits.
 .PP
-\fBTtk_PlaceBox\fP combines \fBTtk_PackBox\fP and \fBTtk_StickBox\fP:
-it allocates a parcel on the specified \fIside\fP of the \fIcavity\fP,
-places a box of the requested size inside the parcel according to \fIsticky\fP,
-and shrinks the \fIcavity\fP.
+\fBTtk_PlaceBox\fR combines \fBTtk_PackBox\fR and \fBTtk_StickBox\fR:
+it allocates a parcel on the specified \fIside\fR of the \fIcavity\fR,
+places a box of the requested size inside the parcel according to \fIsticky\fR,
+and shrinks the \fIcavity\fR.
 .PP
 \fBTtk_AnchorBox\fR places a box with the requested \fIwidth\fR
 and \fIheight\fR inside the \fIparcel\fR according to the
@@ -211,9 +211,9 @@ If fewer than four elements are specified,
 \fItop\fR defaults to \fIleft\fR.
 See \fBTk_GetPixelsFromObj(3)\fR for the syntax of length specifications.
 .PP
-\fBTtk_GetBorderFromObj\fR is the same as \fBTtk_GetPaddingFromObj\fP
+\fBTtk_GetBorderFromObj\fR is the same as \fBTtk_GetPaddingFromObj\fR
 except that the lengths are specified as integers 
-(i.e., resolution-dependant values like \fI3m\fP are not allowed).
+(i.e., resolution-dependant values like \fI3m\fR are not allowed).
 .PP
 \fBTtk_GetStickyFromObj\fR converts the string in \fIobjPtr\fR
 to a \fIsticky\fR bitmask.  The string contains zero or more

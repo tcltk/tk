@@ -1,4 +1,4 @@
-'\" $Id: ttk_separator.n,v 1.1 2006/10/31 01:42:25 hobbs Exp $
+'\" $Id: ttk_separator.n,v 1.2 2006/11/15 13:29:17 dkf Exp $
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
@@ -11,14 +11,14 @@ ttk::separator \- Separator bar
 \fBttk::separator\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
-A \fBseparator\fP widget displays a horizontal or vertical separator bar.
+A \fBseparator\fR widget displays a horizontal or vertical separator bar.
 .SO
 \-class	\-cursor	\-state	\-style	
 \-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-orient orient Orient
-One of \fBhorizontal\fP or \fBvertical\fP.
+One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the separator.
 .SH "WIDGET COMMAND"
 Separator widgets support the standard 

@@ -147,7 +147,7 @@ style default TButton \e
 Many elements are displayed differently depending on the widget state.  
 For example, buttons have a different background when they are active,
 a different foreground when disabled, and a different relief when pressed.
-The \fBstyle map\fP command specifies dynamic resources
+The \fBstyle map\fR command specifies dynamic resources
 for a particular style:
 .CS
 style map TButton \e
