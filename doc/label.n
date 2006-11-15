@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.7 2004/08/16 14:01:10 dkf Exp $
+'\" RCS: @(#) $Id: label.n,v 1.8 2006/11/15 16:31:23 dkf Exp $
 '\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
@@ -71,7 +71,6 @@ one of the characters may optionally be underlined using the
 \fBunderline\fR option.
 The label can be manipulated in a few simple ways, such as
 changing its relief or text, using the commands described below.
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBlabel\fR command creates a new Tcl command whose
@@ -104,11 +103,29 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBlabel\fR
 command.
-
 .SH BINDINGS
 .PP
 When a new label is created, it has no default event bindings:
 labels are not intended to be interactive.
+.SH EXAMPLE
+.CS
+# Make the widgets
+\fBlabel\fR .t \-text "This widget is at the top"    \-bg red
+\fBlabel\fR .b \-text "This widget is at the bottom" \-bg green
+\fBlabel\fR .l \-text "Left\\nHand\\nSide"
+\fBlabel\fR .r \-text "Right\\nHand\\nSide"
+text .mid
+\.mid insert end "This layout is like Java's BorderLayout"
+# Lay them out
+pack .t   \-side top    \-fill x
+pack .b   \-side bottom \-fill x
+pack .l   \-side left   \-fill y
+pack .r   \-side right  \-fill y
+pack .mid \-expand 1    \-fill both
+.CE
+
+.SH "SEE ALSO"
+labelframe(n), button(n)
 
 .SH KEYWORDS
 label, widget

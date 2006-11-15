@@ -1,5 +1,7 @@
 2006-11-15  Donal K. Fellows  <dkf@users.sf.net>
 
+	* doc/label.n: Added an example and some See Also refs.
+
 	* doc/ConfigWidg.3, doc/bind.n, doc/grid.n, doc/panedwindow.n:
 	* doc/text.n, doc/ttk_Geometry.3, doc/ttk_button.n:
 	* doc/ttk_checkbutton.n, doc/ttk_combobox.n, doc/ttk_dialog.n:
