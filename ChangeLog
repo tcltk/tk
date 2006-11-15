@@ -1,23 +1,34 @@
+2006-11-15  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/ConfigWidg.3, doc/bind.n, doc/grid.n, doc/panedwindow.n:
+	* doc/text.n, doc/ttk_Geometry.3, doc/ttk_button.n:
+	* doc/ttk_checkbutton.n, doc/ttk_combobox.n, doc/ttk_dialog.n:
+	* doc/ttk_entry.n, doc/ttk_frame.n, doc/ttk_image.n, doc/ttk_intro.n:
+	* doc/ttk_label.n, doc/ttk_labelframe.n, doc/ttk_menubutton.n:
+	* doc/ttk_notebook.n, doc/ttk_panedwindow.n, doc/ttk_progressbar.n:
+	* doc/ttk_radiobutton.n, doc/ttk_scrollbar.n, doc/ttk_separator.n:
+	* doc/ttk_sizegrip.n, doc/ttk_style.n, doc/ttk_widget.n, doc/wm.n:
+	Convert \fP to \fR so that man-page scrapers have an easier time.
+	
 2006-11-14  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkDefaultTheme.c: Fix off-by-one bug in 
-	tree indicator size computation [#1596021, patch from Tim Baker].
-	Increased default size from 7 to 9 pixels.
+	* generic/ttk/ttkDefaultTheme.c: Fix off-by-one bug in tree indicator
+	size computation [Bug 1596021, patch from Tim Baker]. Increased
+	default size from 7 to 9 pixels.
 
 2006-11-12  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttkScroll.c: *correct* fix for #1588251.
+	* generic/ttkScroll.c: *correct* fix for [Bug 1588251].
 
 2006-11-12  Joe English  <jenglish@users.sourceforge.net>
 
-	* tests/ttk/ttk.test(ttk-6.9): Workaround for #1583038
+	* tests/ttk/ttk.test(ttk-6.9): Workaround for [Bug 1583038]
 
 2006-11-12  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttkScroll.c: Reworked cleanup procedure --
-	"self-cancelling" idle call is not robust, call
-	Tcl_CancelIdleCall() in TtkFreeScrollHandle instead.
-	[fixes #1588251]
+	* generic/ttkScroll.c: Reworked cleanup procedure; "self-cancelling"
+	idle call is not robust, call Tcl_CancelIdleCall() in
+	TtkFreeScrollHandle instead.  Fixes [Bug 1588251]
 
 2006-11-10  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -32,10 +43,10 @@
 
 2006-11-08  Kevin Kenny  <kennykb@acm.org>
 
-	* unix/configure.in: Silenced warnings about missing Xft
-	configuration unless --enable-xft is requested explicitly.
-	Also added a few basic checks that we can actually compile
-	and link against Xft headers and libraries. [Bug 1592667]
+	* unix/configure.in: Silenced warnings about missing Xft configuration
+	unless --enable-xft is requested explicitly. Also added a few basic
+	checks that we can actually compile and link against Xft headers and
+	libraries. [Bug 1592667]
 	* unix/configure: Regen.
 	
 2006-11-07  Kevin Kenny  <kennykb@acm.org>
@@ -46,27 +57,27 @@
 2006-11-06  Joe English  <jenglish@users.sourceforge.net>
 	
 	* generic/ttk/ttkClassicTheme.c, generic/ttk/ttkPanedwindow.c,
-	generic/ttk/ttkTheme.c, generic/ttk/ttkTreeview.c,
-	win/ttkWinXPTheme.c, library/ttk/entry.tcl,
-	library/ttk/notebook.tcl, library/ttk/panedwindow.tcl,
-	library/ttk/utils.tcl, tests/ttk/entry.test, tests/ttk/bwidget.test:
-	Miscellaneous minor changes to re-sync Ttk codebase with Tile CVS:
-	fix comments damaged by overzealous search-and-destroy;
-	removed obsolete [style default] synonym for [ttk::style configure];
-	removed other dead code.
+	* generic/ttk/ttkTheme.c, generic/ttk/ttkTreeview.c,
+	* win/ttkWinXPTheme.c, library/ttk/entry.tcl,
+	* library/ttk/notebook.tcl, library/ttk/panedwindow.tcl,
+	* library/ttk/utils.tcl, tests/ttk/entry.test, tests/ttk/bwidget.test:
+	Miscellaneous minor changes to re-sync Ttk codebase with Tile CVS: fix
+	comments damaged by overzealous search-and-destroy; removed obsolete
+	[style default] synonym for [ttk::style configure]; removed other dead
+	code.
 
 2006-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/safetk.tcl (::safe::tkTopLevel): Theme it.
 
-	* generic/ttk/ttkLayout.c:     We do not want to require tkInt in
-	* generic/ttk/ttkMananager.h:  all the ttk files so added the
-	* generic/ttk/ttkTheme.h:      definition of MODULE_SCOPE to 
-	* generic/ttk/ttkWinMonitor.c: ttkTheme.h Ensure everyone
-	gets to see the definition from someplace.
+	* generic/ttk/ttkLayout.c:     We do not want to require tkInt in all
+	* generic/ttk/ttkMananager.h:  the ttk files so added the definition
+	* generic/ttk/ttkTheme.h:      of MODULE_SCOPE to ttkTheme.h. Ensures
+	* generic/ttk/ttkWinMonitor.c: everyone gets to see the definition
+	from someplace.
 
-	* library/ttk/fonts.tcl: In a safe interp there is no osVersion
-	field in tcl_platform so work around it.
+	* library/ttk/fonts.tcl: In a safe interp there is no osVersion field
+	in tcl_platform so work around it.
 
 2006-11-02  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -92,7 +103,7 @@
 	static when possible); so that 'make check{exports,stubs}' once again
 	complete without errors.
 
-	* macosx/tkMacOSXColor.c (TkMacOSXCompareColors): ifdef out when unused.
+	* macosx/tkMacOSXColor.c (TkMacOSXCompareColors): ifdef out when unused
 	
 	* macosx/Wish.xcodeproj/project.pbxproj: check autoconf/autoheader exit
 	status and stop build if they fail.
@@ -104,10 +115,10 @@
 
 2006-11-01  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXDebug.c: add TkMacOSX prefix to leftover macosx-private
-	* macosx/tkMacOSXDebug.h: global symbols without Tk prefix; ifdef out
-	* macosx/tkMacOSXEmbed.c: currently unused debug procs.
-	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXDebug.c: add TkMacOSX prefix to leftover
+	* macosx/tkMacOSXDebug.h: macosx-private global symbols without Tk
+	* macosx/tkMacOSXEmbed.c: prefix; ifdef out currently unused debug
+	* macosx/tkMacOSXEvent.c: procs.
 	* macosx/tkMacOSXInt.h:
 	* macosx/tkMacOSXCarbonEvents.c:
 	* macosx/tkMacOSXSubwindows.c:
@@ -184,8 +195,8 @@
 	* win/ttkWinMonitor.c, win/ttkWinTheme.c, win/ttkWinXPTheme.c:
 	First import of Ttk themed Tk widgets as branched from tile 0.7.8
 
-	* generic/tkInt.h, generic/tkWindow.c: add Ttk_Init call, copy
-	tk classic widgets to ::tk namespace.
+	* generic/tkInt.h, generic/tkWindow.c: add Ttk_Init call, copy tk
+	classic widgets to ::tk namespace.
 	* library/tk.tcl: add source of ttk/ttk.tcl, define $::ttk::library.
 	* unix/Makefile.in, win/Makefile.in: add Ttk build bits
 	* win/configure, win/configure.in: check for uxtheme.h (XP theme).
@@ -219,12 +230,12 @@
 
 	* doc/text.n: fix docs to not correct -tabs usage case.
 
-	* generic/tkTextDisp.c (SizeOfTab): fix -tabstyle wordprocessor
-	tab alignment to correct tab edge case. [Bug 1578858]
+	* generic/tkTextDisp.c (SizeOfTab): fix -tabstyle wordprocessor tab
+	alignment to correct tab edge case. [Bug 1578858]
 
 2006-10-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tkText.c: Applied suggested patch from #1536735
+	* generic/tkText.c: Applied suggested patch from [Bug 1536735]
 	* tests/text.test:  Update test for above patch.
 	* tests/textWind.test:  Corrected test to catch all messages
 	* tests/safe.test: Silence spurious win32 failure awaiting TIP150
@@ -234,17 +245,18 @@
 2006-10-16  Andreas Kupries <andreask@activestate.com>
 
 	* doc/WindowId.3: Pat's commit on 2006-10-08 broke the .SH NAME
-	  information across several lines, breaking the cross-linking of
-	  manpages during installation for this one. Put everything back
-	  on a single line, unbreaking it.
+	information across several lines, breaking the cross-linking of
+	manpages during installation for this one. Put everything back on a
+	single line, unbreaking it.
 
 2006-10-16  Daniel Steffen  <das@users.sourceforge.net>
 
 	* changes: updates for 8.5a5 release.
 
-	* macosx/tkMacOSXDraw.c: fix numerous issues in CG and QD drawing procs
-	so that they now match X11 drawing much more closely [Bug 1558051];
-	use Tiger ellipse drawing API when available; fix comments & whitespace.
+	* macosx/tkMacOSXDraw.c: fix numerous issues in CG and QD drawing
+	procs so that they now match X11 drawing much more closely [Bug
+	1558051]; use Tiger ellipse drawing API when available; fix comments &
+	whitespace.
 
 	* macosx/tkMacOSXInit.c: set default linewidth limit for CG
 	antialiasing to 0 as thin horizontal/vertical lines look good now.
@@ -274,17 +286,17 @@
 
 	* unix/tkUnixFont.c (Ucs2beToUtfProc, UtfToUcs2beProc):
 	(TkpFontPkgInit, encodingAliases): Correct alignment issues in
-	encoding conversion.  Call ucs-2be "unicode" on big-endian
-	systems. [Bug 1122671]
+	encoding conversion. Call ucs-2be "unicode" on big-endian systems.
+	[Bug 1122671]
 
 2006-09-27  Andreas Kupries  <andreask@activestate.com>
 
 	* unix/Makefile.in (install-binaries): Added a second guard to the
-	* win/Makefile.in: package index file to prevent older versions of
-	* win/makefile.vc: Tcl from seeing version numbers which may
-	  contain a/b information, and then balking on them. This could
-	  otherwise happen when Tcl/Tk 8.4 and 8.5 are installed in the
-	  same directory, seeing each other. [SF Tk Bug 1566418].
+	* win/Makefile.in: package index file to prevent older versions of Tcl
+	* win/makefile.vc: from seeing version numbers which may contain a/b
+	information, and then balking on them. This could otherwise happen
+	when Tcl/Tk 8.4 and 8.5 are installed in the same directory, seeing
+	each other. [Bug 1566418].
 
 2006-09-22  Andreas Kupries  <andreask@activestate.com>
 
@@ -331,7 +343,7 @@
 
 2006-09-10  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXColor.c (TkSetMacColor, TkpGetColor): use AppearanceMgr
+	* macosx/tkMacOSXColor.c (TkSetMacColor,TkpGetColor): use AppearanceMgr
 	* macosx/tkMacOSXDefault.h: to retrieve platform std colors for text
 	* macosx/tkMacOSXPort.h:    selections, add "systemHighlightSecondary"
 	color name for standard color of inactive selections, use this color as
@@ -377,11 +389,11 @@
 
 2006-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* generic/tkEntry.c:   move hard-coded ALWAYS_SHOW_SELECTION
-	* generic/tkInt.h:     control of entry/text selection display
-	* generic/tkText.c:    based on focus to the Tcl level,
-	* generic/tkWindow.c:  controlled by ::tk::AlwaysShowSelection
-	* library/tk.tcl:      (boolean, private).  [Bug 1553691]
+	* generic/tkEntry.c:   move hard-coded ALWAYS_SHOW_SELECTION control
+	* generic/tkInt.h:     of entry/text selection display based on focus
+	* generic/tkText.c:    to the Tcl level, controlled by
+	* generic/tkWindow.c:  ::tk::AlwaysShowSelection (boolean, private).
+	* library/tk.tcl:      [Bug 1553691]
 	* macosx/tkMacOSXDefault.h:
 	* unix/tkUnixDefault.h:
 	* unix/tkUnixPort.h:

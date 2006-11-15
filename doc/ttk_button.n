@@ -10,7 +10,7 @@ ttk::button \- Widget that issues a command when pressed
 \fBttk::button\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
-A \fBbutton\fP widget displays a textual label and/or image,
+A \fBbutton\fR widget displays a textual label and/or image,
 and evaluates a command when pressed.
 .SO
 \-class	\-compound	\-cursor	\-image
@@ -21,23 +21,23 @@ and evaluates a command when pressed.
 .OP \-command command Command
 A script to evaluate when the widget is invoked.
 .OP \-default default Default
-May be set to one of  \fBnormal\fP, \fBactive\fP, or \fBdisabled\fP.
+May be set to one of  \fBnormal\fR, \fBactive\fR, or \fBdisabled\fR.
 In a dialog box, one button may be designated the "default" button
 (meaning, roughly, "the one that gets invoked when the user presses <Enter>").
-\fBactive\fP indicates that this is currently the default button;
-\fBnormal\fP means that it may become the default button, and
-\fBdisabled\fP means that it is not defaultable.
-The default is \fBnormal\fP.
+\fBactive\fR indicates that this is currently the default button;
+\fBnormal\fR means that it may become the default button, and
+\fBdisabled\fR means that it is not defaultable.
+The default is \fBnormal\fR.
 .br
 Depending on the theme, the default button may be displayed 
 with an extra highlight ring, or with a different border color.
-See also: \fIkeynav(n)\fP.
+See also: \fIkeynav(n)\fR.
 .OP \-width width Width
 If greater than zero, specifies how much space, in character widths, 
 to allocate for the text label.  
 If less than zero, specifies a minimum width.
 If zero or unspecified, the natural width of the text label is used.
-Note that some themes may specify a non-zero \fB-width\fP
+Note that some themes may specify a non-zero \fB-width\fR
 in the style.
 '\" Not documented -- may go away
 '\" .OP \-padding padding Padding
@@ -59,14 +59,14 @@ Invokes the command associated with the button.
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
-See \fIwidget(n)\fP
+See \fIwidget(n)\fR
 
 .SH "COMPATIBILITY OPTIONS"
 .OP \-state state State
-May be set to \fBnormal\fP or \fBdisabled\fP
-to control the \fBdisabled\fP state bit.
+May be set to \fBnormal\fR or \fBdisabled\fR
+to control the \fBdisabled\fR state bit.
 This is a ``write-only'' option: setting it changes the
-widget state, but the \fBstate\fP widget command does
+widget state, but the \fBstate\fR widget command does
 not affect the state option.
 
 .SH "SEE ALSO"
