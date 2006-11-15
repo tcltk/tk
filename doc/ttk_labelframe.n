@@ -8,7 +8,7 @@ ttk::labelframe \- Container widget with optional label
 \fBttk::labelframe\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
-A \fBlabelframe\fP widget is a container used to group other widgets together.
+A \fBlabelframe\fR widget is a container used to group other widgets together.
 It has an optional label, which may be a plain text string or another widget. 
 .SO
 \-class	\-cursor	\-takefocus	\-style
@@ -20,7 +20,7 @@ It has an optional label, which may be a plain text string or another widget.
 '\" XXX: .OP -relief relief Relief
 '\" XXX: One of the standard Tk border styles:
 '\" XXX: \fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR,
-'\" XXX: \fBsolid\fR, or \fBsunken\fP.
+'\" XXX: \fBsolid\fR, or \fBsunken\fR.
 '\" XXX: Default is theme-dependent.
 .OP -labelanchor labelAnchor LabelAnchor
 Specifies where to place the label.  
@@ -39,25 +39,25 @@ If set, specifies the integer index (0-based) of a character to
 underline in the text string.
 The underlined character is used for mnemonic activation
 (see \fIkeynav(n)\fR).  
-Mnemonic activation for a \fBttk::labelframe\fP 
-sets the keyboard focus to the first child of the \fBttk::labelframe\fP widget.
+Mnemonic activation for a \fBttk::labelframe\fR 
+sets the keyboard focus to the first child of the \fBttk::labelframe\fR widget.
 .OP -padding padding Padding
 Additional padding to include inside the border.
 .OP -labelwidget labelWidget LabelWidget
 The name of a widget to use for the label.
-If set, overrides the \fB-text\fP option.
-The \fB-labelwidget\fP must be a child of the \fBlabelframe\fP widget
-or one of the \fBlabelframe\fP's ancestors, and must belong to the
-same top-level widget as the \fBlabelframe\fP.
+If set, overrides the \fB-text\fR option.
+The \fB-labelwidget\fR must be a child of the \fBlabelframe\fR widget
+or one of the \fBlabelframe\fR's ancestors, and must belong to the
+same top-level widget as the \fBlabelframe\fR.
 .OP -width width Width
 If specified, the widget's requested width in pixels.
 .OP -height height Height
 If specified, the widget's requested height in pixels.
-(See \fIttk::frame\fP for further notes on \fB-width\fP and \fB-height\fP).
+(See \fIttk::frame\fR for further notes on \fB-width\fR and \fB-height\fR).
 .SH "WIDGET COMMAND"
 Supports the standard widget commands
-\fBconfigure\fP, \fBcget\fP, \fBinstate\fP, and \fBstate\fP;
-see \fIwidget(n)\fP.
+\fBconfigure\fR, \fBcget\fR, \fBinstate\fR, and \fBstate\fR;
+see \fIwidget(n)\fR.
 .SH "SEE ALSO"
 widget(n), frame(n)
 .SH "KEYWORDS"

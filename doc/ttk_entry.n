@@ -18,12 +18,12 @@ ttk::entry \- Editable text field widget
 \fBttk::entry\fR \fIpathName \fR?\fIoptions\fR?
 .SH DESCRIPTION
 .PP
-An \fBentry\fP widget displays a one-line text string and
+An \fBentry\fR widget displays a one-line text string and
 allows that string to be edited by the user.
 The value of the string may be linked to a Tcl variable 
-with the \fB-textvariable\fP option.
+with the \fB-textvariable\fR option.
 Entry widgets support horizontal scrolling with the 
-standard \fB-xscrollcommand\fP option and \fBxview\fP widget command.
+standard \fB-xscrollcommand\fR option and \fBxview\fR widget command.
 .SO
 \-class	\-cursor	\-style	\-takefocus
 \-xscrollcommand
@@ -45,7 +45,7 @@ A script template to evaluate whenever the \fBvalidateCommand\fR returns 0.
 See \fBVALIDATION\fR below for more information.
 .OP \-justify justify Justify
 Specifies how the text is aligned within the entry widget.
-One of \fBleft\fP, \fBcenter\fP, or \fBright\fP.
+One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 .\" MAYBE: .OP \-selectbackground selectBackground Foreground
 .\" MAYBE: .OP \-selectborderwidth selectBorderWidth BorderWidth
 .\" MAYBE: .OP \-selectforeground selectForeground Background
@@ -60,10 +60,10 @@ If characters in the entry are selected and copied elsewhere, the
 information copied will be what is displayed, not the true contents
 of the entry.
 .OP \-state state State
-Compatibility option; see \fBwidget(n)\fP for details.
+Compatibility option; see \fBwidget(n)\fR for details.
 Specifies one of three states for the entry,
 \fBnormal\fR, \fBdisabled\fR, or \fBreadonly\fR.
-See \fBWIDGET STATES\fP, below.
+See \fBWIDGET STATES\fR, below.
 .OP \-textvariable textVariable Variable
 Specifies the name of a variable whose value is linked 
 to the entry widget's contents.
@@ -103,7 +103,7 @@ the standard \fBxScrollCommand\fR mechanism for interacting with
 scrollbars (see the description of the \fBxScrollCommand\fR option
 for details).
 .SH "INDICES"
-Many of the \fBentry\fP widget commands take one or more indices as
+Many of the \fBentry\fR widget commands take one or more indices as
 arguments.  An index specifies a particular character in the entry's
 string, in any of the following ways:
 .IP \fInumber\fR
@@ -147,12 +147,12 @@ The bounding box may refer to a region outside the visible area
 of the window.
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
-Returns the current value of the specified \fIoption\fP.
-See \fIwidget(n)\fP.
+Returns the current value of the specified \fIoption\fR.
+See \fIwidget(n)\fR.
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 Modify or query widget options.
-See \fIwidget(n)\fP.
+See \fIwidget(n)\fR.
 .TP
 \fIpathName \fBdelete \fIfirst \fR?\fIlast\fR?
 Delete one or more elements of the entry.
@@ -171,7 +171,7 @@ Arrange for the insert cursor to be displayed just before the character
 given by \fIindex\fR.  Returns the empty string.
 .TP
 \fIpathName \fBidentify \fIx y\fR
-Returns the name of the element at position \fIx\fP, \fIy\fP,
+Returns the name of the element at position \fIx\fR, \fIy\fR,
 or the empty string if the coordinates are outside the window.
 .TP
 \fIpathName \fBindex\fI index\fR
@@ -183,7 +183,7 @@ indicated by \fIindex\fR.  Returns the empty string.
 .TP
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
 Test the widget state.
-See \fIwidget(n)\fP.
+See \fIwidget(n)\fR.
 .TP
 \fIpathName \fBselection \fIoption arg\fR
 This command is used to adjust the selection within an entry.  It
@@ -209,13 +209,13 @@ earlier one, then the entry's selection is cleared.
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
 Modify or query the widget state.
-See \fIwidget(n)\fP.
+See \fIwidget(n)\fR.
 .TP
 \fIpathName \fBvalidate\fR
 Force revalidation, independent of the conditions specified 
 by the \fB-validate\fR option.
 Returns 0 if validation fails, 1 if it succeeds.
-Sets or clears the \fBinvalid\fP state accordingly.
+Sets or clears the \fBinvalid\fR state accordingly.
 .TP
 \fIpathName \fBxview \fIargs\fR
 This command is used to query and change the horizontal position of the
@@ -256,24 +256,24 @@ become visible;  if it is positive then characters farther to the right
 become visible.
 .RE
 .SH VALIDATION
-The \fB-validate\fP, \fB-validatecommand\fP, and \fB-invalidcommand\fP
+The \fB-validate\fR, \fB-validatecommand\fR, and \fB-invalidcommand\fR
 options are used to enable entry widget validation.
 .SS "VALIDATION MODES"
-There are two main validation modes: \fIprevalidation\fP,
-in which the \fB-validatecommand\fP is evaluated prior to each edit
+There are two main validation modes: \fIprevalidation\fR,
+in which the \fB-validatecommand\fR is evaluated prior to each edit
 and the return value is used to determine whether to accept 
 or reject the change;
-and \fIrevalidation\fP, in which the \fB-validatecommand\fP is 
+and \fIrevalidation\fR, in which the \fB-validatecommand\fR is 
 evaluated to determine whether the current value is valid.
 .PP
-The \fB-validate\fP option determines when validation occurs;
+The \fB-validate\fR option determines when validation occurs;
 it may be set to any of the following values:
 .IP \fBnone\fR
 Default.  This means validation will only occur when 
-specifically requested by the \fBvalidate\fP widget command.
+specifically requested by the \fBvalidate\fR widget command.
 .IP \fBkey\fR
 The entry will be prevalidated prior to each edit
-(specifically, whenever the \fBinsert\fP or \fBdelete\fP 
+(specifically, whenever the \fBinsert\fR or \fBdelete\fR 
 widget commands are called).
 If prevalidation fails, the edit is rejected.
 .IP \fBfocus\fR
@@ -285,18 +285,18 @@ The entry is revalidated when the entry loses focus.
 .IP \fBall\fR
 Validation is performed for all above conditions.
 .PP
-The \fB-invalidcommand\fP is evaluated whenever
-the \fB-validatecommand\fP returns a false value.
+The \fB-invalidcommand\fR is evaluated whenever
+the \fB-validatecommand\fR returns a false value.
 .PP
-The \fB-validatecommand\fP and \fB-invalidcommand\fP
+The \fB-validatecommand\fR and \fB-invalidcommand\fR
 may modify the entry widget's value
-via the widget \fBinsert\fP or \fBdelete\fP commands,
-or by setting the linked \fB-textvariable\fP.
+via the widget \fBinsert\fR or \fBdelete\fR commands,
+or by setting the linked \fB-textvariable\fR.
 If either does so during prevalidation,
 then the edit is rejected 
-regardless of the value returned by the \fB-validatecommand\fP.
+regardless of the value returned by the \fB-validatecommand\fR.
 .PP
-If \fB-validatecommand\fP is empty (the default), 
+If \fB-validatecommand\fR is empty (the default), 
 validation always succeeds.
 .SS "VALIDATION SCRIPT SUBSTITUTIONS"
 It is possible to perform percent substitutions on the 
@@ -317,26 +317,26 @@ The current value of entry prior to editing.
 .IP \fB%S\fR
 The text string being inserted/deleted, if any, {} otherwise.
 .IP \fB%v\fR
-The current value of the \fB-validate\fP option.
+The current value of the \fB-validate\fR option.
 .IP \fB%V\fR
 The validation condition that triggered the callback
-(\fBkey\fP, \fBfocusin\fP, \fBfocusout\fP, or \fBforced\fP).
+(\fBkey\fR, \fBfocusin\fR, \fBfocusout\fR, or \fBforced\fR).
 .IP \fB%W\fR
 The name of the entry widget.
 .SS "DIFFERENCES FROM TK ENTRY WIDGET VALIDATION"
 .IP \(bu
 The standard Tk entry widget automatically disables validation
-(by setting \fB-validate\fP to \fBnone\fP)
-if the \fB-validatecommand\fP or \fB-invalidcommand\fP modifies 
+(by setting \fB-validate\fR to \fBnone\fR)
+if the \fB-validatecommand\fR or \fB-invalidcommand\fR modifies 
 the entry's value.
 The Tk themed entry widget only disables validation if one
-of the validation scripts raises an error, or if \fB-validatecommand\fP
+of the validation scripts raises an error, or if \fB-validatecommand\fR
 does not return a valid boolean value.
 (Thus, it is not necessary to reenable validation after 
 modifying the entry value in a validation script).
 .IP \(bu
 The standard entry widget invokes validation whenever the linked
-\fB-textvariable\fP is modified; the Tk themed entry widget does not.
+\fB-textvariable\fR is modified; the Tk themed entry widget does not.
 .SH "DEFAULT BINDINGS"
 The entry widget's default bindings enable the following behavior.  
 In the descriptions below, ``word'' refers to a contiguous group
@@ -417,22 +417,22 @@ Control-d deletes the character to the right of the insert cursor.
 Control-k deletes all the characters to the right of the insertion
 cursor.
 .SH "WIDGET STATES"
-In the \fBdisabled\fP state, 
+In the \fBdisabled\fR state, 
 the entry cannot be edited and the text cannot be selected.
-In the \fBreadonly\fP state,
+In the \fBreadonly\fR state,
 no insert cursor is displayed and 
 the entry cannot be edited 
-(specifically: the \fBinsert\fP and \fBdelete\fP commands have no effect).
-The \fBdisabled\fP state is the same as \fBreadonly\fP, 
+(specifically: the \fBinsert\fR and \fBdelete\fR commands have no effect).
+The \fBdisabled\fR state is the same as \fBreadonly\fR, 
 and in addition text cannot be selected.
 .PP
-Note that changes to the linked \fB-textvariable\fP will 
+Note that changes to the linked \fB-textvariable\fR will 
 still be reflected in the entry, even if it is disabled or readonly.
 .PP
-Typically, the text is "grayed-out" in the \fBdisabled\fP state,
-and a different background is used in the \fBreadonly\fP state. 
+Typically, the text is "grayed-out" in the \fBdisabled\fR state,
+and a different background is used in the \fBreadonly\fR state. 
 .PP
-The entry widget sets the \fBinvalid\fP state if revalidation fails,
+The entry widget sets the \fBinvalid\fR state if revalidation fails,
 and clears it whenever validation succeeds.
 .SH KEYWORDS
 entry, widget, text field

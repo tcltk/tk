@@ -1,6 +1,6 @@
 '\"
 '\" Copyright (c) 2004 Joe English
-'\" $Id: ttk_style.n,v 1.1 2006/10/31 01:42:25 hobbs Exp $
+'\" $Id: ttk_style.n,v 1.2 2006/11/15 13:29:17 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_style n 8.5 Tk "Tk Themed Widget"
@@ -23,7 +23,7 @@ which specifies the set of elements making up the widget
 and how they are arranged, along with dynamic and default
 settings for element resources.
 By default, the style name is the same as the widget's class;
-this may be overridden by the \fB-style\fP option. 
+this may be overridden by the \fB-style\fR option. 
 .PP
 A \fItheme\fR is a collection of elements and styles 
 which controls the overall look and feel of an application.
@@ -36,16 +36,16 @@ Sets the default value of the specified option(s) in \fIstyle\fR.
 \fBttk::style map \fIstyle\fR ?\fI-option\fR { \fIstatespec value\fR } ... ?
 Sets dynamic values of the specified option(s) in \fIstyle\fR.
 Each \fIstatespec / value\fR pair is examined in order;
-the value corresponding to the first matching \fIstatespec\fP
+the value corresponding to the first matching \fIstatespec\fR
 is used.
 .TP
 \fBttk::style lookup \fIstyle\fR \fI-option \fR?\fIstate \fR?\fIdefault\fR??
-Returns the value specified for \fI-option\fP in style \fIstyle\fP
-in state \fIstate\fP, using the standard lookup rules for element options.
+Returns the value specified for \fI-option\fR in style \fIstyle\fR
+in state \fIstate\fR, using the standard lookup rules for element options.
 \fIstate\fR is a list of state names; if omitted, 
 it defaults to all bits off (the ``normal'' state).
-If the \fIdefault\fP argument is present, it is used as a fallback
-value in case no specification for \fI-option\fP is found.
+If the \fIdefault\fR argument is present, it is used as a fallback
+value in case no specification for \fI-option\fR is found.
 .\" Otherwise -- signal error? return empty string?  Leave unspecified for now. 
 .TP
 \fBttk::style layout \fIstyle\fR ?\fIlayoutSpec\fR?
@@ -70,13 +70,13 @@ Returns the list of \fIelement\fR's options.
 Creates a new theme.  It is an error if \fIthemeName\fR already exists.
 If \fI-parent\fR is specified, the new theme will inherit
 styles, elements, and layouts from the parent theme \fIbasedon\fB.
-If \fI-settings\fR is present, \fIscript\fP is evaluated in the
-context of the new theme as per \fBttk::style theme settings\fP.
+If \fI-settings\fR is present, \fIscript\fR is evaluated in the
+context of the new theme as per \fBttk::style theme settings\fR.
 .TP
-\fBttk::style theme settings \fIthemeName\fP \fIscript\fP
+\fBttk::style theme settings \fIthemeName\fR \fIscript\fR
 Temporarily sets the current theme to \fIthemeName\fR, 
 evaluate \fIscript\fR, then restore the previous theme.
-Typically \fIscript\fP simply defines styles and elements,
+Typically \fIscript\fR simply defines styles and elements,
 though arbitrary Tcl code may appear.
 .TP
 \fBttk::style theme names\fR
@@ -86,16 +86,16 @@ Returns a list of the available themes.
 Sets the current theme to \fIthemeName\fR, and refreshes all widgets.
 
 .SH LAYOUTS
-A \fIlayout\fP specifies a list of elements, each followed
+A \fIlayout\fR specifies a list of elements, each followed
 by one or more options specifying how to arrange the element.
-The layout mechanism uses a simplified version of the \fBpack\fP
+The layout mechanism uses a simplified version of the \fBpack\fR
 geometry manager: given an initial cavity,
 each element is allocated a parcel.
 Valid options are:
 .TP 
 \fB-side \fIside\fR
 Specifies which side of the cavity to place the element;
-one of \fBleft\fP, \fBright\fP, \fBtop\fP, or \fBbottom\fP.
+one of \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
 If omitted, the element occupies the entire cavity.
 .TP
 \fB-sticky \fI[nswe]\fR

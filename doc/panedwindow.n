@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: panedwindow.n,v 1.8 2004/12/20 10:04:23 dkf Exp $
+'\" RCS: @(#) $Id: panedwindow.n,v 1.9 2006/11/15 13:29:17 dkf Exp $
 '\" 
 .so man.macros
 .TH panedwindow n 8.4 Tk "Tk Built-In Commands"
@@ -218,10 +218,10 @@ have any of the forms accepted by \fBTk_GetPixels\fR.
 If a window's pane is larger than the requested dimensions of the
 window, this option may be used to position (or stretch) the window
 within its pane.  \fIStyle\fR  is a string that contains zero or more
-of the characters \fBn\fP, \fBs\fP, \fBe\fP or \fBw\fP.  The string
+of the characters \fBn\fR, \fBs\fR, \fBe\fR or \fBw\fR.  The string
 can optionally contains spaces or commas, but they are ignored.  Each
 letter refers to a side (north, south, east, or west) that the window
-will "stick" to.  If both \fBn\fP and \fBs\fP (or \fBe\fP and \fBw\fP)
+will "stick" to.  If both \fBn\fR and \fBs\fR (or \fBe\fR and \fBw\fR)
 are specified, the window will be stretched to fill the entire height
 (or width) of its cavity.
 .TP

@@ -36,11 +36,11 @@ If omitted, the default is the nearest ancestor toplevel.
 If set to the empty string, the dialog will not be a transient window.
 .OP \-type undefined undefined
 Specifies a built-in or user-defined dialog type.
-See \fBPREDEFINED DIALOG TYPES\fP, below.
+See \fBPREDEFINED DIALOG TYPES\fR, below.
 .OP \-icon undefined undefined
 Specifies one of the stock dialog icons,
-\fBinfo\fP, \fBquestion\fP, \fBwarning\fP, \fBerror\fP,
-\fBauth\fP, or \fBbusy\fP.
+\fBinfo\fR, \fBquestion\fR, \fBwarning\fR, \fBerror\fR,
+\fBauth\fR, or \fBbusy\fR.
 If set to the empty string (the defalt), no icon is displayed.
 .OP \-buttons undefined undefined
 A list of symbolic button names.
@@ -53,7 +53,7 @@ The symbolic name of the default button.
 The symbolic name of the "cancel" button.
 The cancel button is invoked if the user presses the Escape key
 and when the dialog is closed from the window manager.
-If \fB-cancel\fP is not specified, 
+If \fB-cancel\fR is not specified, 
 the dialog ignores window manager close commands (WM_DELETE_WINDOW).
 .SH "WIDGET COMMANDS"
 .TP
@@ -62,9 +62,9 @@ Returns the widget path of the client frame.
 Other widgets may be added to the client frame.
 The client frame appears between the detail message and the command buttons.
 .SH "PREDEFINED DIALOG TYPES"
-The \fB-type\fP option, if present, specifies default values 
+The \fB-type\fR option, if present, specifies default values 
 for other options.  \fBttk::dialog::define \fItype options...\fR
-specifies a new stock dialog \fItype\fP.  
+specifies a new stock dialog \fItype\fR.  
 The following stock dialog types are predefined:
 .CS
 ttk::dialog::define ok \e
@@ -80,22 +80,22 @@ ttk::dialog::define retrycancel \e
 .CE
 .SH "STOCK BUTTONS"
 The following ``stock'' symbolic button names have predefined labels:
-\fByes\fP, \fBno\fP, \fBok\fP, \fBcancel\fP, and \fBretry\fP.
+\fByes\fR, \fBno\fR, \fBok\fR, \fBcancel\fR, and \fBretry\fR.
 .PP
-It is not necessary to list these in the \fB-labels\fP dictionary.
+It is not necessary to list these in the \fB-labels\fR dictionary.
 .\" .SH "DIFFERENCES FROM MESSAGE BOXES"
 .\" The \fBttk::dialog\fR constructor is similar to
-.\" the Tk library procedure \fBtk_messageBox\fP,
+.\" the Tk library procedure \fBtk_messageBox\fR,
 .\" but with the following notable differences:
 .\" .IP \(bu
-.\" The first argument to \fBttk::dialog\fP is the name of
-.\" the widget to create; \fBtk_messageBox\fP has
+.\" The first argument to \fBttk::dialog\fR is the name of
+.\" the widget to create; \fBtk_messageBox\fR has
 .\" .IP \(bu
 .\" Ttk dialog boxes are non-modal by default.
 .\" .IP \(bu
-.\" The \fBtk_messageBox\fP command is blocking:
+.\" The \fBtk_messageBox\fR command is blocking:
 .\" it does not return until the user presses one of the command buttons.
-.\" \fBttk::dialog\fP returns immediately after creating the dialog box.
+.\" \fBttk::dialog\fR returns immediately after creating the dialog box.
 .SH EXAMPLE
 .CS
 proc saveFileComplete {button} {
@@ -117,4 +117,4 @@ ttk::dialog .saveFileDialog \e
     ;
 .CE
 .SH "SEE ALSO"
-\fBtk_messageBox(n)\fR, \fBwm(n)\fR, \fBtoplevel(n)\fP
+\fBtk_messageBox(n)\fR, \fBwm(n)\fR, \fBtoplevel(n)\fR

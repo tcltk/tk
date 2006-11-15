@@ -1,6 +1,6 @@
 '\"
 '\" Copyright (c) 2004 Joe English
-'\" $Id: ttk_widget.n,v 1.1 2006/10/31 01:42:25 hobbs Exp $
+'\" $Id: ttk_widget.n,v 1.2 2006/11/15 13:29:17 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_widget n 8.5 Tk "Tk Themed Widget"
@@ -39,7 +39,7 @@ May be used to specify a custom widget style.
 .PP
 The following options are supported by widgets that
 are controllable by a scrollbar.  
-See \fIscrollbar(n)\fP for more information
+See \fIscrollbar(n)\fR for more information
 .OP \-xscrollcommand xScrollCommand ScrollCommand
 A command prefix, used to communicate with horizontal scrollbars.
 .br
@@ -54,7 +54,7 @@ that is visible in the window, and the second fraction indicates
 the information just after the last portion that is visible.
 .br
 Typically the \fBxScrollCommand\fR option consists of the path name 
-of a \fBscrollbar\fP widget followed by ``set'', e.g. ``.x.scrollbar set''.
+of a \fBscrollbar\fR widget followed by ``set'', e.g. ``.x.scrollbar set''.
 This will cause the scrollbar to be updated whenever the view in the 
 window changes.
 .br
@@ -62,7 +62,7 @@ If this option is set to the empty string (the default),
 then no command is be executed.
 .OP \-yscrollcommand yScrollCommand ScrollCommand
 A command prefix, used to communicate with vertical scrollbars.
-See the description of \fB-xscrollcommand\fP above for details.
+See the description of \fB-xscrollcommand\fR above for details.
 .SH "LABEL OPTIONS"
 The following options are supported by labels, buttons,
 and other button-like widgets:
@@ -71,7 +71,7 @@ Specifies a text string to be displayed inside the widget
 (unless overridden by \fB-textvariable\fR).
 .OP \-textvariable textVariable Variable
 Specifies the name of variable whose value will be used
-in place of the \fB-text\fP resource.
+in place of the \fB-text\fR resource.
 .OP \-underline underline Underline
 If set, specifies the integer index (0-based) of a character to underline 
 in the text string.
@@ -112,10 +112,10 @@ If zero or unspecified, the natural width of the text label is used.
 
 .SH "COMPATIBILITY OPTIONS"
 .OP \-state state State
-May be set to \fBnormal\fP or \fBdisabled\fP
-to control the \fBdisabled\fP state bit.
+May be set to \fBnormal\fR or \fBdisabled\fR
+to control the \fBdisabled\fR state bit.
 This is a ``write-only'' option: setting it changes the
-widget state, but the \fBstate\fP widget command does
+widget state, but the \fBstate\fR widget command does
 not affect the state option.
 
 .SH COMMANDS
@@ -185,7 +185,7 @@ Widget is being pressed (aka "armed" in Motif).
 .TP
 \fBbackground\fR
 Windows and the Mac have a notion of an "active" or foreground window.
-The \fBbackground\fP state is set for widgets in a background window,
+The \fBbackground\fR state is set for widgets in a background window,
 and cleared for those in the foreground window.
 .TP
 \fBreadonly\fR
@@ -195,14 +195,14 @@ Widget should not allow user modification.
 A widget-specific alternate display format.
 For example, used for checkbuttons and radiobuttons 
 in the "tristate" or "mixed" state,
-and for buttons with \fB-default active\fP.
+and for buttons with \fB-default active\fR.
 .TP
-\fBinvalid\fP
+\fBinvalid\fR
 The widget's value is invalid.
 (Potential uses: scale widget value out of bounds, 
 entry widget value failed validation.)
 .PP
-A \fIstate specification\fP or \fIstateSpec\fP is a list
+A \fIstate specification\fR or \fIstateSpec\fR is a list
 of state names, optionally prefixed with an exclamation point (!)
 indicating that the bit is off.
 .SH EXAMPLES

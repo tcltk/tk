@@ -1,4 +1,4 @@
-'\" $Id: ttk_sizegrip.n,v 1.1 2006/10/31 01:42:25 hobbs Exp $
+'\" $Id: ttk_sizegrip.n,v 1.2 2006/11/15 13:29:17 dkf Exp $
 '\"
 '\" Copyright (c) 2006 Joe English
 '\"
@@ -11,7 +11,7 @@ ttk::sizegrip \- A silly widget
 \fBttk::sizegrip\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
-A \fBsizegrip\fP widget (also known as a \fIgrow box\fR)
+A \fBsizegrip\fR widget (also known as a \fIgrow box\fR)
 allows the user to resize the containing toplevel window
 by pressing and dragging the grip.
 .SO
@@ -25,7 +25,7 @@ methods.  No other widget methods are used.
 .SH "PLATFORM-SPECIFIC NOTES"
 On Mac OSX, toplevel windows automatically include a built-in
 size grip by default.
-Adding an \fBttk::sizegrip\fP there is harmless, since 
+Adding an \fBttk::sizegrip\fR there is harmless, since 
 the built-in grip will just mask the widget. 
 .SH EXAMPLES
 .CS

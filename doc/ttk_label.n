@@ -10,7 +10,7 @@ ttk::label \- Display a text string and/or image
 \fBttk::label\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
-A \fBlabel\fP widget displays a textual label and/or image.
+A \fBlabel\fR widget displays a textual label and/or image.
 The label may be linked to a Tcl variable 
 to automatically change the displayed text.
 .SO
@@ -24,7 +24,7 @@ Specifies how the information in the widget is positioned
 relative to the inner margins.  Legal values are
 \fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
 \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, and \fBcenter\fR.
-See also \fB-justify\fP.
+See also \fB-justify\fR.
 .OP \-background frameColor FrameColor
 The widget's background color.  
 If unspecified, the theme default is used.
@@ -36,8 +36,8 @@ If unspecified, the theme default is used.
 .OP \-justify justify Justify
 If there are multiple lines of text, specifies how
 the lines are laid out relative to one another.
-One of \fBleft\fP, \fBcenter\fP, or \fBright\fP.
-See also \fB-anchor\fP.
+One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
+See also \fB-anchor\fR.
 .OP \-padding padding Padding
 Specifies the amount of extra space to allocate for the widget.
 The padding is a list of up to four length specifications 
@@ -70,6 +70,6 @@ than the specified value.
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
-See \fIwidget(n)\fP
+See \fIwidget(n)\fR
 .SH "SEE ALSO"
 widget(n)
