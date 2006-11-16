@@ -1,6 +1,6 @@
 '\"
 '\" Copyright (c) 2004 Joe English
-'\" $Id: ttk_image.n,v 1.2 2006/11/15 13:29:17 dkf Exp $
+'\" $Id: ttk_image.n,v 1.3 2006/11/16 13:25:11 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_image n 8.5 Tk "Tk Themed Widget"
@@ -64,7 +64,7 @@ and the central area (which may be tiled in both directions).
 .CS
 set button(normal) [image create photo -file button.png]
 set button(pressed) [image create photo -file button-pressed.png]
-ttk::style element create Button.button image $button(normal) \e
+ttk::style element create Button.button \fBimage\fR $button(normal) \e
    -border {2 4} -map [list pressed $button(pressed)] -sticky nswe
 .CE
 .SH "SEE ALSO"
