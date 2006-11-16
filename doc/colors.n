@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" Copyright (c) 2003 ActiveState Corporation.
 '\" 
-'\" RCS: @(#) $Id: colors.n,v 1.4 2003/02/18 20:57:44 hobbs Exp $
+'\" RCS: @(#) $Id: colors.n,v 1.5 2006/11/16 13:50:17 dkf Exp $
 '\" 
 '\"
 .so man.macros
@@ -14,10 +14,11 @@ colors \- symbolic color names recognized by Tk
 .BE
 .SH DESCRIPTION
 .PP
-Tk recognizes many symbolic color names (eg, \fBred\fR) when
-specifying colors.  The symbolic names recognized by Tk and their
+Tk recognizes many symbolic color names (e.g., \fBred\fR) when
+specifying colors. The symbolic names recognized by Tk and their
 8-bit RGB values are:
 .CS
+\fIName\fR                       \fIRed\fR  \fIGreen\fR  \fIBlue\fR
 alice blue                 240   248   255
 AliceBlue                  240   248   255
 antique white              250   235   215
@@ -777,6 +778,7 @@ yellow3                    205   205     0
 yellow4                    139   139     0
 YellowGreen                154   205    50
 .CE
-
+.SH "SEE ALSO"
+options(n), Tk_GetColor(3)
 .SH KEYWORDS
 color, option
