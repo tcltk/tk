@@ -1,5 +1,7 @@
 2006-11-16  Donal K. Fellows  <dkf@users.sf.net>
 
+	* doc/colors.n, doc/wm.n: Minor fixes, added See Also.
+
 	* doc/labelframe.n: Added an example.
 
 2006-11-15  Donal K. Fellows  <dkf@users.sf.net>
