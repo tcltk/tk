@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.3 2006/11/07 03:45:28 jenglish Exp $
+ * $Id: ttkWinXPTheme.c,v 1.4 2006/11/21 02:21:27 jenglish Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -40,34 +40,25 @@ typedef HRESULT (STDAPICALLTYPE CloseThemeDataProc)(HTHEME hTheme);
 typedef HRESULT (STDAPICALLTYPE DrawThemeBackgroundProc)(HTHEME hTheme,
                  HDC hdc, int iPartId, int iStateId, const RECT *pRect,
                  OPTIONAL const RECT *pClipRect);
-typedef HRESULT (STDAPICALLTYPE DrawThemeParentBackgroundProc)(HWND hwnd,
-                 HDC hdc, OPTIONAL const RECT *prc);
-typedef HRESULT (STDAPICALLTYPE DrawThemeEdgeProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, const RECT *pDestRect,
-		 UINT uEdge, UINT uFlags, RECT *pContentRect);
-typedef HRESULT (STDAPICALLTYPE DrawThemeTextProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, DWORD dwTextFlags2, const RECT *pRect);
-typedef HRESULT	(STDAPICALLTYPE GetThemeMarginsProc)(HTHEME, HDC,
-		 int iPartId, int iStateId, int iPropId,
-		 OPTIONAL RECT *prc, MARGINS *pMargins);
 typedef HRESULT	(STDAPICALLTYPE GetThemePartSizeProc)(HTHEME,HDC,
 		 int iPartId, int iStateId,
 		 RECT *prc, enum THEMESIZE eSize, SIZE *psz);
+/* GetThemeTextExtent and DrawThemeText only used with BROKEN_TEXT_ELEMENT */ 
 typedef HRESULT (STDAPICALLTYPE GetThemeTextExtentProc)(HTHEME hTheme, HDC hdc,
 		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, const RECT *pBoundingRect, RECT *pExtentRect);
+		 DWORD dwTextFlags, const RECT *pBoundingRect, RECT *pExtent);
+typedef HRESULT (STDAPICALLTYPE DrawThemeTextProc)(HTHEME hTheme, HDC hdc,
+		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
+		 DWORD dwTextFlags, DWORD dwTextFlags2, const RECT *pRect);
 typedef BOOL    (STDAPICALLTYPE IsThemeActiveProc)(VOID);
 
 typedef struct
 {
     OpenThemeDataProc			*OpenThemeData;
     CloseThemeDataProc			*CloseThemeData;
-    DrawThemeBackgroundProc		*DrawThemeBackground;
-    DrawThemeParentBackgroundProc	*DrawThemeParentBackground;
-    DrawThemeEdgeProc			*DrawThemeEdge;
-    DrawThemeTextProc		        *DrawThemeText;
     GetThemePartSizeProc		*GetThemePartSize;
+    DrawThemeBackgroundProc		*DrawThemeBackground;
+    DrawThemeTextProc		        *DrawThemeText;
     GetThemeTextExtentProc		*GetThemeTextExtent;
     IsThemeActiveProc                   *IsThemeActive;
 
@@ -128,12 +119,10 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 
 	    if (   LOADPROC(OpenThemeData)
 		&& LOADPROC(CloseThemeData)
-		&& LOADPROC(DrawThemeBackground)
-		&& LOADPROC(DrawThemeParentBackground)
-		&& LOADPROC(DrawThemeEdge)
-		&& LOADPROC(DrawThemeText)
 		&& LOADPROC(GetThemePartSize)
+		&& LOADPROC(DrawThemeBackground)
 		&& LOADPROC(GetThemeTextExtent)
+		&& LOADPROC(DrawThemeText)
 		&& LOADPROC(IsThemeActive)
 	    )
 	    {
@@ -201,18 +190,20 @@ static Ttk_StateTable pushbutton_statemap[] =
 
 /*
  * Checkboxes (Tk: "Checkbutton")
- *
- * Missing: CBS_MIXEDDISABLED CBS_MIXEDHOT CBS_MIXEDNORMAL CBS_MIXEDPRESSED
  */
 static Ttk_StateTable checkbox_statemap[] =
 {
-{CBS_CHECKEDDISABLED,	TTK_STATE_DISABLED|TTK_STATE_SELECTED, 0},
-{CBS_CHECKEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_SELECTED, 0},
-{CBS_CHECKEDHOT,	TTK_STATE_ACTIVE|TTK_STATE_SELECTED, 0},
+{CBS_MIXEDDISABLED, 	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0},
+{CBS_MIXEDPRESSED, 	TTK_STATE_ALTERNATE|TTK_STATE_PRESSED, 0},
+{CBS_MIXEDHOT,  	TTK_STATE_ALTERNATE|TTK_STATE_ACTIVE, 0},
+{CBS_MIXEDNORMAL, 	TTK_STATE_ALTERNATE, 0},
+{CBS_CHECKEDDISABLED,	TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0},
+{CBS_CHECKEDPRESSED,	TTK_STATE_SELECTED|TTK_STATE_PRESSED, 0},
+{CBS_CHECKEDHOT,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0},
 {CBS_CHECKEDNORMAL,	TTK_STATE_SELECTED, 0},
-{CBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, TTK_STATE_SELECTED},
-{CBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, TTK_STATE_SELECTED},
-{CBS_UNCHECKEDHOT,	TTK_STATE_ACTIVE, TTK_STATE_SELECTED},
+{CBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, 0},
+{CBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, 0},
+{CBS_UNCHECKEDHOT,	TTK_STATE_ACTIVE, 0},
 {CBS_UNCHECKEDNORMAL,	0,0 }
 };
 
@@ -221,13 +212,13 @@ static Ttk_StateTable checkbox_statemap[] =
  */
 static Ttk_StateTable radiobutton_statemap[] =
 {
-{RBS_CHECKEDDISABLED,	TTK_STATE_DISABLED|TTK_STATE_SELECTED, 0},
-{RBS_CHECKEDPRESSED,	TTK_STATE_PRESSED|TTK_STATE_SELECTED, 0},
-{RBS_CHECKEDHOT,	TTK_STATE_ACTIVE|TTK_STATE_SELECTED, 0},
+{RBS_CHECKEDDISABLED,	TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0},
+{RBS_CHECKEDPRESSED,	TTK_STATE_SELECTED|TTK_STATE_PRESSED, 0},
+{RBS_CHECKEDHOT,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0},
 {RBS_CHECKEDNORMAL,	TTK_STATE_SELECTED, 0},
-{RBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, TTK_STATE_SELECTED},
-{RBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, TTK_STATE_SELECTED},
-{RBS_UNCHECKEDHOT,	TTK_STATE_ACTIVE, TTK_STATE_SELECTED},
+{RBS_UNCHECKEDDISABLED,	TTK_STATE_DISABLED, 0},
+{RBS_UNCHECKEDPRESSED,	TTK_STATE_PRESSED, 0},
+{RBS_UNCHECKEDHOT,	TTK_STATE_ACTIVE, 0},
 {RBS_UNCHECKEDNORMAL,	0,0 }
 };
 
@@ -367,6 +358,9 @@ static Ttk_StateTable tabitem_statemap[] =
  *	only seems to work properly for BP_PUSHBUTTON.  So we hardcode
  *	the required padding at element registration time instead.
  *
+ *	The PAD_MARGINS flag bit determines whether the padding
+ *	should be added on the inside (0) or outside (1) of the element.
+ *
  * <<NOTE-GetThemePartSize>>: 
  *	This gives bogus metrics for some parts (in particular,
  *	BP_PUSHBUTTONS).  Set the IGNORE_THEMESIZE flag to skip this call.
@@ -382,7 +376,8 @@ typedef struct 	/* XP element specifications */
     Ttk_StateTable *statemap;	/* Map Tk states to XP states */
     Ttk_Padding	padding;	/* See NOTE-GetThemeMargins */
     int  	flags;		
-#   define 	IGNORE_THEMESIZE 0x1	/* See NOTE-GetThemePartSize */
+#   define 	IGNORE_THEMESIZE 	0x1 /* See NOTE-GetThemePartSize */
+#   define 	PAD_MARGINS		0x2 /* See NOTE-GetThemeMargins */
 } ElementInfo;
 
 typedef struct
@@ -515,10 +510,16 @@ GenericElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     ElementData *elementData = clientData;
-    RECT rc = BoxToRect(b);
+    RECT rc;
 
-    if (!InitElementData(elementData, tkwin, d))
+    if (!InitElementData(elementData, tkwin, d)) {
 	return;
+    }
+
+    if (elementData->info->flags & PAD_MARGINS) {
+    	b = Ttk_PadBox(b, elementData->info->padding);
+    }
+    rc = BoxToRect(b);
 
     elementData->procs->DrawThemeBackground(
 	elementData->hTheme,
@@ -850,9 +851,9 @@ TTK_END_LAYOUT
 
 static ElementInfo ElementInfoTable[] = {
     { "Checkbutton.indicator", &GenericElementSpec, L"BUTTON",
-    	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), 0 },
+    	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
     { "Radiobutton.indicator", &GenericElementSpec, L"BUTTON",
-    	BP_RADIOBUTTON, radiobutton_statemap, PAD(0, 0, 4, 0), 0 },
+    	BP_RADIOBUTTON, radiobutton_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
     { "Button.button", &GenericElementSpec, L"BUTTON",
     	BP_PUSHBUTTON, pushbutton_statemap, PAD(3, 3, 3, 3), IGNORE_THEMESIZE },
     { "Labelframe.border", &GenericElementSpec, L"BUTTON",
@@ -914,7 +915,7 @@ static ElementInfo ElementInfoTable[] = {
     { "Menubutton.dropdown", &GenericElementSpec, L"TOOLBAR",
     	TP_SPLITBUTTONDROPDOWN,toolbutton_statemap, NOPAD,0 },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
-    	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), 0 },
+    	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeheading.border", &GenericElementSpec, L"HEADER", 
     	HP_HEADERITEM, header_statemap, PAD(4,0,4,0),0 },
     { "sizegrip", &GenericElementSpec, L"STATUS", 
