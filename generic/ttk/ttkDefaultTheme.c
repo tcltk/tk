@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.4 2006/11/14 22:44:30 jenglish Exp $
+/* $Id: ttkDefaultTheme.c,v 1.5 2006/11/21 02:21:27 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -17,10 +17,6 @@
 static const int WIN32_XDRAWLINE_HACK = 1;
 #else
 static const int WIN32_XDRAWLINE_HACK = 0;
-#endif
-
-#ifndef MIN
-#define MIN(a,b) (a < b ? a : b)
 #endif
 
 #define BORDERWIDTH     2
