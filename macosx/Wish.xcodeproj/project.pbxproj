@@ -872,7 +872,6 @@
 		F966BC9C08F27A3E005CB29B /* nmakehlp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nmakehlp.c; sourceTree = "<group>"; };
 		F966BCEE08F27A3E005CB29B /* tk.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tk.rc; sourceTree = "<group>"; };
 		F966BCEF08F27A3E005CB29B /* tk_base.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tk_base.rc; sourceTree = "<group>"; };
-		F966BCF008F27A3E005CB29B /* wish.exe.manifest */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = wish.exe.manifest; sourceTree = "<group>"; };
 		F966BCF208F27A3E005CB29B /* wish.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = wish.rc; sourceTree = "<group>"; };
 		F966BCF308F27A3E005CB29B /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		F966BCF408F27A3E005CB29B /* rmd.bat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rmd.bat; sourceTree = "<group>"; };
@@ -1647,7 +1646,6 @@
 		F96D442208F272B8004A47F5 /* eolFix.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = eolFix.tcl; sourceTree = "<group>"; };
 		F96D442408F272B8004A47F5 /* fix_tommath_h.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = fix_tommath_h.tcl; sourceTree = "<group>"; };
 		F96D442508F272B8004A47F5 /* genStubs.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = genStubs.tcl; sourceTree = "<group>"; };
-		F96D442608F272B8004A47F5 /* genWinImage.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = genWinImage.tcl; sourceTree = "<group>"; };
 		F96D442708F272B8004A47F5 /* index.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = index.tcl; sourceTree = "<group>"; };
 		F96D442808F272B8004A47F5 /* installData.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = installData.tcl; sourceTree = "<group>"; };
 		F96D442908F272B8004A47F5 /* loadICU.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = loadICU.tcl; sourceTree = "<group>"; };
@@ -1723,7 +1721,6 @@
 		F96D447808F272BA004A47F5 /* makefile.vc */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = makefile.vc; sourceTree = "<group>"; };
 		F96D447908F272BA004A47F5 /* nmakehlp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nmakehlp.c; sourceTree = "<group>"; };
 		F96D447A08F272BA004A47F5 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
-		F96D447B08F272BA004A47F5 /* README.binary */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.binary; sourceTree = "<group>"; };
 		F96D447C08F272BA004A47F5 /* rules.vc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rules.vc; sourceTree = "<group>"; };
 		F96D447D08F272BA004A47F5 /* stub16.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stub16.c; sourceTree = "<group>"; };
 		F96D447E08F272BA004A47F5 /* tcl.dsp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tcl.dsp; sourceTree = "<group>"; };
@@ -2488,7 +2485,6 @@
 			children = (
 				F966BCEE08F27A3E005CB29B /* tk.rc */,
 				F966BCEF08F27A3E005CB29B /* tk_base.rc */,
-				F966BCF008F27A3E005CB29B /* wish.exe.manifest */,
 				F966BCF208F27A3E005CB29B /* wish.rc */,
 			);
 			path = rc;
@@ -3384,7 +3380,6 @@
 				F96D442208F272B8004A47F5 /* eolFix.tcl */,
 				F96D442408F272B8004A47F5 /* fix_tommath_h.tcl */,
 				F96D442508F272B8004A47F5 /* genStubs.tcl */,
-				F96D442608F272B8004A47F5 /* genWinImage.tcl */,
 				F96D442708F272B8004A47F5 /* index.tcl */,
 				F96D442808F272B8004A47F5 /* installData.tcl */,
 				F96D442908F272B8004A47F5 /* loadICU.tcl */,
@@ -3483,7 +3478,6 @@
 				F96D447808F272BA004A47F5 /* makefile.vc */,
 				F96D447908F272BA004A47F5 /* nmakehlp.c */,
 				F96D447A08F272BA004A47F5 /* README */,
-				F96D447B08F272BA004A47F5 /* README.binary */,
 				F96D447C08F272BA004A47F5 /* rules.vc */,
 				F96D447D08F272BA004A47F5 /* stub16.c */,
 				F96D447E08F272BA004A47F5 /* tcl.dsp */,
@@ -3880,45 +3874,6 @@
 				F966BE3308F27A40005CB29B /* tkUtil.c in Sources */,
 				F966BE3408F27A40005CB29B /* tkVisual.c in Sources */,
 				F966BE3508F27A40005CB29B /* tkWindow.c in Sources */,
-				F966BEDB08F27A40005CB29B /* tkMacOSXBitmap.c in Sources */,
-				F966BEDC08F27A40005CB29B /* tkMacOSXButton.c in Sources */,
-				F966BEDD08F27A40005CB29B /* tkMacOSXCarbonEvents.c in Sources */,
-				F966BEDE08F27A40005CB29B /* tkMacOSXClipboard.c in Sources */,
-				F966BEDF08F27A40005CB29B /* tkMacOSXColor.c in Sources */,
-				F966BEE008F27A40005CB29B /* tkMacOSXConfig.c in Sources */,
-				F966BEE108F27A40005CB29B /* tkMacOSXCursor.c in Sources */,
-				F966BEE308F27A40005CB29B /* tkMacOSXDebug.c in Sources */,
-				F966BEE608F27A40005CB29B /* tkMacOSXDialog.c in Sources */,
-				F966BEE708F27A40005CB29B /* tkMacOSXDraw.c in Sources */,
-				F966BEE808F27A40005CB29B /* tkMacOSXEmbed.c in Sources */,
-				F966BEE908F27A40005CB29B /* tkMacOSXEntry.c in Sources */,
-				F966BEEA08F27A40005CB29B /* tkMacOSXEvent.c in Sources */,
-				F966BEEC08F27A40005CB29B /* tkMacOSXFont.c in Sources */,
-				F966BEED08F27A40005CB29B /* tkMacOSXHLEvents.c in Sources */,
-				F966BEEE08F27A40005CB29B /* tkMacOSXInit.c in Sources */,
-				F966BEF108F27A40005CB29B /* tkMacOSXKeyboard.c in Sources */,
-				F966BEF208F27A40005CB29B /* tkMacOSXKeyEvent.c in Sources */,
-				F966BEF308F27A40005CB29B /* tkMacOSXMenu.c in Sources */,
-				F966BEF608F27A40005CB29B /* tkMacOSXMenubutton.c in Sources */,
-				F966BEF708F27A40005CB29B /* tkMacOSXMenus.c in Sources */,
-				F966BEF808F27A40005CB29B /* tkMacOSXMouseEvent.c in Sources */,
-				F966BEF908F27A40005CB29B /* tkMacOSXNotify.c in Sources */,
-				F966BF0108F27A40005CB29B /* tkMacOSXRegion.c in Sources */,
-				F966BF0308F27A40005CB29B /* tkMacOSXScrlbr.c in Sources */,
-				F966BF0408F27A40005CB29B /* tkMacOSXSend.c in Sources */,
-				F966BF0508F27A40005CB29B /* tkMacOSXSubwindows.c in Sources */,
-				F966BF0608F27A40005CB29B /* tkMacOSXTest.c in Sources */,
-				F966BF0708F27A40005CB29B /* tkMacOSXWindowEvent.c in Sources */,
-				F966BF0808F27A40005CB29B /* tkMacOSXWm.c in Sources */,
-				F966BF0B08F27A40005CB29B /* tkMacOSXXStubs.c in Sources */,
-				F966BF7F08F27A41005CB29B /* tkAppInit.c in Sources */,
-				F966BF8308F27A41005CB29B /* tkUnix3d.c in Sources */,
-				F966BF9608F27A41005CB29B /* tkUnixScale.c in Sources */,
-				F966C02A08F27A42005CB29B /* xcolors.c in Sources */,
-				F966C02B08F27A42005CB29B /* xdraw.c in Sources */,
-				F966C02C08F27A42005CB29B /* xgc.c in Sources */,
-				F966C02D08F27A42005CB29B /* ximage.c in Sources */,
-				F966C02E08F27A42005CB29B /* xutil.c in Sources */,
 				F96888050AF786D5000797B5 /* ttkBlink.c in Sources */,
 				F96888060AF786D5000797B5 /* ttkButton.c in Sources */,
 				F96888070AF786D5000797B5 /* ttkCache.c in Sources */,
@@ -3950,7 +3905,46 @@
 				F96888210AF786D5000797B5 /* ttkTrack.c in Sources */,
 				F96888220AF786D5000797B5 /* ttkTreeview.c in Sources */,
 				F96888230AF786D5000797B5 /* ttkWidget.c in Sources */,
+				F966BEDB08F27A40005CB29B /* tkMacOSXBitmap.c in Sources */,
+				F966BEDC08F27A40005CB29B /* tkMacOSXButton.c in Sources */,
+				F966BEDD08F27A40005CB29B /* tkMacOSXCarbonEvents.c in Sources */,
+				F966BEDE08F27A40005CB29B /* tkMacOSXClipboard.c in Sources */,
+				F966BEDF08F27A40005CB29B /* tkMacOSXColor.c in Sources */,
+				F966BEE008F27A40005CB29B /* tkMacOSXConfig.c in Sources */,
+				F966BEE108F27A40005CB29B /* tkMacOSXCursor.c in Sources */,
+				F966BEE308F27A40005CB29B /* tkMacOSXDebug.c in Sources */,
+				F966BEE608F27A40005CB29B /* tkMacOSXDialog.c in Sources */,
+				F966BEE708F27A40005CB29B /* tkMacOSXDraw.c in Sources */,
+				F966BEE808F27A40005CB29B /* tkMacOSXEmbed.c in Sources */,
+				F966BEE908F27A40005CB29B /* tkMacOSXEntry.c in Sources */,
+				F966BEEA08F27A40005CB29B /* tkMacOSXEvent.c in Sources */,
+				F966BEEC08F27A40005CB29B /* tkMacOSXFont.c in Sources */,
+				F966BEED08F27A40005CB29B /* tkMacOSXHLEvents.c in Sources */,
+				F966BEEE08F27A40005CB29B /* tkMacOSXInit.c in Sources */,
+				F966BEF108F27A40005CB29B /* tkMacOSXKeyboard.c in Sources */,
+				F966BEF208F27A40005CB29B /* tkMacOSXKeyEvent.c in Sources */,
+				F966BEF308F27A40005CB29B /* tkMacOSXMenu.c in Sources */,
+				F966BEF608F27A40005CB29B /* tkMacOSXMenubutton.c in Sources */,
+				F966BEF708F27A40005CB29B /* tkMacOSXMenus.c in Sources */,
+				F966BEF808F27A40005CB29B /* tkMacOSXMouseEvent.c in Sources */,
+				F966BEF908F27A40005CB29B /* tkMacOSXNotify.c in Sources */,
+				F966BF0108F27A40005CB29B /* tkMacOSXRegion.c in Sources */,
+				F966BF0308F27A40005CB29B /* tkMacOSXScrlbr.c in Sources */,
+				F966BF0408F27A40005CB29B /* tkMacOSXSend.c in Sources */,
+				F966BF0508F27A40005CB29B /* tkMacOSXSubwindows.c in Sources */,
+				F966BF0608F27A40005CB29B /* tkMacOSXTest.c in Sources */,
+				F966BF0708F27A40005CB29B /* tkMacOSXWindowEvent.c in Sources */,
+				F966BF0808F27A40005CB29B /* tkMacOSXWm.c in Sources */,
+				F966BF0B08F27A40005CB29B /* tkMacOSXXStubs.c in Sources */,
 				F96888850AF78938000797B5 /* ttkMacOSXTheme.c in Sources */,
+				F966BF7F08F27A41005CB29B /* tkAppInit.c in Sources */,
+				F966BF8308F27A41005CB29B /* tkUnix3d.c in Sources */,
+				F966BF9608F27A41005CB29B /* tkUnixScale.c in Sources */,
+				F966C02A08F27A42005CB29B /* xcolors.c in Sources */,
+				F966C02B08F27A42005CB29B /* xdraw.c in Sources */,
+				F966C02C08F27A42005CB29B /* xgc.c in Sources */,
+				F966C02D08F27A42005CB29B /* ximage.c in Sources */,
+				F966C02E08F27A42005CB29B /* xutil.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
