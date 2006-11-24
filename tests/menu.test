@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.18 2006/03/20 15:27:47 dkf Exp $
+# RCS: @(#) $Id: menu.test,v 1.19 2006/11/24 18:11:32 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2491,6 +2491,16 @@ test menu-35.1 {menus on multiple screens - crashes tk8.3.1, Bug 5454} \
     menu .two.m
     destroy .one
     destroy .two
+} {}
+
+test menu-36.1 {menu -underline string overruns Bug 1599877} {} {
+    # ensure that -underline does not do string overruns [Bug 1599877]
+    catch {destroy .m}
+    menu .m
+    .m add command -label "File" -underline [expr {1<<30}]
+    . configure -menu .m
+    update
+    tk::TraverseToMenu . "e"
 } {}
 
 # cleanup
