@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.19 2006/10/16 15:35:51 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.20 2006/11/24 19:04:07 hobbs Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -225,9 +225,9 @@ TkpInit(interp)
 	}
 
 	/*
-	 * If we don't have a TTY and stdin is a special character file of length 0,
-	 * (e.g. /dev/null, which is what Finder sets when double clicking Wish)
-	 * then use the Tk based console interpreter.
+	 * If we don't have a TTY and stdin is a special character file of
+	 * length 0, (e.g. /dev/null, which is what Finder sets when double
+	 * clicking Wish) then use the Tk based console interpreter.
 	 */
 
 	if (!isatty(0)) {
@@ -237,9 +237,17 @@ TkpInit(interp)
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
-		/* Only show the console if we don't have a startup script */
+		/*
+		 * Only show the console if we don't have a startup script
+		 * and tcl_interactive hasn't been set already.
+		 */
 		if (TclGetStartupScriptFileName() == NULL) {
-		    Tcl_SetVar(interp, "tcl_interactive", "1", TCL_GLOBAL_ONLY);
+		    CONST char *intvar =
+			Tcl_GetVar(interp, "tcl_interactive", TCL_GLOBAL_ONLY);
+		    if (intvar == NULL) {
+			Tcl_SetVar(interp, "tcl_interactive", "1",
+				TCL_GLOBAL_ONLY);
+		    }
 		}
 		if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 		    return TCL_ERROR;
@@ -248,10 +256,10 @@ TkpInit(interp)
 	}
 
 	/*
-	 * If we are loaded into an executable that is not a bundled application,
-	 * the window server does not let us come to the foreground.
-	 * For such an executable, notify the window server that we are now a
-	 * full GUI application.
+	 * If we are loaded into an executable that is not a bundled
+	 * application, the window server does not let us come to the
+	 * foreground.  For such an executable, notify the window server that
+	 * we are now a full GUI application.
 	 */
 	{
 	    /* Check whether we are a bundled executable: */
@@ -285,8 +293,8 @@ TkpInit(interp)
 		CFRelease(bundleUrl);
 	    }
 
-	    /* If we are not a bundled executable, notify the window server that
-	     * we are a foregroundable app. */
+	    /* If we are not a bundled executable, notify the window server
+	     * that we are a foregroundable app. */
 	    if (!bundledExecutable) {
 		OSStatus err = procNotFound;
 		ProcessSerialNumber psn = { 0, kCurrentProcess };
@@ -299,10 +307,11 @@ TkpInit(interp)
 #if MAC_OSX_TK_USE_CPS_SPI
 		if (err != noErr) {
 		    /*
-		     * When building or running on 10.2 or when the above fails,
-		     * attempt to use undocumented CPS SPI to notify the window
-		     * server. Load the SPI symbol dynamically, so that we don't
-		     * break if it ever disappears or changes its name.
+		     * When building or running on 10.2 or when the above
+		     * fails, attempt to use undocumented CPS SPI to notify
+		     * the window server. Load the SPI symbol dynamically, so
+		     * that we don't break if it ever disappears or changes
+		     * its name.
 		     */
 		    TkMacOSXInitNamedSymbol(CoreGraphics, OSErr,
 			    CPSEnableForegroundOperation, ProcessSerialNumberPtr);
@@ -324,7 +333,7 @@ TkpInit(interp)
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
-    return Tcl_Eval(interp, initScript);
+    return Tcl_EvalEx(interp, initScript, -1, TCL_EVAL_GLOBAL);
 }
 
 /*
@@ -462,7 +471,7 @@ TkMacOSXDefaultStartupScript(void)
  *        available on all OS versions.
  *        If module is non-NULL and not the empty string, use twolevel
  *        namespace lookup.
- *       
+ *
  * Results:
  *        Address of given symbol or NULL if unavailable.
  *
@@ -485,7 +494,7 @@ TkMacOSXGetNamedSymbol(const char* module, const char* symbol)
 	    nsSymbol = NSLookupAndBindSymbol(symbol);
 	}
     }
-    if(nsSymbol) {
+    if (nsSymbol) {
 	return NSAddressOfSymbol(nsSymbol);
     } else {
 	return NULL;
