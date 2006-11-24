@@ -1,3 +1,14 @@
+2006-11-24  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/altTheme.tcl, library/ttk/clamTheme.tcl, 
+	library/ttk/defaults.tcl, library/ttk/winTheme.tcl, 
+	library/ttk/xpTheme.tcl: explicitly specify -anchor w on TMenubutton
+	* tests/ttk/entry.test: Fixed font dependency; test entry-3.2 
+	should work on all platforms now.
+	* library/classicTheme.tcl: Don't define or use TkClassicDefaultFont.
+	* generic/ttk/ttkTreeview.c, generic/ttk/ttkPanedwindow.c:
+	Handle missing layouts.
+
 2006-11-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinMenu.c (TkWinHandleMenuEvent, DrawMenuUnderline):
