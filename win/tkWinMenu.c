@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.6 2006/09/21 00:13:54 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.7 2006/11/24 01:52:08 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -505,7 +505,7 @@ GetEntryText(mePtr)
 		next = Tcl_UtfNext(p);
 		Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	    }
-	} 	    
+	}
 
 	itemText = ckalloc(Tcl_DStringLength(&itemString) + 1);
 	strcpy(itemText, Tcl_DStringValue(&itemString));
@@ -1046,27 +1046,28 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable, 
                     (char *) *plParam);
 	    if (hashEntryPtr != NULL) {
-		int i;
+		int i, len, underline;
+		Tcl_Obj *labelPtr;
 
 		*plResult = 0;
 		menuPtr = (TkMenu *) Tcl_GetHashValue(hashEntryPtr);
 		for (i = 0; i < menuPtr->numEntries; i++) {
-		    int underline;
-		    char *label;
-
 		    underline = menuPtr->entries[i]->underline;
-		    if (menuPtr->entries[i]->labelPtr != NULL) {
-			label = Tcl_GetStringFromObj(
-				menuPtr->entries[i]->labelPtr, NULL);
-		    }
-		    if ((-1 != underline) 
-			    && (NULL != menuPtr->entries[i]->labelPtr)
-			    && (CharUpper((LPTSTR) menuChar) 
-			    == CharUpper((LPTSTR) (unsigned char) 
-			    label[underline]))) {
-			*plResult = (2 << 16) | i;
-			returnResult = 1;
-			break;
+		    labelPtr = menuPtr->entries[i]->labelPtr;
+		    if ((underline >= 0) && (labelPtr != NULL)) {
+			/* do the unicode call just to prevent overruns */
+			Tcl_GetUnicodeFromObj(labelPtr, &len);
+			if (underline < len) {
+			    char *label;
+			    label = Tcl_GetStringFromObj(labelPtr, &len);
+			    if (CharUpper((LPTSTR) menuChar)
+				    == CharUpper((LPTSTR)
+					*Tcl_UtfAtIndex(label, underline))) {
+				*plResult = (2 << 16) | i;
+				returnResult = 1;
+				break;
+			    }
+			}
 		    }
 		}
 	    }
@@ -1075,7 +1076,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 
 	case WM_MEASUREITEM: {
 	    LPMEASUREITEMSTRUCT itemPtr = (LPMEASUREITEMSTRUCT) *plParam;
-    
+
 	    if (itemPtr != NULL) {
 		mePtr = (TkMenuEntry *) itemPtr->itemData;
 		menuPtr = mePtr->menuPtr;
@@ -1087,7 +1088,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    itemPtr->itemWidth += 2 - indicatorDimensions[1];
 		} else {
 		    int activeBorderWidth;
-		    
+
 		    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 			    menuPtr->activeBorderWidthPtr, 
 			    &activeBorderWidth);
@@ -1098,7 +1099,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	    }
 	    break;
 	}
-	
+
 	case WM_DRAWITEM: {
 	    TkWinDrawable *twdPtr;
 	    LPDRAWITEMSTRUCT itemPtr = (LPDRAWITEMSTRUCT) *plParam;
@@ -1182,11 +1183,11 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 			    mePtr = menuPtr->entries[LOWORD(*pwParam)];
 			} else {
 			    hashEntryPtr = Tcl_FindHashEntry(
-                                    &tsdPtr->commandTable,
-				    (char *) LOWORD(*pwParam));
+				&tsdPtr->commandTable,
+				(char *) LOWORD(*pwParam));
 			    if (hashEntryPtr != NULL) {
 				mePtr = (TkMenuEntry *) 
-					Tcl_GetHashValue(hashEntryPtr);
+				    Tcl_GetHashValue(hashEntryPtr);
 			    }
 			}
 		    }	 
@@ -1273,7 +1274,7 @@ TkpSetWindowMenuBar(tkwin, menuPtr)
 {
     HMENU winMenuHdl;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (menuPtr != NULL) {
 	Tcl_HashEntry *hashEntryPtr;
@@ -1732,10 +1733,10 @@ DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
     /* Set bitmap bg to highlight color if the menu is highlighted */
     if (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) {
         XColor *activeBgColor = Tk_3DBorderColor(Tk_Get3DBorderFromObj(
-                mePtr->menuPtr->tkwin,
-                (mePtr->activeBorderPtr == NULL) ?
-                mePtr->menuPtr->activeBorderPtr :
-                mePtr->activeBorderPtr));
+						     mePtr->menuPtr->tkwin,
+						     (mePtr->activeBorderPtr == NULL) ?
+						     mePtr->menuPtr->activeBorderPtr :
+						     mePtr->activeBorderPtr));
         gc->background = activeBgColor->pixel;
     }
 
@@ -1800,8 +1801,7 @@ DrawMenuSeparator(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
  *
  * DrawMenuUnderline --
  *
- *	On appropriate platforms, draw the underline character for the
- *	menu.
+ *	On appropriate platforms, draw the underline character for the menu.
  *
  * Results:
  *	None.
@@ -1825,16 +1825,23 @@ DrawMenuUnderline(
     int width,				/* Width of entry */
     int height)				/* Height of entry */
 {
-    if (mePtr->underline >= 0) {
-	char *label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
-	CONST char *start = Tcl_UtfAtIndex(label, mePtr->underline);
-	CONST char *end = Tcl_UtfNext(start);
+    if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
+	int len;
 
-    	Tk_UnderlineChars(menuPtr->display, d,
-    		gc, tkfont, label, x + mePtr->indicatorSpace,
-    		y + (height + fmPtr->ascent - fmPtr->descent) / 2, 
-		(int) (start - label), (int) (end - label));
-    }		
+	/* do the unicode call just to prevent overruns */
+	Tcl_GetUnicodeFromObj(mePtr->labelPtr, &len);
+	if (mePtr->underline < len) {
+	    CONST char *label, *start, *end;
+
+	    label = Tcl_GetStringFromObj(mePtr->labelPtr, &len);
+	    start = Tcl_UtfAtIndex(label, mePtr->underline);
+	    end = Tcl_UtfNext(start);
+	    Tk_UnderlineChars(menuPtr->display, d,
+		    gc, tkfont, label, x + mePtr->indicatorSpace,
+		    y + (height + fmPtr->ascent - fmPtr->descent) / 2,
+		    (int) (start - label), (int) (end - label));
+	}
+    }
 }
 
 /*
