@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.49 2006/09/21 00:13:36 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.50 2006/11/24 01:51:51 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1112,25 +1112,28 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		(char *) *plParam);
 	if (hashEntryPtr != NULL) {
-	    int i;
+	    int i, len, underline;
+	    Tcl_Obj *labelPtr;
 
 	    *plResult = 0;
 	    menuPtr = (TkMenu *) Tcl_GetHashValue(hashEntryPtr);
 	    for (i = 0; i < menuPtr->numEntries; i++) {
-		int underline;
-		char *label;
-
 		underline = menuPtr->entries[i]->underline;
-		if (menuPtr->entries[i]->labelPtr != NULL) {
-		    label = Tcl_GetString(menuPtr->entries[i]->labelPtr);
-		}
-		if ((-1 != underline)
-			&& (NULL != menuPtr->entries[i]->labelPtr)
-			&& (CharUpper((LPTSTR) menuChar)
-			== CharUpper((LPTSTR) UCHAR(label[underline])))) {
-		    *plResult = (2 << 16) | i;
-		    returnResult = 1;
-		    break;
+		labelPtr = menuPtr->entries[i]->labelPtr;
+		if ((underline >= 0) && (labelPtr != NULL)) {
+		    /* do the unicode call just to prevent overruns */
+		    Tcl_GetUnicodeFromObj(labelPtr, &len);
+		    if (underline < len) {
+			char *label;
+			label = Tcl_GetStringFromObj(labelPtr, &len);
+			if (CharUpper((LPTSTR) menuChar)
+				== CharUpper((LPTSTR)
+					*Tcl_UtfAtIndex(label, underline))) {
+			    *plResult = (2 << 16) | i;
+			    returnResult = 1;
+			    break;
+			}
+		    }
 		}
 	    }
 	}
@@ -1901,15 +1904,22 @@ DrawMenuUnderline(
     int width,			/* Width of entry */
     int height)			/* Height of entry */
 {
-    if (mePtr->underline >= 0) {
-	char *label = Tcl_GetString(mePtr->labelPtr);
-	CONST char *start = Tcl_UtfAtIndex(label, mePtr->underline);
-	CONST char *end = Tcl_UtfNext(start);
+    if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
+	int len;
 
-    	Tk_UnderlineChars(menuPtr->display, d,
-    		gc, tkfont, label, x + mePtr->indicatorSpace,
-    		y + (height + fmPtr->ascent - fmPtr->descent) / 2,
-		(int) (start - label), (int) (end - label));
+	/* do the unicode call just to prevent overruns */
+	Tcl_GetUnicodeFromObj(mePtr->labelPtr, &len);
+	if (mePtr->underline < len) {
+	    CONST char *label, *start, *end;
+
+	    label = Tcl_GetStringFromObj(mePtr->labelPtr, &len);
+	    start = Tcl_UtfAtIndex(label, mePtr->underline);
+	    end = Tcl_UtfNext(start);
+	    Tk_UnderlineChars(menuPtr->display, d,
+		    gc, tkfont, label, x + mePtr->indicatorSpace,
+		    y + (height + fmPtr->ascent - fmPtr->descent) / 2,
+		    (int) (start - label), (int) (end - label));
+	}
     }
 }
 
