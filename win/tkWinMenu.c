@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.50 2006/11/24 01:51:51 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.51 2006/11/24 18:11:32 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1125,7 +1125,7 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
 		    Tcl_GetUnicodeFromObj(labelPtr, &len);
 		    if (underline < len) {
 			char *label;
-			label = Tcl_GetStringFromObj(labelPtr, &len);
+			label = Tcl_GetStringFromObj(labelPtr, NULL);
 			if (CharUpper((LPTSTR) menuChar)
 				== CharUpper((LPTSTR)
 					*Tcl_UtfAtIndex(label, underline))) {
@@ -1912,7 +1912,7 @@ DrawMenuUnderline(
 	if (mePtr->underline < len) {
 	    CONST char *label, *start, *end;
 
-	    label = Tcl_GetStringFromObj(mePtr->labelPtr, &len);
+	    label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
 	    start = Tcl_UtfAtIndex(label, mePtr->underline);
 	    end = Tcl_UtfNext(start);
 	    Tk_UnderlineChars(menuPtr->display, d,
