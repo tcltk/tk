@@ -1,5 +1,9 @@
 2006-11-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* macosx/tkMacOSXInit.c (TkpInit): only set tcl_interactive 1 if
+	it isn't already defined.  Allows embedders to set it to 0 to
+	prevent the console appearing on OS X. [Bug 1487701]
+
 	* unix/tkUnixMenu.c (DrawMenuUnderline): bound Tcl_UtfAtIndex usage
 	* tests/menu.test (menu-36.1): [Bug 1599877]
 
