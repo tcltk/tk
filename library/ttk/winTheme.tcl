@@ -1,5 +1,5 @@
 #
-# $Id: winTheme.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: winTheme.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
 #
 # Ttk widget set: Windows Native theme
 #
@@ -23,7 +23,8 @@ namespace eval ttk {
 	style configure TButton -width -11 -relief raised -shiftrelief 1
 	style configure TCheckbutton -padding "2 4"
 	style configure TRadiobutton -padding "2 4"
-	style configure TMenubutton -padding "8 4" -arrowsize 3 -relief raised
+	style configure TMenubutton \
+	    -padding "8 4" -arrowsize 3 -relief raised -anchor w
 
 	style map TButton -relief {{!disabled pressed} sunken}
 

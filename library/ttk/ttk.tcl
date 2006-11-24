@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: ttk.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
 #
 # Ttk widget set initialization script.
 #
@@ -24,27 +24,27 @@ source [file join $::ttk::library utils.tcl]
 #	Define $old command as a deprecated alias for $new command
 #	$old and $new must be fully namespace-qualified.
 #
-proc ::ttk::deprecated {old new} {
+proc ttk::deprecated {old new} {
     interp alias {} $old {} ttk::do'deprecate $old $new
 }
 ## do'deprecate --
 #	Implementation procedure for deprecated commands --
 #	issue a warning (once), then re-alias old to new.
 #
-proc ::ttk::do'deprecate {old new args} {
+proc ttk::do'deprecate {old new args} {
     deprecated'warning $old $new
     interp alias {} $old {} $new
-    eval [linsert $args 0 $new]
+    uplevel 1 [linsert $args 0 $new]
 }
 
 ## deprecated'warning --
 #	Gripe about use of deprecated commands.
 #
-proc ::ttk::deprecated'warning {old new} {
+proc ttk::deprecated'warning {old new} {
     puts stderr "$old deprecated -- use $new instead"
 }
 
-### Forward-compatibility.
+### Backward-compatibility.
 #
 # ttk::panedwindow used to be named ttk::paned.  Keep the alias for now.
 #
@@ -62,7 +62,6 @@ if {[info exists ::ttk::deprecrated] && $::ttk::deprecated} {
 	}
 
 	variable version 0.7.8
-	variable patchlevel 0.7.8
     }
     package provide tile $::tile::version
 
@@ -85,10 +84,6 @@ if {[info exists ::ttk::deprecrated] && $::ttk::deprecated} {
 	variable wc
 	foreach wc $widgets {
 	    namespace export $wc
-
-	    deprecated ::t$wc ::ttk::$wc
-	    deprecated ::tile::$wc ::ttk::$wc
-	    namespace eval ::tile [list namespace export $wc]
 	}
     }
 }
