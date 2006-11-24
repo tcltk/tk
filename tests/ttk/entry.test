@@ -77,7 +77,7 @@ test entry-2.1 "Create entry before scrollbar" -body {
 test entry-2.2 "Initial scroll position" -body {
     ttk::entry .e -font fixed -width 5 -xscrollcommand scroll
     .e insert end "0123456789"
-    pack .e; update idletasks
+    pack .e; update
     set scrollInfo
 } -result {0 0.5} -cleanup { destroy .e }
 # NOTE: result can vary depending on font.
@@ -102,7 +102,7 @@ test entry-3.1 "bbox widget command" -body {
 
 test entry-3.2 "xview" -body {
     .e delete 0 end;
-    .e insert end [string repeat "M" 40]
+    .e insert end [string repeat "0" 40]
     update idletasks
     set result [.e xview]
 } -result {0 0.5}

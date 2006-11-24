@@ -1,5 +1,5 @@
 #
-# $Id: clamTheme.tcl,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+# $Id: clamTheme.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
 #
 # Ttk widget set: "Clam" theme
 #
@@ -82,7 +82,8 @@ namespace eval ttk::theme::clam {
 	style map TRadiobutton -indicatorbackground \
 	    [list  disabled $colors(-frame)  pressed $colors(-frame)]
 
-	style configure TMenubutton -width -11 -padding 5 -relief raised
+	style configure TMenubutton \
+	    -width -11 -padding 5 -relief raised -anchor w
 
 	style configure TEntry -padding 1 -insertwidth 1
 	style map TEntry \

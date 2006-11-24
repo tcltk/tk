@@ -12,12 +12,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.33 2006/02/03 22:40:34 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.34 2006/11/24 18:04:14 jenglish Exp $
  */
 
-#include "tkPort.h"
 #include "tkInt.h"
-#include <signal.h>
 
 /*
  * There's a potential problem if a handler is deleted while it's current

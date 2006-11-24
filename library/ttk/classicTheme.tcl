@@ -1,13 +1,12 @@
 #
-# $Id: classicTheme.tcl,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+# $Id: classicTheme.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
 #
-# Ttk widget set: Classic theme.
-# Implements the classic Tk Motif-like look and feel.
+# "classic" Tk theme.
+#
+# Implements Tk's traditional Motif-like look and feel.
 #
 
 namespace eval ttk::theme::classic {
-
-    font create TkClassicDefaultFont -family Helvetica -weight bold -size -12
 
     variable colors; array set colors {
 	-frame		"#d9d9d9"
@@ -22,7 +21,7 @@ namespace eval ttk::theme::classic {
     namespace import -force ::ttk::style
     style theme settings classic {
 	style configure "." \
-	    -font		TkClassicDefaultFont \
+	    -font		TkDefaultFont \
 	    -background		$colors(-frame) \
 	    -foreground		black \
 	    -selectbackground	$colors(-selectbg) \
@@ -34,6 +33,9 @@ namespace eval ttk::theme::classic {
 	    -selectborderwidth	1 \
 	    -insertwidth	2 \
 	    ;
+
+	# To match pre-Xft X11 appearance, use:
+	#	ttk::style configure . -font {Helvetica 12 bold}
 
 	style map "." -background \
 	    [list disabled $colors(-frame) active $colors(-activebg)]

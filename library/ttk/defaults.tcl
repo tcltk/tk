@@ -1,5 +1,5 @@
 #
-# $Id: defaults.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: defaults.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
 #
 # Ttk widget set: Default theme
 #
@@ -53,7 +53,8 @@ namespace eval ttk {
 	style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  selected $colors(-indicator)]
 
-	style configure TMenubutton -relief raised -padding "10 3"
+	style configure TMenubutton \
+	    -relief raised -padding "10 3" -anchor w
 
 	style configure TEntry -relief sunken -fieldbackground white -padding 1
 	style map TEntry -fieldbackground \
