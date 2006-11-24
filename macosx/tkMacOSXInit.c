@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.24 2006/10/16 15:35:28 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.25 2006/11/24 19:03:50 hobbs Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -224,12 +224,6 @@ TkpInit(interp)
 	    }
 	}
 
-	/*
-	 * If we don't have a TTY and stdin is a special character file of length 0,
-	 * (e.g. /dev/null, which is what Finder sets when double clicking Wish)
-	 * then use the Tk based console interpreter.
-	 */
-
 	/* REMOVE ME: Close stdin & stdout for remote debugging otherwise we
 	 * will fight with gdb for stdin & stdout 
 	 */
@@ -239,6 +233,12 @@ TkpInit(interp)
 	    close (1);
 	}
 
+	/*
+	 * If we don't have a TTY and stdin is a special character file of
+	 * length 0, (e.g. /dev/null, which is what Finder sets when double
+	 * clicking Wish) then use the Tk based console interpreter.
+	 */
+
 	if (!isatty(0)) {
 	    struct stat st;
 	    if (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)) {
@@ -246,9 +246,17 @@ TkpInit(interp)
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
-		/* Only show the console if we don't have a startup script */
+		/*
+		 * Only show the console if we don't have a startup script
+		 * and tcl_interactive hasn't been set already.
+		 */
 		if (Tcl_GetStartupScript(NULL) == NULL) {
-		    Tcl_SetVar(interp, "tcl_interactive", "1", TCL_GLOBAL_ONLY);
+		    CONST char *intvar =
+			Tcl_GetVar(interp, "tcl_interactive", TCL_GLOBAL_ONLY);
+		    if (intvar == NULL) {
+			Tcl_SetVar(interp, "tcl_interactive", "1",
+				TCL_GLOBAL_ONLY);
+		    }
 		}
 		if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
 		    return TCL_ERROR;
@@ -257,10 +265,10 @@ TkpInit(interp)
 	}
 
 	/*
-	 * If we are loaded into an executable that is not a bundled application,
-	 * the window server does not let us come to the foreground.
-	 * For such an executable, notify the window server that we are now a
-	 * full GUI application.
+	 * If we are loaded into an executable that is not a bundled
+	 * application, the window server does not let us come to the
+	 * foreground.  For such an executable, notify the window server that
+	 * we are now a full GUI application.
 	 */
 	{
 	    /* Check whether we are a bundled executable: */
