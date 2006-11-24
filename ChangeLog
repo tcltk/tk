@@ -1,3 +1,8 @@
+2006-11-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkWinHandleMenuEvent, DrawMenuUnderline):
+	handle unichar underlining correctly and safely. [Bug 1599877]
+
 2006-11-20  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/ttkWinXPTheme.c: Add support for alternate/indeterminate
