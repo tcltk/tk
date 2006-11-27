@@ -1,3 +1,9 @@
+2006-11-27  Kevin Kenny  <kennykb@acm.org>
+
+	* unix/configure.in: Corrected Xft configuration so that Xft
+	actually does get turned on when available.
+	* unix/configure: autoconf
+	
 2006-11-26  Joe English  <jenglish@users.sourceforge.net>
 	* generic/ttk/ttkWidget.c, generic/ttk/ttkPaned.c Fix for #1603506
 	* library/ttk/button.tcl, library/ttk/combobox.tcl,
