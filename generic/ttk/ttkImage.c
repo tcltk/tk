@@ -1,4 +1,4 @@
-/* $Id: ttkImage.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkImage.c,v 1.3 2006/11/27 06:53:55 jenglish Exp $
  * 	Ttk widget set -- image element factory.
  *
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
@@ -109,18 +109,10 @@ static void FreeImageData(void *clientData)
 {
     ImageData *imageData = clientData;
     Tcl_DecrRefCount(imageData->baseImage);
-    if (imageData->imageMap) {
-	Tcl_DecrRefCount(imageData->imageMap);
-    }
-    if (imageData->stickyObj) {
-	Tcl_DecrRefCount(imageData->stickyObj);
-    }
-    if (imageData->borderObj) {
-	Tcl_DecrRefCount(imageData->borderObj);
-    }
-    if (imageData->paddingObj) {
-	Tcl_DecrRefCount(imageData->paddingObj);
-    }
+    if (imageData->imageMap)	{ Tcl_DecrRefCount(imageData->imageMap); }
+    if (imageData->stickyObj)	{ Tcl_DecrRefCount(imageData->stickyObj); }
+    if (imageData->borderObj)	{ Tcl_DecrRefCount(imageData->borderObj); }
+    if (imageData->paddingObj)	{ Tcl_DecrRefCount(imageData->paddingObj); }
     ckfree(clientData);
 }
 
