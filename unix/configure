@@ -9610,6 +9610,8 @@ fi
 echo "$as_me: WARNING: Can't find xft configuration, or xft is unusable" >&2;}
 	    fi
 	    enable_xft=no
+	else
+            enable_xft=yes
 	fi
     fi
     if test $enable_xft = "yes" ; then
