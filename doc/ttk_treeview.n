@@ -49,9 +49,10 @@ specifying the number of columns and their names.
 A list of column identifiers 
 (either symbolic names or integer indices)
 specifying which data columns are displayed 
-and the order in which they appear.
+and the order in which they appear, 
+or the string \fB#all\fP.
 .br
-If empty (the default), all columns are shown in the order given.
+If set to \fB#all\fP (the default), all columns are shown in the order given.
 .OP \-height height Height
 Specifies the number of rows which should be visible.
 Note:

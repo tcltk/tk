@@ -1,5 +1,5 @@
 /*
- * $Id: ttkTreeview.c,v 1.4 2006/11/24 18:04:14 jenglish Exp $
+ * $Id: ttkTreeview.c,v 1.5 2006/11/27 06:53:55 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -420,7 +420,7 @@ static Tk_OptionSpec TreeviewOptionSpecs[] =
 	"", Tk_Offset(Treeview,tree.columnsObj), -1,
 	0,0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
     {TK_OPTION_STRING, "-displaycolumns","displayColumns","DisplayColumns",
-	"", Tk_Offset(Treeview,tree.displayColumnsObj), -1,
+	"#all", Tk_Offset(Treeview,tree.displayColumnsObj), -1,
 	0,0,DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-show", "show", "Show",
 	DEFAULT_SHOW, Tk_Offset(Treeview,tree.showObj), -1,
@@ -708,7 +708,7 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
 	return TCL_ERROR;
     }
 
-    if (ndcols == 0) {
+    if (!strcmp(Tcl_GetString(tv->tree.displayColumnsObj), "#all")) {
 	ndcols = tv->tree.nColumns;
 	displayColumns = (TreeColumn**)ckalloc((ndcols+1)*sizeof(TreeColumn*));
 	for (index = 0; index < ndcols; ++index) {
