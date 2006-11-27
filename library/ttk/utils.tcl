@@ -1,7 +1,7 @@
 #
-# $Id: utils.tcl,v 1.2 2006/11/07 03:45:28 jenglish Exp $
+# $Id: utils.tcl,v 1.3 2006/11/27 06:53:55 jenglish Exp $
 #
-# Ttk widget set: utilities for widget implementations.
+# Utilities for widget implementations.
 #
 
 ### Focus management.
@@ -15,6 +15,30 @@
 #
 proc ttk::takefocus {w} {
     expr {[$w instate !disabled] && [winfo viewable $w]}
+}
+
+# ttk::traverseTo $w --
+# 	Set the keyboard focus to the specified window.
+#
+proc ttk::traverseTo {w} {
+    set focus [focus]
+    if {$focus ne ""} {
+	event generate $focus <<TraverseOut>>
+    }
+    focus $w
+    event generate $w <<TraverseIn>>
+}
+
+## ttk::traverseTo $w --
+# 	Set the keyboard focus to the specified window.
+#
+proc ttk::traverseTo {w} {
+    set focus [focus]
+    if {$focus ne ""} {
+	event generate $focus <<TraverseOut>>
+    }
+    focus $w
+    event generate $w <<TraverseIn>>
 }
 
 ## ttk::clickToFocus $w --
@@ -58,15 +82,16 @@ proc ttk::takesFocus {w} {
     return 0
 }
 
-# ttk::focusFirst $w --
+## ttk::focusFirst $w --
 #	Return the first descendant of $w, in preorder traversal order,
 #	that can take keyboard focus, "" if none do.
 #
 # See also: tk_focusNext
 #
+
 proc ttk::focusFirst {w} {
-    if {[ttk::takesFocus $w]} {
-	return $w
+    if {[ttk::takesFocus $w]} { 
+	return $w 
     }
     foreach child [winfo children $w] {
 	if {[set c [ttk::focusFirst $child]] ne ""} {
@@ -222,10 +247,10 @@ proc ttk::CancelRepeat {} {
 ### Miscellaneous.
 #
 
-## ttk::CopyBindings $from $to --
+## ttk::copyBindings $from $to --
 #	Utility routine; copies bindings from one bindtag onto another.
 #
-proc ttk::CopyBindings {from to} {
+proc ttk::copyBindings {from to} {
     foreach event [bind $from] {
 	bind $to $event [bind $from $event]
     }

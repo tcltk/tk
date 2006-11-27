@@ -1,3 +1,11 @@
+2006-11-26  Joe English  <jenglish@users.sourceforge.net>
+	* generic/ttk/ttkWidget.c, generic/ttk/ttkPaned.c Fix for #1603506
+	* library/ttk/button.tcl, library/ttk/combobox.tcl,
+	library/ttk/utils.tcl: Rename ttk::CopyBindings to ttk::copyBindings
+	* generic/ttk/ttkTreeview.c, doc/ttk_treeview.n: 
+	-displaycolumns {} now means "no columns" instead of "all columns".
+	Use -displaycolumns #all for "all columns" [Fixes #1547622].
+
 2006-11-26  Daniel Steffen  <das@users.sourceforge.net>
 
 	* tcl.m4 (Linux): --enable-64bit support. [Patch 1597389], [Bug 1230558]

@@ -1,5 +1,5 @@
 #
-# $Id: button.tcl,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+# $Id: button.tcl,v 1.2 2006/11/27 06:53:55 jenglish Exp $
 #
 # Bindings for Buttons, Checkbuttons, and Radiobuttons.
 #
@@ -36,8 +36,8 @@ bind TButton <Button1-Enter> \
 
 # Checkbuttons and Radiobuttons have the same bindings as Buttons:
 #
-ttk::CopyBindings TButton TCheckbutton
-ttk::CopyBindings TButton TRadiobutton
+ttk::copyBindings TButton TCheckbutton
+ttk::copyBindings TButton TRadiobutton
 
 # ...plus a few more:
 
