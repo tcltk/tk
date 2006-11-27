@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: combobox.tcl,v 1.2 2006/11/27 06:53:55 jenglish Exp $
 #
 # Ttk widget set: combobox bindings.
 #
@@ -21,7 +21,7 @@ namespace eval ttk::combobox {
 # Duplicate the Entry bindings, override if needed:
 #
 
-ttk::CopyBindings TEntry TCombobox
+ttk::copyBindings TEntry TCombobox
 
 bind TCombobox <KeyPress-Down> 		{ ttk::combobox::Post %W }
 bind TCombobox <KeyPress-Escape> 	{ ttk::combobox::Unpost %W }

@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.4 2006/11/24 18:04:14 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.5 2006/11/27 06:53:55 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -474,8 +474,6 @@ static Ttk_Layout PanedGetLayout(
      */
     if (pw->paned.sashThickness < MIN_SASH_THICKNESS)
 	pw->paned.sashThickness = MIN_SASH_THICKNESS;
-
-    Ttk_ManagerSizeChanged(pw->paned.mgr);
 
     return panedLayout;
 }
