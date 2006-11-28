@@ -1,10 +1,10 @@
 #
-# $Id: fonts.tcl,v 1.2 2006/11/03 15:35:40 patthoyts Exp $
+# $Id: fonts.tcl,v 1.3 2006/11/28 21:25:27 jenglish Exp $
 #
-# Ttk package: Font specifications.
+# Font specifications.
 #
-# This file, [source]d from ttk.tcl when the package is loaded,
-# sets up the following symbolic fonts based on the current platform:
+# This file, [source]d at initialization time, sets up the following
+# symbolic fonts based on the current platform:
 #
 # TkDefaultFont	-- default for GUI items not otherwise specified
 # TkTextFont	-- font for user text (entry, listbox, others). [not in #145]
@@ -17,13 +17,13 @@
 # Symbolic fonts listed in TIP #145:
 #
 # TkDefaultFont	-- the default for all GUI items not otherwise specified.
-# TkFixedFont	-- standard fixed width font [not used in Ttk]
-# TkMenuFont	-- used for menu items [not used in Ttk]
-# TkCaptionFont	-- used for window and dialog caption bars [different in Ttk]
+# TkFixedFont	-- standard fixed width font [not used by default]
+# TkMenuFont	-- used for menu items [not used by default]
+# TkCaptionFont	-- used for window and dialog caption bars [different meaning]
 # TkSmallCaptionFont -- captions on contained windows or tool dialogs [not used]
-# TkIconFont	-- font in use for icon captions [not used in Ttk]
+# TkIconFont	-- font in use for icon captions [not used by default]
 # TkTooltipFont	-- font to use for tooltip windows
-# 
+#
 #
 # +++ Platform notes:
 #
@@ -37,10 +37,10 @@
 #	Should use SystemParametersInfo() instead.
 #
 # Mac OSX / Aqua:
-#	Quoth the Apple HIG: 
-#	The _system font_ (Lucida Grande Regular 13 pt) is used for text 
+#	Quoth the Apple HIG:
+#	The _system font_ (Lucida Grande Regular 13 pt) is used for text
 #	in menus, dialogs, and full-size controls.
-#	[...] Use the _view font_ (Lucida Grande Regular 12pt) as the default 
+#	[...] Use the _view font_ (Lucida Grande Regular 12pt) as the default
 #	font of text in lists and tables.
 #	[...] Use the _emphasized system font_ (Lucida Grande Bold 13 pt)
 #	sparingly. It is used for the message text in alerts.
@@ -49,9 +49,9 @@
 #	and for small controls.
 #
 #	Note that the font for column headings (TkHeadingFont) is
-#	_smaller_ than the 
+#	_smaller_ than the default font.
 #
-#	There's also a GetThemeFont() Appearance Manager API call 
+#	There's also a GetThemeFont() Appearance Manager API call
 #	for looking up kThemeSystemFont dynamically.
 #
 # Mac classic:
@@ -81,60 +81,66 @@ catch {font create TkHeadingFont}
 catch {font create TkCaptionFont}
 catch {font create TkTooltipFont}
 
+variable F	;# miscellaneous platform-specific font parameters
 switch -- [tk windowingsystem] {
     win32 {
         # In safe interps there is no osVersion element.
 	if {[info exists tcl_platform(osVersion)]} {
             if {$tcl_platform(osVersion) >= 5.0} {
-                variable family "Tahoma"
+                set F(family) "Tahoma"
             } else {
-                variable family "MS Sans Serif"
+                set F(family) "MS Sans Serif"
             }
         } else {
             if {[lsearch -exact [font families] Tahoma] != -1} {
-                variable family "Tahoma"
+                set F(family) "Tahoma"
             } else {
-                variable family "MS Sans Serif"
+                set F(family) "MS Sans Serif"
             }
         }
-	variable size 8
+	set F(size) 8
 
-	font configure TkDefaultFont -family $family -size $size
-	font configure TkTextFont    -family $family -size $size
-	font configure TkHeadingFont -family $family -size $size
-	font configure TkCaptionFont -family $family -size $size -weight bold
-	font configure TkTooltipFont -family $family -size $size
+	font configure TkDefaultFont -family $F(family) -size $F(size)
+	font configure TkTextFont    -family $F(family) -size $F(size)
+	font configure TkHeadingFont -family $F(family) -size $F(size)
+	font configure TkCaptionFont -family $F(family) -size $F(size) \
+					-weight bold
+	font configure TkTooltipFont -family $F(family) -size $F(size)
     }
-    classic -
     aqua {
-	variable family "Lucida Grande"
-	variable size 13
-	variable viewsize 12
-	variable smallsize 11
+	set F(family) "Lucida Grande"
+	set F(size) 13
+	set F(viewsize) 12
+	set F(smallsize) 11
 
-	font configure TkDefaultFont -family $family -size $size
-	font configure TkTextFont    -family $family -size $size
-	font configure TkHeadingFont -family $family -size $smallsize
-	font configure TkCaptionFont -family $family -size $size -weight bold
-	font configure TkTooltipFont -family $family -size $viewsize
+	font configure TkDefaultFont -family $F(family) -size $F(size)
+	font configure TkTextFont    -family $F(family) -size $F(size)
+	font configure TkHeadingFont -family $F(family) -size $F(smallsize)
+	font configure TkCaptionFont -family $F(family) -size $F(size) \
+					-weight bold
+	font configure TkTooltipFont -family $F(family) -size $F(viewsize)
     }
+    default -
     x11 {
-	if {![catch {tk::pkgconfig get fontsystem} fs] && $fs eq "xft"} {
-	    variable family "sans-serif"
+	if {![catch {tk::pkgconfig get fontsystem} F(fs)] && $F(fs) eq "xft"} {
+	    set F(family) "sans-serif"
 	} else {
-	    variable family "Helvetica"
+	    set F(family) "Helvetica"
 	}
-	variable size -12
-	variable ttsize -10
-	variable capsize -14
+	set F(size) -12
+	set F(ttsize) -10
+	set F(capsize) -14
 
-	font configure TkDefaultFont -family $family -size $size
-	font configure TkTextFont    -family $family -size $size
-	font configure TkHeadingFont -family $family -size $size -weight bold
-	font configure TkCaptionFont -family $family -size $capsize -weight bold
-	font configure TkTooltipFont -family $family -size $ttsize
+	font configure TkDefaultFont -family $F(family) -size $F(size)
+	font configure TkTextFont    -family $F(family) -size $F(size)
+	font configure TkHeadingFont -family $F(family) -size $F(size) \
+			-weight bold
+	font configure TkCaptionFont -family $F(family) -size $F(capsize) \
+			-weight bold
+	font configure TkTooltipFont -family $F(family) -size $F(ttsize)
     }
 }
+unset -nocomplain F
 
 }
 
