@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.109 2006/04/05 20:56:40 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.110 2006/12/01 19:48:00 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -24,6 +24,9 @@
 
 #ifndef WS_EX_LAYERED
 #define WS_EX_LAYERED	0x00080000
+#endif
+#ifndef LWA_COLORKEY
+#define LWA_COLORKEY	0x00000001
 #endif
 #ifndef LWA_ALPHA
 #define LWA_ALPHA	0x00000002
@@ -244,6 +247,8 @@ typedef struct TkWmInfo {
     DWORD style, exStyle;	/* Style flags for the wrapper window. */
     LONG styleConfig;		/* Extra user requested style bits */
     LONG exStyleConfig;		/* Extra user requested extended style bits */
+    Tcl_Obj *crefObj;		/* COLORREF object for transparent handling */
+    COLORREF colorref;		/* COLORREF for transparent handling */
     double alpha;		/* Alpha transparency level 0.0 (fully
 				 * transparent) .. 1.0 (opaque) */
 
@@ -2045,6 +2050,8 @@ TkWmNewWindow(
     wmPtr->height = -1;
     wmPtr->x = winPtr->changes.x;
     wmPtr->y = winPtr->changes.y;
+    wmPtr->crefObj = NULL;
+    wmPtr->colorref = (COLORREF) NULL;
     wmPtr->alpha = 1.0;
 
     wmPtr->configWidth = -1;
@@ -2264,13 +2271,17 @@ UpdateWrapper(
 	     */
 
 	    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
-		    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
-		    LWA_ALPHA);
+		    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
+		    LWA_ALPHA | (wmPtr->crefObj ? LWA_COLORKEY : 0));
 	} else {
 	    /*
 	     * Layering not used or supported.
 	     */
 	    wmPtr->alpha = 1.0;
+	    if (wmPtr->crefObj) {
+		Tcl_DecrRefCount(wmPtr->crefObj);
+		wmPtr->crefObj = NULL;
+	    }
 	}
 
 	place.length = sizeof(WINDOWPLACEMENT);
@@ -2808,6 +2819,10 @@ TkWmDeadWindow(
 		WmWaitVisibilityOrMapProc, (ClientData) winPtr);
 	wmPtr->masterPtr = NULL;
     }
+    if (wmPtr->crefObj != NULL) {
+	Tcl_DecrRefCount(wmPtr->crefObj);
+	wmPtr->crefObj = NULL;
+    }
 
     /*
      * Destroy the decorative frame window.
@@ -3140,6 +3155,7 @@ WmAttributesCmd(
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
 		" ?-alpha ?double??"
+		" ?-transparentcolor ?color??"
 		" ?-disabled ?bool??"
 		" ?-fullscreen ?bool??"
 		" ?-toolwindow ?bool??"
@@ -3153,6 +3169,10 @@ WmAttributesCmd(
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-alpha", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewDoubleObj(wmPtr->alpha));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-transparentcolor", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		wmPtr->crefObj ? wmPtr->crefObj : Tcl_NewObj());
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-disabled", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -3180,7 +3200,9 @@ WmAttributesCmd(
 	if (strncmp(string, "-disabled", length) == 0) {
 	    stylePtr = &style;
 	    styleBit = WS_DISABLED;
-	} else if (strncmp(string, "-alpha", length) == 0) {
+	} else if ((strncmp(string, "-alpha", length) == 0)
+		|| ((length > 2) && (strncmp(string, "-transparentcolor",
+					     length) == 0))) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_LAYERED;
 	} else if (strncmp(string, "-fullscreen", length) == 0) {
@@ -3203,30 +3225,62 @@ WmAttributesCmd(
 	    goto configArgs;
 	}
 	if (styleBit == WS_EX_LAYERED) {
-	    double dval;
-
 	    if (objc == 4) {
-		Tcl_SetDoubleObj(Tcl_GetObjResult(interp), wmPtr->alpha);
+		if (string[1] == 'a') {		/* -alpha */
+		    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(wmPtr->alpha));
+		} else {			/* -transparentcolor */
+		    Tcl_SetObjResult(interp,
+			    wmPtr->crefObj ? wmPtr->crefObj : Tcl_NewObj());
+		}
 	    } else {
-		if ((i < objc-1) &&
-			(Tcl_GetDoubleFromObj(interp, objv[i+1], &dval)
-				!= TCL_OK)) {
-		    return TCL_ERROR;
+		if (string[1] == 'a') {		/* -alpha */
+		    double dval;
+
+		    if (Tcl_GetDoubleFromObj(interp, objv[i+1], &dval)
+			    != TCL_OK) {
+			return TCL_ERROR;
+		    }
+
+		    /*
+		     * The user should give (transparent) 0 .. 1.0 (opaque),
+		     * but we ignore the setting of this (it will always be 1)
+		     * in the case that the API is not available.
+		     */
+		    if (dval < 0.0) {
+			dval = 0;
+		    } else if (dval > 1.0) {
+			dval = 1;
+		    }
+		    wmPtr->alpha = dval;
+		} else {			/* -transparentcolor */
+		    char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
+
+		    if (length == 0) {
+			/* reset to no transparent color */
+			if (wmPtr->crefObj) {
+			    Tcl_DecrRefCount(wmPtr->crefObj);
+			    wmPtr->crefObj = NULL;
+			}
+		    } else {
+			XColor *cPtr =
+			    Tk_GetColor(interp, tkwin, Tk_GetUid(crefstr));
+			if (cPtr == NULL) {
+			    return TCL_ERROR;
+			}
+
+			if (wmPtr->crefObj) {
+			    Tcl_DecrRefCount(wmPtr->crefObj);
+			}
+			wmPtr->crefObj = objv[i+1];
+			Tcl_IncrRefCount(wmPtr->crefObj);
+			wmPtr->colorref = RGB((BYTE) (cPtr->red >> 8),
+				(BYTE) (cPtr->green >> 8),
+				(BYTE) (cPtr->blue >> 8));
+			Tk_FreeColor(cPtr);
+		    }
 		}
 
-		/*
-		 * The user should give (transparent) 0 .. 1.0 (opaque), but
-		 * we ignore the setting of this (it will always be 1) in the
-		 * case that the API is not available.
-		 */
-
-		if (dval < 0.0) {
-		    dval = 0;
-		} else if (dval > 1.0) {
-		    dval = 1;
-		}
-		wmPtr->alpha = dval;
-		if (dval < 1.0) {
+		if ((wmPtr->alpha < 1.0) || (wmPtr->crefObj != NULL)) {
 		    *stylePtr |= styleBit;
 		} else {
 		    *stylePtr &= ~styleBit;
@@ -3237,12 +3291,11 @@ WmAttributesCmd(
 		     * Set the window directly regardless of UpdateWrapper.
 		     * The user supplies a double from [0..1], but Windows
 		     * wants an int (transparent) 0..255 (opaque), so do the
-		     * translation. Add the 0.5 to round the value.
+		     * translation.  Add the 0.5 to round the value.
 		     */
-
 		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
-			    (COLORREF) NULL, (BYTE) (wmPtr->alpha * 255 + 0.5),
-			    LWA_ALPHA);
+			    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
+			    LWA_ALPHA | (wmPtr->crefObj ? LWA_COLORKEY : 0));
 		}
 	    }
 	} else {
