@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.19 2006/07/20 06:25:19 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.20 2006/12/01 20:14:23 kennykb Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -462,6 +462,38 @@ TkpGetSubFonts(
      * us.  We could use ATSUMatchFont to implement this function.  But as
      * the information is only used for testing, such an effort seems not
      * very useful. */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetFontAttrsForChar --
+ *
+ *	Retrieve the font attributes of the actual font used to render
+ *	a given character.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The font attributes are stored in *faPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpGetFontAttrsForChar(
+    Tk_Window tkwin,		/* Window on the font's display */
+    Tk_Font tkfont,		/* Font to query */
+    Tcl_UniChar c,		/* Character of interest */
+    TkFontAttributes* faPtr)	/* Output: Font attributes */
+{
+    /* 
+     * Once again, we don't know what ATSU is doing for us. Simply
+     * return the attributes of the base font.
+     */
+    TkMacOSXFont* fontPtr = (TkMacOSXFont*) tkfont;
+    *faPtr = fontPtr->font.fa;
 }
 
 /*
