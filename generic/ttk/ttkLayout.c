@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.3 2006/11/03 15:42:42 patthoyts Exp $
+ * $Id: ttkLayout.c,v 1.4 2006/12/01 15:05:28 jenglish Exp $
  */
 
 #include <string.h>
@@ -1176,11 +1176,6 @@ const char *Ttk_LayoutNodeName(Ttk_LayoutNode *node)
 Ttk_Box Ttk_LayoutNodeParcel(Ttk_LayoutNode *node)
 {
     return node->parcel;
-}
-
-void Ttk_LayoutNodeSetParcel(Ttk_LayoutNode *node, Ttk_Box parcel)
-{
-    node->parcel = parcel;
 }
 
 void Ttk_PlaceLayoutNode(Ttk_Layout layout, Ttk_LayoutNode *node, Ttk_Box b)
