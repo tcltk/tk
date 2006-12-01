@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.27 2006/11/16 13:50:17 dkf Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.28 2006/12/01 19:48:00 hobbs Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -50,38 +50,62 @@ returned).
 \fBwm attributes \fIwindow\fR ?\fBoption\fR?
 .TP
 \fBwm attributes \fIwindow\fR ?\fBoption value option value...\fR?
-.RS
 This subcommand returns or sets platform specific attributes associated
 with a window. The first form returns a list of the platform specific
 flags and their values. The second form returns the value for the
 specific option. The third form sets one or more of the values. The
 values are as follows:
 .PP
-On Windows, \fB\-disabled\fR gets or sets whether the window is in a
-disabled state. \fB\-toolwindow\fR gets or sets the style of the window
-to toolwindow (as defined in the MSDN). \fB\-topmost\fR gets or sets
-whether this is a topmost window (displays above all other windows).
+On Windows, the following attributes may be set.
+.RS
+.TP
+\fB\-disabled\fR
+Specifies whether the window is in a disabled state.
+.TP
+\fB\-toolwindow\fR
+Specifies a toolwindow style window (as defined in the MSDN).
+.TP
+\fB\-topmost\fR
+Specifies whether this is a topmost window (displays above all other windows).
 .VS 8.5
-The
-\fB\-alpha\fR sets the alpha transparency level of the toplevel.  It accepts
-a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values
-outside that range will be constrained.  This is supported on Windows
-2000/XP+.  Where not supported, the \fB\-alpha\fR value remains at
-\fB1.0\fR.
-The
-\fB\-fullscreen\fR attribute will place the window in a mode that
-takes up the entire screen, has no borders, and covers the Start
-menu and taskbar.
+.TP
+\fB\-alpha\fR
+Specifies the alpha transparency level of the toplevel.
+It accepts a value from \fB0.0\fR (fully transparent) to \fB1.0\fR
+(opaque).  Values outside that range will be constrained.  This is
+supported on Windows 2000/XP+.  Where not supported, the \fB\-alpha\fR
+value remains at \fB1.0\fR.
+.TP
+\fB\-transparentcolor\fR
+Specifies the transparent color index of the toplevel.  It takes any color
+value accepted by \fBTk_GetColor\fR.  If the empty string is specified
+(default), no transparent color is used.  This is supported on Windows
+2000/XP+.  Where not supported, the \fB\-transparentcolor\fR value remains
+at \fB{}\fR.
+.TP
+\fB\-fullscreen\fR
+Places the window in a mode that takes up the entire screen, has no
+borders, and covers the Start menu and taskbar.
+.RE
 .VE 8.5
 .PP
-On Mac OS X, \fB\-modified\fR gets or sets the modification state of the
-window (determines whether the window close widget contains the modification
-indicator and whether the proxy icon is draggable).
-\fB\-titlepath\fR gets or sets the path of the file referenced as
-the window proxy icon (which can be dragged and dropped in lieu of the file's
-finder icon). \fB\-alpha\fR sets the alpha transparency level of the window,
-it accepts a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque),
+On Mac OS X, the following attributes may be set.
+.RS
+.TP
+\fB\-modified\fR
+Specifies the modification state of the window (determines whether the
+window close widget contains the modification indicator and whether the
+proxy icon is draggable).
+.TP
+\fB\-titlepath\fR
+Specifies the path of the file referenced as the window proxy icon (which
+can be dragged and dropped in lieu of the file's finder icon).
+.TP
+\fB\-alpha\fR
+Specifies the alpha transparency level of the window.
+It accepts a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque),
 values outside that range will be constrained.
+.RE
 .PP
 On X11, the following attributes may be set.
 These are not supported by all window managers,
@@ -108,7 +132,6 @@ Querying the value of an attribute returns the current state,
 which will not be the same as the value most recently set
 if the window manager has not yet processed the request
 or if it does not support the attribute.
-.RE
 .TP
 \fBwm client \fIwindow\fR ?\fIname\fR?
 If \fIname\fR is specified, this command stores \fIname\fR (which
@@ -334,7 +357,7 @@ most modern window managers support.  A \fBwm iconbitmap\fR may exist
 simultaneously.  It is recommended to use not more than 2 icons, placing
 the larger icon first.
 .PP
-On Macintosh, this is currently does nothing.
+On Macintosh, this currently does nothing.
 .VE 8.5
 .RE
 .TP
