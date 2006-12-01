@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkTheme.h,v 1.3 2006/11/03 15:42:42 patthoyts Exp $
+ * $Id: ttkTheme.h,v 1.4 2006/12/01 15:05:28 jenglish Exp $
  */
 
 #ifndef _TTKTHEME
@@ -341,7 +341,6 @@ MODULE_SCOPE Ttk_Box Ttk_LayoutNodeInternalParcel(Ttk_Layout,Ttk_LayoutNode *);
 MODULE_SCOPE Ttk_Padding Ttk_LayoutNodeInternalPadding(Ttk_Layout,Ttk_LayoutNode *);
 MODULE_SCOPE void Ttk_LayoutNodeReqSize(Ttk_Layout, Ttk_LayoutNode *, int *w, int *h);
 
-MODULE_SCOPE void Ttk_LayoutNodeSetParcel(Ttk_LayoutNode *node, Ttk_Box parcel);
 MODULE_SCOPE void Ttk_PlaceLayoutNode(Ttk_Layout,Ttk_LayoutNode *, Ttk_Box);
 MODULE_SCOPE void Ttk_ChangeElementState(Ttk_LayoutNode *,unsigned set,unsigned clr);
 
