@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.11 2006/04/11 12:05:18 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.4.2.12 2006/12/01 07:13:14 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1537,6 +1537,9 @@ Tk_MessageBoxObjCmd(
 	    goto end;
 	}
 	paramCFStringRec.defaultButton = defaultNativeButtonIndex;
+	if (paramCFStringRec.cancelButton == defaultNativeButtonIndex) {
+	    paramCFStringRec.cancelButton = 0;
+	}
     }
     SetThemeCursor(kThemeArrowCursor);
 
