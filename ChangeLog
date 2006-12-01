@@ -1,3 +1,8 @@
+2006-11-30  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (WmAttributesCmd): fix getting [wm attr -alpha].
+	[Bug 1581932]
+
 2006-11-28  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/fonts.tcl: Clean up temporary variables.
