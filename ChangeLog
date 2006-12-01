@@ -1,5 +1,9 @@
 2006-11-30  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXDialog.c (Tk_MessageBoxObjCmd): fix inability to use
+	buttons with standard Escape key binding as -default button (reported
+	on tcl-mac by Hans-Christoph Steiner).
+
 	* macosx/tkMacOSXWm.c (WmAttributesCmd): fix getting [wm attr -alpha].
 	[Bug 1581932]
 
