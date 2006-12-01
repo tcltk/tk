@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.28 2006/03/22 00:21:16 das Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.29 2006/12/01 20:14:23 kennykb Exp $
  */
 
 #include "tkPort.h"
@@ -503,31 +503,88 @@ Tk_FontObjCmd(
     switch ((enum options) index) {
     case FONT_ACTUAL: {
 	int skip, result;
+	int n;
+	const char* s;
 	Tk_Font tkfont;
-	Tcl_Obj *objPtr;
+	Tcl_Obj *optPtr;
+	Tcl_Obj *charPtr;
+	Tcl_Obj *resultPtr;
+	Tcl_UniChar uniChar;
 	CONST TkFontAttributes *faPtr;
+	TkFontAttributes fa;
 
+	/* 
+	 * Params 0 and 1 are 'font actual'.  Param 2 is the
+	 * font name. 3-4 may be '-displayof $window'
+	 */
 	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if ((objc < 3) || (objc - skip > 4)) {
+
+	/* Next parameter may be an option */
+	n = skip + 3;
+	optPtr = NULL;
+	charPtr = NULL;
+	if (n < objc) {
+	    s = Tcl_GetString(objv[n]);
+	    if (s[0] == '-' && s[1] != '-') {
+		optPtr = objv[n];
+		++n;
+	    } else {
+		optPtr = NULL;
+	    }
+	}
+
+	/* Next parameter may be '--' to mark end of options */
+	if (n < objc) {
+	    if (!strcmp(Tcl_GetString(objv[n]), "--")) {
+		++n;
+	    }
+	}
+
+	/* Next parameter is the character to get font information for */
+	if (n < objc) {
+	    charPtr = objv[n];
+	    ++n;
+	}
+
+	/* If there were fewer than 3 args, or args remain, that's an error */
+	if (objc < 3 || n < objc) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "font ?-displayof window? ?option?");
+		    "font ?-displayof window? ?option? ?--? ?char?");
 	    return TCL_ERROR;
 	}
+
+	/* The 'charPtr' arg must be a single Unicode */
+	if (charPtr != NULL) {
+	    if (Tcl_GetCharLength(charPtr) != 1) {
+		resultPtr =  Tcl_NewStringObj("expected a single character "
+					      "but got \"", -1);
+		Tcl_AppendLimitedToObj(resultPtr, Tcl_GetString(charPtr),
+				       -1, 40, "...");
+		Tcl_AppendToObj(resultPtr, "\"", -1);
+		Tcl_SetObjResult(interp, resultPtr);
+		return TCL_ERROR;
+	    }
+	    uniChar = Tcl_GetUniChar(charPtr, 0);
+	}
+
+	/* Find the font */
 	tkfont = Tk_AllocFontFromObj(interp, tkwin, objv[2]);
 	if (tkfont == NULL) {
 	    return TCL_ERROR;
 	}
-	objc -= skip;
-	objv += skip;
+	
+	/* Determine the font attributes */
+	if (charPtr == NULL) {
 	faPtr = GetFontAttributes(tkfont);
-	objPtr = NULL;
-	if (objc > 3) {
-	    objPtr = objv[3];
+	} else {
+	    TkpGetFontAttrsForChar(tkwin, tkfont, uniChar, &fa);
+	    faPtr = &fa;
 	}
-	result = GetAttributeInfoObj(interp, faPtr, objPtr);
+	result = GetAttributeInfoObj(interp, faPtr, optPtr);
+
 	Tk_FreeFont(tkfont);
 	return result;
     }

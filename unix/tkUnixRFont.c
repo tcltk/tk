@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.13 2006/03/23 22:08:51 rmax Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.14 2006/12/01 20:14:23 kennykb Exp $
  */
 
 #include "tkUnixInt.h"
@@ -467,6 +467,66 @@ TkpGetSubFonts(
 	Tcl_ListObjAppendElement(NULL, resultPtr, listPtr);
     }
     Tcl_SetObjResult(interp, resultPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetFontAttrsForChar --
+ *
+ *	Retrieve the font attributes of the actual font used to render
+ *	a given character.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The font attributes are stored in *faPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpGetFontAttrsForChar(
+    Tk_Window tkwin,		/* Window on the font's display */
+    Tk_Font tkfont,		/* Font to query */
+    Tcl_UniChar c,		/* Character of interest */
+    TkFontAttributes* faPtr)	/* Output: Font attributes */
+{
+    UnixFtFont *fontPtr = (UnixFtFont*) tkfont;
+				/* Structure describing the logical font */
+    FcChar32 ucs4 = (FcChar32) c;
+				/* UCS-4 character to map */
+    XftFont *xftFontPtr = GetFont(fontPtr, ucs4);
+				/* Actual font used to render the character */
+    const char* family;		/* Font family name */
+    double size;		/* Font size */
+    int weight;			/* Font weight */
+    int slant;			/* Font slant */
+    
+    if (XftPatternGetString(xftFontPtr->pattern, XFT_FAMILY, 0,
+			    &family) != XftResultMatch) {
+	family = "Unknown";
+    }
+    if (XftPatternGetDouble(xftFontPtr->pattern, XFT_SIZE, 0,
+			    &size) != XftResultMatch) {
+	size = 12.0;
+    }
+    if (XftPatternGetInteger(xftFontPtr->pattern, XFT_WEIGHT, 0,
+			     &weight) != XftResultMatch) {
+	weight = XFT_WEIGHT_MEDIUM;
+    }
+    if (XftPatternGetInteger(xftFontPtr->pattern, XFT_SLANT, 0,
+			     &slant) != XftResultMatch) {
+	slant = XFT_SLANT_ROMAN;
+    }
+    faPtr->family = Tk_GetUid(family);
+    faPtr->size = (int) size;
+    faPtr->weight = (weight > XFT_WEIGHT_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
+    faPtr->slant = (slant > XFT_SLANT_ROMAN) ? TK_FS_ITALIC : TK_FS_ROMAN;
+    faPtr->underline = fontPtr->font.fa.underline;
+    faPtr->overstrike = fontPtr->font.fa.overstrike;
+
 }
 
 int

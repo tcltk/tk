@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.27 2006/03/22 00:21:20 das Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.28 2006/12/01 20:14:24 kennykb Exp $
  */
 
 #include "tkWinInt.h"
@@ -558,6 +558,62 @@ TkpGetSubFonts(
 	strPtr = Tcl_NewStringObj(familyPtr->faceName, -1);
 	Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetFontAttrsForChar --
+ *
+ *	Retrieve the font attributes of the actual font used to render
+ *	a given character.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The font attributes are stored in *faPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpGetFontAttrsForChar(
+    Tk_Window tkwin,		/* Window on the font's display */
+    Tk_Font tkfont,		/* Font to query */
+    Tcl_UniChar c,		/* Character of interest */
+    TkFontAttributes* faPtr)	/* Output: Font attributes */
+{
+    WinFont *fontPtr = (WinFont *) tkfont;
+				/* Structure describing the logical font */
+    HDC hdc = GetDC(fontPtr->hwnd);
+				/* GDI device context */
+    SubFont *lastSubFontPtr = &fontPtr->subFontArray[0];
+				/* Pointer to subfont array in case
+				 * FindSubFontForChar needs to fix up
+				 * the memory allocation */
+    SubFont *thisSubFontPtr = FindSubFontForChar(fontPtr, c,
+						 &lastSubFontPtr);
+				/* Pointer to the subfont to use for
+				 * the given character */
+    FontFamily *familyPtr = thisSubFontPtr->familyPtr;
+    HFONT oldfont;		/* Saved font from the device context */
+    TEXTMETRIC tm;		/* Font metrics of the selected subfont */
+
+  
+    /* Get the font attributes */
+
+    oldfont = SelectObject(hdc, thisSubFontPtr->hFont);
+    GetTextMetrics(hdc, &tm);
+    SelectObject(hdc, oldfont);
+    ReleaseDC(fontPtr->hwnd, hdc);
+    faPtr->family = familyPtr->faceName;
+    faPtr->size = TkFontGetPoints(tkwin,
+				  tm.tmInternalLeading - tm.tmHeight);
+    faPtr->weight = (tm.tmWeight > FW_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
+    faPtr->slant = tm.tmItalic ? TK_FS_ITALIC : TK_FS_ROMAN;
+    faPtr->underline = (tm.tmUnderlined != 0);
+    faPtr->overstrike = fontPtr->font.fa.overstrike;
 }
 
 /*
