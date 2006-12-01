@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.29 2006/10/05 21:27:43 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.30 2006/12/01 20:14:23 kennykb Exp $
  */
 
 #include "tkUnixInt.h"
@@ -927,6 +927,44 @@ TkpGetSubFonts(
 	listPtr = Tcl_NewListObj(3, objv);
 	Tcl_ListObjAppendElement(NULL, resultPtr, listPtr);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetFontAttrsForChar --
+ *
+ *	Retrieve the font attributes of the actual font used to render
+ *	a given character.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The font attributes are stored in *faPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpGetFontAttrsForChar(
+    Tk_Window tkwin,		/* Window on the font's display */
+    Tk_Font tkfont,		/* Font to query */
+    Tcl_UniChar c,		/* Character of interest */
+    TkFontAttributes* faPtr)	/* Output: Font attributes */
+{
+    FontAttributes atts;
+    UnixFont *fontPtr = (UnixFont *) tkfont;
+				/* Structure describing the logical font */
+    SubFont *lastSubFontPtr = &fontPtr->subFontArray[0];
+				/* Pointer to subfont array in case
+				 * FindSubFontForChar needs to fix up the
+				 * memory allocation */
+    SubFont *thisSubFontPtr = FindSubFontForChar(fontPtr, c, &lastSubFontPtr);
+				/* Pointer to the subfont to use for the
+				 * given character */
+    GetFontAttributes(Tk_Display(tkwin), thisSubFontPtr->fontStructPtr, &atts);
+    *faPtr = atts.fa;
 }
 
 /*
