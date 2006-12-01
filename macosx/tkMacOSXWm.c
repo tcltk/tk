@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.44 2006/10/31 22:33:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.45 2006/12/01 06:19:24 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -848,9 +848,10 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		break;
 	    case WmAttrAlphaIdx:
 		objPtr = WmAttrGetAlpha(macWindow);
+		break;
 	    case WmAttrNotifyIdx:
 		objPtr = WmAttrGetNotifyStatus();
-	      break;
+		break;
 	}
 	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
@@ -941,8 +942,8 @@ Tcl_Obj *CONST objv[];	/* Argument objects. */
 		    return TCL_ERROR;
 		}
 		objPtr = Tcl_NewBooleanObj(boolean);
-	        WmAttrSetNotifyStatus(boolean);
-                break;
+		WmAttrSetNotifyStatus(boolean);
+		break;
 	}
     }
     Tcl_SetObjResult(interp, objPtr);
