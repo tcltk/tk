@@ -1,13 +1,13 @@
 2006-12-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* generic/tkListbox.c (ConfigureListboxItem): ListboxWorldChanged
-	not needed - just call EventuallyRedrawRange. [Bug 1608046] (rezic)
+	* generic/tkListbox.c (ConfigureListboxItem): ListboxWorldChanged not
+	needed - just call EventuallyRedrawRange. [Bug 1608046] (rezic)
 
 2006-12-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	TIP #286 IMPLEMENTATION
 
-	* generic/tkMenu.c (MenuWidgetObjCmd, MenuDoXPosition): 
+	* generic/tkMenu.c (MenuWidgetObjCmd, MenuDoXPosition):
 	* doc/menu.n, tests/menu.test: Added an [$menu xposition] subcommand
 	which is useful in menubars and when menus use multiple columns. Many
 	thanks to Schelte Bron for the implementation.
@@ -17,14 +17,14 @@
 	TIP #300 IMPLEMENTATION
 
 	* doc/font.n:			Added a [font actual $font $char]
-	* generic/tkFont.c:		variant that introspects the font
-	* generic/tkFont.h:		that is chosen to render a given
-	* macosx/tkMacOSXFont.c:	character in a given nominal font.
-	* tests/font.test:		Added documentation and test cases
-	* unix/tkUnixFont.c:		for the new command syntax.
+	* generic/tkFont.c:		variant that introspects the font that
+	* generic/tkFont.h:		is chosen to render a given character
+	* macosx/tkMacOSXFont.c:	in a given nominal font. Added
+	* tests/font.test:		documentation and test cases for the
+	* unix/tkUnixFont.c:		new command syntax.
 	* unix/tkUnixRFont.c:
 	* win/tkWinFont.c:
-	
+
 2006-12-01  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/wm.n, tests/winWm.test:
@@ -32,8 +32,7 @@
 
 2006-12-01  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTheme.h, generic/ttk/ttkLayout.c:
-	Dead code removal.
+	* generic/ttk/ttkTheme.h, generic/ttk/ttkLayout.c: Dead code removal.
 
 2006-11-30  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -50,15 +49,15 @@
 
 2006-11-27  Kevin Kenny  <kennykb@acm.org>
 
-	* unix/configure.in: Corrected Xft configuration so that Xft
-	actually does get turned on when available.
+	* unix/configure.in: Corrected Xft configuration so that Xft actually
+	does get turned on when available.
 	* unix/configure: autoconf
-	
+
 2006-11-26  Joe English  <jenglish@users.sourceforge.net>
 	* generic/ttk/ttkWidget.c, generic/ttk/ttkPaned.c Fix for #1603506
 	* library/ttk/button.tcl, library/ttk/combobox.tcl,
 	library/ttk/utils.tcl: Rename ttk::CopyBindings to ttk::copyBindings
-	* generic/ttk/ttkTreeview.c, doc/ttk_treeview.n: 
+	* generic/ttk/ttkTreeview.c, doc/ttk_treeview.n:
 	-displaycolumns {} now means "no columns" instead of "all columns".
 	Use -displaycolumns #all for "all columns" [Fixes #1547622].
 
@@ -69,34 +68,34 @@
 
 2006-11-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* macosx/tkMacOSXInit.c (TkpInit): only set tcl_interactive 1 if
-	it isn't already defined.  Allows embedders to set it to 0 to
-	prevent the console appearing on OS X. [Bug 1487701]
+	* macosx/tkMacOSXInit.c (TkpInit): only set tcl_interactive 1 if it
+	isn't already defined. Allows embedders to set it to 0 to prevent the
+	console appearing on OS X. [Bug 1487701]
 
 	* unix/tkUnixMenu.c (DrawMenuUnderline): bound Tcl_UtfAtIndex usage
 	* tests/menu.test (menu-36.1): [Bug 1599877]
 
 2006-11-24  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/altTheme.tcl, library/ttk/clamTheme.tcl, 
-	library/ttk/defaults.tcl, library/ttk/winTheme.tcl, 
-	library/ttk/xpTheme.tcl: explicitly specify -anchor w on TMenubutton
-	* tests/ttk/entry.test: Fixed font dependency; test entry-3.2 
-	should work on all platforms now.
+	* library/ttk/altTheme.tcl, library/ttk/clamTheme.tcl,
+	* library/ttk/defaults.tcl, library/ttk/winTheme.tcl,
+	* library/ttk/xpTheme.tcl: explicitly specify -anchor w on TMenubutton
+	* tests/ttk/entry.test: Fixed font dependency; test entry-3.2 should
+	work on all platforms now.
 	* library/classicTheme.tcl: Don't define or use TkClassicDefaultFont.
-	* generic/ttk/ttkTreeview.c, generic/ttk/ttkPanedwindow.c:
-	Handle missing layouts.
+	* generic/ttk/ttkTreeview.c, generic/ttk/ttkPanedwindow.c: Handle
+	missing layouts.
 
 2006-11-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/tkWinMenu.c (TkWinHandleMenuEvent, DrawMenuUnderline):
-	handle unichar underlining correctly and safely. [Bug 1599877]
+	* win/tkWinMenu.c (TkWinHandleMenuEvent, DrawMenuUnderline): Handle
+	unichar underlining correctly and safely. [Bug 1599877]
 
 2006-11-20  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/ttkWinXPTheme.c: Add support for alternate/indeterminate
-	checkbutton state.  Fix various spacing parameters [#1596020, 
-	patch from Tim Baker].  Remove unused uxtheme hooks.
+	checkbutton state. Fix various spacing parameters [#1596020, patch
+	from Tim Baker]. Remove unused uxtheme hooks.
 
 2006-11-16  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -117,7 +116,7 @@
 	* doc/ttk_radiobutton.n, doc/ttk_scrollbar.n, doc/ttk_separator.n:
 	* doc/ttk_sizegrip.n, doc/ttk_style.n, doc/ttk_widget.n, doc/wm.n:
 	Convert \fP to \fR so that man-page scrapers have an easier time.
-	
+
 2006-11-14  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkDefaultTheme.c: Fix off-by-one bug in tree indicator
@@ -156,14 +155,14 @@
 	checks that we can actually compile and link against Xft headers and
 	libraries. [Bug 1592667]
 	* unix/configure: Regen.
-	
+
 2006-11-07  Kevin Kenny  <kennykb@acm.org>
 
 	* unix/configure.in: Made --enable-xft the default.
 	* unix/configure: Regen.
-	
+
 2006-11-06  Joe English  <jenglish@users.sourceforge.net>
-	
+
 	* generic/ttk/ttkClassicTheme.c, generic/ttk/ttkPanedwindow.c,
 	* generic/ttk/ttkTheme.c, generic/ttk/ttkTreeview.c,
 	* win/ttkWinXPTheme.c, library/ttk/entry.tcl,
@@ -212,7 +211,7 @@
 	complete without errors.
 
 	* macosx/tkMacOSXColor.c (TkMacOSXCompareColors): ifdef out when unused
-	
+
 	* macosx/Wish.xcodeproj/project.pbxproj: check autoconf/autoheader exit
 	status and stop build if they fail.
 
@@ -386,7 +385,7 @@
 
 	* generic/tkWindow.c:  Implemented tip #264 - Tk_Interp function.
 	* doc/WindowId.3:      Documented Tk_Interp.
-	* generic/tk.decls:    Added to the stubs interface and 
+	* generic/tk.decls:    Added to the stubs interface and
 	* generic/tkDecls.h:   regenerated.
 	* generic/tkStubsInit.c:
 
