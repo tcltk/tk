@@ -1,3 +1,9 @@
+2006-12-06  Kevin Kenny  <kennykb@acm.org>
+
+	* unix/configure.in: Further changes to avoid attempting to link
+	* unix/configure:    against Xft libraries in a non-Xft build
+	                     [Bug 1609616] (dgp)
+	
 2006-12-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkListbox.c (ConfigureListboxItem): ListboxWorldChanged not
