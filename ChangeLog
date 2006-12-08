@@ -69,8 +69,8 @@
 
 2006-11-26  Daniel Steffen  <das@users.sourceforge.net>
 
-	* tcl.m4 (Linux): --enable-64bit support. [Patch 1597389], [Bug 1230558]
-	* configure: autoconf-2.59
+	* unix/tcl.m4 (Linux): --enable-64bit support.	[Patch 1597389]
+	* unix/configure: autoconf-2.59			[Bug 1230558]
 
 2006-11-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
