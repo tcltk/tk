@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkNotebook.c,v 1.3 2006/12/09 20:53:35 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * NOTE-ACTIVE: activeTabIndex is not always correct (it's
@@ -638,7 +638,7 @@ static int TabConfigured(
     Tk_Window tkwin = mgr->masterWindow;
 
     /* Check options:
-     * @@@ TODO: validate -image option with TtkGetImageList()
+     * @@@ TODO: validate -image option.
      */
     if (Ttk_GetStickyFromObj(interp, tab->stickyObj, &sticky) != TCL_OK) {
 	return TCL_ERROR;

@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkWidget.h,v 1.3 2006/12/09 20:53:35 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Helper routines for widget implementations.
@@ -168,13 +168,6 @@ MODULE_SCOPE Ttk_TraceHandle *Ttk_TraceVariable(
     Tcl_Interp*, Tcl_Obj *varnameObj, Ttk_TraceProc callback, void *clientData);
 MODULE_SCOPE void Ttk_UntraceVariable(Ttk_TraceHandle *);
 MODULE_SCOPE int Ttk_FireTrace(Ttk_TraceHandle *);
-
-/*
- * Utility routines for managing -image option:
- */
-MODULE_SCOPE int TtkGetImageList(
-    Tcl_Interp *, WidgetCore *, Tcl_Obj *imageOption, Tk_Image **imageListPtr);
-MODULE_SCOPE void TtkFreeImageList(Tk_Image *);
 
 /*
  * Virtual events:
