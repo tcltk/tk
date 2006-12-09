@@ -1,6 +1,6 @@
-/* $Id: ttkLabel.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkLabel.c,v 1.3 2006/12/09 20:53:35 jenglish Exp $
  *
- * Ttk widget set: text, image, and label elements.
+ * text, image, and label elements.
  *
  * The label element combines text and image elements,
  * with layout determined by the "-compound" option.
@@ -263,14 +263,13 @@ MODULE_SCOPE Ttk_ElementSpec ttkImageTextElementSpec;
 typedef struct
 {
     Tcl_Obj	*imageObj;
-
     Tcl_Obj 	*stippleObj;	/* For TTK_STATE_DISABLED */
     Tcl_Obj 	*backgroundObj;	/* " " */
 
+    Ttk_ImageSpec *imageSpec;
     Tk_Image	tkimg;
     int 	width;
     int		height;
-    int		doStipple;
 } ImageElement;
 
 /* ===> NB: Keep in sync with label element option table.  <===
@@ -286,13 +285,6 @@ static Ttk_ElementOptionSpec ImageElementOptions[] =
     {NULL}
 };
 
-/* NullImageChanged --
- * 	No-op Tk_ImageChangedProc for Tk_GetImage.
- */
-static void NullImageChanged(ClientData clientData,
-    int x, int y, int width, int height, int imageWidth, int imageHeight)
-{ }
-
 /*
  * ImageSetup() --
  * 	Look up the Tk_Image from the image element's imageObj resource.
@@ -306,51 +298,19 @@ static void NullImageChanged(ClientData clientData,
 static int ImageSetup(
     ImageElement *image, Tk_Window tkwin, Tcl_Interp *interp, Ttk_State state)
 {
-    const char *imageName;
-    Tcl_Obj *imageObj = image->imageObj;
-    Tcl_Obj **mapList = NULL;
-    int i, mapCnt = 0;
 
-    if (!imageObj)		/* No -image option specified */
+    if (!image->imageObj) {
 	return 0;
-
-    if (Tcl_ListObjGetElements(interp,imageObj,&mapCnt,&mapList) == TCL_ERROR)
-	return 0;
-
-    if (mapCnt == 0)		/* -image is an empty list */
-	return 0;
-
-    /* Only enable disabled-stippling if there's no state map:
-     * @@@ Possibly: Don't do disabled-stippling at all;
-     * @@@ it's ugly and out of fashion.
-     */
-    image->doStipple = mapCnt == 1;
-
-    /* Locate which image to use based on current state:
-     */
-    imageObj = mapList[0];
-    for (i = 1; i < mapCnt - 1; i += 2) {
-	Ttk_StateSpec stateSpec;
-
-	if (Ttk_GetStateSpecFromObj(interp,mapList[i],&stateSpec) != TCL_OK) {
-	    /* shouldn't happen, but can */
-	    break;
-	}
-
-	if (Ttk_StateMatches(state, &stateSpec)) {
-	    imageObj = mapList[i+1];
-	    break;
-	}
     }
-
-    imageName = Tcl_GetString(imageObj);
-    if (!imageName || !*imageName)	/* Empty string. */
+    image->imageSpec = TtkGetImageSpec(NULL, tkwin, image->imageObj);
+    if (!image->imageSpec) {
 	return 0;
-
-    image->tkimg = Tk_GetImage(interp, tkwin, imageName, NullImageChanged, 0);
-    if (!image->tkimg)			/* No such image */
+    }
+    image->tkimg = TtkSelectImage(image->imageSpec, state);
+    if (!image->tkimg) {
+	TtkFreeImageSpec(image->imageSpec);
 	return 0;
-
+    }
     Tk_SizeOfImage(image->tkimg, &image->width, &image->height);
 
     return 1;
@@ -358,7 +318,7 @@ static int ImageSetup(
 
 static void ImageCleanup(ImageElement *image)
 {
-    Tk_FreeImage(image->tkimg);
+    TtkFreeImageSpec(image->imageSpec);
 }
 
 /*
@@ -402,8 +362,15 @@ static void ImageDraw(
 
     Tk_RedrawImage(image->tkimg, 0,0, width, height, d, b.x, b.y);
 
-    if (image->doStipple && (state & TTK_STATE_DISABLED)) {
-	StippleOver(image, tkwin, d, b.x,b.y);
+    /* If we're disabled there's no state-specific 'disabled' image, 
+     * stipple the image.
+     * @@@ Possibly: Don't do disabled-stippling at all;
+     * @@@ it's ugly and out of fashion.
+     */
+    if (state & TTK_STATE_DISABLED) {
+	if (TtkSelectImage(image->imageSpec, 0ul) == image->tkimg) {
+	    StippleOver(image, tkwin, d, b.x,b.y);
+	}
     }
 }
 

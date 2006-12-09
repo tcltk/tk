@@ -1,8 +1,7 @@
-/* $Id: ttkButton.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkButton.c,v 1.3 2006/12/09 20:53:35 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
- * Ttk widget set: label, button, checkbutton, radiobutton, and 
- * menubutton widgets.
+ * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
 
 #include <string.h>
@@ -29,7 +28,7 @@ typedef struct
     Tcl_Obj *widthObj;
 
     Ttk_TraceHandle	*textVariableTrace;
-    Tk_Image	*images;
+    Ttk_ImageSpec	*imageSpec;
 
     /*
      * Image element resources:
@@ -119,106 +118,12 @@ static void TextVariableChanged(void *clientData, const char *value)
     TtkResizeWidget(&basePtr->core);
 }
 
-/*
- * Tk_ImageChangedProc for -image option:
- */
-static void CoreImageChangedProc(ClientData clientData,
-    int x, int y, int width, int height, int imageWidth, int imageHeight)
-{
-    WidgetCore *corePtr = (WidgetCore *)clientData;
-    TtkRedisplayWidget(corePtr);
-}
-
-/* TtkGetImageList --
- * 	ConfigureProc utility routine for handling -image option.
- * 	Verifies that -image is a valid image specification,
- * 	registers image-changed callbacks for each image (via Tk_GetImage).
- *
- * 	The -image option is a multi-element list; the first element
- * 	is the name of the default image to use, the remainder of the 
- * 	list is a sequence of statespec/imagename options as per 
- * 	[style map].
- *
- * Returns: TCL_OK if image specification is valid and sets *imageListPtr
- * 	to a NULL-terminated list of Tk_Images; otherwise TCL_ERROR
- * 	and leaves an error message in the interpreter result.
- */
-int TtkGetImageList(
-    Tcl_Interp *interp, 
-    WidgetCore *corePtr, 
-    Tcl_Obj *imageOption, 
-    Tk_Image **imageListPtr)
-{
-    int i, mapCount, imageCount;
-    Tcl_Obj **mapList;
-    Tk_Image *images;
-
-    if (Tcl_ListObjGetElements(interp, 
-		imageOption, &mapCount, &mapList) != TCL_OK) 
-    {
-	return TCL_ERROR;
-    }
-
-    if (mapCount == 0) {
-	*imageListPtr = 0;
-	return TCL_OK;
-    }
-
-    if ((mapCount % 2) != 1) {
-	Tcl_SetResult(interp,
-	    "-image value must contain an odd number of elements", TCL_STATIC);
-	return TCL_ERROR;
-    }
-
-    /* Verify state specifications:
-     */
-    for (i = 1; i < mapCount -1; i += 2) {
-	Ttk_StateSpec spec;
-	if (Ttk_GetStateSpecFromObj(interp, mapList[i], &spec) != TCL_OK)
-	    return TCL_ERROR;
-    }
-    
-    /* Get images:
-     */
-    imageCount = (mapCount + 1) / 2;
-    images = (Tk_Image*)ckalloc((imageCount+1) * sizeof(Tk_Image));
-
-    for (i = 0; i < imageCount; ++i) {
-	const char *imageName = Tcl_GetString(mapList[i * 2]);
-	images[i] = Tk_GetImage(interp, corePtr->tkwin, 
-		imageName, CoreImageChangedProc, corePtr);
-
-	if (!images[i]) {
-	    while (i--)
-		Tk_FreeImage(images[i]);
-	    ckfree((ClientData)images);
-	    return TCL_ERROR;
-	}
-    }
-    images[i] = NULL;	/* Add null terminator */
-
-    *imageListPtr = images;
-    return TCL_OK;
-}
-
-/*
- * TtkFreeImageList --
- * 	Release an image list obtained by TtkGetImageList.
- */
-void TtkFreeImageList(Tk_Image *imageList)
-{
-    Tk_Image *p;
-    for (p = imageList; *p; ++p)
-	Tk_FreeImage(*p);
-    ckfree((ClientData)imageList);
-}
-
 static int
 BaseInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Base *basePtr = recordPtr;
     basePtr->base.textVariableTrace = 0;
-    basePtr->base.images = NULL;
+    basePtr->base.imageSpec = NULL;
     return TCL_OK;
 }
 
@@ -228,8 +133,8 @@ BaseCleanup(void *recordPtr)
     Base *basePtr = recordPtr;
     if (basePtr->base.textVariableTrace)
 	Ttk_UntraceVariable(basePtr->base.textVariableTrace);
-    if (basePtr->base.images) 
-    	TtkFreeImageList(basePtr->base.images);
+    if (basePtr->base.imageSpec) 
+    	TtkFreeImageSpec(basePtr->base.imageSpec);
 }
 
 static int BaseConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
@@ -237,22 +142,24 @@ static int BaseConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Base *basePtr = recordPtr;
     Tcl_Obj *textVarName = basePtr->base.textVariableObj;
     Ttk_TraceHandle *vt = 0;
-    Tk_Image *images = NULL;
+    Ttk_ImageSpec *imageSpec = NULL;
 
     if (textVarName != NULL && *Tcl_GetString(textVarName) != '\0') {
 	vt = Ttk_TraceVariable(interp,textVarName,TextVariableChanged,basePtr);
 	if (!vt) return TCL_ERROR;
     }
 
-    if (basePtr->base.imageObj && TtkGetImageList(interp, 
-		&basePtr->core, basePtr->base.imageObj, &images) != TCL_OK)
-    {
-	goto error;
+    if (basePtr->base.imageObj) {
+	imageSpec = TtkGetImageSpec(
+	    interp, basePtr->core.tkwin, basePtr->base.imageObj);
+	if (!imageSpec) {
+	    goto error;
+	}
     }
 
     if (TtkCoreConfigure(interp, recordPtr, mask) != TCL_OK) {
 error:
-	if (images) TtkFreeImageList(images);
+	if (imageSpec) TtkFreeImageSpec(imageSpec);
 	if (vt) Ttk_UntraceVariable(vt);
 	return TCL_ERROR;
     }
@@ -262,10 +169,10 @@ error:
     }
     basePtr->base.textVariableTrace = vt;
 
-    if (basePtr->base.images) {
-	TtkFreeImageList(basePtr->base.images);
+    if (basePtr->base.imageSpec) {
+	TtkFreeImageSpec(basePtr->base.imageSpec);
     }
-    basePtr->base.images = images;
+    basePtr->base.imageSpec = imageSpec;
 
     if (mask & STATE_CHANGED) {
 	TtkCheckStateOption(&basePtr->core, basePtr->base.stateObj);

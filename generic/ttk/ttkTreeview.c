@@ -1,5 +1,5 @@
 /*
- * $Id: ttkTreeview.c,v 1.5 2006/11/27 06:53:55 jenglish Exp $
+ * $Id: ttkTreeview.c,v 1.6 2006/12/09 20:53:35 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -949,14 +949,14 @@ static int ConfigureItem(
     }
 
     /* Validate -image option.
-     * @@@ TODO: keep images array around
      */
     if (item->imageObj) {
-	Tk_Image *images = NULL;
-	if (TtkGetImageList(interp, &tv->core, item->imageObj, &images) != TCL_OK)
+	Ttk_ImageSpec *imageSpec = 
+	    TtkGetImageSpec(interp, tv->core.tkwin, item->imageObj);
+	if (!imageSpec) {
 	    goto error;
-	if (images)
-	    TtkFreeImageList(images);
+	}
+	TtkFreeImageSpec(imageSpec);	/* @@@TODO: Keep this around */
     }
 
     /* Keep TTK_STATE_OPEN flag in sync with item->openObj.

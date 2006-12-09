@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkTheme.h,v 1.4 2006/12/01 15:05:28 jenglish Exp $
+ * $Id: ttkTheme.h,v 1.5 2006/12/09 20:53:35 jenglish Exp $
  */
 
 #ifndef _TTKTHEME
@@ -362,6 +362,15 @@ MODULE_SCOPE Tcl_Obj *Ttk_UseBorder(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
 MODULE_SCOPE Tk_Image Ttk_UseImage(Ttk_ResourceCache, Tk_Window, Tcl_Obj *);
 
 MODULE_SCOPE void Ttk_RegisterNamedColor(Ttk_ResourceCache, const char *, XColor *);
+
+/*------------------------------------------------------------------------
+ * +++ Image specifications.
+ */
+
+typedef struct TtkImageSpec Ttk_ImageSpec;
+extern Ttk_ImageSpec *TtkGetImageSpec(Tcl_Interp *, Tk_Window, Tcl_Obj *);
+extern void TtkFreeImageSpec(Ttk_ImageSpec *);
+extern Tk_Image TtkSelectImage(Ttk_ImageSpec *, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Miscellaneous enumerations.

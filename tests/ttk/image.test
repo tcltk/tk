@@ -1,37 +1,14 @@
 #
-# $Id: image.test,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: image.test,v 1.2 2006/12/09 20:53:35 jenglish Exp $
 #
 
 package require Tk 8.5
 package require tcltest ; namespace import -force tcltest::*
 loadTestedCommands
 
-# catch background errors:
-#
-if {[info procs bgerror] == "bgerror"} { rename bgerror {} }
-array set BGerror { caught 0 message {} }
-proc bgerror {message} {
-    variable BGerror
-    set BGerror(caught) 1
-    set BGerror(message) $message
-}
-proc caughtbgerror {} {
-    variable BGerror
-    if {!$BGerror(caught)} {
-        error "No bgerror caught"
-    }
-    set BGerror(caught) 0
-    return $BGerror(message)
-}
-
 test image-1.1 "Bad image element" -body {
     ttk::style element create BadImage image badimage
-    ttk::style layout BadImage { BadImage }
-    ttk::label .l -style BadImage
-    pack .l ; update
-    destroy .l
-    caughtbgerror
-} -result {image "badimage" doesn't exist}
+} -returnCodes error -result {image "badimage" doesn't exist}
 
 test image-1.2 "Duplicate element" -setup {
     image create photo test.element -width 10 -height 10

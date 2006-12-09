@@ -1,3 +1,15 @@
+2006-12-09  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkButton.c, generic/ttk/ttkImage.c,
+	generic/ttk/ttkLabel.c, generic/ttk/ttkWidget.h,
+	generic/ttk/ttkTheme.h, generic/ttk/ttkNotebook.c,
+	generic/ttk/ttkTreeview.c, doc/ttk_image.n:
+	Merged duplicate functionality between image element factory,
+	image element, and -image option processing.  Image element
+	factory now takes an imageSpec argument instead of a separate 
+	image name and -map option.
+	* tests/ttk/image.test(image-1.1): Can catch this error earlier now.
+
 2006-12-06  Kevin Kenny  <kennykb@acm.org>
 
 	* unix/configure.in: Further changes to avoid attempting to link
