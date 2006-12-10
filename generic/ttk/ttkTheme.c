@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.3 2006/11/07 03:45:28 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.4 2006/12/10 19:19:44 jenglish Exp $
  */
 
 #include <stdlib.h>
@@ -753,7 +753,7 @@ const char *Ttk_StyleName(Ttk_Style stylePtr)
  *	repeat the lookups in the parent theme.
  *	If not found, return the null element.
  */
-Ttk_Element Ttk_GetElement(Ttk_Theme themePtr, const char *elementName)
+Ttk_ElementImpl Ttk_GetElement(Ttk_Theme themePtr, const char *elementName)
 {
     Tcl_HashEntry *entryPtr;
     const char *dot = elementName;
@@ -763,7 +763,7 @@ Ttk_Element Ttk_GetElement(Ttk_Theme themePtr, const char *elementName)
      */
     entryPtr = Tcl_FindHashEntry(&themePtr->elementTable, elementName);
     if (entryPtr) {
-	return (Ttk_Element)Tcl_GetHashValue(entryPtr);
+	return (Ttk_ElementImpl)Tcl_GetHashValue(entryPtr);
     }
 
     /*
@@ -790,7 +790,7 @@ Ttk_Element Ttk_GetElement(Ttk_Theme themePtr, const char *elementName)
      */
     entryPtr = Tcl_FindHashEntry(&themePtr->elementTable, "");
     /* ASSERT: entryPtr != 0 */
-    return (Ttk_Element)Tcl_GetHashValue(entryPtr);
+    return (Ttk_ElementImpl)Tcl_GetHashValue(entryPtr);
 }
 
 const char *Ttk_ElementName(ElementImpl *elementImpl)
@@ -870,7 +870,7 @@ static int Ttk_CloneElement(
  *	if interp is non-NULL.
  */
 
-Ttk_Element Ttk_RegisterElement(
+Ttk_ElementImpl Ttk_RegisterElement(
     Tcl_Interp *interp,		/* Where to leave error messages */
     Ttk_Theme theme,		/* Style engine providing the implementation. */
     const char *name,		/* Name of new element */

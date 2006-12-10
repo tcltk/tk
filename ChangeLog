@@ -1,3 +1,10 @@
+2006-12-10  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTheme.h, generic/ttk/ttkThemeInt.h,
+	generic/ttk/ttk.decls, generic/ttk/ttkTheme.c,
+	generic/ttk/ttkLayout.c, generic/ttk/ttkDecls.h: 
+	Rename typedef Ttk_Element => Ttk_ElementImpl.
+
 2006-12-09  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkButton.c, generic/ttk/ttkImage.c,

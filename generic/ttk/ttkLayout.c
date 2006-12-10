@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.4 2006/12/01 15:05:28 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.5 2006/12/10 19:19:44 jenglish Exp $
  */
 
 #include <string.h>
@@ -516,13 +516,13 @@ Tcl_Obj *Ttk_NewStickyObj(Ttk_Sticky sticky)
 struct Ttk_LayoutNode_
 {
     unsigned		flags;		/* Packing and sticky flags */
-    Ttk_Element 	element;	/* Element implementation */
+    Ttk_ElementImpl 	element;	/* Element implementation */
     Ttk_State 	 	state;		/* Current state */
     Ttk_Box 		parcel;		/* allocated parcel */
     Ttk_LayoutNode	*next, *child;
 };
 
-static Ttk_LayoutNode *Ttk_NewLayoutNode(unsigned flags, Ttk_Element element)
+static Ttk_LayoutNode *Ttk_NewLayoutNode(unsigned flags, Ttk_ElementImpl element)
 {
     Ttk_LayoutNode *node = (Ttk_LayoutNode*)ckalloc(sizeof(Ttk_LayoutNode));
 
@@ -581,7 +581,7 @@ void Ttk_FreeLayoutTemplate(Ttk_LayoutTemplate op)
 static Ttk_LayoutNode *
 Ttk_InstantiateLayout(Ttk_Theme theme, Ttk_TemplateNode *op)
 {
-    Ttk_Element elementImpl = Ttk_GetElement(theme, op->name);
+    Ttk_ElementImpl elementImpl = Ttk_GetElement(theme, op->name);
     Ttk_LayoutNode *node = Ttk_NewLayoutNode(op->flags, elementImpl);
 
     if (op->next) {
@@ -849,7 +849,7 @@ Ttk_Layout Ttk_CreateLayout(
     Ttk_Style style = Ttk_GetStyle(themePtr, styleName);
     Ttk_LayoutTemplate layoutTemplate =
 	Ttk_FindLayoutTemplate(themePtr,styleName);
-    Ttk_Element bgelement = Ttk_GetElement(themePtr, "background");
+    Ttk_ElementImpl bgelement = Ttk_GetElement(themePtr, "background");
     Ttk_LayoutNode *bgnode;
 
     if (!layoutTemplate) {
