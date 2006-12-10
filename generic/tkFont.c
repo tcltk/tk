@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.29 2006/12/01 20:14:23 kennykb Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.30 2006/12/10 05:26:42 das Exp $
  */
 
 #include "tkPort.h"
@@ -509,7 +509,7 @@ Tk_FontObjCmd(
 	Tcl_Obj *optPtr;
 	Tcl_Obj *charPtr;
 	Tcl_Obj *resultPtr;
-	Tcl_UniChar uniChar;
+	Tcl_UniChar uniChar = 0;
 	CONST TkFontAttributes *faPtr;
 	TkFontAttributes fa;
 
