@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkTheme.h,v 1.5 2006/12/09 20:53:35 jenglish Exp $
+ * $Id: ttkTheme.h,v 1.6 2006/12/10 19:19:44 jenglish Exp $
  */
 
 #ifndef _TTKTHEME
@@ -218,7 +218,7 @@ MODULE_SCOPE Ttk_Box Ttk_PositionBox(Ttk_Box *cavity, int w, int h, Ttk_Position
 MODULE_SCOPE void Ttk_StylePkgInit(Tcl_Interp *);
 
 typedef struct Ttk_Theme_ *Ttk_Theme;
-typedef struct Ttk_ElementImpl_ *Ttk_Element;
+typedef struct Ttk_ElementImpl_ *Ttk_ElementImpl;
 typedef struct Ttk_Layout_ *Ttk_Layout;
 typedef struct Ttk_LayoutNode_ Ttk_LayoutNode;
 
@@ -267,7 +267,7 @@ typedef struct Ttk_ElementSpec {
     Ttk_ElementDrawProc *draw;  	/* Draw the element */
 } Ttk_ElementSpec;
 
-TTKAPI Ttk_Element Ttk_RegisterElement(
+TTKAPI Ttk_ElementImpl Ttk_RegisterElement(
 	Tcl_Interp *interp, Ttk_Theme theme, const char *elementName,
 	Ttk_ElementSpec *, void *clientData);
 
