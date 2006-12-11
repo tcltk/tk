@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.52 2006/12/11 13:08:58 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.53 2006/12/11 13:33:32 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -687,6 +687,7 @@ TkWmMapWindow(
 	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		    &textProp) != 0) {
 		unsigned long pid = (unsigned long) getpid();
+		Atom atom;
 
 		XSetWMClientMachine(winPtr->display, wmPtr->wrapperPtr->window,
 			&textProp);
@@ -699,9 +700,9 @@ TkWmMapWindow(
 		 * _NET_WM_PID requires that to be set too.
 		 */
 
+		atom = Tk_InternAtom((Tk_Window)winPtr, "_NET_WM_PID");
 		XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-			Tk_InternAtom(winPtr->display, "_NET_WM_PID"),
-			XA_CARDINAL, 32, PropModeReplace,
+			atom, XA_CARDINAL, 32, PropModeReplace,
 			(unsigned char *) &pid, 1);
 	    }
 	    Tcl_DStringFree(&ds);
@@ -1019,6 +1020,7 @@ Tk_WmObjCmd(
     int length;
     char *argv1;
     TkWindow *winPtr;
+    Tk_Window targetWin;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (objc < 2) {
@@ -1061,10 +1063,10 @@ Tk_WmObjCmd(
 	goto wrongNumArgs;
     }
 
-    if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) &winPtr)
-	    != TCL_OK) {
+    if (TkGetWindowFromObj(interp, tkwin, objv[2], &targetWin) != TCL_OK) {
 	return TCL_ERROR;
     }
+    winPtr = (TkWindow *) targetWin;
     if (!Tk_IsTopLevel(winPtr)) {
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
 		"\" isn't a top-level window", NULL);
@@ -1472,7 +1474,7 @@ WmClientCmd(
 	     */
 
 	    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-		    Tk_InternAtom(winPtr->display, "_NET_WM_PID"),
+		    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_PID"),
 		    XA_CARDINAL,32, PropModeReplace, (unsigned char*)&pid, 1);
 	}
 	Tcl_DStringFree(&ds);
@@ -1550,11 +1552,14 @@ WmColormapwindowsCmd(
 	    ((windowObjc+1)*sizeof(Window)));
     gotToplevel = 0;
     for (i = 0; i < windowObjc; i++) {
+	Tk_Window mapWin;
+
 	if (TkGetWindowFromObj(interp, tkwin, windowObjv[i],
-		(Tk_Window *) &winPtr2) != TCL_OK) {
+		&mapWin) != TCL_OK) {
 	    ckfree((char *) cmapList);
 	    return TCL_ERROR;
 	}
+	winPtr2 = (TkWindow *) mapWin;
 	if (winPtr2 == winPtr) {
 	    gotToplevel = 1;
 	}
@@ -3078,13 +3083,14 @@ WmStackorderCmd(
 	    return TCL_OK;
 	}
     } else {
+	Tk_Window relWin;
 	TkWindow *winPtr2;
 	int index1=-1, index2=-1, result;
 
-	if (TkGetWindowFromObj(interp, tkwin, objv[4], (Tk_Window *) &winPtr2)
-		!= TCL_OK) {
+	if (TkGetWindowFromObj(interp, tkwin, objv[4], &relWin) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	winPtr2 = (TkWindow *) relWin;
 
 	if (!Tk_IsTopLevel(winPtr2)) {
 	    Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
@@ -3354,10 +3360,12 @@ WmTransientCmd(
 
 	wmPtr->masterPtr = NULL;
     } else {
-	if (TkGetWindowFromObj(interp, tkwin, objv[3],
-		(Tk_Window *) &masterPtr) != TCL_OK) {
+	Tk_Window masterWin;
+
+	if (TkGetWindowFromObj(interp, tkwin, objv[3], &masterWin)!=TCL_OK) {
 	    return TCL_ERROR;
 	}
+	masterPtr = (TkWindow *) masterWin;
 	while (!Tk_TopWinHierarchy(masterPtr)) {
 	    /*
 	     * Ensure that the master window is actually a Tk toplevel.
@@ -3921,7 +3929,7 @@ ReparentEvent(
 				 * wmPtr->wrapperPtr. */
 {
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
-    Window vRoot, ancestor, *children, dummy2, *virtualRootPtr;
+    Window vRoot, ancestor, *children, dummy2, *virtualRootPtr, **vrPtrPtr;
     Atom actualType;
     int actualFormat;
     unsigned long numItems, bytesAfter;
@@ -3940,15 +3948,16 @@ ReparentEvent(
     vRoot = RootWindow(wrapperPtr->display, wrapperPtr->screenNum);
     wmPtr->vRoot = None;
     handler = Tk_CreateErrorHandler(wrapperPtr->display, -1,-1,-1, NULL,NULL);
+    vrPtrPtr = &virtualRootPtr;		/* Silence GCC warning */
     if (((XGetWindowProperty(wrapperPtr->display, wrapperPtr->window,
 	    Tk_InternAtom((Tk_Window) wrapperPtr, "__WM_ROOT"), 0, (long) 1,
 	    False, XA_WINDOW, &actualType, &actualFormat, &numItems,
-	    &bytesAfter, (unsigned char **) &virtualRootPtr) == Success)
+	    &bytesAfter, (unsigned char **) vrPtrPtr) == Success)
 	    && (actualType == XA_WINDOW))
 	    || ((XGetWindowProperty(wrapperPtr->display, wrapperPtr->window,
 	    Tk_InternAtom((Tk_Window) wrapperPtr, "__SWM_ROOT"), 0, (long) 1,
 	    False, XA_WINDOW, &actualType, &actualFormat, &numItems,
-	    &bytesAfter, (unsigned char **) &virtualRootPtr) == Success)
+	    &bytesAfter, (unsigned char **) vrPtrPtr) == Success)
 	    && (actualType == XA_WINDOW))) {
 	if ((actualFormat == 32) && (numItems == 1)) {
 	    vRoot = wmPtr->vRoot = *virtualRootPtr;
@@ -5938,7 +5947,7 @@ TkWmProtocolEventProc(
 
 	eventPtr->xclient.window = root;
 	(void) XSendEvent(winPtr->display, root, False,
-		(SubstructureNotify|SubstructureRedirect), eventPtr);
+		(SubstructureNotifyMask|SubstructureRedirectMask), eventPtr);
 	return;
     }
 
