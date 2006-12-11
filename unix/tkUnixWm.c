@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.51 2006/05/29 22:21:40 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.52 2006/12/11 13:08:58 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -52,8 +52,8 @@ typedef struct {
     int 	fullscreen;	/* Flag: true=>fullscreen */
 } WmAttributes;
 
-typedef enum { 
-    WMATT_ALPHA, WMATT_TOPMOST, WMATT_ZOOMED, WMATT_FULLSCREEN, 
+typedef enum {
+    WMATT_ALPHA, WMATT_TOPMOST, WMATT_ZOOMED, WMATT_FULLSCREEN,
     _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
@@ -686,9 +686,23 @@ TkWmMapWindow(
 	    Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, -1, &ds);
 	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		    &textProp) != 0) {
+		unsigned long pid = (unsigned long) getpid();
+
 		XSetWMClientMachine(winPtr->display, wmPtr->wrapperPtr->window,
 			&textProp);
 		XFree((char *) textProp.value);
+
+		/*
+		 * Inform the server (and more particularly any session
+		 * manager) what our process ID is. We only do this when the
+		 * CLIENT_MACHINE property is set since the spec for
+		 * _NET_WM_PID requires that to be set too.
+		 */
+
+		XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+			Tk_InternAtom(winPtr->display, "_NET_WM_PID"),
+			XA_CARDINAL, 32, PropModeReplace,
+			(unsigned char *) &pid, 1);
 	    }
 	    Tcl_DStringFree(&ds);
 	}
@@ -1444,9 +1458,22 @@ WmClientCmd(
 	Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, -1, &ds);
 	if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		&textProp) != 0) {
+	    unsigned long pid = (unsigned long) getpid();
+
 	    XSetWMClientMachine(winPtr->display, wmPtr->wrapperPtr->window,
 		    &textProp);
 	    XFree((char *) textProp.value);
+
+	    /*
+	     * Inform the server (and more particularly any session manager)
+	     * what our process ID is. We only do this when the CLIENT_MACHINE
+	     * property is set since the spec for _NET_WM_PID requires that to
+	     * be set too.
+	     */
+
+	    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+		    Tk_InternAtom(winPtr->display, "_NET_WM_PID"),
+		    XA_CARDINAL,32, PropModeReplace, (unsigned char*)&pid, 1);
 	}
 	Tcl_DStringFree(&ds);
     }
@@ -2836,6 +2863,16 @@ WmProtocolCmd(
     }
 
     /*
+     * Special case for _NET_WM_PING: that's always handled directly.
+     */
+
+    if (strcmp(Tcl_GetString(objv[3]), "_NET_WM_PING") == 0) {
+	Tcl_SetResult(interp, "may not alter handling of that protocol",
+		TCL_STATIC);
+	return TCL_ERROR;
+    }
+
+    /*
      * Delete any current protocol handler, then create a new one with the
      * specified command, unless the command is empty.
      */
@@ -4098,8 +4135,8 @@ ComputeReparentGeometry(
  *
  * PropertyEvent --
  *
- *	Handle PropertyNotify events on wrapper windows.
- *	The following properties are of interest:
+ *	Handle PropertyNotify events on wrapper windows. The following
+ *	properties are of interest:
  *
  *	_NET_WM_STATE:
  *		Used to keep wmPtr->attributes up to date.
@@ -4114,7 +4151,7 @@ PropertyEvent(
 {
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     Atom _NET_WM_STATE =
-	Tk_InternAtom((Tk_Window)wmPtr->winPtr, "_NET_WM_STATE");
+	    Tk_InternAtom((Tk_Window)wmPtr->winPtr, "_NET_WM_STATE");
 
     if (eventPtr->atom == _NET_WM_STATE) {
 	Atom actualType;
@@ -4126,9 +4163,8 @@ PropertyEvent(
 	if (XGetWindowProperty(
 		wrapperPtr->display, wrapperPtr->window, _NET_WM_STATE,
 		0l, maxLength, False, XA_ATOM,
-		&actualType, &actualFormat, &numItems, &bytesAfter, 
-		&propertyValue) == Success
-	) {
+		&actualType, &actualFormat, &numItems, &bytesAfter,
+		&propertyValue) == Success) {
 	    CheckNetWmState(wmPtr, (Atom*)propertyValue, (int)numItems);
 	    XFree(propertyValue);
 	}
@@ -4153,7 +4189,7 @@ PropertyEvent(
  *----------------------------------------------------------------------
  */
 
-static const unsigned int WrapperEventMask = 
+static const unsigned int WrapperEventMask =
     (StructureNotifyMask | PropertyChangeMask);
 
 static void
@@ -4754,8 +4790,7 @@ UpdatePhotoIcon(
  * 	Sets the specified state property by sending a _NET_WM_STATE
  * 	ClientMessage to the root window.
  *
- * Preconditions: 
- *
+ * Preconditions:
  * 	Wrapper window must be created.
  *
  * See also:
@@ -4768,7 +4803,11 @@ UpdatePhotoIcon(
 #define _NET_WM_STATE_ADD       1l
 #define _NET_WM_STATE_TOGGLE    2l
 
-static void SetNetWmState(TkWindow *winPtr, const char *atomName, int on)
+static void
+SetNetWmState(
+    TkWindow *winPtr,
+    const char *atomName,
+    int on)
 {
     Tk_Window tkwin = (Tk_Window)winPtr;
     Atom messageType = Tk_InternAtom(tkwin, "_NET_WM_STATE");
@@ -4794,29 +4833,38 @@ static void SetNetWmState(TkWindow *winPtr, const char *atomName, int on)
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * CheckNetWmState --
  *
- * 	Updates the window attributes whenever the _NET_WM_STATE
- * 	property changes.
+ * 	Updates the window attributes whenever the _NET_WM_STATE property
+ * 	changes.
  *
  * Notes:
- * 	
- * 	Tk uses a single -zoomed state, while the EWMH spec supports 
- * 	separate vertical and horizontal maximization.  We consider
- * 	the window to be "zoomed" if _NET_WM_STATE_MAXIMIZED_VERT 
- * 	and _NET_WM_STATE_MAXIMIZED_HORZ are both set.
+ *
+ * 	Tk uses a single -zoomed state, while the EWMH spec supports separate
+ * 	vertical and horizontal maximization. We consider the window to be
+ * 	"zoomed" if _NET_WM_STATE_MAXIMIZED_VERT and
+ * 	_NET_WM_STATE_MAXIMIZED_HORZ are both set.
+ *
+ *----------------------------------------------------------------------
  */
-static void CheckNetWmState(WmInfo *wmPtr, Atom *atoms, int numAtoms)
+
+static void
+CheckNetWmState(
+    WmInfo *wmPtr,
+    Atom *atoms,
+    int numAtoms)
 {
     Tk_Window tkwin = (Tk_Window)wmPtr->wrapperPtr;
     int i;
     Atom _NET_WM_STATE_ABOVE
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_ABOVE"),
-	_NET_WM_STATE_MAXIMIZED_VERT 
+	_NET_WM_STATE_MAXIMIZED_VERT
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_MAXIMIZED_VERT"),
-	_NET_WM_STATE_MAXIMIZED_HORZ 
+	_NET_WM_STATE_MAXIMIZED_HORZ
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_MAXIMIZED_HORZ"),
-	_NET_WM_STATE_FULLSCREEN 
+	_NET_WM_STATE_FULLSCREEN
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
 
     wmPtr->attributes.topmost = 0;
@@ -4840,13 +4888,21 @@ static void CheckNetWmState(WmInfo *wmPtr, Atom *atoms, int numAtoms)
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
  * UpdateNetWmState --
  *
  * 	Sets the _NET_WM_STATE property to match the requested attribute state
  * 	just prior to mapping a withdrawn window.
+ *
+ *----------------------------------------------------------------------
  */
+
 #define NET_WM_STATE_MAX_ATOMS 4
-static void UpdateNetWmState(WmInfo *wmPtr)
+
+static void
+UpdateNetWmState(
+    WmInfo *wmPtr)
 {
     Tk_Window tkwin = (Tk_Window)wmPtr->wrapperPtr;
     Atom atoms[NET_WM_STATE_MAX_ATOMS];
@@ -4858,13 +4914,13 @@ static void UpdateNetWmState(WmInfo *wmPtr)
     if (wmPtr->reqState.zoomed) {
 	atoms[numAtoms++] = Tk_InternAtom(tkwin,"_NET_WM_STATE_MAXIMIZED_VERT");
 	atoms[numAtoms++] = Tk_InternAtom(tkwin,"_NET_WM_STATE_MAXIMIZED_HORZ");
-    } 
+    }
     if (wmPtr->reqState.fullscreen) {
 	atoms[numAtoms++] = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
     }
 
-    XChangeProperty(Tk_Display(tkwin), wmPtr->wrapperPtr->window, 
-	    Tk_InternAtom(tkwin, "_NET_WM_STATE"), XA_ATOM, 32, 
+    XChangeProperty(Tk_Display(tkwin), wmPtr->wrapperPtr->window,
+	    Tk_InternAtom(tkwin, "_NET_WM_STATE"), XA_ATOM, 32,
 	    PropModeReplace, (unsigned char *)atoms, numAtoms);
 }
 
@@ -5803,7 +5859,7 @@ UpdateWmProtocols(
     register WmInfo *wmPtr)	/* Information about top-level window. */
 {
     register ProtocolHandler *protPtr;
-    Atom deleteWindowAtom;
+    Atom deleteWindowAtom, pingAtom;
     int count;
     Atom *arrayPtr, *atomPtr;
 
@@ -5811,22 +5867,25 @@ UpdateWmProtocols(
      * There are only two tricky parts here. First, there could be any number
      * of atoms for the window, so count them and malloc an array to hold all
      * of their atoms. Second, we *always* want to respond to the
-     * WM_DELETE_WINDOW protocol, even if no-one's officially asked.
+     * WM_DELETE_WINDOW and _NET_WM_PING protocols, even if no-one's
+     * officially asked.
      */
 
-    for (protPtr = wmPtr->protPtr, count = 1; protPtr != NULL;
+    for (protPtr = wmPtr->protPtr, count = 2; protPtr != NULL;
 	    protPtr = protPtr->nextPtr, count++) {
 	/* Empty loop body; we're just counting the handlers. */
     }
     arrayPtr = (Atom *) ckalloc((unsigned) (count * sizeof(Atom)));
     deleteWindowAtom = Tk_InternAtom((Tk_Window) wmPtr->winPtr,
 	    "WM_DELETE_WINDOW");
+    pingAtom = Tk_InternAtom((Tk_Window) wmPtr->winPtr, "_NET_WM_PING");
     arrayPtr[0] = deleteWindowAtom;
+    arrayPtr[1] = pingAtom;
     for (protPtr = wmPtr->protPtr, atomPtr = &arrayPtr[1];
 	    protPtr != NULL; protPtr = protPtr->nextPtr) {
-	if (protPtr->protocol != deleteWindowAtom) {
-	    *atomPtr = protPtr->protocol;
-	    atomPtr++;
+	if (protPtr->protocol != deleteWindowAtom
+		&& protPtr->protocol != pingAtom) {
+	    *(atomPtr++) = protPtr->protocol;
 	}
     }
     XChangeProperty(wmPtr->winPtr->display, wmPtr->wrapperPtr->window,
@@ -5866,11 +5925,27 @@ TkWmProtocolEventProc(
     CONST char *protocolName;
     Tcl_Interp *interp;
 
+    protocol = (Atom) eventPtr->xclient.data.l[0];
+
+    /*
+     * If this is a _NET_WM_PING message, send it back to the root window
+     * immediately. We do that here because scripts *cannot* respond correctly
+     * to this protocol.
+     */
+
+    if (protocol == Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_PING")) {
+	Window root = XRootWindow(winPtr->display, winPtr->screenNum);
+
+	eventPtr->xclient.window = root;
+	(void) XSendEvent(winPtr->display, root, False,
+		(SubstructureNotify|SubstructureRedirect), eventPtr);
+	return;
+    }
+
     wmPtr = winPtr->wmInfoPtr;
     if (wmPtr == NULL) {
 	return;
     }
-    protocol = (Atom) eventPtr->xclient.data.l[0];
 
     /*
      * Note: it's very important to retrieve the protocol name now, before
@@ -6571,7 +6646,7 @@ CreateWrapper(
      * etc..
      */
 
-    Tk_CreateEventHandler((Tk_Window) wmPtr->wrapperPtr, 
+    Tk_CreateEventHandler((Tk_Window) wmPtr->wrapperPtr,
 	    WrapperEventMask, WrapperEventProc, (ClientData) wmPtr);
 }
 
@@ -6929,3 +7004,11 @@ TkpWmSetState(
 
     return 1;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
