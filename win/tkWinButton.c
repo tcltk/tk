@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.28 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.29 2006/12/12 23:38:22 mdejong Exp $
  */
 
 #define OEMRESOURCE
@@ -134,7 +134,10 @@ InitBoxes(void)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hrsrc = FindResource(module, "buttons", RT_BITMAP);
-    if (hrsrc) {
+    if (hrsrc == NULL) {
+	Tcl_Panic("FindResource() failed for buttons bitmap resource, "
+            "resources in tk_base.rc must be linked into Tk dll or static executable");
+    } else {
 	hblk = LoadResource(module, hrsrc);
 	tsdPtr->boxesPtr = (LPBITMAPINFOHEADER)LockResource(hblk);
     }

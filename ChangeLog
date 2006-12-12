@@ -1,3 +1,16 @@
+2006-12-12  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* win/tkWinButton.c (InitBoxes): Call Tcl_Panic()
+	if loading of bitmap resources fails. This change
+	generates an error if Tk is unable to find button
+	widget resources instead of silently failing and
+	then drawing widgets incorrectly.
+	win/rc/tk_base.rc: If the user defines BASE_NO_TK_ICON
+	then compile the base resources file without a
+	"tk" icon. This change makes it easier to replace the
+	default tk icon with a custom icon.
+	[Patch 1614362]
+
 2006-12-11  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* unix/tkUnixWm.c (TkWmMapWindow, WmClientCmd): Added support for
