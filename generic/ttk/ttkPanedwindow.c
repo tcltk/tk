@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.5 2006/11/27 06:53:55 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.6 2006/12/13 20:40:32 hobbs Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -799,7 +799,7 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Registration routine.
  */
-MODULE_SCOPE int TtkPaned_Init(Tcl_Interp *interp)
+MODULE_SCOPE int TtkPanedwindow_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
     RegisterWidget(interp, "ttk::panedwindow", &PanedWidgetSpec);

@@ -1,5 +1,9 @@
 2006-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/ttk/ttkInit.c:
+	* generic/ttk/ttkTreeview.c: make treeview exist by default
+	* generic/ttk/ttkPanedwindow.c: s/TtkPaned_Init/TtkPanedwindow_Init/
+
 	* win/Makefile.in, unix/Makefile.in (demo): add 'demo' target
 
 2006-12-13  Joe English  <jenglish@users.sourceforge.net>
