@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.70 2006/10/31 01:42:27 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.71 2006/12/13 20:38:29 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -445,6 +445,9 @@ runtest: binaries $(TKTEST)
 # via `make shell` or `make shell SCRIPT=foo.tcl`
 shell: binaries
 	$(SHELL_ENV) ./$(WISH) $(SCRIPT)
+
+demo:
+	$(SHELL_ENV) ./$(WISH) $(ROOT_DIR)/library/demos/widget
 
 # This target can be used to run wish inside either gdb or insight
 gdb: binaries

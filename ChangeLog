@@ -1,4 +1,9 @@
+2006-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/Makefile.in, unix/Makefile.in (demo): add 'demo' target
+
 2006-12-13  Joe English  <jenglish@users.sourceforge.net>
+
 	* library/ttk/ttk.tcl: Try to straighten out theme loading 
 	and selection logic.
 	* generic/ttk/ttkElements.c, library/ttk/defaults.tcl,
