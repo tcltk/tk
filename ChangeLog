@@ -1,3 +1,8 @@
+2006-12-12  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/ttk.tcl, generic/ttkTheme.c: 
+	Remove nonfunctional code.
+
 2006-12-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWinButton.c (InitBoxes): Call Tcl_Panic()

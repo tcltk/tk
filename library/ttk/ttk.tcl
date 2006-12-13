@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
+# $Id: ttk.tcl,v 1.3 2006/12/13 05:36:38 jenglish Exp $
 #
 # Ttk widget set initialization script.
 #
@@ -49,44 +49,6 @@ proc ttk::deprecated'warning {old new} {
 # ttk::panedwindow used to be named ttk::paned.  Keep the alias for now.
 #
 ::ttk::deprecated ::ttk::paned ::ttk::panedwindow
-
-if {[info exists ::ttk::deprecrated] && $::ttk::deprecated} {
-    ### Deprecated bits.
-    #
-
-    namespace eval ::tile {
-	# Deprecated namespace.  Define these only when requested
-	variable library
-	if {![info exists library]} {
-	    set library [file dirname [info script]]
-	}
-
-	variable version 0.7.8
-    }
-    package provide tile $::tile::version
-
-    ### Widgets.
-    #	Widgets are all defined in the ::ttk namespace.
-    #
-    #	For compatibility with earlier Tile releases, we temporarily
-    #	create aliases ::tile::widget, and ::t$widget.
-    #	Using any of the aliases will issue a warning.
-    #
-
-    namespace eval ttk {
-	variable widgets {
-	    button checkbutton radiobutton menubutton label entry
-	    frame labelframe scrollbar
-	    notebook progressbar combobox separator
-	    scale
-	}
-
-	variable wc
-	foreach wc $widgets {
-	    namespace export $wc
-	}
-    }
-}
 
 ### ::ttk::ThemeChanged --
 #	Called from [::ttk::style theme use].

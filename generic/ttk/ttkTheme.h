@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkTheme.h,v 1.6 2006/12/10 19:19:44 jenglish Exp $
+ * $Id: ttkTheme.h,v 1.7 2006/12/13 05:36:38 jenglish Exp $
  */
 
 #ifndef _TTKTHEME
@@ -32,14 +32,6 @@ extern "C" {
 /* Ttk syncs to the Tk version & patchlevel */
 #define TTK_VERSION    TK_VERSION
 #define TTK_PATCH_LEVEL TK_PATCH_LEVEL
-
-/*
- * Statically branched from tile 0.7.8.
- */
-#ifdef TTK_DEFINE_TILE
-#define TILE_VERSION		"0.7.8"
-#define TILE_PATCH_LEVEL	TILE_VERSION
-#endif
 
 /*------------------------------------------------------------------------
  * +++ Defaults for element option specifications.
