@@ -1,3 +1,10 @@
+2006-12-13  Joe English  <jenglish@users.sourceforge.net>
+	* library/ttk/ttk.tcl: Try to straighten out theme loading 
+	and selection logic.
+	* generic/ttk/ttkElements.c, library/ttk/defaults.tcl,
+	generic/ttk/ttkClamTheme.c, library/ttk/clamTheme.tcl: 
+	Provide package in C part instead of Tcl part.
+
 2006-12-12  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/ttk.tcl, generic/ttkTheme.c: 

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClamTheme.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkClamTheme.c,v 1.3 2006/12/13 17:06:32 jenglish Exp $
  *
  * Copyright (C) 2004 Joe English
  *
@@ -964,6 +964,8 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterLayout(theme, "TCombobox", ComboboxLayout);
     Ttk_RegisterLayout(theme, "Horizontal.Sash", HorizontalSashLayout);
     Ttk_RegisterLayout(theme, "Vertical.Sash", VerticalSashLayout);
+
+    Tcl_PkgProvide(interp, "ttk::theme::clam", TTK_VERSION);
 
     return TCL_OK;
 }
