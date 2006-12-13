@@ -1,16 +1,23 @@
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
+'\" See the file "license.terms" for information on usage and redistribution
+'\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+'\" 
+'\" RCS: @(#) $Id: ttk_radiobutton.n,v 1.3 2006/12/13 23:04:33 hobbs Exp $
+'\" 
 .so man.macros
 .TH ttk_radiobutton n 8.5 Tk "Tk Themed Widget"
 .BS
+.\" Use _ instead of :: as the name becomes a filename on install
 .SH NAME
-ttk::radiobutton \- Mutually exclusive option widget
+ttk_radiobutton \- Mutually exclusive option widget
 .SH SYNOPSIS
 \fBttk::radiobutton\fR \fIpathName \fR?\fIoptions\fR?
 .BE
+
 .SH DESCRIPTION
-\fBradiobutton\fR widgets are used in groups to show or change
+\fBttk::radiobutton\fR widgets are used in groups to show or change
 a set of mutually-exclusive options.
 Radiobuttons are linked to a Tcl variable,
 and have an associated value; when a radiobutton is clicked,
@@ -20,6 +27,7 @@ it sets the variable to its associated value.
 \-state	\-style	\-takefocus	\-text
 \-textvariable	\-underline	\-width
 .SE
+
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
 A Tcl script to evaluate whenever the widget is invoked.
@@ -29,6 +37,7 @@ when the widget is selected.
 .OP \-variable variable Variable
 The name of a global variable whose value is linked to the widget.
 Default value is \fB::selectedButton\fR.
+
 .SH "WIDGET COMMAND"
 In addition to the standard 
 \fBcget\fR, \fBconfigure\fR, \fBinstate\fR, and \fBstate\fR 
@@ -42,6 +51,7 @@ Returns the result of the \fI-command\fR, or the empty
 string if no \fI-command\fR is specified.
 .\" Missing: select, deselect.  Useful?
 .\" Missing: flash.  This is definitely not useful.
+
 .SH "WIDGET STATES"
 The widget does not respond to user input if the \fBdisabled\fR state is set.
 The widget sets the \fBselected\fR state whenever 
@@ -51,7 +61,9 @@ The widget sets the \fBalternate\fR state whenever the
 linked \fB-variable\fR is unset.  
 (The \fBalternate\fR state may be used to indicate a ``tri-state'' 
 or ``indeterminate'' selection.)
+
 .SH "SEE ALSO"
-widget(n), keynav(n), checkbutton(n)
+ttk_widget(n), ttk_checkbutton(n), radiobutton(n)
+
 .SH "KEYWORDS"
 widget, button, option

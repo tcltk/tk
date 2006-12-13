@@ -1,16 +1,31 @@
 '\"
 '\" Copyright (c) 2005 Joe English
 '\"
+'\" See the file "license.terms" for information on usage and redistribution
+'\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+'\" 
+'\" RCS: @(#) $Id: ttk_progressbar.n,v 1.3 2006/12/13 23:04:33 hobbs Exp $
+'\" 
 .so man.macros
 .TH ttk_progressbar n 8.5 Tk "Tk Themed Widget"
 .BS
+.\" Use _ instead of :: as the name becomes a filename on install
 .SH NAME
-ttk::progressbar \- Provide progress feedback
+ttk_progressbar \- Provide progress feedback
 .SH SYNOPSIS
 \fBttk::progressbar\fR \fIpathName \fR?\fIoptions\fR?
+.BE
+
+.SH DESCRIPTION
+A \fBttk::progressbar\fR widget shows the status of a long-running
+operation.  They can operate in two modes: \fIdeterminate\fR mode shows the
+amount completed relative to the total amount of work to be done, and
+\fIindeterminate\fR mode provides an animated display to let the user know
+that something is happening.
 .SO
 \-class	\-cursor	\-takefocus	\-style
 .SE
+
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-orient orient Orient
 One of \fBhorizontal\fR or \fBvertical\fR.
@@ -41,23 +56,17 @@ whenever the \fB-value\fR is greater than 0 and,
 in \fIdeterminate\fR mode, less than \fB-maximum\fR.
 This option may be used by the current theme 
 to provide additional animation effects.
-.BE
-.SH "DESCRIPTION"
-A progress bar widget shows the status of a long-running operation.
-They can operate in two modes: \fIdeterminate\fR mode shows the
-amount completed relative to the total amount of work to be done,
-and \fIindeterminate\fR mode provides an animated display to
-let the user know that something is happening.
+
 .SH "WIDGET COMMAND"
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIwidget(n)\fR.
+Returns the current value of the specified \fIoption\fR; see \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIwidget(n)\fR.
+Modify or query widget options; see \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIwidget(n)\fR.
+Test the widget state; see \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBstart\fR ?\fIinterval\fR?
 Begin autoincrement mode:
@@ -66,7 +75,7 @@ every \fIinterval\fR milliseconds.
 If omitted, \fIinterval\fR defaults to 50 milliseconds (20 steps/second).
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIwidget(n)\fR.
+Modify or query the widget state; see \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBstep\fR ?\fIamount\fR?
 Increments the \fB-value\fR by \fIamount\fR.  
@@ -75,5 +84,6 @@ Increments the \fB-value\fR by \fIamount\fR.
 \fIpathName \fBstop\fR
 Stop autoincrement mode:
 cancels any recurring timer event initiated by \fIpathName \fBstart\fR.
+
 .SH "SEE ALSO"
-widget(n)
+ttk_widget(n)

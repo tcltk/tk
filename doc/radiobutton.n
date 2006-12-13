@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: radiobutton.n,v 1.10 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: radiobutton.n,v 1.11 2006/12/13 23:04:32 hobbs Exp $
 '\" 
 .so man.macros
 .TH radiobutton n 4.4 Tk "Tk Built-In Commands"
@@ -257,7 +257,7 @@ The behavior of radiobuttons can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
 
 .SH "SEE ALSO"
-checkbutton(n), labelframe(n), listbox(n), options(n), scale(n)
+checkbutton(n), labelframe(n), listbox(n), options(n), scale(n), ttk_radiobutton(n)
 
 .SH KEYWORDS
 radiobutton, widget
