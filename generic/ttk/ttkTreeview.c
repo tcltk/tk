@@ -1,5 +1,5 @@
 /*
- * $Id: ttkTreeview.c,v 1.6 2006/12/09 20:53:35 jenglish Exp $
+ * $Id: ttkTreeview.c,v 1.7 2006/12/13 20:40:32 hobbs Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -9,8 +9,6 @@
 #include <tk.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
-
-#ifdef TTK_TREEVIEW_WIDGET
 
 #define DEF_TREE_ROWS		"10"
 #define DEF_TREE_PADDING	"4"
@@ -2970,7 +2968,5 @@ MODULE_SCOPE int TtkTreeview_Init(Tcl_Interp *interp)
 
     return TCL_OK;
 }
-
-#endif /* TTK_TREEVIEW_WIDGET */
 
 /*EOF*/
