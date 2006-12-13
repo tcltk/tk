@@ -1,6 +1,10 @@
 '\"
 '\" Copyright (c) 2004 Joe English
-'\" $Id: ttk_image.n,v 1.4 2006/12/09 20:53:35 jenglish Exp $
+'\"
+'\" See the file "license.terms" for information on usage and redistribution
+'\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+'\" 
+'\" RCS: @(#) $Id: ttk_image.n,v 1.5 2006/12/13 23:04:33 hobbs Exp $
 '\" 
 .so man.macros
 .TH ttk_image n 8.5 Tk "Tk Themed Widget"
@@ -10,6 +14,7 @@ ttk_image \- Define an element based on an image
 .SH SYNOPSIS
 \fBttk::style element create \fIname\fR \fBimage\fR \fIimageSpec\fR ?\fIoptions\fR?
 .BE
+
 .SH DESCRIPTION
 The \fIimage\fR element factory creates a new element
 in the current theme whose visual appearance is determined
@@ -19,8 +24,9 @@ The first element is the default image name.
 The rest of the list is a sequence of \fIstatespec / value\fR
 pairs specifying other images to use when the element is
 in a particular state or combination of states.
+
 .SH OPTIONS
-Valid  \fIoptions\fR are:
+Valid \fIoptions\fR are:
 .TP
 \fB-border\fR \fIpadding\fR
 \fIpadding\fR is a list of up to four integers, specifying
@@ -55,6 +61,7 @@ The \fB-border\fR divides the image into 9 regions:
 four fixed corners, top and left edges (which may be tiled horizontally),
 left and right edges (which may be tiled vertically),
 and the central area (which may be tiled in both directions).
+
 .SH "EXAMPLE"
 .CS
 set img1 [image create photo -file button.png]
@@ -64,7 +71,9 @@ style element create Button.button image \e
     [list $img1  pressed $img2  active $img3] \e
    -border {2 4} -sticky we
 .CE
+
 .SH "SEE ALSO"
 image(n), photo(n)
+
 .SH KEYWORDS
 pixmap theme, image

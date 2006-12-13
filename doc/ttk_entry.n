@@ -1,7 +1,4 @@
 '\"
-'\" SOURCE: entry.n, r1.12
-'\"
-'\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
 '\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" Copyright (c) 2004 Joe English
@@ -9,16 +6,22 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
+'\" SOURCE: entry.n, r1.12
+'\" RCS: @(#) $Id: ttk_entry.n,v 1.3 2006/12/13 23:04:33 hobbs Exp $
+'\" 
 .so man.macros
 .TH ttk_entry n 8.5 Tk "Tk Themed Widget"
 .BS
+.\" Use _ instead of :: as the name becomes a filename on install
 .SH NAME
-ttk::entry \- Editable text field widget
+ttk_entry \- Editable text field widget
 .SH SYNOPSIS
 \fBttk::entry\fR \fIpathName \fR?\fIoptions\fR?
+.BE
+
 .SH DESCRIPTION
 .PP
-An \fBentry\fR widget displays a one-line text string and
+An \fBttk::entry\fR widget displays a one-line text string and
 allows that string to be edited by the user.
 The value of the string may be linked to a Tcl variable 
 with the \fB-textvariable\fR option.
@@ -28,6 +31,7 @@ standard \fB-xscrollcommand\fR option and \fBxview\fR widget command.
 \-class	\-cursor	\-style	\-takefocus
 \-xscrollcommand
 .SE
+
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
 A boolean value specifying whether or not 
@@ -60,7 +64,7 @@ If characters in the entry are selected and copied elsewhere, the
 information copied will be what is displayed, not the true contents
 of the entry.
 .OP \-state state State
-Compatibility option; see \fBwidget(n)\fR for details.
+Compatibility option; see \fIttk_widget(n)\fR for details.
 Specifies one of three states for the entry,
 \fBnormal\fR, \fBdisabled\fR, or \fBreadonly\fR.
 See \fBWIDGET STATES\fR, below.
@@ -85,6 +89,7 @@ in average-size characters of the widget's font.
 .\" Not in ttk: If the value is less than or equal to zero, the widget picks a
 .\" Not in ttk: size just large enough to hold its current text.
 .BE
+
 .SH NOTES
 A portion of the entry may be selected as described below.
 If an entry is exporting its selection (see the \fBexportSelection\fR
@@ -102,6 +107,7 @@ may be used to change the view in the window.  Entries use
 the standard \fBxScrollCommand\fR mechanism for interacting with
 scrollbars (see the description of the \fBxScrollCommand\fR option
 for details).
+
 .SH "INDICES"
 Many of the \fBentry\fR widget commands take one or more indices as
 arguments.  An index specifies a particular character in the entry's
@@ -132,6 +138,7 @@ entry window.
 Abbreviations may be used for any of the forms above, e.g. ``\fBe\fR''
 or ``\fBsel.f\fR''.  In general, out-of-range indices are automatically
 rounded to the nearest legal value.
+
 .SH "WIDGET COMMAND"
 .PP
 The following commands are possible for entry widgets:
@@ -148,11 +155,11 @@ of the window.
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
 Returns the current value of the specified \fIoption\fR.
-See \fIwidget(n)\fR.
+See \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 Modify or query widget options.
-See \fIwidget(n)\fR.
+See \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBdelete \fIfirst \fR?\fIlast\fR?
 Delete one or more elements of the entry.
@@ -183,7 +190,7 @@ indicated by \fIindex\fR.  Returns the empty string.
 .TP
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
 Test the widget state.
-See \fIwidget(n)\fR.
+See \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBselection \fIoption arg\fR
 This command is used to adjust the selection within an entry.  It
@@ -209,7 +216,7 @@ earlier one, then the entry's selection is cleared.
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
 Modify or query the widget state.
-See \fIwidget(n)\fR.
+See \fIttk_widget(n)\fR.
 .TP
 \fIpathName \fBvalidate\fR
 Force revalidation, independent of the conditions specified 
@@ -255,6 +262,7 @@ If \fInumber\fR is negative then characters farther to the left
 become visible;  if it is positive then characters farther to the right
 become visible.
 .RE
+
 .SH VALIDATION
 The \fB-validate\fR, \fB-validatecommand\fR, and \fB-invalidcommand\fR
 options are used to enable entry widget validation.
@@ -337,6 +345,7 @@ modifying the entry value in a validation script).
 .IP \(bu
 The standard entry widget invokes validation whenever the linked
 \fB-textvariable\fR is modified; the Tk themed entry widget does not.
+
 .SH "DEFAULT BINDINGS"
 The entry widget's default bindings enable the following behavior.  
 In the descriptions below, ``word'' refers to a contiguous group
@@ -416,6 +425,7 @@ Control-d deletes the character to the right of the insert cursor.
 .IP \(bu
 Control-k deletes all the characters to the right of the insertion
 cursor.
+
 .SH "WIDGET STATES"
 In the \fBdisabled\fR state, 
 the entry cannot be edited and the text cannot be selected.
@@ -434,5 +444,9 @@ and a different background is used in the \fBreadonly\fR state.
 .PP
 The entry widget sets the \fBinvalid\fR state if revalidation fails,
 and clears it whenever validation succeeds.
+
+.SH "SEE ALSO"
+ttk_widget(n), entry(n)
+
 .SH KEYWORDS
 entry, widget, text field

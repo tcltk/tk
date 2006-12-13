@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.10 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: button.n,v 1.11 2006/12/13 23:04:32 hobbs Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -176,6 +176,9 @@ actions occur:  the button is completely non-responsive.
 .PP
 The behavior of buttons can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
+
+.SH "SEE ALSO"
+ttk_button(n)
 
 .SH KEYWORDS
 button, widget
