@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkInit.c,v 1.3 2006/12/13 20:40:32 hobbs Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -207,10 +207,8 @@ extern WidgetSpec ttkSizegripWidgetSpec;
 extern int TtkProgressbar_Init(Tcl_Interp *);
 extern int TtkNotebook_Init(Tcl_Interp *);
 extern int TtkEntryWidget_Init(Tcl_Interp *);
-#ifdef TTK_TREEVIEW_WIDGET
 extern int TtkTreeview_Init(Tcl_Interp *);
-#endif
-extern int TtkPaned_Init(Tcl_Interp *);
+extern int TtkPanedwindow_Init(Tcl_Interp *);
 #ifdef TTK_SQUARE_WIDGET
 extern int TtkSquareWidget_Init(Tcl_Interp *);
 #endif
@@ -231,10 +229,8 @@ static void RegisterWidgets(Tcl_Interp *interp)
     TtkNotebook_Init(interp);
     TtkEntryWidget_Init(interp);
     TtkProgressbar_Init(interp);
-    TtkPaned_Init(interp);
-#ifdef TTK_TREEVIEW_WIDGET
+    TtkPanedwindow_Init(interp);
     TtkTreeview_Init(interp);
-#endif
 #ifdef TTK_SQUARE_WIDGET
     TtkSquareWidget_Init(interp);
 #endif
