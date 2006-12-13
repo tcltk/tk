@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.8 2006/11/15 16:31:23 dkf Exp $
+'\" RCS: @(#) $Id: label.n,v 1.9 2006/12/13 23:04:32 hobbs Exp $
 '\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
@@ -125,7 +125,7 @@ pack .mid \-expand 1    \-fill both
 .CE
 
 .SH "SEE ALSO"
-labelframe(n), button(n)
+labelframe(n), button(n), ttk_label(n)
 
 .SH KEYWORDS
 label, widget
