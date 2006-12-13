@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scrollbar.n,v 1.6 2004/10/28 12:25:53 dkf Exp $
+'\" RCS: @(#) $Id: scrollbar.n,v 1.7 2006/12/13 23:04:32 hobbs Exp $
 '\" 
 .so man.macros
 .TH scrollbar n 4.1 Tk "Tk Built-In Commands"
@@ -340,6 +340,9 @@ grid .tl.t .tl.s -sticky nsew
 grid columnconfigure .tl 0 -weight 1
 grid rowconfigure .tl 0 -weight 1
 .CE
+
+.SH "SEE ALSO"
+ttk_scrollbar(n)
 
 .SH KEYWORDS
 scrollbar, widget
