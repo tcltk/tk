@@ -1,13 +1,10 @@
 #
-# $Id: defaults.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
+# $Id: defaults.tcl,v 1.3 2006/12/13 17:06:32 jenglish Exp $
 #
-# Ttk widget set: Default theme
+# Settings for default theme.
 #
 
-namespace eval ttk {
-    # XXX do we want to separate Tk version from theme version?
-    package provide ttk::theme::default $::tk_version
-
+namespace eval ttk::theme::default {
     variable colors
     array set colors {
 	-frame		"#d9d9d9"
@@ -19,9 +16,9 @@ namespace eval ttk {
 	-indicator	"#4a6984"
     }
 
-    style theme settings default {
+    ttk::style theme settings default {
 
-	style configure "." \
+	ttk::style configure "." \
 	    -borderwidth 	1 \
 	    -background 	$colors(-frame) \
 	    -foreground 	black \
@@ -34,52 +31,59 @@ namespace eval ttk {
 	    -indicatordiameter	10 \
 	    ;
 
-	style map "." -background \
+	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]
-	style map "." -foreground \
+	ttk::style map "." -foreground \
 	    [list disabled $colors(-disabledfg)]
 
-	style configure TButton \
+	ttk::style configure TButton \
 	    -padding "3 3" -width -9 -relief raised -shiftrelief 1
-	style map TButton -relief [list {!disabled pressed} sunken]
+	ttk::style map TButton -relief [list {!disabled pressed} sunken] 
 
-	style configure TCheckbutton \
+	ttk::style configure TCheckbutton \
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
-	style map TCheckbutton -indicatorcolor \
+	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  selected $colors(-indicator)]
 
-	style configure TRadiobutton \
+	ttk::style configure TRadiobutton \
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
-	style map TRadiobutton -indicatorcolor \
+	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  selected $colors(-indicator)]
 
-	style configure TMenubutton \
+	ttk::style configure TMenubutton \
 	    -relief raised -padding "10 3" -anchor w
 
-	style configure TEntry -relief sunken -fieldbackground white -padding 1
-	style map TEntry -fieldbackground \
+	ttk::style configure TEntry \
+	    -relief sunken -fieldbackground white -padding 1
+	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	style configure TCombobox -arrowsize 12 -padding 1
-	style map TCombobox -fieldbackground \
+	ttk::style configure TCombobox -arrowsize 12 -padding 1
+	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	style configure TLabelframe -relief groove -borderwidth 2
+	ttk::style configure TLabelframe \
+	    -relief groove -borderwidth 2
 
-	style configure TScrollbar -width 12 -arrowsize 12
-	style map TScrollbar -arrowcolor [list disabled $colors(-disabledfg)]
+	ttk::style configure TScrollbar \
+	    -width 12 -arrowsize 12
+	ttk::style map TScrollbar \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	style configure TScale -sliderrelief raised
-	style configure TProgressbar -background $colors(-selectbg)
+	ttk::style configure TScale \
+	    -sliderrelief raised
+	ttk::style configure TProgressbar \
+	    -background $colors(-selectbg)
 
-	style configure TNotebook.Tab \
+	ttk::style configure TNotebook.Tab \
 	    -padding {4 2} -background $colors(-darker)
-	style map TNotebook.Tab -background [list selected $colors(-frame)]
+	ttk::style map TNotebook.Tab \
+	    -background [list selected $colors(-frame)]
 
 	#
 	# Toolbar buttons:
 	#
-	style layout Toolbutton {
+	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {
 		Toolbutton.padding -children {
 		    Toolbutton.label
@@ -87,10 +91,11 @@ namespace eval ttk {
 	    }
 	}
 
-	style configure Toolbutton -padding 2 -relief flat
-	style map Toolbutton -relief \
-	    {disabled flat selected sunken pressed sunken active raised}
-	style map Toolbutton -background \
+	ttk::style configure Toolbutton \
+	    -padding 2 -relief flat
+	ttk::style map Toolbutton -relief \
+	    [list disabled flat selected sunken pressed sunken active raised]
+	ttk::style map Toolbutton -background \
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
     }
 }

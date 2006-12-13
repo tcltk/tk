@@ -1,4 +1,4 @@
-/* $Id: ttkElements.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkElements.c,v 1.3 2006/12/13 17:06:32 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -1443,6 +1443,11 @@ void TtkRegisterElements(Tcl_Interp *interp)
     Ttk_RegisterLayout(theme, "Horizontal.TScale", HorizontalScaleLayout);
     Ttk_RegisterLayout(theme, "TSeparator", SeparatorLayout);
     Ttk_RegisterLayout(theme, "TSizegrip", SizegripLayout);
+
+    /*
+     * Register "default" as a user-loadable theme (for now):
+     */
+    Tcl_PkgProvide(interp, "ttk::theme::default", TTK_VERSION);
 }
 
 /*EOF*/

@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.3 2006/12/13 05:36:38 jenglish Exp $
+# $Id: ttk.tcl,v 1.4 2006/12/13 17:06:32 jenglish Exp $
 #
 # Ttk widget set initialization script.
 #
@@ -114,44 +114,59 @@ source [file join $::ttk::library dialog.tcl]
 bind TLabelframe <<Invoke>>	{ tk::TabToWindow [tk_focusNext %W] }
 bind TLabel <<Invoke>>		{ tk::TabToWindow [tk_focusNext %W] }
 
-### Load themes.
+### Load settings for built-in themes:
 #
-source [file join $::ttk::library defaults.tcl]
-source [file join $::ttk::library classicTheme.tcl]
-source [file join $::ttk::library altTheme.tcl]
-source [file join $::ttk::library clamTheme.tcl]
+proc ttk::LoadThemes {} {
+    variable library
 
-### Choose platform-specific default theme.
-#
-# Notes:
-#	+ xpnative takes precedence over winnative if available.
-#	+ On X11, users can use the X resource database to
-#	  specify a preferred theme (*TkTheme: themeName)
-#
+    # "default" always present:
+    uplevel #0 [list source [file join $library defaults.tcl]] 
 
-set ::ttk::defaultTheme "default"
-
-if {[package provide ttk::theme::winnative] != {}} {
-    source [file join $::ttk::library winTheme.tcl]
-    set ::ttk::defaultTheme "winnative"
-}
-if {[package provide ttk::theme::xpnative] != {}} {
-    source [file join $::ttk::library xpTheme.tcl]
-    set ::ttk::defaultTheme "xpnative"
-}
-if {[package provide ttk::theme::aqua] != {}} {
-    source [file join $::ttk::library aquaTheme.tcl]
-    set ::ttk::defaultTheme "aqua"
-}
-
-set ::ttk::userTheme [option get . tkTheme TkTheme]
-if {$::ttk::userTheme != {}} {
-    if {($::ttk::userTheme in [::ttk::style theme names])
-        || ![catch {package require ttk::theme::$ttk::userTheme}]} {
-	set ::ttk::defaultTheme $::ttk::userTheme
+    set builtinThemes [style theme names]
+    foreach {theme script} {
+	classic 	classicTheme.tcl
+	alt 		altTheme.tcl
+	clam 		clamTheme.tcl
+	winnative	winTheme.tcl
+	xpnative	xpTheme.tcl
+	aqua 		aquaTheme.tcl
+    } {
+	if {[lsearch -exact $builtinThemes $theme] >= 0} {
+	    uplevel #0 [list source [file join $library $script]]
+	}
     }
 }
 
-::ttk::setTheme $::ttk::defaultTheme
+ttk::LoadThemes; rename ::ttk::LoadThemes {}
+
+### Select platform-specific default theme:
+#
+# Notes: 
+#	+ On OSX, aqua theme is the default
+#	+ On Windows, xpnative takes precedence over winnative if available.
+#	+ On X11, users can use the X resource database to
+#	  specify a preferred theme (*TkTheme: themeName);
+#	  otherwise "default" is used.
+#
+
+proc ttk::DefaultTheme {} {
+    set preferred [list aqua xpnative winnative]
+
+    set userTheme [option get . tkTheme TkTheme]
+    if {$userTheme != {} && ![catch {
+	uplevel #0 [list package require ttk::theme::$userTheme]
+    }]} {
+	return $userTheme
+    }
+
+    foreach theme $preferred {
+	if {[package provide ttk::theme::$theme] != ""} {
+	    return $theme
+	}
+    }
+    return "default"
+}
+
+ttk::setTheme [ttk::DefaultTheme] ; rename ttk::DefaultTheme {}
 
 #*EOF*
