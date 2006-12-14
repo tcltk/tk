@@ -1,4 +1,4 @@
-/* $Id: ttkElements.c,v 1.3 2006/12/13 17:06:32 jenglish Exp $
+/* $Id: ttkElements.c,v 1.4 2006/12/14 19:51:03 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -1358,17 +1358,12 @@ TTK_BEGIN_LAYOUT(SizegripLayout)
 TTK_END_LAYOUT
 
 /*----------------------------------------------------------------------
- * TtkRegisterElements --
- *
- *	Register all elements and layouts defined in this package.
+ * TtkElements_Init --
+ *	Register elements and default layouts.
  */
 
-extern Ttk_ElementSpec ttkTextElementSpec;
-extern Ttk_ElementSpec ttkImageElementSpec;
-extern Ttk_ElementSpec ttkImageTextElementSpec;
-extern Ttk_ElementSpec ttkLabelElementSpec;
-
-void TtkRegisterElements(Tcl_Interp *interp)
+MODULE_SCOPE
+void TtkElements_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
@@ -1383,11 +1378,7 @@ void TtkRegisterElements(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "focus", &FocusElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "padding", &PaddingElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "text", &ttkTextElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme,
-	    "Labelframe.text",&ttkImageTextElementSpec,NULL);
-    Ttk_RegisterElement(interp, theme, "image", &ttkImageElementSpec, interp);
-    Ttk_RegisterElement(interp, theme, "label", &ttkLabelElementSpec, interp);
+
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
 	    &CheckbuttonIndicatorElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
