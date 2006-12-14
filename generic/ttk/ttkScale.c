@@ -1,7 +1,7 @@
-/* $Id: ttkScale.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkScale.c,v 1.3 2006/12/14 19:51:04 jenglish Exp $
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
- * Ttk widget set: scale widget.
+ * ttk::scale widget.
  */
 
 #include <tk.h>
@@ -485,8 +485,7 @@ static WidgetCommandSpec ScaleCommands[] =
     { 0, 0 }
 };
 
-MODULE_SCOPE WidgetSpec ttkScaleWidgetSpec;
-WidgetSpec ttkScaleWidgetSpec = 
+static WidgetSpec ScaleWidgetSpec =
 {
     "TScale",			/* Class name */
     sizeof(Scale),		/* record size */
@@ -501,4 +500,13 @@ WidgetSpec ttkScaleWidgetSpec =
     ScaleDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
+
+/*
+ * Initialization.
+ */
+MODULE_SCOPE
+void TtkScale_Init(Tcl_Interp *interp)
+{
+    RegisterWidget(interp, "ttk::scale", &ScaleWidgetSpec);
+}
 

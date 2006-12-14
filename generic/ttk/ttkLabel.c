@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.3 2006/12/09 20:53:35 jenglish Exp $
+/* $Id: ttkLabel.c,v 1.4 2006/12/14 19:51:04 jenglish Exp $
  *
  * text, image, and label elements.
  *
@@ -209,8 +209,7 @@ static void TextElementDraw(
     }
 }
 
-MODULE_SCOPE Ttk_ElementSpec ttkTextElementSpec;
-/*public*/ Ttk_ElementSpec ttkTextElementSpec =
+static Ttk_ElementSpec TextElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(TextElement),
@@ -240,8 +239,7 @@ static void ImageTextElementDraw(
     TextCleanup(text);
 }
 
-MODULE_SCOPE Ttk_ElementSpec ttkImageTextElementSpec;
-/*public*/ Ttk_ElementSpec ttkImageTextElementSpec =
+static Ttk_ElementSpec ImageTextElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(TextElement),
@@ -401,8 +399,7 @@ static void ImageElementDraw(
     }
 }
 
-MODULE_SCOPE Ttk_ElementSpec ttkImageElementSpec;
-/*public*/ Ttk_ElementSpec ttkImageElementSpec =
+static Ttk_ElementSpec ImageElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(ImageElement),
@@ -699,8 +696,7 @@ static void LabelElementDraw(
     LabelCleanup(l);
 }
 
-MODULE_SCOPE Ttk_ElementSpec ttkLabelElementSpec;
-/*public*/ Ttk_ElementSpec ttkLabelElementSpec =
+static Ttk_ElementSpec LabelElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(LabelElement),
@@ -708,4 +704,20 @@ MODULE_SCOPE Ttk_ElementSpec ttkLabelElementSpec;
     LabelElementSize,
     LabelElementDraw
 };
+
+/*------------------------------------------------------------------------
+ * +++ Initialization.
+ */
+
+MODULE_SCOPE
+void TtkLabel_Init(Tcl_Interp *interp)
+{
+    Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
+
+    Ttk_RegisterElement(interp, theme, "text", &TextElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, interp);
+    Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, interp);
+    Ttk_RegisterElement(interp, theme, "Labelframe.text", /* @@@ */
+	    				&ImageTextElementSpec,NULL);
+}
 
