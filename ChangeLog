@@ -1,3 +1,16 @@
+2006-12-14  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkButton.c, generic/ttk/ttkElements.c,
+	generic/ttk/ttkEntry.c, generic/ttk/ttkFrame.c,
+	generic/ttk/ttkImage.c, generic/ttk/ttkInit.c,
+	generic/ttk/ttkLabel.c, generic/ttk/ttkNotebook.c,
+	generic/ttk/ttkPanedwindow.c, generic/ttk/ttkProgress.c,
+	generic/ttk/ttkScale.c, generic/ttk/ttkScrollbar.c,
+	generic/ttk/ttkSeparator.c, generic/ttk/ttkTheme.h,
+	generic/ttk/ttkTreeview.c, generic/ttk/ttkWidget.h:
+	Global reduction: use per-file *_Init() routines to reduce 
+	the number of globally-visible initialization records.
+
 2006-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in (install-doc): intentionally skip ttk_dialog.n

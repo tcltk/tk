@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.3 2006/12/13 20:40:32 hobbs Exp $
+/* $Id: ttkInit.c,v 1.4 2006/12/14 19:51:04 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -11,7 +11,7 @@
 
 /*
  * Legal values for the button -default option.
- * See also: enum Ttk_ButtonDefaultState in ttkTheme.h.
+ * See also: enum Ttk_ButtonDefaultState.
  */
 CONST char *ttkDefaultStrings[] = {
     "normal", "active", "disabled", NULL
@@ -27,7 +27,7 @@ int Ttk_GetButtonDefaultStateFromObj(
 
 /*
  * Legal values for the -compound option.
- * See also: enum Ttk_Compound in ttkTheme.h
+ * See also: enum Ttk_Compound.
  */
 const char *ttkCompoundStrings[] = {
     "none", "text", "image", "center",
@@ -44,7 +44,7 @@ int Ttk_GetCompoundFromObj(
 
 /*
  * Legal values for the -orient option.
- * See also: enum TTK_ORIENT in ttkTheme.h
+ * See also: enum Ttk_Orient.
  */
 CONST char *ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
@@ -62,7 +62,7 @@ int Ttk_GetOrientFromObj(
  * Recognized values for the -state compatibility option.
  * Other options are accepted and interpreted as synonyms for "normal".
  */
-static const char *TTKStateStrings[] = {
+static const char *ttkStateStrings[] = {
     "normal", "readonly", "disabled", "active", NULL
 };
 enum { 
@@ -86,7 +86,7 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
     unsigned all = TTK_STATE_DISABLED|TTK_STATE_READONLY|TTK_STATE_ACTIVE;
 #   define SETFLAGS(f) TtkWidgetChangeState(corePtr, f, all^f)
 
-    (void)Tcl_GetIndexFromObj(NULL,objPtr,TTKStateStrings,"",0,&stateOption);
+    (void)Tcl_GetIndexFromObj(NULL,objPtr,ttkStateStrings,"",0,&stateOption);
     switch (stateOption) {
 	case TTK_COMPAT_STATE_NORMAL:
 	default:
@@ -189,47 +189,50 @@ Tk_OptionSpec ttkCoreOptionSpecs[] =
 };
 
 /*------------------------------------------------------------------------
- * +++ Widget definitions.
+ * +++ Initialization: elements and element factories.
  */
 
-extern WidgetSpec ttkFrameWidgetSpec;
-extern WidgetSpec ttkLabelframeWidgetSpec;
-extern WidgetSpec ttkLabelWidgetSpec;
-extern WidgetSpec ttkButtonWidgetSpec;
-extern WidgetSpec ttkCheckbuttonWidgetSpec;
-extern WidgetSpec ttkRadiobuttonWidgetSpec;
-extern WidgetSpec ttkMenubuttonWidgetSpec;
-extern WidgetSpec ttkScrollbarWidgetSpec;
-extern WidgetSpec ttkScaleWidgetSpec;
-extern WidgetSpec ttkSeparatorWidgetSpec;
-extern WidgetSpec ttkSizegripWidgetSpec;
+extern void TtkElements_Init(Tcl_Interp *);
+extern void TtkLabel_Init(Tcl_Interp *);
+extern void TtkImage_Init(Tcl_Interp *);
 
-extern int TtkProgressbar_Init(Tcl_Interp *);
-extern int TtkNotebook_Init(Tcl_Interp *);
-extern int TtkEntryWidget_Init(Tcl_Interp *);
-extern int TtkTreeview_Init(Tcl_Interp *);
-extern int TtkPanedwindow_Init(Tcl_Interp *);
+static void RegisterElements(Tcl_Interp *interp)
+{
+    TtkElements_Init(interp);
+    TtkLabel_Init(interp);
+    TtkImage_Init(interp);
+}
+
+/*------------------------------------------------------------------------
+ * +++ Initialization: Widget definitions.
+ */
+
+extern void TtkButton_Init(Tcl_Interp *);
+extern void TtkEntry_Init(Tcl_Interp *);
+extern void TtkFrame_Init(Tcl_Interp *);
+extern void TtkNotebook_Init(Tcl_Interp *);
+extern void TtkPanedwindow_Init(Tcl_Interp *);
+extern void TtkProgressbar_Init(Tcl_Interp *);
+extern void TtkScale_Init(Tcl_Interp *);
+extern void TtkScrollbar_Init(Tcl_Interp *);
+extern void TtkSeparator_Init(Tcl_Interp *);
+extern void TtkTreeview_Init(Tcl_Interp *);
+
 #ifdef TTK_SQUARE_WIDGET
 extern int TtkSquareWidget_Init(Tcl_Interp *);
 #endif
 
 static void RegisterWidgets(Tcl_Interp *interp)
 {
-    RegisterWidget(interp, "::ttk::frame", &ttkFrameWidgetSpec);
-    RegisterWidget(interp, "::ttk::labelframe", &ttkLabelframeWidgetSpec);
-    RegisterWidget(interp, "::ttk::label", &ttkLabelWidgetSpec);
-    RegisterWidget(interp, "::ttk::button", &ttkButtonWidgetSpec);
-    RegisterWidget(interp, "::ttk::checkbutton", &ttkCheckbuttonWidgetSpec);
-    RegisterWidget(interp, "::ttk::radiobutton", &ttkRadiobuttonWidgetSpec);
-    RegisterWidget(interp, "::ttk::menubutton", &ttkMenubuttonWidgetSpec);
-    RegisterWidget(interp, "::ttk::scrollbar", &ttkScrollbarWidgetSpec);
-    RegisterWidget(interp, "::ttk::scale", &ttkScaleWidgetSpec);
-    RegisterWidget(interp, "::ttk::separator", &ttkSeparatorWidgetSpec);
-    RegisterWidget(interp, "::ttk::sizegrip", &ttkSizegripWidgetSpec);
+    TtkButton_Init(interp);
+    TtkEntry_Init(interp);
+    TtkFrame_Init(interp);
     TtkNotebook_Init(interp);
-    TtkEntryWidget_Init(interp);
-    TtkProgressbar_Init(interp);
     TtkPanedwindow_Init(interp);
+    TtkProgressbar_Init(interp);
+    TtkScale_Init(interp);
+    TtkScrollbar_Init(interp);
+    TtkSeparator_Init(interp);
     TtkTreeview_Init(interp);
 #ifdef TTK_SQUARE_WIDGET
     TtkSquareWidget_Init(interp);
@@ -237,18 +240,16 @@ static void RegisterWidgets(Tcl_Interp *interp)
 }
 
 /*------------------------------------------------------------------------
- * +++ Built-in themes.
+ * +++ Initialization: Built-in themes.
  */
 
 extern int TtkAltTheme_Init(Tcl_Interp *);
 extern int TtkClassicTheme_Init(Tcl_Interp *);
 extern int TtkClamTheme_Init(Tcl_Interp *);
 
-extern int Ttk_ImageInit(Tcl_Interp *);
-
 static void RegisterThemes(Tcl_Interp *interp)
 {
-    Ttk_ImageInit(interp);	/* not really a theme... */
+
     TtkAltTheme_Init(interp);
     TtkClassicTheme_Init(interp);
     TtkClamTheme_Init(interp);
@@ -269,7 +270,7 @@ Ttk_Init(Tcl_Interp *interp)
      */
     Ttk_StylePkgInit(interp);
 
-    TtkRegisterElements(interp);
+    RegisterElements(interp);
     RegisterWidgets(interp);
     RegisterThemes(interp);
 

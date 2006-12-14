@@ -1,7 +1,7 @@
-/* $Id: ttkFrame.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkFrame.c,v 1.3 2006/12/14 19:51:04 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
- * Ttk widget set: frame and labelframe widgets
+ * ttk::frame and ttk::labelframe widgets.
  */
 
 #include <tk.h>
@@ -149,9 +149,7 @@ static int FrameConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     return TtkCoreConfigure(interp, recordPtr, mask);
 }
 
-/* public */
-MODULE_SCOPE WidgetSpec ttkFrameWidgetSpec;
-WidgetSpec ttkFrameWidgetSpec =
+static WidgetSpec FrameWidgetSpec =
 {
     "TFrame",			/* className */
     sizeof(Frame),		/* recordSize */
@@ -160,8 +158,8 @@ WidgetSpec ttkFrameWidgetSpec =
     TtkNullInitialize,		/* initializeProc */
     TtkNullCleanup,		/* cleanupProc */
     FrameConfigure,		/* configureProc */
-    TtkNullPostConfigure,		/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkNullPostConfigure,	/* postConfigureProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     FrameSize,			/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
@@ -602,9 +600,7 @@ static int LabelframeConfigure(Tcl_Interp *interp,void *recordPtr,int mask)
     return TCL_OK;
 }
 
-/* public */
-MODULE_SCOPE WidgetSpec ttkLabelframeWidgetSpec;
-WidgetSpec ttkLabelframeWidgetSpec =
+static WidgetSpec LabelframeWidgetSpec =
 {
     "TLabelframe",		/* className */
     sizeof(Labelframe),		/* recordSize */
@@ -614,9 +610,19 @@ WidgetSpec ttkLabelframeWidgetSpec =
     LabelframeCleanup,		/* cleanupProc */
     LabelframeConfigure,	/* configureProc */
     TtkNullPostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     LabelframeSize,		/* sizeProc */
     LabelframeDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
 
+/* ======================================================================
+ * +++ Initialization:
+ */
+
+MODULE_SCOPE
+void TtkFrame_Init(Tcl_Interp *interp)
+{
+    RegisterWidget(interp, "ttk::frame", &FrameWidgetSpec);
+    RegisterWidget(interp, "ttk::labelframe", &LabelframeWidgetSpec);
+}

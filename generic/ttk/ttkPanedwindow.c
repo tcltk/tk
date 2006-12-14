@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.6 2006/12/13 20:40:32 hobbs Exp $
+/* $Id: ttkPanedwindow.c,v 1.7 2006/12/14 19:51:04 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -799,7 +799,8 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Registration routine.
  */
-MODULE_SCOPE int TtkPanedwindow_Init(Tcl_Interp *interp)
+MODULE_SCOPE 
+void TtkPanedwindow_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
     RegisterWidget(interp, "ttk::panedwindow", &PanedWidgetSpec);
@@ -810,7 +811,5 @@ MODULE_SCOPE int TtkPanedwindow_Init(Tcl_Interp *interp)
     Ttk_RegisterLayout(themePtr, "TPanedwindow", PanedLayout);
     Ttk_RegisterLayout(themePtr, "Horizontal.Sash", HorizontalSashLayout);
     Ttk_RegisterLayout(themePtr, "Vertical.Sash", VerticalSashLayout);
-    
-    return TCL_OK;
 }
 

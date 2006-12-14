@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.3 2006/12/09 20:53:35 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.4 2006/12/14 19:51:04 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * NOTE-ACTIVE: activeTabIndex is not always correct (it's
@@ -1249,7 +1249,12 @@ TTK_BEGIN_LAYOUT(TabLayout)
 		TTK_NODE("Notebook.label", TTK_PACK_TOP))))
 TTK_END_LAYOUT
 
-MODULE_SCOPE int TtkNotebook_Init(Tcl_Interp *interp)
+/*------------------------------------------------------------------------
+ * +++ Initialization.
+ */
+
+MODULE_SCOPE 
+void TtkNotebook_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
 
@@ -1257,8 +1262,6 @@ MODULE_SCOPE int TtkNotebook_Init(Tcl_Interp *interp)
     Ttk_RegisterLayout(themePtr, "TNotebook", NotebookLayout);
 
     RegisterWidget(interp, "ttk::notebook", &NotebookWidgetSpec);
-
-    return TCL_OK;
 }
 
 /*EOF*/

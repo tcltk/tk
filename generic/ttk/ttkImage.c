@@ -1,4 +1,4 @@
-/* $Id: ttkImage.c,v 1.4 2006/12/09 20:53:35 jenglish Exp $
+/* $Id: ttkImage.c,v 1.5 2006/12/14 19:51:04 jenglish Exp $
  *	Image specifications and image element factory.
  *
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
@@ -408,11 +408,10 @@ error:
     return TCL_ERROR;
 }
 
-MODULE_SCOPE int Ttk_ImageInit(Tcl_Interp *);
-int Ttk_ImageInit(Tcl_Interp *interp)
+MODULE_SCOPE
+void TtkImage_Init(Tcl_Interp *interp)
 {
-    return Ttk_RegisterElementFactory(interp, "image",
-	    Ttk_CreateImageElement, NULL);
+    Ttk_RegisterElementFactory(interp, "image", Ttk_CreateImageElement, NULL);
 }
 
 /*EOF*/

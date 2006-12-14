@@ -1,8 +1,8 @@
-/* $Id: ttkSeparator.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkSeparator.c,v 1.3 2006/12/14 19:51:04 jenglish Exp $
  *
  * Copyright (c) 2004, Joe English
  *
- * Ttk widget set: separator and sizegrip widgets.
+ * ttk::separator and ttk::sizegrip widgets.
  */
 
 #include <tk.h>
@@ -62,8 +62,7 @@ static WidgetCommandSpec SeparatorCommands[] =
 /*
  * Widget specification:
  */
-MODULE_SCOPE WidgetSpec ttkSeparatorWidgetSpec;
-WidgetSpec ttkSeparatorWidgetSpec =
+static WidgetSpec SeparatorWidgetSpec =
 {
     "TSeparator",		/* className */
     sizeof(Separator),		/* recordSize */
@@ -72,7 +71,7 @@ WidgetSpec ttkSeparatorWidgetSpec =
     TtkNullInitialize,		/* initializeProc */
     TtkNullCleanup,		/* cleanupProc */
     TtkCoreConfigure,		/* configureProc */
-    TtkNullPostConfigure,		/* postConfigureProc */
+    TtkNullPostConfigure,	/* postConfigureProc */
     SeparatorGetLayout,		/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
@@ -93,21 +92,30 @@ static WidgetCommandSpec SizegripCommands[] =
     { NULL, NULL }
 };
 
-MODULE_SCOPE WidgetSpec ttkSizegripWidgetSpec;
-WidgetSpec ttkSizegripWidgetSpec =
+static WidgetSpec SizegripWidgetSpec =
 {
     "TSizegrip",		/* className */
     sizeof(WidgetCore),		/* recordSize */
-    ttkCoreOptionSpecs, 		/* optionSpecs */
+    ttkCoreOptionSpecs, 	/* optionSpecs */
     SizegripCommands,		/* subcommands */
     TtkNullInitialize,		/* initializeProc */
     TtkNullCleanup,		/* cleanupProc */
     TtkCoreConfigure,		/* configureProc */
-    TtkNullPostConfigure,		/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkNullPostConfigure,	/* postConfigureProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
+
+/* +++ Initialization:
+ */
+
+MODULE_SCOPE
+void TtkSeparator_Init(Tcl_Interp *interp)
+{
+    RegisterWidget(interp, "ttk::separator", &SeparatorWidgetSpec);
+    RegisterWidget(interp, "ttk::sizegrip", &SizegripWidgetSpec);
+}
 
 /*EOF*/

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkEntry.c,v 1.3 2006/12/14 19:51:04 jenglish Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -1666,7 +1666,7 @@ static WidgetSpec EntryWidgetSpec =
     EntryCleanup,		/* cleanupProc */
     EntryConfigure,		/* configureProc */
     EntryPostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
@@ -1822,7 +1822,7 @@ static WidgetSpec ComboboxWidgetSpec =
     EntryCleanup,		/* cleanupProc */
     ComboboxConfigure,		/* configureProc */
     EntryPostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
@@ -1848,7 +1848,7 @@ static Ttk_ElementOptionSpec TextareaElementOptions[] = {
     {0,0,0}
 };
 
-static void TextareaElementGeometry(
+static void TextareaElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -1871,9 +1871,13 @@ static Ttk_ElementSpec TextareaElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TextareaElement),
     TextareaElementOptions,
-    TextareaElementGeometry,
+    TextareaElementSize,
     TtkNullElementDraw
 };
+
+/*------------------------------------------------------------------------
+ * +++ Widget layouts.
+ */
 
 TTK_BEGIN_LAYOUT(EntryLayout)
     TTK_GROUP("Entry.field", TTK_FILL_BOTH|TTK_BORDER,
@@ -1888,10 +1892,12 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
 	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 
-/* TtkEntryWidget_Init --
- * 	Register entry-based widgets and related resources.
+/*------------------------------------------------------------------------
+ * +++ Initialization.
  */
-MODULE_SCOPE int TtkEntryWidget_Init(Tcl_Interp *interp)
+
+MODULE_SCOPE
+void TtkEntry_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr =  Ttk_GetDefaultTheme(interp);
 
@@ -1902,8 +1908,6 @@ MODULE_SCOPE int TtkEntryWidget_Init(Tcl_Interp *interp)
 
     RegisterWidget(interp, "ttk::entry", &EntryWidgetSpec);
     RegisterWidget(interp, "ttk::combobox", &ComboboxWidgetSpec);
-
-    return TCL_OK;
 }
 
 /*EOF*/

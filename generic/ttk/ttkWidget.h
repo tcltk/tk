@@ -1,17 +1,12 @@
-/* $Id: ttkWidget.h,v 1.3 2006/12/09 20:53:35 jenglish Exp $
+/* $Id: ttkWidget.h,v 1.4 2006/12/14 19:51:04 jenglish Exp $
  * Copyright (c) 2003, Joe English
- *
  * Helper routines for widget implementations.
- *
- * Require: ttkTheme.h.
  */
 
 #ifndef _TTKWIDGET
 #define _TTKWIDGET
 
 /* State flags for 'flags' field.
- * @@@ todo: distinguish:
- * need reconfigure, need redisplay, redisplay pending
  */
 #define WIDGET_DESTROYED	0x0001
 #define REDISPLAY_PENDING 	0x0002	/* scheduled call to RedisplayWidget */
@@ -225,7 +220,6 @@ MODULE_SCOPE int Ttk_GetTagListFromObj(
 
 MODULE_SCOPE void Ttk_FreeTagList(void **taglist);
 
-
 /*
  * Useful widget base classes:
  */
@@ -245,9 +239,8 @@ MODULE_SCOPE const char *ttkDefaultStrings[];
 MODULE_SCOPE int TtkGetLabelAnchorFromObj(Tcl_Interp*,Tcl_Obj*,Ttk_PositionSpec *);
 
 /*
- * Package initialiation routines:
+ * Platform-specific initialization.
  */
-MODULE_SCOPE void TtkRegisterElements(Tcl_Interp *);
 
 #if defined(__WIN32__)
 #define Ttk_PlatformInit Ttk_WinPlatformInit
