@@ -1,8 +1,8 @@
-/* $Id: ttkProgress.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkProgress.c,v 1.3 2006/12/14 19:51:04 jenglish Exp $
  *
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
- * Ttk widget set: progress bar widget.
+ * ttk::progressbar widget.
  */
 
 #include <math.h>
@@ -534,7 +534,9 @@ TTK_END_LAYOUT
 /*
  * Initialization:
  */
-MODULE_SCOPE int TtkProgressbar_Init(Tcl_Interp *interp)
+
+MODULE_SCOPE
+void TtkProgressbar_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
 
@@ -544,8 +546,6 @@ MODULE_SCOPE int TtkProgressbar_Init(Tcl_Interp *interp)
 	"Horizontal.TProgressbar", HorizontalProgressbarLayout);
 
     RegisterWidget(interp, "ttk::progressbar", &ProgressbarWidgetSpec);
-
-    return TCL_OK;
 }
 
 /*EOF*/

@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.3 2006/12/09 20:53:35 jenglish Exp $
+/* $Id: ttkButton.c,v 1.4 2006/12/14 19:51:02 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
@@ -259,8 +259,7 @@ static WidgetCommandSpec LabelCommands[] =
     { NULL, NULL }
 };
 
-MODULE_SCOPE WidgetSpec ttkLabelWidgetSpec;
-WidgetSpec ttkLabelWidgetSpec =
+static WidgetSpec LabelWidgetSpec =
 {
     "TLabel",			/* className */
     sizeof(Label),		/* recordSize */
@@ -270,7 +269,7 @@ WidgetSpec ttkLabelWidgetSpec =
     BaseCleanup,		/* cleanupProc */
     BaseConfigure,		/* configureProc */
     BasePostConfigure,		/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
@@ -362,8 +361,7 @@ static WidgetCommandSpec ButtonCommands[] =
     { NULL, NULL }
 };
 
-MODULE_SCOPE WidgetSpec ttkButtonWidgetSpec;
-WidgetSpec ttkButtonWidgetSpec =
+static WidgetSpec ButtonWidgetSpec =
 {
     "TButton",			/* className */
     sizeof(Button),		/* recordSize */
@@ -373,7 +371,7 @@ WidgetSpec ttkButtonWidgetSpec =
     BaseCleanup,		/* cleanupProc */
     ButtonConfigure,		/* configureProc */
     BasePostConfigure,		/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout,		/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
@@ -555,8 +553,7 @@ static WidgetCommandSpec CheckbuttonCommands[] =
     { NULL, NULL }
 };
 
-MODULE_SCOPE WidgetSpec ttkCheckbuttonWidgetSpec;
-WidgetSpec ttkCheckbuttonWidgetSpec =
+static WidgetSpec CheckbuttonWidgetSpec =
 {
     "TCheckbutton",		/* className */
     sizeof(Checkbutton),	/* recordSize */
@@ -566,7 +563,7 @@ WidgetSpec ttkCheckbuttonWidgetSpec =
     CheckbuttonCleanup,		/* cleanupProc */
     CheckbuttonConfigure,	/* configureProc */
     CheckbuttonPostConfigure,	/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
@@ -727,8 +724,7 @@ static WidgetCommandSpec RadiobuttonCommands[] =
     { NULL, NULL }
 };
 
-MODULE_SCOPE WidgetSpec ttkRadiobuttonWidgetSpec;
-WidgetSpec ttkRadiobuttonWidgetSpec =
+static WidgetSpec RadiobuttonWidgetSpec =
 {
     "TRadiobutton",		/* className */
     sizeof(Radiobutton),	/* recordSize */
@@ -738,7 +734,7 @@ WidgetSpec ttkRadiobuttonWidgetSpec =
     RadiobuttonCleanup,		/* cleanupProc */
     RadiobuttonConfigure,	/* configureProc */
     RadiobuttonPostConfigure,	/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
@@ -790,8 +786,7 @@ static WidgetCommandSpec MenubuttonCommands[] =
     { NULL, NULL }
 };
 
-MODULE_SCOPE WidgetSpec ttkMenubuttonWidgetSpec;
-WidgetSpec ttkMenubuttonWidgetSpec =
+static WidgetSpec MenubuttonWidgetSpec =
 {
     "TMenubutton",		/* className */
     sizeof(Menubutton), 	/* recordSize */
@@ -801,9 +796,22 @@ WidgetSpec ttkMenubuttonWidgetSpec =
     BaseCleanup,		/* cleanupProc */
     BaseConfigure,		/* configureProc */
     BasePostConfigure,  	/* postConfigureProc */
-    TtkWidgetGetLayout, 		/* getLayoutProc */
+    TtkWidgetGetLayout, 	/* getLayoutProc */
     TtkWidgetSize, 		/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
 
+/*
+ * Initialization:
+ */
+
+MODULE_SCOPE
+void TtkButton_Init(Tcl_Interp *interp)
+{
+    RegisterWidget(interp, "ttk::label", &LabelWidgetSpec);
+    RegisterWidget(interp, "ttk::button", &ButtonWidgetSpec);
+    RegisterWidget(interp, "ttk::checkbutton", &CheckbuttonWidgetSpec);
+    RegisterWidget(interp, "ttk::radiobutton", &RadiobuttonWidgetSpec);
+    RegisterWidget(interp, "ttk::menubutton", &MenubuttonWidgetSpec);
+}
