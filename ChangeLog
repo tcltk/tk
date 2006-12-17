@@ -1,3 +1,22 @@
+2006-12-16  Mo DeJong  <mdejong@users.sourceforge.net>
+
+	* doc/cursors.n: Mention "none" in supported
+	cursor list. Fix comment that incorrectly
+	claims that the Win32 "no" cursor hides
+	the cursor.
+	* tests/cursor.test: Test "none" cursor.
+	* unix/tkUnixCursor.c (CreateCursorFromTableOrFile,
+	TkGetCursorByName): Define a table of Tk cursors
+	that is searched in addition to the X cursor
+	table. A Tk cursor is loaded from a data string
+	and works with the same options as the built
+	in X cursors. This code makes it possible to
+	use "none" as a cursor name under Unix.
+	* win/rc/cursor9a.cur: Added none Win32 cursor.
+	* win/rc/tk_base.rc: Define a built-in Win32
+	cursor named "none".
+	[Patch 1615427]
+
 2006-12-14  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkButton.c, generic/ttk/ttkElements.c,
