@@ -1,4 +1,4 @@
-// RCS: @(#) $Id: tk_base.rc,v 1.4 2006/12/12 23:38:22 mdejong Exp $
+// RCS: @(#) $Id: tk_base.rc,v 1.5 2006/12/17 00:43:06 mdejong Exp $
 //
 //  Base resources needed by Tk whether it's a DLL or a static library.
 //
@@ -137,3 +137,5 @@ umbrella                CURSOR  DISCARDABLE     "cursor92.cur"
 ur_angle                CURSOR  DISCARDABLE     "cursor94.cur"
 watch                   CURSOR  DISCARDABLE     "cursor96.cur"
 xterm                   CURSOR  DISCARDABLE     "cursor98.cur"
+none                    CURSOR  DISCARDABLE     "cursor9a.cur"
+
