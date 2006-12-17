@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.3 2006/12/14 19:51:04 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.4 2006/12/17 21:09:46 jenglish Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -156,6 +156,7 @@ typedef struct
 #define DEF_INSERT_BG	"black"
 #define DEF_ENTRY_WIDTH	"20"
 #define DEF_ENTRY_FONT	"TkTextFont"
+#define DEF_LIST_HEIGHT	"10"
 
 static Tk_OptionSpec EntryOptionSpecs[] =
 {
@@ -1679,6 +1680,7 @@ static WidgetSpec EntryWidgetSpec =
 typedef struct {
     Tcl_Obj	*postCommandObj;
     Tcl_Obj	*valuesObj;
+    Tcl_Obj	*heightObj;
     int 	currentIndex;
 } ComboboxPart;
 
@@ -1690,6 +1692,9 @@ typedef struct {
 
 static Tk_OptionSpec ComboboxOptionSpecs[] =
 {
+    {TK_OPTION_STRING, "-height", "height", "Height",
+        DEF_LIST_HEIGHT, Tk_Offset(Combobox, combobox.heightObj), -1,
+	0,0,0 },
     {TK_OPTION_STRING, "-postcommand", "postCommand", "PostCommand",
         "", Tk_Offset(Combobox, combobox.postCommandObj), -1,
 	0,0,0 },
