@@ -1,4 +1,4 @@
-/* $Id: ttkScroll.c,v 1.4 2006/11/13 00:22:40 jenglish Exp $
+/* $Id: ttkScroll.c,v 1.5 2006/12/18 19:33:13 jenglish Exp $
  *
  * Copyright 2004, Joe English
  *
@@ -142,6 +142,12 @@ void TtkScrolled(ScrollHandle h, int first, int last, int total)
 	first = 0;
 	last = 1;
 	total = 1;
+    }
+
+    if (last > total) {
+	first -= (last - total);
+	if (first < 0) first = 0;
+	last = total;
     }
 
     if (s->first != first || s->last != last || s->total != total
