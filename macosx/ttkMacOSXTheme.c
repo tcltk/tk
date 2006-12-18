@@ -1,5 +1,5 @@
 /*
- * $Id: ttkMacOSXTheme.c,v 1.3 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkMacOSXTheme.c,v 1.4 2006/12/18 19:33:14 jenglish Exp $
  *
  * Tk theme engine for Mac OSX, using the Appearance Manager API.
  *
@@ -45,6 +45,13 @@ Rect BoxToRect(Ttk_Box b)
     rect.right	= b.x + b.width;
     return rect;
 }
+
+/* DontErase --
+ * 	No-op ThemeEraseProc, can be passed to DrawThemeButton &c.
+ */
+static void DontErase(
+    const Rect *bounds, UInt32 eraseData, SInt16 depth, Boolean isColorDev)
+{  }
 
 #define BEGIN_DRAWING(d) { 				\
     	CGrafPtr saveWorld; GDHandle saveDevice; 	\
@@ -94,6 +101,7 @@ static ThemeButtonParms
     RadioButtonParms = { kThemeRadioButton, kThemeMetricRadioButtonHeight },
     BevelButtonParms = { kThemeBevelButton, NoThemeMetric },
     PopupButtonParms = { kThemePopupButton, NoThemeMetric },
+    DisclosureParms = { kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight },
     ListHeaderParms = { kThemeListHeaderButton, kThemeMetricListHeaderHeight };
 
 static Ttk_StateTable ButtonValueTable[] = {
@@ -866,6 +874,53 @@ static Ttk_ElementSpec TreeHeaderElementSpec =
     TreeHeaderElementDraw
 };
 
+/* Disclosure triangle:
+ */
+#define TTK_TREEVIEW_STATE_OPEN TTK_STATE_USER1
+#define TTK_TREEVIEW_STATE_LEAF TTK_STATE_USER2
+static Ttk_StateTable DisclosureValueTable[] = {
+    { kThemeDisclosureDown, TTK_TREEVIEW_STATE_OPEN, 0 },
+    { kThemeDisclosureRight, 0, 0 },
+};
+
+static void DisclosureElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    SInt32 s;
+    GetThemeMetric(kThemeMetricDisclosureTriangleWidth, &s); *widthPtr = s;
+    GetThemeMetric(kThemeMetricDisclosureTriangleHeight, &s); *heightPtr = s;
+}
+
+static void DisclosureElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
+{
+    Rect bounds = BoxToRect(b);
+    ThemeButtonDrawInfo info;
+
+    if (state & TTK_TREEVIEW_STATE_LEAF)
+	return;
+
+    info.state = Ttk_StateTableLookup(ThemeStateTable, state);
+    info.value = Ttk_StateTableLookup(DisclosureValueTable, state);
+    info.adornment = kThemeAdornmentDrawIndicatorOnly;
+
+    BEGIN_DRAWING(d)
+    DrawThemeButton(&bounds, kThemeDisclosureTriangle, &info,
+	NULL/*prevInfo*/,DontErase,NULL/*labelProc*/,0/*userData*/);
+    END_DRAWING
+}
+
+static Ttk_ElementSpec DisclosureElementSpec =
+{
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    DisclosureElementSize,
+    DisclosureElementDraw
+};
+
 /*----------------------------------------------------------------------
  * +++ Widget layouts.
  */
@@ -944,6 +999,8 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     	&ButtonElementSpec, &BevelButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
     	&ButtonElementSpec, &PopupButtonParms);
+    Ttk_RegisterElementSpec(themePtr, "Treeitem.indicator",
+    	&DisclosureElementSpec, &DisclosureParms);
     Ttk_RegisterElementSpec(themePtr, "Treeheading.cell",
 	&TreeHeaderElementSpec, &ListHeaderParms); 
 
