@@ -1,40 +1,35 @@
 2006-12-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl, generic/ttk/ttkEntry.c,
-	doc/ttk_combobox.n: Add combobox -height option; only 
-	show scrollbar if the listbox needs to scroll [#1032869].
+	* doc/ttk_combobox.n: Add combobox -height option; only show scrollbar
+	if the listbox needs to scroll. [Bug 1032869]
 
 2006-12-16  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* doc/cursors.n: Mention "none" in supported
-	cursor list. Fix comment that incorrectly
-	claims that the Win32 "no" cursor hides
-	the cursor.
+	* doc/cursors.n: Mention "none" in supported cursor list. Fix comment
+	that incorrectly claims that the Win32 "no" cursor hides the cursor.
 	* tests/cursor.test: Test "none" cursor.
-	* unix/tkUnixCursor.c (CreateCursorFromTableOrFile,
-	TkGetCursorByName): Define a table of Tk cursors
-	that is searched in addition to the X cursor
-	table. A Tk cursor is loaded from a data string
-	and works with the same options as the built
-	in X cursors. This code makes it possible to
-	use "none" as a cursor name under Unix.
+	* unix/tkUnixCursor.c (CreateCursorFromTableOrFile)
+	(TkGetCursorByName): Define a table of Tk cursors that is searched in
+	addition to the X cursor table. A Tk cursor is loaded from a data
+	string and works with the same options as the built in X cursors. This
+	code makes it possible to use "none" as a cursor name under Unix.
 	* win/rc/cursor9a.cur: Added none Win32 cursor.
-	* win/rc/tk_base.rc: Define a built-in Win32
-	cursor named "none".
+	* win/rc/tk_base.rc: Define a built-in Win32 cursor named "none".
 	[Patch 1615427]
 
 2006-12-14  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkButton.c, generic/ttk/ttkElements.c,
-	generic/ttk/ttkEntry.c, generic/ttk/ttkFrame.c,
-	generic/ttk/ttkImage.c, generic/ttk/ttkInit.c,
-	generic/ttk/ttkLabel.c, generic/ttk/ttkNotebook.c,
-	generic/ttk/ttkPanedwindow.c, generic/ttk/ttkProgress.c,
-	generic/ttk/ttkScale.c, generic/ttk/ttkScrollbar.c,
-	generic/ttk/ttkSeparator.c, generic/ttk/ttkTheme.h,
-	generic/ttk/ttkTreeview.c, generic/ttk/ttkWidget.h:
-	Global reduction: use per-file *_Init() routines to reduce 
-	the number of globally-visible initialization records.
+	* generic/ttk/ttkEntry.c, generic/ttk/ttkFrame.c,
+	* generic/ttk/ttkImage.c, generic/ttk/ttkInit.c,
+	* generic/ttk/ttkLabel.c, generic/ttk/ttkNotebook.c,
+	* generic/ttk/ttkPanedwindow.c, generic/ttk/ttkProgress.c,
+	* generic/ttk/ttkScale.c, generic/ttk/ttkScrollbar.c,
+	* generic/ttk/ttkSeparator.c, generic/ttk/ttkTheme.h,
+	* generic/ttk/ttkTreeview.c, generic/ttk/ttkWidget.h:
+	Global reduction: use per-file *_Init() routines to reduce the number
+	of globally-visible initialization records.
 
 2006-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
@@ -44,9 +39,9 @@
 	* doc/scrollbar.n, doc/button.n, doc/checkbutton.n:
 	* doc/entry.n, doc/frame.n, doc/label.n, doc/labelframe.n:
 	* doc/menu.n, doc/menubutton.n, doc/panedwindow.n:
-	* doc/radiobutton.n, doc/scrollbar.n, doc/ttk_*: revamp ttk docs
-	to use consist nroff format (not 100% consistent with classic
-	widget docs).  Add more man page cross-linking "SEE ALSO".
+	* doc/radiobutton.n, doc/scrollbar.n, doc/ttk_*: revamp ttk docs to
+	use consist nroff format (not 100% consistent with classic widget
+	docs). Add more man page cross-linking "SEE ALSO".
 
 	* generic/ttk/ttkInit.c:
 	* generic/ttk/ttkTreeview.c: make treeview exist by default
@@ -56,29 +51,26 @@
 
 2006-12-13  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/ttk.tcl: Try to straighten out theme loading 
-	and selection logic.
+	* library/ttk/ttk.tcl: Try to straighten out theme loading and
+	selection logic.
 	* generic/ttk/ttkElements.c, library/ttk/defaults.tcl,
-	generic/ttk/ttkClamTheme.c, library/ttk/clamTheme.tcl: 
+	* generic/ttk/ttkClamTheme.c, library/ttk/clamTheme.tcl:
 	Provide package in C part instead of Tcl part.
 
 2006-12-12  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/ttk.tcl, generic/ttkTheme.c: 
-	Remove nonfunctional code.
+	* library/ttk/ttk.tcl, generic/ttkTheme.c: Remove nonfunctional code.
 
 2006-12-12  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* win/tkWinButton.c (InitBoxes): Call Tcl_Panic()
-	if loading of bitmap resources fails. This change
-	generates an error if Tk is unable to find button
-	widget resources instead of silently failing and
-	then drawing widgets incorrectly.
-	win/rc/tk_base.rc: If the user defines BASE_NO_TK_ICON
-	then compile the base resources file without a
-	"tk" icon. This change makes it easier to replace the
-	default tk icon with a custom icon.
-	[Patch 1614362]
+	* win/tkWinButton.c (InitBoxes): Call Tcl_Panic() if loading of bitmap
+	resources fails. This change generates an error if Tk is unable to
+	find button widget resources instead of silently failing and then
+	drawing widgets incorrectly.
+	* win/rc/tk_base.rc: If the user defines BASE_NO_TK_ICON then compile
+	the base resources file without a "tk" icon. This change makes it
+	easier to replace the default tk icon with a custom icon. [Patch
+	1614362]
 
 2006-12-11  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
@@ -104,9 +96,8 @@
 	* generic/ttk/ttkTheme.h, generic/ttk/ttkNotebook.c,
 	* generic/ttk/ttkTreeview.c, doc/ttk_image.n:
 	Merged duplicate functionality between image element factory, image
-	element, and -image option processing.  Image element factory now
-	takes an imageSpec argument instead of a separate image name and -map
-	option.
+	element, and -image option processing. Image element factory now takes
+	an imageSpec argument instead of a separate image name and -map option
 	* tests/ttk/image.test(image-1.1): Can catch this error earlier now.
 
 2006-12-06  Kevin Kenny  <kennykb@acm.org>
@@ -171,12 +162,12 @@
 	* unix/configure: autoconf
 
 2006-11-26  Joe English  <jenglish@users.sourceforge.net>
-	* generic/ttk/ttkWidget.c, generic/ttk/ttkPaned.c Fix for #1603506
+	* generic/ttk/ttkWidget.c, generic/ttk/ttkPaned.c: Fix [Bug 1603506]
 	* library/ttk/button.tcl, library/ttk/combobox.tcl,
-	library/ttk/utils.tcl: Rename ttk::CopyBindings to ttk::copyBindings
+	* library/ttk/utils.tcl: Rename ttk::CopyBindings to ttk::copyBindings
 	* generic/ttk/ttkTreeview.c, doc/ttk_treeview.n:
 	-displaycolumns {} now means "no columns" instead of "all columns".
-	Use -displaycolumns #all for "all columns" [Fixes #1547622].
+	Use -displaycolumns #all for "all columns". [Bug 1547622]
 
 2006-11-26  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -211,7 +202,7 @@
 2006-11-20  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/ttkWinXPTheme.c: Add support for alternate/indeterminate
-	checkbutton state. Fix various spacing parameters [#1596020, patch
+	checkbutton state. Fix various spacing parameters [Bug 1596020, patch
 	from Tim Baker]. Remove unused uxtheme hooks.
 
 2006-11-16  Donal K. Fellows  <dkf@users.sf.net>
@@ -252,7 +243,7 @@
 
 	* generic/ttkScroll.c: Reworked cleanup procedure; "self-cancelling"
 	idle call is not robust, call Tcl_CancelIdleCall() in
-	TtkFreeScrollHandle instead.  Fixes [Bug 1588251]
+	TtkFreeScrollHandle instead. Fixes [Bug 1588251]
 
 2006-11-10  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -500,7 +491,7 @@
 
 2006-10-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tkWindow.c:  Implemented tip #264 - Tk_Interp function.
+	* generic/tkWindow.c:  Implemented TIP #264 - Tk_Interp function.
 	* doc/WindowId.3:      Documented Tk_Interp.
 	* generic/tk.decls:    Added to the stubs interface and
 	* generic/tkDecls.h:   regenerated.
@@ -539,8 +530,8 @@
 
 2006-09-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/tkWinMenu.c (TkpPostMenu): disable menu animation in menus
-	with images to avoid clipping bug.  [Bug 1329198]
+	* win/tkWinMenu.c (TkpPostMenu): disable menu animation in menus with
+	images to avoid clipping bug. [Bug 1329198]
 
 2006-09-21  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -1972,7 +1963,7 @@
 2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
 	* win/tkWin32Dll.c (DllMain): Replace old asm SEH approach with Kenny's
-	new SEH implementation. [Tcl bug 1235544]
+	new SEH implementation. [Tcl Bug 1235544]
 
 2005-08-23  Mo DeJong  <mdejong@users.sourceforge.net>
 
@@ -2547,9 +2538,12 @@
 
 2005-04-07  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* macosx/tkMacOSXWm.c (TkWmStackorderToplevelWrapperMap, TkWmStackorderToplevel):
-	* unix/tkUnixWm.c (TkWmStackorderToplevelWrapperMap, TkWmStackorderToplevel):
-	* win/tkWinWm.c (TkWmStackorderToplevelWrapperMap, TkWmStackorderToplevel):
+	* macosx/tkMacOSXWm.c (TkWmStackorderToplevelWrapperMap,
+	(TkWmStackorderToplevel):
+	* unix/tkUnixWm.c (TkWmStackorderToplevelWrapperMap,
+	(TkWmStackorderToplevel):
+	* win/tkWinWm.c (TkWmStackorderToplevelWrapperMap,
+	(TkWmStackorderToplevel):
 	Fix panic in wm stackorder when a toplevel is created on another
 	display. The code now ignores toplevels that have a display that does
 	not match the display of the parent window. [Bug 1152809]
