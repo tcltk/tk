@@ -1,10 +1,8 @@
-/* $Id: ttkTreeview.c,v 1.9 2006/12/18 19:33:13 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.10 2006/12/18 19:41:19 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
  */
-
-#include <assert.h>
 
 #include <string.h>
 #include <tk.h>
@@ -755,7 +753,7 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
 
 /*------------------------------------------------------------------------
  * +++ Resizing.
- * 	Invariants: TreeWidth(tree) + slack = available space
+ * 	slack invariant: TreeWidth(tree) + slack = treeArea.width
  */
 
 #define FirstColumn(tv)  ((tv->tree.showFlags&SHOW_TREE) ? 0 : 1)
@@ -772,10 +770,6 @@ static int TreeWidth(Treeview *tv)
 	width += tv->tree.displayColumns[i++]->width;
     }
     return width;
-}
-
-static int SLACKINVARIANT(Treeview *tv) {
-    return (TreeWidth(tv) + tv->tree.slack == tv->tree.treeArea.width) ;
 }
 
 /* + RecomputeSlack --
@@ -1232,7 +1226,7 @@ static int ConfigureColumn(
     }
     TtkRedisplayWidget(&tv->core);
 
-    assert(SLACKINVARIANT(tv));
+    /* ASSERT: SLACKINVARIANT */
 
     Tk_FreeSavedOptions(&savedOptions);
     return TCL_OK;
@@ -1483,7 +1477,7 @@ static void TreeviewDoLayout(void *clientData)
     Ttk_LayoutNode *clientNode = Ttk_LayoutFindNode(tv->core.layout, "client");
     int visibleRows;
 
-    assert(SLACKINVARIANT(tv));
+    /* ASSERT: SLACKINVARIANT */
 
     Ttk_PlaceLayout(tv->core.layout,tv->core.state,Ttk_WinBox(tv->core.tkwin));
     tv->tree.treeArea = clientNode
@@ -1491,7 +1485,7 @@ static void TreeviewDoLayout(void *clientData)
 	: Ttk_WinBox(tv->core.tkwin) ;
 
     ResizeColumns(tv, tv->tree.treeArea.width);
-    assert(SLACKINVARIANT(tv));
+    /* ASSERT: SLACKINVARIANT */
 
     TtkScrolled(tv->tree.xscrollHandle,
 	    tv->tree.xscroll.first,
@@ -2778,7 +2772,7 @@ static int TreeviewDragCommand(
 	int right = left + c->width;
 	if (c == column) {
 	    DragColumn(tv, i, newx - right);
-	    assert(SLACKINVARIANT(tv));
+	    /* ASSERT: SLACKINVARIANT */
 	    TtkRedisplayWidget(&tv->core);
 	    return TCL_OK;
 	}
