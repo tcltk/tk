@@ -1,5 +1,5 @@
 #
-# $Id: clamTheme.tcl,v 1.3 2006/12/13 17:06:32 jenglish Exp $
+# $Id: clamTheme.tcl,v 1.4 2006/12/18 19:33:14 jenglish Exp $
 #
 # "Clam" theme.
 #
@@ -10,8 +10,8 @@ namespace eval ttk::theme::clam {
     variable colors 
     array set colors {
 	-disabledfg	"#999999"
-
 	-frame  	"#dcdad5"
+	-window  	"#ffffff"
 	-dark		"#cfcdc8"
 	-darker 	"#bab5ab"
 	-darkest	"#9e9a91"
@@ -110,6 +110,21 @@ namespace eval ttk::theme::clam {
 	    -background [list selected $colors(-frame) {} $colors(-darker)] \
 	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)] \
 	    ;
+
+	# Treeview:
+	ttk::style configure Heading \
+	    -font TkHeadingFont -relief raised -padding {3}
+	ttk::style configure Row -background $colors(-window)
+	ttk::style configure Cell -background $colors(-window)
+	ttk::style map Row \
+	    -background [list selected $colors(-selectbg)] \
+	    -foreground [list selected $colors(-selectfg)] ;
+	ttk::style map Cell \
+	    -background [list selected $colors(-selectbg)] \
+	    -foreground [list selected $colors(-selectfg)] ;
+	ttk::style map Item \
+	    -background [list selected $colors(-selectbg)] \
+	    -foreground [list selected $colors(-selectfg)] ;
 
     	ttk::style configure TLabelframe \
 	    -labeloutside true -labelmargins {0 0 0 4} \

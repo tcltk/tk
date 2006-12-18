@@ -1,5 +1,5 @@
 #
-# $Id: aquaTheme.tcl,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+# $Id: aquaTheme.tcl,v 1.2 2006/12/18 19:33:14 jenglish Exp $
 #
 # Ttk widget set: Aqua theme (OSX native look and feel)
 #
@@ -38,6 +38,16 @@ namespace eval ttk {
 	style configure TNotebook -tabposition n -padding {20 12}
 	style configure TNotebook.Tab -padding {10 2 10 2}
 
+	# Treeview:
+	style configure Treeview -rowheight 18
+	style configure Heading -font TkHeadingFont
+	style map Row -background [list \
+		{selected background} "#c3c3c3" selected SystemHighlight] ;
+	style map Cell -foreground [list \
+		{selected background} "#000000" selected SystemHighlightText] ;
+	style map Item -foreground [list \
+		{selected background} "#000000" selected SystemHighlightText] ;
+
 	# Enable animation for ttk::progressbar widget:
 	style configure TProgressbar -period 100 -maxphase 255
 
@@ -56,5 +66,6 @@ namespace eval ttk {
 	#
     	style configure TLabelframe \
 		-labeloutside true -labelmargins {14 0 14 4}
+
     }
 }

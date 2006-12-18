@@ -1,9 +1,10 @@
-/*
- * $Id: ttkTreeview.c,v 1.8 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.9 2006/12/18 19:33:13 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
  */
+
+#include <assert.h>
 
 #include <string.h>
 #include <tk.h>
@@ -11,13 +12,12 @@
 #include "ttkWidget.h"
 
 #define DEF_TREE_ROWS		"10"
-#define DEF_TREE_PADDING	"4"
 #define DEF_COLWIDTH		"200"
+#define DEF_MINWIDTH		"20"
 
-static const int ROWHEIGHT 	= 24;
-static const int HEADINGHEIGHT	= 24;
-static const int INDENT 	= 24;
-static const int HALO   	= 4;	/* separator */
+static const int DEFAULT_ROWHEIGHT 	= 20;
+static const int DEFAULT_INDENT 	= 20;
+static const int HALO   		= 4;	/* separator */
 
 #define TTK_STATE_OPEN TTK_STATE_USER1
 #define TTK_STATE_LEAF TTK_STATE_USER2
@@ -172,7 +172,7 @@ typedef struct {
     Tcl_Obj *imageObj;		/* taken from item */
     Tcl_Obj *anchorObj;		/* from column */
     Tcl_Obj *backgroundObj;	/* remainder from tag */
-    Tcl_Obj *foregroundObj;	
+    Tcl_Obj *foregroundObj;
     Tcl_Obj *fontObj;
 } DisplayItem;
 
@@ -185,12 +185,12 @@ static Tk_OptionSpec TagOptionSpecs[] =
 	NULL, Tk_Offset(DisplayItem,imageObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, Tk_Offset(DisplayItem,anchorObj), -1, 
+	NULL, Tk_Offset(DisplayItem,anchorObj), -1,
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
-    {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor", 
+    {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, Tk_Offset(DisplayItem,backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
-    {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor", 
+    {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
 	NULL, Tk_Offset(DisplayItem,foregroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -199,8 +199,6 @@ static Tk_OptionSpec TagOptionSpecs[] =
 
     {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0,0,0}
 };
-
-
 
 /*------------------------------------------------------------------------
  * +++ Columns.
@@ -211,6 +209,8 @@ static Tk_OptionSpec TagOptionSpecs[] =
  */
 typedef struct {
     int 	width;		/* Column width, in pixels */
+    int 	minWidth;	/* Minimum column width, in pixels */
+    int 	stretch;	/* Should column stretch while resizing? */
     Tcl_Obj	*idObj;		/* Column identifier, from -columns option */
 
     Tcl_Obj	*anchorObj;	/* -anchor for cell data */
@@ -232,6 +232,8 @@ typedef struct {
 static void InitColumn(TreeColumn *column)
 {
     column->width = 200;
+    column->minWidth = 20;
+    column->stretch = 1;
     column->idObj = 0;
     column->anchorObj = 0;
 
@@ -245,7 +247,7 @@ static void InitColumn(TreeColumn *column)
     column->data = 0;
 }
 
-static void FreeColumn(TreeColumn *column)	/* @@@ rename */
+static void FreeColumn(TreeColumn *column)
 {
     if (column->idObj) { Tcl_DecrRefCount(column->idObj); }
     if (column->anchorObj) { Tcl_DecrRefCount(column->anchorObj); }
@@ -264,6 +266,12 @@ static Tk_OptionSpec ColumnOptionSpecs[] =
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_COLWIDTH, -1, Tk_Offset(TreeColumn,width),
 	0,0,GEOMETRY_CHANGED },
+    {TK_OPTION_INT, "-minwidth", "minWidth", "MinWidth",
+	DEF_MINWIDTH, -1, Tk_Offset(TreeColumn,minWidth),
+	0,0,0 },
+    {TK_OPTION_BOOLEAN, "-stretch", "stretch", "Stretch",
+	"1", -1, Tk_Offset(TreeColumn,stretch),
+	0,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"w", Tk_Offset(TreeColumn,anchorObj), -1,
 	0,0,0 },
@@ -340,6 +348,8 @@ static int GetEnumSetFromObj(
  * Dependencies:
  * 	columns, columnNames: -columns
  * 	displayColumns:	-columns, -displaycolumns
+ * 	headingHeight: [layout]
+ * 	rowHeight, indent: style
  */
 typedef struct
 {
@@ -358,6 +368,10 @@ typedef struct
     Ttk_Layout cellLayout;
     Ttk_Layout headingLayout;
     Ttk_Layout rowLayout;
+
+    int headingHeight;		/* Space for headings */
+    int rowHeight;		/* Height of each item */
+    int indent;			/* #pixels horizontal offset for child items */
 
     /* Tree data:
      */
@@ -381,6 +395,8 @@ typedef struct
     Tcl_Obj *showObj;		/* -show list */
     Tcl_Obj *selectModeObj;	/* -selectmode option */
 
+    Scrollable xscroll;
+    ScrollHandle xscrollHandle;
     Scrollable yscroll;
     ScrollHandle yscrollHandle;
 
@@ -394,6 +410,7 @@ typedef struct
     int nDisplayColumns;	/* #display columns */
     Ttk_Box headingArea;	/* Display area for column headings */
     Ttk_Box treeArea;   	/* Display area for tree */
+    int slack;			/* Slack space (see Resizing section) */
 
 } TreePart;
 
@@ -432,9 +449,12 @@ static Tk_OptionSpec TreeviewOptionSpecs[] =
 	DEF_TREE_ROWS, Tk_Offset(Treeview,tree.heightObj), -1,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
-	DEF_TREE_PADDING, Tk_Offset(Treeview,tree.paddingObj), -1,
+	NULL, Tk_Offset(Treeview,tree.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
+    {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
+	NULL, -1, Tk_Offset(Treeview, tree.xscroll.scrollCmd),
+	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
 	NULL, -1, Tk_Offset(Treeview, tree.yscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
@@ -734,6 +754,174 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
 }
 
 /*------------------------------------------------------------------------
+ * +++ Resizing.
+ * 	Invariants: TreeWidth(tree) + slack = available space
+ */
+
+#define FirstColumn(tv)  ((tv->tree.showFlags&SHOW_TREE) ? 0 : 1)
+
+/* + TreeWidth --
+ * 	Compute the requested tree width from the sum of visible column widths.
+ */
+static int TreeWidth(Treeview *tv)
+{
+    int i = FirstColumn(tv);
+    int width = 0;
+
+    while (i < tv->tree.nDisplayColumns) {
+	width += tv->tree.displayColumns[i++]->width;
+    }
+    return width;
+}
+
+static int SLACKINVARIANT(Treeview *tv) {
+    return (TreeWidth(tv) + tv->tree.slack == tv->tree.treeArea.width) ;
+}
+
+/* + RecomputeSlack --
+ */
+static void RecomputeSlack(Treeview *tv)
+{
+    tv->tree.slack = tv->tree.treeArea.width - TreeWidth(tv);
+}
+
+/* + PickupSlack/DepositSlack --
+ * 	When resizing columns, distribute extra space to 'slack' first,
+ * 	and only adjust column widths if 'slack' goes to zero.
+ * 	That is, don't bother changing column widths if the tree
+ * 	is already scrolled or short.
+ */
+static int PickupSlack(Treeview *tv, int extra)
+{
+    int newSlack = tv->tree.slack + extra;
+
+    if (   (newSlack < 0 && 0 <= tv->tree.slack)
+	|| (newSlack > 0 && 0 >= tv->tree.slack))
+    {
+	tv->tree.slack = 0;
+	return newSlack;
+    } else {
+	tv->tree.slack = newSlack;
+	return 0;
+    }
+}
+
+static void DepositSlack(Treeview *tv, int extra)
+{
+    tv->tree.slack += extra;
+}
+
+/* + Stretch --
+ * 	Adjust width of column by N pixels, down to minimum width.
+ * 	Returns: #pixels actually moved.
+ */
+static int Stretch(TreeColumn *c, int n)
+{
+    int newWidth = n + c->width;
+    if (newWidth < c->minWidth) {
+	n = c->minWidth - c->width;
+	c->width = c->minWidth;
+    } else {
+	c->width = newWidth;
+    }
+    return n;
+}
+
+/* + ShoveLeft --
+ * 	Adjust width of (stretchable) columns to the left by N pixels.
+ * 	Returns: leftover slack.
+ */
+static int ShoveLeft(Treeview *tv, int i, int n)
+{
+    int first = FirstColumn(tv);
+    while (n != 0 && i >= first) {
+	TreeColumn *c = tv->tree.displayColumns[i];
+	if (c->stretch) {
+	    n -= Stretch(c, n);
+	}
+	--i;
+    }
+    return n;
+}
+
+/* + ShoveRight --
+ * 	Adjust width of (stretchable) columns to the right by N pixels.
+ * 	Returns: leftover slack.
+ */
+static int ShoveRight(Treeview *tv, int i, int n)
+{
+    while (n != 0 && i < tv->tree.nDisplayColumns) {
+	TreeColumn *c = tv->tree.displayColumns[i];
+	if (c->stretch) {
+	    n -= Stretch(c, n);
+	}
+	++i;
+    }
+    return n;
+}
+
+/* + DistributeWidth --
+ * 	Distribute n pixels evenly across all stretchable display columns.
+ * 	Returns: leftover slack.
+ * Notes:
+ * 	The "((++w % m) < r)" term is there so that the remainder r = n % m
+ * 	is distributed round-robin.
+ */
+static int DistributeWidth(Treeview *tv, int n)
+{
+    int w = TreeWidth(tv);
+    int m = 0;
+    int i, d, r;
+
+    for (i = FirstColumn(tv); i < tv->tree.nDisplayColumns; ++i) {
+	if (tv->tree.displayColumns[i]->stretch) {
+	    ++m;
+	}
+    }
+    if (m == 0) {
+	return n;
+    }
+
+    d = n / m;
+    r = n % m;
+    if (r < 0) { r += m; --d; }
+
+    for (i = FirstColumn(tv); i < tv->tree.nDisplayColumns; ++i) {
+	TreeColumn *c = tv->tree.displayColumns[i];
+	if (c->stretch) {
+	    n -= Stretch(c, d + ((++w % m) < r));
+	}
+    }
+    return n;
+}
+
+/* + ResizeColumns --
+ * 	Recompute column widths based on available width.
+ * 	Pick up slack first; 
+ * 	Distribute the remainder evenly across stretchable columns;
+ * 	If any is still left over due to minwidth constraints, shove left.
+ */
+static void ResizeColumns(Treeview *tv, int newWidth)
+{
+    int delta = newWidth - (TreeWidth(tv) + tv->tree.slack);
+    DepositSlack(tv, 
+	ShoveLeft(tv, tv->tree.nDisplayColumns - 1,
+	    DistributeWidth(tv, PickupSlack(tv, delta))));
+}
+
+/* + DragColumn --
+ * 	Move the separator to the right of specified column,
+ * 	adjusting other column widths as necessary.
+ */
+static void DragColumn(Treeview *tv, int i, int delta)
+{
+    TreeColumn *c = tv->tree.displayColumns[i];
+    int dl = delta - ShoveLeft(tv, i-1, delta - Stretch(c, delta));
+    int dr = ShoveRight(tv, i+1, PickupSlack(tv, -dl));
+    DepositSlack(tv, dr);
+}
+
+/*------------------------------------------------------------------------
  * +++ Event handlers.
  */
 
@@ -758,7 +946,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event)
      * Figure out where to deliver the event.
      */
 
-    switch (event->type) 
+    switch (event->type)
     {
 	case KeyPress:
 	case KeyRelease:
@@ -823,6 +1011,8 @@ static int TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 	= tv->tree.headingLayout
 	= tv->tree.rowLayout
 	= 0;
+    tv->tree.headingHeight = tv->tree.rowHeight = DEFAULT_ROWHEIGHT;
+    tv->tree.indent = DEFAULT_INDENT;
 
     Tcl_InitHashTable(&tv->tree.columnNames, TCL_STRING_KEYS);
     tv->tree.nColumns = tv->tree.nDisplayColumns = 0;
@@ -853,7 +1043,13 @@ static int TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 
     /* Scroll handles:
      */
-    tv->tree.yscrollHandle = TtkCreateScrollHandle(&tv->core, &tv->tree.yscroll);
+    tv->tree.xscrollHandle = TtkCreateScrollHandle(&tv->core,&tv->tree.xscroll);
+    tv->tree.yscrollHandle = TtkCreateScrollHandle(&tv->core,&tv->tree.yscroll);
+
+    /* Size parameters:
+     */
+    tv->tree.treeArea = tv->tree.headingArea = Ttk_MakeBox(0,0,0,0);
+    tv->tree.slack = 0;
 
     return TCL_OK;
 }
@@ -880,6 +1076,7 @@ static void TreeviewCleanup(void *recordPtr)
     foreachHashEntry(&tv->tree.items, FreeItemCB);
     Tcl_DeleteHashTable(&tv->tree.items);
 
+    TtkFreeScrollHandle(tv->tree.xscrollHandle);
     TtkFreeScrollHandle(tv->tree.yscrollHandle);
 }
 
@@ -905,9 +1102,9 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	    return TCL_ERROR;
     }
     if (mask & SCROLLCMD_CHANGED) {
+	TtkScrollbarUpdateRequired(tv->tree.xscrollHandle);
 	TtkScrollbarUpdateRequired(tv->tree.yscrollHandle);
     }
-
     if (  (mask & SHOW_CHANGED)
 	&& GetEnumSetFromObj(
 		    interp,tv->tree.showObj,showStrings,&showFlags) != TCL_OK)
@@ -920,6 +1117,10 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     }
 
     tv->tree.showFlags = showFlags;
+
+    if (mask & (SHOW_CHANGED | DCOLUMNS_CHANGED)) {
+	RecomputeSlack(tv);
+    }
     return TCL_OK;
 }
 
@@ -949,7 +1150,7 @@ static int ConfigureItem(
     /* Validate -image option.
      */
     if (item->imageObj) {
-	Ttk_ImageSpec *imageSpec = 
+	Ttk_ImageSpec *imageSpec =
 	    TtkGetImageSpec(interp, tv->core.tkwin, item->imageObj);
 	if (!imageSpec) {
 	    goto error;
@@ -1023,10 +1224,15 @@ static int ConfigureColumn(
      * but only if the widget is currently unmapped, in order to prevent
      * geometry jumping during interactive column resize.
      */
-    if (mask & GEOMETRY_CHANGED && !Tk_IsMapped(tv->core.tkwin)) {
-	TtkResizeWidget(&tv->core);
+    if (mask & GEOMETRY_CHANGED) {
+	if (!Tk_IsMapped(tv->core.tkwin)) {
+	    TtkResizeWidget(&tv->core);
+	}
+	RecomputeSlack(tv);
     }
     TtkRedisplayWidget(&tv->core);
+
+    assert(SLACKINVARIANT(tv));
 
     Tk_FreeSavedOptions(&savedOptions);
     return TCL_OK;
@@ -1081,77 +1287,44 @@ error:
  */
 
 /* + CountRows --
- * 	Count the number of viewable items.
+ * 	Returns the number of viewable rows rooted at item
  */
 static int CountRows(TreeItem *item)
 {
-    int height = 1;
+    int rows = 1;
 
     if (item->state & TTK_STATE_OPEN) {
 	TreeItem *child = item->children;
 	while (child) {
-	    height += CountRows(child);
+	    rows += CountRows(child);
 	    child = child->next;
 	}
     }
-    return height;
-}
-
-/* + TreeWidth --
- * 	Compute the requested tree width from the sum of visible column widths.
- */
-static int TreeWidth(Treeview *tv)
-{
-    int i = (tv->tree.showFlags&SHOW_TREE) ? 0 : 1;
-    int width = 0;
-
-    while (i < tv->tree.nDisplayColumns) {
-	width += tv->tree.displayColumns[i++]->width;
-    }
-    return width;
-}
-
-/* + PlaceColumns -
- * 	Adjust final column width to fill available space.
- * 	@@@ NB: still not right -- see paned.c for correct algorithm
- */
-static void PlaceColumns(Treeview *tv, int availableWidth)
-{
-#   define MIN_WIDTH 24
-    int colno = (tv->tree.showFlags & SHOW_TREE) ? 0 : 1;
-    TreeColumn *column = tv->tree.displayColumns[colno];
-
-    while (++colno < tv->tree.nDisplayColumns) {
-	availableWidth -= column->width;
-	column = tv->tree.displayColumns[colno];
-    }
-    column->width = availableWidth;
-    if (column->width < MIN_WIDTH) {
-	column->width = MIN_WIDTH;
-    }
+    return rows;
 }
 
 /* + IdentifyRow --
  * 	Recursive search for item at specified y position.
- * 	Main work routine for IdentifyItem(()
+ * 	Main work routine for IdentifyItem()
  */
 static TreeItem *IdentifyRow(
-    TreeItem *item, 	/* where to start search */
+    Treeview *tv,	/* Widget record */
+    TreeItem *item, 	/* Where to start search */
     Ttk_Box *bp,	/* Scan position */
-    int y)		/* target y coordinate */
+    int y)		/* Target y coordinate */
 {
     while (item) {
-	int next_ypos = bp->y + ROWHEIGHT;
+	int next_ypos = bp->y + tv->tree.rowHeight;
 	if (bp->y <= y && y <= next_ypos) {
-	    bp->height = ROWHEIGHT;
+	    bp->height = tv->tree.rowHeight;
 	    return item;
 	}
 	bp->y = next_ypos;
 	if (item->state & TTK_STATE_OPEN) {
-	    TreeItem *subitem = IdentifyRow(item->children, bp, y);
+	    TreeItem *subitem = IdentifyRow(tv, item->children, bp, y);
 	    if (subitem) {
-		bp->x += INDENT;
-		bp->width -= INDENT;
+		bp->x += tv->tree.indent;
+		bp->width -= tv->tree.indent;
 		return subitem;
 	    }
 	}
@@ -1166,12 +1339,13 @@ static TreeItem *IdentifyRow(
  */
 static TreeItem *IdentifyItem(Treeview *tv, int y, Ttk_Box *itemPos)
 {
+    int rowHeight = tv->tree.rowHeight;
     *itemPos = Ttk_MakeBox(
-		    tv->tree.treeArea.x,
-		    tv->tree.treeArea.y - tv->tree.yscroll.first * ROWHEIGHT,
-		    tv->tree.column0.width,
-		    ROWHEIGHT);
-    return IdentifyRow(tv->tree.root->children, itemPos, y);
+		tv->tree.treeArea.x,
+		tv->tree.treeArea.y - tv->tree.yscroll.first * rowHeight,
+		tv->tree.column0.width,
+		rowHeight);
+    return IdentifyRow(tv, tv->tree.root->children, itemPos, y);
 }
 
 /* + IdentifyDisplayColumn --
@@ -1180,7 +1354,7 @@ static TreeItem *IdentifyItem(Treeview *tv, int y, Ttk_Box *itemPos)
  */
 static int IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 {
-    int colno = (tv->tree.showFlags & SHOW_TREE) ? 0 : 1;
+    int colno = FirstColumn(tv);
     int xpos = tv->tree.treeArea.x;
 
     while (colno < tv->tree.nDisplayColumns) {
@@ -1197,36 +1371,19 @@ static int IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
     return -1;
 }
 
-/* + SubtreeHeight --
- * 	Returns the height of the visible subtree rooted at item.
- */
-#define ItemHeight(item) (ROWHEIGHT)	/* TBFIXED */
-static int SubtreeHeight(TreeItem *item)
-{
-    int height = ItemHeight(item);
-    if (item->state & TTK_STATE_OPEN) {
-	TreeItem *child = item->children;
-	while (child) {
-	    height += SubtreeHeight(child);
-	    child = child->next;
-	}
-    }
-    return height;
-}
-
-/* + ItemYPosition --
- * 	Returns Y position of specified item relative to root of tree,
+/* + ItemRow --
+ * 	Returns row number of specified item relative to root,
  * 	-1 if item is not viewable.
  */
-static int ItemYPosition(Treeview *tv, TreeItem *p)
+static int ItemRow(Treeview *tv, TreeItem *p)
 {
     TreeItem *root = tv->tree.root;
-    int ypos = 0;
+    int rowNumber = 0;
 
     for (;;) {
 	if (p->prev) {
 	    p = p->prev;
-	    ypos += SubtreeHeight(p);
+	    rowNumber += CountRows(p);
 	} else {
 	    p = p->parent;
 	    if (!(p && (p->state & TTK_STATE_OPEN))) {
@@ -1234,9 +1391,9 @@ static int ItemYPosition(Treeview *tv, TreeItem *p)
 		return -1;
 	    }
 	    if (p == root) {
-		return ypos;
+		return rowNumber;
 	    }
-	    ypos += ItemHeight(p);
+	    ++rowNumber;
 	}
     }
 }
@@ -1275,11 +1432,13 @@ static Ttk_Layout TreeviewGetLayout(
 {
     Treeview *tv = recordPtr;
     Ttk_Layout treeLayout = TtkWidgetGetLayout(interp, themePtr, recordPtr);
+    Tcl_Obj *objPtr;
+    int unused;
 
     if (!(
-	treeLayout 
+	treeLayout
      && GetSublayout(interp, themePtr, treeLayout, ".Item",
-	    tv->tree.itemOptionTable, &tv->tree.itemLayout)
+	    tv->tree.tagOptionTable, &tv->tree.itemLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Cell",
 	    tv->tree.tagOptionTable, &tv->tree.cellLayout)	/*@@@HERE*/
      && GetSublayout(interp, themePtr, treeLayout, ".Heading",
@@ -1288,6 +1447,23 @@ static Ttk_Layout TreeviewGetLayout(
 	    tv->tree.tagOptionTable, &tv->tree.rowLayout)	/*@@@HERE*/
     )) {
 	return 0;
+    }
+
+    /* Compute heading height.
+     */
+    Ttk_RebindSublayout(tv->tree.headingLayout, &tv->tree.column0);
+    Ttk_LayoutSize(tv->tree.headingLayout, 0, &unused, &tv->tree.headingHeight);
+
+    /* Get item height, indent from style:
+     * @@@ TODO: sanity-check.
+     */
+    tv->tree.rowHeight = DEFAULT_ROWHEIGHT;
+    tv->tree.indent = DEFAULT_INDENT;
+    if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
+	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
+    }
+    if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
+	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.indent);
     }
 
     return treeLayout;
@@ -1304,51 +1480,59 @@ static Ttk_Layout TreeviewGetLayout(
 static void TreeviewDoLayout(void *clientData)
 {
     Treeview *tv = clientData;
-    unsigned showFlags = tv->tree.showFlags;
     Ttk_LayoutNode *clientNode = Ttk_LayoutFindNode(tv->core.layout, "client");
+    int visibleRows;
+
+    assert(SLACKINVARIANT(tv));
 
     Ttk_PlaceLayout(tv->core.layout,tv->core.state,Ttk_WinBox(tv->core.tkwin));
     tv->tree.treeArea = clientNode
 	? Ttk_LayoutNodeInternalParcel(tv->core.layout,clientNode)
 	: Ttk_WinBox(tv->core.tkwin) ;
 
-    PlaceColumns(tv, tv->tree.treeArea.width);
+    ResizeColumns(tv, tv->tree.treeArea.width);
+    assert(SLACKINVARIANT(tv));
 
-    if (showFlags & SHOW_HEADINGS) {
+    TtkScrolled(tv->tree.xscrollHandle,
+	    tv->tree.xscroll.first,
+	    tv->tree.xscroll.first + tv->tree.treeArea.width,
+	    TreeWidth(tv));
+
+    tv->tree.treeArea.x -= tv->tree.xscroll.first;
+    if (tv->tree.showFlags & SHOW_HEADINGS) {
 	tv->tree.headingArea = Ttk_PackBox(
-	    &tv->tree.treeArea, 1, HEADINGHEIGHT, TTK_SIDE_TOP);
+	    &tv->tree.treeArea, 1, tv->tree.headingHeight, TTK_SIDE_TOP);
     } else {
 	tv->tree.headingArea = Ttk_MakeBox(0,0,0,0);
     }
 
+    visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight;
     tv->tree.root->state |= TTK_STATE_OPEN;
     TtkScrolled(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first,
-	    tv->tree.yscroll.first + (tv->tree.treeArea.height / ROWHEIGHT),
+	    tv->tree.yscroll.first + visibleRows,
 	    CountRows(tv->tree.root) - 1);
+
 }
 
 /* + TreeviewSize --
  * 	SizeProc() widget hook.  Size is determined by
  * 	-height option and column widths.
- *
- *  	<<NOTE-SLOP>>: Ought to compute extra width and height
- *  	by checking the padding of TTK_OPTION_BORDER elements
- *  	in the layout.  In the meantime, just add some extra for slop.
  */
 static int TreeviewSize(void *clientData, int *widthPtr, int *heightPtr)
 {
     Treeview *tv = clientData;
-    int nRows;
-    int slop = 12;	/* NOTE-SLOP */
+    int nRows, padHeight, padWidth;
 
-    Tk_GetPixelsFromObj(NULL,tv->core.tkwin, tv->tree.heightObj, &nRows);
+    Ttk_LayoutSize(tv->core.layout, tv->core.state, &padWidth, &padHeight);
+    Tcl_GetIntFromObj(NULL, tv->tree.heightObj, &nRows);
 
-    *widthPtr = TreeWidth(tv) + slop;
-    *heightPtr = slop + ROWHEIGHT * nRows;
+    *widthPtr = padWidth + TreeWidth(tv);
+    *heightPtr = padHeight + tv->tree.rowHeight * nRows;
 
-    if (tv->tree.showFlags & SHOW_HEADINGS)
-	*heightPtr += HEADINGHEIGHT;
+    if (tv->tree.showFlags & SHOW_HEADINGS) {
+	*heightPtr += tv->tree.headingHeight;
+    }
 
     return 1;
 }
@@ -1372,7 +1556,7 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item)
  */
 static void DrawHeadings(Treeview *tv, Drawable d, Ttk_Box b)
 {
-    int i = (tv->tree.showFlags & SHOW_TREE) ? 0 : 1;
+    int i = FirstColumn(tv);
     int x = 0;
 
     while (i < tv->tree.nDisplayColumns) {
@@ -1397,7 +1581,7 @@ static void PrepareItem(Treeview *tv, TreeItem *item, DisplayItem *displayItem)
 
     memset(displayItem, 0, sizeof(*displayItem));
 
-    if (   item->tagsObj 
+    if (   item->tagsObj
     	&& Tcl_ListObjGetElements(NULL, item->tagsObj, &objc, &objv) == TCL_OK)
     {
 	int i, j;
@@ -1426,7 +1610,7 @@ static void DrawCells(
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_State state = ItemState(tv, item);
     Ttk_Padding cellPadding = {4, 0, 4, 0};
-    int height = ROWHEIGHT;
+    int rowHeight = tv->tree.rowHeight;
     int nValues = 0;
     Tcl_Obj **values = 0;
     int i;
@@ -1443,7 +1627,7 @@ static void DrawCells(
     for (i = 1; i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_PadBox(
-	    Ttk_MakeBox(b.x+x, b.y+y, column->width, height), cellPadding);
+	    Ttk_MakeBox(b.x+x, b.y+y, column->width, rowHeight), cellPadding);
 
 	displayItem->textObj = column->data;
 	displayItem->anchorObj = column->anchorObj;
@@ -1455,17 +1639,15 @@ static void DrawCells(
 
 /* + DrawItem --
  * 	Draw an item (row background, tree label, and cells).
- * 	at the specified x, y position.
  */
 static void DrawItem(
     Treeview *tv, TreeItem *item, Drawable d, Ttk_Box b, int depth, int row)
 {
-    Ttk_Layout layout = tv->tree.itemLayout;
     Ttk_State state = ItemState(tv, item);
     DisplayItem displayItem;
-    int height = ROWHEIGHT;
-    int x = depth * INDENT;
-    int y = (row - tv->tree.yscroll.first) * ROWHEIGHT;
+    int rowHeight = tv->tree.rowHeight;
+    int x = depth * tv->tree.indent;
+    int y = (row - tv->tree.yscroll.first) * tv->tree.rowHeight;
 
     if (row % 2) state |= TTK_STATE_ALTERNATE;
 
@@ -1474,7 +1656,7 @@ static void DrawItem(
     /* Draw row background:
      */
     {
-	Ttk_Box rowBox = Ttk_MakeBox(b.x, b.y+y, TreeWidth(tv), height);
+	Ttk_Box rowBox = Ttk_MakeBox(b.x, b.y+y, TreeWidth(tv), rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
@@ -1482,8 +1664,11 @@ static void DrawItem(
      */
     if (tv->tree.showFlags & SHOW_TREE) {
 	int colwidth = tv->tree.column0.width;
-	Ttk_Box parcel = Ttk_MakeBox(b.x + x, b.y + y, colwidth - x, height);
-	DisplayLayout(layout, item, state, parcel, d);
+	Ttk_Box parcel = Ttk_MakeBox(b.x + x, b.y + y, colwidth - x, rowHeight);
+	displayItem.textObj = item->textObj;
+	displayItem.imageObj = item->imageObj;
+	displayItem.anchorObj = 0;
+	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
 	x = colwidth;
     } else {
 	x = 0;
@@ -1553,24 +1738,22 @@ static void TreeviewDisplay(void *clientData, Drawable d)
  */
 
 /* + InsertPosition --
- * 	Locate the previous sibling for [$tree insert] and [$tree move].
+ * 	Locate the previous sibling for [$tree insert].
  *
  * 	Returns a pointer to the item just before the specified index,
  * 	or 0 if the item is to be inserted at the beginning.
  */
 static TreeItem *InsertPosition(TreeItem *parent, int index)
 {
-    TreeItem *sibling = parent->children;
-    if (sibling) {
-	while (index > 0 && sibling->next) {
-	    sibling = sibling->next;
-	    --index;
-	}
-	if (index <= 0) {
-	    sibling = sibling->prev;
-	} /* else -- $index > #children, insert at end. */
+    TreeItem *prev = 0, *next = parent->children;
+
+    while (next != 0 && index > 0) {
+	--index;
+	prev = next;
+	next = prev->next;
     }
-    return sibling;
+
+    return prev;
 }
 
 /* + EndPosition --
@@ -1892,7 +2075,7 @@ static int TreeviewBBoxCommand(
     Treeview *tv = recordPtr;
     TreeItem *item = 0;
     TreeColumn *column = 0;
-    int ypos;
+    int row;
     Ttk_Box bbox;
 
     if (objc < 3 || objc > 4) {
@@ -1909,22 +2092,21 @@ static int TreeviewBBoxCommand(
     }
 
     /* Compute bounding box of item:
-     * ALTERNATE: (RowNumber(tv, item) - tv->tree.yscroll.first) * ROWHEIGHT;
      */
-    ypos = ItemYPosition(tv, item) - (ROWHEIGHT * tv->tree.yscroll.first);
-    if (ypos < 0 || ypos > tv->tree.treeArea.height) {
+    row = ItemRow(tv, item);
+    if (row < tv->tree.yscroll.first || row > tv->tree.yscroll.last) {
 	/* not viewable, or off-screen */
 	return TCL_OK;
     }
 
     bbox = tv->tree.treeArea;
-    bbox.y += ypos;
-    bbox.height = ROWHEIGHT;
+    bbox.y += (row - tv->tree.yscroll.first) * tv->tree.rowHeight;
+    bbox.height = tv->tree.rowHeight;
 
     /* If column has been specified, compute bounding box of cell
      */
     if (column) {
-	int xpos = 0, i = (tv->tree.showFlags & SHOW_TREE) ? 0 : 1;
+	int xpos = 0, i = FirstColumn(tv);
 	while (i < tv->tree.nDisplayColumns) {
 	    if (tv->tree.displayColumns[i] == column) {
 		break;
@@ -1943,7 +2125,7 @@ static int TreeviewBBoxCommand(
 	 *  @@@ this may or may not be the right thing.)
 	 */
 	if (column == &tv->tree.column0) {
-	    int indent = INDENT * ItemDepth(item);
+	    int indent = tv->tree.indent * ItemDepth(item);
 	    bbox.x += indent;
 	    bbox.width -= indent;
 	}
@@ -2001,8 +2183,11 @@ static int TreeviewHorribleIdentify(
 	    detail = dcolbuf;
 	} else if (item) {
 	    Ttk_Layout layout = tv->tree.itemLayout;
+	    DisplayItem displayItem;
 	    Ttk_LayoutNode *element;
-	    Ttk_RebindSublayout(layout, item);
+
+	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: -text, etc*/
+	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), itemBox);
 	    element = Ttk_LayoutIdentify(layout, x, y);
 
@@ -2464,16 +2649,27 @@ static int TreeviewMoveCommand(
     if (!strcmp(Tcl_GetString(objv[4]), "end")) {
 	sibling = EndPosition(parent);
     } else {
+	TreeItem *p;
 	int index;
-	if (Tcl_GetIntFromObj(interp, objv[4], &index) != TCL_OK)
+
+	if (Tcl_GetIntFromObj(interp, objv[4], &index) != TCL_OK) {
 	    return TCL_ERROR;
-	sibling = InsertPosition(parent, index);
+	}
+
+	sibling = 0;
+	for (p = parent->children; p != NULL && index > 0; p = p->next) {
+	    if (p != item) {
+		--index;
+	    } /* else -- moving node forward, count index+1 nodes  */
+	    sibling = p; 
+	}
     }
 
     /* Check ancestry:
      */
-    if (!AncestryCheck(interp, tv, item, parent))
+    if (!AncestryCheck(interp, tv, item, parent)) {
 	return TCL_ERROR;
+    }
 
     /* Moving an item after itself is a no-op:
      */
@@ -2493,6 +2689,13 @@ static int TreeviewMoveCommand(
 /*------------------------------------------------------------------------
  * +++ Widget commands -- scrolling
  */
+
+static int TreeviewXViewCommand(
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+{
+    Treeview *tv = recordPtr;
+    return TtkScrollviewCommand(interp, objc, objv, tv->tree.xscrollHandle);
+}
 
 static int TreeviewYViewCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
@@ -2541,6 +2744,52 @@ static int TreeviewSeeCommand(
     }
 
     return TCL_OK;
+}
+
+/*------------------------------------------------------------------------
+ * +++ Widget commands -- interactive column resize
+ */
+
+/* + $tree drag $column $newX --
+ * 	Set right edge of display column $column to x position $X
+ */
+static int TreeviewDragCommand(
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+{
+    Treeview *tv = recordPtr;
+    int left = tv->tree.treeArea.x;
+    int i = FirstColumn(tv);
+    TreeColumn *column;
+    int newx;
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "column xposition");
+	return TCL_ERROR;
+    }
+
+    if (  (column = FindColumn(interp, tv, objv[2])) == 0
+        || Tcl_GetIntFromObj(interp, objv[3], &newx) != TCL_OK)
+    {
+	return TCL_ERROR;
+    }
+
+    for (;i < tv->tree.nDisplayColumns; ++i) {
+	TreeColumn *c = tv->tree.displayColumns[i];
+	int right = left + c->width;
+	if (c == column) {
+	    DragColumn(tv, i, newx - right);
+	    assert(SLACKINVARIANT(tv));
+	    TtkRedisplayWidget(&tv->core);
+	    return TCL_OK;
+	}
+	left = right;
+    }
+
+    Tcl_ResetResult(interp);
+    Tcl_AppendResult(interp,
+	"column ", Tcl_GetString(objv[2]), " is not displayed",
+	NULL);
+    return TCL_ERROR;
 }
 
 /*------------------------------------------------------------------------
@@ -2755,6 +3004,7 @@ static WidgetCommandSpec TreeviewCommands[] =
     { "configure",	TtkWidgetConfigureCommand },
     { "delete", 	TreeviewDeleteCommand },
     { "detach", 	TreeviewDetachCommand },
+    { "drag",   	TreeviewDragCommand },
     { "exists", 	TreeviewExistsCommand },
     { "focus", 		TreeviewFocusCommand },
     { "heading", 	TreeviewHeadingCommand },
@@ -2772,6 +3022,7 @@ static WidgetCommandSpec TreeviewCommands[] =
     { "set",  		TreeviewSetCommand },
     { "state",  	TtkWidgetStateCommand },
     { "tag",    	TreeviewTagCommand },
+    { "xview",  	TreeviewXViewCommand },
     { "yview",  	TreeviewYViewCommand },
     { NULL, NULL }
 };
@@ -2816,14 +3067,15 @@ TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(CellLayout)
     TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
-	TTK_NODE("Treeitem.label", TTK_FILL_BOTH))
+	TTK_NODE("Treeitem.text", TTK_FILL_BOTH))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HeadingLayout)
     TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
     TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
-	TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-	TTK_NODE("Treeheading.text", TTK_FILL_X))
+	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
+	    TTK_NODE("Treeheading.text", TTK_FILL_X)))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(RowLayout)

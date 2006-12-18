@@ -1,5 +1,5 @@
 #
-# $Id: winTheme.tcl,v 1.2 2006/11/24 18:04:14 jenglish Exp $
+# $Id: winTheme.tcl,v 1.3 2006/12/18 19:33:14 jenglish Exp $
 #
 # Ttk widget set: Windows Native theme
 #
@@ -56,6 +56,20 @@ namespace eval ttk {
 	style configure TNotebook -tabmargins {2 2 2 0}
 	style configure TNotebook.Tab -padding {3 1} -borderwidth 1
 	style map TNotebook.Tab -expand [list selected {2 2 2 0}]
+
+	# Treeview:
+	style configure Heading -font TkHeadingFont -relief raised
+	style configure Row -background SystemWindow
+	style configure Cell -background SystemWindow
+	style map Row \
+	    -background [list selected SystemHighlight] \
+	    -foreground [list selected SystemHighlightText] ;
+	style map Cell \
+	    -background [list selected SystemHighlight] \
+	    -foreground [list selected SystemHighlightText] ;
+	style map Item \
+	    -background [list selected SystemHighlight] \
+	    -foreground [list selected SystemHighlightText] ;
 
         style configure TProgressbar -borderwidth 0 -background SystemHighlight
     }

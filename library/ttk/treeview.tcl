@@ -1,7 +1,6 @@
+# $Id: treeview.tcl,v 1.2 2006/12/18 19:33:14 jenglish Exp $
 #
-# $Id: treeview.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
-#
-# Ttk widget set -- bindings for Treeview widget.
+# ttk::treeview widget bindings and utilities.
 #
 
 namespace eval ttk::treeview {
@@ -18,9 +17,7 @@ namespace eval ttk::treeview {
     set State(pressX)		0
 
     # For pressMode == "resize"
-    set State(minWidth)		24
     set State(resizeColumn)	#0
-    set State(resizeWidth)	0
 
     # For pressmode == "heading"
     set State(heading)  	{}
@@ -217,24 +214,15 @@ proc ttk::treeview::Release {w x y} {
 
 ### Interactive column resizing.
 #
-# @@@ needs work.
-#
 proc ttk::treeview::resize.press {w x column} {
     variable State
-
     set State(pressMode) "resize"
-    set State(pressX)	$x
     set State(resizeColumn) $column
-    set State(resizeWidth) [$w column $column -width]
 }
 
 proc ttk::treeview::resize.drag {w x} {
     variable State
-    set newWidth [expr {$State(resizeWidth) + $x - $State(pressX)}]
-    if {$newWidth < $State(minWidth)} {
-	set newWidth $State(minWidth)
-    }
-    $w column $State(resizeColumn) -width $newWidth
+    $w drag $State(resizeColumn) $x
 }
 
 proc ttk::treeview::resize.release {w x} {
@@ -389,35 +377,6 @@ proc ttk::treeview::BrowseTo {w item} {
     $w see $item
     $w focus $item
     $w selection set [list $item]
-}
-
-### Style settings for selected built-in themes.
-#
-#   Do this here instead of in the theme definitions since the details are
-#   likely to change; it's better to keep this all in one place for now.
-#
-namespace eval ::ttk::treeview {
-    variable theme
-    namespace import -force ::ttk::style
-    foreach theme [style theme names] {
-	style theme settings $theme {
-	    style map Item -foreground [list selected "#FFFFFF"]
-	    style configure Row -background "#EEEEEE"
-	    style configure Heading -relief raised -font TkHeadingFont
-	    style configure Item -justify left
-	    style map Heading -relief {
-		pressed sunken
-	    }
-	    style map Row -background {
-		selected	#4a6984
-		focus	#ccccff
-		alternate	#FFFFFF
-	    }
-	    style map Cell -foreground {
-		selected	#FFFFFF
-	    }
-	}
-    }
 }
 
 #*EOF*
