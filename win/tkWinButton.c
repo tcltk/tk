@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.29 2006/12/12 23:38:22 mdejong Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.30 2006/12/19 19:51:06 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -349,7 +349,7 @@ TkpDisplayButton(
 				 * warning. */
     int y, relief;
     register Tk_Window tkwin = butPtr->tkwin;
-    int width, height, haveImage = 0, haveText = 0, drawRing = 0;
+    int width = 0, height = 0, haveImage = 0, haveText = 0, drawRing = 0;
     RECT rect;
     int defaultWidth;		/* Width of default ring. */
     int offset;			/* 0 means this is a label widget. 1 means it
