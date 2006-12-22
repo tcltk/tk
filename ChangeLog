@@ -1,5 +1,9 @@
 2006-12-22  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* unix/tkUnixEvent.c (TkUnixDoOneXEvent): Made correct on AMD64 and
+	other similar 64-bit systems where fd_mask is not 'unsigned int' in
+	effect. [Bug 1522467]
+
 	* library/msgs/es_ES.msg (removed):
 	* library/msgs/es.msg: Fixed translation fault that was present in all
 	Spanish-speaking locales. [Bug 1111213]
