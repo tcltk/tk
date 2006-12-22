@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.11.2.6 2006/01/20 18:42:04 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.11.2.7 2006/12/22 19:06:12 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -466,13 +466,12 @@ DisplayFileProc(clientData, flags)
  *
  * TkUnixDoOneXEvent --
  *
- *	This routine waits for an X event to be processed or for
- *	a timeout to occur.  The timeout is specified as an absolute
- *	time.  This routine is called when Tk needs to wait for a
- *	particular X event without letting arbitrary events be
- *	processed.  The caller will typically call Tk_RestrictEvents
- *	to set up an event filter before calling this routine.  This
- *	routine will service at most one event per invocation.
+ *	This routine waits for an X event to be processed or for a timeout to
+ *	occur. The timeout is specified as an absolute time. This routine is
+ *	called when Tk needs to wait for a particular X event without letting
+ *	arbitrary events be processed. The caller will typically call
+ *	Tk_RestrictEvents to set up an event filter before calling this
+ *	routine. This routine will service at most one event per invocation.
  *
  * Results:
  *	Returns 0 if the timeout has expired, otherwise returns 1.
@@ -485,14 +484,15 @@ DisplayFileProc(clientData, flags)
 
 int
 TkUnixDoOneXEvent(timePtr)
-    Tcl_Time *timePtr;		/* Specifies the absolute time when the
-				 * call should time out. */
+    Tcl_Time *timePtr;		/* Specifies the absolute time when the call
+				 * should time out. */
 {
     TkDisplay *dispPtr;
     static fd_mask readMask[MASK_SIZE];
     struct timeval blockTime, *timeoutPtr;
     Tcl_Time now;
-    int fd, index, bit, numFound, numFdBits = 0;
+    int fd, index, numFound, numFdBits = 0;
+    fd_mask bit;
 
     /*
      * Look for queued events first. 
@@ -503,9 +503,9 @@ TkUnixDoOneXEvent(timePtr)
     }
 
     /*
-     * Compute the next block time and check to see if we have timed out.
-     * Note that HP-UX defines tv_sec to be unsigned so we have to be
-     * careful in our arithmetic.
+     * Compute the next block time and check to see if we have timed out. Note
+     * that HP-UX defines tv_sec to be unsigned so we have to be careful in
+     * our arithmetic.
      */
 
     if (timePtr) {
@@ -528,21 +528,26 @@ TkUnixDoOneXEvent(timePtr)
     }
 
     /*
-     * Set up the select mask for all of the displays.  If a display has
-     * data pending, then we want to poll instead of blocking.
+     * Set up the select mask for all of the displays. If a display has data
+     * pending, then we want to poll instead of blocking.
      */
 
     memset((VOID *) readMask, 0, MASK_SIZE*sizeof(fd_mask));
     for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
-	 dispPtr = dispPtr->nextPtr) {
+	    dispPtr = dispPtr->nextPtr) {
 	XFlush(dispPtr->display);
 	if (QLength(dispPtr->display) > 0) {
 	    blockTime.tv_sec = 0;
 	    blockTime.tv_usec = 0;
 	}
 	fd = ConnectionNumber(dispPtr->display);
+
+	/*
+	 * Assume there are always at least 'fd' bits in the 'readMask' array.
+	 */
+
 	index = fd/(NBBY*sizeof(fd_mask));
-	bit = 1 << (fd%(NBBY*sizeof(fd_mask)));
+	bit = ((fd_mask)1) << (fd%(NBBY*sizeof(fd_mask)));
 	readMask[index] |= bit;
 	if (numFdBits <= fd) {
 	    numFdBits = fd+1;
@@ -553,8 +558,8 @@ TkUnixDoOneXEvent(timePtr)
 	    timeoutPtr);
     if (numFound <= 0) {
 	/*
-	 * Some systems don't clear the masks after an error, so
-	 * we have to do it here.
+	 * Some systems don't clear the masks after an error, so we have to do
+	 * it here.
 	 */
 
 	memset((VOID *) readMask, 0, MASK_SIZE*sizeof(fd_mask));
@@ -565,10 +570,10 @@ TkUnixDoOneXEvent(timePtr)
      */
 
     for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
-	 dispPtr = dispPtr->nextPtr) {
+	    dispPtr = dispPtr->nextPtr) {
 	fd = ConnectionNumber(dispPtr->display);
 	index = fd/(NBBY*sizeof(fd_mask));
-	bit = 1 << (fd%(NBBY*sizeof(fd_mask)));
+	bit = ((fd_mask)1) << (fd%(NBBY*sizeof(fd_mask)));
 	if ((readMask[index] & bit) || (QLength(dispPtr->display) > 0)) {
 	    DisplayFileProc((ClientData)dispPtr, TCL_READABLE);
 	}
@@ -590,8 +595,8 @@ TkUnixDoOneXEvent(timePtr)
     }
 
     /*
-     * We had an event but we did not generate a Tcl event from it. Behave
-     * as though we dealt with it. (JYL&SS)
+     * We had an event but we did not generate a Tcl event from it. Behave as
+     * though we dealt with it. (JYL&SS)
      */
 
     return 1;
