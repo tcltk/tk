@@ -1,3 +1,9 @@
+2006-12-22  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/msgs/es_ES.msg (removed):
+	* library/msgs/es.msg: Fixed translation fault that was present in all
+	Spanish-speaking locales. [Bug 1111213]
+
 2006-12-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinButton.c (TkpDisplayButton): lint init. [Bug 1618604]
