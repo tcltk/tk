@@ -1,3 +1,7 @@
+2006-12-26  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkLabel.c: ImageElement clientData no longer needed.
+
 2006-12-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixEvent.c (TkUnixDoOneXEvent): Made correct on AMD64 and
