@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.4 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkLabel.c,v 1.5 2006/12/25 17:16:28 jenglish Exp $
  *
  * text, image, and label elements.
  *
@@ -251,11 +251,7 @@ static Ttk_ElementSpec ImageTextElementSpec =
 /*
  *----------------------------------------------------------------------
  * +++ Image element.
- *
  * Draws an image.
- *
- * The clientData parameter is a Tcl_Interp, which is needed for
- * the call to Tk_GetImage().
  */
 
 typedef struct
@@ -294,7 +290,7 @@ static Ttk_ElementOptionSpec ImageElementOptions[] =
  */
 
 static int ImageSetup(
-    ImageElement *image, Tk_Window tkwin, Tcl_Interp *interp, Ttk_State state)
+    ImageElement *image, Tk_Window tkwin, Ttk_State state)
 {
 
     if (!image->imageObj) {
@@ -377,9 +373,8 @@ static void ImageElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ImageElement *image = elementRecord;
-    Tcl_Interp *interp = clientData;
 
-    if (ImageSetup(image, tkwin, interp, 0)) {
+    if (ImageSetup(image, tkwin, 0)) {
 	*widthPtr = image->width;
 	*heightPtr = image->height;
 	ImageCleanup(image);
@@ -391,9 +386,8 @@ static void ImageElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     ImageElement *image = elementRecord;
-    Tcl_Interp *interp = clientData;
 
-    if (ImageSetup(image, tkwin, interp, state)) {
+    if (ImageSetup(image, tkwin, state)) {
 	ImageDraw(image, tkwin, d, b, state);
 	ImageCleanup(image);
     }
@@ -412,9 +406,6 @@ static Ttk_ElementSpec ImageElementSpec =
  * +++ Label element.
  *
  * Displays an image and/or text, as determined by the -compound option.
- *
- * The clientData parameter is a Tcl_Interp; this is needed for the
- * image part.
  *
  * Differences from Tk 8.4 compound elements:
  *
@@ -513,7 +504,7 @@ static Ttk_ElementOptionSpec LabelElementOptions[] =
 
 #define MAX(a,b) ((a) > (b) ? a : b);
 static void LabelSetup(
-    LabelElement *c, Tk_Window tkwin, Tcl_Interp *interp, Ttk_State state)
+    LabelElement *c, Tk_Window tkwin, Ttk_State state)
 {
     Tk_GetPixelsFromObj(NULL,tkwin,c->spaceObj,&c->space);
     Ttk_GetCompoundFromObj(NULL,c->compoundObj,(int*)&c->compound);
@@ -522,13 +513,13 @@ static void LabelSetup(
      * Deal with TTK_COMPOUND_NONE.
      */
     if (c->compound == TTK_COMPOUND_NONE) {
-	if (ImageSetup(&c->image, tkwin, interp, state)) {
+	if (ImageSetup(&c->image, tkwin, state)) {
 	    c->compound = TTK_COMPOUND_IMAGE;
 	} else {
 	    c->compound = TTK_COMPOUND_TEXT;
 	}
     } else if (c->compound != TTK_COMPOUND_TEXT) {
-    	if (!ImageSetup(&c->image, tkwin, interp, state)) {
+    	if (!ImageSetup(&c->image, tkwin, state)) {
 	    c->compound = TTK_COMPOUND_TEXT;
 	}
     }
@@ -586,10 +577,9 @@ static void LabelElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     LabelElement *label = elementRecord;
-    Tcl_Interp *interp = clientData;
     int textReqWidth = 0;
 
-    LabelSetup(label, tkwin, interp, 0);
+    LabelSetup(label, tkwin, 0);
 
     *heightPtr = label->totalHeight;
 
@@ -644,10 +634,9 @@ static void LabelElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     LabelElement *l = elementRecord;
-    Tcl_Interp *interp = clientData;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
 
-    LabelSetup(l, tkwin, interp, state);
+    LabelSetup(l, tkwin, state);
 
     /*
      * Adjust overall parcel based on -anchor:
@@ -715,8 +704,8 @@ void TtkLabel_Init(Tcl_Interp *interp)
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
     Ttk_RegisterElement(interp, theme, "text", &TextElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, interp);
-    Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, interp);
+    Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "Labelframe.text", /* @@@ */
 	    				&ImageTextElementSpec,NULL);
 }
