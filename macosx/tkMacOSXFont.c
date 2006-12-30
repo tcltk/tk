@@ -35,14 +35,14 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.20 2006/12/01 20:14:23 kennykb Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.21 2006/12/30 23:15:22 cc_benny Exp $
  */
 
 #include "tkMacOSXInt.h"
 #include "tkMacOSXFont.h"
 
 /*
-#ifdef	TK_MAC_DEBUG
+#ifdef  TK_MAC_DEBUG
 #define TK_MAC_DEBUG_FONTS
 #endif
 */
@@ -404,7 +404,7 @@ TkpGetFontFromAttributes(
 
 void
 TkpDeleteFont(
-    TkFont * tkFontPtr)             /* Token of font to be deleted. */
+    TkFont * tkFontPtr)     /* Token of font to be deleted. */
 {
     ReleaseFont((MacFont *) tkFontPtr);
 }
@@ -429,8 +429,8 @@ TkpDeleteFont(
 
 void
 TkpGetFontFamilies(
-    Tcl_Interp * interp,            /* Interp to hold result. */
-    Tk_Window tkwin)                /* For display to query. */
+    Tcl_Interp * interp,    /* Interp to hold result. */
+    Tk_Window tkwin)        /* For display to query. */
 {
     Tcl_SetObjResult(interp,EnumFontFamilies());
 }
@@ -469,31 +469,108 @@ TkpGetSubFonts(
  *
  * TkpGetFontAttrsForChar --
  *
- *	Retrieve the font attributes of the actual font used to render
- *	a given character.
+ *      Retrieve the font attributes of the actual font used to render a
+ *      given character.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The font attributes are stored in *faPtr.
+ *      The font attributes are stored in *faPtr.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpGetFontAttrsForChar(
-    Tk_Window tkwin,		/* Window on the font's display */
-    Tk_Font tkfont,		/* Font to query */
-    Tcl_UniChar c,		/* Character of interest */
-    TkFontAttributes* faPtr)	/* Output: Font attributes */
+    Tk_Window tkwin,            /* Window on the font's display */
+    Tk_Font tkfont,             /* Font to query */
+    Tcl_UniChar c,              /* Character of interest */
+    TkFontAttributes* faPtr)    /* Output: Font attributes */
 {
-    /* 
-     * Once again, we don't know what ATSU is doing for us. Simply
-     * return the attributes of the base font.
-     */
     TkMacOSXFont* fontPtr = (TkMacOSXFont*) tkfont;
+    UniChar uchar = c;
+    DrawingContext drawingContext;
+    OSStatus err;
+    ATSUFontID fontId;
+    UniCharArrayOffset changedOffset;
+    UniCharCount changedLength;
+
+    /*
+     * Most of the attributes are just copied from the base font.  This
+     * assumes that all fonts can have all attributes.
+     */
+
     *faPtr = fontPtr->font.fa;
+
+    /*
+     * But the name of the actual font may still differ, so we activate the
+     * string as an ATSU layout and ask ATSU about the fallback.
+     */
+
+#if TK_MAC_USE_QUARZ
+    TkMacOSXQuarzStartDraw(&drawingContext);
+#endif
+
+    TkMacOSXLayoutSetString(fontPtr, &drawingContext, &uchar, 1);
+
+    fontId = fontPtr->atsuFontId;
+    err = ATSUMatchFontsToText(
+        fontPtr->atsuLayout, 0, 1,
+        &fontId, &changedOffset, &changedLength);
+#ifdef TK_MAC_DEBUG_FONTS
+    if (err != kATSUFontsMatched && err != noErr) {
+        fprintf(stderr, "TkpGetFontAttrsForChar: "
+                "Can't match \\u%04X\n",
+                (unsigned) c);
+    }
+#endif
+
+    if (err == kATSUFontsMatched) {
+
+        /*
+         * A fallback was used and the actual font is in fontId.  Determine
+         * the name.
+         */
+
+        FMFontFamily fontFamilyId;
+        FMFontStyle fontStyle;
+        int i;
+
+        err = FMGetFontFamilyInstanceFromFont(
+            fontId, &fontFamilyId, &fontStyle);
+#ifdef TK_MAC_DEBUG_FONTS
+        if (err != noErr) {
+            fprintf(stderr, "FMGetFontFamilyInstanceFromFont: Error %d\n",
+                    (int) err);
+        }
+#endif
+
+        if (err == noErr) {
+
+            /*
+             * Find the canonical name in our global list.
+             */
+
+            for (i=0; i<familyListMaxValid; ++i) {
+                if (fontFamilyId == familyList[i].familyId) {
+                    faPtr->family = familyList[i].name;
+                    break;
+                }
+            }
+#ifdef TK_MAC_DEBUG_FONTS
+            if (i >= familyListMaxValid) {
+                fprintf(stderr, "TkpGetFontAttrsForChar: "
+                        "Can't find font %d for \\u%04X\n",
+                        (int) fontFamilyId, (unsigned) c);
+            }
+#endif
+        }
+    }
+
+#if TK_MAC_USE_QUARZ
+    TkMacOSXQuarzEndDraw(&drawingContext);
+#endif
 }
 
 /*
@@ -591,7 +668,7 @@ TkpMeasureCharsInContext(
                              * character that would cross this x-position.
                              * If < 0, then line length is unbounded and the
                              * flags argument is ignored. */
-    int flags,  			/* Various flag bits OR-ed together:
+    int flags,              /* Various flag bits OR-ed together:
                              * TK_PARTIAL_OK means include the last char
                              * which only partially fits on this line.
                              * TK_WHOLE_WORDS means stop on a word boundary,
@@ -1136,46 +1213,46 @@ TkMacOSXQuarzStartDraw(
     err = QDBeginCGContext(destPort, &outContext);
 
     if (err == noErr && outContext) {
-	/*
-	 * Now clip the CG Context to the port. We also have to intersect our clip
-	 * region with the port visible region so we don't overwrite the window
-	 * decoration.
-	 */
+    /*
+     * Now clip the CG Context to the port. We also have to intersect our clip
+     * region with the port visible region so we don't overwrite the window
+     * decoration.
+     */
 
-	if (!clipRgn) {
-	    clipRgn = NewRgn();
-	}
+    if (!clipRgn) {
+        clipRgn = NewRgn();
+    }
 
-	GetPortBounds(destPort, &boundsRect);
+    GetPortBounds(destPort, &boundsRect);
 
-	RectRgn(clipRgn, &boundsRect);
-	SectRegionWithPortClipRegion(destPort, clipRgn);
-	SectRegionWithPortVisibleRegion(destPort, clipRgn);
-	ClipCGContextToRegion(outContext, &boundsRect, clipRgn);
-	SetEmptyRgn(clipRgn);
+    RectRgn(clipRgn, &boundsRect);
+    SectRegionWithPortClipRegion(destPort, clipRgn);
+    SectRegionWithPortVisibleRegion(destPort, clipRgn);
+    ClipCGContextToRegion(outContext, &boundsRect, clipRgn);
+    SetEmptyRgn(clipRgn);
 
-	/*
-	 * Note: You have to call SyncCGContextOriginWithPort
-	 * AFTER all the clip region manipulations.
-	 */
+    /*
+     * Note: You have to call SyncCGContextOriginWithPort
+     * AFTER all the clip region manipulations.
+     */
 
-	SyncCGContextOriginWithPort(outContext, destPort);
+    SyncCGContextOriginWithPort(outContext, destPort);
 
-	/*
-	 * Scale the color values, as QD uses UInt16 with the range [0..2^16-1]
-	 * while Quarz uses float with [0..1].  NB: Only
-	 * CGContextSetRGBFillColor() seems to be actually used by ATSU.
-	 */
+    /*
+     * Scale the color values, as QD uses UInt16 with the range [0..2^16-1]
+     * while Quarz uses float with [0..1].  NB: Only
+     * CGContextSetRGBFillColor() seems to be actually used by ATSU.
+     */
 
-	GetForeColor(&macColor);
-	CGContextSetRGBFillColor(outContext,
-		RGBFLOATRED(macColor),
-		RGBFLOATGREEN(macColor),
-		RGBFLOATBLUE(macColor),
-		1.0f);
+    GetForeColor(&macColor);
+    CGContextSetRGBFillColor(outContext,
+        RGBFLOATRED(macColor),
+        RGBFLOATGREEN(macColor),
+        RGBFLOATBLUE(macColor),
+        1.0f);
  #ifdef TK_MAC_DEBUG_FONTS
     } else {
-	fprintf(stderr, "QDBeginCGContext(): Error %d\n", (int) err);
+    fprintf(stderr, "QDBeginCGContext(): Error %d\n", (int) err);
  #endif
     }
 
@@ -1209,9 +1286,9 @@ TkMacOSXQuarzEndDraw(
     DrawingContext * drawingContextPtr)
 {
     if (drawingContextPtr->cgContext) {
-	QDEndCGContext(
-		drawingContextPtr->graphPort,
-		&drawingContextPtr->cgContext);
+    QDEndCGContext(
+        drawingContextPtr->graphPort,
+        &drawingContextPtr->cgContext);
     }
 }
 #endif /* TK_MAC_USE_QUARZ */
@@ -2178,7 +2255,7 @@ InitFontFamilies(void)
      */
 
     if (familyListNextFree > 0) {
-	return;
+        return;
     }
 
     err = ATSFontFamilyApplyFunction(FontFamilyEnumCallback,NULL);
@@ -2221,17 +2298,15 @@ FontFamilyEnumCallback(
  *      Use the Font Manager to get the name of a given FMFontfamily.  This
  *      currently gets the standard, non-localized QuickDraw name.  Other
  *      names would be possible, see docs for ATSUFindFontName for a
- *      selection.  Hint: The MacOSX font selector seems to use the localized
- *      family name given by ATSUFindFontName(kFontFamilyName,
- *      GetCurrentLanguage()).
+ *      selection.  The MacOSX font selector seems to use the localized
+ *      family name given by ATSUFindFontName(kFontFamilyName), but that API
+ *      doesn't give us a name at all for some fonts.
  *
  * Results:
- *
  *      An OS error code, noErr on success.  name is filled with the
  *      resulting name.
  *
  * Side effects:
- *
  *      None.
  *
  *-------------------------------------------------------------------------
@@ -2581,14 +2656,14 @@ TkMacOSXIsCharacterMissing(
  *
  * TkMacOSXInitControlFontStyle --
  *
- *	This procedure sets up the appropriate ControlFontStyleRec
- *	for a Mac control.
+ *  This procedure sets up the appropriate ControlFontStyleRec
+ *  for a Mac control.
  *
  * Results:
- *	None.
+ *  None.
  *
  * Side effects:
- *	None.
+ *  None.
  *
  *----------------------------------------------------------------------
  */
