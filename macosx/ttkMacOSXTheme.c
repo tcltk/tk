@@ -1,5 +1,5 @@
 /*
- * $Id: ttkMacOSXTheme.c,v 1.4 2006/12/18 19:33:14 jenglish Exp $
+ * $Id: ttkMacOSXTheme.c,v 1.5 2006/12/30 23:23:26 cc_benny Exp $
  *
  * Tk theme engine for Mac OSX, using the Appearance Manager API.
  *
@@ -30,6 +30,11 @@
 
 #include "tkMacOSXInt.h"
 #include "ttk/ttkTheme.h"
+
+/* Define a constant that was renamed for Mac OS X 10.4 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040
+#define kThemeDisclosureTriangle kThemeDisclosureButton 
+#endif
 
 /*----------------------------------------------------------------------
  * +++ Utilities.
