@@ -1,14 +1,18 @@
+2007-01-02  Donal K. Fellows  <dkf@users.sf.net>
+
+	* xlib/*: Made the generic fake-X11 glue layer abide by the formatting
+	rules of the core.
+
 2006-12-31  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
 	* macosx/tkMacOSXFont.c: Fill-in TkpGetFontAttrsForChar (TIP #300).
-	* macosx/ttkMacOSXTheme.c: Define a constant to make it compile on
-	Mac OS X 10.3.
+	* macosx/ttkMacOSXTheme.c: Define a constant to make it compile on Mac
+	OS X 10.3.
 
 2006-12-28  Mo DeJong  <mdejong@users.sourceforge.net>
 
-	* tests/wm.test: Update wm attributes output
-	so that tests pass after addition of
-	-transparentcolor for Win32.
+	* tests/wm.test: Update wm attributes output so that tests pass after
+	addition of -transparentcolor for Win32.
 
 2006-12-26  Joe English  <jenglish@users.sourceforge.net>
 
@@ -37,20 +41,18 @@
 2006-12-18  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTreeview.c, library/ttk/treeview.tcl, doc/treeview.n:
-	Added column '-stretch' and '-minwidth' options.
-	Improved column drag and resize behavior.
-	Added horizontal scrolling [#1518650].
-	Row height and child indent specifiable on Treeview style.
-	Decreased default row height, no default -padding.
-	Use correct heading height [#1163349].
-	Apply tag settings to tree item as well as to data columns 
-	[NOTE: 'tag configure' still buggy].
-	Fix off-by-one condition when moving nodes forward [#1618142]
-	* generic/ttk/ttkScroll.c(TtkScrollTo): Prevent overscroll ([#1173434])
+	Added column '-stretch' and '-minwidth' options. Improved column drag
+	and resize behavior. Added horizontal scrolling [#1518650]. Row height
+	and child indent specifiable on Treeview style. Decreased default row
+	height, no default -padding. Use correct heading height [#1163349].
+	Apply tag settings to tree item as well as to data columns [NOTE: 'tag
+	configure' still buggy]. Fix off-by-one condition when moving nodes
+	forward [#1618142]
+	* generic/ttk/ttkScroll.c (TtkScrollTo): Prevent overscroll [#1173434]
 	* library/ttk/altTheme.tcl, library/ttk/aquaTheme.tcl,
-	library/ttk/clamTheme.tcl, library/ttk/classicTheme.tcl,
-	library/ttk/defaults.tcl, library/ttk/winTheme.tcl
-	library/ttk/xpTheme.tcl: Per-theme treeview settings.
+	* library/ttk/clamTheme.tcl, library/ttk/classicTheme.tcl,
+	* library/ttk/defaults.tcl, library/ttk/winTheme.tcl,
+	* library/ttk/xpTheme.tcl: Per-theme treeview settings.
 	* macosx/ttkMacOSXTheme.c: Added disclosure triangle element.
 
 2006-12-17  Joe English  <jenglish@users.sourceforge.net>
