@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.10 2007/01/02 23:39:40 dkf Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.11 2007/01/03 08:22:08 das Exp $
  */
 
 #include <tkInt.h>
@@ -66,7 +66,7 @@ XCreateGC(
 #define InitField(name,maskbit,default) \
 	(gp->name = (mask & (maskbit)) ? values->name : (default))
 
-    InitField(function,		  GCFunction,		GXCopy);
+    InitField(function,		  GCFunction,		GXcopy);
     InitField(plane_mask,	  GCPlaneMask,		(unsigned long)(~0));
     InitField(foreground,	  GCForeground,		0);
     InitField(background,	  GCBackground,		0xffffff);
