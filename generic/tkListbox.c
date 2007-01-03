@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.36 2006/12/04 20:13:21 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.37 2007/01/03 05:06:25 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -230,7 +230,7 @@ static char *activeStyleStrings[] = {
  * listbox widget.
  */
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-activestyle", "activeStyle", "ActiveStyle",
 	DEF_LISTBOX_ACTIVE_STYLE, -1, Tk_Offset(Listbox, activeStyle),
 	0, (ClientData) activeStyleStrings, 0},
@@ -311,7 +311,7 @@ static Tk_OptionSpec optionSpecs[] = {
  * listbox items
  */
 
-static Tk_OptionSpec itemAttrOptionSpecs[] = {
+static const Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
      NULL, -1, Tk_Offset(ItemAttr, border),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
