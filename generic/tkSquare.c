@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.6 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.7 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -60,7 +60,7 @@ typedef struct {
  * Information used for argv parsing.
  */
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	    "#d9d9d9", Tk_Offset(Square, bgBorderPtr), -1, 0,
 	    (ClientData) "white"},

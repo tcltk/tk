@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.23 2006/06/14 22:17:06 dgp Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.24 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -42,7 +42,7 @@ static char *stateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_SCALE_ACTIVE_BG_COLOR, -1, Tk_Offset(TkScale, activeBorder),
 	0, (ClientData) DEF_SCALE_ACTIVE_BG_MONO, 0},

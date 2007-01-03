@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ManageGeom.3,v 1.3 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: ManageGeom.3,v 1.4 2007/01/03 05:06:27 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_ManageGeometry 3 4.0 Tk "Tk Library Procedures"
@@ -21,7 +21,7 @@ Tk_ManageGeometry \- arrange to handle geometry requests for a window
 .AS Tk_GeometryProc clientData
 .AP Tk_Window tkwin in
 Token for window to be managed.
-.AP Tk_GeomMgr *mgrPtr in
+.AP "const Tk_GeomMgr" *mgrPtr in
 Pointer to data structure containing information about the
 geometry manager, or NULL to indicate that \fItkwin\fR's geometry
 shouldn't be managed anymore.
@@ -45,7 +45,7 @@ The structure pointed to by \fImgrPtr\fR contains information about
 the geometry manager:
 .CS
 typedef struct {
-    char *\fIname\fR;
+    const char *\fIname\fR;
     Tk_GeomRequestProc *\fIrequestProc\fR;
     Tk_GeomLostSlaveProc *\fIlostSlaveProc\fR;
 } Tk_GeomMgr;

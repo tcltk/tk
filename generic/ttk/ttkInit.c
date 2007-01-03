@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.4 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkInit.c,v 1.5 2007/01/03 05:06:25 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -13,7 +13,7 @@
  * Legal values for the button -default option.
  * See also: enum Ttk_ButtonDefaultState.
  */
-CONST char *ttkDefaultStrings[] = {
+const char *ttkDefaultStrings[] = {
     "normal", "active", "disabled", NULL
 };
 
@@ -131,7 +131,7 @@ void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
  *	Common factors for data accessor commands.
  */
 int TtkEnumerateOptions(
-    Tcl_Interp *interp, void *recordPtr, Tk_OptionSpec *specPtr,
+    Tcl_Interp *interp, void *recordPtr, const Tk_OptionSpec *specPtr,
     Tk_OptionTable optionTable, Tk_Window tkwin)
 {
     Tcl_Obj *result = Tcl_NewListObj(0,0);

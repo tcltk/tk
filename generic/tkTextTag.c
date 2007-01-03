@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.23 2005/12/08 18:17:32 hobbs Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.24 2007/01/03 05:06:27 nijtmans Exp $
  */
 
 #include "default.h"
@@ -41,7 +41,7 @@ static char *tabStyleStrings[] = {
     "tabular", "wordprocessor", "", NULL
 };
 
-static Tk_OptionSpec tagOptionSpecs[] = {
+static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BITMAP, "-bgstipple", NULL, NULL,

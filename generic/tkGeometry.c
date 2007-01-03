@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.7 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.8 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -87,7 +87,7 @@ void
 Tk_ManageGeometry(tkwin, mgrPtr, clientData)
     Tk_Window tkwin;		/* Window whose geometry is to be managed by
 				 * proc. */
-    Tk_GeomMgr *mgrPtr;		/* Static structure describing the geometry
+    CONST Tk_GeomMgr *mgrPtr;	/* Static structure describing the geometry
 				 * manager. This structure must never go
 				 * away. */
     ClientData clientData;	/* Arbitrary one-word argument to pass to

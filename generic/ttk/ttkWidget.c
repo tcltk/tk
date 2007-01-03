@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.3 2006/11/27 06:53:55 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.4 2007/01/03 05:06:25 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk widget implementation, core widget utilities.
@@ -145,7 +145,7 @@ void TtkWidgetChangeState(WidgetCore *corePtr,
  * 	Invoke an ensemble defined by a WidgetCommandSpec.
  */
 int TtkWidgetEnsembleCommand(
-    WidgetCommandSpec *commands,	/* Ensemble definition */
+    const WidgetCommandSpec *commands,	/* Ensemble definition */
     int cmdIndex,			/* Index of command word */
     Tcl_Interp *interp,			/* Interpreter to use */
     int objc, Tcl_Obj *const objv[],	/* Argument vector */
@@ -174,10 +174,10 @@ WidgetInstanceObjCmd(
     ClientData clientData,		/* Widget record pointer */
     Tcl_Interp *interp,			/* Current interpreter. */
     int objc,				/* Number of arguments. */
-    Tcl_Obj * CONST objv[])		/* Argument objects. */
+    Tcl_Obj * const objv[])		/* Argument objects. */
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
-    WidgetCommandSpec *commands = corePtr->widgetSpec->commands;
+    const WidgetCommandSpec *commands = corePtr->widgetSpec->commands;
     int status = TCL_OK;
 
     Tcl_Preserve(clientData);

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.28 2006/12/18 16:42:46 dgp Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.29 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -802,7 +802,8 @@ EXTERN void		Tk_MakeWindowExist (Tk_Window tkwin);
 #define Tk_ManageGeometry_TCL_DECLARED
 /* 124 */
 EXTERN void		Tk_ManageGeometry (Tk_Window tkwin, 
-				Tk_GeomMgr * mgrPtr, ClientData clientData);
+				CONST Tk_GeomMgr * mgrPtr, 
+				ClientData clientData);
 #endif
 #ifndef Tk_MapWindow_TCL_DECLARED
 #define Tk_MapWindow_TCL_DECLARED
@@ -1818,7 +1819,7 @@ typedef struct TkStubs {
     void (*tk_MaintainGeometry) (Tk_Window slave, Tk_Window master, int x, int y, int width, int height); /* 121 */
     Tk_Window (*tk_MainWindow) (Tcl_Interp * interp); /* 122 */
     void (*tk_MakeWindowExist) (Tk_Window tkwin); /* 123 */
-    void (*tk_ManageGeometry) (Tk_Window tkwin, Tk_GeomMgr * mgrPtr, ClientData clientData); /* 124 */
+    void (*tk_ManageGeometry) (Tk_Window tkwin, CONST Tk_GeomMgr * mgrPtr, ClientData clientData); /* 124 */
     void (*tk_MapWindow) (Tk_Window tkwin); /* 125 */
     int (*tk_MeasureChars) (Tk_Font tkfont, CONST char * source, int numBytes, int maxPixels, int flags, int * lengthPtr); /* 126 */
     void (*tk_MoveResizeWindow) (Tk_Window tkwin, int x, int y, int width, int height); /* 127 */

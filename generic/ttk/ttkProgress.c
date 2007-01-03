@@ -1,4 +1,4 @@
-/* $Id: ttkProgress.c,v 1.3 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkProgress.c,v 1.4 2007/01/03 05:06:25 nijtmans Exp $
  *
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
@@ -45,7 +45,7 @@ typedef struct {
     ProgressbarPart	progress;
 } Progressbar;
 
-static Tk_OptionSpec ProgressbarOptionSpecs[] =
+static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	"horizontal", Tk_Offset(Progressbar,progress.orientObj), -1,

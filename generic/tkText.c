@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.71 2006/10/17 10:21:49 patthoyts Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.72 2007/01/03 05:06:27 nijtmans Exp $
  */
 
 #include "default.h"
@@ -111,7 +111,7 @@ static Tk_ObjCustomOption lineOption = {
  * Information used to parse text configuration options:
  */
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-autoseparators", "autoSeparators",
 	"AutoSeparators", DEF_TEXT_AUTO_SEPARATORS, -1,
 	Tk_Offset(TkText, autoSeparators), 0, 0, 0},

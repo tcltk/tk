@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.29 2006/10/08 21:47:11 patthoyts Exp $
+# RCS: @(#) $Id: tk.decls,v 1.30 2007/01/03 05:06:26 nijtmans Exp $
 
 library tk
 
@@ -622,7 +622,7 @@ declare 123 generic {
 
 declare 124 generic {
     void Tk_ManageGeometry (Tk_Window tkwin,
-	    Tk_GeomMgr *mgrPtr, ClientData clientData)
+	    CONST Tk_GeomMgr *mgrPtr, ClientData clientData)
 }
 
 declare 125 generic {

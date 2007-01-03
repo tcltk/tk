@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.7 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.8 2007/01/03 05:06:25 nijtmans Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -75,7 +75,7 @@ typedef struct {
 
 /* @@@ NOTE: -orient is readonly 'cause dynamic oriention changes NYI
  */
-static Tk_OptionSpec PanedOptionSpecs[] = {
+static const Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	Tk_Offset(Paned,paned.orientObj), Tk_Offset(Paned,paned.orient),
 	0,(ClientData)ttkOrientStrings,READONLY_OPTION|STYLE_CHANGED },
@@ -92,7 +92,7 @@ typedef struct {
     int 	weight; 		/* Pane -weight, for resizing */
 } Pane;
 
-static Tk_OptionSpec PaneOptionSpecs[] = {
+static const Tk_OptionSpec PaneOptionSpecs[] = {
     {TK_OPTION_INT, "-weight", "weight", "Weight", "0",
 	-1,Tk_Offset(Pane,weight), 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0,0,0}

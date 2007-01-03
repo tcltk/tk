@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.41 2006/09/10 17:06:31 das Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.42 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -63,7 +63,7 @@ enum validateType {
  * Information used for Entry objv parsing.
  */
 
-static Tk_OptionSpec entryOptSpec[] = {
+static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_ENTRY_BG_COLOR, -1, Tk_Offset(Entry, normalBorder),
 	0, (ClientData) DEF_ENTRY_BG_MONO, 0},
@@ -180,7 +180,7 @@ static Tk_OptionSpec entryOptSpec[] = {
 #define DEF_SPINBOX_VALUES		""
 #define DEF_SPINBOX_WRAP		"0"
 
-static Tk_OptionSpec sbOptSpec[] = {
+static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Background",
 	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(Spinbox, activeBorder),
 	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
