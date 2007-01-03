@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.66 2007/01/02 22:50:30 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.67 2007/01/03 04:10:54 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2463,7 +2463,7 @@ ImgPhotoGet(
 	    nBlue = 32;
 	    mono = 0;
 	} else if (visInfoPtr->depth >= 3) {
-	    int *ip = paletteChoice[visInfoPtr->depth - 3];
+	    const int *ip = paletteChoice[visInfoPtr->depth - 3];
 
 	    nRed = ip[0];
 	    nGreen = ip[1];

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.30 2006/12/10 05:26:42 das Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.31 2007/01/03 04:10:54 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -1295,7 +1295,7 @@ SetFontFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_ObjType *typePtr;
+    const Tcl_ObjType *typePtr;
 
     /*
      * Free the old internalRep before setting the new one.
