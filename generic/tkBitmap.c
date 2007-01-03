@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.15 2006/02/27 11:34:49 dkf Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.16 2007/01/03 04:10:55 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -959,7 +959,7 @@ static void
 InitBitmapObj(
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_ObjType *typePtr;
+    const Tcl_ObjType *typePtr;
 
     /*
      * Free the old internalRep before setting the new one.
