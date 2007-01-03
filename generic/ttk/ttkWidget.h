@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.4 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkWidget.h,v 1.5 2007/01/03 05:06:25 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  * Helper routines for widget implementations.
  */
@@ -59,7 +59,7 @@ typedef struct {
 } WidgetCommandSpec;
 
 MODULE_SCOPE int TtkWidgetEnsembleCommand(	/* Run an ensemble command */
-    WidgetCommandSpec *commands, int cmdIndex,
+    const WidgetCommandSpec *commands, int cmdIndex,
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr);
 
 /*
@@ -69,8 +69,8 @@ struct WidgetSpec_
 {
     const char 		*className;	/* Widget class name */
     size_t 		recordSize;	/* #bytes in widget record */
-    Tk_OptionSpec	*optionSpecs;	/* Option specifications */
-    WidgetCommandSpec	*commands;	/* Widget instance subcommands */
+    const Tk_OptionSpec	*optionSpecs;	/* Option specifications */
+    const WidgetCommandSpec	*commands;	/* Widget instance subcommands */
 
     /*
      * Hooks:
@@ -173,7 +173,7 @@ MODULE_SCOPE void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
  * Helper routines for data accessor commands:
  */
 MODULE_SCOPE int TtkEnumerateOptions(
-    Tcl_Interp *, void *recordPtr, Tk_OptionSpec *, Tk_OptionTable, Tk_Window);
+    Tcl_Interp *, void *recordPtr, const Tk_OptionSpec *, Tk_OptionTable, Tk_Window);
 MODULE_SCOPE int TtkGetOptionValue(
     Tcl_Interp *, void *recordPtr, Tcl_Obj *optName, Tk_OptionTable, Tk_Window);
 

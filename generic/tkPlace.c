@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.18 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.19 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -81,7 +81,7 @@ typedef struct Slave {
 
 #define IN_MASK		1
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", -1,
 	 Tk_Offset(Slave, anchor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", -1,

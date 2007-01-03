@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.17 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.18 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tk.h"
@@ -102,7 +102,7 @@ typedef enum {
  * Information used for parsing window configuration options:
  */
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", -1, Tk_Offset(TkTextEmbWindow, align),
 	0, (ClientData) alignStrings, 0},

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStyle.c,v 1.5 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkStyle.c,v 1.6 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1493,8 +1493,8 @@ SetStyleFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_ObjType *typePtr;
-    char *name;
+    const Tcl_ObjType *typePtr;
+    const char *name;
 
     /*
      * Free the old internalRep before setting the new one.

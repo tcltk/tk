@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.75 2006/12/01 20:14:23 kennykb Exp $
+ * RCS: $Id: tkInt.h,v 1.76 2007/01/03 05:06:27 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -790,7 +790,7 @@ typedef struct TkWindow {
      * Information used by tkGeometry.c for geometry management.
      */
 
-    Tk_GeomMgr *geomMgrPtr;	/* Information about geometry manager for this
+    const Tk_GeomMgr *geomMgrPtr; /* Information about geometry manager for this
 				 * window. */
     ClientData geomData;	/* Argument for geometry manager functions. */
     int reqWidth, reqHeight;	/* Arguments from last call to

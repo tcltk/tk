@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.14 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.15 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkMenubutton.h"
@@ -48,7 +48,7 @@ static char *compoundStrings[] = {
  * Information used for parsing configuration specs:
  */
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
         DEF_MENUBUTTON_ACTIVE_BG_COLOR, -1,
         Tk_Offset(TkMenuButton, activeBorder), 0,

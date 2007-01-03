@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.25 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.26 2007/01/03 05:06:25 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -270,7 +270,7 @@ static Tk_ObjCustomOption stickyOption = {
     0
 };
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_PANEDWINDOW_BG_COLOR, -1, Tk_Offset(PanedWindow, background), 0,
 	 (ClientData) DEF_PANEDWINDOW_BG_MONO},
@@ -322,7 +322,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_END}
 };
 
-static Tk_OptionSpec slaveOptionSpecs[] = {
+static const Tk_OptionSpec slaveOptionSpecs[] = {
     {TK_OPTION_WINDOW, "-after", NULL, NULL,
 	 DEF_PANEDWINDOW_PANE_AFTER, -1, Tk_Offset(Slave, after),
 	 TK_OPTION_NULL_OK, 0, 0},
