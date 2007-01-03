@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.12 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.13 2007/01/03 04:10:54 nijtmans Exp $
  */
 
 #include "tkColor.h"
@@ -705,7 +705,7 @@ static void
 InitColorObj(
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_ObjType *typePtr;
+    const Tcl_ObjType *typePtr;
 
     /*
      * Free the old internalRep before setting the new one.

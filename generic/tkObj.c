@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.15 2005/11/17 16:21:56 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.16 2007/01/03 04:10:55 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -282,7 +282,7 @@ SetPixelFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_ObjType *typePtr;
+    const Tcl_ObjType *typePtr;
     char *string, *rest;
     double d;
     int i, units;
@@ -544,14 +544,14 @@ SetMMFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_ObjType *typePtr;
+    const Tcl_ObjType *typePtr;
     char *string, *rest;
     double d;
     int units;
     MMRep *mmPtr;
 
-    static Tcl_ObjType *tclDoubleObjType = NULL;
-    static Tcl_ObjType *tclIntObjType = NULL;
+    static const Tcl_ObjType *tclDoubleObjType = NULL;
+    static const Tcl_ObjType *tclIntObjType = NULL;
 
     if (tclDoubleObjType == NULL) {
 	/*
@@ -729,7 +729,7 @@ SetWindowFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     register Tcl_Obj *objPtr)	/* The object to convert. */
 {
-    Tcl_ObjType *typePtr;
+    const Tcl_ObjType *typePtr;
     WindowRep *winPtr;
 
     /*
