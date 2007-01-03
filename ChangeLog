@@ -1,3 +1,13 @@
+2007-01-03  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/ManageGeom.3,
+	* generic/tk.decls,
+	* generic/tk.h: Add const to 2nd parameter of Tk_ManageGeometry
+	* generic/tkDecls.h: regenerated
+	* generic/tkInt.h,
+	* generic/tk*.c,
+	* generic/ttk/ttk*.c: Added many "const" specifiers in implementation.
+
 2007-01-02  Donal K. Fellows  <dkf@users.sf.net>
 
 	* xlib/*: Made the generic fake-X11 glue layer abide by the formatting
