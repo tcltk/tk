@@ -2,7 +2,7 @@
  *
  * Minimal sample ttk widget.
  *
- * $Id: ttkSquare.c,v 1.2 2006/11/03 03:06:22 das Exp $
+ * $Id: ttkSquare.c,v 1.3 2007/01/03 05:06:25 nijtmans Exp $
  */
 
 #include <tk.h>
@@ -50,7 +50,7 @@ typedef struct
  * defined for all widgets.
  */
 
-static Tk_OptionSpec SquareOptionSpecs[] =
+static const Tk_OptionSpec SquareOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 

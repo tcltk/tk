@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.24 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.25 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "default.h"
@@ -175,7 +175,7 @@ static char *labelAnchorStrings[] = {
  * table used by all and one table for each widget class.
  */
 
-static Tk_OptionSpec commonOptSpec[] = {
+static const Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_FRAME_BG_COLOR, -1, Tk_Offset(Frame, border),
 	TK_OPTION_NULL_OK, (ClientData) DEF_FRAME_BG_MONO, 0},
@@ -217,7 +217,7 @@ static Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
-static Tk_OptionSpec frameOptSpec[] = {
+static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
@@ -230,7 +230,7 @@ static Tk_OptionSpec frameOptSpec[] = {
 	NULL, 0, 0, 0, (ClientData) commonOptSpec, 0}
 };
 
-static Tk_OptionSpec toplevelOptSpec[] = {
+static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
@@ -252,7 +252,7 @@ static Tk_OptionSpec toplevelOptSpec[] = {
 	NULL, 0, 0, 0, (ClientData) commonOptSpec, 0}
 };
 
-static Tk_OptionSpec labelframeOptSpec[] = {
+static const Tk_OptionSpec labelframeOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
@@ -291,7 +291,7 @@ static char *classNames[] = {"Frame", "Toplevel", "Labelframe"};
  * class of widgets.
  */
 
-static Tk_OptionSpec *optionSpecs[] = {
+static const Tk_OptionSpec * const optionSpecs[] = {
     frameOptSpec,
     toplevelOptSpec,
     labelframeOptSpec,

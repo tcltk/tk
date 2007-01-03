@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.16 2006/05/25 23:50:00 hobbs Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.17 2007/01/03 05:06:26 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -110,7 +110,7 @@ typedef struct {
  * Information used for argv parsing.
  */
 
-static Tk_OptionSpec optionSpecs[] = {
+static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", DEF_MESSAGE_ANCHOR,
 	 -1, Tk_Offset(Message, anchor), 0, 0, 0},
     {TK_OPTION_INT, "-aspect", "aspect", "Aspect", DEF_MESSAGE_ASPECT,

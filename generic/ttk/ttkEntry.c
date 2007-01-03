@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.4 2006/12/17 21:09:46 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.5 2007/01/03 05:06:25 nijtmans Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -158,7 +158,7 @@ typedef struct
 #define DEF_ENTRY_FONT	"TkTextFont"
 #define DEF_LIST_HEIGHT	"10"
 
-static Tk_OptionSpec EntryOptionSpecs[] =
+static const Tk_OptionSpec EntryOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 
@@ -1690,7 +1690,7 @@ typedef struct {
     ComboboxPart combobox;
 } Combobox;
 
-static Tk_OptionSpec ComboboxOptionSpecs[] =
+static const Tk_OptionSpec ComboboxOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-height", "height", "Height",
         DEF_LIST_HEIGHT, Tk_Offset(Combobox, combobox.heightObj), -1,
