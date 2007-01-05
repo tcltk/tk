@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.26 2007/01/03 05:06:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.27 2007/01/05 00:00:50 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -244,7 +244,7 @@ static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 #define ValidSashIndex(pwPtr, sash) \
 	(((sash) >= 0) && ((sash) < ((pwPtr)->numSlaves-1)))
 
-static Tk_GeomMgr panedWindowMgrType = {
+static const Tk_GeomMgr panedWindowMgrType = {
     "panedwindow",		/* name */
     PanedWindowReqProc,		/* requestProc */
     PanedWindowLostSlaveProc,	/* lostSlaveProc */

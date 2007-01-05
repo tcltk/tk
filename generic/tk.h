@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.92 2007/01/03 05:06:26 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.93 2007/01/05 00:00:50 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -163,11 +163,11 @@ typedef struct Tk_OptionSpec {
     Tk_OptionType type;		/* Type of option, such as TK_OPTION_COLOR;
 				 * see definitions above. Last option in table
 				 * must have type TK_OPTION_END. */
-    char *optionName;		/* Name used to specify option in Tcl
+    const char *optionName; /* Name used to specify option in Tcl
 				 * commands. */
-    char *dbName;		/* Name for option in option database. */
-    char *dbClass;		/* Class for option in database. */
-    char *defValue;		/* Default value for option if not specified
+    const char *dbName;		/* Name for option in option database. */
+    const char *dbClass;		/* Class for option in database. */
+    const char *defValue;		/* Default value for option if not specified
 				 * in command line, the option database, or
 				 * the system. */
     int objOffset;		/* Where in record to store a Tcl_Obj * that
@@ -223,7 +223,7 @@ typedef void (Tk_CustomOptionFreeProc) _ANSI_ARGS_((ClientData clientData,
 	Tk_Window tkwin, char *internalPtr));
 
 typedef struct Tk_ObjCustomOption {
-    char *name;			/* Name of the custom option. */
+    const char *name; /* Name of the custom option. */
     Tk_CustomOptionSetProc *setProc;
 				/* Function to use to set a record's option
 				 * value from a Tcl_Obj */
