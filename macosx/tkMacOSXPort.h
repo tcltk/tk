@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.9 2006/09/10 17:06:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.10 2007/01/05 00:00:51 nijtmans Exp $
  */
 
 #ifndef _TKMACPORT
@@ -119,12 +119,12 @@
  */
 
 #ifndef strcasecmp
-extern int		strcasecmp _ANSI_ARGS_((CONST char *s1,
-			    CONST char *s2));
+extern int		strcasecmp _ANSI_ARGS_((const char *s1,
+			    const char *s2));
 #endif
 #ifndef strncasecmp			    
-extern int		strncasecmp _ANSI_ARGS_((CONST char *s1,
-			    CONST char *s2, size_t n));
+extern int		strncasecmp _ANSI_ARGS_((const char *s1,
+			    const char *s2, size_t n));
 #endif
 
 /*
