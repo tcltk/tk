@@ -50,7 +50,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWm.h,v 1.6 2006/03/24 14:58:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.h,v 1.7 2007/01/05 00:00:51 nijtmans Exp $
  */
  
 #ifndef _TKMACWM
@@ -218,7 +218,7 @@ typedef struct TkWmInfo {
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for
 				 * this window (NULL means none). */
     int cmdArgc;		/* Number of elements in cmdArgv below. */
-    CONST char **cmdArgv;		/* Array of strings to store in the
+    const char **cmdArgv;		/* Array of strings to store in the
 				 * WM_COMMAND property.  NULL means nothing
 				 * available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
