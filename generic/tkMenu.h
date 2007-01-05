@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.h,v 1.11 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkMenu.h,v 1.12 2007/01/05 00:00:51 nijtmans Exp $
  */
 
 #ifndef _TKMENU
@@ -546,7 +546,7 @@ MODULE_SCOPE void	TkpDestroyMenu(TkMenu *menuPtr);
 MODULE_SCOPE void	TkpDestroyMenuEntry(TkMenuEntry *mEntryPtr);
 MODULE_SCOPE void	TkpDrawMenuEntry(TkMenuEntry *mePtr,
 			    Drawable d, Tk_Font tkfont,
-			    CONST Tk_FontMetrics *menuMetricsPtr, int x,
+			    const Tk_FontMetrics *menuMetricsPtr, int x,
 			    int y, int width, int height, int strictMotif,
 			    int drawArrow);
 MODULE_SCOPE void	TkpMenuInit(void);

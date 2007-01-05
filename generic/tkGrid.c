@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.44 2006/04/11 21:52:20 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.45 2007/01/05 00:00:51 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -303,7 +303,7 @@ static void		StickyToString(int flags, char *result);
 static int		StringToSticky(char *string);
 static void		Unlink(Gridder *gridPtr);
 
-static Tk_GeomMgr gridMgrType = {
+static const Tk_GeomMgr gridMgrType = {
     "grid",			/* name */
     GridReqProc,		/* requestProc */
     GridLostSlaveProc,		/* lostSlaveProc */

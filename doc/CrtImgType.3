@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtImgType.3,v 1.9 2005/04/06 21:11:53 dkf Exp $
+'\" RCS: @(#) $Id: CrtImgType.3,v 1.10 2007/01/05 00:00:48 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateImageType 3 8.3 Tk "Tk Library Procedures"
@@ -30,7 +30,7 @@ Must be static: a
 pointer to this structure is retained by the image code.
 .AP Tcl_Interp *interp in
 Interpreter in which image was created.
-.AP "CONST char" *name in
+.AP "const char" *name in
 Name of existing image.
 .AP Tk_ImageType **typePtrPtr out
 Points to word in which to store a pointer to type information for
@@ -124,7 +124,7 @@ typedef int Tk_ImageCreateProc(
     Tcl_Interp *\fIinterp\fR,
     char *\fIname\fR,
     int \fIobjc\fR,
-    Tcl_Obj *CONST \fIobjv\fR[],
+    Tcl_Obj *const \fIobjv\fR[],
     Tk_ImageType *\fItypePtr\fR,
     Tk_ImageMaster \fImaster\fR,
     ClientData *\fImasterDataPtr\fR);

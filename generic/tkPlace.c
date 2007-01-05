@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.19 2007/01/03 05:06:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.20 2007/01/05 00:00:50 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -153,7 +153,7 @@ static void		PlaceRequestProc(ClientData clientData,
 static void		PlaceLostSlaveProc(ClientData clientData,
 			    Tk_Window tkwin);
 
-static Tk_GeomMgr placerType = {
+static const Tk_GeomMgr placerType = {
     "place",				/* name */
     PlaceRequestProc,			/* requestProc */
     PlaceLostSlaveProc,			/* lostSlaveProc */

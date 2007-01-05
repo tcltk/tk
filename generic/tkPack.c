@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.24 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.25 2007/01/05 00:00:51 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -107,7 +107,7 @@ static void		PackReqProc(ClientData clientData, Tk_Window tkwin);
 static void		PackLostSlaveProc(ClientData clientData,
 			    Tk_Window tkwin);
 
-static Tk_GeomMgr packerType = {
+static const Tk_GeomMgr packerType = {
     "pack",			/* name */
     PackReqProc,		/* requestProc */
     PackLostSlaveProc,		/* lostSlaveProc */

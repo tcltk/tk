@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.25 2007/01/03 05:06:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.26 2007/01/05 00:00:50 nijtmans Exp $
  */
 
 #include "default.h"
@@ -340,7 +340,7 @@ static Tk_ClassProcs frameClass = {
  * geometry manager:
  */
 
-static Tk_GeomMgr frameGeomType = {
+static const Tk_GeomMgr frameGeomType = {
     "labelframe",		/* name */
     FrameRequestProc,		/* requestProc */
     FrameLostSlaveProc		/* lostSlaveProc */

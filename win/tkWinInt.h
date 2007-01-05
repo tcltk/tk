@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.26 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.27 2007/01/05 00:00:52 nijtmans Exp $
  */
 
 #ifndef _TKWININT
@@ -203,7 +203,7 @@ typedef struct TkWinProcs {
 	    UINT Msg, WPARAM wParam, LPARAM lParam);
     LRESULT (WINAPI *defWindowProc)(HWND hWnd, UINT Msg, WPARAM wParam,
 	    LPARAM lParam);
-    ATOM (WINAPI *registerClass)(CONST WNDCLASS *lpWndClass);
+    ATOM (WINAPI *registerClass)(const WNDCLASS *lpWndClass);
     BOOL (WINAPI *setWindowText)(HWND hWnd, LPCTSTR lpString);
     HWND (WINAPI *createWindowEx)(DWORD dwExStyle, LPCTSTR lpClassName,
 	    LPCTSTR lpWindowName, DWORD dwStyle, int x, int y,

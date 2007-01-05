@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ParseArgv.3,v 1.5 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: ParseArgv.3,v 1.6 2007/01/05 00:00:48 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_ParseArgv 3 "" Tk "Tk Library Procedures"
@@ -28,7 +28,7 @@ no Tk options will be processed.
 .AP int argcPtr in/out
 Pointer to number of arguments in argv;  gets modified to hold
 number of unprocessed arguments that remain after the call.
-.AP "CONST char" **argv in/out
+.AP "const char" **argv in/out
 Command line arguments passed to main program.  Modified to
 hold unprocessed arguments that remain after the call.
 .AP Tk_ArgvInfo *argTable in

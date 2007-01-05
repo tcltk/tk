@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.13 2006/05/12 18:17:48 das Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.14 2007/01/05 00:00:51 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -143,7 +143,7 @@ Tk_ItemType tkWindowType = {
  * geometry manager):
  */
 
-static Tk_GeomMgr canvasGeomType = {
+static const Tk_GeomMgr canvasGeomType = {
     "canvas",				/* name */
     WinItemRequestProc,			/* requestProc */
     WinItemLostSlaveProc,		/* lostSlaveProc */

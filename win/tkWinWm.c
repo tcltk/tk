@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.110 2006/12/01 19:48:00 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.111 2007/01/05 00:00:52 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -358,7 +358,7 @@ typedef struct TkWmInfo {
 
 static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
 
-static Tk_GeomMgr wmMgrType = {
+static const Tk_GeomMgr wmMgrType = {
     "wm",			/* name */
     TopLevelReqProc,		/* requestProc */
     NULL,			/* lostSlaveProc */
