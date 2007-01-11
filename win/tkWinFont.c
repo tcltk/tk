@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.28 2006/12/01 20:14:24 kennykb Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.29 2007/01/11 15:35:40 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -1047,7 +1047,7 @@ Tk_DrawChars(
 
 	MultiFontTextOut(dcMem, fontPtr, source, numBytes, 0, tm.tmAscent);
 	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
-		0, 0, tkpWinBltModes[gc->function]);
+		0, 0, (DWORD) tkpWinBltModes[gc->function]);
 
 	/*
 	 * Destroy the temporary bitmap and restore the device context.
@@ -2463,7 +2463,8 @@ LoadFontRanges(
 	}
 	for (i = 0; i < cmapTable.numTables; i++) {
 	    offset = sizeof(cmapTable) + i * sizeof(encTable);
-	    GetFontData(hdc, cmapKey, offset, &encTable, sizeof(encTable));
+	    GetFontData(hdc, cmapKey, (DWORD) offset, &encTable,
+		    sizeof(encTable));
 	    if (swapped) {
 		SwapShort(&encTable.platform);
 		SwapShort(&encTable.encoding);
@@ -2482,7 +2483,7 @@ LoadFontRanges(
 		continue;
 	    }
 
-	    GetFontData(hdc, cmapKey, encTable.offset, &subTable,
+	    GetFontData(hdc, cmapKey, (DWORD) encTable.offset, &subTable,
 		    sizeof(subTable));
 	    if (swapped) {
 		SwapShort(&subTable.any.format);
@@ -2494,13 +2495,13 @@ LoadFontRanges(
 		segCount = subTable.segment.segCountX2 / 2;
 		cbData = segCount * sizeof(USHORT);
 
-		startCount = (USHORT *) ckalloc(cbData);
-		endCount = (USHORT *) ckalloc(cbData);
+		startCount = (USHORT *) ckalloc((unsigned)cbData);
+		endCount = (USHORT *) ckalloc((unsigned)cbData);
 
 		offset = encTable.offset + sizeof(subTable.segment);
-		GetFontData(hdc, cmapKey, offset, endCount, cbData);
+		GetFontData(hdc, cmapKey, (DWORD) offset, endCount, cbData);
 		offset += cbData + sizeof(USHORT);
-		GetFontData(hdc, cmapKey, offset, startCount, cbData);
+		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, cbData);
 		if (swapped) {
 		    for (i = 0; i < segCount; i++) {
 			SwapShort(&endCount[i]);
@@ -2538,8 +2539,8 @@ LoadFontRanges(
 
 	segCount = 1;
 	cbData = segCount * sizeof(USHORT);
-	startCount = (USHORT *) ckalloc(cbData);
-	endCount = (USHORT *) ckalloc(cbData);
+	startCount = (USHORT *) ckalloc((unsigned) cbData);
+	endCount = (USHORT *) ckalloc((unsigned) cbData);
 	startCount[0] = 0x0000;
 	endCount[0] = 0x00ff;
     }

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinRegion.c,v 1.6 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinRegion.c,v 1.7 2007/01/11 15:35:41 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -206,7 +206,8 @@ TkpBuildRegionFromAlphaData(
 		 * Manipulate Win32 regions directly; it's more efficient.
 		 */
 
-		SetRectRgn(rectRgn, x+x1, y+y1, x+end, y+y1+1);
+		SetRectRgn(rectRgn, (int) (x+x1), (int) (y+y1),
+			(int) (x+end), (int) (y+y1+1));
 		CombineRgn((HRGN) region, (HRGN) region, rectRgn, RGN_OR);
 	    }
 	}

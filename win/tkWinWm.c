@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.111 2007/01/05 00:00:52 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.112 2007/01/11 15:35:41 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -1215,7 +1215,7 @@ TkWinGetIcon(
 	 * return default toplevel icon
 	 */
 
-	return GetIcon(tsdPtr->iconPtr, iconsize);
+	return GetIcon(tsdPtr->iconPtr, (int)iconsize);
     }
 
     /*
@@ -1239,7 +1239,7 @@ TkWinGetIcon(
 	 * return window toplevel icon
 	 */
 
-	return GetIcon(wmPtr->iconPtr, iconsize);
+	return GetIcon(wmPtr->iconPtr, (int)iconsize);
     }
 
     /*
@@ -1341,7 +1341,7 @@ ReadIconFromFile(
 
 	if (res != 0) {
 	    SHFILEINFO sfi;
-	    int size;
+	    unsigned size;
 
 	    Tcl_ResetResult(interp);
 	    res = (*shgetfileinfoProc)(Tcl_DStringValue(&ds2), 0, &sfi,
@@ -1716,7 +1716,7 @@ ReadIconOrCursorFromFile(
      */
 
     dwBytesRead = Tcl_Read(channel, (char*) lpIDE,
-	    lpIR->nNumImages * sizeof(ICONDIRENTRY));
+	    (int)(lpIR->nNumImages * sizeof(ICONDIRENTRY)));
     if (dwBytesRead != lpIR->nNumImages * sizeof(ICONDIRENTRY)) {
 	Tcl_AppendResult(interp, "Error reading file", NULL);
 	Tcl_Close(NULL, channel);
@@ -1758,8 +1758,8 @@ ReadIconOrCursorFromFile(
 	 * Read it in.
 	 */
 
-	dwBytesRead = Tcl_Read( channel, lpIR->IconImages[i].lpBits,
-		lpIDE[i].dwBytesInRes);
+	dwBytesRead = Tcl_Read(channel, lpIR->IconImages[i].lpBits,
+		(int) lpIDE[i].dwBytesInRes);
 	if (dwBytesRead != lpIDE[i].dwBytesInRes) {
 	    Tcl_AppendResult(interp, "Error reading file", NULL);
 	    goto readError;
@@ -2272,7 +2272,7 @@ UpdateWrapper(
 
 	    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
 		    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
-		    LWA_ALPHA | (wmPtr->crefObj ? LWA_COLORKEY : 0));
+		    (unsigned)(LWA_ALPHA | (wmPtr->crefObj?LWA_COLORKEY:0)));
 	} else {
 	    /*
 	     * Layering not used or supported.
@@ -2630,7 +2630,6 @@ TkpWmSetFullScreen(
     int changed = 0;
     int full_screen = False;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    TkWindow *focusWinPtr;
 
     if (full_screen_state) {
 	if (! (wmPtr->flags & WM_FULLSCREEN)) {
@@ -2663,9 +2662,12 @@ TkpWmSetFullScreen(
 
 	if (!(wmPtr->flags & (WM_NEVER_MAPPED)
 		&& !(winPtr->flags & TK_EMBEDDED))) {
+	    TkWindow *focusWinPtr;
+
 	    UpdateWrapper(winPtr);
 
-	    if (focusWinPtr = TkGetFocusWin(winPtr)) {
+	    focusWinPtr = TkGetFocusWin(winPtr);
+	    if (focusWinPtr) {
 		TkSetFocusWin(focusWinPtr, 1);
 	    }
 	}
@@ -2940,7 +2942,7 @@ Tk_WmObjCmd(
     }
 
     argv1 = Tcl_GetStringFromObj(objv[1], &length);
-    if ((argv1[0] == 't') && (strncmp(argv1, "tracing", length) == 0)
+    if ((argv1[0] == 't') && !strncmp(argv1, "tracing", (unsigned) length)
 	    && (length >= 3)) {
 	int wmTracing;
 
@@ -3197,23 +3199,23 @@ WmAttributesCmd(
 	if ((length < 2) || (string[0] != '-')) {
 	    goto configArgs;
 	}
-	if (strncmp(string, "-disabled", length) == 0) {
+	if (strncmp(string, "-disabled", (unsigned) length) == 0) {
 	    stylePtr = &style;
 	    styleBit = WS_DISABLED;
-	} else if ((strncmp(string, "-alpha", length) == 0)
+	} else if ((strncmp(string, "-alpha", (unsigned) length) == 0)
 		|| ((length > 2) && (strncmp(string, "-transparentcolor",
-					     length) == 0))) {
+					     (unsigned) length) == 0))) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_LAYERED;
-	} else if (strncmp(string, "-fullscreen", length) == 0) {
+	} else if (strncmp(string, "-fullscreen", (unsigned) length) == 0) {
 	    config_fullscreen = 1;
 	    styleBit = 0;
 	} else if ((length > 3)
-		&& (strncmp(string, "-toolwindow", length) == 0)) {
+		&& (strncmp(string, "-toolwindow", (unsigned) length) == 0)) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_TOOLWINDOW;
 	} else if ((length > 3)
-		&& (strncmp(string, "-topmost", length) == 0)) {
+		&& (strncmp(string, "-topmost", (unsigned) length) == 0)) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_TOPMOST;
 	    if ((i < objc-1) && (winPtr->flags & TK_EMBEDDED)) {
@@ -3291,11 +3293,13 @@ WmAttributesCmd(
 		     * Set the window directly regardless of UpdateWrapper.
 		     * The user supplies a double from [0..1], but Windows
 		     * wants an int (transparent) 0..255 (opaque), so do the
-		     * translation.  Add the 0.5 to round the value.
+		     * translation. Add the 0.5 to round the value.
 		     */
+
 		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
 			    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
-			    LWA_ALPHA | (wmPtr->crefObj ? LWA_COLORKEY : 0));
+			    (unsigned) (LWA_ALPHA |
+				    (wmPtr->crefObj ? LWA_COLORKEY : 0)));
 		}
 	    }
 	} else {
@@ -4321,10 +4325,11 @@ WmIconphotoCmd(
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int i, size, width, height, startObj = 3;
+    int i, width, height, startObj = 3;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
+    unsigned size;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,

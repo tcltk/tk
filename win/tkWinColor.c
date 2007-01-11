@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.10 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.11 2007/01/11 15:35:40 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -38,33 +38,33 @@ typedef struct {
 } SystemColorEntry;
 
 static SystemColorEntry sysColors[] = {
-    "3dDarkShadow",		COLOR_3DDKSHADOW,
-    "3dLight",			COLOR_3DLIGHT,
-    "ActiveBorder",		COLOR_ACTIVEBORDER,
-    "ActiveCaption",		COLOR_ACTIVECAPTION,
-    "AppWorkspace",		COLOR_APPWORKSPACE,
-    "Background",		COLOR_BACKGROUND,
-    "ButtonFace",		COLOR_BTNFACE,
-    "ButtonHighlight",		COLOR_BTNHIGHLIGHT,
-    "ButtonShadow",		COLOR_BTNSHADOW,
-    "ButtonText",		COLOR_BTNTEXT,
-    "CaptionText",		COLOR_CAPTIONTEXT,
-    "DisabledText",		COLOR_GRAYTEXT,
-    "GrayText",			COLOR_GRAYTEXT,
-    "Highlight",		COLOR_HIGHLIGHT,
-    "HighlightText",		COLOR_HIGHLIGHTTEXT,
-    "InactiveBorder",		COLOR_INACTIVEBORDER,
-    "InactiveCaption",		COLOR_INACTIVECAPTION,
-    "InactiveCaptionText",	COLOR_INACTIVECAPTIONTEXT,
-    "InfoBackground",		COLOR_INFOBK,
-    "InfoText",			COLOR_INFOTEXT,
-    "Menu",			COLOR_MENU,
-    "MenuText",			COLOR_MENUTEXT,
-    "Scrollbar",		COLOR_SCROLLBAR,
-    "Window",			COLOR_WINDOW,
-    "WindowFrame",		COLOR_WINDOWFRAME,
-    "WindowText",		COLOR_WINDOWTEXT,
-    NULL,			0
+    {"3dDarkShadow",		COLOR_3DDKSHADOW},
+    {"3dLight",			COLOR_3DLIGHT},
+    {"ActiveBorder",		COLOR_ACTIVEBORDER},
+    {"ActiveCaption",		COLOR_ACTIVECAPTION},
+    {"AppWorkspace",		COLOR_APPWORKSPACE},
+    {"Background",		COLOR_BACKGROUND},
+    {"ButtonFace",		COLOR_BTNFACE},
+    {"ButtonHighlight",		COLOR_BTNHIGHLIGHT},
+    {"ButtonShadow",		COLOR_BTNSHADOW},
+    {"ButtonText",		COLOR_BTNTEXT},
+    {"CaptionText",		COLOR_CAPTIONTEXT},
+    {"DisabledText",		COLOR_GRAYTEXT},
+    {"GrayText",		COLOR_GRAYTEXT},
+    {"Highlight",		COLOR_HIGHLIGHT},
+    {"HighlightText",		COLOR_HIGHLIGHTTEXT},
+    {"InactiveBorder",		COLOR_INACTIVEBORDER},
+    {"InactiveCaption",		COLOR_INACTIVECAPTION},
+    {"InactiveCaptionText",	COLOR_INACTIVECAPTIONTEXT},
+    {"InfoBackground",		COLOR_INFOBK},
+    {"InfoText",		COLOR_INFOTEXT},
+    {"Menu",			COLOR_MENU},
+    {"MenuText",		COLOR_MENUTEXT},
+    {"Scrollbar",		COLOR_SCROLLBAR},
+    {"Window",			COLOR_WINDOW},
+    {"WindowFrame",		COLOR_WINDOWFRAME},
+    {"WindowText",		COLOR_WINDOWTEXT},
+    {NULL,			0}
 };
 
 typedef struct ThreadSpecificData {

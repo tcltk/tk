@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.43 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.44 2007/01/11 15:35:40 dkf Exp $
  *
  */
 
@@ -1460,7 +1460,7 @@ MakeFilter(
 	if (valuePtr == NULL) {
 	    len = 0;
 	} else {
-	    CONST char* string = Tcl_GetStringFromObj(valuePtr, &len);
+	    (void) Tcl_GetStringFromObj(valuePtr, &len);
 	}
 
 	/*
