@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.67 2007/01/03 04:10:54 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.68 2007/01/11 15:35:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4907,9 +4907,10 @@ Tk_PhotoPutZoomedBlock(
 	    TkDestroyRegion(workRgn);
 	}
 
-	TkpBuildRegionFromAlphaData(masterPtr->validRegion, x,y, width,height,
+	TkpBuildRegionFromAlphaData(masterPtr->validRegion,
+		(unsigned)x, (unsigned)y, (unsigned)width, (unsigned)height,
 		&masterPtr->pix32[(y * masterPtr->width + x) * 4 + 3], 4,
-		masterPtr->width * 4);
+		(unsigned) masterPtr->width * 4);
     } else {
 	rect.x = x;
 	rect.y = y;

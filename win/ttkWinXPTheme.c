@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.4 2006/11/21 02:21:27 jenglish Exp $
+ * $Id: ttkWinXPTheme.c,v 1.5 2007/01/11 15:35:41 dkf Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -565,7 +565,7 @@ ThumbElementDraw(
 	return;
 
     elementData->procs->DrawThemeBackground(elementData->hTheme,
-	elementData->hDC, elementData->info->partId, stateId,
+	elementData->hDC, elementData->info->partId, (int) stateId,
 	&rc, NULL);
 
     FreeElementData(elementData);
