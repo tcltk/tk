@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.30 2006/12/19 19:51:06 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.31 2007/01/11 15:35:40 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -725,9 +725,10 @@ TkpDisplayButton(
 		border, TK_3D_FLAT_GC));
 
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-	StretchDIBits(dc, x, y, tsdPtr->boxWidth, tsdPtr->boxHeight, xSrc,
-		ySrc, tsdPtr->boxWidth, tsdPtr->boxHeight, tsdPtr->boxesBits,
-		(LPBITMAPINFO) tsdPtr->boxesPtr, DIB_RGB_COLORS, SRCCOPY);
+	StretchDIBits(dc, x, y, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
+		xSrc, ySrc, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
+		tsdPtr->boxesBits, (LPBITMAPINFO) tsdPtr->boxesPtr,
+		DIB_RGB_COLORS, SRCCOPY);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
@@ -781,15 +782,15 @@ TkpDisplayButton(
     if (defaultWidth != 0) {
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
 	TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
-		butPtr->highlightColorPtr->pixel);
+		(int) butPtr->highlightColorPtr->pixel);
 	TkWinFillRect(dc, 0, 0, defaultWidth, Tk_Height(tkwin),
-		butPtr->highlightColorPtr->pixel);
+		(int) butPtr->highlightColorPtr->pixel);
 	TkWinFillRect(dc, 0, Tk_Height(tkwin) - defaultWidth,
 		Tk_Width(tkwin), defaultWidth,
-		butPtr->highlightColorPtr->pixel);
+		(int) butPtr->highlightColorPtr->pixel);
 	TkWinFillRect(dc, Tk_Width(tkwin) - defaultWidth, 0,
 		defaultWidth, Tk_Height(tkwin),
-		butPtr->highlightColorPtr->pixel);
+		(int) butPtr->highlightColorPtr->pixel);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
@@ -1082,6 +1083,8 @@ TkpComputeButtonGeometry(
 	    if (imgHeight > height) {
 		height = imgHeight;
 	    }
+	    break;
+	case COMPOUND_NONE:
 	    break;
 	} /* switch */
 

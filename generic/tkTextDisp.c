@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.60 2006/10/17 23:44:45 hobbs Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.61 2007/01/11 15:35:39 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -5738,8 +5738,8 @@ TkTextYviewCmd(
 	register CONST char *switchStr =
 		Tcl_GetStringFromObj(objv[2], &switchLength);
 
-	if ((switchLength >= 2)
-		&& (strncmp(switchStr, "-pickplace", switchLength) == 0)) {
+	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",
+		(unsigned) switchLength) == 0)) {
 	    pickPlace = 1;
 	    if (objc != 4) {
 		Tcl_WrongNumArgs(interp, 3, objv, "lineNum|index");
@@ -7058,13 +7058,10 @@ TkTextCharLayoutProc(
 	bciPtr->width = 0;
 
 	ciPtr = &bciPtr->ci;
-
     } else {
-
 	bciPtr = (BaseCharInfo*) baseCharChunkPtr->clientData;
 	ciPtr = (CharInfo*) ckalloc(sizeof(CharInfo));
 	baseString = &bciPtr->baseChars;
-
     }
 
     lineOffset = Tcl_DStringLength(baseString);
@@ -7076,20 +7073,19 @@ TkTextCharLayoutProc(
     ciPtr->chars = NULL;
     ciPtr->numBytes = 0;
 
-    bytesThatFit = CharChunkMeasureChars(
-	chunkPtr, line, lineOffset + maxBytes, lineOffset, -1,
-	chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
+    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
+	    lineOffset + maxBytes, lineOffset, -1, chunkPtr->x, maxX,
+	    TK_ISOLATE_END, &nextX);
 #else  /* !TK_LAYOUT_WITH_BASE_CHUNKS */
-    bytesThatFit = CharChunkMeasureChars(
-	chunkPtr, p, maxBytes, 0, -1,
-	chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
+    bytesThatFit = CharChunkMeasureChars(chunkPtr, p, maxBytes, 0, -1,
+	    chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     if (bytesThatFit < maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
 	    Tcl_UniChar ch;
 	    int chLen = Tcl_UtfToUniChar(p, &ch);
-	    
+
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(
 		chunkPtr, line, lineOffset + chLen, lineOffset, -1,
@@ -7154,10 +7150,10 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #if !TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = (CharInfo *) ckalloc(
-	bytesThatFit + Tk_Offset(CharInfo,chars) +1);
+    ciPtr = (CharInfo *)
+	    ckalloc((unsigned) bytesThatFit + Tk_Offset(CharInfo, chars) + 1);
     chunkPtr->clientData = (ClientData) ciPtr;
-    memcpy(ciPtr->chars, p, bytesThatFit);
+    memcpy(ciPtr->chars, p, (unsigned) bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     ciPtr->numBytes = bytesThatFit;

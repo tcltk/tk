@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.4 2006/12/10 19:19:44 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.5 2007/01/11 15:35:40 dkf Exp $
  */
 
 #include <stdlib.h>
@@ -1015,7 +1015,7 @@ int InitializeElementRecord(
 	    *dest = styleDefault ? styleDefault : elementDefault;
 	}
 
-	if (!AllocateResource(cache, tkwin, dest, elementOption->type)) {
+	if (!AllocateResource(cache, tkwin, dest, (int) elementOption->type)) {
 	    return 0;
 	}
     }

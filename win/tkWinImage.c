@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.9 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.10 2007/01/11 15:35:40 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -315,7 +315,7 @@ XGetImageZPixmap(
      * Need to do a Blt operation to copy into a new bitmap.
      */
 
-    hbmp = CreateCompatibleBitmap(hdc, width, height);
+    hbmp = CreateCompatibleBitmap(hdc, (int) width, (int) height);
     hdcMem = CreateCompatibleDC(hdc);
     hbmpPrev = SelectObject(hdcMem, hbmp);
     hPal = state.palette;
@@ -332,7 +332,7 @@ XGetImageZPixmap(
 	}
     }
 
-    ret = BitBlt(hdcMem, 0, 0, width, height, hdc, x, y, SRCCOPY);
+    ret = BitBlt(hdcMem, 0, 0, (int) width, (int) height, hdc, x, y, SRCCOPY);
     if (hPal) {
 	SelectPalette(hdc, hPalPrev2, FALSE);
     }
@@ -351,7 +351,7 @@ XGetImageZPixmap(
     if (depth <= 8) {
 	size += sizeof(unsigned short) * (1 << depth);
     }
-    bmInfo = (BITMAPINFO *) ckalloc(size);
+    bmInfo = (BITMAPINFO *) ckalloc((unsigned)size);
 
     bmInfo->bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
     bmInfo->bmiHeader.biWidth		= width;
@@ -376,7 +376,7 @@ XGetImageZPixmap(
 	    goto cleanup;
 	}
 	ret_image = XCreateImage(display, NULL, depth, ZPixmap, 0, data,
-		width, height, 32, ((width + 31) >> 3) & ~1);
+		width, height, 32, (int) ((width + 31) >> 3) & ~1);
 	if (ret_image == NULL) {
 	    ckfree(data);
 	    goto cleanup;
@@ -412,7 +412,7 @@ XGetImageZPixmap(
 	    goto cleanup;
 	}
 	ret_image = XCreateImage(display, NULL, 8, ZPixmap, 0, data,
-		width, height, 8, width);
+		width, height, 8, (int) width);
 	if (ret_image == NULL) {
 	    ckfree((char *) data);
 	    goto cleanup;
@@ -469,7 +469,7 @@ XGetImageZPixmap(
 	    goto cleanup;
 	}
 	ret_image = XCreateImage(display, NULL, 32, ZPixmap, 0, data,
-		width, height, 0, width * 4);
+		width, height, 0, (int) width * 4);
 	if (ret_image == NULL) {
 	    ckfree((char *) data);
 	    goto cleanup;
@@ -484,7 +484,7 @@ XGetImageZPixmap(
 	    unsigned char *smallBitData, *smallBitBase, *bigBitData;
 	    unsigned int byte_width, h, w;
 
-	    byte_width = ((width * 3 + 3) & ~3);
+	    byte_width = ((width * 3 + 3) & ~(unsigned)3);
 	    smallBitBase = ckalloc(byte_width * height);
 	    if (!smallBitBase) {
 		ckfree((char *) ret_image->data);
@@ -624,7 +624,7 @@ XGetImage(
 		if (pixel == CLR_INVALID) {
 		    break;
 		}
-		PutPixel(imagePtr, xx, yy, pixel);
+		PutPixel(imagePtr, (int) xx, (int) yy, pixel);
 	    }
 	}
 
@@ -662,7 +662,8 @@ XGetImage(
 
 	imagePtr = XCreateImage(display, NULL, 1, XYBitmap, 0, NULL,
 		width, height, 32, 0);
-	imagePtr->data = ckalloc(imagePtr->bytes_per_line * imagePtr->height);
+	imagePtr->data =
+		ckalloc((unsigned) imagePtr->bytes_per_line*imagePtr->height);
 
 	dc = GetDC(NULL);
 

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.6 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.7 2007/01/11 15:35:41 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -66,7 +66,7 @@ Tk_GetPixmap(
 	depth /= planes;
     }
     newTwdPtr->bitmap.handle =
-	    CreateBitmap(width, height, planes, depth, NULL);
+	    CreateBitmap(width, height, (DWORD) planes, (DWORD) depth, NULL);
 
     if (newTwdPtr->bitmap.handle == NULL) {
 	ckfree((char *) newTwdPtr);

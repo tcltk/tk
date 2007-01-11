@@ -1,4 +1,4 @@
-/* $Id: ttkManager.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkManager.c,v 1.2 2007/01/11 15:35:40 dkf Exp $
  *
  * Copyright 2005, Joe English.  Freely redistributable.
  *
@@ -121,7 +121,7 @@ static void ManagerIdleProc(ClientData clientData)
  * 	Recompute slave layout when master widget is resized.
  * 	Keep the slave's map state in sync with the master's.
  */
-static const int ManagerEventMask = StructureNotifyMask;
+static const unsigned ManagerEventMask = StructureNotifyMask;
 static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
 {
     Ttk_Manager *mgr = clientData;
@@ -221,16 +221,16 @@ Ttk_Manager *Ttk_CreateManager(
     mgr->slaves 	= NULL;
     mgr->flags  	= 0;
 
-    Tk_CreateEventHandler(
-	mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
+    Tk_CreateEventHandler(mgr->masterWindow, ManagerEventMask,
+	    ManagerEventHandler, mgr);
 
     return mgr;
 }
 
 void Ttk_DeleteManager(Ttk_Manager *mgr)
 {
-    Tk_DeleteEventHandler(
-	mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
+    Tk_DeleteEventHandler(mgr->masterWindow, ManagerEventMask,
+	    ManagerEventHandler, mgr);
 
     while (mgr->nSlaves > 0) {
 	Ttk_ForgetSlave(mgr, mgr->nSlaves - 1);
@@ -386,12 +386,12 @@ int Ttk_ConfigureSlave(
     /* ASSERT: mgr->slaveOptionTable != NULL */
 
     if (Tk_SetOptions(interp, slave->slaveData, mgr->slaveOptionTable,
-	    objc, objv, slave->slaveWindow, &savedOptions, &mask) != TCL_OK)
-    {
+	    objc, objv, slave->slaveWindow, &savedOptions, &mask) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    if (mgr->managerSpec->SlaveConfigured(interp,mgr,slave,mask) != TCL_OK) {
+    if (mgr->managerSpec->SlaveConfigured(interp, mgr, slave,
+	    (unsigned)mask) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;
     }

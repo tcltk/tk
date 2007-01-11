@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.51 2006/11/24 18:11:32 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.52 2007/01/11 15:35:40 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -497,7 +497,7 @@ GetEntryText(mePtr)
 	    }
 	}
 
-	itemText = ckalloc(Tcl_DStringLength(&itemString) + 1);
+	itemText = ckalloc((unsigned)Tcl_DStringLength(&itemString) + 1);
 	strcpy(itemText, Tcl_DStringValue(&itemString));
 	Tcl_DStringFree(&itemString);
     }
@@ -940,7 +940,7 @@ TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
     WPARAM wParam;
     LPARAM lParam;
 {
-    static nIdles = 0;
+    static int nIdles = 0;
     LRESULT lResult = 1;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1987,32 +1987,33 @@ TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
 	case XK_Alt_L:
 	    scanCode = MapVirtualKey(VK_LMENU, 0);
 	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-		    WM_SYSKEYDOWN, VK_MENU, (scanCode << 16) | (1 << 29));
+		    WM_SYSKEYDOWN, VK_MENU,
+		    (int) (scanCode << 16) | (1 << 29));
 	    break;
 	case XK_Alt_R:
 	    scanCode = MapVirtualKey(VK_RMENU, 0);
 	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-		    WM_SYSKEYDOWN, VK_MENU, (scanCode << 16)
-		    | (1 << 29) | (1 << 24));
+		    WM_SYSKEYDOWN, VK_MENU,
+		    (int) (scanCode << 16) | (1 << 29) | (1 << 24));
 	    break;
 	case XK_F10:
 	    scanCode = MapVirtualKey(VK_F10, 0);
 	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-		    WM_SYSKEYDOWN, VK_F10, (scanCode << 16));
+		    WM_SYSKEYDOWN, VK_F10, (int) (scanCode << 16));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
 	    scanCode = MapVirtualKey(virtualKey, 0);
 	    if (0 != scanCode) {
 		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-			WM_SYSKEYDOWN, virtualKey, ((scanCode << 16)
-			| (1 << 29)));
+			WM_SYSKEYDOWN, virtualKey,
+			(int) ((scanCode << 16) | (1 << 29)));
 		if (eventPtr->xkey.nbytes > 0) {
 		    for (i = 0; i < eventPtr->xkey.nbytes; i++) {
 			CallWindowProc(DefWindowProc,
 				Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
 				eventPtr->xkey.trans_chars[i],
-				((scanCode << 16) | (1 << 29)));
+				(int) ((scanCode << 16) | (1 << 29)));
 		    }
 		}
 	    }
@@ -2022,27 +2023,27 @@ TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
 	case XK_Alt_L:
 	    scanCode = MapVirtualKey(VK_LMENU, 0);
 	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-		    WM_SYSKEYUP, VK_MENU, (scanCode << 16)
+		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16)
 		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_Alt_R:
 	    scanCode = MapVirtualKey(VK_RMENU, 0);
 	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-		    WM_SYSKEYUP, VK_MENU, (scanCode << 16) | (1 << 24)
+		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16) | (1 << 24)
 		    | (0x111 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_F10:
 	    scanCode = MapVirtualKey(VK_F10, 0);
 	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-		    WM_SYSKEYUP, VK_F10, (scanCode << 16)
-		    | (1 << 30) | (1 << 31));
+		    WM_SYSKEYUP, VK_F10,
+		    (int) (scanCode << 16) | (1 << 30) | (1 << 31));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
 	    scanCode = MapVirtualKey(virtualKey, 0);
 	    if (0 != scanCode) {
 		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
-			WM_SYSKEYUP, virtualKey, ((scanCode << 16)
+			WM_SYSKEYUP, virtualKey, (int) ((scanCode << 16)
 			| (1 << 29) | (1 << 30) | (1 << 31)));
 	    }
 	}
@@ -2580,7 +2581,7 @@ GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
 				 * portion */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
-    int haveImage = 0, haveText = 0;
+    int haveImage = 0;
 
     if (mePtr->image != NULL) {
     	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);

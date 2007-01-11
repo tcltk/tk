@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.33 2006/07/20 06:24:16 das Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.34 2007/01/11 15:35:39 dkf Exp $
  */
 
 /*
@@ -1857,10 +1857,10 @@ writeBlock(
 static void
 blockOut(
     miGIFState_t *statePtr,
-    unsigned char c)
+    unsigned c)
 {
     DEBUGMSG(("blockOut %s\n", binformat(c, 8)));
-    statePtr->oblock[statePtr->oblen++] = c;
+    statePtr->oblock[statePtr->oblen++] = (unsigned char) c;
     if (statePtr->oblen >= 255) {
 	writeBlock(statePtr);
     }
@@ -1887,7 +1887,7 @@ output(
     statePtr->obuf |= val << statePtr->obits;
     statePtr->obits += statePtr->outputBits;
     while (statePtr->obits >= 8) {
-	blockOut(statePtr, UCHAR(statePtr->obuf & 0xff));
+	blockOut(statePtr, statePtr->obuf & 0xff);
 	statePtr->obuf >>= 8;
 	statePtr->obits -= 8;
     }
@@ -1901,7 +1901,7 @@ outputFlush(
 {
     DEBUGMSG(("outputFlush\n"));
     if (statePtr->obits > 0) {
-	blockOut(statePtr, UCHAR(statePtr->obuf));
+	blockOut(statePtr, statePtr->obuf);
     }
     blockFlush(statePtr);
 }
@@ -1958,7 +1958,7 @@ isqrt(
     }
 }
 
-static unsigned int
+static int
 computeTriangleCount(
     unsigned int count,
     unsigned int nrepcodes)
@@ -1983,7 +1983,7 @@ computeTriangleCount(
 	}
 	cost += n;
     }
-    return cost;
+    return (int) cost + 1;
 }
 
 static void
@@ -2052,7 +2052,8 @@ runlengthFlushClearOrRep(
     int withclr;
 
     DEBUGMSG(("runlengthFlushClearOrRep %d\n", count));
-    withclr = 1 + computeTriangleCount(count, statePtr->maxOcodes);
+    withclr = computeTriangleCount((unsigned) count,
+	    (unsigned) statePtr->maxOcodes);
     if (withclr < count) {
 	output(statePtr, statePtr->codeClear);
 	didClear(statePtr);
@@ -2080,11 +2081,12 @@ runlengthFlushWithTable(
     if (statePtr->outputCount+repmax+repleft > statePtr->maxOcodes) {
 	repmax = statePtr->maxOcodes - statePtr->outputCount;
 	leftover = count - (repmax * statePtr->runlengthTableMax);
-	repleft = 1 + computeTriangleCount(leftover, statePtr->maxOcodes);
+	repleft = computeTriangleCount((unsigned) leftover,
+		(unsigned) statePtr->maxOcodes);
     }
     DEBUGMSG(("runlengthFlushWithTable repmax=%d leftover=%d repleft=%d\n",
 	    repmax, leftover, repleft));
-    if (1+(int)computeTriangleCount(count, statePtr->maxOcodes)
+    if (computeTriangleCount((unsigned) count, (unsigned) statePtr->maxOcodes)
 	    < repmax+repleft) {
 	output(statePtr, statePtr->codeClear);
 	didClear(statePtr);

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClamTheme.c,v 1.3 2006/12/13 17:06:32 jenglish Exp $
+ * $Id: ttkClamTheme.c,v 1.4 2007/01/11 15:35:39 dkf Exp $
  *
  * Copyright (C) 2004 Joe English
  *
@@ -324,16 +324,22 @@ RadioIndicatorElementDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    XFillArc(Tk_Display(tkwin),d,gcb, b.x,b.y,b.width,b.height, 0,360*64);
-    XDrawArc(Tk_Display(tkwin),d,gcl, b.x,b.y,b.width,b.height, 225*64,180*64);
-    XDrawArc(Tk_Display(tkwin),d,gcu, b.x,b.y,b.width,b.height, 45*64,180*64);
+    XFillArc(Tk_Display(tkwin),d,gcb,
+	    b.x,b.y,(unsigned)b.width,(unsigned)b.height, 0,360*64);
+    XDrawArc(Tk_Display(tkwin),d,gcl,
+	    b.x,b.y,(unsigned)b.width,(unsigned)b.height, 225*64,180*64);
+    XDrawArc(Tk_Display(tkwin),d,gcu,
+	    b.x,b.y,(unsigned)b.width,(unsigned)b.height, 45*64,180*64);
 
     if (state & TTK_STATE_SELECTED) {
 	b = Ttk_PadBox(b,Ttk_UniformPadding(3));
-	XFillArc(Tk_Display(tkwin),d,gcf, b.x,b.y,b.width,b.height, 0,360*64);
-	XDrawArc(Tk_Display(tkwin),d,gcf, b.x,b.y,b.width,b.height, 0,360*64);
+	XFillArc(Tk_Display(tkwin),d,gcf,
+		b.x,b.y,(unsigned)b.width,(unsigned)b.height, 0,360*64);
+	XDrawArc(Tk_Display(tkwin),d,gcf,
+		b.x,b.y,(unsigned)b.width,(unsigned)b.height, 0,360*64);
 #if WIN32_XDRAWLINE_HACK
-	XDrawArc(Tk_Display(tkwin),d,gcf, b.x,b.y,b.width,b.height, 300*64,360*64);
+	XDrawArc(Tk_Display(tkwin),d,gcf,
+		b.x,b.y,(unsigned)b.width,(unsigned)b.height, 300*64,360*64);
 #endif
     }
 }
@@ -355,9 +361,10 @@ CheckIndicatorElementDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    XFillRectangle(display,d,gcb, b.x,b.y,b.width,b.height);
-    XDrawLine(display,d,gcl,b.x,b.y+b.height,b.x+b.width+w,b.y+b.height);/*S*/
-    XDrawLine(display,d,gcl,b.x+b.width,b.y,b.x+b.width,b.y+b.height+w); /*E*/
+    XFillRectangle(display,d,gcb, b.x,b.y,
+	    (unsigned)b.width,(unsigned)b.height);
+    XDrawLine(display,d,gcl, b.x,b.y+b.height,b.x+b.width+w,b.y+b.height);/*S*/
+    XDrawLine(display,d,gcl, b.x+b.width,b.y,b.x+b.width,b.y+b.height+w); /*E*/
     XDrawLine(display,d,gcu,b.x,b.y, b.x,b.y+b.height+w); /*W*/
     XDrawLine(display,d,gcu,b.x,b.y, b.x+b.width+w,b.y);  /*N*/
 
@@ -586,8 +593,10 @@ static void TroughElementDraw(
     ScrollbarElement *sb = elementRecord;
     GC gcb = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
     GC gct = Ttk_GCForColor(tkwin,sb->troughColorObj,d);
-    XFillRectangle(Tk_Display(tkwin), d, gct, b.x, b.y, b.width-1, b.height-1);
-    XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y, b.width-1, b.height-1);
+    XFillRectangle(Tk_Display(tkwin), d, gct, b.x, b.y,
+	    (unsigned)b.width-1, (unsigned)b.height-1);
+    XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y,
+	    (unsigned)b.width-1, (unsigned)b.height-1);
 }
 
 static Ttk_ElementSpec TroughElementSpec = {
@@ -619,10 +628,10 @@ static void ThumbElementDraw(
     const int w = WIN32_XDRAWLINE_HACK;
 
     DrawSmoothBorder(tkwin, d, b,
-	sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
-    XFillRectangle(
-	Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
-	b.x+2, b.y+2, b.width-4, b.height-4);
+	    sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
+    XFillRectangle(Tk_Display(tkwin), d,
+	    BackgroundGC(tkwin, sb->backgroundObj), b.x+2, b.y+2,
+	    (unsigned)b.width-4, (unsigned)b.height-4);
 
     /*
      * Draw grip:
@@ -631,7 +640,7 @@ static void ThumbElementDraw(
     Tcl_GetIntFromObj(NULL, sb->gripCountObj, &gripCount);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
-    
+
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	dx = 1; dy = 0;
 	x1 = x2 = b.x + b.width / 2 - gripCount;
@@ -709,14 +718,14 @@ static void PbarElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     ScrollbarElement *sb = elementRecord;
-    
+
     b = Ttk_PadBox(b, Ttk_UniformPadding(2));
     if (b.width > 4 && b.height > 4) {
 	DrawSmoothBorder(tkwin, d, b,
-	    sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
-	XFillRectangle(Tk_Display(tkwin), d, 
-	    BackgroundGC(tkwin, sb->backgroundObj),
-	    b.x+2, b.y+2, b.width-4, b.height-4);
+		sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
+	XFillRectangle(Tk_Display(tkwin), d,
+		BackgroundGC(tkwin, sb->backgroundObj),
+		b.x+2, b.y+2, (unsigned)b.width-4, (unsigned)b.height-4);
     }
 }
 
@@ -754,11 +763,11 @@ static void ArrowElementDraw(
     int h, cx, cy;
 
     DrawSmoothBorder(tkwin, d, b,
-	sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
+	    sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
 
     XFillRectangle(
-	Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
-	b.x+2, b.y+2, b.width-4, b.height-4);
+	    Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
+	    b.x+2, b.y+2, (unsigned)b.width-4, (unsigned)b.height-4);
 
     b = Ttk_PadBox(b, Ttk_UniformPadding(3));
     h = b.width < b.height ? b.width : b.height;
