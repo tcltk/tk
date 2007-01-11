@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.13 2007/01/11 15:35:40 dkf Exp $
+/* $Id: ttkTreeview.c,v 1.14 2007/01/11 19:59:26 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -1012,7 +1012,7 @@ static int TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
     tv->tree.nColumns = tv->tree.nDisplayColumns = 0;
     tv->tree.columns = NULL;
     tv->tree.displayColumns = NULL;
-    tv->tree.showFlags = ~(unsigned)0;
+    tv->tree.showFlags = ~0;
 
     InitColumn(&tv->tree.column0);
     Tk_InitOptions(
@@ -3180,7 +3180,7 @@ static void RowElementDraw(
     XColor *color = Tk_GetColorFromObj(tkwin, row->backgroundObj);
     GC gc = Tk_GCForColor(color, d);
     XFillRectangle(Tk_Display(tkwin), d, gc,
-	    b.x, b.y, (unsigned)b.width, (unsigned)b.height);
+	    b.x, b.y, b.width, b.height);
 }
 
 static Ttk_ElementSpec RowElementSpec =

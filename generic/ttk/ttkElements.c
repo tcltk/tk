@@ -1,4 +1,4 @@
-/* $Id: ttkElements.c,v 1.5 2007/01/11 15:35:40 dkf Exp $
+/* $Id: ttkElements.c,v 1.6 2007/01/11 19:59:26 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -84,7 +84,7 @@ BackgroundElementDraw(
 
     XFillRectangle(Tk_Display(tkwin), d,
 	Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-	0,0, (unsigned)Tk_Width(tkwin), (unsigned)Tk_Height(tkwin));
+	0,0, Tk_Width(tkwin), Tk_Height(tkwin));
 }
 
 static Ttk_ElementSpec BackgroundElementSpec =
@@ -297,8 +297,7 @@ static void DrawFocusRing(
     mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
 
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
-    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y,
-	    (unsigned)b.width-1, (unsigned)b.height-1);
+    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.6 2007/01/11 15:35:40 dkf Exp $
+/* $Id: ttkLabel.c,v 1.7 2007/01/11 19:59:26 jenglish Exp $
  *
  * text, image, and label elements.
  *
@@ -233,8 +233,7 @@ static void ImageTextElementDraw(
 	return;
 
     XFillRectangle(Tk_Display(tkwin), d,
-	    Tk_3DBorderGC(tkwin, bd, TK_3D_FLAT_GC), b.x, b.y,
-	    (unsigned)b.width, (unsigned)b.height);
+	Tk_3DBorderGC(tkwin, bd, TK_3D_FLAT_GC), b.x, b.y, b.width, b.height);
 
     TextDraw(text, tkwin, d, b);
     TextCleanup(text);
@@ -335,8 +334,7 @@ static void StippleOver(
 	gcvalues.fill_style = FillStippled;
 	gcvalues.stipple = stipple;
 	gc = Tk_GetGC(tkwin, mask, &gcvalues);
-	XFillRectangle(Tk_Display(tkwin),d,gc,x,y,
-		(unsigned)image->width,(unsigned)image->height);
+	XFillRectangle(Tk_Display(tkwin),d,gc,x,y,image->width,image->height);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
 	Tk_FreeBitmapFromObj(tkwin, image->stippleObj);
     }
