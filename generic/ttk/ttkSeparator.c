@@ -1,4 +1,4 @@
-/* $Id: ttkSeparator.c,v 1.4 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkSeparator.c,v 1.5 2007/01/11 14:49:47 jenglish Exp $
  *
  * Copyright (c) 2004, Joe English
  *
@@ -24,7 +24,7 @@ typedef struct
     SeparatorPart separator;
 } Separator;
 
-static const Tk_OptionSpec SeparatorOptionSpecs[] =
+static Tk_OptionSpec SeparatorOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	Tk_Offset(Separator,separator.orientObj),

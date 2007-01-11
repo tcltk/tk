@@ -1,4 +1,4 @@
-/* $Id: ttkScrollbar.c,v 1.4 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkScrollbar.c,v 1.5 2007/01/11 14:49:47 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * ttk::scrollbar widget.
@@ -32,7 +32,7 @@ typedef struct
     ScrollbarPart scrollbar;
 } Scrollbar;
 
-static const Tk_OptionSpec ScrollbarOptionSpecs[] =
+static Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
 	Tk_Offset(Scrollbar,scrollbar.commandObj), -1, 0,0,0},
