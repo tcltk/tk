@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.5 2006/12/10 19:19:44 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.6 2007/01/11 15:35:40 dkf Exp $
  */
 
 #include <string.h>
@@ -1073,7 +1073,7 @@ static void Ttk_DrawNodeList(
     for (; node; node = node->next)
     {
 	int border = node->flags & TTK_BORDER;
-	int substate = state;
+	Ttk_State substate = state;
 
 	if (node->flags & TTK_UNIT)
 	    substate |= node->state;

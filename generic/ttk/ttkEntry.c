@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.6 2007/01/11 14:49:47 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.7 2007/01/11 15:35:40 dkf Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -293,7 +293,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
 
     Tcl_UtfToUniChar(showChar, &ch);
     size = Tcl_UniCharToUtf(ch, buf);
-    p = displayString = ckalloc(numChars * size + 1);
+    p = displayString = ckalloc((unsigned)numChars * size + 1);
 
     while (numChars--) {
 	p += Tcl_UniCharToUtf(ch, p);
@@ -710,7 +710,7 @@ static void
 EntryStoreValue(Entry *entryPtr, const char *value)
 {
     size_t numBytes = strlen(value);
-    int numChars = Tcl_NumUtfChars(value, numBytes);
+    int numChars = Tcl_NumUtfChars(value, (int)numBytes);
 
     if (entryPtr->core.flags & VALIDATING)
 	entryPtr->core.flags |= VALIDATION_SET_VALUE;
@@ -811,7 +811,7 @@ InsertChars(
     char *string = entryPtr->entry.string;
     size_t byteIndex = Tcl_UtfAtIndex(string, index) - string;
     size_t byteCount = strlen(value);
-    int charsAdded = Tcl_NumUtfChars(value, byteCount);
+    int charsAdded = Tcl_NumUtfChars(value, (int)byteCount);
     size_t newByteCount = entryPtr->entry.numBytes + byteCount + 1;
     char *new;
     int code;
@@ -1245,8 +1245,9 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_SetCaretPos(tkwin, cursorX, cursorY, cursorHeight);
 
 	gc = EntryGetGC(entryPtr, es.insertColorObj);
-	XFillRectangle(Tk_Display(tkwin), d, gc, 
-	    cursorX-cursorWidth/2, cursorY, cursorWidth, cursorHeight);
+	XFillRectangle(Tk_Display(tkwin), d, gc,
+		cursorX-cursorWidth/2, cursorY,
+		(unsigned)cursorWidth, (unsigned)cursorHeight);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
 
@@ -1297,13 +1298,13 @@ EntryIndex(
     int length;
     const char *string = Tcl_GetStringFromObj(indexObj, &length);
 
-    if (strncmp(string, "end", length) == 0) {
+    if (strncmp(string, "end", (unsigned) length) == 0) {
 	*indexPtr = entryPtr->entry.numChars;
-    } else if (strncmp(string, "insert", length) == 0) {
+    } else if (strncmp(string, "insert", (unsigned) length) == 0) {
 	*indexPtr = entryPtr->entry.insertPos;
-    } else if (strncmp(string, "left", length) == 0) {	/* for debugging */
+    } else if (strncmp(string, "left", (unsigned) length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.first;
-    } else if (strncmp(string, "right", length) == 0) {	/* for debugging */
+    } else if (strncmp(string, "right", (unsigned) length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.last;
     } else if (strncmp(string, "sel.", 4) == 0) {
 	if (entryPtr->entry.selectFirst < 0) {
@@ -1312,9 +1313,9 @@ EntryIndex(
 		    Tk_PathName(entryPtr->core.tkwin), NULL);
 	    return TCL_ERROR;
 	}
-	if (strncmp(string, "sel.first", length) == 0) {
+	if (strncmp(string, "sel.first", (unsigned) length) == 0) {
 	    *indexPtr = entryPtr->entry.selectFirst;
-	} else if (strncmp(string, "sel.last", length) == 0) {
+	} else if (strncmp(string, "sel.last", (unsigned) length) == 0) {
 	    *indexPtr = entryPtr->entry.selectLast;
 	} else {
 	    goto badIndex;
