@@ -1,3 +1,10 @@
+2007-01-11  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkManager.h, generic/ttk/ttk*.c:
+	Revert addition of contravariant 'const' qualifiers,
+	to keep in sync with Tile codebase (which must remain 
+	compatible with Tk 8.4).
+
 2007-01-03  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/ManageGeom.3,

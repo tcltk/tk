@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.5 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkWidget.h,v 1.6 2007/01/11 14:49:47 jenglish Exp $
  * Copyright (c) 2003, Joe English
  * Helper routines for widget implementations.
  */
@@ -70,7 +70,7 @@ struct WidgetSpec_
     const char 		*className;	/* Widget class name */
     size_t 		recordSize;	/* #bytes in widget record */
     const Tk_OptionSpec	*optionSpecs;	/* Option specifications */
-    const WidgetCommandSpec	*commands;	/* Widget instance subcommands */
+    const WidgetCommandSpec *commands;	/* Widget instance subcommands */
 
     /*
      * Hooks:
@@ -173,9 +173,9 @@ MODULE_SCOPE void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
  * Helper routines for data accessor commands:
  */
 MODULE_SCOPE int TtkEnumerateOptions(
-    Tcl_Interp *, void *recordPtr, const Tk_OptionSpec *, Tk_OptionTable, Tk_Window);
+    Tcl_Interp *, void *, const Tk_OptionSpec *, Tk_OptionTable, Tk_Window);
 MODULE_SCOPE int TtkGetOptionValue(
-    Tcl_Interp *, void *recordPtr, Tcl_Obj *optName, Tk_OptionTable, Tk_Window);
+    Tcl_Interp *, void *, Tcl_Obj *optName, Tk_OptionTable, Tk_Window);
 
 /*
  * Helper routines for scrolling widgets (see scroll.c).

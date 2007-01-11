@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.5 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkNotebook.c,v 1.6 2007/01/11 14:49:47 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * NOTE-ACTIVE: activeTabIndex is not always correct (it's
@@ -62,7 +62,7 @@ typedef struct
  * PaneOptionSpecs includes additional options for child window placement
  * and is used to configure the slave.
  */
-static const Tk_OptionSpec TabOptionSpecs[] =
+static Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
 	"normal", -1,Tk_Offset(Tab,state),
@@ -79,7 +79,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
     {TK_OPTION_END}
 };
 
-static const Tk_OptionSpec PaneOptionSpecs[] =
+static Tk_OptionSpec PaneOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-padding", "padding", "Padding", "0",
 	Tk_Offset(Tab,paddingObj), -1, 0,0,GEOMETRY_CHANGED },
@@ -114,7 +114,7 @@ typedef struct
     NotebookPart notebook;
 } Notebook;
 
-static const Tk_OptionSpec NotebookOptionSpecs[] =
+static Tk_OptionSpec NotebookOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 

@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.11 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkTreeview.c,v 1.12 2007/01/11 14:49:47 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -52,7 +52,7 @@ struct TreeItemRec
     Tcl_Obj	*tagsObj;
 };
 
-static const Tk_OptionSpec ItemOptionSpecs[] =
+static Tk_OptionSpec ItemOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-text", "text", "Text",
 	"", Tk_Offset(TreeItem,textObj), -1,
@@ -174,7 +174,7 @@ typedef struct {
     Tcl_Obj *fontObj;
 } DisplayItem;
 
-static const Tk_OptionSpec TagOptionSpecs[] =
+static Tk_OptionSpec TagOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-text", "text", "Text",
 	NULL, Tk_Offset(DisplayItem,textObj), -1,
@@ -259,7 +259,7 @@ static void FreeColumn(TreeColumn *column)
     /* Don't touch column->data, it's scratch storage */
 }
 
-static const Tk_OptionSpec ColumnOptionSpecs[] =
+static Tk_OptionSpec ColumnOptionSpecs[] =
 {
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_COLWIDTH, -1, Tk_Offset(TreeColumn,width),
@@ -279,7 +279,7 @@ static const Tk_OptionSpec ColumnOptionSpecs[] =
     {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0,0,0}
 };
 
-static const Tk_OptionSpec HeadingOptionSpecs[] =
+static Tk_OptionSpec HeadingOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-text", "text", "Text",
 	"", Tk_Offset(TreeColumn,headingObj), -1,
@@ -425,7 +425,7 @@ typedef struct {
 
 static const char *SelectModeStrings[] = { "none", "browse", "extended", NULL };
 
-static const Tk_OptionSpec TreeviewOptionSpecs[] =
+static Tk_OptionSpec TreeviewOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 

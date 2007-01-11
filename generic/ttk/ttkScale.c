@@ -1,4 +1,4 @@
-/* $Id: ttkScale.c,v 1.4 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkScale.c,v 1.5 2007/01/11 14:49:47 jenglish Exp $
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.
@@ -43,7 +43,7 @@ typedef struct
     ScalePart  scale;
 } Scale;
 
-static const Tk_OptionSpec ScaleOptionSpecs[] =
+static Tk_OptionSpec ScaleOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 
