@@ -1,3 +1,7 @@
+2007-01-11  Jeff Hobbs  <jeffh@activestate.com>
+
+	* unix/tkUnixEvent.c, library/msgs/es.msg: s/CRLF/LF/g
+
 2007-01-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/tcl.m4(CFLAGS_WARNING): Remove "-Wconversion".
