@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.5 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkButton.c,v 1.6 2007/01/11 14:49:46 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
@@ -54,7 +54,7 @@ typedef struct
     BasePart	base;
 } Base;
 
-static const Tk_OptionSpec BaseOptionSpecs[] =
+static Tk_OptionSpec BaseOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	Tk_Offset(Base,base.textObj), -1, 
@@ -219,7 +219,7 @@ typedef struct
     LabelPart	label;
 } Label;
 
-static const Tk_OptionSpec LabelOptionSpecs[] =
+static Tk_OptionSpec LabelOptionSpecs[] =
 {
     {TK_OPTION_BORDER, "-background", "frameColor", "FrameColor", 
 	NULL, Tk_Offset(Label,label.backgroundObj), -1,
@@ -296,7 +296,7 @@ typedef struct
 /*
  * Option specifications:
  */
-static const Tk_OptionSpec ButtonOptionSpecs[] =
+static Tk_OptionSpec ButtonOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 
@@ -401,7 +401,7 @@ typedef struct
 /*
  * Option specifications:
  */
-static const Tk_OptionSpec CheckbuttonOptionSpecs[] =
+static Tk_OptionSpec CheckbuttonOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 
@@ -593,7 +593,7 @@ typedef struct
 /*
  * Option specifications:
  */
-static const Tk_OptionSpec RadiobuttonOptionSpecs[] =
+static Tk_OptionSpec RadiobuttonOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 
@@ -763,7 +763,7 @@ typedef struct
 static const char *directionStrings[] = {
     "above", "below", "left", "right", "flush", NULL
 };
-static const Tk_OptionSpec MenubuttonOptionSpecs[] =
+static Tk_OptionSpec MenubuttonOptionSpecs[] =
 {
     WIDGET_TAKES_FOCUS,
 
