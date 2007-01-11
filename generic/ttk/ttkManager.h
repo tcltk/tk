@@ -1,4 +1,4 @@
-/* $Id: ttkManager.h,v 1.4 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkManager.h,v 1.5 2007/01/11 14:49:47 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -31,7 +31,7 @@ typedef struct TtkSlave_ Ttk_Slave; /* forward */
  */
 typedef struct {			/* Manager hooks */
     Tk_GeomMgr tkGeomMgr;		/* "real" Tk Geometry Manager */
-    const Tk_OptionSpec *slaveOptionSpecs;	/* slave record options */
+    Tk_OptionSpec *slaveOptionSpecs;	/* slave record options */
     size_t slaveSize;			/* size of slave record */
 
     int  (*RequestedSize)(void *managerData, int *widthPtr, int *heightPtr);
@@ -59,7 +59,7 @@ struct TtkSlave_
 
 struct TtkManager_
 {
-    const Ttk_ManagerSpec	*managerSpec;
+    Ttk_ManagerSpec	*managerSpec;
     void 		*managerData;
     Tk_Window   	masterWindow;
     Tk_OptionTable 	slaveOptionTable;
