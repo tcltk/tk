@@ -1,4 +1,4 @@
-/* $Id: ttkTagSet.c,v 1.2 2007/01/11 15:35:40 dkf Exp $
+/* $Id: ttkTagSet.c,v 1.3 2007/01/11 19:59:26 jenglish Exp $
  *
  * Ttk widget set: tag tables.  Half-baked, work in progress.
  *
@@ -31,8 +31,8 @@ struct TtkTagTable {
 static Ttk_Tag NewTag(Ttk_TagTable tagTable)
 {
     Ttk_Tag tag = (Ttk_Tag)ckalloc(sizeof(*tag));
-    tag->tagRecord = (Tcl_Obj **)ckalloc((unsigned) tagTable->tagRecordSize);
-    memset(tag->tagRecord, 0, (unsigned) tagTable->tagRecordSize);
+    tag->tagRecord = (Tcl_Obj **)ckalloc(tagTable->tagRecordSize);
+    memset(tag->tagRecord, 0, tagTable->tagRecordSize);
     return tag;
 }
 
