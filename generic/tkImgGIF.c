@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.34 2007/01/11 15:35:39 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.35 2007/01/12 09:08:36 dkf Exp $
  */
 
 /*
@@ -627,11 +627,11 @@ StringReadGIF(
     int width, int height,	/* image to copy */
     int srcX, int srcY)
 {
-    MFile handle;
+    MFile handle, *hdlPtr = &handle;
     int length;
     char *data = (char *) Tcl_GetByteArrayFromObj(dataObj, &length);
 
-    mInit((unsigned char *)data, &handle, length);
+    mInit((unsigned char *)data, hdlPtr, length);
 
     if (strncmp(GIF87a, data, 6) && strncmp(GIF89a, data, 6)) {
 	/*
@@ -641,10 +641,10 @@ StringReadGIF(
 	 * because of potential padding).
 	 */
 
-	return FileReadGIF(interp, (Tcl_Channel) &handle, INLINE_DATA_BASE64,
+	return FileReadGIF(interp, (Tcl_Channel) hdlPtr, INLINE_DATA_BASE64,
 		format, imageHandle, destX, destY, width, height, srcX, srcY);
     } else {
-	return FileReadGIF(interp, (Tcl_Channel) &handle, INLINE_DATA_BINARY,
+	return FileReadGIF(interp, (Tcl_Channel) hdlPtr, INLINE_DATA_BINARY,
 		format, imageHandle, destX, destY, width, height, srcX, srcY);
     }
 }
