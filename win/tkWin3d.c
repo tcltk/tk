@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin3d.c,v 1.9 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWin3d.c,v 1.10 2007/01/12 10:41:23 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -162,6 +162,7 @@ Tk_3DVerticalBevel(
 	left = right = borderPtr->bgGC->foreground;
 	break;
     case TK_RELIEF_SOLID:
+    default:
 	left = right = RGB(0,0,0);
 	break;
     }
@@ -261,6 +262,7 @@ Tk_3DHorizontalBevel(
 	topColor = bottomColor = borderPtr->bgGC->foreground;
 	break;
     case TK_RELIEF_SOLID:
+    default:
 	topColor = bottomColor = RGB(0,0,0);
     }
 

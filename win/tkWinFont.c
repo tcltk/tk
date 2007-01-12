@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.29 2007/01/11 15:35:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.30 2007/01/12 10:41:23 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -672,7 +672,7 @@ Tk_MeasureChars(
     Tcl_DString runString;
     SubFont *thisSubFontPtr;
     SubFont *lastSubFontPtr;
-    CONST char *p, *end, *next, *start;
+    CONST char *p, *end, *next = NULL, *start;
 
     if (numBytes == 0) {
 	*lengthPtr = 0;

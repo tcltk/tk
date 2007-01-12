@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.10 2007/01/11 15:35:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.11 2007/01/12 10:41:23 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -294,7 +294,7 @@ XGetImageZPixmap(
     HDC hdc, hdcMem;
     HBITMAP hbmp, hbmpPrev;
     BITMAPINFO *bmInfo = NULL;
-    HPALETTE hPal, hPalPrev1, hPalPrev2;
+    HPALETTE hPal, hPalPrev1 = 0, hPalPrev2 = 0;
     int size;
     unsigned int n;
     unsigned int depth;
@@ -323,12 +323,12 @@ XGetImageZPixmap(
 	hPalPrev1 = SelectPalette(hdcMem, hPal, FALSE);
 	n = RealizePalette(hdcMem);
 	if (n > 0) {
-	    UpdateColors (hdcMem);
+	    UpdateColors(hdcMem);
 	}
 	hPalPrev2 = SelectPalette(hdc, hPal, FALSE);
 	n = RealizePalette(hdc);
 	if (n > 0) {
-	    UpdateColors (hdc);
+	    UpdateColors(hdc);
 	}
     }
 
@@ -339,6 +339,7 @@ XGetImageZPixmap(
     SelectObject(hdcMem, hbmpPrev);
     TkWinReleaseDrawableDC(d, hdc, &state);
     if (ret == FALSE) {
+	ret_image = NULL;
 	goto cleanup;
     }
     if (twdPtr->type == TWD_WINDOW) {
@@ -454,7 +455,7 @@ XGetImageZPixmap(
 	 */
 
 	if (GetDIBits(hdcMem, hbmp, 0, height, ret_image->data, bmInfo,
-		    DIB_RGB_COLORS) == 0) {
+		DIB_RGB_COLORS) == 0) {
 	    ckfree((char *) ret_image->data);
 	    ckfree((char *) ret_image);
 	    ret_image = NULL;
