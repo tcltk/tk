@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.52 2007/01/11 15:35:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.53 2007/01/12 10:41:23 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -1712,19 +1712,18 @@ DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
  */
 
 void
-DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr, activeBorder,
-	x, y, width, height)
-    TkMenu *menuPtr;		/* The menu we are drawing */
-    TkMenuEntry *mePtr;		/* The entry we are drawing */
-    Drawable d;			/* What we are drawing into */
-    GC gc;			/* The gc we are drawing with */
-    Tk_Font tkfont;		/* The precalculated font */
-    CONST Tk_FontMetrics *fmPtr;/* The precalculated font metrics */
-    Tk_3DBorder activeBorder;	/* The border when an item is active */
-    int x;			/* left edge */
-    int y;			/* top edge */
-    int width;			/* Width of menu entry */
-    int height;			/* Height of menu entry */
+DrawMenuEntryAccelerator(
+    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenuEntry *mePtr,		/* The entry we are drawing */
+    Drawable d,			/* What we are drawing into */
+    GC gc,			/* The gc we are drawing with */
+    Tk_Font tkfont,		/* The precalculated font */
+    CONST Tk_FontMetrics *fmPtr,/* The precalculated font metrics */
+    Tk_3DBorder activeBorder,	/* The border when an item is active */
+    int x,			/* left edge */
+    int y,			/* top edge */
+    int width,			/* Width of menu entry */
+    int height)			/* Height of menu entry */
 {
     int baseline;
     int leftEdge = x + mePtr->indicatorSpace + mePtr->labelWidth;
@@ -1732,6 +1731,8 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr, activeBorder,
 
     if (mePtr->accelPtr != NULL) {
 	accel = Tcl_GetString(mePtr->accelPtr);
+    } else {
+	accel = NULL;
     }
 
     baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
@@ -1742,13 +1743,11 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr, activeBorder,
 
     if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
 	if ((mePtr->state == ENTRY_DISABLED)
-		&& (menuPtr->disabledFgPtr != NULL)
-		&& (mePtr->accelPtr != NULL)) {
+		&& (menuPtr->disabledFgPtr != NULL) && (accel != NULL)) {
 	    COLORREF oldFgColor = gc->foreground;
 
 	    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-	    if ((mePtr->accelPtr != NULL) &&
-		    ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)) {
+	    if ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0) {
 		Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
 			mePtr->accelLength, leftEdge + 1, baseline + 1);
 	    }
@@ -1756,7 +1755,7 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr, activeBorder,
 	}
     }
 
-    if (mePtr->accelPtr != NULL) {
+    if (accel != NULL) {
 	Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
 		mePtr->accelLength, leftEdge, baseline);
     }
@@ -2149,7 +2148,7 @@ DrawMenuEntryLabel(
     int activeBorderWidth;
     int leftEdge;
     int imageHeight, imageWidth;
-    int textHeight, textWidth;
+    int textHeight = 0, textWidth = 0;
     int haveImage = 0, haveText = 0;
     int imageXOffset = 0, imageYOffset = 0;
     int textXOffset = 0, textYOffset = 0;

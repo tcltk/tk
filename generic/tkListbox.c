@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.37 2007/01/03 05:06:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.38 2007/01/12 10:41:23 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1819,7 +1819,7 @@ DisplayListbox(clientData)
     register Listbox *listPtr = (Listbox *) clientData;
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
-    int i, limit, x, y, width, prevSelected, freeGC;
+    int i, limit, x, y, prevSelected, freeGC;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -1895,6 +1895,8 @@ DisplayListbox(clientData)
     prevSelected = 0;
 
     for (i = listPtr->topIndex; i <= limit; i++) {
+	int width = Tk_Width(tkwin);	/* zeroth approx to silence warning */
+
 	x = listPtr->inset;
 	y = ((i - listPtr->topIndex) * listPtr->lineHeight) + listPtr->inset;
 	gc = listPtr->textGC;
