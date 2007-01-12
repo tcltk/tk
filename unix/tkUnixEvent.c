@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.22 2007/01/11 18:53:16 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.23 2007/01/12 09:08:36 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -537,7 +537,7 @@ TkUnixDoOneXEvent(
 	}
     }
 
-    numFound = select(numFdBits, (SELECT_MASK *) &readMask[0], NULL, NULL,
+    numFound = select(numFdBits, (SELECT_MASK *) readMask, NULL, NULL,
 	    timeoutPtr);
     if (numFound <= 0) {
 	/*
