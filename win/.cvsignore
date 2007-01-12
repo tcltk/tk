@@ -11,5 +11,7 @@ Release
 Makefile
 tcl.hpj
 tclConfig.sh
-nmakehlp.exe
+*.exe
+*.dll
+wish.exe.manifest
 .#*
