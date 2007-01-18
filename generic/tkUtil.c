@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.14 2005/11/13 20:42:54 dkf Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.15 2007/01/18 23:56:43 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -52,7 +52,7 @@ TkStateParseProc(
     ClientData clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
-    CONST char *value,		/* Value of option. */
+    const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item. */
 {
@@ -172,7 +172,7 @@ TkOrientParseProc(
     ClientData clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
-    CONST char *value,		/* Value of option. */
+    const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item. */
 {
@@ -259,13 +259,13 @@ TkOffsetParseProc(
     ClientData clientData,	/* not used */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
-    CONST char *value,		/* Name of image */
+    const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
     int offset)			/* Offset of tile in record */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *)(widgRec + offset);
     Tk_TSOffset tsoffset;
-    CONST char *q, *p;
+    const char *q, *p;
     int result;
 
     if ((value == NULL) || (*value == 0)) {
@@ -466,7 +466,7 @@ TkPixelParseProc(
 				 * well */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
-    CONST char *value,		/* Name of image */
+    const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
     int offset)			/* Offset of tile in record */
 {
@@ -629,7 +629,7 @@ int
 Tk_GetScrollInfo(
     Tcl_Interp *interp,		/* Used for error reporting. */
     int argc,			/* # arguments for command. */
-    CONST char **argv,		/* Arguments for command. */
+    const char **argv,		/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
     int *intPtr)		/* Filled in with number of pages or lines to
@@ -705,7 +705,7 @@ int
 Tk_GetScrollInfoObj(
     Tcl_Interp *interp,		/* Used for error reporting. */
     int objc,			/* # arguments for command. */
-    Tcl_Obj *CONST objv[],	/* Arguments for command. */
+    Tcl_Obj *const objv[],	/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
     int *intPtr)		/* Filled in with number of pages or lines to
@@ -845,7 +845,7 @@ TkComputeAnchor(
 
 char *
 TkFindStateString(
-    CONST TkStateMap *mapPtr,	/* The state table. */
+    const TkStateMap *mapPtr,	/* The state table. */
     int numKey)			/* The key to try to find in the table. */
 {
     for ( ; mapPtr->strKey != NULL; mapPtr++) {
@@ -880,11 +880,11 @@ TkFindStateString(
 int
 TkFindStateNum(
     Tcl_Interp *interp,		/* Interp for error reporting. */
-    CONST char *option,		/* String to use when constructing error. */
-    CONST TkStateMap *mapPtr,	/* Lookup table. */
-    CONST char *strKey)		/* String to try to find in lookup table. */
+    const char *option,		/* String to use when constructing error. */
+    const TkStateMap *mapPtr,	/* Lookup table. */
+    const char *strKey)		/* String to try to find in lookup table. */
 {
-    CONST TkStateMap *mPtr;
+    const TkStateMap *mPtr;
 
     for (mPtr = mapPtr; mPtr->strKey != NULL; mPtr++) {
 	if (strcmp(strKey, mPtr->strKey) == 0) {
@@ -908,12 +908,12 @@ int
 TkFindStateNumObj(
     Tcl_Interp *interp,		/* Interp for error reporting. */
     Tcl_Obj *optionPtr,		/* String to use when constructing error. */
-    CONST TkStateMap *mapPtr,	/* Lookup table. */
+    const TkStateMap *mapPtr,	/* Lookup table. */
     Tcl_Obj *keyPtr)		/* String key to find in lookup table. */
 {
-    CONST TkStateMap *mPtr;
-    CONST char *key;
-    CONST Tcl_ObjType *typePtr;
+    const TkStateMap *mPtr;
+    const char *key;
+    const Tcl_ObjType *typePtr;
 
     if ((keyPtr->typePtr == &tkStateKeyObjType)
 	    && (keyPtr->internalRep.twoPtrValue.ptr1 == (VOID *) mapPtr)) {

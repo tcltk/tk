@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.11 2005/12/09 00:48:54 das Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.12 2007/01/18 23:56:44 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -237,7 +237,7 @@ TestwineventCmd(
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
-    static TkStateMap messageMap[] = {
+    static const TkStateMap messageMap[] = {
 	{WM_LBUTTONDOWN,	"WM_LBUTTONDOWN"},
 	{WM_LBUTTONUP,		"WM_LBUTTONUP"},
 	{WM_CHAR,		"WM_CHAR"},
