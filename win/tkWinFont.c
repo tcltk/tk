@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.30 2007/01/12 10:41:23 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.31 2007/01/18 23:56:44 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -157,7 +157,7 @@ typedef struct CanUse {
  * represent the system fonts and the numbers used by Windows.
  */
 
-static TkStateMap systemMap[] = {
+static const TkStateMap systemMap[] = {
     {ANSI_FIXED_FONT,	    "ansifixed"},
     {ANSI_VAR_FONT,	    "ansi"},
     {DEVICE_DEFAULT_FONT,   "device"},
