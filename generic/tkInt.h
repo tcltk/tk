@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.76 2007/01/03 05:06:27 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.77 2007/01/18 23:56:43 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -845,7 +845,7 @@ typedef struct TkWindow {
 
 typedef struct TkStateMap {
     int numKey;			/* Integer representation of a value. */
-    char *strKey;		/* String representation of a value. */
+    const char *strKey;		/* String representation of a value. */
 } TkStateMap;
 
 /*
