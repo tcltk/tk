@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.19 2007/01/05 00:00:51 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.20 2007/01/18 23:20:37 nijtmans Exp $
  */
 
 #include "tk.h"
@@ -55,7 +55,7 @@ static void		EmbWinBboxProc(TkText *textPtr,
 			    int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
 static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		EmbWinDelayedUnmap(ClientData clientData);
 static int		EmbWinDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
@@ -68,14 +68,14 @@ static void		EmbWinStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		EmbWinUndisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
-static TkTextEmbWindowClient* EmbWinGetClient(CONST TkText *textPtr,
+static TkTextEmbWindowClient* EmbWinGetClient(const TkText *textPtr,
 			    TkTextSegment *ewPtr);
 
 /*
  * The following structure declares the "embedded window" segment type.
  */
 
-static Tk_SegType tkTextEmbWindowType = {
+static const Tk_SegType tkTextEmbWindowType = {
     "window",			/* name */
     0,				/* leftGravity */
     NULL,			/* splitProc */
@@ -141,13 +141,13 @@ TkTextWindowCmd(
     register TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. Someone else has already
+    Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "window". */
 {
     int optionIndex;
 
-    static CONST char *windOptionStrings[] = {
+    static const char *windOptionStrings[] = {
 	"cget", "configure", "create", "names", NULL
     };
     enum windOptions {
@@ -385,7 +385,7 @@ EmbWinConfigure(
 				 * embedded window. */
     TkTextSegment *ewPtr,	/* Embedded window to be configured. */
     int objc,			/* Number of strings in objv. */
-    Tcl_Obj *CONST objv[])	/* Array of objects describing configuration
+    Tcl_Obj *const objv[])	/* Array of objects describing configuration
 				 * options. */
 {
     Tk_Window oldWindow;
@@ -856,8 +856,8 @@ EmbWinLayoutProc(
 	Tcl_DString name;
 	Tk_Window ancestor;
 	Tcl_HashEntry *hPtr;
-	CONST char *before;
-	CONST char *string;
+	const char *before;
+	const char *string;
 	Tcl_DString buf;
 	Tcl_DString *dsPtr = NULL;
 
@@ -887,7 +887,7 @@ EmbWinLayoutProc(
 		     */
 
 		    int spaceNeeded, cvtFlags, length;
-		    CONST char *str = Tk_PathName(textPtr->tkwin);
+		    const char *str = Tk_PathName(textPtr->tkwin);
 
 		    spaceNeeded = Tcl_ScanElement(str, &cvtFlags);
 		    length = Tcl_DStringLength(dsPtr);
@@ -1331,7 +1331,7 @@ EmbWinDelayedUnmap(
 int
 TkTextWindowIndex(
     TkText *textPtr,		/* Text widget containing window. */
-    CONST char *name,		/* Name of window. */
+    const char *name,		/* Name of window. */
     TkTextIndex *indexPtr)	/* Index information gets stored here. */
 {
     Tcl_HashEntry *hPtr;
@@ -1375,7 +1375,7 @@ TkTextWindowIndex(
 
 static TkTextEmbWindowClient*
 EmbWinGetClient(
-    CONST TkText *textPtr,	/* Information about text widget. */
+    const TkText *textPtr,	/* Information about text widget. */
     TkTextSegment *ewPtr)	/* Segment containing embedded window. */
 {
     TkTextEmbWindowClient *client = ewPtr->body.ew.clients;

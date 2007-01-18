@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.16 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.17 2007/01/18 23:20:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -41,9 +41,9 @@ static int		MarkLayoutProc(TkText *textPtr, TkTextIndex *indexPtr,
 			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr);
 static int		MarkFindNext(Tcl_Interp *interp,
-			    TkText *textPtr, CONST char *markName);
+			    TkText *textPtr, const char *markName);
 static int		MarkFindPrev(Tcl_Interp *interp,
-			    TkText *textPtr, CONST char *markName);
+			    TkText *textPtr, const char *markName);
 
 
 /*
@@ -53,7 +53,7 @@ static int		MarkFindPrev(Tcl_Interp *interp,
  * their gravity property.
  */
 
-Tk_SegType tkTextRightMarkType = {
+const Tk_SegType tkTextRightMarkType = {
     "mark",			/* name */
     0,				/* leftGravity */
     NULL,			/* splitProc */
@@ -64,7 +64,7 @@ Tk_SegType tkTextRightMarkType = {
     MarkCheckProc		/* checkProc */
 };
 
-Tk_SegType tkTextLeftMarkType = {
+const Tk_SegType tkTextLeftMarkType = {
     "mark",			/* name */
     1,				/* leftGravity */
     NULL,			/* splitProc */
@@ -98,7 +98,7 @@ TkTextMarkCmd(
     register TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. Someone else has already
+    Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "mark". */
 {
@@ -106,11 +106,11 @@ TkTextMarkCmd(
     TkTextSegment *markPtr;
     Tcl_HashSearch search;
     TkTextIndex index;
-    Tk_SegType *newTypePtr;
+    const Tk_SegType *newTypePtr;
 
     int optionIndex;
 
-    static CONST char *markOptionStrings[] = {
+    static const char *markOptionStrings[] = {
 	"gravity", "names", "next", "previous", "set",
 	"unset", NULL
     };
@@ -261,7 +261,7 @@ TkTextMarkCmd(
 TkTextSegment *
 TkTextSetMark(
     TkText *textPtr,		/* Text widget in which to create mark. */
-    CONST char *name,		/* Name of mark to set. */
+    const char *name,		/* Name of mark to set. */
     TkTextIndex *indexPtr)	/* Where to set mark. */
 {
     Tcl_HashEntry *hPtr = NULL;
@@ -406,7 +406,7 @@ TkTextMarkSegToIndex(
 int
 TkTextMarkNameToIndex(
     TkText *textPtr,		/* Text widget containing mark. */
-    CONST char *name,		/* Name of mark. */
+    const char *name,		/* Name of mark. */
     TkTextIndex *indexPtr)	/* Index information gets stored here. */
 {
     TkTextSegment *segPtr;
@@ -733,7 +733,7 @@ static int
 MarkFindNext(
     Tcl_Interp *interp,		/* For error reporting */
     TkText *textPtr,		/* The widget */
-    CONST char *string)		/* The starting index or mark name */
+    const char *string)		/* The starting index or mark name */
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
@@ -833,7 +833,7 @@ static int
 MarkFindPrev(
     Tcl_Interp *interp,		/* For error reporting */
     TkText *textPtr,		/* The widget */
-    CONST char *string)		/* The starting index or mark name */
+    const char *string)		/* The starting index or mark name */
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
