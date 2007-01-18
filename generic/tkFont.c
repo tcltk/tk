@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.31 2007/01/03 04:10:54 nijtmans Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.32 2007/01/18 23:56:43 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -66,7 +66,7 @@ typedef struct NamedFont {
  */
 
 typedef struct LayoutChunk {
-    CONST char *start;		/* Pointer to simple string to be displayed.
+    const char *start;		/* Pointer to simple string to be displayed.
 				 * This is a pointer into the TkTextLayout's
 				 * string. */
     int numBytes;		/* The number of bytes in this chunk. */
@@ -91,7 +91,7 @@ typedef struct LayoutChunk {
 
 typedef struct TextLayout {
     Tk_Font tkfont;		/* The font used when laying out the text. */
-    CONST char *string;		/* The string that was layed out. */
+    const char *string;		/* The string that was layed out. */
     int width;			/* The maximum width of all lines in the text
 				 * layout. */
     int numChunks;		/* Number of chunks actually used in following
@@ -108,24 +108,24 @@ typedef struct TextLayout {
  * strings.
  */
 
-static TkStateMap weightMap[] = {
+static const TkStateMap weightMap[] = {
     {TK_FW_NORMAL,	"normal"},
     {TK_FW_BOLD,	"bold"},
     {TK_FW_UNKNOWN,	NULL}
 };
 
-static TkStateMap slantMap[] = {
+static const TkStateMap slantMap[] = {
     {TK_FS_ROMAN,	"roman"},
     {TK_FS_ITALIC,	"italic"},
     {TK_FS_UNKNOWN,	NULL}
 };
 
-static TkStateMap underlineMap[] = {
+static const TkStateMap underlineMap[] = {
     {1,			"underline"},
     {0,			NULL}
 };
 
-static TkStateMap overstrikeMap[] = {
+static const TkStateMap overstrikeMap[] = {
     {1,			"overstrike"},
     {0,			NULL}
 };
@@ -135,7 +135,7 @@ static TkStateMap overstrikeMap[] = {
  * TkFontAttributes.
  */
 
-static TkStateMap xlfdWeightMap[] = {
+static const TkStateMap xlfdWeightMap[] = {
     {TK_FW_NORMAL,	"normal"},
     {TK_FW_NORMAL,	"medium"},
     {TK_FW_NORMAL,	"book"},
@@ -146,14 +146,14 @@ static TkStateMap xlfdWeightMap[] = {
     {TK_FW_NORMAL,	NULL}		/* Assume anything else is "normal". */
 };
 
-static TkStateMap xlfdSlantMap[] = {
+static const TkStateMap xlfdSlantMap[] = {
     {TK_FS_ROMAN,	"r"},
     {TK_FS_ITALIC,	"i"},
     {TK_FS_OBLIQUE,	"o"},
     {TK_FS_ROMAN,	NULL}		/* Assume anything else is "roman". */
 };
 
-static TkStateMap xlfdSetwidthMap[] = {
+static const TkStateMap xlfdSetwidthMap[] = {
     {TK_SW_NORMAL,	"normal"},
     {TK_SW_CONDENSE,	"narrow"},
     {TK_SW_CONDENSE,	"semicondensed"},
@@ -166,7 +166,7 @@ static TkStateMap xlfdSetwidthMap[] = {
  * configuring a set of font attributes.
  */
 
-static CONST char *fontOpt[] = {
+static const char *fontOpt[] = {
     "-family",
     "-size",
     "-weight",
@@ -317,24 +317,24 @@ static char *globalFontClass[] = {
 };
 
 #define GetFontAttributes(tkfont) \
-	((CONST TkFontAttributes *) &((TkFont *) (tkfont))->fa)
+	((const TkFontAttributes *) &((TkFont *) (tkfont))->fa)
 
 #define GetFontMetrics(tkfont)    \
-	((CONST TkFontMetrics *) &((TkFont *) (tkfont))->fm)
+	((const TkFontMetrics *) &((TkFont *) (tkfont))->fm)
 
 
 static int		ConfigAttributesObj(Tcl_Interp *interp,
-			    Tk_Window tkwin, int objc, Tcl_Obj *CONST objv[],
+			    Tk_Window tkwin, int objc, Tcl_Obj *const objv[],
 			    TkFontAttributes *faPtr);
 static int		CreateNamedFont(Tcl_Interp *interp, Tk_Window tkwin,
-			    CONST char *name, TkFontAttributes *faPtr);
+			    const char *name, TkFontAttributes *faPtr);
 static void		DupFontObjProc(Tcl_Obj *srcObjPtr, Tcl_Obj *dupObjPtr);
-static int		FieldSpecified(CONST char *field);
+static int		FieldSpecified(const char *field);
 static void		FreeFontObjProc(Tcl_Obj *objPtr);
 static int		GetAttributeInfoObj(Tcl_Interp *interp,
-			    CONST TkFontAttributes *faPtr, Tcl_Obj *objPtr);
+			    const TkFontAttributes *faPtr, Tcl_Obj *objPtr);
 static LayoutChunk *	NewChunk(TextLayout **layoutPtrPtr, int *maxPtr,
-			    CONST char *start, int numChars, int curX,
+			    const char *start, int numChars, int curX,
 			    int newX, int y);
 static int		ParseFontNameObj(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj *objPtr, TkFontAttributes *faPtr);
@@ -473,12 +473,12 @@ Tk_FontObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
     Tk_Window tkwin;
     TkFontInfo *fiPtr;
-    static CONST char *optionStrings[] = {
+    static const char *optionStrings[] = {
 	"actual",	"configure",	"create",	"delete",
 	"families",	"measure",	"metrics",	"names",
 	NULL
@@ -510,7 +510,7 @@ Tk_FontObjCmd(
 	Tcl_Obj *charPtr;
 	Tcl_Obj *resultPtr;
 	Tcl_UniChar uniChar = 0;
-	CONST TkFontAttributes *faPtr;
+	const TkFontAttributes *faPtr;
 	TkFontAttributes fa;
 
 	/* 
@@ -738,8 +738,8 @@ Tk_FontObjCmd(
     case FONT_METRICS: {
 	Tk_Font tkfont;
 	int skip, index, i;
-	CONST TkFontMetrics *fmPtr;
-	static CONST char *switches[] = {
+	const TkFontMetrics *fmPtr;
+	static const char *switches[] = {
 	    "-ascent", "-descent", "-linespace", "-fixed", NULL
 	};
 
@@ -942,7 +942,7 @@ static int
 CreateNamedFont(
     Tcl_Interp *interp,		/* Interp for error return. */
     Tk_Window tkwin,		/* A window associated with interp. */
-    CONST char *name,		/* Name for the new named font. */
+    const char *name,		/* Name for the new named font. */
     TkFontAttributes *faPtr)	/* Attributes for the new named font. */
 {
     TkFontInfo *fiPtr;
@@ -1010,7 +1010,7 @@ Tk_Font
 Tk_GetFont(
     Tcl_Interp *interp,		/* Interp for database and error return. */
     Tk_Window tkwin,		/* For display on which font will be used. */
-    CONST char *string)		/* String describing font, as: named font,
+    const char *string)		/* String describing font, as: named font,
 				 * native format, or parseable string. */
 {
     Tk_Font tkfont;
@@ -1331,7 +1331,7 @@ SetFontFromAny(
  *---------------------------------------------------------------------------
  */
 
-CONST char *
+const char *
 Tk_NameOfFont(
     Tk_Font tkfont)		/* Font whose name is desired. */
 {
@@ -1760,7 +1760,7 @@ Tk_PostscriptFontName(
 int
 Tk_TextWidth(
     Tk_Font tkfont,		/* Font in which text will be measured. */
-    CONST char *string,		/* String whose width will be computed. */
+    const char *string,		/* String whose width will be computed. */
     int numBytes)		/* Number of bytes to consider from string, or
 				 * < 0 for strlen(). */
 {
@@ -1805,7 +1805,7 @@ Tk_UnderlineChars(
     Tk_Font tkfont,		/* Font used in GC; must have been allocated
 				 * by Tk_GetFont(). Used for character
 				 * dimensions, etc. */
-    CONST char *string,		/* String containing characters to be
+    const char *string,		/* String containing characters to be
 				 * underlined or overstruck. */
     int x, int y,		/* Coordinates at which first character of
 				 * string is drawn. */
@@ -1832,7 +1832,7 @@ TkUnderlineCharsInContext(display, drawable, gc, tkfont, string, numBytes,
     Tk_Font tkfont;		/* Font used in GC;  must have been allocated
 				 * by Tk_GetFont().  Used for character
 				 * dimensions, etc. */
-    CONST char *string;		/* String containing characters to be
+    const char *string;		/* String containing characters to be
 				 * underlined or overstruck. */
     int numBytes;		/* Number of bytes in string. */
     int x, y;			/* Coordinates at which the first character
@@ -1888,7 +1888,7 @@ TkUnderlineCharsInContext(display, drawable, gc, tkfont, string, numBytes,
 Tk_TextLayout
 Tk_ComputeTextLayout(
     Tk_Font tkfont,		/* Font that will be used to display text. */
-    CONST char *string,		/* String whose dimensions are to be
+    const char *string,		/* String whose dimensions are to be
 				 * computed. */
     int numChars,		/* Number of characters to consider from
 				 * string, or < 0 for strlen(). */
@@ -1905,12 +1905,12 @@ Tk_ComputeTextLayout(
     int *heightPtr)		/* Filled with height of string. */
 {
     TkFont *fontPtr;
-    CONST char *start, *end, *special;
+    const char *start, *end, *special;
     int n, y, bytesThisChunk, maxChunks;
     int baseline, height, curX, newX, maxWidth;
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
-    CONST TkFontMetrics *fmPtr;
+    const TkFontMetrics *fmPtr;
     Tcl_DString lineBuffer;
     int *lineLengths;
     int curLine, layoutHeight;
@@ -2059,7 +2059,7 @@ Tk_ComputeTextLayout(
 	    start++;
 	}
 	if (chunkPtr != NULL) {
-	    CONST char *end;
+	    const char *end;
 
 	    /*
 	     * Append all the extra spaces on this line to the end of the last
@@ -2241,8 +2241,8 @@ Tk_DrawTextLayout(
 {
     TextLayout *layoutPtr;
     int i, numDisplayChars, drawX;
-    CONST char *firstByte;
-    CONST char *lastByte;
+    const char *firstByte;
+    const char *lastByte;
     LayoutChunk *chunkPtr;
 
     layoutPtr = (TextLayout *) layout;
@@ -2527,7 +2527,7 @@ Tk_CharBbox(
     int i, x, w;
     Tk_Font tkfont;
     TkFont *fontPtr;
-    CONST char *end;
+    const char *end;
 
     if (index < 0) {
 	return 0;
@@ -2827,7 +2827,7 @@ Tk_TextLayoutToPostscript(
     LayoutChunk *chunkPtr;
     int i, j, used, c, baseline;
     Tcl_UniChar ch;
-    CONST char *p, *last_p,*glyphname;
+    const char *p, *last_p,*glyphname;
     TextLayout *layoutPtr;
     char uindex[5]="\0\0\0\0";
     char one_char[5];
@@ -2957,7 +2957,7 @@ ConfigAttributesObj(
     Tcl_Interp *interp,		/* Interp for error return. */
     Tk_Window tkwin,		/* For display on which font will be used. */
     int objc,			/* Number of elements in argv. */
-    Tcl_Obj *CONST objv[],	/* Command line options. */
+    Tcl_Obj *const objv[],	/* Command line options. */
     TkFontAttributes *faPtr)	/* Font attributes structure whose fields are
 				 * to be modified. Structure must already be
 				 * properly initialized. */
@@ -3055,14 +3055,14 @@ ConfigAttributesObj(
 static int
 GetAttributeInfoObj(
     Tcl_Interp *interp,		/* Interp to hold result. */
-    CONST TkFontAttributes *faPtr,
+    const TkFontAttributes *faPtr,
 				/* The font attributes to inspect. */
     Tcl_Obj *objPtr)		/* If non-NULL, indicates the single option
 				 * whose value is to be returned. Otherwise
 				 * information is returned for all options. */
 {
     int i, index, start, end;
-    CONST char *str;
+    const char *str;
     Tcl_Obj *optionPtr, *valuePtr, *resultPtr;
 
     resultPtr = Tcl_GetObjResult(interp);
@@ -3290,7 +3290,7 @@ static LayoutChunk *
 NewChunk(
     TextLayout **layoutPtrPtr,
     int *maxPtr,
-    CONST char *start,
+    const char *start,
     int numBytes,
     int curX,
     int newX,
@@ -3346,7 +3346,7 @@ NewChunk(
 
 int
 TkFontParseXLFD(
-    CONST char *string,		/* Parseable font description string. */
+    const char *string,		/* Parseable font description string. */
     TkFontAttributes *faPtr,	/* Filled with attributes parsed from font
 				 * name. Any attributes that were not
 				 * specified in font name are filled with
@@ -3358,7 +3358,7 @@ TkFontParseXLFD(
 				 * information is not desired. */
 {
     char *src;
-    CONST char *str;
+    const char *str;
     int i, j;
     char *field[XLFD_NUMFIELDS + 2];
     Tcl_DString ds;
@@ -3547,7 +3547,7 @@ TkFontParseXLFD(
 
 static int
 FieldSpecified(
-    CONST char *field)		/* The field of the XLFD to check. Strictly
+    const char *field)		/* The field of the XLFD to check. Strictly
 				 * speaking, only when the string is "*" does
 				 * it mean don't-care. However, an unspecified
 				 * or question mark is also interpreted as
@@ -3651,7 +3651,7 @@ TkFontGetPoints(
 
 char **
 TkFontGetAliasList(
-    CONST char *faceName)	/* Font name to test for aliases. */
+    const char *faceName)	/* Font name to test for aliases. */
 {
     int i, j;
 

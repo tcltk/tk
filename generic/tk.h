@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.93 2007/01/05 00:00:50 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.94 2007/01/18 23:56:43 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -123,7 +123,7 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
  * Additional types exported to clients.
  */
 
-typedef CONST char *Tk_Uid;
+typedef const char *Tk_Uid;
 
 /*
  * The enum below defines the valid types for Tk configuration options as
@@ -986,13 +986,13 @@ typedef int	Tk_ItemCoordProc _ANSI_ARGS_((Tcl_Interp *interp,
 #else
 typedef int	Tk_ItemCreateProc _ANSI_ARGS_((Tcl_Interp *interp,
 		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-		    Tcl_Obj *CONST objv[]));
+		    Tcl_Obj *const objv[]));
 typedef int	Tk_ItemConfigureProc _ANSI_ARGS_((Tcl_Interp *interp,
 		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-		    Tcl_Obj *CONST objv[], int flags));
+		    Tcl_Obj *const objv[], int flags));
 typedef int	Tk_ItemCoordProc _ANSI_ARGS_((Tcl_Interp *interp,
 		    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-		    Tcl_Obj *CONST argv[]));
+		    Tcl_Obj *const argv[]));
 #endif
 typedef void	Tk_ItemDeleteProc _ANSI_ARGS_((Tk_Canvas canvas,
 		    Tk_Item *itemPtr, Display *display));
@@ -1197,7 +1197,7 @@ typedef int (Tk_ImageCreateProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	Tk_ImageMaster master, ClientData *masterDataPtr));
 #else
 typedef int (Tk_ImageCreateProc) _ANSI_ARGS_((Tcl_Interp *interp,
-	char *name, int objc, Tcl_Obj *CONST objv[], Tk_ImageType *typePtr,
+	char *name, int objc, Tcl_Obj *const objv[], Tk_ImageType *typePtr,
 	Tk_ImageMaster master, ClientData *masterDataPtr));
 #endif
 typedef ClientData (Tk_ImageGetProc) _ANSI_ARGS_((Tk_Window tkwin,
@@ -1316,20 +1316,20 @@ typedef int (Tk_ImageStringWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	Tk_PhotoImageBlock *blockPtr));
 #else
 typedef int (Tk_ImageFileMatchProc) _ANSI_ARGS_((Tcl_Channel chan,
-	CONST char *fileName, Tcl_Obj *format, int *widthPtr,
+	const char *fileName, Tcl_Obj *format, int *widthPtr,
 	int *heightPtr, Tcl_Interp *interp));
 typedef int (Tk_ImageStringMatchProc) _ANSI_ARGS_((Tcl_Obj *dataObj,
 	Tcl_Obj *format, int *widthPtr, int *heightPtr,
 	Tcl_Interp *interp));
 typedef int (Tk_ImageFileReadProc) _ANSI_ARGS_((Tcl_Interp *interp,
-	Tcl_Channel chan, CONST char *fileName, Tcl_Obj *format,
+	Tcl_Channel chan, const char *fileName, Tcl_Obj *format,
 	Tk_PhotoHandle imageHandle, int destX, int destY,
 	int width, int height, int srcX, int srcY));
 typedef int (Tk_ImageStringReadProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	Tcl_Obj *dataObj, Tcl_Obj *format, Tk_PhotoHandle imageHandle,
 	int destX, int destY, int width, int height, int srcX, int srcY));
 typedef int (Tk_ImageFileWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
-	CONST char *fileName, Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
+	const char *fileName, Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
 typedef int (Tk_ImageStringWriteProc) _ANSI_ARGS_((Tcl_Interp *interp,
 	Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr));
 #endif
@@ -1398,16 +1398,16 @@ EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
  */
 
 typedef void (Tk_GetElementSizeProc) _ANSI_ARGS_((ClientData clientData,
-        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
+        char *recordPtr, const Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
         int width, int height, int inner, int *widthPtr, int *heightPtr));
 typedef void (Tk_GetElementBoxProc) _ANSI_ARGS_((ClientData clientData,
-        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
+        char *recordPtr, const Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
         int x, int y, int width, int height, int inner, int *xPtr, int *yPtr,
         int *widthPtr, int *heightPtr));
 typedef int (Tk_GetElementBorderWidthProc) _ANSI_ARGS_((ClientData clientData,
-        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin));
+        char *recordPtr, const Tk_OptionSpec **optionsPtr, Tk_Window tkwin));
 typedef void (Tk_DrawElementProc) _ANSI_ARGS_((ClientData clientData,
-        char *recordPtr, CONST Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
+        char *recordPtr, const Tk_OptionSpec **optionsPtr, Tk_Window tkwin,
         Drawable d, int x, int y, int width, int height, int state));
 
 typedef struct Tk_ElementOptionSpec {
@@ -1493,8 +1493,8 @@ typedef struct Tk_ElementSpec {
 #define Tk_Main(argc, argv, proc) \
     Tk_MainEx(argc, argv, proc, Tcl_CreateInterp())
 
-CONST char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
-			    CONST char *version, int exact));
+const char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
+			    const char *version, int exact));
 
 #ifndef USE_TK_STUBS
 
