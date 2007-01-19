@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.15 2007/01/18 23:56:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.16 2007/01/19 06:29:20 das Exp $
  */
 
 #include "tkInt.h"
@@ -850,7 +850,7 @@ TkFindStateString(
 {
     for ( ; mapPtr->strKey != NULL; mapPtr++) {
 	if (numKey == mapPtr->numKey) {
-	    return mapPtr->strKey;
+	    return (char*)(mapPtr->strKey);
 	}
     }
     return NULL;
