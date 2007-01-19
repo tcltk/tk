@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.29 2006/03/16 10:04:48 das Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.30 2007/01/19 00:36:45 das Exp $
  */
 
 #include "tkInt.h"
@@ -739,7 +739,7 @@ Tk_PostscriptImage(image, interp, tkwin, psinfo, x, y, width, height, prepass)
     XDestroyImage(ximage);
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1035,7 +1035,7 @@ Tk_GetImageMasterData(interp, name, typePtrPtr)
     *typePtrPtr = masterPtr->typePtr;
     return masterPtr->masterData;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *

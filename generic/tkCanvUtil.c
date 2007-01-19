@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.14 2005/11/04 15:23:05 dkf Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.15 2007/01/19 00:36:45 das Exp $
  */
 
 #include "tkInt.h"
@@ -682,6 +682,7 @@ Tk_CreateSmoothMethod(
     Tcl_SetAssocData(interp, "smoothMethod", SmoothMethodCleanupProc,
 	    (ClientData) ptr);
 }
+
 /*
  *----------------------------------------------------------------------
  *
