@@ -1,4 +1,8 @@
-2006-01-19  Daniel Steffen  <das@users.sourceforge.net>
+2007-01-19  Joe Mistachkin  <joe@mistachkin.com>
+
+	* win/makefile.vc: Properly build man2tcl.c for MSVC8.
+
+2007-01-19  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcodeproj/project.pbxproj: remove libtommath defines.
 
