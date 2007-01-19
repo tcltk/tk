@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.98 2006/11/03 11:22:22 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.99 2007/01/19 09:00:30 mistachkin Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -715,7 +715,9 @@ CreateButton(4, "FAQ", ExecFile("http://www.purl.org/NET/Tcl-FAQ/"))
 	$(CPY) "$(DOCTMP_DIR)\$(@B).cnt" "$(OUT_DIR)"
 
 $(MAN2TCL): $(TCLTOOLSDIR)\$$(@B).c
-	$(cc32) -nologo -G4 -ML -O2 -Fo$(@D)\ $(TCLTOOLSDIR)\$(@B).c -link -out:$@
+	$(cc32) $(TK_CFLAGS) -Fo$(@D)\ $(TCLTOOLSDIR)\$(@B).c
+	$(link32) $(conlflags) -out:$@ -stack:16384 $(@D)\man2tcl.obj
+	$(_VC_MANIFEST_EMBED_EXE)
 
 $(HELPRTF): $(MAN2TCL) $(MAN2HELP) $(MAN2HELP2) $(INDEX)
 	$(TCLSH) $(MAN2HELP) -bitmap $(BMP_NOPATH) $(PROJECT) $(VERSION) $(DOCDIR:\=/)
