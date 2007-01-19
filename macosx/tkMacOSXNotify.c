@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.16 2006/03/28 02:43:24 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.17 2007/01/19 00:36:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -85,7 +85,7 @@ Tk_MacOSXSetupTkNotifier()
 	}
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -149,7 +149,7 @@ CarbonEventsSetupProc(clientData, flags)
         Tcl_SetMaxBlockTime(&blockTime);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *

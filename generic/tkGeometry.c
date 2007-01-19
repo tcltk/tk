@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.8 2007/01/03 05:06:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.9 2007/01/19 00:36:45 das Exp $
  */
 
 #include "tkPort.h"
@@ -232,6 +232,7 @@ Tk_SetInternalBorderEx(tkwin, left, right, top, bottom)
 	Tk_ResizeWindow(tkwin, Tk_Width(tkwin), Tk_Height(tkwin));
     }
 }
+
 /*
  *----------------------------------------------------------------------
  *
