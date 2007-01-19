@@ -1,3 +1,14 @@
+2006-01-19  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcodeproj/project.pbxproj: remove libtommath defines.
+
+	* unix/tcl.m4: ensure CPPFLAGS env var is used when set. [Bug 1586861]
+	(Darwin): add -isysroot and -mmacosx-version-min flags to CPPFLAGS when
+	present in CFLAGS to avoid discrepancies between what headers configure
+	sees during preprocessing tests and compiling tests.
+
+	* unix/configure: autoconf-2.59
+
 2007-01-11  Jeff Hobbs  <jeffh@activestate.com>
 
 	* unix/tkUnixEvent.c, library/msgs/es.msg: s/CRLF/LF/g
