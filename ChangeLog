@@ -1,3 +1,12 @@
+2007-01-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/tcl.m4:       integrate CPPFLAGS into CFLAGS as late as possible
+	* unix/configure.in: and move (rather than duplicate) -isysroot flags
+	from CFLAGS to CPPFLAGS to avoid errors about multiple -isysroot flags
+	from some older gcc builds.
+
+	* unix/configure: autoconf-2.13
+
 2006-01-19  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4: ensure CPPFLAGS env var is used when set. [Bug 1586861]
