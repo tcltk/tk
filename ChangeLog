@@ -1,3 +1,23 @@
+2007-01-28  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcodeproj/project.pbxproj:   extract build settings that
+	* macosx/Wish.xcodeproj/default.pbxuser:   were common to multiple
+	* macosx/Wish-Common.xcconfig (new file):  configurations into external
+	* macosx/Wish-Debug.xcconfig (new file):   xcconfig files; add extra
+	* macosx/Wish-Release.xcconfig (new file): configurations for building
+	with SDKs; convert legacy jam-based 'Tk' target to native target with
+	single script phase; correct syntax of build setting references to use
+	$() throughout; remove unused tcltest sources from 'tktest' target.
+
+	* macosx/README: document new Wish.xcodeproj configurations; other
+	minor updates/corrections.
+
+	* generic/tk.h: update location of version numbers in macosx files.
+
+	* macosx/Wish.xcode/project.pbxproj: restore 'tktest' target to working 
+	* macosx/Wish.xcode/default.pbxuser: order by replicating applicable
+	changes to Wish.xcodeproj since 2006-07-20.
+
 2007-01-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4: integrate CPPFLAGS into CFLAGS as late as possible and
@@ -27,7 +47,7 @@
 
 2007-01-11  Joe English  <jenglish@users.sourceforge.net>
 
-	* win/tcl.m4(CFLAGS_WARNING): Remove "-Wconversion".
+	* win/tcl.m4 (CFLAGS_WARNING): Remove "-Wconversion".
 	This was removed from unix/tcl.m4 2004-07-16 but not from here.
 	* win/configure: Regenerated.
 

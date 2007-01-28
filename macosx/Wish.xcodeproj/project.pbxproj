@@ -98,7 +98,7 @@
 		F966BEEA08F27A40005CB29B /* tkMacOSXEvent.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBD408F27A3B005CB29B /* tkMacOSXEvent.c */; };
 		F966BEEC08F27A40005CB29B /* tkMacOSXFont.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBD608F27A3B005CB29B /* tkMacOSXFont.c */; };
 		F966BEED08F27A40005CB29B /* tkMacOSXHLEvents.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBD708F27A3B005CB29B /* tkMacOSXHLEvents.c */; };
-		F966BEEE08F27A40005CB29B /* tkMacOSXInit.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBD808F27A3B005CB29B /* tkMacOSXInit.c */; settings = {COMPILER_FLAGS = "-DTK_LIBRARY=\\\"${TK_LIBRARY}\\\""; }; };
+		F966BEEE08F27A40005CB29B /* tkMacOSXInit.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBD808F27A3B005CB29B /* tkMacOSXInit.c */; settings = {COMPILER_FLAGS = "-DTK_LIBRARY=\\\"$(TK_LIBRARY)\\\""; }; };
 		F966BEF108F27A40005CB29B /* tkMacOSXKeyboard.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBDB08F27A3B005CB29B /* tkMacOSXKeyboard.c */; };
 		F966BEF208F27A40005CB29B /* tkMacOSXKeyEvent.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBDC08F27A3B005CB29B /* tkMacOSXKeyEvent.c */; };
 		F966BEF308F27A40005CB29B /* tkMacOSXMenu.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BBDD08F27A3B005CB29B /* tkMacOSXMenu.c */; };
@@ -206,7 +206,7 @@
 		F96D45B008F272BC004A47F5 /* tclPathObj.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1108F272A7004A47F5 /* tclPathObj.c */; };
 		F96D45B108F272BC004A47F5 /* tclPipe.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1208F272A7004A47F5 /* tclPipe.c */; };
 		F96D45B208F272BC004A47F5 /* tclPkg.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1308F272A7004A47F5 /* tclPkg.c */; };
-		F96D45B308F272BC004A47F5 /* tclPkgConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1408F272A7004A47F5 /* tclPkgConfig.c */; settings = {COMPILER_FLAGS = "-DCFG_INSTALL_LIBDIR=\\\"${LIBDIR}\\\" -DCFG_INSTALL_BINDIR=\\\"${BINDIR}\\\" -DCFG_INSTALL_SCRDIR=\\\"${TCL_LIBRARY}\\\" -DCFG_INSTALL_INCDIR=\\\"${INCLUDEDIR}\\\" -DCFG_INSTALL_DOCDIR=\\\"${MANDIR}\\\" -DCFG_RUNTIME_LIBDIR=\\\"${LIBDIR}\\\" -DCFG_RUNTIME_BINDIR=\\\"${BINDIR}\\\" -DCFG_RUNTIME_SCRDIR=\\\"${TCL_LIBRARY}\\\" -DCFG_RUNTIME_INCDIR=\\\"${INCLUDEDIR}\\\" -DCFG_RUNTIME_DOCDIR=\\\"${MANDIR}\\\""; }; };
+		F96D45B308F272BC004A47F5 /* tclPkgConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1408F272A7004A47F5 /* tclPkgConfig.c */; settings = {COMPILER_FLAGS = "-DCFG_INSTALL_LIBDIR=\\\"$(LIBDIR)\\\" -DCFG_INSTALL_BINDIR=\\\"$(BINDIR)\\\" -DCFG_INSTALL_SCRDIR=\\\"$(TCL_LIBRARY)\\\" -DCFG_INSTALL_INCDIR=\\\"$(INCLUDEDIR)\\\" -DCFG_INSTALL_DOCDIR=\\\"$(MANDIR)\\\" -DCFG_RUNTIME_LIBDIR=\\\"$(LIBDIR)\\\" -DCFG_RUNTIME_BINDIR=\\\"$(BINDIR)\\\" -DCFG_RUNTIME_SCRDIR=\\\"$(TCL_LIBRARY)\\\" -DCFG_RUNTIME_INCDIR=\\\"$(INCLUDEDIR)\\\" -DCFG_RUNTIME_DOCDIR=\\\"$(MANDIR)\\\""; }; };
 		F96D45B608F272BC004A47F5 /* tclPosixStr.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1708F272A7004A47F5 /* tclPosixStr.c */; };
 		F96D45B708F272BC004A47F5 /* tclPreserve.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1808F272A7004A47F5 /* tclPreserve.c */; };
 		F96D45B808F272BC004A47F5 /* tclProc.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F1908F272A7004A47F5 /* tclProc.c */; };
@@ -218,14 +218,10 @@
 		F96D45C308F272BC004A47F5 /* tclStrToD.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2408F272A7004A47F5 /* tclStrToD.c */; };
 		F96D45C408F272BC004A47F5 /* tclStubInit.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2508F272A7004A47F5 /* tclStubInit.c */; };
 		F96D45C508F272BC004A47F5 /* tclStubLib.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2608F272A7004A47F5 /* tclStubLib.c */; };
-		F96D45C608F272BC004A47F5 /* tclTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2708F272A7004A47F5 /* tclTest.c */; };
-		F96D45C708F272BC004A47F5 /* tclTestObj.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2808F272A7004A47F5 /* tclTestObj.c */; };
-		F96D45C808F272BC004A47F5 /* tclTestProcBodyObj.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2908F272A7004A47F5 /* tclTestProcBodyObj.c */; };
 		F96D45C908F272BC004A47F5 /* tclThread.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2A08F272A7004A47F5 /* tclThread.c */; };
 		F96D45CA08F272BC004A47F5 /* tclThreadAlloc.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2B08F272A7004A47F5 /* tclThreadAlloc.c */; };
 		F96D45CB08F272BC004A47F5 /* tclThreadJoin.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2C08F272A7004A47F5 /* tclThreadJoin.c */; };
 		F96D45CC08F272BC004A47F5 /* tclThreadStorage.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2D08F272A7004A47F5 /* tclThreadStorage.c */; };
-		F96D45CD08F272BC004A47F5 /* tclThreadTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2E08F272A7004A47F5 /* tclThreadTest.c */; };
 		F96D45CE08F272BC004A47F5 /* tclTimer.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F2F08F272A7004A47F5 /* tclTimer.c */; };
 		F96D45D008F272BC004A47F5 /* tclTomMathInterface.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F3108F272A7004A47F5 /* tclTomMathInterface.c */; };
 		F96D45D108F272BC004A47F5 /* tclTrace.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D3F3208F272A7004A47F5 /* tclTrace.c */; };
@@ -290,11 +286,10 @@
 		F96D4ACB08F272C9004A47F5 /* tclUnixEvent.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446008F272B9004A47F5 /* tclUnixEvent.c */; };
 		F96D4ACC08F272C9004A47F5 /* tclUnixFCmd.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446108F272B9004A47F5 /* tclUnixFCmd.c */; };
 		F96D4ACD08F272C9004A47F5 /* tclUnixFile.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446208F272B9004A47F5 /* tclUnixFile.c */; };
-		F96D4ACE08F272C9004A47F5 /* tclUnixInit.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446308F272B9004A47F5 /* tclUnixInit.c */; settings = {COMPILER_FLAGS = "-DTCL_LIBRARY=\\\"${TCL_LIBRARY}\\\" -DTCL_PACKAGE_PATH=\\\"${TCL_PACKAGE_PATH}\\\""; }; };
+		F96D4ACE08F272C9004A47F5 /* tclUnixInit.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446308F272B9004A47F5 /* tclUnixInit.c */; settings = {COMPILER_FLAGS = "-DTCL_LIBRARY=\\\"$(TCL_LIBRARY)\\\" -DTCL_PACKAGE_PATH=\\\"$(TCL_PACKAGE_PATH)\\\""; }; };
 		F96D4ACF08F272C9004A47F5 /* tclUnixNotfy.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446408F272B9004A47F5 /* tclUnixNotfy.c */; };
 		F96D4AD008F272C9004A47F5 /* tclUnixPipe.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446508F272B9004A47F5 /* tclUnixPipe.c */; };
 		F96D4AD208F272CA004A47F5 /* tclUnixSock.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446708F272B9004A47F5 /* tclUnixSock.c */; };
-		F96D4AD308F272CA004A47F5 /* tclUnixTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446808F272B9004A47F5 /* tclUnixTest.c */; };
 		F96D4AD408F272CA004A47F5 /* tclUnixThrd.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446908F272B9004A47F5 /* tclUnixThrd.c */; };
 		F96D4AD608F272CA004A47F5 /* tclUnixTime.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D446B08F272B9004A47F5 /* tclUnixTime.c */; };
 		F9E61D28090A481F002B3151 /* bn_mp_cmp_d.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D427108F272B3004A47F5 /* bn_mp_cmp_d.c */; };
@@ -1753,11 +1748,14 @@
 		F96D449808F272BA004A47F5 /* tclWinThrd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclWinThrd.c; sourceTree = "<group>"; };
 		F96D449908F272BA004A47F5 /* tclWinThrd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tclWinThrd.h; sourceTree = "<group>"; };
 		F96D449A08F272BA004A47F5 /* tclWinTime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclWinTime.c; sourceTree = "<group>"; };
+		F97AE7F10B65C1E900310EA2 /* Wish-Common.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Common.xcconfig"; sourceTree = "<group>"; };
+		F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Release.xcconfig"; sourceTree = "<group>"; };
+		F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Debug.xcconfig"; sourceTree = "<group>"; };
 		F9903CAF094FAADA004613E9 /* tclTomMath.decls */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tclTomMath.decls; sourceTree = "<group>"; };
 		F9903CB0094FAADA004613E9 /* tclTomMathDecls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tclTomMathDecls.h; sourceTree = "<group>"; };
-		F9A3082D08F2D4AB00BAE1AB /* Tk.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tk.framework; path = ../Tk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		F9A3084B08F2D4CE00BAE1AB /* Wish.app */ = {isa = PBXFileReference; lastKnownFileType = wrapper.application; name = Wish.app; path = ../Wish.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F9A3084E08F2D4F400BAE1AB /* Tcl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Tcl.framework; path = ../Tcl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9A3082D08F2D4AB00BAE1AB /* Tk.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = Tk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9A3084B08F2D4CE00BAE1AB /* Wish.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wish.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9A3084E08F2D4F400BAE1AB /* Tcl.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = Tcl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9ECB1120B26521500A28025 /* pkgIndex.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = pkgIndex.tcl; sourceTree = "<group>"; };
 		F9ECB1130B26521500A28025 /* platform.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = platform.tcl; sourceTree = "<group>"; };
 		F9ECB1140B26521500A28025 /* shell.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = shell.tcl; sourceTree = "<group>"; };
@@ -1797,11 +1795,12 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8DD76FB20486AB0100D96B5E /* tktest */,
 				F9A3084B08F2D4CE00BAE1AB /* Wish.app */,
+				8DD76FB20486AB0100D96B5E /* tktest */,
 				F9A3082D08F2D4AB00BAE1AB /* Tk.framework */,
 				F9A3084E08F2D4F400BAE1AB /* Tcl.framework */,
 			);
+			includeInIndex = 0;
 			name = Products;
 			sourceTree = "<group>";
 		};
@@ -2271,8 +2270,11 @@
 				F966BBF408F27A3C005CB29B /* tkMacOSXXCursors.r */,
 				F966BBF508F27A3C005CB29B /* tkMacOSXXStubs.c */,
 				F96888840AF78938000797B5 /* ttkMacOSXTheme.c */,
-				F966BBF708F27A3C005CB29B /* Wish-Info.plist.in */,
 				F966BBF808F27A3C005CB29B /* Wish.icns */,
+				F966BBF708F27A3C005CB29B /* Wish-Info.plist.in */,
+				F97AE7F10B65C1E900310EA2 /* Wish-Common.xcconfig */,
+				F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */,
+				F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */,
 			);
 			path = macosx;
 			sourceTree = "<group>";
@@ -3539,23 +3541,6 @@
 		};
 /* End PBXGroup section */
 
-/* Begin PBXLegacyTarget section */
-		F9E61D16090A3E94002B3151 /* Tk */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "-c 'cd \"${TK_SRCROOT}/macosx\"  && a=`echo $0 | sed -e s/clean/distclean/ -e \\'s/..\\*/\\&-/\\'` && CFLAGS=\"${CFLAGS}\" gnumake $a\"\"${MAKE_TARGET} INSTALL_ROOT=\"${DSTROOT}\" INSTALL_PATH=\"${INSTALL_PATH}\" PREFIX=\"${PREFIX}\" BINDIR=\"${BINDIR}\" MANDIR=\"${MANDIR}\" TCL_BUILD_DIR=\"${TCL_BUILD_DIR}\" APPLICATION_INSTALL_PATH=\"${APPLICATION_INSTALL_PATH}\" $EXTRA_MAKE_FLAGS ${ALL_SETTINGS}' ${ACTION} \"\"";
-			buildConfigurationList = F95CC8AB09158F3100EA5ACE /* Build configuration list for PBXLegacyTarget "Tk" */;
-			buildPhases = (
-			);
-			buildToolPath = /bin/bash;
-			buildWorkingDirectory = "${SRCROOT}";
-			dependencies = (
-			);
-			name = Tk;
-			passBuildSettingsInEnvironment = 0;
-			productName = Tk;
-		};
-/* End PBXLegacyTarget section */
-
 /* Begin PBXNativeTarget section */
 		8DD76FA90486AB0100D96B5E /* tktest */ = {
 			isa = PBXNativeTarget;
@@ -3573,10 +3558,25 @@
 			dependencies = (
 			);
 			name = tktest;
-			productInstallPath = "${BINDIR}";
+			productInstallPath = "$(BINDIR)";
 			productName = tktest;
 			productReference = 8DD76FB20486AB0100D96B5E /* tktest */;
 			productType = "com.apple.product-type.tool";
+		};
+		F9E61D16090A3E94002B3151 /* Tk */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F95CC8AB09158F3100EA5ACE /* Build configuration list for PBXNativeTarget "Tk" */;
+			buildPhases = (
+				F97AF02F0B665DA900310EA2 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tk;
+			productName = Wish;
+			productReference = F9A3084B08F2D4CE00BAE1AB /* Wish.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
@@ -3617,15 +3617,28 @@
 			files = (
 			);
 			inputPaths = (
-				"${TARGET_BUILD_DIR}/${PRODUCT_NAME}",
-				"${REZ_COLLECTOR_DIR}/${PRODUCT_NAME}.rsrc",
+				"$(TARGET_BUILD_DIR)/$(PRODUCT_NAME)",
+				"$(REZ_COLLECTOR_DIR)/$(PRODUCT_NAME).rsrc",
 			);
 			outputPaths = (
-				"${TARGET_TEMP_DIR}/stamp",
+				"$(TARGET_TEMP_DIR)/stamp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
 			shellScript = "touch -t $(date -r $(expr $(date '+%s') + 5) '+%Y%m%d%H%M.%S') \"${TARGET_TEMP_DIR}/stamp\"\n\n## Xcode bug workaround: Rezzing does not take place for commandline tool targets\n## even when a ResourceManager Resources phase is present, but this script phase's\n## input dependency on the final merged resource file forces the Rezzing.\n\nif [ \"${ZERO_LINK}\" = \"YES\" ]; then\n    ## ZeroLinking ignores OTHER_LDFLAGS, so our resource file doesn't get linked into the executable.\n    ## workaround: copy resource data into resource fork of zerolink launcher (will only work on HFS+).\n    cp -f \"${SCRIPT_INPUT_FILE_1}\" \"${SCRIPT_INPUT_FILE_0}/..namedfork/rsrc\"\nfi\n";
+		};
+		F97AF02F0B665DA900310EA2 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "gnumake -C \"${TK_SRCROOT}/macosx\"  -j \"$(sysctl -n hw.activecpu)\" \"$(echo \"${ACTION}\" | sed -e s/build// -e s/clean/distclean/ -e s/..\\*/\\&-/)${MAKE_TARGET}\" CFLAGS_WARNING=\"${WARNING_CFLAGS}\" SYMROOT=\"${BUILT_PRODUCTS_DIR}\" OBJ_DIR=\"${OBJECT_FILE_DIR}\" INSTALL_ROOT=\"${DSTROOT}\" PREFIX=\"${PREFIX}\" BINDIR=\"${BINDIR}\" LIBDIR=\"${FRAMEWORK_INSTALL_PATH}\" MANDIR=\"${MANDIR}\" EXTRA_CONFIGURE_ARGS=\"${CONFIGURE_ARGS}\" APPLICATION_INSTALL_PATH=\"${APPLICATION_INSTALL_PATH}\" TCL_BUILD_DIR=\"${TCL_BUILD_DIR}\" TCL_FRAMEWORK_DIR=\"${TCL_FRAMEWORK_DIR}\" ${EXTRA_MAKE_FLAGS}\nresult=$?\nif [ -e \"${BUILT_PRODUCTS_DIR}/tktest\" ]; then\n\trm -f \"${BUILT_PRODUCTS_DIR}/tktest\"\nfi\necho \"Done\"\nexit ${result}\n";
 		};
 		F9A5C5F508F651A2008AE941 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3633,14 +3646,14 @@
 			files = (
 			);
 			inputPaths = (
-				"${TCL_SRCROOT}/macosx/configure.ac",
-				"${TCL_SRCROOT}/unix/configure.in",
-				"${TCL_SRCROOT}/unix/tcl.m4",
-				"${TCL_SRCROOT}/unix/aclocal.m4",
-				"${TCL_SRCROOT}/unix/tclConfig.sh.in",
+				"$(TCL_SRCROOT)/macosx/configure.ac",
+				"$(TCL_SRCROOT)/unix/configure.in",
+				"$(TCL_SRCROOT)/unix/tcl.m4",
+				"$(TCL_SRCROOT)/unix/aclocal.m4",
+				"$(TCL_SRCROOT)/unix/tclConfig.sh.in",
 			);
 			outputPaths = (
-				"${DERIVED_FILE_DIR}/tcl/tclConfig.sh",
+				"$(DERIVED_FILE_DIR)/tcl/tclConfig.sh",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
@@ -3652,14 +3665,14 @@
 			files = (
 			);
 			inputPaths = (
-				"${TK_SRCROOT}/macosx/configure.ac",
-				"${TK_SRCROOT}/unix/configure.in",
-				"${TK_SRCROOT}/unix/tcl.m4",
-				"${TK_SRCROOT}/unix/aclocal.m4",
-				"${TK_SRCROOT}/unix/tkConfig.sh.in",
+				"$(TK_SRCROOT)/macosx/configure.ac",
+				"$(TK_SRCROOT)/unix/configure.in",
+				"$(TK_SRCROOT)/unix/tcl.m4",
+				"$(TK_SRCROOT)/unix/aclocal.m4",
+				"$(TK_SRCROOT)/unix/tkConfig.sh.in",
 			);
 			outputPaths = (
-				"${DERIVED_FILE_DIR}/tk/tkConfig.sh",
+				"$(DERIVED_FILE_DIR)/tk/tkConfig.sh",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
@@ -3734,14 +3747,10 @@
 				F96D45C308F272BC004A47F5 /* tclStrToD.c in Sources */,
 				F96D45C408F272BC004A47F5 /* tclStubInit.c in Sources */,
 				F96D45C508F272BC004A47F5 /* tclStubLib.c in Sources */,
-				F96D45C608F272BC004A47F5 /* tclTest.c in Sources */,
-				F96D45C708F272BC004A47F5 /* tclTestObj.c in Sources */,
-				F96D45C808F272BC004A47F5 /* tclTestProcBodyObj.c in Sources */,
 				F96D45C908F272BC004A47F5 /* tclThread.c in Sources */,
 				F96D45CA08F272BC004A47F5 /* tclThreadAlloc.c in Sources */,
 				F96D45CB08F272BC004A47F5 /* tclThreadJoin.c in Sources */,
 				F96D45CC08F272BC004A47F5 /* tclThreadStorage.c in Sources */,
-				F96D45CD08F272BC004A47F5 /* tclThreadTest.c in Sources */,
 				F96D45CE08F272BC004A47F5 /* tclTimer.c in Sources */,
 				F96D45D008F272BC004A47F5 /* tclTomMathInterface.c in Sources */,
 				F96D45D108F272BC004A47F5 /* tclTrace.c in Sources */,
@@ -3822,7 +3831,6 @@
 				F96D4ACF08F272C9004A47F5 /* tclUnixNotfy.c in Sources */,
 				F96D4AD008F272C9004A47F5 /* tclUnixPipe.c in Sources */,
 				F96D4AD208F272CA004A47F5 /* tclUnixSock.c in Sources */,
-				F96D4AD308F272CA004A47F5 /* tclUnixTest.c in Sources */,
 				F96D4AD408F272CA004A47F5 /* tclUnixThrd.c in Sources */,
 				F96D4AD608F272CA004A47F5 /* tclUnixTime.c in Sources */,
 				F966BDCF08F27A3F005CB29B /* tk3d.c in Sources */,
@@ -3980,228 +3988,61 @@
 		F91BCC4F093152310042A6BF /* ReleaseUniversal */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				APPLICATION_INSTALL_PATH = /Applications/Utilities;
-				BINDIR = "${PREFIX}/bin";
-				BUILD_STYLE = Deployment;
-				CFLAGS = "-Wno-deprecated-declarations ${CFLAGS}";
-				INSTALL_PATH = /Library/Frameworks;
-				MAKE_TARGET = deploy;
-				MANDIR = "${PREFIX}/man";
-				PREFIX = /usr/local;
-				PRODUCT_NAME = Tk;
-				TCL_BUILD_DIR = "${SYMROOT}/../tcl/${BUILD_STYLE}";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
+				PRODUCT_NAME = Wish;
 			};
 			name = ReleaseUniversal;
 		};
 		F91BCC50093152310042A6BF /* ReleaseUniversal */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
-				BINDIR = "${PREFIX}/bin";
-				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
-				DEAD_CODE_STRIPPING = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEPLOYMENT_POSTPROCESSING = YES;
-				GCC_DEBUGGING_SYMBOLS = full;
-				GCC_DYNAMIC_NO_PIC = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = "";
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PREFIX_HEADER = "${DERIVED_FILE_DIR}/tk/tkConfig.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					HAVE_TK_CONFIG_H,
-					TCL_NO_DEPRECATED,
-					HAVE_TCL_CONFIG_H,
-					"${GCC_PREPROCESSOR_DEFINITIONS}",
-				);
-				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				HEADER_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TK_SRCROOT}/xlib",
-					"${DERIVED_FILE_DIR}/tcl",
-					"${DERIVED_FILE_DIR}/tk",
-				);
-				INCLUDEDIR = "${PREFIX}/include";
-				INSTALL_PATH = "${BINDIR}";
-				LIBDIR = "${PREFIX}/lib";
-				MANDIR = "${PREFIX}/man";
-				OTHER_CFLAGS = (
-					"-imacros",
-					"${DERIVED_FILE_DIR}/tcl/tclConfig.h",
-				);
-				OTHER_LDFLAGS = (
-					"-headerpad_max_install_names",
-					"-sectcreate",
-					__TEXT,
-					__tk_rsrc,
-					"${REZ_COLLECTOR_DIR}/${PRODUCT_NAME}.rsrc",
-				);
-				PER_ARCH_CFLAGS_ppc = "-mcpu=G3 -mtune=G4";
-				PREBINDING = NO;
-				PREFIX = /usr/local;
 				PRODUCT_NAME = tktest;
-				REZ_RESOURCE_MAP_READ_ONLY = YES;
-				REZ_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TCL_SRCROOT}/generic",
-				);
-				SEPARATE_STRIP = YES;
-				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
-				VERSION = 8.5;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wno-implicit-int",
-					"-Wextra",
-					"-Wno-unused-parameter",
-					"-Wno-missing-field-initializers",
-				);
-				ZERO_LINK = NO;
 			};
 			name = ReleaseUniversal;
 		};
 		F91BCC51093152310042A6BF /* ReleaseUniversal */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
 			buildSettings = {
-				CFLAGS = "-arch ppc -arch i386 -isysroot ${SDKROOT} -mmacosx-version-min=10.4";
-				CONFIGURE_ARGS = "--disable-symbols";
-				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				CFLAGS = "-arch ppc -arch i386 $(CFLAGS)";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				PREBINDING = NO;
 			};
 			name = ReleaseUniversal;
 		};
 		F95CC8AC09158F3100EA5ACE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				APPLICATION_INSTALL_PATH = /Applications/Utilities;
-				BINDIR = "${PREFIX}/bin";
-				BUILD_STYLE = Development;
-				CFLAGS = "-Wno-deprecated-declarations ${CFLAGS}";
-				INSTALL_PATH = /Library/Frameworks;
-				MAKE_TARGET = develop;
-				MANDIR = "${PREFIX}/man";
-				PREFIX = /usr/local;
-				PRODUCT_NAME = Tk;
-				TCL_BUILD_DIR = "${SYMROOT}/../tcl/${BUILD_STYLE}";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
+				PRODUCT_NAME = Wish;
 			};
 			name = Debug;
 		};
 		F95CC8AD09158F3100EA5ACE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				APPLICATION_INSTALL_PATH = /Applications/Utilities;
-				BINDIR = "${PREFIX}/bin";
-				BUILD_STYLE = Deployment;
-				CFLAGS = "-Wno-deprecated-declarations ${CFLAGS}";
-				INSTALL_PATH = /Library/Frameworks;
-				MAKE_TARGET = deploy;
-				MANDIR = "${PREFIX}/man";
-				PREFIX = /usr/local;
-				PRODUCT_NAME = Tk;
-				TCL_BUILD_DIR = "${SYMROOT}/../tcl/${BUILD_STYLE}";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
+				PRODUCT_NAME = Wish;
 			};
 			name = Release;
 		};
 		F95CC8AE09158F3100EA5ACE /* DebugNoFixZL */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				APPLICATION_INSTALL_PATH = /Applications/Utilities;
-				BINDIR = "${PREFIX}/bin";
-				BUILD_STYLE = Development;
-				CFLAGS = "-Wno-deprecated-declarations ${CFLAGS}";
-				INSTALL_PATH = /Library/Frameworks;
-				MAKE_TARGET = develop;
-				MANDIR = "${PREFIX}/man";
-				PREFIX = /usr/local;
-				PRODUCT_NAME = Tk;
-				TCL_BUILD_DIR = "${SYMROOT}/../tcl/${BUILD_STYLE}";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
+				PRODUCT_NAME = Wish;
 			};
 			name = DebugNoFixZL;
 		};
 		F95CC8B109158F3100EA5ACE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BINDIR = "${PREFIX}/bin";
-				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
-				DEAD_CODE_STRIPPING = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEPLOYMENT_POSTPROCESSING = NO;
-				GCC_DEBUGGING_SYMBOLS = default;
-				GCC_DYNAMIC_NO_PIC = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = "";
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREFIX_HEADER = "${DERIVED_FILE_DIR}/tk/tkConfig.h";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					HAVE_TK_CONFIG_H,
-					TCL_NO_DEPRECATED,
-					HAVE_TCL_CONFIG_H,
-					"${GCC_PREPROCESSOR_DEFINITIONS}",
+					"__private_extern__=extern",
+					"$(GCC_PREPROCESSOR_DEFINITIONS)",
 				);
-				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				HEADER_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TK_SRCROOT}/xlib",
-					"${DERIVED_FILE_DIR}/tcl",
-					"${DERIVED_FILE_DIR}/tk",
-				);
-				INCLUDEDIR = "${PREFIX}/include";
-				INSTALL_PATH = "${BINDIR}";
-				LIBDIR = "${PREFIX}/lib";
-				MANDIR = "${PREFIX}/man";
-				OTHER_CFLAGS = (
-					"-imacros",
-					"${DERIVED_FILE_DIR}/tcl/tclConfig.h",
-				);
-				OTHER_LDFLAGS = (
-					"-headerpad_max_install_names",
-					"-sectcreate",
-					__TEXT,
-					__tk_rsrc,
-					"${REZ_COLLECTOR_DIR}/${PRODUCT_NAME}.rsrc",
-				);
-				PER_ARCH_CFLAGS_ppc = "-mcpu=G3 -mtune=G4";
-				PREBINDING = NO;
-				PREFIX = /usr/local;
 				PRODUCT_NAME = tktest;
-				REZ_RESOURCE_MAP_READ_ONLY = YES;
-				REZ_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TCL_SRCROOT}/generic",
-				);
-				SEPARATE_STRIP = YES;
-				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
-				VERSION = 8.5;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wno-implicit-int",
-					"-Wextra",
-					"-Wno-unused-parameter",
-					"-Wno-missing-field-initializers",
-				);
 				ZERO_LINK = YES;
 			};
 			name = Debug;
@@ -4209,185 +4050,149 @@
 		F95CC8B209158F3100EA5ACE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BINDIR = "${PREFIX}/bin";
-				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
-				DEAD_CODE_STRIPPING = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEPLOYMENT_POSTPROCESSING = YES;
-				GCC_DEBUGGING_SYMBOLS = full;
-				GCC_DYNAMIC_NO_PIC = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = "";
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PREFIX_HEADER = "${DERIVED_FILE_DIR}/tk/tkConfig.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					HAVE_TK_CONFIG_H,
-					TCL_NO_DEPRECATED,
-					HAVE_TCL_CONFIG_H,
-					"${GCC_PREPROCESSOR_DEFINITIONS}",
-				);
-				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				HEADER_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TK_SRCROOT}/xlib",
-					"${DERIVED_FILE_DIR}/tcl",
-					"${DERIVED_FILE_DIR}/tk",
-				);
-				INCLUDEDIR = "${PREFIX}/include";
-				INSTALL_PATH = "${BINDIR}";
-				LIBDIR = "${PREFIX}/lib";
-				MANDIR = "${PREFIX}/man";
-				OTHER_CFLAGS = (
-					"-imacros",
-					"${DERIVED_FILE_DIR}/tcl/tclConfig.h",
-				);
-				OTHER_LDFLAGS = (
-					"-headerpad_max_install_names",
-					"-sectcreate",
-					__TEXT,
-					__tk_rsrc,
-					"${REZ_COLLECTOR_DIR}/${PRODUCT_NAME}.rsrc",
-				);
-				PER_ARCH_CFLAGS_ppc = "-mcpu=G3 -mtune=G4";
-				PREBINDING = NO;
-				PREFIX = /usr/local;
 				PRODUCT_NAME = tktest;
-				REZ_RESOURCE_MAP_READ_ONLY = YES;
-				REZ_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TCL_SRCROOT}/generic",
-				);
-				SEPARATE_STRIP = YES;
-				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
-				VERSION = 8.5;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wno-implicit-int",
-					"-Wextra",
-					"-Wno-unused-parameter",
-					"-Wno-missing-field-initializers",
-				);
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 		F95CC8B309158F3100EA5ACE /* DebugNoFixZL */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BINDIR = "${PREFIX}/bin";
-				CONFIGURE_ARGS = "--enable-threads ${CONFIGURE_ARGS}";
-				DEAD_CODE_STRIPPING = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEPLOYMENT_POSTPROCESSING = NO;
-				GCC_DEBUGGING_SYMBOLS = default;
-				GCC_DYNAMIC_NO_PIC = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = "";
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREFIX_HEADER = "${DERIVED_FILE_DIR}/tk/tkConfig.h";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					HAVE_TK_CONFIG_H,
-					TCL_NO_DEPRECATED,
-					HAVE_TCL_CONFIG_H,
-					"${GCC_PREPROCESSOR_DEFINITIONS}",
-				);
-				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				HEADER_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TK_SRCROOT}/xlib",
-					"${DERIVED_FILE_DIR}/tcl",
-					"${DERIVED_FILE_DIR}/tk",
-				);
-				INCLUDEDIR = "${PREFIX}/include";
-				INSTALL_PATH = "${BINDIR}";
-				LIBDIR = "${PREFIX}/lib";
-				MANDIR = "${PREFIX}/man";
-				OTHER_CFLAGS = (
-					"-imacros",
-					"${DERIVED_FILE_DIR}/tcl/tclConfig.h",
-				);
-				OTHER_LDFLAGS = (
-					"-headerpad_max_install_names",
-					"-sectcreate",
-					__TEXT,
-					__tk_rsrc,
-					"${REZ_COLLECTOR_DIR}/${PRODUCT_NAME}.rsrc",
-				);
-				PER_ARCH_CFLAGS_ppc = "-mcpu=G3 -mtune=G4";
-				PREBINDING = NO;
-				PREFIX = /usr/local;
 				PRODUCT_NAME = tktest;
-				REZ_RESOURCE_MAP_READ_ONLY = YES;
-				REZ_SEARCH_PATHS = (
-					"${TK_SRCROOT}/generic",
-					"${TCL_SRCROOT}/generic",
-				);
-				SEPARATE_STRIP = YES;
-				TCL_LIBRARY = "${LIBDIR}/tcl${VERSION}";
-				TCL_PACKAGE_PATH = "\"${LIBDIR}\"";
-				TCL_SRCROOT = "${SRCROOT}/../../tcl";
-				TK_LIBRARY = "${LIBDIR}/tk${VERSION}";
-				TK_SRCROOT = "${SRCROOT}/../../tk";
-				VERSION = 8.5;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wno-implicit-int",
-					"-Wextra",
-					"-Wno-unused-parameter",
-					"-Wno-missing-field-initializers",
-				);
-				ZERO_LINK = NO;
 			};
 			name = DebugNoFixZL;
 		};
 		F95CC8B609158F3100EA5ACE /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
 			buildSettings = {
-				CONFIGURE_ARGS = "--enable-symbols";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"__private_extern__=extern",
-					"DEBUG_ASSERT_PRODUCTION_CODE=0",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = NO;
 			};
 			name = Debug;
 		};
 		F95CC8B709158F3100EA5ACE /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
 			buildSettings = {
-				CONFIGURE_ARGS = "--disable-symbols";
-				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = YES;
 			};
 			name = Release;
 		};
 		F95CC8B809158F3100EA5ACE /* DebugNoFixZL */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
 			buildSettings = {
-				CONFIGURE_ARGS = "--enable-symbols";
-				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG_ASSERT_PRODUCTION_CODE=0";
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = NO;
 			};
 			name = DebugNoFixZL;
+		};
+		F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = ReleaseUniversal10.4uSDK;
+		};
+		F9DB62090B65ADA800A370FB /* ReleaseUniversal10.4uSDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = tktest;
+			};
+			name = ReleaseUniversal10.4uSDK;
+		};
+		F9DB620A0B65ADA800A370FB /* ReleaseUniversal10.4uSDK */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				CFLAGS = "-arch ppc -arch i386 $(CFLAGS)";
+				CPPFLAGS = "-isysroot $(SDKROOT) $(CPPFLAGS)";
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = ReleaseUniversal10.4uSDK;
+		};
+		F9DB621F0B65AFDE00A370FB /* ReleasePPC10.3.9SDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = ReleasePPC10.3.9SDK;
+		};
+		F9DB62200B65AFDE00A370FB /* ReleasePPC10.3.9SDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = tktest;
+			};
+			name = ReleasePPC10.3.9SDK;
+		};
+		F9DB62210B65AFDE00A370FB /* ReleasePPC10.3.9SDK */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
+			buildSettings = {
+				ARCHS = ppc;
+				CFLAGS = "$(PER_ARCH_CFLAGS_ppc) $(CFLAGS)";
+				CPPFLAGS = "-arch ppc -isysroot $(SDKROOT) $(CPPFLAGS)";
+				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = YES;
+				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
+			};
+			name = ReleasePPC10.3.9SDK;
+		};
+		F9DB62350B65B03A00A370FB /* ReleasePPC10.2.8SDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = ReleasePPC10.2.8SDK;
+		};
+		F9DB62360B65B03A00A370FB /* ReleasePPC10.2.8SDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = tktest;
+			};
+			name = ReleasePPC10.2.8SDK;
+		};
+		F9DB62370B65B03A00A370FB /* ReleasePPC10.2.8SDK */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
+			buildSettings = {
+				ARCHS = ppc;
+				CC = "$(CC)-$(GCC_VERSION)";
+				CFLAGS = "$(PER_ARCH_CFLAGS_ppc) -fconstant-cfstrings $(CFLAGS)";
+				CPPFLAGS = "-arch ppc -D__CONSTANT_CFSTRINGS__ -DMAC_OS_X_VERSION_MIN_REQUIRED=1020 -nostdinc -isystem $(SDKROOT)/usr/include/gcc/darwin/$(GCC_VERSION) -isystem $(SDKROOT)/usr/include -F$(SDKROOT)/System/Library/Frameworks";
+				DEBUG_INFORMATION_FORMAT = stabs;
+				GCC_VERSION = 3.3;
+				LDFLAGS = "-L$(SDKROOT)/usr/lib/gcc/darwin/$(GCC_VERSION) -Wl,-syslibroot,$(SDKROOT)";
+				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = YES;
+				SDKROOT = /Developer/SDKs/MacOSX10.2.8.sdk;
+				WARNING_CFLAGS = (
+					"$(WARNING_CFLAGS_GCC3)",
+					"-Wno-long-double",
+				);
+			};
+			name = ReleasePPC10.2.8SDK;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F95CC8AB09158F3100EA5ACE /* Build configuration list for PBXLegacyTarget "Tk" */ = {
+		F95CC8AB09158F3100EA5ACE /* Build configuration list for PBXNativeTarget "Tk" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F95CC8AC09158F3100EA5ACE /* Debug */,
-				F95CC8AD09158F3100EA5ACE /* Release */,
 				F95CC8AE09158F3100EA5ACE /* DebugNoFixZL */,
+				F95CC8AD09158F3100EA5ACE /* Release */,
 				F91BCC4F093152310042A6BF /* ReleaseUniversal */,
+				F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
+				F9DB621F0B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
+				F9DB62350B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -4396,9 +4201,12 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F95CC8B109158F3100EA5ACE /* Debug */,
-				F95CC8B209158F3100EA5ACE /* Release */,
 				F95CC8B309158F3100EA5ACE /* DebugNoFixZL */,
+				F95CC8B209158F3100EA5ACE /* Release */,
 				F91BCC50093152310042A6BF /* ReleaseUniversal */,
+				F9DB62090B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
+				F9DB62200B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
+				F9DB62360B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -4407,9 +4215,12 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F95CC8B609158F3100EA5ACE /* Debug */,
-				F95CC8B709158F3100EA5ACE /* Release */,
 				F95CC8B809158F3100EA5ACE /* DebugNoFixZL */,
+				F95CC8B709158F3100EA5ACE /* Release */,
 				F91BCC51093152310042A6BF /* ReleaseUniversal */,
+				F9DB620A0B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
+				F9DB62210B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
+				F9DB62370B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
