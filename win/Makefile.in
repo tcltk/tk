@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.59.2.6 2006/09/25 17:28:21 andreas_kupries Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.59.2.7 2007/01/30 23:21:24 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -56,6 +56,9 @@ SCRIPT_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)
 
 # Directory in which to install the include file tk.h:
 INCLUDE_INSTALL_DIR	= $(INSTALL_ROOT)$(includedir)
+
+# Directory in which to (optionally) install the private tk headers:
+PRIVATE_INCLUDE_INSTALL_DIR = $(INSTALL_ROOT)$(includedir)
 
 # Top-level directory for manual entries:
 MAN_INSTALL_DIR		= $(INSTALL_ROOT)$(mandir)
@@ -517,6 +520,25 @@ install-demos:
 
 install-doc: doc
 
+# Optional target to install private headers
+install-private-headers: libraries
+	@for i in $(PRIVATE_INCLUDE_INSTALL_DIR); \
+	    do \
+	    if [ ! -d $$i ] ; then \
+		echo "Making directory $$i"; \
+		$(MKDIR) $$i; \
+		chmod 755 $$i; \
+		else true; \
+		fi; \
+	    done;
+	@echo "Installing private header files to $(PRIVATE_INCLUDE_INSTALL_DIR)/";
+	@for i in $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
+		$(GENERIC_DIR)/tkIntPlatDecls.h $(GENERIC_DIR)/tkPort.h \
+		$(WIN_DIR)/tkWinPort.h $(WIN_DIR)/tkWinInt.h \
+		$(WIN_DIR)/tkWin.h; \
+	    do \
+	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
+	    done;
 
 $(WISH): $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(WISH_OBJS) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
