@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.6 2007/01/11 19:59:26 jenglish Exp $
+ * $Id: ttkWinXPTheme.c,v 1.7 2007/02/02 10:58:35 patthoyts Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -51,6 +51,7 @@ typedef HRESULT (STDAPICALLTYPE DrawThemeTextProc)(HTHEME hTheme, HDC hdc,
 		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
 		 DWORD dwTextFlags, DWORD dwTextFlags2, const RECT *pRect);
 typedef BOOL    (STDAPICALLTYPE IsThemeActiveProc)(VOID);
+typedef BOOL    (STDAPICALLTYPE IsAppThemedProc)(VOID);
 
 typedef struct
 {
@@ -60,7 +61,8 @@ typedef struct
     DrawThemeBackgroundProc		*DrawThemeBackground;
     DrawThemeTextProc		        *DrawThemeText;
     GetThemeTextExtentProc		*GetThemeTextExtent;
-    IsThemeActiveProc                   *IsThemeActive;
+    IsThemeActiveProc			*IsThemeActive;
+    IsAppThemedProc			*IsAppThemed;
 
     HWND                                stubWindow;
 } XPThemeProcs;
@@ -124,6 +126,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 		&& LOADPROC(GetThemeTextExtent)
 		&& LOADPROC(DrawThemeText)
 		&& LOADPROC(IsThemeActive)
+		&& LOADPROC(IsAppThemed)
 	    )
 	    {
 		return procs;
@@ -153,7 +156,9 @@ static int
 XPThemeEnabled(Ttk_Theme theme, void *clientData)
 {
     XPThemeData *themeData = clientData;
-    return themeData->procs->IsThemeActive();
+    int active = themeData->procs->IsThemeActive();
+    int themed = themeData->procs->IsAppThemed();
+    return (active && themed);
 }
 
 /*
