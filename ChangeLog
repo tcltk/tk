@@ -1,3 +1,8 @@
+2007-02-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/ttkWinXPTheme.c: Support IsAppThemed() call. This is what 
+	is used when theming is turned off just for an individual application.
+
 2007-01-28  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcodeproj/project.pbxproj:   extract build settings that
