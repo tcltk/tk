@@ -94,7 +94,7 @@
 /* Are we building TkAqua? */
 #undef MAC_OSX_TK
 
-/* Linker support for module scope symbols */
+/* Compiler support for module scope symbols */
 #undef MODULE_SCOPE
 
 /* Is Darwin CoreFoundation unavailable for 64-bit? */
