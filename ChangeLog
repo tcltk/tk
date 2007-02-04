@@ -1,3 +1,11 @@
+2007-02-03  Joe Mistachkin  <joe@mistachkin.com>
+
+	* win/rules.vc: Fix platform specific file copy macros for downlevel
+	Windows.
+	* win/ttkWinMonitor.c: Windows portability support. Fix "noxp" build
+	* win/ttkWinXPTheme.c: option handling and use GetWindowLongPtr and
+	SetWindowLongPtr only when needed.
+
 2007-02-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/ttkWinXPTheme.c: Support IsAppThemed() call. This is what 
