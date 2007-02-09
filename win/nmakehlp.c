@@ -10,7 +10,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * ----------------------------------------------------------------------------
- * RCS: @(#) $Id: nmakehlp.c,v 1.6 2006/10/19 00:48:25 patthoyts Exp $
+ * RCS: @(#) $Id: nmakehlp.c,v 1.7 2007/02/09 06:54:33 mistachkin Exp $
  * ----------------------------------------------------------------------------
  */
 
@@ -134,7 +134,7 @@ main(
 	}
     }
     chars = snprintf(msg, sizeof(msg) - 1,
-	    "usage: %s -c|-l|-f ...\n"
+	    "usage: %s -c|-l|-f|-g|-V ...\n"
 	    "This is a little helper app to equalize shell differences between WinNT and\n"
 	    "Win9x and get nmake.exe to accomplish its job.\n",
 	    argv[0]);
@@ -193,7 +193,7 @@ CheckForCompilerFeature(
      * Base command line.
      */
 
-    lstrcpy(cmdline, "cl.exe -nologo -c -TC -Zs -X ");
+    lstrcpy(cmdline, "cl.exe -nologo -c -TC -Zs -X -Fp.\\_junk.pch ");
 
     /*
      * Append our option for testing

@@ -1,3 +1,9 @@
+2007-02-09  Joe Mistachkin  <joe@mistachkin.com>
+
+	* win/nmakehlp.c: Properly cleanup after nmakehlp, including the
+	* win/makefile.vc: vcX0.pch file.  Sync up fixed nmakehlp usage
+	from Tcl.
+
 2007-02-06  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/ttk.tcl: Add no-op [package ifneeded] script
