@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.13 2007/01/03 04:10:54 nijtmans Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.14 2007/02/12 21:45:41 dkf Exp $
  */
 
 #include "tkColor.h"
@@ -27,7 +27,6 @@ typedef struct {
 				 * allocated. */
     Display *display;		/* Display for colormap. */
 } ValueKey;
-
 
 /*
  * The structure below is used to allocate thread-local data.
@@ -737,8 +736,8 @@ InitColorObj(
  */
 
 static void
-ColorInit(dispPtr)
-    TkDisplay *dispPtr;
+ColorInit(
+    TkDisplay *dispPtr)
 {
     if (!dispPtr->colorInit) {
 	dispPtr->colorInit = 1;
