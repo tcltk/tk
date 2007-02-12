@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.19 2006/10/16 15:35:27 das Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.20 2007/02/12 21:34:39 dkf Exp $
  */
 
 #include <stdio.h>
@@ -1308,10 +1308,10 @@ LineDeleteCoords(
 
 	/* ARGSUSED */
 static double
-LineToPoint(canvas, itemPtr, pointPtr)
-    Tk_Canvas canvas;		/* Canvas containing item. */
-    Tk_Item *itemPtr;		/* Item to check against point. */
-    double *pointPtr;		/* Pointer to x and y coordinates. */
+LineToPoint(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item to check against point. */
+    double *pointPtr)		/* Pointer to x and y coordinates. */
 {
     Tk_State state = itemPtr->state;
     LineItem *linePtr = (LineItem *) itemPtr;
