@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.22 2007/02/12 21:41:47 dkf Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.23 2007/02/13 11:29:17 das Exp $
  */
 
 #include <stdio.h>
