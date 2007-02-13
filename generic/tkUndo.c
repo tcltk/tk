@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.c,v 1.10 2006/01/12 23:29:36 a_kovalenko Exp $
+ * RCS: @(#) $Id: tkUndo.c,v 1.11 2007/02/13 00:02:23 dkf Exp $
  */
 
 #include "tkUndo.h"
@@ -519,8 +519,8 @@ TkUndoInsertUndoSeparator(
  */
 
 int
-TkUndoRevert(stack)
-    TkUndoRedoStack *stack;
+TkUndoRevert(
+    TkUndoRedoStack *stack)
 {
     TkUndoAtom *elem;
 
