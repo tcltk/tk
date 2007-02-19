@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.12 2006/07/07 00:38:47 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.38.2.13 2007/02/19 23:53:36 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -709,12 +709,12 @@ proc ::tk::IconList_KeyPress {w key} {
 proc ::tk::IconList_Goto {w text} {
     upvar ::tk::$w data
     upvar ::tk::$w:textList textList
-    
+
     if {![info exists data(list)]} {
 	return
     }
 
-    if {$text eq ""} {
+    if {$text eq "" || $data(numItems) == 0} {
 	return
     }
 
