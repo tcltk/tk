@@ -1,3 +1,11 @@
+2007-02-19  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/tcl.m4: use SHLIB_SUFFIX=".so" on HP-UX ia64 arch.
+	* unix/configure: autoconf-2.13
+
+	* library/tkfbox.tcl (::tk::IconList_Goto): avoid goto issues in
+	empty dirs.  [Bug 1662959]
+
 2007-02-04  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure.in: add caching to -pipe check.
