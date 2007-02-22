@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.7 2007/02/04 00:10:55 mistachkin Exp $
+/* $Id: ttkWinMonitor.c,v 1.8 2007/02/22 13:56:35 dkf Exp $
  */
 
 #ifdef _MSC_VER
@@ -74,13 +74,15 @@ static void RegisterSystemColors(Tcl_Interp *interp)
 }
 
 static HWND
-CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
+CreateThemeMonitorWindow(
+    HINSTANCE hinst,
+    Tcl_Interp *interp)
 {
     WNDCLASSEX wc;
-    HWND       hwnd = NULL;
-    CHAR       title[32] = "TtkMonitorWindow";
-    CHAR       name[32] = "TtkMonitorClass";
-    
+    HWND hwnd = NULL;
+    CHAR title[32] = "TtkMonitorWindow";
+    CHAR name[32] = "TtkMonitorClass";
+
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc   = (WNDPROC)WndProc;
@@ -93,11 +95,11 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
     wc.lpszMenuName  = name;
     wc.lpszClassName = name;
-    
+
     if (RegisterClassEx(&wc)) {
-	hwnd = CreateWindow( name, title, WS_OVERLAPPEDWINDOW,
-	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-	    NULL, NULL, hinst, NULL );
+	hwnd = CreateWindow(name, title, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		NULL, NULL, hinst, NULL );
 #ifdef _WIN64
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)interp);
 #else
@@ -109,15 +111,20 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
     return hwnd;
 }
 
-static void 
-DestroyThemeMonitorWindow(void *clientData)
+static void
+DestroyThemeMonitorWindow(
+    void *clientData)
 {
     HWND hwnd = (HWND)clientData;
     DestroyWindow(hwnd);
 }
 
 static LRESULT WINAPI
-WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+WndProc(
+    HWND hwnd,
+    UINT msg,
+    WPARAM wp,
+    LPARAM lp)
 {
 #ifdef _WIN64
     Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -157,10 +164,12 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *, HWND hwnd);
 
-MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
+MODULE_SCOPE int
+Ttk_WinPlatformInit(
+    Tcl_Interp *interp)
 {
     HWND hwnd;
-    
+
     hwnd = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
     Ttk_RegisterCleanup(interp, (ClientData)hwnd, DestroyThemeMonitorWindow);
 
@@ -169,4 +178,3 @@ MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
 
     return TCL_OK;
 }
-
