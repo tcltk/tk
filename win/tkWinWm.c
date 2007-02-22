@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.113 2007/01/12 10:41:23 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.114 2007/02/22 13:56:35 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -8161,8 +8161,8 @@ TkWinSetForegroundWindow(
  */
 
 void
-TkpWinToplevelWithDraw(winPtr)
-    TkWindow *winPtr;
+TkpWinToplevelWithDraw(
+    TkWindow *winPtr)
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     wmPtr->flags |= WM_WITHDRAWN;

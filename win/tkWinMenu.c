@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.53 2007/01/12 10:41:23 dkf Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.54 2007/02/22 13:56:34 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -182,9 +182,9 @@ static LRESULT CALLBACK	TkWinEmbeddedMenuProc(HWND hwnd, UINT message,
  */
 
 static int
-GetNewID(mePtr, menuIDPtr)
-    TkMenuEntry *mePtr;		/* The menu we are working with */
-    WORD *menuIDPtr;		/* The resulting id */
+GetNewID(
+    TkMenuEntry *mePtr,		/* The menu we are working with */
+    WORD *menuIDPtr)		/* The resulting id */
 {
     int found = 0;
     int newEntry;
@@ -238,8 +238,8 @@ GetNewID(mePtr, menuIDPtr)
  */
 
 static void
-FreeID(commandID)
-    WORD commandID;
+FreeID(
+    WORD commandID)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -276,8 +276,8 @@ FreeID(commandID)
  */
 
 int
-TkpNewMenu(menuPtr)
-    TkMenu *menuPtr;		/* The common structure we are making the
+TkpNewMenu(
+    TkMenu *menuPtr)		/* The common structure we are making the
 				 * platform structure for. */
 {
     HMENU winMenuHdl;
@@ -324,8 +324,8 @@ TkpNewMenu(menuPtr)
  */
 
 void
-TkpDestroyMenu(menuPtr)
-    TkMenu *menuPtr;		/* The common menu structure */
+TkpDestroyMenu(
+    TkMenu *menuPtr)		/* The common menu structure */
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     char *searchName;
@@ -406,8 +406,8 @@ TkpDestroyMenu(menuPtr)
  */
 
 void
-TkpDestroyMenuEntry(mePtr)
-    TkMenuEntry *mePtr;		/* The entry to destroy */
+TkpDestroyMenuEntry(
+    TkMenuEntry *mePtr)		/* The entry to destroy */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
@@ -442,8 +442,8 @@ TkpDestroyMenuEntry(mePtr)
  */
 
 static char *
-GetEntryText(mePtr)
-    TkMenuEntry *mePtr;		/* A pointer to the menu entry. */
+GetEntryText(
+    TkMenuEntry *mePtr)		/* A pointer to the menu entry. */
 {
     char *itemText;
 
@@ -718,11 +718,10 @@ ReconfigureWindowsMenu(
  */
 
 int
-TkpPostMenu(interp, menuPtr, x, y)
-    Tcl_Interp *interp;
-    TkMenu *menuPtr;
-    int x;
-    int y;
+TkpPostMenu(
+    Tcl_Interp *interp,
+    TkMenu *menuPtr,
+    int x, int y)
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     int i, result, flags;
@@ -837,8 +836,8 @@ TkpPostMenu(interp, menuPtr, x, y)
  */
 
 int
-TkpMenuNewEntry(mePtr)
-    TkMenuEntry *mePtr;
+TkpMenuNewEntry(
+    TkMenuEntry *mePtr)
 {
     WORD commandID;
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -876,11 +875,11 @@ TkpMenuNewEntry(mePtr)
  */
 
 static LRESULT CALLBACK
-TkWinMenuProc(hwnd, message, wParam, lParam)
-    HWND hwnd;
-    UINT message;
-    WPARAM wParam;
-    LPARAM lParam;
+TkWinMenuProc(
+    HWND hwnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     LRESULT lResult;
 
@@ -908,7 +907,10 @@ TkWinMenuProc(hwnd, message, wParam, lParam)
  *----------------------------------------------------------------------
  */
 
-static void UpdateEmbeddedMenu(ClientData clientData) {
+static void
+UpdateEmbeddedMenu(
+    ClientData clientData)
+{
     RECT rc;
     HWND hMenuWnd = (HWND)clientData;
     GetClientRect(hMenuWnd, &rc);
@@ -934,11 +936,11 @@ static void UpdateEmbeddedMenu(ClientData clientData) {
  */
 
 static LRESULT CALLBACK
-TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
-    HWND hwnd;
-    UINT message;
-    WPARAM wParam;
-    LPARAM lParam;
+TkWinEmbeddedMenuProc(
+    HWND hwnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     static int nIdles = 0;
     LRESULT lResult = 1;
@@ -1000,12 +1002,12 @@ TkWinEmbeddedMenuProc(hwnd, message, wParam, lParam)
  */
 
 int
-TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
-    HWND *phwnd;
-    UINT *pMessage;
-    WPARAM *pwParam;
-    LPARAM *plParam;
-    LRESULT *plResult;
+TkWinHandleMenuEvent(
+    HWND *phwnd,
+    UINT *pMessage,
+    WPARAM *pwParam,
+    LPARAM *plParam,
+    LRESULT *plResult)
 {
     Tcl_HashEntry *hashEntryPtr;
     int returnResult = 0;
@@ -1340,10 +1342,10 @@ RecursivelyClearActiveMenu(
  */
 
 void
-TkpSetWindowMenuBar(tkwin, menuPtr)
-    Tk_Window tkwin;		/* The window we are putting the menubar
+TkpSetWindowMenuBar(
+    Tk_Window tkwin,		/* The window we are putting the menubar
 				 * into.*/
-    TkMenu *menuPtr;		/* The menu we are inserting */
+    TkMenu *menuPtr)		/* The menu we are inserting */
 {
     HMENU winMenuHdl;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -1419,7 +1421,7 @@ TkpSetMainMenubar(
  */
 
 void
-GetMenuIndicatorGeometry (
+GetMenuIndicatorGeometry(
     TkMenu *menuPtr,		/* The menu we are measuring */
     TkMenuEntry *mePtr,		/* The entry we are measuring */
     Tk_Font tkfont,		/* Precalculated font */
@@ -1456,7 +1458,7 @@ GetMenuIndicatorGeometry (
  */
 
 void
-GetMenuAccelGeometry (
+GetMenuAccelGeometry(
     TkMenu *menuPtr,		/* The menu we are measuring */
     TkMenuEntry *mePtr,		/* The entry we are measuring */
     Tk_Font tkfont,		/* The precalculated font */
@@ -1493,7 +1495,7 @@ GetMenuAccelGeometry (
  */
 
 void
-GetTearoffEntryGeometry (
+GetTearoffEntryGeometry(
     TkMenu *menuPtr,		/* The menu we are measuring */
     TkMenuEntry *mePtr,		/* The entry we are measuring */
     Tk_Font tkfont,		/* The precalculated font */
@@ -1526,7 +1528,7 @@ GetTearoffEntryGeometry (
  */
 
 void
-GetMenuSeparatorGeometry (
+GetMenuSeparatorGeometry(
     TkMenu *menuPtr,		/* The menu we are measuring */
     TkMenuEntry *mePtr,		/* The entry we are measuring */
     Tk_Font tkfont,		/* The precalculated font */
@@ -1558,14 +1560,14 @@ GetMenuSeparatorGeometry (
  */
 
 static void
-DrawWindowsSystemBitmap(display, drawable, gc, rectPtr, bitmapID, alignFlags)
-    Display *display;		/* The display we are drawing into */
-    Drawable drawable;		/* The drawable we are working with */
-    GC gc;			/* The GC to draw with */
-    CONST RECT *rectPtr;	/* The rectangle to draw into */
-    int bitmapID;		/* The windows id of the system bitmap to
+DrawWindowsSystemBitmap(
+    Display *display,		/* The display we are drawing into */
+    Drawable drawable,		/* The drawable we are working with */
+    GC gc,			/* The GC to draw with */
+    CONST RECT *rectPtr,	/* The rectangle to draw into */
+    int bitmapID,		/* The windows id of the system bitmap to
 				 * draw. */
-    int alignFlags;		/* How to align the bitmap inside the
+    int alignFlags)		/* How to align the bitmap inside the
 				 * rectangle. */
 {
     TkWinDCState state;
@@ -1634,19 +1636,18 @@ DrawWindowsSystemBitmap(display, drawable, gc, rectPtr, bitmapID, alignFlags)
  */
 
 void
-DrawMenuEntryIndicator(menuPtr, mePtr, d, gc, indicatorGC, tkfont, fmPtr, x,
-	y, width, height)
-    TkMenu *menuPtr;		/* The menu we are drawing */
-    TkMenuEntry *mePtr;		/* The entry we are drawing */
-    Drawable d;			/* What we are drawing into */
-    GC gc;			/* The gc we are drawing with */
-    GC indicatorGC;		/* The gc for indicator objects */
-    Tk_Font tkfont;		/* The precalculated font */
-    CONST Tk_FontMetrics *fmPtr;/* The precalculated font metrics */
-    int x;			/* Left edge */
-    int y;			/* Top edge */
-    int width;
-    int height;
+DrawMenuEntryIndicator(
+    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenuEntry *mePtr,		/* The entry we are drawing */
+    Drawable d,			/* What we are drawing into */
+    GC gc,			/* The gc we are drawing with */
+    GC indicatorGC,		/* The gc for indicator objects */
+    Tk_Font tkfont,		/* The precalculated font */
+    CONST Tk_FontMetrics *fmPtr,/* The precalculated font metrics */
+    int x,			/* Left edge */
+    int y,			/* Top edge */
+    int width,
+    int height)
 {
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
@@ -1779,18 +1780,17 @@ DrawMenuEntryAccelerator(
  */
 
 void
-DrawMenuEntryArrow(menuPtr, mePtr, d, gc, activeBorder, x, y, width, height,
-	drawArrow)
-    TkMenu *menuPtr;		/* The menu we are drawing */
-    TkMenuEntry *mePtr;		/* The entry we are drawing */
-    Drawable d;			/* What we are drawing into */
-    GC gc;			/* The gc we are drawing with */
-    Tk_3DBorder activeBorder;	/* The border when an item is active */
-    int x;			/* left edge */
-    int y;			/* top edge */
-    int width;			/* Width of menu entry */
-    int height;			/* Height of menu entry */
-    int drawArrow;		/* For cascade menus, whether of not to draw
+DrawMenuEntryArrow(
+    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenuEntry *mePtr,		/* The entry we are drawing */
+    Drawable d,			/* What we are drawing into */
+    GC gc,			/* The gc we are drawing with */
+    Tk_3DBorder activeBorder,	/* The border when an item is active */
+    int x,			/* left edge */
+    int y,			/* top edge */
+    int width,			/* Width of menu entry */
+    int height,			/* Height of menu entry */
+    int drawArrow)		/* For cascade menus, whether of not to draw
 				 * the arraw. I cannot figure out Windows'
 				 * algorithm for where to draw this. */
 {
@@ -1850,17 +1850,17 @@ DrawMenuEntryArrow(menuPtr, mePtr, d, gc, activeBorder, x, y, width, height,
  */
 
 void
-DrawMenuSeparator(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
-    TkMenu *menuPtr;		/* The menu we are drawing */
-    TkMenuEntry *mePtr;		/* The entry we are drawing */
-    Drawable d;			/* What we are drawing into */
-    GC gc;			/* The gc we are drawing with */
-    Tk_Font tkfont;		/* The precalculated font */
-    CONST Tk_FontMetrics *fmPtr;/* The precalculated font metrics */
-    int x;			/* left edge */
-    int y;			/* top edge */
-    int width;			/* width of item */
-    int height;			/* height of item */
+DrawMenuSeparator(
+    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenuEntry *mePtr,		/* The entry we are drawing */
+    Drawable d,			/* What we are drawing into */
+    GC gc,			/* The gc we are drawing with */
+    Tk_Font tkfont,		/* The precalculated font */
+    CONST Tk_FontMetrics *fmPtr,/* The precalculated font metrics */
+    int x,			/* left edge */
+    int y,			/* top edge */
+    int width,			/* width of item */
+    int height)			/* height of item */
 {
     XPoint points[2];
     Tk_3DBorder border;
@@ -1942,11 +1942,11 @@ DrawMenuUnderline(
  */
 
 static int
-TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;	/* Unused. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int objc;			/* Number of arguments. */
-    Tcl_Obj *CONST objv[];	/* Argument objects. */
+TkWinMenuKeyObjCmd(
+    ClientData clientData,	/* Unused. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     UINT scanCode;
     UINT virtualKey;
@@ -2070,9 +2070,9 @@ TkWinMenuKeyObjCmd(clientData, interp, objc, objv)
  */
 
 void
-TkpInitializeMenuBindings(interp, bindingTable)
-    Tcl_Interp *interp;		/* The interpreter to set. */
-    Tk_BindingTable bindingTable;
+TkpInitializeMenuBindings(
+    Tcl_Interp *interp,		/* The interpreter to set. */
+    Tk_BindingTable bindingTable)
 				/* The table to add to. */
 {
     Tk_Uid uid = Tk_GetUid("all");
@@ -2325,8 +2325,8 @@ DrawMenuEntryLabel(
  */
 
 void
-TkpComputeMenubarGeometry(menuPtr)
-    TkMenu *menuPtr;		/* Structure describing menu. */
+TkpComputeMenubarGeometry(
+    TkMenu *menuPtr)		/* Structure describing menu. */
 {
     TkpComputeStandardMenuGeometry(menuPtr);
 }
@@ -2348,17 +2348,15 @@ TkpComputeMenubarGeometry(menuPtr)
  */
 
 void
-DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
-    TkMenu *menuPtr;		/* The menu we are drawing */
-    TkMenuEntry *mePtr;		/* The entry we are drawing */
-    Drawable d;			/* The drawable we are drawing into */
-    GC gc;			/* The gc we are drawing with */
-    Tk_Font tkfont;		/* The font we are drawing with */
-    CONST Tk_FontMetrics *fmPtr;/* The metrics we are drawing with */
-    int x;
-    int y;
-    int width;
-    int height;
+DrawTearoffEntry(
+    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenuEntry *mePtr,		/* The entry we are drawing */
+    Drawable d,			/* The drawable we are drawing into */
+    GC gc,			/* The gc we are drawing with */
+    Tk_Font tkfont,		/* The font we are drawing with */
+    CONST Tk_FontMetrics *fmPtr,/* The metrics we are drawing with */
+    int x, int y,
+    int width, int height)
 {
     XPoint points[2];
     int segmentWidth, maxX;
@@ -2405,8 +2403,8 @@ DrawTearoffEntry(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, y, width, height)
  */
 
 int
-TkpConfigureMenuEntry(mePtr)
-    register TkMenuEntry *mePtr;/* Information about menu entry; may or may
+TkpConfigureMenuEntry(
+    register TkMenuEntry *mePtr)/* Information about menu entry; may or may
 				 * not already have values for some fields. */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -2436,19 +2434,18 @@ TkpConfigureMenuEntry(mePtr)
  */
 
 void
-TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
-	strictMotif, drawArrow)
-    TkMenuEntry *mePtr;		/* The entry to draw */
-    Drawable d;			/* What to draw into */
-    Tk_Font tkfont;		/* Precalculated font for menu */
-    CONST Tk_FontMetrics *menuMetricsPtr;
+TkpDrawMenuEntry(
+    TkMenuEntry *mePtr,		/* The entry to draw */
+    Drawable d,			/* What to draw into */
+    Tk_Font tkfont,		/* Precalculated font for menu */
+    CONST Tk_FontMetrics *menuMetricsPtr,
 				/* Precalculated metrics for menu */
-    int x;			/* X-coordinate of topleft of entry */
-    int y;			/* Y-coordinate of topleft of entry */
-    int width;			/* Width of the entry rectangle */
-    int height;			/* Height of the current rectangle */
-    int strictMotif;		/* Boolean flag */
-    int drawArrow;		/* Whether or not to draw the cascade arrow
+    int x,			/* X-coordinate of topleft of entry */
+    int y,			/* Y-coordinate of topleft of entry */
+    int width,			/* Width of the entry rectangle */
+    int height,			/* Height of the current rectangle */
+    int strictMotif,		/* Boolean flag */
+    int drawArrow)		/* Whether or not to draw the cascade arrow
 				 * for cascade items. Only applies to
 				 * Windows. */
 {
@@ -2571,12 +2568,12 @@ TkpDrawMenuEntry(mePtr, d, tkfont, menuMetricsPtr, x, y, width, height,
  */
 
 static void
-GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
-    TkMenuEntry *mePtr;		/* The entry we are computing */
-    Tk_Font tkfont;		/* The precalculated font */
-    CONST Tk_FontMetrics *fmPtr;/* The precalculated metrics */
-    int *widthPtr;		/* The resulting width of the label portion */
-    int *heightPtr;		/* The resulting height of the label
+GetMenuLabelGeometry(
+    TkMenuEntry *mePtr,		/* The entry we are computing */
+    Tk_Font tkfont,		/* The precalculated font */
+    CONST Tk_FontMetrics *fmPtr,/* The precalculated metrics */
+    int *widthPtr,		/* The resulting width of the label portion */
+    int *heightPtr)		/* The resulting height of the label
 				 * portion */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -2978,8 +2975,8 @@ TkpMenuNotifyToplevelCreate(
  */
 
 HWND
-Tk_GetMenuHWND(tkwin)
-    Tk_Window tkwin;
+Tk_GetMenuHWND(
+    Tk_Window tkwin)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -3208,7 +3205,7 @@ SetDefaults(
  */
 
 void
-TkpMenuInit()
+TkpMenuInit(void)
 {
     WNDCLASS wndClass;
 
@@ -3254,7 +3251,7 @@ TkpMenuInit()
  */
 
 void
-TkpMenuThreadInit()
+TkpMenuThreadInit(void)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
