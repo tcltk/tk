@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.13 2007/01/11 15:35:41 dkf Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.14 2007/02/22 13:56:35 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -250,7 +250,8 @@ TkpScanWindowId(
  */
 
 Window
-TkpMakeWindow(    TkWindow *winPtr,
+TkpMakeWindow(
+    TkWindow *winPtr,
     Window parent)
 {
     HWND parentWin;

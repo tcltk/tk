@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.14 2006/12/01 20:14:23 kennykb Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.15 2007/02/22 13:56:34 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -491,33 +491,33 @@ TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     Tcl_UniChar c,		/* Character of interest */
-    TkFontAttributes* faPtr)	/* Output: Font attributes */
+    TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
-    UnixFtFont *fontPtr = (UnixFtFont*) tkfont;
+    UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
 				/* Structure describing the logical font */
     FcChar32 ucs4 = (FcChar32) c;
 				/* UCS-4 character to map */
     XftFont *xftFontPtr = GetFont(fontPtr, ucs4);
 				/* Actual font used to render the character */
-    const char* family;		/* Font family name */
+    const char *family;		/* Font family name */
     double size;		/* Font size */
     int weight;			/* Font weight */
     int slant;			/* Font slant */
-    
+
     if (XftPatternGetString(xftFontPtr->pattern, XFT_FAMILY, 0,
-			    &family) != XftResultMatch) {
+	    &family) != XftResultMatch) {
 	family = "Unknown";
     }
     if (XftPatternGetDouble(xftFontPtr->pattern, XFT_SIZE, 0,
-			    &size) != XftResultMatch) {
+	    &size) != XftResultMatch) {
 	size = 12.0;
     }
     if (XftPatternGetInteger(xftFontPtr->pattern, XFT_WEIGHT, 0,
-			     &weight) != XftResultMatch) {
+	    &weight) != XftResultMatch) {
 	weight = XFT_WEIGHT_MEDIUM;
     }
     if (XftPatternGetInteger(xftFontPtr->pattern, XFT_SLANT, 0,
-			     &slant) != XftResultMatch) {
+	    &slant) != XftResultMatch) {
 	slant = XFT_SLANT_ROMAN;
     }
     faPtr->family = Tk_GetUid(family);
@@ -628,11 +628,18 @@ Tk_MeasureChars(
 }
 
 int
-TkpMeasureCharsInContext(Tk_Font tkfont, CONST char * source, int numBytes,
-			 int rangeStart, int rangeLength, int maxLength,
-			 int flags, int * lengthPtr)
+TkpMeasureCharsInContext(
+    Tk_Font tkfont,
+    CONST char *source,
+    int numBytes,
+    int rangeStart,
+    int rangeLength,
+    int maxLength,
+    int flags,
+    int *lengthPtr)
 {
     (void) numBytes; /*unused*/
+
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
 	    maxLength, flags, lengthPtr);
 }
@@ -657,7 +664,7 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
-    const int maxCoord = 0x7FFF;	/* Xft coordinates are 16 bit values */
+    const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XGCValues values;
     XColor xcolor;
