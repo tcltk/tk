@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.54 2007/02/22 13:56:34 dkf Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.55 2007/02/23 14:15:34 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -169,30 +169,25 @@ static LRESULT CALLBACK	TkWinEmbeddedMenuProc(HWND hwnd, UINT message,
  *	Allocates a new menu id and marks it in use.
  *
  * Results:
- *	Returns TCL_OK if succesful; TCL_ERROR if there are no more
- *	ids of the appropriate type to allocate. menuIDPtr contains
- *	the new id if succesful.
+ *	Returns TCL_OK if succesful; TCL_ERROR if there are no more ids of the
+ *	appropriate type to allocate. menuIDPtr contains the new id if
+ *	succesful.
  *
  * Side effects:
- *	An entry is created for the menu in the command hash table,
- *	and the hash entry is stored in the appropriate field in the
- *	menu data structure.
+ *	An entry is created for the menu in the command hash table, and the
+ *	hash entry is stored in the appropriate field in the menu data
+ *	structure.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 GetNewID(
-    TkMenuEntry *mePtr,		/* The menu we are working with */
-    WORD *menuIDPtr)		/* The resulting id */
+    TkMenuEntry *mePtr,		/* The menu we are working with. */
+    WORD *menuIDPtr)		/* The resulting id. */
 {
-    int found = 0;
-    int newEntry;
-    Tcl_HashEntry *commandEntryPtr;
-    WORD returnID;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
     WORD curID = tsdPtr->lastCommandID + 1;
 
     /*
@@ -201,24 +196,20 @@ GetNewID(
      */
 
     while (curID != tsdPtr->lastCommandID) {
+	Tcl_HashEntry *commandEntryPtr;
+	int newEntry;
+
     	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
-		(char *) curID, &newEntry);
+		((char *) NULL) + curID, &newEntry);
     	if (newEntry == 1) {
-    	    found = 1;
-    	    returnID = curID;
-    	    break;
+	    Tcl_SetHashValue(commandEntryPtr, (char *) mePtr);
+	    *menuIDPtr = curID;
+	    tsdPtr->lastCommandID = curID;
+	    return TCL_OK;
     	}
     	curID++;
     }
-
-    if (found) {
-    	Tcl_SetHashValue(commandEntryPtr, (char *) mePtr);
-    	*menuIDPtr = returnID;
-    	tsdPtr->lastCommandID = returnID;
-    	return TCL_OK;
-    } else {
-    	return TCL_ERROR;
-    }
+    return TCL_ERROR;
 }
 
 /*
@@ -250,7 +241,7 @@ FreeID(
 
     if (tsdPtr->menuHWND != NULL) {
 	Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
-		(char *) commandID);
+		((char *) NULL) + commandID);
 	if (entryPtr != NULL) {
 	    Tcl_DeleteHashEntry(entryPtr);
 	}
@@ -418,7 +409,7 @@ TkpDestroyMenuEntry(
 	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
 	}
     }
-    FreeID((WORD) mePtr->platformEntryData);
+    FreeID((WORD) (UINT) mePtr->platformEntryData);
     mePtr->platformEntryData = NULL;
 }
 
@@ -851,7 +842,7 @@ TkpMenuNewEntry(
     	Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
     }
 
-    mePtr->platformEntryData = (TkMenuPlatformEntryData) commandID;
+    mePtr->platformEntryData = (TkMenuPlatformEntryData) (UINT) commandID;
 
     return TCL_OK;
 }
@@ -1060,7 +1051,7 @@ TkWinHandleMenuEvent(
 	    break;
 	}
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
-		(char *) LOWORD(*pwParam));
+		((char *) NULL) + LOWORD(*pwParam));
 	if (hashEntryPtr == NULL) {
 	    break;
 	}
@@ -1123,14 +1114,16 @@ TkWinHandleMenuEvent(
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
 		if ((underline >= 0) && (labelPtr != NULL)) {
-		    /* do the unicode call just to prevent overruns */
+		    /*
+		     * Do the unicode call just to prevent overruns.
+		     */
+
 		    Tcl_GetUnicodeFromObj(labelPtr, &len);
 		    if (underline < len) {
-			char *label;
-			label = Tcl_GetStringFromObj(labelPtr, NULL);
-			if (CharUpper((LPTSTR) menuChar)
-				== CharUpper((LPTSTR)
-					*Tcl_UtfAtIndex(label, underline))) {
+			char *label = Tcl_GetString(labelPtr);
+
+			if (CharUpper((LPTSTR) menuChar) == CharUpper((LPTSTR)
+				*Tcl_UtfAtIndex(label, underline))) {
 			    *plResult = (2 << 16) | i;
 			    returnResult = 1;
 			    break;
@@ -1256,7 +1249,7 @@ TkWinHandleMenuEvent(
 			mePtr = menuPtr->entries[entryIndex];
 		    } else {
 			hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
-				(char *) entryIndex);
+				((char *) NULL) + entryIndex);
 			if (hashEntryPtr != NULL) {
 			    mePtr = (TkMenuEntry *)
 				    Tcl_GetHashValue(hashEntryPtr);
@@ -3238,8 +3231,8 @@ TkpMenuInit(void)
  *
  * TkpMenuThreadInit --
  *
- *	Sets up the thread-local hash tables used by the menu module.
- *	Assumes that TkpMenuInit has been called.
+ *	Sets up the thread-local hash tables used by the menu module. Assumes
+ *	that TkpMenuInit has been called.
  *
  * Results:
  *	None.
