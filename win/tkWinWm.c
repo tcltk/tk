@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.114 2007/02/22 13:56:35 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.115 2007/02/23 14:15:34 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -76,10 +76,9 @@ typedef struct TkWmStackorderToplevelPair {
 
 /*
  * This structure represents the contents of a icon, in terms of its image.
- * The HICON is an internal Windows format. Most of these
- * icon-specific-structures originated with the Winico extension. We stripped
- * out unused parts of that code, and integrated the code more naturally with
- * Tcl.
+ * The HICON is an internal Windows format. Most of these icon-specific
+ * structures originated with the Winico extension. We stripped out unused
+ * parts of that code, and integrated the code more naturally with Tcl.
  */
 
 typedef struct {
@@ -1611,6 +1610,7 @@ GetIcon(
     return NULL;
 }
 
+#if 0 /* UNUSED */
 static HCURSOR
 TclWinReadCursorFromFile(
     Tcl_Interp* interp,
@@ -1629,6 +1629,7 @@ TclWinReadCursorFromFile(
     FreeIconBlock(lpIR);
     return res;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -2934,7 +2935,7 @@ Tk_WmObjCmd(
     };
     int index, length;
     char *argv1;
-    TkWindow *winPtr;
+    TkWindow *winPtr, **winPtrPtr = &winPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (objc < 2) {
@@ -2978,7 +2979,7 @@ Tk_WmObjCmd(
 	goto wrongNumArgs;
     }
 
-    if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) &winPtr)
+    if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) winPtrPtr)
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -3494,7 +3495,7 @@ WmColormapwindowsCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow **cmapList;
-    TkWindow *winPtr2;
+    TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
     int i, windowObjc, gotToplevel;
     Tcl_Obj **windowObjv;
 
@@ -3522,7 +3523,7 @@ WmColormapwindowsCmd(
     gotToplevel = 0;
     for (i = 0; i < windowObjc; i++) {
 	if (TkGetWindowFromObj(interp, tkwin, windowObjv[i],
-		(Tk_Window *) &winPtr2) != TCL_OK) {
+		(Tk_Window *) winPtr2Ptr) != TCL_OK) {
 	    ckfree((char *) cmapList);
 	    return TCL_ERROR;
 	}
@@ -4323,7 +4324,6 @@ WmIconphotoCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
-    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
@@ -5085,11 +5085,11 @@ WmStackorderCmd(
 	    return TCL_OK;
 	}
     } else {
-	TkWindow *winPtr2;
+	TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
 	int index1=-1, index2=-1, result;
 
-	if (TkGetWindowFromObj(interp, tkwin, objv[4], (Tk_Window *) &winPtr2)
-		!= TCL_OK) {
+	if (TkGetWindowFromObj(interp, tkwin, objv[4],
+		(Tk_Window *) winPtr2Ptr) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -5397,7 +5397,7 @@ WmTransientCmd(
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    TkWindow *masterPtr = wmPtr->masterPtr;
+    TkWindow *masterPtr = wmPtr->masterPtr, **masterPtrPtr = &masterPtr;
     WmInfo *wmPtr2;
 
     if ((objc != 3) && (objc != 4)) {
@@ -5426,7 +5426,7 @@ WmTransientCmd(
 	wmPtr->masterPtr = NULL;
     } else {
 	if (TkGetWindowFromObj(interp, tkwin, objv[3],
-		(Tk_Window *) &masterPtr) != TCL_OK) {
+		(Tk_Window *) masterPtrPtr) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	while (!Tk_TopWinHierarchy(masterPtr)) {
