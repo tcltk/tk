@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.24 2007/02/22 13:56:33 dkf Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.25 2007/02/23 13:37:49 das Exp $
  */
 
 #include "tkInt.h"
@@ -1812,7 +1812,7 @@ TkBTreeNextLine(
 
 TkTextLine *
 TkBTreePreviousLine(
-    TkText *textPtr		/* Relative to this client of the B-tree. */
+    TkText *textPtr,		/* Relative to this client of the B-tree. */
     register TkTextLine *linePtr)
 				/* Pointer to existing line in B-tree. */
 {
