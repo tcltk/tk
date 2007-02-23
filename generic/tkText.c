@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.73 2007/02/22 13:56:32 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.74 2007/02/23 15:02:58 dkf Exp $
  */
 
 #include "default.h"
@@ -686,7 +686,7 @@ TextWidgetObjCmd(
     int index;
 
     static CONST char *optionStrings[] = {
-	"bbox", "cget", "compare", "configure", "count", "debug", "delete"
+	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
 	"dlineinfo", "dump", "edit", "get", "image", "index", "insert",
 	"mark", "peer", "replace", "scan", "search", "see", "tag", "window",
 	"xview", "yview", NULL
