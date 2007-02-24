@@ -1,5 +1,5 @@
 #
-# $Id: notebook.tcl,v 1.2 2006/11/07 03:45:28 jenglish Exp $
+# $Id: notebook.tcl,v 1.3 2007/02/24 00:02:09 hobbs Exp $
 #
 # Bindings for TNotebook widget
 #
@@ -107,8 +107,13 @@ proc ttk::notebook::enableTraversal {nb} {
 	catch {
 	bind $top <Control-Key-ISO_Left_Tab> {+ttk::notebook::TLCycleTab %W -1}
 	}
-	bind $top <Alt-KeyPress> \
-	    +[list ttk::notebook::MnemonicActivation $top %K]
+	if {[tk windowingsystem] eq "aqua"} {
+	    bind $top <Alt-KeyPress> \
+		+[list ttk::notebook::MnemonicActivation $top %K]
+	} else {
+	    bind $top <Option-KeyPress> \
+		+[list ttk::notebook::MnemonicActivation $top %K]
+	}
 	bind $top <Destroy> {+ttk::notebook::TLCleanup %W}
     }
 
