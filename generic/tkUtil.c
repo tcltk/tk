@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.16 2007/01/19 06:29:20 das Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.17 2007/02/25 04:30:30 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -796,7 +796,9 @@ TkComputeAnchor(
     case TK_ANCHOR_N:
     case TK_ANCHOR_CENTER:
     case TK_ANCHOR_S:
-	*xPtr = (Tk_Width(tkwin) - innerWidth) / 2;
+	*xPtr = (Tk_Width(tkwin) - innerWidth - Tk_InternalBorderLeft(tkwin) -
+		Tk_InternalBorderRight(tkwin)) / 2 +
+		Tk_InternalBorderLeft(tkwin);
 	break;
 
     default:
@@ -815,7 +817,9 @@ TkComputeAnchor(
     case TK_ANCHOR_W:
     case TK_ANCHOR_CENTER:
     case TK_ANCHOR_E:
-	*yPtr = (Tk_Height(tkwin) - innerHeight) / 2;
+	*yPtr = (Tk_Height(tkwin) - innerHeight- Tk_InternalBorderTop(tkwin) -
+		Tk_InternalBorderBottom(tkwin)) / 2 +
+		Tk_InternalBorderTop(tkwin);
 	break;
 
     default:
