@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.22 2005/11/27 02:36:16 das Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.23 2007/02/27 14:52:56 dkf Exp $
  */
 
 #include "tkButton.h"
@@ -197,7 +197,7 @@ TkpDrawCheckIndicator(
     case CHECK_BUTTON:
 	imgsel = on == 2 ? CHECK_DISON_OFFSET :
 		on == 1 ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
-	imgsel += disabled  && on != 2 ? CHECK_DISOFF_OFFSET : 0;
+	imgsel += disabled && on != 2 ? CHECK_DISOFF_OFFSET : 0;
 	imgstart = CHECK_START;
 	dim = CHECK_BUTTON_DIM;
 	break;
@@ -205,7 +205,7 @@ TkpDrawCheckIndicator(
     case CHECK_MENU:
 	imgsel = on == 2 ? CHECK_DISOFF_OFFSET :
 		on == 1 ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
-	imgsel += disabled  && on != 2 ? CHECK_DISOFF_OFFSET : 0;
+	imgsel += disabled && on != 2 ? CHECK_DISOFF_OFFSET : 0;
 	imgstart = CHECK_START + 2;
 	imgsel += 2;
 	dim = CHECK_MENU_DIM;
@@ -455,7 +455,7 @@ TkpDisplayButton(
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
 	haveImage = 1;
     }
-    imageWidth  = width;
+    imageWidth = width;
     imageHeight = height;
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
@@ -702,7 +702,7 @@ TkpDisplayButton(
 	    }
 	    x -= butPtr->indicatorSpace/2;
 	    y = Tk_Height(tkwin)/2;
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap,  x, y,
+	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
 		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
 		    ((butPtr->flags & SELECTED) ? 1 :
 			    (butPtr->flags & TRISTATED) ? 2 : 0),
