@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.11 2005/10/21 01:51:45 dkf Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.12 2007/02/27 14:52:57 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -366,8 +366,8 @@ TkpInitKeymapInfo(
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = (KeyCode *) ckalloc((unsigned)
-	    (KEYCODE_ARRAY_SIZE * sizeof(KeyCode)));
+    dispPtr->modKeyCodes = (KeyCode *)
+	    ckalloc((unsigned) (KEYCODE_ARRAY_SIZE * sizeof(KeyCode)));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -386,20 +386,21 @@ TkpInitKeymapInfo(
 	    KeyCode *new;
 
 	    /*
-	     * Ran out of space in the array;  grow it.
+	     * Ran out of space in the array; grow it.
 	     */
 
 	    arraySize *= 2;
-	    new = (KeyCode *) ckalloc((unsigned)
-		    (arraySize * sizeof(KeyCode)));
-	    memcpy((VOID *) new, (VOID *) dispPtr->modKeyCodes,
+	    new = (KeyCode *)
+		    ckalloc((unsigned) (arraySize * sizeof(KeyCode)));
+	    memcpy(new, dispPtr->modKeyCodes,
 		    (dispPtr->numModKeyCodes * sizeof(KeyCode)));
 	    ckfree((char *) dispPtr->modKeyCodes);
 	    dispPtr->modKeyCodes = new;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
 	dispPtr->numModKeyCodes++;
-	nextModCode: continue;
+    nextModCode:
+	continue;
     }
     XFreeModifiermap(modMapPtr);
 }

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.54 2007/01/05 00:00:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.55 2007/02/27 14:52:57 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1215,80 +1215,81 @@ WmAspectCmd(
  *
  * WmSetAttribute --
  *
- * 	Helper routine for WmAttributesCmd.  Sets the value
- * 	of the specified attribute.
+ * 	Helper routine for WmAttributesCmd. Sets the value of the specified
+ * 	attribute.
  *
  * Returns:
  *
- * 	TCL_OK if successful, TCL_ERROR otherwise.  In case of an
- * 	error, leaves a message in the interpreter's result.
+ * 	TCL_OK if successful, TCL_ERROR otherwise. In case of an error, leaves
+ * 	a message in the interpreter's result.
  *
  *----------------------------------------------------------------------
  */
-static int WmSetAttribute(
-    TkWindow *winPtr,           /* Toplevel to work with */
+
+static int
+WmSetAttribute(
+    TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter */
     WmAttribute attribute,	/* Code of attribute to set */
     Tcl_Obj *value)		/* New value */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     switch (attribute) {
-	case WMATT_ALPHA:
-	{
-	    unsigned long opacity;	/* 0=transparent, 0xFFFFFFFF=opaque */
+    case WMATT_ALPHA: {
+	unsigned long opacity;	/* 0=transparent, 0xFFFFFFFF=opaque */
 
-	    if (TCL_OK != Tcl_GetDoubleFromObj(
-		    interp, value, &wmPtr->reqState.alpha)) {
-		return TCL_ERROR;
-	    }
-	    if (wmPtr->reqState.alpha < 0.0) {
-		wmPtr->reqState.alpha = 0.0;
-	    }
-	    if (wmPtr->reqState.alpha > 1.0) {
-		wmPtr->reqState.alpha = 1.0;
-	    }
+	if (TCL_OK != Tcl_GetDoubleFromObj(interp, value,
+		&wmPtr->reqState.alpha)) {
+	    return TCL_ERROR;
+	}
+	if (wmPtr->reqState.alpha < 0.0) {
+	    wmPtr->reqState.alpha = 0.0;
+	}
+	if (wmPtr->reqState.alpha > 1.0) {
+	    wmPtr->reqState.alpha = 1.0;
+	}
 
-	    if (!wmPtr->wrapperPtr) {
-		break;
-	    }
-
-	    opacity = 0xFFFFFFFFul * wmPtr->reqState.alpha;
-	    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window, 
-		    Tk_InternAtom((Tk_Window)winPtr, "_NET_WM_WINDOW_OPACITY"),
-		    XA_CARDINAL, 32, PropModeReplace,
-		    (unsigned char *)&opacity, 1L);
-	    wmPtr->attributes.alpha = wmPtr->reqState.alpha;
-
+	if (!wmPtr->wrapperPtr) {
 	    break;
 	}
-	case WMATT_TOPMOST:
-	    if (TCL_OK != Tcl_GetBooleanFromObj(
-		    interp, value, &wmPtr->reqState.topmost)) {
-		return TCL_ERROR;
-	    }
-	    SetNetWmState(winPtr, 
-		"_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
-	    break;
-	case WMATT_ZOOMED:
-	    if (TCL_OK != Tcl_GetBooleanFromObj(
-		    interp, value, &wmPtr->reqState.zoomed)) {
-		return TCL_ERROR;
-	    }
-	    SetNetWmState(winPtr,
-		"_NET_WM_STATE_MAXIMIZED_VERT", wmPtr->reqState.zoomed);
-	    SetNetWmState(winPtr,
-		"_NET_WM_STATE_MAXIMIZED_HORZ", wmPtr->reqState.zoomed);
-	    break;
-	case WMATT_FULLSCREEN:
-	    if (TCL_OK != Tcl_GetBooleanFromObj(
-		    interp, value, &wmPtr->reqState.fullscreen)) {
-		return TCL_ERROR;
-	    }
-	    SetNetWmState(winPtr,
-		"_NET_WM_STATE_FULLSCREEN", wmPtr->reqState.fullscreen);
-	    break;
-	case _WMATT_LAST_ATTRIBUTE:	/* NOTREACHED */
+
+	opacity = 0xFFFFFFFFul * wmPtr->reqState.alpha;
+	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
+		Tk_InternAtom((Tk_Window)winPtr, "_NET_WM_WINDOW_OPACITY"),
+		XA_CARDINAL, 32, PropModeReplace,
+		(unsigned char *)&opacity, 1L);
+	wmPtr->attributes.alpha = wmPtr->reqState.alpha;
+
+	break;
+    }
+    case WMATT_TOPMOST:
+	if (TCL_OK != Tcl_GetBooleanFromObj(interp, value,
+		&wmPtr->reqState.topmost)) {
 	    return TCL_ERROR;
+	}
+	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE",
+		wmPtr->reqState.topmost);
+	break;
+    case WMATT_ZOOMED:
+	if (TCL_OK != Tcl_GetBooleanFromObj(interp, value,
+		&wmPtr->reqState.zoomed)) {
+	    return TCL_ERROR;
+	}
+	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_VERT",
+		wmPtr->reqState.zoomed);
+	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_HORZ",
+		wmPtr->reqState.zoomed);
+	break;
+    case WMATT_FULLSCREEN:
+	if (TCL_OK != Tcl_GetBooleanFromObj(interp, value,
+		&wmPtr->reqState.fullscreen)) {
+	    return TCL_ERROR;
+	}
+	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN",
+		wmPtr->reqState.fullscreen);
+	break;
+    case _WMATT_LAST_ATTRIBUTE:	/* NOTREACHED */
+	return TCL_ERROR;
     }
     return TCL_OK;
 }
@@ -1298,29 +1299,32 @@ static int WmSetAttribute(
  *
  * WmGetAttribute --
  *
- * 	Helper routine for WmAttributesCmd.  Returns the current value
- * 	of the specified attribute.
+ * 	Helper routine for WmAttributesCmd. Returns the current value of the
+ * 	specified attribute.
  *
  * See also: CheckNetWmState().
  *
  *----------------------------------------------------------------------
  */
-static Tcl_Obj *WmGetAttribute(
-    TkWindow *winPtr,           /* Toplevel to work with */
+
+static Tcl_Obj *
+WmGetAttribute(
+    TkWindow *winPtr,		/* Toplevel to work with */
     WmAttribute attribute)	/* Code of attribute to get */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
+
     switch (attribute) {
-	case WMATT_ALPHA:
-	    return Tcl_NewDoubleObj(wmPtr->attributes.alpha);
-	case WMATT_TOPMOST:
-	    return Tcl_NewBooleanObj(wmPtr->attributes.topmost);
-	case WMATT_ZOOMED:
-	    return Tcl_NewBooleanObj(wmPtr->attributes.zoomed);
-	case WMATT_FULLSCREEN:
-	    return Tcl_NewBooleanObj(wmPtr->attributes.fullscreen);
-	case _WMATT_LAST_ATTRIBUTE:	/*NOTREACHED*/
-	    break;
+    case WMATT_ALPHA:
+	return Tcl_NewDoubleObj(wmPtr->attributes.alpha);
+    case WMATT_TOPMOST:
+	return Tcl_NewBooleanObj(wmPtr->attributes.topmost);
+    case WMATT_ZOOMED:
+	return Tcl_NewBooleanObj(wmPtr->attributes.zoomed);
+    case WMATT_FULLSCREEN:
+	return Tcl_NewBooleanObj(wmPtr->attributes.fullscreen);
+    case _WMATT_LAST_ATTRIBUTE:	/*NOTREACHED*/
+	break;
     }
     /*NOTREACHED*/
     return NULL;
@@ -1340,10 +1344,10 @@ static Tcl_Obj *WmGetAttribute(
  * Notes:
  *
  *	Attributes of mapped windows are set by sending a _NET_WM_STATE
- *	ClientMessage to the root window (see SetNetWmState).
- *	For withdrawn windows, we keep track of the requested attribute
- *	state, and set the _NET_WM_STATE property ourselves immediately
- *	prior to mapping the window.
+ *	ClientMessage to the root window (see SetNetWmState). For withdrawn
+ *	windows, we keep track of the requested attribute state, and set the
+ *	_NET_WM_STATE property ourselves immediately prior to mapping the
+ *	window.
  *
  * See also: TIP#231, EWMH.
  *
@@ -1359,8 +1363,10 @@ WmAttributesCmd(
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     int attribute = 0;
+
     if (objc == 3) {		/* wm attributes $win */
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
+
 	for (attribute = 0; attribute < _WMATT_LAST_ATTRIBUTE; ++attribute) {
 	    Tcl_ListObjAppendElement(interp, result,
 		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
@@ -1369,19 +1375,19 @@ WmAttributesCmd(
 	}
 	Tcl_SetObjResult(interp, result);
 	return TCL_OK;
-    } else if (objc == 4)  {	/* wm attributes $win -attribute */
+    } else if (objc == 4) {	/* wm attributes $win -attribute */
 	if (Tcl_GetIndexFromObj(interp, objv[3], WmAttributeNames,
 		    "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, 
-		WmGetAttribute(winPtr, attribute));
+	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, attribute));
 	return TCL_OK;
     } else if ((objc - 3) % 2 == 0) {	/* wm attributes $win -att value... */
 	int i;
+
 	for (i = 3; i < objc; i += 2) {
 	    if (Tcl_GetIndexFromObj(interp, objv[i], WmAttributeNames,
-			"attribute", 0, &attribute) != TCL_OK) {
+		    "attribute", 0, &attribute) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (WmSetAttribute(winPtr,interp,attribute,objv[i+1]) != TCL_OK) {
@@ -1389,11 +1395,10 @@ WmAttributesCmd(
 	    }
 	}
 	return TCL_OK;
-    } else {
-	Tcl_WrongNumArgs(interp, 2, objv, "window ?-attribute ?value ...??");
-	return TCL_ERROR;
     }
-    return TCL_OK;
+
+    Tcl_WrongNumArgs(interp, 2, objv, "window ?-attribute ?value ...??");
+    return TCL_ERROR;
 }
 
 /*
@@ -4956,12 +4961,12 @@ UpdateNetWmState(
  *	   spontaneously by the user. The reason for this is that if the user
  *	   resizes the window we take that as an order to ignore geometry
  *	   requests coming from inside the window hierarchy. If we
- *	   accidentally interpret a response to our request as a
- *	   user-initiated action, the window will stop responding to new
- *	   geometry requests. To make this distinction, (a) this function sets
- *	   a flag for TopLevelEventProc to indicate that we're waiting to sync
- *	   with the wm, and (b) all changes to the size of a top-level window
- *	   are followed by calls to this function.
+ *	   accidentally interpret a response to our request as a user-
+ *	   initiated action, the window will stop responding to new geometry
+ *	   requests. To make this distinction, (a) this function sets a flag
+ *	   for TopLevelEventProc to indicate that we're waiting to sync with
+ *	   the wm, and (b) all changes to the size of a top-level window are
+ *	   followed by calls to this function.
  *	2. Races and confusion can come about if there are multiple operations
  *	   outstanding at a time (e.g. two different resizes of the top-level
  *	   window: it's hard to tell which of the ConfigureNotify events
