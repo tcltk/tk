@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.32 2007/02/27 10:43:47 dkf Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.33 2007/02/28 09:23:30 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -273,7 +273,7 @@ static int		UtfToUcs2beProc(ClientData clientData, CONST char*src,
  *
  * Side effects:
  *	Releases thread-specific resources used by font pkg.
-x *
+ *
  *-------------------------------------------------------------------------
  */
 
