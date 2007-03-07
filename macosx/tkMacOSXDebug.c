@@ -5,7 +5,7 @@
  *      regions, etc...
  *
  * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.10 2006/10/31 22:33:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.11 2007/03/07 23:46:34 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -494,7 +494,11 @@ TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol)
     if (!addr) {
 	const struct mach_header *mh = NULL;
 	uint32_t i, n = _dyld_image_count();
+	size_t module_len;
 
+	if (module && *module) {
+	    module_len = strlen(module);
+	}
 	for (i = 0; i < n; i++) {
 	    if (module && *module) {
 		/* Find image with given module name */
@@ -505,7 +509,7 @@ TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol)
 		    continue;
 		}
 		name = strrchr(path, '/') + 1;
-		if (strncmp(name, module, strlen(name)) != 0) {
+		if (strncmp(name, module, module_len) != 0) {
 		    continue;
 		}
 	    }
