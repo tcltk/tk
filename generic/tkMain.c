@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.15.2.5 2006/09/25 17:28:20 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.15.2.6 2007/03/07 23:48:13 das Exp $
  */
 
 #include <ctype.h>
@@ -103,7 +103,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     Tcl_Interp *interp;
 {
     Tcl_Obj *argvPtr;
-    int code;
+    int code, nullStdin = 0;
     size_t length;
     Tcl_Channel inChannel, outChannel;
     Tcl_DString appName;
@@ -196,6 +196,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      * Set the "tcl_interactive" variable.
      */
 
+#ifdef __WIN32__
     /*
      * For now, under Windows, we assume we are not running as a console mode
      * app, so we need to use the GUI console.  In order to enable this, we
@@ -203,7 +204,6 @@ Tk_MainEx(argc, argv, appInitProc, interp)
      * way to do it.
      */
 
-#ifdef __WIN32__
     handle = GetStdHandle(STD_INPUT_HANDLE);
 
     if ((handle == INVALID_HANDLE_VALUE) || (handle == 0) 
@@ -227,9 +227,22 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 #else
     tsdPtr->tty = isatty(0);
 #endif
+#if defined(MAC_OSX_TK)
+    /*
+     * On TkAqua, if we don't have a TTY and stdin is a special character file
+     * of length 0, (e.g. /dev/null, which is what Finder sets when double
+     * clicking Wish) then use the GUI console.
+     */
+    
+    if (!tsdPtr->tty) {
+	struct stat st;
+
+	nullStdin = fstat(0, &st) || (S_ISCHR(st.st_mode) && !st.st_blocks);
+    }
+#endif
     Tcl_SetVar(interp, "tcl_interactive",
-	    ((TclGetStartupScriptFileName() == NULL) 
-		    && tsdPtr->tty) ? "1" : "0", TCL_GLOBAL_ONLY);
+	    ((TclGetStartupScriptFileName() == NULL) && (tsdPtr->tty
+	    || nullStdin)) ? "1" : "0", TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
