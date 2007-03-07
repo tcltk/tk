@@ -1,3 +1,17 @@
+2007-03-07  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkMain.c (Tk_MainEx): replicate macosx-specific code from
+	TkpInit() that ensures the console window appears when wish is started
+	from the OS X Finder (i.e. with stdin == /dev/null), jeffh's 2006-11-24
+	change rendered the corresponding code in TkpInit() ineffective in wish
+	because Tk_MainEx() sets tcl_interactive before calling TkpInit().
+
+	* macosx/tkMacOSXDebug.c (TkMacOSXGetNamedDebugSymbol): add fix for
+	libraries loaded with a DYLD_IMAGE_SUFFIX.
+
+	* unix/tcl.m4 (Darwin): s/CFLAGS/CPPFLAGS/ in macosx-version-min check.
+	* unix/configure: autoconf-2.13
+
 2007-02-19  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tcl.m4: use SHLIB_SUFFIX=".so" on HP-UX ia64 arch.
