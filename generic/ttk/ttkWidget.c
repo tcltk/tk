@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.4 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkWidget.c,v 1.5 2007/03/07 23:46:34 das Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk widget implementation, core widget utilities.
@@ -9,6 +9,10 @@
 #include <tk.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
+
+#ifdef MAC_OSX_TK
+#define TK_NO_DOUBLE_BUFFERING 1
+#endif
 
 /*------------------------------------------------------------------------
  * +++ Internal helper routines.
@@ -58,14 +62,17 @@ static void RedisplayWidget(ClientData recordPtr)
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Tk_Window tkwin = corePtr->tkwin;
     Drawable d;
+#ifndef TK_NO_DOUBLE_BUFFERING
     XGCValues gcValues;
     GC gc;
+#endif
 
     corePtr->flags &= ~REDISPLAY_PENDING;
     if (!Tk_IsMapped(tkwin)) {
 	return;
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Get a Pixmap for drawing in the background:
      */
@@ -79,6 +86,9 @@ static void RedisplayWidget(ClientData recordPtr)
     gcValues.function = GXcopy;
     gcValues.graphics_exposures = False;
     gc = Tk_GetGC(corePtr->tkwin, GCFunction|GCGraphicsExposures, &gcValues);
+#else
+    d = Tk_WindowId(tkwin);
+#endif
 
     /*
      * Recompute layout and draw widget contents:
@@ -86,6 +96,7 @@ static void RedisplayWidget(ClientData recordPtr)
     corePtr->widgetSpec->layoutProc(recordPtr);
     corePtr->widgetSpec->displayProc(recordPtr, d);
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Copy to the screen.
      */
@@ -98,6 +109,7 @@ static void RedisplayWidget(ClientData recordPtr)
      */
     Tk_FreePixmap(Tk_Display(tkwin), d);
     Tk_FreeGC(Tk_Display(tkwin), gc);
+#endif
 }
 
 /* TtkRedisplayWidget -- 

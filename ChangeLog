@@ -1,3 +1,28 @@
+2007-03-07  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkMain.c (Tk_MainEx): replicate macosx-specific code from
+	TkpInit() that ensures the console window appears when wish is started
+	from the OS X Finder (i.e. with stdin == /dev/null), jeffh's 2006-11-24
+	change rendered the corresponding code in TkpInit() ineffective in wish
+	because Tk_MainEx() sets tcl_interactive before calling TkpInit().
+
+	* generic/ttk/ttkGenStubs.tcl (new): add ttk-specific genstubs.tcl from
+	* unix/Makefile.in (genstubs):       tile and run it from 'genstubs'
+	target, restores ability to generate all of Tk's stub sources.
+
+	* generic/ttk/ttkTreeview.c: #ifdef out unused declaration.
+
+	* macosx/tkMacOSXDebug.c (TkMacOSXGetNamedDebugSymbol): add fix for
+	libraries loaded with a DYLD_IMAGE_SUFFIX.
+
+	* macosx/Wish.xcodeproj/project.pbxproj: ensure gcc version used by
+	* macosx/Wish.xcodeproj/default.pbxuser: Xcode and configure/make are
+	* macosx/Wish-Common.xcconfig:		 consistent and independent of
+	gcc_select default and CC env var; fixes for Xcode 3.0.
+
+	* unix/tcl.m4 (Darwin): s/CFLAGS/CPPFLAGS/ in macosx-version-min check.
+	* unix/configure: autoconf-2.59
+
 2007-02-25  Peter Spjuth  <peter.spjuth@space.se>
 
 	* generic/tkUtil.c: Fixed grid anchor center problem in labelframes.

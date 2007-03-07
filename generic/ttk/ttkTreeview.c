@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.14 2007/01/11 19:59:26 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.15 2007/03/07 23:46:34 das Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -3080,10 +3080,12 @@ TTK_END_LAYOUT
  * +++ Tree indicator element.
  */
 
+#ifdef UNUSED
 #if defined(WIN32)
 static const int WIN32_XDRAWLINE_HACK = 1;
 #else
 static const int WIN32_XDRAWLINE_HACK = 0;
+#endif
 #endif
 
 typedef struct
