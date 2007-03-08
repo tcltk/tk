@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.29 2007/02/25 04:30:31 pspjuth Exp $
+# RCS: @(#) $Id: grid.test,v 1.30 2007/03/08 20:30:47 jenglish Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1935,7 +1935,6 @@ test grid-21.7 {anchor} {
     	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
     	grid .$i -in .f -row $i -column $i -sticky nswe
     }
-    pack propagate . 0
     grid propagate .f 0
     . configure -width 300 -height 250
 
