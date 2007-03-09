@@ -1,7 +1,8 @@
 2007-03-08  Joe English  <jenglish@users.sourceforge.net>
 
-	* tests/grid.test(grid-21.7): Remove 'pack propagate . 0' call,
-	which was causing cascading failures in subsequent tests [Bug 1676770].
+	* tests/grid.test(grid-21.7): Reset wm geometry . and pack propagate .
+	at end of test.  'pack propagate . 0' was causing cascading failures in 
+	subsequent tests [Bug 1676770].
 
 2007-03-07  Daniel Steffen  <das@users.sourceforge.net>
 
