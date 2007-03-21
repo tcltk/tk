@@ -1,3 +1,9 @@
+2007-03-21  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkLayout.c(Ttk_BuildLayoutTemplate): BUGFIX: 
+	Nested TTK_GROUP nodes did not work unless they appeared
+	at the end of the layout (and only by accident then).
+
 2007-03-08  Joe English  <jenglish@users.sourceforge.net>
 
 	* tests/grid.test(grid-21.7): Reset wm geometry . and pack propagate .
