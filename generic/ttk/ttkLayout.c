@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.7 2007/01/11 19:59:26 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.8 2007/03/21 20:06:41 jenglish Exp $
  */
 
 #include <string.h>
@@ -735,9 +735,19 @@ Ttk_LayoutTemplate Ttk_BuildLayoutTemplate(Ttk_LayoutSpec spec)
 	}
 
 	if (spec->opcode & TTK_CHILDREN) {
+	    int depth = 1;
 	    last->child = Ttk_BuildLayoutTemplate(spec+1);
-	    while (!(spec->opcode & TTK_LAYOUT_END)) {
+
+	    /* Skip to end of group:
+	     */
+	    while (depth) {
 		++spec;
+		if (spec->opcode & TTK_CHILDREN) {
+		    ++depth;
+		}
+		if (spec->opcode & TTK_LAYOUT_END) {
+		    --depth;
+		}
 	    }
 	}
     } /* for */
