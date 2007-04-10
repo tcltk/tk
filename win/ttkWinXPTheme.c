@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.10 2007/04/10 18:05:48 jenglish Exp $
+ * $Id: ttkWinXPTheme.c,v 1.11 2007/04/10 18:14:24 jenglish Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -90,50 +90,37 @@ typedef struct
 static XPThemeProcs *
 LoadXPThemeProcs(HINSTANCE *phlib)
 {
-    OSVERSIONINFO os;
-
     /*
-     * We have to check whether we are running at least on Windows XP.
-     * In order to determine this we call GetVersionEx directly, although
-     * it would be a good idea to wrap it inside a function similar to
-     * TkWinGetPlatformId...
+     * Load the library "uxtheme.dll", where the native widget
+     * drawing routines are implemented.  This will only succeed 
+     * if we are running at least on Windows XP.
      */
-    ZeroMemory(&os, sizeof(os));
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&os);
-    if (os.dwMajorVersion >= 5 && os.dwMinorVersion >= 1) {
+    HINSTANCE handle;
+    *phlib = handle = LoadLibrary("uxtheme.dll");
+    if (handle != 0)
+    {
 	/*
-	 * We are running under Windows XP or a newer version.
-	 * Load the library "uxtheme.dll", where the native widget
-	 * drawing routines are implemented.
+	 * We have successfully loaded the library. Proceed in storing the
+	 * addresses of the functions we want to use.
 	 */
-	HINSTANCE handle;
-	*phlib = handle = LoadLibrary("uxtheme.dll");
-	if (handle != 0)
-	{
-	    /*
-	     * We have successfully loaded the library. Proceed in storing the
-	     * addresses of the functions we want to use.
-	     */
-	    XPThemeProcs *procs = (XPThemeProcs*)ckalloc(sizeof(XPThemeProcs));
+	XPThemeProcs *procs = (XPThemeProcs*)ckalloc(sizeof(XPThemeProcs));
 #define LOADPROC(name) \
 	(0 != (procs->name = (name ## Proc *)GetProcAddress(handle, #name) ))
 
-	    if (   LOADPROC(OpenThemeData)
-		&& LOADPROC(CloseThemeData)
-		&& LOADPROC(GetThemePartSize)
-		&& LOADPROC(DrawThemeBackground)
-		&& LOADPROC(GetThemeTextExtent)
-		&& LOADPROC(DrawThemeText)
-		&& LOADPROC(IsThemeActive)
-		&& LOADPROC(IsAppThemed)
-	    )
-	    {
-		return procs;
-	    }
-#undef LOADPROC
-	    ckfree((char*)procs);
+	if (   LOADPROC(OpenThemeData)
+	    && LOADPROC(CloseThemeData)
+	    && LOADPROC(GetThemePartSize)
+	    && LOADPROC(DrawThemeBackground)
+	    && LOADPROC(GetThemeTextExtent)
+	    && LOADPROC(DrawThemeText)
+	    && LOADPROC(IsThemeActive)
+	    && LOADPROC(IsAppThemed)
+	)
+	{
+	    return procs;
 	}
+#undef LOADPROC
+	ckfree((char*)procs);
     }
     return 0;
 }
