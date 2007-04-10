@@ -1,3 +1,11 @@
+2007-04-10  Joe English  <jenglish@users.sourceforge.net>
+
+	* win/ttkWinMonitor.c, win/ttkWinXPTheme.c: Re-sync
+	with Tile codebase so patches can flow back and forth.
+	* win/ttkWinXPTheme.c: Skip OS version test, should work on
+	Vista/Aero now as well as XP [Fixes #1687299, thanks
+	to George Petasis for tracking this down].
+
 2007-03-21  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkLayout.c(Ttk_BuildLayoutTemplate): BUGFIX: 
