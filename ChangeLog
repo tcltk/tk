@@ -1,3 +1,8 @@
+2007-04-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/ttk/panedwindow.tcl (ttk::panedwindow::Press): handle
+	Press triggering outside sash element boundaries.
+
 2007-04-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/ttkWinMonitor.c, win/ttkWinXPTheme.c: Re-sync

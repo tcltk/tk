@@ -1,5 +1,5 @@
 #
-# $Id: panedwindow.tcl,v 1.2 2006/11/07 03:45:28 jenglish Exp $
+# $Id: panedwindow.tcl,v 1.3 2007/04/13 00:21:47 hobbs Exp $
 #
 # Bindings for ttk::panedwindow widget.
 #
@@ -34,7 +34,7 @@ proc ttk::panedwindow::Press {w x y} {
     variable State
 
     lassign [$w identify $x $y] sash element
-    if {![info exists sash]} {
+    if {![info exists sash] || $sash eq ""} {
     	set State(pressed) 0
 	return
     }
