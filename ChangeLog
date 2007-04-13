@@ -1,3 +1,8 @@
+2007-04-13  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* macosx/tkMacOSXInt.h (LOG_MSG, LOG_ON_ERROR): Added macros to make
+	the OSX code much less #ifdef-full.
+
 2007-04-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/ttk/panedwindow.tcl (ttk::panedwindow::Press): handle
@@ -5,23 +10,23 @@
 
 2007-04-10  Joe English  <jenglish@users.sourceforge.net>
 
-	* win/ttkWinMonitor.c, win/ttkWinXPTheme.c: Re-sync
-	with Tile codebase so patches can flow back and forth.
-	* win/ttkWinXPTheme.c: Skip OS version test, should work on
-	Vista/Aero now as well as XP [Fixes #1687299, thanks
-	to George Petasis for tracking this down].
+	* win/ttkWinMonitor.c, win/ttkWinXPTheme.c: Re-sync with Tile codebase
+	so patches can flow back and forth.
+	* win/ttkWinXPTheme.c: Skip OS version test, should work on Vista/Aero
+	now as well as XP [Fixes #1687299, thanks to George Petasis for
+	tracking this down].
 
 2007-03-21  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkLayout.c(Ttk_BuildLayoutTemplate): BUGFIX: 
-	Nested TTK_GROUP nodes did not work unless they appeared
-	at the end of the layout (and only by accident then).
+	* generic/ttk/ttkLayout.c(Ttk_BuildLayoutTemplate): BUGFIX: Nested
+	TTK_GROUP nodes did not work unless they appeared at the end of the
+	layout (and only by accident then).
 
 2007-03-08  Joe English  <jenglish@users.sourceforge.net>
 
 	* tests/grid.test(grid-21.7): Reset wm geometry . and pack propagate .
-	at end of test.  'pack propagate . 0' was causing cascading failures in 
-	subsequent tests [Bug 1676770].
+	at end of test. 'pack propagate . 0' was causing cascading failures in
+	subsequent tests. [Bug 1676770]
 
 2007-03-07  Daniel Steffen  <das@users.sourceforge.net>
 
