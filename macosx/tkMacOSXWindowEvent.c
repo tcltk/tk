@@ -54,7 +54,7 @@
  *      software in accordance with the terms specified in this
  *      license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.18 2006/11/02 15:18:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.19 2007/04/13 14:51:18 dkf Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -203,39 +203,37 @@ TkMacOSXProcessWindowEvent(
             sizeof(whichWindow), NULL,
             &whichWindow);
     if (status != noErr) {
-#ifdef TK_MAC_DEBUG
-        fprintf ( stderr, "TkMacOSXHandleWindowEvent:Failed to retrieve window" );
-#endif
+	ERR_MSG("TkMacOSXHandleWindowEvent: Failed to retrieve window");
         return 0;
     }
-    
+
     window = TkMacOSXGetXWindow(whichWindow);
 
     switch (eventPtr->eKind) {
-        case kEventWindowActivated:
-            eventFound |= GenerateActivateEvents(window, 1);
-            eventFound |= TkMacOSXGenerateFocusEvent(window, 1);
-            break;
-        case kEventWindowDeactivated:
-            eventFound |= GenerateActivateEvents(window, 0);
-            eventFound |= TkMacOSXGenerateFocusEvent(window, 0);
-            break;
-        case kEventWindowUpdate:
-            if (GenerateUpdateEvent(window)) {
-                eventFound = true;
-            }
-            break;
-        case kEventWindowExpanded: {
-            TkDisplay *dispPtr;
-            TkWindow  *winPtr;
-            dispPtr = TkGetDisplayList();
-            winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
-            if (winPtr) {
-		TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
-			ZoomState : NormalState);
-            }
-            break;
-        }
+    case kEventWindowActivated:
+	eventFound |= GenerateActivateEvents(window, 1);
+	eventFound |= TkMacOSXGenerateFocusEvent(window, 1);
+	break;
+    case kEventWindowDeactivated:
+	eventFound |= GenerateActivateEvents(window, 0);
+	eventFound |= TkMacOSXGenerateFocusEvent(window, 0);
+	break;
+    case kEventWindowUpdate:
+	if (GenerateUpdateEvent(window)) {
+	    eventFound = true;
+	}
+	break;
+    case kEventWindowExpanded: {
+	TkDisplay *dispPtr = TkGetDisplayList();
+	TkWindow *winPtr = (TkWindow *)
+		Tk_IdToWindow(dispPtr->display, window);
+
+	if (winPtr) {
+	    TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
+		    ZoomState : NormalState);
+	}
+	break;
+    }
     }
     return 0;
 }
@@ -245,10 +243,10 @@ TkMacOSXProcessWindowEvent(
  *
  * GenerateUpdateEvent --
  *
- *      Given a Macintosh window update event this function generates
- *      all the Expose XEvents needed by Tk.
+ *      Given a Macintosh window update event this function generates all the
+ *      Expose XEvents needed by Tk.
  *
- * Results:     
+ * Results:
  *      True if event(s) are generated - false otherwise.
  *
  * Side effects:

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.8 2006/07/20 06:24:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.9 2007/04/13 14:51:17 dkf Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -358,7 +358,7 @@ TkMacOSXInstallCursor(
     CCrsrHandle ccursor;
     CursHandle cursor;
     static unsigned int cursorStep = 0;
-    
+
     gResizeOverride = resizeOverride;
 
     if (resizeOverride) {
@@ -366,9 +366,7 @@ TkMacOSXInstallCursor(
         if (cursor) {
             SetCursor(*cursor);
         } else {
-#ifdef TK_MAC_DEBUG
-            fprintf(stderr,"Resize cursor failed, %d\n", ResError());
-#endif
+	    LOG_MSG("Resize cursor failed, %d", ResError());
         }
     } else if (macCursorPtr == NULL) {
         SetThemeCursor(kThemeArrowCursor);
