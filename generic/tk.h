@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.95 2007/01/28 01:42:16 das Exp $
+ * RCS: @(#) $Id: tk.h,v 1.96 2007/04/17 15:25:08 dkf Exp $
  */
 
 #ifndef _TK
@@ -161,11 +161,11 @@ typedef struct Tk_OptionSpec {
     Tk_OptionType type;		/* Type of option, such as TK_OPTION_COLOR;
 				 * see definitions above. Last option in table
 				 * must have type TK_OPTION_END. */
-    const char *optionName; /* Name used to specify option in Tcl
+    const char *optionName;	/* Name used to specify option in Tcl
 				 * commands. */
     const char *dbName;		/* Name for option in option database. */
-    const char *dbClass;		/* Class for option in database. */
-    const char *defValue;		/* Default value for option if not specified
+    const char *dbClass;	/* Class for option in database. */
+    const char *defValue;	/* Default value for option if not specified
 				 * in command line, the option database, or
 				 * the system. */
     int objOffset;		/* Where in record to store a Tcl_Obj * that
