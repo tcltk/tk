@@ -1,3 +1,10 @@
+2007-04-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkFont.c, generic/tkListbox.c, unix/tkUnixSelect.c:
+	* win/ttkWinMonitor.c, win/ttkWinTheme.c, win/ttkWinXPTheme.c: Make
+	the format of declarations much more standardized (removing K&R-isms
+	and other things like that).
+
 2007-04-13  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* macosx/tkMacOSXInt.h (LOG_MSG, LOG_ON_ERROR): Added macros to make
