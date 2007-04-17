@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.9 2007/04/10 18:05:48 jenglish Exp $
+/* $Id: ttkWinMonitor.c,v 1.10 2007/04/17 14:32:28 dkf Exp $
  */
 
 #ifdef _MSC_VER
@@ -58,7 +58,9 @@ static SystemColorEntry sysColors[] = {
 	{ NULL, 0 }
 };
 
-static void RegisterSystemColors(Tcl_Interp *interp)
+static void
+RegisterSystemColors(
+    Tcl_Interp *interp)
 {
     Ttk_ResourceCache cache = Ttk_GetResourceCache(interp);
     SystemColorEntry *sysColor;
@@ -74,12 +76,14 @@ static void RegisterSystemColors(Tcl_Interp *interp)
 }
 
 static HWND
-CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
+CreateThemeMonitorWindow(
+    HINSTANCE hinst,
+    Tcl_Interp *interp)
 {
     WNDCLASSEX wc;
-    HWND       hwnd = NULL;
-    CHAR       title[32] = "TtkMonitorWindow";
-    CHAR       name[32] = "TtkMonitorClass";
+    HWND hwnd = NULL;
+    CHAR title[32] = "TtkMonitorWindow";
+    CHAR name[32] = "TtkMonitorClass";
     
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = CS_HREDRAW | CS_VREDRAW;
@@ -95,9 +99,9 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
     wc.lpszClassName = name;
     
     if (RegisterClassEx(&wc)) {
-	hwnd = CreateWindow( name, title, WS_OVERLAPPEDWINDOW,
-	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-	    NULL, NULL, hinst, NULL );
+	hwnd = CreateWindow(name, title, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		NULL, NULL, hinst, NULL);
 #ifdef _WIN64
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)interp);
 #else
@@ -110,14 +114,20 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
 }
 
 static void 
-DestroyThemeMonitorWindow(void *clientData)
+DestroyThemeMonitorWindow(
+    void *clientData)
 {
     HWND hwnd = (HWND)clientData;
+
     DestroyWindow(hwnd);
 }
 
 static LRESULT WINAPI
-WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+WndProc(
+    HWND hwnd,
+    UINT msg,
+    WPARAM wp,
+    LPARAM lp)
 {
 #ifdef _WIN64
     Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -136,9 +146,8 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_THEMECHANGED:
 	/*
-	 * Reset the application theme to 'xpnative' if present,
-	 * which will in turn fall back to 'winnative' if XP theming
-	 * is disabled.
+	 * Reset the application theme to 'xpnative' if present, which will in
+	 * turn fall back to 'winnative' if XP theming is disabled.
 	 */
 	theme = Ttk_GetTheme(interp, "xpnative");
 	if (theme) {
@@ -157,7 +166,9 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *, HWND hwnd);
 
-MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
+MODULE_SCOPE int
+Ttk_WinPlatformInit(
+    Tcl_Interp *interp)
 {
     HWND hwnd;
     
@@ -169,4 +180,3 @@ MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
 
     return TCL_OK;
 }
-
