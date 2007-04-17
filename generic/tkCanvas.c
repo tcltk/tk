@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.41 2007/04/17 14:36:49 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.42 2007/04/17 15:24:48 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -3835,9 +3835,10 @@ DoItem(
 	Tk_Uid *newTagPtr;
 
 	itemPtr->tagSpace += 5;
-	newTagPtr = (Tk_Uid *) ckalloc((unsigned)
-		(itemPtr->tagSpace * sizeof(Tk_Uid)));
-	memcpy(newTagPtr, itemPtr->tagPtr, itemPtr->numTags * sizeof(Tk_Uid));
+	newTagPtr = (Tk_Uid *)
+		ckalloc((unsigned) (itemPtr->tagSpace * sizeof(Tk_Uid)));
+	memcpy((void *) newTagPtr, itemPtr->tagPtr,
+		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 	    ckfree((char *) itemPtr->tagPtr);
 	}
