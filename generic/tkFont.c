@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.32 2007/01/18 23:56:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.33 2007/04/17 14:32:28 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -502,27 +502,28 @@ Tk_FontObjCmd(
 
     switch ((enum options) index) {
     case FONT_ACTUAL: {
-	int skip, result;
-	int n;
-	const char* s;
+	int skip, result, n;
+	const char *s;
 	Tk_Font tkfont;
-	Tcl_Obj *optPtr;
-	Tcl_Obj *charPtr;
-	Tcl_Obj *resultPtr;
+	Tcl_Obj *optPtr, *charPtr, *resultPtr;
 	Tcl_UniChar uniChar = 0;
 	const TkFontAttributes *faPtr;
 	TkFontAttributes fa;
 
-	/* 
-	 * Params 0 and 1 are 'font actual'.  Param 2 is the
-	 * font name. 3-4 may be '-displayof $window'
+	/*
+	 * Params 0 and 1 are 'font actual'. Param 2 is the font name. 3-4 may
+	 * be '-displayof $window'
 	 */
+
 	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
 
-	/* Next parameter may be an option */
+	/*
+	 * Next parameter may be an option.
+	 */
+
 	n = skip + 3;
 	optPtr = NULL;
 	charPtr = NULL;
@@ -536,33 +537,45 @@ Tk_FontObjCmd(
 	    }
 	}
 
-	/* Next parameter may be '--' to mark end of options */
+	/*
+	 * Next parameter may be '--' to mark end of options.
+	 */
+
 	if (n < objc) {
 	    if (!strcmp(Tcl_GetString(objv[n]), "--")) {
 		++n;
 	    }
 	}
 
-	/* Next parameter is the character to get font information for */
+	/*
+	 * Next parameter is the character to get font information for.
+	 */
+
 	if (n < objc) {
 	    charPtr = objv[n];
 	    ++n;
 	}
 
-	/* If there were fewer than 3 args, or args remain, that's an error */
+	/*
+	 * If there were fewer than 3 args, or args remain, that's an error.
+	 */
+
 	if (objc < 3 || n < objc) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "font ?-displayof window? ?option? ?--? ?char?");
 	    return TCL_ERROR;
 	}
 
-	/* The 'charPtr' arg must be a single Unicode */
+	/*
+	 * The 'charPtr' arg must be a single Unicode.
+	 */
+
 	if (charPtr != NULL) {
 	    if (Tcl_GetCharLength(charPtr) != 1) {
-		resultPtr =  Tcl_NewStringObj("expected a single character "
-					      "but got \"", -1);
+		resultPtr = Tcl_NewStringObj(
+			"expected a single character but got \"", -1);
 		Tcl_AppendLimitedToObj(resultPtr, Tcl_GetString(charPtr),
-				       -1, 40, "...");
+			-1, 40, "...");
 		Tcl_AppendToObj(resultPtr, "\"", -1);
 		Tcl_SetObjResult(interp, resultPtr);
 		return TCL_ERROR;
@@ -570,15 +583,21 @@ Tk_FontObjCmd(
 	    uniChar = Tcl_GetUniChar(charPtr, 0);
 	}
 
-	/* Find the font */
+	/*
+	 * Find the font.
+	 */
+
 	tkfont = Tk_AllocFontFromObj(interp, tkwin, objv[2]);
 	if (tkfont == NULL) {
 	    return TCL_ERROR;
 	}
-	
-	/* Determine the font attributes */
+
+	/*
+	 * Determine the font attributes.
+	 */
+
 	if (charPtr == NULL) {
-	faPtr = GetFontAttributes(tkfont);
+	    faPtr = GetFontAttributes(tkfont);
 	} else {
 	    TkpGetFontAttrsForChar(tkwin, tkfont, uniChar, &fa);
 	    faPtr = &fa;
@@ -1391,7 +1410,7 @@ Tk_FreeFont(
     if (prevPtr == fontPtr) {
 	if (fontPtr->nextPtr == NULL) {
 	    Tcl_DeleteHashEntry(fontPtr->cacheHashPtr);
-	} else  {
+	} else {
 	    Tcl_SetHashValue(fontPtr->cacheHashPtr, fontPtr->nextPtr);
 	}
     } else {
@@ -1778,13 +1797,12 @@ Tk_TextWidth(
  *
  * Tk_UnderlineChars, TkUnderlineCharsInContext --
  *
- *	These procedures draw an underline for a given range of
- *	characters in a given string.  They don't draw the characters
- *	(which are assumed to have been displayed previously); they
- *	just draw the underline.  These procedures would mainly be
- *	used to quickly underline a few characters without having to
- *	construct an underlined font.  To produce properly underlined
- *	text, the appropriate underlined font should be constructed
+ *	These procedures draw an underline for a given range of characters in
+ *	a given string. They don't draw the characters (which are assumed to
+ *	have been displayed previously); they just draw the underline. These
+ *	procedures would mainly be used to quickly underline a few characters
+ *	without having to construct an underlined font. To produce properly
+ *	underlined text, the appropriate underlined font should be constructed
  *	and used.
  *
  * Results:
@@ -1822,30 +1840,28 @@ Tk_UnderlineChars(
 }
 
 void
-TkUnderlineCharsInContext(display, drawable, gc, tkfont, string, numBytes,
-	x, y, firstByte, lastByte)
-
-    Display *display;		/* Display on which to draw. */
-    Drawable drawable;		/* Window or pixmap in which to draw. */
-    GC gc;			/* Graphics context for actually drawing
+TkUnderlineCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for actually drawing
 				 * line. */
-    Tk_Font tkfont;		/* Font used in GC;  must have been allocated
-				 * by Tk_GetFont().  Used for character
+    Tk_Font tkfont,		/* Font used in GC; must have been allocated
+				 * by Tk_GetFont(). Used for character
 				 * dimensions, etc. */
-    const char *string;		/* String containing characters to be
+    const char *string,		/* String containing characters to be
 				 * underlined or overstruck. */
-    int numBytes;		/* Number of bytes in string. */
-    int x, y;			/* Coordinates at which the first character
-				 * of the whole string would be drawn. */
-    int firstByte;		/* Index of first byte of first character. */
-    int lastByte;		/* Index of first byte after the last
+    int numBytes,		/* Number of bytes in string. */
+    int x, int y,		/* Coordinates at which the first character of
+				 * the whole string would be drawn. */
+    int firstByte,		/* Index of first byte of first character. */
+    int lastByte)		/* Index of first byte after the last
 				 * character. */
 {
     TkFont *fontPtr;
     int startX, endX;
-  
+
     fontPtr = (TkFont *) tkfont;
-      
+
     TkpMeasureCharsInContext(tkfont, string, numBytes, 0, firstByte, -1, 0,
 	    &startX);
     TkpMeasureCharsInContext(tkfont, string, numBytes, 0, lastByte, -1, 0,
@@ -1906,14 +1922,12 @@ Tk_ComputeTextLayout(
 {
     TkFont *fontPtr;
     const char *start, *end, *special;
-    int n, y, bytesThisChunk, maxChunks;
-    int baseline, height, curX, newX, maxWidth;
+    int n, y, bytesThisChunk, maxChunks, curLine, layoutHeight;
+    int baseline, height, curX, newX, maxWidth, *lineLengths;
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
     const TkFontMetrics *fmPtr;
     Tcl_DString lineBuffer;
-    int *lineLengths;
-    int curLine, layoutHeight;
 
     Tcl_DStringInit(&lineBuffer);
 
@@ -1941,11 +1955,11 @@ Tk_ComputeTextLayout(
 
     maxChunks = 1;
 
-    layoutPtr = (TextLayout *) ckalloc(sizeof(TextLayout)
-	    + (maxChunks - 1) * sizeof(LayoutChunk));
-    layoutPtr->tkfont	    = tkfont;
-    layoutPtr->string	    = string;
-    layoutPtr->numChunks    = 0;
+    layoutPtr = (TextLayout *)
+	    ckalloc(sizeof(TextLayout) + (maxChunks-1) * sizeof(LayoutChunk));
+    layoutPtr->tkfont = tkfont;
+    layoutPtr->string = string;
+    layoutPtr->numChunks = 0;
 
     baseline = fmPtr->ascent;
     maxWidth = 0;
@@ -2010,8 +2024,8 @@ Tk_ComputeTextLayout(
 	    /*
 	     * Handle the special character.
 	     *
-	     * INTL: Special will be pointing at a 7-bit character so we
-	     * can safely treat it as a single byte.
+	     * INTL: Special will be pointing at a 7-bit character so we can
+	     * safely treat it as a single byte.
 	     */
 
 	    chunkPtr = NULL;
@@ -2423,7 +2437,7 @@ Tk_PointToChar(
 	     */
 
 	    lastPtr = chunkPtr;
-	    while ((i < layoutPtr->numChunks) && (chunkPtr->y == baseline))  {
+	    while ((i < layoutPtr->numChunks) && (chunkPtr->y == baseline)) {
 		if (x < chunkPtr->x + chunkPtr->totalWidth) {
 		    /*
 		     * Point falls on one of the characters in this chunk.
@@ -2549,7 +2563,7 @@ Tk_CharBbox(
 	    end = Tcl_UtfAtIndex(chunkPtr->start, index);
 	    if (xPtr != NULL) {
 		Tk_MeasureChars(tkfont, chunkPtr->start,
-			end -  chunkPtr->start, -1, 0, &x);
+			end - chunkPtr->start, -1, 0, &x);
 		x += chunkPtr->x;
 	    }
 	    if (widthPtr != NULL) {
@@ -2561,17 +2575,17 @@ Tk_CharBbox(
 	index -= chunkPtr->numChars;
 	chunkPtr++;
     }
-    if (index == 0) {
-	/*
-	 * Special case to get location just past last char in layout.
-	 */
-
-	chunkPtr--;
-	x = chunkPtr->x + chunkPtr->totalWidth;
-	w = 0;
-    } else {
+    if (index != 0) {
 	return 0;
     }
+
+    /*
+     * Special case to get location just past last char in layout.
+     */
+
+    chunkPtr--;
+    x = chunkPtr->x + chunkPtr->totalWidth;
+    w = 0;
 
     /*
      * Ensure that the bbox lies within the text layout. This forces all chars
@@ -2629,9 +2643,9 @@ int
 Tk_DistanceToTextLayout(
     Tk_TextLayout layout,	/* Layout information, from a previous call
 				 * to Tk_ComputeTextLayout(). */
-    int x, int y)		/* Coordinates of point to check, with
-				 * respect to the upper-left corner of the
-				 * text layout (in pixels). */
+    int x, int y)		/* Coordinates of point to check, with respect
+				 * to the upper-left corner of the text layout
+				 * (in pixels). */
 {
     int i, x1, x2, y1, y2, xDiff, yDiff, dist, minDist, ascent, descent;
     LayoutChunk *chunkPtr;
@@ -2823,15 +2837,12 @@ Tk_TextLayoutToPostscript(
     Tk_TextLayout layout)	/* The layout to be rendered. */
 {
 #define MAXUSE 128
-    char buf[MAXUSE+30];
+    char buf[MAXUSE+30], uindex[5] = "\0\0\0\0", one_char[5];
     LayoutChunk *chunkPtr;
-    int i, j, used, c, baseline;
+    int i, j, used, c, baseline, charsize;
     Tcl_UniChar ch;
-    const char *p, *last_p,*glyphname;
+    const char *p, *last_p, *glyphname;
     TextLayout *layoutPtr;
-    char uindex[5]="\0\0\0\0";
-    char one_char[5];
-    int charsize;
     int bytecount=0;
 
     layoutPtr = (TextLayout *) layout;
@@ -2890,8 +2901,10 @@ Tk_TextLayoutToPostscript(
 		     * This character doesn't belong to system character set.
 		     * So, we must use full glyph name.
 		     */
-		    sprintf(uindex,"%04X",ch); /* endianness? */
-		    if ((glyphname = Tcl_GetVar2(interp , "::tk::psglyphs",uindex,0))) {
+
+		    sprintf(uindex, "%04X", ch);	/* endianness? */
+		    glyphname = Tcl_GetVar2(interp,"::tk::psglyphs",uindex,0);
+		    if (glyphname) {
 			if (used > 0 && buf [used-1] == '(') {
 			    --used;
 			} else {
@@ -3810,7 +3823,7 @@ TkFontGetFirstTextLayout(
     Tk_Font *font,
     char *dst)
 {
-    TextLayout  *layoutPtr;
+    TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
     int numBytesInChunk;
 
