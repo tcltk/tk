@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.19 2005/11/22 11:16:25 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.20 2007/04/17 14:36:49 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1387,7 +1387,7 @@ HandleTclCommand(
 	objPtr = Tcl_GetObjResult(interp);
 	string = Tcl_GetStringFromObj(objPtr, &length);
 	count = (length > maxBytes) ? maxBytes : length;
-	memcpy((VOID *) buffer, (VOID *) string, (size_t) count);
+	memcpy(buffer, string, (size_t) count);
 	buffer[count] = '\0';
 
 	/*

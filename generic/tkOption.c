@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.18 2006/03/30 01:39:07 hobbs Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.19 2007/04/17 14:36:49 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1195,8 +1195,8 @@ ExtendArray(
 	newPtr->arraySize = 2*arrayPtr->arraySize;
 	newPtr->numUsed = arrayPtr->numUsed;
 	newPtr->nextToUse = &newPtr->els[newPtr->numUsed];
-	memcpy((VOID *) newPtr->els, (VOID *) arrayPtr->els,
-		(arrayPtr->arraySize*sizeof(Element)));
+	memcpy(newPtr->els, arrayPtr->els,
+		arrayPtr->arraySize * sizeof(Element));
 	ckfree((char *) arrayPtr);
 	arrayPtr = newPtr;
     }
@@ -1316,9 +1316,9 @@ SetupStacks(
 	StackLevel *newLevels;
 
 	newLevels = (StackLevel *) ckalloc((unsigned)
-		(tsdPtr->numLevels*2*sizeof(StackLevel)));
-	memcpy((VOID *) newLevels, (VOID *) tsdPtr->levels,
-		(tsdPtr->numLevels*sizeof(StackLevel)));
+		(tsdPtr->numLevels * 2 * sizeof(StackLevel)));
+	memcpy(newLevels, tsdPtr->levels,
+		tsdPtr->numLevels * sizeof(StackLevel));
 	ckfree((char *) tsdPtr->levels);
 	tsdPtr->numLevels *= 2;
 	tsdPtr->levels = newLevels;
