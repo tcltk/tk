@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.19 2007/02/22 13:56:34 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.20 2007/04/17 14:29:46 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -534,7 +534,7 @@ TkSelEventProc(
 
     if (eventPtr->type == SelectionNotify) {
 	register TkSelRetrievalInfo *retrPtr;
-	char *propInfo;
+	char *propInfo, **propInfoPtr = &propInfo;
 	Atom type;
 	int format, result;
 	unsigned long numItems, bytesAfter;
@@ -569,7 +569,7 @@ TkSelEventProc(
 		eventPtr->xselection.requestor, retrPtr->property,
 		0, MAX_PROP_WORDS, False, (Atom) AnyPropertyType,
 		&type, &format, &numItems, &bytesAfter,
-		(unsigned char **) &propInfo);
+		(unsigned char **) propInfoPtr);
 	if ((result != Success) || (type == None)) {
 	    return;
 	}
@@ -754,7 +754,7 @@ SelTimeoutProc(
 	retrPtr->result = TCL_ERROR;
     } else {
 	retrPtr->timeout = Tcl_CreateTimerHandler(1000, SelTimeoutProc,
-	    (ClientData) retrPtr);
+		(ClientData) retrPtr);
     }
 }
 
@@ -1110,7 +1110,7 @@ SelRcvIncrProc(
     register XEvent *eventPtr)	/* X PropertyChange event. */
 {
     register TkSelRetrievalInfo *retrPtr = (TkSelRetrievalInfo *) clientData;
-    char *propInfo;
+    char *propInfo, **propInfoPtr = &propInfo;
     Atom type;
     int format, result;
     unsigned long numItems, bytesAfter;
@@ -1125,7 +1125,7 @@ SelRcvIncrProc(
     result = XGetWindowProperty(eventPtr->xproperty.display,
 	    eventPtr->xproperty.window, retrPtr->property, 0, MAX_PROP_WORDS,
 	    True, (Atom) AnyPropertyType, &type, &format, &numItems,
-	    &bytesAfter, (unsigned char **) &propInfo);
+	    &bytesAfter, (unsigned char **) propInfoPtr);
     if ((result != Success) || (type == None)) {
 	return;
     }
