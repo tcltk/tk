@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.26 2007/04/13 14:51:18 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.27 2007/04/21 19:06:38 hobbs Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -198,29 +198,22 @@ TkpInit(interp)
 		    FSRef ref;
 		    SInt16 refNum;
 
-		    /*
-		     * Write resource data to temporary file and open it.
-		     */
-
+		    /* Write resource data to temporary file and open it */
 		    strcpy(fileName, P_tmpdir);
 		    if (fileName[strlen(fileName) - 1] != '/') {
 			strcat(fileName, "/");
 		    }
 		    strcat(fileName, "tkMacOSX_XXXXXX");
 		    fd = mkstemp(fileName);
-		    if (fd == -1) {
-			break;
-		    }
+		    if (fd == -1) break;
 		    fcntl(fd, F_SETFD, FD_CLOEXEC);
-		    if (write(fd, data, size) == -1) {
-			break;
-		    }
+		    if (write(fd, data, size) == -1) break;
 		    err = FSPathMakeRef((unsigned char*)fileName, &ref, NULL);
-		    if (err != noErr) {
-			break;
-		    }
+		    if (err != noErr) break;
 		    err = FSOpenResourceFile(&ref, 0, NULL, fsRdPerm, &refNum);
-		    LOG_ON_ERROR(FSOpenResourceFile);
+#ifdef TK_MAC_DEBUG
+		    if (err != noErr) fprintf(stderr,"FSOpenResourceFile error %ld\n",err);
+#endif
 		    break;
 		}
 		if (fd != -1) {
@@ -232,11 +225,12 @@ TkpInit(interp)
 	}
 
 	/* REMOVE ME: Close stdin & stdout for remote debugging otherwise we
-	 * will fight with gdb for stdin & stdout */
+	 * will fight with gdb for stdin & stdout 
+	 */
 
-	if (getenv("XCNOSTDIN") != NULL) {
-	    close(0);
-	    close(1);
+	if (getenv ("XCNOSTDIN") != NULL) {
+	    close (0);
+	    close (1);
 	}
 
 	/*
@@ -247,22 +241,18 @@ TkpInit(interp)
 
 	if (!isatty(0)) {
 	    struct stat st;
-
 	    if (fstat(0, &st) || (S_ISCHR(st.st_mode) && st.st_blocks == 0)) {
 		Tk_InitConsoleChannels(interp);
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDIN));
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDOUT));
 		Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
-
 		/*
-		 * Only show the console if we don't have a startup script and
-		 * tcl_interactive hasn't been set already.
+		 * Only show the console if we don't have a startup script
+		 * and tcl_interactive hasn't been set already.
 		 */
-
 		if (Tcl_GetStartupScript(NULL) == NULL) {
-		    CONST char *intvar = Tcl_GetVar(interp,
-			    "tcl_interactive", TCL_GLOBAL_ONLY);
-
+		    CONST char *intvar =
+			Tcl_GetVar(interp, "tcl_interactive", TCL_GLOBAL_ONLY);
 		    if (intvar == NULL) {
 			Tcl_SetVar(interp, "tcl_interactive", "1",
 				TCL_GLOBAL_ONLY);
