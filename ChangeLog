@@ -1,3 +1,16 @@
+2007-04-21  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXBitmap.c, macosx/tkMacOSXButton.c:
+	* macosx/tkMacOSXCarbonEvents.c, macosx/tkMacOSXClipboard.c:
+	* macosx/tkMacOSXCursor.c, macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXDraw.c, macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXFont.c, macosx/tkMacOSXInit.c, macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXKeyEvent.c, macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c, macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXScale.c, macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c: Revert of commits from 2007-04-13 which
+	broke the OS X build.
+
 2007-04-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* generic/tkFont.c, generic/tkListbox.c, unix/tkUnixSelect.c:
