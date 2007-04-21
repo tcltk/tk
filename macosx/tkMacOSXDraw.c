@@ -1,17 +1,18 @@
-/*
+/* 
  * tkMacOSXDraw.c --
  *
- *	This file contains functions that perform drawing to Xlib windows.
- *	Most of the functions simple emulate Xlib functions.
+ *        This file contains functions that perform drawing to
+ *        Xlib windows.  Most of the functions simple emulate
+ *        Xlib functions.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
  * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
  *
- * See the file "license.terms" for information on usage and redistribution of
- * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.19 2007/04/13 14:51:18 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.20 2007/04/21 19:06:37 hobbs Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -23,17 +24,15 @@
 #endif
 */
 
-#define RGBFLOATRED(c)	 ((c).red / 65535.0)
+#define RGBFLOATRED(c)   ((c).red   / 65535.0)
 #define RGBFLOATGREEN(c) ((c).green / 65535.0)
-#define RGBFLOATBLUE(c)	 ((c).blue / 65535.0)
-#define radians(d)	 ((d) * (M_PI/180.0))
+#define RGBFLOATBLUE(c)  ((c).blue  / 65535.0)
+#define radians(d)       ((d) * (M_PI/180.0))
 
 /*
- * Non-antialiased CG drawing looks better and more like X11 drawing when
- * using very fine lines, so decrease all linewidths by the following
- * constant.
+ * Non-antialiased CG drawing looks better and more like X11 drawing when using
+ * very fine lines, so decrease all linewidths by the following constant.
  */
-
 #define NON_AA_CG_OFFSET .999
 
 /*
@@ -54,35 +53,33 @@ static int useThemedFrame = 0;
 /*
  * Prototypes for functions used only in this file.
  */
-
-static unsigned char	InvertByte(unsigned char data);
-static void		TkMacOSXSetUpCGContext(MacDrawable *macWin,
-			    CGrafPtr destPort, GC gc,
-			    CGContextRef *contextPtr);
-static void		TkMacOSXReleaseCGContext(MacDrawable *macWin,
-			    CGrafPtr destPort, CGContextRef *context);
+static unsigned char InvertByte(unsigned char data);
+static void TkMacOSXSetUpCGContext(MacDrawable *macWin, CGrafPtr destPort,
+	GC gc, CGContextRef *contextPtr);
+static void TkMacOSXReleaseCGContext(MacDrawable *macWin, CGrafPtr destPort,
+	CGContextRef *context);
 
 /*
  *----------------------------------------------------------------------
  *
  * TkMacOSXInitCGDrawing --
  *
- *	Initializes link vars that control CG drawing.
+ *        Initializes link vars that control CG drawing.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	None.
+ *        None.
  *
  *----------------------------------------------------------------------
  */
 
 MODULE_SCOPE int
-TkMacOSXInitCGDrawing(
-    Tcl_Interp *interp,
-    int enable,
-    int limit)
+TkMacOSXInitCGDrawing(interp, enable, limit)
+	Tcl_Interp *interp;
+	int enable;
+	int limit;
 {
     static Boolean initialized = FALSE;
 
@@ -107,13 +104,12 @@ TkMacOSXInitCGDrawing(
 	/*
 	 * Piggy-back the themed drawing var init here.
 	 */
-
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
-		(char *) &useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
+		    (char *) &useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
-		(char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
+		    (char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
     }
@@ -125,35 +121,36 @@ TkMacOSXInitCGDrawing(
  *
  * XCopyArea --
  *
- *	Copies data from one drawable to another using block transfer
- *	routines.
+ *        Copies data from one drawable to another using block transfer
+ *        routines.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Data is moved from a window or bitmap to a second window or bitmap.
+ *        Data is moved from a window or bitmap to a second window or
+ *        bitmap.
  *
  *----------------------------------------------------------------------
  */
 
 void
 XCopyArea(
-    Display *display,		/* Display. */
-    Drawable src,		/* Source drawable. */
-    Drawable dst,		/* Destination drawable. */
-    GC gc,			/* GC to use. */
-    int src_x,			/* X & Y, width & height */
-    int src_y,			/* define the source rectangle */
-    unsigned int width,		/* the will be copied. */
+    Display* display,                /* Display. */
+    Drawable src,                /* Source drawable. */
+    Drawable dst,                /* Destination drawable. */
+    GC gc,                        /* GC to use. */
+    int src_x,                        /* X & Y, width & height */
+    int src_y,                        /* define the source rectangle */
+    unsigned int width,                /* the will be copied. */
     unsigned int height,
-    int dest_x,			/* Dest X & Y on dest rect. */
+    int dest_x,                        /* Dest X & Y on dest rect. */
     int dest_y)
 {
     Rect srcRect, dstRect;
-    Rect *srcPtr, *dstPtr;
-    const BitMap *srcBit;
-    const BitMap *dstBit;
+    Rect * srcPtr, * dstPtr;
+    const BitMap * srcBit;
+    const BitMap * dstBit;
     MacDrawable *srcDraw = (MacDrawable *) src;
     MacDrawable *dstDraw = (MacDrawable *) dst;
     CGrafPtr srcPort, dstPort;
@@ -198,20 +195,20 @@ XCopyArea(
 	    (short) (dstDraw->yOff + dest_y + height));
     }
     TkMacOSXSetUpClippingRgn(dst);
-
     /*
-     * We will change the clip rgn in this routine, so we need to be able to
-     * restore it when we exit.
+     *  We will change the clip rgn in this routine, so we need to
+     *  be able to restore it when we exit.
      */
 
     GetClip(tmpRgn2);
     if (tkPictureIsOpen) {
 	/*
-	 * When rendering into a picture, after a call to "OpenCPicture" the
-	 * clipping is seriously WRONG and also INCONSISTENT with the clipping
-	 * for single plane bitmaps. To circumvent this problem, we clip to
-	 * the whole window In this case, would have also clipped to the
-	 * srcRect ClipRect(&srcRect);
+	 * When rendering into a picture, after a call to "OpenCPicture"
+	 * the clipping is seriously WRONG and also INCONSISTENT with the
+	 * clipping for single plane bitmaps.
+	 * To circumvent this problem,  we clip to the whole window
+	 * In this case, would have also clipped to the srcRect
+	 * ClipRect(&srcRect);
 	 */
 
 	GetPortBounds(dstPort,&clpRect);
@@ -219,12 +216,11 @@ XCopyArea(
 	ClipRect(&clpRect);
     }
     if (!gc->clip_mask) {
-	/* do nothing */
     } else if (((TkpClipMask*)gc->clip_mask)->type == TKP_CLIP_REGION) {
 	RgnHandle clipRgn = (RgnHandle)
 		((TkpClipMask*)gc->clip_mask)->value.region;
-	int xOffset = 0, yOffset = 0;
 
+	int xOffset = 0, yOffset = 0;
 	if (tmpRgn == NULL) {
 	    tmpRgn = NewRgn();
 	}
@@ -256,33 +252,39 @@ XCopyArea(
  *
  * XCopyPlane --
  *
- *	Copies a bitmap from a source drawable to a destination drawable. The
- *	plane argument specifies which bit plane of the source contains the
- *	bitmap. Note that this implementation ignores the gc->function.
+ *        Copies a bitmap from a source drawable to a destination
+ *        drawable.  The plane argument specifies which bit plane of
+ *        the source contains the bitmap.  Note that this implementation
+ *        ignores the gc->function.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Changes the destination drawable.
+ *        Changes the destination drawable.
  *
  *----------------------------------------------------------------------
  */
 
 void
 XCopyPlane(
-    Display *display,		/* Display. */
-    Drawable src,		/* Source drawable. */
-    Drawable dst,		/* Destination drawable. */
-    GC gc,			/* The GC to use. */
-    int src_x, int src_y,	/* X, Y, width & height define the source
-				 * rect. */
-    unsigned int width, unsigned int height,
-    int dest_x, int dest_y,	/* X & Y on dest where we will copy. */
-    unsigned long plane)	/* Which plane to copy. */
+    Display* display,                /* Display. */
+    Drawable src,                /* Source drawable. */
+    Drawable dst,                /* Destination drawable. */
+    GC gc,                        /* The GC to use. */
+    int src_x,                        /* X, Y, width & height */
+    int src_y,                        /* define the source rect. */
+    unsigned int width,
+    unsigned int height,
+    int dest_x,                        /* X & Y on dest where we will copy. */
+    int dest_y,
+    unsigned long plane)        /* Which plane to copy. */
 {
-    Rect srcRect, dstRect, *srcPtr, *dstPtr;
-    const BitMap *srcBit, *dstBit, *mskBit;
+    Rect srcRect, dstRect;
+    Rect * srcPtr, * dstPtr;
+    const BitMap * srcBit;
+    const BitMap * dstBit;
+    const BitMap * mskBit;
     MacDrawable *srcDraw = (MacDrawable *) src;
     MacDrawable *dstDraw = (MacDrawable *) dst;
     GWorldPtr srcPort, dstPort, mskPort;
@@ -309,10 +311,10 @@ XCopyPlane(
     srcPtr = &srcRect;
     if (tkPictureIsOpen) {
 	/*
-	 * When rendering into a picture, after a call to "OpenCPicture" the
-	 * clipping is seriously WRONG and also INCONSISTENT with the clipping
-	 * for color bitmaps. To circumvent this problem, we clip to the whole
-	 * window.
+	 * When rendering into a picture, after a call to "OpenCPicture"
+	 * the clipping is seriously WRONG and also INCONSISTENT with the
+	 * clipping for color bitmaps.
+	 * To circumvent this problem,  we clip to the whole window
 	 */
 
 	Rect clpRect;
@@ -346,8 +348,8 @@ XCopyPlane(
 	if (clipPtr->value.pixmap == src) {
 	    PixMapHandle pm;
 	    /*
-	     * Case 2: transparent bitmaps. If it's color we ignore the
-	     * forecolor.
+	     * Case 2: transparent bitmaps.  If it's color we ignore
+	     * the forecolor.
 	     */
 
 	    pm = GetPortPixMap(srcPort);
@@ -365,8 +367,8 @@ XCopyPlane(
 	    tmode = srcCopy;
 	    mskPort = TkMacOSXGetDrawablePort(clipPtr->value.pixmap);
 	    mskBit = GetPortBitMapForCopyBits(mskPort);
-	    CopyDeepMask(srcBit, mskBit, dstBit, srcPtr, srcPtr, dstPtr,
-		    tmode, NULL);
+	    CopyDeepMask(srcBit, mskBit, dstBit,
+		srcPtr, srcPtr, dstPtr, tmode, NULL);
 	}
     }
 
@@ -378,14 +380,14 @@ XCopyPlane(
  *
  * TkPutImage --
  *
- *	Copies a subimage from an in-memory image to a rectangle of the
- *	specified drawable.
+ *        Copies a subimage from an in-memory image to a rectangle of
+ *        of the specified drawable.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Draws the image on the specified drawable.
+ *        Draws the image on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
@@ -428,14 +430,13 @@ TkPutImage(
     SetRect(srcPtr, src_x, src_y, src_x + width, src_y + height);
     if (tkPictureIsOpen) {
 	/*
-	 * When rendering into a picture, after a call to "OpenCPicture" the
-	 * clipping is seriously WRONG and also INCONSISTENT with the clipping
-	 * for single plane bitmaps. To circumvent this problem, we clip to
-	 * the whole window.
+	 * When rendering into a picture, after a call to "OpenCPicture"
+	 * the clipping is seriously WRONG and also INCONSISTENT with the
+	 * clipping for single plane bitmaps.
+	 * To circumvent this problem,	we clip to the whole window
 	 */
 
 	Rect clpRect;
-
 	GetPortBounds(destPort,&clpRect);
 	ClipRect(&clpRect);
 	destPtr = srcPtr;
@@ -446,19 +447,14 @@ TkPutImage(
     }
 
     if (image->obdata) {
-	/*
-	 * Image from XGetImage, copy from containing GWorld directly.
-	 */
-
+	/* Image from XGetImage, copy from containing GWorld directly */
 	GWorldPtr srcPort = TkMacOSXGetDrawablePort((Drawable)image->obdata);
-
 	CopyBits(GetPortBitMapForCopyBits(srcPort),
 		destBits, srcPtr, destPtr, srcCopy, NULL);
     } else if (image->depth == 1) {
 	/*
 	 * BW image
 	 */
-
 	const int maxRowBytes = 0x3ffe;
 	BitMap bitmap;
 	int odd;
@@ -491,7 +487,7 @@ TkPutImage(
 	    oldPtr = dataPtr;
 	    odd = sliceRowBytes % 2;
 	    if (!newData) {
-		newData = ckalloc(image->height * (sliceRowBytes+odd));
+		newData = (char *) ckalloc(image->height * (sliceRowBytes+odd));
 	    }
 	    newPtr = newData;
 	    for (i = 0; i < image->height; i++) {
@@ -516,7 +512,6 @@ TkPutImage(
 	/*
 	 * Color image
 	 */
-
 	const int maxRowBytes = 0x3ffc;
 	PixMap pixmap;
 
@@ -524,7 +519,7 @@ TkPutImage(
 	pixmap.bounds.top = 0;
 	pixmap.bounds.bottom = (short) image->height;
 	pixmap.pixelType = RGBDirect;
-	pixmap.pmVersion = baseAddr32;	/* 32bit clean */
+	pixmap.pmVersion = baseAddr32;	      /* 32bit clean */
 	pixmap.packType = 0;
 	pixmap.packSize = 0;
 	pixmap.hRes = 0x00480000;
@@ -594,23 +589,23 @@ TkPutImage(
  *
  * XDrawLines --
  *
- *	Draw connected lines.
+ *        Draw connected lines.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Renders a series of connected lines.
+ *        Renders a series of connected lines.
  *
  *----------------------------------------------------------------------
  */
 
 void
 XDrawLines(
-    Display *display,		/* Display. */
+    Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
     GC gc,			/* Use this GC. */
-    XPoint *points,		/* Array of points. */
+    XPoint* points,		/* Array of points. */
     int npoints,		/* Number of points. */
     int mode)			/* Line drawing mode. */
 {
@@ -659,19 +654,15 @@ XDrawLines(
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	ShowPen();
 	PenPixPat(gPenPat);
-
-	/*
-	 * This is broken for fat lines, it is not possible to correctly
-	 * imitate X11 drawing of oblique fat lines with QD line drawing, we
-	 * should draw a filled polygon instead.
-	 */
-
+	/* This is broken for fat lines, it is not possible to correctly
+	 * imitate X11 drawing of oblique fat lines with QD line drawing,
+	 * we should draw a filled polygon instead. */
 	MoveTo((short) (macWin->xOff + points[0].x + o),
-		(short) (macWin->yOff + points[0].y + o));
+	       (short) (macWin->yOff + points[0].y + o));
 	for (i = 1; i < npoints; i++) {
 	    if (mode == CoordModeOrigin) {
 		LineTo((short) (macWin->xOff + points[i].x + o),
-			(short) (macWin->yOff + points[i].y + o));
+		       (short) (macWin->yOff + points[i].y + o));
 	    } else {
 		Line((short) points[i].x, (short) points[i].y);
 	    }
@@ -687,24 +678,23 @@ XDrawLines(
  *
  * XDrawSegments --
  *
- *	Draw unconnected lines.
+ *        Draw unconnected lines.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Renders a series of unconnected lines.
+ *        Renders a series of unconnected lines.
  *
  *----------------------------------------------------------------------
  */
 
-void
-XDrawSegments(
+void XDrawSegments(
     Display *display,
-    Drawable d,
+    Drawable  d,
     GC gc,
     XSegment *segments,
-    int nsegments)
+    int  nsegments)
 {
     MacDrawable *macWin = (MacDrawable *) d;
     CGrafPtr saveWorld;
@@ -740,18 +730,14 @@ XDrawSegments(
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	ShowPen();
 	PenPixPat(gPenPat);
-
-	/*
-	 * This is broken for fat lines, it is not possible to correctly
-	 * imitate X11 drawing of oblique fat lines with QD line drawing, we
-	 * should draw a filled polygon instead.
-	 */
-
+	/* This is broken for fat lines, it is not possible to correctly
+	 * imitate X11 drawing of oblique fat lines with QD line drawing,
+	 * we should draw a filled polygon instead. */
 	for (i = 0; i < nsegments; i++) {
 	    MoveTo((short) (macWin->xOff + segments[i].x1 + o),
-		    (short) (macWin->yOff + segments[i].y1 + o));
+		   (short) (macWin->yOff + segments[i].y1 + o));
 	    LineTo((short) (macWin->xOff + segments[i].x2 + o),
-		    (short) (macWin->yOff + segments[i].y2 + o));
+		   (short) (macWin->yOff + segments[i].y2 + o));
 	}
 	HidePen();
     }
@@ -764,13 +750,13 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Draws a filled polygon.
+ *        Draws a filled polygon.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Draws a filled polygon on the specified drawable.
+ *        Draws a filled polygon on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
@@ -827,11 +813,11 @@ XFillPolygon(
 	PenNormal();
 	polygon = OpenPoly();
 	MoveTo((short) (macWin->xOff + points[0].x),
-		(short) (macWin->yOff + points[0].y));
+	       (short) (macWin->yOff + points[0].y));
 	for (i = 1; i < npoints; i++) {
 	    if (mode == CoordModeOrigin) {
 		LineTo((short) (macWin->xOff + points[i].x),
-			(short) (macWin->yOff + points[i].y));
+		       (short) (macWin->yOff + points[i].y));
 	    } else {
 		Line((short) points[i].x, (short) points[i].y);
 	    }
@@ -849,24 +835,25 @@ XFillPolygon(
  *
  * XDrawRectangle --
  *
- *	Draws a rectangle.
+ *        Draws a rectangle.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Draws a rectangle on the specified drawable.
+ *        Draws a rectangle on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
 
 void
 XDrawRectangle(
-    Display *display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    int x, int y,		/* Upper left corner. */
-    unsigned int width,		/* Width & height of rect. */
+    Display* display,                /* Display. */
+    Drawable d,                        /* Draw on this. */
+    GC gc,                        /* Use this GC. */
+    int x,                        /* Upper left corner. */
+    int y,
+    unsigned int width,                /* Width & height of rect. */
     unsigned int height)
 {
     MacDrawable *macWin = (MacDrawable *) d;
@@ -904,10 +891,10 @@ XDrawRectangle(
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	ShowPen();
 	PenPixPat(gPenPat);
-	theRect.left = (short) (macWin->xOff + x + o);
-	theRect.top = (short) (macWin->yOff + y + o);
-	theRect.right = (short) (theRect.left + width + lw);
-	theRect.bottom = (short) (theRect.top + height + lw);
+	theRect.left =   (short) (macWin->xOff + x + o);
+	theRect.top =    (short) (macWin->yOff + y + o);
+	theRect.right =  (short) (theRect.left + width  + lw);
+	theRect.bottom = (short) (theRect.top  + height + lw);
 	FrameRect(&theRect);
 	HidePen();
     }
@@ -921,26 +908,27 @@ XDrawRectangle(
  *
  * XDrawRectangles --
  *
- *	Draws the outlines of the specified rectangles as if a five-point
- *	PolyLine protocol request were specified for each rectangle:
+ *       Draws the outlines of the specified rectangles as if a
+ *       five-point PolyLine protocol request were specified for each
+ *       rectangle:
  *
- *		[x,y] [x+width,y] [x+width,y+height] [x,y+height]
- *		[x,y]
+ *             [x,y] [x+width,y] [x+width,y+height] [x,y+height]
+ *             [x,y]
  *
- *	For the specified rectangles, these functions do not draw a pixel more
- *	than once. XDrawRectangles draws the rectangles in the order listed in
- *	the array. If rectangles intersect, the intersecting pixels are drawn
- *	multiple times. Draws a rectangle.
+ *      For the specified rectangles, these functions do not draw a
+ *      pixel more than once.  XDrawRectangles draws the rectangles in
+ *      the order listed in the array.  If rectangles intersect, the
+ *      intersecting pixels are drawn multiple times.  Draws a
+ *      rectangle.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Draws rectangles on the specified drawable.
+ *        Draws rectangles on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
-
 void
 XDrawRectangles(
     Display *display,
@@ -987,10 +975,10 @@ XDrawRectangles(
 	ShowPen();
 	PenPixPat(gPenPat);
 	for (i = 0, rectPtr = rectArr; i < nRects;i++, rectPtr++) {
-	    theRect.left = (short) (macWin->xOff + rectPtr->x + o);
-	    theRect.top = (short) (macWin->yOff + rectPtr->y + o);
-	    theRect.right = (short) (theRect.left + rectPtr->width + lw);
-	    theRect.bottom = (short) (theRect.top + rectPtr->height + lw);
+	    theRect.left =   (short) (macWin->xOff + rectPtr->x + o);
+	    theRect.top =    (short) (macWin->yOff + rectPtr->y + o);
+	    theRect.right =  (short) (theRect.left + rectPtr->width  + lw);
+	    theRect.bottom = (short) (theRect.top  + rectPtr->height + lw);
 	    FrameRect(&theRect);
 	}
 	HidePen();
@@ -1005,24 +993,23 @@ XDrawRectangles(
  *
  * XFillRectangles --
  *
- *	Fill multiple rectangular areas in the given drawable.
+ *        Fill multiple rectangular areas in the given drawable.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Draws onto the specified drawable.
+ *        Draws onto the specified drawable.
  *
  *----------------------------------------------------------------------
  */
-
 void
 XFillRectangles(
-    Display* display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    XRectangle *rectangles,	/* Rectangle array. */
-    int n_rectangles)		/* Number of rectangles. */
+    Display* display,                /* Display. */
+    Drawable d,                        /* Draw on this. */
+    GC gc,                        /* Use this GC. */
+    XRectangle *rectangles,        /* Rectangle array. */
+    int n_rectangles)                /* Number of rectangles. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     CGrafPtr saveWorld;
@@ -1046,7 +1033,8 @@ XFillRectangles(
 	    if (rectPtr->width == 0 || rectPtr->height == 0) {
 		continue;
 	    }
-	    rect = CGRectMake(macWin->xOff + rectPtr->x,
+	    rect = CGRectMake(
+		    macWin->xOff + rectPtr->x,
 		    macWin->yOff + rectPtr->y,
 		    rectPtr->width, rectPtr->height);
 	    CGContextFillRect(outContext, rect);
@@ -1057,10 +1045,10 @@ XFillRectangles(
 
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	for (i = 0, rectPtr = rectangles; i < n_rectangles; i++, rectPtr++) {
-	    theRect.left = (short) (macWin->xOff + rectPtr->x);
-	    theRect.top = (short) (macWin->yOff + rectPtr->y);
-	    theRect.right = (short) (theRect.left + rectPtr->width);
-	    theRect.bottom = (short) (theRect.top + rectPtr->height);
+	    theRect.left =   (short) (macWin->xOff + rectPtr->x);
+	    theRect.top =    (short) (macWin->yOff + rectPtr->y);
+	    theRect.right =  (short) (theRect.left + rectPtr->width);
+	    theRect.bottom = (short) (theRect.top  + rectPtr->height);
 	    FillCRect(&theRect, gPenPat);
 	}
     }
@@ -1073,27 +1061,28 @@ XFillRectangles(
  *
  * XDrawArc --
  *
- *	Draw an arc.
+ *        Draw an arc.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Draws an arc on the specified drawable.
+ *        Draws an arc on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
 
 void
 XDrawArc(
-    Display* display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    int x, int y,		/* Upper left of bounding rect. */
-    unsigned int width,		/* Width & height. */
+    Display* display,                /* Display. */
+    Drawable d,                        /* Draw on this. */
+    GC gc,                        /* Use this GC. */
+    int x,                        /* Upper left of */
+    int y,                        /* bounding rect. */
+    unsigned int width,                /* Width & height. */
     unsigned int height,
-    int angle1,			/* Staring angle of arc. */
-    int angle2)			/* Extent of arc. */
+    int angle1,                        /* Staring angle of arc. */
+    int angle2)                        /* Extent of arc. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     CGrafPtr saveWorld;
@@ -1153,11 +1142,11 @@ XDrawArc(
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	ShowPen();
 	PenPixPat(gPenPat);
-	theRect.left = (short) (macWin->xOff + x + o);
-	theRect.top = (short) (macWin->yOff + y + o);
-	theRect.right = (short) (theRect.left + width + lw);
+	theRect.left =   (short) (macWin->xOff + x + o);
+	theRect.top =    (short) (macWin->yOff + y + o);
+	theRect.right =  (short) (theRect.left + width + lw);
 	theRect.bottom = (short) (theRect.top + height + lw);
-	start = (short) (90 - (angle1/64));
+	start =  (short) (90 - (angle1/64));
 	extent = (short) (-(angle2/64));
 	FrameArc(&theRect, start, extent);
 	HidePen();
@@ -1172,23 +1161,23 @@ XDrawArc(
  *
  * XDrawArcs --
  *
- *	Draws multiple circular or elliptical arcs. Each arc is specified by a
- *	rectangle and two angles. The center of the circle or ellipse is the
- *	center of the rectangle, and the major and minor axes are specified by
- *	the width and height. Positive angles indicate counterclock- wise
- *	motion, and negative angles indicate clockwise motion. If the
- *	magnitude of angle2 is greater than 360 degrees, XDrawArcs truncates
- *	it to 360 degrees.
+ *      Draws multiple circular or elliptical arcs.  Each arc is
+ *      specified by a rectangle and two angles.  The center of the
+ *      circle or ellipse is the center of the rect- angle, and the
+ *      major and minor axes are specified by the width and height.
+ *      Positive angles indicate counterclock- wise motion, and
+ *      negative angles indicate clockwise motion.  If the magnitude
+ *      of angle2 is greater than 360 degrees, XDrawArcs truncates it
+ *      to 360 degrees.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Draws an arc for each array element on the specified drawable.
+ *      Draws an arc for each array element on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
-
 void
 XDrawArcs(
     Display *display,
@@ -1197,11 +1186,12 @@ XDrawArcs(
     XArc *arcArr,
     int nArcs)
 {
+
     MacDrawable *macWin = (MacDrawable *) d;
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
-    XArc *arcPtr;
+    XArc * arcPtr;
     int i, lw = gc->line_width;
 
     destPort = TkMacOSXGetDrawablePort(d);
@@ -1221,7 +1211,8 @@ XDrawArcs(
 		    || arcPtr->angle2 == 0) {
 		continue;
 	    }
-	    rect = CGRectMake(macWin->xOff + arcPtr->x + o,
+	    rect = CGRectMake(
+		    macWin->xOff + arcPtr->x + o,
 		    macWin->yOff + arcPtr->y + o,
 		    arcPtr->width, arcPtr->height);
 
@@ -1235,13 +1226,13 @@ XDrawArcs(
 		CGMutablePathRef p = CGPathCreateMutable();
 		CGAffineTransform t = CGAffineTransformIdentity;
 		CGPoint c = CGPointMake(CGRectGetMidX(rect),
-			CGRectGetMidY(rect));
+					CGRectGetMidY(rect));
 		float w = CGRectGetWidth(rect);
 
 		if (arcPtr->width != arcPtr->height) {
 		    t = CGAffineTransformMakeScale(1, CGRectGetHeight(rect)/w);
 		    c = CGPointApplyAffineTransform(c,
-			    CGAffineTransformInvert(t));
+						    CGAffineTransformInvert(t));
 		}
 		CGPathAddArc(p, &t, c.x, c.y, w/2,
 			radians(-arcPtr->angle1/64.0),
@@ -1262,11 +1253,11 @@ XDrawArcs(
 	ShowPen();
 	PenPixPat(gPenPat);
 	for (i = 0, arcPtr = arcArr;i < nArcs;i++, arcPtr++) {
-	    theRect.left = (short) (macWin->xOff + arcPtr->x + o);
-	    theRect.top = (short) (macWin->yOff + arcPtr->y + o);
-	    theRect.right = (short) (theRect.left + arcPtr->width + lw);
+	    theRect.left =   (short) (macWin->xOff + arcPtr->x + o);
+	    theRect.top =    (short) (macWin->yOff + arcPtr->y + o);
+	    theRect.right =  (short) (theRect.left + arcPtr->width + lw);
 	    theRect.bottom = (short) (theRect.top + arcPtr->height + lw);
-	    start = (short) (90 - (arcPtr->angle1/64));
+	    start =  (short) (90 - (arcPtr->angle1/64));
 	    extent = (short) (-(arcPtr->angle2/64));
 	    FrameArc(&theRect, start, extent);
 	}
@@ -1282,27 +1273,28 @@ XDrawArcs(
  *
  * XFillArc --
  *
- *	Draw a filled arc.
+ *        Draw a filled arc.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	Draws a filled arc on the specified drawable.
+ *        Draws a filled arc on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
 
 void
 XFillArc(
-    Display* display,		/* Display. */
-    Drawable d,			/* Draw on this. */
-    GC gc,			/* Use this GC. */
-    int x, int y,		/* Upper left of bounding rect. */
-    unsigned int width,		/* Width & height. */
+    Display* display,                /* Display. */
+    Drawable d,                        /* Draw on this. */
+    GC gc,                        /* Use this GC. */
+    int x,                        /* Upper left of */
+    int y,                        /* bounding rect. */
+    unsigned int width,                /* Width & height. */
     unsigned int height,
-    int angle1,			/* Staring angle of arc. */
-    int angle2)			/* Extent of arc. */
+    int angle1,                        /* Staring angle of arc. */
+    int angle2)                        /* Extent of arc. */
 {
     MacDrawable *macWin = (MacDrawable *) d;
     CGrafPtr saveWorld;
@@ -1330,7 +1322,9 @@ XFillArc(
 	    u += NON_AA_CG_OFFSET;
 	}
 	TkMacOSXSetUpCGContext(macWin, destPort, gc, &outContext);
-	rect = CGRectMake(macWin->xOff + x + o, macWin->yOff + y + o,
+	rect = CGRectMake(
+		macWin->xOff + x + o,
+		macWin->yOff + y + o,
 		width - u, height - u);
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
@@ -1370,9 +1364,9 @@ XFillArc(
 	double vertex[2], center1[2], center2[2];
 
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
-	theRect.left = (short) (macWin->xOff + x + o);
-	theRect.top = (short) (macWin->yOff + y + o);
-	theRect.right = (short) (theRect.left + width + lw);
+	theRect.left =   (short) (macWin->xOff + x + o);
+	theRect.top =    (short) (macWin->yOff + y + o);
+	theRect.right =  (short) (theRect.left + width + lw);
 	theRect.bottom = (short) (theRect.top + height + lw);
 	start = (short) (90 - (angle1/64));
 	extent = (short) (-(angle2/64));
@@ -1394,7 +1388,7 @@ XFillArc(
 
 	    polygon = OpenPoly();
 	    MoveTo((short) ((theRect.left + theRect.right)/2),
-		    (short) ((theRect.top + theRect.bottom)/2));
+		   (short) ((theRect.top + theRect.bottom)/2));
 	    LineTo((short) (center1[0] + .5), (short) (center1[1] + .5));
 	    LineTo((short) (center2[0] + .5), (short) (center2[1] + .5));
 	    ClosePoly();
@@ -1419,17 +1413,16 @@ XFillArc(
  *
  * XFillArcs --
  *
- *	Draw a filled arc.
+ *      Draw a filled arc.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Draws a filled arc for each array element on the specified drawable.
+ *      Draws a filled arc for each array element on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
-
 void
 XFillArcs(
     Display *display,
@@ -1442,7 +1435,7 @@ XFillArcs(
     CGrafPtr saveWorld;
     GDHandle saveDevice;
     GWorldPtr destPort;
-    XArc *arcPtr;
+    XArc * arcPtr;
     int i, lw = gc->line_width;
 
     destPort = TkMacOSXGetDrawablePort(d);
@@ -1466,7 +1459,8 @@ XFillArcs(
 		    || arcPtr->angle2 == 0) {
 		continue;
 	    }
-	    rect = CGRectMake(macWin->xOff + arcPtr->x + o,
+	    rect = CGRectMake(
+		    macWin->xOff + arcPtr->x + o,
 		    macWin->yOff + arcPtr->y + o,
 		    arcPtr->width - u, arcPtr->height - u);
 
@@ -1480,13 +1474,13 @@ XFillArcs(
 		CGMutablePathRef p = CGPathCreateMutable();
 		CGAffineTransform t = CGAffineTransformIdentity;
 		CGPoint c = CGPointMake(CGRectGetMidX(rect),
-			CGRectGetMidY(rect));
+					CGRectGetMidY(rect));
 		float w = CGRectGetWidth(rect);
 
 		if (arcPtr->width != arcPtr->height) {
 		    t = CGAffineTransformMakeScale(1, CGRectGetHeight(rect)/w);
 		    c = CGPointApplyAffineTransform(c,
-			    CGAffineTransformInvert(t));
+						    CGAffineTransformInvert(t));
 		}
 		if (gc->arc_mode == ArcPieSlice) {
 		    CGPathMoveToPoint(p, &t, c.x, c.y);
@@ -1513,9 +1507,9 @@ XFillArcs(
 
 	TkMacOSXSetUpGraphicsPort(gc, destPort);
 	for (i = 0, arcPtr = arcArr;i<nArcs;i++, arcPtr++) {
-	    theRect.left = (short) (macWin->xOff + arcPtr->x + o);
-	    theRect.top = (short) (macWin->yOff + arcPtr->y + o);
-	    theRect.right = (short) (theRect.left + arcPtr->width + lw);
+	    theRect.left =   (short) (macWin->xOff + arcPtr->x + o);
+	    theRect.top =    (short) (macWin->yOff + arcPtr->y + o);
+	    theRect.right =  (short) (theRect.left + arcPtr->width + lw);
 	    theRect.bottom = (short) (theRect.top + arcPtr->height + lw);
 	    start = (short) (90 - (arcPtr->angle1/64));
 	    extent = (short) (- (arcPtr->angle2/64));
@@ -1538,7 +1532,7 @@ XFillArcs(
 
 		polygon = OpenPoly();
 		MoveTo((short) ((theRect.left + theRect.right)/2),
-			(short) ((theRect.top + theRect.bottom)/2));
+		       (short) ((theRect.top + theRect.bottom)/2));
 		LineTo((short) (center1[0] + .5), (short) (center1[1] + .5));
 		LineTo((short) (center2[0] + .5), (short) (center2[1] + .5));
 		ClosePoly();
@@ -1567,10 +1561,8 @@ XFillArcs(
  *
  *----------------------------------------------------------------------
  */
-
 long
-XMaxRequestSize(
-    Display *display)
+XMaxRequestSize(Display *display)
 {
     return (SHRT_MAX / 4);
 }
@@ -1581,28 +1573,31 @@ XMaxRequestSize(
  *
  * TkScrollWindow --
  *
- *	Scroll a rectangle of the specified window and accumulate a damage
- *	region.
+ *        Scroll a rectangle of the specified window and accumulate
+ *        a damage region.
  *
  * Results:
- *	Returns 0 if the scroll genereated no additional damage. Otherwise,
- *	sets the region that needs to be repainted after scrolling and returns
- *	1.
+ *        Returns 0 if the scroll genereated no additional damage.
+ *        Otherwise, sets the region that needs to be repainted after
+ *        scrolling and returns 1.
  *
  * Side effects:
- *	Scrolls the bits in the window.
+ *        Scrolls the bits in the window.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkScrollWindow(
-    Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
-    int x, int y,		/* Position rectangle to be scrolled. */
-    int width, int height,
-    int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Tk_Window tkwin,                /* The window to be scrolled. */
+    GC gc,                        /* GC for window to be scrolled. */
+    int x,                        /* Position rectangle to be scrolled. */
+    int y,
+    int width,
+    int height,
+    int dx,                        /* Distance rectangle should be moved. */
+    int dy,
+    TkRegion damageRgn)                /* Region to accumulate damage in. */
 {
     MacDrawable *destDraw = (MacDrawable *) Tk_WindowId(tkwin);
     RgnHandle rgn = (RgnHandle) damageRgn;
@@ -1618,12 +1613,13 @@ TkScrollWindow(
     TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     /*
-     * Due to the implementation below the behavior may be differnt than X in
-     * certain cases that should never occur in Tk. The scrollRect is the
-     * source rect extended by the offset (the union of the source rect and
-     * the offset rect). Everything in the extended scrollRect is scrolled. On
-     * X, it's possible to "skip" over an area if the offset makes the source
-     * and destination rects disjoint and non-aligned.
+     * Due to the implementation below the behavior may be differnt
+     * than X in certain cases that should never occur in Tk.  The
+     * scrollRect is the source rect extended by the offset (the union
+     * of the source rect and the offset rect).  Everything
+     * in the extended scrollRect is scrolled.  On X, it's possible
+     * to "skip" over an area if the offset makes the source and
+     * destination rects disjoint and non-aligned.
      */
 
     SetRect(&srcRect, (short) (destDraw->xOff + x),
@@ -1643,10 +1639,9 @@ TkScrollWindow(
     }
 
     /*
-     * Adjust clip region so that we don't copy any windows that may overlap
-     * us.
+     * Adjust clip region so that we don't copy any windows
+     * that may overlap us.
      */
-
     visRgn = NewRgn();
     clipRgn = NewRgn();
     RectRgn(rgn, &srcRect);
@@ -1659,14 +1654,14 @@ TkScrollWindow(
     SetEmptyRgn(rgn);
 
     /*
-     * When a menu is up, the Mac does not expect drawing to occur and does
-     * not clip out the menu. We have to do it ourselves. This is pretty
-     * gross.
+     * When a menu is up, the Mac does not expect drawing to occur and
+     * does not clip out the menu. We have to do it ourselves. This
+     * is pretty gross.
      */
 
     if (tkUseMenuCascadeRgn == 1) {
-	Point scratch = {0, 0};
-	MacDrawable *macDraw = (MacDrawable *) Tk_WindowId(tkwin);
+	    Point scratch = {0, 0};
+	    MacDrawable *macDraw = (MacDrawable *) Tk_WindowId(tkwin);
 
 	LocalToGlobal(&scratch);
 	CopyRgn(tkMenuCascadeRgn, rgn);
@@ -1683,14 +1678,17 @@ TkScrollWindow(
 
     DisposeRgn(clipRgn);
     DisposeRgn(visRgn);
-
     /*
-     * Fortunantly, the region returned by ScrollRect is symanticlly the same
-     * as what we need to return in this function. If the region is empty we
-     * return zero to denote that no damage was created.
+     * Fortunantly, the region returned by ScrollRect is symanticlly
+     * the same as what we need to return in this function.  If the
+     * region is empty we return zero to denote that no damage was
+     * created.
      */
-
-    return !EmptyRgn(rgn);
+    if (EmptyRgn(rgn)) {
+	return 0;
+    } else {
+	return 1;
+    }
 }
 
 /*
@@ -1698,13 +1696,13 @@ TkScrollWindow(
  *
  * TkMacOSXSetUpGraphicsPort --
  *
- *	Set up the graphics port from the given GC.
+ *        Set up the graphics port from the given GC.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	The current port is adjusted.
+ *        The current port is adjusted.
  *
  *----------------------------------------------------------------------
  */
@@ -1712,7 +1710,7 @@ TkScrollWindow(
 void
 TkMacOSXSetUpGraphicsPort(
     GC gc,
-    GWorldPtr destPort)		/* GC to apply to current port. */
+    GWorldPtr destPort)                /* GC to apply to current port. */
 {
     RGBColor macColor;
 
@@ -1721,15 +1719,12 @@ TkMacOSXSetUpGraphicsPort(
     }
 
     if (TkSetMacColor(gc->foreground, &macColor) == true) {
-	/*
-	 * TODO: cache RGBPats for preformace - measure gains...
-	 */
-
+	/* TODO: cache RGBPats for preformace - measure gains...  */
 	MakeRGBPat(gPenPat, &macColor);
     }
 
     PenNormal();
-    if (gc->function == GXxor) {
+    if(gc->function == GXxor) {
 	PenMode(patXor);
     }
     if (gc->line_width > 1) {
@@ -1737,26 +1732,26 @@ TkMacOSXSetUpGraphicsPort(
     }
     if (gc->line_style != LineSolid) {
 	/*
-	 * Here the dash pattern should be set in the drawing environment, but
-	 * I don't know how to do that for the Mac.
+	 * Here the dash pattern should be set in the drawing,
+	 * environment, but I don't know how to do that for the Mac.
 	 *
-	 * p[] is an array of unsigned chars containing the dash list. A '\0'
-	 * indicates the end of this list.
+	 * p[] is an array of unsigned chars containing the dash list.
+	 * A '\0' indicates the end of this list.
 	 *
-	 * Someone knows how to implement this? If you have a more complete
-	 * implementation of SetUpGraphicsPort() for the Mac (or for Windows),
-	 * please let me know.
+	 * Someone knows how to implement this? If you have a more
+	 * complete implementation of SetUpGraphicsPort() for
+	 * the Mac (or for Windows), please let me know.
 	 *
-	 *	Jan Nijtmans
-	 *	CMG Arnhem, B.V.
-	 *	email: j.nijtmans@chello.nl (private)
-	 *	       jan.nijtmans@cmg.nl (work)
-	 *	url:   http://purl.oclc.org/net/nijtmans/
+	 *        Jan Nijtmans
+	 *        CMG Arnhem, B.V.
+	 *        email: j.nijtmans@chello.nl (private)
+	 *               jan.nijtmans@cmg.nl (work)
+	 *        url:   http://purl.oclc.org/net/nijtmans/
 	 *
 	 * FIXME:
-	 * This is not possible with QuickDraw line drawing. As of Tk 8.4.7 we
-	 * have a complete set of drawing routines using CG, so there is no
-	 * reason to support this here.
+	 * This is not possible with QuickDraw line drawing.  As of
+	 * Tk 8.4.7 we have a complete set of drawing routines using
+	 * CG, so there is no reason to support this here.
 	 */
     }
 }
@@ -1766,13 +1761,13 @@ TkMacOSXSetUpGraphicsPort(
  *
  * TkMacOSXSetUpCGContext --
  *
- *	Set up a CGContext for the given graphics port.
+ *        Set up a CGContext for the given graphics port.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	None.
+ *        None.
  *
  *----------------------------------------------------------------------
  */
@@ -1796,13 +1791,13 @@ TkMacOSXSetUpCGContext(
     outContext = *contextPtr;
 
     /*
-     * Now clip the CG Context to the port. Note, we have already set up the
-     * port with our clip region, so we can just get the clip back out of
-     * there. If we use the macWin->clipRgn directly at this point, we get
-     * some odd drawing effects.
+     * Now clip the CG Context to the port.  Note, we have already
+     * set up the port with our clip region, so we can just get
+     * the clip back out of there.  If we use the macWin->clipRgn
+     * directly at this point, we get some odd drawing effects.
      *
-     * We also have to intersect our clip region with the port visible region
-     * so we don't overwrite the window decoration.
+     * We also have to intersect our clip region with the port
+     * visible region so we don't overwrite the window decoration.
      */
 
     if (!clipRgn) {
@@ -1818,8 +1813,8 @@ TkMacOSXSetUpCGContext(
     SetEmptyRgn(clipRgn);
 
     /*
-     * Note: You have to call SyncCGContextOriginWithPort AFTER all the clip
-     * region manipulations.
+     * Note: You have to call SyncCGContextOriginWithPort
+     * AFTER all the clip region manipulations.
      */
 
     SyncCGContextOriginWithPort(outContext, destPort);
@@ -1828,32 +1823,28 @@ TkMacOSXSetUpCGContext(
 	    boundsRect.bottom - boundsRect.top);
     CGContextConcatCTM(outContext, coordsTransform);
 
-    /*
-     * Now offset the CTM to the subwindow offset.
-     */
+    /* Now offset the CTM to the subwindow offset */
 
     if (TkSetMacColor(gc->foreground, &macColor) == true) {
-	CGContextSetRGBFillColor(outContext, RGBFLOATRED(macColor),
-		RGBFLOATGREEN(macColor), RGBFLOATBLUE(macColor), 1);
-	CGContextSetRGBStrokeColor(outContext, RGBFLOATRED(macColor),
-		RGBFLOATGREEN(macColor), RGBFLOATBLUE(macColor), 1);
+	CGContextSetRGBFillColor(outContext,
+		RGBFLOATRED(macColor),
+		RGBFLOATGREEN(macColor),
+		RGBFLOATBLUE(macColor),
+		1);
+	CGContextSetRGBStrokeColor(outContext,
+		RGBFLOATRED(macColor),
+		RGBFLOATGREEN(macColor),
+		RGBFLOATBLUE(macColor),
+		1);
     }
 
-    if (gc->function == GXxor) {
-	/* empty */
+    if(gc->function == GXxor) {
     }
 
     w = gc->line_width;
-
-    /*
-     * When should we antialias?
-     */
-
+    /* When should we antialias? */
     if (notAA(gc->line_width)) {
-	/*
-	 * Make non-antialiased CG drawing look more like X11.
-	 */
-
+	/* Make non-antialiased CG drawing look more like X11 */
 	w -= (gc->line_width ? NON_AA_CG_OFFSET : 0);
 	CGContextSetShouldAntialias(outContext, 0);
     } else {
@@ -1876,7 +1867,7 @@ TkMacOSXSetUpCGContext(
 
     if (gc->cap_style == CapButt) {
 	/*
-	 * What about CapNotLast, CapProjecting?
+	 *  What about CapNotLast, CapProjecting?
 	 */
 
 	CGContextSetLineCap(outContext, kCGLineCapButt);
@@ -1900,22 +1891,22 @@ TkMacOSXSetUpCGContext(
  *
  * TkMacOSXReleaseCGContext --
  *
- *	Release the CGContext for the given graphics port.
+ *        Release the CGContext for the given graphics port.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	None.
+ *        None.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 TkMacOSXReleaseCGContext(
-    MacDrawable *macWin,
-    CGrafPtr destPort,
-    CGContextRef *outContext)
+	MacDrawable *macWin,
+	CGrafPtr destPort,
+	CGContextRef *outContext)
 {
     CGContextSynchronize(*outContext);
     QDEndCGContext(destPort, outContext);
@@ -1926,21 +1917,21 @@ TkMacOSXReleaseCGContext(
  *
  * TkMacOSXSetUpClippingRgn --
  *
- *	Set up the clipping region so that drawing only occurs on the
- *	specified X subwindow.
+ *        Set up the clipping region so that drawing only occurs on the
+ *        specified X subwindow.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	The clipping region in the current port is changed.
+ *        The clipping region in the current port is changed.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkMacOSXSetUpClippingRgn(
-    Drawable drawable)		/* Drawable to update. */
+    Drawable drawable)                /* Drawable to update. */
 {
     MacDrawable *macDraw = (MacDrawable *) drawable;
 
@@ -1951,44 +1942,40 @@ TkMacOSXSetUpClippingRgn(
 
 #if defined(TK_MAC_DEBUG) && defined(TK_MAC_DEBUG_DRAWING)
 	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
-		CGrafPtr port, RgnHandle region);
+				     CGrafPtr port, RgnHandle region);
 	if (QDDebugFlashRegion) {
 	    CGrafPtr grafPtr = TkMacOSXGetDrawablePort(drawable);
-
-	    /*
-	     * Carbon-internal region flashing SPI (c.f. Technote 2124)
-	     */
-
+	    /* Carbon-internal region flashing SPI (c.f. Technote 2124) */
 	    QDDebugFlashRegion(grafPtr, macDraw->clipRgn);
 	}
 #endif /* TK_MAC_DEBUG_DRAWING */
 
 	/*
 	 * When a menu is up, the Mac does not expect drawing to occur and
-	 * does not clip out the menu. We have to do it ourselves. This is
-	 * pretty gross.
+	 * does not clip out the menu. We have to do it ourselves. This
+	 * is pretty gross.
 	 */
 
 	if (macDraw->clipRgn != NULL) {
 	    if (tkUseMenuCascadeRgn == 1) {
-		Point scratch = {0, 0};
-		GDHandle saveDevice;
-		GWorldPtr saveWorld;
+		    Point scratch = {0, 0};
+		    GDHandle saveDevice;
+		    GWorldPtr saveWorld;
 
-		GetGWorld(&saveWorld, &saveDevice);
-		SetGWorld(TkMacOSXGetDrawablePort(drawable), NULL);
-		LocalToGlobal(&scratch);
-		SetGWorld(saveWorld, saveDevice);
-		if (tmpRgn == NULL) {
-		    tmpRgn = NewRgn();
-		}
-		CopyRgn(tkMenuCascadeRgn, tmpRgn);
-		OffsetRgn(tmpRgn, -scratch.h, -scratch.v);
-		DiffRgn(macDraw->clipRgn, tmpRgn, tmpRgn);
-		SetClip(tmpRgn);
-		macDraw->toplevel->flags |= TK_DRAWN_UNDER_MENU;
+		    GetGWorld(&saveWorld, &saveDevice);
+		    SetGWorld(TkMacOSXGetDrawablePort(drawable), NULL);
+		    LocalToGlobal(&scratch);
+		    SetGWorld(saveWorld, saveDevice);
+		    if (tmpRgn == NULL) {
+			tmpRgn = NewRgn();
+		    }
+		    CopyRgn(tkMenuCascadeRgn, tmpRgn);
+		    OffsetRgn(tmpRgn, -scratch.h, -scratch.v);
+		    DiffRgn(macDraw->clipRgn, tmpRgn, tmpRgn);
+		    SetClip(tmpRgn);
+		    macDraw->toplevel->flags |= TK_DRAWN_UNDER_MENU;
 	    } else {
-		SetClip(macDraw->clipRgn);
+		    SetClip(macDraw->clipRgn);
 	    }
 	}
     }
@@ -1999,29 +1986,31 @@ TkMacOSXSetUpClippingRgn(
  *
  * TkMacOSXMakeStippleMap --
  *
- *	Given a drawable and a stipple pattern this function draws the pattern
- *	repeatedly over the drawable. The drawable can then be used as a mask
- *	for bit-bliting a stipple pattern over an object.
+ *        Given a drawable and a stipple pattern this function draws the
+ *        pattern repeatedly over the drawable.  The drawable can then
+ *        be used as a mask for bit-bliting a stipple pattern over an
+ *        object.
  *
  * Results:
- *	A BitMap data structure.
+ *        A BitMap data structure.
  *
  * Side effects:
- *	None.
+ *        None.
  *
  *----------------------------------------------------------------------
  */
 
 BitMapPtr
 TkMacOSXMakeStippleMap(
-    Drawable drawable,		/* Window to apply stipple. */
-    Drawable stipple)		/* The stipple pattern. */
+    Drawable drawable,                /* Window to apply stipple. */
+    Drawable stipple)                /* The stipple pattern. */
 {
     GWorldPtr destPort;
     BitMapPtr bitmapPtr;
-    Rect portRect;
-    int width, height, stippleHeight, stippleWidth, i, j;
-    char *data;
+    Rect      portRect;
+    int width, height, stippleHeight, stippleWidth;
+    int i, j;
+    char * data;
     Rect bounds;
 
     destPort = TkMacOSXGetDrawablePort(drawable);
@@ -2050,7 +2039,7 @@ TkMacOSXMakeStippleMap(
 	    bounds.bottom = i + stippleHeight;
 
 	    CopyBits(GetPortBitMapForCopyBits(destPort), bitmapPtr,
-		    &portRect, &bounds, srcCopy, NULL);
+		&portRect, &bounds, srcCopy, NULL);
 	}
     }
     return bitmapPtr;
@@ -2061,20 +2050,20 @@ TkMacOSXMakeStippleMap(
  *
  * InvertByte --
  *
- *	This function reverses the bits in the passed in Byte of data.
+ *      This function reverses the bits in the passed in Byte of data.
  *
  * Results:
- *	The incoming byte in reverse bit order.
+ *      The incoming byte in reverse bit order.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 static unsigned char
 InvertByte(
-    unsigned char data)		/* Byte of data. */
+    unsigned char data)                /* Byte of data. */
 {
     unsigned char i;
     unsigned char mask = 1, result = 0;
@@ -2093,32 +2082,32 @@ InvertByte(
  *
  * TkpDrawHighlightBorder --
  *
- *	This procedure draws a rectangular ring around the outside of a widget
- *	to indicate that it has received the input focus.
+ *        This procedure draws a rectangular ring around the outside of
+ *        a widget to indicate that it has received the input focus.
  *
- *	On the Macintosh, this puts a 1 pixel border in the bgGC color between
- *	the widget and the focus ring, except in the case where highlightWidth
- *	is 1, in which case the border is left out.
+ *      On the Macintosh, this puts a 1 pixel border in the bgGC color
+ *      between the widget and the focus ring, except in the case where
+ *      highlightWidth is 1, in which case the border is left out.
  *
- *	For proper Mac L&F, use highlightWidth of 3.
+ *      For proper Mac L&F, use highlightWidth of 3.
  *
  * Results:
- *	None.
+ *        None.
  *
  * Side effects:
- *	A rectangle "width" pixels wide is drawn in "drawable", corresponding
- *	to the outer area of "tkwin".
+ *        A rectangle "width" pixels wide is drawn in "drawable",
+ *        corresponding to the outer area of "tkwin".
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpDrawHighlightBorder (
-    Tk_Window tkwin,
-    GC fgGC,
-    GC bgGC,
-    int highlightWidth,
-    Drawable drawable)
+	Tk_Window tkwin,
+	GC fgGC,
+	GC bgGC,
+	int highlightWidth,
+	Drawable drawable)
 {
     if (highlightWidth == 1) {
 	TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
@@ -2136,8 +2125,8 @@ TkpDrawHighlightBorder (
  *
  * TkpDrawFrame --
  *
- *	This procedure draws the rectangular frame area. If the user has
- *	request themeing, it draws with a the background theme.
+ *	This procedure draws the rectangular frame area.  If the user
+ *	has request themeing, it draws with a the background theme.
  *
  * Results:
  *	None.
@@ -2149,20 +2138,15 @@ TkpDrawHighlightBorder (
  */
 
 void
-TkpDrawFrame(
-    Tk_Window tkwin,
-    Tk_3DBorder border,
-    int highlightWidth,
-    int borderWidth,
-    int relief)
+TkpDrawFrame (Tk_Window tkwin, Tk_3DBorder border,
+	int highlightWidth, int borderWidth, int relief)
 {
     if (useThemedToplevel && Tk_IsTopLevel(tkwin)) {
 	/*
-	 * Currently only support themed toplevels, until we can better factor
-	 * this to handle individual windows (blanket theming of frames will
-	 * work for very few UIs).
+	 * Currently only support themed toplevels, until we can better
+	 * factor this to handle individual windows (blanket theming of
+	 * frames will work for very few UIs).
 	 */
-
 	Rect bounds;
 	Point origin;
 	CGrafPtr saveWorld;
@@ -2191,21 +2175,15 @@ TkpDrawFrame(
 	EraseRect(&bounds);
 	SetGWorld(saveWorld, saveDevice);
 
-	XCopyArea(display, pixmap, Tk_WindowId(tkwin), gc, 0, 0, bounds.right,
-		bounds.bottom, 0, 0);
+	XCopyArea(display, pixmap, Tk_WindowId(tkwin),
+		gc, 0, 0, bounds.right, bounds.bottom, 0, 0);
 	Tk_FreePixmap(display, pixmap);
 	Tk_FreeGC(display, gc);
     } else {
-	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, highlightWidth,
-		highlightWidth, Tk_Width(tkwin) - 2 * highlightWidth,
-		Tk_Height(tkwin) - 2 * highlightWidth, borderWidth, relief);
+	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
+		border, highlightWidth, highlightWidth,
+		Tk_Width(tkwin) - 2 * highlightWidth,
+		Tk_Height(tkwin) - 2 * highlightWidth,
+		borderWidth, relief);
     }
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
