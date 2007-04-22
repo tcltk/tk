@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.103 2007/04/22 05:45:13 hobbs Exp $
+RCS: @(#) $Id: changes,v 1.104 2007/04/22 07:04:41 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6278,4 +6278,4 @@ _NET_WM_PING.
 
 2007-04-10 (platform support) correctly handling theming on Vista/Aero.
 
---- Released 8.5a6, April 25, 2006 --- See ChangeLog for details ---
+--- Released 8.5a6, April 25, 2007 --- See ChangeLog for details ---
