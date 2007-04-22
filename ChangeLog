@@ -1,5 +1,7 @@
 2007-04-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	*** 8.5a6 TAGGED FOR RELEASE ***
+
 	* macosx/tkMacOSXBitmap.c, macosx/tkMacOSXButton.c:
 	* macosx/tkMacOSXCarbonEvents.c, macosx/tkMacOSXClipboard.c:
 	* macosx/tkMacOSXCursor.c, macosx/tkMacOSXDialog.c:
@@ -416,6 +418,7 @@
 	* unix/configure: autoconf
 
 2006-11-26  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/ttk/ttkWidget.c, generic/ttk/ttkPaned.c: Fix [Bug 1603506]
 	* library/ttk/button.tcl, library/ttk/combobox.tcl,
 	* library/ttk/utils.tcl: Rename ttk::CopyBindings to ttk::copyBindings
