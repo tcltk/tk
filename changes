@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.105 2007/04/23 21:24:32 das Exp $
+RCS: @(#) $Id: changes,v 1.106 2007/04/23 22:23:09 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6289,7 +6289,7 @@ as system colors.
 
 2007-04-23 (platform support) Aqua: use OS theme for tk_dialog and bgerror.
 
-2007-04-23 (platform support) Aqua: add 'none' cursor.
+2007-04-23 (platform support) Aqua: add 'none' cursor & missing theme cursors.
 
 2007-04-23 (platform support) Aqua: [tk_getOpenFile -parent] uses sheet dialog.
 
