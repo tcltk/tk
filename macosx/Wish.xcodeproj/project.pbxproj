@@ -304,7 +304,6 @@
 		F9E61D31090A48F9002B3151 /* bn_mp_to_unsigned_bin.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D42C608F272B3004A47F5 /* bn_mp_to_unsigned_bin.c */; };
 		F9E61D32090A48FA002B3151 /* bn_mp_unsigned_bin_size.c in Sources */ = {isa = PBXBuildFile; fileRef = F96D42CC08F272B3004A47F5 /* bn_mp_unsigned_bin_size.c */; };
 		F9EA4AF008FA3BD500B1F5F0 /* tkMacOSXXCursors.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBF408F27A3C005CB29B /* tkMacOSXXCursors.r */; };
-		F9EA4AF108FA3BD700B1F5F0 /* tkMacOSXMenu.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBDF08F27A3B005CB29B /* tkMacOSXMenu.r */; };
 		F9EA4AF208FA3BD800B1F5F0 /* tkMacOSXCursors.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBCC08F27A3B005CB29B /* tkMacOSXCursors.r */; };
 		F9EA4AF308FA3BDA00B1F5F0 /* tkMacOSXAETE.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBC408F27A3B005CB29B /* tkMacOSXAETE.r */; };
 		F9EA4AF408FA3BDB00B1F5F0 /* tkAboutDlg.r in Rez */ = {isa = PBXBuildFile; fileRef = F966BBC108F27A3B005CB29B /* tkAboutDlg.r */; };
@@ -698,7 +697,6 @@
 		F966BBDB08F27A3B005CB29B /* tkMacOSXKeyboard.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkMacOSXKeyboard.c; sourceTree = "<group>"; };
 		F966BBDC08F27A3B005CB29B /* tkMacOSXKeyEvent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkMacOSXKeyEvent.c; sourceTree = "<group>"; };
 		F966BBDD08F27A3B005CB29B /* tkMacOSXMenu.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkMacOSXMenu.c; sourceTree = "<group>"; };
-		F966BBDF08F27A3B005CB29B /* tkMacOSXMenu.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; path = tkMacOSXMenu.r; sourceTree = "<group>"; };
 		F966BBE008F27A3B005CB29B /* tkMacOSXMenubutton.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkMacOSXMenubutton.c; sourceTree = "<group>"; };
 		F966BBE108F27A3B005CB29B /* tkMacOSXMenus.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkMacOSXMenus.c; sourceTree = "<group>"; };
 		F966BBE208F27A3B005CB29B /* tkMacOSXMouseEvent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkMacOSXMouseEvent.c; sourceTree = "<group>"; };
@@ -1788,6 +1786,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.19 2007/04/23 21:24:35 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2252,7 +2251,6 @@
 				F966BBDB08F27A3B005CB29B /* tkMacOSXKeyboard.c */,
 				F966BBDC08F27A3B005CB29B /* tkMacOSXKeyEvent.c */,
 				F966BBDD08F27A3B005CB29B /* tkMacOSXMenu.c */,
-				F966BBDF08F27A3B005CB29B /* tkMacOSXMenu.r */,
 				F966BBE008F27A3B005CB29B /* tkMacOSXMenubutton.c */,
 				F966BBE108F27A3B005CB29B /* tkMacOSXMenus.c */,
 				F966BBE208F27A3B005CB29B /* tkMacOSXMouseEvent.c */,
@@ -3601,7 +3599,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F9EA4AF008FA3BD500B1F5F0 /* tkMacOSXXCursors.r in Rez */,
-				F9EA4AF108FA3BD700B1F5F0 /* tkMacOSXMenu.r in Rez */,
 				F9EA4AF208FA3BD800B1F5F0 /* tkMacOSXCursors.r in Rez */,
 				F9EA4AF308FA3BDA00B1F5F0 /* tkMacOSXAETE.r in Rez */,
 				F9EA4AF408FA3BDB00B1F5F0 /* tkAboutDlg.r in Rez */,
@@ -4013,6 +4010,30 @@
 			};
 			name = ReleaseUniversal;
 		};
+		F94173790BC145DD00C54E27 /* DebugMemCompile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = DebugMemCompile;
+		};
+		F941737A0BC145DD00C54E27 /* DebugMemCompile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = tktest;
+			};
+			name = DebugMemCompile;
+		};
+		F941737B0BC145DD00C54E27 /* DebugMemCompile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
+			buildSettings = {
+				CONFIGURE_ARGS = "$(CONFIGURE_ARGS) --enable-symbols=all";
+				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = NO;
+			};
+			name = DebugMemCompile;
+		};
 		F95CC8AC09158F3100EA5ACE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -4037,6 +4058,7 @@
 		F95CC8B109158F3100EA5ACE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CONFIGURE_ARGS = "tcl_cv_cc_visibility_hidden=no $(CONFIGURE_ARGS)";
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"__private_extern__=extern",
@@ -4188,6 +4210,7 @@
 			buildConfigurations = (
 				F95CC8AC09158F3100EA5ACE /* Debug */,
 				F95CC8AE09158F3100EA5ACE /* DebugNoFixZL */,
+				F94173790BC145DD00C54E27 /* DebugMemCompile */,
 				F95CC8AD09158F3100EA5ACE /* Release */,
 				F91BCC4F093152310042A6BF /* ReleaseUniversal */,
 				F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
@@ -4202,6 +4225,7 @@
 			buildConfigurations = (
 				F95CC8B109158F3100EA5ACE /* Debug */,
 				F95CC8B309158F3100EA5ACE /* DebugNoFixZL */,
+				F941737A0BC145DD00C54E27 /* DebugMemCompile */,
 				F95CC8B209158F3100EA5ACE /* Release */,
 				F91BCC50093152310042A6BF /* ReleaseUniversal */,
 				F9DB62090B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
@@ -4216,6 +4240,7 @@
 			buildConfigurations = (
 				F95CC8B609158F3100EA5ACE /* Debug */,
 				F95CC8B809158F3100EA5ACE /* DebugNoFixZL */,
+				F941737B0BC145DD00C54E27 /* DebugMemCompile */,
 				F95CC8B709158F3100EA5ACE /* Release */,
 				F91BCC51093152310042A6BF /* ReleaseUniversal */,
 				F9DB620A0B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
