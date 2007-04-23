@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.15 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.16 2007/04/23 23:10:10 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -36,7 +36,7 @@
  */
 
 MODULE_SCOPE void
-TkMacOSXFlushWindows (void)
+TkMacOSXFlushWindows(void)
 {
     WindowRef wRef = GetWindowList();
 
