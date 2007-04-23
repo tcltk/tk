@@ -1,6 +1,344 @@
-2007-04-21  Jeff Hobbs  <jeffh@ActiveState.com>
+2007-04-23  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.5a6 TAGGED FOR RELEASE ***
+
+	* generic/tkCanvas.c:	allow -selectforeground option to be None; add
+	* generic/tkCanvText.c:	fallback to fgColor when selFgColor is None
+	* generic/tkEntry.c:	(new default on aqua to match native L&F).
+	* generic/tkListbox.c:
+	* generic/tkText.c:
+
+	* generic/tkCanvas.c:	   add support for bypassing all of Tk's double
+	* generic/tkEntry.c:	   buffered drawing into intermediate pixmaps
+	* generic/tkFrame.c:	   (via TK_NO_DOUBLE_BUFFERING #define), it is
+	* generic/tkListbox.c:	   unnecessary & wasteful on aqua where all
+	* generic/tkPanedWindow.c: drawing is already double-buffered by the
+	* generic/tkTextDisp.c:	   window server. (Use of this on other
+	* generic/ttk/ttkWidget.c: platforms would only require implementation
+	* unix/tkUnixScale.c:	   of TkpClipDrawableToRect()).
+	* macosx/tkMacOSXPort.h:
+
+	* library/bgerror.tcl:	on aqua, use moveable alert resp. modal dialog
+	* library/dialog.tcl:	window class and corresponding system
+				background pattern; fix button padding.
+
+	* library/tearoff.tcl:	correct aqua menu bar height; vertically offset
+	* library/tk.tcl:	aqua tearoff floating window to match menu.
+
+	* library/demos/goldberg.tcl: fix overwriting of widget demo global.
+
+	* library/demos/menu.tcl:   on aqua, use custom MDEF and tearoffs;
+	* library/demos/menubu.tcl: correct menubutton toplevel name.
+
+	* library/demos/puzzle.tcl: fix button size & padding for aqua.
+	* library/demos/radio.tcl:
+
+	* macosx/tkMacOSXCarbonEvents.c: add window event target carbon event
+	* macosx/tkMacOSXEvent.c:	 handler for all kEventClassWindow and
+	* macosx/tkMacOSXEvent.h:	 kEventClassMouse events; 
+	* macosx/tkMacOSXNotify.c:	 move all remaining events except for
+	* macosx/tkMacOSXWindowEvent.c:	 kEventClassKeyboard from dispatcher to
+	application event handler; pass event handler callRef downstream; fix
+	debug event tracing; process all tcl event types in carbon event timer;
+	delay carbon event timer first fire; add TkMacOSXTrackingLoop() to mark
+	enter/exit of event tracking loop during which all tcl events but only
+	carbon update events should be processed by the timer (replaces various
+	calls to Tcl_SetServiceMode()); rename TkMacOSXReceiveAndProcessEvent()
+	to TkMacOSXReceiveAndDispatchEvent(), move it from tkMacOSXEvent.c to
+	tkMacOSXCarbonEvents.c and modify it to dequeue only update events
+	during a tracking loop; add TkMacOSXRunTclEventLoop() to standardize
+	the various ways in use to run the tcl event loop; add handling of
+	kEventClassAppearance events (for ScrollBarVariantChanged event).
+
+	* macosx/tkMacOSXDialog.c:	use new TkMacOSXTrackingLoop() around
+	* macosx/tkMacOSXEvent.c:	blocking API that puts up modal dialogs
+	* macosx/tkMacOSXMenu.c:	or when entering/exiting menu/control
+	* macosx/tkMacOSXMouseEvent.c:	tracking, window dragging and other
+	* macosx/tkMacOSXScale.c:	mouse tracking loops.
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXDialog.c:	use new TkMacOSXRunTclEventLoop()
+	* macosx/tkMacOSXScale.c:	instead of Tcl_DoOneEvent(),
+	* macosx/tkMacOSXScrlbr.c:	Tcl_ServiceAll(), TclServiceIdle()
+	* macosx/tkMacOSXWindowEvent.c:	and Tcl_GlobalEval("update idletasks").
+
+	* macosx/tkMacOSXColor.c: make available as Tk system colors all
+	* macosx/tkMacOSXPort.h:  appearance manager brushes, text colors and
+	backgrounds with new and legacy names, as well as the fully transparent
+	color "systemTransparent"; add TkMacOSXSetColorIn{Port,Context}() to
+	directly set an X pixel color value in the current QD port resp. the
+	given CG context without requiring passage through rgb representation
+	(lossy for most system colors); modernize/remove Classic-era code;
+	replace crufty strcmp() elseifs by Tcl_GetIndexFromObjStruct().
+
+	* macosx/tkMacOSXButton.c:	use new TkMacOSXSetColorInPort()
+	* macosx/tkMacOSXDraw.c:	instead of setting rgb color directly
+	* macosx/tkMacOSXMenubutton.c:	to allow for non-rgb system colors.
+
+	* macosx/tkMacOSXCursor.c: implement "none" cursor as on other
+	platforms [Patch 1615427]; add all missing appearance manager cursors.
+
+	* macosx/tkMacOSXDefault.h: set SELECT_FG_COLORs to None to match aqua
+	L&F; use standard system color names; use new 'menu' system font;
+	correct default scrollbar width.
+
+	* macosx/tkMacOSXDraw.c: 	standardize initialization, use and
+	* macosx/tkMacOSXInt.h: 	emptying of various static temp rgns
+	* macosx/tkMacOSXRegion.c:	onto two global RgnHandles; in debug
+	* macosx/tkMacOSXSubwindows.c:	builds, verify emptiness of these temp
+	* macosx/tkMacOSXWindowEvent.c:	rgns before use.
+
+	* macosx/tkMacOSXDraw.c: add TkMacOSX{Setup,Restore}DrawingContext() to
+	* macosx/tkMacOSXInt.h:  abstract common setup & teardown of drawing
+	environment (for both CG and QD); save/restore QD theme drawing state;
+	handle GC clip region; add TkpClipDrawableToRect() to allow clipped
+	drawing into drawable regardless of GC used; use new system color
+	"systemWindowHeaderBackground" to setup background in themed toplevels;
+	correct implementation of TkMacOSXMakeStippleMap().
+
+	* macosx/tkMacOSXEntry.c:  use new TkMacOSXSetupDrawingContext() and
+	* macosx/tkMacOSXFont.c:   TkMacOSXRestoreDrawingContext() instead of
+	* macosx/ttkMacOSXTheme.c: various setup/teardown procs like
+	TkMacOSX{SetUp,Release}CGContext(), TkMacOSXQuarz{Start,End}Draw(),
+	TkMacOSXSetUpGraphicsPort() etc.
+
+	* macosx/tkMacOSXEmbed.c: add CG context and drawable clip rgn fields
+	* macosx/tkMacOSXInt.h:   to MacDrawable struct.
+	* macosx/tkMacOSXSubwindows.c:
+
+	* macosx/tkMacOSXDialog.c: make -parent option of tk_getOpenFile et al.
+	use the sheet version of NavServices dialogs; ensure native parent win
+	exists before using StandardSheet API for tk_messageBox [Bug 1677611];
+	force sheets to behave like app-modal dialogs via WindowModality() API;
+	use more modern ColorPicker API.
+
+	* macosx/tkAboutDlg.r: use themed movable modal dialog, fix (c) year.
+
+	* macosx/tkMacOSXEntry.c:  take xOff/yOff of MacDrawable into account
+	* macosx/ttkMacOSXTheme.c: when computing locations/bounds to ensure
+	correct posititioning when not drawing into intermediate pixmap.
+
+	* macosx/tkMacOSXFont.c: use appearance manager API to map system font
+	* macosx/tkMacOSXFont.h: names to TkFonts; add "menu" system font for
+	menu item text drawing from MDEF; always draw with CG; remove QD
+	dependent stippling algorithm; move most header declarations into the
+	source file (as they were not used anywhere else).
+
+	* macosx/tkMacOSXMenu.c:		 large-scale rewrite of custom
+	* macosx/tkMacOSXMenu.r (removed):	 MDEF and related code that
+	* macosx/Wish.xcode/project.pbxproj:	 restores many longtime-MIA
+	* macosx/Wish.xcodeproj/project.pbxproj: features to working order
+	* unix/Makefile.in:			 (e.g. images, custom colors &
+	fonts in menus etc); implement compound menu items; use Appearance Mgr
+	and ThemeText APIs to mimic native MDEF as closely as possible when
+	default "menu" system font is used; remove now obsolete SICN drawing
+	code and resources.
+
+	* macosx/tkMacOSXCarbonEvents.c: handle additional menu carbon events
+	* macosx/tkMacOSXEvent.c:	 in order to support <<MenuSelect>> in
+	* macosx/tkMacOSXMenu.c:	 the menubar and in menus that are not
+	* macosx/tkMacOSXMenus.c:	 using the custom MDEF [Bug 1620826];
+	fix early and missing clearing of current Tk active menu entry; fix
+	extraneous sending of <<MenuSelect>> during active menu entry clearing.
+
+	* macosx/tkMacOSXMouseEvent.c: add support for async window dragging by
+	the window server; set the corresponding window attribute by default.
+
+	* macosx/tkMacOSXMouseEvent.c: rationalized handling order of
+	non-mousedown events; add TkMacOSXModifierState() to retrieve the
+	current key modifiers in carbon format.
+
+	* macosx/tkMacOSXScrlbr.c: use appearance manager API to retrieve
+	scrollbar component metrics; add awareness of multiple possibilites for
+	scrollbar arrow position in aqua and handle user changes to arrow
+	position pref; handle difference in metrics of small & large scrollbar
+	variants; handle aqua "jump to here" scrollbar behaviour; correct
+	computation of scroll view size and position; enforce min scrollbar
+	height to avoid scrollbar component overlap; erase scrollbar area
+	outside of standard width; remove broken auto-adjust code; account for
+	window class when leaving space for grow box; remove code to manually
+	draw grow box; use modern API for thumb scroll proc; replace
+	HiliteControl() by modern API; replace control mgr constants with
+	appearance mgr equivalents.
+
+	* macosx/tkMacOSXSubwindows.c: use SetWindowBounds() API instead of
+	SizeWindow(); invalidate clip regions after X{Map,Unmap}Window as fix
+	for [Bug 940117] made them dependent on mapping state; remove unneeded
+	calls to TkMacOSXInvalClipRgns() and unnecessary setting of QD port;
+	use native-endian pixmap on intel; remove obsolete pixmap pix locking.
+
+	* macosx/tkMacOSXWindowEvent.c: handle only the first of a batch of
+	kEventAppAvailableWindowBoundsChanged events sent per transaction;
+	handle kEventWindowBoundsChanged event to support live window resizing
+	and centralized sending of location/size changed ConfigureNotify
+	events; ensure HIGrowBox is redrawn after bounds change; constrain
+	window after dragging to ensure titlebar is not inacessible
+	offscreen or under dock/menubar; handle kEventWindowGetRegion and
+	kEventWindowDrawContent for transparent windows to mark resp. paint
+	content region as transparent; handle kEventWindowConstrain for
+	fullscreen windows to ensure bounds match new screen size; enter/exit
+	fullscreen UIMode upon activation/deactivation of fullscreen window.
+
+	* macosx/tkMacOSXWm.c: use live-resize and async-drag carbon window
+	* macosx/tkMacOSXWm.h: attributes for toplevels by default; implement
+	new [wm attributes] -topmost, -transparent and -fullscreen; refactor
+	WmAttributesCmd() parallelling the tkUnixWm.c implementation, use thus
+	factored proc to set proxy icon from [wm iconbitmap]; dynamically
+	determine default values for toplevel min and max sizes (similar to
+	tkWinWm.c impl): min sizes depend on window class & attributes to
+	ensure visibility of all titlebar widgets and grow box, max sizes
+	depend on maximal window bounds for all active displays; factor out
+	code that puts into effect changes to master or override_redirect; use
+	RepositionWindow() API to determine staggered initial window bounds;
+	correct resize limit calculations, handle gridding and use modern
+	resize API in TkMacOSXGrowToplevel(); remove sending of ConfigureNotify
+	after resize or zoom (now handled by BoundsChanged handler); correct
+	composite carbon window attribute handling, remove currently unusable
+	attributes and add new attributes in [tk::unsupported::MacWindowStyle];
+	ensure validity of window class and attributes before use; apply
+	changes to window class when handling carbon window attribute changes
+	(if HIWindowChangeClass() API available); add debug build warning
+	message when deprecated window style is used instead of window class;
+	use transparent HIGrowBox for resizable windows; avoid unnecessary
+	calls to window structure width API; use tcl time API in TkpGetMS();
+	add TkMacOSXEnterExitFullscreen() to enter/exit UIMode with dock and
+	menubar hidden; restrict wmTracing output to debug builds; remove
+	unneeded calls to TkMacOSXInvalClipRgns() and unnecessary setting of QD
+	port; workaround GetWindowStructureWidths() Carbon bug (bogus results
+	for never-mapped floating windows).
+
+	* macosx/tkMacOSXXStubs.c (TkMacOSXDisplayChanged): add maximal window
+	bounds field to Screen record (in ext_data), computed as the union of
+	available window positioning bounds of all graphics devices (displays).
+
+	* macosx/tkMacOSXBitmap.c: fix macRoman encoding leak.
+	* macosx/tkMacOSXCursor.c:
+
+	* macosx/tkMacOSXDebug.c (TkMacOSXCarbonEventToAscii): use static
+	* macosx/tkMacOSXDebug.h: buffer to simplify callers; const fixes.
+
+	* macosx/tkMacOSXBitmap.c: use more efficient QDSwapPort() instead of
+	* macosx/tkMacOSXButton.c: GetPort()/SetPort()/GetGWorld()/SetGWorld().
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXXStubs.c:
+
+	* macosx/tkMacOSXColor.c: use kHIToolboxVersionNumber for runtime OS
+	* macosx/tkMacOSXEntry.c: version check rather than Gestalt() etc.
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXDraw.c: remove obsolete and now incorrect
+	* macosx/tkMacOSXInt.h:  tkMenuCascadeRgn clipping code.
+	* macosx/tkMacOSXMenu.c:
+
+	* macosx/tkMacOSXHLEvents.c: replace Tcl_GlobalEval() resp. Tcl_Eval()
+	* macosx/tkMacOSXScrlbr.c:   by Tcl_EvalEx().
+	* macosx/tkMacOSXInit.c:
+
+	* macosx/tkMacOSXInit.c (TkpInit): reorder initialization steps.
+
+	* macosx/tkMacOSXKeyEvent.c: remove pre-10.2 support.
+
+	* macosx/tkMacOSXMenus.c: remove now useless call to
+	TkMacOSXHandleTearoffMenu(); use \x.. quoting for non-latin1 macroman
+	literar chars to allow file to be edited as utf-8.
+
+	* macosx/tkMacOSXScale.c: replace TrackControl() by modern
+	* macosx/tkMacOSXScrlbr.c: HandleControlClick() API (using new
+	TkMacOSXModifierState()).
+
+	* macosx/tkMacOSXInt.h:		move all constant #defines needed to
+	* macosx/tkMacOSXColor.c:	support building on older OS X releases
+	* macosx/tkMacOSXEvent.h:	to a central location in tkMacOSXInt.h.
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/ttkMacOSXTheme.c:
+
+	* macosx/tkMacOSXInt.h:		 add ChkErr() macro to factor out
+	* macosx/tkMacOSXButton.c:	 Carbon OSStatus return value checking
+	* macosx/tkMacOSXCarbonEvents.c: and TkMacOSXDbgMsg() macro to factour
+	* macosx/tkMacOSXClipboard.c:	 out debug message output; use these
+	* macosx/tkMacOSXColor.c:	 macros to replace #ifdef TK_MAC_DEBUG
+	* macosx/tkMacOSXCursor.c:	 blocks & direct printing to stderr,
+	* macosx/tkMacOSXDebug.c:	 and to do additional OSStatus return
+	* macosx/tkMacOSXDialog.c:	 checking, and to standardize OSStatus
+	* macosx/tkMacOSXDraw.c:	 usage.
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXHLEvents.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c:
+
+	* macosx/tkMacOSXSend.c:	remove duplicate/unused declarations
+	* macosx/tkMacOSXXStubs.c:
+
+	* macosx/tkMacOSXDebug.c:	const fixes.
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXTest.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c:
+
+	* macosx/Wish-Info.plist.in: add tcl document extensions/mime types and
+	LSMinimumSystemVersion, LSRequiresCarbon & NSAppleScriptEnabled keys.
+
+	* macosx/Wish-Common.xcconfig: add Wish's Info.plist as __info_plist
+	section to tktest; enable more warnings.
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add 'DebugMemCompile' build
+	configuration that calls configure with --enable-symbols=all; disable
+	configure check for __attribute__((__visibility__("hidden"))) in Debug
+	configuration to restore availability of ZeroLink.
+
+	* macosx/Wish-Common.xcconfig:	fix whitespace.
+	* macosx/Wish-Debug.xcconfig:
+	* macosx/Wish-Release.xcconfig:
+	* macosx/tkMacOSXAETE.r:
+	* macosx/tkMacOSXConfig.c:
+	* macosx/tkMacOSXCursors.r:
+	* macosx/tkMacOSXKeyboard.c:
+	* macosx/tkMacOSXSend.c:
+	* macosx/ttkMacOSXTheme.c:
+	* macosx/tkMacOSXXCursors.r:
+	* macosx/README:
+
+	* macosx/GNUmakefile:		fix/add copyright and license refs.
+	* macosx/Tk-Info.plist.in:
+	* macosx/Wish-Info.plist.in:
+	* macosx/Wish.xcode/project.pbxproj:
+	* macosx/Wish.xcodeproj/project.pbxproj:
+	* macosx/tkMacOSX.h:
+
+	* unix/configure.in: install license.terms into Tk.framework; fix tk
+	debug build detection.
+	* unix/configure: autoconf-2.59
+
+	* doc/colors.n:		document new Mac OS X system colors.
+	* doc/cursors.n:	document new Mac OS X native cursors.
+	* doc/font.n:		document new Mac OS X 'menu' system font.
+	* doc/wm.n:		document new Mac OS X [wm attributes].
+	* doc/ttk_image.n:	fix 'make html' warning.
+	* doc/canvas.n:		fix nroff typo.
+
+2007-04-21  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXBitmap.c, macosx/tkMacOSXButton.c:
 	* macosx/tkMacOSXCarbonEvents.c, macosx/tkMacOSXClipboard.c:

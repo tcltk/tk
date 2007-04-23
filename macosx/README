@@ -1,7 +1,7 @@
-Tcl/Tk Mac OS X README 
+Tcl/Tk Mac OS X README
 ----------------------
 
-RCS: @(#) $Id: README,v 1.22 2007/01/28 01:42:16 das Exp $
+RCS: @(#) $Id: README,v 1.23 2007/04/23 21:24:32 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -98,7 +98,7 @@ inherits loginwindow's environment variables, which are essentially those set in
 $HOME/.MacOSX/environment.plist, and are unrelated to those set in your shell).
 
 - As of Tk 8.4.7, TkAqua has a version of the low-level drawing primitives using
-the CoreGraphics routines - the code is primarily due to James Tittle.  There
+the CoreGraphics routines - the code is primarily due to James Tittle. There
 were numerous problems with the QD version, mostly due to the different drawing
 model of QD & Tk. CG also trivially supports dashed lines, and the various end
 caps & miters. The old QD code is retained for now, just in case there are any
@@ -132,8 +132,8 @@ have a base name:
 Then to get the sequential variants, add an integer to the end of the base name.
 So, for instance this code will spin the spinner:
     proc spinCursor {widget count} {
-        $widget configure -cursor spinning$count
-        after 100 spinCursor [incr count]
+	$widget configure -cursor spinning$count
+	after 100 spinCursor [incr count]
     }
 This was added in Tk 8.4.2
 
@@ -238,7 +238,7 @@ Detailed Instructions for building with macosx/GNUmakefile
 trees in a common parent directory.
 [ If you don't want have the two source trees in one directory, you'll need to ]
 [ create the following symbolic link for the build to work as setup by default ]
-[      ln -fs /path_to_tcl/build /path_to_tk/build                             ]
+[      ln -fs /path_to_tcl/build /path_to_tk/build			       ]
 [ (where /path_to_{tcl,tk} is the directory containing the tcl resp. tk tree)  ]
 [ or you can pass an argument of BUILD_DIR=/somewhere to the tcl and tk make.  ]
 
@@ -247,12 +247,12 @@ trees in a common parent directory.
 containing the Tcl and Tk version number (for example '8.4.12').
 Setup the shell variable as follows:
 	set ver="8.4.12" ;: if your shell is csh
-	ver="8.4.12"     ;: if your shell is sh
+	ver="8.4.12"	 ;: if your shell is sh
 The source trees will be named this way only if you are building from a release
 archive, if you are building from CVS, the version numbers will be missing; so
 set ${ver} to the empty string instead:
-	set ver=""       ;: if your shell is csh
-	ver=""           ;: if your shell is sh
+	set ver=""	 ;: if your shell is csh
+	ver=""		 ;: if your shell is sh
 
 - The following steps will build Tcl and Tk from the Terminal, assuming you are
 located in the directory containing the tcl and tk source trees:
