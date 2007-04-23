@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_image.n,v 1.5 2006/12/13 23:04:33 hobbs Exp $
+'\" RCS: @(#) $Id: ttk_image.n,v 1.6 2007/04/23 21:19:51 das Exp $
 '\" 
 .so man.macros
 .TH ttk_image n 8.5 Tk "Tk Themed Widget"
@@ -36,7 +36,6 @@ See \fBIMAGE STRETCHING\fR, below.
 \fB-height \fIheight\fR
 Specifies a minimum height for the element.
 If less than zero, the base image's height is used as a default.
-.TP
 .TP
 \fB-padding\fR \fIpadding\fR
 Specifies the element's interior padding.  Defaults to 
