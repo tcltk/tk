@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.121 2007/03/07 23:46:33 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.122 2007/04/23 21:24:35 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -526,7 +526,7 @@ SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
 
 AQUA_RESOURCES = \
 	$(MAC_OSX_DIR)/tkAboutDlg.r $(MAC_OSX_DIR)/tkMacOSXCursors.r \
-	$(MAC_OSX_DIR)/tkMacOSXMenu.r $(MAC_OSX_DIR)/tkMacOSXXCursors.r
+	$(MAC_OSX_DIR)/tkMacOSXXCursors.r
 
 AQUA_WISH_RESOURCES = $(MAC_OSX_DIR)/tkMacOSXAETE.r
 
