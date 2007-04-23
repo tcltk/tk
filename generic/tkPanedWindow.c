@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.27 2007/01/05 00:00:50 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.28 2007/04/23 21:15:18 das Exp $
  */
 
 #include "tkPort.h"
@@ -1419,12 +1419,16 @@ DisplayPanedWindow(
 	ArrangePanes(clientData);
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Create a pixmap for double-buffering, if necessary.
      */
 
     pixmap = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
+    pixmap = Tk_WindowId(tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
     /*
      * Redraw the widget's background and border.
@@ -1467,6 +1471,7 @@ DisplayPanedWindow(
 	}
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Copy the information from the off-screen pixmap onto the screen, then
      * delete the pixmap.
@@ -1475,6 +1480,7 @@ DisplayPanedWindow(
     XCopyArea(Tk_Display(tkwin), pixmap, Tk_WindowId(tkwin), pwPtr->gc, 0, 0,
 	    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin), 0, 0);
     Tk_FreePixmap(Tk_Display(tkwin), pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 }
 
 /*
@@ -2699,12 +2705,16 @@ DisplayProxyWindow(
 	return;
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Create a pixmap for double-buffering, if necessary.
      */
 
     pixmap = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
+    pixmap = Tk_WindowId(tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
     /*
      * Redraw the widget's background and border.
@@ -2713,6 +2723,7 @@ DisplayProxyWindow(
     Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background, 0, 0,
 	    Tk_Width(tkwin), Tk_Height(tkwin), 2, pwPtr->sashRelief);
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Copy the pixmap to the display.
      */
@@ -2720,6 +2731,7 @@ DisplayProxyWindow(
     XCopyArea(Tk_Display(tkwin), pixmap, Tk_WindowId(tkwin), pwPtr->gc, 0, 0,
 	    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin), 0, 0);
     Tk_FreePixmap(Tk_Display(tkwin), pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 }
 
 /*
