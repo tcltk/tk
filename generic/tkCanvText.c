@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.23 2007/02/13 11:29:17 das Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.24 2007/04/23 21:15:17 das Exp $
  */
 
 #include <stdio.h>
@@ -465,7 +465,9 @@ ConfigureText(
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
 	}
-	gcValues.foreground = textInfoPtr->selFgColorPtr->pixel;
+	if (textInfoPtr->selFgColorPtr != NULL) {
+	    gcValues.foreground = textInfoPtr->selFgColorPtr->pixel;
+	}
 	newSelGC = Tk_GetGC(tkwin, mask|GCForeground, &gcValues);
     }
     if (textPtr->gc != None) {
