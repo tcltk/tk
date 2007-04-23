@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing
 # several radiobutton widgets.
 #
-# RCS: @(#) $Id: radio.tcl,v 1.7 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: radio.tcl,v 1.8 2007/04/23 21:16:01 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -29,7 +29,9 @@ labelframe $w.mid -pady 2 -text "Color" -padx 2
 labelframe $w.right -pady 2 -text "Alignment" -padx 2
 button $w.tristate -text Tristate -command "set size multi; set color multi" \
     -pady 2 -padx 2
-
+if {[tk windowingsystem] eq "aqua"} {
+    $w.tristate configure -padx 10
+}
 grid $w.left     -column 0 -row 1 -pady .5c -padx .5c -rowspan 2
 grid $w.mid      -column 1 -row 1 -pady .5c -padx .5c -rowspan 2
 grid $w.right    -column 2 -row 1 -pady .5c -padx .5c
