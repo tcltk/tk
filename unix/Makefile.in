@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.122 2007/04/23 21:24:35 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.123 2007/04/24 15:55:50 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1518,14 +1518,16 @@ dist:   $(UNIX_DIR)/configure
 	    fi; \
 	done;)
 	mkdir $(DISTDIR)/generic
-	cp -p $(GENERIC_DIR)/*.c $(GENERIC_DIR)/*.h $(GENERIC_DIR)/prolog.ps \
-		$(DISTDIR)/generic
+	cp -p $(GENERIC_DIR)/*.[ch] $(GENERIC_DIR)/prolog.ps $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/README $(DISTDIR)/generic
 	cp -p $(TOP_DIR)/changes $(TOP_DIR)/ChangeLog \
 		$(TOP_DIR)/ChangeLog.2??? $(TOP_DIR)/README \
 		$(TOP_DIR)/license.terms $(DISTDIR)
 	rm -f $(DISTDIR)/generic/blt*.[ch]
+	mkdir $(DISTDIR)/generic/ttk
+	cp -p $(GENERIC_DIR)/ttk/*.[ch] $(GENERIC_DIR)/ttk/ttk.decls \
+		$(GENERIC_DIR)/ttk/ttkGenStubs.tcl $(DISTDIR)/generic/ttk
 	mkdir $(DISTDIR)/win
 	cp $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
 	cp $(TOP_DIR)/win/configure.in \
@@ -1533,8 +1535,7 @@ dist:   $(UNIX_DIR)/configure
 		$(TOP_DIR)/win/tkConfig.sh.in \
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
 		$(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/*.c $(TOP_DIR)/win/*.h $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/*.bat $(DISTDIR)/win
+	cp -p $(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat $(DISTDIR)/win
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/*.bat
 	cp -p $(TOP_DIR)/win/makefile.* $(DISTDIR)/win
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/makefile.*
@@ -1544,16 +1545,13 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
 	cp -p $(TOP_DIR)/win/wish.exe.manifest.in $(DISTDIR)/win/
-	cp -p $(TOP_DIR)/win/rc/*.rc $(TOP_DIR)/win/rc/*.cur \
-		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
-		$(DISTDIR)/win/rc
+	cp -p $(TOP_DIR)/win/rc/*.{rc,cur,ico,bmp} $(DISTDIR)/win/rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/wish.exe.manifest.in
 	mkdir $(DISTDIR)/macosx
 	cp -p $(TOP_DIR)/macosx/GNUmakefile $(TOP_DIR)/macosx/README \
-		$(TOP_DIR)/macosx/Wish.icns $(TOP_DIR)/macosx/*.c \
-		$(TOP_DIR)/macosx/*.h $(TOP_DIR)/macosx/*.in \
-		$(TOP_DIR)/macosx/*.r $(TOP_DIR)/macosx/*.ac $(DISTDIR)/macosx
+		$(TOP_DIR)/macosx/Wish.icns $(TOP_DIR)/macosx/*.[chr] \
+		$(TOP_DIR)/macosx/*.in $(TOP_DIR)/macosx/*.ac $(DISTDIR)/macosx
 	mkdir $(DISTDIR)/macosx/Wish.pbproj
 	cp -p $(TOP_DIR)/macosx/Wish.pbproj/*.pbx* $(DISTDIR)/macosx/Wish.pbproj
 	mkdir $(DISTDIR)/macosx/Wish.xcode
@@ -1566,7 +1564,7 @@ dist:   $(UNIX_DIR)/configure
 		$(TCLDIR)/compat/stdlib.h $(TCLDIR)/compat/limits.h \
 		$(DISTDIR)/compat
 	mkdir $(DISTDIR)/xlib
-	cp -p $(TOP_DIR)/xlib/*.h $(TOP_DIR)/xlib/*.c $(DISTDIR)/xlib
+	cp -p $(TOP_DIR)/xlib/*.[ch] $(DISTDIR)/xlib
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/xlib
 	mkdir $(DISTDIR)/xlib/X11
 	cp -p $(TOP_DIR)/xlib/X11/*.h $(DISTDIR)/xlib/X11
@@ -1575,6 +1573,8 @@ dist:   $(UNIX_DIR)/configure
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/library/*.tcl \
 		$(TOP_DIR)/library/tclIndex \
 		$(DISTDIR)/library
+	mkdir $(DISTDIR)/library/ttk
+	cp -p $(TOP_DIR)/library/ttk/*.tcl $(DISTDIR)/library/ttk
 	mkdir $(DISTDIR)/library/images
 	@(cd $(TOP_DIR); for i in library/images/* ; do \
 	    if [ -f $$i ] ; then \
