@@ -1,6 +1,12 @@
-2007-04-23  Daniel Steffen  <das@users.sourceforge.net>
+2007-04-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.5a6 TAGGED FOR RELEASE ***
+
+	* unix/Makefile.in (dist): add ttk bits to src dist
+
+	* tests/font.test (font-46.[12]): correct listification of result
+
+2007-04-23  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkCanvas.c:	allow -selectforeground option to be None; add
 	* generic/tkCanvText.c:	fallback to fgColor when selFgColor is None
