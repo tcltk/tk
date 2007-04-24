@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.14 2006/12/01 20:14:23 kennykb Exp $
+# RCS: @(#) $Id: font.test,v 1.15 2007/04/24 15:54:30 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1339,16 +1339,16 @@ test font-46.1 {font actual, with character, no option, no --} \
 	font actual {times 10} a
     } \
     -match glob \
-    -result "-family [font actual {times 10} -family] -size *\
-             -slant roman -underline 0 -overstrike 0"
+    -result [list -family [font actual {times 10} -family] -size *\
+		 -slant roman -underline 0 -overstrike 0]
 
 test font-46.2 {font actual, with character introduced by --} \
     -body {
 	font actual {times 10} -- -
     } \
     -match glob \
-    -result "-family [font actual {times 10} -family] -size *\
-             -slant roman -underline 0 -overstrike 0"
+    -result [list -family [font actual {times 10} -family] -size *\
+		 -slant roman -underline 0 -overstrike 0]
 
 test font-46.3 {font actual, with character and option} {
     font actual {times 10} -family a
