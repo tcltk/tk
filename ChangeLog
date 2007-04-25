@@ -1,11 +1,17 @@
+2007-04-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	*** 8.5a6 TAGGED FOR RELEASE ***
+
+	* unix/Makefile.in (dist): add tests/ttk dir to src dist
+
+	* unix/tkUnixMenubu.c (TkpDisplayMenuButton): init width/height to 0
+
 2007-04-25  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/Makefile.in (dist): add macosx/*.xcconfig files to src dist;
 	copy license.terms to dist macosx dir; fix autoheader bits.
 
 2007-04-24  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	*** 8.5a6 TAGGED FOR RELEASE ***
 
 	* unix/Makefile.in (dist): add ttk bits to src dist
 

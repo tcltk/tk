@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.125 2007/04/25 03:40:59 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.126 2007/04/25 17:09:13 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1616,11 +1616,11 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/doc/*.[13n] \
 		$(TCLDIR)/doc/man.macros $(DISTDIR)/doc
 	mkdir $(DISTDIR)/tests
-	cp -p $(TOP_DIR)/license.terms $(TEST_DIR)/*.test \
-		$(TEST_DIR)/*.tcl $(TEST_DIR)/README \
-		$(TEST_DIR)/*.gif $(TEST_DIR)/*.ppm \
-		$(TEST_DIR)/*.xbm \
+	cp -p $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
+		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,ppm,xbm} \
 		$(TEST_DIR)/option.file* $(DISTDIR)/tests
+	mkdir $(DISTDIR)/tests/ttk
+	cp -p $(TEST_DIR)/*.{test,tcl} $(DISTDIR)/tests/ttk
 
 #
 # The following target can only be used for non-patch releases.  Use
