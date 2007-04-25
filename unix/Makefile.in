@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.124 2007/04/25 02:49:25 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.125 2007/04/25 03:40:59 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1493,12 +1493,14 @@ DISTNAME = tk${VERSION}${PATCH_LEVEL}
 ZIPNAME	 = tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}-src.zip
 DISTDIR	 = $(DISTROOT)/$(DISTNAME)
 TCLDIR   = @TCL_SRC_DIR@
-$(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in $(UNIX_DIR)/tcl.m4
+$(UNIX_DIR)/configure: $(UNIX_DIR)/configure.in $(UNIX_DIR)/tcl.m4 \
+		$(UNIX_DIR)/aclocal.m4
 	cd $(UNIX_DIR); autoconf
-$(UNIX_DIR)/tkConfig.h.in: $(UNIX_DIR)/configure.in $(UNIX_DIR)/tcl.m4
-	cd $(UNIX_DIR); autoheader
+$(UNIX_DIR)/tkConfig.h.in: $(UNIX_DIR)/configure.in $(UNIX_DIR)/tcl.m4 \
+		$(UNIX_DIR)/aclocal.m4 $(MAC_OSX_DIR)/configure.ac
+	cd $(MAC_OSX_DIR); autoconf; autoheader; touch $@
 
-dist:   $(UNIX_DIR)/configure
+dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)/unix
 	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
@@ -1507,7 +1509,8 @@ dist:   $(UNIX_DIR)/configure
 	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.in $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
-		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage $(DISTDIR)/unix
+		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage \
+		$(UNIX_DIR)/tkConfig.h.in $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
 	chmod +x $(DISTDIR)/unix/install-sh
 	mkdir $(DISTDIR)/bitmaps
@@ -1526,8 +1529,8 @@ dist:   $(UNIX_DIR)/configure
 		$(TOP_DIR)/license.terms $(DISTDIR)
 	rm -f $(DISTDIR)/generic/blt*.[ch]
 	mkdir $(DISTDIR)/generic/ttk
-	cp -p $(GENERIC_DIR)/ttk/*.[ch] $(GENERIC_DIR)/ttk/ttk.decls \
-		$(GENERIC_DIR)/ttk/ttkGenStubs.tcl $(DISTDIR)/generic/ttk
+	cp -p $(TTK_DIR)/*.[ch] $(TTK_DIR)/ttk.decls \
+		$(TTK_DIR)/ttkGenStubs.tcl $(DISTDIR)/generic/ttk
 	mkdir $(DISTDIR)/win
 	cp $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
 	cp $(TOP_DIR)/win/configure.in \
@@ -1549,26 +1552,28 @@ dist:   $(UNIX_DIR)/configure
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/wish.exe.manifest.in
 	mkdir $(DISTDIR)/macosx
-	cp -p $(TOP_DIR)/macosx/GNUmakefile $(TOP_DIR)/macosx/README \
-		$(TOP_DIR)/macosx/Wish.icns $(TOP_DIR)/macosx/*.[chr] \
-		$(TOP_DIR)/macosx/*.in $(TOP_DIR)/macosx/*.ac \
-		$(TOP_DIR)/macosx/*.xcconfig $(DISTDIR)/macosx
+	cp -p $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
+		$(MAC_OSX_DIR)/Wish.icns $(MAC_OSX_DIR)/*.[chr] \
+		$(MAC_OSX_DIR)/*.in $(MAC_OSX_DIR)/*.ac \
+		$(MAC_OSX_DIR)/*.xcconfig $(MAC_OSX_DIR)/configure \
+		$(DISTDIR)/macosx
+	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/macosx
 	mkdir $(DISTDIR)/macosx/Wish.pbproj
-	cp -p $(TOP_DIR)/macosx/Wish.pbproj/*.pbx* $(DISTDIR)/macosx/Wish.pbproj
+	cp -p $(MAC_OSX_DIR)/Wish.pbproj/*.pbx* $(DISTDIR)/macosx/Wish.pbproj
 	mkdir $(DISTDIR)/macosx/Wish.xcode
-	cp -p $(TOP_DIR)/macosx/Wish.xcode/*.pbx* $(DISTDIR)/macosx/Wish.xcode
+	cp -p $(MAC_OSX_DIR)/Wish.xcode/*.pbx* $(DISTDIR)/macosx/Wish.xcode
 	mkdir $(DISTDIR)/macosx/Wish.xcodeproj
-	cp -p $(TOP_DIR)/macosx/Wish.xcodeproj/*.pbx* \
+	cp -p $(MAC_OSX_DIR)/Wish.xcodeproj/*.pbx* \
 		$(DISTDIR)/macosx/Wish.xcodeproj
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
 		$(TCLDIR)/compat/stdlib.h $(TCLDIR)/compat/limits.h \
 		$(DISTDIR)/compat
 	mkdir $(DISTDIR)/xlib
-	cp -p $(TOP_DIR)/xlib/*.[ch] $(DISTDIR)/xlib
+	cp -p $(XLIB_DIR)/*.[ch] $(DISTDIR)/xlib
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/xlib
 	mkdir $(DISTDIR)/xlib/X11
-	cp -p $(TOP_DIR)/xlib/X11/*.h $(DISTDIR)/xlib/X11
+	cp -p $(XLIB_DIR)/X11/*.h $(DISTDIR)/xlib/X11
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/xlib/X11
 	mkdir $(DISTDIR)/library
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/library/*.tcl \
