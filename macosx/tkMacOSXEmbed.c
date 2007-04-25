@@ -15,7 +15,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.10 2007/04/23 23:10:10 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.11 2007/04/25 00:02:04 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1062,7 +1062,7 @@ EmbedFocusProc(
 static void
 EmbedGeometryRequest(
     Container *containerPtr,	/* Information about the embedding. */
-    int width, height)		/* Size that the child has requested. */
+    int width, int height)	/* Size that the child has requested. */
 {
     TkWindow *winPtr = containerPtr->parentPtr;
 
