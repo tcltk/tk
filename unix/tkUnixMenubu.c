@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenubu.c,v 1.8 2005/11/13 21:00:17 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenubu.c,v 1.9 2007/04/25 17:08:51 hobbs Exp $
  */
 
 #include "tkMenubutton.h"
@@ -76,10 +76,11 @@ TkpDisplayMenuButton(
 				 * warning. */
     int y = 0;
     register Tk_Window tkwin = mbPtr->tkwin;
-    int width, height, fullWidth, fullHeight;
+    int fullWidth, fullHeight;
     int textXOffset, textYOffset;
     int imageWidth, imageHeight;
     int imageXOffset, imageYOffset;
+    int width = 0, height = 0;
 				/* Image information that will be used to
 				 * restrict disabled pixmap as well */
     int haveImage = 0, haveText = 0;
