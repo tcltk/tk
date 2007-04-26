@@ -1,6 +1,10 @@
-2007-04-25  Jeff Hobbs  <jeffh@ActiveState.com>
+2007-04-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.5a6 TAGGED FOR RELEASE ***
+
+	* unix/Makefile.in (dist): correct tests/ttk glob inclusion
+
+2007-04-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in (dist): add tests/ttk dir to src dist
 
