@@ -1,3 +1,8 @@
+2007-04-27  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTreeview.c(TagOptionSpecs): Use TK_OPTION_STRING
+	instead of TK_OPTION_FONT to avoid resource leak in tag management.
+
 2007-04-26  Joe English  <jenglish@users.sourceforge.net>
 
 	* macosx/ttkMacOSXTheme.c: Merged OFFSET_RECT processing into 

@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.15 2007/03/07 23:46:34 das Exp $
+/* $Id: ttkTreeview.c,v 1.16 2007/04/28 01:22:10 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -185,13 +185,13 @@ static Tk_OptionSpec TagOptionSpecs[] =
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	NULL, Tk_Offset(DisplayItem,anchorObj), -1,
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
-    {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
+    {TK_OPTION_STRING, "-background", "windowColor", "WindowColor", /*SB:COLOR*/
 	NULL, Tk_Offset(DisplayItem,backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
-    {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
+    {TK_OPTION_STRING, "-foreground", "textColor", "TextColor", /*SB:COLOR*/
 	NULL, Tk_Offset(DisplayItem,foregroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
-    {TK_OPTION_FONT, "-font", "font", "Font",
+    {TK_OPTION_STRING, "-font", "font", "Font",	/* SB:FONT */
 	NULL, Tk_Offset(DisplayItem,fontObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
