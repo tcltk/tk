@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.11.2.5 2006/12/01 19:47:41 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.11.2.6 2007/04/29 02:25:54 das Exp $
 '\" 
 .so man.macros
 .TH wm n 8.4 Tk "Tk Built-In Commands"
@@ -100,6 +100,18 @@ can be dragged and dropped in lieu of the file's finder icon).
 Specifies the alpha transparency level of the window.
 It accepts a value from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque),
 values outside that range will be constrained.
+.TP
+\fB\-topmost\fR
+Specifies whether this is a topmost window (displays above all other windows).
+.TP
+\fB\-transparent\fR
+Makes the window content area transparent and turns off the window shadow. For
+the transparency to be effecive, the toplevel background needs to be set to a
+color with some alpha, e.g. "systemTransparent".
+.TP
+\fB\-fullscreen\fR
+Places the window in a mode that takes up the entire main screen and hides
+the dock and menu bar.
 .RE
 .PP
 On X11, there are currently no special attribute values.
