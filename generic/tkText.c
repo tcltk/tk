@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33.2.5 2006/10/17 05:38:48 dgp Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.6 2007/04/29 02:24:02 das Exp $
  */
 
 #include "default.h"
@@ -113,10 +113,10 @@ static Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_MONO_ONLY|TK_CONFIG_NULL_OK},
     {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_TEXT_SELECT_FG_COLOR, Tk_Offset(TkText, selFgColorPtr),
-	TK_CONFIG_COLOR_ONLY},
+	TK_CONFIG_COLOR_ONLY|TK_CONFIG_NULL_OK},
     {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_TEXT_SELECT_FG_MONO, Tk_Offset(TkText, selFgColorPtr),
-	TK_CONFIG_MONO_ONLY},
+	TK_CONFIG_MONO_ONLY|TK_CONFIG_NULL_OK},
     {TK_CONFIG_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
 	DEF_TEXT_SET_GRID, Tk_Offset(TkText, setGrid), 0},
     {TK_CONFIG_PIXELS, "-spacing1", "spacing1", "Spacing",

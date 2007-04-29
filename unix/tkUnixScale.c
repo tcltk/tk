@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.8.4.1 2004/10/28 15:18:40 patthoyts Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.8.4.2 2007/04/29 02:24:01 das Exp $
  */
 
 #include "tkScale.h"
@@ -567,6 +567,7 @@ TkpDisplayScale(clientData)
     }
     Tcl_Release((ClientData) scalePtr);
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * In order to avoid screen flashes, this procedure redraws
      * the scale in a pixmap, then copies the pixmap to the
@@ -576,6 +577,9 @@ TkpDisplayScale(clientData)
 
     pixmap = Tk_GetPixmap(scalePtr->display, Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
+    pixmap = Tk_WindowId(tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
     drawnArea.x = 0;
     drawnArea.y = 0;
     drawnArea.width = Tk_Width(tkwin);
@@ -620,6 +624,7 @@ TkpDisplayScale(clientData)
 	}
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Copy the information from the off-screen pixmap onto the screen,
      * then delete the pixmap.
@@ -629,6 +634,7 @@ TkpDisplayScale(clientData)
 	    scalePtr->copyGC, drawnArea.x, drawnArea.y, drawnArea.width,
 	    drawnArea.height, drawnArea.x, drawnArea.y);
     Tk_FreePixmap(scalePtr->display, pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
     done:
     scalePtr->flags &= ~REDRAW_ALL;
