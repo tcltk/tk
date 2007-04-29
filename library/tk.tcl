@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.46.2.6 2006/09/25 17:28:20 andreas_kupries Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.46.2.7 2007/04/29 02:24:49 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -123,9 +123,9 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	} elseif {$y > ([winfo screenheight $w]-[winfo reqheight $w])} {
 	    set y [expr {[winfo screenheight $w]-[winfo reqheight $w]}]
 	}
-	if {$windowingsystem eq "macintosh" || $windowingsystem eq "aqua"} {
+	if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
-	    if {$y < 20} { set y 20 }
+	    if {$y < 22} { set y 22 }
 	}
     }
     wm geometry $w +$x+$y
