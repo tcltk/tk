@@ -1,7 +1,7 @@
-Tcl/Tk Mac OS X README 
+Tcl/Tk Mac OS X README
 ----------------------
 
-RCS: @(#) $Id: README,v 1.6.2.14 2006/10/16 15:57:13 das Exp $
+RCS: @(#) $Id: README,v 1.6.2.15 2007/04/29 02:26:47 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -91,14 +91,14 @@ framework directories:
 "-psn_XXXX" argument. This is the Wish's carbon process serial number, you may
 need to filter it out for cross platform compatibility of your scripts.
 
-- the env array is different when Wish is started from the Finder than when it
-(or tclsh) is invoked from the Terminal, in particular PATH may not be what you
-expect. (Wish started from the Finder inherits the Finder's environment
-variables, which are essentially those set in $HOME/.MacOSX/environment.plist
-and not those set by your shell configuration files).
+- the env array is different when Wish is started from the Finder (i.e. via
+LaunchServices) than when it (or tclsh) is invoked from the Terminal, in
+particular PATH may not be what you expect. (Wish started by LaunchServices
+inherits loginwindow's environment variables, which are essentially those set in
+$HOME/.MacOSX/environment.plist, and are unrelated to those set in your shell).
 
 - As of Tk 8.4.7, TkAqua has a version of the low-level drawing primitives using
-the CoreGraphics routines - the code is primarily due to James Tittle.  There
+the CoreGraphics routines - the code is primarily due to James Tittle. There
 were numerous problems with the QD version, mostly due to the different drawing
 model of QD & Tk. CG also trivially supports dashed lines, and the various end
 caps & miters. The old QD code is retained for now, just in case there are any
@@ -110,14 +110,14 @@ control whether a line/shape is drawn antialiased. The antialiasing threshold is
 0 by default (i.e. antialias everything), it can be changed by setting
 	set tk::mac::CGAntialiasLimit <limit>
 in your script before drawing, in which case lines (or shapes with outlines)
-thinner that <limit> pixels will not be antialiased.
+thinner than <limit> pixels will not be antialiased.
 
 - Quickdraw text antialiasing is enabled by default when available (from 10.1.5
 onwards). Changing the global boolean variable '::tk::mac::antialiasedtext'
 allows to dis/enable antialiasing on the fly from Tcl (even for existing text).
 
 - Scrollbars: There are two scrollbar variants in Aqua, normal & small. The
-normal scrollbar has a small dimension of 16, the small variant 12. Access to
+normal scrollbar has a small dimension of 15, the small variant 11. Access to
 the small variant was added in Tk 8.4.2.
 
 - Cursors: You can now put up and spin the Classic MacOS spinner, and the
@@ -131,8 +131,8 @@ have a base name:
 Then to get the sequential variants, add an integer to the end of the base name.
 So, for instance this code will spin the spinner:
     proc spinCursor {widget count} {
-        $widget configure -cursor spinning$count
-        after 100 spinCursor [incr count]
+	$widget configure -cursor spinning$count
+	after 100 spinCursor [incr count]
     }
 This was added in Tk 8.4.2
 
@@ -159,16 +159,16 @@ select based notifier). Note that --enable-aqua is incompatible with
 --disable-corefoundation (for both Tcl and Tk configure).
 
 - It is also possible to build with Apple's IDE via the tk/macosx/Wish.pbproj
-project, this simply calls through to the tk/macosx/GNUMakefile. It requires a
+project, this simply calls through to the tk/macosx/Makefile. It requires a
 build of the tcl/macosx/Tcl.pbproj project.
 
 - To build universal binaries, set CFLAGS as follows:
     export CFLAGS="-arch ppc -arch i386 \
 	-isysroot /Developer/SDKs/MacOSX10.4u.sdk -mmacosx-version-min=10.4"
 This requires Mac OS X 10.4 and Xcode 2.2 (_not_ Xcode 2.1) and will work on any
-of the architectures (on intel Macs, the -isysroot may not be required). Note
-that it is not possible to configure universal builds correctly if the current
-architecture is not present in CFLAGS (i.e. -arch `arch` must be there).
+of the architectures (the -isysroot flag is only required on PowerPC Tiger).
+Note that configure requires CFLAGS to contain a least one architecture that can
+be run on the build machine (i.e. ppc on PowerPC, ppc or i386 on Intel).
 Universal builds of Tk TEA extensions are also possible with CFLAGS set as
 above, they will be [load]able by universal as well as thin binaries of Tk.
 Note that while Tcl can be built for 64-bit architectures, neither TkAqua nor
@@ -194,7 +194,7 @@ Detailed Instructions for building with macosx/GNUmakefile
 trees in a common parent directory.
 [ If you don't want have the two source trees in one directory, you'll need to ]
 [ create the following symbolic link for the build to work as setup by default ]
-[      ln -fs /path_to_tcl/build /path_to_tk/build                             ]
+[      ln -fs /path_to_tcl/build /path_to_tk/build			       ]
 [ (where /path_to_{tcl,tk} is the directory containing the tcl resp. tk tree)  ]
 [ or you can pass an argument of BUILD_DIR=/somewhere to the tcl and tk make.  ]
 
@@ -203,12 +203,12 @@ trees in a common parent directory.
 containing the Tcl and Tk version number (for example '8.4.12').
 Setup the shell variable as follows:
 	set ver="8.4.12" ;: if your shell is csh
-	ver="8.4.12"     ;: if your shell is sh
+	ver="8.4.12"	 ;: if your shell is sh
 The source trees will be named this way only if you are building from a release
 archive, if you are building from CVS, the version numbers will be missing; so
 set ${ver} to the empty string instead:
-	set ver=""       ;: if your shell is csh
-	ver=""           ;: if your shell is sh
+	set ver=""	 ;: if your shell is csh
+	ver=""		 ;: if your shell is sh
 
 - The following steps will build Tcl and Tk from the Terminal, assuming you are
 located in the directory containing the tcl and tk source trees:
