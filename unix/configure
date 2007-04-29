@@ -8665,7 +8665,7 @@ _ACEOF
     LIBS="$LIBS -framework Carbon -framework IOKit"
     CFLAGS="$CFLAGS -fpascal-strings"
     TK_WINDOWINGSYSTEM=AQUA
-    if test "${enable_symbols}" != no; then
+    if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
 
 cat >>confdefs.h <<\_ACEOF
 #define TK_MAC_DEBUG 1
