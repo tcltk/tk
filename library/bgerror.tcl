@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.6 2006/06/22 00:37:01 hobbs Exp $
-# $Id: bgerror.tcl,v 1.23.2.6 2006/06/22 00:37:01 hobbs Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.7 2007/04/29 02:24:49 das Exp $
+# $Id: bgerror.tcl,v 1.23.2.7 2007/04/29 02:24:49 das Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -18,6 +18,12 @@ namespace eval ::tk::dialog::error {
     option add *ErrorDialog.function.text [mc "Save To Log"] \
 	widgetDefault
     option add *ErrorDialog.function.command [namespace code SaveToLog]
+    if {[tk windowingsystem] eq "aqua"} {
+	option add *ErrorDialog*background systemAlertBackgroundActive \
+		widgetDefault
+	option add *ErrorDialog*Button.highlightBackground \
+		systemAlertBackgroundActive widgetDefault
+    }
 }
 
 proc ::tk::dialog::error::Return {} {
@@ -141,7 +147,7 @@ proc ::tk::dialog::error::bgerror err {
 
     if {($tcl_platform(platform) eq "macintosh")
             || ($windowingsystem eq "aqua")} {
-	::tk::unsupported::MacWindowStyle style .bgerrorDialog zoomDocProc
+	::tk::unsupported::MacWindowStyle style .bgerrorDialog moveableAlert {}
     }
 
     frame .bgerrorDialog.bot
@@ -163,6 +169,9 @@ proc ::tk::dialog::error::bgerror err {
 	    -relief $textRelief			\
 	    -highlightthickness $textHilight	\
 	    -wrap char
+    if {$windowingsystem eq "aqua"} {
+	$W.text configure -width 80 -background white
+    }
 
     scrollbar $W.scroll -command [list $W.text yview]
     pack $W.scroll -side right -fill y
@@ -222,6 +231,7 @@ proc ::tk::dialog::error::bgerror err {
 	    if {($name eq "ok") || ($name eq "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 79
 	    }
+	    grid configure .bgerrorDialog.$name -pady 7
 	}
 	incr i
     }
