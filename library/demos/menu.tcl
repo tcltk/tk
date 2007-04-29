@@ -3,7 +3,7 @@
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubars.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.4.2.2 2005/06/25 03:41:39 das Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.4.2.3 2007/04/29 02:24:24 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -19,7 +19,8 @@ positionWindow $w
 label $w.msg -font $font -wraplength 4i -justify left 
 if {[string equal [tk windowingsystem] "classic"]
 	|| [string equal [tk windowingsystem] "aqua"]} {
-    $w.msg configure -text "This window contains a menubar with cascaded menus.  You can invoke entries with an accelerator by typing Command+x, where \"x\" is the character next to the command key symbol. The rightmost menu can be torn off into a palette by dragging outside of its bounds and releasing the mouse."
+    catch {set origUseCustomMDEF $::tk::mac::useCustomMDEF; set ::tk::mac::useCustomMDEF 1}
+    $w.msg configure -text "This window has a menubar with cascaded menus.  You can invoke entries with an accelerator by typing Command+x, where \"x\" is the character next to the command key symbol. The rightmost menu can be torn off into a palette by selecting the first item in the menu."
 } else {
     $w.msg configure -text "This window contains a menubar with cascaded menus.  You can post a menu from the keyboard by typing Alt+x, where \"x\" is the character underlined on the menu.  You can then traverse among the menus using the arrow keys.  When a menu is posted, you can invoke the current entry by typing space, or you can invoke any entry by typing its underlined character.  If a menu entry has an accelerator, you can invoke the entry without posting the menu just by typing the accelerator. The rightmost menu can be torn off into a palette by selecting the first item in the menu."
 }
@@ -143,7 +144,7 @@ $m entryconfigure "Does almost nothing" -bitmap questhead -compound left \
 
 set m $w.menu.colors
 $w.menu add cascade -label "Colors" -menu $m -underline 1
-menu $m
+menu $m -tearoff 1
 foreach i {red orange yellow green blue} {
     $m add command -label $i -background $i -command [list \
 	    puts "You invoked \"$i\"" ]
@@ -158,4 +159,8 @@ bind Menu <<MenuSelect>> {
     }
     set menustatus $label
     update idletasks
+}
+
+if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
+    catch {set ::tk::mac::useCustomMDEF $origUseCustomMDEF}
 }
