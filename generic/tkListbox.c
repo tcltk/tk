@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.29.2.4 2006/12/04 20:13:00 hobbs Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.29.2.5 2007/04/29 02:24:02 das Exp $
  */
 
 #include "tkPort.h"
@@ -278,7 +278,7 @@ static Tk_OptionSpec optionSpecs[] = {
 	 Tk_Offset(Listbox, selBorderWidth), 0, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 DEF_LISTBOX_SELECT_FG_COLOR, -1, Tk_Offset(Listbox, selFgColorPtr),
-	 0, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
+	 TK_CONFIG_NULL_OK, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-selectmode", "selectMode", "SelectMode",
 	 DEF_LISTBOX_SELECT_MODE, -1, Tk_Offset(Listbox, selectMode),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -1779,7 +1779,9 @@ ListboxWorldChanged(instanceData)
     }
     listPtr->textGC = gc;
 
-    gcValues.foreground = listPtr->selFgColorPtr->pixel;
+    if (listPtr->selFgColorPtr != NULL) {
+	gcValues.foreground = listPtr->selFgColorPtr->pixel;
+    }
     gcValues.font = Tk_FontId(listPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
@@ -1865,6 +1867,7 @@ DisplayListbox(clientData)
     listPtr->flags &= ~(REDRAW_PENDING|UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR);
     Tcl_Release((ClientData) listPtr);
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Redrawing is done in a temporary pixmap that is allocated
      * here and freed at the end of the procedure.  All drawing is
@@ -1875,6 +1878,9 @@ DisplayListbox(clientData)
 
     pixmap = Tk_GetPixmap(listPtr->display, Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
+    pixmap = Tk_WindowId(tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
     Tk_Fill3DRectangle(tkwin, pixmap, listPtr->normalBorder, 0, 0,
 	    Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
@@ -1922,7 +1928,11 @@ DisplayListbox(clientData)
 		if (entry != NULL) {
 		    attrs = (ItemAttr *)Tcl_GetHashValue(entry);
 		    /* Default GC has the values from the widget at large */
-		    gcValues.foreground = listPtr->selFgColorPtr->pixel;
+		    if (listPtr->selFgColorPtr) {
+			gcValues.foreground = listPtr->selFgColorPtr->pixel;
+		    } else {
+			gcValues.foreground = listPtr->fgColorPtr->pixel;
+		    }
 		    gcValues.font = Tk_FontId(listPtr->tkfont);
 		    gcValues.graphics_exposures = False;
 		    mask = GCForeground | GCFont | GCGraphicsExposures;
@@ -2122,10 +2132,12 @@ DisplayListbox(clientData)
 	            listPtr->highlightWidth, pixmap);
 	}
     }
+#ifndef TK_NO_DOUBLE_BUFFERING
     XCopyArea(listPtr->display, pixmap, Tk_WindowId(tkwin),
 	    listPtr->textGC, 0, 0, (unsigned) Tk_Width(tkwin),
 	    (unsigned) Tk_Height(tkwin), 0, 0);
     Tk_FreePixmap(listPtr->display, pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 }
 
 /*
