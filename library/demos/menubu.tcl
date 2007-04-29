@@ -1,24 +1,24 @@
-# menubutton.tcl --
+# menubu.tcl --
 #
 # This demonstration script creates a window with a bunch of menus
 # and cascaded menus using menubuttons.
 #
-# # RCS: @(#) $Id: menubu.tcl,v 1.3 2002/08/31 06:12:28 das Exp $
+# # RCS: @(#) $Id: menubu.tcl,v 1.3.2.1 2007/04/29 02:24:24 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-set w .menubutton
+set w .menubu
 catch {destroy $w}
 toplevel $w
 wm title $w "Menu Button Demonstration"
 wm iconname $w "menubutton"
 positionWindow $w
 
-
 frame $w.body
 pack $w.body -expand 1 -fill both
+if {[tk windowingsystem] eq "aqua"} {catch {set origUseCustomMDEF $::tk::mac::useCustomMDEF; set ::tk::mac::useCustomMDEF 1}}
 
 menubutton $w.body.below -text "Below" -underline 0 -direction below -menu $w.body.below.m -relief raised
 menu $w.body.below.m -tearoff 0 
@@ -90,5 +90,4 @@ foreach i {Black gray75 gray50 White} {
 
 pack $body.buttons.colors -side left -padx 25 -pady 25
 
-
-
+if {[tk windowingsystem] eq "aqua"} {catch {set ::tk::mac::useCustomMDEF $origUseCustomMDEF}}
