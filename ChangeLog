@@ -1,3 +1,8 @@
+2007-04-29  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/configure.in: fix for default case in tk debug build detection.
+	* unix/configure: autoconf-2.59
+
 2007-04-27  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTreeview.c(TagOptionSpecs): Use TK_OPTION_STRING
@@ -67,8 +72,8 @@
 
 	* macosx/tkMacOSXCarbonEvents.c: add window event target carbon event
 	* macosx/tkMacOSXEvent.c:	 handler for all kEventClassWindow and
-	* macosx/tkMacOSXEvent.h:	 kEventClassMouse events; 
-	* macosx/tkMacOSXNotify.c:	 move all remaining events except for
+	* macosx/tkMacOSXEvent.h:	 kEventClassMouse events; move all
+	* macosx/tkMacOSXNotify.c:	 remaining events except for
 	* macosx/tkMacOSXWindowEvent.c:	 kEventClassKeyboard from dispatcher to
 	application event handler; pass event handler callRef downstream; fix
 	debug event tracing; process all tcl event types in carbon event timer;
@@ -320,7 +325,7 @@
 	* macosx/tkMacOSXWm.c:
 	* macosx/tkMacOSXXStubs.c:
 
-	* macosx/tkMacOSXSend.c:	remove duplicate/unused declarations
+	* macosx/tkMacOSXSend.c:	remove duplicate/unused declarations.
 	* macosx/tkMacOSXXStubs.c:
 
 	* macosx/tkMacOSXDebug.c:	const fixes.
