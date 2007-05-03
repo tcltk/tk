@@ -1,5 +1,6 @@
 2007-05-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* generic/tkConfig.c (Tk_RestoreSavedOptions): 
 	* generic/tkCanvPs.c (TkCanvPostscriptCmd): 
 	* generic/tkOption.c (GetDefaultOptions): 
 	* unix/tkUnixRFont.c (TkpGetFontAttrsForChar, InitFont) 
