@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.19 2007/04/17 14:36:49 dkf Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.20 2007/05/03 15:21:32 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -1569,7 +1569,7 @@ GetDefaultOptions(
     TkWindow *winPtr)		/* Fetch option defaults for main window
 				 * associated with this. */
 {
-    char *regProp;
+    char *regProp, **regPropPtr = &regProp;
     int result, actualFormat;
     unsigned long numItems, bytesAfter;
     Atom actualType;
@@ -1580,10 +1580,9 @@ GetDefaultOptions(
 
     regProp = NULL;
     result = XGetWindowProperty(winPtr->display,
-	    RootWindow(winPtr->display, 0),
-	    XA_RESOURCE_MANAGER, 0, 100000,
-	    False, XA_STRING, &actualType, &actualFormat,
-	    &numItems, &bytesAfter, (unsigned char **) &regProp);
+	    RootWindow(winPtr->display, 0), XA_RESOURCE_MANAGER, 0, 100000,
+	    False, XA_STRING, &actualType, &actualFormat, &numItems,
+	    &bytesAfter, (unsigned char **) regPropPtr);
 
     if ((result == Success) && (actualType == XA_STRING)
 	    && (actualFormat == 8)) {
