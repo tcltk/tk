@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.16 2007/02/27 14:52:57 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.17 2007/05/03 15:21:32 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -586,7 +586,7 @@ ValidateName(
     int result, actualFormat, argc, i;
     unsigned long length, bytesAfter;
     Atom actualType;
-    char *property;
+    char *property, **propertyPtr = &property;
     Tk_ErrorHandler handler;
     CONST char **argv;
 
@@ -602,7 +602,7 @@ ValidateName(
     result = XGetWindowProperty(dispPtr->display, commWindow,
 	    dispPtr->appNameProperty, 0, MAX_PROP_WORDS,
 	    False, XA_STRING, &actualType, &actualFormat,
-	    &length, &bytesAfter, (unsigned char **) &property);
+	    &length, &bytesAfter, (unsigned char **) propertyPtr);
 
     if ((result == Success) && (actualType == None)) {
 	XWindowAttributes atts;
@@ -1340,7 +1340,7 @@ SendEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     TkDisplay *dispPtr = (TkDisplay *) clientData;
-    char *propInfo;
+    char *propInfo, **propInfoPtr = &propInfo;
     register char *p;
     int result, actualFormat;
     unsigned long numItems, bytesAfter;
@@ -1362,7 +1362,7 @@ SendEventProc(
     result = XGetWindowProperty(dispPtr->display,
 	    Tk_WindowId(dispPtr->commTkwin), dispPtr->commProperty, 0,
 	    MAX_PROP_WORDS, True, XA_STRING, &actualType, &actualFormat,
-	    &numItems, &bytesAfter, (unsigned char **) &propInfo);
+	    &numItems, &bytesAfter, (unsigned char **) propInfoPtr);
 
     /*
      * If the property doesn't exist or is improperly formed then ignore it.
@@ -1903,7 +1903,7 @@ TkpTestsendCmd(
 	int result, actualFormat;
 	unsigned long length, bytesAfter;
 	Atom actualType, propName;
-	char *property, *p, *end;
+	char *property, **propertyPtr = &property, *p, *end;
 	Window w;
 
 	if ((argc != 4) && (argc != 5)) {
@@ -1923,7 +1923,7 @@ TkpTestsendCmd(
 	    property = NULL;
 	    result = XGetWindowProperty(winPtr->dispPtr->display, w, propName,
 		    0, 100000, False, XA_STRING, &actualType, &actualFormat,
-		    &length, &bytesAfter, (unsigned char **) &property);
+		    &length, &bytesAfter, (unsigned char **) propertyPtr);
 	    if ((result == Success) && (actualType != None)
 		    && (actualFormat == 8) && (actualType == XA_STRING)) {
 		for (p = property; (unsigned long)(p-property) < length; p++) {

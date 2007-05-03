@@ -1,3 +1,12 @@
+2007-05-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkCanvPs.c (TkCanvPostscriptCmd): 
+	* generic/tkOption.c (GetDefaultOptions): 
+	* unix/tkUnixRFont.c (TkpGetFontAttrsForChar, InitFont) 
+	(TkpGetFontFamilies, TkpGetSubFonts): 
+	* unix/tkUnixSend.c (TkpTestsendCmd): Squelch warnings from GCC type
+	aliasing. [Bug 1711985]
+
 2007-04-29  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure.in: fix for default case in tk debug build detection.
