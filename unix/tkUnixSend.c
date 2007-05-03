@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.17 2007/05/03 15:21:32 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.18 2007/05/03 22:16:00 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -265,6 +265,7 @@ RegOpen(
     int result, actualFormat;
     unsigned long bytesAfter;
     Atom actualType;
+    char **propertyPtr;
 
     if (dispPtr->commTkwin == NULL) {
 	SendInit(interp, dispPtr);
@@ -275,6 +276,7 @@ RegOpen(
     regPtr->locked = 0;
     regPtr->modified = 0;
     regPtr->allocedByX = 1;
+    propertyPtr = &regPtr->property;
 
     if (lock && !localData.sendDebug) {
 	XGrabServer(dispPtr->display);
@@ -290,7 +292,7 @@ RegOpen(
 	    dispPtr->registryProperty, 0, MAX_PROP_WORDS,
 	    False, XA_STRING, &actualType, &actualFormat,
 	    &regPtr->propLength, &bytesAfter,
-	    (unsigned char **) &regPtr->property);
+	    (unsigned char **) propertyPtr);
 
     if (actualType == None) {
 	regPtr->propLength = 0;
