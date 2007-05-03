@@ -1,5 +1,7 @@
 2007-05-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* generic/tkStubLib.c (Tk_InitStubs): 
+	* generic/ttk/ttkLabel.c (LabelSetup): 
 	* unix/tkUnixSelect.c (ConvertSelection): 
 	* unix/tkUnixEvent.c (TkUnixDoOneXEvent): 
 	* generic/tkConfig.c (Tk_RestoreSavedOptions): 
