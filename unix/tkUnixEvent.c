@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.23 2007/01/12 09:08:36 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.24 2007/05/03 22:16:00 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -480,7 +480,7 @@ TkUnixDoOneXEvent(
     struct timeval blockTime, *timeoutPtr;
     Tcl_Time now;
     int fd, index, numFound, numFdBits = 0;
-    fd_mask bit;
+    fd_mask bit, *readMaskPtr = readMask;
 
     /*
      * Look for queued events first.
@@ -537,7 +537,7 @@ TkUnixDoOneXEvent(
 	}
     }
 
-    numFound = select(numFdBits, (SELECT_MASK *) readMask, NULL, NULL,
+    numFound = select(numFdBits, (SELECT_MASK *) readMaskPtr, NULL, NULL,
 	    timeoutPtr);
     if (numFound <= 0) {
 	/*
