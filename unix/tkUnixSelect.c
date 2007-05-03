@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.20 2007/04/17 14:29:46 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.21 2007/05/03 22:16:00 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -847,7 +847,7 @@ ConvertSelection(
 	incr.multAtoms = singleInfo;
 	incr.numConversions = 1;
     } else {
-	Atom type;
+	Atom type, **multAtomsPtr = &incr.multAtoms;
 	int format, result;
 	unsigned long bytesAfter;
 
@@ -859,7 +859,7 @@ ConvertSelection(
 	result = XGetWindowProperty(eventPtr->display, eventPtr->requestor,
 		eventPtr->property, 0, MAX_PROP_WORDS, False, XA_ATOM,
 		&type, &format, &incr.numConversions, &bytesAfter,
-		(unsigned char **) &incr.multAtoms);
+		(unsigned char **) multAtomsPtr);
 	if ((result != Success) || (bytesAfter != 0) || (format != 32)
 		|| (type == None)) {
 	    if (incr.multAtoms != NULL) {

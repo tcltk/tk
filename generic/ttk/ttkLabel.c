@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.7 2007/01/11 19:59:26 jenglish Exp $
+/* $Id: ttkLabel.c,v 1.8 2007/05/03 22:15:59 dkf Exp $
  *
  * text, image, and label elements.
  *
@@ -506,8 +506,10 @@ static Ttk_ElementOptionSpec LabelElementOptions[] =
 static void LabelSetup(
     LabelElement *c, Tk_Window tkwin, Ttk_State state)
 {
+    Ttk_Compound *compoundPtr = &c->compound;
+
     Tk_GetPixelsFromObj(NULL,tkwin,c->spaceObj,&c->space);
-    Ttk_GetCompoundFromObj(NULL,c->compoundObj,(int*)&c->compound);
+    Ttk_GetCompoundFromObj(NULL,c->compoundObj,(int*)compoundPtr);
 
     /*
      * Deal with TTK_COMPOUND_NONE.
