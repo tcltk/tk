@@ -1,3 +1,9 @@
+2007-05-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/ttk_treeview.n, doc/ttk_panedwindow.n, doc/ttk_dialog.n: 
+	* doc/ttk_checkbutton.n, doc/tk.n, doc/menu.n, doc/font.n:
+	* doc/canvas.n: Spelling fixes. [Bug 1686210]
+
 2007-05-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkStubLib.c (Tk_InitStubs): 
