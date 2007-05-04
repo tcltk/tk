@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.31 2007/01/18 23:56:44 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.32 2007/05/04 21:29:22 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -159,8 +159,10 @@ typedef struct CanUse {
 
 static const TkStateMap systemMap[] = {
     {ANSI_FIXED_FONT,	    "ansifixed"},
+    {ANSI_FIXED_FONT,	    "fixed"},
     {ANSI_VAR_FONT,	    "ansi"},
     {DEVICE_DEFAULT_FONT,   "device"},
+    {DEFAULT_GUI_FONT,	    "defaultgui"},
     {OEM_FIXED_FONT,	    "oemfixed"},
     {SYSTEM_FIXED_FONT,	    "systemfixed"},
     {SYSTEM_FONT,	    "system"},
@@ -208,6 +210,11 @@ static void		InitFont(Tk_Window tkwin, HFONT hFont,
 			    int overstrike, WinFont *tkFontPtr);
 static void		InitSubFont(HDC hdc, HFONT hFont, int base,
 			    SubFont *subFontPtr);
+static int		CreateNamedSystemLogFont(Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char* name,
+			    LOGFONT* logFontPtr);
+static int		CreateNamedSystemFont(Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char* name, HFONT hFont);
 static int		LoadFontRanges(HDC hdc, HFONT hFont,
 			    USHORT **startCount, USHORT **endCount,
 			    int *symbolPtr);
@@ -260,6 +267,8 @@ TkpFontPkgInit(
 
 	systemEncoding = TkWinGetUnicodeEncoding();
     }
+
+    TkWinSetupSystemFonts(mainPtr);
 }
 
 /*
@@ -307,6 +316,138 @@ TkpGetNativeFont(
     InitFont(tkwin, GetStockObject(object), 0, fontPtr);
 
     return (TkFont *) fontPtr;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ * CreateNamedSystemFont --
+ *
+ *	This function registers a Windows logical font description with the Tk
+ *	named font mechanism.
+ *
+ * Side effects
+ *
+ *	A new named font is added to the Tk font registry.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+CreateNamedSystemLogFont(
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    CONST char* name,
+    LOGFONT* logFontPtr)
+{
+    HFONT hFont;
+    int r;
+    
+    hFont = CreateFontIndirect(logFontPtr);
+    r = CreateNamedSystemFont(interp, tkwin, name, hFont);
+    DeleteObject((HGDIOBJ)hFont);
+    return r;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ * CreateNamedSystemFont --
+ *
+ *	This function registers a Windows font with the Tk
+ *	named font mechanism.
+ *
+ * Side effects
+ *
+ *	A new named font is added to the Tk font registry.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static int
+CreateNamedSystemFont(
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    CONST char* name,
+    HFONT hFont)
+{
+    TkFontAttributes *faPtr;
+    WinFont *fontPtr;
+    int r;
+    
+    TkDeleteNamedFont(interp, tkwin, name);
+    
+    fontPtr = (WinFont *) ckalloc(sizeof(WinFont));
+    InitFont(tkwin, hFont, 0, fontPtr);
+    faPtr = (TkFontAttributes*)ckalloc(sizeof(TkFontAttributes));
+    memcpy(faPtr, &fontPtr->font.fa, sizeof(TkFontAttributes));
+    r = TkCreateNamedFont(interp, tkwin, name, faPtr);
+    TkpDeleteFont((TkFont *)fontPtr);
+    ckfree((char *) fontPtr);
+    return r;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ * TkWinSystemFonts --
+ *
+ *	Create some platform specific named fonts that to give access to the
+ *	system fonts. These are all defined for the Windows desktop parameters.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkWinSetupSystemFonts(TkMainInfo *mainPtr)
+{
+    Tcl_Interp *interp;
+    Tk_Window tkwin;
+    const TkStateMap *mapPtr;
+    NONCLIENTMETRICS ncMetrics;
+    ICONMETRICS iconMetrics;
+    HFONT hFont;
+    
+    interp = (Tcl_Interp *) mainPtr->interp;
+    tkwin = (Tk_Window) mainPtr->winPtr;
+    
+    /* force this for now */
+    if (((TkWindow *) tkwin)->mainPtr == NULL)
+        ((TkWindow *) tkwin)->mainPtr = mainPtr;
+    
+    ncMetrics.cbSize = sizeof(ncMetrics);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
+	    &ncMetrics, 0);
+    
+    CreateNamedSystemLogFont(interp, tkwin, "TkDefaultFont",
+	    &ncMetrics.lfMessageFont);
+    CreateNamedSystemLogFont(interp, tkwin, "TkHeadingFont",
+	    &ncMetrics.lfMessageFont);
+    CreateNamedSystemLogFont(interp, tkwin, "TkTextFont",
+	    &ncMetrics.lfMessageFont);
+    CreateNamedSystemLogFont(interp, tkwin, "TkMenuFont",
+	    &ncMetrics.lfMenuFont);
+    CreateNamedSystemLogFont(interp, tkwin, "TkTooltipFont",
+	    &ncMetrics.lfStatusFont);
+    CreateNamedSystemLogFont(interp, tkwin, "TkCaptionFont",
+	    &ncMetrics.lfCaptionFont);
+    CreateNamedSystemLogFont(interp, tkwin, "TkSmallCaptionFont",
+	    &ncMetrics.lfSmCaptionFont);
+
+    iconMetrics.cbSize = sizeof(iconMetrics);
+    SystemParametersInfo(SPI_GETICONMETRICS, sizeof(iconMetrics),
+	    &iconMetrics, 0);
+    CreateNamedSystemLogFont(interp, tkwin, "TkIconFont",
+	    &iconMetrics.lfFont);
+    
+    hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
+    CreateNamedSystemFont(interp, tkwin, "TkFixedFont", hFont);
+    
+    /* 
+     * Setup the remaining standard Tk font names as named fonts.
+     */
+
+    for (mapPtr = systemMap; mapPtr->strKey != NULL; mapPtr++) {
+        hFont = (HFONT)GetStockObject(mapPtr->numKey);
+        CreateNamedSystemFont(interp, tkwin, mapPtr->strKey, hFont);
+    }
 }
 
 /*
