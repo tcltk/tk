@@ -1,5 +1,5 @@
 #
-# $Id: fonts.tcl,v 1.3 2006/11/28 21:25:27 jenglish Exp $
+# $Id: fonts.tcl,v 1.4 2007/05/04 21:29:22 patthoyts Exp $
 #
 # Font specifications.
 #
@@ -75,7 +75,8 @@
 
 namespace eval ttk {
 
-catch {font create TkDefaultFont}
+
+set tip145 [catch {font create TkDefaultFont}]
 catch {font create TkTextFont}
 catch {font create TkHeadingFont}
 catch {font create TkCaptionFont}
@@ -100,12 +101,14 @@ switch -- [tk windowingsystem] {
         }
 	set F(size) 8
 
-	font configure TkDefaultFont -family $F(family) -size $F(size)
-	font configure TkTextFont    -family $F(family) -size $F(size)
-	font configure TkHeadingFont -family $F(family) -size $F(size)
-	font configure TkCaptionFont -family $F(family) -size $F(size) \
-					-weight bold
-	font configure TkTooltipFont -family $F(family) -size $F(size)
+        if {!$tip145} {
+            font configure TkDefaultFont -family $F(family) -size $F(size)
+            font configure TkTextFont    -family $F(family) -size $F(size)
+            font configure TkHeadingFont -family $F(family) -size $F(size)
+            font configure TkCaptionFont -family $F(family) -size $F(size) \
+                -weight bold
+            font configure TkTooltipFont -family $F(family) -size $F(size)
+        }
     }
     aqua {
 	set F(family) "Lucida Grande"
