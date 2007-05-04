@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.9 2006/12/01 20:14:23 kennykb Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.10 2007/05/04 21:29:22 patthoyts Exp $
  */
 
 #ifndef _TKFONT
@@ -203,6 +203,10 @@ MODULE_SCOPE int	TkFontGetPixels(Tk_Window tkwin, int size);
 MODULE_SCOPE int	TkFontGetPoints(Tk_Window tkwin, int size);
 MODULE_SCOPE char **	TkFontGetGlobalClass(void);
 MODULE_SCOPE char **	TkFontGetSymbolClass(void);
+MODULE_SCOPE int	TkCreateNamedFont(Tcl_Interp *interp, Tk_Window tkwin,
+			    CONST char *name, TkFontAttributes *faPtr);
+MODULE_SCOPE int	TkDeleteNamedFont(Tcl_Interp *interp,
+			    Tk_Window tkwin, CONST char *name);
 MODULE_SCOPE int	TkFontGetFirstTextLayout(Tk_TextLayout layout,
 			    Tk_Font *font, char *dst);
 
