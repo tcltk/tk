@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.33 2007/04/17 14:32:28 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.34 2007/05/04 21:29:22 patthoyts Exp $
  */
 
 #include "tkPort.h"
@@ -326,8 +326,6 @@ static char *globalFontClass[] = {
 static int		ConfigAttributesObj(Tcl_Interp *interp,
 			    Tk_Window tkwin, int objc, Tcl_Obj *const objv[],
 			    TkFontAttributes *faPtr);
-static int		CreateNamedFont(Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *name, TkFontAttributes *faPtr);
 static void		DupFontObjProc(Tcl_Obj *srcObjPtr, Tcl_Obj *dupObjPtr);
 static int		FieldSpecified(const char *field);
 static void		FreeFontObjProc(Tcl_Obj *objPtr);
@@ -677,7 +675,7 @@ Tk_FontObjCmd(
 		&fa) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (CreateNamedFont(interp, tkwin, name, &fa) != TCL_OK) {
+	if (TkCreateNamedFont(interp, tkwin, name, &fa) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_AppendResult(interp, name, NULL);
@@ -686,8 +684,6 @@ Tk_FontObjCmd(
     case FONT_DELETE: {
 	int i;
 	char *string;
-	NamedFont *nfPtr;
-	Tcl_HashEntry *namedHashPtr;
 
 	/*
 	 * Delete the named font. If there are still widgets using this font,
@@ -700,19 +696,7 @@ Tk_FontObjCmd(
 	}
 	for (i = 2; i < objc; i++) {
 	    string = Tcl_GetString(objv[i]);
-	    namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, string);
-	    if (namedHashPtr == NULL) {
-		Tcl_AppendResult(interp, "named font \"", string,
-			"\" doesn't exist", NULL);
-		return TCL_ERROR;
-	    }
-	    nfPtr = (NamedFont *) Tcl_GetHashValue(namedHashPtr);
-	    if (nfPtr->refCount != 0) {
-		nfPtr->deletePending = 1;
-	    } else {
-		Tcl_DeleteHashEntry(namedHashPtr);
-		ckfree((char *) nfPtr);
-	    }
+	    TkDeleteNamedFont(interp, tkwin, string);
 	}
 	break;
     }
@@ -936,7 +920,7 @@ RecomputeWidgets(
 /*
  *---------------------------------------------------------------------------
  *
- * CreateNamedFont --
+ * TkCreateNamedFont --
  *
  *	Create the specified named font with the given attributes in the named
  *	font table associated with the interp.
@@ -957,8 +941,8 @@ RecomputeWidgets(
  *---------------------------------------------------------------------------
  */
 
-static int
-CreateNamedFont(
+int
+TkCreateNamedFont(
     Tcl_Interp *interp,		/* Interp for error return. */
     Tk_Window tkwin,		/* A window associated with interp. */
     const char *name,		/* Name for the new named font. */
@@ -1000,6 +984,45 @@ CreateNamedFont(
     nfPtr->fa = *faPtr;
     nfPtr->refCount = 0;
     nfPtr->deletePending = 0;
+    return TCL_OK;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkDeleteNamedFont --
+ *
+ *	Delete the named font.  If there are still widgets using this
+ *	font, then it isn't deleted right away.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkDeleteNamedFont(
+    Tcl_Interp *interp,		/* Interp for error return. */
+    Tk_Window tkwin,		/* A window associated with interp. */
+    CONST char *name)		/* Name for the new named font. */
+{
+    TkFontInfo *fiPtr;
+    NamedFont *nfPtr;
+    Tcl_HashEntry *namedHashPtr;
+    
+    fiPtr = ((TkWindow *) tkwin)->mainPtr->fontInfoPtr;
+
+    namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, name);
+    if (namedHashPtr == NULL) {
+	Tcl_AppendResult(interp, "named font \"", name,
+		"\" doesn't exist", (char *) NULL);
+	return TCL_ERROR;
+    }
+    nfPtr = (NamedFont *) Tcl_GetHashValue(namedHashPtr);
+    if (nfPtr->refCount != 0) {
+	nfPtr->deletePending = 1;
+    } else {
+	Tcl_DeleteHashEntry(namedHashPtr);
+	ckfree((char *) nfPtr);
+    }
     return TCL_OK;
 }
 

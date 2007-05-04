@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.28 2006/09/11 14:41:04 das Exp $
+# RCS: @(#) $Id: widget,v 1.29 2007/05/04 21:29:22 patthoyts Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -33,12 +33,26 @@ if {[tk windowingsystem] eq "x11"} {
 }
 
 if {[lsearch -exact [font names] defaultFont] == -1} {
-    font create mainFont   -family Helvetica -size 12
-    font create fixedFont  -family Courier   -size 10
-    font create boldFont   -family Helvetica -size 12 -weight bold
-    font create titleFont  -family Helvetica -size 18 -weight bold
-    font create statusFont -family Helvetica -size 10
-    font create varsFont   -family Helvetica -size 14
+    # TIP #145 defines some standard named fonts
+    if {[lsearch -exact [font names] TkDefaultFont] != -1} {
+        # FIX ME: the following tecnique of cloning the font to copy it works
+        #         fine but means that if the system font is changed by
+        #         Tk cannot update the copied font. font alias might be
+        #         useful here -- or fix the app to use TkDefaultFont etc.
+        font create mainFont   {*}[font configure TkDefaultFont]
+        font create fixedFont  {*}[font configure TkFixedFont]
+        font create boldFont   {*}[font configure TkDefaultFont] -weight bold
+        font create titleFont  {*}[font configure TkDefaultFont] -weight bold
+        font create statusFont {*}[font configure TkDefaultFont]
+        font create varsFont   {*}[font configure TkDefaultFont]
+    } else {        
+        font create mainFont   -family Helvetica -size 12
+        font create fixedFont  -family Courier   -size 10
+        font create boldFont   -family Helvetica -size 12 -weight bold
+        font create titleFont  -family Helvetica -size 18 -weight bold
+        font create statusFont -family Helvetica -size 10
+        font create varsFont   -family Helvetica -size 14
+    }
 }
 
 set widgetDemo 1

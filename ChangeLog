@@ -1,3 +1,14 @@
+2007-05-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkFont.c:     TIP #145 implementation -
+	* generic/tkFont.h:     Enhanced font handling.
+	* win/tkWinDefault.h:
+	* win/tkWinFont.c:
+	* win/tkWinInt.h:
+	* win/tkWinWm.c:
+	* library/demos/widget:
+	* library/ttk/fonts.tcl:
+
 2007-05-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/ttk_treeview.n, doc/ttk_panedwindow.n, doc/ttk_dialog.n: 

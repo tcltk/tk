@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.115 2007/02/23 14:15:34 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.116 2007/05/04 21:29:23 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -7819,6 +7819,15 @@ WmProc(
     case WM_QUERYNEWPALETTE:
 	result = InstallColormaps(hwnd, WM_QUERYNEWPALETTE, TRUE);
 	goto done;
+
+    case WM_SETTINGCHANGE:
+	if (wParam == SPI_SETNONCLIENTMETRICS) {
+	    winPtr = GetTopLevel(hwnd);
+	    TkWinSetupSystemFonts(winPtr->mainPtr);
+	    result = 0;
+	    goto done;
+	}
+	break;
 
     case WM_WINDOWPOSCHANGED:
 	ConfigureTopLevel((WINDOWPOS *) lParam);
