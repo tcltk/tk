@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.55 2007/02/23 14:15:34 dkf Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.56 2007/05/05 07:33:08 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -1121,9 +1121,10 @@ TkWinHandleMenuEvent(
 		    Tcl_GetUnicodeFromObj(labelPtr, &len);
 		    if (underline < len) {
 			char *label = Tcl_GetString(labelPtr);
+			char underlined = *Tcl_UtfAtIndex(label, underline);
 
-			if (CharUpper((LPTSTR) menuChar) == CharUpper((LPTSTR)
-				*Tcl_UtfAtIndex(label, underline))) {
+			if (CharUpper((LPTSTR) menuChar) ==
+				CharUpper((LPTSTR) underlined)) {
 			    *plResult = (2 << 16) | i;
 			    returnResult = 1;
 			    break;
