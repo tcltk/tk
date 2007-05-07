@@ -1,3 +1,9 @@
+2007-05-07  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixRFont.c: Properly cast sentinel arguments
+	to variadic function (fixes "warning: missing
+	sentinel in function call", [Bug 1712001])
+
 2007-05-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkFont.c:     TIP #145 implementation -
