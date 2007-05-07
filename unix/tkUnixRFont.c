@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.17 2007/05/03 15:21:32 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.18 2007/05/07 19:28:22 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -403,8 +403,9 @@ TkpGetFontFamilies(
 
     resultPtr = Tcl_NewListObj(0, NULL);
 
-    list = XftListFonts(Tk_Display(tkwin), Tk_ScreenNumber(tkwin), 0,
-	    XFT_FAMILY, 0);
+    list = XftListFonts(Tk_Display(tkwin), Tk_ScreenNumber(tkwin),
+		(char*)0,		/* pattern elements */
+		XFT_FAMILY, (char*)0);	/* fields */
     for (i = 0; i < list->nfont; i++) {
 	if (XftPatternGetString(list->fonts[i], XFT_FAMILY, 0,
 		familyPtr) == XftResultMatch) {
