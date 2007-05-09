@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.c,v 1.9 2005/11/04 11:52:50 dkf Exp $
+ * RCS: @(#) $Id: tkFileFilter.c,v 1.10 2007/05/09 12:51:30 das Exp $
  */
 
 #include "tkInt.h"
@@ -347,6 +347,7 @@ AddClause(
 	    int len;
 	    MacFileType *mfPtr = (MacFileType *) ckalloc(sizeof(MacFileType));
 	    CONST char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
+	    char *string;
 
 	    /*
 	     * Convert utf to macRoman, since MacOS types are defined to be 4
@@ -354,8 +355,9 @@ AddClause(
 	     */
 
 	    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
-
-	    memcpy(&mfPtr->type, Tcl_DStringValue(&osTypeDS), sizeof(OSType));
+	    string = Tcl_DStringValue(&osTypeDS);
+	    mfPtr->type = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
+		    (OSType) string[2] <<  8 | (OSType) string[3];
 	    Tcl_DStringFree(&osTypeDS);
 
 	    /*
