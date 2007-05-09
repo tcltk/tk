@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.17 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.18 2007/05/09 12:55:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -844,8 +844,10 @@ TkMacOSXUpdateClipRgn(
 	    if (!Tk_IsTopLevel(winPtr)) {
 		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 		TkMacOSXCheckTmpRgnEmpty(1);
-		SectRgn(rgn,
-			winPtr->parentPtr->privatePtr->aboveClipRgn, rgn);
+		if (winPtr->parentPtr) {
+		    SectRgn(rgn,
+			    winPtr->parentPtr->privatePtr->aboveClipRgn, rgn);
+		}
 
 		win2Ptr = winPtr->nextPtr;
 		while (win2Ptr != NULL) {
@@ -1115,7 +1117,7 @@ TkMacOSXGetDrawablePort(
 	     * of the time, this is harmless... However, we really need to
 	     * find why the embedding loses.
 	     */
-	    DebugStr("\pTkMacOSXGetDrawablePort couldn't find container");
+	    TkMacOSXDbgMsg("Couldn't find container");
 	    return NULL;
 	}
 
