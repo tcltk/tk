@@ -15,7 +15,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.5 2007/04/29 02:26:48 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.6 2007/05/09 12:57:46 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -135,49 +135,49 @@ TkpMakeWindow(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
-	return (Window) winPtr->privatePtr;
-    }
-
-    /*
-     * Allocate sub window
-     */
-
-    macWin = (MacDrawable *) ckalloc(sizeof(MacDrawable));
-    if (macWin == NULL) {
-	winPtr->privatePtr = NULL;
-	return None;
-    }
-    macWin->winPtr = winPtr;
-    winPtr->privatePtr = macWin;
-    macWin->clipRgn = NewRgn();
-    macWin->aboveClipRgn = NewRgn();
-    macWin->drawRgn = NewRgn();
-    macWin->referenceCount = 0;
-    macWin->flags = TK_CLIP_INVALID;
-
-    macWin->grafPtr = NULL;
-    macWin->context = NULL;
-    if (Tk_IsTopLevel(macWin->winPtr)) {
-	/*
-	 *This will be set when we are mapped.
-	 */
-	macWin->xOff = 0;
-	macWin->yOff = 0;
-	macWin->toplevel = macWin;
+	macWin = winPtr->privatePtr;
     } else {
-	macWin->xOff = winPtr->parentPtr->privatePtr->xOff +
-	    winPtr->parentPtr->changes.border_width +
-	    winPtr->changes.x;
-	macWin->yOff = winPtr->parentPtr->privatePtr->yOff +
-	    winPtr->parentPtr->changes.border_width +
-	    winPtr->changes.y;
-	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
-    }
-    macWin->toplevel->referenceCount++;
+	/*
+	 * Allocate sub window
+	 */
 
+	macWin = (MacDrawable *) ckalloc(sizeof(MacDrawable));
+	if (macWin == NULL) {
+	    winPtr->privatePtr = NULL;
+	    return None;
+	}
+	macWin->winPtr = winPtr;
+	winPtr->privatePtr = macWin;
+	macWin->clipRgn = NewRgn();
+	macWin->aboveClipRgn = NewRgn();
+	macWin->drawRgn = NewRgn();
+	macWin->referenceCount = 0;
+	macWin->flags = TK_CLIP_INVALID;
+
+	macWin->grafPtr = NULL;
+	macWin->context = NULL;
+	if (Tk_IsTopLevel(macWin->winPtr)) {
+	    /*
+	     *This will be set when we are mapped.
+	     */
+	    macWin->xOff = 0;
+	    macWin->yOff = 0;
+	    macWin->toplevel = macWin;
+	} else {
+	    macWin->xOff = winPtr->parentPtr->privatePtr->xOff +
+		winPtr->parentPtr->changes.border_width +
+		winPtr->changes.x;
+	    macWin->yOff = winPtr->parentPtr->privatePtr->yOff +
+		winPtr->parentPtr->changes.border_width +
+		winPtr->changes.y;
+	    macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	}
+	macWin->toplevel->referenceCount++;
+    }
     /*
      * TODO: need general solution for visibility events.
      */
+
     event.xany.serial = Tk_Display(winPtr)->request;
     event.xany.send_event = False;
     event.xany.display = Tk_Display(winPtr);
@@ -225,7 +225,6 @@ TkpUseWindow(
     TkWindow *usePtr;
     MacDrawable *parent, *macWin;
     Container *containerPtr;
-    XEvent event;
 
     if (winPtr->window != None) {
 	Tcl_AppendResult(interp, "can't modify container after widget is "
@@ -235,7 +234,7 @@ TkpUseWindow(
 
     /*
      * Decode the container pointer, and look for it among the
-     *list of available containers.
+     * list of available containers.
      *
      * N.B. For now, we are limiting the containers to be in the same Tk
      * application as tkwin, since otherwise they would not be in our list
@@ -379,34 +378,6 @@ TkpUseWindow(
 		(ClientData) winPtr);
 
     }
-
-   /*
-     * TODO: need general solution for visibility events.
-     */
-
-
-    event.xany.serial = Tk_Display(winPtr)->request;
-    event.xany.send_event = False;
-    event.xany.display = Tk_Display(winPtr);
-
-    event.xvisibility.type = VisibilityNotify;
-    event.xvisibility.window = (Window) macWin;;
-    event.xvisibility.state = VisibilityUnobscured;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
-
-    /*
-     * TODO: need general solution for visibility events.
-     */
-
-    event.xany.serial = Tk_Display(winPtr)->request;
-    event.xany.send_event = False;
-    event.xany.display = Tk_Display(winPtr);
-
-    event.xvisibility.type = VisibilityNotify;
-    event.xvisibility.window = (Window) macWin;;
-    event.xvisibility.state = VisibilityUnobscured;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
     return TCL_OK;
 }
