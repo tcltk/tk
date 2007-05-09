@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.16 2007/04/29 02:26:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.17 2007/05/09 12:57:46 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -304,6 +304,7 @@ MODULE_SCOPE void TkMacOSXInstallWindowCarbonEventHandler(Tcl_Interp *interp,
 MODULE_SCOPE int TkMacOSXMakeFullscreen(TkWindow *winPtr, WindowRef window,
 	int fullscreen, Tcl_Interp *interp);
 MODULE_SCOPE void TkMacOSXEnterExitFullscreen(TkWindow *winPtr, int active);
+MODULE_SCOPE void TkMacOSXBringWindowForward(WindowRef wRef);
 
 MODULE_SCOPE void* TkMacOSXGetNamedSymbol(const char* module,
 	const char* symbol);
