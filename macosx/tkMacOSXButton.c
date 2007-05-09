@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.15 2007/04/29 02:26:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.16 2007/05/09 12:57:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -825,7 +825,7 @@ TkMacOSXInitControl(
 	    mbPtr->params.procID, controlReference);
 
     if (!mbPtr->control) {
-	TkMacOSXDbgMsg("failed to create control of type %d\n", procID);
+	TkMacOSXDbgMsg("Failed to create control of type %d\n", procID);
 	return 1;
     }
     if (ChkErr(EmbedControl, mbPtr->control,mbPtr->userPane) != noErr ) {

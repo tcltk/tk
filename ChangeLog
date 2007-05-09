@@ -1,3 +1,28 @@
+2007-05-09  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkFileFilter.c (AddClause): OSType endianness fixes.
+
+	* library/palette.tcl (tk::RecolorTree): handle color options with
+	empty value, fixes error due to emtpy -selectforeground (reported on
+	tcl-mac by Russel E. Owen).
+
+	* macosx/tkMacOSXWindowEvent.c:	ensure window is brought to the front
+	* macosx/tkMacOSXMouseEvent.c:	at the start of a window drag (except
+	* macosx/tkMacOSXInt.h:		when cmd key is down); formatting and
+					whitespace fixes.
+
+	* macosx/tkMacOSXDialog.c (Tk_GetSaveFileObjCmd): add -filetypes option
+	processing.
+
+	* macosx/tkMacOSXEmbed.c (TkpMakeWindow, TkpUseWindow): fix sending of
+	Visibility event for embedded windows (fixes frame-3.9 hang).
+
+	* macosx/tkMacOSXScrlbr.c (ScrollbarBindProc):		fix testsuite
+	* macosx/tkMacOSXSubwindows.c (TkMacOSXUpdateClipRgn):	crashes by
+	adding sanity checks.
+
+	* macosx/tkMacOSXButton.c: fix debug msg typo.
+
 2007-04-29  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkCanvas.c:	allow -selectforeground option to be None; add
