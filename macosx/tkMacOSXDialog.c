@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.24 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.25 2007/05/09 12:55:15 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -424,9 +424,14 @@ Tk_GetSaveFileObjCmd(
 	InitFileDialogs();
     }
 
+    TkInitFileFilters(&ofd.fl);
+    ofd.curType = 0;
+    ofd.usePopup = 0;
+
     for (i = 1; i < objc; i += 2) {
 	char *choice, *string;
 	int index, choiceLen;
+	Tcl_Obj *types;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], saveOptionStrings, "option",
 		TCL_EXACT, &index) != TCL_OK) {
@@ -442,7 +447,10 @@ Tk_GetSaveFileObjCmd(
 	    case SAVE_DEFAULT:
 		break;
 	    case SAVE_FILETYPES:
-		/* Currently unimplemented - what would we do here anyway? */
+		types = objv[i + 1];
+		if (TkGetFileFilters(interp, &ofd.fl, types, 0) != TCL_OK) {
+		    goto end;
+		}
 		break;
 	    case SAVE_INITDIR:
 		choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
@@ -480,8 +488,6 @@ Tk_GetSaveFileObjCmd(
 	}
     }
 
-    TkInitFileFilters(&ofd.fl);
-    ofd.usePopup = 0;
     if (initialDesc.descriptorType == typeFSRef) {
 	initialPtr = &initialDesc;
     }

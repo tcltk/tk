@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.28 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.29 2007/05/09 12:55:15 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -304,29 +304,31 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	     */
 	    if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
 		return result;
-	    } else
+	    } else {
+		/*
+		 * Only windows with the kWindowNoActivatesAttribute can
+		 * receive mouse events in the background.
+		 */
+		if (!(((TkWindow *)tkwin)->wmInfoPtr->attributes &
+			kWindowNoActivatesAttribute)) {
 		    /*
-		     * Only windows with the kWindowNoActivatesAttribute can
-		     * receive mouse events in the background.
+		     * Allow background window dragging & growing with Command
+		     * down.
 		     */
-		    if (!(((TkWindow *)tkwin)->wmInfoPtr->attributes &
-			    kWindowNoActivatesAttribute)) {
-		/*
-		 * Allow background window dragging & growing with Command down
-		 */
-		if (!((medPtr->windowPart == inDrag ||
-			medPtr->windowPart == inGrow) &&
-			medPtr->state & Mod1Mask)) {
-		    TkMacOSXSetEatButtonUp(true);
-		    BringWindowForward(medPtr->whichWin, isFrontProcess);
-		}
-		/*
-		 * Allow dragging & growing of windows that were/are in the
-		 * background.
-		 */
-		if (!(medPtr->windowPart == inDrag ||
-			medPtr->windowPart == inGrow)) {
-		    return false;
+		    if (!((medPtr->windowPart == inDrag ||
+			    medPtr->windowPart == inGrow) &&
+			    medPtr->state & Mod1Mask)) {
+			TkMacOSXSetEatButtonUp(true);
+			BringWindowForward(medPtr->whichWin, isFrontProcess);
+		    }
+		    /*
+		     * Allow dragging & growing of windows that were/are in the
+		     * background.
+		     */
+		    if (!(medPtr->windowPart == inDrag ||
+			    medPtr->windowPart == inGrow)) {
+			return false;
+		    }
 		}
 	    }
 	} else {
@@ -513,8 +515,7 @@ GeneratePollingEvents(MouseEventData * medPtr)
  *
  * BringWindowForward --
  *
- *	Bring this background window to the front. We also set state
- *	so Tk thinks the button is currently up.
+ *	Bring this background window to the front.
  *
  * Results:
  *	None.
@@ -541,6 +542,38 @@ BringWindowForward(
 	    SelectWindow(wRef);
 	}
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXBringWindowForward --
+ *
+ *	Bring this background window to the front (wrapper around
+ *	BringWindowForward()).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The window is brought forward.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXBringWindowForward(
+    WindowRef wRef)
+{
+    OSStatus err;
+    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
+    Boolean isFrontProcess = true;
+
+    err = ChkErr(GetFrontProcess, &frontPsn);
+    if (err == noErr) {
+	ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
+    }
+    BringWindowForward(wRef, isFrontProcess);
 }
 
 /*

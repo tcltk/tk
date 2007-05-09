@@ -33,13 +33,17 @@
 			NO,
 			NO,
 			NO,
+			NO,
+			NO,
 		);
 		argumentStrings = (
 			"${SRCROOT}/../../tk/library/demos/widget",
 			"${SRCROOT}/../../tk/library/demos/ttk_demo.tcl",
 			"${SRCROOT}/../../tk/tests/all.tcl",
+			"-geometry +0+0",
 			"-singleproc 1",
 			"-verbose \"bet\"",
+			"-skip 'unixfont-5.11 window-2.9'",
 		);
 		autoAttachOnCrash = 1;
 		configStateDict = {
@@ -88,13 +92,43 @@
 				value = /Library/Tcl;
 			},
 			{
-				active = YES;
+				active = NO;
+				name = DYLD_PRINT_LIBRARIES;
+			},
+			{
+				active = NO;
+				name = EventDebug;
+				value = 1;
+			},
+			{
+				active = NO;
 				name = MallocBadFreeAbort;
 				value = 1;
 			},
 			{
 				active = NO;
-				name = DYLD_PRINT_LIBRARIES;
+				name = MallocLogFile;
+				value = /tmp/malloc.log;
+			},
+			{
+				active = NO;
+				name = MallocStackLogging;
+				value = 1;
+			},
+			{
+				active = NO;
+				name = MallocStackLoggingNoCompact;
+				value = 1;
+			},
+			{
+				active = NO;
+				name = MallocPreScribble;
+				value = 1;
+			},
+			{
+				active = NO;
+				name = MallocScribble;
+				value = 1;
 			},
 		);
 		executableSystemSymbolLevel = 0;

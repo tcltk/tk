@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.21 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.22 2007/05/09 12:55:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -846,7 +846,9 @@ ScrollbarBindProc(
 	     * Workaround for Carbon bug where the scrollbar down arrow
 	     * sometimes gets "stuck" after the mousebutton has been released.
 	     */
-	    TkMacOSXSetUpClippingRgn(Tk_WindowId(scrollPtr->tkwin));
+	    if (scrollPtr->tkwin) {
+		TkMacOSXSetUpClippingRgn(Tk_WindowId(scrollPtr->tkwin));
+	    }
 	    Draw1Control(macScrollPtr->sbHandle);
 	}
 	TkMacOSXTrackingLoop(0);
@@ -855,8 +857,11 @@ ScrollbarBindProc(
 	 * The HandleControlClick call will "eat" the ButtonUp event. We now
 	 * generate a ButtonUp event so Tk will unset implicit grabs etc.
 	 */
-	window = Tk_WindowId(scrollPtr->tkwin);
-	TkGenerateButtonEventForXPointer(window);
+
+	if (scrollPtr->tkwin) {
+	    window = Tk_WindowId(scrollPtr->tkwin);
+	    TkGenerateButtonEventForXPointer(window);
+	}
 
 	if (portChanged) {
 	    QDSwapPort(savePort, NULL);
