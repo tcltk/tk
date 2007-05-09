@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menuDraw.test,v 1.9 2004/06/24 12:45:43 dkf Exp $
+# RCS: @(#) $Id: menuDraw.test,v 1.10 2007/05/09 12:52:44 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -422,7 +422,7 @@ test menuDraw-15.6 {TkPostTearoffMenu - tearoff off right} {
 } {0 {}}
 
 
-test menuDraw-16.1 {TkPostSubmenu} unix {
+test menuDraw-16.1 {TkPostSubmenu} nonUnixUserInteraction {
     catch {destroy .m1}
     catch {destroy .m2}
     menu .m1
@@ -433,7 +433,7 @@ test menuDraw-16.1 {TkPostSubmenu} unix {
     $tearoff postcascade 0
     list [$tearoff postcascade 0] [destroy .m1] [destroy .m2]
 } {{} {} {}}
-test menuDraw-16.2 {TkPostSubMenu} unix {
+test menuDraw-16.2 {TkPostSubMenu} nonUnixUserInteraction {
     catch {destroy .m1}
     catch {destroy .m2}
     catch {destroy .m3}

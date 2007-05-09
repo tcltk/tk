@@ -148,7 +148,8 @@ testConstraint notAqua [expr {[tk windowingsystem] ne "aqua"}]
 testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint userInteraction 0
 testConstraint nonUnixUserInteraction [expr {
-    [testConstraint userInteraction] || [testConstraint unix]
+    [testConstraint userInteraction] || 
+    ([testConstraint unix] && [testConstraint notAqua])
 }]
 testConstraint haveDISPLAY [info exists env(DISPLAY)]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
