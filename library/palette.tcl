@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# RCS: @(#) $Id: palette.tcl,v 1.11 2006/03/17 11:13:15 patthoyts Exp $
+# RCS: @(#) $Id: palette.tcl,v 1.12 2007/05/09 12:51:55 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 #
@@ -179,11 +179,15 @@ proc ::tk::RecolorTree {w colors} {
 	    if {$defaultcolor eq "" || \
 		    ([info exists prototype] && \
 		    [$prototype cget $option] ne "$defaultcolor")} {
-		set defaultcolor [winfo rgb . [lindex $value 3]]
-	    } else {
+		set defaultcolor [lindex $value 3]
+	    }
+	    if {$defaultcolor ne ""} {
 		set defaultcolor [winfo rgb . $defaultcolor]
 	    }
-	    set chosencolor [winfo rgb . [lindex $value 4]]
+	    set chosencolor [lindex $value 4]
+	    if {$chosencolor ne ""} {
+		set chosencolor [winfo rgb . $chosencolor]
+	    }
 	    if {[string match $defaultcolor $chosencolor]} {
 		# Change the option database so that future windows will get
 		# the same colors.
