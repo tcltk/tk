@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.21 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.22 2007/05/09 12:55:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -266,10 +266,10 @@ TkMacOSXProcessWindowEvent(
     dispPtr = TkGetDisplayList();
     winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
 
-    if (window != None) {
-	switch (eventPtr->eKind) {
-	    case kEventWindowActivated:
-	    case kEventWindowDeactivated: {
+    switch (eventPtr->eKind) {
+	case kEventWindowActivated:
+	case kEventWindowDeactivated:
+	    if (window != None) {
 		int activate = (eventPtr->eKind == kEventWindowActivated);
 
 		eventFound |= GenerateActivateEvents(window, activate);
@@ -278,146 +278,144 @@ TkMacOSXProcessWindowEvent(
 		    TkMacOSXEnterExitFullscreen(winPtr, activate);
 		}
 		statusPtr->stopProcessing = 1;
-		break;
 	    }
-	    case kEventWindowUpdate:
-		if (GenerateUpdateEvent(window)) {
-		    eventFound = true;
-		    statusPtr->stopProcessing = 1;
-		}
-		break;
-	    case kEventWindowExpanded:
-		if (winPtr) {
-		    TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
-			    ZoomState : NormalState);
-		}
-		break;
-	    case kEventWindowBoundsChanged:
-		if (winPtr) {
-		    WmInfo *wmPtr = winPtr->wmInfoPtr;
-		    UInt32 attr;
-		    Rect bounds;
-		    int x = -1, y = -1, width = -1, height = -1, flags = 0;
+	    break;
+	case kEventWindowUpdate:
+	    if (window != None && GenerateUpdateEvent(window)) {
+		eventFound = true;
+		statusPtr->stopProcessing = 1;
+	    }
+	    break;
+	case kEventWindowExpanded:
+	    if (winPtr) {
+		TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
+			ZoomState : NormalState);
+	    }
+	    break;
+	case kEventWindowBoundsChanged:
+	    if (winPtr) {
+		WmInfo *wmPtr = winPtr->wmInfoPtr;
+		UInt32 attr;
+		Rect bounds;
+		int x = -1, y = -1, width = -1, height = -1, flags = 0;
 
-		    ChkErr(GetEventParameter, eventPtr->eventRef,
-			    kEventParamAttributes, typeUInt32,
-			    NULL, sizeof(attr), NULL, &attr);
-		    ChkErr(GetEventParameter, eventPtr->eventRef,
-			    kEventParamCurrentBounds, typeQDRectangle,
-			    NULL, sizeof(bounds), NULL, &bounds);
-		    if (attr & kWindowBoundsChangeOriginChanged) {
-			x = bounds.left - wmPtr->xInParent;
-			y = bounds.top	- wmPtr->yInParent;
-			flags |= TK_LOCATION_CHANGED;
-		    }
-		    if (attr & kWindowBoundsChangeSizeChanged) {
-			width = bounds.right  - bounds.left;
-			height = bounds.bottom - bounds.top;
-			flags |= TK_SIZE_CHANGED;
-		    }
-		    TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width,
-			    height, flags);
-		    if (attr & kWindowBoundsChangeUserResize ||
-			    attr & kWindowBoundsChangeUserDrag) {
-			TkMacOSXRunTclEventLoop();
-		    }
-		    if (wmPtr->attributes & kWindowResizableAttribute) {
-			HIViewRef growBoxView;
+		ChkErr(GetEventParameter, eventPtr->eventRef,
+			kEventParamAttributes, typeUInt32,
+			NULL, sizeof(attr), NULL, &attr);
+		ChkErr(GetEventParameter, eventPtr->eventRef,
+			kEventParamCurrentBounds, typeQDRectangle,
+			NULL, sizeof(bounds), NULL, &bounds);
+		if (attr & kWindowBoundsChangeOriginChanged) {
+		    x = bounds.left - wmPtr->xInParent;
+		    y = bounds.top	- wmPtr->yInParent;
+		    flags |= TK_LOCATION_CHANGED;
+		}
+		if (attr & kWindowBoundsChangeSizeChanged) {
+		    width = bounds.right  - bounds.left;
+		    height = bounds.bottom - bounds.top;
+		    flags |= TK_SIZE_CHANGED;
+		}
+		TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width,
+			height, flags);
+		if (attr & kWindowBoundsChangeUserResize ||
+			attr & kWindowBoundsChangeUserDrag) {
+		    TkMacOSXRunTclEventLoop();
+		}
+		if (wmPtr->attributes & kWindowResizableAttribute) {
+		    HIViewRef growBoxView;
 
-			err = HIViewFindByID(HIViewGetRoot(whichWindow),
-				kHIViewWindowGrowBoxID, &growBoxView);
-			if (err == noErr) {
-			    ChkErr(HIViewSetNeedsDisplay, growBoxView, true);
-			}
+		    err = HIViewFindByID(HIViewGetRoot(whichWindow),
+			    kHIViewWindowGrowBoxID, &growBoxView);
+		    if (err == noErr) {
+			ChkErr(HIViewSetNeedsDisplay, growBoxView, true);
 		    }
 		}
-		break;
-	    case kEventWindowDragStarted:
-		if (winPtr) {
-		    TkMacOSXTrackingLoop(1);
-		}
-		break;
-	    case kEventWindowDragCompleted:
-		if (winPtr) {
-		    Rect maxBounds, bounds, strWidths;
-		    int h = 0, v = 0;
+	    }
+	    break;
+	case kEventWindowDragStarted:
+	    TkMacOSXTrackingLoop(1);
+	    if (!(TkMacOSXModifierState() & cmdKey)) { 
+		TkMacOSXBringWindowForward(whichWindow);
+	    }
+	    break;
+	case kEventWindowDragCompleted: {
+	    Rect maxBounds, bounds, strWidths;
+	    int h = 0, v = 0;
 
-		    TkMacOSXTrackingLoop(0);
-		    ChkErr(GetWindowGreatestAreaDevice, whichWindow,
-			    kWindowDragRgn, NULL, &maxBounds);
-		    ChkErr(GetWindowBounds, whichWindow, kWindowStructureRgn,
-			    &bounds);
-		    ChkErr(GetWindowStructureWidths, whichWindow, &strWidths);
-		    if (bounds.left > maxBounds.right - strWidths.left) {
-			h = maxBounds.right
-				- (strWidths.left ? strWidths.left : 40)
-				- bounds.left;
-		    } else if (bounds.right < maxBounds.left
-			    + strWidths.right) {
-			h = maxBounds.left
-				+ (strWidths.right ? strWidths.right : 40)
-				- bounds.right;
-		    }
-		    if (bounds.top > maxBounds.bottom - strWidths.top) {
-			v = maxBounds.bottom
-				- (strWidths.top ? strWidths.top : 40)
-				- bounds.top;
-		    } else if (bounds.bottom < maxBounds.top
-			    + strWidths.bottom) {
-			v = maxBounds.top
-				+ (strWidths.bottom ? strWidths.bottom : 40)
-				- bounds.bottom;
-		    } else if (strWidths.top && bounds.top < maxBounds.top) {
-			v = maxBounds.top - bounds.top;
-		    }
-		    if (h || v) {
-			OffsetRect(&bounds, h, v);
-			ChkErr(SetWindowBounds, whichWindow,
-			    kWindowStructureRgn, &bounds);
-		    }
-		}
-		break;
-	    case kEventWindowConstrain:
-		if (winPtr) {
-		    if (winPtr->wmInfoPtr->flags & WM_FULLSCREEN &&
-			    TkMacOSXMakeFullscreen(winPtr, whichWindow, 1,
-			    NULL) == TCL_OK) {
+	    TkMacOSXTrackingLoop(0);
+	    ChkErr(GetWindowGreatestAreaDevice, whichWindow,
+		    kWindowDragRgn, NULL, &maxBounds);
+	    ChkErr(GetWindowBounds, whichWindow, kWindowStructureRgn,
+		    &bounds);
+	    ChkErr(GetWindowStructureWidths, whichWindow, &strWidths);
+	    if (bounds.left > maxBounds.right - strWidths.left) {
+		h = maxBounds.right
+			- (strWidths.left ? strWidths.left : 40)
+			- bounds.left;
+	    } else if (bounds.right < maxBounds.left
+		    + strWidths.right) {
+		h = maxBounds.left
+			+ (strWidths.right ? strWidths.right : 40)
+			- bounds.right;
+	    }
+	    if (bounds.top > maxBounds.bottom - strWidths.top) {
+		v = maxBounds.bottom
+			- (strWidths.top ? strWidths.top : 40)
+			- bounds.top;
+	    } else if (bounds.bottom < maxBounds.top
+		    + strWidths.bottom) {
+		v = maxBounds.top
+			+ (strWidths.bottom ? strWidths.bottom : 40)
+			- bounds.bottom;
+	    } else if (strWidths.top && bounds.top < maxBounds.top) {
+		v = maxBounds.top - bounds.top;
+	    }
+	    if (h || v) {
+		OffsetRect(&bounds, h, v);
+		ChkErr(SetWindowBounds, whichWindow,
+		    kWindowStructureRgn, &bounds);
+	    }
+	    break;
+	}
+	case kEventWindowConstrain:
+	    if (winPtr && (winPtr->wmInfoPtr->flags & WM_FULLSCREEN) &&
+		    TkMacOSXMakeFullscreen(winPtr, whichWindow, 1,
+		    NULL) == TCL_OK) {
+		statusPtr->stopProcessing = 1;
+	    }
+	    break;
+	case kEventWindowGetRegion:
+	    if (winPtr && (winPtr->wmInfoPtr->flags & WM_TRANSPARENT)) {
+		WindowRegionCode code;
+
+		statusPtr->stopProcessing = (CallNextEventHandler(
+			eventPtr->callRef, eventPtr->eventRef) == noErr);
+		err = ChkErr(GetEventParameter, eventPtr->eventRef,
+			kEventParamWindowRegionCode, typeWindowRegionCode,
+			NULL, sizeof(code), NULL, &code);
+		if (err == noErr && code == kWindowOpaqueRgn) {
+		    RgnHandle rgn;
+
+		    err = ChkErr(GetEventParameter, eventPtr->eventRef,
+			    kEventParamRgnHandle, typeQDRgnHandle, NULL,
+			    sizeof(rgn), NULL, &rgn);
+		    if (err == noErr) {
+			SetEmptyRgn(rgn);
 			statusPtr->stopProcessing = 1;
 		    }
 		}
-		break;
-	    case kEventWindowGetRegion:
-		if (winPtr && (winPtr->wmInfoPtr->flags & WM_TRANSPARENT)) {
-		    WindowRegionCode code;
+	    }
+	    break;
+	case kEventWindowDrawContent:
+	    if (winPtr && (winPtr->wmInfoPtr->flags & WM_TRANSPARENT)) {
+		CGrafPtr port;
 
-		    statusPtr->stopProcessing = (CallNextEventHandler(
-			    eventPtr->callRef, eventPtr->eventRef) == noErr);
-		    err = ChkErr(GetEventParameter, eventPtr->eventRef,
-			    kEventParamWindowRegionCode, typeWindowRegionCode,
-			    NULL, sizeof(code), NULL, &code);
-		    if (err == noErr && code == kWindowOpaqueRgn) {
-			RgnHandle rgn;
-
-			err = ChkErr(GetEventParameter, eventPtr->eventRef,
-				kEventParamRgnHandle, typeQDRgnHandle, NULL,
-				sizeof(rgn), NULL, &rgn);
-			if (err == noErr) {
-			    SetEmptyRgn(rgn);
-			    statusPtr->stopProcessing = 1;
-			}
-		    }
-		}
-		break;
-	    case kEventWindowDrawContent:
-		if (winPtr && (winPtr->wmInfoPtr->flags & WM_TRANSPARENT)) {
-		    CGrafPtr port;
-
-		    GetPort(&port);
-		    ClearPort(port);
-		}
-		break;
-	}
+		GetPort(&port);
+		ClearPort(port);
+	    }
+	    break;
     }
+
     return 0;
 }
 

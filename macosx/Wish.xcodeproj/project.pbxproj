@@ -1786,7 +1786,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.19 2007/04/23 21:24:35 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.20 2007/05/09 12:55:16 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -4110,6 +4110,57 @@
 			};
 			name = DebugNoFixZL;
 		};
+		F98BA83E0BEB6A0100E34417 /* DebugUnthreaded */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = DebugUnthreaded;
+		};
+		F98BA83F0BEB6A0100E34417 /* DebugLeaks */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = DebugLeaks;
+		};
+		F98BA8400BEB6A0100E34417 /* DebugUnthreaded */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = tktest;
+			};
+			name = DebugUnthreaded;
+		};
+		F98BA8410BEB6A0100E34417 /* DebugLeaks */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = tktest;
+			};
+			name = DebugLeaks;
+		};
+		F98BA8420BEB6A0100E34417 /* DebugUnthreaded */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
+			buildSettings = {
+				CONFIGURE_ARGS = "$(CONFIGURE_ARGS) --disable-threads";
+				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = NO;
+			};
+			name = DebugUnthreaded;
+		};
+		F98BA8430BEB6A0100E34417 /* DebugLeaks */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					PURIFY,
+					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				PREBINDING = NO;
+			};
+			name = DebugLeaks;
+		};
 		F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -4210,7 +4261,9 @@
 			buildConfigurations = (
 				F95CC8AC09158F3100EA5ACE /* Debug */,
 				F95CC8AE09158F3100EA5ACE /* DebugNoFixZL */,
+				F98BA83E0BEB6A0100E34417 /* DebugUnthreaded */,
 				F94173790BC145DD00C54E27 /* DebugMemCompile */,
+				F98BA83F0BEB6A0100E34417 /* DebugLeaks */,
 				F95CC8AD09158F3100EA5ACE /* Release */,
 				F91BCC4F093152310042A6BF /* ReleaseUniversal */,
 				F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
@@ -4225,7 +4278,9 @@
 			buildConfigurations = (
 				F95CC8B109158F3100EA5ACE /* Debug */,
 				F95CC8B309158F3100EA5ACE /* DebugNoFixZL */,
+				F98BA8400BEB6A0100E34417 /* DebugUnthreaded */,
 				F941737A0BC145DD00C54E27 /* DebugMemCompile */,
+				F98BA8410BEB6A0100E34417 /* DebugLeaks */,
 				F95CC8B209158F3100EA5ACE /* Release */,
 				F91BCC50093152310042A6BF /* ReleaseUniversal */,
 				F9DB62090B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
@@ -4240,7 +4295,9 @@
 			buildConfigurations = (
 				F95CC8B609158F3100EA5ACE /* Debug */,
 				F95CC8B809158F3100EA5ACE /* DebugNoFixZL */,
+				F98BA8420BEB6A0100E34417 /* DebugUnthreaded */,
 				F941737B0BC145DD00C54E27 /* DebugMemCompile */,
+				F98BA8430BEB6A0100E34417 /* DebugLeaks */,
 				F95CC8B709158F3100EA5ACE /* Release */,
 				F91BCC51093152310042A6BF /* ReleaseUniversal */,
 				F9DB620A0B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
