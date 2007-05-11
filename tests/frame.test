@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.15 2005/02/15 03:22:10 chengyemao Exp $
+# RCS: @(#) $Id: frame.test,v 1.16 2007/05/11 12:36:04 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -812,7 +812,7 @@ destroy .f
 test frame-14.1 {labelframe labelwidget option} {
     # Test that label is moved in stacking order
     destroy .f .l
-    label .l -text Mupp
+    label .l -text Mupp -font {helvetica 8}
     labelframe .f -labelwidget .l
     pack .f
     frame .f.f -width 50 -height 50
