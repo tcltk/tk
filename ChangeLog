@@ -1,3 +1,8 @@
+2007-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkFont.c: bug #1716613 propagate error from
+	                    TkDeleteNamedFont.
+
 2007-05-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkFileFilter.c (AddClause): OSType endianness fixes.
