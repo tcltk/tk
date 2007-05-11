@@ -1,5 +1,7 @@
 2007-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* tests/winButton.test: Avoid font dependencies in results.
+
 	* generic/tkFont.c: bug #1716613 propagate error from
 	                    TkDeleteNamedFont.
 
