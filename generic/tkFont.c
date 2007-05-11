@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.34 2007/05/04 21:29:22 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.35 2007/05/11 11:00:48 patthoyts Exp $
  */
 
 #include "tkPort.h"
@@ -682,7 +682,7 @@ Tk_FontObjCmd(
 	break;
     }
     case FONT_DELETE: {
-	int i;
+	int i, result = TCL_OK;
 	char *string;
 
 	/*
@@ -694,11 +694,11 @@ Tk_FontObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "fontname ?fontname ...?");
 	    return TCL_ERROR;
 	}
-	for (i = 2; i < objc; i++) {
+	for (i = 2; i < objc && result == TCL_OK; i++) {
 	    string = Tcl_GetString(objv[i]);
-	    TkDeleteNamedFont(interp, tkwin, string);
+	    result = TkDeleteNamedFont(interp, tkwin, string);
 	}
-	break;
+	return result;
     }
     case FONT_FAMILIES: {
 	int skip;
