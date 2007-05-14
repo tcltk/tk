@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.30 2007/01/03 05:06:26 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.31 2007/05/14 20:58:25 dgp Exp $
 
 library tk
 
@@ -1273,6 +1273,23 @@ declare 270 generic {
 # TIP #264
 declare 271 generic {
     Tcl_Interp * Tk_Interp (Tk_Window tkwin)
+}
+
+# Now that the Tk 8.2 -> 8.3 transition is long past, use more conventional
+# means to continue support for extensions using the USE_OLD_IMAGE to 
+# continue use of their string-based Tcl_ImageTypes and Tcl_PhotoImageFormats.
+#
+# Note that this restores the usual rules for stub compatibility.  Stub-enabled
+# extensions compiled against 8.5 headers and linked to the 8.5 stub library
+# will produce a file [load]able into an interp with Tk 8.X, for X >= 5.
+# It will *not* be [load]able into interps with Tk 8.4 (or Tk 8.2!).
+# Developers who need to produce a file [load]able into legacy interps must
+# build against legacy sources.
+declare 272 generic {
+    void Tk_CreateOldImageType(Tk_ImageType *typePtr)
+}
+declare 273 generic {
+    void Tk_CreateOldPhotoImageFormat(Tk_PhotoImageFormat *formatPtr)
 }
 
 # Define the platform specific public Tk interface.  These functions are

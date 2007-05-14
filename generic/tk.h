@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.96 2007/04/17 15:25:08 dkf Exp $
+ * RCS: @(#) $Id: tk.h,v 1.97 2007/05/14 20:58:26 dgp Exp $
  */
 
 #ifndef _TK
@@ -1365,12 +1365,7 @@ struct Tk_PhotoImageFormat {
 				 * image format handler. */
 };
 
-EXTERN void		Tk_CreateOldImageType _ANSI_ARGS_((
-			    Tk_ImageType *typePtr));
-EXTERN void		Tk_CreateOldPhotoImageFormat _ANSI_ARGS_((
-			    Tk_PhotoImageFormat *formatPtr));
-
-#if !defined(USE_TK_STUBS) && defined(USE_OLD_IMAGE)
+#ifdef USE_OLD_IMAGE
 #define Tk_CreateImageType Tk_CreateOldImageType
 #define Tk_CreatePhotoImageFormat Tk_CreateOldPhotoImageFormat
 #endif
@@ -1501,14 +1496,8 @@ const char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
 
 #endif
 
-void			Tk_InitImageArgs _ANSI_ARGS_((Tcl_Interp *interp,
-			    int argc, char ***argv));
-
-#if !defined(USE_TK_STUBS) || !defined(USE_OLD_IMAGE)
-
 #define Tk_InitImageArgs(interp, argc, argv) /**/
 
-#endif
 
 /*
  *--------------------------------------------------------------

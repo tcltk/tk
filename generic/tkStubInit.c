@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.56 2006/10/08 21:47:12 patthoyts Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.57 2007/05/14 20:58:27 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -939,6 +939,8 @@ TkStubs tkStubs = {
     Tk_GetUserInactiveTime, /* 269 */
     Tk_ResetUserInactiveTime, /* 270 */
     Tk_Interp, /* 271 */
+    Tk_CreateOldImageType, /* 272 */
+    Tk_CreateOldPhotoImageFormat, /* 273 */
 };
 
 /* !END!: Do not edit above this line. */
