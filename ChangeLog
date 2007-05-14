@@ -1,3 +1,44 @@
+2007-05-14  Don Porter  <dgp@users.sourceforge.net>
+
+	[Tk Bug 1712081]
+
+	* unix/Makefile.in:	Updates to account for new and deleted files
+	* win/Makefile.in:	tkStubImg.c and tkOldTest.c.
+	* win/makefile.bc:
+	* win/makefile.vc:
+
+	* generic/tkOldTest.c (new):	New file used to create testing
+	* generic/tkTest.c:		commands for testing various Tk
+	* tests/constraints.tcl:	legacy interfaces where a separate
+	* tests/image.test:		compilation unit is needed in order
+	to #define suitable macros during compilation.  Only the effect of
+	USE_OLD_IMAGE on Tk_CreateImageType() is currently tested, but more
+	similar testing commands can be added to this same file.  New
+	constraint defined to detect presence of the image type provided by
+	the new testing code, and a few tests added to exercise it.  Having
+	USE_OLD_IMAGE support tested by the default test suite should reduce
+	chance of a recurrence of this bug.
+
+	* doc/CrtImgType.3:	Revised docs to better indicate the legacy
+	* doc/CrtPhImgFmt.3:	nature of the interfaces supported by
+	USE_OLD_IMAGE.
+
+	* generic/tkDecls.h:	make genstubs
+	* generic/tkStubInit.c:
+
+	* generic/tk.decls:		Reworked USE_OLD_IMAGE support to use
+	* generic/tk.h:			the same support mechanisms both with
+	* generic/tkStubImg.c (deleted):and without a stub-enabled build.  In
+	each case, route the legacy calls to Tk_CreateImageType and
+	Tk_CreatePhotoImageFormat through the Tk_CreateOldImageType and
+	Tk_CreateOldPhotoImageFormat routines.  Add those routines to the
+	public stub table so they're available to a stub-enabled extension.
+	Remove the definition of Tk_InitImageArgs() and use a macro to 
+	convert any calls to it in source code into a comment.
+
+	* generic/tkImage.c:	Removed the MODULE_SCOPE declarations that
+	* generic/tkImgPhoto.c:	broke USE_OLD_IMAGE support.
+
 2007-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/winButton.test: Avoid font dependencies in results.

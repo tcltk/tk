@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.68 2007/01/11 15:35:39 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.69 2007/05/14 20:58:27 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -33,10 +33,6 @@
  */
 
 extern int _XInitImageFuncPtrs(XImage *image);
-
-#ifndef USE_OLD_IMAGE
-MODULE_SCOPE void Tk_CreateOldPhotoImageFormat(Tk_PhotoImageFormat *formatPtr);
-#endif
 
 /*
  * A signed 8-bit integral type. If chars are unsigned and the compiler isn't
