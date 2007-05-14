@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.72 2007/05/05 07:42:58 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.73 2007/05/14 20:58:28 dgp Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -236,6 +236,7 @@ TKTEST_OBJS = \
 	testMain.$(OBJEXT) \
 	tkSquare.$(OBJEXT) \
 	tkTest.$(OBJEXT) \
+	tkOldTest.$(OBJEXT) \
 	tkWinTest.$(OBJEXT)
 
 XLIB_OBJS = \
@@ -387,8 +388,7 @@ TTK_OBJS = \
 	ttkStubLib.$(OBJEXT)
 
 STUB_OBJS = \
-	tkStubLib.$(OBJEXT) \
-	tkStubImg.$(OBJEXT)
+	tkStubLib.$(OBJEXT)
 
 TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)"/doc/*.[13n]
 TK_DOCS = "$(ROOT_DIR_NATIVE)"/doc/*.[13n]
@@ -643,6 +643,9 @@ testMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ -DTK_TEST $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
+	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
+
+tkOldTest.$(OBJEXT): tkOldTest.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkWinTest.$(OBJEXT): tkWinTest.c

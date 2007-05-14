@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.127 2007/04/26 21:02:27 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.128 2007/05/14 20:58:27 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -335,7 +335,8 @@ ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
 
 WISH_OBJS = tkAppInit.o
 
-TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o $(@TK_WINDOWINGSYSTEM@_TKTEST_OBJS)
+TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o tkOldTest.o \
+	$(@TK_WINDOWINGSYSTEM@_TKTEST_OBJS)
 
 WIDG_OBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
 	tkMenu.o tkMenubutton.o tkMenuDraw.o tkMessage.o \
@@ -373,7 +374,7 @@ TTK_STUB_OBJS =  ttkStubInit.o ttkStubLib.o
 
 STUB_OBJS = tkStubInit.o tkStubLib.o
 
-STUB_LIB_OBJS = tkStubLib.o tkStubImg.o
+STUB_LIB_OBJS = tkStubLib.o
 
 X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
@@ -443,7 +444,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextMark.c \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
-	$(GENERIC_DIR)/tkOldConfig.c \
+	$(GENERIC_DIR)/tkOldConfig.c $(GENERIC_DIR)/tkOldTest.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
 	$(GENERIC_DIR)/tkStubInit.c $(GENERIC_DIR)/tkStubLib.c
 
@@ -1082,6 +1083,9 @@ tkImgPPM.o: $(GENERIC_DIR)/tkImgPPM.c
 tkImgPhoto.o: $(GENERIC_DIR)/tkImgPhoto.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhoto.c
 
+tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
+	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(GENERIC_DIR)/tkOldTest.c
+
 tkTest.o: $(GENERIC_DIR)/tkTest.c
 	$(CC) -c $(CC_SWITCHES_NO_STUBS) $(GENERIC_DIR)/tkTest.c
 
@@ -1117,9 +1121,6 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
-
-tkStubImg.o: $(GENERIC_DIR)/tkStubImg.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubImg.c
 
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
