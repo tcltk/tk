@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.102 2007/05/14 20:58:31 dgp Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.103 2007/05/15 23:20:17 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -540,7 +540,9 @@ install:  install-binaries install-libraries install-docs
 tktest:	  setup $(TKTEST) $(CAT32)
 
 
-test: setup $(TKTEST) $(TKLIB) $(CAT32)
+test: test-classic test-ttk
+
+test-classic: setup $(TKTEST) $(TKLIB) $(CAT32)
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	set TK_LIBRARY=$(TK_LIBRARY)
 !if $(TCLINSTALL)
@@ -552,6 +554,20 @@ test: setup $(TKTEST) $(TKLIB) $(CAT32)
 	$(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
 !else
 	$(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
+!endif
+
+test-ttk: setup $(TKTEST) $(TKLIB) $(CAT32)
+	set TCL_LIBRARY=$(TCL_LIBRARY)
+	set TK_LIBRARY=$(TK_LIBRARY)
+!if $(TCLINSTALL)
+	set PATH=$(_TCLDIR)\bin;$(PATH)
+!else
+	set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
+!endif
+!if "$(OS)" == "Windows_NT"  || "$(MSVCDIR)" == "IDE"
+	$(TKTEST) "$(ROOT)/tests/ttk/all.tcl" $(TESTFLAGS) | $(CAT32)
+!else
+	$(TKTEST) "$(ROOT)/tests/ttk/all.tcl" $(TESTFLAGS) | $(CAT32)
 !endif
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
