@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.25.2.6 2006/04/12 22:31:01 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.25.2.7 2007/05/15 16:59:27 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -850,6 +850,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	"-minsize", "-pad", "-uniform", "-weight", (char *) NULL };
     enum options { ROWCOL_MINSIZE, ROWCOL_PAD, ROWCOL_UNIFORM, ROWCOL_WEIGHT };
     int index;
+    Tcl_Obj *listCopy;
 
     if (((objc % 2 != 0) && (objc > 6)) || (objc < 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "master index ?-option value...?");
@@ -860,7 +861,10 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	return TCL_ERROR;
     }
 
-    if (Tcl_ListObjGetElements(interp, objv[3], &lObjc, &lObjv) != TCL_OK) {
+    listCopy = Tcl_DuplicateObj(objv[3]);
+    Tcl_IncrRefCount(listCopy);
+    if (Tcl_ListObjGetElements(interp, listCopy, &lObjc, &lObjv) != TCL_OK) {
+	Tcl_DecrRefCount(listCopy);
 	return TCL_ERROR;
     }
 
@@ -870,6 +874,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	Tcl_AppendResult(interp, "no ",
 		(slotType == COLUMN) ? "column" : "row",
 		" indices specified", (char *) NULL);
+	Tcl_DecrRefCount(listCopy);
 	return TCL_ERROR;
     }
 
@@ -879,10 +884,12 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
 		Tcl_GetString(objv[1]),
 		": must specify a single element on retrieval", (char *) NULL);
+	Tcl_DecrRefCount(listCopy);
 	return TCL_ERROR;
     }
     for (j = 0; j < lObjc; j++) {
 	if (Tcl_GetIntFromObj(interp, lObjv[j], &slot) != TCL_OK) {
+	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
 	ok = CheckSlotData(masterPtr, slot, slotType, checkOnly);
@@ -890,6 +897,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ", 
 		    Tcl_GetString(objv[1]), ": \"", Tcl_GetString(lObjv[j]),
 		    "\" is out of range", (char *) NULL);
+	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	} else if (ok == TCL_OK) {
 	    slotPtr = (slotType == COLUMN) ?
@@ -928,6 +936,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 		    Tcl_NewStringObj("-weight", -1));
 	    Tcl_ListObjAppendElement(interp, res, Tcl_NewIntObj(weight));
 	    Tcl_SetObjResult(interp, res);
+	    Tcl_DecrRefCount(listCopy);
 	    return TCL_OK;
 	}
 
@@ -940,6 +949,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	for (i = 4; i < objc; i += 2) {
 	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option",
 			0, &index) != TCL_OK) {
+		Tcl_DecrRefCount(listCopy);
 		return TCL_ERROR;
 	    }
 	    if (index == ROWCOL_MINSIZE) {
@@ -948,6 +958,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 			    (ok == TCL_OK) ? slotPtr[slot].minSize : 0));
 		} else if (Tk_GetPixelsFromObj(interp, master, objv[i+1], &size)
 			!= TCL_OK) {
+		    Tcl_DecrRefCount(listCopy);
 		    return TCL_ERROR;
 		} else {
 		    slotPtr[slot].minSize = size;
@@ -959,11 +970,13 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 			    (ok == TCL_OK) ? slotPtr[slot].weight : 0));
 		} else if (Tcl_GetIntFromObj(interp, objv[i+1], &wt)
 			!= TCL_OK) {
+		    Tcl_DecrRefCount(listCopy);
 		    return TCL_ERROR;
 		} else if (wt < 0) {
 		    Tcl_AppendResult(interp, "invalid arg \"",
 			    Tcl_GetString(objv[i]),
 			    "\": should be non-negative", (char *) NULL);
+		    Tcl_DecrRefCount(listCopy);
 		    return TCL_ERROR;
 		} else {
 		    slotPtr[slot].weight = wt;
@@ -989,11 +1002,13 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 			    (ok == TCL_OK) ? slotPtr[slot].pad : 0));
 		} else if (Tk_GetPixelsFromObj(interp, master, objv[i+1], &size)
 			!= TCL_OK) {
+		    Tcl_DecrRefCount(listCopy);
 		    return TCL_ERROR;
 		} else if (size < 0) {
 		    Tcl_AppendResult(interp, "invalid arg \"", 
 			    Tcl_GetString(objv[i]),
 			    "\": should be non-negative", (char *) NULL);
+		    Tcl_DecrRefCount(listCopy);
 		    return TCL_ERROR;
 		} else {
 		    slotPtr[slot].pad = size;
@@ -1001,6 +1016,7 @@ GridRowColumnConfigureCommand(tkwin, interp, objc, objv)
 	    }
 	}
     }
+    Tcl_DecrRefCount(listCopy);
 
     /*
      * If we changed a property, re-arrange the table,
