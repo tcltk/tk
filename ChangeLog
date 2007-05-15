@@ -1,3 +1,7 @@
+2007-05-15  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkGrid.c: Stop crash due to list intrep shimmer [Bug 1677608]
+
 2007-05-15  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixRFont.c: Fix various memory leaks [Bug 1717830], 
