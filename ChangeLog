@@ -1,5 +1,7 @@
 2007-05-15  Don Porter  <dgp@users.sourceforge.net>
 
+	* changes: updates for 8.4.15 release.
+
 	* generic/tkGrid.c: Stop crash due to list intrep shimmer [Bug 1677608]
 
 2007-05-09  Daniel Steffen  <das@users.sourceforge.net>
