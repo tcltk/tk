@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.19 2007/05/15 16:15:54 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.20 2007/05/15 19:37:58 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -247,9 +247,6 @@ FinishedWithFont(
     for (i = 0; i < fontPtr->nfaces; i++) {
 	if (fontPtr->faces[i].ftFont) {
 	    XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
-	}
-	if (fontPtr->faces[i].source) {
-	    FcPatternDestroy(fontPtr->faces[i].source);
 	}
 	if (fontPtr->faces[i].charset) {
 	    FcCharSetDestroy(fontPtr->faces[i].charset);
