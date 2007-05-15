@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.18 2007/05/07 19:28:22 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.19 2007/05/15 16:15:54 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -27,7 +27,7 @@ typedef struct {
 				 * first in structure. */
     UnixFtFace *faces;
     int nfaces;
-    FcCharSet *charset;
+    FcFontSet *fontset;
     FcPattern *pattern;
 
     Display *display;
@@ -37,14 +37,6 @@ typedef struct {
     XftColor color;
 } UnixFtFont;
 
-/*
- * Forward declarations...
- */
-
-static void		FinishedWithFont(UnixFtFont *fontPtr);
-static XftFont *	GetFont(UnixFtFont *fontPtr, FcChar32 ucs4);
-static UnixFtFont *	InitFont(Tk_Window tkwin, FcPattern *pattern,
-			    UnixFtFont *fontPtr);
 
 /*
  * Package initialization:
@@ -138,14 +130,14 @@ InitFont(
      * Generate the list of fonts
      */
 
-    set = FcFontSort(0, pattern, FcTrue, &charset, &result);
+    set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set) {
 	FcPatternDestroy(pattern);
-	ckfree((char *) fontPtr);
+	ckfree((char *)fontPtr);
 	return NULL;
     }
 
-    fontPtr->charset = charset;
+    fontPtr->fontset = set;
     fontPtr->pattern = pattern;
     fontPtr->faces = (UnixFtFace *) ckalloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
@@ -263,11 +255,20 @@ FinishedWithFont(
 	    FcCharSetDestroy(fontPtr->faces[i].charset);
 	}
     }
+    if (fontPtr->faces) {
+	ckfree((char *)fontPtr->faces);
+    }
+    if (fontPtr->pattern) {
+	FcPatternDestroy(fontPtr->pattern);
+    }
     if (fontPtr->ftDraw) {
 	XftDrawDestroy(fontPtr->ftDraw);
     }
     if (fontPtr->font.fid) {
 	XUnloadFont(fontPtr->display, fontPtr->font.fid);
+    }
+    if (fontPtr->fontset) {
+	FcFontSetDestroy(fontPtr->fontset);
     }
     Tk_DeleteErrorHandler(handler);
 }
@@ -737,11 +738,3 @@ Tk_DrawChars(
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, &fontPtr->color, specs, nspec);
     }
 }
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
