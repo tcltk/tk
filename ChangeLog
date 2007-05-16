@@ -1,5 +1,11 @@
 2007-05-16  Don Porter  <dgp@users.sourceforge.net>
 
+	* library/choosedir.tcl:	Removed uses of obsolete {expand}
+	* library/comdlg.tcl:		syntax; replaced with the now
+	* library/tk.tcl:		approved {*}.  [Bug 1710633]
+	* tests/canvImg.test:
+	* tests/imgPhoto.test:
+
 	* tests/bind.test:      Make test suite more SCIM-tolerant [Bug 1609316]
 
 2007-05-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
