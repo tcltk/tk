@@ -1,5 +1,5 @@
 #
-# $Id: treeview.test,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: treeview.test,v 1.2 2007/05/16 15:44:08 dgp Exp $
 #
 # [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
 # what it currently does)
@@ -349,7 +349,7 @@ test treeview-6.1 "deletion - setup" -constraints treeview -body {
     .tv children dtest
 } -result [list a b c d e]
 
-test treeview-6.1 "delete" -constraints treeview -body {
+test treeview-6.1.1 "delete" -constraints treeview -body {
     .tv delete b
     consistencyCheck .tv
     list [.tv exists b] [.tv children dtest]
