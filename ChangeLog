@@ -1,3 +1,7 @@
+2007-05-16  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/bind.test:      Make test suite more SCIM-tolerant [Bug 1609316]
+
 2007-05-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: Test ttk widgets

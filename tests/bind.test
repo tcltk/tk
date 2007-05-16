@@ -7,11 +7,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.18 2004/12/07 10:07:41 dkf Exp $
+# RCS: @(#) $Id: bind.test,v 1.19 2007/05/16 15:23:44 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+tk useinputmethods 0
 
 catch {destroy .b}
 toplevel .b -width 100 -height 50
@@ -227,6 +228,7 @@ test bind-6.2 {Tk_DeleteBindTable procedure: pending bindings deleted later} tes
     interp create foo
     foo eval {
 	load {} Tk
+	tk useinputmethods 0
 	load {} Tktest
 	wm geometry . +0+0
 	frame .t -width 50 -height 50
