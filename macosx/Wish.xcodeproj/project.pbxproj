@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F9067BCD0BFBA2900074F726 /* tkOldTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAFE08F27A39005CB29B /* tkOldTest.c */; };
 		F9408AF30B195C08009F7CAC /* tclMathOp.c in Sources */ = {isa = PBXBuildFile; fileRef = F9408AF20B195C08009F7CAC /* tclMathOp.c */; };
 		F966BDCF08F27A3F005CB29B /* tk3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAAC08F27A39005CB29B /* tk3d.c */; };
 		F966BDD108F27A3F005CB29B /* tkArgv.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAAE08F27A39005CB29B /* tkArgv.c */; };
@@ -559,7 +560,7 @@
 		F966BAFB08F27A39005CB29B /* tkSelect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkSelect.c; sourceTree = "<group>"; };
 		F966BAFC08F27A39005CB29B /* tkSelect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkSelect.h; sourceTree = "<group>"; };
 		F966BAFD08F27A39005CB29B /* tkSquare.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkSquare.c; sourceTree = "<group>"; };
-		F966BAFE08F27A39005CB29B /* tkStubImg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkStubImg.c; sourceTree = "<group>"; };
+		F966BAFE08F27A39005CB29B /* tkOldTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkOldTest.c; sourceTree = "<group>"; };
 		F966BAFF08F27A39005CB29B /* tkStubInit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkStubInit.c; sourceTree = "<group>"; };
 		F966BB0008F27A39005CB29B /* tkStubLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkStubLib.c; sourceTree = "<group>"; };
 		F966BB0108F27A39005CB29B /* tkStyle.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkStyle.c; sourceTree = "<group>"; };
@@ -1786,7 +1787,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.20 2007/05/09 12:55:16 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.21 2007/05/16 21:21:35 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2086,7 +2087,7 @@
 				F966BAFB08F27A39005CB29B /* tkSelect.c */,
 				F966BAFC08F27A39005CB29B /* tkSelect.h */,
 				F966BAFD08F27A39005CB29B /* tkSquare.c */,
-				F966BAFE08F27A39005CB29B /* tkStubImg.c */,
+				F966BAFE08F27A39005CB29B /* tkOldTest.c */,
 				F966BAFF08F27A39005CB29B /* tkStubInit.c */,
 				F966BB0008F27A39005CB29B /* tkStubLib.c */,
 				F966BB0108F27A39005CB29B /* tkStyle.c */,
@@ -3878,6 +3879,7 @@
 				F966BE0F08F27A3F005CB29B /* tkMessage.c in Sources */,
 				F966BE1008F27A3F005CB29B /* tkObj.c in Sources */,
 				F966BE1108F27A3F005CB29B /* tkOldConfig.c in Sources */,
+				F9067BCD0BFBA2900074F726 /* tkOldTest.c in Sources */,
 				F966BE1208F27A3F005CB29B /* tkOption.c in Sources */,
 				F966BE1308F27A3F005CB29B /* tkPack.c in Sources */,
 				F966BE1408F27A3F005CB29B /* tkPanedWindow.c in Sources */,
