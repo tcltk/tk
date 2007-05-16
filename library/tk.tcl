@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.61 2007/04/23 21:16:43 das Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.62 2007/05/16 18:10:35 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -25,7 +25,7 @@ namespace eval ::tk {
             # The msgcat package is not available.  Supply our own
             # minimal replacement.
             proc mc {src args} {
-                return [format $src {expand}$args]
+                return [format $src {*}$args]
             }
             proc mcmax {args} {
                 set max 0
@@ -316,35 +316,35 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
 
 if {![llength [info commands tk_chooseColor]]} {
     proc ::tk_chooseColor {args} {
-	return [tk::dialog::color:: {expand}$args]
+	return [tk::dialog::color:: {*}$args]
     }
 }
 if {![llength [info commands tk_getOpenFile]]} {
     proc ::tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
-	    return [tk::MotifFDialog open {expand}$args]
+	    return [tk::MotifFDialog open {*}$args]
 	} else {
-	    return [::tk::dialog::file:: open {expand}$args]
+	    return [::tk::dialog::file:: open {*}$args]
 	}
     }
 }
 if {![llength [info commands tk_getSaveFile]]} {
     proc ::tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
-	    return [tk::MotifFDialog save {expand}$args]
+	    return [tk::MotifFDialog save {*}$args]
 	} else {
-	    return [::tk::dialog::file:: save {expand}$args]
+	    return [::tk::dialog::file:: save {*}$args]
 	}
     }
 }
 if {![llength [info commands tk_messageBox]]} {
     proc ::tk_messageBox {args} {
-	return [tk::MessageBox {expand}$args]
+	return [tk::MessageBox {*}$args]
     }
 }
 if {![llength [info command tk_chooseDirectory]]} {
     proc ::tk_chooseDirectory {args} {
-	return [::tk::dialog::file::chooseDir:: {expand}$args]
+	return [::tk::dialog::file::chooseDir:: {*}$args]
     }
 }
 
@@ -506,7 +506,7 @@ proc ::tk::AmpWidget {class path args} {
 	    lappend options $opt $val
 	}
     }
-    set result [$class $path {expand}$options]
+    set result [$class $path {*}$options]
     if {$class eq "button"} {
 	bind $path <<AltUnderlined>> [list $path invoke]
     }
@@ -527,7 +527,7 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 	    lappend options $opt $val
 	}
     }
-    $widget add $type {expand}$options
+    $widget add $type {*}$options
 }
 
 # ::tk::FindAltKeyTarget --
