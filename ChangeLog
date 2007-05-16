@@ -1,5 +1,7 @@
 2007-05-16  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.4.15 TAGGED FOR RELEASE ***
+
 	* tests/bind.test:	Make test suite more SCIM-tolerant [Bug 1609316]
 
 2007-05-15  Don Porter  <dgp@users.sourceforge.net>
