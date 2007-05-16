@@ -1,3 +1,11 @@
+2007-05-17  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tk.decls: workaround 'make checkstubs' failures from
+	tkStubLib.c MODULE_SCOPE revert. [Bug 1716117]
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add tkOldTest.c and remove
+						 tkStubImg.c.
+
 2007-05-16  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkStubLib.c:  Change Tk_InitStubs(), tkStubsPtr,
@@ -14,16 +22,16 @@
 	* tests/canvImg.test:
 	* tests/imgPhoto.test:
 
-	* tests/bind.test:      Make test suite more SCIM-tolerant [Bug 1609316]
+	* tests/bind.test:    Make test suite more SCIM-tolerant. [Bug 1609316]
 
 2007-05-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/makefile.vc: Test ttk widgets
+	* win/makefile.vc: Test ttk widgets.
 
 2007-05-15  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixRFont.c: Fix crash introduced by previous fix
-	exposed under newer fontconfig libraries [Bug 1717830 again].
+	exposed under newer fontconfig libraries [Bug 1717830] again.
 
 2007-05-15  Don Porter  <dgp@users.sourceforge.net>
 
@@ -31,7 +39,7 @@
 
 2007-05-15  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tkUnixRFont.c: Fix various memory leaks [Bug 1717830], 
+	* unix/tkUnixRFont.c: Fix various memory leaks [Bug 1717830],
 	[Bug 800149].
 
 2007-05-14  Don Porter  <dgp@users.sourceforge.net>
@@ -79,8 +87,8 @@
 
 	* tests/winButton.test: Avoid font dependencies in results.
 
-	* generic/tkFont.c: bug #1716613 propagate error from
-	                    TkDeleteNamedFont.
+	* generic/tkFont.c: propagate error from TkDeleteNamedFont
+	                    [Bug 1716613].
 
 2007-05-09  Daniel Steffen  <das@users.sourceforge.net>
 
