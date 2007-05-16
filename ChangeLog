@@ -1,3 +1,11 @@
+2007-05-16  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkStubLib.c:  Change Tk_InitStubs(), tkStubsPtr,
+	and the auxilliary stubs table pointers back to public visibility.
+	See [Bug 1716117] for details.
+
+	Removed TCL_STORAGE_CLASS monkey business, as it had no effect.
+
 2007-05-16  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/choosedir.tcl:	Removed uses of obsolete {expand}
