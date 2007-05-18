@@ -1,3 +1,8 @@
+2007-05-18  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/ttk/treetags.test:	Another bit of test suite
+	SCIM-tolerance. [Bug 1609316]
+
 2007-05-17  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tk.decls: workaround 'make checkstubs' failures from
