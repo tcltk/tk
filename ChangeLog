@@ -1,3 +1,13 @@
+2007-05-18  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkEntry.c(EntrySetValue):  Ensure
+	that widget is in a consistent state before setting
+	the linked -textvariable.  Previously, it was possible 
+	for [$e index insert] to point past the end of the string, 
+	leading to heap corruption [Bug 1721532].
+	* tests/ttk/entry.test(entry-9.1): Add test case
+	for the above.
+
 2007-05-18  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/configure:       autoconf-2.59 (FC6 fork)
