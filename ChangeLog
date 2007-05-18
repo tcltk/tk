@@ -1,5 +1,15 @@
 2007-05-18  Don Porter  <dgp@users.sourceforge.net>
 
+	* unix/configure:       autoconf-2.59 (FC6 fork)
+	* win/configure:
+
+	* README:               Bump version number to 8.5a7
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
 	* tests/ttk/treetags.test:	Another bit of test suite
 	SCIM-tolerance. [Bug 1609316]
 

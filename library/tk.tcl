@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.62 2007/05/16 18:10:35 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.63 2007/05/18 19:21:59 dgp Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -13,8 +13,8 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Insist on running with compatible versions of Tcl and Tk.
-package require -exact Tcl 8.5a6
-package require -exact Tk  8.5a6
+package require -exact Tcl 8.5a7
+package require -exact Tk  8.5a7
 
 # Create a ::tk namespace
 namespace eval ::tk {
