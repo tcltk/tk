@@ -21,7 +21,7 @@ a PC running Windows, see the README file in the directory ../win.  To
 compile for Mac OS X, see the README file in the directory ../macosx.  To
 compile for a classic Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.19.2.2 2005/12/03 00:36:51 das Exp $
+RCS: @(#) $Id: README,v 1.19.2.3 2007/05/25 16:03:37 dgp Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -32,16 +32,14 @@ How To Compile And Install Tk:
     version Tcl release. Also, be sure that you have configured Tcl before
     you configure Tk.
 
-(b) Check for patches as described in ../README.
-
-(c) If you have already compiled Tk once in this directory and are now
+(b) If you have already compiled Tk once in this directory and are now
     preparing to compile again in the same directory but for a different
-    platform, or if you have applied patches, type "make distclean" to
-    discard all the configuration information computed previously.
+    platform, type "make distclean" to discard all the configuration
+    information computed previously.
 
 (d) Type "./configure".  This runs a configuration script created by GNU
-    autoconf, which configures Tcl for your system and creates a
-    Makefile.  The configure script allows you to customize the Tcl
+    autoconf, which configures Tk for your system and creates a
+    Makefile.  The configure script allows you to customize the Tk
     configuration for your site; for details on how you can do this,
     type "./configure -help" or refer to the autoconf documentation (not
     included here).  Tk's "configure" script supports the following
@@ -51,7 +49,7 @@ How To Compile And Install Tk:
 				configuration information.  By default
 				the Tcl directory is assumed to be in the
 				location given by (a) above.
-	--enable-threads	If this switch is set, Tcl will compile
+	--enable-threads	If this switch is set, Tk will compile
 				itself with multithreading support.
 	--enable-shared		If this switch is specified, Tk will compile
 				itself as a shared library if it can figure
@@ -101,7 +99,7 @@ How To Compile And Install Tk:
     
 (g) Type "make install" to install Tk's binaries and script files in
     standard places.  You'll need write permission on the installation
-    directoryies to do this.  The installation directories are
+    directories to do this.  The installation directories are
     determined by the "configure" script and may be specified with
     the --prefix and --exec-prefix options to "configure".  See the
     Makefile for information on what directories were chosen; you
@@ -136,7 +134,7 @@ processed.  If any errors occur, you'll see a much more substantial
 printout for each error.  In order to avoid false error reports, be sure
 to run the tests with an empty resource database (e.g., remove your
 .Xdefaults file or delete any entries starting with *).  Also, don't
-try to do anything else with your display or keyboard whlie the tests
+try to do anything else with your display or keyboard while the tests
 are running, or you may get false violations.  See the README file in
 the "tests" directory for more information on the test suite.
 
