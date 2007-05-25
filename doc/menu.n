@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.15 2007/05/03 23:55:29 dkf Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.16 2007/05/25 22:27:12 dkf Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -529,7 +529,7 @@ command.
 \fIpathName\fR \fBclone\fR \fInewPathname ?cloneType?\fR
 Makes a clone of the current menu named \fInewPathName\fR. This clone
 is a menu in its own right, but any changes to the clone are
-propogated to the original menu and vice versa. \fIcloneType\fR can be
+propagated to the original menu and vice versa. \fIcloneType\fR can be
 \fBnormal\fR, \fBmenubar\fR, or \fBtearoff\fR. Should not normally be
 called outside of the Tk library. See the \fBCLONES\fR section for
 more information.
