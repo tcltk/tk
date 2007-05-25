@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.5 2007/02/06 22:28:44 jenglish Exp $
+# $Id: ttk.tcl,v 1.6 2007/05/25 22:55:03 jenglish Exp $
 #
 # Ttk widget set initialization script.
 #
@@ -14,10 +14,8 @@ namespace eval ::ttk {
     }
 }
 
-source [file join $::ttk::library keynav.tcl]
 source [file join $::ttk::library fonts.tcl]
 source [file join $::ttk::library cursors.tcl]
-source [file join $::ttk::library icons.tcl]
 source [file join $::ttk::library utils.tcl]
 
 ## ttk::deprecated $old $new --
@@ -109,7 +107,6 @@ source [file join $::ttk::library entry.tcl]
 source [file join $::ttk::library combobox.tcl]	;# dependency: entry.tcl
 source [file join $::ttk::library treeview.tcl]
 source [file join $::ttk::library sizegrip.tcl]
-source [file join $::ttk::library dialog.tcl]
 
 ## Label and Labelframe bindings:
 #  (not enough to justify their own file...)

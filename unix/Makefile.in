@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.128 2007/05/14 20:58:27 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.129 2007/05/25 22:55:03 jenglish Exp $
 
 # Current Tk version;  used in various names.
 
@@ -835,7 +835,6 @@ install-doc:
 
 	@echo "Installing and cross-linking command (.n) docs";
 	@for i in $(TOP_DIR)/doc/*.n; do \
-	    if [ "ttk_dialog.n" = `basename $$i` ] ; then continue ; fi ; \
 	    $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i $(MANN_INSTALL_DIR); \
 	done
 
