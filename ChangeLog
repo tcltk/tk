@@ -1,3 +1,12 @@
+2007-05-25  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/ttk.tcl: Omit ttk::dialog and dependencies.
+	* library/ttk/dialog.tcl, library/ttk/icons.tcl,
+	library/ttk/keynav.tcl: Removed.
+	* tests/ttk/misc.test: Removed.
+	* doc/ttk_dialog.tcl: Removed.
+
+
 2007-05-25  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/canvas.n: Fixed documentation of default -joinstyle option
