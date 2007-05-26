@@ -1,3 +1,17 @@
+2007-05-25  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/ttk.tcl: Omit ttk::dialog and dependencies.
+	* library/ttk/dialog.tcl, library/ttk/icons.tcl,
+	library/ttk/keynav.tcl: Removed.
+	* tests/ttk/misc.test: Removed.
+	* doc/ttk_dialog.tcl: Removed.
+
+
+2007-05-25  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/canvas.n: Fixed documentation of default -joinstyle option
+	values for line and polygon items. [Bug 1725782]
+
 2007-05-22  Don Porter  <dgp@users.sourceforge.net>
 
 	[core-stabilizer-branch]
@@ -14,13 +28,11 @@
 
 2007-05-18  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkEntry.c(EntrySetValue):  Ensure
-	that widget is in a consistent state before setting
-	the linked -textvariable.  Previously, it was possible 
-	for [$e index insert] to point past the end of the string, 
-	leading to heap corruption [Bug 1721532].
-	* tests/ttk/entry.test(entry-9.1): Add test case
-	for the above.
+	* generic/ttk/ttkEntry.c(EntrySetValue):  Ensure that widget is in a
+	consistent state before setting the linked -textvariable. Previously,
+	it was possible for [$e index insert] to point past the end of the
+	string, leading to heap corruption [Bug 1721532].
+	* tests/ttk/entry.test(entry-9.1): Add test case for the above.
 
 2007-05-18  Don Porter  <dgp@users.sourceforge.net>
 
@@ -47,9 +59,9 @@
 
 2007-05-16  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkStubLib.c:  Change Tk_InitStubs(), tkStubsPtr,
-	and the auxilliary stubs table pointers back to public visibility.
-	See [Bug 1716117] for details.
+	* generic/tkStubLib.c:  Change Tk_InitStubs(), tkStubsPtr, and the
+	auxilliary stubs table pointers back to public visibility. See [Bug
+	1716117] for details.
 
 	Removed TCL_STORAGE_CLASS monkey business, as it had no effect.
 
@@ -57,7 +69,7 @@
 
 	* library/choosedir.tcl:	Removed uses of obsolete {expand}
 	* library/comdlg.tcl:		syntax; replaced with the now
-	* library/tk.tcl:		approved {*}.  [Bug 1710633]
+	* library/tk.tcl:		approved {*}. [Bug 1710633]
 	* tests/canvImg.test:
 	* tests/imgPhoto.test:
 
@@ -69,8 +81,8 @@
 
 2007-05-15  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tkUnixRFont.c: Fix crash introduced by previous fix
-	exposed under newer fontconfig libraries [Bug 1717830] again.
+	* unix/tkUnixRFont.c: Fix crash introduced by previous fix exposed
+	under newer fontconfig libraries [Bug 1717830] again.
 
 2007-05-15  Don Porter  <dgp@users.sourceforge.net>
 
@@ -78,8 +90,8 @@
 
 2007-05-15  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tkUnixRFont.c: Fix various memory leaks [Bug 1717830],
-	[Bug 800149].
+	* unix/tkUnixRFont.c: Fix various memory leaks. [Bug 1717830], [Bug
+	800149]
 
 2007-05-14  Don Porter  <dgp@users.sourceforge.net>
 
@@ -94,11 +106,11 @@
 	* generic/tkTest.c:		commands for testing various Tk
 	* tests/constraints.tcl:	legacy interfaces where a separate
 	* tests/image.test:		compilation unit is needed in order
-	to #define suitable macros during compilation.  Only the effect of
+	to #define suitable macros during compilation. Only the effect of
 	USE_OLD_IMAGE on Tk_CreateImageType() is currently tested, but more
-	similar testing commands can be added to this same file.  New
+	similar testing commands can be added to this same file. New
 	constraint defined to detect presence of the image type provided by
-	the new testing code, and a few tests added to exercise it.  Having
+	the new testing code, and a few tests added to exercise it. Having
 	USE_OLD_IMAGE support tested by the default test suite should reduce
 	chance of a recurrence of this bug.
 
@@ -111,13 +123,13 @@
 
 	* generic/tk.decls:		Reworked USE_OLD_IMAGE support to use
 	* generic/tk.h:			the same support mechanisms both with
-	* generic/tkStubImg.c (deleted):and without a stub-enabled build.  In
+	* generic/tkStubImg.c (deleted):and without a stub-enabled build. In
 	each case, route the legacy calls to Tk_CreateImageType and
 	Tk_CreatePhotoImageFormat through the Tk_CreateOldImageType and
-	Tk_CreateOldPhotoImageFormat routines.  Add those routines to the
+	Tk_CreateOldPhotoImageFormat routines. Add those routines to the
 	public stub table so they're available to a stub-enabled extension.
-	Remove the definition of Tk_InitImageArgs() and use a macro to 
-	convert any calls to it in source code into a comment.
+	Remove the definition of Tk_InitImageArgs() and use a macro to convert
+	any calls to it in source code into a comment.
 
 	* generic/tkImage.c:	Removed the MODULE_SCOPE declarations that
 	* generic/tkImgPhoto.c:	broke USE_OLD_IMAGE support.
@@ -126,8 +138,8 @@
 
 	* tests/winButton.test: Avoid font dependencies in results.
 
-	* generic/tkFont.c: propagate error from TkDeleteNamedFont
-	                    [Bug 1716613].
+	* generic/tkFont.c: propagate error from TkDeleteNamedFont. [Bug
+	1716613]
 
 2007-05-09  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -159,7 +171,7 @@
 	* macosx/tkMacOSXButton.c: fix debug msg typo.
 
 	* tests/constraints.tcl: ensure 'nonUnixUserInteraction' constraint is
-				 set for aqua.
+	set for aqua.
 
 	* tests/choosedir.test:	add 'notAqua' constraints to X11-only tests;
 	* tests/clrpick.test:	add 'nonUnixUserInteraction' to 'unix' tests
@@ -170,9 +182,9 @@
 
 2007-05-07  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tkUnixRFont.c: Properly cast sentinel arguments
-	to variadic function (fixes "warning: missing
-	sentinel in function call", [Bug 1712001])
+	* unix/tkUnixRFont.c: Properly cast sentinel arguments to variadic
+	function (fixes "warning: missing sentinel in function call", [Bug
+	1712001])
 
 2007-05-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -187,21 +199,21 @@
 
 2007-05-04  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
-	* doc/ttk_treeview.n, doc/ttk_panedwindow.n, doc/ttk_dialog.n: 
+	* doc/ttk_treeview.n, doc/ttk_panedwindow.n, doc/ttk_dialog.n:
 	* doc/ttk_checkbutton.n, doc/tk.n, doc/menu.n, doc/font.n:
 	* doc/canvas.n: Spelling fixes. [Bug 1686210]
 
 2007-05-03  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
-	* generic/tkStubLib.c (Tk_InitStubs): 
-	* generic/ttk/ttkLabel.c (LabelSetup): 
-	* unix/tkUnixSelect.c (ConvertSelection): 
-	* unix/tkUnixEvent.c (TkUnixDoOneXEvent): 
-	* generic/tkConfig.c (Tk_RestoreSavedOptions): 
-	* generic/tkCanvPs.c (TkCanvPostscriptCmd): 
-	* generic/tkOption.c (GetDefaultOptions): 
-	* unix/tkUnixRFont.c (TkpGetFontAttrsForChar, InitFont) 
-	(TkpGetFontFamilies, TkpGetSubFonts): 
+	* generic/tkStubLib.c (Tk_InitStubs):
+	* generic/ttk/ttkLabel.c (LabelSetup):
+	* unix/tkUnixSelect.c (ConvertSelection):
+	* unix/tkUnixEvent.c (TkUnixDoOneXEvent):
+	* generic/tkConfig.c (Tk_RestoreSavedOptions):
+	* generic/tkCanvPs.c (TkCanvPostscriptCmd):
+	* generic/tkOption.c (GetDefaultOptions):
+	* unix/tkUnixRFont.c (TkpGetFontAttrsForChar, InitFont)
+	(TkpGetFontFamilies, TkpGetSubFonts):
 	* unix/tkUnixSend.c (TkpTestsendCmd, RegOpen): Squelch warnings from
 	GCC type aliasing. [Bug 1711985 and others]
 
@@ -217,9 +229,9 @@
 
 2007-04-26  Joe English  <jenglish@users.sourceforge.net>
 
-	* macosx/ttkMacOSXTheme.c: Merged OFFSET_RECT processing into 
-	BoxToRect(); factored out PatternOrigin; resynchronized
-	with Tile codebase.
+	* macosx/ttkMacOSXTheme.c: Merged OFFSET_RECT processing into
+	BoxToRect(); factored out PatternOrigin; resynchronized with Tile
+	codebase.
 
 2007-04-26  Jeff Hobbs  <jeffh@ActiveState.com>
 

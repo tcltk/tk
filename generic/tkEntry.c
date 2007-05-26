@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.44 2007/04/23 21:15:18 das Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.44.2.1 2007/05/26 04:06:07 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -539,7 +539,7 @@ Tk_EntryObjCmd(
     entryPtr->validate		= VALIDATE_NONE;
 
     /*
-     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * Keep a hold of the associated tkwin until we destroy the entry,
      * otherwise Tk might free it while we still need it.
      */
 
@@ -3573,7 +3573,7 @@ Tk_SpinboxObjCmd(
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
     /*
-     * Keep a hold of the associated tkwin until we destroy the listbox,
+     * Keep a hold of the associated tkwin until we destroy the spinbox,
      * otherwise Tk might free it while we still need it.
      */
 
