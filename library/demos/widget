@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.29 2007/05/04 21:29:22 patthoyts Exp $
+# RCS: @(#) $Id: widget,v 1.30 2007/05/27 13:14:36 das Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -34,7 +34,8 @@ if {[tk windowingsystem] eq "x11"} {
 
 if {[lsearch -exact [font names] defaultFont] == -1} {
     # TIP #145 defines some standard named fonts
-    if {[lsearch -exact [font names] TkDefaultFont] != -1} {
+    if {[lsearch -exact [font names] TkDefaultFont] != -1 &&
+	    [lsearch -exact [font names] TkFixedFont] != -1} {
         # FIX ME: the following tecnique of cloning the font to copy it works
         #         fine but means that if the system font is changed by
         #         Tk cannot update the copied font. font alias might be
