@@ -34,11 +34,9 @@
 			NO,
 			NO,
 			NO,
-			NO,
 		);
 		argumentStrings = (
 			"${SRCROOT}/../../tk/library/demos/widget",
-			"${SRCROOT}/../../tk/library/demos/ttk_demo.tcl",
 			"${SRCROOT}/../../tk/tests/all.tcl",
 			"-geometry +0+0",
 			"-singleproc 1",
