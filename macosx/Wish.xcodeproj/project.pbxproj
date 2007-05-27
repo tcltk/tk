@@ -968,11 +968,8 @@
 		F968883C0AF787B3000797B5 /* combobox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = combobox.tcl; sourceTree = "<group>"; };
 		F968883D0AF787B3000797B5 /* cursors.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = cursors.tcl; sourceTree = "<group>"; };
 		F968883E0AF787B3000797B5 /* defaults.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = defaults.tcl; sourceTree = "<group>"; };
-		F968883F0AF787B3000797B5 /* dialog.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = dialog.tcl; sourceTree = "<group>"; };
 		F96888400AF787B3000797B5 /* entry.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = entry.tcl; sourceTree = "<group>"; };
 		F96888410AF787B3000797B5 /* fonts.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = fonts.tcl; sourceTree = "<group>"; };
-		F96888420AF787B3000797B5 /* icons.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = icons.tcl; sourceTree = "<group>"; };
-		F96888430AF787B3000797B5 /* keynav.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = keynav.tcl; sourceTree = "<group>"; };
 		F96888440AF787B3000797B5 /* menubutton.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = menubutton.tcl; sourceTree = "<group>"; };
 		F96888450AF787B3000797B5 /* notebook.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = notebook.tcl; sourceTree = "<group>"; };
 		F96888460AF787B3000797B5 /* panedwindow.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = panedwindow.tcl; sourceTree = "<group>"; };
@@ -991,7 +988,6 @@
 		F96888580AF7880C000797B5 /* image.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = image.test; sourceTree = "<group>"; };
 		F96888590AF7880C000797B5 /* labelframe.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = labelframe.test; sourceTree = "<group>"; };
 		F968885A0AF7880C000797B5 /* layout.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = layout.test; sourceTree = "<group>"; };
-		F968885B0AF7880C000797B5 /* misc.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = misc.test; sourceTree = "<group>"; };
 		F968885C0AF7880C000797B5 /* notebook.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = notebook.test; sourceTree = "<group>"; };
 		F968885D0AF7880C000797B5 /* panedwindow.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = panedwindow.test; sourceTree = "<group>"; };
 		F968885E0AF7880C000797B5 /* progressbar.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = progressbar.test; sourceTree = "<group>"; };
@@ -1000,13 +996,9 @@
 		F96888610AF7880C000797B5 /* treeview.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = treeview.test; sourceTree = "<group>"; };
 		F96888620AF7880C000797B5 /* ttk.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk.test; sourceTree = "<group>"; };
 		F96888630AF7880C000797B5 /* validate.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = validate.test; sourceTree = "<group>"; };
-		F96888660AF788A6000797B5 /* ttk_demo.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk_demo.tcl; sourceTree = "<group>"; };
-		F96888670AF788A6000797B5 /* ttk_iconlib.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk_iconlib.tcl; sourceTree = "<group>"; };
-		F96888680AF788A6000797B5 /* ttk_repeater.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttk_repeater.tcl; sourceTree = "<group>"; };
 		F968886B0AF788F6000797B5 /* ttk_button.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_button.n; sourceTree = "<group>"; };
 		F968886C0AF788F6000797B5 /* ttk_checkbutton.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_checkbutton.n; sourceTree = "<group>"; };
 		F968886D0AF788F6000797B5 /* ttk_combobox.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_combobox.n; sourceTree = "<group>"; };
-		F968886E0AF788F6000797B5 /* ttk_dialog.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_dialog.n; sourceTree = "<group>"; };
 		F968886F0AF788F6000797B5 /* ttk_entry.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_entry.n; sourceTree = "<group>"; };
 		F96888700AF788F6000797B5 /* ttk_frame.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_frame.n; sourceTree = "<group>"; };
 		F96888710AF788F6000797B5 /* ttk_Geometry.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = ttk_Geometry.3; sourceTree = "<group>"; };
@@ -1787,7 +1779,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.21 2007/05/16 21:21:35 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.22 2007/05/27 01:24:54 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -1970,7 +1962,6 @@
 				F968886B0AF788F6000797B5 /* ttk_button.n */,
 				F968886C0AF788F6000797B5 /* ttk_checkbutton.n */,
 				F968886D0AF788F6000797B5 /* ttk_combobox.n */,
-				F968886E0AF788F6000797B5 /* ttk_dialog.n */,
 				F968886F0AF788F6000797B5 /* ttk_entry.n */,
 				F96888700AF788F6000797B5 /* ttk_frame.n */,
 				F96888710AF788F6000797B5 /* ttk_Geometry.3 */,
@@ -2206,9 +2197,6 @@
 				F966BB5B08F27A3A005CB29B /* tcolor */,
 				F966BB5C08F27A3A005CB29B /* text.tcl */,
 				F966BB5D08F27A3A005CB29B /* timer */,
-				F96888660AF788A6000797B5 /* ttk_demo.tcl */,
-				F96888670AF788A6000797B5 /* ttk_iconlib.tcl */,
-				F96888680AF788A6000797B5 /* ttk_repeater.tcl */,
 				F966BB5E08F27A3A005CB29B /* twind.tcl */,
 				F966BB5F08F27A3A005CB29B /* unicodeout.tcl */,
 				F966BB6008F27A3A005CB29B /* vscale.tcl */,
@@ -2594,11 +2582,8 @@
 				F968883C0AF787B3000797B5 /* combobox.tcl */,
 				F968883D0AF787B3000797B5 /* cursors.tcl */,
 				F968883E0AF787B3000797B5 /* defaults.tcl */,
-				F968883F0AF787B3000797B5 /* dialog.tcl */,
 				F96888400AF787B3000797B5 /* entry.tcl */,
 				F96888410AF787B3000797B5 /* fonts.tcl */,
-				F96888420AF787B3000797B5 /* icons.tcl */,
-				F96888430AF787B3000797B5 /* keynav.tcl */,
 				F96888440AF787B3000797B5 /* menubutton.tcl */,
 				F96888450AF787B3000797B5 /* notebook.tcl */,
 				F96888460AF787B3000797B5 /* panedwindow.tcl */,
@@ -2624,7 +2609,6 @@
 				F96888580AF7880C000797B5 /* image.test */,
 				F96888590AF7880C000797B5 /* labelframe.test */,
 				F968885A0AF7880C000797B5 /* layout.test */,
-				F968885B0AF7880C000797B5 /* misc.test */,
 				F968885C0AF7880C000797B5 /* notebook.test */,
 				F968885D0AF7880C000797B5 /* panedwindow.test */,
 				F968885E0AF7880C000797B5 /* progressbar.test */,
