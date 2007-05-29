@@ -34,16 +34,14 @@
 			NO,
 			NO,
 			NO,
-			NO,
 		);
 		argumentStrings = (
 			"${SRCROOT}/../../tk/library/demos/widget",
-			"${SRCROOT}/../../tk/library/demos/ttk_demo.tcl",
 			"${SRCROOT}/../../tk/tests/all.tcl",
 			"-geometry +0+0",
 			"-singleproc 1",
 			"-verbose \"bet\"",
-			"-skip 'unixfont-5.11 window-2.9'",
+			"-skip window-2.9",
 		);
 		autoAttachOnCrash = 1;
 		configStateDict = {
