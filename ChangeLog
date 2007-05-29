@@ -1,3 +1,9 @@
+2007-05-28  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
+
+	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Fix short
+	measures with flags=TK_WHOLE_WORDS|TK_AT_LEAST_ONE [Bug 1716141].
+	Make some casts unnecessary by changing variable types.
+	
 2007-05-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/ttk.tcl: Omit ttk::dialog and dependencies.
