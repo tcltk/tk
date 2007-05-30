@@ -1,5 +1,7 @@
 2007-05-30  Don Porter  <dgp@users.sourceforge.net>
 
+	* generic/tk.h: Correct placement of #include <tcl.h> [Bug 1723812].
+
 	* README:		Bump version number to 8.4.16
 	* generic/tk.h:
 	* unix/configure.in:
