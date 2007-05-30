@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.38 2007/05/30 06:35:55 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -2699,21 +2699,16 @@ DrawMenuSeparator(
     int width,			/* width of entry */
     int height)			/* height of entry */
 {
-    CGrafPtr destPort, savePort;
-    Boolean portChanged;
+    TkMacOSXDrawingContext dc;
     Rect r;
 
-    destPort = TkMacOSXGetDrawablePort(d);
-    portChanged = QDSwapPort(destPort, &savePort);
-    TkMacOSXSetUpClippingRgn(d);
     r.top = y;
     r.left = x;
     r.bottom = y + height;
     r.right = x + width;
-    DrawThemeMenuSeparator(&r);
-    if (portChanged) {
-	QDSwapPort(savePort, NULL);
-    }
+    TkMacOSXSetupDrawingContext(d, gc, 1, &dc);
+    ChkErr(DrawThemeMenuSeparator, &r);
+    TkMacOSXRestoreDrawingContext(&dc);
 }
 
 #ifdef USE_TK_MDEF
