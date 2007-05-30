@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.7 2007/04/29 02:24:49 das Exp $
-# $Id: bgerror.tcl,v 1.23.2.7 2007/04/29 02:24:49 das Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.8 2007/05/30 06:37:03 das Exp $
+# $Id: bgerror.tcl,v 1.23.2.8 2007/05/30 06:37:03 das Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -229,7 +229,7 @@ proc ::tk::dialog::error::bgerror err {
 	if {($tcl_platform(platform) eq "macintosh")
 	    || ($windowingsystem eq "aqua")} {
 	    if {($name eq "ok") || ($name eq "dismiss")} {
-		grid columnconfigure .bgerrorDialog.bot $i -minsize 79
+		grid columnconfigure .bgerrorDialog.bot $i -minsize 90
 	    }
 	    grid configure .bgerrorDialog.$name -pady 7
 	}
