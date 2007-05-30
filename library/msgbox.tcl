@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.30 2006/01/25 18:22:04 dgp Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.31 2007/05/30 06:34:18 das Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -165,6 +165,9 @@ proc ::tk::MessageBox {args} {
 	    "warning"   {set data(-icon) "caution"}
 	    "info"      {set data(-icon) "note"}
 	}
+	option add *Dialog*background systemDialogBackgroundActive widgetDefault
+	option add *Dialog*Button.highlightBackground \
+		systemDialogBackgroundActive widgetDefault
     }
 
     if {![winfo exists $data(-parent)]} {
@@ -264,7 +267,7 @@ proc ::tk::MessageBox {args} {
     }    
 
     if {$windowingsystem eq "aqua"} {
-	unsupported::MacWindowStyle style $w dBoxProc
+	::tk::unsupported::MacWindowStyle style $w moveableModal {}
     }
 
     frame $w.bot -background $bg
@@ -368,6 +371,16 @@ proc ::tk::MessageBox {args} {
 	}
 	grid $w.$name -in $w.bot -row 0 -column $i -padx 3m -pady 2m -sticky ew
 	grid columnconfigure $w.bot $i -uniform buttons
+	# We boost the size of some Mac buttons for l&f
+	if {$windowingsystem eq "aqua"} {
+	    set tmp [string tolower $name]
+	    if {$tmp eq "ok" || $tmp eq "cancel" || $tmp eq "yes" ||
+		    $tmp eq "no" || $tmp eq "abort" || $tmp eq "retry" ||
+		    $tmp eq "ignore"} {
+		grid columnconfigure $w.bot $i -minsize 90
+	    }
+	    grid configure $w.$name -pady 7
+	}
         incr i
 
 	# create the binding for the key accelerator, based on the underline
