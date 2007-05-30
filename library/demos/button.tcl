@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing
 # several button widgets.
 #
-# RCS: @(#) $Id: button.tcl,v 1.2 1998/09/14 18:23:27 stanton Exp $
+# RCS: @(#) $Id: button.tcl,v 1.2.26.1 2007/05/30 06:37:03 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -25,12 +25,20 @@ button $w.buttons.dismiss -text Dismiss -command "destroy $w"
 button $w.buttons.code -text "See Code" -command "showCode $w"
 pack $w.buttons.dismiss $w.buttons.code -side left -expand 1
 
+proc colorrefresh {w col} {
+    $w configure -bg $col
+    $w.buttons configure -bg $col
+    if {[tk windowingsystem] eq "aqua"} {
+	$w.buttons configure -highlightbackground $col
+    }
+}
+
 button $w.b1 -text "Peach Puff" -width 10 \
-    -command "$w config -bg PeachPuff1; $w.buttons config -bg PeachPuff1"
+    -command [list colorrefresh $w PeachPuff1]
 button $w.b2 -text "Light Blue" -width 10 \
-    -command "$w config -bg LightBlue1; $w.buttons config -bg LightBlue1"
+    -command [list colorrefresh $w LightBlue1]
 button $w.b3 -text "Sea Green" -width 10 \
-    -command "$w config -bg SeaGreen2;  $w.buttons config -bg SeaGreen2"
+    -command [list colorrefresh $w SeaGreen2]
 button $w.b4 -text "Yellow" -width 10 \
-    -command "$w config -bg Yellow1;    $w.buttons config -bg Yellow1"
+    -command [list colorrefresh $w Yellow1]
 pack $w.b1 $w.b2 $w.b3 $w.b4 -side top -expand yes -pady 2

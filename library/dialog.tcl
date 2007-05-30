@@ -3,7 +3,7 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# RCS: @(#) $Id: dialog.tcl,v 1.14.2.4 2007/04/29 02:24:49 das Exp $
+# RCS: @(#) $Id: dialog.tcl,v 1.14.2.5 2007/05/30 06:37:03 das Exp $
 #
 # Copyright (c) 1992-1993 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -46,6 +46,13 @@ proc ::tk_dialog {w title text bitmap default args} {
 	set default [lsearch -exact $args $default]
     }
 
+    set windowingsystem [tk windowingsystem]
+    if {$tcl_platform(platform) eq "macintosh" || $windowingsystem eq "aqua"} {
+	option add *Dialog*background systemDialogBackgroundActive widgetDefault
+	option add *Dialog*Button.highlightBackground \
+		systemDialogBackgroundActive widgetDefault
+    }
+
     # 1. Create the top-level window and divide it into top
     # and bottom parts.
 
@@ -66,13 +73,8 @@ proc ::tk_dialog {w title text bitmap default args} {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }
 
-    set windowingsystem [tk windowingsystem]
-
     if {$tcl_platform(platform) eq "macintosh" || $windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
-	option add *Dialog*background systemDialogBackgroundActive widgetDefault
-	option add *Dialog*Button.highlightBackground \
-		systemDialogBackgroundActive widgetDefault
     }
 
     frame $w.bot
@@ -123,7 +125,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	if {$tcl_platform(platform) eq "macintosh" || $windowingsystem eq "aqua"} {
 	    set tmp [string tolower $but]
 	    if {$tmp eq "ok" || $tmp eq "cancel"} {
-		grid columnconfigure $w.bot $i -minsize [expr {59 + 20}]
+		grid columnconfigure $w.bot $i -minsize 90
 	    }
 	    grid configure $w.button$i -pady 7
 	}
