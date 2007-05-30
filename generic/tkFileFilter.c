@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.c,v 1.5.2.1 2007/05/09 12:55:57 das Exp $
+ * RCS: @(#) $Id: tkFileFilter.c,v 1.5.2.2 2007/05/30 06:37:41 das Exp $
  */
 
 #include "tkInt.h"
@@ -313,7 +313,7 @@ static int AddClause(interp, filterPtr, patternsStr, ostypesStr, isWindows)
     if (ostypeCount > 0 && ostypeList != NULL) {
 	for (i=0; i<ostypeCount; i++) {
 	    MacFileType * mfPtr = (MacFileType*)ckalloc(sizeof(MacFileType));
-	    char *string = ostypeList[i];
+	    CONST char *string = ostypeList[i];
 
 	    mfPtr->type = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 		    (OSType) string[2] <<  8 | (OSType) string[3];
