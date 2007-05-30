@@ -1,3 +1,7 @@
+2007-05-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h: Correct placement of #include <tcl.h> [Bug 1723812].
+
 2007-05-30  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/bgerror.tcl:	standardize dialog option & button size
