@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.19 2007/05/09 12:57:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.20 2007/05/30 06:39:38 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -76,16 +76,15 @@ static int tkMacOSXAppInFront = true;	/* Boolean variable for determining if
 					 * we are the frontmost app. Only set
 					 * in TkMacOSXProcessApplicationEvent
 					 */
-static RgnHandle gDamageRgn = NULL;
-
 /*
  * Declaration of functions used only in this file
  */
 
-static int GenerateUpdateEvent( Window window);
-static int GenerateUpdates( RgnHandle updateRgn, TkWindow *winPtr);
-static int GenerateActivateEvents( Window window, int activeFlag);
-static void ClearPort(CGrafPtr port);
+static int GenerateUpdateEvent(Window window);
+static int GenerateUpdates(RgnHandle updateRgn, Rect *updateBounds,
+	TkWindow *winPtr);
+static int GenerateActivateEvents(Window window, int activeFlag);
+static void ClearPort(CGrafPtr port, RgnHandle updateRgn);
 
 
 /*
@@ -411,7 +410,7 @@ TkMacOSXProcessWindowEvent(
 		CGrafPtr port;
 
 		GetPort(&port);
-		ClearPort(port);
+		ClearPort(port, NULL);
 	    }
 	    break;
     }
@@ -438,11 +437,12 @@ TkMacOSXProcessWindowEvent(
 static int
 GenerateUpdateEvent(Window window)
 {
-    CGrafPtr	destPort;
-    WindowRef	macWindow;
-    TkDisplay * dispPtr;
-    TkWindow  * winPtr;
-    int		result = 0;
+    CGrafPtr destPort;
+    WindowRef macWindow;
+    TkDisplay *dispPtr;
+    TkWindow  *winPtr;
+    int result = 0;
+    Rect updateBounds;
 
     dispPtr = TkGetDisplayList();
     winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
@@ -450,31 +450,23 @@ GenerateUpdateEvent(Window window)
     if (winPtr ==NULL ){
 	return result;
     }
-    if (gDamageRgn == NULL) {
-	gDamageRgn = NewRgn();
-    }
     TkMacOSXCheckTmpRgnEmpty(1);
     destPort = TkMacOSXGetDrawablePort(window);
     macWindow = GetWindowFromPort(destPort);
     GetWindowRegion(macWindow, kWindowUpdateRgn, tkMacOSXtmpRgn1);
     QDGlobalToLocalRegion(destPort, tkMacOSXtmpRgn1);
     SectRegionWithPortVisibleRegion(destPort, tkMacOSXtmpRgn1);
+    GetRegionBounds(tkMacOSXtmpRgn1, &updateBounds);
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-    TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
-				CGrafPtr port, RgnHandle region);
-    if (QDDebugFlashRegion) {
-	/* Carbon-internal region flashing SPI (c.f. Technote 2124) */
-	QDDebugFlashRegion(destPort, tkMacOSXtmpRgn1);
-    }
+    TkMacOSXDebugFlashRegion(destPort, tkMacOSXtmpRgn1);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
     BeginUpdate(macWindow);
     if (winPtr->wmInfoPtr->flags & WM_TRANSPARENT) {
-	ClearPort(destPort);
+	ClearPort(destPort, tkMacOSXtmpRgn1);
     }
-    result = GenerateUpdates(tkMacOSXtmpRgn1, winPtr);
+    result = GenerateUpdates(tkMacOSXtmpRgn1, &updateBounds, winPtr);
     EndUpdate(macWindow);
     SetEmptyRgn(tkMacOSXtmpRgn1);
-    SetEmptyRgn(gDamageRgn);
     return result;
  }
 
@@ -500,51 +492,48 @@ GenerateUpdateEvent(Window window)
 static int
 GenerateUpdates(
     RgnHandle updateRgn,
+    Rect *updateBounds,
     TkWindow *winPtr)
 {
     TkWindow *childPtr;
     XEvent event;
-    Rect bounds, updateBounds, damageBounds;
+    Rect bounds, damageBounds;
+    static RgnHandle damageRgn = NULL;
 
     TkMacOSXWinBounds(winPtr, &bounds);
-    GetRegionBounds(updateRgn,&updateBounds);
-
-    if (bounds.top > updateBounds.bottom ||
-	updateBounds.top > bounds.bottom ||
-	bounds.left > updateBounds.right ||
-	updateBounds.left > bounds.right ||
-	!RectInRgn(&bounds, updateRgn)) {
+    if (bounds.top > updateBounds->bottom ||
+	updateBounds->top > bounds.bottom ||
+	bounds.left > updateBounds->right ||
+	updateBounds->left > bounds.right) {
 	return 0;
     }
     if (!RectInRgn(&bounds, updateRgn)) {
 	return 0;
     }
 
-    event.xany.serial = Tk_Display(winPtr)->request;
-    event.xany.send_event = false;
-    event.xany.window = Tk_WindowId(winPtr);
-    event.xany.display = Tk_Display(winPtr);
-
-    event.type = Expose;
-
     /*
      * Compute the bounding box of the area that the damage occured in.
      */
 
-    /*
-     * CopyRgn(TkMacOSXVisableClipRgn(winPtr), rgn);
-     * TODO: this call doesn't work doing resizes!!!
-     */
-    RectRgn(gDamageRgn, &bounds);
-    SectRgn(gDamageRgn, updateRgn, gDamageRgn);
-    OffsetRgn(gDamageRgn, -bounds.left, -bounds.top);
-    GetRegionBounds(gDamageRgn,&damageBounds);
+    if (damageRgn == NULL) {
+	damageRgn = NewRgn();
+    }
+    RectRgn(damageRgn, &bounds);
+    SectRgn(damageRgn, updateRgn, damageRgn);
+    OffsetRgn(damageRgn, -bounds.left, -bounds.top);
+    GetRegionBounds(damageRgn, &damageBounds);
+    SetEmptyRgn(damageRgn);
+
+    event.xany.serial = Tk_Display(winPtr)->request;
+    event.xany.send_event = false;
+    event.xany.window = Tk_WindowId(winPtr);
+    event.xany.display = Tk_Display(winPtr);
+    event.type = Expose;
     event.xexpose.x = damageBounds.left;
     event.xexpose.y = damageBounds.top;
     event.xexpose.width = damageBounds.right-damageBounds.left;
     event.xexpose.height = damageBounds.bottom-damageBounds.top;
     event.xexpose.count = 0;
-
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
     /*
@@ -552,12 +541,11 @@ GenerateUpdates(
      */
 
     for (childPtr = winPtr->childList; childPtr != NULL;
-				       childPtr = childPtr->nextPtr) {
+	    childPtr = childPtr->nextPtr) {
 	if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
 	    continue;
 	}
-
-	GenerateUpdates(updateRgn, childPtr);
+	GenerateUpdates(updateRgn, updateBounds, childPtr);
     }
 
     /*
@@ -567,7 +555,7 @@ GenerateUpdates(
     if (Tk_IsContainer(winPtr)) {
 	childPtr = TkpGetOtherWindow(winPtr);
 	if (childPtr != NULL && Tk_IsMapped(childPtr)) {
-	    GenerateUpdates(updateRgn, childPtr);
+	    GenerateUpdates(updateRgn, updateBounds, childPtr);
 	}
 
 	/*
@@ -922,7 +910,7 @@ TkWmProtocolEventProc(
  */
 
 int
-Tk_MacOSXIsAppInFront (void)
+Tk_MacOSXIsAppInFront(void)
 {
     return tkMacOSXAppInFront;
 }
@@ -943,13 +931,19 @@ Tk_MacOSXIsAppInFront (void)
  *----------------------------------------------------------------------
  */
 static void
-ClearPort(CGrafPtr port) {
+ClearPort(
+    CGrafPtr port,
+    RgnHandle updateRgn)
+{
     CGContextRef context;
     Rect bounds;
     CGRect rect;
 
     GetPortBounds(port, &bounds);
     QDBeginCGContext(port, &context);
+    if (updateRgn) {
+	ClipCGContextToRegion(context, &bounds, updateRgn);
+    }
     rect = CGRectMake(0, 0, bounds.right, bounds.bottom);
     CGContextClearRect(context, rect);
     QDEndCGContext(port, &context);
