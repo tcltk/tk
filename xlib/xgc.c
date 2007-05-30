@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.6.2.2 2005/11/27 02:44:26 das Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.6.2.3 2007/05/30 06:39:39 das Exp $
  */
 
 #include <tkInt.h>
@@ -338,10 +338,10 @@ XSetClipOrigin(display, gc, clip_x_origin, clip_y_origin)
  *
  *	Sets the clipping region/pixmap for a GC.
  *
- *	Note that unlike the Xlib equivalent, it is not safe to delete
- *	the region after setting it into the GC.  The only use of
- *	TkSetRegion is currently in ImgPhotoDisplay, which uses the GC
- *	immediately.
+ *	Note that unlike the Xlib equivalent, it is not safe to delete the
+ *	region after setting it into the GC. The only uses of TkSetRegion
+ *	are currently in DisplayFrame and in ImgPhotoDisplay, which use the
+ *	GC immediately.
  *
  * Results:
  *	None.
@@ -358,6 +358,8 @@ TkSetRegion(display, gc, r)
     GC gc;
     TkRegion r;
 {
+    TkpClipMask *clip_mask;
+
     if (r == None) {
 	if (gc->clip_mask) {
 	    ckfree((char*) gc->clip_mask);
@@ -369,8 +371,9 @@ TkSetRegion(display, gc, r)
     if (gc->clip_mask == None) {
 	gc->clip_mask = (Pixmap)ckalloc(sizeof(TkpClipMask));
     }
-    ((TkpClipMask*)gc->clip_mask)->type = TKP_CLIP_REGION;
-    ((TkpClipMask*)gc->clip_mask)->value.region = r;
+    clip_mask = (TkpClipMask*) gc->clip_mask;
+    clip_mask->type = TKP_CLIP_REGION;
+    clip_mask->value.region = r;
 }
 
 void
@@ -379,6 +382,8 @@ XSetClipMask(display, gc, pixmap)
     GC gc;
     Pixmap pixmap;
 {
+    TkpClipMask *clip_mask;
+
     if (pixmap == None) {
 	if (gc->clip_mask) {
 	    ckfree((char*) gc->clip_mask);
@@ -390,8 +395,9 @@ XSetClipMask(display, gc, pixmap)
     if (gc->clip_mask == None) {
 	gc->clip_mask = (Pixmap)ckalloc(sizeof(TkpClipMask));
     }
-    ((TkpClipMask*)gc->clip_mask)->type = TKP_CLIP_PIXMAP;
-    ((TkpClipMask*)gc->clip_mask)->value.pixmap = pixmap;
+    clip_mask = (TkpClipMask*) gc->clip_mask;
+    clip_mask->type = TKP_CLIP_PIXMAP;
+    clip_mask->value.pixmap = pixmap;
 }
 
 /*

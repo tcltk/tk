@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.10 2007/04/29 02:26:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.11 2007/05/30 06:39:38 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -24,7 +24,7 @@
  * TkMacOSXFlushWindows --
  *
  *	This routine flushes all the Carbon windows of the application. It
- *	is called by the setup procedure for the Tcl/Carbon event source.
+ *	is called by XSync().
  *
  * Results:
  *	None.
