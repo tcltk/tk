@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.25 2007/05/28 17:12:31 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.26 2007/05/30 06:35:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -797,41 +797,41 @@ TkpMeasureCharsInContext(
 		    (uchars[offset-1] == ' ')) {
 		offset--;
 	    }
-        }
+	}
 
-        /*
-         * Fix up left-overs for the TK_WHOLE_WORDS case.
-         */
+	/*
+	 * Fix up left-overs for the TK_WHOLE_WORDS case.
+	 */
 
-        if (flags & TK_WHOLE_WORDS) {
-            if (flags & TK_AT_LEAST_ONE) {
-                /*
-                 * If we are the the start of the range, we need to look
-                 * forward. If we are not at the end of a word, we must be in
-                 * the middle of the first word, so we also look forward.
-                 */
+	if (flags & TK_WHOLE_WORDS) {
+	    if (flags & TK_AT_LEAST_ONE) {
+		/*
+		 * If we are the the start of the range, we need to look
+		 * forward. If we are not at the end of a word, we must be in
+		 * the middle of the first word, so we also look forward.
+		 */
 
-                if ((offset == urstart) || (uchars[offset] != ' ')) {
-                    while ((offset < urend) && (uchars[offset] != ' ')) {
-                        offset++;
-                    }
-                }
-            } else {
-                /*
-                 * If we are not at the end of a word, we need to look
-                 * backward.
-                 */
+		if ((offset == urstart) || (uchars[offset] != ' ')) {
+		    while ((offset < urend) && (uchars[offset] != ' ')) {
+			offset++;
+		    }
+		}
+	    } else {
+		/*
+		 * If we are not at the end of a word, we need to look
+		 * backward.
+		 */
 
-                if ((offset != urend) && (uchars[offset] != ' ')) {
-                    while ((offset > urstart) && (uchars[offset-1] != ' ')) {
-                        offset--;
-                    }
-                    while ((offset > urstart) && (uchars[offset-1] == ' ')) {
-                        offset--;
-                    }
-                }
-            }
-        }
+		if ((offset != urend) && (uchars[offset] != ' ')) {
+		    while ((offset > urstart) && (uchars[offset-1] != ' ')) {
+			offset--;
+		    }
+		    while ((offset > urstart) && (uchars[offset-1] == ' ')) {
+			offset--;
+		    }
+		}
+	    }
+	}
 
 	if (offset > urend) {
 	    offset = urend;
@@ -948,13 +948,13 @@ TkpMeasureCharsInContext(
 
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: '%.*s', maxLength=%d, flags=%s%s%s%s "
-            "-> width=%d, bytes=%d",
-            rangeLength, source+rangeStart, maxLength,
+	    "-> width=%d, bytes=%d",
+	    rangeLength, source+rangeStart, maxLength,
 	    flags & TK_PARTIAL_OK   ? "partialOk "  : "",
 	    flags & TK_WHOLE_WORDS  ? "wholeWords " : "",
 	    flags & TK_AT_LEAST_ONE ? "atLeastOne " : "",
 	    flags & TK_ISOLATE_END  ? "isolateEnd " : "",
-            curX, curByte);
+	    curX, curByte);
 #endif
 
     *lengthPtr = curX;
@@ -2284,8 +2284,7 @@ TkMacOSXInitControlFontStyle(
  *	disabling of antialiased text from tcl.
  *	The possible values for this variable are:
  *
- *	-1 - Use system default as configurable in "System Preferences" ->
- *	   "General".
+ *	-1 - Use system default as configurable in "System Prefs" -> "General".
  *	 0 - Unconditionally disable antialiasing.
  *	 1 - Unconditionally enable antialiasing.
  *

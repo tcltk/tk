@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.49 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.50 2007/05/30 06:35:55 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -5211,7 +5211,7 @@ TkMacOSXMakeRealWindowExist(
     if (wmPtr->attributes & kWindowResizableAttribute) {
 	HIViewRef growBoxView;
 
-	err = ChkErr(HIViewFindByID, HIViewGetRoot(newWindow),
+	err = HIViewFindByID(HIViewGetRoot(newWindow),
 		kHIViewWindowGrowBoxID, &growBoxView);
 	if (err == noErr && !HIGrowBoxViewIsTransparent(growBoxView)) {
 	    ChkErr(HIGrowBoxViewSetTransparent, growBoxView, true);
@@ -5855,14 +5855,15 @@ ApplyWindowClassAttributeChanges(
 		    oldAttributes & (newAttributes ^ oldAttributes));
 	}
 	ChkErr(GetWindowAttributes, macWindow, &(wmPtr->attributes));
-	if (wmPtr->attributes & kWindowResizableAttribute) {
-	    OSStatus err;
-	    HIViewRef growBoxView;
+	if ((wmPtr->attributes ^ oldAttributes) & kWindowResizableAttribute) {
+	    if (wmPtr->attributes & kWindowResizableAttribute) {
+		HIViewRef growBoxView;
+		OSStatus err = HIViewFindByID(HIViewGetRoot(macWindow),
+			kHIViewWindowGrowBoxID, &growBoxView);
 
-	    err = ChkErr(HIViewFindByID, HIViewGetRoot(macWindow),
-		    kHIViewWindowGrowBoxID, &growBoxView);
-	    if (err == noErr && !HIGrowBoxViewIsTransparent(growBoxView)) {
-		ChkErr(HIGrowBoxViewSetTransparent, growBoxView, true);
+		if (err == noErr && !HIGrowBoxViewIsTransparent(growBoxView)) {
+		    ChkErr(HIGrowBoxViewSetTransparent, growBoxView, true);
+		}
 	    }
 	}
 
