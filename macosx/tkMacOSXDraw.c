@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.21 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.22 2007/05/30 06:35:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -161,9 +161,7 @@ XCopyArea(
     MacDrawable *srcDraw = (MacDrawable *) src, *dstDraw = (MacDrawable *) dst;
     CGrafPtr srcPort, dstPort, savePort;
     Boolean portChanged;
-    short tmode;
     RGBColor origForeColor, origBackColor, whiteColor, blackColor;
-    Rect clpRect;
 
     dstPort = TkMacOSXGetDrawablePort(dst);
     srcPort = TkMacOSXGetDrawablePort(src);
@@ -207,42 +205,36 @@ XCopyArea(
     if (tkPictureIsOpen) {
 	/*
 	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the clipping is seriously WRONG and also INCONSISTENT with the
-	 * clipping for single plane bitmaps.
-	 * To circumvent this problem, we clip to the whole window
-	 * In this case, would have also clipped to the srcRect
-	 * ClipRect(&srcRect);
+	 * the drawable clipping is incorrect, so clip to the whole window.
 	 */
 
-	GetPortBounds(dstPort,&clpRect);
-	dstPtr = &srcRect;
+	Rect clpRect;
+
+	GetPortBounds(dstPort, &clpRect);
 	ClipRect(&clpRect);
     }
     if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
 	    == TKP_CLIP_REGION) {
-	RgnHandle clipRgn = (RgnHandle)
+	RgnHandle gcClipRgn = (RgnHandle)
 		((TkpClipMask*)gc->clip_mask)->value.region;
-	int xOffset = 0, yOffset = 0;
+	int xOffset = dstDraw->xOff + gc->clip_x_origin;
+	int yOffset = dstDraw->yOff + gc->clip_y_origin;
 
 	if (!tkPictureIsOpen) {
-	    xOffset = dstDraw->xOff + gc->clip_x_origin;
-	    yOffset = dstDraw->yOff + gc->clip_y_origin;
-	    OffsetRgn(clipRgn, xOffset, yOffset);
+	    OffsetRgn(gcClipRgn, xOffset, yOffset);
 	}
 	TkMacOSXCheckTmpRgnEmpty(1);
 	GetClip(tkMacOSXtmpRgn1);
-	SectRgn(tkMacOSXtmpRgn1, clipRgn, tkMacOSXtmpRgn1);
+	SectRgn(tkMacOSXtmpRgn1, gcClipRgn, tkMacOSXtmpRgn1);
 	SetClip(tkMacOSXtmpRgn1);
 	SetEmptyRgn(tkMacOSXtmpRgn1);
 	if (!tkPictureIsOpen) {
-	    OffsetRgn(clipRgn, -xOffset, -yOffset);
+	    OffsetRgn(gcClipRgn, -xOffset, -yOffset);
 	}
     }
     srcBit = GetPortBitMapForCopyBits(srcPort);
     dstBit = GetPortBitMapForCopyBits(dstPort);
-    tmode = srcCopy;
-
-    CopyBits(srcBit, dstBit, srcPtr, dstPtr, tmode, NULL);
+    CopyBits(srcBit, dstBit, srcPtr, dstPtr, srcCopy, NULL);
     RGBForeColor(&origForeColor);
     RGBBackColor(&origBackColor);
     SetClip(tkMacOSXtmpRgn2);
@@ -308,13 +300,12 @@ XCopyPlane(
     if (tkPictureIsOpen) {
 	/*
 	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the clipping is seriously WRONG and also INCONSISTENT with the
-	 * clipping for color bitmaps.
-	 * To circumvent this problem, we clip to the whole window
+	 * the drawable clipping is incorrect, so clip to the whole window.
 	 */
 
 	Rect clpRect;
-	GetPortBounds(dstPort,&clpRect);
+
+	GetPortBounds(dstPort, &clpRect);
 	ClipRect(&clpRect);
 	dstPtr = &srcRect;
     } else {
@@ -423,14 +414,12 @@ TkPutImage(
     if (tkPictureIsOpen) {
 	/*
 	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the clipping is seriously WRONG and also INCONSISTENT with the
-	 * clipping for single plane bitmaps.
-	 * To circumvent this problem, we clip to the whole window
+	 * the drawable clipping is incorrect, so clip to the whole window.
 	 */
 
 	Rect clpRect;
 
-	GetPortBounds(destPort,&clpRect);
+	GetPortBounds(destPort, &clpRect);
 	ClipRect(&clpRect);
 	destPtr = srcPtr;
     } else {
@@ -1596,8 +1585,11 @@ TkMacOSXSetUpGraphicsPort(
  */
 
 int
-TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
-	TkMacOSXDrawingContext *dc)
+TkMacOSXSetupDrawingContext(
+    Drawable d,
+    GC gc,
+    int useCG, /* advisory only ! */
+    TkMacOSXDrawingContext *dc)
 {
     MacDrawable *macDraw = ((MacDrawable*)d);
     CGContextRef context = macDraw->context;
@@ -1631,14 +1623,14 @@ TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
 		SectRegionWithPortVisibleRegion(port, tkMacOSXtmpRgn1);
 		if (gc && gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
 			== TKP_CLIP_REGION) {
-		    RgnHandle clipRgn = (RgnHandle)
+		    RgnHandle gcClipRgn = (RgnHandle)
 			    ((TkpClipMask*)gc->clip_mask)->value.region;
 		    int xOffset = macDraw->xOff + gc->clip_x_origin;
 		    int yOffset = macDraw->yOff + gc->clip_y_origin;
 
-		    OffsetRgn(clipRgn, xOffset, yOffset);
-		    SectRgn(clipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
-		    OffsetRgn(clipRgn, -xOffset, -yOffset);
+		    OffsetRgn(gcClipRgn, xOffset, yOffset);
+		    SectRgn(gcClipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
+		    OffsetRgn(gcClipRgn, -xOffset, -yOffset);
 		}
 		ClipCGContextToRegion(context, &portBounds, tkMacOSXtmpRgn1);
 		SetEmptyRgn(tkMacOSXtmpRgn1);
@@ -1655,6 +1647,7 @@ TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
 	    }
 	}
     } else if (context) {
+	TkMacOSXCheckTmpRgnEmpty(1);
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
 	if (!port
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
@@ -1669,8 +1662,6 @@ TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
 		    r.origin.y + r.size.height + macDraw->yOff);
 	}
 #endif
-	CGContextSaveGState(context);
-	TkMacOSXCheckTmpRgnEmpty(1);
 	RectRgn(tkMacOSXtmpRgn1, &portBounds);
 	if (port) {
 	    TkMacOSXSetUpClippingRgn(d);
@@ -1683,21 +1674,25 @@ TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
 	}
 	if (gc && gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
 		== TKP_CLIP_REGION) {
-	    RgnHandle clipRgn = (RgnHandle)
+	    RgnHandle gcClipRgn = (RgnHandle)
 		    ((TkpClipMask*)gc->clip_mask)->value.region;
 	    int xOffset = macDraw->xOff + gc->clip_x_origin;
 	    int yOffset = macDraw->yOff + gc->clip_y_origin;
 
-	    OffsetRgn(clipRgn, xOffset, yOffset);
-	    SectRgn(clipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
-	    OffsetRgn(clipRgn, -xOffset, -yOffset);
+	    OffsetRgn(gcClipRgn, xOffset, yOffset);
+	    SectRgn(gcClipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
+	    OffsetRgn(gcClipRgn, -xOffset, -yOffset);
 	}
+	CGContextSaveGState(context);
 	ClipCGContextToRegion(context, &portBounds, tkMacOSXtmpRgn1);
 	SetEmptyRgn(tkMacOSXtmpRgn1);
 	port = NULL;
 	dc->portChanged = false;
 	dc->saveState = (void*)1;
 	useCG = 1;
+    } else {
+	Tcl_Panic("TkMacOSXSetupDrawingContext(): "
+		"no port or context to draw into !");
     }
     if (useCG) {
 	CGContextConcatCTM(context, CGAffineTransformMake(1.0, 0.0, 0.0, -1.0,
@@ -1767,17 +1762,17 @@ TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
 	    gPenPat = savePat;
 	    if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
 			== TKP_CLIP_REGION) {
-		RgnHandle clipRgn = (RgnHandle)
+		RgnHandle gcClipRgn = (RgnHandle)
 			((TkpClipMask*)gc->clip_mask)->value.region;
 		int xOffset = macDraw->xOff + gc->clip_x_origin;
 		int yOffset = macDraw->yOff + gc->clip_y_origin;
 
-		OffsetRgn(clipRgn, xOffset, yOffset);
+		OffsetRgn(gcClipRgn, xOffset, yOffset);
 		GetClip(tkMacOSXtmpRgn1);
-		SectRgn(clipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
+		SectRgn(gcClipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
 		SetClip(tkMacOSXtmpRgn1);
 		SetEmptyRgn(tkMacOSXtmpRgn1);
-		OffsetRgn(clipRgn, -xOffset, -yOffset);
+		OffsetRgn(gcClipRgn, -xOffset, -yOffset);
 	    }
 	} else {
 	    TkMacOSXSetUpGraphicsPort(NULL, port);
@@ -1865,17 +1860,8 @@ TkMacOSXSetUpClippingRgn(
 	}
 
 #ifdef TK_MAC_DEBUG_DRAWING
-	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
-		CGrafPtr port, RgnHandle region);
-	if (QDDebugFlashRegion) {
-	    CGrafPtr grafPtr = TkMacOSXGetDrawablePort(drawable);
-
-	    /*
-	     * Carbon-internal region flashing SPI (c.f. Technote 2124)
-	     */
-
-	    QDDebugFlashRegion(grafPtr, macDraw->clipRgn);
-	}
+	TkMacOSXDebugFlashRegion(TkMacOSXGetDrawablePort(drawable),
+		macDraw->clipRgn);
 #endif /* TK_MAC_DEBUG_DRAWING */
     }
 
