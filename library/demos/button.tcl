@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing
 # several button widgets.
 #
-# RCS: @(#) $Id: button.tcl,v 1.2.26.1 2007/05/30 06:37:03 das Exp $
+# RCS: @(#) $Id: button.tcl,v 1.2.26.2 2007/05/30 13:24:01 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -29,7 +29,14 @@ proc colorrefresh {w col} {
     $w configure -bg $col
     $w.buttons configure -bg $col
     if {[tk windowingsystem] eq "aqua"} {
-	$w.buttons configure -highlightbackground $col
+	# set highlightbackground of all buttons in $w
+	set l [list $w]
+	while {[llength $l]} {
+	    set l [concat [lrange $l 1 end] [winfo children [set b [lindex $l 0]]]]
+	    if {[winfo class $b] eq "Button"} {
+		$b configure -highlightbackground $col
+	    }
+	}
     }
 }
 
