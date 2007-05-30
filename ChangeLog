@@ -1,3 +1,33 @@
+2007-05-30  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/bgerror.tcl:	standardize dialog option & button size
+	* library/dialog.tcl:	modifications done when running on on Aqua.
+	* library/msgbox.tcl:
+
+	* library/demos/button.tcl: set button highlightbackground on Aqua.
+
+	* macosx/tkMacOSXMenu.c (DrawMenuSeparator): use DrawingContext API.
+
+	* macosx/tkMacOSXWindowEvent.c (ClearPort): clip to updateRgn.
+
+	* macosx/tkMacOSXDebug.c:	factor out debug region flashing.
+	* macosx/tkMacOSXDebug.h:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+
+	* macosx/tkMacOSXEvent.c:	cleanup whitespace and formatting.
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXRegion.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c:
+	* xlib/xgc.c:
+
+	* macosx/Wish.xcodeproj/project.pbxproj: delete references to removed
+	* macosx/Wish.xcodeproj/default.pbxuser: ttk files.
+
 2007-05-28  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
 	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Fix short
@@ -11,7 +41,6 @@
 	library/ttk/keynav.tcl: Removed.
 	* tests/ttk/misc.test: Removed.
 	* doc/ttk_dialog.tcl: Removed.
-
 
 2007-05-25  Donal K. Fellows  <dkf@users.sf.net>
 

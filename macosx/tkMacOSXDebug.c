@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.12 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.13 2007/05/30 06:35:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -453,6 +453,22 @@ TkMacOSXMouseTrackingResultToAscii(MouseTrackingResult r, char * buf)
 }
 #endif /* TK_MACOSXDEBUG_UNUSED */
 
+MODULE_SCOPE void
+TkMacOSXDebugFlashRegion(
+    CGrafPtr port,
+    RgnHandle rgn)
+{
+    TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
+	    CGrafPtr port, RgnHandle region);
+    if (port && rgn && QDDebugFlashRegion) {
+	/*
+	 * Carbon-internal region flashing SPI (c.f. Technote 2124)
+	 */
+
+	QDDebugFlashRegion(port, rgn);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -482,7 +498,9 @@ TkMacOSXMouseTrackingResultToAscii(MouseTrackingResult r, char * buf)
  */
 
 MODULE_SCOPE void *
-TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol)
+TkMacOSXGetNamedDebugSymbol(
+    const char* module,
+    const char* symbol)
 {
     void* addr = TkMacOSXGetNamedSymbol(module, symbol);
 #ifndef __LP64__

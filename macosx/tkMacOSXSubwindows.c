@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.18 2007/05/09 12:55:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.19 2007/05/30 06:35:55 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -200,7 +200,8 @@ XMapWindow(
 	    if ((macWin->winPtr->wmInfoPtr->macClass == kSheetWindowClass)
 		    && (macWin->winPtr->wmInfoPtr->master != None)) {
 		ShowSheetWindow(wRef,
-			GetWindowFromPort(TkMacOSXGetDrawablePort(macWin->winPtr->wmInfoPtr->master)));
+			GetWindowFromPort(TkMacOSXGetDrawablePort(
+			macWin->winPtr->wmInfoPtr->master)));
 	    } else {
 		ShowWindow(wRef);
 	    }
@@ -806,17 +807,16 @@ void
 TkMacOSXUpdateClipRgn(
     TkWindow *winPtr)
 {
-    RgnHandle rgn;
-    int x, y;
-    TkWindow *win2Ptr;
-
     if (winPtr == NULL) {
 	return;
     }
 
     if (winPtr->privatePtr && winPtr->privatePtr->flags & TK_CLIP_INVALID) {
+	TkWindow *win2Ptr;
+
 	if (Tk_IsMapped(winPtr)) {
-	    rgn = winPtr->privatePtr->aboveClipRgn;
+	    int x, y;
+	    RgnHandle rgn = winPtr->privatePtr->aboveClipRgn;
 
 	    /*
 	     * Start with a region defined by the window bounds.
@@ -825,7 +825,7 @@ TkMacOSXUpdateClipRgn(
 	    x = winPtr->privatePtr->xOff;
 	    y = winPtr->privatePtr->yOff;
 	    SetRectRgn(rgn, (short) x, (short) y,
-		(short) (winPtr->changes.width	+ x),
+		(short) (winPtr->changes.width + x),
 		(short) (winPtr->changes.height + y));
 
 	    /*
@@ -845,14 +845,12 @@ TkMacOSXUpdateClipRgn(
 		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 		TkMacOSXCheckTmpRgnEmpty(1);
 		if (winPtr->parentPtr) {
-		    SectRgn(rgn,
-			    winPtr->parentPtr->privatePtr->aboveClipRgn, rgn);
+		    SectRgn(rgn, winPtr->parentPtr->privatePtr->aboveClipRgn,
+			    rgn);
 		}
-
-		win2Ptr = winPtr->nextPtr;
-		while (win2Ptr != NULL) {
+		win2Ptr = winPtr;
+		while ((win2Ptr = win2Ptr->nextPtr)) {
 		    if (Tk_IsTopLevel(win2Ptr) || !Tk_IsMapped(win2Ptr)) {
-			win2Ptr = win2Ptr->nextPtr;
 			continue;
 		    }
 		    x = win2Ptr->privatePtr->xOff;
@@ -861,17 +859,13 @@ TkMacOSXUpdateClipRgn(
 			    (short) (win2Ptr->changes.width  + x),
 			    (short) (win2Ptr->changes.height + y));
 		    DiffRgn(rgn, tkMacOSXtmpRgn1, rgn);
-
-		    win2Ptr = win2Ptr->nextPtr;
 		}
 	    } else if (Tk_IsEmbedded(winPtr)) {
-		TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
-
-		if (contWinPtr != NULL) {
-		    TkMacOSXUpdateClipRgn(contWinPtr);
+		win2Ptr = TkpGetOtherWindow(winPtr);
+		if (win2Ptr) {
+		    TkMacOSXUpdateClipRgn(win2Ptr);
 		    TkMacOSXCheckTmpRgnEmpty(1);
-		    SectRgn(rgn,
-			    contWinPtr->privatePtr->aboveClipRgn, rgn);
+		    SectRgn(rgn, win2Ptr->privatePtr->aboveClipRgn, rgn);
 		} else if (tkMacOSXEmbedHandler != NULL) {
 		    TkMacOSXCheckTmpRgnEmpty(1);
 		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr,
@@ -882,21 +876,19 @@ TkMacOSXUpdateClipRgn(
 		/*
 		 * NOTE: Here we should handle out of process embedding.
 		 */
-
 	    }
 
 	    /*
 	     * The final clip region is the aboveClip region (or visible
 	     * region) minus all the children of this window.
-	     * Alternatively, if the window is a container, we must also
-	     * subtract the region of the embedded window.
+	     * If the window is a container, we must also subtract the region
+	     * of the embedded window.
 	     */
 
 	    rgn = winPtr->privatePtr->clipRgn;
 	    CopyRgn(winPtr->privatePtr->aboveClipRgn, rgn);
-
 	    win2Ptr = winPtr->childList;
-	    while (win2Ptr != NULL) {
+	    while (win2Ptr) {
 		if (Tk_IsTopLevel(win2Ptr) || !Tk_IsMapped(win2Ptr)) {
 		    win2Ptr = win2Ptr->nextPtr;
 		    continue;
@@ -907,13 +899,12 @@ TkMacOSXUpdateClipRgn(
 			(short) (win2Ptr->changes.width	 + x),
 			(short) (win2Ptr->changes.height + y));
 		DiffRgn(rgn, tkMacOSXtmpRgn1, rgn);
-
 		win2Ptr = win2Ptr->nextPtr;
 	    }
 
 	    if (Tk_IsContainer(winPtr)) {
 		win2Ptr = TkpGetOtherWindow(winPtr);
-		if (win2Ptr != NULL) {
+		if (win2Ptr) {
 		    if (Tk_IsMapped(win2Ptr)) {
 			x = win2Ptr->privatePtr->xOff;
 			y = win2Ptr->privatePtr->yOff;
@@ -940,27 +931,20 @@ TkMacOSXUpdateClipRgn(
 	    if (!Tk_IsTopLevel(winPtr)) {
 		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 	    } else if (Tk_IsEmbedded(winPtr)) {
-		TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
-
-		if (contWinPtr != NULL) {
-		    TkMacOSXUpdateClipRgn(contWinPtr);
+		win2Ptr = TkpGetOtherWindow(winPtr);
+		if (win2Ptr) {
+		    TkMacOSXUpdateClipRgn(win2Ptr);
 		}
 	    }
 	    SetEmptyRgn(winPtr->privatePtr->aboveClipRgn);
 	    SetEmptyRgn(winPtr->privatePtr->clipRgn);
 	}
-
 	winPtr->privatePtr->flags &= ~TK_CLIP_INVALID;
 
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
-				     CGrafPtr port, RgnHandle region);
-	if (QDDebugFlashRegion) {
-	    MacDrawable *macDraw = (MacDrawable *) winPtr->privatePtr;
-	    CGrafPtr grafPtr = TkMacOSXGetDrawablePort((Drawable) macDraw);
-	    /* Carbon-internal region flashing SPI (c.f. Technote 2124) */
-	    QDDebugFlashRegion(grafPtr, macDraw->clipRgn);
-	}
+	TkMacOSXDebugFlashRegion(TkMacOSXGetDrawablePort(
+		(Drawable) winPtr->privatePtr),
+		((MacDrawable*) winPtr->privatePtr)->clipRgn);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
 
     }
@@ -1034,12 +1018,7 @@ TkMacOSXInvalidateWindow(
 	}
 
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-	TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
-				     CGrafPtr port, RgnHandle region);
-	if (QDDebugFlashRegion) {
-	    /* Carbon-internal region flashing SPI (c.f. Technote 2124) */
-	    QDDebugFlashRegion(grafPtr, macWin->aboveClipRgn);
-	}
+	TkMacOSXDebugFlashRegion(grafPtr, macWin->aboveClipRgn);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
 
     }
