@@ -1,3 +1,14 @@
+2007-05-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.4.16
+	* generic/tk.h:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.13
+	* win/configure:
+
 2007-05-30  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/bgerror.tcl:	standardize dialog option & button size
