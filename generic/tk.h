@@ -12,11 +12,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.74.2.18 2007/05/30 14:06:20 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.74.2.19 2007/05/30 17:34:45 dgp Exp $
  */
 
 #ifndef _TK
 #define _TK
+
+#include <tcl.h>
+#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION != 4)
+#	error Tk 8.4 must be compiled with tcl.h from Tcl 8.4
+#endif
 
 /*
  * For C++ compilers, use extern "C"
@@ -52,13 +57,6 @@ extern "C" {
 
 #define TK_VERSION	"8.4"
 #define TK_PATCH_LEVEL	"8.4.16"
-
-#ifndef _TCL
-#   include <tcl.h>
-#   if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION != 4)
-#	error Tk 8.4 must be compiled with tcl.h from Tcl 8.4
-#   endif
-#endif
 
 /* 
  * A special definition used to allow this header file to be included
