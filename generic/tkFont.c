@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.35 2007/05/11 11:00:48 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.36 2007/05/31 13:31:26 das Exp $
  */
 
 #include "tkPort.h"
@@ -425,8 +425,10 @@ TkFontPkgFree(
 	    searchPtr != NULL;
 	    searchPtr = Tcl_NextHashEntry(&search)) {
 	fontsLeft++;
+#ifdef DEBUG_FONTS
 	fprintf(stderr, "Font %s still in cache.\n",
 		Tcl_GetHashKey(&fiPtr->fontCache, searchPtr));
+#endif
     }
 
 #ifdef PURIFY

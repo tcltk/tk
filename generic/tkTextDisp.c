@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.63 2007/04/23 21:15:19 das Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.64 2007/05/31 13:31:26 das Exp $
  */
 
 #include "tkPort.h"
@@ -8450,7 +8450,9 @@ RemoveFromBaseChunk(
     BaseCharInfo *bciPtr;
 
     if (chunkPtr->displayProc != CharDisplayProc) {
+#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
 	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk type\n");
+#endif
 	return;
     }
 
@@ -8469,11 +8471,13 @@ RemoveFromBaseChunk(
 
     if ((ciPtr->baseOffset + ciPtr->numBytes)
 	    != Tcl_DStringLength(&bciPtr->baseChars)) {
+#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
 	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk "
 		"(not last)\n");
+#endif
     }
 
-    Tcl_DStringSetLength(&bciPtr->baseChars,ciPtr->baseOffset);
+    Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
 
     /*
      * Invalidate the stored pixel width of the base chunk.
