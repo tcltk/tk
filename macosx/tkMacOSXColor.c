@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.8 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.9 2007/05/31 13:38:13 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -462,12 +462,13 @@ TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
 			(1
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && &kHIToolboxVersionNumber != NULL
-		    && kHIToolboxVersionNumber >= kHIToolboxVersionNumber10_4
+			&& &kHIToolboxVersionNumber != NULL
+			&& kHIToolboxVersionNumber >=
+				kHIToolboxVersionNumber10_4
 #endif
-		    ) ? kCGBitmapByteOrder32Host :
+			) ? kCGBitmapByteOrder32Host :
 #endif
-		    0;
+			0;
 	    }
 	    portChanged = QDSwapPort(patGWorld, &savePort);
 	    TkMacOSXSetColorInPort(pixel, 1, pixpat);
