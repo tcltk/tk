@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.22 2007/05/30 06:39:38 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.23 2007/05/31 13:42:12 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -408,9 +408,9 @@ TkPutImage(
     display->request++;
     destPort = TkMacOSXGetDrawablePort(d);
     portChanged = QDSwapPort(destPort, &savePort);
-    destBits = GetPortBitMapForCopyBits(destPort);
     TkMacOSXSetUpClippingRgn(d);
 
+    destBits = GetPortBitMapForCopyBits(destPort);
     srcPtr = &srcRect;
     SetRect(srcPtr, src_x, src_y, src_x + width, src_y + height);
     if (tkPictureIsOpen) {
@@ -1602,7 +1602,6 @@ TkMacOSXSetupDrawingContext(
     if (port) {
 	GetPortBounds(port, &portBounds);
     }
-
     dc->saveState = NULL;
     if (port && !context) {
 	dc->portChanged = QDSwapPort(port, &(dc->savePort));

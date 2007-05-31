@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.20 2007/05/30 06:39:38 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.21 2007/05/31 13:42:12 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -314,6 +314,9 @@ TkMacOSXProcessWindowEvent(
 		    height = bounds.bottom - bounds.top;
 		    flags |= TK_SIZE_CHANGED;
 		}
+		TkMacOSXInvalClipRgns((Tk_Window) winPtr);
+		TkMacOSXInvalidateWindow((MacDrawable *) window,
+			TK_PARENT_WINDOW);
 		TkGenWMConfigureEvent((Tk_Window)winPtr, x, y, width,
 			height, flags);
 		if (attr & kWindowBoundsChangeUserResize ||
@@ -467,6 +470,14 @@ GenerateUpdateEvent(Window window)
     result = GenerateUpdates(tkMacOSXtmpRgn1, &updateBounds, winPtr);
     EndUpdate(macWindow);
     SetEmptyRgn(tkMacOSXtmpRgn1);
+    if (result) {
+	/*
+	 * Ensure there are no pending idle-time redraws that could prevent
+	 * the just posted Expose events from generating new redraws.
+	 */
+
+	Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT);
+    }
     return result;
  }
 
@@ -522,6 +533,9 @@ GenerateUpdates(
     SectRgn(damageRgn, updateRgn, damageRgn);
     OffsetRgn(damageRgn, -bounds.left, -bounds.top);
     GetRegionBounds(damageRgn, &damageBounds);
+    RectRgn(damageRgn, &bounds);
+    UnionRgn(damageRgn, updateRgn, updateRgn);
+    GetRegionBounds(updateRgn, updateBounds);
     SetEmptyRgn(damageRgn);
 
     event.xany.serial = Tk_Display(winPtr)->request;
