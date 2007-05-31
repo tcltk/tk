@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.16 2007/05/09 12:57:45 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.17 2007/05/31 13:42:11 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -225,15 +225,6 @@ TkpDisplayButton(
     }
 
     /*
-     * Set up clipping region. Make sure the we are using the port
-     * for this button, or we will set the wrong window's clip.
-     */
-
-    destPort = TkMacOSXGetDrawablePort(pixmap);
-    portChanged = QDSwapPort(destPort, &savePort);
-    TkMacOSXSetUpClippingRgn(pixmap);
-
-    /*
      * See the comment in UpdateControlColors as to why we use the
      * highlightbackground for the border of Macintosh buttons.
      */
@@ -247,6 +238,15 @@ TkpDisplayButton(
 		    Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 	}
     }
+
+    /*
+     * Set up clipping region. Make sure the we are using the port
+     * for this button, or we will set the wrong window's clip.
+     */
+
+    destPort = TkMacOSXGetDrawablePort(pixmap);
+    portChanged = QDSwapPort(destPort, &savePort);
+    TkMacOSXSetUpClippingRgn(pixmap);
 
     /*
      * Draw the native portion of the buttons. Start by creating the control
