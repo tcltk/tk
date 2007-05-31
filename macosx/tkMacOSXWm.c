@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.37 2007/05/30 06:39:38 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.38 2007/05/31 13:42:13 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -898,7 +898,7 @@ static int WmSetAttribute(
 			wmPtr->macClass, oldAttributes, 1);
 		ChkErr(ReshapeCustomWindow, macWindow);
 		TkMacOSXInvalidateWindow((MacDrawable *)(winPtr->window),
-			TK_WINDOW_ONLY);
+			TK_PARENT_WINDOW);
 	    }
 	    break;
 	case _WMATT_LAST_ATTRIBUTE:
@@ -4517,6 +4517,7 @@ TkMacOSXGrowToplevel(
 	if (wmPtr->gridWin != NULL) {
 	    int base = winPtr->reqWidth - (wmPtr->reqGridWidth
 		    * wmPtr->widthInc);
+
 	    if (base < 0) {
 		base = 0;
 	    }
@@ -4702,6 +4703,19 @@ TkMacOSXIsWindowZoomed(
 	return false;
     }
     GetMaxSize(winPtr, &maxWidth, &maxHeight);
+    if (wmPtr->gridWin != NULL) {
+	int base = winPtr->reqWidth - (wmPtr->reqGridWidth * wmPtr->widthInc);
+
+	if (base < 0) {
+	    base = 0;
+	}
+	maxWidth = base + (maxWidth * wmPtr->widthInc);
+	base = winPtr->reqHeight - (wmPtr->reqGridHeight * wmPtr->heightInc);
+	if (base < 0) {
+	    base = 0;
+	}
+	maxHeight = base + (maxHeight * wmPtr->heightInc);
+    }
     if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
 	idealSize.h = winPtr->changes.width;
     } else {
@@ -4749,9 +4763,7 @@ TkMacOSXZoomToplevel(
     WmInfo *wmPtr;
     Point idealSize;
     int maxWidth, maxHeight;
-    Rect portRect;
     OSStatus err;
-    CGrafPtr destPort = GetWindowPort(whichWindow);
 
     window = TkMacOSXGetXWindow(whichWindow);
     dispPtr = TkGetDisplayList();
@@ -4763,6 +4775,19 @@ TkMacOSXZoomToplevel(
 	return false;
     }
     GetMaxSize(winPtr, &maxWidth, &maxHeight);
+    if (wmPtr->gridWin != NULL) {
+	int base = winPtr->reqWidth - (wmPtr->reqGridWidth * wmPtr->widthInc);
+
+	if (base < 0) {
+	    base = 0;
+	}
+	maxWidth = base + (maxWidth * wmPtr->widthInc);
+	base = winPtr->reqHeight - (wmPtr->reqGridHeight * wmPtr->heightInc);
+	if (base < 0) {
+	    base = 0;
+	}
+	maxHeight = base + (maxHeight * wmPtr->heightInc);
+    }
     if (wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
 	idealSize.h = winPtr->changes.width;
     } else {
@@ -4780,12 +4805,10 @@ TkMacOSXZoomToplevel(
 	return false;
     }
 
-    GetPortBounds(destPort, &portRect);
     err = ChkErr(ZoomWindowIdeal, whichWindow, zoomPart, &idealSize);
     if (err == noErr) {
 	wmPtr->hints.initial_state =
 		(zoomPart == inZoomIn ? NormalState : ZoomState);
-	InvalWindowRect(whichWindow, &portRect);
 	return true;
     } else {
 	return false;
@@ -5847,7 +5870,7 @@ ApplyWindowClassAttributeChanges(
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
 	if (wmPtr->macClass != oldClass
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		     && HIWindowChangeClass != NULL
+		&& HIWindowChangeClass != NULL
 #endif
 	) {
 	    ChkErr(HIWindowChangeClass, macWindow, wmPtr->macClass);
@@ -5871,6 +5894,8 @@ ApplyWindowClassAttributeChanges(
 		    ChkErr(HIGrowBoxViewSetTransparent, growBoxView, true);
 		}
 	    }
+	    TkMacOSXInvalidateWindow((MacDrawable *)(winPtr->window),
+		    TK_PARENT_WINDOW);
 	}
 
 	/*
@@ -6018,8 +6043,6 @@ TkMacOSXMakeFullscreen(
 		ChkErr(SetWindowBounds, window, kWindowContentRgn,
 			&screenBounds);
 		wmPtr->flags &= ~WM_SYNC_PENDING;
-		TkMacOSXInvalidateWindow((MacDrawable*)winPtr->window,
-		    TK_WINDOW_ONLY);
 	    }
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
@@ -6039,8 +6062,6 @@ TkMacOSXMakeFullscreen(
 	wmPtr->flags |= WM_SYNC_PENDING;
 	ChkErr(SetWindowBounds, window, kWindowStructureRgn, &bounds);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
-	TkMacOSXInvalidateWindow((MacDrawable*)winPtr->window,
-	    TK_WINDOW_ONLY);
     }
     TkMacOSXEnterExitFullscreen(winPtr, IsWindowActive(window));
     return result;
