@@ -1,3 +1,36 @@
+2007-05-31  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWindowEvent.c (GenerateUpdateEvent): complete all
+	pending idle-time redraws before newly posted Expose events are
+	processed; add bounds of redrawn windows to update region to ensure all
+	child windows overdrawn by parents are redrawn.
+
+	* macosx/tkMacOSXWindowEvent.c:	centralize clip and window invalidation
+	* macosx/tkMacOSXSubwindows.c: 	after location/size changes in the
+	* macosx/tkMacOSXWm.c:		BoundsChanged carbon event handler;
+	correct/add window invalidation after window attribute changes.
+
+	* macosx/tkMacOSXSubwindows.c (XResizeWindow, XMoveResizeWindow,
+	XMoveWindow): factor out common code dealing with embedded and
+	non-toplevel windows; remove unnecessary clip and window invalidation.
+
+	* macosx/tkMacOSXButton.c (TkpDisplayButton): move clip setup closer to
+	native button drawing calls.
+
+	* macosx/tkMacOSXWm.c (TkMacOSXIsWindowZoomed, TkMacOSXZoomToplevel):
+	correct handle gridded windows in max size calculations.
+
+	* macosx/tkMacOSXEvent.c (TkMacOSXFlushWindows): use HIWindowFlush API
+	when available.
+
+	* macosx/tkMacOSXColor.c:	cleanup whitespace and formatting.
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWm.c:
+
+	* generic/tkFont.c:	#ifdef out debug msg printing to stderr.
+	* generic/tkTextDisp.c:
+
 2007-05-30  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h: Correct placement of #include <tcl.h> [Bug 1723812].
