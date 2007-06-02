@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.25 2007/05/30 06:39:38 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.26 2007/06/02 06:46:49 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1556,6 +1556,7 @@ TkpPostMenu(
 	    Tcl_CancelIdleCall(DrawMenuBarWhenIdle, NULL);
 	    DrawMenuBarWhenIdle(NULL);
 	}
+	RecursivelyInsertMenu(menuPtr);
 
 	TkMacOSXTrackingLoop(1);
 	popUpResult = PopUpMenuSelect(macMenuHdl, y, x, menuPtr->active);
