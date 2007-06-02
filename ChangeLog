@@ -2,7 +2,7 @@
 
 	* macosx/tkMacOSXMenu.c (TkpPostMenu): ensure cascade menus display in
 	posted menus that are not part of the menubar or attached to a
-	menubutton (fixes bug reported on tcl-mac by Linux Nyberg).
+	menubutton (fixes bug reported on tcl-mac by Linus Nyberg).
 
 2007-05-31  Daniel Steffen  <das@users.sourceforge.net>
 
