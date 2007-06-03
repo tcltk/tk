@@ -10,12 +10,13 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.21 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.22 2007/06/03 13:44:40 das Exp $
  */
 
 #include "tkMacOSXInt.h"
-#include "tkMacOSXEvent.h"	/* TkMacOSXKeycodeToUnicode() FIXME: That
-				 * function should probably move here. */
+#include "tkMacOSXEvent.h"	/* for TkMacOSXKeycodeToUnicode()
+				 * FIXME: That function should probably move
+				 * here. */
 
 /*
  * A couple of simple definitions to make code a bit more self-explaining.
