@@ -33,7 +33,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.6 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.7 2007/06/03 13:44:40 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -297,8 +297,12 @@ Tk_SetAppName(
     interpListPtr = riPtr;
     strcpy(riPtr->name, actualName);
 
+    /*
+     * TODO: DeleteProc
+     */
+
     Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd,
-	    (ClientData) riPtr, NULL /* TODO: DeleteProc */);
+	    (ClientData) riPtr, NULL);
     if (Tcl_IsSafe(interp)) {
 	Tcl_HideCommand(interp, "send", "send");
     }
@@ -439,8 +443,8 @@ Tk_SendObjCmd(
 	Tcl_Release((ClientData) localInterp);
     } else {
 	/*
-	 * This is a non-local request. Send the script to the server and poll
-	 * it for a result. TODO!!!
+	 * TODO: This is a non-local request. Send the script to the server and
+	 * poll it for a result.
 	 */
     }
 

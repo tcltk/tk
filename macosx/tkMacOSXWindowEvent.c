@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.24 2007/05/31 13:38:17 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.25 2007/06/03 13:44:40 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -573,9 +573,8 @@ GenerateUpdates(
 	}
 
 	/*
-	 * NOTE: Here we should handle out of process embedding.
+	 * TODO: Here we should handle out of process embedding.
 	 */
-
     }
 
     return 1;

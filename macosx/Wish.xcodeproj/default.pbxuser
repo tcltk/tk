@@ -34,10 +34,12 @@
 			NO,
 			NO,
 			NO,
+			NO,
 		);
 		argumentStrings = (
 			"${SRCROOT}/../../tk/library/demos/widget",
 			"${SRCROOT}/../../tk/tests/all.tcl",
+			"${SRCROOT}/../../tk/tests/ttk/all.tcl",
 			"-geometry +0+0",
 			"-singleproc 1",
 			"-verbose \"bet\"",
