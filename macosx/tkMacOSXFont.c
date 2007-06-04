@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.2 2007/05/30 13:47:43 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.3 2007/06/04 15:19:00 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1057,7 +1057,10 @@ TkpDrawCharsInContext(
     TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext);
 
 #if 0
-    /* TODO: implement stippled text drawing */
+    /*
+     * TODO: implement stippled text drawing
+     */
+
     if ((gc->fill_style == FillStippled
 	    || gc->fill_style == FillOpaqueStippled)
 	    && gc->stipple != None) {

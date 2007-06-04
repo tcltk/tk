@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.49.2.2 2007/06/01 04:01:39 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.49.2.3 2007/06/04 15:19:01 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -3340,7 +3340,7 @@ UpdateGeometryInfo(
 	TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
 
 	/*
-	 * NOTE: Here we should handle out of process embedding.
+	 * TODO: Here we should handle out of process embedding.
 	 */
 
 	if (contWinPtr != NULL) {
@@ -3743,11 +3743,9 @@ Tk_CoordsToWindow(
 		}
 	    }
 
-
 	    /*
-	     * NOTE: Here we should handle out of process embedding.
+	     * TODO: Here we should handle out of process embedding.
 	     */
-
 	} else {
 	    for (childPtr = winPtr->childList; childPtr != NULL;
 		    childPtr = childPtr->nextPtr) {
@@ -3836,7 +3834,7 @@ Tk_TopCoordsToWindow(
 	    }
 
 	    /*
-	     * NOTE: Here we should handle out of process embedding.
+	     * TODO: Here we should handle out of process embedding.
 	     */
 	} else {
 	    for (childPtr = winPtr->childList; childPtr != NULL;
@@ -5181,7 +5179,7 @@ TkMacOSXMakeRealWindowExist(
 	return;
 
 	/*
-	 * NOTE: Here we should handle out of process embedding.
+	 * TODO: Here we should handle out of process embedding.
 	 */
     }
 
