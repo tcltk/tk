@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.23 2007/05/31 13:42:12 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.24 2007/06/04 09:28:44 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -603,7 +603,11 @@ XDrawLines(
     int i, lw = gc->line_width;
 
     if (npoints < 2) {
-	return; /* TODO: generate BadValue error. */
+	/*
+	 * TODO: generate BadValue error.
+	 */
+
+	return;
     }
 
     display->request++;
@@ -1562,9 +1566,8 @@ TkMacOSXSetUpGraphicsPort(
 	}
 	if (gc->line_style != LineSolid) {
 	    /*
-	     * FIXME:
-	     * Here the dash pattern should be set in the drawing environment.
-	     * This is not possible with QuickDraw line drawing.
+	     * FIXME: Here the dash pattern should be set in the drawing
+	     * environment. This is not possible with QuickDraw line drawing.
 	     */
 	}
     }

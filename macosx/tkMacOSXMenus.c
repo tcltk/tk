@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.13 2007/04/29 02:26:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.2.2.14 2007/06/04 09:28:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -91,7 +91,10 @@ TkMacOSXHandleMenuSelect(
 	case kFileMenu:
 	    switch (theItem) {
 		case kSourceItem:
-		    /* TODO: source script */
+		    /*
+		     * TODO: source script
+		     */
+
 		    SourceDialog();
 		    break;
 		case kCloseItem:

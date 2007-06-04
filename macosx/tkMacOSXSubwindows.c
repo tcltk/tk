@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.17 2007/05/31 13:42:12 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2.2.18 2007/06/04 09:28:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -472,7 +472,10 @@ MoveResizeWindow(
 	     */
 	}
     } else {
-	/* TODO: update all xOff & yOffs */
+	/*
+	 * TODO: update all xOff & yOffs
+	 */
+
 	macParent = macWin->winPtr->parentPtr->privatePtr;
 	parentBorderwidth = macWin->winPtr->parentPtr->changes.border_width;
     }
@@ -558,7 +561,9 @@ XRaiseWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Above, NULL);
     } else {
-	/* TODO: this should generate damage */
+	/*
+	 * TODO: this should generate damage
+	 */
     }
 }
 
@@ -590,7 +595,9 @@ XLowerWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Below, NULL);
     } else {
-	/* TODO: this should generate damage */
+	/*
+	 * TODO: this should generate damage
+	 */
     }
 }
 #endif
@@ -748,7 +755,7 @@ TkMacOSXUpdateClipRgn(
 		}
 
 		/*
-		 * NOTE: Here we should handle out of process embedding.
+		 * TODO: Here we should handle out of process embedding.
 		 */
 	    }
 
@@ -790,7 +797,7 @@ TkMacOSXUpdateClipRgn(
 		}
 
 		/*
-		 * NOTE: Here we should handle out of process embedding.
+		 * TODO: Here we should handle out of process embedding.
 		 */
 	    }
 	    SetEmptyRgn(tkMacOSXtmpRgn1);
@@ -956,10 +963,8 @@ TkMacOSXGetDrawablePort(
 
 	if (resultPort == NULL) {
 	    /*
-	     * FIXME:
-	     *
-	     * So far as I can tell, the only time that this happens is when
-	     * we are tearing down an embedded child interpreter, and most
+	     * FIXME: So far as I can tell, the only time that this happens is
+	     * when we are tearing down an embedded child interpreter, and most
 	     * of the time, this is harmless... However, we really need to
 	     * find why the embedding loses.
 	     */
@@ -968,7 +973,7 @@ TkMacOSXGetDrawablePort(
 	}
 
 	/*
-	 * NOTE: Here we should handle out of process embedding.
+	 * TODO: Here we should handle out of process embedding.
 	 */
     }
     return resultPort;
@@ -1083,7 +1088,7 @@ TkMacOSXInvalClipRgns(
 	}
 
 	/*
-	 * NOTE: Here we should handle out of process embedding.
+	 * TODO: Here we should handle out of process embedding.
 	 */
     }
 }
@@ -1174,7 +1179,7 @@ UpdateOffsets(
 	}
 
 	/*
-	 * NOTE: Here we should handle out of process embedding.
+	 * TODO: Here we should handle out of process embedding.
 	 */
     }
 }

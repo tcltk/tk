@@ -15,7 +15,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.6 2007/05/09 12:57:46 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.7 2007/06/04 09:28:44 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -509,7 +509,7 @@ TkMacOSXGetHostToplevel(
 	contWinPtr = TkpGetOtherWindow(topWinPtr);
 
 	/*
-	 * NOTE: Here we should handle out of process embedding.
+	 * TODO: Here we should handle out of process embedding.
 	 */
 
 	if (contWinPtr != NULL) {
