@@ -53,7 +53,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.2.2.8 2007/04/29 02:26:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.2.2.9 2007/06/04 09:28:44 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -257,7 +257,10 @@ TkpDrawSpinboxButtons(Spinbox *sbPtr, Drawable d)
     GC bgGC;
     MacDrawable *macDraw = (MacDrawable *) d;
 
-    /* FIXME RAISED really makes more sense */
+    /*
+     * FIXME: RAISED really makes more sense
+     */
+
     if (sbPtr->buRelief != TK_RELIEF_FLAT) {
 	return 0;
     }

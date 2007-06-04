@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.6.2.13 2007/04/29 02:26:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.6.2.14 2007/06/04 09:28:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -178,7 +178,12 @@ TkMacOSXProcessKeyboardEvent(
 	    case kHICommandPreferences:
 	    case kHICommandQuit:
 		statusPtr->stopProcessing = 0;
-		return 0; /* TODO: may not be on event on queue. */
+
+		/*
+		 * TODO: may not be on event on queue.
+		 */
+
+		return 0;
 		break;
 	    default:
 		break;
