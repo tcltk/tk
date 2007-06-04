@@ -1,3 +1,19 @@
+2007-06-04  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXMenu.c: add error checking; whitespace cleanup.
+
+	* macosx/tkMacOSXDraw.c:	sync comment formatting with HEAD.
+	* macosx/tkMacOSXEmbed.c:
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXKeyboard.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXSend.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c:
+
 2007-06-02  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXMenu.c (TkpPostMenu): ensure cascade menus display in

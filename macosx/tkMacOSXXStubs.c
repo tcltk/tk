@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.15 2007/05/30 06:39:39 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.16 2007/06/04 09:28:45 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -603,7 +603,10 @@ GContext
 XGContextFromGC(
     GC gc)
 {
-    /* TODO - currently a no-op */
+    /*
+     * TODO: currently a no-op
+     */
+
     return 0;
 }
 
