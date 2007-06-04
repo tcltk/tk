@@ -6,10 +6,11 @@
 
 	* macosx/tkMacOSXMenu.c: add error checking; whitespace cleanup.
 
-	* macosx/tkMacOSXDraw.c:	comment formatting fix for Xcode 3.0.
+	* macosx/tkMacOSXDraw.c:	comment formatting fixes for Xcode 3.0.
 	* macosx/tkMacOSXEmbed.c:
 	* macosx/tkMacOSXEntry.c:
 	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXInit.c:
 	* macosx/tkMacOSXKeyEvent.c:
 	* macosx/tkMacOSXKeyboard.c:
 	* macosx/tkMacOSXMenus.c:

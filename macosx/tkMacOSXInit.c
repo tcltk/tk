@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.28 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.29 2007/06/04 09:27:33 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -307,7 +307,7 @@ TkpInit(
 	}
 
 	/*
-	 * REMOVE ME: Close stdin & stdout for remote debugging otherwise we
+	 * FIXME: Close stdin & stdout for remote debugging otherwise we
 	 * will fight with gdb for stdin & stdout
 	 */
 
