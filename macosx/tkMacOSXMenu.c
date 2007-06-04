@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.1 2007/05/30 13:47:43 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.2 2007/06/04 15:19:00 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1288,8 +1288,8 @@ ReconfigureIndividualMenu(
 			    ->menuPtr->platformData)->menuHdl;
 
 		    if (childMenuHdl != NULL) {
-			SetMenuItemHierarchicalID(macMenuHdl, base + index,
-				GetMenuID(childMenuHdl));
+			ChkErr(SetMenuItemHierarchicalID, macMenuHdl,
+				base + index, GetMenuID(childMenuHdl));
 		    }
 		    /*
 		     * If we changed the highligthing of this menu, its
@@ -1556,6 +1556,7 @@ TkpPostMenu(
 	    Tcl_CancelIdleCall(DrawMenuBarWhenIdle, NULL);
 	    DrawMenuBarWhenIdle(NULL);
 	}
+	RecursivelyInsertMenu(menuPtr);
 
 	TkMacOSXTrackingLoop(1);
 	popUpResult = PopUpMenuSelect(macMenuHdl, y, x, menuPtr->active);
@@ -4203,7 +4204,7 @@ HandleMenuHiliteMsg(
 	    hidPtr->newItem);
 #endif
     GetPort(&macMDEFDrawable.grafPtr);
-    macMDEFDrawable.context = (CGContextRef)hidPtr->context;
+    macMDEFDrawable.context = (CGContextRef) hidPtr->context;
 
     err = ChkErr(GetMenuTrackingData, menu, mtdPtr);
     if (err != noErr) {
@@ -4257,7 +4258,7 @@ HandleMenuDrawMsg(
 
     GetPort(&macMDEFDrawable.grafPtr);
     GetPortBounds(macMDEFDrawable.grafPtr, &bounds);
-    macMDEFDrawable.context = (CGContextRef)ddPtr->context;
+    macMDEFDrawable.context = (CGContextRef) ddPtr->context;
 #ifdef TK_MAC_DEBUG_MENUS
     TkMacOSXDbgMsg("MDEF: DrawMsg %d - %d; %d - %d", menuRectPtr->top,
 	    menuRectPtr->bottom, bounds.top, bounds.bottom);
@@ -4401,7 +4402,7 @@ HandleMenuFindItemMsg(
 
     GetPort(&macMDEFDrawable.grafPtr);
     GetPortBounds(macMDEFDrawable.grafPtr, &bounds);
-    macMDEFDrawable.context = (CGContextRef)fiPtr->context;
+    macMDEFDrawable.context = (CGContextRef) fiPtr->context;
 
     /*
      * Now we need to take care of scrolling the menu.
