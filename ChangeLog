@@ -1,3 +1,8 @@
+2007-06-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/photo.n: Clarified the fact that base64 support for the -data
+	option is not universal. [Bug 1731348] (matzek)
+
 2007-06-04  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXMenu.c: add error checking; whitespace cleanup.
