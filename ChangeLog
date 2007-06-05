@@ -1,3 +1,8 @@
+2007-06-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/photo.n: Clarified the fact that base64 support for the -data
+	option is not universal. [Bug 1731348] (matzek)
+
 2007-06-03  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/Makefile.in: add datarootdir to silence autoconf-2.6x warning.
@@ -6,7 +11,7 @@
 
 	* macosx/tkMacOSXMenu.c: add error checking; whitespace cleanup.
 
-	* macosx/tkMacOSXDraw.c:	comment formatting fixes for Xcode 3.0.
+	* macosx/tkMacOSXDraw.c:	comment formatting fixes for Xcode 3.0
 	* macosx/tkMacOSXEmbed.c:
 	* macosx/tkMacOSXEntry.c:
 	* macosx/tkMacOSXFont.c:
