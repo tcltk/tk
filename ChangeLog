@@ -1,5 +1,7 @@
 2007-06-06  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXInt.h: use native debug message API when available.
+
 	* macosx/tkMacOSXMouseEvent.c (GenerateMouseWheelEvent): enable
 	processing of mousewheel events in background windows.
 
