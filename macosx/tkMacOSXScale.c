@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScale.c,v 1.2.2.6 2007/04/29 02:26:50 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScale.c,v 1.2.2.7 2007/06/06 09:56:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -267,11 +267,7 @@ TkpDisplayScale(
 		&(macScalePtr->scaleHandle));
 	SetControlReference(macScalePtr->scaleHandle, (UInt32) scalePtr);
 
-	/*
-	 * If we are foremost than make us active.
-	 */
-
-	if (windowRef == FrontWindow()) {
+	if (IsWindowActive(windowRef)) {
 	    macScalePtr->flags |= ACTIVE;
 	}
     } else {

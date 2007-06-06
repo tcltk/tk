@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.21 2007/04/29 02:26:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.22 2007/06/06 09:56:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -255,16 +255,10 @@ TkpInit(
 	    OSStatus err = procNotFound;
 	    ProcessSerialNumber psn = { 0, kCurrentProcess };
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-	    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		    && TransformProcessType != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API (3, TransformProcessType,
 		err = ChkErr(TransformProcessType, &psn,
 			kProcessTransformToForegroundApplication);
-	    }
-#endif
+	    ) TK_ENDIF_MAC_OS_X
 #if MAC_OSX_TK_USE_CPS_SPI
 	    if (err != noErr) {
 		/*

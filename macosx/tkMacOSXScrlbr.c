@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.12 2007/05/09 12:57:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.13 2007/06/06 09:56:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -274,7 +274,6 @@ TkpDisplayScrollbar(
 
     if (macScrollPtr->sbHandle == NULL) {
 	Rect r = {0, 0, 1, 1};
-	WindowRef frontNonFloating;
 
 	windowRef = GetWindowFromPort(destPort);
 	CreateScrollBarControl(windowRef, &r, MIN_SCROLLBAR_VALUE +
@@ -283,13 +282,7 @@ TkpDisplayScrollbar(
 		MIN_SCROLLBAR_VALUE, true, NULL, &(macScrollPtr->sbHandle));
 	SetControlReference(macScrollPtr->sbHandle, (SInt32) scrollPtr);
 
-	/*
-	 * If we are foremost then make us active.
-	 */
-
-	frontNonFloating = ActiveNonFloatingWindow();
-
-	if ((windowRef == FrontWindow()) || TkpIsWindowFloating(windowRef)) {
+	if (IsWindowActive(windowRef)) {
 	    macScrollPtr->macFlags |= ACTIVE;
 	}
     }

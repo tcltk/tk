@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.39 2007/06/04 09:28:45 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.40 2007/06/06 09:56:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -808,17 +808,9 @@ static int WmSetAttribute(
 		err = ChkErr(FSPathMakeRef, (const unsigned char*) path, &ref,
 			&d);
 		if (err == noErr) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-		    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-			    && HIWindowSetProxyFSRef != NULL
-#endif
-		    ) {
+		    TK_IF_MAC_OS_X_API (4, HIWindowSetProxyFSRef,
 			err = ChkErr(HIWindowSetProxyFSRef, macWindow, &ref);
-		    } else
-#endif
-		    {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
+		    ) TK_ELSE_MAC_OS_X (4,
 			AliasHandle alias;
 
 			err = ChkErr(FSNewAlias, NULL, &ref, &alias);
@@ -827,8 +819,7 @@ static int WmSetAttribute(
 				    alias);
 			    DisposeHandle((Handle) alias);
 			}
-#endif
-		    }
+		    ) TK_ENDIF_MAC_OS_X
 		}
 	    } else {
 		int len;
@@ -875,12 +866,7 @@ static int WmSetAttribute(
 		if (boolean) {
 		    wmPtr->flags |= WM_TRANSPARENT;
 		    wmPtr->attributes |= kWindowNoShadowAttribute;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-		    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-			    && HIWindowChangeFeatures != NULL
-#endif
-		    ) {
+		    TK_IF_MAC_OS_X_API (3, HIWindowChangeFeatures,
 			UInt32 features;
 
 			ChkErr(GetWindowFeatures, macWindow, &features);
@@ -888,8 +874,7 @@ static int WmSetAttribute(
 			    ChkErr(HIWindowChangeFeatures, macWindow, 0,
 				    kWindowIsOpaque);
 			}
-		    }
-#endif
+		    ) TK_ENDIF_MAC_OS_X
 		} else {
 		    wmPtr->flags &= ~WM_TRANSPARENT;
 		    wmPtr->attributes &= ~kWindowNoShadowAttribute;
@@ -950,17 +935,9 @@ static Tcl_Obj *WmGetAttribute(
 	    UInt8 path[PATH_MAX+1];
 	    OSStatus err;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && HIWindowSetProxyFSRef != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API (4, HIWindowSetProxyFSRef,
 		err = ChkErr(HIWindowGetProxyFSRef, macWindow, &ref);
-	    } else
-#endif
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-	    {
+	    ) TK_ELSE_MAC_OS_X (4,
 		Boolean wasChanged;
 		AliasHandle alias;
 
@@ -969,8 +946,7 @@ static Tcl_Obj *WmGetAttribute(
 		    err = ChkErr(FSResolveAlias, NULL, alias, &ref,
 			    &wasChanged);
 		}
-	    }
-#endif
+	    ) TK_ENDIF_MAC_OS_X
 	    if (err == noErr) {
 		err = ChkErr(FSRefMakePath, &ref, path, PATH_MAX);
 	    }
@@ -5790,8 +5766,7 @@ TkWmStackorderToplevel(parentPtr)
 	goto done;
     }
 
-    frontWindow = (WindowRef) FrontWindow();
-
+    frontWindow = GetFrontWindowOfClass(kAllWindowClasses, false);
     if (frontWindow == NULL) {
 	ckfree((char *) windows);
 	windows = NULL;
@@ -5800,11 +5775,11 @@ TkWmStackorderToplevel(parentPtr)
 	*window_ptr-- = NULL;
 	    while (frontWindow != NULL) {
 		    hPtr = Tcl_FindHashEntry(&table, (char *) frontWindow);
-	    if (hPtr != NULL) {
-		childWinPtr = (TkWindow *) Tcl_GetHashValue(hPtr);
-		*window_ptr-- = childWinPtr;
-	    }
-	    frontWindow = GetNextWindow(frontWindow);
+		if (hPtr != NULL) {
+		    childWinPtr = (TkWindow *) Tcl_GetHashValue(hPtr);
+		    *window_ptr-- = childWinPtr;
+		}
+		frontWindow = GetNextWindow(frontWindow);
 	    }
 	if (window_ptr != (windows-1))
 	    Tcl_Panic("num matched toplevel windows does not equal num "
@@ -5865,16 +5840,12 @@ ApplyWindowClassAttributeChanges(
 	    macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(
 		    winPtr->window));
 	}
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-	if (wmPtr->macClass != oldClass
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		&& HIWindowChangeClass != NULL
-#endif
-	) {
-	    ChkErr(HIWindowChangeClass, macWindow, wmPtr->macClass);
+	if (wmPtr->macClass != oldClass) {
+	    TK_IF_MAC_OS_X_API (4, HIWindowChangeClass,
+		ChkErr(HIWindowChangeClass, macWindow, wmPtr->macClass);
+	    ) TK_ENDIF_MAC_OS_X
 	    ChkErr(GetWindowClass, macWindow, &(wmPtr->macClass));
 	}
-#endif
 	if (newAttributes != oldAttributes) {
 	    newAttributes &= GetAvailableWindowAttributes(wmPtr->macClass);
 	    ChkErr(ChangeWindowAttributes, macWindow,
@@ -6096,20 +6067,12 @@ TkMacOSXEnterExitFullscreen(
 	static SystemUIOptions fullscreenOptions = 0;
 
 	if (!fullscreenMode) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-	    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		    && &kHIToolboxVersionNumber != NULL
-		    && kHIToolboxVersionNumber >= kHIToolboxVersionNumber10_3
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_HI_TOOLBOX (3,
 		fullscreenMode = kUIModeAllSuppressed;
-	    } else
-#endif
-	    {
+	    ) TK_ELSE_MAC_OS_X (3,
 		fullscreenMode = kUIModeAllHidden;
 		fullscreenOptions = kUIOptionAutoShowMenuBar;
-	    }
+	    ) TK_ENDIF_MAC_OS_X
 	}
 	if (mode != fullscreenMode) {
 	    ChkErr(SetSystemUIMode, fullscreenMode, fullscreenOptions);
