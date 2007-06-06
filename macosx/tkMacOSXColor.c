@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.9 2007/05/31 13:38:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.10 2007/06/06 09:55:52 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -382,50 +382,34 @@ TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
 
     if (GetThemeFromPixelCode((pixel >> 24) & 0xff, &brush, &textColor,
 	    &background)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
 	if (brush) {
-	    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && HIThemeSetFill != NULL && HIThemeSetStroke != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API (4, HIThemeSetFill,
 		err = ChkErr(HIThemeSetFill, brush, NULL, context,
 			kHIThemeOrientationNormal);
-		if (err == noErr) {
+		TK_IF_MAC_OS_X_API_COND (4, err == noErr, HIThemeSetFill,
 		    err = ChkErr(HIThemeSetStroke, brush, NULL, context,
 			    kHIThemeOrientationNormal);
-		}
-	    }
+		) TK_ENDIF_MAC_OS_X
+	    ) TK_ENDIF_MAC_OS_X
 	} else if (textColor) {
-	    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && HIThemeSetTextFill != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API (4, HIThemeSetTextFill,
 		err = ChkErr(HIThemeSetTextFill, textColor, NULL, context,
 			kHIThemeOrientationNormal);
-	    }
-	} else
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= 1040 */
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-	if (background) {
-	    if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		    && CGContextGetClipBoundingBox != NULL
-		    && HIThemeApplyBackground != NULL
-		    && &kHIToolboxVersionNumber != NULL /* c.f. QA1377 */
-		    && kHIToolboxVersionNumber >= kHIToolboxVersionNumber10_3
-#endif
-	    ) {
+	    ) TK_ENDIF_MAC_OS_X
+	} else if (background) {
+	    TK_IF_MAC_OS_X_API (3, CGContextGetClipBoundingBox,
 		CGRect rect = CGContextGetClipBoundingBox(context);
 		HIThemeBackgroundDrawInfo info = { 0, kThemeStateActive,
 			background };
 
-		err = ChkErr(HIThemeApplyBackground, &rect, &info, context,
-			kHIThemeOrientationNormal);
-	    }
+		TK_IF_MAC_OS_X_API (3, HIThemeApplyBackground,
+		    TK_IF_MAC_OS_X_HI_TOOLBOX (3, /* c.f. QA1377 */
+			err = ChkErr(HIThemeApplyBackground, &rect, &info,
+				context, kHIThemeOrientationNormal);
+		    ) TK_ENDIF_MAC_OS_X
+		) TK_ENDIF_MAC_OS_X
+	    ) TK_ENDIF_MAC_OS_X
 	}
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= 1030 */
 	if (err == noErr) {
 	    return;
 	}
@@ -458,17 +442,9 @@ TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
 		    Tcl_Panic("TkMacOSXSetColorInContext(): "
 			"pattern initialization failed !");
 		}
-		bitmapInfo =
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-			(1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-			&& &kHIToolboxVersionNumber != NULL
-			&& kHIToolboxVersionNumber >=
-				kHIToolboxVersionNumber10_4
-#endif
-			) ? kCGBitmapByteOrder32Host :
-#endif
-			0;
+		TK_IF_MAC_OS_X_HI_TOOLBOX (4,
+		    bitmapInfo = kCGBitmapByteOrder32Host;
+		) TK_ENDIF_MAC_OS_X
 	    }
 	    portChanged = QDSwapPort(patGWorld, &savePort);
 	    TkMacOSXSetColorInPort(pixel, 1, pixpat);

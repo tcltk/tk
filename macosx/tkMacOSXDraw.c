@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.24 2007/06/03 13:44:39 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.25 2007/06/06 09:55:52 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -39,7 +39,7 @@
 RgnHandle tkMacOSXtmpRgn1 = NULL;
 RgnHandle tkMacOSXtmpRgn2 = NULL;
 
-static PixPatHandle gPenPat = NULL;
+static PixPatHandle penPat = NULL;
 
 static int useCGDrawing = 1;
 static int tkMacOSXCGAntiAliasLimit = 0;
@@ -52,6 +52,7 @@ static int useThemedFrame = 0;
  * Prototypes for functions used only in this file.
  */
 static unsigned char InvertByte(unsigned char data);
+static void NoQDClip(CGrafPtr port);
 
 
 /*
@@ -205,13 +206,10 @@ XCopyArea(
     if (tkPictureIsOpen) {
 	/*
 	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the drawable clipping is incorrect, so clip to the whole window.
+	 * the drawable clipping is incorrect, so don't clip.
 	 */
 
-	Rect clpRect;
-
-	GetPortBounds(dstPort, &clpRect);
-	ClipRect(&clpRect);
+	NoQDClip(dstPort);
     }
     if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
 	    == TKP_CLIP_REGION) {
@@ -235,9 +233,9 @@ XCopyArea(
     srcBit = GetPortBitMapForCopyBits(srcPort);
     dstBit = GetPortBitMapForCopyBits(dstPort);
     CopyBits(srcBit, dstBit, srcPtr, dstPtr, srcCopy, NULL);
+    SetClip(tkMacOSXtmpRgn2);
     RGBForeColor(&origForeColor);
     RGBBackColor(&origBackColor);
-    SetClip(tkMacOSXtmpRgn2);
     SetEmptyRgn(tkMacOSXtmpRgn2);
     if (portChanged) {
 	QDSwapPort(savePort, NULL);
@@ -300,13 +298,10 @@ XCopyPlane(
     if (tkPictureIsOpen) {
 	/*
 	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the drawable clipping is incorrect, so clip to the whole window.
+	 * the drawable clipping is incorrect, so don't clip.
 	 */
 
-	Rect clpRect;
-
-	GetPortBounds(dstPort, &clpRect);
-	ClipRect(&clpRect);
+	NoQDClip(dstPort);
 	dstPtr = &srcRect;
     } else {
 	dstPtr = &dstRect;
@@ -414,13 +409,10 @@ TkPutImage(
     if (tkPictureIsOpen) {
 	/*
 	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the drawable clipping is incorrect, so clip to the whole window.
+	 * the drawable clipping is incorrect, so don't clip.
 	 */
 
-	Rect clpRect;
-
-	GetPortBounds(destPort, &clpRect);
-	ClipRect(&clpRect);
+	NoQDClip(destPort);
 	destPtr = srcPtr;
     } else {
 	destPtr = &destRect;
@@ -1009,17 +1001,10 @@ XDrawArc(
 		macWin->xOff + x + o,
 		macWin->yOff + y + o,
 		width, height);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	if (angle1 == 0 && angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		&& CGContextStrokeEllipseInRect != NULL
-#endif
-	) {
+	TK_IF_MAC_OS_X_API_COND (4, angle1 == 0 && angle2 == 23040,
+		CGContextStrokeEllipseInRect,
 	    CGContextStrokeEllipseInRect(dc.context, rect);
-	} else
-#endif
-	{
+	) TK_ELSE_MAC_OS_X (4,
 	    CGMutablePathRef p = CGPathCreateMutable();
 	    CGAffineTransform t = CGAffineTransformIdentity;
 	    CGPoint c = CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
@@ -1034,7 +1019,7 @@ XDrawArc(
 	    CGContextAddPath(dc.context, p);
 	    CGPathRelease(p);
 	    CGContextStrokePath(dc.context);
-	}
+	) TK_ENDIF_MAC_OS_X
     } else {
 	Rect theRect;
 	short start, extent;
@@ -1104,16 +1089,10 @@ XDrawArcs(
 		    macWin->yOff + arcPtr->y + o,
 		    arcPtr->width, arcPtr->height);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	    if (arcPtr->angle1 == 0 && arcPtr->angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && CGContextStrokeEllipseInRect != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API_COND (4, arcPtr->angle1 == 0 &&
+		    arcPtr->angle2 == 23040, CGContextStrokeEllipseInRect,
 		CGContextStrokeEllipseInRect(dc.context, rect);
-	    } else
-#endif
-	    {
+	    ) TK_ELSE_MAC_OS_X (4,
 		CGMutablePathRef p = CGPathCreateMutable();
 		CGAffineTransform t = CGAffineTransformIdentity;
 		CGPoint c = CGPointMake(CGRectGetMidX(rect),
@@ -1132,7 +1111,7 @@ XDrawArcs(
 		CGContextAddPath(dc.context, p);
 		CGPathRelease(p);
 		CGContextStrokePath(dc.context);
-	    }
+	    ) TK_ENDIF_MAC_OS_X
 	}
     } else {
 	Rect theRect;
@@ -1202,16 +1181,10 @@ XFillArc(
 		macWin->yOff + y + o,
 		width - u, height - u);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	if (angle1 == 0 && angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		&& CGContextFillEllipseInRect != NULL
-#endif
-	) {
+	TK_IF_MAC_OS_X_API_COND (4, angle1 == 0 && angle2 == 23040,
+		CGContextFillEllipseInRect,
 	    CGContextFillEllipseInRect(dc.context, rect);
-	} else
-#endif
-	{
+	) TK_ELSE_MAC_OS_X (4,
 	    CGMutablePathRef p = CGPathCreateMutable();
 	    CGAffineTransform t = CGAffineTransformIdentity;
 	    CGPoint c = CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
@@ -1230,7 +1203,7 @@ XFillArc(
 	    CGContextAddPath(dc.context, p);
 	    CGPathRelease(p);
 	    CGContextFillPath(dc.context);
-	}
+	) TK_ENDIF_MAC_OS_X
     } else {
 	Rect theRect;
 	short start, extent;
@@ -1326,17 +1299,10 @@ XFillArcs(
 		    macWin->xOff + arcPtr->x + o,
 		    macWin->yOff + arcPtr->y + o,
 		    arcPtr->width - u, arcPtr->height - u);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	    if (arcPtr->angle1 == 0 && arcPtr->angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && CGContextFillEllipseInRect != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API_COND (4, arcPtr->angle1 == 0 &&
+		    arcPtr->angle2 == 23040, CGContextFillEllipseInRect,
 		CGContextFillEllipseInRect(dc.context, rect);
-	    } else
-#endif
-	    {
+	    ) TK_ELSE_MAC_OS_X (4,
 		CGMutablePathRef p = CGPathCreateMutable();
 		CGAffineTransform t = CGAffineTransformIdentity;
 		CGPoint c = CGPointMake(CGRectGetMidX(rect),
@@ -1359,7 +1325,7 @@ XFillArcs(
 		CGContextAddPath(dc.context, p);
 		CGPathRelease(p);
 		CGContextFillPath(dc.context);
-	    }
+	    ) TK_ENDIF_MAC_OS_X
 	}
     } else {
 	Rect theRect;
@@ -1477,11 +1443,11 @@ TkScrollWindow(
      * destination rects disjoint and non-aligned.
      */
 
-    SetRect(&srcRect, (short) (destDraw->xOff + x),
+    SetRect(&scrollRect, (short) (destDraw->xOff + x),
 	    (short) (destDraw->yOff + y),
 	    (short) (destDraw->xOff + x + width),
 	    (short) (destDraw->yOff + y + height));
-    scrollRect = srcRect;
+    srcRect = scrollRect;
     if (dx < 0) {
 	scrollRect.left += dx;
     } else {
@@ -1551,11 +1517,11 @@ TkMacOSXSetUpGraphicsPort(
 {
     PenNormal();
     if (gc) {
-	if (gPenPat == NULL) {
-	    gPenPat = NewPixPat();
+	if (penPat == NULL) {
+	    penPat = NewPixPat();
 	}
-	TkMacOSXSetColorInPort(gc->foreground, 1, gPenPat);
-	PenPixPat(gPenPat);
+	TkMacOSXSetColorInPort(gc->foreground, 1, penPat);
+	PenPixPat(penPat);
 	if(gc->function == GXxor) {
 	    PenMode(patXor);
 	}
@@ -1650,20 +1616,16 @@ TkMacOSXSetupDrawingContext(
 	}
     } else if (context) {
 	TkMacOSXCheckTmpRgnEmpty(1);
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-	if (!port
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		&& CGContextGetClipBoundingBox != NULL
-#endif
-	) {
-	    CGRect r = CGContextGetClipBoundingBox(context);
+	if (!port) {
+	    TK_IF_MAC_OS_X_API (3, CGContextGetClipBoundingBox,
+		CGRect r = CGContextGetClipBoundingBox(context);
 
-	    SetRect(&portBounds, r.origin.x + macDraw->xOff,
-		    r.origin.y + macDraw->yOff,
-		    r.origin.x + r.size.width + macDraw->xOff,
-		    r.origin.y + r.size.height + macDraw->yOff);
+		SetRect(&portBounds, r.origin.x + macDraw->xOff,
+			r.origin.y + macDraw->yOff,
+			r.origin.x + r.size.width + macDraw->xOff,
+			r.origin.y + r.size.height + macDraw->yOff);
+	    ) TK_ENDIF_MAC_OS_X
 	}
-#endif
 	RectRgn(tkMacOSXtmpRgn1, &portBounds);
 	if (port) {
 	    TkMacOSXSetUpClippingRgn(d);
@@ -1756,12 +1718,12 @@ TkMacOSXSetupDrawingContext(
     } else {
 	ChkErr(GetThemeDrawingState, &(dc->saveState));
 	if (gc) {
-	    PixPatHandle savePat = gPenPat;
+	    PixPatHandle savePat = penPat;
 
-	    gPenPat = NULL;
+	    penPat = NULL;
 	    TkMacOSXSetUpGraphicsPort(gc, port);
-	    dc->penPat = gPenPat;
-	    gPenPat = savePat;
+	    dc->penPat = penPat;
+	    penPat = savePat;
 	    if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
 			== TKP_CLIP_REGION) {
 		RgnHandle gcClipRgn = (RgnHandle)
@@ -1920,6 +1882,35 @@ TkpClipDrawableToRect(
 	    macDraw->flags |= TK_CLIPPED_DRAW;
 	}
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * NoQDClip --
+ *
+ *	Helper function to setup a QD port to not clip anything.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+NoQDClip(
+    CGrafPtr port)
+{
+    static RgnHandle noClipRgn = NULL;
+    
+    if (!noClipRgn) {
+	noClipRgn = NewRgn();
+	SetRectRgn(noClipRgn, SHRT_MIN, SHRT_MIN, SHRT_MAX, SHRT_MAX);
+    }
+    SetPortClipRegion(port, noClipRgn);
 }
 
 /*
