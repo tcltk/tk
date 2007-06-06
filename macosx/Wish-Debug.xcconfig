@@ -9,7 +9,7 @@
 // See the file "license.terms" for information on usage and redistribution
 // of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// RCS: @(#) $Id: Wish-Debug.xcconfig,v 1.2 2007/04/23 21:24:32 das Exp $
+// RCS: @(#) $Id: Wish-Debug.xcconfig,v 1.3 2007/06/06 21:23:37 das Exp $
 //
 
 #include "Wish-Common.xcconfig"
@@ -17,6 +17,6 @@
 DEBUG_INFORMATION_FORMAT = dwarf
 DEPLOYMENT_POSTPROCESSING = NO
 GCC_OPTIMIZATION_LEVEL = 0
-GCC_PREPROCESSOR_DEFINITIONS = DEBUG_ASSERT_PRODUCTION_CODE=0 $(TCL_DEFS) $(TK_DEFS) $(GCC_PREPROCESSOR_DEFINITIONS)
+GCC_PREPROCESSOR_DEFINITIONS = DEBUGLEVEL=4 $(TCL_DEFS) $(TK_DEFS) $(GCC_PREPROCESSOR_DEFINITIONS)
 CONFIGURE_ARGS = --enable-symbols $(TCL_CONFIGURE_ARGS) $(CONFIGURE_ARGS)
 MAKE_TARGET = develop
