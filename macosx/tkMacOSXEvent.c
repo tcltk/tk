@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.12 2007/05/31 13:42:12 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.13 2007/06/06 09:56:54 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -41,22 +41,15 @@ TkMacOSXFlushWindows(void)
     WindowRef wRef = GetWindowList();
 
     while (wRef) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-	if (1
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		&& HIWindowFlush != NULL
-#endif
-	) {
+	TK_IF_MAC_OS_X_API (3, HIWindowFlush,
 	    ChkErr(HIWindowFlush, wRef);
-	} else
-#endif
-	{
+	) TK_ELSE_MAC_OS_X (3,
 	    CGrafPtr portPtr = GetWindowPort(wRef);
 
 	    if (QDIsPortBuffered(portPtr)) {
 		QDFlushPortBuffer(portPtr, NULL);
 	    }
-	}
+	) TK_ENDIF_MAC_OS_X
 	wRef = GetNextWindow(wRef);
     }
 }
