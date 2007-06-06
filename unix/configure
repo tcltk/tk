@@ -6025,13 +6025,13 @@ if test "${tcl_cv_lib_corefoundation+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-		    hold_libs=$LIBS; hold_cflags=$CFLAGS
-		    if test "$fat_32_64" = yes; then
+		    hold_libs=$LIBS
+		    if test "$fat_32_64" = yes; then for v in CFLAGS CPPFLAGS LDFLAGS; do
 			# On Tiger there is no 64-bit CF, so remove 64-bit archs
-			# from CFLAGS while testing for presence of CF.
+			# from CFLAGS et al. while testing for presence of CF.
 			# 64-bit CF is disabled in tclUnixPort.h if necessary.
-			CFLAGS="`echo "$CFLAGS " | sed -e 's/-arch ppc64 / /g' -e 's/-arch x86_64 / /g'`"
-		    fi
+			eval 'hold_'$v'="$'$v'";'$v'="`echo "$'$v' "|sed -e "s/-arch ppc64 / /g" -e "s/-arch x86_64 / /g"`"'
+		    done; fi
 		    LIBS="$LIBS -framework CoreFoundation"
 		    cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -6079,7 +6079,9 @@ tcl_cv_lib_corefoundation=no
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-		    LIBS=$hold_libs; CFLAGS=$hold_cflags
+		    if test "$fat_32_64" = yes; then for v in CFLAGS CPPFLAGS LDFLAGS; do
+			eval $v'="$hold_'$v'"'
+		    done; fi; LIBS=$hold_libs
 fi
 echo "$as_me:$LINENO: result: $tcl_cv_lib_corefoundation" >&5
 echo "${ECHO_T}$tcl_cv_lib_corefoundation" >&6
@@ -6100,8 +6102,9 @@ if test "${tcl_cv_lib_corefoundation_64+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-			hold_cflags=$CFLAGS
-			CFLAGS="`echo "$CFLAGS " | sed -e 's/-arch ppc / /g' -e 's/-arch i386 / /g'`"
+			for v in CFLAGS CPPFLAGS LDFLAGS; do
+			    eval 'hold_'$v'="$'$v'";'$v'="`echo "$'$v' "|sed -e "s/-arch ppc / /g" -e "s/-arch i386 / /g"`"'
+			done
 			cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -6148,7 +6151,9 @@ tcl_cv_lib_corefoundation_64=no
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-			CFLAGS=$hold_cflags
+			for v in CFLAGS CPPFLAGS LDFLAGS; do
+			    eval $v'="$hold_'$v'"'
+			done
 fi
 echo "$as_me:$LINENO: result: $tcl_cv_lib_corefoundation_64" >&5
 echo "${ECHO_T}$tcl_cv_lib_corefoundation_64" >&6
@@ -8587,10 +8592,10 @@ echo "$as_me: WARNING: Aqua requires Mac OS X 10.2 or later" >&2;}
     fi
     echo "$as_me:$LINENO: result: $tk_aqua" >&5
 echo "${ECHO_T}$tk_aqua" >&6
-    # remove 64-bit arch flags from CFLAGS for combined 32-bit and 64-bit fat
+    # remove 64-bit arch flags from CFLAGS et al. for combined 32 & 64 bit fat
     # builds, as neither TkAqua nor TkX11 can be built for 64-bit at present.
-    test "$fat_32_64" = yes && \
-	CFLAGS="`echo "$CFLAGS " | sed -e 's/-arch ppc64 / /g' -e 's/-arch x86_64 / /g'`"
+    test "$fat_32_64" = yes && for v in CFLAGS CPPFLAGS LDFLAGS; do
+	eval $v'="`echo "$'$v' "|sed -e "s/-arch ppc64 / /g" -e "s/-arch x86_64 / /g"`"'; done
     if test $tk_aqua = no; then
 	# check if weak linking whole libraries is possible.
 	echo "$as_me:$LINENO: checking if ld accepts -weak-l flag" >&5
@@ -8778,7 +8783,7 @@ ac_x_header_dirs='
 /usr/openwin/share/include'
 
 if test "$ac_x_includes" = no; then
-  # Guess where to find include files, by looking for Xlib.h.
+  # Guess where to find include files, by looking for Intrinsic.h.
   # First, try using that file with no special directory specified.
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -8786,7 +8791,7 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
 _ACEOF
 if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
@@ -8813,7 +8818,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
   for ac_dir in $ac_x_header_dirs; do
-  if test -r "$ac_dir/X11/Xlib.h"; then
+  if test -r "$ac_dir/X11/Intrinsic.h"; then
     ac_x_includes=$ac_dir
     break
   fi
@@ -8827,18 +8832,18 @@ if test "$ac_x_libraries" = no; then
   # See if we find them without any special options.
   # Don't add to $LIBS permanently.
   ac_save_LIBS=$LIBS
-  LIBS="-lX11 $LIBS"
+  LIBS="-lXt $LIBS"
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
 int
 main ()
 {
-XrmInitialize ()
+XtMalloc (0)
   ;
   return 0;
 }
@@ -9987,6 +9992,10 @@ echo "${ECHO_T}static library" >&6
 
     TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk '{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}'`"
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_[^_] > $$f && echo $$f)'
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
+    EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
+                        ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in"
+
 fi
 
 if test "$FRAMEWORK_BUILD" = "1" ; then
@@ -9994,8 +10003,6 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
 cat >>confdefs.h <<\_ACEOF
 #define TK_FRAMEWORK 1
 _ACEOF
-
-              ac_config_files="$ac_config_files Tk-Info.plist:../macosx/Tk-Info.plist.in"
 
     # Construct a fake local framework structure to make linking with
     # '-framework Tk' and running of tktest work
@@ -10064,9 +10071,6 @@ fi
 
 # Support for building the Aqua resource files
 if test $tk_aqua = yes; then
-              ac_config_files="$ac_config_files Wish-Info.plist:../macosx/Wish-Info.plist.in"
-
-    EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
     LIB_RSRC_FILE='${TK_RSRC_FILE}'
     APP_RSRC_FILE='${WISH_RSRC_FILE}'
     REZ=/Developer/Tools/Rez
@@ -10075,7 +10079,7 @@ if test $tk_aqua = yes; then
         EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) $(LIB_INSTALL_DIR)'
 	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd`/\${TK_RSRC_FILE}"
 	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"
-    elif test "$FRAMEWORK_BUILD" = "0"; then
+    else
         TK_SHLIB_LD_EXTRAS="$TK_SHLIB_LD_EXTRAS -sectcreate __TEXT __tk_rsrc \${TK_RSRC_FILE}"
     fi
 fi
