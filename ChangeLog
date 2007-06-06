@@ -1,3 +1,31 @@
+2007-06-06  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXMouseEvent.c (GenerateMouseWheelEvent): enable
+	processing of mousewheel events in background windows.
+
+	* macosx/tkMacOSXScrlbr.c: modernize checks for active/front window.
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXColor.c: factor out verbose #ifdef checks of
+	* macosx/tkMacOSXDraw.c:  MAC_OS_X_VERSION_{MAX_ALLOWED,MIN_REQUIRED}
+	* macosx/tkMacOSXEntry.c: and runtime checks of kHIToolboxVersion into
+	* macosx/tkMacOSXEvent.c: new TK_{IF,ELSE,ENDIF}_MAC_OS_X macros.
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXDraw.c:  factor out clip clearing in QD ports;
+	* macosx/tkMacOSXEntry.c: formatting cleanup.
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add settings for Fix&Continue.
+
+	* unix/configure.in (Darwin): link the Tk and Wish plists into their
+	binaries in all cases; fix 64bit arch removal in fat 32&64bit builds. 
+
+	* unix/tcl.m4 (Darwin): fix CF checks in fat 32&64bit builds. 
+	* unix/configure: autoconf-2.59
+
 2007-06-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/photo.n: Clarified the fact that base64 support for the -data
@@ -51,7 +79,7 @@
 	to native button drawing calls.
 
 	* macosx/tkMacOSXWm.c (TkMacOSXIsWindowZoomed, TkMacOSXZoomToplevel):
-	correct handle gridded windows in max size calculations.
+	correct handling of gridded windows in max size calculations.
 
 	* macosx/tkMacOSXEvent.c (TkMacOSXFlushWindows): use HIWindowFlush API
 	when available.
