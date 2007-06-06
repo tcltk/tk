@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.25 2007/06/06 09:55:52 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.26 2007/06/06 21:23:37 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -20,6 +20,8 @@
 #include "tkInt.h"
 #endif
 
+#define kComponentSignatureString "TkMacOSX"
+#define COMPONENT_SIGNATURE 'Tk  '
 #define TextStyle MacTextStyle
 #include <Carbon/Carbon.h>
 #undef TextStyle
@@ -280,13 +282,26 @@ MODULE_SCOPE int TkMacOSXCompareColors(unsigned long c1, unsigned long c2);
 	    __LINE__, __func__, ##__VA_ARGS__); \
 	} while (0)
 /*
+ * Macro to do debug API failure message output.
+ */
+#if !defined(DEBUGLEVEL) || !DEBUGLEVEL
+#define TkMacOSXDbgOSErr(f, err) do { \
+	    TkMacOSXDbgMsg("%s failed: %ld", #f, err); \
+	} while (0)
+#else
+#define TkMacOSXDbgOSErr(f, err) do { \
+	    DEBUG_ASSERT_MESSAGE(kComponentSignatureString, #f " failed:", \
+	    __func__, 0, strrchr(__FILE__, '/')+1, __LINE__, err); \
+	} while (0)
+#endif
+/*
  * Macro to do very common check for noErr return from given API and output
  * debug message in case of failure.
  */
 #define ChkErr(f, ...) ({ \
 	OSStatus err = f(__VA_ARGS__); \
 	if (err != noErr) { \
-	    TkMacOSXDbgMsg("%s failed: %ld", #f, err); \
+	    TkMacOSXDbgOSErr(f, err); \
 	} \
 	err;})
 /*
@@ -299,6 +314,7 @@ MODULE_SCOPE int TkMacOSXCompareColors(unsigned long c1, unsigned long c2);
 	} while(0)
 #else /* TK_MAC_DEBUG */
 #define TkMacOSXDbgMsg(m, ...)
+#define TkMacOSXDbgOSErr(f, err)
 #define ChkErr(f, ...) ({f(__VA_ARGS__);})
 #define TkMacOSXCheckTmpRgnEmpty(r)
 #endif /* TK_MAC_DEBUG */
