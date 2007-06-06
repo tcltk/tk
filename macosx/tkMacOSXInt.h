@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.17 2007/05/09 12:57:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.18 2007/06/06 09:56:54 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -81,7 +81,69 @@
     #define kHIToolboxVersionNumber10_4 (219)
 #endif
 #ifndef kHIToolboxVersionNumber10_5
-    #define kHIToolboxVersionNumber10_5 (291)
+    #define kHIToolboxVersionNumber10_5 (303)
+#endif
+/* Macros for Mac OS X API availability checking */
+#define TK_IF_MAC_OS_X_API(vers, symbol, ...) \
+	tk_if_mac_os_x_10_##vers(1, symbol, 1, __VA_ARGS__)
+#define TK_IF_MAC_OS_X_API_COND(vers, cond, symbol,...) \
+	tk_if_mac_os_x_10_##vers(cond, symbol, 1, __VA_ARGS__)
+#define TK_IF_MAC_OS_X_HI_TOOLBOX(vers, ...) \
+	tk_if_mac_os_x_10_##vers(1, &kHIToolboxVersionNumber, \
+	kHIToolboxVersionNumber >= kHIToolboxVersionNumber10_##vers, \
+	__VA_ARGS__)
+#define TK_ELSE_MAC_OS_X(vers, ...) \
+	tk_else_mac_os_x_10_##vers(__VA_ARGS__)
+#define TK_ENDIF_MAC_OS_X \
+	}
+/* Private helper macros to implement the API checking above */
+#define tk_if_mac_os_x_yes(cond, symbol, postcond, ...) \
+	if (cond) { __VA_ARGS__
+#define tk_else_mac_os_x_yes(...) \
+	} else {
+#define tk_if_mac_os_x_chk(cond, symbol, postcond, ...) \
+	if ((cond) && (symbol) != NULL && (postcond)) { __VA_ARGS__
+#define tk_else_mac_os_x_chk(...) \
+	} else { __VA_ARGS__
+#define tk_if_mac_os_x_no(cond, symbol, postcond, ...) \
+	if (0) {
+#define tk_else_mac_os_x_no(...) \
+	} else { __VA_ARGS__
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1030
+#define tk_if_mac_os_x_10_3		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_10_3		tk_else_mac_os_x_yes
+#else
+#define tk_if_mac_os_x_10_3		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_10_3		tk_else_mac_os_x_chk
+#endif
+#else
+#define tk_if_mac_os_x_10_3		tk_if_mac_os_x_no
+#define tk_else_mac_os_x_10_3		tk_else_mac_os_x_no
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1040
+#define tk_if_mac_os_x_10_4		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_10_4		tk_else_mac_os_x_yes
+#else
+#define tk_if_mac_os_x_10_4		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_10_4		tk_else_mac_os_x_chk
+#endif
+#else
+#define tk_if_mac_os_x_10_4		tk_if_mac_os_x_no
+#define tk_else_mac_os_x_10_4		tk_else_mac_os_x_no
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_yes
+#else
+#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_chk
+#endif
+#else
+#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
+#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
 #endif
 
 /*
