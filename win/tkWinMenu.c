@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.56 2007/05/05 07:33:08 dkf Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.57 2007/06/09 23:53:05 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -1100,35 +1100,34 @@ TkWinHandleMenuEvent(
 	break;
 
     case WM_MENUCHAR: {
-	unsigned char menuChar = (unsigned char) LOWORD(*pwParam);
-
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		(char *) *plParam);
 	if (hashEntryPtr != NULL) {
 	    int i, len, underline;
 	    Tcl_Obj *labelPtr;
+	    Tcl_UniChar *wlabel, menuChar;
 
 	    *plResult = 0;
 	    menuPtr = (TkMenu *) Tcl_GetHashValue(hashEntryPtr);
+	    /*
+	     * Assume we have something directly convertable to Tcl_UniChar.
+	     * True at least for wide systems.
+	     */
+	    menuChar = Tcl_UniCharToUpper((Tcl_UniChar) LOWORD(*pwParam));
+
 	    for (i = 0; i < menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
 		if ((underline >= 0) && (labelPtr != NULL)) {
 		    /*
-		     * Do the unicode call just to prevent overruns.
+		     * Ensure we don't exceed the label length, then check
 		     */
-
-		    Tcl_GetUnicodeFromObj(labelPtr, &len);
-		    if (underline < len) {
-			char *label = Tcl_GetString(labelPtr);
-			char underlined = *Tcl_UtfAtIndex(label, underline);
-
-			if (CharUpper((LPTSTR) menuChar) ==
-				CharUpper((LPTSTR) underlined)) {
-			    *plResult = (2 << 16) | i;
-			    returnResult = 1;
-			    break;
-			}
+		    wlabel = Tcl_GetUnicodeFromObj(labelPtr, &len);
+		    if ((underline < len) && (menuChar ==
+				Tcl_UniCharToUpper(wlabel[underline]))) {
+			*plResult = (2 << 16) | i;
+			returnResult = 1;
+			break;
 		    }
 		}
 	    }
