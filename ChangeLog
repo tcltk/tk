@@ -1,3 +1,9 @@
+2007-06-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinMenu.c (TkWinHandleMenuEvent): improve handling to
+	allow for unicode char menu indices and not use CharUpper on Tcl
+	utf strings. [Bug #1734223]
+
 2007-06-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXColor.c: fix issues with TK_{IF,ELSE,ENDIF} macros;
