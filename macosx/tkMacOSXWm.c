@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.40 2007/06/06 09:56:54 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.41 2007/06/09 17:10:22 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -819,7 +819,7 @@ static int WmSetAttribute(
 				    alias);
 			    DisposeHandle((Handle) alias);
 			}
-		    ) TK_ENDIF_MAC_OS_X
+		    ) TK_ENDIF
 		}
 	    } else {
 		int len;
@@ -874,7 +874,7 @@ static int WmSetAttribute(
 			    ChkErr(HIWindowChangeFeatures, macWindow, 0,
 				    kWindowIsOpaque);
 			}
-		    ) TK_ENDIF_MAC_OS_X
+		    ) TK_ENDIF
 		} else {
 		    wmPtr->flags &= ~WM_TRANSPARENT;
 		    wmPtr->attributes &= ~kWindowNoShadowAttribute;
@@ -946,7 +946,7 @@ static Tcl_Obj *WmGetAttribute(
 		    err = ChkErr(FSResolveAlias, NULL, alias, &ref,
 			    &wasChanged);
 		}
-	    ) TK_ENDIF_MAC_OS_X
+	    ) TK_ENDIF
 	    if (err == noErr) {
 		err = ChkErr(FSRefMakePath, &ref, path, PATH_MAX);
 	    }
@@ -5843,7 +5843,7 @@ ApplyWindowClassAttributeChanges(
 	if (wmPtr->macClass != oldClass) {
 	    TK_IF_MAC_OS_X_API (4, HIWindowChangeClass,
 		ChkErr(HIWindowChangeClass, macWindow, wmPtr->macClass);
-	    ) TK_ENDIF_MAC_OS_X
+	    ) TK_ENDIF
 	    ChkErr(GetWindowClass, macWindow, &(wmPtr->macClass));
 	}
 	if (newAttributes != oldAttributes) {
@@ -6067,12 +6067,12 @@ TkMacOSXEnterExitFullscreen(
 	static SystemUIOptions fullscreenOptions = 0;
 
 	if (!fullscreenMode) {
-	    TK_IF_MAC_OS_X_HI_TOOLBOX (3,
+	    TK_IF_HI_TOOLBOX (3,
 		fullscreenMode = kUIModeAllSuppressed;
-	    ) TK_ELSE_MAC_OS_X (3,
+	    ) TK_ELSE_HI_TOOLBOX (3,
 		fullscreenMode = kUIModeAllHidden;
 		fullscreenOptions = kUIOptionAutoShowMenuBar;
-	    ) TK_ENDIF_MAC_OS_X
+	    ) TK_ENDIF
 	}
 	if (mode != fullscreenMode) {
 	    ChkErr(SetSystemUIMode, fullscreenMode, fullscreenOptions);

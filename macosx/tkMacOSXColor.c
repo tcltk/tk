@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.7 2007/06/06 09:56:54 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2.2.8 2007/06/09 17:10:20 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -386,16 +386,16 @@ TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
 	    TK_IF_MAC_OS_X_API (4, HIThemeSetFill,
 		err = ChkErr(HIThemeSetFill, brush, NULL, context,
 			kHIThemeOrientationNormal);
-		TK_IF_MAC_OS_X_API_COND (4, err == noErr, HIThemeSetFill,
+		TK_IF_MAC_OS_X_API_COND (4, HIThemeSetFill, err == noErr,
 		    err = ChkErr(HIThemeSetStroke, brush, NULL, context,
 			    kHIThemeOrientationNormal);
-		) TK_ENDIF_MAC_OS_X
-	    ) TK_ENDIF_MAC_OS_X
+		) TK_ENDIF
+	    ) TK_ENDIF
 	} else if (textColor) {
 	    TK_IF_MAC_OS_X_API (4, HIThemeSetTextFill,
 		err = ChkErr(HIThemeSetTextFill, textColor, NULL, context,
 			kHIThemeOrientationNormal);
-	    ) TK_ENDIF_MAC_OS_X
+	    ) TK_ENDIF
 	} else if (background) {
 	    TK_IF_MAC_OS_X_API (3, CGContextGetClipBoundingBox,
 		CGRect rect = CGContextGetClipBoundingBox(context);
@@ -403,12 +403,12 @@ TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
 			background };
 
 		TK_IF_MAC_OS_X_API (3, HIThemeApplyBackground,
-		    TK_IF_MAC_OS_X_HI_TOOLBOX (3, /* c.f. QA1377 */
+		    TK_IF_HI_TOOLBOX (3, /* c.f. QA1377 */
 			err = ChkErr(HIThemeApplyBackground, &rect, &info,
 				context, kHIThemeOrientationNormal);
-		    ) TK_ENDIF_MAC_OS_X
-		) TK_ENDIF_MAC_OS_X
-	    ) TK_ENDIF_MAC_OS_X
+		    ) TK_ENDIF
+		) TK_ENDIF
+	    ) TK_ENDIF
 	}
 	if (err == noErr) {
 	    return;
@@ -442,9 +442,9 @@ TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
 		    Tcl_Panic("TkMacOSXSetColorInContext(): "
 			"pattern initialization failed !");
 		}
-		TK_IF_MAC_OS_X_HI_TOOLBOX (4,
+		TK_IF_HI_TOOLBOX (4,
 		    bitmapInfo = kCGBitmapByteOrder32Host;
-		) TK_ENDIF_MAC_OS_X
+		) TK_ENDIF
 	    }
 	    portChanged = QDSwapPort(patGWorld, &savePort);
 	    TkMacOSXSetColorInPort(pixel, 1, pixpat);
