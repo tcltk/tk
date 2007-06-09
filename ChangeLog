@@ -1,3 +1,23 @@
+2007-06-09  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkManager.h, generic/ttk/ttkManager.c, 
+	generic/ttk/ttkNotebook.c, generic/ttk/ttkPanedwindow.c,
+	generic/ttk/ttkFrame.c: Ttk_Manager API overhaul:
+	    + Ttk_Manager no longer responsible for managing slave records
+	    + Ttk_Manager structure now opaque
+	    + Ttk_Slave structure now private
+	    + Pass Ttk_Manager * to Tk_GeomMgr hooks instead of Ttk_Slave *
+
+	* generic/ttk/ttkFrame.c: Simplified -labelwidget management.
+
+	* doc/ttk_panedwindow.n, library/ttk/panedwindow.tcl:
+	Changed documentation of ttk::panedwindow 'identify' command
+	to match implementation.
+
+	* generic/ttk/ttkNotebook.c, tests/ttk/notebook.test:
+	BUGFIX: ttk::noteboook 'insert' command didn't correctly
+	maintain current tab.
+
 2007-06-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXColor.c: fix issues with TK_{IF,ELSE,ENDIF} macros;

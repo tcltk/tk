@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.5 2007/01/11 14:49:47 jenglish Exp $
+/* $Id: ttkFrame.c,v 1.6 2007/06/09 21:45:44 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
@@ -234,10 +234,9 @@ typedef struct {
     Tcl_Obj 	*labelAnchorObj;
     Tcl_Obj	*textObj;
     Tcl_Obj 	*underlineObj;
-    Tcl_Obj	*labelWidgetObj;
+    Tk_Window	labelWidget;
 
     Ttk_Manager	*mgr;
-    Tk_Window	labelWidget;	/* Set in configureProc */
     Ttk_Box	labelParcel;	/* Set in layoutProc */
 } LabelframePart;
 
@@ -262,7 +261,7 @@ static Tk_OptionSpec LabelframeOptionSpecs[] =
 	"-1", Tk_Offset(Labelframe,label.underlineObj), -1, 
 	0,0,0 },
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget", NULL,
-	Tk_Offset(Labelframe,label.labelWidgetObj), -1,
+	-1, Tk_Offset(Labelframe,label.labelWidget),
 	TK_OPTION_NULL_OK,0,LABELWIDGET_CHANGED|GEOMETRY_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(FrameOptionSpecs)
@@ -454,47 +453,26 @@ static void LabelframePlaceSlaves(void *recordPtr)
 
 /* Labelframe geometry manager:
  */
-static void LabelAdded(Ttk_Manager *mgr, int slaveIndex) { /* no-op */ }
-static void LabelRemoved(Ttk_Manager *mgr, int slaveIndex) { /* no-op */ }
-static int LabelConfigured(
-    Tcl_Interp *interp, Ttk_Manager *mgr, Ttk_Slave *slave, unsigned mask)
-    { return TCL_OK; }
 
-/* LabelframeLostSlave --
- * 	Called when the labelWidget slave is involuntarily lost;
- * 	unset the -labelwidget option.
- * Notes:
- * 	Do this here instead of in the SlaveRemoved hook, 
- * 	since the latter is also called when the widget voluntarily
- * 	forgets the slave.  The latter happens in the ConfigureProc
- * 	at a time when the widget is in an inconsistent state.
+/* LabelRemoved --
+ * 	Unset the -labelwidget option.
+ *
+ * <<NOTE-LABELREMOVED>>:
+ * 	This routine is also called when the widget voluntarily forgets
+ * 	the slave in LabelframeConfigure.
  */
-static void LabelframeLostSlave(ClientData clientData, Tk_Window slaveWindow)
+static void LabelRemoved(Ttk_Manager *mgr, int slaveIndex)
 {
-    Ttk_Slave *slave = clientData;
-    Labelframe *lframePtr = slave->manager->managerData;
-
-    Tcl_DecrRefCount(lframePtr->label.labelWidgetObj);
-    lframePtr->label.labelWidgetObj = 0;
-    lframePtr->label.labelWidget = 0;
-    Ttk_LostSlaveProc(clientData, slaveWindow);
+    Labelframe *lframe = Ttk_ManagerData(mgr);
+    lframe->label.labelWidget = 0;
 }
-
-static Tk_OptionSpec LabelOptionSpecs[] = {
-    {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0, 0,0}
-};
 
 static Ttk_ManagerSpec LabelframeManagerSpec = 
 {
-    { "labelframe", Ttk_GeometryRequestProc, LabelframeLostSlave },
-    LabelOptionSpecs, 0,
-
+    { "labelframe", Ttk_GeometryRequestProc, Ttk_LostSlaveProc },
     LabelframeSize,
     LabelframePlaceSlaves,
-
-    LabelAdded,
-    LabelRemoved,
-    LabelConfigured
+    LabelRemoved
 };
 
 /* LabelframeInitialize --
@@ -546,22 +524,14 @@ static void RaiseLabelWidget(Labelframe *lframe)
 static int LabelframeConfigure(Tcl_Interp *interp,void *recordPtr,int mask)
 {
     Labelframe *lframePtr = recordPtr;
-    Tk_Window labelWidget = NULL;
+    Tk_Window labelWidget = lframePtr->label.labelWidget;
     Ttk_PositionSpec unused;
 
-    /* Validate -labelwidget option:
+    /* Validate options:
      */
-    if (lframePtr->label.labelWidgetObj) {
-	const char *pathName = Tcl_GetString(lframePtr->label.labelWidgetObj);
-	if (pathName && *pathName) {
-	    labelWidget =
-		Tk_NameToWindow(interp, pathName, lframePtr->core.tkwin);
-	    if (!labelWidget) {
-		return TCL_ERROR;
-	    }
-	    if (!Ttk_Maintainable(interp, labelWidget, lframePtr->core.tkwin)) {
-		return TCL_ERROR;
-	    }
+    if (mask & LABELWIDGET_CHANGED && labelWidget != NULL) {
+	if (!Ttk_Maintainable(interp, labelWidget, lframePtr->core.tkwin)) {
+	    return TCL_ERROR;
 	}
     }
 
@@ -582,12 +552,13 @@ static int LabelframeConfigure(Tcl_Interp *interp,void *recordPtr,int mask)
     if (mask & LABELWIDGET_CHANGED) {
 	if (Ttk_NumberSlaves(lframePtr->label.mgr) == 1) {
 	    Ttk_ForgetSlave(lframePtr->label.mgr, 0);
+	    /* Restore labelWidget field (see <<NOTE-LABELREMOVED>>)
+	     */
+	    lframePtr->label.labelWidget = labelWidget;
 	}
 
-	lframePtr->label.labelWidget = labelWidget;
-
 	if (labelWidget) {
-	    Ttk_AddSlave(interp, lframePtr->label.mgr, labelWidget, 0,  0,0);
+	    Ttk_InsertSlave(lframePtr->label.mgr, 0, labelWidget, NULL);
 	    RaiseLabelWidget(lframePtr);
 	}
     }
