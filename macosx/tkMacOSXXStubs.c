@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.19 2007/06/03 13:44:40 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.20 2007/06/09 17:09:41 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1143,7 +1143,6 @@ Tk_GetUserInactiveTime(Display *dpy)
     timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
 
     if (timeObj) {
-	CFRetain(timeObj);
 	CFTypeID type = CFGetTypeID(timeObj);
 
 	if (type == CFDataGetTypeID()) { /* Jaguar */
@@ -1161,8 +1160,6 @@ Tk_GetUserInactiveTime(Display *dpy)
 	} else {
 	    ret = -1l;
 	}
-
-	CFRelease(timeObj);
     }
     /* Cleanup */
     CFRelease(props);

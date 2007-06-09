@@ -53,7 +53,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.10 2007/06/06 09:55:52 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.11 2007/06/09 17:09:40 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -84,7 +84,7 @@ ComputeIncDecParameters(int height, int *width)
 {
     ThemeButtonKind kind;
 
-    TK_IF_MAC_OS_X_HI_TOOLBOX (3,
+    TK_IF_HI_TOOLBOX (3,
 	if (height < 11 || height > 28) {
 	    *width = 0;
 	    kind = (ThemeButtonKind) 0;
@@ -100,7 +100,7 @@ ComputeIncDecParameters(int height, int *width)
 		kind = kThemeIncDecButtonMini;
 	    }
 	}
-    ) TK_ELSE_MAC_OS_X (3,
+    ) TK_ELSE_HI_TOOLBOX (3,
 	if (height < 21 || height > 28) {
 	    *width = 0;
 	    kind = (ThemeButtonKind) 0;
@@ -108,7 +108,7 @@ ComputeIncDecParameters(int height, int *width)
 	    *width = 13;
 	    kind = kThemeIncDecButton;
 	}
-    ) TK_ENDIF_MAC_OS_X
+    ) TK_ENDIF
 
     return kind;
 }

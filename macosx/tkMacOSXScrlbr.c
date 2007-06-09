@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.23 2007/06/06 09:55:52 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.24 2007/06/09 17:09:40 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -954,7 +954,8 @@ UpdateControlValues(
     if (portRect.bottom == contrlRect.bottom &&
 	    portRect.right == contrlRect.right) {
 	TkMacOSXSetScrollbarGrow((TkWindow *) tkwin, true);
-	if (TkMacOSXResizable(macDraw->toplevel->winPtr)) {
+	if (macDraw->toplevel &&
+		TkMacOSXResizable(macDraw->toplevel->winPtr)) {
 	    int growSize;
 
 	    switch (TkMacOSXWindowClass(macDraw->toplevel->winPtr)) {

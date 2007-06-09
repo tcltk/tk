@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.21 2007/06/03 13:44:40 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.22 2007/06/09 17:09:41 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -688,23 +688,25 @@ void
 TkMacOSXUpdateClipRgn(
     TkWindow *winPtr)
 {
+    MacDrawable *macWin;
+
     if (winPtr == NULL) {
 	return;
     }
-
-    if (winPtr->privatePtr && winPtr->privatePtr->flags & TK_CLIP_INVALID) {
+    macWin = winPtr->privatePtr;
+    if (macWin && macWin->flags & TK_CLIP_INVALID) {
 	TkWindow *win2Ptr;
 
 	if (Tk_IsMapped(winPtr)) {
 	    int x, y;
-	    RgnHandle rgn = winPtr->privatePtr->aboveClipRgn;
+	    RgnHandle rgn = macWin->aboveClipRgn;
 
 	    /*
 	     * Start with a region defined by the window bounds.
 	     */
 
-	    x = winPtr->privatePtr->xOff;
-	    y = winPtr->privatePtr->yOff;
+	    x = macWin->xOff;
+	    y = macWin->yOff;
 	    SetRectRgn(rgn, (short) x, (short) y,
 		(short) (winPtr->changes.width + x),
 		(short) (winPtr->changes.height + y));
@@ -766,8 +768,8 @@ TkMacOSXUpdateClipRgn(
 	     * of the embedded window.
 	     */
 
-	    rgn = winPtr->privatePtr->clipRgn;
-	    CopyRgn(winPtr->privatePtr->aboveClipRgn, rgn);
+	    rgn = macWin->clipRgn;
+	    CopyRgn(macWin->aboveClipRgn, rgn);
 	    win2Ptr = winPtr->childList;
 	    while (win2Ptr) {
 		if (Tk_IsTopLevel(win2Ptr) || !Tk_IsMapped(win2Ptr)) {
@@ -816,17 +818,15 @@ TkMacOSXUpdateClipRgn(
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		}
 	    }
-	    SetEmptyRgn(winPtr->privatePtr->aboveClipRgn);
-	    SetEmptyRgn(winPtr->privatePtr->clipRgn);
+	    SetEmptyRgn(macWin->aboveClipRgn);
+	    SetEmptyRgn(macWin->clipRgn);
 	}
-	winPtr->privatePtr->flags &= ~TK_CLIP_INVALID;
+	macWin->flags &= ~TK_CLIP_INVALID;
 
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-	TkMacOSXDebugFlashRegion(TkMacOSXGetDrawablePort(
-		(Drawable) winPtr->privatePtr),
-		((MacDrawable*) winPtr->privatePtr)->clipRgn);
+	TkMacOSXDebugFlashRegion(TkMacOSXGetDrawablePort((Drawable) macWin),
+		macWin->visRgn);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
-
     }
 }
 
@@ -1051,18 +1051,19 @@ TkMacOSXInvalClipRgns(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *childPtr;
+    MacDrawable *macWin = winPtr->privatePtr;
 
     /*
      * If already marked we can stop because all
      * decendants will also already be marked.
      */
-    if (!winPtr->privatePtr || winPtr->privatePtr->flags & TK_CLIP_INVALID) {
+    if (!macWin || macWin->flags & TK_CLIP_INVALID) {
 	return;
     }
 
-    winPtr->privatePtr->flags |= TK_CLIP_INVALID;
-    SetEmptyRgn(winPtr->privatePtr->aboveClipRgn);
-    SetEmptyRgn(winPtr->privatePtr->clipRgn);
+    macWin->flags |= TK_CLIP_INVALID;
+    SetEmptyRgn(macWin->aboveClipRgn);
+    SetEmptyRgn(macWin->clipRgn);
 
     /*
      * Invalidate clip regions for all children &
