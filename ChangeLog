@@ -1,3 +1,24 @@
+2007-06-09  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXColor.c: fix issues with TK_{IF,ELSE,ENDIF} macros;
+	* macosx/tkMacOSXDraw.c:  implement Jaguar equivalent of unavailable
+	* macosx/tkMacOSXEntry.c: kHIToolboxVersion global; panic at startup
+	* macosx/tkMacOSXEvent.c: if MAC_OS_X_VERSION_MIN_REQUIRED constraint
+	* macosx/tkMacOSXInit.c:  is not satisfied.
+	* macosx/tkMacOSXInt.h:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXDraw.c (XCopyArea, XCopyPlane, TkPutImage)
+	(TkMacOSXSetupDrawingContext): factor out common code and standardize
+	setup/restore of port, context and clipping; formatting cleanup.
+
+	* macosx/tkMacOSXWindowEvent.c:	add error checking.
+	* macosx/tkMacOSXMenu.c:	fix gcc3 warning.
+	* macosx/tkMacOSXScrlbr.c:	fix testsuite crash.
+	* macosx/tkMacOSXSubwindows.c:	formatting cleanup.
+	* macosx/tkMacOSXRegion.c:	fix typos.
+	* macosx/tkMacOSXScale.c:
+
 2007-06-06  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXInt.h: use native debug message API when available.

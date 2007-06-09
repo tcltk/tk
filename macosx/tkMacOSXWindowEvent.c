@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.22 2007/06/04 09:28:45 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.23 2007/06/09 17:10:22 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -456,7 +456,7 @@ GenerateUpdateEvent(Window window)
     TkMacOSXCheckTmpRgnEmpty(1);
     destPort = TkMacOSXGetDrawablePort(window);
     macWindow = GetWindowFromPort(destPort);
-    GetWindowRegion(macWindow, kWindowUpdateRgn, tkMacOSXtmpRgn1);
+    ChkErr(GetWindowRegion, macWindow, kWindowUpdateRgn, tkMacOSXtmpRgn1);
     QDGlobalToLocalRegion(destPort, tkMacOSXtmpRgn1);
     SectRegionWithPortVisibleRegion(destPort, tkMacOSXtmpRgn1);
     GetRegionBounds(tkMacOSXtmpRgn1, &updateBounds);
