@@ -313,6 +313,7 @@
 
 /* Begin PBXFileReference section */
 		8DD76FB20486AB0100D96B5E /* tktest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tktest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F91E62260C1AE686006C9D96 /* Tclsh-Info.plist.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "Tclsh-Info.plist.in"; sourceTree = "<group>"; };
 		F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXFont.h; sourceTree = "<group>"; };
 		F9408AF20B195C08009F7CAC /* tclMathOp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclMathOp.c; sourceTree = "<group>"; };
 		F966BA0408F27A37005CB29B /* error.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = error.xbm; sourceTree = "<group>"; };
@@ -1779,7 +1780,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.23 2007/06/06 09:55:53 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.24 2007/06/09 17:09:41 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -3217,10 +3218,11 @@
 				F96D432E08F272B5004A47F5 /* configure.ac */,
 				F96D432F08F272B5004A47F5 /* GNUmakefile */,
 				F96D433108F272B5004A47F5 /* README */,
-				F96D433208F272B5004A47F5 /* Tcl-Info.plist.in */,
 				F96D433908F272B5004A47F5 /* tclMacOSXBundle.c */,
 				F96D433D08F272B5004A47F5 /* tclMacOSXFCmd.c */,
 				F96D433E08F272B5004A47F5 /* tclMacOSXNotify.c */,
+				F96D433208F272B5004A47F5 /* Tcl-Info.plist.in */,
+				F91E62260C1AE686006C9D96 /* Tclsh-Info.plist.in */,
 			);
 			path = macosx;
 			sourceTree = "<group>";

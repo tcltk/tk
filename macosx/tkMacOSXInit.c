@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.30 2007/06/06 09:55:52 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.31 2007/06/09 17:09:40 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -19,6 +19,7 @@
 #include "tclInt.h" /* for Tcl_GetStartupScript() & Tcl_SetStartupScript() */
 
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <mach-o/dyld.h>
 #include <mach-o/getsect.h>
 
@@ -93,6 +94,8 @@ Tcl_Encoding TkMacOSXCarbonEncoding = NULL;
  */
 static char scriptPath[PATH_MAX + 1] = "";
 
+float tkMacOSXToolboxVersionNumber = 0;
+
 
 /*
  *----------------------------------------------------------------------
@@ -117,7 +120,7 @@ TkpInit(
     Tcl_Interp *interp)
 {
     static char tkLibPath[PATH_MAX + 1];
-    static int tkMacOSXInitialized = 0;
+    static int initialized = 0;
 
     Tk_MacOSXSetupTkNotifier();
 
@@ -127,15 +130,44 @@ TkpInit(
      * we protect against doing it more than once.
      */
 
-    if (!tkMacOSXInitialized) {
+    if (!initialized) {
 	int bundledExecutable = 0;
 	CFBundleRef bundleRef;
 	CFURLRef bundleUrl = NULL;
 	CFStringEncoding encoding;
 	const char *encodingStr = NULL;
 	int  i;
+	struct utsname name;
+	long osVersion = 0;
 
-	tkMacOSXInitialized = 1;
+	initialized = 1;
+	
+	/*
+	 * Initialize/check OS version variable for runtime checks.
+	 */
+	
+	if (!uname(&name)) {
+	    osVersion = strtol(name.release, NULL, 10) - 4;
+	}
+	if (osVersion && osVersion < (MAC_OS_X_VERSION_MIN_REQUIRED-1000)/10) {
+	    Tcl_Panic("Mac OS X 10.%d or later required !",
+		(MAC_OS_X_VERSION_MIN_REQUIRED-1000)/10);
+	}
+	TK_IF_MAC_OS_X_API (3, &kHIToolboxVersionNumber,
+	    tkMacOSXToolboxVersionNumber = kHIToolboxVersionNumber;
+	) TK_ELSE_MAC_OS_X (3,
+	    if (osVersion > 5) {
+		tkMacOSXToolboxVersionNumber = INFINITY;
+	    } else if (osVersion >= 3) {
+		static const float tbVersions[3] = {
+		    kHIToolboxVersionNumber10_3,
+		    kHIToolboxVersionNumber10_4,
+		    kHIToolboxVersionNumber10_5,
+		};
+
+		tkMacOSXToolboxVersionNumber = tbVersions[osVersion-3];
+	    }
+	) TK_ENDIF
 
 	/*
 	 * When Tk is in a framework, force tcl_findLibrary to look in the
@@ -258,7 +290,7 @@ TkpInit(
 	    TK_IF_MAC_OS_X_API (3, TransformProcessType,
 		err = ChkErr(TransformProcessType, &psn,
 			kProcessTransformToForegroundApplication);
-	    ) TK_ENDIF_MAC_OS_X
+	    ) TK_ENDIF
 #if MAC_OSX_TK_USE_CPS_SPI
 	    if (err != noErr) {
 		/*
