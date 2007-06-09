@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.13 2007/06/06 09:56:54 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.3.2.14 2007/06/09 17:10:21 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -49,7 +49,7 @@ TkMacOSXFlushWindows(void)
 	    if (QDIsPortBuffered(portPtr)) {
 		QDFlushPortBuffer(portPtr, NULL);
 	    }
-	) TK_ENDIF_MAC_OS_X
+	) TK_ENDIF
 	wRef = GetNextWindow(wRef);
     }
 }
