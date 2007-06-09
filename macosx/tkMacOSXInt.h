@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.26 2007/06/06 21:23:37 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.27 2007/06/09 17:09:40 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -49,6 +49,7 @@
     #define kAppearancePartPageUpArea 22
     #define kAppearancePartPageDownArea 23
     #define kAppearancePartIndicator 129
+    #define kUIModeAllSuppressed 4
     #define FixedToInt(a) ((short)(((Fixed)(a) + fixed1/2) >> 16))
     #define IntToFixed(a) ((Fixed)(a) << 16)
 #endif
@@ -75,7 +76,7 @@
     #define kWindowUnifiedTitleAndToolbarAttribute (1L << 7)
     #define kWindowTexturedSquareCornersAttribute (1L << 10)
 #endif
-/* Runtime HIToolbox version checking */
+/* HIToolbox version constants */
 #ifndef kHIToolboxVersionNumber10_3
     #define kHIToolboxVersionNumber10_3 (145)
 #endif
@@ -85,68 +86,98 @@
 #ifndef kHIToolboxVersionNumber10_5
     #define kHIToolboxVersionNumber10_5 (303)
 #endif
+/* Macros for HIToolbox runtime version checking */
+MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
+#define TK_IF_HI_TOOLBOX(vers, ...) \
+	tk_if_mac_os_x_min_10_##vers(tkMacOSXToolboxVersionNumber >= \
+	kHIToolboxVersionNumber10_##vers, 1, __VA_ARGS__)
+#define TK_ELSE_HI_TOOLBOX(vers, ...) \
+	tk_else_mac_os_x_min_10_##vers(__VA_ARGS__)
 /* Macros for Mac OS X API availability checking */
 #define TK_IF_MAC_OS_X_API(vers, symbol, ...) \
-	tk_if_mac_os_x_10_##vers(1, symbol, 1, __VA_ARGS__)
-#define TK_IF_MAC_OS_X_API_COND(vers, cond, symbol,...) \
-	tk_if_mac_os_x_10_##vers(cond, symbol, 1, __VA_ARGS__)
-#define TK_IF_MAC_OS_X_HI_TOOLBOX(vers, ...) \
-	tk_if_mac_os_x_10_##vers(1, &kHIToolboxVersionNumber, \
-	kHIToolboxVersionNumber >= kHIToolboxVersionNumber10_##vers, \
-	__VA_ARGS__)
+	tk_if_mac_os_x_10_##vers(symbol != NULL, 1, __VA_ARGS__)
 #define TK_ELSE_MAC_OS_X(vers, ...) \
 	tk_else_mac_os_x_10_##vers(__VA_ARGS__)
-#define TK_ENDIF_MAC_OS_X \
+#define TK_IF_MAC_OS_X_API_COND(vers, symbol, cond, ...) \
+	tk_if_mac_os_x_10_##vers(symbol != NULL, cond, __VA_ARGS__)
+#define TK_ELSE(...) \
+	} else { __VA_ARGS__
+#define TK_ENDIF \
 	}
-/* Private helper macros to implement the API checking above */
-#define tk_if_mac_os_x_yes(cond, symbol, postcond, ...) \
+/* Private macros that implement the checking macros above */
+#define tk_if_mac_os_x_yes(chk, cond, ...) \
 	if (cond) { __VA_ARGS__
 #define tk_else_mac_os_x_yes(...) \
 	} else {
-#define tk_if_mac_os_x_chk(cond, symbol, postcond, ...) \
-	if ((cond) && (symbol) != NULL && (postcond)) { __VA_ARGS__
+#define tk_if_mac_os_x_chk(chk, cond, ...) \
+	if ((chk) && (cond)) { __VA_ARGS__
 #define tk_else_mac_os_x_chk(...) \
 	} else { __VA_ARGS__
-#define tk_if_mac_os_x_no(cond, symbol, postcond, ...) \
+#define tk_if_mac_os_x_no(chk, cond, ...) \
 	if (0) {
 #define tk_else_mac_os_x_no(...) \
 	} else { __VA_ARGS__
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
+/* Private mapping macros defined according to Mac OS X version requirements */
+/* 10.3 Panther */
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1030
+#define tk_if_mac_os_x_min_10_3		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_min_10_3	tk_else_mac_os_x_yes
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
 #define tk_if_mac_os_x_10_3		tk_if_mac_os_x_yes
 #define tk_else_mac_os_x_10_3		tk_else_mac_os_x_yes
-#else
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#define tk_if_mac_os_x_min_10_3		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_min_10_3	tk_else_mac_os_x_chk
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
 #define tk_if_mac_os_x_10_3		tk_if_mac_os_x_chk
 #define tk_else_mac_os_x_10_3		tk_else_mac_os_x_chk
-#endif
-#else
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
 #define tk_if_mac_os_x_10_3		tk_if_mac_os_x_no
 #define tk_else_mac_os_x_10_3		tk_else_mac_os_x_no
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+/* 10.4 Tiger */
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1040
+#define tk_if_mac_os_x_min_10_4		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_min_10_4	tk_else_mac_os_x_yes
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
 #define tk_if_mac_os_x_10_4		tk_if_mac_os_x_yes
 #define tk_else_mac_os_x_10_4		tk_else_mac_os_x_yes
-#else
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#define tk_if_mac_os_x_min_10_4		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_min_10_4	tk_else_mac_os_x_chk
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
 #define tk_if_mac_os_x_10_4		tk_if_mac_os_x_chk
 #define tk_else_mac_os_x_10_4		tk_else_mac_os_x_chk
-#endif
-#else
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040
 #define tk_if_mac_os_x_10_4		tk_if_mac_os_x_no
 #define tk_else_mac_os_x_10_4		tk_else_mac_os_x_no
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+/* 10.5 Leopard */
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_yes
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #define tk_if_mac_os_x_10_5		tk_if_mac_os_x_yes
 #define tk_else_mac_os_x_10_5		tk_else_mac_os_x_yes
-#else
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_chk
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #define tk_if_mac_os_x_10_5		tk_if_mac_os_x_chk
 #define tk_else_mac_os_x_10_5		tk_else_mac_os_x_chk
-#endif
-#else
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
 #define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
 #define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
-#endif
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
 
 /*
  * Include platform specific public interfaces.
@@ -164,7 +195,7 @@ struct TkWindowPrivate {
     int xOff;			/* X offset from toplevel window */
     int yOff;			/* Y offset from toplevel window */
     RgnHandle clipRgn;		/* Visible region of window */
-    RgnHandle aboveClipRgn;	/* Visible region of window & it's children */
+    RgnHandle aboveClipRgn;	/* Visible region of window & its children */
     RgnHandle drawRgn;		/* Clipped drawing region */
     int referenceCount;		/* Don't delete toplevel until children are
 				 * gone. */

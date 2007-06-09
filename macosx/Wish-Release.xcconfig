@@ -9,13 +9,13 @@
 // See the file "license.terms" for information on usage and redistribution
 // of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// RCS: @(#) $Id: Wish-Release.xcconfig,v 1.2 2007/04/23 21:24:32 das Exp $
+// RCS: @(#) $Id: Wish-Release.xcconfig,v 1.3 2007/06/09 17:09:39 das Exp $
 //
 
 #include "Wish-Common.xcconfig"
 
 DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
-DEPLOYMENT_POSTPROCESSING = YES
+// DEPLOYMENT_POSTPROCESSING = YES
 GCC_OPTIMIZATION_LEVEL = s
 GCC_PREPROCESSOR_DEFINITIONS = NDEBUG $(TCL_DEFS) $(TK_DEFS) $(GCC_PREPROCESSOR_DEFINITIONS)
 CONFIGURE_ARGS = --disable-symbols $(TCL_CONFIGURE_ARGS) $(CONFIGURE_ARGS)
