@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.10 2007/06/09 21:45:45 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.11 2007/06/10 03:25:32 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -26,7 +26,7 @@
  *
  * Pane geometry is determined by the sash positions.
  * When resizing, sash positions are computed from the request sizes,
- * the available space, and pane weights (see ComputePositions()).
+ * the available space, and pane weights (see PlaceSashes()).
  * This ensures continuous resize behavior (that is: changing
  * the size by X pixels then changing the size by Y pixels
  * gives the same result as changing the size by X+Y pixels
@@ -61,8 +61,10 @@
  */
 
 typedef struct {
-    Tcl_Obj 	*orientObj;
+    Tcl_Obj	*orientObj;
     int 	orient;
+    int 	width;
+    int 	height;
     Ttk_Manager	*mgr;
     Tk_OptionTable paneOptionTable;
     Ttk_Layout	sashLayout;
@@ -80,6 +82,12 @@ static Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	Tk_Offset(Paned,paned.orientObj), Tk_Offset(Paned,paned.orient),
 	0,(ClientData)ttkOrientStrings,READONLY_OPTION|STYLE_CHANGED },
+    {TK_OPTION_INT, "-width", "width", "Width", "0",
+	-1,Tk_Offset(Paned,paned.width),
+	0,0,GEOMETRY_CHANGED },
+    {TK_OPTION_INT, "-height", "height", "Height", "0",
+	-1,Tk_Offset(Paned,paned.height),
+	0,0,GEOMETRY_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
@@ -168,7 +176,7 @@ error:
 
 
 /*------------------------------------------------------------------------
- * +++ Layout algorithm.
+ * +++ Sash adjustment.
  */
 
 /* ShoveUp --
@@ -215,7 +223,7 @@ static int ShoveDown(Paned *pw, int i, int pos)
 }
 
 /* PanedSize --
- * 	Compute the requested size of the paned widget 
+ * 	Compute the requested size of the paned widget
  * 	from the individual pane request sizes.
  *
  * 	Used as the WidgetSpec sizeProc and the ManagerSpec sizeProc.
@@ -251,8 +259,8 @@ static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
 	height += nSashes * sashThickness;
     }
 
-    *widthPtr = width;
-    *heightPtr = height;
+    *widthPtr = pw->paned.width > 0 ? pw->paned.width : width;
+    *heightPtr = pw->paned.height > 0 ? pw->paned.height : height;
     return 1;
 }
 
@@ -260,7 +268,7 @@ static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
  * 	Set pane request sizes from sash positions.
  *
  * NOTE:
- * 	AdjustPanes followed by ComputePositions (called during relayout)
+ * 	AdjustPanes followed by PlaceSashes (called during relayout)
  * 	will leave the sashes in the same place, as long as available size
  * 	remains contant.
  */
@@ -278,8 +286,9 @@ static void AdjustPanes(Paned *pw)
     }
 }
 
-/* ComputePositions --
+/* PlaceSashes --
  *	Set sash positions from pane request sizes and available space.
+ *	The sentinel sash position is set to the available space.
  *
  *	Allocate pane->reqSize pixels to each pane, and distribute
  *	the difference = available size - requested size according
@@ -293,14 +302,12 @@ static void AdjustPanes(Paned *pw)
  * 	This doesn't distribute the remainder pixels as evenly as it could
  * 	when more than one pane has weight > 1.
  */
-static void ComputePositions(Paned *pw)
+static void PlaceSashes(Paned *pw, int width, int height)
 {
     Ttk_Manager *mgr = pw->paned.mgr;
     int nPanes = Ttk_NumberSlaves(mgr);
     int sashThickness = pw->paned.sashThickness;
-    int available
-	= pw->paned.orient == TTK_ORIENT_HORIZONTAL
-	? Tk_Width(pw->core.tkwin) : Tk_Height(pw->core.tkwin);
+    int available = pw->paned.orient == TTK_ORIENT_HORIZONTAL ? width : height;
     int reqSize = 0, totalWeight = 0;
     int difference, delta, remainder, pos, i;
 
@@ -393,7 +400,7 @@ static void PlacePanes(Paned *pw)
 static void PanedPlaceSlaves(void *managerData)
 {
     Paned *pw = managerData;
-    ComputePositions(pw);
+    PlaceSashes(pw, Tk_Width(pw->core.tkwin), Tk_Height(pw->core.tkwin));
     PlacePanes(pw);
 }
 
@@ -516,6 +523,25 @@ static void PanedCleanup(void *recordPtr)
     Tk_DeleteEventHandler(pw->core.tkwin,
 	PanedEventMask, PanedEventProc, recordPtr);
     Ttk_DeleteManager(pw->paned.mgr);
+}
+
+/* Post-configuration hook.
+ */
+static int PanedPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
+{
+    Paned *pw = clientData;
+
+    if (mask & GEOMETRY_CHANGED) {
+	/* User has changed -width or -height.
+	 * Recalculate sash positions based on requested size.
+	 */
+	Tk_Window tkwin = pw->core.tkwin;
+	PlaceSashes(pw, 
+	    pw->paned.width > 0 ? pw->paned.width : Tk_Width(tkwin),
+	    pw->paned.height > 0 ? pw->paned.height : Tk_Height(tkwin));
+    }
+
+    return TCL_OK;
 }
 
 /*------------------------------------------------------------------------
@@ -762,6 +788,33 @@ static int PanedPaneCommand(
     }
 }
 
+/* $pw panes --
+ * 	Return list of managed panes.
+ */
+static int PanedPanesCommand(
+    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+{
+    Paned *pw = recordPtr;
+    Ttk_Manager *mgr = pw->paned.mgr;
+    Tcl_Obj *panes;
+    int i;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 2, objv, "");
+	return TCL_ERROR;
+    }
+
+    panes = Tcl_NewListObj(0, NULL);
+    for (i = 0; i < Ttk_NumberSlaves(mgr); ++i) {
+	const char *pathName = Tk_PathName(Ttk_SlaveWindow(mgr,i));
+	Tcl_ListObjAppendElement(interp, panes, Tcl_NewStringObj(pathName,-1));
+    }
+    Tcl_SetObjResult(interp, panes);
+
+    return TCL_OK;
+}
+
+
 /* $pw sashpos $index ?$newpos?
  * 	Query or modify sash position.
  */
@@ -821,6 +874,7 @@ static WidgetCommandSpec PanedCommands[] =
     { "insert", 	PanedInsertCommand },
     { "instate",	TtkWidgetInstateCommand },
     { "pane",   	PanedPaneCommand },
+    { "panes",   	PanedPanesCommand },
     { "sashpos",  	PanedSashposCommand },
     { "state",  	TtkWidgetStateCommand },
     { 0,0 }
@@ -839,7 +893,7 @@ static WidgetSpec PanedWidgetSpec =
     PanedInitialize,		/* initializeProc */
     PanedCleanup,		/* cleanupProc */
     TtkCoreConfigure,		/* configureProc */
-    TtkNullPostConfigure,	/* postConfigureProc */
+    PanedPostConfigure, 	/* postConfigureProc */
     PanedGetLayout,		/* getLayoutProc */
     PanedSize, 			/* sizeProc */
     TtkWidgetDoLayout,		/* layoutProc */
