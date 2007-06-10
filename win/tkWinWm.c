@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.26 2006/12/01 19:47:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.27 2007/06/10 00:15:35 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -4030,7 +4030,8 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
-    int i, size, width, height, startObj = 3;
+    int i, size, width, height, idx, bufferSize, startObj = 3;
+    unsigned char *bgraPixelPtr;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
@@ -4077,10 +4078,20 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
 	Tk_PhotoGetImage(photo, &block);
 
 	/*
-	 * Encode the image data into an HICON.
+	 * Convert the image data into BGRA format (RGBQUAD) and then
+	 * encode the image data into an HICON.
 	 */
+	bufferSize = height * width * block.pixelSize;
+	bgraPixelPtr = ckalloc(bufferSize);
+	for (idx = 0 ; idx < bufferSize ; idx += 4) {
+	    bgraPixelPtr[idx] = block.pixelPtr[idx+2];
+	    bgraPixelPtr[idx+1] = block.pixelPtr[idx+1];
+	    bgraPixelPtr[idx+2] = block.pixelPtr[idx+0];
+	    bgraPixelPtr[idx+3] = block.pixelPtr[idx+3];
+	}
 	hIcon = CreateIcon(Tk_GetHINSTANCE(), width, height, 1, 32,
-		NULL, (BYTE *) block.pixelPtr);
+		NULL, (BYTE *) bgraPixelPtr);
+	ckfree(bgraPixelPtr);
 	if (hIcon == NULL) {
 	    /* XXX should free up created icons */
 	    Tcl_Free((char *) lpIR);

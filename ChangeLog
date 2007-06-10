@@ -1,5 +1,8 @@
 2007-06-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinWm.c (WmIconphotoCmd): fix wm iconphoto RGBA issues.
+	[Bug 1467997] (janssen)
+
 	* win/tkWinMenu.c (TkWinHandleMenuEvent): improve handling to
 	allow for unicode char menu indices and not use CharUpper on Tcl
 	utf strings. [Bug #1734223]
