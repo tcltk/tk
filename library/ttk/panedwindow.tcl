@@ -1,5 +1,5 @@
 #
-# $Id: panedwindow.tcl,v 1.3 2007/04/13 00:21:47 hobbs Exp $
+# $Id: panedwindow.tcl,v 1.3.2.1 2007/06/12 16:22:41 dgp Exp $
 #
 # Bindings for ttk::panedwindow widget.
 #
@@ -33,8 +33,8 @@ bind TPanedwindow <<EnteredChild>>	{ ttk::panedwindow::ResetCursor %W }
 proc ttk::panedwindow::Press {w x y} {
     variable State
 
-    lassign [$w identify $x $y] sash element
-    if {![info exists sash] || $sash eq ""} {
+    set sash [$w identify $x $y]
+    if {$sash eq ""} {
     	set State(pressed) 0
 	return
     }

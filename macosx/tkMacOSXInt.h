@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.24 2007/05/09 12:55:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.24.2.1 2007/06/12 16:22:42 dgp Exp $
  */
 
 #ifndef _TKMACINT
@@ -20,6 +20,8 @@
 #include "tkInt.h"
 #endif
 
+#define kComponentSignatureString "TkMacOSX"
+#define COMPONENT_SIGNATURE 'Tk  '
 #define TextStyle MacTextStyle
 #include <Carbon/Carbon.h>
 #undef TextStyle
@@ -47,6 +49,7 @@
     #define kAppearancePartPageUpArea 22
     #define kAppearancePartPageDownArea 23
     #define kAppearancePartIndicator 129
+    #define kUIModeAllSuppressed 4
     #define FixedToInt(a) ((short)(((Fixed)(a) + fixed1/2) >> 16))
     #define IntToFixed(a) ((Fixed)(a) << 16)
 #endif
@@ -73,7 +76,7 @@
     #define kWindowUnifiedTitleAndToolbarAttribute (1L << 7)
     #define kWindowTexturedSquareCornersAttribute (1L << 10)
 #endif
-/* Runtime HIToolbox version checking */
+/* HIToolbox version constants */
 #ifndef kHIToolboxVersionNumber10_3
     #define kHIToolboxVersionNumber10_3 (145)
 #endif
@@ -81,8 +84,100 @@
     #define kHIToolboxVersionNumber10_4 (219)
 #endif
 #ifndef kHIToolboxVersionNumber10_5
-    #define kHIToolboxVersionNumber10_5 (291)
+    #define kHIToolboxVersionNumber10_5 (303)
 #endif
+/* Macros for HIToolbox runtime version checking */
+MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
+#define TK_IF_HI_TOOLBOX(vers, ...) \
+	tk_if_mac_os_x_min_10_##vers(tkMacOSXToolboxVersionNumber >= \
+	kHIToolboxVersionNumber10_##vers, 1, __VA_ARGS__)
+#define TK_ELSE_HI_TOOLBOX(vers, ...) \
+	tk_else_mac_os_x_min_10_##vers(__VA_ARGS__)
+/* Macros for Mac OS X API availability checking */
+#define TK_IF_MAC_OS_X_API(vers, symbol, ...) \
+	tk_if_mac_os_x_10_##vers(symbol != NULL, 1, __VA_ARGS__)
+#define TK_ELSE_MAC_OS_X(vers, ...) \
+	tk_else_mac_os_x_10_##vers(__VA_ARGS__)
+#define TK_IF_MAC_OS_X_API_COND(vers, symbol, cond, ...) \
+	tk_if_mac_os_x_10_##vers(symbol != NULL, cond, __VA_ARGS__)
+#define TK_ELSE(...) \
+	} else { __VA_ARGS__
+#define TK_ENDIF \
+	}
+/* Private macros that implement the checking macros above */
+#define tk_if_mac_os_x_yes(chk, cond, ...) \
+	if (cond) { __VA_ARGS__
+#define tk_else_mac_os_x_yes(...) \
+	} else {
+#define tk_if_mac_os_x_chk(chk, cond, ...) \
+	if ((chk) && (cond)) { __VA_ARGS__
+#define tk_else_mac_os_x_chk(...) \
+	} else { __VA_ARGS__
+#define tk_if_mac_os_x_no(chk, cond, ...) \
+	if (0) {
+#define tk_else_mac_os_x_no(...) \
+	} else { __VA_ARGS__
+/* Private mapping macros defined according to Mac OS X version requirements */
+/* 10.3 Panther */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1030
+#define tk_if_mac_os_x_min_10_3		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_min_10_3	tk_else_mac_os_x_yes
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
+#define tk_if_mac_os_x_10_3		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_10_3		tk_else_mac_os_x_yes
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#define tk_if_mac_os_x_min_10_3		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_min_10_3	tk_else_mac_os_x_chk
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
+#define tk_if_mac_os_x_10_3		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_10_3		tk_else_mac_os_x_chk
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
+#define tk_if_mac_os_x_10_3		tk_if_mac_os_x_no
+#define tk_else_mac_os_x_10_3		tk_else_mac_os_x_no
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+/* 10.4 Tiger */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1040
+#define tk_if_mac_os_x_min_10_4		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_min_10_4	tk_else_mac_os_x_yes
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+#define tk_if_mac_os_x_10_4		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_10_4		tk_else_mac_os_x_yes
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#define tk_if_mac_os_x_min_10_4		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_min_10_4	tk_else_mac_os_x_chk
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
+#define tk_if_mac_os_x_10_4		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_10_4		tk_else_mac_os_x_chk
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040
+#define tk_if_mac_os_x_10_4		tk_if_mac_os_x_no
+#define tk_else_mac_os_x_10_4		tk_else_mac_os_x_no
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+/* 10.5 Leopard */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_yes
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_yes
+#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_yes
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_chk
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_chk
+#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_chk
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
+#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
 
 /*
  * Include platform specific public interfaces.
@@ -100,7 +195,7 @@ struct TkWindowPrivate {
     int xOff;			/* X offset from toplevel window */
     int yOff;			/* Y offset from toplevel window */
     RgnHandle clipRgn;		/* Visible region of window */
-    RgnHandle aboveClipRgn;	/* Visible region of window & it's children */
+    RgnHandle aboveClipRgn;	/* Visible region of window & its children */
     RgnHandle drawRgn;		/* Clipped drawing region */
     int referenceCount;		/* Don't delete toplevel until children are
 				 * gone. */
@@ -218,13 +313,26 @@ MODULE_SCOPE int TkMacOSXCompareColors(unsigned long c1, unsigned long c2);
 	    __LINE__, __func__, ##__VA_ARGS__); \
 	} while (0)
 /*
+ * Macro to do debug API failure message output.
+ */
+#if !defined(DEBUGLEVEL) || !DEBUGLEVEL
+#define TkMacOSXDbgOSErr(f, err) do { \
+	    TkMacOSXDbgMsg("%s failed: %ld", #f, err); \
+	} while (0)
+#else
+#define TkMacOSXDbgOSErr(f, err) do { \
+	    DEBUG_ASSERT_MESSAGE(kComponentSignatureString, #f " failed:", \
+	    __func__, 0, strrchr(__FILE__, '/')+1, __LINE__, err); \
+	} while (0)
+#endif
+/*
  * Macro to do very common check for noErr return from given API and output
  * debug message in case of failure.
  */
 #define ChkErr(f, ...) ({ \
 	OSStatus err = f(__VA_ARGS__); \
 	if (err != noErr) { \
-	    TkMacOSXDbgMsg("%s failed: %ld", #f, err); \
+	    TkMacOSXDbgOSErr(f, err); \
 	} \
 	err;})
 /*
@@ -237,6 +345,7 @@ MODULE_SCOPE int TkMacOSXCompareColors(unsigned long c1, unsigned long c2);
 	} while(0)
 #else /* TK_MAC_DEBUG */
 #define TkMacOSXDbgMsg(m, ...)
+#define TkMacOSXDbgOSErr(f, err)
 #define ChkErr(f, ...) ({f(__VA_ARGS__);})
 #define TkMacOSXCheckTmpRgnEmpty(r)
 #endif /* TK_MAC_DEBUG */

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.21.2.3 2007/06/04 15:19:00 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.21.2.4 2007/06/12 16:22:41 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -39,7 +39,7 @@
 RgnHandle tkMacOSXtmpRgn1 = NULL;
 RgnHandle tkMacOSXtmpRgn2 = NULL;
 
-static PixPatHandle gPenPat = NULL;
+static PixPatHandle penPat = NULL;
 
 static int useCGDrawing = 1;
 static int tkMacOSXCGAntiAliasLimit = 0;
@@ -52,6 +52,8 @@ static int useThemedFrame = 0;
  * Prototypes for functions used only in this file.
  */
 static unsigned char InvertByte(unsigned char data);
+static void ClipToGC(Drawable d, GC gc, CGrafPtr port, RgnHandle clipRgn);
+static void NoQDClip(CGrafPtr port);
 
 
 /*
@@ -156,88 +158,43 @@ XCopyArea(
     int dest_x,			/* Dest X & Y on dest rect. */
     int dest_y)
 {
-    Rect srcRect, dstRect, *srcPtr, *dstPtr;
-    const BitMap *srcBit, *dstBit;
+    Rect srcRect, dstRect, *srcPtr = &srcRect, *dstPtr = &dstRect;
     MacDrawable *srcDraw = (MacDrawable *) src, *dstDraw = (MacDrawable *) dst;
-    CGrafPtr srcPort, dstPort, savePort;
+    CGrafPtr srcPort, destPort, savePort;
     Boolean portChanged;
-    RGBColor origForeColor, origBackColor, whiteColor, blackColor;
-
-    dstPort = TkMacOSXGetDrawablePort(dst);
-    srcPort = TkMacOSXGetDrawablePort(src);
+    const BitMap *srcBit, *dstBit;
+    RGBColor origForeColor, origBackColor;
+    RGBColor black = {0, 0, 0}, white = {0xffff, 0xffff, 0xffff};
 
     display->request++;
-    portChanged = QDSwapPort(dstPort, &savePort);
-    GetForeColor(&origForeColor);
-    GetBackColor(&origBackColor);
-    whiteColor.red = 0;
-    whiteColor.blue = 0;
-    whiteColor.green = 0;
-    RGBForeColor(&whiteColor);
-    blackColor.red = 0xFFFF;
-    blackColor.blue = 0xFFFF;
-    blackColor.green = 0xFFFF;
-    RGBBackColor(&blackColor);
-
-    srcPtr = &srcRect;
-    SetRect(&srcRect, (short) (srcDraw->xOff + src_x),
-	    (short) (srcDraw->yOff + src_y),
-	    (short) (srcDraw->xOff + src_x + width),
-	    (short) (srcDraw->yOff + src_y + height));
-    if (tkPictureIsOpen) {
-	dstPtr = &srcRect;
-    } else {
-	dstPtr = &dstRect;
-	SetRect(&dstRect, (short) (dstDraw->xOff + dest_x),
-	    (short) (dstDraw->yOff + dest_y),
-	    (short) (dstDraw->xOff + dest_x + width),
-	    (short) (dstDraw->yOff + dest_y + height));
-    }
-    TkMacOSXSetUpClippingRgn(dst);
-
-    /*
-     * We will change the clip rgn in this routine, so we need to
-     * be able to restore it when we exit.
-     */
-
-    TkMacOSXCheckTmpRgnEmpty(2);
-    GetClip(tkMacOSXtmpRgn2);
-    if (tkPictureIsOpen) {
-	/*
-	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the drawable clipping is incorrect, so clip to the whole window.
-	 */
-
-	Rect clpRect;
-
-	GetPortBounds(dstPort, &clpRect);
-	ClipRect(&clpRect);
-    }
-    if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
-	    == TKP_CLIP_REGION) {
-	RgnHandle gcClipRgn = (RgnHandle)
-		((TkpClipMask*)gc->clip_mask)->value.region;
-	int xOffset = dstDraw->xOff + gc->clip_x_origin;
-	int yOffset = dstDraw->yOff + gc->clip_y_origin;
-
-	if (!tkPictureIsOpen) {
-	    OffsetRgn(gcClipRgn, xOffset, yOffset);
-	}
-	TkMacOSXCheckTmpRgnEmpty(1);
-	GetClip(tkMacOSXtmpRgn1);
-	SectRgn(tkMacOSXtmpRgn1, gcClipRgn, tkMacOSXtmpRgn1);
-	SetClip(tkMacOSXtmpRgn1);
-	SetEmptyRgn(tkMacOSXtmpRgn1);
-	if (!tkPictureIsOpen) {
-	    OffsetRgn(gcClipRgn, -xOffset, -yOffset);
-	}
-    }
+    srcPort = TkMacOSXGetDrawablePort(src);
+    destPort = TkMacOSXGetDrawablePort(dst);
     srcBit = GetPortBitMapForCopyBits(srcPort);
-    dstBit = GetPortBitMapForCopyBits(dstPort);
+    dstBit = GetPortBitMapForCopyBits(destPort);
+    SetRect(srcPtr, srcDraw->xOff + src_x, srcDraw->yOff + src_y,
+	    srcDraw->xOff + src_x + width, srcDraw->yOff + src_y + height);
+    TkMacOSXCheckTmpRgnEmpty(2);
+    GetPortClipRegion(destPort, tkMacOSXtmpRgn2);
+    if (tkPictureIsOpen) {
+	dstPtr = srcPtr;
+	NoQDClip(destPort);
+    } else {
+	SetRect(dstPtr, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y,
+		dstDraw->xOff + dest_x + width,
+		dstDraw->yOff + dest_y + height);
+	TkMacOSXSetUpClippingRgn(dst);
+    }
+    TkMacOSXCheckTmpRgnEmpty(1);
+    ClipToGC(dst, gc, destPort, tkMacOSXtmpRgn1);
+    portChanged = QDSwapPort(destPort, &savePort);
+    GetPortForeColor(destPort, &origForeColor);
+    GetPortBackColor(destPort, &origBackColor);
+    RGBForeColor(&black);
+    RGBBackColor(&white);
     CopyBits(srcBit, dstBit, srcPtr, dstPtr, srcCopy, NULL);
     RGBForeColor(&origForeColor);
     RGBBackColor(&origBackColor);
-    SetClip(tkMacOSXtmpRgn2);
+    SetPortClipRegion(destPort, tkMacOSXtmpRgn2);
     SetEmptyRgn(tkMacOSXtmpRgn2);
     if (portChanged) {
 	QDSwapPort(savePort, NULL);
@@ -268,93 +225,82 @@ XCopyPlane(
     Display *display,		/* Display. */
     Drawable src,		/* Source drawable. */
     Drawable dst,		/* Destination drawable. */
-    GC gc,			/* The GC to use. */
-    int src_x, int src_y,	/* X, Y, width & height define the source
-				 * rect. */
-    unsigned int width, unsigned int height,
-    int dest_x, int dest_y,	/* X & Y on dest where we will copy. */
+    GC gc,			/* GC to use. */
+    int src_x,			/* X & Y, width & height */
+    int src_y,			/* define the source rectangle */
+    unsigned int width,		/* the will be copied. */
+    unsigned int height,
+    int dest_x,			/* Dest X & Y on dest rect. */
+    int dest_y,
     unsigned long plane)	/* Which plane to copy. */
 {
-    Rect srcRect, dstRect, *srcPtr, *dstPtr;
-    const BitMap *srcBit, *dstBit, *mskBit;
+    Rect srcRect, dstRect, *srcPtr = &srcRect, *dstPtr = &dstRect;
     MacDrawable *srcDraw = (MacDrawable *) src, *dstDraw = (MacDrawable *) dst;
-    CGrafPtr srcPort, dstPort, mskPort, savePort;
+    CGrafPtr srcPort, destPort, savePort;
     Boolean portChanged;
+    const BitMap *srcBit, *dstBit;
+    RGBColor origForeColor, origBackColor;
     TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
-    short tmode;
-
-    srcPort = TkMacOSXGetDrawablePort(src);
-    dstPort = TkMacOSXGetDrawablePort(dst);
 
     display->request++;
-    portChanged = QDSwapPort(dstPort, &savePort);
-    TkMacOSXSetUpClippingRgn(dst);
-
+    srcPort = TkMacOSXGetDrawablePort(src);
+    destPort = TkMacOSXGetDrawablePort(dst);
     srcBit = GetPortBitMapForCopyBits(srcPort);
-    dstBit = GetPortBitMapForCopyBits(dstPort);
-    SetRect(&srcRect, (short) (srcDraw->xOff + src_x),
-	    (short) (srcDraw->yOff + src_y),
-	    (short) (srcDraw->xOff + src_x + width),
-	    (short) (srcDraw->yOff + src_y + height));
-    srcPtr = &srcRect;
+    dstBit = GetPortBitMapForCopyBits(destPort);
+    SetRect(srcPtr, srcDraw->xOff + src_x, srcDraw->yOff + src_y,
+	    srcDraw->xOff + src_x + width, srcDraw->yOff + src_y + height);
+    TkMacOSXCheckTmpRgnEmpty(2);
+    GetPortClipRegion(destPort, tkMacOSXtmpRgn2);
     if (tkPictureIsOpen) {
-	/*
-	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the drawable clipping is incorrect, so clip to the whole window.
-	 */
-
-	Rect clpRect;
-
-	GetPortBounds(dstPort, &clpRect);
-	ClipRect(&clpRect);
-	dstPtr = &srcRect;
+	dstPtr = srcPtr;
+	NoQDClip(destPort);
     } else {
-	dstPtr = &dstRect;
-	SetRect(&dstRect, (short) (dstDraw->xOff + dest_x),
-		(short) (dstDraw->yOff + dest_y),
-		(short) (dstDraw->xOff + dest_x + width),
-		(short) (dstDraw->yOff + dest_y + height));
+	SetRect(dstPtr, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y,
+		dstDraw->xOff + dest_x + width,
+		dstDraw->yOff + dest_y + height);
+	TkMacOSXSetUpClippingRgn(dst);
     }
-    tmode = srcOr;
-    tmode = srcCopy + transparent;
-
+    TkMacOSXCheckTmpRgnEmpty(1);
+    GetPortClipRegion(destPort, tkMacOSXtmpRgn1);
+    ClipToGC(dst, gc, destPort, tkMacOSXtmpRgn1);
+    SetPortClipRegion(destPort, tkMacOSXtmpRgn1);
+    SetEmptyRgn(tkMacOSXtmpRgn1);
+    portChanged = QDSwapPort(destPort, &savePort);
+    GetPortForeColor(destPort, &origForeColor);
+    GetPortBackColor(destPort, &origBackColor);
     TkMacOSXSetColorInPort(gc->foreground, 1, NULL);
-
-    if (clipPtr == NULL || clipPtr->type == TKP_CLIP_REGION) {
+    if (!clipPtr || clipPtr->type == TKP_CLIP_REGION) {
 	/*
-	 * Case 1: opaque bitmaps.
+	 * Opaque bitmaps.
 	 */
 
 	TkMacOSXSetColorInPort(gc->background, 0, NULL);
-	tmode = srcCopy;
-	CopyBits(srcBit, dstBit, srcPtr, dstPtr, tmode, NULL);
+	CopyBits(srcBit, dstBit, srcPtr, dstPtr, srcCopy, NULL);
     } else if (clipPtr->type == TKP_CLIP_PIXMAP) {
 	if (clipPtr->value.pixmap == src) {
-	    PixMapHandle pm;
 	    /*
-	     * Case 2: transparent bitmaps. If it's color we ignore
-	     * the forecolor.
+	     * Transparent bitmaps. If it's color we ignore the forecolor.
 	     */
+	    short tmode = GetPixDepth(GetPortPixMap(srcPort)) == 1 ?
+		    srcOr : transparent;
 
-	    pm = GetPortPixMap(srcPort);
-	    if (GetPixDepth(pm) == 1) {
-		tmode = srcOr;
-	    } else {
-		tmode = transparent;
-	    }
 	    CopyBits(srcBit, dstBit, srcPtr, dstPtr, tmode, NULL);
 	} else {
 	    /*
-	     * Case 3: two arbitrary bitmaps.
+	     * Two arbitrary bitmaps.
 	     */
 
-	    tmode = srcCopy;
-	    mskPort = TkMacOSXGetDrawablePort(clipPtr->value.pixmap);
-	    mskBit = GetPortBitMapForCopyBits(mskPort);
-	    CopyDeepMask(srcBit, mskBit, dstBit,
-		srcPtr, srcPtr, dstPtr, tmode, NULL);
+	    CGrafPtr mskPort = TkMacOSXGetDrawablePort(clipPtr->value.pixmap);
+	    const BitMap *mskBit = GetPortBitMapForCopyBits(mskPort);
+
+	    CopyDeepMask(srcBit, mskBit, dstBit, srcPtr, srcPtr, dstPtr,
+		    srcCopy, NULL);
 	}
     }
+    RGBForeColor(&origForeColor);
+    RGBBackColor(&origBackColor);
+    SetPortClipRegion(destPort, tkMacOSXtmpRgn2);
+    SetEmptyRgn(tkMacOSXtmpRgn2);
     if (portChanged) {
 	QDSwapPort(savePort, NULL);
     }
@@ -392,49 +338,48 @@ TkPutImage(
     unsigned int width,		/* Same width & height for both */
     unsigned int height)	/* distination and source. */
 {
+    Rect srcRect, dstRect, *srcPtr = &srcRect, *dstPtr = &dstRect;
+    MacDrawable *dstDraw = (MacDrawable *) d;
     CGrafPtr destPort, savePort;
     Boolean portChanged;
-    const BitMap * destBits;
-    MacDrawable *dstDraw = (MacDrawable *) d;
+    const BitMap *dstBit;
+    RGBColor origForeColor, origBackColor;
+    RGBColor black = {0, 0, 0}, white = {0xffff, 0xffff, 0xffff};
     int i, j;
     char *newData = NULL;
-    Rect destRect, srcRect, *destPtr, *srcPtr;
     char *dataPtr, *newPtr, *oldPtr;
     int rowBytes = image->bytes_per_line;
     int slices, sliceRowBytes, lastSliceRowBytes, sliceWidth, lastSliceWidth;
 
     display->request++;
     destPort = TkMacOSXGetDrawablePort(d);
-    portChanged = QDSwapPort(destPort, &savePort);
-    TkMacOSXSetUpClippingRgn(d);
-
-    destBits = GetPortBitMapForCopyBits(destPort);
-    srcPtr = &srcRect;
+    dstBit = GetPortBitMapForCopyBits(destPort);
     SetRect(srcPtr, src_x, src_y, src_x + width, src_y + height);
+    TkMacOSXCheckTmpRgnEmpty(2);
+    GetPortClipRegion(destPort, tkMacOSXtmpRgn2);
     if (tkPictureIsOpen) {
-	/*
-	 * When rendering into a picture, after a call to "OpenCPicture"
-	 * the drawable clipping is incorrect, so clip to the whole window.
-	 */
-
-	Rect clpRect;
-
-	GetPortBounds(destPort, &clpRect);
-	ClipRect(&clpRect);
-	destPtr = srcPtr;
+	dstPtr = srcPtr;
+	NoQDClip(destPort);
     } else {
-	destPtr = &destRect;
-	SetRect(destPtr, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y,
-	    dstDraw->xOff + dest_x + width, dstDraw->yOff + dest_y + height);
+	SetRect(dstPtr, dstDraw->xOff + dest_x, dstDraw->yOff + dest_y,
+		dstDraw->xOff + dest_x + width,
+		dstDraw->yOff + dest_y + height);
+	TkMacOSXSetUpClippingRgn(d);
     }
-
+    TkMacOSXCheckTmpRgnEmpty(1);
+    ClipToGC(d, gc, destPort, tkMacOSXtmpRgn1);
+    portChanged = QDSwapPort(destPort, &savePort);
+    GetPortForeColor(destPort, &origForeColor);
+    GetPortBackColor(destPort, &origBackColor);
+    RGBForeColor(&black);
+    RGBBackColor(&white);
     if (image->obdata) {
 	/*
 	 * Image from XGetImage, copy from containing GWorld directly.
 	 */
 
 	CopyBits(GetPortBitMapForCopyBits(TkMacOSXGetDrawablePort((Drawable)
-		image->obdata)), destBits, srcPtr, destPtr, srcCopy, NULL);
+		image->obdata)), dstBit, srcPtr, dstPtr, srcCopy, NULL);
     } else if (image->depth == 1) {
 	/*
 	 * BW image
@@ -487,12 +432,13 @@ TkPutImage(
 	    }
 	    bitmap.baseAddr = newData;
 	    bitmap.rowBytes = sliceRowBytes + odd;
-	    CopyBits(&bitmap, destBits, srcPtr, destPtr, srcCopy, NULL);
+	    CopyBits(&bitmap, dstBit, srcPtr, dstPtr, srcCopy, NULL);
 	    if (slices) {
 		bitmap.bounds.left = bitmap.bounds.right;
 		dataPtr += sliceRowBytes;
 	    }
 	} while (slices--);
+	ckfree(newData);
     } else {
 	/*
 	 * Color image
@@ -548,24 +494,25 @@ TkPutImage(
 		}
 		pixmap.baseAddr = newData;
 		pixmap.rowBytes = sliceRowBytes | 0x8000;
-		CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr,
-			srcCopy, NULL);
+		CopyBits((BitMap*) &pixmap, dstBit, srcPtr, dstPtr, srcCopy,
+			NULL);
 		if (slices) {
 		    pixmap.bounds.left = pixmap.bounds.right;
 		    dataPtr += sliceRowBytes;
 		}
 	    } while (slices--);
+	    ckfree(newData);
 	} else {
 	    pixmap.bounds.right = (short) image->width;
 	    pixmap.baseAddr = image->data;
 	    pixmap.rowBytes = rowBytes | 0x8000;
-	    CopyBits((BitMap *) &pixmap, destBits, srcPtr, destPtr,
-		    srcCopy, NULL);
+	    CopyBits((BitMap*) &pixmap, dstBit, srcPtr, dstPtr, srcCopy, NULL);
 	}
     }
-    if (newData != NULL) {
-	ckfree(newData);
-    }
+    RGBForeColor(&origForeColor);
+    RGBBackColor(&origBackColor);
+    SetPortClipRegion(destPort, tkMacOSXtmpRgn2);
+    SetEmptyRgn(tkMacOSXtmpRgn2);
     if (portChanged) {
 	QDSwapPort(savePort, NULL);
     }
@@ -1009,17 +956,10 @@ XDrawArc(
 		macWin->xOff + x + o,
 		macWin->yOff + y + o,
 		width, height);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	if (angle1 == 0 && angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		&& CGContextStrokeEllipseInRect != NULL
-#endif
-	) {
+	TK_IF_MAC_OS_X_API_COND (4, CGContextStrokeEllipseInRect,
+		angle1 == 0 && angle2 == 23040,
 	    CGContextStrokeEllipseInRect(dc.context, rect);
-	} else
-#endif
-	{
+	) TK_ELSE (
 	    CGMutablePathRef p = CGPathCreateMutable();
 	    CGAffineTransform t = CGAffineTransformIdentity;
 	    CGPoint c = CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
@@ -1034,7 +974,7 @@ XDrawArc(
 	    CGContextAddPath(dc.context, p);
 	    CGPathRelease(p);
 	    CGContextStrokePath(dc.context);
-	}
+	) TK_ENDIF
     } else {
 	Rect theRect;
 	short start, extent;
@@ -1104,16 +1044,10 @@ XDrawArcs(
 		    macWin->yOff + arcPtr->y + o,
 		    arcPtr->width, arcPtr->height);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	    if (arcPtr->angle1 == 0 && arcPtr->angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && CGContextStrokeEllipseInRect != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API_COND (4, CGContextStrokeEllipseInRect,
+		    arcPtr->angle1 == 0 && arcPtr->angle2 == 23040,
 		CGContextStrokeEllipseInRect(dc.context, rect);
-	    } else
-#endif
-	    {
+	    ) TK_ELSE (
 		CGMutablePathRef p = CGPathCreateMutable();
 		CGAffineTransform t = CGAffineTransformIdentity;
 		CGPoint c = CGPointMake(CGRectGetMidX(rect),
@@ -1132,7 +1066,7 @@ XDrawArcs(
 		CGContextAddPath(dc.context, p);
 		CGPathRelease(p);
 		CGContextStrokePath(dc.context);
-	    }
+	    ) TK_ENDIF
 	}
     } else {
 	Rect theRect;
@@ -1202,16 +1136,10 @@ XFillArc(
 		macWin->yOff + y + o,
 		width - u, height - u);
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	if (angle1 == 0 && angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		&& CGContextFillEllipseInRect != NULL
-#endif
-	) {
+	TK_IF_MAC_OS_X_API_COND (4, CGContextFillEllipseInRect,
+		angle1 == 0 && angle2 == 23040,
 	    CGContextFillEllipseInRect(dc.context, rect);
-	} else
-#endif
-	{
+	) TK_ELSE (
 	    CGMutablePathRef p = CGPathCreateMutable();
 	    CGAffineTransform t = CGAffineTransformIdentity;
 	    CGPoint c = CGPointMake(CGRectGetMidX(rect), CGRectGetMidY(rect));
@@ -1230,7 +1158,7 @@ XFillArc(
 	    CGContextAddPath(dc.context, p);
 	    CGPathRelease(p);
 	    CGContextFillPath(dc.context);
-	}
+	) TK_ENDIF
     } else {
 	Rect theRect;
 	short start, extent;
@@ -1326,17 +1254,10 @@ XFillArcs(
 		    macWin->xOff + arcPtr->x + o,
 		    macWin->yOff + arcPtr->y + o,
 		    arcPtr->width - u, arcPtr->height - u);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-	    if (arcPtr->angle1 == 0 && arcPtr->angle2 == 23040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
-		    && CGContextFillEllipseInRect != NULL
-#endif
-	    ) {
+	    TK_IF_MAC_OS_X_API_COND (4, CGContextFillEllipseInRect,
+		    arcPtr->angle1 == 0 && arcPtr->angle2 == 23040,
 		CGContextFillEllipseInRect(dc.context, rect);
-	    } else
-#endif
-	    {
+	    ) TK_ELSE (
 		CGMutablePathRef p = CGPathCreateMutable();
 		CGAffineTransform t = CGAffineTransformIdentity;
 		CGPoint c = CGPointMake(CGRectGetMidX(rect),
@@ -1359,7 +1280,7 @@ XFillArcs(
 		CGContextAddPath(dc.context, p);
 		CGPathRelease(p);
 		CGContextFillPath(dc.context);
-	    }
+	    ) TK_ENDIF
 	}
     } else {
 	Rect theRect;
@@ -1458,14 +1379,11 @@ TkScrollWindow(
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     MacDrawable *destDraw = (MacDrawable *) Tk_WindowId(tkwin);
-    RgnHandle rgn = (RgnHandle) damageRgn;
     CGrafPtr destPort, savePort;
     Boolean portChanged;
     Rect srcRect, scrollRect;
-
-    destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
-    portChanged = QDSwapPort(destPort, &savePort);
-    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
+    int result;
+    RgnHandle rgn = (RgnHandle) damageRgn;
 
     /*
      * Due to the implementation below the behavior may be differnt
@@ -1477,11 +1395,11 @@ TkScrollWindow(
      * destination rects disjoint and non-aligned.
      */
 
-    SetRect(&srcRect, (short) (destDraw->xOff + x),
+    SetRect(&scrollRect, (short) (destDraw->xOff + x),
 	    (short) (destDraw->yOff + y),
 	    (short) (destDraw->xOff + x + width),
 	    (short) (destDraw->yOff + y + height));
-    scrollRect = srcRect;
+    srcRect = scrollRect;
     if (dx < 0) {
 	scrollRect.left += dx;
     } else {
@@ -1493,11 +1411,8 @@ TkScrollWindow(
 	scrollRect.bottom += dy;
     }
 
-    /*
-     * Adjust clip region so that we don't copy any windows
-     * that may overlap us.
-     */
-
+    destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
+    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
     TkMacOSXCheckTmpRgnEmpty(1);
     TkMacOSXCheckTmpRgnEmpty(2);
     RectRgn(rgn, &srcRect);
@@ -1507,25 +1422,26 @@ TkScrollWindow(
     GetPortClipRegion(destPort, tkMacOSXtmpRgn2);
     DiffRgn(tkMacOSXtmpRgn2, rgn, tkMacOSXtmpRgn2);
     SetPortClipRegion(destPort, tkMacOSXtmpRgn2);
-    SetEmptyRgn(tkMacOSXtmpRgn1);
     SetEmptyRgn(tkMacOSXtmpRgn2);
+    SetEmptyRgn(tkMacOSXtmpRgn1);
     SetEmptyRgn(rgn);
 
+    portChanged = QDSwapPort(destPort, &savePort);
     ScrollRect(&scrollRect, dx, dy, rgn);
     if (portChanged) {
 	QDSwapPort(savePort, NULL);
     }
+
     /*
      * Fortunately, the region returned by ScrollRect is semantically
      * the same as what we need to return in this function. If the
      * region is empty we return zero to denote that no damage was
      * created.
      */
-    if (EmptyRgn(rgn)) {
-	return 0;
-    } else {
-	return 1;
-    }
+
+    result = EmptyRgn(rgn) ? 0 : 1;
+
+    return result;
 }
 
 /*
@@ -1551,11 +1467,11 @@ TkMacOSXSetUpGraphicsPort(
 {
     PenNormal();
     if (gc) {
-	if (gPenPat == NULL) {
-	    gPenPat = NewPixPat();
+	if (penPat == NULL) {
+	    penPat = NewPixPat();
 	}
-	TkMacOSXSetColorInPort(gc->foreground, 1, gPenPat);
-	PenPixPat(gPenPat);
+	TkMacOSXSetColorInPort(gc->foreground, 1, penPat);
+	PenPixPat(penPat);
 	if(gc->function == GXxor) {
 	    PenMode(patXor);
 	}
@@ -1599,71 +1515,25 @@ TkMacOSXSetupDrawingContext(
     CGrafPtr port;
     Rect portBounds;
 
+    dc->saveState = NULL;
+    dc->penPat = NULL;
+    dc->portChanged = false;
     port = TkMacOSXGetDrawablePort(d);
     if (port) {
 	GetPortBounds(port, &portBounds);
     }
-    dc->saveState = NULL;
-    if (port && !context) {
-	dc->portChanged = QDSwapPort(port, &(dc->savePort));
-	TkMacOSXSetUpClippingRgn(d);
-	TkMacOSXCheckTmpRgnEmpty(1);
-	if (useCG) {
-	    if (ChkErr(QDBeginCGContext, port, &context) == noErr) {
-		/*
-		 * Now clip the CG Context to the port. Note, we have already
-		 * set up the port with our clip region, so we can just get
-		 * the clip back out of there. If we use the macWin->clipRgn
-		 * directly at this point, we get some odd drawing effects.
-		 *
-		 * We also have to intersect our clip region with the port
-		 * visible region so we don't overwrite the window decoration.
-		 */
+    if (context) {
+	if (!port) {
+	    TK_IF_MAC_OS_X_API (3, CGContextGetClipBoundingBox,
+		CGRect r = CGContextGetClipBoundingBox(context);
 
-		RectRgn(tkMacOSXtmpRgn1, &portBounds);
-		SectRegionWithPortClipRegion(port, tkMacOSXtmpRgn1);
-		SectRegionWithPortVisibleRegion(port, tkMacOSXtmpRgn1);
-		if (gc && gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
-			== TKP_CLIP_REGION) {
-		    RgnHandle gcClipRgn = (RgnHandle)
-			    ((TkpClipMask*)gc->clip_mask)->value.region;
-		    int xOffset = macDraw->xOff + gc->clip_x_origin;
-		    int yOffset = macDraw->yOff + gc->clip_y_origin;
-
-		    OffsetRgn(gcClipRgn, xOffset, yOffset);
-		    SectRgn(gcClipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
-		    OffsetRgn(gcClipRgn, -xOffset, -yOffset);
-		}
-		ClipCGContextToRegion(context, &portBounds, tkMacOSXtmpRgn1);
-		SetEmptyRgn(tkMacOSXtmpRgn1);
-
-		/*
-		 * Note: You have to call SyncCGContextOriginWithPort
-		 * AFTER all the clip region manipulations.
-		 */
-
-		SyncCGContextOriginWithPort(context, port);
-	    } else {
-		context = NULL;
-		useCG = 0;
-	    }
+		SetRect(&portBounds, r.origin.x + macDraw->xOff,
+			r.origin.y + macDraw->yOff,
+			r.origin.x + r.size.width + macDraw->xOff,
+			r.origin.y + r.size.height + macDraw->yOff);
+	    ) TK_ENDIF
 	}
-    } else if (context) {
 	TkMacOSXCheckTmpRgnEmpty(1);
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-	if (!port
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1030
-		&& CGContextGetClipBoundingBox != NULL
-#endif
-	) {
-	    CGRect r = CGContextGetClipBoundingBox(context);
-
-	    SetRect(&portBounds, r.origin.x + macDraw->xOff,
-		    r.origin.y + macDraw->yOff,
-		    r.origin.x + r.size.width + macDraw->xOff,
-		    r.origin.y + r.size.height + macDraw->yOff);
-	}
-#endif
 	RectRgn(tkMacOSXtmpRgn1, &portBounds);
 	if (port) {
 	    TkMacOSXSetUpClippingRgn(d);
@@ -1674,24 +1544,31 @@ TkMacOSXSetupDrawingContext(
 	    SectRgn(macDraw->clipRgn, macDraw->drawRgn, tkMacOSXtmpRgn1);
 	    OffsetRgn(macDraw->drawRgn, -macDraw->xOff, -macDraw->yOff);
 	}
-	if (gc && gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
-		== TKP_CLIP_REGION) {
-	    RgnHandle gcClipRgn = (RgnHandle)
-		    ((TkpClipMask*)gc->clip_mask)->value.region;
-	    int xOffset = macDraw->xOff + gc->clip_x_origin;
-	    int yOffset = macDraw->yOff + gc->clip_y_origin;
-
-	    OffsetRgn(gcClipRgn, xOffset, yOffset);
-	    SectRgn(gcClipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
-	    OffsetRgn(gcClipRgn, -xOffset, -yOffset);
-	}
+	ClipToGC(d, gc, NULL, tkMacOSXtmpRgn1);
 	CGContextSaveGState(context);
+	dc->saveState = (void*)1;
 	ClipCGContextToRegion(context, &portBounds, tkMacOSXtmpRgn1);
 	SetEmptyRgn(tkMacOSXtmpRgn1);
 	port = NULL;
-	dc->portChanged = false;
-	dc->saveState = (void*)1;
 	useCG = 1;
+    } else if (port) {
+	dc->portChanged = QDSwapPort(port, &(dc->savePort));
+	TkMacOSXSetUpClippingRgn(d);
+	if (useCG) {
+	    if (ChkErr(QDBeginCGContext, port, &context) == noErr) {
+		TkMacOSXCheckTmpRgnEmpty(1);
+		RectRgn(tkMacOSXtmpRgn1, &portBounds);
+		SectRegionWithPortClipRegion(port, tkMacOSXtmpRgn1);
+		SectRegionWithPortVisibleRegion(port, tkMacOSXtmpRgn1);
+		ClipToGC(d, gc, NULL, tkMacOSXtmpRgn1);
+		ClipCGContextToRegion(context, &portBounds, tkMacOSXtmpRgn1);
+		SetEmptyRgn(tkMacOSXtmpRgn1);
+		SyncCGContextOriginWithPort(context, port);
+	    } else {
+		context = NULL;
+		useCG = 0;
+	    }
+	}
     } else {
 	Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		"no port or context to draw into !");
@@ -1719,7 +1596,6 @@ TkMacOSXSetupDrawingContext(
 		CGContextSetShouldAntialias(context, 1);
 	    }
 	    CGContextSetLineWidth(context, w);
-
 	    if (gc->line_style != LineSolid) {
 		int num = 0;
 		char *p = &(gc->dashes);
@@ -1732,7 +1608,6 @@ TkMacOSXSetupDrawingContext(
 		}
 		CGContextSetLineDash(context, dashOffset, lengths, num);
 	    }
-
 	    if (gc->cap_style == CapButt) {
 		/*
 		 *  What about CapNotLast, CapProjecting?
@@ -1744,7 +1619,6 @@ TkMacOSXSetupDrawingContext(
 	    } else if (gc->cap_style == CapProjecting) {
 		CGContextSetLineCap(context, kCGLineCapSquare);
 	    }
-
 	    if (gc->join_style == JoinMiter) {
 		CGContextSetLineJoin(context, kCGLineJoinMiter);
 	    } else if (gc->join_style == JoinRound) {
@@ -1754,36 +1628,21 @@ TkMacOSXSetupDrawingContext(
 	    }
 	}
     } else {
+	PixPatHandle savePat = penPat;
+
 	ChkErr(GetThemeDrawingState, &(dc->saveState));
+	penPat = NULL;
+	TkMacOSXSetUpGraphicsPort(gc, port);
+	dc->penPat = penPat;
+	penPat = savePat;
 	if (gc) {
-	    PixPatHandle savePat = gPenPat;
-
-	    gPenPat = NULL;
-	    TkMacOSXSetUpGraphicsPort(gc, port);
-	    dc->penPat = gPenPat;
-	    gPenPat = savePat;
-	    if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
-			== TKP_CLIP_REGION) {
-		RgnHandle gcClipRgn = (RgnHandle)
-			((TkpClipMask*)gc->clip_mask)->value.region;
-		int xOffset = macDraw->xOff + gc->clip_x_origin;
-		int yOffset = macDraw->yOff + gc->clip_y_origin;
-
-		OffsetRgn(gcClipRgn, xOffset, yOffset);
-		GetClip(tkMacOSXtmpRgn1);
-		SectRgn(gcClipRgn, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
-		SetClip(tkMacOSXtmpRgn1);
-		SetEmptyRgn(tkMacOSXtmpRgn1);
-		OffsetRgn(gcClipRgn, -xOffset, -yOffset);
-	    }
-	} else {
-	    TkMacOSXSetUpGraphicsPort(NULL, port);
-	    dc->penPat = NULL;
+	    TkMacOSXCheckTmpRgnEmpty(1);
+	    ClipToGC(d, gc, port, tkMacOSXtmpRgn1);
 	}
 	ShowPen();
     }
-    dc->port = port;
     dc->portBounds = portBounds;
+    dc->port = port;
     dc->context = context;
     return useCG;
 }
@@ -1855,32 +1714,29 @@ TkMacOSXSetUpClippingRgn(
     Drawable drawable)		/* Drawable to update. */
 {
     MacDrawable *macDraw = (MacDrawable *) drawable;
+    CGrafPtr port = TkMacOSXGetDrawablePort(drawable);
 
-    if (macDraw->winPtr != NULL) {
-	if (macDraw->flags & TK_CLIP_INVALID) {
-	    TkMacOSXUpdateClipRgn(macDraw->winPtr);
-	}
-
+    if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
+	TkMacOSXUpdateClipRgn(macDraw->winPtr);
 #ifdef TK_MAC_DEBUG_DRAWING
-	TkMacOSXDebugFlashRegion(TkMacOSXGetDrawablePort(drawable),
-		macDraw->clipRgn);
+	TkMacOSXDebugFlashRegion(port, macDraw->clipRgn);
 #endif /* TK_MAC_DEBUG_DRAWING */
     }
 
-    if (macDraw->clipRgn != NULL) {
+    if (macDraw->clipRgn) {
 	if (macDraw->flags & TK_CLIPPED_DRAW) {
 	    TkMacOSXCheckTmpRgnEmpty(1);
 	    OffsetRgn(macDraw->drawRgn, macDraw->xOff, macDraw->yOff);
 	    SectRgn(macDraw->clipRgn, macDraw->drawRgn, tkMacOSXtmpRgn1);
 	    OffsetRgn(macDraw->drawRgn, -macDraw->xOff, -macDraw->yOff);
-	    SetClip(tkMacOSXtmpRgn1);
+	    SetPortClipRegion(port, tkMacOSXtmpRgn1);
 	    SetEmptyRgn(tkMacOSXtmpRgn1);
 	} else {
-	    SetClip(macDraw->clipRgn);
+	    SetPortClipRegion(port, macDraw->clipRgn);
 	}
     } else if (macDraw->flags & TK_CLIPPED_DRAW) {
 	OffsetRgn(macDraw->drawRgn, macDraw->xOff, macDraw->yOff);
-	SetClip(macDraw->drawRgn);
+	SetPortClipRegion(port, macDraw->drawRgn);
 	OffsetRgn(macDraw->drawRgn, -macDraw->xOff, -macDraw->yOff);
     }
 }
@@ -1920,6 +1776,83 @@ TkpClipDrawableToRect(
 	    macDraw->flags |= TK_CLIPPED_DRAW;
 	}
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ClipToGC --
+ *
+ *	Helper function to intersect the given port's clip region (or if
+ *	port is NULL, the given clipRgn) with gc clip region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ClipToGC(
+    Drawable d,
+    GC gc,
+    CGrafPtr port, /* can be NULL */
+    RgnHandle clipRgn) /* tmp region or if port == NULL, region to intersect */
+{
+    if (gc && gc->clip_mask &&
+	    ((TkpClipMask*)gc->clip_mask)->type == TKP_CLIP_REGION) {
+	RgnHandle gcClipRgn = (RgnHandle)
+		((TkpClipMask*)gc->clip_mask)->value.region;
+	int xOffset = ((MacDrawable *) d)->xOff + gc->clip_x_origin;
+	int yOffset = ((MacDrawable *) d)->yOff + gc->clip_y_origin;
+
+	if (!tkPictureIsOpen) {
+	    OffsetRgn(gcClipRgn, xOffset, yOffset);
+	}
+	if (port) {
+	    GetPortClipRegion(port, clipRgn);
+	}
+	SectRgn(clipRgn, gcClipRgn, clipRgn);
+	if (port) {
+	    SetPortClipRegion(port, clipRgn);
+	    SetEmptyRgn(clipRgn);
+	}
+	if (!tkPictureIsOpen) {
+	    OffsetRgn(gcClipRgn, -xOffset, -yOffset);
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * NoQDClip --
+ *
+ *	Helper function to setup a QD port to not clip anything.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+NoQDClip(
+    CGrafPtr port)
+{
+    static RgnHandle noClipRgn = NULL;
+    
+    if (!noClipRgn) {
+	noClipRgn = NewRgn();
+	SetRectRgn(noClipRgn, SHRT_MIN, SHRT_MIN, SHRT_MAX, SHRT_MAX);
+    }
+    SetPortClipRegion(port, noClipRgn);
 }
 
 /*

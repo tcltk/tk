@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.6.2.1 2007/05/30 13:47:43 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.6.2.2 2007/06/12 16:22:42 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -68,7 +68,7 @@ TkDestroyRegion(
  *
  * TkIntersectRegion --
  *
- *	Implements the equivilent of the X window function
+ *	Implements the equivalent of the X window function
  *	XIntersectRegion. See X window documentation for more details.
  *
  * Results:
@@ -94,7 +94,7 @@ TkIntersectRegion(
  *
  * TkSubtractRegion --
  *
- *	Implements the equivilent of the X window function
+ *	Implements the equivalent of the X window function
  *	XSubtractRegion. See X window documentation for more details.
  *
  * Results:
