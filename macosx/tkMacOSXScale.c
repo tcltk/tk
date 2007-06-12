@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScale.c,v 1.11 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScale.c,v 1.11.2.1 2007/06/12 16:22:42 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -210,7 +210,7 @@ TkpDisplayScale(
     macDraw = (MacDrawable *) Tk_WindowId(tkwin);
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
     windowRef = GetWindowFromPort(destPort);
-    portChanged = QDSwapPort(dstPort, &savePort);
+    portChanged = QDSwapPort(destPort, &savePort);
     TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     /*
@@ -267,11 +267,7 @@ TkpDisplayScale(
 		&(macScalePtr->scaleHandle));
 	SetControlReference(macScalePtr->scaleHandle, (UInt32) scalePtr);
 
-	/*
-	 * If we are foremost than make us active.
-	 */
-
-	if (windowRef == FrontWindow()) {
+	if (IsWindowActive(windowRef)) {
 	    macScalePtr->flags |= ACTIVE;
 	}
     } else {
@@ -331,7 +327,7 @@ TkpScaleElement(
     TkMacOSXDbgMsg("TkpScaleElement");
 #endif
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(scalePtr->tkwin));
-    portChanged = QDSwapPort(dstPort, &savePort);
+    portChanged = QDSwapPort(destPort, &savePort);
 
     /*
      * All of the calculations in this procedure mirror those in
@@ -412,7 +408,7 @@ MacScaleEventProc(
      */
 
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(macScalePtr->info.tkwin));
-    portChanged = QDSwapPort(dstPort, &savePort);
+    portChanged = QDSwapPort(destPort, &savePort);
     TkMacOSXSetUpClippingRgn(Tk_WindowId(macScalePtr->info.tkwin));
 
     TkMacOSXWinBounds((TkWindow *) macScalePtr->info.tkwin, &bounds);

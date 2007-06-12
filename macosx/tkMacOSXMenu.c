@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.2 2007/06/04 15:19:00 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.3 2007/06/12 16:22:42 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -1672,7 +1672,7 @@ DrawMenuBarWhenIdle(
     ClientData clientData)	/* ignored here */
 {
     TkMenuReferences *menuRefPtr;
-    TkMenu *appleMenuPtr, *helpMenuPtr, *menuBarPtr;
+    TkMenu *appleMenuPtr, *helpMenuPtr, *menuBarPtr = NULL;
     MenuHandle macMenuHdl;
     Tcl_HashEntry *hashEntryPtr;
 
