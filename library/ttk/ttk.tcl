@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.5.2.1 2007/05/26 04:06:07 dgp Exp $
+# $Id: ttk.tcl,v 1.5.2.2 2007/06/21 16:02:24 dgp Exp $
 #
 # Ttk widget set initialization script.
 #
@@ -45,7 +45,7 @@ proc ttk::deprecated'warning {old new} {
 ### Backward-compatibility.
 #
 
-package ifneeded tile 0.8.0 { package provide tile 0.8.0 }
+package ifneeded tile 0.8.0 { package require Tk ; package provide tile 0.8.0 }
 
 # ttk::panedwindow used to be named ttk::paned.  Keep the alias for now.
 #
