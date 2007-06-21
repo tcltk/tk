@@ -1,3 +1,8 @@
+2007-06-20  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/ttk/ttk.tcl: should require Tk before pseudo-providing
+	tile 0.8.0.
+
 2007-06-09  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkPanedwindow.c, doc/ttk_panedwindow.n,
