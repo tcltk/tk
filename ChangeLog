@@ -1,3 +1,19 @@
+2007-06-23  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkImgPhoto.c (ImgPhotoConfigureInstance, DisposeInstance):
+	use XDestroyImage instead of XFree to destroy XImage; replace runtime
+	endianness determination by compile-time check for WORDS_BIGENDIAN.
+
+	* xlib/ximage.c (XCreateBitmapFromData): use XCreateImage and
+	XDestroyImage instead of creating XImage structure manually.
+
+	* macosx/tkMacOSXXStubs.c (XCreateImage, DestroyImage): correct XImage
+	bytes_per_line/bitmap_pad calculations and endianness setting; free
+	image data and XImage structure at destruction; formatting cleanup.
+
+	* macosx/tkMacOSXDialog.c (NavServicesGetFile): disable app-modal
+	sheet variant of nav dialog on OS versions where it causes problems.
+
 2007-06-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinWm.c (WmIconphotoCmd): fix wm iconphoto RGBA issues.
@@ -5,7 +21,7 @@
 
 	* win/tkWinMenu.c (TkWinHandleMenuEvent): improve handling to
 	allow for unicode char menu indices and not use CharUpper on Tcl
-	utf strings. [Bug #1734223]
+	utf strings. [Bug 1734223]
 
 2007-06-09  Daniel Steffen  <das@users.sourceforge.net>
 
