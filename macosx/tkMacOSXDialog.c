@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.25 2007/05/09 12:55:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.26 2007/06/23 00:26:32 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -776,10 +776,17 @@ NavServicesGetFile(
 	    TkMacOSXHostToplevelExists(parent)) {
 	options.parentWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(
 		Tk_WindowId(parent)));
-	if (options.parentWindow) {
-	    options.modality = kWindowModalityWindowModal;
-	    data.sheet = 1;
-	}
+	TK_IF_HI_TOOLBOX (5,
+	    /*
+	     * Impossible to modify dialog modality with the Cocoa-based
+	     * NavServices implementation.
+	     */
+	) TK_ELSE_HI_TOOLBOX (5,
+	    if (options.parentWindow) {
+		options.modality = kWindowModalityWindowModal;
+		data.sheet = 1;
+	    }
+	) TK_ENDIF
     }
 
     /*
