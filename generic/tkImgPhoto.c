@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.17 2006/05/13 00:48:37 hobbs Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.18 2007/06/23 00:26:42 das Exp $
  */
 
 #include "tkInt.h"
@@ -2253,7 +2253,7 @@ ImgPhotoConfigureInstance(instancePtr)
 	if ((instancePtr->imagePtr == NULL)
 		|| (instancePtr->imagePtr->bits_per_pixel != bitsPerPixel)) {
 	    if (instancePtr->imagePtr != NULL) {
-		XFree((char *) instancePtr->imagePtr);
+		XDestroyImage(instancePtr->imagePtr);
 	    }
 	    imagePtr = XCreateImage(instancePtr->display,
 		    instancePtr->visualInfo.visual, (unsigned) bitsPerPixel,
@@ -2262,26 +2262,18 @@ ImgPhotoConfigureInstance(instancePtr)
 	    instancePtr->imagePtr = imagePtr;
 
 	    /*
-	     * Determine the endianness of this machine.
-	     * We create images using the local host's endianness, rather
-	     * than the endianness of the server; otherwise we would have
-	     * to byte-swap any 16 or 32 bit values that we store in the
-	     * image in those situations where the server's endianness
-	     * is different from ours.
-	     *
-	     * FIXME: use autoconf to figure this out.
+	     * We create images using the local host's endianness, rather than
+	     * the endianness of the server; otherwise we would have to
+	     * byte-swap any 16 or 32 bit values that we store in the image
+	     * if the server's endianness is different from ours.
 	     */
 
 	    if (imagePtr != NULL) {
-		union {
-		    int i;
-		    char c[sizeof(int)];
-		} kludge;
-
-		imagePtr->bitmap_unit = sizeof(pixel) * NBBY;
-		kludge.i = 0;
-		kludge.c[0] = 1;
-		imagePtr->byte_order = (kludge.i == 1) ? LSBFirst : MSBFirst;
+#ifdef WORDS_BIGENDIAN
+		imagePtr->byte_order = MSBFirst;
+#else
+		imagePtr->byte_order = LSBFirst;
+#endif
 		_XInitImageFuncPtrs(imagePtr);
 	    }
 	}
@@ -4008,7 +4000,7 @@ DisposeInstance(clientData)
 	Tk_FreeGC(instancePtr->display, instancePtr->gc);
     }
     if (instancePtr->imagePtr != NULL) {
-	XFree((char *) instancePtr->imagePtr);
+	XDestroyImage(instancePtr->imagePtr);
     }
     if (instancePtr->error != NULL) {
 	ckfree((char *) instancePtr->error);
