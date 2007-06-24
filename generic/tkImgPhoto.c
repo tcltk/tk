@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.70 2007/06/23 00:25:38 das Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.71 2007/06/24 16:07:34 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -79,7 +79,7 @@ typedef unsigned int pixel;
  */
 
 typedef struct {
-    Display *display;		/* Qualifies the colormap resource ID */
+    Display *display;		/* Qualifies the colormap resource ID. */
     Colormap colormap;		/* Colormap that the windows are using. */
     double gamma;		/* Gamma exponent value for images. */
     Tk_Uid palette;		/* Specifies how many shades of each primary
@@ -106,8 +106,8 @@ typedef struct ColorTable {
 
     pixel redValues[256];	/* Maps 8-bit values of red intensity to a
 				 * pixel value or index in pixelMap. */
-    pixel greenValues[256];	/* Ditto for green intensity */
-    pixel blueValues[256];	/* Ditto for blue intensity */
+    pixel greenValues[256];	/* Ditto for green intensity. */
+    pixel blueValues[256];	/* Ditto for blue intensity. */
     unsigned long *pixelMap;	/* Actual pixel values allocated. */
 
     unsigned char colorQuant[3][256];
@@ -240,7 +240,8 @@ struct SubcommandOptions {
     int subsampleX, subsampleY;	/* Values specified for -subsample option. */
     Tcl_Obj *format;		/* Value specified for -format option. */
     XColor *background;		/* Value specified for -background option. */
-    int compositingRule;	/* Value specified for -compositingrule opt */
+    int compositingRule;	/* Value specified for -compositingrule
+				 * option. */
 };
 
 /*
@@ -329,7 +330,7 @@ Tk_ImageType tkPhotoImageType = {
     ImgPhotoFree,		/* freeProc */
     ImgPhotoDelete,		/* deleteProc */
     ImgPhotoPostscript,		/* postscriptProc */
-    NULL	/* nextPtr */
+    NULL			/* nextPtr */
 };
 
 typedef struct ThreadSpecificData {
@@ -405,8 +406,8 @@ static int		ImgPhotoConfigureMaster(Tcl_Interp *interp,
 			    PhotoMaster *masterPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
 static void		ImgPhotoConfigureInstance(PhotoInstance *instancePtr);
-static int              ToggleComplexAlphaIfNeeded(PhotoMaster *mPtr);
-static void             ImgPhotoBlendComplexAlpha(XImage *bgImg,
+static int		ToggleComplexAlphaIfNeeded(PhotoMaster *mPtr);
+static void		ImgPhotoBlendComplexAlpha(XImage *bgImg,
 			    PhotoInstance *iPtr, int xOffset, int yOffset,
 			    int width, int height);
 static int		ImgPhotoSetSize(PhotoMaster *masterPtr, int width,
@@ -468,7 +469,7 @@ PhotoFormatThreadExitProc(
 {
     Tk_PhotoImageFormat *freePtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     while (tsdPtr->oldFormatList != NULL) {
 	freePtr = tsdPtr->oldFormatList;
@@ -513,7 +514,7 @@ Tk_CreateOldPhotoImageFormat(
 {
     Tk_PhotoImageFormat *copyPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
@@ -537,7 +538,7 @@ Tk_CreatePhotoImageFormat(
 {
     Tk_PhotoImageFormat *copyPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
@@ -642,7 +643,6 @@ ImgPhotoCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
-    int oldformat = 0;
     static const char *photoOptions[] = {
 	"blank", "cget", "configure", "copy", "data", "get", "put",
 	"read", "redither", "transparency", "write", NULL
@@ -654,22 +654,18 @@ ImgPhotoCmd(
     };
 
     PhotoMaster *masterPtr = (PhotoMaster *) clientData;
-    int result, index;
-    int x, y, width, height;
-    int dataWidth, dataHeight;
+    int result, index, x, y, width, height, dataWidth, dataHeight, listObjc;
     struct SubcommandOptions options;
-    int listObjc;
     Tcl_Obj **listObjv, **srcObjv;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
     Tk_Window tkwin;
     Tk_PhotoImageFormat *imageFormat;
-    int imageWidth, imageHeight;
-    int matched, length;
+    int imageWidth, imageHeight, matched, length, oldformat = 0;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
@@ -1239,15 +1235,15 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 
-        /*
-         * Prevent file system access in safe interpreters.
-         */
+	/*
+	 * Prevent file system access in safe interpreters.
+	 */
 
-        if (Tcl_IsSafe(interp)) {
-            Tcl_AppendResult(interp, "can't get image from a file in a",
+	if (Tcl_IsSafe(interp)) {
+	    Tcl_AppendResult(interp, "can't get image from a file in a",
 		    " safe interpreter", NULL);
-            return TCL_ERROR;
-        }
+	    return TCL_ERROR;
+	}
 
 	/*
 	 * Open the image file and look for a handler for it.
@@ -1258,16 +1254,16 @@ ImgPhotoCmd(
 	if (chan == NULL) {
 	    return TCL_ERROR;
 	}
-        if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
 		!= TCL_OK) {
 	    Tcl_Close(NULL, chan);
-            return TCL_ERROR;
-        }
-        if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
+	    return TCL_ERROR;
+	}
+	if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
 		!= TCL_OK) {
 	    Tcl_Close(NULL, chan);
-            return TCL_ERROR;
-        }
+	    return TCL_ERROR;
+	}
 
 	if (MatchFileFormat(interp, chan,
 		Tcl_GetString(options.name), options.format, &imageFormat,
@@ -1489,15 +1485,15 @@ ImgPhotoCmd(
 	char *data;
 	Tcl_Obj *format;
 
-        /*
-         * Prevent file system access in safe interpreters.
-         */
+	/*
+	 * Prevent file system access in safe interpreters.
+	 */
 
-        if (Tcl_IsSafe(interp)) {
-            Tcl_AppendResult(interp, "can't write image to a file in a",
+	if (Tcl_IsSafe(interp)) {
+	    Tcl_AppendResult(interp, "can't write image to a file in a",
 		    " safe interpreter", NULL);
-            return TCL_ERROR;
-        }
+	    return TCL_ERROR;
+	}
 
 	/*
 	 * photo write command - first parse and check any options given.
@@ -1638,11 +1634,9 @@ ParseSubcommandOptions(
     int objc,			/* Number of arguments in objv[]. */
     Tcl_Obj *const objv[])	/* Arguments to be parsed. */
 {
-    int index, c, bit, currentBit;
-    int length;
+    int index, c, bit, currentBit, length;
+    int values[4], numValues, maxValues, argIndex;
     char *option, **listPtr;
-    int values[4];
-    int numValues, maxValues, argIndex;
 
     for (index = *optIndexPtr; index < objc; *optIndexPtr = ++index) {
 	/*
@@ -1775,7 +1769,7 @@ ParseSubcommandOptions(
 		if (argIndex >= objc) {
 		    break;
 		}
-	        val = Tcl_GetString(objv[argIndex]);
+		val = Tcl_GetString(objv[argIndex]);
 		if ((argIndex < objc) && (isdigit(UCHAR(val[0]))
 			|| ((val[0] == '-') && isdigit(UCHAR(val[1]))))) {
 		    if (Tcl_GetInt(interp, val, &values[numValues])
@@ -1910,15 +1904,12 @@ ImgPhotoConfigureMaster(
     PhotoInstance *instancePtr;
     const char *oldFileString, *oldPaletteString;
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
-    int length, i, j;
+    Tcl_Obj *tempdata, *tempformat;
+    int length, i, j, result, imageWidth, imageHeight, oldformat;
     double oldGamma;
-    int result;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
-    int imageWidth, imageHeight;
     const char **args;
-    int oldformat;
-    Tcl_Obj *tempdata, *tempformat;
 
     args = (const char **) ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
@@ -2045,16 +2036,16 @@ ImgPhotoConfigureMaster(
 	    && ((masterPtr->fileString != oldFileString)
 	    || (masterPtr->format != oldFormat))) {
 
-        /*
-         * Prevent file system access in a safe interpreter.
-         */
+	/*
+	 * Prevent file system access in a safe interpreter.
+	 */
 
-        if (Tcl_IsSafe(interp)) {
+	if (Tcl_IsSafe(interp)) {
 	    Tcl_ResetResult(interp);
-            Tcl_AppendResult(interp,
+	    Tcl_AppendResult(interp,
 		    "can't get image from a file in a safe interpreter", NULL);
 	    goto errorExit;
-        }
+	}
 
 	chan = Tcl_OpenFileChannel(interp, masterPtr->fileString, "r", 0);
 	if (chan == NULL) {
@@ -2065,7 +2056,7 @@ ImgPhotoConfigureMaster(
 	 * -translation binary also sets -encoding binary
 	 */
 
-        if ((Tcl_SetChannelOption(interp, chan,
+	if ((Tcl_SetChannelOption(interp, chan,
 		"-translation", "binary") != TCL_OK) ||
 		(MatchFileFormat(interp, chan, masterPtr->fileString,
 			masterPtr->format, &imageFormat, &imageWidth,
@@ -2341,10 +2332,9 @@ ImgPhotoGet(
     PhotoMaster *masterPtr = (PhotoMaster *) masterData;
     PhotoInstance *instancePtr;
     Colormap colormap;
-    int mono, nRed, nGreen, nBlue;
+    int mono, nRed, nGreen, nBlue, numVisuals;
     XVisualInfo visualInfo, *visInfoPtr;
     char buf[TCL_INTEGER_SPACE * 3];
-    int numVisuals;
     XColor *white, *black;
     XGCValues gcValues;
 
@@ -2536,7 +2526,7 @@ ToggleComplexAlphaIfNeeded(
      */
 
     mPtr->flags &= ~COMPLEX_ALPHA;
-    c += 3;			/* start at first alpha byte */
+    c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
      	    mPtr->flags |= COMPLEX_ALPHA;
@@ -2565,16 +2555,15 @@ ToggleComplexAlphaIfNeeded(
  * Side effects:
  *	Background image passed in gets drawn over with image data.
  *
- *----------------------------------------------------------------------
- */
-
-/*
- * This should work on all platforms that set mask and shift data properly
- * from the visualInfo. RGB is really only a 24+ bpp version whereas RGB15 is
- * the correct version and works for 15bpp+, but it slower, so it's only used
- * for 15bpp+.
+ * Notes:
+ *	This should work on all platforms that set mask and shift data
+ *	properly from the visualInfo. RGB is really only a 24+ bpp version
+ *	whereas RGB15 is the correct version and works for 15bpp+, but it
+ *	slower, so it's only used for 15bpp+.
  *
- * Note that Win32 pre-defines those operations that we really need.
+ *	Note that Win32 pre-defines those operations that we really need.
+ *
+ *----------------------------------------------------------------------
  */
 
 #ifndef __WIN32__
@@ -2593,16 +2582,16 @@ ToggleComplexAlphaIfNeeded(
 
 static void
 ImgPhotoBlendComplexAlpha(
-    XImage *bgImg,		/* background image to draw on */
-    PhotoInstance *iPtr,	/* image instance to draw */
-    int xOffset, int yOffset,	/* X & Y offset into image instance to draw */
-    int width, int height)	/* width & height of image to draw */
+    XImage *bgImg,		/* Background image to draw on. */
+    PhotoInstance *iPtr,	/* Image instance to draw. */
+    int xOffset, int yOffset,	/* X & Y offset into image instance to
+				 * draw. */
+    int width, int height)	/* Width & height of image to draw. */
 {
     int x, y, line;
     unsigned long pixel;
-    unsigned char r, g, b, alpha, unalpha;
+    unsigned char r, g, b, alpha, unalpha, *masterPtr;
     unsigned char *alphaAr = iPtr->masterPtr->pix32;
-    unsigned char *masterPtr;
 
     /*
      * This blending is an integer version of the Source-Over compositing rule
@@ -2688,7 +2677,7 @@ ImgPhotoBlendComplexAlpha(
 			ra = GetRValue(pixel) << red_mlen;
 			ga = GetGValue(pixel) << green_mlen;
 			ba = GetBValue(pixel) << blue_mlen;
-			unalpha = 255 - alpha;	/* calculate once */
+			unalpha = 255 - alpha;	/* Calculate once. */
 			r = ALPHA_BLEND(ra, r, alpha, unalpha);
 			g = ALPHA_BLEND(ga, g, alpha, unalpha);
 			b = ALPHA_BLEND(ba, b, alpha, unalpha);
@@ -2731,7 +2720,7 @@ ImgPhotoBlendComplexAlpha(
 		    ra = GetRValue(pixel);
 		    ga = GetGValue(pixel);
 		    ba = GetBValue(pixel);
-		    unalpha = 255 - alpha;	/* calculate once */
+		    unalpha = 255 - alpha;	/* Calculate once. */
 		    r = ALPHA_BLEND(ra, r, alpha, unalpha);
 		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
@@ -3180,8 +3169,7 @@ ImgPhotoInstanceSetSize(
     PhotoInstance *instancePtr)	/* Instance whose size is to be changed. */
 {
     PhotoMaster *masterPtr;
-    schar *newError;
-    schar *errSrcPtr, *errDestPtr;
+    schar *newError, *errSrcPtr, *errDestPtr;
     int h, offset;
     XRectangle validBox;
     Pixmap newPixmap;
@@ -3198,9 +3186,9 @@ ImgPhotoInstanceSetSize(
 		(masterPtr->width > 0) ? masterPtr->width: 1,
 		(masterPtr->height > 0) ? masterPtr->height: 1,
 		instancePtr->visualInfo.depth);
-        if (!newPixmap) {
-            Tcl_Panic("Fail to create pixmap with Tk_GetPixmap in ImgPhotoInstanceSetSize.\n");
-        }
+	if (!newPixmap) {
+	    Tcl_Panic("Fail to create pixmap with Tk_GetPixmap in ImgPhotoInstanceSetSize.\n");
+	}
 
 	/*
 	 * The following is a gross hack needed to properly support colormaps
@@ -3461,7 +3449,6 @@ GetColorTable(
 	 */
 
 	colorPtr = (ColorTable *) Tcl_GetHashValue(entry);
-
     } else {
 	/*
 	 * No color table currently available; need to make one.
@@ -3536,6 +3523,7 @@ FreeColorTable(
     if (colorPtr->refCount > 0) {
 	return;
     }
+
     if (force) {
 	if ((colorPtr->flags & DISPOSE_PENDING) != 0) {
 	    Tcl_CancelIdleCall(DisposeColorTable, (ClientData) colorPtr);
@@ -3853,10 +3841,9 @@ DisposeColorTable(
     ClientData clientData)	/* Pointer to the ColorTable whose
 				 * colors are to be released. */
 {
-    ColorTable *colorPtr;
+    ColorTable *colorPtr = (ColorTable *) clientData;
     Tcl_HashEntry *entry;
 
-    colorPtr = (ColorTable *) clientData;
     if (colorPtr->pixelMap != NULL) {
 	if (colorPtr->numColors > 0) {
 	    XFreeColors(colorPtr->id.display, colorPtr->id.colormap,
@@ -3905,14 +3892,13 @@ ReclaimColors(
     Tcl_HashSearch srch;
     Tcl_HashEntry *entry;
     ColorTable *colorPtr;
-    int nAvail;
+    int nAvail = 0;
 
     /*
      * First scan through the color hash table to get an upper bound on how
      * many colors we might be able to free.
      */
 
-    nAvail = 0;
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while (entry != NULL) {
 	colorPtr = (ColorTable *) Tcl_GetHashValue(entry);
@@ -3964,7 +3950,7 @@ ReclaimColors(
 
 	entry = Tcl_NextHashEntry(&srch);
     }
-    return 1;			/* we freed some colors */
+    return 1;			/* We freed some colors. */
 }
 
 /*
@@ -4013,7 +3999,7 @@ DisposeInstance(
     } else {
 	for (prevPtr = instancePtr->masterPtr->instancePtr;
 		prevPtr->nextPtr != instancePtr; prevPtr = prevPtr->nextPtr) {
-	    /* Empty loop body */
+	    /* Empty loop body. */
 	}
 	prevPtr->nextPtr = instancePtr->nextPtr;
     }
@@ -4055,13 +4041,12 @@ MatchFileFormat(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here. */
-    int *oldformat)		/* returns 1 if the old image API is used */
+    int *oldformat)		/* Returns 1 if the old image API is used. */
 {
-    int matched;
-    int useoldformat = 0;
+    int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char *formatString = NULL;
 
     if (formatObj) {
@@ -4073,9 +4058,8 @@ MatchFileFormat(
      * handle the image.
      */
 
-    matched = 0;
     for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
-	 formatPtr = formatPtr->nextPtr) {
+	    formatPtr = formatPtr->nextPtr) {
 	if (formatObj != NULL) {
 	    if (strncasecmp(formatString,
 		    formatPtr->name, strlen(formatPtr->name)) != 0) {
@@ -4186,13 +4170,12 @@ MatchStringFormat(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here. */
-    int *oldformat)		/* returns 1 if the old image API is used */
+    int *oldformat)		/* Returns 1 if the old image API is used. */
 {
-    int matched;
-    int useoldformat = 0;
+    int matched = 0, useoldformat = 0;
     Tk_PhotoImageFormat *formatPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char *formatString = NULL;
 
     if (formatObj) {
@@ -4204,7 +4187,6 @@ MatchStringFormat(
      * handle the image.
      */
 
-    matched = 0;
     for (formatPtr = tsdPtr->formatList; formatPtr != NULL;
 	    formatPtr = formatPtr->nextPtr) {
 	if (formatObj != NULL) {
@@ -4340,13 +4322,9 @@ Tk_PhotoPutBlock(
 				 * transparent pixels. */
 {
     register PhotoMaster *masterPtr;
-    int xEnd, yEnd;
-    int greenOffset, blueOffset, alphaOffset;
-    int wLeft, hLeft;
-    int wCopy, hCopy;
-    unsigned char *srcPtr, *srcLinePtr;
-    unsigned char *destPtr, *destLinePtr;
-    int pitch;
+    int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
+    int wLeft, hLeft, wCopy, hCopy, pitch;
+    unsigned char *srcPtr, *srcLinePtr, *destPtr, *destLinePtr;
     int sourceIsSimplePhoto = compRule & SOURCE_IS_SIMPLE_ALPHA_PHOTO;
     XRectangle rect;
 
@@ -4615,6 +4593,7 @@ Tk_PhotoPutBlock(
 	 * builds up large simple-alpha images by single pixels.  We don't
 	 * negate COMPLEX_ALPHA in this case. [Bug 1409140]
 	 */
+
 	if (!(masterPtr->flags & COMPLEX_ALPHA)) {
 	    unsigned char newAlpha;
 
@@ -4632,6 +4611,7 @@ Tk_PhotoPutBlock(
 	 * Toggle to only checking the changed pixels requires knowing where
 	 * the alpha pixels are.
 	 */
+
 	ToggleComplexAlphaIfNeeded(masterPtr);
     }
 
@@ -4688,17 +4668,11 @@ Tk_PhotoPutZoomedBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    register PhotoMaster *masterPtr;
-    int xEnd, yEnd;
-    int greenOffset, blueOffset, alphaOffset;
-    int wLeft, hLeft;
-    int wCopy, hCopy;
-    int blockWid, blockHt;
-    unsigned char *srcPtr, *srcLinePtr, *srcOrigPtr;
-    unsigned char *destPtr, *destLinePtr;
-    int pitch;
-    int xRepeat, yRepeat;
-    int blockXSkip, blockYSkip, sourceIsSimplePhoto;
+    register PhotoMaster *masterPtr = (PhotoMaster *) handle;
+    int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
+    int wLeft, hLeft, wCopy, hCopy, blockWid, blockHt;
+    unsigned char *srcPtr, *srcLinePtr, *srcOrigPtr, *destPtr, *destLinePtr;
+    int pitch, xRepeat, yRepeat, blockXSkip, blockYSkip, sourceIsSimplePhoto;
     XRectangle rect;
 
     if (zoomX==1 && zoomY==1 && subsampleX==1 && subsampleY==1) {
@@ -4708,7 +4682,6 @@ Tk_PhotoPutZoomedBlock(
 
     sourceIsSimplePhoto = compRule & SOURCE_IS_SIMPLE_ALPHA_PHOTO;
     compRule &= ~SOURCE_IS_SIMPLE_ALPHA_PHOTO;
-    masterPtr = (PhotoMaster *) handle;
 
     if (zoomX <= 0 || zoomY <= 0) {
 	return TCL_OK;
@@ -4819,7 +4792,7 @@ Tk_PhotoPutZoomedBlock(
 		srcPtr = srcLinePtr;
 		for (; wCopy > 0; wCopy -= zoomX) {
 		    for (xRepeat = MIN(wCopy, zoomX); xRepeat > 0; xRepeat--) {
-			int alpha = srcPtr[alphaOffset];/* source alpha */
+			int alpha = srcPtr[alphaOffset];/* Source alpha. */
 
 			/*
 			 * Common case (solid pixels) first
@@ -4846,7 +4819,8 @@ Tk_PhotoPutZoomedBlock(
 			    *destPtr++ = srcPtr[blueOffset];
 			    *destPtr++ = alpha;
 			} else if (alpha) {
-			    int Alpha = destPtr[3];	/* destination alpha */
+			    int Alpha = destPtr[3];	/* Destination
+							 * alpha. */
 
 			    destPtr[0] = PD_SRC_OVER(srcPtr[0], alpha,
 				    destPtr[0], Alpha);
@@ -5057,23 +5031,14 @@ DitherInstance(
 				 * block to be dithered. */
     int width, int height)	/* Dimensions of the block to be dithered. */
 {
-    PhotoMaster *masterPtr;
-    ColorTable *colorPtr;
+    PhotoMaster *masterPtr = instancePtr->masterPtr;
+    ColorTable *colorPtr = instancePtr->colorTablePtr;
     XImage *imagePtr;
-    int nLines, bigEndian;
-    int i, c, x, y;
-    int xEnd, yEnd;
+    int nLines, bigEndian, i, c, x, y, xEnd, doDithering = 1;
     int bitsPerPixel, bytesPerLine, lineLength;
-    unsigned char *srcLinePtr, *srcPtr;
+    unsigned char *srcLinePtr;
     schar *errLinePtr, *errPtr;
-    unsigned char *destBytePtr, *dstLinePtr;
-    pixel *destLongPtr;
     pixel firstBit, word, mask;
-    int col[3];
-    int doDithering = 1;
-
-    colorPtr = instancePtr->colorTablePtr;
-    masterPtr = instancePtr->masterPtr;
 
     /*
      * Turn dithering off in certain cases where it is not needed (TrueColor,
@@ -5107,7 +5072,7 @@ DitherInstance(
 
     imagePtr = instancePtr->imagePtr;
     if (imagePtr == NULL) {
-	return;			/* we must be really tight on memory */
+	return;			/* We must be really tight on memory. */
     }
     bitsPerPixel = imagePtr->bits_per_pixel;
     bytesPerLine = ((bitsPerPixel * width + 31) >> 3) & ~3;
@@ -5130,16 +5095,19 @@ DitherInstance(
      */
 
     for (; height > 0; height -= nLines) {
+	unsigned char *dstLinePtr = (unsigned char *) imagePtr->data;
+	int yEnd;
+
 	if (nLines > height) {
 	    nLines = height;
 	}
-	dstLinePtr = (unsigned char *) imagePtr->data;
 	yEnd = yStart + nLines;
 	for (y = yStart; y < yEnd; ++y) {
-	    srcPtr = srcLinePtr;
-	    errPtr = errLinePtr;
-	    destBytePtr = dstLinePtr;
-	    destLongPtr = (pixel *) dstLinePtr;
+	    unsigned char *srcPtr = srcLinePtr;
+	    schar *errPtr = errLinePtr;
+	    unsigned char *destBytePtr = dstLinePtr;
+	    pixel *destLongPtr = (pixel *) dstLinePtr;
+
 	    if (colorPtr->flags & COLOR_WINDOW) {
 		/*
 		 * Color window. We dither the three components independently,
@@ -5149,6 +5117,8 @@ DitherInstance(
 		 */
 
 		for (x = xStart; x < xEnd; ++x) {
+		    int col[3];
+
 		    if (doDithering) {
 			for (i = 0; i < 3; ++i) {
 			    /*
@@ -5397,10 +5367,9 @@ void
 Tk_PhotoBlank(
     Tk_PhotoHandle handle)	/* Handle for the image to be blanked. */
 {
-    PhotoMaster *masterPtr;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
     PhotoInstance *instancePtr;
 
-    masterPtr = (PhotoMaster *) handle;
     masterPtr->ditherX = masterPtr->ditherY = 0;
     masterPtr->flags = 0;
 
@@ -5464,9 +5433,7 @@ Tk_PhotoExpand(
     Tk_PhotoHandle handle,	/* Handle for the image to be expanded. */
     int width, int height)	/* Desired minimum dimensions of the image. */
 {
-    PhotoMaster *masterPtr;
-
-    masterPtr = (PhotoMaster *) handle;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
 
     if (width <= masterPtr->width) {
 	width = masterPtr->width;
@@ -5513,9 +5480,8 @@ Tk_PhotoGetSize(
 				/* The dimensions of the image are returned
 				 * here. */
 {
-    PhotoMaster *masterPtr;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
 
-    masterPtr = (PhotoMaster *) handle;
     *widthPtr = masterPtr->width;
     *heightPtr = masterPtr->height;
 }
@@ -5546,9 +5512,7 @@ Tk_PhotoSetSize(
 				 * set. */
     int width, int height)	/* New dimensions for the image. */
 {
-    PhotoMaster *masterPtr;
-
-    masterPtr = (PhotoMaster *) handle;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
 
     masterPtr->userWidth = width;
     masterPtr->userHeight = height;
@@ -5590,9 +5554,8 @@ TkPhotoGetValidRegion(
     Tk_PhotoHandle handle)	/* Handle for the image whose valid region is
 				 * to obtained. */
 {
-    PhotoMaster *masterPtr;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
 
-    masterPtr = (PhotoMaster *) handle;
     return masterPtr->validRegion;
 }
 
@@ -5721,9 +5684,10 @@ ImgGetPhoto(
 	     */
 	} else if (optPtr->options & OPT_BACKGROUND) {
 	    if (newPixelSize > 2) {
-	        int red = optPtr->background->red>>8;
-	        int green = optPtr->background->green>>8;
-	        int blue = optPtr->background->blue>>8;
+		int red = optPtr->background->red>>8;
+		int green = optPtr->background->green>>8;
+		int blue = optPtr->background->blue>>8;
+
 		for (y = blockPtr->height; y > 0; y--) {
 		    for (x = blockPtr->width; x > 0; x--) {
 			destPtr[0] += (unsigned char) (((255 - *srcPtr) *
@@ -5805,7 +5769,7 @@ ImgStringWrite(
     Tcl_Obj *formatString,
     Tk_PhotoImageBlock *blockPtr)
 {
-    int row,col;
+    int row, col;
     char *line, *linePtr;
     unsigned char *pixelPtr;
     int greenOffset, blueOffset;
@@ -5863,9 +5827,8 @@ Tk_PhotoGetImage(
 				/* Information about the address and layout of
 				 * the image data is returned here. */
 {
-    PhotoMaster *masterPtr;
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
 
-    masterPtr = (PhotoMaster *) handle;
     blockPtr->pixelPtr = masterPtr->pix32;
     blockPtr->width = masterPtr->width;
     blockPtr->height = masterPtr->height;
@@ -5962,9 +5925,10 @@ PhotoOptionCleanupProc(
     Tcl_Interp *interp)		/* Interpreter that is being deleted. */
 {
     OptionAssocData *list = (OptionAssocData *) clientData;
-    OptionAssocData *ptr;
 
     while (list != NULL) {
+	register OptionAssocData *ptr;
+
 	list = (ptr = list)->nextPtr;
 	ckfree((char *) ptr);
     }
@@ -5989,14 +5953,13 @@ PhotoOptionCleanupProc(
 
 MODULE_SCOPE void
 Tk_CreatePhotoOption(
-    Tcl_Interp *interp,		/* Interpreter */
-    CONST char *name,		/* Option name */
-    Tcl_ObjCmdProc *proc)	/* Function to execute command */
+    Tcl_Interp *interp,		/* Interpreter. */
+    CONST char *name,		/* Option name. */
+    Tcl_ObjCmdProc *proc)	/* Function to execute command. */
 {
     OptionAssocData *typePtr2, *prevPtr, *ptr;
-    OptionAssocData *list;
-
-    list = (OptionAssocData *) Tcl_GetAssocData(interp, "photoOption", NULL);
+    OptionAssocData *list = (OptionAssocData *)
+	    Tcl_GetAssocData(interp, "photoOption", NULL);
 
     /*
      * If there's already a photo option with the given name, remove it.
@@ -6041,12 +6004,12 @@ Tk_CreatePhotoOption(
 
 static int
 ImgPhotoPostscript(
-    ClientData clientData,	/* Handle for the photo image */
-    Tcl_Interp *interp,		/* Interpreter */
+    ClientData clientData,	/* Handle for the photo image. */
+    Tcl_Interp *interp,		/* Interpreter. */
     Tk_Window tkwin,		/* (unused) */
-    Tk_PostscriptInfo psInfo,	/* postscript info */
-    int x, int y,		/* First pixel to output */
-    int width, int height,	/* Width and height of area */
+    Tk_PostscriptInfo psInfo,	/* Postscript info. */
+    int x, int y,		/* First pixel to output. */
+    int width, int height,	/* Width and height of area. */
     int prepass)		/* (unused) */
 {
     Tk_PhotoImageBlock block;
