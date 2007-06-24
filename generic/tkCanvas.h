@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.h,v 1.10 2007/06/24 16:07:34 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.h,v 1.11 2007/06/24 16:09:25 dkf Exp $
  */
 
 #ifndef _TKCANVAS
@@ -26,13 +26,13 @@ typedef struct TagSearchExpr_s TagSearchExpr;
 struct TagSearchExpr_s {
     TagSearchExpr *next;	/* For linked lists of expressions - used in
 				 * bindings. */
-    Tk_Uid uid;                 /* The uid of the whole expression. */
-    Tk_Uid *uids;               /* Expresion compiled to an array of uids. */
-    int allocated;              /* Available space for array of uids. */
-    int length;                 /* Length of expression. */
-    int index;                  /* Current position in expression
+    Tk_Uid uid;			/* The uid of the whole expression. */
+    Tk_Uid *uids;		/* Expresion compiled to an array of uids. */
+    int allocated;		/* Available space for array of uids. */
+    int length;			/* Length of expression. */
+    int index;			/* Current position in expression
 				 * evaluation. */
-    int match;                  /* This expression matches event's item's
+    int match;			/* This expression matches event's item's
 				 * tags. */
 };
 #endif /* not USE_OLD_TAG_SEARCH */
