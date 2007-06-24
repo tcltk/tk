@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.h,v 1.8 2005/11/27 02:36:13 das Exp $
+ * RCS: @(#) $Id: tkColor.h,v 1.9 2007/06/24 16:07:34 dkf Exp $
  */
 
 #ifndef _TKCOLOR
@@ -35,7 +35,7 @@
 typedef struct TkColor {
     XColor color;		/* Information about this color. */
     unsigned int magic;		/* Used for quick integrity check on this
-				 * structure.  Must always have the value
+				 * structure. Must always have the value
 				 * COLOR_MAGIC. */
     GC gc;			/* Simple gc with this color as foreground
 				 * color and all other fields defaulted. May
@@ -44,7 +44,7 @@ typedef struct TkColor {
 				 * delete it, and to find its display. */
     Colormap colormap;		/* Colormap from which this entry was
 				 * allocated. */
-    Visual *visual;             /* Visual associated with colormap. */
+    Visual *visual;		/* Visual associated with colormap. */
     int resourceRefCount;	/* Number of active uses of this color (each
 				 * active use corresponds to a call to
 				 * Tk_AllocColorFromObj or Tk_GetColor). If
@@ -57,7 +57,7 @@ typedef struct TkColor {
 				 * both 0. */
     int objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
-    int type;			/* TK_COLOR_BY_NAME or TK_COLOR_BY_VALUE */
+    int type;			/* TK_COLOR_BY_NAME or TK_COLOR_BY_VALUE. */
     Tcl_HashEntry *hashPtr;	/* Pointer to hash table entry for this
 				 * structure. (for use in deleting entry). */
     struct TkColor *nextPtr;	/* Points to the next TkColor structure with

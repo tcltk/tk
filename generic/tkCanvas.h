@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.h,v 1.9 2005/11/27 02:36:13 das Exp $
+ * RCS: @(#) $Id: tkCanvas.h,v 1.10 2007/06/24 16:07:34 dkf Exp $
  */
 
 #ifndef _TKCANVAS
@@ -24,14 +24,16 @@
 typedef struct TagSearchExpr_s TagSearchExpr;
 
 struct TagSearchExpr_s {
-    TagSearchExpr *next;        /* for linked lists of expressions - used in
-				 * bindings */
-    Tk_Uid uid;                 /* the uid of the whole expression */
-    Tk_Uid *uids;               /* expresion compiled to an array of uids */
-    int allocated;              /* available space for array of uids */
-    int length;                 /* length of expression */
-    int index;                  /* current position in expression evaluation */
-    int match;                  /* this expression matches event's item's tags*/
+    TagSearchExpr *next;	/* For linked lists of expressions - used in
+				 * bindings. */
+    Tk_Uid uid;                 /* The uid of the whole expression. */
+    Tk_Uid *uids;               /* Expresion compiled to an array of uids. */
+    int allocated;              /* Available space for array of uids. */
+    int length;                 /* Length of expression. */
+    int index;                  /* Current position in expression
+				 * evaluation. */
+    int match;                  /* This expression matches event's item's
+				 * tags. */
 };
 #endif /* not USE_OLD_TAG_SEARCH */
 
@@ -157,10 +159,10 @@ typedef struct TkCanvas {
 
     char *xScrollCmd;		/* Command prefix for communicating with
 				 * horizontal scrollbar. NULL means no
-				 * horizontal scrollbar. Malloc'ed*/
+				 * horizontal scrollbar. Malloc'ed. */
     char *yScrollCmd;		/* Command prefix for communicating with
 				 * vertical scrollbar. NULL means no vertical
-				 * scrollbar. Malloc'ed*/
+				 * scrollbar. Malloc'ed. */
     int scrollX1, scrollY1, scrollX2, scrollY2;
 				/* These four coordinates define the region
 				 * that is the 100% area for scrolling (i.e.
@@ -226,13 +228,13 @@ typedef struct TkCanvas {
      */
 
     void *reserved1;
-    Tk_State canvas_state;	/* state of canvas */
+    Tk_State canvas_state;	/* State of canvas. */
     void *reserved2;
     void *reserved3;
     Tk_TSOffset tsoffset;
 #ifndef USE_OLD_TAG_SEARCH
-    TagSearchExpr *bindTagExprs; /* Linked list of tag expressions used in
-				  * bindings. */
+    TagSearchExpr *bindTagExprs;/* Linked list of tag expressions used in
+				 * bindings. */
 #endif
 } TkCanvas;
 

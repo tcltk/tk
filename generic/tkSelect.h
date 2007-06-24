@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.h,v 1.6 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkSelect.h,v 1.7 2007/06/24 16:07:35 dkf Exp $
  */
 
 #ifndef _TKSELECT
@@ -37,7 +37,7 @@ typedef struct TkSelectionInfo {
     ClientData clearData;	/* Info to pass to clearProc. */
     struct TkSelectionInfo *nextPtr;
 				/* Next in list of current selections on this
-                                 * display. NULL means end of list */
+				 * display. NULL means end of list. */
 } TkSelectionInfo;
 
 /*
@@ -47,7 +47,7 @@ typedef struct TkSelectionInfo {
  */
 
 typedef struct TkSelHandler {
-    Atom selection;		/* Selection name, e.g. XA_PRIMARY */
+    Atom selection;		/* Selection name, e.g. XA_PRIMARY. */
     Atom target;		/* Target type for selection conversion, such
 				 * as TARGETS or STRING. */
     Atom format;		/* Format in which selection info will be
