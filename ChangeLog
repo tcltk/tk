@@ -1,3 +1,19 @@
+2007-06-23  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkImgPhoto.c (ImgPhotoConfigureInstance, DisposeInstance):
+	use XDestroyImage instead of XFree to destroy XImage; replace runtime
+	endianness determination by compile-time check for WORDS_BIGENDIAN.
+
+	* xlib/ximage.c (XCreateBitmapFromData): use XCreateImage and
+	XDestroyImage instead of creating XImage structure manually.
+
+	* macosx/tkMacOSXXStubs.c (XCreateImage, DestroyImage): correct XImage
+	bytes_per_line/bitmap_pad calculations and endianness setting; free
+	image data and XImage structure at destruction; formatting cleanup.
+
+	* macosx/tkMacOSXDialog.c (NavServicesGetFile): disable app-modal
+	sheet variant of nav dialog on OS versions where it causes problems.
+
 2007-06-20  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/ttk/ttk.tcl: should require Tk before pseudo-providing
@@ -9,8 +25,8 @@
 	tests/ttk/panedwindow.test: Added -width and -height options.
 	Added 'panes' method, return list of managed windows.
 	'sashpos' method is now documented as part of the public
-	interface, and details clarified.  Should be easier 
-	to set initial sash positions now [Alleviates #1659067].
+	interface, and details clarified. Should be easier 
+	to set initial sash positions now. Alleviates [Bug 1659067].
 
 2007-06-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
@@ -19,7 +35,7 @@
 
 	* win/tkWinMenu.c (TkWinHandleMenuEvent): improve handling to
 	allow for unicode char menu indices and not use CharUpper on Tcl
-	utf strings. [Bug #1734223]
+	utf strings. [Bug 1734223]
 
 2007-06-09  Joe English  <jenglish@users.sourceforge.net>
 
@@ -29,7 +45,7 @@
 	    + Ttk_Manager no longer responsible for managing slave records
 	    + Ttk_Manager structure now opaque
 	    + Ttk_Slave structure now private
-	    + Pass Ttk_Manager * to Tk_GeomMgr hooks instead of Ttk_Slave *
+	    + Pass Ttk_Manager* to Tk_GeomMgr hooks instead of Ttk_Slave*
 
 	* generic/ttk/ttkFrame.c: Simplified -labelwidget management.
 

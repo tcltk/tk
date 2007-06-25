@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.35.2.1 2007/06/01 04:01:31 dgp Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.35.2.2 2007/06/25 19:12:13 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -994,8 +994,8 @@ TkCreateNamedFont(
  *
  * TkDeleteNamedFont --
  *
- *	Delete the named font.  If there are still widgets using this
- *	font, then it isn't deleted right away.
+ *	Delete the named font. If there are still widgets using this font,
+ *	then it isn't deleted right away.
  *
  *---------------------------------------------------------------------------
  */
@@ -1009,13 +1009,13 @@ TkDeleteNamedFont(
     TkFontInfo *fiPtr;
     NamedFont *nfPtr;
     Tcl_HashEntry *namedHashPtr;
-    
+
     fiPtr = ((TkWindow *) tkwin)->mainPtr->fontInfoPtr;
 
     namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, name);
     if (namedHashPtr == NULL) {
 	Tcl_AppendResult(interp, "named font \"", name,
-		"\" doesn't exist", (char *) NULL);
+		"\" doesn't exist", NULL);
 	return TCL_ERROR;
     }
     nfPtr = (NamedFont *) Tcl_GetHashValue(namedHashPtr);
@@ -1749,14 +1749,12 @@ Tk_PostscriptFontName(
     slantString = NULL;
     if (fontPtr->fa.slant == TK_FS_ROMAN) {
 	;
+    } else if ((strcmp(family, "Helvetica") == 0)
+	    || (strcmp(family, "Courier") == 0)
+	    || (strcmp(family, "AvantGarde") == 0)) {
+	slantString = "Oblique";
     } else {
-	if ((strcmp(family, "Helvetica") == 0)
-		|| (strcmp(family, "Courier") == 0)
-		|| (strcmp(family, "AvantGarde") == 0)) {
-	    slantString = "Oblique";
-	} else {
-	    slantString = "Italic";
-	}
+	slantString = "Italic";
     }
 
     /*
@@ -1856,10 +1854,6 @@ Tk_UnderlineChars(
     int lastByte)		/* Index of first byte after the last
 				 * character. */
 {
-    TkFont *fontPtr;
-
-    fontPtr = (TkFont *) tkfont;
-
     TkUnderlineCharsInContext(display, drawable, gc, tkfont, string,
 	    lastByte, x, y, firstByte, lastByte);
 }
@@ -2777,10 +2771,10 @@ Tk_IntersectTextLayout(
     chunkPtr = layoutPtr->chunks;
     fontPtr = (TkFont *) layoutPtr->tkfont;
 
-    left    = x;
-    top	    = y;
-    right   = x + width;
-    bottom  = y + height;
+    left = x;
+    top = y;
+    right = x + width;
+    bottom = y + height;
 
     result = 0;
     for (i = 0; i < layoutPtr->numChunks; i++) {
@@ -2827,7 +2821,7 @@ Tk_IntersectTextLayout(
  *	lines in the text layout will be rendered by the user supplied
  *	Postscript function. The function should be of the form:
  *
- *	    justify x y string  function  --
+ *	    justify x y string function --
  *
  *	Justify is -1, 0, or 1, depending on whether the following string
  *	should be left, center, or right justified, x and y is the location
