@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.14 2007/06/24 16:07:34 dkf Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.15 2007/06/25 19:09:44 dgp Exp $
  */
 
 #ifndef _TKBUTTON
