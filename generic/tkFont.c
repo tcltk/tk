@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.37 2007/06/24 16:07:34 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.38 2007/06/25 02:04:27 das Exp $
  */
 
 #include "tkPort.h"
@@ -1854,8 +1854,6 @@ Tk_UnderlineChars(
     int lastByte)		/* Index of first byte after the last
 				 * character. */
 {
-    TkFont *fontPtr = (TkFont *) tkfont;
-
     TkUnderlineCharsInContext(display, drawable, gc, tkfont, string,
 	    lastByte, x, y, firstByte, lastByte);
 }

@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.71 2007/06/24 16:07:34 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.72 2007/06/25 02:04:27 das Exp $
  */
 
 #include "tkInt.h"
@@ -5037,7 +5037,7 @@ DitherInstance(
     int nLines, bigEndian, i, c, x, y, xEnd, doDithering = 1;
     int bitsPerPixel, bytesPerLine, lineLength;
     unsigned char *srcLinePtr;
-    schar *errLinePtr, *errPtr;
+    schar *errLinePtr;
     pixel firstBit, word, mask;
 
     /*
