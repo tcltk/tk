@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.17 2007/06/24 16:17:13 dkf Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.18 2007/06/25 02:04:27 das Exp $
  */
 
 #include "tkPort.h"
@@ -1084,9 +1084,11 @@ TkReadBitmapFile(
     Display *display,
     Drawable d,
     const char *filename,
-    unsigned int *width_return, *height_return,
+    unsigned int *width_return,
+    unsigned int *height_return,
     Pixmap *bitmap_return,
-    int *x_hot_return, *y_hot_return)
+    int *x_hot_return,
+    int *y_hot_return)
 {
     char *data;
 
