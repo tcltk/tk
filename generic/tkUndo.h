@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.h,v 1.6 2007/06/24 16:07:35 dkf Exp $
+ * RCS: @(#) $Id: tkUndo.h,v 1.7 2007/06/25 19:07:15 dgp Exp $
  */
 
 #ifndef _TKUNDO
