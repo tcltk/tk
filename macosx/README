@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README
 ----------------------
 
-RCS: @(#) $Id: README,v 1.23 2007/04/23 21:24:32 das Exp $
+RCS: @(#) $Id: README,v 1.24 2007/06/29 03:19:05 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -173,10 +173,15 @@ take care to only use the project matching your DevTools and OS version:
 	target useful for debugging, this target's 'Development' buildstyle
 	has ZeroLink and Fix&Continue enabled, use the 'DevelNoFixZL' buildstyle
 	if you need a debug build without these features.
-    * Wish.xcodeproj for Xcode 2.4 on 10.4, which has the following
-	additional configurations for the 'Tk' and 'tktest' targets:
+    * Wish.xcodeproj for Xcode 2.4 on 10.4 or later, which has the following
+	additional build configurations for the 'Tk' and 'tktest' targets:
+	'DebugUnthreaded': debug build with threading turned off.
+	'DebugMemCompile': debug build with memory and bytecode debugging on.
+	'DebugLeaks': debug build with PURIFY defined.
 	'ReleaseUniversal': builds the targets as universal binaries for the
 		ppc and i386 architectures.
+	'ReleaseUniversal10.5SDK': same as 'ReleaseUniversal' but builds
+		against the 10.5 SDK on Leopard (with 10.5 deployment target).
 	'ReleaseUniversal10.4uSDK': same as 'ReleaseUniversal' but builds
 		against the 10.4u SDK, required to build universal binaries on
 		PowerPC Tiger (where the system libraries are not universal).
@@ -186,23 +191,26 @@ take care to only use the project matching your DevTools and OS version:
 		10.2.8 SDK, useful to verify on Tiger that building on Jaguar
 		would succeed.
 Notes about the native targets of the Xcode projects:
-    * the Xcode projects refer to the tcl and tk source dirs with a relative
-	path of ../../tcl and ../../tk to the project location, if your source
-	directories are named differently you'll need to enter the correct path
-	in the info panel of the 'Tcl Sources' and 'Tk Sources' groups.
+    * the Xcode 2 project refers to the toplevel tcl and tk source dirs through
+	the TCL_SRCROOT and TK_SRCROOT user build settings, by default these are
+	set to the project-relative paths '../../tcl' and '../../tk', if your
+	source directories are named differently, e.g. '../../tcl8.5', you'll
+	need to manually change the TCL_SRCROOT and TK_SRCROOT settings by
+	editing your ${USER}.pbxuser file (located inside the Wish.xcodeproj
+	bundle directory) with a text editor.
     * XCode 1.5 has a bug that causes Fix&Continue and the Build menu items
 	Compile/Preprocess/ShowAssembly to fail in presence of relative paths to
 	source files, as a workaround change the Path Type of the 'Tcl Sources'
 	and 'Tk Sources' groups to 'Absolute Path' in the groups' Info panel.
 	(fixed in Xcode 2.2)
-    * the native targets need a version of the unix configure scripts with
-	config headers enabled, this is automatically generated as
-	tcl/macosx/configure and tk/macosx/configure by the project but this
-	requires 2.59 versions of autoconf & autoheader, which are not available
-	on on Mac OS X 10.3 by default, and so need to be installed manually. By
-	default they are assumed to be installed as /usr/local/bin/autoconf-2.59
-	and /usr/local/bin/autoheader-2.59, set the env vars AUTOCONF and
-	AUTOHEADER to their true locations if necessary.
+    * the native targets need a version of the unix configure scripts with config
+	headers enabled, this is automatically generated as tcl/macosx/configure
+	and tk/macosx/configure by the project but that requires 2.59 versions
+	of autoconf & autoheader. These are not available on on Mac OS X 10.3 by
+	default and need to be installed manually. By default they are assumed
+	to be installed as /usr/local/bin/autoconf-2.59 and
+	/usr/local/bin/autoheader-2.59, set the env vars AUTOCONF and AUTOHEADER
+	to their true locations if necessary.
 
 - To build universal binaries outside of Wish.xcodeproj, set CFLAGS as follows:
     export CFLAGS="-arch ppc -arch i386 \
