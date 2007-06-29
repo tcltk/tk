@@ -54,10 +54,10 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.23 2007/06/09 17:10:22 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.24 2007/06/29 03:22:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
@@ -445,7 +445,7 @@ GenerateUpdateEvent(Window window)
     TkDisplay *dispPtr;
     TkWindow  *winPtr;
     int result = 0;
-    Rect updateBounds;
+    Rect updateBounds, bounds;
 
     dispPtr = TkGetDisplayList();
     winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
@@ -453,23 +453,24 @@ GenerateUpdateEvent(Window window)
     if (winPtr ==NULL ){
 	return result;
     }
-    TkMacOSXCheckTmpRgnEmpty(1);
+    TkMacOSXCheckTmpQdRgnEmpty();
     destPort = TkMacOSXGetDrawablePort(window);
     macWindow = GetWindowFromPort(destPort);
-    ChkErr(GetWindowRegion, macWindow, kWindowUpdateRgn, tkMacOSXtmpRgn1);
-    QDGlobalToLocalRegion(destPort, tkMacOSXtmpRgn1);
-    SectRegionWithPortVisibleRegion(destPort, tkMacOSXtmpRgn1);
-    GetRegionBounds(tkMacOSXtmpRgn1, &updateBounds);
+    ChkErr(GetWindowRegion, macWindow, kWindowUpdateRgn, tkMacOSXtmpQdRgn);
+    ChkErr(GetWindowBounds, macWindow, kWindowContentRgn, &bounds);
+    OffsetRgn(tkMacOSXtmpQdRgn, -bounds.left, -bounds.top);
+    SectRegionWithPortVisibleRegion(destPort, tkMacOSXtmpQdRgn);
+    GetRegionBounds(tkMacOSXtmpQdRgn, &updateBounds);
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-    TkMacOSXDebugFlashRegion(destPort, tkMacOSXtmpRgn1);
+    TkMacOSXDebugFlashRegion(window, tkMacOSXtmpQdRgn);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
     BeginUpdate(macWindow);
     if (winPtr->wmInfoPtr->flags & WM_TRANSPARENT) {
-	ClearPort(destPort, tkMacOSXtmpRgn1);
+	ClearPort(destPort, tkMacOSXtmpQdRgn);
     }
-    result = GenerateUpdates(tkMacOSXtmpRgn1, &updateBounds, winPtr);
+    result = GenerateUpdates(tkMacOSXtmpQdRgn, &updateBounds, winPtr);
     EndUpdate(macWindow);
-    SetEmptyRgn(tkMacOSXtmpRgn1);
+    SetEmptyRgn(tkMacOSXtmpQdRgn);
     if (result) {
 	/*
 	 * Ensure there are no pending idle-time redraws that could prevent
@@ -531,7 +532,6 @@ GenerateUpdates(
     }
     RectRgn(damageRgn, &bounds);
     SectRgn(damageRgn, updateRgn, damageRgn);
-    OffsetRgn(damageRgn, -bounds.left, -bounds.top);
     GetRegionBounds(damageRgn, &damageBounds);
     RectRgn(damageRgn, &bounds);
     UnionRgn(damageRgn, updateRgn, updateRgn);
@@ -543,10 +543,10 @@ GenerateUpdates(
     event.xany.window = Tk_WindowId(winPtr);
     event.xany.display = Tk_Display(winPtr);
     event.type = Expose;
-    event.xexpose.x = damageBounds.left;
-    event.xexpose.y = damageBounds.top;
-    event.xexpose.width = damageBounds.right-damageBounds.left;
-    event.xexpose.height = damageBounds.bottom-damageBounds.top;
+    event.xexpose.x = damageBounds.left - bounds.left;
+    event.xexpose.y = damageBounds.top - bounds.top;
+    event.xexpose.width = damageBounds.right - damageBounds.left;
+    event.xexpose.height = damageBounds.bottom - damageBounds.top;
     event.xexpose.count = 0;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
@@ -954,6 +954,9 @@ ClearPort(
 
     GetPortBounds(port, &bounds);
     QDBeginCGContext(port, &context);
+    SyncCGContextOriginWithPort(context, port);
+    CGContextConcatCTM(context, CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0,
+	    bounds.bottom - bounds.top));
     if (updateRgn) {
 	ClipCGContextToRegion(context, &bounds, updateRgn);
     }
