@@ -12,15 +12,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.14 2007/06/09 17:10:22 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.5.2.15 2007/06/29 03:22:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkScrollbar.h"
 #include "tkMacOSXDebug.h"
 
 #define MIN_SCROLLBAR_VALUE		0
-#define SCROLLBAR_SCALING_VALUE		((float)LONG_MAX)
+#define SCROLLBAR_SCALING_VALUE		((double)(LONG_MAX>>1))
 
 /*
  * Declaration of Mac specific scrollbar structure.
@@ -230,7 +230,6 @@ TkpDisplayScrollbar(
     TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
     MacScrollbar *macScrollPtr = (MacScrollbar *) clientData;
     Tk_Window tkwin = scrollPtr->tkwin;
-    MacDrawable *macDraw;
     CGrafPtr destPort, savePort;
     Boolean portChanged;
     WindowRef windowRef;
@@ -264,22 +263,12 @@ TkpDisplayScrollbar(
 	Tk_Height(tkwin) - 2*scrollPtr->highlightWidth,
 	scrollPtr->borderWidth, scrollPtr->relief);
 
-    /*
-     * Set up port for drawing Macintosh control.
-     */
-    macDraw = (MacDrawable *) Tk_WindowId(tkwin);
-    destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
-    portChanged = QDSwapPort(destPort, &savePort);
-    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
-
     if (macScrollPtr->sbHandle == NULL) {
 	Rect r = {0, 0, 1, 1};
 
-	windowRef = GetWindowFromPort(destPort);
-	CreateScrollBarControl(windowRef, &r, MIN_SCROLLBAR_VALUE +
-		SCROLLBAR_SCALING_VALUE/2, MIN_SCROLLBAR_VALUE,
-		SCROLLBAR_SCALING_VALUE, SCROLLBAR_SCALING_VALUE -
-		MIN_SCROLLBAR_VALUE, true, NULL, &(macScrollPtr->sbHandle));
+	windowRef = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+	CreateScrollBarControl(windowRef, &r, 0, 0, 0, 0, true, NULL,
+		&(macScrollPtr->sbHandle));
 	SetControlReference(macScrollPtr->sbHandle, (SInt32) scrollPtr);
 
 	if (IsWindowActive(windowRef)) {
@@ -292,6 +281,13 @@ TkpDisplayScrollbar(
      */
 
     UpdateControlValues(macScrollPtr);
+
+    /*
+     * Set up port for drawing Macintosh control.
+     */
+    destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
+    portChanged = QDSwapPort(destPort, &savePort);
+    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     /*
      * Scrollbars do not erase the complete control bounds if they are wider
@@ -770,7 +766,7 @@ ScrollbarBindProc(
     if (eventPtr->type == ButtonPress) {
 	Point where;
 	Rect bounds;
-	int part;
+	ControlPartCode part;
 	CGrafPtr destPort, savePort;
 	Boolean portChanged;
 	Window window;
@@ -1025,10 +1021,10 @@ UpdateControlValues(
 
     dViewSize = (scrollPtr->lastFraction - scrollPtr->firstFraction)
 	    * SCROLLBAR_SCALING_VALUE;
-    SetControlViewSize(macScrollPtr->sbHandle, dViewSize);
     SetControl32BitMinimum(macScrollPtr->sbHandle, MIN_SCROLLBAR_VALUE);
     SetControl32BitMaximum(macScrollPtr->sbHandle, MIN_SCROLLBAR_VALUE +
 	    SCROLLBAR_SCALING_VALUE - dViewSize);
+    SetControlViewSize(macScrollPtr->sbHandle, dViewSize);
     SetControl32BitValue(macScrollPtr->sbHandle, MIN_SCROLLBAR_VALUE +
 	    SCROLLBAR_SCALING_VALUE * scrollPtr->firstFraction);
 

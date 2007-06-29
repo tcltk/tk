@@ -1,3 +1,76 @@
+2007-06-29  Daniel Steffen  <das@users.sourceforge.net>
+
+	* xlib/ximage.c:		bitmaps created from the static .bmp
+					arrays always have LSBFirst bit order.
+
+	* macosx/tkMacOSXScrlbr.c: correct int <-> dobule conversion issues
+	that could lead to Carbon getting confused about scrollbar thumb size.
+
+	* macosx/tkMacOSXDraw.c (XCopyArea, XCopyPlane, TkPutImage) use
+	TkMacOSX{Setup,Restore}DrawingContext() to setup/restore clip & colors.
+	(TkMacOSXSetupDrawingContext, TkMacOSXRestoreDrawingContext): add save
+	and restore of QD port clip region; factor out clip region code common
+	to CG and QD branches; check for port and context validity; handle
+	tkPictureIsOpen flag during QD port setup.
+	(TkScrollWindow): remove unnecessary scroll region manipulation
+
+	* macosx/tkMacOSXDraw.c:	remove second global QD temp region
+	* macosx/tkMacOSXInt.h:		(no longer necessary) and rename
+	* macosx/tkMacOSXRegion.c:	remaining global QD temp region.
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+
+	* macosx/tkMacOSXDraw.c: 	make useCGDrawing variable MODULE_SCOPE
+	* macosx/tkMacOSXFont.c: 	and sync formatting with HEAD.
+
+	* macosx/tkMacOSXButton.c:	reduce reliance on current QD port
+	* macosx/tkMacOSXColor.c:	setting and remove unnecessary
+	* macosx/tkMacOSXDebug.c:	references to a drawable's QD port,
+	* macosx/tkMacOSXDebug.h:	notably replace GetWindowFromPort(
+	* macosx/tkMacOSXDialog.c:	TkMacOSXGetDrawablePort()) idiom by new
+	* macosx/tkMacOSXDraw.c:	TkMacOSXDrawableWindow() and change
+	* macosx/tkMacOSXKeyEvent.c:	TkMacOSXSetColorInPort() to take a port
+	* macosx/tkMacOSXMenu.c:	argument.
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+
+	* macosx/tkMacOSXInt.h:		  	factor out macros, declarations
+	* macosx/tkMacOSXPrivate.h (new): 	and prototypes that are purely
+	internal and private to the 'macosx' sources into a new internal header
+	file that does _not_ get installed into Tk.framework/PrivateHeaders.
+
+	* macosx/tkMacOSXButton.c: 		#include new tkMacOSXPrivate.h
+	* macosx/tkMacOSXCarbonEvents.c:	instead of tkMacOSXInt.h.
+	* macosx/tkMacOSXClipboard.c:
+	* macosx/tkMacOSXColor.c:
+	* macosx/tkMacOSXCursor.c:
+	* macosx/tkMacOSXDebug.c:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXEntry.c:
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXHLEvents.c:
+	* macosx/tkMacOSXInit.c:
+	* macosx/tkMacOSXKeyEvent.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXMouseEvent.c:
+	* macosx/tkMacOSXNotify.c:
+	* macosx/tkMacOSXRegion.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXXStubs.c:
+
 2007-06-23  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkImgPhoto.c (ImgPhotoConfigureInstance, DisposeInstance):

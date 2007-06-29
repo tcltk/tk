@@ -12,10 +12,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.9 2007/04/29 02:26:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.10 2007/06/29 03:22:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXFont.h"
 
 #include "tclInt.h" /* for Tcl_CreateNamespace() */
@@ -257,7 +257,7 @@ static int GetFamilyOrAliasNum(const char *faceName, short *familyPtr);
 static Tcl_Encoding GetFontEncoding(int faceNum, int allowSymbol, int *isSymbolPtr);
 static Tk_Uid GetUtfFaceName(StringPtr faceNameStr);
 static OSStatus GetThemeFontAndFamily(const ThemeFontID themeFontId,
-	FMFontFamily* fontFamily, unsigned char *fontName, SInt16 *fontSize,
+	FMFontFamily *fontFamily, unsigned char *fontName, SInt16 *fontSize,
 	Style *fontStyle);
 
 
@@ -266,7 +266,7 @@ static OSStatus GetThemeFontAndFamily(const ThemeFontID themeFontId,
  *
  * TkpFontPkgInit --
  *
- *	This procedure is called when an application is created.  It
+ *	This procedure is called when an application is created. It
  *	initializes all the structures that are used by the
  *	platform-dependant code on a per application basis.
  *
@@ -414,6 +414,7 @@ GetThemeFontAndFamily(
 	    TkMacOSXDbgMsg("FMGetFontFamilyFromName failed.");
 	}
     }
+
     return err;
 }
 
@@ -425,13 +426,13 @@ GetThemeFontAndFamily(
  *	Map a platform-specific native font name to a TkFont.
  *
  * Results:
- *	 The return value is a pointer to a TkFont that represents the
+ *	The return value is a pointer to a TkFont that represents the
  *	native font. If a native font by the given name could not be
  *	found, the return value is NULL.
  *
- *	Every call to this procedure returns a new TkFont structure,
- *	even if the name has already been seen before.  The caller should
- *	call TkpDeleteFont() when the font is no longer needed.
+ *	Every call to this procedure returns a new TkFont structure, even
+ *	if the name has already been seen before. The caller should call
+ *	TkpDeleteFont() when the font is no longer needed.
  *
  *	The caller is responsible for initializing the memory associated
  *	with the generic TkFont when this function returns and releasing
@@ -480,19 +481,19 @@ TkpGetNativeFont(
  *
  * TkpGetFontFromAttributes --
  *
- *	Given a desired set of attributes for a font, find a font with
- *	the closest matching attributes.
+ *	Given a desired set of attributes for a font, find a font with the
+ *	closest matching attributes.
  *
  * Results:
- *	 The return value is a pointer to a TkFont that represents the
- *	font with the desired attributes.  If a font with the desired
- *	attributes could not be constructed, some other font will be
- *	substituted automatically.
+ *	The return value is a pointer to a TkFont that represents the font
+ *	with the desired attributes. If a font with the desired attributes
+ *	could not be constructed, some other font will be substituted
+ *	automatically.
  *
- *	Every call to this procedure returns a new TkFont structure,
- *	even if the specified attributes have already been seen before.
- *	The caller should call TkpDeleteFont() to free the platform-
- *	specific data when the font is no longer needed.
+ *	Every call to this procedure returns a new TkFont structure, even
+ *	if the specified attributes have already been seen before. The
+ *	caller should call TkpDeleteFont() to free the platform- specific
+ *	data when the font is no longer needed.
  *
  *	The caller is responsible for initializing the memory associated
  *	with the generic TkFont when this function returns and releasing
@@ -503,13 +504,14 @@ TkpGetNativeFont(
  *
  *---------------------------------------------------------------------------
  */
+
 TkFont *
 TkpGetFontFromAttributes(
-    TkFont *tkFontPtr,		/* If non-NULL, store the information in
-				 * this existing TkFont structure, rather than
+    TkFont *tkFontPtr,		/* If non-NULL, store the information in this
+				 * existing TkFont structure, rather than
 				 * allocating a new structure to hold the
 				 * font; the existing contents of the font
-				 * will be released.  If NULL, a new TkFont
+				 * will be released. If NULL, a new TkFont
 				 * structure is allocated. */
     Tk_Window tkwin,		/* For display where font will be used. */
     CONST TkFontAttributes *faPtr)
@@ -580,15 +582,15 @@ found:
  * TkpDeleteFont --
  *
  *	Called to release a font allocated by TkpGetNativeFont() or
- *	TkpGetFontFromAttributes().  The caller should have already
- *	released the fields of the TkFont that are used exclusively by
- *	the generic TkFont code.
+ *	TkpGetFontFromAttributes(). The caller should have already
+ *	released the fields of the TkFont that are used exclusively by the
+ *	generic TkFont code.
  *
  * Results:
- *	None.
+ *	TkFont is deallocated.
  *
  * Side effects:
- *	TkFont is deallocated.
+ *	None.
  *
  *---------------------------------------------------------------------------
  */
@@ -597,10 +599,7 @@ void
 TkpDeleteFont(
     TkFont *tkFontPtr)		/* Token of font to be deleted. */
 {
-    MacFont *fontPtr;
-
-    fontPtr = (MacFont *) tkFontPtr;
-    ReleaseFont(fontPtr);
+    ReleaseFont((MacFont *) tkFontPtr);
 }
 
 /*
@@ -608,8 +607,8 @@ TkpDeleteFont(
  *
  * TkpGetFontFamilies --
  *
- *	Return information about the font families that are available
- *	on the display of the given window.
+ *	Return information about the font families that are available on
+ *	the display of the given window.
  *
  * Results:
  *	Modifies interp's result object to hold a list of all the available
@@ -645,8 +644,8 @@ TkpGetFontFamilies(
  *	screen fonts that make up a font object.
  *
  * Results:
- *	Modifies interp's result object to hold a list containing the
- *	names of the screen fonts that make up the given font object.
+ *	Modifies interp's result object to hold a list containing the names
+ *	of the screen fonts that make up the given font object.
  *
  * Side effects:
  *	None.
@@ -687,7 +686,7 @@ TkpGetSubFonts(
  *
  * Results:
  *	The return value is the number of bytes from source that
- *	fit into the span that extends from 0 to maxLength.  *lengthPtr is
+ *	fit into the span that extends from 0 to maxLength. *lengthPtr is
  *	filled with the x-coordinate of the right edge of the last
  *	character that did fit.
  *
@@ -1009,18 +1008,18 @@ Tk_DrawChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
-    Tk_Font tkfont,		/* Font in which characters will be drawn;
-				 * must be the same as font used in GC. */
-    CONST char *source,		/* UTF-8 string to be displayed.  Need not be
-				 * '\0' terminated.  All Tk meta-characters
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
 				 * (tabs, control characters, and newlines)
 				 * should be stripped out of the string that
-				 * is passed to this function. If they are
-				 * not stripped out, they will be displayed as
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		 /* Number of bytes in string. */
-    int x, int y)		 /* Coordinates at which to place origin of
-				  * string when drawing. */
+    int numBytes,		/* Number of bytes in string. */
+    int x, int y)		/* Coordinates at which to place origin of the
+				 * string when drawing. */
 {
     MacDrawable *macWin = (MacDrawable *) drawable;
     MacFont *fontPtr = (MacFont *) tkfont;
@@ -2158,11 +2157,8 @@ TkMacOSXInitControlFontStyle(
     MacFont    *fontPtr = (MacFont *) tkfont;
     FontFamily *lastFamilyPtr = fontPtr->subFontArray[0].familyPtr;
 
-    fsPtr->flags =
-	kControlUseFontMask|
-	kControlUseSizeMask|
-	kControlUseFaceMask|
-	kControlUseJustMask;
+    fsPtr->flags = kControlUseFontMask | kControlUseSizeMask |
+	    kControlUseFaceMask | kControlUseJustMask;
     fsPtr->font = lastFamilyPtr->faceNum;
     fsPtr->size = fontPtr->size;
     fsPtr->style = fontPtr->style;
