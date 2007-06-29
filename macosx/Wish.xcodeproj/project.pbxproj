@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		F9067BCD0BFBA2900074F726 /* tkOldTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAFE08F27A39005CB29B /* tkOldTest.c */; };
-		F9408AF30B195C08009F7CAC /* tclMathOp.c in Sources */ = {isa = PBXBuildFile; fileRef = F9408AF20B195C08009F7CAC /* tclMathOp.c */; };
 		F966BDCF08F27A3F005CB29B /* tk3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAAC08F27A39005CB29B /* tk3d.c */; };
 		F966BDD108F27A3F005CB29B /* tkArgv.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAAE08F27A39005CB29B /* tkArgv.c */; };
 		F966BDD208F27A3F005CB29B /* tkAtom.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAAF08F27A39005CB29B /* tkAtom.c */; };
@@ -315,7 +314,6 @@
 		8DD76FB20486AB0100D96B5E /* tktest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tktest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F91E62260C1AE686006C9D96 /* Tclsh-Info.plist.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "Tclsh-Info.plist.in"; sourceTree = "<group>"; };
 		F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXFont.h; sourceTree = "<group>"; };
-		F9408AF20B195C08009F7CAC /* tclMathOp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclMathOp.c; sourceTree = "<group>"; };
 		F966BA0408F27A37005CB29B /* error.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = error.xbm; sourceTree = "<group>"; };
 		F966BA0508F27A37005CB29B /* gray12.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray12.xbm; sourceTree = "<group>"; };
 		F966BA0608F27A37005CB29B /* gray25.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray25.xbm; sourceTree = "<group>"; };
@@ -1740,6 +1738,7 @@
 		F96D449808F272BA004A47F5 /* tclWinThrd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclWinThrd.c; sourceTree = "<group>"; };
 		F96D449908F272BA004A47F5 /* tclWinThrd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tclWinThrd.h; sourceTree = "<group>"; };
 		F96D449A08F272BA004A47F5 /* tclWinTime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclWinTime.c; sourceTree = "<group>"; };
+		F976F6A70C325FB6005066D9 /* tkMacOSXPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXPrivate.h; sourceTree = "<group>"; };
 		F97AE7F10B65C1E900310EA2 /* Wish-Common.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Common.xcconfig"; sourceTree = "<group>"; };
 		F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Release.xcconfig"; sourceTree = "<group>"; };
 		F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Debug.xcconfig"; sourceTree = "<group>"; };
@@ -1780,7 +1779,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.24 2007/06/09 17:09:41 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.25 2007/06/29 03:19:05 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2246,6 +2245,7 @@
 				F966BBE208F27A3B005CB29B /* tkMacOSXMouseEvent.c */,
 				F966BBE308F27A3B005CB29B /* tkMacOSXNotify.c */,
 				F966BBEA08F27A3C005CB29B /* tkMacOSXPort.h */,
+				F976F6A70C325FB6005066D9 /* tkMacOSXPrivate.h */,
 				F966BBEB08F27A3C005CB29B /* tkMacOSXRegion.c */,
 				F966BBEC08F27A3C005CB29B /* tkMacOSXScale.c */,
 				F966BBED08F27A3C005CB29B /* tkMacOSXScrlbr.c */,
@@ -2640,8 +2640,7 @@
 				F96D432B08F272B4004A47F5 /* license.terms */,
 			);
 			name = "Tcl Sources";
-			path = ../../tcl;
-			sourceTree = SOURCE_ROOT;
+			sourceTree = TCL_SRCROOT;
 		};
 		F96D3DF708F271BE004A47F5 /* Tk Sources */ = {
 			isa = PBXGroup;
@@ -2661,8 +2660,7 @@
 				F966BB9608F27A3B005CB29B /* license.terms */,
 			);
 			name = "Tk Sources";
-			path = ../../tk;
-			sourceTree = SOURCE_ROOT;
+			sourceTree = TK_SRCROOT;
 		};
 		F96D3DFC08F272A4004A47F5 /* doc */ = {
 			isa = PBXGroup;
@@ -2945,7 +2943,6 @@
 				F96D3F0808F272A7004A47F5 /* tclLoad.c */,
 				F96D3F0908F272A7004A47F5 /* tclLoadNone.c */,
 				F96D3F0A08F272A7004A47F5 /* tclMain.c */,
-				F9408AF20B195C08009F7CAC /* tclMathOp.c */,
 				F96D3F0B08F272A7004A47F5 /* tclNamesp.c */,
 				F96D3F0C08F272A7004A47F5 /* tclNotify.c */,
 				F96D3F0D08F272A7004A47F5 /* tclObj.c */,
@@ -3710,7 +3707,6 @@
 				F96D45A608F272BC004A47F5 /* tclLiteral.c in Sources */,
 				F96D45A708F272BC004A47F5 /* tclLoad.c in Sources */,
 				F96D45A908F272BC004A47F5 /* tclMain.c in Sources */,
-				F9408AF30B195C08009F7CAC /* tclMathOp.c in Sources */,
 				F96D45AA08F272BC004A47F5 /* tclNamesp.c in Sources */,
 				F96D45AB08F272BC004A47F5 /* tclNotify.c in Sources */,
 				F96D45AC08F272BC004A47F5 /* tclObj.c in Sources */,
@@ -4203,7 +4199,7 @@
 				ARCHS = ppc;
 				CFLAGS = "$(PER_ARCH_CFLAGS_ppc) $(CFLAGS)";
 				CPPFLAGS = "-arch ppc -isysroot $(SDKROOT) $(CPPFLAGS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.3;
 				PREBINDING = YES;
 				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
 			};
@@ -4243,6 +4239,36 @@
 			};
 			name = ReleasePPC10.2.8SDK;
 		};
+		F9EEED960C2FEFD300396116 /* ReleaseUniversal10.5SDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = ReleaseUniversal10.5SDK;
+		};
+		F9EEED970C2FEFD300396116 /* ReleaseUniversal10.5SDK */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = tktest;
+			};
+			name = ReleaseUniversal10.5SDK;
+		};
+		F9EEED990C2FEFD300396116 /* ReleaseUniversal10.5SDK */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				CFLAGS = "-arch ppc -arch i386 $(CFLAGS)";
+				CPPFLAGS = "-isysroot $(SDKROOT) $(CPPFLAGS)";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+			};
+			name = ReleaseUniversal10.5SDK;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -4256,6 +4282,7 @@
 				F98BA83F0BEB6A0100E34417 /* DebugLeaks */,
 				F95CC8AD09158F3100EA5ACE /* Release */,
 				F91BCC4F093152310042A6BF /* ReleaseUniversal */,
+				F9EEED960C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB621F0B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
 				F9DB62350B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
@@ -4273,6 +4300,7 @@
 				F98BA8410BEB6A0100E34417 /* DebugLeaks */,
 				F95CC8B209158F3100EA5ACE /* Release */,
 				F91BCC50093152310042A6BF /* ReleaseUniversal */,
+				F9EEED970C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB62090B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB62200B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
 				F9DB62360B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
@@ -4290,6 +4318,7 @@
 				F98BA8430BEB6A0100E34417 /* DebugLeaks */,
 				F95CC8B709158F3100EA5ACE /* Release */,
 				F91BCC51093152310042A6BF /* ReleaseUniversal */,
+				F9EEED990C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB620A0B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB62210B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
 				F9DB62370B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
