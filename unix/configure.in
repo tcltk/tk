@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.135 2007/06/06 09:55:22 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.136 2007/06/29 03:18:34 das Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -400,7 +400,7 @@ if test $tk_aqua = no; then
 		if test "$tcl_cv_ld_weak_l" = yes; then
 		    # On Darwin, weak link libXss if possible,
 		    # as it is only available on Tiger or later.
-		    XLIBSW="$XLIBSW -weak-lXss -lXext"
+		    XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
 		else
 		    XLIBSW="$XLIBSW -lXss -lXext"
 		fi
