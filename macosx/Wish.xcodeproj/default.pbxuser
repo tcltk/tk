@@ -16,6 +16,8 @@
 		userBuildSettings = {
 			GCC = /usr/bin/gcc;
 			SYMROOT = "${SRCROOT}/../../build/tk";
+			TCL_SRCROOT = "${SRCROOT}/../../tcl";
+			TK_SRCROOT = "${SRCROOT}/../../tk";
 		};
 	};
 	8DD76FA90486AB0100D96B5E /* tktest */ = {
@@ -37,9 +39,9 @@
 			NO,
 		);
 		argumentStrings = (
-			"${SRCROOT}/../../tk/library/demos/widget",
-			"${SRCROOT}/../../tk/tests/all.tcl",
-			"${SRCROOT}/../../tk/tests/ttk/all.tcl",
+			"${TK_SRCROOT}/library/demos/widget",
+			"${TK_SRCROOT}/tests/all.tcl",
+			"${TK_SRCROOT}/tests/ttk/all.tcl",
 			"-geometry +0+0",
 			"-singleproc 1",
 			"-verbose \"bet\"",
@@ -79,12 +81,12 @@
 			{
 				active = YES;
 				name = TCL_LIBRARY;
-				value = "${SRCROOT}/../../tcl/library";
+				value = "${TCL_SRCROOT}/library";
 			},
 			{
 				active = YES;
 				name = TK_LIBRARY;
-				value = "${SRCROOT}/../../tk/library";
+				value = "${TK_SRCROOT}/library";
 			},
 			{
 				active = YES;
@@ -165,11 +167,9 @@
 		activeArgIndex = 0;
 		activeArgIndices = (
 			YES,
-			NO,
 		);
 		argumentStrings = (
-			"${SRCROOT}/../../tk/library/demos/widget",
-			"${SRCROOT}/../../tk/library/demos/ttk_demo.tcl",
+			"${TK_SRCROOT}/library/demos/widget",
 		);
 		autoAttachOnCrash = 1;
 		configStateDict = {
