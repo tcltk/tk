@@ -11,10 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.13 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.14 2007/06/29 03:20:01 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 
 /*
  * This is a Tcl_Event structure that the Quit AppleEvent handler

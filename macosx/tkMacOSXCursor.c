@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.11 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCursor.c,v 1.12 2007/06/29 03:20:00 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 
 /*
  * There are three different ways to set the cursor on the Mac.
