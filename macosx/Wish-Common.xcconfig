@@ -9,7 +9,7 @@
 // See the file "license.terms" for information on usage and redistribution
 // of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// RCS: @(#) $Id: Wish-Common.xcconfig,v 1.3 2007/04/23 21:24:32 das Exp $
+// RCS: @(#) $Id: Wish-Common.xcconfig,v 1.4 2007/06/29 03:19:05 das Exp $
 //
 
 HEADER_SEARCH_PATHS = $(TK_SRCROOT)/generic $(TK_SRCROOT)/xlib $(DERIVED_FILE_DIR)/tcl $(DERIVED_FILE_DIR)/tk $(HEADER_SEARCH_PATHS)
@@ -42,9 +42,7 @@ TCL_CONFIGURE_ARGS = --enable-threads
 TCL_FRAMEWORK_DIR = $(SYMROOT)/../tcl/$(CONFIGURATION)
 TCL_LIBRARY = $(LIBDIR)/tcl$(VERSION)
 TCL_PACKAGE_PATH = "$(LIBDIR)"
-TCL_SRCROOT = $(SRCROOT)/../../tcl
 TCL_DEFS = HAVE_TCL_CONFIG_H
 TK_LIBRARY = $(LIBDIR)/tk$(VERSION)
-TK_SRCROOT = $(SRCROOT)/../../tk
 TK_DEFS = HAVE_TK_CONFIG_H TCL_NO_DEPRECATED
 VERSION = 8.5
