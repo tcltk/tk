@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.8 2007/06/09 17:09:40 das Exp $
+ * RCS: @(#) $Id: tkMacOSXRegion.c,v 1.9 2007/06/29 03:20:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 
 
 /*
@@ -139,12 +139,12 @@ TkUnionRectWithRegion(
     TkRegion src_region,
     TkRegion dest_region_return)
 {
-    TkMacOSXCheckTmpRgnEmpty(1);
-    SetRectRgn(tkMacOSXtmpRgn1, rectangle->x, rectangle->y,
+    TkMacOSXCheckTmpQdRgnEmpty();
+    SetRectRgn(tkMacOSXtmpQdRgn, rectangle->x, rectangle->y,
 	    rectangle->x + rectangle->width, rectangle->y + rectangle->height);
-    UnionRgn((RgnHandle) src_region, tkMacOSXtmpRgn1,
+    UnionRgn((RgnHandle) src_region, tkMacOSXtmpQdRgn,
 	    (RgnHandle) dest_region_return);
-    SetEmptyRgn(tkMacOSXtmpRgn1);
+    SetEmptyRgn(tkMacOSXtmpQdRgn);
 }
 
 /*
@@ -174,17 +174,17 @@ TkRectInRegion(
 {
     int result;
 
-    TkMacOSXCheckTmpRgnEmpty(1);
-    SetRectRgn(tkMacOSXtmpRgn1, x, y, x + width, y + height);
-    SectRgn((RgnHandle) region, tkMacOSXtmpRgn1, tkMacOSXtmpRgn1);
-    if (EmptyRgn(tkMacOSXtmpRgn1)) {
+    TkMacOSXCheckTmpQdRgnEmpty();
+    SetRectRgn(tkMacOSXtmpQdRgn, x, y, x + width, y + height);
+    SectRgn((RgnHandle) region, tkMacOSXtmpQdRgn, tkMacOSXtmpQdRgn);
+    if (EmptyRgn(tkMacOSXtmpQdRgn)) {
 	result = RectangleOut;
-    } else if (EqualRgn((RgnHandle) region, tkMacOSXtmpRgn1)) {
+    } else if (EqualRgn((RgnHandle) region, tkMacOSXtmpQdRgn)) {
 	result = RectangleIn;
     } else {
 	result = RectanglePart;
     }
-    SetEmptyRgn(tkMacOSXtmpRgn1);
+    SetEmptyRgn(tkMacOSXtmpQdRgn);
     return result;
 }
 

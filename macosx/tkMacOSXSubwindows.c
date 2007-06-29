@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.22 2007/06/09 17:09:41 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.23 2007/06/29 03:20:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXWm.h"
 
@@ -54,7 +54,7 @@ XDestroyWindow(
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
-    CGrafPtr destPort;
+
     /*
      * Remove any dangling pointers that may exist if
      * the window we are deleting is being tracked by
@@ -79,7 +79,7 @@ XDestroyWindow(
 	if (macWin->grafPtr != NULL) {
 	    TkWindow *focusPtr = TkGetFocusWin(macWin->winPtr);
 	    if (focusPtr == NULL || (focusPtr->mainPtr->winPtr == macWin->winPtr)) {
-		winRef = GetWindowFromPort(macWin->grafPtr);
+		winRef = TkMacOSXDrawableWindow(window);
 		if (TkpIsWindowFloating (winRef)) {
 		    Window window;
 
@@ -102,11 +102,11 @@ XDestroyWindow(
 	 */
 
 	if (!(Tk_IsEmbedded(macWin->winPtr))) {
-	    destPort = TkMacOSXGetDrawablePort(window);
-	    if (destPort != NULL) {
+	    WindowRef winRef = TkMacOSXDrawableWindow(window);
+
+	    if (winRef) {
 		TkMacOSXWindowList *listPtr, *prevPtr;
-		WindowRef winRef;
-		winRef = GetWindowFromPort(destPort);
+
 		TkMacOSXUnregisterMacWindow(winRef);
 		DisposeWindow(winRef);
 
@@ -175,7 +175,6 @@ XMapWindow(
 {
     MacDrawable *macWin = (MacDrawable *) window;
     XEvent event;
-    CGrafPtr  destPort;
 
     /*
      * Under certain situations it's possible for this function to be
@@ -190,19 +189,18 @@ XMapWindow(
 
     display->request++;
     macWin->winPtr->flags |= TK_MAPPED;
-    destPort = TkMacOSXGetDrawablePort (window);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    /*
 	     * XXX This should be ShowSheetWindow for kSheetWindowClass
 	     * XXX windows that have a wmPtr->master parent set.
 	     */
-	    WindowRef wRef = GetWindowFromPort(destPort);
+	    WindowRef wRef = TkMacOSXDrawableWindow(window);
+
 	    if ((macWin->winPtr->wmInfoPtr->macClass == kSheetWindowClass)
 		    && (macWin->winPtr->wmInfoPtr->master != None)) {
-		ShowSheetWindow(wRef,
-			GetWindowFromPort(TkMacOSXGetDrawablePort(
-			macWin->winPtr->wmInfoPtr->master)));
+		ShowSheetWindow(wRef, TkMacOSXDrawableWindow(
+			macWin->winPtr->wmInfoPtr->master));
 	    } else {
 		ShowWindow(wRef);
 	    }
@@ -256,11 +254,9 @@ XUnmapWindow(
 {
     MacDrawable *macWin = (MacDrawable *) window;
     XEvent event;
-    CGrafPtr destPort;
 
     display->request++;
     macWin->winPtr->flags &= ~TK_MAPPED;
-    destPort = TkMacOSXGetDrawablePort(window);
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)
 		&& macWin->winPtr->wmInfoPtr->hints.initial_state != IconicState) {
@@ -268,7 +264,8 @@ XUnmapWindow(
 	     * XXX This should be HideSheetWindow for kSheetWindowClass
 	     * XXX windows that have a wmPtr->master parent set.
 	     */
-	    WindowRef wref = GetWindowFromPort(destPort);
+	    WindowRef wref = TkMacOSXDrawableWindow(window);
+
 	    if ((macWin->winPtr->wmInfoPtr->macClass == kSheetWindowClass)
 		    && (macWin->winPtr->wmInfoPtr->master != None)) {
 		HideSheetWindow(wref);
@@ -329,10 +326,9 @@ XResizeWindow(
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	CGrafPtr destPort = TkMacOSXGetDrawablePort(window);
+	WindowRef w = TkMacOSXDrawableWindow(window);
 
-	if (destPort) {
-	    WindowRef w = GetWindowFromPort(destPort);
+	if (w) {
 	    Rect bounds;
 
 	    ChkErr(GetWindowBounds, w, kWindowContentRgn, &bounds);
@@ -374,10 +370,9 @@ XMoveResizeWindow(
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	CGrafPtr destPort = TkMacOSXGetDrawablePort(window);
+	WindowRef w = TkMacOSXDrawableWindow(window);
 
-	if (destPort) {
-	    WindowRef w = GetWindowFromPort(destPort);
+	if (w) {
 	    Rect bounds;
 
 	    bounds.left = x + macWin->winPtr->wmInfoPtr->xInParent;
@@ -419,11 +414,9 @@ XMoveWindow(
 
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
-	CGrafPtr destPort = TkMacOSXGetDrawablePort(window);
+	WindowRef w = TkMacOSXDrawableWindow(window);
 
-	if (destPort) {
-	    WindowRef w = GetWindowFromPort(destPort);
-
+	if (w) {
 	    ChkErr(MoveWindowStructure, w, x, y);
 	}
     } else {
@@ -651,13 +644,12 @@ XConfigureWindow(
 
     if (value_mask & CWStackMode) {
 	Rect bounds;
-	CGrafPtr destPort;
+	WindowRef wRef = TkMacOSXDrawableWindow(w);
 
-	destPort = TkMacOSXGetDrawablePort(w);
-	if (destPort != NULL) {
+	if (wRef) {
 	    TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
 	    TkMacOSXWinBounds(winPtr, &bounds);
-	    InvalWindowRect(GetWindowFromPort(destPort),&bounds);
+	    InvalWindowRect(wRef, &bounds);
 	}
     }
 
@@ -698,18 +690,15 @@ TkMacOSXUpdateClipRgn(
 	TkWindow *win2Ptr;
 
 	if (Tk_IsMapped(winPtr)) {
-	    int x, y;
+	    Rect bounds;
 	    RgnHandle rgn = macWin->aboveClipRgn;
 
 	    /*
 	     * Start with a region defined by the window bounds.
 	     */
 
-	    x = macWin->xOff;
-	    y = macWin->yOff;
-	    SetRectRgn(rgn, (short) x, (short) y,
-		(short) (winPtr->changes.width + x),
-		(short) (winPtr->changes.height + y));
+	    TkMacOSXWinBounds(winPtr, &bounds);
+	    RectRgn(rgn, &bounds);
 
 	    /*
 	     * Clip away the area of any windows that may obscure this
@@ -726,7 +715,7 @@ TkMacOSXUpdateClipRgn(
 
 	    if (!Tk_IsTopLevel(winPtr)) {
 		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
-		TkMacOSXCheckTmpRgnEmpty(1);
+		TkMacOSXCheckTmpQdRgnEmpty();
 		if (winPtr->parentPtr) {
 		    SectRgn(rgn, winPtr->parentPtr->privatePtr->aboveClipRgn,
 			    rgn);
@@ -736,24 +725,21 @@ TkMacOSXUpdateClipRgn(
 		    if (Tk_IsTopLevel(win2Ptr) || !Tk_IsMapped(win2Ptr)) {
 			continue;
 		    }
-		    x = win2Ptr->privatePtr->xOff;
-		    y = win2Ptr->privatePtr->yOff;
-		    SetRectRgn(tkMacOSXtmpRgn1, (short) x, (short) y,
-			    (short) (win2Ptr->changes.width  + x),
-			    (short) (win2Ptr->changes.height + y));
-		    DiffRgn(rgn, tkMacOSXtmpRgn1, rgn);
+		    TkMacOSXWinBounds(win2Ptr, &bounds);
+		    RectRgn(tkMacOSXtmpQdRgn, &bounds);
+		    DiffRgn(rgn, tkMacOSXtmpQdRgn, rgn);
 		}
 	    } else if (Tk_IsEmbedded(winPtr)) {
 		win2Ptr = TkpGetOtherWindow(winPtr);
 		if (win2Ptr) {
 		    TkMacOSXUpdateClipRgn(win2Ptr);
-		    TkMacOSXCheckTmpRgnEmpty(1);
+		    TkMacOSXCheckTmpQdRgnEmpty();
 		    SectRgn(rgn, win2Ptr->privatePtr->aboveClipRgn, rgn);
 		} else if (tkMacOSXEmbedHandler != NULL) {
-		    TkMacOSXCheckTmpRgnEmpty(1);
+		    TkMacOSXCheckTmpQdRgnEmpty();
 		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr,
-			    tkMacOSXtmpRgn1);
-		    SectRgn(rgn, tkMacOSXtmpRgn1, rgn);
+			    tkMacOSXtmpQdRgn);
+		    SectRgn(rgn, tkMacOSXtmpQdRgn, rgn);
 		}
 
 		/*
@@ -776,12 +762,9 @@ TkMacOSXUpdateClipRgn(
 		    win2Ptr = win2Ptr->nextPtr;
 		    continue;
 		}
-		x = win2Ptr->privatePtr->xOff;
-		y = win2Ptr->privatePtr->yOff;
-		SetRectRgn(tkMacOSXtmpRgn1, (short) x, (short) y,
-			(short) (win2Ptr->changes.width	 + x),
-			(short) (win2Ptr->changes.height + y));
-		DiffRgn(rgn, tkMacOSXtmpRgn1, rgn);
+		TkMacOSXWinBounds(win2Ptr, &bounds);
+		RectRgn(tkMacOSXtmpQdRgn, &bounds);
+		DiffRgn(rgn, tkMacOSXtmpQdRgn, rgn);
 		win2Ptr = win2Ptr->nextPtr;
 	    }
 
@@ -789,12 +772,9 @@ TkMacOSXUpdateClipRgn(
 		win2Ptr = TkpGetOtherWindow(winPtr);
 		if (win2Ptr) {
 		    if (Tk_IsMapped(win2Ptr)) {
-			x = win2Ptr->privatePtr->xOff;
-			y = win2Ptr->privatePtr->yOff;
-			SetRectRgn(tkMacOSXtmpRgn1, (short) x, (short) y,
-				(short) (win2Ptr->changes.width	 + x),
-				(short) (win2Ptr->changes.height + y));
-			DiffRgn(rgn, tkMacOSXtmpRgn1, rgn);
+			TkMacOSXWinBounds(win2Ptr, &bounds);
+			RectRgn(tkMacOSXtmpQdRgn, &bounds);
+			DiffRgn(rgn, tkMacOSXtmpQdRgn, rgn);
 		    }
 		}
 
@@ -802,7 +782,7 @@ TkMacOSXUpdateClipRgn(
 		 * TODO: Here we should handle out of process embedding.
 		 */
 	    }
-	    SetEmptyRgn(tkMacOSXtmpRgn1);
+	    SetEmptyRgn(tkMacOSXtmpQdRgn);
 	} else {
 	    /*
 	     * An unmapped window has empty clip regions to prevent any
@@ -824,8 +804,7 @@ TkMacOSXUpdateClipRgn(
 	macWin->flags &= ~TK_CLIP_INVALID;
 
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-	TkMacOSXDebugFlashRegion(TkMacOSXGetDrawablePort((Drawable) macWin),
-		macWin->visRgn);
+	TkMacOSXDebugFlashRegion((Drawable) macWin, macWin->clipRgn);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
     }
 }
@@ -881,11 +860,9 @@ TkMacOSXInvalidateWindow(
 				 * TK_PARENT_WINDOW */
 {
     WindowRef windowRef;
-    CGrafPtr  grafPtr;
     RgnHandle rgn;
 
-    grafPtr = TkMacOSXGetDrawablePort((Drawable)macWin);
-    windowRef = GetWindowFromPort(grafPtr);
+    windowRef = TkMacOSXDrawableWindow((Drawable)macWin);
     if (macWin->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macWin->winPtr);
     }
@@ -894,8 +871,39 @@ TkMacOSXInvalidateWindow(
 	InvalWindowRgn(windowRef, rgn);
     }
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-    TkMacOSXDebugFlashRegion(grafPtr, rgn);
+    TkMacOSXDebugFlashRegion((Drawable) macWin, rgn);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetDrawableWindow --
+ *
+ *	This function returns the WindowRef for a given X drawable.
+ *
+ * Results:
+ *	A WindowRef, or NULL for off screen pixmaps.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+WindowRef
+TkMacOSXDrawableWindow(
+    Drawable drawable)
+{
+    MacDrawable *macWin = (MacDrawable *) drawable;
+    WindowRef result = NULL;
+
+    if (!macWin || !macWin->clipRgn) {
+	result = NULL;
+    } else {
+	result = GetWindowFromPort(TkMacOSXGetDrawablePort(drawable));
+    }
+    return result;
 }
 
 /*
@@ -921,61 +929,53 @@ TkMacOSXGetDrawablePort(
     MacDrawable *macWin = (MacDrawable *) drawable;
     CGrafPtr resultPort = NULL;
 
-    if (macWin == NULL) {
-	return NULL;
-    }
-
-    /*
-     * This is NULL for off-screen pixmaps. Then the portPtr
-     * always points to the off-screen port, and we don't
-     * have to worry about containment
-     */
-
-    if (macWin->clipRgn == NULL) {
-	return macWin->grafPtr;
-    }
-
-    /*
-     * If the Drawable is in an embedded window, use the Port of its container.
-     *
-     * TRICKY POINT: we can have cases when a toplevel is being destroyed
-     * where the winPtr for the toplevel has been freed, but the children
-     * are not all the way destroyed. The children will call this function
-     * as they are being destroyed, but Tk_IsEmbedded will return garbage.
-     * So we check the copy of the TK_EMBEDDED flag we put into the
-     * toplevel's macWin flags.
-     */
-
-    if (!(macWin->toplevel->flags & TK_EMBEDDED)) {
-	return macWin->toplevel->grafPtr;
-    } else {
-	TkWindow *contWinPtr;
-
-	contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
-
-	if (contWinPtr != NULL) {
-	    resultPort = TkMacOSXGetDrawablePort(
-		(Drawable) contWinPtr->privatePtr);
-	} else if (tkMacOSXEmbedHandler != NULL) {
-	    resultPort = tkMacOSXEmbedHandler->getPortProc(
-		    (Tk_Window) macWin->winPtr);
-	}
-
-	if (resultPort == NULL) {
+    if (macWin) {
+	resultPort = macWin->grafPtr;
+	if (macWin->toplevel && macWin->clipRgn) {
 	    /*
-	     * FIXME: So far as I can tell, the only time that this happens is
-	     * when we are tearing down an embedded child interpreter, and most
-	     * of the time, this is harmless... However, we really need to
-	     * find why the embedding loses.
+	     * If the Drawable is in an embedded window, use the Port of its
+	     * container.
+	     *
+	     * TRICKY POINT: we can have cases when a toplevel is being
+	     * destroyed where the winPtr for the toplevel has been freed, but
+	     * the children are not all the way destroyed. The children will
+	     * call this function as they are being destroyed, but
+	     * Tk_IsEmbedded will return garbage. So we check the copy of the
+	     * TK_EMBEDDED flag we put into the toplevel's macWin flags.
 	     */
-	    TkMacOSXDbgMsg("Couldn't find container");
-	    return NULL;
-	}
 
-	/*
-	 * TODO: Here we should handle out of process embedding.
-	 */
+	    if (macWin->toplevel->flags & TK_EMBEDDED) {
+		TkWindow *contWinPtr;
+
+		contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
+
+		if (contWinPtr != NULL) {
+		    resultPort = TkMacOSXGetDrawablePort(
+			(Drawable) contWinPtr->privatePtr);
+		} else if (tkMacOSXEmbedHandler != NULL) {
+		    resultPort = tkMacOSXEmbedHandler->getPortProc(
+			    (Tk_Window) macWin->winPtr);
+		}
+
+		if (resultPort == NULL) {
+		    /*
+		     * FIXME: So far as I can tell, the only time that this
+		     * happens is when we are tearing down an embedded child
+		     * interpreter, and most of the time, this is harmless...
+		     * However, we really need to find why the embedding loses.
+		     */
+		    TkMacOSXDbgMsg("Couldn't find container");
+		}
+
+		/*
+		 * TODO: Here we should handle out of process embedding.
+		 */
+	    } else {
+		resultPort = macWin->toplevel->grafPtr;
+	    }
+	}
     }
+
     return resultPort;
 }
 
@@ -1118,12 +1118,10 @@ TkMacOSXWinBounds(
     TkWindow *winPtr,
     Rect *bounds)
 {
-    bounds->left = (short) winPtr->privatePtr->xOff;
-    bounds->top = (short) winPtr->privatePtr->yOff;
-    bounds->right = (short) (winPtr->privatePtr->xOff +
-	    winPtr->changes.width);
-    bounds->bottom = (short) (winPtr->privatePtr->yOff +
-	    winPtr->changes.height);
+    bounds->left = winPtr->privatePtr->xOff;
+    bounds->top = winPtr->privatePtr->yOff;
+    bounds->right = bounds->left + winPtr->changes.width;
+    bounds->bottom = bounds->top + winPtr->changes.height;
 }
 
 /*
@@ -1211,7 +1209,7 @@ Tk_GetPixmap(
 {
     QDErr err;
     GWorldPtr gWorld;
-    Rect bounds;
+    Rect bounds = {0, 0, height, width};
     MacDrawable *macPix;
 
     if (display != NULL) {
@@ -1227,19 +1225,10 @@ Tk_GetPixmap(
     macPix->referenceCount = 0;
     macPix->toplevel = NULL;
     macPix->flags = 0;
+    macPix->grafPtr = NULL;
+    macPix->context = NULL;
 
-    bounds.top = bounds.left = 0;
-    bounds.right = (short) width;
-    bounds.bottom = (short) height;
-    if (depth != 1) {
-	depth = 0;
-    }
-    /*
-     * Allocate memory for the off screen pixmap. If we fail
-     * try again from system memory. Eventually, we may have
-     * to panic.
-     */
-    err = ChkErr(NewGWorld, &gWorld, depth, &bounds, NULL, NULL, 0
+    err = ChkErr(NewGWorld, &gWorld, depth == 1 ? 1 : 0, &bounds, NULL, NULL, 0
 #ifdef __LITTLE_ENDIAN__
 	    | kNativeEndianPixMap
 #endif
@@ -1248,7 +1237,6 @@ Tk_GetPixmap(
 	Tcl_Panic("Out of memory: NewGWorld failed in Tk_GetPixmap");
     }
     macPix->grafPtr = gWorld;
-    macPix->context = NULL;
 
     return (Pixmap) macPix;
 }
@@ -1277,6 +1265,8 @@ Tk_FreePixmap(
     MacDrawable *macPix = (MacDrawable *) pixmap;
 
     display->request++;
-    DisposeGWorld(macPix->grafPtr);
+    if (macPix->grafPtr) {
+	DisposeGWorld(macPix->grafPtr);
+    }
     ckfree((char *) macPix);
 }

@@ -54,10 +54,10 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.30 2007/06/06 09:55:52 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.31 2007/06/29 03:20:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
@@ -278,9 +278,8 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		    /* Now we want to set the focus to the local grabWin */
 		    TkMacOSXSetEatButtonUp(true);
 		    grabWin = (Tk_Window) (((TkWindow*)tkwin)->dispPtr->grabWinPtr);
-		    BringWindowForward(GetWindowFromPort(
-			    TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)),
-			    isFrontProcess);
+		    BringWindowForward(TkMacOSXDrawableWindow(
+			    ((TkWindow*)grabWin)->window), isFrontProcess);
 		    statusPtr->stopProcessing = 1;
 		    return false;
 		}
@@ -291,9 +290,8 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		grb = (TkWindow *)grabWin;
 		/* Now we want to set the focus to the global grabWin */
 		TkMacOSXSetEatButtonUp(true);
-		BringWindowForward(GetWindowFromPort(
-			TkMacOSXGetDrawablePort(((TkWindow*)grabWin)->window)),
-			isFrontProcess);
+		BringWindowForward(TkMacOSXDrawableWindow(
+			((TkWindow*)grabWin)->window), isFrontProcess);
 		statusPtr->stopProcessing = 1;
 		return false;
 	    }
