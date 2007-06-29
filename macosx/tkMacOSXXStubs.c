@@ -13,10 +13,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.21 2007/06/23 00:26:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.22 2007/06/29 03:20:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 
 #include <IOKit/IOKitLib.h>
@@ -816,7 +816,7 @@ XCreateImage(
     if (bitmap_pad) {
 	ximage->bitmap_pad = bitmap_pad;
     } else {
-	/* Use 16 byte alignment for best perfomance */
+	/* Use 16 byte alignment for best Quartz perfomance */
 	ximage->bitmap_pad = 128;
     }
     if (bytes_per_line) {
@@ -922,8 +922,7 @@ XGetImage(
  *
  * DestroyImage --
  *
- *	This is a trivial wrapper around ckfree to make it possible to pass
- *	ckfree as a pointer.
+ *	Destroys storage associated with an image.
  *
  * Results:
  *	None.
@@ -943,7 +942,7 @@ DestroyImage(
 	    Tk_FreePixmap((Display*) gMacDisplay, (Pixmap) image->obdata);
 	}
 	if (image->data) {
-	    ckfree((char*) image->data);
+	    ckfree(image->data);
 	}
 	ckfree((char*) image);
     }

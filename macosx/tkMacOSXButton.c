@@ -11,10 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.26 2007/05/31 13:38:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.27 2007/06/29 03:20:00 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkButton.h"
 #include "tkMacOSXFont.h"
 #include "tkMacOSXDebug.h"
@@ -797,8 +797,7 @@ TkMacOSXInitControl(
     SInt32 controlReference;
 
     rootControl = TkMacOSXGetRootControl(Tk_WindowId(butPtr->tkwin));
-    mbPtr->windowRef = GetWindowFromPort(
-	    TkMacOSXGetDrawablePort(Tk_WindowId(butPtr->tkwin)));
+    mbPtr->windowRef = TkMacOSXDrawableWindow(Tk_WindowId(butPtr->tkwin));
 
     /*
      * Set up the user pane.
@@ -1251,9 +1250,11 @@ UserPaneDraw(
 {
     MacButton *mbPtr = (MacButton *)(intptr_t)GetControlReference(control);
     Rect contrlRect;
-
+    CGrafPtr port;
+    
+    GetPort(&port);
     GetControlBounds(control,&contrlRect);
-    TkMacOSXSetColorInPort(mbPtr->userPaneBackground, 0, NULL);
+    TkMacOSXSetColorInPort(mbPtr->userPaneBackground, 0, NULL, port);
     EraseRect(&contrlRect);
 }
 
@@ -1282,7 +1283,10 @@ UserPaneBackgroundProc(
     MacButton * mbPtr = (MacButton *)(intptr_t)GetControlReference(control);
 
     if (info->colorDevice) {
-	TkMacOSXSetColorInPort(mbPtr->userPaneBackground, 0, NULL);
+	CGrafPtr port;
+	
+	GetPort(&port);
+	TkMacOSXSetColorInPort(mbPtr->userPaneBackground, 0, NULL, port);
     }
 }
 
