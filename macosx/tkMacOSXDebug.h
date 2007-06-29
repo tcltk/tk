@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.11 2007/05/30 06:35:54 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.12 2007/06/29 03:20:00 das Exp $
  */
 
 #ifndef _TKMACDEBUG
@@ -82,7 +82,7 @@ MODULE_SCOPE char* TkMacOSXMenuMessageToAscii(int msg, char * s);
 MODULE_SCOPE char* TkMacOSXMouseTrackingResultToAscii(MouseTrackingResult r, char * buf );
 #endif
 
-MODULE_SCOPE void TkMacOSXDebugFlashRegion(CGrafPtr port, RgnHandle rgn);
+MODULE_SCOPE void TkMacOSXDebugFlashRegion(Drawable d, RgnHandle rgn);
 
 MODULE_SCOPE void* TkMacOSXGetNamedDebugSymbol(const char* module, const char* symbol);
 

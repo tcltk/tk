@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.26 2007/06/23 00:26:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.27 2007/06/29 03:20:01 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkFileFilter.h"
 
 #ifndef StrLength
@@ -774,8 +774,7 @@ NavServicesGetFile(
     options.modality = kWindowModalityAppModal;
     if (parent && ((TkWindow*)parent)->window != None &&
 	    TkMacOSXHostToplevelExists(parent)) {
-	options.parentWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(
-		Tk_WindowId(parent)));
+	options.parentWindow = TkMacOSXDrawableWindow(Tk_WindowId(parent));
 	TK_IF_HI_TOOLBOX (5,
 	    /*
 	     * Impossible to modify dialog modality with the Cocoa-based
@@ -1568,8 +1567,7 @@ Tk_MessageBoxObjCmd(
 	if (!handler) {
 	    handler = NewEventHandlerUPP(AlertHandler);
 	}
-	windowRef = GetWindowFromPort(TkMacOSXGetDrawablePort(
-		Tk_WindowId(tkwin)));
+	windowRef = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
 	if (!windowRef) {
 	    goto end;
 	}

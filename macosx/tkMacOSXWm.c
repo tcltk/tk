@@ -13,10 +13,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.54 2007/06/09 17:09:41 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.55 2007/06/29 03:20:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkScrollbar.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
@@ -997,7 +997,7 @@ WmAttributesCmd(
     if (!TkMacOSXHostToplevelExists(winPtr)) {
 	TkMacOSXMakeRealWindowExist(winPtr);
     }
-    macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+    macWindow = TkMacOSXDrawableWindow(winPtr->window);
 
     if (objc == 3) {		/* wm attributes $win */
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
@@ -1648,8 +1648,8 @@ WmIconbitmapCmd(
     if (!TkMacOSXHostToplevelExists(winPtr)) {
 	TkMacOSXMakeRealWindowExist(winPtr);
     }
-    if (WmSetAttribute(winPtr, GetWindowFromPort(TkMacOSXGetDrawablePort(
-	    winPtr->window)), interp, WMATT_TITLEPATH, objv[3]) == TCL_OK) {
+    if (WmSetAttribute(winPtr, TkMacOSXDrawableWindow(winPtr->window), interp,
+	    WMATT_TITLEPATH, objv[3]) == TCL_OK) {
 	if (!len) {
 	    if (wmPtr->hints.icon_pixmap != None) {
 		Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -4074,7 +4074,7 @@ TkWmRestackToplevel(
 
 	TkWmMapWindow(winPtr);
     }
-    macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+    macWindow = TkMacOSXDrawableWindow(winPtr->window);
 
     /*
      * Get the window in which a raise or lower is in relation to.
@@ -4086,8 +4086,7 @@ TkWmRestackToplevel(
 	if (otherPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
 	    TkWmMapWindow(otherPtr);
 	}
-	otherMacWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(
-		otherPtr->window));
+	otherMacWindow = TkMacOSXDrawableWindow(otherPtr->window);
     } else {
 	otherMacWindow = NULL;
     }
@@ -4572,8 +4571,7 @@ TkSetWMName(
     title = CFStringCreateWithBytes(NULL, (const unsigned char*) titleUid,
 	    strlen(titleUid), kCFStringEncodingUTF8, false);
     if (title) {
-	WindowRef macWin = GetWindowFromPort(
-		TkMacOSXGetDrawablePort(winPtr->window));
+	WindowRef macWin = TkMacOSXDrawableWindow(winPtr->window);
 
 	SetWindowTitleWithCFString(macWin, title);
 	CFRelease(title);
@@ -4695,8 +4693,7 @@ TkMacOSXIsWindowZoomed(
 	idealSize.v = maxHeight;
     }
 
-    return IsWindowInStandardState(
-	    GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window)),
+    return IsWindowInStandardState(TkMacOSXDrawableWindow(winPtr->window),
 	    &idealSize, NULL);
 }
 
@@ -5442,7 +5439,7 @@ TkpWmSetState(winPtr, state)
 	return;
     }
 
-    macWin = GetWindowFromPort(TkMacOSXGetDrawablePort (winPtr->window));
+    macWin = TkMacOSXDrawableWindow(winPtr->window);
 
     if (state == WithdrawnState) {
 	Tk_UnmapWindow((Tk_Window) winPtr);
@@ -5694,7 +5691,7 @@ WmStackorderToplevelWrapperMap(
 
     if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)
 	    && (winPtr->display == display)) {
-	macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+	macWindow = TkMacOSXDrawableWindow(winPtr->window);
 
 	hPtr = Tcl_CreateHashEntry(table,
 	    (const char *) macWindow, &newEntry);
@@ -5831,8 +5828,7 @@ ApplyWindowClassAttributeChanges(
 		    return;
 		}
 	    }
-	    macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(
-		    winPtr->window));
+	    macWindow = TkMacOSXDrawableWindow(winPtr->window);
 	}
 	if (wmPtr->macClass != oldClass) {
 	    TK_IF_MAC_OS_X_API (4, HIWindowChangeClass,
@@ -5934,7 +5930,7 @@ ApplyMasterOverrideChanges(
 	if (!TkMacOSXHostToplevelExists(winPtr)) {
 	    return;
 	}
-	macWindow = GetWindowFromPort(TkMacOSXGetDrawablePort(winPtr->window));
+	macWindow = TkMacOSXDrawableWindow(winPtr->window);
     }
     if (macWindow) {
 	Tcl_Obj *val;

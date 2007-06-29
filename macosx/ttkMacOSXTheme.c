@@ -27,10 +27,10 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.7 2007/04/27 04:40:39 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.8 2007/06/29 03:20:02 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "ttk/ttkTheme.h"
 
 #define BEGIN_DRAWING(d) { \

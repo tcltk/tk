@@ -13,10 +13,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.11 2007/06/09 17:09:39 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.12 2007/06/29 03:20:00 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkColor.h"
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1040
@@ -198,8 +198,11 @@ static const struct SystemColorMapEntry systemColorMap[] = {
  */
 
 static int
-GetThemeFromPixelCode(unsigned char code, ThemeBrush *brush,
-	ThemeTextColor *textColor, ThemeBackgroundKind *background)
+GetThemeFromPixelCode(
+    unsigned char code,
+    ThemeBrush *brush,
+    ThemeTextColor *textColor,
+    ThemeBackgroundKind *background)
 {
     if (code >= MIN_PIXELCODE && code <= MAX_PIXELCODE && code != PIXEL_MAGIC) {
 	*brush = systemColorMap[code - MIN_PIXELCODE].brush;
@@ -234,8 +237,12 @@ GetThemeFromPixelCode(unsigned char code, ThemeBrush *brush,
  */
 
 static OSStatus
-GetThemeColor(unsigned long pixel, ThemeBrush brush, ThemeTextColor textColor,
-	ThemeBackgroundKind background, RGBColor *c)
+GetThemeColor(
+    unsigned long pixel,
+    ThemeBrush brush,
+    ThemeTextColor textColor,
+    ThemeBackgroundKind background,
+    RGBColor *c)
 {
     OSStatus err = noErr;
 
@@ -308,25 +315,32 @@ TkSetMacColor(
  */
 
 void
-TkMacOSXSetColorInPort(unsigned long pixel, int fg, PixPatHandle penPat)
+TkMacOSXSetColorInPort(
+    unsigned long pixel,
+    int fg,
+    PixPatHandle penPat,
+    CGrafPtr port)
 {
     OSStatus err;
     RGBColor c;
     ThemeBrush brush;
     ThemeTextColor textColor;
     ThemeBackgroundKind background;
+    int setPenPat = 0;
 
     if (GetThemeFromPixelCode((pixel >> 24) & 0xff, &brush, &textColor,
 	    &background)) {
-	CGrafPtr port;
+	CGrafPtr savePort;
+	Boolean portChanged;
 
-	GetPort(&port);
+	portChanged = QDSwapPort(port, &savePort);
 	err = ChkErr(GetThemeColor, pixel, brush, textColor, background, &c);
 	if (err == noErr) {
 	    if (fg) {
 		RGBForeColor(&c);
 		if (penPat) {
 		    MakeRGBPat(penPat, &c);
+		    setPenPat = 1;
 		}
 	    } else {
 		RGBBackColor(&c);
@@ -346,9 +360,16 @@ TkMacOSXSetColorInPort(unsigned long pixel, int fg, PixPatHandle penPat)
 	    err = ChkErr(ApplyThemeBackground, background, &bounds,
 		    kThemeStateActive, 32, true);
 	}
-	if (penPat && err == noErr && !textColor) {
+	if (penPat && err == noErr && (brush || background)) {
 	    GetPortBackPixPat(port, penPat);
+	    setPenPat = 1;
 	}
+	if (portChanged) {
+	    QDSwapPort(savePort, NULL);
+	}
+    }
+    if (penPat && !setPenPat) {
+	GetPortBackPixPat(port, penPat);
     }
 }
 
@@ -372,7 +393,9 @@ TkMacOSXSetColorInPort(unsigned long pixel, int fg, PixPatHandle penPat)
  */
 
 void
-TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
+TkMacOSXSetColorInContext(
+    unsigned long pixel,
+    CGContextRef context)
 {
     OSStatus err = -1;
     RGBColor c;
@@ -447,7 +470,7 @@ TkMacOSXSetColorInContext(unsigned long pixel, CGContextRef context)
 		) TK_ENDIF
 	    }
 	    portChanged = QDSwapPort(patGWorld, &savePort);
-	    TkMacOSXSetColorInPort(pixel, 1, pixpat);
+	    TkMacOSXSetColorInPort(pixel, 1, pixpat, patGWorld);
 #ifdef TK_MAC_DEBUG
 	    Rect patBounds;
 	    GetPixBounds((**pixpat).patMap, &patBounds);
