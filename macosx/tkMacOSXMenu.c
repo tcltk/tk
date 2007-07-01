@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.3 2007/06/12 16:22:42 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.4 2007/07/01 17:31:37 dgp Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMenubutton.h"
 #include "tkMenu.h"
 #include "tkColor.h"
@@ -2030,15 +2030,10 @@ TkpSetMainMenubar(
 				 */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    CGrafPtr winPort;
     WindowRef macWindowPtr;
     WindowRef frontNonFloating;
 
-    winPort = TkMacOSXGetDrawablePort(winPtr->window);
-    if (!winPort) {
-	return;
-    }
-    macWindowPtr = GetWindowFromPort(winPort);
+    macWindowPtr = TkMacOSXDrawableWindow(winPtr->window);
 
     frontNonFloating = ActiveNonFloatingWindow();
     if ((macWindowPtr == NULL) || (macWindowPtr != frontNonFloating)) {
@@ -3985,7 +3980,17 @@ TkpMenuInit(void)
     tkThemeMenuItemDrawingUPP
 	    = NewMenuItemDrawingUPP(ThemeMenuItemDrawingProc);
     useMDEFVar = Tcl_NewStringObj("::tk::mac::useCustomMDEF", -1);
+    macMDEFDrawable.winPtr = NULL;
+    macMDEFDrawable.xOff = 0;
+    macMDEFDrawable.yOff = 0;
+    macMDEFDrawable.clipRgn = NULL;
+    macMDEFDrawable.aboveClipRgn = NULL;
     macMDEFDrawable.drawRgn = NewRgn();
+    macMDEFDrawable.referenceCount = 0;
+    macMDEFDrawable.toplevel = NULL;
+    macMDEFDrawable.flags = 0;
+    macMDEFDrawable.grafPtr = NULL;
+    macMDEFDrawable.context = NULL;
 #endif
 
     ChkErr(GetThemeMetric, kThemeMetricMenuMarkColumnWidth,

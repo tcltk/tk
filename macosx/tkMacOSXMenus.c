@@ -11,10 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.16.2.1 2007/06/04 15:19:00 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.16.2.2 2007/07/01 17:31:37 dgp Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 
 #define kAppleMenu		256
 #define kAppleAboutItem		1

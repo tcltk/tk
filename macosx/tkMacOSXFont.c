@@ -35,10 +35,10 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.3 2007/06/04 15:19:00 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.4 2007/07/01 17:31:33 dgp Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXFont.h"
 
 /*
@@ -316,7 +316,7 @@ GetThemeFontAndFamily(
 TkFont *
 TkpGetNativeFont(
     Tk_Window tkwin,		/* For display where font will be used. */
-    const char * name)		/* Platform-specific font name. */
+    const char *name)		/* Platform-specific font name. */
 {
     ThemeFontID themeFontId;
     FMFontFamily fontFamily;
@@ -1054,7 +1054,8 @@ TkpDrawCharsInContext(
     Tcl_DString runString;
 #endif
 
-    TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext);
+    TkMacOSXSetupDrawingContext(drawable, gc, tkMacOSXUseCGDrawing,
+	    &drawingContext);
 
 #if 0
     /*

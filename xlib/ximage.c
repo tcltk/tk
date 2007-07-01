@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: ximage.c,v 1.6.2.1 2007/06/25 19:12:14 dgp Exp $
+ * RCS: @(#) $Id: ximage.c,v 1.6.2.2 2007/07/01 17:31:40 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -53,6 +53,8 @@ XCreateBitmapFromData(
     }
     ximage = XCreateImage(display, NULL, 1, XYBitmap, 0, (char*) data, width,
 	    height, 8, (width + 7) / 8);
+    ximage->bitmap_bit_order = LSBFirst;
+    _XInitImageFuncPtrs(ximage);
     TkPutImage(NULL, 0, display, pix, gc, ximage, 0, 0, 0, 0, width, height);
     ximage->data = NULL;
     XDestroyImage(ximage);

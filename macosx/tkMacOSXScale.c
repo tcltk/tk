@@ -11,10 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScale.c,v 1.11.2.1 2007/06/12 16:22:42 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXScale.c,v 1.11.2.2 2007/07/01 17:31:37 dgp Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkScale.h"
 
 /*
@@ -209,7 +209,7 @@ TkpDisplayScale(
 
     macDraw = (MacDrawable *) Tk_WindowId(tkwin);
     destPort = TkMacOSXGetDrawablePort(Tk_WindowId(tkwin));
-    windowRef = GetWindowFromPort(destPort);
+    windowRef = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
     portChanged = QDSwapPort(destPort, &savePort);
     TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
