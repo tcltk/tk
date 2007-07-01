@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.16.2.3 2007/06/12 16:22:42 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.16.2.4 2007/07/01 17:31:32 dgp Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 

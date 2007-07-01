@@ -54,10 +54,10 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.21.2.1 2007/06/04 15:19:00 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.21.2.2 2007/07/01 17:31:34 dgp Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 
 /*
@@ -1123,8 +1123,8 @@ TkpSetCapture(
 	    m = kWindowModalityNone;
 	}
 	if (w && w->window != None && TkMacOSXHostToplevelExists(w)) {
-	    ChkErr(SetWindowModality, GetWindowFromPort(
-		    TkMacOSXGetDrawablePort(w->window)), m, NULL);
+	    ChkErr(SetWindowModality, TkMacOSXDrawableWindow(w->window), m,
+		    NULL);
 	}
     }
 #endif
