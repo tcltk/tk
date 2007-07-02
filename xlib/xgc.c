@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.6.2.4 2007/07/02 13:04:26 das Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.6.2.5 2007/07/02 13:27:04 das Exp $
  */
 
 #include <tkInt.h>
@@ -74,7 +74,7 @@ XCreateGC(display, d, mask, values)
     gp->foreground = 	(mask & GCForeground) 	?values->foreground 	:
 	    BlackPixelOfScreen(DefaultScreenOfDisplay(display));
     gp->background = 	(mask & GCBackground) 	?values->background 	:
-	    WhitePixelOfScreen(DefaultScreenOfDisplay(display)));
+	    WhitePixelOfScreen(DefaultScreenOfDisplay(display));
     gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:1;	
     gp->line_style = 	(mask & GCLineStyle)	?values->line_style	:LineSolid;
     gp->cap_style =  	(mask & GCCapStyle)	?values->cap_style	:0;
