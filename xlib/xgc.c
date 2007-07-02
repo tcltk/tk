@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.6.2.3 2007/05/30 06:39:39 das Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.6.2.4 2007/07/02 13:04:26 das Exp $
  */
 
 #include <tkInt.h>
@@ -71,8 +71,10 @@ XCreateGC(display, d, mask, values)
 
     gp->function = 	(mask & GCFunction) 	?values->function	:GXcopy;
     gp->plane_mask = 	(mask & GCPlaneMask) 	?values->plane_mask 	:~0;
-    gp->foreground = 	(mask & GCForeground) 	?values->foreground 	:0;
-    gp->background = 	(mask & GCBackground) 	?values->background 	:0xffffff;
+    gp->foreground = 	(mask & GCForeground) 	?values->foreground 	:
+	    BlackPixelOfScreen(DefaultScreenOfDisplay(display));
+    gp->background = 	(mask & GCBackground) 	?values->background 	:
+	    WhitePixelOfScreen(DefaultScreenOfDisplay(display)));
     gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:1;	
     gp->line_style = 	(mask & GCLineStyle)	?values->line_style	:LineSolid;
     gp->cap_style =  	(mask & GCCapStyle)	?values->cap_style	:0;
