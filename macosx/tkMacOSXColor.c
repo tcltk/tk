@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.12 2007/06/29 03:20:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.13 2007/07/02 13:05:14 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -300,7 +300,7 @@ TkSetMacColor(
  *
  * TkMacOSXSetColorInPort --
  *
- *	Sets fore or back color in the current QD port from an X pixel
+ *	Sets fore or back color in the given QD port from an X pixel
  *	value, and if the pixel code indicates a system color, sets
  *	the corresponding brush, textColor or background via
  *	Appearance mgr APIs.
@@ -367,6 +367,8 @@ TkMacOSXSetColorInPort(
 	if (portChanged) {
 	    QDSwapPort(savePort, NULL);
 	}
+    } else {
+	TkMacOSXDbgMsg("Ignored unknown pixel value 0x%lx", pixel);
     }
     if (penPat && !setPenPat) {
 	GetPortBackPixPat(port, penPat);
@@ -521,6 +523,8 @@ TkMacOSXSetColorInContext(
     } else if (((pixel >> 24) & 0xff) == TRANSPARENT_PIXEL) {
 	CGContextSetRGBFillColor(context, 0.0, 0.0, 0.0, 0.0);
 	CGContextSetRGBStrokeColor(context, 0.0, 0.0, 0.0, 0.0);
+    } else {
+	TkMacOSXDbgMsg("Ignored unknown pixel value 0x%lx", pixel);
     }
 }
 

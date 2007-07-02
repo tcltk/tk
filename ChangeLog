@@ -1,3 +1,13 @@
+2007-07-02  Daniel Steffen  <das@users.sourceforge.net>
+
+	* xlib/xgc.c (XCreateGC): correct black and white pixel values used to
+	initialize GC foregrund and background fields.
+
+	* macosx/tkMacOSXColor.c: add debug messages for unknown pixel values.
+
+	*  macosx/tkMacOSXDraw.c (TkMacOSXRestoreDrawingContext): don't restore
+	port state if it wasn't altered by TkMacOSXSetupDrawingContext().
+
 2007-06-29  Daniel Steffen  <das@users.sourceforge.net>
 
 	* xlib/ximage.c:		bitmaps created from the static .xbm
