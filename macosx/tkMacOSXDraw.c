@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.21.2.5 2007/07/01 17:31:32 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.21.2.6 2007/07/03 02:28:14 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1630,7 +1630,7 @@ TkMacOSXRestoreDrawingContext(TkMacOSXDrawingContext *dc)
 	if (dc->port) {
 	    ChkErr(QDEndCGContext, dc->port, &(dc->context));
 	}
-    } else {
+    } else if (dc->port) {
 	if (!tkPictureIsOpen) {
 	    HidePen();
 	}
