@@ -1,3 +1,9 @@
+2007-07-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXXStubs.c (DestroyImage): Fixed crash in release
+	of image data for images coming from XGetImage, introduced
+	2007-06-23. (das)
+
 2007-07-02  Daniel Steffen  <das@users.sourceforge.net>
 
 	* xlib/xgc.c (XCreateGC): correct black and white pixel values used to

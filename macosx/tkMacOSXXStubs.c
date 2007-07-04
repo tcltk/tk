@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.18 2007/06/29 03:22:03 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.19 2007/07/04 18:10:52 hobbs Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -938,8 +938,7 @@ DestroyImage(
     if (image) {
 	if (image->obdata) {
 	    Tk_FreePixmap((Display*) gMacDisplay, (Pixmap) image->obdata);
-	}
-	if (image->data) {
+	} else if (image->data) {
 	    ckfree(image->data);
 	}
 	ckfree((char*) image);
