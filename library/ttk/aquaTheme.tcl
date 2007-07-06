@@ -1,5 +1,5 @@
 #
-# $Id: aquaTheme.tcl,v 1.2 2006/12/18 19:33:14 jenglish Exp $
+# $Id: aquaTheme.tcl,v 1.3 2007/07/06 19:44:51 jenglish Exp $
 #
 # Ttk widget set: Aqua theme (OSX native look and feel)
 #
@@ -33,6 +33,7 @@ namespace eval ttk {
 	style configure . -stipple {}
 
 	style configure TButton -padding {0 2} -width -6
+	style configure TMenubutton -anchor w
 	style configure Toolbutton -padding 4
 	# See Apple HIG figs 14-63, 14-65
 	style configure TNotebook -tabposition n -padding {20 12}
