@@ -1,3 +1,7 @@
+2007-07-06  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/aquaTheme.tcl: Set -anchor w for TMenubuttons [#1614540]
+
 2007-07-04  Andreas Kupries <andreask@activestate.com>
 
 	* macosx/tkMacOSXXStubs.c (DestroyImage): Fixed seg.fault in
