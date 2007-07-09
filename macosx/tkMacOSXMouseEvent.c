@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.31 2007/06/29 03:20:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.32 2007/07/09 08:31:54 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -83,13 +83,15 @@ static int gEatButtonUp = 0;	   /* 1 if we need to eat the next up event */
  * Declarations of functions used only in this file.
  */
 
-static void BringWindowForward(WindowRef wRef, Boolean isFrontProcess);
+static void BringWindowForward(WindowRef wRef, int isFrontProcess,
+	int frontWindowOnly);
 static int GeneratePollingEvents(MouseEventData * medPtr);
 static int GenerateMouseWheelEvent(MouseEventData * medPtr);
 static int GenerateButtonEvent(MouseEventData * medPtr);
 static int GenerateToolbarButtonEvent(MouseEventData * medPtr);
 static int HandleWindowTitlebarMouseDown(MouseEventData * medPtr, Tk_Window tkwin);
 static unsigned int ButtonModifiers2State(UInt32 buttonState, UInt32 keyModifiers);
+static Tk_Window GetGrabWindowForWindow(Tk_Window tkwin);
 
 static int TkMacOSXGetEatButtonUp(void);
 static void TkMacOSXSetEatButtonUp(int f);
@@ -121,8 +123,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
     TkDisplay * dispPtr;
     OSStatus err;
     MouseEventData mouseEventData, * medPtr = &mouseEventData;
-    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
-    Boolean isFrontProcess = true;
+    int isFrontProcess;
 
     switch (eventPtr->eKind) {
 	case kEventMouseDown:
@@ -163,7 +164,8 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	return false;
     }
     if (eventPtr->eKind == kEventMouseDown) {
-	if (IsWindowPathSelectEvent(medPtr->whichWin, eventPtr->eventRef)) {
+	if (IsWindowActive(medPtr->whichWin) && IsWindowPathSelectEvent(
+		medPtr->whichWin, eventPtr->eventRef)) {
 	    ChkErr(WindowPathSelect, medPtr->whichWin, NULL, NULL);
 	    return false;
 	}
@@ -178,10 +180,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	    }
 	}
     }
-    err = ChkErr(GetFrontProcess, &frontPsn);
-    if (err == noErr) {
-	ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
-    }
+    isFrontProcess = Tk_MacOSXIsAppInFront();
     if (isFrontProcess) {
 	medPtr->state = ButtonModifiers2State(GetCurrentEventButtonState(),
 		GetCurrentEventKeyModifiers());
@@ -271,29 +270,21 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	if (!(TkpIsWindowFloating(medPtr->whichWin))
 		&& (medPtr->whichWin != medPtr->activeNonFloating
 		|| !isFrontProcess)) {
-	    Tk_Window grabWin = TkMacOSXGetCapture();
-	    if (!grabWin) {
-		int grabState = TkGrabState((TkWindow*)tkwin);
-		if (grabState != TK_GRAB_NONE && grabState != TK_GRAB_IN_TREE) {
-		    /* Now we want to set the focus to the local grabWin */
+	    int frontWindowOnly = 1;
+	    int cmdDragGrow = ((medPtr->windowPart == inDrag ||
+		    medPtr->windowPart == inGrow) && medPtr->state & Mod1Mask);
+
+	    if (!cmdDragGrow) {
+		Tk_Window grabWin = GetGrabWindowForWindow(tkwin);
+
+		frontWindowOnly = !grabWin;
+		if (grabWin && grabWin != tkwin) {
 		    TkMacOSXSetEatButtonUp(true);
-		    grabWin = (Tk_Window) (((TkWindow*)tkwin)->dispPtr->grabWinPtr);
 		    BringWindowForward(TkMacOSXDrawableWindow(
-			    ((TkWindow*)grabWin)->window), isFrontProcess);
-		    statusPtr->stopProcessing = 1;
+			    ((TkWindow*)grabWin)->window), isFrontProcess,
+			    frontWindowOnly);
 		    return false;
 		}
-	    }
-	    if (grabWin && grabWin != tkwin) {
-		TkWindow * tkw, * grb;
-		tkw = (TkWindow *)tkwin;
-		grb = (TkWindow *)grabWin;
-		/* Now we want to set the focus to the global grabWin */
-		TkMacOSXSetEatButtonUp(true);
-		BringWindowForward(TkMacOSXDrawableWindow(
-			((TkWindow*)grabWin)->window), isFrontProcess);
-		statusPtr->stopProcessing = 1;
-		return false;
 	    }
 
 	    /*
@@ -301,6 +292,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	     * window forward.
 	     */
 	    if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
+		statusPtr->stopProcessing = 1;
 		return result;
 	    } else {
 		/*
@@ -313,11 +305,10 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 		     * Allow background window dragging & growing with Command
 		     * down.
 		     */
-		    if (!((medPtr->windowPart == inDrag ||
-			    medPtr->windowPart == inGrow) &&
-			    medPtr->state & Mod1Mask)) {
+		    if (!cmdDragGrow) {
 			TkMacOSXSetEatButtonUp(true);
-			BringWindowForward(medPtr->whichWin, isFrontProcess);
+			BringWindowForward(medPtr->whichWin, isFrontProcess,
+				frontWindowOnly);
 		    }
 		    /*
 		     * Allow dragging & growing of windows that were/are in the
@@ -331,6 +322,7 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 	    }
 	} else {
 	    if ((result = HandleWindowTitlebarMouseDown(medPtr, tkwin)) != -1) {
+		statusPtr->stopProcessing = 1;
 		return result;
 	    }
 	}
@@ -399,42 +391,67 @@ TkMacOSXProcessMouseEvent(TkMacOSXEvent *eventPtr, MacEventStatus * statusPtr)
 int
 HandleWindowTitlebarMouseDown(MouseEventData * medPtr, Tk_Window tkwin)
 {
-    int result = 0;
+    int result = INT_MAX;
 
-    TkMacOSXTrackingLoop(1);
     switch (medPtr->windowPart) {
 	case inGoAway:
-	    if (TrackGoAway(medPtr->whichWin, medPtr->global)) {
-		if (tkwin) {
-		    TkGenWMDestroyEvent(tkwin);
-		    result = 1;
-		}
-	    }
-	    break;
 	case inCollapseBox:
-	    if (TrackBox(medPtr->whichWin, medPtr->global, medPtr->windowPart)) {
-		if (tkwin) {
-		    TkpWmSetState((TkWindow *)tkwin, IconicState);
-		    result = 1;
-		}
-	    }
-	    break;
 	case inZoomIn:
 	case inZoomOut:
-	    if (TrackBox(medPtr->whichWin, medPtr->global, medPtr->windowPart)) {
-		result = TkMacOSXZoomToplevel(medPtr->whichWin, medPtr->windowPart);
-	    }
-	    break;
 	case inToolbarButton:
-	    if (TrackBox(medPtr->whichWin, medPtr->global, medPtr->windowPart)) {
-		result = GenerateToolbarButtonEvent(medPtr);
+	    if (!IsWindowActive(medPtr->whichWin)) {
+		WindowRef frontWindow = FrontNonFloatingWindow();
+		WindowModality frontWindowModality = kWindowModalityNone;
+
+		if (frontWindow && frontWindow != medPtr->whichWin) {
+		    ChkErr(GetWindowModality, frontWindow,
+			    &frontWindowModality, NULL);
+		}
+		if (frontWindowModality == kWindowModalityAppModal) {
+		    result  = 0;
+		}
 	    }
 	    break;
 	default:
 	    result = -1;
 	    break;
     }
-    TkMacOSXTrackingLoop(0);
+    
+    if (result == INT_MAX) {
+	result = 0;
+	TkMacOSXTrackingLoop(1);
+	switch (medPtr->windowPart) {
+	    case inGoAway:
+		if (TrackGoAway(medPtr->whichWin, medPtr->global) && tkwin) {
+		    TkGenWMDestroyEvent(tkwin);
+		    result = 1;
+		}
+		break;
+	    case inCollapseBox:
+		if (TrackBox(medPtr->whichWin, medPtr->global,
+			medPtr->windowPart) && tkwin) {
+		    TkpWmSetState((TkWindow *)tkwin, IconicState);
+		    result = 1;
+		}
+		break;
+	    case inZoomIn:
+	    case inZoomOut:
+		if (TrackBox(medPtr->whichWin, medPtr->global,
+			medPtr->windowPart)) {
+		    result = TkMacOSXZoomToplevel(medPtr->whichWin,
+			    medPtr->windowPart);
+		}
+		break;
+	    case inToolbarButton:
+		if (TrackBox(medPtr->whichWin, medPtr->global,
+			medPtr->windowPart)) {
+		    result = GenerateToolbarButtonEvent(medPtr);
+		}
+		break;
+	}
+	TkMacOSXTrackingLoop(0);
+    }
+
     return result;
 }
 
@@ -527,18 +544,27 @@ GeneratePollingEvents(MouseEventData * medPtr)
 static void
 BringWindowForward(
     WindowRef wRef,
-    Boolean isFrontProcess)
+    int isFrontProcess,
+    int frontWindowOnly)
 {
+    if (wRef && !TkpIsWindowFloating(wRef) && IsValidWindowPtr(wRef)) {
+	WindowRef frontWindow = FrontNonFloatingWindow();
+	WindowModality frontWindowModality = kWindowModalityNone;
+	
+	if (frontWindow && frontWindow != wRef) {
+	    ChkErr(GetWindowModality, frontWindow, &frontWindowModality, NULL);
+	}
+	if (frontWindowModality != kWindowModalityAppModal) {
+	    SelectWindow(wRef);
+	} else {
+	    frontWindowOnly = 0;
+	}
+    }
     if (!isFrontProcess) {
 	ProcessSerialNumber ourPsn = {0, kCurrentProcess};
 
-	ChkErr(SetFrontProcess, &ourPsn);
-    }
-
-    if (!TkpIsWindowFloating(wRef)) {
-	if (IsValidWindowPtr(wRef)) {
-	    SelectWindow(wRef);
-	}
+	ChkErr(SetFrontProcessWithOptions, &ourPsn, frontWindowOnly ?
+	    kSetFrontProcessFrontWindowOnly : 0);
     }
 }
 
@@ -547,8 +573,8 @@ BringWindowForward(
  *
  * TkMacOSXBringWindowForward --
  *
- *	Bring this background window to the front (wrapper around
- *	BringWindowForward()).
+ *	Bring this window to the front in response to a mouse click. If
+ *	a grab is in effect, bring the grab window to the front instead.
  *
  * Results:
  *	None.
@@ -563,15 +589,48 @@ void
 TkMacOSXBringWindowForward(
     WindowRef wRef)
 {
-    OSStatus err;
-    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
-    Boolean isFrontProcess = true;
+    TkDisplay *dispPtr = TkGetDisplayList();
+    Tk_Window tkwin = Tk_IdToWindow(dispPtr->display,TkMacOSXGetXWindow(wRef));
+    Tk_Window grabWin = GetGrabWindowForWindow(tkwin);
 
-    err = ChkErr(GetFrontProcess, &frontPsn);
-    if (err == noErr) {
-	ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
+    if (grabWin && grabWin != tkwin) {
+	wRef = TkMacOSXDrawableWindow(((TkWindow*)grabWin)->window);
     }
-    BringWindowForward(wRef, isFrontProcess);
+    TkMacOSXSetEatButtonUp(true);
+    BringWindowForward(wRef, Tk_MacOSXIsAppInFront(), !grabWin);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetGrabWindowForWindow --
+ *
+ *	Get the grab window for the given window, if any.
+ *
+ * Results:
+ *	Grab Tk_Window or None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tk_Window
+GetGrabWindowForWindow(
+    Tk_Window tkwin) 
+{
+    Tk_Window grabWin = TkMacOSXGetCapture();
+
+    if (!grabWin) {
+	int grabState = TkGrabState((TkWindow*)tkwin);
+
+	if (grabState != TK_GRAB_NONE && grabState != TK_GRAB_IN_TREE) {
+	    grabWin = (Tk_Window) (((TkWindow*)tkwin)->dispPtr->grabWinPtr);
+	}
+    }
+    
+    return grabWin;
 }
 
 /*
@@ -694,16 +753,8 @@ EventModifiers
 TkMacOSXModifierState(void)
 {
     UInt32 keyModifiers;
-    Boolean isFrontProcess = false;
+    int isFrontProcess = (GetCurrentEvent() && Tk_MacOSXIsAppInFront());
 
-    if (GetCurrentEvent()) {
-	ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
-	OSStatus err = ChkErr(GetFrontProcess, &frontPsn);
-
-	if (err == noErr) {
-	    ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
-	}
-    }
     keyModifiers = isFrontProcess ? GetCurrentEventKeyModifiers() :
 	    GetCurrentKeyModifiers();
 
@@ -731,16 +782,7 @@ unsigned int
 TkMacOSXButtonKeyState(void)
 {
     UInt32 buttonState = 0, keyModifiers;
-    Boolean isFrontProcess = false;
-
-    if (GetCurrentEvent()) {
-	ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
-	OSStatus err = ChkErr(GetFrontProcess, &frontPsn);
-
-	if (err == noErr) {
-	    ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
-	}
-    }
+    int isFrontProcess = (GetCurrentEvent() && Tk_MacOSXIsAppInFront());
 
     if (!TkMacOSXGetEatButtonUp()) {
 	buttonState = isFrontProcess ? GetCurrentEventButtonState() :
