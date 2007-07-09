@@ -1,3 +1,8 @@
+2007-07-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in: clarify what the headers installed are, and
+	add ttkTheme.h and ttkDecls.h to private headers (later public).
+
 2007-07-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWindowEvent.c (Tk_MacOSXIsAppInFront):	use process mgr
