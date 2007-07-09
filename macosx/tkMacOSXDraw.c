@@ -12,11 +12,12 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.28 2007/07/02 13:06:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.29 2007/07/09 08:30:31 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
+#include "xbytes.h"
 
 #include "tclInt.h" /* for Tcl_CreateNamespace() */
 
@@ -53,7 +54,7 @@ static int useThemedFrame = 0;
 /*
  * Prototypes for functions used only in this file.
  */
-static unsigned char InvertByte(unsigned char data);
+
 static void ClipToGC(Drawable d, GC gc, CGrafPtr port, RgnHandle clipRgn);
 static void NoQDClip(CGrafPtr port);
 
@@ -375,7 +376,7 @@ TkPutImage(
 	    }
 	    bitmap.bounds.top = bitmap.bounds.left = 0;
 	    bitmap.bounds.bottom = (short) image->height;
-	    dataPtr = image->data;
+	    dataPtr = image->data + image->xoffset;
 	    do {
 		if (slices) {
 		    bitmap.bounds.right = bitmap.bounds.left + sliceWidth;
@@ -389,15 +390,26 @@ TkPutImage(
 		    newData = ckalloc(image->height * (sliceRowBytes+odd));
 		}
 		newPtr = newData;
-		for (i = 0; i < image->height; i++) {
-		    for (j = 0; j < sliceRowBytes; j++) {
-			*newPtr = InvertByte((unsigned char) *oldPtr);
-			newPtr++; oldPtr++;
+		if (image->bitmap_bit_order != MSBFirst) {
+		    for (i = 0; i < image->height; i++) {
+			for (j = 0; j < sliceRowBytes; j++) {
+			    *newPtr = xBitReverseTable[(unsigned char)*oldPtr];
+			    newPtr++; oldPtr++;
+			}
+			if (odd) {
+			    *newPtr++ = 0;
+			}
+			oldPtr += rowBytes - sliceRowBytes;
 		    }
-		    if (odd) {
-			*newPtr++ = 0;
+		} else {
+		    for (i = 0; i < image->height; i++) {
+			memcpy(newPtr, oldPtr, sliceRowBytes);
+			newPtr += sliceRowBytes;
+			if (odd) {
+			    *newPtr++ = 0;
+			}
+			oldPtr += rowBytes;
 		    }
-		    oldPtr += rowBytes - sliceRowBytes;
 		}
 		bitmap.baseAddr = newData;
 		bitmap.rowBytes = sliceRowBytes + odd;
@@ -428,11 +440,8 @@ TkPutImage(
 	    pixmap.pixelSize = 32;
 	    pixmap.cmpCount = 3;
 	    pixmap.cmpSize = 8;
-#ifdef WORDS_BIGENDIAN
-	    pixmap.pixelFormat = k32ARGBPixelFormat;
-#else
-	    pixmap.pixelFormat = k32BGRAPixelFormat;
-#endif
+	    pixmap.pixelFormat = image->byte_order == MSBFirst ?
+		    k32ARGBPixelFormat : k32BGRAPixelFormat;
 	    pixmap.pmTable = NULL;
 	    pixmap.pmExt = 0;
 	    if (rowBytes > maxRowBytes) {
@@ -445,7 +454,7 @@ TkPutImage(
 		}
 		sliceWidth = (long) image->width * maxRowBytes / rowBytes;
 		lastSliceWidth = image->width - (sliceWidth * slices);
-		dataPtr = image->data;
+		dataPtr = image->data + image->xoffset;
 		newData = (char *) ckalloc(image->height * sliceRowBytes);
 		do {
 		    if (slices) {
@@ -473,7 +482,7 @@ TkPutImage(
 		ckfree(newData);
 	    } else {
 		pixmap.bounds.right = (short) image->width;
-		pixmap.baseAddr = image->data;
+		pixmap.baseAddr = image->data + image->xoffset;
 		pixmap.rowBytes = rowBytes | 0x8000;
 		CopyBits((BitMap*) &pixmap, dstBit, srcPtr, dstPtr, srcCopy, NULL);
 	    }
@@ -1878,38 +1887,6 @@ TkMacOSXMakeStippleMap(
 	}
     }
     return bitmapPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * InvertByte --
- *
- *	This function reverses the bits in the passed in Byte of data.
- *
- * Results:
- *	The incoming byte in reverse bit order.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static unsigned char
-InvertByte(
-    unsigned char data)		/* Byte of data. */
-{
-    unsigned char i;
-    unsigned char mask = 1, result = 0;
-
-    for (i = (1 << 7); i != 0; i /= 2) {
-	if (data & mask) {
-	    result |= i;
-	}
-	mask = mask << 1;
-    }
-    return result;
 }
 
 /*
