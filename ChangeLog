@@ -1,6 +1,29 @@
+2007-07-09  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* unix/Makefile.in: clarify what the headers installed are, and
+	add ttkTheme.h and ttkDecls.h to private headers (later public).
+
+2007-07-09  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWindowEvent.c (Tk_MacOSXIsAppInFront):	use process mgr
+	* macosx/tkMacOSXMouseEvent.c:				to determine if
+	app is in front instead of relying on activate/deactivate events (which
+	may arrive after this info is needed, e.g. during window drag/click
+	activation); replace other process mgr use to get this info with calls
+	to Tk_MacOSXIsAppInFront().
+
+	* macosx/tkMacOSXMouseEvent.c (TkMacOSXProcessMouseEvent): correct
+	window click activation, titlebar click handling and background window
+	dragging/growing in the presence of grabs or window-/app-modal windows;
+	fix window click activation bringing all other app windows to front.
+
+	* macosx/tkMacOSXDraw.c (TkPutImage): handle non-native XImage byte and
+	bit orders; reverse bits via xBitReverseTable instead of InvertByte().
+
 2007-07-06  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/aquaTheme.tcl: Set -anchor w for TMenubuttons [#1614540]
+	* library/ttk/aquaTheme.tcl:	Set -anchor w for TMenubuttons
+					[Bug 1614540].
 
 2007-07-04  Andreas Kupries <andreask@activestate.com>
 
