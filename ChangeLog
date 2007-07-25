@@ -1,3 +1,8 @@
+2007-07-25  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDialog.c (NavServicesGetFile): reset interp result on
+	nav dialog cancel. [Bug 1743786]
+
 2007-07-09  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/Makefile.in: clarify what the headers installed are, and

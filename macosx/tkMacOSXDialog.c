@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.27 2007/06/29 03:20:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.28 2007/07/25 05:24:42 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -944,6 +944,7 @@ NavServicesGetFile(
 	Tcl_SetObjResult(interp, theResult);
 	result = TCL_OK;
     } else if (err == userCanceledErr) {
+	Tcl_ResetResult(interp);
 	result = TCL_OK;
     }
 
