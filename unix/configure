@@ -5902,10 +5902,12 @@ fi
     fi
 
     TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk '{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}'`"
-    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -seg1addr 0xb000000 -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_[^_] > $$f && echo $$f)'
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_[^_] > $$f && echo $$f)'
+    echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
     tk_config_files="${tk_config_files} Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in"
+    EXTRA_APP_CC_SWITCHES='-mdynamic-no-pic'
 fi
 
 if test "$FRAMEWORK_BUILD" = "1" ; then
@@ -6017,6 +6019,7 @@ TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 #------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
 
 
 
@@ -6291,6 +6294,7 @@ s%@TK_LIBRARY@%$TK_LIBRARY%g
 s%@PRIVATE_INCLUDE_DIR@%$PRIVATE_INCLUDE_DIR%g
 s%@HTML_DIR@%$HTML_DIR%g
 s%@EXTRA_CC_SWITCHES@%$EXTRA_CC_SWITCHES%g
+s%@EXTRA_APP_CC_SWITCHES@%$EXTRA_APP_CC_SWITCHES%g
 s%@EXTRA_INSTALL@%$EXTRA_INSTALL%g
 s%@EXTRA_INSTALL_BINARIES@%$EXTRA_INSTALL_BINARIES%g
 s%@EXTRA_BUILD_HTML@%$EXTRA_BUILD_HTML%g
