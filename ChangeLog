@@ -1,3 +1,13 @@
+2007-08-07  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/Makefile.in:	add support for compile flags specific to
+				object files linked directly into executables.
+
+	* unix/configure.in (Darwin): only use -seg1addr flag when prebinding;
+	use -mdynamic-no-pic flag for object files linked directly into exes.
+
+	* unix/configure: autoconf-2.59
+
 2007-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinDialog.c:    Fix bug #1692927 (buffer length problems)
