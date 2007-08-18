@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.20 2006/05/29 21:53:16 hobbs Exp $
+# RCS: @(#) $Id: entry.test,v 1.21 2007/08/18 15:39:22 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -673,7 +673,7 @@ test entry-5.11 {ConfigureEntry procedure} {
     pack [entry .e -font {{open look glyph}}]
     .e scan dragto 30
     update
-} {}    
+} {}
 
 # No tests for DisplayEntry.
 
