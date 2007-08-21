@@ -1,5 +1,6 @@
 2007-08-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/rules.vc: Synchronize with tcl rules.vc
 	* tests/all.tcl: Fix the line-endings.
 
 2007-08-07  Daniel Steffen  <das@users.sourceforge.net>
