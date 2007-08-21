@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: all.tcl,v 1.10 2007/08/18 15:39:03 dkf Exp $
+# RCS: @(#) $Id: all.tcl,v 1.11 2007/08/21 20:30:27 patthoyts Exp $
 
 package require Tcl 8.5
 package require tcltest 2.2
