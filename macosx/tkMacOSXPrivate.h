@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1 2007/06/29 03:20:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.2 2007/08/23 10:44:57 das Exp $
  */
 
 #ifndef _TKMACPRIV
@@ -170,6 +170,15 @@ MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
 #define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
 #define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
+
+/*
+ * Macros for DEBUG_ASSERT_MESSAGE et al from Debugging.h.
+ */
+
+#undef kComponentSignatureString
+#undef COMPONENT_SIGNATURE
+#define kComponentSignatureString "TkMacOSX"
+#define COMPONENT_SIGNATURE 'Tk  '
 
 /*
  * Macros abstracting checks only active in a debug build.
