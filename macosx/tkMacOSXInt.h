@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.21 2007/06/29 03:22:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.3.2.22 2007/08/23 10:45:15 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -20,8 +20,6 @@
 #include "tkInt.h"
 #endif
 
-#define kComponentSignatureString "TkMacOSX"
-#define COMPONENT_SIGNATURE 'Tk  '
 #define TextStyle MacTextStyle
 #include <Carbon/Carbon.h>
 #undef TextStyle
