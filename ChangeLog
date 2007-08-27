@@ -1,3 +1,9 @@
+2007-08-27  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDialog.c (Tk_ChooseColorObjCmd): correct setting of
+	interp result [Bug 1782105]; fix -initialcolor overwriting last color
+	selection; style cleanup.
+
 2007-08-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/rules.vc: Synchronize with tcl rules.vc
@@ -15,7 +21,7 @@
 
 2007-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinDialog.c:    Fix bug #1692927 (buffer length problems)
+	* win/tkWinDialog.c:    Fix [Bug 1692927] (buffer length problems)
 	* win/tkWinTest.c:      Added 'testfindwindow' and 'testgetwindowinfo'
 	and extended 'testwinevent' for WM_COMMAND support to enable testing
 	native messagebox dialogs.
