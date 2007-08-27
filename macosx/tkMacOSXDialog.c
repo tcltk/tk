@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.28 2007/07/25 05:24:42 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.29 2007/08/27 06:48:28 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -131,14 +131,14 @@ Tk_ChooseColorObjCmd(
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     OSStatus err;
+    int result = TCL_ERROR;
     Tk_Window parent, tkwin = (Tk_Window) clientData;
     const char *title;
     int i, picked = 0, srcRead, dstWrote;
     CMError cmerr;
     CMProfileRef prof;
     NColorPickerInfo cpinfo;
-    static int inited = 0;
-    static RGBColor in;
+    static RGBColor color = {0xffff, 0xffff, 0xffff};
     static const char *optionStrings[] = {
 	"-initialcolor", "-parent", "-title", NULL
     };
@@ -146,18 +146,11 @@ Tk_ChooseColorObjCmd(
 	COLOR_INITIAL, COLOR_PARENT, COLOR_TITLE
     };
 
-    if (inited == 0) {
-	/*
-	 * 'in' stores the last color picked. The next time the color
-	 * dialog pops up, the last color will remain in the dialog.
-	 */
-
-	in.red = 0xffff;
-	in.green = 0xffff;
-	in.blue = 0xffff;
-	inited = 1;
-    }
     title = "Choose a color:";
+    bzero(&cpinfo, sizeof(cpinfo));
+    cpinfo.theColor.color.rgb.red   = color.red;
+    cpinfo.theColor.color.rgb.green = color.green;
+    cpinfo.theColor.color.rgb.blue  = color.blue;
 
     for (i = 1; i < objc; i += 2) {
 	int index;
@@ -165,13 +158,13 @@ Tk_ChooseColorObjCmd(
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option",
 		TCL_EXACT, &index) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto end;
 	}
 	if (i + 1 == objc) {
 	    option = Tcl_GetString(objv[i]);
 	    Tcl_AppendResult(interp, "value for \"", option, "\" missing",
 		    NULL);
-	    return TCL_ERROR;
+	    goto end;
 	}
 	value = Tcl_GetString(objv[i + 1]);
 
@@ -181,18 +174,18 @@ Tk_ChooseColorObjCmd(
 
 		colorPtr = Tk_GetColor(interp, tkwin, value);
 		if (colorPtr == NULL) {
-		    return TCL_ERROR;
+		    goto end;
 		}
-		in.red	 = colorPtr->red;
-		in.green = colorPtr->green;
-		in.blue	 = colorPtr->blue;
+		cpinfo.theColor.color.rgb.red   = colorPtr->red;
+		cpinfo.theColor.color.rgb.green = colorPtr->green;
+		cpinfo.theColor.color.rgb.blue  = colorPtr->blue;
 		Tk_FreeColor(colorPtr);
 		break;
 	    }
 	    case COLOR_PARENT: {
 		parent = Tk_NameToWindow(interp, value, tkwin);
 		if (parent == NULL) {
-		    return TCL_ERROR;
+		    goto end;
 		}
 		break;
 	    }
@@ -204,14 +197,9 @@ Tk_ChooseColorObjCmd(
     }
 
     cmerr = CMGetDefaultProfileBySpace(cmRGBData, &prof);
-    bzero(&cpinfo, sizeof(cpinfo));
     cpinfo.theColor.profile = prof;
-    cpinfo.theColor.color.rgb.red   = in.red;
-    cpinfo.theColor.color.rgb.green = in.green;
-    cpinfo.theColor.color.rgb.blue  = in.blue;
     cpinfo.dstProfile = prof;
-    cpinfo.flags = kColorPickerDialogIsMoveable
-	    | kColorPickerCanAnimatePalette;
+    cpinfo.flags = kColorPickerDialogIsMoveable | kColorPickerDialogIsModal;
     cpinfo.placeWhere = kCenterOnMainScreen;
     /* Currently, this does not actually change the colorpicker title */
     Tcl_UtfToExternal(NULL, TkMacOSXCarbonEncoding, title, -1, 0, NULL,
@@ -222,22 +210,26 @@ Tk_ChooseColorObjCmd(
     err = ChkErr(NPickColor, &cpinfo);
     TkMacOSXTrackingLoop(0);
     if ((err == noErr) && (cpinfo.newColorChosen != 0)) {
-	in.red	 = cpinfo.theColor.color.rgb.red;
-	in.green = cpinfo.theColor.color.rgb.green;
-	in.blue	 = cpinfo.theColor.color.rgb.blue;
+	color.red   = cpinfo.theColor.color.rgb.red;
+	color.green = cpinfo.theColor.color.rgb.green;
+	color.blue  = cpinfo.theColor.color.rgb.blue;
 	picked = 1;
     }
     cmerr = CMCloseProfile(prof);
 
+    result = TCL_OK;
     if (picked != 0) {
-	char result[32];
+	char colorstr[8];
 
-	sprintf(result, "#%02x%02x%02x", in.red >> 8, in.green >> 8,
-		in.blue >> 8);
-	Tcl_AppendResult(interp, result, NULL);
+	snprintf(colorstr, 8, "#%02x%02x%02x", color.red >> 8,
+		color.green >> 8, color.blue >> 8);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(colorstr, 7));
+    } else {
+	Tcl_ResetResult(interp);    
     }
 
-    return TCL_OK;
+end:
+    return result;
 }
 
 /*
