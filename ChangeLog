@@ -1,3 +1,12 @@
+2007-08-28  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	Assorted documentation improvements.
+	* doc/button.n: Added examples.
+	* doc/checkbutton.n: Added example.
+	* doc/console.n: Standardized section ordering.
+	* doc/tk.n: Added "See also".
+	* doc/ttk_combobox.n: Added keywords.
+
 2007-08-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDialog.c (Tk_ChooseColorObjCmd): correct setting of

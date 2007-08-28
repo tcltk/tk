@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tk.n,v 1.12 2007/05/03 23:55:29 dkf Exp $
+'\" RCS: @(#) $Id: tk.n,v 1.13 2007/08/28 15:16:11 dkf Exp $
 '\" 
 .so man.macros
 .TH tk n 8.4 Tk "Tk Built-In Commands"
@@ -28,6 +28,7 @@ The command can take any of a number of different forms
 depending on the \fIoption\fR argument.  The legal forms are:
 .TP
 \fBtk appname \fR?\fInewName\fR?
+.
 If \fInewName\fR isn't specified, this command returns the name
 of the application (the name that may be used in \fBsend\fR
 commands to communicate with the application).
@@ -110,5 +111,7 @@ state is returned.  This is turned on by default for the main display.
 Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
 or \fBaqua\fR (Mac OS X Aqua).
+.SH "SEE ALSO"
+send(n), winfo(n)
 .SH KEYWORDS
 application name, send
