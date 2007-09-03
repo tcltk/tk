@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.5 2007/01/03 05:06:25 nijtmans Exp $
+/* $Id: ttkInit.c,v 1.6 2007/09/03 01:43:07 das Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -276,9 +276,7 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
-#if 0
     Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (void*)&ttkStubs);
-#endif
 
     return TCL_OK;
 }
