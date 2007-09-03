@@ -1,3 +1,10 @@
+2007-09-03  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/ttk/ttkInit.c  (Ttk_Init): register ttk in package database
+	to enable extension access to the ttkStubs table.
+
+	* generic/ttk/ttkDecls.h: correct capitalization of ttk package name.
+
 2007-08-28  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	Assorted documentation improvements.
