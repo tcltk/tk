@@ -1,3 +1,7 @@
+2007-09-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/wm.test: -transparentcolor added to windows wm attributes tests
+
 2007-08-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDialog.c (Tk_ChooseColorObjCmd): correct setting of
