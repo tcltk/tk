@@ -1,5 +1,5 @@
 /*
- * $Id: ttkDecls.h,v 1.3 2006/12/10 19:19:44 jenglish Exp $
+ * $Id: ttkDecls.h,v 1.3.2.1 2007/09/04 17:44:21 dgp Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  */
@@ -15,7 +15,7 @@ extern const char *TtkInitializeStubs(
 	interp, TTK_VERSION, TTK_STUBS_EPOCH, TTK_STUBS_REVISION)
 #else
 
-#define Ttk_InitStubs(interp) Tcl_PkgRequire(interp,"ttk",TTK_VERSION)
+#define Ttk_InitStubs(interp) Tcl_PkgRequire(interp,"Ttk",TTK_VERSION)
 
 #endif
 
