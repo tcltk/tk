@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.32 2007/05/14 20:58:27 dgp Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.33 2007/09/04 22:03:18 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -1970,7 +1970,8 @@ TestpropCmd(
     int result, actualFormat;
     unsigned long bytesAfter, length, value;
     Atom actualType, propName;
-    char *property, *p, *end;
+    unsigned char *property, *p;
+    char *end;
     Window w;
     char buffer[30];
 
@@ -1986,7 +1987,7 @@ TestpropCmd(
     result = XGetWindowProperty(Tk_Display(mainWin),
 	    w, propName, 0, 100000, False, AnyPropertyType,
 	    &actualType, &actualFormat, &length,
-	    &bytesAfter, (unsigned char **) &property);
+	    &bytesAfter, &property);
     if ((result == Success) && (actualType != None)) {
 	if ((actualFormat == 8) && (actualType == XA_STRING)) {
 	    for (p = property; ((unsigned long)(p-property)) < length; p++) {
@@ -1994,7 +1995,7 @@ TestpropCmd(
 		    *p = '\n';
 		}
 	    }
-	    Tcl_SetResult(interp, property, TCL_VOLATILE);
+	    Tcl_SetResult(interp, (/*!unsigned*/char*)property, TCL_VOLATILE);
 	} else {
 	    for (p = property; length > 0; length--) {
 		if (actualFormat == 32) {

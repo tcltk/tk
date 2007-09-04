@@ -1,3 +1,7 @@
+2007-09-04  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkTest.c: Fix for [Bug 1788019] "tkTest.c compiler warning".
+
 2007-09-04  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/Makefile.in:     It's unreliable to count on the release
