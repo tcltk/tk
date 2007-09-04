@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.133 2007/09/04 18:46:29 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.134 2007/09/04 19:19:01 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1508,7 +1508,7 @@ $(UNIX_DIR)/tkConfig.h.in: $(UNIX_DIR)/configure.in $(UNIX_DIR)/tcl.m4 \
 $(MAC_OSX_DIR)/configure: $(MAC_OSX_DIR)/configure.ac
 	cd $(MAC_OSX_DIR); autoconf
 
-dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure
+dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure genstubs
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)/unix
 	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
