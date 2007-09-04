@@ -1,3 +1,8 @@
+2007-09-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/rc/tk_base.rc: Backported the BASE_NO_TK_ICON patch to assist in
+	creating tclkits and/or basekits with corrent resources.
+
 2007-09-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/wm.test: -transparentcolor added to windows wm attributes tests
