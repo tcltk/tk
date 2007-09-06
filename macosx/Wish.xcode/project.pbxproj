@@ -314,6 +314,7 @@
 		8DD76FB20486AB0100D96B5E /* tktest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tktest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F91E62260C1AE686006C9D96 /* Tclsh-Info.plist.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "Tclsh-Info.plist.in"; sourceTree = "<group>"; };
 		F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXFont.h; sourceTree = "<group>"; };
+		F95FAFF90B34F1130072E431 /* macOSXLoad.test */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = macOSXLoad.test; sourceTree = "<group>"; };
 		F966BA0408F27A37005CB29B /* error.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = error.xbm; sourceTree = "<group>"; };
 		F966BA0508F27A37005CB29B /* gray12.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray12.xbm; sourceTree = "<group>"; };
 		F966BA0608F27A37005CB29B /* gray25.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray25.xbm; sourceTree = "<group>"; };
@@ -1663,7 +1664,6 @@
 		F96D444708F272B9004A47F5 /* pkgc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pkgc.c; sourceTree = "<group>"; };
 		F96D444808F272B9004A47F5 /* pkgd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pkgd.c; sourceTree = "<group>"; };
 		F96D444908F272B9004A47F5 /* pkge.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pkge.c; sourceTree = "<group>"; };
-		F96D444A08F272B9004A47F5 /* pkgf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pkgf.c; sourceTree = "<group>"; };
 		F96D444B08F272B9004A47F5 /* pkgua.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pkgua.c; sourceTree = "<group>"; };
 		F96D444C08F272B9004A47F5 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		F96D444D08F272B9004A47F5 /* install-sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "install-sh"; sourceTree = "<group>"; };
@@ -1779,7 +1779,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.14 2007/09/06 07:26:19 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.15 2007/09/06 08:07:24 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -3299,6 +3299,7 @@
 				F96D438B08F272B6004A47F5 /* lset.test */,
 				F96D438C08F272B6004A47F5 /* lsetComp.test */,
 				F96D438D08F272B6004A47F5 /* macOSXFCmd.test */,
+				F95FAFF90B34F1130072E431 /* macOSXLoad.test */,
 				F96D438E08F272B6004A47F5 /* main.test */,
 				F9ECB1CB0B26534C00A28025 /* mathop.test */,
 				F96D438F08F272B6004A47F5 /* misc.test */,
@@ -3456,7 +3457,6 @@
 				F96D444708F272B9004A47F5 /* pkgc.c */,
 				F96D444808F272B9004A47F5 /* pkgd.c */,
 				F96D444908F272B9004A47F5 /* pkge.c */,
-				F96D444A08F272B9004A47F5 /* pkgf.c */,
 				F96D444B08F272B9004A47F5 /* pkgua.c */,
 				F96D444C08F272B9004A47F5 /* README */,
 			);
@@ -3632,13 +3632,15 @@
 				"$(TCL_SRCROOT)/unix/tcl.m4",
 				"$(TCL_SRCROOT)/unix/aclocal.m4",
 				"$(TCL_SRCROOT)/unix/tclConfig.sh.in",
+				"$(TCL_SRCROOT)/unix/Makefile.in",
+				"$(TCL_SRCROOT)/unix/dltest/Makefile.in",
 			);
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/tcl/tclConfig.sh",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "## tcl configure shell script phase\n\ncd \"${TCL_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tcl/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-/usr/bin/autoconf} && ${AUTOHEADER:-/usr/bin/autoheader} || exit $?\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tcl && cd tcl &&\nif [ \"${TCL_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring Tcl\"\n    \"${TCL_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi\n";
+			shellScript = "## tcl configure shell script phase\n\ncd \"${TCL_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tcl/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-${DEVELOPER_DIR}/usr/bin/autoconf} && ${AUTOHEADER:-${DEVELOPER_DIR}/usr/bin/autoheader} || exit $?\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tcl && cd tcl &&\nif [ \"${TCL_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring Tcl\"\n    \"${TCL_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi\n";
 		};
 		F9A5C5F608F651AB008AE941 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -3657,7 +3659,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "## tk configure shell script phase\n\ncd \"${TK_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tk/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-/usr/bin/autoconf} && ${AUTOHEADER:-/usr/bin/autoheader} || exit $?\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tk && cd tk &&\nif [ \"${TK_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring Tk\"\n    \"${TK_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared --enable-aqua --with-tcl=../tcl ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi";
+			shellScript = "## tk configure shell script phase\n\ncd \"${TK_SRCROOT}\"/macosx &&\nif [ configure.ac -nt configure -o ../unix/configure.in -nt configure -o ../unix/tcl.m4 -nt configure -o ../unix/aclocal.m4 -nt configure ]; then\n    echo \"Running autoconf & autoheader in tk/macosx\"\n    rm -rf autom4te.cache\n    ${AUTOCONF:-${DEVELOPER_DIR}/usr/bin/autoconf} && ${AUTOHEADER:-${DEVELOPER_DIR}/usr/bin/autoheader} || exit $?\n    rm -rf autom4te.cache\nfi\n\ncd \"${DERIVED_FILE_DIR}\" && mkdir -p tk && cd tk &&\nif [ \"${TK_SRCROOT}\"/macosx/configure -nt config.status ]; then\n    echo \"Configuring Tk\"\n    \"${TK_SRCROOT}\"/macosx/configure --cache-file=../config.cache --prefix=${PREFIX} --bindir=${BINDIR} --libdir=${LIBDIR} --mandir=${MANDIR} --includedir=${INCLUDEDIR} --disable-shared --enable-aqua --with-tcl=../tcl ${CONFIGURE_ARGS}\nelse\n    ./config.status\nfi";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -3994,21 +3996,21 @@
 			};
 			name = ReleaseUniversal;
 		};
-		F94173790BC145DD00C54E27 /* DebugMemCompile */ = {
+		F93084370BB93D2800CD0B9E /* DebugMemCompile */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = Wish;
 			};
 			name = DebugMemCompile;
 		};
-		F941737A0BC145DD00C54E27 /* DebugMemCompile */ = {
+		F93084380BB93D2800CD0B9E /* DebugMemCompile */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = tktest;
 			};
 			name = DebugMemCompile;
 		};
-		F941737B0BC145DD00C54E27 /* DebugMemCompile */ = {
+		F930843A0BB93D2800CD0B9E /* DebugMemCompile */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
 			buildSettings = {
@@ -4096,35 +4098,35 @@
 			};
 			name = DebugNoFixZL;
 		};
-		F98BA83E0BEB6A0100E34417 /* DebugUnthreaded */ = {
+		F99EE73B0BE835310060D4AF /* DebugUnthreaded */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = Wish;
 			};
 			name = DebugUnthreaded;
 		};
-		F98BA83F0BEB6A0100E34417 /* DebugLeaks */ = {
+		F99EE73C0BE835310060D4AF /* DebugLeaks */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = Wish;
 			};
 			name = DebugLeaks;
 		};
-		F98BA8400BEB6A0100E34417 /* DebugUnthreaded */ = {
+		F99EE73D0BE835310060D4AF /* DebugUnthreaded */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = tktest;
 			};
 			name = DebugUnthreaded;
 		};
-		F98BA8410BEB6A0100E34417 /* DebugLeaks */ = {
+		F99EE73E0BE835310060D4AF /* DebugLeaks */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PRODUCT_NAME = tktest;
 			};
 			name = DebugLeaks;
 		};
-		F98BA8420BEB6A0100E34417 /* DebugUnthreaded */ = {
+		F99EE7410BE835310060D4AF /* DebugUnthreaded */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
 			buildSettings = {
@@ -4134,7 +4136,7 @@
 			};
 			name = DebugUnthreaded;
 		};
-		F98BA8430BEB6A0100E34417 /* DebugLeaks */ = {
+		F99EE7420BE835310060D4AF /* DebugLeaks */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
 			buildSettings = {
@@ -4227,6 +4229,7 @@
 				CFLAGS = "$(PER_ARCH_CFLAGS_ppc) -fconstant-cfstrings $(CFLAGS)";
 				CPPFLAGS = "-arch ppc -D__CONSTANT_CFSTRINGS__ -DMAC_OS_X_VERSION_MIN_REQUIRED=1020 -nostdinc -isystem $(SDKROOT)/usr/include/gcc/darwin/$(GCC_VERSION) -isystem $(SDKROOT)/usr/include -F$(SDKROOT)/System/Library/Frameworks";
 				DEBUG_INFORMATION_FORMAT = stabs;
+				GCC = /usr/bin/gcc;
 				GCC_VERSION = 3.3;
 				LDFLAGS = "-L$(SDKROOT)/usr/lib/gcc/darwin/$(GCC_VERSION) -Wl,-syslibroot,$(SDKROOT)";
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
@@ -4239,36 +4242,6 @@
 			};
 			name = ReleasePPC10.2.8SDK;
 		};
-		F9EEED960C2FEFD300396116 /* ReleaseUniversal10.5SDK */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = Wish;
-			};
-			name = ReleaseUniversal10.5SDK;
-		};
-		F9EEED970C2FEFD300396116 /* ReleaseUniversal10.5SDK */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = tktest;
-			};
-			name = ReleaseUniversal10.5SDK;
-		};
-		F9EEED990C2FEFD300396116 /* ReleaseUniversal10.5SDK */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
-			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
-				CFLAGS = "-arch ppc -arch i386 $(CFLAGS)";
-				CPPFLAGS = "-isysroot $(SDKROOT) $(CPPFLAGS)";
-				MACOSX_DEPLOYMENT_TARGET = 10.5;
-				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
-			};
-			name = ReleaseUniversal10.5SDK;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -4277,12 +4250,11 @@
 			buildConfigurations = (
 				F95CC8AC09158F3100EA5ACE /* Debug */,
 				F95CC8AE09158F3100EA5ACE /* DebugNoFixZL */,
-				F98BA83E0BEB6A0100E34417 /* DebugUnthreaded */,
-				F94173790BC145DD00C54E27 /* DebugMemCompile */,
-				F98BA83F0BEB6A0100E34417 /* DebugLeaks */,
+				F99EE73B0BE835310060D4AF /* DebugUnthreaded */,
+				F93084370BB93D2800CD0B9E /* DebugMemCompile */,
+				F99EE73C0BE835310060D4AF /* DebugLeaks */,
 				F95CC8AD09158F3100EA5ACE /* Release */,
 				F91BCC4F093152310042A6BF /* ReleaseUniversal */,
-				F9EEED960C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB621F0B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
 				F9DB62350B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
@@ -4295,12 +4267,11 @@
 			buildConfigurations = (
 				F95CC8B109158F3100EA5ACE /* Debug */,
 				F95CC8B309158F3100EA5ACE /* DebugNoFixZL */,
-				F98BA8400BEB6A0100E34417 /* DebugUnthreaded */,
-				F941737A0BC145DD00C54E27 /* DebugMemCompile */,
-				F98BA8410BEB6A0100E34417 /* DebugLeaks */,
+				F99EE73D0BE835310060D4AF /* DebugUnthreaded */,
+				F93084380BB93D2800CD0B9E /* DebugMemCompile */,
+				F99EE73E0BE835310060D4AF /* DebugLeaks */,
 				F95CC8B209158F3100EA5ACE /* Release */,
 				F91BCC50093152310042A6BF /* ReleaseUniversal */,
-				F9EEED970C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB62090B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB62200B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
 				F9DB62360B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
@@ -4313,12 +4284,11 @@
 			buildConfigurations = (
 				F95CC8B609158F3100EA5ACE /* Debug */,
 				F95CC8B809158F3100EA5ACE /* DebugNoFixZL */,
-				F98BA8420BEB6A0100E34417 /* DebugUnthreaded */,
-				F941737B0BC145DD00C54E27 /* DebugMemCompile */,
-				F98BA8430BEB6A0100E34417 /* DebugLeaks */,
+				F99EE7410BE835310060D4AF /* DebugUnthreaded */,
+				F930843A0BB93D2800CD0B9E /* DebugMemCompile */,
+				F99EE7420BE835310060D4AF /* DebugLeaks */,
 				F95CC8B709158F3100EA5ACE /* Release */,
 				F91BCC51093152310042A6BF /* ReleaseUniversal */,
-				F9EEED990C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB620A0B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB62210B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
 				F9DB62370B65B03A00A370FB /* ReleasePPC10.2.8SDK */,
