@@ -9,17 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.12 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.13 2007/09/06 19:34:02 dgp Exp $
  */
 
 #include "tkWinInt.h"
 
-/*
- * The Init script (common to Windows and Unix platforms) is defined in
- * tkInitScript.h
- */
-
-#include "tkInitScript.h"
 
 /*
  *----------------------------------------------------------------------
@@ -49,7 +43,7 @@ TkpInit(
      */
 
     TkWinXInit(Tk_GetHINSTANCE());
-    return Tcl_Eval(interp, initScript);
+    return TCL_OK;
 }
 
 /*
