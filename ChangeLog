@@ -1,3 +1,15 @@
+2007-09-06  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkWindow.c (Initialize):	Moved common Tk initialization
+	* generic/tkInitScript.h (removed):	script out of tkInitScript.h
+	* macosx/tkMacOSXInit.c:	and multiple TkpInit() routines and
+	* unix/Makefile.in:	into the common Initialize() routine in
+	* unix/tkUnixInit.c:	generic code.  Also removed constraint on
+	* win/tkWinInit.c:	ability to define a custom [tkInit] before
+	calling Tk_Init().  Until now the custom [tkInit] had to be a proc.
+	Now it can be any command.  Removal of tkInitScript.h also fixes
+	[Bug 1656283].
+
 2007-09-06  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcode/project.pbxproj: discontinue unmaintained support

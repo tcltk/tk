@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.135 2007/09/05 01:39:45 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.136 2007/09/06 19:34:02 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1167,7 +1167,7 @@ tkUnixFont.o: $(UNIX_DIR)/tkUnixFont.c
 tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
 
-tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c $(GENERIC_DIR)/tkInitScript.h tkConfig.sh
+tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
 	    $(UNIX_DIR)/tkUnixInit.c
 
@@ -1243,7 +1243,7 @@ tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 
-tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c $(GENERIC_DIR)/tkInitScript.h tkConfig.sh
+tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
 	    $(MAC_OSX_DIR)/tkMacOSXInit.c
 
