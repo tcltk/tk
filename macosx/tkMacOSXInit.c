@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.32 2007/06/29 03:20:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.33 2007/09/06 19:33:56 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -22,12 +22,6 @@
 #include <sys/utsname.h>
 #include <mach-o/dyld.h>
 #include <mach-o/getsect.h>
-
-/*
- * The Init script (common to Windows and Unix platforms) is
- * defined in tkInitScript.h
- */
-#include "tkInitScript.h"
 
 /*
  * Define the following to 0 to not attempt to use an undocumented SPI
@@ -387,7 +381,7 @@ TkpInit(
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
-    return Tcl_EvalEx(interp, initScript, -1, TCL_EVAL_GLOBAL);
+    return TCL_OK;
 }
 
 /*
