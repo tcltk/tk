@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.80 2007/02/13 00:16:39 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.81 2007/09/06 19:33:55 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -3232,6 +3232,28 @@ Initialize(
 	ckfree((char *) argv);
     }
     code = TkpInit(interp);
+    if (code == TCL_OK) {
+
+	/*
+	 * In order to find tk.tcl during initialization, we evaluate the
+	 * following script.  It calls on the Tcl command [tcl_findLibrary]
+	 * to perform the search.  See the docs for that command for details
+	 * on where it looks.
+	 *
+	 * Note that this entire search mechanism can be bypassed by defining
+	 * an alternate [tkInit] command before calling Tk_Init().
+	 */
+
+	code = Tcl_Eval(interp,
+"if {[namespace which -command tkInit] eq \"\"} {\n\
+  proc tkInit {} {\n\
+    global tk_library tk_version tk_patchLevel\n\
+      rename tkInit {}\n\
+    tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
+  }\n\
+}\n\
+tkInit");
+    }
     if (code == TCL_OK) {
 	/*
 	 * Create exit handlers to delete all windows when the application or
