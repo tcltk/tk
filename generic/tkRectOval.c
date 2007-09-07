@@ -9,13 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkRectOval.c,v 1.15 2006/10/16 15:35:28 das Exp $
+ * RCS: @(#) $Id: tkRectOval.c,v 1.16 2007/09/07 00:34:53 dgp Exp $
  */
 
 #include <stdio.h>
-#include "tk.h"
 #include "tkInt.h"
-#include "tkPort.h"
 #include "tkCanvas.h"
 
 /*

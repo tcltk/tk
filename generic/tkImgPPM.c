@@ -13,11 +13,10 @@
  *	Department of Computer Science,
  *	Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.18 2007/06/25 19:07:15 dgp Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.19 2007/09/07 00:34:52 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * The maximum amount of memory to allocate for data read from the file. If we

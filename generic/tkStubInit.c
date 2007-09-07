@@ -8,15 +8,15 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.57 2007/05/14 20:58:27 dgp Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.58 2007/09/07 00:34:53 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 /* UNIX */
 #define UNIX_TK
+#include "tkUnixInt.h"
 #endif
 
 #ifdef __WIN32__
@@ -28,10 +28,8 @@
 #include "tkMacOSXInt.h"
 #endif
 
-#include "tkDecls.h"
+/* TODO: These ought to come in some other way */
 #include "tkPlatDecls.h"
-#include "tkIntDecls.h"
-#include "tkIntPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
 /*

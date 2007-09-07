@@ -9,12 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.19 2007/01/18 23:20:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.20 2007/09/07 00:34:54 dgp Exp $
  */
 
-#include "tk.h"
-#include "tkText.h"
 #include "tkPort.h"
+#include "tkText.h"
 
 /*
  * Macro that determines the size of an embedded image segment:

@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.35 2007/01/12 09:08:36 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.36 2007/09/07 00:34:52 dgp Exp $
  */
 
 /*
@@ -62,7 +62,6 @@ typedef struct mFile {
 } MFile;
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * Non-ASCII encoding support:

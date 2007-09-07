@@ -12,14 +12,13 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.43 2007/04/23 21:15:18 das Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.44 2007/09/07 00:34:52 dgp Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
 
 #include "default.h"
 #include "tkInt.h"
-#include "tkPort.h"
 #include "tkCanvas.h"
 #ifdef TK_NO_DOUBLE_BUFFERING
 #ifdef MAC_OSX_TK

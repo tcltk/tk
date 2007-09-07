@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.39 2007/06/24 16:07:35 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.40 2007/09/07 00:34:53 dgp Exp $
  */
 
 /*
@@ -74,7 +74,7 @@
 #define __NO_OLD_CONFIG
 #endif
 
-#include "tkPort.h"
+#include "tkInt.h"
 #include "tkMenu.h"
 
 #define MENU_HASH_KEY "tkMenus"

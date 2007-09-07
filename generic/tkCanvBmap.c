@@ -9,12 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.12 2005/11/04 15:23:05 dkf Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.13 2007/09/07 00:34:51 dgp Exp $
  */
 
 #include <stdio.h>
 #include "tkInt.h"
-#include "tkPort.h"
 #include "tkCanvas.h"
 
 /*

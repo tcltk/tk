@@ -11,12 +11,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.17 2007/05/03 15:21:32 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.18 2007/09/07 00:34:51 dgp Exp $
  */
 
 #include "tkInt.h"
 #include "tkCanvas.h"
-#include "tkPort.h"
 
 /*
  * See tkCanvas.h for key data structures used to implement canvases.

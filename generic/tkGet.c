@@ -12,11 +12,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.11 2005/11/07 15:58:21 dkf Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.12 2007/09/07 00:34:52 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * One of these structures is created per thread to store thread-specific

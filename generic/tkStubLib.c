@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.14 2007/05/16 18:35:20 jenglish Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.15 2007/09/07 00:34:53 dgp Exp $
  */
 
 /*
@@ -30,7 +30,6 @@
 #endif
 #undef USE_TK_STUB_PROCS
 
-#include "tkPort.h"
 #include "tkInt.h"
 
 #ifdef __WIN32__
@@ -41,10 +40,12 @@
 #include "tkMacOSXInt.h"
 #endif
 
-#include "tkDecls.h"
-#include "tkIntDecls.h"
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#include "tkUnixInt.h"
+#endif
+
+/* TODO: These ought to come in some other way */
 #include "tkPlatDecls.h"
-#include "tkIntPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
 TkStubs *tkStubsPtr;

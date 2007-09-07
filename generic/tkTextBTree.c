@@ -11,11 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.25 2007/02/23 13:37:49 das Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.26 2007/09/07 00:34:54 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 #include "tkText.h"
 
 /*

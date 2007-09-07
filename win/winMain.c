@@ -9,16 +9,15 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.23 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.24 2007/09/07 00:34:58 dgp Exp $
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
 #include <locale.h>
 
-#include "tkInt.h"
 
 /*
  * The following declarations refer to internal Tk routines. These interfaces

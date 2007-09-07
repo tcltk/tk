@@ -10,11 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.25 2007/02/22 13:56:33 dkf Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.26 2007/09/07 00:34:54 dgp Exp $
  */
 
 #include "default.h"
-#include "tkPort.h"
 #include "tkInt.h"
 #include "tkText.h"
 

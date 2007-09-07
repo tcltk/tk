@@ -9,12 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.15 2007/01/19 00:36:45 das Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.16 2007/09/07 00:34:52 dgp Exp $
  */
 
 #include "tkInt.h"
 #include "tkCanvas.h"
-#include "tkPort.h"
 #include <assert.h>
 
 /*

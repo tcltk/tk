@@ -9,10 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.24 2007/05/03 22:16:00 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.25 2007/09/07 00:34:58 dgp Exp $
  */
 
-#include "tkInt.h"
 #include "tkUnixInt.h"
 #include <signal.h>
 

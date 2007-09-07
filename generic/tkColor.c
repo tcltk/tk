@@ -11,9 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.14 2007/02/12 21:45:41 dkf Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.15 2007/09/07 00:34:52 dgp Exp $
  */
 
+#include "tkInt.h"
 #include "tkColor.h"
 
 /*

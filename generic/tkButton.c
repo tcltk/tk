@@ -11,9 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.26 2007/01/05 00:00:50 nijtmans Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.27 2007/09/07 00:34:51 dgp Exp $
  */
 
+#include "tkInt.h"
 #include "tkButton.h"
 #include "default.h"
 

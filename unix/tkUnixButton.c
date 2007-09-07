@@ -8,9 +8,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.23 2007/02/27 14:52:56 dkf Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.24 2007/09/07 00:34:57 dgp Exp $
  */
 
+#include "tkInt.h"
 #include "tkButton.h"
 #include "tk3d.h"
 
