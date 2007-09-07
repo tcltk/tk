@@ -11,11 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.7 2005/11/15 15:18:22 dkf Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.8 2007/09/07 00:34:54 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * The table below maps from symbolic names for visual classes to the

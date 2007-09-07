@@ -11,11 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.15 2005/11/17 16:21:55 dkf Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.16 2007/09/07 00:34:52 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 #include "tkSelect.h"
 
 /*

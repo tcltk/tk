@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixXId.c,v 1.8 2005/10/21 01:51:45 dkf Exp $
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.9 2007/09/07 00:34:58 dgp Exp $
  */
 
 /*
@@ -28,7 +28,6 @@
 #define XLIB_ILLEGAL_ACCESS 1
 
 #include "tkUnixInt.h"
-#include "tkPort.h"
 
 /*
  * A structure of the following type is used to hold one or more available

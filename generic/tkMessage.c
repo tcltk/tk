@@ -12,10 +12,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.17 2007/01/03 05:06:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.18 2007/09/07 00:34:53 dgp Exp $
  */
 
-#include "tkPort.h"
 #include "default.h"
 #include "tkInt.h"
 

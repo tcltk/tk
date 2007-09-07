@@ -10,11 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.7 2007/06/25 19:07:15 dgp Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.8 2007/09/07 00:34:51 dgp Exp $
  */
 
 #include "tkPort.h"
-#include "tk.h"
 
 /*
  * Default table of argument descriptors. These are normally available in
