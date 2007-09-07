@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.24 2007/05/03 21:53:13 dkf Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.25 2007/09/07 00:34:52 dgp Exp $
  */
 
 /*
@@ -25,9 +25,7 @@
 #define __NO_OLD_CONFIG
 #endif
 
-#include "tk.h"
 #include "tkInt.h"
-#include "tkPort.h"
 #include "tkFont.h"
 
 /*

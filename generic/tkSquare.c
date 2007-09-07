@@ -12,12 +12,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.7 2007/01/03 05:06:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.8 2007/09/07 00:34:53 dgp Exp $
  */
 
-#include "tkPort.h"
 #define __NO_OLD_CONFIG
-#include "tk.h"
 #include "tkInt.h"
 
 /*

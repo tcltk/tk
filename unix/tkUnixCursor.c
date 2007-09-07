@@ -8,10 +8,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixCursor.c,v 1.10 2006/12/19 08:53:38 dkf Exp $
+ * RCS: @(#) $Id: tkUnixCursor.c,v 1.11 2007/09/07 00:34:57 dgp Exp $
  */
 
-#include "tkPort.h"
 #include "tkInt.h"
 
 /*
