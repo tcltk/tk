@@ -9,11 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.13 2005/11/16 09:28:21 dkf Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.13.2.1 2007/09/07 01:25:34 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * For each top-level window that has ever received the focus, there is a

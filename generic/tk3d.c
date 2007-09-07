@@ -10,9 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.17 2007/01/03 04:10:48 nijtmans Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.17.2.1 2007/09/07 01:25:33 dgp Exp $
  */
 
+#include "tkInt.h"
 #include "tk3d.h"
 
 /*

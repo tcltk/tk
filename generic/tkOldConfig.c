@@ -11,11 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.21 2007/02/13 00:30:19 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.21.2.1 2007/09/07 01:25:36 dgp Exp $
  */
 
 #include "tkPort.h"
-#include "tk.h"
 
 /*
  * Values for "flags" field of Tk_ConfigSpec structures. Be sure to coordinate

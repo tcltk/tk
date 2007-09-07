@@ -1,6 +1,6 @@
 /* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
  *
- * $Id: ttkWinTheme.c,v 1.5 2007/04/17 14:32:28 dkf Exp $
+ * $Id: ttkWinTheme.c,v 1.5.2.1 2007/09/07 01:25:41 dgp Exp $
  */
 
 #ifdef _MSC_VER
@@ -9,7 +9,6 @@
 
 #include <windows.h>
 
-#include <tk.h>
 #include <tkWinInt.h>
 
 #ifndef DFCS_HOT	/* Windows 98/Me, Windows 200/XP only */
