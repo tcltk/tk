@@ -10,10 +10,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.10 2007/02/12 21:57:44 dkf Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.10.2.1 2007/09/07 01:25:34 dgp Exp $
  */
 
-#include "tkPort.h"
 #include "tkInt.h"
 
 /*

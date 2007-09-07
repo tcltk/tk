@@ -8,18 +8,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixInit.c,v 1.7 2005/11/14 11:54:21 dkf Exp $
+ * RCS: @(#) $Id: tkUnixInit.c,v 1.7.2.1 2007/09/07 01:25:39 dgp Exp $
  */
 
-#include "tkInt.h"
 #include "tkUnixInt.h"
-
-/*
- * The Init script (common to Windows and Unix platforms) is defined in
- * tkInitScript.h
- */
-
-#include "tkInitScript.h"
 
 #ifdef HAVE_COREFOUNDATION
 static int		GetLibraryPath(Tcl_Interp *interp);
@@ -51,7 +43,7 @@ TkpInit(
 {
     TkCreateXEventSource();
     GetLibraryPath(interp);
-    return Tcl_Eval(interp, initScript);
+    return TCL_OK;
 }
 
 /*

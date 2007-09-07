@@ -10,11 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.32 2007/05/14 20:58:27 dgp Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.32.2.1 2007/09/07 01:25:34 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * Each call to Tk_GetImage returns a pointer to one of the following

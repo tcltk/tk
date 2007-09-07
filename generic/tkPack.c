@@ -10,10 +10,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.25 2007/01/05 00:00:51 nijtmans Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.25.2.1 2007/09/07 01:25:36 dgp Exp $
  */
 
-#include "tkPort.h"
 #include "tkInt.h"
 
 typedef enum {TOP, BOTTOM, LEFT, RIGHT} Side;

@@ -10,11 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.17 2007/02/25 04:30:30 pspjuth Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.17.2.1 2007/09/07 01:25:36 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * The structure below defines the implementation of the "statekey" Tcl

@@ -8,12 +8,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDialog.c,v 1.4 2005/11/13 21:00:17 dkf Exp $
+ * RCS: @(#) $Id: tkUnixDialog.c,v 1.4.2.1 2007/09/07 01:25:38 dgp Exp $
  *
  */
 
-#include "tkPort.h"
-#include "tkInt.h"
 #include "tkUnixInt.h"
 
 /*

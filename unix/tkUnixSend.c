@@ -11,11 +11,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.18 2007/05/03 22:16:00 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.18.2.1 2007/09/07 01:25:40 dgp Exp $
  */
 
-#include "tkPort.h"
-#include "tkInt.h"
 #include "tkUnixInt.h"
 
 /*

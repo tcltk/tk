@@ -11,10 +11,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.8 2005/11/17 10:57:35 dkf Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.8.2.1 2007/09/07 01:25:36 dgp Exp $
  */
 
-#include "tkPort.h"
+#include "tkInt.h"
 #include "tkScrollbar.h"
 #include "default.h"
 

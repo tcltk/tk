@@ -9,10 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixColor.c,v 1.4 2005/10/21 01:51:44 dkf Exp $
+ * RCS: @(#) $Id: tkUnixColor.c,v 1.4.2.1 2007/09/07 01:25:38 dgp Exp $
  */
 
-#include <tkColor.h>
+#include "tkInt.h"
+#include "tkColor.h"
 
 /*
  * If a colormap fills up, attempts to allocate new colors from that colormap
