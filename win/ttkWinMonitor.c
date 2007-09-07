@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.10 2007/04/17 14:32:28 dkf Exp $
+/* $Id: ttkWinMonitor.c,v 1.11 2007/09/07 00:34:58 dgp Exp $
  */
 
 #ifdef _MSC_VER
@@ -6,8 +6,6 @@
 #endif
 
 #include <windows.h>
-#include <tcl.h>
-#include <tk.h>
 #include <tkWinInt.h>
 #include "ttk/ttkTheme.h"
 

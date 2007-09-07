@@ -9,9 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenubu.c,v 1.9 2007/04/25 17:08:51 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixMenubu.c,v 1.10 2007/09/07 00:34:58 dgp Exp $
  */
 
+#include "tkInt.h"
 #include "tkMenubutton.h"
 
 /*

@@ -11,10 +11,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.40 2007/04/23 21:15:18 das Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.41 2007/09/07 00:34:53 dgp Exp $
  */
 
-#include "tkPort.h"
 #include "default.h"
 #include "tkInt.h"
 

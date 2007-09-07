@@ -10,11 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.20 2006/10/19 00:48:25 patthoyts Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.21 2007/09/07 00:34:52 dgp Exp $
  */
 
 #include "tkInt.h"
-#include "tkPort.h"
 
 /*
  * The following data structure represents the master for a bitmap

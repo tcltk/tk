@@ -13,11 +13,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.75 2007/04/23 21:15:18 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.76 2007/09/07 00:34:54 dgp Exp $
  */
 
 #include "default.h"
-#include "tkPort.h"
 #include "tkInt.h"
 #include "tkUndo.h"
 

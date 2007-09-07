@@ -9,11 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinConfig.c,v 1.4 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinConfig.c,v 1.5 2007/09/07 00:34:58 dgp Exp $
  */
 
-#include "tk.h"
-#include "tkInt.h"
 #include "tkWinInt.h"
 
 

@@ -10,11 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.16 2007/06/24 16:07:35 dkf Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.17 2007/09/07 00:34:53 dgp Exp $
  */
 
+#include "tkInt.h"
 #include "tkMenubutton.h"
-#include "tkPort.h"
 #include "default.h"
 
 /*

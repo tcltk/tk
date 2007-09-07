@@ -10,12 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.16 2006/10/16 15:35:28 das Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.17 2007/09/07 00:34:51 dgp Exp $
  */
 
 #include <stdio.h>
 #include "tkInt.h"
-#include "tkPort.h"
 #include "tkCanvas.h"
 
 /*

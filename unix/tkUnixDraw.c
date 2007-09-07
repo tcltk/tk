@@ -8,10 +8,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.9 2005/11/14 11:54:21 dkf Exp $
+ * RCS: @(#) $Id: tkUnixDraw.c,v 1.10 2007/09/07 00:34:58 dgp Exp $
  */
 
-#include "tkPort.h"
 #include "tkInt.h"
 
 #if !defined(__WIN32__)

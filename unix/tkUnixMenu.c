@@ -8,12 +8,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.16 2007/02/27 14:52:57 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.17 2007/09/07 00:34:58 dgp Exp $
  */
 
-#include "tkPort.h"
 #include "default.h"
-#include "tkInt.h"
 #include "tkUnixInt.h"
 #include "tkMenu.h"
 
