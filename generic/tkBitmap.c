@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.19 2007/09/07 00:34:51 dgp Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.20 2007/09/08 16:01:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -25,7 +25,7 @@
  * that warning message.
  */
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(__GNUC__)
 #pragma warning (disable : 4305)
 #endif
 
@@ -40,7 +40,7 @@
 #include "question.xbm"
 #include "warning.xbm"
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(__GNUC__)
 #pragma warning (default : 4305)
 #endif
 
