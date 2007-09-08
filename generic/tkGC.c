@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGC.c,v 1.8 2007/09/07 00:34:52 dgp Exp $
+ * RCS: @(#) $Id: tkGC.c,v 1.9 2007/09/08 16:01:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -92,7 +92,7 @@ Tk_GetGC(
      * structure on some systems.
      */
 
-    memset((void *) &valueKey, 0, sizeof(valueKey));
+    memset(&valueKey, 0, sizeof(valueKey));
 
     /*
      * First, check to see if there's already a GC that will work for this
@@ -218,7 +218,7 @@ Tk_GetGC(
     valueKey.screenNum = Tk_ScreenNumber(tkwin);
     valueKey.depth = Tk_Depth(tkwin);
     valueHashPtr = Tcl_CreateHashEntry(&dispPtr->gcValueTable,
-            (char *) &valueKey, &isNew);
+	    (char *) &valueKey, &isNew);
     if (!isNew) {
 	gcPtr = (TkGC *) Tcl_GetHashValue(valueHashPtr);
 	gcPtr->refCount++;
@@ -256,7 +256,7 @@ Tk_GetGC(
     gcPtr->refCount = 1;
     gcPtr->valueHashPtr = valueHashPtr;
     idHashPtr = Tcl_CreateHashEntry(&dispPtr->gcIdTable,
-            (char *) gcPtr->gc, &isNew);
+	    (char *) gcPtr->gc, &isNew);
     if (!isNew) {
 	Tcl_Panic("GC already registered in Tk_GetGC");
     }
