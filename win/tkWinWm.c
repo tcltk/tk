@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.117 2007/06/10 00:15:52 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.118 2007/09/08 16:13:45 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -1095,23 +1095,25 @@ WinSetIcon(
 	    }
 	} else {
 	    ThreadSpecificData *tsdPtr;
+
 	    /*
 	     * Don't check return result of SetClassLong() or
-	     * SetClassLongPtr() since they return the previously
-	     * set value which is zero on the initial call or in
-	     * an error case. The MSDN documentation does not
-	     * indicate that the result needs to be checked.
+	     * SetClassLongPtr() since they return the previously set value
+	     * which is zero on the initial call or in an error case. The MSDN
+	     * documentation does not indicate that the result needs to be
+	     * checked.
 	     */
+
 #ifdef _WIN64
 	    SetClassLongPtr(hwnd, GCLP_HICONSM,
-	        (LPARAM)GetIcon(titlebaricon, ICON_SMALL));
+		    (LPARAM) GetIcon(titlebaricon, ICON_SMALL));
 	    SetClassLongPtr(hwnd, GCLP_HICON,
-	        (LPARAM)GetIcon(titlebaricon, ICON_BIG));
+		    (LPARAM) GetIcon(titlebaricon, ICON_BIG));
 #else
 	    SetClassLong(hwnd, GCL_HICONSM,
-	        (LPARAM)GetIcon(titlebaricon, ICON_SMALL));
+		    (LPARAM) GetIcon(titlebaricon, ICON_SMALL));
 	    SetClassLong(hwnd, GCL_HICON,
-	        (LPARAM)GetIcon(titlebaricon, ICON_BIG));
+		    (LPARAM) GetIcon(titlebaricon, ICON_BIG));
 #endif
 	    tsdPtr = (ThreadSpecificData *)
 		    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -2580,8 +2582,8 @@ TkWmUnmapWindow(
 
 void
 TkpWmSetState(
-     TkWindow *winPtr,		/* Toplevel window to operate on. */
-     int state)			/* One of IconicState, ZoomState, NormalState,
+    TkWindow *winPtr,		/* Toplevel window to operate on. */
+    int state)			/* One of IconicState, ZoomState, NormalState,
 				 * or WithdrawnState. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
@@ -2627,8 +2629,8 @@ TkpWmSetState(
 
 static void
 TkpWmSetFullScreen(
-     TkWindow *winPtr,		/* Toplevel window to operate on. */
-     int full_screen_state)	/* True if window should be full screen */
+    TkWindow *winPtr,		/* Toplevel window to operate on. */
+    int full_screen_state)	/* True if window should be full screen */
 {
     int changed = 0;
     int full_screen = False;
@@ -2737,7 +2739,7 @@ TkWmDeadWindow(
     } else {
 	register WmInfo *prevPtr;
 	for (prevPtr = winPtr->dispPtr->firstWmPtr; ;
-	     prevPtr = prevPtr->nextPtr) {
+		prevPtr = prevPtr->nextPtr) {
 	    if (prevPtr == NULL) {
 		Tcl_Panic("couldn't unlink window in TkWmDeadWindow");
 	    }
@@ -3207,7 +3209,7 @@ WmAttributesCmd(
 	    styleBit = WS_DISABLED;
 	} else if ((strncmp(string, "-alpha", (unsigned) length) == 0)
 		|| ((length > 2) && (strncmp(string, "-transparentcolor",
-					     (unsigned) length) == 0))) {
+			(unsigned) length) == 0))) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_LAYERED;
 	} else if (strncmp(string, "-fullscreen", (unsigned) length) == 0) {
@@ -4864,7 +4866,7 @@ WmProtocolCmd(
 	 */
 
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
-	     protPtr = protPtr->nextPtr) {
+		protPtr = protPtr->nextPtr) {
 	    Tcl_AppendElement(interp,
 		    Tk_GetAtomName((Tk_Window) winPtr, protPtr->protocol));
 	}

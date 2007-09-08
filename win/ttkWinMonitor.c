@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.11 2007/09/07 00:34:58 dgp Exp $
+/* $Id: ttkWinMonitor.c,v 1.12 2007/09/08 16:13:45 dkf Exp $
  */
 
 #ifdef _MSC_VER
@@ -17,8 +17,8 @@ static LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 /*
  * RegisterSystemColors --
- *	Register all known Windows system colors (as per GetSysColor)
- *	as Tk named colors.
+ *	Register all known Windows system colors (as per GetSysColor) as Tk
+ *	named colors.
  */
 
 typedef struct {
@@ -72,7 +72,7 @@ RegisterSystemColors(
 	Ttk_RegisterNamedColor(cache, sysColor->name, &colorSpec);
     }
 }
-
+
 static HWND
 CreateThemeMonitorWindow(
     HINSTANCE hinst,
@@ -95,7 +95,7 @@ CreateThemeMonitorWindow(
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
     wc.lpszMenuName  = name;
     wc.lpszClassName = name;
-    
+
     if (RegisterClassEx(&wc)) {
 	hwnd = CreateWindow(name, title, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -119,7 +119,7 @@ DestroyThemeMonitorWindow(
 
     DestroyWindow(hwnd);
 }
-
+
 static LRESULT WINAPI
 WndProc(
     HWND hwnd,
@@ -147,6 +147,7 @@ WndProc(
 	 * Reset the application theme to 'xpnative' if present, which will in
 	 * turn fall back to 'winnative' if XP theming is disabled.
 	 */
+
 	theme = Ttk_GetTheme(interp, "xpnative");
 	if (theme) {
 	    Ttk_UseTheme(interp, theme);
@@ -156,7 +157,7 @@ WndProc(
     }
     return DefWindowProc(hwnd, msg, wp, lp);
 }
-
+
 /*
  * Windows-specific platform initialization:
  */
@@ -169,7 +170,7 @@ Ttk_WinPlatformInit(
     Tcl_Interp *interp)
 {
     HWND hwnd;
-    
+
     hwnd = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
     Ttk_RegisterCleanup(interp, (ClientData)hwnd, DestroyThemeMonitorWindow);
 
@@ -178,3 +179,11 @@ Ttk_WinPlatformInit(
 
     return TCL_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.13 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.14 2007/09/08 16:13:45 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -222,7 +222,7 @@ void
 TkpFreeCursor(
     TkCursor *cursorPtr)
 {
-    TkWinCursor *winCursorPtr = (TkWinCursor *) cursorPtr;
+    /* TkWinCursor *winCursorPtr = (TkWinCursor *) cursorPtr; */
 }
 
 /*
