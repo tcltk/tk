@@ -1,6 +1,6 @@
 /* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
  *
- * $Id: ttkWinTheme.c,v 1.6 2007/09/07 00:34:58 dgp Exp $
+ * $Id: ttkWinTheme.c,v 1.7 2007/09/08 16:13:45 dkf Exp $
  */
 
 #ifdef _MSC_VER
@@ -66,7 +66,7 @@ ReliefToEdge(
 	return BDR_RAISEDOUTER;
     }
 }
-
+
 /* ---------------------------------------------------------------------- */
 
 static Ttk_StateTable checkbutton_statemap[] = {
@@ -115,10 +115,10 @@ static FrameControlElementData FrameControlElements[] = {
     { "uparrow",
     	DFC_SCROLL, DFCS_SCROLLUP, SM_CXVSCROLL, SM_CYVSCROLL,
 	arrow_statemap, {0,0,0,0} },
-    { "downarrow", 
+    { "downarrow",
     	DFC_SCROLL, DFCS_SCROLLDOWN, SM_CXVSCROLL, SM_CYVSCROLL,
 	arrow_statemap, {0,0,0,0} },
-    { "leftarrow", 
+    { "leftarrow",
 	DFC_SCROLL, DFCS_SCROLLLEFT, SM_CXHSCROLL, SM_CYHSCROLL,
 	arrow_statemap, {0,0,0,0} },
     { "rightarrow",
@@ -312,7 +312,7 @@ static Ttk_ElementOptionSpec ButtonBorderElementOptions[] = {
 	Tk_Offset(ButtonBorderElement,reliefObj), "flat" },
     { "-highlightcolor",TK_OPTION_COLOR,
 	Tk_Offset(ButtonBorderElement,highlightColorObj), "black" },
-    { "-default", TK_OPTION_ANY, 
+    { "-default", TK_OPTION_ANY,
 	Tk_Offset(ButtonBorderElement,defaultStateObj), "disabled" },
     {NULL}
 };
@@ -448,7 +448,7 @@ static Ttk_ElementSpec FocusElementSpec = {
     FocusElementGeometry,
     FocusElementDraw
 };
-
+
 /* FillFocusElement --
  * 	Draws a focus ring filled with the selection color
  */
@@ -488,7 +488,7 @@ FillFocusElementDraw(
 	TkWinReleaseDrawableDC(d, hdc, &dcState);
     }
 }
-
+
 /*
  * ComboboxFocusElement --
  * 	Read-only comboboxes have a filled focus ring, editable ones do not.
@@ -781,7 +781,7 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
     TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
 	TTK_GROUP("Combobox.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
-	    TTK_GROUP("Combobox.focus", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH, 
+	    TTK_GROUP("Combobox.focus", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
 		TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))
 TTK_END_LAYOUT
 
@@ -826,3 +826,11 @@ TtkWinTheme_Init(
     Tcl_PkgProvide(interp, "ttk::theme::winnative", TTK_VERSION);
     return TCL_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
