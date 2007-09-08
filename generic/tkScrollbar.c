@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.9 2007/09/07 00:34:53 dgp Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.10 2007/09/08 16:01:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -288,8 +288,7 @@ ScrollbarWidgetCmd(
 	    && (length >= 2)) {
 	if (argc == 2) {
 	    result = Tk_ConfigureInfo(interp, scrollPtr->tkwin,
-		    tkpScrollbarConfigSpecs, (char *) scrollPtr,
-		    NULL, 0);
+		    tkpScrollbarConfigSpecs, (char *) scrollPtr, NULL, 0);
 	} else if (argc == 3) {
 	    result = Tk_ConfigureInfo(interp, scrollPtr->tkwin,
 		    tkpScrollbarConfigSpecs, (char *) scrollPtr, argv[2], 0);
@@ -597,7 +596,7 @@ TkScrollbarEventProc(
 	if (scrollPtr->tkwin != NULL) {
 	    scrollPtr->tkwin = NULL;
 	    Tcl_DeleteCommandFromToken(scrollPtr->interp,
-                    scrollPtr->widgetCmd);
+		    scrollPtr->widgetCmd);
 	}
 	if (scrollPtr->flags & REDRAW_PENDING) {
 	    Tcl_CancelIdleCall(TkpDisplayScrollbar, (ClientData) scrollPtr);
