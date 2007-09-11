@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.4 2006/03/27 12:13:56 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.5 2007/09/11 18:01:45 rmax Exp $
  */
 
 /*
@@ -995,7 +995,7 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
 	 */
 	if (interlace) {
 	    ypos += interlaceStep[pass];
-	    while (ypos >= height) {
+	    while (ypos >= rows) {
 		pass++;
 		if (pass > 3) {
 		    return TCL_OK;
