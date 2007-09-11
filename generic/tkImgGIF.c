@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.35.2.1 2007/09/07 01:25:35 dgp Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.35.2.2 2007/09/11 18:32:35 dgp Exp $
  */
 
 /*
@@ -1031,7 +1031,7 @@ ReadImage(
 
 	if (interlace) {
 	    ypos += interlaceStep[pass];
-	    while (ypos >= height) {
+	    while (ypos >= rows) {
 		pass++;
 		if (pass > 3) {
 		    return TCL_OK;
