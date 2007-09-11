@@ -11,7 +11,7 @@
 #
 # The information in this file is specific to a single platform.
 #
-# RCS: @(#) $Id: tkConfig.sh.in,v 1.8 2002/07/28 03:23:08 mdejong Exp $
+# RCS: @(#) $Id: tkConfig.sh.in,v 1.8.2.1 2007/09/11 05:17:07 das Exp $
 
 # Tk's version number.
 TK_VERSION='@TK_VERSION@'
@@ -34,11 +34,11 @@ TK_LIB_FILE='@TK_LIB_FILE@'
 # Additional libraries to use when linking Tk.
 TK_LIBS='@XLIBSW@ @DL_LIBS@ @LIBS@ @MATH_LIBS@'
 
-# Top-level directory in which Tcl's platform-independent files are
+# Top-level directory in which Tk's platform-independent files are
 # installed.
 TK_PREFIX='@prefix@'
 
-# Top-level directory in which Tcl's platform-specific files (e.g.
+# Top-level directory in which Tk's platform-specific files (e.g.
 # executables) are installed.
 TK_EXEC_PREFIX='@exec_prefix@'
 
@@ -48,7 +48,7 @@ TK_XINCLUDES='@XINCLUDES@'
 # Linker switch(es) to use to link with the X11 library archive.
 TK_XLIBSW='@XLIBSW@'
 
-# -l flag to pass to the linker to pick up the Tcl library
+# -l flag to pass to the linker to pick up the Tk library
 TK_LIB_FLAG='@TK_LIB_FLAG@'
 
 # String to pass to linker to pick up the Tk library from its
@@ -58,6 +58,10 @@ TK_BUILD_LIB_SPEC='@TK_BUILD_LIB_SPEC@'
 # String to pass to linker to pick up the Tk library from its
 # installed directory.
 TK_LIB_SPEC='@TK_LIB_SPEC@'
+
+# String to pass to the compiler so that an extension can
+# find installed Tk headers.
+TK_INCLUDE_SPEC='@TK_INCLUDE_SPEC@'
 
 # Location of the top-level source directory from which Tk was built.
 # This is the directory that contains a README file as well as
