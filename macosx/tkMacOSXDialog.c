@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.29 2007/08/27 06:48:28 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.30 2007/09/11 05:24:13 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -134,7 +134,7 @@ Tk_ChooseColorObjCmd(
     int result = TCL_ERROR;
     Tk_Window parent, tkwin = (Tk_Window) clientData;
     const char *title;
-    int i, picked = 0, srcRead, dstWrote;
+    int i, srcRead, dstWrote;
     CMError cmerr;
     CMProfileRef prof;
     NColorPickerInfo cpinfo;
@@ -209,24 +209,20 @@ Tk_ChooseColorObjCmd(
     TkMacOSXTrackingLoop(1);
     err = ChkErr(NPickColor, &cpinfo);
     TkMacOSXTrackingLoop(0);
+    cmerr = CMCloseProfile(prof);
     if ((err == noErr) && (cpinfo.newColorChosen != 0)) {
+	char colorstr[8];
+
 	color.red   = cpinfo.theColor.color.rgb.red;
 	color.green = cpinfo.theColor.color.rgb.green;
 	color.blue  = cpinfo.theColor.color.rgb.blue;
-	picked = 1;
-    }
-    cmerr = CMCloseProfile(prof);
-
-    result = TCL_OK;
-    if (picked != 0) {
-	char colorstr[8];
-
 	snprintf(colorstr, 8, "#%02x%02x%02x", color.red >> 8,
 		color.green >> 8, color.blue >> 8);
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(colorstr, 7));
     } else {
-	Tcl_ResetResult(interp);    
+	Tcl_ResetResult(interp);
     }
+    result = TCL_OK;
 
 end:
     return result;
