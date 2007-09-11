@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.15.2.4 2006/03/27 15:40:38 dkf Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.15.2.5 2007/09/11 18:01:46 rmax Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -668,6 +668,18 @@ test imgPhoto-14.2 {GIF -index handler buffer sizing} -setup {
 } -cleanup {
     image delete $i
 } -returnCodes error -result {no image data for this index}
+
+test imgPhoto-14.3 {GIF -index interleaving and small frames} -setup {
+    set i [image create photo]
+} -body {
+    # Interleaved GIFs used to crash us when a smaller subsequent frame
+    # was accessed.
+    $i configure -format {GIF -index 1} -data {
+	R0lGODdhAQAFAPAAAP8AAAAAACwAAAAAAQAFAEACAoRdACwAAAAAAQAEAEACAoRRADs=
+    }
+} -cleanup {
+    image delete $i
+}
 
 test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} \
 	{nonPortable} {
