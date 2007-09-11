@@ -1,3 +1,13 @@
+2007-09-11  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConsole.c:	Revised calls to Tcl_InitStubs() and
+	* generic/tkMain.c:	[package require Tcl] so that Tk Says What
+	* generic/tkWindow.c:	It Means using the new facilties of [package]
+	* library/tk.tcl:	in Tcl 8.5 about what version(s) of Tcl it
+	* unix/Makefile.in:	is willing to work with.  [Bug 1578344].
+	* win/Makefile.in:
+	* win/makefile.vc:
+
 2007-09-10  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/README: typo corrections [Bug 1788682]

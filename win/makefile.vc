@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.103 2007/05/15 23:20:17 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.104 2007/09/11 17:46:42 dgp Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -963,8 +963,7 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {![package vsatisfies [package provide Tcl] $(TCL_DOTVERSION)]} { return }
-if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)$(TCL_PATCHLEVEL)] != 0} { return }
+if {[catch {package present Tcl $(TCL_DOTVERSION)$(TCL_PATCHLEVEL)]} { return }
 package ifneeded Tk $(DOTVERSION)$(TCL_PATCHLEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk]
 <<
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"
