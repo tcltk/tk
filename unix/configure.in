@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.41 2007/08/07 05:07:49 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.42 2007/09/11 05:17:07 das Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -534,6 +534,9 @@ TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
 TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
+# Install time header dir can be set via --includedir
+eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
+
 #------------------------------------------------------------------------
 # tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------
@@ -553,6 +556,7 @@ AC_SUBST(TK_STUB_LIB_FILE)
 AC_SUBST(TK_STUB_LIB_FLAG)
 AC_SUBST(TK_STUB_LIB_SPEC)
 AC_SUBST(TK_STUB_LIB_PATH)
+AC_SUBST(TK_INCLUDE_SPEC)
 AC_SUBST(TK_BUILD_STUB_LIB_SPEC)
 AC_SUBST(TK_BUILD_STUB_LIB_PATH)
 

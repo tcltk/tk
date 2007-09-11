@@ -6014,11 +6014,15 @@ TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
 TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
+# Install time header dir can be set via --includedir
+eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
+
 #------------------------------------------------------------------------
 # tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
 
 
 
@@ -6274,6 +6278,7 @@ s%@TK_STUB_LIB_FILE@%$TK_STUB_LIB_FILE%g
 s%@TK_STUB_LIB_FLAG@%$TK_STUB_LIB_FLAG%g
 s%@TK_STUB_LIB_SPEC@%$TK_STUB_LIB_SPEC%g
 s%@TK_STUB_LIB_PATH@%$TK_STUB_LIB_PATH%g
+s%@TK_INCLUDE_SPEC@%$TK_INCLUDE_SPEC%g
 s%@TK_BUILD_STUB_LIB_SPEC@%$TK_BUILD_STUB_LIB_SPEC%g
 s%@TK_BUILD_STUB_LIB_PATH@%$TK_BUILD_STUB_LIB_PATH%g
 s%@TK_SRC_DIR@%$TK_SRC_DIR%g
