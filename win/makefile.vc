@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2002 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.67.2.17 2006/09/26 23:55:50 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.67.2.18 2007/09/11 00:13:07 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -103,7 +103,7 @@ the build instructions.
 #		memdbg   = Enables the debugging memory allocator.
 #		compdbg  = Enables byte compilation logging.
 #
-#	MACHINE=(IX86|IA64|ALPHA)
+#	MACHINE=(IX86|IA64|AMD64|ALPHA)
 #		Set the machine type used for the compiler, linker, and
 #		resource compiler.  This hook is needed to tell the tools
 #		when alternate platforms are requested.  IX86 is the default
@@ -360,11 +360,11 @@ cdebug	= -O2 $(OPTIMIZATIONS)
 !else
 cdebug	=
 !endif
-!else if "$(MACHINE)" == "IA64"
+!else if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
 ### Warnings are too many, can't support warnings into errors.
-cdebug	= -Z7 -Od $(DEBUGFLAGS)
+cdebug	= -Zi -Od $(DEBUGFLAGS)
 !else
-cdebug	= -Z7 -WX $(DEBUGFLAGS)
+cdebug	= -Zi -WX $(DEBUGFLAGS)
 !endif
 
 ### Declarations common to all compiler options
@@ -448,7 +448,7 @@ guilibs	  = $(baselibs) shell32.lib gdi32.lib comdlg32.lib winspool.lib imm32.li
 #---------------------------------------------------------------------
 
 !if "$(TESTPAT)" != ""
-TESTFLAGS   = -file $(TESTPAT)
+TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 !endif
 
 
@@ -543,6 +543,7 @@ $(CAT32): $(_TCLDIR)\win\cat.c
 	$(_VC_MANIFEST_EMBED_EXE)
 
 install-binaries:
+        @echo installing binaries in "$(BIN_INSTALL_DIR)"
 	@$(CPY) "$(WISH)" "$(BIN_INSTALL_DIR)\"
 !if $(TKLIB) != $(TKIMPLIB)
 	@$(CPY) "$(TKLIB)" "$(BIN_INSTALL_DIR)\"
@@ -550,25 +551,26 @@ install-binaries:
 	@$(CPY) "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
 	@$(CPY) "$(TKSTUBLIB)" "$(LIB_INSTALL_DIR)\"
 !if !$(STATIC_BUILD)
-	@echo Creating package index "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
-	-del "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
-	echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)] != 0} { return } > "$(OUT_DIR)\pkgIndex.tcl"
-	echo package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk] >>"$(OUT_DIR)\pkgIndex.tcl"
-	$(CPY) "$(OUT_DIR)\pkgIndex.tcl" "$(SCRIPT_INSTALL_DIR)\"
+	@-del "$(SCRIPT_INSTALL_DIR)\pkgIndex.tcl"
+	@echo if {[package vcompare [package provide Tcl] $(TCL_DOTVERSION)] != 0} { return } > "$(OUT_DIR)\pkgIndex.tcl"
+	@echo package ifneeded Tk $(DOTVERSION) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk] >>"$(OUT_DIR)\pkgIndex.tcl"
+	@$(CPY) "$(OUT_DIR)\pkgIndex.tcl" "$(SCRIPT_INSTALL_DIR)\"
 !endif
 
 install-libraries:
+        @echo installing headers in "$(INCLUDE_INSTALL_DIR)"
 	@$(CPY) "$(GENERICDIR)\tk.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
+        @echo installing library files in "$(SCRIPT_INSTALL_DIR)"
 	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
-	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
-	@$(CPY) "$(ROOT)\library\demos\*" "$(SCRIPT_INSTALL_DIR)\demos\"
-	@$(CPY) "$(ROOT)\library\demos\images\*" "$(SCRIPT_INSTALL_DIR)\demos\images\"
 	@$(CPY) "$(ROOT)\library\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
 	@$(CPY) "$(ROOT)\library\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
+        @echo installing demo files in "$(SCRIPT_INSTALL_DIR)\demos"
+	@$(CPY) "$(ROOT)\library\demos\*" "$(SCRIPT_INSTALL_DIR)\demos\"
+	@$(CPY) "$(ROOT)\library\demos\images\*" "$(SCRIPT_INSTALL_DIR)\demos\images\"
 
 
 #---------------------------------------------------------------------
