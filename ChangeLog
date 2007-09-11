@@ -1,3 +1,8 @@
+2007-09-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/makefile.vc: Fix for AMD64 symbols target builds.
+	* win/rules.vc:
+
 2007-09-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/rc/tk_base.rc: Backported the BASE_NO_TK_ICON patch to assist in
