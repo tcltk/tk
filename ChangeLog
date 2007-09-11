@@ -1,3 +1,11 @@
+2007-09-11  Reinhard Max  <max@suse.de>
+
+	* generic/tkImgGIF.c: Fixed a buffer overrun that got triggered by
+	multi-frame interlaced GIFs that contain subsequent frames that
+	are smaller than the first one.
+
+	* tests/imgPhoto.test: Added a test for the above.
+
 2007-09-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure.in:	backport of TK_INCLUDE_SPEC addition.
