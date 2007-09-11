@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.84 2007/09/11 17:46:41 dgp Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.85 2007/09/11 18:24:41 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -3181,7 +3181,7 @@ Initialize(
 	geometry = NULL;
     }
 
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_PATCH_LEVEL, 1) == NULL) {
+    if (Tcl_PkgRequire(interp, "Tcl", TCL_PATCH_LEVEL, 0) == NULL) {
 	code = TCL_ERROR;
 	goto done;
     }
