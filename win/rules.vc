@@ -11,7 +11,7 @@
 # Copyright (c) 2003-2006 Patrick Thoyts
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.5.2.8 2006/10/31 15:18:28 patthoyts Exp $
+# RCS: @(#) $Id: rules.vc,v 1.5.2.9 2007/09/11 00:13:12 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -123,10 +123,13 @@ OPTIMIZATIONS  = $(OPTIMIZATIONS) -GL
 
 DEBUGFLAGS     =
 
+#  the platform SDK has broken headers that break the runtime checks for amd64
+!if "$(MACHINE)" != "AMD64"
 !if [nmakehlp -c -RTC1]
 DEBUGFLAGS     = $(DEBUGFLAGS) -RTC1
 !elseif [nmakehlp -c -GZ]
 DEBUGFLAGS     = $(DEBUGFLAGS) -GZ
+!endif
 !endif
 
 COMPILERFLAGS  =-W3
