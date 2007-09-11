@@ -1,3 +1,9 @@
+2007-09-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/configure.in:	backport of TK_INCLUDE_SPEC addition.
+	* unix/tkConfig.sh.in:	[Bug 777203]
+	* unix/configure: autoconf-2.13
+
 2007-09-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: Fix for AMD64 symbols target builds.
