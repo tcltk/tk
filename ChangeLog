@@ -1,3 +1,8 @@
+2007-09-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish-Common.xcconfig:		  enable Tcl DTrace support.
+	* macosx/Wish.xcodeproj/project.pbxproj:
+
 2007-09-12  Andreas Kupries  <andreask@activestate.com>
 
 	* win/Makefile.in (install-binaries): Fixed missing brace in the
