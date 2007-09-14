@@ -1,3 +1,14 @@
+2007-09-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish-Common.xcconfig:		  enable Tcl DTrace support.
+	* macosx/Wish.xcodeproj/project.pbxproj:
+
+2007-09-12  Andreas Kupries  <andreask@activestate.com>
+
+	* win/Makefile.in (install-binaries): Fixed missing brace in the
+	* win/makefile.vc (install-binaries): generated package index file.
+	  Note: unix/Makefile.in is good.
+
 2007-09-11  Reinhard Max  <max@suse.de>
 
 	* generic/tkImgGIF.c: Fixed a buffer overrun that got triggered by

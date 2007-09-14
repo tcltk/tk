@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.73.2.1 2007/09/11 18:32:36 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.73.2.2 2007/09/14 16:30:30 dgp Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -481,7 +481,7 @@ install-binaries: binaries
 	@$(RM) $(PKG_INDEX);
 	@(\
 	echo "if {[catch {package present Tcl\
-		$(TCLVERSION)$(TCLPATCHL)]} { return }";\
+		$(TCLVERSION)$(TCLPATCHL)}]} { return }";\
 	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL)\
 		[list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
 	) > $(PKG_INDEX);
