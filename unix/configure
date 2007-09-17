@@ -1491,7 +1491,7 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
     # of TCL_BUILD_LIB_SPEC. An extension should make use of TCL_LIB_SPEC
     # instead of TCL_BUILD_LIB_SPEC since it will work with both an
     # installed and uninstalled version of Tcl.
-    if test -f ${TCL_BIN_DIR}/Makefile ; then
+    if test -f "${TCL_BIN_DIR}/Makefile" ; then
         TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
         TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
         TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
@@ -1501,7 +1501,7 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
 	# against Tcl.framework installed in an arbitary location.
 	case ${TCL_DEFS} in
 	    *TCL_FRAMEWORK*)
-		if test -f ${TCL_BIN_DIR}/${TCL_LIB_FILE}; then
+		if test -f "${TCL_BIN_DIR}/${TCL_LIB_FILE}"; then
 		    for i in "`cd ${TCL_BIN_DIR}; pwd`" \
 			     "`cd ${TCL_BIN_DIR}/../..; pwd`"; do
 			if test "`basename "$i"`" = "${TCL_LIB_FILE}.framework"; then
@@ -1510,7 +1510,7 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
 			fi
 		    done
 		fi
-		if test -f ${TCL_BIN_DIR}/${TCL_STUB_LIB_FILE}; then
+		if test -f "${TCL_BIN_DIR}/${TCL_STUB_LIB_FILE}"; then
 		    TCL_STUB_LIB_SPEC="-L${TCL_BIN_DIR} ${TCL_STUB_LIB_FLAG}"
 		    TCL_STUB_LIB_PATH="${TCL_BIN_DIR}/${TCL_STUB_LIB_FILE}"
 		fi
@@ -4624,26 +4624,25 @@ echo "${ECHO_T}$do64bitVIS" >&6
 	do64bit=yes
     fi
 
-    # Step 0.c: Check if gcc visibility support is available. Do this here so
+    # Step 0.c: Check if visibility support is available. Do this here so
     # that platform specific alternatives can be used below if this fails.
 
-    if test "$GCC" = "yes" ; then
-	echo "$as_me:$LINENO: checking if gcc supports visibility \"hidden\"" >&5
-echo $ECHO_N "checking if gcc supports visibility \"hidden\"... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking if compiler supports visibility \"hidden\"" >&5
+echo $ECHO_N "checking if compiler supports visibility \"hidden\"... $ECHO_C" >&6
 if test "${tcl_cv_cc_visibility_hidden+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
-	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
-	    cat >conftest.$ac_ext <<_ACEOF
+	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
+	cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-		extern __attribute__((__visibility__("hidden"))) void f(void);
-		void f(void) {}
+	    extern __attribute__((__visibility__("hidden"))) void f(void);
+	    void f(void) {}
 int
 main ()
 {
@@ -4683,17 +4682,16 @@ tcl_cv_cc_visibility_hidden=no
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-	    CFLAGS=$hold_cflags
+	CFLAGS=$hold_cflags
 fi
 echo "$as_me:$LINENO: result: $tcl_cv_cc_visibility_hidden" >&5
 echo "${ECHO_T}$tcl_cv_cc_visibility_hidden" >&6
-	if test $tcl_cv_cc_visibility_hidden = yes; then
+    if test $tcl_cv_cc_visibility_hidden = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define MODULE_SCOPE extern __attribute__((__visibility__("hidden")))
 _ACEOF
 
-	fi
     fi
 
     # Step 1: set the variable "system" to hold the name and version number
@@ -4931,7 +4929,7 @@ echo "$as_me: WARNING: 64bit mode not supported with GCC on $system" >&2;}
 		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
 	    else
 		if test "$GCC" = "yes" ; then
-		    SHLIB_LD="gcc -shared"
+		    SHLIB_LD='${CC} -shared'
 		else
 		    SHLIB_LD="/bin/ld -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
 		fi
@@ -5049,7 +5047,7 @@ _ACEOF
 	    ;;
 	BeOS*)
 	    SHLIB_CFLAGS="-fPIC"
-	    SHLIB_LD="${CC} -nostart"
+	    SHLIB_LD='${CC} -nostart'
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -5141,7 +5139,7 @@ fi
 	    ;;
 	BSD/OS-4.*)
 	    SHLIB_CFLAGS="-export-dynamic -fPIC"
-	    SHLIB_LD="cc -shared"
+	    SHLIB_LD='${CC} -shared'
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -5152,7 +5150,7 @@ fi
 	    ;;
 	dgux*)
 	    SHLIB_CFLAGS="-K PIC"
-	    SHLIB_LD="cc -G"
+	    SHLIB_LD='${CC} -G'
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -5261,7 +5259,7 @@ fi
 		LD_LIBRARY_PATH_VAR="SHLIB_PATH"
 	    fi
 	    if test "$GCC" = "yes" ; then
-		SHLIB_LD="gcc -shared"
+		SHLIB_LD='${CC} -shared'
 		SHLIB_LD_LIBS='${LIBS}'
 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 	    fi
@@ -5277,7 +5275,7 @@ fi
 			hppa64*)
 			    # 64-bit gcc in use.  Fix flags for GNU ld.
 			    do64bit_ok=yes
-			    SHLIB_LD="${CC} -shared"
+			    SHLIB_LD='${CC} -shared'
 			    SHLIB_LD_LIBS='${LIBS}'
 			    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 			    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
@@ -5442,7 +5440,7 @@ echo "$as_me: WARNING: 64bit mode not supported by gcc" >&2;}
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 
-	    CFLAGS_OPTIMIZE=-O2
+	    CFLAGS_OPTIMIZE="-O2"
 	    # egcs-2.91.66 on Redhat Linux 6.0 generates lots of warnings
 	    # when you inline the string and math operations.  Turn this off to
 	    # get rid of the warnings.
@@ -5546,7 +5544,7 @@ _ACEOF
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 
-	    SHLIB_LD="${CC} -shared"
+	    SHLIB_LD='${CC} -shared'
 	    DL_OBJS=""
 	    DL_LIBS="-ldl"
 	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
@@ -5561,7 +5559,7 @@ _ACEOF
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    CFLAGS_OPTIMIZE=-02
-	    SHLIB_LD="${CC} -shared "
+	    SHLIB_LD='${CC} -shared'
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-mshared -ldl"
 	    LD_FLAGS="-Wl,--export-dynamic"
@@ -5570,7 +5568,7 @@ _ACEOF
 	    ;;
 	MP-RAS-02*)
 	    SHLIB_CFLAGS="-K PIC"
-	    SHLIB_LD="cc -G"
+	    SHLIB_LD='${CC} -G'
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -5580,7 +5578,7 @@ _ACEOF
 	    ;;
 	MP-RAS-*)
 	    SHLIB_CFLAGS="-K PIC"
-	    SHLIB_LD="cc -G"
+	    SHLIB_LD='${CC} -G'
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -5647,7 +5645,7 @@ echo "${ECHO_T}$tcl_cv_ld_elf" >&6
 	    *)
 		SHLIB_CFLAGS="-fpic";;
 	    esac
-	    SHLIB_LD="${CC} -shared ${SHLIB_CFLAGS}"
+	    SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
 	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -6182,7 +6180,7 @@ _ACEOF
 	    ;;
 	NEXTSTEP-*)
 	    SHLIB_CFLAGS=""
-	    SHLIB_LD="cc -nostdlib -r"
+	    SHLIB_LD='${CC} -nostdlib -r'
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadNext.o"
@@ -6292,7 +6290,7 @@ _ACEOF
 	    ;;
 	SINIX*5.4*)
 	    SHLIB_CFLAGS="-K PIC"
-	    SHLIB_LD="cc -G"
+	    SHLIB_LD='${CC} -G'
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
@@ -6346,7 +6344,7 @@ _ACEOF
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
 	    if test "$GCC" = "yes" ; then
-		SHLIB_LD="$CC -shared"
+		SHLIB_LD='${CC} -shared'
 		CC_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 	    else
@@ -6377,7 +6375,7 @@ _ACEOF
 		arch=`isainfo`
 		if test "$arch" = "sparcv9 sparc" ; then
 			if test "$GCC" = "yes" ; then
-			    if test "`gcc -dumpversion | awk -F. '{print $1}'`" -lt "3" ; then
+			    if test "`${CC} -dumpversion | awk -F. '{print $1}'`" -lt "3" ; then
 				{ echo "$as_me:$LINENO: WARNING: 64bit mode not supported with GCC < 3.2 on $system" >&5
 echo "$as_me: WARNING: 64bit mode not supported with GCC < 3.2 on $system" >&2;}
 			    else
@@ -6421,7 +6419,7 @@ echo "$as_me: WARNING: 64bit mode not supported for $arch" >&2;}
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
 	    if test "$GCC" = "yes" ; then
-		SHLIB_LD="$CC -shared"
+		SHLIB_LD='${CC} -shared'
 		CC_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
 		if test "$do64bit_ok" = "yes" ; then
@@ -6434,14 +6432,19 @@ echo "$as_me: WARNING: 64bit mode not supported for $arch" >&2;}
 		    #CC_SEARCH_FLAGS="${CC_SEARCH_FLAGS},-R,$v9gcclibdir"
 		fi
 	    else
-		SHLIB_LD="/usr/ccs/bin/ld -G -z text"
+		case $system in
+		    SunOS-5.[1-9][0-9]*)
+			SHLIB_LD='${CC} -G -z text';;
+		    *)
+			SHLIB_LD='/usr/ccs/bin/ld -G -z text';;
+		esac
 		CC_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
 	    fi
 	    ;;
 	UNIX_SV* | UnixWare-5*)
 	    SHLIB_CFLAGS="-KPIC"
-	    SHLIB_LD="cc -G"
+	    SHLIB_LD='${CC} -G'
 	    SHLIB_LD_LIBS=""
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
