@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.85 2007/09/11 18:24:41 dgp Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.86 2007/09/17 14:58:05 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -2948,7 +2948,7 @@ Initialize(
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_PATCH_LEVEL, 0) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3181,7 +3181,7 @@ Initialize(
 	geometry = NULL;
     }
 
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_PATCH_LEVEL, 0) == NULL) {
+    if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 0) == NULL) {
 	code = TCL_ERROR;
 	goto done;
     }
@@ -3272,6 +3272,50 @@ tkInit");
     return code;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_PkgInitStubsCheck --
+ *
+ *	This is a replacement routine for Tk_InitStubs() that is called
+ *	from code where -DUSE_TK_STUBS has not been enabled.
+ *
+ * Results:
+ *	Returns the version of a conforming Tk stubs table, or NULL, if
+ *	the table version doesn't satisfy the requested requirements,
+ *	according to historical practice.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+CONST char *
+Tk_PkgInitStubsCheck(
+    Tcl_Interp *interp,
+    CONST char * version,
+    int exact)
+{
+    CONST char *actualVersion = Tcl_PkgRequire(interp, "Tk", version, 0);
+
+    if (exact && actualVersion) {
+	CONST char *p = version;
+	int count = 0;
+
+	while (*p) {
+	    count += !isdigit(*p++);
+	}
+	if (count == 1) {
+	    if (0 != strncmp(version, actualVersion, strlen(version))) {
+		return NULL;
+	    }
+	} else {
+	    return Tcl_PkgPresent(interp, "Tk", version, 1);
+	}
+    }
+    return actualVersion;
+}
 /*
  * Local Variables:
  * mode: c
