@@ -1,3 +1,31 @@
+2007-09-17  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConsole.c:	Revised callers of Tcl_InitStubs() to account
+	* generic/tkMain.c:	for restored compatible support for the call
+	* generic/tkWindow.c:	Tcl_InitStubs(interp, TCL_VERSION, 1).  Also
+	revised Tcl_PkgRequire() call for Tcl so that, for example, a Tk
+	library built against Tcl 8.5.1 headers will not refuse to [load]
+	into a Tcl 8.5.0 interpreter.  [Tcl Bug 1578344].
+
+	* generic/tk.h:		Revised Tk_InitStubs() to restore Tk 8.4
+	* generic/tkStubLib.c:	source compatibility with callers of
+	* generic/tkWindow.c:	Tk_InitStubs(interp, TK_VERSION, 1).
+
+2007-09-17  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl:  Try to improve combobox appearance
+	on OSX + Tk 8.5 [#1780286].
+
+2007-09-15  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/tcl.m4: 	replace all direct references to compiler by ${CC} to
+			enable CC overriding at configure & make time; run
+			check for visibility "hidden" with all compilers;
+			quoting fixes from TEA tcl.m4.
+	(SunOS-5.1x):	replace direct use of '/usr/ccs/bin/ld' in SHLIB_LD by
+			'cc' compiler driver.
+	* unix/configure: autoconf-2.59
+
 2007-09-14  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish-Common.xcconfig:		  enable Tcl DTrace support.
