@@ -1,3 +1,8 @@
+2007-09-17  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl:  Try to improve combobox appearance
+	on OSX + Tk 8.5 [#1780286].
+
 2007-09-15  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4: 	replace all direct references to compiler by ${CC} to
