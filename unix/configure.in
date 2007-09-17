@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.137 2007/08/07 05:07:21 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.138 2007/09/17 20:54:42 jenglish Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -315,13 +315,6 @@ fi
 if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
     LIB_RUNTIME_DIR=`echo ${LIB_RUNTIME_DIR} |sed -e 's/:/ -L/g'`
 fi
-
-# The statement below is very tricky!  It actually *evaluates* the
-# string in TCL_CC_SEARCH_FLAGS and TCL_LD_SEARCH_FLAGS which
-# causes a substitution of the variable LIB_RUNTIME_DIR.
-
-eval "CC_SEARCH_FLAGS=\"$TCL_CC_SEARCH_FLAGS\""
-eval "LD_SEARCH_FLAGS=\"$TCL_LD_SEARCH_FLAGS\""
 
 #--------------------------------------------------------------------
 #	Check for the existence of various libraries.  The order here
