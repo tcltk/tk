@@ -1,3 +1,9 @@
+2007-09-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	*** 8.4.16 TAGGED FOR RELEASE ***
+
+	* changes: updates for 8.4.16 release.
+
 2007-09-15  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4 (SunOS-5.1x): 	replace direct use of '/usr/ccs/bin/ld'
