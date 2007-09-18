@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.107 2007/05/16 22:14:37 das Exp $
+RCS: @(#) $Id: changes,v 1.108 2007/09/18 19:40:23 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6325,3 +6325,36 @@ window class of already existing windows.
 to Wish.app's Info.plist.
 
 --- Released 8.5a6, April 25, 2007 --- See ChangeLog for details ---
+
+2007-05-31 (platform support) Aqua: improve interaction of Expose events and
+idle-time redraws.
+
+2007-05-31 (bug fix) Aqua: gridded window max-size calculation.
+
+2007-06-02 (bug fix)[1731734] Aqua: menu cascades outside menubar.
+
+2007-06-06 (platform support) Aqua: enable MouseWheel events in background
+windows.
+
+2007-06-23 (bug fix) Aqua: nav dialog sheet crash.
+
+2007-06-29 (platform support) Aqua: remove private internal declarations from
+installed tkMacOSXInt.h header.
+
+2007-06-29 (bug fix) Aqua: scrollbar thumb size calculation.
+
+2007-07-09 (bug fix) Aqua: app-is-frontmost detection.
+
+2007-07-09 (bug fix) Aqua: window click activation & titlebar click handling
+in presence of grabs or modal windows.
+
+2007-07-25 (bug fix)[1743786] Aqua: tk_getOpenFile result.
+
+2007-08-27 (bug fix)[1782105] Aqua: tk_chooseColor result.
+
+2007-09-06 (platform support) Aqua: drop support for Xcode 1.5 project, add
+project for Xcode 3.0.
+
+2007-09-15 (platform support) SunOS-5.1x link with cc, not ld.
+
+--- Released 8.5b1, September ??, 2007 --- See ChangeLog for details ---
