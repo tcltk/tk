@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.48 2007/09/18 18:24:53 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.49 2007/09/18 19:37:53 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6076,11 +6076,39 @@ to Wish.app's Info.plist (steffen)
 
 --- Released 8.4.15, May 25, 2007 --- See ChangeLog for details ---
 
+2007-05-31 (platform support) Aqua: improve interaction of Expose events and
+idle-time redraws (steffen)
+
+2007-05-31 (bug fix) Aqua: gridded window max-size calculation (steffen)
+
+2007-06-02 (bug fix)[1731734] Aqua: menu cascades outside menubar (steffen)
+
+2007-06-06 (platform support) Aqua: enable MouseWheel events in background
+windows (steffen)
+
 2007-06-09 (bug fix)[1724223] Unicode menu entry crash (hobbs)
 
 2007-06-09 (bug fix)[1467997] Blue/red reversal in icons (hobbs,janssen)
 
+2007-06-23 (bug fix) Aqua: nav dialog sheet crash (steffen)
+
+2007-06-29 (platform support) Aqua: remove private internal declarations from
+installed tkMacOSXInt.h header (steffen)
+
+2007-06-29 (bug fix) Aqua: scrollbar thumb size calculation (steffen)
+
+2007-07-09 (bug fix) Aqua: app-is-frontmost detection (steffen)
+
+2007-07-09 (bug fix) Aqua: window click activation & titlebar click handling
+in presence of grabs or modal windows (steffen)
+
+2007-07-25 (bug fix)[1743786] Aqua: tk_getOpenFile result (steffen)
+
+2007-08-27 (bug fix)[1782105] Aqua: tk_chooseColor result (steffen)
+
 2007-09-11 (platform support) Windows AMD64 support (thoyts)
+
+2007-09-11 (bug fix)[777203] add TK_INCLUDE_SPEC to tkConfig.sh (steffen)
 
 2007-09-11 (bug fix) Animated GIF buffer overrun (max)
 
