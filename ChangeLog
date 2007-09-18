@@ -1,3 +1,9 @@
+2007-09-18  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkStubLib.c:	Remove C library calls from Tk_InitStubs()
+	* win/makefile.vc:	so that we don't need the C library linked
+	in to libtkStub.
+
 2007-09-18  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkImgGIF.c (FileReadGIF, StringReadGIF): Rewrite for greater
