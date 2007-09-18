@@ -1,18 +1,23 @@
+2007-09-18  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgGIF.c (FileReadGIF, StringReadGIF): Rewrite for greater
+	clarity (more comments, saner code arrangement, etc.)
+
 2007-09-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/all.tcl:     Made ttk/all.tcl be the same as tk's
-	* tests/ttk/all.tcl: all.tcl and make use of file normalize 
-	                     (bugs noted by mjanssen and GPS with msys)
+	* tests/all.tcl:     Made ttk/all.tcl be the same as tk's all.tcl and
+	* tests/ttk/all.tcl: make use of file normalize (bugs noted by
+	mjanssen and GPS with msys)
 
 2007-09-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/makefile.vc: Add crt flags for tkStubLib now it uses
-	                   C-library functions
+	* win/makefile.vc: Add crt flags for tkStubLib now it uses C-library
+	functions.
 
 2007-09-17  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tcl.m4: use '${CC} -shared' instead of 'ld -Bshareable' 
-	to build shared libraries on current NetBSDs [#1749251].
+	* unix/tcl.m4: use '${CC} -shared' instead of 'ld -Bshareable' to
+	build shared libraries on current NetBSDs. [#1749251]
 	* unix/configure: regenerated (autoconf-2.59).
 
 2007-09-17  Don Porter  <dgp@users.sourceforge.net>
@@ -21,8 +26,8 @@
 	* generic/tkMain.c:	for restored compatible support for the call
 	* generic/tkWindow.c:	Tcl_InitStubs(interp, TCL_VERSION, 1).  Also
 	revised Tcl_PkgRequire() call for Tcl so that, for example, a Tk
-	library built against Tcl 8.5.1 headers will not refuse to [load]
-	into a Tcl 8.5.0 interpreter.  [Tcl Bug 1578344].
+	library built against Tcl 8.5.1 headers will not refuse to [load] into
+	a Tcl 8.5.0 interpreter. [Tcl Bug 1578344]
 
 	* generic/tk.h:		Revised Tk_InitStubs() to restore Tk 8.4
 	* generic/tkStubLib.c:	source compatibility with callers of
@@ -30,8 +35,8 @@
 
 2007-09-17  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/combobox.tcl:  Try to improve combobox appearance
-	on OSX + Tk 8.5 [#1780286].
+	* library/ttk/combobox.tcl:  Try to improve combobox appearance on
+	OSX + Tk 8.5 [#1780286].
 
 2007-09-15  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -52,23 +57,23 @@
 
 	* win/Makefile.in (install-binaries): Fixed missing brace in the
 	* win/makefile.vc (install-binaries): generated package index file.
-	  Note: unix/Makefile.in is good.
+	Note: unix/Makefile.in is good.
 
 2007-09-11  Reinhard Max  <max@suse.de>
 
 	* generic/tkImgGIF.c: Fixed a buffer overrun that got triggered by
-	multi-frame interlaced GIFs that contain subsequent frames that
-	are smaller than the first one.
+	multi-frame interlaced GIFs that contain subsequent frames that are
+	smaller than the first one.
 
 	* tests/imgPhoto.test: Added a test for the above.
 
 2007-09-11  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConsole.c:	Revised calls to Tcl_InitStubs() and
-	* generic/tkMain.c:	[package require Tcl] so that Tk Says What
-	* generic/tkWindow.c:	It Means using the new facilties of [package]
-	* library/tk.tcl:	in Tcl 8.5 about what version(s) of Tcl it
-	* unix/Makefile.in:	is willing to work with.  [Bug 1578344].
+	* generic/tkMain.c:	[package require Tcl] so that Tk Says What It
+	* generic/tkWindow.c:	Means using the new facilties of [package] in
+	* library/tk.tcl:	Tcl 8.5 about what version(s) of Tcl it is
+	* unix/Makefile.in:	willing to work with. [Bug 1578344]
 	* win/Makefile.in:
 	* win/makefile.vc:
 
@@ -81,8 +86,8 @@
 	* generic/tkConsole.c:	Revise all Tcl_InitStubs() calls to restore
 	* generic/tkMain.c:	the traditional practice that a Tk shared
 	* generic/tkWindow.c:	library may [load] into a Tcl 8.5 interp at
-	any patchlevel.	 This practice also matches the compile time checks
-	of TCL_MAJOR_VERSION and TCL_MINOR_VERSION in tk.h.  [Bug 1723622]
+	any patchlevel.	 This practice also matches the compile time checks of
+	TCL_MAJOR_VERSION and TCL_MINOR_VERSION in tk.h. [Bug 1723622]
 
 2007-09-06  Don Porter  <dgp@users.sourceforge.net>
 
@@ -90,11 +95,11 @@
 	* generic/tkInitScript.h (removed):	script out of tkInitScript.h
 	* macosx/tkMacOSXInit.c:	and multiple TkpInit() routines and
 	* unix/Makefile.in:	into the common Initialize() routine in
-	* unix/tkUnixInit.c:	generic code.  Also removed constraint on
+	* unix/tkUnixInit.c:	generic code. Also removed constraint on
 	* win/tkWinInit.c:	ability to define a custom [tkInit] before
-	calling Tk_Init().  Until now the custom [tkInit] had to be a proc.
-	Now it can be any command.  Removal of tkInitScript.h also fixes
-	[Bug 1656283].
+	calling Tk_Init(). Until now the custom [tkInit] had to be a proc. Now
+	it can be any command. Removal of tkInitScript.h also fixes [Bug
+	1656283].
 
 2007-09-06  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -117,7 +122,7 @@
 2007-09-04  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/Makefile.in:     It's unreliable to count on the release
-	manager to remember to `make genstubs` before `make dist`.  Let the
+	manager to remember to `make genstubs` before `make dist`. Let the
 	Makefile remember the dependency for us.
 
 	* unix/Makefile.in:     Corrections to `make dist` dependencies to be
