@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.38 2007/09/18 12:37:13 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.39 2007/09/18 12:53:09 das Exp $
  */
 
 #include "tkInt.h"
@@ -664,8 +664,8 @@ StringReadGIF(
      * padding of the BASE64 data).
      */
 
-    if (strncmp(GIF87a, (unsigned char *) data, 6)
-	    && strncmp(GIF89a, (unsigned char *) data, 6)) {
+    if (strncmp(GIF87a, (char *) data, 6)
+	    && strncmp(GIF89a, (char *) data, 6)) {
 	xferFormat = INLINE_DATA_BASE64;
     } else {
 	xferFormat = INLINE_DATA_BINARY;
