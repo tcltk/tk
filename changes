@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.47 2007/05/16 22:12:40 das Exp $
+RCS: @(#) $Id: changes,v 1.64.2.48 2007/09/18 18:24:53 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6075,3 +6075,15 @@ to Wish.app's Info.plist (steffen)
 2007-05-15 (bug fix)[1677608] list shimmer crash [grid *configure] (porter)
 
 --- Released 8.4.15, May 25, 2007 --- See ChangeLog for details ---
+
+2007-06-09 (bug fix)[1724223] Unicode menu entry crash (hobbs)
+
+2007-06-09 (bug fix)[1467997] Blue/red reversal in icons (hobbs,janssen)
+
+2007-09-11 (platform support) Windows AMD64 support (thoyts)
+
+2007-09-11 (bug fix) Animated GIF buffer overrun (max)
+
+2007-09-15 (platform support) SunOS-5.1x link with cc, not ld (steffen)
+
+--- Released 8.4.16, September 21, 2007 --- See ChangeLog for details ---
