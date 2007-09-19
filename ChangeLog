@@ -1,3 +1,7 @@
+2007-09-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkStubLib.: Replaced isdigit with internal implementation.
+
 2007-09-18  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkStubLib.c:	Remove C library calls from Tk_InitStubs()
