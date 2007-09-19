@@ -1,3 +1,14 @@
+2007-09-19  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5b1 TAGGED FOR RELEASE ***
+
+	* README:		Bump version number to 8.5b1.
+	* generic/tk.h:		Merge from core-stabilizer-branch.
+	* library/tk.tcl:	Stabilizing toward 8.5b1 release now done
+	* unix/configure.in:	on the HEAD.  core-stabilizer-branch is
+	* unix/tk.spec:		now suspended.
+	* win/configure.in:
+
 2007-09-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkStubLib.: Replaced isdigit with internal implementation.
