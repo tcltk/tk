@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.14.2.2 2007/09/17 15:22:01 dgp Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.14.2.3 2007/09/19 17:28:22 dgp Exp $
  */
 
 /*
@@ -55,6 +55,15 @@ TkIntPlatStubs *tkIntPlatStubsPtr;
 TkIntXlibStubs *tkIntXlibStubsPtr;
 
 /*
+ * Use our own isdigit to avoid linking to libc on windows
+ */
+
+static int isDigit(const int c)
+{
+    return (c >= '0' && c <= '9');
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * Tk_InitStubs --
@@ -95,10 +104,16 @@ Tk_InitStubs(
         int count = 0;
 
         while (*p) {
-            count += !isdigit(*p++);
+            count += !isDigit(*p++);
         }
         if (count == 1) {
-            if (0 != strncmp(version, actualVersion, strlen(version))) {
+	    CONST char *q = actualVersion;
+
+	    p = version;
+	    while (*p && (*p == *q)) {
+		p++; q++;
+	    }
+            if (*p) {
                 return NULL;
             }
         } else {
