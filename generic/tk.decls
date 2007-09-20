@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.32 2007/05/16 21:21:35 das Exp $
+# RCS: @(#) $Id: tk.decls,v 1.33 2007/09/20 18:48:34 das Exp $
 
 library tk
 
@@ -1386,6 +1386,8 @@ declare 10 aqua {
 # complain about them) 
 
 # const char *Tk_InitStubs(Tcl_Interp *interp, const char *version, int exact)
+# const char *Tk_PkgInitStubsCheck(Tcl_Interp *interp, const char *version,
+#	int exact);
 
 # Global variables that need to be exported from the tcl shared library:
 # (listed here _as comments_ so that the 'checkstubs' make target does not 
