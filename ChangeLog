@@ -1,3 +1,8 @@
+2007-09-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkTextDisp.c (LayoutDLine):  Only call callbacks that are
+	* tests/textDisp.test (textDisp-32.3): not NULL. [Bug 1791052]
+
 2007-09-20  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5b1 TAGGED FOR RELEASE ***
