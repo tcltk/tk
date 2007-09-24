@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.110 2007/09/20 21:01:10 das Exp $
+RCS: @(#) $Id: changes,v 1.111 2007/09/24 16:06:16 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6376,5 +6376,7 @@ project for Xcode 3.0 (steffen)
 2007-09-17 (enhancement)[1780286] Aqua: combobox appearance (english)
 
 2007-09-17 (platform support)[1748251] Fix NetBSD link failures (english)
+
+2007-09-20 (bug fix)[1791052] [text] DLine layout crash (khomoutov,fellows)
 
 --- Released 8.5b1, September 26, 2007 --- See ChangeLog for details ---
