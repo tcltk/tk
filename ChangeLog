@@ -1,3 +1,14 @@
+2007-10-02  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.4.17
+	* generic/tk.h:
+	* unix/configure.in:	Removed "es_ES" entry in LOCALES
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.13
+	* win/configure:
+
 2007-09-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.4.16 TAGGED FOR RELEASE ***
