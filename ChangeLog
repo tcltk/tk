@@ -1,3 +1,48 @@
+2007-10-02  Don Porter  <dgp@users.sourceforge.net>
+
+	[core-stabilizer-branch]
+
+	* README:               Bump version number to 8.5.0
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:	Updated LOCALES.
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf (2.59)
+	* win/configure:
+
+2007-09-30  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/entry.tcl (WordBack, WordForward):
+	Fix private routines accidentally defined in global namespace
+	[Bug 1803836]
+
+2007-09-26  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/msgs/hu.msg: Added Hungarian message set, from Pader Reszo.
+	[Patch 1800742]
+
+2007-09-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	*** 8.5b1 TAGGED FOR RELEASE ***
+
+	* generic/tkTextDisp.c (LayoutDLine):  Only call callbacks that are
+	* tests/textDisp.test (textDisp-32.3): not NULL. [Bug 1791052]
+
+2007-09-20  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes: updates for 8.5b1 release.
+
+2007-09-19  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.5b1.
+	* generic/tk.h:		Merge from core-stabilizer-branch.
+	* library/tk.tcl:	Stabilizing toward 8.5b1 release now done
+	* unix/configure.in:	on the HEAD.  core-stabilizer-branch is
+	* unix/tk.spec:		now suspended.
+	* win/configure.in:
+
 2007-09-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkStubLib.: Replaced isdigit with internal implementation.

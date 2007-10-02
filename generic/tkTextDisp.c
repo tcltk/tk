@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.63.2.2 2007/09/07 01:25:36 dgp Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.63.2.3 2007/10/02 20:43:53 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -1551,6 +1551,7 @@ LayoutDLine(
 		 */
 
 		TkTextLine *linePtr = TkBTreeNextLine(NULL, curIndex.linePtr);
+
 		if (linePtr != NULL) {
 		    dlPtr->logicalLinesMerged++;
 		    curIndex.byteIndex = 0;
@@ -1609,11 +1610,15 @@ LayoutDLine(
 	    }
 	    FreeStyle(textPtr, chunkPtr->stylePtr);
 	    breakChunkPtr->nextPtr = chunkPtr->nextPtr;
-	    (*chunkPtr->undisplayProc)(textPtr, chunkPtr);
+	    if (chunkPtr->undisplayProc != NULL) {
+		(*chunkPtr->undisplayProc)(textPtr, chunkPtr);
+	    }
 	    ckfree((char *) chunkPtr);
 	}
 	if (breakByteOffset != breakChunkPtr->numBytes) {
-	    (*breakChunkPtr->undisplayProc)(textPtr, breakChunkPtr);
+	    if (breakChunkPtr->undisplayProc != NULL) {
+		(*breakChunkPtr->undisplayProc)(textPtr, breakChunkPtr);
+	    }
 	    segPtr = TkTextIndexToSeg(&breakIndex, &byteOffset);
 	    (*segPtr->typePtr->layoutProc)(textPtr, &breakIndex,
 		    segPtr, byteOffset, maxX, breakByteOffset, 0,
