@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.33 2007/09/07 00:34:52 dgp Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.34 2007/10/09 12:34:34 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -574,7 +574,9 @@ Tk_GetImage(
     return (Tk_Image) imagePtr;
 
   noSuchImage:
-    Tcl_AppendResult(interp, "image \"", name, "\" doesn't exist", NULL);
+    if (interp) {
+	Tcl_AppendResult(interp, "image \"", name, "\" doesn't exist", NULL);
+    }
     return NULL;
 }
 
