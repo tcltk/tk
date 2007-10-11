@@ -1,3 +1,8 @@
+2007-10-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* library/msgs/hu.msg: Added message catalog for Hungarian.
+	[Patch 1800742] (rezso)
+
 2007-10-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (TkMacOSXGrowToplevel): manually constrain resize
