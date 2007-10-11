@@ -1,3 +1,9 @@
+2007-10-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (TkMacOSXGrowToplevel): manually constrain resize
+	limitBounds to maxBounds, works around SectRect() mis-feature (return
+	zero rect if input rect has zero height/width). [Bug 1810818]
+
 2007-10-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkImage.c:     Make Ttk_GetImage safe if called with NULL
