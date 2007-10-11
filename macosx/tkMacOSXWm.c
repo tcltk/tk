@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.42 2007/06/29 03:22:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.43 2007/10/11 14:13:59 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -4528,7 +4528,18 @@ TkMacOSXGrowToplevel(
 	    limitBounds.top = limits.top + (strBounds.top + strWidths.top);
 	    limitBounds.bottom = limits.bottom +
 		    (strBounds.top + strWidths.top + strWidths.bottom);
-	    SectRect(&limitBounds, maxBounds, &limitBounds);
+	    if (limitBounds.left < maxBounds->left) {
+		limitBounds.left = maxBounds->left;
+	    }
+	    if (limitBounds.right > maxBounds->right) {
+		limitBounds.right = maxBounds->right;
+	    }
+	    if (limitBounds.top < maxBounds->top) {
+		limitBounds.top = maxBounds->top;
+	    }
+	    if (limitBounds.bottom > maxBounds->bottom) {
+		limitBounds.bottom = maxBounds->bottom;
+	    }
 	    limits.left = limitBounds.left - (strBounds.left + strWidths.left);
 	    limits.right = limitBounds.right -
 		    (strBounds.left + strWidths.left + strWidths.right);
