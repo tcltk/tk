@@ -1,3 +1,10 @@
+2007-10-11  David Gravereaux <davygrvy@pobox.com>
+
+	* win/winMain.c:  Replaced incorrect comments in main() to descibe
+	why the console widget does not need to be created for this
+	application entry point (if used).  Must have been a bad copy/paste
+	of WinMain() from 10 years back.
+
 2007-10-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (TkMacOSXGrowToplevel): manually constrain resize
