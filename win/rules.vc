@@ -11,7 +11,7 @@
 # Copyright (c) 2003-2007 Patrick Thoyts
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.17 2007/10/12 14:14:54 patthoyts Exp $
+# RCS: @(#) $Id: rules.vc,v 1.18 2007/10/12 18:56:33 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -581,6 +581,7 @@ TCL_INCLUDES	= -I"$(_TCLDIR)\generic" -I"$(_TCLDIR)\win"
 
 !if "$(PROJECT)" == "tk"
 _TK_H          = ..\generic\tk.h
+_INSTALLDIR    = $(_INSTALLDIR)\..
 !endif
 
 !ifdef PROJECT_REQUIRES_TK
