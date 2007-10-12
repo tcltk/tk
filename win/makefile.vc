@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.109 2007/10/12 18:56:33 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.110 2007/10/12 19:01:07 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -946,13 +946,13 @@ package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TK
 #"
 
 install-libraries:
-	@echo installing Tk headers to "$(INCLUDE_INSTALL_DIR)"
+	@echo installing Tk headers
 	@$(CPY) "$(GENERICDIR)\tk.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
-	@echo installing script library to "$(SCRIPT_INSTALL_DIR)"
+	@echo installing script library
 	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
 	@echo installing theme library
 	@$(CPY) "$(ROOT)\library\ttk\*" "$(SCRIPT_INSTALL_DIR)\ttk\"
