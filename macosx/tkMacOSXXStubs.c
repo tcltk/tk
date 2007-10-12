@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.23 2007/07/04 17:32:39 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.24 2007/10/12 03:13:55 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -706,15 +706,7 @@ XSetClipRectangles(
     int n,
     int ordering)
 {
-    TkRegion clipRgn;
-
-    if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
-	    == TKP_CLIP_REGION) {
-	clipRgn = ((TkpClipMask*)gc->clip_mask)->value.region;
-	SetEmptyRgn((RgnHandle) clipRgn);
-    } else {
-	clipRgn = TkCreateRegion(); /* LEAK! */
-    }
+    TkRegion clipRgn = TkCreateRegion();
 
     while (n--) {
 	XRectangle rect = *rectangles;
@@ -725,6 +717,7 @@ XSetClipRectangles(
 	rectangles++;
     }
     TkSetRegion(d, gc, clipRgn);
+    TkDestroyRegion(clipRgn);
     return 1;
 }
 #endif
