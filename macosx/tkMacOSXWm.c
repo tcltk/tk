@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.56 2007/10/11 14:13:41 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.57 2007/10/12 03:14:48 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -5864,6 +5864,7 @@ ApplyWindowClassAttributeChanges(
 		    ChkErr(HIGrowBoxViewSetTransparent, growBoxView, true);
 		}
 	    }
+	    TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 	    TkMacOSXInvalidateWindow((MacDrawable *)(winPtr->window),
 		    TK_PARENT_WINDOW);
 	}

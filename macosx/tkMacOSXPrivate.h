@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.2 2007/08/23 10:44:57 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.3 2007/10/12 03:14:48 das Exp $
  */
 
 #ifndef _TKMACPRIV
@@ -252,6 +252,7 @@ typedef struct TkMacOSXDrawingContext {
     CGrafPtr port, savePort;
     ThemeDrawingState saveState;
     RgnHandle saveClip;
+    HIShapeRef clipRgn;
     PixPatHandle penPat;
     Rect portBounds;
     Boolean portChanged;
@@ -263,6 +264,33 @@ typedef struct TkMacOSXDrawingContext {
 
 MODULE_SCOPE RgnHandle tkMacOSXtmpQdRgn;
 MODULE_SCOPE int tkMacOSXUseCGDrawing;
+
+/*
+ * Prototypes for TkMacOSXRegion.c.
+ */
+
+#if 0
+MODULE_SCOPE void TkMacOSXEmtpyRegion(TkRegion r);
+MODULE_SCOPE int TkMacOSXIsEmptyRegion(TkRegion r);
+#endif
+MODULE_SCOPE HIShapeRef TkMacOSXGetNativeRegion(TkRegion r);
+MODULE_SCOPE void TkMacOSXSetWithNativeRegion(TkRegion r, HIShapeRef rgn);
+MODULE_SCOPE void TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
+MODULE_SCOPE HIShapeRef TkMacOSXHIShapeCreateEmpty(void);
+MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
+	const CGRect *inRect);
+MODULE_SCOPE OSStatus  TkMacOSXHIShapeSetWithShape(
+	HIMutableShapeRef inDestShape, HIShapeRef inSrcShape);
+#if 0
+MODULE_SCOPE OSStatus TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
+	const CGRect *inRect);
+#endif
+MODULE_SCOPE OSStatus TkMacOSHIShapeDifferenceWithRect(
+	HIMutableShapeRef inShape, const CGRect *inRect);
+MODULE_SCOPE OSStatus TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
+	const CGRect *inRect);
+MODULE_SCOPE OSStatus TkMacOSHIShapeUnion(HIShapeRef inShape1,
+	HIShapeRef inShape2, HIMutableShapeRef outResult);
 
 /*
  * Prototypes of TkAqua internal procs.
@@ -285,8 +313,8 @@ MODULE_SCOPE int TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
 MODULE_SCOPE int TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
-    TkMacOSXDrawingContext *dc);
-MODULE_SCOPE void TkMacOSXRestoreDrawingContext(TkMacOSXDrawingContext *dc);
+    TkMacOSXDrawingContext *dcPtr);
+MODULE_SCOPE void TkMacOSXRestoreDrawingContext(TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void TkMacOSXSetColorInPort(unsigned long pixel, int fg,
 	PixPatHandle penPat, CGrafPtr port);
 MODULE_SCOPE void TkMacOSXSetColorInContext(unsigned long pixel,
@@ -303,5 +331,7 @@ MODULE_SCOPE int TkMacOSXMakeFullscreen(TkWindow *winPtr, WindowRef window,
 MODULE_SCOPE void TkMacOSXEnterExitFullscreen(TkWindow *winPtr, int active);
 MODULE_SCOPE void TkMacOSXBringWindowForward(WindowRef wRef);
 MODULE_SCOPE WindowRef TkMacOSXDrawableWindow(Drawable drawable);
+MODULE_SCOPE void TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
+MODULE_SCOPE HIShapeRef TkMacOSXGetClipRgn(Drawable drawable);
 
 #endif /* _TKMACPRIV */

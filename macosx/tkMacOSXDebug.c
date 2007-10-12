@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.14 2007/06/29 03:20:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.15 2007/10/12 03:14:48 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -456,19 +456,28 @@ TkMacOSXMouseTrackingResultToAscii(MouseTrackingResult r, char * buf)
 MODULE_SCOPE void
 TkMacOSXDebugFlashRegion(
     Drawable d,
-    RgnHandle rgn)
+    HIShapeRef rgn)
 {
     TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
 	    CGrafPtr port, RgnHandle region);
-    if (d && rgn && QDDebugFlashRegion && !EmptyRgn(rgn)) {
+    CFShow(rgn);
+    if (d && rgn && QDDebugFlashRegion && !HIShapeIsEmpty(rgn)) {
 	CGrafPtr port = TkMacOSXGetDrawablePort(d);
 
 	if (port) {
+	    static RgnHandle qdRgn = NULL;
+
+	    if (!qdRgn) {
+		qdRgn = NewRgn();
+	    }
+	    ChkErr(HIShapeGetAsQDRgn, rgn, qdRgn);
+
 	    /*
 	     * Carbon-internal region flashing SPI (c.f. Technote 2124)
 	     */
 
-	    QDDebugFlashRegion(port, rgn);
+	    QDDebugFlashRegion(port, qdRgn);
+	    SetEmptyRgn(qdRgn);
 	}
     }
 }

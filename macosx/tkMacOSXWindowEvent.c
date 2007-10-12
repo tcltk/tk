@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.28 2007/07/09 08:31:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.29 2007/10/12 03:14:48 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -73,10 +73,10 @@
  */
 
 static int GenerateUpdateEvent(Window window);
-static int GenerateUpdates(RgnHandle updateRgn, Rect *updateBounds,
+static int GenerateUpdates(HIMutableShapeRef updateRgn, CGRect *updateBounds,
 	TkWindow *winPtr);
 static int GenerateActivateEvents(Window window, int activeFlag);
-static void ClearPort(CGrafPtr port, RgnHandle updateRgn);
+static void ClearPort(CGrafPtr port, HIShapeRef updateRgn);
 
 
 /*
@@ -430,12 +430,14 @@ TkMacOSXProcessWindowEvent(
 static int
 GenerateUpdateEvent(Window window)
 {
-    CGrafPtr destPort;
     WindowRef macWindow;
     TkDisplay *dispPtr;
     TkWindow  *winPtr;
     int result = 0;
-    Rect updateBounds, bounds;
+    CGRect updateBounds;
+    HIShapeRef rgn;
+    HIMutableShapeRef updateRgn;
+    int dx, dy;
 
     dispPtr = TkGetDisplayList();
     winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, window);
@@ -443,24 +445,37 @@ GenerateUpdateEvent(Window window)
     if (winPtr ==NULL ){
 	return result;
     }
-    TkMacOSXCheckTmpQdRgnEmpty();
-    destPort = TkMacOSXGetDrawablePort(window);
-    macWindow = GetWindowFromPort(destPort);
-    ChkErr(GetWindowRegion, macWindow, kWindowUpdateRgn, tkMacOSXtmpQdRgn);
-    ChkErr(GetWindowBounds, macWindow, kWindowContentRgn, &bounds);
-    OffsetRgn(tkMacOSXtmpQdRgn, -bounds.left, -bounds.top);
-    SectRegionWithPortVisibleRegion(destPort, tkMacOSXtmpQdRgn);
-    GetRegionBounds(tkMacOSXtmpQdRgn, &updateBounds);
+    macWindow = TkMacOSXDrawableWindow(window);
+    TK_IF_MAC_OS_X_API (5, HIWindowCopyShape,
+	ChkErr(HIWindowCopyShape, macWindow, kWindowUpdateRgn,
+		kHICoordSpaceWindow, &rgn);
+	dx = -winPtr->wmInfoPtr->xInParent;
+	dy = -winPtr->wmInfoPtr->yInParent;
+    ) TK_ELSE_MAC_OS_X (5,
+	Rect bounds;
+
+	TkMacOSXCheckTmpQdRgnEmpty();
+	ChkErr(GetWindowRegion, macWindow, kWindowUpdateRgn, tkMacOSXtmpQdRgn);
+	rgn = HIShapeCreateWithQDRgn(tkMacOSXtmpQdRgn);
+	SetEmptyRgn(tkMacOSXtmpQdRgn);
+	ChkErr(GetWindowBounds, macWindow, kWindowContentRgn, &bounds);
+	dx = -bounds.left;
+	dy = -bounds.top;
+    ) TK_ENDIF
+    updateRgn = HIShapeCreateMutableCopy(rgn);
+    CFRelease(rgn);
+    ChkErr(HIShapeOffset, updateRgn, dx, dy);
+    HIShapeGetBounds(updateRgn, &updateBounds);
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-    TkMacOSXDebugFlashRegion(window, tkMacOSXtmpQdRgn);
+    TkMacOSXDebugFlashRegion(window, updateRgn);
 #endif /* TK_MAC_DEBUG_CLIP_REGIONS */
     BeginUpdate(macWindow);
     if (winPtr->wmInfoPtr->flags & WM_TRANSPARENT) {
-	ClearPort(destPort, tkMacOSXtmpQdRgn);
+	ClearPort(TkMacOSXGetDrawablePort(window), updateRgn);
     }
-    result = GenerateUpdates(tkMacOSXtmpQdRgn, &updateBounds, winPtr);
+    result = GenerateUpdates(updateRgn, &updateBounds, winPtr);
     EndUpdate(macWindow);
-    SetEmptyRgn(tkMacOSXtmpQdRgn);
+    CFRelease(updateRgn);
     if (result) {
 	/*
 	 * Ensure there are no pending idle-time redraws that could prevent
@@ -493,50 +508,51 @@ GenerateUpdateEvent(Window window)
 
 static int
 GenerateUpdates(
-    RgnHandle updateRgn,
-    Rect *updateBounds,
+    HIMutableShapeRef updateRgn,
+    CGRect *updateBounds,
     TkWindow *winPtr)
 {
     TkWindow *childPtr;
     XEvent event;
-    Rect bounds, damageBounds;
-    static RgnHandle damageRgn = NULL;
+    CGRect bounds, damageBounds;
+    HIShapeRef boundsRgn, damageRgn;
 
-    TkMacOSXWinBounds(winPtr, &bounds);
-    if (bounds.top > updateBounds->bottom ||
-	updateBounds->top > bounds.bottom ||
-	bounds.left > updateBounds->right ||
-	updateBounds->left > bounds.right) {
+    TkMacOSXWinCGBounds(winPtr, &bounds);
+    if (!CGRectIntersectsRect(bounds, *updateBounds)) {
 	return 0;
     }
-    if (!RectInRgn(&bounds, updateRgn)) {
-	return 0;
-    }
+    TK_IF_MAC_OS_X_API (4, HIShapeIntersectsRect,
+	if (!HIShapeIntersectsRect(updateRgn, &bounds)) {
+	    return 0;
+	}
+    ) TK_ENDIF
 
     /*
      * Compute the bounding box of the area that the damage occured in.
      */
 
-    if (damageRgn == NULL) {
-	damageRgn = NewRgn();
+    boundsRgn = HIShapeCreateWithRect(&bounds);
+    damageRgn = HIShapeCreateIntersection(updateRgn, boundsRgn);
+    if (HIShapeIsEmpty(damageRgn)) {
+	CFRelease(damageRgn);
+	CFRelease(boundsRgn);
+	return 0;
     }
-    RectRgn(damageRgn, &bounds);
-    SectRgn(damageRgn, updateRgn, damageRgn);
-    GetRegionBounds(damageRgn, &damageBounds);
-    RectRgn(damageRgn, &bounds);
-    UnionRgn(damageRgn, updateRgn, updateRgn);
-    GetRegionBounds(updateRgn, updateBounds);
-    SetEmptyRgn(damageRgn);
+    HIShapeGetBounds(damageRgn, &damageBounds);
+    ChkErr(TkMacOSHIShapeUnion, boundsRgn, updateRgn, updateRgn);
+    HIShapeGetBounds(updateRgn, updateBounds);
+    CFRelease(damageRgn);
+    CFRelease(boundsRgn);
 
     event.xany.serial = Tk_Display(winPtr)->request;
     event.xany.send_event = false;
     event.xany.window = Tk_WindowId(winPtr);
     event.xany.display = Tk_Display(winPtr);
     event.type = Expose;
-    event.xexpose.x = damageBounds.left - bounds.left;
-    event.xexpose.y = damageBounds.top - bounds.top;
-    event.xexpose.width = damageBounds.right - damageBounds.left;
-    event.xexpose.height = damageBounds.bottom - damageBounds.top;
+    event.xexpose.x = damageBounds.origin.x - bounds.origin.x;
+    event.xexpose.y = damageBounds.origin.y - bounds.origin.y;
+    event.xexpose.width = damageBounds.size.width;
+    event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
@@ -945,7 +961,7 @@ Tk_MacOSXIsAppInFront(void)
 static void
 ClearPort(
     CGrafPtr port,
-    RgnHandle updateRgn)
+    HIShapeRef updateRgn)
 {
     CGContextRef context;
     Rect bounds;
@@ -957,7 +973,8 @@ ClearPort(
     CGContextConcatCTM(context, CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0,
 	    bounds.bottom - bounds.top));
     if (updateRgn) {
-	ClipCGContextToRegion(context, &bounds, updateRgn);
+	ChkErr(HIShapeReplacePathInCGContext, updateRgn, context);
+	CGContextEOClip(context);
     }
     rect = CGRectMake(0, 0, bounds.right, bounds.bottom);
     CGContextClearRect(context, rect);

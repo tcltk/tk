@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.29 2007/08/23 10:44:57 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.30 2007/10/12 03:14:48 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -39,9 +39,9 @@ struct TkWindowPrivate {
     ControlRef rootControl;
     int xOff;			/* X offset from toplevel window */
     int yOff;			/* Y offset from toplevel window */
-    RgnHandle clipRgn;		/* Visible region of window */
-    RgnHandle aboveClipRgn;	/* Visible region of window & its children */
-    RgnHandle drawRgn;		/* Clipped drawing region */
+    HIShapeRef visRgn;		/* Visible region of window */
+    HIShapeRef aboveVisRgn;	/* Visible region of window & its children */
+    CGRect drawRect;		/* Clipped drawing rect */
     int referenceCount;		/* Don't delete toplevel until children are
 				 * gone. */
     struct TkWindowPrivate *toplevel;
@@ -71,6 +71,7 @@ typedef struct TkMacOSXWindowList {
 #define TK_HOST_EXISTS		0x04
 #define TK_DRAWN_UNDER_MENU	0x08
 #define TK_CLIPPED_DRAW		0x10
+#define TK_IS_PIXMAP		0x20
 
 /*
  * I am reserving TK_EMBEDDED = 0x100 in the MacDrawable flags
@@ -165,6 +166,8 @@ MODULE_SCOPE int XSetClipRectangles(Display *d, GC gc, int clip_x_origin,
 #endif
 MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 	int y, int width, int height);
+MODULE_SCOPE void TkpRetainRegion(TkRegion r);
+MODULE_SCOPE void TkpReleaseRegion(TkRegion r);
 
 /*
  * Include the stubbed internal platform-specific API.
