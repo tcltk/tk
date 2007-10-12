@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.24 2007/09/07 00:34:58 dgp Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.25 2007/10/12 01:39:15 davygrvy Exp $
  */
 
 #include "tkInt.h"
@@ -274,9 +274,8 @@ main(
     setlocale(LC_ALL, "C");
 
     /*
-     * Create the console channels and install them as the standard channels.
-     * All I/O will be discarded until Tk_CreateConsoleWindow is called to
-     * attach the console to a text widget.
+     * Console emulation widget not required as this entry is from the
+     * console subsystem, thus stdin,out,err already have end-points.
      */
 
     consoleRequired = FALSE;
