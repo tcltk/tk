@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.28 2007/06/29 03:20:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.29 2007/10/12 03:14:48 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1054,8 +1054,10 @@ TkpDrawCharsInContext(
     Tcl_DString runString;
 #endif
 
-    TkMacOSXSetupDrawingContext(drawable, gc, tkMacOSXUseCGDrawing,
-	    &drawingContext);
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, tkMacOSXUseCGDrawing,
+	    &drawingContext)) {
+	return;
+    }
 
 #if 0
     /*

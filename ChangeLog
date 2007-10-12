@@ -1,3 +1,54 @@
+2007-10-12  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDraw.c:	replace all (internal) use of QD region
+	* macosx/tkMacOSXSubwindows.c:	API by HIShape API, with conversion to
+	* macosx/tkMacOSXWindowEvent.c	QD regions only when required by legacy
+	* macosx/tkMacOSXPrivate.h:	Carbon or Tk API.
+	* macosx/tkMacOSXRegion.c:
+	* macosx/tkMacOSXDebug.c:
+	* macosx/tkMacOSXDebug.h:
+
+	* macosx/tkMacOSXInt.h:		replace MacDrawable's QD RgnHandles
+	* macosx/tkMacOSXEmbed.c:	clipRgn, aboveClipRgn & drawRgn by
+	* macosx/tkMacOSXMenu.c:	HIShapeRefs visRgn & aboveVisRgn and
+	* macosx/tkMacOSXSubwindows.c:	CGRect drawRect.
+
+	* macosx/tkMacOSXWindowEvent.c:	remove use of QD port vis rgn in window
+	* macosx/tkMacOSXSubwindows.c:	update rgn calculation, manually excise
+	* macosx/tkMacOSXWm.c:		growbox from toplevel clip rgn instead.
+
+	* macosx/tkMacOSXDraw.c:	replace use of QD port clip rgn by new
+	* macosx/tkMacOSXPrivate.h:	clipRgn fld in TkMacOSXDrawingContext;
+					handle QD/CG drawing mismatches in
+					XCopyArea, XCopyPlane and TkPutImage;
+					cleanup/speedup CGContext setup in
+					TkMacOSXSetupDrawingContext().
+
+	* macosx/tkMacOSXDraw.c:	change TkMacOSXSetupDrawingContext() to
+	* macosx/tkMacOSXEntry.c:	return boolean indicating whether
+	* macosx/tkMacOSXFont.c:	drawing is allowed (and was setup) or
+	* macosx/tkMacOSXMenu.c:	not (e.g. when clipRgn is empty).
+	* macosx/ttkMacOSXTheme.c:
+
+	* macosx/tkMacOSXSubwindows.c:	signal that drawable is a pixmap via
+	* macosx/tkMacOSXInt.h:		new explicit TK_IS_PIXMAP flag instead
+					of a NULL cligRgn field.
+
+	* macosx/tkMacOSXRegion.c:	add wrappers for missing/buggy HIShape
+	* macosx/tkMacOSXPrivate.h:	API, and private helpers to operate on
+					HIShapeRefs & convert to/from TkRegion.
+
+	* macosx/tkMacOSXRegion.c:	add Tkp{Retain,Release}Region() API for
+	* macosx/tkMacOSXInt.h:		TkRegion.
+
+	* xlib/xgc.c:			factor out alloc/free of GC clip_mask;
+	* macosx/tkMacOSXXStubs.c:	manage clip rgn lifetime with new
+					Tkp{Retain,Release}Region().
+
+	* macosx/tkMacOSXButton.c:	delay picParams setup until needed.
+
+	* generic/tkTextDisp.c (CharUndisplayProc): fix textDisp.test crash.
+
 2007-10-11  David Gravereaux <davygrvy@pobox.com>
 
 	* win/winMain.c:  Replaced incorrect comments in main() to descibe
