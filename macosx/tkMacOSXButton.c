@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.27 2007/06/29 03:20:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.28 2007/10/12 03:06:37 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -80,8 +80,6 @@ typedef struct {
      * The following are used to store the image content for
      * beveled buttons, i.e. buttons with images.
      */
-    CCTabHandle tabHandle;
-    Pixmap picPixmap;
     ControlButtonContentInfo bevelButtonContent;
     OpenCPicParams picParams;
 } MacButton;
@@ -154,14 +152,6 @@ TkpCreateButton(
     macButtonPtr->control = NULL;
     macButtonPtr->controlTitle[0] = 0;
     macButtonPtr->controlTitle[1] = 0;
-    macButtonPtr->picParams.version = -2;
-    macButtonPtr->picParams.hRes = 0x00480000;
-    macButtonPtr->picParams.vRes = 0x00480000;
-    macButtonPtr->picParams.srcRect.top = 0;
-    macButtonPtr->picParams.srcRect.left = 0;
-    macButtonPtr->picParams.reserved1 = 0;
-    macButtonPtr->picParams.reserved2 = 0;
-    macButtonPtr->bevelButtonContent.contentType = kControlContentPictHandle;
     bzero(&macButtonPtr->params, sizeof(macButtonPtr->params));
     bzero(&macButtonPtr->fontStyle,sizeof(macButtonPtr->fontStyle));
 
@@ -1062,9 +1052,7 @@ SetupBevelButton(
     int height, width;
     ControlButtonGraphicAlignment theAlignment;
     CGrafPtr savePort;
-    Boolean portChanged;
-
-    portChanged = QDSwapPort(destPort, &savePort);
+    Boolean portChanged = false;
 
     if (butPtr->image != None) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
@@ -1079,13 +1067,17 @@ SetupBevelButton(
 	height = butPtr->height;
     }
 
+    portChanged = QDSwapPort(destPort, &savePort);
+    mbPtr->picParams.version = -2;
+    mbPtr->picParams.hRes = 0x00480000;
+    mbPtr->picParams.vRes = 0x00480000;
+    mbPtr->picParams.srcRect.top = 0;
+    mbPtr->picParams.srcRect.left = 0;
     mbPtr->picParams.srcRect.right = width;
     mbPtr->picParams.srcRect.bottom = height;
-
-    /*
-     * Set the flag to circumvent clipping and bounds problems with OS 10.0.4
-     */
-
+    mbPtr->picParams.reserved1 = 0;
+    mbPtr->picParams.reserved2 = 0;
+    mbPtr->bevelButtonContent.contentType = kControlContentPictHandle;
     mbPtr->bevelButtonContent.u.picture = OpenCPicture(&mbPtr->picParams);
     if (!mbPtr->bevelButtonContent.u.picture) {
 	TkMacOSXDbgMsg("OpenCPicture failed");
@@ -1113,9 +1105,12 @@ SetupBevelButton(
 
     ClosePicture();
     tkPictureIsOpen = 0;
-
+    if (portChanged) {
+	QDSwapPort(savePort, NULL);
+    }
     ChkErr(SetControlData, controlHandle, kControlButtonPart,
-	    kControlBevelButtonContentTag, sizeof(ControlButtonContentInfo),
+	    kControlBevelButtonContentTag,
+	    sizeof(ControlButtonContentInfo),
 	    (char *) &mbPtr->bevelButtonContent);
 
     if (butPtr->anchor == TK_ANCHOR_N) {
@@ -1137,7 +1132,6 @@ SetupBevelButton(
     } else if (butPtr->anchor == TK_ANCHOR_CENTER) {
 	theAlignment = kControlBevelButtonAlignCenter;
     }
-
     ChkErr(SetControlData, controlHandle, kControlButtonPart,
 	    kControlBevelButtonGraphicAlignTag,
 	    sizeof(ControlButtonGraphicAlignment), (char *) &theAlignment);
@@ -1158,9 +1152,6 @@ SetupBevelButton(
 	ChkErr(SetControlData, controlHandle, kControlButtonPart,
 		kControlBevelButtonTextPlaceTag,
 		sizeof(ControlButtonTextPlacement), (char *) &thePlacement);
-    }
-    if (portChanged) {
-	QDSwapPort(savePort, NULL);
     }
 }
 
