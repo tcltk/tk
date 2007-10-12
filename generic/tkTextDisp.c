@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.66 2007/09/20 22:59:40 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.67 2007/10/12 03:06:08 das Exp $
  */
 
 #include "tkInt.h"
@@ -7515,32 +7515,34 @@ CharUndisplayProc(
 {
     CharInfo *ciPtr = (CharInfo *) chunkPtr->clientData;
 
+    if (ciPtr) {
 #if TK_LAYOUT_WITH_BASE_CHUNKS
-    if (chunkPtr == ciPtr->baseChunkPtr) {
-	/*
-	 * Basechunks are undisplayed first, when DLines are freed or
-	 * partially freed, so this makes sure we don't access their data any
-	 * more.
-	 */
+	if (chunkPtr == ciPtr->baseChunkPtr) {
+	    /*
+	     * Basechunks are undisplayed first, when DLines are freed or
+	     * partially freed, so this makes sure we don't access their data
+	     * any more.
+	     */
 
-	FreeBaseChunk(chunkPtr);
-    } else if (ciPtr->baseChunkPtr != NULL) {
-	/*
-	 * When other char chunks are undisplayed, drop their characters from
-	 * the base chunk. This usually happens, when they are last in a line
-	 * and need to be re-layed out.
-	 */
+	    FreeBaseChunk(chunkPtr);
+	} else if (ciPtr->baseChunkPtr != NULL) {
+	    /*
+	     * When other char chunks are undisplayed, drop their characters
+	     * from the base chunk. This usually happens, when they are last
+	     * in a line and need to be re-layed out.
+	     */
 
-	RemoveFromBaseChunk(chunkPtr);
-    }
+	    RemoveFromBaseChunk(chunkPtr);
+	}
 
-    ciPtr->baseChunkPtr = NULL;
-    ciPtr->chars = NULL;
-    ciPtr->numBytes = 0;
+	ciPtr->baseChunkPtr = NULL;
+	ciPtr->chars = NULL;
+	ciPtr->numBytes = 0;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-    ckfree((char *) ciPtr);
-    chunkPtr->clientData = NULL;
+	ckfree((char *) ciPtr);
+	chunkPtr->clientData = NULL;
+    }
 }
 
 /*
