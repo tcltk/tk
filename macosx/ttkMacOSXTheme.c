@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.7.2.1 2007/07/01 17:31:39 dgp Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.7.2.2 2007/10/15 18:38:36 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -35,7 +35,7 @@
 
 #define BEGIN_DRAWING(d) { \
 	TkMacOSXDrawingContext dc; \
-	TkMacOSXSetupDrawingContext((d), NULL, 0, &dc);
+	if (!TkMacOSXSetupDrawingContext((d), NULL, 0, &dc)) {return;}
 #define END_DRAWING \
 	TkMacOSXRestoreDrawingContext(&dc); }
 

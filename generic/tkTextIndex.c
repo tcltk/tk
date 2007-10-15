@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.25.2.1 2007/09/07 01:25:36 dgp Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.25.2.2 2007/10/15 18:38:33 dgp Exp $
  */
 
 #include "default.h"
@@ -61,11 +61,11 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
 #define GET_TEXTINDEX(objPtr) \
 	((TkTextIndex *) (objPtr)->internalRep.twoPtrValue.ptr1)
 #define GET_INDEXEPOCH(objPtr) \
-	((int) (objPtr)->internalRep.twoPtrValue.ptr2)
+	(PTR2INT((objPtr)->internalRep.twoPtrValue.ptr2))
 #define SET_TEXTINDEX(objPtr, indexPtr) \
 	((objPtr)->internalRep.twoPtrValue.ptr1 = (VOID *) (indexPtr))
 #define SET_INDEXEPOCH(objPtr, epoch) \
-	((objPtr)->internalRep.twoPtrValue.ptr2 = (VOID *) (epoch))
+	((objPtr)->internalRep.twoPtrValue.ptr2 = INT2PTR(epoch))
 
 /*
  * Define the 'textindex' object type, which Tk uses to represent indices in
