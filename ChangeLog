@@ -1,3 +1,14 @@
+2007-10-15  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish-Common.xcconfig:		add 'tktest-X11' target.
+	* macosx/Wish.xcode/project.pbxproj:
+	* macosx/Wish.xcode/default.pbxuser:
+	* macosx/Wish.xcodeproj/default.pbxuser:
+	* macosx/Wish.xcodeproj/project.pbxproj:
+
+	* unix/configure.in (Darwin):	add support for 64-bit X11.
+	* unix/configure:		autoconf-2.59
+
 2007-10-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure, win/configure.in (TK_WIN_VERSION): Make sure the
