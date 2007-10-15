@@ -3,19 +3,19 @@
 exec wish "$0" "$@"
 
 # widget --
-# This script demonstrates the various widgets provided by Tk,
-# along with many of the features of the Tk toolkit.  This file
-# only contains code to generate the main window for the
-# application, which invokes individual demonstrations.  The
-# code for the actual demonstrations is contained in separate
-# ".tcl" files is this directory, which are sourced by this script
-# as needed.
+# This script demonstrates the various widgets provided by Tk, along with many
+# of the features of the Tk toolkit. This file only contains code to generate
+# the main window for the application, which invokes individual
+# demonstrations. The code for the actual demonstrations is contained in
+# separate ".tcl" files is this directory, which are sourced by this script as
+# needed.
 #
-# RCS: @(#) $Id: widget,v 1.30 2007/05/27 13:14:36 das Exp $
+# RCS: @(#) $Id: widget,v 1.31 2007/10/15 21:06:17 dkf Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
 package require msgcat
+package require Ttk
 
 eval destroy [winfo child .]
 set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
@@ -23,8 +23,8 @@ set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
 namespace import ::msgcat::mc
 wm title . [mc "Widget Demonstration"]
 if {[tk windowingsystem] eq "x11"} {
-    # This won't work everywhere, but there's no other way in core Tk
-    # at the moment to display a coloured icon.
+    # This won't work everywhere, but there's no other way in core Tk at the
+    # moment to display a coloured icon.
     image create photo TclPowered \
 	    -file [file join $tk_library images logo64.gif]
     wm iconwindow . [toplevel ._iconWindow]
@@ -37,16 +37,16 @@ if {[lsearch -exact [font names] defaultFont] == -1} {
     if {[lsearch -exact [font names] TkDefaultFont] != -1 &&
 	    [lsearch -exact [font names] TkFixedFont] != -1} {
         # FIX ME: the following tecnique of cloning the font to copy it works
-        #         fine but means that if the system font is changed by
-        #         Tk cannot update the copied font. font alias might be
-        #         useful here -- or fix the app to use TkDefaultFont etc.
+        #         fine but means that if the system font is changed by Tk
+        #         cannot update the copied font. font alias might be useful
+        #         here -- or fix the app to use TkDefaultFont etc.
         font create mainFont   {*}[font configure TkDefaultFont]
         font create fixedFont  {*}[font configure TkFixedFont]
         font create boldFont   {*}[font configure TkDefaultFont] -weight bold
         font create titleFont  {*}[font configure TkDefaultFont] -weight bold
         font create statusFont {*}[font configure TkDefaultFont]
         font create varsFont   {*}[font configure TkDefaultFont]
-    } else {        
+    } else {
         font create mainFont   -family Helvetica -size 12
         font create fixedFont  -family Courier   -size 10
         font create boldFont   -family Helvetica -size 12 -weight bold
@@ -108,9 +108,9 @@ image create photo ::img::print -height 19 -format GIF -data {
 }
 
 #----------------------------------------------------------------
-# The code below create the main window, consisting of a menu bar
-# and a text widget that explains how to use the program, plus lists
-# all of the demos as hypertext items.
+# The code below create the main window, consisting of a menu bar and a text
+# widget that explains how to use the program, plus lists all of the demos as
+# hypertext items.
 #----------------------------------------------------------------
 
 menu .menuBar -tearoff 0
@@ -136,16 +136,14 @@ if {[tk windowingsystem] eq "aqua"} {
 
 . configure -menu .menuBar
 
-frame .statusBar
-label .statusBar.lab -text "   " -relief sunken -bd 1 \
-	-font statusFont -anchor w
-label .statusBar.foo -width 8 -relief sunken -bd 1 \
-	-font statusFont -anchor w
+ttk::frame .statusBar
+ttk::label .statusBar.lab -text "   " -anchor w
+ttk::sizegrip .statusBar.foo
 pack .statusBar.lab -side left -padx 2 -expand yes -fill both
 pack .statusBar.foo -side left -padx 2
 pack .statusBar -side bottom -fill x -pady 2
 
-frame .textFrame
+ttk::frame .textFrame
 scrollbar .s -orient vertical -command {.t yview} -highlightthickness 0 \
     -takefocus 1 -bd 1
 pack .s -in .textFrame -side right -fill y
@@ -155,16 +153,16 @@ text .t -yscrollcommand {.s set}  -wrap word  -width 70  -height 30 \
 pack .t -in .textFrame -expand y -fill both -padx 1
 pack  .textFrame -expand yes -fill both
 
-# Create a bunch of tags to use in the text widget, such as those for
-# section titles and demo descriptions.  Also define the bindings for
-# tags.
+# Create a bunch of tags to use in the text widget, such as those for section
+# titles and demo descriptions. Also define the bindings for tags.
 
 .t tag configure title -font titleFont
 .t tag configure bold  -font boldFont
 
-# We put some "space" characters to the left and right of each demo description
-# so that the descriptions are highlighted only when the mouse cursor
-# is right over them (but not when the cursor is to their left or right)
+# We put some "space" characters to the left and right of each demo
+# description so that the descriptions are highlighted only when the mouse
+# cursor is right over them (but not when the cursor is to their left or
+# right).
 #
 .t tag configure demospace -lmargin1 1c -lmargin2 1c
 
@@ -216,11 +214,11 @@ set lastLine ""
 
 # addFormattedText --
 #
-#	Add formatted text (but not hypertext) to the text widget after
-#	first passing it through the message catalog to allow for
-#	localization.  Lines starting with @@ are formatting directives
-#	(begin newline, or change style) and all other lines are literal
-#	strings to be inserted.  Blank lines are ignored.
+#	Add formatted text (but not hypertext) to the text widget after first
+#	passing it through the message catalog to allow for localization.
+#	Lines starting with @@ are formatting directives (begin newline, or
+#	change style) and all other lines are literal strings to be inserted.
+#	Blank lines are ignored.
 #
 proc addFormattedText {formattedText} {
     set style normal
@@ -249,9 +247,9 @@ proc addFormattedText {formattedText} {
 
 # addDemoSection --
 #
-#	Add a new section of demos with a title and a (stride-2) list of
-#	demo files and their descriptions.  Titles and descriptions are
-#	passed through the message catalog to allow for localization.
+#	Add a new section of demos with a title and a (stride-2) list of demo
+#	files and their descriptions. Titles and descriptions are passed
+#	through the message catalog to allow for localization.
 #
 proc addDemoSection {title demos} {
     .t insert end "\n" {} [mc $title] title " \n " demospace
@@ -271,7 +269,7 @@ addFormattedText {
 
     This application provides a front end for several short scripts
     that demonstrate what you can do with Tk widgets.  Each of the
-    numbered lines below describes a demonstration;  you can click on
+    numbered lines below describes a demonstration; you can click on
     it to invoke the demonstration.  Once the demonstration window
     appears, you can click the
     @@bold
@@ -316,6 +314,7 @@ addDemoSection "Text" {
     bind	"Hypertext (tag bindings)"
     twind	"A text widget with embedded windows and other features"
     search	"A search tool built with a text widget"
+    textpeer	"Peering text widgets"
 }
 addDemoSection "Canvases" {
     items	"The canvas item types"
@@ -366,18 +365,19 @@ focus .s
 
 proc addSeeDismiss {w show {vars {}} {extra {}}} {
     ## See Code / Dismiss buttons
-    frame $w
-    frame $w.sep -height 2 -relief sunken -bd 2
+    ttk::frame $w
+    ttk::separator $w.sep
+    #ttk::frame $w.sep -height 2 -relief sunken
     grid $w.sep -columnspan 4 -row 0 -sticky ew -pady 2
-    button $w.dismiss -text [mc "Dismiss"] \
+    ttk::button $w.dismiss -text [mc "Dismiss"] \
 	-image ::img::delete -compound left \
 	-command [list destroy [winfo toplevel $w]]
-    button $w.code -text [mc "See Code"] \
+    ttk::button $w.code -text [mc "See Code"] \
 	-image ::img::view -compound left \
 	-command [list showCode $show]
     set buttons [list x $w.code $w.dismiss]
     if {[llength $vars]} {
-	button $w.vars -text [mc "See Variables"] \
+	ttk::button $w.vars -text [mc "See Variables"] \
 	    -image ::img::view -compound left \
 	    -command [concat [list showVars $w.dialog] $vars]
 	set buttons [linsert $buttons 1 $w.vars]
@@ -385,14 +385,14 @@ proc addSeeDismiss {w show {vars {}} {extra {}}} {
     if {$extra ne ""} {
 	set buttons [linsert $buttons 1 [uplevel 1 $extra]]
     }
-    eval grid $buttons -padx 4 -pady 4
+    grid {*}$buttons -padx 4 -pady 4
     grid columnconfigure $w 0 -weight 1
     return $w
 }
 
 # positionWindow --
-# This procedure is invoked by most of the demos to position a
-# new demo window.
+# This procedure is invoked by most of the demos to position a new demo
+# window.
 #
 # Arguments:
 # w -		The name of the window to position.
@@ -402,8 +402,8 @@ proc positionWindow w {
 }
 
 # showVars --
-# Displays the values of one or more variables in a window, and
-# updates the display whenever any of the variables changes.
+# Displays the values of one or more variables in a window, and updates the
+# display whenever any of the variables changes.
 #
 # Arguments:
 # w -		Name of new window to create for display.
@@ -414,13 +414,13 @@ proc showVars {w args} {
     toplevel $w
     wm title $w [mc "Variable values"]
 
-    set f [labelframe $w.title -text [mc "Variable values:"] -font varsFont]
+    set f [ttk::labelframe $w.title -text [mc "Variable values:"]]
     foreach var $args {
-	label $f.n$var -text "$var:" -anchor w
-	label $f.v$var -textvariable $var -anchor w
+	ttk::label $f.n$var -text "$var:" -anchor w
+	ttk::label $f.v$var -textvariable $var -anchor w
 	grid $f.n$var $f.v$var -padx 2 -pady 2 -sticky w
     }
-    button $w.ok -width 8 -text [mc "OK"] \
+    ttk::button $w.ok -width 8 -text [mc "OK"] \
 	-command [list destroy $w] -default active
     bind $w <Return> [list $w.ok invoke]
     bind $w <Escape> [list $w.ok invoke]
@@ -434,8 +434,8 @@ proc showVars {w args} {
 }
 
 # invoke --
-# This procedure is called when the user clicks on a demo description.
-# It is responsible for invoking the demonstration.
+# This procedure is called when the user clicks on a demo description. It is
+# responsible for invoking the demonstration.
 #
 # Arguments:
 # index -	The index of the character that the user clicked on.
@@ -460,8 +460,8 @@ proc invoke index {
 
 # showStatus --
 #
-#	Show the name of the demo program in the status bar. This procedure
-#	is called when the user moves the cursor over a demo description.
+#	Show the name of the demo program in the status bar. This procedure is
+#	called when the user moves the cursor over a demo description.
 #
 proc showStatus index {
     set tags [.t tag names $index]
@@ -491,12 +491,12 @@ proc evalShowCode {w} {
 }
 
 # showCode --
-# This procedure creates a toplevel window that displays the code for
-# a demonstration and allows it to be edited and reinvoked.
+# This procedure creates a toplevel window that displays the code for a
+# demonstration and allows it to be edited and reinvoked.
 #
 # Arguments:
-# w -		The name of the demonstration's window, which can be
-#		used to derive the name of the file containing its code.
+# w -		The name of the demonstration's window, which can be used to
+#		derive the name of the file containing its code.
 
 proc showCode w {
     global tk_demoDirectory
@@ -522,13 +522,13 @@ proc showCode w {
 
 	set btns [frame $top.btns]
 
-	button $btns.dismiss -text [mc "Dismiss"] \
+	ttk::button $btns.dismiss -text [mc "Dismiss"] \
 	    -default active -command [list destroy $top] \
 	    -image ::img::delete -compound left
-	button $btns.print   -text [mc "Print Code"] \
+	ttk::button $btns.print   -text [mc "Print Code"] \
 	    -command [list printCode $text $file] \
 	    -image ::img::print -compound left
-	button $btns.rerun   -text [mc "Rerun Demo"] \
+	ttk::button $btns.rerun   -text [mc "Rerun Demo"] \
 	    -command [list evalShowCode $text] \
 	    -image ::img::refresh -compound left
 
@@ -558,8 +558,8 @@ proc showCode w {
 }
 
 # printCode --
-# Prints the source code currently displayed in the See Code dialog.
-# Much thanks to Arjen Markus for this.
+# Prints the source code currently displayed in the See Code dialog. Much
+# thanks to Arjen Markus for this.
 #
 # Arguments:
 # w -		Name of text widget containing code to print
@@ -618,11 +618,11 @@ proc printCode {w file} {
 # filename -		Name of the file
 #
 # Note:
-# Taken from the Wiki page by Keith Vetter, "Printing text files
-# under Windows"
+# Taken from the Wiki page by Keith Vetter, "Printing text files under
+# Windows".
 # Note:
-# Do not execute the command in the background: that way we can dispose
-# of the file smoothly
+# Do not execute the command in the background: that way we can dispose of the
+# file smoothly.
 #
 proc PrintTextWin32 {filename} {
     package require registry
@@ -652,7 +652,7 @@ proc aboutBox {} {
 
 [mc {Copyright (c) %s} {1996-1997 Sun Microsystems, Inc.}]
 [mc {Copyright (c) %s} {1997-2000 Ajuba Solutions, Inc.}]
-[mc {Copyright (c) %s} {2001-2003 Donal K. Fellows}]"
+[mc {Copyright (c) %s} {2001-2007 Donal K. Fellows}]"
 }
 
 # Local Variables:
