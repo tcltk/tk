@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.8 2007/09/07 00:34:51 dgp Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.9 2007/10/15 07:24:48 das Exp $
  */
 
-#include "tkPort.h"
+#include "tkInt.h"
 
 /*
  * Default table of argument descriptors. These are normally available in
@@ -172,7 +172,7 @@ Tk_ParseArgv(
 	infoPtr = matchPtr;
 	switch (infoPtr->type) {
 	case TK_ARGV_CONSTANT:
-	    *((int *) infoPtr->dst) = (int) infoPtr->src;
+	    *((int *) infoPtr->dst) = PTR2INT(infoPtr->src);
 	    break;
 	case TK_ARGV_INT:
 	    if (argc == 0) {
