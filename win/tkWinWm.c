@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.118 2007/09/08 16:13:45 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.119 2007/10/15 20:52:48 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -356,6 +356,7 @@ typedef struct TkWmInfo {
  */
 
 static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
+static void		RemapWindows(TkWindow *winPtr, HWND parentHWND);
 
 static const Tk_GeomMgr wmMgrType = {
     "wm",			/* name */
@@ -480,6 +481,9 @@ static int		WmDeiconifyCmd(Tk_Window tkwin,
 static int		WmFocusmodelCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
+static int		WmForgetCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]);
 static int		WmFrameCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
@@ -511,6 +515,9 @@ static int		WmIconpositionCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
 static int		WmIconwindowCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *CONST objv[]);
+static int		WmManageCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
 static int		WmMaxsizeCmd(Tk_Window tkwin,
@@ -2838,7 +2845,7 @@ TkWmDeadWindow(
     if (!(winPtr->flags & TK_EMBEDDED)) {
 	if (wmPtr->wrapper != NULL) {
 	    DestroyWindow(wmPtr->wrapper);
-	} else {
+	} else if (winPtr->window) {
 	    DestroyWindow(Tk_GetHWND(winPtr->window));
 	}
     } else {
@@ -2915,22 +2922,22 @@ Tk_WmObjCmd(
     Tk_Window tkwin = (Tk_Window) clientData;
     static CONST char *optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
-	"command", "deiconify", "focusmodel", "frame",
+	"command", "deiconify", "focusmodel", "forget", "frame",
 	"geometry", "grid", "group", "iconbitmap",
 	"iconify", "iconmask", "iconname",
 	"iconphoto", "iconposition",
-	"iconwindow", "maxsize", "minsize", "overrideredirect",
+	"iconwindow", "manage", "maxsize", "minsize", "overrideredirect",
 	"positionfrom", "protocol", "resizable", "sizefrom",
 	"stackorder", "state", "title", "transient",
 	"withdraw", NULL
     };
     enum options {
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
-	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FRAME,
+	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FORGET, WMOPT_FRAME,
 	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
 	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
 	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION,
-	WMOPT_ICONWINDOW, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
+	WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
 	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW
@@ -2985,7 +2992,8 @@ Tk_WmObjCmd(
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (!Tk_IsTopLevel(winPtr)) {
+    if (!Tk_IsTopLevel(winPtr) &&
+	    (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
 		"\" isn't a top-level window", NULL);
 	return TCL_ERROR;
@@ -3006,6 +3014,8 @@ Tk_WmObjCmd(
 	return WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_FOCUSMODEL:
 	return WmFocusmodelCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_FORGET:
+	return WmForgetCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_FRAME:
 	return WmFrameCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GEOMETRY:
@@ -3028,6 +3038,8 @@ Tk_WmObjCmd(
 	return WmIconpositionCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONWINDOW:
 	return WmIconwindowCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_MANAGE:
+	return WmManageCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_MAXSIZE:
 	return WmMaxsizeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_MINSIZE:
@@ -3734,6 +3746,47 @@ WmFocusmodelCmd(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmForgetCmd --
+ *
+ *	This procedure is invoked to process the "wm forget" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmForgetCmd(tkwin, winPtr, interp, objc, objv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    TkWindow *winPtr;           /* Toplevel or Frame to work with */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+{
+    register Tk_Window frameWin = (Tk_Window)winPtr;
+    char *oldClass = (char*)Tk_Class(frameWin);
+
+    if (Tk_IsTopLevel(frameWin)) {
+	Tk_UnmapWindow(frameWin);
+	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	TkWmDeadWindow(winPtr);
+	/* flags (above) must be cleared before calling */
+	/* TkMapTopFrame (below) */
+	TkMapTopFrame(frameWin);
+    } else {
+	/* Already not managed by wm - ignore it */
+    }
+    return TCL_OK;
+}
 /*
  *----------------------------------------------------------------------
  *
@@ -4585,6 +4638,54 @@ WmIconwindowCmd(
 	    wmPtr2->flags |= WM_WITHDRAWN;
 	    TkpWmSetState(((TkWindow *) tkwin2), WithdrawnState);
 	}
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmManageCmd --
+ *
+ *	This procedure is invoked to process the "wm manage" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmManageCmd(tkwin, winPtr, interp, objc, objv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    TkWindow *winPtr;           /* Toplevel or Frame to work with */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+{
+    register Tk_Window frameWin = (Tk_Window)winPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    char *oldClass = (char*)Tk_Class(frameWin);
+
+    if (!Tk_IsTopLevel(frameWin)) {
+	TkFocusSplit(winPtr);
+	Tk_UnmapWindow(frameWin);
+	winPtr->flags |= TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
+	RemapWindows(winPtr, NULL);
+	if (wmPtr == NULL) {
+	    TkWmNewWindow(winPtr);
+	}
+	wmPtr = winPtr->wmInfoPtr;
+	winPtr->flags &= ~TK_MAPPED;
+	/* flags (above) must be set before calling */
+	/* TkMapTopFrame (below) */
+	TkMapTopFrame (frameWin);
+    } else if (Tk_IsTopLevel(frameWin)) {
+	/* Already managed by wm - ignore it */
     }
     return TCL_OK;
 }
@@ -6966,6 +7067,10 @@ TkWinSetMenu(
     TkWindow *winPtr = (TkWindow *) tkwin;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
+    /* Could be a Frame (i.e. not a Toplevel) */
+    if (wmPtr == NULL)
+	return;
+
     wmPtr->hMenu = hMenu;
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	int syncPending = wmPtr->flags & WM_SYNC_PENDING;
@@ -8427,6 +8532,46 @@ TkpWinToplevelDetachWindow(
     }
     if (winPtr->flags & TK_TOP_LEVEL) {
 	TkpWinToplevelOverrideRedirect(winPtr, 1);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemapWindows
+ *
+ *	Adjust parent/child relation ships of
+ *	the given window hierarchy.
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	keeps windowing system happy
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void 
+RemapWindows(winPtr, parentHWND)
+     TkWindow *winPtr;
+     HWND parentHWND;
+{
+    TkWindow *childPtr;
+
+    /* Skip Menus as they are handled differently */
+    if (strcmp(Tk_Class(winPtr), "Menu") == 0) {
+	return;
+    }
+    if (winPtr->window) {
+	SetParent(Tk_GetHWND(winPtr->window), parentHWND);
+    }
+
+    /* Repeat for all the children */
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	 childPtr = childPtr->nextPtr) {
+	RemapWindows(childPtr,
+		winPtr->window ? Tk_GetHWND(winPtr->window) : NULL);
     }
 }
 
