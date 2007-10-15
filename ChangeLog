@@ -1,5 +1,23 @@
 2007-10-15  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/tkArgv.c:		Fix gcc warnings about 'cast to/from
+	* generic/tkCanvUtil.c:		pointer from/to integer of different
+	* generic/tkCanvas.c:		size' on 64-bit platforms by casting
+	* generic/tkCursor.c:		to intermediate types
+	* generic/tkInt.h:		intptr_t/uintptr_t via new PTR2INT(),
+	* generic/tkListbox.c:		INT2PTR(), PTR2UINT() and UINT2PTR()
+	* generic/tkObj.c:		macros.
+	* generic/tkStyle.c:
+	* generic/tkTextIndex.c:
+	* generic/tkUtil.c:
+	* generic/ttk/ttkTheme.h:
+	* generic/ttk/ttkTreeview.c:
+	* unix/tkUnixMenu.c:
+	* unix/configure.in:
+
+	* unix/configure:		autoconf-2.59
+	* unix/tkConfig.h.in:		autoheader-2.59
+
 	* macosx/Wish-Common.xcconfig:		add 'tktest-X11' target.
 	* macosx/Wish.xcode/project.pbxproj:
 	* macosx/Wish.xcode/default.pbxuser:
