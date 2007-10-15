@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.30 2007/10/15 20:52:47 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.31 2007/10/15 20:54:43 hobbs Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -406,9 +406,8 @@ to ``own'' those events.
 Note: not all window managers support the notion of an icon window.
 .TP
 \fBwm manage \fIwidget\fR
-
-The \fIwidget\fR specified will become a stand alone top-level window.  The window will be decorated with the window managers title bar, etc.
-
+The \fIwidget\fR specified will become a stand alone top-level window.  The
+window will be decorated with the window managers title bar, etc.
 .TP
 \fBwm maxsize \fIwindow\fR ?\fIwidth height\fR?
 If \fIwidth\fR and \fIheight\fR are specified, they give
