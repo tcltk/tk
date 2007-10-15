@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.17 2007/09/07 00:34:58 dgp Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.18 2007/10/15 07:24:50 das Exp $
  */
 
 #include "default.h"
@@ -338,19 +338,19 @@ GetMenuIndicatorGeometry(
 		*heightPtr = mePtr->height;
 		if (mePtr->type == CHECK_BUTTON_ENTRY) {
 		    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-			    ((65 * mePtr->height) / 100);
+			    INT2PTR((65 * mePtr->height) / 100);
 		} else {
 		    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-			    ((75 * mePtr->height) / 100);
+			    INT2PTR((75 * mePtr->height) / 100);
 		}
 	    } else {
 		*widthPtr = *heightPtr = mePtr->height;
 		if (mePtr->type == CHECK_BUTTON_ENTRY) {
 		    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-			    ((80 * mePtr->height) / 100);
+			    INT2PTR((80 * mePtr->height) / 100);
 		} else {
 		    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-			    mePtr->height;
+			    INT2PTR(mePtr->height);
 		}
 	    }
 	} else {
