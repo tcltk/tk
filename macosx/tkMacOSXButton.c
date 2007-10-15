@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.28 2007/10/12 03:06:37 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.29 2007/10/15 20:52:47 hobbs Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -863,6 +863,7 @@ TkMacOSXDrawControl(
     TkButton *butPtr = (TkButton *) mbPtr;
     TkWindow *winPtr;
     Rect paneRect, cntrRect;
+    int rebuild;
 
     winPtr = (TkWindow *) butPtr->tkwin;
 
@@ -888,12 +889,17 @@ TkMacOSXDrawControl(
      * The control has been previously initialised.
      * It may need to be re-initialised
      */
-
+#ifdef TK_REBUILD_TOPLEVEL
+    rebuild = (winPtr->flags & TK_REBUILD_TOPLEVEL);
+    winPtr->flags &= ~TK_REBUILD_TOPLEVEL;
+#else
+    rebuild = 0;
+#endif
     if (mbPtr->flags) {
 	MacControlParams params;
 
 	TkMacOSXComputeControlParams(butPtr, &params);
-	if (bcmp(&params, &mbPtr->params, sizeof(params))) {
+	if (rebuild || bcmp(&params, &mbPtr->params, sizeof(params))) {
 	    /*
 	     * The type of control has changed.
 	     * Clean it up and clear the flag.
@@ -931,7 +937,7 @@ TkMacOSXDrawControl(
 	    len = 0;
 	    controlTitle[0] = 0;
 	}
-	if (bcmp(mbPtr->controlTitle, controlTitle, len+1)) {
+	if (rebuild || bcmp(mbPtr->controlTitle, controlTitle, len+1)) {
 	    CFStringRef cf = CFStringCreateWithCString(NULL,
 		    (char*) controlTitle, kCFStringEncodingUTF8);
 
