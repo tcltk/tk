@@ -53,7 +53,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.8.2.3 2007/07/01 17:31:32 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.8.2.4 2007/10/15 18:38:35 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -197,7 +197,9 @@ TkpDrawEntryBorderAndFocus(Entry *entryPtr, Drawable d, int isSpinbox)
     } else {
 	drawState = kThemeStateActive;
     }
-    TkMacOSXSetupDrawingContext(d, NULL, 0, &dc);
+    if (!TkMacOSXSetupDrawingContext(d, NULL, 0, &dc)) {
+	return 0;
+    }
     DrawThemeEditTextFrame(&bounds, drawState);
     if (entryPtr->flags & GOT_FOCUS) {
 	/*
@@ -307,7 +309,9 @@ TkpDrawSpinboxButtons(Spinbox *sbPtr, Drawable d)
     rects[0].height = Tk_Height(tkwin);
     XFillRectangles(Tk_Display(tkwin), d, bgGC, rects, 1);
 
-    TkMacOSXSetupDrawingContext(d, NULL, 0, &dc);
+    if (!TkMacOSXSetupDrawingContext(d, NULL, 0, &dc)) {
+	return 0;
+    }
     ChkErr(DrawThemeButton, &inBounds, inKind, &inNewInfo, inPrevInfo,
 	    inEraseProc, inLabelProc, inUserData);
     TkMacOSXRestoreDrawingContext(&dc);

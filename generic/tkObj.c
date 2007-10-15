@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.16 2007/01/03 04:10:55 nijtmans Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.16.2.1 2007/10/15 18:38:33 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -28,11 +28,11 @@ typedef struct PixelRep {
     ((objPtr)->internalRep.twoPtrValue.ptr2 == 0)
 
 #define SET_SIMPLEPIXEL(objPtr, intval)			\
-    (objPtr)->internalRep.twoPtrValue.ptr1 = (VOID *) (intval);	\
+    (objPtr)->internalRep.twoPtrValue.ptr1 = INT2PTR(intval);	\
     (objPtr)->internalRep.twoPtrValue.ptr2 = 0
 
 #define GET_SIMPLEPIXEL(objPtr)				\
-    ((int) (objPtr)->internalRep.twoPtrValue.ptr1)
+    (PTR2INT((objPtr)->internalRep.twoPtrValue.ptr1))
 
 #define SET_COMPLEXPIXEL(objPtr, repPtr)		\
     (objPtr)->internalRep.twoPtrValue.ptr1 = 0;		\

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.4 2007/07/01 17:31:37 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.37.2.5 2007/10/15 18:38:36 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -343,10 +343,11 @@ DrawThemeText(
 		cmdKeyBaseline);
 	bounds = &adjustedBounds;
     }
-    TkMacOSXSetupDrawingContext(d, gc, 1, &dc);
-    ChkErr(DrawThemeTextBox, string, font, drawState, false, bounds, just,
-	    dc.context);
-    TkMacOSXRestoreDrawingContext(&dc);
+    if (TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+	ChkErr(DrawThemeTextBox, string, font, drawState, false, bounds, just,
+		dc.context);
+	TkMacOSXRestoreDrawingContext(&dc);
+    }
 }
 
 /*
@@ -2702,9 +2703,10 @@ DrawMenuSeparator(
     r.left = x;
     r.bottom = y + height;
     r.right = x + width;
-    TkMacOSXSetupDrawingContext(d, gc, 1, &dc);
-    ChkErr(DrawThemeMenuSeparator, &r);
-    TkMacOSXRestoreDrawingContext(&dc);
+    if (TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+	ChkErr(DrawThemeMenuSeparator, &r);
+	TkMacOSXRestoreDrawingContext(&dc);
+    }
 }
 
 #ifdef USE_TK_MDEF
@@ -3983,9 +3985,9 @@ TkpMenuInit(void)
     macMDEFDrawable.winPtr = NULL;
     macMDEFDrawable.xOff = 0;
     macMDEFDrawable.yOff = 0;
-    macMDEFDrawable.clipRgn = NULL;
-    macMDEFDrawable.aboveClipRgn = NULL;
-    macMDEFDrawable.drawRgn = NewRgn();
+    macMDEFDrawable.visRgn = NULL;
+    macMDEFDrawable.aboveVisRgn = NULL;
+    macMDEFDrawable.drawRect = CGRectNull;
     macMDEFDrawable.referenceCount = 0;
     macMDEFDrawable.toplevel = NULL;
     macMDEFDrawable.flags = 0;

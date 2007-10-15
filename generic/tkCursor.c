@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.15.2.1 2007/09/07 01:25:34 dgp Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.15.2.2 2007/10/15 18:38:32 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -421,8 +421,7 @@ Tk_NameOfCursor(
 
     if (!dispPtr->cursorInit) {
     printid:
-	sprintf(dispPtr->cursorString, "cursor id 0x%x",
-                (unsigned int) cursor);
+	sprintf(dispPtr->cursorString, "cursor id %p", cursor);
 	return dispPtr->cursorString;
     }
     idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
