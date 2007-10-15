@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing
 # several checkbuttons.
 #
-# RCS: @(#) $Id: check.tcl,v 1.5 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: check.tcl,v 1.6 2007/10/15 21:06:17 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -34,6 +34,9 @@ checkbutton $w.b2 -text "Brakes OK" -variable brakes -relief flat
 checkbutton $w.b3 -text "Driver Sober" -variable sober -relief flat
 pack $w.b0 -side top -pady 2 -anchor w
 pack $w.b1 $w.b2 $w.b3 -side top -pady 2 -anchor w -padx 15
+
+## This code makes $w.b0 function as a tri-state button; it's not
+## needed at all for just straight yes/no buttons.
 
 set in_check 0
 proc tristate_check {n1 n2 op} {
