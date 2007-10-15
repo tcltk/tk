@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStyle.c,v 1.6 2007/01/03 05:06:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkStyle.c,v 1.7 2007/10/15 07:24:49 das Exp $
  */
 
 #include "tkInt.h"
@@ -624,7 +624,7 @@ CreateElement(
 
     entryPtr = Tcl_CreateHashEntry(&tsdPtr->elementTable, name, &newEntry);
     if (!newEntry) {
-	elementId = (int) Tcl_GetHashValue(entryPtr);
+	elementId = PTR2INT(Tcl_GetHashValue(entryPtr));
 	if (create) {
 	    tsdPtr->elements[elementId].created = 1;
 	}
@@ -642,7 +642,7 @@ CreateElement(
     }
 
     elementId = tsdPtr->nbElements++;
-    Tcl_SetHashValue(entryPtr, (ClientData) elementId);
+    Tcl_SetHashValue(entryPtr, (ClientData) INT2PTR(elementId));
 
     /*
      * Reallocate element table.
@@ -705,7 +705,7 @@ Tk_GetElementId(
 
     entryPtr = Tcl_FindHashEntry(&tsdPtr->elementTable, name);
     if (entryPtr) {
-	return (int) Tcl_GetHashValue(entryPtr);
+	return PTR2INT(Tcl_GetHashValue(entryPtr));
     }
 
     /*

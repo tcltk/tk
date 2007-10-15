@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.44 2007/09/07 00:34:52 dgp Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.45 2007/10/15 07:24:48 das Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -685,7 +685,8 @@ CanvasWidgetCmd(
 	if (searchPtr->type == SEARCH_TYPE_ID) {
 	    Tcl_HashEntry *entryPtr;
 
-	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char *) searchPtr->id);
+	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
+		    (char *) INT2PTR(searchPtr->id));
 	    if (entryPtr != NULL) {
 		itemPtr = (Tk_Item *) Tcl_GetHashValue(entryPtr);
 		object = (ClientData) itemPtr;
@@ -990,7 +991,7 @@ CanvasWidgetCmd(
 	}
 	itemPtr->nextPtr = NULL;
 	entryPtr = Tcl_CreateHashEntry(&canvasPtr->idTable,
-		(char *) itemPtr->id, &isNew);
+		(char *) INT2PTR(itemPtr->id), &isNew);
 	Tcl_SetHashValue(entryPtr, itemPtr);
 	itemPtr->prevPtr = canvasPtr->lastItemPtr;
 	canvasPtr->hotPtr = itemPtr;
@@ -1089,7 +1090,7 @@ CanvasWidgetCmd(
 		    ckfree((char *) itemPtr->tagPtr);
 		}
 		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
-			(char *) itemPtr->id);
+			(char *) INT2PTR(itemPtr->id));
 		Tcl_DeleteHashEntry(entryPtr);
 		if (itemPtr->nextPtr != NULL) {
 		    itemPtr->nextPtr->prevPtr = itemPtr->prevPtr;
@@ -3626,7 +3627,7 @@ TagSearchFirst(
 	if ((itemPtr == NULL) || (itemPtr->id != searchPtr->id)
 		|| (lastPtr == NULL) || (lastPtr->nextPtr != itemPtr)) {
 	    entryPtr = Tcl_FindHashEntry(&searchPtr->canvasPtr->idTable,
-		    (char *) searchPtr->id);
+		    (char *) INT2PTR(searchPtr->id));
 	    if (entryPtr != NULL) {
 		itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
 		lastPtr = itemPtr->prevPtr;

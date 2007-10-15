@@ -1,4 +1,4 @@
-/* $Id: ttkTheme.h,v 1.8 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkTheme.h,v 1.9 2007/10/15 07:24:49 das Exp $
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.
@@ -16,6 +16,28 @@ extern "C" {
 #	define MODULE_SCOPE extern "C"
 #   else
 #	define MODULE_SCOPE extern
+#   endif
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+#    include <sys/types.h>
+#endif
+#if !defined(INT2PTR) && !defined(PTR2INT)
+#   if defined(HAVE_INTPTR_T) || defined(intptr_t)
+#	define INT2PTR(p) ((void*)(intptr_t)(p))
+#	define PTR2INT(p) ((int)(intptr_t)(p))
+#   else
+#	define INT2PTR(p) ((void*)(p))
+#	define PTR2INT(p) ((int)(p))
+#   endif
+#endif
+#if !defined(UINT2PTR) && !defined(PTR2UINT)
+#   if defined(HAVE_UINTPTR_T) || defined(uintptr_t)
+#	define UINT2PTR(p) ((void*)(uintptr_t)(p))
+#	define PTR2UINT(p) ((unsigned int)(uintptr_t)(p))
+#   else
+#	define UINT2PTR(p) ((void*)(p))
+#	define PTR2UINT(p) ((unsigned int)(p))
 #   endif
 #endif
 

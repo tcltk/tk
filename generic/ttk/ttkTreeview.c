@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.16 2007/04/28 01:22:10 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.17 2007/10/15 07:24:49 das Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -518,7 +518,7 @@ static int ColumnIndex(Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
     entryPtr = Tcl_FindHashEntry(
 	    &tv->tree.columnNames, Tcl_GetString(columnIDObj));
     if (entryPtr) {
-	return (int)Tcl_GetHashValue(entryPtr);
+	return PTR2INT(Tcl_GetHashValue(entryPtr));
     }
 
     /* Check for number:
@@ -689,7 +689,7 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv)
 
 	Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(
 	    &tv->tree.columnNames, Tcl_GetString(columnName), &isNew);
-	Tcl_SetHashValue(entryPtr, i);
+	Tcl_SetHashValue(entryPtr, INT2PTR(i));
 
 	InitColumn(tv->tree.columns + i);
 	Tk_InitOptions(
