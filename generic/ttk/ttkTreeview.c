@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.17 2007/10/15 07:24:49 das Exp $
+/* $Id: ttkTreeview.c,v 1.18 2007/10/15 15:03:41 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -400,7 +400,7 @@ typedef struct
 
     /* Derived resources:
      */
-    Tcl_HashTable columnNames;	/* Map: column name -> column index */
+    Tcl_HashTable columnNames;	/* Map: column name -> column table entry */
     int nColumns; 		/* #columns */
     unsigned showFlags;		/* bitmask of subparts to display */
 
@@ -501,14 +501,13 @@ static void DisplayLayout(
     Ttk_DrawLayout(layout, state, d);
 }
 
-/* + ColumnIndex --
- * 	Maps column identifier to column index.
- * 	Returns: -1 if not found, column index otherwise.
+/* + GetColumn --
+ * 	Look up column by name or number.
+ * 	Returns: pointer to column table entry, NULL if not found.
  * 	Leaves an error message in interp->result on error.
- *
- * Column IDs may be specified by name or as a number.
  */
-static int ColumnIndex(Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
+static TreeColumn *GetColumn(
+    Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
 {
     Tcl_HashEntry *entryPtr;
     int columnIndex;
@@ -518,7 +517,7 @@ static int ColumnIndex(Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
     entryPtr = Tcl_FindHashEntry(
 	    &tv->tree.columnNames, Tcl_GetString(columnIDObj));
     if (entryPtr) {
-	return PTR2INT(Tcl_GetHashValue(entryPtr));
+	return Tcl_GetHashValue(entryPtr);
     }
 
     /* Check for number:
@@ -531,16 +530,40 @@ static int ColumnIndex(Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
 		    Tcl_GetString(columnIDObj),
 		    " out of bounds",
 		    NULL);
-	    return -1;
+	    return NULL;
 	}
 
-	return columnIndex;
+	return tv->tree.columns + columnIndex;
     }
     Tcl_ResetResult(interp);
     Tcl_AppendResult(interp,
 	"Invalid column index ", Tcl_GetString(columnIDObj),
 	NULL);
-    return -1;
+    return NULL;
+}
+
+/* + FindColumn --
+ * 	Look up column by name, number, or display index.
+ */
+static TreeColumn *FindColumn(
+    Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
+{
+    int colno;
+
+    if (sscanf(Tcl_GetString(columnIDObj), "#%d", &colno) == 1)
+    {	/* Display column specification, #n */
+	if (colno >= 0 && colno < tv->tree.nDisplayColumns) {
+	    return tv->tree.displayColumns[colno];
+	}
+	/* else */
+	Tcl_ResetResult(interp);
+	Tcl_AppendResult(interp,
+	    "Column ", Tcl_GetString(columnIDObj), " out of range",
+	    NULL);
+	return NULL;
+    }
+
+    return GetColumn(interp, tv, columnIDObj);
 }
 
 /* + FindItem --
@@ -608,32 +631,6 @@ static Tcl_Obj *ItemID(Treeview *tv, TreeItem *item)
     return Tcl_NewStringObj(ItemName(tv, item), -1);
 }
 
-/* + FindColumn --
- */
-static TreeColumn *FindColumn(
-    Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
-{
-    int column;
-
-    if (sscanf(Tcl_GetString(columnIDObj), "#%d", &column) == 1)
-    {	/* Display column specification, #n */
-	if (column >= 0 && column < tv->tree.nDisplayColumns) {
-	    return tv->tree.displayColumns[column];
-	}
-	/* else */
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp,
-	    "Column ", Tcl_GetString(columnIDObj), " out of range",
-	    NULL);
-	return NULL;
-    }
-
-    column = ColumnIndex(interp, tv, columnIDObj);
-    if (column >= 0)
-	return tv->tree.columns + column;
-    return 0;
-}
-
 /*------------------------------------------------------------------------
  * +++ Column configuration.
  */
@@ -689,7 +686,7 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv)
 
 	Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(
 	    &tv->tree.columnNames, Tcl_GetString(columnName), &isNew);
-	Tcl_SetHashValue(entryPtr, INT2PTR(i));
+	Tcl_SetHashValue(entryPtr, tv->tree.columns + i);
 
 	InitColumn(tv->tree.columns + i);
 	Tk_InitOptions(
@@ -733,12 +730,11 @@ static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
     } else {
 	displayColumns = (TreeColumn**)ckalloc((ndcols+1)*sizeof(TreeColumn*));
 	for (index = 0; index < ndcols; ++index) {
-	    int columnIndex = ColumnIndex(interp, tv, dcolumns[index]);
-	    if (columnIndex == -1) {
+	    displayColumns[index+1] = GetColumn(interp, tv, dcolumns[index]);
+	    if (!displayColumns[index+1]) {
 		ckfree((ClientData)displayColumns);
 		return TCL_ERROR;
 	    }
-	    displayColumns[index+1] = tv->tree.columns + columnIndex;
 	}
     }
     displayColumns[0] = &tv->tree.column0;
@@ -3079,14 +3075,6 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Tree indicator element.
  */
-
-#ifdef UNUSED
-#if defined(WIN32)
-static const int WIN32_XDRAWLINE_HACK = 1;
-#else
-static const int WIN32_XDRAWLINE_HACK = 0;
-#endif
-#endif
 
 typedef struct
 {

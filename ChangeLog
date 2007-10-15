@@ -1,3 +1,10 @@
+2007-10-15  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTreeview.c:  Store pointer to column 
+	table entry instead of column index in columnNames hash table.
+	This avoids the need for the evil PTR2INT and INT2PTR macros,
+	and simplifies things a bit.
+
 2007-10-15  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkArgv.c:		Fix gcc warnings about 'cast to/from
