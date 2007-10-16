@@ -1,3 +1,8 @@
+2007-10-16  David Gravereaux <davygrvy@pobox.com>
+
+	* win/makefile.vc: depend target now works and builds a generated
+	dependency list with $(TCLTOOLSDIR)/mkdepend.tcl
+
 2007-10-16  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/widget: Made the code for generating the contents of
