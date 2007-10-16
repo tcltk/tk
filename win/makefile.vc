@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.110 2007/10/12 19:01:07 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.111 2007/10/16 21:24:05 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -186,7 +186,7 @@ PROJECT	= tk
 
 # Extra makefile options processing...
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
-HAVE_UXTHEME      = 1
+HAVE_UXTHEME_H    = 1
 TTK_SQUARE_WIDGET = 0
 !else
 !if [nmakehlp -f $(OPTS) "noxp"]
@@ -651,23 +651,6 @@ genstubs:
 
 
 #---------------------------------------------------------------------
-# Generate the makefile depedancies.
-#---------------------------------------------------------------------
-
-depend:
-!if !exist($(TCLSH))
-	@echo Build tclsh first!
-!else
-	set TCL_LIBRARY=$(TCL_LIBRARY)
-	$(TCLSH) $(TOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
-		-passthru:"-DBUILD_tcl $(TK_INCLUDES:"="")" $(GENERICDIR) \
-		$(COMPATDIR) $(WINDIR) @<<
-$(TKOBJS)
-<<
-!endif
-
-
-#---------------------------------------------------------------------
 # Regenerate the windows help files.
 #---------------------------------------------------------------------
 
@@ -791,83 +774,37 @@ $(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
 	$(cc32) $(STUB_CFLAGS) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
 
 
-#---------------------------------------------------------------------
-# Dedependency rules
-#---------------------------------------------------------------------
-
 $(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
 	@nmakehlp -s << $** >$@
 @MACHINE@	  $(MACHINE:IX86=X86)
 @TK_WIN_VERSION@  $(TK_MAJOR_VERSION).$(TK_MINOR_VERSION).0.0
 <<
 
+#---------------------------------------------------------------------
+# Generate the makefile depedancies.
+#---------------------------------------------------------------------
+
+depend:
+!if !exist($(TCLSH))
+	@echo Build tclsh first!
+!else
+	set TCL_LIBRARY=$(TCL_LIBRARY)
+	$(TCLSH) $(TCLTOOLSDIR)\mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
+		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
+		$(WINDIR),$$(WINDIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) @<<
+$(TKOBJS)
+<<
+!endif
+
+
+#---------------------------------------------------------------------
+# Dedependency rules
+#---------------------------------------------------------------------
+
 $(TMP_DIR)\tk.res: \
     $(RCDIR)\buttons.bmp \
     $(RCDIR)\cursor*.cur \
     $(RCDIR)\tk.ico
-
-$(GENERICDIR)/default.h: $(WINDIR)/tkWinDefault.h
-$(GENERICDIR)/tkButton.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkCanvas.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkEntry.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkFrame.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkListbox.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkMenu.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkMenubutton.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkMessage.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkPanedWindow.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkScale.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkScrollbar.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkText.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkTextIndex.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkTextTag.c: $(GENERICDIR)/default.h
-$(GENERICDIR)/tkUndo.c: $(GENERICDIR)/tkUndo.h
-
-$(GENERICDIR)/tkText.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTest.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextBTree.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextDisp.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextDisp.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextImage.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextIndex.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextMark.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextTag.c: $(GENERICDIR)/tkText.h
-$(GENERICDIR)/tkTextWind.c: $(GENERICDIR)/tkText.h
-
-$(GENERICDIR)/tkMacWinMenu.c: $(GENERICDIR)/tkMenu.h
-$(GENERICDIR)/tkMenu.c: $(GENERICDIR)/tkMenu.h
-$(GENERICDIR)/tkMenuDraw.c: $(GENERICDIR)/tkMenu.h
-$(WINDIR)/tkWinMenu.c: $(GENERICDIR)/tkMenu.h
-
-$(TTKDIR)/ttkBlink.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkButton.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkCache.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkClamTheme.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkClassicTheme.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkDefaultTheme.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkElements.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkEntry.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkFrame.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkImage.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkInit.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkLabel.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkLayout.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkManager.c: $(TTKDIR)/ttkTheme.h $(TTKDIR)/ttkManager.h
-$(TTKDIR)/ttkNotebook.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkPanedwindow.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkProgress.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkScroll.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkScrollbar.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkSeparator.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkSquare.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkState.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkTagSet.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkTheme.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkTrace.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkTrack.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkTreeview.c: $(TTKDIR)/ttkTheme.h
-$(TTKDIR)/ttkWidget.c: $(TTKDIR)/ttkTheme.h $(TTKDIR)/ttkWidget.h
-
 
 !if exist("$(OUT_DIR)\depend.mk")
 !include "$(OUT_DIR)\depend.mk"
