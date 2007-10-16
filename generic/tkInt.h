@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.77.2.2 2007/10/15 18:38:33 dgp Exp $
+ * RCS: $Id: tkInt.h,v 1.77.2.3 2007/10/16 04:03:53 dgp Exp $
  */
 
 #ifndef _TKINT
@@ -1180,6 +1180,7 @@ MODULE_SCOPE int	TkTileParseProc(ClientData clientData,
 MODULE_SCOPE char *	TkTilePrintProc(ClientData clientData, Tk_Window tkwin,
 			    char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
+MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
 			    ClientData clientData);
@@ -1196,6 +1197,8 @@ MODULE_SCOPE void	TkPrintPadAmount(Tcl_Interp *interp,
 MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    int *pad1Ptr, int *pad2Ptr);
+MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
+MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
 MODULE_SCOPE int	TkpAlwaysShowSelection(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,

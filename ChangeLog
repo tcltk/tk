@@ -1,9 +1,27 @@
+2007-10-15  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/widget: Use Ttk widgets for the widget demo core, for
+	vastly improved look-and-feel on at least one platform (Windows).
+	* library/demos/{button,check,style,twind}.tcl: Various tweaks for
+	GOOBE...
+	* library/demos/textpeer.tcl: New demo script to show off peering as a
+	specific feature.
+
+2007-10-15  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkFocus.c, generic/tkFrame.c, generic/tkInt.h:
+	* macosx/tkMacOSXButton.c, macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXWm.c, unix/tkUnixWm.c, win/tkWinWm.c:
+	* doc/wm.n, tests/wm.test: TIP #125 implementation [Bug 998125]
+	Adds [wm manage|forget] for dockable frames.
+	Finished X11 and Windows code, needs OS X completion.
+
 2007-10-15  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTreeview.c:  Store pointer to column 
-	table entry instead of column index in columnNames hash table.
-	This avoids the need for the evil PTR2INT and INT2PTR macros,
-	and simplifies things a bit.
+	* generic/ttk/ttkTreeview.c: Store pointer to column table entry
+	instead of column index in columnNames hash table. This avoids the
+	need for the evil PTR2INT and INT2PTR macros, and simplifies things a
+	bit.
 
 2007-10-15  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -52,7 +70,7 @@
 
 	* macosx/tkMacOSXDraw.c:	replace all (internal) use of QD region
 	* macosx/tkMacOSXSubwindows.c:	API by HIShape API, with conversion to
-	* macosx/tkMacOSXWindowEvent.c	QD regions only when required by legacy
+	* macosx/tkMacOSXWindowEvent.c:	QD regions only when required by legacy
 	* macosx/tkMacOSXPrivate.h:	Carbon or Tk API.
 	* macosx/tkMacOSXRegion.c:
 	* macosx/tkMacOSXDebug.c:
@@ -117,7 +135,7 @@
 	* generic/tkImage.c:     Make Ttk_GetImage safe if called with NULL
 	* tests/ttk/image.test:  interp. Added some tests that crash
 	                         on Windows without this fix.
-	
+
 2007-10-02  Don Porter  <dgp@users.sourceforge.net>
 
 	[core-stabilizer-branch]
