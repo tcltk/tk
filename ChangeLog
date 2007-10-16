@@ -1,3 +1,8 @@
+2007-10-16  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* doc/text.n: Made it clearer what things are text widget invokations
+	and what are not. Also some other clarity improvements.
+
 2007-10-15  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/widget: Use Ttk widgets for the widget demo core, for
