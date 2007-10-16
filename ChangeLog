@@ -1,5 +1,9 @@
 2007-10-16  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* library/demos/widget: Made the code for generating the contents of
+	the main widget more informative. Added 'new' flagging for wholly new
+	demos.
+
 	* doc/text.n: Made it clearer what things are text widget invokations
 	and what are not. Also some other clarity improvements.
 

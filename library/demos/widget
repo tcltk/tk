@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.31 2007/10/15 21:06:17 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.32 2007/10/16 15:15:19 dkf Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -32,10 +32,9 @@ if {[tk windowingsystem] eq "x11"} {
     wm iconname . [mc "tkWidgetDemo"]
 }
 
-if {[lsearch -exact [font names] defaultFont] == -1} {
+if {"defaultFont" ni [font names]} {
     # TIP #145 defines some standard named fonts
-    if {[lsearch -exact [font names] TkDefaultFont] != -1 &&
-	    [lsearch -exact [font names] TkFixedFont] != -1} {
+    if {"TkDefaultFont" in [font names] && "TkFixedFont" in [font names]} {
         # FIX ME: the following tecnique of cloning the font to copy it works
         #         fine but means that if the system font is changed by Tk
         #         cannot update the copied font. font alias might be useful
@@ -106,6 +105,48 @@ image create photo ::img::print -height 19 -format GIF -data {
     DiIsCFxjA9sFEVQQCRJCAYAFDJxiKhAxvMTonEFimrhhYinTBgWiCvxLNX3M
     DkkpsKV5OYhjBxCMYAICAigUEAA7
 }
+
+image create photo ::img::new -format GIF -data {
+    R0lGODlhHgAOAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/
+    AP//AAAA//8A/wD//////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBm
+    mQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/
+    AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMz
+    mTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPM
+    ADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYA
+    mWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZ
+    AGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/
+    mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lm
+    AJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnM
+    mZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wz
+    AMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZ
+    mcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8A
+    AP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9m
+    mf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////
+    AP//M///Zv//mf//zP///yH5BAEAABAALAAAAAAeAA4AAAiWAMMJFPhvYEGC
+    /xIeDLdw4UCC+gr+i8hQn0WLEilOdAiRW0R9HidyGznyY0iQFA2CROGRG8uV
+    KGK+dNnyZUOYI2eyJGmR5sqQKl3u1FnSJNGUFWmy1BnzJM2cQDsu9fk0osip
+    NoMOPYrx51SkV3MS5enV502qTGV6LIu0o0mTJEOKRMkRYsaMF1NubPuQoUGD
+    Ch0q7BsQADs=
+}
+apply {{} {
+    # Fix the 'new' image's lack of transparency using a "once only" procedure
+    # (really a lambda application...)
+    # TODO: rework the image to have the transparent bit set
+    set i ::img::new
+    set t "255 0 255"
+    set w [image width $i]
+    set h [image height $i]
+
+    for {set x 0} {$x < $w} {incr x} {
+	for {set y 0} {$y < $h} {incr y} {
+	    if {[$i get $x $y] eq $t} {
+		$i trans set $x $y 1
+	    }
+	}
+    }
+}}
 
 #----------------------------------------------------------------
 # The code below create the main window, consisting of a menu bar and a text
@@ -209,32 +250,61 @@ set lastLine ""
     }
     showStatus [.t index {@%x,%y}]
 }
-
+
+##############################################################################
 # Create the text for the text widget.
 
 # addFormattedText --
 #
 #	Add formatted text (but not hypertext) to the text widget after first
 #	passing it through the message catalog to allow for localization.
-#	Lines starting with @@ are formatting directives (begin newline, or
-#	change style) and all other lines are literal strings to be inserted.
-#	Blank lines are ignored.
+#	Lines starting with @@ are formatting directives (insert title, insert
+#	demo hyperlink, begin newline, or change style) and all other lines
+#	are literal strings to be inserted. Blank lines are ignored.
 #
 proc addFormattedText {formattedText} {
     set style normal
     set isNL 1
+    set demoCount 0
+    set new 0
     foreach line [split [mc $formattedText] \n] {
 	set line [string trim $line]
 	if {$line eq ""} {
 	    continue
 	}
-	if {$line eq "@@newline"} {
-	    .t insert end \n $style
-	    set isNL 1
-	    continue
-	}
 	if {[string match @@* $line]} {
-	    set style [string range $line 2 end]
+	    set data [string range $line 2 end]
+	    set key [lindex $data 0]
+	    set values [lrange $data 1 end]
+	    switch -exact -- $key {
+		title {
+		    .t insert end [mc $values]\n title \n normal
+		}
+		newline {
+		    .t insert end \n $style
+		    set isNL 1
+		}
+		subtitle {
+		    .t insert end "\n" {} [mc $values] title " \n " demospace
+		    set demoCount 0
+		}
+		demo {
+		    set description [lassign $values name]
+		    .t insert end "[incr demoCount]. [mc $description]." \
+			    [list demo demo-$name]
+		    if {$new} {
+			.t image create end -image ::img::new
+			set new 0
+		    }
+		    .t insert end " \n " demospace
+		}
+		new {
+		    set new 1
+		}
+		default {
+		    set style $key
+		}
+	    }
 	    continue
 	}
 	if {!$isNL} {
@@ -245,27 +315,8 @@ proc addFormattedText {formattedText} {
     }
 }
 
-# addDemoSection --
-#
-#	Add a new section of demos with a title and a (stride-2) list of demo
-#	files and their descriptions. Titles and descriptions are passed
-#	through the message catalog to allow for localization.
-#
-proc addDemoSection {title demos} {
-    .t insert end "\n" {} [mc $title] title " \n " demospace
-    set num 0
-    foreach {name description} $demos {
-	.t insert end "[incr num]. [mc $description]." [list demo demo-$name]
-	.t insert end " \n " demospace
-    }
-}
-
 addFormattedText {
-    @@title
-    Tk Widget Demonstrations
-    @@newline
-    @@normal
-    @@newline
+    @@title	Tk Widget Demonstrations
 
     This application provides a front end for several short scripts
     that demonstrate what you can do with Tk widgets.  Each of the
@@ -283,76 +334,83 @@ addFormattedText {
     button in the code window to reinvoke the demonstration with the
     modified code.
     @@newline
+
+    @@subtitle	Labels, buttons, checkbuttons, and radiobuttons
+    @@demo label	Labels (text and bitmaps)
+    @@demo unicodeout	Labels and UNICODE text
+    @@demo button	Buttons
+    @@demo check	Check-buttons (select any of a group)
+    @@demo radio	Radio-buttons (select one of a group)
+    @@demo puzzle	A 15-puzzle game made out of buttons
+    @@demo icon		Iconic buttons that use bitmaps
+    @@demo image1	Two labels displaying images
+    @@demo image2	A simple user interface for viewing images
+    @@demo labelframe	Labelled frames
+
+    @@subtitle	Listboxes
+    @@demo states	The 50 states
+    @@demo colors	Colors: change the color scheme for the application
+    @@demo sayings	A collection of famous and infamous sayings
+
+    @@subtitle	Entries and Spin-boxes
+    @@demo entry1	Entries without scrollbars
+    @@demo entry2	Entries with scrollbars
+    @@demo entry3	Validated entries and password fields
+    @@demo spin		Spin-boxes
+    @@demo form		Simple Rolodex-like form
+
+    @@subtitle	Text
+    @@demo text		Basic editable text
+    @@demo style	Text display styles
+    @@demo bind		Hypertext (tag bindings)
+    @@demo twind	A text widget with embedded windows and other features
+    @@demo search	A search tool built with a text widget
+    @@new
+    @@demo textpeer	Peering text widgets
+
+    @@subtitle	Canvases
+    @@demo items	The canvas item types
+    @@demo plot		A simple 2-D plot
+    @@demo ctext	Text items in canvases
+    @@demo arrow	An editor for arrowheads on canvas lines
+    @@demo ruler	A ruler with adjustable tab stops
+    @@demo floor	A building floor plan
+    @@demo cscroll	A simple scrollable canvas
+
+    @@subtitle	Scales
+    @@demo hscale	Horizontal scale
+    @@demo vscale	Vertical scale
+
+    @@subtitle	Paned Windows
+    @@demo paned1	Horizontal paned window
+    @@demo paned2	Vertical paned window
+
+    @@subtitle	Menus
+    @@demo menu		Menus and cascades (sub-menus)
+    @@demo menubu	Menu-buttons
+
+    @@subtitle	Common Dialogs
+    @@demo msgbox	Message boxes
+    @@demo filebox	File selection dialog
+    @@demo clrpick	Color picker
+
+    @@subtitle	Animation
+    @@new
+    @@demo anilabel	Animated labels
+    @@new
+    @@demo aniwave	Animated wave
+    @@new
+    @@demo pendulum	Pendulum simulation
+    @@new
+    @@demo goldberg	A celebration of Rube Goldberg
+
+    @@subtitle	Miscellaneous
+    @@demo bitmap	The built-in bitmaps
+    @@demo dialog1	A dialog box with a local grab
+    @@demo dialog2	A dialog box with a global grab
 }
-addDemoSection "Labels, buttons, checkbuttons, and radiobuttons" {
-    label	"Labels (text and bitmaps)"
-    unicodeout	"Labels and UNICODE text"
-    button	"Buttons"
-    check	"Check-buttons (select any of a group)"
-    radio	"Radio-buttons (select one of a group)"
-    puzzle	"A 15-puzzle game made out of buttons"
-    icon	"Iconic buttons that use bitmaps"
-    image1	"Two labels displaying images"
-    image2	"A simple user interface for viewing images"
-    labelframe	"Labelled frames"
-}
-addDemoSection "Listboxes" {
-    states	"The 50 states"
-    colors	"Colors: change the color scheme for the application"
-    sayings	"A collection of famous and infamous sayings"
-}
-addDemoSection "Entries and Spin-boxes" {
-    entry1	"Entries without scrollbars"
-    entry2	"Entries with scrollbars"
-    entry3	"Validated entries and password fields"
-    spin	"Spin-boxes"
-    form	"Simple Rolodex-like form"
-}
-addDemoSection "Text" {
-    text	"Basic editable text"
-    style	"Text display styles"
-    bind	"Hypertext (tag bindings)"
-    twind	"A text widget with embedded windows and other features"
-    search	"A search tool built with a text widget"
-    textpeer	"Peering text widgets"
-}
-addDemoSection "Canvases" {
-    items	"The canvas item types"
-    plot	"A simple 2-D plot"
-    ctext	"Text items in canvases"
-    arrow	"An editor for arrowheads on canvas lines"
-    ruler	"A ruler with adjustable tab stops"
-    floor	"A building floor plan"
-    cscroll	"A simple scrollable canvas"
-}
-addDemoSection "Scales" {
-    hscale	"Horizontal scale"
-    vscale	"Vertical scale"
-}
-addDemoSection "Paned Windows" {
-    paned1	"Horizontal paned window"
-    paned2	"Vertical paned window"
-}
-addDemoSection "Menus" {
-    menu	"Menus and cascades (sub-menus)"
-    menubu	"Menu-buttons"
-}
-addDemoSection "Common Dialogs" {
-    msgbox	"Message boxes"
-    filebox	"File selection dialog"
-    clrpick	"Color picker"
-}
-addDemoSection "Animation" {
-    anilabel	"Animated labels"
-    aniwave	"Animated wave"
-    pendulum	"Pendulum simulation"
-    goldberg	"A celebration of Rube Goldberg"
-}
-addDemoSection "Miscellaneous" {
-    bitmap	"The built-in bitmaps"
-    dialog1	"A dialog box with a local grab"
-    dialog2	"A dialog box with a global grab"
-}
+
+##############################################################################
 
 .t configure -state disabled
 focus .s
