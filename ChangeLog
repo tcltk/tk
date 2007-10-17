@@ -1,3 +1,10 @@
+2007-10-16  David Gravereaux <davygrvy@pobox.com>
+
+	* bitmaps/*.xbm: Changed CVS storage mode from -kb to -kkv as these
+	are really text files, not binaries.
+	* win/makefile.vc: Added $(BITMAPDIR) to the search path for the
+	depend target.
+
 2007-10-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/demos/widget:		Aqua GOOBE, cleanup icons.
