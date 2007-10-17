@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.34 2007/10/17 18:21:49 das Exp $
+# RCS: @(#) $Id: widget,v 1.35 2007/10/17 18:55:05 das Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -548,6 +548,9 @@ proc showCode w {
 	    -highlightthickness 0 -orient horizontal -bd 1
 	scrollbar $t.yscroll -command [list $t.text yview] \
 	    -highlightthickness 0 -orient vertical -bd 1
+	if {[tk windowingsystem] eq "aqua"} {
+	    foreach i [list $t.text $t.xscroll $t.yscroll] {$i configure -bd 0}
+	}
 
 	grid $t.text $t.yscroll -sticky news
 	#grid $t.xscroll
