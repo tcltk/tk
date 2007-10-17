@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.58 2007/10/15 20:52:47 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.59 2007/10/17 18:20:59 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1377,13 +1377,13 @@ WmForgetCmd(tkwin, winPtr, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    register Tk_Window frameWin = (Tk_Window)winPtr;
-    char *oldClass = (char*)Tk_Class(frameWin);
-
 #if 1
     Tcl_AppendResult(interp, "wm forget is not yet supported", (char*)NULL);
     return TCL_ERROR;
 #else
+    register Tk_Window frameWin = (Tk_Window)winPtr;
+    char *oldClass = (char*)Tk_Class(frameWin);
+
     if (Tk_IsTopLevel(frameWin)) {
 	MacDrawable *macWin = (MacDrawable *) winPtr->window;
 	CGrafPtr destPort = TkMacOSXGetDrawablePort(winPtr->window);
@@ -2131,14 +2131,14 @@ WmManageCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
-    register Tk_Window frameWin = (Tk_Window)winPtr;
-    register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *oldClass = (char*)Tk_Class(frameWin);
-
 #if 1
     Tcl_AppendResult(interp, "wm manage is not yet supported", (char*)NULL);
     return TCL_ERROR;
 #else
+    register Tk_Window frameWin = (Tk_Window)winPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    char *oldClass = (char*)Tk_Class(frameWin);
+
     if (!Tk_IsTopLevel(frameWin)) {
 	MacDrawable *macWin = (MacDrawable *) winPtr->window;
 
