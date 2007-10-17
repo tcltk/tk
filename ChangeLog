@@ -2,6 +2,8 @@
 
 	* library/demos/widget:		Aqua GOOBE, cleanup icons.
 	* library/demos/ttkbut.tcl:
+	* library/demos/entry3.tcl:
+	* library/demos/msgbox.tcl:
 
 	* library/demos/button.tcl:	restore setting of button
 					highlightbackground on Aqua.

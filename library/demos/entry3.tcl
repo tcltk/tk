@@ -4,7 +4,7 @@
 # permitted input is constrained in some way.  It also shows off a
 # password entry.
 #
-# RCS: @(#) $Id: entry3.tcl,v 1.4 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: entry3.tcl,v 1.5 2007/10/17 18:55:05 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -18,7 +18,6 @@ toplevel $w
 wm title $w "Constrained Entry Demonstration"
 wm iconname $w "entry3"
 positionWindow $w
-
 
 label $w.msg -font $font -wraplength 5i -justify left -text "Four different\
 	entries are displayed below.  You can add characters by pointing,\
@@ -183,5 +182,4 @@ grid $w.l1 $w.l2 -in $w.mid -padx 3m -pady 1m -sticky ew
 grid $w.l3 $w.l4 -in $w.mid -padx 3m -pady 1m -sticky ew
 grid columnconfigure $w.mid {0 1} -uniform 1
 pack $w.msg -side top
-pack $w.buttons -side bottom -fill x -pady 2m
 pack $w.mid -fill both -expand 1
