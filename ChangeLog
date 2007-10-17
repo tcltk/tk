@@ -1,3 +1,7 @@
+2007-10-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/ttkbut.tcl: Added demo of the basic Ttk widgets.
+
 2007-10-16  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: depend target now works and builds a generated
