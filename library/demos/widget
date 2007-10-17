@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.33 2007/10/17 14:59:27 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.34 2007/10/17 18:21:49 das Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -58,95 +58,37 @@ if {"defaultFont" ni [font names]} {
 set widgetDemo 1
 set font mainFont
 
-image create photo ::img::refresh -height 16 -format GIF -data {
-    R0lGODlhEAAQAPMAAMz/zCpnKdb/1z9mPypbKBtLGy9NMPL/9Or+6+P+4j1Y
-    PwQKBP7//xMLFAYBCAEBASH5BAEAAAAALAAAAAAQABAAAwR0EAD3Gn0Vyw0e
-    ++CncU7IIAezMA/nhUqSLJizvSdCEEjy2ZIV46AwDAoDHwPYGSoEiUJAAGJ6
-    EDHBNCFINW5OqABKSFk/B9lUa94IDwIFgewFMwQDQwCZQCztTgM9Sl8SOEMG
-    KSAthiaOjBMPDhQONBiXABEAOw==
+image create photo ::img::refresh -format GIF -data {
+    R0lGODlhEAAQAPEAMf///ypnKv8A/wAAACH5BAEAAAIALAAAAAAQABAAAAI6lIap
+    xgcPH2ouwgFGwzHIxHBQ4F3hSJKmwZXqWrmWxj7lKJ2dndcon9EBUq+gz3brVXAR
+    2tICU0gXBQA7
 }
 
-image create photo ::img::view -height 16 -format GIF -data {
-    R0lGODlhEAAQAPMAAMz/zP///8DAwICAgH9/fwAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAACH5BAEAAAAALAAAAAAQABAAAwRIcMhJB7h3hM33
-    KFjWdQQYap1QrCaGBmrRrS4nj5b53jOgbwXBKGACoYLDIuAoHCmZyYvR1rT5
-    RMAq8LqcIYGsrjPsW1XOmFUEADs=
+image create photo ::img::view -format GIF -data {
+    R0lGODlhEAAQAPMAMf////8A/8DAwAwMDNnZ2SYmJmZmZgAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAACH5BAEAAAEALAAAAAAQABAAAARP8MlJX7j3gc25xYFGENxg
+    DmDYmUIrmJgIDEIHGAGqbrRd5BlezXdBaWbDzg947BGZQhtgaSwlNz+dzMnBaVc0
+    16k6Kp2KpqMU8MkNKvBUBAA7
 }
 
-image create photo ::img::delete -height 16 -format GIF -data {
-    R0lGODlhEAAOAKEAAIQAAO/n3v///////yH5BAEKAAIALAAAAAAQAA4AAAIm
-    lI9pAKHbIHNoVhYhTdjlJ2AWKG2g+CldmB6rxo2uybYhbS80eRQAOw==
+image create photo ::img::delete -format GIF -data {
+    R0lGODlhEAAQAPEAMf///4QAAP8A/wAAACH5BAEAAAIALAAAAAAQABAAAAIjlI+p
+    mxEs3HGyPUSvqYpuvWQg40FfSVacBa5nN6JYDI3mzRQAOw==
 }
 
-image create photo ::img::print -height 19 -format GIF -data {
-    R0lGODlhGgATAPcAACEQOTEpQjEpUkIpc0IxY0I5c0oxjEo5SlJCY1JCe1JK
-    UlpChFpCjFpGkFpSc1paa2NKc2NKnGNja2tapWtjc29KnHNanHNjc3NjrXNr
-    jHNrnHNzc3tjpXtrtXtzhICAgIRzvYSEjIZzqox7tYyEnIyMjJSEtZSEvZSM
-    lJyMtZyMvZyUlJyUrZyUvZycnKWctaWlpa2czq2lzrWtvbWtzrW1tb21xr21
-    1sa9zs693s7OztbO3tbO597W1t7W7+fe7+fn5////+/n7+/v7+/v9////wAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAACH5BAEAAEEALAAAAAAaABMAQAj/AIMIHBhkg0GC
-    CBMGIQEiQgseQT4oeCBBAokgRYYQ0JBixg8hRIiUUEBBYYmTByBwiCBCRYwH
-    CxY8cKFw4AogRXLqLAJkQ80gCBBg3BkxZswTNGh4MGqgQQUMJRHCwMkTSE+D
-    Pn8eCKBhxIMhO3ei2OHDBw6sWSlMMMoWgwwfMDZI8GBjx44NARZwEGGi5MkS
-    PcIWKRGz5YgLbAco+KkQBQoJIRgjdGEVq+SaJajqtNrzMgsPCmoIzqmDgmWE
-    KOBuUKAAwYabYTfs4OHjY0giGyhk4MAWRI4eKyRQqPgggYUXPH4A+XBAgwoK
-    DiIsCFxjA9sFEVQQCRJCAYAFDJxiKhAxvMTonEFimrhhYinTBgWiCvxLNX3M
-    DkkpsKV5OYhjBxCMYAICAigUEAA7
+image create photo ::img::print -format GIF -data {
+    R0lGODlhEAAQAPMAMf///1dBglfYAHNkl4l+qp2Vuq+pyrOzs8C82f8A/wAAAAAA
+    AAAAAAAAAAAAAAAAACH5BAEAAAkALAAAAAAQABAAAARGMMlJK1U4KzsV+ODGeUd5
+    fGLlgeEImCWQXmx7aXgmKUjv/76NwkAsGgUCg7DAbDqbQoJ0Sp0KB9isNisMeL/g
+    ryhH5pgnEQA7
 }
 
 image create photo ::img::new -format GIF -data {
-    R0lGODlhHgAOAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/
-    AP//AAAA//8A/wD//////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBm
-    mQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/
-    AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMz
-    mTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPM
-    ADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYA
-    mWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZ
-    AGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/
-    mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lm
-    AJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnM
-    mZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wz
-    AMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZ
-    mcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8A
-    AP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9m
-    mf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////
-    AP//M///Zv//mf//zP///yH5BAEAABAALAAAAAAeAA4AAAiWAMMJFPhvYEGC
-    /xIeDLdw4UCC+gr+i8hQn0WLEilOdAiRW0R9HidyGznyY0iQFA2CROGRG8uV
-    KGK+dNnyZUOYI2eyJGmR5sqQKl3u1FnSJNGUFWmy1BnzJM2cQDsu9fk0osip
-    NoMOPYrx51SkV3MS5enV502qTGV6LIu0o0mTJEOKRMkRYsaMF1NubPuQoUGD
-    Ch0q7BsQADs=
+    R0lGODlhHgAOAPMAMf////8AAP//AP8A/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    AAAAAAAAAAAAAAAAACH5BAEAAAMALAAAAAAeAA4AAARhcMhJq71XTC2F91uYBZpA
+    DmagnmZ5ViZBBnJM3DU91zAt67EVKajiUWzF3eqjS3I2OlkONyQCe1Jgsxq9Hps3
+    pYqZNUJ/Yeuwa+5op7hasA11uYSc1isjQn2eKIEYg4QXEQA7
 }
-apply {{} {
-    # Fix the 'new' image's lack of transparency using a "once only" procedure
-    # (really a lambda application...)
-    # TODO: rework the image to have the transparent bit set
-    set i ::img::new
-    set t "255 0 255"
-    set w [image width $i]
-    set h [image height $i]
-
-    for {set x 0} {$x < $w} {incr x} {
-	for {set y 0} {$y < $h} {incr y} {
-	    if {[$i get $x $y] eq $t} {
-		$i trans set $x $y 1
-	    }
-	}
-    }
-}}
 
 #----------------------------------------------------------------
 # The code below create the main window, consisting of a menu bar and a text
@@ -179,9 +121,15 @@ if {[tk windowingsystem] eq "aqua"} {
 
 ttk::frame .statusBar
 ttk::label .statusBar.lab -text "   " -anchor w
-ttk::sizegrip .statusBar.foo
+if {[tk windowingsystem] eq "aqua"} {
+    ttk::separator .statusBar.sep
+    pack .statusBar.sep -side top -expand yes -fill x -pady 0
+}
 pack .statusBar.lab -side left -padx 2 -expand yes -fill both
-pack .statusBar.foo -side left -padx 2
+if {[tk windowingsystem] ne "aqua"} {
+    ttk::sizegrip .statusBar.foo
+    pack .statusBar.foo -side left -padx 2
+}
 pack .statusBar -side bottom -fill x -pady 2
 
 ttk::frame .textFrame
@@ -192,13 +140,24 @@ text .t -yscrollcommand {.s set}  -wrap word  -width 70  -height 30 \
 	-font mainFont  -setgrid 1  -highlightthickness 0 \
 	-padx 4  -pady 2  -takefocus 0 -bd 1
 pack .t -in .textFrame -expand y -fill both -padx 1
-pack  .textFrame -expand yes -fill both
+pack .textFrame -expand yes -fill both
+if {[tk windowingsystem] eq "aqua"} {
+    pack configure .statusBar.lab -padx {10 18} -pady {4 6}
+    pack configure .statusBar -pady 0
+    .s configure -bd 0
+    .t configure -padx 10 -pady 0 -bd 0
+}
 
 # Create a bunch of tags to use in the text widget, such as those for section
 # titles and demo descriptions. Also define the bindings for tags.
 
 .t tag configure title -font titleFont
+.t tag configure subtitle -font titleFont
 .t tag configure bold  -font boldFont
+if {[tk windowingsystem] eq "aqua"} {
+    .t tag configure title -spacing1 8
+    .t tag configure subtitle -spacing3 3
+}
 
 # We put some "space" characters to the left and right of each demo
 # description so that the descriptions are highlighted only when the mouse
@@ -206,7 +165,6 @@ pack  .textFrame -expand yes -fill both
 # right).
 #
 .t tag configure demospace -lmargin1 1c -lmargin2 1c
-
 
 if {[winfo depth .] == 1} {
     .t tag configure demo -lmargin1 1c -lmargin2 1c \
@@ -285,7 +243,7 @@ proc addFormattedText {formattedText} {
 		    set isNL 1
 		}
 		subtitle {
-		    .t insert end "\n" {} [mc $values] title " \n " demospace
+		    .t insert end "\n" {} [mc $values] subtitle " \n " demospace
 		    set demoCount 0
 		}
 		demo {
@@ -447,6 +405,13 @@ proc addSeeDismiss {w show {vars {}} {extra {}}} {
     }
     grid {*}$buttons -padx 4 -pady 4
     grid columnconfigure $w 0 -weight 1
+    if {[tk windowingsystem] eq "aqua"} {
+	foreach b [lrange $buttons 1 end] {$b configure -takefocus 0}
+	grid configure $w.sep -pady 0
+	grid configure {*}$buttons -pady {10 12}
+	grid configure [lindex $buttons 1] -padx {16 4}
+	grid configure [lindex $buttons end] -padx {4 18}
+    }
     return $w
 }
 
@@ -474,21 +439,30 @@ proc showVars {w args} {
     toplevel $w
     wm title $w [mc "Variable values"]
 
-    set f [ttk::labelframe $w.title -text [mc "Variable values:"]]
+    set b [ttk::frame $w.frame]
+    grid $b -sticky news
+    set f [ttk::labelframe $b.title -text [mc "Variable values:"]]
     foreach var $args {
 	ttk::label $f.n$var -text "$var:" -anchor w
 	ttk::label $f.v$var -textvariable $var -anchor w
 	grid $f.n$var $f.v$var -padx 2 -pady 2 -sticky w
     }
-    ttk::button $w.ok -width 8 -text [mc "OK"] \
+    ttk::button $b.ok -width 8 -text [mc "OK"] \
 	-command [list destroy $w] -default active
-    bind $w <Return> [list $w.ok invoke]
-    bind $w <Escape> [list $w.ok invoke]
+    bind $w <Return> [list $b.ok invoke]
+    bind $w <Escape> [list $b.ok invoke]
 
     grid $f -sticky news -padx 4
-    grid $w.ok -sticky e -padx 4 -pady {6 4}
+    grid $b.ok -sticky e -padx 4 -pady {6 4}
+    if {[tk windowingsystem] eq "aqua"} {
+	$b.ok configure -takefocus 0
+	grid configure $b.ok -pady {10 12} -padx {16 18}
+	grid configure $f -padx 10 -pady {10 0}
+    }
     grid columnconfig $f 1 -weight 1
     grid rowconfigure $f 100 -weight 1
+    grid columnconfig $b 0 -weight 1
+    grid rowconfigure $b 0 -weight 1
     grid columnconfig $w 0 -weight 1
     grid rowconfigure $w 0 -weight 1
 }
@@ -580,8 +554,9 @@ proc showCode w {
 	grid rowconfigure $t 0 -weight 1
 	grid columnconfig $t 0 -weight 1
 
-	set btns [frame $top.btns]
-
+	set btns [ttk::frame $top.btns]
+	ttk::separator $btns.sep
+	grid $btns.sep -columnspan 4 -row 0 -sticky ew -pady 2
 	ttk::button $btns.dismiss -text [mc "Dismiss"] \
 	    -default active -command [list destroy $top] \
 	    -image ::img::delete -compound left
@@ -591,10 +566,16 @@ proc showCode w {
 	ttk::button $btns.rerun   -text [mc "Rerun Demo"] \
 	    -command [list evalShowCode $text] \
 	    -image ::img::refresh -compound left
-
-	grid x $btns.rerun $btns.print $btns.dismiss -padx 4 -pady {6 4}
+	set buttons [list x $btns.rerun $btns.print $btns.dismiss]
+	grid {*}$buttons -padx 4 -pady 4
 	grid columnconfigure $btns 0 -weight 1
-
+	if {[tk windowingsystem] eq "aqua"} {
+	    foreach b [lrange $buttons 1 end] {$b configure -takefocus 0}
+	    grid configure $btns.sep -pady 0
+	    grid configure {*}$buttons -pady {10 12}
+	    grid configure [lindex $buttons 1] -padx {16 4}
+	    grid configure [lindex $buttons end] -padx {4 18}
+	}
 	grid $t    -sticky news
 	grid $btns -sticky ew
 	grid rowconfigure $top 0 -weight 1
@@ -712,7 +693,8 @@ proc aboutBox {} {
 
 [mc {Copyright (c) %s} {1996-1997 Sun Microsystems, Inc.}]
 [mc {Copyright (c) %s} {1997-2000 Ajuba Solutions, Inc.}]
-[mc {Copyright (c) %s} {2001-2007 Donal K. Fellows}]"
+[mc {Copyright (c) %s} {2001-2007 Donal K. Fellows}]
+[mc {Copyright (c) %s} {2002-2007 Daniel A. Steffen}]"
 }
 
 # Local Variables:

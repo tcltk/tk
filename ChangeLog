@@ -1,3 +1,18 @@
+2007-10-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/demos/widget:		Aqua GOOBE, cleanup icons.
+	* library/demos/ttkbut.tcl:
+
+	* library/demos/button.tcl:	restore setting of button
+					highlightbackground on Aqua.
+
+	* macosx/ttkMacOSXTheme.c: 	adjust button and separator geometry.
+
+	* macosx/tkMacOSXWm.c:		fix warnings.
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new demo files.
+	* macosx/Wish.xcode/project.pbxproj:
+
 2007-10-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/ttkbut.tcl: Added demo of the basic Ttk widgets.
