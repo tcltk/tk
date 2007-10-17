@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.111 2007/10/16 21:24:05 davygrvy Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.112 2007/10/17 20:53:06 davygrvy Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -791,7 +791,8 @@ depend:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(TCLTOOLSDIR)\mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
-		$(WINDIR),$$(WINDIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) @<<
+		$(WINDIR),$$(WINDIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
+		$(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)
 <<
 !endif
