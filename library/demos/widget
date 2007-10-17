@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.35 2007/10/17 18:55:05 das Exp $
+# RCS: @(#) $Id: widget,v 1.36 2007/10/17 20:22:41 das Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -59,35 +59,35 @@ set widgetDemo 1
 set font mainFont
 
 image create photo ::img::refresh -format GIF -data {
-    R0lGODlhEAAQAPEAMf///ypnKv8A/wAAACH5BAEAAAIALAAAAAAQABAAAAI6lIap
-    xgcPH2ouwgFGwzHIxHBQ4F3hSJKmwZXqWrmWxj7lKJ2dndcon9EBUq+gz3brVXAR
+    R0lGODlhEAAQAJEDAP///wAAACpnKv///yH5BAEAAAMALAAAAAAQABAAAAI63IKp
+    xgcPH2ouwgBCw1HIxHCQ4F3hSJKmwZXqWrmWxj7lKJ2dndcon9EBUq+gz3brVXAR
     2tICU0gXBQA7
 }
 
 image create photo ::img::view -format GIF -data {
-    R0lGODlhEAAQAPMAMf////8A/8DAwAwMDNnZ2SYmJmZmZgAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAACH5BAEAAAEALAAAAAAQABAAAARP8MlJX7j3gc25xYFGENxg
-    DmDYmUIrmJgIDEIHGAGqbrRd5BlezXdBaWbDzg947BGZQhtgaSwlNz+dzMnBaVc0
-    16k6Kp2KpqMU8MkNKvBUBAA7
+    R0lGODlhEAAQAKIHAP///wwMDAAAAMDAwNnZ2SYmJmZmZv///yH5BAEAAAcALAAA
+    AAAQABAAAANMKLos90+ASamDRxJCgw9YVnlDOXiQBgRDBRgHKE6sW8QR3doPKK27
+    yg33q/GIOhdg6OsEJzeZykiBSUcs06e56Xx6np8ScIkFGuhQAgA7
 }
 
 image create photo ::img::delete -format GIF -data {
-    R0lGODlhEAAQAPEAMf///4QAAP8A/wAAACH5BAEAAAIALAAAAAAQABAAAAIjlI+p
-    mxEs3HGyPUSvqYpuvWQg40FfSVacBa5nN6JYDI3mzRQAOw==
+    R0lGODlhEAAQAIABAIQAAP///yH5BAEAAAEALAAAAAAQABAAAAIjjI+pmwAc3HGy
+    PUSvqYpuvWQg40FfSVacBa5nN6JYDI3mzRQAOw==
 }
 
 image create photo ::img::print -format GIF -data {
-    R0lGODlhEAAQAPMAMf///1dBglfYAHNkl4l+qp2Vuq+pyrOzs8C82f8A/wAAAAAA
-    AAAAAAAAAAAAAAAAACH5BAEAAAkALAAAAAAQABAAAARGMMlJK1U4KzsV+ODGeUd5
-    fGLlgeEImCWQXmx7aXgmKUjv/76NwkAsGgUCg7DAbDqbQoJ0Sp0KB9isNisMeL/g
+    R0lGODlhEAAQALMKAAAAAP///52VunNkl8C82Yl+qldBgq+pyrOzs1fYAP///wAA
+    AAAAAAAAAAAAAAAAACH5BAEAAAoALAAAAAAQABAAAARGUMlJKwU4AztB+ODGeUiJ
+    fGLlgeEYmGWQXmx7aXgmAUTv/74N4EAsGhOJg1DAbDqbwoJ0Sp0KB9isNis0eL/g
     ryhH5pgnEQA7
 }
 
 image create photo ::img::new -format GIF -data {
-    R0lGODlhHgAOAPMAMf////8AAP//AP8A/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    AAAAAAAAAAAAAAAAACH5BAEAAAMALAAAAAAeAA4AAARhcMhJq71XTC2F91uYBZpA
-    DmagnmZ5ViZBBnJM3DU91zAt67EVKajiUWzF3eqjS3I2OlkONyQCe1Jgsxq9Hps3
-    pYqZNUJ/Yeuwa+5op7hasA11uYSc1isjQn2eKIEYg4QXEQA7
+    R0lGODlhHgAOALMPALMAANyIiOu7u8dEROaqqvru7sxVVeGZmbgREfXd3b0iItZ3
+    d8IzM9FmZvDMzP///yH5BAEAAA8ALAAAAAAeAA4AAASa8MlJq7046827WVOCHEkw
+    nANhUgJlEBIABJIwL3K+4IcUALCHjfbItYZDSgJgkBiYPmBMAUAkkLPKs/BAyLgM
+    wAQwOAAY2ByCaw4QAFQSoDEePJ6DmU1xInYZTw5nOEFFdgVUelkVDTIMd3AKFGQ1
+    MgI2AwEmQW8APZ0gdRONAks5nhIFVVxdAAkUAS2pAVwFl7ITB4UqHb0XEQA7
 }
 
 #----------------------------------------------------------------
@@ -251,7 +251,7 @@ proc addFormattedText {formattedText} {
 		    .t insert end "[incr demoCount]. [mc $description]." \
 			    [list demo demo-$name]
 		    if {$new} {
-			.t image create end -image ::img::new
+			.t image create end -image ::img::new -padx 5
 			set new 0
 		    }
 		    .t insert end " \n " demospace
