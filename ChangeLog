@@ -1,3 +1,9 @@
+2007-10-18  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/ttkmenu.tcl: Added more demos of Ttk widgets. These
+	* library/demos/ttkpane.tcl: ones are of menubuttons, panedwindows and
+	a progress bar (indirectly).
+
 2007-10-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/fonts.tcl: Create all the tip 145 font names on all
