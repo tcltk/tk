@@ -1,5 +1,5 @@
 #
-# $Id: fonts.tcl,v 1.4 2007/05/04 21:29:22 patthoyts Exp $
+# $Id: fonts.tcl,v 1.5 2007/10/18 14:23:55 patthoyts Exp $
 #
 # Font specifications.
 #
@@ -81,6 +81,10 @@ catch {font create TkTextFont}
 catch {font create TkHeadingFont}
 catch {font create TkCaptionFont}
 catch {font create TkTooltipFont}
+catch {font create TkFixedFont}
+catch {font create TkIconFont}
+catch {font create TkMenuFont}
+catch {font create TkSmallCaptionFont}
 
 variable F	;# miscellaneous platform-specific font parameters
 switch -- [tk windowingsystem] {
@@ -108,13 +112,19 @@ switch -- [tk windowingsystem] {
             font configure TkCaptionFont -family $F(family) -size $F(size) \
                 -weight bold
             font configure TkTooltipFont -family $F(family) -size $F(size)
+            font configure TkFixedFont   -family Courier -size 10
+            font configure TkIconFont    -family $F(family) -size $F(size)
+            font configure TkMenuFont    -family $F(family) -size $F(size)
+            font configure TkSmallCaptionFont -family $F(family) -size $F(size)
         }
     }
     aqua {
 	set F(family) "Lucida Grande"
+	set F(fixed) "Monaco"
 	set F(size) 13
 	set F(viewsize) 12
 	set F(smallsize) 11
+	set F(fixedsize) 9
 
 	font configure TkDefaultFont -family $F(family) -size $F(size)
 	font configure TkTextFont    -family $F(family) -size $F(size)
@@ -122,17 +132,24 @@ switch -- [tk windowingsystem] {
 	font configure TkCaptionFont -family $F(family) -size $F(size) \
 					-weight bold
 	font configure TkTooltipFont -family $F(family) -size $F(viewsize)
+	font configure TkFixedFont   -family $F(fixed)  -size $F(fixedsize)
+	font configure TkIconFont    -family $F(family) -size $F(size)
+	font configure TkMenuFont    -family $F(family) -size $F(size)
+	font configure TkSmallCaptionFont -family $F(family) -size $F(fixedsize)
     }
     default -
     x11 {
 	if {![catch {tk::pkgconfig get fontsystem} F(fs)] && $F(fs) eq "xft"} {
 	    set F(family) "sans-serif"
+	    set F(fixed)  "monospace"
 	} else {
 	    set F(family) "Helvetica"
+	    set F(fixed)  "courier"
 	}
 	set F(size) -12
 	set F(ttsize) -10
 	set F(capsize) -14
+	set F(fixedsize) -10
 
 	font configure TkDefaultFont -family $F(family) -size $F(size)
 	font configure TkTextFont    -family $F(family) -size $F(size)
@@ -141,6 +158,10 @@ switch -- [tk windowingsystem] {
 	font configure TkCaptionFont -family $F(family) -size $F(capsize) \
 			-weight bold
 	font configure TkTooltipFont -family $F(family) -size $F(ttsize)
+	font configure TkFixedFont   -family $F(fixed)  -size $F(fixedsize)
+	font configure TkIconFont    -family $F(family) -size $F(size)
+	font configure TkMenuFont    -family $F(family) -size $F(size)
+	font configure TkSmallCaptionFont -family $F(family) -size $F(ttsize)
     }
 }
 unset -nocomplain F
