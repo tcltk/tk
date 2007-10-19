@@ -1,3 +1,42 @@
+2007-10-18  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/ttkmenu.tcl: Added more demos of Ttk widgets. These
+	* library/demos/ttkpane.tcl: ones are of menubuttons, panedwindows and
+	a progress bar (indirectly).
+
+2007-10-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/fonts.tcl: Create all the tip 145 font names on all
+	platforms (mac and unix get handled in script, windows in C)
+
+2007-10-17  David Gravereaux <davygrvy@pobox.com>
+
+	* bitmaps/*.xbm: Changed CVS storage mode from -kb to -kkv as these
+	are really text files, not binaries.
+	* win/makefile.vc: Added $(BITMAPDIR) to the search path for the
+	depend target.
+
+2007-10-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/demos/widget:		Aqua GOOBE, cleanup icons.
+	* library/demos/ttkbut.tcl:
+	* library/demos/entry3.tcl:
+	* library/demos/msgbox.tcl:
+
+	* library/demos/button.tcl:	restore setting of button
+					highlightbackground on Aqua.
+
+	* macosx/ttkMacOSXTheme.c: 	adjust button and separator geometry.
+
+	* macosx/tkMacOSXWm.c:		fix warnings.
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new demo files.
+	* macosx/Wish.xcode/project.pbxproj:
+
+2007-10-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/ttkbut.tcl: Added demo of the basic Ttk widgets.
+
 2007-10-16  David Gravereaux <davygrvy@pobox.com>
 
 	* win/makefile.vc: depend target now works and builds a generated

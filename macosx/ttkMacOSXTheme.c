@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.7.2.2 2007/10/15 18:38:36 dgp Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.7.2.3 2007/10/19 14:35:34 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -198,7 +198,7 @@ static void ButtonElementGeometry(
     paddingPtr->left = contentsRect.left;
     paddingPtr->top = contentsRect.top;
     paddingPtr->bottom = scratchSize - contentsRect.bottom;
-    paddingPtr->right = scratchSize - contentsRect.right;
+    paddingPtr->right = scratchSize - contentsRect.right + 1;
 
     /* Now add a little extra padding to account for drop shadows.
      * @@@ SHOULD: call GetThemeButtonBackgroundBounds() instead.
@@ -681,7 +681,7 @@ static void SeparatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    *widthPtr = *heightPtr = 2;
+    *widthPtr = *heightPtr = 1;
 }
 
 static void SeparatorElementDraw(
