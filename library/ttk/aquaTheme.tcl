@@ -1,17 +1,13 @@
 #
-# $Id: aquaTheme.tcl,v 1.3 2007/07/06 19:44:51 jenglish Exp $
+# $Id: aquaTheme.tcl,v 1.4 2007/10/19 01:25:12 jenglish Exp $
 #
-# Ttk widget set: Aqua theme (OSX native look and feel)
-#
-#
-# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
+# Aqua theme (OSX native look and feel)
 #
 
-namespace eval ttk {
+namespace eval ttk::theme::aqua {
+    ttk::style theme settings aqua {
 
-    style theme settings aqua {
-
-	style configure . \
+	ttk::style configure . \
 	    -font System \
 	    -background White \
 	    -foreground Black \
@@ -20,7 +16,7 @@ namespace eval ttk {
 	    -selectborderwidth 0 \
 	    -insertwidth 1 \
 	    ;
-	style map . \
+	ttk::style map . \
 	    -foreground [list  disabled "#a3a3a3"  background "#a3a3a3"] \
 	    -selectbackground [list background "#c3c3c3"  !focus "#c3c3c3"] \
 	    -selectforeground [list background "#a3a3a3"  !focus "#000000"] \
@@ -30,33 +26,33 @@ namespace eval ttk {
 	# Actually, on Aqua we probably shouldn't stipple images in
 	# disabled buttons even if it did work...
 	#
-	style configure . -stipple {}
+	ttk::style configure . -stipple {}
 
-	style configure TButton -padding {0 2} -width -6
-	style configure TMenubutton -anchor w
-	style configure Toolbutton -padding 4
+	ttk::style configure TButton -padding {0 2} -width -6
+	ttk::style configure TMenubutton -anchor w
+	ttk::style configure Toolbutton -padding 4
 	# See Apple HIG figs 14-63, 14-65
-	style configure TNotebook -tabposition n -padding {20 12}
-	style configure TNotebook.Tab -padding {10 2 10 2}
+	ttk::style configure TNotebook -tabposition n -padding {20 12}
+	ttk::style configure TNotebook.Tab -padding {10 2 10 2}
 
 	# Treeview:
-	style configure Treeview -rowheight 18
-	style configure Heading -font TkHeadingFont
-	style map Row -background [list \
+	ttk::style configure Treeview -rowheight 18
+	ttk::style configure Heading -font TkHeadingFont
+	ttk::style map Row -background [list \
 		{selected background} "#c3c3c3" selected SystemHighlight] ;
-	style map Cell -foreground [list \
+	ttk::style map Cell -foreground [list \
 		{selected background} "#000000" selected SystemHighlightText] ;
-	style map Item -foreground [list \
+	ttk::style map Item -foreground [list \
 		{selected background} "#000000" selected SystemHighlightText] ;
 
 	# Enable animation for ttk::progressbar widget:
-	style configure TProgressbar -period 100 -maxphase 255
+	ttk::style configure TProgressbar -period 100 -maxphase 255
 
 	# Modify the the default Labelframe layout to use generic text element
 	# instead of Labelframe.text; the latter erases the window background
 	# (@@@ this still isn't right... want to fill with background pattern)
 
-	style layout TLabelframe {
+	ttk::style layout TLabelframe {
 	    Labelframe.border
 	    text
 	}
@@ -65,8 +61,9 @@ namespace eval ttk {
 	# with a 14 pixel inset and 4 pixels spacing between border and label
 	# (ref: Apple Human Interface Guidelines / Controls / Grouping Controls)
 	#
-    	style configure TLabelframe \
-		-labeloutside true -labelmargins {14 0 14 4}
+    	ttk::style configure TLabelframe \
+	    -labeloutside true -labelmargins {14 0 14 4}
 
+	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
     }
 }
