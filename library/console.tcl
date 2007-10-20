@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.32 2007/10/12 09:28:29 patthoyts Exp $
+# RCS: @(#) $Id: console.tcl,v 1.33 2007/10/20 09:02:40 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -123,7 +123,11 @@ proc ::tk::ConsoleInit {} {
 
     set con [text .console -yscrollcommand [list .sb set] -setgrid true \
                  -borderwidth 0 -highlightthickness 0 -font TkConsoleFont]
-    ::ttk::scrollbar .sb -command [list $con yview]
+    if {[tk windowingsystem] eq "aqua"} {
+        scrollbar .sb -command [list $con yview]
+    } else {
+        ::ttk::scrollbar .sb -command [list $con yview]
+    }
     pack .sb  -in .consoleframe -fill both -side right -padx 1 -pady 1
     pack $con -in .consoleframe -fill both -expand 1 -side left -padx 1 -pady 1
     pack .consoleframe -fill both -expand 1 -side left
