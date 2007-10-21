@@ -1,5 +1,5 @@
 #
-# $Id: fonts.tcl,v 1.6 2007/10/21 01:31:04 jenglish Exp $
+# $Id: fonts.tcl,v 1.7 2007/10/21 14:51:27 das Exp $
 #
 # Font specifications.
 #
@@ -7,16 +7,16 @@
 # symbolic fonts based on the current platform:
 #
 # TkDefaultFont	-- default for GUI items not otherwise specified
-# TkTextFont	-- font for user text (entry, listbox, others). [not in #145]
+# TkTextFont	-- font for user text (entry, listbox, others)
 # TkFixedFont	-- standard fixed width font
-# TkHeadingFont	-- headings (column headings, etc) [not in #145]
+# TkHeadingFont	-- headings (column headings, etc)
 # TkCaptionFont -- dialog captions (primary text in alert dialogs, etc.)
 # TkTooltipFont	-- font to use for tooltip windows
 # TkIconFont	-- font to use for icon captions
 # TkMenuFont	-- used to use for menu items
 #
 # In Tk 8.5, some of these fonts may be provided by the TIP#145 implementation
-# (Only on Windows as of Oct 2007).
+# (On Windows and Mac OS X as of Oct 2007).
 #
 # +++ Platform notes:
 #
@@ -46,14 +46,6 @@
 #
 #	There does not appear to be any recommendations for fixed-width fonts.
 #
-#	There's also a GetThemeFont() Appearance Manager API call
-#	for looking up kThemeSystemFont dynamically.
-#
-# Mac classic:
-#	Don't know, can't find *anything* on the Web about Mac pre-OSX.
-#	Might have used Geneva.  Doesn't matter, this platform
-#	isn't supported anymore anyway.
-#
 # X11:
 #	Need a way to tell if Xft is enabled or not.
 #	For now, assume patch #971980 applied.
@@ -70,7 +62,6 @@
 
 namespace eval ttk {
 
-
 set tip145 [catch {font create TkDefaultFont}]
 catch {font create TkTextFont}
 catch {font create TkHeadingFont}
@@ -81,6 +72,7 @@ catch {font create TkIconFont}
 catch {font create TkMenuFont}
 catch {font create TkSmallCaptionFont}
 
+if {!$tip145} {
 variable F	;# miscellaneous platform-specific font parameters
 switch -- [tk windowingsystem] {
     win32 {
@@ -100,25 +92,25 @@ switch -- [tk windowingsystem] {
         }
 	set F(size) 8
 
-        if {!$tip145} {
-            font configure TkDefaultFont -family $F(family) -size $F(size)
-            font configure TkTextFont    -family $F(family) -size $F(size)
-            font configure TkHeadingFont -family $F(family) -size $F(size)
-            font configure TkCaptionFont -family $F(family) -size $F(size) \
-                -weight bold
-            font configure TkTooltipFont -family $F(family) -size $F(size)
-            font configure TkFixedFont   -family Courier -size 10
-            font configure TkIconFont    -family $F(family) -size $F(size)
-            font configure TkMenuFont    -family $F(family) -size $F(size)
-            font configure TkSmallCaptionFont -family $F(family) -size $F(size)
-        }
+	font configure TkDefaultFont -family $F(family) -size $F(size)
+	font configure TkTextFont    -family $F(family) -size $F(size)
+	font configure TkHeadingFont -family $F(family) -size $F(size)
+	font configure TkCaptionFont -family $F(family) -size $F(size) \
+	    -weight bold
+	font configure TkTooltipFont -family $F(family) -size $F(size)
+	font configure TkFixedFont   -family Courier -size 10
+	font configure TkIconFont    -family $F(family) -size $F(size)
+	font configure TkMenuFont    -family $F(family) -size $F(size)
+	font configure TkSmallCaptionFont -family $F(family) -size $F(size)
     }
     aqua {
 	set F(family) "Lucida Grande"
 	set F(fixed) "Monaco"
+	set F(menusize) 14
 	set F(size) 13
 	set F(viewsize) 12
 	set F(smallsize) 11
+	set F(labelsize) 10
 	set F(fixedsize) 9
 
 	font configure TkDefaultFont -family $F(family) -size $F(size)
@@ -126,11 +118,11 @@ switch -- [tk windowingsystem] {
 	font configure TkHeadingFont -family $F(family) -size $F(smallsize)
 	font configure TkCaptionFont -family $F(family) -size $F(size) \
 					-weight bold
-	font configure TkTooltipFont -family $F(family) -size $F(viewsize)
+	font configure TkTooltipFont -family $F(family) -size $F(smallsize)
 	font configure TkFixedFont   -family $F(fixed)  -size $F(fixedsize)
 	font configure TkIconFont    -family $F(family) -size $F(size)
-	font configure TkMenuFont    -family $F(family) -size $F(size)
-	font configure TkSmallCaptionFont -family $F(family) -size $F(fixedsize)
+	font configure TkMenuFont    -family $F(family) -size $F(menusize)
+	font configure TkSmallCaptionFont -family $F(family) -size $F(labelsize)		
     }
     default -
     x11 {
@@ -160,6 +152,7 @@ switch -- [tk windowingsystem] {
     }
 }
 unset -nocomplain F
+}
 
 }
 
