@@ -1,5 +1,5 @@
 #
-# $Id: fonts.tcl,v 1.5 2007/10/18 14:23:55 patthoyts Exp $
+# $Id: fonts.tcl,v 1.6 2007/10/21 01:31:04 jenglish Exp $
 #
 # Font specifications.
 #
@@ -8,22 +8,15 @@
 #
 # TkDefaultFont	-- default for GUI items not otherwise specified
 # TkTextFont	-- font for user text (entry, listbox, others). [not in #145]
+# TkFixedFont	-- standard fixed width font
 # TkHeadingFont	-- headings (column headings, etc) [not in #145]
 # TkCaptionFont -- dialog captions (primary text in alert dialogs, etc.)
 # TkTooltipFont	-- font to use for tooltip windows
+# TkIconFont	-- font to use for icon captions
+# TkMenuFont	-- used to use for menu items
 #
-# This is a temporary solution until TIP #145 is implemented.
-#
-# Symbolic fonts listed in TIP #145:
-#
-# TkDefaultFont	-- the default for all GUI items not otherwise specified.
-# TkFixedFont	-- standard fixed width font [not used by default]
-# TkMenuFont	-- used for menu items [not used by default]
-# TkCaptionFont	-- used for window and dialog caption bars [different meaning]
-# TkSmallCaptionFont -- captions on contained windows or tool dialogs [not used]
-# TkIconFont	-- font in use for icon captions [not used by default]
-# TkTooltipFont	-- font to use for tooltip windows
-#
+# In Tk 8.5, some of these fonts may be provided by the TIP#145 implementation
+# (Only on Windows as of Oct 2007).
 #
 # +++ Platform notes:
 #
@@ -50,6 +43,8 @@
 #
 #	Note that the font for column headings (TkHeadingFont) is
 #	_smaller_ than the default font.
+#
+#	There does not appear to be any recommendations for fixed-width fonts.
 #
 #	There's also a GetThemeFont() Appearance Manager API call
 #	for looking up kThemeSystemFont dynamically.
