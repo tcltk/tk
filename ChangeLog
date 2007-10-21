@@ -6,7 +6,7 @@
 	* generic/tkFont.c (Tk{Create,Delete}NamedFont): allow NULL interp.
 
 	* library/ttk/fonts.tcl:	check for TIP #145 fonts on all
-					platforms; correct font sizes for aqua.
+					platforms; correct aqua font sizes.
 
 	* library/demos/ttkmenu.tcl:	Aqua GOOBE.
 	* library/demos/ttkpane.tcl:
