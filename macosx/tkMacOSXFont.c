@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.29 2007/10/12 03:14:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.30 2007/10/21 14:50:54 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -157,6 +157,38 @@ static int antialiasedTextEnabled;
 #define APPLFONT_NAME		"application"
 #define MENUITEMFONT_NAME	"menu"
 
+struct SystemFontMapEntry {
+    const ThemeFontID id;
+    const char *systemName;
+    const char *tkName;
+    const char *tkName1;
+};
+
+#define ThemeFont(n, ...) { kTheme##n##Font, "system" #n "Font", ##__VA_ARGS__ }
+static const struct SystemFontMapEntry systemFontMap[] = {
+    ThemeFont(System, 			"TkDefaultFont", "TkIconFont"),
+    ThemeFont(EmphasizedSystem,		"TkCaptionFont"),
+    ThemeFont(SmallSystem,		"TkHeadingFont", "TkTooltipFont"),
+    ThemeFont(SmallEmphasizedSystem),
+    ThemeFont(Application,		"TkTextFont"),
+    ThemeFont(Label,			"TkSmallCaptionFont"),
+    ThemeFont(Views),
+    ThemeFont(MenuTitle),
+    ThemeFont(MenuItem,			"TkMenuFont"),
+    ThemeFont(MenuItemMark),
+    ThemeFont(MenuItemCmdKey),
+    ThemeFont(WindowTitle),
+    ThemeFont(PushButton),
+    ThemeFont(UtilityWindowTitle),
+    ThemeFont(AlertHeader),
+    ThemeFont(Toolbar),
+    ThemeFont(MiniSystem),
+    { kThemeSystemFontDetail,		"systemDetailSystemFont" },
+    { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont" },
+    { -1, NULL }
+};
+#undef ThemeFont
+
 /*
  * Procedures used only in this file.
  */
@@ -221,9 +253,13 @@ static OSStatus FontFamilyEnumCallback(ATSFontFamilyRef family, void *refCon);
 static void SortFontFamilies(void);
 static int CompareFontFamilies(const void *vp1, const void *vp2);
 static const char *AddString(const char *in);
+
 static OSStatus GetThemeFontAndFamily(const ThemeFontID themeFontId,
 	FMFontFamily *fontFamily, unsigned char *fontName, SInt16 *fontSize,
 	Style *fontStyle);
+static void InitSystemFonts(TkMainInfo *mainPtr);
+static int CreateNamedSystemFont(Tcl_Interp *interp, Tk_Window tkwin,
+	const char* name, TkFontAttributes *faPtr);
 
 
 /*
@@ -249,10 +285,104 @@ TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
     InitFontFamilies();
+    InitSystemFonts(mainPtr);
 
 #if TK_MAC_COALESCE_LINE
     Tcl_DStringInit(&currentLine);
 #endif
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * InitSystemFonts --
+ *
+ *	Initialize named system fonts.
+ *
+ * Results:
+ *
+ *	None.
+ *
+ * Side effects:
+ *
+ *	None.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static void
+InitSystemFonts(
+    TkMainInfo *mainPtr)
+{
+    Tcl_Interp *interp = mainPtr->interp;
+    Tk_Window tkwin = (Tk_Window) mainPtr->winPtr;
+    const struct SystemFontMapEntry *systemFont = systemFontMap;
+    TkFontAttributes fa;
+
+    /* force this for now */
+    if (!mainPtr->winPtr->mainPtr) {
+        mainPtr->winPtr->mainPtr = mainPtr;
+    }
+    TkInitFontAttributes(&fa);
+    while (systemFont->systemName) {
+	Str255 fontName;
+	SInt16 fontSize;
+	Style  fontStyle;
+
+	if (GetThemeFont(systemFont->id, smSystemScript, fontName,
+		&fontSize, &fontStyle) == noErr) {
+	    CopyPascalStringToC(fontName, (char*)fontName);
+	    fa.family = Tk_GetUid((char*)fontName);
+	    fa.size = fontSize;
+	    fa.weight = (fontStyle & bold) ? TK_FW_BOLD : TK_FW_NORMAL;
+	    fa.slant = (fontStyle & italic) ? TK_FS_ITALIC : TK_FS_ROMAN;
+	    fa.underline = ((fontStyle & underline) != 0);
+	    CreateNamedSystemFont(interp, tkwin, systemFont->systemName, &fa);
+	    if (systemFont->tkName) {
+		CreateNamedSystemFont(interp, tkwin, systemFont->tkName, &fa);
+	    }
+	    if (systemFont->tkName1) {
+		CreateNamedSystemFont(interp, tkwin, systemFont->tkName1, &fa);
+	    }
+	}
+	systemFont++;
+    }
+    fa.family = Tk_GetUid("monaco");
+    fa.size = 9;
+    fa.weight = TK_FW_NORMAL;
+    fa.slant = TK_FS_ROMAN;
+    fa.underline = 0;
+    CreateNamedSystemFont(interp, tkwin, "TkFixedFont", &fa);
+    
+}
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * CreateNamedSystemFont --
+ *
+ *	Register a system font with the Tk named font mechanism.
+ *
+ * Results:
+ *
+ *	Result from TkCreateNamedFont().
+ *
+ * Side effects:
+ *
+ *	A new named font is added to the Tk font registry.
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static int
+CreateNamedSystemFont(
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    const char* name,
+    TkFontAttributes *faPtr)
+{
+    TkDeleteNamedFont(NULL, tkwin, name);
+    return TkCreateNamedFont(interp, tkwin, name, faPtr);
 }
 
 /*
@@ -323,7 +453,7 @@ TkpGetNativeFont(
     Str255 fontName;
     SInt16 fontSize;
     Style  fontStyle;
-    MacFont * fontPtr;
+    MacFont *fontPtr;
 
     if (strcmp(name, SYSTEMFONT_NAME) == 0) {
 	themeFontId = kThemeSystemFont;
