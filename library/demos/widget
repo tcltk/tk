@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.38 2007/10/21 14:51:47 das Exp $
+# RCS: @(#) $Id: widget,v 1.39 2007/10/22 14:21:10 dkf Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -85,13 +85,15 @@ image create photo ::img::print -format GIF -data {
     ryhH5pgnEQA7
 }
 
-image create photo ::img::new -format GIF -data {
+# Note that this is run through the message catalog! This is because this is
+# actually an image of a word.
+image create photo ::img::new -format GIF -data [mc {
     R0lGODlhHgAOALMPALMAANyIiOu7u8dEROaqqvru7sxVVeGZmbgREfXd3b0iItZ3
     d8IzM9FmZvDMzP///yH5BAEAAA8ALAAAAAAeAA4AAASa8MlJq7046827WVOCHEkw
     nANhUgJlEBIABJIwL3K+4IcUALCHjfbItYZDSgJgkBiYPmBMAUAkkLPKs/BAyLgM
     wAQwOAAY2ByCaw4QAFQSoDEePJ6DmU1xInYZTw5nOEFFdgVUelkVDTIMd3AKFGQ1
     MgI2AwEmQW8APZ0gdRONAks5nhIFVVxdAAkUAS2pAVwFl7ITB4UqHb0XEQA7
-}
+}]
 
 #----------------------------------------------------------------
 # The code below create the main window, consisting of a menu bar and a text
@@ -113,11 +115,18 @@ if {[tk windowingsystem] eq "aqua"} {
     menu .menuBar.file -tearoff 0
     ::tk::AmpMenuArgs .menuBar.file add command -label [mc "&About..."] \
 	    -command {aboutBox} -accelerator [mc "<F1>"]
+    bind . <F1> {aboutBox}
     .menuBar.file add sep
-    ::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
-	    -command {exit} -accelerator [mc "Meta-Q"]
-    bind . <[mc "Meta-q"]> {exit}
-    bind . <F1>     {aboutBox}
+    if {[string match win* [tk windowingsystem]]} {
+	# Windows doesn't usually have a Meta key
+	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
+		-command {exit} -accelerator [mc "Ctrl+Q"]
+	bind . <[mc "Control-q"]> {exit}
+    } else {
+	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
+		-command {exit} -accelerator [mc "Meta-Q"]
+	bind . <[mc "Meta-q"]> {exit}
+    }
 }
 
 . configure -menu .menuBar
@@ -221,14 +230,16 @@ set lastLine ""
 #	passing it through the message catalog to allow for localization.
 #	Lines starting with @@ are formatting directives (insert title, insert
 #	demo hyperlink, begin newline, or change style) and all other lines
-#	are literal strings to be inserted. Blank lines are ignored.
+#	are literal strings to be inserted. Substitutions are performed,
+#	allowing processing pieces through the message catalog. Blank lines
+#	are ignored.
 #
 proc addFormattedText {formattedText} {
     set style normal
     set isNL 1
     set demoCount 0
     set new 0
-    foreach line [split [mc $formattedText] \n] {
+    foreach line [split $formattedText \n] {
 	set line [string trim $line]
 	if {$line eq ""} {
 	    continue
@@ -246,7 +257,8 @@ proc addFormattedText {formattedText} {
 		    set isNL 1
 		}
 		subtitle {
-		    .t insert end "\n" {} [mc $values] subtitle " \n " demospace
+		    .t insert end "\n" {} [mc $values] subtitle \
+			    " \n " demospace
 		    set demoCount 0
 		}
 		demo {
@@ -272,7 +284,7 @@ proc addFormattedText {formattedText} {
 	    .t insert end " " $style
 	}
 	set isNL 0
-	.t insert end $line $style
+	.t insert end [mc $line] $style
     }
 }
 
@@ -310,16 +322,20 @@ addFormattedText {
     @@new
     @@demo ttkbut	The simple Themed Tk widgets
 
-    @@subtitle	Listboxes
+    @@subtitle	Listboxes and Trees
     @@demo states	The 50 states
     @@demo colors	Colors: change the color scheme for the application
     @@demo sayings	A collection of famous and infamous sayings
+    @@new
+    @@demo tree		A directory browser tree
 
-    @@subtitle	Entries and Spin-boxes
+    @@subtitle	Entries, Spin-boxes and Combo-boxes
     @@demo entry1	Entries without scrollbars
     @@demo entry2	Entries with scrollbars
     @@demo entry3	Validated entries and password fields
     @@demo spin		Spin-boxes
+    @@new
+    @@demo combo	Combo-boxes
     @@demo form		Simple Rolodex-like form
 
     @@subtitle	Text
@@ -340,21 +356,27 @@ addFormattedText {
     @@demo floor	A building floor plan
     @@demo cscroll	A simple scrollable canvas
 
-    @@subtitle	Scales
+    @@subtitle	Scales and Progress Bars
     @@demo hscale	Horizontal scale
     @@demo vscale	Vertical scale
+    @@new
+    @@demo ttkprogress	Progress bar
 
-    @@subtitle	Paned Windows
+    @@subtitle	Paned Windows and Notebooks
     @@demo paned1	Horizontal paned window
     @@demo paned2	Vertical paned window
     @@new
     @@demo ttkpane	Themed nested panes
+    @@new
+    @@demo ttknote	Notebook widget
 
-    @@subtitle	Menus
+    @@subtitle	Menus and Toolbars
     @@demo menu		Menus and cascades (sub-menus)
     @@demo menubu	Menu-buttons
     @@new
     @@demo ttkmenu	Themed menu buttons
+    @@new
+    @@demo toolbar	Detachable toolbar
 
     @@subtitle	Common Dialogs
     @@demo msgbox	Message boxes
@@ -699,7 +721,7 @@ proc PrintTextWin32 {filename} {
 #
 proc aboutBox {} {
     tk_messageBox -icon info -type ok -title [mc "About Widget Demo"] \
-	-message "[mc {Tk widget demonstration application}]
+	    -message "[mc {Tk widget demonstration application}]
 
 [mc {Copyright (c) %s} {1996-1997 Sun Microsystems, Inc.}]
 [mc {Copyright (c) %s} {1997-2000 Ajuba Solutions, Inc.}]
