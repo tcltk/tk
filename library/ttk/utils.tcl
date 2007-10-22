@@ -1,5 +1,5 @@
 #
-# $Id: utils.tcl,v 1.3 2006/11/27 06:53:55 jenglish Exp $
+# $Id: utils.tcl,v 1.4 2007/10/22 03:35:14 jenglish Exp $
 #
 # Utilities for widget implementations.
 #
@@ -15,18 +15,6 @@
 #
 proc ttk::takefocus {w} {
     expr {[$w instate !disabled] && [winfo viewable $w]}
-}
-
-# ttk::traverseTo $w --
-# 	Set the keyboard focus to the specified window.
-#
-proc ttk::traverseTo {w} {
-    set focus [focus]
-    if {$focus ne ""} {
-	event generate $focus <<TraverseOut>>
-    }
-    focus $w
-    event generate $w <<TraverseIn>>
 }
 
 ## ttk::traverseTo $w --
@@ -126,6 +114,13 @@ namespace eval ttk {
 #
 proc ttk::SaveGrab {w} {
     variable Grab
+
+    if {[info exists Grab($w)]} {
+	# $w is already on the grab stack.
+	# This should not happen, but bail out in case it does anyway:
+	#
+	return
+    }
 
     set restoreGrab [set restoreFocus ""]
 

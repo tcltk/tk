@@ -1,3 +1,12 @@
+2007-10-21  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl: ttk::combobox overhaul;
+	fixes [#1814778, #1780286, #1609168, #1349586]
+	* library/ttk/aquaTheme.tcl: Factored out aqua-specific 
+	combobox -postposition adjustments.
+	* generic/ttk/ttkTrack.c: Detect [grab]s and unpress
+	pressed element; combobox workaround no longer needed.
+
 2007-10-22  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXFont.c: 	register named fonts for TIP #145 fonts

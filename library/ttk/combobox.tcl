@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.4 2007/09/17 14:56:56 jenglish Exp $
+# $Id: combobox.tcl,v 1.5 2007/10/22 03:35:14 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -11,7 +11,6 @@
 
 namespace eval ttk::combobox {
     variable Values	;# Values($cb) is -listvariable of listbox widget
-
     variable State
     set State(entryPress) 0
 }
@@ -49,33 +48,22 @@ bind ComboboxListbox <KeyPress-Escape>  { ttk::combobox::LBCancel %W }
 bind ComboboxListbox <KeyPress-Tab>	{ ttk::combobox::LBTab %W next }
 bind ComboboxListbox <<PrevWindow>>	{ ttk::combobox::LBTab %W prev }
 bind ComboboxListbox <Destroy>		{ ttk::combobox::LBCleanup %W }
-# Default behavior is to follow selection on mouseover
-bind ComboboxListbox <Motion> {
-    %W selection clear 0 end
-    %W activate @%x,%y
-    %W selection set @%x,%y
-}
-
-# The combobox has a global grab active when the listbox is posted,
-# but on Windows and OSX that doesn't prevent the user from interacting
-# with other applications.  We need to popdown the listbox when this happens.
-#
-# On OSX, the listbox gets a <Deactivate> event.  This doesn't happen
-# on Windows or X11, but it does get a <FocusOut> event.  However on OSX
-# in Tk 8.5, the listbox gets spurious <FocusOut> events when the listbox
-# is posted (see #1349811).
-#
-# The following seems to work:
-#
+bind ComboboxListbox <Motion>		{ ttk::combobox::LBHover %W %x %y }
 
 switch -- [tk windowingsystem] {
     win32 {
+	# Dismiss listbox when user switches to a different application.
+	# NB: *only* do this on Windows (see #1814778)
 	bind ComboboxListbox <FocusOut>		{ ttk::combobox::LBCancel %W }
     }
-    aqua {
-	bind ComboboxListbox <Deactivate>	{ ttk::combobox::LBCancel %W }
-    }
 }
+
+### Combobox popdown window bindings.
+#
+bind ComboboxPopdown	<Map>		{ ttk::combobox::MapPopdown %W }
+bind ComboboxPopdown	<Unmap>		{ ttk::combobox::UnmapPopdown %W }
+bind ComboboxPopdown	<ButtonPress> \
+			{ ttk::combobox::Unpost [winfo parent %W] }
 
 ### Option database settings.
 #
@@ -98,8 +86,7 @@ switch -- [tk windowingsystem] {
 ### Binding procedures.
 #
 
-## Press $mode $x $y --
-#	ButtonPress binding for comboboxes.
+## Press $mode $x $y -- ButtonPress binding for comboboxes.
 #	Either post/unpost the listbox, or perform Entry widget binding,
 #	depending on widget state and location of button press.
 #
@@ -120,12 +107,11 @@ proc ttk::combobox::Press {mode w x y} {
 	    default { ttk::entry::Press $w $x }
 	}
     } else {
-	TogglePost $w
+	Post $w
     }
 }
 
-## Drag --
-#	B1-Motion binding for comboboxes.
+## Drag -- B1-Motion binding for comboboxes.
 #	If the initial ButtonPress event was handled by Entry binding,
 #	perform Entry widget drag binding; otherwise nothing.
 #
@@ -174,12 +160,9 @@ proc ttk::combobox::Scroll {cb dir} {
 #
 proc ttk::combobox::LBSelected {lb} {
     set cb [LBMaster $lb]
-    set selection [$lb curselection]
+    LBSelect $lb
     Unpost $cb
     focus $cb
-    if {[llength $selection] == 1} {
-	SelectEntry $cb [lindex $selection 0]
-    }
 }
 
 ## LBCancel --
@@ -189,8 +172,7 @@ proc ttk::combobox::LBCancel {lb} {
     Unpost [LBMaster $lb]
 }
 
-## LBTab --
-#	Tab key binding for combobox listbox:
+## LBTab -- Tab key binding for combobox listbox.
 #	Set the selection, and navigate to next/prev widget.
 #
 proc ttk::combobox::LBTab {lb dir} {
@@ -201,13 +183,40 @@ proc ttk::combobox::LBTab {lb dir} {
     }
 
     if {$newFocus ne ""} {
-	LBSelected $lb
+	LBSelect $lb
+	Unpost $cb
 	# The [grab release] call in [Unpost] queues events that later
 	# re-set the focus.  [update] to make sure these get processed first:
 	update
-	tk::TabToWindow $newFocus
+	ttk::traverseTo $newFocus
     }
 }
+
+## LBHover -- <Motion> binding for combobox listbox.
+#	Follow selection on mouseover.
+#
+proc ttk::combobox::LBHover {w x y} {
+    $w selection clear 0 end
+    $w activate @$x,$y
+    $w selection set @$x,$y
+}
+
+## MapPopdown -- <Map> binding for ComboboxPopdown
+#
+proc ttk::combobox::MapPopdown {w} {
+    [winfo parent $w] state pressed
+    ttk::globalGrab $w
+}
+
+## UnmapPopdown -- <Unmap> binding for ComboboxPopdown
+#
+proc ttk::combobox::UnmapPopdown {w} {
+    [winfo parent $w] state !pressed
+    ttk::releaseGrab $w
+}
+
+###
+#
 
 namespace eval ::ttk::combobox {
     # @@@ Until we have a proper native scrollbar on Aqua, use
@@ -247,45 +256,52 @@ proc ttk::combobox::PopdownWindow {cb} {
 
 ## PopdownToplevel -- Create toplevel window for the combobox popdown
 #
+# NOTES:
+#	On Windows: setting [wm transient] prevents the parent
+#	toplevel from becoming inactive when the popdown is posted
+#	(Tk 8.4.8+)
+#
+#	On X11: WM_TRANSIENT_FOR on override-redirect windows
+#	may be used by compositing managers and by EWMH-aware
+#	window managers (even though the older ICCCM spec says
+#	it's meaningless).
+#
+#	On OSX: for MacWindowStyle "help", "noActivates" prevents
+#	the parent toplevel from deactivating when the popdown
+#	is posted, and is necessary for the popdown to receive
+#	mouse events.  "hideOnSuspend" makes the popdown disappear
+#	(resp. reappear) when the parent toplevel is deactivated.
+#
 proc ttk::combobox::PopdownToplevel {w} {
-    toplevel $w -class Popdown
+    toplevel $w -class ComboboxPopdown
     wm withdraw $w
-    wm overrideredirect $w true
-    wm transient $w [winfo toplevel [winfo parent $w]]
     switch -- [tk windowingsystem] {
 	default -
 	x11 {
 	    $w configure -relief solid -borderwidth 1
+	    wm overrideredirect $w true
+	    wm transient $w [winfo toplevel [winfo parent $w]]
 	}
 	win32 {
 	    $w configure -relief solid -borderwidth 1
+	    wm overrideredirect $w true
+	    wm transient $w [winfo toplevel [winfo parent $w]]
 	}
 	aqua {
 	    $w configure -relief solid -borderwidth 0
-	    # @@@ tk::unsupported::MacWindowStyle style $w help none
+	    tk::unsupported::MacWindowStyle style $w \
+	    	help {noActivates hideOnSuspend}
 	}
     }
     return $w
 }
 
-## Post $cb --
-#	Pop down the associated listbox.
+## ConfigureListbox --
+#	Set listbox values, selection, height, and scrollbar visibility
+#	from current combobox values.
 #
-proc ttk::combobox::Post {cb} {
-    variable State
+proc ttk::combobox::ConfigureListbox {cb} {
     variable Values
-
-    # Don't do anything if disabled:
-    #
-    $cb instate disabled { return }
-
-    # Run -postcommand callback:
-    #
-    uplevel #0 [$cb cget -postcommand]
-
-    # Combobox is in 'pressed' state while listbox posted:
-    #
-    $cb state pressed
 
     set popdown [PopdownWindow $cb]
     set values [$cb cget -values]
@@ -298,7 +314,6 @@ proc ttk::combobox::Post {cb} {
     $popdown.l selection set $current
     $popdown.l activate $current
     $popdown.l see $current
-    # Should allow user to control listbox height
     set height [llength $values]
     if {$height > [$cb cget -height]} {
 	set height [$cb cget -height]
@@ -307,61 +322,64 @@ proc ttk::combobox::Post {cb} {
 	grid remove $popdown.sb
     }
     $popdown.l configure -height $height
-    update idletasks
+}
 
-    # Position listbox (@@@ factor with menubutton::PostPosition
-    #
+## PlacePopdown --
+#	Set popdown window geometry.
+#
+# @@@TODO: factor with menubutton::PostPosition
+#
+proc ttk::combobox::PlacePopdown {cb popdown} {
     set x [winfo rootx $cb]
     set y [winfo rooty $cb]
     set w [winfo width $cb]
     set h [winfo height $cb]
-    if {[tk windowingsystem] eq "aqua"} {
-	# Adjust for platform-specific bordering to ensure the box is
-	# directly under actual 'entry square'
-	set xoff 3
-	set yoff 2
-	incr x $xoff
-	set w [expr {$w - $xoff*2}]
-    } else {
-	set yoff 0
+    set postoffset [ttk::style lookup TCombobox -postoffset {} {0 0 0 0}]
+    foreach var {x y w h} delta $postoffset {
+    	incr $var $delta
     }
 
     set H [winfo reqheight $popdown]
     if {$y + $h + $H > [winfo screenheight $popdown]} {
-	set Y [expr {$y - $H - $yoff}]
+	set Y [expr {$y - $H}]
     } else {
-	set Y [expr {$y + $h - $yoff}]
+	set Y [expr {$y + $h}]
     }
     wm geometry $popdown ${w}x${H}+${x}+${Y}
+}
+
+## Post $cb --
+#	Pop down the associated listbox.
+#
+proc ttk::combobox::Post {cb} {
+    # Don't do anything if disabled:
+    #
+    $cb instate disabled { return }
+
+    # ASSERT: ![$cb instate pressed]
+
+    # Run -postcommand callback:
+    #
+    uplevel #0 [$cb cget -postcommand]
+
+    set popdown [PopdownWindow $cb]
+    ConfigureListbox $cb
+    update idletasks
+    PlacePopdown $cb $popdown
 
     # Post the listbox:
     #
     wm deiconify $popdown
     raise $popdown
-    # @@@ Workaround for TrackElementState bug:
-    event generate $cb <ButtonRelease-1>
-    # /@@@
-    ttk::globalGrab $cb
     focus $popdown.l
 }
 
 ## Unpost $cb --
-#	Unpost the listbox, restore focus to combobox widget.
+#	Unpost the listbox.
 #
 proc ttk::combobox::Unpost {cb} {
-    $cb state !pressed
-    ttk::releaseGrab $cb
-    if {[winfo exists $cb.popdown]} {
-	wm withdraw $cb.popdown
-    }
-    focus $cb
-}
-
-## TogglePost $cb --
-#	Post the listbox if unposted, unpost otherwise.
-#
-proc ttk::combobox::TogglePost {cb} {
-    if {[$cb instate pressed]} { Unpost $cb } { Post $cb }
+    wm withdraw $cb.popdown
+    grab release $cb.popdown ;# in case of stuck or unexpected grab [#1239190]
 }
 
 ## LBMaster $lb --
@@ -369,6 +387,17 @@ proc ttk::combobox::TogglePost {cb} {
 #
 proc ttk::combobox::LBMaster {lb} {
     winfo parent [winfo parent $lb]
+}
+
+## LBSelect $lb --
+#	Transfer listbox selection to combobox value.
+#
+proc ttk::combobox::LBSelect {lb} {
+    set cb [LBMaster $lb]
+    set selection [$lb curselection]
+    if {[llength $selection] == 1} {
+	SelectEntry $cb [lindex $selection 0]
+    }
 }
 
 ## LBCleanup $lb --
@@ -379,7 +408,6 @@ proc ttk::combobox::LBMaster {lb} {
 #	because the widget command is already gone when this binding fires).
 #	[winfo parent] still works, fortunately.
 #
-
 proc ttk::combobox::LBCleanup {lb} {
     variable Values
     unset Values([LBMaster $lb])
