@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.11 2005/08/04 10:01:59 dkf Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.12 2007/10/22 14:33:13 dkf Exp $
 '\" 
 .so man.macros
 .TH clipboard n 8.4 Tk "Tk Built-In Commands"
@@ -125,7 +125,7 @@ pack $c
 $c create text 150 30 -text "cut and paste me"
 bind $c <<Cut>> {
    \fBclipboard clear\fR
-   \fBclipboard append -type\fR TkCanvasItem \\
+   \fBclipboard append -type\fR TkCanvasItem \e
          [getItemConfig %W current]
    # Delete because this is cut, not copy.
    %W delete current
