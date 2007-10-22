@@ -1,4 +1,4 @@
-/* $Id: ttkTrack.c,v 1.2 2006/11/03 03:06:22 das Exp $
+/* $Id: ttkTrack.c,v 1.3 2007/10/22 03:35:13 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * TtkTrackElementState() -- helper routine for widgets
@@ -21,8 +21,6 @@
  * <ButtonRelease> event.
  *
  * TODO: Handle "chords" properly (e.g., <B1-ButtonPress-2>)
- * TODO: Deal with grabs -- possible to get a Press event w/no corresponding Release.
- *
  */
 
 #include <tk.h>
@@ -132,6 +130,8 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 	    break;
 	case LeaveNotify:
 	    ActivateElement(es, 0);
+	    if (ev->xcrossing.mode == NotifyGrab)
+		PressElement(es, 0);
 	    break;
 	case EnterNotify:
 	    node = Ttk_LayoutIdentify(
@@ -152,7 +152,7 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 	     */
 	    Tk_DeleteEventHandler(es->corePtr->tkwin,
 		    ElementStateMask, ElementStateEventProc, es);
-	    ckfree((ClientData)es);
+	    ckfree(clientData);
 	    break;
     }
 }
@@ -171,5 +171,4 @@ void TtkTrackElementState(WidgetCore *corePtr)
     Tk_CreateEventHandler(corePtr->tkwin,
 	    ElementStateMask,ElementStateEventProc,es);
 }
-
 
