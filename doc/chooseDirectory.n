@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: chooseDirectory.n,v 1.4 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: chooseDirectory.n,v 1.5 2007/10/22 14:33:13 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_chooseDirectory n 8.3 Tk "Tk Built-In Commands"
@@ -45,7 +45,7 @@ this parameter is true, then the user may only select directories that
 already exist.  The default value is \fIfalse\fR.
 .SH EXAMPLE
 .CS
-set dir [\fBtk_chooseDirectory\fR \\
+set dir [\fBtk_chooseDirectory\fR \e
         \-initialdir ~ \-title "Choose a directory"]
 if {$dir eq ""} {
    label .l -text "No directory selected"
