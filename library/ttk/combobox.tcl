@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.6 2007/10/23 17:09:09 jenglish Exp $
+# $Id: combobox.tcl,v 1.7 2007/10/23 23:24:09 hobbs Exp $
 #
 # Combobox bindings.
 #
@@ -234,8 +234,9 @@ namespace eval ::ttk::combobox {
 proc ttk::combobox::PopdownWindow {cb} {
     variable scrollbar
 
-    if {![winfo exists $cb.popdown]} {
-	set popdown [PopdownToplevel $cb.popdown]
+    set popdown $cb.popdown
+    if {![winfo exists $popdown]} {
+	PopdownToplevel $popdown
 
 	$scrollbar $popdown.sb \
 	    -orient vertical -command [list $popdown.l yview]
@@ -254,7 +255,16 @@ proc ttk::combobox::PopdownWindow {cb} {
 	grid columnconfigure $popdown 0 -weight 1
 	grid rowconfigure $popdown 0 -weight 1
     }
-    return $cb.popdown
+    # to handle reparented frame/toplevel, recalculate transient each time
+    switch -- [tk windowingsystem] {
+	x11 {
+	    wm transient $popdown [winfo toplevel [winfo parent $popdown]]
+	}
+	win32 {
+	    wm transient $popdown [winfo toplevel [winfo parent $popdown]]
+	}
+    }
+    return $popdown
 }
 
 ## PopdownToplevel -- Create toplevel window for the combobox popdown
@@ -276,19 +286,19 @@ proc ttk::combobox::PopdownWindow {cb} {
 #	(resp. reappear) when the parent toplevel is deactivated.
 #
 proc ttk::combobox::PopdownToplevel {w} {
-    toplevel $w -class ComboboxPopdown
+    if {![winfo exists $w]} {
+	toplevel $w -class ComboboxPopdown
+    }
     wm withdraw $w
     switch -- [tk windowingsystem] {
 	default -
 	x11 {
 	    $w configure -relief solid -borderwidth 1
 	    wm overrideredirect $w true
-	    wm transient $w [winfo toplevel [winfo parent $w]]
 	}
 	win32 {
 	    $w configure -relief solid -borderwidth 1
 	    wm overrideredirect $w true
-	    wm transient $w [winfo toplevel [winfo parent $w]]
 	}
 	aqua {
 	    $w configure -relief solid -borderwidth 0
