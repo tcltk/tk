@@ -1,3 +1,8 @@
+2007-10-23  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/cursor.test:	Make tests robust against changes in Tcl's
+	rules for accepting integers in octal format.
+
 2007-10-23  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* doc/font.n: Added section on the TIP#145 fonts.
