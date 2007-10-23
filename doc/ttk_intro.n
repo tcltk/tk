@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_intro.n,v 1.4 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: ttk_intro.n,v 1.5 2007/10/23 15:44:36 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_intro n 8.5 Tk "Tk Themed Widget"
@@ -20,7 +20,6 @@ below. The basic idea is to separate, to the extent possible, the code
 implementing a widget's behavior from the code implementing its appearance.
 Widget class bindings are primarily responsible for maintaining the widget
 state and invoking callbacks; all aspects of the widgets appearance is
-
 .SH "THEMES"
 A \fItheme\fR is a collection of elements and styles that determine the look
 and feel of the widget set. Themes can be used to:
@@ -36,7 +35,6 @@ Application suite "branding"
 Blend in with the rest of the desktop (Gnome, KDE, Java)
 .IP \(bu
 And, of course: eye candy.
-
 .SH "ELEMENTS"
 An \fIelement\fR displays an individual part of a widget. For example, a
 vertical scrollbar widget contains \fBuparrow\fR, \fBdownarrow\fR,
@@ -72,16 +70,15 @@ the \fB\-side\fR option, and placed within the parcel according to the
 .CS
 style layout Horizontal.TScrollbar {
     Scrollbar.trough -children {
-	Scrollbar.leftarrow -side left -sticky w
-	Scrollbar.rightarrow -side right -sticky e
-	Scrollbar.thumb -side left -expand true -sticky ew
+        Scrollbar.leftarrow -side left -sticky w
+        Scrollbar.rightarrow -side right -sticky e
+        Scrollbar.thumb -side left -expand true -sticky ew
     }
 }
 .CE
 By default, the layout for a widget is the same as its class name. Some
 widgets may override this (for example, the \fBscrollbar\fR widget chooses
-different layouts based on the \fB-orient\fR option).
-
+different layouts based on the \fB\-orient\fR option).
 .SH "STATES"
 In standard Tk, many widgets have a \fB\-state\fR option which (in most cases)
 is either \fBnormal\fR or \fBdisabled\fR. Some widgets support additional
@@ -101,12 +98,12 @@ cleared instead.
 .PP
 For example, the class bindings for the \fBttk::button\fR widget are:
 .CS
-bind TButton <Enter>		{ %W state active }
-bind TButton <Leave>		{ %W state !active }
-bind TButton <ButtonPress-1>	{ %W state pressed }
-bind TButton <Button1-Leave>	{ %W state !pressed }
-bind TButton <Button1-Enter>	{ %W state pressed }
-bind TButton <ButtonRelease-1>	\e
+bind TButton <Enter>            { %W state active }
+bind TButton <Leave>            { %W state !active }
+bind TButton <ButtonPress-1>    { %W state pressed }
+bind TButton <Button1-Leave>    { %W state !pressed }
+bind TButton <Button1-Enter>    { %W state pressed }
+bind TButton <ButtonRelease-1>  \e
     { %W instate {pressed} { %W state !pressed ; %W invoke } }
 .CE
 This specifies that the widget becomes \fBactive\fR when the pointer enters
@@ -120,7 +117,6 @@ actual bindings are a little more complicated than the above, but not by
 much).
 .PP
 \fINote to self: rewrite that paragraph. It's horrible.\fR
-
 .SH "STYLES"
 Each widget is associated with a \fIstyle\fR, which specifies values for
 element resources. Style names use a recursive dotted notation like layouts
@@ -128,10 +124,10 @@ and elements; by default, widgets use the class name to look up a style in the
 current theme. For example:
 .CS
 style default TButton \e
-	-background #d9d9d9 \e
-	-foreground black \e
-	-relief raised \e
-	;
+        -background #d9d9d9 \e
+        -foreground black \e
+        -relief raised \e
+        ;
 .CE
 Many elements are displayed differently depending on the widget state. For
 example, buttons have a different background when they are active, a different
@@ -139,11 +135,10 @@ foreground when disabled, and a different relief when pressed. The \fBstyle
 map\fR command specifies dynamic resources for a particular style:
 .CS
 style map TButton \e
-	-background [list disabled #d9d9d9  active #ececec] \e
-	-foreground [list disabled #a3a3a3] \e
-	-relief [list {pressed !disabled} sunken] \e
-	;
+        -background [list disabled #d9d9d9  active #ececec] \e
+        -foreground [list disabled #a3a3a3] \e
+        -relief [list {pressed !disabled} sunken] \e
+        ;
 .CE
-
 .SH "SEE ALSO"
 ttk_widget(n), ttk_style(n)

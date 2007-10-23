@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.31 2007/10/15 20:54:43 hobbs Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.32 2007/10/23 15:44:36 dkf Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -220,11 +220,14 @@ The focus model defaults to \fBpassive\fR, and Tk's \fBfocus\fR command
 assumes a passive model of focusing.
 .TP
 \fBwm forget \fIwindow\fR
+.VS 8.5
 The \fIwindow\fR will be unmapped from the screen and will no longer
 be managed by \fBwm\fR.  Windows created with the \fBtoplevel\fR
 command will be treated like \fBframe\fR windows once they are no
-longer managed by \fBwm\fR, however, the -menu configuration will be
-remembered and the menus will return once the widget is managed again.
+longer managed by \fBwm\fR, however, the \-menu configuration will be
+remembered and the menus will return once the widget is managed again. See
+\fBGEOMETRY MANAGEMENT\fR below for more details.
+.VE 8.5
 .TP
 \fBwm frame \fIwindow\fR
 If \fIwindow\fR has been reparented by the window manager into a
@@ -244,7 +247,7 @@ the form \fB=\fIwidth\fBx\fIheight\fB\(+-\fIx\fB\(+-\fIy\fR, where
 any of \fB=\fR, \fIwidth\fBx\fIheight\fR, or \fB\(+-\fIx\fB\(+-\fIy\fR
 may be omitted.  \fIWidth\fR and \fIheight\fR are positive integers
 specifying the desired dimensions of \fIwindow\fR.  If \fIwindow\fR
-is gridded (see GRIDDED GEOMETRY MANAGEMENT below) then the dimensions
+is gridded (see \fBGRIDDED GEOMETRY MANAGEMENT\fR below) then the dimensions
 are specified in grid units;  otherwise they are specified in pixel
 units.  \fIX\fR and \fIy\fR specify the desired location of
 \fIwindow\fR on the screen, in pixels.
@@ -403,11 +406,17 @@ is no icon window currently specified for \fIwindow\fR.
 Button press events are disabled for \fIwindow\fR as long as it is
 an icon window;  this is needed in order to allow window managers
 to ``own'' those events.
+.RS
+.PP
 Note: not all window managers support the notion of an icon window.
+.RE
 .TP
 \fBwm manage \fIwidget\fR
+.VS 8.5
 The \fIwidget\fR specified will become a stand alone top-level window.  The
-window will be decorated with the window managers title bar, etc.
+window will be decorated with the window managers title bar, etc. See
+\fBGEOMETRY MANAGEMENT\fR below for more details.
+.VE 8.5
 .TP
 \fBwm maxsize \fIwindow\fR ?\fIwidth height\fR?
 If \fIwidth\fR and \fIheight\fR are specified, they give
@@ -616,6 +625,7 @@ well as manual resizes and the \fBwm geometry\fR command.
 You can also use the command \fBwm resizable\fR to completely
 disable interactive resizing in one or both dimensions.
 .PP
+.VS 8.5
 The \fBwm manage\fR and \fBwm forget\fR commands may be used to
 perform undocking and docking of windows.  After a widget is managed
 by \fBwm manage\fR command, all other \fBwm\fR subcommands may be used
@@ -630,6 +640,7 @@ that have their top-level widget changed via a \fBwm manage\fR or
 \fBwm forget\fR command, must be redone to adjust any top-level widget
 path in the bindtags. Bindtags that have not been customized do not
 have to be redone.
+.VE 8.5
 .SH "GRIDDED GEOMETRY MANAGEMENT"
 .PP
 Gridded geometry management occurs when one of the widgets of an

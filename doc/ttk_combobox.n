@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_combobox.n,v 1.6 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: ttk_combobox.n,v 1.7 2007/10/23 15:44:35 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_combobox n 8.5 Tk "Tk Themed Widget"
@@ -21,10 +21,10 @@ A \fBttk::combobox\fR combines a text field with a pop-down list of values;
 the user may select the value of the text field from among the values in the
 list.
 .SO
-\-class	\-cursor	\-takefocus	\-style
+\-class	\-cursor	\-takefocus
+\-style
 .SE
 .\" ALSO: Other entry widget options
-
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
 Boolean value. If set, the widget selection is linked to the X selection.
@@ -52,7 +52,6 @@ Specifies the list of values to display in the drop-down listbox.
 Specifies an integer value indicating the desired width of the entry window,
 in average-size characters of the widget's font.
 .BE
-
 .SH "WIDGET COMMAND"
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
@@ -100,12 +99,10 @@ bbox	delete	icursor
 index	insert	selection
 xview
 .DE
-
 .SH "VIRTUAL EVENTS"
 The combobox widget generates a \fB<<ComboboxSelected>>\fR virtual event when
 the user selects an element from the list of values. This event is generated
 after the listbox is unposted.
-
 .SH "SEE ALSO"
 ttk_widget(n), ttk_entry(n)
 .SH KEYWORDS
