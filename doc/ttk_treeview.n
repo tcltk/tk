@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.6 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.7 2007/10/23 15:44:36 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_treeview n 8.5 Tk "Tk Themed Widget"
@@ -53,8 +53,10 @@ names.
 A list of column identifiers (either symbolic names or integer indices)
 specifying which data columns are displayed and the order in which they
 appear, or the string \fB#all\fP.
-.br
+.RS
+.PP
 If set to \fB#all\fP (the default), all columns are shown in the order given.
+.RE
 .OP \-height height Height
 Specifies the number of rows which should be visible. Note: the requested
 width is determined from the sum of the column widths.
@@ -64,13 +66,15 @@ four length specifications; see \fBTtk_GetPaddingFromObj()\fR for details.
 .OP \-selectmode selectMode SelectMode
 Controls how the built-in class bindings manage the selection. One of
 \fBextended\fR, \fBbrowse\fR, or \fBnone\fR.
-.br
+.RS
+.PP
 If set to \fBextended\fR (the default), multiple items may be selected. If
 \fBbrowse\fR, only a single item will be selected at a time. If \fBnone\fR,
 the selection will not be changed.
-.br
+.PP
 Note that application code and tag bindings can set the selection however they
 wish, regardless of the value of \fB\-selectmode\fR.
+.RE
 .OP \-show show Show
 A list containing zero or more of the following values, specifying which
 elements of the tree to display.
@@ -105,11 +109,13 @@ Returns the current value of the specified \fIoption\fR; see
 .
 If \fInewchildren\fR is not specified, returns the list of children belonging
 to \fIitem\fR.
-.br
+.RS
+.PP
 If \fInewchildren\fR is specified, replaces \fIitem\fR's child list with
 \fInewchildren\fR. Items in the old child list not present in the new child
 list are detached from the tree. None of the items in \fInewchildren\fR may be
 an ancestor of \fIitem\fR.
+.RE
 .TP
 \fIpathname \fBcolumn\fR \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
 .
@@ -238,9 +244,11 @@ greater than or equal to the current number of children, it is inserted at the
 end. If \fB\-id\fR is specified, it is used as the item identifier; \fIid\fR
 must not already exist in the tree. Otherwise, a new unique identifier is
 generated.
-.br
+.RS
+.PP
 \fIpathname \fBinsert\fR returns the item identifier of the newly created
 item. See \fBITEM OPTIONS\fR for the list of available options.
+.RE
 .TP
 \fIpathname \fBinstate \fIstatespec\fR ?\fIscript\fR?
 .
@@ -258,10 +266,12 @@ for the list of available options.
 .
 Moves \fIitem\fR to position \fIindex\fR in \fIparent\fR's list of children.
 It is illegal to move an item under one of its descendants.
-.br
+.RS
+.PP
 If \fIindex\fR is less than or equal to zero, \fIitem\fR is moved to the
 beginning; if greater than or equal to the number of children, it's moved to
 the end.
+.RE
 .TP
 \fIpathname \fBnext \fIitem\fR
 .
@@ -329,14 +339,16 @@ Add a Tk binding script for the event sequence \fIsequence\fR to the tag
 \fItagName\fR. When an X event is delivered to an item, binding scripts for
 each of the item's \fB\-tags\fR are evaluated in order as per
 \fIbindtags(n)\fR.
-.br
+.RS
+.PP
 \fB<KeyPress>\fR, \fB<KeyRelease>\fR, and virtual events are sent to the focus
 item. \fB<ButtonPress>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
 are sent to the item under the mouse pointer. No other event types are
 supported.
-.br
+.PP
 The binding \fIscript\fR undergoes \fB%\fR-substitutions before evaluation;
 see \fBbind(n)\fR for details.
+.RE
 .TP
 \fIpathName \fBtag configure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -366,11 +378,13 @@ The textual label to display for the item.
 A Tk image, displayed to the left of the label.
 .OP \-values values Values
 The list of values associated with the item.
-.br
+.RS
+.PP
 Each item should have the same number of values as the \fB\-columns\fR widget
 option. If there are fewer values than columns, the remaining values are
 assumed empty. If there are more values than columns, the extra values are
 ignored.
+.RE
 .OP \-open open Open
 A boolean value indicating whether the item's children should be displayed
 (\fB\-open true\fR) or hidden (\fB\-open false\fR).
@@ -415,11 +429,11 @@ display column \fB#\fIn+1\fR. Again, \fBcolumn #0 always refers to the tree
 column\fR.
 .SH "VIRTUAL EVENTS"
 The treeview widget generates the following virtual events.
-.IP <<TreeviewSelect>>
+.IP \fB<<TreeviewSelect>>\fR
 Generated whenever the selection changes.
-.IP <<TreeviewOpen>>
+.IP \fB<<TreeviewOpen>>\fR
 Generated just before setting the focus item to \fB\-open true\fR.
-.IP <<TreeviewClose>>
+.IP \fB<<TreeviewClose>>\fR
 Generated just after setting the focus item to \fB\-open false\fR.
 .PP
 The \fBfocus\fR and \fBselection\fR widget commands can be used to determine

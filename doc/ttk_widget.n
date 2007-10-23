@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_widget.n,v 1.4 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: ttk_widget.n,v 1.5 2007/10/23 15:44:36 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_widget n 8.5 Tk "Tk Themed Widget"
@@ -43,7 +43,8 @@ The following options are supported by widgets that are controllable by a
 scrollbar. See \fIscrollbar(n)\fR for more information
 .OP \-xscrollcommand xScrollCommand ScrollCommand
 A command prefix, used to communicate with horizontal scrollbars.
-.br
+.RS
+.PP
 When the view in the widget's window changes, the widget will generate a Tcl
 command by concatenating the scroll command and two numbers. Each of the
 numbers is a fraction between 0 and 1 indicating a position in the document; 0
@@ -51,14 +52,15 @@ indicates the beginning, and 1 indicates the end. The first fraction indicates
 the first information in the widget that is visible in the window, and the
 second fraction indicates the information just after the last portion that is
 visible.
-.br
+.PP
 Typically the \fBxScrollCommand\fR option consists of the path name of a
 \fBscrollbar\fR widget followed by ``set'', e.g. ``.x.scrollbar set''. This
 will cause the scrollbar to be updated whenever the view in the window
 changes.
-.br
+.PP
 If this option is set to the empty string (the default), then no command is be
 executed.
+.RE
 .OP \-yscrollcommand yScrollCommand ScrollCommand
 A command prefix, used to communicate with vertical scrollbars. See the
 description of \fB\-xscrollcommand\fR above for details.
@@ -85,18 +87,15 @@ states. All images in the list should have the same size.
 Specifies how to display the image relative to the text, in the case both
 \fB\-text\fR and \fB\-image\fR are present. Valid values are:
 .RS
-.IP text
+.IP \fBtext\fR
 Display text only.
-.IP image
+.IP \fBimage\fR
 Display image only.
-.IP center
+.IP \fBcenter\fR
 Display text centered on top of image.
-.IP top
-.IP bottom
-.IP left
-.IP right
+.IP \fBtop\fR, \fBbottom\fR, \fBleft\fR, \fBright\fR
 Display image above, below, left of, or right of the text, respectively.
-.IP none
+.IP \fBnone\fR
 The default; display the image if present, otherwise the text.
 .RE
 .OP \-width width Width

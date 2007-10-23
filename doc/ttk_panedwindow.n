@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_panedwindow.n,v 1.7 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: ttk_panedwindow.n,v 1.8 2007/10/23 15:44:36 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_panedwindow n 8.5 Tk "Tk Themed Widget"
@@ -15,7 +15,7 @@ ttk_panedwindow \- Multi-pane container window
 .SH SYNOPSIS
 .nf
 \fBttk::panedwindow\fR \fIpathName \fR?\fIoptions\fR?
-.br
+
 \fIpathName \fBadd\fR \fIpathName.subwindow\fR ?\fIoptions...\fR?
 \fIpathName \fBinsert\fR \fIindex\fR \fIpathName.subwindow\fR ?\fIoptions...\fR?
 .fi
@@ -26,9 +26,9 @@ A \fBttk::panedwindow\fR widget displays a number of subwindows, stacked
 either vertically or horizontally. The user may adjust the relative sizes of
 the subwindows by dragging the sash between panes.
 .SO
-\-class	\-cursor	\-takefocus	\-style
+\-class	\-cursor	\-style
+\-takefocus
 .SE
-
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-orient orient Orient
 Specifies the orientation of the window. If \fBvertical\fR, subpanes are
@@ -42,14 +42,12 @@ managed windows.
 If present and greater than zero, specifies the desired height of the widget
 in pixels. Otherwise, the requested height is determined by the height of the
 managed windows.
-
 .SH "PANE OPTIONS"
 The following options may be specified for each pane:
 .OP \-weight weight Weight
 An integer specifying the relative stretchability of the pane. When the paned
 window is resized, the extra space is added or subtracted to each pane
 proportionally to its \fB\-weight\fR.
-
 .SH "WIDGET COMMAND"
 Supports the standard \fBconfigure\fR, \fBcget\fR, \fBstate\fR, and
 \fBinstate\fR commands; see \fIttk_widget(n)\fR for details. Additional
@@ -99,6 +97,5 @@ Returns the new position of sash number \fIindex\fR.
 .
 Returns the index of the sash at point \fIx,y\fR, or the empty string if
 \fIx,y\fR is not over a sash.
-
 .SH "SEE ALSO"
 ttk_widget(n), ttk_notebook(n), panedwindow(n)

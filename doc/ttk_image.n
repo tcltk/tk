@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_image.n,v 1.7 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: ttk_image.n,v 1.8 2007/10/23 15:44:36 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_image n 8.5 Tk "Tk Themed Widget"
@@ -22,7 +22,6 @@ of one or more elements. The first element is the default image name. The rest
 of the list is a sequence of \fIstatespec / value\fR pairs specifying other
 images to use when the element is in a particular state or combination of
 states.
-
 .SH OPTIONS
 Valid \fIoptions\fR are:
 .TP
@@ -50,7 +49,6 @@ zero or more characters "n", "s", "w", or "e".
 .
 Specifies a minimum width for the element. If less than zero, the base image's
 width is used as a default.
-
 .SH "IMAGE STRETCHING"
 If the element's allocated parcel is larger than the image, the image will be
 placed in the parcel based on the \fB\-sticky\fR option. If the image needs to
@@ -60,7 +58,6 @@ ns\fR), subregions of the image are replicated to fill the parcel based on the
 four fixed corners, top and left edges (which may be tiled horizontally), left
 and right edges (which may be tiled vertically), and the central area (which
 may be tiled in both directions).
-
 .SH "EXAMPLE"
 .CS
 set img1 [image create photo -file button.png]
@@ -70,9 +67,7 @@ style element create Button.button image \e
         [list $img1  pressed $img2  active $img3] \e
         -border {2 4} -sticky we
 .CE
-
 .SH "SEE ALSO"
 image(n), photo(n)
-
 .SH KEYWORDS
 pixmap theme, image

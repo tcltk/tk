@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: text.n,v 1.44 2007/10/16 15:13:18 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.45 2007/10/23 15:44:35 dkf Exp $
 '\"
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -1458,11 +1458,13 @@ arguments, and the section on \fIpathName
 \fBdelete\fR for an explanation of the handling of the indices.  If
 \fIindex2\fR corresponds to an index earlier in the text than
 \fIindex1\fR, an error will be generated.
-.br
+.RS
+.PP
 The deletion and insertion are arranged so that no unnecessary
 scrolling of the window or movement of insertion cursor occurs.  In
 addition the undo/redo stack are correctly modified, if undo operations
 are active in the text widget.  The command returns an empty string.
+.RE
 .VE 8.5
 .TP
 \fIpathName \fBscan\fR \fIoption args\fR

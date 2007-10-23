@@ -6,7 +6,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" SOURCE: tk/doc/scrollbar.n, r1.4
-'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.4 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.5 2007/10/23 15:44:36 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_scrollbar n 8.5 Tk "Tk Themed Widget"
@@ -28,24 +28,25 @@ control the visible region. Depending on the theme, two or more arrow buttons
 may also be present; these are used to scroll the visible region in discrete
 units.
 .SO
-\-class	\-cursor	\-style	\-takefocus
+\-class	\-cursor	\-style
+\-takefocus
 .SE
-
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
 A Tcl script prefix to evaluate to change the view in the widget associated
 with the scrollbar. Additional arguments are appended to the value of this
 option, as described in \fBSCROLLING COMMANDS\fR below, whenever the user
 requests a view change by manipulating the scrollbar.
-.br
+.RS
+.PP
 This option typically consists of a two-element list, containing the name of a
 scrollable widget followed by either \fBxview\fR (for horizontal scrollbars)
 or \fByview\fR (for vertical scrollbars).
+.RE
 .OP \-orient orient Orient
 One of \fBhorizontal\fR or \fBvertical\fR. Specifies the orientation of the
 scrollbar.
 .BE
-
 .SH "WIDGET COMMAND"
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
@@ -76,7 +77,6 @@ between 0 and 1.
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
 .
 Modify or query the widget state; see \fIttk_widget(n)\fR.
-
 .SH "INTERNAL COMMANDS"
 The following widget commands are used internally by the TScrollbar widget
 class bindings.
@@ -106,7 +106,6 @@ closest point in the trough is used.
 Returns the name of the element under the point given by \fIx\fR and \fIy\fR,
 or an empty string if the point does not lie in any element of the scrollbar.
 \fIX\fR and \fIy\fR are pixel coordinates relative to the scrollbar widget.
-
 .SH "SCROLLING COMMANDS"
 When the user interacts with the scrollbar, for example by dragging the thumb,
 the scrollbar notifies the associated widget that it must change its view.
@@ -138,28 +137,27 @@ widget to define the meaning of a page; typically it is slightly less than
 what fits in the window, so that there is a slight overlap between the old and
 new views. \fINumber\fR is either 1, which means the next page should become
 visible, or \-1, which means that the previous page should become visible.
-
 .SH "WIDGET STATES"
 The scrollbar automatically sets the \fBdisabled\fR state bit when the entire
 range is visible (range is 0.0 to 1.0), and clears it otherwise. It also sets
 the \fBactive\fR and \fBpressed\fR state flags of individual elements, based
 on the position and state of the mouse pointer.
-
 .SH EXAMPLE
 .CS
 set f [frame .f]
-ttk::scrollbar $f.hsb -orient horizontal -command [list $f.t xview]
-ttk::scrollbar $f.vsb -orient vertical -command [list $f.t yview]
-text $f.t -xscrollcommand [list $f.hsb set] -yscrollcommand [list $f.vsb set]
+ttk::scrollbar $f.hsb -orient horizontal \e
+        -command [list $f.t xview]
+ttk::scrollbar $f.vsb -orient vertical \e
+        -command [list $f.t yview]
+text $f.t -xscrollcommand [list $f.hsb set] \e
+        -yscrollcommand [list $f.vsb set]
 grid $f.t -row 0 -column 0 -sticky nsew
 grid $f.vsb -row 0 -column 1 -sticky nsew
 grid $f.hsb -row 1 -column 0 -sticky nsew
 grid columnconfigure $f 0 -weight 1
 grid rowconfigure $f 0 -weight 1
 .CE
-
 .SH "SEE ALSO"
 ttk_widget(n), scrollbar(n)
-
 .SH KEYWORDS
 scrollbar, widget
