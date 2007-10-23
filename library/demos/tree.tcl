@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing a Ttk
 # tree widget.
 #
-# RCS: @(#) $Id: tree.tcl,v 1.1 2007/10/22 14:21:11 dkf Exp $
+# RCS: @(#) $Id: tree.tcl,v 1.2 2007/10/23 06:31:16 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -21,7 +21,7 @@ positionWindow $w
 
 ## Explanatory text
 ttk::label $w.msg -font $font -wraplength 4i -justify left -anchor n -text "Ttk is the new Tk themed widget set. One of the widgets it includes is a tree widget, which allows the user to browse a hierarchical data-set such as a filesystem. The tree widget not only allows for the tree part itself, but it also supports an arbitrary number of additional columns which can show additional data (in this case, the size of the files found in your filesystem). You can also change the width of the columns by dragging the boundary between them."
-pack $w.msg
+pack $w.msg -fill x
 
 ## See Code / Dismiss
 pack [addSeeDismiss $w.seeDismiss $w] -side bottom -fill x
@@ -74,8 +74,13 @@ proc populateTree {tree node} {
 ## Create the tree and set it up
 ttk::treeview $w.tree -columns {fullpath type size} -displaycolumns {size} \
 	-yscroll "$w.vsb set" -xscroll "$w.hsb set"
-ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
-ttk::scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
+if {[tk windowingsystem] ne "aqua"} {
+    ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
+    ttk::scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
+} else {
+    scrollbar $w.vsb -orient vertical -command "$w.tree yview"
+    scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
+}
 $w.tree heading \#0 -text "Directory Structure"
 $w.tree heading size -text "File Size"
 $w.tree column size -stretch 0 -width 70
