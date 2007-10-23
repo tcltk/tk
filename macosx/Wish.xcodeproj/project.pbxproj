@@ -600,6 +600,11 @@
 		F9099B8A0CC67D30005A9580 /* textpeer.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = textpeer.tcl; sourceTree = "<group>"; };
 		F9099B8B0CC67D3E005A9580 /* ttkbut.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttkbut.tcl; sourceTree = "<group>"; };
 		F91E62260C1AE686006C9D96 /* Tclsh-Info.plist.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "Tclsh-Info.plist.in"; sourceTree = "<group>"; };
+		F936FCD70CCD984500716967 /* ttkprogress.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttkprogress.tcl; sourceTree = "<group>"; };
+		F936FCD80CCD984600716967 /* tree.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tree.tcl; sourceTree = "<group>"; };
+		F936FCD90CCD984600716967 /* toolbar.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = toolbar.tcl; sourceTree = "<group>"; };
+		F936FCDA0CCD984600716967 /* ttknote.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttknote.tcl; sourceTree = "<group>"; };
+		F936FCDB0CCD984600716967 /* combo.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = combo.tcl; sourceTree = "<group>"; };
 		F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXFont.h; sourceTree = "<group>"; };
 		F95FAFF90B34F1130072E431 /* macOSXLoad.test */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = macOSXLoad.test; sourceTree = "<group>"; };
 		F966BA0408F27A37005CB29B /* error.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = error.xbm; sourceTree = "<group>"; };
@@ -2089,7 +2094,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.31 2007/10/21 14:52:20 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.32 2007/10/23 06:31:51 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2464,6 +2469,7 @@
 				F966BB2208F27A39005CB29B /* check.tcl */,
 				F966BB2308F27A39005CB29B /* clrpick.tcl */,
 				F966BB2408F27A39005CB29B /* colors.tcl */,
+				F936FCDB0CCD984600716967 /* combo.tcl */,
 				F966BB2508F27A39005CB29B /* cscroll.tcl */,
 				F966BB2608F27A39005CB29B /* ctext.tcl */,
 				F966BB2708F27A39005CB29B /* dialog1.tcl */,
@@ -2508,9 +2514,13 @@
 				F966BB5C08F27A3A005CB29B /* text.tcl */,
 				F9099B8A0CC67D30005A9580 /* textpeer.tcl */,
 				F966BB5D08F27A3A005CB29B /* timer */,
+				F936FCD90CCD984600716967 /* toolbar.tcl */,
+				F936FCD80CCD984600716967 /* tree.tcl */,
 				F9099B8B0CC67D3E005A9580 /* ttkbut.tcl */,
-				F9F4EFDC0CC7B3CA00378A27 /* ttkpane.tcl */,
 				F9F4EFDD0CC7B3CB00378A27 /* ttkmenu.tcl */,
+				F936FCDA0CCD984600716967 /* ttknote.tcl */,
+				F9F4EFDC0CC7B3CA00378A27 /* ttkpane.tcl */,
+				F936FCD70CCD984500716967 /* ttkprogress.tcl */,
 				F966BB5E08F27A3A005CB29B /* twind.tcl */,
 				F966BB5F08F27A3A005CB29B /* unicodeout.tcl */,
 				F966BB6008F27A3A005CB29B /* vscale.tcl */,

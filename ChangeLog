@@ -1,3 +1,15 @@
+2007-10-23  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/demos/combo.tcl:	Aqua GOOBE.
+	* library/demos/toolbar.tcl:
+	* library/demos/tree.tcl:
+	* library/demos/ttknote.tcl:
+	* library/demos/ttkprogress.tcl:
+	* library/demos/widget:
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new demo files.
+	* macosx/Wish.xcode/project.pbxproj:
+
 2007-10-22  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/widget: Added more demos, reorganized to make Tk and
@@ -7,14 +19,15 @@
 	demos of new (mostly) Ttk widgets.
 	* library/demos/ttkbut.tcl: Improvements.
 
-2007-10-21  Joe English  <jenglish@users.sourceforge.net>
+2007-10-22  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/combobox.tcl: ttk::combobox overhaul; fixes [#1814778,
-	#1780286, #1609168, #1349586]
-	* library/ttk/aquaTheme.tcl: Factored out aqua-specific combobox
-	-postposition adjustments.
-	* generic/ttk/ttkTrack.c: Detect [grab]s and unpress pressed element;
-	combobox workaround no longer needed.
+	* library/ttk/combobox.tcl:	ttk::combobox overhaul; fixes [Bugs
+					1814778, 1780286, 1609168, 1349586]
+	* library/ttk/aquaTheme.tcl:	Factored out aqua-specific combobox
+					-postposition adjustments.
+	* generic/ttk/ttkTrack.c:	Detect [grab]s and unpress pressed
+					element; combobox workaround no longer
+					needed.
 
 2007-10-22  Daniel Steffen  <das@users.sourceforge.net>
 
