@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.5 2007/10/22 03:35:14 jenglish Exp $
+# $Id: combobox.tcl,v 1.6 2007/10/23 17:09:09 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -221,8 +221,9 @@ proc ttk::combobox::UnmapPopdown {w} {
 namespace eval ::ttk::combobox {
     # @@@ Until we have a proper native scrollbar on Aqua, use
     # @@@ the regular Tk one.  Use ttk::scrollbar on other platforms.
-    if {[tk windowingsystem] ne "aqua"} {
-	namespace import -force ::ttk::scrollbar
+    variable scrollbar ttk::scrollbar
+    if {[tk windowingsystem] eq "aqua"} {
+	set scrollbar ::scrollbar
     }
 }
 
@@ -231,10 +232,12 @@ namespace eval ::ttk::combobox {
 #	creating it if necessary.
 #
 proc ttk::combobox::PopdownWindow {cb} {
+    variable scrollbar
+
     if {![winfo exists $cb.popdown]} {
 	set popdown [PopdownToplevel $cb.popdown]
 
-	scrollbar $popdown.sb \
+	$scrollbar $popdown.sb \
 	    -orient vertical -command [list $popdown.l yview]
 	listbox $popdown.l \
 	    -listvariable ttk::combobox::Values($cb) \
