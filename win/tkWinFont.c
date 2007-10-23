@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.33 2007/09/08 16:13:45 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.34 2007/10/23 09:23:54 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -368,19 +368,13 @@ CreateNamedSystemFont(
     CONST char* name,
     HFONT hFont)
 {
-    TkFontAttributes *faPtr;
-    WinFont *fontPtr;
+    WinFont winfont;
     int r;
     
-    TkDeleteNamedFont(interp, tkwin, name);
-    
-    fontPtr = (WinFont *) ckalloc(sizeof(WinFont));
-    InitFont(tkwin, hFont, 0, fontPtr);
-    faPtr = (TkFontAttributes*)ckalloc(sizeof(TkFontAttributes));
-    memcpy(faPtr, &fontPtr->font.fa, sizeof(TkFontAttributes));
-    r = TkCreateNamedFont(interp, tkwin, name, faPtr);
-    TkpDeleteFont((TkFont *)fontPtr);
-    ckfree((char *) fontPtr);
+    TkDeleteNamedFont(NULL, tkwin, name);
+    InitFont(tkwin, hFont, 0, &winfont);
+    r = TkCreateNamedFont(interp, tkwin, name, &winfont.font.fa);
+    TkpDeleteFont((TkFont *)&winfont);
     return r;
 }
 
