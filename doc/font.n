@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.13 2007/10/23 10:51:47 dkf Exp $
+'\" RCS: @(#) $Id: font.n,v 1.14 2007/10/23 12:47:06 das Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -270,6 +270,10 @@ that match appropriate system defaults.
 .
 This font is the default for all GUI items not otherwise specified.
 .TP
+\fBTkTextFont\fR
+.
+This font should be used for user text in entry widgets, listboxes etc.
+.TP
 \fBTkFixedFont\fR
 .
 This font is the standard fixed-width font.
@@ -277,6 +281,10 @@ This font is the standard fixed-width font.
 \fBTkMenuFont\fR
 .
 This font is used for menu items.
+.TP
+\fBTkHeadingFont\fR
+.
+This font should be used for column headings in lists and tables.
 .TP
 \fBTkCaptionFont\fR
 .
@@ -299,7 +307,7 @@ itself in response to system changes. Instead, make a copy of the font and
 modify that.
 .SS "PLATFORM-SPECIFIC FONTS"
 .LP
-The following named system fonts are supported:
+The following system fonts are supported:
 .RS
 .TP
 X Windows:
@@ -317,6 +325,30 @@ Mac OS X:
 .ta 3c 6c
 \fBsystem	application	menu\fR
 .DE
+.RS
+Additionally, the following named fonts provide access to the Aqua theme fonts:
+.DS
+\fBsystemSystemFont
+systemEmphasizedSystemFont
+systemSmallSystemFont
+systemSmallEmphasizedSystemFont
+systemApplicationFont
+systemLabelFont
+systemViewsFont
+systemMenuTitleFont
+systemMenuItemFont
+systemMenuItemMarkFont
+systemMenuItemCmdKeyFont
+systemWindowTitleFont
+systemPushButtonFont
+systemUtilityWindowTitleFont
+systemAlertHeaderFont
+systemToolbarFont
+systemMiniSystemFont
+systemDetailSystemFont
+systemDetailEmphasizedSystemFont\fR
+.DE
+.RE
 .RE
 .SH EXAMPLE
 Fill a text widget with lots of font demonstrators, one for every font
