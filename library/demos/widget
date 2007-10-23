@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.39 2007/10/22 14:21:10 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.40 2007/10/23 06:31:16 das Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -376,7 +376,7 @@ addFormattedText {
     @@new
     @@demo ttkmenu	Themed menu buttons
     @@new
-    @@demo toolbar	Detachable toolbar
+    @@demo toolbar	Themed toolbar
 
     @@subtitle	Common Dialogs
     @@demo msgbox	Message boxes

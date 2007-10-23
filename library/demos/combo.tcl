@@ -2,7 +2,7 @@
 #
 # This demonstration script creates several combobox widgets.
 #
-# RCS: @(#) $Id: combo.tcl,v 1.1 2007/10/22 14:21:10 dkf Exp $
+# RCS: @(#) $Id: combo.tcl,v 1.2 2007/10/23 06:31:16 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -18,7 +18,7 @@ wm title $w "Combobox Demonstration"
 wm iconname $w "combo"
 positionWindow $w
 
-label $w.msg -font $font -wraplength 5i -justify left -text "Three different\
+ttk::label $w.msg -font $font -wraplength 5i -justify left -text "Three different\
 	combo-boxes are displayed below. You can add characters to the first\
 	one by pointing, clicking and typing, just as with an entry; pressing\
 	Return will cause the current value to be added to the list that is\
@@ -28,11 +28,15 @@ label $w.msg -font $font -wraplength 5i -justify left -text "Three different\
 	particular value, and cannot be modified at all. The third one only\
 	allows you to select values from its drop-down list of Australian\
 	cities."
-pack $w.msg -side top
+pack $w.msg -side top -fill x
 
 ## See Code / Dismiss buttons
 set btns [addSeeDismiss $w.buttons $w {firstValue secondValue ozCity}]
 pack $btns -side bottom -fill x
+
+ttk::frame $w.f
+pack $w.f -fill both -expand 1
+set w $w.f
 
 set australianCities {
     Canberra Sydney Melbourne Perth Adelaide Brisbane
