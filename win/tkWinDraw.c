@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.18 2007/01/11 15:35:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.19 2007/10/24 01:03:37 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -414,6 +414,8 @@ XCopyPlane(
 
 	    fgBrush = CreateSolidBrush(gc->foreground);
 	    oldBrush = SelectObject(destDC, fgBrush);
+	    SetBkColor(destDC, RGB(255,255,255));
+	    SetTextColor(destDC, RGB(0,0,0));
 	    BitBlt(destDC, dest_x, dest_y, (int) width, (int) height, srcDC,
 		    src_x, src_y, MASKPAT);
 	    SelectObject(destDC, oldBrush);
