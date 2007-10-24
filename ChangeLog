@@ -1,3 +1,7 @@
+2007-10-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkWindow.c: permit wm manage of any widget (esp: ttk::frame)
+
 2007-10-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/ttk/combobox.tcl (ttk::combobox::PopdownWindow): redo wm
