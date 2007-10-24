@@ -1,3 +1,80 @@
+2007-10-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinDraw.c: Applied patch #1723362 for transparent bitmaps
+
+	* generic/tkWindow.c: permit wm manage of any widget (esp: ttk::frame)
+
+2007-10-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/ttk/combobox.tcl (ttk::combobox::PopdownWindow): redo wm
+	transient on each drop to handle reparent-able frames. [Bug 1818441]
+
+2007-10-23  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl: [namespace import ::ttk::scrollbar]
+	doesn't work, since ttk::scrollbar isn't [namespace export]ed.
+
+2007-10-23  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/cursor.test:	Make tests robust against changes in Tcl's
+	rules for accepting integers in octal format.
+
+2007-10-23  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* doc/font.n: Added section on the TIP#145 fonts.
+
+2007-10-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinFont.c: Fixed leak in CreateNamedFont spotted by das.
+
+2007-10-23  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/demos/combo.tcl:	Aqua GOOBE.
+	* library/demos/toolbar.tcl:
+	* library/demos/tree.tcl:
+	* library/demos/ttknote.tcl:
+	* library/demos/ttkprogress.tcl:
+	* library/demos/widget:
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new demo files.
+	* macosx/Wish.xcode/project.pbxproj:
+
+2007-10-22  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/widget: Added more demos, reorganized to make Tk and
+	Ttk demos seem to be more coherent whole. Made localization a bit
+	easier by reducing the amount of duplication.
+	* library/demos/{combo,toolbar,tree,ttknote,ttkprogress}.tcl: New
+	demos of new (mostly) Ttk widgets.
+	* library/demos/ttkbut.tcl: Improvements.
+
+2007-10-22  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl:	ttk::combobox overhaul; fixes [Bugs
+					1814778, 1780286, 1609168, 1349586]
+	* library/ttk/aquaTheme.tcl:	Factored out aqua-specific combobox
+					-postposition adjustments.
+	* generic/ttk/ttkTrack.c:	Detect [grab]s and unpress pressed
+					element; combobox workaround no longer
+					needed.
+
+2007-10-22  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXFont.c: 	register named fonts for TIP #145 fonts
+					and all theme font IDs.
+
+	* generic/tkFont.c (Tk{Create,Delete}NamedFont): allow NULL interp.
+
+	* library/ttk/fonts.tcl:	check for TIP #145 fonts on all
+					platforms; correct aqua font sizes.
+
+	* library/demos/ttkmenu.tcl:	Aqua GOOBE.
+	* library/demos/ttkpane.tcl:
+	* library/demos/widget:
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new demo files.
+	* macosx/Wish.xcode/project.pbxproj:
+
 2007-10-18  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/ttkmenu.tcl: Added more demos of Ttk widgets. These
@@ -6,7 +83,7 @@
 
 2007-10-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/ttk/fonts.tcl: Create all the tip 145 font names on all
+	* library/ttk/fonts.tcl: Create all the TIP #145 font names on all
 	platforms (mac and unix get handled in script, windows in C)
 
 2007-10-17  David Gravereaux <davygrvy@pobox.com>

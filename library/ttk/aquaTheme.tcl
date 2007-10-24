@@ -1,5 +1,5 @@
 #
-# $Id: aquaTheme.tcl,v 1.2.2.2 2007/10/19 14:35:33 dgp Exp $
+# $Id: aquaTheme.tcl,v 1.2.2.3 2007/10/24 12:59:33 dgp Exp $
 #
 # Aqua theme (OSX native look and feel)
 #
@@ -34,6 +34,12 @@ namespace eval ttk::theme::aqua {
 	# See Apple HIG figs 14-63, 14-65
 	ttk::style configure TNotebook -tabposition n -padding {20 12}
 	ttk::style configure TNotebook.Tab -padding {10 2 10 2}
+
+
+	# Adjust combobox post position to ensure the box is
+	# directly under 'entry square'
+	#
+	ttk::style configure TCombobox -postoffset {3 -2 -6 0}
 
 	# Treeview:
 	ttk::style configure Treeview -rowheight 18
