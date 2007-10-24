@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: clipboard.n,v 1.12 2007/10/22 14:33:13 dkf Exp $
+'\" RCS: @(#) $Id: clipboard.n,v 1.13 2007/10/24 14:32:58 dkf Exp $
 '\" 
 .so man.macros
 .TH clipboard n 8.4 Tk "Tk Built-In Commands"
@@ -34,8 +34,9 @@ forms are currently supported:
 .TP
 \fBclipboard clear\fR ?\fB\-displayof\fR \fIwindow\fR?
 Claims ownership of the clipboard on \fIwindow\fR's display and removes
-any previous contents.  \fIWindow\fR defaults to ``.''.  Returns an
-empty string.
+any previous contents.  \fIWindow\fR defaults to
+.QW . .
+Returns an empty string.
 .TP
 \fBclipboard append\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-format\fR \fIformat\fR? ?\fB\-type\fR \fItype\fR? ?\fB\-\|\-\fR? \fIdata\fR
 Appends \fIdata\fR to the clipboard on \fIwindow\fR's
@@ -45,7 +46,9 @@ display.
 .RS
 .PP
 \fIType\fR specifies the form in which the selection is to be returned
-(the desired ``target'' for conversion, in ICCCM terminology), and
+(the desired
+.QW target
+for conversion, in ICCCM terminology), and
 should be an atom name such as STRING or FILE_NAME; see the
 Inter-Client Communication Conventions Manual for complete details.
 \fIType\fR defaults to STRING.

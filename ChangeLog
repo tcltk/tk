@@ -1,3 +1,8 @@
+2007-10-24  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/*.n, doc/*.3, doc/*.1: Lots of changes to take advantage of the
+	new macros.
+
 2007-10-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinDraw.c: Applied patch #1723362 for transparent bitmaps

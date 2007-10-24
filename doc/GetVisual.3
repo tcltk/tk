@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetVisual.3,v 1.4 2007/01/05 00:00:49 nijtmans Exp $
+'\" RCS: @(#) $Id: GetVisual.3,v 1.5 2007/10/24 14:32:57 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetVisual 3 4.0 Tk "Tk Library Procedures"
@@ -76,8 +76,9 @@ as \fItkwin\fR.
 Use the visual whose X identifier is \fInumber\fR.
 .TP 15
 \fBbest\fR ?\fIdepth\fR?
-Choose the ``best possible'' visual, using the following rules, in
-decreasing order of priority:
+Choose the
+.QW "best possible"
+visual, using the following rules, in decreasing order of priority:
 (a) a visual that has exactly the desired depth is best, followed
 by a visual with greater depth than requested (but as little extra
 as possible), followed by a visual with less depth than requested
