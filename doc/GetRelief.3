@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetRelief.3,v 1.7 2007/01/05 00:00:49 nijtmans Exp $
+'\" RCS: @(#) $Id: GetRelief.3,v 1.8 2007/10/24 14:32:57 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetReliefFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -71,7 +71,8 @@ return value, so \fBTk_GetRelief\fR is less efficient than
 \fBTk_NameOfRelief\fR is the logical inverse of \fBTk_GetRelief\fR.
 Given a relief value it returns the corresponding string (\fBflat\fR,
 \fBraised\fR, \fBsunken\fR, \fBgroove\fR, \fBsolid\fR, or \fBridge\fR).
-If \fIrelief\fR isn't a legal relief value, then ``unknown relief''
+If \fIrelief\fR isn't a legal relief value, then
+.QW "unknown relief"
 is returned.
 
 .SH KEYWORDS

@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: FontId.3,v 1.6 2005/04/22 21:32:23 georgeps Exp $
+'\" RCS: @(#) $Id: FontId.3,v 1.7 2007/10/24 14:32:56 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_FontId 3 8.0 Tk "Tk Library Procedures"
@@ -56,8 +56,10 @@ ascent, descent, and linespace, used in font metrics.
 Postscript font name that should be used when printing.  The return value
 is the size in points of the \fItkfont\fR and the Postscript font name is
 appended to \fIdsPtr\fR.  \fIDsPtr\fR must refer to an initialized
-\fBTcl_DString\fR.  Given a ``reasonable'' Postscript printer, the
-following screen font families should print correctly:
+\fBTcl_DString\fR.  Given a
+.QW reasonable
+Postscript printer, the following screen font families should print
+correctly:
 .IP
 \fBAvant Garde\fR, \fBArial\fR, \fBBookman\fR, \fBCourier\fR, 
 \fBCourier New\fR, \fBGeneva\fR, \fBHelvetica\fR, \fBMonaco\fR,
