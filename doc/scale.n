@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scale.n,v 1.6 2004/10/28 12:25:53 dkf Exp $
+'\" RCS: @(#) $Id: scale.n,v 1.7 2007/10/24 14:32:58 dkf Exp $
 '\" 
 .so man.macros
 .TH scale n 4.1 Tk "Tk Built-In Commands"
@@ -25,7 +25,8 @@ scale \- Create and manipulate scale widgets
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-bigincrement bigIncrement BigIncrement
 Some interactions with the scale cause its value to change by
-``large'' increments;  this option specifies the size of the
+.QW large
+increments;  this option specifies the size of the
 large increments.  If specified as 0, the large increments default
 to 1/10 the range of the scale.
 .OP \-command command Command

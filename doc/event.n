@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.12 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.13 2007/10/24 14:32:58 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -80,8 +80,9 @@ not defined then an empty string is returned.
 .SH "EVENT FIELDS"
 .PP
 The following options are supported for the \fBevent generate\fR
-command.  These correspond to the ``%'' expansions
-allowed in binding scripts for the \fBbind\fR command.
+command.  These correspond to the
+.QW %
+expansions allowed in binding scripts for the \fBbind\fR command.
 .TP
 \fB\-above\fI window\fR
 \fIWindow\fR specifies the \fIabove\fR field for the event,
