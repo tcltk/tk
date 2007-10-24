@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grab.n,v 1.4 2004/10/28 10:22:51 dkf Exp $
+'\" RCS: @(#) $Id: grab.n,v 1.5 2007/10/24 14:32:58 dkf Exp $
 '\" 
 .so man.macros
 .TH grab n "" Tk "Tk Built-In Commands"
@@ -33,7 +33,9 @@ When the pointer is outside \fIwindow\fR's tree, button presses and
 releases and
 mouse motion events are reported to \fIwindow\fR, and window entry
 and window exit events are ignored.
-The grab subtree ``owns'' the pointer:
+The grab subtree
+.QW owns
+the pointer:
 windows outside the grab subtree will be visible on the screen
 but they will be insensitive until the grab is released.
 The tree of windows underneath the grab window can include top-level

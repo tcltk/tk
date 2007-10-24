@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: selection.n,v 1.7 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: selection.n,v 1.8 2007/10/24 14:32:59 dkf Exp $
 '\" 
 .so man.macros
 .TH selection n 8.1 Tk "Tk Built-In Commands"
@@ -37,15 +37,19 @@ so that no window owns the selection anymore.  \fISelection\fR
 specifies the X selection that should be cleared, and should be an
 atom name such as PRIMARY or CLIPBOARD; see the Inter-Client
 Communication Conventions Manual for complete details.
-\fISelection\fR defaults to PRIMARY and \fIwindow\fR defaults to ``.''.
+\fISelection\fR defaults to PRIMARY and \fIwindow\fR defaults to
+.QW . .
 Returns an empty string. 
 .TP
 \fBselection get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-selection\fR \fIselection\fR? ?\fB\-type\fR \fItype\fR?
 Retrieves the value of \fIselection\fR from \fIwindow\fR's display and
 returns it as a result.  \fISelection\fR defaults to PRIMARY and
-\fIwindow\fR defaults to ``.''. 
+\fIwindow\fR defaults to
+.QW . . 
 \fIType\fR specifies the form in which the selection is to be returned
-(the desired ``target'' for conversion, in ICCCM terminology), and
+(the desired
+.QW target
+for conversion, in ICCCM terminology), and
 should be an atom name such as STRING or FILE_NAME; see the
 Inter-Client Communication Conventions Manual for complete details.
 \fIType\fR defaults to STRING.  The selection owner may choose to
@@ -117,7 +121,8 @@ The first form of \fBselection own\fR returns the path name of the
 window in this application that owns \fIselection\fR on the display
 containing \fIwindow\fR, or an empty string if no window in this
 application owns the selection.  \fISelection\fR defaults to PRIMARY and
-\fIwindow\fR defaults to ``.''.
+\fIwindow\fR defaults to
+.QW . .
 .PP
 The second form of \fBselection own\fR causes \fIwindow\fR to become
 the new owner of \fIselection\fR on \fIwindow\fR's display, returning

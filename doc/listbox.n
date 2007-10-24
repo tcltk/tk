@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.12 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.13 2007/10/24 14:32:58 dkf Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.4 Tk "Tk Built-In Commands"
@@ -56,8 +56,9 @@ cannot be modified and is not shown (though selection information is retained).
 .OP \-width width Width
 Specifies the desired width for the window in characters.
 If the font doesn't have a uniform width then the width of the
-character ``0'' is used in translating from character units to
-screen units.
+character
+.QW 0
+is used in translating from character units to screen units.
 If zero or less, then the desired width for the window is made just
 large enough to hold all the elements in the listbox.
 .BE

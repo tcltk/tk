@@ -7,7 +7,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" SOURCE: entry.n, r1.12
-'\" RCS: @(#) $Id: ttk_entry.n,v 1.4 2007/10/23 15:44:35 dkf Exp $
+'\" RCS: @(#) $Id: ttk_entry.n,v 1.5 2007/10/24 14:32:59 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_entry n 8.5 Tk "Tk Themed Widget"
@@ -56,7 +56,9 @@ One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 If this option is specified, then the true contents of the entry
 are not displayed in the window.
 Instead, each character in the entry's value will be displayed as
-the first character in the value of this option, such as ``*''.
+the first character in the value of this option, such as
+.QW *
+or a bullet character.
 This is useful, for example, if the entry is to be used to enter
 a password.
 If characters in the entry are selected and copied elsewhere, the
@@ -114,8 +116,9 @@ to the first character in the string.
 .IP \fB@\fInumber\fR
 In this form, \fInumber\fR is treated as an x-coordinate in the
 entry's window;  the character spanning that x-coordinate is used.
-For example, ``\fB@0\fR'' indicates the left-most character in the
-window.
+For example,
+.QW \fB@0\fR
+indicates the left-most character in the window.
 .IP \fBend\fR
 Indicates the character just after the last one in the entry's string.
 This is equivalent to specifying a numerical index equal to the length
@@ -131,9 +134,12 @@ Indicates the character just after the last one in the selection.
 It is an error to use this form if the selection isn't in the
 entry window.
 .LP
-Abbreviations may be used for any of the forms above, e.g. ``\fBe\fR''
-or ``\fBsel.f\fR''.  In general, out-of-range indices are automatically
-rounded to the nearest legal value.
+Abbreviations may be used for any of the forms above, e.g.
+.QW \fBe\fR
+or
+.QW \fBsel.f\fR .
+In general, out-of-range indices are automatically rounded to the nearest
+legal value.
 .SH "WIDGET COMMAND"
 .PP
 The following commands are possible for entry widgets:
@@ -341,9 +347,11 @@ The standard entry widget invokes validation whenever the linked
 \fB\-textvariable\fR is modified; the Tk themed entry widget does not.
 .SH "DEFAULT BINDINGS"
 The entry widget's default bindings enable the following behavior.  
-In the descriptions below, ``word'' refers to a contiguous group
-of letters, digits, or ``_'' characters, or any single character
-other than these.
+In the descriptions below,
+.QW word
+refers to a contiguous group of letters, digits, or
+.QW _
+characters, or any single character other than these.
 .IP \(bu
 Clicking mouse button 1 positions the insert cursor
 just before the character underneath the mouse cursor, sets the

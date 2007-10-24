@@ -4,9 +4,9 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
-'\" RCS: @(#) $Id: wm.n,v 1.32 2007/10/23 15:44:36 dkf Exp $
-'\" 
+'\"
+'\" RCS: @(#) $Id: wm.n,v 1.33 2007/10/24 14:32:59 dkf Exp $
+'\"
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
 .BS
@@ -112,7 +112,8 @@ Specifies whether this is a topmost window (displays above all other windows).
 \fB\-transparent\fR
 Makes the window content area transparent and turns off the window shadow. For
 the transparency to be effecive, the toplevel background needs to be set to a
-color with some alpha, e.g. "systemTransparent".
+color with some alpha, such as
+.QW systemTransparent .
 .TP
 \fB\-fullscreen\fR
 Places the window in a mode that takes up the entire main screen and hides
@@ -125,17 +126,17 @@ and will have no effect under older WMs.
 .\" See http://www.freedesktop.org/Standards/wm-spec
 .RS
 .TP
-\fB-topmost\fR
+\fB\-topmost\fR
 Requests that this window should be kept above
-all other windows that do not also have the \fB-topmost\fR
+all other windows that do not also have the \fB\-topmost\fR
 attribute set.
 .TP
-\fB-zoomed\fR
+\fB\-zoomed\fR
 Requests that the window should be maximized.
 This is the same as \fB[wm state zoomed]\fR on Windows and Mac OS X.
 .TP
-\fB-fullscreen\fR
-Requests that the window should fill the entire screen 
+\fB\-fullscreen\fR
+Requests that the window should fill the entire screen
 and have no window decorations.
 .RE
 .PP
@@ -317,8 +318,8 @@ If \fIbitmap\fR is specified then the command returns an empty string.
 Otherwise it returns the name of
 the current icon bitmap associated with \fIwindow\fR, or an empty
 string if \fIwindow\fR has no icon bitmap.  On the Windows operating
-system, an additional flag is supported: 
-\fBwm iconbitmap \fIwindow\fR ?\fB\-default\fR? ?\fIimage\fR?.  
+system, an additional flag is supported:
+\fBwm iconbitmap \fIwindow\fR ?\fB\-default\fR? ?\fIimage\fR?.
 If the \fB\-default\fR
 flag is given, the icon is applied to all toplevel windows (existing
 and future) to which no other specific icon has yet been applied.
@@ -405,7 +406,9 @@ current icon window for \fIwindow\fR, or an empty string if there
 is no icon window currently specified for \fIwindow\fR.
 Button press events are disabled for \fIwindow\fR as long as it is
 an icon window;  this is needed in order to allow window managers
-to ``own'' those events.
+to
+.QW own
+those events.
 .RS
 .PP
 Note: not all window managers support the notion of an icon window.
@@ -472,7 +475,8 @@ If \fIwho\fR is specified, then the command returns an empty string.
 Otherwise it returns \fBuser\fR or \fBprogram\fR to indicate the
 source of the window's current position, or an empty string if
 no source has been specified yet.  Most window managers interpret
-``no source'' as equivalent to \fBprogram\fR.
+.QW "no source"
+as equivalent to \fBprogram\fR.
 Tk will automatically set the position source to \fBuser\fR
 when a \fBwm geometry\fR command is invoked, unless the source has
 been set explicitly to \fBprogram\fR.
@@ -539,7 +543,8 @@ If \fIwho\fR is specified, then the command returns an empty string.
 Otherwise it returns \fBuser\fR or \fBwindow\fR to indicate the
 source of the window's current size, or an empty string if
 no source has been specified yet.  Most window managers interpret
-``no source'' as equivalent to \fBprogram\fR.
+.QW "no source"
+as equivalent to \fBprogram\fR.
 .TP
 \fBwm stackorder \fIwindow\fR ?\fIisabove|isbelow window\fR?
 The stackorder command returns a list of toplevel windows
@@ -664,7 +669,7 @@ Gridded geometry management is typically invoked by turning on
 the \fBsetGrid\fR option for a widget;  it can also be invoked
 with the \fBwm grid\fR command or by calling \fBTk_SetGrid\fR.
 In each of these approaches the particular widget (or sometimes
-code in the application as a whole) specifies the relationship between 
+code in the application as a whole) specifies the relationship between
 integral grid sizes for the window and pixel sizes.
 To return to non-gridded geometry management, invoke
 \fBwm grid\fR with empty argument strings.

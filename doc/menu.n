@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.16 2007/05/25 22:27:12 dkf Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.17 2007/10/24 14:32:58 dkf Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -49,9 +49,12 @@ to invoke whenever the menu is torn off.  The actual command will
 consist of the value of this option, followed by a space, followed
 by the name of the menu window, followed by a space, followed by
 the name of the name of the torn off menu window.  For example, if
-the option's is ``\fBa b\fR'' and menu \fB.x.y\fR is torn off to
+the option's is
+.QW "\fBa b\fR"
+and menu \fB.x.y\fR is torn off to
 create a new menu \fB.x.tearoff1\fR, then the command
-``\fBa b .x.y .x.tearoff1\fR'' will be invoked.
+.QW "\fBa b .x.y .x.tearoff1\fR"
+will be invoked.
 .OP \-title title Title
 The string will be used to title the window created when this menu is
 torn off. If the title is NULL, then the window will have the title
@@ -313,7 +316,9 @@ This form may not be abbreviated.
 Same as \fBend\fR.
 .TP 12
 \fBnone\fR
-Indicates ``no entry at all'';  this is used most commonly with
+Indicates
+.QW "no entry at all" ;
+this is used most commonly with
 the \fBactivate\fR option to deactivate all the entries in the
 menu.  In most cases the specification of \fBnone\fR causes
 nothing to happen in the widget command.
@@ -322,8 +327,9 @@ This form may not be abbreviated.
 \fB@\fInumber\fR
 In this form, \fInumber\fR is treated as a y-coordinate in the
 menu's window;  the entry closest to that y-coordinate is used.
-For example, ``\fB@0\fR'' indicates the top-most entry in the
-window.
+For example,
+.QW \fB@0\fR
+indicates the top-most entry in the window.
 .TP 12
 \fIpattern\fR
 If the index doesn't satisfy one of the above forms then this

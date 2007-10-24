@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.7 2007/10/23 15:44:36 dkf Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.8 2007/10/24 14:32:59 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_treeview n 8.5 Tk "Tk Themed Widget"
@@ -40,10 +40,9 @@ Treeview widgets support horizontal and vertical scrolling with the standard
 \fB\-\fR[\fBxy\fR]\fBscrollcommand\fR options and \fB[xyview\fR widget
 commands.
 .SO
-\-class	\-cursor	\-takefocus	\-style
-\-xscrollcommand	\-yscrollcommand
+\-class	\-cursor	\-takefocus
+\-style	\-xscrollcommand	\-yscrollcommand
 .SE
-
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-columns columns Columns
 A list of column identifiers, specifying the number of columns and their
@@ -89,7 +88,6 @@ The default is \fBtree headings\fR, i.e., show all elements.
 \fBNOTE:\fR Column #0 always refers to the tree column, even if \fB\-show
 tree\fR is not specified.
 .RE
-
 .SH "WIDGET COMMAND"
 .TP
 \fIpathname \fBbbox\fR \fIitem\fR ?\fIcolumn\fR?
@@ -439,6 +437,5 @@ Generated just after setting the focus item to \fB\-open false\fR.
 The \fBfocus\fR and \fBselection\fR widget commands can be used to determine
 the affected item or items. In Tk 8.5, the affected item is also passed as the
 \fB\-detail\fR field of the virtual event.
-
 .SH "SEE ALSO"
 ttk_widget(n), listbox(n), image(n), bind(n)
