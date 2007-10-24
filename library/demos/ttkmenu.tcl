@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing several Ttk
 # menubutton widgets.
 #
-# RCS: @(#) $Id: ttkmenu.tcl,v 1.1.2.2 2007/10/19 14:35:33 dgp Exp $
+# RCS: @(#) $Id: ttkmenu.tcl,v 1.1.2.3 2007/10/24 12:59:33 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -47,6 +47,7 @@ foreach theme [ttk::themes] {
 }
 
 pack [ttk::frame $w.f] -fill x
+pack [ttk::frame $w.f1] -fill both -expand yes
 lower $w.f
 
 grid anchor $w.f center
