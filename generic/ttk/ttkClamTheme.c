@@ -1,10 +1,9 @@
 /*
- * $Id: ttkClamTheme.c,v 1.5 2007/01/11 19:59:26 jenglish Exp $
+ * $Id: ttkClamTheme.c,v 1.6 2007/10/25 07:08:26 jenglish Exp $
  *
  * Copyright (C) 2004 Joe English
  *
- * Ttk widget set: another theme engine.
- * Inspired by the XFCE family of Gnome themes.
+ * "clam" theme; inspired by the XFCE family of Gnome themes.
  */
 
 #include <tk.h>
@@ -131,7 +130,7 @@ static Ttk_ElementOptionSpec BorderElementOptions[] = {
  * the excess is used as padding.
  */
 
-static void BorderElementGeometry(
+static void BorderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -184,7 +183,7 @@ static Ttk_ElementSpec BorderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(BorderElement),
     BorderElementOptions,
-    BorderElementGeometry,
+    BorderElementSize,
     BorderElementDraw
 };
 
@@ -211,7 +210,7 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {0,0,0}
 };
 
-static void FieldElementGeometry(
+static void FieldElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -237,7 +236,7 @@ static Ttk_ElementSpec FieldElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(FieldElement),
     FieldElementOptions,
-    FieldElementGeometry,
+    FieldElementSize,
     FieldElementDraw
 };
 
@@ -264,7 +263,7 @@ static Ttk_ElementSpec ComboboxFieldElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(FieldElement),
     FieldElementOptions,
-    FieldElementGeometry,
+    FieldElementSize,
     ComboboxFieldElementDraw
 };
 
@@ -297,8 +296,7 @@ static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     {0,0,0}
 };
 
-static void
-IndicatorElementGeometry(
+static void IndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -309,8 +307,7 @@ IndicatorElementGeometry(
     *widthPtr = *heightPtr = size;
 }
 
-static void
-RadioIndicatorElementDraw(
+static void RadioIndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned state)
 {
@@ -338,8 +335,7 @@ RadioIndicatorElementDraw(
     }
 }
 
-static void
-CheckIndicatorElementDraw(
+static void CheckIndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned state)
 {
@@ -383,7 +379,7 @@ static Ttk_ElementSpec RadioIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
-    IndicatorElementGeometry,
+    IndicatorElementSize,
     RadioIndicatorElementDraw
 };
 
@@ -391,7 +387,7 @@ static Ttk_ElementSpec CheckIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
-    IndicatorElementGeometry,
+    IndicatorElementSize,
     CheckIndicatorElementDraw
 };
 
@@ -594,11 +590,11 @@ static Ttk_ElementSpec TroughElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
-    TtkNullElementGeometry,
+    TtkNullElementSize,
     TroughElementDraw
 };
 
-static void ThumbElementGeometry(
+static void ThumbElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -656,14 +652,14 @@ static Ttk_ElementSpec ThumbElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
-    ThumbElementGeometry,
+    ThumbElementSize,
     ThumbElementDraw
 };
 
 /*------------------------------------------------------------------------
  * +++ Slider element.
  */
-static void SliderElementGeometry(
+static void SliderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -688,18 +684,18 @@ static Ttk_ElementSpec SliderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
-    SliderElementGeometry,
+    SliderElementSize,
     ThumbElementDraw
 };
 
 /*------------------------------------------------------------------------
  * +++ Progress bar element
  */
-static void PbarElementGeometry(
+static void PbarElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    SliderElementGeometry(clientData, elementRecord, tkwin,
+    SliderElementSize(clientData, elementRecord, tkwin,
 	    widthPtr, heightPtr, paddingPtr);
     *paddingPtr = Ttk_UniformPadding(2);
 }
@@ -724,7 +720,7 @@ static Ttk_ElementSpec PbarElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
-    PbarElementGeometry,
+    PbarElementSize,
     PbarElementDraw
 };
 
@@ -734,7 +730,7 @@ static Ttk_ElementSpec PbarElementSpec = {
  */
 static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
 
-static void ArrowElementGeometry(
+static void ArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -772,7 +768,7 @@ static Ttk_ElementSpec ArrowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
-    ArrowElementGeometry,
+    ArrowElementSize,
     ArrowElementDraw
 };
 
@@ -803,7 +799,7 @@ static Ttk_ElementOptionSpec NotebookElementOptions[] = {
     {0,0,0}
 };
 
-static void TabElementGeometry(
+static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -854,11 +850,11 @@ static Ttk_ElementSpec TabElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(NotebookElement),
     NotebookElementOptions,
-    TabElementGeometry,
+    TabElementSize,
     TabElementDraw
 };
 
-static void ClientElementGeometry(
+static void ClientElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -885,7 +881,7 @@ static Ttk_ElementSpec ClientElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(NotebookElement),
     NotebookElementOptions,
-    ClientElementGeometry,
+    ClientElementSize,
     ClientElementDraw
 };
 

@@ -1,4 +1,4 @@
-/* $Id: ttkSeparator.c,v 1.5 2007/01/11 14:49:47 jenglish Exp $
+/* $Id: ttkSeparator.c,v 1.6 2007/10/25 07:08:26 jenglish Exp $
  *
  * Copyright (c) 2004, Joe English
  *
@@ -78,6 +78,10 @@ static WidgetSpec SeparatorWidgetSpec =
     TtkWidgetDisplay		/* displayProc */
 };
 
+TTK_BEGIN_LAYOUT(SeparatorLayout)
+    TTK_NODE("Separator.separator", TTK_FILL_BOTH)
+TTK_END_LAYOUT
+
 /* +++ Sizegrip widget:
  * 	Has no options or methods other than the standard ones.
  */
@@ -108,12 +112,21 @@ static WidgetSpec SizegripWidgetSpec =
     TtkWidgetDisplay		/* displayProc */
 };
 
+TTK_BEGIN_LAYOUT(SizegripLayout)
+    TTK_NODE("Sizegrip.sizegrip", TTK_PACK_BOTTOM|TTK_STICK_S|TTK_STICK_E)
+TTK_END_LAYOUT
+
 /* +++ Initialization:
  */
 
 MODULE_SCOPE
 void TtkSeparator_Init(Tcl_Interp *interp)
 {
+    Ttk_Theme theme = Ttk_GetDefaultTheme(interp);
+
+    Ttk_RegisterLayout(theme, "TSeparator", SeparatorLayout);
+    Ttk_RegisterLayout(theme, "TSizegrip", SizegripLayout);
+
     RegisterWidget(interp, "ttk::separator", &SeparatorWidgetSpec);
     RegisterWidget(interp, "ttk::sizegrip", &SizegripWidgetSpec);
 }
