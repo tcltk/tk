@@ -1,3 +1,13 @@
+2007-10-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/getOpenFile.n:  TIP#242 implementation of -typevariable to
+	* library/tkfbox.tcl: return type of selected file in file dialogs.
+	* library/xmfbox.tcl: [Bug #1156388]
+	* macosx/tkMacOSXDialog.c:
+	* tests/filebox.test:
+	* tests/winDialog.test:
+	* win/tkWinDialog.c:
+
 2007-10-25  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkPlace.c:    Prevent segfault in place geometry manager.
