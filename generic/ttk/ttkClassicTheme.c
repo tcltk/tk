@@ -1,11 +1,9 @@
 /*
- * $Id: ttkClassicTheme.c,v 1.3 2006/11/07 03:45:27 jenglish Exp $
+ * $Id: ttkClassicTheme.c,v 1.4 2007/10/25 07:08:26 jenglish Exp $
  *
  * Copyright (c) 2004, Joe English
  *
- * Ttk widget set: classic theme.
- *
- * Implements the "classic" Motif-like Tk look.
+ * "classic" theme; implements the classic Motif-like Tk look.
  *
  */
 
@@ -35,10 +33,9 @@ static Ttk_ElementOptionSpec HighlightElementOptions[] = {
     {NULL}
 };
 
-static void
-HighlightElementSize(
-    void *clientData, void *elementRecord,
-    Tk_Window tkwin, int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+static void HighlightElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     HighlightElement *hl = elementRecord;
     int highlightThickness = 0;
@@ -47,9 +44,9 @@ HighlightElementSize(
     *paddingPtr = Ttk_UniformPadding((short)highlightThickness);
 }
 
-static void
-HighlightElementDraw(void *clientData, void *elementRecord,
-    Tk_Window tkwin, Drawable d, Ttk_Box b, unsigned int state)
+static void HighlightElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
 {
     HighlightElement *hl = elementRecord;
     int highlightThickness = 0;
@@ -101,8 +98,7 @@ static Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
     {NULL}
 };
 
-static void
-ButtonBorderElementSize(
+static void ButtonBorderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -124,8 +120,7 @@ ButtonBorderElementSize(
  * padding for default ring is drawn in the wrong color 
  * when the button is active.)
  */
-static void
-ButtonBorderElementDraw(
+static void ButtonBorderElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
