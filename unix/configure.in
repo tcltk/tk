@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.43 2007/10/02 17:55:55 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.44 2007/10/25 20:41:52 das Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -252,10 +252,29 @@ if test "`uname -s`" = "Darwin" ; then
 	fi
     fi
     AC_MSG_RESULT([$tk_aqua])
-    # remove 64-bit arch flags from CFLAGS et al. for combined 32 & 64 bit fat
-    # builds, as neither TkAqua nor TkX11 can be built for 64-bit at present.
-    test "$fat_32_64" = yes && for v in CFLAGS CPPFLAGS LDFLAGS; do
-	eval $v'="`echo "$'$v' "|sed -e "s/-arch ppc64 / /g" -e "s/-arch x86_64 / /g"`"'; done
+    if test "$fat_32_64" = yes; then
+	if test $tk_aqua = no; then
+	    AC_CACHE_CHECK([for 64-bit X11], tcl_cv_lib_x11_64, [
+		for v in CFLAGS CPPFLAGS LDFLAGS; do
+		    eval 'hold_'$v'="$'$v'";'$v'="`echo "$'$v' "|sed -e "s/-arch ppc / /g" -e "s/-arch i386 / /g"`"'
+		done
+		CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include"
+		LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -lX11"
+		AC_TRY_LINK([#include <X11/Xlib.h>], [XrmInitialize();], 
+		    tcl_cv_lib_x11_64=yes, tcl_cv_lib_x11_64=no)
+		for v in CFLAGS CPPFLAGS LDFLAGS; do
+		    eval $v'="$hold_'$v'"'
+		done])
+	fi
+	# remove 64-bit arch flags from CFLAGS et al. for combined 32 & 64 bit
+	# fat builds if configuration does not support 64-bit.
+	if test $tk_aqua = yes -o "$tcl_cv_lib_x11_64" = no; then
+	    AC_MSG_WARN([Removing 64-bit architectures from compiler & linker flags])
+	    for v in CFLAGS CPPFLAGS LDFLAGS; do
+		eval $v'="`echo "$'$v' "|sed -e "s/-arch ppc64 / /g" -e "s/-arch x86_64 / /g"`"'
+	    done
+	fi
+    fi
 else
     tk_aqua=no
 fi
@@ -266,7 +285,7 @@ if test $tk_aqua = yes; then
     CFLAGS="$CFLAGS -fpascal-strings"
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
-        AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])
+        AC_DEFINE(TK_MAC_DEBUG)
     fi
 else
     #--------------------------------------------------------------------

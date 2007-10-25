@@ -1,3 +1,8 @@
+2007-10-26  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/configure.in (Darwin):	add support for 64-bit X11.
+	* unix/configure:		autoconf-2.13
+
 2007-10-25  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkPlace.c:	Prevent segfault in place geometry manager.
