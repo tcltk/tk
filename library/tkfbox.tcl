@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.59 2007/02/19 23:52:19 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.60 2007/10/25 21:44:22 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -867,17 +867,32 @@ proc ::tk::dialog::file:: {type args} {
     $data(dirMenuBtn) configure \
 	    -textvariable ::tk::dialog::file::${dataName}(selectPath)
 
+    # Cleanup previous menu
+    #
+    $data(typeMenu) delete 0 end
+    $data(typeMenuBtn) configure -state normal -text ""
+
     # Initialize the file types menu
     #
     if {[llength $data(-filetypes)]} {
-	$data(typeMenu) delete 0 end
+	# Default type and name to first entry
+	set initialtype     [lindex $data(-filetypes) 0]
+	set initialTypeName [lindex $initialtype 0]
+	if {($data(-typevariable) ne "")
+	    && [uplevel 2 [list info exists $data(-typevariable)]]} {
+	    set initialTypeName [uplevel 2 [list set $data(-typevariable)]]
+	}
 	foreach type $data(-filetypes) {
 	    set title  [lindex $type 0]
 	    set filter [lindex $type 1]
 	    $data(typeMenu) add command -label $title \
-		    -command [list ::tk::dialog::file::SetFilter $w $type]
+		-command [list ::tk::dialog::file::SetFilter $w $type]
+	    # string first avoids glob-pattern char issues
+	    if {[string first ${initialTypeName} $title] == 0} {
+		set initialtype $type
+	    }
 	}
-	SetFilter $w [lindex $data(-filetypes) 0]
+	SetFilter $w $initialtype
 	$data(typeMenuBtn) configure -state normal
 	$data(typeMenuLab) configure -state normal
     } else {
@@ -949,6 +964,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 	{-initialfile "" "" ""}
 	{-parent "" "" "."}
 	{-title "" "" ""}
+	{-typevariable "" "" ""}
     }
 
     # The "-multiple" option is only available for the "open" file dialog.
@@ -1383,6 +1399,7 @@ proc ::tk::dialog::file::SetFilter {w type} {
     upvar ::tk::dialog::file::[winfo name $w] data
     upvar ::tk::$data(icons) icons
 
+    set data(filterType) $type
     set data(filter) [lindex $type 1]
     $data(typeMenuBtn) configure -text [lindex $type 0] -indicatoron 1
 
@@ -1837,6 +1854,12 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	    if {$reply eq "no"} {
 		return
 	    }
+	}
+	if {[info exists data(-typevariable)] && $data(-typevariable) ne ""
+	    && [info exists data(-filetypes)] && [llength $data(-filetypes)]
+	    && [info exists data(filterType)] && $data(filterType) ne ""} {
+	    upvar 4 $data(-typevariable) initialTypeName
+	    set initialTypeName [lindex $data(filterType) 0]
 	}
     }
     bind $data(okBtn) <Destroy> {}

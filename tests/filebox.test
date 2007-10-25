@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: filebox.test,v 1.18 2004/12/20 10:34:20 vincentdarley Exp $
+# RCS: @(#) $Id: filebox.test,v 1.19 2007/10/25 21:44:23 hobbs Exp $
 #
 
 package require tcltest 2.1
@@ -113,8 +113,8 @@ if {$tcl_platform(platform) == "unix"} {
     set modes 1
 }
 
-set unknownOptionsMsg(tk_getOpenFile) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, or -title}
-set unknownOptionsMsg(tk_getSaveFile) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, or -title}
+set unknownOptionsMsg(tk_getOpenFile) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
+set unknownOptionsMsg(tk_getSaveFile) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, -title, or -typevariable}
 
 set tmpFile "filebox.tmp"
 makeFile {
@@ -268,6 +268,27 @@ foreach mode $modes {
 		    -filetypes $filters($x) -parent $parent \
 		    -initialfile $fileName -initialdir $fileDir]
         } $pathName
+    }
+    foreach {x res} [list 1 "-unset-" 2 "Text files"] {
+	set t [expr {$x + [llength [array names filters]]}]
+        test filebox-3.$t-$mode "tk_getOpenFile command" nonUnixUserInteraction {
+	    catch {unset tv}
+	    catch {unset typeName}
+	    ToPressButton $parent ok
+	    if {[info exists tv]} {
+	    } else {
+	    }
+	    set choice [tk_getOpenFile -title "Press Ok" \
+		    -filetypes $filters($x) -parent $parent \
+		    -initialfile $fileName -initialdir $fileDir \
+		    -typevariable tv]
+	    if {[info exists tv]} {
+		regexp {^(.*) \(.*\)$} $tv dummy typeName
+	    } else {
+		set typeName "-unset-"
+	    }
+	    set typeName
+        } $res
     }
 
     test filebox-4.1-$mode "tk_getSaveFile command" -body {
