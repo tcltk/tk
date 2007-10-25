@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.13.2.1 2004/09/16 18:22:21 pspjuth Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.13.2.2 2007/10/25 16:38:23 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -133,6 +133,12 @@ typedef struct Master {
     Tk_Window tkwin;		/* Tk's token for master window. */
     struct Slave *slavePtr;	/* First in linked list of slaves
 				 * placed relative to this master. */
+    int *abortPtr;		/* If non-NULL, it means that there is a nested
+				 * call to RecomputePlacement already working on
+				 * this window.  *abortPtr may be set to 1 to
+				 * abort that nested call.  This happens, for
+				 * example, if tkwin or any of its slaves
+				 * is deleted. */
     int flags;			/* See below for bit definitions. */
 } Master;
 
@@ -513,6 +519,10 @@ UnlinkSlave(slavePtr)
 	    }
 	}
     }
+    
+    if (masterPtr->abortPtr != NULL) {
+	*masterPtr->abortPtr = 1;
+    }
     slavePtr->masterPtr = NULL;
 }
 
@@ -547,6 +557,7 @@ CreateMaster(tkwin)
 	masterPtr = (Master *) ckalloc(sizeof(Master));
 	masterPtr->tkwin	= tkwin;
 	masterPtr->slavePtr	= NULL;
+	masterPtr->abortPtr	= NULL;
 	masterPtr->flags	= 0;
 	Tcl_SetHashValue(hPtr, masterPtr);
 	Tk_CreateEventHandler(masterPtr->tkwin, StructureNotifyMask,
@@ -838,15 +849,34 @@ RecomputePlacement(clientData)
     int masterWidth, masterHeight, masterX, masterY;
     double x1, y1, x2, y2;
 
+    int abort;			/* May get set to non-zero to abort this
+				 * placement operation. */
+
     masterPtr->flags &= ~PARENT_RECONFIG_PENDING;
+    
+    /*
+     * Abort any nested call to RecomputePlacement for this window, since
+     * we'll do everything necessary here, and set up so this call
+     * can be aborted if necessary.  
+     */
+
+    if (masterPtr->abortPtr != NULL) {
+	*masterPtr->abortPtr = 1;
+    }
+    masterPtr->abortPtr = &abort;
+    abort = 0;
+    Tcl_Preserve((ClientData) masterPtr);
 
     /*
      * Iterate over all the slaves for the master.  Each slave's
      * geometry can be computed independently of the other slaves.
+     * Changes to the window's structure could cause almost anything
+     * to happen, including deleting the parent or child.  If this
+     * happens, we'll be told to abort.
      */
 
-    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
-	    slavePtr = slavePtr->nextPtr) {
+    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL && !abort;
+	    slavePtr = slavePtr->nextPtr) {    
 	/*
 	 * Step 1: compute size and borderwidth of master, taking into
 	 * account desired border mode.
@@ -986,6 +1016,9 @@ RecomputePlacement(clientData)
 		    || (height != Tk_Height(slavePtr->tkwin))) {
 		Tk_MoveResizeWindow(slavePtr->tkwin, x, y, width, height);
 	    }
+            if (abort) {
+                break;
+            }
 
 	    /*
 	     * Don't map the slave unless the master is mapped: the slave
@@ -1005,6 +1038,9 @@ RecomputePlacement(clientData)
 	    }
 	}
     }
+
+    masterPtr->abortPtr = NULL;
+    Tcl_Release((ClientData) masterPtr);
 }
 
 /*
@@ -1054,7 +1090,10 @@ MasterStructureProc(clientData, eventPtr)
 	    Tcl_CancelIdleCall(RecomputePlacement, (ClientData) masterPtr);
 	}
 	masterPtr->tkwin = NULL;
-	ckfree((char *) masterPtr);
+	if (masterPtr->abortPtr != NULL) {
+	    *masterPtr->abortPtr = 1;
+	}
+	Tcl_EventuallyFree((ClientData) masterPtr, TCL_DYNAMIC);
     } else if (eventPtr->type == MapNotify) {
 	/*
 	 * When a master gets mapped, must redo the geometry computation

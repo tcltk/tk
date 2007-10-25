@@ -1,3 +1,8 @@
+2007-10-25  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkPlace.c:	Prevent segfault in place geometry manager.
+	Thanks to Colin McDonald.  [Bug 1818491]
+
 2007-10-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* library/msgs/hu.msg: Added message catalog for Hungarian.
