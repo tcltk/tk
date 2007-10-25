@@ -1,3 +1,8 @@
+2007-10-25  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkPlace.c:    Prevent segfault in place geometry manager.
+	Thanks to Colin McDonald.  [Bug 1818491]
+
 2007-10-24  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/*.c, win/{ttkWinMonitor,ttkWinTheme,ttkWinXPTheme}.c,
