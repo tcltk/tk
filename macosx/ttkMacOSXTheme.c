@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.10 2007/10/17 18:21:24 das Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.11 2007/10/25 07:08:26 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -158,7 +158,7 @@ static ThemeButtonDrawInfo computeButtonDrawInfo(
     return info;
 }
 
-static void ButtonElementGeometryNoPadding(
+static void ButtonElementSizeNoPadding(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -172,7 +172,7 @@ static void ButtonElementGeometryNoPadding(
     }
 }
 
-static void ButtonElementGeometry(
+static void ButtonElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -181,7 +181,7 @@ static void ButtonElementGeometry(
     Rect scratchRect, contentsRect;
     const int scratchSize = 100;
 
-    ButtonElementGeometryNoPadding(
+    ButtonElementSizeNoPadding(
 	clientData, elementRecord, tkwin,
 	widthPtr, heightPtr, paddingPtr);
 
@@ -225,7 +225,7 @@ static Ttk_ElementSpec ButtonElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    ButtonElementGeometry,
+    ButtonElementSize,
     ButtonElementDraw
 };
 
@@ -253,7 +253,7 @@ static Ttk_StateTable TabStyleTable[] = {
 static const int TAB_HEIGHT = 21;
 static const int TAB_OVERLAP = 3;
 
-static void TabElementGeometry(
+static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -278,13 +278,13 @@ static Ttk_ElementSpec TabElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    TabElementGeometry,
+    TabElementSize,
     TabElementDraw
 };
 
 /* Notebook panes:
  */
-static void PaneElementGeometry(
+static void PaneElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -308,7 +308,7 @@ static Ttk_ElementSpec PaneElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    PaneElementGeometry,
+    PaneElementSize,
     PaneElementDraw
 };
 
@@ -321,7 +321,7 @@ static Ttk_ElementSpec PaneElementSpec = {
  * "Maximum of 2 pixels thick" is apparently a lie;
  * looks more like 4 to me with shading.
  */
-static void GroupElementGeometry(
+static void GroupElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -344,7 +344,7 @@ static Ttk_ElementSpec GroupElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    GroupElementGeometry,
+    GroupElementSize,
     GroupElementDraw
 };
 
@@ -364,7 +364,7 @@ static Ttk_ElementOptionSpec EntryElementOptions[] = {
     {0}
 };
 
-static void EntryElementGeometry(
+static void EntryElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -403,7 +403,7 @@ static Ttk_ElementSpec EntryElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(EntryElement),
     EntryElementOptions,
-    EntryElementGeometry,
+    EntryElementSize,
     EntryElementDraw
 };
 
@@ -413,8 +413,8 @@ static Ttk_ElementSpec EntryElementSpec = {
  * function in the Appearance Manager reference.
  */
 
-static void PopupArrowElementGeometry(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+static void PopupArrowElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin, 
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     *widthPtr = 12;	/* wild-assed guess */
@@ -456,7 +456,7 @@ static Ttk_ElementSpec PopupArrowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    PopupArrowElementGeometry,
+    PopupArrowElementSize,
     PopupArrowElementDraw
 };
 
@@ -496,7 +496,7 @@ static Ttk_ElementOptionSpec TrackElementOptions[] = {
     {0,0,0}
 };
 
-static void TrackElementGeometry(
+static void TrackElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -557,7 +557,7 @@ static Ttk_ElementSpec TrackElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TrackElement),
     TrackElementOptions,
-    TrackElementGeometry,
+    TrackElementSize,
     TrackElementDraw
 };
 
@@ -570,7 +570,7 @@ static Ttk_ElementSpec TrackElementSpec = {
  * figure out how to get the Appearance Manager to tell me the
  * slider size.
  */
-static void SliderElementGeometry(
+static void SliderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -581,7 +581,7 @@ static Ttk_ElementSpec SliderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    SliderElementGeometry,
+    SliderElementSize,
     TtkNullElementDraw
 };
 
@@ -615,7 +615,7 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
     {0,0,0,0}
 };
 
-static void PbarElementGeometry(
+static void PbarElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -665,7 +665,7 @@ static Ttk_ElementSpec PbarElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(PbarElement),
     PbarElementOptions,
-    PbarElementGeometry,
+    PbarElementSize,
     PbarElementDraw
 };
 
@@ -801,7 +801,7 @@ static Ttk_ElementSpec BackgroundElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    TtkNullElementGeometry,
+    TtkNullElementSize,
     BackgroundElementDraw
 };
 
@@ -838,7 +838,7 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    TtkNullElementGeometry,
+    TtkNullElementSize,
     ToolbarBackgroundElementDraw
 };
 
@@ -875,7 +875,7 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    ButtonElementGeometryNoPadding,
+    ButtonElementSizeNoPadding,
     TreeHeaderElementDraw
 };
 

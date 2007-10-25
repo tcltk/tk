@@ -1,4 +1,4 @@
-/* $Id: ttkScale.c,v 1.5 2007/01/11 14:49:47 jenglish Exp $
+/* $Id: ttkScale.c,v 1.6 2007/10/25 07:08:26 jenglish Exp $
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.
@@ -501,12 +501,27 @@ static WidgetSpec ScaleWidgetSpec =
     TtkWidgetDisplay		/* displayProc */
 };
 
+TTK_BEGIN_LAYOUT(VerticalScaleLayout)
+    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
+	TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )
+TTK_END_LAYOUT
+
+TTK_BEGIN_LAYOUT(HorizontalScaleLayout)
+    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+	TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )
+TTK_END_LAYOUT
+
 /*
  * Initialization.
  */
 MODULE_SCOPE
 void TtkScale_Init(Tcl_Interp *interp)
 {
+    Ttk_Theme theme = Ttk_GetDefaultTheme(interp);
+
+    Ttk_RegisterLayout(theme, "Vertical.TScale", VerticalScaleLayout);
+    Ttk_RegisterLayout(theme, "Horizontal.TScale", HorizontalScaleLayout);
+
     RegisterWidget(interp, "ttk::scale", &ScaleWidgetSpec);
 }
 

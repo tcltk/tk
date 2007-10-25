@@ -2,7 +2,7 @@
  *
  * Minimal sample ttk widget.
  *
- * $Id: ttkSquare.c,v 1.4 2007/01/11 14:49:47 jenglish Exp $
+ * $Id: ttkSquare.c,v 1.5 2007/10/25 07:08:26 jenglish Exp $
  */
 
 #include <tk.h>
@@ -201,10 +201,9 @@ static Ttk_ElementOptionSpec SquareElementOptions[] =
  * size and padding information
  */
 
-static void
-SquareElementGeometry(
-    void *clientData, void *elementRecord,
-    Tk_Window tkwin, int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+static void SquareElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SquareElement *square = elementRecord;
     int borderWidth = 0;
@@ -219,9 +218,9 @@ SquareElementGeometry(
  * Draw the element in the box provided.
  */
 
-static void
-SquareElementDraw(void *clientData, void *elementRecord,
-    Tk_Window tkwin, Drawable d, Ttk_Box b, unsigned int state)
+static void SquareElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
 {
     SquareElement *square = elementRecord;
     Tk_3DBorder border = NULL, foreground = NULL;
@@ -241,7 +240,7 @@ static Ttk_ElementSpec SquareElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(SquareElement),
     SquareElementOptions,
-    SquareElementGeometry,
+    SquareElementSize,
     SquareElementDraw
 };
 

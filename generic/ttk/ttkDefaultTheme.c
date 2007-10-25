@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.7 2007/01/11 19:59:26 jenglish Exp $
+/* $Id: ttkDefaultTheme.c,v 1.8 2007/10/25 07:08:26 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -276,8 +276,7 @@ static void BorderElementSize(
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
-static void
-BorderElementDraw(
+static void BorderElementDraw(
     void *clientData, void *elementRecord,
     Tk_Window tkwin, Drawable d, Ttk_Box b, unsigned int state)
 {

@@ -1,4 +1,4 @@
-/* $Id: ttkElements.c,v 1.6 2007/01/11 19:59:26 jenglish Exp $
+/* $Id: ttkElements.c,v 1.7 2007/10/25 07:08:26 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -25,7 +25,7 @@
 /* public */ Ttk_ElementOptionSpec TtkNullElementOptions[] = { {NULL} };
 
 /* public */ void
-TtkNullElementGeometry(
+TtkNullElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -43,7 +43,7 @@ TtkNullElementDraw(
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    TtkNullElementGeometry,
+    TtkNullElementSize,
     TtkNullElementDraw
 };
 
@@ -67,15 +67,13 @@ static Ttk_ElementOptionSpec BackgroundElementOptions[] =
     {NULL}
 };
 
-static void
-BackgroundElementGeometry(
+static void BackgroundElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
 }
 
-static void
-BackgroundElementDraw(
+static void BackgroundElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -92,7 +90,7 @@ static Ttk_ElementSpec BackgroundElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(BackgroundElement),
     BackgroundElementOptions,
-    BackgroundElementGeometry,
+    BackgroundElementSize,
     BackgroundElementDraw
 };
 
@@ -108,17 +106,16 @@ typedef struct {
 
 static Ttk_ElementOptionSpec BorderElementOptions[] =
 {
-    { "-background", TK_OPTION_BORDER, 
+    { "-background", TK_OPTION_BORDER,
 	Tk_Offset(BorderElement,borderObj), DEFAULT_BACKGROUND },
-    { "-borderwidth", TK_OPTION_PIXELS, 
+    { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(BorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
-    { "-relief", TK_OPTION_RELIEF, 
+    { "-relief", TK_OPTION_RELIEF,
 	Tk_Offset(BorderElement,reliefObj), "flat" },
     {NULL}
 };
 
-static void
-BorderElementGeometry(
+static void BorderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -128,8 +125,7 @@ BorderElementGeometry(
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
-static void
-BorderElementDraw(
+static void BorderElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -152,7 +148,7 @@ static Ttk_ElementSpec BorderElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(BorderElement),
     BorderElementOptions,
-    BorderElementGeometry,
+    BorderElementSize,
     BorderElementDraw
 };
 
@@ -173,8 +169,7 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {NULL}
 };
 
-static void
-FieldElementGeometry(
+static void FieldElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -184,8 +179,7 @@ FieldElementGeometry(
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
-static void
-FieldElementDraw(
+static void FieldElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -203,7 +197,7 @@ static Ttk_ElementSpec FieldElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(FieldElement),
     FieldElementOptions,
-    FieldElementGeometry,
+    FieldElementSize,
     FieldElementDraw
 };
 
@@ -213,7 +207,7 @@ static Ttk_ElementSpec FieldElementSpec =
  *
  * This element has no visual representation, only geometry.
  * It adds a (possibly non-uniform) internal border.
- * In addition, if "-shiftrelief" is specified, 
+ * In addition, if "-shiftrelief" is specified,
  * adds additional pixels to shift child elements "in" or "out"
  * depending on the -relief.
  */
@@ -235,8 +229,7 @@ static Ttk_ElementOptionSpec PaddingElementOptions[] =
     {NULL}
 };
 
-static void
-PaddingElementGeometry(
+static void PaddingElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -251,8 +244,7 @@ PaddingElementGeometry(
     *paddingPtr = Ttk_RelievePadding(pad, relief, shiftRelief);
 }
 
-static void
-PaddingElementDraw(
+static void PaddingElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -264,7 +256,7 @@ static Ttk_ElementSpec PaddingElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(PaddingElement),
     PaddingElementOptions,
-    PaddingElementGeometry,
+    PaddingElementSize,
     PaddingElementDraw
 };
 
@@ -309,8 +301,7 @@ static Ttk_ElementOptionSpec FocusElementOptions[] = {
     {NULL}
 };
 
-static void
-FocusElementGeometry(
+static void FocusElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -321,8 +312,7 @@ FocusElementGeometry(
     *paddingPtr = Ttk_UniformPadding((short)focusThickness);
 }
 
-static void
-FocusElementDraw(
+static void FocusElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -340,7 +330,7 @@ static Ttk_ElementSpec FocusElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(FocusElement),
     FocusElementOptions,
-    FocusElementGeometry,
+    FocusElementSize,
     FocusElementDraw
 };
 
@@ -366,16 +356,14 @@ static Ttk_ElementOptionSpec SeparatorElementOptions[] =
     {NULL}
 };
 
-static void
-SeparatorElementGeometry(
+static void SeparatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     *widthPtr = *heightPtr = 2;
 }
 
-static void
-HorizontalSeparatorElementDraw(
+static void HorizontalSeparatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -388,8 +376,7 @@ HorizontalSeparatorElementDraw(
     XDrawLine(Tk_Display(tkwin), d, lightGC, b.x, b.y+1, b.x + b.width, b.y+1);
 }
 
-static void
-VerticalSeparatorElementDraw(
+static void VerticalSeparatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -402,8 +389,7 @@ VerticalSeparatorElementDraw(
     XDrawLine(Tk_Display(tkwin), d, lightGC, b.x+1, b.y, b.x+1, b.y+b.height);
 }
 
-static void
-GeneralSeparatorElementDraw(
+static void GeneralSeparatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -427,7 +413,7 @@ static Ttk_ElementSpec HorizontalSeparatorElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(SeparatorElement),
     SeparatorElementOptions,
-    SeparatorElementGeometry,
+    SeparatorElementSize,
     HorizontalSeparatorElementDraw
 };
 
@@ -436,7 +422,7 @@ static Ttk_ElementSpec VerticalSeparatorElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(SeparatorElement),
     SeparatorElementOptions,
-    SeparatorElementGeometry,
+    SeparatorElementSize,
     HorizontalSeparatorElementDraw
 };
 
@@ -445,7 +431,7 @@ static Ttk_ElementSpec SeparatorElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(SeparatorElement),
     SeparatorElementOptions,
-    SeparatorElementGeometry,
+    SeparatorElementSize,
     GeneralSeparatorElementDraw
 };
 
@@ -540,8 +526,7 @@ static Ttk_ElementOptionSpec IndicatorElementOptions[] =
 /*
  * Checkbutton indicators (default): 3-D square.
  */
-static void
-SquareIndicatorElementGeometry(
+static void SquareIndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -552,8 +537,7 @@ SquareIndicatorElementGeometry(
     *widthPtr = *heightPtr = diameter;
 }
 
-static void
-SquareIndicatorElementDraw(
+static void SquareIndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -582,8 +566,7 @@ SquareIndicatorElementDraw(
 /*
  * Radiobutton indicators:  3-D diamond.
  */
-static void
-DiamondIndicatorElementGeometry(
+static void DiamondIndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -594,8 +577,7 @@ DiamondIndicatorElementGeometry(
     *widthPtr = *heightPtr = diameter + 3;
 }
 
-static void
-DiamondIndicatorElementDraw(
+static void DiamondIndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -636,7 +618,7 @@ static Ttk_ElementSpec CheckbuttonIndicatorElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
-    SquareIndicatorElementGeometry,
+    SquareIndicatorElementSize,
     SquareIndicatorElementDraw
 };
 
@@ -645,7 +627,7 @@ static Ttk_ElementSpec RadiobuttonIndicatorElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
-    DiamondIndicatorElementGeometry,
+    DiamondIndicatorElementSize,
     DiamondIndicatorElementDraw
 };
 
@@ -686,8 +668,7 @@ static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] =
     { NULL }
 };
 
-static void
-MenuIndicatorElementGeometry(
+static void MenuIndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -697,8 +678,7 @@ MenuIndicatorElementGeometry(
     Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj,paddingPtr);
 }
 
-static void
-MenuIndicatorElementDraw(
+static void MenuIndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -719,7 +699,7 @@ static Ttk_ElementSpec MenuIndicatorElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(MenuIndicatorElement),
     MenuIndicatorElementOptions,
-    MenuIndicatorElementGeometry,
+    MenuIndicatorElementSize,
     MenuIndicatorElementDraw
 };
 
@@ -742,7 +722,7 @@ typedef struct
 
 static Ttk_ElementOptionSpec ArrowElementOptions[] =
 {
-    { "-background", TK_OPTION_BORDER, 
+    { "-background", TK_OPTION_BORDER,
 	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-relief",TK_OPTION_RELIEF,
 	Tk_Offset(ArrowElement,reliefObj),"raised"},
@@ -750,15 +730,14 @@ static Ttk_ElementOptionSpec ArrowElementOptions[] =
 	Tk_Offset(ArrowElement,borderWidthObj), "1" },
     { "-arrowcolor",TK_OPTION_COLOR,
 	Tk_Offset(ArrowElement,colorObj),"black"},
-    { "-arrowsize", TK_OPTION_PIXELS, 
+    { "-arrowsize", TK_OPTION_PIXELS,
 	Tk_Offset(ArrowElement,sizeObj), "14" },
     { NULL }
 };
 
 static Ttk_Padding ArrowPadding = { 3,3,3,3 };
 
-static void
-ArrowElementGeometry(
+static void ArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -772,8 +751,7 @@ ArrowElementGeometry(
     *paddingPtr = ArrowPadding;
 }
 
-static void
-ArrowElementDraw(
+static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -798,10 +776,9 @@ static Ttk_ElementSpec ArrowElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(ArrowElement),
     ArrowElementOptions,
-    ArrowElementGeometry,
+    ArrowElementSize,
     ArrowElementDraw
 };
-
 
 /*----------------------------------------------------------------------
  * +++ Trough element.
@@ -827,8 +804,7 @@ static Ttk_ElementOptionSpec TroughElementOptions[] =
     { NULL }
 };
 
-static void
-TroughElementGeometry(
+static void TroughElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -839,8 +815,7 @@ TroughElementGeometry(
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
-static void
-TroughElementDraw(
+static void TroughElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -861,7 +836,7 @@ static Ttk_ElementSpec TroughElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(TroughElement),
     TroughElementOptions,
-    TroughElementGeometry,
+    TroughElementSize,
     TroughElementDraw
 };
 
@@ -896,8 +871,7 @@ static Ttk_ElementOptionSpec ThumbElementOptions[] =
     { NULL }
 };
 
-static void
-ThumbElementGeometry(
+static void ThumbElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -916,8 +890,7 @@ ThumbElementGeometry(
     }
 }
 
-static void
-ThumbElementDraw(
+static void ThumbElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -936,7 +909,7 @@ static Ttk_ElementSpec ThumbElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(ThumbElement),
     ThumbElementOptions,
-    ThumbElementGeometry,
+    ThumbElementSize,
     ThumbElementDraw
 };
 
@@ -974,8 +947,7 @@ static Ttk_ElementOptionSpec SliderElementOptions[] =
     { NULL }
 };
 
-static void
-SliderElementGeometry(
+static void SliderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -999,8 +971,7 @@ SliderElementGeometry(
     }
 }
 
-static void
-SliderElementDraw(
+static void SliderElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -1047,7 +1018,7 @@ static Ttk_ElementSpec SliderElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(SliderElement),
     SliderElementOptions,
-    SliderElementGeometry,
+    SliderElementSize,
     SliderElementDraw
 };
 
@@ -1057,7 +1028,7 @@ static Ttk_ElementSpec SliderElementSpec =
  *
  *	-thickness specifies the size along the short axis of the bar.
  *	-length specifies the default size along the long axis;
- *	the bar will be this long in indeterminate mode. 
+ *	the bar will be this long in indeterminate mode.
  */
 
 #define DEFAULT_PBAR_THICKNESS "15"
@@ -1090,7 +1061,7 @@ static Ttk_ElementOptionSpec PbarElementOptions[] =
     { NULL }
 };
 
-static void PbarElementGeometry(
+static void PbarElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -1136,7 +1107,7 @@ static Ttk_ElementSpec PbarElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(PbarElement),
     PbarElementOptions,
-    PbarElementGeometry,
+    PbarElementSize,
     PbarElementDraw
 };
 
@@ -1157,8 +1128,7 @@ static Ttk_ElementOptionSpec TabElementOptions[] = {
     {0,0,0,0}
 };
 
-static void
-TabElementGeometry(
+static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -1169,8 +1139,7 @@ TabElementGeometry(
     paddingPtr->bottom = 0;
 }
 
-static void
-TabElementDraw(
+static void TabElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -1227,7 +1196,7 @@ static Ttk_ElementSpec TabElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(TabElement),
     TabElementOptions,
-    TabElementGeometry,
+    TabElementSize,
     TabElementDraw
 };
 
@@ -1238,8 +1207,7 @@ static Ttk_ElementSpec TabElementSpec =
 typedef TabElement ClientElement;
 #define ClientElementOptions TabElementOptions
 
-static void
-ClientElementDraw(
+static void ClientElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
@@ -1253,8 +1221,7 @@ ClientElementDraw(
 	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_RAISED);
 }
 
-static void
-ClientElementGeometry(
+static void ClientElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
@@ -1269,97 +1236,13 @@ static Ttk_ElementSpec ClientElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(ClientElement),
     ClientElementOptions,
-    ClientElementGeometry,
+    ClientElementSize,
     ClientElementDraw
 };
 
-
-/*------------------------------------------------------------------------
- * +++ Widget layouts.
- */
-
-TTK_BEGIN_LAYOUT(FrameLayout)
-    TTK_NODE("Frame.border", TTK_FILL_BOTH)
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(LabelframeLayout)
-    /* Note: labelframe widget does its own layout */
-    TTK_NODE("Labelframe.border", TTK_FILL_BOTH)
-    TTK_NODE("Labelframe.text", TTK_FILL_BOTH)
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(LabelLayout)
-    TTK_GROUP("Label.border", TTK_FILL_BOTH|TTK_BORDER,
-	TTK_GROUP("Label.padding", TTK_FILL_BOTH|TTK_BORDER,
-	    TTK_NODE("Label.label", TTK_FILL_BOTH)))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(ButtonLayout)
-    TTK_GROUP("Button.border", TTK_FILL_BOTH|TTK_BORDER,
-	TTK_GROUP("Button.focus", TTK_FILL_BOTH,
-	    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Button.label", TTK_FILL_BOTH))))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(CheckbuttonLayout)
-     TTK_GROUP("Checkbutton.padding", TTK_FILL_BOTH,
-	 TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
-	 TTK_GROUP("Checkbutton.focus", TTK_PACK_LEFT | TTK_STICK_W,
-	     TTK_NODE("Checkbutton.label", TTK_FILL_BOTH)))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(RadiobuttonLayout)
-     TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
-	 TTK_NODE("Radiobutton.indicator", TTK_PACK_LEFT)
-	 TTK_GROUP("Radiobutton.focus", TTK_PACK_LEFT,
-	     TTK_NODE("Radiobutton.label", TTK_FILL_BOTH)))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(MenubuttonLayout)
-    TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
-	TTK_GROUP("Menubutton.focus", TTK_FILL_BOTH,
-	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
-	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
-	        TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(VerticalScrollbarLayout)
-    TTK_GROUP("Vertical.Scrollbar.trough", TTK_FILL_Y,
-	TTK_NODE("Vertical.Scrollbar.uparrow", TTK_PACK_TOP)
-	TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
-	TTK_NODE(
-	    "Vertical.Scrollbar.thumb", TTK_PACK_TOP|TTK_EXPAND|TTK_FILL_BOTH))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(HorizontalScrollbarLayout)
-    TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
-	TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_LEFT)
-	TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
-	TTK_NODE(
-	"Horizontal.Scrollbar.thumb", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(VerticalScaleLayout)
-    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(HorizontalScaleLayout)
-    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(SeparatorLayout)
-    TTK_NODE("Separator.separator", TTK_FILL_BOTH)
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(SizegripLayout)
-    TTK_NODE("Sizegrip.sizegrip", TTK_PACK_BOTTOM|TTK_STICK_S|TTK_STICK_E)
-TTK_END_LAYOUT
-
 /*----------------------------------------------------------------------
  * TtkElements_Init --
- *	Register elements and default layouts.
+ *	Register default element implementations.
  */
 
 MODULE_SCOPE
@@ -1406,34 +1289,15 @@ void TtkElements_Init(Tcl_Interp *interp)
 
     Ttk_RegisterElement(interp, theme, "separator",
 	    &SeparatorElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "hseparator", 
+    Ttk_RegisterElement(interp, theme, "hseparator",
 	    &HorizontalSeparatorElementSpec, NULL);
-    Ttk_RegisterElement(interp, theme, "vseparator", 
+    Ttk_RegisterElement(interp, theme, "vseparator",
 	    &VerticalSeparatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "sizegrip", &SizegripElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "tab", &TabElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "client", &ClientElementSpec, NULL);
-
-    /*
-     * Layouts:
-     */
-    Ttk_RegisterLayout(theme, "TFrame", FrameLayout);
-    Ttk_RegisterLayout(theme, "TLabelframe", LabelframeLayout);
-    Ttk_RegisterLayout(theme, "TLabel", LabelLayout);
-    Ttk_RegisterLayout(theme, "TButton", ButtonLayout);
-    Ttk_RegisterLayout(theme, "TCheckbutton", CheckbuttonLayout);
-    Ttk_RegisterLayout(theme, "TRadiobutton", RadiobuttonLayout);
-    Ttk_RegisterLayout(theme, "TMenubutton", MenubuttonLayout);
-    Ttk_RegisterLayout(theme,
-	    "Vertical.TScrollbar", VerticalScrollbarLayout);
-    Ttk_RegisterLayout(theme,
-	    "Horizontal.TScrollbar", HorizontalScrollbarLayout);
-    Ttk_RegisterLayout(theme, "Vertical.TScale", VerticalScaleLayout);
-    Ttk_RegisterLayout(theme, "Horizontal.TScale", HorizontalScaleLayout);
-    Ttk_RegisterLayout(theme, "TSeparator", SeparatorLayout);
-    Ttk_RegisterLayout(theme, "TSizegrip", SizegripLayout);
 
     /*
      * Register "default" as a user-loadable theme (for now):

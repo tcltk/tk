@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.6 2007/06/09 21:45:44 jenglish Exp $
+/* $Id: ttkFrame.c,v 1.7 2007/10/25 07:08:26 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
@@ -164,6 +164,10 @@ static WidgetSpec FrameWidgetSpec =
     TtkWidgetDoLayout,		/* layoutProc */
     TtkWidgetDisplay		/* displayProc */
 };
+
+TTK_BEGIN_LAYOUT(FrameLayout)
+    TTK_NODE("Frame.border", TTK_FILL_BOTH)
+TTK_END_LAYOUT
 
 /* ======================================================================
  * +++ Labelframe widget:
@@ -587,6 +591,11 @@ static WidgetSpec LabelframeWidgetSpec =
     TtkWidgetDisplay		/* displayProc */
 };
 
+TTK_BEGIN_LAYOUT(LabelframeLayout)
+    TTK_NODE("Labelframe.border", TTK_FILL_BOTH)
+    TTK_NODE("Labelframe.text", TTK_FILL_BOTH)
+TTK_END_LAYOUT
+
 /* ======================================================================
  * +++ Initialization:
  */
@@ -594,6 +603,12 @@ static WidgetSpec LabelframeWidgetSpec =
 MODULE_SCOPE
 void TtkFrame_Init(Tcl_Interp *interp)
 {
+    Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
+
+    Ttk_RegisterLayout(theme, "TFrame", FrameLayout);
+    Ttk_RegisterLayout(theme, "TLabelframe", LabelframeLayout);
+
     RegisterWidget(interp, "ttk::frame", &FrameWidgetSpec);
     RegisterWidget(interp, "ttk::labelframe", &LabelframeWidgetSpec);
 }
+

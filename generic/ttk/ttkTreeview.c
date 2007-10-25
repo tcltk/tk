@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.18 2007/10/15 15:03:41 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.19 2007/10/25 07:08:26 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -3178,7 +3178,7 @@ static Ttk_ElementSpec RowElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(RowElement),
     RowElementOptions,
-    TtkNullElementGeometry,
+    TtkNullElementSize,
     RowElementDraw
 };
 
