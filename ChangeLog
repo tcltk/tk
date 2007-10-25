@@ -1,3 +1,7 @@
+2007-10-25  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkNotebook.c: [Bug 1817596].
+
 2007-10-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* doc/getOpenFile.n:  TIP#242 implementation of -typevariable to

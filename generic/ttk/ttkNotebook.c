@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.9 2007/06/09 21:45:44 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.10 2007/10/25 22:52:41 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * NOTE-ACTIVE: activeTabIndex is not always correct (it's
@@ -688,7 +688,9 @@ static void TabRemoved(Ttk_Manager *mgr, int index)
     TtkRedisplayWidget(&nb->core);
 }
 
-
+/* AddTab --
+ * 	Add new tab at specified index.
+ */
 static int AddTab(
     Tcl_Interp *interp, Notebook *nb,
     int destIndex, Tk_Window slaveWindow,
@@ -717,6 +719,15 @@ static int AddTab(
     }
 
     Ttk_InsertSlave(nb->notebook.mgr, destIndex, slaveWindow, tab);
+
+    /* Adjust indices and/or autoselect first tab:
+     */
+    if (nb->notebook.currentIndex < 0) {
+	SelectTab(nb, destIndex);
+    } else if (nb->notebook.currentIndex >= destIndex) {
+	++nb->notebook.currentIndex;
+    }
+
     return TCL_OK;
 }
 
@@ -859,13 +870,6 @@ static int NotebookAddCommand(
 	return TCL_ERROR;
     }
 
-    /* If no tab is currently selected (or if this is the first tab),
-     * select this one:
-     */
-    if (nb->notebook.currentIndex < 0) {
-	SelectTab(nb, index);
-    }
-
     TtkResizeWidget(&nb->core);
 
     return TCL_OK;
@@ -881,7 +885,6 @@ static int NotebookInsertCommand(
     int current = nb->notebook.currentIndex;
     int nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
     int srcIndex, destIndex;
-    int status = TCL_OK;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2,objv, "index slave ?options...?");
@@ -895,29 +898,35 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (TCL_OK != Ttk_GetSlaveIndexFromObj(
-		interp, nb->notebook.mgr, objv[3], &srcIndex))
-    {
-	/* Try adding new slave:
+    if (Tcl_GetString(objv[3])[0] == '.') {
+	/* Window name -- could be new or existing slave.
 	 */
 	Tk_Window slaveWindow =
 	    Tk_NameToWindow(interp,Tcl_GetString(objv[3]),nb->core.tkwin);
 
-	/* Check validity.
-	 */
 	if (!slaveWindow) {
 	    return TCL_ERROR;
 	}
-	if (TCL_OK != AddTab(interp,nb,destIndex,slaveWindow,objc-4,objv+4)) {
-	    return TCL_ERROR;
+
+	srcIndex = Ttk_SlaveIndex(nb->notebook.mgr, slaveWindow);
+	if (srcIndex < 0) {	/* New slave */
+	    return AddTab(interp, nb, destIndex, slaveWindow, objc-4,objv+4);
 	}
-	if (nb->notebook.currentIndex >= destIndex) {
-	    ++nb->notebook.currentIndex;
-	}
-	return TCL_OK;
+    } else if (Ttk_GetSlaveIndexFromObj(
+		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
+    {
+	return TCL_ERROR;
     }
 
-    /* else - move existing slave: */
+    /* Move existing slave:
+     */
+    if (ConfigureTab(interp, nb,
+	     Ttk_SlaveData(nb->notebook.mgr,srcIndex),
+	     Ttk_SlaveWindow(nb->notebook.mgr,srcIndex),
+	     objc-4,objv+4) != TCL_OK)
+    {
+	return TCL_ERROR;
+    }
 
     if (destIndex >= nSlaves) {
 	destIndex  = nSlaves - 1;
@@ -935,16 +944,9 @@ static int NotebookInsertCommand(
 	--nb->notebook.currentIndex;
     }
 
-    if (objc > 4) {
-	status = ConfigureTab(interp, nb,
-	     Ttk_SlaveData(nb->notebook.mgr,destIndex),
-	     Ttk_SlaveWindow(nb->notebook.mgr,destIndex),
-	     objc-4,objv+4);
-    }
-
     TtkRedisplayWidget(&nb->core);
 
-    return status;
+    return TCL_OK;
 }
 
 /* $nb forget $item --
@@ -1300,7 +1302,7 @@ static WidgetSpec NotebookWidgetSpec =
     NotebookInitialize,		/* initializeProc */
     NotebookCleanup,		/* cleanupProc */
     NotebookConfigure,		/* configureProc */
-    TtkNullPostConfigure,		/* postConfigureProc */
+    TtkNullPostConfigure,	/* postConfigureProc */
     NotebookGetLayout, 		/* getLayoutProc */
     NotebookSize,		/* geometryProc */
     NotebookDoLayout,		/* layoutProc */
