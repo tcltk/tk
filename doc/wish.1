@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wish.1,v 1.6 2007/10/24 14:32:59 dkf Exp $
+'\" RCS: @(#) $Id: wish.1,v 1.7 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH wish 1 8.0 Tk "Tk Applications"
@@ -70,8 +70,7 @@ arguments, ?\fB-encoding \fIname\fR? ?\fIfileName\fR? specify the
 name of a script file, and, optionally, the
 encoding of the text data stored in that script file.  A value
 for \fIfileName\fR is recognized if the appropriate argument
-does not start with
-.QW \- .
+does not start with ``\-''.
 .PP
 If there are no arguments, or the arguments do not specify a \fIfileName\fR,
 then wish reads Tcl commands interactively from standard input.
@@ -105,8 +104,7 @@ The name of the application, which is used for purposes such as
 \fBsend\fR commands, is taken from the \fB\-name\fR option,
 if it is specified;  otherwise it is taken from \fIfileName\fR,
 if it is specified, or from the command name by which
-\fBwish\fR was invoked.  In the last two cases, if the name contains a
-.QW /
+\fBwish\fR was invoked.  In the last two cases, if the name contains a ``/''
 character, then only the characters after the last slash are used
 as the application name.
 .PP
@@ -187,25 +185,16 @@ since the backslash at the end of the second line causes the third
 line to be treated as part of the comment on the second line.
 .PP
 The end of a script file may be marked either by the physical end of
-the medium, or by the character,
-.QW \e032
-(i.e.
-.QW \eu001a ,
-control-Z).
+the medium, or by the character, '\\032' ('\\u001a', control-Z).
 If this character is present in the file, the \fBwish\fR application
 will read text up to but not including the character.  An application
 that requires this character in the file may encode it as
-.QW \e032 ,
-.QW \ex1a ,
-or
-.QW \eu001a ;
-or may generate it by use of commands such as \fBformat\fR or \fBbinary\fR.
+``\\032'', ``\\x1a'', or ``\\u001a''; or may generate it by use of commands 
+such as \fBformat\fR or \fBbinary\fR.
 .SH PROMPTS
 .PP
 When \fBwish\fR is invoked interactively it normally prompts for each
-command with
-.QW "\fB% \fR" .
-You can change the prompt by setting the
+command with ``\fB% \fR''.  You can change the prompt by setting the
 variables \fBtcl_prompt1\fR and \fBtcl_prompt2\fR.  If variable
 \fBtcl_prompt1\fR exists then it must consist of a Tcl script
 to output a prompt;  instead of outputting a prompt \fBwish\fR

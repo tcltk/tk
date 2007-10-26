@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: focusNext.n,v 1.3 2007/10/24 14:32:58 dkf Exp $
+'\" RCS: @(#) $Id: focusNext.n,v 1.4 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH tk_focusNext n 4.0 Tk "Tk Built-In Commands"
@@ -24,9 +24,7 @@ tk_focusNext, tk_focusPrev, tk_focusFollowsMouse \- Utility procedures for manag
 .SH DESCRIPTION
 .PP
 \fBtk_focusNext\fR is a utility procedure used for keyboard traversal.
-It returns the
-.QW next
-window after \fIwindow\fR in focus order.
+It returns the ``next'' window after \fIwindow\fR in focus order.
 The focus order is determined by
 the stacking order of windows and the structure of the window hierarchy.
 Among siblings, the focus order is the same as the stacking order, with the
