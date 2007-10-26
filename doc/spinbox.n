@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: spinbox.n,v 1.5 2007/10/24 14:32:59 dkf Exp $
+'\" RCS: @(#) $Id: spinbox.n,v 1.6 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH spinbox n 8.4 Tk "Tk Built-In Commands"
@@ -265,15 +265,11 @@ spinbox window.
 \fB@\fInumber\fR
 In this form, \fInumber\fR is treated as an x-coordinate in the
 spinbox's window;  the character spanning that x-coordinate is used.
-For example,
-.QW \fB@0\fR
-indicates the left-most character in the window.
+For example, ``\fB@0\fR'' indicates the left-most character in the
+window.
 .LP
-Abbreviations may be used for any of the forms above, e.g.
-.QW \fBe\fR
-or
-.QW \fBsel.f\fR .
-In general, out-of-range indices are automatically
+Abbreviations may be used for any of the forms above, e.g. ``\fBe\fR''
+or ``\fBsel.f\fR''.  In general, out-of-range indices are automatically
 rounded to the nearest legal value.
 .PP
 The following commands are possible for spinbox widgets:
@@ -471,11 +467,9 @@ become visible.
 .PP
 Tk automatically creates class bindings for spinboxes that give them
 the following default behavior.
-In the descriptions below,
-.QW word
-refers to a contiguous group of letters, digits, or
-.QW _
-characters, or any single character other than these.
+In the descriptions below, ``word'' refers to a contiguous group
+of letters, digits, or ``_'' characters, or any single character
+other than these.
 .IP [1]
 Clicking mouse button 1 positions the insertion cursor
 just before the character underneath the mouse cursor, sets the

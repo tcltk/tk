@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCapStyl.3,v 1.5 2007/10/24 14:32:56 dkf Exp $
+'\" RCS: @(#) $Id: GetCapStyl.3,v 1.6 2007/10/26 20:13:22 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_GetCapStyle 3 "" Tk "Tk Library Procedures"
@@ -26,11 +26,8 @@ const char *
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting.
 .AP "const char" *string in
-String containing name of cap style: one of
-.QW butt ,
-.QW projecting ,
-or
-.QW round .
+String containing name of cap style: one of ```butt'', ``projecting'',
+or ``round''.
 .AP int *capPtr out
 Pointer to location in which to store X cap style corresponding to
 \fIstring\fR.
@@ -60,8 +57,7 @@ stored in \fIinterp->result\fR, \fBTCL_ERROR\fR is returned, and
 Given a cap style such as \fBCapButt\fR it returns a
 statically-allocated string corresponding to \fIcap\fR.
 If \fIcap\fR isn't a legal cap style, then
-.QW "unknown cap style"
-is returned.
+``unknown cap style'' is returned.
 
 .SH KEYWORDS
 butt, cap style, projecting, round
