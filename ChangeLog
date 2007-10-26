@@ -1,5 +1,8 @@
 2007-10-26  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): fix window class of
+	transient toplevels that are not also overrideredirect. [Bug 1816252]
+
 	* macosx/tkMacOSXDialog.c:	TIP#242 cleanup.
 	* library/demos/filebox.tcl: 	demo TIP#242 -typevariable.
 
