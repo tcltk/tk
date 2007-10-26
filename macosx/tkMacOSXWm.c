@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.43 2007/10/11 14:13:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.44 2007/10/26 10:38:13 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -516,21 +516,21 @@ Tk_WmObjCmd(
     Tk_Window tkwin = (Tk_Window) clientData;
     static const char *optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
-	"command", "deiconify", "focusmodel", "frame",
-	"geometry", "grid", "group", "iconbitmap",
-	"iconify", "iconmask", "iconname",
-	"iconphoto", "iconposition",
-	"iconwindow", "maxsize", "minsize", "overrideredirect",
+	"command", "deiconify", "focusmodel",
+	"frame", "geometry", "grid", "group",
+	"iconbitmap", "iconify", "iconmask", "iconname",
+	"iconphoto", "iconposition", "iconwindow",
+	"maxsize", "minsize", "overrideredirect",
 	"positionfrom", "protocol", "resizable", "sizefrom",
 	"stackorder", "state", "title", "transient",
 	"withdraw", NULL };
     enum options {
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
-	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FRAME,
-	WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
-	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
-	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION,
-	WMOPT_ICONWINDOW, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
+	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL,
+	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP,
+	WMOPT_ICONBITMAP, WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
+	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION, WMOPT_ICONWINDOW,
+	WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
 	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
@@ -5241,7 +5241,7 @@ TkMacOSXMakeRealWindowExist(
     macWin->grafPtr = GetWindowPort(newWindow);
     macWin->rootControl = rootControl;
 
-    if (wmPtr->master != None && winPtr->atts.override_redirect) {
+    if (wmPtr->master != None || winPtr->atts.override_redirect) {
 	ApplyMasterOverrideChanges(winPtr, newWindow);
     }
     SetWindowModified(newWindow, false);
@@ -5912,27 +5912,29 @@ ApplyMasterOverrideChanges(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     WindowClass oldClass = wmPtr->macClass;
     WindowAttributes oldAttributes = wmPtr->attributes;
-    int frontmost = 0;
+    const int wasOverrideredirect = (oldClass == kSimpleWindowClass &&
+	    oldAttributes == kWindowNoActivatesAttribute);
+    const int wasTransient = (oldClass == kPlainWindowClass &&
+	    oldAttributes == kWindowNoAttributes);
+    const int wasDefault = (oldClass == kDocumentWindowClass);
 
     /*
      * FIX: We need an UpdateWrapper equivalent to make this 100% correct
      */
     if (winPtr->atts.override_redirect) {
-	if (wmPtr->macClass == kDocumentWindowClass || (wmPtr->master != None
-		&& wmPtr->macClass == kFloatingWindowClass)) {
+	if (wasDefault || (wmPtr->master != None && wasTransient)) {
 	    wmPtr->macClass = kSimpleWindowClass;
 	    wmPtr->attributes = kWindowNoAttributes;
 	}
-	if (wmPtr->master != None) {
-	    frontmost = 1;
-	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
     } else {
-	if (wmPtr->macClass == kSimpleWindowClass) {
-	    if (wmPtr->master != None) {
-		wmPtr->macClass = kFloatingWindowClass;
-		wmPtr->attributes = kWindowStandardFloatingAttributes;
-	    } else {
+	if (wmPtr->master != None) {
+	    if (wasDefault || wasOverrideredirect) {
+		wmPtr->macClass = kPlainWindowClass;
+		wmPtr->attributes = kWindowNoAttributes;
+	    }
+	} else {
+	    if (wasTransient || wasOverrideredirect) {
 		wmPtr->macClass = kDocumentWindowClass;
 		wmPtr->attributes = kWindowStandardDocumentAttributes
 			| kWindowLiveResizeAttribute;
@@ -5954,7 +5956,8 @@ ApplyMasterOverrideChanges(
 
 	ApplyWindowClassAttributeChanges(winPtr, macWindow, oldClass,
 	    oldAttributes, 0);
-	val = Tcl_NewBooleanObj(frontmost);
+	val = Tcl_NewBooleanObj(winPtr->atts.override_redirect &&
+		wmPtr->master != None);
 	WmSetAttribute(winPtr, macWindow, NULL, WMATT_TOPMOST, val);
 	Tcl_DecrRefCount(val);
     }
