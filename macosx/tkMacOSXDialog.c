@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.31 2007/10/25 21:44:22 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.32 2007/10/26 07:56:00 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -364,10 +364,10 @@ Tk_GetOpenFileObjCmd(
 	    title, message, initialtype, multiple, OPEN_FILE, parent);
 
     if (typeVariablePtr) {
+	FileFilter *filterPtr = ofd.fl.filters;
 	int i = ofd.curType;
-	FileFilter *filterPtr;
-	for (filterPtr = ofd.fl.filters; 
-	     filterPtr && i > 0; i--) {
+
+	while (filterPtr && i-- > 0) {
 	    filterPtr = filterPtr->next;
 	}
 	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), filterPtr->name, 0);
@@ -1015,34 +1015,33 @@ OpenEventProc(
 {
     NavHandlerUserData *data = (NavHandlerUserData*) callBackUD;
     OpenFileData *ofd = data->ofdPtr;
+
     switch (callBackSelector) {
 	case kNavCBStart:
-	  if (ofd && ofd->initialType >= 0) {
-		  /* Select initial filter */
-		  int i = ofd->initialType;
-		  FileFilter *filterPtr;
+	    if (ofd && ofd->initialType >= 0) {
+		/* Select initial filter */
+		FileFilter *filterPtr = ofd->fl.filters;
+		int i = ofd->initialType;
 
-		  for (filterPtr = ofd->fl.filters; 
-			   filterPtr && i > 0; i--) {
-			  filterPtr = filterPtr->next;
-		  }
-		  if (filterPtr) {
-			  NavMenuItemSpec selectItem;
-			  OSStatus err;
-			  selectItem.version = kNavMenuItemSpecVersion;
-			  selectItem.menuCreator = 0;
-			  selectItem.menuType = ofd->initialType;
-			  selectItem.menuItemName[0] = strlen(filterPtr->name);
-			  strncpy(&selectItem.menuItemName[1], filterPtr->name, 255);
-			  err = NavCustomControl(callBackParams->context, kNavCtlSelectCustomType, &selectItem);
-			  if (err != noErr) {
-				  fprintf(stderr,"NavCustomControl kNavCtlSelectCustomType Failed, %d\n", (int)err );
-			  }
-		  }
-	  }
-	  break;
+		while (filterPtr && i-- > 0) {
+		    filterPtr = filterPtr->next;
+		}
+		if (filterPtr) {
+		    NavMenuItemSpec selectItem;
+
+		    selectItem.version = kNavMenuItemSpecVersion;
+		    selectItem.menuCreator = 0;
+		    selectItem.menuType = ofd->initialType;
+		    selectItem.menuItemName[0] = strlen(filterPtr->name);
+		    strncpy((char*) &selectItem.menuItemName[1],
+			    filterPtr->name, 255);
+		    ChkErr(NavCustomControl, callBackParams->context,
+			    kNavCtlSelectCustomType, &selectItem);
+		}
+	    }
+	    break;
 	case kNavCBPopupMenuSelect:
-	    data->ofdPtr->curType = ((NavMenuItemSpec *)
+	    ofd->curType = ((NavMenuItemSpec *)
 		    callBackParams->eventData.eventDataParms.param)->menuType;
 	    break;
 	case kNavCBAccept:
