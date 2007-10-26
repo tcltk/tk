@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.16 2007/10/24 14:32:58 dkf Exp $
+'\" RCS: @(#) $Id: font.n,v 1.17 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -84,9 +84,7 @@ Measures the amount of space the string \fItext\fR would use in the given
 see FONT DESCRIPTIONS below.  If the \fIwindow\fR argument is omitted, it
 defaults to the main window.  The return value is the total width in pixels
 of \fItext\fR, not including the extra pixels used by highly exaggerated
-characters such as cursive
-.QW f .
-If the string contains newlines or tabs,
+characters such as cursive ``f''.  If the string contains newlines or tabs,
 those characters are not expanded or treated specially when measuring the
 string.
 .TP
@@ -120,10 +118,9 @@ font will be substituted automatically.
 [2] \fIsystemfont\fR
 .
 The platform-specific name of a font, interpreted by the graphics server.
-This also includes, under X, an XLFD (see [4]) for which a single
-.QW \fB*\fR
+This also includes, under X, an XLFD (see [4]) for which a single ``\fB*\fR''
 character was used to elide more than one field in the middle of the
-name.  See \fBPLATFORM-SPECIFIC\fR issues for a list of the system fonts.
+name.  See PLATFORM-SPECIFIC issues for a list of the system fonts.
 .TP
 [3] \fIfamily \fR?\fIsize\fR? ?\fIstyle\fR? ?\fIstyle ...\fR?
 .
@@ -145,22 +142,14 @@ underline	overstrike\fR
 .
 A Unix-centric font name of the form
 \fI-foundry-family-weight-slant-setwidth-addstyle-pixel-point-resx-resy-spacing-width-charset-encoding\fR.
-The
-.QW \fB*\fR
-character may be used to skip individual fields that the
-user does not care about.  There must be exactly one
-.QW \fB*\fR
-for each field skipped, except that a
-.QW \fB*\fR
-at the end of the XLFD skips any
-remaining fields; the shortest valid XLFD is simply
-.QW \fB*\fR ,
-signifying
+The ``\fB*\fR'' character may be used to skip individual fields that the
+user does not care about.  There must be exactly one ``\fB*\fR'' for each
+field skipped, except that a ``\fB*\fR'' at the end of the XLFD skips any
+remaining fields; the shortest valid XLFD is simply ``\fB*\fR'', signifying
 all fields as defaults.  Any fields that were skipped are given default
 values.  For compatibility, an XLFD always chooses a font of the specified
 pixel size (not point size); although this interpretation is not strictly
-correct, all existing applications using XLFDs assumed that one
-.QW point
+correct, all existing applications using XLFDs assumed that one ``point''
 was in fact one pixel and would display incorrectly (generally larger) if
 the correct size font were actually used.
 .TP
@@ -184,13 +173,9 @@ an error is generated.
 The following options are used by the \fBfont metrics\fR command to query
 font-specific data determined when the font was created.  These properties are
 for the whole font itself and not for individual characters drawn in that
-font.  In the following definitions, the
-.QW baseline
-of a font is the
+font.  In the following definitions, the ``baseline'' of a font is the
 horizontal line where the bottom of most letters line up; certain letters,
-such as lower-case
-.QW g
-stick below the baseline.
+such as lower-case ``g'' stick below the baseline.
 .TP
 \fB\-ascent        \0\fR
 .
@@ -211,13 +196,9 @@ above the baseline line plus the descent below the baseline.
 .TP
 \fB\-fixed          \0\fR
 .
-Returns a boolean flag that is
-.QW \fB1\fR
-if this is a fixed-width font,
+Returns a boolean flag that is ``\fB1\fR'' if this is a fixed-width font,
 where each normal character is the same width as all the other
-characters, or is
-.QW \fB0\fR
-if this is a proportionally-spaced font, where
+characters, or is ``\fB0\fR'' if this is a proportionally-spaced font, where
 individual characters have different widths.  The widths of control
 characters, tab characters, and other non-printing characters are not
 included when calculating this value.
@@ -229,13 +210,9 @@ above:
 \fB\-family \fIname\fR
 .
 The case-insensitive font family name.  Tk guarantees to support the font
-families named \fBCourier\fR (a monospaced
-.QW typewriter
-font), \fBTimes\fR (a serifed
-.QW newspaper
-font), and \fBHelvetica\fR (a sans-serif
-.QW European
-font).  The most closely matching native font family will
+families named \fBCourier\fR (a monospaced ``typewriter'' font), \fBTimes\fR
+(a serifed ``newspaper'' font), and \fBHelvetica\fR (a sans-serif
+``European'' font).  The most closely matching native font family will
 automatically be substituted when one of the above font families is used.
 The \fIname\fR may also be the name of a native, platform-specific font
 family; in that case it will work as desired on one platform but may not
@@ -284,91 +261,25 @@ font should be underlined.  The default value for underline is \fBfalse\fR.
 The value is a boolean flag that specifies whether a horizontal line should
 be drawn through the middle of characters in this font.  The default value
 for overstrike is \fBfalse\fR.
-.SH "STANDARD FONTS"
+.SH "PLATFORM-SPECIFIC ISSUES"
 .LP
-The following named fonts are supported on all systems, and default to values
-that match appropriate system defaults.
-.TP
-\fBTkDefaultFont\fR
-.
-This font is the default for all GUI items not otherwise specified.
-.TP
-\fBTkTextFont\fR
-.
-This font should be used for user text in entry widgets, listboxes etc.
-.TP
-\fBTkFixedFont\fR
-.
-This font is the standard fixed-width font.
-.TP
-\fBTkMenuFont\fR
-.
-This font is used for menu items.
-.TP
-\fBTkHeadingFont\fR
-.
-This font should be used for column headings in lists and tables.
-.TP
-\fBTkCaptionFont\fR
-.
-This font should be used for window and dialog caption bars.
-.TP
-\fBTkSmallCaptionFont\fR
-.
-This font should be used for captions on contained windows or tool dialogs.
-.TP
-\fBTkIconFont\fR
-.
-This font should be used for icon captions.
-.TP
-\fBTkTooltipFont\fR
-.
-This font should be used for tooltip windows (transient information windows).
-.LP
-It is \fInot\fR advised to change these fonts, as they may be modified by Tk
-itself in response to system changes. Instead, make a copy of the font and
-modify that.
-.SS "PLATFORM-SPECIFIC FONTS"
-.LP
-The following system fonts are supported:
+The following named system fonts are supported:
 .RS
 .TP
-\fBX Windows\fR
+X Windows:
 All valid X font names, including those listed by xlsfonts(1), are available.
 .TP
-\fBMS Windows\fR
+MS Windows:
 .DS
 .ta 3c 6c
 \fBsystem	ansi	device
 systemfixed	ansifixed	oemfixed\fR
 .DE
 .TP
-\fBMac OS X\fR
+Mac OS X:
 .DS
 .ta 3c 6c
 \fBsystem	application	menu\fR
-.DE
-Additionally, the following named fonts provide access to the Aqua theme fonts:
-.DS
-\fBsystemSystemFont
-systemEmphasizedSystemFont
-systemSmallSystemFont
-systemSmallEmphasizedSystemFont
-systemApplicationFont
-systemLabelFont
-systemViewsFont
-systemMenuTitleFont
-systemMenuItemFont
-systemMenuItemMarkFont
-systemMenuItemCmdKeyFont
-systemWindowTitleFont
-systemPushButtonFont
-systemUtilityWindowTitleFont
-systemAlertHeaderFont
-systemToolbarFont
-systemMiniSystemFont
-systemDetailSystemFont
-systemDetailEmphasizedSystemFont\fR
 .DE
 .RE
 .SH EXAMPLE
@@ -380,7 +291,7 @@ set count 0
 set tabwidth 0
 foreach family [lsort -dictionary [\fBfont families\fR]] {
     .t tag configure f[incr count] -font [list $family 10]
-    .t insert end ${family}:\\t {} \e
+    .t insert end ${family}:\\t {} \\
             "This is a simple sampler\\n" f$count
     set w [\fBfont measure\fR [.t cget -font] ${family}:]
     if {$w+5 > $tabwidth} {

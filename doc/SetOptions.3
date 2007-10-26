@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: SetOptions.3,v 1.14 2007/10/24 14:32:57 dkf Exp $
+'\" RCS: @(#) $Id: SetOptions.3,v 1.15 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_SetOptions 3 8.1 Tk "Tk Library Procedures"
@@ -95,12 +95,10 @@ options are supported, these procedures handle all the details of
 parsing options and storing their values into a C structure associated
 with the widget or object. The procedures were designed primarily for
 widgets in Tk, but they can also be used for other kinds of objects that
-have configuration options.  In the rest of this manual page
-.QW widget
-will be used to refer to the object whose options are being managed; in
-practice the object may not actually be a widget.  The term
-.QW "widget record"
-is used to refer to the C-level structure in
+have configuration options.  In the rest of this manual page ``widget'' will
+be used to refer to the object whose options are being managed; in
+practice the object may not actually be a widget.  The term ``widget
+record'' is used to refer to the C-level structure in
 which information about a particular widget or object is stored.
 .PP
 Note: the easiest way to learn how to use these procedures is to

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetJustify.3,v 1.7 2007/10/24 14:32:57 dkf Exp $
+'\" RCS: @(#) $Id: GetJustify.3,v 1.8 2007/10/26 20:13:22 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_GetJustifyFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -29,12 +29,9 @@ const char *
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting, or NULL.
 .AP Tcl_Obj *objPtr in/out
-String value contains name of justification style; one of: 
-.QW \fBleft\fR ,
-.QW \fBright\fR ,
-or
-.QW \fBcenter\fR ).
-The internal rep will be modified to cache corresponding justify value.
+String value contains name of justification style (\fBleft\fR, \fBright\fR, or
+\fBcenter\fR).  The
+internal rep will be modified to cache corresponding justify value.
 .AP "const char" *string in
 Same as \fIobjPtr\fR except description of justification style is passed as
 a string.
@@ -83,8 +80,7 @@ return value, so \fBTk_GetJustify\fR is less efficient than
 Given a justify value it returns a statically-allocated string
 corresponding to \fIjustify\fR.
 If \fIjustify\fR isn't a legal justify value, then
-.QW "unknown justification style"
-is returned.
+``unknown justification style'' is returned.
 
 .SH KEYWORDS
 center, fill, justification, string

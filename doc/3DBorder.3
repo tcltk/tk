@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: 3DBorder.3,v 1.8 2007/10/24 14:32:56 dkf Exp $
+'\" RCS: @(#) $Id: 3DBorder.3,v 1.9 2007/10/26 20:13:22 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_Alloc3DBorderFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -238,9 +238,7 @@ Each procedure takes \fIx\fR, \fIy\fR, \fIwidth\fR, and \fIheight\fR
 arguments that describe the rectangular area of the beveled edge
 (e.g., \fIwidth\fR is the border width for \fBTk_3DVerticalBevel\fR).
 The \fIleftBorder\fR and \fItopBorder\fR arguments indicate the
-position of the border relative to the
-.QW inside
-of the object, and
+position of the border relative to the ``inside'' of the object, and
 \fIrelief\fR indicates the relief of the inside of the object relative
 to the outside.
 \fBTk_3DVerticalBevel\fR just draws a rectangular region.

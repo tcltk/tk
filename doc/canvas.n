@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.27 2007/10/24 14:32:57 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.28 2007/10/26 20:13:23 dgp Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -28,9 +28,8 @@ canvas \- Create and manipulate canvas widgets
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-closeenough closeEnough CloseEnough
 Specifies a floating-point value indicating how close the mouse cursor
-must be to an item before it is considered to be
-.QW inside
-the item. Defaults to 1.0.
+must be to an item before it is considered to be ``inside'' the item.
+Defaults to 1.0.
 .OP \-confine confine Confine
 Specifies a boolean value that indicates whether or not it should be
 allowable to set the canvas's view outside the region defined by the
@@ -114,9 +113,7 @@ with the first item in the display list being displayed
 first, followed by the next item in the list, and so on.
 Items later in the display list obscure those that are
 earlier in the display list and are sometimes referred to
-as being
-.QW "on top"
-of earlier items.
+as being ``on top'' of earlier items.
 When a new item is created it is placed at the end of the
 display list, on top of everything else.
 Widget commands may be used to re-arrange the order of the
@@ -139,16 +136,11 @@ canvas widget.
 Each item may also have any number of \fItags\fR associated
 with it.  A tag is just a string of characters, and it may
 take any form except that of an integer.
-For example,
-.QW x123
-is OK but
-.QW 123
-isn't.
+For example, ``x123'' is OK but ``123'' isn't.
 The same tag may be associated with many different items.
 This is commonly done to group items in various interesting
 ways;  for example, all selected items might be given the
-tag
-.QW selected .
+tag ``selected''.
 .PP
 The tag \fBall\fR is implicitly associated with every item
 in the canvas;  it may be used to invoke operations on
@@ -399,9 +391,7 @@ Selects all the items given by \fItagOrId\fR.
 \fIpathName \fBbbox \fItagOrId\fR ?\fItagOrId tagOrId ...\fR?
 Returns a list with four elements giving an approximate bounding box
 for all the items named by the \fItagOrId\fR arguments.
-The list has the form
-.QW "\fIx1 y1 x2 y2\fR"
-such that the drawn
+The list has the form ``\fIx1 y1 x2 y2\fR'' such that the drawn
 areas of all the named elements are within the region bounded by
 \fIx1\fR on the left, \fIx2\fR on the right, \fIy1\fR on the top,
 and \fIy2\fR on the bottom.
@@ -424,9 +414,8 @@ on the syntax of \fIsequence\fR and the substitutions performed
 on \fIcommand\fR before invoking it.
 If all arguments are specified then a new binding is created, replacing
 any existing binding for the same \fIsequence\fR and \fItagOrId\fR
-(if the first character of \fIcommand\fR is
-.QW +
-then \fIcommand\fR augments an existing binding rather than replacing it).
+(if the first character of \fIcommand\fR is ``+'' then \fIcommand\fR
+augments an existing binding rather than replacing it).
 In this case the return value is an empty string.
 If \fIcommand\fR is omitted then the command returns the \fIcommand\fR
 associated with \fItagOrId\fR and \fIsequence\fR (an error occurs
@@ -714,8 +703,7 @@ options are supported:
 \fIVarName\fR must be the name of an array variable
 that specifies a color mapping to use in the Postscript.
 Each element of \fIvarName\fR must consist of Postscript
-code to set a particular color value (e.g.
-.QW "\fB1.0 1.0 0.0 setrgbcolor\fR" ).
+code to set a particular color value (e.g. ``\fB1.0 1.0 0.0 setrgbcolor\fR'').
 When outputting color information in the Postscript, Tk checks
 to see if there is an element of \fIvarName\fR with the same
 name as the color.
@@ -804,12 +792,10 @@ Defaults to the center of the page.
 \fIBoolean\fR specifies whether the printed area is to be rotated 90
 degrees.
 In non-rotated output the x-axis of the printed area runs along
-the short dimension of the page (i.e.
-.QW portrait
-orientation); in rotated output the x-axis runs along the long
-dimension of the page (i.e.
-.QW landscape
-orientation). Defaults to non-rotated.
+the short dimension of the page (``portrait'' orientation);
+in rotated output the x-axis runs along the long dimension of the
+page (``landscape'' orientation).
+Defaults to non-rotated.
 .TP
 \fB\-width \fIsize\fR
 Specifies the width of the area of the canvas to print.
@@ -1040,6 +1026,7 @@ the coordinates of the item.
 .PP
 Many items share a common set of options.  These options are
 explained here, and then referred to be each widget type for brevity.
+.PP
 .TP
 \fB\-dash \fIpattern\fR
 .TP
@@ -1170,7 +1157,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by arcs:
 .CS
 \-dash
@@ -1240,7 +1227,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by bitmaps:
 .CS
 \-state
@@ -1304,7 +1291,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by images:
 .CS
 \-state
@@ -1349,7 +1336,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by lines:
 .CS
 \-dash
@@ -1390,9 +1377,7 @@ The second element gives the distance along the line from the
 trailing points of the arrowhead to the tip, and the third
 element gives the distance from the outside edge of the line to the
 trailing points.
-If this option isn't specified then Tk picks a
-.QW reasonable
-shape.
+If this option isn't specified then Tk picks a ``reasonable'' shape.
 .TP
 \fB\-capstyle \fIstyle\fR
 Specifies the ways in which caps are to be drawn at the endpoints
@@ -1461,7 +1446,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by ovals:
 .CS
 \-dash
@@ -1508,7 +1493,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by polygons:
 .CS
 \-dash
@@ -1573,9 +1558,8 @@ will be approximated with \fInumber\fR line segments.  This
 option is ignored unless the \fB\-smooth\fR option is true or \fBraw\fR.
 .PP
 Polygon items are different from other items such as rectangles, ovals
-and arcs in that interior points are considered to be
-.QW inside
-a polygon (e.g. for purposes of the \fBfind closest\fR and
+and arcs in that interior points are considered to be ``inside'' a
+polygon (e.g. for purposes of the \fBfind closest\fR and
 \fBfind overlapping\fR widget commands) even if it is not filled.
 For most other item types, an
 interior point is considered to be inside the item only if the item
@@ -1601,7 +1585,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by rectangles:
 .CS
 \-dash
@@ -1649,7 +1633,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by text items:
 .CS
 \-fill
@@ -1730,7 +1714,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by window items:
 .CS
 \-state

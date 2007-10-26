@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: text.n,v 1.46 2007/10/24 14:32:59 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.47 2007/10/26 20:13:23 dgp Exp $
 '\"
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -150,9 +150,8 @@ not.
 Specifies the desired width for the window in units of characters
 in the font given by the \fB\-font\fR option.
 If the font doesn't have a uniform width then the width of the
-character
-.QW 0
-is used in translating from character units to screen units.
+character ``0'' is used in translating from character units to
+screen units.
 .OP \-wrap wrap Wrap
 Specifies how to handle lines in the text that are too long to be
 displayed in a single line of the text's window.
@@ -411,18 +410,14 @@ submodifier is given, this only examines non-elided characters, otherwise
 all characters (elided or not) are examined.
 .PP
 If more than one modifier is present then they are applied in
-left-to-right order.  For example, the index
-.QW "\fBend \- 1 chars\fR"
+left-to-right order.  For example, the index ``\fBend \- 1 chars\fR''
 refers to the next-to-last character in the text and
-.QW "\fBinsert wordstart \- 1 c\fR"
-refers to the character just before
+``\fBinsert wordstart \- 1 c\fR'' refers to the character just before
 the first one in the word containing the insertion cursor.  Modifiers
 are applied one by one in this left to right order, and after each step
 the resulting index is constrained to be a valid index in the text
-widget.  So, for example, the index
-.QW "\fB1.0 -1c +1c\fR"
-refers to the index
-.QW "\fB2.0\fR".
+widget.  So, for example, the index ``\fB1.0 -1c +1c\fR'' refers to the
+index ``\fB2.0\fR''.
 .PP
 Where modifiers result in index changes by display lines, display chars
 or display indices, and the \fIbase\fR refers to an index inside an
@@ -436,9 +431,7 @@ The first form of annotation in text widgets is a tag.
 A tag is a textual string that is associated with some of the characters
 in a text.
 Tags may contain arbitrary characters, but it is probably best to
-avoid using the characters
-.QW " "
-(space), \fB+\fR, or \fB\-\fR:
+avoid using the characters `` '' (space), \fB+\fR, or \fB\-\fR:
 these characters have special meaning in indices, so tags containing
 them can't be used as indices.
 There may be any number of tags associated with characters in a
@@ -453,9 +446,7 @@ When a tag is defined (by associating it with characters or setting
 its display options or binding commands to it), it is given
 a priority higher than any existing tag.
 The priority order of tags may be redefined using the
-.QW "\fIpathName \fBtag raise\fR"
-and
-.QW "\fIpathName \fBtag lower\fR"
+``\fIpathName \fBtag raise\fR'' and ``\fIpathName \fBtag lower\fR''
 widget commands.
 .PP
 Tags serve three purposes in text widgets.
@@ -464,9 +455,7 @@ By default, characters are displayed as determined by the
 \fB\-background\fR, \fB\-font\fR, and \fB\-foreground\fR options for the
 text widget.
 However, display options may be associated with individual tags
-using the
-.QW "\fIpathName \fBtag configure\fR"
-widget command.
+using the ``\fIpathName \fBtag configure\fR'' widget command.
 If a character has been tagged, then the display options associated
 with the tag override the default display style.
 The following options are currently supported for tags:
@@ -651,9 +640,8 @@ Tcl command will be executed.
 Tag bindings can be used to give behaviors to ranges of characters;
 among other things, this allows hypertext-like
 features to be implemented.
-For details, see the description of the
-.QW "\fIpathName \fBtag bind\fR"
-widget command below.
+For details, see the description of the ``\fIpathName \fBtag bind\fR'' widget
+command below.
 .VS 8.5
 Tag bindings are shared between all peer widgets
 (including any bindings for the special \fBsel\fR tag).
@@ -683,9 +671,7 @@ remain;  it will just have new neighbor characters.
 In contrast, if the characters containing a tag are deleted then
 the tag will no longer have an association with characters in
 the file.
-Marks may be manipulated with the
-.QW "\fIpathName \fBmark\fR"
-widget
+Marks may be manipulated with the ``\fIpathName \fBmark\fR'' widget
 command, and their current locations may be determined by using the
 mark name as an index in widget commands.
 .PP
@@ -901,8 +887,7 @@ Whenever the \fBsel\fR tag range changes a virtual event
 \fB<<Selection>>\fR is generated.
 .PP
 The \fBsel\fR tag is automatically defined when a text widget is
-created, and it may not be deleted with the
-.QW "\fIpathName \fBtag delete\fR"
+created, and it may not be deleted with the ``\fIpathName \fBtag delete\fR''
 widget command.  Furthermore, the \fBselectBackground\fR,
 \fBselectBorderWidth\fR, and \fBselectForeground\fR options for
 the text widget are tied to the \fB\-background\fR,
@@ -923,9 +908,8 @@ empty) for background windows.  Each peer text widget has its own
 .PP
 The mark named \fBinsert\fR has special significance in text widgets.
 It is defined automatically when a text widget is created and it
-may not be unset with the
-.QW "\fIpathName \fBmark unset\fR"
-widget command.
+may not be unset with the ``\fIpathName \fBmark unset\fR'' widget
+command.
 The \fBinsert\fR mark represents the position of the insertion
 cursor, and the insertion cursor will automatically be drawn at
 this point whenever the text widget has the input focus.
@@ -1444,8 +1428,7 @@ This command returns an empty string.
 \fIpathName \fBmark unset \fImarkName \fR?\fImarkName markName ...\fR?
 Remove the mark corresponding to each of the \fImarkName\fR arguments.
 The removed marks will not be usable in indices and will not be
-returned by future calls to
-.QW "\fIpathName \fBmark names\fR" .
+returned by future calls to ``\fIpathName \fBmark names\fR''.
 This command returns an empty string.
 .RE
 .TP
@@ -1475,13 +1458,11 @@ arguments, and the section on \fIpathName
 \fBdelete\fR for an explanation of the handling of the indices.  If
 \fIindex2\fR corresponds to an index earlier in the text than
 \fIindex1\fR, an error will be generated.
-.RS
-.PP
+.br
 The deletion and insertion are arranged so that no unnecessary
 scrolling of the window or movement of insertion cursor occurs.  In
 addition the undo/redo stack are correctly modified, if undo operations
 are active in the text widget.  The command returns an empty string.
-.RE
 .VE 8.5
 .TP
 \fIpathName \fBscan\fR \fIoption args\fR
@@ -1678,9 +1659,8 @@ on the syntax of \fIsequence\fR and the substitutions performed
 on \fIscript\fR before invoking it.
 If all arguments are specified then a new binding is created, replacing
 any existing binding for the same \fIsequence\fR and \fItagName\fR
-(if the first character of \fIscript\fR is
-.QW +
-then \fIscript\fR augments an existing binding rather than replacing it).
+(if the first character of \fIscript\fR is ``+'' then \fIscript\fR
+augments an existing binding rather than replacing it).
 In this case the return value is an empty string.
 If \fIscript\fR is omitted then the command returns the \fIscript\fR
 associated with \fItagName\fR and \fIsequence\fR (an error occurs
@@ -1765,10 +1745,8 @@ Returns a list whose elements are the names of all the tags that
 are active at the character position given by \fIindex\fR.
 If \fIindex\fR is omitted, then the return value will describe
 all of the tags that exist for the text (this includes all tags
-that have been named in a
-.QW "\fIpathName \fBtag\fR"
-widget command but haven't been deleted by a
-.QW "\fIpathName \fBtag delete\fR"
+that have been named in a ``\fIpathName \fBtag\fR'' widget
+command but haven't been deleted by a ``\fIpathName \fBtag delete\fR''
 widget command, even if no characters are currently marked with
 the tag).
 The list will be sorted in order from lowest priority to highest
@@ -1913,11 +1891,7 @@ This command shifts the view in the window left or right according to
 .VS 8.5
 If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR must be an
 integer, otherwise number may be specified in any of the forms acceptable
-to \fBTk_GetPixels\fR, such as
-.QW 2.0c
-or
-.QW 1i
-(the result is rounded
+to \fBTk_GetPixels\fR, such as ``2.0c'' or ``1i'' (the result is rounded
 to the nearest integer value.  If no units are given, pixels are
 assumed).  If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
 \fInumber\fR average-width characters on the display; if it is
@@ -1970,11 +1944,7 @@ This command adjust the view in the window up or down according to
 .VS 8.5
 If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR must be an
 integer, otherwise number may be specified in any of the forms acceptable
-to \fBTk_GetPixels\fR, such as
-.QW 2.0c
-or
-.QW 1i
-(the result is rounded
+to \fBTk_GetPixels\fR, such as ``2.0c'' or ``1i'' (the result is rounded
 to the nearest integer value.  If no units are given, pixels are
 assumed).  If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
 \fInumber\fR lines on the display; if it is \fBpages\fR then the view
@@ -2019,9 +1989,8 @@ This command used to be used for scrolling, but now it is obsolete.
 .PP
 Tk automatically creates class bindings for texts that give them
 the following default behavior.
-In the descriptions below,
-.QW word
-is dependent on the value of the \fBtcl_wordchars\fR variable. See tclvars(n).
+In the descriptions below, ``word'' is dependent on the value of
+the \fBtcl_wordchars\fR variable.  See tclvars(n).
 .IP [1]
 Clicking mouse button 1 positions the insertion cursor
 just before the character underneath the mouse cursor, sets the

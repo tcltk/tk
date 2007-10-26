@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_button.n,v 1.5 2007/10/24 14:32:59 dkf Exp $
+'\" RCS: @(#) $Id: ttk_button.n,v 1.6 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH ttk_button n 8.5 Tk "Tk Themed Widget"
@@ -20,11 +20,11 @@ ttk_button \- Widget that issues a command when pressed
 A \fBttk::button\fR widget displays a textual label and/or image,
 and evaluates a command when pressed.
 .SO
-\-class	\-compound	\-cursor
-\-image	\-state	\-style
-\-takefocus	\-text	\-textvariable
-\-underline	\-width
+\-class	\-compound	\-cursor	\-image
+\-state	\-style	\-takefocus	\-text	
+\-textvariable	\-underline	\-width
 .SE
+
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
 A script to evaluate when the widget is invoked.
@@ -36,11 +36,9 @@ In a dialog box, one button may be designated the "default" button
 \fBnormal\fR means that it may become the default button, and
 \fBdisabled\fR means that it is not defaultable.
 The default is \fBnormal\fR.
-.RS
-.PP
+.br
 Depending on the theme, the default button may be displayed 
 with an extra highlight ring, or with a different border color.
-.RE
 .OP \-width width Width
 If greater than zero, specifies how much space, in character widths, 
 to allocate for the text label.  
@@ -48,13 +46,14 @@ If less than zero, specifies a minimum width.
 If zero or unspecified, the natural width of the text label is used.
 Note that some themes may specify a non-zero \fB-width\fR
 in the style.
-.\" Not documented -- may go away
-.\" .OP \-padding padding Padding
-.\" .OP \-foreground foreground Foreground
-.\" .OP \-font font Font
-.\" .OP \-anchor anchor Anchor
-.\" .OP \-padding padding Padding
-.\" .OP \-relief relief Relief
+'\" Not documented -- may go away
+'\" .OP \-padding padding Padding
+'\" .OP \-foreground foreground Foreground
+'\" .OP \-font font Font
+'\" .OP \-anchor anchor Anchor
+'\" .OP \-padding padding Padding
+'\" .OP \-relief relief Relief
+
 .SH "WIDGET COMMAND"
 .TP
 \fIpathName \fBinvoke\fR
@@ -68,16 +67,17 @@ Invokes the command associated with the button.
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
 See \fIttk_widget(n)\fR
+
 .SH "COMPATIBILITY OPTIONS"
 .OP \-state state State
 May be set to \fBnormal\fR or \fBdisabled\fR
 to control the \fBdisabled\fR state bit.
-This is a
-.QW write-only
-option: setting it changes the
+This is a ``write-only'' option: setting it changes the
 widget state, but the \fBstate\fR widget command does
 not affect the state option.
+
 .SH "SEE ALSO"
 ttk_widget(n), button(n)
+
 .SH "KEYWORDS"
 widget, button, default, command

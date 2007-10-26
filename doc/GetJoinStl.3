@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetJoinStl.3,v 1.5 2007/10/24 14:32:57 dkf Exp $
+'\" RCS: @(#) $Id: GetJoinStl.3,v 1.6 2007/10/26 20:13:22 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_GetJoinStyle 3 "" Tk "Tk Library Procedures"
@@ -26,11 +26,8 @@ const char *
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting.
 .AP "const char" *string in
-String containing name of join style: one of
-.QW bevel ,
-.QW miter ,
-or
-.QW round .
+String containing name of join style: one of ``bevel'', ``miter'',
+or ``round''.
 .AP int *joinPtr out
 Pointer to location in which to store X join style corresponding to
 \fIstring\fR.
@@ -59,8 +56,7 @@ stored in \fIinterp->result\fR, \fBTCL_ERROR\fR is returned, and
 Given a join style such as \fBJoinBevel\fR it returns a
 statically-allocated string corresponding to \fIjoin\fR.
 If \fIjoin\fR isn't a legal join style, then
-.QW "unknown join style"
-is returned.
+``unknown join style'' is returned.
 
 .SH KEYWORDS
 bevel, join style, miter, round

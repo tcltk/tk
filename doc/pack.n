@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: pack.n,v 1.8 2007/10/24 14:32:58 dkf Exp $
+'\" RCS: @(#) $Id: pack.n,v 1.9 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH pack n 4.0 Tk "Tk Built-In Commands"
@@ -27,15 +27,14 @@ on the \fIoption\fR argument:
 .TP
 \fBpack \fIslave \fR?\fIslave ...\fR? ?\fIoptions\fR?
 If the first argument to \fBpack\fR is a window name (any value
-starting with
-.QW . ),
-then the command is processed in the same way as \fBpack configure\fR.
+starting with ``.''), then the command is processed in the same
+way as \fBpack configure\fR.
 .TP
 \fBpack configure \fIslave \fR?\fIslave ...\fR? ?\fIoptions\fR?
 The arguments consist of the names of one or more slave windows
 followed by pairs of arguments that specify how
 to manage the slaves.
-See \fBTHE PACKER ALGORITHM\fR below for details on how the options
+See ``THE PACKER ALGORITHM'' below for details on how the options
 are used by the packer.
 The following options are supported:
 .RS
@@ -137,14 +136,13 @@ The slaves will no longer be managed by the packer.
 Returns a list whose elements are the current configuration state of
 the slave given by \fIslave\fR in the same option-value form that
 might be specified to \fBpack configure\fR.
-The first two elements of the list are
-.QW "\fB\-in \fImaster\fR"
-where \fImaster\fR is the slave's master.
+The first two elements of the list are ``\fB\-in \fImaster\fR'' where
+\fImaster\fR is the slave's master.
 .TP
 \fBpack propagate \fImaster\fR ?\fIboolean\fR?
 If \fIboolean\fR has a true boolean value such as \fB1\fR or \fBon\fR
 then propagation is enabled for \fImaster\fR, which must be a window
-name (see \fBGEOMETRY PROPAGATION\fR below).
+name (see ``GEOMETRY PROPAGATION'' below).
 If \fIboolean\fR has a false boolean value then propagation is
 disabled for \fImaster\fR.
 In either of these cases an empty string is returned.
@@ -186,7 +184,7 @@ For the left or right side the height of the parcel is
 the height of the cavity and the width is the requested width
 of the slave plus the \fB\-ipadx\fR and \fB\-padx\fR options.
 The parcel may be enlarged further because of the \fB\-expand\fR
-option (see \fBEXPANSION\fR below)
+option (see ``EXPANSION'' below)
 .IP [2]
 The packer chooses the dimensions of the slave.
 The width will normally be the slave's requested width plus

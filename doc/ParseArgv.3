@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ParseArgv.3,v 1.7 2007/10/24 14:32:57 dkf Exp $
+'\" RCS: @(#) $Id: ParseArgv.3,v 1.8 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH Tk_ParseArgv 3 "" Tk "Tk Library Procedures"
@@ -79,10 +79,7 @@ typedef struct {
     char *\fIhelp\fR;
 } Tk_ArgvInfo;
 .CE
-The \fIkey\fR field is a string such as
-.QW \-display
-or
-.QW \-bg
+The \fIkey\fR field is a string such as ``\-display'' or ``\-bg''
 that is compared with the values in \fIargv\fR.  \fIType\fR
 indicates how to process an argument that matches \fIkey\fR
 (more on this below).  \fISrc\fR and \fIdst\fR are additional
@@ -107,13 +104,11 @@ skipped and returned to the caller.
 .PP
 Once a matching argument specifier is found, \fBTk_ParseArgv\fR
 processes the argument according to the \fItype\fR field of the
-specifier.  The argument that matched \fIkey\fR is called
-.QW "the matching argument"
-in the descriptions below.  As part of the processing,
+specifier.  The argument that matched \fIkey\fR is called ``the matching
+argument'' in the descriptions below.  As part of the processing,
 \fBTk_ParseArgv\fR may also use the next argument in \fIargv\fR
-after the matching argument, which is called
-.QW "the following argument" .
-The legal values for \fItype\fR, and the processing
+after the matching argument, which is called ``the following
+argument''.  The legal values for \fItype\fR, and the processing
 that they cause, are as follows:
 .TP
 \fBTK_ARGV_END\fR
@@ -128,11 +123,8 @@ The matching argument is discarded.
 .TP
 \fBTK_ARGV_INT\fR
 The following argument must contain an
-integer string in the format accepted by \fBstrtol\fR (e.g.
-.QW 0
-and
-.QW 0x
-prefixes may be used to specify octal or hexadecimal
+integer string in the format accepted by \fBstrtol\fR (e.g. ``0''
+and ``0x'' prefixes may be used to specify octal or hexadecimal
 numbers, respectively).  \fIDst\fR is treated as a pointer to an
 integer;  the following argument is converted to an integer value
 and stored at \fI*dst\fR.  \fISrc\fR is ignored.  The matching
@@ -353,10 +345,7 @@ prog -of out200 infile    # sets fileName to reference "out200"
 prog -XN 10 infile        # sets the debug flag, also sets numReps
 .CE
 In all of the above examples, \fIargc\fR will be set by \fBTk_ParseArgv\fR to 2,
-\fIargv\fR[0] will be
-.QW prog ,
-\fIargv\fR[1] will be
-.QW infile ,
+\fIargv\fR[0] will be ``prog'', \fIargv\fR[1] will be ``infile'',
 and \fIargv\fR[2] will be NULL.
 
 .SH KEYWORDS
