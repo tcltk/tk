@@ -1,12 +1,17 @@
+2007-10-26  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDialog.c:	TIP#242 cleanup.
+	* library/demos/filebox.tcl: 	demo TIP#242 -typevariable.
+
 2007-10-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkNotebook.c: [Bug 1817596].
 
 2007-10-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* doc/getOpenFile.n:  TIP#242 implementation of -typevariable to
-	* library/tkfbox.tcl: return type of selected file in file dialogs.
-	* library/xmfbox.tcl: [Bug #1156388]
+	* doc/getOpenFile.n:	TIP#242 implementation of -typevariable to
+	* library/tkfbox.tcl:	return type of selected file in file dialogs.
+	* library/xmfbox.tcl:	[Bug 1156388]
 	* macosx/tkMacOSXDialog.c:
 	* tests/filebox.test:
 	* tests/winDialog.test:
@@ -14,7 +19,7 @@
 
 2007-10-25  Don Porter  <dgp@users.sourceforge.net>
 
-	* generic/tkPlace.c:    Prevent segfault in place geometry manager.
+	* generic/tkPlace.c:	Prevent segfault in place geometry manager.
 	Thanks to Colin McDonald.  [Bug 1818491]
 
 2007-10-24  Joe English  <jenglish@users.sourceforge.net>
@@ -31,7 +36,7 @@
 
 2007-10-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinDraw.c: Applied patch #1723362 for transparent bitmaps
+	* win/tkWinDraw.c: Applied [Patch 1723362] for transparent bitmaps.
 
 	* generic/tkWindow.c: permit wm manage of any widget (esp: ttk::frame)
 

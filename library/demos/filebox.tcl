@@ -2,7 +2,7 @@
 #
 # This demonstration script prompts the user to select a file.
 #
-# RCS: @(#) $Id: filebox.tcl,v 1.6 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: filebox.tcl,v 1.7 2007/10/26 07:56:02 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -61,10 +61,13 @@ proc fileDialog {w ent operation} {
 	{"All files"		*}
     }
     if {$operation == "open"} {
-	set file [tk_getOpenFile -filetypes $types -parent $w]
+	set type "Tcl Scripts"
+	set file [tk_getOpenFile -filetypes $types -parent $w \
+		-typevariable type]
+	puts "You selected filetype \"$type\""
     } else {
 	set file [tk_getSaveFile -filetypes $types -parent $w \
-	    -initialfile Untitled -defaultextension .txt]
+		-initialfile Untitled -defaultextension .txt]
     }
     if {[string compare $file ""]} {
 	$ent delete 0 end
