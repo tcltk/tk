@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: message.n,v 1.5 2007/10/24 14:32:58 dkf Exp $
+'\" RCS: @(#) $Id: message.n,v 1.6 2007/10/26 20:13:23 dgp Exp $
 '\" 
 .so man.macros
 .TH message n 4.0 Tk "Tk Built-In Commands"
@@ -99,9 +99,8 @@ characters (ASCII code less than 0x20) and characters not defined
 in the font are displayed as a four-character sequence \fB\ex\fIhh\fR where
 \fIhh\fR is the two-digit hexadecimal number corresponding to
 the character.  In the unusual case where the font doesn't contain
-all of the characters in
-.QW 0123456789abcdef\ex
-then control characters and undefined characters are not displayed at all.
+all of the characters in ``0123456789abcdef\ex'' then control
+characters and undefined characters are not displayed at all.
 
 .SH "WIDGET COMMAND"
 .PP

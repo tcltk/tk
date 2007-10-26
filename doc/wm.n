@@ -4,9 +4,9 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\"
-'\" RCS: @(#) $Id: wm.n,v 1.33 2007/10/24 14:32:59 dkf Exp $
-'\"
+'\" 
+'\" RCS: @(#) $Id: wm.n,v 1.34 2007/10/26 20:13:23 dgp Exp $
+'\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
 .BS
@@ -112,8 +112,7 @@ Specifies whether this is a topmost window (displays above all other windows).
 \fB\-transparent\fR
 Makes the window content area transparent and turns off the window shadow. For
 the transparency to be effecive, the toplevel background needs to be set to a
-color with some alpha, such as
-.QW systemTransparent .
+color with some alpha, e.g. "systemTransparent".
 .TP
 \fB\-fullscreen\fR
 Places the window in a mode that takes up the entire main screen and hides
@@ -126,17 +125,17 @@ and will have no effect under older WMs.
 .\" See http://www.freedesktop.org/Standards/wm-spec
 .RS
 .TP
-\fB\-topmost\fR
+\fB-topmost\fR
 Requests that this window should be kept above
-all other windows that do not also have the \fB\-topmost\fR
+all other windows that do not also have the \fB-topmost\fR
 attribute set.
 .TP
-\fB\-zoomed\fR
+\fB-zoomed\fR
 Requests that the window should be maximized.
 This is the same as \fB[wm state zoomed]\fR on Windows and Mac OS X.
 .TP
-\fB\-fullscreen\fR
-Requests that the window should fill the entire screen
+\fB-fullscreen\fR
+Requests that the window should fill the entire screen 
 and have no window decorations.
 .RE
 .PP
@@ -221,14 +220,11 @@ The focus model defaults to \fBpassive\fR, and Tk's \fBfocus\fR command
 assumes a passive model of focusing.
 .TP
 \fBwm forget \fIwindow\fR
-.VS 8.5
 The \fIwindow\fR will be unmapped from the screen and will no longer
 be managed by \fBwm\fR.  Windows created with the \fBtoplevel\fR
 command will be treated like \fBframe\fR windows once they are no
-longer managed by \fBwm\fR, however, the \-menu configuration will be
-remembered and the menus will return once the widget is managed again. See
-\fBGEOMETRY MANAGEMENT\fR below for more details.
-.VE 8.5
+longer managed by \fBwm\fR, however, the -menu configuration will be
+remembered and the menus will return once the widget is managed again.
 .TP
 \fBwm frame \fIwindow\fR
 If \fIwindow\fR has been reparented by the window manager into a
@@ -248,7 +244,7 @@ the form \fB=\fIwidth\fBx\fIheight\fB\(+-\fIx\fB\(+-\fIy\fR, where
 any of \fB=\fR, \fIwidth\fBx\fIheight\fR, or \fB\(+-\fIx\fB\(+-\fIy\fR
 may be omitted.  \fIWidth\fR and \fIheight\fR are positive integers
 specifying the desired dimensions of \fIwindow\fR.  If \fIwindow\fR
-is gridded (see \fBGRIDDED GEOMETRY MANAGEMENT\fR below) then the dimensions
+is gridded (see GRIDDED GEOMETRY MANAGEMENT below) then the dimensions
 are specified in grid units;  otherwise they are specified in pixel
 units.  \fIX\fR and \fIy\fR specify the desired location of
 \fIwindow\fR on the screen, in pixels.
@@ -318,8 +314,8 @@ If \fIbitmap\fR is specified then the command returns an empty string.
 Otherwise it returns the name of
 the current icon bitmap associated with \fIwindow\fR, or an empty
 string if \fIwindow\fR has no icon bitmap.  On the Windows operating
-system, an additional flag is supported:
-\fBwm iconbitmap \fIwindow\fR ?\fB\-default\fR? ?\fIimage\fR?.
+system, an additional flag is supported: 
+\fBwm iconbitmap \fIwindow\fR ?\fB\-default\fR? ?\fIimage\fR?.  
 If the \fB\-default\fR
 flag is given, the icon is applied to all toplevel windows (existing
 and future) to which no other specific icon has yet been applied.
@@ -406,20 +402,12 @@ current icon window for \fIwindow\fR, or an empty string if there
 is no icon window currently specified for \fIwindow\fR.
 Button press events are disabled for \fIwindow\fR as long as it is
 an icon window;  this is needed in order to allow window managers
-to
-.QW own
-those events.
-.RS
-.PP
+to ``own'' those events.
 Note: not all window managers support the notion of an icon window.
-.RE
 .TP
 \fBwm manage \fIwidget\fR
-.VS 8.5
 The \fIwidget\fR specified will become a stand alone top-level window.  The
-window will be decorated with the window managers title bar, etc. See
-\fBGEOMETRY MANAGEMENT\fR below for more details.
-.VE 8.5
+window will be decorated with the window managers title bar, etc.
 .TP
 \fBwm maxsize \fIwindow\fR ?\fIwidth height\fR?
 If \fIwidth\fR and \fIheight\fR are specified, they give
@@ -475,8 +463,7 @@ If \fIwho\fR is specified, then the command returns an empty string.
 Otherwise it returns \fBuser\fR or \fBprogram\fR to indicate the
 source of the window's current position, or an empty string if
 no source has been specified yet.  Most window managers interpret
-.QW "no source"
-as equivalent to \fBprogram\fR.
+``no source'' as equivalent to \fBprogram\fR.
 Tk will automatically set the position source to \fBuser\fR
 when a \fBwm geometry\fR command is invoked, unless the source has
 been set explicitly to \fBprogram\fR.
@@ -543,8 +530,7 @@ If \fIwho\fR is specified, then the command returns an empty string.
 Otherwise it returns \fBuser\fR or \fBwindow\fR to indicate the
 source of the window's current size, or an empty string if
 no source has been specified yet.  Most window managers interpret
-.QW "no source"
-as equivalent to \fBprogram\fR.
+``no source'' as equivalent to \fBprogram\fR.
 .TP
 \fBwm stackorder \fIwindow\fR ?\fIisabove|isbelow window\fR?
 The stackorder command returns a list of toplevel windows
@@ -630,7 +616,6 @@ well as manual resizes and the \fBwm geometry\fR command.
 You can also use the command \fBwm resizable\fR to completely
 disable interactive resizing in one or both dimensions.
 .PP
-.VS 8.5
 The \fBwm manage\fR and \fBwm forget\fR commands may be used to
 perform undocking and docking of windows.  After a widget is managed
 by \fBwm manage\fR command, all other \fBwm\fR subcommands may be used
@@ -645,7 +630,6 @@ that have their top-level widget changed via a \fBwm manage\fR or
 \fBwm forget\fR command, must be redone to adjust any top-level widget
 path in the bindtags. Bindtags that have not been customized do not
 have to be redone.
-.VE 8.5
 .SH "GRIDDED GEOMETRY MANAGEMENT"
 .PP
 Gridded geometry management occurs when one of the widgets of an
@@ -669,7 +653,7 @@ Gridded geometry management is typically invoked by turning on
 the \fBsetGrid\fR option for a widget;  it can also be invoked
 with the \fBwm grid\fR command or by calling \fBTk_SetGrid\fR.
 In each of these approaches the particular widget (or sometimes
-code in the application as a whole) specifies the relationship between
+code in the application as a whole) specifies the relationship between 
 integral grid sizes for the window and pixel sizes.
 To return to non-gridded geometry management, invoke
 \fBwm grid\fR with empty argument strings.
