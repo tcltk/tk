@@ -1,5 +1,10 @@
 2007-10-26  Daniel Steffen  <das@users.sourceforge.net>
 
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): fix window class of
+	transient toplevels that are not also overrideredirect. [Bug 1816252]
+
+	* macosx/tkMacOSXDialog.c:	sync with HEAD.
+
 	* unix/configure.in (Darwin):	add support for 64-bit X11.
 	* unix/configure:		autoconf-2.13
 
