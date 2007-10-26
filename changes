@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.111 2007/09/24 16:06:16 dgp Exp $
+RCS: @(#) $Id: changes,v 1.112 2007/10/26 16:51:59 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6380,3 +6380,25 @@ project for Xcode 3.0 (steffen)
 2007-09-20 (bug fix)[1791052] [text] DLine layout crash (khomoutov,fellows)
 
 --- Released 8.5b1, September 26, 2007 --- See ChangeLog for details ---
+
+2007-09-26 (enhancement)[1800742] msg catalog for Hungarian. (reszo)
+
+2007-10-11 (bug fix)[1810818] Aqua: [wm resizeable] (steffen)
+
+2007-10-15 (new feature)[TIP 125][998125] dockable frame support (hobbs)
+
+2007-10-22 (bug fix)[1814778,1780286,1609168,1349586] combobox overhaul(english)
+
+2007-10-23 (bug fix)[1818441] combobox & reparentable frames (hobbs)
+
+2007-10-24 (bug fix)[1723362] transparent bitmaps (mcdonald,thoyts)
+
+2007-10-25 (bug fix)[1818491] crash in [place] manager (mcdonald)
+
+2007-10-25 (new feature)[TIP 242][1156388] file dialog filter (hobbs)
+
+2007-10-25 (bug fix)[1817596] ttk::notebook (english)
+
+Improvements to demo suite to make more use of Tk 8.5 features.
+
+--- Released 8.5b2, October 26, 2007 --- See ChangeLog for details ---
