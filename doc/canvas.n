@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.24.2.2 2007/10/24 12:59:30 dgp Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.24.2.3 2007/10/27 04:23:13 dgp Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1026,6 +1026,7 @@ the coordinates of the item.
 .PP
 Many items share a common set of options.  These options are
 explained here, and then referred to be each widget type for brevity.
+.PP
 .TP
 \fB\-dash \fIpattern\fR
 .TP
@@ -1156,7 +1157,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by arcs:
 .CS
 \-dash
@@ -1226,7 +1227,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by bitmaps:
 .CS
 \-state
@@ -1290,7 +1291,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by images:
 .CS
 \-state
@@ -1335,7 +1336,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by lines:
 .CS
 \-dash
@@ -1445,7 +1446,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by ovals:
 .CS
 \-dash
@@ -1492,7 +1493,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by polygons:
 .CS
 \-dash
@@ -1584,7 +1585,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by rectangles:
 .CS
 \-dash
@@ -1632,7 +1633,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by text items:
 .CS
 \-fill
@@ -1713,7 +1714,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.PP
+.br
 The following standard options are supported by window items:
 .CS
 \-state

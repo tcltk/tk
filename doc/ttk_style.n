@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_style.n,v 1.3.2.1 2007/10/24 12:59:32 dgp Exp $
+'\" RCS: @(#) $Id: ttk_style.n,v 1.3.2.2 2007/10/27 04:23:15 dgp Exp $
 '\" 
 .so man.macros
 .TH ttk_style n 8.5 Tk "Tk Themed Widget"
@@ -15,13 +15,11 @@ ttk_style \- Control overall look and feel of widgets
 \fBttk::style\fR \fIoption\fR ?\fIargs\fR?
 .BE
 
-.BS
 .SH NOTES
 .PP
 This manpage has not been written yet.
 Please see the Tcl'2004 conference presentation,
 available at http://tktable.sourceforge.net/tile/tile-tcl2004.pdf
-.BE
 
 .SH DEFINITIONS
 .PP
@@ -91,6 +89,7 @@ Returns a list of the available themes.
 .TP
 \fBttk::style theme use\fR \fIthemeName\fR
 Sets the current theme to \fIthemeName\fR, and refreshes all widgets.
+
 .SH LAYOUTS
 A \fIlayout\fR specifies a list of elements, each followed
 by one or more options specifying how to arrange the element.
@@ -110,9 +109,10 @@ Specifies where the element is placed inside its allocated parcel.
 \fB-children \fI{ sublayout... }\fR
 Specifies a list of elements to place inside the element.
 .\" Also: -border, -unit, -expand: may go away.
-.SH EXAMPLE
+.PP
+For example:
 .CS
-\fBttk::style\fR layout Horizontal.TScrollbar {
+ttk::style layout Horizontal.TScrollbar {
     Scrollbar.trough -children {
         Scrollbar.leftarrow -side left
         Scrollbar.rightarrow -side right
@@ -120,7 +120,9 @@ Specifies a list of elements to place inside the element.
     }
 }
 .CE
+
 .SH "SEE ALSO"
 ttk_intro(n), ttk_widget(n), photo(n)
+
 .SH KEYWORDS
 style, theme, appearance

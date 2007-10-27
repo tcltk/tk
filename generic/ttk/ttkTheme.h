@@ -1,4 +1,4 @@
-/* $Id: ttkTheme.h,v 1.8 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkTheme.h,v 1.8.2.1 2007/10/27 04:23:16 dgp Exp $
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.
@@ -270,7 +270,7 @@ typedef struct {
     Tcl_Obj	*unused;
 } NullElement;
 
-MODULE_SCOPE void TtkNullElementGeometry
+MODULE_SCOPE void TtkNullElementSize
 	(void *, void *, Tk_Window, int *, int *, Ttk_Padding *);
 MODULE_SCOPE void TtkNullElementDraw
 	(void *, void *, Tk_Window, Drawable, Ttk_Box, Ttk_State);
