@@ -1,3 +1,11 @@
+2007-10-28  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl: Make popdown window [wm resizable 0 0]
+	on OSX, to prevent TkAqua from shrinking the scrollbar to make
+	room for a grow box that isn't there.
+	* macosx/ttkMacOSXTheme.c, library/ttk/aquaTheme.tcl:
+	Reworked combobox layout.
+
 2007-10-26  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5b2 TAGGED FOR RELEASE ***
