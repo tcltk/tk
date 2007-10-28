@@ -19,15 +19,15 @@
  *	"Active" means different things in Mac and Tk terminology --
  *	On Aqua, widgets are "Active" if they belong to the foreground window,
  *	"Inactive" if they are in a background window.
- *	Tk/ttk uses the term "active" to mean that the mouse cursor
+ *	Tk uses the term "active" to mean that the mouse cursor
  *	is over a widget; aka "hover", "prelight", or "hot-tracked".
- *	(Aqua doesn't use this kind of feedback).
+ *	Aqua doesn't use this kind of feedback.
  *
  *	The QuickDraw/Carbon coordinate system is relative to the
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.11 2007/10/25 07:08:26 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.12 2007/10/28 18:56:51 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -408,56 +408,45 @@ static Ttk_ElementSpec EntryElementSpec = {
 };
 
 /*----------------------------------------------------------------------
- * +++ Pop-up arrow (for comboboxes)
- * NOTE: This isn't right at all, but I can't find the correct
- * function in the Appearance Manager reference.
+ * +++ Combobox:
+ *
+ * NOTES:
+ *	kThemeMetricComboBoxLargeDisclosureWidth -> 17
+ *	Padding and margins guesstimated by trial-and-error.
  */
 
-static void PopupArrowElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin, 
+static Ttk_Padding ComboboxPadding = { 2, 3, 17, 1 };
+static Ttk_Padding ComboboxMargins = { 3, 3, 4, 4 };
+
+static void ComboboxElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    *widthPtr = 12;	/* wild-assed guess */
-    *heightPtr = 12;	/* wild-assed guess */
+    *widthPtr = 0;
+    *heightPtr = 0;
+    *paddingPtr = Ttk_AddPadding(ComboboxMargins, ComboboxPadding);
 }
 
-static void PopupArrowElementDraw(
+static void ComboboxElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    Rect bounds = BoxToRect(d, b);
     ThemeButtonParms *parms = clientData;
+    Rect bounds = BoxToRect(d, Ttk_PadBox(b, ComboboxMargins));
     ThemeButtonDrawInfo info = computeButtonDrawInfo(parms, state);
 
-    bounds.left -= 6;
-    bounds.top -= 3;
-    bounds.right -= 6;
-    bounds.bottom -= 2;
-
     BEGIN_DRAWING(d)
-    DrawThemeButton(&bounds, kThemeArrowButton, &info,
+    DrawThemeButton(&bounds, kThemeComboBox, &info,
 	NULL/*prevInfo*/,NULL/*eraseProc*/,NULL/*labelProc*/,0/*userData*/);
-
-    bounds = BoxToRect(d, Ttk_PadBox(b, ButtonMargins));
-    bounds.top += 2;
-    bounds.bottom += 2;
-    bounds.left -= 2;
-    bounds.right -= 2;
-
-    DrawThemePopupArrow(&bounds,
-	kThemeArrowDown,
-	kThemeArrow9pt,		/* ??? */
-	Ttk_StateTableLookup(ThemeStateTable, state),
-	NULL /*eraseProc*/,0/*eraseData*/);
     END_DRAWING
 }
 
-static Ttk_ElementSpec PopupArrowElementSpec = {
+static Ttk_ElementSpec ComboboxElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    PopupArrowElementSize,
-    PopupArrowElementDraw
+    ComboboxElementSize,
+    ComboboxElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -957,6 +946,12 @@ TTK_BEGIN_LAYOUT(MenubuttonLayout)
 	    TTK_NODE("Menubutton.label", TTK_PACK_LEFT)))
 TTK_END_LAYOUT
 
+TTK_BEGIN_LAYOUT(ComboboxLayout)
+    TTK_GROUP("Combobox.button", TTK_PACK_TOP|TTK_FILL_X,
+	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Combobox.textarea", TTK_PACK_LEFT|TTK_FILL_X)))
+TTK_END_LAYOUT
+
 /* Notebook tabs -- no focus ring */
 TTK_BEGIN_LAYOUT(TabLayout)
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
@@ -1004,6 +999,8 @@ static int AquaTheme_Init(Tcl_Interp *interp)
 	&ButtonElementSpec, &BevelButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
 	&ButtonElementSpec, &PopupButtonParms);
+    Ttk_RegisterElementSpec(themePtr, "Combobox.button",
+	&ComboboxElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Treeitem.indicator",
 	&DisclosureElementSpec, &DisclosureParms);
     Ttk_RegisterElementSpec(themePtr, "Treeheading.cell",
@@ -1014,10 +1011,6 @@ static int AquaTheme_Init(Tcl_Interp *interp)
 
     Ttk_RegisterElementSpec(themePtr, "Labelframe.border",&GroupElementSpec,0);
     Ttk_RegisterElementSpec(themePtr, "Entry.field",&EntryElementSpec,0);
-
-    Ttk_RegisterElementSpec(themePtr, "Combobox.field",&EntryElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "Combobox.downarrow",
-	&PopupArrowElementSpec, 0);
 
     Ttk_RegisterElementSpec(themePtr, "separator",&SeparatorElementSpec,0);
     Ttk_RegisterElementSpec(themePtr, "hseparator",&SeparatorElementSpec,0);
@@ -1042,6 +1035,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterLayout(themePtr, "TCheckbutton", CheckbuttonLayout);
     Ttk_RegisterLayout(themePtr, "TRadiobutton", RadiobuttonLayout);
     Ttk_RegisterLayout(themePtr, "TMenubutton", MenubuttonLayout);
+    Ttk_RegisterLayout(themePtr, "TCombobox", ComboboxLayout);
     Ttk_RegisterLayout(themePtr, "TProgressbar", ProgressbarLayout);
     Ttk_RegisterLayout(themePtr, "TNotebook.Tab", TabLayout);
     Ttk_RegisterLayout(themePtr, "Heading", TreeHeadingLayout);
@@ -1050,7 +1044,8 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     return TCL_OK;
 }
 
-MODULE_SCOPE int Ttk_MacOSXPlatformInit(Tcl_Interp *interp)
+MODULE_SCOPE
+int Ttk_MacOSXPlatformInit(Tcl_Interp *interp)
 {
     return AquaTheme_Init(interp);
 }

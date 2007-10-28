@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.7 2007/10/23 23:24:09 hobbs Exp $
+# $Id: combobox.tcl,v 1.8 2007/10/28 18:56:51 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -7,6 +7,32 @@
 # a listbox $cb.popdown.l and a scrollbar.  The listbox -listvariable
 # is set to a namespace variable, which is used to synchronize the
 # combobox values with the listbox values.
+#
+# <<NOTE-WM-TRANSIENT>>:
+#
+#	Need to set [wm transient] just before mapping the popdown
+#	instead of when it's created, in case a containing frame
+#	has been reparented [#1818441].
+#
+#	On Windows: setting [wm transient] prevents the parent
+#	toplevel from becoming inactive when the popdown is posted
+#	(Tk 8.4.8+)
+#
+#	On X11: WM_TRANSIENT_FOR on override-redirect windows
+#	may be used by compositing managers and by EWMH-aware
+#	window managers (even though the older ICCCM spec says
+#	it's meaningless).
+#
+#	On OSX: [wm transient] does utterly the wrong thing.
+#	Instead, we use [MacWindowStyle "help" "noActivates hideOnSuspend"].
+#	The "noActivates" attribute prevents the parent toplevel
+#	from deactivating when the popdown is posted, and is also
+#	necessary for "help" windows to receive mouse events.
+#	"hideOnSuspend" makes the popdown disappear (resp. reappear) 
+#	when the parent toplevel is deactivated (resp. reactivated).
+#	(see [#1814778]).  Also set [wm resizable 0 0], to prevent
+#	TkAqua from shrinking the scrollbar to make room for a grow box
+#	that isn't there.
 #
 
 namespace eval ttk::combobox {
@@ -234,9 +260,8 @@ namespace eval ::ttk::combobox {
 proc ttk::combobox::PopdownWindow {cb} {
     variable scrollbar
 
-    set popdown $cb.popdown
-    if {![winfo exists $popdown]} {
-	PopdownToplevel $popdown
+    if {![winfo exists $cb.popdown]} {
+	set popdown [PopdownToplevel $cb.popdown]
 
 	$scrollbar $popdown.sb \
 	    -orient vertical -command [list $popdown.l yview]
@@ -255,40 +280,15 @@ proc ttk::combobox::PopdownWindow {cb} {
 	grid columnconfigure $popdown 0 -weight 1
 	grid rowconfigure $popdown 0 -weight 1
     }
-    # to handle reparented frame/toplevel, recalculate transient each time
-    switch -- [tk windowingsystem] {
-	x11 {
-	    wm transient $popdown [winfo toplevel [winfo parent $popdown]]
-	}
-	win32 {
-	    wm transient $popdown [winfo toplevel [winfo parent $popdown]]
-	}
-    }
-    return $popdown
+    return $cb.popdown
 }
 
 ## PopdownToplevel -- Create toplevel window for the combobox popdown
 #
-# NOTES:
-#	On Windows: setting [wm transient] prevents the parent
-#	toplevel from becoming inactive when the popdown is posted
-#	(Tk 8.4.8+)
-#
-#	On X11: WM_TRANSIENT_FOR on override-redirect windows
-#	may be used by compositing managers and by EWMH-aware
-#	window managers (even though the older ICCCM spec says
-#	it's meaningless).
-#
-#	On OSX: for MacWindowStyle "help", "noActivates" prevents
-#	the parent toplevel from deactivating when the popdown
-#	is posted, and is necessary for the popdown to receive
-#	mouse events.  "hideOnSuspend" makes the popdown disappear
-#	(resp. reappear) when the parent toplevel is deactivated.
-#
+#	See also <<NOTE-WM-TRANSIENT>>
+# 
 proc ttk::combobox::PopdownToplevel {w} {
-    if {![winfo exists $w]} {
-	toplevel $w -class ComboboxPopdown
-    }
+    toplevel $w -class ComboboxPopdown
     wm withdraw $w
     switch -- [tk windowingsystem] {
 	default -
@@ -304,6 +304,7 @@ proc ttk::combobox::PopdownToplevel {w} {
 	    $w configure -relief solid -borderwidth 0
 	    tk::unsupported::MacWindowStyle style $w \
 	    	help {noActivates hideOnSuspend}
+	    wm resizable $w 0 0
 	}
     }
     return $w
@@ -379,6 +380,10 @@ proc ttk::combobox::Post {cb} {
     ConfigureListbox $cb
     update idletasks
     PlacePopdown $cb $popdown
+    # See <<NOTE-WM-TRANSIENT>>
+    switch -- [tk windowingsystem] {
+	x11 - win32 { wm transient $popdown [winfo toplevel $cb] }
+    }
 
     # Post the listbox:
     #
