@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_intro.n,v 1.6 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: ttk_intro.n,v 1.7 2007/10/29 16:04:14 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_intro n 8.5 Tk "Tk Themed Widget"
@@ -35,7 +35,8 @@ Adapt to display limitations (low-color, grayscale, monochrome, tiny screens)
 .IP \(bu
 Accessibility (high contrast, large type)
 .IP \(bu
-Application suite "branding"
+Application suite
+.QW branding
 .IP \(bu
 Blend in with the rest of the desktop (Gnome, KDE, Java)
 .IP \(bu
@@ -59,8 +60,8 @@ Like widgets, elements have \fIoptions\fR which
 specify what to display and how to display it.
 For example, the \fBtext\fR element 
 (which displays a text string) has
-\fB-text\fR, \fB-font\fR, \fB-foreground\fR, \fB-background\fR, 
-\fB-underline\fR, and \fB-width\fR options.
+\fB\-text\fR, \fB\-font\fR, \fB\-foreground\fR, \fB\-background\fR, 
+\fB\-underline\fR, and \fB\-width\fR options.
 The value of an element resource is taken from:
 .IP \(bu
 A dynamic setting specified by \fBstyle map\fR and the current state;
@@ -76,25 +77,25 @@ and how they are arranged.
 The layout engine uses a simplified version of the \fBpack\fR
 algorithm: starting with an initial cavity equal to the size
 of the widget, elements are allocated a parcel within the cavity along
-the side specified by the \fB-side\fR option,
-and placed within the parcel according to the \fB-sticky\fR
+the side specified by the \fB\-side\fR option,
+and placed within the parcel according to the \fB\-sticky\fR
 option.
 For example, the layout for a horizontal scrollbar 
 .CS
 style layout Horizontal.TScrollbar {
-    Scrollbar.trough -children {
-	Scrollbar.leftarrow -side left -sticky w
-	Scrollbar.rightarrow -side right -sticky e
-	Scrollbar.thumb -side left -expand true -sticky ew
+    Scrollbar.trough \-children {
+	Scrollbar.leftarrow \-side left \-sticky w
+	Scrollbar.rightarrow \-side right \-sticky e
+	Scrollbar.thumb \-side left \-expand true \-sticky ew
     }
 }
 .CE
 By default, the layout for a widget is the same as its class name.
 Some widgets may override this (for example, the \fBscrollbar\fR
-widget chooses different layouts based on the \fB-orient\fR option).
+widget chooses different layouts based on the \fB\-orient\fR option).
 
 .SH "STATES"
-In standard Tk, many widgets have a \fB-state\fR option
+In standard Tk, many widgets have a \fB\-state\fR option
 which (in most cases) is either \fBnormal\fR or \fBdisabled\fR.
 Some widgets support additional states, such
 as the \fBentry\fR widget which has a \fBreadonly\fR state
@@ -106,7 +107,7 @@ Widget state flags include \fBactive\fR, \fBdisabled\fR,
 \fBpressed\fR, \fBfocus\fR, etc., 
 (see \fIttk_widget(n)\fR for the full list of state flags).
 .PP
-Instead of a \fB-state\fR option, every widget now has 
+Instead of a \fB\-state\fR option, every widget now has 
 a \fBstate\fR widget command which is used to set or query
 the state.
 A \fIstate specification\fR is a list of symbolic state names
@@ -132,7 +133,7 @@ In addition, the button unpresses if
 pointer is dragged outside the widget while Button-1 is held down,
 and represses if it's dragged back in.
 Finally, when the mouse button is released, the widget's
-\fB-command\fR is invoked, but only if the button is currently
+\fB\-command\fR is invoked, but only if the button is currently
 in the \fBpressed\fR state.
 (The actual bindings are a little more complicated than the above,
 but not by much).
@@ -147,9 +148,9 @@ by default, widgets use the class name to look up a style in the current theme.
 For example:
 .CS
 style default TButton \e
-	-background #d9d9d9 \e
-	-foreground black \e
-	-relief raised \e
+	\-background #d9d9d9 \e
+	\-foreground black \e
+	\-relief raised \e
 	;
 .CE
 Many elements are displayed differently depending on the widget state.  
@@ -159,9 +160,9 @@ The \fBstyle map\fR command specifies dynamic resources
 for a particular style:
 .CS
 style map TButton \e
-	-background [list disabled #d9d9d9  active #ececec] \e
-	-foreground [list disabled #a3a3a3] \e
-	-relief [list {pressed !disabled} sunken] \e
+	\-background [list disabled #d9d9d9  active #ececec] \e
+	\-foreground [list disabled #a3a3a3] \e
+	\-relief [list {pressed !disabled} sunken] \e
 	;
 .CE
 

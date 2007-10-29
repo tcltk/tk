@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: TextLayout.3,v 1.7 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: TextLayout.3,v 1.8 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ComputeTextLayout 3 8.1 Tk "Tk Library Procedures"
@@ -216,7 +216,7 @@ the given point (\fIx, y\fR) to the characters in \fIlayout\fR.
 Newline/return characters and non-displaying space characters that occur at
 the end of individual lines in the text layout are ignored for hit detection
 purposes, but tab characters are not.  The return value is 0 if the point
-actually hits the \fIlayout\fR.  If the point didn't hit the \fIlayout\fR
+actually hits the \fIlayout\fR.  If the point did not hit the \fIlayout\fR
 then the return value is the distance in pixels from the point to the
 \fIlayout\fR.
 .PP
