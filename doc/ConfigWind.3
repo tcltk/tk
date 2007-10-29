@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWind.3,v 1.2 1998/09/14 18:22:46 stanton Exp $
+'\" RCS: @(#) $Id: ConfigWind.3,v 1.3 2007/10/29 16:04:12 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWindow 3 4.0 Tk "Tk Library Procedures"
@@ -81,7 +81,6 @@ New cursor to use for \fItkwin\fR.  If \fBNone\fR is specified, then
 \fItkwin\fR will not have its own cursor;  it will use the cursor
 of its parent.
 .BE
-
 .SH DESCRIPTION
 .PP
 These procedures are analogous to the X library procedures
@@ -127,9 +126,8 @@ To change the stacking order, use the procedure \fBTk_RestackWindow\fR.
 The procedure \fBTk_SetWindowColormap\fR will automatically add
 \fItkwin\fR to the \fBTK_COLORMAP_WINDOWS\fR property of its
 nearest top-level ancestor if the new colormap is different from
-that of \fItkwin\fR's parent and \fItkwin\fR isn't already in
+that of \fItkwin\fR's parent and \fItkwin\fR is not already in
 the \fBTK_COLORMAP_WINDOWS\fR property.
-
 .SH BUGS
 .PP
 \fBTk_SetWindowBackgroundPixmap\fR and \fBTk_SetWindowBorderPixmap\fR
@@ -145,9 +143,7 @@ and \fIpixmap\fR has been passed to the X server.
 A similar problem occurs for the \fIcursor\fR argument passed to
 \fBTk_DefineCursor\fR.  The solution is the same as for pixmaps above:
 call \fBTk_MakeWindowExist\fR before freeing the cursor.
-
 .SH "SEE ALSO"
 Tk_MoveToplevelWindow, Tk_RestackWindow
-
 .SH KEYWORDS
 attributes, border, color, configure, height, pixel, pixmap, width, window, x, y

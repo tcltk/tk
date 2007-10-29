@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: panedwindow.n,v 1.10 2006/12/13 23:04:32 hobbs Exp $
+'\" RCS: @(#) $Id: panedwindow.n,v 1.11 2007/10/29 16:04:14 dkf Exp $
 '\" 
 .so man.macros
 .TH panedwindow n 8.4 Tk "Tk Built-In Commands"
@@ -200,7 +200,7 @@ it will still be maintained in the list of panes.
 \fB\-minsize \fIn\fR
 Specifies that the size of the window cannot be made less than
 \fIn\fR.  This constraint only affects the size of the widget in the
-paned dimension -- the x dimension for horizontal panedwindows, the y
+paned dimension \(em the x dimension for horizontal panedwindows, the y
 dimension for vertical panedwindows.  May be any value accepted by
 \fBTk_GetPixels\fR.
 .TP
@@ -221,7 +221,9 @@ within its pane.  \fIStyle\fR  is a string that contains zero or more
 of the characters \fBn\fR, \fBs\fR, \fBe\fR or \fBw\fR.  The string
 can optionally contains spaces or commas, but they are ignored.  Each
 letter refers to a side (north, south, east, or west) that the window
-will "stick" to.  If both \fBn\fR and \fBs\fR (or \fBe\fR and \fBw\fR)
+will
+.QW stick
+to.  If both \fBn\fR and \fBs\fR (or \fBe\fR and \fBw\fR)
 are specified, the window will be stretched to fill the entire height
 (or width) of its cavity.
 .TP

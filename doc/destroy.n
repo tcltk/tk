@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: destroy.n,v 1.5 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: destroy.n,v 1.6 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH destroy n "" Tk "Tk Built-In Commands"
@@ -16,13 +16,14 @@ destroy \- Destroy one or more windows
 .SH SYNOPSIS
 \fBdestroy \fR?\fIwindow window ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 This command deletes the windows given by the
 \fIwindow\fR arguments, plus all of their descendants.
-If a \fIwindow\fR ``.'' is deleted then the entire application
-will be destroyed.
+If a \fIwindow\fR
+.QW .
+is deleted then all windows will be destroyed and the application will
+(normally) exit.
 The \fIwindow\fRs are destroyed in order, and if an error occurs
 in destroying a window the command aborts without destroying the
 remaining windows.

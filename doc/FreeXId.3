@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: FreeXId.3,v 1.4 1999/04/21 21:53:21 rjohnson Exp $
+'\" RCS: @(#) $Id: FreeXId.3,v 1.5 2007/10/29 16:04:12 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_FreeXId 3 4.0 Tk "Tk Library Procedures"
@@ -25,7 +25,6 @@ Display for which \fIid\fR was allocated.
 Identifier of X resource (window, font, pixmap, cursor, graphics
 context, or colormap) that is no longer in use.
 .BE
-
 .SH DESCRIPTION
 .PP
 The default allocator for resource identifiers provided by Xlib is very
@@ -44,9 +43,8 @@ However, if you allocate resources directly from Xlib, for example
 by calling \fBXCreatePixmap\fR, then you should call \fBTk_FreeXId\fR
 when you call the corresponding Xlib free procedure, such as
 \fBXFreePixmap\fR.
-If you don't call \fBTk_FreeXId\fR then the resource identifier will
+If you do not call \fBTk_FreeXId\fR then the resource identifier will
 be lost, which could cause problems if the application runs long enough
 to lose all of the available identifiers.
-
 .SH KEYWORDS
 resource identifier
