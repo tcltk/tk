@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: MoveToplev.3,v 1.2 1998/09/14 18:22:52 stanton Exp $
+'\" RCS: @(#) $Id: MoveToplev.3,v 1.3 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_MoveToplevelWindow 3 "" Tk "Tk Library Procedures"
@@ -46,7 +46,7 @@ similar in function to the \fBwm geometry\fR Tcl command except that
 negative offsets cannot be specified.  It is invoked by widgets such as
 menus that want to appear at a particular place on the screen.
 .PP
-When \fBTk_MoveToplevelWindow\fR is called it doesn't immediately
+When \fBTk_MoveToplevelWindow\fR is called it does not immediately
 pass on the new desired location to the window manager;  it defers
 this action until all other outstanding work has been completed,
 using the \fBTk_DoWhenIdle\fR mechanism.

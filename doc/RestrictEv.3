@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: RestrictEv.3,v 1.5 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: RestrictEv.3,v 1.6 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_RestrictEvents 3 "" Tk "Tk Library Procedures"
@@ -70,8 +70,9 @@ bindings with the \fBbind\fR Tcl command or by calling
 \fBTk_CreateEventHandler\fR and \fBTk_DeleteEventHandler\fR from C.
 The main place where \fBTk_RestrictEvents\fR must be used is when
 performing synchronous actions (for example, if you need to wait
-for a particular event to occur on a particular window but you don't
-want to invoke any handlers for any other events).  The ``obvious''
+for a particular event to occur on a particular window but you do not
+want to invoke any handlers for any other events).  The
+.QW obvious
 solution in these situations is to call \fBXNextEvent\fR or
 \fBXWindowEvent\fR, but these procedures cannot be used because
 Tk keeps its own event queue that is separate from the X event

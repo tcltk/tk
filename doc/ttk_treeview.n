@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.9 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.10 2007/10/29 16:04:14 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_treeview n 8.5 Tk "Tk Themed Widget"
@@ -23,10 +23,10 @@ The data values are displayed in successive columns after
 the tree label.
 .PP
 The order in which data values are displayed may be controlled
-by setting the \fB-displaycolumns\fR widget option.  
+by setting the \fB\-displaycolumns\fR widget option.  
 The tree widget can also display column headings.
 Columns may be accessed by number or by symbolic names 
-listed in the \fB-columns\fR widget option;
+listed in the \fB\-columns\fR widget option;
 see \fBCOLUMN IDENTIFIERS\fR.
 .PP
 Each item is identified by a unique name.
@@ -42,8 +42,8 @@ and control the appearance of the item.
 .\" @@@HERE: describe selection, focus item
 .PP
 Treeview widgets support horizontal and vertical scrolling with the
-standard \fB-[xy]scrollcommand\fR options 
-and \fB[xyview\fR widget commands.
+standard \fB\-\fR[\fBxy\fR]\fBscrollcommand\fR options 
+and [\fBxy\fR]\fBview\fR widget commands.
 .SO
 \-class	\-cursor	\-takefocus	\-style
 \-xscrollcommand	\-yscrollcommand
@@ -79,7 +79,7 @@ If \fBbrowse\fR, only a single item will be selected at a time.
 If \fBnone\fR, the selection will not be changed.
 .br
 Note that application code and tag bindings can set the selection 
-however they wish, regardless of the value of \fB-selectmode\fR.
+however they wish, regardless of the value of \fB\-selectmode\fR.
 .OP \-show show Show
 A list containing zero or more of the following values, specifying
 which elements of the tree to display.
@@ -92,7 +92,7 @@ Display the heading row.
 The default is \fBtree headings\fR, i.e., show all elements.
 .PP
 \fBNOTE:\fR Column #0 always refers to the tree column,
-even if \fB-show tree\fR is not specified.
+even if \fB\-show tree\fR is not specified.
 .RE
 
 .SH "WIDGET COMMAND"
@@ -120,38 +120,39 @@ are detached from the tree.
 None of the items in \fInewchildren\fR may be an ancestor
 of \fIitem\fR.
 .TP
-\fIpathname \fBcolumn\fR \fIcolumn\fR ?\fI-option \fR?\fIvalue -option value...\fR?
+\fIpathname \fBcolumn\fR \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
 Query or modify the options for the specified \fIcolumn\fR.
-If no \fI-option\fR is specified,
+If no \fI\-option\fR is specified,
 returns a dictionary of option/value pairs.
-If a single \fI-option\fR is specified, 
+If a single \fI\-option\fR is specified, 
 returns the value of that option.
 Otherwise, the options are updated with the specified values.
 The following options may be set on each column:
 .RS
 .TP
-\fB-id \fIname\fR
+\fB\-id \fIname\fR
 The column name.  This is a read-only option.
-For example, [\fI$pathname \fBcolumn #\fIn \fB-id\fR] 
+For example,
+.QW \fI$pathname \fBcolumn #\fIn \fB\-id\fR]
 returns the data column associated with data column #\fIn\fR. 
 .TP
-\fB-anchor\fR
+\fB\-anchor\fR
 Specifies how the text in this column should be aligned
 with respect to the cell. One of
 \fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
 \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, or \fBcenter\fR.
 .TP
-\fB-minwidth\fR
+\fB\-minwidth\fR
 The minimum width of the column in pixels.
 The treeview widget will not make the column any smaller than
-\fB-minwidth\fR when the widget is resized or the user drags a 
+\fB\-minwidth\fR when the widget is resized or the user drags a 
 column separator.
 .TP
-\fB-stretch\fR
+\fB\-stretch\fR
 Specifies whether or not the column's width should be adjusted
 when the widget is resized.
 .TP
-\fB-width \fIw\fR
+\fB\-width \fIw\fR
 The width of the column in pixels.  Default is something reasonable,
 probably 200 or so.
 .PP
@@ -183,22 +184,22 @@ If \fIitem\fR is specified, sets the focus item to \fIitem\fR.
 Otherwise, returns the current focus item, or \fB{}\fR if there is none.
 .\" Need: way to clear the focus item.  {} works for this...
 .TP 
-\fIpathname \fBheading\fR \fIcolumn\fR ?\fI-option \fR?\fIvalue -option value...\fR?
+\fIpathname \fBheading\fR \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
 Query or modify the heading options for the specified \fIcolumn\fR.
 Valid options are:
 .RS
 .TP
-\fB-text \fItext\fR
+\fB\-text \fItext\fR
 The text to display in the column heading.
 .TP
-\fB-image \fIimageName\fR
+\fB\-image \fIimageName\fR
 Specifies an image to display to the right of the column heading.
 .TP
-\fB-anchor \fIanchor\fR
+\fB\-anchor \fIanchor\fR
 Specifies how the heading text should be aligned.
 One of the standard Tk anchor values.
 .TP
-\fB-command \fIscript\fR
+\fB\-command \fIscript\fR
 A script to evaluate when the heading label is pressed.
 .PP
 Use \fIpathname heading #0\fR to configure the tree column heading.
@@ -225,7 +226,7 @@ and data columns.
 \fIpathname \fBindex \fIitem\fR
 Returns the integer index of \fIitem\fR within its parent's list of children.
 .TP
-\fIpathname \fBinsert\fR \fIparent\fR \fIindex\fR ?\fB-id \fIid\fR? \fIoptions...\fR
+\fIpathname \fBinsert\fR \fIparent\fR \fIindex\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 Creates a new item.  
 \fIparent\fR is the item ID of the parent item,
 or the empty string \fB{}\fR
@@ -236,7 +237,7 @@ If \fIindex\fR is less than or equal to zero,
 the new node is inserted at the beginning;
 if \fIindex\fR is greater than or equal to the current number of children,
 it is inserted at the end.
-If \fB-id\fR is specified, it is used as the item identifier;
+If \fB\-id\fR is specified, it is used as the item identifier;
 \fIid\fR must not already exist in the tree.
 Otherwise, a new unique identifier is generated.
 .br
@@ -247,11 +248,11 @@ See \fBITEM OPTIONS\fR for the list of available options.
 \fIpathname \fBinstate \fIstatespec\fR ?\fIscript\fR?
 Test the widget state; see \fIttk_widget(n)\fR.
 .TP
-\fIpathname \fBitem\fR \fIitem\fR ?\fI-option \fR?\fIvalue -option value...\fR?
+\fIpathname \fBitem\fR \fIitem\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
 Query or modify the options for the specified \fIitem\fR.
-If no \fI-option\fR is specified, 
+If no \fI\-option\fR is specified, 
 returns a dictionary of option/value pairs.
-If a single \fI-option\fR is specified, 
+If a single \fI\-option\fR is specified, 
 returns the value of that option.
 Otherwise, the item's options are updated with the specified values.
 See \fBITEM OPTIONS\fR for the list of available options.
@@ -278,7 +279,7 @@ or \fB{}\fR if \fIitem\fR is the first child of its parent.
 .TP
 \fIpathname \fBsee\fR \fIitem\fR
 Ensure that \fIitem\fR is visible:
-sets all of \fIitem\fR's ancestors to \fB-open true\fR,
+sets all of \fIitem\fR's ancestors to \fB\-open true\fR,
 and scrolls the widget if necessary so that \fIitem\fR is 
 within the visible portion of the tree.
 .TP
@@ -317,7 +318,7 @@ Modify or query the widget state; see \fIttk_widget(n)\fR.
 \fIpathName \fBtag bind \fItagName \fR?\fIsequence \fR?\fIscript\fR??
 Add a Tk binding script for the event sequence \fIsequence\fR 
 to the tag \fItagName\fR.  When an X event is delivered to an item,
-binding scripts for each of the item's \fB-tags\fR are evaluated
+binding scripts for each of the item's \fB\-tags\fR are evaluated
 in order as per \fIbindtags(n)\fR.
 .br
 \fB<KeyPress>\fR, \fB<KeyRelease>\fR, and virtual events
@@ -359,14 +360,14 @@ A Tk image, displayed to the left of the label.
 The list of values associated with the item.
 .br
 Each item should have the same number of values as
-the \fB-columns\fR widget option.
+the \fB\-columns\fR widget option.
 If there are fewer values than columns,
 the remaining values are assumed empty.
 If there are more values than columns,
 the extra values are ignored.
 .OP \-open open Open
 A boolean value indicating whether the item's children
-should be displayed (\fB-open true\fR) or hidden (\fB-open false\fR).
+should be displayed (\fB\-open true\fR) or hidden (\fB\-open false\fR).
 .OP \-tags tags Tags
 A list of tags associated with this item.  
 .SH "TAG OPTIONS"
@@ -381,14 +382,14 @@ Specifies the font to use when drawing text.
 .\" ??? Maybe: .IP \-padding
 .\" ??? Maybe: .IP \-text
 .IP \-image
-Specifies the item image, in case the item's \fB-image\fR option is empty.
+Specifies the item image, in case the item's \fB\-image\fR option is empty.
 .PP
 \fI(@@@ TODO: sort out order of precedence for options)\fR
 
 .SH "COLUMN IDENTIFIERS"
 Column identifiers take any of the following forms:
 .IP \(bu
-A symbolic name from the list of \fB-columns\fR.
+A symbolic name from the list of \fB\-columns\fR.
 .IP \(bu
 An integer \fIn\fR, specifying the \fIn\fRth data column.
 .IP \(bu
@@ -396,17 +397,17 @@ A string of the form \fB#\fIn\fR, where \fIn\fR is an integer,
 specifying the \fIn\fRth display column.
 .PP
 \fBNOTE:\fR 
-Item \fB-values\fR may be displayed in a different order than 
+Item \fB\-values\fR may be displayed in a different order than 
 the order in which they are stored.
 .PP
 \fBNOTE:\fR Column #0 always refers to the tree column,
-even if \fB-show tree\fR is not specified.
+even if \fB\-show tree\fR is not specified.
 .PP
-A \fIdata column number\fR is an index into an item's \fB-values\fR list;
+A \fIdata column number\fR is an index into an item's \fB\-values\fR list;
 a \fIdisplay column number\fR is the column number in the tree
 where the values are displayed.  
 Tree labels are displayed in column #0.
-If \fB-displaycolumns\fR is not set,
+If \fB\-displaycolumns\fR is not set,
 then data column \fIn\fR is displayed in display column \fB#\fIn+1\fR.
 Again, \fBcolumn #0 always refers to the tree column\fR.
 .SH "VIRTUAL EVENTS"
@@ -414,13 +415,13 @@ The treeview widget generates the following virtual events.
 .IP <<TreeviewSelect>>
 Generated whenever the selection changes.
 .IP <<TreeviewOpen>>
-Generated just before setting the focus item to \fB-open true\fR.
+Generated just before setting the focus item to \fB\-open true\fR.
 .IP <<TreeviewClose>>
-Generated just after setting the focus item to \fB-open false\fR.
+Generated just after setting the focus item to \fB\-open false\fR.
 .PP
 The \fBfocus\fR and \fBselection\fR widget commands can be used
 to determine the affected item or items.
-In Tk 8.5, the affected item is also passed as the \fB-detail\fR field
+In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 of the virtual event.
 
 .SH "SEE ALSO"

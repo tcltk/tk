@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: getOpenFile.n,v 1.19 2007/10/26 20:25:05 dgp Exp $
+'\" RCS: @(#) $Id: getOpenFile.n,v 1.20 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_getOpenFile n 4.2 Tk "Tk Built-In Commands"
@@ -17,7 +17,6 @@ tk_getOpenFile, tk_getSaveFile \- pop up a dialog box for the user to select a f
 .br
 \fBtk_getSaveFile \fR?\fIoption value ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 The procedures \fBtk_getOpenFile\fR and \fBtk_getSaveFile\fR pop up a
@@ -93,7 +92,7 @@ The variable \fIvariableName\fR is used to preselect which filter is
 used from \fIfilterList\fR when the dialog box is opened and is
 updated when the dialog box is closed, to the last selected
 filter. The variable is read once at the beginning to select the
-appropriate filter. If the variable does not exist, or it's value does
+appropriate filter. If the variable does not exist, or its value does
 not match any filter typename, or is empty (\fB{}\fR), the dialog box
 will revert to the default behavior of selecting the first filter in
 the list. If the dialog is canceled, the variable is not modified.
@@ -102,7 +101,7 @@ If the user selects a file, both \fBtk_getOpenFile\fR and
 \fBtk_getSaveFile\fR return the full pathname of this file. If the
 user cancels the operation, both commands return the empty string.
 .SH "SPECIFYING FILE PATTERNS"
-
+.PP
 The \fIfilePatternList\fR value given by the \fB\-filetypes\fR option
 is a list of file patterns. Each file pattern is a list of the
 form
@@ -132,7 +131,7 @@ sample code matches with files that have a \fB\.c\fR extension AND
 belong to the \fImacType\fR \fBTEXT\fR. To use the OR rule instead,
 you can use two file patterns, one with the \fIextensions\fR only and
 the other with the \fImacType\fR only. The \fBGIF Files\fR file type
-in the sample code matches files that EITHER have a \fB\.gif\fR
+in the sample code matches files that \fIeither\fR have a \fB\.gif\fR
 extension OR belong to the \fImacType\fR \fBGIFF\fR.
 .PP
 On the Unix and Windows platforms, a file matches a file pattern
@@ -143,18 +142,27 @@ the file pattern. The \fImacType\fRs are ignored.
 On the Unix and Macintosh platforms, extensions are matched using
 glob-style pattern matching. On the Windows platforms, extensions are
 matched by the underlying operating system. The types of possible
-extensions are: (1) the special extension * matches any
-file; (2) the special extension "" matches any files that
-do not have an extension (i.e., the filename contains no full stop
-character); (3) any character string that does not contain any wild
-card characters (* and ?).
+extensions are:
+.IP (1)
+the special extension
+.QW *
+matches any file;
+.IP (2)
+the special extension
+.MT
+matches any files that do not have an extension (i.e., the filename
+contains no full stop character);
+.IP (3)
+any character string that does not contain any wild card characters (*
+and ?).
 .PP
 Due to the different pattern matching rules on the various platforms,
 to ensure portability, wild card characters are not allowed in the
-extensions, except as in the special extension *. Extensions
-without a full stop character (e.g. ~) are allowed but may not
-work on all platforms.
-
+extensions, except as in the special extension
+.QW * .
+Extensions without a full stop character (e.g.
+.QW ~ )
+are allowed but may not work on all platforms.
 .SH EXAMPLE
 .CS
 set types {
@@ -165,15 +173,13 @@ set types {
     {{GIF Files}        {}        GIFF}
     {{All Files}        *             }
 }
-set filename [tk_getOpenFile -filetypes $types]
+set filename [tk_getOpenFile \-filetypes $types]
 
 if {$filename != ""} {
     # Open the file ...
 }
 .CE
-
 .SH "SEE ALSO"
 tk_chooseDirectory
-
 .SH KEYWORDS
 file selection dialog

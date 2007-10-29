@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_panedwindow.n,v 1.9 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: ttk_panedwindow.n,v 1.10 2007/10/29 16:04:14 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_panedwindow n 8.5 Tk "Tk Themed Widget"
@@ -50,7 +50,7 @@ The following options may be specified for each pane:
 .OP \-weight weight Weight
 An integer specifying the relative stretchability of the pane.
 When the paned window is resized, the extra space is added
-or subtracted to each pane proportionally to its \fB-weight\fR.
+or subtracted to each pane proportionally to its \fB\-weight\fR.
 
 .SH "WIDGET COMMAND"
 Supports the standard \fBconfigure\fR, \fBcget\fR, \fBstate\fR, 
@@ -74,13 +74,13 @@ If \fIsubwindow\fR is already managed by the paned window,
 moves it to the specified position.
 See \fBPANE OPTIONS\fR for the list of available options.
 .TP
-\fIpathname \fBpane\fR \fIpane -option \fR?\fIvalue \fR?\fI-option value...\fR
+\fIpathname \fBpane\fR \fIpane \-option \fR?\fIvalue \fR?\fI\-option value...\fR
 Query or modify the options of the specified \fIpane\fR,
 where \fIpane\fR is either an integer index or the name of a managed subwindow.
-If no \fI-option\fR is specified, returns a dictionary of the pane 
+If no \fI\-option\fR is specified, returns a dictionary of the pane 
 option values.
-If one \fI-option\fR is specified, returns the value of that \fIoption\fR.
-Otherwise, sets the \fI-option\fRs to the corresponding \fIvalue\fRs.
+If one \fI\-option\fR is specified, returns the value of that \fIoption\fR.
+Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
 .TP
 \fIpathname\fR \fBsashpos\fR \fIindex\fR ?\fInewpos\fR?
 If \fInewpos\fR is specified, sets the position 

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.14 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: event.n,v 1.15 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -62,7 +62,7 @@ argument of the \fBbind\fR command except that it must consist
 of a single event pattern, not a sequence.
 \fIOption-value\fR pairs may be used to specify additional
 attributes of the event, such as the x and y mouse position;  see
-EVENT FIELDS below.  If the \fB\-when\fR option is not specified, the
+\fBEVENT FIELDS\fR below.  If the \fB\-when\fR option is not specified, the
 event is processed immediately:  all of the handlers for the event
 will complete before the \fBevent generate\fR command returns.
 If the \fB\-when\fR option is specified then it determines when the
@@ -80,8 +80,9 @@ not defined then an empty string is returned.
 .SH "EVENT FIELDS"
 .PP
 The following options are supported for the \fBevent generate\fR
-command.  These correspond to the ``%'' expansions
-allowed in binding scripts for the \fBbind\fR command.
+command.  These correspond to the
+.QW %
+expansions allowed in binding scripts for the \fBbind\fR command.
 .TP
 \fB\-above\fI window\fR
 \fIWindow\fR specifies the \fIabove\fR field for the event,
@@ -119,7 +120,7 @@ for the \fBMouseWheel\fR event.  The \fIdelta\fR refers to the
 direction and magnitude the mouse wheel was rotated.  Note the value
 is not a screen distance but are units of motion in the mouse wheel.
 Typically these values are multiples of 120.  For example, 120 should
-scroll the text widget up 4 lines and -240 would scroll the text
+scroll the text widget up 4 lines and \-240 would scroll the text
 widget down 8 lines.  Of course, other widgets may define different
 behaviors for mouse wheel motion.  This field corresponds to the
 \fB%D\fR substitution for binding scripts.
@@ -333,11 +334,15 @@ changed.
 .TP
 \fB<<TraverseIn>>\fR
 This is sent to a widget when the focus enters the widget because of a
-user-driven "tab to widget" action.
+user-driven
+.QW "tab to widget"
+action.
 .TP
 \fB<<TraverseOut>>\fR
 This is sent to a widget when the focus leaves the widget because of a
-user-driven "tab to widget" action.
+user-driven
+.QW "tab to widget"
+action.
 .PP
 Tk defines the following virtual events for the purposes of unifying
 bindings across multiple platforms. Users expect them to behave in the

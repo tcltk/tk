@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: option.n,v 1.5 2004/10/28 12:25:53 dkf Exp $
+'\" RCS: @(#) $Id: option.n,v 1.6 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH option n "" Tk "Tk Built-In Commands"
@@ -78,7 +78,7 @@ the X server, or user-specific startup files.
 .TP
 \fBinteractive\fR
 Level 80.  Used for options specified interactively after the application
-starts running.  If \fIpriority\fR isn't specified, it defaults to
+starts running.  If \fIpriority\fR is not specified, it defaults to
 this level.
 .LP
 Any of the above keywords may be abbreviated.  In addition, priorities

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scale.n,v 1.8 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: scale.n,v 1.9 2007/10/29 16:04:14 dkf Exp $
 '\" 
 .so man.macros
 .TH scale n 4.1 Tk "Tk Built-In Commands"
@@ -25,7 +25,8 @@ scale \- Create and manipulate scale widgets
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-bigincrement bigIncrement BigIncrement
 Some interactions with the scale cause its value to change by
-``large'' increments;  this option specifies the size of the
+.QW large
+increments;  this option specifies the size of the
 large increments.  If specified as 0, the large increments default
 to 1/10 the range of the scale.
 .OP \-command command Command
@@ -73,7 +74,7 @@ or \fBsunken\fR.
 Specifies one of three states for the scale:  \fBnormal\fR,
 \fBactive\fR, or \fBdisabled\fR.
 If the scale is disabled then the value may not be changed and the scale
-won't activate.
+will not activate.
 If the scale is active, the slider is displayed using the color
 specified by the \fBactiveBackground\fR option.
 .OP \-tickinterval tickInterval TickInterval
@@ -188,7 +189,7 @@ the slider;  \fBtrough1\fR means that the point is over the
 portion of the slider above  or to the left of the slider;
 and \fBtrough2\fR means that the point is over the portion
 of the slider below or to the right of the slider.
-If the point isn't over one of these elements, an empty string
+If the point is not over one of these elements, an empty string
 is returned.
 .TP
 \fIpathName \fBset\fR \fIvalue\fR

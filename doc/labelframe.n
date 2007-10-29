@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: labelframe.n,v 1.5 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: labelframe.n,v 1.6 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH labelframe n 8.4 Tk "Tk Built-In Commands"
@@ -143,10 +143,10 @@ This shows how to build part of a GUI for a hamburger vendor. The
 the kinds of things that the choices are being made over.
 .PP
 .CS
-grid [\fBlabelframe\fR .burger -text "Burger"] \\
-     [\fBlabelframe\fR .bun    -text "Bun"] -sticky news
-grid [\fBlabelframe\fR .cheese -text "Cheese Option"] \\
-     [\fBlabelframe\fR .pickle -text "Pickle Option"] -sticky news
+grid [\fBlabelframe\fR .burger \-text "Burger"] \e
+     [\fBlabelframe\fR .bun    \-text "Bun"] \-sticky news
+grid [\fBlabelframe\fR .cheese \-text "Cheese Option"] \e
+     [\fBlabelframe\fR .pickle \-text "Pickle Option"] \-sticky news
 foreach {type name val} {
     burger Beef    beef
     burger Lamb    lamb
@@ -160,7 +160,7 @@ foreach {type name val} {
     cheese Cheddar cheddar
     cheese Edam    edam
     cheese Brie    brie
-    cheese Gruy\\u00e8re gruyere
+    cheese Gruy\eu00e8re gruyere
     cheese "Monterey Jack" jack
 
     pickle None    none
@@ -168,9 +168,9 @@ foreach {type name val} {
     pickle Onions  onion
     pickle Chili   chili
 } {
-    set w [radiobutton .$type.$val -text $name -anchor w \\
-            -variable $type -value $val]
-    pack $w -side top -fill x
+    set w [radiobutton .$type.$val \-text $name \-anchor w \e
+            \-variable $type \-value $val]
+    pack $w \-side top \-fill x
 }
 set burger beef
 set bun    white

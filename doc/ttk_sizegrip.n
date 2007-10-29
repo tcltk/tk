@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_sizegrip.n,v 1.10 2007/10/26 20:13:23 dgp Exp $
+'\" RCS: @(#) $Id: ttk_sizegrip.n,v 1.11 2007/10/29 16:04:14 dkf Exp $
 '\"
 .so man.macros
 .TH ttk_sizegrip n 8.5 Tk "Tk Themed Widget"
@@ -15,7 +15,6 @@ ttk_sizegrip \- Bottom-right corner resize widget
 .SH SYNOPSIS
 \fBttk::sizegrip\fR \fIpathName \fR?\fIoptions\fR?
 .BE
-
 .SH DESCRIPTION
 A \fBttk::sizegrip\fR widget (also known as a \fIgrow box\fR)
 allows the user to resize the containing toplevel window
@@ -24,12 +23,10 @@ by pressing and dragging the grip.
 \-class	\-cursor	\-state	\-style
 \-takefocus
 .SE
-
 .SH "WIDGET COMMAND"
 Sizegrip widgets support the standard
 \fBcget\fR, \fBconfigure\fR, \fBinstate\fR, and \fBstate\fR
 methods.  No other widget methods are used.
-
 .SH "PLATFORM-SPECIFIC NOTES"
 On Mac OSX, toplevel windows automatically include a built-in
 size grip by default.
@@ -38,27 +35,26 @@ the built-in grip will just mask the widget.
 .SH EXAMPLES
 .CS
 # Using pack:
-pack [ttk::frame $top.statusbar] -side bottom -fill x
-pack [ttk::sizegrip $top.statusbar.grip] -side right -anchor se
+pack [ttk::frame $top.statusbar] \-side bottom \-fill x
+pack [ttk::sizegrip $top.statusbar.grip] \-side right \-anchor se
 
 # Using grid:
-grid [ttk::sizegrip $top.statusbar.grip] \
-    -row $lastRow -column $lastColumn -sticky se
+grid [ttk::sizegrip $top.statusbar.grip] \e
+    \-row $lastRow \-column $lastColumn \-sticky se
 # ... optional: add vertical scrollbar in $lastColumn,
 # ... optional: add horizontal scrollbar in $lastRow
 .CE
-
 .SH "BUGS"
 If the containing toplevel's position was specified
 relative to the right or bottom of the screen
-(e.g., \fB[wm geometry ... \fIw\fBx\fIh\fB-\fIx\fB-\fIy\fB]\fR
+(e.g., \fB[wm geometry ... \fIw\fBx\fIh\fB\-\fIx\fB\-\fIy\fB]\fR
 instead of \fB[wm geometry ... \fIw\fBx\fIh\fB+\fIx\fB+\fIy\fB]\fR),
 the sizegrip widget will not resize the window.
 .PP
-ttk::sizegrip widgets only support "southeast" resizing.
-
+ttk::sizegrip widgets only support
+.QW southeast
+resizing.
 .SH "SEE ALSO"
 ttk_widget(n)
-
 .SH "KEYWORDS"
 widget, sizegrip, grow box

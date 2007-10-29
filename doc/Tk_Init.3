@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Tk_Init.3,v 1.4 2000/09/07 17:38:16 hobbs Exp $
+'\" RCS: @(#) $Id: Tk_Init.3,v 1.5 2007/10/29 16:04:13 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Init 3 8.0 Tk "Tk Library Procedures"
@@ -54,8 +54,9 @@ Continuous ringing of the bell is a nuisance.
 .TP
 \fBclipboard\fR
 A malicious script could replace the contents of the clipboard with
-the string \fB"rm -r *"\fR and lead to surprises when the contents of
-the clipboard are pasted.
+the string
+.QW "\fBrm \-r *\fR"
+and lead to surprises when the contents of the clipboard are pasted.
 .TP
 \fBgrab\fR
 Grab can be used to block the user from using any other applications.

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ManageGeom.3,v 1.4 2007/01/03 05:06:27 nijtmans Exp $
+'\" RCS: @(#) $Id: ManageGeom.3,v 1.5 2007/10/29 16:04:12 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ManageGeometry 3 4.0 Tk "Tk Library Procedures"
@@ -24,13 +24,12 @@ Token for window to be managed.
 .AP "const Tk_GeomMgr" *mgrPtr in
 Pointer to data structure containing information about the
 geometry manager, or NULL to indicate that \fItkwin\fR's geometry
-shouldn't be managed anymore.
+should not be managed anymore.
 The data structure pointed to by \fImgrPtr\fR must be static:
 Tk keeps a reference to it as long as the window is managed.
 .AP ClientData clientData in
 Arbitrary one-word value to pass to geometry manager callbacks.
 .BE
-
 .SH DESCRIPTION
 .PP
 \fBTk_ManageGeometry\fR arranges for a particular geometry manager,
