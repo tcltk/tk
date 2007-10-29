@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtCmHdlr.3,v 1.2 2004/09/19 16:05:36 dkf Exp $
+'\" RCS: @(#) $Id: CrtCmHdlr.3,v 1.3 2007/10/29 16:04:12 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateClientMessageHandler 3 "8.4" Tk "Tk Library Procedures"
@@ -27,7 +27,7 @@ Procedure to invoke whenever a ClientMessage X event occurs on any display.
 .PP
 
 \fBTk_CreateClientMessageHandler\fR arranges for \fIproc\fR to be invoked
-in the future whenever a ClientMessage X event occurs that isn't handled by
+in the future whenever a ClientMessage X event occurs that is not handled by
 \fBWM_PROTOCOL\fR.  \fBTk_CreateClientMessageHandler\fR is intended for use
 by applications which need to watch X ClientMessage events, such as drag and
 drop applications.
@@ -49,7 +49,7 @@ The \fItkwin\fR parameter to \fIproc\fR is the Tk window which is
 associated with this event.  \fIEventPtr\fR is a pointer to the X event.
 .PP
 Whenever an X ClientMessage event is processed by \fBTk_HandleEvent\fR,
-the \fIproc\fR is called if it wasn't handled as a \fBWM_PROTOCOL\fR.
+the \fIproc\fR is called if it was not handled as a \fBWM_PROTOCOL\fR.
 The return value from \fIproc\fR is normally 0.
 A non-zero return value indicates that the event is not to be handled
 further; that is, \fIproc\fR has done all processing that is to be

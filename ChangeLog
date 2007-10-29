@@ -1,10 +1,14 @@
+2007-10-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/*.1, doc/*.n, doc/*.3: Lots more GOOBE work.
+
 2007-10-28  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/combobox.tcl: Make popdown window [wm resizable 0 0]
-	on OSX, to prevent TkAqua from shrinking the scrollbar to make
-	room for a grow box that isn't there.
-	* macosx/ttkMacOSXTheme.c, library/ttk/aquaTheme.tcl:
-	Reworked combobox layout.
+	* library/ttk/combobox.tcl: Make popdown window [wm resizable 0 0] on
+	OSX, to prevent TkAqua from shrinking the scrollbar to make room for a
+	grow box that isn't there.
+	* macosx/ttkMacOSXTheme.c, library/ttk/aquaTheme.tcl: Reworked
+	combobox layout.
 
 2007-10-26  Don Porter  <dgp@users.sourceforge.net>
 
@@ -28,8 +32,9 @@
 
 2007-10-26  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): fix window class of
-	transient toplevels that are not also overrideredirect. [Bug 1816252]
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): fix window class
+	of transient toplevels that are not also overrideredirect. [Bug
+	1816252]
 
 	* macosx/tkMacOSXDialog.c:	TIP#242 cleanup.
 	* library/demos/filebox.tcl: 	demo TIP#242 -typevariable.
@@ -56,7 +61,7 @@
 2007-10-24  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/*.c, win/{ttkWinMonitor,ttkWinTheme,ttkWinXPTheme}.c,
-	macosx/ttkMacOSXTheme.c: Move widget layout registration 
+	* macosx/ttkMacOSXTheme.c: Move widget layout registration 
 	from TtkElements_Init() to widget *_Init() routines.
 	Renaming/consistency: s/...ElementGeometry()/...ElementSize()/
 
