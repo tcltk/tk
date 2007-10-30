@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.15 2005/09/10 14:53:20 das Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.16 2007/10/30 01:57:54 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -35,7 +35,7 @@
 
 bind Listbox <1> {
     if {[winfo exists %W]} {
-	tk::ListboxBeginSelect %W [%W index @%x,%y]
+	tk::ListboxBeginSelect %W [%W index @%x,%y] 1
     }
 }
 
@@ -227,7 +227,7 @@ if {"x11" eq [tk windowingsystem]} {
 # el -		The element for the selection operation (typically the
 #		one under the pointer).  Must be in numerical form.
 
-proc ::tk::ListboxBeginSelect {w el} {
+proc ::tk::ListboxBeginSelect {w el {focus 1}} {
     variable ::tk::Priv
     if {[$w cget -selectmode] eq "multiple"} {
 	if {[$w selection includes $el]} {
@@ -243,6 +243,12 @@ proc ::tk::ListboxBeginSelect {w el} {
 	set Priv(listboxPrev) $el
     }
     event generate $w <<ListboxSelect>>
+    # check existence as ListboxSelect may destroy us
+    if {$focus && [winfo exists $w]
+	&& [string is true -strict [$w cget -takefocus]]
+	&& [$w cget -state] eq "normal"} {
+	focus $w
+    }
 }
 
 # ::tk::ListboxMotion --

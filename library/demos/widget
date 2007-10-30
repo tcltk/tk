@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.40 2007/10/23 06:31:16 das Exp $
+# RCS: @(#) $Id: widget,v 1.41 2007/10/30 01:57:55 hobbs Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -35,7 +35,7 @@ if {[tk windowingsystem] eq "x11"} {
 if {"defaultFont" ni [font names]} {
     # TIP #145 defines some standard named fonts
     if {"TkDefaultFont" in [font names] && "TkFixedFont" in [font names]} {
-        # FIX ME: the following tecnique of cloning the font to copy it works
+        # FIX ME: the following technique of cloning the font to copy it works
         #         fine but means that if the system font is changed by Tk
         #         cannot update the copied font. font alias might be useful
         #         here -- or fix the app to use TkDefaultFont etc.
@@ -145,19 +145,17 @@ if {[tk windowingsystem] ne "aqua"} {
 pack .statusBar -side bottom -fill x -pady 2
 
 ttk::frame .textFrame
-scrollbar .s -orient vertical -command {.t yview} -highlightthickness 0 \
-    -takefocus 1 -bd 1
+scrollbar .s -orient vertical -command {.t yview} -takefocus 1
 pack .s -in .textFrame -side right -fill y
 text .t -yscrollcommand {.s set}  -wrap word  -width 70  -height 30 \
 	-font mainFont  -setgrid 1  -highlightthickness 0 \
-	-padx 4  -pady 2  -takefocus 0 -bd 1
+	-padx 4  -pady 2  -takefocus 0
 pack .t -in .textFrame -expand y -fill both -padx 1
 pack .textFrame -expand yes -fill both
 if {[tk windowingsystem] eq "aqua"} {
     pack configure .statusBar.lab -padx {10 18} -pady {4 6}
     pack configure .statusBar -pady 0
-    .s configure -bd 0
-    .t configure -padx 10 -pady 0 -bd 0
+    .t configure -padx 10 -pady 0
 }
 
 # Create a bunch of tags to use in the text widget, such as those for section
@@ -263,7 +261,7 @@ proc addFormattedText {formattedText} {
 		}
 		demo {
 		    set description [lassign $values name]
-		    .t insert end "[incr demoCount]. [mc $description]." \
+		    .t insert end "[incr demoCount]. [mc $description]" \
 			    [list demo demo-$name]
 		    if {$new} {
 			.t image create end -image ::img::new -padx 5
@@ -476,7 +474,7 @@ proc showVars {w args} {
 	ttk::label $f.v$var -textvariable $var -anchor w
 	grid $f.n$var $f.v$var -padx 2 -pady 2 -sticky w
     }
-    ttk::button $b.ok -width 8 -text [mc "OK"] \
+    ttk::button $b.ok -text [mc "OK"] \
 	-command [list destroy $w] -default active
     bind $w <Return> [list $b.ok invoke]
     bind $w <Escape> [list $b.ok invoke]
@@ -514,7 +512,7 @@ proc invoke index {
     .t configure -cursor watch
     update
     set demo [string range [lindex $tags $i] 5 end]
-    uplevel [list source [file join $tk_demoDirectory $demo.tcl]]
+    uplevel 1 [list source [file join $tk_demoDirectory $demo.tcl]]
     update
     .t configure -cursor $cursor
 
@@ -569,17 +567,12 @@ proc showCode w {
 	toplevel $top
 
 	set t [frame $top.f]
-	set text [text $t.text -font fixedFont -height 30 -wrap word -bd 1 \
+	set text [text $t.text -font fixedFont -height 24 -wrap word \
 		      -xscrollcommand [list $t.xscroll set] \
 		      -yscrollcommand [list $t.yscroll set] \
 		      -setgrid 1 -highlightthickness 0 -pady 2 -padx 3]
-	scrollbar $t.xscroll -command [list $t.text xview] \
-	    -highlightthickness 0 -orient horizontal -bd 1
-	scrollbar $t.yscroll -command [list $t.text yview] \
-	    -highlightthickness 0 -orient vertical -bd 1
-	if {[tk windowingsystem] eq "aqua"} {
-	    foreach i [list $t.text $t.xscroll $t.yscroll] {$i configure -bd 0}
-	}
+	scrollbar $t.xscroll -command [list $t.text xview] -orient horizontal
+	scrollbar $t.yscroll -command [list $t.text yview] -orient vertical
 
 	grid $t.text $t.yscroll -sticky news
 	#grid $t.xscroll

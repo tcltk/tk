@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: listbox.n,v 1.15 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: listbox.n,v 1.16 2007/10/30 01:57:54 hobbs Exp $
 '\" 
 .so man.macros
 .TH listbox n 8.4 Tk "Tk Built-In Commands"
@@ -420,6 +420,10 @@ In both modes, clicking button 1 on an element selects
 it and deselects any other selected item.
 In \fBbrowse\fR mode it is also possible to drag the selection
 with button 1.
+.VS 8.5
+On button 1, the listbox will also take focus if it has a \fBnormal\fR
+state and \fB\-takefocus\fR is true.
+.VE 8.5
 .PP
 If the selection mode is \fBmultiple\fR or \fBextended\fR,
 any number of elements may be selected at once, including discontiguous

@@ -3,7 +3,7 @@
 # This file defines the procedure tk_optionMenu, which creates
 # an option button and its associated menu.
 #
-# RCS: @(#) $Id: optMenu.tcl,v 1.4 2001/08/01 16:21:11 dgp Exp $
+# RCS: @(#) $Id: optMenu.tcl,v 1.5 2007/10/30 01:57:54 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994 Sun Microsystems, Inc.
@@ -34,7 +34,7 @@ proc ::tk_optionMenu {w varName firstValue args} {
 	set var $firstValue
     }
     menubutton $w -textvariable $varName -indicatoron 1 -menu $w.menu \
-	    -relief raised -bd 2 -highlightthickness 2 -anchor c \
+	    -relief raised -highlightthickness 1 -anchor c \
 	    -direction flush
     menu $w.menu -tearoff 0
     $w.menu add radiobutton -label $firstValue -variable $varName

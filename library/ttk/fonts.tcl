@@ -1,5 +1,5 @@
 #
-# $Id: fonts.tcl,v 1.7 2007/10/21 14:51:27 das Exp $
+# $Id: fonts.tcl,v 1.8 2007/10/30 01:57:55 hobbs Exp $
 #
 # Font specifications.
 #
@@ -122,7 +122,7 @@ switch -- [tk windowingsystem] {
 	font configure TkFixedFont   -family $F(fixed)  -size $F(fixedsize)
 	font configure TkIconFont    -family $F(family) -size $F(size)
 	font configure TkMenuFont    -family $F(family) -size $F(menusize)
-	font configure TkSmallCaptionFont -family $F(family) -size $F(labelsize)		
+	font configure TkSmallCaptionFont -family $F(family) -size $F(labelsize)
     }
     default -
     x11 {

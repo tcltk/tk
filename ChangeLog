@@ -1,5 +1,20 @@
 2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/listbox.test, tests/panedwindow.test, tests/scrollbar.test:
+	* library/bgerror.tcl, library/dialog.tcl, library/listbox.tcl:
+	* library/msgbox.tcl, library/optMenu.tcl, library/tclIndex:
+	* library/tkfbox.tcl, library/demos/floor.tcl, library/demos/rmt:
+	* library/demos/tcolor, library/demos/text.tcl:
+	* library/demos/twind.tcl, library/demos/widget: Buh-bye Motif look
+	* library/ttk/fonts.tcl:    Update of Tk default look in 8.5
+	* macosx/tkMacOSXDefault.h: Trims border sizes, cleaner X11 look
+	* unix/tkUnixDefault.h:     with minor modifications for Win32/Aqua.
+	* win/tkWinDefault.h:       Uses Tk*Font definitions throughout for
+	* win/tkWinFont.c:          classic widgets. [Bug #1820344]
+	* library/obsolete.tcl (::tk::classic::restore): This restores
+	changes made to defaults in 8.5 using the 'option' command,
+	segmented into logical groups.
+
 	* tests/winfo.test: winfo-4.5 raise .t to above . for Windows
 
 	* tests/unixWm.test: note TIP#142 results and remove unnecessary

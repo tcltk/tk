@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.31 2007/05/30 06:34:18 das Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.32 2007/10/30 01:57:54 hobbs Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -264,7 +264,7 @@ proc ::tk::MessageBox {args} {
     #
     if {[winfo viewable [winfo toplevel $data(-parent)]] } {
 	wm transient $w $data(-parent)
-    }    
+    }
 
     if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
@@ -286,13 +286,8 @@ proc ::tk::MessageBox {args} {
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
     option add *Dialog.dtl.wrapLength 3i widgetDefault
-    if {$windowingsystem eq "aqua"} {
-	option add *Dialog.msg.font system widgetDefault
-	option add *Dialog.dtl.font system widgetDefault
-    } else {
-	option add *Dialog.msg.font {Times 14} widgetDefault
-	option add *Dialog.dtl.font {Times 10} widgetDefault
-    }
+    option add *Dialog.msg.font TkCaptionFont widgetDefault
+    option add *Dialog.dtl.font TkDefaultFont widgetDefault
 
     label $w.msg -anchor nw -justify left -text $data(-message) \
 	    -background $bg

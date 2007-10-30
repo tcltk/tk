@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.18 2006/04/23 21:51:38 vincentdarley Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.19 2007/10/30 01:57:57 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -177,7 +177,7 @@ test scrollbar-3.13 {ScrollbarWidgetCmd procedure, "cget" option} win {
 } {0 0}
 test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} {unix notAqua} {
     list [catch {.s2 cget -highlightthickness} msg] $msg
-} {0 1}
+} {0 0}
 test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} aqua {
     list [catch {.s2 cget -highlightthickness} msg] $msg
 } {0 0}

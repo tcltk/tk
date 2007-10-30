@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.60 2007/10/25 21:44:22 hobbs Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.61 2007/10/30 01:57:54 hobbs Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -222,7 +222,7 @@ proc ::tk::IconList_Create {w} {
     frame $w
     set data(sbar)   [scrollbar $w.sbar -orient horizontal -takefocus 0]
     catch {$data(sbar) configure -highlightthickness 0}
-    set data(canvas) [canvas $w.canvas -bd 2 -relief sunken \
+    set data(canvas) [canvas $w.canvas -borderwidth 1 -relief sunken \
 	    -width 400 -height 120 -takefocus 1]
     pack $data(sbar) -side bottom -fill x -padx 2
     pack $data(canvas) -expand yes -fill both
@@ -1088,7 +1088,7 @@ static char updir_bits[] = {
     # f2: the frame with the OK button, cancel button, "file name" field
     #     and file types field.
     #
-    set f2 [frame $w.f2 -bd 0]
+    set f2 [frame $w.f2]
     bind [::tk::AmpWidget label $f2.lab -text $fNameCaption -anchor e -pady 0]\
 	    <<AltUnderlined>> [list focus $f2.ent]
     set data(ent) [entry $f2.ent]
@@ -1104,8 +1104,7 @@ static char updir_bits[] = {
 	set data(typeMenuBtn) [menubutton $f2.menu -indicatoron 1 \
 		-menu $f2.menu.m]
 	set data(typeMenu) [menu $data(typeMenuBtn).m -tearoff 0]
-	$data(typeMenuBtn) configure -takefocus 1 -highlightthickness 2 \
-		-relief raised -bd 2 -anchor w
+	$data(typeMenuBtn) configure -takefocus 1 -relief raised -anchor w
 	bind $data(typeMenuLab) <<AltUnderlined>> [list \
 		focus $data(typeMenuBtn)]
     }

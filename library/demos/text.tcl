@@ -3,7 +3,7 @@
 # This demonstration script creates a text widget that describes
 # the basic editing functions.
 #
-# RCS: @(#) $Id: text.tcl,v 1.6 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: text.tcl,v 1.7 2007/10/30 01:57:55 hobbs Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -22,9 +22,9 @@ positionWindow $w
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
-text $w.text -relief sunken -bd 2 -yscrollcommand "$w.scroll set" -setgrid 1 \
+text $w.text -yscrollcommand [list $w.scroll set] -setgrid 1 \
 	-height 30 -undo 1 -autosep 1
-scrollbar $w.scroll -command "$w.text yview"
+scrollbar $w.scroll -command [list $w.text yview]
 pack $w.scroll -side right -fill y
 pack $w.text -expand yes -fill both
 $w.text insert 0.0 \
