@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.73 2007/09/07 00:34:52 dgp Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.74 2007/10/30 15:34:57 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -646,7 +646,7 @@ ImgPhotoCmd(
 	"blank", "cget", "configure", "copy", "data", "get", "put",
 	"read", "redither", "transparency", "write", NULL
     };
-    enum options {
+    enum PhotoOptions {
 	PHOTO_BLANK, PHOTO_CGET, PHOTO_CONFIGURE, PHOTO_COPY, PHOTO_DATA,
 	PHOTO_GET, PHOTO_PUT, PHOTO_READ, PHOTO_REDITHER, PHOTO_TRANS,
 	PHOTO_WRITE
@@ -681,7 +681,7 @@ ImgPhotoCmd(
 	return proc(clientData, interp, objc, objv);
     }
 
-    switch ((enum options) index) {
+    switch ((enum PhotoOptions) index) {
     case PHOTO_BLANK:
 	/*
 	 * photo blank command - just call Tk_PhotoBlank.

@@ -1,3 +1,8 @@
+2007-10-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): Rename enumermation for
+	somewhat simpler-to-read code. [Bug 1677613]
+
 2007-10-30  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c: Split up RedisplayWidget()
