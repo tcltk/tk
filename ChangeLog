@@ -1,3 +1,7 @@
+2007-10-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/text.n: Clarify search subccommand docs. [Bug 1622919]
+
 2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* macosx/tkMacOSXFont.c (InitSystemFonts): 
