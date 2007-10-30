@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: chooseDirectory.n,v 1.7 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: chooseDirectory.n,v 1.8 2007/10/30 21:29:58 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_chooseDirectory n 8.3 Tk "Tk Built-In Commands"
@@ -14,7 +14,6 @@ tk_chooseDirectory \- pops up a dialog box for the user to select a directory.
 .SH SYNOPSIS
 \fBtk_chooseDirectory \fR?\fIoption value ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 The procedure \fBtk_chooseDirectory\fR pops up a dialog box for the
@@ -31,6 +30,11 @@ the Macintosh.  This is not a bug. Rather, the \fIGeneral Controls\fR
 control panel on the Mac allows the end user to override the
 application default directory.
 .TP
+\fB\-mustexist\fR \fIboolean\fR
+Specifies whether the user may specify non-existent directories.  If
+this parameter is true, then the user may only select directories that
+already exist.  The default value is \fIfalse\fR.
+.TP
 \fB\-parent\fR \fIwindow\fR
 Makes \fIwindow\fR the logical parent of the dialog. The dialog
 is displayed on top of its parent window.
@@ -38,11 +42,6 @@ is displayed on top of its parent window.
 \fB\-title\fR \fItitleString\fR
 Specifies a string to display as the title of the dialog box. If this
 option is not specified, then a default title will be displayed.
-.TP
-\fB\-mustexist\fR \fIboolean\fR
-Specifies whether the user may specify non-existent directories.  If
-this parameter is true, then the user may only select directories that
-already exist.  The default value is \fIfalse\fR.
 .SH EXAMPLE
 .CS
 set dir [\fBtk_chooseDirectory\fR \e

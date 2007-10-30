@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_radiobutton.n,v 1.7 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_radiobutton.n,v 1.8 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_radiobutton n 8.5 Tk "Tk Themed Widget"
@@ -41,7 +41,7 @@ In addition to the standard
 commands, radiobuttons support the following additional
 widget commands:
 .TP
-\fIpathname\fR invoke
+\fIpathname\fB invoke\fR
 Sets the \fB\-variable\fR to the \fB\-value\fR, selects the widget,
 and evaluates the associated \fB\-command\fR.  
 Returns the result of the \fB\-command\fR, or the empty

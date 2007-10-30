@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_notebook.n,v 1.6 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_notebook.n,v 1.7 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_notebook n 8.5 Tk "Tk Themed Widget"
@@ -13,10 +13,12 @@
 .SH NAME
 ttk_notebook \- Multi-paned container widget
 .SH SYNOPSIS
+.nf
 \fBttk::notebook\fR \fIpathName \fR?\fIoptions\fR?
 .br
 \fIpathName \fBadd\fR \fIpathName\fR.\fIsubwindow\fR ?\fIoptions...\fR?
 \fIpathName \fBinsert\fR \fIindex\fR \fIpathName\fR.\fIsubwindow\fR ?\fIoptions...\fR?
+.fi
 .BE
 .SH DESCRIPTION
 A \fBttk::notebook\fR widget manages a collection of subpanes 
