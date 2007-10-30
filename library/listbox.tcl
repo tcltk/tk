@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: listbox.tcl,v 1.16 2007/10/30 01:57:54 hobbs Exp $
+# RCS: @(#) $Id: listbox.tcl,v 1.17 2007/10/30 19:56:58 hobbs Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
@@ -244,9 +244,7 @@ proc ::tk::ListboxBeginSelect {w el {focus 1}} {
     }
     event generate $w <<ListboxSelect>>
     # check existence as ListboxSelect may destroy us
-    if {$focus && [winfo exists $w]
-	&& [string is true -strict [$w cget -takefocus]]
-	&& [$w cget -state] eq "normal"} {
+    if {$focus && [winfo exists $w] && [$w cget -state] eq "normal"} {
 	focus $w
     }
 }
