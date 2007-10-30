@@ -1,5 +1,7 @@
 2007-10-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* doc/selection.n: Clarify UTF8_STRING handling. [Bug 1778563]
+
 	* doc/text.n: Clarify search subccommand docs. [Bug 1622919]
 
 2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
