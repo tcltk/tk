@@ -1,5 +1,8 @@
 2007-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/choosedir.tcl: only enable OK button when valid in
+	conjunction with -mustexist. [Bug 1550528]
+
 	* library/listbox.tcl (::tk::ListboxBeginSelect): ignore
 	-takefocus when considering focus on <1>, it is for tab focus.
 
