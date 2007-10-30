@@ -1,3 +1,8 @@
+2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tests/unixWm.test: note TIP#142 results and remove unnecessary
+	catches.
+
 2007-10-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/*.1, doc/*.n, doc/*.3: Lots more GOOBE work.
