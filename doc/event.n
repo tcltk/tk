@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.15 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.16 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -16,7 +16,6 @@ event \- Miscellaneous event facilities: define virtual events and generate even
 .SH SYNOPSIS
 \fBevent\fI option \fR?\fIarg arg ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBevent\fR command provides several facilities for dealing with
@@ -69,7 +68,7 @@ If the \fB\-when\fR option is specified then it determines when the
 event is processed.  Certain events, such as key events, require
 that the window has focus to receive the event properly.
 .TP
-\fBevent info \fR?<<\fIvirtual\fB>>\fR?
+\fBevent info \fR?\fB<<\fIvirtual\fB>>\fR?
 Returns information about virtual events.
 If the \fB<<\fIvirtual\fB>>\fR argument is omitted, the return value
 is a list of all the virtual events that are currently defined.

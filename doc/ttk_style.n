@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_style.n,v 1.7 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_style.n,v 1.8 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_style n 8.5 Tk "Tk Themed Widget"
@@ -14,13 +14,11 @@ ttk_style \- Control overall look and feel of widgets
 .SH SYNOPSIS
 \fBttk::style\fR \fIoption\fR ?\fIargs\fR?
 .BE
-
 .SH NOTES
 .PP
 This manpage has not been written yet.
 Please see the Tcl'2004 conference presentation,
 available at http://tktable.sourceforge.net/tile/tile-tcl2004.pdf
-
 .SH DEFINITIONS
 .PP
 Each widget is assigned a \fIstyle\fR,
@@ -35,10 +33,10 @@ which controls the overall look and feel of an application.
 .SH DESCRIPTION
 The \fBttk::style\fR command takes the following arguments:
 .TP
-\fBttk::style configure \fIstyle\fR ?\fI\-option \fR?\fIvalue option value...\fR? ?
+\fBttk::style configure \fIstyle\fR ?\fI\-option\fR? ?\fIvalue option value...\fR?
 Sets the default value of the specified option(s) in \fIstyle\fR.
 .TP
-\fBttk::style map \fIstyle\fR ?\fI\-option\fR { \fIstatespec value\fR } ... ?
+\fBttk::style map \fIstyle\fR ?\fI\-option\fB { \fIstatespec value\fB }\fR ... ?
 Sets dynamic values of the specified option(s) in \fIstyle\fR.
 Each \fIstatespec / value\fR pair is examined in order;
 the value corresponding to the first matching \fIstatespec\fR
@@ -91,7 +89,6 @@ Returns a list of the available themes.
 .TP
 \fBttk::style theme use\fR \fIthemeName\fR
 Sets the current theme to \fIthemeName\fR, and refreshes all widgets.
-
 .SH LAYOUTS
 A \fIlayout\fR specifies a list of elements, each followed
 by one or more options specifying how to arrange the element.
@@ -105,10 +102,10 @@ Specifies which side of the cavity to place the element;
 one of \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
 If omitted, the element occupies the entire cavity.
 .TP
-\fB\-sticky \fI[nswe]\fR
+\fB\-sticky [\fInswe\fB]\fR
 Specifies where the element is placed inside its allocated parcel.
 .TP
-\fB\-children \fI{ sublayout... }\fR
+\fB\-children {\fIsublayout... \fB}\fR
 Specifies a list of elements to place inside the element.
 .\" Also: -border, -unit, -expand: may go away.
 .PP
@@ -122,9 +119,7 @@ ttk::style layout Horizontal.TScrollbar {
     }
 }
 .CE
-
 .SH "SEE ALSO"
 ttk_intro(n), ttk_widget(n), photo(n)
-
 .SH KEYWORDS
 style, theme, appearance

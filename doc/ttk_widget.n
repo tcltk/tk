@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_widget.n,v 1.9 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_widget.n,v 1.10 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_widget n 8.5 Tk "Tk Themed Widget"
@@ -12,10 +12,8 @@
 .SH NAME
 ttk_widget \- Standard options and commands supported by Tk themed widgets
 .BE
-
 .SH DESCRIPTION
 This manual describes common widget options and commands.
-
 .SH "STANDARD OPTIONS"
 The following options are supported by all Tk themed widgets:
 .OP \-class undefined undefined
@@ -41,7 +39,6 @@ or the empty string.
 See \fIoptions(n)\fR in the Tk reference manual for the full description.
 .OP \-style style Style
 May be used to specify a custom widget style.
-
 .SH "SCROLLABLE WIDGET OPTIONS"
 .PP
 The following options are supported by widgets that
@@ -49,7 +46,8 @@ are controllable by a scrollbar.
 See \fIscrollbar(n)\fR for more information
 .OP \-xscrollcommand xScrollCommand ScrollCommand
 A command prefix, used to communicate with horizontal scrollbars.
-.br
+.RS
+.PP
 When the view in the widget's window changes, the widget will
 generate a Tcl command by concatenating the scroll command and
 two numbers.
@@ -59,7 +57,7 @@ and 1 indicates the end.
 The first fraction indicates the first information in the widget
 that is visible in the window, and the second fraction indicates
 the information just after the last portion that is visible.
-.br
+.PP
 Typically the \fBxScrollCommand\fR option consists of the path name 
 of a \fBscrollbar\fR widget followed by
 .QW set ,
@@ -67,13 +65,13 @@ e.g.
 .QW ".x.scrollbar set" .
 This will cause the scrollbar to be updated whenever the view in the 
 window changes.
-.br
+.PP
 If this option is set to the empty string (the default),
 then no command is be executed.
+.RE
 .OP \-yscrollcommand yScrollCommand ScrollCommand
 A command prefix, used to communicate with vertical scrollbars.
 See the description of \fB\-xscrollcommand\fR above for details.
-
 .SH "LABEL OPTIONS"
 The following options are supported by labels, buttons,
 and other button-like widgets:
@@ -234,13 +232,13 @@ indicating that the bit is off.
 set b [ttk::button .b]
 
 # Disable the widget:
-$b state disabled			
+$b state disabled
 
 # Invoke the widget only if it is currently pressed and enabled:
-$b instate {pressed !disabled} { .b invoke }	
+$b instate {pressed !disabled} { .b invoke }
 
 # Reenable widget:
-$b state !disabled			
+$b state !disabled
 .CE
 .SH "SEE ALSO"
 ttk_intro(n), style(n)
