@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: text.n,v 1.48 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.49 2007/10/30 15:02:14 dkf Exp $
 '\"
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -1643,7 +1643,8 @@ with \fB\-\fR.
 The matching range may be within a single line of text, or run across
 multiple lines (if parts of the pattern can match a new-line).  For
 regular expression matching one can use the various newline-matching
-features such as \fB$\fR to match the end of a line, and to control
+features such as \fB$\fR to match the end of a line, \fB^\fR to match
+the beginning of a line, and to control
 whether \fB.\fR is allowed to match a new-line.
 .VE 8.5
 If \fIstopIndex\fR is specified, the search stops at that index:
