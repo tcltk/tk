@@ -1,5 +1,5 @@
 #
-# $Id: aquaTheme.tcl,v 1.6 2007/10/28 18:56:51 jenglish Exp $
+# $Id: aquaTheme.tcl,v 1.7 2007/10/30 15:22:52 jenglish Exp $
 #
 # Aqua theme (OSX native look and feel)
 #
@@ -17,7 +17,7 @@ namespace eval ttk::theme::aqua {
 	    -insertwidth 1 \
 	    ;
 	ttk::style map . \
-	    -foreground [list  disabled "#a3a3a3"  background "#a3a3a3"] \
+	    -foreground [list  disabled "#7f7f7f"  background "#7f7f7f"] \
 	    -selectbackground [list background "#c3c3c3"  !focus "#c3c3c3"] \
 	    -selectforeground [list background "#a3a3a3"  !focus "#000000"] \
 	    ;
