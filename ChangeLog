@@ -1,5 +1,8 @@
 2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* macosx/tkMacOSXFont.c (InitSystemFonts): 
+	* library/ttk/fonts.tcl: use Monaco 11 (was 9) as Aqua TkFixedFont
+
 	* tests/listbox.test, tests/panedwindow.test, tests/scrollbar.test:
 	* library/bgerror.tcl, library/dialog.tcl, library/listbox.tcl:
 	* library/msgbox.tcl, library/optMenu.tcl, library/tclIndex:
