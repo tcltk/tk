@@ -1,5 +1,7 @@
 2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* tests/winfo.test: winfo-4.5 raise .t to above . for Windows
+
 	* tests/unixWm.test: note TIP#142 results and remove unnecessary
 	catches.
 
