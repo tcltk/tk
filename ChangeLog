@@ -1,20 +1,19 @@
 2007-10-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
-	* generic/tkImgPhoto.c (ImgPhotoCmd): Rename enumermation for
-	somewhat simpler-to-read code. [Bug 1677613]
+	* generic/tkImgPhoto.c (ImgPhotoCmd): Rename enumeration for somewhat
+	simpler-to-read code. [Bug 1677613]
 
 2007-10-30  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkWidget.c: Split up RedisplayWidget()
-	to factor out double-buffering related code.
+	* generic/ttk/ttkWidget.c: Split up RedisplayWidget() to factor out
+	double-buffering related code.
 
 	* macosx/ttkMacOSXAquaTheme.c: Use SetThemeBackGround/
-	kThemeBrushModelessDialogBackground{Active|Inactive}
-	instead of ApplyThemeBackground/kThemeBackgroundWindowHeader
-	(advice from DAS).
+	kThemeBrushModelessDialogBackground{Active|Inactive} instead of
+	ApplyThemeBackground/kThemeBackgroundWindowHeader (advice from DAS).
 
-	* library/ttk/aquaTheme.tcl: Use darker shade for inactive 
-	and disabled text, to match typical values of most
+	* library/ttk/aquaTheme.tcl: Use darker shade for inactive and
+	disabled text, to match typical values of most
 	kThemeXXXTextColorInactive values.
 
 2007-10-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
