@@ -1,3 +1,14 @@
+2007-10-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump version number to 8.5b2.1 to distinguish
+	* library/tk.tcl:	CVS development snapshots from the 8.5b2
+	* unix/configure.in:	release.
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf (2.59)
+	* win/configure:
+
 2007-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/entry.tcl: don't error with Clear event. [Bug 1509288]
