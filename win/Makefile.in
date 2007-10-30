@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.75 2007/09/12 17:10:38 andreas_kupries Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.76 2007/10/30 10:13:51 dkf Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -653,6 +653,11 @@ tkWinTest.$(OBJEXT): tkWinTest.c
 
 tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
+
+# Extra dependency info
+tkConsole.$(OBJEXT): configure Makefile
+tkMain.$(OBJEXT): configure Makefile
+tkWindow.$(OBJEXT): configure Makefile
 
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.
