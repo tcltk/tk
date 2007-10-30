@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: text.n,v 1.49 2007/10/30 15:02:14 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.50 2007/10/30 19:39:26 hobbs Exp $
 '\"
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -53,7 +53,7 @@ at the very last line in the textual data store.
 Specifies the desired height for the window, in units of characters
 in the font given by the \fB\-font\fR option.
 Must be at least one.
-.OP \-inactiveselectionbackground inactiveSelectionBackground Foreground
+.OP \-inactiveselectbackground inactiveSelectBackground Foreground
 .VS 8.5
 Specifies the colour to use for the selection (the \fBsel\fR tag) when
 the window does not have the input focus.  If empty, \fB{}\fR, then no
@@ -914,11 +914,11 @@ tag:  changes in either will automatically be reflected in the
 other.
 .VS 8.5
 Also the
-\fB\-inactiveselectionbackground\fR option for the text widget is used
+\fB\-inactiveselectbackground\fR option for the text widget is used
 instead of \fB\-selectbackground\fR when the text widget does not have
 the focus.  This allows programmatic control over the visualization of
 the \fBsel\fR tag for foreground and background windows, or to have
-\fBsel\fR not shown at all (when \fB\-inactiveselectionbackground\fR is
+\fBsel\fR not shown at all (when \fB\-inactiveselectbackground\fR is
 empty) for background windows.  Each peer text widget has its own
 \fBsel\fR tag which can be separately configured and set.
 .VE 8.5
