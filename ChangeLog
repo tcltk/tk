@@ -11,6 +11,8 @@
 
 2007-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* doc/text.n: fix spelling of -inactiveselectbackground [Bug 1626415]
+
 	* library/entry.tcl: don't error with Clear event. [Bug 1509288]
 
 	* library/ttk/fonts.tcl: use size -12 TkFixedFont (was -10) on X11
