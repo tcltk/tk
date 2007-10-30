@@ -6,7 +6,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" SOURCE: tk/doc/scrollbar.n, r1.4
-'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.7 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.8 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_scrollbar n 8.5 Tk "Tk Themed Widget"
@@ -37,11 +37,13 @@ to change the view in the widget associated with the scrollbar.
 Additional arguments are appended to the value of this option,
 as described in \fBSCROLLING COMMANDS\fR below,
 whenever the user requests a view change by manipulating the scrollbar.
-.br
+.RS
+.PP
 This option typically consists of a two-element list,
 containing the name of a scrollable widget followed by
 either \fBxview\fR (for horizontal scrollbars)
 or \fByview\fR (for vertical scrollbars).
+.RE
 .OP \-orient orient Orient
 One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the scrollbar.

@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_button.n,v 1.7 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_button.n,v 1.8 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk_button n 8.5 Tk "Tk Themed Widget"
@@ -36,9 +36,11 @@ button (meaning, roughly,
 \fBnormal\fR means that it may become the default button, and
 \fBdisabled\fR means that it is not defaultable.
 The default is \fBnormal\fR.
-.br
+.RS
+.PP
 Depending on the theme, the default button may be displayed 
 with an extra highlight ring, or with a different border color.
+.RE
 .OP \-width width Width
 If greater than zero, specifies how much space, in character widths, 
 to allocate for the text label.  

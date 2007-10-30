@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.29 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.30 2007/10/30 21:29:58 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -305,16 +305,18 @@ segments are drawn using the
 color. The other segments are drawn transparent.
 .PP
 The second possible syntax is a character list containing only
-5 possible characters \fB[.,\-_ ]\fR. The space can be used
-to enlarge the space between other line elements, and can not
+5 possible characters
+.QW "\fB.,\-_ \fR" .
+The space can be used
+to enlarge the space between other line elements, and cannot
 occur as the first position in the string. Some examples:
 .CS
-    \-dash .     = \-dash {2 4}
-    \-dash \-     = \-dash {6 4}
-    \-dash \-.    = \-dash {6 4 2 4}
-    \-dash \-..   = \-dash {6 4 2 4 2 4}
-    \-dash {. }  = \-dash {2 8}
-    \-dash ,     = \-dash {4 4}
+\-dash .     \(-> \-dash {2 4}
+\-dash \-     \(-> \-dash {6 4}
+\-dash \-.    \(-> \-dash {6 4 2 4}
+\-dash \-..   \(-> \-dash {6 4 2 4 2 4}
+\-dash {. }  \(-> \-dash {2 8}
+\-dash ,     \(-> \-dash {4 4}
 .CE
 .PP
 The main difference of this syntax with the previous is that it
@@ -1183,7 +1185,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by arcs:
 .CS
 \-dash
@@ -1253,7 +1255,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by bitmaps:
 .CS
 \-state
@@ -1319,7 +1321,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by images:
 .CS
 \-state
@@ -1364,7 +1366,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by lines:
 .CS
 \-dash
@@ -1476,7 +1478,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by ovals:
 .CS
 \-dash
@@ -1523,7 +1525,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by polygons:
 .CS
 \-dash
@@ -1616,7 +1618,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by rectangles:
 .CS
 \-dash
@@ -1664,7 +1666,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by text items:
 .CS
 \-fill
@@ -1745,7 +1747,7 @@ pairs, each of which sets one of the configuration options
 for the item.  These same \fIoption\fR\-\fIvalue\fR pairs may be
 used in \fBitemconfigure\fR widget commands to change the item's
 configuration.
-.br
+.PP
 The following standard options are supported by window items:
 .CS
 \-state

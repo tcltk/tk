@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: spinbox.n,v 1.7 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: spinbox.n,v 1.8 2007/10/30 21:29:59 dkf Exp $
 '\" 
 .so man.macros
 .TH spinbox n 8.4 Tk "Tk Built-In Commands"
@@ -114,7 +114,6 @@ size just large enough to hold its current text.
 Must be a proper boolean value.  If on, the spinbox will wrap around the
 values of data in the widget.
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBspinbox\fR command creates a new window (given by the
@@ -147,7 +146,6 @@ may be used to change the view in the window.  Spinboxes use
 the standard \fBxScrollCommand\fR mechanism for interacting with
 scrollbars (see the description of the \fBxScrollCommand\fR option
 for details).  They also support scanning, as described below.
-
 .SH VALIDATION
 .PP
 Validation works by setting the \fBvalidateCommand\fR
@@ -220,7 +218,6 @@ in the \fBvalidateCommand\fR or \fBinvalidCommand\fR (whichever one you
 were editing the spinbox widget from).  It is also recommended to not set an
 associated \fBtextVariable\fR during validation, as that can cause the
 spinbox widget to become out of sync with the \fBtextVariable\fR.
-
 .SH "WIDGET COMMAND"
 .PP
 The \fBspinbox\fR command creates a new Tcl command whose
@@ -231,6 +228,7 @@ operations on the widget.  It has the following general form:
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.
+.SS INDICES
 .PP
 Many of the widget commands for spinboxes take one or more indices as
 arguments.  An index specifies a particular character in the spinbox's
@@ -275,6 +273,7 @@ or
 .QW \fBsel.f\fR .
 In general, out-of-range indices are automatically rounded to the
 nearest legal value.
+.SS SUBCOMMANDS
 .PP
 The following commands are possible for spinbox widgets:
 .TP
