@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2.2.5 2007/04/29 02:26:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2.2.6 2007/10/30 01:54:59 das Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -332,7 +332,7 @@
 #define DEF_MENUBUTTON_DIRECTION	"below"
 #define DEF_MENUBUTTON_DISABLED_FG_COLOR DISABLED
 #define DEF_MENUBUTTON_DISABLED_FG_MONO	""
-#define DEF_MENUBUTTON_FONT		"menu"
+#define DEF_MENUBUTTON_FONT		"system"
 #define DEF_MENUBUTTON_FG		BLACK
 #define DEF_MENUBUTTON_HEIGHT		"0"
 #define DEF_MENUBUTTON_HIGHLIGHT_BG_COLOR DEF_MENUBUTTON_BG_COLOR
