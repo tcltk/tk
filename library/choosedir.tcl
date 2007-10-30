@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.20 2007/05/16 18:10:35 dgp Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.21 2007/10/30 22:29:41 hobbs Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -58,6 +58,15 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     } else {
 	$data(hiddenBtn) configure -state disabled
 	grid remove $data(hiddenBtn)
+    }
+
+    # When using -mustexist, manage the OK button state for validity
+    $data(okBtn) configure -state normal
+    if {$data(-mustexist)} {
+	$data(ent) configure -validate key \
+	    -validatecommand [list ::tk::dialog::file::chooseDir::IsOK? $w %P]
+    } else {
+	$data(ent) configure -validate none
     }
 
     # Dialog boxes should be transient with respect to their parent,
@@ -238,6 +247,18 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
     return
 }
 
+# Change state of OK button to match -mustexist correctness of entry
+#
+proc ::tk::dialog::file::chooseDir::IsOK? {w text} {
+    upvar ::tk::dialog::file::[winfo name $w] data
+
+    set ok [file isdirectory $text]
+    $data(okBtn) configure -state [expr {$ok ? "normal" : "disabled"}]
+
+    # always return 1
+    return 1
+}
+
 proc ::tk::dialog::file::chooseDir::DblClick {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
     set selection [tk::IconList_CurSelection $data(icons)]
@@ -250,7 +271,7 @@ proc ::tk::dialog::file::chooseDir::DblClick {w} {
 	    return
 	}
     }
-}    
+}
 
 # Gets called when user browses the IconList widget (dragging mouse, arrow
 # keys, etc)
@@ -282,10 +303,8 @@ proc ::tk::dialog::file::chooseDir::Done {w {selectFilePath ""}} {
     if {$selectFilePath eq ""} {
 	set selectFilePath $data(selectPath)
     }
-    if {$data(-mustexist)} {
-	if {![file exists $selectFilePath] || ![file isdir $selectFilePath]} {
-	    return
-	}
+    if {$data(-mustexist) && ![file isdirectory $selectFilePath]} {
+	return
     }
     set Priv(selectFilePath) $selectFilePath
 }
