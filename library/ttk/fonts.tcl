@@ -1,5 +1,5 @@
 #
-# $Id: fonts.tcl,v 1.9 2007/10/30 02:33:09 hobbs Exp $
+# $Id: fonts.tcl,v 1.10 2007/10/30 16:29:55 hobbs Exp $
 #
 # Font specifications.
 #
@@ -136,7 +136,7 @@ switch -- [tk windowingsystem] {
 	set F(size) -12
 	set F(ttsize) -10
 	set F(capsize) -14
-	set F(fixedsize) -10
+	set F(fixedsize) -12
 
 	font configure TkDefaultFont -family $F(family) -size $F(size)
 	font configure TkTextFont    -family $F(family) -size $F(size)
