@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.8 2007/09/07 00:34:54 dgp Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.9 2007/10/31 00:05:53 patthoyts Exp $
  */
 
 #include <stdio.h>
@@ -1599,7 +1599,11 @@ TkGetMiterPoints(
     double deltaX, deltaY;	/* X and y offsets cooresponding to dist
 				 * (fudge factors for bounding box). */
     double p1x, p1y, p2x, p2y, p3x, p3y;
-    static double elevenDegrees = (11.0*2.0*PI)/360.0;
+#ifndef _MSC_VER
+    static const double elevenDegrees = (11.0*2.0*PI)/360.0;
+#else /* msvc8 with -fp:strict requires it this way */
+    static const double elevenDegrees = 0.19198621771937624;
+#endif
 
     /*
      * Round the coordinates to integers to mimic what happens when the line
