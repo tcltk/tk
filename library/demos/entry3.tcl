@@ -4,7 +4,7 @@
 # permitted input is constrained in some way.  It also shows off a
 # password entry.
 #
-# RCS: @(#) $Id: entry3.tcl,v 1.5 2007/10/17 18:55:05 das Exp $
+# RCS: @(#) $Id: entry3.tcl,v 1.6 2007/10/31 16:37:23 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -22,7 +22,7 @@ positionWindow $w
 label $w.msg -font $font -wraplength 5i -justify left -text "Four different\
 	entries are displayed below.  You can add characters by pointing,\
 	clicking and typing, though each is constrained in what it will\
-	accept.  The first only accepts integers or the empty string\
+	accept.  The first only accepts 32-bit integers or the empty string\
 	(checking when focus leaves it) and will flash to indicate any\
 	problem.  The second only accepts strings with fewer than ten\
 	characters and sounds the bell when an attempt to go over the limit\
@@ -64,6 +64,8 @@ proc focusAndFlash {W fg bg {count 9}} {
 }
 
 labelframe $w.l1 -text "Integer Entry"
+# Alternatively try using {string is digit} for arbitrary length numbers,
+# and not just 32-bit ones.
 entry $w.l1.e -validate focus -vcmd {string is integer %P}
 $w.l1.e configure -invalidcommand \
 	"focusAndFlash %W [$w.l1.e cget -fg] [$w.l1.e cget -bg]"
