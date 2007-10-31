@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.8 2007/10/28 18:56:51 jenglish Exp $
+# $Id: combobox.tcl,v 1.9 2007/10/31 04:25:23 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -396,7 +396,9 @@ proc ttk::combobox::Post {cb} {
 #	Unpost the listbox.
 #
 proc ttk::combobox::Unpost {cb} {
-    wm withdraw $cb.popdown
+    if {[winfo exists $cb.popdown]} {
+	wm withdraw $cb.popdown
+    }
     grab release $cb.popdown ;# in case of stuck or unexpected grab [#1239190]
 }
 
