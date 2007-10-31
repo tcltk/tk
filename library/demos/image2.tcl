@@ -3,7 +3,7 @@
 # This demonstration script creates a simple collection of widgets
 # that allow you to select and view images in a Tk label.
 #
-# RCS: @(#) $Id: image2.tcl,v 1.9 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: image2.tcl,v 1.10 2007/10/31 16:11:49 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -22,7 +22,7 @@ proc loadDir w {
     global dirName
 
     $w.f.list delete 0 end
-    foreach i [lsort [glob -directory $dirName *]] {
+    foreach i [lsort [glob -type f -directory $dirName *]] {
 	$w.f.list insert end [file tail $i]
     }
 }
@@ -57,7 +57,12 @@ proc loadImage {w x y} {
     global dirName
 
     set file [file join $dirName [$w.f.list get @$x,$y]]
-    image2a configure -file $file
+    if {[catch {
+	image2a configure -file $file
+    }]} then {
+	# Mark the file as not loadable
+	$w.f.list itemconfigure @$x,$y -bg \#c00000 -selectbackground \#ff0000
+    }
 }
 
 set w .image2

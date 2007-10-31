@@ -1,5 +1,9 @@
 2007-10-31  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* library/demos/image2.tcl (loadImage): Mark non-loadable images
+	as such instead of throwing a nasty dialog, following suggestion
+	from Don Porter.
+
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock): More optimization, derived
 	from [Patch 224066].
 
