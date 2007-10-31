@@ -1,5 +1,9 @@
 2007-10-31  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* library/demos/entry3.tcl: Improved description/comments so that
+	people better understand what is being validated, following suggestion
+	from Don Porter.
+
 	* library/demos/image2.tcl (loadImage): Mark non-loadable images
 	as such instead of throwing a nasty dialog, following suggestion
 	from Don Porter.
