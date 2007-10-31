@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.74 2007/10/30 15:34:57 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.75 2007/10/31 10:24:09 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4424,6 +4424,9 @@ Tk_PhotoPutBlock(
      */
 
     for (hLeft = height; hLeft > 0;) {
+	int pixelSize = blockPtr->pixelSize;
+	int compRuleSet = (compRule == TK_PHOTO_COMPOSITE_SET);
+
 	srcLinePtr = blockPtr->pixelPtr + blockPtr->offset[0];
 	hCopy = MIN(hLeft, blockPtr->height);
 	hLeft -= hCopy;
@@ -4434,10 +4437,10 @@ Tk_PhotoPutBlock(
 	     * much faster.
 	     */
 
-	    if ((blockPtr->pixelSize == 4) && (greenOffset == 1)
+	    if ((pixelSize == 4) && (greenOffset == 1)
 		    && (blueOffset == 2) && (alphaOffset == 3)
 		    && (width <= blockPtr->width)
-		    && (compRule == TK_PHOTO_COMPOSITE_SET)) {
+		    && compRuleSet) {
 		memcpy(destLinePtr, srcLinePtr, (size_t) (width * 4));
 		srcLinePtr += blockPtr->pitch;
 		destLinePtr += pitch;
@@ -4453,35 +4456,56 @@ Tk_PhotoPutBlock(
 		wCopy = MIN(wLeft, blockPtr->width);
 		wLeft -= wCopy;
 		srcPtr = srcLinePtr;
-		for (; wCopy>0 ; --wCopy, srcPtr+=blockPtr->pixelSize) {
-		    int alpha = srcPtr[alphaOffset];
 
+		/*
+		 * But we might be lucky and be able to use fairly fast loops.
+		 * It's worth checking...
+		 */
+
+		if (alphaOffset == 0) {
 		    /*
-		     * In the easy case, we can just copy.
+		     * This is the non-alpha case, so can still be fairly
+		     * fast. Note that in the non-alpha-source case, the
+		     * compositing rule doesn't apply.
 		     */
 
-		    if (!alphaOffset || (alpha == 255)) {
-			/*
-			 * New solid part of the image.
-			 */
-
+		    for (; wCopy>0 ; --wCopy, srcPtr+=pixelSize) {
 			*destPtr++ = srcPtr[0];
 			*destPtr++ = srcPtr[greenOffset];
 			*destPtr++ = srcPtr[blueOffset];
 			*destPtr++ = 255;
-			continue;
 		    }
-
+		    continue;
+		} else if (compRuleSet) {
 		    /*
-		     * Combine according to the compositing rule.
+		     * This is the SET compositing rule, which just replaces
+		     * what was there before with the new data. This is
+		     * another fairly fast case. No point in doing a memcpy();
+		     * the order of channels is probably wrong.
 		     */
 
-		    if ((compRule == TK_PHOTO_COMPOSITE_SET) || !destPtr[3]) {
+		    for (; wCopy>0 ; --wCopy, srcPtr+=pixelSize) {
+			*destPtr++ = srcPtr[0];
+			*destPtr++ = srcPtr[greenOffset];
+			*destPtr++ = srcPtr[blueOffset];
+			*destPtr++ = srcPtr[alphaOffset];
+		    }
+		    continue;
+		}
+
+		/*
+		 * Bother; need to consider the alpha value of each pixel to
+		 * know what to do.
+		 */
+
+		for (; wCopy>0 ; --wCopy, srcPtr+=pixelSize) {
+		    int alpha = srcPtr[alphaOffset];
+
+		    if (alpha == 255 || !destPtr[3]) {
 			/*
-			 * Either this is the SET rule (we overwrite whatever
-			 * is there) or the destination is entirely blank. In
-			 * both cases, we just set the destination to the
-			 * source.
+			 * Either the source is 100% opaque, or the
+			 * destination is entirely blank. In all cases, we
+			 * just set the destination to the source.
 			 */
 
 			*destPtr++ = srcPtr[0];
@@ -4491,12 +4515,20 @@ Tk_PhotoPutBlock(
 			continue;
 		    }
 
+		    /*
+		     * Can still skip doing work if the source is 100%
+		     * transparent at this point.
+		     */
+
 		    if (alpha) {
 			int Alpha = destPtr[3];
 
 			/*
-			 * This implements the Porter-Duff Source-Over
-			 * compositing rule.
+			 * OK, there's real work to be done. Luckily, there's
+			 * a substantial literature on what to do in this
+			 * case. In particular, Porter and Duff have done a
+			 * taxonomy of compositing rules, and the right one is
+			 * the "Source Over" rule. This code implements that.
 			 */
 
 			destPtr[0] = PD_SRC_OVER(srcPtr[0], alpha, destPtr[0],
@@ -4507,10 +4539,6 @@ Tk_PhotoPutBlock(
 				destPtr[2], Alpha);
 			destPtr[3] = PD_SRC_OVER_ALPHA(alpha, Alpha);
 		    }
-
-		    /*
-		     * else should be empty space
-		     */
 
 		    destPtr += 4;
 		}
