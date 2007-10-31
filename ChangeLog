@@ -1,21 +1,26 @@
+2007-10-31  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock): More optimization, derived
+	from [Patch 224066].
+
 2007-10-30  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/combobox.tcl(Unpost): BUGFIX: Unpost can be called
-	with no preceding Post.
+	* library/ttk/combobox.tcl (Unpost): BUGFIX: Unpost can be called with
+	no preceding Post.
 
 2007-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/rules.vc:     Use -fp:strict with msvc8 as -fp:precise fails on
-	* generic/tkObj.c:  amd64 builds. Fix the two places in Tk that generate
-	* generic/tkTrig.c: errors with msvc8 when using this flag.
+	* generic/tkObj.c:  amd64 builds. Fix the two places in Tk that
+	* generic/tkTrig.c: generate errors with msvc8 when using this flag.
 
 2007-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/choosedir.tcl: only enable OK button when valid in
 	conjunction with -mustexist. [Bug 1550528]
 
-	* library/listbox.tcl (::tk::ListboxBeginSelect): ignore
-	-takefocus when considering focus on <1>, it is for tab focus.
+	* library/listbox.tcl (::tk::ListboxBeginSelect): ignore -takefocus
+	when considering focus on <1>, it is for tab focus.
 
 2007-10-30  Don Porter  <dgp@users.sourceforge.net>
 
@@ -38,10 +43,8 @@
 
 2007-10-30  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
-	* library/demos/unicodeout.tcl: Fixed Arabic and Hebrew rendering
-	on Windows. [Bug 1803723]
-
-2007-10-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+	* library/demos/unicodeout.tcl: Fixed Arabic and Hebrew rendering on
+	Windows. [Bug 1803723]
 
 	* generic/tkImgPhoto.c (ImgPhotoCmd): Rename enumeration for somewhat
 	simpler-to-read code. [Bug 1677613]
@@ -67,7 +70,7 @@
 
 2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* macosx/tkMacOSXFont.c (InitSystemFonts): 
+	* macosx/tkMacOSXFont.c (InitSystemFonts):
 	* library/ttk/fonts.tcl: use Monaco 11 (was 9) as Aqua TkFixedFont
 
 	* tests/listbox.test, tests/panedwindow.test, tests/scrollbar.test:
