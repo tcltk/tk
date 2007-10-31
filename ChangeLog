@@ -1,3 +1,8 @@
+2007-10-30  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl(Unpost): BUGFIX: Unpost can be called
+	with no preceding Post.
+
 2007-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/rules.vc:     Use -fp:strict with msvc8 as -fp:precise fails on
