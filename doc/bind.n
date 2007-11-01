@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: bind.n,v 1.26 2007/11/01 10:35:12 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.27 2007/11/01 11:33:37 das Exp $
 '\"
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -105,16 +105,16 @@ manual page for each widget for details.
 Modifiers consist of any of the following values:
 .DS
 .ta 6c
-\fBControl\fR	\fBMod2, M2\fR
+\fBControl\fR	\fBMod1, M1, Command\fR	    
+\fBAlt\fR	\fBMod2, M2, Option\fR
 \fBShift\fR	\fBMod3, M3\fR
 \fBLock\fR	\fBMod4, M4\fR
-\fBButton1, B1\fR	\fBMod5, M5\fR
-\fBButton2, B2\fR	\fBMeta, M\fR
-\fBButton3, B3\fR	\fBAlt\fR
-\fBButton4, B4\fR	\fBDouble\fR
-\fBButton5, B5\fR	\fBTriple\fR
-\fBMod1, M1\fR	\fBQuadruple\fR
-\fBCommand\fR	\fBExtended\fR
+\fBExtended\fR	\fBMod5, M5\fR
+\fBButton1, B1\fR	\fBMeta, M\fR
+\fBButton2, B2\fR	\fBDouble\fR
+\fBButton3, B3\fR	\fBTriple\fR
+\fBButton4, B4\fR	\fBQuadruple\fR
+\fBButton5, B5\fR
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.
@@ -150,8 +150,8 @@ substantial mouse motion in between.  For example, \fB<Double\-Button\-1>\fR
 is equivalent to \fB<Button\-1><Button\-1>\fR with the extra time and space
 requirement.
 .PP
-The \fBCommand\fR modifier is much like the \fBControl\fR and
-\fBAlt\fR modifiers, but is only supported on Macintoshes.
+The \fBCommand\fR and \fBOption\fR modifiers are equivalents of \fBMod1\fR
+resp. \fBMod2\fR, they correspond to Macintosh-specific modifier keys.
 .PP
 .VS 8.5
 The \fBExtended\fR modifier is, at present, specific to Windows.  It
