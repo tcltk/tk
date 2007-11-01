@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.10 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: label.n,v 1.11 2007/11/01 10:59:42 dkf Exp $
 '\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
@@ -49,7 +49,6 @@ for text it is in characters.
 If this option is not specified, the label's desired width is computed
 from the size of the image or bitmap or text being displayed in it.
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBlabel\fR command creates a new window (given by the
@@ -123,9 +122,7 @@ pack .l   \-side left   \-fill y
 pack .r   \-side right  \-fill y
 pack .mid \-expand 1    \-fill both
 .CE
-
 .SH "SEE ALSO"
-labelframe(n), button(n), ttk_label(n)
-
+labelframe(n), button(n), ttk::label(n)
 .SH KEYWORDS
 label, widget

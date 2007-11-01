@@ -4,13 +4,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_image.n,v 1.10 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_image.n,v 1.11 2007/11/01 10:59:43 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_image n 8.5 Tk "Tk Themed Widget"
+.TH ttk::image n 8.5 Tk "Tk Themed Widget"
 .BS
 .SH NAME
-ttk_image \- Define an element based on an image
+ttk::image \- Define an element based on an image
 .SH SYNOPSIS
 \fBttk::style element create \fIname\fR \fBimage\fR \fIimageSpec\fR ?\fIoptions\fR?
 .BE

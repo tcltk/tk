@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: labelframe.n,v 1.6 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: labelframe.n,v 1.7 2007/11/01 10:59:42 dkf Exp $
 '\" 
 .so man.macros
 .TH labelframe n 8.4 Tk "Tk Built-In Commands"
@@ -85,7 +85,6 @@ acceptable to \fBTk_GetPixels\fR.
 If this option is less than or equal to zero then the window will
 not request any size at all.
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBlabelframe\fR command creates a new window (given by the
@@ -177,9 +176,7 @@ set bun    white
 set cheese none
 set pickle none
 .CE
-
 .SH "SEE ALSO"
-frame(n), label(n), ttk_labelframe(n)
-
+frame(n), label(n), ttk::labelframe(n)
 .SH KEYWORDS
 labelframe, widget

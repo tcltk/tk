@@ -4,14 +4,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_frame.n,v 1.6 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_frame.n,v 1.7 2007/11/01 10:59:43 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_frame n 8.5 Tk "Tk Themed Widget"
+.TH ttk::frame n 8.5 Tk "Tk Themed Widget"
 .BS
-.\" Use _ instead of :: as the name becomes a filename on install
 .SH NAME
-ttk_frame \- Simple container widget
+ttk::frame \- Simple container widget
 .SH SYNOPSIS
 \fBttk::frame\fR \fIpathName \fR?\fIoptions\fR?
 .BE
@@ -38,7 +37,7 @@ If specified, the widget's requested height in pixels.
 .SH "WIDGET COMMAND"
 Supports the standard widget commands
 \fBconfigure\fR, \fBcget\fR, \fBinstate\fR, and \fBstate\fR;
-see \fIttk_widget(n)\fR.
+see \fIttk::widget(n)\fR.
 .SH "NOTES"
 Note that if the \fBpack\fR, \fBgrid\fR, or other geometry managers
 are used to manage the children of the \fBframe\fR,
@@ -47,6 +46,6 @@ over the \fBframe\fR widget's \fB\-width\fR and \fB\-height\fR options.
 \fBpack propagate\fR and \fBgrid propagate\fR can be used
 to change this.
 .SH "SEE ALSO"
-ttk_widget(n), ttk_labelframe(n), frame(n)
+ttk::widget(n), ttk::labelframe(n), frame(n)
 .SH "KEYWORDS"
 widget, frame, container

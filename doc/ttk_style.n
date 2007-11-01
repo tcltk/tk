@@ -4,13 +4,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_style.n,v 1.8 2007/10/30 21:29:59 dkf Exp $
+'\" RCS: @(#) $Id: ttk_style.n,v 1.9 2007/11/01 10:59:44 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_style n 8.5 Tk "Tk Themed Widget"
+.TH ttk::style n 8.5 Tk "Tk Themed Widget"
 .BS
 .SH NAME
-ttk_style \- Control overall look and feel of widgets
+ttk::style \- Control overall look and feel of widgets
 .SH SYNOPSIS
 \fBttk::style\fR \fIoption\fR ?\fIargs\fR?
 .BE
@@ -120,6 +120,6 @@ ttk::style layout Horizontal.TScrollbar {
 }
 .CE
 .SH "SEE ALSO"
-ttk_intro(n), ttk_widget(n), photo(n)
+ttk::intro(n), ttk::widget(n), photo(n)
 .SH KEYWORDS
 style, theme, appearance

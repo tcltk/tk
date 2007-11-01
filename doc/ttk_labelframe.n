@@ -4,18 +4,16 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.6 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.7 2007/11/01 10:59:43 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_labelframe n 8.5 Tk "Tk Themed Widget"
+.TH ttk::labelframe n 8.5 Tk "Tk Themed Widget"
 .BS
-.\" Use _ instead of :: as the name becomes a filename on install
 .SH NAME
-ttk_labelframe \- Container widget with optional label
+ttk::labelframe \- Container widget with optional label
 .SH SYNOPSIS
 \fBttk::labelframe\fR \fIpathName \fR?\fIoptions\fR?
 .BE
-
 .SH DESCRIPTION
 A \fBttk::labelframe\fR widget is a container used to group other widgets
 together.  It has an optional label, which may be a plain text string or
@@ -23,7 +21,6 @@ another widget.
 .SO
 \-class	\-cursor	\-takefocus	\-style
 .SE
-
 .SH "WIDGET-SPECIFIC OPTIONS"
 .\" XXX: Currently included, but may go away: 
 .\" XXX: .OP -borderwidth borderWidth BorderWidth
@@ -63,16 +60,13 @@ same top-level widget as the \fBlabelframe\fR.
 If specified, the widget's requested width in pixels.
 .OP \-height height Height
 If specified, the widget's requested height in pixels.
-(See \fIttk_frame(n)\fR for further notes on \fB\-width\fR and
+(See \fIttk::frame(n)\fR for further notes on \fB\-width\fR and
 \fB\-height\fR).
-
 .SH "WIDGET COMMAND"
 Supports the standard widget commands
 \fBconfigure\fR, \fBcget\fR, \fBinstate\fR, and \fBstate\fR;
-see \fIttk_widget(n)\fR.
-
+see \fIttk::widget(n)\fR.
 .SH "SEE ALSO"
-ttk_widget(n), ttk_frame(n), labelframe(n)
-
+ttk::widget(n), ttk::frame(n), labelframe(n)
 .SH "KEYWORDS"
 widget, frame, container, label, groupbox

@@ -4,15 +4,14 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_intro.n,v 1.7 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_intro.n,v 1.8 2007/11/01 10:59:43 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_intro n 8.5 Tk "Tk Themed Widget"
+.TH ttk::intro n 8.5 Tk "Tk Themed Widget"
 .BS
 .SH NAME
-ttk_intro \- Introduction to the Tk theme engine
+ttk::intro \- Introduction to the Tk theme engine
 .BE
-
 .SH "OVERVIEW"
 The Tk themed widget set is based on a revised and enhanced version
 of TIP #48 (http://tip.tcl.tk/48) specified style engine.
@@ -23,7 +22,6 @@ the code implementing its appearance.
 Widget class bindings are primarily responsible for
 maintaining the widget state and invoking callbacks;
 all aspects of the widgets appearance is
-
 .SH "THEMES"
 A \fItheme\fR is a collection of elements and styles 
 that determine the look and feel of the widget set.
@@ -41,7 +39,6 @@ Application suite
 Blend in with the rest of the desktop (Gnome, KDE, Java)
 .IP \(bu
 And, of course: eye candy.
-
 .SH "ELEMENTS"
 An \fIelement\fR displays an individual part of a widget.
 For example, a vertical scrollbar widget contains \fBuparrow\fR,
@@ -93,7 +90,6 @@ style layout Horizontal.TScrollbar {
 By default, the layout for a widget is the same as its class name.
 Some widgets may override this (for example, the \fBscrollbar\fR
 widget chooses different layouts based on the \fB\-orient\fR option).
-
 .SH "STATES"
 In standard Tk, many widgets have a \fB\-state\fR option
 which (in most cases) is either \fBnormal\fR or \fBdisabled\fR.
@@ -105,7 +101,7 @@ The themed Tk widgets generalizes this idea:
 every widget has a bitmap of independent state flags.
 Widget state flags include \fBactive\fR, \fBdisabled\fR,
 \fBpressed\fR, \fBfocus\fR, etc., 
-(see \fIttk_widget(n)\fR for the full list of state flags).
+(see \fIttk::widget(n)\fR for the full list of state flags).
 .PP
 Instead of a \fB\-state\fR option, every widget now has 
 a \fBstate\fR widget command which is used to set or query
@@ -139,7 +135,6 @@ in the \fBpressed\fR state.
 but not by much).
 .PP
 \fINote to self: rewrite that paragraph.  It's horrible.\fR
-
 .SH "STYLES"
 Each widget is associated with a \fIstyle\fR, 
 which specifies values for element resources.
@@ -165,6 +160,5 @@ style map TButton \e
 	\-relief [list {pressed !disabled} sunken] \e
 	;
 .CE
-
 .SH "SEE ALSO"
-ttk_widget(n), ttk_style(n)
+ttk::widget(n), ttk::style(n)

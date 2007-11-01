@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.19 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.20 2007/11/01 10:59:42 dkf Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -22,7 +22,6 @@ menu, tk_menuSetFocus \- Create and manipulate menu widgets
 \-activeborderwidth	\-cursor		\-relief
 \-activeforeground	\-disabledforeground	\-takefocus
 \-background	\-font
-
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-postcommand postCommand Command
@@ -68,7 +67,6 @@ changed, this does not affect the menu widget's behavior. This is used
 by the cloning mechanism and is not normally set outside of the Tk
 library.
 .BE
-
 .SH INTRODUCTION
 .PP
 The \fBmenu\fR command creates a new top-level window (given
@@ -751,9 +749,7 @@ individual widgets or by redefining the class bindings.
 At present it is not possible to use the
 option database to specify values for the options to individual
 entries.
-
 .SH "SEE ALSO"
-bind(n), menubutton(n), ttk_menubutton(n), toplevel(n)
-
+bind(n), menubutton(n), ttk::menubutton(n), toplevel(n)
 .SH KEYWORDS
 menu, widget

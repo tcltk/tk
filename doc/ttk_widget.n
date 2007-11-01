@@ -4,13 +4,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_widget.n,v 1.10 2007/10/30 21:29:59 dkf Exp $
+'\" RCS: @(#) $Id: ttk_widget.n,v 1.11 2007/11/01 10:59:44 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_widget n 8.5 Tk "Tk Themed Widget"
+.TH ttk::widget n 8.5 Tk "Tk Themed Widget"
 .BS
 .SH NAME
-ttk_widget \- Standard options and commands supported by Tk themed widgets
+ttk::widget \- Standard options and commands supported by Tk themed widgets
 .BE
 .SH DESCRIPTION
 This manual describes common widget options and commands.
@@ -241,6 +241,6 @@ $b instate {pressed !disabled} { .b invoke }
 $b state !disabled
 .CE
 .SH "SEE ALSO"
-ttk_intro(n), style(n)
+ttk::intro(n), style(n)
 .SH KEYWORDS
 state, configure, option
