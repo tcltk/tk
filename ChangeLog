@@ -1,3 +1,7 @@
+2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/colors.n: Added list of Windows system colors. [Bug 945409]
+
 2007-11-01  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXColor.c (GetThemeColor): improve translation of RGB
