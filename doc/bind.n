@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: bind.n,v 1.27 2007/11/01 11:33:37 das Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.28 2007/11/01 23:03:54 dkf Exp $
 '\"
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -105,16 +105,16 @@ manual page for each widget for details.
 Modifiers consist of any of the following values:
 .DS
 .ta 6c
-\fBControl\fR	\fBMod1, M1, Command\fR	    
-\fBAlt\fR	\fBMod2, M2, Option\fR
-\fBShift\fR	\fBMod3, M3\fR
-\fBLock\fR	\fBMod4, M4\fR
-\fBExtended\fR	\fBMod5, M5\fR
-\fBButton1, B1\fR	\fBMeta, M\fR
-\fBButton2, B2\fR	\fBDouble\fR
-\fBButton3, B3\fR	\fBTriple\fR
-\fBButton4, B4\fR	\fBQuadruple\fR
-\fBButton5, B5\fR
+\fBControl\fR	\fBMod1\fR, \fBM1\fR, \fBCommand\fR
+\fBAlt\fR	\fBMod2\fR, \fBM2\fR, \fBOption\fR
+\fBShift\fR	\fBMod3\fR, \fBM3\fR
+\fBLock\fR	\fBMod4\fR, \fBM4\fR
+\fBExtended\fR	\fBMod5\fR, \fBM5\fR
+\fBButton1\fR, \fBB1\fR	\fBMeta\fR, \fBM\fR
+\fBButton2\fR, \fBB2\fR	\fBDouble\fR
+\fBButton3\fR, \fBB3\fR	\fBTriple\fR
+\fBButton4\fR, \fBB4\fR	\fBQuadruple\fR
+\fBButton5\fR, \fBB5\fR
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.
@@ -171,17 +171,17 @@ couple non-standard X event types that were added to better support
 the Macintosh and Windows platforms.  Below is a list of all the valid
 types; where two names appear together, they are synonyms.
 .DS
-.ta \w'ButtonPress, Button\0\0\0'u +\w'KeyPress, Key\0\0\0'u
-\fBActivate	Destroy	Map
-ButtonPress, Button	Enter	MapRequest
-ButtonRelease	Expose	Motion
-Circulate	FocusIn	MouseWheel
-CirculateRequest	FocusOut	Property
-Colormap	Gravity	Reparent
-Configure	KeyPress, Key	ResizeRequest
-ConfigureRequest	KeyRelease	Unmap
-Create	Leave	Visibility
-Deactivate\fR
+.ta \w'\fBButtonPress, Button\0\0\0\fR'u +\w'\fBKeyPress, Key\0\0\0\fR'u
+\fBActivate\fR	\fBDestroy\fR	\fBMap\fR
+\fBButtonPress\fR, \fBButton\fR	\fBEnter\fR	\fBMapRequest\fR
+\fBButtonRelease\fR	\fBExpose\fR	\fBMotion\fR
+\fBCirculate\fR	\fBFocusIn\fR	\fBMouseWheel\fR
+\fBCirculateRequest\fR	\fBFocusOut\fR	\fBProperty\fR
+\fBColormap\fR	\fBGravity\fR	\fBReparent\fR
+\fBConfigure\fR	\fBKeyPress\fR, \fBKey\fR	\fBResizeRequest\fR
+\fBConfigureRequest\fR	\fBKeyRelease\fR	\fBUnmap\fR
+\fBCreate\fR	\fBLeave\fR	\fBVisibility\fR
+\fBDeactivate\fR
 .DE
 Most of the above events have the same fields and behaviors as events
 in the X Windowing system.  You can find more detailed descriptions of
@@ -442,17 +442,17 @@ the string will be one of the following:
 .RS
 .DS
 .ta 6c
-\fBNotifyAncestor	NotifyNonlinearVirtual
-NotifyDetailNone	NotifyPointer
-NotifyInferior	NotifyPointerRoot
-NotifyNonlinear	NotifyVirtual\fR
+\fBNotifyAncestor\fR	\fBNotifyNonlinearVirtual\fR
+\fBNotifyDetailNone\fR	\fBNotifyPointer\fR
+\fBNotifyInferior\fR	\fBNotifyPointerRoot\fR
+\fBNotifyNonlinear\fR	\fBNotifyVirtual\fR
 .DE
 For \fBConfigureRequest\fR events, the string will be one of:
 .DS
 .ta 6c
-\fBAbove	Opposite
-Below	None
-BottomIf	TopIf\fR
+\fBAbove\fR	\fBOpposite\fR
+\fBBelow\fR	\fBNone\fR
+\fBBottomIf\fR	\fBTopIf\fR
 .DE
 .VS 8.5
 For virtual events, the string will be whatever value is stored in the
