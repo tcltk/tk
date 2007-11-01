@@ -1,5 +1,7 @@
 2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* doc/text.n: Fixed mistake in [$t tag remove] docs. [Bug 1792191]
+
 	* doc/bind.n: Documentated the Command modifier. [Bug 1232908]
 
 	* doc/console.n, doc/wish.1: Made it clearer when and why the console
