@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: text.n,v 1.51 2007/10/30 21:29:59 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.52 2007/11/01 10:37:57 dkf Exp $
 '\"
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -1860,8 +1860,8 @@ at \fIindex1\fR and ending just before
 \fIindex2\fR (the character at \fIindex2\fR is not affected).
 A single command may contain any number of \fIindex1\fR\-\fIindex2\fR
 pairs.
-If the last \fIindex2\fR is omitted then the single character at
-\fIindex1\fR is tagged.
+If the last \fIindex2\fR is omitted then the tag is removed from the
+single character at \fIindex1\fR.
 If there are no characters in the specified range (e.g. \fIindex1\fR
 is past the end of the file or \fIindex2\fR is less than or equal
 to \fIindex1\fR) then the command has no effect.
