@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.12 2005/04/06 21:11:54 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.12.2.1 2007/11/01 16:37:14 dgp Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -16,7 +16,6 @@ event \- Miscellaneous event facilities: define virtual events and generate even
 .SH SYNOPSIS
 \fBevent\fI option \fR?\fIarg arg ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBevent\fR command provides several facilities for dealing with
@@ -62,14 +61,14 @@ argument of the \fBbind\fR command except that it must consist
 of a single event pattern, not a sequence.
 \fIOption-value\fR pairs may be used to specify additional
 attributes of the event, such as the x and y mouse position;  see
-EVENT FIELDS below.  If the \fB\-when\fR option is not specified, the
+\fBEVENT FIELDS\fR below.  If the \fB\-when\fR option is not specified, the
 event is processed immediately:  all of the handlers for the event
 will complete before the \fBevent generate\fR command returns.
 If the \fB\-when\fR option is specified then it determines when the
 event is processed.  Certain events, such as key events, require
 that the window has focus to receive the event properly.
 .TP
-\fBevent info \fR?<<\fIvirtual\fB>>\fR?
+\fBevent info \fR?\fB<<\fIvirtual\fB>>\fR?
 Returns information about virtual events.
 If the \fB<<\fIvirtual\fB>>\fR argument is omitted, the return value
 is a list of all the virtual events that are currently defined.
@@ -80,8 +79,9 @@ not defined then an empty string is returned.
 .SH "EVENT FIELDS"
 .PP
 The following options are supported for the \fBevent generate\fR
-command.  These correspond to the ``%'' expansions
-allowed in binding scripts for the \fBbind\fR command.
+command.  These correspond to the
+.QW %
+expansions allowed in binding scripts for the \fBbind\fR command.
 .TP
 \fB\-above\fI window\fR
 \fIWindow\fR specifies the \fIabove\fR field for the event,
@@ -119,7 +119,7 @@ for the \fBMouseWheel\fR event.  The \fIdelta\fR refers to the
 direction and magnitude the mouse wheel was rotated.  Note the value
 is not a screen distance but are units of motion in the mouse wheel.
 Typically these values are multiples of 120.  For example, 120 should
-scroll the text widget up 4 lines and -240 would scroll the text
+scroll the text widget up 4 lines and \-240 would scroll the text
 widget down 8 lines.  Of course, other widgets may define different
 behaviors for mouse wheel motion.  This field corresponds to the
 \fB%D\fR substitution for binding scripts.
@@ -333,11 +333,15 @@ changed.
 .TP
 \fB<<TraverseIn>>\fR
 This is sent to a widget when the focus enters the widget because of a
-user-driven "tab to widget" action.
+user-driven
+.QW "tab to widget"
+action.
 .TP
 \fB<<TraverseOut>>\fR
 This is sent to a widget when the focus leaves the widget because of a
-user-driven "tab to widget" action.
+user-driven
+.QW "tab to widget"
+action.
 .PP
 Tk defines the following virtual events for the purposes of unifying
 bindings across multiple platforms. Users expect them to behave in the

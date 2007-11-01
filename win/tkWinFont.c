@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.32.2.2 2007/10/24 12:59:36 dgp Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.32.2.3 2007/11/01 16:37:25 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -397,18 +397,19 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
     NONCLIENTMETRICS ncMetrics;
     ICONMETRICS iconMetrics;
     HFONT hFont;
-    
+
     interp = (Tcl_Interp *) mainPtr->interp;
     tkwin = (Tk_Window) mainPtr->winPtr;
-    
+
     /* force this for now */
-    if (((TkWindow *) tkwin)->mainPtr == NULL)
+    if (((TkWindow *) tkwin)->mainPtr == NULL) {
         ((TkWindow *) tkwin)->mainPtr = mainPtr;
-    
+    }
+
     ncMetrics.cbSize = sizeof(ncMetrics);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
 	    &ncMetrics, 0);
-    
+
     CreateNamedSystemLogFont(interp, tkwin, "TkDefaultFont",
 	    &ncMetrics.lfMessageFont);
     CreateNamedSystemLogFont(interp, tkwin, "TkHeadingFont",
@@ -429,10 +430,10 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
 	    &iconMetrics, 0);
     CreateNamedSystemLogFont(interp, tkwin, "TkIconFont",
 	    &iconMetrics.lfFont);
-    
+
     hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
     CreateNamedSystemFont(interp, tkwin, "TkFixedFont", hFont);
-    
+
     /* 
      * Setup the remaining standard Tk font names as named fonts.
      */
