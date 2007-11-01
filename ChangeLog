@@ -1,5 +1,7 @@
 2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* doc/bind.n: Documentated the Command modifier. [Bug 1232908]
+
 	* doc/console.n, doc/wish.1: Made it clearer when and why the console
 	command is present. [Bug 1386955]
 

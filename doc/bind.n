@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: bind.n,v 1.25 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.26 2007/11/01 10:35:12 dkf Exp $
 '\"
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -17,7 +17,6 @@ bind \- Arrange for X events to invoke Tcl scripts
 .SH SYNOPSIS
 \fBbind\fI tag\fR ?\fIsequence\fR? ?\fB+\fR??\fIscript\fR?
 .BE
-
 .SH "INTRODUCTION"
 .PP
 The \fBbind\fR command associates Tcl scripts with X events.
@@ -76,7 +75,7 @@ pattern matches a \fBKeyPress\fR event for the particular
 character.  The second form of pattern is longer but more general.
 It has the following syntax:
 .CS
-\fB<\fImodifier-modifier-type-detail\fB>\fR
+\fB<\fImodifier\-modifier\-type\-detail\fB>\fR
 .CE
 The entire event pattern is surrounded by angle brackets.
 Inside the angle brackets are zero or more modifiers, an event
@@ -115,7 +114,7 @@ Modifiers consist of any of the following values:
 \fBButton4, B4\fR	\fBDouble\fR
 \fBButton5, B5\fR	\fBTriple\fR
 \fBMod1, M1\fR	\fBQuadruple\fR
-\fBExtended\fR
+\fBCommand\fR	\fBExtended\fR
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.
@@ -127,8 +126,8 @@ must include all of those specified in the event pattern.
 An event may also contain additional modifiers not specified in
 the binding.
 For example, if button 1 is pressed while the shift and control keys
-are down, the pattern \fB<Control-Button-1>\fR will match
-the event, but \fB<Mod1-Button-1>\fR will not.
+are down, the pattern \fB<Control\-Button\-1>\fR will match
+the event, but \fB<Mod1\-Button\-1>\fR will not.
 If no modifiers are specified, then any combination of modifiers may
 be present in the event.
 .PP
@@ -147,9 +146,12 @@ events. They cause a particular event pattern to be repeated 2, 3 or 4
 times, and also place a time and space requirement on the sequence: for a
 sequence of events to match a \fBDouble\fR, \fBTriple\fR or \fBQuadruple\fR
 pattern, all of the events must occur close together in time and without
-substantial mouse motion in between.  For example, \fB<Double-Button-1>\fR
-is equivalent to \fB<Button-1><Button-1>\fR with the extra time and space
+substantial mouse motion in between.  For example, \fB<Double\-Button\-1>\fR
+is equivalent to \fB<Button\-1><Button\-1>\fR with the extra time and space
 requirement.
+.PP
+The \fBCommand\fR modifier is much like the \fBControl\fR and
+\fBAlt\fR modifiers, but is only supported on Macintoshes.
 .PP
 .VS 8.5
 The \fBExtended\fR modifier is, at present, specific to Windows.  It
@@ -355,7 +357,7 @@ position in the stacking order.
 .PP
 The last part of a long event specification is \fIdetail\fR.  In the
 case of a \fBButtonPress\fR or \fBButtonRelease\fR event, it is the
-number of a button (1-5).  If a button number is given, then only an
+number of a button (1\-5).  If a button number is given, then only an
 event on that particular button will match;  if no button number is
 given, then an event on any button will match.  Note:  giving a
 specific button number is different than specifying a button modifier;
@@ -364,7 +366,7 @@ while in the second it refers to some other button that is already
 depressed when the matching event occurs.  If a button
 number is given then \fItype\fR may be omitted:  if will default
 to \fBButtonPress\fR.  For example, the specifier \fB<1>\fR
-is equivalent to \fB<ButtonPress-1>\fR.
+is equivalent to \fB<ButtonPress\-1>\fR.
 .PP
 If the event type is \fBKeyPress\fR or \fBKeyRelease\fR, then
 \fIdetail\fR may be specified in the form of an X keysym.  Keysyms
@@ -387,8 +389,8 @@ If necessary, you can use the \fB%K\fR notation described below
 to print out the keysym name for a particular key.
 If a keysym \fIdetail\fR is given, then the
 \fItype\fR field may be omitted;  it will default to \fBKeyPress\fR.
-For example, \fB<Control-comma>\fR is equivalent to
-\fB<Control-KeyPress-comma>\fR.
+For example, \fB<Control\-comma>\fR is equivalent to
+\fB<Control\-KeyPress\-comma>\fR.
 .SH "BINDING SCRIPTS AND SUBSTITUTIONS"
 .PP
 The \fIscript\fR argument to \fBbind\fR is a Tcl script,
@@ -657,13 +659,13 @@ same sequence, and both of those virtual events are bound to the same window
 tag, then only one of the virtual events will be triggered, and it will
 be picked at random:
 .CS
-event add <<Paste>> <Control-y>
-event add <<Paste>> <Button-2>
-event add <<Scroll>> <Button-2>
+event add <<Paste>> <Control\-y>
+event add <<Paste>> <Button\-2>
+event add <<Scroll>> <Button\-2>
 \fBbind\fR Entry <<Paste>> {puts Paste}
 \fBbind\fR Entry <<Scroll>> {puts Scroll}
 .CE
-If the user types Control-y, the \fB<<Paste>>\fR binding
+If the user types Control\-y, the \fB<<Paste>>\fR binding
 will be invoked, but if the user presses button 2 then one of
 either the \fB<<Paste>>\fR or the \fB<<Scroll>>\fR bindings will
 be invoked, but exactly which one gets invoked is undefined.
@@ -677,12 +679,12 @@ When a \fIsequence\fR specified in a \fBbind\fR command contains
 more than one event pattern, then its script is executed whenever
 the recent events (leading up to and including the current event)
 match the given sequence.  This means, for example, that if button 1 is
-clicked repeatedly the sequence \fB<Double-ButtonPress-1>\fR will match
+clicked repeatedly the sequence \fB<Double\-ButtonPress\-1>\fR will match
 each button press but the first.
 If extraneous events that would prevent a match occur in the middle
 of an event sequence then the extraneous events are
 ignored unless they are \fBKeyPress\fR or \fBButtonPress\fR events.
-For example, \fB<Double-ButtonPress-1>\fR will match a sequence of
+For example, \fB<Double\-ButtonPress\-1>\fR will match a sequence of
 presses of button 1, even though there will be \fBButtonRelease\fR
 events (and possibly \fBMotion\fR events) between the
 \fBButtonPress\fR events.
@@ -705,7 +707,7 @@ The \fBbgerror\fR command will be executed at global level
 Arrange for a string describing the motion of the mouse to be printed
 out when the mouse is double-clicked:
 .CS
-\fBbind\fR . <Double-1> {
+\fBbind\fR . <Double\-1> {
     puts "hi from (%x,%y)"
 }
 .CE
