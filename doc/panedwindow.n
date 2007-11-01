@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: panedwindow.n,v 1.11 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: panedwindow.n,v 1.12 2007/11/01 10:59:42 dkf Exp $
 '\" 
 .so man.macros
 .TH panedwindow n 8.4 Tk "Tk Built-In Commands"
@@ -48,7 +48,6 @@ Specifies the width of each sash.  May be any value accepted by
 Specifies whether sash handles should be shown.  May be any valid Tcl
 boolean value.
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBpanedwindow\fR command creates a new window (given by the
@@ -269,7 +268,6 @@ panedwindow.  \fISize\fR may be any value accepted by \fBTk_GetPixels\fR.
 .TP
 \fIpathName \fBpanes\fR
 Returns an ordered list of the widgets managed by \fIpathName\fR.
-
 .SH "RESIZING PANES"
 A pane is resized by grabbing the sash (or sash handle if present) and
 dragging with the mouse.  This is accomplished via mouse motion
@@ -280,9 +278,7 @@ adjusted.
 When a pane is resized from outside (e.g. it is packed to expand and
 fill, and the containing toplevel is resized), space is added to the final
 (rightmost or bottommost) pane in the window.
-
 .SH "SEE ALSO"
-ttk_panedwindow(n)
-
+ttk::panedwindow(n)
 .SH KEYWORDS
 panedwindow, widget, geometry management

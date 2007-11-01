@@ -1,5 +1,8 @@
 2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	* unix/installManPage, doc/*.n: Make documentation use the name that
+	scripts use as much as possible. [Bug 1640073]
+
 	* doc/text.n: Fixed mistake in [$t tag remove] docs. [Bug 1792191]
 
 	* doc/bind.n: Documentated the Command modifier. [Bug 1232908]

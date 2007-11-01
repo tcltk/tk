@@ -4,13 +4,12 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.11 2007/10/30 21:29:59 dkf Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.12 2007/11/01 10:59:44 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_treeview n 8.5 Tk "Tk Themed Widget"
-.\" Use _ instead of :: as the name becomes a filename on install
+.TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
 .SH NAME
-ttk_treeview \- hierarchical multicolumn data display widget
+ttk::treeview \- hierarchical multicolumn data display widget
 .SH SYNOPSIS
 \fBttk::treeview\fR \fIpathname \fR?\fIoptions\fR?
 .BE
@@ -109,7 +108,7 @@ If the \fIitem\fR is not visible
 returns the empty list.
 .TP
 \fIpathname \fBcget\fR \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIttk_widget(n)\fR.
+Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBchildren\fR \fIitem\fR ?\fInewchildren\fR?
 If \fInewchildren\fR is not specified,
@@ -164,7 +163,7 @@ Use \fIpathname column #0\fR to configure the tree column.
 .RE
 .TP
 \fIpathname \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIttk_widget(n)\fR.
+Modify or query widget options; see \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBdelete\fR \fIitemList\fR
 Deletes each of the items in \fIitemList\fR and all of their descendants.
@@ -252,7 +251,7 @@ See \fBITEM OPTIONS\fR for the list of available options.
 .RE
 .TP
 \fIpathname \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIttk_widget(n)\fR.
+Test the widget state; see \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBitem\fR \fIitem\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
 Query or modify the options for the specified \fIitem\fR.
@@ -318,7 +317,7 @@ in item \fIitem\fR to the specified \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
 .TP
 \fIpathname \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIttk_widget(n)\fR.
+Modify or query the widget state; see \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBtag \fIargs...\fR
 .RS
@@ -356,7 +355,7 @@ See \fBTAG OPTIONS\fR for the list of available options.
 Standard command for horizontal scrolling; see \fIwidget(n)\fR.
 .TP
 \fIpathName \fByview \fIargs\fR
-Standard command for vertical scrolling; see \fIttk_widget(n)\fR.
+Standard command for vertical scrolling; see \fIttk::widget(n)\fR.
 .SH "ITEM OPTIONS"
 The following item options may be specified for items
 in the \fBinsert\fR and \fBitem\fR widget commands.
@@ -395,7 +394,6 @@ Specifies the font to use when drawing text.
 Specifies the item image, in case the item's \fB\-image\fR option is empty.
 .PP
 \fI(@@@ TODO: sort out order of precedence for options)\fR
-
 .SH "COLUMN IDENTIFIERS"
 Column identifiers take any of the following forms:
 .IP \(bu
@@ -433,6 +431,5 @@ The \fBfocus\fR and \fBselection\fR widget commands can be used
 to determine the affected item or items.
 In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 of the virtual event.
-
 .SH "SEE ALSO"
-ttk_widget(n), listbox(n), image(n), bind(n)
+ttk::widget(n), listbox(n), image(n), bind(n)

@@ -4,18 +4,16 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_label.n,v 1.6 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: ttk_label.n,v 1.7 2007/11/01 10:59:43 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_label n 8.5 Tk "Tk Themed Widget"
+.TH ttk::label n 8.5 Tk "Tk Themed Widget"
 .BS
-.\" Use _ instead of :: as the name becomes a filename on install
 .SH NAME
-ttk_label \- Display a text string and/or image
+ttk::label \- Display a text string and/or image
 .SH SYNOPSIS
 \fBttk::label\fR \fIpathName \fR?\fIoptions\fR?
 .BE
-
 .SH DESCRIPTION
 A \fBttk::label\fR widget displays a textual label and/or image.
 The label may be linked to a Tcl variable 
@@ -25,7 +23,6 @@ to automatically change the displayed text.
 \-style	\-takefocus	\-text	\-textvariable
 \-underline	\-width
 .SE
-
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-anchor anchor Anchor
 Specifies how the information in the widget is positioned
@@ -69,7 +66,6 @@ If this option is less than or equal to zero,
 then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
-
 .SH "WIDGET COMMAND"
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
@@ -79,7 +75,6 @@ than the specified value.
 \fIpathName \fBinstate \fIstateSpec\fR ?\fIscript\fR?
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
-See \fIttk_widget(n)\fR
-
+See \fIttk::widget(n)\fR
 .SH "SEE ALSO"
-ttk_widget(n), label(n)
+ttk::widget(n), label(n)
