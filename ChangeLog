@@ -9,6 +9,8 @@
 	* doc/bind.n:		document the Option modifier, clarify meaning
 				and availability of Command & Option.
 
+	* doc/console.n:	clarify availability of [console] in TkAqua.
+
 2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* unix/installManPage, doc/*.n: Make documentation use the name that
