@@ -1,3 +1,8 @@
+2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/console.n, doc/wish.1: Made it clearer when and why the console
+	command is present. [Bug 1386955]
+
 2007-10-31  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/entry3.tcl: Improved description/comments so that

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wish.1,v 1.8 2007/10/29 16:04:14 dkf Exp $
+'\" RCS: @(#) $Id: wish.1,v 1.9 2007/11/01 10:19:11 dkf Exp $
 '\" 
 .so man.macros
 .TH wish 1 8.0 Tk "Tk Applications"
@@ -91,6 +91,12 @@ There is no automatic evaluation of
 .QW \fB.wishrc\fR
 when the name of a script file is presented on the \fBwish\fR command line,
 but the script file can always \fBsource\fR it if desired.
+.PP
+Note that on Windows, the \fBwish\fIversion\fB.exe\fR program varies
+from the \fBtclsh\fIversion\fB.exe\fR program in an additional
+important way: it does not connect to a standard Windows console and
+is instead a windowed program. Because of this, it additionally
+provides access to its own \fBconsole\fR command.
 .SH "OPTION PROCESSING"
 .PP
 \fBWish\fR automatically processes all of the command-line options
