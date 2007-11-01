@@ -4,14 +4,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_notebook.n,v 1.7 2007/10/30 21:29:59 dkf Exp $
+'\" RCS: @(#) $Id: ttk_notebook.n,v 1.8 2007/11/01 10:59:43 dkf Exp $
 '\" 
 .so man.macros
-.TH ttk_notebook n 8.5 Tk "Tk Themed Widget"
+.TH ttk::notebook n 8.5 Tk "Tk Themed Widget"
 .BS
-.\" Use _ instead of :: as the name becomes a filename on install
 .SH NAME
-ttk_notebook \- Multi-paned container widget
+ttk::notebook \- Multi-paned container widget
 .SH SYNOPSIS
 .nf
 \fBttk::notebook\fR \fIpathName \fR?\fIoptions\fR?
@@ -89,10 +88,10 @@ will be displayed.
 See \fBTAB OPTIONS\fR for the list of available \fIoptions\fR.
 .TP
 \fIpathname \fBconfigure\fR ?\fIoptions\fR?
-See \fIttk_widget(n)\fR.
+See \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBcget\fR \fIoption\fR
-See \fIttk_widget(n)\fR.
+See \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBforget\fR \fItabid\fR
 Removes the tab specified by \fItabid\fR,
@@ -112,7 +111,7 @@ moves it to the specified position.
 See \fBTAB OPTIONS\fR for the list of available options.
 .TP
 \fIpathname \fBinstate\fR \fIstatespec \fR?\fIscript...\fR?
-See \fIttk_widget(n)\fR.
+See \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBselect\fR ?\fItabid\fR?
 Selects the specified tab.  The associated child pane will be displayed,
@@ -121,7 +120,7 @@ If \fItabid\fR is omitted, returns the widget name of the
 currently selected pane.
 .TP
 \fIpathname \fBstate\fR ?\fIstatespec\fR?
-See \fIttk_widget(n)\fR.
+See \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBtab\fR \fItabid\fR ?\fI\-options \fR?\fIvalue ...\fR
 Query or modify the options of the specific tab.
@@ -188,6 +187,6 @@ pack [\fBttk::notebook\fR .nb]
 ttk::notebook::enableTraversal .nb
 .CE
 .SH "SEE ALSO"
-ttk_widget(n), grid(n)
+ttk::widget(n), grid(n)
 .SH "KEYWORDS"
 pane, tab
