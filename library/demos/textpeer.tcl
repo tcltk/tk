@@ -4,7 +4,7 @@
 # single logical buffer. This is particularly useful when editing related text
 # in two (or more) parts of the same file.
 #
-# RCS: @(#) $Id: textpeer.tcl,v 1.1 2007/10/15 21:06:17 dkf Exp $
+# RCS: @(#) $Id: textpeer.tcl,v 1.2 2007/11/01 16:36:38 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -21,6 +21,7 @@ positionWindow $w
 
 set count 0
 
+## Define a widget that we peer from; it won't ever actually be shown though
 set first [text $w.text[incr count]]
 $first insert end "This is a coupled pair of text widgets; they are peers to "
 $first insert end "each other. They have the same underlying data model, but "
@@ -30,8 +31,9 @@ $first insert end "create additional peers of any of these text widgets using "
 $first insert end "the Make Peer button beside the text widget to clone, and "
 $first insert end "delete a particular peer widget using the Delete Peer "
 $first insert end "button."
-grid $first
 
+## Procedures to make and kill clones; most of this is just so that the demo
+## looks nice...
 proc makeClone {w parent} {
     global count
     set t [$parent peer create $w.text[incr count] -yscroll "$w.sb$count set"\
@@ -52,9 +54,11 @@ proc killClone {w count} {
     destroy $w.clone$count $w.kill$count
 }
 
+## Now set up the GUI
 makeClone $w $first
 makeClone $w $first
 destroy $first
 
 ## See Code / Dismiss buttons
 grid [addSeeDismiss $w.buttons $w] - - -sticky ew -row 5000
+grid columnconfigure $w 0 -weight 1

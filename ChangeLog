@@ -1,3 +1,7 @@
+2007-11-01  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/textpeer.tcl: Better resizing. [Bug 1822601]
+
 2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/colors.n: Added list of Windows system colors. [Bug 945409]
