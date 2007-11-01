@@ -1,5 +1,5 @@
 #
-# $Id: fonts.tcl,v 1.4.2.2 2007/10/24 12:59:35 dgp Exp $
+# $Id: fonts.tcl,v 1.4.2.3 2007/11/01 16:37:23 dgp Exp $
 #
 # Font specifications.
 #
@@ -111,7 +111,7 @@ switch -- [tk windowingsystem] {
 	set F(viewsize) 12
 	set F(smallsize) 11
 	set F(labelsize) 10
-	set F(fixedsize) 9
+	set F(fixedsize) 11
 
 	font configure TkDefaultFont -family $F(family) -size $F(size)
 	font configure TkTextFont    -family $F(family) -size $F(size)
@@ -122,7 +122,7 @@ switch -- [tk windowingsystem] {
 	font configure TkFixedFont   -family $F(fixed)  -size $F(fixedsize)
 	font configure TkIconFont    -family $F(family) -size $F(size)
 	font configure TkMenuFont    -family $F(family) -size $F(menusize)
-	font configure TkSmallCaptionFont -family $F(family) -size $F(labelsize)		
+	font configure TkSmallCaptionFont -family $F(family) -size $F(labelsize)
     }
     default -
     x11 {
@@ -136,7 +136,7 @@ switch -- [tk windowingsystem] {
 	set F(size) -12
 	set F(ttsize) -10
 	set F(capsize) -14
-	set F(fixedsize) -10
+	set F(fixedsize) -12
 
 	font configure TkDefaultFont -family $F(family) -size $F(size)
 	font configure TkTextFont    -family $F(family) -size $F(size)

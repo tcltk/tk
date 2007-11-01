@@ -1,3 +1,147 @@
+2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/colors.n: Added list of Windows system colors. [Bug 945409]
+
+2007-11-01  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXColor.c (GetThemeColor): improve translation of RGB
+				pixel values into RGBColor.
+
+	* library/demos/widget:	increase height of main window text widget to
+				use more of the available vertical space.
+
+	* doc/bind.n:		document the Option modifier, clarify meaning
+				and availability of Command & Option.
+
+	* doc/console.n:	clarify availability of [console] in TkAqua.
+
+2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* unix/installManPage, doc/*.n: Make documentation use the name that
+	scripts use as much as possible. [Bug 1640073]
+
+	* doc/text.n: Fixed mistake in [$t tag remove] docs. [Bug 1792191]
+
+	* doc/bind.n: Documented the Command modifier. [Bug 1232908]
+
+	* doc/console.n, doc/wish.1: Made it clearer when and why the console
+	command is present. [Bug 1386955]
+
+2007-10-31  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/entry3.tcl: Improved description/comments so that
+	people better understand what is being validated, following suggestion
+	from Don Porter.
+
+	* library/demos/image2.tcl (loadImage): Mark non-loadable images
+	as such instead of throwing a nasty dialog, following suggestion
+	from Don Porter.
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock): More optimization, derived
+	from [Patch 224066].
+
+2007-10-30  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl (Unpost): BUGFIX: Unpost can be called with
+	no preceding Post.
+
+2007-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/rules.vc:     Use -fp:strict with msvc8 as -fp:precise fails on
+	* generic/tkObj.c:  amd64 builds. Fix the two places in Tk that
+	* generic/tkTrig.c: generate errors with msvc8 when using this flag.
+
+2007-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/choosedir.tcl: only enable OK button when valid in
+	conjunction with -mustexist. [Bug 1550528]
+
+	* library/listbox.tcl (::tk::ListboxBeginSelect): ignore -takefocus
+	when considering focus on <1>, it is for tab focus.
+
+2007-10-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump version number to 8.5b2.1 to distinguish
+	* library/tk.tcl:	CVS development snapshots from the 8.5b2
+	* unix/configure.in:	release.
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf (2.59)
+	* win/configure:
+
+2007-10-30  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/text.n: fix spelling of -inactiveselectbackground [Bug 1626415]
+
+	* library/entry.tcl: don't error with Clear event. [Bug 1509288]
+
+	* library/ttk/fonts.tcl: use size -12 TkFixedFont (was -10) on X11
+
+2007-10-30  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/unicodeout.tcl: Fixed Arabic and Hebrew rendering on
+	Windows. [Bug 1803723]
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): Rename enumeration for somewhat
+	simpler-to-read code. [Bug 1677613]
+
+2007-10-30  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkWidget.c: Split up RedisplayWidget() to factor out
+	double-buffering related code.
+
+	* macosx/ttkMacOSXAquaTheme.c: Use SetThemeBackGround/
+	kThemeBrushModelessDialogBackground{Active|Inactive} instead of
+	ApplyThemeBackground/kThemeBackgroundWindowHeader (advice from DAS).
+
+	* library/ttk/aquaTheme.tcl: Use darker shade for inactive and
+	disabled text, to match typical values of most
+	kThemeXXXTextColorInactive values.
+
+2007-10-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/selection.n: Clarify UTF8_STRING handling. [Bug 1778563]
+
+	* doc/text.n: Clarify search subccommand docs. [Bug 1622919]
+
+2007-10-29  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* macosx/tkMacOSXFont.c (InitSystemFonts):
+	* library/ttk/fonts.tcl: use Monaco 11 (was 9) as Aqua TkFixedFont
+
+	* tests/listbox.test, tests/panedwindow.test, tests/scrollbar.test:
+	* library/bgerror.tcl, library/dialog.tcl, library/listbox.tcl:
+	* library/msgbox.tcl, library/optMenu.tcl, library/tclIndex:
+	* library/tkfbox.tcl, library/demos/floor.tcl, library/demos/rmt:
+	* library/demos/tcolor, library/demos/text.tcl:
+	* library/demos/twind.tcl, library/demos/widget: Buh-bye Motif look
+	* library/ttk/fonts.tcl:    Update of Tk default look in 8.5
+	* macosx/tkMacOSXDefault.h: Trims border sizes, cleaner X11 look
+	* unix/tkUnixDefault.h:     with minor modifications for Win32/Aqua.
+	* win/tkWinDefault.h:       Uses Tk*Font definitions throughout for
+	* win/tkWinFont.c:          classic widgets. [Bug #1820344]
+	* library/obsolete.tcl (::tk::classic::restore): This restores
+	changes made to defaults in 8.5 using the 'option' command,
+	segmented into logical groups.
+
+	* tests/winfo.test: winfo-4.5 raise .t to above . for Windows
+
+	* tests/unixWm.test: note TIP#142 results and remove unnecessary
+	catches.
+
+2007-10-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/*.1, doc/*.n, doc/*.3: Lots more GOOBE work.
+
+2007-10-28  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl: Make popdown window [wm resizable 0 0] on
+	OSX, to prevent TkAqua from shrinking the scrollbar to make room for a
+	grow box that isn't there.
+	* macosx/ttkMacOSXTheme.c, library/ttk/aquaTheme.tcl: Reworked
+	combobox layout.
+
 2007-10-26  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5b2 TAGGED FOR RELEASE ***
@@ -20,8 +164,9 @@
 
 2007-10-26  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): fix window class of
-	transient toplevels that are not also overrideredirect. [Bug 1816252]
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): fix window class
+	of transient toplevels that are not also overrideredirect. [Bug
+	1816252]
 
 	* macosx/tkMacOSXDialog.c:	TIP#242 cleanup.
 	* library/demos/filebox.tcl: 	demo TIP#242 -typevariable.
@@ -48,7 +193,7 @@
 2007-10-24  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/*.c, win/{ttkWinMonitor,ttkWinTheme,ttkWinXPTheme}.c,
-	macosx/ttkMacOSXTheme.c: Move widget layout registration 
+	* macosx/ttkMacOSXTheme.c: Move widget layout registration 
 	from TtkElements_Init() to widget *_Init() routines.
 	Renaming/consistency: s/...ElementGeometry()/...ElementSize()/
 

@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.6 2007/10/24 12:59:35 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.7 2007/11/01 16:37:23 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -348,12 +348,11 @@ InitSystemFonts(
 	systemFont++;
     }
     fa.family = Tk_GetUid("monaco");
-    fa.size = 9;
+    fa.size = 11;
     fa.weight = TK_FW_NORMAL;
     fa.slant = TK_FS_ROMAN;
     fa.underline = 0;
     CreateNamedSystemFont(interp, tkwin, "TkFixedFont", &fa);
-    
 }
 
 /*
