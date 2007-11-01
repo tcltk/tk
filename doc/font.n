@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.19 2007/10/30 01:26:11 das Exp $
+'\" RCS: @(#) $Id: font.n,v 1.20 2007/11/01 23:03:54 dkf Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"
@@ -139,8 +139,8 @@ for the \fIstyle\fR arguments are as follows:
 .RS
 .DS
 .ta 3c 6c 9c
-\fBnormal	bold	roman	italic
-underline	overstrike\fR
+\fBnormal\fR	\fBbold\fR	\fBroman\fR	\fBitalic\fR
+\fBunderline\fR	\fBoverstrike\fR
 .DE
 .RE
 .TP
@@ -332,46 +332,46 @@ It is \fInot\fR advised to change these fonts, as they may be modified by Tk
 itself in response to system changes. Instead, make a copy of the font and
 modify that.
 .SH "PLATFORM-SPECIFIC FONTS"
-.LP
+.PP
 The following system fonts are supported:
-.RS
 .TP
 \fBX Windows\fR
 All valid X font names, including those listed by xlsfonts(1), are available.
 .TP
 \fBMS Windows\fR
+The following fonts are supported, and are mapped to the user's
+style defaults.
+.RS
 .DS
 .ta 3c 6c
-\fBsystem	ansi	device
-systemfixed	ansifixed	oemfixed\fR
+\fBsystem\fR	\fBansi\fR	\fBdevice\fR
+\fBsystemfixed\fR	\fBansifixed\fR	\fBoemfixed\fR
 .DE
+.RE
 .TP
 \fBMac OS X\fR
+The following fonts are supported, and are mapped to the user's
+style defaults.
+.RS
 .DS
 .ta 3c 6c
-\fBsystem	application	menu\fR
+\fBsystem\fR	\fBapplication\fR	\fBmenu\fR
 .DE
-Additionally, the following named fonts provide access to the Aqua theme fonts:
+.PP
+Additionally, the following named fonts provide access to the Aqua
+theme fonts:
 .DS
-\fBsystemSystemFont
-systemEmphasizedSystemFont
-systemSmallSystemFont
-systemSmallEmphasizedSystemFont
-systemApplicationFont
-systemLabelFont
-systemViewsFont
-systemMenuTitleFont
-systemMenuItemFont
-systemMenuItemMarkFont
-systemMenuItemCmdKeyFont
-systemWindowTitleFont
-systemPushButtonFont
-systemUtilityWindowTitleFont
-systemAlertHeaderFont
-systemToolbarFont
-systemMiniSystemFont
-systemDetailSystemFont
-systemDetailEmphasizedSystemFont\fR
+.ta 5c
+\fBsystemSystemFont\fR	\fBsystemEmphasizedSystemFont\fR
+\fBsystemSmallSystemFont\fR	\fBsystemSmallEmphasizedSystemFont\fR
+\fBsystemApplicationFont\fR	\fBsystemLabelFont\fR
+\fBsystemViewsFont\fR	\fBsystemMenuTitleFont\fR
+\fBsystemMenuItemFont\fR	\fBsystemMenuItemMarkFont\fR
+\fBsystemMenuItemCmdKeyFont\fR	\fBsystemWindowTitleFont\fR
+\fBsystemPushButtonFont\fR	\fBsystemUtilityWindowTitleFont\fR
+\fBsystemAlertHeaderFont\fR	\fBsystemToolbarFont\fR
+\fBsystemMiniSystemFont\fR	\fBsystemDetailSystemFont\fR
+\fBsystemDetailEmphasizedSystemFont\fR
 .DE
 .RE
 .SH EXAMPLE
