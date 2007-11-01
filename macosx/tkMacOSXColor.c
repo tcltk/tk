@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.13 2007/07/02 13:05:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.14 2007/11/01 11:36:22 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -253,9 +253,12 @@ GetThemeColor(
     } else if (textColor) {
 	err = ChkErr(GetThemeTextColor, textColor, 32, true, c);
     } else {
-	c->red	 = ((pixel >> 16) & 0xff) << 8;
-	c->green = ((pixel >>  8) & 0xff) << 8;
-	c->blue	 = ((pixel	) & 0xff) << 8;
+	c->red	  = (pixel >> 16) & 0xff;
+	c->green  = (pixel >>  8) & 0xff;
+	c->blue	  = (pixel	) & 0xff;
+	c->red	 |= c->red   << 8;
+	c->green |= c->green << 8;
+	c->blue	 |= c->blue  << 8;
     }
     return err;
 }
