@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: console.n,v 1.8 2007/08/28 15:16:11 dkf Exp $
+'\" RCS: @(#) $Id: console.n,v 1.9 2007/11/01 10:19:11 dkf Exp $
 '\"
 .so man.macros
 .TH console n 8.4 Tk "Tk Built-In Commands"
@@ -15,7 +15,6 @@ console \- Control the console on systems without a real console
 .SH SYNOPSIS
 \fBconsole\fR \fIsubcommand\fR ?\fIarg ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 The console window is a replacement for a real console to allow input
@@ -24,7 +23,10 @@ a real console.  It is implemented as a separate interpreter with the
 Tk toolkit loaded, and control over this interpreter is given through
 the \fBconsole\fR command.  The behaviour of the console window is
 defined mainly through the contents of the \fIconsole.tcl\fR file in
-the Tk library.
+the Tk library. Note that this command is not available when Tk is
+loaded into a tclsh interpreter with
+.QW "\fBpackage require Tk"
+as a conventional terminal is expected to be present in that case.
 .PP
 .TP
 \fBconsole eval \fIscript\fR
