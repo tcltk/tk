@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.63 2007/11/02 14:20:23 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.64 2007/11/02 14:24:11 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -227,6 +227,8 @@ proc ::tk::IconList_Create {w} {
     catch {$data(sbar) configure -highlightthickness 0}
     set data(canvas) [canvas $w.cHull.canvas -highlightthick 0 \
 	    -width 400 -height 120 -takefocus 1]
+    $data(canvas) configure -background \
+	    [ttk::style lookup $::ttk::currentTheme -background]
     pack $data(sbar) -side bottom -fill x -padx 2 -in $w.cHull -pady {0 2}
     pack $data(canvas) -expand yes -fill both -padx 2 -pady {2 0}
     pack $w.cHull -expand yes -fill both -ipadx 2 -ipady 2
