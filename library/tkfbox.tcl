@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.62 2007/11/02 11:54:10 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.63 2007/11/02 14:20:23 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1110,7 +1110,7 @@ static char updir_bits[] = {
 
     # The font to use for the icons. The default Canvas font on Unix
     # is just deviant.
-    set ::tk::$w.icons(font) [$data(ent) cget -font]
+    set ::tk::$w.contents.icons(font) [$data(ent) cget -font]
 
     # Make the file types bits only if this is a File Dialog
     if {$class eq "TkFDialog"} {
