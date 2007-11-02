@@ -1,5 +1,8 @@
 2007-11-02  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	* library/msgbox.tcl: Made message dialog use Ttk widgets for better
+	L&F.
+
 	* library/tkfbox.tcl (::tk::dialog::file::CompleteEnt): Added <Tab>
 	completion. [FRQ 805091]
 	* library/tkfbox.tcl: Made file dialog use Ttk widgets for better L&F.
