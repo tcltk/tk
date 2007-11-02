@@ -1,3 +1,7 @@
+2007-11-02  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* library/demos/sayings.tcl: Better resizing. [Bug 1822410]
+
 2007-11-01  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/textpeer.tcl: Better resizing. [Bug 1822601]
