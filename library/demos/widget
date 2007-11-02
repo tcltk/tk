@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.45 2007/11/02 23:48:11 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.46 2007/11/02 23:53:07 dkf Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -145,8 +145,12 @@ if {[tk windowingsystem] ne "aqua"} {
 pack .statusBar -side bottom -fill x -pady 2
 
 set textheight 30
-catch {set textheight [expr {([winfo screenheight .] - 100) / 
-	[font metrics mainFont -displayof . -linespace]}]}
+catch {
+    set textheight [expr {
+	([winfo screenheight .] - 200) /
+	[font metrics mainFont -displayof . -linespace]
+    }]
+}
 
 ttk::frame .textFrame
 scrollbar .s -orient vertical -command {.t yview} -takefocus 1
