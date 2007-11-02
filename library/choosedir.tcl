@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.21 2007/10/30 22:29:41 hobbs Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.22 2007/11/02 15:12:07 dkf Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -43,14 +43,14 @@ proc ::tk::dialog::file::chooseDir:: {args} {
 	destroy $w
 	::tk::dialog::file::Create $w TkChooseDir
     } else {
-	set data(dirMenuBtn) $w.f1.menu
-	set data(dirMenu) $w.f1.menu.menu
-	set data(upBtn) $w.f1.up
-	set data(icons) $w.icons
-	set data(ent) $w.f2.ent
-	set data(okBtn) $w.f2.ok
-	set data(cancelBtn) $w.f2.cancel
-	set data(hiddenBtn) $w.f2.hidden
+	set data(dirMenuBtn) $w.contents.f1.menu
+	set data(dirMenu) $w.contents.f1.menu.menu
+	set data(upBtn) $w.contents.f1.up
+	set data(icons) $w.contents.icons
+	set data(ent) $w.contents.f2.ent
+	set data(okBtn) $w.contents.f2.ok
+	set data(cancelBtn) $w.contents.f2.cancel
+	set data(hiddenBtn) $w.contents.f2.hidden
     }
     if {$::tk::dialog::file::showHiddenBtn} {
 	$data(hiddenBtn) configure -state normal
