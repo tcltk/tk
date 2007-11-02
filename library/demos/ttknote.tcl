@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing a Ttk
 # notebook widget.
 #
-# RCS: @(#) $Id: ttknote.tcl,v 1.2 2007/10/23 06:31:16 das Exp $
+# RCS: @(#) $Id: ttknote.tcl,v 1.3 2007/11/02 14:28:24 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -55,6 +55,6 @@ ttk::frame $w.note.editor
 $w.note add $w.note.editor -text "Text Editor" -underline 0
 text $w.note.editor.t -width 40 -height 10 -wrap char \
 	-yscroll "$w.note.editor.s set"
-scrollbar $w.note.editor.s -orient vertical -command "$w.note.editor.t yview"
+ttk::scrollbar $w.note.editor.s -orient vertical -command "$w.note.editor.t yview"
 pack $w.note.editor.s -side right -fill y -padx {0 2} -pady 2
 pack $w.note.editor.t -fill both -expand 1 -pady 2 -padx {2 0}
