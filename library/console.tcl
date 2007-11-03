@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.33 2007/10/20 09:02:40 patthoyts Exp $
+# RCS: @(#) $Id: console.tcl,v 1.34 2007/11/03 00:51:23 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -95,6 +95,12 @@ proc ::tk::ConsoleInit {} {
 	AmpMenuArgs .menubar.help add command -label [mc &About...] \
 		-command tk::ConsoleAbout
     }
+
+    AmpMenuArgs .menubar.edit add separator
+    AmpMenuArgs .menubar.edit add command -label [mc "&Increase font"] \
+        -command {event generate .console <<Console_FontSizeIncr>>}
+    AmpMenuArgs .menubar.edit add command -label [mc "&Reduce font"] \
+        -command {event generate .console <<Console_FontSizeDecr>>}
 
     . configure -menu .menubar
 
@@ -375,6 +381,8 @@ proc ::tk::ConsoleBind {w} {
 	<<Console_Transpose>>		<Control-Key-t>
 	<<Console_ClearLine>>		<Control-Key-u>
 	<<Console_SaveCommand>>		<Control-Key-z>
+        <<Console_FontSizeIncr>>	<Control-Key-plus>
+        <<Console_FontSizeDecr>>	<Control-Key-minus>
     } {
 	event add $ev $key
 	bind Console $key {}
@@ -534,6 +542,14 @@ proc ::tk::ConsoleBind {w} {
 		tk::ConsoleInsert %W $x
 	    }
 	}
+    }
+    bind Console <<Console_FontSizeIncr>> {
+        set size [font configure TkConsoleFont -size]
+        font configure TkConsoleFont -size [incr size]
+    }
+    bind Console <<Console_FontSizeDecr>> {
+        set size [font configure TkConsoleFont -size]
+        font configure TkConsoleFont -size [incr size -1]
     }
 
     ##

@@ -1,3 +1,7 @@
+2007-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/console.tcl: Add menu item and key binding to adjust font
+
 2007-11-02  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/demos/mclist.tcl: Added a demo of how to do a multi-column
