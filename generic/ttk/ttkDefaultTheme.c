@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.8 2007/10/25 07:08:26 jenglish Exp $
+/* $Id: ttkDefaultTheme.c,v 1.9 2007/11/05 00:00:00 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -1048,7 +1048,7 @@ static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] =
     { "-diameter", TK_OPTION_PIXELS,
 	Tk_Offset(TreeitemIndicator,diameterObj), "9" },
     { "-indicatormargins", TK_OPTION_STRING,
-	Tk_Offset(TreeitemIndicator,marginObj), "0 2 4 2" },
+	Tk_Offset(TreeitemIndicator,marginObj), "2 2 4 2" },
     {NULL}
 };
 
