@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.46 2007/11/02 23:53:07 dkf Exp $
+# RCS: @(#) $Id: widget,v 1.47 2007/11/04 10:38:09 das Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -103,19 +103,14 @@ image create photo ::img::new -format GIF -data [mc {
 
 menu .menuBar -tearoff 0
 
-# On the Mac use the special .apple menu for the about item
-if {[tk windowingsystem] eq "aqua"} {
-    .menuBar add cascade -menu .menuBar.apple
-    menu .menuBar.apple -tearoff 0
-    .menuBar.apple add command -label [mc "About..."] -command {aboutBox}
-} else {
+if {[tk windowingsystem] ne "aqua"} {
     # This is a tk-internal procedure to make i18n easier
     ::tk::AmpMenuArgs .menuBar add cascade -label [mc "&File"] \
 	    -menu .menuBar.file
     menu .menuBar.file -tearoff 0
     ::tk::AmpMenuArgs .menuBar.file add command -label [mc "&About..."] \
-	    -command {aboutBox} -accelerator [mc "<F1>"]
-    bind . <F1> {aboutBox}
+	    -command {tkAboutDialog} -accelerator [mc "<F1>"]
+    bind . <F1> {tkAboutDialog}
     .menuBar.file add sep
     if {[string match win* [tk windowingsystem]]} {
 	# Windows doesn't usually have a Meta key
@@ -718,11 +713,11 @@ proc PrintTextWin32 {filename} {
     eval exec $command
 }
 
-# aboutBox --
+# tkAboutDialog --
 #
 #	Pops up a message box with an "about" message
 #
-proc aboutBox {} {
+proc tkAboutDialog {} {
     tk_messageBox -icon info -type ok -title [mc "About Widget Demo"] \
 	    -message [mc "Tk widget demonstration application"] -detail \
 "[mc {Copyright (c) %s} {1996-1997 Sun Microsystems, Inc.}]
