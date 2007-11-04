@@ -1,6 +1,32 @@
+2007-11-04  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXMenus.c: add "Run Widget Demo" menu item to the
+	default Edit menu along with associated carbon event handler enabling
+	the item only if demo files are installed; cleanup handling of "About"
+	and "Source" menu items.
+
+	* library/bgerror.tcl:		fix background of detail text on Aqua.
+
+	* library/console.tcl:		add accelerators and fix Aqua bindings
+					of the new font size menu items.
+
+	* library/demos/mclist.tcl:	Aqua GOOBE.
+	* library/demos/tree.tcl:
+	* library/demos/ttknote.tcl:
+	* library/demos/widget:
+
+	* doc/chooseDirectory.n:	remove/correct obsolete Mac OS 9-era
+	* doc/getOpenFile.n:		information.
+	* doc/menu.n:
+
+	* macosx/tkMacOSXEvent.c (TkMacOSXProcessCommandEvent): fix boolean arg
+	
+	* macosx/Wish.xcodeproj/project.pbxproj: add new demo file.
+	* macosx/Wish.xcode/project.pbxproj:
+
 2007-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/console.tcl: Add menu item and key binding to adjust font
+	* library/console.tcl: Add menu item and key binding to adjust font.
 
 2007-11-02  Donal K. Fellows  <dkf@users.sf.net>
 
