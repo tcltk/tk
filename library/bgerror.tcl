@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # Copyright (c) 2007 by ActiveState Software Inc.
 #
-# RCS: @(#) $Id: bgerror.tcl,v 1.35 2007/10/30 01:57:54 hobbs Exp $
-# $Id: bgerror.tcl,v 1.35 2007/10/30 01:57:54 hobbs Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.36 2007/11/04 10:38:45 das Exp $
+# $Id: bgerror.tcl,v 1.36 2007/11/04 10:38:45 das Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -22,6 +22,7 @@ namespace eval ::tk::dialog::error {
     if {[tk windowingsystem] eq "aqua"} {
 	option add *ErrorDialog*background systemAlertBackgroundActive \
 		widgetDefault
+	option add *ErrorDialog*info.text.background white widgetDefault
 	option add *ErrorDialog*Button.highlightBackground \
 		systemAlertBackgroundActive widgetDefault
     }
