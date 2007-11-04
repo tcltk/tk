@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: getOpenFile.n,v 1.21 2007/10/30 21:29:59 dkf Exp $
+'\" RCS: @(#) $Id: getOpenFile.n,v 1.22 2007/11/04 10:37:50 das Exp $
 '\" 
 .so man.macros
 .TH tk_getOpenFile n 4.2 Tk "Tk Built-In Commands"
@@ -41,7 +41,7 @@ arguments to these two commands:
 Specifies a string that will be appended to the filename if the user
 enters a filename without an extension. The default value is the empty
 string, which means no extension will be appended to the filename in
-any case. This option is ignored on the Macintosh platform, which
+any case. This option is ignored on Mac OS X, which
 does not require extensions to filenames,
 and the UNIX implementation guesses reasonable values for this from
 the \fB\-filetypes\fR option when this is not supplied.
@@ -61,28 +61,22 @@ Specifies that the files in \fIdirectory\fR should be displayed
 when the dialog pops up. If this parameter is not specified, then
 the files in the current working directory are displayed. If the
 parameter specifies a relative path, the return value will convert the
-relative path to an absolute path.  This option may not always work on
-the Macintosh.  This is not a bug. Rather, the \fIGeneral Controls\fR
-control panel on the Mac allows the end user to override the
-application default directory.
+relative path to an absolute path.
 .TP
 \fB\-initialfile\fR \fIfilename\fR
-Specifies a filename to be displayed in the dialog when it pops up.  This
-option is ignored on the Macintosh platform.
+Specifies a filename to be displayed in the dialog when it pops up.
 .TP
 \fB\-message\fR \fIstring\fR
 Specifies a message to include in the client area of the dialog.
-This is only available on the Macintosh, and only when Navigation
-Services are installed.
+This is only available on Mac OS X.
 .TP
 \fB\-multiple\fR \fIboolean\fR
 Allows the user to choose multiple files from the Open dialog.
-On the Macintosh, this is only available when Navigation Services are
-installed.
 .TP
 \fB\-parent\fR \fIwindow\fR
 Makes \fIwindow\fR the logical parent of the file dialog. The file
-dialog is displayed on top of its parent window.
+dialog is displayed on top of its parent window. On Mac OS X, this
+turns the file dialog into a sheet attached to the parent window.
 .TP
 \fB\-title\fR \fItitleString\fR
 Specifies a string to display as the title of the dialog box. If this
@@ -121,8 +115,8 @@ they refer to the same file type and share the same entry in the
 listbox. When the user selects an entry in the listbox, all the files
 that match at least one of the file patterns corresponding
 to that entry are listed. Usually, each file pattern corresponds to a
-distinct type of file. The use of more than one file patterns for one
-type of file is necessary on the Macintosh platform only.
+distinct type of file. The use of more than one file pattern for one
+type of file is only necessary on the Macintosh platform.
 .PP
 On the Macintosh platform, a file matches a file pattern if its
 name matches at least one of the \fIextension\fR(s) AND it
@@ -141,7 +135,7 @@ the file pattern. The \fImacType\fRs are ignored.
 .SH "SPECIFYING EXTENSIONS"
 .PP
 On the Unix and Macintosh platforms, extensions are matched using
-glob-style pattern matching. On the Windows platforms, extensions are
+glob-style pattern matching. On the Windows platform, extensions are
 matched by the underlying operating system. The types of possible
 extensions are:
 .IP (1)
