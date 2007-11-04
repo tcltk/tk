@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.34 2007/11/03 00:51:23 patthoyts Exp $
+# RCS: @(#) $Id: console.tcl,v 1.35 2007/11/04 10:38:29 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -97,10 +97,10 @@ proc ::tk::ConsoleInit {} {
     }
 
     AmpMenuArgs .menubar.edit add separator
-    AmpMenuArgs .menubar.edit add command -label [mc "&Increase font"] \
-        -command {event generate .console <<Console_FontSizeIncr>>}
-    AmpMenuArgs .menubar.edit add command -label [mc "&Reduce font"] \
-        -command {event generate .console <<Console_FontSizeDecr>>}
+    AmpMenuArgs .menubar.edit add command -label [mc "&Increase Font Size"] \
+        -accel "$mod++" -command {event generate .console <<Console_FontSizeIncr>>}
+    AmpMenuArgs .menubar.edit add command -label [mc "&Decrease Font Size"] \
+        -accel "$mod+-" -command {event generate .console <<Console_FontSizeDecr>>}
 
     . configure -menu .menubar
 
@@ -108,7 +108,7 @@ proc ::tk::ConsoleInit {} {
     font create TkConsoleFont {*}[font configure TkFixedFont]
     set families [font families]
     switch -exact -- [tk windowingsystem] {
-        aqua { set preferred {Monaco 9} }
+        aqua { set preferred {Monaco 10} }
         win32 { set preferred {ProFontWindows 8 Consolas 8} }
         default { set preferred {} }
     }
@@ -387,7 +387,15 @@ proc ::tk::ConsoleBind {w} {
 	event add $ev $key
 	bind Console $key {}
     }
-
+    if {[tk windowingsystem] eq "aqua"} {
+	foreach {ev key} {
+	    <<Console_FontSizeIncr>>	<Command-Key-plus>
+	    <<Console_FontSizeDecr>>	<Command-Key-minus>
+	} {
+	    event add $ev $key
+	    bind Console $key {}
+	}
+    }
     bind Console <<Console_Expand>> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W
