@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing a Ttk
 # tree widget.
 #
-# RCS: @(#) $Id: tree.tcl,v 1.2 2007/10/23 06:31:16 das Exp $
+# RCS: @(#) $Id: tree.tcl,v 1.3 2007/11/04 10:38:09 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -20,7 +20,7 @@ wm iconname $w "tree"
 positionWindow $w
 
 ## Explanatory text
-ttk::label $w.msg -font $font -wraplength 4i -justify left -anchor n -text "Ttk is the new Tk themed widget set. One of the widgets it includes is a tree widget, which allows the user to browse a hierarchical data-set such as a filesystem. The tree widget not only allows for the tree part itself, but it also supports an arbitrary number of additional columns which can show additional data (in this case, the size of the files found in your filesystem). You can also change the width of the columns by dragging the boundary between them."
+ttk::label $w.msg -font $font -wraplength 4i -justify left -anchor n -padding {10 2 10 6} -text "Ttk is the new Tk themed widget set. One of the widgets it includes is a tree widget, which allows the user to browse a hierarchical data-set such as a filesystem. The tree widget not only allows for the tree part itself, but it also supports an arbitrary number of additional columns which can show additional data (in this case, the size of the files found in your filesystem). You can also change the width of the columns by dragging the boundary between them."
 pack $w.msg -fill x
 
 ## See Code / Dismiss
