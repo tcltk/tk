@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.20 2007/11/01 10:59:42 dkf Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.21 2007/11/04 10:37:50 das Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -231,7 +231,7 @@ to system restrictions.
 .SS "SPECIAL MENUS IN MENUBARS"
 .PP
 Certain menus in a menubar will be treated specially.  On the Macintosh,
-access to the special Apple and Help menus is provided. On Windows,
+access to the special Application and Help menus is provided. On Windows,
 access to the Windows System menu in each window is provided. On X Windows,
 a special right-justified help menu is provided. In all cases, these
 menus must be created with the command name of the menubar menu concatenated
@@ -240,25 +240,16 @@ the special menus would be .menubar.apple and .menubar.help; on Windows,
 the special menu would be .menubar.system; on X Windows, the help
 menu would be .menubar.help.
 .PP
-When Tk sees an Apple menu on the Macintosh, that menu's contents make
-up the first items of the Apple menu on the screen whenever the window
-containing the menubar is in front. The menu is the
-first one that the user sees and has a title which is an Apple logo.
+When Tk sees a .menubar.apple menu on the Macintosh, that menu's contents
+make up the first items of the Application menu whenever the window
+containing the menubar is in front.
 After all of the Tk-defined items, the menu will have a separator,
-followed by all of the items in the user's Apple Menu Items folder.
-Since the System uses a different menu definition procedure for
-the Apple menu than Tk uses for its menus, and the system APIs do
-not fully support everything Tk tries to do, the menu item will only
-have its text displayed. No font attributes, images, bitmaps, or colors
-will be displayed. In addition, a menu with a tearoff item will have
-the tearoff item displayed as
-.QW (TearOff) .
+followed by all standard Application menu items.
 .PP
-When Tk see a Help menu on the Macintosh, the menu's contents are
-appended to the standard help menu on the right of the user's menubar
-whenever the user's menubar is in front. The first items in the menu
-are provided by Apple. Similar to the Apple Menu, customization in this
-menu is limited to what the system provides.
+When Tk sees a Help menu on the Macintosh, the menu's contents are
+appended to the standard Help menu on the right of the user's menubar
+whenever the window's menubar is in front. The first items in the menu
+are provided by Mac OS X.
 .PP
 When Tk sees a System menu on Windows, its items are appended to the 
 system menu that the menubar is attached to. This menu has an icon
