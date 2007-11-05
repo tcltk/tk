@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.13.2.3 2006/03/07 22:30:31 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.13.2.4 2007/11/05 17:21:58 dgp Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -53,9 +53,9 @@ one of: \fBnormal\fR, \fBdisabled\fR, or \fBhidden\fR. Individual canvas
 objects all have their own state option which may override the default
 state.  Many options can take separate specifications such that the
 appearance of the item can be different in different situations. The
-options that start with \fBactive\fR control the appearence when the mouse
+options that start with \fBactive\fR control the appearance when the mouse
 pointer is over it, while the option starting with \fBdisabled\fR controls
-the appearence when the state is disabled.  Canvas items which are
+the appearance when the state is disabled.  Canvas items which are
 \fBdisabled\fR will not react to canvas bindings.
 .OP \-width width width
 Specifies a desired window width that the canvas widget should request from

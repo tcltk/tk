@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.8.2.1 2004/10/28 10:19:29 dkf Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.8.2.2 2007/11/05 17:21:59 dgp Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -684,7 +684,7 @@ of the pulldowns. Once you have done this, specify the menu using the
 .VE
 .TP
 \fBPulldown Menus in Menu Buttons\fR
-This is the compatable way to do menu bars.  You create one menubutton
+This is the compatible way to do menu bars.  You create one menubutton
 widget for each top-level menu, and typically you arrange a series of
 menubuttons in a row in a menubar window.  You also create the top-level menus
 and any cascaded submenus, and tie them together with \fB\-menu\fR
