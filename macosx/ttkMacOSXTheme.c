@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.13 2007/10/30 15:22:52 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.14 2007/11/05 16:37:50 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -953,10 +953,18 @@ TTK_BEGIN_LAYOUT(ProgressbarLayout)
 TTK_END_LAYOUT
 
 /* Tree heading -- no border, fixed height */
-TTK_BEGIN_LAYOUT(TreeHeadingLayout)
+TTK_BEGIN_LAYOUT(TreeheadingLayout)
     TTK_NODE("Treeheading.cell", TTK_FILL_X)
     TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
     TTK_NODE("Treeheading.text", 0)
+TTK_END_LAYOUT
+
+/* Tree items -- omit focus ring */ 
+TTK_BEGIN_LAYOUT(TreeitemLayout)
+    TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
+	TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
+	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
+	TTK_NODE("Treeitem.text", TTK_PACK_LEFT))
 TTK_END_LAYOUT
 
 /*----------------------------------------------------------------------
@@ -1026,7 +1034,8 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterLayout(themePtr, "TCombobox", ComboboxLayout);
     Ttk_RegisterLayout(themePtr, "TProgressbar", ProgressbarLayout);
     Ttk_RegisterLayout(themePtr, "TNotebook.Tab", TabLayout);
-    Ttk_RegisterLayout(themePtr, "Heading", TreeHeadingLayout);
+    Ttk_RegisterLayout(themePtr, "Heading", TreeheadingLayout);
+    Ttk_RegisterLayout(themePtr, "Item", TreeitemLayout);
 
     Tcl_PkgProvide(interp, "ttk::theme::aqua", TTK_VERSION);
     return TCL_OK;
