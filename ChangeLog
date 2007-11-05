@@ -1,3 +1,8 @@
+2007-11-05  Andreas Kupries  <andreask@activestate.com>
+
+	* doc/CrtConsoleChan.3: New file providing minimal documentation
+	  of 'Tk_InitConsoleChannels()'. This is for [SF Tk Bug 432435].
+
 2007-11-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* macosx/ttkMacOSXTheme.c(TreeitemLayout): Remove focus ring
