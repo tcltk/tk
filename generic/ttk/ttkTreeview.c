@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.16.2.2 2007/10/27 04:23:16 dgp Exp $
+/* $Id: ttkTreeview.c,v 1.16.2.3 2007/11/05 14:24:17 dgp Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -1470,7 +1470,7 @@ static Ttk_Layout TreeviewGetLayout(
 static void TreeviewDoLayout(void *clientData)
 {
     Treeview *tv = clientData;
-    Ttk_LayoutNode *clientNode = Ttk_LayoutFindNode(tv->core.layout, "client");
+    Ttk_LayoutNode *clientNode = Ttk_LayoutFindNode(tv->core.layout,"treearea");
     int visibleRows;
 
     /* ASSERT: SLACKINVARIANT */
@@ -3044,7 +3044,7 @@ static WidgetSpec TreeviewWidgetSpec =
 TTK_BEGIN_LAYOUT(TreeviewLayout)
     TTK_GROUP("Treeview.field", TTK_FILL_BOTH|TTK_BORDER,
 	TTK_GROUP("Treeview.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Treeview.client", TTK_FILL_BOTH)))
+	    TTK_NODE("Treeview.treearea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(ItemLayout)
@@ -3197,6 +3197,7 @@ void TtkTreeview_Init(Tcl_Interp *interp)
 	    &TreeitemIndicatorElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.row", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeheading.cell", &RowElementSpec, 0);
+    Ttk_RegisterElement(interp, theme, "treearea", &ttkNullElementSpec, 0);
 
     Ttk_RegisterLayout(theme, TreeviewWidgetSpec.className, TreeviewLayout);
     Ttk_RegisterLayout(theme, "Item", ItemLayout);

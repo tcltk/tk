@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.16.2.4 2007/07/01 17:31:32 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.16.2.5 2007/11/05 14:24:18 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -243,7 +243,7 @@ TkMacOSXProcessCommandEvent(
 		    (menuContext & kMenuContextMenuBarTracking)) {
 		TkMacOSXHandleMenuSelect(GetMenuID(command.menu.menuRef),
 			command.menu.menuItemIndex,
-			GetCurrentEventKeyModifiers() & optionKey);
+			(GetCurrentEventKeyModifiers() & optionKey) != 0);
 		return 1;
 	    }
 	} else {
