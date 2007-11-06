@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.9 2007/10/31 04:25:23 jenglish Exp $
+# $Id: combobox.tcl,v 1.10 2007/11/06 02:15:55 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -28,11 +28,15 @@
 #	The "noActivates" attribute prevents the parent toplevel
 #	from deactivating when the popdown is posted, and is also
 #	necessary for "help" windows to receive mouse events.
-#	"hideOnSuspend" makes the popdown disappear (resp. reappear) 
+#	"hideOnSuspend" makes the popdown disappear (resp. reappear)
 #	when the parent toplevel is deactivated (resp. reactivated).
 #	(see [#1814778]).  Also set [wm resizable 0 0], to prevent
 #	TkAqua from shrinking the scrollbar to make room for a grow box
 #	that isn't there.
+#
+#	In order to work around other platform quirks in TkAqua,
+#	[grab] and [focus] are set in <Map> bindings instead of
+#	immediately after deiconifying the window.
 #
 
 namespace eval ttk::combobox {
@@ -67,7 +71,6 @@ bind TCombobox <<TraverseIn>> 		{ ttk::combobox::TraverseIn %W }
 
 ### Combobox listbox bindings.
 #
-bind ComboboxListbox <ButtonPress-1> 	{ focus %W ; continue }
 bind ComboboxListbox <ButtonRelease-1>	{ ttk::combobox::LBSelected %W }
 bind ComboboxListbox <KeyPress-Return>	{ ttk::combobox::LBSelected %W }
 bind ComboboxListbox <KeyPress-Escape>  { ttk::combobox::LBCancel %W }
@@ -75,6 +78,7 @@ bind ComboboxListbox <KeyPress-Tab>	{ ttk::combobox::LBTab %W next }
 bind ComboboxListbox <<PrevWindow>>	{ ttk::combobox::LBTab %W prev }
 bind ComboboxListbox <Destroy>		{ ttk::combobox::LBCleanup %W }
 bind ComboboxListbox <Motion>		{ ttk::combobox::LBHover %W %x %y }
+bind ComboboxListbox <Map>		{ focus -force %W }
 
 switch -- [tk windowingsystem] {
     win32 {
@@ -286,7 +290,7 @@ proc ttk::combobox::PopdownWindow {cb} {
 ## PopdownToplevel -- Create toplevel window for the combobox popdown
 #
 #	See also <<NOTE-WM-TRANSIENT>>
-# 
+#
 proc ttk::combobox::PopdownToplevel {w} {
     toplevel $w -class ComboboxPopdown
     wm withdraw $w
@@ -389,7 +393,6 @@ proc ttk::combobox::Post {cb} {
     #
     wm deiconify $popdown
     raise $popdown
-    focus $popdown.l
 }
 
 ## Unpost $cb --
