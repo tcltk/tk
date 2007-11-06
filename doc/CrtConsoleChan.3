@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtConsoleChan.3,v 1.1 2007/11/05 20:43:45 andreas_kupries Exp $
+'\" RCS: @(#) $Id: CrtConsoleChan.3,v 1.2 2007/11/06 17:02:28 andreas_kupries Exp $
 '\" 
 .so man.macros
 .TH Tk_InitConsoleChannels 3 8.5 Tk "Tk Library Procedures"
@@ -29,7 +29,7 @@ channels will be discarded until \fBTk_CreateConsoleWindow\fR is
 called to attach the console to a text widget.
 .PP
 This function is for use by shell applications based on Tk, like
-\fbwish\fR, on platforms which have no standard channels in graphical
+\fBwish\fR, on platforms which have no standard channels in graphical
 mode, like Win32.
 .PP
 The \fIinterp\fR argument is the interpreter in which to create and
@@ -41,5 +41,6 @@ through other channel functions. Because otherwise the standard
 channels will be already initialized to the system defaults, which will
 be nonsensical for the case \fBTk_InitConsoleChannels\fR is for.
 .SH "SEE ALSO"
+console(n)
 .SH KEYWORDS
 standard channels, console
