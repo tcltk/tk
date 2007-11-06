@@ -1,3 +1,8 @@
+2007-11-06  Andreas Kupries  <andreask@activestate.com>
+
+	* doc/CrtConsoleChan.3: Fixed markup typo and extended see also
+	  section per suggestions by Donal.
+
 2007-11-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl: Set focus to listbox in <Map> binding
