@@ -1,3 +1,8 @@
+2007-11-05  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl: Set focus to listbox in <Map> binding
+	instead of in Post command (see #1349811 for info).
+
 2007-11-05  Andreas Kupries  <andreask@activestate.com>
 
 	* doc/CrtConsoleChan.3: New file providing minimal documentation
