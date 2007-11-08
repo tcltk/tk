@@ -54,16 +54,13 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.16 2007/11/08 14:26:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.17 2007/11/08 15:45:31 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
 
 #ifdef TK_MAC_DEBUG
-
-#include <mach-o/dyld.h>
-#include <mach-o/nlist.h>
 
 typedef struct {
     EventKind kind;
@@ -482,6 +479,9 @@ TkMacOSXDebugFlashRegion(
     }
 }
 #endif /* TK_MAC_DEBUG */
+
+#include <mach-o/dyld.h>
+#include <mach-o/nlist.h>
 
 /*
  *----------------------------------------------------------------------
