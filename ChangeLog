@@ -55,17 +55,15 @@
 
 2007-11-07  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTheme.c(Ttk_ElementSize): Fixed longstanding,
+	* generic/ttk/ttkTheme.c (Ttk_ElementSize): Fixed longstanding,
 	subtle bug that caused element padding to sometimes be counted 
 	twice in size computations.
 
 	* generic/ttk/ttkElements.c, generic/ttk/ttkClamTheme.c,
 	generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkTreeview.c,
 	generic/ttk/ttkImage.c, macosx/ttkMacOSXTheme.c,
-	win/ttkWinTheme.c, win/ttkWinXPTheme.c:
-
-	Fix ElementSizeProcs affected by previous change.
-
+	win/ttkWinTheme.c, win/ttkWinXPTheme.c:	Fix ElementSizeProcs affected
+						 by previous change.
 
 2007-11-06  Andreas Kupries  <andreask@activestate.com>
 
@@ -75,16 +73,16 @@
 2007-11-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl: Set focus to listbox in <Map> binding
-	instead of in Post command (see #1349811 for info).
+	instead of in Post command (see [Bug 1349811] for info).
 
 2007-11-05  Andreas Kupries  <andreask@activestate.com>
 
 	* doc/CrtConsoleChan.3: New file providing minimal documentation
-	  of 'Tk_InitConsoleChannels()'. This is for [SF Tk Bug 432435].
+	  of 'Tk_InitConsoleChannels()'. [Bug 432435]
 
 2007-11-05  Joe English  <jenglish@users.sourceforge.net>
 
-	* macosx/ttkMacOSXTheme.c(TreeitemLayout): Remove focus ring
+	* macosx/ttkMacOSXTheme.c (TreeitemLayout): Remove focus ring
 	from treeview items on OSX (problem reported by Kevin Walzer).
 
 2007-11-04  Joe English  <jenglish@users.sourceforge.net>
@@ -138,7 +136,7 @@
 	L&F.
 
 	* library/tkfbox.tcl (::tk::dialog::file::CompleteEnt): Added <Tab>
-	completion. [FRQ 805091]
+	completion. [FR 805091]
 	* library/tkfbox.tcl: Made file dialog use Ttk widgets for better L&F.
 
 	* library/demos/sayings.tcl: Better resizing. [Bug 1822410]
