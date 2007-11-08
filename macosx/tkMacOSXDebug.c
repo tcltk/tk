@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.17 2007/11/08 15:45:31 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.18 2007/11/08 17:37:34 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -521,7 +521,7 @@ TkMacOSXGetNamedDebugSymbol(
     if (!addr) {
 	const struct mach_header *mh = NULL;
 	uint32_t i, n = _dyld_image_count();
-	size_t module_len;
+	size_t module_len = 0;
 
 	if (module && *module) {
 	    module_len = strlen(module);
