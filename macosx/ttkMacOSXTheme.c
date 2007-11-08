@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.14 2007/11/05 16:37:50 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.15 2007/11/08 01:40:25 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -205,6 +205,8 @@ static void ButtonElementSize(
      */
 
     *paddingPtr = Ttk_AddPadding(*paddingPtr, ButtonMargins);
+    *widthPtr += Ttk_PaddingWidth(ButtonMargins);
+    *heightPtr += Ttk_PaddingHeight(ButtonMargins);
 }
 
 static void ButtonElementDraw(
