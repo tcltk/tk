@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.33 2007/10/26 10:35:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.34 2007/11/08 17:37:34 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1110,7 +1110,7 @@ OpenFileFilterProc(
 
 		if (!theInfo->isFolder) {
 		    OSType fileType;
-		    StringPtr fileNamePtr;
+		    StringPtr fileNamePtr = NULL;
 		    Tcl_DString fileNameDString;
 		    int i;
 		    FileFilter *filterPtr;
@@ -1126,7 +1126,6 @@ OpenFileFilterProc(
 			strncpy(fileName, (char*) fileNamePtr + 1, len);
 			fileName[len] = '\0';
 			fileNamePtr = (unsigned char*) fileName;
-
 		    } else if ((theItem->descriptorType == typeFSRef)) {
 			OSStatus err;
 			FSRef *theRef = (FSRef *) *theItem->dataHandle;
@@ -1140,8 +1139,6 @@ OpenFileFilterProc(
 				    uniFileName.length, &fileNameDString);
 			    fileNamePtr = (unsigned char*)
 				    Tcl_DStringValue(&fileNameDString);
-			} else {
-			    fileNamePtr = NULL;
 			}
 		    }
 		    if (ofdPtr->usePopup) {
