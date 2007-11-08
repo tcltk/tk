@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.15 2007/11/08 01:40:25 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.16 2007/11/08 14:23:47 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -43,11 +43,12 @@
  * +++ Utilities.
  */
 
-/* BoxToRect --
+/*
+ * BoxToRect --
  *	Convert a Ttk_Box in Tk coordinates relative to the given Drawable
  *	to a native Rect relative to the containing port.
  */
-static Rect BoxToRect(Drawable d, Ttk_Box b)
+static inline Rect BoxToRect(Drawable d, Ttk_Box b)
 {
     MacDrawable *md = (MacDrawable*)d;
     Rect rect;
@@ -60,7 +61,8 @@ static Rect BoxToRect(Drawable d, Ttk_Box b)
     return rect;
 }
 
-/* PatternOrigin --
+/*
+ * PatternOrigin --
  *	Compute brush pattern origin for a Drawable relative to a Tk_Window.
  *
  * Notes: This will only be nonzero if the Drawable is an off-screen pixmap.
@@ -79,14 +81,16 @@ static Point PatternOrigin(Tk_Window tkwin, Drawable d)
     return origin;
 }
 
-/* DontErase --
+/*
+ * DontErase --
  *	No-op ThemeEraseProc, can be passed to DrawThemeButton &c.
  */
 static void DontErase(
     const Rect *bounds, UInt32 eraseData, SInt16 depth, Boolean isColorDev)
 {  }
 
-/* Table mapping Tk states to Appearance manager ThemeStates
+/*
+ * Table mapping Tk states to Appearance manager ThemeStates
  */
 
 static Ttk_StateTable ThemeStateTable[] = {
@@ -110,7 +114,8 @@ static Ttk_StateTable ThemeStateTable[] = {
  * +++ Button element: Used for elements drawn with DrawThemeButton.
  */
 
-/* Extra margins to account for drop shadow.
+/*
+ * Extra margins to account for drop shadow.
  */
 static Ttk_Padding ButtonMargins = {2,2,2,2};
 
@@ -122,11 +127,11 @@ typedef struct {
 } ThemeButtonParms;
 
 static ThemeButtonParms
-    PushButtonParms = { kThemePushButton, NoThemeMetric },
+    PushButtonParms = { kThemePushButton, kThemeMetricPushButtonHeight },
     CheckBoxParms = { kThemeCheckBox, kThemeMetricCheckBoxHeight },
     RadioButtonParms = { kThemeRadioButton, kThemeMetricRadioButtonHeight },
     BevelButtonParms = { kThemeBevelButton, NoThemeMetric },
-    PopupButtonParms = { kThemePopupButton, NoThemeMetric },
+    PopupButtonParms = { kThemePopupButton, kThemeMetricPopupButtonHeight },
     DisclosureParms = { kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight },
     ListHeaderParms = { kThemeListHeaderButton, kThemeMetricListHeaderHeight };
 
@@ -165,10 +170,10 @@ static void ButtonElementSizeNoPadding(
     ThemeButtonParms *parms = clientData;
 
     if (parms->heightMetric != NoThemeMetric) {
-	SInt32 gratuitouslyOverspecifiedType;
+	SInt32 height;
 
-	GetThemeMetric(parms->heightMetric, &gratuitouslyOverspecifiedType);
-	*heightPtr = gratuitouslyOverspecifiedType;
+	ChkErr(GetThemeMetric, parms->heightMetric, &height);
+	*heightPtr = height;
     }
 }
 
@@ -177,30 +182,28 @@ static void ButtonElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ThemeButtonParms *parms = clientData;
-    ThemeButtonDrawInfo drawInfo = computeButtonDrawInfo(parms, 0);
-    Rect scratchRect, contentsRect;
-    const int scratchSize = 100;
+    ThemeButtonDrawInfo info = computeButtonDrawInfo(parms, 0);
+    static const Rect scratchBounds = {0, 0, 100, 100};
+    Rect contentBounds;
 
-    ButtonElementSizeNoPadding(
-	clientData, elementRecord, tkwin,
-	widthPtr, heightPtr, paddingPtr);
+    ButtonElementSizeNoPadding(clientData, elementRecord, tkwin, widthPtr,
+	    heightPtr, paddingPtr);
 
-    /* To compute internal padding, query the appearance manager
+    /*
+     * To compute internal padding, query the appearance manager
      * for the content bounds of a dummy rectangle, then use
      * the difference as the padding.
      */
-    scratchRect.top = scratchRect.left = 0;
-    scratchRect.bottom = scratchRect.right = scratchSize;
+    ChkErr(GetThemeButtonContentBounds, &scratchBounds, parms->kind, &info,
+	    &contentBounds);
 
-    GetThemeButtonContentBounds(
-	&scratchRect, parms->kind, &drawInfo, &contentsRect);
+    paddingPtr->left = contentBounds.left;
+    paddingPtr->top = contentBounds.top;
+    paddingPtr->right = scratchBounds.right - contentBounds.right + 1;
+    paddingPtr->bottom = scratchBounds.bottom - contentBounds.bottom;
 
-    paddingPtr->left = contentsRect.left;
-    paddingPtr->top = contentsRect.top;
-    paddingPtr->bottom = scratchSize - contentsRect.bottom;
-    paddingPtr->right = scratchSize - contentsRect.right + 1;
-
-    /* Now add a little extra padding to account for drop shadows.
+    /*
+     * Now add a little extra padding to account for drop shadows.
      * @@@ SHOULD: call GetThemeButtonBackgroundBounds() instead.
      */
 
@@ -213,13 +216,12 @@ static void ButtonElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    Rect bounds = BoxToRect(d, Ttk_PadBox(b, ButtonMargins));
     ThemeButtonParms *parms = clientData;
     ThemeButtonDrawInfo info = computeButtonDrawInfo(parms, state);
+    Rect bounds = BoxToRect(d, Ttk_PadBox(b, ButtonMargins));
 
     BEGIN_DRAWING(d)
-    DrawThemeButton(&bounds, parms->kind, &info,
-	NULL/*prevInfo*/,NULL/*eraseProc*/,NULL/*labelProc*/,0/*userData*/);
+    ChkErr(DrawThemeButton, &bounds, parms->kind, &info, NULL, NULL, NULL, 0);
     END_DRAWING
 }
 
@@ -245,7 +247,8 @@ static Ttk_StateTable TabStyleTable[] = {
     { kThemeTabNonFront, 0,0 }
 };
 
-/* Quoth DrawThemeTab() reference manual:
+/*
+ * Quoth DrawThemeTab() reference manual:
  * "Small tabs have a height of 16 pixels large tabs have a height of
  * 21 pixels. (The widths of tabs are variable.) Additionally, the
  * distance that the tab overlaps the pane must be included in the tab
@@ -270,9 +273,8 @@ static void TabElementDraw(
 
     bounds.bottom += TAB_OVERLAP;
     BEGIN_DRAWING(d)
-    DrawThemeTab(
-	&bounds, Ttk_StateTableLookup(TabStyleTable, state), kThemeTabNorth,
-	0/*labelProc*/,0/*userData*/);
+    ChkErr(DrawThemeTab, &bounds, Ttk_StateTableLookup(TabStyleTable, state),
+	    kThemeTabNorth, 0, 0);
     END_DRAWING
 }
 
@@ -284,14 +286,15 @@ static Ttk_ElementSpec TabElementSpec = {
     TabElementDraw
 };
 
-/* Notebook panes:
+/*
+ * Notebook panes:
  */
 static void PaneElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     /* Padding determined by trial-and-error */
-    *paddingPtr = Ttk_MakePadding(2,8,2,2);
+    *paddingPtr = Ttk_MakePadding(2, 8, 2, 2);
 }
 
 static void PaneElementDraw(
@@ -301,8 +304,8 @@ static void PaneElementDraw(
     Rect bounds = BoxToRect(d, b);
 
     BEGIN_DRAWING(d)
-    DrawThemeTabPane(
-	&bounds, Ttk_StateTableLookup(ThemeStateTable, state));
+    ChkErr(DrawThemeTabPane, &bounds,
+	    Ttk_StateTableLookup(ThemeStateTable, state));
     END_DRAWING
 }
 
@@ -314,7 +317,8 @@ static Ttk_ElementSpec PaneElementSpec = {
     PaneElementDraw
 };
 
-/* Labelframe borders:
+/*
+ * Labelframe borders:
  * Use "primary group box ..."
  * Quoth DrawThemePrimaryGroup reference:
  * "The primary group box frame is drawn inside the specified
@@ -337,8 +341,8 @@ static void GroupElementDraw(
     Rect bounds = BoxToRect(d, b);
 
     BEGIN_DRAWING(d)
-    DrawThemePrimaryGroup(
-	&bounds, Ttk_StateTableLookup(ThemeStateTable, state));
+    ChkErr(DrawThemePrimaryGroup, &bounds,
+	    Ttk_StateTableLookup(ThemeStateTable, state));
     END_DRAWING
 }
 
@@ -382,22 +386,26 @@ static void EntryElementDraw(
     Ttk_Box inner = Ttk_PadBox(b, Ttk_UniformPadding(3));
     Rect bounds = BoxToRect(d, inner);
 
-    /* Erase w/background color:
-    */
+    /*
+     * Erase w/background color:
+     */
     XFillRectangle(Tk_Display(tkwin), d,
-	Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-	inner.x,inner.y, inner.width, inner.height);
+	    Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
+	    inner.x,inner.y, inner.width, inner.height);
 
     BEGIN_DRAWING(d)
-    /* Draw border:
-    */
-    DrawThemeEditTextFrame(
-	&bounds, Ttk_StateTableLookup(ThemeStateTable, state));
+    /*
+     * Draw border:
+     */
+    ChkErr(DrawThemeEditTextFrame, &bounds,
+	    Ttk_StateTableLookup(ThemeStateTable, state));
 
-    /* Draw focus highlight:
-    */
-    if (state & TTK_STATE_FOCUS)
-	DrawThemeFocusRect(&bounds, 1);
+    /*
+     * Draw focus highlight:
+     */
+    if (state & TTK_STATE_FOCUS) {
+	ChkErr(DrawThemeFocusRect, &bounds, 1);
+    }
     END_DRAWING
 }
 
@@ -434,12 +442,12 @@ static void ComboboxElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     ThemeButtonParms *parms = clientData;
-    Rect bounds = BoxToRect(d, Ttk_PadBox(b, ComboboxMargins));
     ThemeButtonDrawInfo info = computeButtonDrawInfo(parms, state);
+    Rect bounds = BoxToRect(d, Ttk_PadBox(b, ComboboxMargins));
 
     BEGIN_DRAWING(d)
-    DrawThemeButton(&bounds, kThemeComboBox, &info,
-	NULL/*prevInfo*/,NULL/*eraseProc*/,NULL/*labelProc*/,0/*userData*/);
+    ChkErr(DrawThemeButton, &bounds, kThemeComboBox, &info, NULL, NULL, NULL,
+	    0);
     END_DRAWING
 }
 
@@ -494,7 +502,7 @@ static void TrackElementSize(
     TrackElementData *data = clientData;
     SInt32 size = 24;	/* reasonable default ... */
 
-    GetThemeMetric(data->thicknessMetric, &size);
+    ChkErr(GetThemeMetric, data->thicknessMetric, &size);
     *widthPtr = *heightPtr = size;
 }
 
@@ -506,41 +514,41 @@ static void TrackElementDraw(
     TrackElement *elem = elementRecord;
     double from = 0, to = 100, value = 0;
     int orientation = TTK_ORIENT_HORIZONTAL;
-    ThemeTrackDrawInfo drawInfo;
+    ThemeTrackDrawInfo info;
 
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
     Ttk_GetOrientFromObj(NULL, elem->orientObj, &orientation);
 
-    /* @@@ BUG: min, max, and value should account for resolution:
+    /*
+     * @@@ BUG: min, max, and value should account for resolution:
      * @@@ if finer than 1.0, conversion to int breaks.
      */
-    drawInfo.kind = data->kind;
-    drawInfo.bounds = BoxToRect(d, b);
-    drawInfo.min = (int)from;		/* @@@ */
-    drawInfo.max = (int)to;		/* @@@ */
-    drawInfo.value = (int)value;	/* @@@ */
+    info.kind = data->kind;
+    info.bounds = BoxToRect(d, b);
+    info.min = (int) from;		/* @@@ */
+    info.max = (int) to;		/* @@@ */
+    info.value = (int) value;		/* @@@ */
 
-    drawInfo.attributes = orientation == TTK_ORIENT_HORIZONTAL
-	? kThemeTrackHorizontal : 0;
-    drawInfo.attributes |= kThemeTrackShowThumb;
-    drawInfo.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state);
+    info.attributes = orientation == TTK_ORIENT_HORIZONTAL
+	    ? kThemeTrackHorizontal : 0;
+    info.attributes |= kThemeTrackShowThumb;
+    info.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state);
 
     switch (data->kind) {
 	case kThemeProgressBar:
-	    drawInfo.trackInfo.progress.phase = 0; /* 1-4: animation phase */
+	    info.trackInfo.progress.phase = 0; /* 1-4: animation phase */
 	    break;
 	case kThemeSlider:
-	    drawInfo.trackInfo.slider.pressState = 0; /* @@@ fill this in */
-	    drawInfo.trackInfo.slider.thumbDir =  kThemeThumbPlain;
+	    info.trackInfo.slider.pressState = 0; /* @@@ fill this in */
+	    info.trackInfo.slider.thumbDir =  kThemeThumbPlain;
 		/* kThemeThumbUpward, kThemeThumbDownward, kThemeThumbPlain  */
 	    break;
     }
 
     BEGIN_DRAWING(d)
-    DrawThemeTrack(&drawInfo,
-	NULL/*rgnGhost*/,NULL/*eraseProc*/,0/*eraseData*/);
+    ChkErr(DrawThemeTrack, &info, NULL, NULL, 0);
     END_DRAWING
 }
 
@@ -552,7 +560,8 @@ static Ttk_ElementSpec TrackElementSpec = {
     TrackElementDraw
 };
 
-/* Slider element -- <<NOTE-TRACKS>>
+/*
+ * Slider element -- <<NOTE-TRACKS>>
  * Has geometry only. The Scale widget adjusts the position of this element,
  * and uses it for hit detection. In the Aqua theme, the slider is actually
  * drawn as part of the trough element.
@@ -612,7 +621,7 @@ static void PbarElementSize(
 {
     SInt32 size = 24;	/* @@@ Check HIG for correct default */
 
-    GetThemeMetric(kThemeMetricLargeProgressBarThickness, &size);
+    ChkErr(GetThemeMetric, kThemeMetricLargeProgressBarThickness, &size);
     *widthPtr = *heightPtr = size;
 }
 
@@ -624,7 +633,7 @@ static void PbarElementDraw(
     int orientation = TTK_ORIENT_HORIZONTAL;
     double value = 0, maximum = 100;
     int phase = 0;
-    ThemeTrackDrawInfo drawInfo;
+    ThemeTrackDrawInfo info;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
@@ -632,23 +641,22 @@ static void PbarElementDraw(
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
 
     if (!strcmp("indeterminate", Tcl_GetString(pbar->modeObj)) && value) {
-	drawInfo.kind = kThemeIndeterminateBar;
+	info.kind = kThemeIndeterminateBar;
     } else {
-	drawInfo.kind = kThemeProgressBar;
+	info.kind = kThemeProgressBar;
     }
-    drawInfo.bounds = BoxToRect(d, b);
-    drawInfo.min = 0;
-    drawInfo.max = (int)maximum;	/* @@@ See note above */
-    drawInfo.value = (int)value;
-    drawInfo.attributes = orientation == TTK_ORIENT_HORIZONTAL
-	? kThemeTrackHorizontal : 0;
-    drawInfo.attributes |= kThemeTrackShowThumb;
-    drawInfo.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state);
-    drawInfo.trackInfo.progress.phase = phase;
+    info.bounds = BoxToRect(d, b);
+    info.min = 0;
+    info.max = (int) maximum;	/* @@@ See note above */
+    info.value = (int) value;
+    info.attributes = orientation == TTK_ORIENT_HORIZONTAL
+	    ? kThemeTrackHorizontal : 0;
+    info.attributes |= kThemeTrackShowThumb;
+    info.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state);
+    info.trackInfo.progress.phase = phase;
 
     BEGIN_DRAWING(d)
-    DrawThemeTrack(&drawInfo,
-	NULL/*rgnGhost*/,NULL/*eraseProc*/,0/*eraseData*/);
+    ChkErr(DrawThemeTrack, &info, NULL, NULL, 0);
     END_DRAWING
 }
 
@@ -681,11 +689,13 @@ static void SeparatorElementDraw(
 {
     Rect bounds = BoxToRect(d, b);
 
-    /* DrawThemeSeparator only supports kThemeStateActive / kThemeStateInactive
+    /*
+     * DrawThemeSeparator only supports kThemeStateActive / kThemeStateInactive
     */
     state &= TTK_STATE_BACKGROUND;
     BEGIN_DRAWING(d)
-    DrawThemeSeparator(&bounds, Ttk_StateTableLookup(ThemeStateTable, state));
+    ChkErr(DrawThemeSeparator, &bounds,
+	    Ttk_StateTableLookup(ThemeStateTable, state));
     END_DRAWING
 }
 
@@ -707,11 +717,11 @@ static void SizegripElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    Point origin = {0, 0};
     Rect bounds;
+    Point origin = {0, 0};
 
-    GetThemeStandaloneGrowBoxBounds(
-	origin, sizegripGrowDirection, false, &bounds);
+    ChkErr(GetThemeStandaloneGrowBoxBounds, origin, sizegripGrowDirection,
+	    false, &bounds);
     *widthPtr = bounds.right - bounds.left;
     *heightPtr = bounds.bottom - bounds.top;
 }
@@ -721,17 +731,14 @@ static void SizegripElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     Rect bounds = BoxToRect(d, b);
-    Point origin;
-
-    origin.h = bounds.left; origin.v = bounds.top;
+    Point origin = {bounds.top, bounds.left};
 
     /* Grow box only supports kThemeStateActive, kThemeStateInactive */
     state &= TTK_STATE_BACKGROUND;
 
     BEGIN_DRAWING(d)
-    DrawThemeStandaloneGrowBox(
-	origin, sizegripGrowDirection, false,
-	Ttk_StateTableLookup(ThemeStateTable, state));
+    ChkErr(DrawThemeStandaloneGrowBox, origin, sizegripGrowDirection, false,
+	    Ttk_StateTableLookup(ThemeStateTable, state));
     END_DRAWING
 }
 
@@ -759,18 +766,13 @@ static void BackgroundElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    ThemeBrush brush 
-    	= (state & TTK_STATE_BACKGROUND)
-	? kThemeBrushModelessDialogBackgroundInactive
-	: kThemeBrushModelessDialogBackgroundActive
-	;
-
+    ThemeBrush brush = (state & TTK_STATE_BACKGROUND)
+	    ? kThemeBrushModelessDialogBackgroundInactive
+	    : kThemeBrushModelessDialogBackgroundActive;
     Rect bounds = BoxToRect(d, Ttk_WinBox(tkwin));
-    SInt32 depth = 32; /* ??? */
-    Boolean inColor = true;
 
     BEGIN_DRAWING(d)
-    SetThemeBackground(brush, depth, inColor);
+    ChkErr(SetThemeBackground, brush, 32, true);
     QDSetPatternOrigin(PatternOrigin(tkwin, d));
     EraseRect(&bounds);
     END_DRAWING
@@ -803,11 +805,9 @@ static void ToolbarBackgroundElementDraw(
 {
     ThemeBrush brush = kThemeBrushToolbarBackground;
     Rect bounds = BoxToRect(d, Ttk_WinBox(tkwin));
-    SInt32 depth = 32;		/* ??? */
-    Boolean inColor = true;
 
     BEGIN_DRAWING(d)
-    SetThemeBackground(brush, depth, inColor);
+    ChkErr(SetThemeBackground, brush, 32, true);
     QDSetPatternOrigin(PatternOrigin(tkwin, d));
     EraseRect(&bounds);
     END_DRAWING
@@ -836,17 +836,16 @@ static void TreeHeaderElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    Rect bounds = BoxToRect(d, b);
     ThemeButtonParms *parms = clientData;
     ThemeButtonDrawInfo info;
+    Rect bounds = BoxToRect(d, b);
 
     info.state = Ttk_StateTableLookup(ThemeStateTable, state);
     info.value = Ttk_StateTableLookup(ButtonValueTable, state);
     info.adornment = Ttk_StateTableLookup(TreeHeaderAdornmentTable, state);
 
     BEGIN_DRAWING(d)
-    DrawThemeButton(&bounds, parms->kind, &info,
-	NULL/*prevInfo*/,NULL/*eraseProc*/,NULL/*labelProc*/,0/*userData*/);
+    ChkErr(DrawThemeButton, &bounds, parms->kind, &info, NULL, NULL, NULL, 0);
     END_DRAWING
 }
 
@@ -858,7 +857,8 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
     TreeHeaderElementDraw
 };
 
-/* Disclosure triangle:
+/*
+ * Disclosure triangle:
  */
 #define TTK_TREEVIEW_STATE_OPEN TTK_STATE_USER1
 #define TTK_TREEVIEW_STATE_LEAF TTK_STATE_USER2
@@ -872,28 +872,30 @@ static void DisclosureElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SInt32 s;
-    GetThemeMetric(kThemeMetricDisclosureTriangleWidth, &s); *widthPtr = s;
-    GetThemeMetric(kThemeMetricDisclosureTriangleHeight, &s); *heightPtr = s;
+
+    ChkErr(GetThemeMetric, kThemeMetricDisclosureTriangleWidth, &s);
+    *widthPtr = s;
+    ChkErr(GetThemeMetric, kThemeMetricDisclosureTriangleHeight, &s);
+    *heightPtr = s;
 }
 
 static void DisclosureElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    Rect bounds = BoxToRect(d, b);
     ThemeButtonDrawInfo info;
+    Rect bounds = BoxToRect(d, b);
 
     if (state & TTK_TREEVIEW_STATE_LEAF) {
 	return;
     }
-
     info.state = Ttk_StateTableLookup(ThemeStateTable, state);
     info.value = Ttk_StateTableLookup(DisclosureValueTable, state);
     info.adornment = kThemeAdornmentDrawIndicatorOnly;
 
     BEGIN_DRAWING(d)
-    DrawThemeButton(&bounds, kThemeDisclosureTriangle, &info,
-	NULL/*prevInfo*/,DontErase,NULL/*labelProc*/,0/*userData*/);
+    ChkErr(DrawThemeButton, &bounds, kThemeDisclosureTriangle, &info, NULL,
+	    DontErase, NULL, 0);
     END_DRAWING
 }
 
@@ -981,28 +983,29 @@ static int AquaTheme_Init(Tcl_Interp *interp)
 	return TCL_ERROR;
     }
 
-    /* Elements:
+    /*
+     * Elements:
      */
     Ttk_RegisterElementSpec(themePtr,"background",&BackgroundElementSpec,0);
     Ttk_RegisterElementSpec(themePtr,"Toolbar.background",
-	&ToolbarBackgroundElementSpec, 0);
+	    &ToolbarBackgroundElementSpec, 0);
 
     Ttk_RegisterElementSpec(themePtr, "Button.button",
-	&ButtonElementSpec, &PushButtonParms);
+	    &ButtonElementSpec, &PushButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Checkbutton.button",
-	&ButtonElementSpec, &CheckBoxParms);
+	    &ButtonElementSpec, &CheckBoxParms);
     Ttk_RegisterElementSpec(themePtr, "Radiobutton.button",
-	&ButtonElementSpec, &RadioButtonParms);
+	    &ButtonElementSpec, &RadioButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Toolbutton.border",
-	&ButtonElementSpec, &BevelButtonParms);
+	    &ButtonElementSpec, &BevelButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
-	&ButtonElementSpec, &PopupButtonParms);
+	    &ButtonElementSpec, &PopupButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Combobox.button",
-	&ComboboxElementSpec, 0);
+	    &ComboboxElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Treeitem.indicator",
-	&DisclosureElementSpec, &DisclosureParms);
+	    &DisclosureElementSpec, &DisclosureParms);
     Ttk_RegisterElementSpec(themePtr, "Treeheading.cell",
-	&TreeHeaderElementSpec, &ListHeaderParms);
+	    &TreeHeaderElementSpec, &ListHeaderParms);
 
     Ttk_RegisterElementSpec(themePtr, "Notebook.tab", &TabElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.client", &PaneElementSpec, 0);
@@ -1016,17 +1019,19 @@ static int AquaTheme_Init(Tcl_Interp *interp)
 
     Ttk_RegisterElementSpec(themePtr, "sizegrip",&SizegripElementSpec,0);
 
-    /* <<NOTE-TRACKS>>
+    /*
+     * <<NOTE-TRACKS>>
      * The Progressbar widget adjusts the size of the pbar element.
      * In the Aqua theme, the appearance manager computes the bar geometry;
      * we do all the drawing in the ".track" element and leave the .pbar out.
      */
     Ttk_RegisterElementSpec(themePtr,"Scale.trough",
-	&TrackElementSpec, &ScaleData);
+	    &TrackElementSpec, &ScaleData);
     Ttk_RegisterElementSpec(themePtr,"Scale.slider",&SliderElementSpec,0);
     Ttk_RegisterElementSpec(themePtr,"Progressbar.track", &PbarElementSpec, 0);
 
-    /* Layouts:
+    /*
+     * Layouts:
      */
     Ttk_RegisterLayout(themePtr, "Toolbar", ToolbarLayout);
     Ttk_RegisterLayout(themePtr, "TButton", ButtonLayout);
