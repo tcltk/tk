@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.23 2005/10/16 02:36:45 hobbs Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.24 2007/11/08 14:25:37 das Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -203,7 +203,7 @@ proc ::tk::MbEnter w {
 	MbLeave $Priv(inMenubutton)
     }
     set Priv(inMenubutton) $w
-    if {[$w cget -state] ne "disabled"} {
+    if {[$w cget -state] ne "disabled" && [tk windowingsystem] ne "aqua"} {
 	$w configure -state active
     }
 }
@@ -222,7 +222,7 @@ proc ::tk::MbLeave w {
     if {![winfo exists $w]} {
 	return
     }
-    if {[$w cget -state] eq "active"} {
+    if {[$w cget -state] eq "active" && [tk windowingsystem] ne "aqua"} {
 	$w configure -state normal
     }
 }
@@ -261,9 +261,13 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	MenuUnpost {}
     }
     set Priv(cursor) [$w cget -cursor]
-    set Priv(relief) [$w cget -relief]
     $w configure -cursor arrow
-    $w configure -relief raised
+    if {[tk windowingsystem] ne "aqua"} {
+	set Priv(relief) [$w cget -relief]
+	$w configure -relief raised
+    } else {
+	$w configure -state active
+    }
 
     set Priv(postedMb) $w
     set Priv(focus) [focus]
@@ -405,7 +409,11 @@ proc ::tk::MenuUnpost menu {
 	    $menu unpost
 	    set Priv(postedMb) {}
 	    $mb configure -cursor $Priv(cursor)
-	    $mb configure -relief $Priv(relief)
+	    if {[tk windowingsystem] ne "aqua"} {
+		$mb configure -relief $Priv(relief)
+	    } else {
+		$mb configure -state normal
+	    }
 	} elseif {$Priv(popup) ne ""} {
 	    $Priv(popup) unpost
 	    set Priv(popup) {}
