@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.13 2007/10/30 01:57:55 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.14 2007/11/08 14:25:20 das Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -32,7 +32,8 @@
 #define BLACK				"Black"
 #define WHITE				"White"
 #define NORMAL_BG			"systemWindowBody"
-#define ACTIVE_BG			"#ececec"
+#define ACTIVE_BG			"systemButtonFacePressed"
+#define ACTIVE_FG			"systemPushButtonPressedText"
 #define SELECT_BG			"systemHighlight"
 #define SELECT_FG			None
 #define INACTIVE_SELECT_BG		"systemHighlightSecondary"
@@ -45,9 +46,9 @@
  */
 
 #define DEF_BUTTON_ANCHOR		"center"
-#define DEF_BUTTON_ACTIVE_BG_COLOR	"systemButtonText"
+#define DEF_BUTTON_ACTIVE_BG_COLOR	ACTIVE_BG
 #define DEF_BUTTON_ACTIVE_BG_MONO	BLACK
-#define DEF_BUTTON_ACTIVE_FG_COLOR	"systemButtonFace"
+#define DEF_BUTTON_ACTIVE_FG_COLOR	ACTIVE_FG
 #define DEF_CHKRAD_ACTIVE_FG_COLOR	DEF_BUTTON_ACTIVE_FG_COLOR
 #define DEF_BUTTON_ACTIVE_FG_MONO	WHITE
 /* #define DEF_BUTTON_BG_COLOR	"systemButtonFace"*/
@@ -323,12 +324,12 @@
 #define DEF_MENUBUTTON_ANCHOR		"center"
 #define DEF_MENUBUTTON_ACTIVE_BG_COLOR	ACTIVE_BG
 #define DEF_MENUBUTTON_ACTIVE_BG_MONO	BLACK
-#define DEF_MENUBUTTON_ACTIVE_FG_COLOR	BLACK
+#define DEF_MENUBUTTON_ACTIVE_FG_COLOR	ACTIVE_FG
 #define DEF_MENUBUTTON_ACTIVE_FG_MONO	WHITE
 #define DEF_MENUBUTTON_BG_COLOR		NORMAL_BG
 #define DEF_MENUBUTTON_BG_MONO		WHITE
 #define DEF_MENUBUTTON_BITMAP		""
-#define DEF_MENUBUTTON_BORDER_WIDTH	"1"
+#define DEF_MENUBUTTON_BORDER_WIDTH	"2"
 #define DEF_MENUBUTTON_CURSOR		""
 #define DEF_MENUBUTTON_DIRECTION	"below"
 #define DEF_MENUBUTTON_DISABLED_FG_COLOR DISABLED
