@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.9 2007/11/05 00:00:00 jenglish Exp $
+/* $Id: ttkDefaultTheme.c,v 1.10 2007/11/08 01:40:25 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -496,9 +496,10 @@ static void IndicatorElementSize(
 {
     IndicatorSpec *spec = clientData;
     IndicatorElement *indicator = elementRecord;
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, paddingPtr);
-    *widthPtr = spec->width;
-    *heightPtr = spec->height;
+    Ttk_Padding margins;
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
+    *widthPtr = spec->width + Ttk_PaddingWidth(margins);
+    *heightPtr = spec->height + Ttk_PaddingHeight(margins);
 }
 
 static void IndicatorElementDraw(
@@ -649,7 +650,8 @@ static void ArrowElementSize(
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &width);
     width -= Ttk_PaddingWidth(ArrowPadding);
     TtkArrowSize(width/2, direction, widthPtr, heightPtr);
-    *paddingPtr = ArrowPadding;
+    *widthPtr += Ttk_PaddingWidth(ArrowPadding);
+    *heightPtr += Ttk_PaddingHeight(ArrowPadding);
 }
 
 static void ArrowElementDraw(
@@ -722,7 +724,8 @@ static void MenubuttonArrowElementSize(
     int size = MENUBUTTON_ARROW_SIZE;
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
     *widthPtr = *heightPtr = 2 * size + 1;
-    *paddingPtr = MenubuttonArrowPadding;
+    *widthPtr += Ttk_PaddingWidth(MenubuttonArrowPadding);
+    *heightPtr += Ttk_PaddingHeight(MenubuttonArrowPadding);
 }
 
 static void MenubuttonArrowElementDraw(
@@ -1058,9 +1061,12 @@ static void TreeitemIndicatorSize(
 {
     TreeitemIndicator *indicator = elementRecord;
     int diameter = 0;
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, paddingPtr);
+    Ttk_Padding margins;
+
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
-    *widthPtr = *heightPtr = diameter;
+    *widthPtr = diameter + Ttk_PaddingWidth(margins);
+    *heightPtr = diameter + Ttk_PaddingHeight(margins);
 }
 
 static void TreeitemIndicatorDraw(

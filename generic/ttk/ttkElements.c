@@ -1,4 +1,4 @@
-/* $Id: ttkElements.c,v 1.7 2007/10/25 07:08:26 jenglish Exp $
+/* $Id: ttkElements.c,v 1.8 2007/11/08 01:40:25 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -531,10 +531,12 @@ static void SquareIndicatorElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     IndicatorElement *indicator = elementRecord;
+    Ttk_Padding margins;
     int diameter = 0;
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, paddingPtr);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
-    *widthPtr = *heightPtr = diameter;
+    *widthPtr = diameter + Ttk_PaddingWidth(margins);
+    *heightPtr = diameter + Ttk_PaddingHeight(margins);
 }
 
 static void SquareIndicatorElementDraw(
@@ -571,10 +573,12 @@ static void DiamondIndicatorElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     IndicatorElement *indicator = elementRecord;
+    Ttk_Padding margins;
     int diameter = 0;
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, paddingPtr);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
-    *widthPtr = *heightPtr = diameter + 3;
+    *widthPtr = diameter + 3 + Ttk_PaddingWidth(margins);
+    *heightPtr = diameter + 3 + Ttk_PaddingHeight(margins);
 }
 
 static void DiamondIndicatorElementDraw(
@@ -673,9 +677,12 @@ static void MenuIndicatorElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     MenuIndicatorElement *mi = elementRecord;
+    Ttk_Padding margins;
     Tk_GetPixelsFromObj(NULL, tkwin, mi->widthObj, widthPtr);
     Tk_GetPixelsFromObj(NULL, tkwin, mi->heightObj, heightPtr);
-    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj,paddingPtr);
+    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj, &margins);
+    *widthPtr += Ttk_PaddingWidth(margins);
+    *heightPtr += Ttk_PaddingHeight(margins);
 }
 
 static void MenuIndicatorElementDraw(
@@ -735,7 +742,7 @@ static Ttk_ElementOptionSpec ArrowElementOptions[] =
     { NULL }
 };
 
-static Ttk_Padding ArrowPadding = { 3,3,3,3 };
+static Ttk_Padding ArrowMargins = { 3,3,3,3 };
 
 static void ArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -746,9 +753,10 @@ static void ArrowElementSize(
     int width = 14;
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &width);
-    width -= Ttk_PaddingWidth(ArrowPadding);
+    width -= Ttk_PaddingWidth(ArrowMargins);
     TtkArrowSize(width/2, direction, widthPtr, heightPtr);
-    *paddingPtr = ArrowPadding;
+    *widthPtr += Ttk_PaddingWidth(ArrowMargins);
+    *heightPtr += Ttk_PaddingWidth(ArrowMargins);
 }
 
 static void ArrowElementDraw(
@@ -768,7 +776,7 @@ static void ArrowElementDraw(
 	tkwin, d, border, b.x, b.y, b.width, b.height, borderWidth, relief);
 
     TtkFillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
-	Ttk_PadBox(b, ArrowPadding), direction);
+	Ttk_PadBox(b, ArrowMargins), direction);
 }
 
 static Ttk_ElementSpec ArrowElementSpec =
@@ -1075,16 +1083,14 @@ static void PbarElementSize(
 
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
-	    *widthPtr	= length;
-	    *heightPtr	= thickness;
+	    *widthPtr	= length + 2 * borderWidth;
+	    *heightPtr	= thickness + 2 * borderWidth;
 	    break;
 	case TTK_ORIENT_VERTICAL:
-	    *widthPtr	= thickness;
-	    *heightPtr	= length;
+	    *widthPtr	= thickness + 2 * borderWidth;
+	    *heightPtr	= length + 2 * borderWidth;
 	    break;
     }
-
-    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
 static void PbarElementDraw(
