@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.30 2007/10/12 03:14:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.31 2007/11/08 14:24:47 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -39,6 +39,7 @@ struct TkWindowPrivate {
     ControlRef rootControl;
     int xOff;			/* X offset from toplevel window */
     int yOff;			/* Y offset from toplevel window */
+    CGSize size;
     HIShapeRef visRgn;		/* Visible region of window */
     HIShapeRef aboveVisRgn;	/* Visible region of window & its children */
     CGRect drawRect;		/* Clipped drawing rect */
@@ -72,6 +73,7 @@ typedef struct TkMacOSXWindowList {
 #define TK_DRAWN_UNDER_MENU	0x08
 #define TK_CLIPPED_DRAW		0x10
 #define TK_IS_PIXMAP		0x20
+#define TK_IS_BW_PIXMAP		0x40
 
 /*
  * I am reserving TK_EMBEDDED = 0x100 in the MacDrawable flags

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.43 2007/10/12 03:14:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.44 2007/11/08 14:24:47 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -3993,6 +3993,7 @@ TkpMenuInit(void)
     macMDEFDrawable.flags = 0;
     macMDEFDrawable.grafPtr = NULL;
     macMDEFDrawable.context = NULL;
+    macMDEFDrawable.size = CGSizeZero;
 #endif
 
     ChkErr(GetThemeMetric, kThemeMetricMenuMarkColumnWidth,

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.30 2007/10/12 03:14:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.31 2007/11/08 14:24:47 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -40,6 +40,8 @@
 RgnHandle tkMacOSXtmpQdRgn = NULL;
 
 int tkMacOSXUseCGDrawing = 1;
+
+int tkPictureIsOpen;
 
 static PixPatHandle penPat = NULL;
 
@@ -151,7 +153,7 @@ XCopyArea(
     GC gc,			/* GC to use. */
     int src_x,			/* X & Y, width & height */
     int src_y,			/* define the source rectangle */
-    unsigned int width,		/* the will be copied. */
+    unsigned int width,		/* that will be copied. */
     unsigned int height,
     int dest_x,			/* Dest X & Y on dest rect. */
     int dest_y)
@@ -234,7 +236,7 @@ XCopyPlane(
     GC gc,			/* GC to use. */
     int src_x,			/* X & Y, width & height */
     int src_y,			/* define the source rectangle */
-    unsigned int width,		/* the will be copied. */
+    unsigned int width,		/* that will be copied. */
     unsigned int height,
     int dest_x,			/* Dest X & Y on dest rect. */
     int dest_y,
@@ -1573,21 +1575,29 @@ TkMacOSXSetupDrawingContext(
 	}
 	goto end;
     }
-    dc.port = TkMacOSXGetDrawablePort(d);
-    if (dc.port) {
-	GetPortBounds(dc.port, &dc.portBounds);
+    if (useCG) {
+	dc.context = macDraw->context;;
     }
-    dc.context = macDraw->context;
-    if (dc.context && useCG) {
+    if (!dc.context || !(macDraw->flags & TK_IS_PIXMAP)) {
+	dc.port = TkMacOSXGetDrawablePort(d);
+	if (dc.port) {
+	    GetPortBounds(dc.port, &dc.portBounds);
+	}
+    }
+    if (dc.context) {
 	if (!dc.port) {
-	    TK_IF_MAC_OS_X_API (3, CGContextGetClipBoundingBox,
-		CGRect r = CGContextGetClipBoundingBox(dc.context);
+	    CGRect r;
 
-		SetRect(&dc.portBounds, r.origin.x + macDraw->xOff,
-			r.origin.y + macDraw->yOff,
-			r.origin.x + r.size.width + macDraw->xOff,
-			r.origin.y + r.size.height + macDraw->yOff);
+	    TK_IF_MAC_OS_X_API (3, CGContextGetClipBoundingBox,
+		r = CGContextGetClipBoundingBox(dc.context);
+	    ) TK_ELSE_MAC_OS_X (3,
+		r.origin = CGPointZero;
+		r.size = macDraw->size;
 	    ) TK_ENDIF
+	    SetRect(&dc.portBounds, r.origin.x + macDraw->xOff,
+		    r.origin.y + macDraw->yOff,
+		    r.origin.x + r.size.width + macDraw->xOff,
+		    r.origin.y + r.size.height + macDraw->yOff);
 	}
 	CGContextSaveGState(dc.context);
 	dc.saveState = (void*)1;

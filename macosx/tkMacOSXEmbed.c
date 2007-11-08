@@ -15,7 +15,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.14 2007/10/12 03:14:48 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.15 2007/11/08 14:24:47 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -155,6 +155,7 @@ TkpMakeWindow(
 	macWin->flags = TK_CLIP_INVALID;
 	macWin->grafPtr = NULL;
 	macWin->context = NULL;
+	macWin->size = CGSizeZero;
 	if (Tk_IsTopLevel(macWin->winPtr)) {
 	    /*
 	     *This will be set when we are mapped.
@@ -298,6 +299,7 @@ TkpUseWindow(
 
     macWin->grafPtr = NULL;
     macWin->context = NULL;
+    macWin->size = CGSizeZero;
     macWin->visRgn = NULL;
     macWin->aboveVisRgn = NULL;
     macWin->drawRect = CGRectNull;
