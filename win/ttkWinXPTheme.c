@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.13 2007/10/25 07:08:27 jenglish Exp $
+ * $Id: ttkWinXPTheme.c,v 1.14 2007/11/08 01:40:26 jenglish Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -493,6 +493,10 @@ static void GenericElementSize(
     /* See NOTE-GetThemeMargins 
      */
     *paddingPtr = elementData->info->padding;
+    if (elementData->info->flags & PAD_MARGINS) {
+	*widthPtr += Ttk_PaddingWidth(elementData->info->padding);
+	*heightPtr += Ttk_PaddingHeight(elementData->info->padding);
+    }
 }
 
 static void GenericElementDraw(

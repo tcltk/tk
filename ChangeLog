@@ -1,3 +1,17 @@
+2007-11-07  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTheme.c(Ttk_ElementSize): Fixed longstanding,
+	subtle bug that caused element padding to sometimes be counted 
+	twice in size computations.
+
+	* generic/ttk/ttkElements.c, generic/ttk/ttkClamTheme.c,
+	generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkTreeview.c,
+	generic/ttk/ttkImage.c, macosx/ttkMacOSXTheme.c,
+	win/ttkWinTheme.c, win/ttkWinXPTheme.c:
+
+	Fix ElementSizeProcs affected by previous change.
+
+
 2007-11-06  Andreas Kupries  <andreask@activestate.com>
 
 	* doc/CrtConsoleChan.3: Fixed markup typo and extended see also

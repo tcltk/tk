@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.6 2007/01/11 19:59:26 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.7 2007/11/08 01:40:25 jenglish Exp $
  */
 
 #include <stdlib.h>
@@ -1095,8 +1095,6 @@ Ttk_ElementSize(
     element->specPtr->size(
 	element->clientData, element->elementRecord,
 	tkwin, widthPtr, heightPtr, paddingPtr);
-    *widthPtr += paddingPtr->left + paddingPtr->right;
-    *heightPtr += paddingPtr->top + paddingPtr->bottom;
 }
 
 /*
