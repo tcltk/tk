@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClamTheme.c,v 1.6 2007/10/25 07:08:26 jenglish Exp $
+ * $Id: ttkClamTheme.c,v 1.7 2007/11/08 01:40:24 jenglish Exp $
  *
  * Copyright (C) 2004 Joe English
  *
@@ -301,10 +301,12 @@ static void IndicatorElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     IndicatorElement *indicator = elementRecord;
+    Ttk_Padding margins;
     int size = 10;
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, paddingPtr);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    *widthPtr = *heightPtr = size;
+    *widthPtr = size + Ttk_PaddingWidth(margins);
+    *heightPtr = size + Ttk_PaddingHeight(margins);
 }
 
 static void RadioIndicatorElementDraw(
@@ -418,10 +420,13 @@ static void MenuIndicatorElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     MenuIndicatorElement *indicator = elementRecord;
+    Ttk_Padding margins;
     int size = MENUBUTTON_ARROW_SIZE;
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &margins);
     TtkArrowSize(size, ARROW_DOWN, widthPtr, heightPtr);
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, paddingPtr);
+    *widthPtr += Ttk_PaddingWidth(margins);
+    *heightPtr += Ttk_PaddingHeight(margins);
 }
 
 static void MenuIndicatorElementDraw(
@@ -698,6 +703,8 @@ static void PbarElementSize(
     SliderElementSize(clientData, elementRecord, tkwin,
 	    widthPtr, heightPtr, paddingPtr);
     *paddingPtr = Ttk_UniformPadding(2);
+    *widthPtr += 4;
+    *heightPtr += 4;
 }
 
 static void PbarElementDraw(

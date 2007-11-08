@@ -1,4 +1,4 @@
-/* $Id: ttkImage.c,v 1.5 2006/12/14 19:51:04 jenglish Exp $
+/* $Id: ttkImage.c,v 1.6 2007/11/08 01:40:25 jenglish Exp $
  *	Image specifications and image element factory.
  *
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
@@ -258,8 +258,6 @@ static void ImageElementSize(
     }
 
     *paddingPtr = imageData->padding;
-    *widthPtr -= Ttk_PaddingWidth(imageData->padding);
-    *heightPtr -= Ttk_PaddingHeight(imageData->padding);
 }
 
 static void ImageElementDraw(

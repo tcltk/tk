@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.20 2007/11/05 00:00:00 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.21 2007/11/08 01:40:25 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -3099,12 +3099,14 @@ static void TreeitemIndicatorSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     TreeitemIndicator *indicator = elementRecord;
+    Ttk_Padding margins;
     int size = 0;
 
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, paddingPtr);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
 
-    *widthPtr = *heightPtr = size;
+    *widthPtr = size + Ttk_PaddingWidth(margins);
+    *heightPtr = size + Ttk_PaddingHeight(margins);
 }
 
 static void TreeitemIndicatorDraw(
