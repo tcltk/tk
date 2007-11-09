@@ -53,6 +53,18 @@
 
 	* macosx/ttkMacOSXTheme.c:	add error checking; cleanup formatting.
 
+	* macosx/tkMacOSXFont.c (TkpGetFontAttrsForChar): panic on false return
+					from TkMacOSXSetupDrawingContext().
+
+	* macosx/tkMacOSXButton.c:	sync formatting, whitespace, copyrights
+	* macosx/tkMacOSXDialog.c:	with core-8-4-branch.
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXWm.c:
+	* xlib/xgc.c
+	* library/bgerror.tcl:
+	* library/console.tcl:
+	* library/menu.tcl:
+
 2007-11-07  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTheme.c (Ttk_ElementSize): Fixed longstanding,

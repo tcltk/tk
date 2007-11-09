@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.60 2007/10/26 10:36:42 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.61 2007/11/09 06:23:29 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -574,8 +574,9 @@ wrongNumArgs:
 	!= TCL_OK) {
 	return TCL_ERROR;
     }
-    if (!Tk_IsTopLevel(winPtr) &&
-	    (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
+    if (!Tk_IsTopLevel(winPtr)
+	    && (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)
+	    ) {
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
 		"\" isn't a top-level window", NULL);
 	return TCL_ERROR;
