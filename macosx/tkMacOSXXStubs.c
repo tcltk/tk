@@ -13,11 +13,15 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.19 2007/07/04 18:10:52 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.20 2007/11/09 06:26:57 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
+
+#if 0
+#include <IOKit/IOKitLib.h>
+#endif
 
 /*
  * Because this file is still under major development Debugger statements are
@@ -704,15 +708,7 @@ XSetClipRectangles(
     int n,
     int ordering)
 {
-    TkRegion clipRgn;
-
-    if (gc->clip_mask && ((TkpClipMask*)gc->clip_mask)->type
-	    == TKP_CLIP_REGION) {
-	clipRgn = ((TkpClipMask*)gc->clip_mask)->value.region;
-	SetEmptyRgn((RgnHandle) clipRgn);
-    } else {
-	clipRgn = TkCreateRegion(); /* LEAK! */
-    }
+    TkRegion clipRgn = TkCreateRegion();
 
     while (n--) {
 	XRectangle rect = *rectangles;
@@ -723,6 +719,7 @@ XSetClipRectangles(
 	rectangles++;
     }
     TkSetRegion(d, gc, clipRgn);
+    TkDestroyRegion(clipRgn);
     return 1;
 }
 #endif
@@ -1198,3 +1195,95 @@ TkGetDefaultScreenName(
 #endif
     return macScreenName;
 }
+#if 0
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_GetUserInactiveTime --
+ *
+ *	Return the number of milliseconds the user was inactive.
+ *
+ * Results:
+ *	The number of milliseconds the user has been inactive,
+ *	or -1 if querying the inactive time is not supported.
+ *
+ * Side effects:
+ *	None.
+ *----------------------------------------------------------------------
+ */
+
+long
+Tk_GetUserInactiveTime(Display *dpy)
+{
+    io_registry_entry_t regEntry;
+    CFMutableDictionaryRef props = NULL;
+    CFTypeRef timeObj;
+    long ret = -1l;
+    uint64_t time;
+
+    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
+	    IOServiceMatching("IOHIDSystem"));
+
+    if (regEntry == 0) {
+	return -1l;
+    }
+
+    IOReturn result = IORegistryEntryCreateCFProperties(regEntry, &props,
+	    kCFAllocatorDefault, 0);
+    IOObjectRelease(regEntry);
+
+    if (result != KERN_SUCCESS || props == NULL) {
+	return -1l;
+    }
+
+    timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
+
+    if (timeObj) {
+	CFTypeID type = CFGetTypeID(timeObj);
+
+	if (type == CFDataGetTypeID()) { /* Jaguar */
+	    CFDataGetBytes((CFDataRef) timeObj,
+		    CFRangeMake(0, sizeof(time)), (UInt8 *) &time);
+	    /* Convert nanoseconds to milliseconds. */
+	    /* ret /= kMillisecondScale; */
+	    ret = (long)(time/kMillisecondScale);
+	} else if (type == CFNumberGetTypeID()) { /* Panther+ */
+	    CFNumberGetValue((CFNumberRef)timeObj,
+		    kCFNumberSInt64Type, &time);
+	    /* Convert nanoseconds to milliseconds. */
+	    /* ret /= kMillisecondScale; */
+	    ret = (long)(time/kMillisecondScale);
+	} else {
+	    ret = -1l;
+	}
+    }
+    /* Cleanup */
+    CFRelease(props);
+
+    return ret;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_ResetUserInactiveTime --
+ *
+ *	Reset the user inactivity timer
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	The user inactivity timer of the underlaying windowing system
+ *	is reset to zero.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_ResetUserInactiveTime(Display *dpy)
+{
+    UpdateSystemActivity(OverallAct);
+}
+#endif

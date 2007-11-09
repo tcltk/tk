@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.44 2007/10/26 10:38:13 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.45 2007/11/09 06:26:57 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -77,9 +77,9 @@ static Tk_GeomMgr wmMgrType = {
  * The following keeps state for Aqua dock icon bounce notification.
  */
 
-/*
+#if 0
 static int tkMacOSXWmAttrNotifyVal = 0;
-*/
+#endif
 
 /*
  * Hash table for Mac Window -> TkWindow mapping.
@@ -115,6 +115,10 @@ static int WmDeiconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
 	Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int WmFocusmodelCmd(Tk_Window tkwin, TkWindow *winPtr,
 	Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+#if 0
+static int WmForgetCmd(Tk_Window tkwin, TkWindow *winPtr,
+	Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+#endif
 static int WmFrameCmd(Tk_Window tkwin, TkWindow *winPtr, Tcl_Interp *interp,
 	int objc, Tcl_Obj *const objv[]);
 static int WmGeometryCmd(Tk_Window tkwin, TkWindow *winPtr, Tcl_Interp *interp,
@@ -137,6 +141,10 @@ static int WmIconpositionCmd(Tk_Window tkwin, TkWindow *winPtr,
 	Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 static int WmIconwindowCmd(Tk_Window tkwin, TkWindow *winPtr,
 	Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+#if 0
+static int WmManageCmd(Tk_Window tkwin, TkWindow *winPtr, Tcl_Interp *interp,
+	int objc, Tcl_Obj *const objv[]);
+#endif
 static int WmMaxsizeCmd(Tk_Window tkwin, TkWindow *winPtr, Tcl_Interp *interp,
 	int objc, Tcl_Obj *const objv[]);
 static int WmMinsizeCmd(Tk_Window tkwin, TkWindow *winPtr, Tcl_Interp *interp,
@@ -170,6 +178,9 @@ static void ApplyWindowClassAttributeChanges(TkWindow *winPtr,
 static void ApplyMasterOverrideChanges(TkWindow *winPtr, WindowRef macWindow);
 static void GetMinSize(TkWindow *winPtr, int *minWidthPtr, int *minHeightPtr);
 static void GetMaxSize(TkWindow *winPtr, int *maxWidthPtr, int *maxHeightPtr);
+#if 0
+static void RemapWindows(TkWindow *winPtr, MacDrawable *parentWin);
+#endif
 
 
 /*
@@ -516,21 +527,21 @@ Tk_WmObjCmd(
     Tk_Window tkwin = (Tk_Window) clientData;
     static const char *optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
-	"command", "deiconify", "focusmodel",
+	"command", "deiconify", "focusmodel",/* "forget",*/
 	"frame", "geometry", "grid", "group",
 	"iconbitmap", "iconify", "iconmask", "iconname",
 	"iconphoto", "iconposition", "iconwindow",
-	"maxsize", "minsize", "overrideredirect",
+	/*"manage", */"maxsize", "minsize", "overrideredirect",
 	"positionfrom", "protocol", "resizable", "sizefrom",
 	"stackorder", "state", "title", "transient",
 	"withdraw", NULL };
     enum options {
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
-	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL,
+	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL,/* WMOPT_FORGET,*/
 	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP,
 	WMOPT_ICONBITMAP, WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME,
 	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION, WMOPT_ICONWINDOW,
-	WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
+	/*WMOPT_MANAGE, */WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
 	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
@@ -571,7 +582,11 @@ wrongNumArgs:
 	!= TCL_OK) {
 	return TCL_ERROR;
     }
-    if (!Tk_IsTopLevel(winPtr)) {
+    if (!Tk_IsTopLevel(winPtr)
+#if 0
+	    && (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)
+#endif
+	    ) {
 	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
 		"\" isn't a top-level window", NULL);
 	return TCL_ERROR;
@@ -592,6 +607,10 @@ wrongNumArgs:
 	    return WmDeiconifyCmd(tkwin, winPtr, interp, objc, objv);
 	case WMOPT_FOCUSMODEL:
 	    return WmFocusmodelCmd(tkwin, winPtr, interp, objc, objv);
+#if 0
+	case WMOPT_FORGET:
+	    return WmForgetCmd(tkwin, winPtr, interp, objc, objv);
+#endif
 	case WMOPT_FRAME:
 	    return WmFrameCmd(tkwin, winPtr, interp, objc, objv);
 	case WMOPT_GEOMETRY:
@@ -614,6 +633,10 @@ wrongNumArgs:
 	    return WmIconpositionCmd(tkwin, winPtr, interp, objc, objv);
 	case WMOPT_ICONWINDOW:
 	    return WmIconwindowCmd(tkwin, winPtr, interp, objc, objv);
+#if 0
+	case WMOPT_MANAGE:
+	    return WmManageCmd(tkwin, winPtr, interp, objc, objv);
+#endif
 	case WMOPT_MAXSIZE:
 	    return WmMaxsizeCmd(tkwin, winPtr, interp, objc, objv);
 	case WMOPT_MINSIZE:
@@ -776,7 +799,7 @@ static int WmSetAttribute(
 		ChkErr(SetWindowModified, macWindow, boolean);
 	    }
 	    break;
-/*
+#if 0
 	case WMATT_NOTIFY:
 	    if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
 		return TCL_ERROR;
@@ -795,7 +818,7 @@ static int WmSetAttribute(
 		tkMacOSXWmAttrNotifyVal = boolean;
 	    }
 	    break;
-*/
+#endif
 	case WMATT_TITLEPATH: {
 	    const char *path;
 	    OSStatus err;
@@ -925,11 +948,11 @@ static Tcl_Obj *WmGetAttribute(
 	case WMATT_MODIFIED:
 	    result = Tcl_NewBooleanObj(IsWindowModified(macWindow));
 	    break;
-/*
+#if 0
 	case WMATT_NOTIFY:
 	    result = Tcl_NewBooleanObj(tkMacOSXWmAttrNotifyVal);
 	    break;
-*/
+#endif
 	case WMATT_TITLEPATH: {
 	    FSRef ref;
 	    UInt8 path[PATH_MAX+1];
@@ -1347,6 +1370,69 @@ WmFocusmodelCmd(
     }
     return TCL_OK;
 }
+#if 0
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmForgetCmd --
+ *
+ *	This procedure is invoked to process the "wm forget" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmForgetCmd(tkwin, winPtr, interp, objc, objv)
+    Tk_Window tkwin;		/* Main window of the application. */
+    TkWindow *winPtr;           /* Toplevel or Frame to work with */
+    Tcl_Interp *interp;		/* Current interpreter. */
+    int objc;			/* Number of arguments. */
+    Tcl_Obj *CONST objv[];	/* Argument objects. */
+{
+#if 1
+    Tcl_AppendResult(interp, "wm forget is not yet supported", (char*)NULL);
+    return TCL_ERROR;
+#else
+    register Tk_Window frameWin = (Tk_Window)winPtr;
+    char *oldClass = (char*)Tk_Class(frameWin);
+
+    if (Tk_IsTopLevel(frameWin)) {
+	MacDrawable *macWin = (MacDrawable *) winPtr->window;
+	CGrafPtr destPort = TkMacOSXGetDrawablePort(winPtr->window);
+
+	TkFocusJoin(winPtr);
+	Tk_UnmapWindow(frameWin);
+
+	if (destPort != NULL) {
+	    WindowRef winRef;
+	    winRef = GetWindowFromPort(destPort);
+	    TkMacOSXUnregisterMacWindow(winRef);
+	    DisposeWindow(winRef);
+	}
+	macWin->grafPtr = NULL;
+	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	macWin->flags &= ~TK_HOST_EXISTS;
+
+	RemapWindows(winPtr, macWin);
+	TkWmDeadWindow(winPtr);
+	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+
+	TkMapTopFrame(frameWin);
+    } else {
+	/* Already not managed by wm - ignore it */
+    }
+    return TCL_OK;
+#endif
+}
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -2040,6 +2126,69 @@ WmIconwindowCmd(
     }
     return TCL_OK;
 }
+#if 0
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmManageCmd --
+ *
+ *	This procedure is invoked to process the "wm manage" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmManageCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,           /* Toplevel or Frame to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
+{
+#if 1
+    Tcl_AppendResult(interp, "wm manage is not yet supported", (char*)NULL);
+    return TCL_ERROR;
+#else
+    register Tk_Window frameWin = (Tk_Window)winPtr;
+    register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    char *oldClass = (char*)Tk_Class(frameWin);
+
+    if (!Tk_IsTopLevel(frameWin)) {
+	MacDrawable *macWin = (MacDrawable *) winPtr->window;
+
+	TkFocusSplit(winPtr);
+	Tk_UnmapWindow(frameWin);
+	if (wmPtr == NULL) {
+	    TkWmNewWindow(winPtr);
+	    if (winPtr->window == None) {
+		Tk_MakeWindowExist((Tk_Window) winPtr);
+		macWin = (MacDrawable *) winPtr->window;
+	    }
+	    TkWmMapWindow(winPtr);
+	    Tk_UnmapWindow(frameWin);
+	}
+	wmPtr = winPtr->wmInfoPtr;
+	winPtr->flags &= ~TK_MAPPED;
+	macWin->grafPtr = NULL;
+	macWin->toplevel = macWin;
+	RemapWindows(winPtr, macWin);
+	winPtr->flags |= (TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+	TkMapTopFrame (frameWin);
+    } else if (Tk_IsTopLevel(frameWin)) {
+	/* Already managed by wm - ignore it */
+    }
+    return TCL_OK;
+#endif
+}
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -5870,6 +6019,7 @@ ApplyWindowClassAttributeChanges(
 		    ChkErr(HIGrowBoxViewSetTransparent, growBoxView, true);
 		}
 	    }
+	    TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 	    TkMacOSXInvalidateWindow((MacDrawable *)(winPtr->window),
 		    TK_PARENT_WINDOW);
 	}
@@ -6242,3 +6392,46 @@ GetMaxSize(
 	*maxHeightPtr = maxHeight;
     }
 }
+#if 0
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemapWindows
+ *
+ *	Adjust parent/child relation ships of
+ *	the given window hierarchy.
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	keeps windowing system (X11) happy
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+RemapWindows(TkWindow *winPtr, MacDrawable *parentWin)
+{
+    TkWindow *childPtr;
+
+    /* Remove the OS specific window.
+     * It will get rebuilt when the window gets Mapped.
+     */
+    if (winPtr->window != None) {
+	MacDrawable *macWin = (MacDrawable *) winPtr->window;
+	macWin->grafPtr = NULL;
+	macWin->toplevel = parentWin->toplevel;
+	winPtr->flags &= ~TK_MAPPED;
+#ifdef TK_REBUILD_TOPLEVEL
+	winPtr->flags |= TK_REBUILD_TOPLEVEL;
+#endif
+    }
+
+    /* Repeat for all the children */
+    for (childPtr = winPtr->childList; childPtr != NULL;
+	 childPtr = childPtr->nextPtr) {
+	RemapWindows(childPtr, (MacDrawable *) winPtr->window);
+    }
+}
+#endif
