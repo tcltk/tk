@@ -5,11 +5,12 @@
  *	contexts.
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
+ * Copyright (c) 2002-2007 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.14 2007/10/12 03:13:55 das Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.15 2007/11/09 06:23:30 das Exp $
  */
 
 #include <tkInt.h>
