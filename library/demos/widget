@@ -11,7 +11,7 @@ exec wish "$0" "$@"
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
 #
-# RCS: @(#) $Id: widget,v 1.9.2.2 2006/09/11 14:41:16 das Exp $
+# RCS: @(#) $Id: widget,v 1.9.2.3 2007/11/09 06:48:32 das Exp $
 
 eval destroy [winfo child .]
 wm title . "Widget Demonstration"
@@ -44,20 +44,15 @@ set font $widgetFont(main)
 
 menu .menuBar -tearoff 0
 
-# On the Mac use the special .apple menu for the about item
-if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
-    .menuBar add cascade -menu .menuBar.apple
-    menu .menuBar.apple -tearoff 0
-    .menuBar.apple add command -label "About..." -command "aboutBox"
-} else {
+if {[tk windowingsystem] ne "classic" && [tk windowingsystem] ne "aqua"} {
     .menuBar add cascade -menu .menuBar.file -label "File" -underline 0
     menu .menuBar.file -tearoff 0
-    .menuBar.file add command -label "About..." -command "aboutBox" \
+    .menuBar.file add command -label "About..." -command "tkAboutDialog" \
 	-underline 0 -accelerator "<F1>"
     .menuBar.file add sep
     .menuBar.file add command -label "Quit" -command "exit" -underline 0 \
 	-accelerator "Meta-Q"
-    bind . <F1> aboutBox
+    bind . <F1> tkAboutDialog
 }
 
 . configure -menu .menuBar
@@ -71,11 +66,19 @@ pack .statusBar.lab -side left -padx 2 -expand yes -fill both
 pack .statusBar.foo -side left -padx 2
 pack .statusBar -side bottom -fill x -pady 2
 
+set textheight 30
+catch {
+    set textheight [expr {
+	([winfo screenheight .] - 200) /
+	[font metrics $widgetFont(main) -displayof . -linespace]
+    }]
+}
+
 frame .textFrame
 scrollbar .s -orient vertical -command {.t yview} -highlightthickness 0 \
     -takefocus 1
 pack .s -in .textFrame -side right -fill y
-text .t -yscrollcommand {.s set}  -wrap word  -width 70  -height 30 \
+text .t -yscrollcommand {.s set}  -wrap word  -width 70  -height $textheight \
 	-font $widgetFont(main)  -setgrid 1  -highlightthickness 0 \
 	-padx 4  -pady 2  -takefocus 0
 pack .t -in .textFrame -expand y -fill both -padx 1
@@ -374,11 +377,11 @@ proc showCode w {
     close $id
 }
 
-# aboutBox --
+# tkAboutDialog --
 #
 #	Pops up a message box with an "about" message
 #
-proc aboutBox {} {
+proc tkAboutDialog {} {
     tk_messageBox -icon info -type ok -title "About Widget Demo" -message \
 "Tk widget demonstration
 
@@ -386,7 +389,9 @@ Copyright (c) 1996-1997 Sun Microsystems, Inc.
 
 Copyright (c) 1997-2000 Ajuba Solutions, Inc.
 
-Copyright (c) 2001-2002 Donal K. Fellows"
+Copyright (c) 2001-2002 Donal K. Fellows
+
+Copyright (c) 2002-2007 Daniel A. Steffen"
 }
 
 # Local Variables:
