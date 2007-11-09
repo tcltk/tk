@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.31 2007/10/30 02:33:10 hobbs Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.32 2007/11/09 06:22:36 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -678,7 +678,10 @@ TkpGetFontAttrsForChar(
      * But the name of the actual font may still differ, so we activate the
      * string as an ATSU layout and ask ATSU about the fallback.
      */
-    TkMacOSXSetupDrawingContext(Tk_WindowId(tkwin), NULL, 1, &drawingContext);
+    if (!TkMacOSXSetupDrawingContext(Tk_WindowId(tkwin), NULL, 1,
+	    &drawingContext)) {
+	Tcl_Panic("TkpGetFontAttrsForChar: drawingContext not setup");
+    }
 
     LayoutSetString(fontPtr, &drawingContext, &uchar, 1);
 
