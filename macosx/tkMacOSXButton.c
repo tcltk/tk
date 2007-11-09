@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.30 2007/11/08 14:25:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.31 2007/11/09 06:23:29 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -24,6 +24,8 @@
 #define CONTROL_INITIALIZED 1
 #define FIRST_DRAW	    2
 #define ACTIVE		    4
+
+#define MAX_VALUE	    2
 
 /*
  * Default insets for controls
@@ -1456,13 +1458,13 @@ TkMacOSXComputeControlParams(
 		|| (butPtr->indicatorOn)) {
 		paramsPtr->initialValue = 1;
 		paramsPtr->minValue = 0;
-		paramsPtr->maxValue = 2;
+		paramsPtr->maxValue = MAX_VALUE;
 		paramsPtr->procID = kControlRadioButtonProc;
 	    } else {
 		paramsPtr->initialValue = 0;
 		paramsPtr->minValue = kControlBehaviorOffsetContents |
 			kControlBehaviorSticky | kControlContentPictHandle;
-		paramsPtr->maxValue = 2;
+		paramsPtr->maxValue = MAX_VALUE;
 		if (butPtr->borderWidth <= 2) {
 		    paramsPtr->procID = kControlBevelButtonSmallBevelProc;
 		} else if (butPtr->borderWidth == 3) {
@@ -1478,13 +1480,13 @@ TkMacOSXComputeControlParams(
 		    || (butPtr->indicatorOn)) {
 		paramsPtr->initialValue = 1;
 		paramsPtr->minValue = 0;
-		paramsPtr->maxValue = 2;
+		paramsPtr->maxValue = MAX_VALUE;
 		paramsPtr->procID = kControlCheckBoxProc;
 	    } else {
 		paramsPtr->initialValue = 0;
 		paramsPtr->minValue = kControlBehaviorOffsetContents |
 			kControlBehaviorSticky | kControlContentPictHandle;
-		paramsPtr->maxValue = 2;
+		paramsPtr->maxValue = MAX_VALUE;
 		if (butPtr->borderWidth <= 2) {
 		    paramsPtr->procID = kControlBevelButtonSmallBevelProc;
 		} else if (butPtr->borderWidth == 3) {

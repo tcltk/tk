@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.34 2007/11/08 17:37:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.35 2007/11/09 06:23:29 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -270,7 +270,8 @@ Tk_GetOpenFileObjCmd(
     };
     enum openOptions {
 	OPEN_DEFAULT, OPEN_FILETYPES, OPEN_INITDIR, OPEN_INITFILE,
-	OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE, OPEN_TYPEVARIABLE
+	OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE,
+	OPEN_TYPEVARIABLE,
     };
 
     if (!fileDlgInited) {
@@ -352,11 +353,9 @@ Tk_GetOpenFileObjCmd(
 	    &selectDesc, &initialDesc) != TCL_OK) {
 	goto end;
     }
-
     if (initialDesc.descriptorType == typeFSRef) {
 	initialPtr = &initialDesc;
     }
-
     if (typeVariablePtr) {
 	initialtype = Tcl_GetVar(interp, Tcl_GetString(typeVariablePtr), 0);
     }
@@ -427,7 +426,7 @@ Tk_GetSaveFileObjCmd(
     };
     enum saveOptions {
 	SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
-	SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE
+	SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE,
     };
 
     if (!fileDlgInited) {
