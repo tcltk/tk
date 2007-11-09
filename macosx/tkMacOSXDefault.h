@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2.2.6 2007/10/30 01:54:59 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.2.2.7 2007/11/09 06:26:55 das Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -32,7 +32,8 @@
 #define BLACK				"Black"
 #define WHITE				"White"
 #define NORMAL_BG			"systemWindowBody"
-#define ACTIVE_BG			"#ececec"
+#define ACTIVE_BG			"systemButtonFacePressed"
+#define ACTIVE_FG			"systemPushButtonPressedText"
 #define SELECT_BG			"systemHighlight"
 #define SELECT_FG			None
 #define INACTIVE_SELECT_BG		"systemHighlightSecondary"
@@ -45,9 +46,9 @@
  */
 
 #define DEF_BUTTON_ANCHOR		"center"
-#define DEF_BUTTON_ACTIVE_BG_COLOR	"systemButtonText"
+#define DEF_BUTTON_ACTIVE_BG_COLOR	ACTIVE_BG
 #define DEF_BUTTON_ACTIVE_BG_MONO	BLACK
-#define DEF_BUTTON_ACTIVE_FG_COLOR	"systemButtonFace"
+#define DEF_BUTTON_ACTIVE_FG_COLOR	ACTIVE_FG
 #define DEF_CHKRAD_ACTIVE_FG_COLOR	DEF_BUTTON_ACTIVE_FG_COLOR
 #define DEF_BUTTON_ACTIVE_FG_MONO	WHITE
 /* #define DEF_BUTTON_BG_COLOR	"systemButtonFace"*/
@@ -227,8 +228,8 @@
  * Defaults for listboxes:
  */
 
-#define DEF_LISTBOX_ACTIVE_STYLE	"underline"
-#define DEF_LISTBOX_BG_COLOR		NORMAL_BG
+#define DEF_LISTBOX_ACTIVE_STYLE	"dotbox"
+#define DEF_LISTBOX_BG_COLOR		WHITE
 #define DEF_LISTBOX_BG_MONO		WHITE
 #define DEF_LISTBOX_BORDER_WIDTH	"1"
 #define DEF_LISTBOX_CURSOR		""
@@ -298,7 +299,7 @@
 #define DEF_MENU_CURSOR			"arrow"
 #define DEF_MENU_DISABLED_FG_COLOR	"systemMenuDisabled"
 #define DEF_MENU_DISABLED_FG_MONO	""
-#define DEF_MENU_FONT			"menu"
+#define DEF_MENU_FONT			"menu" /* special: see tkMacOSXMenu.c */
 #define DEF_MENU_FG			"systemMenuText"
 #define DEF_MENU_POST_COMMAND		""
 #define DEF_MENU_RELIEF			"flat"
@@ -322,7 +323,7 @@
 #define DEF_MENUBUTTON_ANCHOR		"center"
 #define DEF_MENUBUTTON_ACTIVE_BG_COLOR	ACTIVE_BG
 #define DEF_MENUBUTTON_ACTIVE_BG_MONO	BLACK
-#define DEF_MENUBUTTON_ACTIVE_FG_COLOR	BLACK
+#define DEF_MENUBUTTON_ACTIVE_FG_COLOR	ACTIVE_FG
 #define DEF_MENUBUTTON_ACTIVE_FG_MONO	WHITE
 #define DEF_MENUBUTTON_BG_COLOR		NORMAL_BG
 #define DEF_MENUBUTTON_BG_MONO		WHITE
@@ -363,7 +364,7 @@
 #define DEF_MESSAGE_ASPECT		"150"
 #define DEF_MESSAGE_BG_COLOR		NORMAL_BG
 #define DEF_MESSAGE_BG_MONO		WHITE
-#define DEF_MESSAGE_BORDER_WIDTH	"2"
+#define DEF_MESSAGE_BORDER_WIDTH	"1"
 #define DEF_MESSAGE_CURSOR		""
 #define DEF_MESSAGE_FG			BLACK
 #define DEF_MESSAGE_FONT		"system"
@@ -384,19 +385,19 @@
 
 #define DEF_PANEDWINDOW_BG_COLOR	NORMAL_BG
 #define DEF_PANEDWINDOW_BG_MONO		WHITE
-#define DEF_PANEDWINDOW_BORDERWIDTH	"2"
+#define DEF_PANEDWINDOW_BORDERWIDTH	"1"
 #define DEF_PANEDWINDOW_CURSOR		""
 #define DEF_PANEDWINDOW_HANDLEPAD	"8"
 #define DEF_PANEDWINDOW_HANDLESIZE	"8"
 #define DEF_PANEDWINDOW_HEIGHT		""
-#define DEF_PANEDWINDOW_OPAQUERESIZE	"0"
+#define DEF_PANEDWINDOW_OPAQUERESIZE	"1"
 #define DEF_PANEDWINDOW_ORIENT		"horizontal"
 #define DEF_PANEDWINDOW_RELIEF		"flat"
 #define DEF_PANEDWINDOW_SASHCURSOR	""
-#define DEF_PANEDWINDOW_SASHPAD		"2"
-#define DEF_PANEDWINDOW_SASHRELIEF	"raised"
-#define DEF_PANEDWINDOW_SASHWIDTH	"2"
-#define DEF_PANEDWINDOW_SHOWHANDLE	"1"
+#define DEF_PANEDWINDOW_SASHPAD		"0"
+#define DEF_PANEDWINDOW_SASHRELIEF	"flat"
+#define DEF_PANEDWINDOW_SASHWIDTH	"3"
+#define DEF_PANEDWINDOW_SHOWHANDLE	"0"
 #define DEF_PANEDWINDOW_WIDTH		""
 
 /*
@@ -421,7 +422,7 @@
 #define DEF_SCALE_BG_COLOR		NORMAL_BG
 #define DEF_SCALE_BG_MONO		WHITE
 #define DEF_SCALE_BIG_INCREMENT		"0"
-#define DEF_SCALE_BORDER_WIDTH		"2"
+#define DEF_SCALE_BORDER_WIDTH		"1"
 #define DEF_SCALE_COMMAND		""
 #define DEF_SCALE_CURSOR		""
 #define DEF_SCALE_DIGITS		"0"
@@ -461,18 +462,15 @@
 #define DEF_SCROLLBAR_ACTIVE_RELIEF	"raised"
 #define DEF_SCROLLBAR_BG_COLOR		NORMAL_BG
 #define DEF_SCROLLBAR_BG_MONO		WHITE
-/* #define DEF_SCROLLBAR_BORDER_WIDTH	"2" */
 #define DEF_SCROLLBAR_BORDER_WIDTH	"0"
 #define DEF_SCROLLBAR_COMMAND		""
 #define DEF_SCROLLBAR_CURSOR		""
 #define DEF_SCROLLBAR_EL_BORDER_WIDTH	"-1"
 #define DEF_SCROLLBAR_HIGHLIGHT_BG	NORMAL_BG
 #define DEF_SCROLLBAR_HIGHLIGHT		BLACK
-/* #define DEF_SCROLLBAR_HIGHLIGHT_WIDTH	"2" */
 #define DEF_SCROLLBAR_HIGHLIGHT_WIDTH	"0"
 #define DEF_SCROLLBAR_JUMP		"0"
 #define DEF_SCROLLBAR_ORIENT		"vertical"
-/*#define DEF_SCROLLBAR_RELIEF		"sunken" */
 #define DEF_SCROLLBAR_RELIEF		"flat"
 #define DEF_SCROLLBAR_REPEAT_DELAY	"300"
 #define DEF_SCROLLBAR_REPEAT_INTERVAL	"100"

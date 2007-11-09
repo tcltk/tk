@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.10 2007/06/29 03:22:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.3.2.11 2007/11/09 06:26:55 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1025,7 +1025,9 @@ Tk_DrawChars(
     MacFont *fontPtr = (MacFont *) tkfont;
     TkMacOSXDrawingContext drawingContext;
 
-    TkMacOSXSetupDrawingContext(drawable, gc, 0, &drawingContext);
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, 0, &drawingContext)) {
+	return;
+    }
 #if 0
     /*
      * Stippled QD text drawing only kind of works and is ugly, so disable it
@@ -1044,7 +1046,10 @@ Tk_DrawChars(
 	stippleMap = TkMacOSXMakeStippleMap(drawable, gc->stipple);
 	pixmap = Tk_GetPixmap(display, drawable,
 	    stippleMap->bounds.right, stippleMap->bounds.bottom, 0);
-	TkMacOSXSetupDrawingContext(pixmap, gc, 0, &pixmapDrawingContext);
+	if (!TkMacOSXSetupDrawingContext(pixmap, gc, 0,
+		&pixmapDrawingContext)) {
+	    return;
+	}
 	GetQDGlobalsWhite(&white);
 	FillRect(&stippleMap->bounds, &white);
 	MultiFontDrawText(fontPtr, source, numBytes, 0, macWin->yOff + y);

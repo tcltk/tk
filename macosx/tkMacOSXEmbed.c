@@ -15,7 +15,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.7 2007/06/04 09:28:44 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.8 2007/11/09 06:26:55 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -148,14 +148,14 @@ TkpMakeWindow(
 	}
 	macWin->winPtr = winPtr;
 	winPtr->privatePtr = macWin;
-	macWin->clipRgn = NewRgn();
-	macWin->aboveClipRgn = NewRgn();
-	macWin->drawRgn = NewRgn();
+	macWin->visRgn = NULL;
+	macWin->aboveVisRgn = NULL;
+	macWin->drawRect = CGRectNull;
 	macWin->referenceCount = 0;
 	macWin->flags = TK_CLIP_INVALID;
-
 	macWin->grafPtr = NULL;
 	macWin->context = NULL;
+	macWin->size = CGSizeZero;
 	if (Tk_IsTopLevel(macWin->winPtr)) {
 	    /*
 	     *This will be set when we are mapped.
@@ -299,10 +299,10 @@ TkpUseWindow(
 
     macWin->grafPtr = NULL;
     macWin->context = NULL;
-
-    macWin->clipRgn = NewRgn();
-    macWin->aboveClipRgn = NewRgn();
-    macWin->drawRgn = NewRgn();
+    macWin->size = CGSizeZero;
+    macWin->visRgn = NULL;
+    macWin->aboveVisRgn = NULL;
+    macWin->drawRect = CGRectNull;
     macWin->referenceCount = 0;
     macWin->flags = TK_CLIP_INVALID;
     macWin->toplevel = macWin;

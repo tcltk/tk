@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.24 2007/06/29 03:22:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.3.2.25 2007/11/09 06:26:55 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -331,6 +331,18 @@ TkpInit(
 	if (TkMacOSXCarbonEncoding == NULL) {
 	    TkMacOSXCarbonEncoding = Tcl_GetEncoding(NULL, NULL);
 	}
+
+#if 0
+	/*
+	 * FIXME: Close stdin & stdout for remote debugging otherwise we
+	 * will fight with gdb for stdin & stdout
+	 */
+
+	if (getenv("XCNOSTDIN") != NULL) {
+	    close(0);
+	    close(1);
+	}
+#endif
 
 	/*
 	 * If we don't have a TTY and stdin is a special character file of

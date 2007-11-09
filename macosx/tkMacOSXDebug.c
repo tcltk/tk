@@ -54,16 +54,13 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.2.2.13 2007/06/29 03:22:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.2.2.14 2007/11/09 06:26:55 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
 
 #ifdef TK_MAC_DEBUG
-
-#include <mach-o/dyld.h>
-#include <mach-o/nlist.h>
 
 typedef struct {
     EventKind kind;
@@ -456,22 +453,35 @@ TkMacOSXMouseTrackingResultToAscii(MouseTrackingResult r, char * buf)
 MODULE_SCOPE void
 TkMacOSXDebugFlashRegion(
     Drawable d,
-    RgnHandle rgn)
+    HIShapeRef rgn)
 {
     TkMacOSXInitNamedDebugSymbol(HIToolbox, int, QDDebugFlashRegion,
 	    CGrafPtr port, RgnHandle region);
-    if (d && rgn && QDDebugFlashRegion && !EmptyRgn(rgn)) {
+    CFShow(rgn);
+    if (d && rgn && QDDebugFlashRegion && !HIShapeIsEmpty(rgn)) {
 	CGrafPtr port = TkMacOSXGetDrawablePort(d);
 
 	if (port) {
+	    static RgnHandle qdRgn = NULL;
+
+	    if (!qdRgn) {
+		qdRgn = NewRgn();
+	    }
+	    ChkErr(HIShapeGetAsQDRgn, rgn, qdRgn);
+
 	    /*
 	     * Carbon-internal region flashing SPI (c.f. Technote 2124)
 	     */
 
-	    QDDebugFlashRegion(port, rgn);
+	    QDDebugFlashRegion(port, qdRgn);
+	    SetEmptyRgn(qdRgn);
 	}
     }
 }
+#endif /* TK_MAC_DEBUG */
+
+#include <mach-o/dyld.h>
+#include <mach-o/nlist.h>
 
 /*
  *----------------------------------------------------------------------
@@ -511,7 +521,7 @@ TkMacOSXGetNamedDebugSymbol(
     if (!addr) {
 	const struct mach_header *mh = NULL;
 	uint32_t i, n = _dyld_image_count();
-	size_t module_len;
+	size_t module_len = 0;
 
 	if (module && *module) {
 	    module_len = strlen(module);
@@ -606,5 +616,3 @@ TkMacOSXGetNamedDebugSymbol(
 #endif /* __LP64__ */
     return addr;
 }
-
-#endif /* TK_MAC_DEBUG */

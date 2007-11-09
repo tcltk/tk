@@ -4,10 +4,11 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.22.2.5 2006/01/25 18:21:41 dgp Exp $
+# RCS: @(#) $Id: console.tcl,v 1.22.2.6 2007/11/09 06:26:54 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
+# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -105,7 +106,7 @@ proc ::tk::ConsoleInit {} {
     pack $con -fill both -expand 1 -side left
     switch -exact $tcl_platform(platform) {
 	"macintosh" {
-	    $con configure -font {Monaco 9 normal} -highlightthickness 0
+	    $con configure -font {Monaco 10 normal} -highlightthickness 0
 	}
 	"windows" {
 	    $con configure -font systemfixed
