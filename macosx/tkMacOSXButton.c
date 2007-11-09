@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.19 2007/11/09 06:26:54 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.20 2007/11/09 07:36:45 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -900,7 +900,7 @@ TkMacOSXDrawControl(
      * The control has been previously initialised.
      * It may need to be re-initialised
      */
-#ifdef TK_REBUILD_TOPLEVEL
+#if 0
     rebuild = (winPtr->flags & TK_REBUILD_TOPLEVEL);
     winPtr->flags &= ~TK_REBUILD_TOPLEVEL;
 #else
