@@ -7,10 +7,10 @@
 #	Donal K. Fellows.
 #
 # Copyright (c) 1998-2000 by Ajuba Solutions.
-# All rights reserved.
+# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.8 2007/05/30 06:37:03 das Exp $
-# $Id: bgerror.tcl,v 1.23.2.8 2007/05/30 06:37:03 das Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.9 2007/11/09 06:26:54 das Exp $
+# $Id: bgerror.tcl,v 1.23.2.9 2007/11/09 06:26:54 das Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -21,6 +21,7 @@ namespace eval ::tk::dialog::error {
     if {[tk windowingsystem] eq "aqua"} {
 	option add *ErrorDialog*background systemAlertBackgroundActive \
 		widgetDefault
+	option add *ErrorDialog*info.text.background white widgetDefault
 	option add *ErrorDialog*Button.highlightBackground \
 		systemAlertBackgroundActive widgetDefault
     }
