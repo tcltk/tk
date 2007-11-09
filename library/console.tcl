@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.22.2.6 2007/11/09 06:26:54 das Exp $
+# RCS: @(#) $Id: console.tcl,v 1.22.2.7 2007/11/09 07:08:51 das Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -113,7 +113,7 @@ proc ::tk::ConsoleInit {} {
 	}
 	"unix" {
 	    if {[tk windowingsystem] eq "aqua"} {
-		$con configure -font {Monaco 9 normal} -highlightthickness 0
+		$con configure -font {Monaco 10 normal} -highlightthickness 0
 	    }
 	}
     }
