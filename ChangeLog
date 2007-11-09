@@ -62,10 +62,16 @@
 
 	* library/console.tcl:		sync aqua font size with HEAD.
 
+	* library/demos/widget:		Aqua GOOBE.
+
 	* macosx/tkMacOSXEvent.c (TkMacOSXProcessCommandEvent): fix boolean arg
 	
 	* macosx/tkMacOSXColor.c (GetThemeColor): improve translation of RGB
 					pixel values into RGBColor.
+
+	* library/demos/widget:		increase height of main window text
+					widget to use more of the available
+					vertical space.
 
 	* macosx/tkMacOSXDraw.c:	replace all (internal) use of QD region
 	* macosx/tkMacOSXSubwindows.c:	API by HIShape API, with conversion to
