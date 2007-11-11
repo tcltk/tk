@@ -1,3 +1,9 @@
+2007-11-11  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
+
+	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Fix the case when
+	TK_WHOLE_WORDS and TK_AT_LEAST_ONE are both set and maxLength is
+	small.  [Bug #1824638]
+
 2007-11-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXCarbonEvents.c
