@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.32 2007/11/09 06:22:36 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.33 2007/11/11 21:41:12 cc_benny Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -823,13 +823,15 @@ TkpMeasureCharsInContext(
 				 * which only partially fits on this line.
 				 * TK_WHOLE_WORDS means stop on a word
 				 * boundary, if possible. TK_AT_LEAST_ONE
-				 * means return at least one character (or at
-				 * least the first partial word in case
-				 * TK_WHOLE_WORDS is also set) even if no
-				 * characters (words) fit. TK_ISOLATE_END
-				 * means that the last character should not be
-				 * considered in context with the rest of the
-				 * string (used for breaking lines). */
+				 * means return at least one character even
+				 * if no characters fit.  If TK_WHOLE_WORDS
+				 * and TK_AT_LEAST_ONE are set and the first
+				 * word doesn't fit, we return at least one
+				 * character or whatever characters fit into
+				 * maxLength.  TK_ISOLATE_END means that the
+				 * last character should not be considered in
+				 * context with the rest of the string (used
+				 * for breaking lines). */
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
@@ -839,6 +841,7 @@ TkpMeasureCharsInContext(
     int ulen;
     UniCharArrayOffset urstart, urlen, urend;
     Tcl_DString ucharBuffer;
+    int forceCharacterMode = 0;
 
     /*
      * Sanity checks.
@@ -936,31 +939,29 @@ TkpMeasureCharsInContext(
 	 */
 
 	if (flags & TK_WHOLE_WORDS) {
-	    if (flags & TK_AT_LEAST_ONE) {
+	    if ((flags & TK_AT_LEAST_ONE)
+                    && ((offset == urstart) || (uchars[offset] != ' '))) {
 		/*
-		 * If we are the the start of the range, we need to look
-		 * forward. If we are not at the end of a word, we must be in
-		 * the middle of the first word, so we also look forward.
+		 * With TK_AT_LEAST_ONE, if we are the the start of the
+		 * range, we need to add at least one character.  If we are
+		 * not at the end of a word, we must be in the middle of the
+		 * first word still and we want to run with what we have so
+		 * far.  In both cases we still need to find the right
+		 * character boundary, so we set a flag that gets us into the
+		 * code for character mode below.
 		 */
 
-		if ((offset == urstart) || (uchars[offset] != ' ')) {
-		    while ((offset < urend) && (uchars[offset] != ' ')) {
-			offset++;
-		    }
-		}
-	    } else {
+                forceCharacterMode = 1;
+
+            } else {
 		/*
-		 * If we are not at the end of a word, we need to look
-		 * backward.
+		 * If we are not at the end of a word, we must be in the
+		 * middle of the first word still.  Return 0.
 		 */
 
 		if ((offset != urend) && (uchars[offset] != ' ')) {
-		    while ((offset > urstart) && (uchars[offset-1] != ' ')) {
-			offset--;
-		    }
-		    while ((offset > urstart) && (uchars[offset-1] == ' ')) {
-			offset--;
-		    }
+                    offset = urstart;
+                    curX = 0;
 		}
 	    }
 	}
@@ -976,7 +977,7 @@ TkpMeasureCharsInContext(
 	 */
 
 	if ((err != kATSULineBreakInWord)
-		&& !(flags & TK_WHOLE_WORDS)
+		&& (!(flags & TK_WHOLE_WORDS) || forceCharacterMode)
 		&& (offset <= urend)) {
 	    UniCharArrayOffset lastOffset = offset;
 	    UniCharArrayOffset nextoffset;
