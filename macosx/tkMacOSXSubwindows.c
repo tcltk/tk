@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.18.2.6 2007/10/15 18:38:36 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.18.2.7 2007/11/12 19:22:39 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1016,6 +1016,17 @@ TkMacOSXGetDrawablePort(
 		resultPort = macWin->toplevel->grafPtr;
 	    }
 	} else {
+	    if ((macWin->flags & TK_IS_PIXMAP) && !macWin->grafPtr) {
+		Rect bounds = {0, 0, macWin->size.height, macWin->size.width};
+
+		ChkErr(NewGWorld, &macWin->grafPtr,
+			(macWin->flags & TK_IS_BW_PIXMAP) ? 1 : 0,
+			&bounds, NULL, NULL, 0
+#ifdef __LITTLE_ENDIAN__
+			| kNativeEndianPixMap
+#endif
+			);
+	    }
 	    resultPort = macWin->grafPtr;	
 	}
     }
@@ -1301,24 +1312,19 @@ Tk_GetPixmap(
     macPix->drawRect = CGRectNull;
     macPix->referenceCount = 0;
     macPix->toplevel = NULL;
-    macPix->flags = TK_IS_PIXMAP;
+    macPix->flags = TK_IS_PIXMAP | (depth == 1 ? TK_IS_BW_PIXMAP : 0);
     macPix->grafPtr = NULL;
     macPix->context = NULL;
+    macPix->size = CGSizeMake(width, height);
     {
-	OSStatus err;
-	GWorldPtr gWorld;
 	Rect bounds = {0, 0, height, width};
 
-	err = ChkErr(NewGWorld, &gWorld, depth == 1 ? 1 : 0, &bounds, NULL,
+	ChkErr(NewGWorld, &macPix->grafPtr, depth == 1 ? 1 : 0, &bounds, NULL,
 		NULL, 0
 #ifdef __LITTLE_ENDIAN__
 		| kNativeEndianPixMap
 #endif
 		);
-	if (err != noErr) {
-	    Tcl_Panic("Out of memory: NewGWorld failed in Tk_GetPixmap");
-	}
-	macPix->grafPtr = gWorld;
     }
 
     return (Pixmap) macPix;
@@ -1350,6 +1356,9 @@ Tk_FreePixmap(
     display->request++;
     if (macPix->grafPtr) {
 	DisposeGWorld(macPix->grafPtr);
+    }
+    if (macPix->context) {
+	TkMacOSXDbgMsg("Cannot free CG backed Pixmap");
     }
     ckfree((char *) macPix);
 }

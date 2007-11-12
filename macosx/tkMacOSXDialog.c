@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.25.2.5 2007/10/27 04:23:16 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.25.2.6 2007/11/12 19:22:38 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -270,7 +270,8 @@ Tk_GetOpenFileObjCmd(
     };
     enum openOptions {
 	OPEN_DEFAULT, OPEN_FILETYPES, OPEN_INITDIR, OPEN_INITFILE,
-	OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE, OPEN_TYPEVARIABLE
+	OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE,
+	OPEN_TYPEVARIABLE,
     };
 
     if (!fileDlgInited) {
@@ -352,11 +353,9 @@ Tk_GetOpenFileObjCmd(
 	    &selectDesc, &initialDesc) != TCL_OK) {
 	goto end;
     }
-
     if (initialDesc.descriptorType == typeFSRef) {
 	initialPtr = &initialDesc;
     }
-
     if (typeVariablePtr) {
 	initialtype = Tcl_GetVar(interp, Tcl_GetString(typeVariablePtr), 0);
     }
@@ -427,7 +426,7 @@ Tk_GetSaveFileObjCmd(
     };
     enum saveOptions {
 	SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
-	SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE
+	SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE,
     };
 
     if (!fileDlgInited) {
@@ -1110,7 +1109,7 @@ OpenFileFilterProc(
 
 		if (!theInfo->isFolder) {
 		    OSType fileType;
-		    StringPtr fileNamePtr;
+		    StringPtr fileNamePtr = NULL;
 		    Tcl_DString fileNameDString;
 		    int i;
 		    FileFilter *filterPtr;
@@ -1126,7 +1125,6 @@ OpenFileFilterProc(
 			strncpy(fileName, (char*) fileNamePtr + 1, len);
 			fileName[len] = '\0';
 			fileNamePtr = (unsigned char*) fileName;
-
 		    } else if ((theItem->descriptorType == typeFSRef)) {
 			OSStatus err;
 			FSRef *theRef = (FSRef *) *theItem->dataHandle;
@@ -1140,8 +1138,6 @@ OpenFileFilterProc(
 				    uniFileName.length, &fileNameDString);
 			    fileNamePtr = (unsigned char*)
 				    Tcl_DStringValue(&fileNameDString);
-			} else {
-			    fileNamePtr = NULL;
 			}
 		    }
 		    if (ofdPtr->usePopup) {
