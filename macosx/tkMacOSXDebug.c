@@ -54,16 +54,13 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.12.2.3 2007/10/15 18:38:35 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.12.2.4 2007/11/12 19:22:38 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
 
 #ifdef TK_MAC_DEBUG
-
-#include <mach-o/dyld.h>
-#include <mach-o/nlist.h>
 
 typedef struct {
     EventKind kind;
@@ -481,6 +478,10 @@ TkMacOSXDebugFlashRegion(
 	}
     }
 }
+#endif /* TK_MAC_DEBUG */
+
+#include <mach-o/dyld.h>
+#include <mach-o/nlist.h>
 
 /*
  *----------------------------------------------------------------------
@@ -520,7 +521,7 @@ TkMacOSXGetNamedDebugSymbol(
     if (!addr) {
 	const struct mach_header *mh = NULL;
 	uint32_t i, n = _dyld_image_count();
-	size_t module_len;
+	size_t module_len = 0;
 
 	if (module && *module) {
 	    module_len = strlen(module);
@@ -615,5 +616,3 @@ TkMacOSXGetNamedDebugSymbol(
 #endif /* __LP64__ */
     return addr;
 }
-
-#endif /* TK_MAC_DEBUG */

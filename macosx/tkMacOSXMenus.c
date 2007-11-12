@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.16.2.3 2007/11/05 14:24:19 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.16.2.4 2007/11/12 19:22:39 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -41,7 +41,6 @@ static void GenerateEditEvent(int flag);
 static Tcl_Obj* GetWidgetDemoPath(Tcl_Interp *interp);
 static OSStatus MenuEventHandlerProc(EventHandlerCallRef callRef,
 	EventRef event, void *userData);
-
 
 
 /*

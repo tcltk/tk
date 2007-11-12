@@ -8,9 +8,10 @@
 #
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # Copyright (c) 2007 by ActiveState Software Inc.
+# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.33.2.3 2007/11/05 14:24:18 dgp Exp $
-# $Id: bgerror.tcl,v 1.33.2.3 2007/11/05 14:24:18 dgp Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.33.2.4 2007/11/12 19:22:38 dgp Exp $
+# $Id: bgerror.tcl,v 1.33.2.4 2007/11/12 19:22:38 dgp Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*

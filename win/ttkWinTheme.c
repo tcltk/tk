@@ -1,6 +1,6 @@
 /* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
  *
- * $Id: ttkWinTheme.c,v 1.5.2.3 2007/10/27 04:23:18 dgp Exp $
+ * $Id: ttkWinTheme.c,v 1.5.2.4 2007/11/12 19:22:39 dgp Exp $
  */
 
 #ifdef _MSC_VER
@@ -93,7 +93,7 @@ typedef struct
     int cxId;			/* system metric id for size in x */
     int cyId;			/* system metric id for size in y */
     Ttk_StateTable *stateMap;	/* map Tk states to Win32 flags */
-    Ttk_Padding padding;	/* additional placement padding */
+    Ttk_Padding margins;	/* additional placement padding */
 } FrameControlElementData;
 
 static FrameControlElementData FrameControlElements[] =
@@ -129,10 +129,9 @@ static void FrameControlElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    FrameControlElementData *elementData = clientData;
-    *widthPtr = GetSystemMetrics(elementData->cxId);
-    *heightPtr = GetSystemMetrics(elementData->cyId);
-    *paddingPtr = elementData->padding;
+    FrameControlElementData *p = clientData;
+    *widthPtr = GetSystemMetrics(p->cxId) + Ttk_PaddingWidth(p->margins);
+    *heightPtr = GetSystemMetrics(p->cyId) + Ttk_PaddingHeight(p->margins);
 }
 
 static void FrameControlElementDraw(

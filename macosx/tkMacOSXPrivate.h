@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1.4.4 2007/10/15 18:38:36 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1.4.5 2007/11/12 19:22:39 dgp Exp $
  */
 
 #ifndef _TKMACPRIV
@@ -76,7 +76,7 @@
     #define kHIToolboxVersionNumber10_4 (219)
 #endif
 #ifndef kHIToolboxVersionNumber10_5
-    #define kHIToolboxVersionNumber10_5 (316)
+    #define kHIToolboxVersionNumber10_5 (343)
 #endif
 /* Macros for HIToolbox runtime version checking */
 MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
