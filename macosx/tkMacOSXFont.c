@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.8 2007/11/12 19:22:39 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.24.2.9 2007/11/13 13:08:44 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -321,7 +321,7 @@ InitSystemFonts(
 
     /* force this for now */
     if (!mainPtr->winPtr->mainPtr) {
-        mainPtr->winPtr->mainPtr = mainPtr;
+	mainPtr->winPtr->mainPtr = mainPtr;
     }
     TkInitFontAttributes(&fa);
     while (systemFont->systemName) {
@@ -928,8 +928,7 @@ TkpMeasureCharsInContext(
 	     * also something we like to decide for ourself.
 	     */
 
-	    while ((offset > urstart) &&
-		    (uchars[offset-1] == ' ')) {
+	    while ((offset > urstart) && (uchars[offset-1] == ' ')) {
 		offset--;
 	    }
 	}
@@ -940,7 +939,7 @@ TkpMeasureCharsInContext(
 
 	if (flags & TK_WHOLE_WORDS) {
 	    if ((flags & TK_AT_LEAST_ONE)
-                    && ((offset == urstart) || (uchars[offset] != ' '))) {
+		    && ((offset == urstart) || (uchars[offset] != ' '))) {
 		/*
 		 * With TK_AT_LEAST_ONE, if we are the the start of the
 		 * range, we need to add at least one character.  If we are
@@ -951,17 +950,17 @@ TkpMeasureCharsInContext(
 		 * code for character mode below.
 		 */
 
-                forceCharacterMode = 1;
+		forceCharacterMode = 1;
 
-            } else {
+	    } else {
 		/*
 		 * If we are not at the end of a word, we must be in the
 		 * middle of the first word still.  Return 0.
 		 */
 
 		if ((offset != urend) && (uchars[offset] != ' ')) {
-                    offset = urstart;
-                    curX = 0;
+		    offset = urstart;
+		    curX = 0;
 		}
 	    }
 	}
