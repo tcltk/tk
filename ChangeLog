@@ -1,3 +1,8 @@
+2007-11-14  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/msgs/sv.msg: Get the locale declared within the message
+	catalog correct! [Bug 1831803]
+
 2007-11-11  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
 	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Fix the case when
