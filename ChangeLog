@@ -1,3 +1,8 @@
+2007-11-15  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new chanio.test.
+	* macosx/Wish.xcode/project.pbxproj:
+
 2007-11-14  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/msgs/sv.msg: Get the locale declared within the message
@@ -7,7 +12,7 @@
 
 	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Fix the case when
 	TK_WHOLE_WORDS and TK_AT_LEAST_ONE are both set and maxLength is
-	small.  [Bug #1824638]
+	small. [Bug 1824638]
 
 2007-11-09  Daniel Steffen  <das@users.sourceforge.net>
 

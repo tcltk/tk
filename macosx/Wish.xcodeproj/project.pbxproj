@@ -606,7 +606,7 @@
 		F936FCDA0CCD984600716967 /* ttknote.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttknote.tcl; sourceTree = "<group>"; };
 		F936FCDB0CCD984600716967 /* combo.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = combo.tcl; sourceTree = "<group>"; };
 		F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXFont.h; sourceTree = "<group>"; };
-		F95FAFF90B34F1130072E431 /* macOSXLoad.test */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = macOSXLoad.test; sourceTree = "<group>"; };
+		F95FAFF90B34F1130072E431 /* macOSXLoad.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = macOSXLoad.test; sourceTree = "<group>"; };
 		F966BA0408F27A37005CB29B /* error.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = error.xbm; sourceTree = "<group>"; };
 		F966BA0508F27A37005CB29B /* gray12.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray12.xbm; sourceTree = "<group>"; };
 		F966BA0608F27A37005CB29B /* gray25.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = gray25.xbm; sourceTree = "<group>"; };
@@ -2038,6 +2038,7 @@
 		F9A3082D08F2D4AB00BAE1AB /* Tk.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = Tk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9A3084B08F2D4CE00BAE1AB /* Wish.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wish.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9A3084E08F2D4F400BAE1AB /* Tcl.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = Tcl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9A493240CEBF38300B78AE2 /* chanio.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = chanio.test; sourceTree = "<group>"; };
 		F9D1360A0CDC252C00DBE0B5 /* mclist.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = mclist.tcl; sourceTree = "<group>"; };
 		F9ECB1120B26521500A28025 /* pkgIndex.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = pkgIndex.tcl; sourceTree = "<group>"; };
 		F9ECB1130B26521500A28025 /* platform.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = platform.tcl; sourceTree = "<group>"; };
@@ -2095,7 +2096,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.33 2007/11/04 10:37:09 das Exp $\n";
+			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.34 2007/11/15 03:47:50 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -3571,6 +3572,7 @@
 				F96D434C08F272B5004A47F5 /* binary.test */,
 				F96D434D08F272B5004A47F5 /* case.test */,
 				F96D434E08F272B5004A47F5 /* chan.test */,
+				F9A493240CEBF38300B78AE2 /* chanio.test */,
 				F96D434F08F272B5004A47F5 /* clock.test */,
 				F96D435008F272B5004A47F5 /* cmdAH.test */,
 				F96D435108F272B5004A47F5 /* cmdIL.test */,
