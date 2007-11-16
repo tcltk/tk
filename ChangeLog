@@ -1,3 +1,8 @@
+2007-11-16  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
+
+	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Correct an
+	oversight in the bug fix from 2007-11-11.  [Bug 1824638]
+
 2007-11-15  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcodeproj/project.pbxproj: add new chanio.test.
