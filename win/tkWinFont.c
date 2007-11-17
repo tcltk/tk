@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.35 2007/10/30 01:57:58 hobbs Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.36 2007/11/17 21:55:09 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -1393,11 +1393,14 @@ InitFont(
     Tcl_ExternalToUtfDString(systemEncoding, buf, -1, &faceString);
 
     fontPtr->font.fid	= (Font) fontPtr;
+    fontPtr->hwnd	= hwnd;
+    fontPtr->pixelSize	= tm.tmHeight - tm.tmInternalLeading;
 
     faPtr		= &fontPtr->font.fa;
     faPtr->family	= Tk_GetUid(Tcl_DStringValue(&faceString));
+
     faPtr->size =
-	    TkFontGetPoints(tkwin, -(tm.tmHeight - tm.tmInternalLeading));
+	    TkFontGetPoints(tkwin, -(fontPtr->pixelSize));
     faPtr->weight =
 	    (tm.tmWeight > FW_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
     faPtr->slant	= (tm.tmItalic != 0) ? TK_FS_ITALIC : TK_FS_ROMAN;
@@ -1409,9 +1412,6 @@ InitFont(
     fmPtr->descent	= tm.tmDescent;
     fmPtr->maxWidth	= tm.tmMaxCharWidth;
     fmPtr->fixed	= !(tm.tmPitchAndFamily & TMPF_FIXED_PITCH);
-
-    fontPtr->hwnd	= hwnd;
-    fontPtr->pixelSize	= tm.tmHeight - tm.tmInternalLeading;
 
     fontPtr->numSubFonts 	= 1;
     fontPtr->subFontArray	= fontPtr->staticSubFonts;
