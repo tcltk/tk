@@ -1,5 +1,5 @@
 #
-# $Id: scrollbar.tcl,v 1.2 2007/11/17 19:17:50 jenglish Exp $
+# $Id: scrollbar.tcl,v 1.3 2007/11/17 19:19:15 jenglish Exp $
 #
 # Bindings for TScrollbar widget
 #
@@ -11,14 +11,14 @@
 if {[tk windowingsystem] eq "aqua"} {
     rename ::ttk::scrollbar ::ttk::_scrollbar
     proc ttk::scrollbar {w args} {
-	set constructor ::scrollbar
+	set constructor ::tk::scrollbar
 	foreach {option _} $args {
 	    if {$option eq "-class" || $option eq "-style"} {
 		set constructor ::ttk::_scrollbar
 		break
 	    }
 	}
-	return [eval [linsert $args 0 $constructor $w]]
+	return [$constructor $w {*}$args]
     }
 }
 
