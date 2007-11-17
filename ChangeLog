@@ -1,3 +1,9 @@
+2007-11-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkFont.c: Only check for -displayof if there are
+	* test/font.test:   sufficient arguments. This permits checking
+	                    strings like -d.
+
 2007-11-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/scrollbar.tcl: Swap in core scrollbars for 
