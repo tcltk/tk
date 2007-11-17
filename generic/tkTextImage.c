@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.20 2007/09/07 00:34:54 dgp Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.21 2007/11/17 23:07:46 patthoyts Exp $
  */
 
 #include "tkPort.h"
@@ -328,7 +328,7 @@ EmbImageConfigure(
     char *name;
     int count = 0;		/* The counter for picking a unique name */
     int conflict = 0;		/* True if we have a name conflict */
-    unsigned int len;		/* length of image name */
+    size_t len;		/* length of image name */
 
     if (Tk_SetOptions(textPtr->interp, (char*)&eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,

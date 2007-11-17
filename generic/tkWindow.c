@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.87 2007/10/24 00:16:43 patthoyts Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.88 2007/11/17 23:07:46 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -744,7 +744,7 @@ NameWindow(
     char *pathName;
     int isNew;
     Tcl_HashEntry *hPtr;
-    int length1, length2;
+    size_t length1, length2;
 
     /*
      * Setup all the stuff except name right away, then do the name stuff
