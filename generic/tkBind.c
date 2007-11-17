@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.43 2007/09/07 00:34:51 dgp Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.44 2007/11/17 23:07:45 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -1002,7 +1002,7 @@ Tk_CreateBinding(
 
     oldStr = (char *) psPtr->clientData;
     if ((append != 0) && (oldStr != NULL)) {
-	int length;
+	size_t length;
 
 	length = strlen(oldStr) + strlen(command) + 2;
 	newStr = (char *) ckalloc((unsigned) length);
@@ -3935,7 +3935,7 @@ GetVirtualEventUid(
     char *virtString)
 {
     Tk_Uid uid;
-    int length;
+    size_t length;
 
     length = strlen(virtString);
 
