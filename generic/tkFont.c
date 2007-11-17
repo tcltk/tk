@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.40 2007/10/21 14:50:19 das Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.41 2007/11/17 21:28:05 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -718,12 +718,14 @@ Tk_FontObjCmd(
     case FONT_MEASURE: {
 	char *string;
 	Tk_Font tkfont;
-	int length, skip;
+	int length = 0, skip = 0;
 	Tcl_Obj *resultPtr;
 
-	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
-	if (skip < 0) {
-	    return TCL_ERROR;
+	if (objc > 4) {
+	    skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
+	    if (skip < 0) {
+		return TCL_ERROR;
+	    }
 	}
 	if (objc - skip != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "font ?-displayof window? text");
