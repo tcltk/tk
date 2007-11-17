@@ -1,5 +1,9 @@
 2007-11-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* generic/(tkArgv.c, tkBind.c, tkCipboard.c, tkEntry.c, tkOption.c,
+	tkScale.c, tkScrollbar.c, tkTextImage.c, tkVisual.c, tkWindow.c):
+	Tidy up some variable types.
+
 	* generic/tkFont.c: Only check for -displayof if there are
 	* test/font.test:   sufficient arguments. This permits checking
 	                    strings like -d.

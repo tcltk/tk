@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.10 2007/09/08 16:01:20 dkf Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.11 2007/11/17 23:07:46 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -542,7 +542,7 @@ ConfigureScrollbar(
      */
 
     if (scrollPtr->command != NULL) {
-	scrollPtr->commandSize = strlen(scrollPtr->command);
+        scrollPtr->commandSize = (int)strlen(scrollPtr->command);
     } else {
 	scrollPtr->commandSize = 0;
     }

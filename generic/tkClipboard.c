@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.16 2007/09/07 00:34:52 dgp Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.17 2007/11/17 23:07:45 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -61,7 +61,7 @@ ClipboardHandler(
     TkClipboardTarget *targetPtr = (TkClipboardTarget*) clientData;
     TkClipboardBuffer *cbPtr;
     char *srcPtr, *destPtr;
-    int count = 0;
+    size_t count = 0;
     int scanned = 0;
     size_t length, freeCount;
 
@@ -104,7 +104,7 @@ ClipboardHandler(
 	srcPtr = cbPtr->buffer;
 	length = cbPtr->length;
     }
-    return count;
+    return (int)count;
 }
 
 /*
@@ -150,7 +150,7 @@ ClipboardAppHandler(
 	length = maxBytes;
     }
     strncpy(buffer, p, length);
-    return length;
+    return (int)length;
 }
 
 /*

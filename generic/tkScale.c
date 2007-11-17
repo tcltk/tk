@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.26 2007/09/07 00:34:53 dgp Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.27 2007/11/17 23:07:46 patthoyts Exp $
  */
 
 #include "default.h"
@@ -636,7 +636,7 @@ ConfigureScale(
 
 	ComputeFormat(scalePtr);
 
-	scalePtr->labelLength = scalePtr->label ? strlen(scalePtr->label) : 0;
+	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
 
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 

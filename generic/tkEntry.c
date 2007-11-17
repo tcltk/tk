@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.45 2007/05/24 14:46:24 dkf Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.46 2007/11/17 23:07:45 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -2008,7 +2008,9 @@ InsertChars(
     char *value)		/* New characters to add (NULL-terminated
 				 * string). */
 {
-    int byteIndex, byteCount, oldChars, charsAdded, newByteCount;
+    ptrdiff_t byteIndex;
+    size_t byteCount, newByteCount;
+    int oldChars, charsAdded;
     CONST char *string;
     char *newStr;
 
@@ -2021,7 +2023,7 @@ InsertChars(
 
     newByteCount = entryPtr->numBytes + byteCount + 1;
     newStr = (char *) ckalloc((unsigned) newByteCount);
-    memcpy(newStr, string, (size_t) byteIndex);
+    memcpy(newStr, string, byteIndex);
     strcpy(newStr + byteIndex, value);
     strcpy(newStr + byteIndex + byteCount, string + byteIndex);
 
