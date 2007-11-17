@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.35 2007/11/16 17:47:30 cc_benny Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.36 2007/11/17 04:24:00 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -938,10 +938,8 @@ TkpMeasureCharsInContext(
 	 */
 
 	if (flags & TK_WHOLE_WORDS) {
-	    if ((flags & TK_AT_LEAST_ONE)
-                    && ((offset == urstart)
-                            || ((offset != urend)
-                                    && (uchars[offset] != ' ')))) {
+	    if ((flags & TK_AT_LEAST_ONE) && ((offset == urstart)
+		    || ((offset != urend) && (uchars[offset] != ' ')))) {
 		/*
 		 * With TK_AT_LEAST_ONE, if we are the the start of the
 		 * range, we need to add at least one character.  If we are
@@ -975,14 +973,13 @@ TkpMeasureCharsInContext(
 	 * If "flags" says that we don't actually want a word break, we need
 	 * to find the next character break ourself, as ATSUBreakLine will
 	 * only give us word breaks.  Do a simple linear search.
-         *
-         * Even do this, if ATSUBreakLine returned kATSULineBreakInWord,
+	 *
+	 * Even do this, if ATSUBreakLine returned kATSULineBreakInWord,
 	 * because we have not accounted correctly for all of the flags yet,
 	 * like TK_AT_LEAST_ONE.
 	 */
 
-	if ((!(flags & TK_WHOLE_WORDS) || forceCharacterMode)
-                && (offset <= urend)) {
+	if ((!(flags & TK_WHOLE_WORDS) || forceCharacterMode) && (offset <= urend)) {
 	    UniCharArrayOffset lastOffset = offset;
 	    UniCharArrayOffset nextoffset;
 	    int lastX = -1;
