@@ -1,5 +1,11 @@
 2007-11-18  Joe English  <jenglish@users.sourceforge.net>
 
+	* generic/ttk/ttkLayout.c(TTKInitPadding): BUGFIX: 
+	Ttk_GetPaddingFromObj() and Ttk_GetBorderFromObj() returned 
+	garbage when passed an empty list.
+
+2007-11-18  Joe English  <jenglish@users.sourceforge.net>
+
 	* macosx/ttkMacOSXTheme.c: Resynchronize with Tile codebase
 	so that patches can flow back and forth.
 
