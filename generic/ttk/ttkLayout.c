@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.8 2007/03/21 20:06:41 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.9 2007/11/18 17:28:02 jenglish Exp $
  */
 
 #include <string.h>
@@ -280,6 +280,7 @@ static void TTKInitPadding(int padc, int pixels[4], Ttk_Padding *pad)
 {
     switch (padc)
     {
+	case 0: pixels[0] = 0; /*FALLTHRU*/
 	case 1:	pixels[1] = pixels[0]; /*FALLTHRU*/
 	case 2:	pixels[2] = pixels[0]; /*FALLTHRU*/
 	case 3:	pixels[3] = pixels[1]; /*FALLTHRU*/
