@@ -1,5 +1,5 @@
 #
-# $Id: aquaTheme.tcl,v 1.7 2007/10/30 15:22:52 jenglish Exp $
+# $Id: aquaTheme.tcl,v 1.8 2007/11/18 17:00:28 jenglish Exp $
 #
 # Aqua theme (OSX native look and feel)
 #
@@ -28,7 +28,7 @@ namespace eval ttk::theme::aqua {
 	#
 	ttk::style configure . -stipple {}
 
-	ttk::style configure TButton -padding {0 2} -width -6
+	ttk::style configure TButton -width -6
 	ttk::style configure TMenubutton -anchor w
 	ttk::style configure Toolbutton -padding 4
 	# See Apple HIG figs 14-63, 14-65
@@ -65,7 +65,7 @@ namespace eval ttk::theme::aqua {
 	# (ref: Apple Human Interface Guidelines / Controls / Grouping Controls)
 	#
     	ttk::style configure TLabelframe \
-	    -labeloutside true -labelmargins {14 0 14 4}
+		-labeloutside true -labelmargins {14 0 14 4}
 
 	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
     }

@@ -1,3 +1,10 @@
+2007-11-18  Joe English  <jenglish@users.sourceforge.net>
+
+	* macosx/ttkMacOSXTheme.c: Resynchronize with Tile codebase
+	so that patches can flow back and forth.
+
+	* library/ttk/aquaTheme.tcl: Extra TButton -padding no longer needed.
+
 2007-11-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/ttkWinXPTheme.c: Add support for size information flags for
