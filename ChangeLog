@@ -1,3 +1,9 @@
+2007-11-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/ttkWinXPTheme.c: Add support for size information flags for
+	scrollbar and combobox buttons. This handles tile patches 1596647
+	and 1596657 but a bit more generically.
+
 2007-11-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/(tkArgv.c, tkBind.c, tkCipboard.c, tkEntry.c, tkOption.c,

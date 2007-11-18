@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.14 2007/11/08 01:40:26 jenglish Exp $
+ * $Id: ttkWinXPTheme.c,v 1.15 2007/11/18 00:35:11 patthoyts Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -43,6 +43,7 @@ typedef HRESULT (STDAPICALLTYPE DrawThemeBackgroundProc)(HTHEME hTheme,
 typedef HRESULT	(STDAPICALLTYPE GetThemePartSizeProc)(HTHEME,HDC,
 		 int iPartId, int iStateId,
 		 RECT *prc, enum THEMESIZE eSize, SIZE *psz);
+typedef int     (STDAPICALLTYPE GetThemeSysSizeProc)(HTHEME,int);
 /* GetThemeTextExtent and DrawThemeText only used with BROKEN_TEXT_ELEMENT */ 
 typedef HRESULT (STDAPICALLTYPE GetThemeTextExtentProc)(HTHEME hTheme, HDC hdc,
 		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
@@ -58,6 +59,7 @@ typedef struct
     OpenThemeDataProc			*OpenThemeData;
     CloseThemeDataProc			*CloseThemeData;
     GetThemePartSizeProc		*GetThemePartSize;
+    GetThemeSysSizeProc			*GetThemeSysSize;
     DrawThemeBackgroundProc		*DrawThemeBackground;
     DrawThemeTextProc		        *DrawThemeText;
     GetThemeTextExtentProc		*GetThemeTextExtent;
@@ -110,6 +112,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	if (   LOADPROC(OpenThemeData)
 	    && LOADPROC(CloseThemeData)
 	    && LOADPROC(GetThemePartSize)
+	    && LOADPROC(GetThemeSysSize)
 	    && LOADPROC(DrawThemeBackground)
 	    && LOADPROC(GetThemeTextExtent)
 	    && LOADPROC(DrawThemeText)
@@ -368,8 +371,8 @@ typedef struct 	/* XP element specifications */
     Ttk_StateTable *statemap;	/* Map Tk states to XP states */
     Ttk_Padding	padding;	/* See NOTE-GetThemeMargins */
     int  	flags;		
-#   define 	IGNORE_THEMESIZE 	0x1 /* See NOTE-GetThemePartSize */
-#   define 	PAD_MARGINS		0x2 /* See NOTE-GetThemeMargins */
+#   define 	IGNORE_THEMESIZE 0x80000000 /* See NOTE-GetThemePartSize */
+#   define 	PAD_MARGINS	 0x40000000 /* See NOTE-GetThemeMargins */
 } ElementInfo;
 
 typedef struct
@@ -532,6 +535,41 @@ static Ttk_ElementSpec GenericElementSpec =
     sizeof(NullElement),
     TtkNullElementOptions,
     GenericElementSize,
+    GenericElementDraw
+};
+
+/*----------------------------------------------------------------------
+ * +++ Sized element implementation.
+ * 
+ * Used for elements which are handled entirely by the XP Theme API,
+ * but that require a fixed size adjustment.
+ * Note that GetThemeSysSize calls through to GetSystemMetrics
+ */
+
+static void
+GenericSizedElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    ElementData *elementData = clientData;
+
+    if (!InitElementData(elementData, tkwin, 0))
+	return;
+
+    GenericElementSize(clientData, elementRecord, tkwin,
+	widthPtr, heightPtr, paddingPtr);
+
+    *widthPtr = elementData->procs->GetThemeSysSize(NULL,
+	(elementData->info->flags >> 8) & 0xff);
+    *heightPtr = elementData->procs->GetThemeSysSize(NULL,
+	elementData->info->flags & 0xff);
+}
+
+static Ttk_ElementSpec GenericSizedElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    GenericSizedElementSize,
     GenericElementDraw
 };
 
@@ -853,8 +891,9 @@ static ElementInfo ElementInfoTable[] = {
     	edittext_statemap, PAD(1, 1, 1, 1), 0 },
     { "Combobox.field", &GenericElementSpec, L"EDIT",
 	EP_EDITTEXT, combotext_statemap, PAD(1, 1, 1, 1), 0 },
-    { "Combobox.downarrow", &GenericElementSpec, L"COMBOBOX",
-	CP_DROPDOWNBUTTON, combobox_statemap, NOPAD, 0 },
+    { "Combobox.downarrow", &GenericSizedElementSpec, L"COMBOBOX",
+	CP_DROPDOWNBUTTON, combobox_statemap, NOPAD,
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
     { "Vertical.Scrollbar.trough", &GenericElementSpec, L"SCROLLBAR",
     	SBP_UPPERTRACKVERT, scrollbar_statemap, NOPAD, 0 },
     { "Vertical.Scrollbar.thumb", &ThumbElementSpec, L"SCROLLBAR",
@@ -867,14 +906,18 @@ static ElementInfo ElementInfoTable[] = {
    	SBP_THUMBBTNHORZ, scrollbar_statemap, NOPAD, 0 },
     { "Horizontal.Scrollbar.grip", &GenericElementSpec, L"SCROLLBAR",
     	SBP_GRIPPERHORZ, scrollbar_statemap, NOPAD, 0 },
-    { "Scrollbar.uparrow", &GenericElementSpec, L"SCROLLBAR",
-    	SBP_ARROWBTN, uparrow_statemap, NOPAD, 0 },
-    { "Scrollbar.downarrow", &GenericElementSpec, L"SCROLLBAR",
-    	SBP_ARROWBTN, downarrow_statemap, NOPAD, 0 },
-    { "Scrollbar.leftarrow", &GenericElementSpec, L"SCROLLBAR",
-    	SBP_ARROWBTN, leftarrow_statemap, NOPAD, 0 },
-    { "Scrollbar.rightarrow", &GenericElementSpec, L"SCROLLBAR",
-    	SBP_ARROWBTN, rightarrow_statemap, NOPAD, 0 },
+    { "Scrollbar.uparrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    	SBP_ARROWBTN, uparrow_statemap, NOPAD,
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "Scrollbar.downarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    	SBP_ARROWBTN, downarrow_statemap, NOPAD,
+	(SM_CXVSCROLL << 8) | SM_CYVSCROLL },
+    { "Scrollbar.leftarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    	SBP_ARROWBTN, leftarrow_statemap, NOPAD,
+	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
+    { "Scrollbar.rightarrow", &GenericSizedElementSpec, L"SCROLLBAR",
+    	SBP_ARROWBTN, rightarrow_statemap, NOPAD,
+	(SM_CXHSCROLL << 8) | SM_CYHSCROLL },
     { "Horizontal.Scale.slider", &GenericElementSpec, L"TRACKBAR",
     	TKP_THUMB, scale_statemap, NOPAD, 0 },
     { "Vertical.Scale.slider", &GenericElementSpec, L"TRACKBAR",
