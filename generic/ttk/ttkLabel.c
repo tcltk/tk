@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.8 2007/05/03 22:15:59 dkf Exp $
+/* $Id: ttkLabel.c,v 1.9 2007/11/18 19:20:26 jenglish Exp $
  *
  * text, image, and label elements.
  *
@@ -66,7 +66,7 @@ static Ttk_ElementOptionSpec TextElementOptions[] =
     { "-width", TK_OPTION_INT,
 	Tk_Offset(TextElement,widthObj), "-1"},
     { "-anchor", TK_OPTION_ANCHOR,
-	Tk_Offset(TextElement,anchorObj), "center"},
+	Tk_Offset(TextElement,anchorObj), "w"},
     { "-justify", TK_OPTION_JUSTIFY,
 	Tk_Offset(TextElement,justifyObj), "left" },
     { "-wraplength", TK_OPTION_PIXELS,
@@ -474,7 +474,7 @@ static Ttk_ElementOptionSpec LabelElementOptions[] =
     { "-width", TK_OPTION_INT,
 	Tk_Offset(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,
-	Tk_Offset(LabelElement,text.anchorObj), "center"},
+	Tk_Offset(LabelElement,text.anchorObj), "w"},
     { "-justify", TK_OPTION_JUSTIFY,
 	Tk_Offset(LabelElement,text.justifyObj), "left" },
     { "-wraplength", TK_OPTION_PIXELS,

@@ -1,5 +1,5 @@
 #
-# $Id: defaults.tcl,v 1.4 2006/12/18 19:33:14 jenglish Exp $
+# $Id: defaults.tcl,v 1.5 2007/11/18 19:20:26 jenglish Exp $
 #
 # Settings for default theme.
 #
@@ -38,7 +38,8 @@ namespace eval ttk::theme::default {
 	    [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TButton \
-	    -padding "3 3" -width -9 -relief raised -shiftrelief 1
+	    -anchor center -padding "3 3" -width -9 \
+	    -relief raised -shiftrelief 1
 	ttk::style map TButton -relief [list {!disabled pressed} sunken] 
 
 	ttk::style configure TCheckbutton \
@@ -52,7 +53,7 @@ namespace eval ttk::theme::default {
 	    [list pressed $colors(-activebg)  selected $colors(-indicator)]
 
 	ttk::style configure TMenubutton \
-	    -relief raised -padding "10 3" -anchor w
+	    -relief raised -padding "10 3"
 
 	ttk::style configure TEntry \
 	    -relief sunken -fieldbackground white -padding 1
