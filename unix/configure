@@ -1476,7 +1476,7 @@ echo $ECHO_N "checking for existence of ${TCL_BIN_DIR}/tclConfig.sh... $ECHO_C" 
     if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
         echo "$as_me:$LINENO: result: loading" >&5
 echo "${ECHO_T}loading" >&6
-	. ${TCL_BIN_DIR}/tclConfig.sh
+	. "${TCL_BIN_DIR}/tclConfig.sh"
     else
         echo "$as_me:$LINENO: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
 echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
@@ -5216,12 +5216,12 @@ fi
 	    # Use updated header definitions where possible
 
 cat >>confdefs.h <<\_ACEOF
-#define _XOPEN_SOURCE 1
+#define _XOPEN_SOURCE_EXTENDED 1
 _ACEOF
 
 
 cat >>confdefs.h <<\_ACEOF
-#define _XOPEN_SOURCE_EXTENDED 1
+#define _XOPEN_SOURCE 1
 _ACEOF
 
 	    LIBS="$LIBS -lxnet"               # Use the XOPEN network library
@@ -6158,9 +6158,24 @@ echo "${ECHO_T}$tcl_cv_ld_search_paths_first" >&6
 
 fi
 
+	    if test "$tcl_cv_cc_visibility_hidden" != yes; then
+
+
+cat >>confdefs.h <<\_ACEOF
+#define MODULE_SCOPE __private_extern__
+_ACEOF
+
+
+fi
+
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    LD_LIBRARY_PATH_VAR="DYLD_LIBRARY_PATH"
+
+cat >>confdefs.h <<\_ACEOF
+#define MAC_OSX_TCL 1
+_ACEOF
+
 	    PLAT_OBJS='${MAC_OSX_OBJS}'
 	    PLAT_SRCS='${MAC_OSX_SRCS}'
 	    echo "$as_me:$LINENO: checking whether to use CoreFoundation" >&5
@@ -6344,21 +6359,6 @@ fi
 
 
 fi
-
-	    if test "$tcl_cv_cc_visibility_hidden" != yes; then
-
-
-cat >>confdefs.h <<\_ACEOF
-#define MODULE_SCOPE __private_extern__
-_ACEOF
-
-
-fi
-
-
-cat >>confdefs.h <<\_ACEOF
-#define MAC_OSX_TCL 1
-_ACEOF
 
 	    ;;
 	NEXTSTEP-*)
