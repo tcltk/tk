@@ -1,5 +1,5 @@
 #
-# $Id: winTheme.tcl,v 1.4 2007/10/16 21:00:15 jenglish Exp $
+# $Id: winTheme.tcl,v 1.5 2007/11/18 19:20:26 jenglish Exp $
 #
 # Settings for 'winnative' theme.
 #
@@ -19,11 +19,12 @@ namespace eval ttk::theme::winnative {
 	ttk::style map "." -foreground [list disabled SystemGrayText] ;
         ttk::style map "." -embossed [list disabled 1] ;
 
-	ttk::style configure TButton -width -11 -relief raised -shiftrelief 1
+	ttk::style configure TButton \
+	    -anchor center -width -11 -relief raised -shiftrelief 1
 	ttk::style configure TCheckbutton -padding "2 4"
 	ttk::style configure TRadiobutton -padding "2 4"
 	ttk::style configure TMenubutton \
-	    -padding "8 4" -arrowsize 3 -relief raised -anchor w
+	    -padding "8 4" -arrowsize 3 -relief raised
 
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
 

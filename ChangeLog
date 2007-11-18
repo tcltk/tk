@@ -1,5 +1,16 @@
 2007-11-18  Joe English  <jenglish@users.sourceforge.net>
 
+	* generic/ttk/ttkFrame.c: Use sublayout for ttk::labelframe labels 
+	instead of single element.
+
+	* generic/ttk/ttkLabel.c: Default -anchor for text and label elements
+	is now "w" instead of "center".  Fixes [Bug 1614540].
+
+	* library/ttk/defaults.tcl, library/ttk/*Theme.tcl: Button styles
+	now need explicit "-anchor center".
+
+2007-11-18  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/ttk/ttkLayout.c(TTKInitPadding): BUGFIX: 
 	Ttk_GetPaddingFromObj() and Ttk_GetBorderFromObj() returned 
 	garbage when passed an empty list.
