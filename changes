@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.115 2007/11/19 18:34:20 dgp Exp $
+RCS: @(#) $Id: changes,v 1.116 2007/11/19 19:04:37 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6251,11 +6251,11 @@ ttk::radiobutton, ttk::checkbutton, ttk::treeview, ttk::separator,
 ttk::scrollbar, ttk::entry, ttk::frame and ttk::labelframe widgets.  Adds
 ttk::style command.
 
-2006-11-02 (enhancement) Improve OS X Carbon Update event handling (steffen).
+2006-11-02 (enhancement) Improve OS X Carbon Update event handling (steffen)
 
-2006-11-07 (configure change) Unix --enable-xft is enabled by default now.
+2006-11-07 (configure change) Unix --enable-xft is enabled by default (kenny)
 
-2006-11-23 (bug fix)[1599877] Fix unicode character underline in menus.
+2006-11-23 (bug fix)[1599877] Fix unicode character underline in menus (hobbs)
 
 2006-11-24 (bug fix)[1487701] Better handling of tcl_interactive on OS X to
 control display of console (hobbs, steffen)
@@ -6266,19 +6266,19 @@ control display of console (hobbs, steffen)
 
 2006-12-01 (new feature) Add -transparentcolor wm attribute on Windows (hobbs)
 
-2006-12-02 (new feature)[TIP 300] Added [font actual $font $char].
+2006-12-01 (new feature)[TIP 300] Added [font actual $font $char] (kenny)
 
-2006-12-04 (new feature)[TIP 286] Added [$menu xposition] subcommand.
+2006-12-04 (new feature)[TIP 286] Added [$menu xposition] subcommand (bron)
 
 2006-12-11 (enhancement) Improved EWMH support for _NET_WM_PID and
-_NET_WM_PING.
+_NET_WM_PING (fellows)
 
 2007-01-25 (configure change) ensure CPPFLAGS env var used when set (steffen)
 
 2007-02-19 (configure change) Use SHLIB_SUFFIX=".so" on HP-UX IA64 (was
-".sl").
+".sl") (hobbs)
 
-2007-04-10 (platform support) Correctly handle theming on Vista/Aero.
+2007-04-10 (platform support) Correctly handle theming on Vista/Aero (english)
 
 2007-04-23 (enhancement) Allow empty value for -selectforeground opt (steffen)
 
@@ -6419,11 +6419,11 @@ Improvements to demo suite to make more use of Tk 8.5 features (fellows,steffen)
 2007-10-30 (bug fix)[1803723] Win: Arabic and Hebrew rendering (fellows)
 
 2007-10-30 (bug fix)[1550528] [tk_chooseDirectory -mustexist true] disables
-	the "OK" until valid selection (hobbs)
+the "OK" until valid selection (hobbs)
 
 2007-11-03 (new feature) adjustable [console] fonts (thoyts)
 
-2007-11-04 (platform support) Aqua: "Run Widget Demo" menu item (steffen)
+2007-11-04 (enhancement) Aqua: "Run Widget Demo" menu item (steffen)
 
 2007-11-09 (bug fix) Aqua: activate event after window expansion (steffen)
 
@@ -6435,10 +6435,11 @@ look&feel; menubutton size with -image/-bitmap (steffen)
 2007-11-09 (bug fix) Aqua: [tk_getOpenFile] (et al.) and help menu crashes on
 Mac OS X Leopard (steffen)
 
-2007-11-11 (bug fix)[1824638] Aqua: small max width text measuring (riefenstahl)
+2007-11-11 (bug fix)[1824638] Aqua: small max-width text measuring (riefenstahl)
 
 2007-11-14 (bug fix)[1831803] sv.msg catalog for "sv" locale (fellows)
 
-Many significant improvements to the documentation and demos.
+Many significant improvements to the documentation and demos (fellows, hobbs,
+steffen, kupries)
 
 --- Released 8.5b3, Novemeber 19, 2007 --- See ChangeLog for details ---
