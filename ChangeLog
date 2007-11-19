@@ -1,5 +1,7 @@
 2007-11-19  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.5b3 TAGGED FOR RELEASE ***
+
 	* README:		Bump version number to 8.5b3.
 	* generic/tk.h:
 	* library/tk.tcl:
