@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.17 2007/11/18 17:00:29 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.18 2007/11/19 01:49:07 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -48,7 +48,7 @@
  * need to do this the hard way in Tile:
  */
 #define BEGIN_DRAWING(d) { \
-    	CGrafPtr saveWorld; GDHandle saveDevice; \
+	CGrafPtr saveWorld; GDHandle saveDevice; \
 	GetGWorld(&saveWorld, &saveDevice); \
 	SetGWorld(TkMacOSXGetDrawablePort(d), 0); \
 	TkMacOSXSetUpClippingRgn(d);
@@ -762,7 +762,7 @@ static Ttk_ElementSpec SizegripElementSpec = {
 };
 
 /*----------------------------------------------------------------------
- * +++ Background element.
+ * +++ Background and fill elements.
  *
  *	This isn't quite right: In Aqua, the correct background for
  *	a control depends on what kind of container it belongs to,
@@ -773,11 +773,11 @@ static Ttk_ElementSpec SizegripElementSpec = {
  *	off-screen graphics port this leads to alignment glitches.
  */
 
-static void BackgroundElementDraw(
+static void FillElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    Rect bounds = BoxToRect(d, Ttk_WinBox(tkwin));
+    Rect bounds = BoxToRect(d, b);
     ThemeBrush brush = (state & TTK_STATE_BACKGROUND)
 	    ? kThemeBrushModelessDialogBackgroundInactive
 	    : kThemeBrushModelessDialogBackgroundActive;
@@ -788,6 +788,23 @@ static void BackgroundElementDraw(
     EraseRect(&bounds);
     END_DRAWING
 }
+
+static void BackgroundElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
+{
+    FillElementDraw(
+	clientData, elementRecord, tkwin,
+	d, Ttk_WinBox(tkwin), state);
+}
+
+static Ttk_ElementSpec FillElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    TtkNullElementSize,
+    FillElementDraw
+};
 
 static Ttk_ElementSpec BackgroundElementSpec = {
     TK_STYLE_VERSION_2,
@@ -995,26 +1012,27 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     /*
      * Elements:
      */
-    Ttk_RegisterElementSpec(themePtr,"background",&BackgroundElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr,"Toolbar.background",
-	    &ToolbarBackgroundElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "background", &BackgroundElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "fill", &FillElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Toolbar.background",
+	&ToolbarBackgroundElementSpec, 0);
 
     Ttk_RegisterElementSpec(themePtr, "Button.button",
-	    &ButtonElementSpec, &PushButtonParms);
+	&ButtonElementSpec, &PushButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Checkbutton.button",
-	    &ButtonElementSpec, &CheckBoxParms);
+	&ButtonElementSpec, &CheckBoxParms);
     Ttk_RegisterElementSpec(themePtr, "Radiobutton.button",
-	    &ButtonElementSpec, &RadioButtonParms);
+	&ButtonElementSpec, &RadioButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Toolbutton.border",
-	    &ButtonElementSpec, &BevelButtonParms);
+	&ButtonElementSpec, &BevelButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
-	    &ButtonElementSpec, &PopupButtonParms);
+	&ButtonElementSpec, &PopupButtonParms);
     Ttk_RegisterElementSpec(themePtr, "Combobox.button",
-	    &ComboboxElementSpec, 0);
+	&ComboboxElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Treeitem.indicator",
-	    &DisclosureElementSpec, &DisclosureParms);
+	&DisclosureElementSpec, &DisclosureParms);
     Ttk_RegisterElementSpec(themePtr, "Treeheading.cell",
-	    &TreeHeaderElementSpec, &ListHeaderParms);
+	&TreeHeaderElementSpec, &ListHeaderParms);
 
     Ttk_RegisterElementSpec(themePtr, "Notebook.tab", &TabElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.client", &PaneElementSpec, 0);
@@ -1035,7 +1053,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
      * we do all the drawing in the ".track" element and leave the .pbar out.
      */
     Ttk_RegisterElementSpec(themePtr,"Scale.trough",
-	    &TrackElementSpec, &ScaleData);
+	&TrackElementSpec, &ScaleData);
     Ttk_RegisterElementSpec(themePtr,"Scale.slider",&SliderElementSpec,0);
     Ttk_RegisterElementSpec(themePtr,"Progressbar.track", &PbarElementSpec, 0);
 

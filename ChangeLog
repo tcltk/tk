@@ -1,5 +1,18 @@
 2007-11-18  Joe English  <jenglish@users.sourceforge.net>
 
+	* generic/ttk/ttkElements.c, macosx/ttkMacOSXTheme.c:
+	Add "fill" element: like "background" but only erases parcel.
+
+	* generic/ttk/ttkFrame.c: Use fill element in Labelframe Label
+	sublayout.  Also improved default labelmargins for -labelanchor w*, e*.
+
+	* generic/ttk/ttkLabel.c: no longer need Labelframe hack.
+
+	* library/ttk/aquaTheme.tcl: ImageTextElement no longer needed.
+	TextElement no longer needs '-background' option.
+
+2007-11-18  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/ttk/ttkFrame.c: Use sublayout for ttk::labelframe labels 
 	instead of single element.
 
