@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.114 2007/11/19 14:24:12 das Exp $
+RCS: @(#) $Id: changes,v 1.115 2007/11/19 18:34:20 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6413,6 +6413,16 @@ Improvements to demo suite to make more use of Tk 8.5 features (fellows,steffen)
 
 --- Released 8.5b2, October 26, 2007 --- See ChangeLog for details ---
 
+2007-10-29 (appearance change) Default look and fonts on X11 (hobbs)
+	*** POTENTIAL INCOMPATIBILITY; [::tk::classic::restore] to undo ***
+
+2007-10-30 (bug fix)[1803723] Win: Arabic and Hebrew rendering (fellows)
+
+2007-10-30 (bug fix)[1550528] [tk_chooseDirectory -mustexist true] disables
+	the "OK" until valid selection (hobbs)
+
+2007-11-03 (new feature) adjustable [console] fonts (thoyts)
+
 2007-11-04 (platform support) Aqua: "Run Widget Demo" menu item (steffen)
 
 2007-11-09 (bug fix) Aqua: activate event after window expansion (steffen)
@@ -6427,4 +6437,8 @@ Mac OS X Leopard (steffen)
 
 2007-11-11 (bug fix)[1824638] Aqua: small max width text measuring (riefenstahl)
 
---- Released 8.5b3, Novemeber 21, 2007 --- See ChangeLog for details ---
+2007-11-14 (bug fix)[1831803] sv.msg catalog for "sv" locale (fellows)
+
+Many significant improvements to the documentation and demos.
+
+--- Released 8.5b3, Novemeber 19, 2007 --- See ChangeLog for details ---
