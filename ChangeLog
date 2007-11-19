@@ -14,6 +14,11 @@
 
 	* changes:		Update changes for 8.5b3 release.
 
+2007-11-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/ttk/ttkTheme.c: Fixed crash when 'style element create'
+	* tests/ttk/ttk.test:     called with insufficient args. Plus tests.
+
 2007-11-18  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkElements.c, macosx/ttkMacOSXTheme.c: Add "fill"

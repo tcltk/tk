@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.7 2007/11/08 01:40:25 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.8 2007/11/19 18:49:59 patthoyts Exp $
  */
 
 #include <stdlib.h>
@@ -1460,7 +1460,7 @@ static int StyleElementCreateCmd(
     FactoryRec *recPtr;
 
     if (objc < 5) {
-	Tcl_WrongNumArgs(interp, 5, objv, "name type ?options...?");
+	Tcl_WrongNumArgs(interp, 3, objv, "name type ?options...?");
 	return TCL_ERROR;
     }
 
