@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.113 2007/10/26 17:20:56 das Exp $
+RCS: @(#) $Id: changes,v 1.114 2007/11/19 14:24:12 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6361,7 +6361,7 @@ installed tkMacOSXInt.h header (steffen)
 2007-07-09 (bug fix) Aqua: window click activation & titlebar click handling
 in presence of grabs or modal windows (steffen)
 
-2007-07-25 (bug fix)[1743786] Aqua: tk_getOpenFile result (steffen)
+2007-07-25 (bug fix)[1743786] Aqua: [tk_getOpenFile] result (steffen)
 
 2007-08-01 (bug fix)[1692927] [tk_messageBox -detail] buffer (davies,thoyts)
 
@@ -6412,3 +6412,19 @@ project for Xcode 3.0 (steffen)
 Improvements to demo suite to make more use of Tk 8.5 features (fellows,steffen)
 
 --- Released 8.5b2, October 26, 2007 --- See ChangeLog for details ---
+
+2007-11-04 (platform support) Aqua: "Run Widget Demo" menu item (steffen)
+
+2007-11-09 (bug fix) Aqua: activate event after window expansion (steffen)
+
+2007-11-09 (bug fix)[1824521] Aqua: menubutton crash with -bitmap (steffen)
+
+2007-11-09 (platform support) Aqua: (menu)button pressed/inactive/disabled
+look&feel; menubutton size with -image/-bitmap (steffen)
+
+2007-11-09 (bug fix) Aqua: [tk_getOpenFile] (et al.) and help menu crashes on
+Mac OS X Leopard (steffen)
+
+2007-11-11 (bug fix)[1824638] Aqua: small max width text measuring (riefenstahl)
+
+--- Released 8.5b3, Novemeber 21, 2007 --- See ChangeLog for details ---
