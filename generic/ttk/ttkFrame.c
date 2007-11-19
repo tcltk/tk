@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.8 2007/11/18 19:20:25 jenglish Exp $
+/* $Id: ttkFrame.c,v 1.9 2007/11/19 01:49:07 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
@@ -288,8 +288,6 @@ static void LabelframeStyleOptions(Labelframe *lf, LabelframeStyle *style)
     style->borderWidth = DEFAULT_BORDERWIDTH;
     style->padding = Ttk_UniformPadding(0);
     style->labelAnchor = TTK_PACK_TOP | TTK_STICK_W;
-    style->labelMargins = 
-	Ttk_MakePadding(DEFAULT_LABELINSET,0,DEFAULT_LABELINSET,0);
     style->labelOutside = 0;
 
     if ((objPtr = Ttk_QueryOption(layout, "-borderwidth", 0)) != NULL) {
@@ -303,6 +301,14 @@ static void LabelframeStyleOptions(Labelframe *lf, LabelframeStyle *style)
     }
     if ((objPtr = Ttk_QueryOption(layout,"-labelmargins", 0)) != NULL) {
 	Ttk_GetBorderFromObj(NULL, objPtr, &style->labelMargins);
+    } else {
+	if (style->labelAnchor & (TTK_PACK_TOP|TTK_PACK_BOTTOM)) {
+	    style->labelMargins = 
+		Ttk_MakePadding(DEFAULT_LABELINSET,0,DEFAULT_LABELINSET,0);
+	} else {
+	    style->labelMargins = 
+		Ttk_MakePadding(0,DEFAULT_LABELINSET,0,DEFAULT_LABELINSET);
+	}
     }
     if ((objPtr = Ttk_QueryOption(layout,"-labeloutside", 0)) != NULL) {
 	Tcl_GetBooleanFromObj(NULL, objPtr, &style->labelOutside);
@@ -615,7 +621,8 @@ TTK_BEGIN_LAYOUT(LabelframeLayout)
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(LabelSublayout)
-    TTK_NODE("Labelframe.text", TTK_FILL_BOTH)
+    TTK_GROUP("Label.fill", TTK_FILL_BOTH,
+	TTK_NODE("Label.text", TTK_FILL_BOTH))
 TTK_END_LAYOUT
 
 /* ======================================================================
