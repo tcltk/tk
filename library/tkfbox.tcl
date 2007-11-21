@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.65 2007/11/02 16:14:57 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.66 2007/11/21 16:29:08 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -169,6 +169,10 @@ proc ::tk::IconList_DrawSelection {w} {
     upvar ::tk::$w:itemList itemList
 
     $data(canvas) delete selection
+    $data(canvas) itemconfigure selectionText -fill black
+    $data(canvas) dtag selectionText
+    set cbg [ttk::style lookup TEntry -selectbackground focus]
+    set cfg [ttk::style lookup TEntry -selectforeground focus]
     foreach item $data(selection) {
 	set rTag [lindex [lindex $data(list) $item] 2]
 	foreach {iTag tTag text serial} $itemList($rTag) {
@@ -176,8 +180,9 @@ proc ::tk::IconList_DrawSelection {w} {
 	}
 
 	set bbox [$data(canvas) bbox $tTag]
-	$data(canvas) create rect $bbox -fill \#a0a0ff -outline \#a0a0ff \
+	$data(canvas) create rect $bbox -fill $cbg -outline $cbg \
 		-tags selection
+	$data(canvas) itemconfigure $tTag -fill $cfg -tags selectionText
     }
     $data(canvas) lower selection
     return
@@ -226,9 +231,7 @@ proc ::tk::IconList_Create {w} {
     set data(sbar)   [ttk::scrollbar $w.cHull.sbar -orient horizontal -takefocus 0]
     catch {$data(sbar) configure -highlightthickness 0}
     set data(canvas) [canvas $w.cHull.canvas -highlightthick 0 \
-	    -width 400 -height 120 -takefocus 1]
-    $data(canvas) configure -background \
-	    [ttk::style lookup $::ttk::currentTheme -background]
+	    -width 400 -height 120 -takefocus 1 -background white]
     pack $data(sbar) -side bottom -fill x -padx 2 -in $w.cHull -pady {0 2}
     pack $data(canvas) -expand yes -fill both -padx 2 -pady {2 0}
     pack $w.cHull -expand yes -fill both -ipadx 2 -ipady 2

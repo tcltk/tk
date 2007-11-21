@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.33 2007/11/02 13:16:38 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.34 2007/11/21 16:29:08 dkf Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -247,7 +247,7 @@ proc ::tk::MessageBox {args} {
     }
 
     # There is only one background colour for the whole dialog
-    set bg [ttk::style lookup $::ttk::currentTheme -background]
+    set bg [ttk::style lookup . -background]
 
     # 3. Create the top-level window and divide it into top
     # and bottom parts.
