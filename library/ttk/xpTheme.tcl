@@ -1,5 +1,5 @@
 #
-# $Id: xpTheme.tcl,v 1.3.2.1 2007/10/17 14:37:05 dgp Exp $
+# $Id: xpTheme.tcl,v 1.3.2.2 2007/11/21 16:46:27 dgp Exp $
 #
 # Settings for 'xpnative' theme
 #
@@ -20,10 +20,10 @@ namespace eval ttk::theme::xpnative {
 	    -foreground [list disabled SystemGrayText] \
 	    ;
 
-	ttk::style configure TButton -padding {1 1} -width -11
+	ttk::style configure TButton -anchor center -padding {1 1} -width -11
 	ttk::style configure TRadiobutton -padding 2
 	ttk::style configure TCheckbutton -padding 2
-	ttk::style configure TMenubutton -padding {8 4} -anchor w
+	ttk::style configure TMenubutton -padding {8 4}
 
 	ttk::style configure TNotebook -tabmargins {2 2 2 0}
 	ttk::style map TNotebook.Tab \
