@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.7.2.1 2007/09/07 01:25:36 dgp Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.7.2.2 2007/11/21 16:46:26 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -101,7 +101,8 @@ Tk_GetVisual(
     XVisualInfo template, *visInfoList, *bestPtr;
     long mask;
     Visual *visual;
-    int length, c, numVisuals, prio, bestPrio, i;
+    ptrdiff_t length;
+    int c, numVisuals, prio, bestPrio, i;
     CONST char *p;
     VisualDictionary *dictPtr;
     TkColormap *cmapPtr;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.20.2.2 2007/09/07 01:25:36 dgp Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.20.2.3 2007/11/21 16:46:26 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -261,7 +261,8 @@ Tk_AddOption(
     Element newEl;
     register CONST char *p;
     CONST char *field;
-    int count, firstField, length;
+    int count, firstField;
+    ptrdiff_t length;
 #define TMP_SIZE 100
     char tmp[TMP_SIZE+1];
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)

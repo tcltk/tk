@@ -1,8 +1,26 @@
 #
-# $Id: scrollbar.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: scrollbar.tcl,v 1.1.2.1 2007/11/21 16:46:27 dgp Exp $
 #
 # Bindings for TScrollbar widget
 #
+
+# Still don't have a working ttk::scrollbar under OSX -
+# Swap in a [tk::scrollbar] on that platform,
+# unless user specifies -class or -style.
+#
+if {[tk windowingsystem] eq "aqua"} {
+    rename ::ttk::scrollbar ::ttk::_scrollbar
+    proc ttk::scrollbar {w args} {
+	set constructor ::tk::scrollbar
+	foreach {option _} $args {
+	    if {$option eq "-class" || $option eq "-style"} {
+		set constructor ::ttk::_scrollbar
+		break
+	    }
+	}
+	return [$constructor $w {*}$args]
+    }
+}
 
 namespace eval ttk::scrollbar {
     variable State

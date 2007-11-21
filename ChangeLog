@@ -1,3 +1,81 @@
+2007-11-19  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5b3 TAGGED FOR RELEASE ***
+
+	* README:		Bump version number to 8.5b3.
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+	* changes:		Update changes for 8.5b3 release.
+
+2007-11-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/ttk/ttkTheme.c:	Fix crash when 'style element create'
+	* tests/ttk/ttk.test:		called w/ insufficient args; add tests.
+
+2007-11-18  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkElements.c, macosx/ttkMacOSXTheme.c: Add "fill"
+	element: like "background" but only erases parcel.
+
+	* generic/ttk/ttkFrame.c: Use fill element in Labelframe Label
+	sublayout.  Also improved default labelmargins for -labelanchor w*, e*.
+
+	* generic/ttk/ttkLabel.c: no longer need Labelframe hack.
+
+	* library/ttk/aquaTheme.tcl: ImageTextElement no longer needed.
+	TextElement no longer needs '-background' option.
+
+	* generic/ttk/ttkFrame.c: Use sublayout for ttk::labelframe labels
+	instead of single element.
+
+	* generic/ttk/ttkLabel.c: Default -anchor for text and label elements
+	is now "w" instead of "center". [Bug 1614540]
+
+	* library/ttk/defaults.tcl, library/ttk/*Theme.tcl: Button styles now
+	need explicit "-anchor center".
+
+	* generic/ttk/ttkLayout.c (TTKInitPadding): BUGFIX:
+	Ttk_GetPaddingFromObj() and Ttk_GetBorderFromObj() returned garbage
+	when passed an empty list.
+
+	* macosx/ttkMacOSXTheme.c: Resynchronize with Tile codebase so that
+	patches can flow back and forth.
+
+	* library/ttk/aquaTheme.tcl: Extra TButton -padding no longer needed.
+
+2007-11-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/ttkWinXPTheme.c: Add support for size information flags for
+	scrollbar and combobox buttons. This handles Tile [Patches 1596647 and
+	1596657] but a bit more generically.
+
+2007-11-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/(tkArgv.c, tkBind.c, tkCipboard.c, tkEntry.c, tkOption.c,
+	tkScale.c, tkScrollbar.c, tkTextImage.c, tkVisual.c, tkWindow.c): Tidy
+	up some variable types.
+
+	* generic/tkFont.c:	Only check for -displayof if there are
+	* test/font.test:	sufficient arguments. This permits checking
+				strings like -d.
+
+2007-11-17  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/scrollbar.tcl: Swap in core scrollbars for
+	[ttk::scrollbar]s on OSX.
+
+2007-11-16  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
+
+	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Correct an
+	oversight in the bug fix from 2007-11-11. [Bug 1824638]
+
 2007-11-15  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcodeproj/project.pbxproj: add new chanio.test.
@@ -11,8 +89,8 @@
 2007-11-11  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
 	* macosx/tkMacOSXFont.c (TkpMeasureCharsInContext): Fix the case when
-	TK_WHOLE_WORDS and TK_AT_LEAST_ONE are both set and maxLength is
-	small. [Bug 1824638]
+	TK_WHOLE_WORDS and TK_AT_LEAST_ONE are both set and maxLength is small.
+	[Bug 1824638]
 
 2007-11-09  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -158,8 +236,6 @@
 	* library/demos/mclist.tcl: Added a demo of how to do a multi-column
 	sortable listbox.
 
-2007-11-02  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
-
 	* library/msgbox.tcl: Made message dialog use Ttk widgets for better
 	L&F.
 
@@ -172,8 +248,6 @@
 2007-11-01  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/demos/textpeer.tcl: Better resizing. [Bug 1822601]
-
-2007-11-01  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/colors.n: Added list of Windows system colors. [Bug 945409]
 

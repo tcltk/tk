@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.98.2.5 2007/10/27 04:23:15 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.98.2.6 2007/11/21 16:46:25 dgp Exp $
  */
 
 #ifndef _TK

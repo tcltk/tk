@@ -1,5 +1,5 @@
 #
-# $Id: classicTheme.tcl,v 1.3 2006/12/18 19:33:14 jenglish Exp $
+# $Id: classicTheme.tcl,v 1.3.2.1 2007/11/21 16:46:27 dgp Exp $
 #
 # "classic" Tk theme.
 #
@@ -45,7 +45,8 @@ namespace eval ttk::theme::classic {
 
 	style map "." -highlightcolor [list focus black]
 
-	style configure TButton -padding "3m 1m" -relief raised -shiftrelief 1
+	style configure TButton \
+	    -anchor center -padding "3m 1m" -relief raised -shiftrelief 1
 	style map TButton -relief [list {!disabled pressed} sunken]
 
 	style configure TCheckbutton -indicatorrelief raised
