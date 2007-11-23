@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for MacOSX, see the README file in the directory ../macosx.
 
-RCS: @(#) $Id: README,v 1.23 2007/09/10 22:59:06 hobbs Exp $
+RCS: @(#) $Id: README,v 1.24 2007/11/23 16:41:06 dkf Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -28,7 +28,7 @@ How To Compile And Install Tk:
 (a) Make sure that the Tcl release is present in the directory
     ../../tcl<version> (or else use the "--with-tcl" switch described
     below).  This release of Tk will only work with the equivalently
-    version Tcl release. Also, be sure that you have configured Tcl before
+    versioned Tcl release. Also, be sure that you have configured Tcl before
     you configure Tk.
 
 (b) Check for patches as described in ../README.
@@ -39,18 +39,18 @@ How To Compile And Install Tk:
     discard all the configuration information computed previously.
 
 (d) Type "./configure".  This runs a configuration script created by GNU
-    autoconf, which configures Tcl for your system and creates a
-    Makefile.  The configure script allows you to customize the Tcl
-    configuration for your site; for details on how you can do this,
-    type "./configure -help" or refer to the autoconf documentation (not
-    included here).  Tk's "configure" script supports the following
-    special switches in addition to the standard ones:
+    autoconf, which configures Tk for your system and creates a Makefile.
+    The configure script allows you to customize the Tk configuration for
+    your site; for details on how you can do this, type "./configure
+    -help" or refer to the autoconf documentation (not included here).
+    Tk's "configure" script supports the following special switches in
+    addition to the standard ones:
 	--with-tcl=DIR		Specifies the directory containing the Tcl
 				binaries and Tcl's platform-dependent
 				configuration information.  By default
 				the Tcl directory is assumed to be in the
 				location given by (a) above.
-	--enable-threads	If this switch is set, Tcl will compile
+	--enable-threads	If this switch is set, Tk will compile
 				itself with multithreading support.
 	--enable-shared		If this switch is specified, Tk will compile
 				itself as a shared library if it can figure
@@ -59,24 +59,34 @@ How To Compile And Install Tk:
 				how to build shared libraries.
 	--disable-shared	If this switch is specified, Tk will compile
 				itself as a static library.
-	--enable-symbols	build with debugging symbols  By default
+	--enable-symbols	Build with debugging symbols  By default
 				standard debugging symbols are used.  You
 				can specify the value "mem" to include
 				TCL_MEM_DEBUG memory debugging.
-	--disable-symbols	build without debugging symbols
-	--enable-64bit		enable 64bit support (where applicable)
-	--disable-64bit		disable 64bit support (where applicable)
-	--enable-64bit-vis	enable 64bit Sparc VIS support
-	--disable-64bit-vis	disable 64bit Sparc VIS support
+	--disable-symbols	Build without debugging symbols
+	--disable-xft		Disable support for antialiased fonts via
+				the Freetype/xft library. By default,
+				this is switched on whenever the
+				configure script can detect the required
+				libraries.
+	--enable-64bit		Enable 64bit support (where applicable)
+	--disable-64bit		Disable 64bit support (where applicable)
+	--enable-64bit-vis	Enable 64bit Sparc VIS support
+	--disable-64bit-vis	Disable 64bit Sparc VIS support
 	--enable-man-symlinks	Use symlinks for linking the manpages that
 				should be reachable under several names.
 	--enable-man-compression=PROG
 				Compress the manpages using PROG.
-    Mac OS X only: 
-	--enable-framework	package Tk as a framework.
-	--disable-corefoundation disable use of CoreFoundation API.
-	--enable-aqua		use Aqua windowingsystem rather than X11,
-				requires --enable-corefoundation with tcl & tk.
+	--enable-man-suffix=STRING
+				Add STRING to the name of each of the
+				manual pages. If specified without giving
+				STRING, the suffix will be "tk".
+    Mac OS X only:
+	--enable-framework	Package Tk as a framework.
+	--disable-corefoundation Disable use of CoreFoundation API.
+	--enable-aqua		Use Aqua windowingsystem rather than X11,
+				requires --enable-corefoundation with Tcl
+				and Tk.
 
     Note: by default gcc will be used if it can be located on the PATH.
     if you want to use cc instead of gcc, set the CC environment variable
@@ -88,7 +98,7 @@ How To Compile And Install Tk:
 
 (e) Type "make".  This will create a library archive called
     "libtk<version>.a" or "libtk<version>.so" and an interpreter
-    application called "wish" that allows you to type Tcl commands
+    application called "wish" that allows you to type Tcl/Tk commands
     interactively or execute script files.
 
 (f) If the make fails then you'll have to personalize the Makefile
@@ -97,7 +107,7 @@ How To Compile And Install Tk:
     for compiling on your system.  If you need to modify Makefile,
     there are comments at the beginning of it that describe the things
     you might want to change and how to change them.
-    
+
 (g) Type "make install" to install Tk's binaries and script files in
     standard places.  You'll need write permission on the installation
     directories to do this.  The installation directories are
@@ -108,7 +118,7 @@ How To Compile And Install Tk:
     "exec_prefix" variables in the Makefile.
 
 (h) At this point you can play with Tk by invoking the "wish"
-    program and typing Tcl commands.  However, if you haven't installed
+    program and typing Tcl/Tk commands.  However, if you haven't installed
     Tk then you'll first need to set your TK_LIBRARY environment
     variable to hold the full path name of the "library" subdirectory.
     If you haven't installed Tcl either then you'll need to set your
@@ -117,13 +127,20 @@ How To Compile And Install Tk:
     libtk.a, libtk.so, and the Tk library have a version number in their
     names, such as "wish8.5" or "libtk8.5.so"; to use the installed
     versions, either specify the version number or create a symbolic
-    link (e.g. from "wish" to "wish8.5").
+    link (e.g. from "wish" to "wish8.5"). You can also play with Tcl/Tk
+    by typing "make shell", provided Tcl has been built first.
 
 If you have trouble compiling Tk, see the URL noted above about working
 platforms.  It contains information that people have provided about changes
 they had to make to compile Tk in various environments.  We're also
 interested in hearing how to change the configuration setup so that Tk
 compiles on additional platforms "out of the box".
+
+Note: Do not specify either of the TCL_LIBRARY and TK_LIBRARY environment
+variables in a production installation, as this can cause conflicts
+between different versions of the libraries. Instead, the libraries
+should have the correct locations of their associated script directories
+built into them.
 
 Test suite
 ----------
