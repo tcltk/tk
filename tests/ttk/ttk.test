@@ -589,13 +589,13 @@ test ttk-14.3 "-textvariable in nonexistant namespace" -body {
 
 test ttk-15.1 "style element create: insufficient args" -body {
      ttk::style element create
-} -returnCodes 1 -match glob -result "wrong # args:*"
+} -returnCodes 1 -result "wrong # args: should be \"ttk::style element create name type ?options...?\""
 test ttk-15.2 "style element create: insufficient args" -body {
      ttk::style element create plain.background
-} -returnCodes 1 -match glob -result "wrong # args:*"
+} -returnCodes 1 -result "wrong # args: should be \"ttk::style element create name type ?options...?\""
 test ttk-15.3 "style element create: insufficient args" -body {
      ttk::style element create plain.background from
-} -returnCodes 1 -match glob -result "wrong # args:*"
+} -returnCodes 1 -result "wrong # args: should be \"theme ?element?\""
 test ttk-15.4 "style element create: valid" -body {
      ttk::style element create plain.background from default
 } -returnCodes 0 -result ""

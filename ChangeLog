@@ -1,3 +1,15 @@
+2007-11-25  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkManager.h, generic/ttk/ttkManager.c,
+	generic/ttk/ttkFrame.c, generic/ttk/ttkNotebook.c,
+	generic/ttk/ttkPanedwindow.c:  Internal Ttk_Manager API 
+	updates; Fixed [Bug 1343984]; Added [$nb hide] method;
+	[$nb add] on already-managed windows no longer throws 
+	an error, can be used to re-add a hidden tab.
+
+	* doc/ttk_notebook.n, tests/ttk/notebook.test,
+	tests/ttk/panedwindow.test:  Updated docs and test suite.
+
 2007-11-23  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* unix/README: General improvements.
