@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.9 2007/11/19 01:49:07 jenglish Exp $
+/* $Id: ttkFrame.c,v 1.10 2007/11/25 18:11:12 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
@@ -482,6 +482,11 @@ static void LabelframePlaceSlaves(void *recordPtr)
     }
 }
 
+static int LabelRequest(void *managerData, int index, int width, int height)
+{
+    return 1;
+}
+
 /* LabelRemoved --
  * 	Unset the -labelwidget option.
  *
@@ -489,17 +494,17 @@ static void LabelframePlaceSlaves(void *recordPtr)
  * 	This routine is also called when the widget voluntarily forgets
  * 	the slave in LabelframeConfigure.
  */
-static void LabelRemoved(Ttk_Manager *mgr, int slaveIndex)
+static void LabelRemoved(void *managerData, int slaveIndex)
 {
-    Labelframe *lframe = Ttk_ManagerData(mgr);
+    Labelframe *lframe = managerData;
     lframe->label.labelWidget = 0;
 }
 
-static Ttk_ManagerSpec LabelframeManagerSpec = 
-{
+static Ttk_ManagerSpec LabelframeManagerSpec = {
     { "labelframe", Ttk_GeometryRequestProc, Ttk_LostSlaveProc },
     LabelframeSize,
     LabelframePlaceSlaves,
+    LabelRequest,
     LabelRemoved
 };
 

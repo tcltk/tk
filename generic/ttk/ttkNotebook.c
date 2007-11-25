@@ -1,8 +1,5 @@
-/* $Id: ttkNotebook.c,v 1.10 2007/10/25 22:52:41 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.11 2007/11/25 18:11:12 jenglish Exp $
  * Copyright (c) 2004, Joe English
- *
- * NOTE-ACTIVE: activeTabIndex is not always correct (it's
- * more trouble than it's worth to track this 100%)
  */
 
 #include <string.h>
@@ -645,35 +642,36 @@ static int NextTab(Notebook *nb, int index)
 
 /* SelectNearestTab --
  * 	Handles the case where the current tab is forgotten, hidden,
- * 	or destroyed. Select the next available tab; or, if there is none,
- * 	leaves all tabs unselected.
+ * 	or destroyed.
+ *
+ * 	Unmap the current tab and schedule the next available one
+ * 	to be mapped at the next GM update.
  */
 static void SelectNearestTab(Notebook *nb)
 {
-    int nextIndex = NextTab(nb, nb->notebook.currentIndex);
+    int currentIndex = nb->notebook.currentIndex;
+    int nextIndex = NextTab(nb, currentIndex);
 
-    if (nextIndex >= 0) {
-	SelectTab(nb, nextIndex);
-    } else {
-	/* No available tabs -- unmap current one.
-	 * ASSERT: this is safe to do even when the slave is being destroyed.
-	 */
-	if (nb->notebook.currentIndex >= 0) {
-	    Ttk_UnmapSlave(nb->notebook.mgr, nb->notebook.currentIndex);
-	    TtkSendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
-	}
-	nb->notebook.currentIndex = -1;
+    if (currentIndex >= 0) {
+	Ttk_UnmapSlave(nb->notebook.mgr, currentIndex);
     }
+    if (currentIndex != nextIndex) {
+	TtkSendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
+    }
+
+    nb->notebook.currentIndex = nextIndex;
+    Ttk_ManagerLayoutChanged(nb->notebook.mgr);
+    TtkRedisplayWidget(&nb->core);
 }
 
 /* TabRemoved -- GM SlaveRemoved hook.
  * 	Select the next tab if the current one is being removed.
  * 	Adjust currentIndex to account for removed slave.
  */
-static void TabRemoved(Ttk_Manager *mgr, int index)
+static void TabRemoved(void *managerData, int index)
 {
-    Notebook *nb = Ttk_ManagerData(mgr);
-    Tab *tab = Ttk_SlaveData(mgr, index);
+    Notebook *nb = managerData;
+    Tab *tab = Ttk_SlaveData(nb->notebook.mgr, index);
 
     if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
@@ -688,6 +686,11 @@ static void TabRemoved(Ttk_Manager *mgr, int index)
     TtkRedisplayWidget(&nb->core);
 }
 
+static int TabRequest(void *managerData, int index, int width, int height)
+{
+    return 1;
+}
+
 /* AddTab --
  * 	Add new tab at specified index.
  */
@@ -700,12 +703,14 @@ static int AddTab(
     if (!Ttk_Maintainable(interp, slaveWindow, nb->core.tkwin)) {
 	return TCL_ERROR;
     }
+#if 0 /* can't happen */
     if (Ttk_SlaveIndex(nb->notebook.mgr, slaveWindow) >= 0) {
 	Tcl_AppendResult(interp,
 	    Tk_PathName(slaveWindow), " already added",
 	    NULL);
 	return TCL_ERROR;
     }
+#endif
 
     /* Create and insert tab.
      */
@@ -731,12 +736,12 @@ static int AddTab(
     return TCL_OK;
 }
 
-static Ttk_ManagerSpec NotebookManagerSpec =
-{
+static Ttk_ManagerSpec NotebookManagerSpec = {
     { "notebook", Ttk_GeometryRequestProc, Ttk_LostSlaveProc },
     NotebookSize,
     NotebookPlaceSlaves,
-    TabRemoved,
+    TabRequest,
+    TabRemoved
 };
 
 /*------------------------------------------------------------------------
@@ -853,6 +858,8 @@ static int NotebookAddCommand(
     Notebook *nb = recordPtr;
     int index = Ttk_NumberSlaves(nb->notebook.mgr);
     Tk_Window slaveWindow;
+    int slaveIndex;
+    Tab *tab;
 
     if (objc <= 2 || objc % 2 != 1) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?options...?");
@@ -863,14 +870,21 @@ static int NotebookAddCommand(
     if (!slaveWindow) {
 	return TCL_ERROR;
     }
+    slaveIndex = Ttk_SlaveIndex(nb->notebook.mgr, slaveWindow);
 
-    /* Create and initialize new tab:
-     */
-    if (AddTab(interp, nb, index, slaveWindow, objc-3,objv+3) != TCL_OK) {
+    if (slaveIndex < 0) { /* New tab */
+	return AddTab(interp, nb, index, slaveWindow, objc-3,objv+3);
+    }
+
+    tab = Ttk_SlaveData(nb->notebook.mgr, slaveIndex);
+    if (tab->state == TAB_STATE_HIDDEN) {
+	tab->state = TAB_STATE_NORMAL;
+    }
+    if (ConfigureTab(interp, nb, tab, slaveWindow, objc-4,objv+4) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    TtkResizeWidget(&nb->core);
+    TtkRedisplayWidget(&nb->core);
 
     return TCL_OK;
 }
@@ -949,8 +963,8 @@ static int NotebookInsertCommand(
     return TCL_OK;
 }
 
-/* $nb forget $item --
- * 	Removes the selected tab.
+/* $nb forget $tab --
+ * 	Removes the specified tab.
  */
 static int NotebookForgetCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
@@ -968,6 +982,34 @@ static int NotebookForgetCommand(
     }
 
     Ttk_ForgetSlave(nb->notebook.mgr, index);
+
+    return TCL_OK;
+}
+
+/* $nb hide $tab --
+ * 	Hides the specified tab.
+ */
+static int NotebookHideCommand(
+    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+{
+    Notebook *nb = recordPtr;
+    int index;
+    Tab *tab;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "tab");
+	return TCL_ERROR;
+    }
+
+    if (GetTabIndex(interp, nb, objv[2], &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    tab = Ttk_SlaveData(nb->notebook.mgr, index);
+    tab->state = TAB_STATE_HIDDEN;
+    if (index == nb->notebook.currentIndex) {
+	SelectNearestTab(nb);
+    }
 
     return TCL_OK;
 }
@@ -1153,6 +1195,7 @@ static WidgetCommandSpec NotebookCommands[] =
     { "configure",	TtkWidgetConfigureCommand },
     { "cget",		TtkWidgetCgetCommand },
     { "forget",		NotebookForgetCommand },
+    { "hide",		NotebookHideCommand },
     { "identify",	NotebookIdentifyCommand },
     { "index",		NotebookIndexCommand },
     { "insert",  	NotebookInsertCommand },
