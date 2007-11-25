@@ -1,3 +1,7 @@
+2007-11-23  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* unix/README: General improvements.
+
 2007-11-21  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/tkfbox.tcl: Better theming in the file list area.
