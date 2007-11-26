@@ -13,7 +13,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.10.2.2 2004/03/27 00:40:39 dkf Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.10.2.3 2007/11/26 20:53:57 kennykb Exp $
  */
 
 #include "tkInt.h"
@@ -540,7 +540,7 @@ StringReadPPM(interp, dataObj, format, imageHandle, destX, destY,
 	 * We have all the data in memory, so write everything in one
 	 * go.
 	 */
-	if (block.pitch*height < dataSize) {
+	if (block.pitch*height > dataSize) {
 	    Tcl_AppendResult(interp, "truncated PPM data", NULL);
 	    return TCL_ERROR;
 	}
