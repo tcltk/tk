@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: imgPPM.test,v 1.5 2002/07/13 21:52:34 dgp Exp $
+# RCS: @(#) $Id: imgPPM.test,v 1.5.2.1 2007/11/26 20:53:57 kennykb Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure
@@ -149,6 +149,19 @@ test imgPPM-3.13 {ReadPPMFileHeader procedure, file ends too soon} {
     put test.ppm "P6\n566\n#asdf"
     list [catch {image create photo p1 -file test.ppm} msg] $msg
 } {1 {couldn't recognize data in image file "test.ppm"}}
+
+test imgPPM-4.1 {StringReadPPM procedure, data too short [Bug 1822391]} \
+    -setup {
+	image create photo I -width 1103 -height 997
+    } \
+    -cleanup {
+	image delete I
+    } \
+    -body {
+	I put "P5\n1103 997\n255\n"
+    } \
+    -returnCodes error \
+    -result {truncated PPM data}
 
 removeFile test.ppm
 removeFile test2.ppm
