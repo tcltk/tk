@@ -1,3 +1,12 @@
+2007-11-26  Kevin Kenny  <kennykb@acm.org>
+
+	* library/tkfbox.tcl (VerifyFileName): Corrected a couple
+	of typos in handling of bad file names. [Bug #1822076]
+	* tests/filebox.test (filebox-7.1, filebox-7.2): Added
+	test cases that exercise the above bug.
+	Thanks to Christoph Bauer (fridolin@users.sf.net) for the
+	patch.
+	
 2007-11-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkManager.h, generic/ttk/ttkManager.c,
