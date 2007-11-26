@@ -1,3 +1,14 @@
+2007-11-26  Kevin Kenny  <kennykb@acm.org>
+	
+	Backport from HEAD of [Bug #1822391]:
+	
+	* generic/tkImgPPM.c (StringReadPPM): Corrected a comparison
+	whose sense was reversed that resulted in reading beyond the
+	end of the input buffer on malformed PPM data. [Bug #1822391]
+	* tests/imgPPM.test (imgPPM-4.1): Added test case that
+	exercises [Bug #1822391].
+	
+	
 2007-11-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	Backport from HEAD of Aqua changes from 2007-10-12 to 2007-11-09:
