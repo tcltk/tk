@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.113 2007/11/17 21:47:02 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.114 2007/11/28 02:05:24 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -938,8 +938,8 @@ tidy:
 	@if exist $(TKIMPLIB) del $(TKIMPLIB)
 	@echo Removing $(WISH) ...
 	@if exist $(WISH) del $(WISH)
-	@echo Removing $(TCLTEST) ...
-	@if exist $(TCLTEST) del $(TCLTEST)
+	@echo Removing $(TKTEST) ...
+	@if exist $(TKTEST) del $(TKTEST)
 	@echo Removing $(TKSTUBLIB) ...
 	@if exist $(TKSTUBLIB) del $(TKSTUBLIB)
 
