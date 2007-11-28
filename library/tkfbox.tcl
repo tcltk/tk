@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.59.2.5 2007/11/21 17:01:47 dgp Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.59.2.6 2007/11/28 20:33:15 dgp Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1682,13 +1682,14 @@ proc ::tk::dialog::file::VerifyFileName {w filename} {
 	    $data(ent) icursor end
 	}
 	CHDIR {
-	    tk_messageBox -type ok -parent $w -message -icon warning \
-		    [mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $path]
+	    tk_messageBox -type ok -parent $w -icon warning -message  \
+		[mc "Cannot change to the directory\
+                     \"%1\$s\".\nPermission denied." $path]
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
 	ERROR {
-	    tk_messageBox -type ok -parent $w -message -icon warning \
+	    tk_messageBox -type ok -parent $w -icon warning -message \
 		    [mc "Invalid file name \"%1\$s\"." $path]
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end

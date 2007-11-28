@@ -1,3 +1,23 @@
+2007-11-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/tkUnixPort.h:	When unix/configure determines whether the
+	intptr_t type is available, it has the <inttypes.h> header present.
+	It's only fair that we let Tk have it too. 
+
+2007-11-26  Kevin Kenny  <kennykb@acm.org>
+
+	* generic/tkImgPPM.c (StringReadPPM): Corrected a comparison
+	whose sense was reversed that resulted in reading beyond the
+	end of the input buffer on malformed PPM data. [Bug #1822391]
+	* library/tkfbox.tcl (VerifyFileName): Corrected a couple
+	of typos in handling of bad file names. [Bug #1822076]
+	Thanks to Christoph Bauer (fridolin@users.sf.net) for the
+	patch.
+	* tests/filebox.test (filebox-7.1, filebox-7.2): Added
+	test cases that exercise [Bug #1822076].
+	* tests/imgPPM.test (imgPPM-4.1): Added test case that
+	exercises [Bug #1822391].
+	
 2007-11-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkManager.h, generic/ttk/ttkManager.c,
