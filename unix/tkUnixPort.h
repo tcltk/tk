@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.12 2006/09/06 22:39:28 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.13 2007/11/28 20:12:38 dgp Exp $
  */
 
 #ifndef _UNIXPORT
@@ -68,6 +68,9 @@
 #   else
 #       include <time.h>
 #   endif
+#endif
+#if HAVE_INTTYPES_H
+#    include <inttypes.h>
 #endif
 #ifndef NO_UNISTD_H
 #   include <unistd.h>
