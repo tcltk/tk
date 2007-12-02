@@ -1,6 +1,6 @@
 /* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
  *
- * $Id: ttkWinTheme.c,v 1.9 2007/11/08 01:40:25 jenglish Exp $
+ * $Id: ttkWinTheme.c,v 1.10 2007/12/02 04:32:23 jenglish Exp $
  */
 
 #ifdef _MSC_VER
@@ -38,7 +38,7 @@ static RECT BoxToRect(Ttk_Box b)
  *	which must be handled specially.
  *
  *	Passing the BF_FLAT flag to DrawEdge() yields something similar
- * 	to TK_RELIEF_SOLID. TK_RELIEF_FLAT can be implemented by not 
+ * 	to TK_RELIEF_SOLID. TK_RELIEF_FLAT can be implemented by not
  *	drawing anything.
  */
 static unsigned int ReliefToEdge(int relief)
@@ -53,7 +53,7 @@ static unsigned int ReliefToEdge(int relief)
 	case TK_RELIEF_FLAT:   return BDR_RAISEDOUTER;
     }
 }
-
+
 /* ---------------------------------------------------------------------- */
 
 static Ttk_StateTable checkbutton_statemap[] =
@@ -74,7 +74,7 @@ static Ttk_StateTable pushbutton_statemap[] =
     { 0, 0, 0 }
 };
 
-static Ttk_StateTable arrow_statemap[] = 
+static Ttk_StateTable arrow_statemap[] =
 {
     { DFCS_INACTIVE,            TTK_STATE_DISABLED, 0 },
     { DFCS_PUSHED | DFCS_FLAT,  TTK_STATE_PRESSED,  0 },
@@ -98,7 +98,7 @@ typedef struct
 
 static FrameControlElementData FrameControlElements[] =
 {
-    { "Checkbutton.indicator", 
+    { "Checkbutton.indicator",
 	DFC_BUTTON, DFCS_BUTTONCHECK, SM_CYMENUCHECK, SM_CYMENUCHECK,
 	checkbutton_statemap, {0,0,4,0} },
     { "Radiobutton.indicator",
@@ -149,7 +149,7 @@ static void FrameControlElementDraw(
     TkWinReleaseDrawableDC(d, hdc, &dcState);
 }
 
-static Ttk_ElementSpec FrameControlElementSpec = 
+static Ttk_ElementSpec FrameControlElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
@@ -220,7 +220,7 @@ typedef struct
 
 static Ttk_ElementOptionSpec FieldElementOptions[] =
 {
-    { "-fieldbackground", TK_OPTION_BORDER, 
+    { "-fieldbackground", TK_OPTION_BORDER,
     	Tk_Offset(FieldElement,backgroundObj), "white" },
     {NULL}
 };
@@ -392,7 +392,7 @@ static Ttk_ElementSpec FocusElementSpec =
     FocusElementSize,
     FocusElementDraw
 };
-
+
 /* FillFocusElement --
  * 	Draws a focus ring filled with the selection color
  */
@@ -426,7 +426,7 @@ static void FillFocusElementDraw(
 	TkWinReleaseDrawableDC(d, hdc, &dcState);
     }
 }
-
+
 /*
  * ComboboxFocusElement --
  * 	Read-only comboboxes have a filled focus ring, editable ones do not.
@@ -578,7 +578,7 @@ static Ttk_ElementSpec ThumbElementSpec =
     ThumbElementDraw
 };
 
-/* ---------------------------------------------------------------------- 
+/* ----------------------------------------------------------------------
  * The slider element is the shaped thumb used in the slider widget.
  * Windows likes to call this a trackbar.
  */
@@ -670,24 +670,26 @@ static Ttk_ElementSpec ClientElementSpec =
  * +++ Layouts.
  */
 
-TTK_BEGIN_LAYOUT(ButtonLayout)
+TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
+
+TTK_LAYOUT("TButton",
     TTK_GROUP("Button.border", TTK_FILL_BOTH,
 	TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Button.label", TTK_FILL_BOTH)))
-TTK_END_LAYOUT
+	    TTK_NODE("Button.label", TTK_FILL_BOTH))))
 
-TTK_BEGIN_LAYOUT(ComboboxLayout)
+TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
 	TTK_GROUP("Combobox.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
 	    TTK_GROUP("Combobox.focus", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH,
-		TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))
-TTK_END_LAYOUT
+		TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
 
+TTK_END_LAYOUT_TABLE
 
 /* ---------------------------------------------------------------------- */
 
-MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *interp, HWND hwnd)
+MODULE_SCOPE
+int TtkWinTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     Ttk_Theme themePtr, parentPtr;
     FrameControlElementData *fce = FrameControlElements;
@@ -699,11 +701,11 @@ MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *interp, HWND hwnd)
     }
 
     Ttk_RegisterElementSpec(themePtr, "border", &BorderElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "Button.border", 
+    Ttk_RegisterElementSpec(themePtr, "Button.border",
 	&ButtonBorderElementSpec, NULL);
     Ttk_RegisterElementSpec(themePtr, "field", &FieldElementSpec, NULL);
     Ttk_RegisterElementSpec(themePtr, "focus", &FocusElementSpec, NULL);
-    Ttk_RegisterElementSpec(themePtr, "Combobox.focus", 
+    Ttk_RegisterElementSpec(themePtr, "Combobox.focus",
     	&ComboboxFocusElementSpec, NULL);
     Ttk_RegisterElementSpec(themePtr, "thumb", &ThumbElementSpec, NULL);
     Ttk_RegisterElementSpec(themePtr, "slider", &SliderElementSpec, NULL);
@@ -717,8 +719,7 @@ MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *interp, HWND hwnd)
 		&FrameControlElementSpec, fce);
     }
 
-    Ttk_RegisterLayout(themePtr, "TButton", ButtonLayout);
-    Ttk_RegisterLayout(themePtr, "TCombobox", ComboboxLayout);
+    Ttk_RegisterLayouts(themePtr, LayoutTable);
 
     Tcl_PkgProvide(interp, "ttk::theme::winnative", TTK_VERSION);
     return TCL_OK;

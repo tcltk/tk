@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.18 2007/11/19 01:49:07 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.19 2007/12/02 04:32:23 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -936,66 +936,61 @@ static Ttk_ElementSpec DisclosureElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Widget layouts.
  */
-TTK_BEGIN_LAYOUT(ToolbarLayout)
-    TTK_NODE("Toolbar.background", TTK_FILL_BOTH)
-TTK_END_LAYOUT
 
-TTK_BEGIN_LAYOUT(ButtonLayout)
+TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
+
+TTK_LAYOUT("Toolbar",
+    TTK_NODE("Toolbar.background", TTK_FILL_BOTH))
+
+TTK_LAYOUT("TButton",
     TTK_GROUP("Button.button", TTK_FILL_BOTH,
 	TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Button.label", TTK_FILL_BOTH)))
-TTK_END_LAYOUT
+	    TTK_NODE("Button.label", TTK_FILL_BOTH))))
 
-TTK_BEGIN_LAYOUT(RadiobuttonLayout)
+TTK_LAYOUT("TRadiobutton",
     TTK_GROUP("Radiobutton.button", TTK_FILL_BOTH,
 	TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Radiobutton.label", TTK_PACK_LEFT)))
-TTK_END_LAYOUT
+	    TTK_NODE("Radiobutton.label", TTK_PACK_LEFT))))
 
-TTK_BEGIN_LAYOUT(CheckbuttonLayout)
+TTK_LAYOUT("TCheckbutton",
     TTK_GROUP("Checkbutton.button", TTK_FILL_BOTH,
 	TTK_GROUP("Checkbutton.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Checkbutton.label", TTK_PACK_LEFT)))
-TTK_END_LAYOUT
+	    TTK_NODE("Checkbutton.label", TTK_PACK_LEFT))))
 
-TTK_BEGIN_LAYOUT(MenubuttonLayout)
+TTK_LAYOUT("TMenubutton",
     TTK_GROUP("Menubutton.button", TTK_FILL_BOTH,
 	TTK_GROUP("Menubutton.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Menubutton.label", TTK_PACK_LEFT)))
-TTK_END_LAYOUT
+	    TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
 
-TTK_BEGIN_LAYOUT(ComboboxLayout)
+TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.button", TTK_PACK_TOP|TTK_FILL_X,
 	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Combobox.textarea", TTK_PACK_LEFT|TTK_FILL_X)))
-TTK_END_LAYOUT
+	    TTK_NODE("Combobox.textarea", TTK_PACK_LEFT|TTK_FILL_X))))
 
 /* Notebook tabs -- no focus ring */
-TTK_BEGIN_LAYOUT(TabLayout)
+TTK_LAYOUT("Tab",
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
 	TTK_GROUP("Notebook.padding", TTK_EXPAND|TTK_FILL_BOTH,
-	    TTK_NODE("Notebook.label", TTK_EXPAND|TTK_FILL_BOTH)))
-TTK_END_LAYOUT
+	    TTK_NODE("Notebook.label", TTK_EXPAND|TTK_FILL_BOTH))))
 
 /* Progress bars -- track only */
-TTK_BEGIN_LAYOUT(ProgressbarLayout)
-    TTK_NODE("Progressbar.track", TTK_EXPAND|TTK_FILL_BOTH)
-TTK_END_LAYOUT
+TTK_LAYOUT("TProgressbar",
+    TTK_NODE("Progressbar.track", TTK_EXPAND|TTK_FILL_BOTH))
 
 /* Tree heading -- no border, fixed height */
-TTK_BEGIN_LAYOUT(TreeheadingLayout)
+TTK_LAYOUT("Heading",
     TTK_NODE("Treeheading.cell", TTK_FILL_X)
     TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-    TTK_NODE("Treeheading.text", 0)
-TTK_END_LAYOUT
+    TTK_NODE("Treeheading.text", 0))
 
 /* Tree items -- omit focus ring */ 
-TTK_BEGIN_LAYOUT(TreeitemLayout)
+TTK_LAYOUT("Item",
     TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
 	TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
 	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	TTK_NODE("Treeitem.text", TTK_PACK_LEFT))
-TTK_END_LAYOUT
+	TTK_NODE("Treeitem.text", TTK_PACK_LEFT)))
+
+TTK_END_LAYOUT_TABLE
 
 /*----------------------------------------------------------------------
  * +++ Initialization.
@@ -1060,16 +1055,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     /*
      * Layouts:
      */
-    Ttk_RegisterLayout(themePtr, "Toolbar", ToolbarLayout);
-    Ttk_RegisterLayout(themePtr, "TButton", ButtonLayout);
-    Ttk_RegisterLayout(themePtr, "TCheckbutton", CheckbuttonLayout);
-    Ttk_RegisterLayout(themePtr, "TRadiobutton", RadiobuttonLayout);
-    Ttk_RegisterLayout(themePtr, "TMenubutton", MenubuttonLayout);
-    Ttk_RegisterLayout(themePtr, "TCombobox", ComboboxLayout);
-    Ttk_RegisterLayout(themePtr, "TProgressbar", ProgressbarLayout);
-    Ttk_RegisterLayout(themePtr, "TNotebook.Tab", TabLayout);
-    Ttk_RegisterLayout(themePtr, "Heading", TreeheadingLayout);
-    Ttk_RegisterLayout(themePtr, "Item", TreeitemLayout);
+    Ttk_RegisterLayouts(themePtr, LayoutTable);
 
     Tcl_PkgProvide(interp, "ttk::theme::aqua", TTK_VERSION);
     return TCL_OK;

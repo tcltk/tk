@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.21 2007/11/08 01:40:25 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.22 2007/12/02 04:32:23 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -3041,36 +3041,35 @@ static WidgetSpec TreeviewWidgetSpec =
  * +++ Layout specifications.
  */
 
-TTK_BEGIN_LAYOUT(TreeviewLayout)
+TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
+
+TTK_LAYOUT("Treeview",
     TTK_GROUP("Treeview.field", TTK_FILL_BOTH|TTK_BORDER,
 	TTK_GROUP("Treeview.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Treeview.treearea", TTK_FILL_BOTH)))
-TTK_END_LAYOUT
+	    TTK_NODE("Treeview.treearea", TTK_FILL_BOTH))))
 
-TTK_BEGIN_LAYOUT(ItemLayout)
+TTK_LAYOUT("Item",
     TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
 	TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
 	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
 	TTK_GROUP("Treeitem.focus", TTK_PACK_LEFT,
-	    TTK_NODE("Treeitem.text", TTK_PACK_LEFT)))
-TTK_END_LAYOUT
+	    TTK_NODE("Treeitem.text", TTK_PACK_LEFT))))
 
-TTK_BEGIN_LAYOUT(CellLayout)
+TTK_LAYOUT("Cell",
     TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
-	TTK_NODE("Treeitem.text", TTK_FILL_BOTH))
-TTK_END_LAYOUT
+	TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
 
-TTK_BEGIN_LAYOUT(HeadingLayout)
+TTK_LAYOUT("Heading",
     TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
     TTK_GROUP("Treeheading.border", TTK_FILL_BOTH,
 	TTK_GROUP("Treeheading.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-	    TTK_NODE("Treeheading.text", TTK_FILL_X)))
-TTK_END_LAYOUT
+	    TTK_NODE("Treeheading.text", TTK_FILL_X))))
 
-TTK_BEGIN_LAYOUT(RowLayout)
-    TTK_NODE("Treeitem.row", TTK_FILL_BOTH)
-TTK_END_LAYOUT
+TTK_LAYOUT("Row",
+    TTK_NODE("Treeitem.row", TTK_FILL_BOTH))
+
+TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------
  * +++ Tree indicator element.
@@ -3201,11 +3200,7 @@ void TtkTreeview_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "Treeheading.cell", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "treearea", &ttkNullElementSpec, 0);
 
-    Ttk_RegisterLayout(theme, TreeviewWidgetSpec.className, TreeviewLayout);
-    Ttk_RegisterLayout(theme, "Item", ItemLayout);
-    Ttk_RegisterLayout(theme, "Cell", CellLayout);
-    Ttk_RegisterLayout(theme, "Heading", HeadingLayout);
-    Ttk_RegisterLayout(theme, "Row", RowLayout);
+    Ttk_RegisterLayouts(theme, LayoutTable);
 }
 
 /*EOF*/

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.15 2007/11/18 00:35:11 patthoyts Exp $
+ * $Id: ttkWinXPTheme.c,v 1.16 2007/12/02 04:32:23 jenglish Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -825,49 +825,47 @@ static Ttk_ElementSpec TextElementSpec =
  * +++ Widget layouts:
  */
 
-TTK_BEGIN_LAYOUT(ButtonLayout)
+TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
+
+TTK_LAYOUT("TButton",
     TTK_GROUP("Button.button", TTK_FILL_BOTH,
 	TTK_GROUP("Button.focus", TTK_FILL_BOTH, 
 	    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-		TTK_NODE("Button.label", TTK_FILL_BOTH))))
-TTK_END_LAYOUT
+		TTK_NODE("Button.label", TTK_FILL_BOTH)))))
 
-TTK_BEGIN_LAYOUT(MenubuttonLayout)
+TTK_LAYOUT("TMenubutton",
     TTK_NODE("Menubutton.dropdown", TTK_PACK_RIGHT|TTK_FILL_Y)
     TTK_GROUP("Menubutton.button", TTK_PACK_RIGHT|TTK_EXPAND|TTK_FILL_BOTH,
 	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
-	        TTK_NODE("Menubutton.label", 0)))
-TTK_END_LAYOUT
+	        TTK_NODE("Menubutton.label", 0))))
 
-TTK_BEGIN_LAYOUT(HorizontalScrollbarLayout)
+TTK_LAYOUT("Horizontal.TScrollbar",
     TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
 	TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_LEFT)
 	TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
 	TTK_GROUP("Horizontal.Scrollbar.thumb", TTK_FILL_BOTH|TTK_UNIT,
-	    TTK_NODE("Horizontal.Scrollbar.grip", 0)))
-TTK_END_LAYOUT
+	    TTK_NODE("Horizontal.Scrollbar.grip", 0))))
 
-TTK_BEGIN_LAYOUT(VerticalScrollbarLayout)
+TTK_LAYOUT("Vertical.TScrollbar",
     TTK_GROUP("Vertical.Scrollbar.trough", TTK_FILL_Y,
 	TTK_NODE("Vertical.Scrollbar.uparrow", TTK_PACK_TOP)
 	TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
 	TTK_GROUP("Vertical.Scrollbar.thumb", TTK_FILL_BOTH|TTK_UNIT,
-	    TTK_NODE("Vertical.Scrollbar.grip", 0)))
-TTK_END_LAYOUT
+	    TTK_NODE("Vertical.Scrollbar.grip", 0))))
 
-TTK_BEGIN_LAYOUT(VerticalScaleLayout)
-    TTK_GROUP("Scale.focus", TTK_EXPAND|TTK_FILL_BOTH,
-	TTK_GROUP("Vertical.Scale.trough", TTK_EXPAND|TTK_FILL_BOTH,
-	    TTK_NODE("Vertical.Scale.track", TTK_FILL_Y)
-	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) ))
-TTK_END_LAYOUT
-
-TTK_BEGIN_LAYOUT(HorizontalScaleLayout)
+TTK_LAYOUT("Horizontal.TScale",
     TTK_GROUP("Scale.focus", TTK_EXPAND|TTK_FILL_BOTH,
 	TTK_GROUP("Horizontal.Scale.trough", TTK_EXPAND|TTK_FILL_BOTH,
 	    TTK_NODE("Horizontal.Scale.track", TTK_FILL_X) 
-	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) ))
-TTK_END_LAYOUT
+	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )))
+
+TTK_LAYOUT("Vertical.TScale",
+    TTK_GROUP("Scale.focus", TTK_EXPAND|TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.trough", TTK_EXPAND|TTK_FILL_BOTH,
+	    TTK_NODE("Vertical.Scale.track", TTK_FILL_Y)
+	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )))
+
+TTK_END_LAYOUT_TABLE
 
 /*----------------------------------------------------------------------
  * +++ XP element info table: 
@@ -1016,14 +1014,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     /*
      * Layouts:
      */
-    Ttk_RegisterLayout(themePtr, "TButton", ButtonLayout);
-    Ttk_RegisterLayout(themePtr, "TMenubutton", MenubuttonLayout);
-    Ttk_RegisterLayout(themePtr, "Vertical.TScrollbar",
-    	VerticalScrollbarLayout);
-    Ttk_RegisterLayout(themePtr, "Horizontal.TScrollbar",
-    	HorizontalScrollbarLayout);
-    Ttk_RegisterLayout(themePtr, "Vertical.TScale", VerticalScaleLayout);
-    Ttk_RegisterLayout(themePtr, "Horizontal.TScale", HorizontalScaleLayout);
+    Ttk_RegisterLayouts(themePtr, LayoutTable);
 
     Tcl_PkgProvide(interp, "ttk::theme::xpnative", TTK_VERSION);
 
