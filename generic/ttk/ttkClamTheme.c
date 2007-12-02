@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClamTheme.c,v 1.7 2007/11/08 01:40:24 jenglish Exp $
+ * $Id: ttkClamTheme.c,v 1.8 2007/12/02 04:32:22 jenglish Exp $
  *
  * Copyright (C) 2004 Joe English
  *
@@ -896,22 +896,23 @@ static Ttk_ElementSpec ClientElementSpec =
  * +++ Modified widget layouts.
  */
 
-TTK_BEGIN_LAYOUT(ComboboxLayout)
+TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
+
+TTK_LAYOUT("TCombobox",
     TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
     TTK_GROUP("Combobox.field", TTK_PACK_LEFT|TTK_FILL_BOTH|TTK_EXPAND,
 	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))
-TTK_END_LAYOUT
+	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))
 
-TTK_BEGIN_LAYOUT(HorizontalSashLayout)
+TTK_LAYOUT("Horizontal.Sash",
     TTK_GROUP("Sash.hsash", TTK_FILL_BOTH,
-	TTK_NODE("Sash.hgrip", TTK_FILL_BOTH))
-TTK_END_LAYOUT
+	TTK_NODE("Sash.hgrip", TTK_FILL_BOTH)))
 
-TTK_BEGIN_LAYOUT(VerticalSashLayout)
+TTK_LAYOUT("Vertical.Sash",
     TTK_GROUP("Sash.vsash", TTK_FILL_BOTH,
-	TTK_NODE("Sash.vgrip", TTK_FILL_BOTH))
-TTK_END_LAYOUT
+	TTK_NODE("Sash.vgrip", TTK_FILL_BOTH)))
+
+TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------
  * +++ Initialization.
@@ -964,9 +965,7 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "vgrip",
 	    &GripElementSpec,  &GripClientData[1]);
 
-    Ttk_RegisterLayout(theme, "TCombobox", ComboboxLayout);
-    Ttk_RegisterLayout(theme, "Horizontal.Sash", HorizontalSashLayout);
-    Ttk_RegisterLayout(theme, "Vertical.Sash", VerticalSashLayout);
+    Ttk_RegisterLayouts(theme, LayoutTable);
 
     Tcl_PkgProvide(interp, "ttk::theme::clam", TTK_VERSION);
 
