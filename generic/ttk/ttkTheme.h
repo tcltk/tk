@@ -1,4 +1,4 @@
-/* $Id: ttkTheme.h,v 1.11 2007/10/25 07:08:26 jenglish Exp $
+/* $Id: ttkTheme.h,v 1.12 2007/12/02 04:32:23 jenglish Exp $
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.
@@ -181,8 +181,9 @@ typedef unsigned int Ttk_PositionSpec;	/* See below */
 /*
  * Extra bits for layout specifications
  */
-#define TTK_CHILDREN	(0x1000)/* for LayoutSpecs -- children follow */
-#define TTK_LAYOUT_END	(0x2000)/* for LayoutSpecs -- end of child list */
+#define _TTK_CHILDREN	(0x1000)/* for LayoutSpecs -- children follow */
+#define _TTK_LAYOUT_END	(0x2000)/* for LayoutSpecs -- end of child list */
+#define _TTK_LAYOUT	(0x4000)/* for LayoutSpec tables -- define layout */
 
 #define _TTK_MASK_STICK (0x0F)	/* See Ttk_UnparseLayout() */
 #define _TTK_MASK_PACK	(0xF0)	/* See Ttk_UnparseLayout(), packStrings */
@@ -285,16 +286,27 @@ typedef struct {
     unsigned		opcode;
 } TTKLayoutInstruction, *Ttk_LayoutSpec;
 
-#define TTK_BEGIN_LAYOUT(name)	static TTKLayoutInstruction name[] = {
+#define TTK_BEGIN_LAYOUT_TABLE(name) \
+				static TTKLayoutInstruction name[] = {
+#define TTK_LAYOUT(name, content) \
+				{ name, _TTK_CHILDREN|_TTK_LAYOUT }, \
+				content \
+				{ 0, _TTK_LAYOUT_END },
 #define TTK_GROUP(name, flags, children) \
-				{ name, flags | TTK_CHILDREN }, \
+				{ name, flags | _TTK_CHILDREN }, \
 				children \
-				{ 0, TTK_LAYOUT_END },
+				{ 0, _TTK_LAYOUT_END },
 #define TTK_NODE(name, flags)	{ name, flags },
-#define TTK_END_LAYOUT 		{ 0, TTK_LAYOUT_END } };
+#define TTK_END_LAYOUT_TABLE	{ 0, _TTK_LAYOUT | _TTK_LAYOUT_END } };
+
+#define TTK_BEGIN_LAYOUT(name)	static TTKLayoutInstruction name[] = {
+#define TTK_END_LAYOUT 		{ 0, _TTK_LAYOUT_END } };
 
 TTKAPI void Ttk_RegisterLayout(
     Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec);
+
+TTKAPI void Ttk_RegisterLayouts(
+    Ttk_Theme theme, Ttk_LayoutSpec layoutTable);
 
 /*------------------------------------------------------------------------
  * +++ Layout instances.
