@@ -1,4 +1,4 @@
-/* $Id: ttkManager.h,v 1.5.2.2 2007/11/25 19:19:21 dgp Exp $
+/* $Id: ttkManager.h,v 1.5.2.3 2007/12/04 17:05:20 dgp Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -80,9 +80,6 @@ MODULE_SCOPE int Ttk_GetSlaveIndexFromObj(
  */
 MODULE_SCOPE int Ttk_NumberSlaves(Ttk_Manager *);
     /* Returns: number of managed slaves */
-
-MODULE_SCOPE void *Ttk_ManagerData(Ttk_Manager *);
-    /* Returns: client data associated with master */
 
 MODULE_SCOPE void *Ttk_SlaveData(Ttk_Manager *, int slaveIndex);
     /* Returns: client data associated with slave */

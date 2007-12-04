@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.6.2.2 2007/11/21 16:46:27 dgp Exp $
+ * $Id: ttkTheme.c,v 1.6.2.3 2007/12/04 17:05:20 dgp Exp $
  */
 
 #include <stdlib.h>
@@ -671,7 +671,8 @@ Ttk_GetResourceCache(Tcl_Interp *interp)
  * Register a new layout specification with a style.
  * @@@ TODO: Make sure layoutName is not ".", root style must not have a layout
  */
-static void Ttk_RegisterLayoutTemplate(
+MODULE_SCOPE
+void Ttk_RegisterLayoutTemplate(
     Ttk_Theme theme,			/* Target theme */
     const char *layoutName,		/* Name of new layout */
     Ttk_LayoutTemplate layoutTemplate)	/* Template */
