@@ -1,5 +1,7 @@
 2007-12-04  Donal K. Fellows  <dkf@users.sf.net>
 
+	* library/msgs/en.msg: Added missing messages. [Patch 1800744]
+
 	* library/msgs/da.msg: Added Danish messages. [Patch 1844143]. Many
 	thanks to Torsten Berg <treincke@users.sf.net>.
 
