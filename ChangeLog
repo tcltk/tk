@@ -1,3 +1,17 @@
+2007-12-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/configure, win/tcl.m4 (LIBS_GUI): remove ole32.lib oleaut32.lib
+	(LIBS): add ws2_32.lib for static builds with Tcl.
+	
+2007-12-01  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTheme.h, generic/ttk/ttkThemeInt.h,
+	generic/ttk/ttkTheme.c, generic/ttk/ttkLayout.c,
+	generic/ttk/ttkClamTheme.c, generic/ttk/ttkClassicTheme.c,
+	generic/ttk/ttkTreeview.c, macosx/ttkMacOSXTheme.c,
+	win/ttkWinTheme.c, win/ttkWinXPTheme.c: Improved macrology for
+	statically-initialized layout template tables.
+
 2007-11-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/tkUnixPort.h:	When unix/configure determines whether the
