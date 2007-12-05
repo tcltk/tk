@@ -1,3 +1,18 @@
+2007-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinButton.c, win/tkWinDialog.c: use SetWindowLongPtr and
+	* win/tkWinScrlbr.c, win/tkWinWm.c:     GetWindowLongPtr only.
+	* win/ttkWinMonitor.c:
+
+	* win/tkWinInt.h: remove CS_CLASSDC (not recommended for any apps now)
+	* win/tkWinX.c:   and simplify WNDCLASS to one style.
+	* win/tkWinWm.c:  Reduce wrapper update for exStyle to toolwindow
+	change only and set WS_EX_LAYERED as sticky (once set on a window,
+	do not remove it) to reduce alpha transition flicker.
+
+	* win/configure, win/tcl.m4 (LIBS_GUI): mingw needs -lole32
+	-loleaut32 but not msvc for Tk's [send]. [Bug 1844749]
+
 2007-12-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_style.n: Remove nonsense about "this manpage has
