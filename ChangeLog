@@ -1,3 +1,13 @@
+2007-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinInt.h: remove CS_CLASSDC (not recommended for any apps now)
+	* win/tkWinX.c:   and simplify WNDCLASS to one style.
+	* win/tkWinWm.c:  Reduce wrapper update for exStyle to toolwindow
+	change only and set WS_EX_LAYERED as sticky (once set on a window,
+	do not remove it) to reduce alpha transition flicker.
+
+	* win/tkWinDraw.c: Applied [Patch 1723362] for transparent bitmaps.
+
 2007-11-26  Kevin Kenny  <kennykb@acm.org>
 	
 	Backport from HEAD of [Bug #1822391]:
@@ -7,7 +17,6 @@
 	end of the input buffer on malformed PPM data. [Bug #1822391]
 	* tests/imgPPM.test (imgPPM-4.1): Added test case that
 	exercises [Bug #1822391].
-	
 	
 2007-11-09  Daniel Steffen  <das@users.sourceforge.net>
 
