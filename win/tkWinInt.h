@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.28 2007/05/04 21:29:23 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.29 2007/12/05 19:01:48 hobbs Exp $
  */
 
 #ifndef _TKWININT
@@ -121,7 +121,6 @@ typedef struct {
  */
 
 #define TK_WIN_TOPLEVEL_CLASS_NAME "TkTopLevel"
-#define TK_WIN_TOPLEVEL_NOCDC_CLASS_NAME "TkTopLevelNoCDC"
 #define TK_WIN_CHILD_CLASS_NAME "TkChild"
 
 /*

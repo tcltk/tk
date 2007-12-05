@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.119 2007/10/15 20:52:48 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.120 2007/12/05 19:01:48 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -936,20 +936,7 @@ InitWindowClass(
 
 	    ZeroMemory(&class, sizeof(WNDCLASS));
 
-	    /*
-	     * When threads are enabled, we cannot use CLASSDC because threads
-	     * will then write into the same device context.
-	     *
-	     * This is a hack; we should add a subsystem that manages device
-	     * context on a per-thread basis. See also tkWinX.c, which also
-	     * initializes a WNDCLASS structure.
-	     */
-
-#ifdef TCL_THREADS
 	    class.style = CS_HREDRAW | CS_VREDRAW;
-#else
-	    class.style = CS_HREDRAW | CS_VREDRAW | CS_CLASSDC;
-#endif
 	    class.hInstance = Tk_GetHINSTANCE();
 	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
 	    class.lpszClassName = (LPCTSTR) Tcl_DStringValue(&classString);
@@ -975,23 +962,6 @@ InitWindowClass(
 		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
 
-#ifndef TCL_THREADS
-	    /*
-	     * Use of WS_EX_LAYERED disallows CS_CLASSDC, as does TCL_THREADS
-	     * usage, so only create this if necessary.
-	     */
-
-	    if (setLayeredWindowAttributesProc != NULL) {
-		class.style = CS_HREDRAW | CS_VREDRAW;
-		Tcl_DStringFree(&classString);
-		Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_NOCDC_CLASS_NAME,
-			-1, &classString);
-		class.lpszClassName = (LPCTSTR) Tcl_DStringValue(&classString);
-		if (!(*tkWinProcs->registerClass)(&class)) {
-		    Tcl_Panic("Unable to register TkTopLevelNoCDC class");
-		}
-	    }
-#endif
 	    Tcl_DStringFree(&classString);
 	}
 	Tcl_MutexUnlock(&winWmMutex);
@@ -1988,17 +1958,6 @@ TkWinWmCleanup(
     tsdPtr->initialized = 0;
 
     UnregisterClass(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
-
-#ifndef TCL_THREADS
-    /*
-     * Clean up specialized class created for layered windows.
-     */
-
-    if (setLayeredWindowAttributesProc != NULL) {
-	UnregisterClass(TK_WIN_TOPLEVEL_NOCDC_CLASS_NAME, hInstance);
-	setLayeredWindowAttributesProc = NULL;
-    }
-#endif
 }
 
 /*
@@ -2244,19 +2203,7 @@ UpdateWrapper(
 	Tcl_WinUtfToTChar(((wmPtr->title != NULL) ?
 		wmPtr->title : winPtr->nameUid), -1, &titleString);
 
-#ifndef TCL_THREADS
-	/*
-	 * Transparent windows require a non-CS_CLASSDC window class.
-	 */
-	if ((wmPtr->exStyleConfig & WS_EX_LAYERED)
-		&& setLayeredWindowAttributesProc != NULL) {
-	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_NOCDC_CLASS_NAME,
-		    -1, &classString);
-	} else
-#endif
-	{
-	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
-	}
+	Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
 
 	wmPtr->wrapper = (*tkWinProcs->createWindowEx)(wmPtr->exStyle,
 		(LPCTSTR) Tcl_DStringValue(&classString),
@@ -3166,7 +3113,7 @@ WmAttributesCmd(
     LONG style, exStyle, styleBit, *stylePtr = NULL;
     char *string;
     int i, boolean, length;
-    int config_fullscreen = 0;
+    int config_fullscreen = 0, updatewrapper = 0;
     int fullscreen_attr_changed = 0, fullscreen_attr = 0;
 
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
@@ -3231,6 +3178,12 @@ WmAttributesCmd(
 		&& (strncmp(string, "-toolwindow", (unsigned) length) == 0)) {
 	    stylePtr = &exStyle;
 	    styleBit = WS_EX_TOOLWINDOW;
+	    if (objc != 4) {
+		/*
+		 * Changes to toolwindow style require an update
+		 */
+		updatewrapper = 1;
+	    }
 	} else if ((length > 3)
 		&& (strncmp(string, "-topmost", (unsigned) length) == 0)) {
 	    stylePtr = &exStyle;
@@ -3299,10 +3252,14 @@ WmAttributesCmd(
 		    }
 		}
 
+		/*
+		 * Only ever add the WS_EX_LAYERED bit, as it can cause
+		 * flashing to change this window style.  This allows things
+		 * like fading tooltips to avoid flash ugliness without
+		 * forcing all window to be layered.
+		 */
 		if ((wmPtr->alpha < 1.0) || (wmPtr->crefObj != NULL)) {
 		    *stylePtr |= styleBit;
-		} else {
-		    *stylePtr &= ~styleBit;
 		}
 		if ((setLayeredWindowAttributesProc != NULL)
 			&& (wmPtr->wrapper != NULL)) {
@@ -3313,6 +3270,10 @@ WmAttributesCmd(
 		     * translation. Add the 0.5 to round the value.
 		     */
 
+		    if (!(wmPtr->exStyleConfig & WS_EX_LAYERED)) {
+			SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,
+				*stylePtr);
+		    }
 		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
 			    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
 			    (unsigned) (LWA_ALPHA |
@@ -3368,14 +3329,16 @@ WmAttributesCmd(
 	}
     }
     if (wmPtr->exStyleConfig != exStyle) {
-	/*
-	 * UpdateWrapper ensure that all effects are properly handled, such as
-	 * TOOLWINDOW disappearing from the taskbar.
-	 */
-
 	wmPtr->exStyleConfig = exStyle;
-	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	    UpdateWrapper(winPtr);
+	if (updatewrapper) {
+	    /*
+	     * UpdateWrapper ensure that all effects are properly handled,
+	     * such as TOOLWINDOW disappearing from the taskbar.
+	     */
+
+	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+		UpdateWrapper(winPtr);
+	    }
 	}
     }
     if (fullscreen_attr_changed) {
@@ -3772,7 +3735,6 @@ WmForgetCmd(tkwin, winPtr, interp, objc, objv)
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
     register Tk_Window frameWin = (Tk_Window)winPtr;
-    char *oldClass = (char*)Tk_Class(frameWin);
 
     if (Tk_IsTopLevel(frameWin)) {
 	Tk_UnmapWindow(frameWin);
@@ -4669,7 +4631,6 @@ WmManageCmd(tkwin, winPtr, interp, objc, objv)
 {
     register Tk_Window frameWin = (Tk_Window)winPtr;
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *oldClass = (char*)Tk_Class(frameWin);
 
     if (!Tk_IsTopLevel(frameWin)) {
 	TkFocusSplit(winPtr);
