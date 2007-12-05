@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.12.2.2 2005/07/28 04:57:38 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.12.2.3 2007/12/05 19:17:32 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -415,11 +415,14 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	    /*
 	     * Case 2: transparent bitmaps are handled by setting the
 	     * destination to the foreground color whenever the source
-	     * pixel is set.
+	     * pixel is set.  We need to reset the BkColor and TextColor,
+	     * because they affect bitmap color mapping.
 	     */
 
 	    fgBrush = CreateSolidBrush(gc->foreground);
 	    oldBrush = SelectObject(destDC, fgBrush);
+	    SetBkColor(destDC, RGB(255,255,255));
+	    SetTextColor(destDC, RGB(0,0,0));
 	    BitBlt(destDC, dest_x, dest_y, width, height, srcDC, src_x, src_y,
 		    MASKPAT);
 	    SelectObject(destDC, oldBrush);
@@ -429,7 +432,7 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	    /*
 	     * Case 3: two arbitrary bitmaps.  Copy the source rectangle
 	     * into a color pixmap.  Use the result as a brush when
-	     * copying the clip mask into the destination.	 
+	     * copying the clip mask into the destination.
 	     */
 
 	    HDC memDC, maskDC;
