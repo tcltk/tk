@@ -1,48 +1,59 @@
+2007-12-04  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/ttk_style.n: Remove nonsense about "this manpage has
+	not yet been written"; everything supported is documented.
+
+2007-12-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/msgs/en.msg: Added missing messages. [Patch 1800744]
+
+	* library/msgs/da.msg: Added Danish messages. [Patch 1844143]. Many
+	thanks to Torsten Berg <treincke@users.sf.net>.
+
 2007-12-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure, win/tcl.m4 (LIBS_GUI): remove ole32.lib oleaut32.lib
 	(LIBS): add ws2_32.lib for static builds with Tcl.
-	
+
 2007-12-01  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTheme.h, generic/ttk/ttkThemeInt.h,
-	generic/ttk/ttkTheme.c, generic/ttk/ttkLayout.c,
-	generic/ttk/ttkClamTheme.c, generic/ttk/ttkClassicTheme.c,
-	generic/ttk/ttkTreeview.c, macosx/ttkMacOSXTheme.c,
-	win/ttkWinTheme.c, win/ttkWinXPTheme.c: Improved macrology for
+	* generic/ttk/ttkTheme.c, generic/ttk/ttkLayout.c,
+	* generic/ttk/ttkClamTheme.c, generic/ttk/ttkClassicTheme.c,
+	* generic/ttk/ttkTreeview.c, macosx/ttkMacOSXTheme.c,
+	* win/ttkWinTheme.c, win/ttkWinXPTheme.c: Improved macrology for
 	statically-initialized layout template tables.
 
 2007-11-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/tkUnixPort.h:	When unix/configure determines whether the
 	intptr_t type is available, it has the <inttypes.h> header present.
-	It's only fair that we let Tk have it too. 
+	It's only fair that we let Tk have it too.
 
 2007-11-26  Kevin Kenny  <kennykb@acm.org>
 
-	* generic/tkImgPPM.c (StringReadPPM): Corrected a comparison
-	whose sense was reversed that resulted in reading beyond the
-	end of the input buffer on malformed PPM data. [Bug #1822391]
-	* library/tkfbox.tcl (VerifyFileName): Corrected a couple
-	of typos in handling of bad file names. [Bug #1822076]
-	Thanks to Christoph Bauer (fridolin@users.sf.net) for the
-	patch.
-	* tests/filebox.test (filebox-7.1, filebox-7.2): Added
-	test cases that exercise [Bug #1822076].
-	* tests/imgPPM.test (imgPPM-4.1): Added test case that
-	exercises [Bug #1822391].
-	
+	* generic/tkImgPPM.c (StringReadPPM): Corrected a comparison whose
+	sense was reversed that resulted in reading beyond the end of the
+	input buffer on malformed PPM data. [Bug 1822391]
+	* library/tkfbox.tcl (VerifyFileName): Corrected a couple of typos in
+	handling of bad file names. [Bug 1822076] Thanks to Christoph Bauer
+	(fridolin@users.sf.net) for the patch.
+	* tests/filebox.test (filebox-7.1, filebox-7.2): Added test cases that
+	exercise [Bug 1822076].
+	* tests/imgPPM.test (imgPPM-4.1): Added test case that exercises [Bug
+	1822391].
+
 2007-11-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkManager.h, generic/ttk/ttkManager.c,
-	generic/ttk/ttkFrame.c, generic/ttk/ttkNotebook.c,
-	generic/ttk/ttkPanedwindow.c:  Internal Ttk_Manager API 
-	updates; Fixed [Bug 1343984]; Added [$nb hide] method;
-	[$nb add] on already-managed windows no longer throws 
-	an error, can be used to re-add a hidden tab.
+	* generic/ttk/ttkFrame.c, generic/ttk/ttkNotebook.c,
+	* generic/ttk/ttkPanedwindow.c:  Internal Ttk_Manager API updates;
+	Fixed [Bug 1343984]; Added [$nb hide] method; [$nb add] on
+	already-managed windows no longer throws an error, can be used to
+	re-add a hidden tab.
 
 	* doc/ttk_notebook.n, tests/ttk/notebook.test,
-	tests/ttk/panedwindow.test:  Updated docs and test suite.
+	* tests/ttk/panedwindow.test:  Updated docs and test suite.
 
 2007-11-23  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
@@ -423,7 +434,7 @@
 	* macosx/tkMacOSXDefault.h: Trims border sizes, cleaner X11 look
 	* unix/tkUnixDefault.h:     with minor modifications for Win32/Aqua.
 	* win/tkWinDefault.h:       Uses Tk*Font definitions throughout for
-	* win/tkWinFont.c:          classic widgets. [Bug #1820344]
+	* win/tkWinFont.c:          classic widgets. [Bug 1820344]
 	* library/obsolete.tcl (::tk::classic::restore): This restores
 	changes made to defaults in 8.5 using the 'option' command,
 	segmented into logical groups.
@@ -847,7 +858,7 @@
 2007-09-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tcl.m4: use '${CC} -shared' instead of 'ld -Bshareable' to
-	build shared libraries on current NetBSDs. [#1749251]
+	build shared libraries on current NetBSDs. [Bug 1749251]
 	* unix/configure: regenerated (autoconf-2.59).
 
 2007-09-17  Don Porter  <dgp@users.sourceforge.net>
@@ -866,7 +877,7 @@
 2007-09-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl:  Try to improve combobox appearance on
-	OSX + Tk 8.5 [#1780286].
+	OSX + Tk 8.5 [Bug 1780286].
 
 2007-09-15  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -2195,13 +2206,14 @@
 
 	* generic/ttk/ttkTreeview.c, library/ttk/treeview.tcl, doc/treeview.n:
 	Added column '-stretch' and '-minwidth' options. Improved column drag
-	and resize behavior. Added horizontal scrolling [#1518650]. Row height
-	and child indent specifiable on Treeview style. Decreased default row
-	height, no default -padding. Use correct heading height [#1163349].
-	Apply tag settings to tree item as well as to data columns [NOTE: 'tag
-	configure' still buggy]. Fix off-by-one condition when moving nodes
-	forward [#1618142]
-	* generic/ttk/ttkScroll.c (TtkScrollTo): Prevent overscroll [#1173434]
+	and resize behavior. Added horizontal scrolling [Bug 1518650]. Row
+	height and child indent specifiable on Treeview style. Decreased
+	default row height, no default -padding. Use correct heading height
+	[Bug 1163349]. Apply tag settings to tree item as well as to data
+	columns [NOTE: 'tag configure' still buggy]. Fix off-by-one condition
+	when moving nodes forward [Bug 1618142]
+	* generic/ttk/ttkScroll.c (TtkScrollTo): Prevent overscroll [Bug
+	1173434]
 	* library/ttk/altTheme.tcl, library/ttk/aquaTheme.tcl,
 	* library/ttk/clamTheme.tcl, library/ttk/classicTheme.tcl,
 	* library/ttk/defaults.tcl, library/ttk/winTheme.tcl,
