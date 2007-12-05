@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.13 2007/10/25 07:08:26 jenglish Exp $
+/* $Id: ttkWinMonitor.c,v 1.14 2007/12/05 19:08:00 hobbs Exp $
  */
 
 #ifdef _MSC_VER
@@ -96,11 +96,7 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
 	hwnd = CreateWindow( name, title, WS_OVERLAPPEDWINDOW,
 	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 	    NULL, NULL, hinst, NULL );
-#ifdef _WIN64
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)interp);
-#else
-	SetWindowLong(hwnd, GWL_USERDATA, (LONG)interp);
-#endif
 	ShowWindow(hwnd, SW_HIDE);
 	UpdateWindow(hwnd);
     }
@@ -117,11 +113,7 @@ DestroyThemeMonitorWindow(void *clientData)
 static LRESULT WINAPI
 WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-#ifdef _WIN64
     Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-#else
-    Tcl_Interp *interp = (Tcl_Interp *)GetWindowLong(hwnd, GWL_USERDATA);
-#endif
     Ttk_Theme theme;
 
     switch (msg) {
