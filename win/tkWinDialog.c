@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.44.2.3 2007/10/27 04:23:18 dgp Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.44.2.4 2007/12/05 20:26:46 dgp Exp $
  *
  */
 
@@ -124,21 +124,12 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
  * Abstract trivial differences between Win32 and Win64.
  */
 
-#ifdef _WIN64
 #define TkWinGetHInstance(from) \
 	((HINSTANCE) GetWindowLongPtr((from), GWLP_HINSTANCE))
 #define TkWinGetUserData(from) \
 	GetWindowLongPtr((from), GWLP_USERDATA)
 #define TkWinSetUserData(to,what) \
 	SetWindowLongPtr((to), GWLP_USERDATA, (LPARAM)(what))
-#else
-#define TkWinGetHInstance(from) \
-	((HINSTANCE) GetWindowLong((from), GWL_HINSTANCE))
-#define TkWinGetUserData(from) \
-	GetWindowLong((from), GWL_USERDATA)
-#define TkWinSetUserData(to,what) \
-	SetWindowLong((to), GWL_USERDATA, (LPARAM)(what))
-#endif
 
 /*
  * The value of TK_MULTI_MAX_PATH dictactes how many files can be retrieved
