@@ -1,3 +1,8 @@
+2007-12-04  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/ttk_style.n: Remove nonsense about "this manpage has
+	not yet been written"; everything supported is documented.
+
 2007-12-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/msgs/en.msg: Added missing messages. [Patch 1800744]
