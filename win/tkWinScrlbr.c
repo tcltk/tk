@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.12 2005/12/02 13:42:29 dkf Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.13 2007/12/05 19:08:00 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -255,13 +255,8 @@ CreateProc(
     }
 
     scrollPtr->lastVertical = scrollPtr->info.vertical;
-#ifdef _WIN64
     scrollPtr->oldProc = (WNDPROC)SetWindowLongPtr(scrollPtr->hwnd,
 	    GWLP_WNDPROC, (LONG_PTR) ScrollbarProc);
-#else
-    scrollPtr->oldProc = (WNDPROC)SetWindowLong(scrollPtr->hwnd, GWL_WNDPROC,
-	    (DWORD) ScrollbarProc);
-#endif
     window = Tk_AttachHWND(tkwin, scrollPtr->hwnd);
 
     UpdateScrollbar(scrollPtr);
@@ -306,11 +301,7 @@ TkpDisplayScrollbar(
     if (scrollPtr->lastVertical != scrollPtr->info.vertical) {
 	HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
-#ifdef _WIN64
 	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR) scrollPtr->oldProc);
-#else
-	SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) scrollPtr->oldProc);
-#endif
 	DestroyWindow(hwnd);
 
 	CreateProc(tkwin, Tk_WindowId(Tk_Parent(tkwin)),
@@ -344,11 +335,7 @@ TkpDestroyScrollbar(
     HWND hwnd = winScrollPtr->hwnd;
 
     if (hwnd) {
-#ifdef _WIN64
 	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR) winScrollPtr->oldProc);
-#else
-	SetWindowLong(hwnd, GWL_WNDPROC, (DWORD) winScrollPtr->oldProc);
-#endif
 	if (winScrollPtr->winFlags & IN_MODAL_LOOP) {
 	    ((TkWindow *)scrollPtr->tkwin)->flags |= TK_DONT_DESTROY_WINDOW;
 	    SetParent(hwnd, NULL);

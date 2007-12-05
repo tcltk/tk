@@ -1,5 +1,9 @@
 2007-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/tkWinButton.c, win/tkWinDialog.c: use SetWindowLongPtr and
+	* win/tkWinScrlbr.c, win/tkWinWm.c:     GetWindowLongPtr only.
+	* win/ttkWinMonitor.c:
+
 	* win/tkWinInt.h: remove CS_CLASSDC (not recommended for any apps now)
 	* win/tkWinX.c:   and simplify WNDCLASS to one style.
 	* win/tkWinWm.c:  Reduce wrapper update for exStyle to toolwindow

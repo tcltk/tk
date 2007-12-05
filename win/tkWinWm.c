@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.120 2007/12/05 19:01:48 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.121 2007/12/05 19:08:00 hobbs Exp $
  */
 
 #include "tkWinInt.h"
@@ -1081,17 +1081,10 @@ WinSetIcon(
 	     * checked.
 	     */
 
-#ifdef _WIN64
 	    SetClassLongPtr(hwnd, GCLP_HICONSM,
 		    (LPARAM) GetIcon(titlebaricon, ICON_SMALL));
 	    SetClassLongPtr(hwnd, GCLP_HICON,
 		    (LPARAM) GetIcon(titlebaricon, ICON_BIG));
-#else
-	    SetClassLong(hwnd, GCL_HICONSM,
-		    (LPARAM) GetIcon(titlebaricon, ICON_SMALL));
-	    SetClassLong(hwnd, GCL_HICON,
-		    (LPARAM) GetIcon(titlebaricon, ICON_BIG));
-#endif
 	    tsdPtr = (ThreadSpecificData *)
 		    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 	    if (tsdPtr->iconPtr != NULL) {
@@ -1228,13 +1221,8 @@ TkWinGetIcon(
     icon = (HICON) SendMessage(wmPtr->wrapper, WM_GETICON, iconsize,
 	    (LPARAM) NULL);
     if (icon == (HICON) NULL) {
-#ifdef _WIN64
 	icon = (HICON) GetClassLongPtr(wmPtr->wrapper,
 		(iconsize == ICON_BIG) ? GCLP_HICON : GCLP_HICONSM);
-#else
-	icon = (HICON) GetClassLong(wmPtr->wrapper,
-		(iconsize == ICON_BIG) ? GCL_HICON : GCL_HICONSM);
-#endif
     }
     return icon;
 }
@@ -1815,11 +1803,7 @@ GetTopLevel(
     if (tsdPtr->createWindow) {
 	return tsdPtr->createWindow;
     }
-#ifdef _WIN64
     return (TkWindow *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
-#else
-    return (TkWindow *) GetWindowLong(hwnd, GWL_USERDATA);
-#endif
 }
 
 /*
@@ -2212,11 +2196,7 @@ UpdateWrapper(
 		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
 	Tcl_DStringFree(&classString);
 	Tcl_DStringFree(&titleString);
-#ifdef _WIN64
 	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (LONG_PTR) winPtr);
-#else
-	SetWindowLong(wmPtr->wrapper, GWL_USERDATA, (LONG) winPtr);
-#endif
 	tsdPtr->createWindow = NULL;
 
 	if ((wmPtr->exStyleConfig & WS_EX_LAYERED)
@@ -2266,20 +2246,11 @@ UpdateWrapper(
      * doesn't try to set the focus to the child window.
      */
 
-#ifdef _WIN64
     SetWindowLongPtr(child, GWL_STYLE,
 	    WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
-#else
-    SetWindowLong(child, GWL_STYLE,
-	    WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
-#endif
 
     if (winPtr->flags & TK_EMBEDDED) {
-#ifdef _WIN64
 	SetWindowLongPtr(child, GWLP_WNDPROC, (LONG_PTR) TopLevelProc);
-#else
-	SetWindowLong(child, GWL_WNDPROC, (LONG) TopLevelProc);
-#endif
     }
 
     SetParent(child, wmPtr->wrapper);
@@ -2292,11 +2263,7 @@ UpdateWrapper(
 
     if (oldWrapper && (oldWrapper != wmPtr->wrapper)
 	    && (oldWrapper != GetDesktopWindow())) {
-#ifdef _WIN64
 	SetWindowLongPtr(oldWrapper, GWLP_USERDATA, (LONG) NULL);
-#else
-	SetWindowLong(oldWrapper, GWL_USERDATA, (LONG) NULL);
-#endif
 
 	if (wmPtr->numTransients > 0) {
 	    /*
