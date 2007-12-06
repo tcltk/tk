@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.19 2007/12/02 04:32:23 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.20 2007/12/06 17:53:01 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -965,7 +965,7 @@ TTK_LAYOUT("TMenubutton",
 TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.button", TTK_PACK_TOP|TTK_FILL_X,
 	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Combobox.textarea", TTK_PACK_LEFT|TTK_FILL_X))))
+	    TTK_NODE("Combobox.textarea", TTK_FILL_X))))
 
 /* Notebook tabs -- no focus ring */
 TTK_LAYOUT("Tab",

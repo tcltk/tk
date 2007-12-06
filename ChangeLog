@@ -1,3 +1,9 @@
+2007-12-05  Joe English  <jenglish@users.sourceforge.net>
+
+	* macosx/ttkMacOSXTheme.c: Fix TCombobox layout so as
+	not to truncate long text when combobox is wider than 
+	requested [Bug 1845164].
+
 2007-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/demos/widget: reduce start size to 70% of screenheight
