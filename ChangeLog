@@ -1,5 +1,8 @@
 2007-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/demos/widget: reduce start size to 70% of screenheight
+	from sh-200 for a more reasonable size.
+
 	* win/tkWinButton.c, win/tkWinDialog.c: use SetWindowLongPtr and
 	* win/tkWinScrlbr.c, win/tkWinWm.c:     GetWindowLongPtr only.
 	* win/ttkWinMonitor.c:
