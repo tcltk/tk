@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for MacOSX, see the README file in the directory ../macosx.
 
-RCS: @(#) $Id: README,v 1.24 2007/11/23 16:41:06 dkf Exp $
+RCS: @(#) $Id: README,v 1.25 2007/12/07 20:47:56 dgp Exp $
 
 How To Compile And Install Tk:
 ------------------------------
@@ -99,7 +99,10 @@ How To Compile And Install Tk:
 (e) Type "make".  This will create a library archive called
     "libtk<version>.a" or "libtk<version>.so" and an interpreter
     application called "wish" that allows you to type Tcl/Tk commands
-    interactively or execute script files.
+    interactively or execute script files.  It will also create a
+    stub library archive "libtkstub<version>.a" that developers may
+    link against other C code to produce loadable extensions that call
+    into Tk's public interface routines.
 
 (f) If the make fails then you'll have to personalize the Makefile
     for your site or possibly modify the distribution in other ways.
@@ -113,22 +116,16 @@ How To Compile And Install Tk:
     directories to do this.  The installation directories are
     determined by the "configure" script and may be specified with
     the --prefix and --exec-prefix options to "configure".  See the
-    Makefile for information on what directories were chosen; you
-    can override these choices by modifying the "prefix" and
-    "exec_prefix" variables in the Makefile.
+    Makefile for information on what directories were chosen.  You
+    should not override these choices by modifying the Makefile, or by
+    copying files post-install.  The installed binaries have embedded within
+    them path values relative to the install directory.  If you change your
+    mind about where Tk should be installed, start this procedure over again        from step (a) so that the path embedded in the binaries agrees with the
+    install location.
 
-(h) At this point you can play with Tk by invoking the "wish"
-    program and typing Tcl/Tk commands.  However, if you haven't installed
-    Tk then you'll first need to set your TK_LIBRARY environment
-    variable to hold the full path name of the "library" subdirectory.
-    If you haven't installed Tcl either then you'll need to set your
-    TCL_LIBRARY environment variable as well (see the Tcl README file
-    for information on this).  Note that installed versions of wish,
-    libtk.a, libtk.so, and the Tk library have a version number in their
-    names, such as "wish8.5" or "libtk8.5.so"; to use the installed
-    versions, either specify the version number or create a symbolic
-    link (e.g. from "wish" to "wish8.5"). You can also play with Tcl/Tk
-    by typing "make shell", provided Tcl has been built first.
+(h) At this point you can play with Tk by running the installed "wish"
+    executable, or via the "make shell" target, and typing Tcl/Tk commands
+    at the interactive prompt.
 
 If you have trouble compiling Tk, see the URL noted above about working
 platforms.  It contains information that people have provided about changes

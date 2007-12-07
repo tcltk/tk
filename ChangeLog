@@ -1,3 +1,9 @@
+2007-12-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/README:  Mention the stub library created by `make` and warn
+	about the effect of embedded paths in the installed binaries.
+	Thanks to Larry Virden.  [Tcl Bug 1794084]
+
 2007-12-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* macosx/ttkMacOSXTheme.c: Fix TCombobox layout so as
