@@ -1,3 +1,8 @@
+2007-12-07  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/altTheme.tcl, library/ttk/classicTheme.tcl:
+	s/style/ttk::style/.
+
 2007-12-07  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/README:  Mention the stub library created by `make` and warn
