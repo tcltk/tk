@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.72 2007/11/19 18:39:33 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.73 2007/12/09 20:44:08 dkf Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.59)
@@ -179,7 +179,7 @@ TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
 TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
-eval "TK_SRC_DIR=`cd $srcdir/..; pwd`"
+eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
 eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
