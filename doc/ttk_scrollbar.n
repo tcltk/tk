@@ -6,7 +6,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" SOURCE: tk/doc/scrollbar.n, r1.4
-'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.9 2007/11/01 10:59:43 dkf Exp $
+'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.10 2007/12/10 16:21:01 jenglish Exp $
 '\" 
 .so man.macros
 .TH ttk::scrollbar n 8.5 Tk "Tk Themed Widget"
@@ -46,7 +46,6 @@ or \fByview\fR (for vertical scrollbars).
 .OP \-orient orient Orient
 One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the scrollbar.
-.BE
 .SH "WIDGET COMMAND"
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
