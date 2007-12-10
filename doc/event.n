@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.17 2007/11/01 23:03:54 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.18 2007/12/10 21:37:19 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -76,6 +76,11 @@ If \fB<<\fIvirtual\fB>>\fR is specified then the return value is
 a list whose elements are the physical event sequences currently
 defined for the given virtual event;  if the virtual event is
 not defined then an empty string is returned.
+.RS
+.PP
+Note that virtual events that that are not bound to physical event
+sequences are \fInot\fR returned by \fBevent info\fR.
+.RE
 .SH "EVENT FIELDS"
 .PP
 The following options are supported for the \fBevent generate\fR
