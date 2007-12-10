@@ -2,7 +2,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: chooseDirectory.n,v 1.9 2007/11/04 10:37:50 das Exp $
+'\" RCS: @(#) $Id: chooseDirectory.n,v 1.10 2007/12/10 16:21:48 jenglish Exp $
 '\" 
 .so man.macros
 .TH tk_chooseDirectory n 8.3 Tk "Tk Built-In Commands"
@@ -10,7 +10,6 @@
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
 tk_chooseDirectory \- pops up a dialog box for the user to select a directory.
-.PP
 .SH SYNOPSIS
 \fBtk_chooseDirectory \fR?\fIoption value ...\fR?
 .BE

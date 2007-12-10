@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: TextLayout.3,v 1.8 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: TextLayout.3,v 1.9 2007/12/10 16:21:48 jenglish Exp $
 '\" 
 .so man.macros
 .TH Tk_ComputeTextLayout 3 8.1 Tk "Tk Library Procedures"
@@ -234,8 +234,7 @@ is the responsibility of the caller to take the Postscript array of
 strings and add some Postscript function operate on the array to render
 each of the lines.  The code that represents the Postscript array of
 strings is appended to \fIinterp->result\fR.
-.PP
-.SH DISPLAY MODEL
+.SH "DISPLAY MODEL"
 When measuring a text layout, space characters that occur at the end of a
 line are ignored.  The space characters still exist and the insertion point
 can be positioned amongst them, but their additional width is ignored when
