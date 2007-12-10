@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: loadTk.n,v 1.10 2007/10/29 16:04:13 dkf Exp $
+'\" RCS: @(#) $Id: loadTk.n,v 1.11 2007/12/10 16:21:48 jenglish Exp $
 '\" 
 .so man.macros
 .TH "Safe Tk" n 8.0 Tk "Tk Built-In Commands"
@@ -15,15 +15,13 @@ loadTk \- Load Tk into a safe interpreter.
 .SH SYNOPSIS
 \fB::safe::loadTk \fIslave\fR ?\fB\-use\fR \fIwindowId\fR? ?\fB\-display\fR \fIdisplayName\fR? 
 .BE
-
+.SH DESCRIPTION
 Safe Tk is based on Safe Tcl, which provides a mechanism 
 that allows restricted and mediated
 access to auto-loading and packages for safe interpreters.
 Safe Tk adds the ability to configure the interpreter
 for safe Tk operations and load Tk into safe 
 interpreters.
-
-.SH DESCRIPTION
 .PP
 The \fB::safe::loadTk\fR command initializes the required data structures
 in the named safe interpreter and then loads Tk into it.
