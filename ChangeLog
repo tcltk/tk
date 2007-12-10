@@ -1,3 +1,15 @@
+2007-12-10  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tk.decls:		use new genstubs 'export' command to
+	* generic/tkInt.decls:		mark exported symbols not in stubs
+					table [FR 1716117]; cleanup formatting.
+
+	* generic/tkIntDecls.h:		regen with new genStubs.tcl.
+	* generic/tkIntPlatDecls.h:	[Tcl Bug 1834288]
+	* generic/tkIntXlibDecls.h:
+	* generic/tkPlatDecls.h:
+	* generic/tkStubInit.c:
+
 2007-12-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* tests/safe.test: Ensure list of hidden commands is correct. [Bug
