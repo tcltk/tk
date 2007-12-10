@@ -1,11 +1,10 @@
-/* $Id: ttkWinMonitor.c,v 1.14 2007/12/05 19:08:00 hobbs Exp $
+/* $Id: ttkWinMonitor.c,v 1.15 2007/12/10 12:03:55 patthoyts Exp $
  */
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include <windows.h>
 #include <tkWinInt.h>
 #include "ttk/ttkTheme.h"
 

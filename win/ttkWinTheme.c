@@ -1,13 +1,11 @@
 /* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
  *
- * $Id: ttkWinTheme.c,v 1.10 2007/12/02 04:32:23 jenglish Exp $
+ * $Id: ttkWinTheme.c,v 1.11 2007/12/10 12:03:55 patthoyts Exp $
  */
 
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
 #endif
-
-#include <windows.h>
 
 #include <tkWinInt.h>
 

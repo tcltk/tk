@@ -1,5 +1,9 @@
 2007-12-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/ttkWinMonitor.c:  Only tkWin.h should include windows.h
+	* win/ttkWinTheme.c:    unless we have an explicit override of
+	* tin/ttkWinXPTheme.c:  the WINVER macro.
+
 	* win/rules.vc: Handle MSVC 9 (aka: Visual Studio 2008)
 
 	* tests/safe.test: Update for 'unload' as a safe command (tcl 8.5b3+)
