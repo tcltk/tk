@@ -4,10 +4,11 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.12 2007/11/01 10:59:44 dkf Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.13 2007/12/10 16:21:01 jenglish Exp $
 '\" 
 .so man.macros
 .TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
+.BS
 .SH NAME
 ttk::treeview \- hierarchical multicolumn data display widget
 .SH SYNOPSIS
@@ -135,9 +136,8 @@ The following options may be set on each column:
 .TP
 \fB\-id \fIname\fR
 The column name.  This is a read-only option.
-For example,
-.QW \fI$pathname \fBcolumn #\fIn \fB\-id\fR]
-returns the data column associated with data column #\fIn\fR. 
+For example, [\fI$pathname \fBcolumn #\fIn \fB\-id\fR]
+returns the data column associated with display column #\fIn\fR. 
 .TP
 \fB\-anchor\fR
 Specifies how the text in this column should be aligned
