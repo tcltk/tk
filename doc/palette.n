@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: palette.n,v 1.6 2007/11/01 23:03:54 dkf Exp $
+'\" RCS: @(#) $Id: palette.n,v 1.7 2007/12/10 16:21:48 jenglish Exp $
 '\" 
 .so man.macros
 .TH tk_setPalette n 4.0 Tk "Tk Built-In Commands"
@@ -34,7 +34,7 @@ of \fIname\fR\-\fIvalue\fR pairs, where the first argument of the pair
 is the name of an option in the Tk option database and the second
 argument is the new value to use for that option.  The following
 database names are currently supported:
-.DS L
+.DS
 .ta 4c 8c
 \fBactiveBackground\fR	\fBforeground\fR	\fBselectColor\fR
 \fBactiveForeground\fR	\fBhighlightBackground\fR	\fBselectBackground\fR
