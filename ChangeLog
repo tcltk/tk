@@ -1,3 +1,7 @@
+2007-12-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/safe.test: Update for 'unload' as a safe command (tcl 8.5b3+)
+
 2007-12-09  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/configure.in: Adjusted code so that running configure does not
