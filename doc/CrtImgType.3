@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtImgType.3,v 1.11 2007/05/14 20:58:25 dgp Exp $
+'\" RCS: @(#) $Id: CrtImgType.3,v 1.12 2007/12/10 16:21:48 jenglish Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateImageType 3 8.5 Tk "Tk Library Procedures"
@@ -250,8 +250,7 @@ and the return value is the ClientData value returned by the
 pointer to the image master data structure).  If no such image exists
 then NULL is returned and NULL is stored at \fI*typePtrPtr\fR.
 
-.SH LEGACY INTERFACE SUPPORT
-.PP
+.SH "LEGACY INTERFACE SUPPORT"
 In Tk 8.2 and earlier, the definition of \fBTk_ImageCreateProc\fR
 was incompatibly different, with the following prototype:
 .CS
