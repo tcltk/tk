@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.12.2.4 2007/12/04 17:05:21 dgp Exp $
+ * $Id: ttkWinXPTheme.c,v 1.12.2.5 2007/12/10 18:39:33 dgp Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -19,8 +19,7 @@
 
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
-#include <windows.h>
-#include <tcl.h>
+#include <tkWinInt.h>
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
 

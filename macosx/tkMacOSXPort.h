@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.11 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.11.2.1 2007/12/10 18:39:30 dgp Exp $
  */
 
 #ifndef _TKMACPORT
@@ -59,6 +59,9 @@
 #   else
 #	include <time.h>
 #   endif
+#endif
+#if HAVE_INTTYPES_H
+#    include <inttypes.h>
 #endif
 #include <unistd.h>
 #include <X11/Xlib.h>

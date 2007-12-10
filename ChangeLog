@@ -1,7 +1,78 @@
+2007-12-10  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/AddOption.3, doc/CrtImgType.3, doc/CrtPhImgFmt.3,
+	doc/InternAtom.3, doc/TextLayout.3, doc/chooseColor.n,
+	doc/chooseDirectory.n, doc/loadTk.n, doc/palette.n,
+	doc/ttk_combobox.n: Various markup fixes (mostly: missing 
+	quotes on .SH arguments, extraneous .PPs)
+
+	* doc/ttk_entry.n, doc/ttk_scrollbar.n, doc/ttk_treeview.n:
+	Remove extra .BEs that got added by mistake somewhere.
+
+2007-12-10  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tk.decls:		use new genstubs 'export' command to
+	* generic/tkInt.decls:		mark exported symbols not in stubs
+					table [FR 1716117]; cleanup formatting.
+
+	* generic/tkIntDecls.h:		regen with new genStubs.tcl.
+	* generic/tkIntPlatDecls.h:	[Tcl Bug 1834288]
+	* generic/tkIntXlibDecls.h:
+	* generic/tkPlatDecls.h:
+	* generic/tkStubInit.c:
+
+2007-12-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* tests/safe.test: Ensure list of hidden commands is correct. [Bug
+	1847925]
+
+2007-12-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWin.h: We must specify the lowest Windows version we intend to
+	support. In particular the SystemParametersInfo API doesn't like to
+	receive structures that are larger than it expects which affects the
+	font assignements. Set to Win98 support.
+
+	* win/tkWinFont.c: Handle failure to read the system parameters. This
+	causes ttk/fonts.tcl to set any missing named fonts.
+
+	* win/ttkWinMonitor.c:  Only tkWin.h should include windows.h unless
+	* win/ttkWinTheme.c:    we have an explicit override of the WINVER
+	* tin/ttkWinXPTheme.c:  macro.
+
+	* win/rules.vc: Handle MSVC 9 (aka: Visual Studio 2008)
+
+	* tests/safe.test: Update for 'unload' as a safe command (tcl 8.5b3+)
+
+2007-12-09  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/configure.in: Adjusted code so that running configure does not
+	generate an error message when the full current directory name
+	contains a space.
+
+	* win/tkWinWm.c: Added set of #defs to make this file build with my
+	version of the SDK (i.e. with the msys suite we distribute).
+
+2007-12-07  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/altTheme.tcl, library/ttk/classicTheme.tcl:
+	s/style/ttk::style/.
+
+2007-12-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/README:  Mention the stub library created by `make` and warn
+	about the effect of embedded paths in the installed binaries. Thanks
+	to Larry Virden. [Tcl Bug 1794084]
+
+2007-12-05  Joe English  <jenglish@users.sourceforge.net>
+
+	* macosx/ttkMacOSXTheme.c: Fix TCombobox layout so as not to truncate
+	long text when combobox is wider than requested. [Bug 1845164]
+
 2007-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* library/demos/widget: reduce start size to 70% of screenheight
-	from sh-200 for a more reasonable size.
+	* library/demos/widget: reduce start size to 70% of screenheight from
+	sh-200 for a more reasonable size.
 
 	* win/tkWinButton.c, win/tkWinDialog.c: use SetWindowLongPtr and
 	* win/tkWinScrlbr.c, win/tkWinWm.c:     GetWindowLongPtr only.
@@ -10,16 +81,16 @@
 	* win/tkWinInt.h: remove CS_CLASSDC (not recommended for any apps now)
 	* win/tkWinX.c:   and simplify WNDCLASS to one style.
 	* win/tkWinWm.c:  Reduce wrapper update for exStyle to toolwindow
-	change only and set WS_EX_LAYERED as sticky (once set on a window,
-	do not remove it) to reduce alpha transition flicker.
+	change only and set WS_EX_LAYERED as sticky (once set on a window, do
+	not remove it) to reduce alpha transition flicker.
 
-	* win/configure, win/tcl.m4 (LIBS_GUI): mingw needs -lole32
-	-loleaut32 but not msvc for Tk's [send]. [Bug 1844749]
+	* win/configure, win/tcl.m4 (LIBS_GUI): mingw needs -lole32 -loleaut32
+	but not msvc for Tk's [send]. [Bug 1844749]
 
 2007-12-04  Joe English  <jenglish@users.sourceforge.net>
 
-	* doc/ttk_style.n: Remove nonsense about "this manpage has
-	not yet been written"; everything supported is documented.
+	* doc/ttk_style.n: Remove nonsense about "this manpage has not yet
+	been written"; everything supported is documented.
 
 2007-12-04  Donal K. Fellows  <dkf@users.sf.net>
 
