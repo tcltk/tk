@@ -9,11 +9,26 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.13 2005/01/16 00:23:11 chengyemao Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.14 2007/12/10 12:10:09 patthoyts Exp $
  */
 
 #ifndef _TKWIN
 #define _TKWIN
+
+/*
+ * We must specify the lower version we intend to support. In particular
+ * the SystemParametersInfo API doesn't like to receive structures that
+ * are larger than it expects which affects the font assignements.
+ *
+ * WINVER = 0x0410 means Windows 98 and above
+ */
+
+#ifndef WINVER
+#define WINVER 0x0410
+#endif
+#ifndef _WIN32_WINDOWS
+#define _WIN32_WINDOWS 0x0410
+#endif
 
 #ifndef _TK
 #include <tk.h>
