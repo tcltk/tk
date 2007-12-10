@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.36 2007/11/17 21:55:09 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.37 2007/12/10 12:10:10 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -336,7 +336,7 @@ CreateNamedSystemLogFont(
     Tcl_Interp *interp,
     Tk_Window tkwin,
     CONST char* name,
-    LOGFONT* logFontPtr)
+    LOGFONTA* logFontPtr)
 {
     HFONT hFont;
     int r;
@@ -406,30 +406,39 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
         ((TkWindow *) tkwin)->mainPtr = mainPtr;
     }
 
-    ncMetrics.cbSize = sizeof(ncMetrics);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
-	    &ncMetrics, 0);
+    /*
+     * If this API call fails then we will fallback to setting these
+     * named fonts from script in ttk/fonts.tcl. So far I've only
+     * seen it fail when WINVER has been defined for a higher platform than
+     * we are running on. (ie: WINVER=0x0600 and running on XP).
+     */
 
-    CreateNamedSystemLogFont(interp, tkwin, "TkDefaultFont",
+    ZeroMemory(&ncMetrics, sizeof(ncMetrics));
+    ncMetrics.cbSize = sizeof(ncMetrics);
+    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
+	    sizeof(ncMetrics), &ncMetrics, 0)) {
+	CreateNamedSystemLogFont(interp, tkwin, "TkDefaultFont",
 	    &ncMetrics.lfMessageFont);
-    CreateNamedSystemLogFont(interp, tkwin, "TkHeadingFont",
+	CreateNamedSystemLogFont(interp, tkwin, "TkHeadingFont",
 	    &ncMetrics.lfMessageFont);
-    CreateNamedSystemLogFont(interp, tkwin, "TkTextFont",
+	CreateNamedSystemLogFont(interp, tkwin, "TkTextFont",
 	    &ncMetrics.lfMessageFont);
-    CreateNamedSystemLogFont(interp, tkwin, "TkMenuFont",
+	CreateNamedSystemLogFont(interp, tkwin, "TkMenuFont",
 	    &ncMetrics.lfMenuFont);
-    CreateNamedSystemLogFont(interp, tkwin, "TkTooltipFont",
+	CreateNamedSystemLogFont(interp, tkwin, "TkTooltipFont",
 	    &ncMetrics.lfStatusFont);
-    CreateNamedSystemLogFont(interp, tkwin, "TkCaptionFont",
+	CreateNamedSystemLogFont(interp, tkwin, "TkCaptionFont",
 	    &ncMetrics.lfCaptionFont);
-    CreateNamedSystemLogFont(interp, tkwin, "TkSmallCaptionFont",
+	CreateNamedSystemLogFont(interp, tkwin, "TkSmallCaptionFont",
 	    &ncMetrics.lfSmCaptionFont);
+    }
 
     iconMetrics.cbSize = sizeof(iconMetrics);
-    SystemParametersInfo(SPI_GETICONMETRICS, sizeof(iconMetrics),
-	    &iconMetrics, 0);
-    CreateNamedSystemLogFont(interp, tkwin, "TkIconFont",
+    if (SystemParametersInfo(SPI_GETICONMETRICS, sizeof(iconMetrics),
+	    &iconMetrics, 0)) {
+	CreateNamedSystemLogFont(interp, tkwin, "TkIconFont",
 	    &iconMetrics.lfFont);
+    }
 
     hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
     CreateNamedSystemFont(interp, tkwin, "TkFixedFont", hFont);

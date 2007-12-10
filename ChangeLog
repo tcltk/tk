@@ -1,5 +1,13 @@
 2007-12-10  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/tkWin.h:  We must specify the lowest Windows version we
+	intend to support. In particular the SystemParametersInfo API
+	doesn't like to receive structures that are larger than it expects
+	which affects the font assignements. Set to Win98 support.
+
+	* win/tkWinFont.c: Handle failure to read the system parameters. 
+	This causes ttk/fonts.tcl to set any missing named fonts.
+
 	* win/ttkWinMonitor.c:  Only tkWin.h should include windows.h
 	* win/ttkWinTheme.c:    unless we have an explicit override of
 	* tin/ttkWinXPTheme.c:  the WINVER macro.
