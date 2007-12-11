@@ -1,3 +1,9 @@
+2007-12-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkText.c (TextReplaceCmd): Added code to rebuild the from
+	index after the deletion phase so that the linePtr field is valid for
+	the insertion phase. [Bug 1602537]
+
 2007-12-10  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/event.n: Clarify the fact that [event info] only returns the
