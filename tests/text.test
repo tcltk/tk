@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.46 2006/10/17 10:21:50 patthoyts Exp $
+# RCS: @(#) $Id: text.test,v 1.47 2007/12/11 22:14:58 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -423,6 +423,15 @@ test text-8.24 {TextWidgetCmd procedure, "replace" option with peers, undo} {
 	lappend res 1
     }
 } {foo 0 1}
+test text-8.25 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    destroy .tt
+} -body {
+    text .tt
+    .tt insert 0.0 foo\n
+    .tt replace end-1l end bar
+} -cleanup {
+    destroy .tt
+} -result {}
 
 .t delete 1.0 end; .t insert 1.0 $prevtext
 

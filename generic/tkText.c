@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.76 2007/09/07 00:34:54 dgp Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.77 2007/12/11 22:14:58 dkf Exp $
  */
 
 #include "default.h"
@@ -1726,7 +1726,8 @@ TextReplaceCmd(
      */
 
     int origAutoSep = textPtr->sharedTextPtr->autoSeparators;
-    int result;
+    int result, lineNumber;
+    TkTextIndex indexTmp;
 
     if (textPtr->sharedTextPtr->undo) {
 	textPtr->sharedTextPtr->autoSeparators = 0;
@@ -1736,9 +1737,18 @@ TextReplaceCmd(
 	}
     }
 
+    /*
+     * Must save and restore line in indexFromPtr based on line number; can't
+     * keep the line itself as that might be eliminated/invalidated when
+     * deleting the range. [Bug 1602537]
+     */
+
+    indexTmp = *indexFromPtr;
+    lineNumber = TkBTreeLinesTo(textPtr, indexFromPtr->linePtr);
     DeleteIndexRange(NULL, textPtr, indexFromPtr, indexToPtr, viewUpdate);
+    indexTmp.linePtr = TkBTreeFindLine(indexTmp.tree, textPtr, lineNumber);
     result = TextInsertCmd(NULL, textPtr, interp, objc-4, objv+4,
-	    indexFromPtr, viewUpdate);
+	    &indexTmp, viewUpdate);
 
     if (textPtr->sharedTextPtr->undo) {
 	textPtr->sharedTextPtr->lastEditMode = TK_TEXT_EDIT_REPLACE;
@@ -3101,7 +3111,7 @@ DeleteIndexRange(
 	    Tcl_Obj *get;
 
 	    if (sharedTextPtr->autoSeparators
-		&& (sharedTextPtr->lastEditMode != TK_TEXT_EDIT_DELETE)) {
+		    && (sharedTextPtr->lastEditMode != TK_TEXT_EDIT_DELETE)) {
 		TkUndoInsertUndoSeparator(sharedTextPtr->undoStack);
 	    }
 
@@ -3123,17 +3133,18 @@ DeleteIndexRange(
 
 	if (line != -1) {
 	    int byteIndex = lineAndByteIndex[resetViewCount+1];
+	    TkTextIndex indexTmp;
 
 	    if (tPtr == textPtr) {
 		if (viewUpdate) {
 		    TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, line,
-			    byteIndex, &index1);
-		    TkTextSetYView(tPtr, &index1, 0);
+			    byteIndex, &indexTmp);
+		    TkTextSetYView(tPtr, &indexTmp, 0);
 		}
 	    } else {
-		TkTextMakeByteIndex(sharedTextPtr->tree, NULL, line, byteIndex,
-			&index1);
-		TkTextSetYView(tPtr, &index1, 0);
+		TkTextMakeByteIndex(sharedTextPtr->tree, NULL, line,
+			byteIndex, &indexTmp);
+		TkTextSetYView(tPtr, &indexTmp, 0);
 	    }
 	}
 	resetViewCount += 2;
@@ -3143,7 +3154,6 @@ DeleteIndexRange(
     }
 
     if (line1 >= line2) {
-
 	/*
 	 * Invalidate any selection retrievals in progress, assuming we didn't
 	 * check for this case above.
