@@ -1,4 +1,9 @@
+2007-12-12  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:		Updated for 8.5.0 release.
+
 2007-12-11  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/ttk/ttkTheme.c(StyleElementOptionsCmd):
 	Use Ttk_GetElement() to find element instead of direct
 	hash table access.
