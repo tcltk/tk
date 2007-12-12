@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.13 2007/12/10 16:21:01 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.14 2007/12/12 15:51:22 jenglish Exp $
 '\" 
 .so man.macros
 .TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
@@ -429,7 +429,8 @@ Generated just after setting the focus item to \fB\-open false\fR.
 .PP
 The \fBfocus\fR and \fBselection\fR widget commands can be used
 to determine the affected item or items.
-In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
-of the virtual event.
+'\" Not yet:
+'\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
+'\" of the virtual event.
 .SH "SEE ALSO"
 ttk::widget(n), listbox(n), image(n), bind(n)
