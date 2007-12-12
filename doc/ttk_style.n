@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_style.n,v 1.10 2007/12/05 16:38:15 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_style.n,v 1.11 2007/12/12 15:51:22 jenglish Exp $
 '\" 
 .so man.macros
 .TH ttk::style n 8.5 Tk "Tk Themed Widget"
@@ -21,7 +21,7 @@ available at http://tktable.sourceforge.net/tile/tile-tcl2004.pdf
 Each widget is assigned a \fIstyle\fR,
 which specifies the set of elements making up the widget
 and how they are arranged, along with dynamic and default
-settings for element resources.
+settings for element options.
 By default, the style name is the same as the widget's class;
 this may be overridden by the \fB\-style\fR option. 
 .PP
@@ -30,10 +30,10 @@ which controls the overall look and feel of an application.
 .SH DESCRIPTION
 The \fBttk::style\fR command takes the following arguments:
 .TP
-\fBttk::style configure \fIstyle\fR ?\fI\-option\fR? ?\fIvalue option value...\fR?
+\fBttk::style configure \fIstyle\fR ?\fI\-option\fR ?\fIvalue option value...\fR? ?
 Sets the default value of the specified option(s) in \fIstyle\fR.
 .TP
-\fBttk::style map \fIstyle\fR ?\fI\-option\fB { \fIstatespec value\fB }\fR ... ?
+\fBttk::style map \fIstyle\fR ?\fI\-option\fB { \fIstatespec value...\fB }\fR?
 Sets dynamic values of the specified option(s) in \fIstyle\fR.
 Each \fIstatespec / value\fR pair is examined in order;
 the value corresponding to the first matching \fIstatespec\fR
@@ -82,7 +82,7 @@ Typically \fIscript\fR simply defines styles and elements,
 though arbitrary Tcl code may appear.
 .TP
 \fBttk::style theme names\fR
-Returns a list of the available themes.
+Returns a list of all known themes.
 .TP
 \fBttk::style theme use\fR \fIthemeName\fR
 Sets the current theme to \fIthemeName\fR, and refreshes all widgets.
@@ -99,10 +99,10 @@ Specifies which side of the cavity to place the element;
 one of \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
 If omitted, the element occupies the entire cavity.
 .TP
-\fB\-sticky [\fInswe\fB]\fR
+\fB\-sticky\fR \fB[\fInswe\fB]\fR
 Specifies where the element is placed inside its allocated parcel.
 .TP
-\fB\-children {\fIsublayout... \fB}\fR
+\fB\-children { \fIsublayout... \fB}\fR
 Specifies a list of elements to place inside the element.
 .\" Also: -border, -unit, -expand: may go away.
 .PP
