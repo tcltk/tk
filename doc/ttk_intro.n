@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_intro.n,v 1.8 2007/11/01 10:59:43 dkf Exp $
+'\" RCS: @(#) $Id: ttk_intro.n,v 1.9 2007/12/12 15:51:21 jenglish Exp $
 '\" 
 .so man.macros
 .TH ttk::intro n 8.5 Tk "Tk Themed Widget"
@@ -33,8 +33,7 @@ Adapt to display limitations (low-color, grayscale, monochrome, tiny screens)
 .IP \(bu
 Accessibility (high contrast, large type)
 .IP \(bu
-Application suite
-.QW branding
+Application suite branding
 .IP \(bu
 Blend in with the rest of the desktop (Gnome, KDE, Java)
 .IP \(bu
@@ -46,7 +45,7 @@ For example, a vertical scrollbar widget contains \fBuparrow\fR,
 .PP
 Element names use a recursive dotted notation.
 For example, \fBuparrow\fR identifies a generic arrow element,
-and \fBScrollbar.arrow\fR and \fBCombobox.uparrow\fR identify 
+and \fBScrollbar.uparrow\fR and \fBCombobox.uparrow\fR identify 
 widget-specific elements.
 When looking for an element, the style engine looks for
 the specific name first, and if an element of that name is
@@ -59,15 +58,15 @@ For example, the \fBtext\fR element
 (which displays a text string) has
 \fB\-text\fR, \fB\-font\fR, \fB\-foreground\fR, \fB\-background\fR, 
 \fB\-underline\fR, and \fB\-width\fR options.
-The value of an element resource is taken from:
-.IP \(bu
-A dynamic setting specified by \fBstyle map\fR and the current state;
+The value of an element option is taken from:
 .IP \(bu
 An option of the same name and type in the widget containing the element;
 .IP \(bu
-The default setting specified by \fBstyle default\fR; or
+A dynamic setting specified by \fBstyle map\fR and the current state;
 .IP \(bu
-The element's built-in default value for the resource.
+The default setting specified by \fBstyle configure\fR; or
+.IP \(bu
+The element's built-in default value for the option.
 .SH "LAYOUTS"
 A \fIlayout\fR specifies which elements make up a widget
 and how they are arranged.
@@ -79,7 +78,7 @@ and placed within the parcel according to the \fB\-sticky\fR
 option.
 For example, the layout for a horizontal scrollbar 
 .CS
-style layout Horizontal.TScrollbar {
+ttk::style layout Horizontal.TScrollbar {
     Scrollbar.trough \-children {
 	Scrollbar.leftarrow \-side left \-sticky w
 	Scrollbar.rightarrow \-side right \-sticky e
@@ -88,7 +87,7 @@ style layout Horizontal.TScrollbar {
 }
 .CE
 By default, the layout for a widget is the same as its class name.
-Some widgets may override this (for example, the \fBscrollbar\fR
+Some widgets may override this (for example, the \fBttk::scrollbar\fR
 widget chooses different layouts based on the \fB\-orient\fR option).
 .SH "STATES"
 In standard Tk, many widgets have a \fB\-state\fR option
@@ -110,7 +109,7 @@ A \fIstate specification\fR is a list of symbolic state names
 indicating which bits are set, each optionally prefixed with an 
 exclamation point indicating that the bit is cleared instead.
 .PP
-For example, the class bindings for the \fBtbutton\fR
+For example, the class bindings for the \fBttk::button\fR
 widget are:
 .CS
 bind TButton <Enter>		{ %W state active }
@@ -137,12 +136,12 @@ but not by much).
 \fINote to self: rewrite that paragraph.  It's horrible.\fR
 .SH "STYLES"
 Each widget is associated with a \fIstyle\fR, 
-which specifies values for element resources.
+which specifies values for element options.
 Style names use a recursive dotted notation like layouts and elements;
 by default, widgets use the class name to look up a style in the current theme.
 For example:
 .CS
-style default TButton \e
+ttk::style configure TButton \e
 	\-background #d9d9d9 \e
 	\-foreground black \e
 	\-relief raised \e
@@ -151,10 +150,10 @@ style default TButton \e
 Many elements are displayed differently depending on the widget state.  
 For example, buttons have a different background when they are active,
 a different foreground when disabled, and a different relief when pressed.
-The \fBstyle map\fR command specifies dynamic resources
+The \fBstyle map\fR command specifies dynamic option settings
 for a particular style:
 .CS
-style map TButton \e
+ttk::style map TButton \e
 	\-background [list disabled #d9d9d9  active #ececec] \e
 	\-foreground [list disabled #a3a3a3] \e
 	\-relief [list {pressed !disabled} sunken] \e
