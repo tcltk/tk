@@ -1,19 +1,37 @@
+2007-12-11  Joe English  <jenglish@users.sourceforge.net>
+	* generic/ttk/ttkTheme.c(StyleElementOptionsCmd):
+	Use Ttk_GetElement() to find element instead of direct
+	hash table access.
+
+2007-12-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkText.c (TextReplaceCmd): Added code to rebuild the from
+	index after the deletion phase so that the linePtr field is valid for
+	the insertion phase. [Bug 1602537]
+
+2007-12-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/event.n: Clarify the fact that [event info] only returns the
+	names of virtual events that are bound to physical event sequences.
+	This follows on from comments on comp.lang.tcl.
+	http://groups.google.com/group/comp.lang.tcl/msg/935d2d226ae8a770
+
 2007-12-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/AddOption.3, doc/CrtImgType.3, doc/CrtPhImgFmt.3,
-	doc/InternAtom.3, doc/TextLayout.3, doc/chooseColor.n,
-	doc/chooseDirectory.n, doc/loadTk.n, doc/palette.n,
-	doc/ttk_combobox.n: Various markup fixes (mostly: missing 
-	quotes on .SH arguments, extraneous .PPs)
+	* doc/InternAtom.3, doc/TextLayout.3, doc/chooseColor.n,
+	* doc/chooseDirectory.n, doc/loadTk.n, doc/palette.n,
+	* doc/ttk_combobox.n: Various markup fixes (mostly: missing quotes on
+	.SH arguments, extraneous .PPs)
 
-	* doc/ttk_entry.n, doc/ttk_scrollbar.n, doc/ttk_treeview.n:
-	Remove extra .BEs that got added by mistake somewhere.
+	* doc/ttk_entry.n, doc/ttk_scrollbar.n, doc/ttk_treeview.n: Remove
+	extra .BEs that got added by mistake somewhere.
 
 2007-12-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tk.decls:		use new genstubs 'export' command to
 	* generic/tkInt.decls:		mark exported symbols not in stubs
-					table [FR 1716117]; cleanup formatting.
+					table [FR 1716117]; cleanup formatting
 
 	* generic/tkIntDecls.h:		regen with new genStubs.tcl.
 	* generic/tkIntPlatDecls.h:	[Tcl Bug 1834288]
