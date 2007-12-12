@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.9 2007/12/02 04:32:23 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.10 2007/12/12 01:42:11 jenglish Exp $
  */
 
 #include <stdlib.h>
@@ -1497,22 +1497,24 @@ static int StyleElementNamesCmd(
 }
 
 /* + style element options $element --
+ * 	Return list of element options for specified element
  */
 static int StyleElementOptionsCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj * CONST objv[])
 {
-    StylePackageData *pkgPtr = (StylePackageData *)clientData;
+    StylePackageData *pkgPtr = clientData;
     Ttk_Theme theme = pkgPtr->currentTheme;
-    Tcl_HashEntry *entryPtr;
+    const char *elementName;
+    ElementImpl *elementImpl;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 3, objv, "element");
 	return TCL_ERROR;
     }
 
-    entryPtr = Tcl_FindHashEntry(&theme->elementTable, Tcl_GetString(objv[3]));
-    if (entryPtr) {
-	ElementImpl *elementImpl = (ElementImpl *)Tcl_GetHashValue(entryPtr);
+    elementName = Tcl_GetString(objv[3]);
+    elementImpl = Ttk_GetElement(theme, elementName);
+    if (elementImpl) {
 	Ttk_ElementSpec *specPtr = elementImpl->specPtr;
 	Ttk_ElementOptionSpec *option = specPtr->options;
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
@@ -1527,9 +1529,7 @@ static int StyleElementOptionsCmd(
 	return TCL_OK;
     }
 
-    Tcl_AppendResult(interp, 
-	"element ", Tcl_GetString(objv[3]), " not found",
-	NULL);
+    Tcl_AppendResult(interp, "element ", elementName, " not found", NULL);
     return TCL_ERROR;
 }
 
