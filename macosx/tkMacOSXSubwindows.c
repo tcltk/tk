@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.25 2007/11/08 14:24:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.26 2007/12/12 23:44:22 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -109,7 +109,42 @@ XDestroyWindow(
 
 	    if (winRef) {
 		TkMacOSXWindowList *listPtr, *prevPtr;
+		WindowGroupRef group;
 
+		if (GetWindowProperty(winRef, 'Tk  ', 'TsGp', sizeof(group),
+			NULL, &group) == noErr) {
+		    TkDisplay *dispPtr = TkGetDisplayList();
+		    ItemCount i = CountWindowGroupContents(group,
+			    kWindowGroupContentsReturnWindows);
+
+		    while (i > 0) {
+			WindowRef macWin;
+			
+			ChkErr(GetIndexedWindow, group, i--, 0, &macWin);
+			if (macWin) {
+			    WindowGroupRef newGroup = NULL;
+			    Window window = TkMacOSXGetXWindow(macWin);
+
+			    if (window != None) {
+				TkWindow * winPtr = (TkWindow *)Tk_IdToWindow(
+					dispPtr->display, window);
+
+				if (winPtr && winPtr->wmInfoPtr) {
+				    newGroup = GetWindowGroupOfClass(
+					    winPtr->wmInfoPtr->macClass);
+				}
+			    }
+			    if (!newGroup) {
+				newGroup = GetWindowGroupOfClass(
+					kDocumentWindowClass);
+			    }
+			    ChkErr(SetWindowGroup, macWin, newGroup);
+			}
+
+		    }
+		    ChkErr(SetWindowGroupOwner, group, NULL);
+		    ChkErr(ReleaseWindowGroup, group);
+		}
 		TkMacOSXUnregisterMacWindow(winRef);
 		DisposeWindow(winRef);
 
