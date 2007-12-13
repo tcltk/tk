@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.119 2007/12/13 15:23:42 dgp Exp $
+RCS: @(#) $Id: changes,v 1.120 2007/12/13 23:08:43 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6455,6 +6455,9 @@ steffen, kupries)
 2007-12-11 (bug fix)[1602537] crash in [$text replace] (goth,porter,fellows)
 
 2007-12-12 (bug fix)[1845899] Aqua: [wm transient] (steffen)
+
+2007-12-13 (bug fix) correctly trace menubutton -textvariable for -compound
+use (hobbs)
 
 Several documentation and release notes improvements
 
