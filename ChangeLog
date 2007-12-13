@@ -1,3 +1,8 @@
+2007-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkMenubutton.c (ConfigureMenuButton): trace the
+	-textvariable even if an image exists as it may use -compound.
+
 2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c (DeleteChars, TextEditCmd, updateDirtyFlag): 
