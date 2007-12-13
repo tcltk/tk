@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.33 2007/12/13 00:28:40 hobbs Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.34 2007/12/13 15:24:17 dgp Exp $
  */
 
 #ifndef _TKTEXT

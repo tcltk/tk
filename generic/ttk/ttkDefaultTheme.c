@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.10 2007/11/08 01:40:25 jenglish Exp $
+/* $Id: ttkDefaultTheme.c,v 1.11 2007/12/13 15:26:26 dgp Exp $
  *
  * Copyright (c) 2003, Joe English
  *

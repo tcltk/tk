@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.26 2007/09/11 18:05:04 rmax Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.27 2007/12/13 15:27:54 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

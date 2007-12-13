@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.30 2007/12/10 15:54:10 das Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.31 2007/12/13 15:24:14 dgp Exp $
  */
 
 #ifndef _TKINTDECLS

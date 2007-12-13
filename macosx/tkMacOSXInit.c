@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.33 2007/09/06 19:33:56 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.34 2007/12/13 15:27:09 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"

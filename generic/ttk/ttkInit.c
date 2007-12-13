@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.6 2007/09/03 01:43:07 das Exp $
+/* $Id: ttkInit.c,v 1.7 2007/12/13 15:26:26 dgp Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.

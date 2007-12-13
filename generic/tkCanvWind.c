@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.15 2007/09/07 00:34:52 dgp Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.16 2007/12/13 15:24:13 dgp Exp $
  */
 
 #include <stdio.h>

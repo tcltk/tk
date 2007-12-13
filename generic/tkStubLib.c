@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.18 2007/09/19 10:54:20 patthoyts Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.19 2007/12/13 15:24:16 dgp Exp $
  */
 
 /*

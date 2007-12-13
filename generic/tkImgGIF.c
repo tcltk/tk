@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.39 2007/09/18 12:53:09 das Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.40 2007/12/13 15:24:14 dgp Exp $
  */
 
 #include "tkInt.h"

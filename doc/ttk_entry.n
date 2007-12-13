@@ -7,7 +7,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" SOURCE: entry.n, r1.12
-'\" RCS: @(#) $Id: ttk_entry.n,v 1.9 2007/12/10 16:21:01 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_entry.n,v 1.10 2007/12/13 15:23:44 dgp Exp $
 '\" 
 .so man.macros
 .TH ttk::entry n 8.5 Tk "Tk Themed Widget"

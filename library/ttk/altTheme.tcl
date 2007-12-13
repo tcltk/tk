@@ -1,5 +1,5 @@
 #
-# $Id: altTheme.tcl,v 1.5 2007/12/08 03:49:27 jenglish Exp $
+# $Id: altTheme.tcl,v 1.6 2007/12/13 15:27:07 dgp Exp $
 #
 # Ttk widget set: Alternate theme
 #
