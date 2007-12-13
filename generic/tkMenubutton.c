@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.12.2.1 2003/11/17 23:29:36 hobbs Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.12.2.2 2007/12/13 23:13:52 hobbs Exp $
  */
 
 #include "tkMenubutton.h"
@@ -620,32 +620,28 @@ ConfigureMenuButton(interp, mbPtr, objc, objv)
       Tk_FreeSavedOptions(&savedOptions);
     }
 
-    if ((mbPtr->image == NULL) && (mbPtr->bitmap == None)
-	    && (mbPtr->textVarName != NULL)) {
+    if (mbPtr->textVarName != NULL) {
+	/*
+	 * If no image or -compound is used, display the value of a variable.
+	 * Set up a trace to watch for any changes in it, create the variable
+	 * if it doesn't exist, and fetch its current value.
+	 */
+	CONST char *value;
 
-      /*
-       * The menubutton displays the value of a variable.  
-       * Set up a trace to watch for any changes in it, create
-       * the variable if it doesn't exist, and fetch its
-       * current value.
-       */
-
-      CONST char *value;
-
-      value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
-      if (value == NULL) {
-	  Tcl_SetVar(interp, mbPtr->textVarName, mbPtr->text,
-		     TCL_GLOBAL_ONLY);
-      } else {
-	  if (mbPtr->text != NULL) {
-	      ckfree(mbPtr->text);
-	  }
-	  mbPtr->text = (char *) ckalloc((unsigned) (strlen(value) + 1));
-	  strcpy(mbPtr->text, value);
-      }
-      Tcl_TraceVar(interp, mbPtr->textVarName,
-		   TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		   MenuButtonTextVarProc, (ClientData) mbPtr);
+	value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
+	if (value == NULL) {
+	    Tcl_SetVar(interp, mbPtr->textVarName, mbPtr->text,
+		    TCL_GLOBAL_ONLY);
+	} else {
+	    if (mbPtr->text != NULL) {
+		ckfree(mbPtr->text);
+	    }
+	    mbPtr->text = (char *) ckalloc((unsigned) (strlen(value) + 1));
+	    strcpy(mbPtr->text, value);
+	}
+	Tcl_TraceVar(interp, mbPtr->textVarName,
+		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		MenuButtonTextVarProc, (ClientData) mbPtr);
     }
 
     TkMenuButtonWorldChanged((ClientData) mbPtr);
