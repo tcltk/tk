@@ -3,7 +3,7 @@
 # This demonstration script shows how you can produce output (in label
 # widgets) using many different alphabets.
 #
-# RCS: @(#) $Id: unicodeout.tcl,v 1.6 2007/10/30 15:44:40 dkf Exp $
+# RCS: @(#) $Id: unicodeout.tcl,v 1.7 2007/12/13 15:27:07 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

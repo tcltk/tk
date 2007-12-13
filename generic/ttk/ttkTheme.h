@@ -1,4 +1,4 @@
-/* $Id: ttkTheme.h,v 1.12 2007/12/02 04:32:23 jenglish Exp $
+/* $Id: ttkTheme.h,v 1.13 2007/12/13 15:26:26 dgp Exp $
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.

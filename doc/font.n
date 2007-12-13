@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: font.n,v 1.21 2007/11/05 17:22:44 dgp Exp $
+'\" RCS: @(#) $Id: font.n,v 1.22 2007/12/13 15:23:43 dgp Exp $
 '\" 
 .so man.macros
 .TH font n 8.0 Tk "Tk Built-In Commands"

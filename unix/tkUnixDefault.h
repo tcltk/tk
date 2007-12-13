@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.25 2007/10/30 01:57:58 hobbs Exp $
+ * RCS: @(#) $Id: tkUnixDefault.h,v 1.26 2007/12/13 15:28:50 dgp Exp $
  */
 
 #ifndef _TKUNIXDEFAULT

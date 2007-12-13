@@ -1,5 +1,5 @@
 #
-# $Id: entry.tcl,v 1.3 2007/09/30 16:54:38 jenglish Exp $
+# $Id: entry.tcl,v 1.4 2007/12/13 15:27:08 dgp Exp $
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #

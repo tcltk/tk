@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.12 2007/11/25 18:11:12 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.13 2007/12/13 15:26:26 dgp Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *

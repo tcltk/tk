@@ -1,5 +1,5 @@
 #
-# $Id: classicTheme.tcl,v 1.5 2007/12/08 03:49:27 jenglish Exp $
+# $Id: classicTheme.tcl,v 1.6 2007/12/13 15:27:08 dgp Exp $
 #
 # "classic" Tk theme.
 #

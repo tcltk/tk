@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.19 2007/06/29 03:20:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.20 2007/12/13 15:27:10 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"

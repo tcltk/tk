@@ -4,7 +4,7 @@
 # simple Ttk widgets, such as labels, labelframes, buttons, checkbuttons and
 # radiobuttons.
 #
-# RCS: @(#) $Id: ttkbut.tcl,v 1.3 2007/10/22 14:21:10 dkf Exp $
+# RCS: @(#) $Id: ttkbut.tcl,v 1.4 2007/12/13 15:27:07 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

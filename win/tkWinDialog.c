@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.48 2007/12/05 19:08:00 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.49 2007/12/13 15:28:55 dgp Exp $
  *
  */
 

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStyle.c,v 1.7 2007/10/15 07:24:49 das Exp $
+ * RCS: @(#) $Id: tkStyle.c,v 1.8 2007/12/13 15:24:16 dgp Exp $
  */
 
 #include "tkInt.h"

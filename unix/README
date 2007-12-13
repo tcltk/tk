@@ -20,7 +20,7 @@ SGI, as well as PCs running Linux, BSDI, and SCO UNIX.  To compile for
 a PC running Windows, see the README file in the directory ../win.  To
 compile for MacOSX, see the README file in the directory ../macosx.
 
-RCS: @(#) $Id: README,v 1.25 2007/12/07 20:47:56 dgp Exp $
+RCS: @(#) $Id: README,v 1.26 2007/12/13 15:28:49 dgp Exp $
 
 How To Compile And Install Tk:
 ------------------------------

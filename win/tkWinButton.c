@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.32 2007/12/05 19:08:00 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.33 2007/12/13 15:28:52 dgp Exp $
  */
 
 #define OEMRESOURCE

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkThemeInt.h,v 1.4 2007/12/02 04:32:23 jenglish Exp $
+ * $Id: ttkThemeInt.h,v 1.5 2007/12/13 15:26:26 dgp Exp $
  *
  * Theme engine: private definitions.
  *

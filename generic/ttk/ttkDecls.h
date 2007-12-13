@@ -1,5 +1,5 @@
 /*
- * $Id: ttkDecls.h,v 1.4 2007/09/03 01:43:06 das Exp $
+ * $Id: ttkDecls.h,v 1.5 2007/12/13 15:26:26 dgp Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  */

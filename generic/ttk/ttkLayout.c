@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.10 2007/12/02 04:32:23 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.11 2007/12/13 15:26:26 dgp Exp $
  */
 
 #include <string.h>

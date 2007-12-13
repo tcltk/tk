@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.46 2007/11/17 23:07:45 patthoyts Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.47 2007/12/13 15:24:14 dgp Exp $
  */
 
 #include "tkInt.h"

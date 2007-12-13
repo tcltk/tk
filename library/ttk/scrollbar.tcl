@@ -1,5 +1,5 @@
 #
-# $Id: scrollbar.tcl,v 1.3 2007/11/17 19:19:15 jenglish Exp $
+# $Id: scrollbar.tcl,v 1.4 2007/12/13 15:27:08 dgp Exp $
 #
 # Bindings for TScrollbar widget
 #

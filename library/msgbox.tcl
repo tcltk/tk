@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.34 2007/11/21 16:29:08 dkf Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.35 2007/12/13 15:26:27 dgp Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #

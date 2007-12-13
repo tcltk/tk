@@ -2,7 +2,7 @@
 #
 # This demonstration script creates several progress bar widgets.
 #
-# RCS: @(#) $Id: ttkprogress.tcl,v 1.2 2007/10/23 06:31:16 das Exp $
+# RCS: @(#) $Id: ttkprogress.tcl,v 1.3 2007/12/13 15:27:07 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

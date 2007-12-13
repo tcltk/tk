@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.22 2007/12/10 15:54:13 das Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.23 2007/12/13 15:24:15 dgp Exp $
  */
 
 #ifndef _TKINTXLIBDECLS

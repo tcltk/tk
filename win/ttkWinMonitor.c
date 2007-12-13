@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.15 2007/12/10 12:03:55 patthoyts Exp $
+/* $Id: ttkWinMonitor.c,v 1.16 2007/12/13 15:28:56 dgp Exp $
  */
 
 #ifdef _MSC_VER

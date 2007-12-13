@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.56 2007/12/05 19:01:49 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.57 2007/12/13 15:28:56 dgp Exp $
  */
 
 /*

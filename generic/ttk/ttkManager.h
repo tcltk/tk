@@ -1,4 +1,4 @@
-/* $Id: ttkManager.h,v 1.8 2007/12/02 02:50:07 jenglish Exp $
+/* $Id: ttkManager.h,v 1.9 2007/12/13 15:26:26 dgp Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *

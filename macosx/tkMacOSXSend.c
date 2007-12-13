@@ -33,7 +33,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.7 2007/06/03 13:44:40 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.8 2007/12/13 15:27:10 dgp Exp $
  */
 
 #include "tkMacOSXInt.h"

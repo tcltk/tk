@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.10 2007/11/19 01:49:07 jenglish Exp $
+/* $Id: ttkLabel.c,v 1.11 2007/12/13 15:26:26 dgp Exp $
  *
  * text, image, and label elements.
  *

@@ -1,5 +1,5 @@
 #
-# $Id: winTheme.tcl,v 1.5 2007/11/18 19:20:26 jenglish Exp $
+# $Id: winTheme.tcl,v 1.6 2007/12/13 15:27:08 dgp Exp $
 #
 # Settings for 'winnative' theme.
 #

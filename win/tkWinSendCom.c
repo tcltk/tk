@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.c,v 1.7 2007/09/07 00:34:58 dgp Exp $
+ * RCS: @(#) $Id: tkWinSendCom.c,v 1.8 2007/12/13 15:28:56 dgp Exp $
  */
 
 #include "tkInt.h"

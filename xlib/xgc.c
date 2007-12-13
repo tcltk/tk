@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xgc.c,v 1.15 2007/11/09 06:23:30 das Exp $
+ * RCS: @(#) $Id: xgc.c,v 1.16 2007/12/13 15:29:45 dgp Exp $
  */
 
 #include <tkInt.h>

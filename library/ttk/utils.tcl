@@ -1,5 +1,5 @@
 #
-# $Id: utils.tcl,v 1.4 2007/10/22 03:35:14 jenglish Exp $
+# $Id: utils.tcl,v 1.5 2007/12/13 15:27:08 dgp Exp $
 #
 # Utilities for widget implementations.
 #

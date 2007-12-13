@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.13 2007/11/28 20:12:38 dgp Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.14 2007/12/13 15:28:50 dgp Exp $
  */
 
 #ifndef _UNIXPORT

@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.7 2007/06/21 00:29:16 hobbs Exp $
+# $Id: ttk.tcl,v 1.8 2007/12/13 15:27:08 dgp Exp $
 #
 # Ttk widget set initialization script.
 #

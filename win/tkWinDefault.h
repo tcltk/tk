@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDefault.h,v 1.23 2007/10/30 01:57:58 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDefault.h,v 1.24 2007/12/13 15:28:55 dgp Exp $
  */
 
 #ifndef _TKWINDEFAULT

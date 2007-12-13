@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.20 2007/12/06 17:53:01 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.21 2007/12/13 15:27:10 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
