@@ -60,7 +60,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.18 2007/11/08 14:26:50 das Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.19 2007/12/13 15:27:08 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.9 2007/10/31 00:05:53 patthoyts Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.10 2007/12/13 15:24:21 dgp Exp $
  */
 
 #include <stdio.h>

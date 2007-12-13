@@ -2,7 +2,7 @@
  *
  * Minimal sample ttk widget.
  *
- * $Id: ttkSquare.c,v 1.5 2007/10/25 07:08:26 jenglish Exp $
+ * $Id: ttkSquare.c,v 1.6 2007/12/13 15:26:26 dgp Exp $
  */
 
 #include <tk.h>

@@ -3,7 +3,7 @@
 # This file defines the procedure tk_optionMenu, which creates
 # an option button and its associated menu.
 #
-# RCS: @(#) $Id: optMenu.tcl,v 1.5 2007/10/30 01:57:54 hobbs Exp $
+# RCS: @(#) $Id: optMenu.tcl,v 1.6 2007/12/13 15:26:27 dgp Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994 Sun Microsystems, Inc.

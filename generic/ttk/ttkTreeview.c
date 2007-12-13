@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.22 2007/12/02 04:32:23 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.23 2007/12/13 15:26:26 dgp Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.

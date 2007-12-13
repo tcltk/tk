@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.18 2007/10/15 07:24:50 das Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.19 2007/12/13 15:28:50 dgp Exp $
  */
 
 #include "default.h"

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.20 2007/10/15 07:24:49 das Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.21 2007/12/13 15:24:21 dgp Exp $
  */
 
 #include "tkInt.h"

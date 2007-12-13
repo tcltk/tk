@@ -1,5 +1,5 @@
 #
-# $Id: scrollbar.test,v 1.2 2007/11/17 19:17:50 jenglish Exp $
+# $Id: scrollbar.test,v 1.3 2007/12/13 15:28:49 dgp Exp $
 #
 
 package require Tk 8.5

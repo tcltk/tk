@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.7 2007/10/25 07:08:26 jenglish Exp $
+/* $Id: ttkButton.c,v 1.8 2007/12/13 15:26:24 dgp Exp $
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
