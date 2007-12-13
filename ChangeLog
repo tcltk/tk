@@ -1,5 +1,7 @@
 2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	*** 8.5.0 TAGGED FOR RELEASE ***
+
 	* generic/tkText.c (DeleteIndexRange, TextEditCmd, UpdateDirtyFlag): 
 	* tests/text.test (text-25.10.1,25.11.[12]): 
 	Don't require [update idle] to trigger Modified event [Bug 1809538]
