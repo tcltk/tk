@@ -1,6 +1,11 @@
-2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
+2007-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.5.0 TAGGED FOR RELEASE ***
+
+	* generic/tkMenubutton.c (ConfigureMenuButton): trace the
+	-textvariable even if an image exists as it may use -compound.
+
+2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c (DeleteIndexRange, TextEditCmd, UpdateDirtyFlag): 
 	* tests/text.test (text-25.10.1,25.11.[12]): 

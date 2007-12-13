@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.18 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.19 2007/12/13 23:08:43 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -610,15 +610,12 @@ ConfigureMenuButton(
 	Tk_FreeSavedOptions(&savedOptions);
     }
 
-    if ((mbPtr->image == NULL) && (mbPtr->bitmap == None)
-	    && (mbPtr->textVarName != NULL)) {
-
+    if (mbPtr->textVarName != NULL) {
 	/*
-	 * The menubutton displays the value of a variable. Set up a trace to
-	 * watch for any changes in it, create the variable if it doesn't
-	 * exist, and fetch its current value.
+	 * If no image or -compound is used, display the value of a variable.
+	 * Set up a trace to watch for any changes in it, create the variable
+	 * if it doesn't exist, and fetch its current value.
 	 */
-
 	CONST char *value;
 
 	value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
