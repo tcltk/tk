@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33.2.6 2007/04/29 02:24:02 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.7 2007/12/13 00:31:33 hobbs Exp $
  */
 
 #include "default.h"
@@ -323,6 +323,7 @@ static int		TextEditUndo _ANSI_ARGS_((TkText *textPtr));
 static int		TextEditRedo _ANSI_ARGS_((TkText *textPtr));
 static void		TextGetText _ANSI_ARGS_((TkTextIndex * index1,
 			    TkTextIndex * index2, Tcl_DString *dsPtr));
+static void		GenerateModifiedEvent(TkText *textPtr);
 static void		updateDirtyFlag _ANSI_ARGS_((TkText *textPtr));
 
 /*
@@ -1721,9 +1722,10 @@ DeleteChars(textPtr, index1String, index2String, indexPtr1, indexPtr2)
 	Tcl_DStringFree(&actionCommand);
 	Tcl_DStringFree(&revertCommand);
     }
+    TkBTreeDeleteChars(&index1, &index2);
+
     updateDirtyFlag(textPtr);
 
-    TkBTreeDeleteChars(&index1, &index2);
     if (resetView) {
 	TkTextMakeByteIndex(textPtr->tree, line, byteIndex, &index1);
 	TkTextSetYView(textPtr, &index1, 0);
@@ -2871,7 +2873,7 @@ TextEditCmd(textPtr, interp, argc, argv)
     int argc;                 /* Number of arguments. */
     CONST char **argv;        /* Argument strings. */
 {
-    int      c, setModified;
+    int      c;
     size_t   length;
 
     if (argc < 3) {
@@ -2889,35 +2891,24 @@ TextEditCmd(textPtr, interp, argc, argv)
 		    argv[0], " edit modified ?boolean?\"", (char *) NULL);
 	    return TCL_ERROR;
 	} else {
-	    XEvent event;
+	    int setModified;
+
 	    if (Tcl_GetBoolean(interp, argv[3], &setModified) != TCL_OK) {
 		return TCL_ERROR;
-            }
-	    /*
-	     * Set or reset the dirty info and trigger a Modified event.
-	     */
-
-	    if (setModified) {
-		textPtr->isDirty     = 1;
-		textPtr->modifiedSet = 1;
-	    } else {
-		textPtr->isDirty     = 0;
-		textPtr->modifiedSet = 0;
 	    }
 
 	    /*
-	     * Send an event that the text was modified.  This is equivalent to
-	     * "event generate $textWidget <<Modified>>"
+	     * Set or reset the dirty info, but trigger a Modified event only
+	     * if it has changed.  Ensure a rationalized value for the bit.
 	     */
 
-	    memset((VOID *) &event, 0, sizeof(event));
-	    event.xany.type = VirtualEvent;
-	    event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-	    event.xany.send_event = False;
-	    event.xany.window = Tk_WindowId(textPtr->tkwin);
-	    event.xany.display = Tk_Display(textPtr->tkwin);
-	    ((XVirtualEvent *) &event)->name = Tk_GetUid("Modified");
-	    Tk_HandleEvent(&event);
+	    setModified = setModified ? 1 : 0;
+
+	    textPtr->isDirty = setModified;
+	    if (textPtr->modifiedSet != setModified) {
+		textPtr->modifiedSet = setModified;
+		GenerateModifiedEvent(textPtr);
+	    }
         }
     } else if ((c == 'r') && (strncmp(argv[2], "redo", length) == 0)
 	    && (length >= 3)) {
@@ -3018,6 +3009,37 @@ TextGetText(indexPtr1,indexPtr2, dsPtr)
 }
 
 /*
+ * GenerateModifiedEvent --
+ *
+ *	Send an event that the text was modified. This is equivalent to
+ *	   event generate $textWidget <<Modified>>
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	May force the text window into existence.
+ */
+
+static void
+GenerateModifiedEvent(
+    TkText *textPtr)	/* Information about text widget. */
+{
+    XEvent event;
+
+    Tk_MakeWindowExist(textPtr->tkwin);
+
+    memset(&event, 0, sizeof(event));
+    event.xany.type = VirtualEvent;
+    event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+    event.xany.send_event = False;
+    event.xany.window = Tk_WindowId(textPtr->tkwin);
+    event.xany.display = Tk_Display(textPtr->tkwin);
+    ((XVirtualEvent *) &event)->name = Tk_GetUid("Modified");
+    Tk_HandleEvent(&event);
+}
+
+/*
  * updateDirtyFlag --
  *    increases the dirtyness of the text widget
  *
@@ -3039,19 +3061,6 @@ static void updateDirtyFlag (textPtr)
     oldDirtyFlag = textPtr->isDirty;
     textPtr->isDirty += textPtr->isDirtyIncrement;
     if (textPtr->isDirty == 0 || oldDirtyFlag == 0) {
-	XEvent event;
-	/*
-	 * Send an event that the text was modified.  This is equivalent to
-	 * "event generate $textWidget <<Modified>>"
-	 */
-
-	memset((VOID *) &event, 0, sizeof(event));
-	event.xany.type = VirtualEvent;
-	event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-	event.xany.send_event = False;
-	event.xany.window = Tk_WindowId(textPtr->tkwin);
-	event.xany.display = Tk_Display(textPtr->tkwin);
-	((XVirtualEvent *) &event)->name = Tk_GetUid("Modified");
-	Tk_HandleEvent(&event);
+	GenerateModifiedEvent(textPtr);
     }
 }

@@ -1,3 +1,11 @@
+2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkText.c (DeleteChars, TextEditCmd, updateDirtyFlag): 
+	* tests/text.test (text-25.10.1,25.11.[12]): 
+	Don't require [update idle] to trigger Modified event [Bug 1809538]
+	Modified virtual event should only fire on state change [Bug 1799782]
+	Make sure we delete chars before triggering <<Modified>> [Bug 1737288]
+
 2007-12-05  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinInt.h: remove CS_CLASSDC (not recommended for any apps now)
