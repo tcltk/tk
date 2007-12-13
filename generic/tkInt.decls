@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.43 2007/12/10 15:52:09 das Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.44 2007/12/13 15:24:14 dgp Exp $
 
 library tk
 

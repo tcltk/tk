@@ -4,7 +4,7 @@
 # single logical buffer. This is particularly useful when editing related text
 # in two (or more) parts of the same file.
 #
-# RCS: @(#) $Id: textpeer.tcl,v 1.2 2007/11/01 16:36:38 dkf Exp $
+# RCS: @(#) $Id: textpeer.tcl,v 1.3 2007/12/13 15:27:07 dgp Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

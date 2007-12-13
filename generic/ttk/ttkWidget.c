@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.8 2007/10/30 15:22:51 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.9 2007/12/13 15:26:26 dgp Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.

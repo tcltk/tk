@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.14 2007/11/08 14:26:15 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.h,v 1.15 2007/12/13 15:27:08 dgp Exp $
  */
 
 #ifndef _TKMACDEBUG

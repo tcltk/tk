@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClassicTheme.c,v 1.5 2007/12/02 04:32:23 jenglish Exp $
+ * $Id: ttkClassicTheme.c,v 1.6 2007/12/13 15:26:26 dgp Exp $
  *
  * Copyright (c) 2004, Joe English
  *

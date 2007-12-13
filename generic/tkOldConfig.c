@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.22 2007/09/07 00:34:53 dgp Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.23 2007/12/13 15:24:16 dgp Exp $
  */
 
 #include "tkPort.h"
