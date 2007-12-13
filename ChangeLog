@@ -1,4 +1,36 @@
+2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkText.c (DeleteIndexRange, TextEditCmd, UpdateDirtyFlag): 
+	* tests/text.test (text-25.10.1,25.11.[12]): 
+	Don't require [update idle] to trigger Modified event [Bug 1809538]
+	Modified virtual event should only fire on state change [Bug 1799782]
+	Make sure we delete chars before triggering <<Modified>> [Bug 1737288]
+
+2007-12-12  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): Revert 2007-10-26
+	change to window class of transient toplevels that are not also
+	overrideredirect. [Bug 1845899]
+
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): Implement more
+	* macosx/tkMacOSXMouseEvent.c (BringWindowForward): X11-like transient
+	* macosx/tkMacOSXSubwindows.c (XDestroyWindow):     behaviour by adding
+	transient windows to a window group owned by the master window, this
+	ensures transients always remain in front of and are collapsed with the
+	master; bring master to front when selecting transient windows; restore
+	default window group of transients if master destroyed. [Bug 1845899]
+
+2007-12-12  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/ttk_intro.n, doc/ttk_style.n, doc/ttk_widget.n:
+	Various minor updates.
+
+2007-12-12  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:		Updated for 8.5.0 release.
+
 2007-12-11  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/ttk/ttkTheme.c(StyleElementOptionsCmd):
 	Use Ttk_GetElement() to find element instead of direct
 	hash table access.

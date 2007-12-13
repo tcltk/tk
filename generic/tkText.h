@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.31.2.1 2007/06/25 19:12:13 dgp Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.31.2.2 2007/12/13 06:28:47 dgp Exp $
  */
 
 #ifndef _TKTEXT
@@ -566,9 +566,9 @@ typedef struct TkSharedText {
 				 * statements. */
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
-    int modifiedSet;		/* Flag indicating that the 'dirtynesss' of
-				 * the text widget has been expplicitly set. */
-    int isDirty;		/* Flag indicating the 'dirtynesss' of the
+    int modifiedSet;		/* Flag indicating that the 'dirtyness' of
+				 * the text widget has been explicitly set. */
+    int isDirty;		/* Flag indicating the 'dirtyness' of the
 				 * text widget. If the flag is not zero,
 				 * unsaved modifications have been applied to
 				 * the text widget. */

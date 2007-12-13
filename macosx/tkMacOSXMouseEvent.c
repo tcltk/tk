@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.29.2.3 2007/07/10 21:54:28 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.29.2.4 2007/12/13 06:28:48 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -555,6 +555,29 @@ BringWindowForward(
 	    ChkErr(GetWindowModality, frontWindow, &frontWindowModality, NULL);
 	}
 	if (frontWindowModality != kWindowModalityAppModal) {
+	    Window window = TkMacOSXGetXWindow(wRef);
+
+	    if (window != None) {
+		TkDisplay *dispPtr = TkGetDisplayList();
+		TkWindow * winPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display,
+			window);
+
+		if (winPtr && winPtr->wmInfoPtr &&
+			winPtr->wmInfoPtr->master != None) {
+		    TkWindow *masterWinPtr = (TkWindow *)Tk_IdToWindow(
+			    dispPtr->display, winPtr->wmInfoPtr->master);
+
+		    if (masterWinPtr && masterWinPtr->window != None &&
+			    TkMacOSXHostToplevelExists(masterWinPtr)) {
+			WindowRef masterMacWin =
+				TkMacOSXDrawableWindow(masterWinPtr->window);
+
+			if (masterMacWin) {
+			    BringToFront(masterMacWin);
+			}
+		    }
+		}
+	    }
 	    SelectWindow(wRef);
 	} else {
 	    frontWindowOnly = 0;
