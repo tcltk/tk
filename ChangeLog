@@ -1,3 +1,10 @@
+2007-12-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinInt.h:     Add in missing function definitions
+	* win/tkWinButton.c:  to support plain MSVC6 and use INT_PTR
+	* win/tkWinScrlBar.c: rather than LONG_PTR which isn'tr defined
+	* win/tkWinWm.c:      in the msvc6 headers.
+
 2007-12-14  Pat Thoyts <patthoyts@users.sourceforge.net>
 
 	* win/nmakehlp.c:  Support compilation with MSVC9 for AMD64.
