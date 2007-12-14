@@ -1,3 +1,7 @@
+2007-12-14  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	More updates for 8.5.0 release.
+
 2007-12-14  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_treeview.n: Fix typo [Bug 1850713].
