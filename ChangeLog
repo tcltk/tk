@@ -1,5 +1,7 @@
 2007-12-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
+	*** 8.5.0 TAGGED FOR RELEASE ***
+
 	* doc/canvas.n: Documented -outlineoffset item option. [Bug 1836621]
 
 2007-12-14  Don Porter  <dgp@users.sourceforge.net>
@@ -23,8 +25,6 @@
 	* win/makefile.vc:
 
 2007-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	*** 8.5.0 TAGGED FOR RELEASE ***
 
 	* generic/tkMenubutton.c (ConfigureMenuButton): trace the
 	-textvariable even if an image exists as it may use -compound.
