@@ -1,3 +1,7 @@
+2007-12-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
+
+	* doc/canvas.n: Documented -outlineoffset item option. [Bug 1836621]
+
 2007-12-14  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	More updates for 8.5.0 release.

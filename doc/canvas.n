@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.31 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.32 2007/12/17 15:24:45 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1126,6 +1126,17 @@ in a solid fashion.
 \fINote that stipples are not well supported on platforms that do not
 use X11 as their drawing API.\fR
 .TP
+\fB\-outlineoffset \fIoffset\fR
+.
+Specifies the offset of the stipple pattern used for outlines. The
+offset value can be of the form
+.QW \fIx\fB,\fIy\fR
+or the description of a side (one of \fBn\fR, \fBne\fR, \fBe\fR,
+\fBse\fR, \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, or \fBcenter\fR). This
+option only has an effect when the outline is drawn as a stipple
+pattern, and is only supported under X11.
+.\" TODO: What does this actually do? What do the acceptable forms mean?!
+.TP
 \fB\-stipple \fIbitmap\fR
 .TP
 \fB\-activestipple \fIbitmap\fR
@@ -1199,6 +1210,7 @@ The following standard options are supported by arcs:
 \-outline
 \-activeoutline
 \-disabledoutline
+\-outlineoffset
 \-outlinestipple
 \-activeoutlinestipple
 \-disabledoutlinestipple
@@ -1492,6 +1504,7 @@ The following standard options are supported by ovals:
 \-outline
 \-activeoutline
 \-disabledoutline
+\-outlineoffset
 \-outlinestipple
 \-activeoutlinestipple
 \-disabledoutlinestipple
@@ -1632,6 +1645,7 @@ The following standard options are supported by rectangles:
 \-outline
 \-activeoutline
 \-disabledoutline
+\-outlineoffset
 \-outlinestipple
 \-activeoutlinestipple
 \-disabledoutlinestipple
