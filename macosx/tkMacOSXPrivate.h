@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1.2.4 2007/11/09 06:26:56 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1.2.5 2007/12/18 18:20:34 das Exp $
  */
 
 #ifndef _TKMACPRIV
@@ -36,6 +36,7 @@
     #define kThemeBackgroundMetal 6
     #define kThemeIncDecButtonSmall 21
     #define kThemeIncDecButtonMini 22
+    #define kThemeMiniSystemFont 109
     #define kAppearancePartUpButton 20
     #define kAppearancePartDownButton 21
     #define kAppearancePartPageUpArea 22
