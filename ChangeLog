@@ -1,3 +1,19 @@
+2007-12-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): Revert 2007-10-26
+	change to window class of transient toplevels that are not also
+	overrideredirect. [Bug 1845899]
+
+	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): Implement more
+	* macosx/tkMacOSXMouseEvent.c (BringWindowForward): X11-like transient
+	* macosx/tkMacOSXSubwindows.c (XDestroyWindow):     behaviour by adding
+	transient windows to a window group owned by the master window, this
+	ensures transients always remain in front of and are collapsed with the
+	master; bring master to front when selecting transient windows; restore
+	default window group of transients if master destroyed. [Bug 1845899]
+
+	* macosx/tkMacOSXPrivate.h: fix Panther build.
+
 2007-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenubutton.c (ConfigureMenuButton): trace the
