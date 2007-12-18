@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.45 2007/11/09 06:26:57 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.7.2.46 2007/12/18 18:21:31 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -67,7 +67,7 @@ static int wmTracing = 0;
 
 static void TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
 
-static Tk_GeomMgr wmMgrType = {
+static /* const */ Tk_GeomMgr wmMgrType = {
     "wm",				/* name */
     TopLevelReqProc,			/* requestProc */
     (Tk_GeomLostSlaveProc *) NULL,	/* lostSlaveProc */
@@ -176,6 +176,7 @@ static void ApplyWindowClassAttributeChanges(TkWindow *winPtr,
 	WindowRef macWindow, WindowClass oldClass,
 	WindowAttributes oldAttributes, int create);
 static void ApplyMasterOverrideChanges(TkWindow *winPtr, WindowRef macWindow);
+static WindowGroupRef WmGetWindowGroup(TkWindow *winPtr);
 static void GetMinSize(TkWindow *winPtr, int *minWidthPtr, int *minHeightPtr);
 static void GetMaxSize(TkWindow *winPtr, int *maxWidthPtr, int *maxHeightPtr);
 #if 0
@@ -868,11 +869,10 @@ static int WmSetAttribute(
 
 		if (boolean) {
 		    wmPtr->flags |= WM_TOPMOST;
-		    group = GetWindowGroupOfClass(kUtilityWindowClass);
 		} else {
 		    wmPtr->flags &= ~WM_TOPMOST;
-		    group = GetWindowGroupOfClass(wmPtr->macClass);
 		}
+		group = WmGetWindowGroup(winPtr);
 		if (group && group != GetWindowGroup(macWindow)) {
 		    ChkErr(SetWindowGroup, macWindow, group);
 		}
@@ -6062,55 +6062,100 @@ ApplyMasterOverrideChanges(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     WindowClass oldClass = wmPtr->macClass;
     WindowAttributes oldAttributes = wmPtr->attributes;
-    const int wasOverrideredirect = (oldClass == kSimpleWindowClass &&
-	    oldAttributes == kWindowNoActivatesAttribute);
-    const int wasTransient = (oldClass == kPlainWindowClass &&
-	    oldAttributes == kWindowNoAttributes);
-    const int wasDefault = (oldClass == kDocumentWindowClass);
 
     /*
      * FIX: We need an UpdateWrapper equivalent to make this 100% correct
      */
+
     if (winPtr->atts.override_redirect) {
-	if (wasDefault || (wmPtr->master != None && wasTransient)) {
+	if (oldClass == kDocumentWindowClass) {
 	    wmPtr->macClass = kSimpleWindowClass;
 	    wmPtr->attributes = kWindowNoAttributes;
 	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
     } else {
-	if (wmPtr->master != None) {
-	    if (wasDefault || wasOverrideredirect) {
-		wmPtr->macClass = kPlainWindowClass;
-		wmPtr->attributes = kWindowNoAttributes;
-	    }
-	} else {
-	    if (wasTransient || wasOverrideredirect) {
-		wmPtr->macClass = kDocumentWindowClass;
-		wmPtr->attributes = kWindowStandardDocumentAttributes
-			| kWindowLiveResizeAttribute;
-	    }
+	if (oldClass == kSimpleWindowClass &&
+		oldAttributes == kWindowNoActivatesAttribute) {
+	    wmPtr->macClass = kDocumentWindowClass;
+	    wmPtr->attributes = kWindowStandardDocumentAttributes
+		    | kWindowLiveResizeAttribute;
 	}
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
     }
-    if (!macWindow) {
-	if (winPtr->window == None) {
-	    return;
-	}
-	if (!TkMacOSXHostToplevelExists(winPtr)) {
-	    return;
-	}
+    if (!macWindow && winPtr->window != None &&
+	    TkMacOSXHostToplevelExists(winPtr)) {
 	macWindow = TkMacOSXDrawableWindow(winPtr->window);
     }
     if (macWindow) {
-	Tcl_Obj *val;
+	WindowGroupRef group;
 
 	ApplyWindowClassAttributeChanges(winPtr, macWindow, oldClass,
 	    oldAttributes, 0);
-	val = Tcl_NewBooleanObj(winPtr->atts.override_redirect &&
-		wmPtr->master != None);
-	WmSetAttribute(winPtr, macWindow, NULL, WMATT_TOPMOST, val);
-	Tcl_DecrRefCount(val);
+
+	if (winPtr->atts.override_redirect && wmPtr->master != None) {
+	    wmPtr->flags |= WM_TOPMOST;
+	} else {
+	    wmPtr->flags &= ~WM_TOPMOST;
+	}
+	group = WmGetWindowGroup(winPtr);
+	if (group && group != GetWindowGroup(macWindow)) {
+	    ChkErr(SetWindowGroup, macWindow, group);
+	}
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmGetWindowGroup --
+ *
+ *	Gets the window group a toplevel should be placed in.
+ *
+ * Results:
+ *	A WindowGroupRef.
+ *
+ * Side effects:
+ *	A transient window group for the master (if any) may be created.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static WindowGroupRef
+WmGetWindowGroup(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    WindowGroupRef group = NULL;
+
+    if (wmPtr->flags & WM_TOPMOST) {
+	group = GetWindowGroupOfClass(kUtilityWindowClass);
+    } else if (wmPtr->master != None) {
+	TkDisplay *dispPtr = TkGetDisplayList();
+	TkWindow *masterWinPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display,
+		wmPtr->master);
+	
+	if (masterWinPtr && masterWinPtr->window != None &&
+		TkMacOSXHostToplevelExists(masterWinPtr)) {
+	    WindowRef masterMacWin =
+		    TkMacOSXDrawableWindow(masterWinPtr->window);
+
+	    if (masterMacWin && GetWindowProperty(masterMacWin, 'Tk  ', 'TsGp',
+		    sizeof(group), NULL, &group) != noErr) {
+		ChkErr(CreateWindowGroup, 0, &group);
+		if (group) {
+		    ChkErr(SetWindowGroupParent, group,
+			    GetWindowGroup(masterMacWin));
+		    ChkErr(SetWindowGroupOwner, group, masterMacWin);
+		    ChkErr(SetWindowProperty, masterMacWin, 'Tk  ', 'TsGp',
+			    sizeof(group), &group);
+		}
+	    }
+	}
+    }
+    if (!group) {
+	group = GetWindowGroupOfClass(wmPtr->macClass);
+    }
+    return group;
 }
 
 /*
