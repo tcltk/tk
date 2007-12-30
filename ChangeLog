@@ -1,5 +1,9 @@
 2007-12-30  Donal K. Fellows  <dkf@users.sf.net>
 
+	* doc/canvas.n: Documented exact behaviour of items with respect to
+	when they are the current item. [Bug 1774593] Also documented the
+	clipping behaviour of window items.
+
 	* library/demos/nl.msg: Corrected following testing "in the field" by
 	Arjen Markus. [Bug 1860802]
 
