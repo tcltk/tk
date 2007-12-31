@@ -1,3 +1,11 @@
+2007-12-31  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.4.17 TAGGED FOR RELEASE ***
+
+	* changes:		updates for 8.4.17 release.
+	* unix/configure.in:	Add "hu" to LOCALES.
+	* unix/configure:	autoconf-2.13
+
 2007-12-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): Revert 2007-10-26

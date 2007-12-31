@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.49 2007/09/18 19:37:53 das Exp $
+RCS: @(#) $Id: changes,v 1.64.2.50 2007/12/31 17:20:39 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6115,3 +6115,33 @@ in presence of grabs or modal windows (steffen)
 2007-09-15 (platform support) SunOS-5.1x link with cc, not ld (steffen)
 
 --- Released 8.4.16, September 21, 2007 --- See ChangeLog for details ---
+
+2007-10-11 (bug fix)[1810818] Aqua: [wm resizeable] (steffen)
+
+2007-10-11 (enhancement)[1800742] msg catalog for Hungarian. (reszo)
+
+2007-10-25 (bug fix)[1818491] crash in [place] manager (mcdonald)
+
+2007-10-26 (platform support) Mac OS X: 64-bit X11 support (steffen)
+
+2007-11-09 (bug fix) Aqua: activate event after window expansion (steffen)
+
+2007-11-09 (bug fix)[1824521] Aqua: menubutton crash with -bitmap (steffen)
+
+2007-11-09 (platform support) Aqua: (menu)button pressed/inactive/disabled
+look&feel; menubutton size with -image/-bitmap (steffen)
+
+2007-11-09 (bug fix) Aqua: [tk_getOpenFile] (et al.) and help menu crashes on
+Mac OS X Leopard (steffen)
+
+2007-11-26 (bug fix)[1822391] [photo put] segfault w/ PPM data (kenny)
+
+2007-12-12 (bug fix)[1809538,1799782,1737288] fixes for the <<Modified>>
+virtual event on [text] widgets (hobbs)
+
+2007-12-13 (bug fix) correctly trace menubutton -textvariable for -compound
+use (hobbs)
+
+2007-12-18 (bug fix)[1845899] Aqua: [wm transient] (steffen)
+
+--- Released 8.4.17, January 4, 2008 --- See ChangeLog for details ---
