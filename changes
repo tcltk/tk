@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.50 2007/12/31 17:20:39 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.51 2007/12/31 17:35:20 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6123,6 +6123,11 @@ in presence of grabs or modal windows (steffen)
 2007-10-25 (bug fix)[1818491] crash in [place] manager (mcdonald)
 
 2007-10-26 (platform support) Mac OS X: 64-bit X11 support (steffen)
+
+2007-11-09 (platform support) Aqua: replace RgnHandles by HIShapeRefs (steffen)
+	*** POTENTIAL INCOMPATIBILITY for C code acessing MacDrawable Rgns ***
+
+2007-11-09 (enhancement) Aqua: "Run Widget Demo" menu item (steffen)
 
 2007-11-09 (bug fix) Aqua: activate event after window expansion (steffen)
 
