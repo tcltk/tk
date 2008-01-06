@@ -1,5 +1,11 @@
 2008-01-06  Joe English  <jenglish@users.sourceforge.net>
 
+	* generic/ttk/ttkWidget.c, generic/ttk/ttkWidget.h:
+	Call Tk_MakeWindowExist() in widget constructor.
+	Removed now-unnecessary initial ConfigureNotify processing.
+
+2008-01-06  Joe English  <jenglish@users.sourceforge.net>
+
 	* library/ttk/treeview.tcl, library/ttk/utils.tcl:
 	Fix MouseWheel bindings for ttk::treeview widget
 	(Fixes #1442006, #1821939, #1862692)
