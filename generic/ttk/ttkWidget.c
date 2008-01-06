@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.9 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkWidget.c,v 1.10 2008/01/06 22:33:14 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -232,7 +232,8 @@ WidgetCleanup(char *memPtr)
  *	It turns out this is impossible to do correctly in a binding script,
  *	because Tk filters out focus events with detail == NotifyInferior.
  *
- *	For Deactivate/Activate pseudo-events, clear/set the background state flag.
+ *	For Deactivate/Activate pseudo-events, set/clear the background state
+ *	flag.
  *
  *	<<NOTE-REALIZED>> On the first ConfigureNotify event
  *	(which indicates that the window has just been created),
@@ -260,12 +261,6 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
     switch (eventPtr->type)
     {
 	case ConfigureNotify :
-	    if (!(corePtr->flags & WIDGET_REALIZED)) {
-		/* See <<NOTE-REALIZED>> */
-		(void)UpdateLayout(corePtr->interp, corePtr);
-		SizeChanged(corePtr);
-		corePtr->flags |= WIDGET_REALIZED;
-	    }
 	    TtkRedisplayWidget(corePtr);
 	    break;
 	case Expose :
@@ -443,6 +438,8 @@ int TtkWidgetConstructorObjCmd(
 
     SizeChanged(corePtr);
     Tk_CreateEventHandler(tkwin, CoreEventMask, CoreEventProc, recordPtr);
+
+    Tk_MakeWindowExist(tkwin);
 
     Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(tkwin), -1));
 
