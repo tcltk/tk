@@ -1,5 +1,10 @@
 2008-01-08  Joe English  <jenglish@users.sourceforge.net>
 
+	* generic/ttk/ttkFrame.c: BUGFIX: fix crash in [ttk::labelframe]
+	when -style option specified [Bug 1867122].
+
+2008-01-08  Joe English  <jenglish@users.sourceforge.net>
+
 	* win/ttkWinTheme.c: Add tristate support to checkbuttons 
 	and radiobuttons [Bug 1865898].  Fix check and radio indicator 
 	size [Bug 1679067].
