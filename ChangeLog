@@ -1,6 +1,78 @@
-2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
+2008-01-08  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkFrame.c: BUGFIX: fix crash in [ttk::labelframe]
+	when -style option specified [Bug 1867122].
+
+2008-01-08  Joe English  <jenglish@users.sourceforge.net>
+
+	* win/ttkWinTheme.c: Add tristate support to checkbuttons 
+	and radiobuttons [Bug 1865898].  Fix check and radio indicator 
+	size [Bug 1679067].
+
+2008-01-06  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkWidget.c, generic/ttk/ttkWidget.h:
+	Call Tk_MakeWindowExist() in widget constructor.
+	Removed now-unnecessary initial ConfigureNotify processing.
+
+2008-01-06  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/treeview.tcl, library/ttk/utils.tcl:
+	Fix MouseWheel bindings for ttk::treeview widget
+	(Fixes #1442006, #1821939, #1862692)
+
+2008-01-02  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump version number to 8.5.1b1 to distinguish
+	* library/tk.tcl:	CVS development snapshots from the 8.5.0 and
+	* unix/configure.in:	8.5.1 releases.
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf (2.59)
+	* win/configure:
+
+2007-12-30  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/canvas.n: Documented exact behaviour of items with respect to
+	when they are the current item. [Bug 1774593] Also documented the
+	clipping behaviour of window items.
+
+	* library/demos/nl.msg: Corrected following testing "in the field" by
+	Arjen Markus. [Bug 1860802]
+
+2007-12-17  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	*** 8.5.0 TAGGED FOR RELEASE ***
+
+	* doc/canvas.n: Documented -outlineoffset item option. [Bug 1836621]
+
+2007-12-14  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	More updates for 8.5.0 release.
+
+2007-12-14  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/ttk_treeview.n: Fix typo [Bug 1850713].
+
+2007-12-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinInt.h:     Add in missing function definitions
+	* win/tkWinButton.c:  to support plain MSVC6 and use INT_PTR
+	* win/tkWinScrlBar.c: rather than LONG_PTR which isn'tr defined
+	* win/tkWinWm.c:      in the msvc6 headers.
+
+2007-12-14  Pat Thoyts <patthoyts@users.sourceforge.net>
+
+	* win/nmakehlp.c:  Support compilation with MSVC9 for AMD64.
+	* win/makefile.vc:
+
+2007-12-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkMenubutton.c (ConfigureMenuButton): trace the
+	-textvariable even if an image exists as it may use -compound.
+
+2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkText.c (DeleteIndexRange, TextEditCmd, UpdateDirtyFlag): 
 	* tests/text.test (text-25.10.1,25.11.[12]): 
