@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.6.2.1 2007/12/04 17:05:21 dgp Exp $
+/* $Id: ttkWidget.h,v 1.6.2.2 2008/01/23 16:39:12 dgp Exp $
  * Copyright (c) 2003, Joe English
  * Helper routines for widget implementations.
  */
@@ -11,7 +11,6 @@
  */
 #define WIDGET_DESTROYED	0x0001
 #define REDISPLAY_PENDING 	0x0002	/* scheduled call to RedisplayWidget */
-#define WIDGET_REALIZED		0x0010	/* set at first ConfigureNotify */
 #define CURSOR_ON 		0x0020	/* See TtkBlinkCursor() */
 #define WIDGET_USER_FLAG        0x0100  /* 0x0100 - 0x8000 for user flags */
 
