@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.122 2007/12/17 17:29:14 dgp Exp $
+RCS: @(#) $Id: changes,v 1.123 2008/01/25 17:57:04 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6465,3 +6465,13 @@ use (hobbs)
 Several documentation and release notes improvements
 
 --- Released 8.5.0, December 18, 2007 --- See ChangeLog for details ---
+
+2007-12-30 (bug fix)[1860802] fixed Dutch message catalog (markus,fellows)
+
+2008-01-06 (bug fix)[1442006,1821939,18862692] MouseWheel for treeview (english)
+
+2008-01-08 (bug fix)[1865898,1679067] button size & state (english)
+
+2008-01-08 (bug fix)[1867122] [labelframe -style] crash (english,rib)
+
+--- Released 8.5.1, February 1, 2008 --- See ChangeLog for details ---
