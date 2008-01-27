@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.21 2008/01/27 16:40:24 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.22 2008/01/27 16:44:12 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -101,16 +101,21 @@ GetTkFontAttributes(
     TkFontAttributes *faPtr)
 {
     char *family;
-    int weight, slant;
-    double size;
+    int weight, slant, size, pxsize;
+    double ptsize;
 
     if (XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0,
 	    &family) != XftResultMatch) {
 	family = "Unknown";
     }
     if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
-	    &size) != XftResultMatch) {
-	size = 12.0;
+	    &ptsize) == XftResultMatch) {
+	size = (int)ptsize;
+    } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+	    &pxsize) == XftResultMatch) {
+	size = -pxsize;
+    } else {
+	size = 12;
     }
     if (XftPatternGetInteger(ftFont->pattern, XFT_WEIGHT, 0,
 	    &weight) != XftResultMatch) {
@@ -122,12 +127,12 @@ GetTkFontAttributes(
     }
 
 #if DEBUG_FONTSEL
-    printf("family %s size %g weight %d slant %d\n",
+    printf("family %s size %d weight %d slant %d\n",
 	    family, size, weight, slant);
 #endif /* DEBUG_FONTSEL */
 
     faPtr->family = Tk_GetUid(family);
-    faPtr->size = (int) size;
+    faPtr->size = size;
     faPtr->weight = (weight > XFT_WEIGHT_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
     faPtr->slant = (slant > XFT_SLANT_ROMAN) ? TK_FS_ITALIC : TK_FS_ROMAN;
     faPtr->underline = 0;
@@ -330,11 +335,11 @@ TkpGetFontFromAttributes(
 	XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
     }
     if (faPtr->size > 0) {
-	XftPatternAddInteger(pattern, XFT_SIZE, faPtr->size);
+	XftPatternAddDouble(pattern, XFT_SIZE, (double)faPtr->size);
     } else if (faPtr->size < 0) {
 	XftPatternAddInteger(pattern, XFT_PIXEL_SIZE, -faPtr->size);
     } else {
-	XftPatternAddInteger(pattern, XFT_SIZE, 12);
+	XftPatternAddDouble(pattern, XFT_SIZE, 12.0);
     }
     switch (faPtr->weight) {
     case TK_FW_NORMAL:
