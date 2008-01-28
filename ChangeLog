@@ -1,5 +1,10 @@
 2008-01-27  Joe English  <jenglish@users.sourceforge.net>
 
+	* generic/ttk/ttkNotebook.c: Make sure to schedule a 
+	redisplay when adding and/or hiding tabs [Bug 1878298].
+
+2008-01-27  Joe English  <jenglish@users.sourceforge.net>
+
 	* unix/tkUnixRFont.c: Merged common code from InitFont()
 	and TkpGetFontAttrsForChar(), factored into GetTkFontAttributes()
 	and GetTkFontMetrics().  Removed write-only struct UnixFtFont
