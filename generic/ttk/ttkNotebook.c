@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.12 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkNotebook.c,v 1.13 2008/01/28 00:36:08 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -239,6 +239,7 @@ static int ConfigureTab(
 
     Tk_FreeSavedOptions(&savedOptions);
     Ttk_ManagerSizeChanged(nb->notebook.mgr);
+    TtkRedisplayWidget(&nb->core);
 
     return TCL_OK;
 error:
@@ -982,6 +983,7 @@ static int NotebookForgetCommand(
     }
 
     Ttk_ForgetSlave(nb->notebook.mgr, index);
+    TtkRedisplayWidget(&nb->core);
 
     return TCL_OK;
 }
@@ -1010,6 +1012,8 @@ static int NotebookHideCommand(
     if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
     }
+
+    TtkRedisplayWidget(&nb->core);
 
     return TCL_OK;
 }
@@ -1183,7 +1187,6 @@ static int NotebookTabCommand(
 	SelectNearestTab(nb);
     }
 
-    TtkResizeWidget(&nb->core);
     return TCL_OK;
 }
 
