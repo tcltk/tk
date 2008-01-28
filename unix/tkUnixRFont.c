@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.22 2008/01/27 16:44:12 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.23 2008/01/28 15:56:40 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -100,14 +100,11 @@ GetTkFontAttributes(
     XftFont *ftFont,
     TkFontAttributes *faPtr)
 {
-    char *family;
+    char *family = "Unknown", **familyPtr = &family;
     int weight, slant, size, pxsize;
     double ptsize;
 
-    if (XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0,
-	    &family) != XftResultMatch) {
-	family = "Unknown";
-    }
+    (void)XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0, familyPtr);
     if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
 	    &ptsize) == XftResultMatch) {
 	size = (int)ptsize;
@@ -406,10 +403,9 @@ TkpGetFontFamilies(
     Tcl_Interp *interp,		/* Interp to hold result. */
     Tk_Window tkwin)		/* For display to query. */
 {
-    Tcl_Obj *resultPtr, *strPtr;
+    Tcl_Obj *resultPtr;
     XftFontSet *list;
     int i;
-    char *family;
 
     resultPtr = Tcl_NewListObj(0, NULL);
 
@@ -417,9 +413,11 @@ TkpGetFontFamilies(
 		(char*)0,		/* pattern elements */
 		XFT_FAMILY, (char*)0);	/* fields */
     for (i = 0; i < list->nfont; i++) {
-	if (XftPatternGetString(list->fonts[i], XFT_FAMILY, 0,
-		&family) == XftResultMatch) {
-	    strPtr = Tcl_NewStringObj(Tk_GetUid(family), -1);
+	char *family, **familyPtr = &family;
+	if (XftPatternGetString(list->fonts[i], XFT_FAMILY, 0, familyPtr)
+		== XftResultMatch)
+	{
+	    Tcl_Obj *strPtr = Tcl_NewStringObj(family, -1);
 	    Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	}
     }
@@ -449,7 +447,9 @@ TkpGetSubFonts(
     Tcl_Obj *objv[3], *listPtr, *resultPtr;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     FcPattern *pattern;
-    char *family, *foundry, *encoding;
+    char *family = "Unknown", **familyPtr = &family;
+    char *foundry = "Unknown", **foundryPtr = &foundry;
+    char *encoding = "Unknown", **encodingPtr = &encoding;
     int i;
 
     resultPtr = Tcl_NewListObj(0, NULL);
@@ -458,18 +458,9 @@ TkpGetSubFonts(
  	pattern = FcFontRenderPrepare(0, fontPtr->pattern,
 		fontPtr->faces[i].source);
 
-	if (XftPatternGetString(pattern, XFT_FAMILY, 0,
-		&family) != XftResultMatch) {
-	    family = "Unknown";
-	}
-	if (XftPatternGetString(pattern, XFT_FOUNDRY, 0,
-		&foundry) != XftResultMatch) {
-	    foundry = "Unknown";
-	}
-	if (XftPatternGetString(pattern, XFT_ENCODING, 0,
-		&encoding) != XftResultMatch) {
-	    encoding = "Unknown";
-	}
+	XftPatternGetString(pattern, XFT_FAMILY, 0, familyPtr);
+	XftPatternGetString(pattern, XFT_FOUNDRY, 0, foundryPtr);
+	XftPatternGetString(pattern, XFT_ENCODING, 0, encodingPtr);
 	objv[0] = Tcl_NewStringObj(family, -1);
 	objv[1] = Tcl_NewStringObj(foundry, -1);
 	objv[2] = Tcl_NewStringObj(encoding, -1);
