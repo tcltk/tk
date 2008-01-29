@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.8 2007/12/13 15:23:44 dgp Exp $
+'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.9 2008/01/29 15:38:00 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::labelframe n 8.5 Tk "Tk Themed Widget"
@@ -18,8 +18,9 @@ ttk::labelframe \- Container widget with optional label
 A \fBttk::labelframe\fR widget is a container used to group other widgets
 together.  It has an optional label, which may be a plain text string or
 another widget.
-.SO
-\-class	\-cursor	\-takefocus	\-style
+.SO ttk_widget
+\-class	\-cursor	\-takefocus
+\-style
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .\" XXX: Currently included, but may go away: 
