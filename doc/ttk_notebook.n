@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_notebook.n,v 1.10 2007/12/13 15:23:44 dgp Exp $
+'\" RCS: @(#) $Id: ttk_notebook.n,v 1.11 2008/01/29 15:38:00 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::notebook n 8.5 Tk "Tk Themed Widget"
@@ -24,8 +24,9 @@ A \fBttk::notebook\fR widget manages a collection of windows
 and displays a single one at a time.
 Each slave window is associated with a \fItab\fR,
 which the user may select to change the currently-displayed window.
-.SO
-\-class	\-cursor	\-takefocus	\-style
+.SO ttk_widget
+\-class	\-cursor	\-takefocus
+\-style
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-height height Height
