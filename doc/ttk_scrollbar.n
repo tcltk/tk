@@ -6,7 +6,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" SOURCE: tk/doc/scrollbar.n, r1.4
-'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.3.2.4 2007/12/10 18:39:28 dgp Exp $
+'\" RCS: @(#) $Id: ttk_scrollbar.n,v 1.3.2.5 2008/01/29 17:35:51 dgp Exp $
 '\" 
 .so man.macros
 .TH ttk::scrollbar n 8.5 Tk "Tk Themed Widget"
@@ -26,8 +26,9 @@ document visible in the associated window.
 The thumb may be dragged by the user to control the visible region.
 Depending on the theme, two or more arrow buttons may also be present;
 these are used to scroll the visible region in discrete units.
-.SO
-\-class	\-cursor	\-style	\-takefocus
+.SO ttk_widget
+\-class	\-cursor	\-style
+\-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
