@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.16 2007/12/14 16:29:24 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.17 2008/01/29 15:38:00 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
@@ -43,9 +43,9 @@ and control the appearance of the item.
 Treeview widgets support horizontal and vertical scrolling with the
 standard \fB\-\fR[\fBxy\fR]\fBscrollcommand\fR options 
 and [\fBxy\fR]\fBview\fR widget commands.
-.SO
-\-class	\-cursor	\-takefocus	\-style
-\-xscrollcommand	\-yscrollcommand
+.SO ttk_widget
+\-class	\-cursor	\-takefocus
+\-style	\-xscrollcommand	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-columns columns Columns
