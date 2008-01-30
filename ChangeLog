@@ -1,3 +1,8 @@
+2008-01-29  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/treeview.tcl: Fix bug in Shift-ButtonPress-1 binding
+	(error if no current focus item; reported on c.l.t.)
+
 2008-01-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/ttk_*.n: Adjusted handling of the standard options part of the
