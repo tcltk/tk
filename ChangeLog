@@ -1,3 +1,8 @@
+2008-01-30  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/canvas.n, doc/listbox.n, doc/message.n: Fix erroneous listing of
+	"standard" options. [Bug 1882495]
+
 2008-01-29  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/treeview.tcl: Fix bug in Shift-ButtonPress-1 binding
