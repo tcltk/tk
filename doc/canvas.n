@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.33 2007/12/30 23:35:05 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.34 2008/01/30 12:00:38 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -17,13 +17,12 @@ canvas \- Create and manipulate canvas widgets
 .SH SYNOPSIS
 \fBcanvas\fR \fIpathName \fR?\fIoptions\fR?
 .SO
-\-background	\-insertborderwidth	\-selectborderwidth
-\-borderwidth	\-insertofftime	\-selectforeground
-\-cursor	\-insertontime	\-takefocus
-\-highlightbackground	\-insertwidth	\-xscrollcommand
-\-highlightcolor	\-relief	\-yscrollcommand
-\-highlightthickness	\-state
-\-insertbackground	\-selectbackground
+\-background	\-borderwidth	\-cursor
+\-highlightbackground	\-highlightcolor	\-highlightthickness
+\-insertbackground	\-insertborderwidth	\-insertofftime
+\-insertontime	\-insertwidth	\-relief
+\-selectbackground	\-selectborderwidth	\-selectforeground
+\-takefocus	\-xscrollcommand	\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-closeenough closeEnough CloseEnough
@@ -83,7 +82,6 @@ are selected) will also be \fByScrollIncrement\fR.  If the value of
 this option is less than or equal to zero, then vertical scrolling
 is unconstrained.
 .BE
-
 .SH INTRODUCTION
 .PP
 The \fBcanvas\fR command creates a new window (given
@@ -1845,9 +1843,7 @@ Tk's canvas widget is a blatant ripoff of ideas from Joel Bartlett's
 environment and preceded canvases by a year or two.  Its simple
 mechanisms for placing and animating graphical objects inspired the
 functions of canvases.
-
 .SH "SEE ALSO"
 bind(n), font(n), image(n), scrollbar(n)
-
 .SH KEYWORDS
 canvas, widget
