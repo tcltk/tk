@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.35 2007/12/13 15:26:27 dgp Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.36 2008/01/31 23:33:42 hobbs Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -301,7 +301,8 @@ proc ::tk::MessageBox {args} {
     if {$data(-icon) ne ""} {
 	if {$windowingsystem eq "aqua"
 		|| ([winfo depth $w] < 4) || $tk_strictMotif} {
-	    ttk::label $w.bitmap -bitmap $data(-icon) -background $bg
+	    # ttk::label has no -bitmap option
+	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
 	    canvas $w.bitmap -width 32 -height 32 -highlightthickness 0 \
 		    -background $bg
