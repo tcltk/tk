@@ -1,5 +1,8 @@
 2008-01-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* library/msgbox.tcl (::tk::MessageBox): don't use ttk::label in
+	low depth/aqua fallback, as it doesn't support -bitmap.
+
 	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): pass "" instead of NULL
 	when -title isn't set.  [Bug #1881892]
 
