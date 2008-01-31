@@ -1,3 +1,8 @@
+2008-01-31  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): pass "" instead of NULL
+	when -title isn't set.  [Bug #1881892]
+
 2008-01-31  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/panedwindow.n: Added proper description of -height and -width
