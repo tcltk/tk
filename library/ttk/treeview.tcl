@@ -1,4 +1,4 @@
-# $Id: treeview.tcl,v 1.2.2.1 2008/01/23 16:39:12 dgp Exp $
+# $Id: treeview.tcl,v 1.2.2.2 2008/01/31 02:59:18 dgp Exp $
 #
 # ttk::treeview widget bindings and utilities.
 #
@@ -286,7 +286,7 @@ proc ttk::treeview::select.extend.extended {w item} {
     if {[set anchor [$w focus]] ne ""} {
 	$w selection set [between $w $anchor $item]
     } else {
-    	BrowseTo $item
+    	BrowseTo $w $item
     }
 }
 
