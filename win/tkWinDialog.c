@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.44.2.4 2007/12/05 20:26:46 dgp Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.44.2.5 2008/02/01 16:09:26 dgp Exp $
  *
  */
 
@@ -2202,7 +2202,7 @@ Tk_MessageBoxObjCmd(
     tsdPtr->hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
     winCode = MessageBoxW(hWnd, Tcl_GetUnicode(tmpObj),
-	    titleObj ? Tcl_GetUnicode(titleObj) : NULL, flags);
+	    titleObj ? Tcl_GetUnicode(titleObj) : L"", flags);
     UnhookWindowsHookEx(tsdPtr->hMsgBoxHook);
     (void) Tcl_SetServiceMode(oldMode);
 
