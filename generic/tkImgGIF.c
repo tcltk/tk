@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.40 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.41 2008/02/01 16:53:53 rmax Exp $
  */
 
 #include "tkInt.h"
@@ -879,6 +879,12 @@ ReadImage(
 		Tcl_PosixError(interp), NULL);
 	return TCL_ERROR;
     }
+
+    if (initialCodeSize > MAX_LWZ_BITS) {
+	Tcl_SetResult(interp, "malformed image", TCL_STATIC);
+	return TCL_ERROR;
+    }
+
     if (transparent != -1) {
 	cmap[transparent][CM_RED] = 0;
 	cmap[transparent][CM_GREEN] = 0;
