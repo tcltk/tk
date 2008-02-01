@@ -1,3 +1,8 @@
+2008-02-01  Reinhard Max  <max@suse.de>
+
+	* generic/tkImgGIF.c: Fixed a buffer overflow (CVE-2006-4484).
+	* tests/imgPhoto.test: Added a test for the above.
+
 2008-01-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/msgbox.tcl (::tk::MessageBox): don't use ttk::label in
