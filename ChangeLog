@@ -1,3 +1,9 @@
+2008-02-01  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.1 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for 8.5.1 release.
+
 2008-02-01  Reinhard Max  <max@suse.de>
 
 	* generic/tkImgGIF.c: Fixed a buffer overflow (CVE-2006-4484).
@@ -49,7 +55,7 @@
 	GetTkFontMetrics(). Removed write-only struct UnixFtFont member
 	'drawable'. Removed unneeded double-pointer indirections. Ensure that
 	TkFontAttributes.family member is a Tk_Uid, as specified. Use
-	FcTypeDouble for XFT_SIZE attribute. Finally: fix [Bug 835848]
+	FcTypeDouble for XFT_SIZE attribute. Finally: fix [Bug 1835848]
 
 2008-01-25  Don Porter  <dgp@users.sourceforge.net>
 
