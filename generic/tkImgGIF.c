@@ -29,7 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.5 2007/09/11 18:01:45 rmax Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.6 2008/02/01 16:59:58 rmax Exp $
  */
 
 /*
@@ -826,6 +826,12 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
 		Tcl_PosixError(interp), (char *) NULL);
 	return TCL_ERROR;
     }
+
+    if (initialCodeSize > MAX_LWZ_BITS) {
+	Tcl_SetResult(interp, "malformed image", TCL_STATIC);
+	return TCL_ERROR;
+    }
+
     if (transparent != -1) {
 	cmap[transparent][CM_RED] = 0;
 	cmap[transparent][CM_GREEN] = 0;
