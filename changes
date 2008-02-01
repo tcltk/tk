@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.123 2008/01/25 17:57:04 dgp Exp $
+RCS: @(#) $Id: changes,v 1.124 2008/02/01 22:11:26 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6473,5 +6473,13 @@ Several documentation and release notes improvements
 2008-01-08 (bug fix)[1865898,1679067] button size & state (english)
 
 2008-01-08 (bug fix)[1867122] [labelframe -style] crash (english,rib)
+
+2008-01-27 (bug fix)[1835848] size value returned by [font actual] (english)
+
+2008-01-27 (bug fix)[1878298] [notebook] redraws on tab visibility (english)
+
+2008-01-31 (bug fix)[1881892] messagebox default title (hobbs)
+
+2008-02-01 (bug fix)[CVE-2006-4484] buffer overflow in GIF format (max)
 
 --- Released 8.5.1, February 1, 2008 --- See ChangeLog for details ---
