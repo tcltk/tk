@@ -6,7 +6,7 @@
 	See the file "license.terms" for information on usage and redistribution of
 	this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-	RCS: @(#) $Id: Wish-Info.plist.in,v 1.1.2.3 2007/04/29 02:26:47 das Exp $
+	RCS: @(#) $Id: Wish-Info.plist.in,v 1.1.2.4 2008/02/02 23:59:11 das Exp $
 -->
 <plist version="1.0">
 <dict>
@@ -51,6 +51,10 @@ Copyright © 2001-2002, Apple Computer, Inc.</string>
 	<string>com.tcltk.wish</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		@CFBUNDLELOCALIZATIONS@
+	</array>
 	<key>CFBundleName</key>
 	<string>Wish</string>
 	<key>CFBundlePackageType</key>
