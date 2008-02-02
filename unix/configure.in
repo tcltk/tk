@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.148 2008/01/02 19:07:19 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.149 2008/02/02 23:58:56 das Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -577,8 +577,10 @@ if test "`uname -s`" = "Darwin" ; then
     echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
-    AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in])
     EXTRA_APP_CC_SWITCHES='-mdynamic-no-pic'
+    AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in])
+    for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
+    TK_YEAR="`date +%Y`"
 fi
 
 if test "$FRAMEWORK_BUILD" = "1" ; then
@@ -623,7 +625,6 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
         EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing ${WISH_RSRC_FILE} to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "${WISH_RSRC_FILE}" "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
-    TK_YEAR="`date +%Y`"
     # Don't use AC_DEFINE for the following as the framework version define 
     # needs to go into the Makefile even when using autoheader, so that we  
     # can pick up a potential make override of VERSION. Also, don't put this
@@ -741,6 +742,7 @@ AC_SUBST(EXTRA_INSTALL)
 AC_SUBST(EXTRA_INSTALL_BINARIES)
 AC_SUBST(EXTRA_BUILD_HTML)
 AC_SUBST(EXTRA_WISH_LIBS)
+AC_SUBST(CFBUNDLELOCALIZATIONS)
 
 AC_SUBST(TK_RSRC_FILE)
 AC_SUBST(WISH_RSRC_FILE)

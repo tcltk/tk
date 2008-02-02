@@ -1,6 +1,16 @@
-2008-02-01  Don Porter  <dgp@users.sourceforge.net>
+2007-02-02  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.5.1 TAGGED FOR RELEASE ***
+
+	* macosx/Wish-Info.plist.in:	add CFBundleLocalizations key, listing
+	* unix/configure.in (Darwin): 	all library/msgs locales.
+
+	* unix/configure.in (Darwin):	correct Info.plist year substitution in
+					non-framework builds.
+
+	* unix/configure:		autoconf-2.59
+
+2008-02-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.1 release.
 
@@ -15,7 +25,7 @@
 	low depth/aqua fallback, as it doesn't support -bitmap.
 
 	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): pass "" instead of NULL
-	when -title isn't set.  [Bug #1881892]
+	when -title isn't set.  [Bug 1881892]
 
 2008-01-31  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
