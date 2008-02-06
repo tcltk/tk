@@ -1,4 +1,19 @@
-2007-02-02  Daniel Steffen  <das@users.sourceforge.net>
+2008-02-06  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.4.18 TAGGED FOR RELEASE ***
+
+	* README:		Bump version number to 8.4.18
+	* generic/tk.h:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.13
+	* win/configure:
+
+	* changes:		updates for 8.4.18 release.
+
+2008-02-02  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish-Info.plist.in:	add CFBundleLocalizations key, listing
 	* unix/configure.in (Darwin): 	all library/msgs locales.
