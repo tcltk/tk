@@ -25,7 +25,7 @@
 
 2008-02-01  Reinhard Max  <max@suse.de>
 
-	* generic/tkImgGIF.c: Fixed a buffer overflow (CVE-2006-4484).
+	* generic/tkImgGIF.c: Fixed a buffer overflow (CVE-2008-0553).
 	* tests/imgPhoto.test: Added a test for the above.
 
 2007-12-31  Don Porter  <dgp@users.sourceforge.net>
