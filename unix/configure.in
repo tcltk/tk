@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.83.2.46 2008/02/02 23:59:12 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.83.2.47 2008/02/06 15:31:41 dgp Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.13)
@@ -11,7 +11,7 @@ AC_PREREQ(2.13)
 TK_VERSION=8.4
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=4
-TK_PATCH_LEVEL=".17"
+TK_PATCH_LEVEL=".18"
 VERSION=${TK_VERSION}
 LOCALES="cs de el en en_gb eo es fr hu it nl pl pt ru"
 

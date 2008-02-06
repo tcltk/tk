@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.51 2007/12/31 17:35:20 das Exp $
+RCS: @(#) $Id: changes,v 1.64.2.52 2008/02/06 15:31:40 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6150,3 +6150,7 @@ use (hobbs)
 2007-12-18 (bug fix)[1845899] Aqua: [wm transient] (steffen)
 
 --- Released 8.4.17, January 4, 2008 --- See ChangeLog for details ---
+
+2008-02-01 (bug fix)[CVE-2008-0553] buffer overflow in GIF format (max)
+
+--- Released 8.4.18, February 8, 2008 --- See ChangeLog for details ---
