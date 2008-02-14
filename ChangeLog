@@ -1,3 +1,7 @@
+2008-02-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* unix/README: Documented missing configure flags.
+
 2008-02-06  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* doc/ttk_scale.n (new file): Added basic documentation. [Bug 1881925]
