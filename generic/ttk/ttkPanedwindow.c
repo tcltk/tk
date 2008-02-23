@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.13 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkPanedwindow.c,v 1.14 2008/02/23 17:35:28 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -12,8 +12,6 @@
 #include "ttkManager.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
-
-#define MIN_SASH_THICKNESS 5
 
 /*------------------------------------------------------------------------
  * +++ Layout algorithm.
@@ -570,11 +568,6 @@ static Ttk_Layout PanedGetLayout(
 	}
     }
 
-    /* Sanity-check:
-     */
-    if (pw->paned.sashThickness < MIN_SASH_THICKNESS)
-	pw->paned.sashThickness = MIN_SASH_THICKNESS;
-
     return panedLayout;
 }
 
@@ -899,6 +892,8 @@ static WidgetSpec PanedWidgetSpec =
  * +++ Elements and layouts.
  */
 
+static const int DEFAULT_SASH_THICKNESS = 5;
+
 typedef struct {
     Tcl_Obj *thicknessObj;
 } SashElement;
@@ -914,7 +909,7 @@ static void SashElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SashElement *sash = elementRecord;
-    int thickness = MIN_SASH_THICKNESS;
+    int thickness = DEFAULT_SASH_THICKNESS;
     Tcl_GetIntFromObj(NULL, sash->thicknessObj, &thickness);
     *widthPtr = *heightPtr = thickness;
 }
