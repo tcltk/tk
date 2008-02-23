@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_combobox.n,v 1.14 2008/01/29 15:38:00 dkf Exp $
+'\" RCS: @(#) $Id: ttk_combobox.n,v 1.15 2008/02/23 18:41:06 jenglish Exp $
 '\"
 .so man.macros
 .TH ttk::combobox n 8.5 Tk "Tk Themed Widget"
@@ -99,7 +99,8 @@ widget commands (see \fIttk::entry(n)\fR for details):
 .SH "VIRTUAL EVENTS"
 The combobox widget generates a \fB<<ComboboxSelected>>\fR virtual event
 when the user selects an element from the list of values.
-This event is generated after the listbox is unposted.
+If the selection action unposts the listbox,
+this event is delivered after the listbox is unposted.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::entry(n)
 .SH KEYWORDS
