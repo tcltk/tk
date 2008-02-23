@@ -1,5 +1,12 @@
 2008-02-23  Joe English  <jenglish@users.sourceforge.net>
 
+	* library/ttk/combobox.tcl, doc/ttk_combobox.n,
+	tests/ttk/combobox.test: Arrange to deliver <<ComboboxSelected>>
+	event after listbox is unposted, as intended [Bug 1890211].
+	Clarified documentation.
+
+2008-02-23  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/ttk/ttkPanedWindow.c: Don't enforce minimum sash 
 	thickness of 5 pixels, just use 5 as a default  [FR 1898288]
 
