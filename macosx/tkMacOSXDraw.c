@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.30 2007/11/09 06:26:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.31 2008/02/27 00:12:59 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -45,7 +45,7 @@ int tkMacOSXUseCGDrawing = 1;
 
 int tkPictureIsOpen;
 
-static PixPatHandle penPat = NULL;
+static PixPatHandle penPat = NULL, tmpPixPat = NULL;
 
 static int cgAntiAliasLimit = 0;
 #define notAA(w) ((w) < cgAntiAliasLimit)
@@ -1504,20 +1504,27 @@ TkMacOSXSetUpGraphicsPort(
     GC gc,			/* GC to apply to current port. */
     GWorldPtr destPort)
 {
+    CGrafPtr savePort;
+    Boolean portChanged;
+
+    portChanged = QDSwapPort(destPort, &savePort);
     PenNormal();
     if (gc) {
-	if (penPat == NULL) {
-	    penPat = NewPixPat();
+	if (!penPat) {
+	    if (!tmpPixPat) {
+		penPat = NewPixPat();
+	    } else {
+		penPat = tmpPixPat;
+		tmpPixPat = NULL;
+	    }
 	}
 	TkMacOSXSetColorInPort(gc->foreground, 1, penPat, destPort);
-	SetPortPenPixPat(destPort, penPat);
+	PenPixPat(penPat);
 	if(gc->function == GXxor) {
-	    SetPortPenMode(destPort, patXor);
+	    PenMode(patXor);
 	}
 	if (gc->line_width > 1) {
-	    Point s = {gc->line_width, gc->line_width};
-
-	    SetPortPenSize(destPort, s);
+	    PenSize(gc->line_width, gc->line_width);
 	}
 	if (gc->line_style != LineSolid) {
 	    /*
@@ -1525,6 +1532,9 @@ TkMacOSXSetUpGraphicsPort(
 	     * environment. This is not possible with QuickDraw line drawing.
 	     */
 	}
+    }
+    if (portChanged) {
+	QDSwapPort(savePort, NULL);
     }
 }
 
@@ -1578,7 +1588,7 @@ TkMacOSXSetupDrawingContext(
 	goto end;
     }
     if (useCG) {
-	dc.context = macDraw->context;;
+	dc.context = macDraw->context;
     }
     if (!dc.context || !(macDraw->flags & TK_IS_PIXMAP)) {
 	dc.port = TkMacOSXGetDrawablePort(d);
@@ -1745,7 +1755,11 @@ TkMacOSXRestoreDrawingContext(
 	    DisposeRgn(dcPtr->saveClip);
 	}
 	if (dcPtr->penPat) {
-	    DisposePixPat(dcPtr->penPat);
+	    if (!tmpPixPat) {
+		tmpPixPat = dcPtr->penPat;
+	    } else {
+		DisposePixPat(dcPtr->penPat);
+	    }
 	}
 	if (dcPtr->saveState) {
 	    ChkErr(SetThemeDrawingState, dcPtr->saveState, true);
@@ -1758,7 +1772,7 @@ TkMacOSXRestoreDrawingContext(
 	QDSwapPort(dcPtr->savePort, NULL);
     }
 #ifdef TK_MAC_DEBUG
-    bzero(dcPtr, sizeof(dcPtr));
+    bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
 #endif /* TK_MAC_DEBUG */
 }
 
