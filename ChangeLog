@@ -1,3 +1,8 @@
+2008-02-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/demos/widget:  Added a Knight's tour canvas demo.
+	* library/demos/knightstour.tcl:
+
 2008-02-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDraw.c: workaround leak in Carbon SetPortPenPixPat()
