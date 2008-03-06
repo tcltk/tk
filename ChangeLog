@@ -1,3 +1,8 @@
+2008-03-06  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/ttk_notebook.n: Move "TAB IDENTIFIERS" section
+	above "WIDGET COMMAND" section [Bug 1882011].
+
 2008-02-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/demos/widget:  Added a Knight's tour canvas demo.

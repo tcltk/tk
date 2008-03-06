@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_notebook.n,v 1.11 2008/01/29 15:38:00 dkf Exp $
+'\" RCS: @(#) $Id: ttk_notebook.n,v 1.12 2008/03/06 16:33:30 jenglish Exp $
 '\" 
 .so man.macros
 .TH ttk::notebook n 8.5 Tk "Tk Themed Widget"
@@ -79,6 +79,27 @@ Specifies the integer index (0-based) of a character to underline
 in the text string.
 The underlined character is used for mnemonic activation
 if \fBttk::notebook::enableTraversal\fR is called.
+.SH "TAB IDENTIFIERS"
+The \fItabid\fR argument to the following commands may take
+any of the following forms:
+.IP \(bu
+An integer between zero and the number of tabs;
+.IP \(bu
+The name of a slave window;
+.IP \(bu
+A positional specification of the form
+.QW @\fIx\fR,\fIy\fR ,
+which identifies the tab 
+.IP \(bu
+The literal string
+.QW \fBcurrent\fR ,
+which identifies the currently-selected tab; or:
+.IP \(bu
+The literal string
+.QW \fBend\fR ,
+which returns the number of tabs 
+(only valid for
+.QW "\fIpathname \fBindex\fR" ).
 .SH "WIDGET COMMAND"
 .TP
 \fIpathname \fBadd\fR \fIwindow\fR ?\fIoptions...\fR?
@@ -161,27 +182,6 @@ Multiple notebooks in a single toplevel may be enabled for traversal,
 including nested notebooks.  
 However, notebook traversal only works properly if all panes
 are direct children of the notebook.
-.SH "TAB IDENTIFIERS"
-The \fItabid\fR argument to the above commands may take
-any of the following forms:
-.IP \(bu
-An integer between zero and the number of tabs;
-.IP \(bu
-The name of a slave window;
-.IP \(bu
-A positional specification of the form
-.QW @\fIx\fR,\fIy\fR ,
-which identifies the tab 
-.IP \(bu
-The literal string
-.QW \fBcurrent\fR ,
-which identifies the currently-selected tab; or:
-.IP \(bu
-The literal string
-.QW \fBend\fR ,
-which returns the number of tabs 
-(only valid for
-.QW "\fIpathname \fBindex\fR" ).
 .SH "VIRTUAL EVENTS"
 The notebook widget generates a \fB<<NotebookTabChanged>>\fR
 virtual event after a new tab is selected.
