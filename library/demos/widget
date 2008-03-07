@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.29.2.8 2007/12/06 07:00:05 dgp Exp $
+# RCS: @(#) $Id: widget,v 1.29.2.9 2008/03/07 22:03:49 dgp Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -358,6 +358,7 @@ addFormattedText {
     @@demo ruler	A ruler with adjustable tab stops
     @@demo floor	A building floor plan
     @@demo cscroll	A simple scrollable canvas
+    @@demo knightstour  A Knight's tour of the chess board
 
     @@subtitle	Scales and Progress Bars
     @@demo hscale	Horizontal scale
