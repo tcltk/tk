@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.3.2.4 2007/11/12 19:22:38 dgp Exp $
+# $Id: combobox.tcl,v 1.3.2.5 2008/03/07 22:03:49 dgp Exp $
 #
 # Combobox bindings.
 #
@@ -169,7 +169,7 @@ proc ttk::combobox::SelectEntry {cb index} {
     $cb current $index
     $cb selection range 0 end
     $cb icursor end
-    event generate $cb <<ComboboxSelected>>
+    event generate $cb <<ComboboxSelected>> -when mark
 }
 
 ## Scroll -- Mousewheel binding
