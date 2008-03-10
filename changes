@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.125 2008/02/04 21:44:01 dgp Exp $
+RCS: @(#) $Id: changes,v 1.126 2008/03/10 19:14:27 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6483,3 +6483,9 @@ Several documentation and release notes improvements
 2008-02-01 (bug fix)[CVE-2008-0553] buffer overflow in GIF format (max)
 
 --- Released 8.5.1, February 5, 2008 --- See ChangeLog for details ---
+
+2008-02-27 (bug fix)[1863346] Aqua: memleak in text drawing (steffen)
+
+2008-02-29 (enhancement) Knight's tour demo (thoyts)
+
+--- Released 8.5.2, March 14, 2008 --- See ChangeLog for details ---
