@@ -1,7 +1,15 @@
+2008-03-10  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.2 release.
+
+2008-03-07  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* doc/colors.n: Reworked to produce nicer HTML output.
+
 2008-03-06  Joe English  <jenglish@users.sourceforge.net>
 
-	* doc/ttk_notebook.n: Move "TAB IDENTIFIERS" section
-	above "WIDGET COMMAND" section [Bug 1882011].
+	* doc/ttk_notebook.n: Move "TAB IDENTIFIERS" section above "WIDGET
+	COMMAND" section [Bug 1882011].
 
 2008-02-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -16,14 +24,14 @@
 2008-02-23  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl, doc/ttk_combobox.n,
-	tests/ttk/combobox.test: Arrange to deliver <<ComboboxSelected>>
-	event after listbox is unposted, as intended [Bug 1890211].
-	Clarified documentation.
+	* tests/ttk/combobox.test: Arrange to deliver <<ComboboxSelected>>
+	event after listbox is unposted, as intended [Bug 1890211]. Clarified
+	documentation.
 
 2008-02-23  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkPanedWindow.c: Don't enforce minimum sash 
-	thickness of 5 pixels, just use 5 as a default  [FR 1898288]
+	* generic/ttk/ttkPanedWindow.c: Don't enforce minimum sash thickness
+	of 5 pixels, just use 5 as a default. [FR 1898288]
 
 2008-02-14  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
