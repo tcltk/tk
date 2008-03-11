@@ -600,6 +600,7 @@
 		F9099B8A0CC67D30005A9580 /* textpeer.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = textpeer.tcl; sourceTree = "<group>"; };
 		F9099B8B0CC67D3E005A9580 /* ttkbut.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttkbut.tcl; sourceTree = "<group>"; };
 		F91E62260C1AE686006C9D96 /* Tclsh-Info.plist.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = "Tclsh-Info.plist.in"; sourceTree = "<group>"; };
+		F92240290D7C620F005EC715 /* knightstour.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = knightstour.tcl; sourceTree = "<group>"; };
 		F936FCD70CCD984500716967 /* ttkprogress.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ttkprogress.tcl; sourceTree = "<group>"; };
 		F936FCD80CCD984600716967 /* tree.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tree.tcl; sourceTree = "<group>"; };
 		F936FCD90CCD984600716967 /* toolbar.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = toolbar.tcl; sourceTree = "<group>"; };
@@ -2096,7 +2097,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2007 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.35 2007/12/13 15:27:54 dgp Exp $\n";
+			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.36 2008/03/11 22:30:57 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2490,6 +2491,7 @@
 				F966BB3508F27A39005CB29B /* image2.tcl */,
 				F966BB4208F27A3A005CB29B /* items.tcl */,
 				F966BB4308F27A3A005CB29B /* ixset */,
+				F92240290D7C620F005EC715 /* knightstour.tcl */,
 				F966BB4408F27A3A005CB29B /* label.tcl */,
 				F966BB4508F27A3A005CB29B /* labelframe.tcl */,
 				F9D1360A0CDC252C00DBE0B5 /* mclist.tcl */,
@@ -3979,7 +3981,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "gnumake -C \"${TK_SRCROOT}/macosx\"  -j \"$(sysctl -n hw.activecpu)\" \"$(echo \"${ACTION}\" | sed -e s/build// -e s/clean/distclean/ -e s/..\\*/\\&-/)${MAKE_TARGET}\" CFLAGS_WARNING=\"${WARNING_CFLAGS}\" SYMROOT=\"${BUILT_PRODUCTS_DIR}\" OBJ_DIR=\"${OBJECT_FILE_DIR}\" INSTALL_ROOT=\"${DSTROOT}\" PREFIX=\"${PREFIX}\" BINDIR=\"${BINDIR}\" LIBDIR=\"${FRAMEWORK_INSTALL_PATH}\" MANDIR=\"${MANDIR}\" EXTRA_CONFIGURE_ARGS=\"${CONFIGURE_ARGS}\" APPLICATION_INSTALL_PATH=\"${APPLICATION_INSTALL_PATH}\" TCL_BUILD_DIR=\"${TCL_BUILD_DIR}\" TCL_FRAMEWORK_DIR=\"${TCL_FRAMEWORK_DIR}\" ${EXTRA_MAKE_FLAGS}\nresult=$?\nif [ -e \"${BUILT_PRODUCTS_DIR}/tktest\" ]; then\n\trm -f \"${BUILT_PRODUCTS_DIR}/tktest\"\nfi\necho \"Done\"\nexit ${result}\n";
+			shellScript = "gnumake -C \"${TK_SRCROOT}/macosx\"  -j \"$(sysctl -n hw.activecpu)\" \"$(echo \"${ACTION}\" | sed -e s/build// -e s/clean/distclean/ -e s/..\\*/\\&-/)${MAKE_TARGET}\" CFLAGS_WARNING=\"${WARNING_CFLAGS}\" CFLAGS_OPTIMIZE=\"-O${GCC_OPTIMIZATION_LEVEL}\" SYMROOT=\"${BUILT_PRODUCTS_DIR}\" OBJ_DIR=\"${OBJECT_FILE_DIR}\" INSTALL_ROOT=\"${DSTROOT}\" PREFIX=\"${PREFIX}\" BINDIR=\"${BINDIR}\" LIBDIR=\"${FRAMEWORK_INSTALL_PATH}\" MANDIR=\"${MANDIR}\" EXTRA_CONFIGURE_ARGS=\"${CONFIGURE_ARGS}\" APPLICATION_INSTALL_PATH=\"${APPLICATION_INSTALL_PATH}\" TCL_BUILD_DIR=\"${TCL_BUILD_DIR}\" TCL_FRAMEWORK_DIR=\"${TCL_FRAMEWORK_DIR}\" ${EXTRA_MAKE_FLAGS}\nresult=$?\nif [ -e \"${BUILT_PRODUCTS_DIR}/tktest\" ]; then\n\trm -f \"${BUILT_PRODUCTS_DIR}/tktest\"\nfi\necho \"Done\"\nexit ${result}\n";
 			showEnvVarsInLog = 0;
 		};
 		F9A5C5F508F651A2008AE941 /* ShellScript */ = {
@@ -4808,6 +4810,247 @@
 			};
 			name = DebugNoFixZL;
 		};
+		F98A2A230D85F1CB002A40A7 /* Debug gcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURE_ARGS = "tcl_cv_cc_visibility_hidden=no $(CONFIGURE_ARGS)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"__private_extern__=extern",
+					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/usr/X11R6/include,
+					/usr/X11R6/include/freetype2,
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/X11R6/lib,
+					"$(LIBRARY_SEARCH_PATHS)",
+				);
+				PRODUCT_NAME = "tktest-X11";
+				ZERO_LINK = YES;
+			};
+			name = "Debug gcc42";
+		};
+		F98A2A270D85F1DB002A40A7 /* Debug llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURE_ARGS = "tcl_cv_cc_visibility_hidden=no $(CONFIGURE_ARGS)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"__private_extern__=extern",
+					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/usr/X11R6/include,
+					/usr/X11R6/include/freetype2,
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/X11R6/lib,
+					"$(LIBRARY_SEARCH_PATHS)",
+				);
+				PRODUCT_NAME = "tktest-X11";
+				ZERO_LINK = YES;
+			};
+			name = "Debug llvmgcc42";
+		};
+		F98A2A2B0D85F1E7002A40A7 /* ReleaseUniversal gcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					ppc64,
+					i386,
+					x86_64,
+				);
+				CFLAGS = "-arch ppc -arch ppc64 -arch i386 -arch x86_64 $(CFLAGS)";
+				HEADER_SEARCH_PATHS = (
+					/usr/X11R6/include,
+					/usr/X11R6/include/freetype2,
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/X11R6/lib,
+					"$(LIBRARY_SEARCH_PATHS)",
+				);
+				PRODUCT_NAME = "tktest-X11";
+			};
+			name = "ReleaseUniversal gcc42";
+		};
+		F98A2A2F0D85F1EC002A40A7 /* ReleaseUniversal llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+					x86_64,
+				);
+				CFLAGS = "-arch ppc -arch i386 -arch x86_64 $(CFLAGS)";
+				HEADER_SEARCH_PATHS = (
+					/usr/X11R6/include,
+					/usr/X11R6/include/freetype2,
+					"$(HEADER_SEARCH_PATHS)",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/X11R6/lib,
+					"$(LIBRARY_SEARCH_PATHS)",
+				);
+				PRODUCT_NAME = "tktest-X11";
+			};
+			name = "ReleaseUniversal llvmgcc42";
+		};
+		F9988AB10D814C6500B6B03B /* Debug gcc42 */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
+			buildSettings = {
+				GCC_VERSION = 4.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				PREBINDING = NO;
+			};
+			name = "Debug gcc42";
+		};
+		F9988AB20D814C6500B6B03B /* Debug gcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = "Debug gcc42";
+		};
+		F9988AB30D814C6500B6B03B /* Debug gcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURE_ARGS = "tcl_cv_cc_visibility_hidden=no $(CONFIGURE_ARGS)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"__private_extern__=extern",
+					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS_AQUA)",
+					"$(OTHER_LDFLAGS)",
+				);
+				PRODUCT_NAME = tktest;
+				ZERO_LINK = YES;
+			};
+			name = "Debug gcc42";
+		};
+		F9988AB50D814C7500B6B03B /* Debug llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */;
+			buildSettings = {
+				GCC = "$(DEVELOPER_DIR)/usr/bin/llvm-gcc";
+				GCC_VERSION = 4.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				PREBINDING = NO;
+			};
+			name = "Debug llvmgcc42";
+		};
+		F9988AB60D814C7500B6B03B /* Debug llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = "Debug llvmgcc42";
+		};
+		F9988AB70D814C7500B6B03B /* Debug llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURE_ARGS = "tcl_cv_cc_visibility_hidden=no $(CONFIGURE_ARGS)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"__private_extern__=extern",
+					"$(GCC_PREPROCESSOR_DEFINITIONS)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS_AQUA)",
+					"$(OTHER_LDFLAGS)",
+				);
+				PRODUCT_NAME = tktest;
+				ZERO_LINK = YES;
+			};
+			name = "Debug llvmgcc42";
+		};
+		F9988BB10D81586D00B6B03B /* ReleaseUniversal gcc42 */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				CFLAGS = "-arch ppc -arch i386 $(CFLAGS)";
+				GCC_VERSION = 4.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				PREBINDING = NO;
+			};
+			name = "ReleaseUniversal gcc42";
+		};
+		F9988BB20D81586D00B6B03B /* ReleaseUniversal gcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = "ReleaseUniversal gcc42";
+		};
+		F9988BB30D81586D00B6B03B /* ReleaseUniversal gcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS_AQUA)",
+					"$(OTHER_LDFLAGS)",
+				);
+				PRODUCT_NAME = tktest;
+			};
+			name = "ReleaseUniversal gcc42";
+		};
+		F9988BB50D81587400B6B03B /* ReleaseUniversal llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				CFLAGS = "-arch ppc -arch i386 $(CFLAGS)";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC = "$(DEVELOPER_DIR)/usr/bin/llvm-gcc";
+				GCC_OPTIMIZATION_LEVEL = 4;
+				GCC_VERSION = 4.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_CFLAGS = "-emit-llvm";
+				PREBINDING = NO;
+				TCL_CONFIGURE_ARGS = "$(TCL_CONFIGURE_ARGS) --disable-dtrace";
+			};
+			name = "ReleaseUniversal llvmgcc42";
+		};
+		F9988BB60D81587400B6B03B /* ReleaseUniversal llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Wish;
+			};
+			name = "ReleaseUniversal llvmgcc42";
+		};
+		F9988BB70D81587400B6B03B /* ReleaseUniversal llvmgcc42 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_LDFLAGS = (
+					"$(OTHER_LDFLAGS_AQUA)",
+					"$(OTHER_LDFLAGS)",
+				);
+				PRODUCT_NAME = tktest;
+			};
+			name = "ReleaseUniversal llvmgcc42";
+		};
 		F99EE73B0BE835310060D4AF /* DebugUnthreaded */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -5212,12 +5455,16 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F95CC8AC09158F3100EA5ACE /* Debug */,
+				F9988AB20D814C6500B6B03B /* Debug gcc42 */,
+				F9988AB60D814C7500B6B03B /* Debug llvmgcc42 */,
 				F95CC8AE09158F3100EA5ACE /* DebugNoFixZL */,
 				F99EE73B0BE835310060D4AF /* DebugUnthreaded */,
 				F93084370BB93D2800CD0B9E /* DebugMemCompile */,
 				F99EE73C0BE835310060D4AF /* DebugLeaks */,
 				F95CC8AD09158F3100EA5ACE /* Release */,
 				F91BCC4F093152310042A6BF /* ReleaseUniversal */,
+				F9988BB20D81586D00B6B03B /* ReleaseUniversal gcc42 */,
+				F9988BB60D81587400B6B03B /* ReleaseUniversal llvmgcc42 */,
 				F9EEED960C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB62080B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB621F0B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
@@ -5230,12 +5477,16 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F95CC8B109158F3100EA5ACE /* Debug */,
+				F9988AB30D814C6500B6B03B /* Debug gcc42 */,
+				F9988AB70D814C7500B6B03B /* Debug llvmgcc42 */,
 				F95CC8B309158F3100EA5ACE /* DebugNoFixZL */,
 				F99EE73D0BE835310060D4AF /* DebugUnthreaded */,
 				F93084380BB93D2800CD0B9E /* DebugMemCompile */,
 				F99EE73E0BE835310060D4AF /* DebugLeaks */,
 				F95CC8B209158F3100EA5ACE /* Release */,
 				F91BCC50093152310042A6BF /* ReleaseUniversal */,
+				F9988BB30D81586D00B6B03B /* ReleaseUniversal gcc42 */,
+				F9988BB70D81587400B6B03B /* ReleaseUniversal llvmgcc42 */,
 				F9EEED970C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB62090B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB62200B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
@@ -5248,12 +5499,16 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F95CC8B609158F3100EA5ACE /* Debug */,
+				F9988AB10D814C6500B6B03B /* Debug gcc42 */,
+				F9988AB50D814C7500B6B03B /* Debug llvmgcc42 */,
 				F95CC8B809158F3100EA5ACE /* DebugNoFixZL */,
 				F99EE7410BE835310060D4AF /* DebugUnthreaded */,
 				F930843A0BB93D2800CD0B9E /* DebugMemCompile */,
 				F99EE7420BE835310060D4AF /* DebugLeaks */,
 				F95CC8B709158F3100EA5ACE /* Release */,
 				F91BCC51093152310042A6BF /* ReleaseUniversal */,
+				F9988BB10D81586D00B6B03B /* ReleaseUniversal gcc42 */,
+				F9988BB50D81587400B6B03B /* ReleaseUniversal llvmgcc42 */,
 				F9EEED990C2FEFD300396116 /* ReleaseUniversal10.5SDK */,
 				F9DB620A0B65ADA800A370FB /* ReleaseUniversal10.4uSDK */,
 				F9DB62210B65AFDE00A370FB /* ReleasePPC10.3.9SDK */,
@@ -5266,12 +5521,16 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F9FD31E90CC1AD070073837D /* Debug */,
+				F98A2A230D85F1CB002A40A7 /* Debug gcc42 */,
+				F98A2A270D85F1DB002A40A7 /* Debug llvmgcc42 */,
 				F9FD31EA0CC1AD070073837D /* DebugNoFixZL */,
 				F9FD31EB0CC1AD070073837D /* DebugUnthreaded */,
 				F9FD31EC0CC1AD070073837D /* DebugMemCompile */,
 				F9FD31ED0CC1AD070073837D /* DebugLeaks */,
 				F9FD31EE0CC1AD070073837D /* Release */,
 				F9FD31EF0CC1AD070073837D /* ReleaseUniversal */,
+				F98A2A2B0D85F1E7002A40A7 /* ReleaseUniversal gcc42 */,
+				F98A2A2F0D85F1EC002A40A7 /* ReleaseUniversal llvmgcc42 */,
 				F9FD31F00CC1AD070073837D /* ReleaseUniversal10.5SDK */,
 				F9FD31F10CC1AD070073837D /* ReleaseUniversal10.4uSDK */,
 				F9FD31F20CC1AD070073837D /* ReleasePPC10.3.9SDK */,
