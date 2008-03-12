@@ -1,3 +1,8 @@
+2008-03-12  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixRFont.c: Try a fallback font if XftFontOpenPattern()
+	fails in GetFont (workaround for [Bug 1090382]).
+
 2008-03-11  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/demos/knightstour.tcl:	Aqua GOOBE.

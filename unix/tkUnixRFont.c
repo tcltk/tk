@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.23 2008/01/28 15:56:40 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.24 2008/03/12 16:35:27 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -80,10 +80,31 @@ GetFont(
 	i = 0;
     }
     if (!fontPtr->faces[i].ftFont) {
-	FcPattern *pat = FcFontRenderPrepare(0, fontPtr->pattern,
-		fontPtr->faces[i].source);
+	FcPattern *pat = FcFontRenderPrepare(0,
+	    fontPtr->pattern, fontPtr->faces[i].source);
+	XftFont *ftFont = XftFontOpenPattern(fontPtr->display, pat);
 
-	fontPtr->faces[i].ftFont = XftFontOpenPattern(fontPtr->display, pat);
+	if (!ftFont) {
+	    /*
+	     * The previous call to XftFontOpenPattern() should not fail,
+	     * but sometimes does anyway.  Usual cause appears to be
+	     * a misconfigured fontconfig installation; see [Bug 1090382].
+	     * Try a fallback:
+	     */
+	    ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
+			FC_FAMILY, FcTypeString, "sans",
+			FC_SIZE, FcTypeDouble, 12.0,
+			NULL);
+	}
+	if (!ftFont) {
+	    /*
+	     * The previous call should definitely not fail.
+	     * Impossible to proceed at this point.
+	     */
+	    Tcl_Panic("Cannot find a usable font.");
+	}
+
+	fontPtr->faces[i].ftFont = ftFont;
     }
     return fontPtr->faces[i].ftFont;
 }
