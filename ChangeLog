@@ -1,3 +1,9 @@
+2008-03-12  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add support for Xcode 3.1
+	* macosx/Wish.xcodeproj/default.pbxuser: CODE_SIGN_IDENTITY and
+	* macosx/Wish-Common.xcconfig:		 'xcodebuild install'.
+
 2008-03-12  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixRFont.c: Try a fallback font if XftFontOpenPattern()
