@@ -98,7 +98,7 @@ proc MovePiece {dlg last square} {
     if {$next ne -1} {
         variable aid [after $delay [list MovePiece $dlg $square $next]]
     } else {
-        $dlg.b1 configure -state normal
+        $dlg.tf.b1 configure -state normal
         if {[llength $visited] == 64} {
             variable initial
             if {$initial == $square} {
@@ -120,7 +120,7 @@ proc MovePiece {dlg last square} {
 proc Tour {dlg {square {}}} {
     variable visited {}
     $dlg.f.txt delete 1.0 end
-    $dlg.b1 configure -state disabled
+    $dlg.tf.b1 configure -state disabled
     for {set n 0} {$n < 64} {incr n} {
         $dlg.f.c itemconfigure $n -state disabled -outline black
     }
@@ -179,13 +179,14 @@ proc CreateGUI {} {
 
     variable delay 600
     variable continuous 0
-    ttk::label $dlg.ls -text Speed
-    ttk::scale $dlg.sc  -from 8 -to 2000 -command [list SetDelay] \
+    ttk::frame $dlg.tf
+    ttk::label $dlg.tf.ls -text Speed
+    ttk::scale $dlg.tf.sc  -from 8 -to 2000 -command [list SetDelay] \
         -variable [namespace which -variable delay]
-    ttk::checkbutton $dlg.cc -text Repeat \
+    ttk::checkbutton $dlg.tf.cc -text Repeat \
         -variable [namespace which -variable continuous]
-    ttk::button $dlg.b1 -text Start -command [list Tour $dlg]
-    ttk::button $dlg.b2 -text Exit -command [list Exit $dlg]
+    ttk::button $dlg.tf.b1 -text Start -command [list Tour $dlg]
+    ttk::button $dlg.tf.b2 -text Exit -command [list Exit $dlg]
     set square 0
     for {set row 7} {$row != -1} {incr row -1} {
         for {set col 0} {$col < 8} {incr col} {
@@ -194,8 +195,8 @@ proc CreateGUI {} {
             } else {
                 set fill bisque ; set dfill bisque3
             }
-            set coords [list [expr {$col * 30 + 3}] [expr {$row * 30 + 3}] \
-                            [expr {$col * 30 + 29}] [expr {$row * 30 + 29}]]
+            set coords [list [expr {$col * 30 + 4}] [expr {$row * 30 + 4}] \
+                            [expr {$col * 30 + 30}] [expr {$row * 30 + 30}]]
             $c create rectangle $coords -fill $fill -disabledfill $dfill \
                 -width 2 -state disabled
         }
@@ -213,11 +214,20 @@ proc CreateGUI {} {
     grid columnconfigure $f 1 -weight 1
 
     grid $f - - - - - -sticky news
-    set things [list $dlg.ls $dlg.sc $dlg.cc $dlg.b1]
+    set things [list $dlg.tf.ls $dlg.tf.sc $dlg.tf.cc $dlg.tf.b1]
     if {![info exists ::widgetDemo]} {
-        lappend things $dlg.b2 [ttk::sizegrip $dlg.sg]
+	lappend things $dlg.tf.b2
+	if {[tk windowingsystem] ne "aqua"} {
+	    set things [linsert $things 0 [ttk::sizegrip $dlg.tf.sg]]
+	}
     }
-    grid {*}$things -sticky e
+    pack {*}$things -side right
+    if {[tk windowingsystem] eq "aqua"} {
+	pack configure {*}$things -padx {4 4} -pady {12 12}
+	pack configure [lindex $things 0] -padx {4 24}
+	pack configure [lindex $things end] -padx {16 4}
+    }
+    grid $dlg.tf  - - - - - -sticky ew
     if {[info exists ::widgetDemo]} {
         grid [addSeeDismiss $dlg.buttons $dlg] - - - - - -sticky ew
     }
@@ -226,8 +236,8 @@ proc CreateGUI {} {
     grid columnconfigure $dlg 0 -weight 1
 
     bind $dlg <Control-F2> {console show}
-    bind $dlg <Return> [list $dlg.b1 invoke]
-    bind $dlg <Escape> [list $dlg.b2 invoke]
+    bind $dlg <Return> [list $dlg.tf.b1 invoke]
+    bind $dlg <Escape> [list $dlg.tf.b2 invoke]
     bind $dlg <Destroy> [namespace code [list Stop]]
     wm protocol $dlg WM_DELETE_WINDOW [namespace code [list Exit $dlg]]
 
