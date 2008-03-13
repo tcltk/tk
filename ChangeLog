@@ -1,3 +1,41 @@
+2008-03-13  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.2 release.
+
+2008-03-12  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add support for Xcode 3.1
+	* macosx/Wish.xcodeproj/default.pbxuser: CODE_SIGN_IDENTITY and
+	* macosx/Wish-Common.xcconfig:		 'xcodebuild install'.
+
+2008-03-12  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixRFont.c: Try a fallback font if XftFontOpenPattern()
+	fails in GetFont (workaround for [Bug 1090382]).
+
+2008-03-11  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/demos/knightstour.tcl:	Aqua GOOBE.
+	* library/demos/widget:
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add support for Xcode 3.1 and
+	* macosx/Wish.xcodeproj/default.pbxuser: targets for building with
+	* macosx/Wish-Common.xcconfig:		 gcc-4.2 and llvm-gcc-4.2.
+
+	* generic/tkCanvUtil.c:			fix gcc-4.2 warnings.
+
+	* macosx/GNUmakefile:			fix quoting to allow paths to
+	* macosx/Wish-Common.xcconfig:		${builddir}, ${INSTALL_ROOT}
+	* unix/Makefile.in:			and ${TCL_BIN_DIR} to contain
+	* unix/configure.in:			spaces.
+	* unix/install-sh:
+	* unix/tcl.m4:
+
+	* unix/configure:			autoconf-2.59
+
+	* unix/Makefile.in (install-strip):	strip non-global symbols from
+						dynamic library.
+
 2008-03-10  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.2 release.
