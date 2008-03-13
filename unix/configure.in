@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.151 2008/03/11 22:33:23 das Exp $
+# RCS: @(#) $Id: configure.in,v 1.152 2008/03/13 17:44:18 das Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -602,8 +602,8 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     fi
     TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
-    TK_BUILD_LIB_SPEC="-F\"`pwd`\" -framework Tk"
-    TK_LIB_SPEC="-F\"${libdir}\" -framework Tk"
+    TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
+    TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
     TK_PKG_DIR="Resources/Scripts"
@@ -639,18 +639,18 @@ else
         else
             TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
         fi
-        TK_BUILD_LIB_SPEC="-L\"`pwd`\" ${TK_LIB_FLAG}"
-        TK_LIB_SPEC="-L\"${libdir}\" ${TK_LIB_FLAG}"
+        TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+        TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
     else
         TK_BUILD_EXP_FILE="lib.exp"
         eval "TK_EXP_FILE=libtk${TCL_EXPORT_FILE_SUFFIX}"
     
         if test "$GCC" = "yes" ; then
-            TK_BUILD_LIB_SPEC="-Wl,-bI:\"`pwd`\"/${TK_BUILD_EXP_FILE} -L\"`pwd`\""
-            TK_LIB_SPEC="-Wl,-bI:\"${libdir}\"/${TK_EXP_FILE} -L\"`pwd`\""
+            TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd | sed -e 's/ /\\\\ /g'`/${TK_BUILD_EXP_FILE} -L`pwd | sed -e 's/ /\\\\ /g'`"
+            TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L${libdir}"
         else
-            TK_BUILD_LIB_SPEC="-bI:\"`pwd`\"/${TK_BUILD_EXP_FILE}"
-            TK_LIB_SPEC="-bI:\"${libdir}\"/${TK_EXP_FILE}"
+            TK_BUILD_LIB_SPEC="-bI:`pwd | sed -e 's/ /\\\\ /g'`/${TK_BUILD_EXP_FILE}"
+            TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"
         fi
     fi
 fi
@@ -663,8 +663,8 @@ if test $tk_aqua = yes; then
     REZ_FLAGS='-d "SystemSevenOrLater=1" -useDF -ro'
     if test "$SHARED_BUILD" = 0; then
 	EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) "$(LIB_INSTALL_DIR)"'
-	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc \"`pwd`\"/\${TK_RSRC_FILE}"
-	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc \"${libdir}\"/\${TK_RSRC_FILE}"
+	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
+	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"
     else
         TK_SHLIB_LD_EXTRAS="$TK_SHLIB_LD_EXTRAS -sectcreate __TEXT __tk_rsrc \${TK_RSRC_FILE}"
     fi
@@ -685,8 +685,8 @@ else
     TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`"
 fi
 
-TK_BUILD_STUB_LIB_SPEC="-L\"`pwd`\" ${TK_STUB_LIB_FLAG}"
-TK_STUB_LIB_SPEC="-L\"${TK_STUB_LIB_DIR}\" ${TK_STUB_LIB_FLAG}"
+TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
+TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
 TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
