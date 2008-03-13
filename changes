@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.127 2008/03/11 22:37:12 das Exp $
+RCS: @(#) $Id: changes,v 1.128 2008/03/13 14:56:00 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6487,5 +6487,7 @@ Several documentation and release notes improvements
 2008-02-27 (bug fix)[1863346] Aqua: memleak in QD drawing (steffen)
 
 2008-02-29 (enhancement) Knight's tour demo (thoyts)
+
+2008-03-12 (bug fix)[1090382] crash when GetFont() fails (jenglish)
 
 --- Released 8.5.2, March 14, 2008 --- See ChangeLog for details ---
