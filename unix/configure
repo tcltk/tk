@@ -1506,13 +1506,13 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
 		    for i in "`cd "${TCL_BIN_DIR}"; pwd`" \
 			     "`cd "${TCL_BIN_DIR}"/../..; pwd`"; do
 			if test "`basename "$i"`" = "${TCL_LIB_FILE}.framework"; then
-			    TCL_LIB_SPEC="-F\"`dirname "$i"`\" -framework ${TCL_LIB_FILE}"
+			    TCL_LIB_SPEC="-F`dirname "$i" | sed -e 's/ /\\\\ /g'` -framework ${TCL_LIB_FILE}"
 			    break
 			fi
 		    done
 		fi
 		if test -f "${TCL_BIN_DIR}/${TCL_STUB_LIB_FILE}"; then
-		    TCL_STUB_LIB_SPEC="-L\"${TCL_BIN_DIR}\" ${TCL_STUB_LIB_FLAG}"
+		    TCL_STUB_LIB_SPEC="-L`echo "${TCL_BIN_DIR}"  | sed -e 's/ /\\\\ /g'` ${TCL_STUB_LIB_FLAG}"
 		    TCL_STUB_LIB_PATH="${TCL_BIN_DIR}/${TCL_STUB_LIB_FILE}"
 		fi
 		;;
@@ -1521,9 +1521,9 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
 
     # eval is required to do the TCL_DBGX substitution
     eval "TCL_LIB_FLAG=\"${TCL_LIB_FLAG}\""
-    eval "TCL_LIB_SPEC=\"`echo "${TCL_LIB_SPEC}" | sed -e 's/"/\\\\"/g'`\""
+    eval "TCL_LIB_SPEC=\"${TCL_LIB_SPEC}\""
     eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
-    eval "TCL_STUB_LIB_SPEC=\"`echo "${TCL_STUB_LIB_SPEC}" | sed -e 's/"/\\\\"/g'`\""
+    eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
 
 
 
@@ -10635,8 +10635,8 @@ _ACEOF
     fi
     TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
-    TK_BUILD_LIB_SPEC="-F\"`pwd`\" -framework Tk"
-    TK_LIB_SPEC="-F\"${libdir}\" -framework Tk"
+    TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
+    TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
     TK_PKG_DIR="Resources/Scripts"
@@ -10672,18 +10672,18 @@ else
         else
             TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
         fi
-        TK_BUILD_LIB_SPEC="-L\"`pwd`\" ${TK_LIB_FLAG}"
-        TK_LIB_SPEC="-L\"${libdir}\" ${TK_LIB_FLAG}"
+        TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+        TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
     else
         TK_BUILD_EXP_FILE="lib.exp"
         eval "TK_EXP_FILE=libtk${TCL_EXPORT_FILE_SUFFIX}"
 
         if test "$GCC" = "yes" ; then
-            TK_BUILD_LIB_SPEC="-Wl,-bI:\"`pwd`\"/${TK_BUILD_EXP_FILE} -L\"`pwd`\""
-            TK_LIB_SPEC="-Wl,-bI:\"${libdir}\"/${TK_EXP_FILE} -L\"`pwd`\""
+            TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd | sed -e 's/ /\\\\ /g'`/${TK_BUILD_EXP_FILE} -L`pwd | sed -e 's/ /\\\\ /g'`"
+            TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L${libdir}"
         else
-            TK_BUILD_LIB_SPEC="-bI:\"`pwd`\"/${TK_BUILD_EXP_FILE}"
-            TK_LIB_SPEC="-bI:\"${libdir}\"/${TK_EXP_FILE}"
+            TK_BUILD_LIB_SPEC="-bI:`pwd | sed -e 's/ /\\\\ /g'`/${TK_BUILD_EXP_FILE}"
+            TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"
         fi
     fi
 fi
@@ -10696,8 +10696,8 @@ if test $tk_aqua = yes; then
     REZ_FLAGS='-d "SystemSevenOrLater=1" -useDF -ro'
     if test "$SHARED_BUILD" = 0; then
 	EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) "$(LIB_INSTALL_DIR)"'
-	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc \"`pwd`\"/\${TK_RSRC_FILE}"
-	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc \"${libdir}\"/\${TK_RSRC_FILE}"
+	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
+	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"
     else
         TK_SHLIB_LD_EXTRAS="$TK_SHLIB_LD_EXTRAS -sectcreate __TEXT __tk_rsrc \${TK_RSRC_FILE}"
     fi
@@ -10718,8 +10718,8 @@ else
     TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`"
 fi
 
-TK_BUILD_STUB_LIB_SPEC="-L\"`pwd`\" ${TK_STUB_LIB_FLAG}"
-TK_STUB_LIB_SPEC="-L\"${TK_STUB_LIB_DIR}\" ${TK_STUB_LIB_FLAG}"
+TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
+TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
 TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
