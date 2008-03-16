@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_style.n,v 1.12 2007/12/13 15:23:44 dgp Exp $
+'\" RCS: @(#) $Id: ttk_style.n,v 1.13 2008/03/16 22:37:45 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::style n 8.5 Tk "Tk Themed Widget"
@@ -58,7 +58,7 @@ for style \fIstyle\fR.
 .TP 
 \fBttk::style element create\fR \fIelementName\fR \fItype\fR ?\fIargs...\fR?
 Creates a new element in the current theme of type \fItype\fR.
-The only built-in element type is \fIimage\fR (see \fIimage(n)\fR),
+The only built-in element type is \fIimage\fR (see \fBttk_image\fR(n)),
 although themes may define other element types 
 (see \fBTtk_RegisterElementFactory\fR).
 .TP 
@@ -117,6 +117,6 @@ ttk::style layout Horizontal.TScrollbar {
 }
 .CE
 .SH "SEE ALSO"
-ttk::intro(n), ttk::widget(n), photo(n)
+ttk::intro(n), ttk::widget(n), photo(n), ttk_image(n)
 .SH KEYWORDS
 style, theme, appearance
