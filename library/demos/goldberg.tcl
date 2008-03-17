@@ -96,7 +96,7 @@ set C(24a) red;		set C(24b) white;
 proc DoDisplay {w} {
     global S C
 
-    frame $w.ctrl -relief ridge -bd 2 -padx 5 -pady 5
+    ttk::frame $w.ctrl -relief ridge -borderwidth 2 -padding 5
     pack [frame $w.screen -bd 2 -relief raised] \
 	    -side left -fill both -expand 1
 
@@ -112,7 +112,11 @@ proc DoDisplay {w} {
     }
     DoCtrlFrame $w
     DoDetailFrame $w
-    ttk::button $w.show -text "\u00bb" -command [list ShowCtrl $w] -width 2
+    if {[tk windowingsystem] ne "aqua"} {
+	ttk::button $w.show -text "\u00bb" -command [list ShowCtrl $w] -width 2
+    } else {
+	button $w.show -text "\u00bb" -command [list ShowCtrl $w] -width 2 -highlightbackground $C(bg)
+    }
     place $w.show -in $w.c -relx 1 -rely 0 -anchor ne
     update
 }
