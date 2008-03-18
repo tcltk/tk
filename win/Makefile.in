@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.77 2007/12/13 15:28:52 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.78 2008/03/18 06:59:04 jenglish Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -385,11 +385,10 @@ TTK_OBJS = \
 	ttkTrack.$(OBJEXT) \
 	ttkTreeview.$(OBJEXT) \
 	ttkWidget.$(OBJEXT) \
-	ttkStubInit.$(OBJEXT) \
-	ttkStubLib.$(OBJEXT)
+	ttkStubInit.$(OBJEXT)
 
 STUB_OBJS = \
-	tkStubLib.$(OBJEXT)
+	tkStubLib.$(OBJEXT) ttkStubLib.$(OBJEXT)
 
 TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)"/doc/*.[13n]
 TK_DOCS = "$(ROOT_DIR_NATIVE)"/doc/*.[13n]

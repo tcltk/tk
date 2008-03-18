@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.140 2008/03/12 16:17:17 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.141 2008/03/18 06:59:04 jenglish Exp $
 
 # Current Tk version;  used in various names.
 
@@ -370,13 +370,11 @@ TTK_OBJS = \
 	ttkPanedwindow.o ttkProgress.o ttkScale.o ttkScrollbar.o ttkScroll.o \
 	ttkSeparator.o ttkSquare.o ttkState.o \
 	ttkTagSet.o ttkTheme.o ttkTrace.o ttkTrack.o ttkTreeview.o \
-	ttkWidget.o
-
-TTK_STUB_OBJS =  ttkStubInit.o ttkStubLib.o
+	ttkWidget.o ttkStubInit.o
 
 STUB_OBJS = tkStubInit.o tkStubLib.o
 
-STUB_LIB_OBJS = tkStubLib.o
+STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
 X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
@@ -400,7 +398,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
-	$(STUB_OBJS) $(TTK_OBJS) $(TTK_STUB_OBJS) \
+	$(STUB_OBJS) $(TTK_OBJS) \
 	$(@TK_WINDOWINGSYSTEM@_OBJS) @PLAT_OBJS@
 
 TK_DECLS = \

@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.116 2007/12/14 02:19:42 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.117 2008/03/18 06:59:04 jenglish Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -393,11 +393,10 @@ TTK_OBJS = \
         $(TMP_DIR)\ttkTrack.obj \
         $(TMP_DIR)\ttkTreeview.obj \
         $(TMP_DIR)\ttkWidget.obj \
-        $(TMP_DIR)\ttkStubInit.obj \
-        $(TMP_DIR)\ttkStubLib.obj
+        $(TMP_DIR)\ttkStubInit.obj
 
 TKSTUBOBJS = \
-	$(TMP_DIR)\tkStubLib.obj
+	$(TMP_DIR)\tkStubLib.obj $(TMP_DIR)\ttkStubLib.obj
 
 
 WINDIR          = $(ROOT)\win
