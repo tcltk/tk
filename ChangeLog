@@ -1,3 +1,9 @@
+2008-03-17  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/Makefile.in, win/Makefile.in, win/makefile.vc:
+	Put ttkStubLib.o in libtkstub instead of libtk. 
+	[Bug 1863007].
+
 2008-03-16  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/demos/goldberg.tcl: Made work when run twice in the same
