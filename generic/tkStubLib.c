@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.19 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.20 2008/03/19 17:31:35 das Exp $
  */
 
 /*
@@ -48,11 +48,11 @@
 #include "tkPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
-TkStubs *tkStubsPtr;
-TkPlatStubs *tkPlatStubsPtr;
-TkIntStubs *tkIntStubsPtr;
-TkIntPlatStubs *tkIntPlatStubsPtr;
-TkIntXlibStubs *tkIntXlibStubsPtr;
+TkStubs *tkStubsPtr = NULL;
+TkPlatStubs *tkPlatStubsPtr = NULL;
+TkIntStubs *tkIntStubsPtr = NULL;
+TkIntPlatStubs *tkIntPlatStubsPtr = NULL;
+TkIntXlibStubs *tkIntXlibStubsPtr = NULL;
 
 /*
  * Use our own isdigit to avoid linking to libc on windows
