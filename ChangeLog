@@ -1,8 +1,11 @@
+2008-03-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/GetClrmap.3: Documented Tk_PreserveColormap. [Bug 220809]
+
 2008-03-17  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/Makefile.in, win/Makefile.in, win/makefile.vc:
-	Put ttkStubLib.o in libtkstub instead of libtk. 
-	[Bug 1863007].
+	* unix/Makefile.in, win/Makefile.in, win/makefile.vc: Put ttkStubLib.o
+	in libtkstub instead of libtk. [Bug 1863007]
 
 2008-03-16  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -12,7 +15,7 @@
 2008-03-13  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure.in:	Use backslash-quoting instead of double-quoting
-	* unix/tcl.m4:		for lib paths in tkConfig.sh [Bug 1913622].
+	* unix/tcl.m4:		for lib paths in tkConfig.sh. [Bug 1913622]
 	* unix/configure:	autoconf-2.59
 
 2008-03-13  Don Porter  <dgp@users.sourceforge.net>
@@ -64,7 +67,7 @@
 2008-03-06  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_notebook.n: Move "TAB IDENTIFIERS" section above "WIDGET
-	COMMAND" section [Bug 1882011].
+	COMMAND" section. [Bug 1882011]
 
 2008-02-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
