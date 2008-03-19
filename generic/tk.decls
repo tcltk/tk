@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.35 2007/12/13 15:24:13 dgp Exp $
+# RCS: @(#) $Id: tk.decls,v 1.36 2008/03/19 16:57:21 das Exp $
 
 library tk
 
@@ -1159,7 +1159,11 @@ export {
 }
 export {
     CONST char *Tk_PkgInitStubsCheck(Tcl_Interp *interp, CONST char *version,
-	int exact);
+	int exact)
+}
+export {
+    const char *TtkInitializeStubs(Tcl_Interp *, const char *version,
+    int epoch, int revision)
 }
 
 # Global variables that need to be exported from the tcl shared library.
@@ -1178,4 +1182,7 @@ export {
 }
 export {
     TkIntXlibStubs *tkIntXlibStubsPtr           (fool checkstubs)
+}
+export {
+    TtkStubs *ttkStubsPtr                       (fool checkstubs)
 }
