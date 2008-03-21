@@ -1,5 +1,5 @@
 /*
- * $Id: ttkStubLib.c,v 1.3 2008/03/19 16:57:22 das Exp $
+ * $Id: ttkStubLib.c,v 1.4 2008/03/21 21:49:12 jenglish Exp $
  * SOURCE: tk/generic/tkStubLib.c, version 1.9 2004/03/17
  */
 
@@ -8,7 +8,8 @@
 #define USE_TTK_STUBS 1
 #include "ttkTheme.h"
 
-const TtkStubs *ttkStubsPtr = NULL;
+MODULE_SCOPE const TtkStubs *ttkStubsPtr;
+const TtkStubs *ttkStubsPtr;
 
 /*
  *----------------------------------------------------------------------
@@ -25,7 +26,7 @@ const TtkStubs *ttkStubsPtr = NULL;
  *	Sets the stub table pointer.
  *
  */
-const char *
+MODULE_SCOPE const char *
 TtkInitializeStubs(
     Tcl_Interp *interp, const char *version, int epoch, int revision)
 {
