@@ -1,3 +1,8 @@
+2008-03-21  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tk.decls, generic/ttk/ttkStubLib.c, unix/Makefile.in:
+	Keep ttkStubLib.o in libtkstub instead of libtk. [Bug 1920030]
+
 2008-03-20  Donal K. Fellows  <dkf@users.sf.net>
 
 	* tests/wm.test: Rewrote so that tests clean up after themselves
