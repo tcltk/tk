@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.12 2007/02/27 14:52:57 dkf Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.13 2008/03/26 19:04:10 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -24,15 +24,8 @@
  * Tk_SetCaretPos --
  *
  *	This enables correct placement of the XIM caret. This is called by
- *	widgets to indicate their cursor placement, and the caret location is
- *	used by TkpGetString to place the XIM caret. This is currently only
+ *	widgets to indicate their cursor placement.  This is currently only
  *	used for over-the-spot XIM.
- *
- * Results:
- *	None
- *
- * Side effects:
- *	None
  *
  *----------------------------------------------------------------------
  */
@@ -44,16 +37,42 @@ Tk_SetCaretPos(
     int y,
     int height)
 {
-    TkCaret *caretPtr = &(((TkWindow *) tkwin)->dispPtr->caret);
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkDisplay *dispPtr = winPtr->dispPtr;
 
+    if (   dispPtr->caret.winPtr == winPtr
+	&& dispPtr->caret.x == x
+	&& dispPtr->caret.y == y
+	&& dispPtr->caret.height == height) 
+    {
+	return;
+    }
+
+    dispPtr->caret.winPtr = winPtr;
+    dispPtr->caret.x = x;
+    dispPtr->caret.y = y;
+    dispPtr->caret.height = height;
+
+#ifdef TK_USE_INPUT_METHODS
     /*
-     * Use height for best placement of the XIM over-the-spot box.
+     * Adjust the XIM caret position.
      */
+    if (   (dispPtr->flags & TK_DISPLAY_USE_IM)
+	&& (dispPtr->inputStyle & XIMPreeditPosition)
+	&& (winPtr->inputContext != NULL) )
+    {
+	XVaNestedList preedit_attr;
+	XPoint spot;
 
-    caretPtr->winPtr = ((TkWindow *) tkwin);
-    caretPtr->x = x;
-    caretPtr->y = y;
-    caretPtr->height = height;
+	spot.x = dispPtr->caret.x;
+	spot.y = dispPtr->caret.y + dispPtr->caret.height;
+	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+	XSetICValues(winPtr->inputContext,
+		XNPreeditAttributes, preedit_attr,
+		NULL);
+	XFree(preedit_attr);
+    }
+#endif
 }
 
 /*
@@ -85,9 +104,6 @@ TkpGetString(
     int len;
     Tcl_DString buf;
     Status status;
-#ifdef TK_USE_INPUT_METHODS
-    TkDisplay *dispPtr = winPtr->dispPtr;
-#endif
 
     /*
      * Overallocate the dstring to the maximum stack amount.
@@ -97,13 +113,9 @@ TkpGetString(
     Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 
 #ifdef TK_USE_INPUT_METHODS
-    if ((dispPtr->flags & TK_DISPLAY_USE_IM)
+    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (winPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
-#if TK_XIM_SPOT
-	XVaNestedList preedit_attr;
-	XPoint spot;
-#endif
 
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf), NULL,
@@ -121,21 +133,6 @@ TkpGetString(
 	    len = 0;
 	}
 
-#if TK_XIM_SPOT
-	/*
-	 * Adjust the XIM caret position. We might want to check that this is
-	 * the right caret.winPtr as well.
-	 */
-
-	if (dispPtr->flags & TK_DISPLAY_XIM_SPOT) {
-	    spot.x = dispPtr->caret.x;
-	    spot.y = dispPtr->caret.y + dispPtr->caret.height;
-	    preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
-	    XSetICValues(winPtr->inputContext,
-		    XNPreeditAttributes, preedit_attr, NULL);
-	    XFree(preedit_attr);
-	}
-#endif
     } else {
 	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
 		Tcl_DStringLength(&buf), NULL, NULL);

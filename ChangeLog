@@ -1,3 +1,9 @@
+2008-03-26  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkInt.h, generic/tkEvent.c, unix/tkUnixEvent.c, 
+	unix/tkUnixKey.c: XIM reorganization and cleanup; see
+	[Patch 1919791] for details.
+
 2008-03-21  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tk.decls, generic/ttk/ttkStubLib.c, unix/Makefile.in:

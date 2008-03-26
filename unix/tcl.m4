@@ -1454,10 +1454,6 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    # files in compat/*.c is being linked in.
 
 	    AS_IF([test x"${USE_COMPAT}" != x],[CFLAGS="$CFLAGS -fno-inline"])
-
-	    # XIM peeking works under XFree86.
-	    AC_DEFINE(PEEK_XCLOSEIM, 1, [May we use XIM peeking safely?])
-
 	    ;;
 	GNU*)
 	    SHLIB_CFLAGS="-fPIC"
