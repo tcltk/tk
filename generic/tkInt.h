@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.81 2007/12/13 15:24:14 dgp Exp $
+ * RCS: $Id: tkInt.h,v 1.82 2008/03/26 19:04:09 jenglish Exp $
  */
 
 #ifndef _TKINT
@@ -143,16 +143,6 @@ typedef struct TkCursor {
 				 * but different displays are chained together
 				 * off a single hash table entry. */
 } TkCursor;
-
-/*
- * This defines whether we should try to use XIM over-the-spot style input.
- * Allow users to override it. It is a much more elegant use of XIM, but uses
- * a bit more memory.
- */
-
-#ifndef TK_XIM_SPOT
-#define TK_XIM_SPOT	1
-#endif
 
 /*
  * The following structure is kept one-per-TkDisplay to maintain information
@@ -530,9 +520,8 @@ typedef struct TkDisplay {
 
 #ifdef TK_USE_INPUT_METHODS
     XIM inputMethod;		/* Input method for this display. */
-#if TK_XIM_SPOT
+    XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
-#endif
 #endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
@@ -572,8 +561,6 @@ typedef struct TkDisplay {
  *	Indicates that we should collapse motion events on this display
  *  TK_DISPLAY_USE_IM:			(default on, set via tk.tcl)
  *	Whether to use input methods for this display
- *  TK_DISPLAY_XIM_SPOT:		(default off)
- *	Indicates that we should use over-the-spot XIM on this display
  *  TK_DISPLAY_WM_TRACING:		(default off)
  *	Whether we should do wm tracing on this display.
  *  TK_DISPLAY_IN_WARP:			(default off)
@@ -582,7 +569,6 @@ typedef struct TkDisplay {
 
 #define TK_DISPLAY_COLLAPSE_MOTION_EVENTS	(1 << 0)
 #define TK_DISPLAY_USE_IM			(1 << 1)
-#define TK_DISPLAY_XIM_SPOT			(1 << 2)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
 #define TK_DISPLAY_IN_WARP			(1 << 4)
 
