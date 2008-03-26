@@ -1,7 +1,45 @@
+2008-03-26  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.2 release.
+
+	* unix/tkUnixCursor.c:	Stop crash in [. configure -cursor] on X11.
+	Thanks to emiliano gavilán.  [Bug 1922466]
+
+2008-03-26  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkInt.h, generic/tkEvent.c, unix/tkUnixEvent.c, 
+	unix/tkUnixKey.c: XIM reorganization and cleanup; see
+	[Patch 1919791] for details.
+
+2008-03-21  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tk.decls, generic/ttk/ttkStubLib.c, unix/Makefile.in:
+	Keep ttkStubLib.o in libtkstub instead of libtk. [Bug 1920030]
+
+2008-03-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	* tests/wm.test: Rewrote so that tests clean up after themselves
+	rather than leaving that to the following test. Makes it easier to
+	catch problems where they originate. Inspired by [Bug 1852338]
+
+2008-03-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/GetClrmap.3: Documented Tk_PreserveColormap. [Bug 220809]
+
+2008-03-17  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/Makefile.in, win/Makefile.in, win/makefile.vc: Put ttkStubLib.o
+	in libtkstub instead of libtk. [Bug 1863007]
+
+2008-03-16  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/demos/goldberg.tcl: Made work when run twice in the same
+	session. [Bug 1899664] Also made the control panel use Ttk widgets.
+
 2008-03-13  Daniel Steffen  <das@users.sourceforge.net>
 
-	* unix/configure.in:	use backslash-quoting instead of double-quoting
-	* unix/tcl.m4:		for lib paths in tkConfig.sh [Bug 1913622].
+	* unix/configure.in:	Use backslash-quoting instead of double-quoting
+	* unix/tcl.m4:		for lib paths in tkConfig.sh. [Bug 1913622]
 	* unix/configure:	autoconf-2.59
 
 2008-03-13  Don Porter  <dgp@users.sourceforge.net>
@@ -10,7 +48,7 @@
 
 2008-03-12  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/Wish.xcodeproj/project.pbxproj: add support for Xcode 3.1
+	* macosx/Wish.xcodeproj/project.pbxproj: Add support for Xcode 3.1
 	* macosx/Wish.xcodeproj/default.pbxuser: CODE_SIGN_IDENTITY and
 	* macosx/Wish-Common.xcconfig:		 'xcodebuild install'.
 
@@ -24,13 +62,13 @@
 	* library/demos/knightstour.tcl:	Aqua GOOBE.
 	* library/demos/widget:
 
-	* macosx/Wish.xcodeproj/project.pbxproj: add support for Xcode 3.1 and
+	* macosx/Wish.xcodeproj/project.pbxproj: Add support for Xcode 3.1 and
 	* macosx/Wish.xcodeproj/default.pbxuser: targets for building with
 	* macosx/Wish-Common.xcconfig:		 gcc-4.2 and llvm-gcc-4.2.
 
-	* generic/tkCanvUtil.c:			fix gcc-4.2 warnings.
+	* generic/tkCanvUtil.c:			Fix gcc-4.2 warnings.
 
-	* macosx/GNUmakefile:			fix quoting to allow paths to
+	* macosx/GNUmakefile:			Fix quoting to allow paths to
 	* macosx/Wish-Common.xcconfig:		${builddir}, ${INSTALL_ROOT}
 	* unix/Makefile.in:			and ${TCL_BIN_DIR} to contain
 	* unix/configure.in:			spaces.
@@ -39,7 +77,7 @@
 
 	* unix/configure:			autoconf-2.59
 
-	* unix/Makefile.in (install-strip):	strip non-global symbols from
+	* unix/Makefile.in (install-strip):	Strip non-global symbols from
 						dynamic library.
 
 2008-03-10  Don Porter  <dgp@users.sourceforge.net>
@@ -53,7 +91,7 @@
 2008-03-06  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_notebook.n: Move "TAB IDENTIFIERS" section above "WIDGET
-	COMMAND" section [Bug 1882011].
+	COMMAND" section. [Bug 1882011]
 
 2008-02-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
