@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixCursor.c,v 1.12 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixCursor.c,v 1.13 2008/03/26 19:34:53 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -493,7 +493,7 @@ CreateCursorFromTableOrFile(
      * If there is no mask data, then create the cursor now.
      */
 
-    if ((!inTkTable && (argc == 2)) || (tkCursorPtr->mask == NULL)) {
+    if ((!inTkTable && (argc == 2)) || (inTkTable && tkCursorPtr->mask == NULL)) {
 	cursor = XCreatePixmapCursor(display, source, source,
 		&fg, &fg, (unsigned) xHot, (unsigned) yHot);
 	goto cleanup;
@@ -532,7 +532,7 @@ CreateCursorFromTableOrFile(
 	}
     }
 
-    if ((maskWidth != width) && (maskHeight != height)) {
+    if ((maskWidth != width) || (maskHeight != height)) {
 	Tcl_SetResult(interp, "source and mask bitmaps have different sizes",
 		TCL_STATIC);
 	goto cleanup;
