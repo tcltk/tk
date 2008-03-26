@@ -1,3 +1,10 @@
+2008-03-26  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.2 release.
+
+	* unix/tkUnixCursor.c:	Stop crash in [. configure -cursor] on X11.
+	Thanks to emiliano gavilán.  [Bug 1922466]
+
 2008-03-26  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkInt.h, generic/tkEvent.c, unix/tkUnixEvent.c, 
