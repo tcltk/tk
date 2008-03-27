@@ -5643,14 +5643,6 @@ fi
   CFLAGS="$CFLAGS -fno-inline"
 fi
 
-
-	    # XIM peeking works under XFree86.
-
-cat >>confdefs.h <<\_ACEOF
-#define PEEK_XCLOSEIM 1
-_ACEOF
-
-
 	    ;;
 	GNU*)
 	    SHLIB_CFLAGS="-fPIC"
@@ -6685,7 +6677,7 @@ else
 
 		case $system in
 		    SunOS-5.[1-9][0-9]*)
-			SHLIB_LD='${CC} -G -z text';;
+			SHLIB_LD='${CC} -G -z text ${LDFLAGS}';;
 		    *)
 			SHLIB_LD='/usr/ccs/bin/ld -G -z text';;
 		esac
