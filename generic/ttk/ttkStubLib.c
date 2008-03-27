@@ -1,7 +1,17 @@
 /*
- * $Id: ttkStubLib.c,v 1.4 2008/03/21 21:49:12 jenglish Exp $
+ * $Id: ttkStubLib.c,v 1.5 2008/03/27 12:04:02 das Exp $
  * SOURCE: tk/generic/tkStubLib.c, version 1.9 2004/03/17
  */
+
+/*
+ * We need to ensure that we use the tcl stub macros so that this file
+ * contains no references to any of the tcl stub functions.
+ */
+
+#ifndef USE_TCL_STUBS
+#define USE_TCL_STUBS
+#endif
+#undef USE_TCL_STUB_PROCS
 
 #include "tk.h"
 
@@ -9,7 +19,7 @@
 #include "ttkTheme.h"
 
 MODULE_SCOPE const TtkStubs *ttkStubsPtr;
-const TtkStubs *ttkStubsPtr;
+const TtkStubs *ttkStubsPtr = NULL;
 
 /*
  *----------------------------------------------------------------------

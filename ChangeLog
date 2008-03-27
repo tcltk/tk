@@ -1,3 +1,10 @@
+2008-03-27  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/ttk/ttkStubLib.c:	ensure tcl stubs are used in libtkstub
+					even in a static build of Tk.
+	* generic/ttk/ttkDecls.h:	fix incorrect number of arguments in
+					Ttk_InitStubs macro definition.
+
 2008-03-26  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.2 release.
