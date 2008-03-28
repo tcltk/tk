@@ -1,5 +1,17 @@
 2008-03-28  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.5.2 TAGGED FOR RELEASE ***
+
+	* README:		Bump to 8.5.2 for release.
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 	* changes:	Updates for 8.5.2 release.
 
 2008-03-27  Jeff Hobbs  <jeffh@ActiveState.com>
