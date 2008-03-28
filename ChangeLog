@@ -1,3 +1,12 @@
+2008-03-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.2 release.
+
+2008-03-27  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/safetk.tcl (::safe::tkInterpInit): make sure tk_library
+	and its subdirs (eg, ttk) are on the "safe" access path.
+
 2008-03-27  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/tcl.m4 (SunOS-5.1x): fix 64bit support for Sun cc. [Bug 1921166]
