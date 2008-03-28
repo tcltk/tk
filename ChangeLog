@@ -1,3 +1,7 @@
+2008-03-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.2 release.
+
 2008-03-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/safetk.tcl (::safe::tkInterpInit): make sure tk_library
