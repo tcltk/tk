@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.129 2008/03/26 19:34:52 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130 2008/03/28 17:50:50 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6495,5 +6495,9 @@ Several documentation and release notes improvements
 2008-03-21 (bug fix)[1863007,1920030] Export Ttk stubs table (english)
 
 2008-03-26 (bug fix)[1922466] crash  in [. configure -cursor] (gavilán)
+
+2008-03-27 (platform support)[1921166] Solaris 64bit build fixes (steffen)
+
+2008-03-27 (bug fix) restored [::safe::loadTk] (hobbs)
 
 --- Released 8.5.2, March 28, 2008 --- See ChangeLog for details ---
