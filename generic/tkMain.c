@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.28 2007/12/13 15:24:15 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.29 2008/04/01 16:30:54 dgp Exp $
  */
 
 #include <ctype.h>
@@ -106,11 +106,11 @@ Tk_MainEx(
     Tcl_DString appName;
 
     /*
-     * Ensure that we are getting the matching version of Tcl. This is really
+     * Ensure that we are getting a compatible version of Tcl. This is really
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
 	abort();
     }
 

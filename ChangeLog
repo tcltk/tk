@@ -1,3 +1,31 @@
+2008-04-01  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.6a0
+	* generic/tk.h:
+	* library/tk.tcl:
+	* macosx/Wish-Common.xcconfig:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/README:
+	* win/configure.in:
+	* win/tcl.m4:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+	* generic/tkConsole.c:	Relax Tcl_InitStubs() calls so that a Tk 8.6
+	* generic/tkMain.c:	might [load] into a Tcl 8.5 interp.
+	* generic/tkWindow.c:
+
+	* generic/tkStubLib.c:	Update to compatibility with a libtcl.so
+	that contains no "tclStubsPtr" [Tcl Bug 1819422].
+
+	* generic/tkDecls.h:		make genstubs
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkPlatDecls.h:
+
 2008-03-28  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.2 TAGGED FOR RELEASE ***
