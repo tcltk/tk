@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.30 2007/05/14 20:58:26 dgp Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.31 2008/04/01 16:30:53 dgp Exp $
  */
 
 #ifndef _TKDECLS
@@ -1982,6 +1982,8 @@ typedef struct TkStubs {
     void (*tk_CreateOldPhotoImageFormat) (Tk_PhotoImageFormat * formatPtr); /* 273 */
 } TkStubs;
 
+#if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1989,6 +1991,8 @@ extern TkStubs *tkStubsPtr;
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
 

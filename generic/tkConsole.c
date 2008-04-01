@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.35 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.36 2008/04/01 16:30:52 dgp Exp $
  */
 
 #include "tk.h"
@@ -229,11 +229,11 @@ Tk_InitConsoleChannels(
     Tcl_Channel consoleChannel;
 
     /*
-     * Ensure that we are getting the matching version of Tcl. This is really
+     * Ensure that we are getting a compatible version of Tcl. This is really
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
         return;
     }
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.89 2007/12/13 15:24:21 dgp Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.90 2008/04/01 16:30:54 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -2944,11 +2944,11 @@ Initialize(
     ThreadSpecificData *tsdPtr;
 
     /*
-     * Ensure that we are getting the matching version of Tcl. This is really
+     * Ensure that we are getting a compatible version of Tcl. This is really
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
 	return TCL_ERROR;
     }
 

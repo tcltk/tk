@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.15 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.16 2008/04/01 16:30:54 dgp Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -156,6 +156,8 @@ typedef struct TkPlatStubs {
 #endif /* AQUA */
 } TkPlatStubs;
 
+#if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -163,6 +165,8 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
 

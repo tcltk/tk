@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.23 2007/12/13 15:24:15 dgp Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.24 2008/04/01 16:30:53 dgp Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -1419,6 +1419,8 @@ typedef struct TkIntXlibStubs {
 #endif /* AQUA */
 } TkIntXlibStubs;
 
+#if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1426,6 +1428,8 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
 
