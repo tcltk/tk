@@ -12,7 +12,7 @@
 # Copyright (c) 2001-2004 David Gravereaux.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.118 2008/04/02 04:30:44 dgp Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.119 2008/04/02 14:39:36 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -543,9 +543,9 @@ test-classic: setup $(TKTEST) $(TKLIB) $(CAT32)
 	@set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
 !if "$(OS)" == "Windows_NT"  || "$(MSVCDIR)" == "IDE"
-	$(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
+	$(DEBUGGER) $(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
 !else
-	$(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
+	$(DEBUGGER) $(TKTEST) "$(ROOT)/tests/all.tcl" $(TESTFLAGS) | $(CAT32)
 !endif
 
 test-ttk: setup $(TKTEST) $(TKLIB) $(CAT32)
@@ -558,9 +558,9 @@ test-ttk: setup $(TKTEST) $(TKLIB) $(CAT32)
 	@set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
 !if "$(OS)" == "Windows_NT"  || "$(MSVCDIR)" == "IDE"
-	$(TKTEST) "$(ROOT)/tests/ttk/all.tcl" $(TESTFLAGS) | $(CAT32)
+	$(DEBUGGER) $(TKTEST) "$(ROOT)/tests/ttk/all.tcl" $(TESTFLAGS) | $(CAT32)
 !else
-	$(TKTEST) "$(ROOT)/tests/ttk/all.tcl" $(TESTFLAGS) | $(CAT32)
+	$(DEBUGGER) $(TKTEST) "$(ROOT)/tests/ttk/all.tcl" $(TESTFLAGS) | $(CAT32)
 !endif
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
@@ -572,7 +572,7 @@ runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 !else
 	@set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
-	$(TKTEST) 
+	$(DEBUGGER) $(TKTEST)
 
 rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
@@ -594,20 +594,9 @@ shell: setup $(WISH)
 !else
 	@set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
-	$(WISH) <<
+	$(DEBUGGER) $(WISH) <<
 	console show
 <<
-
-dbgshell: setup $(WISH)
-	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
-	@set TK_LIBRARY=$(TK_LIBRARY:\=/)
-	@set TCLLIBPATH=
-!if $(TCLINSTALL)
-	@set PATH=$(_TCLDIR)\bin;$(PATH)
-!else
-	@set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
-!endif
-	windbg $(WISH)
 
 setup:
 	@if not exist $(OUT_DIR)\nul mkdir $(OUT_DIR)
