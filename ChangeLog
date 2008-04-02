@@ -6,8 +6,9 @@
 
 	* generic/tkWindow.c:	Revised package initialization so that 
 	* unix/Makefile.in:	"tkStubsPtr" is not present in libtk.so, but
-	is present only in libtkstub.a.  This tightens up the rules for users
-	of the stubs interfaces.  [Tcl Bug 1819422].
+	* win/Makefile.in:	is present only in libtkstub.a.  This tightens
+	* win/makefile.bc:	up the rules for users of the stubs interfaces.
+	* win/makefile.vc:	[Tcl Bug 1819422].
 
 	* README:		Bump version number to 8.6a0
 	* generic/tk.h:
