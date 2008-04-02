@@ -1,5 +1,10 @@
 2008-04-01  Don Porter  <dgp@users.sourceforge.net>
 
+	* generic/tkWindow.c:	Revised package initialization so that 
+	* unix/Makefile.in:	"tkStubsPtr" is not present in libtk.so, but
+	is present only in libtkstub.a.  This tightens up the rules for users
+	of the stubs interfaces.  [Tcl Bug 1819422].
+
 	* README:		Bump version number to 8.6a0
 	* generic/tk.h:
 	* library/tk.tcl:
@@ -16,9 +21,6 @@
 	* generic/tkConsole.c:	Relax Tcl_InitStubs() calls so that a Tk 8.6
 	* generic/tkMain.c:	might [load] into a Tcl 8.5 interp.
 	* generic/tkWindow.c:
-
-	* generic/tkStubLib.c:	Update to compatibility with a libtcl.so
-	that contains no "tclStubsPtr" [Tcl Bug 1819422].
 
 	* generic/tkDecls.h:		make genstubs
 	* generic/tkIntDecls.h:
