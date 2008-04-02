@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.23 2008/04/02 04:06:38 dgp Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.24 2008/04/02 21:31:58 das Exp $
  */
 
 /*
@@ -20,7 +20,9 @@
  * including the rest of the stub functions.
  */
 
+#undef USE_TCL_STUBS
 #define USE_TCL_STUBS
+
 #define USE_TK_STUBS
 
 #include "tkInt.h"
@@ -41,11 +43,17 @@
 #include "tkPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
-TkStubs *tkStubsPtr = NULL;
-TkPlatStubs *tkPlatStubsPtr = NULL;
-TkIntStubs *tkIntStubsPtr = NULL;
-TkIntPlatStubs *tkIntPlatStubsPtr = NULL;
-TkIntXlibStubs *tkIntXlibStubsPtr = NULL;
+MODULE_SCOPE const TkStubs *tkStubsPtr;
+MODULE_SCOPE const TkPlatStubs *tkPlatStubsPtr;
+MODULE_SCOPE const TkIntStubs *tkIntStubsPtr;
+MODULE_SCOPE const TkIntPlatStubs *tkIntPlatStubsPtr;
+MODULE_SCOPE const TkIntXlibStubs *tkIntXlibStubsPtr;
+
+const TkStubs *tkStubsPtr = NULL;
+const TkPlatStubs *tkPlatStubsPtr = NULL;
+const TkIntStubs *tkIntStubsPtr = NULL;
+const TkIntPlatStubs *tkIntPlatStubsPtr = NULL;
+const TkIntXlibStubs *tkIntXlibStubsPtr = NULL;
 
 /*
  * Use our own isdigit to avoid linking to libc on windows
@@ -74,14 +82,14 @@ static int isDigit(const int c)
  *----------------------------------------------------------------------
  */
 
-CONST char *
+MODULE_SCOPE CONST char *
 Tk_InitStubs(
     Tcl_Interp *interp,
     CONST char *version,
     int exact)
 {
     CONST char *actualVersion;
-    TkStubs **stubsPtrPtr = &tkStubsPtr;	/* squelch warning */
+    const TkStubs **stubsPtrPtr = &tkStubsPtr;	/* squelch warning */
 
     actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0,
 	    (ClientData *) stubsPtrPtr);
