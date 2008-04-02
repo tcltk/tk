@@ -13,7 +13,7 @@
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 #
-# RCS: @(#) $Id: makefile.bc,v 1.14 2007/05/14 20:58:31 dgp Exp $
+# RCS: @(#) $Id: makefile.bc,v 1.15 2008/04/02 04:30:44 dgp Exp $
 
 # Does not depend on the presence of any environment variables in
 # order to compile tcl; all needed information is derived from
@@ -227,7 +227,6 @@ TKOBJS = \
 	$(TMPDIR)\tkUtil.obj \
 	$(TMPDIR)\tkVisual.obj \
 	$(TMPDIR)\tkStubInit.obj \
-	$(TMPDIR)\tkStubLib.obj \
 	$(TMPDIR)\tkWindow.obj
 
 # Maintenance hint: Please have multiple members of TKSTUBOBJS be separated
