@@ -1,7 +1,32 @@
+2008-04-02  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tk.decls:	remove 'export' declarations of symbols now
+				only in libtkstub and no longer in libtk.
+
+	* generic/tkStubLib.c:	make symbols in libtkstub.a MODULE_SCOPE to
+				avoid exporting them from libraries that link
+				with -ltkstub; constify tk*StubsPtr and stub
+				table hook pointers. [Bug 1819422]
+
+	* generic/tkStubLib.c:		undef USE_TCL_STUBS before defining it
+	* generic/ttk/ttkStubLib.c:	unconditionally; remove needless #ifdef
+
+	* generic/tkDecls.h:		make genstubs
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkPlatDecls.h:
+	* generic/tkStubInit.c:
+
+	* unix/configure.in (Darwin):	remove now unnecessary unexporting
+					of libtclstub symbols from libtk.
+
+	* unix/configure:		autoconf-2.59
+
 2008-04-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkStubLib.c (Tk_InitStubs):	Added missing error message and
-	* generic/tkWindow.c (Tk_PkgInitStubsCheck):	removed needless $ifdef
+	* generic/tkWindow.c (Tk_PkgInitStubsCheck):	removed needless #ifdef
 	complexity.
 
 	* generic/tkWindow.c:	Revised package initialization so that 
