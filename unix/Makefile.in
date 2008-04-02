@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.143 2008/03/21 21:49:12 jenglish Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.144 2008/04/02 03:55:39 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -372,7 +372,7 @@ TTK_OBJS = \
 	ttkTagSet.o ttkTheme.o ttkTrace.o ttkTrack.o ttkTreeview.o \
 	ttkWidget.o ttkStubInit.o
 
-STUB_OBJS = tkStubInit.o tkStubLib.o
+STUB_OBJS = tkStubInit.o
 
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
@@ -446,7 +446,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
 	$(GENERIC_DIR)/tkOldConfig.c $(GENERIC_DIR)/tkOldTest.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
-	$(GENERIC_DIR)/tkStubInit.c $(GENERIC_DIR)/tkStubLib.c
+	$(GENERIC_DIR)/tkStubInit.c
 
 TTK_SRCS = \
 	$(TTK_DIR)/ttkBlink.c \
