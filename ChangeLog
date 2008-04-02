@@ -1,5 +1,9 @@
 2008-04-01  Don Porter  <dgp@users.sourceforge.net>
 
+	* generic/tkStubLib.c (Tk_InitStubs):	Added missing error message and
+	* generic/tkWindow.c (Tk_PkgInitStubsCheck):	removed needless $ifdef
+	complexity.
+
 	* generic/tkWindow.c:	Revised package initialization so that 
 	* unix/Makefile.in:	"tkStubsPtr" is not present in libtk.so, but
 	is present only in libtkstub.a.  This tightens up the rules for users
