@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.21 2008/04/01 16:30:54 dgp Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.22 2008/04/02 03:55:39 dgp Exp $
  */
 
 /*
@@ -19,6 +19,11 @@
  * build an extension that references Tk_InitStubs but doesn't end up
  * including the rest of the stub functions.
  */
+
+#ifndef USE_TCL_STUBS
+#define USE_TCL_STUBS
+#endif
+#undef USE_TCL_STUB_PROCS
 
 #ifndef USE_TK_STUBS
 #define USE_TK_STUBS
