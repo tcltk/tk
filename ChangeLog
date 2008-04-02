@@ -1,6 +1,6 @@
 2008-04-01  Don Porter  <dgp@users.sourceforge.net>
 
-	* generic/tkStubLib.c (Tcl_InitStubs):	Added missing error message.
+	* generic/tkStubLib.c (Tk_InitStubs):	Added missing error message.
 	* generic/tkWindow.c (Tk_PkgInitStubsCheck):
 
 2008-03-28  Don Porter  <dgp@users.sourceforge.net>
