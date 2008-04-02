@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.90 2008/04/01 16:30:54 dgp Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.91 2008/04/02 03:55:39 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -3204,12 +3204,6 @@ Initialize(
      */
 
     Tcl_SetMainLoop(Tk_MainLoop);
-
-#ifdef Tk_InitStubs
-#undef Tk_InitStubs
-#endif
-
-    Tk_InitStubs(interp, TK_VERSION, 1);
 
     /*
      * Initialized the themed widget set
