@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# RCS: @(#) $Id: tk.decls,v 1.38 2008/03/27 12:03:33 das Exp $
+# RCS: @(#) $Id: tk.decls,v 1.39 2008/04/02 21:31:17 das Exp $
 
 library tk
 
@@ -1154,28 +1154,6 @@ declare 10 aqua {
 # Public functions that are not accessible via the stubs table.
 
 export {
-    CONST char *Tk_InitStubs(Tcl_Interp *interp, CONST char *version,
-	    int exact)
-}
-export {
     CONST char *Tk_PkgInitStubsCheck(Tcl_Interp *interp, CONST char *version,
 	    int exact)
-}
-
-# Global variables that need to be exported from the tcl shared library.
-
-export {
-    TkStubs *tkStubsPtr                         (fool checkstubs)
-}
-export {
-    TkPlatStubs *tkPlatStubsPtr                 (fool checkstubs)
-}
-export {
-    TkIntStubs *tkIntStubsPtr                   (fool checkstubs)
-}
-export {
-    TkIntPlatStubs *tkIntPlatStubsPtr           (fool checkstubs)
-}
-export {
-    TkIntXlibStubs *tkIntXlibStubsPtr           (fool checkstubs)
 }
