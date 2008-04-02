@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.89 2007/12/13 15:24:21 dgp Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.89.2.1 2008/04/02 04:05:13 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -3308,6 +3308,8 @@ Tk_PkgInitStubsCheck(
 	}
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
+		/* Construct error message */
+		Tcl_PkgPresent(interp, "Tk", version, 1);
 		return NULL;
 	    }
 	} else {
