@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.24 2008/04/01 16:30:53 dgp Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.25 2008/04/02 21:32:32 das Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -1212,7 +1212,7 @@ EXTERN int		XSync (Display * display, Bool flag);
 
 typedef struct TkIntXlibStubs {
     int magic;
-    struct TkIntXlibStubHooks *hooks;
+    CONST struct TkIntXlibStubHooks *hooks;
 
 #ifdef __WIN32__ /* WIN */
     void (*xSetDashes) (Display * display, GC gc, int dash_offset, _Xconst char * dash_list, int n); /* 0 */
@@ -1420,15 +1420,7 @@ typedef struct TkIntXlibStubs {
 } TkIntXlibStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern TkIntXlibStubs *tkIntXlibStubsPtr;
-#ifdef __cplusplus
-}
-#endif
-
+EXTERN CONST TkIntXlibStubs *tkIntXlibStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.16 2008/04/01 16:30:54 dgp Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.17 2008/04/02 21:32:33 das Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -131,7 +131,7 @@ EXTERN int		Tk_MacOSXIsAppInFront (void);
 
 typedef struct TkPlatStubs {
     int magic;
-    struct TkPlatStubHooks *hooks;
+    CONST struct TkPlatStubHooks *hooks;
 
 #ifdef __WIN32__ /* WIN */
     Window (*tk_AttachHWND) (Tk_Window tkwin, HWND hwnd); /* 0 */
@@ -157,15 +157,7 @@ typedef struct TkPlatStubs {
 } TkPlatStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern TkPlatStubs *tkPlatStubsPtr;
-#ifdef __cplusplus
-}
-#endif
-
+EXTERN CONST TkPlatStubs *tkPlatStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)

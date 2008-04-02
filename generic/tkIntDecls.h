@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.32 2008/04/01 16:30:53 dgp Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.33 2008/04/02 21:32:32 das Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -961,7 +961,7 @@ EXTERN int		TkpTesttextCmd (ClientData dummy,
 
 typedef struct TkIntStubs {
     int magic;
-    struct TkIntStubHooks *hooks;
+    CONST struct TkIntStubHooks *hooks;
 
     TkWindow * (*tkAllocWindow) (TkDisplay * dispPtr, int screenNum, TkWindow * parentPtr); /* 0 */
     void (*tkBezierPoints) (double control[], int numSteps, double * coordPtr); /* 1 */
@@ -1223,15 +1223,7 @@ typedef struct TkIntStubs {
 } TkIntStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern TkIntStubs *tkIntStubsPtr;
-#ifdef __cplusplus
-}
-#endif
-
+EXTERN CONST TkIntStubs *tkIntStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
