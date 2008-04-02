@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.60 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.61 2008/04/02 21:32:33 das Exp $
  */
 
 #include "tkInt.h"
@@ -666,7 +666,7 @@ TkPlatStubs tkPlatStubs = {
 #endif /* AQUA */
 };
 
-static TkStubHooks tkStubHooks = {
+static const TkStubHooks tkStubHooks = {
     &tkPlatStubs,
     &tkIntStubs,
     &tkIntPlatStubs,
