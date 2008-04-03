@@ -1,3 +1,7 @@
+2008-04-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/xpTheme.tcl: fix the colour of labelframe in xp
+
 2008-04-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkStubLib.c (Tk_InitStubs):	Added missing error message.
