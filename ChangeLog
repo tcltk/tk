@@ -1,5 +1,6 @@
 2008-04-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/makefile.vc:         Fixed stubs usage
 	* library/ttk/xpTheme.tcl: fix the colour of labelframe in xp
 
 2008-04-02  Daniel Steffen  <das@users.sourceforge.net>
