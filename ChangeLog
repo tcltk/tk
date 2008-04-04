@@ -1,3 +1,8 @@
+2008-04-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/sizegrip.tcl: Don't resize if the toplevel is not resizable
+	or the sizegrip has been disabled.
+
 2008-04-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc:         Fixed stubs usage

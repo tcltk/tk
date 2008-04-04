@@ -1,5 +1,5 @@
 #
-# $Id: sizegrip.tcl,v 1.1 2006/10/31 01:42:27 hobbs Exp $
+# $Id: sizegrip.tcl,v 1.2 2008/04/04 14:18:30 patthoyts Exp $
 #
 # Ttk widget set -- sizegrip widget bindings.
 #
@@ -20,6 +20,8 @@ namespace eval ttk::sizegrip {
 	height 		0
 	widthInc	1
 	heightInc	1
+        resizeX         1
+        resizeY         1
 	toplevel 	{}
     }
 }
@@ -31,7 +33,15 @@ bind TSizegrip <ButtonRelease-1> 	{ ttk::sizegrip::Release %W %X %Y }
 proc ttk::sizegrip::Press {W X Y} {
     variable State
 
+    if {[$W instate disabled]} { return }
+
     set top [winfo toplevel $W]
+
+    # If the toplevel is not resizable then bail
+    foreach {State(resizeX) State(resizeY)} [wm resizable $top] break
+    if {!$State(resizeX) && !$State(resizeY)} {
+        return
+    }
 
     # Sanity-checks:
     #	If a negative X or Y position was specified for [wm geometry],
@@ -62,8 +72,14 @@ proc ttk::sizegrip::Press {W X Y} {
 proc ttk::sizegrip::Drag {W X Y} {
     variable State
     if {!$State(pressed)} { return }
-    set w [expr {$State(width)  + ($X - $State(pressX))/$State(widthInc)}]
-    set h [expr {$State(height) + ($Y - $State(pressY))/$State(heightInc)}]
+    set w $State(width)
+    set h $State(height)
+    if {$State(resizeX)} {
+        set w [expr {$w + ($X - $State(pressX))/$State(widthInc)}]
+    }
+    if {$State(resizeY)} {
+        set h [expr {$h + ($Y - $State(pressY))/$State(heightInc)}]
+    }
     if {$w <= 0} { set w 1 }
     if {$h <= 0} { set h 1 }
     wm geometry $State(toplevel) ${w}x${h}
