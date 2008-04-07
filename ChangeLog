@@ -1,6 +1,6 @@
 2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* generic/tkArgv.c: fix -help mem explosion. [Bug 1936238] (bachmann)
+	* generic/tkArgv.c: fix -help mem explosion. [Bug 1936238] (kenny)
 
 2008-04-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
