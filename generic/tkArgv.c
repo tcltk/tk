@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.12 2008/04/07 18:39:36 hobbs Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.13 2008/04/07 22:27:41 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -337,10 +337,7 @@ PrintUsage(
 				 * for default options. */
 {
     register Tk_ArgvInfo *infoPtr;
-    size_t width, i;
-    int numSpaces; /* must be int to allow for negative values */
-#define NUM_SPACES 20
-    static char spaces[] = "                    ";
+    size_t width, i, numSpaces;
     char tmp[TCL_DOUBLE_SPACE];
 
     /*
@@ -373,13 +370,8 @@ PrintUsage(
 	    }
 	    Tcl_AppendResult(interp, "\n ", infoPtr->key, ":", NULL);
 	    numSpaces = width + 1 - strlen(infoPtr->key);
-	    while (numSpaces > 0) {
-		if (numSpaces >= NUM_SPACES) {
-		    Tcl_AppendResult(interp, spaces, NULL);
-		} else {
-		    Tcl_AppendResult(interp, spaces+NUM_SPACES-numSpaces,NULL);
-		}
-		numSpaces -= NUM_SPACES;
+	    while (numSpaces-- > 0) {
+		Tcl_AppendResult(interp, " ", NULL);
 	    }
 	    Tcl_AppendResult(interp, infoPtr->help, NULL);
 	    switch (infoPtr->type) {
