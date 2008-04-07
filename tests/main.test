@@ -8,7 +8,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: main.test,v 1.10 2004/12/08 03:03:06 dgp Exp $
+# RCS: @(#) $Id: main.test,v 1.11 2008/04/07 23:14:39 hobbs Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -98,6 +98,30 @@ test main-2.3 {Tk_MainEx: -encoding option} -constraints {
         close $f
         removeFile script
     } -result {0 {-enc utf-8 script}}
+
+test main-3.1 {Tk_ParseArgv: -help option} -constraints unix -body {
+    # Run only on unix as Win32 pops up native dialog
+    list [catch {exec [interpreter] -help} msg] $msg
+} -match glob -result {1 {% Application initialization failed: Command-specific options:*}}
+
+test main-3.2 {Tk_ParseArgv: -help option} -setup {
+    set maininterp [interp create]
+} -body {
+    $maininterp eval { set argc 1 ; set argv -help }
+    list [catch {load {} Tk $maininterp} msg] $msg
+} -cleanup {
+    interp delete $maininterp
+} -match glob -result {1 {Command-specific options:*}}
+
+test main-3.3 {Tk_ParseArgv: -help option} -setup {
+    set maininterp [interp create]
+} -body {
+    # Repeat of 3.2 to catch cleanup, eg Bug 1927135
+    $maininterp eval { set argc 1 ; set argv -help }
+    list [catch {load {} Tk $maininterp} msg] $msg
+} -cleanup {
+    interp delete $maininterp
+} -match glob -result {1 {Command-specific options:*}}
 
 # cleanup
 cleanupTests
