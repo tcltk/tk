@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.64.2.53 2008/04/07 19:17:54 dgp Exp $
+RCS: @(#) $Id: changes,v 1.64.2.54 2008/04/07 23:12:06 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6158,5 +6158,7 @@ use (hobbs)
 2008-02-27 (bug fix)[1863346] Aqua: memleak in QD drawing (steffen)
 
 2008-03-27 (platform support)[1921166] Solaris 64bit build fixes (steffen)
+
+2008-04-07 (bug fix)[1937135] Fix double-free with argv error (hobbs)
 
 --- Released 8.4.19, April 11, 2008 --- See ChangeLog for details ---
