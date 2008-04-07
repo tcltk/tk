@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.56.2.14 2006/09/25 17:28:20 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.56.2.15 2008/04/07 23:12:10 hobbs Exp $
  */
 
 #include "tkPort.h"
@@ -3067,7 +3067,6 @@ Initialize(interp)
 	if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv,
 		argTable, TK_ARGV_DONT_SKIP_FIRST_ARG|TK_ARGV_NO_DEFAULTS)
 		!= TCL_OK) {
-	    ckfree((char *) argv);
 	    goto argError;
 	}
 	p = Tcl_Merge(argc, argv);
