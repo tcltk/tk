@@ -1,3 +1,15 @@
+2008-04-08  Kevin Kenny  <kennykb@acm.org>
+
+	* tkDecls.h:     Reverted das's change of Tk's stubs pointers 
+	* tkIntDecls.h:  from 'extern' to 'EXTERN'. Since the stubs pointer 
+	* tkPlatDecls.h: is always linked statically, its wrong to import 
+	                 or export it from a DLL, and the change causes
+	                 trouble for extensions that build with -DUSE_TK_STUBS.
+	* tkWinEmbed.c:  Removed #if 0 code. Trust the revision control system,
+	                 if you need it again, you can find it.
+	* tkWinSend.c:   Added conditional compilation to silence several
+	                 compiler warnings.
+	
 2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): fix double-free on Tk_ParseArgv
