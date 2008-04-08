@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.15 2007/12/13 15:28:56 dgp Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.16 2008/04/08 03:28:05 kennykb Exp $
  */
 
 #include "tkInt.h"
@@ -63,13 +63,17 @@ static Tcl_ThreadDataKey dataKey;
  * Functions internal to this file.
  */
 
+#ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void		CmdDeleteProc(ClientData clientData);
 static void		InterpDeleteProc(ClientData clientData,
 			    Tcl_Interp *interp);
+#endif
 static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
 static HRESULT		BuildMoniker(const char *name, LPMONIKER *pmk);
+#ifdef TK_SEND_ENABLED_ON_WINDOWS
 static HRESULT		RegisterInterp(const char *name,
 			    RegisteredInterp *riPtr);
+#endif
 static int		FindInterpreterObject(Tcl_Interp *interp,
 			    const char *name, LPDISPATCH *ppdisp);
 static int		Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
@@ -471,6 +475,7 @@ FindInterpreterObject(
  *--------------------------------------------------------------
  */
 
+#ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void
 CmdDeleteProc(
     ClientData clientData)
@@ -506,6 +511,7 @@ CmdDeleteProc(
 
     ckfree(clientData);
 }
+#endif
 
 /*
  *--------------------------------------------------------------
@@ -568,6 +574,7 @@ RevokeObjectRegistration(
  * ----------------------------------------------------------------------
  */
 
+#ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void
 InterpDeleteProc(
     ClientData clientData,
@@ -575,6 +582,7 @@ InterpDeleteProc(
 {
     CoUninitialize();
 }
+#endif
 
 /*
  * ----------------------------------------------------------------------
@@ -638,6 +646,7 @@ BuildMoniker(
  * ----------------------------------------------------------------------
  */
 
+#ifdef TK_SEND_ENABLED_ON_WINDOWS
 static HRESULT
 RegisterInterp(
     const char *name,
@@ -694,6 +703,7 @@ RegisterInterp(
     Tcl_DStringFree(&dString);
     return hr;
 }
+#endif
 
 /*
  * ----------------------------------------------------------------------

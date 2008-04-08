@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.33 2008/04/02 21:32:32 das Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.34 2008/04/08 03:28:05 kennykb Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -1223,7 +1223,7 @@ typedef struct TkIntStubs {
 } TkIntStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
-EXTERN CONST TkIntStubs *tkIntStubsPtr;
+extern CONST TkIntStubs *tkIntStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
