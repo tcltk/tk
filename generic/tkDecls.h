@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.32 2008/04/02 21:32:32 das Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.33 2008/04/08 03:28:04 kennykb Exp $
  */
 
 #ifndef _TKDECLS
@@ -1983,7 +1983,12 @@ typedef struct TkStubs {
 } TkStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
-EXTERN CONST TkStubs *tkStubsPtr;
+/* 
+ * The following declaration has to be 'extern', not EXTERN. The
+ * stubs pointer is always static-linked, and never exported from
+ * a DLL.
+ */
+extern const TkStubs *tkStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
