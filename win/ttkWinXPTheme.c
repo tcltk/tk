@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.18 2007/12/13 15:28:56 dgp Exp $
+ * $Id: ttkWinXPTheme.c,v 1.19 2008/04/08 23:30:46 patthoyts Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -372,6 +372,7 @@ typedef struct 	/* XP element specifications */
     int  	flags;		
 #   define 	IGNORE_THEMESIZE 0x80000000 /* See NOTE-GetThemePartSize */
 #   define 	PAD_MARGINS	 0x40000000 /* See NOTE-GetThemeMargins */
+#   define 	HEAP_ELEMENT	 0x20000000 /* ElementInfo is on heap */
 } ElementInfo;
 
 typedef struct
@@ -406,9 +407,21 @@ NewElementData(XPThemeProcs *procs, ElementInfo *info)
     return elementData;
 }
 
-static void DestroyElementData(void *elementData)
+/*
+ * Destroy elements. If the element was created by the element factory
+ * then the info member is dynamically allocated. Otherwise it was
+ * static data from the C object and only the ElementData needs freeing.
+ */
+static void DestroyElementData(void *clientData)
 {
-    ckfree(elementData);
+    ElementData *elementData = clientData;
+    if (elementData->info->flags & HEAP_ELEMENT) {
+	ckfree((char *)elementData->info->statemap);
+	ckfree((char *)elementData->info->className);
+	ckfree((char *)elementData->info->elementName);
+	ckfree((char *)elementData->info);    
+    }
+    ckfree(clientData);
 }
 
 /*
@@ -962,6 +975,147 @@ static ElementInfo ElementInfoTable[] = {
 #undef PAD
 
 /*----------------------------------------------------------------------
+ * Windows Visual Styles API Element Factory
+ *
+ * The Vista release has shown that the Windows Visual Styles can be 
+ * extended with additional elements. This element factory can permit
+ * the programmer to create elements for use with script-defined layouts
+ *
+ * eg: to create the small close button:
+ * style element create smallclose vsapi \
+ *    WINDOW 19 {disabled 4 pressed 3 active 2 {} 1}
+ */
+
+static int
+Ttk_CreateVsapiElement(
+    Tcl_Interp *interp,
+    void *clientData,
+    Ttk_Theme theme,
+    const char *elementName,
+    int objc, Tcl_Obj *CONST objv[])
+{
+    XPThemeData *themeData = clientData;
+    ElementInfo *elementPtr = NULL;
+    ClientData elementData;
+    Tcl_UniChar *className;
+    int partId = 0;
+    Ttk_StateTable *stateTable;
+    Ttk_Padding pad = {0, 0, 0, 0};
+    int flags = 0;
+    int length = 0;
+    char *name;
+    LPWSTR wname;
+
+    const char *optionStrings[] = 
+	{ "-padding","-width","-height","-margins",NULL };
+    enum { O_PADDING, O_WIDTH, O_HEIGHT, O_MARGINS };
+
+    if (objc < 2) {
+	Tcl_AppendResult(interp,
+	    "missing required arguments 'class' and/or 'partId'", NULL);
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetIntFromObj(interp, objv[1], &partId) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    className = Tcl_GetUnicodeFromObj(objv[0], &length);
+    
+    /* flags or padding */
+    if (objc > 3) {
+	int i = 3, option = 0;
+	for (i = 3; i < objc; i += 2) {
+	    int tmp = 0;
+	    if (i == objc -1) {
+		Tcl_AppendResult(interp, "Missing value for \"",
+		    Tcl_GetString(objv[i]), "\".", NULL);
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
+		    "option", 0, &option) != TCL_OK)
+		return TCL_ERROR;
+	    switch (option) {
+		case O_PADDING:
+		    if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK)
+			return TCL_ERROR;
+		    break;
+		case O_MARGINS:
+		    if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK)
+			return TCL_ERROR;
+		    flags |= PAD_MARGINS;
+		    break;
+		case O_WIDTH:
+		    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK)
+			return TCL_ERROR;
+		    pad.left = pad.right = tmp;
+		    flags |= IGNORE_THEMESIZE;
+		    break;
+		case O_HEIGHT:
+		    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK)
+			return TCL_ERROR;
+		    pad.top = pad.bottom = tmp;
+		    flags |= IGNORE_THEMESIZE;
+		    break;
+	    }
+	}
+    }
+
+    /* convert a statemap into a state table */
+    if (objc > 2) {
+	Tcl_Obj **specs;
+	int n,j,count, status = TCL_OK;
+	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
+	    return TCL_ERROR;
+	/* we over-allocate to ensure there is a terminating entry */
+	stateTable = (Ttk_StateTable *)
+	    ckalloc(sizeof(Ttk_StateTable) * (count + 1));
+	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
+	for (n = 0, j = 0; status == TCL_OK && n < count; n += 2, ++j) {
+	    Ttk_StateSpec spec = {0,0};
+	    status = Ttk_GetStateSpecFromObj(interp, specs[n], &spec);
+	    if (status == TCL_OK) {
+		stateTable[j].onBits = spec.onbits;
+		stateTable[j].offBits = spec.offbits;
+		status = Tcl_GetIntFromObj(interp, specs[n+1],
+		    &stateTable[j].index);
+	    }
+	}
+	if (status != TCL_OK) {
+	    ckfree((char *)stateTable);
+	    return status;
+	}
+    } else {
+	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable));
+	memset(stateTable, 0, sizeof(Ttk_StateTable));
+    }
+
+    elementPtr = (ElementInfo *)ckalloc(sizeof(ElementInfo));
+    elementPtr->elementSpec = &GenericElementSpec;
+    elementPtr->partId = partId;
+    elementPtr->statemap = stateTable;
+    elementPtr->padding = pad;
+    elementPtr->flags = HEAP_ELEMENT | flags;
+
+    /* set the element name to an allocated copy */
+    name = ckalloc(strlen(elementName) + 1);
+    strcpy(name, elementName);
+    elementPtr->elementName = name;
+
+    /* set the class name to an allocated copy */
+    wname = (LPWSTR)ckalloc(sizeof(WCHAR) * (length + 1));
+    wcscpy(wname, className);
+    elementPtr->className = wname;
+
+    elementData = NewElementData(themeData->procs, elementPtr);
+    Ttk_RegisterElementSpec(
+	theme, elementName, elementPtr->elementSpec, elementData);
+
+    Ttk_RegisterCleanup(interp, elementData, DestroyElementData);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));
+    return TCL_OK;
+}
+
+/*----------------------------------------------------------------------
  * +++ Initialization routine:
  */
 
@@ -997,6 +1151,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 
     Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, themeData);
     Ttk_RegisterCleanup(interp, themeData, XPThemeDeleteProc);
+    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
 
     /*
      * New elements:

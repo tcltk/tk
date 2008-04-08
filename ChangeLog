@@ -1,3 +1,9 @@
+2008-04-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/ttkWinXpTheme.c:  Provide a visual-styles API element engine
+	* tests/ttk/vsapi.test: to permit scripts to create any available
+	* doc/ttk_vsapi.n:      windows xp/vista element. Plus basic tests.
+
 2008-04-08  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkDecls.h:		make genstubs (genStubs.tcl changes).
