@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.31 2008/04/02 21:32:32 das Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.32 2008/04/08 15:00:43 das Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -671,7 +671,7 @@ typedef struct TkIntPlatStubs {
 } TkIntPlatStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
-EXTERN CONST TkIntPlatStubs *tkIntPlatStubsPtr;
+extern CONST TkIntPlatStubs *tkIntPlatStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
