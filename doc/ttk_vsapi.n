@@ -4,16 +4,15 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_vsapi.n,v 1.1 2008/04/08 23:30:45 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_vsapi.n,v 1.2 2008/04/09 09:28:05 patthoyts Exp $
 '\" 
 .so man.macros
-.TH ttk::vsapi n 8.5 Tk "Tk Themed Widget"
+.TH ttk_vsapi n 8.5 Tk "Tk Themed Widget"
 .BS
 .SH NAME
-ttk::vsapi \- Define a Microsoft Visual Styles element
+ttk_vsapi \- Define a Microsoft Visual Styles element
 .SH SYNOPSIS
-\fBttk::style element create \fIname\fR \fBvsapi\fR \fIclassName\fR
-\fIpartId\fR ?\fIstateMap\fR? ?\fIoptions\fR?
+\fBttk::style element create \fIname\fR \fBvsapi\fR \fIclassName\fR \fIpartId\fR ?\fIstateMap\fR? ?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 The \fIvsapi\fR element factory creates a new element
@@ -33,20 +32,21 @@ Valid \fIoptions\fR are:
 \fB\-padding\fR \fIpadding\fR
 Specify the element's interior padding.
 \fIpadding\fR is a list of up to four integers specifying
-the left, top, right and bottom borders respectively. This option
-cannot be mixed with any other options.
+the left, top, right and bottom padding quantities respectively.
+This option may not be mixed with any other options.
 .TP
 \fB\-margins\fR \fIpadding\fR
-Specifies the elements exterior padding. The \fIpadding\fR is as
-described for the \fI-padding\fR option. This option may not be mixed
-with any other options.
+Specifies the elements exterior padding.
+\fIpadding\fR is a list of up to four integers specifying
+the left, top, right and bottom padding quantities respectively.
+This option may not be mixed with any other options.
 .TP
 \fB\-width\fR \fIwidth\fR
 Specifies the height for the element. If this option is set then
 the Visual Styles API will not be queried for the recommended
-size. If this option is set then \fI-height\fR should also be set.
-The \fI-width\fR and \fI-height\fR options cannot be mixed with
-the \fI-padding\fR or \fI-margins\fR options.
+size or the part. If this option is set then \fI-height\fR should
+also be set. The \fI-width\fR and \fI-height\fR options cannot
+be mixed with the \fI-padding\fR or \fI-margins\fR options.
 .TP
 \fB\-height\fR \fIheight\fR
 Specifies the height of the element. See the comments for \fI-width\fR.
@@ -57,15 +57,29 @@ This permits the element appearence to respond to changes in the
 widget state such as becoming active or being pressed. The list should
 be as described for the \fBttk::style map\fR command but note that the
 last pair in the list should be the default state and is typically and
-empty list and 1.
+empty list and 1. Unfortunately all the Visual Styles parts have
+different state values and these must be looked up either in the
+Microsoft documentation or more likely in the header files. The
+original header to use was \fItmschema.h\fR but in more recent
+versions of the Windows Development Kit this is \fIvssym32.h\fR.
 .PP
 If no \fIstateMap\fR parameter is given there is an implicit default
-\fIstateMap\fR of {{} 1}
+map of {{} 1}
 .SH "EXAMPLE"
-Change the appearence of a ttk::checkbutton to use the Explorer pin
-part.
+Create a correctly themed close button by changing the layout of 
+a \fBttk::button\fR(n). This uses the WINDOW part WP_SMALLCLOSEBUTTON
+and as documented the states CBS_DISABLED, CBS_HOT, CBS_NORMAL and
+CBS_PUSHED are mapped from ttk states.
 .CS
-# EXPLORERBAR EBP_HEADERPIN
+ttk::style element create smallclose vsapi WINDOW 19 \\
+    {disabled 4 pressed 3 active 2 {} 1}
+ttk::style layout CloseButton {CloseButton.smallclose -sticky news}
+pack [ttk::button .close -style CloseButton]
+.CE
+.PP
+Change the appearence of a \fBttk::checkbutton\fR(n) to use the
+Explorer pin part EBP_HEADERPIN.
+.CS
 ttk::style element create pin vsapi EXPLORERBAR 3 {
     {pressed !selected} 3
     {active !selected} 2
@@ -78,6 +92,6 @@ ttk::style layout Explorer.Pin {Explorer.Pin.pin -sticky news}
 pack [ttk::checkbutton .pin -style Explorer.Pin]
 .CE
 .SH "SEE ALSO"
-ttk::intro(n), ttk::widget(n), ttk::style(n), ttk::image(n)
+ttk::intro(n), ttk::widget(n), ttk::style(n), ttk_image(n)
 .SH "KEYWORDS"
 style, theme, appearance, windows
