@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.42 2008/04/09 20:52:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.43 2008/04/09 21:00:54 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1739,501 +1739,378 @@ ReadValue(
 }
 
 /*
- *-----------------------------------------------------------------------
  *
- * miGIF Compression - mouse and ivo's GIF-compatible compression
+ * GIF Image compression - modified 'compress'
  *
- *		-run length encoding compression routines-
+ * Based on: compress.c - File compression ala IEEE Computer, June 1984.
  *
- * Copyright (C) 1998 Hutchison Avenue Software Corporation
- *		 http://www.hasc.com
- *		 info@hasc.com
+ * By Authors:  Spencer W. Thomas       (decvax!harpo!utah-cs!utah-gr!thomas)
+ *              Jim McKie               (decvax!mcvax!jim)
+ *              Steve Davies            (decvax!vax135!petsd!peora!srd)
+ *              Ken Turkowski           (decvax!decwrl!turtlevax!ken)
+ *              James A. Woods          (decvax!ihnp4!ames!jaw)
+ *              Joe Orost               (decvax!vax135!petsd!joe)
  *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted, provided
- * that the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation. This software is provided "AS IS." The Hutchison Avenue
- * Software Corporation disclaims all warranties, either express or implied,
- * including but not limited to implied warranties of merchantability and
- * fitness for a particular purpose, with respect to this code and
- * accompanying documentation.
- *
- * The miGIF compression routines do not, strictly speaking, generate files
- * conforming to the GIF spec, since the image data is not LZW-compressed
- * (this is the point: in order to avoid transgression of the Unisys patent on
- * the LZW algorithm.) However, miGIF generates data streams that any
- * reasonably sane LZW decompresser will decompress to what we want.
- *
- * miGIF compression uses run length encoding. It compresses horizontal runs
- * of pixels of the same color. This type of compression gives good results on
- * images with many runs, for example images with lines, text and solid shapes
- * on a solid-colored background. It gives little or no compression on images
- * with few runs, for example digital or scanned photos.
- *
- *				 der Mouse
- *			mouse@rodents.montreal.qc.ca
- *	      7D C8 61 52 5D E7 2D 39  4E F1 31 3E E8 B3 27 4B
- *
- *			       ivo@hasc.com
- *
- * The Graphics Interchange Format(c) is the Copyright property of CompuServe
- * Incorporated. GIF(sm) is a Service Mark property of CompuServe Incorporated.
- *
- *-----------------------------------------------------------------------
  */
+
+#define MAXCODE(n_bits)		(((long) 1 << (n_bits)) - 1)
 
 typedef struct {
-    int runlengthPixel;
-    int runlengthBaseCode;
-    int runlengthCount;
-    int runlengthTablePixel;
-    int runlengthTableMax;
-    int justCleared;
-    int outputBits;
-    int outputBitsInit;
-    int outputCount;
-    int outputBump;
-    int outputBumpInit;
-    int outputClear;
-    int outputClearInit;
-    int maxOcodes;
-    int codeClear;
-    int codeEOF;
-    unsigned int obuf;
-    int obits;
-    Tcl_Channel ofile;
-    unsigned char oblock[256];
-    int oblen;
-} miGIFState_t;
-
-/*
- * Used only when debugging GIF compression code
- */
-/* #define MIGIF_DEBUGGING_ENVARS */
+    int n_bits;		/* number of bits/code */
+    long maxcode;		/* maximum code, given n_bits */
+    int		htab[HSIZE];
+    unsigned int	codetab[HSIZE];
 
-#ifdef MIGIF_DEBUGGING_ENVARS
+    long hsize;	/* for dynamic table sizing */
 
 /*
- * This debugging code is _absolutely_ not thread-safe. It's also not normally
- * enabled either.
+ * To save much memory, we overlay the table used by compress() with those
+ * used by decompress().  The tab_prefix table is the same size and type
+ * as the codetab.  The tab_suffix table needs 2**GIFBITS characters.  We
+ * get this from the beginning of htab.  The output stack uses the rest
+ * of htab, and contains characters.  There is plenty of room for any
+ * possible stack (stack used to be 8000 characters).
  */
 
-static int verboseSet = 0;
-static int verbose;
-#define MIGIF_VERBOSE		(verboseSet?verbose:setVerbose())
-#define DEBUGMSG(printfArgs)	if (MIGIF_VERBOSE) { printf printfArgs; }
+    int free_ent;  /* first unused entry */
 
-static int
-setVerbose(void)
-{
-    verbose = !!getenv("MIGIF_VERBOSE");
-    verboseSet = 1;
-    return verbose;
-}
+/*
+ * block compression parameters -- after all codes are used up,
+ * and compression rate changes, start over.
+ */
+    int clear_flg;
 
-static const char *
-binformat(
-    unsigned int v,
-    int nbits)
-{
-    static char bufs[8][64];
-    static int bhand = 0;
-    unsigned int bit;
-    int bno;
-    char *bp;
+    int offset;
+    unsigned int in_count;            /* length of input */
+    unsigned int out_count;           /* # of codes output (for debugging) */
 
-    bhand--;
-    if (bhand < 0) {
-	bhand = (sizeof(bufs) / sizeof(bufs[0])) - 1;
-    }
-    bp = &bufs[bhand][0];
-    for (bno=nbits-1,bit=((unsigned int)1)<<bno ; bno>=0 ; bno--,bit>>=1) {
-	*bp++ = (v & bit) ? '1' : '0';
-	if (((bno&3) == 0) && (bno != 0)) {
-	    *bp++ = '.';
-	}
-    }
-    *bp = '\0';
-    return &bufs[bhand][0];
-}
-#else /* !MIGIF_DEBUGGING_ENVARS */
-#define DEBUGMSG(printfArgs) /* do nothing */
-#endif
-
-static void
-writeBlock(
-    miGIFState_t *statePtr)
-{
-    unsigned char c;
+/*
+ * compress stdin to stdout
+ *
+ * Algorithm:  use open addressing double hashing (no chaining) on the
+ * prefix code / next character combination.  We do a variant of Knuth's
+ * algorithm D (vol. 3, sec. 6.4) along with G. Knott's relatively-prime
+ * secondary probe.  Here, the modular division first probe is gives way
+ * to a faster exclusive-or manipulation.  Also do block compression with
+ * an adaptive reset, whereby the code table is cleared when the compression
+ * ratio decreases, but after the table fills.  The variable-length output
+ * codes are re-sized at this point, and a special CLEAR code is generated
+ * for the decompressor.  Late addition:  construct the table according to
+ * file size for noticeable speed improvement on small files.  Please direct
+ * questions about this implementation to ames!jaw.
+ */
 
-#ifdef MIGIF_DEBUGGING_ENVARS
-    if (MIGIF_VERBOSE) {
-	int i;
-	printf("writeBlock %d:", statePtr->oblen);
-	for (i=0 ; i<statePtr->oblen ; i++) {
-	    printf(" %02x", statePtr->oblock[i]);
-	}
-	printf("\n");
-    }
-#endif
-    c = statePtr->oblen;
-    Tcl_Write(statePtr->ofile, (char *) &c, 1);
-    Tcl_Write(statePtr->ofile, (char *) &statePtr->oblock[0], statePtr->oblen);
-    statePtr->oblen = 0;
-}
-
-static void
-blockOut(
-    miGIFState_t *statePtr,
-    unsigned c)
-{
-    DEBUGMSG(("blockOut %s\n", binformat(c, 8)));
-    statePtr->oblock[statePtr->oblen++] = (unsigned char) c;
-    if (statePtr->oblen >= 255) {
-	writeBlock(statePtr);
-    }
-}
-
-static void
-blockFlush(
-    miGIFState_t *statePtr)
-{
-    DEBUGMSG(("blockFlush\n"));
-    if (statePtr->oblen > 0) {
-	writeBlock(statePtr);
-    }
-}
-
-static void
-output(
-    miGIFState_t *statePtr,
-    int val)
-{
-    DEBUGMSG(("output %s [%s %d %d]\n", binformat(val, statePtr->outputBits),
-	    binformat(statePtr->obuf, statePtr->obits), statePtr->obits,
-	    statePtr->outputBits));
-    statePtr->obuf |= val << statePtr->obits;
-    statePtr->obits += statePtr->outputBits;
-    while (statePtr->obits >= 8) {
-	blockOut(statePtr, statePtr->obuf & 0xff);
-	statePtr->obuf >>= 8;
-	statePtr->obits -= 8;
-    }
-    DEBUGMSG(("output leaving [%s %d]\n",
-	    binformat(statePtr->obuf, statePtr->obits), statePtr->obits));
-}
-
-static void
-outputFlush(
-    miGIFState_t *statePtr)
-{
-    DEBUGMSG(("outputFlush\n"));
-    if (statePtr->obits > 0) {
-	blockOut(statePtr, statePtr->obuf);
-    }
-    blockFlush(statePtr);
-}
-
-static void
-didClear(
-    miGIFState_t *statePtr)
-{
-    DEBUGMSG(("didClear\n"));
-    statePtr->outputBits = statePtr->outputBitsInit;
-    statePtr->outputBump = statePtr->outputBumpInit;
-    statePtr->outputClear = statePtr->outputClearInit;
-    statePtr->outputCount = 0;
-    statePtr->runlengthTableMax = 0;
-    statePtr->justCleared = 1;
-}
-
-static void
-outputPlain(
-    miGIFState_t *statePtr,
-    int c)
-{
-    DEBUGMSG(("outputPlain %s\n", binformat(c, statePtr->outputBits)));
-    statePtr->justCleared = 0;
-    output(statePtr, c);
-    statePtr->outputCount++;
-    if (statePtr->outputCount >= statePtr->outputBump) {
-	statePtr->outputBits++;
-	statePtr->outputBump += 1 << (statePtr->outputBits - 1);
-    }
-    if (statePtr->outputCount >= statePtr->outputClear) {
-	output(statePtr, statePtr->codeClear);
-	didClear(statePtr);
-    }
-}
-
-static unsigned int
-isqrt(
-    unsigned int x)
-{
-    unsigned int r;
-    unsigned int v;
+    int g_init_bits;
+    Tcl_Channel g_outfile;
 
-    if (x < 2) {
-	return x;
-    }
-    for (v=x,r=1 ; v ; v>>=2,r<<=1);
-    while (1) {
-	v = ((x / r) + r) / 2;
-	if (v==r || v==r+1) {
-	    return r;
-	}
-	r = v;
-    }
-}
-
-static int
-computeTriangleCount(
-    unsigned int count,
-    unsigned int nrepcodes)
-{
-    unsigned int perrep;
-    unsigned int cost;
+    int ClearCode;
+    int EOFCode;
 
-    cost = 0;
-    perrep = (nrepcodes * (nrepcodes+1)) / 2;
-    while (count >= perrep) {
-	cost += nrepcodes;
-	count -= perrep;
-    }
-    if (count > 0) {
-	unsigned int n = isqrt(count);
+    unsigned long cur_accum;
+    int  cur_bits;
 
-	while (n*(n+1) >= 2*count) {
-	    n--;
-	}
-	while (n*(n+1) < 2*count) {
-	    n++;
-	}
-	cost += n;
-    }
-    return (int) cost + 1;
-}
-
-static void
-maxOutputClear(
-    miGIFState_t *statePtr)
-{
-    statePtr->outputClear = statePtr->maxOcodes;
-}
-
-static void
-resetOutputClear(
-    miGIFState_t *statePtr)
-{
-    statePtr->outputClear = statePtr->outputClearInit;
-    if (statePtr->outputCount >= statePtr->outputClear) {
-	output(statePtr, statePtr->codeClear);
-	didClear(statePtr);
-    }
-}
-
-static void
-runlengthFlushFromClear(
-    miGIFState_t *statePtr,
-    int count)
-{
-    int n;
+/*
+ * Number of characters so far in this 'packet'
+ */
+    int a_count;
 
-    DEBUGMSG(("runlengthFlushFromClear %d\n", count));
-    maxOutputClear(statePtr);
-    statePtr->runlengthTablePixel = statePtr->runlengthPixel;
-    n = 1;
-    while (count > 0) {
-	if (n == 1) {
-	    statePtr->runlengthTableMax = 1;
-	    outputPlain(statePtr, statePtr->runlengthPixel);
-	    count--;
-	} else if (count >= n) {
-	    statePtr->runlengthTableMax = n;
-	    outputPlain(statePtr, statePtr->runlengthBaseCode+n-2);
-	    count -= n;
-	} else if (count == 1) {
-	    statePtr->runlengthTableMax++;
-	    outputPlain(statePtr, statePtr->runlengthPixel);
-	    count = 0;
-	} else {
-	    statePtr->runlengthTableMax++;
-	    outputPlain(statePtr, statePtr->runlengthBaseCode+count-2);
-	    count = 0;
-	}
-	if (statePtr->outputCount == 0) {
-	    n = 1;
-	} else {
-	    n++;
-	}
-    }
-    resetOutputClear(statePtr);
-    DEBUGMSG(("runlengthFlushFromClear leaving tableMax=%d\n",
-	    statePtr->runlengthTableMax));
-}
-
-static void
-runlengthFlushClearOrRep(
-    miGIFState_t *statePtr,
-    int count)
-{
-    int withclr;
+/*
+ * Define the storage for the packet accumulator
+ */
+    unsigned char accum[256];
+} GIFState_t;
 
-    DEBUGMSG(("runlengthFlushClearOrRep %d\n", count));
-    withclr = computeTriangleCount((unsigned) count,
-	    (unsigned) statePtr->maxOcodes);
-    if (withclr < count) {
-	output(statePtr, statePtr->codeClear);
-	didClear(statePtr);
-	runlengthFlushFromClear(statePtr, count);
-    } else {
-	for (; count>0 ; count--) {
-	    outputPlain(statePtr, statePtr->runlengthPixel);
-	}
-    }
-}
-
-static void
-runlengthFlushWithTable(
-    miGIFState_t *statePtr,
-    int count)
-{
-    int repmax;
-    int repleft;
-    int leftover;
+static void output _ANSI_ARGS_((GIFState_t *statePtr, long code));
+static void cl_block _ANSI_ARGS_((GIFState_t *statePtr));
+static void cl_hash _ANSI_ARGS_((GIFState_t *statePtr, int hsize));
+static void char_init _ANSI_ARGS_((GIFState_t *statePtr));
+static void char_out _ANSI_ARGS_((GIFState_t *statePtr, int c));
+static void flush_char _ANSI_ARGS_((GIFState_t *statePtr));
 
-    DEBUGMSG(("runlengthFlushWithTable %d\n", count));
-    repmax = count / statePtr->runlengthTableMax;
-    leftover = count % statePtr->runlengthTableMax;
-    repleft = (leftover ? 1 : 0);
-    if (statePtr->outputCount+repmax+repleft > statePtr->maxOcodes) {
-	repmax = statePtr->maxOcodes - statePtr->outputCount;
-	leftover = count - (repmax * statePtr->runlengthTableMax);
-	repleft = computeTriangleCount((unsigned) leftover,
-		(unsigned) statePtr->maxOcodes);
-    }
-    DEBUGMSG(("runlengthFlushWithTable repmax=%d leftover=%d repleft=%d\n",
-	    repmax, leftover, repleft));
-    if (computeTriangleCount((unsigned) count, (unsigned) statePtr->maxOcodes)
-	    < repmax+repleft) {
-	output(statePtr, statePtr->codeClear);
-	didClear(statePtr);
-	runlengthFlushFromClear(statePtr, count);
-	return;
-    }
-    maxOutputClear(statePtr);
-    for (; repmax>0 ; repmax--) {
-	outputPlain(statePtr,
-		statePtr->runlengthBaseCode + statePtr->runlengthTableMax - 2);
-    }
-    if (leftover) {
-	if (statePtr->justCleared) {
-	    runlengthFlushFromClear(statePtr, leftover);
-	} else if (leftover == 1) {
-	    outputPlain(statePtr, statePtr->runlengthPixel);
-	} else {
-	    outputPlain(statePtr, statePtr->runlengthBaseCode + leftover - 2);
-	}
-    }
-    resetOutputClear(statePtr);
-}
-
-static void
-runlengthFlush(
-    miGIFState_t *statePtr)
+static void		compress(int initBits, Tcl_Channel handle,
+			    ifunptr readValue, GifWriterState *statePtr);
+
+static void compress(init_bits, handle, readValue, statePtr)
+    int init_bits;
+    Tcl_Channel handle;
+    ifunptr readValue;
+    GifWriterState *statePtr;
 {
-    DEBUGMSG(("runlengthFlush [ %d %d\n", statePtr->runlengthCount,
-	    statePtr->runlengthPixel));
-    if (statePtr->runlengthCount == 1) {
-	outputPlain(statePtr, statePtr->runlengthPixel);
-	statePtr->runlengthCount = 0;
-	DEBUGMSG(("runlengthFlush ]\n"));
-	return;
-    }
-    if (statePtr->justCleared) {
-	runlengthFlushFromClear(statePtr, statePtr->runlengthCount);
-    } else if ((statePtr->runlengthTableMax < 2)
-	    || (statePtr->runlengthTablePixel != statePtr->runlengthPixel)) {
-	runlengthFlushClearOrRep(statePtr, statePtr->runlengthCount);
-    } else {
-	runlengthFlushWithTable(statePtr, statePtr->runlengthCount);
-    }
-    DEBUGMSG(("runlengthFlush ]\n"));
-    statePtr->runlengthCount = 0;
-}
-
-static void
-compress(
-    int initBits,
-    Tcl_Channel handle,
-    ifunptr readValue,
-    GifWriterState *statePtr)
-{
-    int c;
-    miGIFState_t state;
+    register long fcode;
+    register long i = 0;
+    register int c;
+    register long ent;
+    register long disp;
+    register long hsize_reg;
+    register int hshift;
+    GIFState_t state;
 
     memset(&state, 0, sizeof(state));
-
-    state.ofile = handle;
-    state.obuf = 0;
-    state.obits = 0;
-    state.oblen = 0;
-    state.codeClear = 1 << (initBits - 1);
-    state.codeEOF = state.codeClear + 1;
-    state.runlengthBaseCode = state.codeEOF + 1;
-    state.outputBumpInit = (1 << (initBits - 1)) - 1;
+    /*
+     * Set up the globals:  g_init_bits - initial number of bits
+     *                      g_outfile   - pointer to output file
+     */
+    state.g_init_bits = init_bits;
+    state.g_outfile = handle;
 
     /*
-     * For images with a lot of runs, making outputClearInit larger will give
-     * better compression.
+     * Set up the necessary values
+     */
+    state.offset = 0;
+    state.hsize = HSIZE;
+    state.out_count = 0;
+    state.clear_flg = 0;
+    state.in_count = 1;
+    state.maxcode = MAXCODE(state.n_bits = state.g_init_bits);
+
+    state.ClearCode = (1 << (init_bits - 1));
+    state.EOFCode = state.ClearCode + 1;
+    state.free_ent = state.ClearCode + 2;
+
+    char_init(&state);
+
+    ent = readValue(statePtr);
+
+    hshift = 0;
+    for ( fcode = (long) state.hsize;  fcode < 65536L; fcode *= 2L )
+        hshift++;
+    hshift = 8 - hshift;                /* set hash code range bound */
+
+    hsize_reg = state.hsize;
+    cl_hash(&state, (int) hsize_reg);            /* clear hash table */
+
+    output(&state, (long)state.ClearCode);
+
+#ifdef SIGNED_COMPARE_SLOW
+    while ( (c = readValue(statePtr) ) != (unsigned) EOF ) {
+#else
+    while ( (c = readValue(statePtr)) != EOF ) {
+#endif
+
+        state.in_count++;
+
+        fcode = (long) (((long) c << GIFBITS) + ent);
+        i = (((long)c << hshift) ^ ent);    /* xor hashing */
+
+        if (state.htab[i] == fcode) {
+            ent = state.codetab[i];
+            continue;
+        } else if ( (long) state.htab[i] < 0 )      /* empty slot */
+            goto nomatch;
+        disp = hsize_reg - i;           /* secondary hash (after G. Knott) */
+        if ( i == 0 )
+            disp = 1;
+probe:
+        if ( (i -= disp) < 0 )
+            i += hsize_reg;
+
+        if (state.htab[i] == fcode) {
+            ent = state.codetab[i];
+            continue;
+        }
+        if ( (long) state.htab[i] > 0 )
+            goto probe;
+nomatch:
+        output (&state, (long) ent);
+        state.out_count++;
+        ent = c;
+#ifdef SIGNED_COMPARE_SLOW
+        if ( (unsigned) free_ent < (unsigned) ((long)1 << GIFBITS)) {
+#else
+        if (state.free_ent < ((long)1 << GIFBITS)) {
+#endif
+            state.codetab[i] = state.free_ent++; /* code -> hashtable */
+            state.htab[i] = fcode;
+        } else
+                cl_block(&state);
+    }
+    /*
+     * Put out the final code.
+     */
+    output(&state, (long)ent);
+    state.out_count++;
+    output(&state, (long) state.EOFCode);
+
+    return;
+}
+
+/*****************************************************************
+ * TAG( output )
+ *
+ * Output the given code.
+ * Inputs:
+ *      code:   A n_bits-bit integer.  If == -1, then EOF.  This assumes
+ *              that n_bits =< (long) wordsize - 1.
+ * Outputs:
+ *      Outputs code to the file.
+ * Assumptions:
+ *      Chars are 8 bits long.
+ * Algorithm:
+ *      Maintain a GIFBITS character long buffer (so that 8 codes will
+ * fit in it exactly).  Use the VAX insv instruction to insert each
+ * code in turn.  When the buffer fills up empty it and start over.
+ */
+
+static const
+unsigned long masks[] = { 0x0000, 0x0001, 0x0003, 0x0007, 0x000F,
+                                  0x001F, 0x003F, 0x007F, 0x00FF,
+                                  0x01FF, 0x03FF, 0x07FF, 0x0FFF,
+                                  0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF };
+
+static void
+output(statePtr, code)
+    GIFState_t *statePtr;
+    long  code;
+{
+    statePtr->cur_accum &= masks[statePtr->cur_bits];
+
+    if (statePtr->cur_bits > 0) {
+	statePtr->cur_accum |= ((long) code << statePtr->cur_bits);
+    } else {
+	statePtr->cur_accum = code;
+    }
+
+    statePtr->cur_bits += statePtr->n_bits;
+
+    while (statePtr->cur_bits >= 8 ) {
+	char_out(statePtr, (unsigned int)(statePtr->cur_accum & 0xff));
+	statePtr->cur_accum >>= 8;
+	statePtr->cur_bits -= 8;
+    }
+
+    /*
+     * If the next entry is going to be too big for the code size,
+     * then increase it, if possible.
      */
 
-    state.outputClearInit =
-	    (initBits <= 3) ? 9 : (state.outputBumpInit-1);
-#ifdef MIGIF_DEBUGGING_ENVARS
-    {
-	const char *ocienv = getenv("MIGIF_OUT_CLEAR_INIT");
-
-	if (ocienv) {
-	    state.outputClearInit = atoi(ocienv);
-	    DEBUGMSG(("[overriding outputClearInit to %d]\n",
-		    state.outputClearInit));
-	}
-    }
-#endif
-    state.outputBitsInit = initBits;
-    state.maxOcodes =
-	    (1 << GIFBITS) - ((1 << (state.outputBitsInit - 1)) + 3);
-    didClear(&state);
-    output(&state, state.codeClear);
-    state.runlengthCount = 0;
-    while (1) {
-	c = readValue(statePtr);
-	if (state.runlengthCount>0 && state.runlengthPixel!=c) {
-	    runlengthFlush(&state);
-	}
-	if (c == EOF) {
-	    break;
-	}
-	if (state.runlengthPixel == c) {
-	    state.runlengthCount++;
+    if ((statePtr->free_ent > statePtr->maxcode)|| statePtr->clear_flg ) {
+	if (statePtr->clear_flg) {
+	    statePtr->maxcode = MAXCODE(statePtr->n_bits = statePtr->g_init_bits);
+	    statePtr->clear_flg = 0;
 	} else {
-	    state.runlengthPixel = c;
-	    state.runlengthCount = 1;
+	    statePtr->n_bits++;
+	    if (statePtr->n_bits == GIFBITS) {
+		statePtr->maxcode = (long)1 << GIFBITS;
+	    } else {
+		statePtr->maxcode = MAXCODE(statePtr->n_bits);
+	    }
 	}
     }
-    output(&state, state.codeEOF);
-    outputFlush(&state);
+
+    if (code == statePtr->EOFCode) {
+	/*
+	 * At EOF, write the rest of the buffer.
+	 */
+        while (statePtr->cur_bits > 0) {
+	    char_out(statePtr, (unsigned int)(statePtr->cur_accum & 0xff));
+	    statePtr->cur_accum >>= 8;
+	    statePtr->cur_bits -= 8;
+	}
+	flush_char(statePtr);
+    }
 }
 
 /*
- *-----------------------------------------------------------------------
- *
- * End of miGIF section - See copyright notice at start of section.
- *
- *-----------------------------------------------------------------------
+ * Clear out the hash table
  */
+static void
+cl_block(statePtr)             /* table clear for block compress */
+    GIFState_t *statePtr;
+{
+
+        cl_hash (statePtr, (int) statePtr->hsize);
+        statePtr->free_ent = statePtr->ClearCode + 2;
+        statePtr->clear_flg = 1;
+
+        output(statePtr, (long) statePtr->ClearCode);
+}
+
+static void
+cl_hash(statePtr, hsize)          /* reset code table */
+    GIFState_t *statePtr;
+    int hsize;
+{
+    register int *htab_p = statePtr->htab+hsize;
+    register long i;
+    register long m1 = -1;
+
+    i = hsize - 16;
+    do {                            /* might use Sys V memset(3) here */
+	*(htab_p-16) = m1;
+	*(htab_p-15) = m1;
+	*(htab_p-14) = m1;
+	*(htab_p-13) = m1;
+	*(htab_p-12) = m1;
+	*(htab_p-11) = m1;
+	*(htab_p-10) = m1;
+	*(htab_p-9) = m1;
+	*(htab_p-8) = m1;
+	*(htab_p-7) = m1;
+	*(htab_p-6) = m1;
+	*(htab_p-5) = m1;
+	*(htab_p-4) = m1;
+	*(htab_p-3) = m1;
+	*(htab_p-2) = m1;
+	*(htab_p-1) = m1;
+	htab_p -= 16;
+    } while ((i -= 16) >= 0);
+
+    for (i += 16; i > 0; i--) {
+	*--htab_p = m1;
+    }
+}
+
+
+/******************************************************************************
+ *
+ * GIF Specific routines
+ *
+ ******************************************************************************/
+
+/*
+ * Set up the 'byte output' routine
+ */
+static void
+char_init(statePtr)
+    GIFState_t *statePtr;
+{
+    statePtr->a_count = 0;
+    statePtr->cur_accum = 0;
+    statePtr->cur_bits = 0;
+}
+
+/*
+ * Add a character to the end of the current packet, and if it is 254
+ * characters, flush the packet to disk.
+ */
+static void
+char_out(statePtr, c)
+    GIFState_t *statePtr;
+    int c;
+{
+    statePtr->accum[statePtr->a_count++] = c;
+    if (statePtr->a_count >= 254) {
+	flush_char(statePtr);
+    }
+}
+
+/*
+ * Flush the packet to disk, and reset the accumulator
+ */
+static void
+flush_char(statePtr)
+    GIFState_t *statePtr;
+{
+    unsigned char c;
+    if (statePtr->a_count > 0) {
+	c = statePtr->a_count;
+	Tcl_Write(statePtr->g_outfile, (CONST char *) &c, 1);
+	Tcl_Write(statePtr->g_outfile, (CONST char *) statePtr->accum, statePtr->a_count);
+	statePtr->a_count = 0;
+    }
+}
+
+/* The End */
 
 /*
  * Local Variables:
