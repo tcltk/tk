@@ -1,3 +1,14 @@
+2008-04-11  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump version number to 8.5.3b1 to distinguish
+	* library/tk.tcl:	CVS development snapshots from the 8.5.2 and
+	* unix/configure.in:	8.5.3 releases.
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf (2.59)
+	* win/configure:
+
 2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): fix double-free on Tk_ParseArgv
