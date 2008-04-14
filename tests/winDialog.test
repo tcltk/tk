@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.15 2007/12/13 15:27:55 dgp Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.15.2.1 2008/04/14 20:59:51 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -57,10 +57,80 @@ proc SetText {button text} {
     return [testwinevent $::tk_dialog $button WM_SETTEXT $text]
 }
 
-test winDialog-1.1 {Tk_ChooseColorObjCmd} {nt} {
-} {}
+test winDialog-1.1.0 {Tk_ChooseColorObjCmd} -constraints {
+    testwinevent
+} -body {
+    start {tk_chooseColor}
+    then {
+        Click cancel
+    }
+} -result {0}
+test winDialog-1.1.1 {Tk_ChooseColorObjCmd} -constraints {
+    testwinevent
+} -body {
+    start {set clr [tk_chooseColor -initialcolor "#ff9933"]}
+    then {
+        set x [Click cancel]
+    }
+    list $x $clr
+} -result {0 {}}
+test winDialog-1.1.2 {Tk_ChooseColorObjCmd} -constraints {
+    testwinevent
+} -body {
+    start {set clr [tk_chooseColor -initialcolor "#ff9933"]}
+    then {
+        set x [Click 1]
+    }
+    list $x $clr
+} -result [list 0 "#ff9933"]
+test winDialog-1.1.3 {Tk_ChooseColorObjCmd: -title} -constraints {
+    testwinevent
+} -body {
+    set x {}
+    start {set clr [tk_chooseColor -initialcolor "#ff9933" -title "Hello"]}
+    then {
+        array set a [testgetwindowinfo $::tk_dialog]
+        if {[info exists a(text)]} {lappend x $a(text)}
+        lappend x [Click 1]
+    }
+    lappend x $clr
+} -result [list Hello 0 "#ff9933"]
+test winDialog-1.1.4 {Tk_ChooseColorObjCmd: -title} -constraints {
+    testwinevent
+} -body {
+    set x {}
+    start {
+        set clr [tk_chooseColor -initialcolor "#ff9933" \
+                     -title "\u041f\u0440\u0438\u0432\u0435\u0442"]
+    }
+    then {
+        array set a [testgetwindowinfo $::tk_dialog]
+        if {[info exists a(text)]} {lappend x $a(text)}
+        lappend x [Click 1]
+    }
+    lappend x $clr
+} -result [list "\u041f\u0440\u0438\u0432\u0435\u0442" 0 "#ff9933"]
+test winDialog-1.1.5 {Tk_ChooseColorObjCmd: -parent} -constraints {
+    testwinevent
+} -body {
+    start {set clr [tk_chooseColor -initialcolor "#ff9933" -parent .]}
+    set x {}
+    then {
+        array set a [testgetwindowinfo $::tk_dialog]
+        if {[info exists a(parent)]} {
+            append x [expr {$a(parent) == [wm frame .]}]
+        }
+        Click 1
+    }
+    list $x $clr
+} -result [list 1 "#ff9933"]
+test winDialog-1.1.6 {Tk_ChooseColorObjCmd: -parent} -constraints {
+    testwinevent
+} -body {
+    tk_chooseColor -initialcolor "#ff9933" -parent .xyzzy12
+} -returnCodes error -match glob -result {bad window path name*}
 
-test winDialog-2.1 {ColorDlgHookProc} {nt} {
+test winDialog-2.1 {ColorDlgHookProc} {emptyTest nt} {
 } {}
 
 test winDialog-3.1 {Tk_GetOpenFileObjCmd} {nt testwinevent} {
