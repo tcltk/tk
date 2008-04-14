@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.15 2008/04/09 20:48:10 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.16 2008/04/14 20:48:51 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -464,6 +464,9 @@ TestgetwindowinfoObjCmd(
 
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("text", -1));
     Tcl_ListObjAppendElement(interp, resObj, textObj);
+    Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("parent", -1));
+    Tcl_ListObjAppendElement(interp, resObj, 
+	Tcl_NewLongObj((long)GetParent(hwnd)));
 
     childrenObj = Tcl_NewListObj(0, NULL);
     EnumChildWindows(hwnd, EnumChildrenProc, (LPARAM)childrenObj);

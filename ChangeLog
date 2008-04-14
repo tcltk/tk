@@ -1,3 +1,9 @@
+2008-04-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinDialog.c: Fix bug #1941740: tk_chooseColor -title broken
+	* win/tkWinTest.c:   Added parent to testgetwininfo
+	* tests/winDialog.test: Created some tk_chooseColor win tests.
+
 2008-04-09  Jan Nijtmans  <nijtmans@users.sourceforge.net>
 
 	* generic/tkImgGIF.c:  Let the GIF writer use a real LZW compressor.
