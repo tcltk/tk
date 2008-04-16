@@ -1,12 +1,18 @@
+2008-04-16  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkStubInit.c:			make stubs tables static const
+	* generic/tkWindow.c (Initialize):	and export only a module-scope
+	pointer to to the main stubs table (for package init). [Patch 1938497]
+
 2008-04-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinDialog.c: Fix bug #1941740: tk_chooseColor -title broken
-	* win/tkWinTest.c:   Added parent to testgetwininfo
-	* tests/winDialog.test: Created some tk_chooseColor win tests.
+	* win/tkWinDialog.c:	Fix [tk_chooseColor -title]. [Bug 1941740]
+	* win/tkWinTest.c:	Added parent to testgetwininfo
+	* tests/winDialog.test:	Created some tk_chooseColor win tests.
 
 2008-04-09  Jan Nijtmans  <nijtmans@users.sourceforge.net>
 
-	* generic/tkImgGIF.c:  Let the GIF writer use a real LZW compressor.
+	* generic/tkImgGIF.c:	Let the GIF writer use a real LZW compressor.
 
 2008-04-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
