@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.21.2.4 2007/04/29 02:24:01 das Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.21.2.5 2008/04/17 14:48:23 dgp Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -4663,9 +4663,6 @@ PickCurrentItem(canvasPtr, eventPtr)
 
     buttonDown = canvasPtr->state
 	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
-    if (!buttonDown) {
-	canvasPtr->flags &= ~LEFT_GRABBED_ITEM;
-    }
 
     /*
      * Save information about this event in the canvas.  The event in
@@ -4739,6 +4736,10 @@ PickCurrentItem(canvasPtr, eventPtr)
 	return;
     }
 
+    if (!buttonDown) {
+	canvasPtr->flags &= ~LEFT_GRABBED_ITEM;
+    }
+    
     /*
      * Simulate a LeaveNotify event on the previous current item and
      * an EnterNotify event on the new current item.  Remove the "current"
