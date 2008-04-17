@@ -1,11 +1,11 @@
 2008-04-17  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.4.19 TAGGED FOR RELEASE ***
+
 	* generic/tkCanvas.c:	Fix logic that determines when canvas item
 	<Enter> event should fire.  Thanks to Sebastian Wangnick. [Bug 1327482]
 
 2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	*** 8.4.19 TAGGED FOR RELEASE ***
 
 	* generic/tkWindow.c (Initialize): fix double-free on Tk_ParseArgv
 	* tests/main.test (main-3.*):      error. [Bug 1937135]
