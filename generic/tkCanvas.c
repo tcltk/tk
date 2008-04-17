@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.46 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.46.2.1 2008/04/17 14:52:24 dgp Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -4483,9 +4483,6 @@ PickCurrentItem(
 
     buttonDown = canvasPtr->state
 	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
-    if (!buttonDown) {
-	canvasPtr->flags &= ~LEFT_GRABBED_ITEM;
-    }
 
     /*
      * Save information about this event in the canvas. The event in the
@@ -4558,6 +4555,10 @@ PickCurrentItem(
 	 */
 
 	return;
+    }
+
+    if (!buttonDown) {
+	canvasPtr->flags &= ~LEFT_GRABBED_ITEM;
     }
 
     /*

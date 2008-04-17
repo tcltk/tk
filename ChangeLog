@@ -1,8 +1,13 @@
+2008-04-17  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkCanvas.c:   Fix logic that determines when canvas item
+	<Enter> event should fire.  Thanks to Sebastian Wangnick. [Bug 1327482]
+
 2008-04-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-        * win/tkWinDialog.c: backport tk_chooseColor -title fix from head
-        * win/tkWinTest.c:   Added parent to testgetwininfo
-        * tests/winDialog.test: Created some tk_chooseColor win tests.
+	* win/tkWinDialog.c: backport tk_chooseColor -title fix from head
+	* win/tkWinTest.c:   Added parent to testgetwininfo
+	* tests/winDialog.test: Created some tk_chooseColor win tests.
 
 2008-04-11  Don Porter  <dgp@users.sourceforge.net>
 
