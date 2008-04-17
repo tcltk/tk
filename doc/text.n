@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.53 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: text.n,v 1.54 2008/04/17 15:27:12 dkf Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -572,7 +572,7 @@ the middle of characters.
 in any of the forms accepted by \fBTk_GetRelief\fR.
 This option is used in conjunction with the \fB\-borderwidth\fR
 option to give a 3-D appearance to the background for characters;
-it is ignored unless the \fB\-background\fR option
+it is ignored unless the \fB\-borderwidth\fR option
 has been set for the tag.
 .TP
 \fB\-rmargin \fIpixels\fR

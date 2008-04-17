@@ -1,3 +1,8 @@
+2008-04-17  Donal K. Fellows  <dkf@cspool38.cs.man.ac.uk>
+
+	* doc/text.n: Correct description of when -relief option is ignored on
+	a tag. Thanks to emiliano for spotting.
+
 2008-04-17  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkCanvas.c:   Fix logic that determines when canvas item
