@@ -1,3 +1,8 @@
+2008-04-17  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkCanvas.c:   Fix logic that determines when canvas item
+	<Enter> event should fire.  Thanks to Sebastian Wangnick. [Bug 1327482]
+
 2008-04-16  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkStubInit.c:			make stubs tables static const
