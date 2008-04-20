@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: button.n,v 1.15 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: button.n,v 1.16 2008/04/20 19:19:23 patthoyts Exp $
 '\" 
 .so man.macros
 .TH button n 4.4 Tk "Tk Built-In Commands"
@@ -139,9 +139,9 @@ command.
 .TP
 \fIpathName \fBflash\fR
 Flash the button.  This is accomplished by redisplaying the button
-several times, alternating between active and normal colors.  At
-the end of the flash the button is left in the same normal/active
-state as when the command was invoked.
+several times, alternating between the configured activebackground
+and background colors.  At the end of the flash the button is left
+in the same normal/active state as when the command was invoked.
 This command is ignored if the button's state is \fBdisabled\fR.
 .TP
 \fIpathName \fBinvoke\fR
