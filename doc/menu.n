@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.23 2008/01/30 09:58:57 dkf Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.24 2008/04/20 19:42:34 patthoyts Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -252,8 +252,8 @@ whenever the window's menubar is in front. The first items in the menu
 are provided by Mac OS X.
 .PP
 When Tk sees a System menu on Windows, its items are appended to the 
-system menu that the menubar is attached to. This menu has an icon
-representing a spacebar, and can be invoked with the mouse or by typing
+system menu that the menubar is attached to. This menu is tied to the 
+application icon and can be invoked with the mouse or by typing
 Alt+Spacebar.  Due to limitations in the Windows API, any font changes,
 colors, images, bitmaps, or tearoff images will not appear in the
 system menu.
