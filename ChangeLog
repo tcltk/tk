@@ -1,5 +1,6 @@
 2008-04-20  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/makefile.vc: Include ws2_32 in the link list [Bug 1900872]
 	* doc/menu.n: Minor change regarding the system menu [Bug 1887169]
 	* doc/button.n: Minor clarification of button flash [Bug 1926223]
 
