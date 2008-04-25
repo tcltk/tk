@@ -1839,7 +1839,6 @@
 		F96D437B08F272B6004A47F5 /* io.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = io.test; sourceTree = "<group>"; };
 		F96D437C08F272B6004A47F5 /* ioCmd.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ioCmd.test; sourceTree = "<group>"; };
 		F96D437D08F272B6004A47F5 /* iogt.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = iogt.test; sourceTree = "<group>"; };
-		F96D437E08F272B6004A47F5 /* ioUtil.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = ioUtil.test; sourceTree = "<group>"; };
 		F96D437F08F272B6004A47F5 /* join.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = join.test; sourceTree = "<group>"; };
 		F96D438008F272B6004A47F5 /* lindex.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = lindex.test; sourceTree = "<group>"; };
 		F96D438108F272B6004A47F5 /* link.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = link.test; sourceTree = "<group>"; };
@@ -2098,7 +2097,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.38 2008/04/15 10:55:49 das Exp $\n";
+			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.39 2008/04/25 21:28:41 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -3622,7 +3621,6 @@
 				F96D437B08F272B6004A47F5 /* io.test */,
 				F96D437C08F272B6004A47F5 /* ioCmd.test */,
 				F96D437D08F272B6004A47F5 /* iogt.test */,
-				F96D437E08F272B6004A47F5 /* ioUtil.test */,
 				F96D437F08F272B6004A47F5 /* join.test */,
 				F96D438008F272B6004A47F5 /* lindex.test */,
 				F96D438108F272B6004A47F5 /* link.test */,
@@ -4895,12 +4893,6 @@
 		F98A2A2F0D85F1EC002A40A7 /* ReleaseUniversal llvmgcc42 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-					x86_64,
-				);
-				CFLAGS = "-arch ppc -arch i386 -arch x86_64 $(CFLAGS)";
 				HEADER_SEARCH_PATHS = (
 					/usr/X11R6/include,
 					/usr/X11R6/include/freetype2,
