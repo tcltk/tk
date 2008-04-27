@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix.c,v 1.15 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnix.c,v 1.16 2008/04/27 22:39:13 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -71,11 +71,11 @@ TkGetServerInfo(
  *----------------------------------------------------------------------
  */
 
-CONST char *
+const char *
 TkGetDefaultScreenName(
     Tcl_Interp *interp,		/* Interp used to find environment
 				 * variables. */
-    CONST char *screenName)	/* Screen name from command line, or NULL. */
+    const char *screenName)	/* Screen name from command line, or NULL. */
 {
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY);

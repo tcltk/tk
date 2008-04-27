@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.26 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.27 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include <stdio.h>
@@ -139,10 +139,10 @@ static Tk_ConfigSpec configSpecs[] = {
 static void		ComputeTextBbox(Tk_Canvas canvas, TextItem *textPtr);
 static int		ConfigureText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST objv[], int flags);
+			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *CONST objv[]);
+			    int argc, Tcl_Obj *const objv[]);
 static void		DeleteText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayCanvText(Tk_Canvas canvas,
@@ -161,7 +161,7 @@ static void		SetTextCursor(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int index);
 static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *CONST objv[]);
+			    int argc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int first, int last);
 static void		TextInsert(Tk_Canvas canvas,
@@ -228,7 +228,7 @@ CreateText(
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
     int objc,			/* Number of arguments in objv. */
-    Tcl_Obj *CONST objv[])	/* Arguments describing rectangle. */
+    Tcl_Obj *const objv[])	/* Arguments describing rectangle. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int i;
@@ -322,7 +322,7 @@ TextCoords(
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
     int objc,			/* Number of coordinates supplied in objv. */
-    Tcl_Obj *CONST objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
+    Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
@@ -389,7 +389,7 @@ ConfigureText(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Rectangle item to reconfigure. */
     int objc,			/* Number of elements in objv. */
-    Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
+    Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -405,7 +405,7 @@ ConfigureText(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (CONST char **) objv, (char *) textPtr, flags|TK_CONFIG_OBJS)) {
+	    (const char **) objv, (char *) textPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 
@@ -423,12 +423,12 @@ ConfigureText(
     }
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     color = textPtr->color;
     stipple = textPtr->stipple;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (textPtr->activeColor!=NULL) {
 	    color = textPtr->activeColor;
 	}
@@ -615,7 +615,7 @@ ComputeTextBbox(
     Tk_State state = textPtr->header.state;
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     Tk_FreeTextLayout(textPtr->textLayout);
@@ -729,10 +729,10 @@ DisplayCanvText(
     textInfoPtr = textPtr->textInfoPtr;
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     stipple = textPtr->stipple;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (textPtr->activeStipple!=None) {
 	    stipple = textPtr->activeStipple;
 	}
@@ -1087,7 +1087,7 @@ TextToPoint(
     double value;
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     textPtr = (TextItem *) itemPtr;
     value = (double) Tk_DistanceToTextLayout(textPtr->textLayout,
@@ -1132,7 +1132,7 @@ TextToArea(
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     textPtr = (TextItem *) itemPtr;
@@ -1377,7 +1377,7 @@ GetSelText(
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteCount;
     char *text;
-    CONST char *selStart, *selEnd;
+    const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     if ((textInfoPtr->selectFirst < 0) ||
@@ -1438,14 +1438,14 @@ TextToPostscript(
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     color = textPtr->color;
     stipple = textPtr->stipple;
     if (state == TK_STATE_HIDDEN || textPtr->color == NULL ||
 	    textPtr->text == NULL || *textPtr->text == 0) {
 	return TCL_OK;
-    } else if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    } else if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (textPtr->activeColor!=NULL) {
 	    color = textPtr->activeColor;
 	}

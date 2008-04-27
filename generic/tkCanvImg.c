@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvImg.c,v 1.11 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkCanvImg.c,v 1.12 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include <stdio.h>
@@ -80,7 +80,7 @@ static void		ImageChangedProc(ClientData clientData,
 			    int imgHeight);
 static int		ImageCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST argv[]);
+			    Tcl_Obj *const argv[]);
 static int		ImageToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		ImageToPoint(Tk_Canvas canvas,
@@ -90,10 +90,10 @@ static int		ImageToPostscript(Tcl_Interp *interp,
 static void		ComputeImageBbox(Tk_Canvas canvas, ImageItem *imgPtr);
 static int		ConfigureImage(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *CONST argv[], int flags);
+			    Tcl_Obj *const argv[], int flags);
 static int		CreateImage(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *CONST argv[]);
+			    int argc, Tcl_Obj *const argv[]);
 static void		DeleteImage(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayImage(Tk_Canvas canvas,
@@ -159,7 +159,7 @@ CreateImage(
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
     int objc,			/* Number of arguments in objv. */
-    Tcl_Obj *CONST objv[])	/* Arguments describing rectangle. */
+    Tcl_Obj *const objv[])	/* Arguments describing rectangle. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
     int i;
@@ -231,7 +231,7 @@ ImageCoords(
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
     int objc,			/* Number of coordinates supplied in objv. */
-    Tcl_Obj *CONST objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
+    Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
 
@@ -296,7 +296,7 @@ ConfigureImage(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Image item to reconfigure. */
     int objc,			/* Number of elements in objv.  */
-    Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
+    Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
@@ -305,7 +305,7 @@ ConfigureImage(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (CONST char **) objv, (char *) imgPtr, flags|TK_CONFIG_OBJS)) {
+	    (const char **) objv, (char *) imgPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 
@@ -439,10 +439,10 @@ ComputeImageBbox(
     Tk_State state = imgPtr->header.state;
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     image = imgPtr->image;
-    if (((TkCanvas *)canvas)->currentItemPtr == (Tk_Item *)imgPtr) {
+    if (Canvas(canvas)->currentItemPtr == (Tk_Item *)imgPtr) {
 	if (imgPtr->activeImage != NULL) {
 	    image = imgPtr->activeImage;
 	}
@@ -542,11 +542,11 @@ DisplayImage(
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     image = imgPtr->image;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (imgPtr->activeImage != NULL) {
 	    image = imgPtr->activeImage;
 	}
@@ -699,7 +699,7 @@ ImageToPostscript(
 				 * information; 0 means final Postscript is
 				 * being created.*/
 {
-    ImageItem *imgPtr = (ImageItem *)itemPtr;
+    ImageItem *imgPtr = (ImageItem *) itemPtr;
     Tk_Window canvasWin = Tk_CanvasTkwin(canvas);
 
     char buffer[256];
@@ -709,11 +709,11 @@ ImageToPostscript(
     Tk_State state = itemPtr->state;
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     image = imgPtr->image;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (imgPtr->activeImage != NULL) {
 	    image = imgPtr->activeImage;
 	}

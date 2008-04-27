@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.24 2008/03/12 16:35:27 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.25 2008/04/27 22:39:13 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -303,7 +303,7 @@ FinishedWithFont(
 TkFont *
 TkpGetNativeFont(
     Tk_Window tkwin,		/* For display where font will be used. */
-    CONST char *name)		/* Platform-specific font name. */
+    const char *name)		/* Platform-specific font name. */
 {
     UnixFtFont *fontPtr;
     FcPattern *pattern;
@@ -337,7 +337,7 @@ TkpGetFontFromAttributes(
 				 * will be released. If NULL, a new TkFont
 				 * structure is allocated. */
     Tk_Window tkwin,		/* For display where font will be used. */
-    CONST TkFontAttributes *faPtr)
+    const TkFontAttributes *faPtr)
 				/* Set of attributes to match. */
 {
     XftPattern *pattern;
@@ -524,7 +524,7 @@ TkpGetFontAttrsForChar(
 int
 Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
     int numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
@@ -620,7 +620,7 @@ Tk_MeasureChars(
 int
 TkpMeasureCharsInContext(
     Tk_Font tkfont,
-    CONST char *source,
+    const char *source,
     int numBytes,
     int rangeStart,
     int rangeLength,
@@ -643,7 +643,7 @@ Tk_DrawChars(
     GC gc,			/* Graphics context for drawing characters. */
     Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
 				 * (tabs, control characters, and newlines)
 				 * should be stripped out of the string that

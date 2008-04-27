@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.19 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.20 2008/04/27 22:38:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -36,7 +36,7 @@ typedef struct PixelRep {
 
 #define SET_COMPLEXPIXEL(objPtr, repPtr)		\
     (objPtr)->internalRep.twoPtrValue.ptr1 = 0;		\
-    (objPtr)->internalRep.twoPtrValue.ptr2 = (VOID *) repPtr
+    (objPtr)->internalRep.twoPtrValue.ptr2 = (void *) repPtr
 
 #define GET_COMPLEXPIXEL(objPtr)			\
     ((PixelRep *) (objPtr)->internalRep.twoPtrValue.ptr2)
@@ -476,7 +476,7 @@ DupMMInternalRep(
     newPtr->units = oldPtr->units;
     newPtr->tkwin = oldPtr->tkwin;
     newPtr->returnValue = oldPtr->returnValue;
-    copyPtr->internalRep.otherValuePtr = (VOID *) newPtr;
+    copyPtr->internalRep.otherValuePtr = (void *) newPtr;
 }
 
 /*
@@ -639,7 +639,7 @@ SetMMFromAny(
     mmPtr->tkwin	= NULL;
     mmPtr->returnValue	= d;
 
-    objPtr->internalRep.otherValuePtr = (VOID *) mmPtr;
+    objPtr->internalRep.otherValuePtr = (void *) mmPtr;
 
     return TCL_OK;
 }
@@ -747,7 +747,7 @@ SetWindowFromAny(
     winPtr->mainPtr = NULL;
     winPtr->epoch = 0;
 
-    objPtr->internalRep.otherValuePtr = (VOID*)winPtr;
+    objPtr->internalRep.otherValuePtr = (void *) winPtr;
     objPtr->typePtr = &windowObjType;
 
     return TCL_OK;
@@ -783,7 +783,7 @@ DupWindowInternalRep(
     newPtr->tkwin = oldPtr->tkwin;
     newPtr->mainPtr = oldPtr->mainPtr;
     newPtr->epoch = oldPtr->epoch;
-    copyPtr->internalRep.otherValuePtr = (VOID *)newPtr;
+    copyPtr->internalRep.otherValuePtr = (void *) newPtr;
     copyPtr->typePtr = srcPtr->typePtr;
 }
 

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixInit.c,v 1.10 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixInit.c,v 1.11 2008/04/27 22:39:13 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -69,7 +69,7 @@ TkpGetAppName(
     Tcl_Interp *interp,
     Tcl_DString *namePtr)	/* A previously initialized Tcl_DString. */
 {
-    CONST char *p, *name;
+    const char *p, *name;
 
     name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
     if ((name == NULL) || (*name == 0)) {
@@ -102,10 +102,11 @@ TkpGetAppName(
 
 void
 TkpDisplayWarning(
-    CONST char *msg,		/* Message to be displayed. */
-    CONST char *title)		/* Title of warning. */
+    const char *msg,		/* Message to be displayed. */
+    const char *title)		/* Title of warning. */
 {
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
+
     if (errChannel) {
 	Tcl_WriteChars(errChannel, title, -1);
 	Tcl_WriteChars(errChannel, ": ", 2);

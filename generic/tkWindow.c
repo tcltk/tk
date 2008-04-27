@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.94 2008/04/16 14:51:29 das Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.95 2008/04/27 22:38:58 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -242,14 +242,14 @@ static Tk_ArgvInfo argTable[] = {
  */
 
 static Tk_Window	CreateTopLevelWindow(Tcl_Interp *interp,
-			    Tk_Window parent, CONST char *name,
-			    CONST char *screenName, unsigned int flags);
+			    Tk_Window parent, const char *name,
+			    const char *screenName, unsigned int flags);
 static void		DeleteWindowsExitProc(ClientData clientData);
-static TkDisplay *	GetScreen(Tcl_Interp *interp, CONST char *screenName,
+static TkDisplay *	GetScreen(Tcl_Interp *interp, const char *screenName,
 			    int *screenPtr);
 static int		Initialize(Tcl_Interp *interp);
 static int		NameWindow(Tcl_Interp *interp, TkWindow *winPtr,
-			    TkWindow *parentPtr, CONST char *name);
+			    TkWindow *parentPtr, const char *name);
 static void		UnlinkWindow(TkWindow *winPtr);
 
 /*
@@ -342,9 +342,9 @@ CreateTopLevelWindow(
     Tk_Window parent,		/* Token for logical parent of new window
 				 * (used for naming, options, etc.). May be
 				 * NULL. */
-    CONST char *name,		/* Name for new window; if parent is non-NULL,
+    const char *name,		/* Name for new window; if parent is non-NULL,
 				 * must be unique among parent's children. */
-    CONST char *screenName,	/* Name of screen on which to create window.
+    const char *screenName,	/* Name of screen on which to create window.
 				 * NULL means use DISPLAY environment variable
 				 * to determine. Empty string means use
 				 * parent's screen, or DISPLAY if no
@@ -354,7 +354,7 @@ CreateTopLevelWindow(
     register TkWindow *winPtr;
     register TkDisplay *dispPtr;
     int screenId;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
@@ -446,15 +446,15 @@ CreateTopLevelWindow(
 static TkDisplay *
 GetScreen(
     Tcl_Interp *interp,		/* Place to leave error message. */
-    CONST char *screenName,	/* Name for screen. NULL or empty means use
+    const char *screenName,	/* Name for screen. NULL or empty means use
 				 * DISPLAY envariable. */
     int *screenPtr)		/* Where to store screen number. */
 {
     register TkDisplay *dispPtr;
-    CONST char *p;
+    const char *p;
     int screenId;
     size_t length;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -564,7 +564,7 @@ TkGetDisplay(
     Display *display)		/* X's display pointer */
 {
     TkDisplay *dispPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
@@ -597,7 +597,7 @@ TkGetDisplay(
 TkDisplay *
 TkGetDisplayList(void)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->displayList;
@@ -624,7 +624,7 @@ TkGetDisplayList(void)
 TkMainInfo *
 TkGetMainInfoList(void)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->mainWindowList;
@@ -736,7 +736,7 @@ NameWindow(
     register TkWindow *winPtr,	/* Window that is to be named and inserted. */
     TkWindow *parentPtr,	/* Pointer to logical parent for winPtr (used
 				 * for naming, options, etc.). */
-    CONST char *name)		/* Name for winPtr; must be unique among
+    const char *name)		/* Name for winPtr; must be unique among
 				 * parentPtr's children. */
 {
 #define FIXED_SIZE 200
@@ -853,7 +853,7 @@ NameWindow(
 Tk_Window
 TkCreateMainWindow(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    CONST char *screenName,	/* Name of screen on which to create window.
+    const char *screenName,	/* Name of screen on which to create window.
 				 * Empty or NULL string means use DISPLAY
 				 * environment variable. */
     char *baseName)		/* Base name for application; usually of the
@@ -866,7 +866,7 @@ TkCreateMainWindow(
     register TkWindow *winPtr;
     register TkCmd *cmdPtr;
     ClientData clientData;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -952,13 +952,13 @@ TkCreateMainWindow(
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
 	if (cmdPtr->passMainWindow) {
-	    clientData = (ClientData) tkwin;
+	    clientData = tkwin;
 	} else {
-	    clientData = (ClientData) NULL;
+	    clientData = NULL;
 	}
 	if (cmdPtr->cmdProc != NULL) {
 	    Tcl_CreateCommand(interp, cmdPtr->name, cmdPtr->cmdProc,
-		    clientData, (void (*) _ANSI_ARGS_((ClientData))) NULL);
+		    clientData, NULL);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
@@ -1011,9 +1011,9 @@ Tk_CreateWindow(
 				 * the interp's result is assumed to be
 				 * initialized by the caller. */
     Tk_Window parent,		/* Token for parent of new window. */
-    CONST char *name,		/* Name for new window. Must be unique among
+    const char *name,		/* Name for new window. Must be unique among
 				 * parent's children. */
-    CONST char *screenName)	/* If NULL, new window will be internal on
+    const char *screenName)	/* If NULL, new window will be internal on
 				 * same screen as its parent. If non-NULL,
 				 * gives name of screen on which to create new
 				 * window; window will be a top-level
@@ -1075,7 +1075,7 @@ Tk_CreateAnonymousWindow(
 				 * the interp's result is assumed to be
 				 * initialized by the caller. */
     Tk_Window parent,		/* Token for parent of new window. */
-    CONST char *screenName)	/* If NULL, new window will be internal on
+    const char *screenName)	/* If NULL, new window will be internal on
 				 * same screen as its parent. If non-NULL,
 				 * gives name of screen on which to create new
 				 * window; window will be a top-level
@@ -1142,11 +1142,11 @@ Tk_CreateWindowFromPath(
 				 * initialized by the caller. */
     Tk_Window tkwin,		/* Token for any window in application that is
 				 * to contain new window. */
-    CONST char *pathName,	/* Path name for new window within the
+    const char *pathName,	/* Path name for new window within the
 				 * application of tkwin. The parent of this
 				 * window must already exist, but the window
 				 * itself must not exist. */
-    CONST char *screenName)	/* If NULL, new window will be on same screen
+    const char *screenName)	/* If NULL, new window will be on same screen
 				 * as its parent. If non-NULL, gives name of
 				 * screen on which to create new window;
 				 * window will be a top-level window. */
@@ -1257,7 +1257,7 @@ Tk_DestroyWindow(
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->flags & TK_ALREADY_DEAD) {
@@ -1485,7 +1485,7 @@ Tk_DestroyWindow(
     if (winPtr->mainPtr != NULL) {
 	if (winPtr->pathName != NULL) {
 	    Tk_DeleteAllBindings(winPtr->mainPtr->bindingTable,
-		    (ClientData) winPtr->pathName);
+		    winPtr->pathName);
 	    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&winPtr->mainPtr->nameTable,
 		    winPtr->pathName));
 
@@ -1607,7 +1607,7 @@ Tk_DestroyWindow(
 #endif
 	}
     }
-    Tcl_EventuallyFree((ClientData) winPtr, TCL_DYNAMIC);
+    Tcl_EventuallyFree(winPtr, TCL_DYNAMIC);
 }
 
 /*
@@ -2235,7 +2235,7 @@ TkDoConfigureNotify(
 void
 Tk_SetClass(
     Tk_Window tkwin,		/* Token for window to assign class. */
-    CONST char *className)	/* New class for tkwin. */
+    const char *className)	/* New class for tkwin. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
@@ -2299,7 +2299,7 @@ Tk_SetClassProcs(
 Tk_Window
 Tk_NameToWindow(
     Tcl_Interp *interp,		/* Where to report errors. */
-    CONST char *pathName,	/* Path name of window. */
+    const char *pathName,	/* Path name of window. */
     Tk_Window tkwin)		/* Token for window: name is assumed to belong
 				 * to the same main window as tkwin. */
 {
@@ -2326,7 +2326,7 @@ Tk_NameToWindow(
 	}
 	return NULL;
     }
-    return (Tk_Window) Tcl_GetHashValue(hPtr);
+    return Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -2369,7 +2369,7 @@ Tk_IdToWindow(
     if (hPtr == NULL) {
 	return NULL;
     }
-    return (Tk_Window) Tcl_GetHashValue(hPtr);
+    return Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -2389,7 +2389,7 @@ Tk_IdToWindow(
  *----------------------------------------------------------------------
  */
 
-CONST char *
+const char *
 Tk_DisplayName(
     Tk_Window tkwin)		/* Window whose display name is desired. */
 {
@@ -2628,8 +2628,7 @@ Tk_MainWindow(
 	return NULL;
     }
 #endif
-    tsdPtr = (ThreadSpecificData *)
-	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
 	    mainPtr = mainPtr->nextPtr) {
@@ -2697,8 +2696,7 @@ Tk_GetNumMainWindows(void)
     }
 #endif
 
-    tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
 }
@@ -2756,7 +2754,7 @@ DeleteWindowsExitProc(
 {
     TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) clientData;
+    ThreadSpecificData *tsdPtr = clientData;
 
     if (tsdPtr == NULL) {
 	return;
@@ -2772,11 +2770,11 @@ DeleteWindowsExitProc(
 
     while (tsdPtr->halfdeadWindowList != NULL) {
 	interp = tsdPtr->halfdeadWindowList->winPtr->mainPtr->interp;
-	Tcl_Preserve((ClientData) interp);
+	Tcl_Preserve(interp);
 	tsdPtr->halfdeadWindowList->flags |= HD_CLEANUP;
 	tsdPtr->halfdeadWindowList->winPtr->flags &= ~TK_ALREADY_DEAD;
 	Tk_DestroyWindow((Tk_Window) tsdPtr->halfdeadWindowList->winPtr);
-	Tcl_Release((ClientData) interp);
+	Tcl_Release(interp);
     }
 
     /*
@@ -2785,9 +2783,9 @@ DeleteWindowsExitProc(
 
     while (tsdPtr->mainWindowList != NULL) {
 	interp = tsdPtr->mainWindowList->interp;
-	Tcl_Preserve((ClientData) interp);
+	Tcl_Preserve(interp);
 	Tk_DestroyWindow((Tk_Window) tsdPtr->mainWindowList->winPtr);
-	Tcl_Release((ClientData) interp);
+	Tcl_Release(interp);
     }
 
     /*
@@ -2937,9 +2935,9 @@ Initialize(
 {
     char *p;
     int argc, code;
-    CONST char **argv;
+    const char **argv;
     char *args[20];
-    CONST char *argString = NULL;
+    const char *argString = NULL;
     Tcl_DString class;
     ThreadSpecificData *tsdPtr;
 
@@ -2958,8 +2956,7 @@ Initialize(
 
     TkRegisterObjTypes();
 
-    tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Start by initializing all the static variables to default acceptable
@@ -2979,7 +2976,7 @@ Initialize(
     argv = NULL;
 
     /*
-     * We start by resetting the result because it might not be clean
+     * We start by resetting the result because it might not be clean.
      */
 
     Tcl_ResetResult(interp);
@@ -3155,7 +3152,7 @@ Initialize(
 	visual = NULL;
     }
     args[argc] = NULL;
-    code = TkCreateFrame((ClientData) NULL, interp, argc, args, 1, name);
+    code = TkCreateFrame(NULL, interp, argc, args, 1, name);
 
     Tcl_DStringFree(&class);
     if (code != TCL_OK) {
@@ -3253,7 +3250,7 @@ tkInit");
 	 * specific cleanups take place to avoid panics in finalization.
 	 */
 
-	TkCreateThreadExitHandler(DeleteWindowsExitProc, (ClientData) tsdPtr);
+	TkCreateThreadExitHandler(DeleteWindowsExitProc, tsdPtr);
     }
     return code;
 
@@ -3284,16 +3281,16 @@ tkInit");
  *----------------------------------------------------------------------
  */
 
-CONST char *
+const char *
 Tk_PkgInitStubsCheck(
     Tcl_Interp *interp,
-    CONST char * version,
+    const char * version,
     int exact)
 {
-    CONST char *actualVersion = Tcl_PkgRequire(interp, "Tk", version, 0);
+    const char *actualVersion = Tcl_PkgRequire(interp, "Tk", version, 0);
 
     if (exact && actualVersion) {
-	CONST char *p = version;
+	const char *p = version;
 	int count = 0;
 
 	while (*p) {

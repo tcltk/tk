@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.19 2008/04/08 23:30:46 patthoyts Exp $
+ * $Id: ttkWinXPTheme.c,v 1.20 2008/04/27 22:39:17 dkf Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -50,8 +50,8 @@ typedef HRESULT (STDAPICALLTYPE GetThemeTextExtentProc)(HTHEME hTheme, HDC hdc,
 typedef HRESULT (STDAPICALLTYPE DrawThemeTextProc)(HTHEME hTheme, HDC hdc,
 		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
 		 DWORD dwTextFlags, DWORD dwTextFlags2, const RECT *pRect);
-typedef BOOL    (STDAPICALLTYPE IsThemeActiveProc)(VOID);
-typedef BOOL    (STDAPICALLTYPE IsAppThemedProc)(VOID);
+typedef BOOL    (STDAPICALLTYPE IsThemeActiveProc)(void);
+typedef BOOL    (STDAPICALLTYPE IsAppThemedProc)(void);
 
 typedef struct
 {
@@ -992,7 +992,8 @@ Ttk_CreateVsapiElement(
     void *clientData,
     Ttk_Theme theme,
     const char *elementName,
-    int objc, Tcl_Obj *CONST objv[])
+    int objc,
+    Tcl_Obj *const objv[])
 {
     XPThemeData *themeData = clientData;
     ElementInfo *elementPtr = NULL;
@@ -1028,34 +1029,38 @@ Ttk_CreateVsapiElement(
 	    int tmp = 0;
 	    if (i == objc -1) {
 		Tcl_AppendResult(interp, "Missing value for \"",
-		    Tcl_GetString(objv[i]), "\".", NULL);
+			Tcl_GetString(objv[i]), "\".", NULL);
 		return TCL_ERROR;
 	    }
 	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
 		    "option", 0, &option) != TCL_OK)
 		return TCL_ERROR;
 	    switch (option) {
-		case O_PADDING:
-		    if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK)
-			return TCL_ERROR;
-		    break;
-		case O_MARGINS:
-		    if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK)
-			return TCL_ERROR;
-		    flags |= PAD_MARGINS;
-		    break;
-		case O_WIDTH:
-		    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK)
-			return TCL_ERROR;
-		    pad.left = pad.right = tmp;
-		    flags |= IGNORE_THEMESIZE;
-		    break;
-		case O_HEIGHT:
-		    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK)
-			return TCL_ERROR;
-		    pad.top = pad.bottom = tmp;
-		    flags |= IGNORE_THEMESIZE;
-		    break;
+	    case O_PADDING:
+		if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		break;
+	    case O_MARGINS:
+		if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		flags |= PAD_MARGINS;
+		break;
+	    case O_WIDTH:
+		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		pad.left = pad.right = tmp;
+		flags |= IGNORE_THEMESIZE;
+		break;
+	    case O_HEIGHT:
+		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		pad.top = pad.bottom = tmp;
+		flags |= IGNORE_THEMESIZE;
+		break;
 	    }
 	}
     }
@@ -1068,7 +1073,7 @@ Ttk_CreateVsapiElement(
 	    return TCL_ERROR;
 	/* we over-allocate to ensure there is a terminating entry */
 	stateTable = (Ttk_StateTable *)
-	    ckalloc(sizeof(Ttk_StateTable) * (count + 1));
+		ckalloc(sizeof(Ttk_StateTable) * (count + 1));
 	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
 	for (n = 0, j = 0; status == TCL_OK && n < count; n += 2, ++j) {
 	    Ttk_StateSpec spec = {0,0};
@@ -1077,7 +1082,7 @@ Ttk_CreateVsapiElement(
 		stateTable[j].onBits = spec.onbits;
 		stateTable[j].offBits = spec.offbits;
 		status = Tcl_GetIntFromObj(interp, specs[n+1],
-		    &stateTable[j].index);
+			&stateTable[j].index);
 	    }
 	}
 	if (status != TCL_OK) {
@@ -1102,7 +1107,7 @@ Ttk_CreateVsapiElement(
     elementPtr->elementName = name;
 
     /* set the class name to an allocated copy */
-    wname = (LPWSTR)ckalloc(sizeof(WCHAR) * (length + 1));
+    wname = (LPWSTR) ckalloc(sizeof(WCHAR) * (length + 1));
     wcscpy(wname, className);
     elementPtr->className = wname;
 

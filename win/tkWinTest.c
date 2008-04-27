@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.16 2008/04/14 20:48:51 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.17 2008/04/27 22:39:17 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -24,15 +24,15 @@ HWND tkWinCurrentDialog;
 
 static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static int		TestwineventCmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc, CONST char **argv);
+			    Tcl_Interp *interp, int argc, const char **argv);
 static int		TestfindwindowObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static int		TestgetwindowinfoObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 
 
@@ -180,7 +180,7 @@ TestclipboardObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument values. */
+    Tcl_Obj *const objv[])	/* Argument values. */
 {
     HGLOBAL handle;
     char *data;
@@ -238,7 +238,7 @@ TestwineventCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
+    const char **argv)		/* Argument strings. */
 {
     HWND hwnd = 0;
     HWND child = 0;
@@ -379,7 +379,7 @@ TestfindwindowObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument values. */
+    Tcl_Obj *const objv[])	/* Argument values. */
 {
     const char *title = NULL, *class = NULL;
     HWND hwnd = NULL;
@@ -418,7 +418,7 @@ TestgetwindowinfoObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
     int objc,
-    Tcl_Obj *CONST objv[])
+    Tcl_Obj *const objv[])
 {
     HWND hwnd = NULL;
     Tcl_Obj *resObj = NULL, *classObj = NULL, *textObj = NULL;

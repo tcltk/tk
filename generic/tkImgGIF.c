@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.43 2008/04/09 21:00:54 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.44 2008/04/27 22:38:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1647,7 +1647,8 @@ color(
     int x = (statePtr->alphaOffset != 0);
 
     for (; x<=MAXCOLORMAPSIZE ; x++) {
-	if ((statePtr->mapa[x][CM_RED] == red) && (statePtr->mapa[x][CM_GREEN] == green) &&
+	if ((statePtr->mapa[x][CM_RED] == red) &&
+		(statePtr->mapa[x][CM_GREEN] == green) &&
 		(statePtr->mapa[x][CM_BLUE] == blue)) {
 	    return x;
 	}
@@ -1663,7 +1664,8 @@ nuevo(
     int x = (statePtr->alphaOffset != 0);
 
     for (; x<=statePtr->num ; x++) {
-	if ((statePtr->mapa[x][CM_RED] == red) && (statePtr->mapa[x][CM_GREEN] == green) &&
+	if ((statePtr->mapa[x][CM_RED] == red) &&
+		(statePtr->mapa[x][CM_GREEN] == green) &&
 		(statePtr->mapa[x][CM_BLUE] == blue)) {
 	    return 0;
 	}
@@ -1739,7 +1741,6 @@ ReadValue(
 }
 
 /*
- *
  * GIF Image compression - modified 'compress'
  *
  * Based on: compress.c - File compression ala IEEE Computer, June 1984.
@@ -1750,55 +1751,54 @@ ReadValue(
  *              Ken Turkowski           (decvax!decwrl!turtlevax!ken)
  *              James A. Woods          (decvax!ihnp4!ames!jaw)
  *              Joe Orost               (decvax!vax135!petsd!joe)
- *
  */
 
 #define MAXCODE(n_bits)		(((long) 1 << (n_bits)) - 1)
 
 typedef struct {
-    int n_bits;		/* number of bits/code */
+    int n_bits;			/* number of bits/code */
     long maxcode;		/* maximum code, given n_bits */
-    int		htab[HSIZE];
-    unsigned int	codetab[HSIZE];
+    int htab[HSIZE];
+    unsigned int codetab[HSIZE];
+    long hsize;			/* for dynamic table sizing */
 
-    long hsize;	/* for dynamic table sizing */
+    /*
+     * To save much memory, we overlay the table used by compress() with those
+     * used by decompress(). The tab_prefix table is the same size and type as
+     * the codetab. The tab_suffix table needs 2**GIFBITS characters. We get
+     * this from the beginning of htab. The output stack uses the rest of
+     * htab, and contains characters. There is plenty of room for any possible
+     * stack (stack used to be 8000 characters).
+     */
 
-/*
- * To save much memory, we overlay the table used by compress() with those
- * used by decompress().  The tab_prefix table is the same size and type
- * as the codetab.  The tab_suffix table needs 2**GIFBITS characters.  We
- * get this from the beginning of htab.  The output stack uses the rest
- * of htab, and contains characters.  There is plenty of room for any
- * possible stack (stack used to be 8000 characters).
- */
+    int free_ent;		/* first unused entry */
 
-    int free_ent;  /* first unused entry */
+    /*
+     * block compression parameters -- after all codes are used up,
+     * and compression rate changes, start over.
+     */
 
-/*
- * block compression parameters -- after all codes are used up,
- * and compression rate changes, start over.
- */
     int clear_flg;
 
     int offset;
-    unsigned int in_count;            /* length of input */
-    unsigned int out_count;           /* # of codes output (for debugging) */
+    unsigned int in_count;	/* length of input */
+    unsigned int out_count;	/* # of codes output (for debugging) */
 
-/*
- * compress stdin to stdout
- *
- * Algorithm:  use open addressing double hashing (no chaining) on the
- * prefix code / next character combination.  We do a variant of Knuth's
- * algorithm D (vol. 3, sec. 6.4) along with G. Knott's relatively-prime
- * secondary probe.  Here, the modular division first probe is gives way
- * to a faster exclusive-or manipulation.  Also do block compression with
- * an adaptive reset, whereby the code table is cleared when the compression
- * ratio decreases, but after the table fills.  The variable-length output
- * codes are re-sized at this point, and a special CLEAR code is generated
- * for the decompressor.  Late addition:  construct the table according to
- * file size for noticeable speed improvement on small files.  Please direct
- * questions about this implementation to ames!jaw.
- */
+    /*
+     * compress stdin to stdout
+     *
+     * Algorithm: use open addressing double hashing (no chaining) on the
+     * prefix code / next character combination. We do a variant of Knuth's
+     * algorithm D (vol. 3, sec. 6.4) along with G. Knott's relatively-prime
+     * secondary probe. Here, the modular division first probe is gives way to
+     * a faster exclusive-or manipulation. Also do block compression with an
+     * adaptive reset, whereby the code table is cleared when the compression
+     * ratio decreases, but after the table fills. The variable-length output
+     * codes are re-sized at this point, and a special CLEAR code is generated
+     * for the decompressor. Late addition: construct the table according to
+     * file size for noticeable speed improvement on small files. Please
+     * direct questions about this implementation to ames!jaw.
+     */
 
     int g_init_bits;
     Tcl_Channel g_outfile;
@@ -1807,34 +1807,36 @@ typedef struct {
     int EOFCode;
 
     unsigned long cur_accum;
-    int  cur_bits;
+    int cur_bits;
 
-/*
- * Number of characters so far in this 'packet'
- */
+    /*
+     * Number of characters so far in this 'packet'
+     */
+
     int a_count;
 
-/*
- * Define the storage for the packet accumulator
- */
+    /*
+     * Define the storage for the packet accumulator
+     */
+
     unsigned char accum[256];
 } GIFState_t;
 
-static void output _ANSI_ARGS_((GIFState_t *statePtr, long code));
-static void cl_block _ANSI_ARGS_((GIFState_t *statePtr));
-static void cl_hash _ANSI_ARGS_((GIFState_t *statePtr, int hsize));
-static void char_init _ANSI_ARGS_((GIFState_t *statePtr));
-static void char_out _ANSI_ARGS_((GIFState_t *statePtr, int c));
-static void flush_char _ANSI_ARGS_((GIFState_t *statePtr));
-
+static void		output(GIFState_t *statePtr, long code);
+static void		cl_block(GIFState_t *statePtr);
+static void		cl_hash(GIFState_t *statePtr, int hsize);
+static void		char_init(GIFState_t *statePtr);
+static void		char_out(GIFState_t *statePtr, int c);
+static void		flush_char(GIFState_t *statePtr);
 static void		compress(int initBits, Tcl_Channel handle,
 			    ifunptr readValue, GifWriterState *statePtr);
-
-static void compress(init_bits, handle, readValue, statePtr)
-    int init_bits;
-    Tcl_Channel handle;
-    ifunptr readValue;
-    GifWriterState *statePtr;
+
+static void
+compress(
+    int init_bits,
+    Tcl_Channel handle,
+    ifunptr readValue,
+    GifWriterState *statePtr)
 {
     register long fcode;
     register long i = 0;
@@ -1846,16 +1848,19 @@ static void compress(init_bits, handle, readValue, statePtr)
     GIFState_t state;
 
     memset(&state, 0, sizeof(state));
+
     /*
      * Set up the globals:  g_init_bits - initial number of bits
-     *                      g_outfile   - pointer to output file
+     *			    g_outfile	- pointer to output file
      */
+
     state.g_init_bits = init_bits;
     state.g_outfile = handle;
 
     /*
-     * Set up the necessary values
+     * Set up the necessary values.
      */
+
     state.offset = 0;
     state.hsize = HSIZE;
     state.out_count = 0;
@@ -1872,95 +1877,111 @@ static void compress(init_bits, handle, readValue, statePtr)
     ent = readValue(statePtr);
 
     hshift = 0;
-    for ( fcode = (long) state.hsize;  fcode < 65536L; fcode *= 2L )
-        hshift++;
-    hshift = 8 - hshift;                /* set hash code range bound */
+    for (fcode = (long) state.hsize;  fcode < 65536L;  fcode *= 2L) {
+	hshift++;
+    }
+    hshift = 8 - hshift;			/* set hash code range bound */
 
     hsize_reg = state.hsize;
-    cl_hash(&state, (int) hsize_reg);            /* clear hash table */
+    cl_hash(&state, (int) hsize_reg);		/* clear hash table */
 
-    output(&state, (long)state.ClearCode);
+    output(&state, (long) state.ClearCode);
 
 #ifdef SIGNED_COMPARE_SLOW
-    while ( (c = readValue(statePtr) ) != (unsigned) EOF ) {
+    while ((c = readValue(statePtr)) != (unsigned) EOF)
 #else
-    while ( (c = readValue(statePtr)) != EOF ) {
+    while ((c = readValue(statePtr)) != EOF)
 #endif
+    {
+	state.in_count++;
 
-        state.in_count++;
+	fcode = (long) (((long) c << GIFBITS) + ent);
+	i = (((long)c << hshift) ^ ent);	/* xor hashing */
 
-        fcode = (long) (((long) c << GIFBITS) + ent);
-        i = (((long)c << hshift) ^ ent);    /* xor hashing */
+	if (state.htab[i] == fcode) {
+	    ent = state.codetab[i];
+	    continue;
+	} else if ((long) state.htab[i] < 0) {	/* empty slot */
+	    goto nomatch;
+	}
 
-        if (state.htab[i] == fcode) {
-            ent = state.codetab[i];
-            continue;
-        } else if ( (long) state.htab[i] < 0 )      /* empty slot */
-            goto nomatch;
-        disp = hsize_reg - i;           /* secondary hash (after G. Knott) */
-        if ( i == 0 )
-            disp = 1;
-probe:
-        if ( (i -= disp) < 0 )
-            i += hsize_reg;
+	disp = hsize_reg - i;			/* secondary hash (after G.
+						 * Knott) */
+	if (i == 0) {
+	    disp = 1;
+	}
 
-        if (state.htab[i] == fcode) {
-            ent = state.codetab[i];
-            continue;
-        }
-        if ( (long) state.htab[i] > 0 )
-            goto probe;
-nomatch:
-        output (&state, (long) ent);
-        state.out_count++;
-        ent = c;
+    probe:
+	if ((i -= disp) < 0) {
+	    i += hsize_reg;
+	}
+
+	if (state.htab[i] == fcode) {
+	    ent = state.codetab[i];
+	    continue;
+	}
+	if ((long) state.htab[i] > 0) {
+	    goto probe;
+	}
+
+    nomatch:
+	output(&state, (long) ent);
+	state.out_count++;
+	ent = c;
 #ifdef SIGNED_COMPARE_SLOW
-        if ( (unsigned) free_ent < (unsigned) ((long)1 << GIFBITS)) {
+	if ((unsigned) free_ent < (unsigned) ((long)1 << GIFBITS))
 #else
-        if (state.free_ent < ((long)1 << GIFBITS)) {
+	if (state.free_ent < ((long)1 << GIFBITS))
 #endif
-            state.codetab[i] = state.free_ent++; /* code -> hashtable */
-            state.htab[i] = fcode;
-        } else
-                cl_block(&state);
+	{
+	    state.codetab[i] = state.free_ent++; /* code -> hashtable */
+	    state.htab[i] = fcode;
+	} else {
+	    cl_block(&state);
+	}
     }
+
     /*
      * Put out the final code.
      */
+
     output(&state, (long)ent);
     state.out_count++;
     output(&state, (long) state.EOFCode);
 
     return;
 }
-
+
 /*****************************************************************
  * TAG( output )
  *
  * Output the given code.
  * Inputs:
- *      code:   A n_bits-bit integer.  If == -1, then EOF.  This assumes
- *              that n_bits =< (long) wordsize - 1.
+ *	code:	A n_bits-bit integer. If == -1, then EOF. This assumes that
+ *		n_bits =< (long) wordsize - 1.
  * Outputs:
- *      Outputs code to the file.
+ *	Outputs code to the file.
  * Assumptions:
- *      Chars are 8 bits long.
+ *	Chars are 8 bits long.
  * Algorithm:
- *      Maintain a GIFBITS character long buffer (so that 8 codes will
- * fit in it exactly).  Use the VAX insv instruction to insert each
+ *	Maintain a GIFBITS character long buffer (so that 8 codes will
+ * fit in it exactly).	Use the VAX insv instruction to insert each
  * code in turn.  When the buffer fills up empty it and start over.
  */
 
 static const
-unsigned long masks[] = { 0x0000, 0x0001, 0x0003, 0x0007, 0x000F,
-                                  0x001F, 0x003F, 0x007F, 0x00FF,
-                                  0x01FF, 0x03FF, 0x07FF, 0x0FFF,
-                                  0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF };
+unsigned long masks[] = {
+    0x0000,
+    0x0001, 0x0003, 0x0007, 0x000F,
+    0x001F, 0x003F, 0x007F, 0x00FF,
+    0x01FF, 0x03FF, 0x07FF, 0x0FFF,
+    0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF
+};
 
 static void
-output(statePtr, code)
-    GIFState_t *statePtr;
-    long  code;
+output(
+    GIFState_t *statePtr,
+    long code)
 {
     statePtr->cur_accum &= masks[statePtr->cur_bits];
 
@@ -1973,7 +1994,7 @@ output(statePtr, code)
     statePtr->cur_bits += statePtr->n_bits;
 
     while (statePtr->cur_bits >= 8 ) {
-	char_out(statePtr, (unsigned int)(statePtr->cur_accum & 0xff));
+	char_out(statePtr, (unsigned) (statePtr->cur_accum & 0xff));
 	statePtr->cur_accum >>= 8;
 	statePtr->cur_bits -= 8;
     }
@@ -1985,7 +2006,8 @@ output(statePtr, code)
 
     if ((statePtr->free_ent > statePtr->maxcode)|| statePtr->clear_flg ) {
 	if (statePtr->clear_flg) {
-	    statePtr->maxcode = MAXCODE(statePtr->n_bits = statePtr->g_init_bits);
+	    statePtr->maxcode = MAXCODE(
+		    statePtr->n_bits = statePtr->g_init_bits);
 	    statePtr->clear_flg = 0;
 	} else {
 	    statePtr->n_bits++;
@@ -2001,41 +2023,42 @@ output(statePtr, code)
 	/*
 	 * At EOF, write the rest of the buffer.
 	 */
-        while (statePtr->cur_bits > 0) {
-	    char_out(statePtr, (unsigned int)(statePtr->cur_accum & 0xff));
+
+	while (statePtr->cur_bits > 0) {
+	    char_out(statePtr, (unsigned) (statePtr->cur_accum & 0xff));
 	    statePtr->cur_accum >>= 8;
 	    statePtr->cur_bits -= 8;
 	}
 	flush_char(statePtr);
     }
 }
-
+
 /*
  * Clear out the hash table
  */
+
 static void
-cl_block(statePtr)             /* table clear for block compress */
-    GIFState_t *statePtr;
+cl_block(			/* table clear for block compress */
+    GIFState_t *statePtr)
 {
+    cl_hash(statePtr, (int) statePtr->hsize);
+    statePtr->free_ent = statePtr->ClearCode + 2;
+    statePtr->clear_flg = 1;
 
-        cl_hash (statePtr, (int) statePtr->hsize);
-        statePtr->free_ent = statePtr->ClearCode + 2;
-        statePtr->clear_flg = 1;
-
-        output(statePtr, (long) statePtr->ClearCode);
+    output(statePtr, (long) statePtr->ClearCode);
 }
-
+
 static void
-cl_hash(statePtr, hsize)          /* reset code table */
-    GIFState_t *statePtr;
-    int hsize;
+cl_hash(			/* reset code table */
+    GIFState_t *statePtr,
+    int hsize)
 {
-    register int *htab_p = statePtr->htab+hsize;
+    register int *htab_p = statePtr->htab + hsize;
     register long i;
     register long m1 = -1;
 
     i = hsize - 16;
-    do {                            /* might use Sys V memset(3) here */
+    do {			/* might use Sys V memset(3) here */
 	*(htab_p-16) = m1;
 	*(htab_p-15) = m1;
 	*(htab_p-14) = m1;
@@ -2059,53 +2082,59 @@ cl_hash(statePtr, hsize)          /* reset code table */
 	*--htab_p = m1;
     }
 }
-
-
-/******************************************************************************
+
+/*
+ *****************************************************************************
  *
  * GIF Specific routines
  *
- ******************************************************************************/
+ *****************************************************************************
+ */
 
 /*
  * Set up the 'byte output' routine
  */
+
 static void
-char_init(statePtr)
-    GIFState_t *statePtr;
+char_init(
+    GIFState_t *statePtr)
 {
     statePtr->a_count = 0;
     statePtr->cur_accum = 0;
     statePtr->cur_bits = 0;
 }
-
+
 /*
  * Add a character to the end of the current packet, and if it is 254
  * characters, flush the packet to disk.
  */
+
 static void
-char_out(statePtr, c)
-    GIFState_t *statePtr;
-    int c;
+char_out(
+    GIFState_t *statePtr,
+    int c)
 {
     statePtr->accum[statePtr->a_count++] = c;
     if (statePtr->a_count >= 254) {
 	flush_char(statePtr);
     }
 }
-
+
 /*
  * Flush the packet to disk, and reset the accumulator
  */
+
 static void
-flush_char(statePtr)
-    GIFState_t *statePtr;
+flush_char(
+    GIFState_t *statePtr)
 {
     unsigned char c;
+
     if (statePtr->a_count > 0) {
 	c = statePtr->a_count;
-	Tcl_Write(statePtr->g_outfile, (CONST char *) &c, 1);
-	Tcl_Write(statePtr->g_outfile, (CONST char *) statePtr->accum, statePtr->a_count);
+	Tcl_Write(statePtr->g_outfile, (const char *) &c, 1);
+	Tcl_Write(statePtr->g_outfile, (const char *) statePtr->accum,
+		statePtr->a_count);
 	statePtr->a_count = 0;
     }
 }

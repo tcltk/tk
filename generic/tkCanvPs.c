@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.19 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.20 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -156,7 +156,7 @@ TkCanvPostscriptCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. Caller has already parsed
+    const char **argv)		/* Argument strings. Caller has already parsed
 				 * this command enough to know that argv[1] is
 				 * "postscript". */
 {
@@ -166,7 +166,7 @@ TkCanvPostscriptCmd(
     Tk_Item *itemPtr;
 #define STRING_LENGTH 400
     char string[STRING_LENGTH+1];
-    CONST char *p;
+    const char *p;
     time_t now;
     size_t length;
     Tk_Window tkwin = canvasPtr->tkwin;
@@ -640,7 +640,7 @@ Tk_PostscriptColor(
      */
 
     if (psInfoPtr->colorVar != NULL) {
-	CONST char *cmdString;
+	const char *cmdString;
 
 	cmdString = Tcl_GetVar2(interp, psInfoPtr->colorVar,
 		Tk_NameOfColor(colorPtr), 0);
@@ -715,14 +715,14 @@ Tk_PostscriptFont(
      */
 
     if (psInfoPtr->fontVar != NULL) {
-	CONST char *name = Tk_NameOfFont(tkfont);
+	const char *name = Tk_NameOfFont(tkfont);
 	Tcl_Obj **objv;
 	int objc;
 	double size;
 	Tcl_Obj *list = Tcl_GetVar2Ex(interp, psInfoPtr->fontVar, name, 0);
 
 	if (list != NULL) {
-	    CONST char *fontname;
+	    const char *fontname;
 
 	    if (Tcl_ListObjGetElements(interp, list, &objc, &objv) != TCL_OK
 		    || objc != 2

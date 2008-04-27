@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.18 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.19 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include <stdio.h>
@@ -160,10 +160,10 @@ static void		ComputePolygonBbox(Tk_Canvas canvas,
 			    PolygonItem *polyPtr);
 static int		ConfigurePolygon(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
-			    Tcl_Obj *CONST objv[], int flags);
+			    Tcl_Obj *const objv[], int flags);
 static int		CreatePolygon(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DeletePolygon(Tk_Canvas canvas,
 			    Tk_Item *itemPtr,  Display *display);
 static void		DisplayPolygon(Tk_Canvas canvas,
@@ -174,7 +174,7 @@ static int		GetPolygonIndex(Tcl_Interp *interp,
 			    Tcl_Obj *obj, int *indexPtr);
 static int		PolygonCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		PolygonDeleteCoords(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int first, int last);
 static void		PolygonInsert(Tk_Canvas canvas,
@@ -253,7 +253,7 @@ CreatePolygon(
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
     int objc,			/* Number of arguments in objv. */
-    Tcl_Obj *CONST objv[])	/* Arguments describing polygon. */
+    Tcl_Obj *const objv[])	/* Arguments describing polygon. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     int i;
@@ -336,7 +336,7 @@ PolygonCoords(
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
     int objc,			/* Number of coordinates supplied in objv. */
-    Tcl_Obj *CONST objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
+    Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     int i, numPoints;
@@ -435,7 +435,7 @@ ConfigurePolygon(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Polygon item to reconfigure. */
     int objc,			/* Number of elements in objv.  */
-    Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
+    Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
@@ -449,7 +449,7 @@ ConfigurePolygon(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (CONST char **) objv, (char *) polyPtr, flags|TK_CONFIG_OBJS)) {
+	    (const char **) objv, (char *) polyPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 
@@ -472,7 +472,7 @@ ConfigurePolygon(
     }
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     if (state==TK_STATE_HIDDEN) {
 	ComputePolygonBbox(canvas, polyPtr);
@@ -495,7 +495,7 @@ ConfigurePolygon(
 
     color = polyPtr->fillColor;
     stipple = polyPtr->fillStipple;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (polyPtr->activeFillColor!=NULL) {
 	    color = polyPtr->activeFillColor;
 	}
@@ -632,7 +632,7 @@ ComputePolygonBbox(
     Tk_TSOffset *tsoffset;
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     width = polyPtr->outline.width;
     if (polyPtr->coordPtr == NULL || (polyPtr->numPoints < 1) || (state==TK_STATE_HIDDEN)) {
@@ -640,7 +640,7 @@ ComputePolygonBbox(
 	polyPtr->header.y1 = polyPtr->header.y2 = -1;
 	return;
     }
-    if (((TkCanvas *)canvas)->currentItemPtr == (Tk_Item *)polyPtr) {
+    if (Canvas(canvas)->currentItemPtr == (Tk_Item *)polyPtr) {
 	if (polyPtr->outline.activeWidth>width) {
 	    width = polyPtr->outline.activeWidth;
 	}
@@ -894,9 +894,9 @@ DisplayPolygon(
     }
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (polyPtr->outline.activeWidth>linewidth) {
 	    linewidth = polyPtr->outline.activeWidth;
 	}
@@ -1028,7 +1028,7 @@ PolygonInsert(
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     if (!obj || (Tcl_ListObjGetElements(NULL, obj, &objc, &objv) != TCL_OK)
@@ -1129,7 +1129,7 @@ PolygonInsert(
 	    TkIncludePoint(itemPtr, polyPtr->coordPtr+j);
 	}
 	width = polyPtr->outline.width;
-	if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+	if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	    if (polyPtr->outline.activeWidth > width) {
 		width = polyPtr->outline.activeWidth;
 	    }
@@ -1263,10 +1263,10 @@ PolygonToPoint(
     bestDist = 1.0e36;
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     width = polyPtr->outline.width;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (polyPtr->outline.activeWidth>width) {
 	    width = polyPtr->outline.activeWidth;
 	}
@@ -1460,11 +1460,11 @@ PolygonToArea(
     Tk_State state = itemPtr->state;
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     width = polyPtr->outline.width;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (polyPtr->outline.activeWidth>width) {
 	    width = polyPtr->outline.activeWidth;
 	}
@@ -1820,14 +1820,14 @@ PolygonToPostscript(
     }
 
     if(state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     width = polyPtr->outline.width;
     color = polyPtr->outline.color;
     stipple = polyPtr->fillStipple;
     fillColor = polyPtr->fillColor;
     fillStipple = polyPtr->fillStipple;
-    if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
+    if (Canvas(canvas)->currentItemPtr == itemPtr) {
 	if (polyPtr->outline.activeWidth>width) {
 	    width = polyPtr->outline.activeWidth;
 	}

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.51 2008/04/14 20:48:50 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.52 2008/04/27 22:39:14 dkf Exp $
  *
  */
 
@@ -175,10 +175,10 @@ static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static int 		GetFileNameA(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[], int isOpen);
+			    Tcl_Obj *const objv[], int isOpen);
 static int 		GetFileNameW(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[], int isOpen);
+			    Tcl_Obj *const objv[], int isOpen);
 static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 			    Tcl_DString *dsPtr, Tcl_Obj *initialPtr,
 			    int *index);
@@ -290,7 +290,7 @@ Tk_ChooseColorObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin, parent;
     HWND hWnd;
@@ -299,7 +299,7 @@ Tk_ChooseColorObjCmd(
     static int inited = 0;
     static COLORREF dwCustColors[16];
     static long oldColor;		/* the color selected last time */
-    static CONST char *optionStrings[] = {
+    static const char *optionStrings[] = {
 	"-initialcolor", "-parent", "-title", NULL
     };
     enum options {
@@ -502,7 +502,7 @@ Tk_GetOpenFileObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	return GetFileNameW(clientData, interp, objc, objv, 1);
@@ -533,7 +533,7 @@ Tk_GetSaveFileObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	return GetFileNameW(clientData, interp, objc, objv, 0);
@@ -563,7 +563,7 @@ GetFileNameW(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[],	/* Argument objects. */
+    Tcl_Obj *const objv[],	/* Argument objects. */
     int open)			/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
 {
@@ -579,15 +579,15 @@ GetFileNameW(
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static CONST char *saveOptionStrings[] = {
+    static const char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-parent", "-title", "-typevariable", NULL
     };
-    static CONST char *openOptionStrings[] = {
+    static const char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-multiple", "-parent", "-title", "-typevariable", NULL
     };
-    CONST char **optionStrings;
+    const char **optionStrings;
 
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
@@ -1007,7 +1007,7 @@ GetFileNameA(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[],	/* Argument objects. */
+    Tcl_Obj *const objv[],	/* Argument objects. */
     int open)			/* 1 to call GetOpenFileName(), 0 to call
 				 * GetSaveFileName(). */
 {
@@ -1022,15 +1022,15 @@ GetFileNameA(
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static CONST char *saveOptionStrings[] = {
+    static const char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-parent", "-title", "-typevariable", NULL
     };
-    static CONST char *openOptionStrings[] = {
+    static const char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-multiple", "-parent", "-title", "-typevariable", NULL
     };
-    CONST char **optionStrings;
+    const char **optionStrings;
 
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
@@ -1674,7 +1674,7 @@ Tk_ChooseDirectoryObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     char path[MAX_PATH];
     int oldMode, result, i;
@@ -1689,7 +1689,7 @@ Tk_ChooseDirectoryObjCmd(
     TCHAR saveDir[MAX_PATH];
     Tcl_DString titleString;	/* UTF Title */
     Tcl_DString initDirString;	/* Initial directory */
-    static CONST char *optionStrings[] = {
+    static const char *optionStrings[] = {
 	"-initialdir", "-mustexist",  "-parent",  "-title", NULL
     };
     enum options {
@@ -2056,7 +2056,7 @@ Tk_MessageBoxObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin, parent;
     HWND hWnd;
@@ -2064,7 +2064,7 @@ Tk_MessageBoxObjCmd(
     int defaultBtn, icon, type;
     int i, oldMode, winCode;
     UINT flags;
-    static CONST char *optionStrings[] = {
+    static const char *optionStrings[] = {
 	"-default",	"-detail",	"-icon",	"-message",
 	"-parent",	"-title",	"-type",	NULL
     };
