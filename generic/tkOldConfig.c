@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.23 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.24 2008/04/27 22:38:56 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -35,11 +35,11 @@ static int		DoConfig(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_ConfigSpec *specPtr, Tk_Uid value,
 			    int valueIsUid, char *widgRec);
 static Tk_ConfigSpec *	FindConfigSpec(Tcl_Interp *interp,
-			    Tk_ConfigSpec *specs, CONST char *argvName,
+			    Tk_ConfigSpec *specs, const char *argvName,
 			    int needFlags, int hateFlags);
 static char *		FormatConfigInfo(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_ConfigSpec *specPtr, char *widgRec);
-static CONST char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
+static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_ConfigSpec *specPtr, char *widgRec,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
 static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
@@ -76,7 +76,7 @@ Tk_ConfigureWidget(
 				 * X resources). */
     Tk_ConfigSpec *specs,	/* Describes legal options. */
     int argc,			/* Number of elements in argv. */
-    CONST char **argv,		/* Command-line options. */
+    const char **argv,		/* Command-line options. */
     char *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
     int flags)			/* Used to specify additional flags that must
@@ -120,7 +120,7 @@ Tk_ConfigureWidget(
      */
 
     for ( ; argc > 0; argc -= 2, argv += 2) {
-	CONST char *arg;
+	const char *arg;
 
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetStringFromObj((Tcl_Obj *) *argv, NULL);
@@ -242,7 +242,7 @@ FindConfigSpec(
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_ConfigSpec *specs,	/* Pointer to table of configuration
 				 * specifications for a widget. */
-    CONST char *argvName,	/* Name (suitable for use in a "config"
+    const char *argvName,	/* Name (suitable for use in a "config"
 				 * command) identifying particular option. */
     int needFlags,		/* Flags that must be present in matching
 				 * entry. */
@@ -597,7 +597,7 @@ Tk_ConfigureInfo(
     Tk_ConfigSpec *specs,	/* Describes legal options. */
     char *widgRec,		/* Record whose fields contain current values
 				 * for options. */
-    CONST char *argvName,	/* If non-NULL, indicates a single option
+    const char *argvName,	/* If non-NULL, indicates a single option
 				 * whose info is to be returned. Otherwise
 				 * info is returned for all options. */
     int flags)			/* Used to specify additional flags that must
@@ -692,7 +692,7 @@ FormatConfigInfo(
     char *widgRec)		/* Pointer to record holding current values of
 				 * info for widget. */
 {
-    CONST char *argv[6];
+    const char *argv[6];
     char *result;
     char buffer[200];
     Tcl_FreeProc *freeProc = NULL;
@@ -721,9 +721,9 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree((char *)argv[4]);
+	    ckfree((char *) argv[4]);
 	} else {
-	    (*freeProc)((char *)argv[4]);
+	    (*freeProc)((char *) argv[4]);
 	}
     }
     return result;
@@ -749,7 +749,7 @@ FormatConfigInfo(
  *----------------------------------------------------------------------
  */
 
-static CONST char *
+static const char *
 FormatConfigValue(
     Tcl_Interp *interp,		/* Interpreter for use in real conversions. */
     Tk_Window tkwin,		/* Window corresponding to widget. */
@@ -763,7 +763,7 @@ FormatConfigValue(
 				 * function to free the result, or NULL if
 				 * result is static. */
 {
-    CONST char *ptr, *result;
+    const char *ptr, *result;
 
     *freeProcPtr = NULL;
     ptr = widgRec + specPtr->offset;
@@ -909,7 +909,7 @@ Tk_ConfigureValue(
     Tk_ConfigSpec *specs,	/* Describes legal options. */
     char *widgRec,		/* Record whose fields contain current values
 				 * for options. */
-    CONST char *argvName,	/* Gives the command-line name for the option
+    const char *argvName,	/* Gives the command-line name for the option
 				 * whose value is to be returned. */
     int flags)			/* Used to specify additional flags that must
 				 * be present in config specs for them to be
@@ -918,7 +918,7 @@ Tk_ConfigureValue(
     Tk_ConfigSpec *specPtr;
     int needFlags, hateFlags;
     Tcl_FreeProc *freeProc;
-    CONST char *result;
+    const char *result;
     char buffer[200];
 
     needFlags = flags & ~(TK_CONFIG_USER_BIT - 1);
@@ -943,9 +943,9 @@ Tk_ConfigureValue(
     Tcl_SetResult(interp, (char *) result, TCL_VOLATILE);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree((char *)result);
+	    ckfree((char *) result);
 	} else {
-	    (*freeProc)((char *)result);
+	    (*freeProc)((char *) result);
 	}
     }
     return TCL_OK;
@@ -1072,13 +1072,13 @@ GetCachedSpecs(
      * self-initializing code.
      */
 
-    specCacheTablePtr = (Tcl_HashTable *)
+    specCacheTablePtr =
 	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
     if (specCacheTablePtr == NULL) {
 	specCacheTablePtr = (Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(specCacheTablePtr, TCL_ONE_WORD_KEYS);
 	Tcl_SetAssocData(interp, "tkConfigSpec.threadTable",
-		DeleteSpecCacheTable, (ClientData) specCacheTablePtr);
+		DeleteSpecCacheTable, specCacheTablePtr);
     }
 
     /*
@@ -1110,7 +1110,7 @@ GetCachedSpecs(
 
 	cachedSpecs = (Tk_ConfigSpec *) ckalloc(entrySpace);
 	memcpy(cachedSpecs, staticSpecs, entrySpace);
-	Tcl_SetHashValue(entryPtr, (ClientData) cachedSpecs);
+	Tcl_SetHashValue(entryPtr, cachedSpecs);
 
 	/*
 	 * Finally, go through and replace database names, database classes
@@ -1133,7 +1133,7 @@ GetCachedSpecs(
 	    specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
 	}
     } else {
-	cachedSpecs = (Tk_ConfigSpec *) Tcl_GetHashValue(entryPtr);
+	cachedSpecs = Tcl_GetHashValue(entryPtr);
     }
 
     return cachedSpecs;
@@ -1161,7 +1161,7 @@ DeleteSpecCacheTable(
     ClientData clientData,
     Tcl_Interp *interp)
 {
-    Tcl_HashTable *tablePtr = (Tcl_HashTable *) clientData;
+    Tcl_HashTable *tablePtr = clientData;
     Tcl_HashEntry *entryPtr;
     Tcl_HashSearch search;
 
@@ -1171,7 +1171,7 @@ DeleteSpecCacheTable(
 	 * Someone else deallocates the Tk_Uids themselves.
 	 */
 
-	ckfree((char *) Tcl_GetHashValue(entryPtr));
+	ckfree(Tcl_GetHashValue(entryPtr));
     }
     Tcl_DeleteHashTable(tablePtr);
     ckfree((char *) tablePtr);

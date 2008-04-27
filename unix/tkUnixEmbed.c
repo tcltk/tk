@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.12 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixEmbed.c,v 1.13 2008/04/27 22:39:13 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -97,7 +97,7 @@ TkpUseWindow(
 				 * string is bogus. */
     Tk_Window tkwin,		/* Tk window that does not yet have an
 				 * associated X window. */
-    CONST char *string)		/* String identifying an X window to use for
+    const char *string)		/* String identifying an X window to use for
 				 * tkwin; must be an integer value. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -867,7 +867,7 @@ TkpTestembedCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
+    const char **argv)		/* Argument strings. */
 {
     int all;
     Container *containerPtr;

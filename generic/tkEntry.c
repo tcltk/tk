@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.47 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.48 2008/04/27 22:38:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -319,7 +319,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
  * dispatch the entry widget command.
  */
 
-static CONST char *entryCmdNames[] = {
+static const char *entryCmdNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "index",
     "insert", "scan", "selection", "validate", "xview", NULL
 };
@@ -330,7 +330,7 @@ enum entryCmd {
     COMMAND_SCAN, COMMAND_SELECTION, COMMAND_VALIDATE, COMMAND_XVIEW
 };
 
-static CONST char *selCmdNames[] = {
+static const char *selCmdNames[] = {
     "adjust", "clear", "from", "present", "range", "to", NULL
 };
 
@@ -345,7 +345,7 @@ enum selCmd {
  * dispatch the spinbox widget command.
  */
 
-static CONST char *sbCmdNames[] = {
+static const char *sbCmdNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "identify",
     "index", "insert", "invoke", "scan", "selection", "set",
     "validate", "xview", NULL
@@ -358,7 +358,7 @@ enum sbCmd {
     SB_CMD_SET, SB_CMD_VALIDATE, SB_CMD_XVIEW
 };
 
-static CONST char *sbSelCmdNames[] = {
+static const char *sbSelCmdNames[] = {
     "adjust", "clear", "element", "from", "present", "range", "to", NULL
 };
 
@@ -376,7 +376,7 @@ enum sbselCmd {
  * modify them, you must modify the strings here.
  */
 
-static CONST char *selElementNames[] = {
+static const char *selElementNames[] = {
     "none", "buttondown", "buttonup", NULL, "entry"
 };
 
@@ -392,7 +392,7 @@ static CONST char *selElementNames[] = {
  */
 
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
-			    int objc, Tcl_Obj *CONST objv[], int flags);
+			    int objc, Tcl_Obj *const objv[], int flags);
 static void		DeleteChars(Entry *entryPtr, int index, int count);
 static void		DestroyEntry(char *memPtr);
 static void		DisplayEntry(ClientData clientData);
@@ -407,25 +407,25 @@ static int		EntryFetchSelection(ClientData clientData, int offset,
 static void		EntryLostSelection(ClientData clientData);
 static void		EventuallyRedraw(Entry *entryPtr);
 static void		EntryScanTo(Entry *entryPtr, int y);
-static void		EntrySetValue(Entry *entryPtr, CONST char *value);
+static void		EntrySetValue(Entry *entryPtr, const char *value);
 static void		EntrySelectTo(Entry *entryPtr, int index);
 static char *		EntryTextVarProc(ClientData clientData,
-			    Tcl_Interp *interp, CONST char *name1,
-			    CONST char *name2, int flags);
+			    Tcl_Interp *interp, const char *name1,
+			    const char *name2, int flags);
 static void		EntryUpdateScrollbar(Entry *entryPtr);
 static int		EntryValidate(Entry *entryPtr, char *cmd);
 static int		EntryValidateChange(Entry *entryPtr, char *change,
-			    CONST char *newStr, int index, int type);
-static void		ExpandPercents(Entry *entryPtr, CONST char *before,
-			    CONST char *change, CONST char *newStr, int index,
+			    const char *newStr, int index, int type);
+static void		ExpandPercents(Entry *entryPtr, const char *before,
+			    const char *change, const char *newStr, int index,
 			    int type, Tcl_DString *dsPtr);
 static void		EntryValueChanged(Entry *entryPtr,
-			    CONST char *newValue);
+			    const char *newValue);
 static void		EntryVisibleRange(Entry *entryPtr,
 			    double *firstPtr, double *lastPtr);
 static int		EntryWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
 			    char *string, int *indexPtr);
@@ -437,7 +437,7 @@ static void		InsertChars(Entry *entryPtr, int index, char *string);
 
 static int		SpinboxWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static int		GetSpinboxElement(Spinbox *sbPtr, int x, int y);
 static int		SpinboxInvoke(Tcl_Interp *interp, Spinbox *sbPtr,
 			    int element);
@@ -476,7 +476,7 @@ Tk_EntryObjCmd(
     ClientData clientData,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register Entry *entryPtr;
     Tk_OptionTable optionTable;
@@ -515,11 +515,11 @@ Tk_EntryObjCmd(
     entryPtr->display		= Tk_Display(tkwin);
     entryPtr->interp		= interp;
     entryPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
-	    Tk_PathName(entryPtr->tkwin), EntryWidgetObjCmd,
-	    (ClientData) entryPtr, EntryCmdDeletedProc);
+	    Tk_PathName(entryPtr->tkwin), EntryWidgetObjCmd, entryPtr,
+	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
     entryPtr->type		= TK_ENTRY;
-    tmp				= (char *) ckalloc(1);
+    tmp				= ckalloc(1);
     tmp[0]			= '\0';
     entryPtr->string		= tmp;
     entryPtr->selectFirst	= -1;
@@ -543,15 +543,15 @@ Tk_EntryObjCmd(
      * otherwise Tk might free it while we still need it.
      */
 
-    Tcl_Preserve((ClientData) entryPtr->tkwin);
+    Tcl_Preserve(entryPtr->tkwin);
 
     Tk_SetClass(entryPtr->tkwin, "Entry");
-    Tk_SetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
+    Tk_SetClassProcs(entryPtr->tkwin, &entryClass, entryPtr);
     Tk_CreateEventHandler(entryPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
-	    EntryEventProc, (ClientData) entryPtr);
+	    EntryEventProc, entryPtr);
     Tk_CreateSelHandler(entryPtr->tkwin, XA_PRIMARY, XA_STRING,
-	    EntryFetchSelection, (ClientData) entryPtr, XA_STRING);
+	    EntryFetchSelection, entryPtr, XA_STRING);
 
     if ((Tk_InitOptions(interp, (char *) entryPtr, optionTable, tkwin)
 	    != TCL_OK) ||
@@ -587,9 +587,9 @@ EntryWidgetObjCmd(
     ClientData clientData,	/* Information about entry widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
     int cmdIndex, selIndex, result;
     Tcl_Obj *objPtr;
 
@@ -603,13 +603,13 @@ EntryWidgetObjCmd(
      * valid command names.
      */
 
-    result = Tcl_GetIndexFromObj(interp, objv[1], entryCmdNames,
-	    "option", 0, &cmdIndex);
+    result = Tcl_GetIndexFromObj(interp, objv[1], entryCmdNames, "option", 0,
+	    &cmdIndex);
     if (result != TCL_OK) {
 	return result;
     }
 
-    Tcl_Preserve((ClientData) entryPtr);
+    Tcl_Preserve(entryPtr);
     switch ((enum entryCmd) cmdIndex) {
     case COMMAND_BBOX: {
 	int index, x, y, width, height;
@@ -882,7 +882,7 @@ EntryWidgetObjCmd(
 	    if (!(entryPtr->flags & GOT_SELECTION)
 		    && (entryPtr->exportSelection)) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
-			EntryLostSelection, (ClientData) entryPtr);
+			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
 	    }
 	    EventuallyRedraw(entryPtr);
@@ -980,11 +980,11 @@ EntryWidgetObjCmd(
     }
 
   done:
-    Tcl_Release((ClientData) entryPtr);
+    Tcl_Release(entryPtr);
     return result;
 
   error:
-    Tcl_Release((ClientData) entryPtr);
+    Tcl_Release(entryPtr);
     return TCL_ERROR;
 }
 
@@ -1021,7 +1021,7 @@ DestroyEntry(
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar(entryPtr->interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		EntryTextVarProc, (ClientData) entryPtr);
+		EntryTextVarProc, entryPtr);
 	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
     if (entryPtr->textGC != None) {
@@ -1048,7 +1048,7 @@ DestroyEntry(
     Tk_FreeTextLayout(entryPtr->textLayout);
     Tk_FreeConfigOptions((char *) entryPtr, entryPtr->optionTable,
 	    entryPtr->tkwin);
-    Tcl_Release((ClientData) entryPtr->tkwin);
+    Tcl_Release(entryPtr->tkwin);
     entryPtr->tkwin = NULL;
 
     ckfree((char *) entryPtr);
@@ -1080,7 +1080,7 @@ ConfigureEntry(
     Entry *entryPtr,		/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
-    Tcl_Obj *CONST objv[],	/* Argument objects. */
+    Tcl_Obj *const objv[],	/* Argument objects. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
@@ -1105,7 +1105,7 @@ ConfigureEntry(
 	    && (entryPtr->flags & ENTRY_VAR_TRACED)) {
 	Tcl_UntraceVar(interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		EntryTextVarProc, (ClientData) entryPtr);
+		EntryTextVarProc, entryPtr);
 	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
 
@@ -1266,7 +1266,7 @@ ConfigureEntry(
 		&& (entryPtr->selectFirst != -1)
 		&& !(entryPtr->flags & GOT_SELECTION)) {
 	    Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
-		    (ClientData) entryPtr);
+		    entryPtr);
 	    entryPtr->flags |= GOT_SELECTION;
 	}
 
@@ -1294,7 +1294,7 @@ ConfigureEntry(
      */
 
     if (entryPtr->textVarName != NULL) {
-	CONST char *value;
+	const char *value;
 
 	value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
@@ -1355,11 +1355,11 @@ ConfigureEntry(
 	    && !(entryPtr->flags & ENTRY_VAR_TRACED)) {
 	Tcl_TraceVar(interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		EntryTextVarProc, (ClientData) entryPtr);
+		EntryTextVarProc, entryPtr);
 	entryPtr->flags |= ENTRY_VAR_TRACED;
     }
 
-    EntryWorldChanged((ClientData) entryPtr);
+    EntryWorldChanged(entryPtr);
     if (error) {
 	Tcl_SetObjResult(interp, errorResult);
 	Tcl_DecrRefCount(errorResult);
@@ -1548,7 +1548,7 @@ static void
 DisplayEntry(
     ClientData clientData)	/* Information about window. */
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
     Tk_Window tkwin = entryPtr->tkwin;
     int baseY, selStartX, selEndX, cursorX;
     int showSelection, xBound;
@@ -1575,14 +1575,14 @@ DisplayEntry(
 	 * side-effect of destroying or unmapping the entry widget.
 	 */
 
-	Tcl_Preserve((ClientData) entryPtr);
+	Tcl_Preserve(entryPtr);
 	EntryUpdateScrollbar(entryPtr);
 
 	if ((entryPtr->flags & ENTRY_DELETED) || !Tk_IsMapped(tkwin)) {
-	    Tcl_Release((ClientData) entryPtr);
+	    Tcl_Release(entryPtr);
 	    return;
 	}
-	Tcl_Release((ClientData) entryPtr);
+	Tcl_Release(entryPtr);
     }
 
 #ifndef TK_NO_DOUBLE_BUFFERING
@@ -2011,7 +2011,7 @@ InsertChars(
     ptrdiff_t byteIndex;
     size_t byteCount, newByteCount;
     int oldChars, charsAdded;
-    CONST char *string;
+    const char *string;
     char *newStr;
 
     string = entryPtr->string;
@@ -2107,7 +2107,7 @@ DeleteChars(
     int count)			/* How many characters to delete. */
 {
     int byteIndex, byteCount, newByteCount;
-    CONST char *string;
+    const char *string;
     char *newStr, *toDelete;
 
     if ((index + count) > entryPtr->numChars) {
@@ -2219,7 +2219,7 @@ DeleteChars(
 static void
 EntryValueChanged(
     Entry *entryPtr,		/* Entry whose value just changed. */
-    CONST char *newValue)	/* If this value is not NULL, we first force
+    const char *newValue)	/* If this value is not NULL, we first force
 				 * the value of the entry to this. */
 {
     if (newValue != NULL) {
@@ -2279,9 +2279,9 @@ EntryValueChanged(
 static void
 EntrySetValue(
     Entry *entryPtr,		/* Entry whose value is to be changed. */
-    CONST char *value)		/* New text to display in entry. */
+    const char *value)		/* New text to display in entry. */
 {
-    CONST char *oldSource;
+    const char *oldSource;
     int valueLen, malloced = 0;
 
     if (strcmp(value, entryPtr->string) == 0) {
@@ -2387,10 +2387,10 @@ EntryEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
 
     if ((entryPtr->type == TK_SPINBOX) && (eventPtr->type == MotionNotify)) {
-	Spinbox *sbPtr = (Spinbox *) clientData;
+	Spinbox *sbPtr = clientData;
 	int elem;
 
 	elem = GetSpinboxElement(sbPtr, eventPtr->xmotion.x,
@@ -2431,11 +2431,11 @@ EntryEventProc(
 	}
 	break;
     case ConfigureNotify:
-	Tcl_Preserve((ClientData) entryPtr);
+	Tcl_Preserve(entryPtr);
 	entryPtr->flags |= UPDATE_SCROLLBAR;
 	EntryComputeGeometry(entryPtr);
 	EventuallyRedraw(entryPtr);
-	Tcl_Release((ClientData) entryPtr);
+	Tcl_Release(entryPtr);
 	break;
     case FocusIn:
     case FocusOut:
@@ -2468,7 +2468,7 @@ static void
 EntryCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
 
     /*
      * This function could be invoked either because the window was destroyed
@@ -2691,7 +2691,7 @@ EntrySelectTo(
 
     if (!(entryPtr->flags & GOT_SELECTION) && (entryPtr->exportSelection)) {
 	Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
-		(ClientData) entryPtr);
+		entryPtr);
 	entryPtr->flags |= GOT_SELECTION;
     }
 
@@ -2751,10 +2751,10 @@ EntryFetchSelection(
     int maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NUL character. */
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
     int byteCount;
-    CONST char *string;
-    CONST char *selStart, *selEnd;
+    const char *string;
+    const char *selStart, *selEnd;
 
     if ((entryPtr->selectFirst < 0) || !(entryPtr->exportSelection)) {
 	return -1;
@@ -2797,7 +2797,7 @@ static void
 EntryLostSelection(
     ClientData clientData)	/* Information about entry widget. */
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
 
     entryPtr->flags &= ~GOT_SELECTION;
 
@@ -2851,7 +2851,7 @@ EventuallyRedraw(
 
     if (!(entryPtr->flags & REDRAW_PENDING)) {
 	entryPtr->flags |= REDRAW_PENDING;
-	Tcl_DoWhenIdle(DisplayEntry, (ClientData) entryPtr);
+	Tcl_DoWhenIdle(DisplayEntry, entryPtr);
     }
 }
 
@@ -2938,7 +2938,7 @@ EntryUpdateScrollbar(
     }
 
     interp = entryPtr->interp;
-    Tcl_Preserve((ClientData) interp);
+    Tcl_Preserve(interp);
     EntryVisibleRange(entryPtr, &first, &last);
     sprintf(args, " %g %g", first, last);
     code = Tcl_VarEval(interp, entryPtr->scrollCmd, args, NULL);
@@ -2950,7 +2950,7 @@ EntryUpdateScrollbar(
 	Tcl_BackgroundError(interp);
     }
     Tcl_SetResult(interp, NULL, TCL_STATIC);
-    Tcl_Release((ClientData) interp);
+    Tcl_Release(interp);
 }
 
 /*
@@ -2975,7 +2975,7 @@ static void
 EntryBlinkProc(
     ClientData clientData)	/* Pointer to record describing entry. */
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
 
     if ((entryPtr->state == STATE_DISABLED) ||
 	    (entryPtr->state == STATE_READONLY) ||
@@ -2985,11 +2985,11 @@ EntryBlinkProc(
     if (entryPtr->flags & CURSOR_ON) {
 	entryPtr->flags &= ~CURSOR_ON;
 	entryPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
-	    entryPtr->insertOffTime, EntryBlinkProc, (ClientData) entryPtr);
+		entryPtr->insertOffTime, EntryBlinkProc, entryPtr);
     } else {
 	entryPtr->flags |= CURSOR_ON;
 	entryPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
-	    entryPtr->insertOnTime, EntryBlinkProc, (ClientData) entryPtr);
+		entryPtr->insertOnTime, EntryBlinkProc, entryPtr);
     }
     EventuallyRedraw(entryPtr);
 }
@@ -3023,23 +3023,22 @@ EntryFocusProc(
 	entryPtr->flags |= GOT_FOCUS | CURSOR_ON;
 	if (entryPtr->insertOffTime != 0) {
 	    entryPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
-		    entryPtr->insertOnTime, EntryBlinkProc,
-		    (ClientData) entryPtr);
+		    entryPtr->insertOnTime, EntryBlinkProc, entryPtr);
 	}
 	if (entryPtr->validate == VALIDATE_ALL ||
-	    entryPtr->validate == VALIDATE_FOCUS ||
-	    entryPtr->validate == VALIDATE_FOCUSIN) {
-	    EntryValidateChange(entryPtr, NULL,
-				entryPtr->string, -1, VALIDATE_FOCUSIN);
+		entryPtr->validate == VALIDATE_FOCUS ||
+		entryPtr->validate == VALIDATE_FOCUSIN) {
+	    EntryValidateChange(entryPtr, NULL, entryPtr->string, -1,
+		    VALIDATE_FOCUSIN);
 	}
     } else {
 	entryPtr->flags &= ~(GOT_FOCUS | CURSOR_ON);
-	entryPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+	entryPtr->insertBlinkHandler = NULL;
 	if (entryPtr->validate == VALIDATE_ALL ||
-	    entryPtr->validate == VALIDATE_FOCUS ||
-	    entryPtr->validate == VALIDATE_FOCUSOUT) {
-	    EntryValidateChange(entryPtr, NULL,
-				entryPtr->string, -1, VALIDATE_FOCUSOUT);
+		entryPtr->validate == VALIDATE_FOCUS ||
+		entryPtr->validate == VALIDATE_FOCUSOUT) {
+	    EntryValidateChange(entryPtr, NULL, entryPtr->string, -1,
+		    VALIDATE_FOCUSOUT);
 	}
     }
     EventuallyRedraw(entryPtr);
@@ -3067,12 +3066,12 @@ static char *
 EntryTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    CONST char *name1,		/* Not used. */
-    CONST char *name2,		/* Not used. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
-    Entry *entryPtr = (Entry *) clientData;
-    CONST char *value;
+    Entry *entryPtr = clientData;
+    const char *value;
 
     if (entryPtr->flags & ENTRY_DELETED) {
 	/*
@@ -3197,7 +3196,7 @@ EntryValidateChange(
      register Entry *entryPtr,	/* Entry that needs validation. */
      char *change,		/* Characters to be added/deleted
 				 * (NUL-terminated string). */
-     CONST char *newValue,	/* Potential new value of entry string */
+     const char *newValue,	/* Potential new value of entry string */
      int index,			/* index of insert/delete, -1 otherwise */
      int type)			/* forced, delete, insert, focusin or
 				 * focusout */
@@ -3331,12 +3330,12 @@ EntryValidateChange(
 static void
 ExpandPercents(
      register Entry *entryPtr,	/* Entry that needs validation. */
-     register CONST char *before,
+     register const char *before,
 				/* Command containing percent expressions to
 				 * be replaced. */
-     CONST char *change,	/* Characters to added/deleted (NUL-terminated
+     const char *change,	/* Characters to added/deleted (NUL-terminated
 				 * string). */
-     CONST char *newValue,	/* Potential new value of entry string */
+     const char *newValue,	/* Potential new value of entry string */
      int index,			/* index of insert/delete */
      int type,			/* INSERT or DELETE */
      Tcl_DString *dsPtr)	/* Dynamic string in which to append new
@@ -3345,7 +3344,7 @@ ExpandPercents(
     int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
     int number, length;
-    register CONST char *string;
+    register const char *string;
     Tcl_UniChar ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
@@ -3498,7 +3497,7 @@ Tk_SpinboxObjCmd(
     ClientData clientData,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register Entry *entryPtr;
     register Spinbox *sbPtr;
@@ -3539,11 +3538,11 @@ Tk_SpinboxObjCmd(
     entryPtr->display		= Tk_Display(tkwin);
     entryPtr->interp		= interp;
     entryPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
-	    Tk_PathName(entryPtr->tkwin), SpinboxWidgetObjCmd,
-	    (ClientData) sbPtr, EntryCmdDeletedProc);
+	    Tk_PathName(entryPtr->tkwin), SpinboxWidgetObjCmd, sbPtr,
+	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
     entryPtr->type		= TK_SPINBOX;
-    tmp				= (char *) ckalloc(1);
+    tmp				= ckalloc(1);
     tmp[0]			= '\0';
     entryPtr->string		= tmp;
     entryPtr->selectFirst	= -1;
@@ -3570,7 +3569,7 @@ Tk_SpinboxObjCmd(
     sbPtr->fromValue		= 0.0;
     sbPtr->toValue		= 100.0;
     sbPtr->increment		= 1.0;
-    sbPtr->formatBuf		= (char *) ckalloc(TCL_DOUBLE_SPACE);
+    sbPtr->formatBuf		= ckalloc(TCL_DOUBLE_SPACE);
     sbPtr->bdRelief		= TK_RELIEF_FLAT;
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
@@ -3579,15 +3578,15 @@ Tk_SpinboxObjCmd(
      * otherwise Tk might free it while we still need it.
      */
 
-    Tcl_Preserve((ClientData) entryPtr->tkwin);
+    Tcl_Preserve(entryPtr->tkwin);
 
     Tk_SetClass(entryPtr->tkwin, "Spinbox");
-    Tk_SetClassProcs(entryPtr->tkwin, &entryClass, (ClientData) entryPtr);
+    Tk_SetClassProcs(entryPtr->tkwin, &entryClass, entryPtr);
     Tk_CreateEventHandler(entryPtr->tkwin,
 	    PointerMotionMask|ExposureMask|StructureNotifyMask|FocusChangeMask,
-	    EntryEventProc, (ClientData) entryPtr);
+	    EntryEventProc, entryPtr);
     Tk_CreateSelHandler(entryPtr->tkwin, XA_PRIMARY, XA_STRING,
-	    EntryFetchSelection, (ClientData) entryPtr, XA_STRING);
+	    EntryFetchSelection, entryPtr, XA_STRING);
 
     if (Tk_InitOptions(interp, (char *) sbPtr, optionTable, tkwin)
 	    != TCL_OK) {
@@ -3601,7 +3600,7 @@ Tk_SpinboxObjCmd(
     Tcl_SetResult(interp, Tk_PathName(entryPtr->tkwin), TCL_STATIC);
     return TCL_OK;
 
-    error:
+  error:
     Tk_DestroyWindow(entryPtr->tkwin);
     return TCL_ERROR;
 }
@@ -3629,10 +3628,10 @@ SpinboxWidgetObjCmd(
     ClientData clientData,	/* Information about spinbox widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Entry *entryPtr = (Entry *) clientData;
-    Spinbox *sbPtr = (Spinbox *) clientData;
+    Entry *entryPtr = clientData;
+    Spinbox *sbPtr = clientData;
     int cmdIndex, selIndex, result;
     Tcl_Obj *objPtr;
 
@@ -3652,7 +3651,7 @@ SpinboxWidgetObjCmd(
 	return result;
     }
 
-    Tcl_Preserve((ClientData) entryPtr);
+    Tcl_Preserve(entryPtr);
     switch ((enum sbCmd) cmdIndex) {
     case SB_CMD_BBOX: {
 	int index, x, y, width, height;
@@ -3669,8 +3668,7 @@ SpinboxWidgetObjCmd(
 	if ((index == entryPtr->numChars) && (index > 0)) {
 	    index--;
 	}
-	Tk_CharBbox(entryPtr->textLayout, index, &x, &y,
-		&width, &height);
+	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
 	sprintf(buf, "%d %d %d %d", x + entryPtr->layoutX,
 		y + entryPtr->layoutY, width, height);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
@@ -3695,8 +3693,7 @@ SpinboxWidgetObjCmd(
     case SB_CMD_CONFIGURE:
 	if (objc <= 3) {
 	    objPtr = Tk_GetOptionInfo(interp, (char *) entryPtr,
-		    entryPtr->optionTable,
-		    (objc == 3) ? objv[2] : NULL,
+		    entryPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    entryPtr->tkwin);
 	    if (objPtr == NULL) {
 		goto error;
@@ -3738,6 +3735,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	    goto error;
 	}
+	/* FIXME: modification of objresult */
 	Tcl_SetStringObj(Tcl_GetObjResult(interp), entryPtr->string, -1);
 	break;
 
@@ -3766,6 +3764,7 @@ SpinboxWidgetObjCmd(
 	}
 	elem = GetSpinboxElement(sbPtr, x, y);
 	if (elem != SEL_NONE) {
+	    /* FIXME: modification of objresult */
 	    Tcl_SetStringObj(Tcl_GetObjResult(interp),
 		    selElementNames[elem], -1);
 	}
@@ -3962,9 +3961,9 @@ SpinboxWidgetObjCmd(
 		entryPtr->selectLast = index2;
 	    }
 	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && (entryPtr->exportSelection)) {
+		    && entryPtr->exportSelection) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
-			EntryLostSelection, (ClientData) entryPtr);
+			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
 	    }
 	    EventuallyRedraw(entryPtr);
@@ -3988,6 +3987,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (objc == 3) {
+		/* FIXME: modification of objresult */
 		Tcl_SetStringObj(Tcl_GetObjResult(interp),
 			selElementNames[sbPtr->selElement], -1);
 	    } else {
@@ -4015,6 +4015,7 @@ SpinboxWidgetObjCmd(
 	if (objc == 3) {
 	    EntryValueChanged(entryPtr, Tcl_GetString(objv[2]));
 	}
+	/* FIXME: modification of objresult */
 	Tcl_SetStringObj(Tcl_GetObjResult(interp), entryPtr->string, -1);
 	break;
 
@@ -4032,6 +4033,7 @@ SpinboxWidgetObjCmd(
 	if (entryPtr->validate != VALIDATE_NONE) {
 	    entryPtr->validate = selIndex;
 	}
+	/* FIXME: modification of objresult */
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj((code == TCL_OK)));
 	break;
     }
@@ -4096,11 +4098,11 @@ SpinboxWidgetObjCmd(
     }
 
   done:
-    Tcl_Release((ClientData) entryPtr);
+    Tcl_Release(entryPtr);
     return result;
 
   error:
-    Tcl_Release((ClientData) entryPtr);
+    Tcl_Release(entryPtr);
     return TCL_ERROR;
 }
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.18 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.19 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -58,7 +58,7 @@ ClipboardHandler(
     char *buffer,		/* Place to store converted selection. */
     int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
-    TkClipboardTarget *targetPtr = (TkClipboardTarget*) clientData;
+    TkClipboardTarget *targetPtr = clientData;
     TkClipboardBuffer *cbPtr;
     char *srcPtr, *destPtr;
     size_t count = 0;
@@ -136,9 +136,9 @@ ClipboardAppHandler(
     char *buffer,		/* Place to store converted selection. */
     int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
-    TkDisplay *dispPtr = (TkDisplay *) clientData;
+    TkDisplay *dispPtr = clientData;
     size_t length;
-    CONST char *p;
+    const char *p;
 
     p = dispPtr->clipboardAppPtr->winPtr->nameUid;
     length = strlen(p);
@@ -207,7 +207,7 @@ static void
 ClipboardLostSel(
     ClientData clientData)	/* Pointer to TkDisplay structure. */
 {
-    TkDisplay *dispPtr = (TkDisplay*) clientData;
+    TkDisplay *dispPtr = clientData;
 
     dispPtr->clipboardActive = 0;
 }
@@ -284,7 +284,7 @@ Tk_ClipboardClear(
 
     if (!dispPtr->clipboardActive) {
 	Tk_OwnSelection(dispPtr->clipWindow, dispPtr->clipboardAtom,
-		ClipboardLostSel, (ClientData) dispPtr);
+		ClipboardLostSel, dispPtr);
 	dispPtr->clipboardActive = 1;
     }
     dispPtr->clipboardAppPtr = winPtr->mainPtr;
@@ -326,7 +326,7 @@ Tk_ClipboardAppend(
 				 * clipboard item, e.g. STRING or LENGTH. */
     Atom format,		/* Format in which the selection information
 				 * should be returned to the requestor. */
-    char* buffer)		/* NULL terminated string containing the data
+    char *buffer)		/* NULL terminated string containing the data
 				 * to be added to the clipboard. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -343,7 +343,7 @@ Tk_ClipboardAppend(
 	Tk_ClipboardClear(interp, tkwin);
     } else if (!dispPtr->clipboardActive) {
 	Tk_OwnSelection(dispPtr->clipWindow, dispPtr->clipboardAtom,
-		ClipboardLostSel, (ClientData) dispPtr);
+		ClipboardLostSel, dispPtr);
 	dispPtr->clipboardActive = 1;
     }
 
@@ -360,14 +360,14 @@ Tk_ClipboardAppend(
 	}
     }
     if (targetPtr == NULL) {
-	targetPtr = (TkClipboardTarget*) ckalloc(sizeof(TkClipboardTarget));
+	targetPtr = (TkClipboardTarget *) ckalloc(sizeof(TkClipboardTarget));
 	targetPtr->type = type;
 	targetPtr->format = format;
 	targetPtr->firstBufferPtr = targetPtr->lastBufferPtr = NULL;
 	targetPtr->nextPtr = dispPtr->clipTargetPtr;
 	dispPtr->clipTargetPtr = targetPtr;
 	Tk_CreateSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
-		type, ClipboardHandler, (ClientData) targetPtr, format);
+		type, ClipboardHandler, targetPtr, format);
     } else if (targetPtr->format != format) {
 	Tcl_AppendResult(interp, "format \"", Tk_GetAtomName(tkwin, format),
 		"\" does not match current format \"",
@@ -380,7 +380,7 @@ Tk_ClipboardAppend(
      * Append a new buffer to the buffer chain.
      */
 
-    cbPtr = (TkClipboardBuffer*) ckalloc(sizeof(TkClipboardBuffer));
+    cbPtr = (TkClipboardBuffer *) ckalloc(sizeof(TkClipboardBuffer));
     cbPtr->nextPtr = NULL;
     if (targetPtr->lastBufferPtr != NULL) {
 	targetPtr->lastBufferPtr->nextPtr = cbPtr;
@@ -393,7 +393,7 @@ Tk_ClipboardAppend(
     cbPtr->buffer = (char *) ckalloc((unsigned) (cbPtr->length + 1));
     strcpy(cbPtr->buffer, buffer);
 
-    TkSelUpdateClipboard((TkWindow*)(dispPtr->clipWindow), targetPtr);
+    TkSelUpdateClipboard((TkWindow *) dispPtr->clipWindow, targetPtr);
 
     return TCL_OK;
 }
@@ -420,12 +420,12 @@ Tk_ClipboardObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument strings. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     char *path = NULL;
     Atom selection;
-    static CONST char *optionStrings[] = { "append", "clear", "get", NULL };
+    static const char *optionStrings[] = { "append", "clear", "get", NULL };
     enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET };
     int index, i;
 
@@ -445,7 +445,7 @@ Tk_ClipboardObjCmd(
 	char *targetName = NULL;
 	char *formatName = NULL;
 	char *string;
-	static CONST char *appendOptionStrings[] = {
+	static const char *appendOptionStrings[] = {
 	    "-displayof", "-format", "-type", NULL
 	};
 	enum appendOptions { APPEND_DISPLAYOF, APPEND_FORMAT, APPEND_TYPE };
@@ -516,7 +516,7 @@ Tk_ClipboardObjCmd(
 		Tcl_GetString(objv[i]));
     }
     case CLIPBOARD_CLEAR: {
-	static CONST char *clearOptionStrings[] = { "-displayof", NULL };
+	static const char *clearOptionStrings[] = { "-displayof", NULL };
 	enum clearOptions { CLEAR_DISPLAYOF };
 	int subIndex;
 
@@ -548,7 +548,7 @@ Tk_ClipboardObjCmd(
 	Tcl_DString selBytes;
 	int result;
 	char *string;
-	static CONST char *getOptionStrings[] = {
+	static const char *getOptionStrings[] = {
 	    "-displayof", "-type", NULL
 	};
 	enum getOptions { APPEND_DISPLAYOF, APPEND_TYPE };
@@ -647,12 +647,12 @@ TkClipInit(
      * and set up an event handler for it.
      */
 
-    dispPtr->clipWindow = Tk_CreateWindow(interp, (Tk_Window) NULL,
-	    "_clip", DisplayString(dispPtr->display));
+    dispPtr->clipWindow = Tk_CreateWindow(interp, NULL, "_clip",
+	    DisplayString(dispPtr->display));
     if (dispPtr->clipWindow == NULL) {
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) dispPtr->clipWindow);
+    Tcl_Preserve(dispPtr->clipWindow);
     atts.override_redirect = True;
     Tk_ChangeWindowAttributes(dispPtr->clipWindow, CWOverrideRedirect, &atts);
     Tk_MakeWindowExist(dispPtr->clipWindow);
@@ -673,11 +673,9 @@ TkClipInit(
      */
 
     Tk_CreateSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
-	    dispPtr->applicationAtom, ClipboardAppHandler,
-	    (ClientData) dispPtr, XA_STRING);
+	    dispPtr->applicationAtom, ClipboardAppHandler, dispPtr,XA_STRING);
     Tk_CreateSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
-	    dispPtr->windowAtom, ClipboardWindowHandler,
-	    (ClientData) dispPtr, XA_STRING);
+	    dispPtr->windowAtom, ClipboardWindowHandler, dispPtr, XA_STRING);
     return TCL_OK;
 }
 
