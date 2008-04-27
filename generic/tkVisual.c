@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.10 2007/12/13 15:24:21 dgp Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.11 2008/04/27 22:38:58 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -88,7 +88,7 @@ Visual *
 Tk_GetVisual(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which visual will be used. */
-    CONST char *string,		/* String describing visual. See manual entry
+    const char *string,		/* String describing visual. See manual entry
 				 * for details. */
     int *depthPtr,		/* The depth of the returned visual is stored
 				 * here. */
@@ -103,7 +103,7 @@ Tk_GetVisual(
     Visual *visual;
     ptrdiff_t length;
     int c, numVisuals, prio, bestPrio, i;
-    CONST char *p;
+    const char *p;
     VisualDictionary *dictPtr;
     TkColormap *cmapPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -368,7 +368,7 @@ Colormap
 Tk_GetColormap(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window where colormap will be used. */
-    CONST char *string)		/* String that identifies colormap: either
+    const char *string)		/* String that identifies colormap: either
 				 * "new" or the name of another window. */
 {
     Colormap colormap;

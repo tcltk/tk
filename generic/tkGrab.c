@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.13 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.14 2008/04/27 22:38:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -183,7 +183,7 @@ Tk_GrabObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int globalGrab;
     Tk_Window tkwin;
@@ -191,10 +191,10 @@ Tk_GrabObjCmd(
     char *arg;
     int index;
     int len;
-    static CONST char *optionStrings[] = {
+    static const char *optionStrings[] = {
 	"current", "release", "set", "status", NULL
     };
-    static CONST char *flagStrings[] = {
+    static const char *flagStrings[] = {
 	"-global", NULL
     };
     enum options {
@@ -229,7 +229,7 @@ Tk_GrabObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
 	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, arg, (Tk_Window) clientData);
+	tkwin = Tk_NameToWindow(interp, arg, clientData);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -245,8 +245,7 @@ Tk_GrabObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
 	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
-		(Tk_Window) clientData);
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), clientData);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -272,7 +271,7 @@ Tk_GrabObjCmd(
 	}
 	if (objc == 3) {
 	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
-		    (Tk_Window) clientData);
+		    clientData);
 	    if (tkwin == NULL) {
 		return TCL_ERROR;
 	    }
@@ -298,8 +297,7 @@ Tk_GrabObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "release window");
 	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
-		(Tk_Window) clientData);
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), clientData);
 	if (tkwin == NULL) {
 	    Tcl_ResetResult(interp);
 	} else {
@@ -316,7 +314,7 @@ Tk_GrabObjCmd(
 	if (objc == 3) {
 	    globalGrab = 0;
 	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
-		    (Tk_Window) clientData);
+		    clientData);
 	} else {
 	    globalGrab = 1;
 
@@ -332,7 +330,7 @@ Tk_GrabObjCmd(
 		return TCL_ERROR;
 	    }
 	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[3]),
-		    (Tk_Window) clientData);
+		    clientData);
 	}
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
@@ -348,7 +346,7 @@ Tk_GrabObjCmd(
 	    return TCL_ERROR;
 	}
 	winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
-		(Tk_Window) clientData);
+		clientData);
 	if (winPtr == NULL) {
 	    return TCL_ERROR;
 	}
@@ -1246,8 +1244,9 @@ EatGrabEvents(
     info.display = dispPtr->display;
     info.serial = serial;
     TkpSync(info.display);
-    oldProc = Tk_RestrictEvents(GrabRestrictProc, (ClientData)&info, &oldArg);
+    oldProc = Tk_RestrictEvents(GrabRestrictProc, &info, &oldArg);
     while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
+	/* EMPTY */
     }
     Tk_RestrictEvents(oldProc, oldArg, &dummy);
 }
@@ -1276,7 +1275,7 @@ GrabRestrictProc(
     ClientData arg,
     XEvent *eventPtr)
 {
-    GrabInfo *info = (GrabInfo *) arg;
+    GrabInfo *info = arg;
     int mode, diff;
 
     /*

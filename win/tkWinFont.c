@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.38 2007/12/13 15:28:55 dgp Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.39 2008/04/27 22:39:17 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -174,7 +174,7 @@ typedef struct ThreadSpecificData {
 				 * currently loaded. As screen fonts are
 				 * loaded, this list grows to hold information
 				 * about what characters exist in each font
-				 * family.  */
+				 * family. */
     Tcl_HashTable uidTable;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -196,33 +196,33 @@ static SubFont *	CanUseFallback(HDC hdc, WinFont *fontPtr,
 static SubFont *	CanUseFallbackWithAliases(HDC hdc, WinFont *fontPtr,
 			    char *faceName, int ch, Tcl_DString *nameTriedPtr,
 			    SubFont **subFontPtrPtr);
-static int		FamilyExists(HDC hdc, CONST char *faceName);
-static char *		FamilyOrAliasExists(HDC hdc, CONST char *faceName);
+static int		FamilyExists(HDC hdc, const char *faceName);
+static char *		FamilyOrAliasExists(HDC hdc, const char *faceName);
 static SubFont *	FindSubFontForChar(WinFont *fontPtr, int ch,
 			    SubFont **subFontPtrPtr);
 static void		FontMapInsert(SubFont *subFontPtr, int ch);
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
 static int		FontMapLookup(SubFont *subFontPtr, int ch);
 static void		FreeFontFamily(FontFamily *familyPtr);
-static HFONT		GetScreenFont(CONST TkFontAttributes *faPtr,
-			    CONST char *faceName, int pixelSize);
+static HFONT		GetScreenFont(const TkFontAttributes *faPtr,
+			    const char *faceName, int pixelSize);
 static void		InitFont(Tk_Window tkwin, HFONT hFont,
 			    int overstrike, WinFont *tkFontPtr);
 static void		InitSubFont(HDC hdc, HFONT hFont, int base,
 			    SubFont *subFontPtr);
 static int		CreateNamedSystemLogFont(Tcl_Interp *interp,
-			    Tk_Window tkwin, CONST char* name,
+			    Tk_Window tkwin, const char* name,
 			    LOGFONT* logFontPtr);
 static int		CreateNamedSystemFont(Tcl_Interp *interp,
-			    Tk_Window tkwin, CONST char* name, HFONT hFont);
+			    Tk_Window tkwin, const char* name, HFONT hFont);
 static int		LoadFontRanges(HDC hdc, HFONT hFont,
 			    USHORT **startCount, USHORT **endCount,
 			    int *symbolPtr);
 static void		MultiFontTextOut(HDC hdc, WinFont *fontPtr,
-			    CONST char *source, int numBytes, int x, int y);
+			    const char *source, int numBytes, int x, int y);
 static void		ReleaseFont(WinFont *fontPtr);
 static void		ReleaseSubFont(SubFont *subFontPtr);
-static int		SeenName(CONST char *name, Tcl_DString *dsPtr);
+static int		SeenName(const char *name, Tcl_DString *dsPtr);
 static void		SwapLong(PULONG p);
 static void		SwapShort(USHORT *p);
 static int CALLBACK	WinFontCanUseProc(ENUMLOGFONT *lfPtr,
@@ -300,7 +300,7 @@ TkpFontPkgInit(
 TkFont *
 TkpGetNativeFont(
     Tk_Window tkwin,		/* For display where font will be used. */
-    CONST char *name)		/* Platform-specific font name. */
+    const char *name)		/* Platform-specific font name. */
 {
     int object;
     WinFont *fontPtr;
@@ -335,7 +335,7 @@ static int
 CreateNamedSystemLogFont(
     Tcl_Interp *interp,
     Tk_Window tkwin,
-    CONST char* name,
+    const char* name,
     LOGFONTA* logFontPtr)
 {
     HFONT hFont;
@@ -365,7 +365,7 @@ static int
 CreateNamedSystemFont(
     Tcl_Interp *interp,
     Tk_Window tkwin,
-    CONST char* name,
+    const char* name,
     HFONT hFont)
 {
     WinFont winfont;
@@ -403,14 +403,14 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
 
     /* force this for now */
     if (((TkWindow *) tkwin)->mainPtr == NULL) {
-        ((TkWindow *) tkwin)->mainPtr = mainPtr;
+	((TkWindow *) tkwin)->mainPtr = mainPtr;
     }
 
     /*
-     * If this API call fails then we will fallback to setting these
-     * named fonts from script in ttk/fonts.tcl. So far I've only
-     * seen it fail when WINVER has been defined for a higher platform than
-     * we are running on. (ie: WINVER=0x0600 and running on XP).
+     * If this API call fails then we will fallback to setting these named
+     * fonts from script in ttk/fonts.tcl. So far I've only seen it fail when
+     * WINVER has been defined for a higher platform than we are running on.
+     * (i.e. WINVER=0x0600 and running on XP).
      */
 
     ZeroMemory(&ncMetrics, sizeof(ncMetrics));
@@ -418,29 +418,29 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
     if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
 	    sizeof(ncMetrics), &ncMetrics, 0)) {
 	CreateNamedSystemLogFont(interp, tkwin, "TkDefaultFont",
-	    &ncMetrics.lfMessageFont);
+		&ncMetrics.lfMessageFont);
 	CreateNamedSystemLogFont(interp, tkwin, "TkHeadingFont",
-	    &ncMetrics.lfMessageFont);
+		&ncMetrics.lfMessageFont);
 	CreateNamedSystemLogFont(interp, tkwin, "TkTextFont",
-	    &ncMetrics.lfMessageFont);
+		&ncMetrics.lfMessageFont);
 	CreateNamedSystemLogFont(interp, tkwin, "TkMenuFont",
-	    &ncMetrics.lfMenuFont);
+		&ncMetrics.lfMenuFont);
 	CreateNamedSystemLogFont(interp, tkwin, "TkTooltipFont",
-	    &ncMetrics.lfStatusFont);
+		&ncMetrics.lfStatusFont);
 	CreateNamedSystemLogFont(interp, tkwin, "TkCaptionFont",
-	    &ncMetrics.lfCaptionFont);
+		&ncMetrics.lfCaptionFont);
 	CreateNamedSystemLogFont(interp, tkwin, "TkSmallCaptionFont",
-	    &ncMetrics.lfSmCaptionFont);
+		&ncMetrics.lfSmCaptionFont);
     }
 
     iconMetrics.cbSize = sizeof(iconMetrics);
     if (SystemParametersInfo(SPI_GETICONMETRICS, sizeof(iconMetrics),
 	    &iconMetrics, 0)) {
 	CreateNamedSystemLogFont(interp, tkwin, "TkIconFont",
-	    &iconMetrics.lfFont);
+		&iconMetrics.lfFont);
     }
 
-    hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
+    hFont = (HFONT) GetStockObject(ANSI_FIXED_FONT);
     CreateNamedSystemFont(interp, tkwin, "TkFixedFont", hFont);
 
     /* 
@@ -448,8 +448,8 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
      */
 
     for (mapPtr = systemMap; mapPtr->strKey != NULL; mapPtr++) {
-        hFont = (HFONT)GetStockObject(mapPtr->numKey);
-        CreateNamedSystemFont(interp, tkwin, mapPtr->strKey, hFont);
+	hFont = (HFONT) GetStockObject(mapPtr->numKey);
+	CreateNamedSystemFont(interp, tkwin, mapPtr->strKey, hFont);
     }
 }
 
@@ -491,7 +491,7 @@ TkpGetFontFromAttributes(
 				 * will be released. If NULL, a new TkFont
 				 * structure is allocated. */
     Tk_Window tkwin,		/* For display where font will be used. */
-    CONST TkFontAttributes *faPtr)
+    const TkFontAttributes *faPtr)
 				/* Set of attributes to match. */
 {
     int i, j;
@@ -764,7 +764,7 @@ TkpGetFontAttrsForChar(
 /*
  *---------------------------------------------------------------------------
  *
- *  Tk_MeasureChars --
+ * Tk_MeasureChars --
  *
  *	Determine the number of bytes from the string that will fit in the
  *	given horizontal span. The measurement is done under the assumption
@@ -784,7 +784,7 @@ TkpGetFontAttrsForChar(
 int
 Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
     int numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
@@ -815,7 +815,7 @@ Tk_MeasureChars(
     FontFamily *familyPtr;
     Tcl_DString runString;
     SubFont *thisSubFontPtr, *lastSubFontPtr;
-    CONST char *p, *end, *next = NULL, *start;
+    const char *p, *end, *next = NULL, *start;
 
     if (numBytes == 0) {
 	*lengthPtr = 0;
@@ -952,7 +952,7 @@ Tk_MeasureChars(
 	 * procedure without the maxLength limit or any flags.
 	 */
 
-	CONST char *lastWordBreak = NULL;
+	const char *lastWordBreak = NULL;
 	Tcl_UniChar ch2;
 
 	end = p;
@@ -986,7 +986,7 @@ Tk_MeasureChars(
 /*
  *---------------------------------------------------------------------------
  *
- *  TkpMeasureCharsInContext --
+ * TkpMeasureCharsInContext --
  *
  *	Determine the number of bytes from the string that will fit in the
  *	given horizontal span. The measurement is done under the assumption
@@ -1011,7 +1011,7 @@ Tk_MeasureChars(
 int
 TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
     int numBytes,		/* Maximum number of bytes to consider from
 				 * source string in all. */
@@ -1063,7 +1063,7 @@ Tk_DrawChars(
     GC gc,			/* Graphics context for drawing characters. */
     Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
 				 * (tabs, control characters, and newlines)
 				 * should be stripped out of the string that
@@ -1227,7 +1227,7 @@ TkpDrawCharsInContext(
     GC gc,			/* Graphics context for drawing characters. */
     Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
 				 * (tabs, control characters, and newlines)
 				 * should be stripped out of the string that
@@ -1271,7 +1271,7 @@ MultiFontTextOut(
     HDC hdc,			/* HDC to draw into. */
     WinFont *fontPtr,		/* Contains set of fonts to use when drawing
 				 * following string. */
-    CONST char *source,		/* Potentially multilingual UTF-8 string. */
+    const char *source,		/* Potentially multilingual UTF-8 string. */
     int numBytes,		/* Length of string in bytes. */
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
@@ -1281,7 +1281,7 @@ MultiFontTextOut(
     HFONT oldFont;
     FontFamily *familyPtr;
     Tcl_DString runString;
-    CONST char *p, *end, *next;
+    const char *p, *end, *next;
     SubFont *lastSubFontPtr, *thisSubFontPtr;
     TEXTMETRIC tm;
 
@@ -1705,7 +1705,7 @@ FreeFontFamily(
 
     for (familyPtrPtr = &tsdPtr->fontFamilyList; ; ) {
 	if (*familyPtrPtr == familyPtr) {
-  	    *familyPtrPtr = familyPtr->nextPtr;
+	    *familyPtrPtr = familyPtr->nextPtr;
 	    break;
 	}
 	familyPtrPtr = &(*familyPtrPtr)->nextPtr;
@@ -1850,7 +1850,7 @@ FindSubFontForChar(
 
     if (subFontPtr == NULL) {
 	/*
-	 * No font can display this character.  We will use the base font and
+	 * No font can display this character. We will use the base font and
 	 * have it display the "unknown" character.
 	 */
 
@@ -2146,11 +2146,11 @@ CanUseFallbackWithAliases(
 
 static int
 SeenName(
-    CONST char *name,		/* The name to check. */
+    const char *name,		/* The name to check. */
     Tcl_DString *dsPtr)		/* Contains names that have already been
 				 * seen. */
 {
-    CONST char *seen, *end;
+    const char *seen, *end;
 
     seen = Tcl_DStringValue(dsPtr);
     end = seen + Tcl_DStringLength(dsPtr);
@@ -2277,9 +2277,9 @@ CanUseFallback(
 
 static HFONT
 GetScreenFont(
-    CONST TkFontAttributes *faPtr,
+    const TkFontAttributes *faPtr,
 				/* Desired font attributes for new HFONT. */
-    CONST char *faceName,	/* Overrides font family specified in font
+    const char *faceName,	/* Overrides font family specified in font
 				 * attributes. */
     int pixelSize)		/* Overrides size specified in font
 				 * attributes. */
@@ -2359,7 +2359,7 @@ GetScreenFont(
 static int
 FamilyExists(
     HDC hdc,			/* HDC in which font family will be used. */
-    CONST char *faceName)	/* Font family to query. */
+    const char *faceName)	/* Font family to query. */
 {
     int result;
     Tcl_DString faceString;
@@ -2403,7 +2403,7 @@ FamilyExists(
 static char *
 FamilyOrAliasExists(
     HDC hdc,
-    CONST char *faceName)
+    const char *faceName)
 {
     char **aliases;
     int i;
@@ -2439,7 +2439,7 @@ WinFontExistProc(
 
 #pragma pack(1)			/* Structures are byte aligned in file. */
 
-#define CMAPHEX  0x636d6170	/* Key for character map resource. */
+#define CMAPHEX 0x636d6170	/* Key for character map resource. */
 
 typedef struct CMAPTABLE {
     USHORT version;		/* Table version number (0). */
@@ -2481,7 +2481,7 @@ typedef struct SUBHEADER {
 } SUBHEADER;
 
 typedef struct HIBYTETABLE {
-    USHORT format;  		/* Format number is set to 2. */
+    USHORT format;		/* Format number is set to 2. */
     USHORT length;		/* The actual length in bytes of this
 				 * subtable. */
     USHORT version;		/* Version number (starts at 0). */

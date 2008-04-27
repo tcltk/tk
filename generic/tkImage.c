@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.35 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.36 2008/04/27 22:38:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -154,9 +154,9 @@ Tk_ImageObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument strings. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    static CONST char *imageOptions[] = {
+    static const char *imageOptions[] = {
 	"create", "delete", "height", "inuse", "names", "type", "types",
 	"width", NULL
     };
@@ -164,7 +164,7 @@ Tk_ImageObjCmd(
 	IMAGE_CREATE, IMAGE_DELETE, IMAGE_HEIGHT, IMAGE_INUSE, IMAGE_NAMES,
 	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
-    TkWindow *winPtr = (TkWindow *) clientData;
+    TkWindow *winPtr = clientData;
     int i, isNew, firstOption, index;
     Tk_ImageType *typePtr;
     ImageMaster *masterPtr;
@@ -271,7 +271,7 @@ Tk_ImageObjCmd(
 	    masterPtr->instancePtr = NULL;
 	    masterPtr->deleted = 0;
 	    masterPtr->winPtr = winPtr->mainPtr->winPtr;
-	    Tcl_Preserve((ClientData) masterPtr->winPtr);
+	    Tcl_Preserve(masterPtr->winPtr);
 	    Tcl_SetHashValue(hPtr, masterPtr);
 	} else {
 	    /*
@@ -279,7 +279,7 @@ Tk_ImageObjCmd(
 	     * from the master.
 	     */
 
-	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    masterPtr = Tcl_GetHashValue(hPtr);
 	    if (masterPtr->typePtr != NULL) {
 		for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
 			imagePtr = imagePtr->nextPtr) {
@@ -313,17 +313,17 @@ Tk_ImageObjCmd(
 	    }
 	    args[objc] = NULL;
 	}
-	Tcl_Preserve((ClientData) masterPtr);
+	Tcl_Preserve(masterPtr);
 	if ((*typePtr->createProc)(interp, name, objc, args, typePtr,
 		(Tk_ImageMaster)masterPtr, &masterPtr->masterData) != TCL_OK) {
 	    EventuallyDeleteImage(masterPtr, 0);
-	    Tcl_Release((ClientData) masterPtr);
+	    Tcl_Release(masterPtr);
 	    if (oldimage) {
 		ckfree((char *) args);
 	    }
 	    return TCL_ERROR;
 	}
-	Tcl_Release((ClientData) masterPtr);
+	Tcl_Release(masterPtr);
 	if (oldimage) {
 	    ckfree((char *) args);
 	}
@@ -345,7 +345,7 @@ Tk_ImageObjCmd(
 	    if (hPtr == NULL) {
 		goto alreadyDeleted;
 	    }
-	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    masterPtr = Tcl_GetHashValue(hPtr);
 	    if (masterPtr->deleted) {
 		goto alreadyDeleted;
 	    }
@@ -359,7 +359,7 @@ Tk_ImageObjCmd(
 	}
 	hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
 	for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	    masterPtr = Tcl_GetHashValue(hPtr);
 	    if (masterPtr->deleted) {
 		continue;
 	    }
@@ -402,7 +402,7 @@ Tk_ImageObjCmd(
 	if (hPtr == NULL) {
 	    goto alreadyDeleted;
 	}
-	masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+	masterPtr = Tcl_GetHashValue(hPtr);
 	if (masterPtr->deleted) {
 	    goto alreadyDeleted;
 	}
@@ -500,7 +500,7 @@ Tk_ImageChanged(
  *----------------------------------------------------------------------
  */
 
-CONST char *
+const char *
 Tk_NameOfImage(
     Tk_ImageMaster imageMaster)	/* Token for image. */
 {
@@ -540,7 +540,7 @@ Tk_GetImage(
 				 * be found. */
     Tk_Window tkwin,		/* Token for window in which image will be
 				 * used. */
-    CONST char *name,		/* Name of desired image. */
+    const char *name,		/* Name of desired image. */
     Tk_ImageChangedProc *changeProc,
 				/* Function to invoke when redisplay is needed
 				 * because image's pixels or size changed. */
@@ -554,7 +554,7 @@ Tk_GetImage(
     if (hPtr == NULL) {
 	goto noSuchImage;
     }
-    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+    masterPtr = Tcl_GetHashValue(hPtr);
     if (masterPtr->typePtr == NULL) {
 	goto noSuchImage;
     }
@@ -635,7 +635,7 @@ Tk_FreeImage(
 	if (masterPtr->hPtr != NULL) {
 	    Tcl_DeleteHashEntry(masterPtr->hPtr);
 	}
-	Tcl_Release((ClientData) masterPtr->winPtr);
+	Tcl_Release(masterPtr->winPtr);
 	ckfree((char *) masterPtr);
     }
 }
@@ -855,7 +855,7 @@ void
 Tk_DeleteImage(
     Tcl_Interp *interp,		/* Interpreter in which the image was
 				 * created. */
-    CONST char *name)		/* Name of image. */
+    const char *name)		/* Name of image. */
 {
     Tcl_HashEntry *hPtr;
     TkWindow *winPtr;
@@ -868,7 +868,7 @@ Tk_DeleteImage(
     if (hPtr == NULL) {
 	return;
     }
-    DeleteImage((ImageMaster *)Tcl_GetHashValue(hPtr));
+    DeleteImage(Tcl_GetHashValue(hPtr));
 }
 
 /*
@@ -913,7 +913,7 @@ DeleteImage(
 	if (masterPtr->hPtr != NULL) {
 	    Tcl_DeleteHashEntry(masterPtr->hPtr);
 	}
-	Tcl_Release((ClientData) masterPtr->winPtr);
+	Tcl_Release(masterPtr->winPtr);
 	ckfree((char *) masterPtr);
     } else {
 	masterPtr->deleted = 1;
@@ -949,8 +949,7 @@ EventuallyDeleteImage(
     }
     if (!masterPtr->deleted) {
 	masterPtr->deleted = 1;
-	Tcl_EventuallyFree((ClientData) masterPtr,
-		(Tcl_FreeProc *)DeleteImage);
+	Tcl_EventuallyFree(masterPtr, (Tcl_FreeProc *) DeleteImage);
     }
 }
 
@@ -982,7 +981,7 @@ TkDeleteAllImages(
 
     for (hPtr = Tcl_FirstHashEntry(&mainPtr->imageTable, &search);
 	    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	EventuallyDeleteImage((ImageMaster *) Tcl_GetHashValue(hPtr), 1);
+	EventuallyDeleteImage(Tcl_GetHashValue(hPtr), 1);
     }
     Tcl_DeleteHashTable(&mainPtr->imageTable);
 }
@@ -1011,7 +1010,7 @@ ClientData
 Tk_GetImageMasterData(
     Tcl_Interp *interp,		/* Interpreter in which the image was
 				 * created. */
-    CONST char *name,		/* Name of image. */
+    const char *name,		/* Name of image. */
     Tk_ImageType **typePtrPtr)	/* Points to location to fill in with pointer
 				 * to type information for image. */
 {
@@ -1025,7 +1024,7 @@ Tk_GetImageMasterData(
 	*typePtrPtr = NULL;
 	return NULL;
     }
-    masterPtr = (ImageMaster *) Tcl_GetHashValue(hPtr);
+    masterPtr = Tcl_GetHashValue(hPtr);
     if (masterPtr->deleted) {
 	*typePtrPtr = NULL;
 	return NULL;

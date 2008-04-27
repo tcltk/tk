@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.68 2007/12/13 15:24:17 dgp Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.69 2008/04/27 22:38:58 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -542,23 +542,23 @@ static void		DisplayDLine(TkText *textPtr, DLine *dlPtr,
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
 static void		DisplayText(ClientData clientData);
-static DLine *		FindDLine(DLine *dlPtr, CONST TkTextIndex *indexPtr);
+static DLine *		FindDLine(DLine *dlPtr, const TkTextIndex *indexPtr);
 static void		FreeDLines(TkText *textPtr, DLine *firstPtr,
 			    DLine *lastPtr, int action);
 static void		FreeStyle(TkText *textPtr, TextStyle *stylePtr);
-static TextStyle *	GetStyle(TkText *textPtr, CONST TkTextIndex *indexPtr);
+static TextStyle *	GetStyle(TkText *textPtr, const TkTextIndex *indexPtr);
 static void		GetXView(Tcl_Interp *interp, TkText *textPtr,
 			    int report);
 static void		GetYView(Tcl_Interp *interp, TkText *textPtr,
 			    int report);
 static int		GetYPixelCount(TkText *textPtr, DLine *dlPtr);
 static DLine *		LayoutDLine(TkText *textPtr,
-			    CONST TkTextIndex *indexPtr);
-static int		MeasureChars(Tk_Font tkfont, CONST char *source,
+			    const TkTextIndex *indexPtr);
+static int		MeasureChars(Tk_Font tkfont, const char *source,
 			    int maxBytes, int rangeStart, int rangeLength,
 			    int startX, int maxX, int flags, int *nextXPtr);
 static void		MeasureUp(TkText *textPtr,
-			    CONST TkTextIndex *srcPtr, int distance,
+			    const TkTextIndex *srcPtr, int distance,
 			    TkTextIndex *dstPtr, int *overlap);
 static int		NextTabStop(Tk_Font tkfont, int x, int tabOrigin);
 static void		UpdateDisplayInfo(TkText *textPtr);
@@ -568,8 +568,8 @@ static int		SizeOfTab(TkText *textPtr, int tabStyle,
 			    TkTextTabArray *tabArrayPtr, int *indexPtr, int x,
 			    int maxX);
 static void		TextChanged(TkText *textPtr,
-			    CONST TkTextIndex *index1Ptr,
-			    CONST TkTextIndex *index2Ptr);
+			    const TkTextIndex *index1Ptr,
+			    const TkTextIndex *index2Ptr);
 static void		TextInvalidateRegion(TkText *textPtr, TkRegion region);
 static void		TextRedrawTag(TkText *textPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
@@ -577,7 +577,7 @@ static void		TextRedrawTag(TkText *textPtr,
 static void		TextInvalidateLineMetrics(TkText *textPtr,
 			    TkTextLine *linePtr, int lineCount, int action);
 static int		CalculateDisplayLineHeight(TkText *textPtr,
-			    CONST TkTextIndex *indexPtr, int *byteCountPtr,
+			    const TkTextIndex *indexPtr, int *byteCountPtr,
 			    int *mergedLinePtr);
 static void		DlineIndexOfX(TkText *textPtr,
 			    DLine *dlPtr, int x, TkTextIndex *indexPtr);
@@ -585,7 +585,7 @@ static int		DlineXOfIndex(TkText *textPtr,
 			    DLine *dlPtr, int byteIndex);
 static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    TkText *textPtr, int objc,
-			    Tcl_Obj *CONST objv[], double *dblPtr,
+			    Tcl_Obj *const objv[], double *dblPtr,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(ClientData clientData);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
@@ -742,7 +742,7 @@ TkTextFreeDInfo(
 static TextStyle *
 GetStyle(
     TkText *textPtr,		/* Overall information about text widget. */
-    CONST TkTextIndex *indexPtr)/* The character in the text for which display
+    const TkTextIndex *indexPtr)/* The character in the text for which display
 				 * information is wanted. */
 {
     TkTextTag **tagPtrs;
@@ -1047,7 +1047,7 @@ FreeStyle(
 static DLine *
 LayoutDLine(
     TkText *textPtr,		/* Overall information about text widget. */
-    CONST TkTextIndex *indexPtr)/* Beginning of display line. May not
+    const TkTextIndex *indexPtr)/* Beginning of display line. May not
 				 * necessarily point to a character
 				 * segment. */
 {
@@ -3518,7 +3518,7 @@ TkTextFindDisplayLineEnd(
 static int
 CalculateDisplayLineHeight(
     TkText *textPtr,		/* Widget record for text widget. */
-    CONST TkTextIndex *indexPtr,/* The index at the beginning of the display
+    const TkTextIndex *indexPtr,/* The index at the beginning of the display
 				 * line of interest. */
     int *byteCountPtr,		/* NULL or used to return the number of byte
 				 * indices on the given display line. */
@@ -3589,7 +3589,7 @@ CalculateDisplayLineHeight(
 int
 TkTextIndexYPixels(
     TkText *textPtr,		/* Widget record for text widget. */
-    CONST TkTextIndex *indexPtr)/* The index of which we want the pixel
+    const TkTextIndex *indexPtr)/* The index of which we want the pixel
 				 * distance from top of logical line to top of
 				 * index. */
 {
@@ -4510,8 +4510,8 @@ void
 TkTextChanged(
     TkSharedText *sharedTextPtr,/* Shared widget section, or NULL. */
     TkText *textPtr,		/* Widget record for text widget, or NULL. */
-    CONST TkTextIndex*index1Ptr,/* Index of first character to redisplay. */
-    CONST TkTextIndex*index2Ptr)/* Index of character just after last one to
+    const TkTextIndex*index1Ptr,/* Index of first character to redisplay. */
+    const TkTextIndex*index2Ptr)/* Index of character just after last one to
 				 * redisplay. */
 {
     if (sharedTextPtr == NULL) {
@@ -4528,8 +4528,8 @@ TkTextChanged(
 static void
 TextChanged(
     TkText *textPtr,		/* Widget record for text widget, or NULL. */
-    CONST TkTextIndex*index1Ptr,/* Index of first character to redisplay. */
-    CONST TkTextIndex*index2Ptr)/* Index of character just after last one to
+    const TkTextIndex*index1Ptr,/* Index of first character to redisplay. */
+    const TkTextIndex*index2Ptr)/* Index of character just after last one to
 				 * redisplay. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -5209,7 +5209,7 @@ TkTextMeasureDown(
 static void
 MeasureUp(
     TkText *textPtr,		/* Text widget in which to measure. */
-    CONST TkTextIndex *srcPtr,	/* Index of character from which to start
+    const TkTextIndex *srcPtr,	/* Index of character from which to start
 				 * measuring. */
     int distance,		/* Vertical distance in pixels measured from
 				 * the pixel just below the lowest one in
@@ -5313,7 +5313,7 @@ TkTextSeeCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. Someone else has already
+    Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "see". */
 {
@@ -5442,7 +5442,7 @@ TkTextXviewCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. Someone else has already
+    Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "xview". */
 {
@@ -5725,7 +5725,7 @@ TkTextYviewCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. Someone else has already
+    Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "yview". */
 {
@@ -5751,7 +5751,7 @@ TkTextYviewCmd(
 
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
-	register CONST char *switchStr =
+	register const char *switchStr =
 		Tcl_GetStringFromObj(objv[2], &switchLength);
 
 	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",
@@ -5906,7 +5906,7 @@ TkTextScanCmd(
     register TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. Someone else has already
+    Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "scan". */
 {
@@ -6414,7 +6414,7 @@ static DLine *
 FindDLine(
     register DLine *dlPtr,	/* Pointer to first in list of DLines to
 				 * search. */
-    CONST TkTextIndex *indexPtr)/* Index of desired character. */
+    const TkTextIndex *indexPtr)/* Index of desired character. */
 {
     TkTextLine *linePtr;
 
@@ -6784,7 +6784,7 @@ DlineXOfIndex(
 int
 TkTextIndexBbox(
     TkText *textPtr,		/* Widget record for text widget. */
-    CONST TkTextIndex *indexPtr,/* Index whose bounding box is desired. */
+    const TkTextIndex *indexPtr,/* Index whose bounding box is desired. */
     int *xPtr, int *yPtr,	/* Filled with index's upper-left
 				 * coordinate. */
     int *widthPtr, int *heightPtr,
@@ -6914,7 +6914,7 @@ TkTextIndexBbox(
 int
 TkTextDLineInfo(
     TkText *textPtr,		/* Widget record for text widget. */
-    CONST TkTextIndex *indexPtr,/* Index of character whose bounding box is
+    const TkTextIndex *indexPtr,/* Index of character whose bounding box is
 				 * desired. */
     int *xPtr, int *yPtr,	/* Filled with line's upper-left
 				 * coordinate. */
@@ -8054,7 +8054,7 @@ NextTabStop(
 static int
 MeasureChars(
     Tk_Font tkfont,		/* Font in which to draw characters. */
-    CONST char *source,		/* Characters to be displayed. Need not be
+    const char *source,		/* Characters to be displayed. Need not be
 				 * NULL-terminated. */
     int maxBytes,		/* Maximum # of bytes to consider from
 				 * source. */
@@ -8069,7 +8069,7 @@ MeasureChars(
 				 * here. */
 {
     int curX, width, ch;
-    CONST char *special, *end, *start;
+    const char *special, *end, *start;
 
     ch = 0;			/* lint. */
     curX = startX;
@@ -8161,19 +8161,19 @@ TextGetScrollInfoObj(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkText *textPtr,		/* Information about the text widget. */
     int objc,			/* # arguments for command. */
-    Tcl_Obj *CONST objv[],	/* Arguments for command. */
+    Tcl_Obj *const objv[],	/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
     int *intPtr)		/* Filled in with number of pages or lines or
 				 * pixels to scroll, if any. */
 {
-    static CONST char *subcommands[] = {
+    static const char *subcommands[] = {
 	"moveto", "scroll", NULL
     };
     enum viewSubcmds {
 	VIEW_MOVETO, VIEW_SCROLL
     };
-    static CONST char *units[] = {
+    static const char *units[] = {
 	"units", "pages", "pixels", NULL
     };
     enum viewUnits {

@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.28 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.29 2008/04/27 22:38:58 dkf Exp $
  */
 
 #include "default.h"
@@ -142,7 +142,7 @@ static const Tk_OptionSpec optionSpecs[] = {
  * scale widget command.
  */
 
-static CONST char *commandNames[] = {
+static const char *commandNames[] = {
     "cget", "configure", "coords", "get", "identify", "set", NULL
 };
 
@@ -158,17 +158,17 @@ enum command {
 static void		ComputeFormat(TkScale *scalePtr);
 static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyScale(char *memPtr);
 static void		ScaleCmdDeletedProc(ClientData clientData);
 static void		ScaleEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static char *		ScaleVarProc(ClientData clientData,
-			    Tcl_Interp *interp, CONST char *name1,
-			    CONST char *name2, int flags);
+			    Tcl_Interp *interp, const char *name1,
+			    const char *name2, int flags);
 static int		ScaleWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static void		ScaleWorldChanged(ClientData instanceData);
 static void		ScaleSetVariable(TkScale *scalePtr);
 
@@ -204,7 +204,7 @@ Tk_ScaleObjCmd(
     ClientData clientData,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument values. */
+    Tcl_Obj *const objv[])	/* Argument values. */
 {
     register TkScale *scalePtr;
     Tk_OptionTable optionTable;
@@ -242,7 +242,7 @@ Tk_ScaleObjCmd(
     scalePtr->interp		= interp;
     scalePtr->widgetCmd		= Tcl_CreateObjCommand(interp,
 	    Tk_PathName(scalePtr->tkwin), ScaleWidgetObjCmd,
-	    (ClientData) scalePtr, ScaleCmdDeletedProc);
+	    scalePtr, ScaleCmdDeletedProc);
     scalePtr->optionTable	= optionTable;
     scalePtr->orient		= ORIENT_VERTICAL;
     scalePtr->width		= 0;
@@ -291,10 +291,10 @@ Tk_ScaleObjCmd(
     scalePtr->takeFocusPtr	= NULL;
     scalePtr->flags		= NEVER_SET;
 
-    Tk_SetClassProcs(scalePtr->tkwin, &scaleClass, (ClientData) scalePtr);
+    Tk_SetClassProcs(scalePtr->tkwin, &scaleClass, scalePtr);
     Tk_CreateEventHandler(scalePtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
-	    ScaleEventProc, (ClientData) scalePtr);
+	    ScaleEventProc, scalePtr);
 
     if ((Tk_InitOptions(interp, (char *) scalePtr, optionTable, tkwin)
 	    != TCL_OK) ||
@@ -330,9 +330,9 @@ ScaleWidgetObjCmd(
     ClientData clientData,	/* Information about scale widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument strings. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    TkScale *scalePtr = (TkScale *) clientData;
+    TkScale *scalePtr = clientData;
     Tcl_Obj *objPtr;
     int index, result;
 
@@ -345,7 +345,7 @@ ScaleWidgetObjCmd(
     if (result != TCL_OK) {
 	return result;
     }
-    Tcl_Preserve((ClientData) scalePtr);
+    Tcl_Preserve(scalePtr);
 
     switch (index) {
     case COMMAND_CGET:
@@ -467,11 +467,11 @@ ScaleWidgetObjCmd(
 	break;
     }
     }
-    Tcl_Release((ClientData) scalePtr);
+    Tcl_Release(scalePtr);
     return result;
 
   error:
-    Tcl_Release((ClientData) scalePtr);
+    Tcl_Release(scalePtr);
     return TCL_ERROR;
 }
 
@@ -503,7 +503,7 @@ DestroyScale(
 
     Tcl_DeleteCommandFromToken(scalePtr->interp, scalePtr->widgetCmd);
     if (scalePtr->flags & REDRAW_PENDING) {
-	Tcl_CancelIdleCall(TkpDisplayScale, (ClientData) scalePtr);
+	Tcl_CancelIdleCall(TkpDisplayScale, scalePtr);
     }
 
     /*
@@ -514,7 +514,7 @@ DestroyScale(
     if (scalePtr->varNamePtr != NULL) {
 	Tcl_UntraceVar(scalePtr->interp, Tcl_GetString(scalePtr->varNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		ScaleVarProc, (ClientData) scalePtr);
+		ScaleVarProc, scalePtr);
     }
     if (scalePtr->troughGC != None) {
 	Tk_FreeGC(scalePtr->display, scalePtr->troughGC);
@@ -557,7 +557,7 @@ ConfigureScale(
     register TkScale *scalePtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in objv. */
-    Tcl_Obj *CONST objv[])	/* Argument values. */
+    Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
@@ -571,7 +571,7 @@ ConfigureScale(
     if (scalePtr->varNamePtr != NULL) {
 	Tcl_UntraceVar(interp, Tcl_GetString(scalePtr->varNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		ScaleVarProc, (ClientData) scalePtr);
+		ScaleVarProc, scalePtr);
     }
 
     for (error = 0; error <= 1; error++) {
@@ -581,8 +581,8 @@ ConfigureScale(
 	     */
 
 	    if (Tk_SetOptions(interp, (char *) scalePtr,
-		    scalePtr->optionTable, objc, objv,
-		    scalePtr->tkwin, &savedOptions, NULL) != TCL_OK) {
+		    scalePtr->optionTable, objc, objv, scalePtr->tkwin,
+		    &savedOptions, NULL) != TCL_OK) {
 		continue;
 	    }
 	} else {
@@ -687,10 +687,10 @@ ConfigureScale(
 	}
 	Tcl_TraceVar(interp, Tcl_GetString(scalePtr->varNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		ScaleVarProc, (ClientData) scalePtr);
+		ScaleVarProc, scalePtr);
     }
 
-    ScaleWorldChanged((ClientData) scalePtr);
+    ScaleWorldChanged(scalePtr);
     if (error) {
 	Tcl_SetObjResult(interp, errorResult);
 	Tcl_DecrRefCount(errorResult);
@@ -723,9 +723,7 @@ ScaleWorldChanged(
 {
     XGCValues gcValues;
     GC gc;
-    TkScale *scalePtr;
-
-    scalePtr = (TkScale *) instanceData;
+    TkScale *scalePtr = instanceData;
 
     gcValues.foreground = scalePtr->troughColorPtr->pixel;
     gc = Tk_GetGC(scalePtr->tkwin, GCForeground, &gcValues);
@@ -1007,7 +1005,7 @@ ScaleEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScale *scalePtr = (TkScale *) clientData;
+    TkScale *scalePtr = clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
@@ -1055,7 +1053,7 @@ static void
 ScaleCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkScale *scalePtr = (TkScale *) clientData;
+    TkScale *scalePtr = clientData;
     Tk_Window tkwin = scalePtr->tkwin;
 
     /*
@@ -1102,7 +1100,7 @@ TkEventuallyRedrawScale(
     }
     if (!(scalePtr->flags & REDRAW_PENDING)) {
 	scalePtr->flags |= REDRAW_PENDING;
-	Tcl_DoWhenIdle(TkpDisplayScale, (ClientData) scalePtr);
+	Tcl_DoWhenIdle(TkpDisplayScale, scalePtr);
     }
     scalePtr->flags |= what;
 }
@@ -1173,11 +1171,11 @@ static char *
 ScaleVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    CONST char *name1,		/* Name of variable. */
-    CONST char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Name of variable. */
+    const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register TkScale *scalePtr = (TkScale *) clientData;
+    register TkScale *scalePtr = clientData;
     char *resultStr;
     double value;
     Tcl_Obj *valuePtr;

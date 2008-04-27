@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.23 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkTreeview.c,v 1.24 2008/04/27 22:41:12 dkf Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -2915,8 +2915,8 @@ static int TreeviewTagBindCommand(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(script,-1));
 	}
     } else if (objc == 6) {	/* $tv tag bind $tag $sequence $script */
-	CONST char *sequence = Tcl_GetString(objv[4]);
-	CONST char *script = Tcl_GetString(objv[5]);
+	const char *sequence = Tcl_GetString(objv[4]);
+	const char *script = Tcl_GetString(objv[5]);
 	unsigned long mask = Tk_CreateBinding(interp,
 		tv->tree.bindingTable, tag, sequence, script, 0);
 

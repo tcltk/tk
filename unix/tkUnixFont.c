@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.33 2007/02/28 09:23:30 dkf Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.34 2008/04/27 22:39:13 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -21,7 +21,7 @@
  * The preferred font encodings.
  */
 
-static CONST char *encodingList[] = {
+static const char *encodingList[] = {
     "iso8859-1", "jis0208", "jis0212", NULL
 };
 
@@ -207,31 +207,31 @@ static void		FontPkgCleanup(ClientData clientData);
 static FontFamily *	AllocFontFamily(Display *display,
 			    XFontStruct *fontStructPtr, int base);
 static SubFont *	CanUseFallback(UnixFont *fontPtr,
-			    CONST char *fallbackName, int ch,
+			    const char *fallbackName, int ch,
 			    SubFont **fixSubFontPtrPtr);
 static SubFont *	CanUseFallbackWithAliases(UnixFont *fontPtr,
 			    char *fallbackName, int ch,
 			    Tcl_DString *nameTriedPtr,
 			    SubFont **fixSubFontPtrPtr);
-static int		ControlUtfProc(ClientData clientData, CONST char *src,
+static int		ControlUtfProc(ClientData clientData, const char *src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
 static XFontStruct *	CreateClosestFont(Tk_Window tkwin,
-			    CONST TkFontAttributes *faPtr,
-			    CONST TkXLFDAttributes *xaPtr);
+			    const TkFontAttributes *faPtr,
+			    const TkXLFDAttributes *xaPtr);
 static SubFont *	FindSubFontForChar(UnixFont *fontPtr, int ch,
 			    SubFont **fixSubFontPtrPtr);
 static void		FontMapInsert(SubFont *subFontPtr, int ch);
 static void		FontMapLoadPage(SubFont *subFontPtr, int row);
 static int		FontMapLookup(SubFont *subFontPtr, int ch);
 static void		FreeFontFamily(FontFamily *afPtr);
-static CONST char *	GetEncodingAlias(CONST char *name);
+static const char *	GetEncodingAlias(const char *name);
 static int		GetFontAttributes(Display *display,
 			    XFontStruct *fontStructPtr, FontAttributes *faPtr);
 static XFontStruct *	GetScreenFont(Display *display,
 			    FontAttributes *wantPtr, char **nameList,
-			    int bestIdx[], unsigned int bestScore[]);
+			    int bestIdx[], unsigned bestScore[]);
 static XFontStruct *	GetSystemFont(Display *display);
 static int		IdentifySymbolEncodings(FontAttributes *faPtr);
 static void		InitFont(Tk_Window tkwin, XFontStruct *fontStructPtr,
@@ -239,21 +239,21 @@ static void		InitFont(Tk_Window tkwin, XFontStruct *fontStructPtr,
 static void		InitSubFont(Display *display,
 			    XFontStruct *fontStructPtr, int base,
 			    SubFont *subFontPtr);
-static char **		ListFonts(Display *display, CONST char *faceName,
+static char **		ListFonts(Display *display, const char *faceName,
 			    int *numNamesPtr);
-static char **		ListFontOrAlias(Display *display, CONST char*faceName,
+static char **		ListFontOrAlias(Display *display, const char*faceName,
 			    int *numNamesPtr);
-static unsigned int	RankAttributes(FontAttributes *wantPtr,
+static unsigned		RankAttributes(FontAttributes *wantPtr,
 			    FontAttributes *gotPtr);
 static void		ReleaseFont(UnixFont *fontPtr);
 static void		ReleaseSubFont(Display *display, SubFont *subFontPtr);
-static int		SeenName(CONST char *name, Tcl_DString *dsPtr);
+static int		SeenName(const char *name, Tcl_DString *dsPtr);
 #ifndef WORDS_BIGENDIAN
-static int		Ucs2beToUtfProc(ClientData clientData, CONST char*src,
+static int		Ucs2beToUtfProc(ClientData clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
-static int		UtfToUcs2beProc(ClientData clientData, CONST char*src,
+static int		UtfToUcs2beProc(ClientData clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
@@ -281,7 +281,7 @@ static void
 FontPkgCleanup(
     ClientData clientData)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->controlFamily.encoding != NULL) {
@@ -320,7 +320,7 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_EncodingType type;
     SubFont dummy;
@@ -382,7 +382,7 @@ TkpFontPkgInit(
 static int
 ControlUtfProc(
     ClientData clientData,	/* Not used. */
-    CONST char *src,		/* Source string in UTF-8. */
+    const char *src,		/* Source string in UTF-8. */
     int srcLen,			/* Source string length in bytes. */
     int flags,			/* Conversion control flags. */
     Tcl_EncodingState *statePtr,/* Place for conversion routine to store state
@@ -406,7 +406,7 @@ ControlUtfProc(
 				 * correspond to the bytes stored in the
 				 * output buffer. */
 {
-    CONST char *srcStart, *srcEnd;
+    const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
     Tcl_UniChar ch;
     int result;
@@ -475,7 +475,7 @@ ControlUtfProc(
 static int
 Ucs2beToUtfProc(
     ClientData clientData,	/* Not used. */
-    CONST char *src,		/* Source string in Unicode. */
+    const char *src,		/* Source string in Unicode. */
     int srcLen,			/* Source string length in bytes. */
     int flags,			/* Conversion control flags. */
     Tcl_EncodingState *statePtr,/* Place for conversion routine to store state
@@ -499,7 +499,7 @@ Ucs2beToUtfProc(
 				 * correspond to the bytes stored in the
 				 * output buffer. */
 {
-    CONST char *srcStart, *srcEnd;
+    const char *srcStart, *srcEnd;
     char *dstEnd, *dstStart;
     int result, numChars;
 
@@ -558,7 +558,7 @@ static int
 UtfToUcs2beProc(
     ClientData clientData,	/* TableEncodingData that specifies
 				 * encoding. */
-    CONST char *src,		/* Source string in UTF-8. */
+    const char *src,		/* Source string in UTF-8. */
     int srcLen,			/* Source string length in bytes. */
     int flags,			/* Conversion control flags. */
     Tcl_EncodingState *statePtr,/* Place for conversion routine to store state
@@ -582,7 +582,7 @@ UtfToUcs2beProc(
 				 * correspond to the bytes stored in the
 				 * output buffer. */
 {
-    CONST char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
+    const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
     int result, numChars;
     Tcl_UniChar ch;
 
@@ -658,12 +658,12 @@ UtfToUcs2beProc(
 TkFont *
 TkpGetNativeFont(
     Tk_Window tkwin,		/* For display where font will be used. */
-    CONST char *name)		/* Platform-specific font name. */
+    const char *name)		/* Platform-specific font name. */
 {
     UnixFont *fontPtr;
     XFontStruct *fontStructPtr;
     FontAttributes fa;
-    CONST char *p;
+    const char *p;
     int hasSpace, dashes, hasWild;
 
     /*
@@ -765,7 +765,7 @@ TkpGetFontFromAttributes(
 				 * will be released. If NULL, a new TkFont
 				 * structure is allocated. */
     Tk_Window tkwin,		/* For display where font will be used. */
-    CONST TkFontAttributes *faPtr)
+    const TkFontAttributes *faPtr)
 				/* Set of attributes to match. */
 {
     UnixFont *fontPtr;
@@ -960,6 +960,7 @@ TkpGetFontAttrsForChar(
     SubFont *thisSubFontPtr = FindSubFontForChar(fontPtr, c, &lastSubFontPtr);
 				/* Pointer to the subfont to use for the given
 				 * character */
+
     GetFontAttributes(Tk_Display(tkwin), thisSubFontPtr->fontStructPtr, &atts);
     *faPtr = atts.fa;
 }
@@ -988,7 +989,7 @@ TkpGetFontAttrsForChar(
 int
 Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
     int numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
@@ -1027,7 +1028,7 @@ Tk_MeasureChars(
 	curX = 0;
 	curByte = 0;
     } else if (maxLength < 0) {
-	CONST char *p, *end, *next;
+	const char *p, *end, *next;
 	Tcl_UniChar ch;
 	SubFont *thisSubFontPtr;
 	FontFamily *familyPtr;
@@ -1080,7 +1081,7 @@ Tk_MeasureChars(
 	Tcl_DStringFree(&runString);
 	curByte = numBytes;
     } else {
-	CONST char *p, *end, *next, *term;
+	const char *p, *end, *next, *term;
 	int newX, termX, sawNonSpace, dstWrote;
 	Tcl_UniChar ch;
 	FontFamily *familyPtr;
@@ -1202,7 +1203,7 @@ Tk_MeasureChars(
 int
 TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
     int numBytes,		/* Maximum number of bytes to consider from
 				 * source string in all. */
@@ -1255,7 +1256,7 @@ Tk_DrawChars(
     GC gc,			/* Graphics context for drawing characters. */
     Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
 				 * (tabs, control characters, and newlines)
 				 * should be stripped out of the string that
@@ -1266,22 +1267,20 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
-    UnixFont *fontPtr;
+    UnixFont *fontPtr = (UnixFont *) tkfont;
     SubFont *thisSubFontPtr, *lastSubFontPtr;
     Tcl_DString runString;
-    CONST char *p, *end, *next;
+    const char *p, *end, *next;
     int xStart, needWidth, window_width, do_width;
     Tcl_UniChar ch;
     FontFamily *familyPtr;
 #ifdef TK_DRAW_CHAR_XWINDOW_CHECK
     int rx, ry;
-    unsigned int width, height, border_width, depth;
+    unsigned width, height, border_width, depth;
     Drawable root;
 #endif
 
-    fontPtr = (UnixFont *) tkfont;
     lastSubFontPtr = &fontPtr->subFontArray[0];
-
     xStart = x;
 
 #ifdef TK_DRAW_CHAR_XWINDOW_CHECK
@@ -1394,7 +1393,7 @@ TkpDrawCharsInContext(
     GC gc,			/* Graphics context for drawing characters. */
     Tk_Font tkfont,		/* Font in which characters will be drawn;
 				 * must be the same as font used in GC. */
-    CONST char *source,		/* UTF-8 string to be displayed. Need not be
+    const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. All Tk meta-characters
 				 * (tabs, control characters, and newlines)
 				 * should be stripped out of the string that
@@ -1443,9 +1442,9 @@ TkpDrawCharsInContext(
 static XFontStruct *
 CreateClosestFont(
     Tk_Window tkwin,		/* For display where font will be used. */
-    CONST TkFontAttributes *faPtr,
+    const TkFontAttributes *faPtr,
 				/* Set of generic attributes to match. */
-    CONST TkXLFDAttributes *xaPtr)
+    const TkXLFDAttributes *xaPtr)
 				/* Set of X-specific attributes to match. */
 {
     FontAttributes want;
@@ -1453,7 +1452,7 @@ CreateClosestFont(
     int numNames, nameIdx, bestIdx[2];
     Display *display;
     XFontStruct *fontStructPtr;
-    unsigned int bestScore[2];
+    unsigned bestScore[2];
 
     want.fa = *faPtr;
     want.xa = *xaPtr;
@@ -1515,12 +1514,12 @@ CreateClosestFont(
   found:
     bestIdx[0] = -1;
     bestIdx[1] = -1;
-    bestScore[0] = (unsigned int) -1;
-    bestScore[1] = (unsigned int) -1;
+    bestScore[0] = (unsigned) -1;
+    bestScore[1] = (unsigned) -1;
     for (nameIdx = 0; nameIdx < numNames; nameIdx++) {
 	FontAttributes got;
 	int scalable;
-	unsigned int score;
+	unsigned score;
 
 	if (TkFontParseXLFD(nameList[nameIdx], &got.fa, &got.xa) != TCL_OK) {
 	    continue;
@@ -1576,7 +1575,7 @@ InitFont(
     UnixFont *fontPtr)		/* Filled with information constructed from
 				 * the above arguments. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     unsigned long value;
     int minHi, maxHi, minLo, maxLo, fixed, width, limit, i, n;
@@ -1829,7 +1828,7 @@ AllocFontFamily(
     FontFamily *familyPtr;
     FontAttributes fa;
     Tcl_Encoding encoding;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     GetFontAttributes(display, fontStructPtr, &fa);
@@ -1903,7 +1902,7 @@ FreeFontFamily(
     FontFamily *familyPtr)	/* The FontFamily to delete. */
 {
     FontFamily **familyPtrPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     int i;
 
@@ -2206,7 +2205,7 @@ FontMapLoadPage(
     Tcl_Encoding encoding;
     XFontStruct *fontStructPtr;
     XCharStruct *widths;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     subFontPtr->fontMap[row] = (char *) ckalloc(FONTMAP_BITSPERPAGE / 8);
@@ -2343,11 +2342,11 @@ CanUseFallbackWithAliases(
 
 static int
 SeenName(
-    CONST char *name,		/* The name to check. */
+    const char *name,		/* The name to check. */
     Tcl_DString *dsPtr)		/* Contains names that have already been
 				 * seen. */
 {
-    CONST char *seen, *end;
+    const char *seen, *end;
 
     seen = Tcl_DStringValue(dsPtr);
     end = seen + Tcl_DStringLength(dsPtr);
@@ -2392,7 +2391,7 @@ static SubFont *
 CanUseFallback(
     UnixFont *fontPtr,		/* The font object that will own the new
 				 * screen font. */
-    CONST char *faceName,	/* Desired face name for new screen font. */
+    const char *faceName,	/* Desired face name for new screen font. */
     int ch,			/* The Unicode character that the new screen
 				 * font must be able to display. */
     SubFont **fixSubFontPtrPtr)	/* Subfont reference to fix up if we
@@ -2400,8 +2399,8 @@ CanUseFallback(
 {
     int i, nameIdx, numNames, srcLen, numEncodings, bestIdx[2];
     Tk_Uid hateFoundry;
-    CONST char *charset, *hateCharset;
-    unsigned int bestScore[2];
+    const char *charset, *hateCharset;
+    unsigned bestScore[2];
     char **nameList, **nameListOrig, src[TCL_UTF_MAX];
     FontAttributes want, got;
     Display *display;
@@ -2450,13 +2449,13 @@ CanUseFallback(
   retry:
     bestIdx[0] = -1;
     bestIdx[1] = -1;
-    bestScore[0] = (unsigned int) -1;
-    bestScore[1] = (unsigned int) -1;
+    bestScore[0] = (unsigned) -1;
+    bestScore[1] = (unsigned) -1;
     for (nameIdx = 0; nameIdx < numNames; nameIdx++) {
 	Tcl_Encoding encoding;
 	char dst[16];
 	int scalable, srcRead, dstWrote;
-	unsigned int score;
+	unsigned score;
 
 	if (nameList[nameIdx] == NULL) {
 	    continue;
@@ -2624,12 +2623,12 @@ CanUseFallback(
  *---------------------------------------------------------------------------
  */
 
-static unsigned int
+static unsigned
 RankAttributes(
     FontAttributes *wantPtr,	/* The desired attributes. */
     FontAttributes *gotPtr)	/* The attributes we have to live with. */
 {
-    unsigned int penalty;
+    unsigned penalty;
 
     penalty = 0;
     if (gotPtr->xa.foundry != wantPtr->xa.foundry) {
@@ -2676,7 +2675,7 @@ RankAttributes(
     }
     if (gotPtr->xa.charset != wantPtr->xa.charset) {
 	int i;
-	CONST char *gotAlias, *wantAlias;
+	const char *gotAlias, *wantAlias;
 
 	penalty += 65000;
 	gotAlias = GetEncodingAlias(gotPtr->xa.charset);
@@ -2721,7 +2720,7 @@ GetScreenFont(
     char **nameList,		/* Array of XLFDs. */
     int bestIdx[2],		/* Indices into above array for XLFD of best
 				 * bitmapped and best scalable font. */
-    unsigned int bestScore[2])	/* Scores of best bitmapped and best scalable
+    unsigned bestScore[2])	/* Scores of best bitmapped and best scalable
 				 * font. XLFD corresponding to lowest score
 				 * will be constructed. */
 {
@@ -2890,7 +2889,7 @@ GetFontAttributes(
 static char **
 ListFonts(
     Display *display,		/* Display to query. */
-    CONST char *faceName,	/* Desired face name, or "*" for all. */
+    const char *faceName,	/* Desired face name, or "*" for all. */
     int *numNamesPtr)		/* Filled with length of returned array, or 0
 				 * if no names were found. */
 {
@@ -2903,7 +2902,7 @@ ListFonts(
 static char **
 ListFontOrAlias(
     Display *display,		/* Display to query. */
-    CONST char *faceName,	/* Desired face name, or "*" for all. */
+    const char *faceName,	/* Desired face name, or "*" for all. */
     int *numNamesPtr)		/* Filled with length of returned array, or 0
 				 * if no names were found. */
 {
@@ -2995,9 +2994,9 @@ IdentifySymbolEncodings(
  *---------------------------------------------------------------------------
  */
 
-static CONST char *
+static const char *
 GetEncodingAlias(
-    CONST char *name)		/* The name to look up. */
+    const char *name)		/* The name to look up. */
 {
     EncodingAlias *aliasPtr;
 

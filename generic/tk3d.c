@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.19 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.20 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -21,7 +21,7 @@
  * by Tk_GetReliefFromObj.
  */
 
-static CONST char *reliefStrings[] = {
+static const char *reliefStrings[] = {
     "flat", "groove", "raised", "ridge", "solid", "sunken", NULL
 };
 
@@ -320,7 +320,7 @@ Tk_Draw3DRectangle(
  *--------------------------------------------------------------
  */
 
-CONST char *
+const char *
 Tk_NameOf3DBorder(
     Tk_3DBorder border)		/* Token for border. */
 {
@@ -645,7 +645,7 @@ Tk_GetReliefFromObj(
 int
 Tk_GetRelief(
     Tcl_Interp *interp,		/* For error messages. */
-    CONST char *name,		/* Name of a relief type. */
+    const char *name,		/* Name of a relief type. */
     int *reliefPtr)		/* Where to store converted relief. */
 {
     char c;
@@ -694,7 +694,7 @@ Tk_GetRelief(
  *--------------------------------------------------------------
  */
 
-CONST char *
+const char *
 Tk_NameOfRelief(
     int relief)		/* One of TK_RELIEF_FLAT, TK_RELIEF_RAISED, or
 			 * TK_RELIEF_SUNKEN. */

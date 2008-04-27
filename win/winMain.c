@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.26 2007/12/13 15:28:56 dgp Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.27 2008/04/27 22:39:17 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -28,7 +28,7 @@
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		WishPanic(CONST char *format, ...);
+static void		WishPanic(const char *format, ...);
 #ifdef TK_TEST
 extern int		Tktest_Init(Tcl_Interp *interp);
 #endif /* TK_TEST */
@@ -224,7 +224,7 @@ error:
 
 void
 WishPanic(
-    CONST char *format, ...)
+    const char *format, ...)
 {
     va_list argList;
     char buf[1024];

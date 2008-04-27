@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.15 2007/02/23 14:15:34 dkf Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.16 2008/04/27 22:39:17 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -203,7 +203,7 @@ TkpPrintWindowId(
 int
 TkpScanWindowId(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    CONST char *string,		/* String containing a (possibly signed)
+    const char *string,		/* String containing a (possibly signed)
 				 * integer in a form acceptable to strtol. */
     Window *idPtr)		/* Place to store converted result. */
 {

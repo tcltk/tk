@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAtom.c,v 1.7 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkAtom.c,v 1.8 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -78,7 +78,7 @@ Atom
 Tk_InternAtom(
     Tk_Window tkwin,		/* Window token; map name to atom for this
 				 * window's display. */
-    CONST char *name)		/* Name to turn into atom. */
+    const char *name)		/* Name to turn into atom. */
 {
     register TkDisplay *dispPtr;
     register Tcl_HashEntry *hPtr;
@@ -123,7 +123,7 @@ Tk_InternAtom(
  *--------------------------------------------------------------
  */
 
-CONST char *
+const char *
 Tk_GetAtomName(
     Tk_Window tkwin,		/* Window token; map atom to name relative to
 				 * this window's display. */

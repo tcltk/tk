@@ -1,4 +1,4 @@
-/* $Id: ttkScale.c,v 1.7 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkScale.c,v 1.8 2008/04/27 22:41:12 dkf Exp $
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.
@@ -252,7 +252,7 @@ static double ScaleFraction(Scale *scalePtr, double value)
  */
 static int
 ScaleGetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Scale *scalePtr = recordPtr;
     int x, y, r = TCL_OK;
@@ -280,7 +280,7 @@ ScaleGetCommand(
  */
 static int
 ScaleSetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Scale *scalePtr = recordPtr;
     double from = 0.0, to = 1.0, value;
@@ -348,7 +348,7 @@ ScaleSetCommand(
 
 static int
 ScaleCoordsCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Scale *scalePtr = recordPtr;
     double value;

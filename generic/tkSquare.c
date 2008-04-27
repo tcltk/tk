@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.10 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.11 2008/04/27 22:38:58 dkf Exp $
  */
 
 #if 0
@@ -94,7 +94,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 int			SquareObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * CONST objv[]);
+			    Tcl_Obj * const objv[]);
 static void		SquareDeletedProc(ClientData clientData);
 static int		SquareConfigure(Tcl_Interp *interp, Square *squarePtr);
 static void		SquareDestroy(char *memPtr);
@@ -103,7 +103,7 @@ static void		KeepInWindow(Square *squarePtr);
 static void		SquareObjEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int		SquareWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj * CONST objv[]);
+			    Tcl_Interp *, int objc, Tcl_Obj * const objv[]);
 
 /*
  *--------------------------------------------------------------
@@ -127,7 +127,7 @@ SquareObjCmd(
     ClientData clientData,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Square *squarePtr;
     Tk_Window tkwin;
@@ -166,8 +166,8 @@ SquareObjCmd(
     squarePtr->display = Tk_Display(tkwin);
     squarePtr->interp = interp;
     squarePtr->widgetCmd = Tcl_CreateObjCommand(interp,
-	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd,
-	    (ClientData) squarePtr, SquareDeletedProc);
+	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd, squarePtr,
+	    SquareDeletedProc);
     squarePtr->gc = None;
     squarePtr->optionTable = optionTable;
 
@@ -179,7 +179,7 @@ SquareObjCmd(
     }
 
     Tk_CreateEventHandler(squarePtr->tkwin, ExposureMask|StructureNotifyMask,
-	    SquareObjEventProc, (ClientData) squarePtr);
+	    SquareObjEventProc, squarePtr);
     if (Tk_SetOptions(interp, (char *) squarePtr, optionTable, objc - 2,
 	    objv + 2, tkwin, NULL, NULL) != TCL_OK) {
 	goto error;
@@ -220,11 +220,11 @@ SquareWidgetObjCmd(
     ClientData clientData,	/* Information about square widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj * CONST objv[])	/* Argument objects. */
+    Tcl_Obj * const objv[])	/* Argument objects. */
 {
-    Square *squarePtr = (Square *) clientData;
+    Square *squarePtr = clientData;
     int result = TCL_OK;
-    static CONST char *squareOptions[] = {"cget", "configure", NULL};
+    static const char *squareOptions[] = {"cget", "configure", NULL};
     enum {
 	SQUARE_CGET, SQUARE_CONFIGURE
     };
@@ -241,7 +241,7 @@ SquareWidgetObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_Preserve((ClientData) squarePtr);
+    Tcl_Preserve(squarePtr);
 
     switch (index) {
     case SQUARE_CGET:
@@ -279,7 +279,7 @@ SquareWidgetObjCmd(
 		result = SquareConfigure(interp, squarePtr);
 	    }
 	    if (!squarePtr->updatePending) {
-		Tcl_DoWhenIdle(SquareDisplay, (ClientData) squarePtr);
+		Tcl_DoWhenIdle(SquareDisplay, squarePtr);
 		squarePtr->updatePending = 1;
 	    }
 	}
@@ -287,11 +287,11 @@ SquareWidgetObjCmd(
 	    Tcl_SetObjResult(interp, resultObjPtr);
 	}
     }
-    Tcl_Release((ClientData) squarePtr);
+    Tcl_Release(squarePtr);
     return result;
 
   error:
-    Tcl_Release((ClientData) squarePtr);
+    Tcl_Release(squarePtr);
     return TCL_ERROR;
 }
 
@@ -352,7 +352,7 @@ SquareConfigure(
 	    &borderWidth);
     Tk_SetInternalBorder(squarePtr->tkwin, borderWidth);
     if (!squarePtr->updatePending) {
-	Tcl_DoWhenIdle(SquareDisplay, (ClientData) squarePtr);
+	Tcl_DoWhenIdle(SquareDisplay, squarePtr);
 	squarePtr->updatePending = 1;
     }
     KeepInWindow(squarePtr);
@@ -382,17 +382,17 @@ SquareObjEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    Square *squarePtr = (Square *) clientData;
+    Square *squarePtr = clientData;
 
     if (eventPtr->type == Expose) {
 	if (!squarePtr->updatePending) {
-	    Tcl_DoWhenIdle(SquareDisplay, (ClientData) squarePtr);
+	    Tcl_DoWhenIdle(SquareDisplay, squarePtr);
 	    squarePtr->updatePending = 1;
 	}
     } else if (eventPtr->type == ConfigureNotify) {
 	KeepInWindow(squarePtr);
 	if (!squarePtr->updatePending) {
-	    Tcl_DoWhenIdle(SquareDisplay, (ClientData) squarePtr);
+	    Tcl_DoWhenIdle(SquareDisplay, squarePtr);
 	    squarePtr->updatePending = 1;
 	}
     } else if (eventPtr->type == DestroyNotify) {
@@ -407,9 +407,9 @@ SquareObjEventProc(
 		    squarePtr->widgetCmd);
 	}
 	if (squarePtr->updatePending) {
-	    Tcl_CancelIdleCall(SquareDisplay, (ClientData) squarePtr);
+	    Tcl_CancelIdleCall(SquareDisplay, squarePtr);
 	}
-	Tcl_EventuallyFree((ClientData) squarePtr, SquareDestroy);
+	Tcl_EventuallyFree(squarePtr, SquareDestroy);
     }
 }
 
@@ -435,7 +435,7 @@ static void
 SquareDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    Square *squarePtr = (Square *) clientData;
+    Square *squarePtr = clientData;
     Tk_Window tkwin = squarePtr->tkwin;
 
     /*
@@ -472,7 +472,7 @@ static void
 SquareDisplay(
     ClientData clientData)	/* Information about window. */
 {
-    Square *squarePtr = (Square *) clientData;
+    Square *squarePtr = clientData;
     Tk_Window tkwin = squarePtr->tkwin;
     Pixmap pm = None;
     Drawable d;

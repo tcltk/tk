@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.20 2007/12/13 15:28:55 dgp Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.21 2008/04/27 22:39:16 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -103,7 +103,7 @@ int tkpWinBltModes[] = {
  * The followng typedef is used to pass Windows GDI drawing functions.
  */
 
-typedef BOOL (CALLBACK *WinDrawFunc)(HDC dc, CONST POINT* points, int npoints);
+typedef BOOL (CALLBACK *WinDrawFunc)(HDC dc, const POINT *points, int npoints);
 
 typedef struct ThreadSpecificData {
     POINT *winPoints;		/* Array of points that is reused. */

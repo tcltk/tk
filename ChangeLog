@@ -1,3 +1,11 @@
+2008-04-27  Donal K. Fellows  <dkf@users.sf.net>
+
+	* */*.c: A large tranche of getting rid of pre-C89-isms; if your
+	compiler doesn't support things like proper function declarations,
+	'void' and 'const', borrow a proper one when building Tcl. (The header
+	files allow building things that link against Tcl with really ancient
+	compilers still; the requirement is just when building Tcl itself.)
+
 2008-04-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/treeview.tcl: BUGFIX: [$tv selection] takes

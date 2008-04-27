@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.76 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.77 2008/04/27 22:38:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -302,7 +302,7 @@ static char *optionNames[] = {
  */
 
 static int		ImgPhotoCreate(Tcl_Interp *interp, char *name,
-			    int objc, Tcl_Obj *CONST objv[],
+			    int objc, Tcl_Obj *const objv[],
 			    Tk_ImageType *typePtr, Tk_ImageMaster master,
 			    ClientData *clientDataPtr);
 static ClientData	ImgPhotoGet(Tk_Window tkwin, ClientData clientData);
@@ -395,7 +395,7 @@ static int imgPhotoColorHashInitialized;
 
 static void		PhotoFormatThreadExitProc(ClientData clientData);
 static int		ImgPhotoCmd(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		ParseSubcommandOptions(
 			    struct SubcommandOptions *optPtr,
 			    Tcl_Interp *interp, int allowedOptions,
@@ -579,7 +579,7 @@ ImgPhotoCreate(
 				 * image. */
     char *name,			/* Name to use for image. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[],	/* Argument objects for options (doesn't
+    Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
     Tk_ImageType *typePtr,	/* Pointer to our type record (not used). */
     Tk_ImageMaster master,	/* Token for image, to be used by us in later
@@ -598,7 +598,7 @@ ImgPhotoCreate(
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
     masterPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgPhotoCmd,
-	    (ClientData) masterPtr, ImgPhotoCmdDeletedProc);
+	    masterPtr, ImgPhotoCmdDeletedProc);
     masterPtr->palette = NULL;
     masterPtr->pix32 = NULL;
     masterPtr->instancePtr = NULL;
@@ -609,11 +609,11 @@ ImgPhotoCreate(
      */
 
     if (ImgPhotoConfigureMaster(interp, masterPtr, objc, objv, 0) != TCL_OK) {
-	ImgPhotoDelete((ClientData) masterPtr);
+	ImgPhotoDelete(masterPtr);
 	return TCL_ERROR;
     }
 
-    *clientDataPtr = (ClientData) masterPtr;
+    *clientDataPtr = masterPtr;
     return TCL_OK;
 }
 
@@ -640,7 +640,7 @@ ImgPhotoCmd(
     ClientData clientData,	/* Information about photo master. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *photoOptions[] = {
 	"blank", "cget", "configure", "copy", "data", "get", "put",
@@ -652,7 +652,7 @@ ImgPhotoCmd(
 	PHOTO_WRITE
     };
 
-    PhotoMaster *masterPtr = (PhotoMaster *) clientData;
+    PhotoMaster *masterPtr = clientData;
     int result, index, x, y, width, height, dataWidth, dataHeight, listObjc;
     struct SubcommandOptions options;
     Tcl_Obj **listObjv, **srcObjv;
@@ -1206,7 +1206,7 @@ ImgPhotoCmd(
 	block.offset[1] = 1;
 	block.offset[2] = 2;
 	block.offset[3] = 0;
-	result = Tk_PhotoPutBlock(interp, (ClientData)masterPtr, &block,
+	result = Tk_PhotoPutBlock(interp, masterPtr, &block,
 		options.toX, options.toY, options.toX2 - options.toX,
 		options.toY2 - options.toY,
 		TK_PHOTO_COMPOSITE_SET);
@@ -2328,7 +2328,7 @@ ImgPhotoGet(
     ClientData masterData)	/* Pointer to our master structure for the
 				 * image. */
 {
-    PhotoMaster *masterPtr = (PhotoMaster *) masterData;
+    PhotoMaster *masterPtr = masterData;
     PhotoInstance *instancePtr;
     Colormap colormap;
     int mono, nRed, nGreen, nBlue, numVisuals;
@@ -2378,14 +2378,14 @@ ImgPhotoGet(
 		 * We are resurrecting this instance.
 		 */
 
-		Tcl_CancelIdleCall(DisposeInstance, (ClientData) instancePtr);
+		Tcl_CancelIdleCall(DisposeInstance, instancePtr);
 		if (instancePtr->colorTablePtr != NULL) {
 		    FreeColorTable(instancePtr->colorTablePtr, 0);
 		}
 		GetColorTable(instancePtr);
 	    }
 	    instancePtr->refCount++;
-	    return (ClientData) instancePtr;
+	    return instancePtr;
 	}
     }
 
@@ -2489,7 +2489,7 @@ ImgPhotoGet(
 		masterPtr->width, masterPtr->height);
     }
 
-    return (ClientData) instancePtr;
+    return instancePtr;
 }
 
 /*
@@ -2760,7 +2760,7 @@ ImgPhotoDisplay(
     int drawableX,int drawableY)/* Coordinates within drawable that correspond
 				 * to imageX and imageY. */
 {
-    PhotoInstance *instancePtr = (PhotoInstance *) clientData;
+    PhotoInstance *instancePtr = clientData;
     XVisualInfo visInfo = instancePtr->visualInfo;
 
     /*
@@ -2783,8 +2783,7 @@ ImgPhotoDisplay(
 	 * not properly constrained, which can cause an X error. [Bug 979239]
 	 */
 
-	handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL,
-		(ClientData) NULL);
+	handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
 	/*
 	 * Pull the current background from the display to blend with
@@ -2855,7 +2854,7 @@ ImgPhotoFree(
     Display *display)		/* Display containing window that used
 				 * image. */
 {
-    PhotoInstance *instancePtr = (PhotoInstance *) clientData;
+    PhotoInstance *instancePtr = clientData;
     ColorTable *colorPtr;
 
     instancePtr->refCount -= 1;
@@ -2875,7 +2874,7 @@ ImgPhotoFree(
 	colorPtr->liveRefCount -= 1;
     }
 
-    Tcl_DoWhenIdle(DisposeInstance, (ClientData) instancePtr);
+    Tcl_DoWhenIdle(DisposeInstance, instancePtr);
 }
 
 /*
@@ -2900,15 +2899,15 @@ ImgPhotoDelete(
     ClientData masterData)	/* Pointer to PhotoMaster structure for image.
 				 * Must not have any more instances. */
 {
-    PhotoMaster *masterPtr = (PhotoMaster *) masterData;
+    PhotoMaster *masterPtr = masterData;
     PhotoInstance *instancePtr;
 
     while ((instancePtr = masterPtr->instancePtr) != NULL) {
 	if (instancePtr->refCount > 0) {
 	    Tcl_Panic("tried to delete photo image when instances still exist");
 	}
-	Tcl_CancelIdleCall(DisposeInstance, (ClientData) instancePtr);
-	DisposeInstance((ClientData) instancePtr);
+	Tcl_CancelIdleCall(DisposeInstance, instancePtr);
+	DisposeInstance(instancePtr);
     }
     masterPtr->tkMaster = NULL;
     if (masterPtr->imageCmd != NULL) {
@@ -2952,7 +2951,7 @@ ImgPhotoCmdDeletedProc(
     ClientData clientData)	/* Pointer to PhotoMaster structure for
 				 * image. */
 {
-    PhotoMaster *masterPtr = (PhotoMaster *) clientData;
+    PhotoMaster *masterPtr = clientData;
 
     masterPtr->imageCmd = NULL;
     if (masterPtr->tkMaster != NULL) {
@@ -3350,7 +3349,7 @@ IsValidPalette(
     case StaticColor:
 	numColors = nRed;
 	if (!mono) {
-	    numColors *= nGreen*nBlue;
+	    numColors *= nGreen * nBlue;
 	}
 	if (numColors > (1 << instancePtr->visualInfo.depth)) {
 	    return 0;
@@ -3447,7 +3446,7 @@ GetColorTable(
 	 * Re-use the existing entry.
 	 */
 
-	colorPtr = (ColorTable *) Tcl_GetHashValue(entry);
+	colorPtr = Tcl_GetHashValue(entry);
     } else {
 	/*
 	 * No color table currently available; need to make one.
@@ -3480,7 +3479,7 @@ GetColorTable(
     colorPtr->liveRefCount++;
     instancePtr->colorTablePtr = colorPtr;
     if (colorPtr->flags & DISPOSE_PENDING) {
-	Tcl_CancelIdleCall(DisposeColorTable, (ClientData) colorPtr);
+	Tcl_CancelIdleCall(DisposeColorTable, colorPtr);
 	colorPtr->flags &= ~DISPOSE_PENDING;
     }
 
@@ -3525,12 +3524,12 @@ FreeColorTable(
 
     if (force) {
 	if ((colorPtr->flags & DISPOSE_PENDING) != 0) {
-	    Tcl_CancelIdleCall(DisposeColorTable, (ClientData) colorPtr);
+	    Tcl_CancelIdleCall(DisposeColorTable, colorPtr);
 	    colorPtr->flags &= ~DISPOSE_PENDING;
 	}
-	DisposeColorTable((ClientData) colorPtr);
+	DisposeColorTable(colorPtr);
     } else if ((colorPtr->flags & DISPOSE_PENDING) == 0) {
-	Tcl_DoWhenIdle(DisposeColorTable, (ClientData) colorPtr);
+	Tcl_DoWhenIdle(DisposeColorTable, colorPtr);
 	colorPtr->flags |= DISPOSE_PENDING;
     }
 }
@@ -3840,7 +3839,7 @@ DisposeColorTable(
     ClientData clientData)	/* Pointer to the ColorTable whose
 				 * colors are to be released. */
 {
-    ColorTable *colorPtr = (ColorTable *) clientData;
+    ColorTable *colorPtr = clientData;
     Tcl_HashEntry *entry;
 
     if (colorPtr->pixelMap != NULL) {
@@ -3900,7 +3899,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while (entry != NULL) {
-	colorPtr = (ColorTable *) Tcl_GetHashValue(entry);
+	colorPtr = Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0 )&& (colorPtr->numColors != 0)
@@ -3929,7 +3928,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while ((entry != NULL) && (numColors > 0)) {
-	colorPtr = (ColorTable *) Tcl_GetHashValue(entry);
+	colorPtr = Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0) && (colorPtr->numColors != 0)
@@ -3974,7 +3973,7 @@ DisposeInstance(
     ClientData clientData)	/* Pointer to the instance whose resources are
 				 * to be released. */
 {
-    PhotoInstance *instancePtr = (PhotoInstance *) clientData;
+    PhotoInstance *instancePtr = clientData;
     PhotoInstance *prevPtr;
 
     if (instancePtr->pixels != None) {
@@ -4273,16 +4272,16 @@ Tk_PhotoHandle
 Tk_FindPhoto(
     Tcl_Interp *interp,		/* Interpreter (application) in which image
 				 * exists. */
-    CONST char *imageName)	/* Name of the desired photo image. */
+    const char *imageName)	/* Name of the desired photo image. */
 {
-    ClientData clientData;
     Tk_ImageType *typePtr;
+    ClientData clientData =
+	    Tk_GetImageMasterData(interp, imageName, &typePtr);
 
-    clientData = Tk_GetImageMasterData(interp, imageName, &typePtr);
     if (typePtr != &tkPhotoImageType) {
 	return NULL;
     }
-    return (Tk_PhotoHandle) clientData;
+    return clientData;
 }
 
 /*
@@ -4617,7 +4616,7 @@ Tk_PhotoPutBlock(
     if (!sourceIsSimplePhoto && (width == 1) && (height == 1)) {
 	/*
 	 * Optimize the single pixel case if we can. This speeds up code that
-	 * builds up large simple-alpha images by single pixels.  We don't
+	 * builds up large simple-alpha images by single pixels. We don't
 	 * negate COMPLEX_ALPHA in this case. [Bug 1409140]
 	 */
 
@@ -4634,7 +4633,7 @@ Tk_PhotoPutBlock(
     } else if ((alphaOffset != 0) || (masterPtr->flags & COMPLEX_ALPHA)) {
 	/*
 	 * Check for partial transparency if alpha pixels are specified, or
-	 * rescan if we already knew such pixels existed.  To restrict this
+	 * rescan if we already knew such pixels existed. To restrict this
 	 * Toggle to only checking the changed pixels requires knowing where
 	 * the alpha pixels are.
 	 */
@@ -4743,7 +4742,7 @@ Tk_PhotoPutZoomedBlock(
     }
 
     if ((y < masterPtr->ditherY) || ((y == masterPtr->ditherY)
-	   && (x < masterPtr->ditherX))) {
+	    && (x < masterPtr->ditherX))) {
 	/*
 	 * The dithering isn't correct past the start of this block.
 	 */
@@ -4917,7 +4916,7 @@ Tk_PhotoPutZoomedBlock(
     if (!sourceIsSimplePhoto && (width == 1) && (height == 1)) {
 	/*
 	 * Optimize the single pixel case if we can. This speeds up code that
-	 * builds up large simple-alpha images by single pixels.  We don't
+	 * builds up large simple-alpha images by single pixels. We don't
 	 * negate COMPLEX_ALPHA in this case. [Bug 1409140]
 	 */
 	if (!(masterPtr->flags & COMPLEX_ALPHA)) {
@@ -4933,7 +4932,7 @@ Tk_PhotoPutZoomedBlock(
     } else if ((alphaOffset != 0) || (masterPtr->flags & COMPLEX_ALPHA)) {
 	/*
 	 * Check for partial transparency if alpha pixels are specified, or
-	 * rescan if we already knew such pixels existed.  To restrict this
+	 * rescan if we already knew such pixels existed. To restrict this
 	 * Toggle to only checking the changed pixels requires knowing where
 	 * the alpha pixels are.
 	 */
@@ -5246,7 +5245,7 @@ DitherInstance(
 		for (x = xStart; x < xEnd; ++x) {
 		    c = (x > 0) ? errPtr[-1] * 7: 0;
 		    if (y > 0) {
-			if (x > 0)  {
+			if (x > 0) {
 			    c += errPtr[-lineLength-1];
 			}
 			c += errPtr[-lineLength] * 5;
@@ -5259,7 +5258,7 @@ DitherInstance(
 		    if ((masterPtr->flags & COLOR_IMAGE) == 0) {
 			c += srcPtr[0];
 		    } else {
-			c += (unsigned)(srcPtr[0] * 11 + srcPtr[1] * 16
+			c += (unsigned) (srcPtr[0] * 11 + srcPtr[1] * 16
 				+ srcPtr[2] * 5 + 16) >> 5;
 		    }
 		    srcPtr += 4;
@@ -5900,8 +5899,7 @@ PhotoOptionFind(
     char *name = Tcl_GetStringFromObj(obj, &length);
     char *prevname = NULL;
     Tcl_ObjCmdProc *proc = NULL;
-    OptionAssocData *list = (OptionAssocData *) Tcl_GetAssocData(interp,
-	    "photoOption", NULL);
+    OptionAssocData *list = Tcl_GetAssocData(interp, "photoOption", NULL);
 
     while (list != NULL) {
 	if (strncmp(name, list->name, (unsigned) length) == 0) {
@@ -5951,7 +5949,7 @@ PhotoOptionCleanupProc(
 				 * interpreter. */
     Tcl_Interp *interp)		/* Interpreter that is being deleted. */
 {
-    OptionAssocData *list = (OptionAssocData *) clientData;
+    OptionAssocData *list = clientData;
 
     while (list != NULL) {
 	register OptionAssocData *ptr;
@@ -5981,12 +5979,11 @@ PhotoOptionCleanupProc(
 MODULE_SCOPE void
 Tk_CreatePhotoOption(
     Tcl_Interp *interp,		/* Interpreter. */
-    CONST char *name,		/* Option name. */
+    const char *name,		/* Option name. */
     Tcl_ObjCmdProc *proc)	/* Function to execute command. */
 {
     OptionAssocData *typePtr2, *prevPtr, *ptr;
-    OptionAssocData *list = (OptionAssocData *)
-	    Tcl_GetAssocData(interp, "photoOption", NULL);
+    OptionAssocData *list = Tcl_GetAssocData(interp, "photoOption", NULL);
 
     /*
      * If there's already a photo option with the given name, remove it.
@@ -6008,8 +6005,7 @@ Tk_CreatePhotoOption(
     strcpy(&(ptr->name[0]), name);
     ptr->command = proc;
     ptr->nextPtr = list;
-    Tcl_SetAssocData(interp, "photoOption", PhotoOptionCleanupProc,
-	    (ClientData) ptr);
+    Tcl_SetAssocData(interp, "photoOption", PhotoOptionCleanupProc, ptr);
 }
 
 /*
@@ -6041,7 +6037,7 @@ ImgPhotoPostscript(
 {
     Tk_PhotoImageBlock block;
 
-    Tk_PhotoGetImage((Tk_PhotoHandle) clientData, &block);
+    Tk_PhotoGetImage(clientData, &block);
     block.pixelPtr += y * block.pitch + x * block.pixelSize;
 
     return Tk_PostscriptPhoto(interp, &block, psInfo, width, height);

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDialog.c,v 1.6 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixDialog.c,v 1.7 2008/04/27 22:39:13 dkf Exp $
  *
  */
 
@@ -42,7 +42,7 @@ EvalObjv(
     Tcl_Interp *interp,		/* Current interpreter. */
     char *cmdName,		/* Name of the TCL command to call */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST *objv)	/* Arguments. */
+    Tcl_Obj *const *objv)	/* Arguments. */
 {
     Tcl_Obj *cmdObj, **objs;
     int result;
@@ -85,7 +85,7 @@ Tk_ChooseColorObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST *objv)	/* Arguments. */
+    Tcl_Obj *const *objv)	/* Arguments. */
 {
     return EvalObjv(interp, "tk::ColorDialog", objc-1, objv+1);
 }
@@ -114,9 +114,9 @@ Tk_GetOpenFileObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST *objv)	/* Arguments. */
+    Tcl_Obj *const *objv)	/* Arguments. */
 {
-    Tk_Window tkwin = (Tk_Window)clientData;
+    Tk_Window tkwin = clientData;
 
     if (Tk_StrictMotif(tkwin)) {
 	return EvalObjv(interp, "tk::MotifOpenFDialog", objc-1, objv+1);
@@ -146,9 +146,9 @@ Tk_GetSaveFileObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST *objv)	/* Arguments. */
+    Tcl_Obj *const *objv)	/* Arguments. */
 {
-    Tk_Window tkwin = (Tk_Window)clientData;
+    Tk_Window tkwin = clientData;
 
     if (Tk_StrictMotif(tkwin)) {
 	return EvalObjv(interp, "tk::MotifSaveFDialog", objc-1, objv+1);
@@ -180,7 +180,7 @@ Tk_MessageBoxCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST *objv)	/* Arguments. */
+    Tcl_Obj *const *objv)	/* Arguments. */
 {
     return EvalObjv(interp, "tk::MessageBox", objc-1, objv+1);
 }
