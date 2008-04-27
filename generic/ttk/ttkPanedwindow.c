@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.14 2008/02/23 17:35:28 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.15 2008/04/27 22:41:12 dkf Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -142,7 +142,7 @@ static void DestroyPane(Paned *pw, Pane *pane)
  */
 static int ConfigurePane(
     Tcl_Interp *interp, Paned *pw, Pane *pane, Tk_Window slaveWindow,
-    int objc, Tcl_Obj *CONST objv[])
+    int objc, Tcl_Obj *const objv[])
 {
     Ttk_Manager *mgr = pw->paned.mgr;
     Tk_SavedOptions savedOptions;
@@ -615,7 +615,7 @@ static void PanedDisplay(void *recordPtr, Drawable d)
 /* $pw add window [ options ... ]
  */
 static int PanedAddCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Paned *pw = recordPtr;
     Tk_Window slaveWindow;
@@ -640,7 +640,7 @@ static int PanedAddCommand(
  * 	Insert new slave, or move existing one.
  */
 static int PanedInsertCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Paned *pw = recordPtr;
     int nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
@@ -685,7 +685,7 @@ static int PanedInsertCommand(
 /* $pw forget $pane
  */
 static int PanedForgetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Paned *pw = recordPtr;
     int paneIndex;
@@ -709,7 +709,7 @@ static int PanedForgetCommand(
  * 	Return index of sash at $x,$y
  */
 static int PanedIdentifyCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Paned *pw = recordPtr;
     int sashThickness = pw->paned.sashThickness;
@@ -743,7 +743,7 @@ static int PanedIdentifyCommand(
  * 	Query/modify pane options.
  */
 static int PanedPaneCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Paned *pw = recordPtr;
     int paneIndex;
@@ -780,7 +780,7 @@ static int PanedPaneCommand(
  * 	Return list of managed panes.
  */
 static int PanedPanesCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Paned *pw = recordPtr;
     Ttk_Manager *mgr = pw->paned.mgr;
@@ -807,7 +807,7 @@ static int PanedPanesCommand(
  * 	Query or modify sash position.
  */
 static int PanedSashposCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Paned *pw = recordPtr;
     int sashIndex, position = -1;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.7 2007/04/23 21:24:32 das Exp $
+ * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.8 2008/04/27 22:39:12 dkf Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -137,7 +137,7 @@ TkpDefineNativeBitmaps(void)
 Pixmap
 TkpCreateNativeBitmap(
     Display *display,
-    CONST char *source)		/* Info about the icon to build. */
+    const char *source)		/* Info about the icon to build. */
 {
     Pixmap pix;
     Rect destRect;
@@ -195,7 +195,7 @@ TkpCreateNativeBitmap(
 Pixmap
 TkpGetNativeAppBitmap(
     Display *display,		/* The display. */
-    CONST char *name,		/* The name of the bitmap. */
+    const char *name,		/* The name of the bitmap. */
     int *width,			/* The width & height of the bitmap. */
     int *height)
 {
@@ -249,9 +249,9 @@ TkpGetNativeAppBitmap(
 	Str255 dummy;
 
 	/*
-	 * We need to first paint the background white. Also, for
-	 * some reason we *must* use GetCIcon instead of GetNamedResource
-	 * for PlotCIcon to work - so we use GetResInfo to get the id.
+	 * We need to first paint the background white. Also, for some reason
+	 * we *must* use GetCIcon instead of GetNamedResource for PlotCIcon to
+	 * work - so we use GetResInfo to get the id.
 	 */
 
 	RGBForeColor(&white);

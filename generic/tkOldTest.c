@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldTest.c,v 1.1 2007/05/14 20:58:27 dgp Exp $
+ * RCS: @(#) $Id: tkOldTest.c,v 1.2 2008/04/27 22:38:56 dkf Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -77,7 +77,7 @@ static Tk_ImageType imageType = {
  */
 
 static int              ImageCmd(ClientData dummy,
-                            Tcl_Interp *interp, int argc, CONST char **argv);
+                            Tcl_Interp *interp, int argc, const char **argv);
 MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 
 
@@ -171,8 +171,8 @@ ImageCreate(
     strcpy(timPtr->imageName, name);
     timPtr->varName = (char *) ckalloc((unsigned) (strlen(varName) + 1));
     strcpy(timPtr->varName, varName);
-    Tcl_CreateCommand(interp, name, ImageCmd, (ClientData) timPtr, NULL);
-    *clientDataPtr = (ClientData) timPtr;
+    Tcl_CreateCommand(interp, name, ImageCmd, timPtr, NULL);
+    *clientDataPtr = timPtr;
     Tk_ImageChanged(master, 0, 0, 30, 15, 30, 15);
     return TCL_OK;
 }
@@ -200,9 +200,9 @@ ImageCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
+    const char **argv)		/* Argument strings. */
 {
-    TImageMaster *timPtr = (TImageMaster *) clientData;
+    TImageMaster *timPtr = clientData;
     int x, y, width, height;
 
     if (argc < 2) {
@@ -258,7 +258,7 @@ ImageGet(
 				 * used. */
     ClientData clientData)	/* Pointer to TImageMaster for image. */
 {
-    TImageMaster *timPtr = (TImageMaster *) clientData;
+    TImageMaster *timPtr = clientData;
     TImageInstance *instPtr;
     char buffer[100];
     XGCValues gcValues;
@@ -272,7 +272,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
-    return (ClientData) instPtr;
+    return instPtr;
 }
 
 /*
@@ -305,7 +305,7 @@ ImageDisplay(
 				/* Coordinates in drawable corresponding to
 				 * imageX and imageY. */
 {
-    TImageInstance *instPtr = (TImageInstance *) clientData;
+    TImageInstance *instPtr = clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
     sprintf(buffer, "%s display %d %d %d %d %d %d",
@@ -350,7 +350,7 @@ ImageFree(
     ClientData clientData,	/* Pointer to TImageInstance for instance. */
     Display *display)		/* Display where image was to be drawn. */
 {
-    TImageInstance *instPtr = (TImageInstance *) clientData;
+    TImageInstance *instPtr = clientData;
     char buffer[200];
 
     sprintf(buffer, "%s free", instPtr->masterPtr->imageName);
@@ -384,7 +384,7 @@ ImageDelete(
 				 * this function is called, no more instances
 				 * exist. */
 {
-    TImageMaster *timPtr = (TImageMaster *) clientData;
+    TImageMaster *timPtr = clientData;
     char buffer[100];
 
     sprintf(buffer, "%s delete", timPtr->imageName);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.13 2008/04/07 22:27:41 hobbs Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.14 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -63,7 +63,7 @@ Tk_ParseArgv(
 				 * means ignore Tk option specs. */
     int *argcPtr,		/* Number of arguments in argv. Modified to
 				 * hold # args left in argv at end. */
-    CONST char **argv,		/* Array of arguments. Modified to hold those
+    const char **argv,		/* Array of arguments. Modified to hold those
 				 * that couldn't be processed here. */
     Tk_ArgvInfo *argTable,	/* Array of option descriptions */
     int flags)			/* Or'ed combination of various flag bits,
@@ -73,7 +73,7 @@ Tk_ParseArgv(
 				/* Pointer to the current entry in the table
 				 * of argument descriptions. */
     Tk_ArgvInfo *matchPtr;	/* Descriptor that matches current argument. */
-    CONST char *curArg;		/* Current argument */
+    const char *curArg;		/* Current argument */
     register char c;		/* Second character of current arg (used for
 				 * quick check for matching; use 2nd char.
 				 * because first char. will almost always be
@@ -195,7 +195,7 @@ Tk_ParseArgv(
 	    if (argc == 0) {
 		goto missingArg;
 	    }
-	    *((CONST char **)infoPtr->dst) = argv[srcIndex];
+	    *((const char **)infoPtr->dst) = argv[srcIndex];
 	    srcIndex++;
 	    argc--;
 	    break;
@@ -228,7 +228,7 @@ Tk_ParseArgv(
 	    }
 	    break;
 	case TK_ARGV_FUNC: {
-	    typedef int (ArgvFunc)(char *, char *, CONST char *);
+	    typedef int (ArgvFunc)(char *, char *, const char *);
 	    ArgvFunc *handlerProc = (ArgvFunc *) infoPtr->src;
 
 	    if ((*handlerProc)(infoPtr->dst, infoPtr->key, argv[srcIndex])) {
@@ -239,7 +239,7 @@ Tk_ParseArgv(
 	}
 	case TK_ARGV_GENFUNC: {
 	    typedef int (ArgvGenFunc)(char *, Tcl_Interp *, char *, int,
-		    CONST char **);
+		    const char **);
 	    ArgvGenFunc *handlerProc = (ArgvGenFunc *) infoPtr->src;
 
 	    argc = (*handlerProc)(infoPtr->dst, interp, infoPtr->key,

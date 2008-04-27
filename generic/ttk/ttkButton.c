@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.8 2007/12/13 15:26:24 dgp Exp $
+/* $Id: ttkButton.c,v 1.9 2008/04/27 22:41:12 dkf Exp $
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
@@ -519,7 +519,7 @@ CheckbuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 CheckbuttonInvokeCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Checkbutton *checkPtr = recordPtr;
     WidgetCore *corePtr = &checkPtr->core;
@@ -705,7 +705,7 @@ RadiobuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 RadiobuttonInvokeCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], void *recordPtr)
+    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Radiobutton *radioPtr = recordPtr;
     WidgetCore *corePtr = &radioPtr->core;

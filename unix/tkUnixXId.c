@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixXId.c,v 1.10 2007/12/13 15:28:51 dgp Exp $
+ * RCS: @(#) $Id: tkUnixXId.c,v 1.11 2008/04/27 22:39:14 dkf Exp $
  */
 
 /*
@@ -76,7 +76,7 @@ TkInitXId(
     TkDisplay *dispPtr)		/* Tk's information about the display. */
 {
     dispPtr->idStackPtr = NULL;
-    dispPtr->defaultAllocProc = (XID (*) _ANSI_ARGS_((Display *display)))
+    dispPtr->defaultAllocProc = (XID (*) (Display *display))
 	    dispPtr->display->resource_alloc;
     dispPtr->display->resource_alloc = AllocXId;
     dispPtr->windowStackPtr = NULL;
@@ -324,7 +324,7 @@ TkFreeWindowId(
 
     if (!dispPtr->idCleanupScheduled) {
 	dispPtr->idCleanupScheduled = Tcl_CreateTimerHandler(100,
-		WindowIdCleanup, (ClientData) dispPtr);
+		WindowIdCleanup, dispPtr);
     }
 }
 
@@ -351,7 +351,7 @@ static void
 WindowIdCleanup(
     ClientData clientData)	/* Pointer to TkDisplay for display */
 {
-    TkDisplay *dispPtr = (TkDisplay *) clientData;
+    TkDisplay *dispPtr = clientData;
     int anyEvents, delta;
     Tk_RestrictProc *oldProc;
     ClientData oldData;
@@ -379,8 +379,7 @@ WindowIdCleanup(
 	XSync(dispPtr->display, False);
     }
     anyEvents = 0;
-    oldProc = Tk_RestrictEvents(CheckRestrictProc, (ClientData) &anyEvents,
-	    &oldData);
+    oldProc = Tk_RestrictEvents(CheckRestrictProc, &anyEvents, &oldData);
     TkUnixDoOneXEvent(&timeout);
     Tk_RestrictEvents(oldProc, oldData, &oldData);
     if (anyEvents) {
@@ -394,7 +393,7 @@ WindowIdCleanup(
 
     if (dispPtr->windowStackPtr != NULL) {
 	Tcl_CreateTimerHandler(5000, WindowIdCleanup2,
-		(ClientData) dispPtr->windowStackPtr);
+		dispPtr->windowStackPtr);
 	dispPtr->windowStackPtr = NULL;
     }
     return;
@@ -405,7 +404,7 @@ WindowIdCleanup(
 
   tryAgain:
     dispPtr->idCleanupScheduled = Tcl_CreateTimerHandler(500,
-	    WindowIdCleanup, (ClientData) dispPtr);
+	    WindowIdCleanup, dispPtr);
 }
 
 /*
@@ -430,7 +429,7 @@ static void
 WindowIdCleanup2(
     ClientData clientData)	/* Pointer to TkIdStack list. */
 {
-    TkIdStack *stackPtr = (TkIdStack *) clientData;
+    TkIdStack *stackPtr = clientData;
     TkIdStack *lastPtr;
 
     lastPtr = stackPtr;
@@ -465,7 +464,8 @@ CheckRestrictProc(
     ClientData clientData,	/* Pointer to flag to set. */
     XEvent *eventPtr)		/* Event to filter; not used. */
 {
-    int *flag = (int *) clientData;
+    int *flag = clientData;
+
     *flag = 1;
     return TK_DEFER_EVENT;
 }
@@ -585,7 +585,7 @@ TkpWindowWasRecentlyDeleted(
 int
 TkpScanWindowId(
     Tcl_Interp *interp,
-    CONST char *string,
+    const char *string,
     Window *idPtr)
 {
     int value;

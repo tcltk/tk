@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.16 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.17 2008/04/27 22:38:55 dkf Exp $
  */
 
 #include <stdio.h>
@@ -73,10 +73,10 @@ static void		ComputeWindowBbox(Tk_Canvas canvas,
 			    WindowItem *winItemPtr);
 static int		ConfigureWinItem(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
-			    Tcl_Obj *CONST objv[], int flags);
+			    Tcl_Obj *const objv[], int flags);
 static int		CreateWinItem(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DeleteWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayWinItem(Tk_Canvas canvas,
@@ -89,7 +89,7 @@ static void		TranslateWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY);
 static int		WinItemCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static void		WinItemLostSlaveProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		WinItemRequestProc(ClientData clientData,
@@ -174,7 +174,7 @@ CreateWinItem(
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
     int objc,			/* Number of arguments in objv. */
-    Tcl_Obj *CONST objv[])	/* Arguments describing window. */
+    Tcl_Obj *const objv[])	/* Arguments describing window. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     int i;
@@ -202,6 +202,7 @@ CreateWinItem(
 	i = 1;
     } else {
 	char *arg = Tcl_GetString(objv[1]);
+
 	i = 2;
 	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
 	    i = 1;
@@ -244,7 +245,7 @@ WinItemCoords(
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
     int objc,			/* Number of coordinates supplied in objv. */
-    Tcl_Obj *CONST objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
+    Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
 
@@ -308,7 +309,7 @@ ConfigureWinItem(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Window item to reconfigure. */
     int objc,			/* Number of elements in objv.  */
-    Tcl_Obj *CONST objv[],	/* Arguments describing things to configure. */
+    Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
@@ -318,7 +319,7 @@ ConfigureWinItem(
     oldWindow = winItemPtr->tkwin;
     canvasTkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, canvasTkwin, configSpecs, objc,
-	    (CONST char **) objv, (char *) winItemPtr, flags|TK_CONFIG_OBJS)) {
+	    (const char **) objv, (char *) winItemPtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 
@@ -453,7 +454,7 @@ ComputeWindowBbox(
     y = (int) (winItemPtr->y + ((winItemPtr->y >= 0) ? 0.5 : - 0.5));
 
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
     if ((winItemPtr->tkwin == NULL) || (state == TK_STATE_HIDDEN)) {
 	/*
@@ -578,7 +579,7 @@ DisplayWinItem(
 	return;
     }
     if (state == TK_STATE_NULL) {
-	state = ((TkCanvas *)canvas)->canvas_state;
+	state = Canvas(canvas)->canvas_state;
     }
 
     /*
@@ -759,8 +760,7 @@ xerrorhandler(
 {
     return 0;
 }
-#endif
-
+#endif /* X_GetImage */
 
 /*
  *--------------------------------------------------------------
@@ -790,8 +790,7 @@ WinItemToPostscript(
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
-    WindowItem *winItemPtr = (WindowItem *)itemPtr;
-
+    WindowItem *winItemPtr = (WindowItem *) itemPtr;
     double x, y;
     int width, height;
     Tk_Window tkwin = winItemPtr->tkwin;
@@ -890,7 +889,7 @@ CanvasPsWindow(
      */
 
     ximage = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), 0, 0,
-	    (unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
+	    (unsigned) width, (unsigned) height, AllPlanes, ZPixmap);
 
 #ifdef X_GetImage
     Tk_DeleteErrorHandler(handle);
@@ -900,8 +899,8 @@ CanvasPsWindow(
 	return TCL_OK;
     }
 
-    result = TkPostscriptImage(interp, tkwin,
-	    ((TkCanvas *)canvas)->psInfo, ximage, 0, 0, width, height);
+    result = TkPostscriptImage(interp, tkwin, Canvas(canvas)->psInfo, ximage,
+	    0, 0, width, height);
 
     XDestroyImage(ximage);
     return result;
@@ -1069,11 +1068,11 @@ WinItemLostSlaveProc(
 				 * was stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    WindowItem *winItemPtr = (WindowItem *) clientData;
+    WindowItem *winItemPtr = clientData;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(winItemPtr->canvas);
 
     Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
-	    WinItemStructureProc, (ClientData) winItemPtr);
+	    WinItemStructureProc, winItemPtr);
     if (canvasTkwin != Tk_Parent(winItemPtr->tkwin)) {
 	Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
     }

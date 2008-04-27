@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.12 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.13 2008/04/27 22:38:58 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -25,7 +25,7 @@
 static Tk_CustomOption orientOption = {
     (Tk_OptionParseProc *) TkOrientParseProc,
     TkOrientPrintProc,
-    (ClientData) NULL
+    NULL
 };
 
 /*
@@ -99,10 +99,10 @@ Tk_ConfigSpec tkpScrollbarConfigSpecs[] = {
 
 static int		ConfigureScrollbar(Tcl_Interp *interp,
 			    TkScrollbar *scrollPtr, int argc,
-			    CONST char **argv, int flags);
+			    const char **argv, int flags);
 static void		ScrollbarCmdDeletedProc(ClientData clientData);
 static int		ScrollbarWidgetCmd(ClientData clientData,
-			    Tcl_Interp *, int argc, CONST char **argv);
+			    Tcl_Interp *, int argc, const char **argv);
 
 /*
  *--------------------------------------------------------------
@@ -126,9 +126,9 @@ Tk_ScrollbarCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
+    const char **argv)		/* Argument strings. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     register TkScrollbar *scrollPtr;
     Tk_Window newWin;
 
@@ -146,7 +146,7 @@ Tk_ScrollbarCmd(
     Tk_SetClass(newWin, "Scrollbar");
     scrollPtr = TkpCreateScrollbar(newWin);
 
-    Tk_SetClassProcs(newWin, &tkpScrollbarProcs, (ClientData) scrollPtr);
+    Tk_SetClassProcs(newWin, &tkpScrollbarProcs, scrollPtr);
 
     /*
      * Initialize fields that won't be initialized by ConfigureScrollbar, or
@@ -159,7 +159,7 @@ Tk_ScrollbarCmd(
     scrollPtr->interp = interp;
     scrollPtr->widgetCmd = Tcl_CreateCommand(interp,
 	    Tk_PathName(scrollPtr->tkwin), ScrollbarWidgetCmd,
-	    (ClientData) scrollPtr, ScrollbarCmdDeletedProc);
+	    scrollPtr, ScrollbarCmdDeletedProc);
     scrollPtr->vertical = 0;
     scrollPtr->width = 0;
     scrollPtr->command = NULL;
@@ -223,9 +223,9 @@ ScrollbarWidgetCmd(
     ClientData clientData,	/* Information about scrollbar widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
+    const char **argv)		/* Argument strings. */
 {
-    register TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    register TkScrollbar *scrollPtr = clientData;
     int result = TCL_OK;
     size_t length;
     int c;
@@ -235,7 +235,7 @@ ScrollbarWidgetCmd(
 		argv[0], " option ?arg arg ...?\"", NULL);
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) scrollPtr);
+    Tcl_Preserve(scrollPtr);
     c = argv[1][0];
     length = strlen(argv[1]);
     if ((c == 'a') && (strncmp(argv[1], "activate", length) == 0)) {
@@ -493,11 +493,11 @@ ScrollbarWidgetCmd(
     }
 
   done:
-    Tcl_Release((ClientData) scrollPtr);
+    Tcl_Release(scrollPtr);
     return result;
 
   error:
-    Tcl_Release((ClientData) scrollPtr);
+    Tcl_Release(scrollPtr);
     return TCL_ERROR;
 }
 
@@ -528,7 +528,7 @@ ConfigureScrollbar(
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
     int argc,			/* Number of valid entries in argv. */
-    CONST char **argv,		/* Arguments. */
+    const char **argv,		/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, tkpScrollbarConfigSpecs,
@@ -587,7 +587,7 @@ TkScrollbarEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    TkScrollbar *scrollPtr = clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkScrollbarEventuallyRedraw(scrollPtr);
@@ -599,7 +599,7 @@ TkScrollbarEventProc(
 		    scrollPtr->widgetCmd);
 	}
 	if (scrollPtr->flags & REDRAW_PENDING) {
-	    Tcl_CancelIdleCall(TkpDisplayScrollbar, (ClientData) scrollPtr);
+	    Tcl_CancelIdleCall(TkpDisplayScrollbar, scrollPtr);
 	}
 	/*
 	 * Free up all the stuff that requires special handling, then let
@@ -608,7 +608,7 @@ TkScrollbarEventProc(
 
 	Tk_FreeOptions(tkpScrollbarConfigSpecs, (char *) scrollPtr,
 		scrollPtr->display, 0);
-	Tcl_EventuallyFree((ClientData) scrollPtr, TCL_DYNAMIC);
+	Tcl_EventuallyFree(scrollPtr, TCL_DYNAMIC);
     } else if (eventPtr->type == ConfigureNotify) {
 	TkpComputeScrollbarGeometry(scrollPtr);
 	TkScrollbarEventuallyRedraw(scrollPtr);
@@ -651,7 +651,7 @@ static void
 ScrollbarCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    TkScrollbar *scrollPtr = clientData;
     Tk_Window tkwin = scrollPtr->tkwin;
 
     /*
@@ -691,7 +691,7 @@ TkScrollbarEventuallyRedraw(
 	return;
     }
     if ((scrollPtr->flags & REDRAW_PENDING) == 0) {
-	Tcl_DoWhenIdle(TkpDisplayScrollbar, (ClientData) scrollPtr);
+	Tcl_DoWhenIdle(TkpDisplayScrollbar, scrollPtr);
 	scrollPtr->flags |= REDRAW_PENDING;
     }
 }

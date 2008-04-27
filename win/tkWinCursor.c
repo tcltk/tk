@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.15 2007/12/13 15:28:55 dgp Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.16 2008/04/27 22:39:14 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -98,7 +98,7 @@ TkGetCursorByName(
     struct CursorName *namePtr;
     TkWinCursor *cursorPtr;
     int argc;
-    CONST char **argv = NULL;
+    const char **argv = NULL;
 
     /*
      * All cursor names are valid lists of one element (for
@@ -191,8 +191,8 @@ TkGetCursorByName(
 TkCursor *
 TkCreateCursorFromData(
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    CONST char *source,		/* Bitmap data for cursor shape. */
-    CONST char *mask,		/* Bitmap data for cursor mask. */
+    const char *source,		/* Bitmap data for cursor shape. */
+    const char *mask,		/* Bitmap data for cursor mask. */
     int width, int height,	/* Dimensions of cursor. */
     int xHot, int yHot,		/* Location of hot-spot in cursor. */
     XColor fgColor,		/* Foreground color for cursor. */

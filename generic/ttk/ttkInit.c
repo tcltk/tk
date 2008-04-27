@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.7 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkInit.c,v 1.8 2008/04/27 22:41:12 dkf Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -46,7 +46,7 @@ int Ttk_GetCompoundFromObj(
  * Legal values for the -orient option.
  * See also: enum Ttk_Orient.
  */
-CONST char *ttkOrientStrings[] = {
+const char *ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
