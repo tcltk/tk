@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.10 2007/05/04 21:29:22 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.11 2008/05/02 10:28:18 dkf Exp $
  */
 
 #ifndef _TKFONT
@@ -195,18 +195,18 @@ typedef struct TkXLFDAttributes {
 #define TkInitFontAttributes(fa)   memset((fa), 0, sizeof(TkFontAttributes));
 #define TkInitXLFDAttributes(xa)   memset((xa), 0, sizeof(TkXLFDAttributes));
 
-MODULE_SCOPE int	TkFontParseXLFD(CONST char *string,
+MODULE_SCOPE int	TkFontParseXLFD(const char *string,
 			    TkFontAttributes *faPtr, TkXLFDAttributes *xaPtr);
-MODULE_SCOPE char **	TkFontGetAliasList(CONST char *faceName);
+MODULE_SCOPE char **	TkFontGetAliasList(const char *faceName);
 MODULE_SCOPE char ***	TkFontGetFallbacks(void);
 MODULE_SCOPE int	TkFontGetPixels(Tk_Window tkwin, int size);
 MODULE_SCOPE int	TkFontGetPoints(Tk_Window tkwin, int size);
 MODULE_SCOPE char **	TkFontGetGlobalClass(void);
 MODULE_SCOPE char **	TkFontGetSymbolClass(void);
 MODULE_SCOPE int	TkCreateNamedFont(Tcl_Interp *interp, Tk_Window tkwin,
-			    CONST char *name, TkFontAttributes *faPtr);
+			    const char *name, TkFontAttributes *faPtr);
 MODULE_SCOPE int	TkDeleteNamedFont(Tcl_Interp *interp,
-			    Tk_Window tkwin, CONST char *name);
+			    Tk_Window tkwin, const char *name);
 MODULE_SCOPE int	TkFontGetFirstTextLayout(Tk_TextLayout layout,
 			    Tk_Font *font, char *dst);
 
@@ -217,10 +217,10 @@ MODULE_SCOPE int	TkFontGetFirstTextLayout(Tk_TextLayout layout,
 MODULE_SCOPE void	TkpDeleteFont(TkFont *tkFontPtr);
 MODULE_SCOPE void	TkpFontPkgInit(TkMainInfo *mainPtr);
 MODULE_SCOPE TkFont *	TkpGetFontFromAttributes(TkFont *tkFontPtr,
-			    Tk_Window tkwin, CONST TkFontAttributes *faPtr);
+			    Tk_Window tkwin, const TkFontAttributes *faPtr);
 MODULE_SCOPE void	TkpGetFontFamilies(Tcl_Interp *interp,
 			    Tk_Window tkwin);
-MODULE_SCOPE TkFont *	TkpGetNativeFont(Tk_Window tkwin, CONST char *name);
+MODULE_SCOPE TkFont *	TkpGetNativeFont(Tk_Window tkwin, const char *name);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
