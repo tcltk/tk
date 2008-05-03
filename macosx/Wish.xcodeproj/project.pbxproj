@@ -2098,7 +2098,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.37.2.1 2008/04/15 10:56:02 das Exp $\n";
+			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.37.2.2 2008/05/03 21:07:34 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -4895,12 +4895,6 @@
 		F98A2A2F0D85F1EC002A40A7 /* ReleaseUniversal llvmgcc42 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-					x86_64,
-				);
-				CFLAGS = "-arch ppc -arch i386 -arch x86_64 $(CFLAGS)";
 				HEADER_SEARCH_PATHS = (
 					/usr/X11R6/include,
 					/usr/X11R6/include/freetype2,
