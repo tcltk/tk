@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.64 2008/04/27 22:39:12 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.65 2008/05/03 21:12:55 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -812,7 +812,7 @@ WmSetAttribute(
 	    err = ChkErr(FSPathMakeRef, (const unsigned char*)path, &ref, &d);
 	    if (err == noErr) {
 		TK_IF_MAC_OS_X_API (4, HIWindowSetProxyFSRef,
-			err = ChkErr(HIWindowSetProxyFSRef, macWindow, &ref);
+		    err = ChkErr(HIWindowSetProxyFSRef, macWindow, &ref);
 		) TK_ELSE_MAC_OS_X (4,
 		    AliasHandle alias;
 
@@ -5945,7 +5945,7 @@ ApplyWindowClassAttributeChanges(
 	if (wmPtr->macClass != oldClass) {
 	    TK_IF_MAC_OS_X_API (4, HIWindowChangeClass,
 		ChkErr(HIWindowChangeClass, macWindow, wmPtr->macClass);
-	    ) TK_ENDIF;
+	    ) TK_ENDIF
 	    ChkErr(GetWindowClass, macWindow, &(wmPtr->macClass));
 	}
 	if (newAttributes != oldAttributes) {
