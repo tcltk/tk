@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.48 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.49 2008/05/03 19:53:02 das Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -4811,12 +4811,12 @@ CanvasDoEvent(
 		(numObjects * sizeof(ClientData)));
     }
 #ifdef USE_OLD_TAG_SEARCH
-    objectPtr[0] = Tk_GetUid("all");
+    objectPtr[0] = (ClientData) Tk_GetUid("all");
 #else /* USE_OLD_TAG_SEARCH */
-    objectPtr[0] = searchUids->allUid;
+    objectPtr[0] = (ClientData) searchUids->allUid;
 #endif /* USE_OLD_TAG_SEARCH */
     for (i = itemPtr->numTags-1; i >= 0; i--) {
-	objectPtr[i+1] = itemPtr->tagPtr[i];
+	objectPtr[i+1] = (ClientData) itemPtr->tagPtr[i];
     }
     objectPtr[itemPtr->numTags+1] = itemPtr;
 
