@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.26 2008/04/27 22:39:12 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.27 2008/05/03 21:12:55 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1090,7 +1090,7 @@ AddPixel(
  * XSetWindowBackgroundPixmap, XSetWindowBorder, XSetWindowBorderPixmap,
  * XSetWindowBorderWidth, XSetWindowColormap
  *
- *	These functions are all no-ops. They all have equivilent Tk calls that
+ *	These functions are all no-ops. They all have equivalent Tk calls that
  *	should always be used instead.
  *
  * Results:
