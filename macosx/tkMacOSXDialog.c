@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.36.2.1 2008/05/03 21:09:16 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.36.2.2 2008/05/03 21:33:00 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -537,7 +537,7 @@ Tk_ChooseDirectoryObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
+    Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     int i, result = TCL_ERROR;
     Tk_Window parent = NULL;
