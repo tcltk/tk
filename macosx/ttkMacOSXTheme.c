@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.21 2007/12/13 15:27:10 dgp Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.22 2008/05/04 17:17:33 jenglish Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -160,6 +160,8 @@ static Ttk_StateTable ButtonValueTable[] = {
 };
 
 static Ttk_StateTable ButtonAdornmentTable[] = {
+    { kThemeAdornmentDefault| kThemeAdornmentFocus,
+	TTK_STATE_ALTERNATE| TTK_STATE_FOCUS, 0 },
     { kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0 },
     { kThemeAdornmentFocus, TTK_STATE_FOCUS, 0 },
     { kThemeAdornmentNone, 0, 0 }
