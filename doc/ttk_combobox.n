@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_combobox.n,v 1.15 2008/02/23 18:41:06 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_combobox.n,v 1.16 2008/05/09 18:35:00 patthoyts Exp $
 '\"
 .so man.macros
 .TH ttk::combobox n 8.5 Tk "Tk Themed Widget"
@@ -74,8 +74,8 @@ Otherwise, returns the index of the current value in the list of
 Returns the current value of the combobox.
 .TP
 \fIpathName \fBidentify \fIx y\fR
-Returns the name of the element at position \fIx\fR, \fIy\fR,
-or the empty string if the coordinates are outside the window.
+Returns the name of the element at position \fIx\fR, \fIy\fR.
+See \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBinstate \fIstateSpec\fR ?\fIscript\fR?
 Test the widget state.
