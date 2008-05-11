@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.9 2008/01/29 15:38:00 dkf Exp $
+'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.9.2.1 2008/05/11 00:31:03 patthoyts Exp $
 '\" 
 .so man.macros
 .TH ttk::labelframe n 8.5 Tk "Tk Themed Widget"
@@ -65,7 +65,7 @@ If specified, the widget's requested height in pixels.
 \fB\-height\fR).
 .SH "WIDGET COMMAND"
 Supports the standard widget commands
-\fBconfigure\fR, \fBcget\fR, \fBinstate\fR, and \fBstate\fR;
+\fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
 see \fIttk::widget(n)\fR.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::frame(n), labelframe(n)
