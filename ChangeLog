@@ -1,5 +1,6 @@
 2008-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/tk.tcl: Support for ttk widgets in AmpWidget
 	* doc/button.n: Note negative widths for button [Patch #1883418]
 
 2008-05-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
