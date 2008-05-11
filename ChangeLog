@@ -1,3 +1,7 @@
+2008-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* doc/button.n: Note negative widths for button [Patch #1883418]
+
 2008-05-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/ttk_*: 'identify' widget command is on all ttk widgets.
