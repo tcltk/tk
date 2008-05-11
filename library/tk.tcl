@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.74 2008/04/01 16:30:54 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.75 2008/05/11 00:47:22 patthoyts Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -355,7 +355,7 @@ if {![llength [info command tk_chooseDirectory]]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
-switch -- [tk windowingsystem] {
+switch -exact -- [tk windowingsystem] {
     "x11" {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
@@ -510,7 +510,7 @@ proc ::tk::AmpWidget {class path args} {
 	}
     }
     set result [$class $path {*}$options]
-    if {$class eq "button"} {
+    if {[string match "*button" $class]} {
 	bind $path <<AltUnderlined>> [list $path invoke]
     }
     return $result
@@ -539,8 +539,8 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 #
 proc ::tk::FindAltKeyTarget {path char} {
     switch -- [winfo class $path] {
-	Button -
-	Label {
+	Button - Label - 
+        TButton - TLabel - TCheckbutton {
 	    if {[string equal -nocase $char \
 		  [string index [$path cget -text] [$path cget -underline]]]} {
 		return $path
