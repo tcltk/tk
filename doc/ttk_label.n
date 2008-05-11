@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_label.n,v 1.9 2008/01/29 15:38:00 dkf Exp $
+'\" RCS: @(#) $Id: ttk_label.n,v 1.9.2.1 2008/05/11 00:31:01 patthoyts Exp $
 '\" 
 .so man.macros
 .TH ttk::label n 8.5 Tk "Tk Themed Widget"
@@ -68,14 +68,8 @@ then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
 .SH "WIDGET COMMAND"
-.TP
-\fIpathName \fBcget\fR \fIoption\fR
-.TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-.TP
-\fIpathName \fBinstate \fIstateSpec\fR ?\fIscript\fR?
-.TP
-\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-See \fIttk::widget(n)\fR
+Supports the standard widget commands
+\fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
+see \fIttk::widget(n)\fR.
 .SH "SEE ALSO"
 ttk::widget(n), label(n)
