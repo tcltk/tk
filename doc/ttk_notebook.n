@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_notebook.n,v 1.12 2008/03/06 16:33:30 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_notebook.n,v 1.12.2.1 2008/05/11 00:31:03 patthoyts Exp $
 '\" 
 .so man.macros
 .TH ttk::notebook n 8.5 Tk "Tk Themed Widget"
@@ -123,6 +123,10 @@ Hides the tab specified by \fItabid\fR.
 The tab will not be displayed, but the associated window
 remains managed by the notebook and its configuration remembered.
 Hidden tabs may be restored with the \fBadd\fR command.
+.TP
+\fIpathName \fBidentify\fR \fIx y\fR
+Returns the name of the element at position \fIx\fR, \fIy\fR.
+See \fIttk::widget(n)\fR.
 .TP
 \fIpathname \fBindex\fR \fItabid\fR
 Returns the numeric index of the tab specified by \fItabid\fR,
