@@ -1,3 +1,7 @@
+2008-05-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/winDialog.test: Fixed hanging tk_chooseColor tests.
+
 2008-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/tk.tcl: Support for ttk widgets in AmpWidget
