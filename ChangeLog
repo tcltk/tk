@@ -1,5 +1,6 @@
 2008-05-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* tests/listbox.test: -activestyle default is underline on windows.
 	* tests/winDialog.test: Fixed hanging tk_chooseColor tests.
 
 2008-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
