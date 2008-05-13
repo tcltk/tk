@@ -1,3 +1,4 @@
+# -*- tcl -*-
 # This file is a Tcl script to test the Windows specific behavior of
 # the common dialog boxes.  It is organized in the standard
 # fashion for Tcl tests.
@@ -6,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.16 2008/04/14 20:48:50 patthoyts Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.17 2008/05/13 12:39:28 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -85,41 +86,47 @@ test winDialog-1.1.2 {Tk_ChooseColorObjCmd} -constraints {
 } -result [list 0 "#ff9933"]
 test winDialog-1.1.3 {Tk_ChooseColorObjCmd: -title} -constraints {
     testwinevent
-} -body {
+} -setup {unset a x} -body {
     set x {}
     start {set clr [tk_chooseColor -initialcolor "#ff9933" -title "Hello"]}
     then {
-        array set a [testgetwindowinfo $::tk_dialog]
-        if {[info exists a(text)]} {lappend x $a(text)}
+        if {[catch {
+            array set a [testgetwindowinfo $::tk_dialog]
+            if {[info exists a(text)]} {lappend x $a(text)}
+        } err]} { lappend x $err }
         lappend x [Click 1]
     }
     lappend x $clr
 } -result [list Hello 0 "#ff9933"]
 test winDialog-1.1.4 {Tk_ChooseColorObjCmd: -title} -constraints {
     testwinevent
-} -body {
+} -setup {unset a x} -body {
     set x {}
     start {
         set clr [tk_chooseColor -initialcolor "#ff9933" \
                      -title "\u041f\u0440\u0438\u0432\u0435\u0442"]
     }
     then {
-        array set a [testgetwindowinfo $::tk_dialog]
-        if {[info exists a(text)]} {lappend x $a(text)}
+        if {[catch {
+            array set a [testgetwindowinfo $::tk_dialog]
+            if {[info exists a(text)]} {lappend x $a(text)}
+        } err]} { lappend x $err }
         lappend x [Click 1]
     }
     lappend x $clr
 } -result [list "\u041f\u0440\u0438\u0432\u0435\u0442" 0 "#ff9933"]
 test winDialog-1.1.5 {Tk_ChooseColorObjCmd: -parent} -constraints {
     testwinevent
-} -body {
+} -setup {unset a x} -body {
     start {set clr [tk_chooseColor -initialcolor "#ff9933" -parent .]}
     set x {}
     then {
-        array set a [testgetwindowinfo $::tk_dialog]
-        if {[info exists a(parent)]} {
-            append x [expr {$a(parent) == [wm frame .]}]
-        }
+        if {[catch {
+            array set a [testgetwindowinfo $::tk_dialog]
+            if {[info exists a(parent)]} {
+                append x [expr {$a(parent) == [wm frame .]}]
+            }
+        } err]} {lappend x $err}
         Click 1
     }
     list $x $clr
