@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.37 2007/12/13 15:26:27 dgp Exp $
+# RCS: @(#) $Id: console.tcl,v 1.38 2008/05/13 13:25:18 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -554,11 +554,16 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <<Console_FontSizeIncr>> {
         set size [font configure TkConsoleFont -size]
-        font configure TkConsoleFont -size [incr size]
+        if {$size < 0} {set sign -1} else {set sign 1}
+        set size [expr {(abs($size) + 1) * $sign}]
+        font configure TkConsoleFont -size $size
     }
     bind Console <<Console_FontSizeDecr>> {
         set size [font configure TkConsoleFont -size]
-        font configure TkConsoleFont -size [incr size -1]
+        if {abs($size) < 2} { return }
+        if {$size < 0} {set sign -1} else {set sign 1}
+        set size [expr {(abs($size) - 1) * $sign}]
+        font configure TkConsoleFont -size $size
     }
 
     ##
