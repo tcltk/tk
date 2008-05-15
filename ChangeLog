@@ -1,3 +1,7 @@
+2008-05-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/xpTheme.tcl: Add correct border to combobox on Vista
+
 2008-05-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: We should use the thread allocator for threaded
