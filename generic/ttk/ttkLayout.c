@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.11 2007/12/13 15:26:26 dgp Exp $
+ * $Id: ttkLayout.c,v 1.12 2008/05/23 20:20:05 jenglish Exp $
  */
 
 #include <string.h>
@@ -46,8 +46,6 @@ Ttk_NewBoxObj(Ttk_Box box)
 
     return Tcl_NewListObj(4, result);
 }
-
-
 
 /*
  * packTop, packBottom, packLeft, packRight --
@@ -768,7 +766,7 @@ void Ttk_RegisterLayouts(Ttk_Theme theme, Ttk_LayoutSpec spec)
     }
 }
 
-Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node) 
+Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 {
     Tcl_Obj *result = Tcl_NewListObj(0,0);
 
@@ -785,14 +783,14 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 	 */
 	if (flags & TTK_EXPAND) {
 	    APPENDSTR("-expand");
-	    APPENDSTR("1"); 
+	    APPENDSTR("1");
 	} else {
 	    if (flags & _TTK_MASK_PACK) {
 		int side = 0;
 		unsigned sideFlags = flags & _TTK_MASK_PACK;
 
 		while ((sideFlags & TTK_PACK_LEFT) == 0) {
-		    ++side; 
+		    ++side;
 		    sideFlags >>= 1;
 		}
 		APPENDSTR("-side");
@@ -891,7 +889,7 @@ Ttk_Layout Ttk_CreateLayout(
  * 	Creates a new sublayout.
  *
  * 	Sublayouts are used to draw subparts of a compound widget.
- *	They use the same Tk_Window, but a different option table 
+ *	They use the same Tk_Window, but a different option table
  *	and data record.
  */
 Ttk_Layout
@@ -924,7 +922,7 @@ Ttk_CreateSublayout(
     Tcl_DStringFree(&buf);
 
     return TTKNewLayout(
-	    style, 0, optionTable, parentLayout->tkwin, 
+	    style, 0, optionTable, parentLayout->tkwin,
 	    Ttk_InstantiateLayout(themePtr, layoutTemplate));
 }
 
@@ -945,6 +943,15 @@ Tcl_Obj *Ttk_QueryOption(
 {
     return Ttk_QueryStyle(
 	layout->style,layout->recordPtr,layout->optionTable,optionName,state);
+}
+
+/*
+ * Ttk_LayoutStyle --
+ * 	Extract Ttk_Style from Ttk_Layout.
+ */
+Ttk_Style Ttk_LayoutStyle(Ttk_Layout layout)
+{
+    return layout->style;
 }
 
 /*------------------------------------------------------------------------

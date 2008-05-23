@@ -1,5 +1,5 @@
 #
-# $Id: defaults.tcl,v 1.6 2007/12/13 15:27:08 dgp Exp $
+# $Id: defaults.tcl,v 1.7 2008/05/23 20:20:06 jenglish Exp $
 #
 # Settings for default theme.
 #
@@ -8,7 +8,9 @@ namespace eval ttk::theme::default {
     variable colors
     array set colors {
 	-frame		"#d9d9d9"
+	-foreground	"#000000"
 	-window		"#ffffff"
+	-text   	"#000000"
 	-activebg	"#ececec"
 	-selectbg	"#4a6984"
 	-selectfg	"#ffffff"
@@ -22,7 +24,7 @@ namespace eval ttk::theme::default {
 	ttk::style configure "." \
 	    -borderwidth 	1 \
 	    -background 	$colors(-frame) \
-	    -foreground 	black \
+	    -foreground 	$colors(-foreground) \
 	    -troughcolor 	$colors(-darker) \
 	    -font 		TkDefaultFont \
 	    -selectborderwidth	1 \
@@ -85,15 +87,10 @@ namespace eval ttk::theme::default {
 	# Treeview.
 	#
 	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Row -background $colors(-window)
-	ttk::style configure Cell -background $colors(-window)
-	ttk::style map Row \
-	    -background [list selected $colors(-selectbg)] \
-	    -foreground [list selected $colors(-selectfg)] ;
-	ttk::style map Cell \
-	    -background [list selected $colors(-selectbg)] \
-	    -foreground [list selected $colors(-selectfg)] ;
-	ttk::style map Item \
+	ttk::style configure Treeview \
+	    -background $colors(-window) \
+	    -foreground $colors(-text) ;
+	ttk::style map Treeview \
 	    -background [list selected $colors(-selectbg)] \
 	    -foreground [list selected $colors(-selectfg)] ;
 
