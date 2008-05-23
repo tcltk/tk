@@ -33,7 +33,6 @@
 
 	* doc/ttk_*: 'identify' widget command is on all ttk widgets.
 
->>>>>>> 1.1929
 2008-05-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* macosx/ttkMacOSAquaTheme.c: "default" and "focus" adornments
