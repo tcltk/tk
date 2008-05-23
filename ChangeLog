@@ -1,5 +1,28 @@
 2008-05-23  Joe English  <jenglish@users.sourceforge.net>
 
+	* doc/ttk_treeview.n, generic/ttk/ttkTreeview.c,
+	generic/ttk/ttkTagSet.c, generic/ttk/ttkLayout.c,
+	generic/ttk/ttkTheme.c, generic/ttk/ttkTheme.h,
+	generic/ttk/ttkThemeInt.h, generic/ttk/ttkWidget.h:
+	
+	Added [$tv identify region], [$tv identify element],
+	and [$tv identify item] subcommands.  Simplified
+	bindings.  Added [$tv tag has] subcommand.  Tag-related
+	display improvements; setting a tag -background or -foreground
+	no longer overrides selection feedback.
+
+
+	* library/ttk/altTheme.tcl, library/ttk/aquaTheme.tcl,
+	library/ttk/clamTheme.tcl, library/ttk/classicTheme.tcl,
+	library/ttk/defaults.tcl, library/ttk/treeview.tcl,
+	library/ttk/winTheme.tcl, library/ttk/xpTheme.tcl:
+
+	Don't need separate 'Item', 'Cell', and 'Row' style
+	settings anymore, only the base "Treeview" style is used.
+
+
+2008-05-23  Joe English  <jenglish@users.sourceforge.net>
+
 	* generic/ttk/ttkLabel.c: Avoid passing width or height <= 0 to 
 	Tk_RedrawImage, as this leads to a panic on Windows [Bug 1967576]
 
