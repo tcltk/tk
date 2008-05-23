@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.17 2008/01/29 15:38:00 dkf Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.18 2008/05/23 20:20:05 jenglish Exp $
 '\" 
 .so man.macros
 .TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
@@ -58,11 +58,8 @@ A list of column identifiers
 specifying which data columns are displayed 
 and the order in which they appear, 
 or the string \fB#all\fP.
-.RS
-.PP
-If set to \fB#all\fP (the default), all columns are shown in the order
-given.
-.RE
+If set to \fB#all\fP (the default),
+all columns are shown in the order given.
 .OP \-height height Height
 Specifies the number of rows which should be visible.
 Note:
@@ -104,7 +101,7 @@ Returns the bounding box (relative to the treeview widget's window)
 of the specified \fIitem\fR
 in the form \fIx y width height\fR.
 If \fIcolumn\fR is specified, returns the bounding box of that cell.
-If the \fIitem\fR is not visible 
+If the \fIitem\fR is not visible
 (i.e., if it is a descendant of a closed item or is scrolled offscreen),
 returns the empty list.
 .TP
@@ -215,12 +212,35 @@ or the empty string if no such \fIcomponent\fR is present at that position.
 The following subcommands are supported:
 .RS
 .TP
-\fIpathname \fBidentify row\fR \fIx y\fR
+\fIpathname \fBidentify region\fR \fI x y\fR
+.RS
+Returns one of:
+.IP heading
+Tree heading area;
+use [\fBpathname identify column \fIx y\fR]
+to determine the heading number.
+.IP separator
+Space between two column headings;
+[\fBpathname identify column \fIx y\fR]
+will return the display column identifier
+of the heading to left of the separator.
+.IP tree
+The tree area.
+.IP cell
+A data cell.
+.RE
+\fIpathname \fBidentify item\fR \fIx y\fR
 Returns the item ID of the item at position \fIy\fR.
 .TP
 \fIpathname \fBidentify column\fR \fIx y\fR
 Returns the data column identifier of the cell at position \fIx\fR.
 The tree column has ID \fB#0\fR.
+.TP
+\fIpathname \fBidentify element\fR \fIx y\fR
+The element at position \fIx,y\fR.
+.TP
+\fIpathname \fBidentify row\fR \fIx y\fR
+Obsolescent synonym for \fIpathname \fBidentify item\fR.
 .PP
 See \fBCOLUMN IDENTIFIERS\fR for a discussion of display columns
 and data columns.
@@ -310,7 +330,7 @@ Toggle the selection state of each item in \fIitemList\fR.
 .TP
 \fIpathname \fBset\fR \fIitem\fR ?\fIcolumn\fR? ?\fIvalue\fR?
 With one argument, returns a dictionary of column/value pairs
-for the specified \fIitem\fR.  
+for the specified \fIitem\fR.
 With two arguments, returns the current value of the specified \fIcolumn\fR.
 With three arguments, sets the value of column \fIcolumn\fR
 in item \fIitem\fR to the specified \fIvalue\fR.
@@ -349,6 +369,12 @@ returns the value of that option
 With no additional arguments, 
 returns a dictionary of the option settings for \fItagName\fR.
 See \fBTAG OPTIONS\fR for the list of available options.
+.TP
+\fIpathName \fBtag has\fR \fItagName\fR ?\fIitem\fR?
+If \fIitem\fR is specified, returns 1 or 0
+depending on whether the specified item has the named tag.
+Otherwise, returns a list of all items which have
+the specified tag.
 .RE
 .TP
 \fIpathName \fBxview \fIargs\fR

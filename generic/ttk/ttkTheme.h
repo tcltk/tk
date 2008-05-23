@@ -1,4 +1,4 @@
-/* $Id: ttkTheme.h,v 1.13 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkTheme.h,v 1.14 2008/05/23 20:20:05 jenglish Exp $
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.
@@ -205,6 +205,7 @@ typedef struct Ttk_Theme_ *Ttk_Theme;
 typedef struct Ttk_ElementImpl_ *Ttk_ElementImpl;
 typedef struct Ttk_Layout_ *Ttk_Layout;
 typedef struct Ttk_LayoutNode_ Ttk_LayoutNode;
+typedef struct Ttk_Style_ *Ttk_Style;
 
 TTKAPI Ttk_Theme Ttk_GetTheme(Tcl_Interp *interp, const char *name);
 TTKAPI Ttk_Theme Ttk_GetDefaultTheme(Tcl_Interp *interp);
@@ -340,6 +341,10 @@ MODULE_SCOPE void Ttk_PlaceLayoutNode(Ttk_Layout,Ttk_LayoutNode *, Ttk_Box);
 MODULE_SCOPE void Ttk_ChangeElementState(Ttk_LayoutNode *,unsigned set,unsigned clr);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);
+
+TTKAPI Ttk_Style Ttk_LayoutStyle(Ttk_Layout);
+TTKAPI Tcl_Obj *Ttk_StyleDefault(Ttk_Style, const char *optionName);
+TTKAPI Tcl_Obj *Ttk_StyleMap(Ttk_Style, const char *optionName, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Resource cache.

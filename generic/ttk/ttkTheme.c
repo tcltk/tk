@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.12 2008/04/27 22:41:12 dkf Exp $
+ * $Id: ttkTheme.c,v 1.13 2008/05/23 20:20:05 jenglish Exp $
  */
 
 #include <stdlib.h>
@@ -85,34 +85,35 @@ static void FreeStyle(Style *stylePtr)
 }
 
 /*
- * LookupStateMap --
- * 	Look up dynamic resource settings in the in the specified style.
+ * Ttk_StyleMap --
+ * 	Look up state-specific option value from specified style.
  */
-
-static Ttk_StateMap LookupStateMap(Ttk_Style stylePtr, const char *optionName)
+Tcl_Obj *Ttk_StyleMap(Ttk_Style style, const char *optionName, Ttk_State state)
 {
-    while (stylePtr) {
+    while (style) {
 	Tcl_HashEntry *entryPtr =
-	    Tcl_FindHashEntry(&stylePtr->settingsTable, optionName);
-	if (entryPtr)
-	    return (Ttk_StateMap)Tcl_GetHashValue(entryPtr);
-	stylePtr = stylePtr->parentStyle;
+	    Tcl_FindHashEntry(&style->settingsTable, optionName);
+	if (entryPtr) {
+	    Ttk_StateMap stateMap = Tcl_GetHashValue(entryPtr);
+	    return Ttk_StateMapLookup(NULL, stateMap, state);
+	}
+	style = style->parentStyle;
     }
     return 0;
 }
 
 /*
- * LookupDefault --
+ * Ttk_StyleDefault --
  * 	Look up default resource setting the in the specified style.
  */
-static Tcl_Obj *LookupDefault(Ttk_Style stylePtr, const char *optionName)
+Tcl_Obj *Ttk_StyleDefault(Ttk_Style style, const char *optionName)
 {
-    while (stylePtr) {
+    while (style) {
 	Tcl_HashEntry *entryPtr =
-	    Tcl_FindHashEntry(&stylePtr->defaultsTable, optionName);
+	    Tcl_FindHashEntry(&style->defaultsTable, optionName);
 	if (entryPtr)
 	    return (Tcl_Obj *)Tcl_GetHashValue(entryPtr);
-	stylePtr = stylePtr->parentStyle;
+	style= style->parentStyle;
     }
     return 0;
 }
@@ -295,7 +296,6 @@ static void FreeElementImpl(ElementImpl *elementImpl)
     ckfree(elementImpl->elementRecord);
     ckfree((ClientData)elementImpl);
 }
-
 
 /*------------------------------------------------------------------------
  * +++ Themes.
@@ -993,14 +993,9 @@ int InitializeElementRecord(
 	Tcl_Obj **dest = (Tcl_Obj **)
 	    (elementRecord + elementOption->offset);
 	const char *optionName = elementOption->optionName;
-	Tcl_Obj *stateMap = LookupStateMap(style, optionName);
-	Tcl_Obj *dynamicSetting = 0;
+	Tcl_Obj *dynamicSetting = Ttk_StyleMap(style, optionName, state);
 	Tcl_Obj *widgetValue = 0;
 	Tcl_Obj *elementDefault = element->defaultValues[i];
-
-	if (stateMap) {
-	    dynamicSetting = Ttk_StateMapLookup(NULL, stateMap, state);
-	}
 
 	if (optionMap[i]) {
 	    widgetValue = *(Tcl_Obj **)
@@ -1012,7 +1007,7 @@ int InitializeElementRecord(
 	} else if (dynamicSetting) {
 	    *dest = dynamicSetting;
 	} else {
-	    Tcl_Obj *styleDefault = LookupDefault(style, optionName);
+	    Tcl_Obj *styleDefault = Ttk_StyleDefault(style, optionName);
 	    *dest = styleDefault ? styleDefault : elementDefault;
 	}
 
@@ -1039,7 +1034,6 @@ Tcl_Obj *Ttk_QueryStyle(
     const char *optionName,	/* Option name */
     Ttk_State state) 		/* Current state */
 {
-    Tcl_Obj *stateMap;
     const Tk_OptionSpec *optionSpec;
     Tcl_Obj *result;
 
@@ -1057,18 +1051,15 @@ Tcl_Obj *Ttk_QueryStyle(
     /*
      * Check dynamic settings:
      */
-    stateMap = LookupStateMap(style, optionName);
-    if (stateMap) {
-	result = Ttk_StateMapLookup(NULL, stateMap, state);
-	if (result) {
-	    return result;
-	}
+    result = Ttk_StyleMap(style, optionName, state);
+    if (result) {
+	return result;
     }
 
     /*
      * Use style default:
      */
-    return LookupDefault(style, optionName);
+    return Ttk_StyleDefault(style, optionName);
 }
 
 /*

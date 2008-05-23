@@ -1,5 +1,5 @@
 /*
- * $Id: ttkThemeInt.h,v 1.5 2007/12/13 15:26:26 dgp Exp $
+ * $Id: ttkThemeInt.h,v 1.6 2008/05/23 20:20:05 jenglish Exp $
  *
  * Theme engine: private definitions.
  *
@@ -11,7 +11,6 @@
 
 #include "ttkTheme.h"
 
-typedef struct Ttk_Style_ *Ttk_Style;
 typedef struct Ttk_TemplateNode_ Ttk_TemplateNode, *Ttk_LayoutTemplate;
 
 MODULE_SCOPE Ttk_ElementImpl Ttk_GetElement(Ttk_Theme theme, const char *name);
