@@ -1,3 +1,8 @@
+2008-05-23  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkLabel.c: Avoid passing width or height <= 0 to 
+	Tk_RedrawImage, as this leads to a panic on Windows [Bug 1967576]
+
 2008-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/tk.tcl: Support for ttk widgets in AmpWidget
