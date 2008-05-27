@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.13 2008/05/23 20:20:05 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.14 2008/05/27 20:47:20 patthoyts Exp $
  */
 
 #include <stdlib.h>
@@ -1334,6 +1334,39 @@ static int StyleLookupCmd(
     return TCL_OK;
 }
 
+static int StyleThemeCurrentCmd(
+    ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj * const objv[])
+{
+    StylePackageData *pkgPtr = (StylePackageData *)clientData;
+    Tcl_HashSearch search;
+    Tcl_HashEntry *entryPtr = NULL;
+    const char *name = NULL;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 3, objv, "");
+	return TCL_ERROR;
+    }
+
+    entryPtr = Tcl_FirstHashEntry(&pkgPtr->themeTable, &search);
+    while (entryPtr != NULL) {
+	Theme *ptr = (Theme *)Tcl_GetHashValue(entryPtr);
+	if (ptr == pkgPtr->currentTheme) {
+	    name = Tcl_GetHashKey(&pkgPtr->themeTable, entryPtr);
+	    break;
+	}
+	entryPtr = Tcl_NextHashEntry(&search);
+    }
+
+    if (name == NULL) {
+	Tcl_SetObjResult(interp, 
+	    Tcl_NewStringObj("error: failed to get theme name", -1));
+	return TCL_ERROR;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
+    return TCL_OK;
+}
+
 /* + style theme create name ?-parent $theme? ?-settings { script }?
  */
 static int StyleThemeCreateCmd(
@@ -1572,9 +1605,13 @@ StyleThemeUseCmd(
     StylePackageData *pkgPtr = clientData;
     Ttk_Theme theme;
 
-    if (objc != 4) {
-	Tcl_WrongNumArgs(interp, 3, objv, "theme");
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 3, objv, "?theme?");
 	return TCL_ERROR;
+    }
+
+    if (objc == 3) {
+	return StyleThemeCurrentCmd(clientData, interp, objc, objv);
     }
 
     theme = LookupTheme(interp, pkgPtr, Tcl_GetString(objv[3]));
