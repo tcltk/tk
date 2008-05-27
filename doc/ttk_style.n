@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_style.n,v 1.14 2008/04/09 09:28:05 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_style.n,v 1.15 2008/05/27 20:47:16 patthoyts Exp $
 '\" 
 .so man.macros
 .TH ttk::style n 8.5 Tk "Tk Themed Widget"
@@ -86,8 +86,10 @@ though arbitrary Tcl code may appear.
 \fBttk::style theme names\fR
 Returns a list of all known themes.
 .TP
-\fBttk::style theme use\fR \fIthemeName\fR
-Sets the current theme to \fIthemeName\fR, and refreshes all widgets.
+\fBttk::style theme use\fR ?\fIthemeName\fR?
+Without an argument the result is the name of the current theme.
+Otherwise this command sets the current theme to \fIthemeName\fR,
+and refreshes all widgets.
 .SH LAYOUTS
 A \fIlayout\fR specifies a list of elements, each followed
 by one or more options specifying how to arrange the element.

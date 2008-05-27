@@ -1,3 +1,8 @@
+2008-05-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/ttk/ttkTheme.c: [ttk::style theme use] without
+	* doc/ttk_style.n: an argument now returns the current theme
+
 2008-05-23  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_treeview.n, generic/ttk/ttkTreeview.c,
