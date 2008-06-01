@@ -1,3 +1,9 @@
+2008-06-01  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add new tclOO files; add debug
+	* macosx/README:			targets with gcov; update to
+						Xcode 3.1.
+
 2008-05-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/ttk/ttkTheme.c: [ttk::style theme use] without
