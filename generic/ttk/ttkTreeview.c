@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.26 2008/05/23 22:18:27 das Exp $
+/* $Id: ttkTreeview.c,v 1.27 2008/06/01 08:28:18 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -1132,12 +1132,12 @@ static int ConfigureItem(
     int objc, Tcl_Obj *const objv[])
 {
     Tk_SavedOptions savedOptions;
-    unsigned mask;
+    int mask;
     Ttk_ImageSpec *newImageSpec = NULL;
     Ttk_TagSet newTagSet = NULL;
 
     if (Tk_SetOptions(interp, (ClientData)item, tv->tree.itemOptionTable,
-		objc, objv, tv->core.tkwin, &savedOptions, (int*) &mask)
+		objc, objv, tv->core.tkwin, &savedOptions, &mask)
 		!= TCL_OK)
     {
 	return TCL_ERROR;
