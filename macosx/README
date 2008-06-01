@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README
 ----------------------
 
-RCS: @(#) $Id: README,v 1.27 2007/12/13 15:27:08 dgp Exp $
+RCS: @(#) $Id: README,v 1.28 2008/06/01 00:29:29 das Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -188,7 +188,7 @@ take care to only use the project matching your DevTools and OS version:
 	'ReleasePPC10.2.8SDK': builds for PowerPC with gcc-3.3 against the
 		10.2.8 SDK, useful to verify on Tiger that building on Jaguar
 		would succeed.
-    * Wish.xcodeproj for Xcode 3.0 on 10.5 and later, which has the following
+    * Wish.xcodeproj for Xcode 3.1 on 10.5 and later, which has the following
 	additional build configuration:
 	'ReleaseUniversal10.5SDK': same as 'ReleaseUniversal' but builds
 		against the 10.5 SDK on Leopard (with 10.5 deployment target).
