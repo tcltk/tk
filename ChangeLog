@@ -1,3 +1,9 @@
+2008-06-10  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixKey.c: tkUnixKey.c: Use Xutf8LookupString if available
+	[Patch #1986818].  This should fix problems (like #1908443) where
+	Xlib's idea of the system encoding does not match Tcl's.
+
 2008-05-23  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkLabel.c: Avoid passing width or height <= 0 to 
