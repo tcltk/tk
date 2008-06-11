@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.13 2008/03/26 19:04:10 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.14 2008/06/11 00:41:43 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -78,6 +78,48 @@ Tk_SetCaretPos(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpGetChar --
+ *
+ *	Convert a keyboard event to a UTF-8 string using XLookupString.
+ *
+ *	This is used as a fallback instead of Xutf8LookupString
+ *	or XmbLookupString if input methods are turned off
+ *	and for KeyRelease events.
+ *
+ * Notes:
+ *	XLookupString() normally returns a single ISO Latin 1
+ *	or ASCII control character.
+ *
+ *----------------------------------------------------------------------
+ */
+static char *
+TkpGetChar(
+    XEvent *eventPtr,		/* KeyPress or KeyRelease event */
+    Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
+{
+    int len;
+    char buf[TCL_DSTRING_STATIC_SIZE];
+
+    len = XLookupString(&eventPtr->xkey, buf, TCL_DSTRING_STATIC_SIZE, 0, 0);
+    buf[len] = '\0';
+
+    if (len == 1) {
+	len = Tcl_UniCharToUtf((unsigned char)buf[0], Tcl_DStringValue(dsPtr));
+	Tcl_DStringSetLength(dsPtr, len);
+    } else {
+	/*
+	 * len > 1 should only happen if someone has called XRebindKeysym().
+	 * Assume UTF-8.
+	 */
+	Tcl_DStringSetLength(dsPtr, len);
+	strncpy(Tcl_DStringValue(dsPtr), buf, len);
+    }
+    return Tcl_DStringValue(dsPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpGetString --
  *
  *	Retrieve the UTF string associated with a keyboard event.
@@ -95,11 +137,42 @@ Tk_SetCaretPos(
 
 char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: needed to get
-				 * input context. */
+    TkWindow *winPtr,		/* Window where event occurred */
     XEvent *eventPtr,		/* X keyboard event. */
-    Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
-				 * result. */
+    Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
+#ifdef TK_USE_INPUT_METHODS
+#if X_HAVE_UTF8_STRING
+{
+    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
+	    && (winPtr->inputContext != NULL)
+	    && (eventPtr->type == KeyPress)) 
+    {
+	int len;
+	Status status;
+
+	Tcl_DStringSetLength(dsPtr, TCL_DSTRING_STATIC_SIZE-1);
+	len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+		Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
+		NULL, &status);
+
+	if (status == XBufferOverflow) { /* Expand buffer and try again */
+	    Tcl_DStringSetLength(dsPtr, len);
+	    len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr), 
+		    NULL, &status);
+	}
+	if ((status != XLookupChars) && (status != XLookupBoth)) {
+	    Tcl_DStringSetLength(dsPtr, 0);
+	    len = 0;
+	}
+	Tcl_DStringSetLength(dsPtr, len);
+
+	return Tcl_DStringValue(dsPtr);
+    } else {
+	return TkpGetChar(eventPtr, dsPtr);
+    }
+}
+#else /* !X_HAVE_UTF8_STRING */
 {
     int len;
     Tcl_DString buf;
@@ -112,7 +185,6 @@ TkpGetString(
     Tcl_DStringInit(&buf);
     Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 
-#ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (winPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
@@ -120,6 +192,7 @@ TkpGetString(
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf), NULL,
 		&status);
+
 	/*
 	 * If the buffer wasn't big enough, grow the buffer and try again.
 	 */
@@ -132,22 +205,24 @@ TkpGetString(
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
 	    len = 0;
 	}
-
     } else {
-	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
-		Tcl_DStringLength(&buf), NULL, NULL);
+	return TkpGetChar(eventPtr, dsPtr);
     }
-#else /* TK_USE_INPUT_METHODS */
-    len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
-	    Tcl_DStringLength(&buf), NULL, NULL);
-#endif /* TK_USE_INPUT_METHODS */
-    Tcl_DStringSetLength(&buf, len);
 
+    Tcl_DStringSetLength(&buf, len);
     Tcl_ExternalToUtfDString(NULL, Tcl_DStringValue(&buf), len, dsPtr);
     Tcl_DStringFree(&buf);
 
     return Tcl_DStringValue(dsPtr);
 }
+
+#endif /* X_HAVE_UTF8_STRING */
+#else /* !TK_USE_INPUT_METHODS */
+{
+    return TkpGetChar(eventPtr, dsPtr);
+}
+#endif
+
 
 /*
  * When mapping from a keysym to a keycode, need information about the
