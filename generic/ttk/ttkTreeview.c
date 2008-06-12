@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.27 2008/06/01 08:28:18 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.28 2008/06/12 06:30:22 das Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -1510,8 +1510,9 @@ static const char *regionStrings[] = {
 
 static TreeRegion IdentifyRegion(Treeview *tv, int x, int y)
 {
-    int x1, colno = IdentifyDisplayColumn(tv, x, &x1);
-
+    int x1 = 0, colno;
+    
+    colno = IdentifyDisplayColumn(tv, x, &x1);
     if (Ttk_BoxContains(tv->tree.headingArea, x, y)) {
 	if (colno < 0) {
 	    return REGION_NOTHING;
