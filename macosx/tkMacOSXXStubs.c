@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.27 2008/05/03 21:12:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.28 2008/06/12 06:32:11 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1306,5 +1306,5 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    UpdateSystemActivity(OverallAct);
+    UpdateSystemActivity(UsrActivity);
 }
