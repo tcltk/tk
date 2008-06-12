@@ -1,5 +1,10 @@
 2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/tkPointer.c (Tk_UpdatePointer): fix failure to restore a
+	global grab capture and to release the restrict window capture when
+	releasing a button grab. Fixes segfault due to dangling reference to
+	restrict window inside TkpSetCapture() implementation. [Bug 1991932]
+
 	* generic/ttk/ttkTreeview.c:	fix warning.
 
 	* unix/tcl.m4 (SunOS-5.11): fix 64bit amd64 support with gcc & Sun cc.
