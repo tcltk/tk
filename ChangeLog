@@ -1,3 +1,19 @@
+2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/tcl.m4 (SunOS-5.11): fix 64bit amd64 support with gcc & Sun cc.
+	* unix/configure: autoconf-2.59
+
+	* macosx/tkMacOSXXStubs.c (Tk_ResetUserInactiveTime): use UsrActivity
+	instead of OverallAct (which may be ignored in some circumstances).
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add debug configs for 64bit,
+	* macosx/Wish.xcodeproj/default.pbxuser: with gcov, and with
+	corefoundation disabled; updates & cleanup for Xcode 3.1 and for
+	Leopard; sync with Tcl.xcodeproj.
+	* macosx/Wish.xcode/project.pbxproj:	sync Wish.xcodeproj changes.
+	* macosx/Wish.xcode/default.pbxuser:
+	* macosx/README:			document new build configs.
+
 2008-06-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixKey.c: tkUnixKey.c: Use Xutf8LookupString if available
