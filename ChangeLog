@@ -174,7 +174,7 @@
 	* library/demos/widget:
 
 	* macosx/Wish.xcodeproj/project.pbxproj: Add support for Xcode 3.1 and
-	* macosx/Wish.xcodeproj/default.pbxuser: targets for building with
+	* macosx/Wish.xcodeproj/default.pbxuser: configs for building with
 	* macosx/Wish-Common.xcconfig:		 gcc-4.2 and llvm-gcc-4.2.
 
 	* generic/tkCanvUtil.c:			Fix gcc-4.2 warnings.
