@@ -10,7 +10,7 @@
 
 	* macosx/Wish.xcodeproj/project.pbxproj: add tclIORTrans.c; add tclOO
 	* macosx/Wish.xcodeproj/default.pbxuser: files to tktest-X11 target;
-	add debug targets for 64bit and with corefoundation disabled; updates
+	add debug configs for 64bit and with corefoundation disabled; updates
 	and cleanup for Xcode 3.1 and for Leopard; sync with Tcl.xcodeproj.
 	* macosx/Wish.xcode/project.pbxproj:	sync Wish.xcodeproj changes.
 	* macosx/Wish.xcode/default.pbxuser:
@@ -339,7 +339,7 @@
 	* library/demos/widget:
 
 	* macosx/Wish.xcodeproj/project.pbxproj: Add support for Xcode 3.1 and
-	* macosx/Wish.xcodeproj/default.pbxuser: targets for building with
+	* macosx/Wish.xcodeproj/default.pbxuser: configs for building with
 	* macosx/Wish-Common.xcconfig:		 gcc-4.2 and llvm-gcc-4.2.
 
 	* generic/tkCanvUtil.c:			Fix gcc-4.2 warnings.
