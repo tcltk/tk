@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.7 2002/08/31 06:12:25 das Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.7.2.1 2008/06/12 17:09:16 das Exp $
  */
 
 #include "tkInt.h"
@@ -317,14 +317,12 @@ Tk_UpdatePointer(tkwin, x, y, state)
 
 	        /*
 		 * ButtonRelease - Release the mouse capture and clear the
-		 * restrict window when the last button is released and we
-		 * aren't in a global grab.
+		 * restrict window when the last button is released. If we
+		 * are in a global grab, restore the grab window capture.
 		 */
 
 		if ((tsdPtr->lastState & ALL_BUTTONS) == mask) {
-		    if (!tsdPtr->grabWinPtr) {
-			TkpSetCapture(NULL);
-		    }
+		    TkpSetCapture(tsdPtr->grabWinPtr);
 		}
 
 		/*
