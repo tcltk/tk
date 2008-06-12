@@ -1,3 +1,21 @@
+2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/ttk/ttkTreeview.c:	fix warning.
+
+	* unix/tcl.m4 (SunOS-5.11): fix 64bit amd64 support with gcc & Sun cc.
+	* unix/configure: autoconf-2.59
+
+	* macosx/tkMacOSXXStubs.c (Tk_ResetUserInactiveTime): use UsrActivity
+	instead of OverallAct (which may be ignored in some circumstances).
+
+	* macosx/Wish.xcodeproj/project.pbxproj: add tclIORTrans.c; add tclOO
+	* macosx/Wish.xcodeproj/default.pbxuser: files to tktest-X11 target;
+	add debug targets for 64bit and with corefoundation disabled; updates
+	and cleanup for Xcode 3.1 and for Leopard; sync with Tcl.xcodeproj.
+	* macosx/Wish.xcode/project.pbxproj:	sync Wish.xcodeproj changes.
+	* macosx/Wish.xcode/default.pbxuser:
+	* macosx/README:			document new build configs.
+
 2008-06-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixKey.c: tkUnixKey.c: Use Xutf8LookupString if available
@@ -7,7 +25,7 @@
 2008-06-01  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/Wish.xcodeproj/project.pbxproj: add new tclOO files; add debug
-	* macosx/README:			targets with gcov; update to
+	* macosx/README:			configs with gcov; update to
 						Xcode 3.1.
 
 2008-05-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
