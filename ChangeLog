@@ -1,3 +1,10 @@
+2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXXStubs.c: sync with core-8-5-branch.
+
+	* unix/tcl.m4 (SunOS-5.11): fix 64bit amd64 support with gcc & Sun cc.
+	* unix/configure: autoconf-2.13
+
 2008-04-17  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.4.19 TAGGED FOR RELEASE ***
