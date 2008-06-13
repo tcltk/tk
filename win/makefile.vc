@@ -13,7 +13,7 @@
 # Copyright (c) 2003-2008 Pat Thoyts.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.122 2008/05/15 00:06:19 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.123 2008/06/13 05:46:09 mistachkin Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -437,6 +437,9 @@ cdebug	= $(OPTIMIZATIONS)
 !else
 cdebug	=
 !endif
+!if $(SYMBOLS)
+cdebug	= $(cdebug) -Zi
+!endif
 !else if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
 ### Warnings are too many, can't support warnings into errors.
 cdebug	= -Zi -Od $(DEBUGFLAGS)
@@ -480,6 +483,9 @@ TK_CFLAGS = $(TK_CFLAGS) -DUSE_TCL_STUBS
 ldebug	= -debug:full -debugtype:cv
 !else
 ldebug	= -release -opt:ref -opt:icf,3
+!if $(SYMBOLS)
+ldebug	= $(ldebug) -debug:full -debugtype:cv
+!endif
 !endif
 
 ### Declarations common to all linker options
