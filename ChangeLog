@@ -1,3 +1,8 @@
+2008-06-13  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/configure, win/configure.in (TK_WIN_VERSION): fix handling
+	of interim a/b versioning for manifest usage.
+
 2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkPointer.c (Tk_UpdatePointer): fix failure to restore a
