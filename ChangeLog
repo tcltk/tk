@@ -1,3 +1,12 @@
+2008-06-13  Joe Mistachkin  <joe@mistachkin.com>
+
+	TIP #285 IMPLEMENTATION
+
+	* generic/tkCmds.c: During [tkwait] and [update], always cooperatively
+	check for script cancellation.
+	* win/makefile.vc: Added 'pdbs' option for Windows build rules to allow
+	* win/rules.vc: for non-debug builds with full symbols.
+
 2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkPointer.c (Tk_UpdatePointer): fix failure to restore a
