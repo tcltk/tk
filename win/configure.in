@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.77.2.1 2008/04/11 19:00:51 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.77.2.2 2008/06/13 21:29:29 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.59)
@@ -232,11 +232,10 @@ fi
 # The wish.exe.manifest requires these
 # TK_WIN_VERSION is the 4 dotted pair Windows version format
 # Make sure the patch level doesn't contain extra dotted pairs (interim rel)
-AB_PATCH_LEVEL="`echo $TK_PATCH_LEVEL | sed -e 's/\..*//'`"
 case "$TK_PATCH_LEVEL" in
-     a*) TK_WIN_VERSION="$TK_VERSION.0.`echo $AB_PATCH_LEVEL | tr -d a`" ;;
-     b*) TK_WIN_VERSION="$TK_VERSION.1.`echo $AB_PATCH_LEVEL | tr -d b`" ;;
-     .*) TK_WIN_VERSION="$TK_VERSION.2$TK_PATCH_LEVEL" ;;
+     .[[0-9]]a*) TK_WIN_VERSION="$TK_VERSION.0`echo $TK_PATCH_LEVEL | tr -d a`" ;;
+     .[[0-9]]b*) TK_WIN_VERSION="$TK_VERSION.1`echo $TK_PATCH_LEVEL | tr -d b`" ;;
+     *) TK_WIN_VERSION="$TK_VERSION.2$TK_PATCH_LEVEL" ;;
 esac
 AC_SUBST(TK_WIN_VERSION)
 # X86|AMD64|IA64 for manifest
