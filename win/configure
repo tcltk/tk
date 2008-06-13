@@ -4068,15 +4068,14 @@ else
 fi
 
 # The wish.exe.manifest requires these
-# TK_WIN_VERSION is the 4 dotted pair Windows version format
-# Make sure the patch level doesn't contain extra dotted pairs (interim rel)
-echo "patchlevel $TK_PATCH_LEVEL"
+# TK_WIN_VERSION is the 4 dotted pair Windows version format which needs
+# the release level, and must account for interim release versioning
 case "$TK_PATCH_LEVEL" in
-     .[0-9]a*) TK_WIN_VERSION="$TK_VERSION.0`echo $TK_PATCH_LEVEL | tr -d a`" ;;
-     .[0-9]b*) TK_WIN_VERSION="$TK_VERSION.1`echo $TK_PATCH_LEVEL | tr -d b`" ;;
-     *) TK_WIN_VERSION="$TK_VERSION.2$TK_PATCH_LEVEL" ;;
+     *a*) TK_RELEASE_LEVEL=0 ;;
+     *b*) TK_RELEASE_LEVEL=1 ;;
+     *)   TK_RELEASE_LEVEL=2 ;;
 esac
-echo "winversion $TK_WIN_VERSION"
+TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`"
 
 # X86|AMD64|IA64 for manifest
 
