@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.31 2007/12/13 15:27:10 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.32 2008/06/19 00:11:08 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -418,7 +418,7 @@ TkMacOSXProcessWindowEvent(
 	    break;
     }
 
-    return 0;
+    return eventFound;
 }
 
 /*
