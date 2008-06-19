@@ -1,3 +1,15 @@
+2008-06-19  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.6a1
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2008-06-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXCarbonEvents.c:	fix debug carbon event tracing;
