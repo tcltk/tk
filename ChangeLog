@@ -1,5 +1,10 @@
 2008-06-19  Don Porter  <dgp@users.sourceforge.net>
 
+	* generic/tk.h:		TIP 285 additions make Tk 8.6 call the new
+	* library/tk.tcl:	Tcl_Canceled() routine, available only in
+	Tcl 8.6, so bump our Tcl dependencies to version 8.6.  Tk 8.6a1 will
+	no longer [load] into a Tcl 8.5 interp.
+
 	* README:		Bump version number to 8.6a1
 	* generic/tk.h:
 	* library/tk.tcl:
