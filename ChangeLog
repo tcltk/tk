@@ -1,3 +1,21 @@
+2008-06-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXCarbonEvents.c:	fix debug carbon event tracing;
+	(InstallStandardApplicationEventHandler):	replace needless use of
+	TkMacOSXInitNamedDebugSymbol() by standard TkMacOSXInitNamedSymbol().
+
+	* macosx/tkMacOSXDebug.c:	revert 2007-11-09 commit making
+	* macosx/tkMacOSXDebug.h:	TkMacOSXInitNamedDebugSymbol()
+					available outside of debug builds.
+
+	* macosx/tkMacOSXEmbed.c (TkpMakeWindow):	fix bug with missing
+	* macosx/tkMacOSXSubwindows.c (XMapWindow):	focus on first map by
+	only sending VisibilityNotify events once windows are mapped (rather
+	than when they are created).
+
+	* macosx/tkMacOSXWindowEvent.c (TkMacOSXProcessWindowEvent): fix
+	return value.
+
 2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkPointer.c (Tk_UpdatePointer): fix failure to restore a
