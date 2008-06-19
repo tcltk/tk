@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130 2008/03/28 17:50:50 dgp Exp $
+RCS: @(#) $Id: changes,v 1.131 2008/06/19 21:17:54 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6501,3 +6501,31 @@ Several documentation and release notes improvements
 2008-03-27 (bug fix) restored [::safe::loadTk] (hobbs)
 
 --- Released 8.5.2, March 28, 2008 --- See ChangeLog for details ---
+
+2008-04-01 (interface)[1819422] tkStubsPtr no longer in libtk (porter)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2008-04-07 (bug fix)[1937135] Tk_ParseArgv() double free crash (hobbs)
+
+2008-04-07 (bug fix)[1936238] wish -h mem explosion (bachmann,kenny)
+
+2008-04-08 (new feature) Win: visual-styles API element engine (thoyts)
+
+2008-04-09 (enhancement) real LZW compression in GIF writer (nijtmans)
+
+2008-04-14 (bug fix)[1941740] [tk_chooseColor -title] (thoyts)
+
+2008-04-16 (interface)[1938497] make stubs tables 'static const' (steffen)
+
+2008-04-17 (bug fix)[1327482] canvas item <Enter> events (wangnick)
+
+2008-05-23 (bug fix)[1967576] ttk::label height or width 0 panic (lawlor)
+
+2008-06-10 (enhancement)[1986818] Use Xutf8LookupString when possible (english)
+
+2008-06-12 (bug fix)[1991932] global grab segfault (steffen)
+
+2008-06-13 (new feature)[TIP 285] [tkwait] and [update] are now
+[interp cancel]able (mistachkin)
+
+--- Released 8.6a1, June ??, 2008 --- See ChangeLog for details ---
