@@ -10,12 +10,12 @@
  *
  * Copyright (c) 1996-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2006-2008 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.8 2007/11/09 06:26:55 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.2.2.9 2008/06/19 00:14:29 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -126,7 +126,6 @@ TkpMakeWindow(
     Window parent)
 {
     MacDrawable *macWin;
-    XEvent event;
 
     /*
      * If this window is marked as embedded then
@@ -174,19 +173,6 @@ TkpMakeWindow(
 	}
 	macWin->toplevel->referenceCount++;
     }
-    /*
-     * TODO: need general solution for visibility events.
-     */
-
-    event.xany.serial = Tk_Display(winPtr)->request;
-    event.xany.send_event = False;
-    event.xany.display = Tk_Display(winPtr);
-
-    event.xvisibility.type = VisibilityNotify;
-    event.xvisibility.window = (Window) macWin;
-    event.xvisibility.state = VisibilityUnobscured;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
     return (Window) macWin;
 }
 
