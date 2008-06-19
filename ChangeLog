@@ -1,3 +1,28 @@
+2008-06-18  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXCarbonEvents.c:	fix debug carbon event tracing;
+	(InstallStandardApplicationEventHandler):	replace needless use of
+	TkMacOSXInitNamedDebugSymbol() by standard TkMacOSXInitNamedSymbol().
+
+	* macosx/tkMacOSXDebug.c:	revert 2007-11-09 commit making
+	* macosx/tkMacOSXDebug.h:	TkMacOSXInitNamedDebugSymbol()
+					available outside of debug builds.
+
+	* macosx/tkMacOSXEmbed.c (TkpMakeWindow):	fix bug with missing
+	* macosx/tkMacOSXSubwindows.c (XMapWindow):	focus on first map by
+	only sending VisibilityNotify events once windows are mapped (rather
+	than when they are created).
+
+	* macosx/tkMacOSXWindowEvent.c (TkMacOSXProcessWindowEvent): fix
+	return value.
+
+	* macosx/tkMacOSXInit.c:	add helper to efficiently convert from
+	* macosx/tkMacOSXPrivate.h:	CFString to Tcl_Obj.
+
+	* macosx/tkMacOSXFont.c (TkpGetFontFromAttributes, InitFont):	fix
+	incorrect conversion to points of font sizes already in points; factor
+	out retrieval of font family name from font family ID.
+
 2008-06-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure, win/configure.in (TK_WIN_VERSION): fix handling
