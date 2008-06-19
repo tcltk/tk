@@ -1,3 +1,7 @@
+2008-06-19  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.3 release.
+
 2008-06-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXCarbonEvents.c:	fix debug carbon event tracing;
