@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.131 2008/06/19 21:17:54 dgp Exp $
+RCS: @(#) $Id: changes,v 1.132 2008/06/20 13:51:43 das Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6505,6 +6505,8 @@ Several documentation and release notes improvements
 2008-04-01 (interface)[1819422] tkStubsPtr no longer in libtk (porter)
 	*** POTENTIAL INCOMPATIBILITY ***
 
+2008-04-02 (interface)[1819422] libtkstub symbols MODULE_SCOPE (steffen)
+
 2008-04-07 (bug fix)[1937135] Tk_ParseArgv() double free crash (hobbs)
 
 2008-04-07 (bug fix)[1936238] wish -h mem explosion (bachmann,kenny)
@@ -6525,7 +6527,11 @@ Several documentation and release notes improvements
 
 2008-06-12 (bug fix)[1991932] global grab segfault (steffen)
 
+2008-06-12 (platform support) Solaris/amd64 gcc 64bit support (steffen)
+
 2008-06-13 (new feature)[TIP 285] [tkwait] and [update] are now
 [interp cancel]able (mistachkin)
+
+2008-06-18 (bug fix) Aqua: missing focus on first map (steffen)
 
 --- Released 8.6a1, June ??, 2008 --- See ChangeLog for details ---
