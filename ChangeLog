@@ -1,3 +1,7 @@
+2008-06-20  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/treeview.tcl: Backport fix for [Bug 1951733]
+
 2008-06-19  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.3 release.
