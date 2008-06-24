@@ -1,3 +1,7 @@
+2008-06-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* doc/text.n: bug #1997293 - fix documentation of text tag options.
+
 2008-06-19  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:		Updates for 8.6a1 release.
