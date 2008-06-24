@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.54 2008/04/17 15:27:12 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.55 2008/06/24 10:54:53 patthoyts Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -492,13 +492,10 @@ as an empty string, then a solid fill will be used for the
 background.
 .TP
 \fB\-borderwidth \fIpixels\fR
-\fIPixels\fR specifies the width of a 3-D border to draw around
-the background.
-It may have any of the forms accepted by \fBTk_GetPixels\fR.
-This option is used in conjunction with the \fB\-relief\fR
-option to give a 3-D appearance to the background for characters;
-it is ignored unless the \fB\-background\fR option
-has been set for the tag.
+\fIPixels\fR specifies the width of a border to draw around
+the tag using any of the forms accepted by \fBTk_GetPixels\fR.
+This option should be used in conjuction with the 
+\fB\-relief\fR option to provide the desired border.
 .TP
 \fB\-elide \fIboolean\fR
 \fIElide\fR specifies whether the data should
@@ -568,12 +565,10 @@ the middle of characters.
 \fIBoolean\fR may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 .TP
 \fB\-relief \fIrelief\fR
-\fIRelief\fR specifies the 3-D relief to use for drawing backgrounds,
+\fIRelief\fR specifies the relief style to use for drawing the border,
 in any of the forms accepted by \fBTk_GetRelief\fR.
 This option is used in conjunction with the \fB\-borderwidth\fR
-option to give a 3-D appearance to the background for characters;
-it is ignored unless the \fB\-borderwidth\fR option
-has been set for the tag.
+option to enable to the desired border appearance.
 .TP
 \fB\-rmargin \fIpixels\fR
 If the first non-elided character of a display line has a tag for which this
