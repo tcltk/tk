@@ -1,5 +1,6 @@
 2008-06-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/demos/ttkpane.tcl: Work around missing timezones
 	* doc/text.n: bug #1997293 - fix documentation of text tag options.
 
 2008-06-19  Don Porter  <dgp@users.sourceforge.net>
