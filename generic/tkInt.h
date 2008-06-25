@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.77.2.4 2008/03/26 20:09:32 dgp Exp $
+ * RCS: $Id: tkInt.h,v 1.77.2.5 2008/06/25 16:46:04 dgp Exp $
  */
 
 #ifndef _TKINT
@@ -43,7 +43,7 @@
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN
 #	     undef WORDS_BIGENDIAN
-#	     define WORDS_BIGENDIAN
+#	     define WORDS_BIGENDIAN 1
 #	 endif
 #    endif
 #    ifdef LITTLE_ENDIAN

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.80.2.5 2007/11/21 16:46:26 dgp Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.80.2.6 2008/06/25 16:46:04 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -3080,7 +3080,6 @@ Initialize(
 	if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv,
 		argTable, TK_ARGV_DONT_SKIP_FIRST_ARG|TK_ARGV_NO_DEFAULTS)
 		!= TCL_OK) {
-	    ckfree((char *) argv);
 	    goto argError;
 	}
 	p = Tcl_Merge(argc, argv);
@@ -3308,6 +3307,8 @@ Tk_PkgInitStubsCheck(
 	}
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
+		/* Construct error message */
+		Tcl_PkgPresent(interp, "Tk", version, 1);
 		return NULL;
 	    }
 	} else {

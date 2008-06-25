@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: GNUmakefile,v 1.8.2.1 2008/03/13 14:57:33 dgp Exp $
+# RCS: @(#) $Id: GNUmakefile,v 1.8.2.2 2008/06/25 16:46:06 dgp Exp $
 #
 ########################################################################################################
 
@@ -86,7 +86,7 @@ OBJ_DIR			= ${OBJROOT}/${BUILD_STYLE}
 
 empty			:=
 space			:= ${empty} ${empty}
-objdir			:= $(subst ${space},\ ,${OBJ_DIR})
+objdir			= $(subst ${space},\ ,${OBJ_DIR})
 
 develop_make_args	:= BUILD_STYLE=Development CONFIGURE_ARGS=--enable-symbols
 deploy_make_args	:= BUILD_STYLE=Deployment INSTALL_TARGET=install-strip

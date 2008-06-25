@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1.4.6 2008/01/23 16:39:12 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1.4.7 2008/06/25 16:46:08 dgp Exp $
  */
 
 #ifndef _TKMACPRIV
@@ -335,5 +335,6 @@ MODULE_SCOPE void TkMacOSXBringWindowForward(WindowRef wRef);
 MODULE_SCOPE WindowRef TkMacOSXDrawableWindow(Drawable drawable);
 MODULE_SCOPE void TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef TkMacOSXGetClipRgn(Drawable drawable);
+MODULE_SCOPE Tcl_Obj* TkMacOSXGetStringObjFromCFString(CFStringRef str);
 
 #endif /* _TKMACPRIV */
