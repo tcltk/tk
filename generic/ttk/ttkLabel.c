@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.8.2.1 2007/11/21 16:46:27 dgp Exp $
+/* $Id: ttkLabel.c,v 1.8.2.2 2008/06/25 16:46:05 dgp Exp $
  *
  * text, image, and label elements.
  *
@@ -312,6 +312,12 @@ static void ImageDraw(
     }
     if (b.y + height > Tk_Height(tkwin)) {
 	height = Tk_Height(tkwin) - b.y;
+    }
+
+    if (height <= 0 || width <= 0) {
+	/* Completely clipped - bail out.
+	 */
+	return;
     }
 
     Tk_RedrawImage(image->tkimg, 0,0, width, height, d, b.x, b.y);

@@ -1,5 +1,5 @@
 #
-# $Id: xpTheme.tcl,v 1.3.2.2 2007/11/21 16:46:27 dgp Exp $
+# $Id: xpTheme.tcl,v 1.3.2.3 2008/06/25 16:46:06 dgp Exp $
 #
 # Settings for 'xpnative' theme
 #
@@ -43,7 +43,7 @@ namespace eval ttk::theme::xpnative {
 	    -background [list selected SystemHighlight] \
 	    -foreground [list selected SystemHighlightText] ;
 
-	ttk::style configure TLabelframe -foreground "#0046d5"
+	ttk::style configure TLabelframe.Label -foreground "#0046d5"
 
 	# OR: -padding {3 3 3 6}, which some apps seem to use.
 	ttk::style configure TEntry -padding {2 2 2 4}

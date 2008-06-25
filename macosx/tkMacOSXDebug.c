@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.12.2.4 2007/11/12 19:22:38 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.12.2.5 2008/06/25 16:46:07 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -478,7 +478,6 @@ TkMacOSXDebugFlashRegion(
 	}
     }
 }
-#endif /* TK_MAC_DEBUG */
 
 #include <mach-o/dyld.h>
 #include <mach-o/nlist.h>
@@ -616,3 +615,5 @@ TkMacOSXGetNamedDebugSymbol(
 #endif /* __LP64__ */
     return addr;
 }
+
+#endif /* TK_MAC_DEBUG */
