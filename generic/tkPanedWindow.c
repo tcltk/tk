@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.30 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.30.2.1 2008/06/26 21:26:09 dgp Exp $
  */
 
 #include "default.h"
@@ -1459,9 +1459,11 @@ DisplayPanedWindow(
 	if (slavePtr->hide) {
 	    continue;
 	}
-	Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background,
-		slavePtr->sashx, slavePtr->sashy,
-		sashWidth, sashHeight, 1, pwPtr->sashRelief);
+	if (sashWidth > 0 && sashHeight > 0) {
+	    Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background,
+		    slavePtr->sashx, slavePtr->sashy, sashWidth, sashHeight,
+		    1, pwPtr->sashRelief);
+	}
 	if (pwPtr->showHandle) {
 	    Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background,
 		    slavePtr->handlex, slavePtr->handley,
@@ -2830,6 +2832,13 @@ PanedWindowProxyCommand(
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
 		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
 	}
+
+        if (sashWidth < 1) {
+            sashWidth = 1;
+        }
+        if (sashHeight < 1) {
+            sashHeight = 1;
+        }
 
 	/*
 	 * Stash the proxy coordinates for future "proxy coord" calls.
