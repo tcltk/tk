@@ -1,10 +1,11 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2005 Joe English
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_panedwindow.n,v 1.16 2008/05/09 18:35:00 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_panedwindow.n,v 1.17 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::panedwindow n 8.5 Tk "Tk Themed Widget"
@@ -20,6 +21,7 @@ ttk::panedwindow \- Multi-pane container window
 .fi
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::panedwindow\fR widget displays a number of subwindows, stacked
 either vertically or horizontally.  The user may adjust the relative sizes
 of the subwindows by dragging the sash between panes.
@@ -43,12 +45,14 @@ specifies the desired height of the widget in pixels.
 Otherwise, the requested height is determined by the height
 of the managed windows.
 .SH "PANE OPTIONS"
+.PP
 The following options may be specified for each pane:
 .OP \-weight weight Weight
 An integer specifying the relative stretchability of the pane.
 When the paned window is resized, the extra space is added
 or subtracted to each pane proportionally to its \fB\-weight\fR.
 .SH "WIDGET COMMAND"
+.PP
 Supports the standard \fBconfigure\fR, \fBcget\fR, \fBstate\fR, 
 and \fBinstate\fR commands; see \fIttk::widget(n)\fR for details.
 Additional commands:

@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1994 The Australian National University
 '\" Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -9,7 +10,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: photo.n,v 1.22 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: photo.n,v 1.23 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH photo n 4.0 Tk "Tk Built-In Commands"
@@ -20,7 +21,6 @@ photo \- Full-color images
 .SH SYNOPSIS
 \fBimage create photo \fR?\fIname\fR? ?\fIoptions\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 A photo is an image whose pixels can display any color or be
@@ -423,6 +423,7 @@ The photo image type was designed and implemented by Paul Mackerras,
 based on his earlier photo widget and some suggestions from
 John Ousterhout.
 .SH EXAMPLE
+.PP
 Load an image from a file and tile it to the size of a window, which
 is useful for producing a tiled background:
 .CS
@@ -436,9 +437,7 @@ set width  [winfo width .someWidget]
 set height [winfo height .someWidget]
 tiled \fBcopy\fR untiled \-to 0 0 $width $height \-shrink
 .CE
-
 .SH "SEE ALSO"
 image(n)
-
 .SH KEYWORDS
 photo, image, color

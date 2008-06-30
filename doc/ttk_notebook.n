@@ -1,10 +1,11 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_notebook.n,v 1.13 2008/05/09 18:35:00 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_notebook.n,v 1.14 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::notebook n 8.5 Tk "Tk Themed Widget"
@@ -20,6 +21,7 @@ ttk::notebook \- Multi-paned container widget
 .fi
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::notebook\fR widget manages a collection of windows 
 and displays a single one at a time.
 Each slave window is associated with a \fItab\fR,
@@ -49,6 +51,7 @@ specifies the desired width of the pane area
 (not including internal padding).
 Otherwise, the maximum width of all panes is used.
 .SH "TAB OPTIONS"
+.PP
 The following options may be specified for individual notebook panes:
 .OP \-state state State
 Either \fBnormal\fR, \fBdisabled\fR or \fBhidden\fR.  
@@ -80,6 +83,7 @@ in the text string.
 The underlined character is used for mnemonic activation
 if \fBttk::notebook::enableTraversal\fR is called.
 .SH "TAB IDENTIFIERS"
+.PP
 The \fItabid\fR argument to the following commands may take
 any of the following forms:
 .IP \(bu
@@ -101,6 +105,7 @@ which returns the number of tabs
 (only valid for
 .QW "\fIpathname \fBindex\fR" ).
 .SH "WIDGET COMMAND"
+.PP
 .TP
 \fIpathname \fBadd\fR \fIwindow\fR ?\fIoptions...\fR?
 Adds a new tab to the notebook.
@@ -166,6 +171,7 @@ See \fBTAB OPTIONS\fR for the available options.
 \fIpathname \fBtabs\fR
 Returns the list of windows managed by the notebook.
 .SH "KEYBOARD TRAVERSAL"
+.PP
 To enable keyboard traversal for a toplevel window
 containing a notebook widget \fI$nb\fR, call:
 .CS
@@ -187,9 +193,11 @@ including nested notebooks.
 However, notebook traversal only works properly if all panes
 are direct children of the notebook.
 .SH "VIRTUAL EVENTS"
+.PP
 The notebook widget generates a \fB<<NotebookTabChanged>>\fR
 virtual event after a new tab is selected.
 .SH "EXAMPLE"
+.PP
 .CS
 pack [\fBttk::notebook\fR .nb]
 \.nb add [frame .nb.f1] \-text "First tab"

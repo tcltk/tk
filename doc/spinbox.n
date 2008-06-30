@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2000 Jeffrey Hobbs.
 '\" Copyright (c) 2000 Ajuba Solutions.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: spinbox.n,v 1.9 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: spinbox.n,v 1.10 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH spinbox n 8.4 Tk "Tk Built-In Commands"
@@ -465,7 +466,6 @@ If \fInumber\fR is negative then characters farther to the left
 become visible;  if it is positive then characters farther to the right
 become visible.
 .RE
-
 .SH "DEFAULT BINDINGS"
 .PP
 Tk automatically creates class bindings for spinboxes that give them
@@ -582,6 +582,5 @@ take place.
 .PP
 The behavior of spinboxes can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
-
 .SH KEYWORDS
 spinbox, entry, widget

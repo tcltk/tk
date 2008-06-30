@@ -1,10 +1,11 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.18 2008/05/23 20:20:05 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_treeview.n,v 1.19 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
@@ -15,6 +16,7 @@ ttk::treeview \- hierarchical multicolumn data display widget
 \fBttk::treeview\fR \fIpathname \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
+.PP
 The \fBttk::treeview\fR widget displays a hierarchical collection of items.
 Each item has a textual label, an optional image, 
 and an optional list of data values.
@@ -95,6 +97,7 @@ The default is \fBtree headings\fR, i.e., show all elements.
 even if \fB\-show tree\fR is not specified.
 .RE
 .SH "WIDGET COMMAND"
+.PP
 .TP
 \fIpathname \fBbbox\fR \fIitem\fR ?\fIcolumn\fR?
 Returns the bounding box (relative to the treeview widget's window)
@@ -383,6 +386,7 @@ Standard command for horizontal scrolling; see \fIwidget(n)\fR.
 \fIpathName \fByview \fIargs\fR
 Standard command for vertical scrolling; see \fIttk::widget(n)\fR.
 .SH "ITEM OPTIONS"
+.PP
 The following item options may be specified for items
 in the \fBinsert\fR and \fBitem\fR widget commands.
 .OP \-text text Text
@@ -406,6 +410,7 @@ should be displayed (\fB\-open true\fR) or hidden (\fB\-open false\fR).
 .OP \-tags tags Tags
 A list of tags associated with this item.  
 .SH "TAG OPTIONS"
+.PP
 The following options may be specified on tags:
 .IP \fB\-foreground\fR
 Specifies the text foreground color.
@@ -421,6 +426,7 @@ Specifies the item image, in case the item's \fB\-image\fR option is empty.
 .PP
 \fI(@@@ TODO: sort out order of precedence for options)\fR
 .SH "COLUMN IDENTIFIERS"
+.PP
 Column identifiers take any of the following forms:
 .IP \(bu
 A symbolic name from the list of \fB\-columns\fR.
@@ -445,6 +451,7 @@ If \fB\-displaycolumns\fR is not set,
 then data column \fIn\fR is displayed in display column \fB#\fIn+1\fR.
 Again, \fBcolumn #0 always refers to the tree column\fR.
 .SH "VIRTUAL EVENTS"
+.PP
 The treeview widget generates the following virtual events.
 .IP <<TreeviewSelect>>
 Generated whenever the selection changes.

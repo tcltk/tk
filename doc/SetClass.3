@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: SetClass.3,v 1.2 1998/09/14 18:22:53 stanton Exp $
+'\" RCS: @(#) $Id: SetClass.3,v 1.3 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_SetClass 3 "" Tk "Tk Library Procedures"
@@ -27,7 +27,6 @@ Token for window.
 .AP char *class in
 New class name for window.
 .BE
-
 .SH DESCRIPTION
 .PP
 \fBTk_SetClass\fR is called to associate a class with a particular
@@ -56,6 +55,5 @@ the properties of a unique identifier (see the manual entry for
 \fBTk_GetUid\fR for details).
 If \fItkwin\fR has not yet been given a class, then
 \fBTk_Class\fR will return NULL.
-
 .SH KEYWORDS
 class, unique identifier, window, window manager
