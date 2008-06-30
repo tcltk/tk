@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetPixels.3,v 1.8 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: GetPixels.3,v 1.9 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetPixelsFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -45,7 +45,6 @@ Pointer to location in which to store converted distance in pixels.
 .AP double *doublePtr out
 Pointer to location in which to store converted distance in millimeters.
 .BE
-
 .SH DESCRIPTION
 .PP
 These procedures take as argument a specification of distance on
@@ -94,6 +93,5 @@ return value, so \fBTk_GetAnchor\fR is less efficient than
 \fBTk_GetPixelsFromObj\fR and \fBTk_GetPixels\fR (respectively) except
 that they convert the screen distance to millimeters and
 store a double-precision floating-point result at \fI*doublePtr\fR.
-
 .SH KEYWORDS
 centimeters, convert, inches, millimeters, pixels, points, screen units

@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1992 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grab.n,v 1.8 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: grab.n,v 1.9 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH grab n "" Tk "Tk Built-In Commands"
@@ -18,7 +19,6 @@ grab \- Confine pointer and keyboard events to a window sub-tree
 .sp
 \fBgrab \fIoption \fR?\fIarg arg \fR...?
 .BE
-
 .SH DESCRIPTION
 .PP
 This command implements simple pointer and keyboard grabs for Tk.
@@ -104,6 +104,7 @@ Returns \fBnone\fR if no grab is currently set on \fIwindow\fR,
 \fBlocal\fR if a local grab is set on \fIwindow\fR, and
 \fBglobal\fR if a global grab is set.
 .SH WARNING
+.PP
 It is very easy to use global grabs to render a display completely
 unusable (e.g. by setting a grab on a widget which does not respond to
 events and not providing any mechanism for releasing the grab).  Take
@@ -123,6 +124,7 @@ only one of those applications can have a local grab for a given
 display at any given time.  If the applications are in different
 processes, this restriction does not exist.
 .SH EXAMPLE
+.PP
 Set a grab so that only one button may be clicked out of a group.  The
 other buttons are unresponsive to the mouse until the middle button is
 clicked.
@@ -132,6 +134,5 @@ pack [button .b2 \-text "Click me! #2" \-command {destroy .b2}]
 pack [button .b3 \-text "Click me! #3" \-command {destroy .b3}]
 \fBgrab\fR .b2
 .CE
-
 .SH KEYWORDS
 grab, keyboard events, pointer events, window

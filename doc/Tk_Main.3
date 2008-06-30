@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Tk_Main.3,v 1.6 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: Tk_Main.3,v 1.7 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Main 3 4.0 Tk "Tk Library Procedures"
@@ -27,7 +27,6 @@ Array of strings containing command-line arguments.
 Address of an application-specific initialization procedure.
 The value for this argument is usually \fBTcl_AppInit\fR.
 .BE
-
 .SH DESCRIPTION
 .PP
 \fBTk_Main\fR acts as the main program for most Tk-based applications.
@@ -52,11 +51,11 @@ for the application to perform its own initialization, such as defining
 application-specific commands.  The procedure must have an interface
 that matches the type \fBTcl_AppInitProc\fR:
 .CS
-typedef int Tcl_AppInitProc(Tcl_Interp *\fIinterp\fR);
+typedef int \fBTcl_AppInitProc\fR(
+        Tcl_Interp *\fIinterp\fR);
 .CE
 \fIAppInitProc\fR is almost always a pointer to \fBTcl_AppInit\fR;
 for more details on this procedure, see the documentation
 for \fBTcl_AppInit\fR.
-
 .SH KEYWORDS
 application-specific initialization, command-line arguments, main program

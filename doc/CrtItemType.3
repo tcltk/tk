@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtItemType.3,v 1.12 2007/12/13 15:23:42 dgp Exp $
+'\" RCS: @(#) $Id: CrtItemType.3,v 1.13 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateItemType 3 4.0 Tk "Tk Library Procedures"
@@ -84,7 +84,7 @@ typedef struct Tk_ItemType {
     Tk_ItemInsertProc *\fIinsertProc\fR;
     Tk_ItemDCharsProc *\fIdCharsProc\fR;
     Tk_ItemType *\fInextPtr\fR;
-} Tk_ItemType;
+} \fBTk_ItemType\fR;
 .CE
 .PP
 The fields of a Tk_ItemType structure are described in more detail
@@ -118,7 +118,7 @@ typedef struct BitmapItem {
     XColor *\fIfgColor\fR;
     XColor *\fIbgColor\fR;
     GC \fIgc\fR;
-} BitmapItem;
+} \fBBitmapItem\fR;
 .CE
 The \fIheader\fR substructure contains information used by Tk
 to manage the item, such as its identifier, its tags, its type,
@@ -163,6 +163,7 @@ type.
 If there already existed an item type by this name then
 the new item type replaces the old one.
 .SS ITEMSIZE
+.PP
 \fItypePtr->itemSize\fR gives the size in bytes of item records
 of this type, including the Tk_Item header.
 Tk uses this size to allocate memory space for items of the type.
@@ -176,12 +177,12 @@ object of variable length and keep a pointer to it in the item record.
 Tk to call whenever a new item of this type is created.
 \fItypePtr->createProc\fR must match the following prototype:
 .CS
-typedef int Tk_ItemCreateProc(
-    Tcl_Interp *\fIinterp\fR,
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIobjc\fR,
-    Tcl_Obj* const \fIobjv\fR[]);
+typedef int \fBTk_ItemCreateProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIobjc\fR,
+        Tcl_Obj* const \fIobjv\fR[]);
 .CE
 The \fIinterp\fR argument is the interpreter in which the canvas's
 \fBcreate\fR widget command was invoked, and \fIcanvas\fR is a
@@ -230,13 +231,13 @@ manager for an example of how to use it in \fIconfigSpecs\fR.
 configuration options for a canvas item.
 This procedure must match the following prototype:
 .CS
-typedef int Tk_ItemConfigureProc(
-    Tcl_Interp *\fIinterp\fR,
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIobjc\fR,
-    Tcl_Obj* const \fIobjv\fR[],
-    int \fIflags\fR);
+typedef int \fBTk_ItemConfigureProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIobjc\fR,
+        Tcl_Obj* const \fIobjv\fR[],
+        int \fIflags\fR);
 .CE
 The \fIinterp\fR objument identifies the interpreter in which the
 widget command was invoked,  \fIcanvas\fR is a handle for the canvas
@@ -264,12 +265,12 @@ options.
 widget command for an item.
 It must match the following prototype:
 .CS
-typedef int Tk_ItemCoordProc(
-    Tcl_Interp *\fIinterp\fR,
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIobjc\fR,
-    Tcl_Obj* const \fIobjv\fR[]);
+typedef int \fBTk_ItemCoordProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIobjc\fR,
+        Tcl_Obj* const \fIobjv\fR[]);
 .CE
 The arguments \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR
 all have the standard meanings, and \fIobjc\fR and \fIobjv\fR
@@ -293,10 +294,10 @@ If an error occurs, \fIcoordProc\fR must leave an error message in
 and free any resources allocated to it.
 It must match the following prototype:
 .CS
-typedef void Tk_ItemDeleteProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    Display *\fIdisplay\fR);
+typedef void \fBTk_ItemDeleteProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        Display *\fIdisplay\fR);
 .CE
 The \fIcanvas\fR and \fIitemPtr\fR arguments have the usual
 interpretations, and \fIdisplay\fR identifies the X display containing
@@ -311,15 +312,15 @@ be done by Tk when \fIdeleteProc\fR returns.
 on the screen.
 It must match the following prototype:
 .CS
-typedef void Tk_ItemDisplayProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    Display *\fIdisplay\fR,
-    Drawable \fIdst\fR,
-    int \fIx\fR,
-    int \fIy\fR,
-    int \fIwidth\fR,
-    int \fIheight\fR);
+typedef void \fBTk_ItemDisplayProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        Display *\fIdisplay\fR,
+        Drawable \fIdst\fR,
+        int \fIx\fR,
+        int \fIy\fR,
+        int \fIwidth\fR,
+        int \fIheight\fR);
 .CE
 The \fIcanvas\fR and \fIitemPtr\fR arguments have the usual meaning.
 \fIdisplay\fR identifies the display containing the canvas, and
@@ -356,10 +357,10 @@ Tk uses this procedure for purposes such as locating the item
 under the mouse or finding the closest item to a given point.
 The procedure must match the following prototype:
 .CS
-typedef double Tk_ItemPointProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    double *\fIpointPtr\fR);
+typedef double \fBTk_ItemPointProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        double *\fIpointPtr\fR);
 .CE
 \fIcanvas\fR and \fIitemPtr\fR have the usual meaning.
 \fIpointPtr\fR points to an array of two numbers giving
@@ -373,10 +374,10 @@ the item.
 between an item and a rectangular area.
 It must match the following prototype:
 .CS
-typedef int Tk_ItemAreaProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    double *\fIrectPtr\fR);
+typedef int \fBTk_ItemAreaProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        double *\fIrectPtr\fR);
 .CE
 \fIcanvas\fR and \fIitemPtr\fR have the usual meaning.
 \fIrectPtr\fR points to an array of four real numbers;
@@ -394,11 +395,11 @@ If the type manager is not capable of generating Postscript then
 \fItypePtr->postscriptProc\fR should be NULL.
 The procedure must match the following prototype:
 .CS
-typedef int Tk_ItemPostscriptProc(
-    Tcl_Interp *\fIinterp\fR,
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIprepass\fR);
+typedef int \fBTk_ItemPostscriptProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIprepass\fR);
 .CE
 The \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR arguments all have
 standard meanings;  \fIprepass\fR will be described below.
@@ -437,17 +438,18 @@ all Postscript generation except for calls to \fBTk_CanvasPsFont\fR.
 During the second pass \fIprepass\fR will be 0, so the type manager
 must generate complete Postscript.
 .SS SCALEPROC
+.PP
 \fItypePtr->scaleProc\fR is invoked by Tk to rescale a canvas item
 during the \fBscale\fR widget command.
 The procedure must match the following prototype:
 .CS
-typedef void Tk_ItemScaleProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    double \fIoriginX\fR,
-    double \fIoriginY\fR,
-    double \fIscaleX\fR,
-    double \fIscaleY\fR);
+typedef void \fBTk_ItemScaleProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        double \fIoriginX\fR,
+        double \fIoriginY\fR,
+        double \fIscaleX\fR,
+        double \fIscaleY\fR);
 .CE
 The \fIcanvas\fR and \fIitemPtr\fR arguments have the usual meaning.
 \fIoriginX\fR and \fIoriginY\fR specify an origin relative to which
@@ -463,15 +465,16 @@ y\(fm = originY + scaleY*(y-originY)\fR
 \fIscaleProc\fR must also update the bounding box in the item's
 header.
 .SS TRANSLATEPROC
+.PP
 \fItypePtr->translateProc\fR is invoked by Tk to translate a canvas item
 during the \fBmove\fR widget command.
 The procedure must match the following prototype:
 .CS
-typedef void Tk_ItemTranslateProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    double \fIdeltaX\fR,
-    double \fIdeltaY\fR);
+typedef void \fBTk_ItemTranslateProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        double \fIdeltaX\fR,
+        double \fIdeltaY\fR);
 .CE
 The \fIcanvas\fR and \fIitemPtr\fR arguments have the usual meaning,
 and \fIdeltaX\fR and \fIdeltaY\fR give the amounts that should be
@@ -479,6 +482,7 @@ added to each x and y coordinate within the item.
 The type manager should adjust the item's coordinates and
 update the bounding box in the item's header.
 .SS INDEXPROC
+.PP
 \fItypePtr->indexProc\fR is invoked by Tk to translate a string
 index specification into a numerical index, for example during the
 \fBindex\fR widget command.
@@ -487,12 +491,12 @@ It is only relevant for item types that support indexable text;
 item types.
 The procedure must match the following prototype:
 .CS
-typedef int Tk_ItemIndexProc(
-    Tcl_Interp *\fIinterp\fR,
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    char \fIindexString\fR,
-    int *\fIindexPtr\fR);
+typedef int \fBTk_ItemIndexProc\fR(
+        Tcl_Interp *\fIinterp\fR,
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        char \fIindexString\fR,
+        int *\fIindexPtr\fR);
 .CE
 The \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR arguments all
 have the usual meaning.
@@ -514,10 +518,10 @@ It is only relevant for item types that support an insertion cursor;
 that do not support an insertion cursor.
 The procedure must match the following prototype:
 .CS
-typedef void Tk_ItemCursorProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIindex\fR);
+typedef void \fBTk_ItemCursorProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIindex\fR);
 .CE
 \fIcanvas\fR and \fIitemPtr\fR have the usual meanings, and
 \fIindex\fR is an index into the item's text, as returned by a
@@ -536,12 +540,12 @@ It is only relevant for item types that support text;
 item types.
 The procedure must match the following prototype:
 .CS
-typedef int Tk_ItemSelectionProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIoffset\fR,
-    char *\fIbuffer\fR,
-    int \fImaxBytes\fR);
+typedef int \fBTk_ItemSelectionProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIoffset\fR,
+        char *\fIbuffer\fR,
+        int \fImaxBytes\fR);
 .CE
 \fIcanvas\fR and \fIitemPtr\fR have the usual meanings.
 \fIoffset\fR is an offset in bytes into the selection where 0 refers
@@ -565,11 +569,11 @@ It is only relevant for item types that support text;
 item types.
 The procedure must match the following prototype:
 .CS
-typedef void Tk_ItemInsertProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIindex\fR,
-    char *\fIstring\fR);
+typedef void \fBTk_ItemInsertProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIindex\fR,
+        char *\fIstring\fR);
 .CE
 \fIcanvas\fR and \fIitemPtr\fR have the usual meanings.
 \fIindex\fR is an index into the item's text, as returned by a
@@ -587,11 +591,11 @@ It is only relevant for item types that support text;
 item types.
 The procedure must match the following prototype:
 .CS
-typedef void Tk_ItemDCharsProc(
-    Tk_Canvas \fIcanvas\fR,
-    Tk_Item *\fIitemPtr\fR,
-    int \fIfirst\fR,
-    int \fIlast\fR);
+typedef void \fBTk_ItemDCharsProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        int \fIfirst\fR,
+        int \fIlast\fR);
 .CE
 \fIcanvas\fR and \fIitemPtr\fR have the usual meanings.
 \fIfirst\fR and \fIlast\fR give the indices of the first and last bytes

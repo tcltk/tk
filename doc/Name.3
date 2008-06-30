@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Name.3,v 1.9 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: Name.3,v 1.10 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Name 3 "" Tk "Tk Library Procedures"
@@ -33,7 +33,6 @@ Interpreter to use for error reporting.
 .AP "const char" *pathName in
 Character string containing path name of window.
 .BE
-
 .SH DESCRIPTION
 .PP
 Each window managed by Tk has two names, a short name that identifies
@@ -85,6 +84,5 @@ two main windows, each will have a separate naming hierarchy and the
 same path name might appear in each of the hierarchies.  Normally
 \fItkwin\fR is the main window of the desired hierarchy, but this
 need not be the case:  any window in the desired hierarchy may be used.
-
 .SH KEYWORDS
 name, path name, token, window
