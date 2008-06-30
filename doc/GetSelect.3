@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetSelect.3,v 1.5 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: GetSelect.3,v 1.6 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetSelection 3 4.0 Tk "Tk Library Procedures"
@@ -35,7 +35,6 @@ are retrieved.
 .AP ClientData clientData in
 Arbitrary one-word value to pass to \fIproc\fR.
 .BE
-
 .SH DESCRIPTION
 .PP
 \fBTk_GetSelection\fR retrieves the selection specified by the atom
@@ -45,12 +44,12 @@ is retrieved, \fIproc\fR is called to process the piece.  \fIProc\fR
 should have arguments and result that match the type
 \fBTk_GetSelProc\fR:
 .CS
-typedef int Tk_GetSelProc(
-    ClientData \fIclientData\fR,
-    Tcl_Interp *\fIinterp\fR,
-    char *\fIportion\fR);
+typedef int \fBTk_GetSelProc\fR(
+        ClientData \fIclientData\fR,
+        Tcl_Interp *\fIinterp\fR,
+        char *\fIportion\fR);
 .CE
-The \fIclientData\fR and \fIinterp\fR parameters to \fIproc\fR 
+The \fIclientData\fR and \fIinterp\fR parameters to \fIproc\fR
 will be copies of the corresponding arguments to
 \fBTk_GetSelection\fR.  \fIPortion\fR will be a pointer to
 a string containing part or all of the selection.  For large
@@ -74,6 +73,5 @@ in \fIinterp->result\fR.  \fIProc\fR should also return either
 \fBTCL_OK\fR or \fBTCL_ERROR\fR. If \fIproc\fR encounters an error in dealing with the
 selection, it should leave an error message in \fIinterp->result\fR
 and return \fBTCL_ERROR\fR;  this will abort the selection retrieval.
-
 .SH KEYWORDS
 format, get, selection retrieval

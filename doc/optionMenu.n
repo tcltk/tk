@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: optionMenu.n,v 1.6 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: optionMenu.n,v 1.7 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_optionMenu n 4.0 Tk "Tk Built-In Commands"
@@ -35,6 +36,7 @@ The return value from \fBtk_optionMenu\fR is the name of the menu
 associated with \fIpathName\fR, so that the caller can change its
 configuration options or manipulate it in other ways.
 .SH EXAMPLE
+.PP
 .CS
 tk_optionMenu .foo myVar Foo Bar Boo Spong Wibble
 pack .foo

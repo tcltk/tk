@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: pack.n,v 1.11 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: pack.n,v 1.12 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH pack n 4.0 Tk "Tk Built-In Commands"
@@ -16,7 +17,6 @@ pack \- Geometry manager that packs around edges of cavity
 .SH SYNOPSIS
 \fBpack \fIoption arg \fR?\fIarg ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBpack\fR command is used to communicate with the packer,
@@ -261,6 +261,7 @@ will be highest in the stacking order.
 Or, you can use the \fBraise\fR and \fBlower\fR commands to change
 the stacking order of either the master or the slave.
 .SH EXAMPLE
+.PP
 .CS
 # Make the widgets
 label .t \-text "This widget is at the top"    \-bg red
@@ -276,9 +277,7 @@ text .mid
 \fBpack\fR .r   \-side right  \-fill y
 \fBpack\fR .mid \-expand 1    \-fill both
 .CE
-
 .SH "SEE ALSO"
 grid(n), place(n)
-
 .SH KEYWORDS
 geometry manager, location, packer, parcel, propagation, size

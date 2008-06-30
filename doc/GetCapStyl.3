@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCapStyl.3,v 1.8 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: GetCapStyl.3,v 1.9 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetCapStyle 3 "" Tk "Tk Library Procedures"
@@ -37,7 +37,6 @@ Pointer to location in which to store X cap style corresponding to
 .AP int cap in
 Cap style: one of \fBCapButt\fR, \fBCapProjecting\fR, or \fBCapRound\fR.
 .BE
-
 .SH DESCRIPTION
 .PP
 \fBTk_GetCapStyle\fR places in \fI*capPtr\fR the X cap style
@@ -62,6 +61,5 @@ statically-allocated string corresponding to \fIcap\fR.
 If \fIcap\fR is not a legal cap style, then
 .QW "unknown cap style"
 is returned.
-
 .SH KEYWORDS
 butt, cap style, projecting, round

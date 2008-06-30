@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.12 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: label.n,v 1.13 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
@@ -107,6 +108,7 @@ command.
 When a new label is created, it has no default event bindings:
 labels are not intended to be interactive.
 .SH EXAMPLE
+.PP
 .CS
 # Make the widgets
 \fBlabel\fR .t \-text "This widget is at the top"    \-bg red

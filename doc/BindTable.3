@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: BindTable.3,v 1.5 2007/01/05 00:00:49 nijtmans Exp $
+'\" RCS: @(#) $Id: BindTable.3,v 1.6 2008/06/30 22:57:00 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateBindingTable 3 4.0 Tk "Tk Library Procedures"
@@ -63,7 +63,6 @@ Number of object identifiers pointed to by \fIobjectPtr\fR.
 Points to an array of object identifiers:  bindings will be considered
 for each of these objects in order from first to last.
 .BE
-
 .SH DESCRIPTION
 .PP
 These procedures provide a general-purpose mechanism for creating
@@ -152,6 +151,5 @@ the object is skipped.
 \fBTk_BindEvent\fR continues through all of the objects, handling
 exceptions such as errors, \fBbreak\fR, and \fBcontinue\fR as
 described in the documentation for \fBbind\fR.
-
 .SH KEYWORDS
 binding, event, object, script

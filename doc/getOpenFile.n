@@ -1,10 +1,11 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1996 Sun Microsystems, Inc.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: getOpenFile.n,v 1.23 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: getOpenFile.n,v 1.24 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_getOpenFile n 4.2 Tk "Tk Built-In Commands"
@@ -159,6 +160,7 @@ Extensions without a full stop character (e.g.
 .QW ~ )
 are allowed but may not work on all platforms.
 .SH EXAMPLE
+.PP
 .CS
 set types {
     {{Text Files}       {.txt}        }

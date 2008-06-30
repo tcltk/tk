@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scrollbar.n,v 1.10 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: scrollbar.n,v 1.11 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH scrollbar n 4.1 Tk "Tk Built-In Commands"
@@ -264,6 +265,7 @@ If it is given two real arguments then the new syntax will be
 used in the future, and if it is given four integer arguments then
 the old syntax will be used.
 .SH BINDINGS
+.PP
 Tk automatically creates class bindings for scrollbars that give them
 the following default behavior.
 If the behavior is different for vertical and horizontal scrollbars,
@@ -330,6 +332,7 @@ The Home key adjusts the view to the top (left edge) of the document.
 .IP [14]
 The End key adjusts the view to the bottom (right edge) of the document.
 .SH EXAMPLE
+.PP
 Create a window with a scrollable \fBtext\fR widget:
 .CS
 toplevel .tl

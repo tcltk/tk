@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: winfo.n,v 1.12 2007/12/13 15:23:44 dgp Exp $
+'\" RCS: @(#) $Id: winfo.n,v 1.13 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH winfo n 4.3 Tk "Tk Built-In Commands"
@@ -16,7 +17,6 @@ winfo \- Return window-related information
 .SH SYNOPSIS
 \fBwinfo\fR \fIoption \fR?\fIarg arg ...\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBwinfo\fR command is used to retrieve information about windows
@@ -337,6 +337,7 @@ parent, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
 has no border).
 .SH EXAMPLE
+.PP
 Print where the mouse pointer is and what window it is currently over:
 .CS
 lassign [\fBwinfo pointerxy\fR .] x y
@@ -348,7 +349,6 @@ if {$win eq ""} {
     puts "over $win"
 }
 .CE
-
 .SH KEYWORDS
 atom, children, class, geometry, height, identifier, information, interpreters,
 mapped, parent, path name, screen, virtual root, width, window

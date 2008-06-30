@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: pack-old.n,v 1.5 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: pack-old.n,v 1.6 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH pack-old n 4.0 Tk "Tk Built-In Commands"
@@ -22,7 +23,6 @@ pack-old \- Obsolete syntax for packer geometry manager
 .sp
 \fBpack unpack \fIwindow\fR
 .BE
-
 .SH DESCRIPTION
 .PP
 \fINote: this manual entry describes the syntax for the \fBpack\fI
@@ -191,6 +191,5 @@ The packer makes geometry requests on behalf of the parent windows
 it manages.  For each parent window it requests a size large enough
 to accommodate all the options specified by all the packed children,
 such that zero space would be leftover for \fBexpand\fR options.
-
 .SH KEYWORDS
 geometry manager, location, packer, parcel, size

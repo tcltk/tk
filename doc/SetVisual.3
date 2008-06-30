@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: SetVisual.3,v 1.4 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: SetVisual.3,v 1.5 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_SetWindowVisual 3 4.0 Tk "Tk Library Procedures"
@@ -30,7 +30,6 @@ Number of bits per pixel desired for \fItkwin\fR.
 New colormap for \fItkwin\fR, which must be compatible with
 \fIvisual\fR and \fIdepth\fR.
 .BE
-
 .SH DESCRIPTION
 .PP
 When Tk creates a new window it assigns it the default visual
@@ -49,6 +48,5 @@ completed successfully.
 Note:  \fBTk_SetWindowVisual\fR should not be called if you just want
 to change a window's colormap without changing its visual or depth;
 call \fBTk_SetWindowColormap\fR instead.
-
 .SH KEYWORDS
 colormap, depth, visual

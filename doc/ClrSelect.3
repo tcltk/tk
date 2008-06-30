@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ClrSelect.3,v 1.2 1998/09/14 18:22:46 stanton Exp $
+'\" RCS: @(#) $Id: ClrSelect.3,v 1.3 2008/06/30 22:57:00 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ClearSelection 3 4.0 Tk "Tk Library Procedures"
@@ -25,10 +25,9 @@ window.
 .AP Atom selection in
 The name of selection to be cleared.
 .BE
-
 .SH DESCRIPTION
 .PP
-\fBTk_ClearSelection\fR cancels the selection specified by the atom 
+\fBTk_ClearSelection\fR cancels the selection specified by the atom
 \fIselection\fR for the display containing \fItkwin\fR.
 The selection need not be in \fItkwin\fR itself or even in
 \fItkwin\fR's application.
@@ -37,6 +36,5 @@ owns \fIselection\fR, the window will be notified and the
 selection will be cleared.
 If there is no owner for \fIselection\fR on the display, then the
 procedure has no effect.
-
 .SH KEYWORDS
 clear, selection

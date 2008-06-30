@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.24 2008/04/20 19:42:34 patthoyts Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.25 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -625,10 +626,8 @@ empty string. This subcommand does not work on Windows and the
 Macintosh, as those platforms have their own way of unposting menus.
 .TP
 \fIpathName \fBxposition \fIindex\fR
-.VS 8.5
 Returns a decimal string giving the x-coordinate within the menu
 window of the leftmost pixel in the entry specified by \fIindex\fR.
-.VE 8.5
 .TP
 \fIpathName \fByposition \fIindex\fR
 Returns a decimal string giving the y-coordinate within the menu

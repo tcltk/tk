@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetGC.3,v 1.2 1998/09/14 18:22:49 stanton Exp $
+'\" RCS: @(#) $Id: GetGC.3,v 1.3 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetGC 3 "" Tk "Tk Library Procedures"
@@ -36,7 +36,6 @@ Display for which \fIgc\fR was allocated.
 X identifier for graphics context that is no longer needed.
 Must have been allocated by \fBTk_GetGC\fR.
 .BE
-
 .SH DESCRIPTION
 .PP
 \fBTk_GetGC\fR and \fBTk_FreeGC\fR manage a collection of graphics contexts
@@ -69,6 +68,5 @@ each call to \fBTk_GetGC\fR.
 When a graphics context is no longer in use anywhere (i.e. it has
 been freed as many times as it has been gotten) \fBTk_FreeGC\fR
 will release it to the X server and delete it from the database.
-
 .SH KEYWORDS
 graphics context

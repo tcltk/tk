@@ -1,10 +1,11 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_menubutton.n,v 1.10 2008/05/09 18:35:00 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_menubutton.n,v 1.11 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::menubutton n 8.5 Tk "Tk Themed Widget"
@@ -15,6 +16,7 @@ ttk::menubutton \- Widget that pops down a menu when pressed
 \fBttk::menubutton\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::menubutton\fR widget displays a textual label and/or image,
 and displays a menu when pressed.
 .SO ttk_widget
@@ -38,6 +40,7 @@ menubutton.
 .\" .OP \-anchor anchor Anchor
 .\" .OP \-padding padding Pad
 .SH "WIDGET COMMAND"
+.PP
 Menubutton widgets support the standard 
 \fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR 
 methods.  No other widget methods are used.

@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: scale.n,v 1.10 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: scale.n,v 1.11 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH scale n 4.1 Tk "Tk Built-In Commands"
@@ -98,7 +99,6 @@ Specifies the desired narrow dimension of the trough in screen units
 For vertical scales this is the trough's width;  for horizontal scales
 this is the trough's height.
 .BE
-
 .SH DESCRIPTION
 .PP
 The \fBscale\fR command creates a new window (given by the
@@ -241,6 +241,5 @@ none of the above bindings have any effect.
 .PP
 The behavior of scales can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
-
 .SH KEYWORDS
 scale, slider, trough, widget

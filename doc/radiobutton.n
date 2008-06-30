@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: radiobutton.n,v 1.16 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: radiobutton.n,v 1.17 2008/06/30 22:57:03 dkf Exp $
 '\" 
 .so man.macros
 .TH radiobutton n 4.4 Tk "Tk Built-In Commands"
@@ -90,18 +91,14 @@ the widget and will ignore mouse button presses.
 In this state the \fBdisabledForeground\fR and
 \fBbackground\fR options determine how the radiobutton is displayed.
 .OP \-tristateimage tristateImage TristateImage
-.VS 8.5
 Specifies an image to display (in place of the \fBimage\fR option)
 when the radiobutton is selected.
 This option is ignored unless the \fBimage\fR option has been
 specified.
-.VE 8.5
 .OP \-tristatevalue tristateValue Value
-.VS 8.5
-Specifies the value that causes the radiobutton to display the multi-value 
+Specifies the value that causes the radiobutton to display the multi-value
 selection, also known as the tri-state mode.  Defaults to
 .QW "" .
-.VE 8.5
 .OP \-value value Value
 Specifies value to store in the button's associated variable whenever
 this button is selected.
@@ -162,12 +159,10 @@ When a radiobutton is selected it sets the value of the variable to
 indicate that fact;  each radiobutton also monitors the value of
 the variable and automatically selects and deselects itself when the
 variable's value changes.
-.VS 8.5
-If the variable's value matches the \fBtristateValue\fR, then the radiobutton is 
-drawn using the tri-state mode.  This mode is used to indicate mixed or 
-multiple values.  (This is used when the radiobutton represents the state 
+If the variable's value matches the \fBtristateValue\fR, then the radiobutton
+is drawn using the tri-state mode.  This mode is used to indicate mixed or
+multiple values.  (This is used when the radiobutton represents the state
 of multiple items.)
-.VE 8.5
 By default the variable \fBselectedButton\fR
 is used;  its contents give the name of the button that is
 selected, or the empty string if no button associated with that

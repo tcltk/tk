@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Restack.3,v 1.2 1998/09/14 18:22:53 stanton Exp $
+'\" RCS: @(#) $Id: Restack.3,v 1.3 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_RestackWindow 3 "" Tk "Tk Library Procedures"
@@ -30,7 +30,6 @@ must be \fBAbove\fR or \fBBelow\fR.
 Must be a sibling of \fItkwin\fR or a descendant of a sibling.
 If NULL then \fItkwin\fR is restacked above or below all siblings.
 .BE
-
 .SH DESCRIPTION
 .PP
 \fBTk_RestackWindow\fR changes the stacking order of \fIwindow\fR relative
@@ -44,6 +43,5 @@ just above or below \fIother\fR.
 The \fIaboveBelow\fR argument must have one of the symbolic values
 \fBAbove\fR or \fBBelow\fR.
 Both of these values are defined by the include file <X11/Xlib.h>.
-
 .SH KEYWORDS
 above, below, obscure, stacking order

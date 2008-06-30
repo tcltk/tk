@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bindtags.n,v 1.8 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: bindtags.n,v 1.9 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH bindtags n 4.0 Tk "Tk Built-In Commands"
@@ -16,7 +17,6 @@ bindtags \- Determine which bindings apply to a window, and order of evaluation
 .SH SYNOPSIS
 \fBbindtags \fIwindow \fR?\fItagList\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 When a binding is created with the \fBbind\fR command, it is
@@ -75,6 +75,7 @@ associated with the \fBButton\fR tag, will no longer apply to \fB.b\fR,
 but any bindings associated with \fBTrickyButton\fR (perhaps some
 new button behavior) will apply.
 .SH EXAMPLE
+.PP
 If you have a set of nested \fBframe\fR widgets and you want events
 sent to a \fBbutton\fR widget to also be delivered to all the widgets
 up to the current \fBtoplevel\fR (in contrast to Tk's default
@@ -95,9 +96,7 @@ proc setupBindtagsForTreeDelivery {widget} {
     \fBbindtags\fR $widget $tags
 }
 .CE
-
 .SH "SEE ALSO"
 bind(n)
-
 .SH KEYWORDS
 binding, event, tag
