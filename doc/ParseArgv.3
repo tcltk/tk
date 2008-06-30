@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ParseArgv.3,v 1.10 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: ParseArgv.3,v 1.11 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ParseArgv 3 "" Tk "Tk Library Procedures"
@@ -77,7 +77,7 @@ typedef struct {
     char *\fIsrc\fR;
     char *\fIdst\fR;
     char *\fIhelp\fR;
-} Tk_ArgvInfo;
+} \fBTk_ArgvInfo\fR;
 .CE
 The \fIkey\fR field is a string such as
 .QW \-display
@@ -265,7 +265,7 @@ an error then it should leave an error message in \fIinterp->result\fR,
 in the usual Tcl fashion, and return \-1;  when this happens
 \fBTk_ParseArgv\fR will abort its processing and return \fBTCL_ERROR\fR.
 .RE
-.SH "FLAGS"
+.SS "FLAGS"
 .TP
 \fBTK_ARGV_DONT_SKIP_FIRST_ARG\fR
 \fBTk_ParseArgv\fR normally treats \fIargv[0]\fR as a program

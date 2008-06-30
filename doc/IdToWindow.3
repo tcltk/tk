@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: IdToWindow.3,v 1.2 1998/09/14 18:22:52 stanton Exp $
+'\" RCS: @(#) $Id: IdToWindow.3,v 1.3 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_IdToWindow 3 4.0 Tk "Tk Library Procedures"
@@ -24,13 +24,11 @@ X display containing the window.
 .AP Window window in
 X id for window.
 .BE
-
 .SH DESCRIPTION
 .PP
 Given an X window identifier and the X display it corresponds to,
 this procedure returns the corresponding Tk_Window handle.
 If there is no Tk_Window corresponding to \fIwindow\fR then
 NULL is returned.
-
 .SH KEYWORDS
 X window id

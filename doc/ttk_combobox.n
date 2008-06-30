@@ -1,10 +1,11 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_combobox.n,v 1.16 2008/05/09 18:35:00 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_combobox.n,v 1.17 2008/06/30 22:57:03 dkf Exp $
 '\"
 .so man.macros
 .TH ttk::combobox n 8.5 Tk "Tk Themed Widget"
@@ -15,6 +16,7 @@ ttk::combobox \- text field with popdown selection list
 \fBttk::combobox\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::combobox\fR combines a text field with a pop-down list of values;
 the user may select the value of the text field from among the 
 values in the list.
@@ -97,6 +99,7 @@ widget commands (see \fIttk::entry(n)\fR for details):
 \fBxview\fR
 .DE
 .SH "VIRTUAL EVENTS"
+.PP
 The combobox widget generates a \fB<<ComboboxSelected>>\fR virtual event
 when the user selects an element from the list of values.
 If the selection action unposts the listbox,

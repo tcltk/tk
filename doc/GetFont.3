@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetFont.3,v 1.11 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: GetFont.3,v 1.12 2008/06/30 22:57:01 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_AllocFontFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -33,7 +33,6 @@ Tk_Font
 .sp
 void
 \fBTk_FreeFont(\fItkfont\fB)\fR
-
 .SH ARGUMENTS
 .AS "const char" *tkfont
 .AP "Tcl_Interp" *interp in
@@ -107,7 +106,6 @@ with the same information used to create it; for
 with its Tk_Font token.  There should be
 exactly one call to \fBTk_FreeFontFromObj\fR or \fBTk_FreeFont\fR
 for each call to \fBTk_AllocFontFromObj\fR or \fBTk_GetFont\fR.
-
 .SH "SEE ALSO"
 Tk_FontId(3)
 .SH KEYWORDS

@@ -1,3 +1,4 @@
+'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -5,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bitmap.n,v 1.2 1998/09/14 18:22:54 stanton Exp $
+'\" RCS: @(#) $Id: bitmap.n,v 1.3 2008/06/30 22:57:02 dkf Exp $
 '\" 
 .so man.macros
 .TH bitmap n 4.0 Tk "Tk Built-In Commands"
@@ -16,7 +17,6 @@ bitmap \- Images that display two colors
 .SH SYNOPSIS
 \fBimage create bitmap \fR?\fIname\fR? ?\fIoptions\fR?
 .BE
-
 .SH DESCRIPTION
 .PP
 A bitmap is an image whose pixels can display either of two colors
@@ -32,7 +32,6 @@ producing a transparent effect.
 For other pixels, the image displays the foreground color if
 the source data is one and the background color if the source
 data is zero.
-
 .SH "CREATING BITMAPS"
 .PP
 Like all images, bitmaps are created using the \fBimage create\fR
@@ -75,7 +74,6 @@ the \fB\-maskdata\fR option takes precedence.
 mask.
 The file must adhere to X11 bitmap format (e.g., as generated
 by the \fBbitmap\fR program).
-
 .SH "IMAGE COMMAND"
 .PP
 When a bitmap image is created, Tk also creates a new command
@@ -109,6 +107,5 @@ modifies the given option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the
 \fBimage create bitmap\fR command.
-
 .SH KEYWORDS
 bitmap, image
