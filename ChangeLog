@@ -1,3 +1,19 @@
+2008-06-29  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.3 TAGGED FOR RELEASE ***
+
+	* generic/tk.h:		Bump to 8.5.3 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+	* changes:	Updates for 8.5.3 release.
+
 2008-06-26  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkPanedWindow.c (PanedWindowProxyCommand)

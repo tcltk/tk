@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.3 2008/06/26 21:26:08 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.4 2008/06/30 03:37:37 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6520,4 +6520,4 @@ Several documentation and release notes improvements
 
 2008-06-18 (bug fix) Aqua: missing focus on first map (steffen)
 
---- Released 8.5.3, June ??, 2008 --- See ChangeLog for details ---
+--- Released 8.5.3, June 30, 2008 --- See ChangeLog for details ---

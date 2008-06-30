@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.109.2.1 2008/04/11 19:00:47 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.109.2.2 2008/06/30 03:37:37 dgp Exp $
  */
 
 #ifndef _TK
@@ -56,7 +56,7 @@ extern "C" {
 #define TK_RELEASE_SERIAL	3
 
 #define TK_VERSION		"8.5"
-#define TK_PATCH_LEVEL		"8.5.3b1"
+#define TK_PATCH_LEVEL		"8.5.3"
 
 /*
  * A special definition used to allow this header file to be included from
