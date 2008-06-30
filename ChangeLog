@@ -1,4 +1,4 @@
-2008-06-25  Don Porter  <dgp@users.sourceforge.net>
+2008-06-29  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.3 TAGGED FOR RELEASE ***
 
@@ -11,6 +11,14 @@
 
 	* unix/configure:	autoconf-2.59
 	* win/configure:
+
+2008-06-26  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkPanedWindow.c (PanedWindowProxyCommand)
+	(DisplayPanedWindow): Ensure that a zero width never gets fed to the
+	underlying window system. [Bug 1639824]  (Backport fix from dkf).
+
+2008-06-25  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.3 release.
 
