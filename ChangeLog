@@ -1,3 +1,8 @@
+2008-07-02  Donal K. Fellows  <dkf@users.sf.net>
+
+	* macosx/tkMacOSXHLEvents.c: Some tidying up of this file. Make sure
+	that failing handling callbacks get reported as background errors.
+
 2008-06-30  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/*.1, doc/*.3, doc/*.n: Remove out of date changebars, make
