@@ -1,3 +1,9 @@
+2008-07-04  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkClamTheme.c,
+	generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: 
+	Backport [Bug 2009213].
+
 2008-06-29  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.3 TAGGED FOR RELEASE ***
