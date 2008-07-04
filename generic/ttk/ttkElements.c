@@ -1,4 +1,4 @@
-/* $Id: ttkElements.c,v 1.10 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkElements.c,v 1.11 2008/07/04 19:05:04 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -957,7 +957,7 @@ static void SliderElementDraw(
 {
     SliderElement *slider = elementRecord;
     Tk_3DBorder border = NULL;
-    int relief, borderWidth, orient;
+    int relief = TK_RELIEF_RAISED, borderWidth = 2, orient;
 
     border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
@@ -1043,7 +1043,7 @@ static void PbarElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     PbarElement *pbar = elementRecord;
-    int orient, thickness, length, borderWidth;
+    int orient, thickness = 15, length = 30, borderWidth = 2;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);
@@ -1068,7 +1068,7 @@ static void PbarElementDraw(
 {
     PbarElement *pbar = elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, pbar->borderObj);
-    int relief, borderWidth;
+    int relief = TK_RELIEF_RAISED, borderWidth = 2;
 
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, pbar->reliefObj, &relief);

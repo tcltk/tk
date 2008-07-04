@@ -1,3 +1,12 @@
+2008-07-04  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkClamTheme.c,
+	generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: 
+	Audit: ensure that output arguments to Tk_Get*FromObj()
+	are initialized, in case of erroneous style specifications
+	[Bug #2009213].
+
+
 2008-07-02  Donal K. Fellows  <dkf@users.sf.net>
 
 	* macosx/tkMacOSXHLEvents.c: Some tidying up of this file. Make sure

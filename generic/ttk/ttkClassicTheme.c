@@ -1,5 +1,5 @@
 /*
- * $Id: ttkClassicTheme.c,v 1.6 2007/12/13 15:26:26 dgp Exp $
+ * $Id: ttkClassicTheme.c,v 1.7 2008/07/04 19:05:04 jenglish Exp $
  *
  * Copyright (c) 2004, Joe English
  *
@@ -228,17 +228,15 @@ static void ArrowElementDraw(
 {
     int direction = *(int *)clientData;
     ArrowElement *arrow = elementRecord;
-    Tk_3DBorder border;
-    int borderWidth;
+    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
+    int borderWidth = 2;
     int relief = TK_RELIEF_RAISED;
-    int size;
+    int size = b.width < b.height ? b.width : b.height;
     XPoint points[3];
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->borderWidthObj, &borderWidth);
-    border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
-    size = b.width < b.height ? b.width : b.height;
 
     /*
      * @@@ There are off-by-one pixel errors in the way these are drawn;
