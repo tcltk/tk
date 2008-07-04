@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.11 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkDefaultTheme.c,v 1.11.2.1 2008/07/04 19:06:03 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -826,7 +826,7 @@ static void TroughElementDraw(
 {
     TroughElement *troughPtr = elementRecord;
     Tk_3DBorder border = NULL;
-    int borderWidth = 2, relief, groove, orient;
+    int borderWidth = 2, relief = TK_RELIEF_SUNKEN, groove = -1, orient;
 
     border = Tk_Get3DBorderFromObj(tkwin, troughPtr->colorObj);
     Ttk_GetOrientFromObj(NULL, troughPtr->orientObj, &orient);
