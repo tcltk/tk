@@ -1,3 +1,7 @@
+2008-07-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* doc/*.n: Fixed broken line endings from last doc commit.
+
 2008-07-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkClamTheme.c,
