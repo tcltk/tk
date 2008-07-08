@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tkwait.n,v 1.3 2008/06/30 22:57:03 dkf Exp $
+'\" RCS: @(#) $Id: tkwait.n,v 1.4 2008/07/08 22:40:51 patthoyts Exp $
 '\" 
 .so man.macros
 .TH tkwait n "" Tk "Tk Built-In Commands"

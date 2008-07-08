@@ -3,7 +3,7 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: keysyms.n,v 1.5 2008/06/30 22:57:02 dkf Exp $
+'\" RCS: @(#) $Id: keysyms.n,v 1.6 2008/07/08 22:40:51 patthoyts Exp $
 '\" 
 '\"
 .so man.macros
