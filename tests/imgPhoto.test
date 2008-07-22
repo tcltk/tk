@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.28 2008/02/01 16:53:57 rmax Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.28.2.1 2008/07/22 14:35:21 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -660,18 +660,6 @@ test imgPhoto-14.3 {GIF -index interleaving and small frames} -setup {
     # was accessed.
     $i configure -format {GIF -index 1} -data {
 	R0lGODdhAQAFAPAAAP8AAAAAACwAAAAAAQAFAEACAoRdACwAAAAAAQAEAEACAoRRADs=
-    }
-} -cleanup {
-    image delete $i
-}
-
-test imgPhoto-14.3 {GIF -index interleaving and small frames} -setup {
-    set i [image create photo]
-} -body {
-    # Interleaved GIFs used to crash us when a smaller subsequent frame
-    # was accessed.
-    $i configure -format {GIF -index 1} -data {
-        R0lGODdhAQAFAPAAAP8AAAAAACwAAAAAAQAFAEACAoRdACwAAAAAAQAEAEACAoRRADs=
     }
 } -cleanup {
     image delete $i
