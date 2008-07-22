@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.21 2008/07/22 11:55:57 aniap Exp $
+# RCS: @(#) $Id: button.test,v 1.22 2008/07/22 13:17:26 aniap Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -3265,7 +3265,7 @@ test button-5.5 {ConfigureButton - image handling} -constraints {
     image names
 } -cleanup {
     destroy .b
-    image delete image1 image2
+    image delete image2
 } -result {image2}
 
 test button-5.6 {ConfigureButton - default value for variable} -body {
@@ -3725,7 +3725,7 @@ test button-10.2 {ButtonTextVarProc procedure} -setup {
 test button-11.1 {ButtonImageProc procedure} -constraints {
     testImageType 
 } -setup {
-    label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    label .l -highlightthickness 0 -font {Helvetica -12 bold}
     image create test image1
 } -body {
     .l configure -image image1 -padx 0 -pady 0 -bd 0
@@ -3752,14 +3752,14 @@ test button-12.1 {button widget vs hidden commands} -body {
 } -result {1}
 
 test button-13.1 {size behaviouor: label} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Helvetica -12 bold}
+    label .a -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    label .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    label .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	label .a -text Hej 
-	label .b -text Hej -width 10 -height 1
-	label .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3769,18 +3769,16 @@ test button-13.1 {size behaviouor: label} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
-
 test button-13.2 {size behaviouor: label} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Arial 20}
+    label .a -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    label .b -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    label .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	label .a -text Hej 
-	label .b -text Hej -width 10 -height 1
-	label .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3790,18 +3788,17 @@ test button-13.2 {size behaviouor: label} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
 
 test button-13.3 {size behaviouor: button} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Helvetica -12 bold}
+    button .a -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    button .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	label .a -text Hej 
-	label .b -text Hej -width 10 -height 1
-	label .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3811,17 +3808,16 @@ test button-13.3 {size behaviouor: button} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
 test button-13.4 {size behaviouor: button} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Arial 20}
+    button .a -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    button .b -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    button .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	button .a -text Hej 
-	button .b -text Hej -width 10 -height 1
-	button .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3831,18 +3827,17 @@ test button-13.4 {size behaviouor: button} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
 
 test button-13.5 {size behaviouor: radiobutton} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Helvetica -12 bold}
+    radiobutton .a -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    radiobutton .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    radiobutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	radiobutton .a -text Hej 
-	radiobutton .b -text Hej -width 10 -height 1
-	radiobutton .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3852,18 +3847,17 @@ test button-13.5 {size behaviouor: radiobutton} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
 
 test button-13.6 {size behaviouor: radiobutton} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Arial 20}
+    radiobutton .a -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    radiobutton .b -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    radiobutton .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	radiobutton .a -text Hej 
-	radiobutton .b -text Hej -width 10 -height 1
-	radiobutton .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3873,18 +3867,17 @@ test button-13.6 {size behaviouor: radiobutton} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
 
 test button-13.7 {size behaviouor: checkbutton} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Helvetica -12 bold}
+    checkbutton .a -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    checkbutton .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	checkbutton .a -text Hej 
-	checkbutton .b -text Hej -width 10 -height 1
-	checkbutton .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3894,18 +3887,17 @@ test button-13.7 {size behaviouor: checkbutton} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
 
 test button-13.8 {size behaviouor: checkbutton} -setup {
-    option add *Button.borderwidth 2
-    option add *Button.highlightThickness 2
-    option add *Button.font {Arial 20}
+    checkbutton .a -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    checkbutton .b -borderwidth 2 -highlightthickness 2 -font {Arial 20}
+    checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	checkbutton .a -text Hej 
-	checkbutton .b -text Hej -width 10 -height 1
-	checkbutton .c -text "" -width 10 -height 1
+	.a configure -text Hej 
+	.b configure -text Hej -width 10 -height 1
+	.c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
 	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
@@ -3915,7 +3907,6 @@ test button-13.8 {size behaviouor: checkbutton} -setup {
 	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
-    option clear
 } -result {1 1 1} 
 
 
