@@ -1,3 +1,10 @@
+2008-07-22  Daniel Steffen  <das@users.sourceforge.net>
+
+	* library/ttk/aquaTheme.tcl: Use system color names and TIP145 named
+	font instead of hardcoded color values and deprecated native font name.
+
+	* macosx/tkMacOSXHLEvents.c: factor out common code; formatting.
+
 2008-07-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/*.n: Fixed broken line endings from last doc commit.
@@ -5,11 +12,9 @@
 2008-07-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkClamTheme.c,
-	generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: 
-	Audit: ensure that output arguments to Tk_Get*FromObj()
-	are initialized, in case of erroneous style specifications
-	[Bug #2009213].
-
+	generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: Audit:
+	ensure that output arguments to Tk_Get*FromObj() are initialized, in
+	case of erroneous style specifications. [Bug 2009213]
 
 2008-07-02  Donal K. Fellows  <dkf@users.sf.net>
 
