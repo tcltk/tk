@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.16 2008/07/02 09:44:49 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.17 2008/07/22 17:00:20 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -497,7 +497,7 @@ ScriptHandler(
 		strlen(errString));
     } else if (MissedAnyParameters(event)) {
 	/*
-	 * Dude! Where's my parameter?
+	 * Return error if parameter is missing.
 	 */
 
 	sprintf(errString, "AEDoScriptHandler: extra parameters");
@@ -573,20 +573,18 @@ ScriptHandler(
      * If we actually go to run Tcl code - put the result in the reply.
      */
 
-    if (tclErr == TCL_OK) {
+    if (tclErr >= 0) {
 	int reslen;
 	const char *result =
 		Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &reslen);
 
-	AEPutParamPtr(reply, keyDirectObject, typeChar, result, reslen);
-    } else if (tclErr >= 0) {
-	int reslen;
-	const char *result =
-		Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &reslen);
-
-	AEPutParamPtr(reply, keyErrorString, typeChar, result, reslen);
-	AEPutParamPtr(reply, keyErrorNumber, typeInteger, (Ptr) &tclErr,
-		sizeof(int));
+	if (tclErr == TCL_OK) {
+	    AEPutParamPtr(reply, keyDirectObject, typeChar, result, reslen);
+	} else {
+	    AEPutParamPtr(reply, keyErrorString, typeChar, result, reslen);
+	    AEPutParamPtr(reply, keyErrorNumber, typeInteger, (Ptr) &tclErr,
+		    sizeof(int));
+	}
     }
 
     AEDisposeDesc(&theDesc);
@@ -617,14 +615,9 @@ ReallyKillMe(
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     Tcl_CmdInfo dummy;
-    int result;
+    int quit = Tcl_GetCommandInfo(interp, "::tk::mac::Quit", &dummy);
 
-    if (Tcl_GetCommandInfo(interp, "::tk::mac::Quit", &dummy)) {
-	result = Tcl_GlobalEval(interp, "::tk::mac::Quit");
-    } else {
-	result = Tcl_GlobalEval(interp, "exit");
-    }
-    if (result != TCL_OK) {
+    if (Tcl_GlobalEval(interp, quit ? "::tk::mac::Quit" : "exit") != TCL_OK) {
 	/*
 	 * Should be never reached...
 	 */
@@ -656,7 +649,7 @@ MissedAnyParameters(
 {
    DescType returnedType;
    Size actualSize;
-   register OSStatus err;
+   OSStatus err;
 
    err = ChkErr(AEGetAttributePtr, theEvent, keyMissedKeywordAttr,
 	    typeWildCard, &returnedType, NULL, 0, &actualSize);
@@ -686,11 +679,11 @@ FSRefToDString(
     Tcl_DString *ds)
 {
     UInt8 fileName[PATH_MAX+1];
-    register OSStatus err;
+    OSStatus err;
 
     err = ChkErr(FSRefMakePath, fsref, fileName, sizeof(fileName));
     if (err == noErr) {
-	Tcl_ExternalToUtfDString(NULL, (char *) fileName, -1, ds);
+	Tcl_ExternalToUtfDString(NULL, (char*) fileName, -1, ds);
     }
     return err;
 }
