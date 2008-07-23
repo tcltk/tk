@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.14 2007/05/14 20:58:27 dgp Exp $
+# RCS: @(#) $Id: image.test,v 1.15 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -26,7 +26,7 @@ test image-1.2 {Tk_ImageCmd procedure, "create" option} {
 } {1 {bad option "gorp": must be create, delete, height, inuse, names, type, types, or width}}
 test image-1.3 {Tk_ImageCmd procedure, "create" option} {
     list [catch {image create} msg] $msg
-} {1 {wrong # args: should be "image create type ?name? ?options?"}}
+} {1 {wrong # args: should be "image create type ?name? ?-option value ...?"}}
 test image-1.4 {Tk_ImageCmd procedure, "create" option} {
     list [catch {image c bad_type} msg] $msg
 } {1 {image type "bad_type" doesn't exist}}

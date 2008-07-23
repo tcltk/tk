@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.31 2007/03/09 00:46:17 jenglish Exp $
+# RCS: @(#) $Id: grid.test,v 1.32 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -511,7 +511,7 @@ test grid-9.2 {slaves} {
 
 test grid-9.3 {slaves} {
 	list [catch {grid slaves a b} msg] $msg
-} {1 {wrong # args: should be "grid slaves window ?-option value...?"}}
+} {1 {wrong # args: should be "grid slaves window ?-option value ...?"}}
 
 test grid-9.4 {slaves} {
 	list [catch {grid slaves . a b} msg] $msg
@@ -568,12 +568,12 @@ grid_reset 9.11
 
 test grid-10.1 {column/row configure} {
 	list [catch {grid columnconfigure .} msg] $msg
-} {1 {wrong # args: should be "grid columnconfigure master index ?-option value...?"}}
+} {1 {wrong # args: should be "grid columnconfigure master index ?-option value ...?"}}
 grid_reset 10.1
 
 test grid-10.2 {column/row configure} {
 	list [catch {grid columnconfigure . 0 -weight 0 -pad} msg] $msg
-} {1 {wrong # args: should be "grid columnconfigure master index ?-option value...?"}}
+} {1 {wrong # args: should be "grid columnconfigure master index ?-option value ...?"}}
 grid_reset 10.2
 
 test grid-10.3 {column/row configure} {

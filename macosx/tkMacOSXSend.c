@@ -30,7 +30,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.9 2008/04/27 22:39:12 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.10 2008/07/23 23:24:44 nijtmans Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -357,7 +357,7 @@ Tk_SendObjCmd(
 
     if (objc < (i + 2)) {
 	Tcl_WrongNumArgs(interp, 1, objv,
-		"?options? interpName arg ?arg ...?");
+		"?-option value ...? interpName arg ?arg ...?");
 	return TCL_ERROR;
     }
 

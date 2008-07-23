@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: frame.test,v 1.16 2007/05/11 12:36:04 patthoyts Exp $
+# RCS: @(#) $Id: frame.test,v 1.17 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -259,7 +259,7 @@ foreach test {
 
 test frame-3.1 {TkCreateFrame procedure} -body {
     frame
-} -returnCodes error -result {wrong # args: should be "frame pathName ?options?"}
+} -returnCodes error -result {wrong # args: should be "frame pathName ?-option value ...?"}
 test frame-3.2 {TkCreateFrame procedure} -setup {
     catch {destroy .f}
     frame .f
@@ -499,7 +499,7 @@ catch {destroy .f}
 frame .f -highlightcolor black
 test frame-5.1 {FrameWidgetCommand procedure} {
     list [catch .f msg] $msg
-} {1 {wrong # args: should be ".f option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".f option ?arg ...?"}}
 test frame-5.2 {FrameWidgetCommand procedure, cget option} {
     list [catch {.f cget} msg] $msg
 } {1 {wrong # args: should be ".f cget option"}}

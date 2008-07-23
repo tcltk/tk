@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.28 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.29 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -642,7 +642,7 @@ ButtonCreate(
     }
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -789,7 +789,7 @@ ButtonWidgetObjCmd(
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+        Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     result = Tcl_GetIndexFromObj(interp, objv[1], commandNames[butPtr->type],

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.42 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.43 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 /*
@@ -459,7 +459,7 @@ MenuCmd(
     TkMenuOptionTables *optionTablesPtr = clientData;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -668,7 +668,7 @@ MenuWidgetObjCmd(
     int option;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObj(interp, objv[1], menuOptions, "option", 0,
@@ -700,7 +700,7 @@ MenuWidgetObjCmd(
     }
     case MENU_ADD:
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "type ?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "type ?-option value ...?");
 	    goto error;
 	}
 
@@ -822,7 +822,7 @@ MenuWidgetObjCmd(
 	Tcl_Obj *resultPtr;
 
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index ?option value ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "index ?-option value ...?");
 	    goto error;
 	}
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
@@ -877,7 +877,7 @@ MenuWidgetObjCmd(
     }
     case MENU_INSERT:
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index type ?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "index type ?-option value ...?");
 	    goto error;
 	}
 	if (MenuAddOrInsert(interp,menuPtr,objv[2],objc-3,objv+3) != TCL_OK) {

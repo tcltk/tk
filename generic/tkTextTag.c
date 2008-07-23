@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.28 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.29 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "default.h"
@@ -146,7 +146,7 @@ TkTextTagCmd(
     TkTextIndex index1, index2;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -336,7 +336,7 @@ TkTextTagCmd(
 
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv,
-		    "tagName ?option? ?value? ?option value ...?");
+		    "tagName ?-option? ?value? ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), &newTag);

@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.22 2008/07/22 13:17:26 aniap Exp $
+# RCS: @(#) $Id: button.test,v 1.23 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -2673,7 +2673,7 @@ test button-1.270 {configuration options} -body {
 # ex-tests 3.*
 test button-2.1 {ButtonCreate - not enough arguments} -body {   
     button
-} -returnCodes {error} -result {wrong # args: should be "button pathName ?options?"}
+} -returnCodes {error} -result {wrong # args: should be "button pathName ?-option value ...?"}
 
 test button-2.2 {ButtonCreate procedure - setting label class} -body {
     label .x
@@ -2758,7 +2758,7 @@ test button-3.1 {ButtonWidgetCmd - too few arguments} -body {
     .b
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {wrong # args: should be ".b option ?arg arg ...?"}
+} -returnCodes {error} -result {wrong # args: should be ".b option ?arg ...?"}
 test button-3.2 {ButtonWidgetCmd - bad option name} -body {
     button .b
     .b c

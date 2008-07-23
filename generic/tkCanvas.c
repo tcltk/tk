@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.49 2008/05/03 19:53:02 das Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.50 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -388,7 +388,7 @@ Tk_CanvasObjCmd(
     }
 
     if (argc < 2) {
-	Tcl_WrongNumArgs(interp, 1, argv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, argv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -564,7 +564,7 @@ CanvasWidgetCmd(
     };
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
@@ -577,7 +577,7 @@ CanvasWidgetCmd(
     switch ((enum options) index) {
     case CANV_ADDTAG:
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "tag searchCommand ?arg arg ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "tag searchCommand ?arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -926,7 +926,7 @@ CanvasWidgetCmd(
 	int length;
 
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg arg ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -960,7 +960,7 @@ CanvasWidgetCmd(
 	    /*
 	     * Allow more specific error return.
 	     */
-	    Tcl_WrongNumArgs(interp, 3, objv, "coords ?arg arg ...?");
+	    Tcl_WrongNumArgs(interp, 3, objv, "coords ?arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1158,7 +1158,7 @@ CanvasWidgetCmd(
     }
     case CANV_FIND:
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "searchCommand ?arg arg ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "searchCommand ?arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1355,7 +1355,7 @@ CanvasWidgetCmd(
 	break;
     case CANV_ITEMCONFIGURE:
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?option value ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?-option value ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}

@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.18 2006/12/01 19:48:00 hobbs Exp $
+# RCS: @(#) $Id: winWm.test,v 1.19 2008/07/23 23:24:24 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -359,7 +359,7 @@ test winWm-7.4 {UpdateWrapper must maintain focus} win {
 
 test winWm-8.1 {Tk_WmCmd procedure, "iconphoto" option} win {
     list [catch {wm iconph .} msg] $msg
-} {1 {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}}
+} {1 {wrong # args: should be "wm iconphoto window ?-default? image ?image ...?"}}
 test winWm-8.2 {Tk_WmCmd procedure, "iconphoto" option} win {
     destroy .t
     toplevel .t

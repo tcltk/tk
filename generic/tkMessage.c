@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.20 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.21 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "default.h"
@@ -224,7 +224,7 @@ Tk_MessageObjCmd(
     Tk_Window tkwin;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -314,7 +314,7 @@ MessageWidgetObjCmd(
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 

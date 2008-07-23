@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.19 2007/05/16 15:23:44 dgp Exp $
+# RCS: @(#) $Id: bind.test,v 1.20 2008/07/23 23:24:26 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -1595,7 +1595,7 @@ test bind-17.6 {event command: add with error} {
 } {1 {bad event type or keysym "xyz"} {<Button-2> <Control-Key-v> abc}}
 test bind-17.7 {event command: delete} {
     list [catch {event delete} msg] $msg
-} {1 {wrong # args: should be "event delete virtual ?sequence sequence ...?"}}
+} {1 {wrong # args: should be "event delete virtual ?sequence ...?"}}
 test bind-17.8 {event command: delete many} {
     setup
     event add <<Paste>> <3> <1> <2> t
@@ -1630,7 +1630,7 @@ test bind-17.13 {event command: info error} {
 } {1 {wrong # args: should be "event info ?virtual?"}}
 test bind-17.14 {event command: generate} {
     list [catch {event generate} msg] $msg
-} {1 {wrong # args: should be "event generate window event ?options?"}}
+} {1 {wrong # args: should be "event generate window event ?-option value ...?"}}
 test bind-17.15 {event command: generate} {
     setup
     bind .b.f <1> "lappend x 1"

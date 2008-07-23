@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.13 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.14 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -134,7 +134,7 @@ Tk_ScrollbarCmd(
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " pathName ?options?\"", NULL);
+		argv[0], " pathName ?-option value ...?\"", NULL);
 	return TCL_ERROR;
     }
 
@@ -232,7 +232,7 @@ ScrollbarWidgetCmd(
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " option ?arg arg ...?\"", NULL);
+		argv[0], " option ?arg ...?\"", NULL);
 	return TCL_ERROR;
     }
     Tcl_Preserve(scrollPtr);

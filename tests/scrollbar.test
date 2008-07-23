@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.20 2007/12/13 15:27:54 dgp Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.21 2008/07/23 23:24:26 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -101,7 +101,7 @@ foreach test {
 destroy .s
 test scrollbar-2.1 {Tk_ScrollbarCmd procedure} -returnCodes error -body {
     scrollbar
-} -result {wrong # args: should be "scrollbar pathName ?options?"}
+} -result {wrong # args: should be "scrollbar pathName ?-option value ...?"}
 test scrollbar-2.2 {Tk_ScrollbarCmd procedure} -body {
     scrollbar gorp
 } -returnCodes error -result {bad window path name "gorp"}
@@ -129,7 +129,7 @@ pack .s -side right -fill y
 update
 test scrollbar-3.1 {ScrollbarWidgetCmd procedure} {
     list [catch {.s} msg] $msg
-} {1 {wrong # args: should be ".s option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".s option ?arg ...?"}}
 test scrollbar-3.2 {ScrollbarWidgetCmd procedure, "cget" option} {
     list [catch {.s cget} msg] $msg
 } {1 {wrong # args: should be ".s cget option"}}

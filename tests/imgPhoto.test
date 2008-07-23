@@ -9,7 +9,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.29 2008/07/22 14:35:23 dgp Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.30 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -118,7 +118,7 @@ update
 
 test imgPhoto-4.1 {ImgPhotoCmd procedure} {
     list [catch {p1} err] $err
-} {1 {wrong # args: should be "p1 option ?arg arg ...?"}}
+} {1 {wrong # args: should be "p1 option ?arg ...?"}}
 test imgPhoto-4.2 {ImgPhotoCmd procedure} {
     list [catch {p1 blah} err] $err
 } {1 {bad option "blah": must be blank, cget, configure, copy, data, get, put, read, redither, transparency, or write}}
@@ -220,7 +220,7 @@ test imgPhoto-4.25 {ImgPhotoCmd procedure: get option} {
 } {1 {wrong # args: should be "p1 get x y"}}
 test imgPhoto-4.26 {ImgPhotoCmd procedure: put option} {
     list [catch {p1 put} err] $err
-} {1 {wrong # args: should be "p1 put data ?options?"}}
+} {1 {wrong # args: should be "p1 put data ?-option value ...?"}}
 test imgPhoto-4.27 {ImgPhotoCmd procedure: put option} {
     list [catch {p1 put {{white} {white white}}} err] $err
 } {1 {all elements of color list must have the same number of elements}}
@@ -233,7 +233,7 @@ test imgPhoto-4.29 {ImgPhotoCmd procedure: put option} {
 } {255 255 255}
 test imgPhoto-4.30 {ImgPhotoCmd procedure: read option} {
     list [catch {p1 read} err] $err
-} {1 {wrong # args: should be "p1 read fileName ?options?"}}
+} {1 {wrong # args: should be "p1 read fileName ?-option value ...?"}}
 test imgPhoto-4.31 {ImgPhotoCmd procedure: read option} hasTeapotPhoto {
     list [catch {p1 read $teapotPhotoFile -zoom 2} err] $err
 } {1 {unrecognized option "-zoom": must be -format, -from, -shrink, or -to}}
@@ -260,7 +260,7 @@ test imgPhoto-4.37 {ImgPhotoCmd procedure: redither option} {
 } {1 {wrong # args: should be "p1 redither"}}
 test imgPhoto-4.38 {ImgPhotoCmd procedure: write option} {
     list [catch {p1 write} err] $err
-} {1 {wrong # args: should be "p1 write fileName ?options?"}}
+} {1 {wrong # args: should be "p1 write fileName ?-option value ...?"}}
 test imgPhoto-4.39 {ImgPhotoCmd procedure: write option} {
     list [catch {p1 write teapot.tmp -format bogus} err] $err
 } {1 {image file format "bogus" is unknown}}
@@ -268,7 +268,7 @@ eval image delete [image names]
 image create photo p1
 test imgPhoto-4.40 {ImgPhotoCmd procedure: transparency option} {
     list [catch {p1 transparency} err] $err
-} {1 {wrong # args: should be "p1 transparency option ?arg arg ...?"}}
+} {1 {wrong # args: should be "p1 transparency option ?arg ...?"}}
 test imgPhoto-4.41 {ImgPhotoCmd procedure: transparency get option} {
     list [catch {p1 transparency get} err] $err
 } {1 {wrong # args: should be "p1 transparency get x y"}}

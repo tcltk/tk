@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.59 2008/04/27 22:39:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.60 2008/07/23 23:24:45 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -382,7 +382,7 @@ static int		WmDeiconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmFocusmodelCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		WmForgetCmd(Tk_Window tkwin, TkWindow *winPtr, 
+static int		WmForgetCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmFrameCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -418,7 +418,7 @@ static int		WmIconpositionCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmIconwindowCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		WmManageCmd(Tk_Window tkwin, TkWindow *winPtr, 
+static int		WmManageCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmMaxsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -987,7 +987,7 @@ TkWmSetClass(
  *
  * Tk_WmObjCmd --
  *
- *	This function is invoked to process the "wm" Tcl command. 
+ *	This function is invoked to process the "wm" Tcl command.
  *
  *----------------------------------------------------------------------
  */
@@ -2344,14 +2344,14 @@ WmIconphotoCmd(
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image1 ?image2 ...?");
+		"window ?-default? image ?image ...?");
 	return TCL_ERROR;
     }
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image1 ?image2 ...?");
+		    "window ?-default? image ?image ...?");
 	    return TCL_ERROR;
 	}
     }
@@ -7142,7 +7142,7 @@ TkpWmSetState(
  *----------------------------------------------------------------------
  */
 
-static void 
+static void
 RemapWindows(winPtr, parentPtr)
      TkWindow *winPtr;
      TkWindow *parentPtr;

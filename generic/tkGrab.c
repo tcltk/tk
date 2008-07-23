@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.14 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.15 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -205,8 +205,8 @@ Tk_GrabObjCmd(
 	/*
 	 * Can't use Tcl_WrongNumArgs here because we want the message to
 	 * read:
-	 * wrong # args: should be "cmd ?-global window" or "cmd option
-	 *    ?arg arg ...?"
+	 * wrong # args: should be "cmd ?-global? window" or "cmd option
+	 *    ?arg ...?"
 	 * We can fake it with Tcl_WrongNumArgs if we assume the command name
 	 * is "grab", but if it has been aliased, the message will be
 	 * incorrect.
@@ -214,7 +214,7 @@ Tk_GrabObjCmd(
 	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
 		Tcl_GetString(objv[0]), " ?-global? window\" or \"",
-		Tcl_GetString(objv[0]), " option ?arg arg ...?\"", NULL);
+		Tcl_GetString(objv[0]), " option ?arg ...?\"", NULL);
 	return TCL_ERROR;
     }
 

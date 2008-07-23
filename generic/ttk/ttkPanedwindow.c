@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.15 2008/04/27 22:41:12 dkf Exp $
+/* $Id: ttkPanedwindow.c,v 1.16 2008/07/23 23:24:45 nijtmans Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -529,7 +529,7 @@ static int PanedPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
 	 * Recalculate sash positions based on requested size.
 	 */
 	Tk_Window tkwin = pw->core.tkwin;
-	PlaceSashes(pw, 
+	PlaceSashes(pw,
 	    pw->paned.width > 0 ? pw->paned.width : Tk_Width(tkwin),
 	    pw->paned.height > 0 ? pw->paned.height : Tk_Height(tkwin));
     }
@@ -636,7 +636,7 @@ static int PanedAddCommand(
 	    objc - 3, objv + 3);
 }
 
-/* $pw insert $index $slave ?options...?
+/* $pw insert $index $slave ?-option value ...?
  * 	Insert new slave, or move existing one.
  */
 static int PanedInsertCommand(
@@ -648,7 +648,7 @@ static int PanedInsertCommand(
     Tk_Window slaveWindow;
 
     if (objc < 4) {
-	Tcl_WrongNumArgs(interp, 2,objv, "index slave ?options...?");
+	Tcl_WrongNumArgs(interp, 2,objv, "index slave ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -661,7 +661,7 @@ static int PanedInsertCommand(
     if (!strcmp(Tcl_GetString(objv[2]), "end")) {
 	destIndex = Ttk_NumberSlaves(pw->paned.mgr);
     } else if (TCL_OK != Ttk_GetSlaveIndexFromObj(
-		interp,pw->paned.mgr,objv[2],&destIndex)) 
+		interp,pw->paned.mgr,objv[2],&destIndex))
     {
 	return TCL_ERROR;
     }
@@ -696,7 +696,7 @@ static int PanedForgetCommand(
     }
 
     if (TCL_OK != Ttk_GetSlaveIndexFromObj(
-		    interp, pw->paned.mgr, objv[2], &paneIndex)) 
+		    interp, pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
     }
@@ -751,7 +751,7 @@ static int PanedPaneCommand(
     Pane *pane;
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2,objv, "pane ?-option value...?");
+	Tcl_WrongNumArgs(interp, 2,objv, "pane ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -937,7 +937,7 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Registration routine.
  */
-MODULE_SCOPE 
+MODULE_SCOPE
 void TtkPanedwindow_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);

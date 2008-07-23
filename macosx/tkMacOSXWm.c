@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.65 2008/05/03 21:12:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.66 2008/07/23 23:24:44 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1924,14 +1924,14 @@ WmIconphotoCmd(
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image1 ?image2 ...?");
+		"window ?-default? image ?image ...?");
 	return TCL_ERROR;
     }
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image1 ?image2 ...?");
+		    "window ?-default? image ?image ...?");
 	    return TCL_ERROR;
 	}
     }
@@ -5298,7 +5298,7 @@ TkMacOSXMakeRealWindowExist(
 	/*
 	 * Workaround GetWindowStructureWidths() Carbon bug:
 	 */
-	
+
 	strWidths.top = 16;
     }
     wmPtr->xInParent = strWidths.left;
@@ -6080,7 +6080,7 @@ WmGetWindowGroup(
 	TkDisplay *dispPtr = TkGetDisplayList();
 	TkWindow *masterWinPtr = (TkWindow *)
 		Tk_IdToWindow(dispPtr->display, wmPtr->master);
-	
+
 	if (masterWinPtr && masterWinPtr->window != None &&
 		TkMacOSXHostToplevelExists(masterWinPtr)) {
 	    WindowRef masterMacWin =

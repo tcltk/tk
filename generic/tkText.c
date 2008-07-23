@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.80 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.81 2008/07/23 23:24:22 nijtmans Exp $
  */
 
 #include "default.h"
@@ -446,7 +446,7 @@ Tk_TextObjCmd(
     Tk_Window tkwin = (Tk_Window) clientData;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -700,7 +700,7 @@ TextWidgetObjCmd(
     };
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -823,7 +823,7 @@ TextWidgetObjCmd(
 	Tcl_Obj *objPtr = NULL;
 
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?options? index1 index2");
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-option value ...? index1 index2");
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1544,7 +1544,7 @@ SharedTextObjCmd(
     };
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -1649,7 +1649,7 @@ TextPeerCmd(
     };
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -1661,7 +1661,7 @@ TextPeerCmd(
     switch ((enum peerOptions)index) {
     case PEER_CREATE:
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "pathName ?options?");
+	    Tcl_WrongNumArgs(interp, 3, objv, "pathName ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	return CreateWidget(textPtr->sharedTextPtr, tkwin, interp, textPtr,
@@ -4968,7 +4968,7 @@ TextEditCmd(
     };
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 

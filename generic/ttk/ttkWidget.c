@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.12 2008/04/27 22:41:12 dkf Exp $
+/* $Id: ttkWidget.c,v 1.13 2008/07/23 23:24:44 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -356,7 +356,7 @@ int TtkWidgetConstructorObjCmd(
     int i;
 
     if (objc < 2 || objc % 1 == 1) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 

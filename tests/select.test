@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.16 2005/11/13 21:58:16 dkf Exp $
+# RCS: @(#) $Id: select.test,v 1.17 2008/07/23 23:24:25 nijtmans Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -567,7 +567,7 @@ test select-5.14 {Tk_GetSelection procedure} {unix altDisplay} {
 
 test select-6.1 {Tk_SelectionCmd procedure} {
     list [catch {selection} cmd] $cmd
-} {1 {wrong # args: should be "selection option ?arg arg ...?"}}
+} {1 {wrong # args: should be "selection option ?arg ...?"}}
 # selection clear
 test select-6.2 {Tk_SelectionCmd procedure} {
     list [catch {selection clear -selection} cmd] $cmd
@@ -622,7 +622,7 @@ test select-6.11 {Tk_SelectionCmd procedure} {
 } {.f1 {}}
 test select-6.12 {Tk_SelectionCmd procedure} {
     list [catch {selection clear foo bar} cmd] $cmd
-} {1 {wrong # args: should be "selection clear ?options?"}}
+} {1 {wrong # args: should be "selection clear ?-option value ...?"}}
 # selection get
 test select-6.13 {Tk_SelectionCmd procedure} {
     list [catch {selection get -selection} cmd] $cmd
@@ -666,7 +666,7 @@ test select-6.19 {Tk_SelectionCmd procedure} {
 } {1 {bad window path name ".f2"}}
 test select-6.20 {Tk_SelectionCmd procedure} {
     list [catch {selection get foo bar} cmd] $cmd
-} {1 {wrong # args: should be "selection get ?options?"}}
+} {1 {wrong # args: should be "selection get ?-option value ...?"}}
 test select-6.21 {Tk_SelectionCmd procedure} {
     global selValue selInfo
     setup
@@ -696,13 +696,13 @@ test select-6.25 {Tk_SelectionCmd procedure} {
 } {1 {bad option "-selectionfoo": must be -format, -selection, or -type}}
 test select-6.26 {Tk_SelectionCmd procedure} {
     list [catch {selection handle} cmd] $cmd
-} {1 {wrong # args: should be "selection handle ?options? window command"}}
+} {1 {wrong # args: should be "selection handle ?-option value ...? window command"}}
 test select-6.27 {Tk_SelectionCmd procedure} {
     list [catch {selection handle .} cmd] $cmd
-} {1 {wrong # args: should be "selection handle ?options? window command"}}
+} {1 {wrong # args: should be "selection handle ?-option value ...? window command"}}
 test select-6.28 {Tk_SelectionCmd procedure} {
     list [catch {selection handle . foo bar baz blat} cmd] $cmd
-} {1 {wrong # args: should be "selection handle ?options? window command"}}
+} {1 {wrong # args: should be "selection handle ?-option value ...? window command"}}
 test select-6.29 {Tk_SelectionCmd procedure} {
     catch { destroy .f2 }
     list [catch {selection handle .f2 dummy} cmd] $cmd
@@ -748,7 +748,7 @@ test select-6.37 {Tk_SelectionCmd procedure} {
 } {1 {bad window path name ".f2"}}
 test select-6.38 {Tk_SelectionCmd procedure} {
     list [catch {selection own foo bar baz} cmd] $cmd
-} {1 {wrong # args: should be "selection own ?options? ?window?"}}
+} {1 {wrong # args: should be "selection own ?-option value ...? ?window?"}}
 test select-6.39 {Tk_SelectionCmd procedure} {
     list [catch {selection foo} cmd] $cmd
 } {1 {bad option "foo": must be clear, get, handle, or own}}

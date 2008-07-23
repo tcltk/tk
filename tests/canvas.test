@@ -6,7 +6,7 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.23 2004/12/07 21:22:19 dgp Exp $
+# RCS: @(#) $Id: canvas.test,v 1.24 2008/07/23 23:24:26 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -491,7 +491,7 @@ foreach type {arc bitmap image line oval polygon rect text window} {
 	canvas .c
     } -body {
 	.c create $type
-    } -returnCodes error -result [format {wrong # args: should be ".c create %s coords ?arg arg ...?"} $type]
+    } -returnCodes error -result [format {wrong # args: should be ".c create %s coords ?arg ...?"} $type]
     incr i
     test canvas-15.$i "basic coords check: $type coords are paired" -setup {
 	destroy .c

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.36 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.37 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1107,7 +1107,7 @@ TestobjconfigObjCmd(
 	};
 
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "new name ?options?");
+	    Tcl_WrongNumArgs(interp, 1, objv, "new name ?-option value ...?");
 	    return TCL_ERROR;
 	}
 
@@ -1565,7 +1565,7 @@ ImageCmd(
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], "option ?arg arg ...?", NULL);
+		argv[0], "option ?arg ...?", NULL);
 	return TCL_ERROR;
     }
     if (strcmp(argv[1], "changed") == 0) {

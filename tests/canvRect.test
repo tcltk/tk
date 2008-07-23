@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvRect.test,v 1.8 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: canvRect.test,v 1.9 2008/07/23 23:24:26 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -53,7 +53,7 @@ test canvRect-1.$i {configuration options} {
 
 test canvRect-2.1 {CreateRectOval procedure} {
     list [catch {.c create rect} msg] $msg
-} {1 {wrong # args: should be ".c create rect coords ?arg arg ...?"}}
+} {1 {wrong # args: should be ".c create rect coords ?arg ...?"}}
 test canvRect-2.2 {CreateRectOval procedure} {
     list [catch {.c create oval x y z} msg] $msg
 } {1 {wrong # coordinates: expected 0 or 4, got 3}}

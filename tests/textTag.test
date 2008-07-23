@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textTag.test,v 1.12 2004/12/04 00:04:42 dkf Exp $
+# RCS: @(#) $Id: textTag.test,v 1.13 2008/07/23 23:24:26 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -99,7 +99,7 @@ foreach test {
 }
 test textTag-2.1 {TkTextTagCmd - "add" option} haveCourier12 {
     list [catch {.t tag} msg] $msg
-} {1 {wrong # args: should be ".t tag option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".t tag option ?arg ...?"}}
 test textTag-2.2 {TkTextTagCmd - "add" option} haveCourier12 {
     list [catch {.t tag gorp} msg] $msg
 } {1 {bad tag option "gorp": must be add, bind, cget, configure, delete, lower, names, nextrange, prevrange, raise, ranges, or remove}}
@@ -213,7 +213,7 @@ test textTag-4.5 {TkTextTagCmd - "cget" option} haveCourier12 {
 
 test textTag-5.1 {TkTextTagCmd - "configure" option} haveCourier12 {
     list [catch {.t tag configure} msg] $msg
-} {1 {wrong # args: should be ".t tag configure tagName ?option? ?value? ?option value ...?"}}
+} {1 {wrong # args: should be ".t tag configure tagName ?-option? ?value? ?-option value ...?"}}
 test textTag-5.2 {TkTextTagCmd - "configure" option} haveCourier12 {
     list [catch {.t tag configure x -foo} msg] $msg
 } {1 {unknown option "-foo"}}
