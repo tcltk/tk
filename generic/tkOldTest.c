@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldTest.c,v 1.2 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkOldTest.c,v 1.3 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -207,7 +207,7 @@ ImageCmd(
 
     if (argc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], "option ?arg arg ...?", NULL);
+		argv[0], "option ?arg ...?", NULL);
 	return TCL_ERROR;
     }
     if (strcmp(argv[1], "changed") == 0) {

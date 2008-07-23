@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.45 2007/12/13 15:24:13 dgp Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.46 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2777,7 +2777,7 @@ Tk_EventObjCmd(
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "virtual ?sequence sequence ...?");
+		    "virtual ?sequence ...?");
 	    return TCL_ERROR;
 	}
 	name = Tcl_GetString(objv[2]);
@@ -2794,7 +2794,7 @@ Tk_EventObjCmd(
     }
     case EVENT_GENERATE:
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window event ?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window event ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	return HandleEventGenerate(interp, tkwin, objc - 2, objv + 2);

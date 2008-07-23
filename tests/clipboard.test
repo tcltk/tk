@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clipboard.test,v 1.9 2004/06/24 12:45:42 dkf Exp $
+# RCS: @(#) $Id: clipboard.test,v 1.10 2008/07/23 23:24:25 nijtmans Exp $
 
 #
 # Note: Multiple display clipboard handling will only be tested if the
@@ -181,7 +181,7 @@ test clipboard-6.3 {Tk_ClipboardAppend procedure} {
 
 test clipboard-7.1 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard} msg] $msg
-} {1 {wrong # args: should be "clipboard option ?arg arg ...?"}}
+} {1 {wrong # args: should be "clipboard option ?arg ...?"}}
 test clipboard-7.2 {Tk_ClipboardCmd procedure} {
     clipboard clear
     list [catch {clipboard append --} msg] $msg \
@@ -197,7 +197,7 @@ test clipboard-7.4 {Tk_ClipboardCmd procedure} {
 } {1 {bad option "--x": must be -displayof, -format, or -type}}
 test clipboard-7.5 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard append -- a b} msg] $msg
-} {1 {wrong # args: should be "clipboard append ?options? data"}}
+} {1 {wrong # args: should be "clipboard append ?-option value ...? data"}}
 test clipboard-7.6 {Tk_ClipboardCmd procedure} {
     clipboard clear
     list [catch {clipboard append -format} msg] $msg \
@@ -208,7 +208,7 @@ test clipboard-7.7 {Tk_ClipboardCmd procedure} {
 } {1 {bad option "-displayofoo": must be -displayof, -format, or -type}}
 test clipboard-7.8 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard append -type TEST} msg] $msg
-} {1 {wrong # args: should be "clipboard append ?options? data"}}
+} {1 {wrong # args: should be "clipboard append ?-option value ...? data"}}
 test clipboard-7.9 {Tk_ClipboardCmd procedure} {
     list [catch {clipboard append -displayof foo "test"} msg] $msg
 } {1 {bad window path name "foo"}}

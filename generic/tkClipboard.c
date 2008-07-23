@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.19 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.20 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -430,7 +430,7 @@ Tk_ClipboardObjCmd(
     int index, i;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -493,7 +493,7 @@ Tk_ClipboardObjCmd(
 	    }
 	}
 	if (objc - i != 1) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?options? data");
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-option value ...? data");
 	    return TCL_ERROR;
 	}
 	if (path != NULL) {
@@ -587,7 +587,7 @@ Tk_ClipboardObjCmd(
 	selection = Tk_InternAtom(tkwin, "CLIPBOARD");
 
 	if (objc - i > 1) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-option value ...?");
 	    return TCL_ERROR;
 	} else if (objc - i == 1) {
 	    target = Tk_InternAtom(tkwin, Tcl_GetString(objv[i]));

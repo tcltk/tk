@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.11 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.12 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 #if 0
@@ -134,7 +134,7 @@ SquareObjCmd(
     Tk_OptionTable optionTable;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 

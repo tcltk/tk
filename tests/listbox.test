@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.29 2008/05/13 13:17:26 patthoyts Exp $
+# RCS: @(#) $Id: listbox.test,v 1.30 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -115,7 +115,7 @@ foreach test {
 
 test listbox-2.1 {Tk_ListboxCmd procedure} {
     list [catch {listbox} msg] $msg
-} {1 {wrong # args: should be "listbox pathName ?options?"}}
+} {1 {wrong # args: should be "listbox pathName ?-option value ...?"}}
 test listbox-2.2 {Tk_ListboxCmd procedure} {
     list [catch {listbox gorp} msg] $msg
 } {1 {bad window path name "gorp"}}
@@ -142,7 +142,7 @@ pack .l
 update
 test listbox-3.1 {ListboxWidgetCmd procedure} {
     list [catch .l msg] $msg
-} {1 {wrong # args: should be ".l option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".l option ?arg ...?"}}
 test listbox-3.2 {ListboxWidgetCmd procedure, "activate" option} {
     list [catch {.l activate} msg] $msg
 } {1 {wrong # args: should be ".l activate index"}}
@@ -408,7 +408,7 @@ test listbox-3.63 {ListboxWidgetCmd procedure, "index" option} {
 } 34
 test listbox-3.64 {ListboxWidgetCmd procedure, "insert" option} {
     list [catch {.l insert} msg] $msg
-} {1 {wrong # args: should be ".l insert index ?element element ...?"}}
+} {1 {wrong # args: should be ".l insert index ?element ...?"}}
 test listbox-3.65 {ListboxWidgetCmd procedure, "insert" option} {
     list [catch {.l insert badIndex} msg] $msg
 } {1 {bad listbox index "badIndex": must be active, anchor, end, @x,y, or a number}}
@@ -1978,7 +1978,7 @@ test listbox-23.4 {ConfigureListboxItem, wrong num args} {
     .l insert end a
     catch {.l itemco} result
     set result
-} {wrong # args: should be ".l itemconfigure index ?option? ?value? ?option value ...?"}
+} {wrong # args: should be ".l itemconfigure index ?-option? ?value? ?-option value ...?"}
 test listbox-23.5 {ConfigureListboxItem, multiple calls} {
     catch {destroy .l}
     listbox .l

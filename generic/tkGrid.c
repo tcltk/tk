@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.48 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.49 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -941,7 +941,7 @@ GridRowColumnConfigureCommand(
     Tcl_Obj *listCopy;
 
     if (((objc % 2 != 0) && (objc > 6)) || (objc < 4)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "master index ?-option value...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "master index ?-option value ...?");
 	return TCL_ERROR;
     }
 
@@ -1313,7 +1313,7 @@ GridSlavesCommand(
     Tcl_Obj *res;
 
     if ((objc < 3) || ((objc % 2) == 0)) {
-	Tcl_WrongNumArgs(interp, 2, objv, "window ?-option value...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "window ?-option value ...?");
 	return TCL_ERROR;
     }
 
