@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scale.test,v 1.15 2004/05/23 17:34:49 dkf Exp $
+# RCS: @(#) $Id: scale.test,v 1.16 2008/07/23 23:24:24 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -90,7 +90,7 @@ destroy .s
 
 test scale-2.1 {Tk_ScaleCmd procedure} {
     list [catch {scale} msg] $msg
-} {1 {wrong # args: should be "scale pathName ?options?"}}
+} {1 {wrong # args: should be "scale pathName ?-option value ...?"}}
 test scale-2.2 {Tk_ScaleCmd procedure} {
     list [catch {scale foo} msg] $msg [winfo child .]
 } {1 {bad window path name "foo"} {}}
@@ -103,7 +103,7 @@ pack .s
 update idletasks
 test scale-3.1 {ScaleWidgetCmd procedure} {
     list [catch {.s} msg] $msg
-} {1 {wrong # args: should be ".s option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".s option ?arg ...?"}}
 test scale-3.2 {ScaleWidgetCmd procedure, cget option} {
     list [catch {.s cget} msg] $msg
 } {1 {wrong # args: should be ".s cget option"}}

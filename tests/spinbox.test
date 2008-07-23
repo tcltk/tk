@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: spinbox.test,v 1.10 2008/07/22 11:55:57 aniap Exp $
+# RCS: @(#) $Id: spinbox.test,v 1.11 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -988,7 +988,7 @@ test spinbox-1.85 {configuration option: "xscrollcommand"} -setup {
 
 test spinbox-2.1 {Tk_EntryCmd procedure} -body {
     spinbox
-} -returnCodes error -result {wrong # args: should be "spinbox pathName ?options?"}
+} -returnCodes error -result {wrong # args: should be "spinbox pathName ?-option value ...?"}
 test spinbox-2.2 {Tk_EntryCmd procedure} -body {
     spinbox gorp
 } -returnCodes error -result {bad window path name "gorp"}
@@ -1026,7 +1026,7 @@ test spinbox-3.1 {EntryWidgetCmd procedure} -setup {
     .e
 } -cleanup {
     destroy .e
-} -returnCodes error -result {wrong # args: should be ".e option ?arg arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".e option ?arg ...?"}
 test spinbox-3.2 {EntryWidgetCmd procedure, "bbox" widget command} -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2 
     pack .e

@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: entry.test,v 1.23 2008/07/22 11:55:57 aniap Exp $
+# RCS: @(#) $Id: entry.test,v 1.24 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -633,7 +633,7 @@ test entry-1.58 {configuration option: "xscrollcommand" for entry} -setup {
 
 test entry-2.1 {Tk_EntryCmd procedure} -body {
     entry
-} -returnCodes error -result {wrong # args: should be "entry pathName ?options?"}
+} -returnCodes error -result {wrong # args: should be "entry pathName ?-option value ...?"}
 test entry-2.2 {Tk_EntryCmd procedure} -body {
     entry gorp
 } -returnCodes error -result {bad window path name "gorp"}
@@ -671,7 +671,7 @@ test entry-3.1 {EntryWidgetCmd procedure} -setup {
     .e
 } -cleanup {
     destroy .e
-} -returnCodes error -result {wrong # args: should be ".e option ?arg arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".e option ?arg ...?"}
 test entry-3.2 {EntryWidgetCmd procedure, "bbox" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2 
     pack .e

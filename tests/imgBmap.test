@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: imgBmap.test,v 1.6 2004/05/23 17:34:48 dkf Exp $
+# RCS: @(#) $Id: imgBmap.test,v 1.7 2008/07/23 23:24:25 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -339,7 +339,7 @@ eval image delete [image names]
 image create bitmap i1
 test imageBmap-7.1 {ImgBmapCmd procedure} {
     list [catch {i1} msg] $msg
-} {1 {wrong # args: should be "i1 option ?arg arg ...?"}}
+} {1 {wrong # args: should be "i1 option ?arg ...?"}}
 test imageBmap-7.2 {ImgBmapCmd procedure, "cget" option} {
     list [catch {i1 cget} msg] $msg
 } {1 {wrong # args: should be "i1 cget option"}}

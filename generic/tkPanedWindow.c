@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.32 2008/05/14 08:29:07 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.33 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 #include "default.h"
@@ -381,7 +381,7 @@ Tk_PanedWindowObjCmd(
     XSetWindowAttributes atts;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
