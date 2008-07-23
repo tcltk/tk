@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.77 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.78 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -667,7 +667,7 @@ ImgPhotoCmd(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -912,7 +912,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	if ((options.name != NULL) || (index < objc)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-option value ...?");
 	    return TCL_ERROR;
 	}
 	if ((options.fromX > masterPtr->width)
@@ -1056,7 +1056,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	if ((options.name == NULL) || (index < objc)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "data ?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "data ?-option value ...?");
 	    return TCL_ERROR;
 	}
 
@@ -1230,7 +1230,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	if ((options.name == NULL) || (index < objc)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
 	    return TCL_ERROR;
 	}
 
@@ -1367,7 +1367,7 @@ ImgPhotoCmd(
 	};
 
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIndexFromObj(interp, objv[2], photoTransOptions, "option",
@@ -1508,7 +1508,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	if ((options.name == NULL) || (index < objc)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	if ((options.fromX > masterPtr->width)

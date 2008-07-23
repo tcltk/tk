@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textMark.test,v 1.9 2004/06/17 22:38:57 dkf Exp $
+# RCS: @(#) $Id: textMark.test,v 1.10 2008/07/23 23:24:24 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -41,7 +41,7 @@ Line 7"
 
 test textMark-1.1 {TkTextMarkCmd - missing option} haveCourier12 {
     list [catch {.t mark} msg] $msg
-} {1 {wrong # args: should be ".t mark option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".t mark option ?arg ...?"}}
 test textMark-1.2 {TkTextMarkCmd - bogus option} haveCourier12 {
     list [catch {.t mark gorp} msg] $msg
 } {1 {bad mark option "gorp": must be gravity, names, next, previous, set, or unset}}
@@ -125,7 +125,7 @@ test textMark-4.3 {TkTextMarkCmd - "unset" option} haveCourier12 {
 
 test textMark-5.1 {TkTextMarkCmd - miscellaneous} haveCourier12 {
     list [catch {.t mark} msg] $msg
-} {1 {wrong # args: should be ".t mark option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".t mark option ?arg ...?"}}
 test textMark-5.2 {TkTextMarkCmd - miscellaneous} haveCourier12 {
     list [catch {.t mark foo} msg] $msg
 } {1 {bad mark option "foo": must be gravity, names, next, previous, set, or unset}}

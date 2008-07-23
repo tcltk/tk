@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.36 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.37 2008/07/23 23:24:21 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -191,7 +191,7 @@ Tk_ImageObjCmd(
 	Tcl_Obj **args;
 	int oldimage = 0;
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "type ?name? ?options?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "type ?name? ?-option value ...?");
 	    return TCL_ERROR;
 	}
 

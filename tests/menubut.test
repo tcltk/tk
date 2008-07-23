@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menubut.test,v 1.10 2004/06/24 12:45:43 dkf Exp $
+# RCS: @(#) $Id: menubut.test,v 1.11 2008/07/23 23:24:25 nijtmans Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
@@ -88,7 +88,7 @@ foreach test {
 
 test menubutton-2.1 {Tk_MenubuttonCmd procedure} {
     list [catch {menubutton} msg] $msg
-} {1 {wrong # args: should be "menubutton pathName ?options?"}}
+} {1 {wrong # args: should be "menubutton pathName ?-option value ...?"}}
 test menubutton-2.2 {Tk_MenubuttonCmd procedure} {
     list [catch {menubutton foo} msg] $msg
 } {1 {bad window path name "foo"}}
@@ -107,7 +107,7 @@ menubutton .mb -text "Test Menu"
 pack .mb
 test menubutton-3.1 {MenuButtonWidgetCmd procedure} {
     list [catch {.mb} msg] $msg
-} {1 {wrong # args: should be ".mb option ?arg arg ...?"}}
+} {1 {wrong # args: should be ".mb option ?arg ...?"}}
 test menubutton-3.2 {ButtonWidgetCmd procedure, "cget" option} {
     list [catch {.mb c} msg] $msg
 } {1 {ambiguous option "c": must be cget or configure}}

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.20 2007/12/13 15:24:17 dgp Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.21 2008/07/23 23:24:23 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -115,7 +115,7 @@ TkTextMarkCmd(
     };
 
     if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg arg ...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObj(interp, objv[2], markOptionStrings, "mark option",

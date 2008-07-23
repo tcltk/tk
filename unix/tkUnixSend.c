@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.21 2008/04/27 22:39:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.22 2008/07/23 23:24:46 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -931,7 +931,7 @@ Tk_SendCmd(
 
     if (argc < (i+2)) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" ?options? interpName arg ?arg ...?\"", NULL);
+		" ?-option value ...? interpName arg ?arg ...?\"", NULL);
 	return TCL_ERROR;
     }
     destName = argv[i];
