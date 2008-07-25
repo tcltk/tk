@@ -7,9 +7,10 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.21 2008/07/25 13:40:15 aniap Exp $
+# RCS: @(#) $Id: bind.test,v 1.22 2008/07/25 23:47:15 aniap Exp $
 
-package require tcltest 2.1
+package require tcltest 2.2
+namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 tk useinputmethods 0
@@ -3177,7 +3178,6 @@ test bind-22.18 {HandleEventGenerate} -body {
     event gen . <a> -root 98765
 } -returnCodes error -result {bad window name/identifier "98765"}
 
-# previously -run with foreach
 test bind-22.19 {HandleEventGenerate: options <Configure> -above .xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -5376,7 +5376,6 @@ test bind-25.4 {ParseEventDescription} -body {
 } -result {<<Shift-Paste>>}
 
 # Assorted error cases in event sequence parsing
-# previously -run with foreach
 test bind-25.5 {ParseEventDescription procedure error cases} -body {
     bind .t \x7 {puts hi}
 } -returnCodes error -result {bad ASCII character 0x7}
@@ -5739,7 +5738,6 @@ test bind-26.3 {event names} -setup {
     destroy .t.f
 } -result {<Destroy> destroyed}
 
-# previously -run with foreach
 test bind-26.4 {event names: Motion} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -5952,14 +5950,6 @@ test bind-26.18 {event names: Deactivate} -setup {
 
 
 # These events require an extra argument to [event generate]
-package require tcltest 2.1
-eval tcltest::configure $argv
-tcltest::loadTestedCommands
-tk useinputmethods 0
-
-toplevel .t -width 100 -height 50
-wm geom .t +0+0
-update idletasks
 test bind-26.19 {event names: Circulate} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -6197,20 +6187,6 @@ test bind-28.8 {keysym names} -setup {
     destroy .t.f
 } -result {X x {keysym X}}
 
-# test bind-29.1 {dummy test to help ensure proper numbering} -body {}
-
-#test bind-29.2-6 {GetKeySym procedure} -setup { ;#nonP
-#    frame .t.f -class Test -width 150 -height 100
-#    pack .t.f
-#    focus -force .t.f
-#    update
-#} -body {
-#	set x nothing
-#	event gen .t.f <KeyPress> -keysym a -state 0
-#	set x
-#} -cleanup {
-#   destroy .t.f
-#} -result {a}
 
 test bind-29.1 {Tk_BackgroundError procedure} -setup {
     proc bgerror msg {
@@ -6400,8 +6376,6 @@ test bind-31.7 {virtual event user_data field - unshared, asynch} -setup {
     destroy .t.f
 } -result {{} {} {TestUserData >b<}}
 
-
-destroy .t
 
 # cleanup
 cleanupTests
