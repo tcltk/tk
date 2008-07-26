@@ -1,5 +1,7 @@
 2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* doc/options.n: Direct to the font manual for -font [Bug 1686012]
+
 	* win/tkWinWindow.c: Check for 0x prefix in sprintf %p. Bug [2026405]
 
 2008-07-22  Daniel Steffen  <das@users.sourceforge.net>
