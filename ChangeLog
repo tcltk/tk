@@ -1,3 +1,7 @@
+2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWindow.c: Check for 0x prefix in sprintf %p. Bug [2026405]
+
 2008-07-22  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/ttk/aquaTheme.tcl: Use system color names and TIP145 named
