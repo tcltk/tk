@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.126 2008/05/02 10:28:18 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.127 2008/07/26 13:03:07 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -3705,7 +3705,9 @@ WmForgetCmd(
     if (Tk_IsTopLevel(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
-	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	if (Tk_IsMapped(Tk_Parent(frameWin))) {
+	    RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	}
 	TkWmDeadWindow(winPtr);
 	/* flags (above) must be cleared before calling */
 	/* TkMapTopFrame (below) */

@@ -1,5 +1,8 @@
 2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/tkWinWm.c: Check that the parent has been mapped before
+	* tests/wm.test: calling RemapWindows. [Bug 2009788]
+
 	* win/tkWinWindow.c: Check for 0x prefix in sprintf %p. Bug [2026405]
 
 2007-02-24  Jan Nijtmans  <nijtmans@users.sf.net>
