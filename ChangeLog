@@ -1,3 +1,7 @@
+2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWindow.c: Check for 0x prefix in sprintf %p. Bug [2026405]
+
 2007-02-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/*.c: fix [2021443] inconsistant "wrong # args" messages
