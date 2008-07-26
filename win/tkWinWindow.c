@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.15 2007/02/23 14:15:34 dkf Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.15.4.1 2008/07/26 11:49:30 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -174,9 +174,12 @@ TkpPrintWindowId(
     /*
      * Use pointer representation, because Win64 is P64 (*not* LP64). Windows
      * doesn't print the 0x for %p, so we do it.
+     * bug #2026405: cygwin does output 0x for %p so test and recover.
      */
 
     sprintf(buf, "0x%p", hwnd);
+    if (buf[2] == '0' && buf[3] == 'x')
+	sprintf(buf, "%p", hwnd);
 }
 
 /*
