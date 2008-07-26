@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.30 2008/07/23 23:24:25 nijtmans Exp $
+# RCS: @(#) $Id: listbox.test,v 1.31 2008/07/26 13:32:44 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2131,12 +2131,12 @@ test listbox-28.1 {listbox -activestyle} {
     listbox .l -activ non
     .l cget -activestyle
 } none
-test listbox-28.2 {listbox -activestyle} {!win} {
+test listbox-28.2-nonwin {listbox -activestyle} {nonwin} {
     destroy .l
     listbox .l
     .l cget -activestyle
 } dotbox
-test listbox-28.2 {listbox -activestyle} {win} {
+test listbox-28.2-win {listbox -activestyle} {win} {
     destroy .l
     listbox .l
     .l cget -activestyle
