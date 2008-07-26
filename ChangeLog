@@ -1,5 +1,7 @@
 2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* doc/options.n: Direct to the font manual for -font [Bug 1686012]
+
 	* tests/constraints.tcl: Add a nonwin contraint.
 	* tests/listbox.test:    Conform to testing policy. [Bug 2024753]
 
