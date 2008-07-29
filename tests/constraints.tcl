@@ -182,7 +182,7 @@ testConstraint testwrapper   [llength [info commands testwrapper]]
 # constraint to see what sort of fonts are available
 testConstraint fonts 1
 destroy .e
-entry .e -width 0 -font {Helvetica -12} -bd 1
+entry .e -width 0 -font {Helvetica -12} -bd 1 -highlightthickness 1
 .e insert end a.bcd
 if {([winfo reqwidth .e] != 37) || ([winfo reqheight .e] != 20)} {
     testConstraint fonts 0
