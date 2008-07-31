@@ -1,3 +1,8 @@
+2008-07-31  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:	Added missing EXTERN for the Tcl_PkgInitStubsCheck
+	declaration to fix inability to embed non-stub-enabled Tk on Windows.
+
 2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/options.n: Direct to the font manual for -font [Bug 1686012]
