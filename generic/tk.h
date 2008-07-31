@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.112 2008/06/19 19:48:26 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.113 2008/07/31 04:22:09 dgp Exp $
  */
 
 #ifndef _TK
@@ -1486,7 +1486,7 @@ typedef struct Tk_ElementSpec {
 
 const char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
 			    const char *version, int exact));
-const char *		Tk_PkgInitStubsCheck _ANSI_ARGS_((Tcl_Interp *interp,
+EXTERN const char *	Tk_PkgInitStubsCheck _ANSI_ARGS_((Tcl_Interp *interp,
 			    const char *version, int exact));
 
 #ifndef USE_TK_STUBS
