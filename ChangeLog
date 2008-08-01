@@ -1,3 +1,8 @@
+2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWm.c: Check wmPtr is valid in TopLevelReqProc
+	* test/wm.test:  to fix [Bug 2028703]
+
 2008-07-31  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h: Added missing EXTERN for the Tcl_PkgInitStubsCheck
