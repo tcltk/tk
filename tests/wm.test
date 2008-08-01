@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.39 2008/03/20 13:23:20 dkf Exp $
+# RCS: @(#) $Id: wm.test,v 1.39.2.1 2008/08/01 20:24:48 patthoyts Exp $
 
 # This file tests window manager interactions that work across platforms.
 # Window manager tests that only work on a specific platform should be placed
@@ -2137,6 +2137,43 @@ test wm-manage-1.2 {unmanaging a toplevel} -setup {
 } -cleanup {
     deleteWindows
 } -result {wm .t.t pack .t wm .t.t}
+
+test wm-forget-1.1 "bug #2009788: forget toplevel can cause crash" -body {
+    toplevel .parent
+    toplevel .parent.child
+    wm forget .parent.child
+    winfo exists .parent.child
+} -cleanup {
+    deleteWindows
+}  -result {1}
+test wm-forget-1.2 "bug #2009788: forget toplevel can cause crash" -body {
+    toplevel .parent
+    update
+    toplevel .parent.child
+    wm forget .parent.child
+    winfo exists .parent.child
+} -cleanup {
+    deleteWindows
+}  -result {1}
+test wm-forget-1.3 "bug #2009788: forget toplevel can cause crash" -body {
+    toplevel .parent
+    toplevel .parent.child
+    wm forget .parent.child
+    wm manage .parent.child
+    winfo exists .parent.child
+} -cleanup {
+    deleteWindows
+}  -result {1}
+test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
+    toplevel .parent
+    toplevel .parent.child
+    wm forget .parent.child
+    pack [button .parent.child.button -text Hello]
+    after 250 {destroy .parent}
+    tkwait window .parent
+} -cleanup {
+    deleteWindows
+} -result {}
 
 # FIXME:
 
