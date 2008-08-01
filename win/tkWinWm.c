@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124 2007/12/14 15:56:09 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.1 2008/08/01 20:24:50 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -3706,7 +3706,9 @@ WmForgetCmd(tkwin, winPtr, interp, objc, objv)
     if (Tk_IsTopLevel(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
-	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	if (Tk_IsMapped(Tk_Parent(frameWin))) {
+	    RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
+	}
 	TkWmDeadWindow(winPtr);
 	/* flags (above) must be cleared before calling */
 	/* TkMapTopFrame (below) */
@@ -5872,13 +5874,15 @@ TopLevelReqProc(
     WmInfo *wmPtr;
 
     wmPtr = winPtr->wmInfoPtr;
-    if ((winPtr->flags & TK_EMBEDDED) && (wmPtr->wrapper != NULL)) {
-	SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, Tk_ReqWidth(tkwin),
+    if (wmPtr) {
+	if ((winPtr->flags & TK_EMBEDDED) && (wmPtr->wrapper != NULL)) {
+	    SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, Tk_ReqWidth(tkwin),
 		Tk_ReqHeight(tkwin));
-    }
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
-	wmPtr->flags |= WM_UPDATE_PENDING;
+	}
+	if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
+	    Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
+	    wmPtr->flags |= WM_UPDATE_PENDING;
+	}
     }
 }
 
