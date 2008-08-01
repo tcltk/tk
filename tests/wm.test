@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.41 2008/07/26 13:03:06 patthoyts Exp $
+# RCS: @(#) $Id: wm.test,v 1.42 2008/08/01 19:39:01 patthoyts Exp $
 
 # This file tests window manager interactions that work across platforms.
 # Window manager tests that only work on a specific platform should be placed
@@ -2164,6 +2164,16 @@ test wm-forget-1.3 "bug #2009788: forget toplevel can cause crash" -body {
 } -cleanup {
     deleteWindows
 }  -result {1}
+test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
+    toplevel .parent
+    toplevel .parent.child
+    wm forget .parent.child
+    pack [button .parent.child.button -text Hello]
+    after 250 {destroy .parent}
+    tkwait window .parent
+} -cleanup {
+    deleteWindows
+} -result {}
 
 # FIXME:
 
