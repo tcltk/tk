@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.127 2008/07/26 13:03:07 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.128 2008/08/01 19:39:04 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -5874,13 +5874,15 @@ TopLevelReqProc(
     WmInfo *wmPtr;
 
     wmPtr = winPtr->wmInfoPtr;
-    if ((winPtr->flags & TK_EMBEDDED) && (wmPtr->wrapper != NULL)) {
-	SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, Tk_ReqWidth(tkwin),
+    if (wmPtr) {
+	if ((winPtr->flags & TK_EMBEDDED) && (wmPtr->wrapper != NULL)) {
+	    SendMessage(wmPtr->wrapper, TK_GEOMETRYREQ, Tk_ReqWidth(tkwin),
 		Tk_ReqHeight(tkwin));
-    }
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
-	wmPtr->flags |= WM_UPDATE_PENDING;
+	}
+	if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
+	    Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
+	    wmPtr->flags |= WM_UPDATE_PENDING;
+	}
     }
 }
 
