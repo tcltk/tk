@@ -1,3 +1,10 @@
+2008-08-03  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* test/cmds.test:  Update to tcltest2
+	* test/dialog.test:  Update to tcltest2
+	* test/get.test:  Update to tcltest2
+	* test/text.test:  Update to tcltest2; report: 33.11 fails
+
 2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinWm.c: Check wmPtr is valid in TopLevelReqProc
