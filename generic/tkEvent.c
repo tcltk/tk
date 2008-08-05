@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.35 2008/03/26 19:04:09 jenglish Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.36 2008/08/05 20:31:08 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -75,7 +75,7 @@ typedef struct TkWindowEvent {
  * Array of event masks corresponding to each X event:
  */
 
-static unsigned long eventMasks[TK_LASTEVENT] = {
+static unsigned long realEventMasks[MappingNotify+1] = {
     0,
     0,
     KeyPressMask,			/* KeyPress */
@@ -113,7 +113,10 @@ static unsigned long eventMasks[TK_LASTEVENT] = {
     0,					/* SelectionNotify */
     ColormapChangeMask,			/* ColormapNotify */
     0,					/* ClientMessage */
-    0,					/* Mapping Notify */
+    0					/* Mapping Notify */
+};
+
+static unsigned long virtualEventMasks[TK_LASTEVENT-VirtualEvent] = {
     VirtualEventMask,			/* VirtualEvents */
     ActivateMask,			/* ActivateNotify */
     ActivateMask,			/* DeactivateNotify */
@@ -489,7 +492,7 @@ GetTkWindowFromXEvent(
  *
  * GetEventMaskFromXEvent --
  *
- *	The event type is looked up in our eventMasks table, and may be
+ *	The event type is looked up in our eventMasks tables, and may be
  *	changed to a different mask depending on the state of the event and
  *	window members.
  *
@@ -506,7 +509,23 @@ static unsigned long
 GetEventMaskFromXEvent(
     XEvent *eventPtr)
 {
-    unsigned long mask = eventMasks[eventPtr->xany.type];
+    unsigned long mask;
+
+    /*
+     * Get the event mask from the correct table. Note that there are two
+     * tables here because that means we no longer need this code to rely on
+     * the exact value of VirtualEvent, which has caused us problems in the
+     * past when X11 changed the value of LASTEvent. [Bug ???]
+     */
+
+    if (eventPtr->xany.type <= MappingNotify) {
+	mask = realEventMasks[eventPtr->xany.type];
+    } else if (eventPtr->xany.type >= VirtualEvent
+	    && eventPtr->xany.type<TK_LASTEVENT) {
+	mask = virtualEventMasks[eventPtr->xany.type - VirtualEvent];
+    } else {
+	mask = 0;
+    }
 
     /*
      * Events selected by StructureNotify require special handling. They look
