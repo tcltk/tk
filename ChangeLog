@@ -1,3 +1,9 @@
+2008-08-05  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tk.h, generic/tkEvent.c: Fix for [Bug 2010422]
+	"no event type or button # or keysym while executing
+	"bind Listbox <MouseWheel> [...]".
+
 2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinWm.c: Backported fixes for handling unmapped parent
