@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.74.2.22 2008/04/07 19:17:54 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.74.2.23 2008/08/06 16:54:48 jenglish Exp $
  */
 
 #ifndef _TK
@@ -635,18 +635,16 @@ typedef struct Tk_GeomMgr {
  *
  *---------------------------------------------------------------------------
  */
-#define VirtualEvent	    (LASTEvent)
-#define ActivateNotify	    (LASTEvent + 1)
-#define DeactivateNotify    (LASTEvent + 2)
-#define MouseWheelEvent     (LASTEvent + 3)
-#define TK_LASTEVENT	    (LASTEvent + 4)
+
+#define VirtualEvent	    (MappingNotify + 1)
+#define ActivateNotify	    (MappingNotify + 2)
+#define DeactivateNotify    (MappingNotify + 3)
+#define MouseWheelEvent     (MappingNotify + 4)
+#define TK_LASTEVENT	    (MappingNotify + 5)
 
 #define MouseWheelMask	    (1L << 28)
-
 #define ActivateMask	    (1L << 29)
 #define VirtualEventMask    (1L << 30)
-#define TK_LASTEVENT	    (LASTEvent + 4)
-
 
 /*
  * A virtual event shares most of its fields with the XKeyEvent and

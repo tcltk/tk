@@ -1,3 +1,8 @@
+2008-08-06  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tk.h: Fix for [Bug 2010422]: account for X11 changing
+	constant LASTEvent.
+
 2008-06-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXCarbonEvents.c:	fix debug carbon event tracing;
