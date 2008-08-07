@@ -1,3 +1,8 @@
+2008-08-07  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* test/canvPs.test: Update to tcltest2
+	* test/config.test  
+
 2008-08-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tk.h, generic/tkEvent.c: Fix for [Bug 2010422]
@@ -6,10 +11,10 @@
 
 2008-08-03  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/cmds.test:  Update to tcltest2
-	* test/dialog.test:  Update to tcltest2
-	* test/get.test:  Update to tcltest2
-	* test/text.test:  Update to tcltest2; report: 33.11 fails
+	* test/cmds.test: Update to tcltest2
+	* test/dialog.test
+	* test/get.test
+	* test/text.test: Update to tcltest2; report: 33.11 fails
 
 2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -20,6 +25,16 @@
 
 	* generic/tk.h: Added missing EXTERN for the Tcl_PkgInitStubsCheck
 	declaration to fix inability to embed non-stub-enabled Tk on Windows.
+2008-07-29  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* test/constraints.tcl: -highlightthickness entry's option
+	(fonts constraint)
+
+
+2008-07-28  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* test/cursor.test: Update to tcltest2
+	* test/message.test
 
 2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -33,6 +48,10 @@
 
 	* win/tkWinWindow.c: Check for 0x prefix in sprintf %p. Bug [2026405]
 
+2008-07-25  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* test/bind.test: Update to tcltest2
+
 2007-02-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/*.c: fix [2021443] inconsistant "wrong # args" messages
@@ -41,6 +60,16 @@
 	* unix/tkUnixSend.c
 	* unix/tkUnixWm.c
 	* tests/*.test
+
+2008-07-22  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* test/bell.test:   Update to tcltest2
+	* test/bgerror.test
+	* test/bitmap.test
+	* test/border.test
+	* test/button.test
+	* test/entry.test
+	* test/spinbox.test
 
 2008-07-22  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -137,7 +166,7 @@
 	* generic/tkCmds.c: During [tkwait] and [update], always cooperatively
 	check for script cancellation.
 	* win/makefile.vc: Added 'pdbs' option for Windows build rules to
-	* win/rules.vc:    allow for non-debug builds with full symbols.
+	* win/rules.vc: allow for non-debug builds with full symbols.
 
 2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -209,7 +238,7 @@
 2008-05-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: We should use the thread allocator for threaded
-	* win/rules.vc:    builds. Added 'tclalloc' option to disable.
+	* win/rules.vc: builds. Added 'tclalloc' option to disable.
 
 2008-05-14  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -286,7 +315,7 @@
 
 	* win/ttkWinXpTheme.c:  Provide a visual-styles API element engine
 	* tests/ttk/vsapi.test: to permit scripts to create any available
-	* doc/ttk_vsapi.n:      windows xp/vista element. Plus basic tests.
+	* doc/ttk_vsapi.n:    windows xp/vista element. Plus basic tests.
 
 2008-04-08  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -299,15 +328,15 @@
 2008-04-08  Kevin Kenny  <kennykb@acm.org>
 
 	* tkWinEmbed.c:  Removed #if 0 code. Trust the revision control system,
-	                 if you need it again, you can find it.
+	        if you need it again, you can find it.
 
 	* tkWinSend.c:   Added conditional compilation to silence several
-	                 compiler warnings.
+	        compiler warnings.
 
 2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): Fix double-free on Tk_ParseArgv
-	* tests/main.test (main-3.*):      error. [Bug 1937135]
+	* tests/main.test (main-3.*):   error. [Bug 1937135]
 
 	* generic/tkArgv.c: fix -help mem explosion. [Bug 1936238] (kenny)
 
@@ -318,7 +347,7 @@
 
 2008-04-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/makefile.vc:         Fixed stubs usage
+	* win/makefile.vc:    Fixed stubs usage
 	* library/ttk/xpTheme.tcl: fix the colour of labelframe in xp
 
 2008-04-02  Daniel Steffen  <das@users.sourceforge.net>
@@ -687,10 +716,10 @@
 
 2007-12-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinInt.h:     Add in missing function definitions
+	* win/tkWinInt.h:    Add in missing function definitions
 	* win/tkWinButton.c:  to support plain MSVC6 and use INT_PTR
 	* win/tkWinScrlBar.c: rather than LONG_PTR which isn'tr defined
-	* win/tkWinWm.c:      in the msvc6 headers.
+	* win/tkWinWm.c:     in the msvc6 headers.
 
 2007-12-14  Pat Thoyts <patthoyts@users.sourceforge.net>
 
@@ -718,7 +747,7 @@
 
 	* macosx/tkMacOSXWm.c (ApplyMasterOverrideChanges): Implement more
 	* macosx/tkMacOSXMouseEvent.c (BringWindowForward): X11-like transient
-	* macosx/tkMacOSXSubwindows.c (XDestroyWindow):     behaviour by
+	* macosx/tkMacOSXSubwindows.c (XDestroyWindow):  behaviour by
 	adding transient windows to a window group owned by the master window,
 	this ensures transients always remain in front of and are collapsed
 	with the master; bring master to front when selecting transient
@@ -829,7 +858,7 @@
 	sh-200 for a more reasonable size.
 
 	* win/tkWinButton.c, win/tkWinDialog.c: use SetWindowLongPtr and
-	* win/tkWinScrlbr.c, win/tkWinWm.c:     GetWindowLongPtr only.
+	* win/tkWinScrlbr.c, win/tkWinWm.c:  GetWindowLongPtr only.
 	* win/ttkWinMonitor.c:
 
 	* win/tkWinInt.h: remove CS_CLASSDC (not recommended for any apps now)
@@ -1204,7 +1233,7 @@
 
 2007-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/rules.vc:     Use -fp:strict with msvc8 as -fp:precise fails on
+	* win/rules.vc:  Use -fp:strict with msvc8 as -fp:precise fails on
 	* generic/tkObj.c:  amd64 builds. Fix the two places in Tk that
 	* generic/tkTrig.c: generate errors with msvc8 when using this flag.
 
@@ -1275,9 +1304,9 @@
 	* library/demos/twind.tcl, library/demos/widget: Buh-bye Motif look
 	* library/ttk/fonts.tcl:    Update of Tk default look in 8.5
 	* macosx/tkMacOSXDefault.h: Trims border sizes, cleaner X11 look
-	* unix/tkUnixDefault.h:     with minor modifications for Win32/Aqua.
-	* win/tkWinDefault.h:       Uses Tk*Font definitions throughout for
-	* win/tkWinFont.c:          classic widgets. [Bug 1820344]
+	* unix/tkUnixDefault.h:  with minor modifications for Win32/Aqua.
+	* win/tkWinDefault.h:    Uses Tk*Font definitions throughout for
+	* win/tkWinFont.c:     classic widgets. [Bug 1820344]
 	* library/obsolete.tcl (::tk::classic::restore): This restores
 	changes made to defaults in 8.5 using the 'option' command,
 	segmented into logical groups.
@@ -1305,9 +1334,9 @@
 
 	* changes:		Update changes for 8.5b2 release.
 
-	* doc/*.1:              Revert doc changes that broke
-	* doc/*.3:              `make html` so we can get the release
-	* doc/*.n:              out the door.
+	* doc/*.1:      Revert doc changes that broke
+	* doc/*.3:      `make html` so we can get the release
+	* doc/*.n:      out the door.
 
 	* README:		Bump version number to 8.5b2.
 	* generic/tk.h:
@@ -1551,11 +1580,11 @@
 2007-10-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc:  Mine all version information from headers.
-	* win/rules.vc:     Sync tcl and tk and bring extension versions
+	* win/rules.vc:  Sync tcl and tk and bring extension versions
 	* win/nmakehlp.c:   closer together. Try and avoid using tclsh
-	                    to do substitutions as we may cross compile.
+	        to do substitutions as we may cross compile.
 
-	* library/console.tcl:          Use TkFixedFont and ttk widgets
+	* library/console.tcl:     Use TkFixedFont and ttk widgets
 
 2007-10-12  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -1632,7 +1661,7 @@
 
 	[core-stabilizer-branch]
 
-	* README:               Bump version number to 8.5.0
+	* README:        Bump version number to 8.5.0
 	* generic/tk.h:
 	* library/tk.tcl:
 	* unix/configure.in:	Updated LOCALES.
@@ -1690,7 +1719,7 @@
 
 2007-09-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/all.tcl:     Made ttk/all.tcl be the same as tk's all.tcl and
+	* tests/all.tcl:    Made ttk/all.tcl be the same as tk's all.tcl and
 	* tests/ttk/all.tcl: make use of file normalize (bugs noted by
 	mjanssen and GPS with msys)
 
@@ -1806,11 +1835,11 @@
 
 2007-09-04  Don Porter  <dgp@users.sourceforge.net>
 
-	* unix/Makefile.in:     It's unreliable to count on the release
+	* unix/Makefile.in:  It's unreliable to count on the release
 	manager to remember to `make genstubs` before `make dist`. Let the
 	Makefile remember the dependency for us.
 
-	* unix/Makefile.in:     Corrections to `make dist` dependencies to be
+	* unix/Makefile.in:  Corrections to `make dist` dependencies to be
 	sure that macosx/configure gets generated whenever it does not exist.
 
 2007-09-03  Daniel Steffen  <das@users.sourceforge.net>
@@ -1853,7 +1882,7 @@
 2007-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinDialog.c:    Fix [Bug 1692927] (buffer length problems)
-	* win/tkWinTest.c:      Added 'testfindwindow' and 'testgetwindowinfo'
+	* win/tkWinTest.c:    Added 'testfindwindow' and 'testgetwindowinfo'
 	and extended 'testwinevent' for WM_COMMAND support to enable testing
 	native messagebox dialogs.
 	* tests/winMsgbox.test: New Windows native messagebox tests.
@@ -2232,10 +2261,10 @@
 
 	[core-stabilizer-branch]
 
-	* unix/configure:       autoconf-2.59 (FC6 fork)
+	* unix/configure:    autoconf-2.59 (FC6 fork)
 	* win/configure:
 
-	* README:               Bump version number to 8.5b1
+	* README:        Bump version number to 8.5b1
 	* generic/tk.h:
 	* library/tk.tcl:
 	* unix/configure.in:
@@ -2252,10 +2281,10 @@
 
 2007-05-18  Don Porter  <dgp@users.sourceforge.net>
 
-	* unix/configure:       autoconf-2.59 (FC6 fork)
+	* unix/configure:    autoconf-2.59 (FC6 fork)
 	* win/configure:
 
-	* README:               Bump version number to 8.5a7
+	* README:        Bump version number to 8.5a7
 	* generic/tk.h:
 	* library/tk.tcl:
 	* unix/configure.in:
@@ -2289,7 +2318,7 @@
 	* tests/canvImg.test:
 	* tests/imgPhoto.test:
 
-	* tests/bind.test:    Make test suite more SCIM-tolerant. [Bug 1609316]
+	* tests/bind.test:  Make test suite more SCIM-tolerant. [Bug 1609316]
 
 2007-05-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -2404,8 +2433,8 @@
 
 2007-05-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tkFont.c:     TIP #145 implementation -
-	* generic/tkFont.h:     Enhanced font handling.
+	* generic/tkFont.c:  TIP #145 implementation -
+	* generic/tkFont.h:  Enhanced font handling.
 	* win/tkWinDefault.h:
 	* win/tkWinFont.c:
 	* win/tkWinInt.h:
@@ -2870,7 +2899,7 @@
 	because Tk_MainEx() sets tcl_interactive before calling TkpInit().
 
 	* generic/ttk/ttkGenStubs.tcl (new): Add ttk-specific genstubs.tcl from
-	* unix/Makefile.in (genstubs):       tile and run it from 'genstubs'
+	* unix/Makefile.in (genstubs):  tile and run it from 'genstubs'
 	target, restores ability to generate all of Tk's stub sources.
 
 	* generic/ttk/ttkTreeview.c: #ifdef out unused declaration.
@@ -3169,8 +3198,8 @@
 2006-12-06  Kevin Kenny  <kennykb@acm.org>
 
 	* unix/configure.in: Further changes to avoid attempting to link
-	* unix/configure:    against Xft libraries in a non-Xft build
-	                     [Bug 1609616] (dgp)
+	* unix/configure:   against Xft libraries in a non-Xft build
+	         [Bug 1609616] (dgp)
 
 2006-12-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
@@ -3352,9 +3381,9 @@
 
 	* library/safetk.tcl (::safe::tkTopLevel): Theme it.
 
-	* generic/ttk/ttkLayout.c:     We do not want to require tkInt in all
+	* generic/ttk/ttkLayout.c:   We do not want to require tkInt in all
 	* generic/ttk/ttkMananager.h:  the ttk files so added the definition
-	* generic/ttk/ttkTheme.h:      of MODULE_SCOPE to ttkTheme.h. Ensures
+	* generic/ttk/ttkTheme.h:   of MODULE_SCOPE to ttkTheme.h. Ensures
 	* generic/ttk/ttkWinMonitor.c: everyone gets to see the definition
 	from someplace.
 
@@ -3409,7 +3438,7 @@
 2006-10-31  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: Added ttk files to msvc build and add manifest
-	* win/rules.vc:    files to binaries with MSVC8.
+	* win/rules.vc: files to binaries with MSVC8.
 
 2006-10-31  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -3501,7 +3530,7 @@
 
 	* generic/tkImgBmap.c: Fixed line endings.
 	* win/makefile.vc:  Patched up build system to manage
-	* win/rules.vc:     AMD64 with MSVC8
+	* win/rules.vc:  AMD64 with MSVC8
 	* win/nmakehlp.c:   Ensure operation without Platform SDK.
 
 2006-10-18  Don Porter  <dgp@users.sourceforge.net>
@@ -3544,7 +3573,7 @@
 	antialiasing to 0 as thin horizontal/vertical lines look good now.
 	* macosx/README: document CG antialiasing limit changes.
 
-	* generic/tkCanvLine.c (ConfigureLine):     on TkAqua, pass outline
+	* generic/tkCanvLine.c (ConfigureLine):  on TkAqua, pass outline
 	* generic/tkCanvPoly.c (ConfigurePolygon):  linewidth in gc even for
 	* generic/tkRectOval.c (ConfigureRectOval): fills (as it controls AA).
 
@@ -3559,8 +3588,8 @@
 2006-10-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkWindow.c:  Implemented TIP #264 - Tk_Interp function.
-	* doc/WindowId.3:      Documented Tk_Interp.
-	* generic/tk.decls:    Added to the stubs interface and
+	* doc/WindowId.3:   Documented Tk_Interp.
+	* generic/tk.decls: Added to the stubs interface and
 	* generic/tkDecls.h:   regenerated.
 	* generic/tkStubsInit.c:
 
@@ -3583,7 +3612,7 @@
 2006-09-22  Andreas Kupries  <andreask@activestate.com>
 
 	* generic/tkConsole.c: TIP #268 update regarding registered package
-	* generic/tkMain.c:    version, now using full patchlevel instead of
+	* generic/tkMain.c: version, now using full patchlevel instead of
 	* generic/tkWindow.c:  major.minor
 	* library/tk.tcl:
 	* unix/configure:
@@ -3635,11 +3664,11 @@
 	* library/text.tcl (aqua): remove focus bindings to set selection color
 
 	* generic/tkTextBTree.c (TkTextIsElided): on TkAqua, don't show
-	* generic/tkTextDisp.c (GetStyle):        inactive text selection when
+	* generic/tkTextDisp.c (GetStyle):   inactive text selection when
 						  text widget is disabled.
 
 	* generic/tkEntry.c (DisplayEntry): change default TkAqua selection
-	* macosx/tkMacOSXDefault.h:         relief to "flat" (platform std).
+	* macosx/tkMacOSXDefault.h:     relief to "flat" (platform std).
 
 	* generic/tkText.c (CreateWidget): fix bug leading to default text
 	selection relief string DEF_TEXT_SELECT_RELIEF being ignored.
@@ -3672,10 +3701,10 @@
 2006-09-06  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkEntry.c:   move hard-coded ALWAYS_SHOW_SELECTION control
-	* generic/tkInt.h:     of entry/text selection display based on focus
-	* generic/tkText.c:    to the Tcl level, controlled by
+	* generic/tkInt.h:   of entry/text selection display based on focus
+	* generic/tkText.c: to the Tcl level, controlled by
 	* generic/tkWindow.c:  ::tk::AlwaysShowSelection (boolean, private).
-	* library/tk.tcl:      [Bug 1553691]
+	* library/tk.tcl:   [Bug 1553691]
 	* macosx/tkMacOSXDefault.h:
 	* unix/tkUnixDefault.h:
 	* unix/tkUnixPort.h:
@@ -3765,14 +3794,14 @@
 2006-07-20  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c (WmAttributesCmd, WmIconbitmapCmd): add support
-	* unix/tkUnixSend.c (Tk_GetUserInactiveTime):             for weakly
+	* unix/tkUnixSend.c (Tk_GetUserInactiveTime):       for weakly
 	importing symbols not available on OSX 10.2 or 10.3, enables binaires
 	built on later OSX versions to run on earlier ones.
 	* macosx/Wish.xcodeproj/project.pbxproj: enable weak-linking; turn on
-	                                         extra warnings.
+	                 extra warnings.
 	* macosx/README: document how to enable weak-linking; cleanup.
 	* unix/configure.in: add check on Darwin-X11 for ld support of -weak-l
-	* unix/tcl.m4:       flag and weak-link libXss if possible as it is not
+	* unix/tcl.m4:  flag and weak-link libXss if possible as it is not
 	available before OSX 10.4; enforce requirement of OSX 10.2 for TkAqua;
 	move Darwin specific checks & defines that are only relevant to the tcl
 	build out of tcl.m4; restrict framework option to Darwin; clean up
@@ -3785,10 +3814,10 @@
 	verify validity of context returned from QDBeginCGContext() before use.
 	* macosx/tkMacOSXKeyEvent.c: ifdef out diagnostic messages to stderr.
 
-	* macosx/tkMacOSXEvent.h:      standardize MAC_OS_X_VERSION_MAX_ALLOWED
-	* macosx/tkMacOSXMenu.c:       checks per QA1316, ensure define can be
+	* macosx/tkMacOSXEvent.h:   standardize MAC_OS_X_VERSION_MAX_ALLOWED
+	* macosx/tkMacOSXMenu.c:    checks per QA1316, ensure define can be
 	* macosx/tkMacOSXMenubutton.c: overridden on command line (from default
-	* macosx/tkMacOSXMenus.c:      of current OS version).
+	* macosx/tkMacOSXMenus.c:   of current OS version).
 	* macosx/tkMacOSXMouseEvent.c:
 	* macosx/tkMacOSXWm.c:
 
@@ -3907,7 +3936,7 @@
 	region of unmapped windows to prevent any drawing into them or into
 	their children from becoming visible. [Bug 940117]
 
-	* macosx/tkMacOSXInt.h:         revert Jim's attempt of 2005-03-14 to
+	* macosx/tkMacOSXInt.h:     revert Jim's attempt of 2005-03-14 to
 	* macosx/tkMacOSXSubwindows.c:  fix Bug 940117 as it disables Map/Unmap
 	event propagation to children. [Bug 1480105]
 
@@ -3923,11 +3952,11 @@
 	* macosx/tkMacOSXKeyEvent.c (TkMacOSXProcessKeyboardEvent): only check
 	for HICommand menu item shortcuts in the application menu.
 
-	* macosx/tkMacOSXInt.h:       initialize keyboard layout setup in
-	* macosx/tkMacOSXInit.c:      TkpInit() rather than during handling of
+	* macosx/tkMacOSXInt.h:    initialize keyboard layout setup in
+	* macosx/tkMacOSXInit.c:     TkpInit() rather than during handling of
 	* macosx/tkMacOSXKeyEvent.c:  first key down event.
 
-	* macosx/tkMacOSXDraw.c:        add optional debug code to flash clip
+	* macosx/tkMacOSXDraw.c:     add optional debug code to flash clip
 	* macosx/tkMacOSXSubwindows.c:  regions during update or draw.
 
 2006-05-04  Don Porter  <dgp@users.sourceforge.net>
@@ -3956,10 +3985,10 @@
 	* macosx/tkMacOSXMouseEvent.c (XQueryPointer): implement return of
 	window-local pointer position.
 
-	* macosx/tkMacOSXInt.h:      use improvements above to avoid calls to
+	* macosx/tkMacOSXInt.h:   use improvements above to avoid calls to
 	* macosx/tkMacOSXKeyEvent.c: GlobalToLocal() when the current port
-	* macosx/tkMacOSXMenu.c:     might not be set correctly. May fix [Bug
-	* macosx/tkMacOSXMenus.c:    1243318]
+	* macosx/tkMacOSXMenu.c:    might not be set correctly. May fix [Bug
+	* macosx/tkMacOSXMenus.c:   1243318]
 	* macosx/tkMacOSXScale.c:
 	* macosx/tkMacOSXScrlbr.c:
 
@@ -4016,7 +4045,7 @@
 	key binding for msgbox cancel buttons [Patch 1193614], whitespace.
 
 	* macosx/tkMacOSXCarbonEvents.c: handle kEventCommandUpdateStatus
-	* macosx/tkMacOSXEvent.c:        carbon event to dynamically enable
+	* macosx/tkMacOSXEvent.c:     carbon event to dynamically enable
 	the 'Preferences' app menu item when proc [::tk::mac::ShowPreferences]
 	is defined. [Bug 700316]
 
@@ -4028,13 +4057,13 @@
 
 	* macosx/tkMacOSXFont.c: remove #ifdef'd text measuring codepaths now
 	* macosx/tkMacOSXInit.c: known to be incorrect, cleanup obsolete text
-	* macosx/README:         antialiasing control code, document ATSUI text
+	* macosx/README:      antialiasing control code, document ATSUI text
 				 antialiasing changes.
 
-	* macosx/tkMacOSXInt.h:         Implemented 'zoomed' window state
+	* macosx/tkMacOSXInt.h:     Implemented 'zoomed' window state
 	* macosx/tkMacOSXWindowEvent.c: handling for TkAqua, via titlebar
-	* macosx/tkMacOSXWm.c:          widget clicks as well as [wm state].
-	* doc/wm.n:                     [Bug 1073456]
+	* macosx/tkMacOSXWm.c:     widget clicks as well as [wm state].
+	* doc/wm.n:         [Bug 1073456]
 
 2006-04-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
@@ -4150,10 +4179,10 @@
 
 2006-03-28  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/Wish.xcode/default.pbxuser:     add '-singleproc 1' cli arg to
+	* macosx/Wish.xcode/default.pbxuser:    add '-singleproc 1' cli arg to
 	* macosx/Wish.xcodeproj/default.pbxuser: tktest to ease test debugging.
 
-	* macosx/Wish.xcode/project.pbxproj:     removed $prefix/share from
+	* macosx/Wish.xcode/project.pbxproj:    removed $prefix/share from
 	* macosx/Wish.xcodeproj/project.pbxproj: TCL_PACKAGE_PATH as per change
 	to tcl/unix/configure.in of 2006-03-13.
 
@@ -4198,8 +4227,8 @@
 	* macosx/tkMacOSXColor.c: [Patch 638966] into platform specific files.
 	* macosx/tkMacOSXInt.h:
 
-	* macosx/tkMacOSX.h:             Cleaned up & rationalized order of
-	* macosx/tkMacOSXBitmap.c:       #includes of tk and carbon headers.
+	* macosx/tkMacOSX.h:       Cleaned up & rationalized order of
+	* macosx/tkMacOSXBitmap.c:  #includes of tk and carbon headers.
 	* macosx/tkMacOSXButton.c:
 	* macosx/tkMacOSXCarbonEvents.c:
 	* macosx/tkMacOSXClipboard.c:
@@ -4251,9 +4280,9 @@
 
 2006-03-21  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkFont.c:             implementation of ATSUI text rendering
-	* generic/tkInt.h:              in TkAqua provided by Benjamin
-	* generic/tkTextDisp.c:         Riefenstahl. [Patch 638966]
+	* generic/tkFont.c:       implementation of ATSUI text rendering
+	* generic/tkInt.h:      in TkAqua provided by Benjamin
+	* generic/tkTextDisp.c:     Riefenstahl. [Patch 638966]
 	* library/demos/unicodeout.tcl:
 	* macosx/tkMacOSXFont.h (new file):
 	* macosx/tkMacOSXFont.c:
@@ -4261,17 +4290,17 @@
 	* unix/tkUnixFont.c:
 	* win/tkWinFont.c:
 
-	* generic/tkFont.c:             moved MODULE_SCOPE declarations of font
-	* generic/tkFont.h:             helper procs into header files.
+	* generic/tkFont.c:       moved MODULE_SCOPE declarations of font
+	* generic/tkFont.h:       helper procs into header files.
 	* macosx/tkMacOSXButton.c:
 	* macosx/tkMacOSXFont.h:
 	* macosx/tkMacOSXMenubutton.c:
 
-	* macosx/Wish.xcode/project.pbxproj:     add new tkMacOSXFont.h file,
+	* macosx/Wish.xcode/project.pbxproj:    add new tkMacOSXFont.h file,
 	* macosx/Wish.xcodeproj/project.pbxproj: turn off dead code stripping
 	as it interferes with -sectcreate (rdar://4486223).
 
-	* macosx/Wish.xcode/default.pbxuser:     add TCLLIBPATH=/Library/Tcl
+	* macosx/Wish.xcode/default.pbxuser:    add TCLLIBPATH=/Library/Tcl
 	* macosx/Wish.xcodeproj/default.pbxuser: env var setting to tktest.
 
 	* unix/configure.in: fix detection of symbols build when enabling
@@ -4296,7 +4325,7 @@
 
 	* library/clrpick.tcl:   Avoid using abbreviated sub-commands in core
 	* library/palette.tcl:   scripts as this can cause problems with
-	* library/scale.tcl:     mega-widget libraries like snit.
+	* library/scale.tcl:    mega-widget libraries like snit.
 	* library/scrlbar.tcl:	 [Bug 1451587]
 	* library/tkfbox.tcl:
 	* library/xmfbox.tcl:
@@ -4334,8 +4363,8 @@
 	* tests/scrollbar.test: Corrected several broken calls to [testmetrics]
 	that were crashing the test suite.
 
-	* tests/constraints.tcl:        Added notAqua constraint to canvPs-3.1
-	* tests/canvPs.test:            to stop test suite crash on Mac OSX.
+	* tests/constraints.tcl:     Added notAqua constraint to canvPs-3.1
+	* tests/canvPs.test:      to stop test suite crash on Mac OSX.
 					[Bug 1088807]
 
 	* generic/tkCmds.c:		Purged remaining references to errno,
@@ -4382,13 +4411,13 @@
 
 2006-02-09  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tk.decls:             fix signature of TkMacOSXInvalClipRgns
-	* generic/tkPlatDecls.h:        to use Tk_Window instead of internal
+	* generic/tk.decls:       fix signature of TkMacOSXInvalClipRgns
+	* generic/tkPlatDecls.h:     to use Tk_Window instead of internal
 	* macosx/tkMacOSXSubwindows.c:  type TkWindow (which led to any include
 	* macosx/tkMacOSXWindowEvent.c: of public header tkMacOSX.h requiring
-	* macosx/tkMacOSXWm.c:          prior include of tkInt.h).
+	* macosx/tkMacOSXWm.c:     prior include of tkInt.h).
 
-	* generic/tk.h:          move TkAqua specific REDO_KEYSYM_LOOKUP define
+	* generic/tk.h:      move TkAqua specific REDO_KEYSYM_LOOKUP define
 	* macosx/tkMacOSXPort.h: out of tk.h into platform header.
 
 2006-01-31  Donal K. Fellows  <dkf@users.sf.net>
@@ -4412,7 +4441,7 @@
 
 2006-01-23  Daniel Steffen  <das@users.sourceforge.net>
 
-	* unix/configure:    minor fix to Darwin specific code removing
+	* unix/configure:   minor fix to Darwin specific code removing
 	* unix/configure.in: 64bit flags from CFLAGS for Tk build.
 
 2006-01-20  Joe English  <jenglish@users.sourceforge.net>
@@ -4456,15 +4485,15 @@
 	* macosx/tkMacOSXInit.c: conditionalize 64bit-unsafe dyld code.
 	* macosx/GNUmakefile: add 'wish8.x' symlink to SYMROOT.
 
-	* macosx/Wish.xcode/project.pbxproj:     fix copy to tktest resource
+	* macosx/Wish.xcode/project.pbxproj:    fix copy to tktest resource
 	* macosx/Wish.xcodeproj/project.pbxproj: fork when zerolinked.
 
-	* macosx/Wish.xcode/default.pbxuser:     add widget demo as argument to
+	* macosx/Wish.xcode/default.pbxuser:    add widget demo as argument to
 	* macosx/Wish.xcodeproj/default.pbxuser: executables (on by default).
 
-	* unix/configure:    add caching, use AC_CACHE_CHECK instead of
+	* unix/configure:   add caching, use AC_CACHE_CHECK instead of
 	* unix/configure.in: AC_CACHE_VAL where possible, consistent message
-	* unix/tcl.m4:       quoting, sync relevant tclconfig/tcl.m4 changes
+	* unix/tcl.m4:  quoting, sync relevant tclconfig/tcl.m4 changes
 	and gratuitous formatting differences, fix SC_CONFIG_MANPAGES with
 	default argument, Darwin improvements to SC_LOAD_*CONFIG.
 
@@ -4512,7 +4541,7 @@
 2005-12-09  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkInt.decls:  Move all platform test sources from tk lib into
-	* generic/tkTest.c:     tktest directly, removes requirement to export
+	* generic/tkTest.c:  tktest directly, removes requirement to export
 	* macosx/tkMacOSXTest.c:TkplatformtestInit from internal stubs table.
 	* unix/Makefile.in:
 	* win/Makefile.in:
@@ -4524,14 +4553,14 @@
 
 2005-12-08  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/tcl.m4:       Add build support for Windows-x64 builds.
+	* win/tcl.m4:    Add build support for Windows-x64 builds.
 	* win/configure:    --enable-64bit now accepts =amd64|ia64 for
 	* win/Makefile.in:  Windows 64-bit build variants (default: amd64)
 	* win/makefile.vc:  [Bug 1369597]
 	(TKOBJS): add tkWinTest.obj to regular Tk obj for TkplatformtestInit
 
 	* win/configure.in: Add CE build support (some C code fixes needed)
-	* win/wish.exe.manifest.in (new):     manifest must map in MACHINE and
+	* win/wish.exe.manifest.in (new):    manifest must map in MACHINE and
 	* win/rc/wish.exe.manifest (removed): VERSION to be correct.
 	* unix/Makefile.in: fix dist target for manifest dir change
 
@@ -4830,7 +4859,7 @@
 
 2005-11-06  Pat Thoyts  <pat@zsplat.freeserve.co.uk>
 
-	* unix/tcl.m4:    Fix SHLIB_LD_LIBS for building tclkit on OpenBSD.
+	* unix/tcl.m4:  Fix SHLIB_LD_LIBS for building tclkit on OpenBSD.
 	* unix/configure: regenerated
 
 2005-10-31  Vince Darley  <vincentdarley@users.sourceforge.net>
@@ -4857,7 +4886,7 @@
 
 2005-10-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinSend.c:    Avoid using tcl internal headers and fix to
+	* win/tkWinSend.c:  Avoid using tcl internal headers and fix to
 	* win/tkWinSendCom.h: correctly link on all types of build (was
 	* win/tkWinSendCom.c: broken in static,msvcrt builds).
 
@@ -4875,7 +4904,7 @@
 	properly alloc/delete one more option. [Bug 1319720] (melbardis)
 
 	* macosx/tkMacOSXInt.h: Move MODULE_SCOPE defn to tkInt.h and add
-	* generic/tkInt.h:      WORDS_BIGENDIAN checks that will work with OS X
+	* generic/tkInt.h:    WORDS_BIGENDIAN checks that will work with OS X
 	universal binary compiles. (steffen)
 
 	* generic/tkMenu.c (TkSetWindowMenuBar): do not call TkMenuInit if the
@@ -5148,8 +5177,8 @@
 	obsolete AppendResMenu() API.
 
 	* macosx/tkMacOSXKeyEvent.c: replaced all direct uses of expensive
-	* macosx/tkMacOSXMenu.c:     GetMouse() and TkMacOSXButtonKeyState()
-	* macosx/tkMacOSXMenus.c:    APIs by calls to XQueryPointer()
+	* macosx/tkMacOSXMenu.c:    GetMouse() and TkMacOSXButtonKeyState()
+	* macosx/tkMacOSXMenus.c:   APIs by calls to XQueryPointer()
 	* macosx/tkMacOSXMouseEvent.c:
 	* macosx/tkMacOSXScale.c:
 	* macosx/tkMacOSXScrlbr.c:
@@ -5157,7 +5186,7 @@
 
 	* macosx/tkMacOSXDialog.c:   replaced use of FrontNonFloatingWindow()
 	* macosx/tkMacOSXKeyEvent.c: by ActiveNonFloatingWindow() as
-	* macosx/tkMacOSXMenu.c:     recommended by Carbon docs.
+	* macosx/tkMacOSXMenu.c:    recommended by Carbon docs.
 	* macosx/tkMacOSXMenus.c:
 	* macosx/tkMacOSXSubwindows.c:
 	* macosx/tkMacOSXWm.c:
@@ -5942,6 +5971,6 @@
 	caused crash in reinit of Tk (as seen in plugin).
 
 	******************************************************************
-	*** CHANGELOG ENTRIES FOR 2004 AND 2003 IN "ChangeLog.2004"    ***
+	*** CHANGELOG ENTRIES FOR 2004 AND 2003 IN "ChangeLog.2004" ***
 	*** CHANGELOG ENTRIES FOR 2002 AND EARLIER IN "ChangeLog.2002" ***
 	******************************************************************
