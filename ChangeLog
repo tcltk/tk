@@ -1,5 +1,7 @@
 2008-08-08  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.5.4 TAGGED FOR RELEASE ***
+
 	* generic/tk.h:		Bump to 8.5.4 for release.
 	* library/tk.tcl:
 	* unix/configure.in:
