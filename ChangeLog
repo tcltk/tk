@@ -1,5 +1,9 @@
 2008-08-07  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
+	* test/canvas.test: Update to tcltest2
+
+2008-08-07  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
 	* test/canvPs.test: Update to tcltest2
 	* test/config.test  
 
@@ -25,6 +29,7 @@
 
 	* generic/tk.h: Added missing EXTERN for the Tcl_PkgInitStubsCheck
 	declaration to fix inability to embed non-stub-enabled Tk on Windows.
+	
 2008-07-29  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/constraints.tcl: -highlightthickness entry's option
