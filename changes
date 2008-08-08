@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.4 2008/06/30 03:37:37 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.5 2008/08/08 15:43:46 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6521,3 +6521,16 @@ Several documentation and release notes improvements
 2008-06-18 (bug fix) Aqua: missing focus on first map (steffen)
 
 --- Released 8.5.3, June 30, 2008 --- See ChangeLog for details ---
+
+2008-07-04 (bug fix)[2009213] crash in [ttk::scale] (polo,english)
+
+2008-07-26 (bug fix)[2026405] portability of [winfo id] (uchida,thoyts)
+
+2008-07-31 (bug fix) export Tk_PkgInitStubsCheck; fixes Tk embed on Windows
+
+2008-08-01 (bug fix)[2009788,2028703] unmapped toplevel crashes (thoyts)
+
+2008-08-05 (bug fix)[2010422] Tk header files revised to accommodate
+incompatible changes in recent X.org releases of X11 headers. (jenglish)
+
+--- Released 8.5.4, August 15, 2008 --- See ChangeLog for details ---
