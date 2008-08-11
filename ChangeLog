@@ -1,11 +1,15 @@
-2008-08-07  Ania Pawelczyk  <aniap@users.sourceforge.net>
+2008-08-11  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/canvas.test: Update to tcltest2
+	* test/canvImg.test: Update to tcltest2
+	* test/canvRect.test
+	* test/canvText.test
+	* test/obj.test
 
 2008-08-07  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/canvPs.test: Update to tcltest2
-	* test/config.test  
+	* test/config.test 
+	* test/canvas.test 
 
 2008-08-05  Joe English  <jenglish@users.sourceforge.net>
 
