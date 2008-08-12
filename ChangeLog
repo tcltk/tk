@@ -1,3 +1,10 @@
+2008-08-12  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* test/choosedir.test: Update to tcltest2
+	* test/clipboard.test:
+	* test/embed.test:
+	* test/main.test:
+
 2008-08-12  Don Porter  <dgp@users.sourceforge.net>
 
 	* README:		Bump version number to 8.6a2
@@ -15,15 +22,15 @@
 2008-08-11  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/canvImg.test: Update to tcltest2
-	* test/canvRect.test
-	* test/canvText.test
-	* test/obj.test
+	* test/canvRect.test:
+	* test/canvText.test:
+	* test/obj.test:
 
 2008-08-07  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/canvPs.test: Update to tcltest2
-	* test/config.test 
-	* test/canvas.test 
+	* test/config.test:
+	* test/canvas.test:
 
 2008-08-05  Joe English  <jenglish@users.sourceforge.net>
 
@@ -34,8 +41,8 @@
 2008-08-03  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/cmds.test: Update to tcltest2
-	* test/dialog.test
-	* test/get.test
+	* test/dialog.test:
+	* test/get.test:
 	* test/text.test: Update to tcltest2; report: 33.11 fails
 
 2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
@@ -57,7 +64,7 @@
 2008-07-28  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/cursor.test: Update to tcltest2
-	* test/message.test
+	* test/message.test:
 
 2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -87,12 +94,12 @@
 2008-07-22  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/bell.test:   Update to tcltest2
-	* test/bgerror.test
-	* test/bitmap.test
-	* test/border.test
-	* test/button.test
-	* test/entry.test
-	* test/spinbox.test
+	* test/bgerror.test:
+	* test/bitmap.test:
+	* test/border.test:
+	* test/button.test:
+	* test/entry.test:
+	* test/spinbox.test:
 
 2008-07-22  Daniel Steffen  <das@users.sourceforge.net>
 
