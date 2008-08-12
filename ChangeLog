@@ -1,3 +1,7 @@
+2008-08-12  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.6a2 release.
+
 2008-08-11  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/canvImg.test: Update to tcltest2
@@ -61,7 +65,7 @@
 
 	* test/bind.test: Update to tcltest2
 
-2007-02-24  Jan Nijtmans  <nijtmans@users.sf.net>
+2007-07-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/*.c: fix [2021443] inconsistant "wrong # args" messages
 	* macosx/tkMacOSXSend.c
