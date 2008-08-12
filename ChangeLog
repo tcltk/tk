@@ -1,5 +1,15 @@
 2008-08-12  Don Porter  <dgp@users.sourceforge.net>
 
+	* README:		Bump version number to 8.6a2
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 	* changes:	Updates for 8.6a2 release.
 
 2008-08-11  Ania Pawelczyk  <aniap@users.sourceforge.net>
