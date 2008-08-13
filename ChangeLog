@@ -1,3 +1,10 @@
+2008-08-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* unix/tcl.m4 (SC_PATH_X):	check for libX11.dylib in addition to
+					libX11.so et al.
+
+	* unix/configure: 		autoconf-2.59
+
 2008-08-12  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* test/choosedir.test: Update to tcltest2
