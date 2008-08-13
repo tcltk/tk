@@ -5404,7 +5404,7 @@ echo "configure:5404: checking for X11 libraries" >&5
 	XLIBSW=nope
 	dirs="/usr/unsupported/lib /usr/local/lib /usr/X386/lib /usr/X11R6/lib /usr/X11R5/lib /usr/lib/X11R5 /usr/lib/X11R4 /usr/openwin/lib /usr/X11/lib /usr/sww/X11/lib"
 	for i in $dirs ; do
-	    if test -r $i/libX11.a -o -r $i/libX11.so -o -r $i/libX11.sl; then
+	    if test -r $i/libX11.a -o -r $i/libX11.so -o -r $i/libX11.sl -o -r $i/libX11.dylib; then
 		echo "$ac_t""$i" 1>&6
 		XLIBSW="-L$i -lX11"
 		x_libraries="$i"
