@@ -1,13 +1,13 @@
 2008-08-14  Daniel Steffen  <das@users.sourceforge.net>
 
+	*** 8.5.4 TAGGED FOR RELEASE ***
+
 	* unix/tcl.m4 (SC_PATH_X):	check for libX11.dylib in addition to
 					libX11.so et al.
 
 	* unix/configure: 		autoconf-2.59
 
 2008-08-08  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.5.4 TAGGED FOR RELEASE ***
 
 	* generic/tk.h:		Bump to 8.5.4 for release.
 	* library/tk.tcl:
