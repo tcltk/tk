@@ -1,3 +1,10 @@
+2008-08-15  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+    * tests/clrpick.test: Update to tcltest2
+    * tests/frame.test:
+    * tests/font.test:
+    * tests/image.test:
+
 2008-08-14  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
     * test/event.test: Update to tcltest2
