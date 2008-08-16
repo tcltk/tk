@@ -1,3 +1,13 @@
+2008-08-17  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+    * tests/focus.test: Update to tcltest2
+    * tests/focusTcl.test:
+    * tests/grab.test:
+    * tests/grid.test:
+    * tests/safe.test:
+    * tests/tk.test:
+    * tests/util.test:
+
 2008-08-15  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
     * tests/clrpick.test: Update to tcltest2
