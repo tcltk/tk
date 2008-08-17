@@ -2,8 +2,13 @@
 
     * tests/focus.test: Update to tcltest2
     * tests/focusTcl.test:
+    * tests/geometry.test:
     * tests/grab.test:
     * tests/grid.test:
+    * tests/imgBmap.test:
+    * tests/imgPhoto.test:
+    * tests/imgPPM.test:
+    * tests/listbox.test:
     * tests/safe.test:
     * tests/tk.test:
     * tests/util.test:
