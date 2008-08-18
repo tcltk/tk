@@ -1,3 +1,12 @@
+2008-08-18  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+    * tests/canvWind.test: Update to tcltest2
+    * tests/menubut.test:
+    * tests/raise.test:
+    * tests/unixButton.test:
+    * tests/unixEmbed.test:
+    * tests/winClipboard.test:
+
 2008-08-17  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
     * tests/focus.test: Update to tcltest2
