@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.17 2008/07/26 11:17:25 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.18 2008/08/19 15:52:14 georgeps Exp $
  */
 
 #include "tkWinInt.h"
@@ -781,32 +781,6 @@ TkWinSetWindowPos(
 
     SetWindowPos(hwnd, siblingHwnd, 0, 0, 0, 0,
 	    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWindowWasRecentlyDeleted --
- *
- *	Determines whether we know if the window given as argument was
- *	recently deleted. Called by the generic code error handler to handle
- *	BadWindow events.
- *
- * Results:
- *	Always 0. We do not keep this information on Windows.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpWindowWasRecentlyDeleted(
-    Window win,
-    TkDisplay *dispPtr)
-{
-    return 0;
 }
 
 /*

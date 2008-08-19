@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.63 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.64 2008/08/19 15:52:12 georgeps Exp $
  */
 
 #include "tkInt.h"
@@ -128,7 +128,7 @@ static const TkIntStubs tkIntStubs = {
     TkpRedirectKeyEvent, /* 73 */
     TkpSetMainMenubar, /* 74 */
     TkpUseWindow, /* 75 */
-    TkpWindowWasRecentlyDeleted, /* 76 */
+    NULL, /* 76 */
     TkQueueEventForAllChildren, /* 77 */
     TkReadBitmapFile, /* 78 */
     TkScrollWindow, /* 79 */
@@ -410,8 +410,8 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
-    TkFreeWindowId, /* 1 */
-    TkInitXId, /* 2 */
+    NULL, /* 1 */
+    NULL, /* 2 */
     TkpCmapStressed, /* 3 */
     TkpSync, /* 4 */
     TkUnixContainerId, /* 5 */
@@ -420,7 +420,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpScanWindowId, /* 8 */
     TkWmCleanup, /* 9 */
     TkSendCleanup, /* 10 */
-    TkFreeXId, /* 11 */
+    NULL, /* 11 */
     TkpWmSetState, /* 12 */
     TkpTestsendCmd, /* 13 */
 #endif /* X11 */
