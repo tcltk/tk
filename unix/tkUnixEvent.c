@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.28 2008/04/27 22:39:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.29 2008/08/19 15:52:13 georgeps Exp $
  */
 
 #include "tkUnixInt.h"
@@ -155,8 +155,6 @@ TkpCloseDisplay(
     TkDisplay *dispPtr)
 {
     TkSendCleanup(dispPtr);
-
-    TkFreeXId(dispPtr);
 
     TkWmCleanup(dispPtr);
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.10 2005/09/28 18:31:57 dgp Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.11 2008/08/19 15:52:14 georgeps Exp $
  */
 
 #ifndef _WINPORT
@@ -85,8 +85,6 @@
  * under Windows.
  */
 
-#define TkFreeWindowId(dispPtr,w)
-#define TkInitXId(dispPtr)
 #define TkpCmapStressed(tkwin,colormap) (0)
 #define XFlush(display)
 #define XGrabServer(display)

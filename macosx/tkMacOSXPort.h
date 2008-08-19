@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.13 2007/12/13 15:27:10 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.14 2008/08/19 15:52:13 georgeps Exp $
  */
 
 #ifndef _TKMACPORT
@@ -140,8 +140,6 @@
  * The following functions are not used on the Mac, so we stub them out.
  */
 
-#define TkFreeWindowId(dispPtr,w)
-#define TkInitXId(dispPtr)
 #define TkpButtonSetDefaults(specPtr) {}
 #define TkpCmapStressed(tkwin,colormap) (0)
 #define TkpFreeColor(tkColPtr)

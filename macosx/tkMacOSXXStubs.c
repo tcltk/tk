@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.28 2008/06/12 06:32:11 das Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.29 2008/08/19 15:52:13 georgeps Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -318,33 +318,6 @@ MacXIdAlloc(
      */
 
     return ++cur_id;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpWindowWasRecentlyDeleted --
- *
- *	Tries to determine whether the given window was recently deleted.
- *	Called from the generic code error handler to attempt to deal with
- *	async BadWindow errors under some circumstances.
- *
- * Results:
- *	Always 0, we do not keep this information on the Mac, so we do not
- *	know whether the window was destroyed.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpWindowWasRecentlyDeleted(
-    Window win,
-    TkDisplay *dispPtr)
-{
-    return 0;
 }
 
 /*
