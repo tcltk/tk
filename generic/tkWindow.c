@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.95 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.96 2008/08/19 15:52:12 georgeps Exp $
  */
 
 #include "tkInt.h"
@@ -521,8 +521,6 @@ GetScreen(
 	    dispPtr->name = (char *) ckalloc((unsigned) (length+1));
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
-
-	    TkInitXId(dispPtr);
 	    break;
 	}
 	if ((strncmp(dispPtr->name, screenName, length) == 0)
@@ -1461,7 +1459,6 @@ Tk_DestroyWindow(
 	    XDestroyWindow(winPtr->display, winPtr->window);
 	}
 #endif
-	TkFreeWindowId(dispPtr, winPtr->window);
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
 		(char *) winPtr->window));
 	winPtr->window = None;

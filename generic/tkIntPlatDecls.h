@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.32 2008/04/08 15:00:43 das Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.33 2008/08/19 15:52:12 georgeps Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -484,16 +484,8 @@ EXTERN unsigned long	TkpGetMS (void);
 /* 0 */
 EXTERN void		TkCreateXEventSource (void);
 #endif
-#ifndef TkFreeWindowId_TCL_DECLARED
-#define TkFreeWindowId_TCL_DECLARED
-/* 1 */
-EXTERN void		TkFreeWindowId (TkDisplay * dispPtr, Window w);
-#endif
-#ifndef TkInitXId_TCL_DECLARED
-#define TkInitXId_TCL_DECLARED
-/* 2 */
-EXTERN void		TkInitXId (TkDisplay * dispPtr);
-#endif
+/* Slot 1 is reserved */
+/* Slot 2 is reserved */
 #ifndef TkpCmapStressed_TCL_DECLARED
 #define TkpCmapStressed_TCL_DECLARED
 /* 3 */
@@ -535,11 +527,7 @@ EXTERN void		TkWmCleanup (TkDisplay * dispPtr);
 /* 10 */
 EXTERN void		TkSendCleanup (TkDisplay * dispPtr);
 #endif
-#ifndef TkFreeXId_TCL_DECLARED
-#define TkFreeXId_TCL_DECLARED
-/* 11 */
-EXTERN void		TkFreeXId (TkDisplay * dispPtr);
-#endif
+/* Slot 11 is reserved */
 #ifndef TkpWmSetState_TCL_DECLARED
 #define TkpWmSetState_TCL_DECLARED
 /* 12 */
@@ -654,8 +642,8 @@ typedef struct TkIntPlatStubs {
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
-    void (*tkFreeWindowId) (TkDisplay * dispPtr, Window w); /* 1 */
-    void (*tkInitXId) (TkDisplay * dispPtr); /* 2 */
+    void *reserved1;
+    void *reserved2;
     int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 3 */
     void (*tkpSync) (Display * display); /* 4 */
     Window (*tkUnixContainerId) (TkWindow * winPtr); /* 5 */
@@ -664,7 +652,7 @@ typedef struct TkIntPlatStubs {
     int (*tkpScanWindowId) (Tcl_Interp * interp, CONST char * string, Window * idPtr); /* 8 */
     void (*tkWmCleanup) (TkDisplay * dispPtr); /* 9 */
     void (*tkSendCleanup) (TkDisplay * dispPtr); /* 10 */
-    void (*tkFreeXId) (TkDisplay * dispPtr); /* 11 */
+    void *reserved11;
     int (*tkpWmSetState) (TkWindow * winPtr, int state); /* 12 */
     int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp * interp, int argc, CONST char ** argv); /* 13 */
 #endif /* X11 */
@@ -1022,14 +1010,8 @@ extern CONST TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
 #endif
-#ifndef TkFreeWindowId
-#define TkFreeWindowId \
-	(tkIntPlatStubsPtr->tkFreeWindowId) /* 1 */
-#endif
-#ifndef TkInitXId
-#define TkInitXId \
-	(tkIntPlatStubsPtr->tkInitXId) /* 2 */
-#endif
+/* Slot 1 is reserved */
+/* Slot 2 is reserved */
 #ifndef TkpCmapStressed
 #define TkpCmapStressed \
 	(tkIntPlatStubsPtr->tkpCmapStressed) /* 3 */
@@ -1062,10 +1044,7 @@ extern CONST TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkSendCleanup \
 	(tkIntPlatStubsPtr->tkSendCleanup) /* 10 */
 #endif
-#ifndef TkFreeXId
-#define TkFreeXId \
-	(tkIntPlatStubsPtr->tkFreeXId) /* 11 */
-#endif
+/* Slot 11 is reserved */
 #ifndef TkpWmSetState
 #define TkpWmSetState \
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.34 2008/04/08 03:28:05 kennykb Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.35 2008/08/19 15:52:11 georgeps Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -477,12 +477,7 @@ EXTERN void		TkpSetMainMenubar (Tcl_Interp * interp,
 EXTERN int		TkpUseWindow (Tcl_Interp * interp, Tk_Window tkwin, 
 				CONST char * string);
 #endif
-#ifndef TkpWindowWasRecentlyDeleted_TCL_DECLARED
-#define TkpWindowWasRecentlyDeleted_TCL_DECLARED
-/* 76 */
-EXTERN int		TkpWindowWasRecentlyDeleted (Window win, 
-				TkDisplay * dispPtr);
-#endif
+/* Slot 76 is reserved */
 #ifndef TkQueueEventForAllChildren_TCL_DECLARED
 #define TkQueueEventForAllChildren_TCL_DECLARED
 /* 77 */
@@ -1039,7 +1034,7 @@ typedef struct TkIntStubs {
     void (*tkpRedirectKeyEvent) (TkWindow * winPtr, XEvent * eventPtr); /* 73 */
     void (*tkpSetMainMenubar) (Tcl_Interp * interp, Tk_Window tkwin, char * menuName); /* 74 */
     int (*tkpUseWindow) (Tcl_Interp * interp, Tk_Window tkwin, CONST char * string); /* 75 */
-    int (*tkpWindowWasRecentlyDeleted) (Window win, TkDisplay * dispPtr); /* 76 */
+    void *reserved76;
     void (*tkQueueEventForAllChildren) (TkWindow * winPtr, XEvent * eventPtr); /* 77 */
     int (*tkReadBitmapFile) (Display * display, Drawable d, CONST char * filename, unsigned int * width_return, unsigned int * height_return, Pixmap * bitmap_return, int * x_hot_return, int * y_hot_return); /* 78 */
     int (*tkScrollWindow) (Tk_Window tkwin, GC gc, int x, int y, int width, int height, int dx, int dy, TkRegion damageRgn); /* 79 */
@@ -1536,10 +1531,7 @@ extern CONST TkIntStubs *tkIntStubsPtr;
 #define TkpUseWindow \
 	(tkIntStubsPtr->tkpUseWindow) /* 75 */
 #endif
-#ifndef TkpWindowWasRecentlyDeleted
-#define TkpWindowWasRecentlyDeleted \
-	(tkIntStubsPtr->tkpWindowWasRecentlyDeleted) /* 76 */
-#endif
+/* Slot 76 is reserved */
 #ifndef TkQueueEventForAllChildren
 #define TkQueueEventForAllChildren \
 	(tkIntStubsPtr->tkQueueEventForAllChildren) /* 77 */

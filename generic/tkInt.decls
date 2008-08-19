@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.44 2007/12/13 15:24:14 dgp Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.45 2008/08/19 15:52:11 georgeps Exp $
 
 library tk
 
@@ -278,9 +278,6 @@ declare 74 generic {
 declare 75 generic {
     int TkpUseWindow(Tcl_Interp *interp, Tk_Window tkwin, CONST char *string)
 }
-declare 76 generic {
-    int TkpWindowWasRecentlyDeleted(Window win, TkDisplay *dispPtr)
-}
 declare 77 generic {
     void TkQueueEventForAllChildren(TkWindow *winPtr, XEvent *eventPtr)
 }
@@ -531,12 +528,6 @@ interface tkIntPlat
 declare 0 x11 {
     void TkCreateXEventSource(void)
 }
-declare 1 x11 {
-    void TkFreeWindowId(TkDisplay *dispPtr, Window w)
-}
-declare 2 x11 {
-    void TkInitXId(TkDisplay *dispPtr)
-}
 declare 3 x11 {
     int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 }
@@ -560,9 +551,6 @@ declare 9 x11 {
 }
 declare 10 x11 {
     void TkSendCleanup(TkDisplay *dispPtr)
-}
-declare 11 x11 {
-    void TkFreeXId(TkDisplay *dispPtr)
 }
 declare 12 x11 {
     int TkpWmSetState(TkWindow *winPtr, int state)
