@@ -1,3 +1,9 @@
+2008-08-19  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXFont.c (SetFontFeatures):	Disable antialiasing of
+						 	fixed-width fonts with
+						 	size <= 10.
+
 2008-08-14  Daniel Steffen  <das@users.sourceforge.net>
 
 	*** 8.5.4 TAGGED FOR RELEASE ***

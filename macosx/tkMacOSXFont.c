@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.37.2.1 2008/06/19 00:10:54 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.37.2.2 2008/08/19 00:17:48 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -220,7 +220,8 @@ static void InitATSUObjects(FMFontFamily familyId, short qdsize, short qdStyle,
 	ATSUFontID *fontIdPtr, ATSUTextLayout *layoutPtr, ATSUStyle *stylePtr);
 static void InitATSUStyle(ATSUFontID fontId, short ptSize, short qdStyle,
 	ATSUStyle style);
-static void SetFontFeatures(ATSUFontID fontId, int fixed, ATSUStyle style);
+static void SetFontFeatures(ATSUFontID fontId, int fixed, short size,
+	ATSUStyle style);
 static void AdjustFontHeight(MacFont *fontPtr);
 static void InitATSULayout(const TkMacOSXDrawingContext *drawingContextPtr,
 	ATSUTextLayout layout, int fixed);
@@ -1493,7 +1494,8 @@ InitFont(
     Tk_MeasureChars((Tk_Font)fontPtr, "W", 1, -1, 0, &wWidth);
     fmPtr->fixed = periodWidth == wWidth;
 
-    SetFontFeatures(fontPtr->atsuFontId, fmPtr->fixed, fontPtr->atsuStyle);
+    SetFontFeatures(fontPtr->atsuFontId, fmPtr->fixed, size,
+	    fontPtr->atsuStyle);
 
     AdjustFontHeight(fontPtr);
 }
@@ -1646,6 +1648,7 @@ static void
 SetFontFeatures(
     ATSUFontID fontId,		/* The font id to use. */
     int fixed,			/* Is this a fixed font? */
+    short size,			/* Size of the font */
     ATSUStyle style)		/* The style handle to configure. */
 {
     /*
@@ -1664,6 +1667,19 @@ SetFontFeatures(
 	ChkErr(ATSUSetFontFeatures, style, sizeof(fixed_featureTypes) /
 		sizeof(fixed_featureTypes[0]), fixed_featureTypes,
 		fixed_featureSelectors);
+	if (size <= 10) {
+	    /*
+	     * Disable antialiasing of fixed fonts with sizes <= 10
+	     */
+
+	    const ATSStyleRenderingOptions options = kATSStyleNoAntiAliasing;
+	    const ATSUAttributeTag styleTag = kATSUStyleRenderingOptionsTag;
+	    const ByteCount styleSize = sizeof(ATSStyleRenderingOptions);
+	    const ConstATSUAttributeValuePtr styleValue = &options;
+
+	    ChkErr(ATSUSetAttributes, style, 1, &styleTag, &styleSize,
+		    (ATSUAttributeValuePtr*) &styleValue);
+	}
     }
 }
 
