@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkError.c,v 1.6 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkError.c,v 1.7 2008/08/19 15:52:11 georgeps Exp $
  */
 
 #include "tkInt.h"
@@ -271,8 +271,7 @@ ErrorProc(
     if (errEventPtr->error_code == BadWindow) {
 	Window w = (Window) errEventPtr->resourceid;
 
-	if (Tk_IdToWindow(display, w) != NULL
-		|| TkpWindowWasRecentlyDeleted(w, dispPtr)) {
+	if (Tk_IdToWindow(display, w) != NULL) {
 	    return 0;
 	}
     }
