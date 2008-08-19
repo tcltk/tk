@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.37.2.2 2008/08/19 00:17:48 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.37.2.3 2008/08/19 00:19:10 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1669,7 +1669,7 @@ SetFontFeatures(
 		fixed_featureSelectors);
 	if (size <= 10) {
 	    /*
-	     * Disable antialiasing of fixed fonts with sizes <= 10
+	     * Disable antialiasing of fixed-width fonts with sizes <= 10
 	     */
 
 	    const ATSStyleRenderingOptions options = kATSStyleNoAntiAliasing;
