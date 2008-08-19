@@ -31,6 +31,8 @@
 	win/tkWinPort.h: Remove TkFreeWindowId and TkInitXId.
 	win/tkWinWindow.c: Remove TkpWindowWasRecentlyDeleted.
 
+	tests/id.test: Remove this unnecessary test.
+
 2008-08-19  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkScroll.c:  Don't use sprintf "%g" to
