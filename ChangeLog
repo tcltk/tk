@@ -1,3 +1,9 @@
+2008-08-19  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXFont.c (SetFontFeatures):	Disable antialiasing of
+						 	fixed-width fonts with
+						 	size <= 10.
+
 2008-08-18  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
     * tests/canvWind.test: Update to tcltest2
