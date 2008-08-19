@@ -1,3 +1,36 @@
+2008-08-19  George Peter Staplin <georgeps@users.sourceforge.net>
+
+	After some discussion with Joe English and subsequently the
+	X.org developers (Keith Packard in particular), it was discovered
+	that Tk is doing management of XIDs that it shouldn't need to do.
+	The very common XC-MISC extension which has come with every version
+	of X for the last 15 years is used with Xlib now, to retrieve the
+	information about the used/unused XIDs.
+
+	The public Tk_FreeXId is now a no-op.
+	
+	Joe English reviewed the patch, and said "please commit."  
+	The patch is associated with the bug tracker id: 2039720
+
+	generic/tkError.c: Remove the usage of TkpWindowWasRecentlyDeleted.
+	generic/tkInt.decls: Update the declarations for the now unused 
+		internalstubs.
+	generic/tkIntDecls.h: Regenerated based on tkInt.decls.
+	generic/tkIntPlatDecls.h: Regenerated based on tkInt.decls.
+	generic/tkStubInit.c
+	generic/tkWindow.c: Remove the calls to TkInitXId, and TkFreeWindowId.
+
+	macosx/tkMaxOSXPort.h: Remove TkFreeWindowId and TkInitXId macro
+		definitions.
+	macosx/tkMacOSXXStubs.c: Remove the no-op 
+		TkpWindowWasRecentlyDeleted.
+
+	unix/tkUnixEvent.c: Remove call to TkFreeXId.
+	unix/tkUnixXId.c: Remove a lot of unnecessary code (see above).  
+
+	win/tkWinPort.h: Remove TkFreeWindowId and TkInitXId.
+	win/tkWinWindow.c: Remove TkpWindowWasRecentlyDeleted.
+
 2008-08-19  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkScroll.c:  Don't use sprintf "%g" to
