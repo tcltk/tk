@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.25 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.26 2008/08/21 09:43:53 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1188,16 +1188,12 @@ ExtendArray(
      */
 
     if (arrayPtr->numUsed >= arrayPtr->arraySize) {
-	register ElArray *newPtr;
+	register int newSize = 2*arrayPtr->arraySize;
 
-	newPtr = (ElArray *) ckalloc(EL_ARRAY_SIZE(2*arrayPtr->arraySize));
-	newPtr->arraySize = 2*arrayPtr->arraySize;
-	newPtr->numUsed = arrayPtr->numUsed;
-	newPtr->nextToUse = &newPtr->els[newPtr->numUsed];
-	memcpy(newPtr->els, arrayPtr->els,
-		arrayPtr->arraySize * sizeof(Element));
-	ckfree((char *) arrayPtr);
-	arrayPtr = newPtr;
+	arrayPtr = (ElArray *)
+		ckrealloc((char *) arrayPtr, EL_ARRAY_SIZE(newSize));
+	arrayPtr->arraySize = newSize;
+	arrayPtr->nextToUse = &arrayPtr->els[arrayPtr->numUsed];
     }
 
     *arrayPtr->nextToUse = *elPtr;
