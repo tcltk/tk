@@ -1,89 +1,85 @@
+2008-08-21  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkOption.c (ExtendArray): Rework so that the code uses
+	ckrealloc (idiomatically) rather than its home-brewed version.
+
 2008-08-19  George Peter Staplin <georgeps@users.sourceforge.net>
 
-	After some discussion with Joe English and subsequently the
-	X.org developers (Keith Packard in particular), it was discovered
-	that Tk is doing management of XIDs that it shouldn't need to do.
-	The very common XC-MISC extension which has come with every version
-	of X for the last 15 years is used with Xlib now, to retrieve the
-	information about the used/unused XIDs.
+	After some discussion with Joe English and subsequently the X.org
+	developers (Keith Packard in particular), it was discovered that Tk is
+	doing management of XIDs that it shouldn't need to do. The very common
+	XC-MISC extension which has come with every version of X for the last
+	15 years is used with Xlib now, to retrieve the information about the
+	used/unused XIDs. The public Tk_FreeXId is now a no-op. [Bug 2039720]
 
-	The public Tk_FreeXId is now a no-op.
-	
-	Joe English reviewed the patch, and said "please commit."  
-	The patch is associated with the bug tracker id: 2039720
-
-	generic/tkError.c: Remove the usage of TkpWindowWasRecentlyDeleted.
-	generic/tkInt.decls: Update the declarations for the now unused 
-		internalstubs.
-	generic/tkIntDecls.h: Regenerated based on tkInt.decls.
-	generic/tkIntPlatDecls.h: Regenerated based on tkInt.decls.
-	generic/tkStubInit.c
-	generic/tkWindow.c: Remove the calls to TkInitXId, and TkFreeWindowId.
-
-	macosx/tkMaxOSXPort.h: Remove TkFreeWindowId and TkInitXId macro
-		definitions.
-	macosx/tkMacOSXXStubs.c: Remove the no-op 
-		TkpWindowWasRecentlyDeleted.
-
-	unix/tkUnixEvent.c: Remove call to TkFreeXId.
-	unix/tkUnixXId.c: Remove a lot of unnecessary code (see above).  
-
-	win/tkWinPort.h: Remove TkFreeWindowId and TkInitXId.
-	win/tkWinWindow.c: Remove TkpWindowWasRecentlyDeleted.
-
-	tests/id.test: Remove this unnecessary test.
+	* generic/tkError.c: Remove the usage of TkpWindowWasRecentlyDeleted.
+	* generic/tkInt.decls: Update the declarations for the now unused
+	internal stubs.
+	* generic/tkIntDecls.h: Regenerated based on tkInt.decls.
+	* generic/tkIntPlatDecls.h: Regenerated based on tkInt.decls.
+	* generic/tkStubInit.c
+	* generic/tkWindow.c: Remove the calls to TkInitXId, and
+	TkFreeWindowId.
+	* macosx/tkMaxOSXPort.h: Remove TkFreeWindowId and TkInitXId macro
+	definitions.
+	* macosx/tkMacOSXXStubs.c: Remove the no-op
+	TkpWindowWasRecentlyDeleted.
+	* unix/tkUnixEvent.c: Remove call to TkFreeXId.
+	* unix/tkUnixXId.c: Remove a lot of unnecessary code (see above).
+	* win/tkWinPort.h: Remove TkFreeWindowId and TkInitXId.
+	* win/tkWinWindow.c: Remove TkpWindowWasRecentlyDeleted.
+	* tests/id.test: Remove this unnecessary test.
 
 2008-08-19  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkScroll.c:  Don't use sprintf "%g" to
-	format floating point numbers in -[xy]scrollcommand callbacks
-	or [xy]view methods.  Minor incompatibility: 0 and 1 now
-	formatted as "0.0" resp "1.0".
-	* tests/ttk/entry.test, tests/ttk/treeview.test: Updated
-	to account for above change.
+	* generic/ttk/ttkScroll.c:  Don't use sprintf "%g" to format floating
+	point numbers in -[xy]scrollcommand callbacks or [xy]view methods.
+	Minor incompatibility: 0 and 1 now formatted as "0.0" resp "1.0".
+	* tests/ttk/entry.test, tests/ttk/treeview.test: Updated to account
+	for above change.
 
 2008-08-19  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXFont.c (SetFontFeatures):	Disable antialiasing of
-						 	fixed-width fonts with
-						 	size <= 10.
+	* macosx/tkMacOSXFont.c (SetFontFeatures): Disable antialiasing of
+						   fixed-width fonts with
+						   size <= 10.
 
 2008-08-18  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-    * tests/canvWind.test: Update to tcltest2
-    * tests/menubut.test:
-    * tests/raise.test:
-    * tests/unixButton.test:
-    * tests/unixEmbed.test:
-    * tests/winClipboard.test:
+	* tests/canvWind.test: Update to tcltest2
+	* tests/menubut.test:
+	* tests/raise.test:
+	* tests/unixButton.test:
+	* tests/unixEmbed.test:
+	* tests/winClipboard.test:
 
 2008-08-17  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-    * tests/focus.test: Update to tcltest2
-    * tests/focusTcl.test:
-    * tests/geometry.test:
-    * tests/grab.test:
-    * tests/grid.test:
-    * tests/imgBmap.test:
-    * tests/imgPhoto.test:
-    * tests/imgPPM.test:
-    * tests/listbox.test:
-    * tests/safe.test:
-    * tests/tk.test:
-    * tests/util.test:
+	* tests/focus.test: Update to tcltest2
+	* tests/focusTcl.test:
+	* tests/geometry.test:
+	* tests/grab.test:
+	* tests/grid.test:
+	* tests/imgBmap.test:
+	* tests/imgPhoto.test:
+	* tests/imgPPM.test:
+	* tests/listbox.test:
+	* tests/safe.test:
+	* tests/tk.test:
+	* tests/util.test:
 
 2008-08-15  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-    * tests/clrpick.test: Update to tcltest2
-    * tests/frame.test:
-    * tests/font.test:
-    * tests/image.test:
+	* tests/clrpick.test: Update to tcltest2
+	* tests/frame.test:
+	* tests/font.test:
+	* tests/image.test:
 
 2008-08-14  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-    * test/event.test: Update to tcltest2
-    * test/id.test:
-    * test/menu.test:
+	* test/event.test: Update to tcltest2
+	* test/id.test:
+	* test/menu.test:
 
 2008-08-14  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -128,9 +124,9 @@
 
 2008-08-05  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tk.h, generic/tkEvent.c: Fix for [Bug 2010422]
-	"no event type or button # or keysym while executing
-	"bind Listbox <MouseWheel> [...]".
+	* generic/tk.h, generic/tkEvent.c: Fix for [Bug 2010422] "no event
+	type or button # or keysym while executing "bind Listbox
+	<MouseWheel> [...]".
 
 2008-08-03  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
@@ -141,19 +137,18 @@
 
 2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinWm.c: Check wmPtr is valid in TopLevelReqProc
-	* test/wm.test:  to fix [Bug 2028703]
+	* win/tkWinWm.c: Check wmPtr is valid in TopLevelReqProc to fix
+	* test/wm.test:  [Bug 2028703]
 
 2008-07-31  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h: Added missing EXTERN for the Tcl_PkgInitStubsCheck
 	declaration to fix inability to embed non-stub-enabled Tk on Windows.
-	
+
 2008-07-29  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/constraints.tcl: -highlightthickness entry's option
-	(fonts constraint)
-
+	* test/constraints.tcl: -highlightthickness entry's option (fonts
+	constraint)
 
 2008-07-28  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
@@ -198,7 +193,7 @@
 2008-07-22  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/ttk/aquaTheme.tcl: Use system color names and TIP145 named
-	font instead of hardcoded color values and deprecated native font name.
+	font instead of hardcoded color values and deprecated native font name
 
 	* macosx/tkMacOSXHLEvents.c: factor out common code; formatting.
 
@@ -209,7 +204,7 @@
 2008-07-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkClamTheme.c,
-	generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: Audit:
+	* generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: Audit:
 	ensure that output arguments to Tk_Get*FromObj() are initialized, in
 	case of erroneous style specifications. [Bug 2009213]
 
@@ -460,7 +455,7 @@
 2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): Fix double-free on Tk_ParseArgv
-	* tests/main.test (main-3.*):   error. [Bug 1937135]
+	* tests/main.test (main-3.*):	   error. [Bug 1937135]
 
 	* generic/tkArgv.c: fix -help mem explosion. [Bug 1936238] (kenny)
 
@@ -4177,12 +4172,12 @@
 	* macosx/tkMacOSXWindowEvent.c: registered appleevents [FR 1105284],
 	implement print applevent handling, style/whitespace cleanup.
 
-	* macosx/tkMacOSXDraw.c (TkMacOSXInitCGDrawing): prevent multiple init.
+	* macosx/tkMacOSXDraw.c (TkMacOSXInitCGDrawing): prevent multiple init
 
 	* macosx/tkMacOSXFont.c: remove #ifdef'd text measuring codepaths now
 	* macosx/tkMacOSXInit.c: known to be incorrect, cleanup obsolete text
-	* macosx/README:      antialiasing control code, document ATSUI text
-				 antialiasing changes.
+	* macosx/README:	 antialiasing control code, document ATSUI
+				 text antialiasing changes.
 
 	* macosx/tkMacOSXInt.h:     Implemented 'zoomed' window state
 	* macosx/tkMacOSXWindowEvent.c: handling for TkAqua, via titlebar
@@ -4192,8 +4187,8 @@
 2006-04-10  Donal K. Fellows  <donal.k.fellows@manchester.ac.uk>
 
 	* library/tkfbox.tcl (::tk::IconList_Goto): Fix prefix searching so
-	that the start location is reasonable, and the prefix matching is using
-	the correct Tcl command for this. [Bug 1467938]
+	that the start location is reasonable, and the prefix matching is
+	using the correct Tcl command for this. [Bug 1467938]
 
 2006-04-10  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
