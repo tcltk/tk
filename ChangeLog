@@ -1,3 +1,11 @@
+2008-08-18  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+    * tests/menuDraw.test: Update to tcltest2
+    * tests/msgbox.test:
+    * tests/oldpack.test:
+    * tests/ pack.test:
+    * tests/panedwindow.test:
+
 2008-08-21  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkOption.c (ExtendArray): Rework so that the code uses
