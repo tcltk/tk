@@ -1,10 +1,16 @@
-2008-08-18  Ania Pawelczyk  <aniap@users.sourceforge.net>
+2008-08-22  Don Porter  <dgp@users.sourceforge.net>
 
-    * tests/menuDraw.test: Update to tcltest2
-    * tests/msgbox.test:
-    * tests/oldpack.test:
-    * tests/ pack.test:
-    * tests/panedwindow.test:
+	*** 8.6a2 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for 8.6a2 release.
+
+2008-08-21  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* tests/menuDraw.test: Update to tcltest2
+	* tests/msgbox.test:
+	* tests/oldpack.test:
+	* tests/ pack.test:
+	* tests/panedwindow.test:
 
 2008-08-21  Donal K. Fellows  <dkf@users.sf.net>
 
