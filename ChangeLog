@@ -1,9 +1,13 @@
+2008-08-25  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPhoto.c (ImgPhotoConfigureMaster): Ensure that uses of
+	TclStackAlloc and TclStackFree balance.
+
 2008-08-25  Todd M. Helfter <tmh@users.sourceforge.net>
 
-        The patch is associated with the bug tracker id: 1936220
-        library/tkfbox.tcl : fix the multiple selection error for
-        tk_getOpenFile -multiple 1 which fails on all unix platforms since
-        the adoption of ttk widgets.
+	* library/tkfbox.tcl: Fix the multiple selection error for
+	tk_getOpenFile -multiple 1 which fails on all unix platforms since the
+	adoption of ttk widgets. [Bug 1936220]
 
 2008-08-25  Donal K. Fellows  <dkf@users.sf.net>
 

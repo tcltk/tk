@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.79 2008/08/25 11:44:04 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.80 2008/08/25 17:19:43 dkf Exp $
  */
 
 #include "tclInt.h"
@@ -1678,6 +1678,7 @@ ImgPhotoConfigureMaster(
 		    data = objv[i];
 		    j--;
 		} else {
+		    TclStackFree(interp, args);
 		    Tcl_AppendResult(interp,
 			    "value for \"-data\" missing", NULL);
 		    return TCL_ERROR;
@@ -1688,6 +1689,7 @@ ImgPhotoConfigureMaster(
 		    format = objv[i];
 		    j--;
 		} else {
+		    TclStackFree(interp, args);
 		    Tcl_AppendResult(interp,
 			    "value for \"-format\" missing", NULL);
 		    return TCL_ERROR;
