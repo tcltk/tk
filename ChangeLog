@@ -1,3 +1,11 @@
+2008-08-25  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPhoto.c:	     Split the implementation of the core of
+	* generic/tkImgPhoto.h:	     photo images into two pieces, the photo
+	* generic/tkImgPhInstance.c: master (which manages the data model and
+	the interaction with the script level) and the photo instances (which
+	handle display).
+
 2008-08-22  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6a2 TAGGED FOR RELEASE ***
