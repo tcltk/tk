@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.68 2007/12/13 15:26:27 dgp Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.68.2.1 2008/08/25 17:22:40 tmh Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -581,12 +581,11 @@ proc ::tk::IconList_ShiftBtn1 {w x y} {
 	if {$i eq ""} {
 	    return
 	}
-	set a [IconList_Index $w anchor]
-	if {$a eq ""} {
-	    set a $i
+	if {[IconList_Index $w anchor] eq ""} {
+		IconList_Selection $w anchor $i
 	}
 	IconList_Selection $w clear 0 end
-	IconList_Selection $w set $a $i
+	IconList_Selection $w set anchor $i
     }
 }
 
@@ -1608,20 +1607,8 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 
     set text [$data(ent) get]
     if {$data(-multiple)} {
-	# For the multiple case we have to be careful to get the file
-	# names as a true list, watching out for a single file with a
-	# space in the name.  Thus we query the IconList directly.
-
-	set selIcos [::tk::IconList_CurSelection $data(icons)]
-	set data(selectFile) ""
-	if {[llength $selIcos] == 0 && $text ne ""} {
-	    # This assumes the user typed something in without selecting
-	    # files - so assume they only type in a single filename.
-	    VerifyFileName $w $text
-	} else {
-	    foreach item $selIcos {
-		VerifyFileName $w [::tk::IconList_Get $data(icons) $item]
-	    }
+	foreach t $text {
+	    VerifyFileName $w $t
 	}
     } else {
 	VerifyFileName $w $text
@@ -1783,7 +1770,7 @@ proc ::tk::dialog::file::ListBrowse {w} {
     if {[llength $text] == 0} {
 	return
     }
-    if { [llength $text] > 1 } {
+    if {$data(-multiple)} {
 	set newtext {}
 	foreach file $text {
 	    set fullfile [JoinFile $data(selectPath) $file]
