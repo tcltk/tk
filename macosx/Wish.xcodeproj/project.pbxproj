@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		F9067BCD0BFBA2900074F726 /* tkOldTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAFE08F27A39005CB29B /* tkOldTest.c */; };
+		F92EE8BF0E62F846001A6E80 /* tkImgPhInstance.c in Sources */ = {isa = PBXBuildFile; fileRef = F92EE8BE0E62F846001A6E80 /* tkImgPhInstance.c */; };
+		F92EE8D30E62F939001A6E80 /* tkImgPhInstance.c in Sources */ = {isa = PBXBuildFile; fileRef = F92EE8BE0E62F846001A6E80 /* tkImgPhInstance.c */; };
 		F93599B30DF1F75400E04F67 /* tclOO.c in Sources */ = {isa = PBXBuildFile; fileRef = F93599B20DF1F75400E04F67 /* tclOO.c */; };
 		F93599B70DF1F76100E04F67 /* tclOOBasic.c in Sources */ = {isa = PBXBuildFile; fileRef = F93599B60DF1F76100E04F67 /* tclOOBasic.c */; };
 		F93599B90DF1F76600E04F67 /* tclOOCall.c in Sources */ = {isa = PBXBuildFile; fileRef = F93599B80DF1F76600E04F67 /* tclOOCall.c */; };
@@ -623,6 +625,7 @@
 		F92240290D7C620F005EC715 /* knightstour.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = knightstour.tcl; sourceTree = "<group>"; };
 		F92D7F100DE777240033A13A /* tsdPerf.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tsdPerf.tcl; sourceTree = "<group>"; };
 		F92D7F140DE777670033A13A /* tsdPerf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tsdPerf.c; sourceTree = "<group>"; };
+		F92EE8BE0E62F846001A6E80 /* tkImgPhInstance.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkImgPhInstance.c; sourceTree = "<group>"; };
 		F93599B20DF1F75400E04F67 /* tclOO.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tclOO.c; sourceTree = "<group>"; };
 		F93599B40DF1F75900E04F67 /* tclOO.decls */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tclOO.decls; sourceTree = "<group>"; };
 		F93599B50DF1F75D00E04F67 /* tclOO.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tclOO.h; sourceTree = "<group>"; };
@@ -2142,7 +2145,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.45 2008/08/19 21:06:01 das Exp $\n";
+			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.46 2008/08/25 14:33:50 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2407,6 +2410,7 @@
 				F966BAD708F27A39005CB29B /* tkImage.c */,
 				F966BAD808F27A39005CB29B /* tkImgBmap.c */,
 				F966BAD908F27A39005CB29B /* tkImgGIF.c */,
+				F92EE8BE0E62F846001A6E80 /* tkImgPhInstance.c */,
 				F966BADA08F27A39005CB29B /* tkImgPhoto.c */,
 				F966BADB08F27A39005CB29B /* tkImgPPM.c */,
 				F966BADC08F27A39005CB29B /* tkImgUtil.c */,
@@ -4343,6 +4347,7 @@
 				F966BDFA08F27A3F005CB29B /* tkImage.c in Sources */,
 				F966BDFB08F27A3F005CB29B /* tkImgBmap.c in Sources */,
 				F966BDFC08F27A3F005CB29B /* tkImgGIF.c in Sources */,
+				F92EE8BF0E62F846001A6E80 /* tkImgPhInstance.c in Sources */,
 				F966BDFD08F27A3F005CB29B /* tkImgPhoto.c in Sources */,
 				F966BDFE08F27A3F005CB29B /* tkImgPPM.c in Sources */,
 				F966BE0708F27A3F005CB29B /* tkListbox.c in Sources */,
@@ -4654,6 +4659,7 @@
 				F9FD31710CC1AD070073837D /* tkImage.c in Sources */,
 				F9FD31720CC1AD070073837D /* tkImgBmap.c in Sources */,
 				F9FD31730CC1AD070073837D /* tkImgGIF.c in Sources */,
+				F92EE8D30E62F939001A6E80 /* tkImgPhInstance.c in Sources */,
 				F9FD31740CC1AD070073837D /* tkImgPhoto.c in Sources */,
 				F9FD31750CC1AD070073837D /* tkImgPPM.c in Sources */,
 				F9FD31760CC1AD070073837D /* tkListbox.c in Sources */,
