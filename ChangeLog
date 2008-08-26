@@ -1,8 +1,12 @@
+2008-08-26  Donal K. Fellows  <dkf@users.sf.net>
+
+	* tests/imgPhoto.test: More style improvements.
+
 2008-08-25  Todd M. Helfter <tmh@users.sourceforge.net>
 
-	* library/menu.tcl : Do not flip to the arrow cursor on menus.
-	This was a Motif convention.  Current behavior is maintained if
-	tk_strictMotif is enabled.  [Bug 1023955]
+	* library/menu.tcl: Do not flip to the arrow cursor on menus. This was
+	a Motif convention. Current behavior is maintained iff tk_strictMotif
+	is enabled. [Bug 1023955]
 
 2008-08-25  Donal K. Fellows  <dkf@users.sf.net>
 
