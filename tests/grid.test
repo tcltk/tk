@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: grid.test,v 1.33 2008/08/16 23:52:34 aniap Exp $
+# RCS: @(#) $Id: grid.test,v 1.34 2008/08/27 18:08:02 pspjuth Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -18,7 +18,6 @@ namespace import -force tcltest::test
 # of one or all of the tests
 
 proc grid_reset {{test ?} {top .}} {
-#puts "AAA$test"
     global GRID_VERBOSE
     if {[info exists GRID_VERBOSE]} {
 	if {$GRID_VERBOSE=="" || $GRID_VERBOSE==$test} {
@@ -586,7 +585,7 @@ test grid-9.11 {slaves} -body {
     set a
 } -cleanup {
     grid_reset 9.11
-} -result {{0{.0-x .0}} {1{.1-x .1}} {2{.2-x .2}} 3{} 0{.0} {1{.1 .0-x}} {2{.2 .1-x}} 3{.2-x}} 
+} -result {{0{.0-x .0}} {1{.1-x .1}} {2{.2-x .2}} 3{} 0{.0} {1{.1 .0-x}} {2{.2 .1-x}} 3{.2-x}}
 
 
 # column/row configure
@@ -1091,7 +1090,7 @@ test grid-11.16 {default widget placement} -body {
     foreach l {a b c d e} {
         frame .$l -width 50 -height 50
     }
-    grid .a .b .c .d -sticky news 
+    grid .a .b .c .d -sticky news
     grid  x  ^  x .e -sticky news
     update
     set res ""
@@ -1190,14 +1189,14 @@ test grid-12.1 {-sticky} -body {
 (new) 0 0 250 100
 (nesw) 0 0 250 150
 }
-   
+
 test grid-12.2 {-sticky} -body {
     frame .f -bg red
     grid .f -sticky glue
 } -cleanup {
     grid_reset 12.2
 } -returnCodes error -result {bad stickyness value "glue": must be a string containing n, e, s, and/or w}
-   
+
 test grid-12.3 {-sticky} -body {
     frame .f -bg red
     grid .f -sticky {n,s,e,w}
@@ -1410,8 +1409,8 @@ test grid-13.20 {reparenting} -body {
 test grid-14.1 {structure notify} -body {
     frame .f -width 200 -height 100 -highlightthickness 0 -bg red
     frame .g -width 200 -height 100 -highlightthickness 0 -bg red
-    grid .f 
-    grid .g -in .f    
+    grid .f
+    grid .g -in .f
     update
     set a ""
     lappend a "[winfo x .g],[winfo y .g] \
@@ -1426,9 +1425,9 @@ test grid-14.1 {structure notify} -body {
 } -result {{0,0  200,100} {5,5  200,100}}
 
 test grid-14.2 {structure notify} -body {
-    frame .f -width 200 -height 100 
-    frame .f.g -width 200 -height 100 
-    grid .f 
+    frame .f -width 200 -height 100
+    frame .f.g -width 200 -height 100
+    grid .f
     grid .f.g
     update
     set a ""
@@ -1604,9 +1603,9 @@ test grid-16.6 {layout weights (shrinking at minsize)} -body {
 } -result {69-52 69-52 69-52}
 
 # test fails when run alone
-# reason (I think): -minsize 0 causes both: 
-# [winfo ismapped .$i] => 0 and 
-# not responding for width ang height settings, so that 
+# reason (I think): -minsize 0 causes both:
+# [winfo ismapped .$i] => 0 and
+# not responding for width ang height settings, so that
 # [winfo width .$i] [winfo height .$i] take different values
 # That doesn't happen if previous tests run
 test grid-16.7 {layout weights (shrinking at minsize)} -body {
@@ -1912,6 +1911,30 @@ test grid-16.18 {layout span} -body {
     grid_reset 16.18
 } -result [list [list 137 29 10] [list 30 136 10] [list 98 68 10]]
 
+test grid-16.19 {layout span} -constraints { knownBug } -body {
+    # This test shows the problem in Bug 2075285
+    # Several overlapping multi-span widgets is a weak spot
+    # in the current implementation.
+    # Test present as a reminder in case a future algorithm update is made.
+    frame .f1 -width 100 -height 20
+    frame .f2 -width 20  -height 20
+    frame .f3 -width 10  -height 20
+    frame .f4 -width 20  -height 20
+
+    grid .f1 - -   - -   - -sticky we
+    grid .f2 - .f3 - .f4 - -sticky we
+    grid columnconfigure . {1 5} -weight 1
+
+    set res {}
+    update
+    for {set c 0} {$c <= 5} {incr c} {
+        lappend res [lindex [grid bbox . $c 0] 2]
+    }
+    set res
+} -cleanup {
+    grid_reset 16.19
+} -result [list 0 45 5 5 0 45]
+
 
 test grid-17.1 {forget and pending idle handlers} -body {
     # This test is intended to detect a crash caused by a failure to remove
@@ -2096,6 +2119,3 @@ test grid-21.7 {anchor} -body {
 # cleanup
 cleanupTests
 return
-
-
-
