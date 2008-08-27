@@ -10,7 +10,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.32 2008/08/26 13:58:32 dkf Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.33 2008/08/27 16:37:16 dgp Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -696,7 +696,7 @@ test imgPhoto-4.66 {ImgPhotoCmd procedure: transparency get option} -setup {
     photo1 put white -to 0 0 3 3
     photo1 blank
     checkImgTrans photo1
-v -result {0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2}
+} -result {0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2}
 test imgPhoto-4.67 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
     proc checkImgTransLoopSetReset {img width height} {
