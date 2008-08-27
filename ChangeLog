@@ -1,3 +1,7 @@
+2008-08-25  Todd M. Helfter  <tmh@users.sourceforge.net>
+
+	* library/menu.tcl: fix typo from [Bug 1023955]
+
 2008-08-25  Todd M. Helfter <tmh@users.sourceforge.net>
 
 	* library/menu.tcl : Do not flip to the arrow cursor on menus.
