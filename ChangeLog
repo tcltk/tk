@@ -1,3 +1,8 @@
+2008-08-27  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* tests/grid.test: Added a "knownBug"-marked test to show a problem
+	identified in the grid implementation. [Bug 2075285]
+
 2008-08-26  Donal K. Fellows  <dkf@users.sf.net>
 
 	* tests/imgPhoto.test: More style improvements.
