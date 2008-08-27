@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.26.2.1 2008/08/25 23:37:12 tmh Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.26.2.2 2008/08/27 18:51:07 tmh Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -261,7 +261,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     if {$cur ne ""} {
 	MenuUnpost {}
     }
-    if {$tk_stricktMotif} {
+    if {$tk_strictMotif} {
         set Priv(cursor) [$w cget -cursor]
         $w configure -cursor arrow
     }
