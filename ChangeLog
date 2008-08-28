@@ -1,3 +1,15 @@
+2008-08-28  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* tests/option.test: Update to tcltest2
+	* tests/place.test:
+	* tests/scale.test:
+	* tests/select.test:
+	* tests/textBTree.test:
+	* tests/textImage.test:
+	* tests/textMark.test:
+	* tests/textTag.test:
+	* tests/unixMenu.test:
+
 2008-08-25  Todd M. Helfter  <tmh@users.sourceforge.net>
 
 	* library/menu.tcl: fix typo from [Bug 1023955]
