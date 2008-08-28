@@ -1,5 +1,12 @@
 2008-08-22  Don Porter  <dgp@users.sourceforge.net>
 
+	* generic/tkImgPhoto.c:	Changed TclStack* calls to ck* calls so that
+	we don't create new dependencies on Tcl internals.
+
+	* unix/tkUnixPort.h:	Removed #include of tclInt.h that has been
+	* win/tkWinPort.h:	disabled for three years.  If we needed this
+	we'd have noticed by now.
+
 	* README:		Bump version number to 8.6a3
 	* generic/tk.h:
 	* library/tk.tcl:
