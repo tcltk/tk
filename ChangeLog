@@ -1,3 +1,15 @@
+2008-08-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump version number to 8.5.5b1 to distinguish
+	* library/tk.tcl:	CVS development snapshots from the 8.5.4 and
+	* unix/configure.in:	8.5.5 releases.
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf (2.59)
+	* win/configure:
+
 2008-08-25  Todd M. Helfter  <tmh@users.sourceforge.net>
 
 	* library/menu.tcl: fix typo from [Bug 1023955]
