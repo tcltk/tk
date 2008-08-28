@@ -10,7 +10,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.33 2008/08/27 16:37:16 dgp Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.34 2008/08/28 15:36:16 dkf Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -36,6 +36,18 @@ proc checkImgTrans {img} {
 	if {[$img transparency get $x $y]} {
 	    lappend result $x,$y
 	}
+    }
+    return $result
+}
+proc checkImgTransLoop {img script1 script2} {
+    set result {}
+    foreachPixel $img x y {
+	eval $script1
+	lappend result {*}[checkImgTrans $img]
+	append result :
+	eval $script2
+	lappend result {*}[checkImgTrans $img]
+	append result .
     }
     return $result
 }
@@ -699,46 +711,28 @@ test imgPhoto-4.66 {ImgPhotoCmd procedure: transparency get option} -setup {
 } -result {0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2}
 test imgPhoto-4.67 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
-    proc checkImgTransLoopSetReset {img width height} {
-	set result {}
-	foreachPixel img x y {
-	    $img put white -to 0 0 3 3
-	    $img transparency set $x $y 1
-	    lappend result {*}[checkImgTrans $img]
-	    append result :
-	    $img transparency set $x $y 0
-	    lappend result {*}[checkImgTrans $img]
-	    append result .
-	}
-	return $result
-    }
 } -body {
     photo1 put white -to 0 0 3 3
-    checkImgTransLoopSetReset photo1 3 3
+    checkImgTransLoop photo1 {
+	photo1 put white -to 0 0 3 3
+	photo1 transparency set $x $y 1
+    } {
+	photo1 transparency set $x $y 0
+    }
 } -cleanup {
-    rename checkImgTransLoopSetReset {}
     image delete photo1
 } -result {0,0:. 0,1:. 0,2:. 1,0:. 1,1:. 1,2:. 2,0:. 2,1:. 2,2:.}
 test imgPhoto-4.68 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
-    proc checkImgTransLoopResetSet {img width height} {
-	set result {}
-	foreachPixel $img x y {
-	    $img blank
-	    $img transparency set $x $y 0
-	    lappend result {*}[checkImgTrans $img]
-	    append result :
-	    $img transparency set $x $y 1
-	    lappend result {*}[checkImgTrans $img]
-	    append result .
-	}
-	return $result
-    }
 } -body {
     photo1 put white -to 0 0 3 3
-    checkImgTransLoopResetSet photo1 3 3
+    checkImgTransLoop photo1 {
+	photo1 blank
+	photo1 transparency set $x $y 0
+    } {
+	photo1 transparency set $x $y 1
+    }
 } -cleanup {
-    catch {rename checkImgTransLoopResetSet {}}
     image delete photo1
 } -result {0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,2 1,0 1,1 1,2 2,0 2,1 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,1 1,0 1,1 1,2 2,0 2,1 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,1 0,2 1,1 1,2 2,0 2,1 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,1 0,2 1,0 1,2 2,0 2,1 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,1 0,2 1,0 1,1 2,0 2,1 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,1 0,2 1,0 1,1 1,2 2,1 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,2: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2. 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1: 0,0 0,1 0,2 1,0 1,1 1,2 2,0 2,1 2,2.}
 test imgPhoto-4.69 {ImgPhotoCmd procedure: copy with -compositingrule} -setup {
@@ -774,7 +768,7 @@ test imgPhoto-4.71 {ImgPhotoCmd procedure: copy with -compositingrule} -setup {
     checkImgTrans photo1
 } -cleanup {
     image delete photo1 photo2
-} -result {0 2 2 0}
+} -result {0,2 2,0}
 test imgPhoto-4.72 {ImgPhotoCmd procedure: copy with -compositingrule} -setup {
     # Test the compositing rules for copying images
     image create photo photo1 -width 3 -height 3
@@ -789,7 +783,7 @@ test imgPhoto-4.72 {ImgPhotoCmd procedure: copy with -compositingrule} -setup {
     checkImgTrans photo1
 } -cleanup {
     image delete photo1 photo2
-} -result {0 2 2 0}
+} -result {0,2 2,0}
 test imgPhoto-4.73 {ImgPhotoCmd procedure: copy with -compositingrule} -setup {
     # Test the compositing rules for copying images
     image create photo photo1 -width 3 -height 3
@@ -804,7 +798,7 @@ test imgPhoto-4.73 {ImgPhotoCmd procedure: copy with -compositingrule} -setup {
     checkImgTrans photo1
 } -cleanup {
     image delete photo1 photo2
-} -result {0 2 1 1 2 0}
+} -result {0,2 1,1 2,0}
 
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
     hasTeapotPhoto 
@@ -1123,7 +1117,9 @@ test imgPhoto-16.1 {copying to self doesn't access freed memory} -setup {
 
 # ----------------------------------------------------------------------
 
+catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
+catch {rename checkImgTransLoop {}}
 image delete {*}[image names]
 
 # cleanup
