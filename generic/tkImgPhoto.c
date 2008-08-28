@@ -17,10 +17,9 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.80 2008/08/25 17:19:43 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.81 2008/08/28 18:13:34 dgp Exp $
  */
 
-#include "tclInt.h"
 #include "tkImgPhoto.h"
 #include <ctype.h>
 
@@ -1668,7 +1667,7 @@ ImgPhotoConfigureMaster(
     Tk_PhotoImageFormat *imageFormat;
     const char **args;
 
-    args = TclStackAlloc(interp, (objc + 1) * sizeof(char *));
+    args = (const char **) ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
 	args[j] = Tcl_GetStringFromObj(objv[i], &length);
 	if ((length > 1) && (args[j][0] == '-')) {
@@ -1678,7 +1677,7 @@ ImgPhotoConfigureMaster(
 		    data = objv[i];
 		    j--;
 		} else {
-		    TclStackFree(interp, args);
+		    ckfree((char *) args);
 		    Tcl_AppendResult(interp,
 			    "value for \"-data\" missing", NULL);
 		    return TCL_ERROR;
@@ -1689,7 +1688,7 @@ ImgPhotoConfigureMaster(
 		    format = objv[i];
 		    j--;
 		} else {
-		    TclStackFree(interp, args);
+		    ckfree((char *) args);
 		    Tcl_AppendResult(interp,
 			    "value for \"-format\" missing", NULL);
 		    return TCL_ERROR;
@@ -1727,10 +1726,10 @@ ImgPhotoConfigureMaster(
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
 	    j, args, (char *) masterPtr, flags) != TCL_OK) {
-	TclStackFree(interp, args);
+	ckfree((char *) args);
 	goto errorExit;
     }
-    TclStackFree(interp, args);
+    ckfree((char *) args);
 
     /*
      * Regard the empty string for -file, -data or -format as the null value.
@@ -3698,8 +3697,7 @@ ImgStringWrite(
 
     Tcl_DStringInit(&data);
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
-	char *line = TclStackAlloc(interp,
-		(unsigned) ((8 * blockPtr->width) + 2));
+	char *line = ckalloc((unsigned) ((8 * blockPtr->width) + 2));
 	int row, col;
 
 	for (row=0; row<blockPtr->height; row++) {
@@ -3715,7 +3713,7 @@ ImgStringWrite(
 	    }
 	    Tcl_DStringAppendElement(&data, line+1);
 	}
-	TclStackFree(interp, line);
+	ckfree(line);
     }
     Tcl_DStringResult(interp, &data);
     return TCL_OK;
