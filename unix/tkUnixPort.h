@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.14 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.15 2008/08/28 18:13:36 dgp Exp $
  */
 
 #ifndef _UNIXPORT
@@ -203,16 +203,5 @@
 
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))
-
-/*
- * The following declaration is used to get access to a private Tcl interface
- * that is needed for portability reasons.
- *
- * Disabled for now to determined whether we really still need this.
-
-#ifndef _TCLINT
-#include <tclInt.h>
-#endif
- */
 
 #endif /* _UNIXPORT */
