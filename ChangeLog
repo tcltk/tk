@@ -1,5 +1,9 @@
 2008-08-28  Don Porter  <dgp@users.sourceforge.net>
 
+	* unix/tkConfig.sh.in:	Added @XFT_LIBS@ to the definition of TK_LIBS
+	to avoid link failures when a "big wish" program links against a
+	--disable-shared build of libtk.  (Discovered building expectTk).
+
 	* generic/tk.h:		Bump version number to 8.5.5b1 to distinguish
 	* library/tk.tcl:	CVS development snapshots from the 8.5.4 and
 	* unix/configure.in:	8.5.5 releases.
