@@ -1,3 +1,19 @@
+2008-08-30  Ania Pawelczyk  <aniap@users.sourceforge.net>
+
+	* tests/textWind.test: Update to tcltest2
+	* tests/unixSelect.test:
+	* tests/visual_bb.test:
+	* tests/visual.test:
+	* tests/window.test:
+	* tests/winfo.test:
+	* tests/xmfbox.test:
+	* tests/winButton.test:
+	* tests/winDialog.test:
+	* tests/winFont.test:
+	* tests/winMenu.test:
+	* tests/winMsbox.test:
+	* tests/winWm.test:
+
 2008-08-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/tkConfig.sh.in:  Added @XFT_LIBS@ to the definition of TK_LIBS
@@ -86,7 +102,7 @@
 	* tests/menuDraw.test: Update to tcltest2
 	* tests/msgbox.test:
 	* tests/oldpack.test:
-	* tests/ pack.test:
+	* tests/pack.test:
 	* tests/panedwindow.test:
 
 2008-08-21  Donal K. Fellows  <dkf@users.sf.net>
@@ -168,9 +184,9 @@
 
 2008-08-14  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/event.test: Update to tcltest2
-	* test/id.test:
-	* test/menu.test:
+	* tests/event.test: Update to tcltest2
+	* tests/id.test:
+	* tests/menu.test:
 
 2008-08-14  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -181,10 +197,10 @@
 
 2008-08-12  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/choosedir.test: Update to tcltest2
-	* test/clipboard.test:
-	* test/embed.test:
-	* test/main.test:
+	* tests/choosedir.test: Update to tcltest2
+	* tests/clipboard.test:
+	* tests/embed.test:
+	* tests/main.test:
 
 2008-08-12  Don Porter  <dgp@users.sourceforge.net>
 
@@ -202,16 +218,16 @@
 
 2008-08-11  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/canvImg.test: Update to tcltest2
-	* test/canvRect.test:
-	* test/canvText.test:
-	* test/obj.test:
+	* tests/canvImg.test: Update to tcltest2
+	* tests/canvRect.test:
+	* tests/canvText.test:
+	* tests/obj.test:
 
 2008-08-07  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/canvPs.test: Update to tcltest2
-	* test/config.test:
-	* test/canvas.test:
+	* tests/canvPs.test: Update to tcltest2
+	* tests/config.test:
+	* tests/canvas.test:
 
 2008-08-05  Joe English  <jenglish@users.sourceforge.net>
 
@@ -221,15 +237,15 @@
 
 2008-08-03  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/cmds.test: Update to tcltest2
-	* test/dialog.test:
-	* test/get.test:
-	* test/text.test: Update to tcltest2; report: 33.11 fails
+	* tests/cmds.test: Update to tcltest2
+	* tests/dialog.test:
+	* tests/get.test:
+	* tests/text.test: Update to tcltest2; report: 33.11 fails
 
 2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinWm.c: Check wmPtr is valid in TopLevelReqProc to fix
-	* test/wm.test:  [Bug 2028703]
+	* tests/wm.test:  [Bug 2028703]
 
 2008-07-31  Don Porter  <dgp@users.sourceforge.net>
 
@@ -238,13 +254,13 @@
 
 2008-07-29  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/constraints.tcl: -highlightthickness entry's option (fonts
+	* tests/constraints.tcl: -highlightthickness entry's option (fonts
 	constraint)
 
 2008-07-28  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/cursor.test: Update to tcltest2
-	* test/message.test:
+	* tests/cursor.test: Update to tcltest2
+	* tests/message.test:
 
 2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -260,7 +276,7 @@
 
 2008-07-25  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/bind.test: Update to tcltest2
+	* tests/bind.test: Update to tcltest2
 
 2008-07-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -273,13 +289,13 @@
 
 2008-07-22  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
-	* test/bell.test:   Update to tcltest2
-	* test/bgerror.test:
-	* test/bitmap.test:
-	* test/border.test:
-	* test/button.test:
-	* test/entry.test:
-	* test/spinbox.test:
+	* tests/bell.test:   Update to tcltest2
+	* tests/bgerror.test:
+	* tests/bitmap.test:
+	* tests/border.test:
+	* tests/button.test:
+	* tests/entry.test:
+	* tests/spinbox.test:
 
 2008-07-22  Daniel Steffen  <das@users.sourceforge.net>
 
