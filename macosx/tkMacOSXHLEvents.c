@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.15.2.1 2008/07/22 17:00:49 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.15.2.2 2008/09/02 16:14:18 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -329,7 +329,7 @@ OdocHandler(
     }
 
     /*
-     * If we get any errors wil retrieving our parameters we just return with
+     * If we get any errors while retrieving our parameters we just return with
      * no error.
      */
 
@@ -418,7 +418,7 @@ PrintHandler(
     }
 
     /*
-     * If we get any errors wil retrieving our parameters we just return with
+     * If we get any errors while retrieving our parameters we just return with
      * no error.
      */
 
@@ -446,6 +446,10 @@ PrintHandler(
 	    Tcl_DStringFree(&pathName);
 	}
     }
+
+    /*
+     * Now handle the event by evaluating a script.
+     */
 
     if (Tcl_EvalEx(interp, Tcl_DStringValue(&command),
 	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL) != TCL_OK) {
