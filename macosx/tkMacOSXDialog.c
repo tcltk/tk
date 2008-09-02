@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.37 2008/04/27 22:39:12 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.38 2008/09/02 16:10:54 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -38,6 +38,7 @@
  * The following structures are used in the GetFileName() function. They store
  * information about the file dialog and the file filters.
  */
+
 typedef struct _OpenFileData {
     FileFilterList fl;          /* List of file filters.                   */
     SInt16 curType;             /* The filetype currently being listed.    */
