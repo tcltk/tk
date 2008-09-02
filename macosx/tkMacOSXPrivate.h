@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.6.2.1 2008/06/19 00:13:10 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.6.2.2 2008/09/02 16:14:18 das Exp $
  */
 
 #ifndef _TKMACPRIV
@@ -64,7 +64,7 @@
     #else
     #define kCGBitmapByteOrder32Host (2 << 12)
     #endif
-    #endif
+#endif
 /* Define constants only available on Mac OS X 10.5 or later */
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
     #define kWindowUnifiedTitleAndToolbarAttribute (1L << 7)
