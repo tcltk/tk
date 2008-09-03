@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.h,v 1.9 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkSelect.h,v 1.10 2008/09/03 06:01:52 dgp Exp $
  */
 
 #ifndef _TKSELECT
@@ -77,8 +77,7 @@ typedef struct TkSelRetrievalInfo {
     Atom selection;		/* Selection being requested. */
     Atom property;		/* Property where selection will appear. */
     Atom target;		/* Desired form for selection. */
-    int (*proc) _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp,
-	char *portion));	/* Procedure to call to handle pieces of
+    int (*proc) (ClientData clientData, Tcl_Interp *interp, char *portion);					/* Procedure to call to handle pieces of
 				 * selection. */
     ClientData clientData;	/* Argument for proc. */
     int result;			/* Initially -1. Set to a Tcl return value
