@@ -1,3 +1,8 @@
+2008-09-03  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Dropped use of _ANSI_ARGS_ macro to preserve
+	* generic/tkSelect.h:	Tk's TCL_NO_DEPRECATED build.
+
 2008-08-30  Ania Pawelczyk  <aniap@users.sourceforge.net>
 
 	* tests/textWind.test: Update to tcltest2
