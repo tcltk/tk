@@ -1,3 +1,7 @@
+2008-09-08  Todd M. Helfter  <tmh@users.sourceforge.net>
+
+	* doc/menu.n: fix typo in docs [Bug 2098425]
+
 2008-08-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/tkConfig.sh.in:	Added @XFT_LIBS@ to the definition of TK_LIBS
