@@ -1,3 +1,7 @@
+2008-09-08  Todd M. Helfter  <tmh@users.sourceforge.net>
+
+	* doc/menu.n: fix typo in docs [Bug 2098425]
+
 2008-09-03  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Dropped use of _ANSI_ARGS_ macro to preserve
