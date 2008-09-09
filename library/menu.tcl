@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.30 2008/09/09 17:48:58 tmh Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.31 2008/09/09 18:17:54 tmh Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -243,7 +243,7 @@ proc ::tk::MbLeave w {
 proc ::tk::MbPost {w {x {}} {y {}}} {
     global errorInfo
     variable ::tk::Priv
-    global tcl_platform tk_strictMotif
+    global tcl_platform
 
     if {[$w cget -state] eq "disabled" || $w eq $Priv(postedMb)} {
 	return
@@ -392,7 +392,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 #			is a posted menubutton.
 
 proc ::tk::MenuUnpost menu {
-    global tcl_platform tk_strictMotif
+    global tcl_platform
     variable ::tk::Priv
     set mb $Priv(postedMb)
 
@@ -579,7 +579,7 @@ proc ::tk::MenuMotion {menu x y state} {
 
 proc ::tk::MenuButtonDown menu {
     variable ::tk::Priv
-    global tcl_platform tk_strictMotif
+    global tcl_platform
 
     if {![winfo viewable $menu]} {
         return
