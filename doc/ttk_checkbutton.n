@@ -1,11 +1,10 @@
-'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2004 Joe English
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_checkbutton.n,v 1.14 2008/06/30 22:57:03 dkf Exp $
+'\" RCS: @(#) $Id: ttk_checkbutton.n,v 1.15 2008/09/23 13:36:56 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::checkbutton n 8.5 Tk "Tk Themed Widget"
@@ -71,3 +70,6 @@ selection.)
 ttk::widget(n), ttk::radiobutton(n), checkbutton(n)
 .SH "KEYWORDS"
 widget, button, toggle, check, option
+'\" Local Variables:
+'\" mode: nroff
+'\" End:

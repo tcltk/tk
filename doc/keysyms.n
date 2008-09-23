@@ -1,9 +1,8 @@
-'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: keysyms.n,v 1.6 2008/07/08 22:40:51 patthoyts Exp $
+'\" RCS: @(#) $Id: keysyms.n,v 1.7 2008/09/23 13:36:40 dkf Exp $
 '\" 
 '\"
 .so man.macros
@@ -926,3 +925,6 @@ Delete                           65535     0xffff
 bind
 .SH KEYWORDS
 keysym, bind, binding
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
