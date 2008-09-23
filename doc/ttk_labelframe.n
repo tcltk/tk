@@ -1,11 +1,10 @@
-'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 2005 Joe English
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.11 2008/06/30 22:57:03 dkf Exp $
+'\" RCS: @(#) $Id: ttk_labelframe.n,v 1.12 2008/09/23 13:36:56 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::labelframe n 8.5 Tk "Tk Themed Widget"
@@ -74,3 +73,6 @@ see \fIttk::widget(n)\fR.
 ttk::widget(n), ttk::frame(n), labelframe(n)
 .SH "KEYWORDS"
 widget, frame, container, label, groupbox
+'\" Local Variables:
+'\" mode: nroff
+'\" End:

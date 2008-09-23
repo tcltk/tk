@@ -1,4 +1,3 @@
-'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1991-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -6,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.39 2008/06/30 22:57:03 dkf Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.40 2008/09/23 13:36:58 dkf Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -755,3 +754,6 @@ set y [expr {([winfo screenheight .]\-[winfo height .msg])/2}]
 toplevel(n), winfo(n)
 .SH KEYWORDS
 aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
