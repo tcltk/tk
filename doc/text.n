@@ -1,4 +1,3 @@
-'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1992 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -6,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.56 2008/06/30 22:57:03 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.57 2008/09/23 13:36:55 dkf Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -2087,3 +2086,6 @@ since that match encloses all the others.
 entry(n), scrollbar(n)
 .SH KEYWORDS
 text, widget, tkvars
+'\" Local Variables:
+'\" mode: nroff
+'\" End:

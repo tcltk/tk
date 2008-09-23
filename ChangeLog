@@ -1,10 +1,15 @@
+2008-09-23  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/*.n: Make sure that the initial line of the manpage includes
+	nothing that chokes old versions of man. [Bug 2118116]
+
 2008-08-25  Todd M. Helfter  <tmh@users.sourceforge.net>
 
-	* library/menu.tcl: additional fix for [Bug 1023955]
+	* library/menu.tcl: Additional fix for [Bug 1023955]
 
 2008-09-08  Todd M. Helfter  <tmh@users.sourceforge.net>
 
-	* doc/menu.n: fix typo in docs [Bug 2098425]
+	* doc/menu.n: Fix typo in docs. [Bug 2098425]
 
 2008-09-03  Don Porter  <dgp@users.sourceforge.net>
 
@@ -31,13 +36,13 @@
 
 	* unix/tkConfig.sh.in:  Added @XFT_LIBS@ to the definition of TK_LIBS
 	to avoid link failures when a "big wish" program links against a
-	--disable-shared build of libtk.  (Discovered building expectTk).
+	--disable-shared build of libtk. (Discovered building expectTk.)
 
 	* generic/tkImgPhoto.c:	Changed TclStack* calls to ck* calls so that
 	we don't create new dependencies on Tcl internals.
 
 	* unix/tkUnixPort.h:	Removed #include of tclInt.h that has been
-	* win/tkWinPort.h:	disabled for three years.  If we needed this
+	* win/tkWinPort.h:	disabled for three years. If we needed this
 	we'd have noticed by now.
 
 	* README:		Bump version number to 8.6a3
@@ -68,7 +73,7 @@
 
 2008-08-25  Todd M. Helfter  <tmh@users.sourceforge.net>
 
-	* library/menu.tcl: fix typo from [Bug 1023955]
+	* library/menu.tcl: Fix typo from [Bug 1023955]
 
 2008-08-27  Peter Spjuth  <peter.spjuth@gmail.com>
 

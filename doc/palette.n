@@ -1,11 +1,10 @@
-'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1995-1996 Sun Microsystems, Inc.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: palette.n,v 1.9 2008/06/30 22:57:03 dkf Exp $
+'\" RCS: @(#) $Id: palette.n,v 1.10 2008/09/23 13:36:45 dkf Exp $
 '\" 
 .so man.macros
 .TH tk_setPalette n 4.0 Tk "Tk Built-In Commands"
@@ -71,3 +70,6 @@ it restores the application's colors to the light brown
 color scheme used in Tk 3.6 and earlier versions.
 .SH KEYWORDS
 bisque, color, palette
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
