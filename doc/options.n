@@ -1,4 +1,3 @@
-'\" -*- nroff -*-
 '\"
 '\" Copyright (c) 1990-1994 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -6,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: options.n,v 1.17 2008/07/26 16:13:58 patthoyts Exp $
+'\" RCS: @(#) $Id: options.n,v 1.18 2008/09/23 13:36:45 dkf Exp $
 '\" 
 .so man.macros
 .TH options n 4.4 Tk "Tk Built-In Commands"
@@ -356,3 +355,6 @@ on how this option is used.
 colors, cursors, font
 .SH KEYWORDS
 class, name, standard option, switch
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
