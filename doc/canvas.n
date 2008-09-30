@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.36 2008/09/23 13:36:37 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.37 2008/09/30 23:54:46 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -256,6 +256,7 @@ and the selection. Their indices are supposed to be even
 always, because coordinates always appear in pairs.
 .TP 10
 \fInumber\fR
+.
 A decimal number giving the position of the desired character
 within the text item.
 0 refers to the first character, 1 to the next character, and
@@ -270,23 +271,28 @@ the length until the result is between zero and the length,
 inclusive.
 .TP 10
 \fBend\fR
+.
 Refers to the character or coordinate just after the last one
 in the item (same as the number of characters or coordinates
 in the item).
 .TP 10
 \fBinsert\fR
+.
 Refers to the character just before which the insertion cursor
 is drawn in this item. Not valid for lines and polygons.
 .TP 10
 \fBsel.first\fR
+.
 Refers to the first selected character in the item.
 If the selection is not in this item then this form is illegal.
 .TP 10
 \fBsel.last\fR
+.
 Refers to the last selected character in the item.
 If the selection is not in this item then this form is illegal.
 .TP 10
 \fB@\fIx,y\fR
+.
 Refers to the character or coordinate at the point given by \fIx\fR and
 \fIy\fR, where \fIx\fR and \fIy\fR are specified in the coordinate
 system of the canvas.
@@ -346,6 +352,7 @@ determine the exact behavior of the command.
 The following widget commands are possible for canvas widgets:
 .TP
 \fIpathName \fBaddtag \fItag searchSpec \fR?\fIarg arg ...\fR?
+.
 For each item that meets the constraints specified by
 \fIsearchSpec\fR and the \fIarg\fRs, add
 \fItag\fR to the list of tags associated with the item if it
@@ -359,21 +366,25 @@ forms:
 .RS
 .TP
 \fBabove \fItagOrId\fR
+.
 Selects the item just after (above) the one given by \fItagOrId\fR
 in the display list.
 If \fItagOrId\fR denotes more than one item, then the last (topmost)
 of these items in the display list is used.
 .TP
 \fBall\fR
+.
 Selects all the items in the canvas.
 .TP
 \fBbelow \fItagOrId\fR
+.
 Selects the item just before (below) the one given by \fItagOrId\fR
 in the display list.
 If \fItagOrId\fR denotes more than one item, then the first (lowest)
 of these items in the display list is used.
 .TP
 \fBclosest \fIx y \fR?\fIhalo\fR? ?\fIstart\fR?
+.
 Selects the item closest to the point given by \fIx\fR and \fIy\fR.
 If more than one item is at the same closest distance (e.g. two
 items overlap the point), then the top-most of these items (the
@@ -393,12 +404,14 @@ the display list;  if no such item exists, then the selection
 behaves as if the \fIstart\fR argument had not been specified.
 .TP
 \fBenclosed\fR \fIx1\fR \fIy1\fR \fIx2\fR \fIy2\fR
+.
 Selects all the items completely enclosed within the rectangular
 region given by \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR.
 \fIX1\fR must be no greater then \fIx2\fR and \fIy1\fR must be
 no greater than \fIy2\fR.
 .TP
 \fBoverlapping\fR \fIx1\fR \fIy1\fR \fIx2\fR \fIy2\fR
+.
 Selects all the items that overlap or are enclosed within the
 rectangular region given by \fIx1\fR, \fIy1\fR, \fIx2\fR,
 and \fIy2\fR.
@@ -406,10 +419,12 @@ and \fIy2\fR.
 no greater than \fIy2\fR.
 .TP
 \fBwithtag \fItagOrId\fR
+.
 Selects all the items given by \fItagOrId\fR.
 .RE
 .TP
 \fIpathName \fBbbox \fItagOrId\fR ?\fItagOrId tagOrId ...\fR?
+.
 Returns a list with four elements giving an approximate bounding box
 for all the items named by the \fItagOrId\fR arguments.
 The list has the form
@@ -426,6 +441,7 @@ to display)
 then an empty string is returned.
 .TP
 \fIpathName \fBbind \fItagOrId\fR ?\fIsequence\fR? ?\fIcommand\fR?
+.
 This command associates \fIcommand\fR with all the items given by
 \fItagOrId\fR such that whenever the event sequence given by
 \fIsequence\fR occurs for one of the items the command will
@@ -486,24 +502,28 @@ for the window as a whole.
 .RE
 .TP
 \fIpathName \fBcanvasx \fIscreenx\fR ?\fIgridspacing\fR?
+.
 Given a window x-coordinate in the canvas \fIscreenx\fR, this command returns
 the canvas x-coordinate that is displayed at that location.
 If \fIgridspacing\fR is specified, then the canvas coordinate is
 rounded to the nearest multiple of \fIgridspacing\fR units.
 .TP
 \fIpathName \fBcanvasy \fIscreeny\fR ?\fIgridspacing\fR?
+.
 Given a window y-coordinate in the canvas \fIscreeny\fR this command returns
 the canvas y-coordinate that is displayed at that location.
 If \fIgridspacing\fR is specified, then the canvas coordinate is
 rounded to the nearest multiple of \fIgridspacing\fR units.
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
+.
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBcanvas\fR
 command.
 .TP
 \fIpathName \fBconfigure ?\fIoption\fR? ?\fIvalue\fR? ?\fIoption value ...\fR?
+.
 Query or modify the configuration options of the widget.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR (see \fBTk_ConfigureInfo\fR for
@@ -520,6 +540,7 @@ command.
 \fIpathName\fR \fBcoords \fItagOrId \fR?\fIx0 y0 ...\fR?
 .TP
 \fIpathName\fR \fBcoords \fItagOrId \fR?\fIcoordList\fR?
+.
 Query or modify the coordinates that define an item.
 If no coordinates are specified, this command returns a list
 whose elements are the coordinates of the item named by
@@ -532,6 +553,7 @@ the first one in the display list is used.
 \fIpathName \fBcreate \fItype x y \fR?\fIx y ...\fR? ?\fIoption value ...\fR?
 .TP
 \fIpathName \fBcreate \fItype coordList \fR?\fIoption value ...\fR?
+.
 Create a new item in \fIpathName\fR of type \fItype\fR.
 The exact format of the arguments after \fBtype\fR depends
 on \fBtype\fR, but usually they consist of the coordinates for
@@ -542,6 +564,7 @@ on the syntax of this command.
 This command returns the id for the new item.
 .TP
 \fIpathName \fBdchars \fItagOrId first \fR?\fIlast\fR?
+.
 For each item given by \fItagOrId\fR, delete the characters, or coordinates,
 in the range given by \fIfirst\fR and \fIlast\fR, inclusive.
 If some of the items given by \fItagOrId\fR do not support
@@ -553,10 +576,12 @@ If \fIlast\fR is omitted, it defaults to \fIfirst\fR.
 This command returns an empty string.
 .TP
 \fIpathName \fBdelete \fR?\fItagOrId tagOrId ...\fR?
+.
 Delete each of the items given by each \fItagOrId\fR, and return
 an empty string.
 .TP
 \fIpathName \fBdtag \fItagOrId \fR?\fItagToDelete\fR?
+.
 For each of the items given by \fItagOrId\fR, delete the
 tag given by \fItagToDelete\fR from the list of those
 associated with the item.
@@ -566,6 +591,7 @@ If \fItagToDelete\fR is omitted then it defaults to \fItagOrId\fR.
 This command returns an empty string.
 .TP
 \fIpathName \fBfind \fIsearchCommand \fR?\fIarg arg ...\fR?
+.
 This command returns a list consisting of all the items that
 meet the constraints specified by \fIsearchCommand\fR and
 \fIarg\fR's.
@@ -574,6 +600,7 @@ accepted by the \fBaddtag\fR command.
 The items are returned in stacking order, with the lowest item first.
 .TP
 \fIpathName \fBfocus \fR?\fItagOrId\fR?
+.
 Set the keyboard focus for the canvas widget to the item given by
 \fItagOrId\fR.
 If \fItagOrId\fR refers to several items, then the focus is set
@@ -602,6 +629,7 @@ the canvas (if it was not there already).
 .RE
 .TP
 \fIpathName \fBgettags\fR \fItagOrId\fR
+.
 Return a list whose elements are the tags associated with the
 item given by \fItagOrId\fR.
 If \fItagOrId\fR refers to more than one item, then the tags
@@ -610,6 +638,7 @@ If \fItagOrId\fR does not refer to any items, or if the item
 contains no tags, then an empty string is returned.
 .TP
 \fIpathName \fBicursor \fItagOrId index\fR
+.
 Set the position of the insertion cursor for the item(s) given by \fItagOrId\fR
 to just before the character whose position is given by \fIindex\fR.
 If some or all of the items given by \fItagOrId\fR do not support
@@ -623,6 +652,7 @@ be set even when the item does not have the focus.
 This command returns an empty string.
 .TP
 \fIpathName \fBindex \fItagOrId index\fR
+.
 This command returns a decimal string giving the numerical index
 within \fItagOrId\fR corresponding to \fIindex\fR.
 \fIIndex\fR gives a textual description of the desired position
@@ -636,6 +666,7 @@ is processed in the first of these items that supports indexing
 operations (in display list order).
 .TP
 \fIpathName \fBinsert \fItagOrId beforeThis string\fR
+.
 For each of the items given by \fItagOrId\fR, if the item supports
 text or coordinate, insertion then \fIstring\fR is inserted into the item's
 text just before the character, or coordinate, whose index is \fIbeforeThis\fR.
@@ -648,6 +679,7 @@ for \fIbeforeThis\fR.
 This command returns an empty string.
 .TP
 \fIpathName \fBitemcget\fR \fItagOrId\fR \fIoption\fR
+.
 Returns the current value of the configuration option for the
 item given by \fItagOrId\fR whose name is \fIoption\fR.
 This command is similar to the \fBcget\fR widget command except that
@@ -658,6 +690,7 @@ If \fItagOrId\fR is a tag that refers to more than one item,
 the first (lowest) such item is used.
 .TP
 \fIpathName \fBitemconfigure \fItagOrId\fR ?\fIoption\fR? ?\fIvalue\fR? ?\fIoption value ...\fR?
+.
 This command is similar to the \fBconfigure\fR widget command except
 that it modifies item-specific options for the items given by
 \fItagOrId\fR instead of modifying options for the overall
@@ -679,6 +712,7 @@ see the sections describing individual item types below for details
 on the legal options.
 .TP
 \fIpathName \fBlower \fItagOrId \fR?\fIbelowThis\fR?
+.
 Move all of the items given by \fItagOrId\fR to a new position
 in the display list just before the item given by \fIbelowThis\fR.
 If \fItagOrId\fR refers to more than one item then all are moved
@@ -693,13 +727,27 @@ determined by the \fBraise\fR and \fBlower\fR commands, not the
 This command returns an empty string.
 .TP
 \fIpathName \fBmove \fItagOrId xAmount yAmount\fR
+.
 Move each of the items given by \fItagOrId\fR in the canvas coordinate
 space by adding \fIxAmount\fR to the x-coordinate of each point
 associated with the item and \fIyAmount\fR to the y-coordinate of
 each point associated with the item.
 This command returns an empty string.
 .TP
+\fIpathName \fBmoveto \fItagOrId xPos yPos
+.VS 8.6
+Move the items given by \fItagOrId\fR in the canvas coordinate
+space so that the first coordinate pair of the bottommost item with
+tag \fItagOrId\fR is located at
+position (\fIxPos\fR,\fIyPos\fR). \fIxPos\fR and \fIyPos\fR may be
+the empty string, in which case the corresponding coordinate
+will be unchanged. All items matching
+\fItagOrId\fR remain in the same positions relative to each other.
+This command returns an empty string.
+.VE 8.6
+.TP
 \fIpathName \fBpostscript \fR?\fIoption value option value ...\fR?
+.
 Generate a Postscript representation for part or all of the canvas.
 If the \fB\-file\fR option is specified then the Postscript is written
 to a file and an empty string is returned;  otherwise the Postscript
@@ -725,6 +773,7 @@ options are supported:
 .RS
 .TP
 \fB\-colormap \fIvarName\fR
+.
 \fIVarName\fR must be the name of an array variable
 that specifies a color mapping to use in the Postscript.
 Each element of \fIvarName\fR must consist of Postscript
@@ -740,17 +789,20 @@ in \fIvarName\fR for a given color, then Tk uses the red, green,
 and blue intensities from the X color.
 .TP
 \fB\-colormode \fImode\fR
+.
 Specifies how to output color information.  \fIMode\fR must be either
 \fBcolor\fR (for full color output), \fBgray\fR (convert all colors
 to their gray-scale equivalents) or \fBmono\fR (convert all colors
 to black or white).
 .TP
 \fB\-file \fIfileName\fR
+.
 Specifies the name of the file in which to write the Postscript.
 If this option is not specified then the Postscript is returned as the
 result of the command instead of being written to a file.
 .TP
 \fB\-fontmap \fIvarName\fR
+.
 \fIVarName\fR must be the name of an array variable
 that specifies a font mapping to use in the Postscript.
 Each element of \fIvarName\fR must consist of a Tcl list with
@@ -769,10 +821,12 @@ For example, \fB\-*\-Courier\-Bold\-R\-Normal\-\-*\-120\-*\fR will work but
 parse the font name).
 .TP
 \fB\-height \fIsize\fR
+.
 Specifies the height of the area of the canvas to print.
 Defaults to the height of the canvas window.
 .TP
 \fB\-pageanchor \fIanchor\fR
+.
 Specifies which point of the printed area of the canvas should appear over
 the positioning point on the page (which is given by the \fB\-pagex\fR
 and \fB\-pagey\fR options).
@@ -781,6 +835,7 @@ area of the canvas being printed (as it appears in the canvas window)
 should be over the positioning point. Defaults to \fBcenter\fR.
 .TP
 \fB\-pageheight \fIsize\fR
+.
 Specifies that the Postscript should be scaled in both x and y so
 that the printed area is \fIsize\fR high on the Postscript page.
 \fISize\fR consists of a floating-point number followed by
@@ -792,6 +847,7 @@ the scale factor from \fB\-pagewidth\fR is used (non-uniform scaling
 is not implemented).
 .TP
 \fB\-pagewidth \fIsize\fR
+.
 Specifies that the Postscript should be scaled in both x and y so
 that the printed area is \fIsize\fR wide on the Postscript page.
 \fISize\fR has the same form as for \fB\-pageheight\fR.
@@ -801,6 +857,7 @@ the scale factor from \fB\-pagewidth\fR  is used (non-uniform scaling
 is not implemented).
 .TP
 \fB\-pagex \fIposition\fR
+.
 \fIPosition\fR gives the x-coordinate of the positioning point on
 the Postscript page, using any of the forms allowed for \fB\-pageheight\fR.
 Used in conjunction with the \fB\-pagey\fR and \fB\-pageanchor\fR options
@@ -808,6 +865,7 @@ to determine where the printed area appears on the Postscript page.
 Defaults to the center of the page.
 .TP
 \fB\-pagey \fIposition\fR
+.
 \fIPosition\fR gives the y-coordinate of the positioning point on
 the Postscript page, using any of the forms allowed for \fB\-pageheight\fR.
 Used in conjunction with the \fB\-pagex\fR and \fB\-pageanchor\fR options
@@ -815,6 +873,7 @@ to determine where the printed area appears on the Postscript page.
 Defaults to the center of the page.
 .TP
 \fB\-rotate \fIboolean\fR
+.
 \fIBoolean\fR specifies whether the printed area is to be rotated 90
 degrees.
 In non-rotated output the x-axis of the printed area runs along
@@ -825,16 +884,19 @@ in rotated output the x-axis runs along the long dimension of the page
 Defaults to non-rotated.
 .TP
 \fB\-width \fIsize\fR
+.
 Specifies the width of the area of the canvas to print.
 Defaults to the width of the canvas window.
 .TP
 \fB\-x \fIposition\fR
+.
 Specifies the x-coordinate of the left edge of the area of the
 canvas that is to be printed, in canvas coordinates, not window
 coordinates.
 Defaults to the coordinate of the left edge of the window.
 .TP
 \fB\-y \fIposition\fR
+.
 Specifies the y-coordinate of the top edge of the area of the
 canvas that is to be printed, in canvas coordinates, not window
 coordinates.
@@ -842,6 +904,7 @@ Defaults to the coordinate of the top edge of the window.
 .RE
 .TP
 \fIpathName \fBraise \fItagOrId \fR?\fIaboveThis\fR?
+.
 Move all of the items given by \fItagOrId\fR to a new position
 in the display list just after the item given by \fIaboveThis\fR.
 If \fItagOrId\fR refers to more than one item then all are moved
@@ -856,6 +919,7 @@ determined by the \fBraise\fR and \fBlower\fR commands, not the
 This command returns an empty string.
 .TP
 \fIpathName \fBscale \fItagOrId xOrigin yOrigin xScale yScale\fR
+.
 Rescale all of the items given by \fItagOrId\fR in canvas coordinate
 space.
 \fIXOrigin\fR and \fIyOrigin\fR identify the origin for the scaling
@@ -870,18 +934,21 @@ from \fIyOrigin\fR by a factor of \fIyScale\fR.
 This command returns an empty string.
 .TP
 \fIpathName \fBscan\fR \fIoption args\fR
+.
 This command is used to implement scanning on canvases.  It has
 two forms, depending on \fIoption\fR:
 .RS
 .TP
 \fIpathName \fBscan mark \fIx y\fR
+.
 Records \fIx\fR and \fIy\fR and the canvas's current view;  used
 in conjunction with later \fBscan dragto\fR commands.
 Typically this command is associated with a mouse button press in
 the widget and \fIx\fR and \fIy\fR are the coordinates of the
 mouse.  It returns an empty string.
 .TP
-\fIpathName \fBscan dragto \fIx y ?gain?\fR.
+\fIpathName \fBscan dragto \fIx y ?gain?\fR
+.
 This command computes the difference between its \fIx\fR and \fIy\fR
 arguments (which are typically mouse coordinates) and the \fIx\fR and
 \fIy\fR arguments to the last \fBscan mark\fR command for the widget.
@@ -894,6 +961,7 @@ value is an empty string.
 .RE
 .TP
 \fIpathName \fBselect \fIoption\fR ?\fItagOrId arg\fR?
+.
 Manipulates the selection in one of several ways, depending on
 \fIoption\fR.
 The command may take any of the forms described below.
@@ -906,6 +974,7 @@ within \fItagOrId\fR, as described in \fBINDICES\fR above.
 .RS
 .TP
 \fIpathName \fBselect adjust \fItagOrId index\fR
+.
 Locate the end of the selection in \fItagOrId\fR nearest
 to the character given by \fIindex\fR, and adjust that
 end of the selection to be at \fIindex\fR (i.e. including
@@ -918,12 +987,14 @@ command.
 Returns an empty string.
 .TP
 \fIpathName \fBselect clear\fR
+.
 Clear the selection if it is in this widget.
 If the selection is not in this widget then the command
 has no effect.
 Returns an empty string.
 .TP
 \fIpathName \fBselect from \fItagOrId index\fR
+.
 Set the selection anchor point for the widget to be just
 before the character
 given by \fIindex\fR in the item given by \fItagOrId\fR.
@@ -933,12 +1004,14 @@ commands.
 Returns an empty string.
 .TP
 \fIpathName \fBselect item\fR
+.
 Returns the id of the selected item, if the selection is in an
 item in this canvas.
 If the selection is not in this canvas then an empty string
 is returned.
 .TP
 \fIpathName \fBselect to \fItagOrId index\fR
+.
 Set the selection to consist of those characters of \fItagOrId\fR
 between the selection anchor point and
 \fIindex\fR.
@@ -954,6 +1027,7 @@ Returns an empty string.
 .RE
 .TP
 \fIpathName \fBtype\fI tagOrId\fR
+.
 Returns the type of the item given by \fItagOrId\fR, such as
 \fBrectangle\fR or \fBtext\fR.
 If \fItagOrId\fR refers to more than one item, then the type
@@ -962,12 +1036,14 @@ If \fItagOrId\fR does not refer to any items at all then
 an empty string is returned.
 .TP
 \fIpathName \fBxview  \fR?\fIargs\fR?
+.
 This command is used to query and change the horizontal position of the
 information displayed in the canvas's window.
 It can take any of the following forms:
 .RS
 .TP
 \fIpathName \fBxview\fR
+.
 Returns a list containing two elements.
 Each element is a real fraction between 0 and 1;  together they describe
 the horizontal span that is visible in the window.
@@ -979,11 +1055,13 @@ These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
 option.
 .TP
 \fIpathName \fBxview moveto\fI fraction\fR
+.
 Adjusts the view in the window so that \fIfraction\fR of the
 total width of the canvas is off-screen to the left.
 \fIFraction\fR must be a fraction between 0 and 1.
 .TP
 \fIpathName \fBxview scroll \fInumber what\fR
+.
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer.
@@ -1000,12 +1078,14 @@ becomes visible.
 .RE
 .TP
 \fIpathName \fByview \fI?args\fR?
+.
 This command is used to query and change the vertical position of the
 information displayed in the canvas's window.
 It can take any of the following forms:
 .RS
 .TP
 \fIpathName \fByview\fR
+.
 Returns a list containing two elements.
 Each element is a real fraction between 0 and 1;  together they describe
 the vertical span that is visible in the window.
@@ -1016,11 +1096,13 @@ These are the same values passed to scrollbars via the \fB\-yscrollcommand\fR
 option.
 .TP
 \fIpathName \fByview moveto\fI fraction\fR
+.
 Adjusts the view in the window so that \fIfraction\fR of the canvas's
 area is off-screen to the top.
 \fIFraction\fR is a fraction between 0 and 1.
 .TP
 \fIpathName \fByview scroll \fInumber what\fR
+.
 This command adjusts the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer.
@@ -1784,6 +1866,7 @@ The following standard options are supported by window items:
 The following extra options are supported for window items:
 .TP
 \fB\-anchor \fIanchorPos\fR
+.
 \fIAnchorPos\fR tells how to position the window relative to the
 positioning point for the item;  it may have any of the forms
 accepted by \fBTk_GetAnchor\fR.  For example, if \fIanchorPos\fR
@@ -1793,6 +1876,7 @@ its top center point is at the positioning point.
 This option defaults to \fBcenter\fR.
 .TP
 \fB\-height \fIpixels\fR
+.
 Specifies the height to assign to the item's window.
 \fIPixels\fR may have any of the
 forms described in the \fBCOORDINATES\fR section above.
@@ -1800,6 +1884,7 @@ If this option is not specified, or if it is specified as an empty
 string, then the window is given whatever height it requests internally.
 .TP
 \fB\-width \fIpixels\fR
+.
 Specifies the width to assign to the item's window.
 \fIPixels\fR may have any of the
 forms described in the \fBCOORDINATES\fR section above.
@@ -1807,6 +1892,7 @@ If this option is not specified, or if it is specified as an empty
 string, then the window is given whatever width it requests internally.
 .TP
 \fB\-window \fIpathName\fR
+.
 Specifies the window to associate with this item.
 The window specified by \fIpathName\fR must either be a child of
 the canvas widget or a child of some ancestor of the canvas widget.
