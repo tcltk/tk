@@ -1,3 +1,11 @@
+2008-10-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	TIP #236 IMPLEMENTATION
+
+	* doc/canvas.n, generic/tkCanvas.c (CanvasWidgetCmd)
+	* tests/canvMoveto.test: Added 'moveto' subcommand to canvases to
+	allow items to be easily moved to a particular place.
+
 2008-09-23  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/listbox.n (SEE ALSO): Redirected this to ttk::treeview(n) which
