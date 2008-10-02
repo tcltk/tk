@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.37 2008/09/30 23:54:46 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.38 2008/10/02 19:13:35 mistachkin Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -734,7 +734,7 @@ associated with the item and \fIyAmount\fR to the y-coordinate of
 each point associated with the item.
 This command returns an empty string.
 .TP
-\fIpathName \fBmoveto \fItagOrId xPos yPos
+\fIpathName \fBmoveto \fItagOrId xPos yPos\fR
 .VS 8.6
 Move the items given by \fItagOrId\fR in the canvas coordinate
 space so that the first coordinate pair of the bottommost item with

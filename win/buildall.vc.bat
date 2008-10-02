@@ -4,7 +4,7 @@
 ::  edit this (or make your own) for your needs and wants using
 ::  the instructions for calling makefile.vc found in makefile.vc
 ::
-::  RCS: @(#) $Id: buildall.vc.bat,v 1.6 2005/10/14 12:31:53 patthoyts Exp $
+::  RCS: @(#) $Id: buildall.vc.bat,v 1.7 2008/10/02 19:13:35 mistachkin Exp $
 
 set SYMBOLS=
 
@@ -58,7 +58,7 @@ if "%TCLDIR%" == "" set TCLDIR=..\..\tcl
 ::
 set OPTS=none
 if not %SYMBOLS%.==. set OPTS=symbols
-nmake -nologo -f makefile.vc release winhelp OPTS=%OPTS% %1
+nmake -nologo -f makefile.vc release htmlhelp OPTS=%OPTS% %1
 if errorlevel 1 goto error
 
 :: Build the static core, dlls and shell.
