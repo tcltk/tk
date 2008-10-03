@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.15 2007/12/14 15:56:09 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.16 2008/10/03 13:13:31 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -563,7 +563,7 @@ ScrollbarProc(
 		break;
 	    }
 
-	    sprintf(valueString, "%g", pos);
+	    Tcl_PrintDouble(NULL, pos, valueString);
 	    Tcl_DStringAppendElement(&cmdString, "moveto");
 	    Tcl_DStringAppendElement(&cmdString, valueString);
 	}

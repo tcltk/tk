@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.49 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.50 2008/10/03 13:13:31 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -452,8 +452,7 @@ static Tk_ClassProcs entryClass = {
     sizeof(Tk_ClassProcs),	/* size */
     EntryWorldChanged,		/* worldChangedProc */
 };
-
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -508,7 +507,7 @@ Tk_EntryObjCmd(
      * initialized as memset covers the rest.
      */
 
-    entryPtr			= (Entry *) ckalloc(sizeof(Entry));
+    entryPtr = (Entry *) ckalloc(sizeof(Entry));
     memset(entryPtr, 0, sizeof(Entry));
 
     entryPtr->tkwin		= tkwin;
@@ -563,7 +562,7 @@ Tk_EntryObjCmd(
     Tcl_SetResult(interp, Tk_PathName(entryPtr->tkwin), TCL_STATIC);
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -926,11 +925,13 @@ EntryWidgetObjCmd(
 
 	if (objc == 2) {
 	    double first, last;
-	    char buf[TCL_DOUBLE_SPACE * 2];
+	    char buf[TCL_DOUBLE_SPACE];
 
 	    EntryVisibleRange(entryPtr, &first, &last);
-	    sprintf(buf, "%g %g", first, last);
+	    Tcl_PrintDouble(NULL, first, buf);
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    Tcl_PrintDouble(NULL, last, buf);
+	    Tcl_AppendResult(interp, " ", buf, NULL);
 	    goto done;
 	} else if (objc == 3) {
 	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
@@ -987,7 +988,7 @@ EntryWidgetObjCmd(
     Tcl_Release(entryPtr);
     return TCL_ERROR;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1053,7 +1054,7 @@ DestroyEntry(
 
     ckfree((char *) entryPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1114,12 +1115,12 @@ ConfigureEntry(
      * value.
      */
 
-    oldExport		= entryPtr->exportSelection;
+    oldExport = entryPtr->exportSelection;
     if (entryPtr->type == TK_SPINBOX) {
-	oldValues	= sbPtr->valueStr;
-	oldFormat	= sbPtr->reqFormat;
-	oldFrom		= sbPtr->fromValue;
-	oldTo		= sbPtr->toValue;
+	oldValues = sbPtr->valueStr;
+	oldFormat = sbPtr->reqFormat;
+	oldFrom = sbPtr->fromValue;
+	oldTo = sbPtr->toValue;
     }
 
     for (error = 0; error <= 1; error++) {
@@ -1368,7 +1369,7 @@ ConfigureEntry(
 	return TCL_OK;
     }
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1420,8 +1421,8 @@ EntryWorldChanged(
      * the background may be overridden.
      */
 
-    border	= entryPtr->normalBorder;
-    colorPtr	= entryPtr->fgColorPtr;
+    border = entryPtr->normalBorder;
+    colorPtr = entryPtr->fgColorPtr;
     switch (entryPtr->state) {
     case STATE_DISABLED:
 	if (entryPtr->disabledBorder != NULL) {
@@ -1468,7 +1469,7 @@ EntryWorldChanged(
     entryPtr->flags |= UPDATE_SCROLLBAR;
     EventuallyRedraw(entryPtr);
 }
-
+
 #ifndef MAC_OSX_TK
 /*
  *--------------------------------------------------------------
@@ -1498,7 +1499,7 @@ TkpDrawEntryBorderAndFocus(
 {
     return 0;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1527,7 +1528,7 @@ TkpDrawSpinboxButtons(
     return 0;
 }
 #endif /* Not MAC_OSX_TK */
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1846,7 +1847,7 @@ DisplayEntry(
 #endif /* TK_NO_DOUBLE_BUFFERING */
     entryPtr->flags &= ~BORDER_NEEDED;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1982,7 +1983,7 @@ EntryComputeGeometry(
 
     Tk_GeometryRequest(entryPtr->tkwin, width, height);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2022,7 +2023,7 @@ InsertChars(
     }
 
     newByteCount = entryPtr->numBytes + byteCount + 1;
-    newStr = (char *) ckalloc((unsigned) newByteCount);
+    newStr = ckalloc((unsigned) newByteCount);
     memcpy(newStr, string, byteIndex);
     strcpy(newStr + byteIndex, value);
     strcpy(newStr + byteIndex + byteCount, string + byteIndex);
@@ -2082,7 +2083,7 @@ InsertChars(
     }
     EntryValueChanged(entryPtr, NULL);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2122,11 +2123,11 @@ DeleteChars(
     byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
-    newStr = (char *) ckalloc((unsigned) newByteCount);
+    newStr = ckalloc((unsigned) newByteCount);
     memcpy(newStr, string, (size_t) byteIndex);
     strcpy(newStr + byteIndex, string + byteIndex + byteCount);
 
-    toDelete = (char *) ckalloc((unsigned) (byteCount + 1));
+    toDelete = ckalloc((unsigned) (byteCount + 1));
     memcpy(toDelete, string + byteIndex, (size_t) byteCount);
     toDelete[byteCount] = '\0';
 
@@ -2197,7 +2198,7 @@ DeleteChars(
     }
     EntryValueChanged(entryPtr, NULL);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2253,7 +2254,7 @@ EntryValueChanged(
 	EventuallyRedraw(entryPtr);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2327,7 +2328,7 @@ EntrySetValue(
     if (malloced) {
 	entryPtr->string = value;
     } else {
-	char *tmp = (char *) ckalloc((unsigned) (valueLen + 1));
+	char *tmp = ckalloc((unsigned) (valueLen + 1));
 
 	strcpy(tmp, value);
 	entryPtr->string = tmp;
@@ -2363,7 +2364,7 @@ EntrySetValue(
     EntryComputeGeometry(entryPtr);
     EventuallyRedraw(entryPtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2445,7 +2446,7 @@ EntryEventProc(
 	break;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2481,7 +2482,7 @@ EntryCmdDeletedProc(
 	Tk_DestroyWindow(entryPtr->tkwin);
     }
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -2601,7 +2602,7 @@ GetEntryIndex(
     }
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2659,7 +2660,7 @@ EntryScanTo(
 	EventuallyRedraw(entryPtr);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2720,7 +2721,7 @@ EntrySelectTo(
     entryPtr->selectLast = newLast;
     EventuallyRedraw(entryPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2815,7 +2816,7 @@ EntryLostSelection(
 	EventuallyRedraw(entryPtr);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2854,7 +2855,7 @@ EventuallyRedraw(
 	Tcl_DoWhenIdle(DisplayEntry, entryPtr);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2903,7 +2904,7 @@ EntryVisibleRange(
 		/ entryPtr->numChars;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2928,7 +2929,7 @@ static void
 EntryUpdateScrollbar(
     Entry *entryPtr)			/* Information about widget. */
 {
-    char args[TCL_DOUBLE_SPACE * 2];
+    char firstStr[TCL_DOUBLE_SPACE], lastStr[TCL_DOUBLE_SPACE];
     int code;
     double first, last;
     Tcl_Interp *interp;
@@ -2940,8 +2941,10 @@ EntryUpdateScrollbar(
     interp = entryPtr->interp;
     Tcl_Preserve(interp);
     EntryVisibleRange(entryPtr, &first, &last);
-    sprintf(args, " %g %g", first, last);
-    code = Tcl_VarEval(interp, entryPtr->scrollCmd, args, NULL);
+    Tcl_PrintDouble(NULL, first, firstStr);
+    Tcl_PrintDouble(NULL, last, lastStr);
+    code = Tcl_VarEval(interp, entryPtr->scrollCmd, " ", firstStr, " ",
+	    lastStr, NULL);
     if (code != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (horizontal scrolling command executed by ");
@@ -2952,7 +2955,7 @@ EntryUpdateScrollbar(
     Tcl_SetResult(interp, NULL, TCL_STATIC);
     Tcl_Release(interp);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2993,7 +2996,7 @@ EntryBlinkProc(
     }
     EventuallyRedraw(entryPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -3043,7 +3046,7 @@ EntryFocusProc(
     }
     EventuallyRedraw(entryPtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -3110,7 +3113,7 @@ EntryTextVarProc(
     EntrySetValue(entryPtr, value);
     return NULL;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -3171,7 +3174,7 @@ EntryValidate(
     Tcl_SetResult(interp, NULL, 0);
     return (bool ? TCL_OK : TCL_BREAK);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -3308,7 +3311,7 @@ EntryValidateChange(
 
     return code;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -3474,7 +3477,7 @@ ExpandPercents(
 	Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -3530,7 +3533,7 @@ Tk_SpinboxObjCmd(
      * initialized as memset covers the rest.
      */
 
-    sbPtr			= (Spinbox *) ckalloc(sizeof(Spinbox));
+    sbPtr = (Spinbox *) ckalloc(sizeof(Spinbox));
     entryPtr			= (Entry *) sbPtr;
     memset(sbPtr, 0, sizeof(Spinbox));
 
@@ -3604,7 +3607,7 @@ Tk_SpinboxObjCmd(
     Tk_DestroyWindow(entryPtr->tkwin);
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -4043,11 +4046,13 @@ SpinboxWidgetObjCmd(
 
 	if (objc == 2) {
 	    double first, last;
-	    char buf[TCL_DOUBLE_SPACE * 2];
+	    char buf[TCL_DOUBLE_SPACE];
 
 	    EntryVisibleRange(entryPtr, &first, &last);
-	    sprintf(buf, "%g %g", first, last);
+	    Tcl_PrintDouble(NULL, first, buf);
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    Tcl_PrintDouble(NULL, last, buf);
+	    Tcl_AppendResult(interp, " ", buf, NULL);
 	    goto done;
 	} else if (objc == 3) {
 	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
@@ -4105,7 +4110,7 @@ SpinboxWidgetObjCmd(
     Tcl_Release(entryPtr);
     return TCL_ERROR;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -4144,7 +4149,7 @@ GetSpinboxElement(
     }
     return SEL_ENTRY;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -4310,7 +4315,7 @@ SpinboxInvoke(
 
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4399,7 +4404,7 @@ ComputeFormat(
     sbPtr->valueFormat = sbPtr->digitFormat;
     return TCL_OK;
 }
-
+
 /*
  * Local Variables:
  * mode: c

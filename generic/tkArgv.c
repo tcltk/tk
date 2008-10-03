@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.14 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.15 2008/10/03 13:13:31 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -380,7 +380,7 @@ PrintUsage(
 		Tcl_AppendResult(interp, "\n\t\tDefault value: ", tmp, NULL);
 		break;
 	    case TK_ARGV_FLOAT:
-		sprintf(tmp, "%g", *((double *) infoPtr->dst));
+		Tcl_PrintDouble(NULL, *((double *) infoPtr->dst), tmp);
 		Tcl_AppendResult(interp, "\n\t\tDefault value: ", tmp, NULL);
 		break;
 	    case TK_ARGV_STRING: {
