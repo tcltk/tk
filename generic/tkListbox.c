@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.46 2008/10/03 13:13:31 dkf Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.47 2008/10/03 15:37:02 dkf Exp $
  */
 
 #include "default.h"
@@ -1258,7 +1258,7 @@ ListboxXviewSubCmd(
 	    }
 	    Tcl_PrintDouble(NULL, fraction, buf);
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	    Tcl_PrintDouble(NULL, fraction1, buf);
+	    Tcl_PrintDouble(NULL, fraction2, buf);
 	    Tcl_AppendResult(interp, " ", buf, NULL);
 	}
     } else if (objc == 3) {
