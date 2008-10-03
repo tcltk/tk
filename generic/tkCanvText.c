@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.27 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.28 2008/10/03 13:13:31 dkf Exp $
  */
 
 #include <stdio.h>
@@ -1501,8 +1501,13 @@ TextToPostscript(
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);
-    sprintf(buffer, "] %d %g %g %s %s DrawText\n",
-	    fm.linespace, x / -2.0, y / 2.0, justify,
+    sprintf(buffer. "] %d ", fm.linespace);
+    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_PrintDouble(NULL, x / -2.0, buffer);
+    Tcl_AppendResult(interp, buffer, " ", NULL);
+    Tcl_PrintDouble(NULL, y / 2.0, buffer);
+    Tcl_AppendResult(interp, buffer, NULL);
+    sprintf(buffer, " %s %s DrawText\n", justify,
 	    ((stipple == None) ? "false" : "true"));
     Tcl_AppendResult(interp, buffer, NULL);
 

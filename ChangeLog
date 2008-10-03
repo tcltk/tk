@@ -1,3 +1,11 @@
+2008-10-03  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkArgv.c, generic/tkCanvText.c, generic/tkEntry.c:
+	* generic/tkListbox.c, generic/tkScrollbar.c, macosx/tkMacOSXScrlbr.c:
+	* win/tkWinScrlbr.c: Convert use of %g to Tcl_PrintDouble to create
+	string versions of floats so as to avoid trouble with some locales.
+	[Bug 2112563]
+
 2008-10-02  Joe Mistachkin  <joe@mistachkin.com>
 
 	* doc/canvas.n: Fix unmatched font change.
