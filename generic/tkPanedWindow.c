@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.33 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.34 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "default.h"
@@ -493,7 +493,7 @@ Tk_PanedWindowObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetStringObj(Tcl_GetObjResult(interp), Tk_PathName(pwPtr->tkwin), -1);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(pwPtr->tkwin), -1));
     return TCL_OK;
 }
 
@@ -1109,7 +1109,7 @@ PanedWindowSashCommand(
 
 	coords[0] = Tcl_NewIntObj(slavePtr->sashx);
 	coords[1] = Tcl_NewIntObj(slavePtr->sashy);
-	Tcl_SetListObj(Tcl_GetObjResult(interp), 2, coords);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
 
     case SASH_MARK:
@@ -1142,7 +1142,7 @@ PanedWindowSashCommand(
 	} else {
 	    coords[0] = Tcl_NewIntObj(pwPtr->slaves[sash]->markx);
 	    coords[1] = Tcl_NewIntObj(pwPtr->slaves[sash]->marky);
-	    Tcl_SetListObj(Tcl_GetObjResult(interp), 2, coords);
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	}
 	break;
 
@@ -2787,7 +2787,7 @@ PanedWindowProxyCommand(
 
 	coords[0] = Tcl_NewIntObj(pwPtr->proxyx);
 	coords[1] = Tcl_NewIntObj(pwPtr->proxyy);
-	Tcl_SetListObj(Tcl_GetObjResult(interp), 2, coords);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
 
     case PROXY_FORGET:

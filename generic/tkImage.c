@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.37 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.38 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -413,19 +413,20 @@ Tk_ImageObjCmd(
 
 	switch ((enum options) index) {
 	case IMAGE_HEIGHT:
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->height);
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(masterPtr->height));
 	    break;
 	case IMAGE_INUSE:
-	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
-		    masterPtr->typePtr!=NULL && masterPtr->instancePtr!=NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		    masterPtr->typePtr && masterPtr->instancePtr));
 	    break;
 	case IMAGE_TYPE:
 	    if (masterPtr->typePtr != NULL) {
-		Tcl_SetResult(interp, masterPtr->typePtr->name, TCL_STATIC);
+		Tcl_SetObjResult(interp,
+			Tcl_NewStringObj(masterPtr->typePtr->name, -1));
 	    }
 	    break;
 	case IMAGE_WIDTH:
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp), masterPtr->width);
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(masterPtr->width));
 	    break;
 	default:
 	    Tcl_Panic("can't happen");

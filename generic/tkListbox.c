@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.47 2008/10/03 15:37:02 dkf Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.48 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "default.h"
@@ -820,8 +820,8 @@ ListboxWidgetObjCmd(
 
 	    Tcl_SetObjResult(interp, elemPtrs[first]);
 	} else {
-	    Tcl_SetListObj(Tcl_GetObjResult(interp), (last - first + 1),
-		    &(elemPtrs[first]));
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewListObj(last-first+1, elemPtrs+first));
 	}
 	result = TCL_OK;
 	break;

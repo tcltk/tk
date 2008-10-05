@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.43 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.44 2008/10/05 18:22:21 dkf Exp $
  */
 
 /*
@@ -871,7 +871,7 @@ MenuWidgetObjCmd(
 	if (index < 0) {
 	    Tcl_SetResult(interp, "none", TCL_STATIC);
 	} else {
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp), index);
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
 	}
 	break;
     }
@@ -959,8 +959,8 @@ MenuWidgetObjCmd(
 	if (menuPtr->entries[index]->type == TEAROFF_ENTRY) {
 	    Tcl_SetResult(interp, "tearoff", TCL_STATIC);
 	} else {
-	    Tcl_SetStringObj(Tcl_GetObjResult(interp),
-		    menuEntryTypeStrings[menuPtr->entries[index]->type], -1);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    menuEntryTypeStrings[menuPtr->entries[index]->type], -1));
 	}
 	break;
     }
