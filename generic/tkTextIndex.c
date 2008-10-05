@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.29 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.30 2008/10/05 18:22:22 dkf Exp $
  */
 
 #include "default.h"
@@ -145,9 +145,8 @@ SetTextIndexFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_AppendToObj(Tcl_GetObjResult(interp),
-	    "can't convert value to textindex except via TkTextGetIndexFromObj API",
-	    -1);
+    Tcl_AppendResult(interp, "can't convert value to textindex except "
+	    "via TkTextGetIndexFromObj API", -1);
     return TCL_ERROR;
 }
 

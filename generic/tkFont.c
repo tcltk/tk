@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.44 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.45 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -733,8 +733,8 @@ Tk_FontObjCmd(
 	    return TCL_ERROR;
 	}
 	string = Tcl_GetStringFromObj(objv[3 + skip], &length);
-	resultPtr = Tcl_GetObjResult(interp);
-	Tcl_SetIntObj(resultPtr, Tk_TextWidth(tkfont, string, length));
+	Tcl_SetObjResult(interp,
+		Tcl_NewIntObj(Tk_TextWidth(tkfont, string, length)));
 	Tk_FreeFont(tkfont);
 	break;
     }
@@ -763,12 +763,10 @@ Tk_FontObjCmd(
 	objv += skip;
 	fmPtr = GetFontMetrics(tkfont);
 	if (objc == 3) {
-	    char buf[64 + TCL_INTEGER_SPACE * 4];
-
-	    sprintf(buf, "-ascent %d -descent %d -linespace %d -fixed %d",
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "-ascent %d -descent %d -linespace %d -fixed %d",
 		    fmPtr->ascent, fmPtr->descent,
-		    fmPtr->ascent + fmPtr->descent, fmPtr->fixed);
-	    Tcl_AppendResult(interp, buf, NULL);
+		    fmPtr->ascent + fmPtr->descent, fmPtr->fixed));
 	} else {
 	    if (Tcl_GetIndexFromObj(interp, objv[3], switches, "metric", 0,
 		    &index) != TCL_OK) {
@@ -782,33 +780,35 @@ Tk_FontObjCmd(
 	    case 2: i = fmPtr->ascent + fmPtr->descent;	break;
 	    case 3: i = fmPtr->fixed;			break;
 	    }
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp), i);
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(i));
 	}
 	Tk_FreeFont(tkfont);
 	break;
     }
     case FONT_NAMES: {
-	char *string;
-	NamedFont *nfPtr;
 	Tcl_HashSearch search;
 	Tcl_HashEntry *namedHashPtr;
-	Tcl_Obj *strPtr, *resultPtr;
+	Tcl_Obj *resultPtr;
 
 	if (objc != 2) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "names");
 	    return TCL_ERROR;
 	}
-	resultPtr = Tcl_GetObjResult(interp);
+	resultPtr = Tcl_NewObj();
 	namedHashPtr = Tcl_FirstHashEntry(&fiPtr->namedTable, &search);
 	while (namedHashPtr != NULL) {
-	    nfPtr = Tcl_GetHashValue(namedHashPtr);
+	    NamedFont *nfPtr = Tcl_GetHashValue(namedHashPtr);
+
 	    if (nfPtr->deletePending == 0) {
-		string = Tcl_GetHashKey(&fiPtr->namedTable, namedHashPtr);
-		strPtr = Tcl_NewStringObj(string, -1);
-		Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
+		char *string = Tcl_GetHashKey(&fiPtr->namedTable,
+			namedHashPtr);
+
+		Tcl_ListObjAppendElement(NULL, resultPtr,
+			Tcl_NewStringObj(string, -1));
 	    }
 	    namedHashPtr = Tcl_NextHashEntry(&search);
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
     }
@@ -3087,9 +3087,7 @@ GetAttributeInfoObj(
 {
     int i, index, start, end;
     const char *str;
-    Tcl_Obj *optionPtr, *valuePtr, *resultPtr;
-
-    resultPtr = Tcl_GetObjResult(interp);
+    Tcl_Obj *valuePtr, *resultPtr = NULL;
 
     start = 0;
     end = FONT_NUMFIELDS;
@@ -3103,6 +3101,9 @@ GetAttributeInfoObj(
     }
 
     valuePtr = NULL;
+    if (objPtr == NULL) {
+	resultPtr = Tcl_NewObj();
+    }
     for (i = start; i < end; i++) {
 	switch (i) {
 	case FONT_FAMILY:
@@ -3136,10 +3137,11 @@ GetAttributeInfoObj(
 	    Tcl_SetObjResult(interp, valuePtr);
 	    return TCL_OK;
 	}
-	optionPtr = Tcl_NewStringObj(fontOpt[i], -1);
-	Tcl_ListObjAppendElement(NULL, resultPtr, optionPtr);
+	Tcl_ListObjAppendElement(NULL, resultPtr,
+		Tcl_NewStringObj(fontOpt[i], -1));
 	Tcl_ListObjAppendElement(NULL, resultPtr, valuePtr);
     }
+    Tcl_SetObjResult(interp, resultPtr);
     return TCL_OK;
 }
 

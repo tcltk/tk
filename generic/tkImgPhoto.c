@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.81 2008/08/28 18:13:34 dgp Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.82 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -512,6 +512,10 @@ ImgPhotoCmd(
 	    if (length > 1 && !strncmp(arg, "-data", (unsigned) length)) {
 		Tcl_AppendResult(interp, "-data {} {} {}", NULL);
 		if (masterPtr->dataString) {
+		    /*
+		     * TODO: Modifying result is bad!
+		     */
+
 		    Tcl_ListObjAppendElement(interp, Tcl_GetObjResult(interp),
 			    masterPtr->dataString);
 		} else {
@@ -522,6 +526,10 @@ ImgPhotoCmd(
 		    !strncmp(arg, "-format", (unsigned) length)) {
 		Tcl_AppendResult(interp, "-format {} {} {}", NULL);
 		if (masterPtr->format) {
+		    /*
+		     * TODO: Modifying result is bad!
+		     */
+
 		    Tcl_ListObjAppendElement(interp, Tcl_GetObjResult(interp),
 			    masterPtr->format);
 		} else {
@@ -532,9 +540,10 @@ ImgPhotoCmd(
 		return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
 			configSpecs, (char *) masterPtr, arg, 0);
 	    }
+	} else {
+	    return ImgPhotoConfigureMaster(interp, masterPtr, objc-2, objv+2,
+		    TK_CONFIG_ARGV_ONLY);
 	}
-	return ImgPhotoConfigureMaster(interp, masterPtr, objc-2, objv+2,
-		TK_CONFIG_ARGV_ONLY);
 
     case PHOTO_COPY:
 	/*
@@ -1146,7 +1155,7 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 	    if ((x < 0) || (x >= masterPtr->width)
-		|| (y < 0) || (y >= masterPtr->height)) {
+		    || (y < 0) || (y >= masterPtr->height)) {
 		Tcl_AppendResult(interp, Tcl_GetString(objv[0]),
 			" transparency get: coordinates out of range", NULL);
 		return TCL_ERROR;
@@ -1163,8 +1172,8 @@ ImgPhotoCmd(
 	    TkClipBox(testRegion, &testBox);
 	    TkDestroyRegion(testRegion);
 
-	    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
-		    (testBox.width==0 && testBox.height==0));
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		    testBox.width==0 && testBox.height==0));
 	    return TCL_OK;
 	}
 

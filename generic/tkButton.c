@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.29 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.30 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -753,8 +753,7 @@ ButtonCreate(
 	return TCL_ERROR;
     }
 
-    Tcl_SetStringObj(Tcl_GetObjResult(interp), Tk_PathName(butPtr->tkwin),
-	    -1);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(butPtr->tkwin),-1));
     return TCL_OK;
 }
 
