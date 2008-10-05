@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.52 2008/04/27 22:39:14 dkf Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.53 2008/10/05 18:22:22 dkf Exp $
  *
  */
 
@@ -883,12 +883,13 @@ GetFileNameW(
 	    int listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
+
 	    if (Tcl_ListObjGetElements(interp, filterObj,
-			    &listObjc, &listObjv) != TCL_OK) {
+		    &listObjc, &listObjv) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ListObjGetElements(interp,
-			    listObjv[ofn.nFilterIndex - 1],
-			    &count, &typeInfo) != TCL_OK) {
+		    listObjv[ofn.nFilterIndex - 1], &count,
+		    &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else {
 		Tcl_ObjSetVar2(interp, typeVariableObj, NULL, typeInfo[0], 0);
@@ -1332,12 +1333,13 @@ GetFileNameA(
 	    int listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
-	    if (Tcl_ListObjGetElements(interp, filterObj,
-			    &listObjc, &listObjv) != TCL_OK) {
+
+	    if (Tcl_ListObjGetElements(interp, filterObj, &listObjc,
+		    &listObjv) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ListObjGetElements(interp,
-			    listObjv[ofn.nFilterIndex - 1],
-			    &count, &typeInfo) != TCL_OK) {
+		    listObjv[ofn.nFilterIndex - 1], &count,
+		    &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else {
 		Tcl_ObjSetVar2(interp, typeVariableObj, NULL, typeInfo[0], 0);

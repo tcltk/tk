@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.39 2008/04/27 22:39:17 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.40 2008/10/05 18:22:22 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -615,10 +615,12 @@ TkpGetFontFamilies(
     HDC hdc;
     HWND hwnd;
     Window window;
+    Tcl_Obj *resultObj;
 
     window = Tk_WindowId(tkwin);
     hwnd = (window == None) ? NULL : TkWinGetHWND(window);
     hdc = GetDC(hwnd);
+    resultObj = Tcl_NewObj();
 
     /*
      * On any version NT, there may fonts with international names. Use the
@@ -637,12 +639,13 @@ TkpGetFontFamilies(
 
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
 	EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontFamilyEnumProc,
-		(LPARAM) interp);
+		(LPARAM) resultObj);
     } else {
 	EnumFontFamiliesA(hdc, NULL, (FONTENUMPROCA) WinFontFamilyEnumProc,
-		(LPARAM) interp);
+		(LPARAM) resultObj);
     }
     ReleaseDC(hwnd, hdc);
+    Tcl_SetObjResult(interp, resultObj);
 }
 
 static int CALLBACK
@@ -652,17 +655,13 @@ WinFontFamilyEnumProc(
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
-    char *faceName;
+    char *faceName = lfPtr->elfLogFont.lfFaceName;
+    Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
-    Tcl_Obj *strPtr;
-    Tcl_Interp *interp;
 
-    interp = (Tcl_Interp *) lParam;
-    faceName = lfPtr->elfLogFont.lfFaceName;
     Tcl_ExternalToUtfDString(systemEncoding, faceName, -1, &faceString);
-    strPtr = Tcl_NewStringObj(Tcl_DStringValue(&faceString),
-	    Tcl_DStringLength(&faceString));
-    Tcl_ListObjAppendElement(NULL, Tcl_GetObjResult(interp), strPtr);
+    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+	    Tcl_DStringValue(&faceString), Tcl_DStringLength(&faceString)));
     Tcl_DStringFree(&faceString);
     return 1;
 }
@@ -695,13 +694,14 @@ TkpGetSubFonts(
     FontFamily *familyPtr;
     Tcl_Obj *resultPtr, *strPtr;
 
-    resultPtr = Tcl_GetObjResult(interp);
+    resultPtr = Tcl_NewObj();
     fontPtr = (WinFont *) tkfont;
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	familyPtr = fontPtr->subFontArray[i].familyPtr;
 	strPtr = Tcl_NewStringObj(familyPtr->faceName, -1);
 	Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
     }
+    Tcl_SetObjResult(interp, resultPtr);
 }
 
 /*

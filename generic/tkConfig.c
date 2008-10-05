@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.27 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.28 2008/10/05 18:22:21 dkf Exp $
  */
 
 /*
@@ -1223,9 +1223,9 @@ SetOptionFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     register Tcl_Obj *objPtr)	/* The object to convert. */
 {
-    Tcl_AppendToObj(Tcl_GetObjResult(interp),
+    Tcl_AppendResult(interp,
 	    "can't convert value to option except via GetOptionFromObj API",
-	    -1);
+	    NULL);
     return TCL_ERROR;
 }
 
@@ -1306,9 +1306,8 @@ Tk_SetOptions(
 
 	if (objc < 2) {
 	    if (interp != NULL) {
-		Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
-			"value for \"", Tcl_GetStringFromObj(*objv, NULL),
-			"\" missing", NULL);
+		Tcl_AppendResult(interp, "value for \"",
+			Tcl_GetStringFromObj(*objv, NULL), "\" missing",NULL);
 		goto error;
 	    }
 	}

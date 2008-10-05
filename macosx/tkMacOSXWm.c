@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.66 2008/07/23 23:24:44 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.67 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -2295,8 +2295,8 @@ WmOverrideredirectCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
-		Tk_Attributes((Tk_Window) winPtr)->override_redirect);
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		Tk_Attributes((Tk_Window) winPtr)->override_redirect));
 	return TCL_OK;
     }
     if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
@@ -2719,7 +2719,7 @@ WmStackorderCmd(
 	} else { /* OPT_ISBELOW */
 	    result = index1 < index2;
 	}
-	Tcl_SetIntObj(Tcl_GetObjResult(interp), result);
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
 	return TCL_OK;
     }
     return TCL_OK;

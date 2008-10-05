@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.16 2008/04/08 03:28:05 kennykb Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.17 2008/10/05 18:22:22 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -365,9 +365,8 @@ Tk_SendObjCmd(
      */
 
     if (displayPtr) {
-	Tcl_SetStringObj(Tcl_GetObjResult(interp),
-		"option not implemented: \"displayof\" is not available "
-		"for this platform.", -1);
+	Tcl_SetResult(interp, "option not implemented: \"displayof\" is "
+		"not available for this platform.", TCL_STATIC);
 	result = TCL_ERROR;
     }
 
@@ -377,6 +376,7 @@ Tk_SendObjCmd(
     /* FIX ME: we need to check for local interp */
     if (result == TCL_OK) {
 	LPDISPATCH pdisp;
+
 	result = FindInterpreterObject(interp, Tcl_GetString(objv[i]), &pdisp);
 	if (result == TCL_OK) {
 	    i++;

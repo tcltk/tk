@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.c,v 1.8 2007/12/13 15:28:56 dgp Exp $
+ * RCS: @(#) $Id: tkWinSendCom.c,v 1.9 2008/10/05 18:22:22 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -381,8 +381,8 @@ Async(
 
     hr = VariantChangeType(&vCmd, &Cmd, 0, VT_BSTR);
     if (FAILED(hr)) {
-	Tcl_SetStringObj(Tcl_GetObjResult(obj->interp),
-		"invalid args: Async(command)", -1);
+	Tcl_SetObjResult(obj->interp, Tcl_NewStringObj(
+		"invalid args: Async(command)", -1));
 	SetExcepInfo(obj->interp, pExcepInfo);
 	hr = DISP_E_EXCEPTION;
     }
@@ -390,13 +390,13 @@ Async(
     if (SUCCEEDED(hr)) {
 	if (obj->interp) {
 	    Tcl_Obj *scriptPtr = Tcl_NewUnicodeObj(vCmd.bstrVal,
-		    (int)SysStringLen(vCmd.bstrVal));
+		    (int) SysStringLen(vCmd.bstrVal));
+
 	    result = TkWinSend_QueueCommand(obj->interp, scriptPtr);
 	}
     }
 
     VariantClear(&vCmd);
-
     return hr;
 }
 
