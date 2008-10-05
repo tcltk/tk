@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.37 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.38 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1314,7 +1314,7 @@ TrivialConfigObjCmd(
 		    headerPtr->optionTable, objc - 2, objv + 2,
 		    tkwin, NULL, &mask);
 	    if (result == TCL_OK) {
-		Tcl_SetIntObj(Tcl_GetObjResult(interp), mask);
+		Tcl_SetObjResult(interp, Tcl_NewIntObj(mask));
 	    }
 	}
 	break;
@@ -1324,7 +1324,7 @@ TrivialConfigObjCmd(
 		tkwin, &saved, &mask);
 	Tk_FreeSavedOptions(&saved);
 	if (result == TCL_OK) {
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp), mask);
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(mask));
 	}
 	break;
     }

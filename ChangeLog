@@ -1,3 +1,30 @@
+2008-10-05  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinWm.c (WmAttributesCmd, WmOverrideredirectCmd)
+	(WmStackorderCmd): 
+	* win/tkWinSendCom.c (Async): 
+	* win/tkWinSend.c (Tk_SendObjCmd): 
+	* win/tkWinFont.c (TkpGetFontFamilies, TkpGetSubFonts): 
+	* unix/tkUnixWm.c (WmOverrideredirectCmd, WmStackorderCmd): 
+	* unix/tkUnixFont.c (TkpGetFontFamilies, TkpGetSubFonts): 
+	* macosx/tkMacOSXWm.c (WmOverrideredirectCmd, WmStackorderCmd): 
+	* generic/tkTextIndex.c (SetTextIndexFromAny): 
+	* generic/tkTest.c (TrivialConfigObjCmd): 
+	* generic/tkSelect.c (HandleTclCommand): 
+	* generic/tkPanedWindow.c (Tk_PanedWindowObjCmd)
+	(PanedWindowSashCommand, PanedWindowProxyCommand): 
+	* generic/tkMenubutton.c (Tk_MenubuttonObjCmd): 
+	* generic/tkMenu.c (MenuWidgetObjCmd): 
+	* generic/tkListbox.c (ListboxWidgetObjCmd): 
+	* generic/tkImgPhoto.c (ImgPhotoCmd): (mostly)
+	* generic/tkImage.c (Tk_ImageObjCmd): 
+	* generic/tkFont.c (Tk_FontObjCmd, GetAttributeInfoObj): 
+	* generic/tkEntry.c (EntryWidgetObjCmd, SpinboxWidgetObjCmd): 
+	* generic/tkConfig.c (SetOptionFromAny, Tk_SetOptions): 
+	* generic/tkCmds.c (Tk_TkObjCmd, Tk_WinfoObjCmd, TkGetDisplayOf): 
+	* generic/tkButton.c (ButtonCreate): Get rid of code that insists on
+	non-idiomatically writing to the object in the interpreter result.
+
 2008-10-03  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkArgv.c, generic/tkCanvText.c, generic/tkEntry.c:

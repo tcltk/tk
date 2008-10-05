@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.128 2008/08/01 19:39:04 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.129 2008/10/05 18:22:22 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -3017,12 +3017,9 @@ WmAspectCmd(
     }
     if (objc == 3) {
 	if (wmPtr->sizeHintsFlags & PAspect) {
-	    char buf[TCL_INTEGER_SPACE * 4];
-
-	    sprintf(buf, "%d %d %d %d", wmPtr->minAspect.x,
-		    wmPtr->minAspect.y, wmPtr->maxAspect.x,
-		    wmPtr->maxAspect.y);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d %d %d",
+		    wmPtr->minAspect.x, wmPtr->minAspect.y,
+		    wmPtr->maxAspect.x, wmPtr->maxAspect.y);
 	}
 	return TCL_OK;
     }
@@ -3254,16 +3251,16 @@ WmAttributesCmd(
 	    }
 	    if (config_fullscreen) {
 		if (objc == 4) {
-		    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
-			(wmPtr->flags & WM_FULLSCREEN));
+		    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+			    wmPtr->flags & WM_FULLSCREEN));
 		} else {
 		    fullscreen_attr_changed = 1;
 		    fullscreen_attr = boolean;
 		}
 		config_fullscreen = 0;
 	    } else if (objc == 4) {
-		Tcl_SetIntObj(Tcl_GetObjResult(interp),
-			((*stylePtr & styleBit) != 0));
+		Tcl_SetObjResult(interp,
+			Tcl_NewBooleanObj(*stylePtr & styleBit));
 	    } else if (boolean) {
 		*stylePtr |= styleBit;
 	    } else {
@@ -3744,7 +3741,6 @@ WmFrameCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     HWND hwnd;
-    char buf[TCL_INTEGER_SPACE];
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -3757,8 +3753,7 @@ WmFrameCmd(
     if (hwnd == NULL) {
 	hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) winPtr));
     }
-    sprintf(buf, "0x%x", (unsigned int) hwnd);
-    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", (unsigned) hwnd));
     return TCL_OK;
 }
 
@@ -3796,10 +3791,8 @@ WmGeometryCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newGeometry?");
 	return TCL_ERROR;
     }
-    if (objc == 3) {
-	char buf[16 + TCL_INTEGER_SPACE * 4];
-	int x, y;
 
+    if (objc == 3) {
 	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
 	if (wmPtr->gridWin != NULL) {
@@ -3818,10 +3811,11 @@ WmGeometryCmd(
 	}
 	x = wmPtr->x;
 	y = wmPtr->y;
-	sprintf(buf, "%dx%d%c%d%c%d", width, height, xSign, x, ySign, y);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
+		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
 	return TCL_OK;
     }
+
     argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
 	wmPtr->width = -1;
@@ -3867,12 +3861,9 @@ WmGridCmd(
     }
     if (objc == 3) {
 	if (wmPtr->sizeHintsFlags & PBaseSize) {
-	    char buf[TCL_INTEGER_SPACE * 4];
-
-	    sprintf(buf, "%d %d %d %d", wmPtr->reqGridWidth,
-		    wmPtr->reqGridHeight, wmPtr->widthInc,
-		    wmPtr->heightInc);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d %d %d",
+		    wmPtr->reqGridWidth, wmPtr->reqGridHeight,
+		    wmPtr->widthInc, wmPtr->heightInc));
 	}
 	return TCL_OK;
     }
@@ -4443,11 +4434,8 @@ WmIconpositionCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconPositionHint) {
-	    char buf[TCL_INTEGER_SPACE * 2];
-
-	    sprintf(buf, "%d %d", wmPtr->hints.icon_x,
-		    wmPtr->hints.icon_y);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d",
+		    wmPtr->hints.icon_x, wmPtr->hints.icon_y));
 	}
 	return TCL_OK;
     }
@@ -4652,11 +4640,8 @@ WmMaxsizeCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	char buf[TCL_INTEGER_SPACE * 2];
-
 	GetMaxSize(wmPtr, &width, &height);
-	sprintf(buf, "%d %d", width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d", width, height));
 	return TCL_OK;
     }
     if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
@@ -4702,11 +4687,8 @@ WmMinsizeCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	char buf[TCL_INTEGER_SPACE * 2];
-
 	GetMinSize(wmPtr, &width, &height);
-	sprintf(buf, "%d %d", width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d", width, height));
 	return TCL_OK;
     }
     if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
@@ -4763,7 +4745,7 @@ WmOverrideredirectCmd(
 	curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
     }
     if (objc == 3) {
-	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), curValue);
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(curValue));
 	return TCL_OK;
     }
     if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
@@ -4980,12 +4962,9 @@ WmResizableCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	char buf[TCL_INTEGER_SPACE * 2];
-
-	sprintf(buf, "%d %d",
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d",
 		(wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) ? 0 : 1,
-		(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) ? 0 : 1);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) ? 0 : 1));
 	return TCL_OK;
     }
     if ((Tcl_GetBooleanFromObj(interp, objv[3], &width) != TCL_OK)
@@ -5119,13 +5098,12 @@ WmStackorderCmd(
 	windows = TkWmStackorderToplevel(winPtr);
 	if (windows == NULL) {
 	    Tcl_Panic("TkWmStackorderToplevel failed");
-	} else {
-	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
-		Tcl_AppendElement(interp, (*window_ptr)->pathName);
-	    }
-	    ckfree((char *) windows);
-	    return TCL_OK;
 	}
+	for (window_ptr = windows; *window_ptr ; window_ptr++) {
+	    Tcl_AppendElement(interp, (*window_ptr)->pathName);
+	}
+	ckfree((char *) windows);
+	return TCL_OK;
     } else {
 	TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
 	int index1=-1, index2=-1, result;
@@ -5159,28 +5137,27 @@ WmStackorderCmd(
 	 */
 
 	windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
-
 	if (windows == NULL) {
 	    Tcl_AppendResult(interp, "TkWmStackorderToplevel failed", NULL);
 	    return TCL_ERROR;
-	} else {
-	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
-		if (*window_ptr == winPtr) {
-		    index1 = (window_ptr - windows);
-		}
-		if (*window_ptr == winPtr2) {
-		    index2 = (window_ptr - windows);
-		}
-	    }
-	    if (index1 == -1) {
-		Tcl_Panic("winPtr window not found");
-	    }
-	    if (index2 == -1) {
-		Tcl_Panic("winPtr2 window not found");
-	    }
-
-	    ckfree((char *) windows);
 	}
+
+	for (window_ptr = windows; *window_ptr ; window_ptr++) {
+	    if (*window_ptr == winPtr) {
+		index1 = (window_ptr - windows);
+	    }
+	    if (*window_ptr == winPtr2) {
+		index2 = (window_ptr - windows);
+	    }
+	}
+	if (index1 == -1) {
+	    Tcl_Panic("winPtr window not found");
+	}
+	if (index2 == -1) {
+	    Tcl_Panic("winPtr2 window not found");
+	}
+
+	ckfree((char *) windows);
 
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
 		&index) != TCL_OK) {
@@ -5191,10 +5168,9 @@ WmStackorderCmd(
 	} else { /* OPT_ISBELOW */
 	    result = index1 < index2;
 	}
-	Tcl_SetIntObj(Tcl_GetObjResult(interp), result);
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
 	return TCL_OK;
     }
-    return TCL_OK;
 }
 
 /*

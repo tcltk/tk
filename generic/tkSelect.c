@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.22 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.23 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1331,7 +1331,6 @@ HandleTclCommand(
     char *command, *string;
     Tcl_Interp *interp = cmdInfoPtr->interp;
     Tcl_DString oldResult;
-    Tcl_Obj *objPtr;
     int extraBytes, charOffset, count, numChars;
     const char *p;
 
@@ -1384,8 +1383,7 @@ HandleTclCommand(
     Tcl_DStringInit(&oldResult);
     Tcl_DStringGetResult(interp, &oldResult);
     if (TkCopyAndGlobalEval(interp, command) == TCL_OK) {
-	objPtr = Tcl_GetObjResult(interp);
-	string = Tcl_GetStringFromObj(objPtr, &length);
+	string = Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &length);
 	count = (length > maxBytes) ? maxBytes : length;
 	memcpy(buffer, string, (size_t) count);
 	buffer[count] = '\0';

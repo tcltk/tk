@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.21 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.22 2008/10/05 18:22:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -308,7 +308,7 @@ Tk_MenubuttonObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetStringObj(Tcl_GetObjResult(interp), Tk_PathName(mbPtr->tkwin), -1);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(mbPtr->tkwin), -1));
     return TCL_OK;
 }
 
