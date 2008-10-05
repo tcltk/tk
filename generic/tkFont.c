@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.45 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.46 2008/10/05 21:23:25 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -716,7 +716,6 @@ Tk_FontObjCmd(
 	char *string;
 	Tk_Font tkfont;
 	int length = 0, skip = 0;
-	Tcl_Obj *resultPtr;
 
 	if (objc > 4) {
 	    skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
@@ -808,7 +807,7 @@ Tk_FontObjCmd(
 	    }
 	    namedHashPtr = Tcl_NextHashEntry(&search);
 	}
-	Tcl_SetObjResult(interp, resultObj);
+	Tcl_SetObjResult(interp, resultPtr);
 	break;
     }
     }

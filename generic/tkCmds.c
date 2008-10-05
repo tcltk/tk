@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.43 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.44 2008/10/05 21:25:07 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1362,7 +1362,7 @@ Tk_WinfoObjCmd(
 
 	    xyObj[0] = Tcl_NewIntObj(x);
 	    xyObj[1] = Tcl_NewIntObj(y);
-	    Tcl_SetObjResult(interp, Tcl_NewListObj(xyObj, 2));
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, xyObj));
 	} else if (useX) {
 	    Tcl_SetObjResult(interp, Tcl_NewIntObj(x));
 	} else {
@@ -1695,7 +1695,7 @@ Tk_WinfoObjCmd(
 	visInfoPtr = XGetVisualInfo(Tk_Display(tkwin), VisualScreenMask,
 		&template, &count);
 	if (visInfoPtr == NULL) {
-	    Tcl_SetObjResult(interp, "can't find any visuals for screen",
+	    Tcl_SetResult(interp, "can't find any visuals for screen",
 		    TCL_STATIC);
 	    return TCL_ERROR;
 	}
