@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.12 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.12.2.1 2008/10/05 11:34:46 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -324,7 +324,7 @@ ScrollbarWidgetCmd(
 	} else {
 	    fraction = ((double) pixels / (double) length);
 	}
-	sprintf(buf, "%g", fraction);
+	Tcl_PrintDouble(NULL, fraction, buf);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'f') && (strncmp(argv[1], "fraction", length) == 0)) {
 	int x, y, pos, length;
@@ -359,7 +359,7 @@ ScrollbarWidgetCmd(
 	} else if (fraction > 1.0) {
 	    fraction = 1.0;
 	}
-	sprintf(buf, "%g", fraction);
+	Tcl_PrintDouble(NULL, fraction, buf);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
     } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
 	if (argc != 2) {
