@@ -1,3 +1,13 @@
+2008-10-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
+
+	* win/tkWinScrlbr.c:		Convert 'sprintf(..."%g"...)' to the
+	* macosx/tkMacOSXScrlbr.c:	locale-insensitive Tcl_PrintDouble.
+	* generic/tkScrollbar.c:	[Bug 2112563]
+	* generic/tkListbox.c:
+	* generic/tkEntry.c:
+	* generic/tkCanvText.c:
+	* generic/tkArgv.c:
+
 2008-08-25  Todd M. Helfter  <tmh@users.sourceforge.net>
 
 	* library/menu.tcl: additional fix for [Bug 1023955]
