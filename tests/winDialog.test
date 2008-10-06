@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.18 2008/08/30 21:52:26 aniap Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.19 2008/10/06 22:09:16 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -260,12 +260,14 @@ test winDialog-5.11 {GetFileName: initial directory} -constraints {
 } -body {
 #        case FILE_INITDIR:
 
-    start {set x [tk_getSaveFile -initialdir c:/ -initialfile "12x 455" -title Foo]}
+    start {set x [tk_getSaveFile \
+                      -initialdir [file normalize $::env(TEMP)] \
+                      -initialfile "12x 455" -title Foo]}
     then {
         Click 1
     }
     return $x
-} -result {C:/12x 455}
+} -result [file join [file normalize $::env(TEMP)] "12x 455"]
 test winDialog-5.12 {GetFileName: initial directory: Tcl_TranslateFilename()} -constraints {
     nt
 } -body {
@@ -392,11 +394,11 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
 } -body {
     start {set x [tk_getSaveFile -title Back]}
     then {
-        SetText 0x480 "c:\\12x 457"
+        SetText 0x480 "$::env(TEMP)\\12x 457"
         Click 1
     }
     return $x
-} -result {c:/12x 457}
+} -result [file join [file normalize $::env(TEMP)] "12x 457"]
 test winDialog-5.24 {GetFileName: file types: MakeFilter() succeeds} -constraints {
     nt
 } -body {
