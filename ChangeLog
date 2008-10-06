@@ -1,5 +1,6 @@
 2008-10-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* tests/winDialog.test: Fixed tests for Vista+
 	* win/tkWinWm.c: corrected some errors from the previous commit
 
 2008-10-05  Donal K. Fellows  <dkf@users.sf.net>
