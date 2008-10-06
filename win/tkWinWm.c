@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.129 2008/10/05 18:22:22 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.130 2008/10/06 21:57:21 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -3019,7 +3019,7 @@ WmAspectCmd(
 	if (wmPtr->sizeHintsFlags & PAspect) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d %d %d",
 		    wmPtr->minAspect.x, wmPtr->minAspect.y,
-		    wmPtr->maxAspect.x, wmPtr->maxAspect.y);
+		    wmPtr->maxAspect.x, wmPtr->maxAspect.y));
 	}
 	return TCL_OK;
     }
@@ -3809,8 +3809,6 @@ WmGeometryCmd(
 	    wmPtr->x = result >> 16;
 	    wmPtr->y = result & 0x0000ffff;
 	}
-	x = wmPtr->x;
-	y = wmPtr->y;
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
 		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
 	return TCL_OK;
