@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: listbox.test,v 1.32 2008/08/17 19:40:33 aniap Exp $
+# RCS: @(#) $Id: listbox.test,v 1.33 2008/10/06 23:59:02 patthoyts Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -15,9 +15,9 @@ namespace import -force tcltest::test
 
 set fixed {Courier -12}
 
-proc record args {
+proc record {name args} {
     global log
-    lappend log $args
+    lappend log [format {%s %.6g %.6g} $name {*}$args]
 }
 
 proc getsize w {
@@ -916,7 +916,7 @@ test listbox-3.115 {ListboxWidgetCmd procedure, "xview" option} -setup {
     .l2 insert 0 a b c d e f g h i j k l m n o p q r s t
     pack .l2
     update
-    .l2 xview
+    format {%.6g %.6g} {*}[.l2 xview]
 } -cleanup {
     destroy .l2
 } -result {0 1}
@@ -932,7 +932,7 @@ test listbox-3.116 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     .l2 insert 0 a b c d e f g h i j k l m n o p q r s t
     .l2 insert 1 "0123456789a123456789b123456789c123456789d123456789"
     .l2 xview 4
-    .l2 xview
+    format {%.6g %.6g} {*}[.l2 xview]
 } -cleanup {
     destroy .l2
 } -result {0.08 0.28}
@@ -955,7 +955,7 @@ test listbox-3.119 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     .l xview 0
     .l2 xview moveto .4
     update
-    .l2 xview
+    format {%.6g %.6g} {*}[.l2 xview]
 } -cleanup {
     destroy .l2
 } -result {0.4 0.6}
@@ -972,7 +972,7 @@ test listbox-3.120 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     .l2 xview 0
     .l2 xview scroll 2 units
     update
-    .l2 xview
+    format {%.6g %.6g} {*}[.l2 xview]
 } -cleanup {
     destroy .l2
 } -result {0.04 0.24}
@@ -989,7 +989,7 @@ test listbox-3.121 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     .l2 xview 30
     .l2 xview scroll -1 pages
     update
-    .l2 xview
+    format {%.6g %.6g} {*}[.l2 xview]
 } -cleanup {
     destroy .l2
 } -result {0.44 0.64}
@@ -1008,7 +1008,7 @@ test listbox-3.122 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     .l2 xview 30
     .l2 xview scroll -4 pages
     update
-    .l2 xview
+    format {%.6g %.6g} {*}[.l2 xview]
 } -cleanup {
     destroy .l2
 } -result {0.52 0.54}
@@ -1018,7 +1018,7 @@ test listbox-3.123 {ListboxWidgetCmd procedure, "yview" option} -setup {
     listbox .l2
     pack  .l2
     update
-    .l2 yview
+    format {%.6g %.6g} {*}[.l2 yview]
 } -cleanup {
     destroy .l2
 } -result {0 1}
@@ -1029,7 +1029,7 @@ test listbox-3.124 {ListboxWidgetCmd procedure, "yview" option} -setup {
     .l2 insert 0 el1
     pack  .l2
     update
-    .l2 yview
+    format {%.6g %.6g} {*}[.l2 yview]
 } -cleanup {
     destroy .l2
 } -result {0 1}
@@ -1043,7 +1043,7 @@ test listbox-3.125 {ListboxWidgetCmd procedure, "yview" option} -setup {
     .l2 insert 0 a b c d e f g h i j k l m n o p q r s t
     .l2 yview 4
     update
-    .l2 yview
+    format {%.6g %.6g} {*}[.l2 yview]
 } -cleanup {
     destroy .l2
 } -result {0.2 0.45}
@@ -1062,7 +1062,7 @@ test listbox-3.128 {ListboxWidgetCmd procedure, "xview" option} -setup {
     .l2 insert 0 a b c d e f g h i j k l m n o p q r s t
     .l2 yview 0
     .l2 yview moveto .31
-    .l2 yview
+    format {%.6g %.6g} {*}[.l2 yview]
 } -cleanup {
     destroy .l2
 } -result {0.3 0.55}
@@ -1075,7 +1075,7 @@ test listbox-3.129 {ListboxWidgetCmd procedure, "xview" option} -setup {
     .l2 insert 0 a b c d e f g h i j k l m n o p q r s t
     .l2 yview 2
     .l2 yview scroll 2 pages
-    .l2 yview
+    format {%.6g %.6g} {*}[.l2 yview]
 } -cleanup {
     destroy .l2
 } -result {0.4 0.65}
@@ -1088,7 +1088,7 @@ test listbox-3.130 {ListboxWidgetCmd procedure, "xview" option} -setup {
     .l2 insert 0 a b c d e f g h i j k l m n o p q r s t
     .l2 yview 10
     .l2 yview scroll -3 units
-    .l2 yview
+    format {%.6g %.6g} {*}[.l2 yview]
 } -cleanup {
     destroy .l2
 } -result {0.35 0.6}
@@ -1103,7 +1103,7 @@ test listbox-3.131 {ListboxWidgetCmd procedure, "xview" option} -setup {
     update
     .l2 yview 15
     .l2 yview scroll -4 pages
-    .l2 yview
+    format {%.6g %.6g} {*}[.l2 yview]
 } -cleanup {
     destroy .l2
 } -result {0.55 0.65}
@@ -1131,7 +1131,7 @@ test listbox-3.137 {ListboxWidgetCmd procedure, "yview" option, partial last lin
 } -body {
     .l insert 0 a b c d e f g h i j k l m n o p q r s t
     mkPartial
-    .partial.l yview
+    format {%.6g %.6g} {*}[.partial.l yview]
 } -cleanup {
     destroy .l
 } -result {0 0.266667}
@@ -2112,7 +2112,7 @@ test listbox-11.3 {ChangeListboxView procedure} -setup {
     set log {}
     .l yview 2
     update
-    list [.l yview] $log
+    list [format {%.6g %.6g} {*}[.l yview]] $log
 } -cleanup {
     destroy .l
 } -result {{0.2 0.7} {{y 0.2 0.7}}}
@@ -2126,7 +2126,7 @@ test listbox-11.4 {ChangeListboxView procedure} -setup {
     set log {}
     .l yview 8
     update
-    list [.l yview] $log
+    list [format {%.6g %.6g} {*}[.l yview]] $log
 } -cleanup {
     destroy .l
 } -result {{0.5 1} {{y 0.5 1}}}
@@ -2141,7 +2141,7 @@ test listbox-11.5 {ChangeListboxView procedure} -setup {
     set log {}
     .l yview 3
     update
-    list [.l yview] $log
+    list [format {%.6g %.6g} {*}[.l yview]] $log
 } -cleanup {
     destroy .l
 } -result {{0.3 0.8} {}}
@@ -2447,7 +2447,7 @@ test listbox-18.3 {ListboxUpdateVScrollbar procedure} -body {
     rename bgerror {}
 } -result {{{invalid command name "gorp"}} {invalid command name "gorp"
     while executing
-"gorp 0 1"
+"gorp 0.0 1.0"
     (vertical scrolling command executed by listbox)}}
 
 
@@ -2480,7 +2480,7 @@ test listbox-19.2 {ListboxUpdateVScrollbar procedure} -body {
     return $x
 } -result {{{invalid command name "bogus"}} {invalid command name "bogus"
     while executing
-"bogus 0 1"
+"bogus 0.0 1.0"
     (horizontal scrolling command executed by listbox)}}
 
 
@@ -2702,12 +2702,12 @@ test listbox-21.17 {ListboxListVarProc, update vertical scrollbar} -setup {
     .l yview scroll 3 units
     update
     set result {}
-    lappend result [.l yview]
+    lappend result [format {%.6g %.6g} {*}[.l yview]]
     set x [lreplace $x 3 3]
     set x [lreplace $x 3 3]
     set x [lreplace $x 3 3]
     update
-    lappend result [.l yview]
+    lappend result [format {%.6g %.6g} {*}[.l yview]]
     return $result
 } -cleanup {
     destroy .l

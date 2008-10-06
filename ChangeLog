@@ -1,6 +1,7 @@
 2008-10-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/entry.test: Removed dependency on precision in results
+	* tests/listbox.test: 
 	* tests/scrollbar.test: 
 	* tests/spinbox.test:
 	* tests/winWm.test: Fixed incorrect error strings
