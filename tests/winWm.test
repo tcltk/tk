@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.20 2008/08/30 21:52:26 aniap Exp $
+# RCS: @(#) $Id: winWm.test,v 1.21 2008/10/06 23:13:19 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -431,7 +431,7 @@ test winWm-7.4 {UpdateWrapper must maintain focus} -constraints win -setup {
 
 test winWm-8.1 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -body {
     wm iconph .
-} -returnCodes error -result {wrong # args: should be "wm iconphoto window ?-default? image ?image ...?"}
+} -returnCodes error -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
 test winWm-8.2 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -setup {
     destroy .t
 } -body {
