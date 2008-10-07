@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvImg.test,v 1.10 2008/08/11 21:33:17 aniap Exp $
+# RCS: @(#) $Id: canvImg.test,v 1.11 2008/10/07 00:10:07 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -98,11 +98,11 @@ test canvImg-3.1 {ImageCoords procedure} -constraints testImageType -setup {
 	image create test foo
 } -body {
     .c create image 50 100 -image foo -tags i1
-    .c coords i1
+    format {%.6g %.6g} {*}[.c coords i1]
 } -cleanup {
 	.c delete all
 	image delete foo
-} -result {50.0 100.0}
+} -result {50 100}
 test canvImg-3.2 {ImageCoords procedure} -constraints testImageType -setup {
 	image create test foo
 } -body {
