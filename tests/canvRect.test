@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvRect.test,v 1.10 2008/08/11 21:33:17 aniap Exp $
+# RCS: @(#) $Id: canvRect.test,v 1.11 2008/10/07 00:10:07 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -417,16 +417,16 @@ test canvRect-9.1 {ScaleRectOval procedure} -setup {
 } -body {
     .c create rect 100 300 200 350 -tags x
     .c scale x 50 100 2 4
-    .c coords x
-} -result {150.0 900.0 350.0 1100.0}
+    format {%.6g %.6g %.6g %.6g} {*}[.c coords x]
+} -result {150 900 350 1100}
 
 test canvRect-10.1 {TranslateRectOval procedure} -setup {
     .c delete withtag all
 } -body {
     .c create rect 100 300 200 350 -tags x
     .c move x 100 -10
-    .c coords x
-} -result {200.0 290.0 300.0 340.0}
+    format {%.6g %.6g %.6g %.6g} {*}[.c coords x]
+} -result {200 290 300 340}
 
 
 test canvRect-11.1 {RectOvalToPostscript procedure} -constraints {

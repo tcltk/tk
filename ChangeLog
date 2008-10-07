@@ -1,6 +1,9 @@
 2008-10-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/entry.test: Removed dependency on precision in results
+	* tests/canvImg.test:  Removed dependency on precision in results
+	* tests/canvRect.test:
+	* tests/canvText.test: 
+	* tests/entry.test: 
 	* tests/listbox.test: 
 	* tests/scrollbar.test: 
 	* tests/spinbox.test:

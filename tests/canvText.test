@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.18 2008/08/11 21:33:17 aniap Exp $
+# RCS: @(#) $Id: canvText.test,v 1.19 2008/10/07 00:10:07 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -747,19 +747,19 @@ test canvText-11.2 {TextToArea procedure} -setup {
 test canvText-12.1 {ScaleText procedure} -body {
 	.c create text 100 100 -tag test
     .c scale all 50 50 2 2
-    .c coords test
+    format {%.6g %.6g} {*}[.c coords test]
 } -cleanup {
 	.c delete test
-} -result {150.0 150.0}
+} -result {150 150}
 
 
 test canvText-13.1 {TranslateText procedure} -body {
 	.c create text 100 100 -tag test
     .c move all 10 10
-    .c coords test
+    format {%.6g %.6g} {*}[.c coords test]
 } -cleanup {
 	.c delete test
-} -result {110.0 110.0}
+} -result {110 110}
 
 
 test canvText-14.1 {GetTextIndex procedure} -setup {
