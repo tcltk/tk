@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.20 2008/10/07 18:27:01 dgp Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.21 2008/10/07 18:33:47 dgp Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -391,6 +391,7 @@ test winDialog-5.22 {GetFileName: call GetSaveFileName} -constraints {
     }
     return $x
 } -result {&Save}
+if {[info exists ::env(TEMP)]} {
 test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     nt testwinevent
 } -body {
@@ -401,6 +402,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     }
     return $x
 } -result [file join [file normalize $::env(TEMP)] "12x 457"]
+}
 test winDialog-5.24 {GetFileName: file types: MakeFilter() succeeds} -constraints {
     nt
 } -body {
