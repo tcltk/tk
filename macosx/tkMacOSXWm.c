@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.68 2008/10/05 21:26:12 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.69 2008/10/08 15:39:13 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1964,14 +1964,14 @@ WmIconphotoCmd(
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image ?image ...?");
+		"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image ?image ...?");
+		    "window ?-default? image1 ?image2 ...?");
 	    return TCL_ERROR;
 	}
     }
