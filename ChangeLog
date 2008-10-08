@@ -1,5 +1,9 @@
 2008-10-08  Don Porter  <dgp@users.sourceforge.net>
 
+	* tests/canvText.test (canText-17.1):	Update expected result to
+	match revised PostScript output due to more predictable formatting
+	of floating point values.
+
 	* unix/tkUnixWm.c:	Restored consistency of error messages from
 	* macosx/tkMacOSXWm.c:	[wm iconphoto] with the test suite and across
 	all platforms.  [Bug 2021443]
