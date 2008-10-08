@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.22 2008/10/06 23:42:58 patthoyts Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.23 2008/10/08 18:57:47 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -163,24 +163,24 @@ test scrollbar-3.10 {ScrollbarWidgetCmd procedure, "cget" option} {
     list [catch {.s cget -orient} msg] $msg
 } {0 vertical}
 scrollbar .s2
-test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} win {
-    list [catch {.s2 cget -bd} msg] $msg
-} {0 0}
-test scrollbar-3.12 {ScrollbarWidgetCmd procedure, "cget" option} {unix notAqua} {
-    list [catch {.s2 cget -bd} msg] $msg
-} {0 2}
-test scrollbar-3.12.1 {ScrollbarWidgetCmd procedure, "cget" option} aqua {
-    list [catch {.s2 cget -bd} msg] $msg
-} {0 0}
-test scrollbar-3.13 {ScrollbarWidgetCmd procedure, "cget" option} win {
-    list [catch {.s2 cget -highlightthickness} msg] $msg
-} {0 0}
-test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} {unix notAqua} {
-    list [catch {.s2 cget -highlightthickness} msg] $msg
-} {0 0}
-test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} aqua {
-    list [catch {.s2 cget -highlightthickness} msg] $msg
-} {0 0}
+test scrollbar-3.11 {ScrollbarWidgetCmd procedure, "cget" option} {
+    expr {[.s2 cget -bd] == [lindex [.s2 configure -bd] 3]}
+} 1
+test scrollbar-3.12 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
+    # empty test; duplicated scrollbar-3.11
+} {}
+test scrollbar-3.12.1 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
+    # empty test; duplicated scrollbar-3.11
+} {}
+test scrollbar-3.13 {ScrollbarWidgetCmd procedure, "cget" option} {
+    expr {[.s2 cget -highlightthickness] == [lindex [.s2 configure -highlightthickness] 3]}
+} 1
+test scrollbar-3.14 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
+    # empty test; duplicated scrollbar-3.13
+} {}
+test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
+    # empty test; duplicated scrollbar-3.13
+} {}
 destroy .s2
 test scrollbar-3.15 {ScrollbarWidgetCmd procedure, "configure" option} {
     llength [.s configure]

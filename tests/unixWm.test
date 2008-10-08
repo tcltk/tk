@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.45 2008/07/23 23:24:25 nijtmans Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.46 2008/10/08 18:57:47 dgp Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -2475,7 +2475,7 @@ test unixWm-60.5 {wm attributes - bad attribute} -constraints unix -body {
 
 test unixWm-61.1 {Tk_WmCmd procedure, "iconphoto" option} unix {
     list [catch {wm iconph .} msg] $msg
-} {1 {wrong # args: should be "wm iconphoto window ?-default? image ?image ...?"}}
+} {1 {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}}
 test unixWm-61.2 {Tk_WmCmd procedure, "iconphoto" option} unix {
     destroy .t
     toplevel .t
