@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.61 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.62 2008/10/08 15:39:13 dgp Exp $
  */
 
 #include "tkUnixInt.h"
@@ -2344,14 +2344,14 @@ WmIconphotoCmd(
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image ?image ...?");
+		"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image ?image ...?");
+		    "window ?-default? image1 ?image2 ...?");
 	    return TCL_ERROR;
 	}
     }
