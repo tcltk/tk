@@ -1,5 +1,9 @@
 2008-10-08  Don Porter  <dgp@users.sourceforge.net>
 
+	* tests/textDisp.test (textDisp-16.34):	Update test that tested
+	string equality of double values based on an assumption of
+	tcl_precision==12.  Test now does its own formatting.
+
 	* tests/scrollbar.test:	Revised testing of the cget subcommand so
 	that it tests consistency with the configure subcommand and not
 	agreement with a hardcoded value that will change as tastes in
