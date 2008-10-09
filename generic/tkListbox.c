@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.44.2.1 2008/10/05 11:34:46 dkf Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.44.2.2 2008/10/09 21:20:45 dgp Exp $
  */
 
 #include "default.h"
@@ -1246,7 +1246,7 @@ ListboxXviewSubCmd(
 	    - 2*(listPtr->inset + listPtr->selBorderWidth);
     if (objc == 2) {
 	if (listPtr->maxWidth == 0) {
-	    Tcl_SetResult(interp, "0 1", TCL_STATIC);
+	    Tcl_SetResult(interp, "0.0 1.0", TCL_STATIC);
 	} else {
 	    char buf[TCL_DOUBLE_SPACE];
 
@@ -1320,7 +1320,7 @@ ListboxYviewSubCmd(
 
     if (objc == 2) {
 	if (listPtr->nElements == 0) {
-	    Tcl_SetResult(interp, "0 1", TCL_STATIC);
+	    Tcl_SetResult(interp, "0.0 1.0", TCL_STATIC);
 	} else {
 	    char buf[TCL_DOUBLE_SPACE];
 
