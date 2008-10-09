@@ -1,7 +1,7 @@
 2008-10-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/canvText.test:	Backport test updates in light of the
-	2008-10-05 commit.
+	* tests/entry.test:	2008-10-05 commit.
 
 	* generic/tkEntry.c:	Fix missing space constructing the scroll
 	command.
