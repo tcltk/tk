@@ -1,11 +1,19 @@
+2008-10-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/canvText.test:	Backport test updates in light of the
+	2008-10-05 commit.
+
+	* generic/tkEntry.c:	Fix missing space constructing the scroll
+	command.
+
 2008-10-05  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* win/tkWinScrlbr.c:		Convert 'sprintf(..."%g"...)' to the
 	* macosx/tkMacOSXScrlbr.c:	locale-insensitive Tcl_PrintDouble.
-	* generic/tkScrollbar.c:	[Bug 2112563]
-	* generic/tkListbox.c:
-	* generic/tkEntry.c:
-	* generic/tkCanvText.c:
+	* generic/tkScrollbar.c:	[Bug 2112563]  NOTE: Tcl_PrintDouble
+	* generic/tkListbox.c:		is sensitive to the value of
+	* generic/tkEntry.c:		::tcl_precision.
+	* generic/tkCanvText.c:		*** POTENTIAL INCOMPATIBILITY ***
 	* generic/tkArgv.c:
 
 2008-08-25  Todd M. Helfter  <tmh@users.sourceforge.net>

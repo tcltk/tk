@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.47.2.1 2008/10/05 11:34:46 dkf Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.47.2.2 2008/10/09 15:17:44 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -2944,8 +2944,8 @@ EntryUpdateScrollbar(
     EntryVisibleRange(entryPtr, &first, &last);
     Tcl_PrintDouble(NULL, first, firstStr);
     Tcl_PrintDouble(NULL, last, lastStr);
-    code = Tcl_VarEval(interp, entryPtr->scrollCmd, firstStr, " ", lastStr,
-	    NULL);
+    code = Tcl_VarEval(interp, entryPtr->scrollCmd, " ", firstStr, " ",
+	    lastStr, NULL);
     if (code != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (horizontal scrolling command executed by ");
