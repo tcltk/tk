@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.51 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.52 2008/10/09 21:49:44 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4032,8 +4032,8 @@ SpinboxWidgetObjCmd(
 	if (entryPtr->validate != VALIDATE_NONE) {
 	    entryPtr->validate = selIndex;
 	}
-	/* FIXME: modification of objresult */
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj((code == TCL_OK)));
+
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(code == TCL_OK));
 	break;
     }
 
