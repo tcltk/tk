@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.h,v 1.7 2005/11/27 02:36:13 das Exp $
+ * RCS: @(#) $Id: tk3d.h,v 1.8 2008/10/09 09:42:50 dkf Exp $
  */
 
 #ifndef _TK3D
@@ -42,9 +42,8 @@ typedef struct TkBorder {
 				 * no longer valid and it isn't present in
 				 * borderTable: it is being kept around only
 				 * because there are objects referring to it.
-				 * The structure is freed when
-				 * resourceRefCount and objRefCount are both
-				 * 0. */
+				 * The structure is freed when objRefCount and
+				 * resourceRefCount are both 0. */
     int objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
     XColor *bgColorPtr;		/* Background color (intensity between
