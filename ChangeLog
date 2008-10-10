@@ -5,7 +5,7 @@
 
 	* tests/entry.test:	Restore test naming consistency with Tk 8.5.
 	* tests/listbox.test:	Remove some more dependency on precision in
-	test results.
+	* tests/spinbox.test:	test results.
 
 2008-10-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
