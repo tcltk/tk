@@ -9,6 +9,10 @@
 	* unix/configure:	autoconf-2.59
 	* win/configure:
 
+	* unix/Makefile.in:	Relax constraints in index script so that
+	* win/Makefile.in:	each Tk 8.5.* release may be [package require]d
+	* win/makefile.vc:	into any Tcl 8.5.* interp.  [Bug 1890438].
+
 2008-10-09  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkListbox.c:	Make literal return values consistent with
