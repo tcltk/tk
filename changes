@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.135 2008/08/22 19:47:47 dgp Exp $
+RCS: @(#) $Id: changes,v 1.136 2008/10/10 21:30:21 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6551,9 +6551,26 @@ incompatible changes in recent X.org releases of X11 headers. (jenglish)
 
 2008-08-19 (bug fix) revised number format in -[xy]scrollcommand callbacks
 and [xy]view methods (jenglish)
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2008-08-19 (enhancement) removed obsolete XID management code (staplin)
 
 Test suite modernization by Ania Pawelczyk.
 
 --- Released 8.6a2, August 25, 2008 --- See ChangeLog for details ---
+
+2008-08-25 (bug fix)[1936220] fix [tk_getOpenFile -multiple 1] on unix (helfter)
+
+2008-08-25 (bug fix)[1023955] default menu cursor: no more Motif (helfter)
+
+2008-08-28 (bug fix) correct TK_LIBS value to include Xft (porter)
+
+2008-09-03 (support) Dropped support for pre-ANSI compilers. (porter)
+
+2008-10-01 (new feature)[TIP 236] [$canvas moveto] (mckay,fellows)
+
+2008-10-05 (bug fix)[2112563] format double values explicitly in double
+format, avoiding sensitivity to locale setting. (fellows)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+--- Released 8.6a3, October 10, 2008 --- See ChangeLog for details ---
