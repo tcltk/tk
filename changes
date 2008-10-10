@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.5 2008/08/08 15:43:46 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.6 2008/10/10 19:28:18 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6534,3 +6534,23 @@ Several documentation and release notes improvements
 incompatible changes in recent X.org releases of X11 headers. (jenglish)
 
 --- Released 8.5.4, August 15, 2008 --- See ChangeLog for details ---
+
+2008-08-19 (behavior change) arguments passed to -[xy]scrollcommand
+callbacks, and values returned by [xy]view methods are explicitly
+formatted as doubles.  (english)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2008-08-25 (bug fix)[1936220] fix [tk_getOpenFile -multiple 1] on unix (helfter)
+
+2008-08-25 (bug fix)[1023955] default menu cursor: no more Motif (helfter)
+
+2008-08-28 (bug fix) correct TK_LIBS value to include Xft (porter)
+
+2008-10-05 (bug fix)[2112563] format double values explicitly in double
+format, avoiding sensitivity to locale setting. (fellows)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2008-10-10 (bug fix)[1890438] [package require] any Tk 8.5.* in any Tcl 8.5.*
+(porter)
+
+--- Released 8.5.5, October 15, 2008 --- See ChangeLog for details ---
