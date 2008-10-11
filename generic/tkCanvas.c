@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.46.2.1 2008/04/17 14:52:24 dgp Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.46.2.2 2008/10/11 06:55:03 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -1630,7 +1630,7 @@ CanvasWidgetCmd(
 	    break;
 	case CANV_CLEAR:
 	    if (objc != 3) {
-		Tcl_AppendResult(interp, 3, objv, NULL);
+		Tcl_WrongNumArgs(interp, 3, objv, NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }

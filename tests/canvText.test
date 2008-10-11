@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvText.test,v 1.16.4.1 2008/10/09 15:17:44 dgp Exp $
+# RCS: @(#) $Id: canvText.test,v 1.16.4.2 2008/10/11 06:55:03 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -458,6 +458,9 @@ test canvText-14.4 {GetTextIndex procedure: select error} {
 test canvText-14.5 {GetTextIndex procedure: bad int or unknown index} {
     list [catch {.c index test xyz} msg] $msg
 } {1 {bad index "xyz"}}
+test canvText-14.6 {select clear errors} -body {
+    .c select clear test
+} -returnCodes error -result "wrong \# args: should be \".c select clear\""
 
 test canvText-15.1 {SetTextCursor procedure} {
     .c itemconfig -text "abcdefg"
