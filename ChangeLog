@@ -1,10 +1,10 @@
 2008-10-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
+	*** 8.5.5 TAGGED FOR RELEASE ***
+
 	* generic/tkCanvas.c (CanvasWidgetCmd): Corrected result generation.
 
 2008-10-10  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.5.5 TAGGED FOR RELEASE ***
 
 	* generic/tk.h:		Bump to 8.5.5 for release.
 	* library/tk.tcl:
