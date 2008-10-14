@@ -1,3 +1,9 @@
+2008-10-14  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkObj.c (TkNewWindowObj): Added utility function for making
+	a Tcl_Obj from a Tk_Window reference. Candidate for future exposure to
+	third-party code I suppose, but useful internal to Tk for sure.
+
 2008-10-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	* generic/tkCanvas.c (CanvasWidgetCmd): Corrected result generation.
@@ -19,23 +25,22 @@
 
 2008-10-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4:          fix for bug [2073255]
-	* unix/configure:       regenerated
+	* unix/tcl.m4:		Fix for bug [2073255]
+	* unix/configure:	regenerated
 
 2008-10-08  Don Porter  <dgp@users.sourceforge.net>
 
-	* tests/textDisp.test (textDisp-16.34):	Update test that tested
-	string equality of double values based on an assumption of
-	tcl_precision==12.  Test now does its own formatting.
+	* tests/textDisp.test (textDisp-16.34): Update test that tested string
+	equality of double values based on an assumption of tcl_precision==12.
+	Test now does its own formatting.
 
-	* tests/scrollbar.test:	Revised testing of the cget subcommand so
-	that it tests consistency with the configure subcommand and not
-	agreement with a hardcoded value that will change as tastes in
-	GUIs evolve.
+	* tests/scrollbar.test: Revised testing of the cget subcommand so that
+	it tests consistency with the configure subcommand and not agreement
+	with a hardcoded value that will change as tastes in GUIs evolve.
 
-	* tests/canvText.test (canvText-17.1):	Update expected result to
-	match revised PostScript output due to more predictable formatting
-	of floating point values.
+	* tests/canvText.test (canvText-17.1): Update expected result to match
+	revised PostScript output due to more predictable formatting of
+	floating point values.
 
 	* unix/tkUnixWm.c:	Restored consistency of error messages from
 	* macosx/tkMacOSXWm.c:	[wm iconphoto] with the test suite and across
@@ -45,13 +50,13 @@
 
 	* tests/canvImg.test:  Removed dependency on precision in results
 	* tests/canvRect.test:
-	* tests/canvText.test: 
-	* tests/entry.test: 
-	* tests/listbox.test: 
-	* tests/scrollbar.test: 
+	* tests/canvText.test:
+	* tests/entry.test:
+	* tests/listbox.test:
+	* tests/scrollbar.test:
 	* tests/spinbox.test:
 	* tests/winWm.test: Fixed incorrect error strings
-	* tests/wm.test: 
+	* tests/wm.test:
 
 2008-10-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -61,27 +66,27 @@
 2008-10-05  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/tkWinWm.c (WmAttributesCmd, WmOverrideredirectCmd)
-	(WmStackorderCmd): 
-	* win/tkWinSendCom.c (Async): 
-	* win/tkWinSend.c (Tk_SendObjCmd): 
-	* win/tkWinFont.c (TkpGetFontFamilies, TkpGetSubFonts): 
-	* unix/tkUnixWm.c (WmOverrideredirectCmd, WmStackorderCmd): 
-	* unix/tkUnixFont.c (TkpGetFontFamilies, TkpGetSubFonts): 
-	* macosx/tkMacOSXWm.c (WmOverrideredirectCmd, WmStackorderCmd): 
-	* generic/tkTextIndex.c (SetTextIndexFromAny): 
-	* generic/tkTest.c (TrivialConfigObjCmd): 
-	* generic/tkSelect.c (HandleTclCommand): 
+	(WmStackorderCmd):
+	* win/tkWinSendCom.c (Async):
+	* win/tkWinSend.c (Tk_SendObjCmd):
+	* win/tkWinFont.c (TkpGetFontFamilies, TkpGetSubFonts):
+	* unix/tkUnixWm.c (WmOverrideredirectCmd, WmStackorderCmd):
+	* unix/tkUnixFont.c (TkpGetFontFamilies, TkpGetSubFonts):
+	* macosx/tkMacOSXWm.c (WmOverrideredirectCmd, WmStackorderCmd):
+	* generic/tkTextIndex.c (SetTextIndexFromAny):
+	* generic/tkTest.c (TrivialConfigObjCmd):
+	* generic/tkSelect.c (HandleTclCommand):
 	* generic/tkPanedWindow.c (Tk_PanedWindowObjCmd)
-	(PanedWindowSashCommand, PanedWindowProxyCommand): 
-	* generic/tkMenubutton.c (Tk_MenubuttonObjCmd): 
-	* generic/tkMenu.c (MenuWidgetObjCmd): 
-	* generic/tkListbox.c (ListboxWidgetObjCmd): 
+	(PanedWindowSashCommand, PanedWindowProxyCommand):
+	* generic/tkMenubutton.c (Tk_MenubuttonObjCmd):
+	* generic/tkMenu.c (MenuWidgetObjCmd):
+	* generic/tkListbox.c (ListboxWidgetObjCmd):
 	* generic/tkImgPhoto.c (ImgPhotoCmd): (mostly)
-	* generic/tkImage.c (Tk_ImageObjCmd): 
-	* generic/tkFont.c (Tk_FontObjCmd, GetAttributeInfoObj): 
-	* generic/tkEntry.c (EntryWidgetObjCmd, SpinboxWidgetObjCmd): 
-	* generic/tkConfig.c (SetOptionFromAny, Tk_SetOptions): 
-	* generic/tkCmds.c (Tk_TkObjCmd, Tk_WinfoObjCmd, TkGetDisplayOf): 
+	* generic/tkImage.c (Tk_ImageObjCmd):
+	* generic/tkFont.c (Tk_FontObjCmd, GetAttributeInfoObj):
+	* generic/tkEntry.c (EntryWidgetObjCmd, SpinboxWidgetObjCmd):
+	* generic/tkConfig.c (SetOptionFromAny, Tk_SetOptions):
+	* generic/tkCmds.c (Tk_TkObjCmd, Tk_WinfoObjCmd, TkGetDisplayOf):
 	* generic/tkButton.c (ButtonCreate): Get rid of code that insists on
 	non-idiomatically writing to the object in the interpreter result.
 
@@ -320,7 +325,7 @@
 
 2008-08-14  Daniel Steffen  <das@users.sourceforge.net>
 
-	* unix/tcl.m4 (SC_PATH_X):	check for libX11.dylib in addition to
+	* unix/tcl.m4 (SC_PATH_X):	Check for libX11.dylib in addition to
 					libX11.so et al.
 
 	* unix/configure: 		autoconf-2.59
@@ -410,7 +415,7 @@
 
 2008-07-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/*.c: fix inconsistant "wrong # args" messages. [Bug 2021443]
+	* generic/*.c: Fix inconsistant "wrong # args" messages. [Bug 2021443]
 	* macosx/tkMacOSXSend.c
 	* macosx/tkMacOSXWm.c
 	* unix/tkUnixSend.c
@@ -432,7 +437,7 @@
 	* library/ttk/aquaTheme.tcl: Use system color names and TIP145 named
 	font instead of hardcoded color values and deprecated native font name
 
-	* macosx/tkMacOSXHLEvents.c: factor out common code; formatting.
+	* macosx/tkMacOSXHLEvents.c: Factor out common code; formatting.
 
 2008-07-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -526,26 +531,26 @@
 
 2008-06-12  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkPointer.c (Tk_UpdatePointer): fix failure to restore a
+	* generic/tkPointer.c (Tk_UpdatePointer): Fix failure to restore a
 	global grab capture and to release the restrict window capture when
 	releasing a button grab. Fixes segfault due to dangling reference to
 	restrict window inside TkpSetCapture() implementation. [Bug 1991932]
 
-	* generic/ttk/ttkTreeview.c:	fix warning.
+	* generic/ttk/ttkTreeview.c:	Fix warning.
 
-	* unix/tcl.m4 (SunOS-5.11): fix 64bit amd64 support with gcc & Sun cc.
+	* unix/tcl.m4 (SunOS-5.11): Fix 64bit amd64 support with gcc & Sun cc.
 	* unix/configure: autoconf-2.59
 
-	* macosx/tkMacOSXXStubs.c (Tk_ResetUserInactiveTime): use UsrActivity
+	* macosx/tkMacOSXXStubs.c (Tk_ResetUserInactiveTime): Use UsrActivity
 	instead of OverallAct (which may be ignored in some circumstances).
 
-	* macosx/Wish.xcodeproj/project.pbxproj: add tclIORTrans.c; add tclOO
+	* macosx/Wish.xcodeproj/project.pbxproj: Add tclIORTrans.c; add tclOO
 	* macosx/Wish.xcodeproj/default.pbxuser: files to tktest-X11 target;
 	add debug configs for 64bit and with corefoundation disabled; updates
 	and cleanup for Xcode 3.1 and for Leopard; sync with Tcl.xcodeproj.
-	* macosx/Wish.xcode/project.pbxproj:	sync Wish.xcodeproj changes.
+	* macosx/Wish.xcode/project.pbxproj:	Sync Wish.xcodeproj changes.
 	* macosx/Wish.xcode/default.pbxuser:
-	* macosx/README:			document new build configs.
+	* macosx/README:			Document new build configs.
 
 2008-06-10  Joe English  <jenglish@users.sourceforge.net>
 
@@ -683,18 +688,18 @@
 
 2008-04-08  Kevin Kenny  <kennykb@acm.org>
 
-	* tkWinEmbed.c:  Removed #if 0 code. Trust the revision control system,
-	        if you need it again, you can find it.
+	* tkWinEmbed.c:  Removed #if 0 code. Trust the revision control
+	system, if you need it again, you can find it.
 
 	* tkWinSend.c:   Added conditional compilation to silence several
-	        compiler warnings.
+	compiler warnings.
 
 2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): Fix double-free on Tk_ParseArgv
 	* tests/main.test (main-3.*):	   error. [Bug 1937135]
 
-	* generic/tkArgv.c: fix -help mem explosion. [Bug 1936238] (kenny)
+	* generic/tkArgv.c: Fix -help mem explosion. [Bug 1936238] (kenny)
 
 2008-04-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -784,12 +789,13 @@
 
 2008-03-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* library/safetk.tcl (::safe::tkInterpInit): make sure tk_library and
+	* library/safetk.tcl (::safe::tkInterpInit): Make sure tk_library and
 	its subdirs (eg, ttk) are on the "safe" access path.
 
 2008-03-27  Daniel Steffen  <das@users.sourceforge.net>
 
-	* unix/tcl.m4 (SunOS-5.1x): fix 64bit support for Sun cc. [Bug 1921166]
+	* unix/tcl.m4 (SunOS-5.1x): Fix 64bit support for Sun cc. [Bug
+	1921166]
 
 	* unix/configure: autoconf-2.59
 
@@ -840,9 +846,9 @@
 
 2008-03-13  Daniel Steffen  <das@users.sourceforge.net>
 
-	* unix/configure.in:	Use backslash-quoting instead of double-quoting
-	* unix/tcl.m4:		for lib paths in tkConfig.sh. [Bug 1913622]
-	* unix/configure:	autoconf-2.59
+	* unix/configure.in: Use backslash-quoting instead of double-quoting
+	* unix/tcl.m4:	     for lib paths in tkConfig.sh. [Bug 1913622]
+	* unix/configure:    autoconf-2.59
 
 2008-03-13  Don Porter  <dgp@users.sourceforge.net>
 
@@ -902,7 +908,7 @@
 
 2008-02-27  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXDraw.c: workaround leak in Carbon SetPortPenPixPat()
+	* macosx/tkMacOSXDraw.c: Workaround leak in Carbon SetPortPenPixPat()
 	API [Bug 1863346]; avoid repeated PixPat allocation/deallocation.
 
 2008-02-23  Joe English  <jenglish@users.sourceforge.net>
@@ -945,11 +951,11 @@
 
 2008-02-02  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/Wish-Info.plist.in:	add CFBundleLocalizations key, listing
+	* macosx/Wish-Info.plist.in:	Add CFBundleLocalizations key, listing
 	* unix/configure.in (Darwin): 	all library/msgs locales.
 
-	* unix/configure.in (Darwin):	correct Info.plist year substitution in
-					non-framework builds.
+	* unix/configure.in (Darwin):	Correct Info.plist year substitution
+					in non-framework builds.
 
 	* unix/configure:		autoconf-2.59
 
@@ -964,10 +970,10 @@
 
 2008-01-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* library/msgbox.tcl (::tk::MessageBox): don't use ttk::label in low
+	* library/msgbox.tcl (::tk::MessageBox): Don't use ttk::label in low
 	depth/aqua fallback, as it doesn't support -bitmap.
 
-	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): pass "" instead of NULL
+	* win/tkWinDialog.c (Tk_MessageBoxObjCmd): Pass "" instead of NULL
 	when -title isn't set. [Bug 1881892]
 
 2008-01-31  Donal K. Fellows  <donal.k.fellows@man.ac.uk>

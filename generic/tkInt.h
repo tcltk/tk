@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.83 2008/04/02 21:32:32 das Exp $
+ * RCS: $Id: tkInt.h,v 1.84 2008/10/14 13:24:32 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -1200,6 +1200,7 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
+MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 
 /*
  * Unsupported commands.
