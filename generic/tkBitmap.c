@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.21 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.22 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -122,7 +122,7 @@ static void		InitBitmapObj(Tcl_Obj *objPtr);
  * field of the Tcl_Obj points to a TkBitmap object.
  */
 
-Tcl_ObjType tkBitmapObjType = {
+const Tcl_ObjType tkBitmapObjType = {
     "bitmap",			/* name */
     FreeBitmapObjProc,		/* freeIntRepProc */
     DupBitmapObjProc,		/* dupIntRepProc */

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.21 2007/12/13 15:24:21 dgp Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.22 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -20,7 +20,7 @@
  * object, used for quickly finding a mapping in a TkStateMap.
  */
 
-Tcl_ObjType tkStateKeyObjType = {
+const Tcl_ObjType tkStateKeyObjType = {
     "statekey",			/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */

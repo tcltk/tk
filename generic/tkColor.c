@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.17 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.18 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -53,7 +53,7 @@ static void		InitColorObj(Tcl_Obj *objPtr);
  * of the Tcl_Obj points to a TkColor object.
  */
 
-Tcl_ObjType tkColorObjType = {
+const Tcl_ObjType tkColorObjType = {
     "color",			/* name */
     FreeColorObjProc,		/* freeIntRepProc */
     DupColorObjProc,		/* dupIntRepProc */

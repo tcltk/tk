@@ -1,3 +1,17 @@
+2008-10-15  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.h:       Add "const" to many internal
+	* generic/tk3d.c:        const tables, so those will be
+	* generic/tkBitmap.c:    put by the C-compiler in the
+	* generic/tkColor.c:     TEXT segment in stead of the
+	* generic/tkConfig.c:    DATA segment. This makes those
+	* generic/tkCursor.c:    table sharable in shared libraries.
+	* generic/tkFont.c:
+	* generic/tkObj.c:
+	* generic/tkStyle.c:
+	* generic/tkTextIndex.c:
+	* generic/tkUtil.c:
+
 2008-10-14  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkObj.c (TkNewWindowObj): Added utility function for making

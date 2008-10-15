@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.30 2008/10/05 18:22:22 dkf Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.31 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "default.h"
@@ -72,7 +72,7 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
  * text widgets internally.
  */
 
-Tcl_ObjType tkTextIndexType = {
+const Tcl_ObjType tkTextIndexType = {
     "textindex",		/* name */
     FreeTextIndexInternalRep,	/* freeIntRepProc */
     DupTextIndexInternalRep,	/* dupIntRepProc */

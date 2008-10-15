@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.19 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.20 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -56,7 +56,7 @@ static void		InitCursorObj(Tcl_Obj *objPtr);
  * option is set.
  */
 
-Tcl_ObjType tkCursorObjType = {
+Tcl_ObjType const tkCursorObjType = {
     "cursor",			/* name */
     FreeCursorObjProc,		/* freeIntRepProc */
     DupCursorObjProc,		/* dupIntRepProc */

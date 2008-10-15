@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.28 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.29 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 /*
@@ -136,7 +136,7 @@ static int		SetOptionFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
  * the internalPtr2 field points to the entry that matched.
  */
 
-Tcl_ObjType tkOptionObjType = {
+const Tcl_ObjType tkOptionObjType = {
     "option",			/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */

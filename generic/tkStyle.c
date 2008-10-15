@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStyle.c,v 1.9 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkStyle.c,v 1.10 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -152,7 +152,7 @@ static int		SetStyleFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
  * object points to the Style structure for the stylefont, or NULL.
  */
 
-static Tcl_ObjType styleObjType = {
+static const Tcl_ObjType styleObjType = {
     "style",			/* name */
     FreeStyleObjProc,		/* freeIntRepProc */
     DupStyleObjProc,		/* dupIntRepProc */
