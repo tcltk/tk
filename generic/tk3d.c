@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.20 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.21 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -21,7 +21,7 @@
  * by Tk_GetReliefFromObj.
  */
 
-static const char *reliefStrings[] = {
+static const char *const reliefStrings[] = {
     "flat", "groove", "raised", "ridge", "solid", "sunken", NULL
 };
 
@@ -47,7 +47,7 @@ static void		ShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
  * is set.
  */
 
-Tcl_ObjType tkBorderObjType = {
+const Tcl_ObjType tkBorderObjType = {
     "border",			/* name */
     FreeBorderObjProc,		/* freeIntRepProc */
     DupBorderObjProc,		/* dupIntRepProc */
