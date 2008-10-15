@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.21 2008/10/14 13:24:32 dkf Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.22 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -87,7 +87,7 @@ static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
  * initial display-independant settings.
  */
 
-static Tcl_ObjType pixelObjType = {
+static const Tcl_ObjType pixelObjType = {
     "pixel",			/* name */
     FreePixelInternalRep,	/* freeIntRepProc */
     DupPixelInternalRep,	/* dupIntRepProc */
@@ -101,7 +101,7 @@ static Tcl_ObjType pixelObjType = {
  * initial display-independant settings.
  */
 
-static Tcl_ObjType mmObjType = {
+static const Tcl_ObjType mmObjType = {
     "mm",			/* name */
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
@@ -114,7 +114,7 @@ static Tcl_ObjType mmObjType = {
  * Tcl object.
  */
 
-static Tcl_ObjType windowObjType = {
+static const Tcl_ObjType windowObjType = {
     "window",			/* name */
     FreeWindowInternalRep,	/* freeIntRepProc */
     DupWindowInternalRep,	/* dupIntRepProc */
