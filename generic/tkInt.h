@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.84 2008/10/14 13:24:32 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.85 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -931,14 +931,14 @@ extern TkDisplay *tkDisplayList;
  * be properly registered with Tcl:
  */
 
-MODULE_SCOPE Tcl_ObjType tkBorderObjType;
-MODULE_SCOPE Tcl_ObjType tkBitmapObjType;
-MODULE_SCOPE Tcl_ObjType tkColorObjType;
-MODULE_SCOPE Tcl_ObjType tkCursorObjType;
-MODULE_SCOPE Tcl_ObjType tkFontObjType;
-MODULE_SCOPE Tcl_ObjType tkOptionObjType;
-MODULE_SCOPE Tcl_ObjType tkStateKeyObjType;
-MODULE_SCOPE Tcl_ObjType tkTextIndexType;
+MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
+MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
+MODULE_SCOPE const Tcl_ObjType tkColorObjType;
+MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
+MODULE_SCOPE const Tcl_ObjType tkFontObjType;
+MODULE_SCOPE const Tcl_ObjType tkOptionObjType;
+MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
+MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the

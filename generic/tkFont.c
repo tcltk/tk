@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.46 2008/10/05 21:23:25 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.47 2008/10/15 06:41:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -165,7 +165,7 @@ static const TkStateMap xlfdSetwidthMap[] = {
  * configuring a set of font attributes.
  */
 
-static const char *fontOpt[] = {
+static const char *const fontOpt[] = {
     "-family",
     "-size",
     "-weight",
@@ -347,7 +347,7 @@ static void		UpdateDependentFonts(TkFontInfo *fiPtr,
  * font object points to the TkFont structure for the font, or NULL.
  */
 
-Tcl_ObjType tkFontObjType = {
+const Tcl_ObjType tkFontObjType = {
     "font",			/* name */
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
@@ -474,7 +474,7 @@ Tk_FontObjCmd(
     int index;
     Tk_Window tkwin;
     TkFontInfo *fiPtr;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"actual",	"configure",	"create",	"delete",
 	"families",	"measure",	"metrics",	"names",
 	NULL
@@ -741,7 +741,7 @@ Tk_FontObjCmd(
 	Tk_Font tkfont;
 	int skip, index, i;
 	const TkFontMetrics *fmPtr;
-	static const char *switches[] = {
+	static const char *const switches[] = {
 	    "-ascent", "-descent", "-linespace", "-fixed", NULL
 	};
 
