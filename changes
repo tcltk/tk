@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.6 2008/10/10 19:28:18 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.7 2008/10/15 15:25:54 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6550,7 +6550,7 @@ formatted as doubles.  (english)
 format, avoiding sensitivity to locale setting. (fellows)
 	*** POTENTIAL INCOMPATIBILITY ***
 
-2008-10-10 (bug fix)[1890438] [package require] any Tk 8.5.* in any Tcl 8.5.*
+2008-10-10 (bug fix)[1894038] [package require] any Tk 8.5.* in any Tcl 8.5.*
 (porter)
 
 --- Released 8.5.5, October 15, 2008 --- See ChangeLog for details ---
