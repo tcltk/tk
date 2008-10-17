@@ -1,3 +1,7 @@
+2008-10-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/scale.tcl: Implemented keyboard bindings for ttk::scale
+
 2008-10-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.h:       Add "const" to many internal
