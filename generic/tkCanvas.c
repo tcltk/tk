@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.52 2008/10/11 06:47:25 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.53 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -542,7 +542,7 @@ CanvasWidgetCmd(
 #endif /* USE_OLD_TAG_SEARCH */
 
     int index;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"addtag",	"bbox",		"bind",		"canvasx",
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
@@ -1601,7 +1601,7 @@ CanvasWidgetCmd(
     }
     case CANV_SCAN: {
 	int x, y, gain = 10;
-	static const char *optionStrings[] = {
+	static const char *const optionStrings[] = {
 	    "mark", "dragto", NULL
 	};
 
@@ -1645,7 +1645,7 @@ CanvasWidgetCmd(
     }
     case CANV_SELECT: {
 	int index, optionindex;
-	static const char *optionStrings[] = {
+	static const char *const optionStrings[] = {
 	    "adjust", "clear", "from", "item", "to", NULL
 	};
 	enum options {
@@ -3992,7 +3992,7 @@ FindItems(
     Tk_Item *itemPtr;
     Tk_Uid uid;
     int index, result;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"above", "all", "below", "closest",
 	"enclosed", "overlapping", "withtag", NULL
     };

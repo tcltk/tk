@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.12 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.13 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #if 0
@@ -224,7 +224,7 @@ SquareWidgetObjCmd(
 {
     Square *squarePtr = clientData;
     int result = TCL_OK;
-    static const char *squareOptions[] = {"cget", "configure", NULL};
+    static const char *const squareOptions[] = {"cget", "configure", NULL};
     enum {
 	SQUARE_CGET, SQUARE_CONFIGURE
     };

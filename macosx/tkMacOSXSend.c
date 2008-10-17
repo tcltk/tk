@@ -30,7 +30,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.10 2008/07/23 23:24:44 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.11 2008/10/17 23:18:38 nijtmans Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -327,7 +327,7 @@ Tk_SendObjCmd(
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
 {
-    const char *sendOptions[] = {"-async", "-displayof", "-", NULL};
+    const char *const sendOptions[] = {"-async", "-displayof", "-", NULL};
     char *stringRep, *destName;
     int async = 0;
     int i, index, firstArg;

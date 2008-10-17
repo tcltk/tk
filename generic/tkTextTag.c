@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.29 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.30 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "default.h"
@@ -25,7 +25,7 @@
  * a whole is not.
  */
 
-static char *wrapStrings[] = {
+static const char *const wrapStrings[] = {
     "char", "none", "word", "", NULL
 };
 
@@ -36,7 +36,7 @@ static char *wrapStrings[] = {
  * widget as a whole is not.
  */
 
-static char *tabStyleStrings[] = {
+static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", "", NULL
 };
 
@@ -132,7 +132,7 @@ TkTextTagCmd(
 				 * parsed this command enough to know that
 				 * objv[1] is "tag". */
 {
-    static const char *tagOptionStrings[] = {
+    static const char *const tagOptionStrings[] = {
 	"add", "bind", "cget", "configure", "delete", "lower", "names",
 	"nextrange", "prevrange", "raise", "ranges", "remove", NULL
     };

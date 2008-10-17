@@ -1,3 +1,53 @@
+2008-10-15  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.h:          Add "const" to many internal
+	* generic/tkBind.c:      const tables, so those will be
+	* generic/tkButton.c:    put by the C-compiler in the
+	* generic/tkCanvas.c:    TEXT segment in stead of the
+	* generic/tkClipboard.c: DATA segment. This makes those
+	* generic/tkCmds.c:      table sharable in shared libraries.
+	* generic/tkConsole.c:
+	* generic/tkEntry.c:
+	* generic/tkFocus.c:
+	* generic/tkFrame.c:
+	* generic/tkGet.c:
+	* generic/tkGrab.c:
+	* generic/tkGrid.c:
+	* generic/tkImage.c:
+	* generic/tkImgBmap.c:
+	* generic/tkImgGIF.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkListbox.c:
+	* generic/tkMenu.c:
+	* generic/tkMenu.h:
+	* generic/tkMenubutton.c:
+	* generic/tkMessage.c:
+	* generic/tkOption.c:
+	* generic/tkPack.c:
+	* generic/tkPanedWindow.c:
+	* generic/tkPlace.c:
+	* generic/tkScale.c:
+	* generic/tkSelect.c:
+	* generic/tkSquare.c:
+	* generic/tkTest.c:
+	* generic/tkText.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextMark.c:
+	* generic/tkTextTag.c:
+	* generic/tkTextWind.c:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXSend.c:
+	* macosx/tkMacOSXWin.c:
+	* unix/tkUnixFont.c:
+	* unix/tkUnixWm.c:
+	* win/tkWinButton.c:
+	* win/tkWinColor.c:
+	* win/tkWinDialog.c:
+	* win/tkWinMenu.c:
+	* win/tkWinSend.c:
+	* win/tkWinWm.c:
+	* xlib/xcolors.c:
+
 2008-10-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/scale.tcl: Implemented keyboard bindings for ttk::scale

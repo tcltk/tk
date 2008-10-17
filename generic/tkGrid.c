@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.49 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.50 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -334,7 +334,7 @@ Tk_GridObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"anchor", "bbox", "columnconfigure", "configure",
 	"forget", "info", "location", "propagate", "remove",
 	"rowconfigure", "size",	"slaves", NULL
@@ -931,7 +931,7 @@ GridRowColumnConfigureCommand(
     int ok;			/* temporary TCL result code */
     int i, j, first, last;
     char *string;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"-minsize", "-pad", "-uniform", "-weight", NULL
     };
     enum options {
@@ -1306,7 +1306,7 @@ GridSlavesCommand(
     Gridder *slavePtr;
     int i, value, index;
     int row = -1, column = -1;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"-column", "-row", NULL
     };
     enum options { SLAVES_COLUMN, SLAVES_ROW };
@@ -2885,7 +2885,7 @@ ConfigureSlaves(
     char *lastWindow;		/* Use this window to base current row/col
 				 * on */
     int numSkip;		/* Number of 'x' found */
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"-column", "-columnspan", "-in", "-ipadx", "-ipady",
 	"-padx", "-pady", "-row", "-rowspan", "-sticky", NULL
     };

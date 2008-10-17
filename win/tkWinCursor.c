@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.16 2008/04/27 22:39:14 dkf Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.17 2008/10/17 23:18:38 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -39,7 +39,7 @@ typedef struct {
  */
 
 static struct CursorName {
-    char *name;
+    const char *name;
     LPCTSTR id;
 } cursorNames[] = {
     {"starting",		IDC_APPSTARTING},
@@ -71,7 +71,7 @@ static struct CursorName {
 
 #define TK_DEFAULT_CURSOR	IDC_ARROW
 
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -171,7 +171,7 @@ TkGetCursorByName(
 	return (TkCursor *) cursorPtr;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -200,7 +200,7 @@ TkCreateCursorFromData(
 {
     return NULL;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -224,7 +224,7 @@ TkpFreeCursor(
 {
     /* TkWinCursor *winCursorPtr = (TkWinCursor *) cursorPtr; */
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -259,7 +259,7 @@ TkpSetCursor(
 	SetCursor(hcursor);
     }
 }
-
+
 /*
  * Local Variables:
  * mode: c
