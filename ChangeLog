@@ -1,3 +1,7 @@
+2008-10-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/scale.tcl: Backported keyboard bindings for ttk::scale
+
 2008-10-11  Donal K. Fellows  <donal.k.fellows@man.ac.uk>
 
 	*** 8.5.5 TAGGED FOR RELEASE ***
