@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.25 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.26 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -215,7 +215,7 @@ Tk_PlaceObjCmd(
     char *string;
     TkDisplay *dispPtr;
     Tk_OptionTable optionTable;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"configure", "forget", "info", "slaves", NULL
     };
     enum options { PLACE_CONFIGURE, PLACE_FORGET, PLACE_INFO, PLACE_SLAVES };
@@ -509,7 +509,7 @@ UnlinkSlave(
 	    }
 	}
     }
-    
+
     if (masterPtr->abortPtr != NULL) {
 	*masterPtr->abortPtr = 1;
     }
@@ -861,11 +861,11 @@ RecomputePlacement(
 				 * placement operation. */
 
     masterPtr->flags &= ~PARENT_RECONFIG_PENDING;
-    
+
     /*
      * Abort any nested call to RecomputePlacement for this window, since
      * we'll do everything necessary here, and set up so this call
-     * can be aborted if necessary.  
+     * can be aborted if necessary.
      */
 
     if (masterPtr->abortPtr != NULL) {

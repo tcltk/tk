@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.59 2007/12/13 15:28:56 dgp Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.60 2008/10/17 23:18:38 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -452,9 +452,9 @@ GetEntryText(
 	strcpy(itemText, "( )");
     } else {
 	int i;
-	char *label = (mePtr->labelPtr == NULL) ? ""
+	const char *label = (mePtr->labelPtr == NULL) ? ""
 		: Tcl_GetString(mePtr->labelPtr);
-	char *accel = (mePtr->accelPtr == NULL) ? ""
+	const char *accel = (mePtr->accelPtr == NULL) ? ""
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;

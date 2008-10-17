@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.38 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.39 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -620,7 +620,7 @@ TestobjconfigObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *options[] = {
+    static const char *const options[] = {
 	"alltypes", "chain1", "chain2", "configerror", "delete", "info",
 	"internal", "new", "notenoughparams", "twowindows", NULL
     };
@@ -1252,7 +1252,7 @@ TrivialConfigObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int result = TCL_OK;
-    static const char *options[] = {
+    static const char *const options[] = {
 	"cget", "configure", "csave", NULL
     };
     enum {
@@ -1434,7 +1434,7 @@ TestfontObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *options[] = {"counts", "subfonts", NULL};
+    static const char *const options[] = {"counts", "subfonts", NULL};
     enum option {COUNTS, SUBFONTS};
     int index;
     Tk_Window tkwin;

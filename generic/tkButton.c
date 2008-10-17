@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.30 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.31 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -28,14 +28,14 @@ static Tcl_ThreadDataKey dataKey;
  * tkButton.h.
  */
 
-static const char *classNames[] = {"Label", "Button", "Checkbutton", "Radiobutton"};
+static const char *const classNames[] = {"Label", "Button", "Checkbutton", "Radiobutton"};
 
 /*
  * The following table defines the legal values for the -default option. It is
  * used together with the "enum defaultValue" declaration in tkButton.h.
  */
 
-static const char *defaultStrings[] = {
+static const char *const defaultStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
@@ -44,7 +44,7 @@ static const char *defaultStrings[] = {
  * It is used together with the "enum state" declaration in tkButton.h.
  */
 
-static const char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
@@ -53,7 +53,7 @@ static const char *stateStrings[] = {
  * It is used with the "enum compound" declaration in tkButton.h
  */
 
-static const char *compoundStrings[] = {
+static const char *const compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", NULL
 };
 
@@ -478,7 +478,7 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
  * such as TYPE_LABEL, to the option template for that class of widgets.
  */
 
-static Tk_OptionSpec * const optionSpecs[] = {
+static Tk_OptionSpec *const optionSpecs[] = {
     labelOptionSpecs,
     buttonOptionSpecs,
     checkbuttonOptionSpecs,
@@ -491,7 +491,7 @@ static Tk_OptionSpec * const optionSpecs[] = {
  * enumerated type used to dispatch the widget command.
  */
 
-static const char *commandNames[][8] = {
+static const char *const commandNames[][8] = {
     {"cget", "configure", NULL},
     {"cget", "configure", "flash", "invoke", NULL},
     {"cget", "configure", "deselect", "flash", "invoke", "select",

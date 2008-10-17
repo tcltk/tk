@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.34 2007/12/14 15:56:09 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.35 2008/10/17 23:18:38 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -258,7 +258,7 @@ CreateProc(
 {
     Window window;
     HWND parent;
-    char *class;
+    const char *class;
     WinButton *butPtr = (WinButton *)instanceData;
 
     parent = Tk_GetHWND(parentWin);

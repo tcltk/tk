@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.22 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.23 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -22,7 +22,7 @@
  * is used together with the "enum direction" declaration in tkMenubutton.h.
  */
 
-static char *directionStrings[] = {
+static const char *const directionStrings[] = {
     "above", "below", "flush", "left", "right", NULL
 };
 
@@ -31,7 +31,7 @@ static char *directionStrings[] = {
  * used together with the "enum state" declaration in tkMenubutton.h.
  */
 
-static char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
@@ -40,7 +40,7 @@ static char *stateStrings[] = {
  * is used with the "enum compound" declaration in tkMenuButton.h
  */
 
-static char *compoundStrings[] = {
+static const char *const compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", NULL
 };
 
@@ -153,7 +153,7 @@ static const Tk_OptionSpec optionSpecs[] = {
  * dispatch the scale widget command.
  */
 
-static const char *commandNames[] = {
+static const char *const commandNames[] = {
     "cget", "configure", NULL
 };
 

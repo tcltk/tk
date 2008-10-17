@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.24 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.25 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -87,7 +87,7 @@ static const Tk_SegType tkTextEmbWindowType = {
  * Definitions for alignment values:
  */
 
-static char *alignStrings[] = {
+static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
@@ -143,7 +143,7 @@ TkTextWindowCmd(
 				 * objv[1] is "window". */
 {
     int optionIndex;
-    static const char *windOptionStrings[] = {
+    static const char *const windOptionStrings[] = {
 	"cget", "configure", "create", "names", NULL
     };
     enum windOptions {

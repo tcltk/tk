@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.82 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.83 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -398,7 +398,7 @@ ImgPhotoCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *photoOptions[] = {
+    static const char *const photoOptions[] = {
 	"blank", "cget", "configure", "copy", "data", "get", "put",
 	"read", "redither", "transparency", "write", NULL
     };
@@ -1125,7 +1125,7 @@ ImgPhotoCmd(
 	return TCL_OK;
 
     case PHOTO_TRANS: {
-	static const char *photoTransOptions[] = {
+	static const char *const photoTransOptions[] = {
 	    "get", "set", NULL
 	};
 	enum transOptions {
@@ -1510,7 +1510,7 @@ ParseSubcommandOptions(
 		 * constants.
 		 */
 
-		static const char *compositingRules[] = {
+		static const char *const compositingRules[] = {
 		    "overlay", "set", NULL
 		};
 

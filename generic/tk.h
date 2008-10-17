@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.117 2008/09/03 06:01:51 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.118 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -1006,7 +1006,7 @@ typedef void	Tk_ItemDCharsProc (Tk_Canvas canvas, Tk_Item *itemPtr,
 #ifndef __NO_OLD_CONFIG
 
 typedef struct Tk_ItemType {
-    char *name;			/* The name of this type of item, such as
+    CONST char *name; /* The name of this type of item, such as
 				 * "line". */
     int itemSize;		/* Total amount of space needed for item's
 				 * record. */
@@ -1201,7 +1201,7 @@ typedef int (Tk_ImagePostscriptProc) (ClientData clientData,
  */
 
 struct Tk_ImageType {
-    char *name;			/* Name of image type. */
+    CONST char *name; /* Name of image type. */
     Tk_ImageCreateProc *createProc;
 				/* Procedure to call to create a new image of
 				 * this type. */

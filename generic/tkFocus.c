@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.17 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.18 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -120,7 +120,7 @@ Tk_FocusObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *focusOptions[] = {
+    static const char *const focusOptions[] = {
 	"-displayof", "-force", "-lastfor", NULL
     };
     Tk_Window tkwin = clientData;
@@ -1113,7 +1113,7 @@ TkFocusSplit(winPtr)
      * See if current focusWin is child of the new toplevel.
      */
 
-    for (subWinPtr = tlFocusPtr->focusWinPtr; 
+    for (subWinPtr = tlFocusPtr->focusWinPtr;
 	    subWinPtr && subWinPtr != winPtr && subWinPtr != topLevelPtr;
 	    subWinPtr = subWinPtr->parentPtr) {
 	/* EMPTY */

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.81 2008/07/23 23:24:22 nijtmans Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.82 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "default.h"
@@ -685,7 +685,7 @@ TextWidgetObjCmd(
     int result = TCL_OK;
     int index;
 
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
 	"dlineinfo", "dump", "edit", "get", "image", "index", "insert",
 	"mark", "peer", "replace", "scan", "search", "see", "tag", "window",
@@ -1536,7 +1536,7 @@ SharedTextObjCmd(
     int result = TCL_OK;
     int index;
 
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"delete", "insert", NULL
     };
     enum options {
@@ -1641,7 +1641,7 @@ TextPeerCmd(
     Tk_Window tkwin = textPtr->tkwin;
     int index;
 
-    static const char *peerOptionStrings[] = {
+    static const char *const peerOptionStrings[] = {
 	"create", "names", NULL
     };
     enum peerOptions {
@@ -3575,7 +3575,7 @@ TextSearchCmd(
     int i, argsLeft, code;
     SearchSpec searchSpec;
 
-    static const char *switchStrings[] = {
+    static const char *const switchStrings[] = {
 	"--", "-all", "-backwards", "-count", "-elide", "-exact", "-forwards",
 	"-hidden", "-nocase", "-nolinestop", "-overlap", "-regexp",
 	"-strictlimits", NULL
@@ -4277,7 +4277,7 @@ TkTextGetTabs(
     /*
      * Map these strings to TkTextTabAlign values.
      */
-    static const char *tabOptionStrings[] = {
+    static const char *const tabOptionStrings[] = {
 	"left", "right", "center", "numeric", NULL
     };
 
@@ -4449,7 +4449,7 @@ TextDumpCmd(
 #define TK_DUMP_IMG	0x10
 #define TK_DUMP_ALL	(TK_DUMP_TEXT|TK_DUMP_MARK|TK_DUMP_TAG| \
 	TK_DUMP_WIN|TK_DUMP_IMG)
-    static const char *optStrings[] = {
+    static const char *const optStrings[] = {
 	"-all", "-command", "-image", "-mark", "-tag", "-text", "-window",
 	NULL
     };
@@ -4960,7 +4960,7 @@ TextEditCmd(
 {
     int index;
 
-    static const char *editOptionStrings[] = {
+    static const char *const editOptionStrings[] = {
 	"modified", "redo", "reset", "separator", "undo", NULL
     };
     enum editOptions {

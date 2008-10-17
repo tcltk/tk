@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.35 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.36 2008/10/17 23:18:53 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -21,7 +21,7 @@
  * The preferred font encodings.
  */
 
-static const char *encodingList[] = {
+static const char *const encodingList[] = {
     "iso8859-1", "jis0208", "jis0212", NULL
 };
 
@@ -628,7 +628,7 @@ UtfToUcs2beProc(
     return result;
 }
 #endif /* WORDS_BIGENDIAN */
-
+
 /*
  *---------------------------------------------------------------------------
  *

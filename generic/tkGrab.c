@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.15 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.16 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -191,10 +191,10 @@ Tk_GrabObjCmd(
     char *arg;
     int index;
     int len;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"current", "release", "set", "status", NULL
     };
-    static const char *flagStrings[] = {
+    static const char *const flagStrings[] = {
 	"-global", NULL
     };
     enum options {

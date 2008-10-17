@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.23 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.24 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -130,7 +130,7 @@ TkTextImageCmd(
     int idx;
     register TkTextSegment *eiPtr;
     TkTextIndex index;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"cget", "configure", "create", "names", NULL
     };
     enum opts {

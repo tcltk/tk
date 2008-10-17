@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.52 2008/10/09 21:49:44 dkf Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.53 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -37,7 +37,7 @@
 #define DOUBLES_EQ(d1, d2)	(fabs((d1) - (d2)) < MIN_DBL_VAL)
 
 
-static char *stateStrings[] = {
+static char *const stateStrings[] = {
     "disabled", "normal", "readonly", NULL
 };
 
@@ -45,7 +45,7 @@ static char *stateStrings[] = {
  * Definitions for -validate option values:
  */
 
-static char *validateStrings[] = {
+static char *const validateStrings[] = {
     "all", "key", "focus", "focusin", "focusout", "none", NULL
 };
 enum validateType {
@@ -319,7 +319,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
  * dispatch the entry widget command.
  */
 
-static const char *entryCmdNames[] = {
+static const char *const entryCmdNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "index",
     "insert", "scan", "selection", "validate", "xview", NULL
 };
@@ -330,7 +330,7 @@ enum entryCmd {
     COMMAND_SCAN, COMMAND_SELECTION, COMMAND_VALIDATE, COMMAND_XVIEW
 };
 
-static const char *selCmdNames[] = {
+static const char *const selCmdNames[] = {
     "adjust", "clear", "from", "present", "range", "to", NULL
 };
 
@@ -345,7 +345,7 @@ enum selCmd {
  * dispatch the spinbox widget command.
  */
 
-static const char *sbCmdNames[] = {
+static const char *const sbCmdNames[] = {
     "bbox", "cget", "configure", "delete", "get", "icursor", "identify",
     "index", "insert", "invoke", "scan", "selection", "set",
     "validate", "xview", NULL
@@ -358,7 +358,7 @@ enum sbCmd {
     SB_CMD_SET, SB_CMD_VALIDATE, SB_CMD_XVIEW
 };
 
-static const char *sbSelCmdNames[] = {
+static const char *const sbSelCmdNames[] = {
     "adjust", "clear", "element", "from", "present", "range", "to", NULL
 };
 
@@ -376,7 +376,7 @@ enum sbselCmd {
  * modify them, you must modify the strings here.
  */
 
-static const char *selElementNames[] = {
+static const char *const selElementNames[] = {
     "none", "buttondown", "buttonup", NULL, "entry"
 };
 

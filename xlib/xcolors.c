@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xcolors.c,v 1.7 2007/01/02 23:39:40 dkf Exp $
+ * RCS: @(#) $Id: xcolors.c,v 1.8 2008/10/17 23:18:38 nijtmans Exp $
  */
 
 #include <tkInt.h>
@@ -34,11 +34,11 @@ static int	FindColor(const char *name, XColor *colorPtr);
  */
 
 typedef struct {
-    char *name;
+    const char *name;
     unsigned char red, green, blue;
 } XColorEntry;
 
-static XColorEntry xColors[] = {
+static const XColorEntry xColors[] = {
      { "alice blue", 240, 248, 255 },
      { "AliceBlue", 240, 248, 255 },
      { "antique white", 250, 235, 215 },
@@ -825,7 +825,7 @@ FindColor(
      */
 
     if (numXColors == 0) {
-	XColorEntry *ePtr;
+	const XColorEntry *ePtr;
 	for (ePtr = xColors; ePtr->name != NULL; ePtr++) {
 	    numXColors++;
 	}

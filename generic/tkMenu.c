@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.44 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.45 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 /*
@@ -99,9 +99,9 @@ TCL_DECLARE_MUTEX(menuMutex)
  * to update code in TkpMenuInit that changes the font string entry.
  */
 
-char *tkMenuStateStrings[] = {"active", "normal", "disabled", NULL};
+static const char *const menuStateStrings[] = {"active", "normal", "disabled", NULL};
 
-static const char *menuEntryTypeStrings[] = {
+static const char *const menuEntryTypeStrings[] = {
     "cascade", "checkbutton", "command", "radiobutton", "separator", NULL
 };
 
@@ -110,7 +110,7 @@ static const char *menuEntryTypeStrings[] = {
  * is used with the "enum compound" declaration in tkMenu.h
  */
 
-static char *compoundStrings[] = {
+static char *const compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", NULL
 };
 
@@ -157,7 +157,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
 	DEF_MENU_ENTRY_STATE,
 	-1, Tk_Offset(TkMenuEntry, state), 0,
-	(ClientData) tkMenuStateStrings},
+	(ClientData) menuStateStrings},
     {TK_OPTION_INT, "-underline", NULL, NULL,
 	DEF_MENU_ENTRY_UNDERLINE, -1, Tk_Offset(TkMenuEntry, underline)},
     {TK_OPTION_END}
@@ -227,7 +227,7 @@ static const Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
 	Tk_Offset(TkMenuEntry, borderPtr), -1, TK_OPTION_NULL_OK},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
 	DEF_MENU_ENTRY_STATE, -1, Tk_Offset(TkMenuEntry, state), 0,
-	(ClientData) tkMenuStateStrings},
+	(ClientData) menuStateStrings},
     {TK_OPTION_END}
 };
 
@@ -241,7 +241,7 @@ static const Tk_OptionSpec *specsArray[] = {
  * Menu type strings for use with Tcl_GetIndexFromObj.
  */
 
-static const char *menuTypeStrings[] = {
+static const char *const menuTypeStrings[] = {
     "normal", "tearoff", "menubar", NULL
 };
 
@@ -310,7 +310,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
  * with MenuWidgetObjCmd.
  */
 
-static const char *menuOptions[] = {
+static const char *const menuOptions[] = {
     "activate", "add", "cget", "clone", "configure", "delete", "entrycget",
     "entryconfigure", "index", "insert", "invoke", "post", "postcascade",
     "type", "unpost", "xposition", "yposition", NULL
@@ -455,7 +455,7 @@ MenuCmd(
     TkMenuReferences *menuRefPtr;
     int i, index, toplevel;
     char *windowName;
-    static const char *typeStringList[] = {"-type", NULL};
+    static const char *const typeStringList[] = {"-type", NULL};
     TkMenuOptionTables *optionTablesPtr = clientData;
 
     if (objc < 2) {

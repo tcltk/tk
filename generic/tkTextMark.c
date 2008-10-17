@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.21 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.22 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -106,7 +106,7 @@ TkTextMarkCmd(
     TkTextIndex index;
     const Tk_SegType *newTypePtr;
     int optionIndex;
-    static const char *markOptionStrings[] = {
+    static const char *const markOptionStrings[] = {
 	"gravity", "names", "next", "previous", "set", "unset", NULL
     };
     enum markOptions {

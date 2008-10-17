@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.34 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.35 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "default.h"
@@ -524,7 +524,7 @@ PanedWindowWidgetObjCmd(
 {
     PanedWindow *pwPtr = clientData;
     int result = TCL_OK;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"add", "cget", "configure", "forget", "identify", "panecget",
 	"paneconfigure", "panes", "proxy", "sash", NULL
     };
@@ -1068,7 +1068,7 @@ PanedWindowSashCommand(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *sashOptionStrings[] = {
+    static const char *const sashOptionStrings[] = {
 	"coord", "dragto", "mark", "place", NULL
     };
     enum sashOptions {
@@ -2759,7 +2759,7 @@ PanedWindowProxyCommand(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"coord", "forget", "place", NULL
     };
     enum options {
