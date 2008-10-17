@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.26 2008/08/21 09:43:53 dkf Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.27 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -621,7 +621,7 @@ Tk_OptionObjCmd(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    static const char *optionCmds[] = {
+    static const char *const optionCmds[] = {
 	"add", "clear", "get", "readfile", NULL
     };
 

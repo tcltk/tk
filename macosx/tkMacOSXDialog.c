@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.38 2008/09/02 16:10:54 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.39 2008/10/17 23:18:38 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -105,7 +105,7 @@ static int fileDlgInited = 0;
 
 static NavObjectFilterUPP openFileFilterUPP;
 static NavEventUPP openFileEventUPP;
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -139,7 +139,7 @@ Tk_ChooseColorObjCmd(
     CMProfileRef prof;
     NColorPickerInfo cpinfo;
     static RGBColor color = {0xffff, 0xffff, 0xffff};
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"-initialcolor", "-parent", "-title", NULL
     };
     enum options {
@@ -227,7 +227,7 @@ Tk_ChooseColorObjCmd(
   end:
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -262,7 +262,7 @@ Tk_GetOpenFileObjCmd(
     char *initialFile = NULL, *initialDir = NULL;
     Tcl_Obj *typeVariablePtr = NULL;
     const char *initialtype = NULL;
-    static const char *openOptionStrings[] = {
+    static const char *const openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-message", "-multiple", "-parent", "-title", "-typevariable", NULL
     };
@@ -389,7 +389,7 @@ Tk_GetOpenFileObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -420,7 +420,7 @@ Tk_GetSaveFileObjCmd(
     FSRef dirRef;
     CFStringRef title = NULL, message = NULL;
     OpenFileData ofd;
-    static const char *saveOptionStrings[] = {
+    static const char *const saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
 	"-message", "-parent", "-title", "-typevariable", NULL
     };
@@ -514,7 +514,7 @@ Tk_GetSaveFileObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -546,7 +546,7 @@ Tk_ChooseDirectoryObjCmd(
     FSRef dirRef;
     CFStringRef message = NULL, title = NULL;
     OpenFileData ofd;
-    static const char *chooseOptionStrings[] = {
+    static const char *const chooseOptionStrings[] = {
 	"-initialdir", "-message", "-mustexist", "-parent", "-title", NULL
     };
     enum chooseOptions {
@@ -620,7 +620,7 @@ Tk_ChooseDirectoryObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -705,7 +705,7 @@ HandleInitialDirectory(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -729,7 +729,7 @@ InitFileDialogs(void)
     openFileFilterUPP = NewNavObjectFilterUPP(OpenFileFilterProc);
     openFileEventUPP = NewNavEventUPP(OpenEventProc);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1010,7 +1010,7 @@ NavServicesGetFile(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1095,7 +1095,7 @@ OpenEventProc(
 	    break;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1192,7 +1192,7 @@ OpenFileFilterProc(
     }
     return (result == MATCHED);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1309,7 +1309,7 @@ MatchOneType(
 
     return UNMATCHED;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1348,7 +1348,7 @@ TkAboutDlg(void)
     DisposeDialog(aboutDlog);
     SelectWindow(ActiveNonFloatingWindow());
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1385,18 +1385,18 @@ Tk_MessageBoxObjCmd(
     int defaultNativeButtonIndex; /* 1, 2, 3: right to left */
     int typeIndex, i, indexDefaultOption = 0, result = TCL_ERROR;
 
-    static const char *movableAlertStrings[] = {
+    static const char *const movableAlertStrings[] = {
 	"-default", "-detail", "-icon", "-message", "-parent", "-title",
 	"-type", NULL
     };
-    static const char *movableTypeStrings[] = {
+    static const char *const movableTypeStrings[] = {
 	"abortretryignore", "ok", "okcancel", "retrycancel", "yesno",
 	"yesnocancel", NULL
     };
-    static const char *movableButtonStrings[] = {
+    static const char *const movableButtonStrings[] = {
 	"abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
     };
-    static const char *movableIconStrings[] = {
+    static const char *const movableIconStrings[] = {
 	"error", "info", "question", "warning", NULL
     };
     enum movableAlertOptions {
@@ -1671,7 +1671,7 @@ Tk_MessageBoxObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *

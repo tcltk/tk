@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.11 2007/01/12 10:41:23 dkf Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.12 2008/10/17 23:18:38 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -641,7 +641,7 @@ XGetImage(
 	imagePtr = XGetImageZPixmap(display, d, x, y,
 		width, height, plane_mask, format);
     } else {
-	char *errMsg = NULL;
+	const char *errMsg = NULL;
 	char infoBuf[sizeof(BITMAPINFO) + sizeof(RGBQUAD)];
 	BITMAPINFO *infoPtr = (BITMAPINFO*)infoBuf;
 

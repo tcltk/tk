@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.38 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.39 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -156,7 +156,7 @@ Tk_ImageObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    static const char *imageOptions[] = {
+    static const char *const imageOptions[] = {
 	"create", "delete", "height", "inuse", "names", "type", "types",
 	"width", NULL
     };

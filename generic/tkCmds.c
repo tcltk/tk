@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.44 2008/10/05 21:25:07 dkf Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.45 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -61,7 +61,7 @@ Tk_BellObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *bellOptions[] = {
+    static const char *const bellOptions[] = {
 	"-displayof", "-nice", NULL
     };
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
@@ -612,7 +612,7 @@ Tk_TkObjCmd(
 {
     int index;
     Tk_Window tkwin;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"appname",	"caret",	"scaling",	"useinputmethods",
 	"windowingsystem",		"inactive",	NULL
     };
@@ -661,7 +661,7 @@ Tk_TkObjCmd(
 	Tcl_Obj *objPtr;
 	TkCaret *caretPtr;
 	Tk_Window window;
-	static const char *caretStrings[] = {
+	static const char *const caretStrings[] = {
 	    "-x",	"-y", "-height", NULL
 	};
 	enum caretOptions {
@@ -916,7 +916,7 @@ Tk_TkwaitObjCmd(
     Tk_Window tkwin = (Tk_Window) clientData;
     int done, index;
     int code = TCL_OK;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"variable", "visibility", "window", NULL
     };
     enum options {
@@ -1101,7 +1101,7 @@ Tk_UpdateObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *updateOptions[] = {"idletasks", NULL};
+    static const char *const updateOptions[] = {"idletasks", NULL};
     int flags, index;
     TkDisplay *dispPtr;
     int code = TCL_OK;
@@ -1213,7 +1213,7 @@ Tk_WinfoObjCmd(
 	{StaticGray,	"staticgray"},
 	{-1,		NULL}
     };
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"cells",	"children",	"class",	"colormapfull",
 	"depth",	"geometry",	"height",	"id",
 	"ismapped",	"manager",	"name",		"parent",
@@ -1752,7 +1752,7 @@ Tk_WmObjCmd(
     Tk_Window tkwin;
     TkWindow *winPtr;
 
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"aspect",	"client",	"command",	"deiconify",
 	"focusmodel",	"frame",	"geometry",	"grid",
 	"group",	"iconbitmap",	"iconify",	"iconmask",

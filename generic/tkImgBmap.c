@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.24 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.25 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -745,7 +745,7 @@ ImgBmapCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *bmapOptions[] = {"cget", "configure", NULL};
+    static const char *const bmapOptions[] = {"cget", "configure", NULL};
     BitmapMaster *masterPtr = clientData;
     int index;
 

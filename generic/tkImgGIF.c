@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.44 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.45 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -264,7 +264,7 @@ FileReadGIF(
     int bitPixel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"-index", NULL
     };
     GIFImageConfig gifConf, *gifConfPtr = &gifConf;

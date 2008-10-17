@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.69 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.70 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2726,7 +2726,7 @@ DisplayLineBackground(
 		    rightX2 + xOffset, y, sValuePtr->borderWidth,
 		    sValuePtr->borderWidth, 1, sValuePtr->relief);
 	    Tk_3DHorizontalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    leftX + xOffset, y, rightX2 + sValuePtr->borderWidth - 
+		    leftX + xOffset, y, rightX2 + sValuePtr->borderWidth -
 		    leftX, sValuePtr->borderWidth, leftXIn, 0, 1,
 		    sValuePtr->relief);
 	}
@@ -8167,13 +8167,13 @@ TextGetScrollInfoObj(
     int *intPtr)		/* Filled in with number of pages or lines or
 				 * pixels to scroll, if any. */
 {
-    static const char *subcommands[] = {
+    static const char *const subcommands[] = {
 	"moveto", "scroll", NULL
     };
     enum viewSubcmds {
 	VIEW_MOVETO, VIEW_SCROLL
     };
-    static const char *units[] = {
+    static const char *const units[] = {
 	"units", "pages", "pixels", NULL
     };
     enum viewUnits {
