@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.33 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.34 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "default.h"
@@ -702,7 +702,7 @@ FrameWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    static const char *frameOptions[] = {
+    static const char *const frameOptions[] = {
 	"cget", "configure", NULL
     };
     enum options {

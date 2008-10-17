@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.30 2008/07/23 23:24:23 nijtmans Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.31 2008/10/17 23:18:37 nijtmans Exp $
  */
 
 #include "default.h"
@@ -28,7 +28,7 @@
  * used together with the "enum orient" declaration in tkScale.h.
  */
 
-static char *orientStrings[] = {
+static const char *const orientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
@@ -37,7 +37,7 @@ static char *orientStrings[] = {
  * used together with the "enum state" declaration in tkScale.h.
  */
 
-static char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
@@ -142,7 +142,7 @@ static const Tk_OptionSpec optionSpecs[] = {
  * scale widget command.
  */
 
-static const char *commandNames[] = {
+static const char *const commandNames[] = {
     "cget", "configure", "coords", "get", "identify", "set", NULL
 };
 
