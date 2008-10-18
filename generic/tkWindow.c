@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.96 2008/08/19 15:52:12 georgeps Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.97 2008/10/18 14:22:21 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -926,6 +926,7 @@ TkCreateMainWindow(
     hPtr = Tcl_CreateHashEntry(&mainPtr->nameTable, ".", &dummy);
     Tcl_SetHashValue(hPtr, winPtr);
     winPtr->pathName = Tcl_GetHashKey(&mainPtr->nameTable, hPtr);
+    Tcl_InitHashTable(&mainPtr->busyTable, TCL_ONE_WORD_KEYS);
 
     /*
      * We have just created another Tk application; increment the refcount on
@@ -1529,6 +1530,7 @@ Tk_DestroyWindow(
 			"::tk::AlwaysShowSelection");
 	    }
 
+	    Tcl_DeleteHashTable(&winPtr->mainPtr->busyTable);
 	    Tcl_DeleteHashTable(&winPtr->mainPtr->nameTable);
 	    TkBindFree(winPtr->mainPtr);
 	    TkDeleteAllImages(winPtr->mainPtr);
