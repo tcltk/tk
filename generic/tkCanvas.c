@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.53 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.54 2008/10/18 11:26:20 patthoyts Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -1762,7 +1762,8 @@ CanvasWidgetCmd(
 	}
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
-	    Tcl_SetResult(interp, itemPtr->typePtr->name, TCL_STATIC);
+	    Tcl_SetObjResult(interp, 
+		Tcl_NewStringObj(itemPtr->typePtr->name, -1));
 	}
 	break;
     case CANV_XVIEW: {
