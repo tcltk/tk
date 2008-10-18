@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.80 2008/08/25 11:44:04 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.81 2008/10/18 14:22:22 dkf Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -282,6 +282,7 @@ TK_OBJS = \
 	tkAtom.$(OBJEXT) \
 	tkBind.$(OBJEXT) \
 	tkBitmap.$(OBJEXT) \
+	tkBusy.$(OBJEXT) \
 	tkButton.$(OBJEXT) \
 	tkCanvArc.$(OBJEXT) \
 	tkCanvBmap.$(OBJEXT) \

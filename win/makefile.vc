@@ -13,7 +13,7 @@
 # Copyright (c) 2003-2008 Pat Thoyts.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.124 2008/08/25 11:44:04 dkf Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.125 2008/10/18 14:22:22 dkf Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -290,6 +290,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkAtom.obj \
 	$(TMP_DIR)\tkBind.obj \
 	$(TMP_DIR)\tkBitmap.obj \
+	$(TMP_DIR)\tkBusy.obj \
 	$(TMP_DIR)\tkButton.obj \
 	$(TMP_DIR)\tkCanvArc.obj \
 	$(TMP_DIR)\tkCanvBmap.obj \

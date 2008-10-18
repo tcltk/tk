@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.15 2008/08/16 23:52:34 aniap Exp $
+# RCS: @(#) $Id: tk.test,v 1.16 2008/10/18 14:22:22 dkf Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -17,8 +17,7 @@ test tk-1.1 {tk command: general} -body {
 } -returnCodes error -result {wrong # args: should be "tk option ?arg?"}
 test tk-1.2 {tk command: general} -body {
     tk xyz
-} -returnCodes error -result {bad option "xyz": must be appname, caret, scaling, useinputmethods, windowingsystem, or inactive}
-
+} -returnCodes error -result {bad option "xyz": must be appname, busy, caret, inactive, scaling, useinputmethods, or windowingsystem}
 
 # Value stored to restore default settings after 2.* tests
 set appname [tk appname]
@@ -36,7 +35,6 @@ test tk-2.4 {tk command: appname} -body {
     tk appname [tk appname]
 } -result [tk appname]
 tk appname $appname
-
 
 # Value stored to restore default settings after 3.* tests
 set scaling [tk scaling]
@@ -72,7 +70,7 @@ test tk-3.8 {tk command: scaling: negative} -body {
 test tk-3.9 {tk command: scaling: too big} -body {
     tk scaling 1000000
     expr {[tk scaling] < 10000}
-} -result {1}    
+} -result {1}
 test tk-3.10 {tk command: scaling: widthmm} -body {
     tk scaling 1.25
     expr {int((25.4*[winfo screenwidth .])/(72*1.25) + 0.5) \
@@ -84,7 +82,6 @@ test tk-3.11 {tk command: scaling: heightmm} -body {
         - [winfo screenmmheight .]}
 } -result {0}
 tk scaling $scaling
-
 
 # Value stored to restore default settings after 4.* tests
 set useim [tk useinputmethods]
@@ -109,23 +106,21 @@ test tk-4.5 {tk command: useinputmethods: set new} -body {
     tk useinputmethods -displayof . xyz
 } -returnCodes error -result {expected boolean value but got "xyz"}
 test tk-4.6 {tk command: useinputmethods: set new} -body {
-    # This isn't really a test, but more of a check...
-    # The answer is what was given, because we may be on a Unix
-    # system that doesn't have the XIM stuff
+    # This isn't really a test, but more of a check... The answer is what was
+    # given, because we may be on a Unix system that doesn't have the XIM
+    # stuff
     if {[tk useinputmethods 1] == 0} {
-	    puts "this wish doesn't have XIM (X Input Methods) support"
+	puts "this wish doesn't have XIM (X Input Methods) support"
     }
-
     return $useim
 } -result $useim
 test tk-4.7 {tk command: useinputmethods: set new} -constraints win -body {
-    # Mac and Windows don't have X Input Methods, so this should
-    # always return 0
+    # Mac and Windows don't have X Input Methods, so this should always return
+    # 0
     tk useinputmethods 1
 } -cleanup {
     tk useinputmethods $useim
 } -result 0
-
 
 test tk-5.1 {tk caret} -body {
     tk caret
@@ -145,7 +140,6 @@ test tk-5.5 {tk caret} -body {
 test tk-5.6 {tk caret} -body {
     tk caret . -x 20 -y 25 -h 30; tk caret . -hei
 } -result {30}
-
 
 # tk inactive
 test tk-6.1 {tk inactive} -body {
@@ -168,7 +162,6 @@ test tk-6.5 {tk inactive} -body {
     expr {$i == -1 || ( $i > 90 && $i < 200 )}
 } -result 1
 
-
 test tk-7.1 {tk inactive in a safe interpreter} -body {
 # tk inactive in safe interpreters
     safe::interpCreate foo
@@ -186,6 +179,7 @@ test tk-7.2 {tk inactive reset in a safe interpreter} -body {
     ::safe::interpDelete foo
 } -returnCodes 1 -result {resetting the user inactivity timer is not allowed in a safe interpreter}
 
+# tests of [tk busy] in busy.test
 
 # cleanup
 cleanupTests
