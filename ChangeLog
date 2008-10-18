@@ -1,3 +1,9 @@
+2008-10-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinFont.c: [Bug 1825353] To fix a problem with tiny fonts
+	on Russian versions of Windows we will avoid removing the internal
+	leading for fixed width fonts.
+
 2008-10-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.h:          Add "const" to many internal
