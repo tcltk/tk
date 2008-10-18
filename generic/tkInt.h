@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.85 2008/10/15 06:41:06 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.86 2008/10/18 14:22:21 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -670,6 +670,7 @@ typedef struct TkMainInfo {
 				 * ::tk::AlwaysShowSelection variable. */
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
+    Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
 } TkMainInfo;
 
 /*
@@ -979,6 +980,9 @@ MODULE_SCOPE int	Tk_BindObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_BindtagsObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+MODULE_SCOPE int	Tk_BusyObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_ButtonObjCmd(ClientData clientData,
