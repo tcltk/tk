@@ -13,7 +13,7 @@
 # Copyright (c) 2003-2008 Pat Thoyts.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.125 2008/10/18 14:22:22 dkf Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.126 2008/10/19 21:22:36 patthoyts Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -425,7 +425,7 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 		 -DTTK_SQUARE_WIDGET=1 \
 !endif
 
-TK_DEFINES	=-DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS)
+TK_DEFINES	=-DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS) -Dinline=__inline
 
 #---------------------------------------------------------------------
 # Compile flags
@@ -471,7 +471,8 @@ BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
 TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
 CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
 WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
-STUB_CFLAGS     = $(cflags) $(cdebug) $(TK_DEFINES)
+### Stubs files should not be compiled with -GL
+STUB_CFLAGS     = $(cflags) $(cdebug:-GL=) $(TK_DEFINES)
 
 !if !$(STATIC_BUILD)
 TK_CFLAGS = $(TK_CFLAGS) -DUSE_TCL_STUBS
