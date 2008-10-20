@@ -11,66 +11,23 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBusy.c,v 1.1 2008/10/18 14:22:22 dkf Exp $
+ * RCS: @(#) $Id: tkBusy.c,v 1.2 2008/10/20 10:50:20 dkf Exp $
  */
 
 #include "tkInt.h"
-
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
-#include "tkUnixInt.h"
-#endif
-
-#ifdef WIN32
-#include <windows.h>
-extern HINSTANCE	Tk_GetHINSTANCE(void);
-extern Window		Tk_AttachHWND(Tk_Window tkwin, HWND hwnd);
-extern HWND		Tk_GetHWND(Window window);
-
-#define DEF_BUSY_CURSOR "wait"
-#else
-#define DEF_BUSY_CURSOR "watch"
-#endif
-
-/*
- * Types used in this file.
- */
-
-typedef struct {
-    Display *display;		/* Display of busy window */
-    Tcl_Interp *interp;		/* Interpreter where "busy" command was
-				 * created. It's used to key the searches in
-				 * the window hierarchy. See the "windows"
-				 * command. */
-    Tk_Window tkBusy;		/* Busy window: Transparent window used to
-				 * block delivery of events to windows
-				 * underneath it. */
-    Tk_Window tkParent;		/* Parent window of the busy window. It may be
-				 * the reference window (if the reference is a
-				 * toplevel) or a mutual ancestor of the
-				 * reference window */
-    Tk_Window tkRef;		/* Reference window of the busy window. It is
-				 * used to manage the size and position of the
-				 * busy window. */
-    int x, y;			/* Position of the reference window */
-    int width, height;		/* Size of the reference window. Retained to
-				 * know if the reference window has been
-				 * reconfigured to a new size. */
-    int menuBar;		/* Menu bar flag. */
-    Tk_Cursor cursor;		/* Cursor for the busy window. */
-    Tcl_HashEntry *hashPtr;	/* Used the delete the busy window entry out
-				 * of the global hash table. */
-    Tcl_HashTable *tablePtr;
-    Tk_OptionTable optionTable;
-} Busy;
+#include "tkBusy.h"
 
 /*
- * Things about the busy system that may be configured.
+ * Things about the busy system that may be configured. Note that currently on
+ * OSX/Aqua, that's nothing at all.
  */
 
 static Tk_OptionSpec busyOptionSpecs[] = {
+#ifndef MAC_OSX_TK
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUSY_CURSOR, -1, Tk_Offset(Busy, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
+#endif
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0}
 };
 
@@ -78,13 +35,31 @@ static Tk_OptionSpec busyOptionSpecs[] = {
  * Forward declarations of functions defined in this file.
  */
 
-static void		DestroyBusy(char *dataPtr);
 static void		BusyEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		BusyGeometryProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		BusyCustodyProc(ClientData clientData,
 			    Tk_Window tkwin);
+static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
+			    int objc, Tcl_Obj *const objv[]);
+static Busy *		CreateBusy(Tcl_Interp *interp, Tk_Window tkRef);
+static void		DestroyBusy(char *dataPtr);
+static void		DoConfigureNotify(Tk_FakeWin *winPtr);
+static inline Tk_Window	FirstChild(Tk_Window parent);
+static int		GetBusy(Tcl_HashTable *busyTablePtr,
+			    Tcl_Interp *interp, Tcl_Obj *const windowObj,
+			    Busy **busyPtrPtr);
+static int		HoldBusy(Tcl_HashTable *busyTablePtr,
+			    Tcl_Interp *interp, Tcl_Obj *const windowObj,
+			    int configObjc, Tcl_Obj *const configObjv[]);
+static void		MakeTransparentWindowExist(Tk_Window tkwin,
+			    Window parent);
+static inline Tk_Window	NextChild(Tk_Window tkwin);
+static void		RefWinEventProc(ClientData clientData,
+			    register XEvent *eventPtr);
+static inline void	SetWindowInstanceData(Tk_Window tkwin,
+			    ClientData instanceData);
 
 /*
  * The "busy" geometry manager definition.
@@ -130,273 +105,6 @@ SetWindowInstanceData(
 
     winPtr->instanceData = instanceData;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpShowBusyWindow, TkpHideBusyWindow, TkpMakeTransparentWindowExist,
- * TkpCreateBusy --
- *
- *	Portability layer. Holds platform-specific gunk for the [tk busy]
- *	command, including a wholly dummy implementation for OSX/Aqua. The
- *	individual functions do the following:
- *
- * TkpShowBusyWindow --
- *	Make the busy window appear.
- *
- * TkpHideBusyWindow --
- *	Make the busy window go away.
- *
- * TkpMakeTransparentWindowExist --
- *	Actually make a transparent window.
- *
- * TkpCreateBusy --
- *	Creates the platform-specific part of a busy window structure.
- *
- *----------------------------------------------------------------------
- */
-
-#ifdef WIN32			/* Windows */
-
-void
-TkpShowBusyWindow(
-    Busy *busyPtr)
-{
-    HWND hWnd;
-    POINT point;
-    Display *display;
-    Window window;
-
-    if (busyPtr->tkBusy != NULL) {
-	Tk_MapWindow(busyPtr->tkBusy);
-	window = Tk_WindowId(busyPtr->tkBusy);
-	display = Tk_Display(busyPtr->tkBusy);
-	hWnd = Tk_GetHWND(window);
-	display->request++;
-	SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-    }
-
-    /*
-     * Under Win32, cursors aren't associated with windows. Tk fakes this by
-     * watching Motion events on its windows. So Tk will automatically change
-     * the cursor when the pointer enters the Busy window. But Windows does
-     * not immediately change the cursor; it waits for the cursor position to
-     * change or a system call. We need to change the cursor before the
-     * application starts processing, so set the cursor position redundantly
-     * back to the current position.
-     */
-
-    GetCursorPos(&point);
-    SetCursorPos(point.x, point.y);
-}
-
-void
-TkpHideBusyWindow(
-    Busy *busyPtr)
-{
-    POINT point;
-
-    if (busyPtr->tkBusy != NULL) {
-	Tk_UnmapWindow(busyPtr->tkBusy);
-    }
-
-    /*
-     * Under Win32, cursors aren't associated with windows. Tk fakes this by
-     * watching Motion events on its windows. So Tk will automatically change
-     * the cursor when the pointer enters the Busy window. But Windows does
-     * not immediately change the cursor: it waits for the cursor position to
-     * change or a system call. We need to change the cursor before the
-     * application starts processing, so set the cursor position redundantly
-     * back to the current position.
-     */
-
-    GetCursorPos(&point);
-    SetCursorPos(point.x, point.y);
-}
-
-void
-TkpMakeTransparentWindowExist(
-    Tk_Window tkwin,		/* Token for window. */
-    Window parent)		/* Parent window. */
-{
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    HWND hParent;
-    HWND hWnd;
-    int style;
-    DWORD exStyle;
-
-    hParent = (HWND) parent;
-    style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-    exStyle = WS_EX_TRANSPARENT | WS_EX_TOPMOST;
-#define TK_WIN_CHILD_CLASS_NAME "TkChild"
-    hWnd = CreateWindowEx(exStyle, TK_WIN_CHILD_CLASS_NAME, NULL, style,
-	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
-	    hParent, NULL, Tk_GetHINSTANCE(), NULL);
-    winPtr->window = Tk_AttachHWND(tkwin, hWnd);
-}
-
-void
-TkpCreateBusy(
-    Tk_FakeWin *winPtr,
-    Tk_Window tkRef,
-    Window* parentPtr,
-    Tk_Window tkParent,
-    Busy *busyPtr)
-{
-    if (winPtr->flags & TK_REPARENTED) {
-	/*
-	 * This works around a bug in the implementation of menubars for
-	 * non-MacIntosh window systems (Win32 and X11). Tk doesn't reset the
-	 * pointers to the parent window when the menu is reparented
-	 * (winPtr->parentPtr points to the wrong window). We get around this
-	 * by determining the parent via the native API calls.
-	 */
-
-	HWND hWnd;
-	RECT rect;
-
-	hWnd = GetParent(Tk_GetHWND(Tk_WindowId(tkRef)));
-	if (GetWindowRect(hWnd, &rect)) {
-	    busyPtr->width = rect.right - rect.left;
-	    busyPtr->height = rect.bottom - rect.top;
-	}
-    } else {
-	*parentPtr = Tk_WindowId(tkParent);
-	*parentPtr = (Window) Tk_GetHWND(*parentPtr);
-    }
-}
-
-#elif defined(MAC_OSX_TK)	/* Aqua */
-
-void
-TkpShowBusyWindow(
-    Busy *busyPtr)
-{
-}
-
-void
-TkpHideBusyWindow(
-    Busy *busyPtr)
-{
-}
-
-void
-TkpMakeTransparentWindowExist(
-    Tk_Window tkwin,		/* Token for window. */
-    Window parent)		/* Parent window. */
-{
-}
-
-void
-TkpCreateBusy(
-    Tk_FakeWin *winPtr,
-    Tk_Window tkRef,
-    Window* parentPtr,
-    Tk_Window tkParent,
-    Busy *busyPtr)
-{
-}
-
-#else /* UNIX/X11 */
-
-void
-TkpShowBusyWindow(
-    Busy *busyPtr)
-{
-    if (busyPtr->tkBusy != NULL) {
-	Tk_MapWindow(busyPtr->tkBusy);
-
-	/*
-	 * Always raise the busy window just in case new sibling windows have
-	 * been created in the meantime. Can't use Tk_RestackWindow because it
-	 * doesn't work under Win32.
-	 */
-
-	XRaiseWindow(Tk_Display(busyPtr->tkBusy),
-		Tk_WindowId(busyPtr->tkBusy));
-    }
-}
-
-void
-TkpHideBusyWindow(
-    Busy *busyPtr)
-{
-    if (busyPtr->tkBusy != NULL) {
-	Tk_UnmapWindow(busyPtr->tkBusy);
-    }
-}
-
-void
-TkpMakeTransparentWindowExist(
-    Tk_Window tkwin,		/* Token for window. */
-    Window parent)		/* Parent window. */
-{
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    long int mask = CWDontPropagate | CWEventMask;
-
-    /*
-     * Ignore the important events while the window is mapped.
-     */
-
-#define USER_EVENTS \
-	(EnterWindowMask | LeaveWindowMask | KeyPressMask | KeyReleaseMask | \
-	ButtonPressMask | ButtonReleaseMask | PointerMotionMask)
-#define PROP_EVENTS \
-	(KeyPressMask | KeyReleaseMask | ButtonPressMask | \
-	ButtonReleaseMask | PointerMotionMask)
-
-    winPtr->atts.do_not_propagate_mask = PROP_EVENTS;
-    winPtr->atts.event_mask = USER_EVENTS;
-    winPtr->changes.border_width = 0;
-    winPtr->depth = 0;
-
-    winPtr->window = XCreateWindow(winPtr->display, parent,
-	    winPtr->changes.x, winPtr->changes.y,
-	    (unsigned) winPtr->changes.width,		/* width */
-	    (unsigned) winPtr->changes.height,		/* height */
-	    (unsigned) winPtr->changes.border_width,	/* border_width */
-	    winPtr->depth, InputOnly, winPtr->visual, mask, &winPtr->atts);
-}
-
-static Window
-GetParent(
-    Display *display,
-    Window window)
-{
-    Window root, parent;
-    Window *dummy;
-    unsigned int count;
-
-    if (XQueryTree(display, window, &root, &parent, &dummy, &count) > 0) {
-	XFree(dummy);
-	return parent;
-    }
-    return None;
-}
-
-void
-TkpCreateBusy(
-    Tk_FakeWin *winPtr,
-    Tk_Window tkRef,
-    Window* parentPtr,
-    Tk_Window tkParent,
-    Busy *busyPtr)
-{
-    if (winPtr->flags & TK_REPARENTED) {
-	/*
-	 * This works around a bug in the implementation of menubars for
-	 * non-MacIntosh window systems (Win32 and X11). Tk doesn't reset the
-	 * pointers to the parent window when the menu is reparented
-	 * (winPtr->parentPtr points to the wrong window). We get around this
-	 * by determining the parent via the native API calls.
-	 */
-
-	*parentPtr = GetParent(Tk_Display(tkRef), Tk_WindowId(tkRef));
-    } else {
-	*parentPtr = Tk_WindowId(tkParent);
-    }
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -866,7 +574,7 @@ CreateBusy(
 	Tk_DestroyWindow(tkBusy);
 	return NULL;
     }
-    SetWindowInstanceData(tkBusy, (ClientData)busyPtr);
+    SetWindowInstanceData(tkBusy, busyPtr);
     winPtr = (Tk_FakeWin *) tkRef;
 
     TkpCreateBusy(winPtr, tkRef, &parent, tkParent, busyPtr);
@@ -888,11 +596,9 @@ CreateBusy(
      */
 
     Tk_ManageGeometry(tkBusy, &busyMgrInfo, busyPtr);
-#ifndef MAC_OSX_TK
     if (busyPtr->cursor != None) {
 	Tk_DefineCursor(tkBusy, busyPtr->cursor);
     }
-#endif
 
     /*
      * Track the reference window to see if it is resized or destroyed.
@@ -928,7 +634,6 @@ ConfigureBusy(
     int objc,
     Tcl_Obj *const objv[])
 {
-#ifndef MAC_OSX_TK
     Tk_Cursor oldCursor = busyPtr->cursor;
 
     if (Tk_SetOptions(interp, (char *) busyPtr, busyPtr->optionTable, objc,
@@ -942,7 +647,6 @@ ConfigureBusy(
 	    Tk_DefineCursor(busyPtr->tkBusy, busyPtr->cursor);
 	}
     }
-#endif
 
     return TCL_OK;
 }
@@ -1033,7 +737,7 @@ HoldBusy(
     }
     hPtr = Tcl_CreateHashEntry(busyTablePtr, (char *) tkwin, &isNew);
     if (isNew) {
-	busyPtr = (Busy *) CreateBusy(interp, tkwin);
+	busyPtr = CreateBusy(interp, tkwin);
 	if (busyPtr == NULL) {
 	    return TCL_ERROR;
 	}
