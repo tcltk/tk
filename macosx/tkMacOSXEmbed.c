@@ -14,10 +14,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.18 2008/06/19 00:14:10 das Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.19 2008/10/20 10:50:20 dkf Exp $
  */
 
 #include "tkMacOSXInt.h"
+#include "tkBusy.h"
 
 /*
  * One of the following structures exists for each container in this
@@ -1119,3 +1120,65 @@ EmbedWindowDeleted(
 	ckfree((char *) containerPtr);
     }
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpShowBusyWindow, TkpHideBusyWindow, TkpMakeTransparentWindowExist,
+ * TkpCreateBusy --
+ *
+ *	Portability layer for busy windows. Holds platform-specific gunk for
+ *	the [tk busy] command, which is currently a dummy implementation for
+ *	OSX/Aqua. The individual functions are supposed to do the following:
+ *
+ * TkpShowBusyWindow --
+ *	Make the busy window appear.
+ *
+ * TkpHideBusyWindow --
+ *	Make the busy window go away.
+ *
+ * TkpMakeTransparentWindowExist --
+ *	Actually make a transparent window.
+ *
+ * TkpCreateBusy --
+ *	Creates the platform-specific part of a busy window structure.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpShowBusyWindow(
+    TkBusy busy)
+{
+}
+
+void
+TkpHideBusyWindow(
+    TkBusy busy)
+{
+}
+
+void
+TkpMakeTransparentWindowExist(
+    Tk_Window tkwin,		/* Token for window. */
+    Window parent)		/* Parent window. */
+{
+}
+
+void
+TkpCreateBusy(
+    Tk_FakeWin *winPtr,
+    Tk_Window tkRef,
+    Window* parentPtr,
+    Tk_Window tkParent,
+    TkBusy busy)
+{
+}
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
