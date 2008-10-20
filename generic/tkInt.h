@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.87 2008/10/20 10:50:20 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.88 2008/10/20 12:22:50 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -102,7 +102,7 @@ typedef struct TkpCursor_ *TkpCursor;
 typedef struct TkRegion_ *TkRegion;
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
-typedef struct TkBusy_ *TkBusy;
+typedef struct Busy *TkBusy;
 
 /*
  * Function types.
