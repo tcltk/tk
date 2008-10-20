@@ -4,17 +4,18 @@
  *	This file contains platform-specific functions for UNIX to provide
  *	basic operations needed for application embedding (where one
  *	application can use as its main window an internal window from some
- *	other application).
+ *	other application). Also includes code to support busy windows.
  *
  * Copyright (c) 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.13 2008/04/27 22:39:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEmbed.c,v 1.14 2008/10/20 10:50:20 dkf Exp $
  */
 
 #include "tkUnixInt.h"
+#include "tkBusy.h"
 
 /*
  * One of the following structures exists for each container in this
@@ -1012,6 +1013,176 @@ TkUnixContainerId(
     }
     Tcl_Panic("TkUnixContainerId couldn't find window");
     return None;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpShowBusyWindow --
+ *
+ *	Makes a busy window "appear".
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Arranges for the busy window to start intercepting events and the
+ *	cursor to change to the configured "hey, I'm busy!" setting.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpShowBusyWindow(
+    TkBusy busy)
+{
+    Busy *busyPtr = (Busy *) busy;
+
+    if (busyPtr->tkBusy != NULL) {
+	Tk_MapWindow(busyPtr->tkBusy);
+
+	/*
+	 * Always raise the busy window just in case new sibling windows have
+	 * been created in the meantime. Can't use Tk_RestackWindow because it
+	 * doesn't work under Win32.
+	 */
+
+	XRaiseWindow(Tk_Display(busyPtr->tkBusy),
+		Tk_WindowId(busyPtr->tkBusy));
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpHideBusyWindow --
+ *
+ *	Makes a busy window "disappear".
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Arranges for the busy window to stop intercepting events, and the
+ *	cursor to change back to its normal setting.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpHideBusyWindow(
+    TkBusy busy)
+{
+    Busy *busyPtr = (Busy *) busy;
+
+    if (busyPtr->tkBusy != NULL) {
+	Tk_UnmapWindow(busyPtr->tkBusy);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpMakeTransparentWindowExist --
+ *
+ *	Construct the platform-specific resources for a transparent window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Moves the specified window in the stacking order.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpMakeTransparentWindowExist(
+    Tk_Window tkwin,		/* Token for window. */
+    Window parent)		/* Parent window. */
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    long int mask = CWDontPropagate | CWEventMask;
+
+    /*
+     * Ignore the important events while the window is mapped.
+     */
+
+#define USER_EVENTS \
+	(EnterWindowMask | LeaveWindowMask | KeyPressMask | KeyReleaseMask | \
+	ButtonPressMask | ButtonReleaseMask | PointerMotionMask)
+#define PROP_EVENTS \
+	(KeyPressMask | KeyReleaseMask | ButtonPressMask | \
+	ButtonReleaseMask | PointerMotionMask)
+
+    winPtr->atts.do_not_propagate_mask = PROP_EVENTS;
+    winPtr->atts.event_mask = USER_EVENTS;
+    winPtr->changes.border_width = 0;
+    winPtr->depth = 0;
+
+    winPtr->window = XCreateWindow(winPtr->display, parent,
+	    winPtr->changes.x, winPtr->changes.y,
+	    (unsigned) winPtr->changes.width,		/* width */
+	    (unsigned) winPtr->changes.height,		/* height */
+	    (unsigned) winPtr->changes.border_width,	/* border_width */
+	    winPtr->depth, InputOnly, winPtr->visual, mask, &winPtr->atts);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCreateBusy --
+ *
+ *	Construct the platform-specific parts of a busy window. Note that this
+ *	postpones the actual creation of the window resource until later. The
+ *	GetParent() function is a helper for this.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets up part of the busy window structure.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static inline Window
+GetParent(
+    Display *display,
+    Window window)
+{
+    Window root, parent;
+    Window *dummy;
+    unsigned int count;
+
+    if (XQueryTree(display, window, &root, &parent, &dummy, &count) > 0) {
+	XFree(dummy);
+	return parent;
+    }
+    return None;
+}
+
+void
+TkpCreateBusy(
+    Tk_FakeWin *winPtr,
+    Tk_Window tkRef,
+    Window *parentPtr,
+    Tk_Window tkParent,
+    TkBusy busy)
+{
+    if (winPtr->flags & TK_REPARENTED) {
+	/*
+	 * This works around a bug in the implementation of menubars for
+	 * non-MacIntosh window systems (Win32 and X11). Tk doesn't reset the
+	 * pointers to the parent window when the menu is reparented (since
+	 * winPtr->parentPtr points to the wrong window). We get around this
+	 * by determining the parent via the native API calls.
+	 */
+
+	*parentPtr = GetParent(Tk_Display(tkRef), Tk_WindowId(tkRef));
+    } else {
+	*parentPtr = Tk_WindowId(tkParent);
+    }
 }
 
 /*

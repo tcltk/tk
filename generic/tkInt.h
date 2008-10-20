@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.86 2008/10/18 14:22:21 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.87 2008/10/20 10:50:20 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -102,6 +102,7 @@ typedef struct TkpCursor_ *TkpCursor;
 typedef struct TkRegion_ *TkRegion;
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
+typedef struct TkBusy_ *TkBusy;
 
 /*
  * Function types.
@@ -1205,6 +1206,13 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
+MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
+MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
+MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
+			    Window parent);
+MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
+			    Window *parentPtr, Tk_Window tkParent,
+			    TkBusy busy);
 
 /*
  * Unsupported commands.

@@ -9,10 +9,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.18 2008/08/19 15:52:14 georgeps Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.19 2008/10/20 10:50:20 dkf Exp $
  */
 
 #include "tkWinInt.h"
+#include "tkBusy.h"
 
 typedef struct ThreadSpecificData {
     int initialized;		/* 0 means table below needs initializing. */
@@ -174,12 +175,13 @@ TkpPrintWindowId(
     /*
      * Use pointer representation, because Win64 is P64 (*not* LP64). Windows
      * doesn't print the 0x for %p, so we do it.
-     * bug #2026405: cygwin does output 0x for %p so test and recover.
+     * Bug 2026405: cygwin does output 0x for %p so test and recover.
      */
 
     sprintf(buf, "0x%p", hwnd);
-    if (buf[2] == '0' && buf[3] == 'x')
+    if (buf[2] == '0' && buf[3] == 'x') {
 	sprintf(buf, "%p", hwnd);
+    }
 }
 
 /*
@@ -781,6 +783,180 @@ TkWinSetWindowPos(
 
     SetWindowPos(hwnd, siblingHwnd, 0, 0, 0, 0,
 	    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpShowBusyWindow --
+ *
+ *	Makes a busy window "appear".
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Arranges for the busy window to start intercepting events and the
+ *	cursor to change to the configured "hey, I'm busy!" setting.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpShowBusyWindow(
+    TkBusy busy)
+{
+    Busy *busyPtr = (Busy *) busy;
+    HWND hWnd;
+    POINT point;
+    Display *display;
+    Window window;
+
+    if (busyPtr->tkBusy != NULL) {
+	Tk_MapWindow(busyPtr->tkBusy);
+	window = Tk_WindowId(busyPtr->tkBusy);
+	display = Tk_Display(busyPtr->tkBusy);
+	hWnd = Tk_GetHWND(window);
+	display->request++;
+	SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+
+    /*
+     * Under Win32, cursors aren't associated with windows. Tk fakes this by
+     * watching Motion events on its windows. So Tk will automatically change
+     * the cursor when the pointer enters the Busy window. But Windows does
+     * not immediately change the cursor; it waits for the cursor position to
+     * change or a system call. We need to change the cursor before the
+     * application starts processing, so set the cursor position redundantly
+     * back to the current position.
+     */
+
+    GetCursorPos(&point);
+    SetCursorPos(point.x, point.y);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpHideBusyWindow --
+ *
+ *	Makes a busy window "disappear".
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Arranges for the busy window to stop intercepting events, and the
+ *	cursor to change back to its normal setting.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpHideBusyWindow(
+    TkBusy busy)
+{
+    Busy *busyPtr = (Busy *) busy;
+    POINT point;
+
+    if (busyPtr->tkBusy != NULL) {
+	Tk_UnmapWindow(busyPtr->tkBusy);
+    }
+
+    /*
+     * Under Win32, cursors aren't associated with windows. Tk fakes this by
+     * watching Motion events on its windows. So Tk will automatically change
+     * the cursor when the pointer enters the Busy window. But Windows does
+     * not immediately change the cursor: it waits for the cursor position to
+     * change or a system call. We need to change the cursor before the
+     * application starts processing, so set the cursor position redundantly
+     * back to the current position.
+     */
+
+    GetCursorPos(&point);
+    SetCursorPos(point.x, point.y);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpMakeTransparentWindowExist --
+ *
+ *	Construct the platform-specific resources for a transparent window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Moves the specified window in the stacking order.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpMakeTransparentWindowExist(
+    Tk_Window tkwin,		/* Token for window. */
+    Window parent)		/* Parent window. */
+{
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    HWND hParent = (HWND) parent, hWnd;
+    int style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    DWORD exStyle = WS_EX_TRANSPARENT | WS_EX_TOPMOST;
+
+#define TK_WIN_CHILD_CLASS_NAME "TkChild"
+    hWnd = CreateWindowEx(exStyle, TK_WIN_CHILD_CLASS_NAME, NULL, style,
+	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
+	    hParent, NULL, Tk_GetHINSTANCE(), NULL);
+    winPtr->window = Tk_AttachHWND(tkwin, hWnd);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCreateBusy --
+ *
+ *	Construct the platform-specific parts of a busy window. Note that this
+ *	postpones the actual creation of the window resource until later.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets up part of the busy window structure.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCreateBusy(
+    Tk_FakeWin *winPtr,
+    Tk_Window tkRef,
+    Window *parentPtr,
+    Tk_Window tkParent,
+    TkBusy busy)
+{
+    Busy *busyPtr = (Busy *) busy;
+
+    if (winPtr->flags & TK_REPARENTED) {
+	/*
+	 * This works around a bug in the implementation of menubars for
+	 * non-Macintosh window systems (Win32 and X11). Tk doesn't reset the
+	 * pointers to the parent window when the menu is reparented
+	 * (winPtr->parentPtr points to the wrong window). We get around this
+	 * by determining the parent via the native API calls.
+	 */
+
+	HWND hWnd = GetParent(Tk_GetHWND(Tk_WindowId(tkRef)));
+	RECT rect;
+
+	if (GetWindowRect(hWnd, &rect)) {
+	    busyPtr->width = rect.right - rect.left;
+	    busyPtr->height = rect.bottom - rect.top;
+	}
+    } else {
+	*parentPtr = Tk_WindowId(tkParent);
+	*parentPtr = (Window) Tk_GetHWND(*parentPtr);
+    }
 }
 
 /*
