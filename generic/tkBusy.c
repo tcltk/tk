@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBusy.c,v 1.3 2008/10/20 11:18:07 dgp Exp $
+ * RCS: @(#) $Id: tkBusy.c,v 1.4 2008/10/20 12:22:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -48,9 +48,9 @@ static Busy *		CreateBusy(Tcl_Interp *interp, Tk_Window tkRef);
 static void		DestroyBusy(char *dataPtr);
 static void		DoConfigureNotify(Tk_FakeWin *winPtr);
 static inline Tk_Window	FirstChild(Tk_Window parent);
-static int		GetBusy(Tcl_HashTable *busyTablePtr,
-			    Tcl_Interp *interp, Tcl_Obj *const windowObj,
-			    Busy **busyPtrPtr);
+static Busy *		GetBusy(Tcl_Interp *interp,
+			    Tcl_HashTable *busyTablePtr,
+			    Tcl_Obj *const windowObj);
 static int		HoldBusy(Tcl_HashTable *busyTablePtr,
 			    Tcl_Interp *interp, Tcl_Obj *const windowObj,
 			    int configObjc, Tcl_Obj *const configObjv[]);
@@ -136,7 +136,7 @@ BusyCustodyProc(
 
     Tk_DeleteEventHandler(busyPtr->tkBusy, StructureNotifyMask, BusyEventProc,
 	    busyPtr);
-    TkpHideBusyWindow((TkBusy)busyPtr);
+    TkpHideBusyWindow(busyPtr);
     busyPtr->tkBusy = NULL;
     Tcl_EventuallyFree(busyPtr, DestroyBusy);
 }
@@ -296,20 +296,20 @@ RefWinEventProc(
 	    if (busyPtr->tkBusy != NULL) {
 		Tk_MoveResizeWindow(busyPtr->tkBusy, x, y, busyPtr->width,
 			busyPtr->height);
-		TkpShowBusyWindow((TkBusy)busyPtr);
+		TkpShowBusyWindow(busyPtr);
 	    }
 	}
 	break;
 
     case MapNotify:
 	if (busyPtr->tkParent != busyPtr->tkRef) {
-	    TkpShowBusyWindow((TkBusy)busyPtr);
+	    TkpShowBusyWindow(busyPtr);
 	}
 	break;
 
     case UnmapNotify:
 	if (busyPtr->tkParent != busyPtr->tkRef) {
-	    TkpHideBusyWindow((TkBusy)busyPtr);
+	    TkpHideBusyWindow(busyPtr);
 	}
 	break;
     }
@@ -578,7 +578,7 @@ CreateBusy(
     SetWindowInstanceData(tkBusy, busyPtr);
     winPtr = (Tk_FakeWin *) tkRef;
 
-    TkpCreateBusy(winPtr, tkRef, &parent, tkParent, (TkBusy)busyPtr);
+    TkpCreateBusy(winPtr, tkRef, &parent, tkParent, busyPtr);
 
     MakeTransparentWindowExist(tkBusy, parent);
 
@@ -673,29 +673,26 @@ ConfigureBusy(
  *----------------------------------------------------------------------
  */
 
-static int
+static Busy *
 GetBusy(
-    Tcl_HashTable *busyTablePtr,/* busy hash table */
-    Tcl_Interp *interp,		/* Interpreter to report errors to */
-    Tcl_Obj *const windowObj,	/* Path name of parent window */
-    Busy **busyPtrPtr)		/* Will contain address of busy window if
-				 * found. */
+    Tcl_Interp *interp,		/* Interpreter to look up main window of. */
+    Tcl_HashTable *busyTablePtr,/* Busy hash table */
+    Tcl_Obj *const windowObj)	/* Path name of parent window */
 {
     Tcl_HashEntry *hPtr;
     Tk_Window tkwin;
 
     if (TkGetWindowFromObj(interp, Tk_MainWindow(interp), windowObj,
 	    &tkwin) != TCL_OK) {
-	return TCL_ERROR;
+	return NULL;
     }
     hPtr = Tcl_FindHashEntry(busyTablePtr, (char *) tkwin);
     if (hPtr == NULL) {
 	Tcl_AppendResult(interp, "can't find busy window \"",
 		Tcl_GetString(windowObj), "\"", NULL);
-	return TCL_ERROR;
+	return NULL;
     }
-    *busyPtrPtr = Tcl_GetHashValue(hPtr);
-    return TCL_OK;
+    return Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -757,9 +754,9 @@ HoldBusy(
      */
 
     if (Tk_IsMapped(busyPtr->tkRef)) {
-	TkpShowBusyWindow((TkBusy)busyPtr);
+	TkpShowBusyWindow(busyPtr);
     } else {
-	TkpHideBusyWindow((TkBusy)busyPtr);
+	TkpHideBusyWindow(busyPtr);
     }
     return result;
 }
@@ -828,7 +825,8 @@ Tk_BusyObjCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "window option");
 	    return TCL_ERROR;
 	}
-	if (GetBusy(busyTablePtr, interp, objv[3], &busyPtr) != TCL_OK) {
+	busyPtr = GetBusy(interp, busyTablePtr, objv[3]);
+	if (busyPtr == NULL) {
 	    return TCL_ERROR;
 	}
 	Tcl_Preserve(busyPtr);
@@ -847,7 +845,8 @@ Tk_BusyObjCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "window ?option? ?value ...?");
 	    return TCL_ERROR;
 	}
-	if (GetBusy(busyTablePtr, interp, objv[3], &busyPtr) != TCL_OK) {
+	busyPtr = GetBusy(interp, busyTablePtr, objv[3]);
+	if (busyPtr == NULL) {
 	    return TCL_ERROR;
 	}
 	Tcl_Preserve(busyPtr);
@@ -864,7 +863,7 @@ Tk_BusyObjCmd(
 	    result = ConfigureBusy(interp, busyPtr, objc-4, objv+4);
 	}
 	Tcl_Release(busyPtr);
-	return TCL_OK;
+	return result;
 
     case BUSY_CURRENT: {
 	Tcl_HashEntry *hPtr;
@@ -890,10 +889,11 @@ Tk_BusyObjCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "window");
 	    return TCL_ERROR;
 	}
-	if (GetBusy(busyTablePtr, interp, objv[3], &busyPtr) != TCL_OK) {
+	busyPtr = GetBusy(interp, busyTablePtr, objv[3]);
+	if (busyPtr == NULL) {
 	    return TCL_ERROR;
 	}
-	TkpHideBusyWindow((TkBusy)busyPtr);
+	TkpHideBusyWindow(busyPtr);
 	Tcl_EventuallyFree(busyPtr, DestroyBusy);
 	return TCL_OK;
 
@@ -910,7 +910,7 @@ Tk_BusyObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		GetBusy(busyTablePtr, interp, objv[3], &busyPtr) == TCL_OK));
+		GetBusy(interp, busyTablePtr, objv[3]) != NULL));
 	return TCL_OK;
     }
 
