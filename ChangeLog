@@ -1,3 +1,9 @@
+2008-10-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkBusy.c, macosx/tkMacOSXEmbed.c, unix/tkUnixEmbed.c:
+	* win/tkWinWindow.c: Factor out the platform-specific parts into the
+	platform directories. [Bug 2180919]
+
 2008-10-18  Donal K. Fellows  <dkf@users.sf.net>
 
 	TIP #321 IMPLEMENTATION
