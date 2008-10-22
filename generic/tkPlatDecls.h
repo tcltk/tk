@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.18 2008/04/08 03:28:05 kennykb Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.19 2008/10/22 20:56:43 nijtmans Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -60,8 +60,8 @@ EXTERN void		Tk_PointerEvent (HWND hwnd, int x, int y);
 #ifndef Tk_TranslateWinEvent_TCL_DECLARED
 #define Tk_TranslateWinEvent_TCL_DECLARED
 /* 5 */
-EXTERN int		Tk_TranslateWinEvent (HWND hwnd, UINT message, 
-				WPARAM wParam, LPARAM lParam, 
+EXTERN int		Tk_TranslateWinEvent (HWND hwnd, UINT message,
+				WPARAM wParam, LPARAM lParam,
 				LRESULT * result);
 #endif
 #endif /* WIN */
@@ -70,10 +70,10 @@ EXTERN int		Tk_TranslateWinEvent (HWND hwnd, UINT message,
 #define Tk_MacOSXSetEmbedHandler_TCL_DECLARED
 /* 0 */
 EXTERN void		Tk_MacOSXSetEmbedHandler (
-				Tk_MacOSXEmbedRegisterWinProc * registerWinProcPtr, 
-				Tk_MacOSXEmbedGetGrafPortProc * getPortProcPtr, 
-				Tk_MacOSXEmbedMakeContainerExistProc * containerExistProcPtr, 
-				Tk_MacOSXEmbedGetClipProc * getClipProc, 
+				Tk_MacOSXEmbedRegisterWinProc * registerWinProcPtr,
+				Tk_MacOSXEmbedGetGrafPortProc * getPortProcPtr,
+				Tk_MacOSXEmbedMakeContainerExistProc * containerExistProcPtr,
+				Tk_MacOSXEmbedGetClipProc * getClipProc,
 				Tk_MacOSXEmbedGetOffsetInParentProc * getOffsetProc);
 #endif
 #ifndef Tk_MacOSXTurnOffMenus_TCL_DECLARED
@@ -99,7 +99,7 @@ EXTERN void		TkMacOSXInitAppleEvents (Tcl_Interp * interp);
 #ifndef TkGenWMConfigureEvent_TCL_DECLARED
 #define TkGenWMConfigureEvent_TCL_DECLARED
 /* 5 */
-EXTERN void		TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y, 
+EXTERN void		TkGenWMConfigureEvent (Tk_Window tkwin, int x, int y,
 				int width, int height, int flags);
 #endif
 #ifndef TkMacOSXInvalClipRgns_TCL_DECLARED
@@ -131,7 +131,7 @@ EXTERN int		Tk_MacOSXIsAppInFront (void);
 
 typedef struct TkPlatStubs {
     int magic;
-    CONST struct TkPlatStubHooks *hooks;
+    const struct TkPlatStubHooks *hooks;
 
 #ifdef __WIN32__ /* WIN */
     Window (*tk_AttachHWND) (Tk_Window tkwin, HWND hwnd); /* 0 */
@@ -157,7 +157,7 @@ typedef struct TkPlatStubs {
 } TkPlatStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
-extern CONST TkPlatStubs *tkPlatStubsPtr;
+extern const TkPlatStubs *tkPlatStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)

@@ -1,3 +1,17 @@
+2008-10-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.h:               CONST -> const and white-spacing
+	* generic/tk.decls
+	* generic/tkInt.decls
+	* generic/tkDecls.h:          (regenerated)
+	* generic/tkIntDecls.h:       (regenerated)
+	* generic/tkIntPlatDecls.h:   (regenerated)
+	* generic/tkIntXlibDecls.h:   (regenerated)
+	* generic/tkPlatDecls.h:      (regenerated)
+	* generic/ttk/tk.decls
+	* generic/ttk/ttkDecls.h      (regenerated)
+	* generic/ttk/ttkGenStubs.tcl
+
 2008-10-20  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkBusy.c, macosx/tkMacOSXEmbed.c, unix/tkUnixEmbed.c:
