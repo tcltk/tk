@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.30 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.31 2008/10/22 16:30:16 das Exp $
  */
 
 #include "tkUnixInt.h"
@@ -291,7 +291,7 @@ TransferXEventsToTcl(
 	if (event.type == GenericEvent) {
 	    xGenericEvent *xgePtr = (xGenericEvent *) &event;
 
-	    Tcl_Panic("Wild GenericEvent; panic! (extension=%d,evtype=%d)"
+	    Tcl_Panic("Wild GenericEvent; panic! (extension=%d,evtype=%d)",
 		    xgePtr->extension, xgePtr->evtype);
 	}
 #endif
