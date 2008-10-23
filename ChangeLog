@@ -1,3 +1,15 @@
+2008-10-23  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.6a4
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2008-10-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.h:               CONST -> const and white-spacing
