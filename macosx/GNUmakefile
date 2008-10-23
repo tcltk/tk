@@ -9,7 +9,7 @@
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: GNUmakefile,v 1.9.2.2 2008/08/19 00:08:36 das Exp $
+# RCS: @(#) $Id: GNUmakefile,v 1.9.2.3 2008/10/23 12:20:18 das Exp $
 #
 ########################################################################################################
 
@@ -131,7 +131,7 @@ else
 override CONFIGURE_ARGS := ${CONFIGURE_ARGS} --enable-xft
 VERSION			:= ${VERSION}-X11
 wish			:= ${wish}-X11
-override EMBEDDED_BUILD := 0
+override EMBEDDED_BUILD :=
 endif
 
 INSTALL_TARGETS		= install-binaries install-libraries
