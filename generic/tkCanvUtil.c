@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.20 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.21 2008/10/24 06:00:22 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -819,10 +819,10 @@ TkSmoothPrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Tk_SmoothMethod **smoothPtr =
-	    (Tk_SmoothMethod **) (widgRec + offset);
+    register const Tk_SmoothMethod *smoothPtr =
+	    * (Tk_SmoothMethod **) (widgRec + offset);
 
-    return (*smoothPtr) ? (*smoothPtr)->name : "0";
+    return smoothPtr ? (char *) smoothPtr->name : "0";
 }
 /*
  *--------------------------------------------------------------
@@ -1803,6 +1803,7 @@ TkCanvTranslatePath(
 		/*
 		 * The current vertex is to the left of xClip
 		 */
+
 		if (!inside) {
 		    /*
 		     * If the current vertex is on the left of xClip and one
