@@ -28,12 +28,7 @@ test ttk-6.2 "Checkbutton self-destructed" -body {
     winfo exists .sd
 } -result 0
 
-test ttk-6.3 "Test package cleanup" -body {
-    interp create foo
-    foo eval { if {[catch {package require Tk}]} { load {} Tk } }
-    foo eval { destroy . }
-    interp delete foo
-}
+# test ttk-6.3 not applicable [see #2175411]
 
 test ttk-6.4 "Defeat evil intentions" -body {
     trace variable OUCH r { kill.b }

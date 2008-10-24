@@ -9,20 +9,16 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.15 2008/07/23 23:24:45 nijtmans Exp $
+ * $Id: ttkTheme.c,v 1.16 2008/10/24 20:01:10 jenglish Exp $
  */
 
 #include <stdlib.h>
 #include <string.h>
 #include <tk.h>
+#include <tkInt.h>
 #include "ttkThemeInt.h"
 
-#ifdef NO_PRIVATE_HEADERS
-EXTERN const Tk_OptionSpec *TkGetOptionSpec(const char *name,
-                            Tk_OptionTable optionTable);
-#else
-#include <tkInt.h>
-#endif
+#define PKG_ASSOC_KEY "Ttk"
 
 /*------------------------------------------------------------------------
  * +++ Styles.
@@ -475,7 +471,7 @@ static void Ttk_StylePkgFree(ClientData clientData, Tcl_Interp *interp)
 
 static StylePackageData *GetStylePackageData(Tcl_Interp *interp)
 {
-    return (StylePackageData*)Tcl_GetAssocData(interp, "StylePackage", NULL);
+    return Tcl_GetAssocData(interp, PKG_ASSOC_KEY, NULL);
 }
 
 /*
@@ -1708,8 +1704,7 @@ void Ttk_StylePkgInit(Tcl_Interp *interp)
     pkgPtr->cache = Ttk_CreateResourceCache(interp);
     pkgPtr->themeChangePending = 0;
 
-    Tcl_SetAssocData(interp, "StylePackage", Ttk_StylePkgFree,
-	(ClientData)pkgPtr);
+    Tcl_SetAssocData(interp, PKG_ASSOC_KEY, Ttk_StylePkgFree, pkgPtr);
 
     /*
      * Create the default system theme:
