@@ -1,3 +1,8 @@
+2008-10-24  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvUtil.c (TkSmoothPrintProc): Corrected 'const'ness to
+	quell warning. [Bug 2190619]
+
 2008-10-23  Don Porter  <dgp@users.sourceforge.net>
 
 	* README:		Bump version number to 8.6a4
