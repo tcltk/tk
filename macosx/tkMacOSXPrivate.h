@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.8 2008/09/02 16:10:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.9 2008/10/27 11:55:45 dkf Exp $
  */
 
 #ifndef _TKMACPRIV
@@ -17,7 +17,7 @@
 #ifndef _TKMACINT
 #include "tkMacOSXInt.h"
 #endif
-
+
 /* Define constants only available on Mac OS X 10.3 or later */
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
     #define kEventAppAvailableWindowBoundsChanged 110
@@ -172,7 +172,7 @@ MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
 #define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
 #define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
-
+
 /*
  * Macros for DEBUG_ASSERT_MESSAGE et al from Debugging.h.
  */
@@ -190,23 +190,28 @@ MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
 /*
  * Macro to do debug message output.
  */
-#define TkMacOSXDbgMsg(m, ...) do { \
-	    fprintf(stderr, "%s:%d: %s(): " m "\n", strrchr(__FILE__, '/')+1, \
-	    __LINE__, __func__, ##__VA_ARGS__); \
-	} while (0)
+#define TkMacOSXDbgMsg(m, ...) \
+    do { \
+	fprintf(stderr, "%s:%d: %s(): " m "\n", strrchr(__FILE__, '/')+1, \
+		__LINE__, __func__, ##__VA_ARGS__); \
+    } while (0)
+
 /*
  * Macro to do debug API failure message output.
  */
 #if !defined(DEBUGLEVEL) || !DEBUGLEVEL
-#define TkMacOSXDbgOSErr(f, err) do { \
-	    TkMacOSXDbgMsg("%s failed: %ld", #f, err); \
-	} while (0)
+#define TkMacOSXDbgOSErr(f, err) \
+    do { \
+	TkMacOSXDbgMsg("%s failed: %ld", #f, err); \
+    } while (0)
 #else
-#define TkMacOSXDbgOSErr(f, err) do { \
-	    DEBUG_ASSERT_MESSAGE(kComponentSignatureString, #f " failed:", \
-	    __func__, 0, strrchr(__FILE__, '/')+1, __LINE__, err); \
-	} while (0)
+#define TkMacOSXDbgOSErr(f, err) \
+    do { \
+	DEBUG_ASSERT_MESSAGE(kComponentSignatureString, #f " failed:", \
+		__func__, 0, strrchr(__FILE__, '/')+1, __LINE__, err); \
+    } while (0)
 #endif
+
 /*
  * Macro to do very common check for noErr return from given API and output
  * debug message in case of failure.
@@ -217,14 +222,16 @@ MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
 	    TkMacOSXDbgOSErr(f, err); \
 	} \
 	err;})
+
 /*
  * Macro to check emptyness of shared QD tmp region before use in debug builds.
  */
-#define TkMacOSXCheckTmpQdRgnEmpty() do { \
-	    if (!EmptyRgn(tkMacOSXtmpQdRgn)) { \
-		Tcl_Panic("tkMacOSXtmpQdRgn nonempty"); \
-	    } \
-	} while(0)
+#define TkMacOSXCheckTmpQdRgnEmpty() \
+    do { \
+	if (!EmptyRgn(tkMacOSXtmpQdRgn)) { \
+	    Tcl_Panic("tkMacOSXtmpQdRgn nonempty"); \
+	} \
+    } while(0)
 #else /* TK_MAC_DEBUG */
 #define TkMacOSXDbgMsg(m, ...)
 #define TkMacOSXDbgOSErr(f, err)
@@ -242,9 +249,7 @@ MODULE_SCOPE float tkMacOSXToolboxVersionNumber;
 	symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), \
 		STRINGIFY(_##symbol)); \
     }
-MODULE_SCOPE void* TkMacOSXGetNamedSymbol(const char* module,
-	const char* symbol);
-
+
 /*
  * Structure encapsulating current drawing environment.
  */
@@ -272,69 +277,78 @@ MODULE_SCOPE int tkMacOSXUseCGDrawing;
  */
 
 #if 0
-MODULE_SCOPE void TkMacOSXEmtpyRegion(TkRegion r);
-MODULE_SCOPE int TkMacOSXIsEmptyRegion(TkRegion r);
+MODULE_SCOPE void	TkMacOSXEmtpyRegion(TkRegion r);
+MODULE_SCOPE int	TkMacOSXIsEmptyRegion(TkRegion r);
 #endif
-MODULE_SCOPE HIShapeRef TkMacOSXGetNativeRegion(TkRegion r);
-MODULE_SCOPE void TkMacOSXSetWithNativeRegion(TkRegion r, HIShapeRef rgn);
-MODULE_SCOPE void TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
-MODULE_SCOPE HIShapeRef TkMacOSXHIShapeCreateEmpty(void);
+MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
+MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
+			    HIShapeRef rgn);
+MODULE_SCOPE void	TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
+MODULE_SCOPE HIShapeRef	TkMacOSXHIShapeCreateEmpty(void);
 MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
-	const CGRect *inRect);
-MODULE_SCOPE OSStatus  TkMacOSXHIShapeSetWithShape(
-	HIMutableShapeRef inDestShape, HIShapeRef inSrcShape);
+			    const CGRect *inRect);
+MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
+			    HIMutableShapeRef inDestShape,
+			    HIShapeRef inSrcShape);
 #if 0
-MODULE_SCOPE OSStatus TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
-	const CGRect *inRect);
+MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
+			    const CGRect *inRect);
 #endif
-MODULE_SCOPE OSStatus TkMacOSHIShapeDifferenceWithRect(
-	HIMutableShapeRef inShape, const CGRect *inRect);
-MODULE_SCOPE OSStatus TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
-	const CGRect *inRect);
-MODULE_SCOPE OSStatus TkMacOSHIShapeUnion(HIShapeRef inShape1,
-	HIShapeRef inShape2, HIMutableShapeRef outResult);
+MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
+			    HIMutableShapeRef inShape, const CGRect *inRect);
+MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
+			    const CGRect *inRect);
+MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
+			    HIShapeRef inShape2, HIMutableShapeRef outResult);
 
 /*
  * Prototypes of TkAqua internal procs.
  */
 
-MODULE_SCOPE void TkMacOSXDisplayChanged(Display *display);
-MODULE_SCOPE void TkMacOSXInitScrollbarMetrics(void);
-MODULE_SCOPE int TkMacOSXUseAntialiasedText(Tcl_Interp *interp, int enable);
-MODULE_SCOPE void TkMacOSXInitCarbonEvents(Tcl_Interp *interp);
-MODULE_SCOPE int TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
-	int antiAlias);
-MODULE_SCOPE void TkMacOSXInitKeyboard(Tcl_Interp *interp);
-MODULE_SCOPE int TkMacOSXGenerateFocusEvent(Window window, int activeFlag);
-MODULE_SCOPE int TkMacOSXGenerateParentMenuSelectEvent(MenuRef menu);
-MODULE_SCOPE int TkMacOSXGenerateMenuSelectEvent(MenuRef menu,
-	MenuItemIndex index);
-MODULE_SCOPE void TkMacOSXClearActiveMenu(MenuRef menu);
+MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
+			    const char *symbol);
+MODULE_SCOPE void	TkMacOSXDisplayChanged(Display *display);
+MODULE_SCOPE void	TkMacOSXInitScrollbarMetrics(void);
+MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
+			    int enable);
+MODULE_SCOPE void	TkMacOSXInitCarbonEvents(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
+			    int antiAlias);
+MODULE_SCOPE void	TkMacOSXInitKeyboard(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXGenerateFocusEvent(Window window,
+			    int activeFlag);
+MODULE_SCOPE int	TkMacOSXGenerateParentMenuSelectEvent(MenuRef menu);
+MODULE_SCOPE int	TkMacOSXGenerateMenuSelectEvent(MenuRef menu,
+			    MenuItemIndex index);
+MODULE_SCOPE void	TkMacOSXClearActiveMenu(MenuRef menu);
 MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
-MODULE_SCOPE int TkMacOSXIsWindowZoomed(TkWindow *winPtr);
-MODULE_SCOPE int TkGenerateButtonEventForXPointer(Window window);
+MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
+MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
-MODULE_SCOPE int TkMacOSXSetupDrawingContext(Drawable d, GC gc, int useCG,
-    TkMacOSXDrawingContext *dcPtr);
-MODULE_SCOPE void TkMacOSXRestoreDrawingContext(TkMacOSXDrawingContext *dcPtr);
-MODULE_SCOPE void TkMacOSXSetColorInPort(unsigned long pixel, int fg,
-	PixPatHandle penPat, CGrafPtr port);
-MODULE_SCOPE void TkMacOSXSetColorInContext(unsigned long pixel,
-	CGContextRef context);
-MODULE_SCOPE int TkMacOSXRunTclEventLoop(void);
-MODULE_SCOPE OSStatus TkMacOSXStartTclEventLoopCarbonTimer(void);
-MODULE_SCOPE OSStatus TkMacOSXStopTclEventLoopCarbonTimer(void);
-MODULE_SCOPE void TkMacOSXTrackingLoop(int tracking);
-MODULE_SCOPE OSStatus TkMacOSXReceiveAndDispatchEvent(void);
-MODULE_SCOPE void TkMacOSXInstallWindowCarbonEventHandler(Tcl_Interp *interp,
-	WindowRef window);
-MODULE_SCOPE int TkMacOSXMakeFullscreen(TkWindow *winPtr, WindowRef window,
-	int fullscreen, Tcl_Interp *interp);
-MODULE_SCOPE void TkMacOSXEnterExitFullscreen(TkWindow *winPtr, int active);
-MODULE_SCOPE void TkMacOSXBringWindowForward(WindowRef wRef);
-MODULE_SCOPE WindowRef TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE void TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
-MODULE_SCOPE HIShapeRef TkMacOSXGetClipRgn(Drawable drawable);
-MODULE_SCOPE Tcl_Obj* TkMacOSXGetStringObjFromCFString(CFStringRef str);
+MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
+			    int useCG, TkMacOSXDrawingContext *dcPtr);
+MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
+			    TkMacOSXDrawingContext *dcPtr);
+MODULE_SCOPE void	TkMacOSXSetColorInPort(unsigned long pixel, int fg,
+			    PixPatHandle penPat, CGrafPtr port);
+MODULE_SCOPE void	TkMacOSXSetColorInContext(unsigned long pixel,
+			    CGContextRef context);
+MODULE_SCOPE int	TkMacOSXRunTclEventLoop(void);
+MODULE_SCOPE OSStatus	TkMacOSXStartTclEventLoopCarbonTimer(void);
+MODULE_SCOPE OSStatus	TkMacOSXStopTclEventLoopCarbonTimer(void);
+MODULE_SCOPE void	TkMacOSXTrackingLoop(int tracking);
+MODULE_SCOPE OSStatus	TkMacOSXReceiveAndDispatchEvent(void);
+MODULE_SCOPE void	TkMacOSXInstallWindowCarbonEventHandler(
+			    Tcl_Interp *interp, WindowRef window);
+MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
+			    WindowRef window, int fullscreen,
+			    Tcl_Interp *interp);
+MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
+			    int active);
+MODULE_SCOPE void	TkMacOSXBringWindowForward(WindowRef wRef);
+MODULE_SCOPE WindowRef	TkMacOSXDrawableWindow(Drawable drawable);
+MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
+MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
+MODULE_SCOPE Tcl_Obj *	TkMacOSXGetStringObjFromCFString(CFStringRef str);
 
 #endif /* _TKMACPRIV */
