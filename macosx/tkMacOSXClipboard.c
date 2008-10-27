@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.13 2008/10/05 21:26:11 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.14 2008/10/27 11:55:44 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -130,8 +130,7 @@ TkSelGetSelection(
 
 	    Tcl_ExternalToUtfDString(TkMacOSXCarbonEncoding, buf, length,
 		    &encodedText);
-	    result = (*proc)(clientData, interp,
-		    Tcl_DStringValue(&encodedText));
+	    result = proc(clientData, interp, Tcl_DStringValue(&encodedText));
 	    Tcl_DStringFree(&encodedText);
 
 	    ckfree(buf);
