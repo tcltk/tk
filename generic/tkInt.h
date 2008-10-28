@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.88 2008/10/20 12:22:50 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.89 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -1184,7 +1184,7 @@ MODULE_SCOPE void	TkpBuildRegionFromAlphaData(TkRegion region,
 			    unsigned height, unsigned char *dataPtr,
 			    unsigned pixelStride, unsigned lineStride);
 MODULE_SCOPE void	TkPrintPadAmount(Tcl_Interp *interp,
-			    char *buffer, int pad1, int pad2);
+			    const char *buffer, int pad1, int pad2);
 MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    int *pad1Ptr, int *pad2Ptr);

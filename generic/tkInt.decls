@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.46 2008/10/22 20:56:43 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.47 2008/10/28 22:33:06 nijtmans Exp $
 
 library tk
 
@@ -72,11 +72,11 @@ declare 12 generic {
 }
 declare 13 generic {
     int TkCreateFrame(ClientData clientData, Tcl_Interp *interp,
-	    int argc, char **argv, int toplevel, char *appName)
+	    int argc, CONST86 char *const *argv, int toplevel, const char *appName)
 }
 declare 14 generic {
     Tk_Window TkCreateMainWindow(Tcl_Interp *interp,
-	    const char *screenName, char *baseName)
+	    const char *screenName, const char *baseName)
 }
 declare 15 generic {
     Time TkCurrentTime(TkDisplay *dispPtr)
@@ -513,6 +513,11 @@ declare 156 generic {
 declare 157 generic {
     int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int argc,
 	    const char **argv)
+}
+declare 158 generic {
+    int	TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
+	    Atom selection, Atom target, Tk_GetSelProc *proc,
+	    ClientData clientData)
 }
 
 ##############################################################################
