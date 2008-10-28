@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAtom.c,v 1.8 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkAtom.c,v 1.9 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -22,7 +22,7 @@
  * those found in xatom.h
  */
 
-static char * atomNameArray[] = {
+static const char * atomNameArray[] = {
     "PRIMARY",		"SECONDARY",		"ARC",
     "ATOM",		"BITMAP",		"CARDINAL",
     "COLORMAP",		"CURSOR",		"CUT_BUFFER0",
@@ -139,7 +139,7 @@ Tk_GetAtomName(
 
     hPtr = Tcl_FindHashEntry(&dispPtr->atomTable, (char *) atom);
     if (hPtr == NULL) {
-	char *name;
+	const char *name;
 	Tk_ErrorHandler handler;
 	int isNew, mustFree;
 
@@ -192,7 +192,7 @@ AtomInit(
     Tcl_InitHashTable(&dispPtr->atomTable, TCL_ONE_WORD_KEYS);
 
     for (atom = 1; atom <= XA_LAST_PREDEFINED; atom++) {
-	char *name;
+	const char *name;
 	int isNew;
 
 	hPtr = Tcl_FindHashEntry(&dispPtr->atomTable, (char *) atom);

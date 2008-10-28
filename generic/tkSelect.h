@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.h,v 1.10 2008/09/03 06:01:52 dgp Exp $
+ * RCS: @(#) $Id: tkSelect.h,v 1.11 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #ifndef _TKSELECT
@@ -161,9 +161,6 @@ MODULE_SCOPE void	TkSelClearSelection(Tk_Window tkwin, XEvent *eventPtr);
 MODULE_SCOPE int	TkSelDefaultSelection(TkSelectionInfo *infoPtr,
 			    Atom target, char *buffer, int maxBytes,
 			    Atom *typePtr);
-MODULE_SCOPE int	TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
-			    Atom selection, Atom target, Tk_GetSelProc *proc,
-			    ClientData clientData);
 #ifndef TkSelUpdateClipboard
 MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr,
 			    TkClipboardTarget *targetPtr);

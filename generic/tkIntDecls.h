@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.36 2008/10/22 20:56:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.37 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -120,14 +120,16 @@ EXTERN TkCursor *	TkCreateCursorFromData (Tk_Window tkwin,
 #define TkCreateFrame_TCL_DECLARED
 /* 13 */
 EXTERN int		TkCreateFrame (ClientData clientData,
-				Tcl_Interp * interp, int argc, char ** argv,
-				int toplevel, char * appName);
+				Tcl_Interp * interp, int argc,
+				CONST86 char *const * argv, int toplevel,
+				const char * appName);
 #endif
 #ifndef TkCreateMainWindow_TCL_DECLARED
 #define TkCreateMainWindow_TCL_DECLARED
 /* 14 */
 EXTERN Tk_Window	TkCreateMainWindow (Tcl_Interp * interp,
-				const char * screenName, char * baseName);
+				const char * screenName,
+				const char * baseName);
 #endif
 #ifndef TkCurrentTime_TCL_DECLARED
 #define TkCurrentTime_TCL_DECLARED
@@ -953,6 +955,13 @@ EXTERN int		TkpTesttextCmd (ClientData dummy,
 				Tcl_Interp * interp, int argc,
 				const char ** argv);
 #endif
+#ifndef TkSelGetSelection_TCL_DECLARED
+#define TkSelGetSelection_TCL_DECLARED
+/* 158 */
+EXTERN int		TkSelGetSelection (Tcl_Interp * interp,
+				Tk_Window tkwin, Atom selection, Atom target,
+				Tk_GetSelProc * proc, ClientData clientData);
+#endif
 
 typedef struct TkIntStubs {
     int magic;
@@ -971,8 +980,8 @@ typedef struct TkIntStubs {
     int (*tkCopyAndGlobalEval) (Tcl_Interp * interp, char * script); /* 10 */
     unsigned long (*tkCreateBindingProcedure) (Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object, const char * eventString, TkBindEvalProc * evalProc, TkBindFreeProc * freeProc, ClientData clientData); /* 11 */
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char * source, const char * mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
-    int (*tkCreateFrame) (ClientData clientData, Tcl_Interp * interp, int argc, char ** argv, int toplevel, char * appName); /* 13 */
-    Tk_Window (*tkCreateMainWindow) (Tcl_Interp * interp, const char * screenName, char * baseName); /* 14 */
+    int (*tkCreateFrame) (ClientData clientData, Tcl_Interp * interp, int argc, CONST86 char *const * argv, int toplevel, const char * appName); /* 13 */
+    Tk_Window (*tkCreateMainWindow) (Tcl_Interp * interp, const char * screenName, const char * baseName); /* 14 */
     Time (*tkCurrentTime) (TkDisplay * dispPtr); /* 15 */
     void (*tkDeleteAllImages) (TkMainInfo * mainPtr); /* 16 */
     void (*tkDoConfigureNotify) (TkWindow * winPtr); /* 17 */
@@ -1215,6 +1224,7 @@ typedef struct TkIntStubs {
     void *reserved155;
     int (*tkpTestembedCmd) (ClientData clientData, Tcl_Interp * interp, int argc, const char ** argv); /* 156 */
     int (*tkpTesttextCmd) (ClientData dummy, Tcl_Interp * interp, int argc, const char ** argv); /* 157 */
+    int (*tkSelGetSelection) (Tcl_Interp * interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc * proc, ClientData clientData); /* 158 */
 } TkIntStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
@@ -1883,6 +1893,10 @@ extern const TkIntStubs *tkIntStubsPtr;
 #ifndef TkpTesttextCmd
 #define TkpTesttextCmd \
 	(tkIntStubsPtr->tkpTesttextCmd) /* 157 */
+#endif
+#ifndef TkSelGetSelection
+#define TkSelGetSelection \
+	(tkIntStubsPtr->tkSelGetSelection) /* 158 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

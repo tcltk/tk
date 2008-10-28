@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.29 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.30 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -151,7 +151,7 @@ void
 TkPrintPadAmount(
     Tcl_Interp *interp,		/* The interpreter into which the result is
 				 * written. */
-    char *switchName,		/* One of "padx", "pady", "ipadx" or "ipady" */
+    const char *switchName,		/* One of "padx", "pady", "ipadx" or "ipady" */
     int halfSpace,		/* The left or top padding amount */
     int allSpace)		/* The total amount of padding */
 {
