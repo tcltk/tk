@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.120 2008/10/23 16:15:27 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.121 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -86,7 +86,7 @@ extern "C" {
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
 #endif
-
+
 /*
  * Decide whether or not to use input methods.
  */
@@ -338,7 +338,7 @@ typedef struct Tk_ConfigSpec {
     int type;			/* Type of option, such as TK_CONFIG_COLOR;
 				 * see definitions below. Last option in table
 				 * must have type TK_CONFIG_END. */
-    char *argvName;		/* Switch used to specify option in argv. NULL
+    const char *argvName;	/* Switch used to specify option in argv. NULL
 				 * means this spec is part of a group. */
     Tk_Uid dbName;		/* Name for option in option database. */
     Tk_Uid dbClass;		/* Class for option in database. */
@@ -398,14 +398,14 @@ typedef enum {
  */
 
 typedef struct {
-    char *key;			/* The key string that flags the option in the
+    const char *key;		/* The key string that flags the option in the
 				 * argv array. */
     int type;			/* Indicates option type; see below. */
     char *src;			/* Value to be used in setting dst; usage
 				 * depends on type. */
     char *dst;			/* Address of value to be modified; usage
 				 * depends on type. */
-    char *help;			/* Documentation message describing this
+    const char *help;		/* Documentation message describing this
 				 * option. */
 } Tk_ArgvInfo;
 
@@ -676,7 +676,7 @@ typedef struct {
 } XActivateDeactivateEvent;
 typedef XActivateDeactivateEvent XActivateEvent;
 typedef XActivateDeactivateEvent XDeactivateEvent;
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -873,7 +873,7 @@ typedef struct Tk_FakeWin {
 #define TK_WIN_MANAGED		0x10000
 #define TK_TOP_HIERARCHY	0x20000
 #define TK_PROP_PROPCHANGE	0x40000
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1107,7 +1107,7 @@ typedef struct Tk_CanvasTextInfo {
 				 * should be displayed in focusItemPtr.
 				 * Read-only to items.*/
 } Tk_CanvasTextInfo;
-
+
 /*
  * Structures used for Dashing and Outline.
  */
@@ -1161,7 +1161,7 @@ typedef struct Tk_Outline {
     Pixmap disabledStipple;	/* Outline Stipple pattern if state is
 				 * disabled. */
 } Tk_Outline;
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1227,7 +1227,7 @@ struct Tk_ImageType {
 				 * manager. */
     char *reserved;		/* reserved for future expansion */
 };
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1313,7 +1313,7 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
  */
 
 struct Tk_PhotoImageFormat {
-    char *name;			/* Name of image file format */
+    const char *name;		/* Name of image file format */
     Tk_ImageFileMatchProc *fileMatchProc;
 				/* Procedure to call to determine whether an
 				 * image file matches this format. */
@@ -1343,7 +1343,7 @@ struct Tk_PhotoImageFormat {
 #define Tk_CreateImageType Tk_CreateOldImageType
 #define Tk_CreatePhotoImageFormat Tk_CreateOldPhotoImageFormat
 #endif
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1411,7 +1411,7 @@ typedef struct Tk_ElementSpec {
 #define TK_ELEMENT_STATE_DISABLED       1<<1
 #define TK_ELEMENT_STATE_FOCUS          1<<2
 #define TK_ELEMENT_STATE_PRESSED        1<<3
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1474,7 +1474,7 @@ EXTERN const char *	Tk_PkgInitStubsCheck (Tcl_Interp *interp,
 
 #define Tk_InitImageArgs(interp, argc, argv) /**/
 
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1488,13 +1488,13 @@ typedef void (Tk_EventProc) (ClientData clientData, XEvent *eventPtr);
 typedef int (Tk_GenericProc) (ClientData clientData, XEvent *eventPtr);
 typedef int (Tk_ClientMessageProc) (Tk_Window tkwin, XEvent *eventPtr);
 typedef int (Tk_GetSelProc) (ClientData clientData, Tcl_Interp *interp,
-	char *portion);
+	CONST86 char *portion);
 typedef void (Tk_LostSelProc) (ClientData clientData);
 typedef Tk_RestrictAction (Tk_RestrictProc) (ClientData clientData,
 	XEvent *eventPtr);
 typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 	char *buffer, int maxBytes);
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1564,7 +1564,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 #endif
 
 #endif /* _TK */
-
+
 /*
  * Local Variables:
  * mode: c

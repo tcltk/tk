@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.34 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.35 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #include "default.h"
@@ -164,7 +164,7 @@ enum labelanchor {
     LABELANCHOR_W, LABELANCHOR_WN, LABELANCHOR_WS
 };
 
-static char *labelAnchorStrings[] = {
+static const char *labelAnchorStrings[] = {
     "e", "en", "es", "n", "ne", "nw", "s", "se", "sw", "w", "wn", "ws",
     NULL
 };
@@ -283,7 +283,7 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
  * Class names for widgets, indexed by FrameType.
  */
 
-static char *classNames[] = {"Frame", "Toplevel", "Labelframe"};
+static const char *const classNames[] = {"Frame", "Toplevel", "Labelframe"};
 
 /*
  * The following table maps from FrameType to the option template for that
@@ -305,7 +305,7 @@ static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 			    int objc, Tcl_Obj *const objv[]);
 static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const argv[],
-			    enum FrameType type, char *appName);
+			    enum FrameType type, const char *appName);
 static void		DestroyFrame(char *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(ClientData clientData);
@@ -418,10 +418,10 @@ TkCreateFrame(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    char **argv,		/* Argument strings. */
+    const char *const *argv,		/* Argument strings. */
     int toplevel,		/* Non-zero means create a toplevel window,
 				 * zero means create a frame. */
-    char *appName)		/* Should only be non-NULL if there is no main
+    const char *appName)		/* Should only be non-NULL if there is no main
 				 * window associated with the interpreter.
 				 * Gives the base name to use for the new
 				 * application. */
@@ -450,7 +450,7 @@ CreateFrame(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     enum FrameType type,	/* What widget type to create. */
-    char *appName)		/* Should only be non-NULL if there are no
+    const char *appName)		/* Should only be non-NULL if there are no
 				 * Main window associated with the
 				 * interpreter. Gives the base name to use for
 				 * the new application. */

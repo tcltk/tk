@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.15 2008/10/03 13:13:31 dkf Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.16 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -30,7 +30,7 @@ static Tk_ArgvInfo defaultTable[] = {
  * Forward declarations for functions defined in this file:
  */
 
-static void	PrintUsage(Tcl_Interp *interp, Tk_ArgvInfo *argTable,
+static void	PrintUsage(Tcl_Interp *interp, const Tk_ArgvInfo *argTable,
 		    int flags);
 
 /*
@@ -65,14 +65,14 @@ Tk_ParseArgv(
 				 * hold # args left in argv at end. */
     const char **argv,		/* Array of arguments. Modified to hold those
 				 * that couldn't be processed here. */
-    Tk_ArgvInfo *argTable,	/* Array of option descriptions */
+    const Tk_ArgvInfo *argTable,	/* Array of option descriptions */
     int flags)			/* Or'ed combination of various flag bits,
 				 * such as TK_ARGV_NO_DEFAULTS. */
 {
-    register Tk_ArgvInfo *infoPtr;
+    register const Tk_ArgvInfo *infoPtr;
 				/* Pointer to the current entry in the table
 				 * of argument descriptions. */
-    Tk_ArgvInfo *matchPtr;	/* Descriptor that matches current argument. */
+    const Tk_ArgvInfo *matchPtr;	/* Descriptor that matches current argument. */
     const char *curArg;		/* Current argument */
     register char c;		/* Second character of current arg (used for
 				 * quick check for matching; use 2nd char.
@@ -228,7 +228,7 @@ Tk_ParseArgv(
 	    }
 	    break;
 	case TK_ARGV_FUNC: {
-	    typedef int (ArgvFunc)(char *, char *, const char *);
+	    typedef int (ArgvFunc)(char *, const char *, const char *);
 	    ArgvFunc *handlerProc = (ArgvFunc *) infoPtr->src;
 
 	    if ((*handlerProc)(infoPtr->dst, infoPtr->key, argv[srcIndex])) {
@@ -238,7 +238,7 @@ Tk_ParseArgv(
 	    break;
 	}
 	case TK_ARGV_GENFUNC: {
-	    typedef int (ArgvGenFunc)(char *, Tcl_Interp *, char *, int,
+	    typedef int (ArgvGenFunc)(char *, Tcl_Interp *, const char *, int,
 		    const char **);
 	    ArgvGenFunc *handlerProc = (ArgvGenFunc *) infoPtr->src;
 
@@ -330,13 +330,13 @@ static void
 PrintUsage(
     Tcl_Interp *interp,		/* Place information in this interp's result
 				 * area. */
-    Tk_ArgvInfo *argTable,	/* Array of command-specific argument
+    const Tk_ArgvInfo *argTable,	/* Array of command-specific argument
 				 * descriptions. */
     int flags)			/* If the TK_ARGV_NO_DEFAULTS bit is set in
 				 * this word, then don't generate information
 				 * for default options. */
 {
-    register Tk_ArgvInfo *infoPtr;
+    register const Tk_ArgvInfo *infoPtr;
     size_t width, i, numSpaces;
     char tmp[TCL_DOUBLE_SPACE];
 

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.35 2008/10/22 20:56:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.36 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -907,7 +907,7 @@ EXTERN void		Tk_OwnSelection (Tk_Window tkwin, Atom selection,
 /* 143 */
 EXTERN int		Tk_ParseArgv (Tcl_Interp * interp, Tk_Window tkwin,
 				int * argcPtr, CONST84 char ** argv,
-				Tk_ArgvInfo * argTable, int flags);
+				const Tk_ArgvInfo * argTable, int flags);
 #endif
 #ifndef Tk_PhotoPutBlock_NoComposite_TCL_DECLARED
 #define Tk_PhotoPutBlock_NoComposite_TCL_DECLARED
@@ -1849,7 +1849,7 @@ typedef struct TkStubs {
     CONST84_RETURN char * (*tk_NameOfRelief) (int relief); /* 140 */
     Tk_Window (*tk_NameToWindow) (Tcl_Interp * interp, const char * pathName, Tk_Window tkwin); /* 141 */
     void (*tk_OwnSelection) (Tk_Window tkwin, Atom selection, Tk_LostSelProc * proc, ClientData clientData); /* 142 */
-    int (*tk_ParseArgv) (Tcl_Interp * interp, Tk_Window tkwin, int * argcPtr, CONST84 char ** argv, Tk_ArgvInfo * argTable, int flags); /* 143 */
+    int (*tk_ParseArgv) (Tcl_Interp * interp, Tk_Window tkwin, int * argcPtr, CONST84 char ** argv, const Tk_ArgvInfo * argTable, int flags); /* 143 */
     void (*tk_PhotoPutBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height); /* 144 */
     void (*tk_PhotoPutZoomedBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY); /* 145 */
     int (*tk_PhotoGetImage) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr); /* 146 */

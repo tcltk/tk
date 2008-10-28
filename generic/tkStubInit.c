@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.64 2008/08/19 15:52:12 georgeps Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.65 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -309,6 +309,7 @@ static const TkIntStubs tkIntStubs = {
     NULL, /* 155 */
     TkpTestembedCmd, /* 156 */
     TkpTesttextCmd, /* 157 */
+    TkSelGetSelection, /* 158 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {

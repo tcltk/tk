@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.21 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.22 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -29,7 +29,7 @@ static int		ClipboardWindowHandler(ClientData clientData,
 			    int offset, char *buffer, int maxBytes);
 static void		ClipboardLostSel(ClientData clientData);
 static int		ClipboardGetProc(ClientData clientData,
-			    Tcl_Interp *interp, char *portion);
+			    Tcl_Interp *interp, const char *portion);
 
 /*
  *----------------------------------------------------------------------
@@ -704,7 +704,7 @@ ClipboardGetProc(
 				 * selection. */
     Tcl_Interp *interp,		/* Interpreter used for error reporting (not
 				 * used). */
-    char *portion)		/* New information to be appended. */
+    const char *portion)		/* New information to be appended. */
 {
     Tcl_DStringAppend((Tcl_DString *) clientData, portion, -1);
     return TCL_OK;

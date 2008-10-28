@@ -1,3 +1,23 @@
+2008-10-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.h:               Add "const" to a few struct member fields.
+	* generic/tkInt.h             CONSTify TkPrintPadAmount
+	* generic/tkSelect.h          move TkSelGetSelection to tkInt.decls
+	* generic/tk.decls            CONSTify Tk_ParseArgv
+	* generic/tkInt.decls         CONSTify TkCreateFrame and TkCreateMainWindow
+	* generic/tkDecls.h:          (regenerated)
+	* generic/tkIntDecls.h:       (regenerated)
+	* generic/tkArgv.c
+	* generic/tkAtom.c
+	* generic/tkEntry.c
+	* generic/tkFrame.c
+	* generic/tkImgPhoto.c
+	* generic/tkPack.c
+	* generic/tkSelect.c
+	* generic/tkVisual.c
+	* generic/tkWindow.c
+	* win/tkWinTest.c             fix compilation under mingw32
+
 2008-10-28  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/cursors.tcl, library/ttk/combobox.tcl,
