@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.40 2008/10/22 20:56:43 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.41 2008/10/28 22:33:06 nijtmans Exp $
 
 library tk
 
@@ -563,7 +563,7 @@ declare 142 generic {
 declare 143 generic {
     int Tk_ParseArgv(Tcl_Interp *interp,
 	    Tk_Window tkwin, int *argcPtr, CONST84 char **argv,
-	    Tk_ArgvInfo *argTable, int flags)
+	    const Tk_ArgvInfo *argTable, int flags)
 }
 declare 144 generic {
     void Tk_PhotoPutBlock_NoComposite(Tk_PhotoHandle handle,

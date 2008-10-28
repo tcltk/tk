@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.11 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.12 2008/10/28 22:33:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -22,12 +22,12 @@
  */
 
 typedef struct VisualDictionary {
-    char *name;			/* Textual name of class. */
+    const char *name;			/* Textual name of class. */
     int minLength;		/* Minimum # characters that must be specified
 				 * for an unambiguous match. */
     int class;			/* X symbol for class. */
 } VisualDictionary;
-static VisualDictionary visualNames[] = {
+static const VisualDictionary visualNames[] = {
     {"best",		1,	0},
     {"directcolor",	2,	DirectColor},
     {"grayscale",	1,	GrayScale},
@@ -104,7 +104,7 @@ Tk_GetVisual(
     ptrdiff_t length;
     int c, numVisuals, prio, bestPrio, i;
     const char *p;
-    VisualDictionary *dictPtr;
+    const VisualDictionary *dictPtr;
     TkColormap *cmapPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 

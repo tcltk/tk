@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.18 2008/10/28 17:44:38 dgp Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.19 2008/10/28 22:33:07 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -34,7 +34,7 @@ static int		TestgetwindowinfoObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
-Tk_GetSelProc		SetSelectionResult;
+static Tk_GetSelProc		SetSelectionResult;
 
 
 /*
@@ -194,9 +194,6 @@ TestclipboardObjCmd(
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    HGLOBAL handle;
-    char *data;
-    int code = TCL_OK;
 
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
@@ -356,7 +353,7 @@ TestwineventCmd(
 /*
  *  testfindwindow title ?class?
  *	Find a Windows window using the FindWindow API call. This takes the window
- *	title and optionally the window class and if found returns the HWND and 
+ *	title and optionally the window class and if found returns the HWND and
  *	raises an error if the window is not found.
  *	eg: testfindwindow Console TkTopLevel
  *	    Can find the console window if it is visible.
@@ -392,7 +389,7 @@ TestfindwindowObjCmd(
         Tcl_SetObjResult(interp, Tcl_NewLongObj((long)hwnd));
     }
     return r;
-    
+
 }
 
 static BOOL CALLBACK
@@ -423,7 +420,7 @@ TestgetwindowinfoObjCmd(
 
     if (Tcl_GetLongFromObj(interp, objv[1], (long *)&hwnd) != TCL_OK)
 	return TCL_ERROR;
-    
+
     if (tkWinProcs->useWide) {
 	cch = GetClassNameW(hwnd, (LPWSTR)buf, sizeof(buf)/sizeof(WCHAR));
 	classObj = Tcl_NewUnicodeObj((LPWSTR)buf, cch);
@@ -435,14 +432,14 @@ TestgetwindowinfoObjCmd(
     	Tcl_SetResult(interp, "failed to get class name: ", TCL_STATIC);
     	AppendSystemError(interp, GetLastError());
     	return TCL_ERROR;
-    }	
+    }
 
     resObj = Tcl_NewListObj(0, NULL);
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("class", -1));
     Tcl_ListObjAppendElement(interp, resObj, classObj);
 
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("id", -1));
-    Tcl_ListObjAppendElement(interp, resObj, 
+    Tcl_ListObjAppendElement(interp, resObj,
 	Tcl_NewLongObj(GetWindowLong(hwnd, GWL_ID)));
 
     cch = tkWinProcs->getWindowText(hwnd, (LPTSTR)buf, cchBuf);
@@ -455,7 +452,7 @@ TestgetwindowinfoObjCmd(
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("text", -1));
     Tcl_ListObjAppendElement(interp, resObj, textObj);
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("parent", -1));
-    Tcl_ListObjAppendElement(interp, resObj, 
+    Tcl_ListObjAppendElement(interp, resObj,
 	Tcl_NewLongObj((long)GetParent(hwnd)));
 
     childrenObj = Tcl_NewListObj(0, NULL);
@@ -465,7 +462,7 @@ TestgetwindowinfoObjCmd(
 
     Tcl_SetObjResult(interp, resObj);
     return TCL_OK;
-}   
+}
 
 /*
  * Local Variables:
