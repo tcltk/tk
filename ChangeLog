@@ -1,3 +1,9 @@
+2008-10-28  Don Porter  <dgp@users.sourceforge.net>
+
+	* win/tkWinTest.c:		Revise [testclipboard] to form that
+	* tests/winClipboard.test:	handles encodings.  [Bug 2191960]
+	* tests/constraints.tcl: [tcltest::bytestring] no longer used.
+
 2008-10-24  Joe English  <jenglish@users.sourceforge.net>
 
 	* tests/ttk/ttk.test: Disable test ttk-6.3, it's not 
