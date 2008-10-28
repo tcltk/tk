@@ -1,3 +1,12 @@
+2008-10-28  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/cursors.tcl, library/ttk/combobox.tcl,
+	library/ttk/entry.tcl, library/ttk/paned.tcl, library/ttk/sizegrip.tcl,
+	library/treeview.tcl:
+	Add correct platform-specific cursors for OSX [Bug 2054562]
+	Expanded set of symbolic cursors.  Use correct cursor for 
+	ttk::entry and ttk::combobox widgets [Bug 1534835]
+
 2008-10-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/tkWinTest.c:		Revise [testclipboard] to form that

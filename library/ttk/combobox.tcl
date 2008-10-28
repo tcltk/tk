@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.12 2008/02/23 18:41:07 jenglish Exp $
+# $Id: combobox.tcl,v 1.13 2008/10/28 20:02:03 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -60,6 +60,7 @@ bind TCombobox <Shift-ButtonPress-1>	{ ttk::combobox::Press "s" %W %x %y }
 bind TCombobox <Double-ButtonPress-1> 	{ ttk::combobox::Press "2" %W %x %y }
 bind TCombobox <Triple-ButtonPress-1> 	{ ttk::combobox::Press "3" %W %x %y }
 bind TCombobox <B1-Motion>		{ ttk::combobox::Drag %W %x }
+bind TCombobox <Motion>			{ ttk::combobox::Motion %W %x %y }
 
 bind TCombobox <MouseWheel> 	{ ttk::combobox::Scroll %W [expr {%D/-120}] }
 if {[tk windowingsystem] eq "x11"} {
@@ -149,6 +150,19 @@ proc ttk::combobox::Drag {w x}  {
     variable State
     if {$State(entryPress)} {
 	ttk::entry::Drag $w $x
+    }
+}
+
+## Motion --
+#	Set cursor.
+#
+proc ttk::combobox::Motion {w x y} {
+    if {   [$w identify $x $y] eq "textarea"
+        && [$w instate {!readonly !disabled}] 
+    } {
+	ttk::setCursor $w text
+    } else {
+	ttk::setCursor $w ""
     }
 }
 
