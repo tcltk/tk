@@ -10,7 +10,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.15 2008/08/18 16:09:10 aniap Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.16 2008/10/28 17:44:38 dgp Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -71,7 +71,7 @@ test winClipboard-1.5 {TkSelGetSelection & TkWinClipboardRender} -constraints {
     list [selection get -selection CLIPBOARD] [testclipboard]
 } -cleanup {
     clipboard clear
-} -result [list "line 1\u00c7\nline 2" [bytestring "line 1\u00c7\r\nline 2"]]
+} -result [list "line 1\u00c7\nline 2" "line 1\u00c7\r\nline 2"]
 
 
 test winClipboard-2.1 {TkSelUpdateClipboard reentrancy problem} -constraints {

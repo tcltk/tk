@@ -242,7 +242,6 @@ namespace import -force tcltest::removeDirectory
 namespace import -force tcltest::interpreter
 namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::cleanupTests
-namespace import -force tcltest::bytestring
 
 deleteWindows
 wm geometry . {}
