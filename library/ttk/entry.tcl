@@ -1,5 +1,5 @@
 #
-# $Id: entry.tcl,v 1.4 2007/12/13 15:27:08 dgp Exp $
+# $Id: entry.tcl,v 1.5 2008/10/28 20:02:03 jenglish Exp $
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #
@@ -33,6 +33,10 @@ namespace eval ttk {
 	set State(deadband) 3	;# #pixels for mouse-moved deadband.
     }
 }
+
+### Option database settings.
+#
+option add *TEntry.cursor [ttk::cursor text]
 
 ### Bindings.
 #

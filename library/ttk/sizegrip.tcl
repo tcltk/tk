@@ -1,14 +1,22 @@
 #
-# $Id: sizegrip.tcl,v 1.2 2008/04/04 14:18:30 patthoyts Exp $
+# $Id: sizegrip.tcl,v 1.3 2008/10/28 20:02:03 jenglish Exp $
 #
-# Ttk widget set -- sizegrip widget bindings.
+# Sizegrip widget bindings.
 #
 # Dragging a sizegrip widget resizes the containing toplevel.
 #
 # NOTE: the sizegrip widget must be in the lower right hand corner.
 #
 
-option add *TSizegrip.cursor $::ttk::Cursors(seresize)
+switch -- [tk windowingsystem] {
+    x11 -
+    win32 {
+	option add *TSizegrip.cursor [ttk::cursor seresize]
+    }
+    aqua {
+    	# Aqua sizegrips use default Arrow cursor.
+    }
+}
 
 namespace eval ttk::sizegrip {
     variable State
