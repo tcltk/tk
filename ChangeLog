@@ -1,3 +1,8 @@
+2008-10-29  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkAtom.c(Tk_GetAtomName): Remove incorrect 'const' qualifier.
+	Remove useless 'register' declarations too, while we're at it.
+
 2008-10-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.h:		Add "const" to a few struct member fields.
