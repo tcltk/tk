@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.24 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.25 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -71,7 +71,7 @@ static const Tk_SegType tkTextEmbImageType = {
  * Definitions for alignment values:
  */
 
-static char *alignStrings[] = {
+static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
@@ -100,7 +100,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_END}
 };
 
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -292,7 +292,7 @@ TkTextImageCmd(
     }
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -420,7 +420,7 @@ EmbImageConfigure(
 
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -475,7 +475,7 @@ EmbImageDeleteProc(
     ckfree((char *) eiPtr);
     return 0;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -501,7 +501,7 @@ EmbImageCleanupProc(
     eiPtr->body.ei.linePtr = linePtr;
     return eiPtr;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -589,7 +589,7 @@ EmbImageLayoutProc(
     eiPtr->body.ei.chunkCount += 1;
     return 1;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -621,7 +621,7 @@ EmbImageCheckProc(
 		eiPtr->size);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -680,7 +680,7 @@ EmbImageDisplayProc(
 
     Tk_RedrawImage(image, 0, 0, width, height, dst, imageX, imageY);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -749,7 +749,7 @@ EmbImageBboxProc(
 	break;
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -788,7 +788,7 @@ TkTextImageIndex(
     indexPtr->byteIndex = TkTextSegToOffset(eiPtr, indexPtr->linePtr);
     return 1;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -833,7 +833,7 @@ EmbImageProc(
     TkTextInvalidateLineMetrics(eiPtr->body.ei.sharedTextPtr, NULL,
 	    index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }
-
+
 /*
  * Local Variables:
  * mode: c

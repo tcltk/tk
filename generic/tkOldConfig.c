@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.24 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.25 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -607,7 +607,7 @@ Tk_ConfigureInfo(
     register Tk_ConfigSpec *specPtr;
     int needFlags, hateFlags;
     char *list;
-    char *leader = "{";
+    const char *leader = "{";
 
     needFlags = flags & ~(TK_CONFIG_USER_BIT - 1);
     if (Tk_Depth(tkwin) <= 1) {

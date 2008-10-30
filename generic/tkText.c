@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.82 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.83 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "default.h"
@@ -50,7 +50,7 @@
  * table below.
  */
 
-static char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "disabled", "normal", NULL
 };
 
@@ -60,7 +60,7 @@ static char *stateStrings[] = {
  * table below.
  */
 
-static char *wrapStrings[] = {
+static const char *const wrapStrings[] = {
     "char", "none", "word", NULL
 };
 
@@ -70,7 +70,7 @@ static char *wrapStrings[] = {
  * the string table below.
  */
 
-static char *tabStyleStrings[] = {
+static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
 };
 
@@ -4685,7 +4685,7 @@ DumpLine(
 	    }
 	} else if ((offset >= startByte)) {
 	    if ((what & TK_DUMP_MARK) && (segPtr->typePtr->name[0] == 'm')) {
-		char *name;
+		const char *name;
 		TkTextMark *markPtr = (TkTextMark *) &segPtr->body;
 
 		if (segPtr == textPtr->insertMarkPtr) {
@@ -4717,7 +4717,7 @@ DumpLine(
 	    } else if ((what & TK_DUMP_IMG) &&
 		    (segPtr->typePtr->name[0] == 'i')) {
 		TkTextEmbImage *eiPtr = (TkTextEmbImage *)&segPtr->body;
-		char *name = (eiPtr->name == NULL) ? "" : eiPtr->name;
+		const char *name = (eiPtr->name == NULL) ? "" : eiPtr->name;
 
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
 			lineno, offset, &index);
@@ -4726,7 +4726,7 @@ DumpLine(
 	    } else if ((what & TK_DUMP_WIN) &&
 		    (segPtr->typePtr->name[0] == 'w')) {
 		TkTextEmbWindow *ewPtr = (TkTextEmbWindow *)&segPtr->body;
-		char *pathname;
+		const char *pathname;
 
 		if (ewPtr->tkwin == (Tk_Window) NULL) {
 		    pathname = "";

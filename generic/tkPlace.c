@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.26 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.27 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -26,7 +26,7 @@
  *			actual window size.
  */
 
-static char *borderModeStrings[] = {
+static const char *const borderModeStrings[] = {
     "inside", "outside", "ignore", NULL
 };
 
