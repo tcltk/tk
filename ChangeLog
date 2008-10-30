@@ -1,3 +1,11 @@
+2008-10-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/unixSelect.test:	Revise the unixSelect-1.* tests so that
+	they test the ability of Tk's selection mechanism to faithfully pass
+	valid Tcl values without corruption, and stop testing details of
+	Tcl's internal encoding scheme.  With this change, the Tk test suite
+	no longer uses the identity encoding or [string bytelength].
+
 2008-10-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.h:               CONSTify return value of
