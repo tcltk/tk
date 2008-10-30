@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.23 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.24 2008/10/30 21:39:16 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -111,13 +111,13 @@ static int		LineToPostscript(Tcl_Interp *interp,
 static int		ArrowParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *recordPtr, int offset);
-static char *		ArrowPrintProc(ClientData clientData,
+static const char * ArrowPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 static int		ParseArrowShape(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *recordPtr, int offset);
-static char *		PrintArrowShape(ClientData clientData,
+static const char * PrintArrowShape(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 static void		ScaleLine(Tk_Canvas canvas,
@@ -132,38 +132,30 @@ static void		TranslateLine(Tk_Canvas canvas,
  * CreateLine.
  */
 
-static Tk_CustomOption arrowShapeOption = {
-    (Tk_OptionParseProc *) ParseArrowShape,
-    PrintArrowShape, (ClientData) NULL
+static const Tk_CustomOption arrowShapeOption = {
+    ParseArrowShape, PrintArrowShape, (ClientData) NULL
 };
-static Tk_CustomOption arrowOption = {
-    (Tk_OptionParseProc *) ArrowParseProc,
-    ArrowPrintProc, (ClientData) NULL
+static const Tk_CustomOption arrowOption = {
+    ArrowParseProc, ArrowPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption smoothOption = {
-    (Tk_OptionParseProc *) TkSmoothParseProc,
-    TkSmoothPrintProc, (ClientData) NULL
+static const Tk_CustomOption smoothOption = {
+    TkSmoothParseProc, TkSmoothPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption stateOption = {
-    (Tk_OptionParseProc *) TkStateParseProc,
-    TkStatePrintProc, (ClientData) 2
+static const Tk_CustomOption stateOption = {
+    TkStateParseProc, TkStatePrintProc, (ClientData) 2
 };
-static Tk_CustomOption tagsOption = {
-    (Tk_OptionParseProc *) Tk_CanvasTagsParseProc,
-    Tk_CanvasTagsPrintProc, (ClientData) NULL
+static const Tk_CustomOption tagsOption = {
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption dashOption = {
-    (Tk_OptionParseProc *) TkCanvasDashParseProc,
-    TkCanvasDashPrintProc, (ClientData) NULL
+static const Tk_CustomOption dashOption = {
+    TkCanvasDashParseProc, TkCanvasDashPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption offsetOption = {
-    (Tk_OptionParseProc *) TkOffsetParseProc,
-    TkOffsetPrintProc,
+static const Tk_CustomOption offsetOption = {
+    TkOffsetParseProc, TkOffsetPrintProc,
     (ClientData) (TK_OFFSET_RELATIVE|TK_OFFSET_INDEX)
 };
-static Tk_CustomOption pixelOption = {
-    (Tk_OptionParseProc *) TkPixelParseProc,
-    TkPixelPrintProc, (ClientData) NULL
+static const Tk_CustomOption pixelOption = {
+    TkPixelParseProc, TkPixelPrintProc, (ClientData) NULL
 };
 
 static Tk_ConfigSpec configSpecs[] = {
@@ -524,7 +516,7 @@ ConfigureLine(
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
 #ifdef MAC_OSX_TK
 	/*
-	 * Mac OS X CG drawing needs access to linewidth even for 
+	 * Mac OS X CG drawing needs access to linewidth even for
 	 * arrow fills (as linewidth controls antialiasing).
 	 */
 	mask |= GCLineWidth;
@@ -1923,7 +1915,7 @@ ParseArrowShape(
  */
 
     /* ARGSUSED */
-static char *
+static const char *
 PrintArrowShape(
     ClientData clientData,	/* Not used. */
     Tk_Window tkwin,		/* Window associated with linePtr's widget. */
@@ -1942,7 +1934,6 @@ PrintArrowShape(
     *freeProcPtr = TCL_DYNAMIC;
     return buffer;
 }
-
 
 /*
  *--------------------------------------------------------------
@@ -2028,7 +2019,7 @@ ArrowParseProc(
  *--------------------------------------------------------------
  */
 
-static char *
+static const char *
 ArrowPrintProc(
     ClientData clientData,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
@@ -2242,7 +2233,7 @@ LineToPostscript(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     char buffer[64 + TCL_INTEGER_SPACE];
-    char *style;
+    const char *style;
 
     double width;
     XColor *color;
