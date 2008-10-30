@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.41 2008/10/28 22:33:06 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.42 2008/10/30 21:39:16 nijtmans Exp $
 
 library tk
 
@@ -106,7 +106,7 @@ declare 18 generic {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 19 generic {
-    char * Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    CONST86 char * Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 20 generic {

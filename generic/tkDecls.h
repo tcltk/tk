@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.36 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.37 2008/10/30 21:39:16 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -154,7 +154,7 @@ EXTERN int		Tk_CanvasTagsParseProc (ClientData clientData,
 #ifndef Tk_CanvasTagsPrintProc_TCL_DECLARED
 #define Tk_CanvasTagsPrintProc_TCL_DECLARED
 /* 19 */
-EXTERN char *		Tk_CanvasTagsPrintProc (ClientData clientData,
+EXTERN CONST86 char *	Tk_CanvasTagsPrintProc (ClientData clientData,
 				Tk_Window tkwin, char * widgRec, int offset,
 				Tcl_FreeProc ** freeProcPtr);
 #endif
@@ -1725,7 +1725,7 @@ typedef struct TkStubs {
     double (*tk_CanvasPsY) (Tk_Canvas canvas, double y); /* 16 */
     void (*tk_CanvasSetStippleOrigin) (Tk_Canvas canvas, GC gc); /* 17 */
     int (*tk_CanvasTagsParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 18 */
-    char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 19 */
+    CONST86 char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 19 */
     Tk_Window (*tk_CanvasTkwin) (Tk_Canvas canvas); /* 20 */
     void (*tk_CanvasWindowCoords) (Tk_Canvas canvas, double x, double y, short * screenXPtr, short * screenYPtr); /* 21 */
     void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes * attsPtr); /* 22 */
