@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.31 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.32 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "default.h"
@@ -1176,7 +1176,7 @@ ScaleVarProc(
     int flags)			/* Information about what happened. */
 {
     register TkScale *scalePtr = clientData;
-    char *resultStr;
+    const char *resultStr;
     double value;
     Tcl_Obj *valuePtr;
     int result;
@@ -1227,7 +1227,7 @@ ScaleVarProc(
     }
     TkEventuallyRedrawScale(scalePtr, REDRAW_SLIDER);
 
-    return resultStr;
+    return (char *) resultStr;
 }
 
 /*

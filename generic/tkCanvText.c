@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.29 2008/10/03 15:37:13 dkf Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.30 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -85,16 +85,13 @@ typedef struct TextItem {
  */
 
 static Tk_CustomOption stateOption = {
-    (Tk_OptionParseProc *) TkStateParseProc,
-    TkStatePrintProc, (ClientData) 2
+    TkStateParseProc, TkStatePrintProc, (ClientData) 2
 };
 static Tk_CustomOption tagsOption = {
-    (Tk_OptionParseProc *) Tk_CanvasTagsParseProc,
-    Tk_CanvasTagsPrintProc, (ClientData) NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
 static Tk_CustomOption offsetOption = {
-    (Tk_OptionParseProc *) TkOffsetParseProc,
-    TkOffsetPrintProc, (ClientData) (TK_OFFSET_RELATIVE)
+    TkOffsetParseProc, TkOffsetPrintProc, (ClientData) (TK_OFFSET_RELATIVE)
 };
 
 static Tk_ConfigSpec configSpecs[] = {
@@ -1431,7 +1428,7 @@ TextToPostscript(
     TextItem *textPtr = (TextItem *) itemPtr;
     int x, y;
     Tk_FontMetrics fm;
-    char *justify;
+    const char *justify;
     char buffer[500];
     XColor *color;
     Pixmap stipple;

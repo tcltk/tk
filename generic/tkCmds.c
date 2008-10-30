@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.46 2008/10/18 14:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.47 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1200,7 +1200,7 @@ Tk_WinfoObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, class, skip;
-    char *string;
+    const char *string;
     TkWindow *winPtr;
     Tk_Window tkwin;
 

@@ -1,3 +1,22 @@
+2008-10-30  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkAtom.c:      more internal -Wwrite-strings warning fixes
+	* generic/tkBusy.c       (thanks, Joe, for fixing tkAtom.c, but this
+	* generic/tkButton.c     is how it should have been fixed)
+	* generic/tkCanvPoly.c
+	* generic/tkCanvText.c
+	* generic/tkCmds.c
+	* generic/tkListbox.c
+	* generic/tkMenu.c
+	* generic/tkOldConfig.c
+	* generic/tkOption.c
+	* generic/tkPanedWindow.c
+	* generic/tkPlace.c
+	* generic/tkScale.c
+	* generic/tkTest.c
+	* generic/tkText.c
+	* generic/tkTextImage.c
+
 2008-10-30  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/unixSelect.test:	Revise the unixSelect-1.* tests so that

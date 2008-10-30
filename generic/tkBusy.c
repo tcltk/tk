@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBusy.c,v 1.4 2008/10/20 12:22:20 dkf Exp $
+ * RCS: @(#) $Id: tkBusy.c,v 1.5 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -520,7 +520,8 @@ CreateBusy(
 {
     Busy *busyPtr;
     int length, x, y;
-    char *fmt, *name;
+    const char *fmt;
+    char *name;
     Tk_Window tkBusy, tkChild, tkParent;
     Window parent;
     Tk_FakeWin *winPtr;
