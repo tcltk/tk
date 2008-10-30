@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.22 2008/10/15 06:41:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.23 2008/10/30 21:39:16 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -123,7 +123,7 @@ TkStateParseProc(
  *--------------------------------------------------------------
  */
 
-char *
+const char *
 TkStatePrintProc(
     ClientData clientData,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
@@ -224,7 +224,7 @@ TkOrientParseProc(
  *--------------------------------------------------------------
  */
 
-char *
+const char *
 TkOrientPrintProc(
     ClientData clientData,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
@@ -396,7 +396,7 @@ TkOffsetParseProc(
  *----------------------------------------------------------------------
  */
 
-char *
+const char *
 TkOffsetPrintProc(
     ClientData clientData,	/* not used */
     Tk_Window tkwin,		/* not used */
@@ -495,7 +495,7 @@ TkPixelParseProc(
  *----------------------------------------------------------------------
  */
 
-char *
+const char *
 TkPixelPrintProc(
     ClientData clientData,	/* not used */
     Tk_Window tkwin,		/* not used */

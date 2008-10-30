@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.89 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.90 2008/10/30 21:39:16 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -1127,7 +1127,7 @@ MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 MODULE_SCOPE int	TkCanvasDashParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkCanvasDashPrintProc(ClientData clientData,
+MODULE_SCOPE CONST86 char * TkCanvasDashPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
@@ -1135,19 +1135,19 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkOffsetParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkOffsetPrintProc(ClientData clientData,
+MODULE_SCOPE CONST86 char * TkOffsetPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkOrientParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkOrientPrintProc(ClientData clientData,
+MODULE_SCOPE CONST86 char * TkOrientPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkPixelParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkPixelPrintProc(ClientData clientData,
+MODULE_SCOPE CONST86 char * TkPixelPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
@@ -1156,19 +1156,19 @@ MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkSmoothParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *recordPtr, int offset);
-MODULE_SCOPE char *	TkSmoothPrintProc(ClientData clientData,
+MODULE_SCOPE CONST86 char * TkSmoothPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkStateParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkStatePrintProc(ClientData clientData,
+MODULE_SCOPE CONST86 char * TkStatePrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkTileParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkTilePrintProc(ClientData clientData, Tk_Window tkwin,
+MODULE_SCOPE CONST86 char * TkTilePrintProc(ClientData clientData, Tk_Window tkwin,
 			    char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);

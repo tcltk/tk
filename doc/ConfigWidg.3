@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.21 2008/06/30 22:57:00 dkf Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.22 2008/10/30 21:39:16 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -111,7 +111,7 @@ typedef struct {
     char *\fIdefValue\fR;
     int \fIoffset\fR;
     int \fIspecFlags\fR;
-    Tk_CustomOption *\fIcustomPtr\fR;
+    const Tk_CustomOption *\fIcustomPtr\fR;
 } \fBTk_ConfigSpec\fR;
 .CE
 The \fItype\fR field indicates what type of configuration option this is
@@ -557,7 +557,7 @@ typedef int \fBTk_OptionParseProc\fR(
         char *\fIwidgRec\fR,
         int \fIoffset\fR);
 
-typedef char *\fBTk_OptionPrintProc\fR(
+typedef const char *\fBTk_OptionPrintProc\fR(
         ClientData \fIclientData\fR,
         Tk_Window \fItkwin\fR,
         char *\fIwidgRec\fR,

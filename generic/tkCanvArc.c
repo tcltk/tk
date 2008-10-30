@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.17 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.18 2008/10/30 21:39:16 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -83,32 +83,26 @@ typedef struct ArcItem {
 static int	StyleParseProc(ClientData clientData, Tcl_Interp *interp,
 		    Tk_Window tkwin, const char *value,
 		    char *widgRec, int offset);
-static char *	StylePrintProc(ClientData clientData, Tk_Window tkwin,
+static const char * StylePrintProc(ClientData clientData, Tk_Window tkwin,
 		    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 
-static Tk_CustomOption stateOption = {
-    (Tk_OptionParseProc *) TkStateParseProc,
-    TkStatePrintProc, (ClientData) 2
+static const Tk_CustomOption stateOption = {
+    TkStateParseProc, TkStatePrintProc, (ClientData) 2
 };
-static Tk_CustomOption styleOption = {
-    (Tk_OptionParseProc *) StyleParseProc,
-    StylePrintProc, (ClientData) NULL
+static const Tk_CustomOption styleOption = {
+    StyleParseProc, StylePrintProc, (ClientData) NULL
 };
-static Tk_CustomOption tagsOption = {
-    (Tk_OptionParseProc *) Tk_CanvasTagsParseProc,
-    Tk_CanvasTagsPrintProc, (ClientData) NULL
+static const Tk_CustomOption tagsOption = {
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption dashOption = {
-    (Tk_OptionParseProc *) TkCanvasDashParseProc,
-    TkCanvasDashPrintProc, (ClientData) NULL
+static const Tk_CustomOption dashOption = {
+    TkCanvasDashParseProc, TkCanvasDashPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption offsetOption = {
-    (Tk_OptionParseProc *) TkOffsetParseProc,
-    TkOffsetPrintProc, (ClientData) (TK_OFFSET_RELATIVE)
+static const Tk_CustomOption offsetOption = {
+    TkOffsetParseProc, TkOffsetPrintProc, (ClientData) (TK_OFFSET_RELATIVE)
 };
-static Tk_CustomOption pixelOption = {
-    (Tk_OptionParseProc *) TkPixelParseProc,
-    TkPixelPrintProc, (ClientData) NULL
+static const Tk_CustomOption pixelOption = {
+    TkPixelParseProc, TkPixelPrintProc, (ClientData) NULL
 };
 
 static Tk_ConfigSpec configSpecs[] = {
@@ -2061,7 +2055,7 @@ StyleParseProc(
  *--------------------------------------------------------------
  */
 
-static char *
+static const char *
 StylePrintProc(
     ClientData clientData,	/* Ignored. */
     Tk_Window tkwin,		/* Ignored. */

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.121 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.122 2008/10/30 21:39:16 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -312,7 +312,7 @@ typedef struct Tk_SavedOptions {
 
 typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
 	Tk_Window tkwin, CONST84 char *value, char *widgRec, int offset);
-typedef char *(Tk_OptionPrintProc) (ClientData clientData, Tk_Window tkwin,
+typedef CONST86 char *(Tk_OptionPrintProc) (ClientData clientData, Tk_Window tkwin,
 	char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 
 typedef struct Tk_CustomOption {
@@ -350,7 +350,7 @@ typedef struct Tk_ConfigSpec {
     int specFlags;		/* Any combination of the values defined
 				 * below; other bits are used internally by
 				 * tkConfig.c. */
-    Tk_CustomOption *customPtr;	/* If type is TK_CONFIG_CUSTOM then this is a
+    CONST86 Tk_CustomOption *customPtr;	/* If type is TK_CONFIG_CUSTOM then this is a
 				 * pointer to info about how to parse and
 				 * print the option. Otherwise it is
 				 * irrelevant. */

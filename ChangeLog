@@ -1,3 +1,14 @@
+2008-10-30  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.h:               CONSTify return value of
+	* generic/tkInt.h             Tk_OptionPrintProc, and customPtr
+	* generic/tk.decls            field of Tk_ConfigSpec.
+	* generic/tkCanvArc.c         See [Bug 2190619]: Warnings due to
+	* generic/tkCanvLine.c        Tk_SmoothMethod name constness change
+	* generic/tkCanvUtil.c
+	* generic/tkUtil.c
+	* generic/tkDecls.h:          (regenerated)
+
 2008-10-29  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkAtom.c(Tk_GetAtomName): Remove incorrect 'const' qualifier.
