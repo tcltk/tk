@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.39 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.40 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -699,7 +699,7 @@ TestobjconfigObjCmd(
 	    Tcl_Obj *customPtr;
 	} TypesRecord;
 	TypesRecord *recordPtr;
-	static char *stringTable[] = {
+	static const char *const stringTable[] = {
 	    "one", "two", "three", "four", NULL
 	};
 	static const Tk_OptionSpec typesSpecs[] = {
@@ -972,7 +972,7 @@ TestobjconfigObjCmd(
 	    char *custom;
 	} InternalRecord;
 	InternalRecord *recordPtr;
-	static char *internalStringTable[] = {
+	static const char *const internalStringTable[] = {
 	    "one", "two", "three", "four", NULL
 	};
 	static const Tk_OptionSpec internalSpecs[] = {
@@ -1502,7 +1502,7 @@ ImageCreate(
 				 * will be returned in later callbacks. */
 {
     TImageMaster *timPtr;
-    char *varName;
+    const char *varName;
     int i;
 
     varName = "log";

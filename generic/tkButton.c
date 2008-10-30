@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.31 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.32 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1594,7 +1594,8 @@ ButtonVarProc(
     int flags)			/* Information about what happened. */
 {
     register TkButton *butPtr = (TkButton *) clientData;
-    char *name, *value;
+    char *name;
+    const char *value;
     Tcl_Obj *valuePtr;
 
     name = Tcl_GetString(butPtr->selVarNamePtr);

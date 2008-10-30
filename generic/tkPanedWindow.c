@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.35 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.36 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "default.h"
@@ -37,7 +37,7 @@
  * The following table defines the legal values for the -orient option.
  */
 
-static char *orientStrings[] = {
+static const char *const orientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
@@ -47,7 +47,7 @@ enum orient { ORIENT_HORIZONTAL, ORIENT_VERTICAL };
  * The following table defines the legal values for the -stretch option.
  */
 
-static char *stretchStrings[] = {
+static const char *const stretchStrings[] = {
     "always", "first", "last", "middle", "never", NULL
 };
 

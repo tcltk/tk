@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAtom.c,v 1.10 2008/10/29 23:31:55 jenglish Exp $
+ * RCS: @(#) $Id: tkAtom.c,v 1.11 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -22,7 +22,7 @@
  * those found in xatom.h
  */
 
-static const char * atomNameArray[] = {
+static const char *const atomNameArray[] = {
     "PRIMARY",		"SECONDARY",		"ARC",
     "ATOM",		"BITMAP",		"CARDINAL",
     "COLORMAP",		"CURSOR",		"CUT_BUFFER0",
@@ -139,23 +139,22 @@ Tk_GetAtomName(
 
     hPtr = Tcl_FindHashEntry(&dispPtr->atomTable, (char *) atom);
     if (hPtr == NULL) {
-	char *name;
+	const char *name;
 	Tk_ErrorHandler handler;
-	int isNew, mustFree;
+	int isNew;
+	char *mustFree = NULL;
 
 	handler = Tk_CreateErrorHandler(dispPtr->display, BadAtom, -1, -1,
 		NULL, (ClientData) NULL);
-	name = XGetAtomName(dispPtr->display, atom);
-	mustFree = 1;
+	name = mustFree = XGetAtomName(dispPtr->display, atom);
 	if (name == NULL) {
 	    name = "?bad atom?";
-	    mustFree = 0;
 	}
 	Tk_DeleteErrorHandler(handler);
 	hPtr = Tcl_CreateHashEntry(&dispPtr->nameTable, name, &isNew);
 	Tcl_SetHashValue(hPtr, atom);
 	if (mustFree) {
-	    XFree(name);
+	    XFree(mustFree);
 	}
 	name = Tcl_GetHashKey(&dispPtr->nameTable, hPtr);
 	hPtr = Tcl_CreateHashEntry(&dispPtr->atomTable, (char *) atom, &isNew);
