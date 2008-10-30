@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.21 2008/10/24 06:00:22 dkf Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.22 2008/10/30 21:39:16 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -457,7 +457,7 @@ Tk_CanvasTagsParseProc(
  *--------------------------------------------------------------
  */
 
-char *
+const char *
 Tk_CanvasTagsPrintProc(
     ClientData clientData,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
@@ -475,7 +475,7 @@ Tk_CanvasTagsPrintProc(
     }
     if (itemPtr->numTags == 1) {
 	*freeProcPtr = NULL;
-	return (char *) itemPtr->tagPtr[0];
+	return (const char *) itemPtr->tagPtr[0];
     }
     *freeProcPtr = TCL_DYNAMIC;
     return Tcl_Merge(itemPtr->numTags, (const char **) itemPtr->tagPtr);
@@ -533,7 +533,7 @@ TkCanvasDashParseProc(
  *--------------------------------------------------------------
  */
 
-char *
+const char *
 TkCanvasDashPrintProc(
     ClientData clientData,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
@@ -809,7 +809,7 @@ TkSmoothParseProc(
  *--------------------------------------------------------------
  */
 
-char *
+const char *
 TkSmoothPrintProc(
     ClientData clientData,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
@@ -822,7 +822,7 @@ TkSmoothPrintProc(
     register const Tk_SmoothMethod *smoothPtr =
 	    * (Tk_SmoothMethod **) (widgRec + offset);
 
-    return smoothPtr ? (char *) smoothPtr->name : "0";
+    return smoothPtr ? smoothPtr->name : "0";
 }
 /*
  *--------------------------------------------------------------
