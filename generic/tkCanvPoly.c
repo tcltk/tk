@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.19 2008/04/27 22:38:55 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.20 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -58,29 +58,23 @@ typedef struct PolygonItem  {
  */
 
 static Tk_CustomOption smoothOption = {
-    (Tk_OptionParseProc *) TkSmoothParseProc,
-    TkSmoothPrintProc, (ClientData) NULL
+    TkSmoothParseProc, TkSmoothPrintProc, (ClientData) NULL
 };
 static Tk_CustomOption stateOption = {
-    (Tk_OptionParseProc *) TkStateParseProc,
-    TkStatePrintProc, (ClientData) 2
+    TkStateParseProc, TkStatePrintProc, (ClientData) 2
 };
 static Tk_CustomOption tagsOption = {
-    (Tk_OptionParseProc *) Tk_CanvasTagsParseProc,
-    Tk_CanvasTagsPrintProc, (ClientData) NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
 static Tk_CustomOption dashOption = {
-    (Tk_OptionParseProc *) TkCanvasDashParseProc,
-    TkCanvasDashPrintProc, (ClientData) NULL
+    TkCanvasDashParseProc, TkCanvasDashPrintProc, (ClientData) NULL
 };
 static Tk_CustomOption offsetOption = {
-    (Tk_OptionParseProc *) TkOffsetParseProc,
-    TkOffsetPrintProc,
+    TkOffsetParseProc, TkOffsetPrintProc,
     (ClientData) (TK_OFFSET_RELATIVE|TK_OFFSET_INDEX)
 };
 static Tk_CustomOption pixelOption = {
-    (Tk_OptionParseProc *) TkPixelParseProc,
-    TkPixelPrintProc, (ClientData) NULL
+    TkPixelParseProc, TkPixelPrintProc, (ClientData) NULL
 };
 
 static Tk_ConfigSpec configSpecs[] = {
@@ -526,7 +520,7 @@ ConfigurePolygon(
 	 * Mac OS X CG drawing needs access to the outline linewidth
 	 * even for fills (as linewidth controls antialiasing).
 	 */
-	gcValues.line_width = polyPtr->outline.gc != None ? 
+	gcValues.line_width = polyPtr->outline.gc != None ?
 		polyPtr->outline.gc->line_width : 0;
 	mask |= GCLineWidth;
 #endif
@@ -1807,7 +1801,7 @@ PolygonToPostscript(
 				 * being created. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    char *style;
+    const char *style;
     XColor *color;
     XColor *fillColor;
     Pixmap stipple;

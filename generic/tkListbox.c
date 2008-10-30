@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.50 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.51 2008/10/30 23:18:59 nijtmans Exp $
  */
 
 #include "default.h"
@@ -213,7 +213,7 @@ enum state {
     STATE_DISABLED, STATE_NORMAL
 };
 
-static char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "disabled", "normal", NULL
 };
 
@@ -221,7 +221,7 @@ enum activeStyle {
     ACTIVE_STYLE_DOTBOX, ACTIVE_STYLE_NONE, ACTIVE_STYLE_UNDERLINE
 };
 
-static char *activeStyleStrings[] = {
+static const char *const activeStyleStrings[] = {
     "dotbox", "none", "underline", NULL
 };
 
@@ -3408,7 +3408,7 @@ ListboxListVarProc(
 	if (Tcl_ListObjLength(listPtr->interp, varListObj, &i) != TCL_OK) {
 	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL, oldListObj,
 		    TCL_GLOBAL_ONLY);
-	    return "invalid listvar value";
+	    return (char *) "invalid listvar value";
 	}
 
 	listPtr->listObj = varListObj;
