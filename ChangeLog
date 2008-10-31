@@ -1,3 +1,7 @@
+2008-10-31  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/widget.c: Temporary workaround for [Bug 2207435]
+
 2008-10-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkAtom.c:      more internal -Wwrite-strings warning fixes
