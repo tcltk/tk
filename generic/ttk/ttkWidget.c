@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.13 2008/07/23 23:24:44 nijtmans Exp $
+/* $Id: ttkWidget.c,v 1.14 2008/10/31 18:01:35 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -442,6 +442,7 @@ error_nocleanup:
 	Ttk_FreeLayout(corePtr->layout);
 	corePtr->layout = 0;
     }
+    Tk_UndefineCursor(tkwin);	/* @@@ TEMP: workaround for #2207435 */
     Tk_FreeConfigOptions(recordPtr, optionTable, tkwin);
     Tk_DestroyWindow(tkwin);
     corePtr->tkwin = 0;
