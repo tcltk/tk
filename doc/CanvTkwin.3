@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CanvTkwin.3,v 1.8 2008/06/30 22:57:00 dkf Exp $
+'\" RCS: @(#) $Id: CanvTkwin.3,v 1.9 2008/11/01 12:25:14 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CanvasTkwin 3 4.1 Tk "Tk Library Procedures"
@@ -87,7 +87,7 @@ canvas coordinate.
 If \fIstring\fR is a valid coordinate description then \fBTk_CanvasGetCoord\fR
 stores the corresponding canvas coordinate at *\fIdoublePtr\fR
 and returns \fBTCL_OK\fR.
-Otherwise it stores an error message in \fIinterp->result\fR and
+Otherwise it stores an error message in the interpreter result and
 returns \fBTCL_ERROR\fR.
 .PP
 \fBTk_CanvasDrawableCoords\fR is called by type managers during
@@ -143,6 +143,7 @@ The code of a canvas type manager will not call these procedures
 directly, but will use their addresses to create a \fBTk_CustomOption\fR
 structure for the \fB\-tags\fR option.   The code typically looks
 like this:
+.PP
 .CS
 static Tk_CustomOption tagsOption = {Tk_CanvasTagsParseProc,
     Tk_CanvasTagsPrintProc, (ClientData) NULL
