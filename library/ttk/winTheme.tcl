@@ -1,5 +1,5 @@
 #
-# $Id: winTheme.tcl,v 1.7 2008/05/23 20:20:06 jenglish Exp $
+# $Id: winTheme.tcl,v 1.8 2008/11/01 15:34:24 patthoyts Exp $
 #
 # Settings for 'winnative' theme.
 #
@@ -44,6 +44,8 @@ namespace eval ttk::theme::winnative {
 	    -foreground	[list {readonly focus} SystemHighlightText] \
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
+
+        ttk::style configure TSpinbox -padding {2 0 16 0}
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 

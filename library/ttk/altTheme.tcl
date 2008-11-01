@@ -1,5 +1,5 @@
 #
-# $Id: altTheme.tcl,v 1.7 2008/05/23 20:20:05 jenglish Exp $
+# $Id: altTheme.tcl,v 1.8 2008/11/01 15:34:24 patthoyts Exp $
 #
 # Ttk widget set: Alternate theme
 #
@@ -59,6 +59,11 @@ namespace eval ttk::theme::alt {
 	ttk::style configure TCombobox -padding 1
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
+
+	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
+	ttk::style map TSpinbox -fieldbackground \
+	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure Toolbutton -relief flat -padding 2
 	ttk::style map Toolbutton -relief \

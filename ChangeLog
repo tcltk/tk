@@ -1,3 +1,20 @@
+2008-11-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/ttk/ttkEntry.c:      Implemented the themed spinbox
+	* library/ttk/altTheme.tcl:    widget.
+	* library/ttk/clamTheme.tcl:
+	* library/ttk/classicTheme.tcl:
+	* library/ttk/defaults.tcl:
+	* library/ttk/entry.tcl:
+	* library/ttk/ttk.tcl:
+	* library/ttk/winTheme.tcl:
+	* library/ttk/xpTheme.tcl:
+	* library/ttk/spinbox.tcl:
+	* win/ttkWinTheme.c:
+	* win/ttkWinXPTheme.c:
+	* doc/ttk_spinbox.n:
+	* tests/ttk/spinbox.test:
+
 2008-10-31  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/widget.c: Temporary workaround for [Bug 2207435]

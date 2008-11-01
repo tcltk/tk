@@ -1,0 +1,239 @@
+#
+# ttk::spinbox widget tests
+#
+
+package require Tk 8.5
+package require tcltest ; namespace import -force tcltest::*
+loadTestedCommands
+
+set PI [expr {acos(-1)}]
+
+test spinbox-1.0 "Spinbox tests -- setup" -body {
+    ttk::spinbox .sb
+} -cleanup { destroy .sb } -result .sb
+
+test spinbox-1.1 "Bad -values list" -setup {
+    ttk::spinbox .sb
+} -body {
+    .sb configure -values "bad \{list"
+} -cleanup {
+    destroy .sb
+} -returnCodes error -result "unmatched open brace in list"
+
+test spinbox-1.2.1 "starts within range" -setup {
+    ttk::spinbox .sb -from 0 -to 100
+} -body {
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 0
+
+test spinbox-1.2.2 "starts within range" -setup {
+    ttk::spinbox .sb -from 100 -to 110
+} -body {
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 100
+
+test spinbox-1.3.1 "get retrieves value" -setup {
+    ttk::spinbox .sb -from 0 -to 100
+} -body {
+    .sb set 50
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 50
+
+test spinbox-1.3.2 "get retrieves value" -setup {
+    ttk::spinbox .sb -from 0 -to 100 -values 55
+} -body {
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 55
+
+test spinbox-1.4.1 "set changes value" -setup {
+    ttk::spinbox .sb -from 0 -to 100
+} -body {
+    .sb set 33
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 33
+
+test spinbox-1.4.2 "set changes value" -setup {
+    ttk::spinbox .sb -from 0 -to 100 -values 55
+} -body {
+    .sb set 33
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 33
+
+test spinbox-1.5.1 "format accounts for -increment" -setup {
+    ttk::spinbox .sb -from 0 -to 10 -increment 0.1
+} -body {
+    ::ttk::spinbox::Change .sb [expr {acos(-1)}] line
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 3.1
+
+test spinbox-1.5.2 "format accounts for -increment" -setup {
+    ttk::spinbox .sb -from 0 -to 10 -increment 0.1
+} -body {
+    .sb set $PI
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 3.1
+
+test spinbox-1.6.1 "insert start" -setup {
+    ttk::spinbox .sb -from 0 -to 100
+} -body {
+    .sb set 5
+    .sb insert 0 4
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 45
+
+test spinbox-1.6.2 "insert end" -setup {
+    ttk::spinbox .sb -from 0 -to 100
+} -body {
+    .sb set 5
+    .sb insert end 4
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 54
+
+test spinbox-1.6.3 "insert invalid index" -setup {
+    ttk::spinbox .sb -from 0 -to 100
+} -body {
+    .sb set 5
+    .sb insert 100 4
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result 54
+
+test spinbox-1.7.1 "-command option: set doesnt fire" -setup {
+    ttk::spinbox .sb -from 0 -to 100 -command {set ::spinbox_test 1}
+} -body {
+    set ::spinbox_test 0
+    .sb set 50
+    set ::spinbox_test
+} -cleanup {
+    destroy .sb
+} -result 0
+    
+test spinbox-1.7.2 "-command option: button handler will fire" -setup {
+    ttk::spinbox .sb -from 0 -to 100 -command {set ::spinbox_test 1}
+} -body {
+    set ::spinbox_test 0
+    .sb set 50
+    ::ttk::spinbox::Change .sb [expr {acos(-1)}] line
+    set ::spinbox_test
+} -cleanup {
+    destroy .sb
+} -result 1
+
+test spinbox-1.8.1 "option -validate" -setup {
+    ttk::spinbox .sb -from 0 -to 100 
+} -body {
+    .sb configure -validate all
+    .sb cget -validate
+} -cleanup {
+    destroy .sb
+} -result {all}
+
+test spinbox-1.8.2 "option -validate" -setup {
+    ttk::spinbox .sb -from 0 -to 100 
+} -body {
+    .sb configure -validate key
+    .sb configure -validate focus
+    .sb configure -validate focusin
+    .sb configure -validate focusout
+    .sb configure -validate none
+    .sb cget -validate
+} -cleanup {
+    destroy .sb
+} -result {none}
+
+test spinbox-1.8.3 "option -validate" -setup {
+    ttk::spinbox .sb -from 0 -to 100 
+} -body {
+    .sb configure -validate bogus
+} -cleanup {
+    destroy .sb
+} -returnCodes error -result {bad validate "bogus": must be all, key, focus, focusin, focusout, or none}
+
+test spinbox-1.8.4 "-validate option: " -setup {
+    set ::spinbox_test {}
+    ttk::spinbox .sb -from 0 -to 100
+} -body {
+    .sb configure -validate all -validatecommand {lappend ::spinbox_test %P}
+    pack .sb
+    .sb set 50
+    focus .sb
+    after 100 {set ::spinbox_wait 1} ; vwait ::spinbox_wait
+    set ::spinbox_test
+} -cleanup {
+    destroy .sb
+} -result {50}
+    
+
+test spinbox-2.0 "current command -- unset should be 0" -setup {
+    ttk::spinbox .sb -values [list a b c d e a]
+} -body {
+    .sb current
+} -cleanup {
+    destroy .sb
+} -result 0
+
+test spinbox-2.1 "current command -- set index" -setup {
+    ttk::spinbox .sb -values [list a b c d e a]
+} -body {
+    .sb current 5
+    .sb get
+} -cleanup {
+    destroy .sb
+} -result a
+
+test spinbox-2.2 "current command -- change -values" -setup {
+    ttk::spinbox .sb -values [list a b c d e a]
+} -body {
+    .sb current 5
+    .sb configure -values [list c b a d e]
+    .sb current
+} -cleanup {
+    destroy .sb
+} -result 2
+
+test spinbox-2.3 "current command -- change value" -setup {
+    ttk::spinbox .sb -values [list c b a d e]
+} -body {
+    .sb current 2
+    .sb set "b"
+    .sb current
+} -cleanup {
+    destroy .sb
+} -result 1
+
+test spinbox-2.4 "current command -- value not in list" -setup {
+    ttk::spinbox .sb -values [list c b a d e]
+} -body {
+    .sb current 2
+    .sb set "z"
+    .sb current
+} -cleanup {
+    destroy .sb
+} -result -1
+
+tcltest::cleanupTests
+
+# Local variables:
+# mode: tcl
+# End:

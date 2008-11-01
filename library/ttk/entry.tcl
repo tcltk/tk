@@ -1,5 +1,5 @@
 #
-# $Id: entry.tcl,v 1.5 2008/10/28 20:02:03 jenglish Exp $
+# $Id: entry.tcl,v 1.6 2008/11/01 15:34:24 patthoyts Exp $
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #
@@ -228,7 +228,7 @@ proc ttk::entry::See {w {index insert}} {
 #	position following the next end-of-word position.
 #
 set ::ttk::entry::State(startNext) \
-	[string equal $tcl_platform(platform) "windows"]
+	[string equal $::tcl_platform(platform) "windows"]
 
 proc ttk::entry::NextWord {w start} {
     variable State
