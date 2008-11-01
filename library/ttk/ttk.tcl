@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.8 2007/12/13 15:27:08 dgp Exp $
+# $Id: ttk.tcl,v 1.9 2008/11/01 15:34:24 patthoyts Exp $
 #
 # Ttk widget set initialization script.
 #
@@ -105,6 +105,7 @@ source [file join $::ttk::library notebook.tcl]
 source [file join $::ttk::library panedwindow.tcl]
 source [file join $::ttk::library entry.tcl]
 source [file join $::ttk::library combobox.tcl]	;# dependency: entry.tcl
+source [file join $::ttk::library spinbox.tcl]  ;# dependency: entry.tcl
 source [file join $::ttk::library treeview.tcl]
 source [file join $::ttk::library sizegrip.tcl]
 

@@ -1,5 +1,5 @@
 #
-# $Id: clamTheme.tcl,v 1.7 2008/05/23 20:20:06 jenglish Exp $
+# $Id: clamTheme.tcl,v 1.8 2008/11/01 15:34:24 patthoyts Exp $
 #
 # "Clam" theme.
 #
@@ -105,6 +105,14 @@ namespace eval ttk::theme::clam {
 				  readonly $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
 	    ;
+
+	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
+	ttk::style map TSpinbox \
+	    -background [list  readonly $colors(-frame)] \
+	    -bordercolor [list  focus $colors(-selectbg)] \
+	    -lightcolor [list  focus "#6f9dc6"] \
+	    -darkcolor [list  focus "#6f9dc6"] \
+            -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TNotebook.Tab -padding {6 2 6 2}
 	ttk::style map TNotebook.Tab \
