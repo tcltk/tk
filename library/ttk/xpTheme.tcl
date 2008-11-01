@@ -1,5 +1,5 @@
 #
-# $Id: xpTheme.tcl,v 1.9 2008/05/23 20:20:06 jenglish Exp $
+# $Id: xpTheme.tcl,v 1.10 2008/11/01 15:34:24 patthoyts Exp $
 #
 # Settings for 'xpnative' theme
 #
@@ -52,6 +52,12 @@ namespace eval ttk::theme::xpnative {
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
 
+	ttk::style configure TSpinbox -padding {2 0 14 0}
+	ttk::style map TSpinbox \
+	    -selectbackground [list !focus SystemWindow] \
+	    -selectforeground [list !focus SystemWindowText] \
+	    ;
+
 	ttk::style configure Toolbutton -padding {4 4}
 
 	# Vista requires some style modifications. There are some
@@ -75,6 +81,20 @@ namespace eval ttk::theme::xpnative {
 		}
 	    }
 
+            # EDIT EP_EDITBORDER_HVSCROLL
+            ttk::style configure TSpinbox -padding {2 0 15 1}
+            ttk::style element create Vista.Spinbox.field vsapi \
+                EDIT 9 {disabled 4 focus 3 active 2 {} 1} \
+                -padding {1 1 1 2}
+            ttk::style layout TSpinbox {
+                Vista.Spinbox.field -sticky nswe -children {
+                    Spinbox.padding -sticky nswe -children {
+                        Spinbox.textarea -expand 1 -sticky {}
+                    }
+                    Spinbox.uparrow -side top -sticky ens
+                    Spinbox.downarrow -side bottom -sticky ens
+                }
+            }
 	}
     }
 }
