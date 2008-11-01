@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.38 2008/10/02 19:13:35 mistachkin Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.39 2008/11/01 16:14:30 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -568,9 +568,9 @@ This command returns the id for the new item.
 For each item given by \fItagOrId\fR, delete the characters, or coordinates,
 in the range given by \fIfirst\fR and \fIlast\fR, inclusive.
 If some of the items given by \fItagOrId\fR do not support
-indexing operations then they ignore dchars.
+indexing operations then they ignore this operation.
 Text items interpret \fIfirst\fR and \fIlast\fR as indices to a character,
-line and polygon items interpret them indices to a coordinate (an x,y pair).
+line and polygon items interpret them as indices to a coordinate (an x,y pair).
 Indices are described in \fBINDICES\fR above.
 If \fIlast\fR is omitted, it defaults to \fIfirst\fR.
 This command returns an empty string.
@@ -650,6 +650,15 @@ that item currently has the keyboard focus (see the widget
 command \fBfocus\fR, below), but the cursor position may
 be set even when the item does not have the focus.
 This command returns an empty string.
+.TP
+\fIpathName \fBimove \fItagOrId index x y\fR
+.VS 8.6
+This command causes the \fIindex\fR'th coordinate of each of the items
+indicated by \fItagOrId\fR to be relocated to the location (\fIx\fR,\fIy\fR).
+Each item interprets \fIindex\fR independently according to the rules
+described in \fBINDICES\fR above. Out of the standard set of items, only line
+and polygon items may have their coordinates relocated this way.
+.VE 8.6
 .TP
 \fIpathName \fBindex \fItagOrId index\fR
 .
@@ -917,6 +926,18 @@ obscure other item types, and the stacking order of window items is
 determined by the \fBraise\fR and \fBlower\fR commands, not the
 \fBraise\fR and \fBlower\fR widget commands for canvases.
 This command returns an empty string.
+.TP
+\fIpathName \fBrchars \fItagOrId first last string\fR
+.VS 8.6
+This command causes the text or coordinates between \fIfirst\fR and \fIlast\fR
+for each of the items indicated by \fItagOrId\fR to be replaced by
+\fIstring\fR. Each item interprets \fIfirst\fR and \fIlast\fR independently
+according to the rules described in \fBINDICES\fR above. Out of the standard
+set of items, text items support this operation by altering their text as
+directed, and line and polygon items support this operation by altering their
+coordinate list (in which case \fIstring\fR should be a list of coordinates to
+use as a replacement). The other items ignore this operation.
+.VE 8.6
 .TP
 \fIpathName \fBscale \fItagOrId xOrigin yOrigin xScale yScale\fR
 .
