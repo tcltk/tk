@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.54 2008/10/18 11:26:20 patthoyts Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.55 2008/11/01 16:14:30 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -268,8 +268,7 @@ static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
 static int		CanvasWidgetCmd(ClientData clientData,
 			    Tcl_Interp *interp, int argc,
 			    Tcl_Obj *const *argv);
-static void		CanvasWorldChanged(
-			    ClientData instanceData);
+static void		CanvasWorldChanged(ClientData instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int argc,
 			    Tcl_Obj *const *argv, int flags);
@@ -277,7 +276,7 @@ static void		DestroyCanvas(char *memPtr);
 static void		DisplayCanvas(ClientData clientData);
 static void		DoItem(Tcl_Interp *interp,
 			    Tk_Item *itemPtr, Tk_Uid tag);
-static void		EventuallyRedrawItem(Tk_Canvas canvas,
+static void		EventuallyRedrawItem(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr);
 #ifdef USE_OLD_TAG_SEARCH
 static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
@@ -341,6 +340,10 @@ static Tk_ClassProcs canvasClass = {
 #define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
     for ((itemPtr) = StartTagSearch(canvasPtr, (objPtr), &search); \
 	    (itemPtr) != NULL; (itemPtr) = NextItem(&search))
+#define FIND_ITEMS(objPtr, n) \
+    FindItems(interp, canvasPtr, objc, objv, (objPtr), (n))
+#define RELINK_ITEMS(objPtr, itemPtr) \
+    RelinkItems(canvasPtr, (objPtr), (itemPtr))
 #else /* USE_OLD_TAG_SEARCH */
 #define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
     if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
@@ -353,8 +356,266 @@ static Tk_ClassProcs canvasClass = {
     } \
     for (itemPtr = TagSearchFirst(*(searchPtrPtr)); \
 	    itemPtr != NULL; itemPtr = TagSearchNext(*(searchPtrPtr)))
+#define FIND_ITEMS(objPtr, n) \
+    FindItems(interp, canvasPtr, objc, objv, (objPtr), (n), &searchPtr)
+#define RELINK_ITEMS(objPtr, itemPtr) \
+    result = RelinkItems(canvasPtr, (objPtr), (itemPtr), &searchPtr)
 #endif /* USE_OLD_TAG_SEARCH */
+
+/*
+ * ----------------------------------------------------------------------
+ *
+ * AlwaysRedraw, ItemConfigure, ItemCoords, etc. --
+ *
+ *	Helper functions that make access to canvas item functions simpler.
+ *	Note that these are all inline functions.
+ *
+ * ----------------------------------------------------------------------
+ */
 
+static inline int
+AlwaysRedraw(
+    Tk_Item *itemPtr)
+{
+    return itemPtr->typePtr->alwaysRedraw & 1;
+}
+
+static inline int
+ItemConfigure(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    Tcl_Interp *interp = canvasPtr->interp;
+    int result;
+
+    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
+	result = itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, objc, objv, TK_CONFIG_ARGV_ONLY);
+    } else {
+	const char **args = TkGetStringsFromObjs(objc, objv);
+
+	result = itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, objc, (Tcl_Obj **) args, TK_CONFIG_ARGV_ONLY);
+	if (args != NULL) {
+	    ckfree((char *) args);
+	}
+    }
+    return result;
+}
+
+static inline int
+ItemConfigInfo(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    Tcl_Obj *fieldName)
+{
+    return Tk_ConfigureInfo(canvasPtr->interp, canvasPtr->tkwin,
+	    itemPtr->typePtr->configSpecs, (char *) itemPtr,
+	    (fieldName ? Tcl_GetString(fieldName) : NULL), 0);
+}
+
+static inline int
+ItemConfigValue(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    Tcl_Obj *fieldName)
+{
+    return Tk_ConfigureValue(canvasPtr->interp, canvasPtr->tkwin,
+	    itemPtr->typePtr->configSpecs, (char *) itemPtr,
+	    Tcl_GetString(fieldName), 0);
+}
+
+static inline int
+ItemCoords(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    Tcl_Interp *interp = canvasPtr->interp;
+    int result;
+
+    if (itemPtr->typePtr->coordProc == NULL) {
+	result = TCL_OK;
+    } else if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
+	result = itemPtr->typePtr->coordProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, objc, objv);
+    } else {
+	const char **args = TkGetStringsFromObjs(objc, objv);
+
+	result = itemPtr->typePtr->coordProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, objc, (Tcl_Obj **) args);
+	if (args != NULL) {
+	    ckfree((char *) args);
+	}
+    }
+    return result;
+}
+
+static inline int
+ItemCreate(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,		/* Warning: incomplete! typePtr field must be
+				 * set by this point. */
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    Tcl_Interp *interp = canvasPtr->interp;
+    int result;
+
+    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
+	result = itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, objc-3, objv+3);
+    } else {
+	const char **args = TkGetStringsFromObjs(objc-3, objv+3);
+
+	result = itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, objc-3, (Tcl_Obj **) args);
+	if (args != NULL) {
+	    ckfree((char *) args);
+	}
+    }
+    return result;
+}
+
+static inline void
+ItemCursor(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    int index)
+{
+    itemPtr->typePtr->icursorProc((Tk_Canvas) canvasPtr, itemPtr, index);
+}
+
+static inline void
+ItemDelChars(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    int first,
+    int last)
+{
+    itemPtr->typePtr->dCharsProc((Tk_Canvas) canvasPtr, itemPtr, first, last);
+}
+
+static inline void
+ItemDelete(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr)
+{
+    itemPtr->typePtr->deleteProc((Tk_Canvas) canvasPtr, itemPtr,
+	    canvasPtr->display);
+}
+
+static inline void
+ItemDisplay(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    Pixmap pixmap,
+    int screenX1, int screenY1,
+    int width, int height)
+{
+    itemPtr->typePtr->displayProc((Tk_Canvas) canvasPtr, itemPtr,
+	    canvasPtr->display, pixmap, screenX1, screenY1, width, height);
+}
+
+static inline int
+ItemIndex(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    Tcl_Obj *objPtr,
+    int *indexPtr)
+{
+    Tcl_Interp *interp = canvasPtr->interp;
+
+    if (itemPtr->typePtr->indexProc == NULL) {
+	return TCL_OK;
+    } else if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
+	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, (char *) objPtr, indexPtr);
+    } else {
+	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
+		itemPtr, Tcl_GetString(objPtr), indexPtr);
+    }
+}
+
+static inline void
+ItemInsert(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    int beforeThis,
+    Tcl_Obj *toInsert)
+{
+    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
+	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
+		beforeThis, (char *) toInsert);
+    } else {
+	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
+		beforeThis, Tcl_GetString(toInsert));
+    }
+}
+
+static inline int
+ItemOverlap(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    double rect[])
+{
+    return itemPtr->typePtr->areaProc((Tk_Canvas) canvasPtr, itemPtr, rect);
+}
+
+static inline double
+ItemPoint(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    double coords[],
+    double halo)
+{
+    double dist;
+
+    dist = itemPtr->typePtr->pointProc((Tk_Canvas) canvasPtr, itemPtr,
+	    coords) - halo;
+    return (dist < 0.0) ? 0.0 : dist;
+}
+
+static inline void
+ItemScale(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    double xOrigin, double yOrigin,
+    double xScale, double yScale)
+{
+    itemPtr->typePtr->scaleProc((Tk_Canvas) canvasPtr, itemPtr,
+	    xOrigin, yOrigin, xScale, yScale);
+}
+
+static inline int
+ItemSelection(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    int offset,
+    char *buffer,
+    int maxBytes)
+{
+    if (itemPtr == NULL || itemPtr->typePtr->selectionProc == NULL) {
+	return -1;
+    }
+
+    return itemPtr->typePtr->selectionProc((Tk_Canvas) canvasPtr, itemPtr,
+	    offset, buffer, maxBytes);
+}
+
+static inline void
+ItemTranslate(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    double xDelta,
+    double yDelta)
+{
+    itemPtr->typePtr->translateProc((Tk_Canvas) canvasPtr, itemPtr,
+	    xDelta, yDelta);
+}
 
 /*
  *--------------------------------------------------------------
@@ -380,7 +641,7 @@ Tk_CanvasObjCmd(
     int argc,			/* Number of arguments. */
     Tcl_Obj *const argv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     TkCanvas *canvasPtr;
     Tk_Window newWin;
 
@@ -409,8 +670,8 @@ Tk_CanvasObjCmd(
     canvasPtr->display = Tk_Display(newWin);
     canvasPtr->interp = interp;
     canvasPtr->widgetCmd = Tcl_CreateObjCommand(interp,
-	    Tk_PathName(canvasPtr->tkwin), CanvasWidgetCmd,
-	    (ClientData) canvasPtr, CanvasCmdDeletedProc);
+	    Tk_PathName(canvasPtr->tkwin), CanvasWidgetCmd, canvasPtr,
+	    CanvasCmdDeletedProc);
     canvasPtr->firstItemPtr = NULL;
     canvasPtr->lastItemPtr = NULL;
     canvasPtr->borderWidth = 0;
@@ -483,21 +744,21 @@ Tk_CanvasObjCmd(
     Tcl_InitHashTable(&canvasPtr->idTable, TCL_ONE_WORD_KEYS);
 
     Tk_SetClass(canvasPtr->tkwin, "Canvas");
-    Tk_SetClassProcs(canvasPtr->tkwin, &canvasClass, (ClientData) canvasPtr);
+    Tk_SetClassProcs(canvasPtr->tkwin, &canvasClass, canvasPtr);
     Tk_CreateEventHandler(canvasPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
-	    CanvasEventProc, (ClientData) canvasPtr);
+	    CanvasEventProc, canvasPtr);
     Tk_CreateEventHandler(canvasPtr->tkwin, KeyPressMask|KeyReleaseMask
 	    |ButtonPressMask|ButtonReleaseMask|EnterWindowMask
 	    |LeaveWindowMask|PointerMotionMask|VirtualEventMask,
-	    CanvasBindProc, (ClientData) canvasPtr);
+	    CanvasBindProc, canvasPtr);
     Tk_CreateSelHandler(canvasPtr->tkwin, XA_PRIMARY, XA_STRING,
-	    CanvasFetchSelection, (ClientData) canvasPtr, XA_STRING);
+	    CanvasFetchSelection, canvasPtr, XA_STRING);
     if (ConfigureCanvas(interp, canvasPtr, argc-2, argv+2, 0) != TCL_OK) {
 	goto error;
     }
 
-    Tcl_SetResult(interp, Tk_PathName(canvasPtr->tkwin), TCL_STATIC);
+    Tcl_SetObjResult(interp, TkNewWindowObj(canvasPtr->tkwin));
     return TCL_OK;
 
   error:
@@ -547,10 +808,11 @@ CanvasWidgetCmd(
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
 	"find",		"focus",	"gettags",	"icursor",
-	"index",	"insert",	"itemcget",	"itemconfigure",
+	"imove",	"index",	"insert",	"itemcget",
+	"itemconfigure",
 	"lower",	"move",		"moveto",	"postscript",
-	"raise",	"scale",	"scan",		"select",
-	"type",		"xview",	"yview",
+	"raise",	"rchars",	"scale",	"scan",
+	"select",	"type",		"xview",	"yview",
 	NULL
     };
     enum options {
@@ -558,10 +820,11 @@ CanvasWidgetCmd(
 	CANV_CANVASY,	CANV_CGET,	CANV_CONFIGURE,	CANV_COORDS,
 	CANV_CREATE,	CANV_DCHARS,	CANV_DELETE,	CANV_DTAG,
 	CANV_FIND,	CANV_FOCUS,	CANV_GETTAGS,	CANV_ICURSOR,
-	CANV_INDEX,	CANV_INSERT,	CANV_ITEMCGET,	CANV_ITEMCONFIGURE,
+	CANV_IMOVE,	CANV_INDEX,	CANV_INSERT,	CANV_ITEMCGET,
+	CANV_ITEMCONFIGURE,
 	CANV_LOWER,	CANV_MOVE,	CANV_MOVETO,	CANV_POSTSCRIPT,
-	CANV_RAISE,	CANV_SCALE,	CANV_SCAN,	CANV_SELECT,
-	CANV_TYPE,	CANV_XVIEW,	CANV_YVIEW
+	CANV_RAISE,	CANV_RCHARS,	CANV_SCALE,	CANV_SCAN,
+	CANV_SELECT,	CANV_TYPE,	CANV_XVIEW,	CANV_YVIEW
     };
 
     if (objc < 2) {
@@ -572,7 +835,7 @@ CanvasWidgetCmd(
 	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    Tcl_Preserve((ClientData) canvasPtr);
+    Tcl_Preserve(canvasPtr);
 
     result = TCL_OK;
     switch ((enum options) index) {
@@ -582,12 +845,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-#ifdef USE_OLD_TAG_SEARCH
-	result = FindItems(interp, canvasPtr, objc, objv, objv[2], 3);
-#else /* USE_OLD_TAG_SEARCH */
-	result = FindItems(interp, canvasPtr, objc, objv, objv[2], 3,
-		&searchPtr);
-#endif /* USE_OLD_TAG_SEARCH */
+	result = FIND_ITEMS(objv[2], 3);
 	break;
 
     case CANV_BBOX: {
@@ -631,10 +889,13 @@ CanvasWidgetCmd(
 	    }
 	}
 	if (gotAny) {
-	    char buf[TCL_INTEGER_SPACE * 4];
+	    Tcl_Obj *resultObjs[4];
 
-	    sprintf(buf, "%d %d %d %d", x1, y1, x2, y2);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    resultObjs[0] = Tcl_NewIntObj(x1);
+	    resultObjs[1] = Tcl_NewIntObj(y1);
+	    resultObjs[2] = Tcl_NewIntObj(x2);
+	    resultObjs[3] = Tcl_NewIntObj(y2);
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resultObjs));
 	}
 	break;
     }
@@ -665,8 +926,8 @@ CanvasWidgetCmd(
 	    }
 	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char *) id);
 	    if (entryPtr != NULL) {
-		itemPtr = (Tk_Item *) Tcl_GetHashValue(entryPtr);
-		object = (ClientData) itemPtr;
+		itemPtr = Tcl_GetHashValue(entryPtr);
+		object = itemPtr;
 	    }
 
 	    if (object == 0) {
@@ -676,8 +937,8 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	} else {
-	    bindByTag:
-	    object = (ClientData) Tk_GetUid(Tcl_GetString(objv[2]));
+	bindByTag:
+	    object = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
 #else /* USE_OLD_TAG_SEARCH */
 	result = TagSearchScan(canvasPtr, objv[2], &searchPtr);
@@ -690,8 +951,8 @@ CanvasWidgetCmd(
 	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
 		    (char *) INT2PTR(searchPtr->id));
 	    if (entryPtr != NULL) {
-		itemPtr = (Tk_Item *) Tcl_GetHashValue(entryPtr);
-		object = (ClientData) itemPtr;
+		itemPtr = Tcl_GetHashValue(entryPtr);
+		object = itemPtr;
 	    }
 
 	    if (object == 0) {
@@ -716,7 +977,7 @@ CanvasWidgetCmd(
 	if (objc == 5) {
 	    int append = 0;
 	    unsigned long mask;
-	    char* argv4 = Tcl_GetString(objv[4]);
+	    char *argv4 = Tcl_GetString(objv[4]);
 
 	    if (argv4[0] == 0) {
 		result = Tk_DeleteBinding(interp, canvasPtr->bindingTable,
@@ -785,9 +1046,7 @@ CanvasWidgetCmd(
 	    command = Tk_GetBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetString(objv[3]));
 	    if (command == NULL) {
-		const char *string;
-
-		string = Tcl_GetStringResult(interp);
+		const char *string = Tcl_GetStringResult(interp);
 
 		/*
 		 * Ignore missing binding errors. This is a special hack that
@@ -798,11 +1057,10 @@ CanvasWidgetCmd(
 		if (string[0] != '\0') {
 		    result = TCL_ERROR;
 		    goto done;
-		} else {
-		    Tcl_ResetResult(interp);
 		}
+		Tcl_ResetResult(interp);
 	    } else {
-		Tcl_SetResult(interp, (char *) command, TCL_STATIC);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
 	    }
 	} else {
 	    Tk_GetAllBindings(interp, canvasPtr->bindingTable, object);
@@ -812,7 +1070,6 @@ CanvasWidgetCmd(
     case CANV_CANVASX: {
 	int x;
 	double grid;
-	char buf[TCL_DOUBLE_SPACE];
 
 	if ((objc < 3) || (objc > 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "screenx ?gridspacing?");
@@ -834,14 +1091,12 @@ CanvasWidgetCmd(
 	    grid = 0.0;
 	}
 	x += canvasPtr->xOrigin;
-	Tcl_PrintDouble(interp, GridAlign((double) x, grid), buf);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(GridAlign((double)x,grid)));
 	break;
     }
     case CANV_CANVASY: {
 	int y;
 	double grid;
-	char buf[TCL_DOUBLE_SPACE];
 
 	if ((objc < 3) || (objc > 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "screeny ?gridspacing?");
@@ -863,8 +1118,7 @@ CanvasWidgetCmd(
 	    grid = 0.0;
 	}
 	y += canvasPtr->yOrigin;
-	Tcl_PrintDouble(interp, GridAlign((double) y, grid), buf);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(GridAlign((double)y,grid)));
 	break;
     }
     case CANV_CGET:
@@ -897,33 +1151,88 @@ CanvasWidgetCmd(
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    if (objc != 3) {
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 	    }
-	    if (itemPtr->typePtr->coordProc != NULL) {
-		if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		    result = itemPtr->typePtr->coordProc(interp,
-			    (Tk_Canvas) canvasPtr, itemPtr, objc-3, objv+3);
-		} else {
-		    const char **args = TkGetStringsFromObjs(objc-3, objv+3);
-
-		    result = itemPtr->typePtr->coordProc(interp,
-			    (Tk_Canvas) canvasPtr, itemPtr, objc-3,
-			    (Tcl_Obj **) args);
-		    if (args != NULL) {
-			ckfree((char *) args);
-		    }
-		}
-	    }
+	    result = ItemCoords(canvasPtr, itemPtr, objc-3, objv+3);
 	    if (objc != 3) {
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 	    }
 	}
 	break;
+    case CANV_IMOVE: {
+	double ignored;
+	Tcl_Obj *tmpObj;
+
+	if (objc != 6) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId index x y");
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	if (Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
+		    objv[4], &ignored) != TCL_OK
+		|| Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr,
+		    objv[5], &ignored) != TCL_OK) {
+	    result = TCL_ERROR;
+	    goto done;
+	}
+
+	/*
+	 * Make a temporary object here that we can reuse for all the
+	 * modifications in the loop.
+	 */
+
+	tmpObj = Tcl_NewListObj(2, objv+4);
+
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
+	    int index;
+	    int x1,x2,y1,y2;
+
+	    /*
+	     * The TK_MOVABLE_POINTS flag should only be set for types that
+	     * support the same semantics of index, dChars and insert methods
+	     * as lines and canvases.
+	     */
+
+	    if (itemPtr == NULL ||
+		    !(itemPtr->typePtr->alwaysRedraw & TK_MOVABLE_POINTS)) {
+		continue;
+	    }
+
+	    result = ItemIndex(canvasPtr, itemPtr, objv[3], &index);
+	    if (result != TCL_OK) {
+		break;
+	    }
+
+	    /*
+	     * Redraw both item's old and new areas: it's possible that a
+	     * replace could result in a new area larger than the old area.
+	     * Except if the dCharsProc or insertProc sets the
+	     * TK_ITEM_DONT_REDRAW flag, nothing more needs to be done.
+	     */
+
+	    x1 = itemPtr->x1; y1 = itemPtr->y1;
+	    x2 = itemPtr->x2; y2 = itemPtr->y2;
+	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+
+	    ItemDelChars(canvasPtr, itemPtr, index, index);
+	    ItemInsert(canvasPtr, itemPtr, index, tmpObj);
+
+	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
+		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
+			x1, y1, x2, y2);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
+	    }
+	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	}
+
+    doneImove:
+	Tcl_DecrRefCount(tmpObj);
+	break;
+    }
     case CANV_CREATE: {
 	Tk_ItemType *typePtr;
 	Tk_ItemType *matchPtr = NULL;
 	Tk_Item *itemPtr;
-	char buf[TCL_INTEGER_SPACE];
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	char *arg;
@@ -949,12 +1258,7 @@ CanvasWidgetCmd(
 		    && (!strncmp(arg, typePtr->name, (unsigned)length))) {
 		if (matchPtr != NULL) {
 		    Tcl_MutexUnlock(&typeListMutex);
-		badType:
-		    Tcl_AppendResult(interp,
-			    "unknown or ambiguous item type \"", arg, "\"",
-			    NULL);
-		    result = TCL_ERROR;
-		    goto done;
+		    goto badType;
 		}
 		matchPtr = typePtr;
 	    }
@@ -967,7 +1271,11 @@ CanvasWidgetCmd(
 
 	Tcl_MutexUnlock(&typeListMutex);
 	if (matchPtr == NULL) {
-	    goto badType;
+	badType:
+	    Tcl_AppendResult(interp,
+		    "unknown or ambiguous item type \"", arg, "\"", NULL);
+	    result = TCL_ERROR;
+	    goto done;
 	}
 	if (objc < 4) {
 	    /*
@@ -978,6 +1286,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
+
 	typePtr = matchPtr;
 	itemPtr = (Tk_Item *) ckalloc((unsigned) typePtr->itemSize);
 	itemPtr->id = canvasPtr->nextId;
@@ -988,23 +1297,13 @@ CanvasWidgetCmd(
 	itemPtr->typePtr = typePtr;
 	itemPtr->state = TK_STATE_NULL;
 	itemPtr->redraw_flags = 0;
-	if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-	    result = typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
-		    itemPtr, objc-3, objv+3);
-	} else {
-	    const char **args = TkGetStringsFromObjs(objc-3, objv+3);
 
-	    result = typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
-		    itemPtr, objc-3, (Tcl_Obj **) args);
-	    if (args != NULL) {
-		ckfree((char *) args);
-	    }
-	}
-	if (result != TCL_OK) {
+	if (ItemCreate(canvasPtr, itemPtr, objc, objv) != TCL_OK) {
 	    ckfree((char *) itemPtr);
 	    result = TCL_ERROR;
 	    goto done;
 	}
+
 	itemPtr->nextPtr = NULL;
 	entryPtr = Tcl_CreateHashEntry(&canvasPtr->idTable,
 		(char *) INT2PTR(itemPtr->id), &isNew);
@@ -1019,10 +1318,9 @@ CanvasWidgetCmd(
 	}
 	canvasPtr->lastItemPtr = itemPtr;
 	itemPtr->redraw_flags |= FORCE_REDRAW;
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+	EventuallyRedrawItem(canvasPtr, itemPtr);
 	canvasPtr->flags |= REPICK_NEEDED;
-	sprintf(buf, "%d", itemPtr->id);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(itemPtr->id));
 	break;
     }
     case CANV_DCHARS: {
@@ -1039,28 +1337,12 @@ CanvasWidgetCmd(
 		    || (itemPtr->typePtr->dCharsProc == NULL)) {
 		continue;
 	    }
-	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[3],
-			&first);
-	    } else {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr,
-			Tcl_GetString(objv[3]), &first);
-	    }
+	    result = ItemIndex(canvasPtr, itemPtr, objv[3], &first);
 	    if (result != TCL_OK) {
 		goto done;
 	    }
 	    if (objc == 5) {
-		if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		    result = itemPtr->typePtr->indexProc(interp,
-			    (Tk_Canvas) canvasPtr, itemPtr, (char *) objv[4],
-			    &last);
-		} else {
-		    result = itemPtr->typePtr->indexProc(interp,
-			    (Tk_Canvas) canvasPtr, itemPtr,
-			    Tcl_GetString(objv[4]), &last);
-		}
+		result = ItemIndex(canvasPtr, itemPtr, objv[4], &last);
 		if (result != TCL_OK) {
 		    goto done;
 		}
@@ -1078,12 +1360,11 @@ CanvasWidgetCmd(
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
 	    x2 = itemPtr->x2; y2 = itemPtr->y2;
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
-	    itemPtr->typePtr->dCharsProc((Tk_Canvas) canvasPtr, itemPtr,
-		    first, last);
+	    ItemDelChars(canvasPtr, itemPtr, first, last);
 	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 			x1, y1, x2, y2);
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 	    }
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	}
@@ -1095,13 +1376,11 @@ CanvasWidgetCmd(
 
 	for (i = 2; i < objc; i++) {
 	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, goto done) {
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 		if (canvasPtr->bindingTable != NULL) {
-		    Tk_DeleteAllBindings(canvasPtr->bindingTable,
-			    (ClientData) itemPtr);
+		    Tk_DeleteAllBindings(canvasPtr->bindingTable, itemPtr);
 		}
-		itemPtr->typePtr->deleteProc((Tk_Canvas) canvasPtr, itemPtr,
-			canvasPtr->display);
+		ItemDelete(canvasPtr, itemPtr);
 		if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 		    ckfree((char *) itemPtr->tagPtr);
 		}
@@ -1176,12 +1455,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-#ifdef USE_OLD_TAG_SEARCH
-	result = FindItems(interp, canvasPtr, objc, objv, NULL, 2);
-#else /* USE_OLD_TAG_SEARCH */
-	result = FindItems(interp, canvasPtr, objc, objv, NULL, 2,
-		&searchPtr);
-#endif /* USE_OLD_TAG_SEARCH */
+	result = FIND_ITEMS(NULL, 2);
 	break;
     case CANV_FOCUS:
 	if (objc > 3) {
@@ -1192,15 +1466,12 @@ CanvasWidgetCmd(
 	itemPtr = canvasPtr->textInfo.focusItemPtr;
 	if (objc == 2) {
 	    if (itemPtr != NULL) {
-		char buf[TCL_INTEGER_SPACE];
-
-		sprintf(buf, "%d", itemPtr->id);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_NewIntObj(itemPtr->id));
 	    }
 	    goto done;
 	}
-	if ((itemPtr != NULL) && (canvasPtr->textInfo.gotFocus)) {
-	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+	if (canvasPtr->textInfo.gotFocus) {
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	}
 	if (Tcl_GetString(objv[2])[0] == 0) {
 	    canvasPtr->textInfo.focusItemPtr = NULL;
@@ -1216,7 +1487,7 @@ CanvasWidgetCmd(
 	}
 	canvasPtr->textInfo.focusItemPtr = itemPtr;
 	if (canvasPtr->textInfo.gotFocus) {
-	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	}
 	break;
     case CANV_GETTAGS:
@@ -1246,30 +1517,20 @@ CanvasWidgetCmd(
 		    || (itemPtr->typePtr->icursorProc == NULL)) {
 		goto done;
 	    }
-	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[3],
-			&index);
-	    } else {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr,
-			Tcl_GetString(objv[3]), &index);
-	    }
+	    result = ItemIndex(canvasPtr, itemPtr, objv[3], &index);
 	    if (result != TCL_OK) {
 		goto done;
 	    }
-	    itemPtr->typePtr->icursorProc((Tk_Canvas) canvasPtr, itemPtr,
-		    index);
+	    ItemCursor(canvasPtr, itemPtr, index);
 	    if ((itemPtr == canvasPtr->textInfo.focusItemPtr)
 		    && (canvasPtr->textInfo.cursorOn)) {
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 	    }
 	}
 	break;
     }
     case CANV_INDEX: {
 	int index;
-	char buf[TCL_INTEGER_SPACE];
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId string");
@@ -1287,18 +1548,11 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-	    result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas)canvasPtr,
-		    itemPtr, (char *) objv[3], &index);
-	} else {
-	    result = itemPtr->typePtr->indexProc(interp, (Tk_Canvas)canvasPtr,
-		    itemPtr, Tcl_GetString(objv[3]), &index);
-	}
+	result = ItemIndex(canvasPtr, itemPtr, objv[3], &index);
 	if (result != TCL_OK) {
 	    goto done;
 	}
-	sprintf(buf, "%d", index);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
 	break;
     }
     case CANV_INSERT: {
@@ -1315,15 +1569,7 @@ CanvasWidgetCmd(
 		    || (itemPtr->typePtr->insertProc == NULL)) {
 		continue;
 	    }
-	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[3],
-			&beforeThis);
-	    } else {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr,
-			Tcl_GetString(objv[3]), &beforeThis);
-	    }
+	    result = ItemIndex(canvasPtr, itemPtr, objv[3], &beforeThis);
 	    if (result != TCL_OK) {
 		goto done;
 	    }
@@ -1338,17 +1584,11 @@ CanvasWidgetCmd(
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
 	    x2 = itemPtr->x2; y2 = itemPtr->y2;
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
-	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
-			beforeThis, (char *) objv[4]);
-	    } else {
-		itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
-			beforeThis, Tcl_GetString(objv[4]));
-	    }
+	    ItemInsert(canvasPtr, itemPtr, beforeThis, objv[4]);
 	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 			x1, y1, x2, y2);
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 	    }
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	}
@@ -1362,9 +1602,7 @@ CanvasWidgetCmd(
 	}
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
-	    result = Tk_ConfigureValue(canvasPtr->interp, canvasPtr->tkwin,
-		    itemPtr->typePtr->configSpecs, (char *) itemPtr,
-		    Tcl_GetString(objv[3]), 0);
+	    result = ItemConfigValue(canvasPtr, itemPtr, objv[3]);
 	}
 	break;
     case CANV_ITEMCONFIGURE:
@@ -1375,30 +1613,13 @@ CanvasWidgetCmd(
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    if (objc == 3) {
-		result = Tk_ConfigureInfo(canvasPtr->interp, canvasPtr->tkwin,
-			itemPtr->typePtr->configSpecs, (char *) itemPtr,
-			NULL, 0);
+		result = ItemConfigInfo(canvasPtr, itemPtr, NULL);
 	    } else if (objc == 4) {
-		result = Tk_ConfigureInfo(canvasPtr->interp, canvasPtr->tkwin,
-			itemPtr->typePtr->configSpecs, (char *) itemPtr,
-			Tcl_GetString(objv[3]), 0);
+		result = ItemConfigInfo(canvasPtr, itemPtr, objv[3]);
 	    } else {
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
-		if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		    result = itemPtr->typePtr->configProc(interp,
-			    (Tk_Canvas) canvasPtr, itemPtr, objc-3, objv+3,
-			    TK_CONFIG_ARGV_ONLY);
-		} else {
-		    const char **args = TkGetStringsFromObjs(objc-3, objv+3);
-
-		    result = itemPtr->typePtr->configProc(interp,
-			    (Tk_Canvas) canvasPtr, itemPtr, objc-3,
-			    (Tcl_Obj **) args, TK_CONFIG_ARGV_ONLY);
-		    if (args != NULL) {
-			ckfree((char *) args);
-		    }
-		}
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
+		result = ItemConfigure(canvasPtr, itemPtr, objc-3, objv+3);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 		canvasPtr->flags |= REPICK_NEEDED;
 	    }
 	    if ((result != TCL_OK) || (objc < 5)) {
@@ -1430,11 +1651,7 @@ CanvasWidgetCmd(
 	    }
 	    itemPtr = itemPtr->prevPtr;
 	}
-#ifdef USE_OLD_TAG_SEARCH
-	RelinkItems(canvasPtr, objv[2], itemPtr);
-#else /* USE_OLD_TAG_SEARCH */
-	result = RelinkItems(canvasPtr, objv[2], itemPtr, &searchPtr);
-#endif /* USE_OLD_TAG_SEARCH */
+	RELINK_ITEMS(objv[2], itemPtr);
 	break;
     }
     case CANV_MOVE: {
@@ -1452,10 +1669,9 @@ CanvasWidgetCmd(
 	    goto done;
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
-	    itemPtr->typePtr->translateProc((Tk_Canvas) canvasPtr, itemPtr,
-		    xAmount, yAmount);
-	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
+	    ItemTranslate(canvasPtr, itemPtr, xAmount, yAmount);
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	    canvasPtr->flags |= REPICK_NEEDED;
 	}
 	break;
@@ -1515,10 +1731,9 @@ CanvasWidgetCmd(
 	     */
 
 	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
-		itemPtr->typePtr->translateProc((Tk_Canvas) canvasPtr,
-			itemPtr, xAmount, yAmount);
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
+		ItemTranslate(canvasPtr, itemPtr, xAmount, yAmount);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
 		canvasPtr->flags |= REPICK_NEEDED;
 	    }
 	}
@@ -1560,11 +1775,54 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	}
-#ifdef USE_OLD_TAG_SEARCH
-	RelinkItems(canvasPtr, objv[2], prevPtr);
-#else /* USE_OLD_TAG_SEARCH */
-	result = RelinkItems(canvasPtr, objv[2], prevPtr, &searchPtr);
-#endif /* USE_OLD_TAG_SEARCH */
+	RELINK_ITEMS(objv[2], prevPtr);
+	break;
+    }
+    case CANV_RCHARS: {
+	int first, last;
+	int x1,x2,y1,y2;
+
+	if (objc != 6) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId first last string");
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	    if ((itemPtr->typePtr->indexProc == NULL)
+		    || (itemPtr->typePtr->dCharsProc == NULL)
+		    || (itemPtr->typePtr->insertProc == NULL)) {
+		continue;
+	    }
+	    result = ItemIndex(canvasPtr, itemPtr, objv[3], &first);
+	    if (result != TCL_OK) {
+		goto done;
+	    }
+	    result = ItemIndex(canvasPtr, itemPtr, objv[4], &last);
+	    if (result != TCL_OK) {
+		goto done;
+	    }
+
+	    /*
+	     * Redraw both item's old and new areas: it's possible that a
+	     * replace could result in a new area larger than the old area.
+	     * Except if the dCharsProc or insertProc sets the
+	     * TK_ITEM_DONT_REDRAW flag, nothing more needs to be done.
+	     */
+
+	    x1 = itemPtr->x1; y1 = itemPtr->y1;
+	    x2 = itemPtr->x2; y2 = itemPtr->y2;
+	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+
+	    ItemDelChars(canvasPtr, itemPtr, first, last);
+	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
+
+	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
+		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
+			x1, y1, x2, y2);
+		EventuallyRedrawItem(canvasPtr, itemPtr);
+	    }
+	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	}
 	break;
     }
     case CANV_SCALE: {
@@ -1591,10 +1849,9 @@ CanvasWidgetCmd(
 	    goto done;
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
-	    itemPtr->typePtr->scaleProc((Tk_Canvas) canvasPtr, itemPtr,
-		    xOrigin, yOrigin, xScale, yScale);
-	    EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
+	    ItemScale(canvasPtr, itemPtr, xOrigin, yOrigin, xScale, yScale);
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	    canvasPtr->flags |= REPICK_NEEDED;
 	}
 	break;
@@ -1673,15 +1930,7 @@ CanvasWidgetCmd(
 	    }
 	}
 	if (objc == 5) {
-	    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr, (char *) objv[4],
-			&index);
-	    } else {
-		result = itemPtr->typePtr->indexProc(interp,
-			(Tk_Canvas) canvasPtr, itemPtr,
-			Tcl_GetString(objv[4]), &index);
-	    }
+	    result = ItemIndex(canvasPtr, itemPtr, objv[4], &index);
 	    if (result != TCL_OK) {
 		goto done;
 	    }
@@ -1716,12 +1965,8 @@ CanvasWidgetCmd(
 		result = TCL_ERROR;
 		goto done;
 	    }
-	    if (canvasPtr->textInfo.selItemPtr != NULL) {
-		EventuallyRedrawItem((Tk_Canvas) canvasPtr,
-			canvasPtr->textInfo.selItemPtr);
-		canvasPtr->textInfo.selItemPtr = NULL;
-	    }
-	    goto done;
+	    EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.selItemPtr);
+	    canvasPtr->textInfo.selItemPtr = NULL;
 	    break;
 	case CANV_FROM:
 	    if (objc != 5) {
@@ -1763,7 +2008,7 @@ CanvasWidgetCmd(
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    Tcl_SetObjResult(interp, 
-		Tcl_NewStringObj(itemPtr->typePtr->name, -1));
+		    Tcl_NewStringObj(itemPtr->typePtr->name, -1));
 	}
 	break;
     case CANV_XVIEW: {
@@ -1867,7 +2112,7 @@ CanvasWidgetCmd(
 #ifndef USE_OLD_TAG_SEARCH
     TagSearchDestroy(searchPtr);
 #endif /* not USE_OLD_TAG_SEARCH */
-    Tcl_Release((ClientData) canvasPtr);
+    Tcl_Release(canvasPtr);
     return result;
 }
 
@@ -1906,8 +2151,7 @@ DestroyCanvas(
     for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 	    itemPtr = canvasPtr->firstItemPtr) {
 	canvasPtr->firstItemPtr = itemPtr->nextPtr;
-	itemPtr->typePtr->deleteProc((Tk_Canvas) canvasPtr, itemPtr,
-		canvasPtr->display);
+	ItemDelete(canvasPtr, itemPtr);
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 	    ckfree((char *) itemPtr->tagPtr);
 	}
@@ -2035,7 +2279,7 @@ ConfigureCanvas(
 	if (argc2 != 4) {
 	    Tcl_AppendResult(interp, "bad scrollRegion \"",
 		    canvasPtr->regionString, "\"", NULL);
-	    badRegion:
+	badRegion:
 	    ckfree(canvasPtr->regionString);
 	    ckfree((char *) argv2);
 	    canvasPtr->regionString = NULL;
@@ -2085,7 +2329,7 @@ ConfigureCanvas(
 }
 
 /*
- *---------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * CanvasWorldChanged --
  *
@@ -2101,23 +2345,19 @@ ConfigureCanvas(
  *	side effect of causing all the items to recompute their geometry and
  *	to be redisplayed.
  *
- *---------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static void
 CanvasWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
-    TkCanvas *canvasPtr = (TkCanvas *) instanceData;
+    TkCanvas *canvasPtr = instanceData;
     Tk_Item *itemPtr;
-    int result;
 
     itemPtr = canvasPtr->firstItemPtr;
     for ( ; itemPtr != NULL; itemPtr = itemPtr->nextPtr) {
-	result = itemPtr->typePtr->configProc(canvasPtr->interp,
-		(Tk_Canvas) canvasPtr, itemPtr, 0, NULL,
-		TK_CONFIG_ARGV_ONLY);
-	if (result != TCL_OK) {
+	if (ItemConfigure(canvasPtr, itemPtr, 0, NULL) != TCL_OK) {
 	    Tcl_ResetResult(canvasPtr->interp);
 	}
     }
@@ -2129,7 +2369,7 @@ CanvasWorldChanged(
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * DisplayCanvas --
  *
@@ -2143,7 +2383,7 @@ CanvasWorldChanged(
  * Side effects:
  *	Information appears on the screen.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -2170,11 +2410,11 @@ DisplayCanvas(
      */
 
     while (canvasPtr->flags & REPICK_NEEDED) {
-	Tcl_Preserve((ClientData) canvasPtr);
+	Tcl_Preserve(canvasPtr);
 	canvasPtr->flags &= ~REPICK_NEEDED;
 	PickCurrentItem(canvasPtr, &canvasPtr->pickEvent);
 	tkwin = canvasPtr->tkwin;
-	Tcl_Release((ClientData) canvasPtr);
+	Tcl_Release(canvasPtr);
 	if (tkwin == NULL) {
 	    return;
 	}
@@ -2187,13 +2427,14 @@ DisplayCanvas(
      */
 
     for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
-		itemPtr = itemPtr->nextPtr) {
+	    itemPtr = itemPtr->nextPtr) {
 	if (itemPtr->redraw_flags & FORCE_REDRAW) {
 	    itemPtr->redraw_flags &= ~FORCE_REDRAW;
-	    EventuallyRedrawItem((Tk_Canvas)canvasPtr, itemPtr);
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	    itemPtr->redraw_flags &= ~FORCE_REDRAW;
 	}
     }
+
     /*
      * Compute the intersection between the area that needs redrawing and the
      * area that's visible on the screen.
@@ -2291,7 +2532,7 @@ DisplayCanvas(
 		    || (itemPtr->y1 >= screenY2)
 		    || (itemPtr->x2 < screenX1)
 		    || (itemPtr->y2 < screenY1)) {
-		if (!(itemPtr->typePtr->alwaysRedraw & 1)
+		if (!AlwaysRedraw(itemPtr)
 			|| (itemPtr->x1 >= canvasPtr->redrawX2)
 			|| (itemPtr->y1 >= canvasPtr->redrawY2)
 			|| (itemPtr->x2 < canvasPtr->redrawX1)
@@ -2300,12 +2541,11 @@ DisplayCanvas(
 		}
 	    }
 	    if (itemPtr->state == TK_STATE_HIDDEN ||
-		(itemPtr->state == TK_STATE_NULL &&
-		 canvasPtr->canvas_state == TK_STATE_HIDDEN)) {
+		    (itemPtr->state == TK_STATE_NULL &&
+		    canvasPtr->canvas_state == TK_STATE_HIDDEN)) {
 		continue;
 	    }
-	    itemPtr->typePtr->displayProc((Tk_Canvas) canvasPtr, itemPtr,
-		    canvasPtr->display, pixmap, screenX1, screenY1, width,
+	    ItemDisplay(canvasPtr, itemPtr, pixmap, screenX1, screenY1, width,
 		    height);
 	}
 
@@ -2369,7 +2609,7 @@ DisplayCanvas(
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * CanvasEventProc --
  *
@@ -2380,10 +2620,10 @@ DisplayCanvas(
  *	None.
  *
  * Side effects:
- *	When the window gets deleted, internal structures get cleaned up.
- *	When it gets exposed, it is redisplayed.
+ *	When the window gets deleted, internal structures get cleaned up. When
+ *	it gets exposed, it is redisplayed.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -2416,10 +2656,9 @@ CanvasEventProc(
 		    canvasPtr->widgetCmd);
 	}
 	if (canvasPtr->flags & REDRAW_PENDING) {
-	    Tcl_CancelIdleCall(DisplayCanvas, (ClientData) canvasPtr);
+	    Tcl_CancelIdleCall(DisplayCanvas, canvasPtr);
 	}
-	Tcl_EventuallyFree((ClientData) canvasPtr,
-		(Tcl_FreeProc *) DestroyCanvas);
+	Tcl_EventuallyFree(canvasPtr, (Tcl_FreeProc *) DestroyCanvas);
     } else if (eventPtr->type == ConfigureNotify) {
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 
@@ -2453,9 +2692,8 @@ CanvasEventProc(
 
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
-	    if (itemPtr->typePtr->alwaysRedraw & 1) {
-		itemPtr->typePtr->displayProc((Tk_Canvas) canvasPtr, itemPtr,
-			canvasPtr->display, None, 0, 0, 0, 0);
+	    if (AlwaysRedraw(itemPtr)) {
+		ItemDisplay(canvasPtr, itemPtr, None, 0, 0, 0, 0);
 	    }
 	}
     }
@@ -2500,7 +2738,7 @@ CanvasCmdDeletedProc(
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Tk_CanvasEventuallyRedraw --
  *
@@ -2513,7 +2751,7 @@ CanvasCmdDeletedProc(
  * Side effects:
  *	The screen will eventually be refreshed.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 void
@@ -2562,13 +2800,13 @@ Tk_CanvasEventuallyRedraw(
 	canvasPtr->flags |= BBOX_NOT_EMPTY;
     }
     if (!(canvasPtr->flags & REDRAW_PENDING)) {
-	Tcl_DoWhenIdle(DisplayCanvas, (ClientData) canvasPtr);
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
 	canvasPtr->flags |= REDRAW_PENDING;
     }
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * EventuallyRedrawItem --
  *
@@ -2581,22 +2819,24 @@ Tk_CanvasEventuallyRedraw(
  * Side effects:
  *	The screen will eventually be refreshed.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static void
 EventuallyRedrawItem(
-    Tk_Canvas canvas,		/* Information about widget. */
-    Tk_Item *itemPtr)		/* Item to be redrawn. */
+    TkCanvas *canvasPtr,	/* Information about widget. */
+    Tk_Item *itemPtr)		/* Item to be redrawn. May be NULL, in which
+				 * case nothing happens. */
 {
-    TkCanvas *canvasPtr = Canvas(canvas);
-
+    if (itemPtr == NULL) {
+	return;
+    }
     if ((itemPtr->x1 >= itemPtr->x2) || (itemPtr->y1 >= itemPtr->y2) ||
  	    (itemPtr->x2 < canvasPtr->xOrigin) ||
 	    (itemPtr->y2 < canvasPtr->yOrigin) ||
 	    (itemPtr->x1 >= canvasPtr->xOrigin+Tk_Width(canvasPtr->tkwin)) ||
 	    (itemPtr->y1 >= canvasPtr->yOrigin+Tk_Height(canvasPtr->tkwin))) {
-	if (!(itemPtr->typePtr->alwaysRedraw & 1)) {
+	if (!AlwaysRedraw(itemPtr)) {
 	    return;
 	}
     }
@@ -2624,13 +2864,13 @@ EventuallyRedrawItem(
 	itemPtr->redraw_flags |= FORCE_REDRAW;
     }
     if (!(canvasPtr->flags & REDRAW_PENDING)) {
-	Tcl_DoWhenIdle(DisplayCanvas, (ClientData) canvasPtr);
+	Tcl_DoWhenIdle(DisplayCanvas, canvasPtr);
 	canvasPtr->flags |= REDRAW_PENDING;
     }
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Tk_CreateItemType --
  *
@@ -2646,7 +2886,7 @@ EventuallyRedrawItem(
  *	commands). If there was already a type with the same name as in
  *	typePtr, it is replaced with the new type.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 void
@@ -2786,11 +3026,8 @@ StartTagSearch(
     Tk_Uid uid;
     char *tag = Tcl_GetString(tagObj);
     int count;
-    TkWindow *tkwin;
-    TkDisplay *dispPtr;
-
-    tkwin = (TkWindow *) canvasPtr->tkwin;
-    dispPtr = tkwin->dispPtr;
+    TkWindow *tkwin = (TkWindow *) canvasPtr->tkwin;
+    TkDisplay *dispPtr = tkwin->dispPtr;
 
     /*
      * Initialize the search.
@@ -2820,7 +3057,7 @@ StartTagSearch(
 		dispPtr->numSlowSearches++;
 		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char*) id);
 		if (entryPtr != NULL) {
-		    itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
+		    itemPtr = Tcl_GetHashValue(entryPtr);
 		    lastPtr = itemPtr->prevPtr;
 		} else {
 		    lastPtr = itemPtr = NULL;
@@ -3012,9 +3249,9 @@ static void
 TagSearchExprInit(
     TagSearchExpr **exprPtrPtr)
 {
-    TagSearchExpr* expr = *exprPtrPtr;
+    TagSearchExpr *expr = *exprPtrPtr;
 
-    if (! expr) {
+    if (expr == NULL) {
 	expr = (TagSearchExpr *) ckalloc(sizeof(TagSearchExpr));
 	expr->allocated = 0;
 	expr->uids = NULL;
@@ -3044,11 +3281,11 @@ static void
 TagSearchExprDestroy(
     TagSearchExpr *expr)
 {
-    if (expr) {
+    if (expr != NULL) {
     	if (expr->uids) {
-	    ckfree((char *)expr->uids);
+	    ckfree((char *) expr->uids);
 	}
-	ckfree((char *)expr);
+	ckfree((char *) expr);
     }
 }
 
@@ -3089,7 +3326,7 @@ TagSearchScan(
      * Initialize the search.
      */
 
-    if (*searchPtrPtr) {
+    if (*searchPtrPtr != NULL) {
 	searchPtr = *searchPtrPtr;
     } else {
 	/*
@@ -3106,7 +3343,7 @@ TagSearchScan(
 	searchPtr->rewritebufferAllocated = 100;
 	searchPtr->rewritebuffer = ckalloc(searchPtr->rewritebufferAllocated);
     }
-    TagSearchExprInit(&(searchPtr->expr));
+    TagSearchExprInit(&searchPtr->expr);
 
     /*
      * How long is the tagOrId?
@@ -3118,7 +3355,7 @@ TagSearchScan(
      * Make sure there is enough buffer to hold rewritten tags.
      */
 
-    if ((unsigned int)searchPtr->stringLength >=
+    if ((unsigned) searchPtr->stringLength >=
 	    searchPtr->rewritebufferAllocated) {
 	searchPtr->rewritebufferAllocated = searchPtr->stringLength + 100;
 	searchPtr->rewritebuffer =
@@ -3250,8 +3487,8 @@ TagSearchDestroy(
 {
     if (searchPtr) {
 	TagSearchExprDestroy(searchPtr->expr);
-	ckfree((char *)searchPtr->rewritebuffer);
-	ckfree((char *)searchPtr);
+	ckfree((char *) searchPtr->rewritebuffer);
+	ckfree((char *) searchPtr);
     }
 }
 
@@ -3596,7 +3833,7 @@ TagSearchEvalExpr(
 		negate_result = 0;
 	    }
 	    looking_for_tag = 0;
-	} else {    /* ! looking_for_tag */
+	} else {		/* ! looking_for_tag */
 	    if (((uid == searchUids->andUid) && (!result)) ||
 		    ((uid == searchUids->orUid) && result)) {
 		/*
@@ -3702,7 +3939,7 @@ TagSearchFirst(
 	    entryPtr = Tcl_FindHashEntry(&searchPtr->canvasPtr->idTable,
 		    (char *) INT2PTR(searchPtr->id));
 	    if (entryPtr != NULL) {
-		itemPtr = (Tk_Item *)Tcl_GetHashValue(entryPtr);
+		itemPtr = Tcl_GetHashValue(entryPtr);
 		lastPtr = itemPtr->prevPtr;
 	    } else {
 		lastPtr = itemPtr = NULL;
@@ -3925,8 +4162,8 @@ DoItem(
 
 	itemPtr->tagSpace += 5;
 	newTagPtr = (Tk_Uid *)
-		ckalloc((unsigned) (itemPtr->tagSpace * sizeof(Tk_Uid)));
-	memcpy((void *) newTagPtr, itemPtr->tagPtr,
+		ckalloc((unsigned) itemPtr->tagSpace * sizeof(Tk_Uid));
+	memcpy(newTagPtr, itemPtr->tagPtr,
 		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 	    ckfree((char *) itemPtr->tagPtr);
@@ -4113,11 +4350,7 @@ FindItems(
 	if (itemPtr == NULL) {
 	    return TCL_OK;
 	}
-	closestDist = itemPtr->typePtr->pointProc((Tk_Canvas) canvasPtr,
-		itemPtr, coords) - halo;
-	if (closestDist < 0.0) {
-	    closestDist = 0.0;
-	}
+	closestDist = ItemPoint(canvasPtr, itemPtr, coords, halo);
 	while (1) {
 	    double newDist;
 
@@ -4156,11 +4389,7 @@ FindItems(
 			|| (itemPtr->y1 >= y2) || (itemPtr->y2 <= y1)) {
 		    continue;
 		}
-		newDist = itemPtr->typePtr->pointProc((Tk_Canvas) canvasPtr,
-			itemPtr, coords) - halo;
-		if (newDist < 0.0) {
-		    newDist = 0.0;
-		}
+		newDist = ItemPoint(canvasPtr, itemPtr, coords, halo);
 		if (newDist <= closestDist) {
 		    closestDist = newDist;
 		    break;
@@ -4272,8 +4501,7 @@ FindArea(
 		|| (itemPtr->y1 >= y2) || (itemPtr->y2 <= y1)) {
 	    continue;
 	}
-	if (itemPtr->typePtr->areaProc((Tk_Canvas) canvasPtr, itemPtr, rect)
-		>= enclosed) {
+	if (ItemOverlap(canvasPtr, itemPtr, rect) >= enclosed) {
 	    DoItem(interp, itemPtr, uid);
 	}
     }
@@ -4365,7 +4593,7 @@ RelinkItems(
 	    lastMovePtr->nextPtr = itemPtr;
 	}
 	lastMovePtr = itemPtr;
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+	EventuallyRedrawItem(canvasPtr, itemPtr);
 	canvasPtr->flags |= REPICK_NEEDED;
     }
 
@@ -4429,6 +4657,7 @@ CanvasBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = clientData;
+    int mask;
 
     Tcl_Preserve(canvasPtr);
 
@@ -4438,9 +4667,9 @@ CanvasBindProc(
      * current item while buttons are down.
      */
 
-    if (eventPtr->type == ButtonPress || eventPtr->type == ButtonRelease) {
-	int mask;
-
+    switch (eventPtr->type) {
+    case ButtonPress:
+    case ButtonRelease:
 	switch (eventPtr->xbutton.button) {
 	case Button1:
 	    mask = Button1Mask;
@@ -4494,19 +4723,20 @@ CanvasBindProc(
 	    PickCurrentItem(canvasPtr, eventPtr);
 	    eventPtr->xbutton.state ^= mask;
 	}
-	goto done;
-    } else if ((eventPtr->type == EnterNotify)
-	    || (eventPtr->type == LeaveNotify)) {
+	break;
+    case EnterNotify:
+    case LeaveNotify:
 	canvasPtr->state = eventPtr->xcrossing.state;
 	PickCurrentItem(canvasPtr, eventPtr);
-	goto done;
-    } else if (eventPtr->type == MotionNotify) {
+	break;
+    case MotionNotify:
 	canvasPtr->state = eventPtr->xmotion.state;
 	PickCurrentItem(canvasPtr, eventPtr);
+	/* fallthrough */
+    default:
+	CanvasDoEvent(canvasPtr, eventPtr);
     }
-    CanvasDoEvent(canvasPtr, eventPtr);
 
-  done:
     Tcl_Release(canvasPtr);
 }
 
@@ -4704,10 +4934,8 @@ PickCurrentItem(
     canvasPtr->currentItemPtr = canvasPtr->newCurrentPtr;
     if (prevItemPtr != NULL && prevItemPtr != canvasPtr->currentItemPtr &&
 	    (prevItemPtr->redraw_flags & TK_ITEM_STATE_DEPENDANT)) {
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr, prevItemPtr);
-	prevItemPtr->typePtr->configProc(canvasPtr->interp,
-		(Tk_Canvas) canvasPtr, prevItemPtr, 0, NULL,
-		TK_CONFIG_ARGV_ONLY);
+	EventuallyRedrawItem(canvasPtr, prevItemPtr);
+	ItemConfigure(canvasPtr, prevItemPtr, 0, NULL);
     }
     if (canvasPtr->currentItemPtr != NULL) {
 	XEvent event;
@@ -4716,14 +4944,11 @@ PickCurrentItem(
 	DoItem(NULL, canvasPtr->currentItemPtr, Tk_GetUid("current"));
 #else /* USE_OLD_TAG_SEARCH */
 	DoItem(NULL, canvasPtr->currentItemPtr, searchUids->currentUid);
-#endif /* USE_OLD_TAG_SEA */
+#endif /* USE_OLD_TAG_SEARCH */
 	if ((canvasPtr->currentItemPtr->redraw_flags & TK_ITEM_STATE_DEPENDANT
 		&& prevItemPtr != canvasPtr->currentItemPtr)) {
-	    canvasPtr->currentItemPtr->typePtr->configProc(canvasPtr->interp,
-		    (Tk_Canvas) canvasPtr, canvasPtr->currentItemPtr, 0, NULL,
-		    TK_CONFIG_ARGV_ONLY);
-	    EventuallyRedrawItem((Tk_Canvas) canvasPtr,
-		    canvasPtr->currentItemPtr);
+	    ItemConfigure(canvasPtr, canvasPtr->currentItemPtr, 0, NULL);
+	    EventuallyRedrawItem(canvasPtr, canvasPtr->currentItemPtr);
 	}
 	event = canvasPtr->pickEvent;
 	event.type = EnterNotify;
@@ -4780,8 +5005,7 @@ CanvasFindClosest(
 		|| (itemPtr->y1 > y2) || (itemPtr->y2 < y1)) {
 	    continue;
 	}
-	if (itemPtr->typePtr->pointProc((Tk_Canvas) canvasPtr, itemPtr,
-		coords) <= canvasPtr->closeEnough) {
+	if (ItemPoint(canvasPtr,itemPtr,coords,0) <= canvasPtr->closeEnough) {
 	    bestPtr = itemPtr;
 	}
     }
@@ -4956,10 +5180,7 @@ CanvasBlinkProc(
 	canvasPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
 		canvasPtr->insertOnTime, CanvasBlinkProc, canvasPtr);
     }
-    if (canvasPtr->textInfo.focusItemPtr != NULL) {
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr,
-		canvasPtr->textInfo.focusItemPtr);
-    }
+    EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.focusItemPtr);
 }
 
 /*
@@ -4999,10 +5220,7 @@ CanvasFocusProc(
 	canvasPtr->textInfo.cursorOn = 0;
 	canvasPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
     }
-    if (canvasPtr->textInfo.focusItemPtr != NULL) {
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr,
-		canvasPtr->textInfo.focusItemPtr);
-    }
+    EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.focusItemPtr);
     if (canvasPtr->highlightWidth > 0) {
 	canvasPtr->flags |= REDRAW_BORDERS;
 	if (!(canvasPtr->flags & REDRAW_PENDING)) {
@@ -5051,8 +5269,7 @@ CanvasSelectTo(
 	Tk_OwnSelection(canvasPtr->tkwin, XA_PRIMARY, CanvasLostSelection,
 		canvasPtr);
     } else if (canvasPtr->textInfo.selItemPtr != itemPtr) {
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr,
-		canvasPtr->textInfo.selItemPtr);
+	EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.selItemPtr);
     }
     canvasPtr->textInfo.selItemPtr = itemPtr;
 
@@ -5070,7 +5287,7 @@ CanvasSelectTo(
     if ((canvasPtr->textInfo.selectFirst != oldFirst)
 	    || (canvasPtr->textInfo.selectLast != oldLast)
 	    || (itemPtr != oldSelPtr)) {
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr, itemPtr);
+	EventuallyRedrawItem(canvasPtr, itemPtr);
     }
 }
 
@@ -5107,14 +5324,7 @@ CanvasFetchSelection(
 {
     TkCanvas *canvasPtr = clientData;
 
-    if (canvasPtr->textInfo.selItemPtr == NULL) {
-	return -1;
-    }
-    if (canvasPtr->textInfo.selItemPtr->typePtr->selectionProc == NULL) {
-	return -1;
-    }
-    return canvasPtr->textInfo.selItemPtr->typePtr->selectionProc(
-	    (Tk_Canvas) canvasPtr, canvasPtr->textInfo.selItemPtr, offset,
+    return ItemSelection(canvasPtr, canvasPtr->textInfo.selItemPtr, offset,
 	    buffer, maxBytes);
 }
 
@@ -5142,10 +5352,7 @@ CanvasLostSelection(
 {
     TkCanvas *canvasPtr = clientData;
 
-    if (canvasPtr->textInfo.selItemPtr != NULL) {
-	EventuallyRedrawItem((Tk_Canvas) canvasPtr,
-		canvasPtr->textInfo.selItemPtr);
-    }
+    EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.selItemPtr);
     canvasPtr->textInfo.selItemPtr = NULL;
 }
 

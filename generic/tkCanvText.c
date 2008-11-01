@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.30 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.31 2008/11/01 16:14:30 dkf Exp $
  */
 
 #include <stdio.h>
@@ -337,10 +337,8 @@ TextCoords(
 		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
 	    } else if (objc != 2) {
-		char buf[64 + TCL_INTEGER_SPACE];
-
-		sprintf(buf, "wrong # coordinates: expected 2, got %d", objc);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"wrong # coordinates: expected 2, got %d", objc));
 		return TCL_ERROR;
 	    }
 	}
@@ -352,10 +350,8 @@ TextCoords(
 	}
 	ComputeTextBbox(canvas, textPtr);
     } else {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected 0 or 2, got %d", objc));
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -491,7 +487,6 @@ ConfigureText(
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->cursorOffGC);
     }
     textPtr->cursorOffGC = newGC;
-
 
     /*
      * If the text was changed, move the selection and insertion indices to
@@ -879,7 +874,7 @@ DisplayCanvText(
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * TextInsert --
  *
@@ -892,7 +887,7 @@ DisplayCanvText(
  *	The text in the given item is modified. The cursor and selection
  *	positions are also modified to reflect the insertion.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 static void
@@ -924,7 +919,7 @@ TextInsert(
 	return;
     }
 
-    newStr = (char *) ckalloc((unsigned) textPtr->numBytes + byteCount + 1);
+    newStr = ckalloc((unsigned) textPtr->numBytes + byteCount + 1);
     memcpy(newStr, text, (size_t) byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
@@ -1005,7 +1000,7 @@ TextDeleteChars(
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
 
-    newStr = (char *) ckalloc((unsigned) (textPtr->numBytes + 1 - byteCount));
+    newStr = ckalloc((unsigned) (textPtr->numBytes + 1 - byteCount));
     memcpy(newStr, text, (size_t) byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
@@ -1285,7 +1280,7 @@ GetTextIndex(
 		x + canvasPtr->scrollX1 - textPtr->leftEdge,
 		y + canvasPtr->scrollY1 - textPtr->header.y1);
     } else if (Tcl_GetIntFromObj(NULL, obj, indexPtr) == TCL_OK) {
-	if (*indexPtr < 0){
+	if (*indexPtr < 0) {
 	    *indexPtr = 0;
 	} else if (*indexPtr > textPtr->numChars) {
 	    *indexPtr = textPtr->numChars;
@@ -1297,8 +1292,7 @@ GetTextIndex(
 	 */
 
     badIndex:
-	Tcl_SetResult(interp, NULL, TCL_STATIC);
-	Tcl_AppendResult(interp, "bad index \"", string, "\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
 	return TCL_ERROR;
     }
     return TCL_OK;
