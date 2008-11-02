@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.36 2008/10/17 23:18:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.37 2008/11/02 09:54:02 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -139,9 +139,9 @@ typedef struct UnixFont {
  */
 
 typedef struct EncodingAlias {
-    char *realName;		/* The real name of the encoding to load if
+    const char *realName;		/* The real name of the encoding to load if
 				 * the provided name matched the pattern. */
-    char *aliasPattern;		/* Pattern for encoding name, of the form that
+    const char *aliasPattern;		/* Pattern for encoding name, of the form that
 				 * is acceptable to Tcl_StringMatch. */
 } EncodingAlias;
 
@@ -210,7 +210,7 @@ static SubFont *	CanUseFallback(UnixFont *fontPtr,
 			    const char *fallbackName, int ch,
 			    SubFont **fixSubFontPtrPtr);
 static SubFont *	CanUseFallbackWithAliases(UnixFont *fontPtr,
-			    char *fallbackName, int ch,
+			    const char *fallbackName, int ch,
 			    Tcl_DString *nameTriedPtr,
 			    SubFont **fixSubFontPtrPtr);
 static int		ControlUtfProc(ClientData clientData, const char *src,
@@ -628,7 +628,7 @@ UtfToUcs2beProc(
     return result;
 }
 #endif /* WORDS_BIGENDIAN */
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1483,9 +1483,9 @@ CreateClosestFont(
 
     nameList = ListFontOrAlias(display, want.fa.family, &numNames);
     if (numNames == 0) {
-	char ***fontFallbacks;
+	const char *const *const *fontFallbacks;
 	int i, j;
-	char *fallback;
+	const char *fallback;
 
 	fontFallbacks = TkFontGetFallbacks();
 	for (i = 0; fontFallbacks[i] != NULL; i++) {
@@ -1969,7 +1969,11 @@ FindSubFontForChar(
 {
     int i, j, k, numNames;
     Tk_Uid faceName;
-    char *fallback, **aliases, **nameList, **anyFallbacks, ***fontFallbacks;
+    const char *fallback;
+    const char *const *aliases;
+    const char *const *nameList;
+    const char *const *anyFallbacks;
+    const char *const *const *fontFallbacks;
     SubFont *subFontPtr;
     Tcl_DString ds;
 
@@ -2287,7 +2291,7 @@ static SubFont *
 CanUseFallbackWithAliases(
     UnixFont *fontPtr,		/* The font object that will own the new
 				 * screen font. */
-    char *faceName,		/* Desired face name for new screen font. */
+    const char *faceName,		/* Desired face name for new screen font. */
     int ch,			/* The Unicode character that the new screen
 				 * font must be able to display. */
     Tcl_DString *nameTriedPtr,	/* Records face names that have already been
@@ -2298,7 +2302,7 @@ CanUseFallbackWithAliases(
 				 * reallocate our subfont table. */
 {
     SubFont *subFontPtr;
-    char **aliases;
+    const char *const *aliases;
     int i;
 
     if (SeenName(faceName, nameTriedPtr) == 0) {
@@ -2402,7 +2406,9 @@ CanUseFallback(
     Tk_Uid hateFoundry;
     const char *charset, *hateCharset;
     unsigned bestScore[2];
-    char **nameList, **nameListOrig, src[TCL_UTF_MAX];
+    const char *const *nameList;
+    const char *const *nameListOrig;
+    char src[TCL_UTF_MAX];
     FontAttributes want, got;
     Display *display;
     SubFont subFont;
