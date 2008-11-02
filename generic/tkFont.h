@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.11 2008/05/02 10:28:18 dkf Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.12 2008/11/02 09:54:02 nijtmans Exp $
  */
 
 #ifndef _TKFONT
@@ -197,12 +197,12 @@ typedef struct TkXLFDAttributes {
 
 MODULE_SCOPE int	TkFontParseXLFD(const char *string,
 			    TkFontAttributes *faPtr, TkXLFDAttributes *xaPtr);
-MODULE_SCOPE char **	TkFontGetAliasList(const char *faceName);
-MODULE_SCOPE char ***	TkFontGetFallbacks(void);
+MODULE_SCOPE CONST86 char *CONST86 * TkFontGetAliasList(const char *faceName);
+MODULE_SCOPE CONST86 char *CONST86 *CONST86 * TkFontGetFallbacks(void);
 MODULE_SCOPE int	TkFontGetPixels(Tk_Window tkwin, int size);
 MODULE_SCOPE int	TkFontGetPoints(Tk_Window tkwin, int size);
-MODULE_SCOPE char **	TkFontGetGlobalClass(void);
-MODULE_SCOPE char **	TkFontGetSymbolClass(void);
+MODULE_SCOPE CONST86 char *CONST86 * TkFontGetGlobalClass(void);
+MODULE_SCOPE CONST86 char *CONST86 * TkFontGetSymbolClass(void);
 MODULE_SCOPE int	TkCreateNamedFont(Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *name, TkFontAttributes *faPtr);
 MODULE_SCOPE int	TkDeleteNamedFont(Tcl_Interp *interp,

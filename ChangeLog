@@ -1,3 +1,14 @@
+2008-11-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkFont.h:      more internal -Wwrite-strings warning fixes
+	* generic/tkFont.c
+	* generic/ttk/ttkTheme.h
+	* generic/ttk/ttkDefaultTheme.c
+	* generic/ttk/ttkState.c
+	* macosx/tkMacOSXFont.c
+	* unix/tkUnixFont.c
+	* win/tkWinFont.c
+
 2008-11-01  Donal K. Fellows  <dkf@users.sf.net>
 
 	TIP #97 IMPLEMENTATION
@@ -32,8 +43,8 @@
 2008-10-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkAtom.c:      more internal -Wwrite-strings warning fixes
-	* generic/tkBusy.c       (thanks, Joe, for fixing tkAtom.c, but this
-	* generic/tkButton.c     is how it should have been fixed)
+	* generic/tkBusy.c
+	* generic/tkButton.c
 	* generic/tkCanvPoly.c
 	* generic/tkCanvText.c
 	* generic/tkCmds.c
