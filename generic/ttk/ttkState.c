@@ -1,5 +1,5 @@
 /*
- * $Id: ttkState.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkState.c,v 1.2 2008/11/02 09:54:02 nijtmans Exp $
  *
  * Tk widget state utilities.
  *
@@ -16,7 +16,7 @@
  * Table of state names.  Must be kept in sync with TTK_STATE_*
  * #defines in ttkTheme.h.
  */
-static const char *stateNames[] =
+static const char *const stateNames[] =
 {
     "active",		/* Mouse cursor is over widget or element */
     "disabled",		/* Widget is disabled */
@@ -219,7 +219,7 @@ Tcl_Obj *Ttk_StateMapLookup(
 
 /* Ttk_GetStateMapFromObj --
  * 	Returns a Ttk_StateMap from a Tcl_Obj*.
- * 	Since a Ttk_StateMap is just a specially-formatted Tcl_Obj, 
+ * 	Since a Ttk_StateMap is just a specially-formatted Tcl_Obj,
  * 	this basically just checks for errors.
  */
 Ttk_StateMap Ttk_GetStateMapFromObj(
