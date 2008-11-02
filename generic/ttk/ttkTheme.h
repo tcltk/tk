@@ -1,4 +1,4 @@
-/* $Id: ttkTheme.h,v 1.14 2008/05/23 20:20:05 jenglish Exp $
+/* $Id: ttkTheme.h,v 1.15 2008/11/02 09:54:02 nijtmans Exp $
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.
@@ -236,10 +236,10 @@ typedef void (Ttk_ElementDrawProc)(void *clientData, void *elementRecord,
 
 typedef struct Ttk_ElementOptionSpec
 {
-    char *optionName;		/* Command-line name of the widget option */
+    const char *optionName;		/* Command-line name of the widget option */
     Tk_OptionType type; 	/* Accepted option types */
     int offset;			/* Offset of Tcl_Obj* field in element record */
-    char *defaultValue;		/* Default value to used if resource missing */
+    const char *defaultValue;		/* Default value to used if resource missing */
 } Ttk_ElementOptionSpec;
 
 #define TK_OPTION_ANY TK_OPTION_STRING

@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.12 2008/07/04 19:05:04 jenglish Exp $
+/* $Id: ttkDefaultTheme.c,v 1.13 2008/11/02 09:54:02 nijtmans Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -39,7 +39,7 @@ static const int WIN32_XDRAWLINE_HACK = 0;
 enum BorderColor { FLAT = 1, LITE = 2, DARK = 3, BRDR = 4 };
 
 /* top-left outer, top-left inner, bottom-right inner, bottom-right outer */
-static int shadowColors[6][4] =
+static int const shadowColors[6][4] =
 {
     { FLAT, FLAT, FLAT, FLAT },	/* TK_RELIEF_FLAT   = 0*/
     { DARK, LITE, DARK, LITE },	/* TK_RELIEF_GROOVE = 1*/
@@ -50,7 +50,7 @@ static int shadowColors[6][4] =
 };
 
 /* top-left, bottom-right */
-static int thinShadowColors[6][4] =
+static int const thinShadowColors[6][4] =
 {
     { FLAT, FLAT },	/* TK_RELIEF_FLAT   = 0*/
     { DARK, LITE },	/* TK_RELIEF_GROOVE = 1*/
@@ -204,7 +204,7 @@ void TtkArrowSize(int h, ArrowDirection dir, int *widthPtr, int *heightPtr)
  * TtkDrawArrow, TtkFillArrow --
  * 	Draw an arrow in the indicated direction inside the specified box.
  */
-/*public*/ 
+/*public*/
 void TtkFillArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection dir)
 {
@@ -214,7 +214,7 @@ void TtkFillArrow(
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
 }
 
-/*public*/ 
+/*public*/
 void TtkDrawArrow(
     Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection dir)
 {
@@ -296,7 +296,7 @@ static void BorderElementDraw(
 
     if (defaultState == TTK_BUTTON_DEFAULT_ACTIVE) {
 	GC gc = Tk_GCForColor(borderColor, d);
-	XDrawRectangle(Tk_Display(tkwin), d, gc, 
+	XDrawRectangle(Tk_Display(tkwin), d, gc,
 		b.x, b.y, b.width-1, b.height-1);
     }
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
@@ -379,13 +379,13 @@ typedef struct
     int width;		/* Width of each image */
     int height;		/* Height of each image */
     int nimages;	/* #images / row */
-    char **pixels;	/* array[height] of char[width*nimage] */
+    const char *const *pixels;	/* array[height] of char[width*nimage] */
     Ttk_StateTable *map;/* used to look up image index by state */
 } IndicatorSpec;
 
 #if 0
 /*XPM*/
-static char *button_images[] = {
+static const char *const button_images[] = {
     /* width height ncolors chars_per_pixel */
     "52 26 7 1",
     /* colors */
@@ -408,7 +408,7 @@ static Ttk_StateTable checkbutton_states[] =
     { 3, TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
     { 0, 0, 0 }
 };
-static char *checkbutton_pixels[] = {
+static const char *const checkbutton_pixels[] = {
     "AAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAAB",
     "AEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECB",
     "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
@@ -440,7 +440,7 @@ static Ttk_StateTable radiobutton_states[] =
     { 0, 0, 0 }
 };
 
-static char *radiobutton_pixels[] = {
+static const char *const radiobutton_pixels[] = {
     "FFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFF",
     "FFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFF",
     "FAEEDDDDECBFFFAEEDDDDECBFFFAEEFFFFECBFFFAEEFFFFECBFF",
@@ -621,9 +621,9 @@ static Ttk_ElementOptionSpec ArrowElementOptions[] =
 {
     { "-arrowsize", TK_OPTION_PIXELS,
 	Tk_Offset(ArrowElement,sizeObj), STRINGIFY(SCROLLBAR_WIDTH) },
-    { "-background", TK_OPTION_BORDER, 
+    { "-background", TK_OPTION_BORDER,
 	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
-    { "-bordercolor", TK_OPTION_COLOR, 
+    { "-bordercolor", TK_OPTION_COLOR,
 	Tk_Offset(ArrowElement,borderColorObj), "black" },
     { "-relief", TK_OPTION_RELIEF,
 	Tk_Offset(ArrowElement,reliefObj),"raised"},

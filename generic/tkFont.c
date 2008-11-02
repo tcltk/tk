@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.47 2008/10/15 06:41:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.48 2008/11/02 09:54:02 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -190,27 +190,27 @@ static const char *const fontOpt[] = {
  * the alias list are also automatically tried.
  */
 
-static char *timesAliases[] = {
+static const char *const timesAliases[] = {
     "Times",			/* Unix. */
     "Times New Roman",		/* Windows. */
     "New York",			/* Mac. */
     NULL
 };
 
-static char *helveticaAliases[] = {
+static const char *const helveticaAliases[] = {
     "Helvetica",		/* Unix. */
     "Arial",			/* Windows. */
     "Geneva",			/* Mac. */
     NULL
 };
 
-static char *courierAliases[] = {
+static const char *const courierAliases[] = {
     "Courier",			/* Unix and Mac. */
     "Courier New",		/* Windows. */
     NULL
 };
 
-static char *minchoAliases[] = {
+static const char *const minchoAliases[] = {
     "mincho",			/* Unix. */
     "\357\274\255\357\274\263 \346\230\216\346\234\235",
 				/* Windows (MS mincho). */
@@ -219,7 +219,7 @@ static char *minchoAliases[] = {
     NULL
 };
 
-static char *gothicAliases[] = {
+static const char *const gothicAliases[] = {
     "gothic",			/* Unix. */
     "\357\274\255\357\274\263 \343\202\264\343\202\267\343\203\203\343\202\257",
 				/* Windows (MS goshikku). */
@@ -228,7 +228,7 @@ static char *gothicAliases[] = {
     NULL
 };
 
-static char *dingbatsAliases[] = {
+static const char *const dingbatsAliases[] = {
     "dingbats", "zapfdingbats", "itc zapfdingbats",
 				/* Unix. */
 				/* Windows. */
@@ -236,7 +236,7 @@ static char *dingbatsAliases[] = {
     NULL
 };
 
-static char **fontAliases[] = {
+static const char *const *const fontAliases[] = {
     timesAliases,
     helveticaAliases,
     courierAliases,
@@ -252,7 +252,7 @@ static char **fontAliases[] = {
  * be examined also.
  */
 
-static char *systemClass[] = {
+static const char *const systemClass[] = {
     "fixed",			/* Unix. */
 				/* Windows. */
     "chicago", "osaka", "sistemny",
@@ -260,7 +260,7 @@ static char *systemClass[] = {
     NULL
 };
 
-static char *serifClass[] = {
+static const char *const serifClass[] = {
     "times", "palatino", "mincho",
 				/* All platforms. */
     "song ti",			/* Unix. */
@@ -270,7 +270,7 @@ static char *serifClass[] = {
     NULL
 };
 
-static char *sansClass[] = {
+static const char *const sansClass[] = {
     "helvetica", "gothic",	/* All platforms. */
 				/* Unix. */
     "ms sans serif", "traditional arabic",
@@ -279,7 +279,7 @@ static char *sansClass[] = {
     NULL
 };
 
-static char *monoClass[] = {
+static const char *const monoClass[] = {
     "courier", "gothic",	/* All platforms. */
     "fangsong ti",		/* Unix. */
     "simplified arabic fixed",	/* Windows. */
@@ -287,11 +287,11 @@ static char *monoClass[] = {
     NULL
 };
 
-static char *symbolClass[] = {
+static const char *const symbolClass[] = {
     "symbol", "dingbats", "wingdings", NULL
 };
 
-static char **fontFallbacks[] = {
+static const char *const *const fontFallbacks[] = {
     systemClass,
     serifClass,
     sansClass,
@@ -306,7 +306,7 @@ static char **fontFallbacks[] = {
  * found, all font families in the system are examined.
  */
 
-static char *globalFontClass[] = {
+static const char *const globalFontClass[] = {
     "symbol",			/* All platforms. */
 				/* Unix. */
     "lucida sans unicode",	/* Windows. */
@@ -3674,7 +3674,7 @@ TkFontGetPoints(
  *-------------------------------------------------------------------------
  */
 
-char **
+const char *const *
 TkFontGetAliasList(
     const char *faceName)	/* Font name to test for aliases. */
 {
@@ -3707,7 +3707,7 @@ TkFontGetAliasList(
  *-------------------------------------------------------------------------
  */
 
-char ***
+const char *const *const *
 TkFontGetFallbacks(void)
 {
     return fontFallbacks;
@@ -3732,7 +3732,7 @@ TkFontGetFallbacks(void)
  *-------------------------------------------------------------------------
  */
 
-char **
+const char *const *
 TkFontGetGlobalClass(void)
 {
     return globalFontClass;
@@ -3755,7 +3755,7 @@ TkFontGetGlobalClass(void)
  *-------------------------------------------------------------------------
  */
 
-char **
+const char *const *
 TkFontGetSymbolClass(void)
 {
     return symbolClass;

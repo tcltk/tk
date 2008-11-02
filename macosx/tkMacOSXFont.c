@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.39 2008/08/19 00:17:44 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.40 2008/11/02 09:54:02 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1930,7 +1930,7 @@ FindFontFamilyOrAlias(
     const char *name)		/* Name or alias name of the font to find. */
 {
     const MacFontFamily * familyPtr;
-    char ** aliases;
+    const char *const * aliases;
     int i;
 
     familyPtr = FindFontFamily(name);
@@ -1956,7 +1956,7 @@ FindFontFamilyOrAliasOrFallback(
 {
     const MacFontFamily * familyPtr;
     const char * fallback;
-    char *** fallbacks;
+    const char *const *const * fallbacks;
     int i, j;
 
     familyPtr = FindFontFamilyOrAlias(name);
