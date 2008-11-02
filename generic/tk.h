@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.122 2008/10/30 21:39:16 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.123 2008/11/02 11:20:03 dkf Exp $
  */
 
 #ifndef _TK
@@ -88,6 +88,8 @@ extern "C" {
 #endif
 
 /*
+ *----------------------------------------------------------------------
+ *
  * Decide whether or not to use input methods.
  */
 
@@ -122,6 +124,8 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
 typedef const char *Tk_Uid;
 
 /*
+ *----------------------------------------------------------------------
+ *
  * The enum below defines the valid types for Tk configuration options as
  * implemented by Tk_InitOptions, Tk_SetOptions, etc.
  */
@@ -615,11 +619,11 @@ typedef struct Tk_GeomMgr {
 #define TK_SCROLL_ERROR		4
 
 /*
- *---------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Extensions to the X event set
  *
- *---------------------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 #define VirtualEvent	    (MappingNotify + 1)
@@ -678,12 +682,12 @@ typedef XActivateDeactivateEvent XActivateEvent;
 typedef XActivateDeactivateEvent XDeactivateEvent;
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Macros for querying Tk_Window structures. See the manual entries for
  * documentation.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 #define Tk_Display(tkwin)	(((Tk_FakeWin *) (tkwin))->display)
@@ -875,11 +879,11 @@ typedef struct Tk_FakeWin {
 #define TK_PROP_PROPCHANGE	0x40000
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Procedure prototypes and structures used for defining new canvas items:
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 typedef enum {
@@ -961,46 +965,46 @@ typedef struct Tk_Item {
  */
 
 #ifdef USE_OLD_CANVAS
-typedef int	Tk_ItemCreateProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
-typedef int	Tk_ItemConfigureProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv, int flags);
-typedef int	Tk_ItemCoordProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, char **argv);
 #else
-typedef int	Tk_ItemCreateProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const objv[]);
-typedef int	Tk_ItemConfigureProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const objv[],
 		    int flags);
-typedef int	Tk_ItemCoordProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int argc, Tcl_Obj *const argv[]);
 #endif
-typedef void	Tk_ItemDeleteProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef void	(Tk_ItemDeleteProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Display *display);
-typedef void	Tk_ItemDisplayProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef void	(Tk_ItemDisplayProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Display *display, Drawable dst, int x, int y, int width,
 		    int height);
-typedef double	Tk_ItemPointProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef double	(Tk_ItemPointProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double *pointPtr);
-typedef int	Tk_ItemAreaProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef int	(Tk_ItemAreaProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double *rectPtr);
-typedef int	Tk_ItemPostscriptProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemPostscriptProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int prepass);
-typedef void	Tk_ItemScaleProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double originX, double originY, double scaleX,
 		    double scaleY);
-typedef void	Tk_ItemTranslateProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef void	(Tk_ItemTranslateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double deltaX, double deltaY);
-typedef int	Tk_ItemIndexProc (Tcl_Interp *interp, Tk_Canvas canvas,
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
-typedef void	Tk_ItemCursorProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int index);
-typedef int	Tk_ItemSelectionProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int offset, char *buffer, int maxBytes);
-typedef void	Tk_ItemInsertProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int beforeThis, char *string);
-typedef void	Tk_ItemDCharsProc (Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int first, int last);
 
 #ifndef __NO_OLD_CONFIG
@@ -1061,6 +1065,13 @@ typedef struct Tk_ItemType {
     char *reserved3;		/* Jan Nijtmans dash patch */
     char *reserved4;
 } Tk_ItemType;
+
+/*
+ * Flag (used in the alwaysRedraw field) to say whether an item supports
+ * point-level manipulation like the line and polygon items.
+ */
+
+#define TK_MOVABLE_POINTS	2
 
 #endif
 
@@ -1163,11 +1174,11 @@ typedef struct Tk_Outline {
 } Tk_Outline;
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Procedure prototypes and structures used for managing images:
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 typedef struct Tk_ImageType Tk_ImageType;
@@ -1229,11 +1240,11 @@ struct Tk_ImageType {
 };
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Additional definitions used to manage images of type "photo".
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 /*
@@ -1345,11 +1356,11 @@ struct Tk_PhotoImageFormat {
 #endif
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Procedure prototypes and structures used for managing styles:
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 /*
@@ -1413,13 +1424,13 @@ typedef struct Tk_ElementSpec {
 #define TK_ELEMENT_STATE_PRESSED        1<<3
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * The definitions below provide backward compatibility for functions and
  * types related to event handling that used to be in Tk but have moved to
  * Tcl.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 #define TK_READABLE		TCL_READABLE
@@ -1476,11 +1487,11 @@ EXTERN const char *	Tk_PkgInitStubsCheck (Tcl_Interp *interp,
 
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
  * Additional procedure types defined by Tk.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 typedef int (Tk_ErrorProc) (ClientData clientData, XErrorEvent *errEventPtr);
@@ -1496,16 +1507,18 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 	char *buffer, int maxBytes);
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
- * Platform independant exported procedures and variables.
+ * Platform independent exported procedures and variables.
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 
 #include "tkDecls.h"
 
 /*
+ *----------------------------------------------------------------------
+ *
  * Allow users to say that they don't want to alter their source to add extra
  * arguments to Tk_PhotoPutBlock() et al; DO NOT DEFINE THIS WHEN BUILDING TK.
  *
@@ -1545,11 +1558,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 #   endif
 #   define Tk_PhotoSetSize		Tk_PhotoSetSize_Panic
 #endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
-
-/*
- * Tcl commands exported by Tk:
- */
-
+
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
