@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldTest.c,v 1.3 2008/07/23 23:24:21 nijtmans Exp $
+ * RCS: @(#) $Id: tkOldTest.c,v 1.4 2008/11/03 22:20:22 nijtmans Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -144,7 +144,7 @@ ImageCreate(
 				 * will be returned in later callbacks. */
 {
     TImageMaster *timPtr;
-    char *varName;
+    const char *varName;
     int i;
 
     varName = "log";
