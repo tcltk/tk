@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.41 2008/10/18 11:31:29 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.42 2008/11/03 11:09:35 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -191,13 +191,14 @@ static Tcl_Encoding systemEncoding;
 
 static FontFamily *	AllocFontFamily(HDC hdc, HFONT hFont, int base);
 static SubFont *	CanUseFallback(HDC hdc, WinFont *fontPtr,
-			    char *fallbackName,	int ch,
+			    const char *fallbackName, int ch,
 			    SubFont **subFontPtrPtr);
 static SubFont *	CanUseFallbackWithAliases(HDC hdc, WinFont *fontPtr,
-			    char *faceName, int ch, Tcl_DString *nameTriedPtr,
+			    const char *faceName, int ch,
+			    Tcl_DString *nameTriedPtr,
 			    SubFont **subFontPtrPtr);
 static int		FamilyExists(HDC hdc, const char *faceName);
-static char *		FamilyOrAliasExists(HDC hdc, const char *faceName);
+static const char *	FamilyOrAliasExists(HDC hdc, const char *faceName);
 static SubFont *	FindSubFontForChar(WinFont *fontPtr, int ch,
 			    SubFont **subFontPtrPtr);
 static void		FontMapInsert(SubFont *subFontPtr, int ch);
@@ -500,7 +501,7 @@ TkpGetFontFromAttributes(
     HFONT hFont;
     Window window;
     WinFont *fontPtr;
-    char ***fontFallbacks;
+    const char *const *const *fontFallbacks;
     Tk_Uid faceName, fallback, actualName;
 
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->mainPtr->winPtr;
@@ -1758,9 +1759,10 @@ FindSubFontForChar(
     HDC hdc;
     int i, j, k;
     CanUse canUse;
-    char **aliases, **anyFallbacks;
-    char ***fontFallbacks;
-    char *fallbackName;
+    const char *const *aliases;
+    const char *const *anyFallbacks;
+    const char *const *const *fontFallbacks;
+    const char *fallbackName;
     SubFont *subFontPtr;
     Tcl_DString ds;
 
@@ -2103,7 +2105,7 @@ CanUseFallbackWithAliases(
     HDC hdc,			/* HDC in which font can be selected. */
     WinFont *fontPtr,		/* The font object that will own the new
 				 * screen font. */
-    char *faceName,		/* Desired face name for new screen font. */
+    const char *faceName,	/* Desired face name for new screen font. */
     int ch,			/* The Unicode character that the new screen
 				 * font must be able to display. */
     Tcl_DString *nameTriedPtr,	/* Records face names that have already been
@@ -2114,7 +2116,7 @@ CanUseFallbackWithAliases(
 				 * array of subfonts. */
 {
     int i;
-    char **aliases;
+    const char *const *aliases;
     SubFont *subFontPtr;
 
     if (SeenName(faceName, nameTriedPtr) == 0) {
@@ -2206,7 +2208,7 @@ CanUseFallback(
     HDC hdc,			/* HDC in which font can be selected. */
     WinFont *fontPtr,		/* The font object that will own the new
 				 * screen font. */
-    char *faceName,		/* Desired face name for new screen font. */
+    const char *faceName,	/* Desired face name for new screen font. */
     int ch,			/* The Unicode character that the new screen
 				 * font must be able to display. */
     SubFont **subFontPtrPtr)	/* Variable to fix-up if we realloc the array
@@ -2413,12 +2415,12 @@ FamilyExists(
     return (result == 0);
 }
 
-static char *
+static const char *
 FamilyOrAliasExists(
     HDC hdc,
     const char *faceName)
 {
-    char **aliases;
+    const char *const *aliases;
     int i;
 
     if (FamilyExists(hdc, faceName) != 0) {
