@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.10 2008/11/01 15:34:24 patthoyts Exp $
+ * $Id: ttkEntry.c,v 1.11 2008/11/03 22:20:22 nijtmans Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -80,7 +80,7 @@ static const char *validateReasonStrings[] = {
 
 /* Style parameters:
  */
-typedef struct 
+typedef struct
 {
     Tcl_Obj *foregroundObj;	/* Foreground color for normal text */
     Tcl_Obj *backgroundObj;	/* Entry widget background color */
@@ -576,7 +576,7 @@ static int EntryNeedsValidation(VMODE vmode, VREASON reason)
  *	TCL_BREAK if the change is rejected
  *      TCL_ERROR if any errors occured
  *
- * The change will be rejected if -validatecommand returns 0, 
+ * The change will be rejected if -validatecommand returns 0,
  * or if -validatecommand or -invalidcommand modifies the value.
  */
 static int
@@ -1198,7 +1198,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     EntryInitStyleData(entryPtr, &es);
 
-    showCursor = 
+    showCursor =
 	   (entryPtr->core.flags & CURSOR_ON) != 0
 	&& EntryEditable(entryPtr)
 	&& entryPtr->entry.insertPos >= leftIndex
@@ -1260,7 +1260,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_SetCaretPos(tkwin, cursorX, cursorY, cursorHeight);
 
 	gc = EntryGetGC(entryPtr, es.insertColorObj);
-	XFillRectangle(Tk_Display(tkwin), d, gc, 
+	XFillRectangle(Tk_Display(tkwin), d, gc,
 	    cursorX-cursorWidth/2, cursorY, cursorWidth, cursorHeight);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
@@ -1402,7 +1402,7 @@ EntryBBoxCommand(
     if ((index == entryPtr->entry.numChars) && (index > 0)) {
 	index--;
     }
-    Tk_CharBbox(entryPtr->entry.textLayout, index, 
+    Tk_CharBbox(entryPtr->entry.textLayout, index,
 	    &b.x, &b.y, &b.width, &b.height);
     b.x += entryPtr->entry.layoutX;
     b.y += entryPtr->entry.layoutY;
@@ -1723,7 +1723,7 @@ static int
 ValuesValidate(Tcl_Interp *interp, void *recordPtr, int *indexPtr)
 {
     Values *valPtr = recordPtr;
-    int currentIndex = valPtr->values.currentIndex;    
+    int currentIndex = valPtr->values.currentIndex;
     const char *currentValue = valPtr->entry.string;
     int eltc;
     Tcl_Obj **eltv;
@@ -1733,8 +1733,8 @@ ValuesValidate(Tcl_Interp *interp, void *recordPtr, int *indexPtr)
 	return TCL_ERROR;
 
     Tcl_ListObjGetElements(interp,valPtr->values.valuesObj,&eltc,&eltv);
-    
-    if (   currentIndex < 0 
+
+    if (   currentIndex < 0
 	|| currentIndex >= eltc
 	|| strcmp(currentValue, Tcl_GetString(eltv[currentIndex]))) {
 	/*
@@ -1758,14 +1758,13 @@ ValuesValidate(Tcl_Interp *interp, void *recordPtr, int *indexPtr)
  * 	Setting the current index updates the combobox value,
  * 	but the value and -values may be changed independently
  * 	of the index.  Instead of trying to keep currentIndex
- * 	in sync at all times, [$cb current] double-checks 
+ * 	in sync at all times, [$cb current] double-checks
  */
 static int ValuesCurrentCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Values *valPtr = recordPtr;
     int currentIndex = valPtr->values.currentIndex;
-    const char *currentValue = valPtr->entry.string;
     int nValues;
     Tcl_Obj **values;
 
@@ -1781,7 +1780,7 @@ static int ValuesCurrentCommand(
 	    return TCL_ERROR;
 	}
 	if (currentIndex < 0 || currentIndex >= nValues) {
-	    Tcl_AppendResult(interp, 
+	    Tcl_AppendResult(interp,
 		    "Index ", Tcl_GetString(objv[2]), " out of range",
 		    NULL);
 	    return TCL_ERROR;
@@ -2017,7 +2016,7 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 		|| sbPtr->values.currentIndex != currentIndex) {
 		Tcl_Obj *valueObj;
 		if (currentIndex == -1) currentIndex = 0;
-		Tcl_ListObjIndex(interp, sbPtr->values.valuesObj, 
+		Tcl_ListObjIndex(interp, sbPtr->values.valuesObj,
 		    currentIndex, &valueObj);
 		EntrySetValue(recordPtr, Tcl_GetString(valueObj));
 	    }
@@ -2036,7 +2035,7 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	    Tcl_DecrRefCount(valueObj);
 	}
     }
-	
+
     return EntryConfigure(interp, recordPtr, mask);
 }
 
