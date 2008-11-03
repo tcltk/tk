@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winfo.test,v 1.16 2008/08/30 21:52:26 aniap Exp $
+# RCS: @(#) $Id: winfo.test,v 1.17 2008/11/03 14:36:20 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -390,11 +390,12 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
     pack .emb.b -expand yes -fill both
     update
 
-    expr {[winfo rootx .emb] == [winfo rootx .con] \
-        && [winfo rooty .emb] == [winfo rooty .con]}
+    list rootx [expr {[winfo rootx .emb] == [winfo rootx .con]}] \
+        rooty [expr {[winfo rooty .emb] == [winfo rooty .con]}]
 } -cleanup {
     deleteWindows
-} -result {1}
+} -result {rootx 1 rooty 1}
+
 test winfo-13.2 {destroying embedded toplevel} -setup {
     deleteWindows
 } -body {
@@ -407,10 +408,10 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
 
     destroy .emb
     update
-    expr {[winfo exists .emb.b] || [winfo exists .con]}
+    list embedded [winfo exists .emb.b] container [winfo exists .con]
 } -cleanup {
     deleteWindows
-} -result 0
+} -result {embedded 0 container 1}
 
 test winfo-13.3 {destroying container window} -setup {
     deleteWindows
@@ -424,10 +425,10 @@ test winfo-13.3 {destroying container window} -setup {
 
     destroy .con
     update
-    expr {[winfo exists .emb.b] || [winfo exists .emb]}
+    list child [winfo exists .emb.b] parent [winfo exists .emb]
 } -cleanup {
     deleteWindows
-} -result 0
+} -result {child 0 parent 0}
 
 test winfo-13.4 {[winfo containing] with embedded windows} -setup {
     deleteWindows
