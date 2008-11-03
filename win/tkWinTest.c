@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.19 2008/10/28 22:33:07 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.20 2008/11/03 22:44:22 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -123,7 +123,7 @@ AppendSystemError(
     }
     if (length == 0) {
 	if (error == ERROR_CALL_NOT_IMPLEMENTED) {
-	    msg = "function not supported under Win32s";
+	    msg = (char *)"function not supported under Win32s";
 	} else {
 	    sprintf(msgBuf, "unknown error: %ld", error);
 	    msg = msgBuf;
