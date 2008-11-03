@@ -10,7 +10,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winClipboard.test,v 1.16 2008/10/28 17:44:38 dgp Exp $
+# RCS: @(#) $Id: winClipboard.test,v 1.17 2008/11/03 22:02:12 patthoyts Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -56,23 +56,38 @@ test winClipboard-1.4 {TkSelGetSelection & TkWinClipboardRender} -constraints {
 } -setup {
     clipboard clear
 } -body {
+    set map [list "\r" "\\r" "\n" "\\n"]
     clipboard append "line 1\nline 2"
-    list [selection get -selection CLIPBOARD] [testclipboard]
+    list [string map $map [selection get -selection CLIPBOARD]]\
+        [string map $map [testclipboard]]
 } -cleanup {
     clipboard clear
-} -result [list "line 1\nline 2" "line 1\r\nline 2"]
+} -result [list "line 1\\nline 2" "line 1\\nline 2"]
 
 test winClipboard-1.5 {TkSelGetSelection & TkWinClipboardRender} -constraints {
     win testclipboard
 } -setup {
     clipboard clear
 } -body {
+    set map [list "\r" "\\r" "\n" "\\n"]
     clipboard append "line 1\u00c7\nline 2"
+    list [string map $map [selection get -selection CLIPBOARD]]\
+        [string map $map [testclipboard]]
+} -cleanup {
+    clipboard clear
+} -result [list "line 1\u00c7\\nline 2" "line 1\u00c7\\nline 2"]
+
+test winClipboard-1.6 {TkSelGetSelection & TkWinClipboardRender} -constraints {
+    win testclipboard
+} -setup {
+    clipboard clear
+} -body {
+    clipboard append "\u043f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0444"
     list [selection get -selection CLIPBOARD] [testclipboard]
 } -cleanup {
     clipboard clear
-} -result [list "line 1\u00c7\nline 2" "line 1\u00c7\r\nline 2"]
-
+} -result [list "\u043f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0444"\
+              "\u043f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0444"]
 
 test winClipboard-2.1 {TkSelUpdateClipboard reentrancy problem} -constraints {
     win testclipboard
@@ -104,3 +119,6 @@ test winClipboard-2.2 {TkSelUpdateClipboard reentrancy problem} -constraints {
 cleanupTests
 return
 
+# Local variables:
+# mode: tcl
+# End:
