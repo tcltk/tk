@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPort.h,v 1.3.2.1 2004/01/01 00:34:56 das Exp $
+ * RCS: @(#) $Id: tkPort.h,v 1.3.2.2 2008/11/04 23:55:34 hobbs Exp $
  */
 
 #ifndef _TKPORT
@@ -31,7 +31,7 @@
 #   elif defined(MAC_OSX_TK)
 #	include "tkMacOSXPort.h"
 #   else
-#	include "../unix/tkUnixPort.h"
+#	include "tkUnixPort.h"
 #   endif
 #endif
 
