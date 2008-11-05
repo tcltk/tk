@@ -5,6 +5,8 @@
 	* unix/tkUnixCursor.c:
 	* unix/tkUnixSend.c:
 	* unix/tkUnixRFont.c:
+	* generic/tkInt.h:     no need to use CONST in internal header files
+	* generic/tkFont.h
 	* generic/tkInt.decls: CONSTify string and fileName parameters of TkGetBitmapData
 	* generic/tkImgBmap.c:
 	* generic/tkBitmap.c:  remove unneccessary type cast

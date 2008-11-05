@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.38 2008/11/05 22:48:58 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.39 2008/11/05 23:29:58 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -121,7 +121,7 @@ EXTERN TkCursor *	TkCreateCursorFromData (Tk_Window tkwin,
 /* 13 */
 EXTERN int		TkCreateFrame (ClientData clientData,
 				Tcl_Interp * interp, int argc,
-				CONST86 char *const * argv, int toplevel,
+				const char *const * argv, int toplevel,
 				const char * appName);
 #endif
 #ifndef TkCreateMainWindow_TCL_DECLARED
@@ -239,7 +239,7 @@ EXTERN TkCursor *	TkGetCursorByName (Tcl_Interp * interp,
 #ifndef TkGetDefaultScreenName_TCL_DECLARED
 #define TkGetDefaultScreenName_TCL_DECLARED
 /* 33 */
-EXTERN CONST84_RETURN char * TkGetDefaultScreenName (Tcl_Interp * interp,
+EXTERN const char *	TkGetDefaultScreenName (Tcl_Interp * interp,
 				const char * screenName);
 #endif
 #ifndef TkGetDisplay_TCL_DECLARED
@@ -980,7 +980,7 @@ typedef struct TkIntStubs {
     int (*tkCopyAndGlobalEval) (Tcl_Interp * interp, char * script); /* 10 */
     unsigned long (*tkCreateBindingProcedure) (Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object, const char * eventString, TkBindEvalProc * evalProc, TkBindFreeProc * freeProc, ClientData clientData); /* 11 */
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char * source, const char * mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
-    int (*tkCreateFrame) (ClientData clientData, Tcl_Interp * interp, int argc, CONST86 char *const * argv, int toplevel, const char * appName); /* 13 */
+    int (*tkCreateFrame) (ClientData clientData, Tcl_Interp * interp, int argc, const char *const * argv, int toplevel, const char * appName); /* 13 */
     Tk_Window (*tkCreateMainWindow) (Tcl_Interp * interp, const char * screenName, const char * baseName); /* 14 */
     Time (*tkCurrentTime) (TkDisplay * dispPtr); /* 15 */
     void (*tkDeleteAllImages) (TkMainInfo * mainPtr); /* 16 */
@@ -1000,7 +1000,7 @@ typedef struct TkIntStubs {
     char * (*tkGetBitmapData) (Tcl_Interp * interp, const char * string, const char * fileName, int * widthPtr, int * heightPtr, int * hotXPtr, int * hotYPtr); /* 30 */
     void (*tkGetButtPoints) (double p1[], double p2[], double width, int project, double m1[], double m2[]); /* 31 */
     TkCursor * (*tkGetCursorByName) (Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid string); /* 32 */
-    CONST84_RETURN char * (*tkGetDefaultScreenName) (Tcl_Interp * interp, const char * screenName); /* 33 */
+    const char * (*tkGetDefaultScreenName) (Tcl_Interp * interp, const char * screenName); /* 33 */
     TkDisplay * (*tkGetDisplay) (Display * display); /* 34 */
     int (*tkGetDisplayOf) (Tcl_Interp * interp, int objc, Tcl_Obj *const objv[], Tk_Window * tkwinPtr); /* 35 */
     TkWindow * (*tkGetFocusWin) (TkWindow * winPtr); /* 36 */
