@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.37 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.38 2008/11/05 22:48:58 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -218,10 +218,10 @@ EXTERN void		TkpFreeCursor (TkCursor * cursorPtr);
 #ifndef TkGetBitmapData_TCL_DECLARED
 #define TkGetBitmapData_TCL_DECLARED
 /* 30 */
-EXTERN char *		TkGetBitmapData (Tcl_Interp * interp, char * string,
-				char * fileName, int * widthPtr,
-				int * heightPtr, int * hotXPtr,
-				int * hotYPtr);
+EXTERN char *		TkGetBitmapData (Tcl_Interp * interp,
+				const char * string, const char * fileName,
+				int * widthPtr, int * heightPtr,
+				int * hotXPtr, int * hotYPtr);
 #endif
 #ifndef TkGetButtPoints_TCL_DECLARED
 #define TkGetButtPoints_TCL_DECLARED
@@ -997,7 +997,7 @@ typedef struct TkIntStubs {
     void (*tkFontPkgFree) (TkMainInfo * mainPtr); /* 27 */
     void (*tkFreeBindingTags) (TkWindow * winPtr); /* 28 */
     void (*tkpFreeCursor) (TkCursor * cursorPtr); /* 29 */
-    char * (*tkGetBitmapData) (Tcl_Interp * interp, char * string, char * fileName, int * widthPtr, int * heightPtr, int * hotXPtr, int * hotYPtr); /* 30 */
+    char * (*tkGetBitmapData) (Tcl_Interp * interp, const char * string, const char * fileName, int * widthPtr, int * heightPtr, int * hotXPtr, int * hotYPtr); /* 30 */
     void (*tkGetButtPoints) (double p1[], double p2[], double width, int project, double m1[], double m2[]); /* 31 */
     TkCursor * (*tkGetCursorByName) (Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid string); /* 32 */
     CONST84_RETURN char * (*tkGetDefaultScreenName) (Tcl_Interp * interp, const char * screenName); /* 33 */
