@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.47 2008/10/28 22:33:06 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.48 2008/11/05 22:48:58 nijtmans Exp $
 
 library tk
 
@@ -129,8 +129,9 @@ declare 29 generic {
     void TkpFreeCursor(TkCursor *cursorPtr)
 }
 declare 30 generic {
-    char *TkGetBitmapData(Tcl_Interp *interp, char *string, char *fileName,
-	    int *widthPtr, int *heightPtr, int *hotXPtr, int *hotYPtr)
+    char *TkGetBitmapData(Tcl_Interp *interp, const char *string,
+	    const char *fileName, int *widthPtr, int *heightPtr,
+	    int *hotXPtr, int *hotYPtr)
 }
 declare 31 generic {
     void TkGetButtPoints(double p1[], double p2[],
