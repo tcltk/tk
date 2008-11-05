@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.22 2008/07/23 23:24:46 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.23 2008/11/05 22:48:58 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -226,7 +226,7 @@ static int		ServerSecure(TkDisplay *dispPtr);
 static void		UpdateCommWindow(TkDisplay *dispPtr);
 static int		ValidateName(TkDisplay *dispPtr, const char *name,
 			    Window commWindow, int oldOK);
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -325,7 +325,7 @@ RegOpen(
     }
     return regPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -378,7 +378,7 @@ RegFindName(
     }
     return None;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -442,7 +442,7 @@ RegDeleteName(
 	}
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -492,7 +492,7 @@ RegAddName(
     regPtr->property = newProp;
     regPtr->allocedByX = 0;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -552,7 +552,7 @@ RegClose(
     }
     ckfree((char *) regPtr);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -647,7 +647,7 @@ ValidateName(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -690,7 +690,7 @@ ServerSecure(
     return secure;
 #endif /* TK_NO_SECURITY */
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -849,7 +849,7 @@ Tk_SetAppName(
 
     return riPtr->name;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1087,7 +1087,7 @@ Tk_SendCmd(
 
 	    if (!ValidateName(pending.dispPtr, pending.target,
 		    pending.commWindow, 0)) {
-		char *msg;
+		const char *msg;
 
 		if (ValidateName(pending.dispPtr, pending.target,
 			pending.commWindow, 1)) {
@@ -1137,7 +1137,7 @@ Tk_SendCmd(
     Tcl_SetResult(interp, pending.result, TCL_DYNAMIC);
     return pending.code;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1225,7 +1225,7 @@ TkGetInterpNames(
     RegClose(regPtr);
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1255,7 +1255,7 @@ TkSendCleanup(
 	dispPtr->commTkwin = NULL;
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1312,7 +1312,7 @@ SendInit(
 
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1340,7 +1340,7 @@ SendEventProc(
 {
     TkDisplay *dispPtr = clientData;
     char *propInfo, **propInfoPtr = &propInfo;
-    register char *p;
+    const char *p;
     int result, actualFormat;
     unsigned long numItems, bytesAfter;
     Atom actualType;
@@ -1395,7 +1395,8 @@ SendEventProc(
 
 	if ((*p == 'c') && (p[1] == 0)) {
 	    Window commWindow;
-	    char *interpName, *script, *serial, *end;
+	    const char *interpName, *script, *serial;
+	    char *end;
 	    Tcl_DString reply;
 	    RegisteredInterp *riPtr;
 
@@ -1550,7 +1551,7 @@ SendEventProc(
 	    }
 	} else if ((*p == 'r') && (p[1] == 0)) {
 	    int serial, code, gotSerial;
-	    char *errorInfo, *errorCode, *resultString;
+	    const char *errorInfo, *errorCode, *resultString;
 	    PendingCommand *pcPtr;
 
 	    /*
@@ -1649,7 +1650,7 @@ SendEventProc(
     }
     XFree(propInfo);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1728,7 +1729,7 @@ AppendErrorProc(
     }
     return 0;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1777,7 +1778,7 @@ DeleteProc(
     UpdateCommWindow(riPtr->dispPtr);
     Tcl_EventuallyFree(riPtr, TCL_DYNAMIC);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1817,7 +1818,7 @@ SendRestrictProc(
     }
     return TK_DEFER_EVENT;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1857,7 +1858,7 @@ UpdateCommWindow(
 	    Tcl_DStringLength(&names));
     Tcl_DStringFree(&names);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1965,7 +1966,7 @@ TkpTestsendCmd(
     }
     return TCL_OK;
 }
-
+
 /*
  * Local Variables:
  * mode: c
