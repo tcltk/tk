@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.25 2008/04/27 22:39:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.26 2008/11/05 22:20:59 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -121,7 +121,8 @@ GetTkFontAttributes(
     XftFont *ftFont,
     TkFontAttributes *faPtr)
 {
-    char *family = "Unknown", **familyPtr = &family;
+    const char *family = "Unknown";
+    const char *const *familyPtr = &family;
     int weight, slant, size, pxsize;
     double ptsize;
 
@@ -468,9 +469,12 @@ TkpGetSubFonts(
     Tcl_Obj *objv[3], *listPtr, *resultPtr;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     FcPattern *pattern;
-    char *family = "Unknown", **familyPtr = &family;
-    char *foundry = "Unknown", **foundryPtr = &foundry;
-    char *encoding = "Unknown", **encodingPtr = &encoding;
+    const char *family = "Unknown";
+    const char *const *familyPtr = &family;
+    const char *foundry = "Unknown";
+    const char *const *foundryPtr = &foundry;
+    const char *encoding = "Unknown";
+    const char *const *encodingPtr = &encoding;
     int i;
 
     resultPtr = Tcl_NewListObj(0, NULL);
