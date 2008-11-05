@@ -2,7 +2,13 @@
 
 	* unix/tkUnixFont.c:   fix [Bug 2226093] const changes not all correct
 	* unix/tkUnixButton.c: more internal -Wwrite-strings warning fixes
+	* unix/tkUnixCursor.c:
+	* unix/tkUnixSend.c:
 	* unix/tkUnixRFont.c:
+	* generic/tkInt.decls: CONSTify string and fileName parameters of TkGetBitmapData
+	* generic/tkImgBmap.c:
+	* generic/tkBitmap.c:  remove unneccessary type cast
+	* generic/tkIntDecls.h: (regenerated)
 
 2008-11-03  Jan Nijtmans  <nijtmans@users.sf.net>
 

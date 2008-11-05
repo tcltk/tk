@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.22 2008/10/15 06:41:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.23 2008/11/05 22:48:58 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1091,7 +1091,7 @@ TkReadBitmapFile(
 {
     char *data;
 
-    data = TkGetBitmapData(NULL, NULL, (char *) filename,
+    data = TkGetBitmapData(NULL, NULL, filename,
 	    (int *) width_return, (int *) height_return, x_hot_return,
 	    y_hot_return);
     if (data == NULL) {

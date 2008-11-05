@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixCursor.c,v 1.14 2008/04/27 22:39:13 dkf Exp $
+ * RCS: @(#) $Id: tkUnixCursor.c,v 1.15 2008/11/05 22:48:58 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -163,7 +163,7 @@ static const struct CursorName {
 
 static const struct TkCursorName {
     const char *name;
-    char *data;
+    const char *data;
     char *mask;
 } tkCursorNames[] = {
     {"none",	CURSOR_NONE_DATA,	NULL},
@@ -184,7 +184,7 @@ static const struct TkCursorName {
 static Cursor		CreateCursorFromTableOrFile(Tcl_Interp *interp,
 			    Tk_Window tkwin, int argc, const char **argv,
 			    const struct TkCursorName *tkCursorPtr);
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -550,7 +550,7 @@ CreateCursorFromTableOrFile(
     }
     return cursor;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -600,7 +600,7 @@ TkCreateCursorFromData(
     }
     return (TkCursor *) cursorPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -627,7 +627,7 @@ TkpFreeCursor(
     XFreeCursor(unixCursorPtr->display, (Cursor) unixCursorPtr->info.cursor);
     Tk_FreeXId(unixCursorPtr->display, (XID) unixCursorPtr->info.cursor);
 }
-
+
 /*
  * Local Variables:
  * mode: c
