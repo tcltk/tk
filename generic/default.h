@@ -10,14 +10,14 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: default.h,v 1.5 2004/03/17 18:15:42 das Exp $
+ * RCS: @(#) $Id: default.h,v 1.6 2008/11/06 22:19:00 nijtmans Exp $
  */
 
 #ifndef _DEFAULT
 #define _DEFAULT
 
 #if defined(__WIN32__) || defined(_WIN32) || \
-    defined(__CYGWIN__) || defined(__MINGW32__)
+    defined(__MINGW32__)
 #   include "tkWinDefault.h"
 #else
 #   if defined(MAC_OSX_TK)

@@ -1,3 +1,10 @@
+2008-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4:       add "-Wno-implicit-int" flag for gcc, as on UNIX
+	* win/configure     (regenerated)
+	* generic/default.h Use tkUnixDefault.h under CygWin. With this change,
+	                    at least the X11 version of Tk can be built with cygwin
+
 2008-11-06  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/configure.in: Work around the fact that the HP-UX system
