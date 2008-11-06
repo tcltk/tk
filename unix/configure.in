@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.159 2008/10/23 16:15:27 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.160 2008/11/06 16:28:33 dkf Exp $
 
 AC_INIT([tk],[8.6])
 AC_PREREQ(2.59)
@@ -72,6 +72,7 @@ if test "${CFLAGS+set}" != "set" ; then
 fi
 
 AC_PROG_CC
+AC_C_INLINE
 
 # limits header checks must come early to prevent
 # an autoconf bug that throws errors on configure
