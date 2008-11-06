@@ -1,36 +1,41 @@
+2008-11-06  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/configure.in: Work around the fact that the HP-UX system
+	compiler cannot handle 'inline'. [Bug 2229999]
+
 2008-11-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tkUnixFont.c:   fix [Bug 2226093] const changes not all correct
-	* unix/tkUnixButton.c: more internal -Wwrite-strings warning fixes
+	* unix/tkUnixFont.c:   Fix [Bug 2226093] const changes not all correct
+	* unix/tkUnixButton.c: More internal -Wwrite-strings warning fixes
 	* unix/tkUnixCursor.c:
 	* unix/tkUnixSend.c:
 	* unix/tkUnixRFont.c:
-	* generic/tkInt.h:     no need to use CONST in internal header files
+	* generic/tkInt.h:     No need to use CONST in internal header files
 	* generic/tkFont.h
-	* generic/tkInt.decls: CONSTify string and fileName parameters of TkGetBitmapData
-	* generic/tkImgBmap.c:
-	* generic/tkBitmap.c:  remove unneccessary type cast
+	* generic/tkInt.decls: CONSTify string and fileName parameters of
+	* generic/tkImgBmap.c: TkGetBitmapData
+	* generic/tkBitmap.c:  Remove unneccessary type cast
 	* generic/tkIntDecls.h: (regenerated)
-	* doc/GetCursor.3:     fix documentation about obsolete X10 bitmaps
+	* doc/GetCursor.3:     Fix documentation about obsolete X10 bitmaps
 	* doc/GetBitmap.3:     [Bug 1866774] Remove X10 references from docs
 
 2008-11-03  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/ttk/ttkEntry.c: fix warning: unused variable `currentValue'
-	* generic/tkOldTest.c:    fix warning: assignment discards qualifiers
+	* generic/ttk/ttkEntry.c: Fix warning: unused variable `currentValue'
+	* generic/tkOldTest.c:    Fix warning: assignment discards qualifiers
 	* win/tkWinTest.c:        from pointer target type
 
 2008-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/winClipboard.test: testclipboard no longer returns strings
 	with embedded \r but now returns Tcl strings
-	* tests/winfo.test: fixed embedding test broken during upgrade
-	* tests/busy.test: default wait cursor on windows is 'wait'
+	* tests/winfo.test: Fixed embedding test broken during upgrade
+	* tests/busy.test: Default wait cursor on windows is 'wait'
 	* win/tkWinFont.c: const fixes for the windows code.
 
 2008-11-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkFont.h:      more internal -Wwrite-strings warning fixes
+	* generic/tkFont.h:      More internal -Wwrite-strings warning fixes
 	* generic/tkFont.c
 	* generic/ttk/ttkTheme.h
 	* generic/ttk/ttkDefaultTheme.c
