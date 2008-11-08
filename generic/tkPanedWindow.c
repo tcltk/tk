@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.36 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.37 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "default.h"
@@ -493,7 +493,7 @@ Tk_PanedWindowObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(pwPtr->tkwin), -1));
+    Tcl_SetObjResult(interp, TkNewWindowObj(pwPtr->tkwin));
     return TCL_OK;
 }
 

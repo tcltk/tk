@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.42 2008/11/03 11:09:35 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.43 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -390,7 +390,8 @@ CreateNamedSystemFont(
  */
 
 void
-TkWinSetupSystemFonts(TkMainInfo *mainPtr)
+TkWinSetupSystemFonts(
+    TkMainInfo *mainPtr)
 {
     Tcl_Interp *interp;
     Tk_Window tkwin;
@@ -849,7 +850,7 @@ Tk_MeasureChars(
 	    Tcl_UtfToExternalDString(familyPtr->encoding, start,
 		    (int) (p - start), &runString);
 	    size.cx = 0;
-	    (*familyPtr->getTextExtentPoint32Proc)(hdc,
+	    familyPtr->getTextExtentPoint32Proc(hdc,
 		    Tcl_DStringValue(&runString),
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
@@ -877,8 +878,7 @@ Tk_MeasureChars(
 	Tcl_UtfToExternalDString(familyPtr->encoding, start,
 		(int) (p - start), &runString);
 	size.cx = 0;
-	(*familyPtr->getTextExtentPoint32Proc)(hdc,
-		Tcl_DStringValue(&runString),
+	familyPtr->getTextExtentPoint32Proc(hdc, Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		&size);
 	Tcl_DStringFree(&runString);
@@ -911,7 +911,7 @@ Tk_MeasureChars(
 		    &dstWrote, NULL);
 	    Tcl_DStringAppend(&runString,buf,dstWrote);
 	    size.cx = 0;
-	    (*familyPtr->getTextExtentPoint32Proc)(hdc,
+	    familyPtr->getTextExtentPoint32Proc(hdc,
 		    Tcl_DStringValue(&runString),
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
@@ -1299,10 +1299,10 @@ MultiFontTextOut(
 		familyPtr = lastSubFontPtr->familyPtr;
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			(int) (p - source), &runString);
-		(*familyPtr->textOutProc)(hdc, x-(tm.tmOverhang/2), y,
+		familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString)>>familyPtr->isWideFont);
-		(*familyPtr->getTextExtentPoint32Proc)(hdc,
+		familyPtr->getTextExtentPoint32Proc(hdc,
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 			&size);
@@ -1320,7 +1320,7 @@ MultiFontTextOut(
 	familyPtr = lastSubFontPtr->familyPtr;
  	Tcl_UtfToExternalDString(familyPtr->encoding, source,
 		(int) (p - source), &runString);
-	(*familyPtr->textOutProc)(hdc, x-(tm.tmOverhang/2), y,
+	familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
 		Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
@@ -1580,7 +1580,7 @@ AllocFontFamily(
     Tcl_DString faceString;
     Tcl_Encoding encoding;
     char buf[LF_FACESIZE * sizeof(WCHAR)];
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hFont = SelectObject(hdc, hFont);
@@ -1688,7 +1688,7 @@ FreeFontFamily(
 {
     int i;
     FontFamily **familyPtrPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (familyPtr == NULL) {

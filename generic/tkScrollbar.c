@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.15 2008/10/03 13:13:31 dkf Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.16 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -196,7 +196,7 @@ Tk_ScrollbarCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetResult(interp, Tk_PathName(scrollPtr->tkwin), TCL_STATIC);
+    Tcl_SetObjResult(interp, TkNewWindowObj(scrollPtr->tkwin));
     return TCL_OK;
 }
 
@@ -299,7 +299,6 @@ ScrollbarWidgetCmd(
     } else if ((c == 'd') && (strncmp(argv[1], "delta", length) == 0)) {
 	int xDelta, yDelta, pixels, length;
 	double fraction;
-	char buf[TCL_DOUBLE_SPACE];
 
 	if (argc != 4) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -324,12 +323,10 @@ ScrollbarWidgetCmd(
 	} else {
 	    fraction = ((double) pixels / (double) length);
 	}
-	Tcl_PrintDouble(NULL, fraction, buf);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(fraction));
     } else if ((c == 'f') && (strncmp(argv[1], "fraction", length) == 0)) {
 	int x, y, pos, length;
 	double fraction;
-	char buf[TCL_DOUBLE_SPACE];
 
 	if (argc != 4) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -359,8 +356,7 @@ ScrollbarWidgetCmd(
 	} else if (fraction > 1.0) {
 	    fraction = 1.0;
 	}
-	Tcl_PrintDouble(NULL, fraction, buf);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(fraction));
     } else if ((c == 'g') && (strncmp(argv[1], "get", length) == 0)) {
 	if (argc != 2) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
@@ -368,18 +364,19 @@ ScrollbarWidgetCmd(
 	    goto error;
 	}
 	if (scrollPtr->flags & NEW_STYLE_COMMANDS) {
-	    char first[TCL_DOUBLE_SPACE], last[TCL_DOUBLE_SPACE];
+	    Tcl_Obj *resObjs[2];
 
-	    Tcl_PrintDouble(NULL, scrollPtr->firstFraction, first);
-	    Tcl_PrintDouble(NULL, scrollPtr->lastFraction, last);
-	    Tcl_AppendResult(interp, first, " ", last, NULL);
+	    resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
+	    resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
 	} else {
-	    char buf[TCL_INTEGER_SPACE * 4];
+	    Tcl_Obj *resObjs[4];
 
-	    sprintf(buf, "%d %d %d %d", scrollPtr->totalUnits,
-		    scrollPtr->windowUnits, scrollPtr->firstUnit,
-		    scrollPtr->lastUnit);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    resObjs[0] = Tcl_NewIntObj(scrollPtr->totalUnits);
+	    resObjs[1] = Tcl_NewIntObj(scrollPtr->windowUnits);
+	    resObjs[2] = Tcl_NewIntObj(scrollPtr->firstUnit);
+	    resObjs[3] = Tcl_NewIntObj(scrollPtr->lastUnit);
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resObjs));
 	}
     } else if ((c == 'i') && (strncmp(argv[1], "identify", length) == 0)) {
 	int x, y, thing;

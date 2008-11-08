@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.50 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.51 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1353,8 +1353,7 @@ GridSlavesCommand(
 		slavePtr->row+slavePtr->numRows-1 < row)) {
 	    continue;
 	}
-	Tcl_ListObjAppendElement(interp, res,
-		Tcl_NewStringObj(Tk_PathName(slavePtr->tkwin), -1));
+	Tcl_ListObjAppendElement(interp,res, TkNewWindowObj(slavePtr->tkwin));
     }
     Tcl_SetObjResult(interp, res);
     return TCL_OK;

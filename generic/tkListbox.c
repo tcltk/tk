@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.51 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.52 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "default.h"
@@ -568,7 +568,7 @@ Tk_ListboxObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetResult(interp, Tk_PathName(listPtr->tkwin), TCL_STATIC);
+    Tcl_SetObjResult(interp, TkNewWindowObj(listPtr->tkwin));
     return TCL_OK;
 }
 
@@ -694,10 +694,9 @@ ListboxWidgetObjCmd(
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
 		break;
-	    } else {
-		Tcl_SetObjResult(interp, objPtr);
-		result = TCL_OK;
 	    }
+	    Tcl_SetObjResult(interp, objPtr);
+	    result = TCL_OK;
 	} else {
 	    result = ConfigureListbox(interp, listPtr, objc-2, objv+2, 0);
 	}
@@ -1094,7 +1093,6 @@ ListboxBboxSubCmd(
      */
 
     if ((listPtr->topIndex <= index) && (index < lastVisibleIndex)) {
-	char buf[TCL_INTEGER_SPACE * 4];
 	Tcl_Obj *el;
 	char *stringRep;
 	int pixelWidth, stringLen, x, y, result;
@@ -1116,8 +1114,8 @@ ListboxBboxSubCmd(
 	x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
-	sprintf(buf, "%d %d %d %d", x, y, pixelWidth, fm.linespace);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d %d %d",
+		x, y, pixelWidth, fm.linespace));
     }
     return TCL_OK;
 }
@@ -1240,7 +1238,7 @@ ListboxXviewSubCmd(
 
     int index, count, type, windowWidth, windowUnits;
     int offset = 0;		/* Initialized to stop gcc warnings. */
-    double fraction, fraction2;
+    double fraction;
 
     windowWidth = Tk_Width(listPtr->tkwin)
 	    - 2*(listPtr->inset + listPtr->selBorderWidth);
@@ -1248,7 +1246,7 @@ ListboxXviewSubCmd(
 	if (listPtr->maxWidth == 0) {
 	    Tcl_SetResult(interp, "0.0 1.0", TCL_STATIC);
 	} else {
-	    char buf[TCL_DOUBLE_SPACE];
+	    double fraction2;
 
 	    fraction = listPtr->xOffset/((double) listPtr->maxWidth);
 	    fraction2 = (listPtr->xOffset + windowWidth)
@@ -1256,10 +1254,8 @@ ListboxXviewSubCmd(
 	    if (fraction2 > 1.0) {
 		fraction2 = 1.0;
 	    }
-	    Tcl_PrintDouble(NULL, fraction, buf);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	    Tcl_PrintDouble(NULL, fraction2, buf);
-	    Tcl_AppendResult(interp, " ", buf, NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%g %g",
+		    fraction, fraction2));
 	}
     } else if (objc == 3) {
 	if (Tcl_GetIntFromObj(interp, objv[2], &index) != TCL_OK) {
@@ -1316,24 +1312,21 @@ ListboxYviewSubCmd(
     Tcl_Obj *const objv[])	/* Array of arguments to the procedure */
 {
     int index, count, type;
-    double fraction, fraction2;
+    double fraction;
 
     if (objc == 2) {
 	if (listPtr->nElements == 0) {
 	    Tcl_SetResult(interp, "0.0 1.0", TCL_STATIC);
 	} else {
-	    char buf[TCL_DOUBLE_SPACE];
+	    double fraction2, numEls = (double) listPtr->nElements;
 
-	    fraction = listPtr->topIndex/((double) listPtr->nElements);
-	    fraction2 = (listPtr->topIndex+listPtr->fullLines)
-		    /((double) listPtr->nElements);
+	    fraction = listPtr->topIndex / numEls;
+	    fraction2 = (listPtr->topIndex+listPtr->fullLines) / numEls;
 	    if (fraction2 > 1.0) {
 		fraction2 = 1.0;
 	    }
-	    Tcl_PrintDouble(NULL, fraction, buf);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
-	    Tcl_PrintDouble(NULL, fraction2, buf);
-	    Tcl_AppendResult(interp, " ", buf, NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%g %g",
+		    fraction, fraction2));
 	}
     } else if (objc == 3) {
 	if (GetListboxIndex(interp, listPtr, objv[2], 0, &index) != TCL_OK) {

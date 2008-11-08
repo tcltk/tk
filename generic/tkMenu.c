@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.46 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.47 2008/11/08 22:52:29 dkf Exp $
  */
 
 /*
@@ -633,7 +633,7 @@ MenuCmd(
     	}
     }
 
-    Tcl_SetResult(interp, Tk_PathName(menuPtr->tkwin), TCL_STATIC);
+    Tcl_SetObjResult(interp, TkNewWindowObj(menuPtr->tkwin));
     return TCL_OK;
 }
 

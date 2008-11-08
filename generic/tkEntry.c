@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.54 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.55 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -559,7 +559,7 @@ Tk_EntryObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetResult(interp, Tk_PathName(entryPtr->tkwin), TCL_STATIC);
+    Tcl_SetObjResult(interp, TkNewWindowObj(entryPtr->tkwin));
     return TCL_OK;
 }
 
@@ -612,7 +612,6 @@ EntryWidgetObjCmd(
     switch ((enum entryCmd) cmdIndex) {
     case COMMAND_BBOX: {
 	int index, x, y, width, height;
-	char buf[TCL_INTEGER_SPACE * 4];
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -626,9 +625,8 @@ EntryWidgetObjCmd(
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
-	sprintf(buf, "%d %d %d %d", x + entryPtr->layoutX,
-		y + entryPtr->layoutY, width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d %d %d",
+		x + entryPtr->layoutX, y + entryPtr->layoutY, width, height));
 	break;
     }
 
@@ -642,9 +640,8 @@ EntryWidgetObjCmd(
 		entryPtr->optionTable, objv[2], entryPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
-	} else {
-	    Tcl_SetObjResult(interp, objPtr);
 	}
+	Tcl_SetObjResult(interp, objPtr);
 	break;
 
     case COMMAND_CONFIGURE:
@@ -655,9 +652,8 @@ EntryWidgetObjCmd(
 		    entryPtr->tkwin);
 	    if (objPtr == NULL) {
 		goto error;
-	    } else {
-		Tcl_SetObjResult(interp, objPtr);
 	    }
+	    Tcl_SetObjResult(interp, objPtr);
 	} else {
 	    result = ConfigureEntry(interp, entryPtr, objc-2, objv+2, 0);
 	}
@@ -1335,12 +1331,10 @@ ConfigureEntry(
 	    code = Tcl_GetDouble(NULL, entryPtr->string, &dvalue);
 	    if (code != TCL_OK) {
 		dvalue = sbPtr->fromValue;
-	    } else {
-		if (dvalue > sbPtr->toValue) {
-		    dvalue = sbPtr->toValue;
-		} else if (dvalue < sbPtr->fromValue) {
-		    dvalue = sbPtr->fromValue;
-		}
+	    } else if (dvalue > sbPtr->toValue) {
+		dvalue = sbPtr->toValue;
+	    } else if (dvalue < sbPtr->fromValue) {
+		dvalue = sbPtr->fromValue;
 	    }
 	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
 	    EntryValueChanged(entryPtr, sbPtr->formatBuf);
@@ -1968,12 +1962,10 @@ EntryComputeGeometry(
     height = fm.linespace + 2*entryPtr->inset + 2*(YPAD-XPAD);
     if (entryPtr->prefWidth > 0) {
 	width = entryPtr->prefWidth*entryPtr->avgWidth + 2*entryPtr->inset;
+    } else if (totalLength == 0) {
+	width = entryPtr->avgWidth + 2*entryPtr->inset;
     } else {
-	if (totalLength == 0) {
-	    width = entryPtr->avgWidth + 2*entryPtr->inset;
-	} else {
-	    width = totalLength + 2*entryPtr->inset;
-	}
+	width = totalLength + 2*entryPtr->inset;
     }
 
     /*
@@ -2515,36 +2507,26 @@ GetEntryIndex(
 
     length = strlen(string);
 
-    if (string[0] == 'a') {
-	if (strncmp(string, "anchor", length) == 0) {
-	    *indexPtr = entryPtr->selectAnchor;
-	} else {
-	badIndex:
-
-	    /*
-	     * Some of the paths here leave messages in the interp's result,
-	     * so we have to clear it out before storing our own message.
-	     */
-
-	    Tcl_SetResult(interp, NULL, TCL_STATIC);
-	    Tcl_AppendResult(interp, "bad ",
-		    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox",
-		    " index \"", string, "\"", NULL);
-	    return TCL_ERROR;
-	}
-    } else if (string[0] == 'e') {
-	if (strncmp(string, "end", length) == 0) {
-	    *indexPtr = entryPtr->numChars;
-	} else {
+    switch (string[0]) {
+    case 'a':
+	if (strncmp(string, "anchor", length) != 0) {
 	    goto badIndex;
 	}
-    } else if (string[0] == 'i') {
-	if (strncmp(string, "insert", length) == 0) {
-	    *indexPtr = entryPtr->insertPos;
-	} else {
+	*indexPtr = entryPtr->selectAnchor;
+	break;
+    case 'e':
+	if (strncmp(string, "end", length) != 0) {
 	    goto badIndex;
 	}
-    } else if (string[0] == 's') {
+	*indexPtr = entryPtr->numChars;
+	break;
+    case 'i':
+	if (strncmp(string, "insert", length) != 0) {
+	    goto badIndex;
+	}
+	*indexPtr = entryPtr->insertPos;
+	break;
+    case 's':
 	if (entryPtr->selectFirst < 0) {
 	    Tcl_SetResult(interp, NULL, TCL_STATIC);
 	    Tcl_AppendResult(interp, "selection isn't in widget ",
@@ -2561,7 +2543,8 @@ GetEntryIndex(
 	} else {
 	    goto badIndex;
 	}
-    } else if (string[0] == '@') {
+	break;
+    case '@': {
 	int x, roundUp, maxWidth;
 
 	if (Tcl_GetInt(interp, string + 1, &x) != TCL_OK) {
@@ -2572,7 +2555,7 @@ GetEntryIndex(
 	}
 	roundUp = 0;
 	maxWidth = Tk_Width(entryPtr->tkwin) - entryPtr->inset
-	    - entryPtr->xWidth - 1;
+		- entryPtr->xWidth - 1;
 	if (x > maxWidth) {
 	    x = maxWidth;
 	    roundUp = 1;
@@ -2590,7 +2573,9 @@ GetEntryIndex(
 	if (roundUp && (*indexPtr < entryPtr->numChars)) {
 	    *indexPtr += 1;
 	}
-    } else {
+	break;
+    }
+    default:
 	if (Tcl_GetInt(interp, string, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
@@ -2601,6 +2586,11 @@ GetEntryIndex(
 	}
     }
     return TCL_OK;
+
+  badIndex:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad %s index \"%s\"",
+	    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox", string));
+    return TCL_ERROR;
 }
 
 /*
@@ -3658,7 +3648,6 @@ SpinboxWidgetObjCmd(
     switch ((enum sbCmd) cmdIndex) {
     case SB_CMD_BBOX: {
 	int index, x, y, width, height;
-	char buf[TCL_INTEGER_SPACE * 4];
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -3672,9 +3661,8 @@ SpinboxWidgetObjCmd(
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
-	sprintf(buf, "%d %d %d %d", x + entryPtr->layoutX,
-		y + entryPtr->layoutY, width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d %d %d",
+		x + entryPtr->layoutX, y + entryPtr->layoutY, width, height));
 	break;
     }
 
@@ -3688,9 +3676,8 @@ SpinboxWidgetObjCmd(
 		entryPtr->optionTable, objv[2], entryPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
-	} else {
-	    Tcl_SetObjResult(interp, objPtr);
 	}
+	Tcl_SetObjResult(interp, objPtr);
 	break;
 
     case SB_CMD_CONFIGURE:
@@ -3700,9 +3687,8 @@ SpinboxWidgetObjCmd(
 		    entryPtr->tkwin);
 	    if (objPtr == NULL) {
 		goto error;
-	    } else {
-		Tcl_SetObjResult(interp, objPtr);
 	    }
+	    Tcl_SetObjResult(interp, objPtr);
 	} else {
 	    result = ConfigureEntry(interp, entryPtr, objc-2, objv+2, 0);
 	}
