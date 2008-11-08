@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.20 2008/11/03 22:44:22 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.21 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -393,10 +393,13 @@ TestfindwindowObjCmd(
 }
 
 static BOOL CALLBACK
-EnumChildrenProc(HWND hwnd, LPARAM lParam)
+EnumChildrenProc(
+    HWND hwnd,
+    LPARAM lParam)
 {
-    Tcl_Obj *listObj = (Tcl_Obj *)lParam;
-    Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewLongObj((long)hwnd));
+    Tcl_Obj *listObj = (Tcl_Obj *) lParam;
+
+    Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewLongObj((long) hwnd));
     return TRUE;
 }
 

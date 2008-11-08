@@ -11,7 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  * ----------------------------------------------------------------------------
- * RCS: @(#) $Id: nmakehlp.c,v 1.11 2007/12/14 02:19:43 patthoyts Exp $
+ * RCS: @(#) $Id: nmakehlp.c,v 1.12 2008/11/08 18:44:40 dkf Exp $
  * ----------------------------------------------------------------------------
  */
 
@@ -592,7 +592,10 @@ typedef struct list_item_t {
 
 /* insert a list item into the list (list may be null) */
 static list_item_t *
-list_insert(list_item_t **listPtrPtr, const char *key, const char *value)
+list_insert(
+    list_item_t **listPtrPtr,
+    const char *key,
+    const char *value)
 {
     list_item_t *itemPtr = malloc(sizeof(list_item_t));
     if (itemPtr) {
@@ -609,7 +612,8 @@ list_insert(list_item_t **listPtrPtr, const char *key, const char *value)
 }
 
 static void
-list_free(list_item_t **listPtrPtr)
+list_free(
+    list_item_t **listPtrPtr)
 {
     list_item_t *tmpPtr, *listPtr = *listPtrPtr;
     while (listPtr) {

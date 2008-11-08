@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.23 2008/11/05 22:48:58 nijtmans Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.24 2008/11/08 18:44:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -967,7 +967,7 @@ InitBitmapObj(
     Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	(*typePtr->freeIntRepProc)(objPtr);
+	typePtr->freeIntRepProc(objPtr);
     }
     objPtr->typePtr = &tkBitmapObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;

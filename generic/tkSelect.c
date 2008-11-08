@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.25 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.26 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -435,7 +435,7 @@ Tk_OwnSelection(
      */
 
     if (clearProc != NULL) {
-	(*clearProc)(clearData);
+	clearProc(clearData);
     }
 }
 
@@ -499,7 +499,7 @@ Tk_ClearSelection(
     XSetSelectionOwner(winPtr->display, selection, None, CurrentTime);
 
     if (clearProc != NULL) {
-	(*clearProc)(clearData);
+	clearProc(clearData);
     }
 }
 
@@ -604,7 +604,7 @@ Tk_GetSelection(
 		goto cantget;
 	    }
 	    buffer[count] = 0;
-	    result = (*proc)(clientData, interp, buffer);
+	    result = proc(clientData, interp, buffer);
 	} else {
 	    offset = 0;
 	    result = TCL_OK;
@@ -612,7 +612,7 @@ Tk_GetSelection(
 	    ip.nextPtr = tsdPtr->pendingPtr;
 	    tsdPtr->pendingPtr = &ip;
 	    while (1) {
-		count = (selPtr->proc)(selPtr->clientData, offset, buffer,
+		count = selPtr->proc(selPtr->clientData, offset, buffer,
 			TK_SEL_BYTES_AT_ONCE);
 		if ((count < 0) || (ip.selPtr == NULL)) {
 		    tsdPtr->pendingPtr = ip.nextPtr;
@@ -622,7 +622,7 @@ Tk_GetSelection(
 		    Tcl_Panic("selection handler returned too many bytes");
 		}
 		buffer[count] = '\0';
-		result = (*proc)(clientData, interp, buffer);
+		result = proc(clientData, interp, buffer);
 		if ((result != TCL_OK) || (count < TK_SEL_BYTES_AT_ONCE)
 			|| (ip.selPtr == NULL)) {
 		    break;
@@ -1259,7 +1259,7 @@ TkSelClearSelection(
 	 */
 
 	if (infoPtr->clearProc != NULL) {
-	    (*infoPtr->clearProc)(infoPtr->clearData);
+	    infoPtr->clearProc(infoPtr->clearData);
 	}
 	ckfree((char *) infoPtr);
     }

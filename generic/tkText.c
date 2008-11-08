@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.83 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.84 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "default.h"
@@ -443,7 +443,7 @@ Tk_TextObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -513,7 +513,7 @@ CreateWidget(
     textPtr->interp = interp;
     textPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(textPtr->tkwin), TextWidgetObjCmd,
-	    (ClientData) textPtr, TextCmdDeletedProc);
+	    textPtr, TextCmdDeletedProc);
 
     if (sharedPtr == NULL) {
 	sharedPtr = (TkSharedText *) ckalloc(sizeof(TkSharedText));
@@ -628,18 +628,18 @@ CreateWidget(
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     Tk_SetClass(textPtr->tkwin, "Text");
-    Tk_SetClassProcs(textPtr->tkwin, &textClass, (ClientData) textPtr);
+    Tk_SetClassProcs(textPtr->tkwin, &textClass, textPtr);
     textPtr->optionTable = optionTable;
 
     Tk_CreateEventHandler(textPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
-	    TextEventProc, (ClientData) textPtr);
+	    TextEventProc, textPtr);
     Tk_CreateEventHandler(textPtr->tkwin, KeyPressMask|KeyReleaseMask
 	    |ButtonPressMask|ButtonReleaseMask|EnterWindowMask
 	    |LeaveWindowMask|PointerMotionMask|VirtualEventMask,
-	    TkTextBindProc, (ClientData) textPtr);
+	    TkTextBindProc, textPtr);
     Tk_CreateSelHandler(textPtr->tkwin, XA_PRIMARY, XA_STRING,
-	    TextFetchSelection, (ClientData) textPtr, XA_STRING);
+	    TextFetchSelection, textPtr, XA_STRING);
 
     if (Tk_InitOptions(interp, (char *) textPtr, optionTable, textPtr->tkwin)
 	    != TCL_OK) {
@@ -651,8 +651,7 @@ CreateWidget(
 	return TCL_ERROR;
     }
 
-    Tcl_SetObjResult(interp,
-	    Tcl_NewStringObj(Tk_PathName(textPtr->tkwin),-1));
+    Tcl_SetObjResult(interp, TkNewWindowObj(textPtr->tkwin));
     return TCL_OK;
 }
 
@@ -681,7 +680,7 @@ TextWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register TkText *textPtr = (TkText *) clientData;
+    register TkText *textPtr = clientData;
     int result = TCL_OK;
     int index;
 
@@ -1532,7 +1531,7 @@ SharedTextObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register TkSharedText *sharedPtr = (TkSharedText *) clientData;
+    register TkSharedText *sharedPtr = clientData;
     int result = TCL_OK;
     int index;
 
@@ -2197,7 +2196,7 @@ ConfigureText(
 	if (TkBTreeCharTagged(&first, textPtr->selTagPtr)
 		|| TkBTreeNextTag(&search)) {
 	    Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY, TkTextLostSelection,
-		    (ClientData) textPtr);
+		    textPtr);
 	    textPtr->flags |= GOT_SELECTION;
 	}
     }
@@ -2209,7 +2208,7 @@ ConfigureText(
     if (textPtr->flags & GOT_FOCUS) {
 	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
 	textPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
-	TextBlinkProc((ClientData) textPtr);
+	TextBlinkProc(textPtr);
     }
 
     /*
@@ -2252,9 +2251,8 @@ static void
 TextWorldChangedCallback(
     ClientData instanceData)	/* Information about widget. */
 {
-    TkText *textPtr;
+    TkText *textPtr = instanceData;
 
-    textPtr = (TkText *) instanceData;
     TextWorldChanged(textPtr, TK_TEXT_LINE_GEOMETRY);
 }
 
@@ -2340,7 +2338,7 @@ TextEventProc(
     ClientData clientData,	/* Information about window. */
     register XEvent *eventPtr)	/* Information about event. */
 {
-    register TkText *textPtr = (TkText *) clientData;
+    register TkText *textPtr = clientData;
     TkTextIndex index, index2;
 
     if (eventPtr->type == Expose) {
@@ -2400,8 +2398,7 @@ TextEventProc(
 		textPtr->flags |= GOT_FOCUS | INSERT_ON;
 		if (textPtr->insertOffTime != 0) {
 		    textPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
-			    textPtr->insertOnTime, TextBlinkProc,
-			    (ClientData) textPtr);
+			    textPtr->insertOnTime, TextBlinkProc, textPtr);
 		}
 	    } else {
 		textPtr->flags &= ~(GOT_FOCUS | INSERT_ON);
@@ -2450,7 +2447,7 @@ static void
 TextCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkText *textPtr = (TkText *) clientData;
+    TkText *textPtr = clientData;
     Tk_Window tkwin = textPtr->tkwin;
 
     /*
@@ -2718,13 +2715,13 @@ TextPushUndoAction(
      * underlying data shared by all peers.
      */
 
-    iAtom = TkUndoMakeSubAtom(&TextUndoRedoCallback,
-	    (ClientData)textPtr->sharedTextPtr, insertCmdObj, NULL);
+    iAtom = TkUndoMakeSubAtom(&TextUndoRedoCallback, textPtr->sharedTextPtr,
+	    insertCmdObj, NULL);
     TkUndoMakeCmdSubAtom(NULL, markSet2InsertObj, iAtom);
     TkUndoMakeCmdSubAtom(NULL, seeInsertObj, iAtom);
 
-    dAtom = TkUndoMakeSubAtom(&TextUndoRedoCallback,
-	    (ClientData)textPtr->sharedTextPtr, deleteCmdObj, NULL);
+    dAtom = TkUndoMakeSubAtom(&TextUndoRedoCallback, textPtr->sharedTextPtr,
+	    deleteCmdObj, NULL);
     TkUndoMakeCmdSubAtom(NULL, markSet1InsertObj, dAtom);
     TkUndoMakeCmdSubAtom(NULL, seeInsertObj, dAtom);
 
@@ -2773,7 +2770,7 @@ TextUndoRedoCallback(
     Tcl_Obj *objPtr)		/* Arguments of a command to be handled by the
 				 * shared text data structure. */
 {
-    TkSharedText *sharedPtr = (TkSharedText *) clientData;
+    TkSharedText *sharedPtr = clientData;
     int res, objc;
     Tcl_Obj **objv;
     TkText *textPtr;
@@ -2838,7 +2835,7 @@ TextUndoRedoCallback(
      * the Tcl level.
      */
 
-    return SharedTextObjCmd((ClientData)sharedPtr, interp, objc+1, objv-1);
+    return SharedTextObjCmd(sharedPtr, interp, objc+1, objv-1);
 }
 
 /*
@@ -3199,7 +3196,7 @@ TextFetchSelection(
 				 * not including terminating NULL
 				 * character. */
 {
-    register TkText *textPtr = (TkText *) clientData;
+    register TkText *textPtr = clientData;
     TkTextIndex eof;
     int count, chunkSize, offsetInSeg;
     TkTextSearch search;
@@ -3330,7 +3327,7 @@ void
 TkTextLostSelection(
     ClientData clientData)	/* Information about text widget. */
 {
-    register TkText *textPtr = (TkText *) clientData;
+    register TkText *textPtr = clientData;
 
     if (TkpAlwaysShowSelection(textPtr->tkwin)) {
 	TkTextIndex start, end;
@@ -3424,7 +3421,7 @@ static void
 TextBlinkProc(
     ClientData clientData)	/* Pointer to record describing text. */
 {
-    register TkText *textPtr = (TkText *) clientData;
+    register TkText *textPtr = clientData;
     TkTextIndex index;
     int x, y, w, h, charWidth;
 
@@ -3444,11 +3441,11 @@ TextBlinkProc(
     if (textPtr->flags & INSERT_ON) {
 	textPtr->flags &= ~INSERT_ON;
 	textPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
-		textPtr->insertOffTime, TextBlinkProc, (ClientData) textPtr);
+		textPtr->insertOffTime, TextBlinkProc, textPtr);
     } else {
 	textPtr->flags |= INSERT_ON;
 	textPtr->insertBlinkHandler = Tcl_CreateTimerHandler(
-		textPtr->insertOnTime, TextBlinkProc, (ClientData) textPtr);
+		textPtr->insertOnTime, TextBlinkProc, textPtr);
     }
   redrawInsert:
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
@@ -3604,7 +3601,7 @@ TextSearchCmd(
     searchSpec.strictLimits = 0;
     searchSpec.numLines =
 	    TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
-    searchSpec.clientData = (ClientData)textPtr;
+    searchSpec.clientData = textPtr;
     searchSpec.addLineProc = &TextSearchAddNextLine;
     searchSpec.foundMatchProc = &TextSearchFoundMatch;
     searchSpec.lineIndexProc = &TextSearchGetLineIndex;
@@ -3789,7 +3786,7 @@ TextSearchGetLineIndex(
 {
     const TkTextIndex *indexPtr;
     int line;
-    TkText *textPtr = (TkText *) searchSpecPtr->clientData;
+    TkText *textPtr = searchSpecPtr->clientData;
 
     indexPtr = TkTextGetIndexFromObj(interp, textPtr, objPtr);
     if (indexPtr == NULL) {
@@ -3854,7 +3851,7 @@ TextSearchIndexInLine(
     TkTextSegment *segPtr;
     TkTextIndex curIndex;
     int index, leftToScan;
-    TkText *textPtr = (TkText *) searchSpecPtr->clientData;
+    TkText *textPtr = searchSpecPtr->clientData;
 
     index = 0;
     curIndex.tree = textPtr->sharedTextPtr->tree;
@@ -3924,7 +3921,7 @@ TextSearchAddNextLine(
     TkTextLine *linePtr, *thisLinePtr;
     TkTextIndex curIndex;
     TkTextSegment *segPtr;
-    TkText *textPtr = (TkText *) searchSpecPtr->clientData;
+    TkText *textPtr = searchSpecPtr->clientData;
     int nothingYet = 1;
 
     /*
@@ -4001,7 +3998,7 @@ TextSearchAddNextLine(
 	    *lenPtr = Tcl_GetCharLength(theLine);
 	}
     }
-    return (ClientData)linePtr;
+    return linePtr;
 }
 
 /*
@@ -4045,7 +4042,7 @@ TextSearchFoundMatch(
     TkTextIndex curIndex, foundIndex;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
-    TkText *textPtr = (TkText *) searchSpecPtr->clientData;
+    TkText *textPtr = searchSpecPtr->clientData;
 
     if (lineNum == searchSpecPtr->stopLine) {
 	/*
@@ -4096,7 +4093,7 @@ TextSearchFoundMatch(
      * reached the end of the match or we have reached the end of the line.
      */
 
-    linePtr = (TkTextLine *)clientData;
+    linePtr = clientData;
     if (linePtr == NULL) {
 	linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, textPtr,
 		lineNum);
@@ -5240,7 +5237,7 @@ SearchPerform(
      * for regexp search, utf-8 bytes for exact search).
      */
 
-    if ((*searchSpecPtr->lineIndexProc)(interp, fromPtr, searchSpecPtr,
+    if (searchSpecPtr->lineIndexProc(interp, fromPtr, searchSpecPtr,
 	    &searchSpecPtr->startLine,
 	    &searchSpecPtr->startOffset) != TCL_OK) {
 	return TCL_ERROR;
@@ -5252,7 +5249,7 @@ SearchPerform(
 
     if (toPtr != NULL) {
 	const TkTextIndex *indexToPtr, *indexFromPtr;
-	TkText *textPtr = (TkText *) searchSpecPtr->clientData;
+	TkText *textPtr = searchSpecPtr->clientData;
 
 	indexToPtr = TkTextGetIndexFromObj(interp, textPtr, toPtr);
 	if (indexToPtr == NULL) {
@@ -5276,7 +5273,7 @@ SearchPerform(
 	    }
 	}
 
-	if ((*searchSpecPtr->lineIndexProc)(interp, toPtr, searchSpecPtr,
+	if (searchSpecPtr->lineIndexProc(interp, toPtr, searchSpecPtr,
 		&searchSpecPtr->stopLine,
 		&searchSpecPtr->stopOffset) != TCL_OK) {
 	    return TCL_ERROR;
@@ -5462,8 +5459,8 @@ SearchCore(
 	 * this line, which is what 'lastOffset' represents.
 	 */
 
-	lineInfo = (*searchSpecPtr->addLineProc)(lineNum, searchSpecPtr,
-		theLine, &lastOffset, &linesSearched);
+	lineInfo = searchSpecPtr->addLineProc(lineNum, searchSpecPtr, theLine,
+		&lastOffset, &linesSearched);
 
 	if (lineInfo == NULL) {
 	    /*
@@ -5647,7 +5644,7 @@ SearchCore(
 			     */
 
 			    if (extraLines > maxExtraLines) {
-				if ((*searchSpecPtr->addLineProc)(lineNum
+				if (searchSpecPtr->addLineProc(lineNum
 					+ extraLines, searchSpecPtr, theLine,
 					&lastTotal, &extraLines) == NULL) {
 				    p = NULL;
@@ -5727,9 +5724,8 @@ SearchCore(
 		matchOffset = p - startOfLine;
 
 		if (searchSpecPtr->all &&
-			!(*searchSpecPtr->foundMatchProc)(lineNum,
-			searchSpecPtr, lineInfo, theLine, matchOffset,
-			matchLength)) {
+			!searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr,
+			lineInfo, theLine, matchOffset, matchLength)) {
 		    /*
 		     * We reached the end of the search.
 		     */
@@ -5870,7 +5866,7 @@ SearchCore(
 			 */
 
 			if (extraLines > maxExtraLines) {
-			    if ((*searchSpecPtr->addLineProc)(lineNum
+			    if (searchSpecPtr->addLineProc(lineNum
 				    + extraLines, searchSpecPtr, theLine,
 				    &lastTotal, &extraLines) == NULL) {
 				/*
@@ -6049,9 +6045,9 @@ SearchCore(
 
 		    if (lastBackwardsLineMatch != -1) {
 		    recordBackwardsMatch:
-			(*searchSpecPtr->foundMatchProc)(
-				lastBackwardsLineMatch, searchSpecPtr, NULL,
-				NULL, lastBackwardsMatchOffset, matchLength);
+			searchSpecPtr->foundMatchProc(lastBackwardsLineMatch,
+				searchSpecPtr, NULL, NULL,
+				lastBackwardsMatchOffset, matchLength);
 			lastBackwardsLineMatch = -1;
 			if (!searchSpecPtr->all) {
 			    goto searchDone;
@@ -6116,7 +6112,7 @@ SearchCore(
 			 */
 
 			if (searchSpecPtr->all &&
-				!(*searchSpecPtr->foundMatchProc)(lineNum,
+				!searchSpecPtr->foundMatchProc(lineNum,
 				searchSpecPtr, lineInfo, theLine, matchOffset,
 				matchLength)) {
 			    /*
@@ -6207,7 +6203,7 @@ SearchCore(
 			    continue;
 			}
 		    }
-		    (*searchSpecPtr->foundMatchProc)(lineNum, searchSpecPtr,
+		    searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr,
 			    lineInfo, theLine, matchOffset, matchLength);
 		    if (!searchSpecPtr->all) {
 			goto searchDone;
@@ -6222,7 +6218,7 @@ SearchCore(
 		     * non-all case.
 		     */
 
-		    (*searchSpecPtr->foundMatchProc)(lineNum, searchSpecPtr,
+		    searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr,
 			    lineInfo, theLine, matchOffset, matchLength);
 		} else {
 		    lastBackwardsLineMatch = lineNum;
@@ -6241,7 +6237,7 @@ SearchCore(
 
 	if ((lastBackwardsLineMatch == -1) && (matchOffset >= 0)
 		&& !searchSpecPtr->all) {
-	    (*searchSpecPtr->foundMatchProc)(lineNum, searchSpecPtr, lineInfo,
+	    searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr, lineInfo,
 		    theLine, matchOffset, matchLength);
 	    goto searchDone;
 	}
@@ -6268,7 +6264,7 @@ SearchCore(
 		if (lastBackwardsLineMatch != -1
 			&& ((lineNum < 0)
 			|| (lineNum + 2 < lastBackwardsLineMatch))) {
-		    (*searchSpecPtr->foundMatchProc)(lastBackwardsLineMatch,
+		    searchSpecPtr->foundMatchProc(lastBackwardsLineMatch,
 			    searchSpecPtr, NULL, NULL,
 			    lastBackwardsMatchOffset, matchLength);
 		    lastBackwardsLineMatch = -1;
@@ -6314,7 +6310,7 @@ SearchCore(
   searchDone:
 
     if (lastBackwardsLineMatch != -1) {
-	(*searchSpecPtr->foundMatchProc)(lastBackwardsLineMatch, searchSpecPtr,
+	searchSpecPtr->foundMatchProc(lastBackwardsLineMatch, searchSpecPtr,
 		NULL, NULL, lastBackwardsMatchOffset, matchLength);
     }
 
