@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.18 2007/12/13 15:27:10 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.19 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -443,8 +443,8 @@ TkpDestroyMenuButton(
  */
 
 void
-TkpComputeMenuButtonGeometry(mbPtr)
-    register TkMenuButton *mbPtr;	/* Widget record for menu button. */
+TkpComputeMenuButtonGeometry(
+    register TkMenuButton *mbPtr)	/* Widget record for menu button. */
 {
     int width, height, mm, pixels;
     int hasImageOrBitmap = 0;

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkError.c,v 1.7 2008/08/19 15:52:11 georgeps Exp $
+ * RCS: @(#) $Id: tkError.c,v 1.8 2008/11/08 18:44:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -248,8 +248,8 @@ ErrorProc(
 		    && (errorPtr->lastRequest < errEventPtr->serial))) {
 	    continue;
 	}
-	if (errorPtr->errorProc == NULL || (*errorPtr->errorProc)(
-		errorPtr->clientData, errEventPtr) == 0) {
+	if (errorPtr->errorProc == NULL ||
+		errorPtr->errorProc(errorPtr->clientData, errEventPtr) == 0) {
 	    return 0;
 	}
     }
@@ -281,7 +281,7 @@ ErrorProc(
      */
 
   couldntHandle:
-    return (*defaultHandler)(display, errEventPtr);
+    return defaultHandler(display, errEventPtr);
 }
 
 /*
