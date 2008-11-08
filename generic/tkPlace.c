@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.27 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.28 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -212,7 +212,6 @@ Tk_PlaceObjCmd(
 {
     Tk_Window tkwin;
     Slave *slavePtr;
-    char *string;
     TkDisplay *dispPtr;
     Tk_OptionTable optionTable;
     static const char *const optionStrings[] = {
@@ -237,10 +236,9 @@ Tk_PlaceObjCmd(
      * Handle special shortcut where window name is first argument.
      */
 
-    string = Tcl_GetString(objv[1]);
-    if (string[0] == '.') {
-	tkwin = Tk_NameToWindow(interp, string,	Tk_MainWindow(interp));
-	if (tkwin == NULL) {
+    if (Tcl_GetString(objv[1])[0] == '.') {
+	if (TkGetWindowFromObj(interp, Tk_MainWindow(interp), objv[1],
+		&tkwin) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -263,9 +261,8 @@ Tk_PlaceObjCmd(
      * possible additional arguments.
      */
 
-    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
-	    Tk_MainWindow(interp));
-    if (tkwin == NULL) {
+    if (TkGetWindowFromObj(interp, Tk_MainWindow(interp), objv[2],
+	    &tkwin) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -348,7 +345,7 @@ Tk_PlaceObjCmd(
 	    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 		    slavePtr = slavePtr->nextPtr) {
 		Tcl_ListObjAppendElement(interp, listPtr,
-			Tcl_NewStringObj(Tk_PathName(slavePtr->tkwin),-1));
+			TkNewWindowObj(slavePtr->tkwin));
 	    }
 	    Tcl_SetObjResult(interp, listPtr);
 	}
@@ -405,7 +402,7 @@ CreateSlave(
     slavePtr->optionTable = table;
     Tcl_SetHashValue(hPtr, slavePtr);
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
-	    (ClientData) slavePtr);
+	    slavePtr);
     return slavePtr;
 }
 
@@ -864,8 +861,8 @@ RecomputePlacement(
 
     /*
      * Abort any nested call to RecomputePlacement for this window, since
-     * we'll do everything necessary here, and set up so this call
-     * can be aborted if necessary.
+     * we'll do everything necessary here, and set up so this call can be
+     * aborted if necessary.
      */
 
     if (masterPtr->abortPtr != NULL) {
@@ -1077,13 +1074,15 @@ MasterStructureProc(
     register Slave *slavePtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) masterPtr->tkwin)->dispPtr;
 
-    if (eventPtr->type == ConfigureNotify) {
+    switch (eventPtr->type) {
+    case ConfigureNotify:
 	if ((masterPtr->slavePtr != NULL)
 		&& !(masterPtr->flags & PARENT_RECONFIG_PENDING)) {
 	    masterPtr->flags |= PARENT_RECONFIG_PENDING;
 	    Tcl_DoWhenIdle(RecomputePlacement, masterPtr);
 	}
-    } else if (eventPtr->type == DestroyNotify) {
+	return;
+    case DestroyNotify:
 	for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 		slavePtr = nextPtr) {
 	    slavePtr->masterPtr = NULL;
@@ -1100,7 +1099,8 @@ MasterStructureProc(
 	    *masterPtr->abortPtr = 1;
 	}
 	Tcl_EventuallyFree(masterPtr, TCL_DYNAMIC);
-    } else if (eventPtr->type == MapNotify) {
+	return;
+    case MapNotify:
 	/*
 	 * When a master gets mapped, must redo the geometry computation so
 	 * that all of its slaves get remapped.
@@ -1111,7 +1111,8 @@ MasterStructureProc(
 	    masterPtr->flags |= PARENT_RECONFIG_PENDING;
 	    Tcl_DoWhenIdle(RecomputePlacement, masterPtr);
 	}
-    } else if (eventPtr->type == UnmapNotify) {
+	return;
+    case UnmapNotify:
 	/*
 	 * Unmap all of the slaves when the master gets unmapped, so that they
 	 * don't keep redisplaying themselves.
@@ -1121,6 +1122,7 @@ MasterStructureProc(
 		slavePtr = slavePtr->nextPtr) {
 	    Tk_UnmapWindow(slavePtr->tkwin);
 	}
+	return;
     }
 }
 
