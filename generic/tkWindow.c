@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.98 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.99 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1706,7 +1706,7 @@ Tk_MakeWindowExist(
 
     createProc = Tk_GetClassProc(winPtr->classProcsPtr, createProc);
     if (createProc != NULL && parent != None) {
-	winPtr->window = (*createProc)(tkwin, parent, winPtr->instanceData);
+	winPtr->window = createProc(tkwin, parent, winPtr->instanceData);
     } else {
 	winPtr->window = TkpMakeWindow(winPtr, parent);
     }

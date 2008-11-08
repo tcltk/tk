@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.31 2008/10/15 06:41:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.32 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "default.h"
@@ -239,8 +239,8 @@ TkTextGetIndexFromObj(
 	if (objPtr->bytes == NULL) {
 	    objPtr->typePtr->updateStringProc(objPtr);
 	}
-	if ((objPtr->typePtr->freeIntRepProc) != NULL) {
-	    (*objPtr->typePtr->freeIntRepProc)(objPtr);
+	if (objPtr->typePtr->freeIntRepProc != NULL) {
+	    objPtr->typePtr->freeIntRepProc(objPtr);
 	}
     }
 

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.30 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.31 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include <ctype.h>
@@ -255,7 +255,7 @@ Tk_MainEx(
      * Invoke application-specific initialization.
      */
 
-    if ((*appInitProc)(interp) != TCL_OK) {
+    if (appInitProc(interp) != TCL_OK) {
 	TkpDisplayWarning(Tcl_GetStringResult(interp),
 		"Application initialization failed");
     }

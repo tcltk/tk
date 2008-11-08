@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.54 2008/10/17 23:18:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.55 2008/11/08 18:44:40 dkf Exp $
  *
  */
 
@@ -467,8 +467,7 @@ ColorDlgHookProc(
 	if ((title != NULL) && (title[0] != '\0')) {
 	    Tcl_DString ds;
 
-	    (*tkWinProcs->setWindowText)(hDlg,
-		    Tcl_WinUtfToTChar(title, -1, &ds));
+	    tkWinProcs->setWindowText(hDlg, Tcl_WinUtfToTChar(title,-1,&ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {

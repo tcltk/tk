@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.63 2008/10/17 23:18:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.64 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -7143,9 +7143,9 @@ TkpWmSetState(
  */
 
 static void
-RemapWindows(winPtr, parentPtr)
-     TkWindow *winPtr;
-     TkWindow *parentPtr;
+RemapWindows(
+    TkWindow *winPtr,
+    TkWindow *parentPtr)
 {
     XWindowAttributes win_attr;
 

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.21 2008/04/27 22:39:16 dkf Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.22 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -814,7 +814,7 @@ RenderObject(
 	SetPolyFillMode(dcMem, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
 	oldMemBrush = SelectObject(dcMem, CreateSolidBrush(gc->foreground));
-	(*func)(dcMem, winPoints, npoints);
+	func(dcMem, winPoints, npoints);
 	BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
 
 	/*
@@ -826,7 +826,7 @@ RenderObject(
 	if (gc->fill_style == FillOpaqueStippled) {
 	    DeleteObject(SelectObject(dcMem,
 		    CreateSolidBrush(gc->background)));
-	    (*func)(dcMem, winPoints, npoints);
+	    func(dcMem, winPoints, npoints);
 	    BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
 		    COPYBG);
 	}
@@ -842,9 +842,7 @@ RenderObject(
 
 	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
-
-	(*func)(dc, winPoints, npoints);
-
+	func(dc, winPoints, npoints);
 	SelectObject(dc, oldPen);
     }
     DeleteObject(SelectObject(dc, oldBrush));

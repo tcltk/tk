@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.27 2008/10/03 13:13:31 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.28 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -328,10 +328,10 @@ TkpDisplayScrollbar(
  */
 
 void
-TkpConfigureScrollbar(scrollPtr)
-    register TkScrollbar *scrollPtr;	/* Information about widget; may or
-					 * may not already have values for
-					 * some fields. */
+TkpConfigureScrollbar(
+    register TkScrollbar *scrollPtr)
+				/* Information about widget; may or may not
+				 * already have values for some fields. */
 {
 }
 
@@ -554,7 +554,9 @@ TkpScrollbarPosition(
  */
 
 static pascal void
-ThumbActionProc(ControlRef theControl, ControlPartCode partCode)
+ThumbActionProc(
+    ControlRef theControl,
+    ControlPartCode partCode)
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)(intptr_t)
 	    GetControlReference(theControl);

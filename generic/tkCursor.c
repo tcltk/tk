@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCursor.c,v 1.20 2008/10/15 06:41:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkCursor.c,v 1.21 2008/11/08 18:44:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -760,7 +760,7 @@ InitCursorObj(
     Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	(*typePtr->freeIntRepProc)(objPtr);
+	typePtr->freeIntRepProc(objPtr);
     }
     objPtr->typePtr = &tkCursorObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.27 2007/12/13 15:24:17 dgp Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.28 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -867,7 +867,7 @@ DestroyNode(
 	    while (linePtr->segPtr != NULL) {
 		segPtr = linePtr->segPtr;
 		linePtr->segPtr = segPtr->nextPtr;
-		(*segPtr->typePtr->deleteProc)(segPtr, linePtr, 1);
+		segPtr->typePtr->deleteProc(segPtr, linePtr, 1);
 	    }
 	    ckfree((char *) linePtr->pixels);
 	    ckfree((char *) linePtr);
@@ -1207,7 +1207,7 @@ SplitSeg(
 	    if (count == 0) {
 		return prevPtr;
 	    }
-	    segPtr = (*segPtr->typePtr->splitProc)(segPtr, count);
+	    segPtr = segPtr->typePtr->splitProc(segPtr, count);
 	    if (prevPtr == NULL) {
 		indexPtr->linePtr->segPtr = segPtr;
 	    } else {
@@ -1282,7 +1282,7 @@ CleanupLine(
 		segPtr != NULL;
 		prevPtrPtr = &(*prevPtrPtr)->nextPtr, segPtr = *prevPtrPtr) {
 	    if (segPtr->typePtr->cleanupProc != NULL) {
-		*prevPtrPtr = (*segPtr->typePtr->cleanupProc)(segPtr, linePtr);
+		*prevPtrPtr = segPtr->typePtr->cleanupProc(segPtr, linePtr);
 		if (segPtr != *prevPtrPtr) {
 		    anyChanges = 1;
 		}
@@ -1452,7 +1452,7 @@ TkBTreeDeleteIndexRange(
 	}
 
 	nextPtr = segPtr->nextPtr;
-	if ((*segPtr->typePtr->deleteProc)(segPtr, curLinePtr, 0) != 0) {
+	if (segPtr->typePtr->deleteProc(segPtr, curLinePtr, 0) != 0) {
 	    /*
 	     * This segment refuses to die. Move it to prevPtr and advance
 	     * prevPtr if the segment has left gravity.
@@ -1483,7 +1483,7 @@ TkBTreeDeleteIndexRange(
 	for (segPtr = lastPtr; segPtr != NULL;
 		segPtr = segPtr->nextPtr) {
 	    if (segPtr->typePtr->lineChangeProc != NULL) {
-		(*segPtr->typePtr->lineChangeProc)(segPtr, index2Ptr->linePtr);
+		segPtr->typePtr->lineChangeProc(segPtr, index2Ptr->linePtr);
 	    }
 	}
 	curNodePtr = index2Ptr->linePtr->parentPtr;
@@ -3935,7 +3935,7 @@ CheckNodeConsistency(
 	    for (segPtr = linePtr->segPtr; segPtr != NULL;
 		    segPtr = segPtr->nextPtr) {
 		if (segPtr->typePtr->checkProc != NULL) {
-		    (*segPtr->typePtr->checkProc)(segPtr, linePtr);
+		    segPtr->typePtr->checkProc(segPtr, linePtr);
 		}
 		if ((segPtr->size == 0) && (!segPtr->typePtr->leftGravity)
 			&& (segPtr->nextPtr != NULL)

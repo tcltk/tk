@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.16 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.17 2008/11/08 18:44:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -231,7 +231,7 @@ Tk_ParseArgv(
 	    typedef int (ArgvFunc)(char *, const char *, const char *);
 	    ArgvFunc *handlerProc = (ArgvFunc *) infoPtr->src;
 
-	    if ((*handlerProc)(infoPtr->dst, infoPtr->key, argv[srcIndex])) {
+	    if (handlerProc(infoPtr->dst, infoPtr->key, argv[srcIndex])) {
 		srcIndex++;
 		argc--;
 	    }
@@ -242,8 +242,8 @@ Tk_ParseArgv(
 		    const char **);
 	    ArgvGenFunc *handlerProc = (ArgvGenFunc *) infoPtr->src;
 
-	    argc = (*handlerProc)(infoPtr->dst, interp, infoPtr->key,
-		    argc, argv+srcIndex);
+	    argc = handlerProc(infoPtr->dst, interp, infoPtr->key, argc,
+		    argv+srcIndex);
 	    if (argc < 0) {
 		return TCL_ERROR;
 	    }

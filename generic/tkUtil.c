@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.23 2008/10/30 21:39:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.24 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -950,7 +950,7 @@ TkFindStateNumObj(
 	if (strcmp(key, mPtr->strKey) == 0) {
 	    typePtr = keyPtr->typePtr;
 	    if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-		(*typePtr->freeIntRepProc)(keyPtr);
+		typePtr->freeIntRepProc(keyPtr);
 	    }
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (void *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = INT2PTR(mPtr->numKey);

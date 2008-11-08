@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.60 2008/10/17 23:18:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.61 2008/11/08 18:44:40 dkf Exp $
  */
 
 #define OEMRESOURCE
@@ -669,7 +669,7 @@ ReconfigureWindowsMenu(
 	    }
 	}
 	if (!systemMenu) {
-	    (*tkWinProcs->insertMenu)(winMenuHdl, 0xFFFFFFFF, flags,
+	    tkWinProcs->insertMenu(winMenuHdl, 0xFFFFFFFF, flags,
 		    itemID, lpNewItem);
 	}
 	Tcl_DStringFree(&translatedText);
