@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.35 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.36 2008/11/08 22:52:29 dkf Exp $
  */
 
 #include "default.h"
@@ -418,10 +418,10 @@ TkCreateFrame(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    const char *const *argv,		/* Argument strings. */
+    const char *const *argv,	/* Argument strings. */
     int toplevel,		/* Non-zero means create a toplevel window,
 				 * zero means create a frame. */
-    const char *appName)		/* Should only be non-NULL if there is no main
+    const char *appName)	/* Should only be non-NULL if there is no main
 				 * window associated with the interpreter.
 				 * Gives the base name to use for the new
 				 * application. */
@@ -667,7 +667,7 @@ CreateFrame(
     if (type == TYPE_TOPLEVEL) {
 	Tcl_DoWhenIdle(MapFrame, framePtr);
     }
-    Tcl_SetResult(interp, Tk_PathName(newWin), TCL_STATIC);
+    Tcl_SetObjResult(interp, TkNewWindowObj(newWin));
     return TCL_OK;
 
   error:
@@ -934,9 +934,8 @@ ConfigureFrame(
 	    ckfree(oldMenuName);
 	}
 	return TCL_ERROR;
-    } else {
-	Tk_FreeSavedOptions(&savedOptions);
     }
+    Tk_FreeSavedOptions(&savedOptions);
 
     /*
      * A few of the options require additional processing.
@@ -1267,10 +1266,14 @@ ComputeFrameGeometry(
     if ((labelframePtr->labelAnchor >= LABELANCHOR_N) &&
 	    (labelframePtr->labelAnchor <= LABELANCHOR_SW)) {
 	maxWidth -= padding;
-	if (maxWidth < 1) maxWidth = 1;
+	if (maxWidth < 1) {
+	    maxWidth = 1;
+	}
     } else {
 	maxHeight -= padding;
-	if (maxHeight < 1) maxHeight = 1;
+	if (maxHeight < 1) {
+	    maxHeight = 1;
+	}
     }
     if (labelframePtr->labelBox.width > maxWidth) {
 	labelframePtr->labelBox.width = maxWidth;
@@ -1916,8 +1919,8 @@ FrameLostSlaveProc(
 }
 
 void
-TkMapTopFrame (tkwin)
-     Tk_Window tkwin;
+TkMapTopFrame(
+     Tk_Window tkwin)
 {
     Frame *framePtr = ((TkWindow*)tkwin)->instanceData;
     Tk_OptionTable optionTable;
