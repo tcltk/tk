@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.18 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.19 2008/11/08 18:44:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1059,8 +1059,8 @@ TkFocusFree(
  */
 
 void
-TkFocusSplit(winPtr)
-    TkWindow *winPtr;		/* Window is the new toplevel. Any focus point
+TkFocusSplit(
+    TkWindow *winPtr)		/* Window is the new toplevel. Any focus point
 				 * at or below window must be moved to this
 				 * new toplevel. */
 {

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.39 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.40 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -283,13 +283,13 @@ Tk_ImageObjCmd(
 	    if (masterPtr->typePtr != NULL) {
 		for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
 			imagePtr = imagePtr->nextPtr) {
-		    (*masterPtr->typePtr->freeProc)(imagePtr->instanceData,
+		    masterPtr->typePtr->freeProc(imagePtr->instanceData,
 			    imagePtr->display);
-		    (*imagePtr->changeProc)(imagePtr->widgetClientData,
-			    0, 0, masterPtr->width, masterPtr->height,
+		    imagePtr->changeProc(imagePtr->widgetClientData, 0, 0,
+			    masterPtr->width, masterPtr->height,
 			    masterPtr->width, masterPtr->height);
 		}
-		(*masterPtr->typePtr->deleteProc)(masterPtr->masterData);
+		masterPtr->typePtr->deleteProc(masterPtr->masterData);
 		masterPtr->typePtr = NULL;
 	    }
 	    masterPtr->deleted = 0;
@@ -314,8 +314,8 @@ Tk_ImageObjCmd(
 	    args[objc] = NULL;
 	}
 	Tcl_Preserve(masterPtr);
-	if ((*typePtr->createProc)(interp, name, objc, args, typePtr,
-		(Tk_ImageMaster)masterPtr, &masterPtr->masterData) != TCL_OK) {
+	if (typePtr->createProc(interp, name, objc, args, typePtr,
+		(Tk_ImageMaster)masterPtr, &masterPtr->masterData) != TCL_OK){
 	    EventuallyDeleteImage(masterPtr, 0);
 	    Tcl_Release(masterPtr);
 	    if (oldimage) {
@@ -330,7 +330,7 @@ Tk_ImageObjCmd(
 	masterPtr->typePtr = typePtr;
 	for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
 		imagePtr = imagePtr->nextPtr) {
-	    imagePtr->instanceData = (*typePtr->getProc)(imagePtr->tkwin,
+	    imagePtr->instanceData = typePtr->getProc(imagePtr->tkwin,
 		    masterPtr->masterData);
 	}
 	Tcl_SetResult(interp,
@@ -479,8 +479,8 @@ Tk_ImageChanged(
     masterPtr->height = imageHeight;
     for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
 	    imagePtr = imagePtr->nextPtr) {
-	(*imagePtr->changeProc)(imagePtr->widgetClientData, x, y,
-		width, height, imageWidth, imageHeight);
+	imagePtr->changeProc(imagePtr->widgetClientData, x, y, width, height,
+		imageWidth, imageHeight);
     }
 }
 
@@ -567,7 +567,7 @@ Tk_GetImage(
     imagePtr->display = Tk_Display(tkwin);
     imagePtr->masterPtr = masterPtr;
     imagePtr->instanceData =
-	    (*masterPtr->typePtr->getProc)(tkwin, masterPtr->masterData);
+	    masterPtr->typePtr->getProc(tkwin, masterPtr->masterData);
     imagePtr->changeProc = changeProc;
     imagePtr->widgetClientData = clientData;
     imagePtr->nextPtr = masterPtr->instancePtr;
@@ -613,7 +613,7 @@ Tk_FreeImage(
      */
 
     if (masterPtr->typePtr != NULL) {
-	(*masterPtr->typePtr->freeProc)(imagePtr->instanceData,
+	masterPtr->typePtr->freeProc(imagePtr->instanceData,
 		imagePtr->display);
     }
     prevPtr = masterPtr->instancePtr;
@@ -691,7 +691,7 @@ Tk_PostscriptImage(
      */
 
     if (imagePtr->masterPtr->typePtr->postscriptProc != NULL) {
-	return (*imagePtr->masterPtr->typePtr->postscriptProc)(
+	return imagePtr->masterPtr->typePtr->postscriptProc(
 	    imagePtr->masterPtr->masterData, interp, tkwin, psinfo,
 	    x, y, width, height, prepass);
     }
@@ -801,9 +801,9 @@ Tk_RedrawImage(
     if ((imageY + height) > imagePtr->masterPtr->height) {
 	height = imagePtr->masterPtr->height - imageY;
     }
-    (*imagePtr->masterPtr->typePtr->displayProc)(
-	    imagePtr->instanceData, imagePtr->display, drawable,
-	    imageX, imageY, width, height, drawableX, drawableY);
+    imagePtr->masterPtr->typePtr->displayProc(imagePtr->instanceData,
+	    imagePtr->display, drawable, imageX, imageY, width, height,
+	    drawableX, drawableY);
 }
 
 /*
@@ -902,13 +902,12 @@ DeleteImage(
     if (typePtr != NULL) {
 	for (imagePtr = masterPtr->instancePtr; imagePtr != NULL;
 		imagePtr = imagePtr->nextPtr) {
-	    (*typePtr->freeProc)(imagePtr->instanceData,
-		    imagePtr->display);
-	    (*imagePtr->changeProc)(imagePtr->widgetClientData, 0, 0,
+	    typePtr->freeProc(imagePtr->instanceData, imagePtr->display);
+	    imagePtr->changeProc(imagePtr->widgetClientData, 0, 0,
 		    masterPtr->width, masterPtr->height, masterPtr->width,
 		    masterPtr->height);
 	}
-	(*typePtr->deleteProc)(masterPtr->masterData);
+	typePtr->deleteProc(masterPtr->masterData);
     }
     if (masterPtr->instancePtr == NULL) {
 	if (masterPtr->hPtr != NULL) {

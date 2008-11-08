@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.13 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.14 2008/11/08 18:44:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -98,7 +98,7 @@ Tk_ManageGeometry(
 	    && ((winPtr->geomMgrPtr != mgrPtr)
 		|| (winPtr->geomData != clientData))
 	    && (winPtr->geomMgrPtr->lostSlaveProc != NULL)) {
-	(*winPtr->geomMgrPtr->lostSlaveProc)(winPtr->geomData, tkwin);
+	winPtr->geomMgrPtr->lostSlaveProc(winPtr->geomData, tkwin);
     }
 
     winPtr->geomMgrPtr = mgrPtr;
@@ -154,7 +154,7 @@ Tk_GeometryRequest(
     winPtr->reqHeight = reqHeight;
     if ((winPtr->geomMgrPtr != NULL)
 	    && (winPtr->geomMgrPtr->requestProc != NULL)) {
-	(*winPtr->geomMgrPtr->requestProc)(winPtr->geomData, tkwin);
+	winPtr->geomMgrPtr->requestProc(winPtr->geomData, tkwin);
     }
 }
 
