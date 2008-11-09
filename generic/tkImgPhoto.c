@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.84 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.85 2008/11/09 23:16:56 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -261,7 +261,7 @@ PhotoFormatThreadExitProc(
 
 void
 Tk_CreateOldPhotoImageFormat(
-    Tk_PhotoImageFormat *formatPtr)
+    const Tk_PhotoImageFormat *formatPtr)
 				/* Structure describing the format. All of the
 				 * fields except "nextPtr" must be filled in
 				 * by caller. Must not have been passed to
@@ -285,7 +285,7 @@ Tk_CreateOldPhotoImageFormat(
 
 void
 Tk_CreatePhotoImageFormat(
-    Tk_PhotoImageFormat *formatPtr)
+    const Tk_PhotoImageFormat *formatPtr)
 				/* Structure describing the format. All of the
 				 * fields except "nextPtr" must be filled in
 				 * by caller. Must not have been passed to

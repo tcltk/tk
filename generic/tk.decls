@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.43 2008/11/09 21:53:39 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.44 2008/11/09 23:16:56 nijtmans Exp $
 
 library tk
 
@@ -191,7 +191,7 @@ declare 39 generic {
     void Tk_CreateItemType(Tk_ItemType *typePtr)
 }
 declare 40 generic {
-    void Tk_CreatePhotoImageFormat(Tk_PhotoImageFormat *formatPtr)
+    void Tk_CreatePhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 declare 41 generic {
     void Tk_CreateSelHandler(Tk_Window tkwin,
@@ -1071,7 +1071,7 @@ declare 272 generic {
     void Tk_CreateOldImageType(Tk_ImageType *typePtr)
 }
 declare 273 generic {
-    void Tk_CreateOldPhotoImageFormat(Tk_PhotoImageFormat *formatPtr)
+    void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 
 # Define the platform specific public Tk interface.  These functions are
