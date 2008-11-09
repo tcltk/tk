@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.16 2008/07/23 23:24:45 nijtmans Exp $
+/* $Id: ttkPanedwindow.c,v 1.17 2008/11/09 23:53:09 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -493,7 +493,7 @@ static void PanedEventProc(ClientData clientData, XEvent *eventPtr)
  * +++ Initialization and cleanup hooks.
  */
 
-static int PanedInitialize(Tcl_Interp *interp, void *recordPtr)
+static void PanedInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Paned *pw = recordPtr;
 
@@ -503,8 +503,6 @@ static int PanedInitialize(Tcl_Interp *interp, void *recordPtr)
     pw->paned.paneOptionTable = Tk_CreateOptionTable(interp,PaneOptionSpecs);
     pw->paned.sashLayout = 0;
     pw->paned.sashThickness = 1;
-
-    return TCL_OK;
 }
 
 static void PanedCleanup(void *recordPtr)

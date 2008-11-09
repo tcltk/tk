@@ -1,4 +1,4 @@
-/* $Id: ttkScrollbar.c,v 1.8 2008/04/27 22:41:12 dkf Exp $
+/* $Id: ttkScrollbar.c,v 1.9 2008/11/09 23:53:09 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * ttk::scrollbar widget.
@@ -49,7 +49,7 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
  * +++ Widget hooks.
  */
 
-static int 
+static void 
 ScrollbarInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Scrollbar *sb = recordPtr;
@@ -57,8 +57,6 @@ ScrollbarInitialize(Tcl_Interp *interp, void *recordPtr)
     sb->scrollbar.last = 1.0;
 
     TtkTrackElementState(&sb->core);
-
-    return TCL_OK;
 }
 
 static Ttk_Layout ScrollbarGetLayout(
