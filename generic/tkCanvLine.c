@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.25 2008/11/01 16:14:30 dkf Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.26 2008/11/09 21:53:39 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -61,7 +61,7 @@ typedef struct LineItem  {
 				 * point in line (PTS_IN_ARROW points, first
 				 * of which is tip). Malloc'ed. NULL means no
 				 * arrowhead at last point. */
-    Tk_SmoothMethod *smooth;	/* Non-zero means draw line smoothed (i.e.
+    const Tk_SmoothMethod *smooth; /* Non-zero means draw line smoothed (i.e.
 				 * with Bezier splines). */
     int splineSteps;		/* Number of steps in each spline segment. */
 } LineItem;

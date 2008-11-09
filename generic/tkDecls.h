@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.37 2008/10/30 21:39:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.38 2008/11/09 21:53:39 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -1353,7 +1353,7 @@ EXTERN int		Tk_CreateConsoleWindow (Tcl_Interp * interp);
 #define Tk_CreateSmoothMethod_TCL_DECLARED
 /* 217 */
 EXTERN void		Tk_CreateSmoothMethod (Tcl_Interp * interp,
-				Tk_SmoothMethod * method);
+				const Tk_SmoothMethod * method);
 #endif
 /* Slot 218 is reserved */
 /* Slot 219 is reserved */
@@ -1923,7 +1923,7 @@ typedef struct TkStubs {
     int (*tk_SetOptions) (Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions * savePtr, int * maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp * interp); /* 215 */
     int (*tk_CreateConsoleWindow) (Tcl_Interp * interp); /* 216 */
-    void (*tk_CreateSmoothMethod) (Tcl_Interp * interp, Tk_SmoothMethod * method); /* 217 */
+    void (*tk_CreateSmoothMethod) (Tcl_Interp * interp, const Tk_SmoothMethod * method); /* 217 */
     void *reserved218;
     void *reserved219;
     int (*tk_GetDash) (Tcl_Interp * interp, const char * value, Tk_Dash * dash); /* 220 */

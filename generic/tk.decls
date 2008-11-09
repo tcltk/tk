@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.42 2008/10/30 21:39:16 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.43 2008/11/09 21:53:39 nijtmans Exp $
 
 library tk
 
@@ -827,7 +827,7 @@ declare 216 generic {
     int Tk_CreateConsoleWindow(Tcl_Interp *interp)
 }
 declare 217 generic {
-    void Tk_CreateSmoothMethod(Tcl_Interp *interp, Tk_SmoothMethod *method)
+    void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
 }
 
 #declare 218 generic {
