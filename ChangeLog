@@ -1,3 +1,7 @@
+2008-11-09  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkWidget.c: Remove unnecessary casts.
+
 2008-11-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkCanvas.c:    make all Tk_CustomOption tables const and
