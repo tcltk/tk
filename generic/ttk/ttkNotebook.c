@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.15 2008/07/23 23:24:45 nijtmans Exp $
+/* $Id: ttkNotebook.c,v 1.16 2008/11/09 23:53:09 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -1214,7 +1214,7 @@ static WidgetCommandSpec NotebookCommands[] =
  * +++ Widget class hooks.
  */
 
-static int NotebookInitialize(Tcl_Interp *interp, void *recordPtr)
+static void NotebookInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Notebook *nb = recordPtr;
 
@@ -1232,8 +1232,6 @@ static int NotebookInitialize(Tcl_Interp *interp, void *recordPtr)
 
     Tk_CreateEventHandler(
 	nb->core.tkwin, NotebookEventMask, NotebookEventHandler, recordPtr);
-
-    return TCL_OK;
 }
 
 static void NotebookCleanup(void *recordPtr)
