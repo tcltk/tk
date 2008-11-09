@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.22 2008/11/09 20:51:28 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.23 2008/11/09 21:53:39 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -46,7 +46,7 @@ typedef struct PolygonItem  {
     Pixmap disabledFillStipple;	/* Stipple bitmap for filling polygon if state
 				 * is disabled. */
     GC fillGC;			/* Graphics context for filling polygon. */
-    Tk_SmoothMethod *smooth;	/* Non-zero means draw shape smoothed (i.e.
+    const Tk_SmoothMethod *smooth; /* Non-zero means draw shape smoothed (i.e.
 				 * with Bezier splines). */
     int splineSteps;		/* Number of steps in each spline segment. */
     int autoClosed;		/* Zero means the given polygon was closed,
