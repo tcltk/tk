@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.9 2008/04/27 22:41:12 dkf Exp $
+/* $Id: ttkButton.c,v 1.10 2008/11/09 23:53:09 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
@@ -118,13 +118,12 @@ static void TextVariableChanged(void *clientData, const char *value)
     TtkResizeWidget(&basePtr->core);
 }
 
-static int
+static void
 BaseInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Base *basePtr = recordPtr;
     basePtr->base.textVariableTrace = 0;
     basePtr->base.imageSpec = NULL;
-    return TCL_OK;
 }
 
 static void
@@ -453,7 +452,7 @@ static void CheckbuttonVariableChanged(void *clientData, const char *value)
     }
 }
 
-static int CheckbuttonInitialize(Tcl_Interp *interp, void *recordPtr)
+static void CheckbuttonInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Checkbutton *checkPtr = recordPtr;
     Tcl_Obj *objPtr;
@@ -464,8 +463,7 @@ static int CheckbuttonInitialize(Tcl_Interp *interp, void *recordPtr)
     Tcl_IncrRefCount(objPtr);
     Tcl_DecrRefCount(checkPtr->checkbutton.variableObj);
     checkPtr->checkbutton.variableObj = objPtr;
-
-    return BaseInitialize(interp, recordPtr);
+    BaseInitialize(interp, recordPtr);
 }
 
 static void

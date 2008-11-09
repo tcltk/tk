@@ -1,4 +1,4 @@
-/* $Id: ttkScale.c,v 1.8 2008/04/27 22:41:12 dkf Exp $
+/* $Id: ttkScale.c,v 1.9 2008/11/09 23:53:09 jenglish Exp $
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.
@@ -100,12 +100,10 @@ static void ScaleVariableChanged(void *recordPtr, const char *value)
 /* ScaleInitialize --
  * 	Scale widget initialization hook.
  */
-static int ScaleInitialize(Tcl_Interp *interp, void *recordPtr)
+static void ScaleInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Scale *scalePtr = recordPtr;
-
     TtkTrackElementState(&scalePtr->core);
-    return TCL_OK;
 }
 
 static void ScaleCleanup(void *recordPtr)

@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.15 2008/11/09 21:37:13 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.16 2008/11/09 23:53:09 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -406,8 +406,7 @@ int TtkWidgetConstructorObjCmd(
     if (Tk_InitOptions(interp, recordPtr, optionTable, tkwin) != TCL_OK)
     	goto error_nocleanup;
 
-    if (widgetSpec->initializeProc(interp, recordPtr) != TCL_OK)
-	goto error_nocleanup;
+    widgetSpec->initializeProc(interp, recordPtr);
 
     if (Tk_SetOptions(interp, recordPtr, optionTable, objc - 2,
 	    objv + 2, tkwin, NULL/*savePtr*/, NULL/*maskPtr*/) != TCL_OK)
@@ -522,9 +521,8 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
 /* TtkNullInitialize --
  * 	Default widget initializeProc (no-op)
  */
-int TtkNullInitialize(Tcl_Interp *interp, void *recordPtr)
+void TtkNullInitialize(Tcl_Interp *interp, void *recordPtr)
 {
-    return TCL_OK;
 }
 
 /* TtkNullPostConfigure --
