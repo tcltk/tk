@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.14 2008/10/31 18:01:35 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.15 2008/11/09 21:37:13 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -116,7 +116,7 @@ void TtkRedisplayWidget(WidgetCore *corePtr)
     }
 
     if (!(corePtr->flags & REDISPLAY_PENDING)) {
-	Tcl_DoWhenIdle(DrawWidget, (ClientData) corePtr);
+	Tcl_DoWhenIdle(DrawWidget, corePtr);
 	corePtr->flags |= REDISPLAY_PENDING;
     }
 }
@@ -182,7 +182,7 @@ WidgetInstanceObjCmd(
     int objc,				/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument objects. */
 {
-    WidgetCore *corePtr = (WidgetCore *)clientData;
+    WidgetCore *corePtr = clientData;
     const WidgetCommandSpec *commands = corePtr->widgetSpec->commands;
     int status = TCL_OK;
 
@@ -199,7 +199,7 @@ WidgetInstanceObjCmd(
 static void
 WidgetInstanceObjCmdDeleted(ClientData clientData)
 {
-    WidgetCore *corePtr = (WidgetCore *) clientData;
+    WidgetCore *corePtr = clientData;
     corePtr->widgetCmd = NULL;
     if (corePtr->tkwin != NULL)
 	Tk_DestroyWindow(corePtr->tkwin);
@@ -246,7 +246,7 @@ static const unsigned CoreEventMask
 
 static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 {
-    WidgetCore *corePtr = (WidgetCore *) clientData;
+    WidgetCore *corePtr = clientData;
 
     switch (eventPtr->type)
     {
@@ -329,7 +329,7 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
  */
 static void WidgetWorldChanged(ClientData clientData)
 {
-    WidgetCore *corePtr = (WidgetCore*)clientData;
+    WidgetCore *corePtr = clientData;
     SizeChanged(corePtr);
     TtkRedisplayWidget(corePtr);
 }
@@ -347,10 +347,10 @@ static struct Tk_ClassProcs widgetClassProcs = {
 int TtkWidgetConstructorObjCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetSpec *widgetSpec = (WidgetSpec *)clientData;
+    WidgetSpec *widgetSpec = clientData;
     const char *className = widgetSpec->className;
     WidgetCore *corePtr;
-    ClientData recordPtr;
+    void *recordPtr;
     Tk_Window tkwin;
     Tk_OptionTable optionTable;
     int i;
@@ -360,8 +360,8 @@ int TtkWidgetConstructorObjCmd(
 	return TCL_ERROR;
     }
 
-    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-	    Tcl_GetStringFromObj(objv[1], NULL), (char *) NULL);
+    tkwin = Tk_CreateWindowFromPath(
+	interp, Tk_MainWindow(interp), Tcl_GetString(objv[1]), NULL);
     if (tkwin == NULL)
 	return TCL_ERROR;
 
@@ -371,8 +371,7 @@ int TtkWidgetConstructorObjCmd(
      * since InitOptions() is affected by the widget class.
      */
     for (i = 2; i < objc; i += 2) {
-	const char *resourceName = Tcl_GetString(objv[i]);
-	if (!strcmp(resourceName, "-class")) {
+	if (!strcmp(Tcl_GetString(objv[i]), "-class")) {
 	    className = Tcl_GetString(objv[i+1]);
 	    break;
 	}
@@ -393,7 +392,7 @@ int TtkWidgetConstructorObjCmd(
      */
     recordPtr = ckalloc(widgetSpec->recordSize);
     memset(recordPtr, 0, widgetSpec->recordSize);
-    corePtr = (WidgetCore *)recordPtr;
+    corePtr = recordPtr;
 
     corePtr->tkwin	= tkwin;
     corePtr->interp 	= interp;
@@ -411,7 +410,7 @@ int TtkWidgetConstructorObjCmd(
 	goto error_nocleanup;
 
     if (Tk_SetOptions(interp, recordPtr, optionTable, objc - 2,
-	    objv + 2, tkwin, NULL/*savePtr*/, (int *)NULL/*maskPtr*/) != TCL_OK)
+	    objv + 2, tkwin, NULL/*savePtr*/, NULL/*maskPtr*/) != TCL_OK)
 	goto error;
 
     if (widgetSpec->configureProc(interp, recordPtr, ~0) != TCL_OK)
@@ -622,7 +621,7 @@ Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 
     if (objc == 2) {
 	result = Tk_GetOptionInfo(interp, recordPtr,
-		corePtr->optionTable, (Tcl_Obj *) NULL, corePtr->tkwin);
+		corePtr->optionTable, NULL, corePtr->tkwin);
     } else if (objc == 3) {
 	result = Tk_GetOptionInfo(interp, recordPtr,
 		corePtr->optionTable, objv[2], corePtr->tkwin);
