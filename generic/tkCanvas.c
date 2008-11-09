@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.56 2008/11/03 10:17:49 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.57 2008/11/09 20:51:28 nijtmans Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -102,15 +102,13 @@ typedef struct TagSearch {
  * Custom option for handling "-state" and "-offset"
  */
 
-static Tk_CustomOption stateOption = {
-    (Tk_OptionParseProc *) TkStateParseProc,
-    TkStatePrintProc,
+static const Tk_CustomOption stateOption = {
+    TkStateParseProc, TkStatePrintProc,
     (ClientData) NULL		/* Only "normal" and "disabled". */
 };
 
-static Tk_CustomOption offsetOption = {
-    (Tk_OptionParseProc *) TkOffsetParseProc,
-    TkOffsetPrintProc,
+static const Tk_CustomOption offsetOption = {
+    TkOffsetParseProc, TkOffsetPrintProc,
     (ClientData) TK_OFFSET_RELATIVE
 };
 
@@ -2007,7 +2005,7 @@ CanvasWidgetCmd(
 	}
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
-	    Tcl_SetObjResult(interp, 
+	    Tcl_SetObjResult(interp,
 		    Tcl_NewStringObj(itemPtr->typePtr->name, -1));
 	}
 	break;
