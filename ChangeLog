@@ -2,6 +2,18 @@
 
 	* generic/ttk/ttkWidget.c: Remove unnecessary casts.
 
+	* generic/ttk/ttkWidget.h, generic/ttk/ttkWidget.c:
+	Ttk widget initializeProc()s now return void instead of
+	a status code, and are no longer allowed to fail.
+	(Fix for [Bug 2207435] in progress).
+
+	* generic/ttk/ttkButton.c, generic/ttk/ttkEntry.c,
+	generic/ttk/ttkFrame.c, generic/ttk/ttkNotebook.c,
+	generic/ttk/ttkPanedwindow.c, generic/ttk/ttkProgress.c,
+	generic/ttk/ttkScale.c, generic/ttk/ttkScrollbar.c,
+	generic/ttk/ttkTreeview.c: Adjustments for the above.
+
+
 2008-11-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkCanvas.c:    make all Tk_CustomOption tables const and
@@ -17,9 +29,9 @@
 	* generic/tkCanvLine.c
 	* generic/tkCanvUtil.c
 	* generic/tkImgPhoto.c
-    * generic/tkDecls.h: (regenerated)
-    * doc/CrtImgType.3   doc updates
-    * doc/CrtPhImgFmt.3
+	* generic/tkDecls.h: (regenerated)
+	* doc/CrtImgType.3   doc updates
+	* doc/CrtPhImgFmt.3
 
 2008-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
 

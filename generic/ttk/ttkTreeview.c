@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.29 2008/07/23 23:24:45 nijtmans Exp $
+/* $Id: ttkTreeview.c,v 1.30 2008/11/09 23:53:09 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -985,7 +985,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event)
  * +++ Initialization and cleanup.
  */
 
-static int TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
+static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Treeview *tv = recordPtr;
     int unused;
@@ -1050,8 +1050,6 @@ static int TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
      */
     tv->tree.treeArea = tv->tree.headingArea = Ttk_MakeBox(0,0,0,0);
     tv->tree.slack = 0;
-
-    return TCL_OK;
 }
 
 static void TreeviewCleanup(void *recordPtr)

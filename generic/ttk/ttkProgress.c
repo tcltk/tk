@@ -1,4 +1,4 @@
-/* $Id: ttkProgress.c,v 1.6 2008/04/27 22:41:12 dkf Exp $
+/* $Id: ttkProgress.c,v 1.7 2008/11/09 23:53:09 jenglish Exp $
  *
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
@@ -185,12 +185,11 @@ static void VariableChanged(void *recordPtr, const char *value)
  * +++ Widget class methods:
  */
 
-static int ProgressbarInitialize(Tcl_Interp *interp, void *recordPtr)
+static void ProgressbarInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Progressbar *pb = recordPtr;
     pb->progress.variableTrace = 0;
     pb->progress.timer = 0;
-    return TCL_OK;
 }
 
 static void ProgressbarCleanup(void *recordPtr)
