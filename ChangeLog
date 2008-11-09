@@ -1,3 +1,14 @@
+2008-11-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvas.c:    make all Tk_CustomOption tables const and
+	* generic/tkCanvBmap.c:  remove unnecessary type cast
+	* generic/tkCanvImg.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvWind.c:
+	* generic/tkRectOval.c:
+	* generic/tkScrollbar.c:
+
 2008-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4:       add "-Wno-implicit-int" flag for gcc, as on UNIX

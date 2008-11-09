@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.21 2008/11/01 16:14:30 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.22 2008/11/09 20:51:28 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -57,23 +57,23 @@ typedef struct PolygonItem  {
  * Information used for parsing configuration specs:
  */
 
-static Tk_CustomOption smoothOption = {
+static const Tk_CustomOption smoothOption = {
     TkSmoothParseProc, TkSmoothPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption stateOption = {
+static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, (ClientData) 2
 };
-static Tk_CustomOption tagsOption = {
+static const Tk_CustomOption tagsOption = {
     Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption dashOption = {
+static const Tk_CustomOption dashOption = {
     TkCanvasDashParseProc, TkCanvasDashPrintProc, (ClientData) NULL
 };
-static Tk_CustomOption offsetOption = {
+static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc,
     (ClientData) (TK_OFFSET_RELATIVE|TK_OFFSET_INDEX)
 };
-static Tk_CustomOption pixelOption = {
+static const Tk_CustomOption pixelOption = {
     TkPixelParseProc, TkPixelPrintProc, (ClientData) NULL
 };
 
