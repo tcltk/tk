@@ -12,11 +12,14 @@
 	* generic/tkCanvWind.c:
 	* generic/tkRectOval.c:
 	* generic/tkScrollbar.c:
-	* generic/tk.decls:     One more (hopefully the last) signature change
-	* generic/tkInt.h:      in Tk_CreateSmoothMethod.
+	* generic/tk.decls:     Two more (hopefully the last) signature changes
+	* generic/tkInt.h:      in Tk_CreateSmoothMethod and Tk_CreatePhotoImageFormat
 	* generic/tkCanvLine.c
 	* generic/tkCanvUtil.c
+	* generic/tkImgPhoto.c
     * generic/tkDecls.h: (regenerated)
+    * doc/CrtImgType.3   doc updates
+    * doc/CrtPhImgFmt.3
 
 2008-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
