@@ -12,6 +12,11 @@
 	* generic/tkCanvWind.c:
 	* generic/tkRectOval.c:
 	* generic/tkScrollbar.c:
+	* generic/tk.decls:     One more (hopefully the last) signature change
+	* generic/tkInt.h:      in Tk_CreateSmoothMethod.
+	* generic/tkCanvLine.c
+	* generic/tkCanvUtil.c
+    * generic/tkDecls.h: (regenerated)
 
 2008-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
 

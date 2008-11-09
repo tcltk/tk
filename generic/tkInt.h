@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.91 2008/11/05 23:29:58 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.92 2008/11/09 21:53:39 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -947,7 +947,7 @@ MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
  * outside world:
  */
 
-MODULE_SCOPE Tk_SmoothMethod	tkBezierSmoothMethod;
+MODULE_SCOPE const Tk_SmoothMethod tkBezierSmoothMethod;
 MODULE_SCOPE Tk_ImageType	tkBitmapImageType;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtGIF;
 MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
