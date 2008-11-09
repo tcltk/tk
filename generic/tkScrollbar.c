@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.16 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.17 2008/11/09 20:51:28 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -22,10 +22,8 @@
  * Custom option for handling "-orient"
  */
 
-static Tk_CustomOption orientOption = {
-    (Tk_OptionParseProc *) TkOrientParseProc,
-    TkOrientPrintProc,
-    NULL
+static const Tk_CustomOption orientOption = {
+    TkOrientParseProc, TkOrientPrintProc, (ClientData) NULL
 };
 
 /*
