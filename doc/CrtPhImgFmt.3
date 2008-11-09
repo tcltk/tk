@@ -9,7 +9,7 @@
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
 '\"
-'\" RCS: @(#) $Id: CrtPhImgFmt.3,v 1.11 2008/06/30 22:57:01 dkf Exp $
+'\" RCS: @(#) $Id: CrtPhImgFmt.3,v 1.12 2008/11/09 23:16:56 nijtmans Exp $
 '\"
 .so man.macros
 .TH Tk_CreatePhotoImageFormat 3 8.5 Tk "Tk Library Procedures"
@@ -22,8 +22,8 @@ Tk_CreatePhotoImageFormat \- define new file format for photo images
 .sp
 \fBTk_CreatePhotoImageFormat\fR(\fIformatPtr\fR)
 .SH ARGUMENTS
-.AS Tk_PhotoImageFormat *formatPtr
-.AP Tk_PhotoImageFormat *formatPtr in
+.AS "const Tk_PhotoImageFormat" *formatPtr
+.AP "const Tk_PhotoImageFormat" *formatPtr in
 Structure that defines the new file format.
 .BE
 .SH DESCRIPTION
@@ -47,7 +47,7 @@ handler to deal with files and strings in this format.  The
 Tk_PhotoImageFormat structure contains the following fields:
 .CS
 typedef struct Tk_PhotoImageFormat {
-    char *\fIname\fR;
+    const char *\fIname\fR;
     Tk_ImageFileMatchProc *\fIfileMatchProc\fR;
     Tk_ImageStringMatchProc *\fIstringMatchProc\fR;
     Tk_ImageFileReadProc *\fIfileReadProc\fR;
