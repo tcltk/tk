@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.16 2008/11/09 23:53:09 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.17 2008/11/11 23:39:30 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -61,8 +61,7 @@ static void SizeChanged(WidgetCore *corePtr)
 static Drawable BeginDrawing(Tk_Window tkwin)
 {
     return Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin),
-	    DefaultDepthOfScreen(Tk_Screen(tkwin)));
+	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
 }
 
 /* EndDrawing --
