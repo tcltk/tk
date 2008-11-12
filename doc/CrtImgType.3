@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtImgType.3,v 1.15 2008/11/09 23:16:56 nijtmans Exp $
+'\" RCS: @(#) $Id: CrtImgType.3,v 1.16 2008/11/12 00:15:26 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateImageType 3 8.5 Tk "Tk Library Procedures"
@@ -23,11 +23,12 @@ ClientData
 .sp
 \fBTk_InitImageArgs\fR(\fIinterp, argc, argvPtr\fR)
 .SH ARGUMENTS
-.AS Tk_ImageType *typePtrPtr
-.AP Tk_ImageType *typePtr in
+.AS "const Tk_ImageType" *typePtrPtr
+.AP "const Tk_ImageType" *typePtr in
 Structure that defines the new type of image.
-Must be static: a
+For Tk 8.4 and earlier this must be static: a
 pointer to this structure is retained by the image code.
+In Tk 8.5, this limitation was relaxed.
 .AP Tcl_Interp *interp in
 Interpreter in which image was created.
 .AP "const char" *name in
@@ -113,7 +114,7 @@ typedef int \fBTk_ImageCreateProc\fR(
         const char *\fIname\fR,
         int \fIobjc\fR,
         Tcl_Obj *const \fIobjv\fR[],
-        Tk_ImageType *\fItypePtr\fR,
+        const Tk_ImageType *\fItypePtr\fR,
         Tk_ImageMaster \fImaster\fR,
         ClientData *\fImasterDataPtr\fR);
 .CE

@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.85 2008/11/09 23:16:56 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.86 2008/11/12 00:15:26 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -77,7 +77,7 @@ struct SubcommandOptions {
  * of the OPT_* constants above.
  */
 
-static const char *optionNames[] = {
+static const char *const optionNames[] = {
     "-background",
     "-compositingrule",
     "-format",
@@ -102,9 +102,9 @@ static const char *optionNames[] = {
  * Functions used in the type record for photo images.
  */
 
-static int		ImgPhotoCreate(Tcl_Interp *interp, char *name,
+static int		ImgPhotoCreate(Tcl_Interp *interp, const char *name,
 			    int objc, Tcl_Obj *const objv[],
-			    Tk_ImageType *typePtr, Tk_ImageMaster master,
+			    const Tk_ImageType *typePtr, Tk_ImageMaster master,
 			    ClientData *clientDataPtr);
 static void		ImgPhotoDelete(ClientData clientData);
 static int		ImgPhotoPostscript(ClientData clientData,
@@ -135,7 +135,7 @@ typedef struct ThreadSpecificData {
 				/* Pointer to the first in the list of known
 				 * photo image formats.*/
     int initialized;		/* Set to 1 if we've initialized the
-				 * strucuture. */
+				 * structure. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -333,11 +333,11 @@ static int
 ImgPhotoCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
-    char *name,			/* Name to use for image. */
+    const char *name,			/* Name to use for image. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
-    Tk_ImageType *typePtr,	/* Pointer to our type record (not used). */
+    const Tk_ImageType *typePtr,	/* Pointer to our type record (not used). */
     Tk_ImageMaster master,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
@@ -1401,8 +1401,8 @@ ParseSubcommandOptions(
 {
     int index, c, bit, currentBit, length;
     int values[4], numValues, maxValues, argIndex;
-    char *option;
-    const char **listPtr;
+    const char *option;
+    const char *const *listPtr;
 
     for (index = *optIndexPtr; index < objc; *optIndexPtr = ++index) {
 	/*
@@ -2518,7 +2518,7 @@ Tk_FindPhoto(
 				 * exists. */
     const char *imageName)	/* Name of the desired photo image. */
 {
-    Tk_ImageType *typePtr;
+    const Tk_ImageType *typePtr;
     ClientData clientData =
 	    Tk_GetImageMasterData(interp, imageName, &typePtr);
 
