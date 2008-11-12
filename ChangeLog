@@ -1,5 +1,6 @@
 2008-11-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* tests/winDialog.test: backported some fixes from head
 	* library/text.tcl: Backported fix for bug #1777362 to have events
 	* test/text.test:   work with window paths that include hyphens.
 
