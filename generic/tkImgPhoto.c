@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.86 2008/11/12 00:15:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.87 2008/11/12 01:19:27 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -2522,7 +2522,7 @@ Tk_FindPhoto(
     ClientData clientData =
 	    Tk_GetImageMasterData(interp, imageName, &typePtr);
 
-    if (typePtr != &tkPhotoImageType) {
+    if ((typePtr == NULL) || (typePtr->name != tkPhotoImageType.name)) {
 	return NULL;
     }
     return clientData;
