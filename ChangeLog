@@ -1,3 +1,7 @@
+2008-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgPhoto.c    Fix [Bug 2265860] new test failures
+
 2008-11-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c(BeginDrawing): Don't crash when 
