@@ -10,15 +10,15 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.41 2008/11/12 00:15:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.42 2008/11/12 09:56:51 dkf Exp $
  */
 
 #include "tkInt.h"
 
 /*
  * Each call to Tk_GetImage returns a pointer to one of the following
- * structures, which is used as a token by clients (widgets) that
- * display images.
+ * structures, which is used as a token by clients (widgets) that display
+ * images.
  */
 
 typedef struct Image {
@@ -108,7 +108,7 @@ static void
 ImageTypeThreadExitProc(
     ClientData clientData)	/* not used */
 {
-	Tk_ImageType *freePtr;
+    Tk_ImageType *freePtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -145,11 +145,12 @@ ImageTypeThreadExitProc(
 
 void
 Tk_CreateOldImageType(
-    const Tk_ImageType *typePtr)	/* Structure describing the type. All of the
+    const Tk_ImageType *typePtr)
+				/* Structure describing the type. All of the
 				 * fields except "nextPtr" must be filled in
 				 * by caller. */
 {
-	Tk_ImageType *copyPtr;
+    Tk_ImageType *copyPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -165,11 +166,12 @@ Tk_CreateOldImageType(
 
 void
 Tk_CreateImageType(
-    const Tk_ImageType *typePtr)	/* Structure describing the type. All of the
+    const Tk_ImageType *typePtr)
+				/* Structure describing the type. All of the
 				 * fields except "nextPtr" must be filled in
 				 * by caller. */
 {
-	Tk_ImageType *copyPtr;
+    Tk_ImageType *copyPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -225,7 +227,7 @@ Tk_ImageObjCmd(
     char idString[16 + TCL_INTEGER_SPACE];
     TkDisplay *dispPtr = winPtr->dispPtr;
     char *arg, *name;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
@@ -241,8 +243,10 @@ Tk_ImageObjCmd(
     case IMAGE_CREATE: {
 	Tcl_Obj **args;
 	int oldimage = 0;
+
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "type ?name? ?-option value ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv,
+		    "type ?name? ?-option value ...?");
 	    return TCL_ERROR;
 	}
 
@@ -280,6 +284,7 @@ Tk_ImageObjCmd(
 
 	if ((objc == 3) || (*(arg = Tcl_GetString(objv[3])) == '-')) {
 	    Tcl_CmdInfo dummy;
+
 	    do {
 		dispPtr->imageId++;
 		sprintf(idString, "image%d", dispPtr->imageId);
@@ -743,8 +748,8 @@ Tk_PostscriptImage(
 
     if (imagePtr->masterPtr->typePtr->postscriptProc != NULL) {
 	return imagePtr->masterPtr->typePtr->postscriptProc(
-	    imagePtr->masterPtr->masterData, interp, tkwin, psinfo,
-	    x, y, width, height, prepass);
+		imagePtr->masterPtr->masterData, interp, tkwin, psinfo,
+		x, y, width, height, prepass);
     }
 
     if (prepass) {
@@ -763,15 +768,15 @@ Tk_PostscriptImage(
     gcValues.foreground = WhitePixelOfScreen(Tk_Screen(tkwin));
     newGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
     if (newGC != None) {
-	XFillRectangle(Tk_Display(tkwin), pmap, newGC,
-		0, 0, (unsigned int)width, (unsigned int)height);
+	XFillRectangle(Tk_Display(tkwin), pmap, newGC, 0, 0,
+		(unsigned) width, (unsigned) height);
 	Tk_FreeGC(Tk_Display(tkwin), newGC);
     }
 
     Tk_RedrawImage(image, x, y, width, height, pmap, 0, 0);
 
     ximage = XGetImage(Tk_Display(tkwin), pmap, 0, 0,
-	    (unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
+	    (unsigned) width, (unsigned) height, AllPlanes, ZPixmap);
 
     Tk_FreePixmap(Tk_Display(tkwin), pmap);
 
@@ -1062,14 +1067,14 @@ Tk_GetImageMasterData(
     Tcl_Interp *interp,		/* Interpreter in which the image was
 				 * created. */
     const char *name,		/* Name of image. */
-    const Tk_ImageType **typePtrPtr)	/* Points to location to fill in with pointer
+    const Tk_ImageType **typePtrPtr)
+				/* Points to location to fill in with pointer
 				 * to type information for image. */
 {
+    TkWindow *winPtr = (TkWindow *) Tk_MainWindow(interp);
     Tcl_HashEntry *hPtr;
-    TkWindow *winPtr;
     ImageMaster *masterPtr;
 
-    winPtr = (TkWindow *) Tk_MainWindow(interp);
     hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->imageTable, name);
     if (hPtr == NULL) {
 	*typePtrPtr = NULL;
