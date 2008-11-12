@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.123 2008/11/02 11:20:03 dkf Exp $
+ * RCS: @(#) $Id: tk.h,v 1.124 2008/11/12 00:15:26 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -1187,8 +1187,8 @@ typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
 	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster master,
 	ClientData *masterDataPtr);
 #else
-typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int objc,
-	Tcl_Obj *const objv[], Tk_ImageType *typePtr, Tk_ImageMaster master,
+typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, CONST86 char *name, int objc,
+	Tcl_Obj *const objv[], CONST86 Tk_ImageType *typePtr, Tk_ImageMaster master,
 	ClientData *masterDataPtr);
 #endif
 typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData masterData);

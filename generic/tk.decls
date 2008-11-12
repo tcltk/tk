@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.44 2008/11/09 23:16:56 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.45 2008/11/12 00:15:24 nijtmans Exp $
 
 library tk
 
@@ -185,7 +185,7 @@ declare 37 generic {
     void Tk_CreateGenericHandler(Tk_GenericProc *proc, ClientData clientData)
 }
 declare 38 generic {
-    void Tk_CreateImageType(Tk_ImageType *typePtr)
+    void Tk_CreateImageType(const Tk_ImageType *typePtr)
 }
 declare 39 generic {
     void Tk_CreateItemType(Tk_ItemType *typePtr)
@@ -405,7 +405,7 @@ declare 97 generic {
 }
 declare 98 generic {
     ClientData Tk_GetImageMasterData(Tcl_Interp *interp,
-	    const char *name, Tk_ImageType **typePtrPtr)
+	    const char *name, CONST86 Tk_ImageType **typePtrPtr)
 }
 declare 99 generic {
     Tk_ItemType * Tk_GetItemTypes(void)
@@ -1068,7 +1068,7 @@ declare 271 generic {
 # Developers who need to produce a file [load]able into legacy interps must
 # build against legacy sources.
 declare 272 generic {
-    void Tk_CreateOldImageType(Tk_ImageType *typePtr)
+    void Tk_CreateOldImageType(const Tk_ImageType *typePtr)
 }
 declare 273 generic {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
