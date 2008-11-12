@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.39 2008/11/09 23:16:56 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.40 2008/11/12 00:15:26 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -284,7 +284,7 @@ EXTERN void		Tk_CreateGenericHandler (Tk_GenericProc * proc,
 #ifndef Tk_CreateImageType_TCL_DECLARED
 #define Tk_CreateImageType_TCL_DECLARED
 /* 38 */
-EXTERN void		Tk_CreateImageType (Tk_ImageType * typePtr);
+EXTERN void		Tk_CreateImageType (const Tk_ImageType * typePtr);
 #endif
 #ifndef Tk_CreateItemType_TCL_DECLARED
 #define Tk_CreateItemType_TCL_DECLARED
@@ -650,7 +650,7 @@ EXTERN Tk_Image		Tk_GetImage (Tcl_Interp * interp, Tk_Window tkwin,
 /* 98 */
 EXTERN ClientData	Tk_GetImageMasterData (Tcl_Interp * interp,
 				const char * name,
-				Tk_ImageType ** typePtrPtr);
+				CONST86 Tk_ImageType ** typePtrPtr);
 #endif
 #ifndef Tk_GetItemTypes_TCL_DECLARED
 #define Tk_GetItemTypes_TCL_DECLARED
@@ -1686,7 +1686,7 @@ EXTERN Tcl_Interp *	Tk_Interp (Tk_Window tkwin);
 #ifndef Tk_CreateOldImageType_TCL_DECLARED
 #define Tk_CreateOldImageType_TCL_DECLARED
 /* 272 */
-EXTERN void		Tk_CreateOldImageType (Tk_ImageType * typePtr);
+EXTERN void		Tk_CreateOldImageType (const Tk_ImageType * typePtr);
 #endif
 #ifndef Tk_CreateOldPhotoImageFormat_TCL_DECLARED
 #define Tk_CreateOldPhotoImageFormat_TCL_DECLARED
@@ -1744,7 +1744,7 @@ typedef struct TkStubs {
     Tk_ErrorHandler (*tk_CreateErrorHandler) (Display * display, int errNum, int request, int minorCode, Tk_ErrorProc * errorProc, ClientData clientData); /* 35 */
     void (*tk_CreateEventHandler) (Tk_Window token, unsigned long mask, Tk_EventProc * proc, ClientData clientData); /* 36 */
     void (*tk_CreateGenericHandler) (Tk_GenericProc * proc, ClientData clientData); /* 37 */
-    void (*tk_CreateImageType) (Tk_ImageType * typePtr); /* 38 */
+    void (*tk_CreateImageType) (const Tk_ImageType * typePtr); /* 38 */
     void (*tk_CreateItemType) (Tk_ItemType * typePtr); /* 39 */
     void (*tk_CreatePhotoImageFormat) (const Tk_PhotoImageFormat * formatPtr); /* 40 */
     void (*tk_CreateSelHandler) (Tk_Window tkwin, Atom selection, Atom target, Tk_SelectionProc * proc, ClientData clientData, Atom format); /* 41 */
@@ -1804,7 +1804,7 @@ typedef struct TkStubs {
     void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics * fmPtr); /* 95 */
     GC (*tk_GetGC) (Tk_Window tkwin, unsigned long valueMask, XGCValues * valuePtr); /* 96 */
     Tk_Image (*tk_GetImage) (Tcl_Interp * interp, Tk_Window tkwin, const char * name, Tk_ImageChangedProc * changeProc, ClientData clientData); /* 97 */
-    ClientData (*tk_GetImageMasterData) (Tcl_Interp * interp, const char * name, Tk_ImageType ** typePtrPtr); /* 98 */
+    ClientData (*tk_GetImageMasterData) (Tcl_Interp * interp, const char * name, CONST86 Tk_ImageType ** typePtrPtr); /* 98 */
     Tk_ItemType * (*tk_GetItemTypes) (void); /* 99 */
     int (*tk_GetJoinStyle) (Tcl_Interp * interp, const char * str, int * joinPtr); /* 100 */
     int (*tk_GetJustify) (Tcl_Interp * interp, const char * str, Tk_Justify * justifyPtr); /* 101 */
@@ -1978,7 +1978,7 @@ typedef struct TkStubs {
     long (*tk_GetUserInactiveTime) (Display * dpy); /* 269 */
     void (*tk_ResetUserInactiveTime) (Display * dpy); /* 270 */
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
-    void (*tk_CreateOldImageType) (Tk_ImageType * typePtr); /* 272 */
+    void (*tk_CreateOldImageType) (const Tk_ImageType * typePtr); /* 272 */
     void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat * formatPtr); /* 273 */
 } TkStubs;
 

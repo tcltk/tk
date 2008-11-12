@@ -8,6 +8,17 @@
 	* win/tcl.m4:       reverted change from 2008-11-06 (was under the impression
 	                    that "-Wno-implicit-int" added an extra warning)
 	* win/configure     (regenerated)
+	* generic/tk.decls     modify Tk_Create(Old)ImageType signature, relaxing
+	* generic/tk.h         the constraint that every Tk_ImageType can only
+	* generic/tkImage.c    be passed to this function once. This allows
+	* generic/tkImgBmap.c  tkImg to be loaded in multiple interpreters
+	* generic/tkImgPhoto.c in a thread-enabled build of Tk.
+	* generic/tkTest.c     This CONSTification complies with TIP #27. It is
+	* doc/CrtImgType.3     binary compatible with the old interface, but not
+	                       fully source compatible (although tkImg does not suffer).
+	* generic/tkDecls.h (regenerated)
+
+	*** POTENTIAL INCOMPATIBILITY ***
 
 2008-11-09  Joe English  <jenglish@users.sourceforge.net>
 
