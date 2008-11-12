@@ -8,6 +8,10 @@
 	* win/tcl.m4:       reverted change from 2008-11-06 (was under the impression
 	                    that "-Wno-implicit-int" added an extra warning)
 	* win/configure     (regenerated)
+	* unix/tcl.m4:      Use -O2 as gcc optimization compiler flag, and get
+	                    rid of -Wno-implicit-int for UNIX
+	* unix/configure    (regenerated)
+
 	* generic/tk.decls     modify Tk_Create(Old)ImageType signature, relaxing
 	* generic/tk.h         the constraint that every Tk_ImageType can only
 	* generic/tkImage.c    be passed to this function once. This allows

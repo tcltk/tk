@@ -5087,13 +5087,16 @@ fi
     ECHO_VERSION='`echo ${VERSION}`'
     TCL_LIB_VERSIONS_OK=ok
     CFLAGS_DEBUG=-g
-    CFLAGS_OPTIMIZE=-O
     if test "$GCC" = yes; then
 
-	CFLAGS_WARNING="-Wall -Wno-implicit-int"
+	CFLAGS_OPTIMIZE="-O2"
+	CFLAGS_WARNING="-Wall"
 
 else
-  CFLAGS_WARNING=""
+
+	CFLAGS_OPTIMIZE=-O
+	CFLAGS_WARNING=""
+
 fi
 
     TCL_NEEDS_EXP_FILE=0
