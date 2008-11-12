@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.51 2008/08/03 15:30:26 aniap Exp $
+# RCS: @(#) $Id: text.test,v 1.52 2008/11/12 16:38:13 patthoyts Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -6653,11 +6653,48 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 } -result {ok}
 
 
+test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
+    proc bgerror {m} {set ::my_error $m}
+    set ::my_error {}
+    pack [set w [text .t-1]]
+} -body {
+    tkwait visibility $w
+    event generate $w <1>
+    event generate $w <1>
+    update
+    set ::my_error
+} -cleanup {
+    destroy .t-1
+} -result {}
+
+test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
+    proc bgerror {m} {set ::my_error $m}
+    set ::my_error {}
+    pack [set w [text .t+1]]
+} -body {
+    tkwait visibility $w
+    event generate $w <1>
+    event generate $w <1>
+    update
+    set ::my_error
+} -cleanup {
+    destroy $w
+} -result {}
+
+test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
+    proc bgerror {m} {set ::my_error $m}
+    set ::my_error {}
+    pack [set w [text .t*1]]
+} -body {
+    tkwait visibility $w
+    event generate $w <1>
+    event generate $w <1>
+    update
+    set ::my_error
+} -cleanup {
+    destroy $w
+} -result {}
+
 # cleanup
 cleanupTests
 return
-
-
-
-
-
