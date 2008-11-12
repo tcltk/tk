@@ -1,3 +1,8 @@
+2008-11-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/text.tcl: Backported fix for bug #1777362 to have events
+	* test/text.test:   work with window paths that include hyphens.
+
 2008-10-23  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump version number to 8.5.6b1 to distinguish
