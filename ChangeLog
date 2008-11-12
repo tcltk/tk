@@ -1,3 +1,8 @@
+2008-11-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/text.tcl: bug #1777362 - handle windows with funky names
+	* test/text.test:   by avoiding use of the window path for anchors.
+
 2008-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkImgPhoto.c    Fix [Bug 2265860] new test failures
