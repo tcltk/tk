@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.40 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.41 2008/11/12 00:15:26 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -74,6 +74,8 @@ typedef struct ThreadSpecificData {
     Tk_ImageType *oldImageTypeList;
 				/* First in a list of all known old-style
 				 * image types. */
+    int initialized;		/* Set to 1 if we've initialized the
+				 * structure. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -81,10 +83,47 @@ static Tcl_ThreadDataKey dataKey;
  * Prototypes for local functions:
  */
 
+static void		ImageTypeThreadExitProc(ClientData clientData);
 static void		DeleteImage(ImageMaster *masterPtr);
 static void		EventuallyDeleteImage(ImageMaster *masterPtr,
 			    int forgetImageHashNow);
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImageTypeThreadExitProc --
+ *
+ *	Clean up the registered list of image types.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The thread's linked lists of photo image formats is deleted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ImageTypeThreadExitProc(
+    ClientData clientData)	/* not used */
+{
+	Tk_ImageType *freePtr;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    while (tsdPtr->oldImageTypeList != NULL) {
+	freePtr = tsdPtr->oldImageTypeList;
+	tsdPtr->oldImageTypeList = tsdPtr->oldImageTypeList->nextPtr;
+	ckfree((char *) freePtr);
+    }
+    while (tsdPtr->imageTypeList != NULL) {
+	freePtr = tsdPtr->imageTypeList;
+	tsdPtr->imageTypeList = tsdPtr->imageTypeList->nextPtr;
+	ckfree((char *) freePtr);
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -106,30 +145,42 @@ static void		EventuallyDeleteImage(ImageMaster *masterPtr,
 
 void
 Tk_CreateOldImageType(
-    Tk_ImageType *typePtr)	/* Structure describing the type. All of the
+    const Tk_ImageType *typePtr)	/* Structure describing the type. All of the
 				 * fields except "nextPtr" must be filled in
-				 * by caller. Must not have been passed to
-				 * Tk_CreateImageType previously. */
+				 * by caller. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tk_ImageType *copyPtr;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    typePtr->nextPtr = tsdPtr->oldImageTypeList;
-    tsdPtr->oldImageTypeList = typePtr;
+    if (!tsdPtr->initialized) {
+	tsdPtr->initialized = 1;
+	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
+    }
+    copyPtr = (Tk_ImageType *) ckalloc(sizeof(Tk_ImageType));
+    *copyPtr = *typePtr;
+    copyPtr->nextPtr = tsdPtr->oldImageTypeList;
+    tsdPtr->oldImageTypeList = copyPtr;
 }
 
 void
 Tk_CreateImageType(
-    Tk_ImageType *typePtr)	/* Structure describing the type. All of the
+    const Tk_ImageType *typePtr)	/* Structure describing the type. All of the
 				 * fields except "nextPtr" must be filled in
-				 * by caller. Must not have been passed to
-				 * Tk_CreateImageType previously. */
+				 * by caller. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	Tk_ImageType *copyPtr;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    typePtr->nextPtr = tsdPtr->imageTypeList;
-    tsdPtr->imageTypeList = typePtr;
+    if (!tsdPtr->initialized) {
+	tsdPtr->initialized = 1;
+	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
+    }
+    copyPtr = (Tk_ImageType *) ckalloc(sizeof(Tk_ImageType));
+    *copyPtr = *typePtr;
+    copyPtr->nextPtr = tsdPtr->imageTypeList;
+    tsdPtr->imageTypeList = copyPtr;
 }
 
 /*
@@ -1011,7 +1062,7 @@ Tk_GetImageMasterData(
     Tcl_Interp *interp,		/* Interpreter in which the image was
 				 * created. */
     const char *name,		/* Name of image. */
-    Tk_ImageType **typePtrPtr)	/* Points to location to fill in with pointer
+    const Tk_ImageType **typePtrPtr)	/* Points to location to fill in with pointer
 				 * to type information for image. */
 {
     Tcl_HashEntry *hPtr;
