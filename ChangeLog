@@ -1,3 +1,13 @@
+2008-11-12  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkWidget.c: Reworked widget construction
+	and destruction sequence; fixes [Bug 2207435] and several
+	other problems discovered during investigation of same.
+	* generic/ttk/ttkButton.c(CheckbuttonInitialize): 
+	Account for initializeProc being called earlier in the
+	construction sequence now.
+	* tests/ttk/ttk.test: Updated test suite.
+
 2008-11-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/text.tcl: bug #1777362 - handle windows with funky names
