@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.38 2007/12/13 15:23:44 dgp Exp $
+'\" RCS: @(#) $Id: wm.n,v 1.38.2.1 2008/11/15 00:37:30 patthoyts Exp $
 '\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
@@ -417,7 +417,11 @@ Note: not all window managers support the notion of an icon window.
 .TP
 \fBwm manage \fIwidget\fR
 The \fIwidget\fR specified will become a stand alone top-level window.  The
-window will be decorated with the window managers title bar, etc.
+window will be decorated with the window managers title bar, etc. Only
+\fIframe\fR, \fIlabelframe\fR and \fItoplevel\fR widgets can be used
+with this command. Attempting to pass any other widget type will raise
+an error. Attempting to manage a \fItoplevel\fR widget is benign and
+achieves nothing. See also \fBGEOMETRY MANAGEMENT\fR.
 .TP
 \fBwm maxsize \fIwindow\fR ?\fIwidth height\fR?
 If \fIwidth\fR and \fIheight\fR are specified, they give
