@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.36 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.37 2008/11/15 00:00:27 patthoyts Exp $
  */
 
 #include "default.h"
@@ -556,6 +556,12 @@ CreateFrame(
     }
     if (newWin == NULL) {
 	goto error;
+    } else {
+	/*
+	 * Mark Tk frames as suitable candidates for [wm manage]
+	 */
+	TkWindow *winPtr = (TkWindow *)newWin;
+	winPtr->flags |= TK_WM_MANAGEABLE;
     }
     if (className == NULL) {
 	className = Tk_GetOption(newWin, "class", "Class");
