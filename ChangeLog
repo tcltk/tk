@@ -1,3 +1,13 @@
+2008-11-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tk.h:        The tip 125 implementation permits the
+	* generic/tkFrame.c:   wm manage command to manage any widget but
+	* macosx/tkMacOSXWm.c: only those with Frame instance data should
+	* unix/tkUnixWm.c:     be permitted. We now check for the suitability
+	* win/tkWinWm.c:       and raise an error for non-frame widgets.
+	* test/wm.test:        Updated the tests and documentation.
+	* doc/wm.n:            See also [Bug 2239034]
+
 2008-11-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/constraints.tcl: backported listbox test fix from head
