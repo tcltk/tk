@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.124 2008/11/12 00:15:26 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.125 2008/11/15 00:00:27 patthoyts Exp $
  */
 
 #ifndef _TK
@@ -721,6 +721,8 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_WIN_MANAGED)
 #define Tk_TopWinHierarchy(tkwin) \
     (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_HIERARCHY)
+#define Tk_IsManageable(tkwin) \
+    (((Tk_FakeWin *) (tkwin))->flags & TK_WM_MANAGEABLE)
 #define Tk_ReqWidth(tkwin)	(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)	(((Tk_FakeWin *) (tkwin))->reqHeight)
 /* Tk_InternalBorderWidth is deprecated */
@@ -856,6 +858,8 @@ typedef struct Tk_FakeWin {
  * TK_PROP_PROPCHANGE		1 means that PropertyNotify events in the
  *				window's children should propagate up to this
  *				window.
+ * TK_WM_MANAGEABLE		1 marks a window as capable of being converted
+ *				into a toplevel using [wm manage].
  */
 
 #define TK_MAPPED		1
@@ -877,6 +881,7 @@ typedef struct Tk_FakeWin {
 #define TK_WIN_MANAGED		0x10000
 #define TK_TOP_HIERARCHY	0x20000
 #define TK_PROP_PROPCHANGE	0x40000
+#define TK_WM_MANAGEABLE	0x80000
 
 /*
  *----------------------------------------------------------------------
