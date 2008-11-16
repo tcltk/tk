@@ -1,27 +1,32 @@
+2008-11-16  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/wm.n: Added note about [wm overrideredirect] so that users will
+	avoid making unwarranted assumptions about how magical it is.
+	Triggered by [Bug 2282861] discussion.
+
 2008-11-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tk.h:        The tip 125 implementation permits the
-	* generic/tkFrame.c:   wm manage command to manage any widget but
-	* macosx/tkMacOSXWm.c: only those with Frame instance data should
-	* unix/tkUnixWm.c:     be permitted. We now check for the suitability
-	* win/tkWinWm.c:       and raise an error for non-frame widgets.
-	* test/wm.test:        Updated the tests and documentation.
-	* doc/wm.n:            See also [Bug 2239034]
+	* generic/tk.h:        The TIP 125 implementation permits the
+	* generic/tkFrame.c:   [wm manage] command to manage any widget but
+	* macosx/tkMacOSXWm.c: only those with Frame instance data should be
+	* unix/tkUnixWm.c:     permitted. We now check for the suitability and
+	* win/tkWinWm.c:       raise an error for non-frame widgets. Updated
+	* test/wm.test:        the tests and documentation. See also [Bug
+	* doc/wm.n:            2239034]
 
 2008-11-12  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkWidget.c: Reworked widget construction
-	and destruction sequence; fixes [Bug 2207435] and several
-	other problems discovered during investigation of same.
-	* generic/ttk/ttkButton.c(CheckbuttonInitialize):
-	Account for initializeProc being called earlier in the
-	construction sequence now.
+	* generic/ttk/ttkWidget.c: Reworked widget construction and
+	destruction sequence; fixes [Bug 2207435] and several other problems
+	discovered during investigation of same.
+	* generic/ttk/ttkButton.c (CheckbuttonInitialize): Account for
+	initializeProc being called earlier in the construction sequence now.
 	* tests/ttk/ttk.test: Updated test suite.
 
 2008-11-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/text.tcl: bug #1777362 - handle windows with funky names
-	* test/text.test:   by avoiding use of the window path for anchors.
+	* library/text.tcl: Handle windows with funky names by avoiding use of
+	* test/text.test:   the window path for anchors. [Bug 1777362]
 
 2008-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -29,27 +34,29 @@
 
 2008-11-11  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkWidget.c(BeginDrawing): Don't crash when
-	application uses nondefault visual [Bug 2264732].
+	* generic/ttk/ttkWidget.c(BeginDrawing): Don't crash when application
+	uses nondefault visual. [Bug 2264732]
 
 2008-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4:       reverted change from 2008-11-06 (was under the impression
-	                    that "-Wno-implicit-int" added an extra warning)
-	* win/configure     (regenerated)
-	* unix/tcl.m4:      Use -O2 as gcc optimization compiler flag, and get
-	                    rid of -Wno-implicit-int for UNIX
-	* unix/configure    (regenerated)
+	* win/tcl.m4:	Reverted change from 2008-11-06 (was under the
+			impression that "-Wno-implicit-int" added an extra
+			warning).
+	* win/configure: (regenerated)
+	* unix/tcl.m4:	Use -O2 as gcc optimization compiler flag, and get rid
+			of -Wno-implicit-int for UNIX.
+	* unix/configure: (regenerated)
 
-	* generic/tk.decls     modify Tk_Create(Old)ImageType signature, relaxing
-	* generic/tk.h         the constraint that every Tk_ImageType can only
-	* generic/tkImage.c    be passed to this function once. This allows
-	* generic/tkImgBmap.c  tkImg to be loaded in multiple interpreters
-	* generic/tkImgPhoto.c in a thread-enabled build of Tk.
-	* generic/tkTest.c     This CONSTification complies with TIP #27. It is
-	* doc/CrtImgType.3     binary compatible with the old interface, but not
-	                       fully source compatible (although tkImg does not suffer).
-	* generic/tkDecls.h (regenerated)
+	* generic/tk.decls:    Modify Tk_Create(Old)ImageType signature,
+	* generic/tk.h:        relaxing the constraint that every Tk_ImageType
+	* generic/tkImage.c:   can only be passed to this function once. This
+	* generic/tkImgBmap.c: allows tkImg to be loaded in multiple
+	* generic/tkImgPhoto.c:interpreters in a thread-enabled build of Tk.
+	* generic/tkTest.c:    This CONSTification complies with TIP #27. It
+	* doc/CrtImgType.3:    is binary compatible with the old interface,
+	                       but not fully source compatible (although
+			       tkImg does not suffer).
+	* generic/tkDecls.h: (regenerated)
 
 	*** POTENTIAL INCOMPATIBILITY ***
 
@@ -57,43 +64,42 @@
 
 	* generic/ttk/ttkWidget.c: Remove unnecessary casts.
 
-	* generic/ttk/ttkWidget.h, generic/ttk/ttkWidget.c:
-	Ttk widget initializeProc()s now return void instead of
-	a status code, and are no longer allowed to fail.
-	(Fix for [Bug 2207435] in progress).
+	* generic/ttk/ttkWidget.h, generic/ttk/ttkWidget.c: Ttk widget
+	initializeProc()s now return void instead of a status code, and are no
+	longer allowed to fail. (Fix for [Bug 2207435] in progress).
 
 	* generic/ttk/ttkButton.c, generic/ttk/ttkEntry.c,
-	generic/ttk/ttkFrame.c, generic/ttk/ttkNotebook.c,
-	generic/ttk/ttkPanedwindow.c, generic/ttk/ttkProgress.c,
-	generic/ttk/ttkScale.c, generic/ttk/ttkScrollbar.c,
-	generic/ttk/ttkTreeview.c: Adjustments for the above.
-
+	* generic/ttk/ttkFrame.c, generic/ttk/ttkNotebook.c,
+	* generic/ttk/ttkPanedwindow.c, generic/ttk/ttkProgress.c,
+	* generic/ttk/ttkScale.c, generic/ttk/ttkScrollbar.c,
+	* generic/ttk/ttkTreeview.c: Adjustments for the above.
 
 2008-11-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvas.c:    make all Tk_CustomOption tables const and
-	* generic/tkCanvBmap.c:  remove unnecessary type cast
+	* generic/tkCanvas.c:    Make all Tk_CustomOption tables const and
+	* generic/tkCanvBmap.c:  remove unnecessary type cast.
 	* generic/tkCanvImg.c:
 	* generic/tkCanvPoly.c:
 	* generic/tkCanvText.c:
 	* generic/tkCanvWind.c:
 	* generic/tkRectOval.c:
 	* generic/tkScrollbar.c:
-	* generic/tk.decls:     Two more (hopefully the last) signature changes
-	* generic/tkInt.h:      in Tk_CreateSmoothMethod and Tk_CreatePhotoImageFormat
-	* generic/tkCanvLine.c
-	* generic/tkCanvUtil.c
-	* generic/tkImgPhoto.c
+	* generic/tk.decls:     Two more (hopefully the last) signature
+	* generic/tkInt.h:      changes in Tk_CreateSmoothMethod and
+	* generic/tkCanvLine.c: Tk_CreatePhotoImageFormat
+	* generic/tkCanvUtil.c:
+	* generic/tkImgPhoto.c:
 	* generic/tkDecls.h: (regenerated)
-	* doc/CrtImgType.3   doc updates
-	* doc/CrtPhImgFmt.3
+	* doc/CrtImgType.3:  doc updates
+	* doc/CrtPhImgFmt.3:
 
 2008-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4:       add "-Wno-implicit-int" flag for gcc, as on UNIX
-	* win/configure     (regenerated)
-	* generic/default.h Use tkUnixDefault.h under CygWin. With this change,
-	                    at least the X11 version of Tk can be built with cygwin
+	* win/tcl.m4: Add "-Wno-implicit-int" flag for gcc, as on UNIX
+	* win/configure: (regenerated)
+	* generic/default.h: Use tkUnixDefault.h under CygWin. With this
+			     change, at least the X11 version of Tk can be
+			     built with cygwin.
 
 2008-11-06  Donal K. Fellows  <dkf@users.sf.net>
 
