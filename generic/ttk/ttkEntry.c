@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.12 2008/11/09 23:53:09 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.13 2008/11/16 17:14:16 jenglish Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -1709,12 +1709,11 @@ typedef struct {
     {TK_OPTION_STRING, "-values", "values", "Values", \
         "", Tk_Offset(Values, values.valuesObj), -1, 0, 0, VALUES_CHANGED}
 
-static int
+static void
 ValuesInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Values *valPtr = recordPtr;
     valPtr->values.currentIndex = -1;
-    return TCL_OK;
 }
 
 static int

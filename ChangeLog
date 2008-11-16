@@ -1,3 +1,8 @@
+2008-11-16  Joe English  <jenglish@users.sourceforge.net>
+	
+	* generic/ttk/ttkWidget.c: Widget self-destruction is
+	not necessarily an error [Bug 2298720].
+
 2008-11-16  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/wm.n: Added note about [wm overrideredirect] so that users will

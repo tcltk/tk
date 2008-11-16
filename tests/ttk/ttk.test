@@ -23,7 +23,7 @@ test ttk-6.1 "Self-destructing checkbutton" -body {
     trace variable sd w [list selfdestruct .sd]
     update
     .sd invoke
-} -returnCodes 1 -result "Widget has been destroyed"
+} -returnCodes 1
 test ttk-6.2 "Checkbutton self-destructed" -body {
     winfo exists .sd
 } -result 0
@@ -117,6 +117,14 @@ test ttk-construction-failure-2 "Destroy widget in constructor" -setup {
 	[info commands .b] \
 	;
 } -result [list 1 "Widget has been destroyed" 0 {}]
+
+test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
+    # see #2298720
+    toplevel .t
+    ttk::button .t.b -command [list destroy .t]
+    .t.b invoke
+    list [winfo exists .t] [winfo exists .t.b]
+} -result [list 0 0]
 
 #
 # Basic tests.
