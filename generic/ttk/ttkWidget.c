@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.18 2008/11/13 01:13:54 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.19 2008/11/16 17:14:16 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -183,10 +183,6 @@ WidgetInstanceObjCmd(
 
     Tcl_Preserve(clientData);
     status = TtkWidgetEnsembleCommand(commands,1, interp,objc,objv,clientData);
-    if (WidgetDestroyed(corePtr)) {
-	status = TCL_ERROR;
-	Tcl_SetResult(interp, "Widget has been destroyed", TCL_STATIC);
-    }
     Tcl_Release(clientData);
 
     return status;
@@ -664,6 +660,10 @@ Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 	Tk_FreeSavedOptions(&savedOptions);
 
 	status = corePtr->widgetSpec->postConfigureProc(interp,recordPtr,mask);
+	if (WidgetDestroyed(corePtr)) {
+	    Tcl_SetResult(interp, "Widget has been destroyed", TCL_STATIC);
+	    status = TCL_ERROR;
+	}
 	if (status != TCL_OK) {
 	    return status;
 	}
