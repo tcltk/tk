@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.87 2008/11/12 01:19:27 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.88 2008/11/18 23:49:43 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -229,13 +229,11 @@ PhotoFormatThreadExitProc(
     while (tsdPtr->oldFormatList != NULL) {
 	freePtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = tsdPtr->oldFormatList->nextPtr;
-	ckfree((char *) freePtr->name);
 	ckfree((char *) freePtr);
     }
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
-	ckfree((char *) freePtr->name);
 	ckfree((char *) freePtr);
     }
 }
@@ -264,8 +262,7 @@ Tk_CreateOldPhotoImageFormat(
     const Tk_PhotoImageFormat *formatPtr)
 				/* Structure describing the format. All of the
 				 * fields except "nextPtr" must be filled in
-				 * by caller. Must not have been passed to
-				 * Tk_CreatePhotoImageFormat previously. */
+				 * by caller. */
 {
     Tk_PhotoImageFormat *copyPtr;
     ThreadSpecificData *tsdPtr =
@@ -277,8 +274,6 @@ Tk_CreateOldPhotoImageFormat(
     }
     copyPtr = (Tk_PhotoImageFormat *) ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
-    copyPtr->name = ckalloc((unsigned) (strlen(formatPtr->name) + 1));
-    strcpy((char *) copyPtr->name, formatPtr->name);
     copyPtr->nextPtr = tsdPtr->oldFormatList;
     tsdPtr->oldFormatList = copyPtr;
 }
@@ -288,8 +283,7 @@ Tk_CreatePhotoImageFormat(
     const Tk_PhotoImageFormat *formatPtr)
 				/* Structure describing the format. All of the
 				 * fields except "nextPtr" must be filled in
-				 * by caller. Must not have been passed to
-				 * Tk_CreatePhotoImageFormat previously. */
+				 * by caller. */
 {
     Tk_PhotoImageFormat *copyPtr;
     ThreadSpecificData *tsdPtr =
@@ -301,8 +295,6 @@ Tk_CreatePhotoImageFormat(
     }
     copyPtr = (Tk_PhotoImageFormat *) ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
-    copyPtr->name = ckalloc((unsigned) (strlen(formatPtr->name) + 1));
-    strcpy((char *)copyPtr->name, formatPtr->name);
     if (isupper((unsigned char) *formatPtr->name)) {
 	copyPtr->nextPtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = copyPtr;
