@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.23 2008/11/05 22:48:58 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.24 2008/11/18 23:49:43 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -1134,7 +1134,8 @@ Tk_SendCmd(
 	Tcl_SetObjErrorCode(interp, errorObjPtr);
 	ckfree(pending.errorCode);
     }
-    Tcl_SetResult(interp, pending.result, TCL_DYNAMIC);
+    Tcl_SetResult(interp, pending.result, TCL_VOLATILE);
+    ckfree(pending.result);
     return pending.code;
 }
 
