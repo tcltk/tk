@@ -1,3 +1,14 @@
+2008-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgPhoto.c    Minor simplification in fix for [Bug 2312027]:
+	                          no need to malloc and copy photo type name because
+	                          it is a constant to begin with.
+	* generic/tkOldConfig.c   Convert Tcl_SetResult(......, TCL_DYNAMIC) to
+	* mac/tkMacOSXWm.c        Tcl_SetResult(......, TCL_VOLATILE), in preparation
+	* unix/tkUnixWm.c         for TIP #340
+	* unix/tkUnixSend.c
+	* win/tkWinWm.c
+
 2008-11-16  Joe English  <jenglish@users.sourceforge.net>
 	
 	* generic/ttk/ttkWidget.c: Widget self-destruction is
@@ -44,6 +55,24 @@
 
 2008-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
+<<<<<<< ChangeLog
+	* win/tcl.m4:       reverted change from 2008-11-06 (was under the impression
+	                    that "-Wno-implicit-int" added an extra warning)
+	* win/configure     (regenerated)
+	* unix/tcl.m4:      Use -O2 as gcc optimization compiler flag, and get
+	                    rid of -Wno-implicit-int for UNIX
+	* unix/configure    (regenerated)
+
+	* generic/tk.decls     modify Tk_Create(Old)ImageType signature, relaxing
+	* generic/tk.h         the constraint that every Tk_ImageType can only
+	* generic/tkImage.c    be passed to this function once. This allows
+	* generic/tkImgBmap.c  tkImg to be loaded in multiple interpreters
+	* generic/tkImgPhoto.c in a thread-enabled build of Tk. [Bug 2312027]
+	* generic/tkTest.c     This CONSTification complies with TIP #27. It is
+	* doc/CrtImgType.3     binary compatible with the old interface, but not
+	                       fully source compatible (although tkImg does not suffer).
+	* generic/tkDecls.h (regenerated)
+=======
 	* win/tcl.m4:	Reverted change from 2008-11-06 (was under the
 			impression that "-Wno-implicit-int" added an extra
 			warning).
@@ -62,6 +91,7 @@
 	                       but not fully source compatible (although
 			       tkImg does not suffer).
 	* generic/tkDecls.h: (regenerated)
+>>>>>>> 1.2071
 
 	*** POTENTIAL INCOMPATIBILITY ***
 

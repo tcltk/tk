@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.132 2008/11/15 00:00:27 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.133 2008/11/18 23:49:42 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -3537,8 +3537,9 @@ WmCommandCmd(
     }
     if (objc == 3) {
 	if (wmPtr->cmdArgv != NULL) {
-	    Tcl_SetResult(interp,
-		    Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv), TCL_DYNAMIC);
+		argv3 = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
+	    Tcl_SetResult(interp, argv3, TCL_VOLATILE);
+	    ckfree(argv3);
 	}
 	return TCL_OK;
     }
@@ -3713,7 +3714,8 @@ WmForgetCmd(
 	/* Already not managed by wm - ignore it */
     }
     return TCL_OK;
-}
+}
+
 /*
  *----------------------------------------------------------------------
  *

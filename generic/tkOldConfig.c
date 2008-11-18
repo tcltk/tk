@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.26 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.27 2008/11/18 23:49:43 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -632,9 +632,9 @@ Tk_ConfigureInfo(
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetResult(interp,
-		FormatConfigInfo(interp, tkwin, specPtr, widgRec),
-		TCL_DYNAMIC);
+	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
+	Tcl_SetResult(interp, list, TCL_VOLATILE);
+	ckfree(list);
 	return TCL_OK;
     }
 
