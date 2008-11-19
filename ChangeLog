@@ -1,3 +1,9 @@
+2008-11-19  Joe English  <jenglish@users.sourceforge.net>
+
+	* doc/ttk_panedwindow.n: Remove inoperative text 
+	stating that slave windows must be direct children
+	of the master [Bug 1824996].
+
 2008-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkImgPhoto.c    Minor simplification in fix for [Bug 2312027]:
