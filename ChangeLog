@@ -1,3 +1,11 @@
+2008-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImage.c    Relax the constraint that every Tk_ImageType
+	* generic/tkImgPhoto.c can only be passed to this function once.
+	                       This allows tkImg to be loaded in multiple
+	                       interpreters in a thread-enabled build of Tk.
+	                       [Bug 2312027]
+
 2008-11-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tk.h:        The tip 125 implementation permits the
