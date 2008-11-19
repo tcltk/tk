@@ -55,7 +55,6 @@
 
 2008-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
-<<<<<<< ChangeLog
 	* win/tcl.m4:       reverted change from 2008-11-06 (was under the impression
 	                    that "-Wno-implicit-int" added an extra warning)
 	* win/configure     (regenerated)
@@ -72,26 +71,6 @@
 	* doc/CrtImgType.3     binary compatible with the old interface, but not
 	                       fully source compatible (although tkImg does not suffer).
 	* generic/tkDecls.h (regenerated)
-=======
-	* win/tcl.m4:	Reverted change from 2008-11-06 (was under the
-			impression that "-Wno-implicit-int" added an extra
-			warning).
-	* win/configure: (regenerated)
-	* unix/tcl.m4:	Use -O2 as gcc optimization compiler flag, and get rid
-			of -Wno-implicit-int for UNIX.
-	* unix/configure: (regenerated)
-
-	* generic/tk.decls:    Modify Tk_Create(Old)ImageType signature,
-	* generic/tk.h:        relaxing the constraint that every Tk_ImageType
-	* generic/tkImage.c:   can only be passed to this function once. This
-	* generic/tkImgBmap.c: allows tkImg to be loaded in multiple
-	* generic/tkImgPhoto.c:interpreters in a thread-enabled build of Tk.
-	* generic/tkTest.c:    This CONSTification complies with TIP #27. It
-	* doc/CrtImgType.3:    is binary compatible with the old interface,
-	                       but not fully source compatible (although
-			       tkImg does not suffer).
-	* generic/tkDecls.h: (regenerated)
->>>>>>> 1.2071
 
 	*** POTENTIAL INCOMPATIBILITY ***
 
