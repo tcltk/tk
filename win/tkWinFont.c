@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.44 2008/11/22 18:08:51 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.45 2008/11/22 20:05:32 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -1298,12 +1298,12 @@ TkpDrawAngledChars(
 	 */
 
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, BLACKNESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
+	MultiFontTextOut(dc, fontPtr, source, numBytes, (int)x, (int)y, angle);
+	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0xEA02E9);
 	PatBlt(dcMem, 0, 0, size.cx, size.cy, WHITENESS);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
+	MultiFontTextOut(dc, fontPtr, source, numBytes, (int)x, (int)y, angle);
+	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, 0x8A0E06);
 
 	/*
@@ -1319,7 +1319,7 @@ TkpDrawAngledChars(
 	SetTextAlign(dc, TA_LEFT | TA_BASELINE);
 	SetTextColor(dc, gc->foreground);
 	SetBkMode(dc, TRANSPARENT);
-	MultiFontTextOut(dc, fontPtr, source, numBytes, x, y, angle);
+	MultiFontTextOut(dc, fontPtr, source, numBytes, (int)x, (int)y, angle);
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
@@ -1345,7 +1345,7 @@ TkpDrawAngledChars(
 
 	MultiFontTextOut(dcMem, fontPtr, source, numBytes, 0, tm.tmAscent,
 		angle);
-	BitBlt(dc, x, y - tm.tmAscent, size.cx, size.cy, dcMem,
+	BitBlt(dc, (int)x, (int)y - tm.tmAscent, size.cx, size.cy, dcMem,
 		0, 0, (DWORD) tkpWinBltModes[gc->function]);
 
 	/*

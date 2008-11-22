@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.22 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.23 2008/11/22 20:05:32 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -19,7 +19,6 @@
  * These macros convert between X's bizarre angle units to radians.
  */
 
-#define PI 3.14159265358979
 #define XAngleToRadians(a) ((double)(a) / 64 * PI / 180);
 
 /*
