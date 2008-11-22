@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.21 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.22 2008/11/22 01:07:56 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -31,6 +31,9 @@ static int		TestfindwindowObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		TestgetwindowinfoObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		TestwinlocaleObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
@@ -70,7 +73,8 @@ TkplatformtestInit(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-
+    Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
+	    (ClientData) Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
 
@@ -292,6 +296,8 @@ TestwineventCmd(
 	    child = GetWindow(child, GW_HWNDNEXT);
 	}
 	if (child == NULL) {
+	    Tcl_AppendResult(interp, "could not find a control matching \"",
+		argv[2], "\"", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -464,6 +470,23 @@ TestgetwindowinfoObjCmd(
     Tcl_ListObjAppendElement(interp, resObj, childrenObj);
 
     Tcl_SetObjResult(interp, resObj);
+    return TCL_OK;
+}
+
+static int
+TestwinlocaleObjCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    Tk_Window tkwin = (Tk_Window) clientData;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj((int)GetThreadLocale()));
     return TCL_OK;
 }
 

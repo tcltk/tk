@@ -1,3 +1,8 @@
+2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* test/winDialog.test: [Bug 2307837] avoid some locale-dependent
+	* win/tkWinTest.c:     failures by using id's or an english constraint
+
 2008-11-19  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_panedwindow.n: Remove inoperative text 
