@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.10 2007/12/13 15:24:21 dgp Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.11 2008/11/22 22:28:52 das Exp $
  */
 
 #include <stdio.h>
@@ -22,9 +22,6 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #undef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#ifndef PI
-#   define PI 3.14159265358979323846
-#endif /* PI */
 
 /*
  *--------------------------------------------------------------

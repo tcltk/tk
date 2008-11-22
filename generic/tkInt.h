@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.93 2008/11/22 18:08:51 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.94 2008/11/22 22:28:52 das Exp $
  */
 
 #ifndef _TKINT
@@ -962,7 +962,11 @@ MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
  */
 
 #ifndef PI
+#ifdef M_PI
+#define PI	M_PI
+#else
 #define PI	3.14159265358979323846
+#endif
 #endif
 
 /*

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.18 2008/10/30 21:39:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.19 2008/11/22 22:28:52 das Exp $
  */
 
 #include <stdio.h>
@@ -236,10 +236,6 @@ Tk_ItemType tkArcType = {
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
 };
-
-#ifndef PI
-#define PI	3.14159265358979323846
-#endif
 
 /*
  *--------------------------------------------------------------
