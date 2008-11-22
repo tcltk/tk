@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.22 2008/11/22 01:07:56 patthoyts Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.23 2008/11/22 12:22:12 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -21,7 +21,7 @@ if {[testConstraint testwinevent]} {
 # Locale identifier LANG_ENGLISH is 0x09
 testConstraint english [expr {
     [llength [info commands testwinlocale]]
-    && (([testwinlocale] & 0x09) == 9)
+    && (([testwinlocale] & 0xff) == 9)
 }]
 
 proc start {arg} {
@@ -411,7 +411,8 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
 } -body {
     start {set x [tk_getSaveFile -title Back]}
     then {
-        SetText 0x480 "$::env(TEMP)\\12x 457"
+        SetText 0x480 [file nativename \
+                           [file join [file normalize $::env(TEMP)] "12x 457"]]
         Click ok
     }
     return $x
