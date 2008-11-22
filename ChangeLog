@@ -1,3 +1,8 @@
+2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl: [Bug 1939129] combobox dropdown was
+	                            drawn behind topmost toplevels.
+
 2008-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkImage.c    Relax the constraint that every Tk_ImageType
