@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.41 2008/11/22 18:08:51 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.42 2008/11/22 22:29:14 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1299,9 +1299,9 @@ DrawCharsInContext(
      */
 
     if (drawingContext.context && angle != 0.0) {
-	CGContextTranslateCTM(drawingContext.context, x, y);
-	CGContextRotateCTM(drawingContext.context, angle * PI/180.0);
-	CGContextTranslateCTM(drawingContext.context, -x, -y);
+	CGContextConcatCTM(drawingContext.context, CGAffineTransformTranslate(
+		CGAffineTransformRotate(CGAffineTransformMakeTranslation(
+		x, y), angle * PI/180.0), -x, -y));
     }
 
     ChkErr(ATSUDrawText, fontPtr->atsuLayout, lineOffset+urstart, urlen, fx,
