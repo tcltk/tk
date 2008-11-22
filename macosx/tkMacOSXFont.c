@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.40 2008/11/02 09:54:02 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.41 2008/11/22 18:08:51 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -262,7 +262,10 @@ static OSStatus GetThemeFontAndFamily(const ThemeFontID themeFontId,
 static void InitSystemFonts(TkMainInfo *mainPtr);
 static int CreateNamedSystemFont(Tcl_Interp *interp, Tk_Window tkwin,
 	const char* name, TkFontAttributes *faPtr);
-
+static void		DrawCharsInContext(Display *display,
+			    Drawable drawable, GC gc, Tk_Font tkfont,
+			    const char *source, int numBytes, int rangeStart,
+			    int rangeLength, int x, int y, double angle);
 
 /*
  *-------------------------------------------------------------------------
@@ -1135,8 +1138,31 @@ Tk_DrawChars(
     int x, int y)		/* Coordinates at which to place origin of the
 				 * string when drawing. */
 {
-    TkpDrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
-	    0, numBytes, x, y);
+    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+	    0, numBytes, x, y, 0.0);
+}
+
+void
+TkpDrawAngledChars(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn;
+				 * must be the same as font used in GC. */
+    const char *source,		/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    double x, double y,		/* Coordinates at which to place origin of
+				 * string when drawing. */
+    double angle)		/* What angle to put text at, in degrees. */
+{
+    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+	    0, numBytes, x, y, angle);
 }
 
 /*
@@ -1179,6 +1205,32 @@ TkpDrawCharsInContext(
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
+{
+    DrawCharsInContext(display, drawable, gc, tkfont, source, numBytes,
+	    rangeStart, rangeLength, x, y, 0.0);
+}
+
+static void
+DrawCharsInContext(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context for drawing characters. */
+    Tk_Font tkfont,		/* Font in which characters will be drawn; must
+				 * be the same as font used in GC. */
+    const char * source,	/* UTF-8 string to be displayed. Need not be
+				 * '\0' terminated. All Tk meta-characters
+				 * (tabs, control characters, and newlines)
+				 * should be stripped out of the string that
+				 * is passed to this function. If they are not
+				 * stripped out, they will be displayed as
+				 * regular printing characters. */
+    int numBytes,		/* Number of bytes in string. */
+    int rangeStart,		/* Index of first byte to draw. */
+    int rangeLength,		/* Length of range to draw in bytes. */
+    int x, int y,		/* Coordinates at which to place origin of the
+				 * whole (not just the range) string when
+				 * drawing. */
+    double angle)
 {
     const MacFont * fontPtr = (const MacFont *) tkfont;
     MacDrawable *macWin = (MacDrawable *) drawable;
@@ -1241,6 +1293,16 @@ TkpDrawCharsInContext(
 
     urstart = Tcl_NumUtfChars(source, rangeStart);
     urlen = Tcl_NumUtfChars(source+rangeStart,rangeLength);
+
+    /*
+     * Rotate the coordinate system for Quarz drawing.
+     */
+
+    if (drawingContext.context && angle != 0.0) {
+	CGContextTranslateCTM(drawingContext.context, x, y);
+	CGContextRotateCTM(drawingContext.context, angle * PI/180.0);
+	CGContextTranslateCTM(drawingContext.context, -x, -y);
+    }
 
     ChkErr(ATSUDrawText, fontPtr->atsuLayout, lineOffset+urstart, urlen, fx,
 	    fy);

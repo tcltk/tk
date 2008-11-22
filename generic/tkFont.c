@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.48 2008/11/02 09:54:02 nijtmans Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.49 2008/11/22 18:08:51 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -888,7 +888,7 @@ RecomputeWidgets(
 	    Tk_GetClassProc(winPtr->classProcsPtr, worldChangedProc);
 
     if (proc != NULL) {
-	(*proc)(winPtr->instanceData);
+	proc(winPtr->instanceData);
     }
 
     /*
@@ -1347,7 +1347,7 @@ SetFontFromAny(
     Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
-	(*typePtr->freeIntRepProc)(objPtr);
+	typePtr->freeIntRepProc(objPtr);
     }
     objPtr->typePtr = &tkFontObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
@@ -2310,6 +2310,69 @@ Tk_DrawTextLayout(
     }
 }
 
+void
+TkDrawAngledTextLayout(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context to use for drawing text. */
+    Tk_TextLayout layout,	/* Layout information, from a previous call to
+				 * Tk_ComputeTextLayout(). */
+    int x, int y,		/* Upper-left hand corner of rectangle in
+				 * which to draw (pixels). */
+    double angle,
+    int firstChar,		/* The index of the first character to draw
+				 * from the given text item. 0 specfies the
+				 * beginning. */
+    int lastChar)		/* The index just after the last character to
+				 * draw from the given text item. A number < 0
+				 * means to draw all characters. */
+{
+    TextLayout *layoutPtr = (TextLayout *) layout;
+    int i, numDisplayChars, drawX;
+    const char *firstByte, *lastByte;
+    LayoutChunk *chunkPtr;
+    double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
+
+    if (layoutPtr == NULL) {
+	return;
+    }
+
+    if (lastChar < 0) {
+	lastChar = 100000000;
+    }
+    chunkPtr = layoutPtr->chunks;
+    for (i = 0; i < layoutPtr->numChunks; i++) {
+	numDisplayChars = chunkPtr->numDisplayChars;
+	if ((numDisplayChars > 0) && (firstChar < numDisplayChars)) {
+	    double dx, dy;
+
+	    if (firstChar <= 0) {
+		drawX = 0;
+		firstChar = 0;
+		firstByte = chunkPtr->start;
+	    } else {
+		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
+		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
+			firstByte - chunkPtr->start, -1, 0, &drawX);
+	    }
+	    if (lastChar < numDisplayChars) {
+		numDisplayChars = lastChar;
+	    }
+	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
+	    dx = cosA * (chunkPtr->x + drawX) + sinA * (chunkPtr->y);
+	    dy = -sinA * (chunkPtr->x + drawX) + cosA * (chunkPtr->y);
+	    TkpDrawAngledChars(display, drawable, gc, layoutPtr->tkfont,
+		    firstByte, lastByte - firstByte, x+dx, y+dy, angle);
+	}
+	firstChar -= chunkPtr->numChars;
+	lastChar -= chunkPtr->numChars;
+	if (lastChar <= 0) {
+	    break;
+	}
+	chunkPtr++;
+    }
+}
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -2355,6 +2418,68 @@ Tk_UnderlineTextLayout(
 	XFillRectangle(display, drawable, gc, x + xx,
 		y + yy + fontPtr->fm.ascent + fontPtr->underlinePos,
 		(unsigned) width, (unsigned) fontPtr->underlineHeight);
+    }
+}
+
+void
+TkUnderlineAngledTextLayout(
+    Display *display,		/* Display on which to draw. */
+    Drawable drawable,		/* Window or pixmap in which to draw. */
+    GC gc,			/* Graphics context to use for drawing text. */
+    Tk_TextLayout layout,	/* Layout information, from a previous call to
+				 * Tk_ComputeTextLayout(). */
+    int x, int y,		/* Upper-left hand corner of rectangle in
+				 * which to draw (pixels). */
+    double angle,
+    int underline)		/* Index of the single character to underline,
+				 * or -1 for no underline. */
+{
+    int xx, yy, width, height;
+
+    if (angle == 0.0) {
+	Tk_UnderlineTextLayout(display, drawable, gc, layout, x,y, underline);
+	return;
+    }
+
+    if ((Tk_CharBbox(layout, underline, &xx, &yy, &width, &height) != 0)
+	    && (width != 0)) {
+	TextLayout *layoutPtr = (TextLayout *) layout;
+	TkFont *fontPtr = (TkFont *) layoutPtr->tkfont;
+	double sinA = sin(angle*PI/180), cosA = cos(angle*PI/180);
+	double dy = yy + fontPtr->fm.ascent + fontPtr->underlinePos;
+	XPoint points[5];
+
+	/*
+	 * Note that we're careful to only round a double value once, which
+	 * minimizes roundoff errors.
+	 */
+
+	points[0].x = x + round(xx*cosA + dy*sinA);
+	points[0].y = y + round(dy*cosA - xx*sinA);
+	points[1].x = x + round(xx*cosA + dy*sinA + width*cosA);
+	points[1].y = y + round(dy*cosA - xx*sinA - width*sinA);
+	if (fontPtr->underlineHeight == 1) {
+	    /*
+	     * Thin underlines look better when rotated when drawn as a line
+	     * rather than a rectangle; the rasterizer copes better.
+	     */
+
+	    XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
+	} else {
+	    points[2].x = x + round(xx*cosA + dy*sinA + width*cosA
+		    - fontPtr->underlineHeight*sinA);
+	    points[2].y = y + round(dy*cosA - xx*sinA - width*sinA
+		    + fontPtr->underlineHeight*cosA);
+	    points[3].x = x + round(xx*cosA + dy*sinA
+		    - fontPtr->underlineHeight*sinA);
+	    points[3].y = y + round(dy*cosA - xx*sinA
+		    + fontPtr->underlineHeight*cosA);
+	    points[4].x = points[0].x;
+	    points[4].y = points[0].y;
+	    XFillPolygon(display, drawable, gc, points, 5, Complex,
+		    CoordModeOrigin);
+	    XDrawLines(display, drawable, gc, points, 5, CoordModeOrigin);
+	}
     }
 }
 
@@ -2801,6 +2926,263 @@ Tk_IntersectTextLayout(
 	chunkPtr++;
     }
     return result;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkIntersectAngledTextLayout --
+ *
+ *	Determines whether a text layout that has been turned by an angle
+ *	about its top-left coordinae lies entirely inside, entirely outside,
+ *	or overlaps a given rectangle. Non-displaying space characters that
+ *	occur at the end of individual lines in the text layout are ignored
+ *	for intersection calculations.
+ *
+ * Results:
+ *	The return value is -1 if the text layout is entirely outside of the
+ *	rectangle, 0 if it overlaps, and 1 if it is entirely inside of the
+ *	rectangle.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static inline int
+PointInQuadrilateral(
+    double qx[],
+    double qy[],
+    double x,
+    double y)
+{
+    int i;
+
+    for (i=0 ; i<4 ; i++) {
+	double sideDX = qx[(i+1)%4] - qx[i];
+	double sideDY = qy[(i+1)%4] - qy[i];
+	double dx = x - qx[i];
+	double dy = y - qy[i];
+
+	if (sideDX*dy < sideDY*dx) {
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+static inline int
+sign(
+    double value)
+{
+    if (value < 0.0) return -1;
+    if (value > 0.0) return 1;
+    return 0;
+}
+
+static inline int
+SidesIntersect(
+    double ax1, double ay1, double ax2, double ay2,
+    double bx1, double by1, double bx2, double by2)
+{
+#if 0
+/* http://www.freelunchdesign.com/cgi-bin/codwiki.pl?DiscussionTopics/CollideMeUpBaby */
+
+    double a1, b1, c1, a2, b2, c2, r1, r2, r3, r4, denom;
+
+    a1 = ay2 - ay1;
+    b1 = ax1 - ax2;
+    c1 = (ax2 * ay1) - (ax1 * ay2);
+    r3 = (a1 * bx1) + (b1 * by1) + c1;
+    r4 = (a1 * bx2) + (b1 * by2) + c1;
+    if ((r3 != 0.0) && (r4 != 0.0) && (r3*r4 > 0.0)) {
+	return 0;
+    }
+
+    a2 = by2 - by1;
+    b2 = bx1 - bx2;
+    c2 = (bx2 * by1) - (bx1 * by2);
+    r1 = (a2 * ax1) + (b2 * ay1) + c2;
+    r2 = (a2 * ax2) + (b2 * ay2) + c2;
+    if ((r1 != 0.0) && (r2 != 0.0) && (r1*r2 > 0.0)) {
+	return 0;
+    }
+
+    denom = (a1 * b2) - (a2 * b1);
+    return (denom != 0.0);
+#else
+    /*
+     * A more efficient version. Two line segments intersect if, when seen
+     * from the perspective of one line, the two endpoints of the other
+     * segment lie on opposite sides of the line, and vice versa. "Lie on
+     * opposite sides" is computed by taking the cross products and seeing if
+     * they are of opposite signs.
+     */
+
+    double dx, dy, dx1, dy1;
+
+    dx = ax2 - ax1;
+    dy = ay2 - ay1;
+    dx1 = bx1 - ax1;
+    dy1 = by1 - ay1;
+    if ((dx*dy1-dy*dx1 > 0.0) == (dx*(by2-ay1)-dy*(bx2-ax1) > 0.0)) {
+	return 0;
+    }
+    dx = bx2 - bx1;
+    dy = by2 - by1;
+    if ((dy*dx1-dx*dy1 > 0.0) == (dx*(ay2-by1)-dy*(ax2-bx1) > 0.0)) {
+	return 0;
+    }
+    return 1;
+#endif
+}
+
+int
+TkIntersectAngledTextLayout(
+    Tk_TextLayout layout,	/* Layout information, from a previous call to
+				 * Tk_ComputeTextLayout(). */
+    int x, int y,		/* Upper-left hand corner, in pixels, of
+				 * rectangular area to compare with text
+				 * layout. Coordinates are with respect to the
+				 * upper-left hand corner of the text layout
+				 * itself. */
+    int width, int height,	/* The width and height of the above
+				 * rectangular area, in pixels. */
+    double angle)
+{
+    int i, x1, y1, x2, y2;
+    TextLayout *layoutPtr;
+    LayoutChunk *chunkPtr;
+    TkFont *fontPtr;
+    double c = cos(angle * PI/180.0), s = sin(angle * PI/180.0);
+    double rx[4], ry[4];
+
+    if (angle == 0.0) {
+	return Tk_IntersectTextLayout(layout, x, y, width, height);
+    }
+
+    /*
+     * Compute the coordinates of the rectangle, rotated into text layout
+     * space.
+     */
+
+    rx[0] = x*c - y*s;
+    ry[0] = y*c + x*s;
+    rx[1] = (x+width)*c - y*s;
+    ry[1] = y*c + (x+width)*s;
+    rx[2] = (x+width)*c - (y+height)*s;
+    ry[2] = (y+height)*c + (x+width)*s;
+    rx[3] = x*c - (y+height)*s;
+    ry[3] = (y+height)*c + x*s;
+
+    /*
+     * Want to know if all chunks are inside the rectangle, or if there is any
+     * overlap. First, we check to see if all chunks are inside; if and only
+     * if they are, we're in the "inside" case.
+     */
+
+    layoutPtr = (TextLayout *) layout;
+    chunkPtr = layoutPtr->chunks;
+    fontPtr = (TkFont *) layoutPtr->tkfont;
+
+    for (i=0 ; i<layoutPtr->numChunks ; i++,chunkPtr++) {
+	if (chunkPtr->start[0] == '\n') {
+	    /*
+	     * Newline characters are not counted when computing area
+	     * intersection (but tab characters would still be considered).
+	     */
+
+	    continue;
+	}
+
+	x1 = chunkPtr->x;
+	y1 = chunkPtr->y - fontPtr->fm.ascent;
+	x2 = chunkPtr->x + chunkPtr->displayWidth;
+	y2 = chunkPtr->y + fontPtr->fm.descent;
+	if (	!PointInQuadrilateral(rx, ry, x1, y1) ||
+		!PointInQuadrilateral(rx, ry, x2, y1) ||
+		!PointInQuadrilateral(rx, ry, x2, y2) ||
+		!PointInQuadrilateral(rx, ry, x1, y2)) {
+	    goto notInside;
+	}
+    }
+    return 1;
+
+    /*
+     * Next, check to see if all the points of the rectangle are inside a
+     * single chunk; if they are, we're in an "overlap" case.
+     */
+
+  notInside:
+    chunkPtr = layoutPtr->chunks;
+
+    for (i=0 ; i<layoutPtr->numChunks ; i++,chunkPtr++) {
+	double cx[4], cy[4];
+	if (chunkPtr->start[0] == '\n') {
+	    /*
+	     * Newline characters are not counted when computing area
+	     * intersection (but tab characters would still be considered).
+	     */
+
+	    continue;
+	}
+
+	cx[0] = cx[3] = chunkPtr->x;
+	cy[0] = cy[1] = chunkPtr->y - fontPtr->fm.ascent;
+	cx[1] = cx[2] = chunkPtr->x + chunkPtr->displayWidth;
+	cy[2] = cy[3] = chunkPtr->y + fontPtr->fm.descent;
+	if (	!PointInQuadrilateral(cx, cy, rx[0], ry[0]) ||
+		!PointInQuadrilateral(cx, cy, rx[1], ry[1]) ||
+		!PointInQuadrilateral(cx, cy, rx[2], ry[2]) ||
+		!PointInQuadrilateral(cx, cy, rx[3], ry[3])) {
+	    goto notReverseInside;
+	}
+    }
+    return 0;
+
+    /*
+     * If we're overlapping now, we must be partially in and out of at least
+     * one chunk. If that is the case, there must be one line segment of the
+     * rectangle that is touching or crossing a line segment of a chunk.
+     */
+
+  notReverseInside:
+    chunkPtr = layoutPtr->chunks;
+
+    for (i=0 ; i<layoutPtr->numChunks ; i++,chunkPtr++) {
+	int j;
+
+	if (chunkPtr->start[0] == '\n') {
+	    /*
+	     * Newline characters are not counted when computing area
+	     * intersection (but tab characters would still be considered).
+	     */
+
+	    continue;
+	}
+
+	x1 = chunkPtr->x;
+	y1 = chunkPtr->y - fontPtr->fm.ascent;
+	x2 = chunkPtr->x + chunkPtr->displayWidth;
+	y2 = chunkPtr->y + fontPtr->fm.descent;
+
+	for (j=0 ; j<4 ; j++) {
+	    int k = (j+1) % 4;
+	    if (    SidesIntersect(rx[j],ry[j], rx[k],ry[k], x1,y1, x2,y1) ||
+		    SidesIntersect(rx[j],ry[j], rx[k],ry[k], x2,y1, x2,y2) ||
+		    SidesIntersect(rx[j],ry[j], rx[k],ry[k], x2,y2, x1,y2) ||
+		    SidesIntersect(rx[j],ry[j], rx[k],ry[k], x1,y2, x1,y1)) {
+		return 0;
+	    }
+	}
+    }
+
+    /*
+     * They must be wholly non-overlapping.
+     */
+
+    return -1;
 }
 
 /*
