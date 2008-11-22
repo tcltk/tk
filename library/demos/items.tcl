@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas that displays the
 # canvas item types.
 #
-# RCS: @(#) $Id: items.tcl,v 1.7 2004/12/21 11:56:35 dkf Exp $
+# RCS: @(#) $Id: items.tcl,v 1.8 2008/11/22 22:30:41 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -129,7 +129,7 @@ $c create text 25.5c 11c -anchor w -font $font1 -fill $blue \
 	-justify center -tags item
 $c create rectangle 24.9c 13.9c 25.1c 14.1c
 $c create text 25c 14c -font $font2 -anchor c -fill $red -stipple gray50 \
-	-text "Stippled characters" -tags item
+	-text "Stippled characters" -tags item -angle 15
 
 $c create text 5c 16.2c -text Arcs -anchor n
 $c create arc 0.5c 17c 7c 20c -fill $green -outline black \
