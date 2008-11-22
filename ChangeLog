@@ -1,5 +1,7 @@
 2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/ttk/combobox.tcl: [Bug 1939129] combobox dropdown was
+	                            drawn behind topmost toplevels.
 	* generic/tkCanvText.c:  Fixed up complaints from MSVC engendered
 	* generic/tkFont.c:      by the last commit. In particular replaced
 	* win/tkWinDraw.c:       round() which is a C99 function.
