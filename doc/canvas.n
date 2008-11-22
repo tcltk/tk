@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.39 2008/11/01 16:14:30 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.40 2008/11/22 20:16:43 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1818,6 +1818,15 @@ is \fBcenter\fR then the text is centered on the point;  if
 the top center point of the rectangular region occupied by the
 text will be at the positioning point.
 This option defaults to \fBcenter\fR.
+.TP
+\fB\-angle \fIrotationDegrees\fR
+.VS 8.6
+\fIRotationDegrees\fR tells how many degrees to rotate the text anticlockwise
+about the positioning point for the text; it may have any floating-point value
+from 0.0 to 360.0. For example, if \fIrotationDegrees\fR is \fB90\fR, then the
+text will be drawn vertically from bottom to top.
+This option defaults to \fB0.0\fR.
+.VE 8.6
 .TP
 \fB\-font \fIfontName\fR
 Specifies the font to use for the text item.
