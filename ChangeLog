@@ -1,3 +1,8 @@
+2008-11-22  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/demos/ctext.tcl: Extended to show off what you can do with
+	angled text; there is now a pie selector to change the orientation.
+
 2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl: [Bug 1939129,1991930] combobox dropdown
