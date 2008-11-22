@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.33 2008/11/22 18:08:51 dkf Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.34 2008/11/22 20:05:32 patthoyts Exp $
  */
 
 #include <stdio.h>
@@ -880,14 +880,14 @@ DisplayCanvText(
 		dy1 = y;
 		dx2 = width + 2 * textInfoPtr->selBorderWidth;
 		dy2 = height;
-		points[0].x = drawableX + dx1*c + dy1*s;
-		points[0].y = drawableY + dy1*c - dx1*s;
-		points[1].x = drawableX + (dx1+dx2)*c + dy1*s;
-		points[1].y = drawableY + dy1*c - (dx1+dx2)*s;
-		points[2].x = drawableX + (dx1+dx2)*c + (dy1+dy2)*s;
-		points[2].y = drawableY + (dy1+dy2)*c - (dx1+dx2)*s;
-		points[3].x = drawableX + dx1*c + (dy1+dy2)*s;
-		points[3].y = drawableY + (dy1+dy2)*c - dx1*s;
+		points[0].x = (short)(drawableX + dx1*c + dy1*s);
+		points[0].y = (short)(drawableY + dy1*c - dx1*s);
+		points[1].x = (short)(drawableX + (dx1+dx2)*c + dy1*s);
+		points[1].y = (short)(drawableY + dy1*c - (dx1+dx2)*s);
+		points[2].x = (short)(drawableX + (dx1+dx2)*c + (dy1+dy2)*s);
+		points[2].y = (short)(drawableY + (dy1+dy2)*c - (dx1+dx2)*s);
+		points[3].x = (short)(drawableX + dx1*c + (dy1+dy2)*s);
+		points[3].y = (short)(drawableY + (dy1+dy2)*c - dx1*s);
 		Tk_Fill3DPolygon(Tk_CanvasTkwin(canvas), drawable,
 			textInfoPtr->selBorder, points, 4,
 			textInfoPtr->selBorderWidth, TK_RELIEF_RAISED);
@@ -916,14 +916,14 @@ DisplayCanvText(
 	    dy1 = y;
 	    dx2 = textInfoPtr->insertWidth;
 	    dy2 = height;
-	    points[0].x = drawableX + dx1*c + dy1*s;
-	    points[0].y = drawableY + dy1*c - dx1*s;
-	    points[1].x = drawableX + (dx1+dx2)*c + dy1*s;
-	    points[1].y = drawableY + dy1*c - (dx1+dx2)*s;
-	    points[2].x = drawableX + (dx1+dx2)*c + (dy1+dy2)*s;
-	    points[2].y = drawableY + (dy1+dy2)*c - (dx1+dx2)*s;
-	    points[3].x = drawableX + dx1*c + (dy1+dy2)*s;
-	    points[3].y = drawableY + (dy1+dy2)*c - dx1*s;
+	    points[0].x = (short)(drawableX + dx1*c + dy1*s);
+	    points[0].y = (short)(drawableY + dy1*c - dx1*s);
+	    points[1].x = (short)(drawableX + (dx1+dx2)*c + dy1*s);
+	    points[1].y = (short)(drawableY + dy1*c - (dx1+dx2)*s);
+	    points[2].x = (short)(drawableX + (dx1+dx2)*c + (dy1+dy2)*s);
+	    points[2].y = (short)(drawableY + (dy1+dy2)*c - (dx1+dx2)*s);
+	    points[3].x = (short)(drawableX + dx1*c + (dy1+dy2)*s);
+	    points[3].y = (short)(drawableY + (dy1+dy2)*c - dx1*s);
 
 	    Tk_SetCaretPos(Tk_CanvasTkwin(canvas), points[0].x, points[0].y,
 		    height);
@@ -1191,8 +1191,8 @@ TextToPoint(
     px = pointPtr[0] - textPtr->drawOrigin[0];
     py = pointPtr[1] - textPtr->drawOrigin[1];
     value = (double) Tk_DistanceToTextLayout(textPtr->textLayout,
-	    (int) px*textPtr->cosine - py*textPtr->sine,
-	    (int) py*textPtr->cosine + px*textPtr->sine);
+	    (int)(px*textPtr->cosine - py*textPtr->sine),
+	    (int)(py*textPtr->cosine + px*textPtr->sine));
 
     if ((state == TK_STATE_HIDDEN) || (textPtr->color == NULL) ||
 	    (textPtr->text == NULL) || (*textPtr->text == 0)) {
@@ -1237,8 +1237,8 @@ TextToArea(
 
     textPtr = (TextItem *) itemPtr;
     return TkIntersectAngledTextLayout(textPtr->textLayout,
-	    (int) (rectPtr[0] + 0.5) - textPtr->drawOrigin[0],
-	    (int) (rectPtr[1] + 0.5) - textPtr->drawOrigin[1],
+	    (int) ((rectPtr[0] + 0.5) - textPtr->drawOrigin[0]),
+	    (int) ((rectPtr[1] + 0.5) - textPtr->drawOrigin[1]),
 	    (int) (rectPtr[2] - rectPtr[0] + 0.5),
 	    (int) (rectPtr[3] - rectPtr[1] + 0.5),
 	    textPtr->angle);
@@ -1385,9 +1385,10 @@ GetTextIndex(
 	    goto badIndex;
 	}
 	y = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
-	x += canvasPtr->scrollX1 - textPtr->drawOrigin[0];
-	y += canvasPtr->scrollY1 - textPtr->drawOrigin[1];
-	*indexPtr = Tk_PointToChar(textPtr->textLayout, x*c-y*s, y*c+x*s);
+	x += canvasPtr->scrollX1 - (int)textPtr->drawOrigin[0];
+	y += canvasPtr->scrollY1 - (int)textPtr->drawOrigin[1];
+	*indexPtr = Tk_PointToChar(textPtr->textLayout, 
+	    (int)(x*c-y*s), (int)(y*c+x*s));
     } else if (Tcl_GetIntFromObj(NULL, obj, indexPtr) == TCL_OK) {
 	if (*indexPtr < 0) {
 	    *indexPtr = 0;
