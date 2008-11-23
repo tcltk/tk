@@ -1,5 +1,9 @@
 2008-11-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* generic/tkBind.c:  [Bug 1389270] event generate silently ignored
+	* generic/tkFocus.c: focus events. These can now be generated.
+	* generic/tkGrab.c:
+	* generic/tkInt.h:
 	* tests/bind.test: Fixed some locale dependencies in various
 	tests to reduce the noise on non-English windows systems.
 

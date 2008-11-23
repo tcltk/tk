@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.94 2008/11/22 22:28:52 das Exp $
+ * RCS: $Id: tkInt.h,v 1.95 2008/11/23 21:58:24 patthoyts Exp $
  */
 
 #ifndef _TKINT
@@ -968,6 +968,14 @@ MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 #define PI	3.14159265358979323846
 #endif
 #endif
+
+/*
+ * The following magic value is stored in the "send_event" field of FocusIn
+ * and FocusOut events. This allows us to separate "real" events coming from
+ * the server from those that we generated.
+ */
+
+#define GENERATED_FOCUS_EVENT_MAGIC	((Bool) 0x547321ac)
 
 /*
  * Exported internals.
