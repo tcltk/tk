@@ -1,3 +1,8 @@
+2008-11-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/bind.test: Fixed some locale dependencies in various
+	tests to reduce the noise on non-English windows systems.
+
 2008-11-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/demos/ctext.tcl: Extended to show off what you can do with
