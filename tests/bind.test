@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.23 2008/11/22 23:45:54 ferrieux Exp $
+# RCS: @(#) $Id: bind.test,v 1.24 2008/11/23 00:47:25 ferrieux Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -3069,11 +3069,11 @@ test bind-22.10 {HandleEventGenerate} -setup {
     set x {}
 } -body {
     bind .t.f <Key> {set x "%s %K"}
-    event gen .t.f <Control-Key-j>
+    event gen .t.f <Control-Key-space>
     set x
 } -cleanup {
     destroy .t.f
-} -result {4 j}
+} -result {4 space}
 test bind-22.11 {HandleEventGenerate} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
