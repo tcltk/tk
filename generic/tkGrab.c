@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.16 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.17 2008/11/23 21:58:24 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -132,7 +132,7 @@ typedef struct NewGrabWinEvent {
  * we generated.
  */
 
-#define GENERATED_EVENT_MAGIC ((Bool) 0x147321ac)
+#define GENERATED_GRAB_EVENT_MAGIC ((Bool) 0x147321ac)
 
 /*
  * Mask that selects any of the state bits corresponding to buttons, plus
@@ -722,7 +722,7 @@ TkPointerEvent(
 	 * serverWinPtr.
 	 */
 
-	if (eventPtr->xcrossing.send_event != GENERATED_EVENT_MAGIC) {
+	if (eventPtr->xcrossing.send_event != GENERATED_GRAB_EVENT_MAGIC) {
 	    if ((eventPtr->type == LeaveNotify) &&
 		    (winPtr->flags & TK_TOP_HIERARCHY)) {
 		dispPtr->serverWinPtr = NULL;
@@ -1151,7 +1151,7 @@ MovePointer2(
     }
 
     event.xcrossing.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xcrossing.send_event = GENERATED_EVENT_MAGIC;
+    event.xcrossing.send_event = GENERATED_GRAB_EVENT_MAGIC;
     event.xcrossing.display = winPtr->display;
     event.xcrossing.root = RootWindow(winPtr->display, winPtr->screenNum);
     event.xcrossing.time = TkCurrentTime(winPtr->dispPtr);
