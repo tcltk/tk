@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.25 2008/11/23 21:40:43 patthoyts Exp $
+# RCS: @(#) $Id: bind.test,v 1.26 2008/11/23 21:58:24 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -3403,7 +3403,7 @@ test bind-22.35 {HandleEventGenerate: options <FocusIn> -detail NotifyVirtual} -
     return $x
 } -cleanup {
     destroy .t.f
-} -result {}
+} -result {FocusIn NotifyVirtual}
 
 test bind-22.35.1 {HandleEventGenerate: options <FocusOut> -detail NotifyVirtual} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3417,7 +3417,7 @@ test bind-22.35.1 {HandleEventGenerate: options <FocusOut> -detail NotifyVirtual
     return $x
 } -cleanup {
     destroy .t.f
-} -result {}
+} -result {FocusOut NotifyVirtual}
 
 test bind-22.36 {HandleEventGenerate: options <Enter> -detail NotifyVirtual} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3659,7 +3659,7 @@ test bind-22.53 {HandleEventGenerate: options <FocusIn> -mode NotifyNormal} -set
     return $x
 } -cleanup {
     destroy .t.f
-} -result {}
+} -result {NotifyNormal}
 
 test bind-22.54 {HandleEventGenerate: options <Key> -mode NotifyNormal} -setup {
     frame .t.f -class Test -width 150 -height 100

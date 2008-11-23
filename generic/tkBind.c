@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.48 2008/11/08 19:04:05 dkf Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.49 2008/11/23 21:58:24 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -3386,6 +3386,10 @@ HandleEventGenerate(
     if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
 	event.xkey.x_root = -1;
 	event.xkey.y_root = -1;
+    }
+
+    if (event.xany.type == FocusIn || event.xany.type == FocusOut) {
+	event.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
     /*
