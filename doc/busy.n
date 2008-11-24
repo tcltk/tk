@@ -1,6 +1,6 @@
 '\"
 '\" Copyright (c) 1993-1998 Lucent Technologies, Inc.
-'\" Copyright (c) 2008, Jos Decoster
+'\" Copyright (c) 2008 Jos Decoster
 '\"
 '\" Permission to use, copy, modify, and distribute this software and its
 '\" documentation for any purpose and without fee is hereby granted, provided
@@ -23,7 +23,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: busy.n,v 1.1 2008/10/18 14:22:21 dkf Exp $
+'\" RCS: @(#) $Id: busy.n,v 1.2 2008/11/24 09:56:44 dkf Exp $
 '\"
 .so man.macros
 .TH busy n "" Tk "Tk Built-In Commands"

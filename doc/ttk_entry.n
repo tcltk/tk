@@ -7,7 +7,7 @@
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
 '\" SOURCE: entry.n, r1.12
-'\" RCS: @(#) $Id: ttk_entry.n,v 1.14 2008/10/27 13:38:51 dkf Exp $
+'\" RCS: @(#) $Id: ttk_entry.n,v 1.15 2008/11/24 09:56:44 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::entry n 8.5 Tk "Tk Themed Widget"
@@ -271,6 +271,7 @@ widget subcommands (see \fIttk::widget(n)\fR for details):
 .ta 5.5c 11c
 \fBcget\fR	\fBconfigure\fR	\fBidentify\fR
 \fBinstate\fR	\fBstate\fR
+.DE
 .SH VALIDATION
 .PP
 The \fB\-validate\fR, \fB\-validatecommand\fR, and \fB\-invalidcommand\fR
