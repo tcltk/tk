@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.49 2008/11/23 21:58:24 patthoyts Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.50 2008/11/25 11:19:03 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -31,13 +31,10 @@
  *
  * Init/Free this package.
  *
- * Tcl "bind" command (actually located in tkCmds.c).
- * "bind" command implementation.
- * "bind" implementation helpers.
+ * Tcl "bind" command (actually located in tkCmds.c) core implementation, plus
+ * helpers.
  *
- * Tcl "event" command.
- * "event" command implementation.
- * "event" implementation helpers.
+ * Tcl "event" command implementation, plus helpers.
  *
  * Package-specific common helpers.
  *
@@ -230,8 +227,7 @@ typedef struct PatSeq {
 				 * enough space will be allocated for
 				 * "numPats" patterns. To match, pats[0] must
 				 * match event n, pats[1] must match event
-				 * n-1, etc.
-				 */
+				 * n-1, etc. */
 } PatSeq;
 
 /*
@@ -536,7 +532,7 @@ static Tcl_HashTable eventTable;
 #define CIRCREQ			0x400000
 
 #define KEY_BUTTON_MOTION_VIRTUAL	(KEY|BUTTON|MOTION|VIRTUAL)
-#define KEY_BUTTON_MOTION_CROSSING	(KEY|BUTTON|MOTION|CROSSING|VIRTUAL)
+#define KEY_BUTTON_MOTION_CROSSING	(KEY|BUTTON|MOTION|VIRTUAL|CROSSING)
 
 static int flagArray[TK_LASTEVENT] = {
    /* Not used */		0,
@@ -699,7 +695,6 @@ static void		DoWarp(ClientData clientData);
  */
 
 #define EvalTclBinding	((TkBindEvalProc *) 1)
-
 
 /*
  *---------------------------------------------------------------------------
@@ -741,7 +736,6 @@ TkBindInit(
 	    const ModInfo *modPtr;
 	    EventInfo *eiPtr;
 	    int newEntry;
-
 #ifdef REDO_KEYSYM_LOOKUP
 	    KeySymInfo *kPtr;
 
@@ -1089,7 +1083,6 @@ TkCreateBindingProcedure(
 	}
 	Tcl_SetHashValue(hPtr, psPtr);
     } else {
-
 	/*
 	 * Free existing callback.
 	 */
@@ -1328,7 +1321,7 @@ Tk_DeleteAllBindings(
     }
     for (psPtr = Tcl_GetHashValue(hPtr); psPtr != NULL;
 	    psPtr = nextPtr) {
-	nextPtr  = psPtr->nextObjPtr;
+	nextPtr = psPtr->nextObjPtr;
 
 	/*
 	 * Be sure to remove each binding from its hash chain in the pattern
@@ -1423,8 +1416,7 @@ Tk_BindEvent(
     Tcl_DString scripts, savedResult;
     Detail detail;
     char *p, *end;
-    PendingBinding *pendingPtr;
-    PendingBinding staticPending;
+    PendingBinding staticPending, *pendingPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
     PatternTableKey key;
     Tk_ClassModalProc *modalProc;
@@ -1447,12 +1439,12 @@ Tk_BindEvent(
      * mega-widget isn't supposed to be visible to people watching the parent.
      */
 
-    if ((eventPtr->type == EnterNotify)  || (eventPtr->type == LeaveNotify)) {
+    if ((eventPtr->type == EnterNotify) || (eventPtr->type == LeaveNotify)) {
 	if (eventPtr->xcrossing.detail == NotifyInferior) {
 	    return;
 	}
     }
-    if ((eventPtr->type == FocusIn)  || (eventPtr->type == FocusOut)) {
+    if ((eventPtr->type == FocusIn) || (eventPtr->type == FocusOut)) {
 	if (eventPtr->xfocus.detail == NotifyInferior) {
 	    return;
 	}
@@ -1545,10 +1537,8 @@ Tk_BindEvent(
     memset(&key, 0, sizeof(key));
 
     if (ringPtr->type != VirtualEvent) {
-	Tcl_HashTable *veptPtr;
+	Tcl_HashTable *veptPtr = &bindInfoPtr->virtualEventTable.patternTable;
 	Tcl_HashEntry *hPtr;
-
-	veptPtr = &bindInfoPtr->virtualEventTable.patternTable;
 
 	key.object = NULL;
 	key.type = ringPtr->type;
@@ -1582,11 +1572,8 @@ Tk_BindEvent(
     Tcl_DStringInit(&scripts);
 
     for ( ; numObjects > 0; numObjects--, objectPtr++) {
-	PatSeq *matchPtr, *sourcePtr;
+	PatSeq *matchPtr = NULL, *sourcePtr = NULL;
 	Tcl_HashEntry *hPtr;
-
-	matchPtr = NULL;
-	sourcePtr = NULL;
 
 	/*
 	 * Match the new event against those recorded in the pattern table,
@@ -1770,6 +1757,7 @@ Tk_BindEvent(
 	    }
 	} else {
 	    int len = (int) strlen(p);
+
 	    code = Tcl_EvalEx(interp, p, len, TCL_EVAL_GLOBAL);
 	    p += len;
 	}
@@ -1928,6 +1916,7 @@ TkBindDeadWindow(
  *
  *----------------------------------------------------------------------
  */
+
 static PatSeq *
 MatchPatterns(
     TkDisplay *dispPtr,		/* Display from which the event came. */
@@ -1962,22 +1951,17 @@ MatchPatterns(
      */
 
     for ( ; psPtr != NULL; psPtr = psPtr->nextSeqPtr) {
-	XEvent *eventPtr;
-	Pattern *patPtr;
-	Window window;
-	Detail *detailPtr;
-	int patCount, ringCount, flags, state;
-	int modMask;
+	XEvent *eventPtr = &bindPtr->eventRing[bindPtr->curEvent];
+	Detail *detailPtr = &bindPtr->detailRing[bindPtr->curEvent];
+	Pattern *patPtr = psPtr->pats;
+	Window window = eventPtr->xany.window;
+	int patCount, ringCount, flags, state, modMask, i;
 
 	/*
 	 * Iterate over all the patterns in a sequence to be sure that they
 	 * all match.
 	 */
 
-	eventPtr = &bindPtr->eventRing[bindPtr->curEvent];
-	detailPtr = &bindPtr->detailRing[bindPtr->curEvent];
-	window = eventPtr->xany.window;
-	patPtr = psPtr->pats;
 	patCount = psPtr->numPats;
 	ringCount = EVENT_BUFFER_SIZE;
 	while (patCount > 0) {
@@ -2013,8 +1997,6 @@ MatchPatterns(
 			|| (patPtr->eventType == ButtonRelease)) {
 		    if ((eventPtr->xany.type == KeyPress)
 			    || (eventPtr->xany.type == KeyRelease)) {
-			int i;
-
 			/*
 			 * Ignore key events if they are modifier keys.
 			 */
@@ -2025,6 +2007,7 @@ MatchPatterns(
 				/*
 				 * This key is a modifier key, so ignore it.
 				 */
+
 				goto nextEvent;
 			    }
 			}
@@ -2056,8 +2039,6 @@ MatchPatterns(
 		 */
 
 		if (eventPtr->xany.type == KeyPress) {
-		    int i;
-
 		    for (i = 0; i < dispPtr->numModKeyCodes; i++) {
 			if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 			    goto nextEvent;
@@ -2067,7 +2048,7 @@ MatchPatterns(
 		goto nextSequence;
 	    }
 	    flags = flagArray[eventPtr->type];
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
+	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 		state = eventPtr->xkey.state;
 	    } else if (flags & CROSSING) {
 		state = eventPtr->xcrossing.state;
@@ -2095,10 +2076,9 @@ MatchPatterns(
 		}
 	    }
 	    if (psPtr->flags & PAT_NEARBY) {
-		XEvent *firstPtr;
+		XEvent *firstPtr = &bindPtr->eventRing[bindPtr->curEvent];
 		int timeDiff;
 
-		firstPtr = &bindPtr->eventRing[bindPtr->curEvent];
 		timeDiff = (Time) firstPtr->xkey.time - eventPtr->xkey.time;
 		if ((firstPtr->xkey.x_root
 			    < (eventPtr->xkey.x_root - NEARBY_PIXELS))
@@ -2154,16 +2134,14 @@ MatchPatterns(
 		hPtr = Tcl_FindHashEntry(&bindPtr->patternTable,
 			(char *) &key);
 		if (hPtr != NULL) {
-
 		    /*
 		     * This tag is interested in this virtual event and its
 		     * corresponding physical event is a good match with the
 		     * virtual event's definition.
 		     */
 
-		    PatSeq *virtMatchPtr;
+		    PatSeq *virtMatchPtr = Tcl_GetHashValue(hPtr);
 
-		    virtMatchPtr = Tcl_GetHashValue(hPtr);
 		    if ((virtMatchPtr->numPats != 1)
 			    || (virtMatchPtr->nextSeqPtr != NULL)) {
 			Tcl_Panic("MatchPattern: badly constructed virtual event");
@@ -2190,7 +2168,6 @@ MatchPatterns(
 
 	if (bestPtr != NULL) {
 	    Pattern *patPtr2;
-	    int i;
 
 	    if (matchPtr->numPats != bestPtr->numPats) {
 		if (bestPtr->numPats > matchPtr->numPats) {
@@ -2249,7 +2226,6 @@ MatchPatterns(
     *sourcePtrPtr = bestSourcePtr;
     return bestPtr;
 }
-
 
 /*
  *--------------------------------------------------------------
@@ -2377,14 +2353,14 @@ ExpandPercents(
 	case 'h':
 	    if (flags & EXPOSE) {
 		number = eventPtr->xexpose.height;
-	    } else if (flags & (CONFIG)) {
+	    } else if (flags & CONFIG) {
 		number = eventPtr->xconfigure.height;
 	    } else if (flags & CREATE) {
 		number = eventPtr->xcreatewindow.height;
 	    } else if (flags & CONFIGREQ) {
-		number =  eventPtr->xconfigurerequest.height;
+		number = eventPtr->xconfigurerequest.height;
 	    } else if (flags & RESIZEREQ) {
-		number =  eventPtr->xresizerequest.height;
+		number = eventPtr->xresizerequest.height;
 	    } else {
 		goto doString;
 	    }
@@ -2440,7 +2416,7 @@ ExpandPercents(
 	    }
 	    goto doString;
 	case 's':
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
+	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 		number = eventPtr->xkey.state;
 		goto doNumber;
 	    } else if (flags & CROSSING) {
@@ -2458,7 +2434,7 @@ ExpandPercents(
 		goto doString;
 	    }
 	case 't':
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
+	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 		number = (int) eventPtr->xkey.time;
 	    } else if (flags & CROSSING) {
 		number = (int) eventPtr->xcrossing.time;
@@ -2479,15 +2455,15 @@ ExpandPercents(
 	    } else if (flags & CREATE) {
 		number = eventPtr->xcreatewindow.width;
 	    } else if (flags & CONFIGREQ) {
-		number =  eventPtr->xconfigurerequest.width;
+		number = eventPtr->xconfigurerequest.width;
 	    } else if (flags & RESIZEREQ) {
-		number =  eventPtr->xresizerequest.width;
+		number = eventPtr->xresizerequest.width;
 	    } else {
 		goto doString;
 	    }
 	    goto doNumber;
 	case 'x':
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
+	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 		number = eventPtr->xkey.x;
 	    } else if (flags & CROSSING) {
 		number = eventPtr->xcrossing.x;
@@ -2500,13 +2476,13 @@ ExpandPercents(
 	    } else if (flags & CREATE) {
 		number = eventPtr->xcreatewindow.x;
 	    } else if (flags & CONFIGREQ) {
-		number =  eventPtr->xconfigurerequest.x;
+		number = eventPtr->xconfigurerequest.x;
 	    } else {
 		goto doString;
 	    }
 	    goto doNumber;
 	case 'y':
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
+	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 		number = eventPtr->xkey.y;
 	    } else if (flags & EXPOSE) {
 		number = eventPtr->xexpose.y;
@@ -2721,7 +2697,8 @@ Tk_EventObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int index;
+    int index, i;
+    char *name, *event;
     Tk_Window tkwin = clientData;
     VirtualEventTable *vetPtr;
     TkBindInfo bindInfo;
@@ -2746,10 +2723,7 @@ Tk_EventObjCmd(
     }
 
     switch ((enum options) index) {
-    case EVENT_ADD: {
-	int i;
-	char *name, *event;
-
+    case EVENT_ADD:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "virtual sequence ?sequence ...?");
@@ -2763,14 +2737,9 @@ Tk_EventObjCmd(
 	    }
 	}
 	break;
-    }
-    case EVENT_DELETE: {
-	int i;
-	char *name, *event;
-
+    case EVENT_DELETE:
 	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "virtual ?sequence ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "virtual ?sequence ...?");
 	    return TCL_ERROR;
 	}
 	name = Tcl_GetString(objv[2]);
@@ -2784,7 +2753,6 @@ Tk_EventObjCmd(
 	    }
 	}
 	break;
-    }
     case EVENT_GENERATE:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
@@ -3044,15 +3012,15 @@ DeleteVirtualEvent(
 	eventPSPtr = FindSequence(interp, &vetPtr->patternTable, NULL,
 		eventString, 0, 0, &eventMask);
 	if (eventPSPtr == NULL) {
-	    const char *string;
+	    const char *string = Tcl_GetStringResult(interp);
 
-	    string = Tcl_GetStringResult(interp);
 	    return (string[0] != '\0') ? TCL_ERROR : TCL_OK;
 	}
     }
 
     for (iPhys = poPtr->numOwned; --iPhys >= 0; ) {
 	PatSeq *psPtr = poPtr->patSeqs[iPhys];
+
 	if ((eventPSPtr == NULL) || (psPtr == eventPSPtr)) {
 	    int iVirt;
 	    VirtualOwners *voPtr;
@@ -3292,6 +3260,7 @@ HandleEventGenerate(
     TkWindow *mainPtr;
     unsigned long eventMask;
     Tcl_Obj *userDataObj;
+
     static const char *const fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
 	"-count",	"-data",	"-delta",	"-detail",
@@ -3369,7 +3338,7 @@ HandleEventGenerate(
 	Tk_DestroyWindow(tkwin);
 	return TCL_OK;
     }
-    if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
+    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 	event.xkey.state = pat.needMods;
 	if ((flags & KEY) && (event.xany.type != MouseWheelEvent)) {
 	    TkpSetKeycodeAndState(tkwin, pat.detail.keySym, &event);
@@ -3383,7 +3352,7 @@ HandleEventGenerate(
 	event.xcreatewindow.window = event.xany.window;
     }
 
-    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 	event.xkey.x_root = -1;
 	event.xkey.y_root = -1;
     }
@@ -3429,7 +3398,7 @@ HandleEventGenerate(
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &warp) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (!(flags & (KEY_BUTTON_MOTION_VIRTUAL))) {
+	    if (!(flags & KEY_BUTTON_MOTION_VIRTUAL)) {
 		goto badopt;
 	    }
 	    break;
@@ -3621,7 +3590,7 @@ HandleEventGenerate(
 	    if (NameToWindow(interp, tkwin, valuePtr, &tkwin2) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.xkey.root = Tk_WindowId(tkwin2);
 	    } else {
 		goto badopt;
@@ -3631,7 +3600,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp,tkwin,valuePtr,&number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.xkey.x_root = number;
 	    } else {
 		goto badopt;
@@ -3641,7 +3610,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp,tkwin,valuePtr,&number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.xkey.y_root = number;
 	    } else {
 		goto badopt;
@@ -3675,11 +3644,11 @@ HandleEventGenerate(
 	    event.xany.serial = number;
 	    break;
 	case EVENT_STATE:
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (flags & (KEY_BUTTON_MOTION_VIRTUAL)) {
+		if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 		    event.xkey.state = number;
 		} else {
 		    event.xcrossing.state = number;
@@ -3699,7 +3668,7 @@ HandleEventGenerate(
 	    if (NameToWindow(interp, tkwin, valuePtr, &tkwin2) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.xkey.subwindow = Tk_WindowId(tkwin2);
 	    } else {
 		goto badopt;
@@ -3709,7 +3678,7 @@ HandleEventGenerate(
 	    if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.xkey.time = (Time) number;
 	    } else if (flags & PROP) {
 		event.xproperty.time = (Time) number;
@@ -3743,7 +3712,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp,tkwin,valuePtr,&number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.xkey.x = number;
 
 		/*
@@ -3770,7 +3739,7 @@ HandleEventGenerate(
 	    if (Tk_GetPixelsFromObj(interp,tkwin,valuePtr,&number) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (flags & (KEY_BUTTON_MOTION_VIRTUAL|CROSSING)) {
+	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.xkey.y = number;
 
 		/*
@@ -3869,10 +3838,7 @@ NameToWindow(
 	 */
 
 	if (TkpScanWindowId(NULL, name, &id) != TCL_OK) {
-	badWindow:
-	    Tcl_AppendResult(interp, "bad window name/identifier \"",
-		    name, "\"", NULL);
-	    return TCL_ERROR;
+	    goto badWindow;
 	}
 	tkwin = Tk_IdToWindow(Tk_Display(mainWin), id);
 	if (tkwin == NULL) {
@@ -3881,6 +3847,10 @@ NameToWindow(
     }
     *tkwinPtr = tkwin;
     return TCL_OK;
+
+  badWindow:
+    Tcl_AppendResult(interp, "bad window name/identifier \"",name,"\"", NULL);
+    return TCL_ERROR;
 }
 
 /*
@@ -3898,6 +3868,7 @@ NameToWindow(
  *
  *-------------------------------------------------------------------------
  */
+
 static void
 DoWarp(
     ClientData clientData)
@@ -4105,8 +4076,8 @@ FindSequence(
 
 	return NULL;
     }
-    psPtr = (PatSeq *) ckalloc((unsigned) (sizeof(PatSeq)
-	    + (numPats-1)*sizeof(Pattern)));
+    psPtr = (PatSeq *) ckalloc((unsigned)
+	    (sizeof(PatSeq) + (numPats-1)*sizeof(Pattern)));
     psPtr->numPats = numPats;
     psPtr->eventProc = NULL;
     psPtr->freeProc = NULL;
@@ -4192,7 +4163,7 @@ ParseEventDescription(
 		patPtr->detail.keySym = *p;
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"bad ASCII character 0x%x", (unsigned char) *p));
+			"bad ASCII character 0x%x", UCHAR(*p)));
 		count = 0;
 		goto done;
 	    }
@@ -4230,6 +4201,7 @@ ParseEventDescription(
 	 */
 
 	char *field = p + 1;
+
 	p = strchr(field, '>');
 	if (p == field) {
 	    Tcl_SetResult(interp, "virtual event \"<<>>\" is badly formed",
@@ -4272,10 +4244,13 @@ ParseEventDescription(
 	}
 	modPtr = Tcl_GetHashValue(hPtr);
 	patPtr->needMods |= modPtr->mask;
-	if (modPtr->flags & (MULT_CLICKS)) {
+	if (modPtr->flags & MULT_CLICKS) {
 	    int i = modPtr->flags & MULT_CLICKS;
+
 	    count = 2;
-	    while (i >>= 1) count++;
+	    while (i >>= 1) {
+		count++;
+	    }
 	}
 	while ((*p == '-') || isspace(UCHAR(*p))) {
 	    p++;
@@ -4438,7 +4413,6 @@ GetPatternString(
 
     for (patsLeft = psPtr->numPats, patPtr = &psPtr->pats[psPtr->numPats - 1];
 	    patsLeft > 0; patsLeft--, patPtr--) {
-
 	/*
 	 * Check for simple case of an ASCII character.
 	 */
@@ -4450,7 +4424,6 @@ GetPatternString(
 		&& isprint(UCHAR(patPtr->detail.keySym))
 		&& (patPtr->detail.keySym != '<')
 		&& (patPtr->detail.keySym != ' ')) {
-
 	    c = (char) patPtr->detail.keySym;
 	    Tcl_DStringAppend(dsPtr, &c, 1);
 	    continue;
@@ -4474,6 +4447,7 @@ GetPatternString(
 	 */
 
 	Tcl_DStringAppend(dsPtr, "<", 1);
+
 	if ((psPtr->flags & PAT_NEARBY) && (patsLeft > 1)
 		&& (memcmp(patPtr, patPtr-1, sizeof(Pattern)) == 0)) {
 	    patsLeft--;
@@ -4494,6 +4468,7 @@ GetPatternString(
 		Tcl_DStringAppend(dsPtr, "Double-", 7);
 	    }
 	}
+
 	for (needMods = patPtr->needMods, modPtr = modArray;
 		needMods != 0; modPtr++) {
 	    if (modPtr->mask & needMods) {
@@ -4502,6 +4477,7 @@ GetPatternString(
 		Tcl_DStringAppend(dsPtr, "-", 1);
 	    }
 	}
+
 	for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
 	    if (eiPtr->type == patPtr->eventType) {
 		Tcl_DStringAppend(dsPtr, eiPtr->name, -1);
@@ -4515,9 +4491,8 @@ GetPatternString(
 	if (patPtr->detail.clientData != 0) {
 	    if ((patPtr->eventType == KeyPress)
 		    || (patPtr->eventType == KeyRelease)) {
-		char *string;
+		char *string = TkKeysymToString(patPtr->detail.keySym);
 
-		string = TkKeysymToString(patPtr->detail.keySym);
 		if (string != NULL) {
 		    Tcl_DStringAppend(dsPtr, string, -1);
 		}
@@ -4526,6 +4501,7 @@ GetPatternString(
 		Tcl_DStringAppend(dsPtr, buffer, -1);
 	    }
 	}
+
 	Tcl_DStringAppend(dsPtr, ">", 1);
     }
 }
@@ -4577,9 +4553,8 @@ TkStringToKeysym(
     char *name)			/* Name of a keysym. */
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&keySymTable, name);
 
-    hPtr = Tcl_FindHashEntry(&keySymTable, name);
     if (hPtr != NULL) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
