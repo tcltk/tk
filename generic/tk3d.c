@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.22 2008/11/08 18:44:39 dkf Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.23 2008/11/26 15:57:24 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -91,7 +91,7 @@ Tk_Alloc3DBorderFromObj(
     if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
-    borderPtr = (TkBorder *) objPtr->internalRep.twoPtrValue.ptr1;
+    borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
 
     /*
      * If the object currently points to a TkBorder, see if it's the one we
@@ -130,16 +130,16 @@ Tk_Alloc3DBorderFromObj(
      */
 
     if (borderPtr != NULL) {
-	TkBorder *firstBorderPtr =
-		(TkBorder *) Tcl_GetHashValue(borderPtr->hashPtr);
+	TkBorder *firstBorderPtr = Tcl_GetHashValue(borderPtr->hashPtr);
+
 	FreeBorderObjProc(objPtr);
 	for (borderPtr = firstBorderPtr ; borderPtr != NULL;
 		borderPtr = borderPtr->nextPtr) {
 	    if ((Tk_Screen(tkwin) == borderPtr->screen)
-		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
+		    && (Tk_Colormap(tkwin) == borderPtr->colormap)) {
 		borderPtr->resourceRefCount++;
 		borderPtr->objRefCount++;
-		objPtr->internalRep.twoPtrValue.ptr1 = (void *) borderPtr;
+		objPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
 		return (Tk_3DBorder) borderPtr;
 	    }
 	}
@@ -151,7 +151,7 @@ Tk_Alloc3DBorderFromObj(
 
     borderPtr = (TkBorder *) Tk_Get3DBorder(interp, tkwin,
 	    Tcl_GetString(objPtr));
-    objPtr->internalRep.twoPtrValue.ptr1 = (void *) borderPtr;
+    objPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
     if (borderPtr != NULL) {
 	borderPtr->objRefCount++;
     }
@@ -203,7 +203,7 @@ Tk_Get3DBorder(
 
     hashPtr = Tcl_CreateHashEntry(&dispPtr->borderTable, colorName, &isNew);
     if (!isNew) {
-	existingBorderPtr = (TkBorder *) Tcl_GetHashValue(hashPtr);
+	existingBorderPtr = Tcl_GetHashValue(hashPtr);
 	for (borderPtr = existingBorderPtr; borderPtr != NULL;
 		borderPtr = borderPtr->nextPtr) {
 	    if ((Tk_Screen(tkwin) == borderPtr->screen)
@@ -428,7 +428,7 @@ Tk_Free3DBorder(
 	return;
     }
 
-    prevPtr = (TkBorder *) Tcl_GetHashValue(borderPtr->hashPtr);
+    prevPtr = Tcl_GetHashValue(borderPtr->hashPtr);
     TkpFreeBorder(borderPtr);
     if (borderPtr->bgColorPtr != NULL) {
 	Tk_FreeColor(borderPtr->bgColorPtr);
@@ -522,7 +522,7 @@ static void
 FreeBorderObjProc(
     Tcl_Obj *objPtr)		/* The object we are releasing. */
 {
-    TkBorder *borderPtr = (TkBorder *) objPtr->internalRep.twoPtrValue.ptr1;
+    TkBorder *borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
 
     if (borderPtr != NULL) {
 	borderPtr->objRefCount--;
@@ -557,10 +557,10 @@ DupBorderObjProc(
     Tcl_Obj *srcObjPtr,		/* The object we are copying from. */
     Tcl_Obj *dupObjPtr)		/* The object we are copying to. */
 {
-    TkBorder *borderPtr = (TkBorder *) srcObjPtr->internalRep.twoPtrValue.ptr1;
+    TkBorder *borderPtr = srcObjPtr->internalRep.twoPtrValue.ptr1;
 
     dupObjPtr->typePtr = srcObjPtr->typePtr;
-    dupObjPtr->internalRep.twoPtrValue.ptr1 = (void *) borderPtr;
+    dupObjPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
 
     if (borderPtr != NULL) {
 	borderPtr->objRefCount++;
@@ -982,8 +982,8 @@ Tk_Fill3DRectangle(
     if ((width > doubleBorder) && (height > doubleBorder)) {
 	XFillRectangle(Tk_Display(tkwin), drawable, borderPtr->bgGC,
 		x + borderWidth, y + borderWidth,
-		(unsigned int) (width - doubleBorder),
-		(unsigned int) (height - doubleBorder));
+		(unsigned) (width - doubleBorder),
+		(unsigned) (height - doubleBorder));
     }
     if (borderWidth) {
 	Tk_Draw3DRectangle(tkwin, drawable, border, x, y, width,
@@ -1251,7 +1251,7 @@ Tk_Get3DBorderFromObj(
      * cached in the internal representation of the Tcl_Obj. Check it out...
      */
 
-    borderPtr = (TkBorder *) objPtr->internalRep.twoPtrValue.ptr1;
+    borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
     if ((borderPtr != NULL)
 	    && (borderPtr->resourceRefCount > 0)
 	    && (Tk_Screen(tkwin) == borderPtr->screen)
@@ -1279,12 +1279,12 @@ Tk_Get3DBorderFromObj(
     if (hashPtr == NULL) {
 	goto error;
     }
-    for (borderPtr = (TkBorder *) Tcl_GetHashValue(hashPtr);
-	    (borderPtr != NULL); borderPtr = borderPtr->nextPtr) {
+    for (borderPtr = Tcl_GetHashValue(hashPtr); borderPtr != NULL;
+	    borderPtr = borderPtr->nextPtr) {
 	if ((Tk_Screen(tkwin) == borderPtr->screen)
 		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
 	    FreeBorderObjProc(objPtr);
-	    objPtr->internalRep.twoPtrValue.ptr1 = (void *) borderPtr;
+	    objPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
 	    borderPtr->objRefCount++;
 	    return (Tk_3DBorder) borderPtr;
 	}
@@ -1362,20 +1362,21 @@ TkDebugBorder(
 				 * (not currently used). */
     char *name)			/* Name of the desired color. */
 {
-    TkBorder *borderPtr;
     Tcl_HashEntry *hashPtr;
-    Tcl_Obj *resultPtr, *objPtr;
+    Tcl_Obj *resultPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     resultPtr = Tcl_NewObj();
     hashPtr = Tcl_FindHashEntry(&dispPtr->borderTable, name);
     if (hashPtr != NULL) {
-	borderPtr = (TkBorder *) Tcl_GetHashValue(hashPtr);
+	TkBorder *borderPtr = Tcl_GetHashValue(hashPtr);
+
 	if (borderPtr == NULL) {
 	    Tcl_Panic("TkDebugBorder found empty hash table entry");
 	}
 	for ( ; (borderPtr != NULL); borderPtr = borderPtr->nextPtr) {
-	    objPtr = Tcl_NewObj();
+	    Tcl_Obj *objPtr = Tcl_NewObj();
+
 	    Tcl_ListObjAppendElement(NULL, objPtr,
 		    Tcl_NewIntObj(borderPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
