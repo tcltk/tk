@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.95 2008/11/23 21:58:24 patthoyts Exp $
+ * RCS: $Id: tkInt.h,v 1.96 2008/11/27 23:47:09 ferrieux Exp $
  */
 
 #ifndef _TKINT
@@ -1140,6 +1140,11 @@ MODULE_SCOPE int	Tk_WinfoObjCmd(ClientData clientData,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
+
+MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
+						  Tk_Window tkwin,
+						  Tcl_Obj *objPtr,
+						  double *doublePtr);
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
