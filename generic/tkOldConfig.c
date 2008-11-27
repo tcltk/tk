@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.27 2008/11/18 23:49:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.28 2008/11/27 23:26:05 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -626,7 +626,7 @@ Tk_ConfigureInfo(
      * handle that one spec specially.
      */
 
-    Tcl_SetResult(interp, NULL, TCL_STATIC);
+    Tcl_ResetResult(interp);
     if (argvName != NULL) {
 	specPtr = FindConfigSpec(interp, specs, argvName, needFlags,hateFlags);
 	if (specPtr == NULL) {
