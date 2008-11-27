@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.26 2008/11/09 21:53:39 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.27 2008/11/27 23:26:05 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -251,7 +251,7 @@ Tk_ItemType tkLineType = {
  */
 
 #define MAX_STATIC_POINTS 200
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -332,7 +332,7 @@ CreateLine(
     DeleteLine(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -444,7 +444,7 @@ LineCoords(
     }
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -586,7 +586,7 @@ ConfigureLine(
 
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -626,7 +626,7 @@ DeleteLine(
 	ckfree((char *) linePtr->lastArrowPtr);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -810,7 +810,7 @@ ComputeLineBbox(
     linePtr->header.y1 -= 1;
     linePtr->header.y2 += 1;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -935,7 +935,7 @@ DisplayLine(
 	XSetTSOrigin(display, linePtr->arrowGC, 0, 0);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1128,7 +1128,7 @@ LineInsert(
 
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1303,7 +1303,7 @@ LineDeleteCoords(
     }
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1534,7 +1534,7 @@ LineToPoint(
     }
     return bestDist;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1657,7 +1657,7 @@ LineToArea(
     }
     return result;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1720,7 +1720,7 @@ ScaleLine(
     }
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1764,7 +1764,7 @@ GetLineIndex(
 	     */
 
 	badIndex:
-	    Tcl_SetResult(interp, NULL, TCL_STATIC);
+	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, "bad index \"", string, "\"", NULL);
 	    return TCL_ERROR;
 	}
@@ -1807,7 +1807,7 @@ GetLineIndex(
     }
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1857,7 +1857,7 @@ TranslateLine(
     }
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1924,7 +1924,7 @@ ParseArrowShape(
     ckfree((char *) argv);
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1961,7 +1961,7 @@ PrintArrowShape(
     *freeProcPtr = TCL_DYNAMIC;
     return buffer;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2024,7 +2024,7 @@ ArrowParseProc(
     *arrowPtr = ARROWS_NONE;
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2069,7 +2069,7 @@ ArrowPrintProc(
 	return "none";
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2229,7 +2229,7 @@ ConfigureArrows(
 
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2404,7 +2404,7 @@ LineToPostscript(
     }
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2463,7 +2463,7 @@ ArrowheadPostscript(
     }
     return TCL_OK;
 }
-
+
 /*
  * Local Variables:
  * mode: c

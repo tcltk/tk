@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.47 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.48 2008/11/27 23:26:05 nijtmans Exp $
  */
 
 /*
@@ -2154,7 +2154,7 @@ TkGetMenuIndex(
 	    *indexPtr = i;
 	    goto success;
 	}
-	Tcl_SetResult(interp, NULL, TCL_STATIC);
+	Tcl_ResetResult(interp);
     }
 
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -2956,7 +2956,7 @@ GetIndexFromCoords(
     return TCL_OK;
 
   error:
-    Tcl_SetResult(interp, NULL, TCL_STATIC);
+    Tcl_ResetResult(interp);
     return TCL_ERROR;
 }
 
