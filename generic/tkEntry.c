@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.55 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.56 2008/11/27 23:26:05 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2528,7 +2528,7 @@ GetEntryIndex(
 	break;
     case 's':
 	if (entryPtr->selectFirst < 0) {
-	    Tcl_SetResult(interp, NULL, TCL_STATIC);
+	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, "selection isn't in widget ",
 		    Tk_PathName(entryPtr->tkwin), NULL);
 	    return TCL_ERROR;
@@ -2942,7 +2942,7 @@ EntryUpdateScrollbar(
 	Tcl_AddErrorInfo(interp, ")");
 	Tcl_BackgroundError(interp);
     }
-    Tcl_SetResult(interp, NULL, TCL_STATIC);
+    Tcl_ResetResult(interp);
     Tcl_Release(interp);
 }
 
@@ -3157,11 +3157,11 @@ EntryValidate(
 	Tcl_AddErrorInfo(interp,
 		 "\nvalid boolean not returned by validation command");
 	Tcl_BackgroundError(interp);
-	Tcl_SetResult(interp, NULL, 0);
+	Tcl_ResetResult(interp);
 	return TCL_ERROR;
     }
 
-    Tcl_SetResult(interp, NULL, 0);
+    Tcl_ResetResult(interp);
     return (bool ? TCL_OK : TCL_BREAK);
 }
 
@@ -4292,7 +4292,7 @@ SpinboxInvoke(
 	    return TCL_OK;
 	}
 
-	Tcl_SetResult(interp, NULL, 0);
+	Tcl_ResetResult(interp);
     }
 
     return TCL_OK;
