@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.22 2008/11/22 01:07:56 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.23 2008/11/27 23:26:05 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -39,7 +39,6 @@ static int		TestwinlocaleObjCmd(ClientData clientData,
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 static Tk_GetSelProc		SetSelectionResult;
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -480,8 +479,6 @@ TestwinlocaleObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
-
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;

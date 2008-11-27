@@ -1,3 +1,11 @@
+2008-11-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvLine.c:   Replace Tcl_SetResult(interp, NULL, ....)
+	* generic/tkEntry.c       calls with Tcl_ResetResult(interp)
+	* generic/tkMenu.c
+	* generic/tkOldConfig.c
+	* win/tkWinTest.c:  eliminate warning: unused variable 'tkwin'
+
 2008-11-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkBind.c:  [Bug 1389270] event generate silently ignored
