@@ -7,7 +7,7 @@
 # Copyright (c) 2008 Donal K. Fellows
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.26 2008/11/01 16:14:30 dkf Exp $
+# RCS: @(#) $Id: canvas.test,v 1.27 2008/11/28 00:10:25 ferrieux Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -707,6 +707,13 @@ test canvas-15.18 "basic coords check: window coords are paired" -setup {
 } -returnCodes error -body {
     .c create window 0
 } -result {wrong # coordinates: expected 2, got 1}
+test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setup {
+    destroy .c
+    canvas .c
+} -body {
+    set id [.c create rect 0 0 1cm 1cm] 
+    expr {[lindex [.c coords $id] 2]>1}
+} -result {1}
 destroy .c
 
 test canvas-16.1 {arc coords check} -setup {
