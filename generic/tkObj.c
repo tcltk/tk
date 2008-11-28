@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.23 2008/11/27 23:47:09 ferrieux Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.24 2008/11/28 17:05:59 ferrieux Exp $
  */
 
 #include "tkInt.h"
@@ -267,6 +267,8 @@ Tk_GetDoublePixelsFromObj(
 	    /* internally "shimmer" to pixel units */
 	    pixelPtr->units=-1;
 	    pixelPtr->value=d;
+	} else {
+	    d=pixelPtr->value;
 	}
     }
     *doublePtr = d;
