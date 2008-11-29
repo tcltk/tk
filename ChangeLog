@@ -1,3 +1,14 @@
+2008-11-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/altTheme.tcl:     Use a styled frame around the popdown
+	* library/ttk/clamTheme.tcl:    listbox so we can adjust the border
+	* library/ttk/classicTheme.tcl: for each theme as needed.
+	* library/ttk/combobox.tcl:
+	* library/ttk/defaults.tcl:
+	* library/ttk/winTheme.tcl:
+	* library/ttk/xpTheme.tcl:
+	* tests/ttk/combobox.test:
+
 2008-11-28  Alexandre Ferrieux 	<ferrieux@users.sourceforge.net>
 
 	* generic/tkCanvUtil.c	Millimeter patch. Fixes [1813597,2218964]
