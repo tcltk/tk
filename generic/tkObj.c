@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.24 2008/11/28 17:05:59 ferrieux Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.25 2008/11/29 00:12:58 ferrieux Exp $
  */
 
 #include "tkInt.h"
@@ -152,18 +152,22 @@ GetPixelsFromObjEx(
     int *intPtr,
     double *dblPtr)		/* Places to store resulting pixels. */
 {
-    int result;
+    int result,fresh;
     double d;
     PixelRep *pixelPtr;
     static double bias[] = {
 	1.0,	10.0,	25.4,	0.35278 /*25.4 / 72.0*/
     };
 
+ retry:
     if (objPtr->typePtr != &pixelObjType) {
 	result = SetPixelFromAny(interp, objPtr);
 	if (result != TCL_OK) {
 	    return result;
 	}
+	fresh=1;
+    } else {
+	fresh=0;
     }
 
     if (SIMPLE_PIXELREP(objPtr)) {
@@ -173,7 +177,16 @@ GetPixelsFromObjEx(
 	}
     } else {
 	pixelPtr = GET_COMPLEXPIXEL(objPtr);
-	if (pixelPtr->tkwin != tkwin) {
+	if ((!fresh) && (pixelPtr->tkwin != tkwin))
+	    {
+		/* in case of exo-screen conversions of non-pixels
+		 * we force a recomputation from the string
+		 */
+
+		FreePixelInternalRep(objPtr);
+		goto retry;
+	    }
+	if ((pixelPtr->tkwin != tkwin)||dblPtr) {
 	    d = pixelPtr->value;
 	    if (pixelPtr->units >= 0) {
 		d *= bias[pixelPtr->units] * WidthOfScreen(Tk_Screen(tkwin));
@@ -267,8 +280,6 @@ Tk_GetDoublePixelsFromObj(
 	    /* internally "shimmer" to pixel units */
 	    pixelPtr->units=-1;
 	    pixelPtr->value=d;
-	} else {
-	    d=pixelPtr->value;
 	}
     }
     *doublePtr = d;
