@@ -1,5 +1,5 @@
 #
-# $Id: xpTheme.tcl,v 1.10 2008/11/01 15:34:24 patthoyts Exp $
+# $Id: xpTheme.tcl,v 1.11 2008/11/29 00:43:48 patthoyts Exp $
 #
 # Settings for 'xpnative' theme
 #
@@ -70,9 +70,11 @@ namespace eval ttk::theme::xpnative {
 		COMBOBOX 2 {{} 1}
 	    ttk::style element create Combobox.border vsapi \
 		COMBOBOX 4 {disabled 4 focus 3 active 2 {} 1}
+            ttk::style element create Combobox.rightdownarrow vsapi \
+                COMBOBOX 6 {disabled 4 pressed 3 active 2 {} 1}
 	    ttk::style layout TCombobox {
 		Combobox.border -sticky nswe -border 0 -children {
-		    Combobox.downarrow -side right -sticky ns
+		    Combobox.rightdownarrow -side right -sticky ns
 		    Combobox.padding -expand 1 -sticky nswe -children {
 			Combobox.focus -expand 1 -sticky nswe -children {
 			    Combobox.textarea -sticky nswe
@@ -80,6 +82,13 @@ namespace eval ttk::theme::xpnative {
 		    }
 		}
 	    }
+            ttk::style element create ComboboxPopdownFrame.background vsapi\
+                COMBOBOX 2
+            ttk::style layout ComboboxPopdownFrame {
+                ComboboxPopdownFrame.background -sticky news -border 1 -children {
+                    ComboboxPopdownFrame.padding -sticky news
+                }
+            }
 
             # EDIT EP_EDITBORDER_HVSCROLL
             ttk::style configure TSpinbox -padding {2 0 15 1}

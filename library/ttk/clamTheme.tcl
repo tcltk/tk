@@ -1,5 +1,5 @@
 #
-# $Id: clamTheme.tcl,v 1.8 2008/11/01 15:34:24 patthoyts Exp $
+# $Id: clamTheme.tcl,v 1.9 2008/11/29 00:43:48 patthoyts Exp $
 #
 # "Clam" theme.
 #
@@ -105,6 +105,8 @@ namespace eval ttk::theme::clam {
 				  readonly $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
 	    ;
+	ttk::style configure ComboboxPopdownFrame \
+	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox \
