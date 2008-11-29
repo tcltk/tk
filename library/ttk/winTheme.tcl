@@ -1,5 +1,5 @@
 #
-# $Id: winTheme.tcl,v 1.8 2008/11/01 15:34:24 patthoyts Exp $
+# $Id: winTheme.tcl,v 1.9 2008/11/29 00:43:48 patthoyts Exp $
 #
 # Settings for 'winnative' theme.
 #
@@ -44,6 +44,10 @@ namespace eval ttk::theme::winnative {
 	    -foreground	[list {readonly focus} SystemHighlightText] \
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
+
+	ttk::style element create ComboboxPopdownFrame.border from default
+	ttk::style configure ComboboxPopdownFrame \
+	    -borderwidth 1 -relief solid
 
         ttk::style configure TSpinbox -padding {2 0 16 0}
 

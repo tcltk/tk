@@ -1,5 +1,5 @@
 #
-# $Id: classicTheme.tcl,v 1.8 2008/11/01 15:34:24 patthoyts Exp $
+# $Id: classicTheme.tcl,v 1.9 2008/11/29 00:43:48 patthoyts Exp $
 #
 # "classic" Tk theme.
 #
@@ -70,6 +70,8 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TCombobox -padding 1
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
+	ttk::style configure ComboboxPopdownFrame \
+	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
