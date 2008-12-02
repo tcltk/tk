@@ -11,18 +11,18 @@
 
 2008-11-28  Alexandre Ferrieux 	<ferrieux@users.sourceforge.net>
 
-	* generic/tkCanvUtil.c	Millimeter patch. Fixes [1813597,2218964]
-	* generic/tkInt.h	by eliminating the functional redundancy
-	* generic/tkObj.c       and unnecessary loss of precision of the
-	* generic/tkText.c      {pixel,mm}ObjType tandem.
+	* generic/tkCanvUtil.c:	Millimeter patch. Fixes [1813597,2218964]
+	* generic/tkInt.h:	by eliminating the functional redundancy
+	* generic/tkObj.c:	and unnecessary loss of precision of the
+	* generic/tkText.c:	{pixel,mm}ObjType tandem.
 
 2008-11-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvLine.c:   Replace Tcl_SetResult(interp, NULL, ....)
-	* generic/tkEntry.c       calls with Tcl_ResetResult(interp)
+	* generic/tkCanvLine.c:	Replace Tcl_SetResult(interp, NULL, ....)
+	* generic/tkEntry.c:	calls with Tcl_ResetResult(interp)
 	* generic/tkMenu.c
 	* generic/tkOldConfig.c
-	* win/tkWinTest.c:  eliminate warning: unused variable 'tkwin'
+	* win/tkWinTest.c:	Eliminate warning: unused variable 'tkwin'
 
 2008-11-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -41,7 +41,7 @@
 2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl: [Bug 1939129,1991930] combobox dropdown
-	                            was drawn behind topmost toplevels.
+				    was drawn behind topmost toplevels.
 	* generic/tkCanvText.c:  Fixed up complaints from MSVC engendered
 	* generic/tkFont.c:      by the last commit. In particular replaced
 	* win/tkWinDraw.c:       round() which is a C99 function.
