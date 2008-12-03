@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.19 2008/11/16 17:14:16 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.20 2008/12/03 18:44:50 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -281,6 +281,8 @@ static const unsigned CoreEventMask
     | FocusChangeMask
     | VirtualEventMask
     | ActivateMask
+    | EnterWindowMask
+    | LeaveWindowMask
     ;
 
 static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
@@ -322,6 +324,14 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 	    break;
 	case DeactivateNotify:
 	    corePtr->state |= TTK_STATE_BACKGROUND;
+	    TtkRedisplayWidget(corePtr);
+	    break;
+	case LeaveNotify:
+	    corePtr->state &= ~TTK_STATE_HOVER;
+	    TtkRedisplayWidget(corePtr);
+	    break;
+	case EnterNotify:
+	    corePtr->state |= TTK_STATE_HOVER;
 	    TtkRedisplayWidget(corePtr);
 	    break;
 	case VirtualEvent:

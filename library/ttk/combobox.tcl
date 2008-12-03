@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.16 2008/11/29 00:43:48 patthoyts Exp $
+# $Id: combobox.tcl,v 1.17 2008/12/03 18:44:50 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -61,8 +61,6 @@ bind TCombobox <Double-ButtonPress-1> 	{ ttk::combobox::Press "2" %W %x %y }
 bind TCombobox <Triple-ButtonPress-1> 	{ ttk::combobox::Press "3" %W %x %y }
 bind TCombobox <B1-Motion>		{ ttk::combobox::Drag %W %x }
 bind TCombobox <Motion>			{ ttk::combobox::Motion %W %x %y }
-bind TCombobox <Enter> {%W instate !disabled {%W state active}}
-bind TCombobox <Leave> {%W state !active}
 
 bind TCombobox <MouseWheel> 	{ ttk::combobox::Scroll %W [expr {%D/-120}] }
 if {[tk windowingsystem] eq "x11"} {
