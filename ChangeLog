@@ -1,3 +1,10 @@
+2008-12-03  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkState.c, generic/ttk/ttkTheme.h,
+	generic/ttk/ttkWidget.c, doc/ttk_widget.n:
+	Add new "hover" state (patch from Pat Thoyts; needed
+	to support proper visual feedback on Vista).
+
 2008-11-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/altTheme.tcl:     Use a styled frame around the popdown
