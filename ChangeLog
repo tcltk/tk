@@ -1,9 +1,15 @@
+2008-12-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/ttk_button.n, doc/ttk_checkbutton.n, doc/ttk_menubutton.n: 
+	* doc/ttk_radiobutton.n: Added mention of the Toolbutton style to all
+	widgets that can sensibly make use of it.
+
 2008-12-03  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkState.c, generic/ttk/ttkTheme.h,
-	generic/ttk/ttkWidget.c, doc/ttk_widget.n:
-	Add new "hover" state (patch from Pat Thoyts; needed
-	to support proper visual feedback on Vista).
+	* generic/ttk/ttkWidget.c, doc/ttk_widget.n:
+	Add new "hover" state (patch from Pat Thoyts; needed to support proper
+	visual feedback on Vista).
 
 2008-11-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
