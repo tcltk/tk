@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.49 2008/11/05 23:29:58 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.50 2008/12/04 21:33:25 nijtmans Exp $
 
 library tk
 
@@ -516,9 +516,55 @@ declare 157 generic {
 	    const char **argv)
 }
 declare 158 generic {
-    int	TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
+    int TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
 	    Atom selection, Atom target, Tk_GetSelProc *proc,
 	    ClientData clientData)
+}
+declare 159 generic {
+    int TkTextGetIndex(Tcl_Interp *interp, struct TkText *textPtr,
+	    const char *string, struct TkTextIndex *indexPtr)
+}
+declare 160 generic {
+    int TkTextIndexBackBytes(const struct TkText *textPtr,
+	    const struct TkTextIndex *srcPtr, int count,
+	    struct TkTextIndex *dstPtr)
+}
+declare 161 generic {
+    int TkTextIndexForwBytes(const struct TkText *textPtr,
+	    const struct TkTextIndex *srcPtr, int count,
+	    struct TkTextIndex *dstPtr)
+}
+declare 162 generic {
+    struct TkTextIndex *TkTextMakeByteIndex(const TkTextBTree tree,
+	    const struct TkText *textPtr, int lineIndex,
+	    int byteIndex, struct TkTextIndex *indexPtr)
+}
+declare 163 generic {
+    int TkTextPrintIndex(const struct TkText *textPtr,
+	    const struct TkTextIndex *indexPtr, char *string)
+}
+declare 164 generic {
+    struct TkTextSegment *TkTextSetMark(struct TkText *textPtr,
+	    const char *name, struct TkTextIndex *indexPtr)
+}
+declare 165 generic {
+    int TkTextXviewCmd(struct TkText *textPtr, Tcl_Interp *interp,
+	    int objc, Tcl_Obj *const objv[])
+}
+declare 166 generic {
+    void TkTextChanged(struct TkSharedText *sharedTextPtr,
+	    struct TkText *textPtr, const struct TkTextIndex *index1Ptr,
+	    const struct TkTextIndex *index2Ptr)
+}
+declare 167 generic {
+    int	TkBTreeNumLines(TkTextBTree tree,
+	    const struct TkText *textPtr)
+}
+declare 168 generic {
+    void TkTextInsertDisplayProc(struct TkText *textPtr,
+	    struct TkTextDispChunk *chunkPtr, int x, int y,
+	    int height, int baseline, Display *display,
+	    Drawable dst, int screenY)
 }
 
 ##############################################################################

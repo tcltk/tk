@@ -1,3 +1,10 @@
+2008-12-04  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls:	Move 10 functions from tkText.h to
+	* generic/tkText.h:     stub table [Feature Request 220906]
+	* generic/tkStubInit.c (regenerated)
+	* generic/tkIntDecls.h (regenerated)
+
 2008-12-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/ttk_button.n, doc/ttk_checkbutton.n, doc/ttk_menubutton.n: 
