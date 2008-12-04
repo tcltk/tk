@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_menubutton.n,v 1.12 2008/09/23 13:36:57 dkf Exp $
+'\" RCS: @(#) $Id: ttk_menubutton.n,v 1.13 2008/12/04 15:47:22 dkf Exp $
 '\" 
 .so man.macros
 .TH ttk::menubutton n 8.5 Tk "Tk Themed Widget"
@@ -43,6 +43,10 @@ menubutton.
 Menubutton widgets support the standard 
 \fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR 
 methods.  No other widget methods are used.
+.SH "STANDARD STYLES"
+.PP
+\fBTtk::menubutton\fR widgets support the \fBToolbutton\fR style in all
+standard themes, which is useful for creating widgets for toolbars.
 .SH "SEE ALSO"
 ttk::widget(n), menu(n), menubutton(n)
 .SH "KEYWORDS"
