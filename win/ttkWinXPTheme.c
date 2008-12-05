@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.21 2008/11/01 15:34:24 patthoyts Exp $
+ * $Id: ttkWinXPTheme.c,v 1.22 2008/12/05 11:11:58 patthoyts Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -258,6 +258,7 @@ static Ttk_StateTable combobox_statemap[] = {
     { CBXS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { CBXS_PRESSED, 	TTK_STATE_PRESSED, 0 },
     { CBXS_HOT, 	TTK_STATE_ACTIVE, 0 },
+    { CBXS_HOT, 	TTK_STATE_HOVER, 0 },
     { CBXS_NORMAL, 	0, 0 }
 };
 
@@ -1175,8 +1176,12 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     XPThemeData *themeData;
     XPThemeProcs *procs;
     HINSTANCE hlibrary;
-    Ttk_Theme themePtr, parentPtr;
+    Ttk_Theme themePtr, parentPtr, vistaPtr;
     ElementInfo *infoPtr;
+    OSVERSIONINFO os;
+
+    os.dwOSVersionInfoSize = sizeof(os);
+    GetVersionEx(&os);
 
     procs = LoadXPThemeProcs(&hlibrary);
     if (!procs)
@@ -1203,6 +1208,18 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, themeData);
     Ttk_RegisterCleanup(interp, themeData, XPThemeDeleteProc);
     Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
+
+    /*
+     * Create the vista theme on suitable platform versions and set the theme
+     * enable function. The theme itself is defined in script.
+     */
+
+    if (os.dwPlatformId == VER_PLATFORM_WIN32_NT && os.dwMajorVersion > 5) {
+	vistaPtr = Ttk_CreateTheme(interp, "vista", themePtr);
+	if (vistaPtr) {
+	    Ttk_SetThemeEnabledProc(vistaPtr, XPThemeEnabled, themeData);
+	}
+    }
 
     /*
      * New elements:
