@@ -1,3 +1,12 @@
+2008-12-05  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvPs.c (Tk_PostscriptFont): Ensure that font sizes can
+	ever be negative; it triggers a really strange case that is definitely
+	not what is wanted. [Bug 2107938]
+	* library/mkpsenc.tcl: Corrected and improved generation of postscript
+	* library/prolog.ps:  prolog. Removed prolog.ps, which wasn't used and
+	was misleading.
+
 2008-12-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.decls:	Move 10 functions from tkText.h to
