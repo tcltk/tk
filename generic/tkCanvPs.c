@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.22 2008/12/05 10:27:50 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.23 2008/12/05 16:25:58 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -84,6 +84,8 @@ typedef struct TkPostscriptInfo {
 				 * standard prolog in the header. Generated in
 				 * library/mkpsenc.tcl, stored in the variable
 				 * ::tk::ps_preamable [sic]. */
+    Tk_Window tkwin;		/* Window to get font pixel/point transform
+				 * from. */
 } TkPostscriptInfo;
 
 /*
@@ -175,7 +177,7 @@ TkCanvPostscriptCmd(
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     Tcl_DString buffer;
-    char psenccmd[] = "::tk::ensure_psenc_is_loaded";
+    static const char *psenccmd = "::tk::ensure_psenc_is_loaded";
     int deltaX = 0, deltaY = 0;	/* Offset of lower-left corner of area to be
 				 * marked up, measured in canvas units from
 				 * the positioning point on the page (reflects
@@ -187,7 +189,7 @@ TkCanvPostscriptCmd(
      * process all the arguments to fill the data structure in.
      */
 
-    result = Tcl_EvalEx(interp,psenccmd,-1,TCL_EVAL_GLOBAL);
+    result = Tcl_EvalEx(interp, psenccmd, -1, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
         return result;
     }
@@ -215,6 +217,7 @@ TkCanvPostscriptCmd(
     psInfo.chan = NULL;
     psInfo.prepass = 0;
     psInfo.prolog = 1;
+    psInfo.tkwin = tkwin;
     Tcl_InitHashTable(&psInfo.fontTable, TCL_STRING_KEYS);
     result = Tk_ConfigureWidget(interp, tkwin, configSpecs, argc-2, argv+2,
 	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY);
@@ -758,7 +761,7 @@ Tk_PostscriptFont(
 
     Tcl_DStringInit(&ds);
     points = Tk_PostscriptFontName(tkfont, &ds);
-    sprintf(pointString, "%d", (points<0 ? -points : points));
+    sprintf(pointString, "%d", TkFontGetPoints(psInfoPtr->tkwin, points));
     Tcl_AppendResult(interp, "/", Tcl_DStringValue(&ds), " findfont ",
 	    pointString, " scalefont ", NULL);
     if (strncasecmp(Tcl_DStringValue(&ds), "Symbol", 7) != 0) {
