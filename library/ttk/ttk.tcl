@@ -1,5 +1,5 @@
 #
-# $Id: ttk.tcl,v 1.9 2008/11/01 15:34:24 patthoyts Exp $
+# $Id: ttk.tcl,v 1.10 2008/12/05 11:11:58 patthoyts Exp $
 #
 # Ttk widget set initialization script.
 #
@@ -124,16 +124,18 @@ proc ttk::LoadThemes {} {
     uplevel #0 [list source [file join $library defaults.tcl]] 
 
     set builtinThemes [style theme names]
-    foreach {theme script} {
+    foreach {theme scripts} {
 	classic 	classicTheme.tcl
 	alt 		altTheme.tcl
 	clam 		clamTheme.tcl
 	winnative	winTheme.tcl
-	xpnative	xpTheme.tcl
+	xpnative	{xpTheme.tcl vistaTheme.tcl}
 	aqua 		aquaTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
-	    uplevel #0 [list source [file join $library $script]]
+            foreach script $scripts {
+                uplevel #0 [list source [file join $library $script]]
+            }
 	}
     }
 }
@@ -151,17 +153,17 @@ ttk::LoadThemes; rename ::ttk::LoadThemes {}
 #
 
 proc ttk::DefaultTheme {} {
-    set preferred [list aqua xpnative winnative]
+    set preferred [list aqua vista xpnative winnative]
 
     set userTheme [option get . tkTheme TkTheme]
-    if {$userTheme != {} && ![catch {
+    if {$userTheme ne {} && ![catch {
 	uplevel #0 [list package require ttk::theme::$userTheme]
     }]} {
 	return $userTheme
     }
 
     foreach theme $preferred {
-	if {[package provide ttk::theme::$theme] != ""} {
+	if {[package provide ttk::theme::$theme] ne ""} {
 	    return $theme
 	}
     }
