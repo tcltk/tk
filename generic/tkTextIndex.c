@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.32 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.33 2008/12/05 09:33:12 patthoyts Exp $
  */
 
 #include "default.h"
@@ -382,7 +382,7 @@ TkTextMakePixelIndex(
 
 TkTextIndex *
 TkTextMakeByteIndex(
-    TkTextBTree tree,		/* Tree that lineIndex and byteIndex refer
+    const TkTextBTree tree,	/* Tree that lineIndex and byteIndex refer
 				 * to. */
     const TkText *textPtr,
     int lineIndex,		/* Index of desired line (0 means first line
