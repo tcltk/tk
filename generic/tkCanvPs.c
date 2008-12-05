@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.21 2008/11/01 16:14:30 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.22 2008/12/05 10:27:50 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -81,7 +81,9 @@ typedef struct TkPostscriptInfo {
 				 * pre-pass that collects font information, so
 				 * the Postscript generated isn't relevant. */
     int prolog;			/* Non-zero means output should contain the
-				 * file prolog.ps in the header. */
+				 * standard prolog in the header. Generated in
+				 * library/mkpsenc.tcl, stored in the variable
+				 * ::tk::ps_preamable [sic]. */
 } TkPostscriptInfo;
 
 /*
@@ -454,7 +456,7 @@ TkCanvPostscriptCmd(
 	 * Insert the prolog
 	 */
 
-	Tcl_AppendResult(interp, Tcl_GetVar(interp,"::tk::ps_preamable",
+	Tcl_AppendResult(interp, Tcl_GetVar(interp, "::tk::ps_preamable",
 		TCL_GLOBAL_ONLY), NULL);
 
 	if (psInfo.chan != NULL) {
@@ -727,7 +729,7 @@ Tk_PostscriptFont(
 
 	    if (Tcl_ListObjGetElements(interp, list, &objc, &objv) != TCL_OK
 		    || objc != 2
-		    || Tcl_GetString(objv[0])[0]=='\0'
+		    || Tcl_GetString(objv[0])[0] == '\0'
 		    || Tcl_GetDoubleFromObj(interp, objv[1], &size) != TCL_OK
 		    || size <= 0) {
 		Tcl_ResetResult(interp);
@@ -737,7 +739,7 @@ Tk_PostscriptFont(
 	    }
 
 	    fontname = Tcl_GetString(objv[0]);
-	    sprintf(pointString, "%d", (int)size);
+	    sprintf(pointString, "%d", (int) size);
 
 	    Tcl_AppendResult(interp, "/", fontname, " findfont ",
 		    pointString, " scalefont ", NULL);
@@ -756,7 +758,7 @@ Tk_PostscriptFont(
 
     Tcl_DStringInit(&ds);
     points = Tk_PostscriptFontName(tkfont, &ds);
-    sprintf(pointString, "%d", points);
+    sprintf(pointString, "%d", (points<0 ? -points : points));
     Tcl_AppendResult(interp, "/", Tcl_DStringValue(&ds), " findfont ",
 	    pointString, " scalefont ", NULL);
     if (strncasecmp(Tcl_DStringValue(&ds), "Symbol", 7) != 0) {
