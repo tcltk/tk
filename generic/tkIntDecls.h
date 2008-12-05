@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.40 2008/12/04 21:33:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.41 2008/12/05 15:51:31 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -993,7 +993,7 @@ EXTERN int		TkTextIndexForwBytes (const struct TkText * textPtr,
 #ifndef TkTextMakeByteIndex_TCL_DECLARED
 #define TkTextMakeByteIndex_TCL_DECLARED
 /* 162 */
-EXTERN struct TkTextIndex * TkTextMakeByteIndex (const TkTextBTree tree,
+EXTERN struct TkTextIndex * TkTextMakeByteIndex (TkTextBTree tree,
 				const struct TkText * textPtr, int lineIndex,
 				int byteIndex, struct TkTextIndex * indexPtr);
 #endif
@@ -1306,7 +1306,7 @@ typedef struct TkIntStubs {
     int (*tkTextGetIndex) (Tcl_Interp * interp, struct TkText * textPtr, const char * string, struct TkTextIndex * indexPtr); /* 159 */
     int (*tkTextIndexBackBytes) (const struct TkText * textPtr, const struct TkTextIndex * srcPtr, int count, struct TkTextIndex * dstPtr); /* 160 */
     int (*tkTextIndexForwBytes) (const struct TkText * textPtr, const struct TkTextIndex * srcPtr, int count, struct TkTextIndex * dstPtr); /* 161 */
-    struct TkTextIndex * (*tkTextMakeByteIndex) (const TkTextBTree tree, const struct TkText * textPtr, int lineIndex, int byteIndex, struct TkTextIndex * indexPtr); /* 162 */
+    struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText * textPtr, int lineIndex, int byteIndex, struct TkTextIndex * indexPtr); /* 162 */
     int (*tkTextPrintIndex) (const struct TkText * textPtr, const struct TkTextIndex * indexPtr, char * string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText * textPtr, const char * name, struct TkTextIndex * indexPtr); /* 164 */
     int (*tkTextXviewCmd) (struct TkText * textPtr, Tcl_Interp * interp, int objc, Tcl_Obj *const objv[]); /* 165 */
