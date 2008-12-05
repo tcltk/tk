@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.81 2008/10/18 14:22:22 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.82 2008/12/05 10:48:52 dkf Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -517,8 +517,8 @@ install-libraries: libraries
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR)/X11; \
 	    done;
 	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)";
-	@for i in $(ROOT_DIR)/library/*.tcl $(GENERIC_DIR)/prolog.ps \
-	        $(ROOT_DIR)/library/tclIndex $(UNIX_DIR)/tkAppInit.c; \
+	@for i in $(ROOT_DIR)/library/*.tcl $(ROOT_DIR)/library/tclIndex \
+		$(UNIX_DIR)/tkAppInit.c; \
 	    do \
 	    $(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR); \
 	    done;
