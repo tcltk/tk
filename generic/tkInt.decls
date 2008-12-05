@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.50 2008/12/04 21:33:25 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.51 2008/12/05 15:51:31 nijtmans Exp $
 
 library tk
 
@@ -535,7 +535,7 @@ declare 161 generic {
 	    struct TkTextIndex *dstPtr)
 }
 declare 162 generic {
-    struct TkTextIndex *TkTextMakeByteIndex(const TkTextBTree tree,
+    struct TkTextIndex *TkTextMakeByteIndex(TkTextBTree tree,
 	    const struct TkText *textPtr, int lineIndex,
 	    int byteIndex, struct TkTextIndex *indexPtr)
 }
