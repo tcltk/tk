@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.52 2008/11/12 16:38:13 patthoyts Exp $
+# RCS: @(#) $Id: text.test,v 1.53 2008/12/06 10:48:29 dkf Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -20,8 +20,7 @@ wm withdraw .
 wm minsize . 1 1
 wm positionfrom . user
 wm deiconify .
-
-
+
 test text-1.1 {configuration option: "autoseparators"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -782,7 +781,6 @@ test text-1.80 {configuration option: "wrap"} -setup {
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
-
 test text-1.81 {text options} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -813,6 +811,45 @@ test text-1.83 {text options} -setup {
 } -cleanup {
     destroy .t
 } -result {-yscrollcommand yScrollCommand ScrollCommand {} {test command}}
+test text-1.83 {configuration option: "insertunfocussed"} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t configure -insertunfocussed none
+    .t cget -insertunfocussed
+} -cleanup {
+    destroy .t
+} -result none
+test text-1.84 {configuration option: "insertunfocussed"} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t configure -insertunfocussed hollow
+    .t cget -insertunfocussed
+} -cleanup {
+    destroy .t
+} -result hollow
+test text-1.85 {configuration option: "insertunfocussed"} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t configure -insertunfocussed solid
+    .t cget -insertunfocussed
+} -cleanup {
+    destroy .t
+} -result solid
+test text-1.86 {configuration option: "insertunfocussed"} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -returnCodes error -body {
+    .t configure -insertunfocussed gorp
+} -cleanup {
+    destroy .t
+} -result {bad insertunfocussed "gorp": must be hollow, none, or solid}
 
 
 test text-2.1 {Tk_TextCmd procedure} -body {
@@ -843,7 +880,6 @@ test text-2.6 {Tk_TextCmd procedure} -body {
 } -cleanup {
     destroy .t
 } -result {2 red}
-
 test text-2.7 {Tk_TextCmd procedure} -constraints {
     win
 } -body {
@@ -871,7 +907,6 @@ test text-2.9 {Tk_TextCmd procedure} -constraints {
 } -cleanup {
     destroy .t
 } -result {raised}
-
 test text-2.10 {Tk_TextCmd procedure} -body {
     list [text .t] [winfo class .t]
 } -cleanup {
@@ -1249,7 +1284,6 @@ abcdefghijklm
 } -cleanup {
     destroy .t
 } -result {abcdefghijklm}
-
 test text-8.10 {TextWidgetCmd procedure, "delete" option} -setup {
     text .t
 } -body {
@@ -1346,7 +1380,6 @@ test text-8.17 {TextWidgetCmd procedure, "delete" option} -setup {
     destroy .t
 } -result {foo
 ghijklm}
-
 test text-8.18 {TextWidgetCmd procedure, "replace" option} -setup {
     text .t
 } -body {
@@ -1381,7 +1414,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -returnCodes ok -result {}
-
 test text-8.21 {TextWidgetCmd procedure, "replace" option with undo} -setup {
     text .t
 } -body {
@@ -1453,7 +1485,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result {1}
-
 test text-8.24 {TextWidgetCmd procedure, "replace" option with peers, undo} -setup {
     text .t
 } -body {
@@ -1596,7 +1627,6 @@ Line 7"
 !@#$%
 Line 7
 }
-
 test text-9.8 {TextWidgetCmd procedure, "get" option} -setup {
     text .t
 } -body {
@@ -1766,7 +1796,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result {5.5}
-
 test text-9.20 {TextWidgetCmd procedure, "get" option} -setup {
     text .t
 } -body {
@@ -1881,7 +1910,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result {5.1 5.1}
-
 test text-9.27 {TextWidgetCmd procedure, "get" option} -setup {
     text .t
 } -body {
@@ -2048,7 +2076,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result {29}
-
 test text-10.9 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
     .t insert 1.0 "Line 1
@@ -2105,7 +2132,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {bad text index "foo"}
-
 test text-10.13 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2155,7 +2181,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result {5}
-
 test text-10.16 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2498,7 +2523,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result {19}
-
 test text-10.30 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2986,7 +3010,6 @@ test text-14.6 {ConfigureText procedure} -setup {
     (while processing -tabs option)
     invoked from within
 ".t configure -tabs {30 foo}"}
-
 test text-14.7 {ConfigureText procedure} -setup {
     text .t
 } -body {
@@ -3109,7 +3132,6 @@ test text-14.17 {ConfigureText procedure} -body {
 } -cleanup {
     destroy .t .t2
 } -result {1234}
-
 test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3122,11 +3144,11 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 } -cleanup {
     destroy .top
 } -result {150x140+}
+# This test was failing Windows because the title bar on .t was a certain
+# minimum size and it was interfering with the size requested by the -setgrid.
+# The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
+# to the appropriate size.
 test text-14.19 {ConfigureText procedure} -setup {
-# This test was failing Windows because the title bar on .t
-# was a certain minimum size and it was interfering with the size
-# requested by the -setgrid.  The "overrideredirect" gets rid of the
-# titlebar so the toplevel can shrink to the appropriate size.
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
@@ -3139,12 +3161,11 @@ test text-14.19 {ConfigureText procedure} -setup {
 } -cleanup {
     destroy .top
 } -result {20x10+0+0}
-
+# This test was failing on Windows because the title bar on .t was a certain
+# minimum size and it was interfering with the size requested by the -setgrid.
+# The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
+# to the appropriate size.
 test text-14.20 {ConfigureText procedure} -setup {
-# This test was failing on Windows because the title bar on .t
-# was a certain minimum size and it was interfering with the size
-# requested by the -setgrid.  The "overrideredirect" gets rid of the
-# titlebar so the toplevel can shrink to the appropriate size.
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
@@ -3211,7 +3232,6 @@ test text-17.2 {TextCmdDeletedProc procedure, disabling -setgrid} -constraints {
    update
    set geom [wm geometry .top]
    set x [string range $geom 0 [string first + $geom]]
-
    rename .top.t {}
    update
    set geom [wm geometry .top]
@@ -3463,7 +3483,6 @@ test text-19.12 {DeleteChars procedure} -body {
 } -cleanup {
     destroy .top
 } -result {2.0 y}
-
 test text-19.13 {DeleteChars procedure, updates affecting topIndex} -setup {
     toplevel .top
     text .top.t -width 1 -height 10 -wrap char
@@ -3594,7 +3613,6 @@ test text-20.4 {TextFetchSelection procedure}  -setup {
     destroy .t
 } -result {0a..1b.2b.3b.4
 cj.0j.1j.2j.3j.4m}
-
 test text-20.5 {TextFetchSelection procedure, long selections} -setup {
     text .t -width 20 -height 10
     pack append . .t {top expand fill}
@@ -3642,7 +3660,6 @@ test text-21.2 {TkTextLostSelection procedure} -constraints win -setup {
 } -cleanup {
     destroy .t .t2
 } -result {1.2 3.3}
-
 test text-21.3 {TkTextLostSelection procedure} -body {
     text .t
     .t insert 1.0 "abcdef\nghijk\n1234"
@@ -3953,7 +3970,6 @@ test text-22.40 {TextSearchCmd procedure, regexp finds empty lines} -body {
 } -cleanup {
     destroy .t
 } -result {4.0}
-
 test text-22.41 {TextSearchCmd procedure, firstChar and lastChar} -setup {
     toplevel .top
     text .top.t -width 30 -height 10 -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -4032,7 +4048,6 @@ test text-22.46 {TextSearchCmd procedure, firstChar and lastChar} -setup {
 } -cleanup {
     destroy .top
 } -result {1.1}
-
 test text-22.47 {TextSearchCmd procedure, firstChar and lastChar} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
@@ -5679,7 +5694,6 @@ test text-24.10 {TextDumpCmd procedure, negative range} -body {
 } -cleanup {
     destroy .t
 } -result {}
-
 test text-24.11 {TextDumpCmd procedure, stop at begin-line} -body {
     pack [text .t]
     .t insert end "Line One\nLine Two\nLine Three\nLine Four"
@@ -5697,7 +5711,6 @@ test text-24.12 {TextDumpCmd procedure, span multiple lines} -body {
 } -result {text {One
 } 1.5 text {Line Two
 } 2.0 text {Line Three} 3.0}
-
 test text-24.13 {TextDumpCmd procedure, tags only} -body {
     pack [text .t]
     .t insert end "Line One\nLine Two\nLine Three\nLine Four"
@@ -5716,7 +5729,6 @@ test text-24.14 {TextDumpCmd procedure, tags only} -body {
 } -cleanup {
     destroy .t
 } -result {tagon x 2.0}
-
 test text-24.15 {TextDumpCmd procedure, tags only} -body {
     pack [text .t]
     .t insert end "Line One\nLine Two\nLine Three\nLine Four"
@@ -5735,7 +5747,6 @@ test text-24.16 {TextDumpCmd procedure, tags only} -body {
 } -cleanup {
     destroy .t
 } -result {tagon y 1.0 tagon x 2.0 tagoff x 2.8 tagoff y 5.0}
-
 test text-24.17 {TextDumpCmd procedure, marks only} -body {
     pack [text .t]
     .t insert end "Line One\nLine Two\nLine Three\nLine Four"
@@ -5784,7 +5795,6 @@ test text-24.20 {TextDumpCmd procedure, marks only} -body {
 } -cleanup {
     destroy .t
 } -result {mark current 1.0 mark insert 1.0 mark m 2.4 mark n 4.0 mark END 5.0}
-
 test text-24.21 {TextDumpCmd procedure, windows only} -setup {
     pack [text .t]
     .t insert end "Line One\nLine Two\nLine Three\nLine Four"
@@ -5809,7 +5819,6 @@ test text-24.22 {TextDumpCmd procedure, windows only} -setup {
 } -cleanup {
     destroy .t
 } -result {window {} 100.0}
-
 test text-24.23 {TextDumpCmd procedure, command script} -setup {
     set x {}
     pack [text .t]
@@ -5851,7 +5860,6 @@ test text-24.24 {TextDumpCmd procedure, command script} -setup {
     destroy .t
     rename Append {}
 } -result {mark 1.0 current mark 1.0 insert mark 2.4 m}
-
 test text-24.25 {TextDumpCmd procedure, unicode characters} -body {
     text .t
     .t insert 1.0 \xb1\xb1\xb1
@@ -6442,7 +6450,6 @@ test text-31.19 {peer widgets} -body {
 
 test text-32.1 {line heights on creation} -setup {
     text .t
-
     proc makeText {} {
         set w .g
         set font "Times 11"
@@ -6450,8 +6457,9 @@ test text-32.1 {line heights on creation} -setup {
         toplevel .g
         frame $w.f -highlightthickness 2 -borderwidth 2 -relief sunken
         set t $w.f.text
-        text $t -yscrollcommand "$w.scroll set" -setgrid true -font $font -width 70 \
-            -height 35 -wrap word -highlightthickness 0 -borderwidth 0
+        text $t -yscrollcommand "$w.scroll set" -setgrid true -font $font \
+	    -width 70 -height 35 -wrap word -highlightthickness 0 \
+	    -borderwidth 0
         pack $t -expand  yes -fill both
         scrollbar $w.scroll -command "$t yview"
         pack $w.scroll -side right -fill y
@@ -6666,7 +6674,6 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy .t-1
 } -result {}
-
 test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
     proc bgerror {m} {set ::my_error $m}
     set ::my_error {}
@@ -6680,7 +6687,6 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy $w
 } -result {}
-
 test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
     proc bgerror {m} {set ::my_error $m}
     set ::my_error {}
@@ -6694,7 +6700,11 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy $w
 } -result {}
-
+
 # cleanup
 cleanupTests
 return
+
+# Local Variables:
+# mode: tcl
+# End:

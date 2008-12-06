@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.16 2008/10/20 10:50:20 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDefault.h,v 1.17 2008/12/06 10:48:29 dkf Exp $
  */
 
 #ifndef _TKMACDEFAULT
@@ -504,6 +504,7 @@
 #define DEF_TEXT_INSERT_BD_MONO		"0"
 #define DEF_TEXT_INSERT_OFF_TIME	"300"
 #define DEF_TEXT_INSERT_ON_TIME		"600"
+#define DEF_TEXT_INSERT_UNFOCUSSED	"none"
 #define DEF_TEXT_INSERT_WIDTH		"1"
 #define DEF_TEXT_MAX_UNDO		"0"
 #define DEF_TEXT_PADX			"1"
