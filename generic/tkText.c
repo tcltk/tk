@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.85 2008/11/27 23:47:09 ferrieux Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.86 2008/12/06 10:48:29 dkf Exp $
  */
 
 #include "default.h"
@@ -72,6 +72,16 @@ static const char *const wrapStrings[] = {
 
 static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
+};
+
+/*
+ * The 'TkTextInsertUnfocussed' enum in tkText.h is used to define a type for
+ * the -insertunfocussed option of the Text widget. These values are used as
+ * indice into the string table below.
+ */
+
+static const char *const insertUnfocussedStrings[] = {
+    "hollow", "none", "solid", NULL
 };
 
 /*
@@ -177,6 +187,10 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-insertontime", "insertOnTime", "OnTime",
 	DEF_TEXT_INSERT_ON_TIME, -1, Tk_Offset(TkText, insertOnTime),
 	0, 0, 0},
+    {TK_OPTION_STRING_TABLE,
+	"-insertunfocussed", "insertUnfocussed", "InsertUnfocussed",
+	DEF_TEXT_INSERT_UNFOCUSSED, -1, Tk_Offset(TkText, insertUnfocussed),
+	0, (ClientData) insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_TEXT_INSERT_WIDTH, -1, Tk_Offset(TkText, insertWidth),
 	0, 0, 0},
@@ -2207,7 +2221,7 @@ ConfigureText(
 
     if (textPtr->flags & GOT_FOCUS) {
 	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
-	textPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+	textPtr->insertBlinkHandler = NULL;
 	TextBlinkProc(textPtr);
     }
 
@@ -2402,7 +2416,7 @@ TextEventProc(
 		}
 	    } else {
 		textPtr->flags &= ~(GOT_FOCUS | INSERT_ON);
-		textPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+		textPtr->insertBlinkHandler = NULL;
 	    }
 	    if (textPtr->inactiveSelBorder != textPtr->selBorder) {
 		TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr,
@@ -3427,6 +3441,16 @@ TextBlinkProc(
 
     if ((textPtr->state == TK_TEXT_STATE_DISABLED) ||
 	    !(textPtr->flags & GOT_FOCUS) || (textPtr->insertOffTime == 0)) {
+	if (!(textPtr->flags & GOT_FOCUS) &&
+		(textPtr->insertUnfocussed != TK_TEXT_INSERT_NOFOCUS_NONE)) {
+	    /*
+	     * The widget doesn't have the focus yet it is configured to
+	     * display the cursor when it doesn't have the focus. Act now!
+	     */
+
+	    textPtr->flags |= INSERT_ON;
+	    goto redrawInsert;
+	}
 	if ((textPtr->insertOffTime == 0) && !(textPtr->flags & INSERT_ON)) {
 	    /*
 	     * The widget was configured to have zero offtime while the

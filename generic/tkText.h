@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.35 2008/12/04 21:33:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.36 2008/12/06 10:48:29 dkf Exp $
  */
 
 #ifndef _TKTEXT
@@ -579,6 +579,17 @@ typedef struct TkSharedText {
 } TkSharedText;
 
 /*
+ * The following enum is used to define a type for the -insertunfocussed
+ * option of the Text widget.
+ */
+
+typedef enum {
+    TK_TEXT_INSERT_NOFOCUS_HOLLOW,
+    TK_TEXT_INSERT_NOFOCUS_NONE,
+    TK_TEXT_INSERT_NOFOCUS_SOLID
+} TkTextInsertUnfocussed;
+
+/*
  * A data structure of the following type is kept for each text widget that
  * currently exists for this process:
  */
@@ -710,7 +721,10 @@ typedef struct TkText {
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. */
     int insertWidth;		/* Total width of insert cursor. */
-    int insertBorderWidth;	/* Width of 3-D border around insert cursor. */
+    int insertBorderWidth;	/* Width of 3-D border around insert cursor */
+    TkTextInsertUnfocussed insertUnfocussed;
+				/* How to display the insert cursor when the
+				 * text widget does not have the focus. */
     int insertOnTime;		/* Number of milliseconds cursor should spend
 				 * in "on" state for each blink. */
     int insertOffTime;		/* Number of milliseconds cursor should spend
