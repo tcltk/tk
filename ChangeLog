@@ -1,3 +1,16 @@
+2008-12-06  Donal K. Fellows  <dkf@users.sf.net>
+
+	TIP #197 IMPLEMENTATION
+
+	* generic/tkText.c (insertUnfocussedStrings, optionSpecs):
+	* generic/tkText.h (TkText, TkTextInsertUnfocussed):
+	* doc/text.n, tests/text.test:
+	Added definitions/tests/docs for "-insertunfocussed" field.
+	* generic/tkTextMark.c (TkTextInsertDisplayProc):
+	* generic/tkText.c (TextBlinkProc):
+	Added user-controlledrendering of insertion cursor when focus is not
+	in the text widget.
+
 2008-12-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/ttk.tcl:        Added vista theme to iron out the visual
