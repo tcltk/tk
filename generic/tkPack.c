@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.31 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.32 2008/12/07 16:35:44 das Exp $
  */
 
 #include "tkInt.h"
@@ -893,9 +893,11 @@ XExpansion(
 	childWidth = Tk_ReqWidth(slavePtr->tkwin) + slavePtr->doubleBw
 		+ slavePtr->padX + slavePtr->iPadX;
 	if ((slavePtr->side == TOP) || (slavePtr->side == BOTTOM)) {
-	    curExpand = (cavityWidth - childWidth)/numExpand;
-	    if (curExpand < minExpand) {
-		minExpand = curExpand;
+	    if (numExpand) {
+		curExpand = (cavityWidth - childWidth)/numExpand;
+		if (curExpand < minExpand) {
+		    minExpand = curExpand;
+		}
 	    }
 	} else {
 	    cavityWidth -= childWidth;
@@ -904,9 +906,11 @@ XExpansion(
 	    }
 	}
     }
-    curExpand = cavityWidth/numExpand;
-    if (curExpand < minExpand) {
-	minExpand = curExpand;
+    if (numExpand) {
+	curExpand = cavityWidth/numExpand;
+	if (curExpand < minExpand) {
+	    minExpand = curExpand;
+	}
     }
     return (minExpand < 0) ? 0 : minExpand;
 }
@@ -948,9 +952,11 @@ YExpansion(
 	childHeight = Tk_ReqHeight(slavePtr->tkwin) + slavePtr->doubleBw
 		+ slavePtr->padY + slavePtr->iPadY;
 	if ((slavePtr->side == LEFT) || (slavePtr->side == RIGHT)) {
-	    curExpand = (cavityHeight - childHeight)/numExpand;
-	    if (curExpand < minExpand) {
-		minExpand = curExpand;
+	    if (numExpand) {
+		curExpand = (cavityHeight - childHeight)/numExpand;
+		if (curExpand < minExpand) {
+		    minExpand = curExpand;
+		}
 	    }
 	} else {
 	    cavityHeight -= childHeight;
@@ -959,9 +965,11 @@ YExpansion(
 	    }
 	}
     }
-    curExpand = cavityHeight/numExpand;
-    if (curExpand < minExpand) {
-	minExpand = curExpand;
+    if (numExpand) {
+	curExpand = cavityHeight/numExpand;
+	if (curExpand < minExpand) {
+	    minExpand = curExpand;
+	}
     }
     return (minExpand < 0) ? 0 : minExpand;
 }
