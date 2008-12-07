@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.50 2008/11/22 20:05:32 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.51 2008/12/07 16:34:12 das Exp $
  */
 
 #include "tkInt.h"
@@ -2675,7 +2675,7 @@ Tk_CharBbox(
 {
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
-    int i, x, w;
+    int i, x = 0, w;
     Tk_Font tkfont;
     TkFont *fontPtr;
     const char *end;
