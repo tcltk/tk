@@ -1,12 +1,7 @@
 #
-# $Id: combobox.tcl,v 1.17 2008/12/03 18:44:50 jenglish Exp $
+# $Id: combobox.tcl,v 1.18 2008/12/07 21:24:12 jenglish Exp $
 #
 # Combobox bindings.
-#
-# Each combobox $cb has a child $cb.popdown, which contains
-# a listbox $cb.popdown.l and a scrollbar.  The listbox -listvariable
-# is set to a namespace variable, which is used to synchronize the
-# combobox values with the listbox values.
 #
 # <<NOTE-WM-TRANSIENT>>:
 #
@@ -62,11 +57,7 @@ bind TCombobox <Triple-ButtonPress-1> 	{ ttk::combobox::Press "3" %W %x %y }
 bind TCombobox <B1-Motion>		{ ttk::combobox::Drag %W %x }
 bind TCombobox <Motion>			{ ttk::combobox::Motion %W %x %y }
 
-bind TCombobox <MouseWheel> 	{ ttk::combobox::Scroll %W [expr {%D/-120}] }
-if {[tk windowingsystem] eq "x11"} {
-    bind TCombobox <ButtonPress-4>	{ ttk::combobox::Scroll %W -1 }
-    bind TCombobox <ButtonPress-5>	{ ttk::combobox::Scroll %W  1 }
-}
+ttk::bindMouseWheel TCombobox [list ttk::combobox::Scroll %W]
 
 bind TCombobox <<TraverseIn>> 		{ ttk::combobox::TraverseIn %W }
 
@@ -158,7 +149,7 @@ proc ttk::combobox::Drag {w x}  {
 #
 proc ttk::combobox::Motion {w x y} {
     if {   [$w identify $x $y] eq "textarea"
-        && [$w instate {!readonly !disabled}] 
+        && [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
@@ -324,6 +315,7 @@ proc ttk::combobox::PopdownToplevel {w} {
 	win32 {
 	    $w configure -relief flat -borderwidth 0
 	    wm overrideredirect $w true
+	    wm attributes $w -topmost 1
 	}
 	aqua {
 	    $w configure -relief solid -borderwidth 0
