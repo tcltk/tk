@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.22 2008/05/04 17:17:33 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.23 2008/12/07 16:29:38 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -700,12 +700,13 @@ static void SeparatorElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     Rect bounds = BoxToRect(d, b);
-    ThemeDrawState drawState = Ttk_StateTableLookup(ThemeStateTable, state);
+    ThemeDrawState drawState;
 
     /*
      * DrawThemeSeparator only supports kThemeStateActive / kThemeStateInactive
     */
     state &= TTK_STATE_BACKGROUND;
+    drawState = Ttk_StateTableLookup(ThemeStateTable, state);
     BEGIN_DRAWING(d)
     ChkErr(DrawThemeSeparator, &bounds, drawState);
     END_DRAWING
