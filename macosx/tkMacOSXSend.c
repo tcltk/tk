@@ -30,7 +30,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.11 2008/10/17 23:18:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXSend.c,v 1.12 2008/12/07 16:36:26 das Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -256,7 +256,7 @@ Tk_SetAppName(
     Tcl_IncrRefCount(resultObjPtr);
     for (i = 0; ; ) {
 	result = Tcl_ListObjIndex(NULL, resultObjPtr, i, &interpNamePtr);
-	if (interpNamePtr == NULL) {
+	if (result != TCL_OK || interpNamePtr == NULL) {
 	    break;
 	}
 	interpName = Tcl_GetString(interpNamePtr);
@@ -329,10 +329,10 @@ Tk_SendObjCmd(
 {
     const char *const sendOptions[] = {"-async", "-displayof", "-", NULL};
     char *stringRep, *destName;
-    int async = 0;
+    /*int async = 0;*/
     int i, index, firstArg;
     RegisteredInterp *riPtr;
-    Tcl_Obj *resultPtr, *listObjPtr;
+    Tcl_Obj *listObjPtr;
     int result = TCL_OK;
 
     for (i = 1; i < (objc - 1); ) {
@@ -343,7 +343,7 @@ Tk_SendObjCmd(
 		return TCL_ERROR;
 	    }
 	    if (index == 0) {
-		async = 1;
+		/*async = 1;*/
 		i++;
 	    } else if (index == 1) {
 		i += 2;
@@ -363,8 +363,6 @@ Tk_SendObjCmd(
 
     destName = Tcl_GetString(objv[i]);
     firstArg = i + 1;
-
-    resultPtr = Tcl_GetObjResult(interp);
 
     /*
      * See if the target interpreter is local. If so, execute the command
