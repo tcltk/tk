@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.24 2008/12/07 18:42:55 jenglish Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.25 2008/12/07 21:56:37 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -473,13 +473,6 @@ static Ttk_ElementSpec ComboboxElementSpec = {
 };
 
 /*----------------------------------------------------------------------
- * +++ DrawThemeTrack-based elements --
- * Progress bars and scales. (See also: <<NOTE-TRACKS>>)
- */
-
-static Ttk_StateTable ThemeTrackEnableTable[] = {
-    { kThemeTrackDisabled, TTK_STATE_DISABLED, 0 },
-    { kThemeTrackInactive, TTK_STATE_BACKGROUND, 0 },
  * +++ Spinbuttons.
  *
  * From Apple HIG, part III, section "Controls", "The Stepper Control":
@@ -530,6 +523,13 @@ static Ttk_ElementSpec SpinButtonElementSpec = {
 
 
 /*----------------------------------------------------------------------
+ * +++ DrawThemeTrack-based elements --
+ * Progress bars and scales. (See also: <<NOTE-TRACKS>>)
+ */
+
+static Ttk_StateTable ThemeTrackEnableTable[] = {
+    { kThemeTrackDisabled, TTK_STATE_DISABLED, 0 },
+    { kThemeTrackInactive, TTK_STATE_BACKGROUND, 0 },
     { kThemeTrackActive, 0, 0 }
     /* { kThemeTrackNothingToScroll, ?, ? }, */
 };
