@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.41 2008/12/07 16:34:12 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.42 2008/12/07 16:36:26 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -135,7 +135,6 @@ Tk_ChooseColorObjCmd(
     Tk_Window parent, tkwin = clientData;
     const char *title;
     int i, srcRead, dstWrote;
-    CMError cmerr;
     CMProfileRef prof;
     NColorPickerInfo cpinfo;
     static RGBColor color = {0xffff, 0xffff, 0xffff};
@@ -196,7 +195,7 @@ Tk_ChooseColorObjCmd(
 	}
     }
 
-    cmerr = CMGetDefaultProfileBySpace(cmRGBData, &prof);
+    ChkErr(CMGetDefaultProfileBySpace, cmRGBData, &prof);
     cpinfo.theColor.profile = prof;
     cpinfo.dstProfile = prof;
     cpinfo.flags = kColorPickerDialogIsMoveable | kColorPickerDialogIsModal;
@@ -209,7 +208,7 @@ Tk_ChooseColorObjCmd(
     TkMacOSXTrackingLoop(1);
     err = ChkErr(NPickColor, &cpinfo);
     TkMacOSXTrackingLoop(0);
-    cmerr = CMCloseProfile(prof);
+    ChkErr(CMCloseProfile, prof);
     if ((err == noErr) && (cpinfo.newColorChosen != 0)) {
 	char colorstr[8];
 
@@ -1599,7 +1598,6 @@ Tk_MessageBoxObjCmd(
 	 * we do this here.
 	 */
 
-	str = Tcl_GetString(objv[indexDefaultOption + 1]);
 	if (Tcl_GetIndexFromObj(interp, objv[indexDefaultOption + 1],
 		movableButtonStrings, "value", TCL_EXACT, &defaultButtonIndex)
 		!= TCL_OK) {

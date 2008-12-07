@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.19 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.20 2008/12/07 16:36:26 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -446,7 +446,7 @@ void
 TkpComputeMenuButtonGeometry(
     register TkMenuButton *mbPtr)	/* Widget record for menu button. */
 {
-    int width, height, mm, pixels;
+    int width, height;
     int hasImageOrBitmap = 0;
 
     mbPtr->inset = mbPtr->highlightWidth + mbPtr->borderWidth;
@@ -490,8 +490,6 @@ TkpComputeMenuButtonGeometry(
 	width += TK_POPUP_OFFSET;
     }
     if (mbPtr->indicatorOn) {
-	mm = WidthMMOfScreen(Tk_Screen(mbPtr->tkwin));
-	pixels = WidthOfScreen(Tk_Screen(mbPtr->tkwin));
 	mbPtr->indicatorHeight = kTriangleHeight;
 	mbPtr->indicatorWidth = kTriangleWidth + kTriangleMargin;
 	width += mbPtr->indicatorWidth;
