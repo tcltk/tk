@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.12 2008/05/23 20:20:05 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.13 2008/12/07 16:34:56 das Exp $
  */
 
 #include <string.h>
@@ -733,7 +733,7 @@ Ttk_LayoutTemplate Ttk_BuildLayoutTemplate(Ttk_LayoutSpec spec)
 	    last = node;
 	}
 
-	if (spec->opcode & _TTK_CHILDREN) {
+	if (spec->opcode & _TTK_CHILDREN && last) {
 	    int depth = 1;
 	    last->child = Ttk_BuildLayoutTemplate(spec+1);
 
