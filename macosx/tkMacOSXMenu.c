@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.47 2008/12/07 16:30:09 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.48 2008/12/07 16:36:26 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -3194,8 +3194,8 @@ TkpComputeStandardMenuGeometry(
 	    &activeBorderWidth);
     x = y = borderWidth;
     indicatorSpace = labelWidth = accelWidth = maxAccelTextWidth = 0;
-    windowHeight = windowWidth = maxWidth = lastColumnBreak = 0;
-    maxModifierWidth = nonAccelMargin = maxNonAccelMargin = 0;
+    windowHeight = maxWidth = lastColumnBreak = 0;
+    maxModifierWidth = maxNonAccelMargin = 0;
     maxEntryWithAccelWidth = maxEntryWithoutAccelWidth = 0;
     maxIndicatorSpace = 0;
 
@@ -3265,7 +3265,7 @@ TkpComputeStandardMenuGeometry(
 	    lastColumnBreak = i;
 	    y = borderWidth;
 	}
-	geometryPtr = (EntryGeometry *) mePtr->platformEntryData;
+	/*geometryPtr = (EntryGeometry *) mePtr->platformEntryData;*/ /* dead code */
 
 	if (mePtr->type == SEPARATOR_ENTRY) {
 	    GetMenuSeparatorGeometry(menuPtr, mePtr, tkfont,
