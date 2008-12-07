@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.20 2007/11/09 07:36:45 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2.2.21 2008/12/07 16:45:44 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -490,7 +490,7 @@ TkpDisplayButton(
 
 	    Tk_Draw3DRectangle(tkwin, pixmap, dpPtr->border, inset, inset,
 		    Tk_Width(tkwin) - 2*inset, Tk_Height(tkwin) - 2*inset,
-		    butPtr->borderWidth, dpPtr->relief);
+		    borderWidth, dpPtr->relief);
 	}
     }
     if (portChanged) {
