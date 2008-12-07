@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.36.2.4 2008/12/07 16:48:00 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.36.2.5 2008/12/07 16:57:44 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -315,7 +315,7 @@ Tk_GetOpenFileObjCmd(
 	    }
 	    break;
 	case OPEN_INITFILE:
-	    initialFile = Tcl_GetString(objv[i + 1]);
+	    initialFile = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
 	    /* empty strings should be like no selection given */
 	    if (choiceLen == 0) {
 		initialFile = NULL;
@@ -376,7 +376,8 @@ Tk_GetOpenFileObjCmd(
 	while (filterPtr && i-- > 0) {
 	    filterPtr = filterPtr->next;
 	}
-	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), filterPtr->name, 0);
+	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), filterPtr ?
+		filterPtr->name : "", 0);
     }
 
   end:
