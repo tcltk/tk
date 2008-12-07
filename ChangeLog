@@ -6,6 +6,9 @@
 	tests/ttk/spinbox.test: Moved most spinbox "business logic"
 	out of ttkEntry.c into Tcl bindings.
 	* library/ttk/clamTheme.tcl: Minor spinbox appearance improvements.
+	* library/ttk/combobox.tcl, library/ttk/utils.tcl:
+	Factor out ttk::bindMouseWheel procedure.
+	* library/ttk/spinbox.tcl: Add cross-platform MouseWheel bindings.
 
 2008-12-06  Donal K. Fellows  <dkf@users.sf.net>
 
