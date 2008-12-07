@@ -1,3 +1,12 @@
+2008-12-07  Joe English  <jenglish@users.sourceforge.net>
+
+	* macosx/ttkMacOSXTheme.c: Add native aqua elements for
+	ttk::spinbox [Bug 2219588]
+	* generic/ttk/ttkEntry.c, library/ttk/spinbox.tcl,
+	tests/ttk/spinbox.test: Moved most spinbox "business logic"
+	out of ttkEntry.c into Tcl bindings.
+	* library/ttk/clamTheme.tcl: Minor spinbox appearance improvements.
+
 2008-12-06  Donal K. Fellows  <dkf@users.sf.net>
 
 	TIP #197 IMPLEMENTATION
