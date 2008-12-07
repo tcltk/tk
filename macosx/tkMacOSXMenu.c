@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.46 2008/10/27 11:55:44 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.47 2008/12/07 16:30:09 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -4121,12 +4121,8 @@ MenuDefProc(
 
     menuID = GetMenuID(menu);
     commandEntryPtr = Tcl_FindHashEntry(&commandTable, (char*)(intptr_t)menuID);
-
-    if (commandEntryPtr) {
-	menuPtr = Tcl_GetHashValue(commandEntryPtr);
-    } else {
-	menuPtr = NULL;
-    }
+    if (!commandEntryPtr) return;
+    menuPtr = Tcl_GetHashValue(commandEntryPtr);
 
     switch (message) {
     case kMenuInitMsg:
