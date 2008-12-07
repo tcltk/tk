@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.79 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.79.2.1 2008/12/07 16:48:00 das Exp $
  */
 
 #include "default.h"
@@ -2653,7 +2653,7 @@ TextPushUndoAction(
 
     Tcl_Obj *seeInsertObj = Tcl_NewObj();
     Tcl_Obj *markSet1InsertObj = Tcl_NewObj();
-    Tcl_Obj *markSet2InsertObj = Tcl_NewObj();
+    Tcl_Obj *markSet2InsertObj = NULL;
     Tcl_Obj *insertCmdObj = Tcl_NewObj();
     Tcl_Obj *deleteCmdObj = Tcl_NewObj();
 
