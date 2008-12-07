@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.28 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.29 2008/12/07 16:36:26 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -562,7 +562,8 @@ ThumbActionProc(
 	    GetControlReference(theControl);
     MacScrollbar *macScrollPtr = (MacScrollbar *) scrollPtr;
     Tcl_DString cmdString;
-    int origValue, variant;
+    /*int origValue;*/ /* dead code */
+    int variant;
     short trackBarSize;
     double oldFirstFraction, newFirstFraction;
     char valueString[40];
@@ -577,7 +578,7 @@ ThumbActionProc(
     }
 
     Tcl_DStringInit(&cmdString);
-    origValue = GetControl32BitValue(macScrollPtr->sbHandle);
+    /*origValue = GetControl32BitValue(macScrollPtr->sbHandle);*/ /* dead code */
     GetControlBounds(macScrollPtr->sbHandle, &trackRect);
 
     if (scrollPtr->vertical) {
@@ -789,7 +790,7 @@ ScrollbarBindProc(
 
 	    mouseDownPoint.h = where.h;
 	    mouseDownPoint.v = where.v;
-	    part = HandleControlClick(macScrollPtr->sbHandle, where,
+	    HandleControlClick(macScrollPtr->sbHandle, where,
 		    TkMacOSXModifierState(), thumbActionProc);
 	} else if (part == kAppearancePartIndicator) {
 	    /*

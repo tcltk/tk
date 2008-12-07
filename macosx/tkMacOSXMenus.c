@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.22 2008/10/05 18:22:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.23 2008/12/07 16:36:26 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -376,7 +376,7 @@ GenerateEditEvent(
 
     XQueryPointer(NULL, None, NULL, NULL,
 	    &event.x_root, &event.y_root, &x, &y, &event.state);
-    tkwin = Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
+    Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
     event.same_screen = true;
 
     switch (flag) {
