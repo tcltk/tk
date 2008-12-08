@@ -27,7 +27,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.25 2008/12/07 21:56:37 das Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.26 2008/12/08 00:10:36 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -486,10 +486,11 @@ static void SpinButtonElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SInt32 s;
-    GetThemeMetric(kThemeMetricLittleArrowsWidth, &s); *widthPtr = s;
-    GetThemeMetric(kThemeMetricLittleArrowsHeight, &s); *heightPtr = s;
-    *widthPtr += Ttk_PaddingWidth(SpinbuttonMargins);
-    *heightPtr += Ttk_PaddingHeight(SpinbuttonMargins);
+
+    ChkErr(GetThemeMetric, kThemeMetricLittleArrowsWidth, &s);
+    *widthPtr = s + Ttk_PaddingWidth(SpinbuttonMargins);
+    ChkErr(GetThemeMetric, kThemeMetricLittleArrowsHeight, &s);
+    *heightPtr = s + Ttk_PaddingHeight(SpinbuttonMargins);
 }
 
 static void SpinButtonElementDraw(
@@ -508,8 +509,8 @@ static void SpinButtonElementDraw(
     info.adornment = kThemeAdornmentNone;
 
     BEGIN_DRAWING(d)
-    DrawThemeButton(
-	&bounds, kThemeIncDecButton, &info, NULL, NULL/*DontErase*/, NULL, 0);
+    ChkErr(DrawThemeButton,
+	&bounds, kThemeIncDecButton, &info, NULL, NULL, NULL, 0);
     END_DRAWING
 }
 
@@ -953,8 +954,11 @@ static void DisclosureElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SInt32 s;
-    GetThemeMetric(kThemeMetricDisclosureTriangleWidth, &s); *widthPtr = s;
-    GetThemeMetric(kThemeMetricDisclosureTriangleHeight, &s); *heightPtr = s;
+
+    ChkErr(GetThemeMetric, kThemeMetricDisclosureTriangleWidth, &s);
+    *widthPtr = s;
+    ChkErr(GetThemeMetric, kThemeMetricDisclosureTriangleHeight, &s);
+    *heightPtr = s;
 }
 
 static void DisclosureElementDraw(
