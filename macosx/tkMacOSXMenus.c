@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.23 2008/12/07 16:36:26 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.24 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -102,6 +102,7 @@ TkMacOSXHandleMenuSelect(
     Window window;
     TkDisplay *dispPtr;
     Tcl_CmdInfo dummy;
+    int code;
 
     if (theItem == 0) {
 	TkMacOSXClearMenubarActive();
@@ -116,9 +117,10 @@ TkMacOSXHandleMenuSelect(
 		Tcl_GetCommandInfo(gInterp, "tkAboutDialog", &dummy) == 0) {
 		TkAboutDlg();
 	    } else {
-		if (Tcl_EvalEx(gInterp, "tkAboutDialog", -1,
-			TCL_EVAL_GLOBAL) != TCL_OK) {
-		    Tcl_BackgroundError(gInterp);
+		code = Tcl_EvalEx(gInterp, "tkAboutDialog", -1,
+			TCL_EVAL_GLOBAL);
+		if (code != TCL_OK) {
+		    Tcl_BackgroundException(gInterp, code);
 		}
 		Tcl_ResetResult(gInterp);
 	    }
@@ -138,8 +140,9 @@ TkMacOSXHandleMenuSelect(
 		    Tcl_GetStringFromObj(path, &len);
 		    if (len) {
 			Tcl_IncrRefCount(path);
-			if (Tcl_FSEvalFile(gInterp, path) == TCL_ERROR) {
-			    Tcl_BackgroundError(gInterp);
+			code = Tcl_FSEvalFile(gInterp, path);
+			if (code != TCL_OK) {
+			    Tcl_BackgroundException(gInterp, code);
 			}
 			Tcl_DecrRefCount(path);
 		    }
@@ -153,8 +156,9 @@ TkMacOSXHandleMenuSelect(
 
 		if (path) {
 		    Tcl_IncrRefCount(path);
-		    if (Tcl_FSEvalFile(gInterp, path) == TCL_ERROR) {
-			Tcl_BackgroundError(gInterp);
+		    code = Tcl_FSEvalFile(gInterp, path);
+		    if (code != TCL_OK) {
+			Tcl_BackgroundException(gInterp, code);
 		    }
 		    Tcl_DecrRefCount(path);
 		    Tcl_ResetResult(gInterp);

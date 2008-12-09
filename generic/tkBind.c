@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.50 2008/11/25 11:19:03 dkf Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.51 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -1775,7 +1775,7 @@ Tk_BindEvent(
 		break;
 	    } else {
 		Tcl_AddErrorInfo(interp, "\n    (command bound to event)");
-		Tcl_BackgroundError(interp);
+		Tcl_BackgroundException(interp, code);
 		break;
 	    }
 	}
@@ -2663,12 +2663,14 @@ ChangeScreen(
 {
     Tcl_Obj *cmdObj = Tcl_ObjPrintf("::tk::ScreenChanged %s.%d",
 	    dispName, screenIndex);
+    int code;
 
     Tcl_IncrRefCount(cmdObj);
-    if (Tcl_GlobalEvalObj(interp, cmdObj) != TCL_OK) {
+    code = Tcl_GlobalEvalObj(interp, cmdObj);
+    if (code != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (changing screen in event binding)");
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, code);
     }
     Tcl_DecrRefCount(cmdObj);
 }

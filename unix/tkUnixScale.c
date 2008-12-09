@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScale.c,v 1.13 2007/12/13 15:28:51 dgp Exp $
+ * RCS: @(#) $Id: tkUnixScale.c,v 1.14 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -557,7 +557,7 @@ TkpDisplayScale(
 		(char *) NULL);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_Release((ClientData) interp);
     }

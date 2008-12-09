@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.66 2008/11/18 23:49:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.67 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkUnixInt.h"
@@ -6086,11 +6086,10 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve((ClientData) interp);
 	    result = Tcl_GlobalEval(interp, protPtr->command);
 	    if (result != TCL_OK) {
-		Tcl_AddErrorInfo(interp, "\n    (command for \"");
-		Tcl_AddErrorInfo(interp, protocolName);
-		Tcl_AddErrorInfo(interp,
-			"\" window manager protocol)");
-		Tcl_BackgroundError(interp);
+		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+			"\n    (command for \"%s\" window manager protocol)",
+			protocolName));
+		Tcl_BackgroundException(interp, result);
 	    }
 	    Tcl_Release((ClientData) interp);
 	    Tcl_Release((ClientData) protPtr);

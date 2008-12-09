@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.71 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.72 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -6063,7 +6063,7 @@ GetXView(
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (horizontal scrolling command executed by text)");
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, code);
 	}
     }
 }
@@ -6345,7 +6345,7 @@ GetYView(
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (vertical scrolling command executed by text)");
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, code);
 	}
     }
 }

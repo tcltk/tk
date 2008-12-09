@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.53 2008/12/07 16:34:12 das Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.54 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "default.h"
@@ -3276,7 +3276,7 @@ ListboxUpdateVScrollbar(
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (vertical scrolling command executed by listbox)");
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, result);
     }
     Tcl_Release(interp);
 }
@@ -3341,7 +3341,7 @@ ListboxUpdateHScrollbar(
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (horizontal scrolling command executed by listbox)");
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, result);
     }
     Tcl_Release(interp);
 }
