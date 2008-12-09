@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.21 2008/11/26 15:56:37 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.22 2008/12/09 23:02:17 dkf Exp $
  */
 
 #include "default.h"
@@ -364,8 +364,8 @@ GetMenuIndicatorGeometry(
     } else {
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 		&borderWidth);
-        *heightPtr = 0;
-        *widthPtr = borderWidth;
+	*heightPtr = 0;
+	*widthPtr = borderWidth;
     }
 }
 
@@ -506,7 +506,7 @@ DrawMenuEntryAccelerator(
 	    &activeBorderWidth);
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
     	points[0].x = x + width - borderWidth - activeBorderWidth
-	        - CASCADE_ARROW_WIDTH;
+		- CASCADE_ARROW_WIDTH;
     	points[0].y = y + (height - CASCADE_ARROW_HEIGHT)/2;
     	points[1].x = points[0].x;
     	points[1].y = points[0].y + CASCADE_ARROW_HEIGHT;
@@ -519,7 +519,7 @@ DrawMenuEntryAccelerator(
     } else if (mePtr->accelPtr != NULL) {
 	char *accel = Tcl_GetString(mePtr->accelPtr);
 	int left = x + mePtr->labelWidth + activeBorderWidth
-	        + mePtr->indicatorSpace;
+		+ mePtr->indicatorSpace;
 
 	if (menuPtr->menuType == MENUBAR) {
 	    left += 5;
@@ -1085,7 +1085,7 @@ TkpComputeMenubarGeometry(
 		    x = borderWidth;
 		    for (j = lastRowBreak; j < i; j++) {
 			menuPtr->entries[j]->y = y + currentRowHeight
-			        - menuPtr->entries[j]->height;
+				- menuPtr->entries[j]->height;
 			menuPtr->entries[j]->x = x;
 			x += menuPtr->entries[j]->width;
 		    }
@@ -1259,7 +1259,7 @@ TkpInitializeMenuBindings(
 
 static void
 SetHelpMenu(
-     TkMenu *menuPtr)		/* The menu we are checking */
+    TkMenu *menuPtr)		/* The menu we are checking */
 {
     TkMenuEntry *cascadeEntryPtr;
 
@@ -1305,19 +1305,19 @@ SetHelpMenu(
 
 void
 TkpDrawMenuEntry(
-    TkMenuEntry *mePtr,		    /* The entry to draw */
-    Drawable d,			    /* What to draw into */
-    Tk_Font tkfont,		    /* Precalculated font for menu */
+    TkMenuEntry *mePtr,		/* The entry to draw */
+    Drawable d,			/* What to draw into */
+    Tk_Font tkfont,		/* Precalculated font for menu */
     const Tk_FontMetrics *menuMetricsPtr,
-				    /* Precalculated metrics for menu */
-    int x,			    /* X-coordinate of topleft of entry */
-    int y,			    /* Y-coordinate of topleft of entry */
-    int width,			    /* Width of the entry rectangle */
-    int height,			    /* Height of the current rectangle */
-    int strictMotif,		    /* Boolean flag */
-    int drawArrow)		    /* Whether or not to draw the cascade
-				     * arrow for cascade items. Only applies
-				     * to Windows. */
+				/* Precalculated metrics for menu */
+    int x,			/* X-coordinate of topleft of entry */
+    int y,			/* Y-coordinate of topleft of entry */
+    int width,			/* Width of the entry rectangle */
+    int height,			/* Height of the current rectangle */
+    int strictMotif,		/* Boolean flag */
+    int drawArrow)		/* Whether or not to draw the cascade arrow
+				 * for cascade items. Only applies to
+				 * Windows. */
 {
     GC gc, indicatorGC;
     XColor *indicatorColor, *disableColor = NULL;
@@ -1675,8 +1675,8 @@ TkpComputeStandardMenuGeometry(
 	    	accelWidth = width;
 	    }
 
-	    GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont,
-	    	    fmPtr, &width, &height);
+	    GetMenuIndicatorGeometry(menuPtr, mePtr, tkfont, fmPtr,
+		    &width, &height);
 	    if (height > mePtr->height) {
 	    	mePtr->height = height;
 	    }
@@ -1689,7 +1689,7 @@ TkpComputeStandardMenuGeometry(
 
 	    mePtr->height += 2 * activeBorderWidth + MENU_DIVIDER_HEIGHT;
     	}
-        mePtr->y = y;
+	mePtr->y = y;
 	y += mePtr->height;
 	if (y > windowHeight) {
 	    windowHeight = y;

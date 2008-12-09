@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnix3d.c,v 1.12 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnix3d.c,v 1.13 2008/12/09 22:58:30 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -379,7 +379,7 @@ TkpGetShadows(
 	 */
 
 	/*
-	 * Compute the dark shadow color
+	 * Compute the dark shadow color.
 	 */
 
 	r = (int) borderPtr->bgColorPtr->red;
@@ -397,7 +397,7 @@ TkpGetShadows(
 	}
 
 	/*
-	 * Allocate the dark shadow color and its GC
+	 * Allocate the dark shadow color and its GC.
 	 */
 
 	borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
@@ -405,7 +405,7 @@ TkpGetShadows(
 	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
 
 	/*
-	 * Compute the light shadow color
+	 * Compute the light shadow color.
 	 */
 
 	if (g > MAX_INTENSITY*0.95) {
@@ -433,9 +433,9 @@ TkpGetShadows(
 	    lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
 	}
 
-       /*
-        * Allocate the light shadow color and its GC
-        */
+	/*
+	 * Allocate the light shadow color and its GC.
+	 */
 
 	borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
 	gcValues.foreground = borderPtr->lightColorPtr->pixel;
