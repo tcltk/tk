@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.25 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.26 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkPort.h"
@@ -911,7 +911,7 @@ EmbWinLayoutProc(
 	}
 	if (code != TCL_OK) {
 	createError:
-	    Tcl_BackgroundError(textPtr->interp);
+	    Tcl_BackgroundException(textPtr->interp, code);
 	    goto gotWindow;
 	}
 	Tcl_DStringInit(&name);

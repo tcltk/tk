@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.16 2008/10/03 13:13:31 dkf Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.17 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -572,7 +572,7 @@ ScrollbarProc(
 	code = Tcl_GlobalEval(interp, cmdString.string);
 	if (code != TCL_OK && code != TCL_CONTINUE && code != TCL_BREAK) {
 	    Tcl_AddErrorInfo(interp, "\n    (scrollbar command)");
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, code);
 	}
 	Tcl_DStringFree(&cmdString);
 
