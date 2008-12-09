@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.67 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.68 2008/12/09 23:21:48 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -44,10 +44,10 @@ typedef struct ProtocolHandler {
  * Data for [wm attributes] command:
  */
 typedef struct {
-    double 	alpha;		/* Transparency; 0.0=transparent, 1.0=opaque */
-    int 	topmost;	/* Flag: true=>stay-on-top */
-    int 	zoomed;		/* Flag: true=>maximized */
-    int 	fullscreen;	/* Flag: true=>fullscreen */
+    double alpha;		/* Transparency; 0.0=transparent, 1.0=opaque */
+    int topmost;		/* Flag: true=>stay-on-top */
+    int zoomed;			/* Flag: true=>maximized */
+    int fullscreen;		/* Flag: true=>fullscreen */
 } WmAttributes;
 
 typedef enum {
@@ -1244,6 +1244,7 @@ WmSetAttribute(
     Tcl_Obj *value)		/* New value */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
+
     switch (attribute) {
     case WMATT_ALPHA: {
 	unsigned long opacity;	/* 0=transparent, 0xFFFFFFFF=opaque */
@@ -1273,16 +1274,15 @@ WmSetAttribute(
 	break;
     }
     case WMATT_TOPMOST:
-	if (TCL_OK != Tcl_GetBooleanFromObj(interp, value,
-		&wmPtr->reqState.topmost)) {
+	if (Tcl_GetBooleanFromObj(interp, value,
+		&wmPtr->reqState.topmost) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE",
-		wmPtr->reqState.topmost);
+	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
 	break;
     case WMATT_ZOOMED:
-	if (TCL_OK != Tcl_GetBooleanFromObj(interp, value,
-		&wmPtr->reqState.zoomed)) {
+	if (Tcl_GetBooleanFromObj(interp, value,
+		&wmPtr->reqState.zoomed) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	SetNetWmState(winPtr, "_NET_WM_STATE_MAXIMIZED_VERT",
@@ -1291,8 +1291,8 @@ WmSetAttribute(
 		wmPtr->reqState.zoomed);
 	break;
     case WMATT_FULLSCREEN:
-	if (TCL_OK != Tcl_GetBooleanFromObj(interp, value,
-		&wmPtr->reqState.fullscreen)) {
+	if (Tcl_GetBooleanFromObj(interp, value,
+		&wmPtr->reqState.fullscreen) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	SetNetWmState(winPtr, "_NET_WM_STATE_FULLSCREEN",
@@ -1387,7 +1387,7 @@ WmAttributesCmd(
 	return TCL_OK;
     } else if (objc == 4) {	/* wm attributes $win -attribute */
 	if (Tcl_GetIndexFromObj(interp, objv[3], WmAttributeNames,
-		    "attribute", 0, &attribute) != TCL_OK) {
+		"attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, attribute));
@@ -2552,7 +2552,7 @@ WmIconwindowCmd(
     }
     if (objc == 3) {
 	if (wmPtr->icon != NULL) {
-	    Tcl_SetResult(interp, Tk_PathName(wmPtr->icon), TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj(wmPtr->icon));
 	}
 	return TCL_OK;
     }
@@ -3448,7 +3448,7 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (masterPtr != NULL) {
-	    Tcl_SetResult(interp, Tk_PathName(masterPtr), TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj(masterPtr));
 	}
 	return TCL_OK;
     }
@@ -4596,7 +4596,7 @@ UpdateGeometryInfo(
      * Reconfigure the wrapper if it isn't already configured correctly. A few
      * tricky points:
      *
-     * 1. If the window is embeddedand the container is also in this process,
+     * 1. If the window is embedded and the container is also in this process,
      *    don't actually reconfigure the window; just pass the desired size on
      *    to the container. Also, zero out any position information, since
      *    embedded windows are not allowed to move.
