@@ -1,6 +1,11 @@
+2008-12-10  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXInit.c (TkpInit):	unconditionally show Tk console
+						if TK_CONSOLE env var is set.
+
 2008-12-09  Don Porter	<dgp@users.sourceforge.net>
 
-	TIP 337
+	TIP #337 IMPLEMENTATION
 
 	* generic/tkBind.c:	Updated callers of Tcl_BackgroundError()
 	* generic/tkCanvas.c:	to use the new routine
