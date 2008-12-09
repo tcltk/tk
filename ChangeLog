@@ -1,3 +1,27 @@
+2008-12-09  Don Porter	<dgp@users.sourceforge.net>
+
+	TIP 337
+
+	* generic/tkBind.c:	Updated callers of Tcl_BackgroundError()
+	* generic/tkCanvas.c:	to use the new routine
+	* generic/tkEntry.c:	Tcl_BackgroundException() as appropriate.
+	* generic/tkImgBmap.c:
+	* generic/tkListbox.c:
+	* generic/tkSelect.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextWind.c:
+	* macosx/tkMacOSXHLEvents.c:
+	* macosx/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenus.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* unix/tkUnixScale.c:
+	* unix/tkUnixWm.c:
+	* win/tkWinButton.c:
+	* win/tkWinMenu.c:
+	* win/tkWinScrlbr.c:
+	* win/tkWinWm.c:
+
 2008-12-07  Joe English  <jenglish@users.sourceforge.net>
 
 	* macosx/ttkMacOSXTheme.c: Add native aqua elements for

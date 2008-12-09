@@ -48,7 +48,7 @@
  *	permission to use and distribute the software in accordance with the
  *	terms specified in this license.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.33 2008/10/05 21:26:11 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.34 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -891,7 +891,7 @@ TkWmProtocolEventProc(
 		Tcl_AddErrorInfo(interp,
 			Tk_GetAtomName((Tk_Window) winPtr, protocol));
 		Tcl_AddErrorInfo(interp, "\" window manager protocol)");
-		Tk_BackgroundError(interp);
+		Tk_BackgroundException(interp, result);
 	    }
 	    Tcl_Release(interp);
 	    Tcl_Release(protPtr);

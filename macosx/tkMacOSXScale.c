@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScale.c,v 1.15 2007/12/13 15:27:10 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXScale.c,v 1.16 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -174,7 +174,7 @@ TkpDisplayScale(
 	result = Tcl_VarEval(interp, scalePtr->command, " ", string, NULL);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_Release((ClientData) interp);
     }

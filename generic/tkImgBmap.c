@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.27 2008/11/12 00:15:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.28 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -443,9 +443,9 @@ ImgBmapConfigureInstance(
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
     instancePtr->gc = None;
-    Tcl_AddErrorInfo(masterPtr->interp, "\n    (while configuring image \"");
-    Tcl_AddErrorInfo(masterPtr->interp, Tk_NameOfImage(masterPtr->tkMaster));
-    Tcl_AddErrorInfo(masterPtr->interp, "\")");
+    Tcl_AppendObjToErrorInfo(masterPtr->interp, Tcl_ObjPrintf(
+	    "\n    (while configuring image \"%s\")", Tk_NameOfImage(
+	    masterPtr->tkMaster)));
     Tcl_BackgroundError(masterPtr->interp);
 }
 

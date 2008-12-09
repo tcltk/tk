@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.18 2008/09/02 16:10:55 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.19 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -208,8 +208,9 @@ OappHandler(
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::OpenApplication", &dummy)){
-	if (Tcl_GlobalEval(interp, "::tk::mac::OpenApplication") != TCL_OK) {
-	    Tcl_BackgroundError(interp);
+	int code = Tcl_GlobalEval(interp, "::tk::mac::OpenApplication");
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(interp, code);
 	}
     }
     return noErr;
@@ -244,8 +245,9 @@ RappHandler(
 
     if (interp && Tcl_GetCommandInfo(interp,
 	    "::tk::mac::ReopenApplication", &dummy)) {
-	if (Tcl_GlobalEval(interp, "::tk::mac::ReopenApplication") != TCL_OK){
-	    Tcl_BackgroundError(interp);
+	int code = Tcl_GlobalEval(interp, "::tk::mac::ReopenApplication");
+	if (code != TCL_OK){
+	    Tcl_BackgroundException(interp, code);
 	}
     }
     return err;
@@ -279,8 +281,9 @@ PrefsHandler(
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::ShowPreferences", &dummy)){
-	if (Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences") != TCL_OK) {
-	    Tcl_BackgroundError(interp);
+	int code = Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences");
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(interp, code);
 	}
     }
     return noErr;
@@ -317,6 +320,7 @@ OdocHandler(
     AEKeyword keyword;
     Tcl_DString command, pathName;
     Tcl_CmdInfo dummy;
+    int code;
 
     /*
      * Don't bother if we don't have an interp or the open document procedure
@@ -367,9 +371,10 @@ OdocHandler(
      * Now handle the event by evaluating a script.
      */
 
-    if (Tcl_EvalEx(interp, Tcl_DStringValue(&command),
-	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL) != TCL_OK) {
-	Tcl_BackgroundError(interp);
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&command),
+	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
     }
     Tcl_DStringFree(&command);
     return noErr;
@@ -406,6 +411,7 @@ PrintHandler(
     AEKeyword keyword;
     Tcl_DString command, pathName;
     Tcl_CmdInfo dummy;
+    int code;
 
     /*
      * Don't bother if we don't have an interp or the print document procedure
@@ -451,9 +457,10 @@ PrintHandler(
      * Now handle the event by evaluating a script.
      */
 
-    if (Tcl_EvalEx(interp, Tcl_DStringValue(&command),
-	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL) != TCL_OK) {
-	Tcl_BackgroundError(interp);
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&command),
+	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
     }
     Tcl_DStringFree(&command);
     return noErr;
@@ -620,13 +627,14 @@ ReallyKillMe(
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     Tcl_CmdInfo dummy;
     int quit = Tcl_GetCommandInfo(interp, "::tk::mac::Quit", &dummy);
+    int code = Tcl_GlobalEval(interp, quit ? "::tk::mac::Quit" : "exit");
 
-    if (Tcl_GlobalEval(interp, quit ? "::tk::mac::Quit" : "exit") != TCL_OK) {
+    if (code != TCL_OK) {
 	/*
 	 * Should be never reached...
 	 */
 
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, code);
     }
     return 1;
 }

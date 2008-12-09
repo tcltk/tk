@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.56 2008/11/27 23:26:05 nijtmans Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.57 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -2940,7 +2940,7 @@ EntryUpdateScrollbar(
 		"\n    (horizontal scrolling command executed by ");
 	Tcl_AddErrorInfo(interp, Tk_PathName(entryPtr->tkwin));
 	Tcl_AddErrorInfo(interp, ")");
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, code);
     }
     Tcl_ResetResult(interp);
     Tcl_Release(interp);
@@ -3141,10 +3141,10 @@ EntryValidate(
      */
 
     if (code != TCL_OK && code != TCL_RETURN) {
-	Tcl_AddErrorInfo(interp, "\n\t(in validation command executed by ");
-	Tcl_AddErrorInfo(interp, Tk_PathName(entryPtr->tkwin));
-	Tcl_AddErrorInfo(interp, ")");
-	Tcl_BackgroundError(interp);
+	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+		"\n\t(in validation command executed by %s)",
+		Tk_PathName(entryPtr->tkwin)));
+	Tcl_BackgroundException(interp, code);
 	return TCL_ERROR;
     }
 
@@ -3275,11 +3275,12 @@ EntryValidateChange(
 		    change, newValue, index, type, &script);
 	    Tcl_DStringAppend(&script, "", 1);
 	    p = Tcl_DStringValue(&script);
-	    if (Tcl_EvalEx(entryPtr->interp, p, -1,
-		    TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT) != TCL_OK) {
+	    code = Tcl_EvalEx(entryPtr->interp, p, -1,
+		    TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
+	    if (code != TCL_OK) {
 		Tcl_AddErrorInfo(entryPtr->interp,
 			"\n\t(in invalidcommand executed by entry)");
-		Tcl_BackgroundError(entryPtr->interp);
+		Tcl_BackgroundException(entryPtr->interp, code);
 		code = TCL_ERROR;
 		entryPtr->validate = VALIDATE_NONE;
 	    }
@@ -4283,7 +4284,7 @@ SpinboxInvoke(
 
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n\t(in command executed by spinbox)");
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, code);
 
 	    /*
 	     * Yes, it's an error, but a bg one, so we return OK
