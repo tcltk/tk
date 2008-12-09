@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.133 2008/11/18 23:49:42 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.134 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -6523,10 +6523,10 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve(interp);
 	    result = Tcl_GlobalEval(interp, protPtr->command);
 	    if (result != TCL_OK) {
-		Tcl_AddErrorInfo(interp, "\n    (command for \"");
-		Tcl_AddErrorInfo(interp, name);
-		Tcl_AddErrorInfo(interp, "\" window manager protocol)");
-		Tcl_BackgroundError(interp);
+		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+			"\n    (command for \"%s\" window manager protocol)",
+			name));
+		Tcl_BackgroundException(interp, result);
 	    }
 	    Tcl_Release(interp);
 	    Tcl_Release(protPtr);

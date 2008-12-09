@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.61 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.62 2008/12/09 21:22:56 dgp Exp $
  */
 
 #define OEMRESOURCE
@@ -1032,7 +1032,7 @@ TkWinHandleMenuEvent(
 		if ((code != TCL_OK) && (code != TCL_CONTINUE)
 			&& (code != TCL_BREAK)) {
 		    Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
-		    Tcl_BackgroundError(interp);
+		    Tcl_BackgroundException(interp, code);
 		}
 		Tcl_Release((ClientData)interp);
 	    }
@@ -1091,7 +1091,7 @@ TkWinHandleMenuEvent(
 	    code = TkInvokeMenu(interp, menuPtr, mePtr->index);
 	    if (code != TCL_OK && code != TCL_CONTINUE && code != TCL_BREAK) {
 		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-		Tcl_BackgroundError(interp);
+		Tcl_BackgroundException(interp, code);
 	    }
 	    Tcl_Release((ClientData)interp);
 	    *plResult = 0;

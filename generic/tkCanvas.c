@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.57 2008/11/09 20:51:28 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.58 2008/12/09 21:22:56 dgp Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -5501,7 +5501,7 @@ CanvasUpdateScrollbars(
 		NULL);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_ResetResult(interp);
 	Tcl_Release(xScrollCmd);
@@ -5515,7 +5515,7 @@ CanvasUpdateScrollbars(
 		NULL);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
-	    Tcl_BackgroundError(interp);
+	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_ResetResult(interp);
 	Tcl_Release(yScrollCmd);

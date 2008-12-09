@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.26 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.27 2008/12/09 21:22:56 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -1560,6 +1560,7 @@ LostSelection(
     LostCommand *lostPtr = clientData;
     Tcl_Obj *objPtr;
     Tcl_Interp *interp;
+    int code;
 
     interp = lostPtr->interp;
     Tcl_Preserve(interp);
@@ -1573,8 +1574,9 @@ LostSelection(
     Tcl_IncrRefCount(objPtr);
     Tcl_ResetResult(interp);
 
-    if (TkCopyAndGlobalEval(interp, lostPtr->command) != TCL_OK) {
-	Tcl_BackgroundError(interp);
+    code = TkCopyAndGlobalEval(interp, lostPtr->command);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(interp, code);
     }
 
     Tcl_SetObjResult(interp, objPtr);
