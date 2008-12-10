@@ -4,10 +4,10 @@
 
 	* generic/tkCmds.c:		Implementation of [tk fontchooser]
 	* generic/tkInt.h:		as a Ttk dialog for X11 and as a native
-	* library/fontchooser.tcl:	platform dialog on Mac OS X & Windows.
-	* library/tclIndex:		(thoyts, vetter, robert, steffen)
-	* library/msgs/de.msg:
-	* library/msgs/en.msg:
+	* win/tkWinDialog.c:		platform dialog on Mac OS X & Windows.
+	* win/tkWinInt.h:		(thoyts, vetter, robert, steffen)
+	* win/tkWinTest.c:		[Patch 1477426]
+	* win/tkWinX.c:
 	* macosx/tkMacOSXCarbonEvents.c:
 	* macosx/tkMacOSXDialog.c:
 	* macosx/tkMacOSXEvent.c:
@@ -15,13 +15,13 @@
 	* macosx/tkMacOSXFont.c:
 	* macosx/tkMacOSXFont.h:
 	* macosx/Wish.xcodeproj/project.pbxproj:
-	* win/tkWinDialog.c:
-	* win/tkWinInt.h:
-	* win/tkWinTest.c:
-	* win/tkWinX.c:
-	* tests/fontchooser.test:
+	* library/fontchooser.tcl (new):
+	* library/tclIndex:		
+	* library/msgs/de.msg:		
+	* library/msgs/en.msg:
+	* tests/fontchooser.test (new):
 	* tests/winDialog.test:
-	* doc/fontchooser.n:
+	* doc/fontchooser.n (new):
 	* doc/tk.n:
 
 	* library/console.tcl:		Let user select console font via
