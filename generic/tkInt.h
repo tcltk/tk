@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.97 2008/12/10 00:34:51 das Exp $
+ * RCS: $Id: tkInt.h,v 1.98 2008/12/10 05:02:51 das Exp $
  */
 
 #ifndef _TKINT
@@ -1040,9 +1040,6 @@ MODULE_SCOPE int	Tk_ChooseColorObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_ChooseDirectoryObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ChooseFontObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_DestroyObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -1251,7 +1248,6 @@ MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
 MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
-
 MODULE_SCOPE void	TkDrawAngledTextLayout(Display *display,
 			    Drawable drawable, GC gc, Tk_TextLayout layout,
 			    int x, int y, double angle, int firstChar,
@@ -1264,10 +1260,15 @@ MODULE_SCOPE void	TkUnderlineAngledTextLayout(Display *display,
 			    int x, int y, double angle, int underline);
 MODULE_SCOPE int	TkIntersectAngledTextLayout(Tk_TextLayout layout,
 			    int x,int y, int width, int height, double angle);
+MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
+			    int objc, Tcl_Obj *const *objv, int flags);
+MODULE_SCOPE void	TkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *namespace, const char *name,
 			    ClientData clientData, const TkEnsemble *map);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
+			    ClientData clientData);
+MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 
 /*

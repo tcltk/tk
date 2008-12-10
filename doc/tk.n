@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tk.n,v 1.20 2008/10/18 14:22:21 dkf Exp $
+'\" RCS: @(#) $Id: tk.n,v 1.21 2008/12/10 05:02:40 das Exp $
 '\" 
 .so man.macros
 .TH tk n 8.4 Tk "Tk Built-In Commands"
@@ -66,6 +66,28 @@ format.  \fI\-x\fR and \fI\-y\fR represent window-relative coordinates, and
 \fI\-height\fR is the height of the current cursor location, or the height
 of the specified \fIwindow\fR if none is given.
 .TP
+\fBtk inactive \fR?\fB\-displayof \fIwindow\fR? ?\fBreset\fR?
+.
+Returns a positive integer, the number of milliseconds since the last
+time the user interacted with the system. If the \fB\-displayof\fR
+option is given then the return value refers to the display of
+\fIwindow\fR; otherwise it refers to the display of the application's
+main window.
+.RS
+.PP
+\fBtk inactive\fR will return \-1, if querying the user inactive time
+is not supported by the system, and in safe interpreters.
+.PP
+If the literal string \fBreset\fR is given as an additional argument,
+the timer is reset and an empty string is returned. Resetting the
+inactivity time is forbidden in safe interpreters and will throw and
+error if tried.
+.RE
+.TP
+\fBtk fontchooser \fIsubcommand\fR ...
+Controls the Tk font selection dialog. For more details see the
+\fBfontchooser\fR manual page.
+.TP
 \fBtk scaling \fR?\fB\-displayof \fIwindow\fR? ?\fInumber\fR?
 .
 Sets and queries the current scaling factor used by Tk to convert between
@@ -91,24 +113,6 @@ is undefined whether existing widgets will resize themselves dynamically to
 accommodate the new scaling factor.
 .RE
 .TP
-\fBtk inactive \fR?\fB\-displayof \fIwindow\fR? ?\fBreset\fR?
-.
-Returns a positive integer, the number of milliseconds since the last
-time the user interacted with the system. If the \fB\-displayof\fR
-option is given then the return value refers to the display of
-\fIwindow\fR; otherwise it refers to the display of the application's
-main window.
-.RS
-.PP
-\fBtk inactive\fR will return \-1, if querying the user inactive time
-is not supported by the system, and in safe interpreters.
-.PP
-If the literal string \fBreset\fR is given as an additional argument,
-the timer is reset and an empty string is returned. Resetting the
-inactivity time is forbidden in safe interpreters and will throw and
-error if tried.
-.RE
-.TP
 \fBtk useinputmethods \fR?\fB\-displayof \fIwindow\fR? ?\fIboolean\fR?
 .
 Sets and queries the state of whether Tk should use XIM (X Input Methods)
@@ -125,7 +129,7 @@ Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
 or \fBaqua\fR (Mac OS X Aqua).
 .SH "SEE ALSO"
-busy(n), send(n), winfo(n)
+busy(n), fontchooser(n), send(n), winfo(n)
 .SH KEYWORDS
 application name, send
 '\" Local Variables:

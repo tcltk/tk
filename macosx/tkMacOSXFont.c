@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.42 2008/11/22 22:29:14 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.43 2008/12/10 05:02:52 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -2512,6 +2512,103 @@ TkMacOSXInitControlFontStyle(
     fsPtr->size = fontPtr->qdSize;
     fsPtr->style = fontPtr->qdStyle;
     fsPtr->just = teCenter;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXFMFontInfoForFont --
+ *
+ *	Retrieve FontManager/ATSUI font information for a Tk font.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkMacOSXFMFontInfoForFont(
+    Tk_Font tkfont,
+    FMFontFamily *fontFamilyPtr,
+    FMFontStyle *fontStylePtr,
+    FMFontSize *fontSizePtr,
+    ATSUStyle *fontATSUStylePtr)
+{
+    const MacFont * fontPtr = (MacFont *) tkfont;
+
+    if (fontFamilyPtr) {
+	*fontFamilyPtr = fontPtr->qdFont;
+    }
+    if (fontStylePtr) {
+	*fontStylePtr = fontPtr->qdStyle;
+    }
+    if (fontSizePtr) {
+	*fontSizePtr = fontPtr->qdSize;
+    }
+    if (fontATSUStylePtr) {
+	*fontATSUStylePtr = fontPtr->atsuStyle;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXFontDescriptionForFMFontInfo --
+ *
+ *	Get text description of a font specified by FontManager info.
+ *
+ * Results:
+ *	List object or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE Tcl_Obj *
+TkMacOSXFontDescriptionForFMFontInfo(
+    FMFontFamily fontFamily,
+    FMFontStyle fontStyle,
+    FMFontSize fontSize,
+    FMFont fontID)
+{
+    Tcl_Obj *objv[6];
+    int i = 0;
+
+    if (fontFamily != kInvalidFontFamily && fontStyle != -1) {
+	const char *familyName = FamilyNameForFamilyID(fontFamily);
+
+	if (familyName) {
+	    objv[i++] = Tcl_NewStringObj(familyName, -1);
+	    objv[i++] = Tcl_NewIntObj(fontSize);
+#define S(s) Tcl_NewStringObj(STRINGIFY(s),(int)(sizeof(STRINGIFY(s))-1))
+	    objv[i++] = (fontStyle & bold)	? S(bold)   : S(normal);
+	    objv[i++] = (fontStyle & italic)	? S(italic) : S(roman);
+	    if (fontStyle & underline) objv[i++] = S(underline);
+	    /*if (fontStyle & overstrike) objv[i++] = S(overstrike);*/
+#undef S
+	}
+    } else if (fontID != kInvalidFont) {
+	CFStringRef fontName = NULL;
+	Tcl_Obj *fontNameObj = NULL;
+
+	ChkErr(ATSFontGetName, FMGetATSFontRefFromFont(fontID),
+		kATSOptionFlagsDefault, &fontName);
+	if (fontName) {
+	    fontNameObj = TkMacOSXGetStringObjFromCFString(fontName);
+	    CFRelease(fontName);
+	}
+	if (fontNameObj) {
+	    objv[i++] = fontNameObj;
+	    objv[i++] = Tcl_NewIntObj(fontSize);
+	}
+    }
+    return i ? Tcl_NewListObj(i, objv) : NULL;
 }
 
 /*

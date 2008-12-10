@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.23 2008/11/27 23:26:05 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.24 2008/12/10 05:02:52 das Exp $
  */
 
 #include "tkWinInt.h"
@@ -373,18 +373,25 @@ TestfindwindowObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    const char *title = NULL, *class = NULL;
+    const TCHAR  *title = NULL, *class = NULL;
+    Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
+
+    Tcl_DStringInit(&classString);
+    Tcl_DStringInit(&titleString);
 
     if (objc < 2 || objc > 3) {
         Tcl_WrongNumArgs(interp, 1, objv, "title ?class?");
         return TCL_ERROR;
     }
-    title = Tcl_GetString(objv[1]);
-    if (objc == 3)
-        class = Tcl_GetString(objv[2]);
-    hwnd = FindWindowA(class, title);
+
+    title = Tcl_WinUtfToTChar(Tcl_GetString(objv[1]), -1, &titleString);
+    if (objc == 3) {
+        class = Tcl_WinUtfToTChar(Tcl_GetString(objv[2]), -1, &classString);
+    }
+
+    hwnd  = tkWinProcs->findWindow(class, title);
 
     if (hwnd == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", -1));
@@ -393,6 +400,9 @@ TestfindwindowObjCmd(
     } else {
         Tcl_SetObjResult(interp, Tcl_NewLongObj((long)hwnd));
     }
+
+    Tcl_DStringFree(&titleString);
+    Tcl_DStringFree(&classString);
     return r;
 
 }
@@ -416,7 +426,7 @@ TestgetwindowinfoObjCmd(
     Tcl_Obj *const objv[])
 {
     HWND hwnd = NULL;
-    Tcl_Obj *resObj = NULL, *classObj = NULL, *textObj = NULL;
+    Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
     char buf[512];
     int cch, cchBuf = tkWinProcs->useWide ? 256 : 512;
@@ -429,25 +439,21 @@ TestgetwindowinfoObjCmd(
     if (Tcl_GetLongFromObj(interp, objv[1], (long *)&hwnd) != TCL_OK)
 	return TCL_ERROR;
 
-    if (tkWinProcs->useWide) {
-	cch = GetClassNameW(hwnd, (LPWSTR)buf, sizeof(buf)/sizeof(WCHAR));
-	classObj = Tcl_NewUnicodeObj((LPWSTR)buf, cch);
-    } else {
-	cch = GetClassNameA(hwnd, (LPSTR)buf, sizeof(buf));
-	classObj = Tcl_NewStringObj((LPSTR)buf, cch);
-    }
+    cch = tkWinProcs->getClassName(hwnd, buf, cchBuf);
     if (cch == 0) {
     	Tcl_SetResult(interp, "failed to get class name: ", TCL_STATIC);
     	AppendSystemError(interp, GetLastError());
     	return TCL_ERROR;
+    } else {
+	Tcl_DString ds;
+	Tcl_WinTCharToUtf(buf, -1, &ds);
+	classObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+	Tcl_DStringFree(&ds);
     }
 
-    resObj = Tcl_NewListObj(0, NULL);
-    Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("class", -1));
-    Tcl_ListObjAppendElement(interp, resObj, classObj);
-
-    Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("id", -1));
-    Tcl_ListObjAppendElement(interp, resObj,
+    dictObj = Tcl_NewDictObj();
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("class", 5), classObj);
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
 	Tcl_NewLongObj(GetWindowLong(hwnd, GWL_ID)));
 
     cch = tkWinProcs->getWindowText(hwnd, (LPTSTR)buf, cchBuf);
@@ -457,18 +463,15 @@ TestgetwindowinfoObjCmd(
 	textObj = Tcl_NewStringObj((LPCSTR)buf, cch);
     }
 
-    Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("text", -1));
-    Tcl_ListObjAppendElement(interp, resObj, textObj);
-    Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("parent", -1));
-    Tcl_ListObjAppendElement(interp, resObj,
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
 	Tcl_NewLongObj((long)GetParent(hwnd)));
 
     childrenObj = Tcl_NewListObj(0, NULL);
     EnumChildWindows(hwnd, EnumChildrenProc, (LPARAM)childrenObj);
-    Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("children", -1));
-    Tcl_ListObjAppendElement(interp, resObj, childrenObj);
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", -1), childrenObj);
 
-    Tcl_SetObjResult(interp, resObj);
+    Tcl_SetObjResult(interp, dictObj);
     return TCL_OK;
 }
 

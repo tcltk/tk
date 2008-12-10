@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.24 2008/10/27 11:55:44 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.25 2008/12/10 05:02:52 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -102,6 +102,9 @@ TkMacOSXProcessEvent(
 	break;
     case kEventClassCommand:
 	TkMacOSXProcessCommandEvent(eventPtr, statusPtr);
+	break;
+    case kEventClassFont:
+	TkMacOSXProcessFontEvent(eventPtr, statusPtr);
 	break;
     default: {
 	TkMacOSXDbgMsg("Unrecognised event: %s",

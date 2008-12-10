@@ -2087,10 +2087,13 @@
 		F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Debug.xcconfig"; sourceTree = "<group>"; };
 		F9903CAF094FAADA004613E9 /* tclTomMath.decls */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tclTomMath.decls; sourceTree = "<group>"; };
 		F9903CB0094FAADA004613E9 /* tclTomMathDecls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tclTomMathDecls.h; sourceTree = "<group>"; };
+		F99388380EE0114B0065FE6B /* fontchooser.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = fontchooser.tcl; sourceTree = "<group>"; };
+		F99388950EE02D980065FE6B /* fontchooser.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = fontchooser.test; sourceTree = "<group>"; };
 		F9A3082D08F2D4AB00BAE1AB /* Tk.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = Tk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9A3084B08F2D4CE00BAE1AB /* Wish.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wish.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9A3084E08F2D4F400BAE1AB /* Tcl.framework */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.framework; path = Tcl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9A493240CEBF38300B78AE2 /* chanio.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = chanio.test; sourceTree = "<group>"; };
+		F9C888C20EEF6571003F63AD /* fontchooser.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = fontchooser.n; sourceTree = "<group>"; };
 		F9D1360A0CDC252C00DBE0B5 /* mclist.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = mclist.tcl; sourceTree = "<group>"; };
 		F9ECB1120B26521500A28025 /* pkgIndex.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = pkgIndex.tcl; sourceTree = "<group>"; };
 		F9ECB1130B26521500A28025 /* platform.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = platform.tcl; sourceTree = "<group>"; };
@@ -2148,7 +2151,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.48 2008/12/05 17:10:30 das Exp $\n";
+			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.49 2008/12/10 05:02:52 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2229,6 +2232,7 @@
 				F966BA3908F27A37005CB29B /* focus.n */,
 				F966BA3A08F27A37005CB29B /* focusNext.n */,
 				F966BA3B08F27A37005CB29B /* font.n */,
+				F9C888C20EEF6571003F63AD /* fontchooser.n */,
 				F966BA3C08F27A37005CB29B /* FontId.3 */,
 				F966BA3D08F27A37005CB29B /* frame.n */,
 				F966BA3E08F27A37005CB29B /* FreeXId.3 */,
@@ -2487,6 +2491,7 @@
 				F966BB6208F27A3A005CB29B /* dialog.tcl */,
 				F966BB6308F27A3A005CB29B /* entry.tcl */,
 				F966BB6408F27A3A005CB29B /* focus.tcl */,
+				F99388380EE0114B0065FE6B /* fontchooser.tcl */,
 				F966BB7308F27A3A005CB29B /* listbox.tcl */,
 				F966BB7408F27A3A005CB29B /* menu.tcl */,
 				F966BB7508F27A3A005CB29B /* mkpsenc.tcl */,
@@ -2691,6 +2696,7 @@
 				F966BC2A08F27A3C005CB29B /* focus.test */,
 				F966BC2B08F27A3C005CB29B /* focusTcl.test */,
 				F966BC2C08F27A3C005CB29B /* font.test */,
+				F99388950EE02D980065FE6B /* fontchooser.test */,
 				F966BC2D08F27A3C005CB29B /* frame.test */,
 				F966BC2E08F27A3C005CB29B /* geometry.test */,
 				F966BC2F08F27A3C005CB29B /* get.test */,

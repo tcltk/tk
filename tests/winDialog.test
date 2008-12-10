@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.23 2008/11/22 12:22:12 patthoyts Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.24 2008/12/10 05:02:52 das Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -34,6 +34,7 @@ proc start {arg} {
 proc then {cmd} {
     set ::command $cmd
     set ::dialogresult {}
+    set ::testfont {}
 
     afterbody
     vwait ::dialogresult
@@ -71,6 +72,10 @@ proc GetText {id} {
 
 proc SetText {id text} {
     return [testwinevent $::tk_dialog $id WM_SETTEXT $text]
+}
+
+proc ApplyFont {font} {
+     set ::testfont $font
 }
 
 # ----------------------------------------------------------------------
@@ -515,6 +520,118 @@ test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFi
    
     tk_chooseDirectory -initialdir ~12x/455
 } -returnCodes error -result {user "12x" doesn't exist}
+
+
+test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {
+    nt testwinevent
+} -body {
+    start {tk fontchooser show}
+    list [then {
+	Click cancel
+    }] $::testfont
+} -result {0 {}}
+test winDialog-10.2 {Tk_FontchooserObjCmd: -initialfont} -constraints {
+    nt testwinevent
+} -body {
+    start {
+        tk fontchooser configure -command ApplyFont -font system
+        tk fontchooser show
+    }
+    list [then {
+	Click cancel
+    }] $::testfont
+} -result {0 {}}
+test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
+    nt testwinevent
+} -body {
+    start {
+        tk fontchooser configure -command ApplyFont -font system
+        tk fontchooser show
+    }
+    list [then {
+	Click 1
+    }] [expr {[llength $::testfont] ne {}}]
+} -result {0 1}
+test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
+    nt testwinevent
+} -body {
+    start {
+        tk fontchooser configure -command ApplyFont -title "tk test"
+        tk fontchooser show
+    }
+    list [then {
+	Click cancel
+    }] $::testfont
+} -result {0 {}}
+test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
+    nt testwinevent
+} -setup {
+    array set a {parent {}}
+} -body {
+    start {
+        tk fontchooser configure -command ApplyFont -parent .
+        tk fontchooser show
+    }
+    then {
+        array set a [testgetwindowinfo $::tk_dialog]
+	Click cancel
+    }
+    list [expr {$a(parent) == [wm frame .]}] $::testfont
+} -result {1 {}}
+test winDialog-10.6 {Tk_FontchooserObjCmd: -apply} -constraints {
+    nt testwinevent
+} -body {
+    start {
+        tk fontchooser configure -command FooBarBaz
+        tk fontchooser show
+    }
+    then {
+	Click cancel
+    }
+} -result 0
+test winDialog-10.7 {Tk_FontchooserObjCmd: -apply} -constraints {
+    nt testwinevent
+} -body {
+    start {
+        tk fontchooser configure -command ApplyFont -parent .
+        tk fontchooser show
+    }
+    list [then {
+	Click [expr {0x0402}] ;# value from XP
+        Click cancel
+    }] [expr {[llength $::testfont] > 0}]
+} -result {0 1}
+test winDialog-10.8 {Tk_FontchooserObjCmd: -title} -constraints {
+    nt testwinevent
+} -setup {
+    array set a {text failed}
+} -body {
+    start {
+        tk fontchooser configure -command ApplyFont -title "Hello"
+        tk fontchooser show
+    }
+    then {
+        array set a [testgetwindowinfo $::tk_dialog]
+        Click cancel
+    }
+    set a(text)
+} -result "Hello"
+test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
+    nt testwinevent
+} -setup {
+    array set a {text failed}
+} -body {
+    start {
+        tk fontchooser configure -command ApplyFont \
+            -title  "\u041f\u0440\u0438\u0432\u0435\u0442"
+        tk fontchooser show
+    }
+    then {
+        array set a [testgetwindowinfo $::tk_dialog]
+        Click cancel
+    }
+    set a(text)
+} -result "\u041f\u0440\u0438\u0432\u0435\u0442"
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 0}

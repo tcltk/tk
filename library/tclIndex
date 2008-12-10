@@ -276,3 +276,4 @@ set auto_index(::tk::ListBoxKeyAccel_Reset) [list source [file join $dir xmfbox.
 set auto_index(tk_getFileType) [list source [file join $dir xmfbox.tcl]]
 set auto_index(::tk::unsupported::ExposePrivateCommand) [list source [file join $dir unsupported.tcl]]
 set auto_index(::tk::unsupported::ExposePrivateVariable) [list source [file join $dir unsupported.tcl]]
+set auto_index(::tk::fontchooser) [list source [file join $dir fontchooser.tcl]]
