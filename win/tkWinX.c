@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.58 2008/04/27 22:39:17 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.59 2008/12/10 05:02:52 das Exp $
  */
 
 /*
@@ -79,6 +79,8 @@ static TkWinProcs asciiProcs = {
     (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
 	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuA,
     (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextA,
+    (HWND (WINAPI *)(LPCTSTR lpClassName, LPCTSTR lpWindowName)) FindWindowA,
+    (int (WINAPI *)(HWND hwnd, LPTSTR lpClassName, int nMaxCount)) GetClassNameA,
 };
 
 static TkWinProcs unicodeProcs = {
@@ -97,6 +99,8 @@ static TkWinProcs unicodeProcs = {
     (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
 	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuW,
     (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextW,
+    (HWND (WINAPI *)(LPCTSTR lpClassName, LPCTSTR lpWindowName)) FindWindowW,
+    (int (WINAPI *)(HWND hwnd, LPTSTR lpClassName, int nMaxCount)) GetClassNameW,
 };
 
 TkWinProcs *tkWinProcs;

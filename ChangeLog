@@ -1,7 +1,39 @@
 2008-12-10  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkInt.h:	Turn [tk] into an ensemble (thoyts, steffen)
-	* generic/tkBusy.c:
+	TIP #324 IMPLEMENTATION
+
+	* generic/tkCmds.c:		Implementation of [tk fontchooser]
+	* generic/tkInt.h:		as a Ttk dialog for X11 and as a native
+	* library/fontchooser.tcl:	platform dialog on Mac OS X & Windows.
+	* library/tclIndex:		(thoyts, vetter, robert, steffen)
+	* library/msgs/de.msg:
+	* library/msgs/en.msg:
+	* macosx/tkMacOSXCarbonEvents.c:
+	* macosx/tkMacOSXDialog.c:
+	* macosx/tkMacOSXEvent.c:
+	* macosx/tkMacOSXEvent.h:
+	* macosx/tkMacOSXFont.c:
+	* macosx/tkMacOSXFont.h:
+	* macosx/Wish.xcodeproj/project.pbxproj:
+	* win/tkWinDialog.c:
+	* win/tkWinInt.h:
+	* win/tkWinTest.c:
+	* win/tkWinX.c:
+	* tests/fontchooser.test:
+	* tests/winDialog.test:
+	* doc/fontchooser.n:
+	* doc/tk.n:
+
+	* library/console.tcl:		Let user select console font via
+					[tk fontchooser].
+	* library/demos/text.tcl:	Add [tk fontchooser] demo.
+
+	* generic/tkUtil.c:		Add TkBackgroundEvalObjv() and
+					TkSendVirtualEvent() utility functions
+					(used by TIP #324 code).
+
+	* generic/tkInt.h:		Turn [tk] into an ensemble.
+	* generic/tkBusy.c:		(thoyts, steffen)
 	* generic/tkCmds.c:
 	* generic/tkWindow.c:
 

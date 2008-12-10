@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.h,v 1.5 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.h,v 1.6 2008/12/10 05:02:52 das Exp $
  */
 
 #ifndef TKMACOSXFONT_H
@@ -30,5 +30,11 @@
 
 MODULE_SCOPE void TkMacOSXInitControlFontStyle(Tk_Font tkfont,
 	ControlFontStylePtr fsPtr);
+MODULE_SCOPE void TkMacOSXFMFontInfoForFont(Tk_Font tkfont,
+	FMFontFamily *fontFamilyPtr, FMFontStyle *fontStylePtr,
+	FMFontSize *fontSizePtr, ATSUStyle *fontATSUStylePtr);
+MODULE_SCOPE Tcl_Obj * TkMacOSXFontDescriptionForFMFontInfo(
+	FMFontFamily fontFamily, FMFontStyle fontStyle, FMFontSize fontSize,
+	FMFont fontID);
 
 #endif /*TKMACOSXFONT_H*/
