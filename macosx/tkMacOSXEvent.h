@@ -54,7 +54,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.12 2007/04/23 21:24:33 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.13 2008/12/10 05:02:52 das Exp $
  */
 
 #ifndef _TKMACEVENT
@@ -97,6 +97,8 @@ MODULE_SCOPE int TkMacOSXProcessAppearanceEvent(TkMacOSXEvent *e,
 MODULE_SCOPE int TkMacOSXProcessMenuEvent(TkMacOSXEvent *e,
 	MacEventStatus *statusPtr);
 MODULE_SCOPE int TkMacOSXProcessCommandEvent(TkMacOSXEvent *e,
+	MacEventStatus *statusPtr);
+MODULE_SCOPE int TkMacOSXProcessFontEvent(TkMacOSXEvent *e,
 	MacEventStatus *statusPtr);
 MODULE_SCOPE int TkMacOSXKeycodeToUnicode(
 	UniChar * uniChars, int maxChars,
