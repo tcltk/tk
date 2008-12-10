@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.68 2008/12/09 23:21:48 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.69 2008/12/10 04:13:01 das Exp $
  */
 
 #include "tkUnixInt.h"
@@ -3448,7 +3448,7 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (masterPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(masterPtr));
+	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) masterPtr));
 	}
 	return TCL_OK;
     }
