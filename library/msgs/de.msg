@@ -5,6 +5,7 @@ namespace eval ::tk {
     ::msgcat::mcset de "Application Error" "Applikationsfehler"
     ::msgcat::mcset de "&Blue" "&Blau"
     ::msgcat::mcset de "&Cancel" "&Abbruch"
+    ::msgcat::mcset de "Cancel" "Abbruch"
     ::msgcat::mcset de "Cannot change to the directory \"%1\$s\".\nPermission denied." "Kann nicht in das Verzeichnis \"%1\$s\" wechseln.\nKeine Rechte vorhanden."
     ::msgcat::mcset de "Choose Directory" "W\u00e4hle Verzeichnis"
     ::msgcat::mcset de "&Clear" "&R\u00fccksetzen"

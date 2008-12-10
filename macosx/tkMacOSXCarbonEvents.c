@@ -60,7 +60,7 @@
  *	software in accordance with the terms specified in this
  *	license.
  *
- * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.21 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXCarbonEvents.c,v 1.22 2008/12/10 05:02:52 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -211,6 +211,8 @@ TkMacOSXInitCarbonEvents(
 	{kEventClassApplication, kEventAppShown},
 	{kEventClassApplication, kEventAppAvailableWindowBoundsChanged},
 	{kEventClassAppearance,	 kEventAppearanceScrollBarVariantChanged},
+	{kEventClassFont,	 kEventFontPanelClosed},
+	{kEventClassFont,	 kEventFontSelection},
     };
 
     carbonEventHandlerUPP = NewEventHandlerUPP(CarbonEventHandlerProc);
