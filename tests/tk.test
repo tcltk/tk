@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
 #
-# RCS: @(#) $Id: tk.test,v 1.16 2008/10/18 14:22:22 dkf Exp $
+# RCS: @(#) $Id: tk.test,v 1.17 2008/12/10 10:54:56 patthoyts Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -14,10 +14,10 @@ namespace import -force tcltest::test
 
 test tk-1.1 {tk command: general} -body {
     tk
-} -returnCodes error -result {wrong # args: should be "tk option ?arg?"}
+} -returnCodes error -result {wrong # args: should be "tk subcommand ?arg ...?"}
 test tk-1.2 {tk command: general} -body {
     tk xyz
-} -returnCodes error -result {bad option "xyz": must be appname, busy, caret, inactive, scaling, useinputmethods, or windowingsystem}
+} -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be appname, busy, caret, fontchooser, inactive, scaling, useinputmethods, or windowingsystem}
 
 # Value stored to restore default settings after 2.* tests
 set appname [tk appname]
