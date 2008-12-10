@@ -1,6 +1,11 @@
 2008-12-10  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXInit.c (TkpInit):	unconditionally show Tk console
+	* generic/tkInt.h:	Turn [tk] into an ensemble (thoyts, steffen)
+	* generic/tkBusy.c:
+	* generic/tkCmds.c:
+	* generic/tkWindow.c:
+
+	* macosx/tkMacOSXInit.c (TkpInit):	Unconditionally show Tk console
 						if TK_CONSOLE env var is set.
 
 2008-12-09  Don Porter	<dgp@users.sourceforge.net>

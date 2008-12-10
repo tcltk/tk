@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBusy.c,v 1.5 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkBusy.c,v 1.6 2008/12/10 00:34:51 das Exp $
  */
 
 #include "tkInt.h"
@@ -799,8 +799,8 @@ Tk_BusyObjCmd(
 	BUSY_STATUS
     };
 
-    if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "options ?arg arg ...?");
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "options ?arg arg ...?");
 	return TCL_ERROR;
     }
 
@@ -808,31 +808,31 @@ Tk_BusyObjCmd(
      * [tk busy <window>] command shortcut.
      */
 
-    if (Tcl_GetString(objv[2])[0] == '.') {
-	if (objc%2 != 1) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window ?option value ...?");
+    if (Tcl_GetString(objv[1])[0] == '.') {
+	if (objc%2 == 1) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "window ?option value ...?");
 	    return TCL_ERROR;
 	}
-	return HoldBusy(busyTablePtr, interp, objv[2], objc-3, objv+3);
+	return HoldBusy(busyTablePtr, interp, objv[1], objc-2, objv+2);
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings, "option", 0,
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
 	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch ((enum options) index) {
     case BUSY_CGET:
-	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "window option");
+	if (objc != 4) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window option");
 	    return TCL_ERROR;
 	}
-	busyPtr = GetBusy(interp, busyTablePtr, objv[3]);
+	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
 	if (busyPtr == NULL) {
 	    return TCL_ERROR;
 	}
 	Tcl_Preserve(busyPtr);
 	objPtr = Tk_GetOptionValue(interp, (char *) busyPtr,
-		busyPtr->optionTable, objv[4], busyPtr->tkBusy);
+		busyPtr->optionTable, objv[3], busyPtr->tkBusy);
 	if (objPtr == NULL) {
 	    result = TCL_ERROR;
 	} else {
@@ -842,18 +842,18 @@ Tk_BusyObjCmd(
 	return result;
 
     case BUSY_CONFIGURE:
-	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "window ?option? ?value ...?");
+	if (objc < 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?option? ?value ...?");
 	    return TCL_ERROR;
 	}
-	busyPtr = GetBusy(interp, busyTablePtr, objv[3]);
+	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
 	if (busyPtr == NULL) {
 	    return TCL_ERROR;
 	}
 	Tcl_Preserve(busyPtr);
-	if (objc <= 5) {
+	if (objc <= 4) {
 	    objPtr = Tk_GetOptionInfo(interp, (char *) busyPtr,
-		    busyPtr->optionTable, (objc == 5) ? objv[4] : NULL,
+		    busyPtr->optionTable, (objc == 4) ? objv[3] : NULL,
 		    busyPtr->tkBusy);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
@@ -861,7 +861,7 @@ Tk_BusyObjCmd(
 		Tcl_SetObjResult(interp, objPtr);
 	    }
 	} else {
-	    result = ConfigureBusy(interp, busyPtr, objc-4, objv+4);
+	    result = ConfigureBusy(interp, busyPtr, objc-3, objv+3);
 	}
 	Tcl_Release(busyPtr);
 	return result;
@@ -869,7 +869,7 @@ Tk_BusyObjCmd(
     case BUSY_CURRENT: {
 	Tcl_HashEntry *hPtr;
 	Tcl_HashSearch cursor;
-	const char *pattern = (objc == 4 ? Tcl_GetString(objv[3]) : NULL);
+	const char *pattern = (objc == 3 ? Tcl_GetString(objv[2]) : NULL);
 
 	objPtr = Tcl_NewObj();
 	for (hPtr = Tcl_FirstHashEntry(busyTablePtr, &cursor); hPtr != NULL;
@@ -886,11 +886,11 @@ Tk_BusyObjCmd(
     }
 
     case BUSY_FORGET:
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "window");
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window");
 	    return TCL_ERROR;
 	}
-	busyPtr = GetBusy(interp, busyTablePtr, objv[3]);
+	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
 	if (busyPtr == NULL) {
 	    return TCL_ERROR;
 	}
@@ -899,19 +899,19 @@ Tk_BusyObjCmd(
 	return TCL_OK;
 
     case BUSY_HOLD:
-	if (objc < 4 || objc%2 == 1) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "window ?option value ...?");
+	if (objc < 3 || objc%2 != 1) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?option value ...?");
 	    return TCL_ERROR;
 	}
-	return HoldBusy(busyTablePtr, interp, objv[3], objc-4, objv+4);
+	return HoldBusy(busyTablePtr, interp, objv[2], objc-3, objv+3);
 
     case BUSY_STATUS:
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "window");
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window");
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		GetBusy(interp, busyTablePtr, objv[3]) != NULL));
+		GetBusy(interp, busyTablePtr, objv[2]) != NULL));
 	return TCL_OK;
     }
 
