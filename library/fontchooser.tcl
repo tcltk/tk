@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: fontchooser.tcl,v 1.1 2008/12/10 05:02:51 das Exp $
+# RCS: @(#) $Id: fontchooser.tcl,v 1.2 2008/12/10 13:41:19 patthoyts Exp $
 
 namespace eval ::tk::fontchooser {
     variable S
@@ -29,8 +29,8 @@ namespace eval ::tk::fontchooser {
     set S(sampletext) [::msgcat::mc "AaBbYyZz01"]
     set S(-parent) .
     set S(-title) [::msgcat::mc "Font"]
-    set S(-font) {}
-    set S(-command) {}
+    set S(-command) ""
+    set S(-font) TkDefaultFont
 
     # Canonical versions of font families, styles, etc. for easier searching
     set S(fonts,lcase) {}
@@ -74,19 +74,41 @@ proc ::tk::fontchooser::Configure {args} {
     variable S
 
     set specs {
-        {-parent "" "" .}
-        {-title "" "" " "}
-        {-font "" "" ""}
+        {-parent  "" "" . }
+        {-title   "" "" ""}
+        {-font    "" "" ""}
         {-command "" "" ""}
     }
 
-    if {[llength $args] == 1 && [string equal [lindex $args 0] "-visible"]} {
-        return [expr {[winfo exists $S(W)] && [winfo ismapped $S(W)]}]
+    if {[llength $args] == 0} {
+        set result {}
+        foreach spec $specs {
+            foreach {name xx yy default} $spec break
+            lappend result $name \
+                [expr {[info exists S($name)] ? $S($name) : $default}]
+        }
+        lappend result -visible \
+            [expr {[winfo exists $S(W)] && [winfo ismapped $S(W)]}]
+        return $result
     }
-
-    tclParseConfigSpec [namespace which -variable S] $specs "" $args
-    if {$S(-parent) ne "."} {
-	winfo toplevel $S(-parent)
+    if {[llength $args] == 1} {
+        set option [lindex $args 0]
+        if {[string equal $option "-visible"]} {
+            return [expr {[winfo exists $S(W)] && [winfo ismapped $S(W)]}]
+        } elseif {[info exists S($option)]} {
+            return $S($option)
+        }
+        return -code error "bad option \"$option\": must be\
+            -command, -font, -parent, -title or -visible"
+    }
+    
+    set cache [dict create -parent $S(-parent) -title $S(-title) \
+                   -font $S(-font) -command $S(-command)]
+    set r [tclParseConfigSpec [namespace which -variable S] $specs "" $args]
+    if {![winfo exists $S(-parent)]} {
+        set err "bad window path name \"$S(-parent)\""
+        array set S $cache
+        return -code error $err
     }
     if {[string trim $S(-title)] eq ""} {
         set S(-title) [::msgcat::mc "Font"]
@@ -95,6 +117,7 @@ proc ::tk::fontchooser::Configure {args} {
 	Init $S(-font)
 	event generate $S(-parent) <<TkFontchooserFontChanged>>
     }
+    return $r
 }
 
 proc ::tk::fontchooser::Create {} {
@@ -182,7 +205,9 @@ proc ::tk::fontchooser::Create {} {
 
         grid $S(W).ok     -in $bbox -sticky new -pady {0 2}
         grid $S(W).cancel -in $bbox -sticky new -pady 2
-        grid $S(W).apply -in $bbox -sticky new -pady 2
+        if {$S(-command) ne ""} {
+            grid $S(W).apply -in $bbox -sticky new -pady 2
+        }
         grid columnconfigure $bbox 0 -weight 1
 
         grid $WE.strike -sticky w -padx 10
@@ -343,7 +368,7 @@ proc ::tk::fontchooser::Tracer {var1 var2 op} {
         $S(W).l${var}s see $n
     }
     if {!$bad} { Update }
-    $S(W).ok config -state $nstate
+    $S(W).ok configure -state $nstate
 }
 
 # ::tk::fontchooser::Update --
@@ -360,7 +385,7 @@ proc ::tk::fontchooser::Update {} {
     if {$S(strike)} { lappend S(result) overstrike}
     if {$S(under)} { lappend S(result) underline}
 
-    $S(sample) config -font $S(result)
+    $S(sample) configure -font $S(result)
 }
 
 # ::tk::fontchooser::Visibility --
