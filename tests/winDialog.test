@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.24 2008/12/10 05:02:52 das Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.25 2008/12/10 13:41:19 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -43,12 +43,12 @@ proc then {cmd} {
 
 proc afterbody {} {
     if {$::tk_dialog == 0} {
-    if {[incr ::iter_after] > 30} {
-        set ::dialogresult ">30 iterations waiting on tk_dialog"
+        if {[incr ::iter_after] > 30} {
+            set ::dialogresult ">30 iterations waiting on tk_dialog"
+            return
+        }
+        after 150 {afterbody}
         return
-    }
-    after 150 {afterbody}
-    return
     }
     uplevel #0 {set dialogresult [eval $command]}
 }

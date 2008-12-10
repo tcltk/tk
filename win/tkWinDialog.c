@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.57 2008/12/10 09:08:29 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.58 2008/12/10 13:41:19 patthoyts Exp $
  *
  */
 
@@ -2822,6 +2822,7 @@ const TkEnsemble tkFontchooserEnsemble[] = {
     { "configure", FontchooserConfigureCmd, NULL },
     { "show", FontchooserShowCmd, NULL },
     { "hide", FontchooserHideCmd, NULL },
+    { NULL, NULL, NULL }
 };
 
 int

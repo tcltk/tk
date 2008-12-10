@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2008 Pat Thoyts
 #
-# RCS: @(#) $Id: fontchooser.test,v 1.1 2008/12/10 05:02:52 das Exp $
+# RCS: @(#) $Id: fontchooser.test,v 1.2 2008/12/10 13:41:19 patthoyts Exp $
 #
 
 package require tcltest 2.1
@@ -89,11 +89,12 @@ test fontchooser-1.9 {tk fontchooser: usage} -returnCodes error -body {
 } -match glob -result {*}
 
 # -------------------------------------------------------------------------
-# By explicitly calling the tk internal command we always test the script
-# implementation here even when the current platform defines a native
-# font dialog. This is intentional in this test file.
-
-source [file join $tk_library fontchooser.tcl]
+#
+# The remaining tests in this file are only relevant for the script
+# implementation. They can be tested by sourcing the script file but
+# the Tk tests are run with -singleproc 1 and doing this affects the
+# result of later attempts to test the native implementations.
+#
 testConstraint scriptImpl [llength [info proc ::tk::fontchooser::Configure]]
 
 test fontchooser-2.0 {fontchooser -title} -constraints scriptImpl -body {
