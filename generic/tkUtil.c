@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.25 2008/12/10 00:34:51 das Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.26 2008/12/10 04:27:45 das Exp $
  */
 
 #include "tkInt.h"
@@ -1047,7 +1047,7 @@ TkMakeEnsemble(
 	if (map[i].proc) {
 	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
 		map[i].proc, clientData, NULL);
-	} else {
+	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
 		map[i].name, clientData, map[i].subensemble);
 	}
