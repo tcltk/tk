@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.56 2008/12/10 05:02:52 das Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.57 2008/12/10 09:08:29 patthoyts Exp $
  *
  */
 
@@ -2566,7 +2566,7 @@ FontchooserConfigureCmd(
     }
 
     for (i = 1; i < objc; i += 2) {
-	int optionIndex;
+	int optionIndex, len;
 	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
 		"option", 0, &optionIndex) != TCL_OK) {
 	    return TCL_ERROR;
@@ -2736,7 +2736,7 @@ FontchooserShowCmd(
 
     if (TCL_OK == r) {
 	oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	if (FontChooser(&cf)) {
+	if (ChooseFont(&cf)) {
 	    if (hdPtr->cmdObj) {
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
