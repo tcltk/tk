@@ -1,3 +1,10 @@
+2008-12-11  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/demos/*.tcl: Omit contraindicated [package require Ttk].
+	Remove logic that switches [ttk::scrollbar]s to [tk::scrollbar]s
+	based on [tk windowingsystem]; this is already handled in 
+	library/ttk/scrollbar.tcl.
+
 2008-12-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	TIP #324 IMPLEMENTATION

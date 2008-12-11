@@ -2,14 +2,13 @@
 #
 # This demonstration script creates a Ttk pane with some content.
 #
-# RCS: @(#) $Id: ttkpane.tcl,v 1.4 2008/06/24 13:37:32 patthoyts Exp $
+# RCS: @(#) $Id: ttkpane.tcl,v 1.5 2008/12/11 18:13:08 jenglish Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
 package require Tk
-package require Ttk
 
 set w .ttkpane
 catch {destroy $w}
