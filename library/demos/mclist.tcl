@@ -3,14 +3,13 @@
 # This demonstration script creates a toplevel window containing a Ttk
 # tree widget configured as a multi-column listbox.
 #
-# RCS: @(#) $Id: mclist.tcl,v 1.3 2007/12/13 15:27:07 dgp Exp $
+# RCS: @(#) $Id: mclist.tcl,v 1.4 2008/12/11 18:13:08 jenglish Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
 package require Tk
-package require Ttk
 
 set w .mclist
 catch {destroy $w}
@@ -29,13 +28,8 @@ pack [addSeeDismiss $w.seeDismiss $w] -side bottom -fill x
 ttk::frame $w.container
 ttk::treeview $w.tree -columns {country capital currency} -show headings \
     -yscroll "$w.vsb set" -xscroll "$w.hsb set"
-if {[tk windowingsystem] ne "aqua"} {
-    ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
-    ttk::scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
-} else {
-    scrollbar $w.vsb -orient vertical -command "$w.tree yview"
-    scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
-}
+ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
+ttk::scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
 pack $w.container -fill both -expand 1
 grid $w.tree $w.vsb -in $w.container -sticky nsew
 grid $w.hsb         -in $w.container -sticky nsew
