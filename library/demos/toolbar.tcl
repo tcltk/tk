@@ -2,14 +2,13 @@
 #
 # This demonstration script creates a toolbar that can be torn off.
 #
-# RCS: @(#) $Id: toolbar.tcl,v 1.3 2007/12/13 15:27:07 dgp Exp $
+# RCS: @(#) $Id: toolbar.tcl,v 1.4 2008/12/11 18:13:08 jenglish Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
 package require Tk
-package require Ttk
 
 set w .toolbar
 destroy $w

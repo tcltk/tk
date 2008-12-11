@@ -3,15 +3,13 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.36 2008/01/31 23:33:42 hobbs Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.37 2008/12/11 18:13:08 jenglish Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-
-package require Ttk
 
 # Ensure existence of ::tk::dialog namespace
 #
