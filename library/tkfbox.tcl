@@ -11,15 +11,13 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.69 2008/08/25 17:13:04 tmh Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.70 2008/12/11 18:13:08 jenglish Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-
-package require Ttk
 
 #----------------------------------------------------------------------
 #
