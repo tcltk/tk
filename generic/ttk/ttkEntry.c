@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.14 2008/12/07 18:42:55 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.15 2008/12/11 18:35:08 jenglish Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -1910,7 +1910,6 @@ static WidgetCommandSpec SpinboxCommands[] = {
     { "bbox", 		EntryBBoxCommand },
     { "cget", 		TtkWidgetCgetCommand },
     { "configure", 	TtkWidgetConfigureCommand },
-//X: { "current", 	ValuesCurrentCommand },
     { "delete", 	EntryDeleteCommand },
     { "get", 		EntryGetCommand },
     { "icursor", 	EntryICursorCommand },
