@@ -1,3 +1,10 @@
+2008-12-11  Jan Nijtmans  <nijtmans@users.sf.net>
+    * generic/tk3d.c:    Make error message from Tk_GetRelief the
+                         same as for Tk_GetReliefFromObj
+    * tests/canvas.test  Adapt test cases for changed error message
+    * tests/scrollbar.test
+    * tests/textTag.test
+
 2008-12-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/demos/*.tcl: Omit contraindicated [package require Ttk].

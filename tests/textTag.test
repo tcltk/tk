@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textTag.test,v 1.14 2008/08/28 08:52:06 aniap Exp $
+# RCS: @(#) $Id: textTag.test,v 1.15 2008/12/12 00:09:38 nijtmans Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -215,7 +215,7 @@ test textTag-1.23 {configuration options} -constraints {
     .t tag configure x -relief stupid
 } -cleanup {
     .t tag configure x -relief [lindex [.t tag configure x -relief] 3]
-} -returnCodes error -result {bad relief type "stupid": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, or sunken}
 test textTag-1.24 {tag configuration options} -constraints {
     haveCourier12
 } -body {
