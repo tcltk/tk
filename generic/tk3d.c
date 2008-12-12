@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.23 2008/11/26 15:57:24 dkf Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.24 2008/12/12 00:09:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -670,7 +670,7 @@ Tk_GetRelief(
     } else {
 	char buf[200];
 
-	sprintf(buf, "bad relief type \"%.50s\": must be %s",
+	sprintf(buf, "bad relief \"%.50s\": must be %s",
 		name, "flat, groove, raised, ridge, solid, or sunken");
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return TCL_ERROR;

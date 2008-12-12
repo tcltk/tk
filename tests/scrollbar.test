@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: scrollbar.test,v 1.23 2008/10/08 18:57:47 dgp Exp $
+# RCS: @(#) $Id: scrollbar.test,v 1.24 2008/12/12 00:09:38 nijtmans Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -59,7 +59,7 @@ foreach test {
     {-activebackground #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
     {-activerelief sunken sunken non-existent
-	    {bad relief type "non-existent": must be flat, groove, raised, ridge, solid, or sunken}}
+	    {bad relief "non-existent": must be flat, groove, raised, ridge, solid, or sunken}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
     {-bd 4 4 badValue {bad screen distance "badValue"}}
@@ -77,7 +77,7 @@ foreach test {
     {-orient horizontal horizontal badValue
 	    {bad orientation "badValue": must be vertical or horizontal}}
     {-orient horizontal horizontal bogus {bad orientation "bogus": must be vertical or horizontal}}
-    {-relief ridge ridge badValue {bad relief type "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
+    {-relief ridge ridge badValue {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
     {-repeatdelay 140 140 129.3 {expected integer but got "129.3"}}
     {-repeatinterval 140 140 129.3 {expected integer but got "129.3"}}
     {-takefocus "any string" "any string" {} {}}
