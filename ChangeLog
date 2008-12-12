@@ -1,15 +1,20 @@
+2008-12-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/demos/fontchoose.tcl: Simple fontchooser demo
+	* library/demos/widget:
+
 2008-12-11  Jan Nijtmans  <nijtmans@users.sf.net>
-    * generic/tk3d.c:    Make error message from Tk_GetRelief the
-                         same as for Tk_GetReliefFromObj
-    * tests/canvas.test  Adapt test cases for changed error message
-    * tests/scrollbar.test
-    * tests/textTag.test
+	* generic/tk3d.c:    Make error message from Tk_GetRelief the
+	                     same as for Tk_GetReliefFromObj
+	* tests/canvas.test  Adapt test cases for changed error message
+	* tests/scrollbar.test
+	* tests/textTag.test
 
 2008-12-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/demos/*.tcl: Omit contraindicated [package require Ttk].
 	Remove logic that switches [ttk::scrollbar]s to [tk::scrollbar]s
-	based on [tk windowingsystem]; this is already handled in 
+	based on [tk windowingsystem]; this is already handled in
 	library/ttk/scrollbar.tcl.
 
 2008-12-10  Daniel Steffen  <das@users.sourceforge.net>

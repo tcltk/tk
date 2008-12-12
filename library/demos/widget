@@ -10,7 +10,7 @@ exec wish "$0" "$@"
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.52 2008/12/11 18:13:08 jenglish Exp $
+# RCS: @(#) $Id: widget,v 1.53 2008/12/12 02:02:35 patthoyts Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -386,6 +386,7 @@ addFormattedText {
     @@demo msgbox	Message boxes
     @@demo filebox	File selection dialog
     @@demo clrpick	Color picker
+    @@demo fontchoose	Font selection dialog
 
     @@subtitle	Animation
     @@new
