@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.15 2008/12/11 18:35:08 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.16 2008/12/15 17:51:31 das Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -2016,7 +2016,7 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Initialization.
  */
-
+MODULE_SCOPE
 void TtkEntry_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr =  Ttk_GetDefaultTheme(interp);
