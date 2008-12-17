@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.125 2008/11/15 00:00:27 patthoyts Exp $
+ * RCS: @(#) $Id: tk.h,v 1.126 2008/12/17 22:51:25 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -1164,9 +1164,9 @@ typedef struct Tk_Outline {
     Tk_Dash dash;		/* Dash pattern. */
     Tk_Dash activeDash;		/* Dash pattern if state is active. */
     Tk_Dash disabledDash;	/* Dash pattern if state is disabled. */
-    VOID *reserved1;		/* Reserved for future expansion. */
-    VOID *reserved2;
-    VOID *reserved3;
+    void *reserved1;		/* Reserved for future expansion. */
+    void *reserved2;
+    void *reserved3;
     Tk_TSOffset tsoffset;	/* Stipple offset for outline. */
     XColor *color;		/* Outline color. */
     XColor *activeColor;	/* Outline color if state is active. */
