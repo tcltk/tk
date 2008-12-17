@@ -1,6 +1,10 @@
+2008-12-17  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/selection.n: Assorted small fixes. [Bugs 2441817,2441884]
+
 2008-12-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c: remove unused variables
+	* win/tkWinDialog.c: Remove unused variables
 
 2008-12-15  Don Porter	<dgp@users.sourceforge.net>
 
@@ -16,9 +20,10 @@
 	* library/demos/widget:
 
 2008-12-11  Jan Nijtmans  <nijtmans@users.sf.net>
-	* generic/tk3d.c:    Make error message from Tk_GetRelief the
-	                     same as for Tk_GetReliefFromObj
-	* tests/canvas.test  Adapt test cases for changed error message
+
+	* generic/tk3d.c:    Make error message from Tk_GetRelief the same as
+			     for Tk_GetReliefFromObj.
+	* tests/canvas.test  Adapt test cases for changed error message.
 	* tests/scrollbar.test
 	* tests/textTag.test
 
@@ -33,8 +38,8 @@
 
 	TIP #324 IMPLEMENTATION
 
-	* generic/tkCmds.c:		Implementation of [tk fontchooser]
-	* generic/tkInt.h:		as a Ttk dialog for X11 and as a native
+	* generic/tkCmds.c:		Implementation of [tk fontchooser] as
+	* generic/tkInt.h:		a Ttk dialog for X11 and as a native
 	* win/tkWinDialog.c:		platform dialog on Mac OS X & Windows.
 	* win/tkWinInt.h:		(thoyts, vetter, robert, steffen)
 	* win/tkWinTest.c:		[Patch 1477426]
@@ -100,8 +105,8 @@
 	* macosx/ttkMacOSXTheme.c: Add native aqua elements for
 	ttk::spinbox [Bug 2219588]
 	* generic/ttk/ttkEntry.c, library/ttk/spinbox.tcl,
-	tests/ttk/spinbox.test: Moved most spinbox "business logic"
-	out of ttkEntry.c into Tcl bindings.
+	* tests/ttk/spinbox.test: Moved most spinbox "business logic" out of
+	ttkEntry.c into Tcl bindings.
 	* library/ttk/clamTheme.tcl: Minor spinbox appearance improvements.
 	* library/ttk/combobox.tcl, library/ttk/utils.tcl:
 	Factor out ttk::bindMouseWheel procedure.
