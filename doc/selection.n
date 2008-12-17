@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: selection.n,v 1.14 2008/09/23 13:36:54 dkf Exp $
+'\" RCS: @(#) $Id: selection.n,v 1.15 2008/12/17 22:36:46 dkf Exp $
 '\" 
 .so man.macros
 .TH selection n 8.1 Tk "Tk Built-In Commands"
@@ -129,6 +129,7 @@ containing \fIwindow\fR, or an empty string if no window in this
 application owns the selection.  \fISelection\fR defaults to PRIMARY and
 \fIwindow\fR defaults to
 .QW . .
+.RS
 .PP
 The second form of \fBselection own\fR causes \fIwindow\fR to become
 the new owner of \fIselection\fR on \fIwindow\fR's display, returning
@@ -137,6 +138,7 @@ that it has lost the selection.
 If \fIcommand\fR is specified, it is a Tcl script to execute when
 some other window claims ownership of the selection away from
 \fIwindow\fR.  \fISelection\fR defaults to PRIMARY.
+.RE
 .SH EXAMPLES
 .PP
 On X11 platforms, one of the standard selections available is the
@@ -155,14 +157,14 @@ foreach type [\fBselection get\fR \-type TARGETS] {
 .CE
 .PP
 To claim the selection, you must first set up a handler to supply the
-data for the selection.  Then you have to claim the selection...
+data for the selection. Then you have to claim the selection...
 .CS
 # Set up the data handler ready for incoming requests
 set foo "This is a string with some data in it... blah blah"
 \fBselection handle\fR \-selection SECONDARY . getData
 proc getData {offset maxChars} {
    puts "Retrieving selection starting at $offset"
-   return [string range $::foo $offset [expr {$offset+$maxChars}]]
+   return [string range $::foo $offset [expr {$offset+$maxChars-1}]]
 }
 
 # Now we grab the selection itself
