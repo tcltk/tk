@@ -1,3 +1,8 @@
+2008-12-18  Don Porter	<dgp@users.sourceforge.net>
+
+	* library/msgs/de.msg:	Updated German messages.  Thanks to Ruediger
+	Haertel. [Patch 2442309].
+
 2008-12-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.h:           VOID --> void
