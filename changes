@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.136 2008/10/10 21:30:21 dgp Exp $
+RCS: @(#) $Id: changes,v 1.137 2008/12/19 19:58:50 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6574,3 +6574,54 @@ format, avoiding sensitivity to locale setting. (fellows)
         *** POTENTIAL INCOMPATIBILITY ***
 
 --- Released 8.6a3, October 10, 2008 --- See ChangeLog for details ---
+
+2008-10-17 (enhancement) keyboard bindings for ttk::scale (thoyts)
+
+2008-10-18 (bug fix)[1825353] Russian Windows tiny fonts problem (thoyts)
+
+2008-10-18 (new feature)[TIP 321] [tk busy] (decoster,fellows)
+
+2008-10-28 (bug fix)[1534835,2054562] use of more correct cursors (english)
+
+2008-11-01 (new feature) New [ttk::spinbox] widget (thoyts)
+
+2008-11-01 (new feature)[TIP 97] [$canvas imove] [$canvas rchars] (fellows)
+
+2008-11-09 (bug fix)[2207435] [ttk::entry .t -textvar ::noexist::x] (english)
+
+2008-11-11 (bug fix)[2312027] Tk_Create*ImageType() thread safety (nijtmans)
+
+2008-11-11 (bug fix)[2264732] crash using nondefault visual (english)
+
+2008-11-12 (bug fix)[1777362] permit [text] names containing "-" (thoyts)
+
+2008-11-14 (bug fix)[2239034] limit [wm manage] to Frames (thoyts)
+
+2008-11-22 (new feature)[TIP 119] -angle option for canvas text items (fellows)
+
+2008-11-22 (bug fix)[1939129,1991930] combobox behind other windows (thoyts)
+
+2008-11-22 (new feature) Demo ctext.tcl now demos angled text (fellows)
+
+2008-11-23 (bug fix)[1389270] made [event generate <Focus*>] work (thoyts)
+
+2008-11-28 (bug fix)[1813597,2218964] eliminate unnecessary units conversion
+in screen distances, reducing precision loss (ferrieux)
+
+2008-12-03 (enhancement) new "hover" state for proper Vista visuals (thoyts)
+
+2008-12-05 (bug fix)[2107938] no negative font size in PS (fellows)
+
+2008-12-05 (enhancement) new "vista" theme (thoyts)
+
+2008-12-06 (new feature)[TIP 197] [$text -insertunfocussed] (edwards,fellows)
+
+2008-12-06 (new feature)[TIP 337] handle non-error bg exceptions (porter)
+
+2008-12-10 (new feature)[TIP 324] [tk fontchooser](thoyts,vetter,robert,steffen)
+
+2008-12-12 (new feature) Demo fontchoose.tcl demos [tk fontchooser] (thoyts)
+
+2008-12-18 (enhancement)[24442309] Updated German messages (haertel)
+
+--- Released 8.6b1, December 19, 2008 --- See ChangeLog for details ---
