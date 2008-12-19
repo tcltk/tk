@@ -4,7 +4,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: embed.test,v 1.5 2008/08/12 22:52:23 aniap Exp $
+# RCS: @(#) $Id: embed.test,v 1.6 2008/12/19 15:33:40 dgp Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -38,7 +38,7 @@ test embed-1.3 {CreateFrame procedure, both -use and -container is invalid} -set
 } -returnCodes error -result {A window cannot have both the -use and the -container option set.}
 
 # testing window embedding for win platforms
-test embed-1.4 {TkpUseWindow procedure, -container must be set} -constraints {
+test embed-1.4.win {TkpUseWindow procedure, -container must be set} -constraints {
 	win
 } -setup {
     deleteWindows
@@ -49,7 +49,7 @@ test embed-1.4 {TkpUseWindow procedure, -container must be set} -constraints {
     deleteWindows
 } -returnCodes error -result {the window to use is not a Tk container}
 # testing window embedding for win platforms
-test embed-1.5 {TkpUseWindow procedure, -container must be set} -constraints {
+test embed-1.5.win {TkpUseWindow procedure, -container must be set} -constraints {
 	win
 } -setup {
     deleteWindows
@@ -61,7 +61,7 @@ test embed-1.5 {TkpUseWindow procedure, -container must be set} -constraints {
 } -returnCodes error -result {the window to use is not a Tk container}
 
 # testing window embedding for other than win platforms
-test embed-1.5 {TkpUseWindow procedure, -container must be set} -constraints {
+test embed-1.4.nonwin {TkpUseWindow procedure, -container must be set} -constraints {
 	nonwin
 } -setup {
     deleteWindows
@@ -72,7 +72,7 @@ test embed-1.5 {TkpUseWindow procedure, -container must be set} -constraints {
     deleteWindows
 } -returnCodes error -result {window ".container" doesn't have -container option set}
 # testing window embedding for other than win platforms
-test embed-1.6 {TkpUseWindow procedure, -container must be set} -constraints {
+test embed-1.5.nonwin {TkpUseWindow procedure, -container must be set} -constraints {
 	nonwin
 } -setup {
     deleteWindows

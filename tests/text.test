@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.53 2008/12/06 10:48:29 dkf Exp $
+# RCS: @(#) $Id: text.test,v 1.54 2008/12/19 15:33:40 dgp Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -811,7 +811,7 @@ test text-1.83 {text options} -setup {
 } -cleanup {
     destroy .t
 } -result {-yscrollcommand yScrollCommand ScrollCommand {} {test command}}
-test text-1.83 {configuration option: "insertunfocussed"} -setup {
+test text-1.83.1 {configuration option: "insertunfocussed"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
     update
