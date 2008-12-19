@@ -1,11 +1,11 @@
-# $Id: tk.spec,v 1.40 2008/10/23 16:15:27 dgp Exp $
+# $Id: tk.spec,v 1.41 2008/12/19 14:32:25 dgp Exp $
 # This file is the basis for a binary Tk Linux RPM.
 
 %{!?directory:%define directory /usr/local}
 
 Name:          tk
 Summary:       Tk graphical toolkit for the Tcl scripting language.
-Version:       8.6a4
+Version:       8.6b1
 Release:       2
 License:       BSD
 Group:         Development/Languages

@@ -1,3 +1,15 @@
+2008-12-19  Don Porter	<dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.6b1
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2008-12-18  Don Porter	<dgp@users.sourceforge.net>
 
 	* library/msgs/de.msg:	Updated German messages.  Thanks to Ruediger
