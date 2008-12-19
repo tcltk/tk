@@ -1,5 +1,10 @@
 2008-12-19  Don Porter	<dgp@users.sourceforge.net>
 
+	* tests/clrpick.test:	Eliminate duplicate test names.
+	* tests/embed.test:
+	* tests/text.test:
+	* tests/textMark.test:
+
 	* README:		Bump version number to 8.6b1
 	* generic/tk.h:
 	* library/tk.tcl:

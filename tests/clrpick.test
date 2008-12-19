@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: clrpick.test,v 1.14 2008/08/15 01:10:03 aniap Exp $
+# RCS: @(#) $Id: clrpick.test,v 1.15 2008/12/19 15:33:40 dgp Exp $
 #
 
 package require tcltest 2.2
@@ -54,10 +54,10 @@ test clrpick-1.1 {tk_chooseColor command} -body {
 test clrpick-1.2 {tk_chooseColor command } -body {
     tk_chooseColor -initialcolor
 } -returnCodes error -result {value for "-initialcolor" missing}
-test clrpick-1.2 {tk_chooseColor command } -body {
+test clrpick-1.2.1 {tk_chooseColor command } -body {
     tk_chooseColor -parent
 } -returnCodes error -result {value for "-parent" missing}
-test clrpick-1.2 {tk_chooseColor command } -body {
+test clrpick-1.2.2 {tk_chooseColor command } -body {
     tk_chooseColor -title
 } -returnCodes error -result {value for "-title" missing}
 
