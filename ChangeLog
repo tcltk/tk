@@ -2,6 +2,8 @@
 
 	*** 8.6b1 TAGGED FOR RELEASE ***
 
+	* changes:	Updates for 8.6b1 release.
+
 	* tests/clrpick.test:	Eliminate duplicate test names.
 	* tests/embed.test:
 	* tests/text.test:
