@@ -1,5 +1,7 @@
 2008-12-19  Don Porter	<dgp@users.sourceforge.net>
 
+	*** 8.6b1 TAGGED FOR RELEASE ***
+
 	* tests/clrpick.test:	Eliminate duplicate test names.
 	* tests/embed.test:
 	* tests/text.test:
