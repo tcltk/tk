@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.30 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.31 2008/12/20 01:33:09 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -171,7 +171,7 @@ TkpOpenDisplay(
     Gestalt(gestaltQuickdrawVersion, (long *) &display->proto_minor_version);
     display->proto_major_version = 10;
     display->proto_minor_version -= gestaltMacOSXQD;
-    display->vendor = "Apple";
+    display->vendor = (char*) "Apple";
     Gestalt(gestaltSystemVersion, (long *) &display->release);
 
     /*
