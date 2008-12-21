@@ -26,12 +26,12 @@
 
 2008-12-18  Don Porter	<dgp@users.sourceforge.net>
 
-	* library/msgs/de.msg:	Updated German messages.  Thanks to Ruediger
+	* library/msgs/de.msg:	Updated German messages. Thanks to Ruediger
 	Haertel. [Patch 2442309].
 
 2008-12-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tk.h:           VOID --> void
+	* generic/tk.h:		VOID --> void
 	* unix/tkUnixPort.h:
 	* macosx/tkMacOSXPort.h:
 
@@ -58,9 +58,9 @@
 
 2008-12-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tk3d.c:    Make error message from Tk_GetRelief the same as
-			     for Tk_GetReliefFromObj.
-	* tests/canvas.test  Adapt test cases for changed error message.
+	* generic/tk3d.c:	Make error message from Tk_GetRelief the same
+				as for Tk_GetReliefFromObj.
+	* tests/canvas.test:	Adapt test cases for changed error message.
 	* tests/scrollbar.test
 	* tests/textTag.test
 
@@ -110,15 +110,15 @@
 	* generic/tkCmds.c:
 	* generic/tkWindow.c:
 
-	* macosx/tkMacOSXInit.c (TkpInit):	Unconditionally show Tk console
-						if TK_CONSOLE env var is set.
+	* macosx/tkMacOSXInit.c (TkpInit): Unconditionally show Tk console if
+					   TK_CONSOLE env var is set.
 
 2008-12-09  Don Porter	<dgp@users.sourceforge.net>
 
 	TIP #337 IMPLEMENTATION
 
-	* generic/tkBind.c:	Updated callers of Tcl_BackgroundError()
-	* generic/tkCanvas.c:	to use the new routine
+	* generic/tkBind.c:	Updated callers of Tcl_BackgroundError() to
+	* generic/tkCanvas.c:	use the new routine
 	* generic/tkEntry.c:	Tcl_BackgroundException() as appropriate.
 	* generic/tkImgBmap.c:
 	* generic/tkListbox.c:
@@ -164,7 +164,7 @@
 
 2008-12-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/ttk/ttk.tcl:        Added vista theme to iron out the visual
+	* library/ttk/ttk.tcl:	      Added vista theme to iron out the visual
 	* library/ttk/vistaTheme.tcl: differences between vista and XP.
 	* library/ttk/xpTheme.tcl:
 	* win/ttkWinXPTheme.c:
