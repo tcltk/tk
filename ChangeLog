@@ -1,3 +1,8 @@
+2008-12-21  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/canvas.n (postscript): Regularized documentation of -channel
+	option.
+
 2008-12-19  Don Porter	<dgp@users.sourceforge.net>
 
 	*** 8.6b1 TAGGED FOR RELEASE ***
