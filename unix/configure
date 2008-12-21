@@ -1337,7 +1337,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=8.5
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=5
-TK_PATCH_LEVEL=".6b1"
+TK_PATCH_LEVEL=".6"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 

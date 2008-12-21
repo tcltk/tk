@@ -2,6 +2,16 @@
 
 	*** 8.5.6 TAGGED FOR RELEASE ***
 
+	* generic/tk.h:		Bump to 8.5.6 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 	* changes:	Updates for 8.5.6 release.
 
 2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
