@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.79.2.1 2008/12/07 16:48:00 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.79.2.2 2008/12/21 23:52:45 ferrieux Exp $
  */
 
 #include "default.h"
@@ -4326,12 +4326,10 @@ TkTextGetTabs(
 	}
 
 	prevStop = lastStop;
-	if (Tk_GetMMFromObj(interp, textPtr->tkwin, objv[i],
-		&lastStop) != TCL_OK) {
+	if (Tk_GetDoublePixelsFromObj (interp, textPtr->tkwin, objv[i],
+				       &lastStop) != TCL_OK) {
 	    goto error;
 	}
-	lastStop *= WidthOfScreen(Tk_Screen(textPtr->tkwin));
-	lastStop /= WidthMMOfScreen(Tk_Screen(textPtr->tkwin));
 
 	if (i > 0 && (tabPtr->location <= (tabPtr-1)->location)) {
 	    /*

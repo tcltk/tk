@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.19 2008/03/11 22:31:19 das Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.19.2.1 2008/12/21 23:52:45 ferrieux Exp $
  */
 
 #include "tkInt.h"
@@ -268,12 +268,7 @@ Tk_CanvasGetCoordFromObj(
 {
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
 
-    if (Tk_GetMMFromObj(canvasPtr->interp, canvasPtr->tkwin, obj,
-	    doublePtr) != TCL_OK) {
-	return TCL_ERROR;
-    }
-    *doublePtr *= canvasPtr->pixelsPerMM;
-    return TCL_OK;
+    return Tk_GetDoublePixelsFromObj(canvasPtr->interp, canvasPtr->tkwin, obj, doublePtr);
 }
 
 /*
