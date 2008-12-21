@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.7 2008/10/15 15:25:54 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.8 2008/12/21 20:36:41 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6554,3 +6554,15 @@ format, avoiding sensitivity to locale setting. (fellows)
 (porter)
 
 --- Released 8.5.5, October 15, 2008 --- See ChangeLog for details ---
+
+2008-10-17 (enhancement) keyboard bindings for ttk::scale (thoyts)
+
+2008-11-12 (bug fix)[1777362] permit [text] names containing "-" (thoyts)
+
+2008-11-15 (bug fix)[2239034] limit [wm manage] to Frames (thoyts)
+
+2008-11-19 (bug fix)[2312027] Tk_Create*ImageType() thread safety (nijtmans)
+
+2008-11-22 (bug fix)[1939129,1991930] combobox behind other windows (thoyts)
+
+--- Released 8.5.6, December 21, 2008 --- See ChangeLog for details ---

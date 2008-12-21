@@ -1,3 +1,9 @@
+2008-12-21  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.6 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for 8.5.6 release.
+
 2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl: [Bug 1939129,1991930] combobox dropdown
