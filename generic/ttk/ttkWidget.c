@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.11 2008/01/06 22:35:41 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.11.2.1 2008/12/22 18:34:55 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -61,8 +61,7 @@ static void SizeChanged(WidgetCore *corePtr)
 static Drawable BeginDrawing(Tk_Window tkwin)
 {
     return Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin),
-	    DefaultDepthOfScreen(Tk_Screen(tkwin)));
+	    Tk_Width(tkwin), Tk_Height(tkwin),Tk_Depth(tkwin));
 }
 
 /* EndDrawing --
@@ -270,6 +269,7 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 
 	    corePtr->widgetSpec->cleanupProc(corePtr);
 
+	    Tk_UndefineCursor(corePtr->tkwin);	/* workaround for #2207435 */
 	    Tk_FreeConfigOptions(
 		clientData, corePtr->optionTable, corePtr->tkwin);
 	    corePtr->tkwin = NULL;
