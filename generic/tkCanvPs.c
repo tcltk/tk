@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.19.2.1 2008/12/22 01:43:39 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.19.2.2 2008/12/22 09:19:40 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -42,6 +42,7 @@ typedef struct TkColormapData {	/* Hold color information for a window */
  */
 
 typedef struct TkPostscriptInfo {
+    Tk_Window tkwin;		/* The canvas being printed. */
     int x, y, width, height;	/* Area to print, in canvas pixel
 				 * coordinates. */
     int x2, y2;			/* x+width and y+height. */
@@ -191,6 +192,7 @@ TkCanvPostscriptCmd(
     }
     oldInfoPtr = canvasPtr->psInfo;
     canvasPtr->psInfo = (Tk_PostscriptInfo) psInfoPtr;
+    psInfo.tkwin = canvasPtr->tkwin;
     psInfo.x = canvasPtr->xOrigin;
     psInfo.y = canvasPtr->yOrigin;
     psInfo.width = -1;
