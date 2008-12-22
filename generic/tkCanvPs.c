@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.19 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.19.2.1 2008/12/22 01:43:39 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -755,7 +755,7 @@ Tk_PostscriptFont(
 
     Tcl_DStringInit(&ds);
     points = Tk_PostscriptFontName(tkfont, &ds);
-    sprintf(pointString, "%d", points);
+    sprintf(pointString, "%d", TkFontGetPoints(psInfoPtr->tkwin, points));
     Tcl_AppendResult(interp, "/", Tcl_DStringValue(&ds), " findfont ",
 	    pointString, " scalefont ", NULL);
     if (strncasecmp(Tcl_DStringValue(&ds), "Symbol", 7) != 0) {
