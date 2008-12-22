@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.9 2008/12/22 12:33:20 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.10 2008/12/22 18:49:24 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6569,5 +6569,9 @@ format, avoiding sensitivity to locale setting. (fellows)
 in screen distances, reducing precision loss (ferrieux)
 
 2008-12-22 (bug fix)[2107938] no negative font size in PS (fellows)
+
+2008-12-22 (bug fix)[2264732] crash using nondefault visual (english)
+
+2008-12-22 (bug fix)[2207435] [ttk::entry .t -textvar ::noexist::x] (english)
 
 --- Released 8.5.6, December 23, 2008 --- See ChangeLog for details ---
