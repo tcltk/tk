@@ -1,3 +1,9 @@
+2008-12-22  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.6 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for 8.5.6 release.
+
 2008-12-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkCanvPs.c (Tk_PostscriptFont,TkCanvPostscriptCmd): Backport
@@ -6,13 +12,11 @@
 2008-12-22  Alexandre Ferrieux 	<ferrieux@users.sourceforge.net>
 
 	* generic/tkCanvUtil.c: Backport of the Millipeter patch [1813597,
-	* generic/tkInt.h       2218964]
-	* generic/tkObj.c 
-	* generic/tkText.c 
+	* generic/tkInt.h:       2218964]
+	* generic/tkObj.c:
+	* generic/tkText.c:
 	
 2008-12-21  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.5.6 TAGGED FOR RELEASE ***
 
 	* generic/tk.h:		Bump to 8.5.6 for release.
 	* library/tk.tcl:

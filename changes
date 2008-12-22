@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.8 2008/12/21 20:36:41 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.9 2008/12/22 12:33:20 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6565,4 +6565,9 @@ format, avoiding sensitivity to locale setting. (fellows)
 
 2008-11-22 (bug fix)[1939129,1991930] combobox behind other windows (thoyts)
 
---- Released 8.5.6, December 21, 2008 --- See ChangeLog for details ---
+2008-12-22 (bug fix)[1813597,2218964] eliminate unnecessary units conversion
+in screen distances, reducing precision loss (ferrieux)
+
+2008-12-22 (bug fix)[2107938] no negative font size in PS (fellows)
+
+--- Released 8.5.6, December 23, 2008 --- See ChangeLog for details ---
