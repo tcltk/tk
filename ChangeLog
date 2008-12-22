@@ -2,6 +2,8 @@
 
 	*** 8.5.6 TAGGED FOR RELEASE ***
 
+	* tests/embed.test:	Eliminate duplicate test names.
+
 	* changes:	Updates for 8.5.6 release.
 
 2008-12-22  Donal K. Fellows  <dkf@users.sf.net>
