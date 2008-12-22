@@ -4,7 +4,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: embed.test,v 1.4 2005/02/15 03:22:10 chengyemao Exp $
+# RCS: @(#) $Id: embed.test,v 1.4.4.1 2008/12/22 13:59:09 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -34,13 +34,13 @@ if {$tcl_platform(platform) == "windows"} {
 
 # testing window embedding for Windows platform
 
-test embed-1.4 {TkpUseWindow procedure, -container must be set} {
+test embed-1.4.win {TkpUseWindow procedure, -container must be set} {
     deleteWindows
     toplevel .container
     list [catch {toplevel .embd -use [winfo id .container]} err] $err
 } {1 {the window to use is not a Tk container}}
 
-test embed-1.5 {TkpUseWindow procedure, -container must be set} {
+test embed-1.5.win {TkpUseWindow procedure, -container must be set} {
     deleteWindows
     frame .container
     list [catch {toplevel .embd -use [winfo id .container]} err] $err
@@ -50,13 +50,13 @@ test embed-1.5 {TkpUseWindow procedure, -container must be set} {
 
 # testing window embedding for other platforms
 
-test embed-1.4 {TkpUseWindow procedure, -container must be set} {
+test embed-1.4.nonwin {TkpUseWindow procedure, -container must be set} {
     deleteWindows
     toplevel .container
     list [catch {toplevel .embd -use [winfo id .container]} err] $err
 } {1 {window ".container" doesn't have -container option set}}
 
-test embed-1.5 {TkpUseWindow procedure, -container must be set} {
+test embed-1.5.nonwin {TkpUseWindow procedure, -container must be set} {
     deleteWindows
     frame .container
     list [catch {toplevel .embd -use [winfo id .container]} err] $err
