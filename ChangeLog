@@ -1,11 +1,3 @@
-2008-12-22  Joe English  <jenglish@users.sourceforge.net>
-
-	* generic/ttk/ttkWidget.c: Don't crash when 
-	application uses nondefault visual [Bug 2264732]
-	(Backport from trunk change 2008-11-11)
-	* Workaround for [Bug 2207435]
-	(Backport from trunk change 2008-10-31).
-
 2008-12-22  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.6 TAGGED FOR RELEASE ***
@@ -13,6 +5,14 @@
 	* tests/embed.test:	Eliminate duplicate test names.
 
 	* changes:	Updates for 8.5.6 release.
+
+2008-12-22  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkWidget.c: Don't crash when 
+	application uses nondefault visual [Bug 2264732]
+	(Backport from trunk change 2008-11-11)
+	* Workaround for [Bug 2207435]
+	(Backport from trunk change 2008-10-31).
 
 2008-12-22  Donal K. Fellows  <dkf@users.sf.net>
 
