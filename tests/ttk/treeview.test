@@ -1,5 +1,5 @@
 #
-# $Id: treeview.test,v 1.5 2008/08/19 14:47:55 jenglish Exp $
+# $Id: treeview.test,v 1.6 2008/12/27 18:54:56 jenglish Exp $
 #
 # [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
 # what it currently does)
@@ -570,6 +570,25 @@ test treeview-identify-8 "identify element" -body {
     identify* .tv {item element} 10 10  30 30  50 50
 } -match glob -result [list \
 	branch $disclosure branch2 $disclosure branch3 $disclosure]
+
+# See #2381555 
+test treeview-identify-9 "identify works when horizontally scrolled" -setup {
+    .tv configure -show {tree headings}
+    foreach column {#0 A B C} {
+	.tv column $column -stretch 0 -width 50
+    }
+    place .tv -x 0 -y 0 -width 100
+} -body {
+    set result [list]
+    foreach xoffs {0 50 100} {
+	.tv xview $xoffs ; update
+	lappend result [identify* .tv {region column} 10 10 60 10]
+    }
+    set result
+} -result [list \
+	[list heading #0 heading #1] \
+	[list heading #1 heading #2] \
+	[list heading #2 heading #3] ]
 
 test treeview-identify-cleanup "identify - cleanup" -body {
     destroy .tv

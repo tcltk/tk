@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.30 2008/11/09 23:53:09 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.31 2008/12/27 18:54:56 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -1343,7 +1343,7 @@ static TreeItem *IdentifyRow(
 static TreeItem *IdentifyItem(Treeview *tv, int y)
 {
     int rowHeight = tv->tree.rowHeight;
-    int ypos = tv->tree.treeArea.y - tv->tree.yscroll.first * rowHeight;
+    int ypos = tv->tree.treeArea.y - rowHeight * tv->tree.yscroll.first;
     return IdentifyRow(tv, tv->tree.root->children, &ypos, y);
 }
 
@@ -1354,7 +1354,7 @@ static TreeItem *IdentifyItem(Treeview *tv, int y)
 static int IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 {
     int colno = FirstColumn(tv);
-    int xpos = tv->tree.treeArea.x;
+    int xpos = tv->tree.treeArea.x - tv->tree.xscroll.first;
 
     while (colno < tv->tree.nDisplayColumns) {
 	TreeColumn *column = tv->tree.displayColumns[colno];
@@ -1464,6 +1464,9 @@ static int BoundingBox(
     bbox.y += (row - tv->tree.yscroll.first) * tv->tree.rowHeight;
     bbox.height = tv->tree.rowHeight;
 
+    bbox.x -= tv->tree.xscroll.first;
+    bbox.width = TreeWidth(tv);
+
     if (column) {
 	int xpos = 0, i = FirstColumn(tv);
 	while (i < tv->tree.nDisplayColumns) {
@@ -1519,7 +1522,7 @@ static TreeRegion IdentifyRegion(Treeview *tv, int x, int y)
 	} else {
 	    return REGION_HEADING;
 	}
-    } else if (Ttk_BoxContains(tv->tree.treeArea,x,y)) {
+    } else if (Ttk_BoxContains(tv->tree.treeArea, x, y)) {
 	TreeItem *item = IdentifyItem(tv, y);
 	if (item && colno > 0) {
 	    return REGION_CELL;
@@ -1630,7 +1633,6 @@ static void TreeviewDoLayout(void *clientData)
 	    tv->tree.xscroll.first + tv->tree.treeArea.width,
 	    TreeWidth(tv));
 
-    tv->tree.treeArea.x -= tv->tree.xscroll.first;
     if (tv->tree.showFlags & SHOW_HEADINGS) {
 	tv->tree.headingArea = Ttk_PackBox(
 	    &tv->tree.treeArea, 1, tv->tree.headingHeight, TTK_SIDE_TOP);
@@ -1644,7 +1646,6 @@ static void TreeviewDoLayout(void *clientData)
 	    tv->tree.yscroll.first,
 	    tv->tree.yscroll.first + visibleRows,
 	    CountRows(tv->tree.root) - 1);
-
 }
 
 /* + TreeviewSize --
@@ -1686,14 +1687,17 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item)
 /* + DrawHeadings --
  *	Draw tree headings.
  */
-static void DrawHeadings(Treeview *tv, Drawable d, Ttk_Box b)
+static void DrawHeadings(Treeview *tv, Drawable d)
 {
+    const int x0 = tv->tree.headingArea.x - tv->tree.xscroll.first;
+    const int y0 = tv->tree.headingArea.y;
+    const int h0 = tv->tree.headingArea.height;
     int i = FirstColumn(tv);
     int x = 0;
 
     while (i < tv->tree.nDisplayColumns) {
 	TreeColumn *column = tv->tree.displayColumns[i];
-	Ttk_Box parcel = Ttk_MakeBox(b.x+x, b.y, column->width, b.height);
+	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
 	DisplayLayout(tv->tree.headingLayout,
 	    column, column->headingState, parcel, d);
 	x += column->width;
@@ -1719,7 +1723,7 @@ static void PrepareItem(
  */
 static void DrawCells(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem,
-    Drawable d, Ttk_Box b, int x, int y)
+    Drawable d, int x, int y)
 {
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_State state = ItemState(tv, item);
@@ -1741,7 +1745,7 @@ static void DrawCells(
     for (i = 1; i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_PadBox(
-	    Ttk_MakeBox(b.x+x, b.y+y, column->width, rowHeight), cellPadding);
+	    Ttk_MakeBox(x, y, column->width, rowHeight), cellPadding);
 
 	displayItem->textObj = column->data;
 	displayItem->anchorObj = column->anchorObj;	/* <<NOTE-ANCHOR>> */
@@ -1755,13 +1759,13 @@ static void DrawCells(
  * 	Draw an item (row background, tree label, and cells).
  */
 static void DrawItem(
-    Treeview *tv, TreeItem *item, Drawable d, Ttk_Box b, int depth, int row)
+    Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
     Ttk_State state = ItemState(tv, item);
     DisplayItem displayItem;
     int rowHeight = tv->tree.rowHeight;
-    int x = depth * tv->tree.indent;
-    int y = (row - tv->tree.yscroll.first) * tv->tree.rowHeight;
+    int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
+    int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
 
     if (row % 2) state |= TTK_STATE_ALTERNATE;
 
@@ -1770,27 +1774,27 @@ static void DrawItem(
     /* Draw row background:
      */
     {
-	Ttk_Box rowBox = Ttk_MakeBox(b.x, b.y+y, TreeWidth(tv), rowHeight);
+	Ttk_Box rowBox = Ttk_MakeBox(x, y, TreeWidth(tv), rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
     /* Draw tree label:
      */
     if (tv->tree.showFlags & SHOW_TREE) {
+	int indent = depth * tv->tree.indent;
 	int colwidth = tv->tree.column0.width;
-	Ttk_Box parcel = Ttk_MakeBox(b.x + x, b.y + y, colwidth - x, rowHeight);
+	Ttk_Box parcel = Ttk_MakeBox(
+		x+indent, y, colwidth-indent, rowHeight);
 	if (item->textObj) { displayItem.textObj = item->textObj; }
 	if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
 	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
-	x = colwidth;
-    } else {
-	x = 0;
+	x += colwidth;
     }
 
     /* Draw data cells:
      */
-    DrawCells(tv, item, &displayItem, d, b, x, y);
+    DrawCells(tv, item, &displayItem, d, x, y);
 }
 
 /* + DrawSubtree --
@@ -1801,17 +1805,17 @@ static void DrawItem(
  */
 
 static int DrawForest(	/* forward */
-    Treeview *tv, TreeItem *item, Drawable d, Ttk_Box b, int depth, int row);
+    Treeview *tv, TreeItem *item, Drawable d, int depth, int row);
 
 static int DrawSubtree(
-    Treeview *tv, TreeItem *item, Drawable d, Ttk_Box b, int depth, int row)
+    Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
     if (row >= tv->tree.yscroll.first) {
-	DrawItem(tv, item, d, b, depth, row);
+	DrawItem(tv, item, d, depth, row);
     }
 
     if (item->state & TTK_STATE_OPEN) {
-	return DrawForest(tv, item->children, d, b, depth + 1, row + 1);
+	return DrawForest(tv, item->children, d, depth + 1, row + 1);
     } else {
 	return row + 1;
     }
@@ -1824,10 +1828,10 @@ static int DrawSubtree(
  * 	Row number of the last item drawn.
  */
 static int DrawForest(
-    Treeview *tv, TreeItem *item, Drawable d, Ttk_Box b, int depth, int row)
+    Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
     while (item && row <= tv->tree.yscroll.last) {
-        row = DrawSubtree(tv, item, d, b, depth, row);
+        row = DrawSubtree(tv, item, d, depth, row);
 	item = item->next;
     }
     return row;
@@ -1842,9 +1846,9 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 
     Ttk_DrawLayout(tv->core.layout, tv->core.state, d);
     if (tv->tree.showFlags & SHOW_HEADINGS) {
-	DrawHeadings(tv, d, tv->tree.headingArea);
+	DrawHeadings(tv, d);
     }
-    DrawForest(tv, tv->tree.root->children, d, tv->tree.treeArea, 0,0);
+    DrawForest(tv, tv->tree.root->children, d, 0,0);
 }
 
 /*------------------------------------------------------------------------
@@ -2836,7 +2840,7 @@ static int TreeviewDragCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Treeview *tv = recordPtr;
-    int left = tv->tree.treeArea.x;
+    int left = tv->tree.treeArea.x - tv->tree.xscroll.first;
     int i = FirstColumn(tv);
     TreeColumn *column;
     int newx;
