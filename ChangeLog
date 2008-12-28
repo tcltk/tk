@@ -9,6 +9,9 @@
 	that contains the mouse.
 	* generic/tkEvent.c (InvokeFocusHandlers): Do not direct <MouseWheel>
 	through the focus mechanism.
+	*** POTENTIAL INCOMPATIBILITY *** for anyone counting on shift-wheel
+	to do something else (or nothing at all) or for the wheel events to be
+	following the keyboard on Win.
 
 	* generic/tkImgPNG.c (ReadIDAT): Corrected code to transfer blocks of
 	compressed data into the Tcl_ZlibStream. Allows the reading of all
