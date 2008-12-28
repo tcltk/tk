@@ -1,8 +1,16 @@
+2008-12-28  Donal K. Fellows  <dkf@users.sf.net>
+
+	TIP #244 IMPLEMENTATION
+
+	* generic/tkImgPNG.c, tests/imgPNG.test, doc/photo.n: Adaptation of
+	tkpng to the Tk core, proving support for PNG image reading and
+	writing, based on Tcl's zlib support.
+
 2008-12-27  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTreeview.c: Fix inconsistent use of 
-	treeArea / headingArea; fixes [Bug 2381555]. ([$tv identify]
-	didn't work when horizontally scrolled).
+	* generic/ttk/ttkTreeview.c: Fix inconsistent use of treeArea /
+	headingArea; fixes [Bug 2381555]. ([$tv identify] didn't work when
+	horizontally scrolled).
 
 2008-12-21  Donal K. Fellows  <dkf@users.sf.net>
 

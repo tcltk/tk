@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.147 2008/12/05 10:48:52 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.148 2008/12/28 13:08:38 dkf Exp $
 
 # Current Tk version;  used in various names.
 
@@ -348,8 +348,8 @@ CANV_OBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 	tkCanvLine.o tkCanvPoly.o tkCanvPs.o tkCanvText.o \
 	tkCanvUtil.o tkCanvWind.o tkRectOval.o tkTrig.o
 
-IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPPM.o tkImgPhoto.o \
-	tkImgPhInstance.o
+IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
+	tkImgPhoto.o tkImgPhInstance.o
 
 TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
@@ -441,7 +441,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkCanvWind.c $(GENERIC_DIR)/tkRectOval.c \
 	$(GENERIC_DIR)/tkTrig.c $(GENERIC_DIR)/tkImage.c \
 	$(GENERIC_DIR)/tkImgBmap.c $(GENERIC_DIR)/tkImgGIF.c \
-	$(GENERIC_DIR)/tkImgPPM.c \
+	$(GENERIC_DIR)/tkImgPNG.c $(GENERIC_DIR)/tkImgPPM.c \
 	$(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
 	$(GENERIC_DIR)/tkText.c \
 	$(GENERIC_DIR)/tkTextBTree.c $(GENERIC_DIR)/tkTextDisp.c \
@@ -1085,6 +1085,9 @@ tkImgBmap.o: $(GENERIC_DIR)/tkImgBmap.c
 
 tkImgGIF.o: $(GENERIC_DIR)/tkImgGIF.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgGIF.c
+
+tkImgPNG.o: $(GENERIC_DIR)/tkImgPNG.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPNG.c
 
 tkImgPPM.o: $(GENERIC_DIR)/tkImgPPM.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPPM.c
