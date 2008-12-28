@@ -1,5 +1,9 @@
 2008-12-28  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/tkImgPNG.c (ReadIDAT): Corrected code to transfer blocks of
+	compressed data into the Tcl_ZlibStream. Allows the reading of all
+	images from PngSuite set. Thanks to Michael Kirkham for fix/testing.
+
 	TIP #244 IMPLEMENTATION
 
 	* generic/tkImgPNG.c, tests/imgPNG.test, doc/photo.n: Adaptation of
