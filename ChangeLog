@@ -2,6 +2,9 @@
 
 	TIP #171 IMPLEMENTATION
 
+	* library/listbox.tcl, library/scrlbar.tcl, library/text.tcl: Adjust
+	users of the <MouseWheel> event to do the right thing horizontally as
+	well as vertically.
 	* win/tkWinX.c (GenerateXEvent): Redirect <MouseWheel> to the window
 	that contains the mouse.
 	* generic/tkEvent.c (InvokeFocusHandlers): Do not direct <MouseWheel>

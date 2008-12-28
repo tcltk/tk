@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: scrlbar.tcl,v 1.13 2006/03/17 11:13:15 patthoyts Exp $
+# RCS: @(#) $Id: scrlbar.tcl,v 1.14 2008/12/28 23:43:14 dkf Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -130,18 +130,34 @@ bind Scrollbar <End> {
     tk::ScrollToPos %W 1
 }
 }
-if {[tk windowingsystem] eq "aqua"} {
-    bind Scrollbar <MouseWheel> {
-        tk::ScrollByUnits %W v [expr {- (%D)}]
+switch [tk windowingsystem] {
+    "aqua" {
+	bind Scrollbar <MouseWheel> {
+	    tk::ScrollByUnits %W v [expr {- (%D)}]
+	}
+	bind Scrollbar <Option-MouseWheel> {
+	    tk::ScrollByUnits %W v [expr {-10 * (%D)}]
+	}
+	bind Scrollbar <Shift-MouseWheel> {
+	    tk::ScrollByUnits %W h [expr {- (%D)}]
+	}
+	bind Scrollbar <Shift-Option-MouseWheel> {
+	    tk::ScrollByUnits %W h [expr {-10 * (%D)}]
+	}
     }
-    bind Scrollbar <Option-MouseWheel> {
-        tk::ScrollByUnits %W v [expr {-10 * (%D)}]
+    "win32" {
+	bind Scrollbar <MouseWheel> {
+	    tk::ScrollByUnits %W v [expr {- (%D / 120) * 4}]
+	}
+	bind Scrollbar <Shift-MouseWheel> {
+	    tk::ScrollByUnits %W h [expr {- (%D / 120) * 4}]
+	}
     }
-    bind Scrollbar <Shift-MouseWheel> {
-        tk::ScrollByUnits %W h [expr {- (%D)}]
-    }
-    bind Scrollbar <Shift-Option-MouseWheel> {
-        tk::ScrollByUnits %W h [expr {-10 * (%D)}]
+    "x11" {
+	bind Scrollbar <4> {tk::ScrollByUnits %W v -5}
+	bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
+	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
+	bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
     }
 }
 # tk::ScrollButtonDown --
