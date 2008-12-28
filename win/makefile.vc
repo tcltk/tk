@@ -13,7 +13,7 @@
 # Copyright (c) 2003-2008 Pat Thoyts.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.126 2008/10/19 21:22:36 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.127 2008/12/28 13:08:39 dkf Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -322,6 +322,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkImage.obj \
 	$(TMP_DIR)\tkImgBmap.obj \
 	$(TMP_DIR)\tkImgGIF.obj \
+	$(TMP_DIR)\tkImgPNG.obj \
 	$(TMP_DIR)\tkImgPPM.obj \
 	$(TMP_DIR)\tkImgPhoto.obj \
 	$(TMP_DIR)\tkImgPhInstance.obj \

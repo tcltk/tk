@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.82 2008/12/05 10:48:52 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.83 2008/12/28 13:08:39 dkf Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -314,6 +314,7 @@ TK_OBJS = \
 	tkImage.$(OBJEXT) \
 	tkImgBmap.$(OBJEXT) \
 	tkImgGIF.$(OBJEXT) \
+	tkImgPNG.$(OBJEXT) \
 	tkImgPPM.$(OBJEXT) \
 	tkImgPhoto.$(OBJEXT) \
 	tkImgPhInstance.$(OBJEXT) \
