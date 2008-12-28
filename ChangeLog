@@ -1,5 +1,12 @@
 2008-12-28  Donal K. Fellows  <dkf@users.sf.net>
 
+	TIP #171 IMPLEMENTATION
+
+	* win/tkWinX.c (GenerateXEvent): Redirect <MouseWheel> to the window
+	that contains the mouse.
+	* generic/tkEvent.c (InvokeFocusHandlers): Do not direct <MouseWheel>
+	through the focus mechanism.
+
 	* generic/tkImgPNG.c (ReadIDAT): Corrected code to transfer blocks of
 	compressed data into the Tcl_ZlibStream. Allows the reading of all
 	images from PngSuite set. Thanks to Michael Kirkham for fix/testing.
