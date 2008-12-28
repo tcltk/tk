@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.42 2008/11/12 16:38:13 patthoyts Exp $
+# RCS: @(#) $Id: text.tcl,v 1.43 2008/12/28 23:43:14 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -471,6 +471,13 @@ if {[tk windowingsystem] eq "aqua"} {
 	    %W yview scroll [expr {(2-%D)/3}] pixels
 	}
     }
+    bind Text <Shift-MouseWheel> {
+	if {%D >= 0} {
+	    %W xview scroll [expr {-%D/3}] pixels
+	} else {
+	    %W xview scroll [expr {(2-%D)/3}] pixels
+	}
+    }
 }
 
 if {"x11" eq [tk windowingsystem]} {
@@ -486,6 +493,16 @@ if {"x11" eq [tk windowingsystem]} {
     bind Text <5> {
 	if {!$tk_strictMotif} {
 	    %W yview scroll 50 pixels
+	}
+    }
+    bind Text <Shift-4> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll -50 pixels
+	}
+    }
+    bind Text <Shift-5> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll 50 pixels
 	}
     }
 }
