@@ -5,14 +5,16 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: window.test,v 1.13 2008/08/30 21:52:26 aniap Exp $
+# RCS: @(#) $Id: window.test,v 1.14 2008/12/29 16:29:43 das Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
+testConstraint unthreaded [expr {
+    (![info exist tcl_platform(threaded)] || !$tcl_platform(threaded))
+}]
 namespace import ::tk::test::loadTkCommand
-
 update
 
 # XXX This file is woefully incomplete.  Right now it only tests
@@ -192,8 +194,9 @@ test window-2.8 {Tk_DestroyWindow, cleanup half dead windows at exit} -constrain
     list $error $msg
 } -result {0 {}}
 
+# window-2.9 deadlocks threaded Tk [Bug 1715716]
 test window-2.9 {Tk_DestroyWindow, Destroy bindings evaluated after exit} -constraints {
-    unixOrWin
+    unixOrWin unthreaded
 } -body {
     set code [loadTkCommand]
     append code {
