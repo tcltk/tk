@@ -1,3 +1,7 @@
+﻿2008-12-31  David Gravereaux <davygrvy@pobox.com>
+
+	* win/rules.vc: small bug not setting SYMBOLS macro fixed.
+
 2008-12-31  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkDefaultTheme.c: Fix color palette for
