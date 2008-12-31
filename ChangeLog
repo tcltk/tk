@@ -6,6 +6,7 @@
 	as intended.
 	* library/ttk/altTheme.tcl: Specify dark gray -bordercolor
 	to soften edges.
+	* tests/ttk/{checkbutton,radiobutton}.test: split out of ttk.test.
 
 2008-12-28  Donal K. Fellows  <dkf@users.sf.net>
 
