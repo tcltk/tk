@@ -1,3 +1,12 @@
+2008-12-31  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkDefaultTheme.c: Fix color palette for
+	radiobutton and checkbutton indicators.  Fixes [Bug 2003310];
+	also makes "alt" theme check/radiobuttons look like Windows 98,
+	as intended.
+	* library/ttk/altTheme.tcl: Specify dark gray -bordercolor
+	to soften edges.
+
 2008-12-28  Donal K. Fellows  <dkf@users.sf.net>
 
 	TIP #171 IMPLEMENTATION
