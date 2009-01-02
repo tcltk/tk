@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.40 2008/11/12 00:15:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.41 2009/01/02 23:20:32 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -194,7 +194,7 @@ EXTERN void		Tk_ClearSelection (Tk_Window tkwin, Atom selection);
 /* 25 */
 EXTERN int		Tk_ClipboardAppend (Tcl_Interp * interp,
 				Tk_Window tkwin, Atom target, Atom format,
-				char* buffer);
+				const char* buffer);
 #endif
 #ifndef Tk_ClipboardClear_TCL_DECLARED
 #define Tk_ClipboardClear_TCL_DECLARED
@@ -1731,7 +1731,7 @@ typedef struct TkStubs {
     void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes * attsPtr); /* 22 */
     int (*tk_CharBbox) (Tk_TextLayout layout, int index, int * xPtr, int * yPtr, int * widthPtr, int * heightPtr); /* 23 */
     void (*tk_ClearSelection) (Tk_Window tkwin, Atom selection); /* 24 */
-    int (*tk_ClipboardAppend) (Tcl_Interp * interp, Tk_Window tkwin, Atom target, Atom format, char* buffer); /* 25 */
+    int (*tk_ClipboardAppend) (Tcl_Interp * interp, Tk_Window tkwin, Atom target, Atom format, const char* buffer); /* 25 */
     int (*tk_ClipboardClear) (Tcl_Interp * interp, Tk_Window tkwin); /* 26 */
     int (*tk_ConfigureInfo) (Tcl_Interp * interp, Tk_Window tkwin, Tk_ConfigSpec * specs, char * widgRec, const char * argvName, int flags); /* 27 */
     int (*tk_ConfigureValue) (Tcl_Interp * interp, Tk_Window tkwin, Tk_ConfigSpec * specs, char * widgRec, const char * argvName, int flags); /* 28 */
