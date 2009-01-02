@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.45 2008/11/12 00:15:24 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.46 2009/01/02 23:20:32 nijtmans Exp $
 
 library tk
 
@@ -129,7 +129,7 @@ declare 24 generic {
 }
 declare 25 generic {
     int Tk_ClipboardAppend(Tcl_Interp *interp,Tk_Window tkwin,
-	    Atom target, Atom format, char* buffer)
+	    Atom target, Atom format, const char* buffer)
 }
 declare 26 generic {
     int Tk_ClipboardClear(Tcl_Interp *interp, Tk_Window tkwin)

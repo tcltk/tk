@@ -1,4 +1,10 @@
-﻿2008-12-31  David Gravereaux <davygrvy@pobox.com>
+2009-01-03  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.decls:       CONSTify Tk_ClipboardAppend
+	* generic/tkClipboard.c:
+	* generic/tkDecls.h: (regenerated)
+
+2008-12-31  David Gravereaux <davygrvy@pobox.com>
 
 	* win/rules.vc: small bug not setting SYMBOLS macro fixed.
 
