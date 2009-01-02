@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.22 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.23 2009/01/02 23:20:32 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -326,7 +326,7 @@ Tk_ClipboardAppend(
 				 * clipboard item, e.g. STRING or LENGTH. */
     Atom format,		/* Format in which the selection information
 				 * should be returned to the requestor. */
-    char *buffer)		/* NULL terminated string containing the data
+    const char *buffer)		/* NULL terminated string containing the data
 				 * to be added to the clipboard. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -423,7 +423,7 @@ Tk_ClipboardObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    char *path = NULL;
+    const char *path = NULL;
     Atom selection;
     static const char *const optionStrings[] = { "append", "clear", "get", NULL };
     enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET };
@@ -442,9 +442,9 @@ Tk_ClipboardObjCmd(
     switch ((enum options) index) {
     case CLIPBOARD_APPEND: {
 	Atom target, format;
-	char *targetName = NULL;
-	char *formatName = NULL;
-	char *string;
+	const char *targetName = NULL;
+	const char *formatName = NULL;
+	const char *string;
 	static const char *const appendOptionStrings[] = {
 	    "-displayof", "-format", "-type", NULL
 	};
@@ -544,10 +544,10 @@ Tk_ClipboardObjCmd(
     }
     case CLIPBOARD_GET: {
 	Atom target;
-	char *targetName = NULL;
+	const char *targetName = NULL;
 	Tcl_DString selBytes;
 	int result;
-	char *string;
+	const char *string;
 	static const char *const getOptionStrings[] = {
 	    "-displayof", "-type", NULL
 	};
