@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.29 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: bind.n,v 1.29.2.1 2009/01/03 00:18:08 ferrieux Exp $
 '\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
@@ -581,8 +581,7 @@ window.
 .LP
 The replacement string for a %-replacement is formatted as a proper
 Tcl list element.
-This means that it will be surrounded with braces
-if it contains spaces, or special characters such as \fB$\fR and
+This means that spaces or special characters such as \fB$\fR and
 \fB{\fR may be preceded by backslashes.
 This guarantees that the string will be passed through the Tcl
 parser when the binding script is evaluated.
