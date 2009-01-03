@@ -2100,6 +2100,8 @@
 		F97AE7F10B65C1E900310EA2 /* Wish-Common.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Common.xcconfig"; sourceTree = "<group>"; };
 		F97AE82B0B65C69B00310EA2 /* Wish-Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Release.xcconfig"; sourceTree = "<group>"; };
 		F97AE8330B65C87F00310EA2 /* Wish-Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "Wish-Debug.xcconfig"; sourceTree = "<group>"; };
+		F98383650F0FA43900171CA6 /* checkbutton.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = checkbutton.test; sourceTree = "<group>"; };
+		F98383680F0FA44700171CA6 /* radiobutton.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = radiobutton.test; sourceTree = "<group>"; };
 		F9903CAF094FAADA004613E9 /* tclTomMath.decls */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tclTomMath.decls; sourceTree = "<group>"; };
 		F9903CB0094FAADA004613E9 /* tclTomMathDecls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tclTomMathDecls.h; sourceTree = "<group>"; };
 		F99388380EE0114B0065FE6B /* fontchooser.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = fontchooser.tcl; sourceTree = "<group>"; };
@@ -2171,7 +2173,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.53 2008/12/28 16:42:43 das Exp $\n";
+			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.54 2009/01/03 13:56:21 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -3031,6 +3033,7 @@
 			isa = PBXGroup;
 			children = (
 				F96888540AF7880C000797B5 /* all.tcl */,
+				F98383650F0FA43900171CA6 /* checkbutton.test */,
 				F96888560AF7880C000797B5 /* combobox.test */,
 				F96888570AF7880C000797B5 /* entry.test */,
 				F96888580AF7880C000797B5 /* image.test */,
@@ -3039,6 +3042,7 @@
 				F968885C0AF7880C000797B5 /* notebook.test */,
 				F968885D0AF7880C000797B5 /* panedwindow.test */,
 				F968885E0AF7880C000797B5 /* progressbar.test */,
+				F98383680F0FA44700171CA6 /* radiobutton.test */,
 				F968885F0AF7880C000797B5 /* scrollbar.test */,
 				F96888600AF7880C000797B5 /* treetags.test */,
 				F96888610AF7880C000797B5 /* treeview.test */,
