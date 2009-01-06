@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ParseArgv.3,v 1.11 2008/06/30 22:57:01 dkf Exp $
+'\" RCS: @(#) $Id: ParseArgv.3,v 1.12 2009/01/06 21:58:15 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_ParseArgv 3 "" Tk "Tk Library Procedures"
@@ -72,11 +72,11 @@ The \fIargTable\fR array specifies the kinds of arguments that are
 expected;  each of its entries has the following structure:
 .CS
 typedef struct {
-    char *\fIkey\fR;
+    const char *\fIkey\fR;
     int \fItype\fR;
     char *\fIsrc\fR;
     char *\fIdst\fR;
-    char *\fIhelp\fR;
+    const char *\fIhelp\fR;
 } \fBTk_ArgvInfo\fR;
 .CE
 The \fIkey\fR field is a string such as

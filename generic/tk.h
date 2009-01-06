@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.127 2008/12/19 14:32:25 dgp Exp $
+ * RCS: @(#) $Id: tk.h,v 1.128 2009/01/06 21:58:15 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -342,7 +342,7 @@ typedef struct Tk_ConfigSpec {
     int type;			/* Type of option, such as TK_CONFIG_COLOR;
 				 * see definitions below. Last option in table
 				 * must have type TK_CONFIG_END. */
-    const char *argvName;	/* Switch used to specify option in argv. NULL
+    CONST86 char *argvName;	/* Switch used to specify option in argv. NULL
 				 * means this spec is part of a group. */
     Tk_Uid dbName;		/* Name for option in option database. */
     Tk_Uid dbClass;		/* Class for option in database. */
@@ -402,14 +402,14 @@ typedef enum {
  */
 
 typedef struct {
-    const char *key;		/* The key string that flags the option in the
+    CONST86 char *key;		/* The key string that flags the option in the
 				 * argv array. */
     int type;			/* Indicates option type; see below. */
     char *src;			/* Value to be used in setting dst; usage
 				 * depends on type. */
     char *dst;			/* Address of value to be modified; usage
 				 * depends on type. */
-    const char *help;		/* Documentation message describing this
+    CONST86 char *help;		/* Documentation message describing this
 				 * option. */
 } Tk_ArgvInfo;
 
@@ -897,7 +897,7 @@ typedef enum {
 } Tk_State;
 
 typedef struct Tk_SmoothMethod {
-    const char *name;
+    CONST86 char *name;
     int (*coordProc) (Tk_Canvas canvas, double *pointPtr, int numPoints,
 	    int numSteps, XPoint xPoints[], double dblPoints[]);
     void (*postscriptProc) (Tcl_Interp *interp, Tk_Canvas canvas,
@@ -1001,21 +1001,31 @@ typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double scaleY);
 typedef void	(Tk_ItemTranslateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double deltaX, double deltaY);
+#ifdef USE_OLD_CANVAS
 typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
+#else
+typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
+		    Tk_Item *itemPtr, Tcl_Obj *indexString, int *indexPtr);
+#endif
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int index);
 typedef int	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int offset, char *buffer, int maxBytes);
+#ifdef USE_OLD_CANVAS
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int beforeThis, char *string);
+#else
+typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    int beforeThis, Tcl_Obj *string);
+#endif
 typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int first, int last);
 
 #ifndef __NO_OLD_CONFIG
 
 typedef struct Tk_ItemType {
-    const char *name; /* The name of this type of item, such as
+    CONST86 char *name; /* The name of this type of item, such as
 				 * "line". */
     int itemSize;		/* Total amount of space needed for item's
 				 * record. */
@@ -1217,7 +1227,7 @@ typedef int (Tk_ImagePostscriptProc) (ClientData clientData,
  */
 
 struct Tk_ImageType {
-    const char *name; /* Name of image type. */
+    CONST86 char *name; /* Name of image type. */
     Tk_ImageCreateProc *createProc;
 				/* Procedure to call to create a new image of
 				 * this type. */
@@ -1329,7 +1339,7 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
  */
 
 struct Tk_PhotoImageFormat {
-    const char *name;		/* Name of image file format */
+    CONST86 char *name;		/* Name of image file format */
     Tk_ImageFileMatchProc *fileMatchProc;
 				/* Procedure to call to determine whether an
 				 * image file matches this format. */

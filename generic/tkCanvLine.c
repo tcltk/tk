@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.27 2008/11/27 23:26:05 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.28 2009/01/06 21:58:15 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -236,10 +236,10 @@ Tk_ItemType tkLineType = {
     LineToPostscript,			/* postscriptProc */
     ScaleLine,				/* scaleProc */
     TranslateLine,			/* translateProc */
-    (Tk_ItemIndexProc *) GetLineIndex,	/* indexProc */
+    GetLineIndex,		/* indexProc */
     NULL,				/* icursorProc */
     NULL,				/* selectionProc */
-    (Tk_ItemInsertProc *) LineInsert,	/* insertProc */
+    LineInsert,		/* insertProc */
     LineDeleteCoords,			/* dTextProc */
     NULL,				/* nextPtr */
 };
@@ -315,7 +315,7 @@ CreateLine(
      */
 
     for (i = 1; i < objc; i++) {
-	char *arg = Tcl_GetString(objv[i]);
+	const char *arg = Tcl_GetString(objv[i]);
 
 	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
 	    break;
@@ -1752,7 +1752,7 @@ GetLineIndex(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     int length;
-    char *string = Tcl_GetStringFromObj(obj, &length);
+    const char *string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == 'e') {
 	if (strncmp(string, "end", (unsigned) length) == 0) {
@@ -1771,7 +1771,8 @@ GetLineIndex(
     } else if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
-	char *end, *p;
+	char *end;
+	const char *p;
 
 	p = string+1;
 	x = strtod(p, &end);
