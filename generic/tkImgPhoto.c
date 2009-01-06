@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.88 2008/11/18 23:49:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.89 2009/01/06 09:22:30 dkf Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -2849,21 +2849,26 @@ Tk_PhotoPutBlock(
      * Check if display code needs alpha blending...
      */
 
-    if (!sourceIsSimplePhoto && (width == 1) && (height == 1)) {
+    if (!sourceIsSimplePhoto && (height == 1)) {
 	/*
-	 * Optimize the single pixel case if we can. This speeds up code that
-	 * builds up large simple-alpha images by single pixels. We don't
-	 * negate COMPLEX_ALPHA in this case. [Bug 1409140]
+	 * Optimize the single span case if we can. This speeds up code that
+	 * builds up large simple-alpha images by scan-lines or individual
+	 * pixels. We don't negate COMPLEX_ALPHA in this case. [Bug 1409140]
+	 * [Patch 1539990]
 	 */
 
 	if (!(masterPtr->flags & COMPLEX_ALPHA)) {
-	    unsigned char newAlpha;
+	    register unsigned int x1;
 
-	    destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
-	    newAlpha = destLinePtr[3];
+	    for (x1=x ; x<x+width ; x1++) {
+		register unsigned char newAlpha;
 
-	    if (newAlpha && newAlpha != 255) {
-		masterPtr->flags |= COMPLEX_ALPHA;
+		destLinePtr = masterPtr->pix32 + (y*masterPtr->width + x1)*4;
+		newAlpha = destLinePtr[3];
+		if (newAlpha && newAlpha != 255) {
+		    masterPtr->flags |= COMPLEX_ALPHA;
+		    break;
+		}
 	    }
 	}
     } else if ((alphaOffset != 0) || (masterPtr->flags & COMPLEX_ALPHA)) {
