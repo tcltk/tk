@@ -1,3 +1,15 @@
+2009-01-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.h:          A few const -> CONST86 modifications, improving
+	* generic/tkCanvas.c:    backwards compatibility. Change Tk_ItemIndexProc
+	* generic/tkCanvLine.c:  and Tk_ItemInsertProc signature to have a Tcl_Obj parameter
+	* generic/tkCanvPoly.c:  in stead of a string parameter. This is binary
+	* generic/tkCanvText.c:  and source compatible with previous API, it just prevents
+	* doc/CrtItemType.3:     the need for a type cast in the Tk_ItemType table construction.
+	* doc/Clipboard.3:       Bring doc in line with API
+	* doc/ConfigWidg.3:
+	* doc/ParseArgv.3:
+
 2009-01-06  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock): Optimize a common case for
