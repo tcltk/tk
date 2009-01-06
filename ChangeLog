@@ -1,7 +1,12 @@
+2009-01-06  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock): Optimize a common case for
+	photo image building. [Patch 1539990] (jepler)
+
 2009-01-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinDialog.c: Use task modal for messagebox instead of
-	system modal [Bug 2484771] (ferrieux,thoyts,mjanssen)
+	* win/tkWinDialog.c: Use task modal for messagebox instead of system
+	modal. [Bug 2484771] (ferrieux,thoyts,mjanssen)
 
 2009-01-03  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -16,17 +21,16 @@
 
 2008-12-31  David Gravereaux <davygrvy@pobox.com>
 
-	* win/rules.vc: small bug not setting SYMBOLS macro fixed.
+	* win/rules.vc: Small bug not setting SYMBOLS macro fixed.
 
 2008-12-31  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkDefaultTheme.c: Fix color palette for
-	radiobutton and checkbutton indicators.  Fixes [Bug 2003310];
-	also makes "alt" theme check/radiobuttons look like Windows 98,
-	as intended.
-	* library/ttk/altTheme.tcl: Specify dark gray -bordercolor
-	to soften edges.
-	* tests/ttk/{checkbutton,radiobutton}.test: split out of ttk.test.
+	* generic/ttk/ttkDefaultTheme.c: Fix color palette for radiobutton and
+	checkbutton indicators. Fixes [Bug 2003310]; also makes "alt" theme
+	check/radiobuttons look like Windows 98, as intended.
+	* library/ttk/altTheme.tcl: Specify dark gray -bordercolor to soften
+	edges.
+	* tests/ttk/{checkbutton,radiobutton}.test: Split out of ttk.test.
 
 2008-12-28  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -114,7 +118,7 @@
 
 2008-12-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/demos/fontchoose.tcl: Simple fontchooser demo
+	* library/demos/fontchoose.tcl: Simple fontchooser demo.
 	* library/demos/widget:
 
 2008-12-11  Jan Nijtmans  <nijtmans@users.sf.net>
