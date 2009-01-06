@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.22 2008/10/30 21:39:16 nijtmans Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.23 2009/01/06 21:58:15 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -105,10 +105,10 @@ option and has the following structure:
 .CS
 typedef struct {
     int \fItype\fR;
-    char *\fIargvName\fR;
-    char *\fIdbName\fR;
-    char *\fIdbClass\fR;
-    char *\fIdefValue\fR;
+    const char *\fIargvName\fR;
+    const char *\fIdbName\fR;
+    const char *\fIdbClass\fR;
+    const char *\fIdefValue\fR;
     int \fIoffset\fR;
     int \fIspecFlags\fR;
     const Tk_CustomOption *\fIcustomPtr\fR;

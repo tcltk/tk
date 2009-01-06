@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.23 2008/11/09 21:53:39 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvPoly.c,v 1.24 2009/01/06 21:58:15 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -205,10 +205,10 @@ Tk_ItemType tkPolygonType = {
     PolygonToPostscript,		/* postscriptProc */
     ScalePolygon,			/* scaleProc */
     TranslatePolygon,			/* translateProc */
-    (Tk_ItemIndexProc *) GetPolygonIndex,/* indexProc */
+    GetPolygonIndex,	/* indexProc */
     NULL,				/* icursorProc */
     NULL,				/* selectionProc */
-    (Tk_ItemInsertProc *) PolygonInsert,/* insertProc */
+    PolygonInsert,		/* insertProc */
     PolygonDeleteCoords,		/* dTextProc */
     NULL,				/* nextPtr */
 };
@@ -287,7 +287,7 @@ CreatePolygon(
      */
 
     for (i = 0; i < objc; i++) {
-	char *arg = Tcl_GetString(objv[i]);
+	const char *arg = Tcl_GetString(objv[i]);
 
 	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
 	    break;
@@ -1679,7 +1679,7 @@ GetPolygonIndex(
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     int length;
-    char *string = Tcl_GetStringFromObj(obj, &length);
+    const char *string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == 'e') {
 	if (strncmp(string, "end", (unsigned)length) != 0) {
@@ -1689,7 +1689,8 @@ GetPolygonIndex(
     } else if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
-	char *end, *p;
+	char *end;
+	const char *p;
 
 	p = string+1;
 	x = strtod(p, &end);

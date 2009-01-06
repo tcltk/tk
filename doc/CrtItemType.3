@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtItemType.3,v 1.14 2008/11/01 17:26:36 dkf Exp $
+'\" RCS: @(#) $Id: CrtItemType.3,v 1.15 2009/01/06 21:58:15 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateItemType 3 4.0 Tk "Tk Library Procedures"
@@ -65,7 +65,7 @@ the standard procedures implemented by the type manager:
 .PP
 .CS
 typedef struct Tk_ItemType {
-    char *\fIname\fR;
+    const char *\fIname\fR;
     int \fIitemSize\fR;
     Tk_ItemCreateProc *\fIcreateProc\fR;
     Tk_ConfigSpec *\fIconfigSpecs\fR;
@@ -280,7 +280,7 @@ typedef int \fBTk_ItemConfigureProc\fR(
         int \fIflags\fR);
 .CE
 .PP
-The \fIinterp\fR objument identifies the interpreter in which the
+The \fIinterp\fR argument identifies the interpreter in which the
 widget command was invoked, \fIcanvas\fR is a handle for the canvas
 widget, and \fIitemPtr\fR is a pointer to the item being configured.
 \fIobjc\fR and \fIobjv\fR contain the configuration options.
@@ -566,18 +566,18 @@ typedef int \fBTk_ItemIndexProc\fR(
         Tcl_Interp *\fIinterp\fR,
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
-        char *\fIindexString\fR,
+        Tcl_Obj *\fIindexObj\fR,
         int *\fIindexPtr\fR);
 .CE
 .PP
 The \fIinterp\fR, \fIcanvas\fR, and \fIitemPtr\fR arguments all
 have the usual meaning.
-\fIindexString\fR contains a textual description of an index,
+\fIindexObj\fR contains a textual description of an index,
 and \fIindexPtr\fR points to an integer value that should be
 filled in with a numerical index.
-Note that if \fBTK_CONFIG_OBJS\fR is set in the
-\fItypePtr\->alwaysRedraw\fR field, the \fIindexString\fR parameter will
-actually contain a Tcl_Obj reference.
+Note that if \fBTK_CONFIG_OBJS\fR is not set in the
+\fItypePtr\->alwaysRedraw\fR field, the \fIindexObj\fR parameter will
+actually contain a pointer to a constant string.
 It is up to the type manager to decide what forms of index
 are supported (e.g., numbers, \fBinsert\fR, \fBsel.first\fR,
 \fBend\fR, etc.).
@@ -653,17 +653,17 @@ typedef void \fBTk_ItemInsertProc\fR(
         Tk_Canvas \fIcanvas\fR,
         Tk_Item *\fIitemPtr\fR,
         int \fIindex\fR,
-        char *\fIstring\fR);
+        Tcl_Obj *\fIobj\fR);
 .CE
 .PP
 \fIcanvas\fR and \fIitemPtr\fR have the usual meanings.
 \fIindex\fR is an index into the item's text, as returned by a
-previous call to \fItypePtr\->insertProc\fR, and \fIstring\fR
+previous call to \fItypePtr\->insertProc\fR, and \fIobj\fR
 contains new text to insert just before the character given
 by \fIindex\fR.
-Note that if \fBTK_CONFIG_OBJS\fR is set in the
-\fItypePtr\->alwaysRedraw\fR field, the \fIstring\fR parameter will
-actually contain a Tcl_Obj reference to the string to insert.
+Note that if \fBTK_CONFIG_OBJS\fR is not set in the
+\fItypePtr\->alwaysRedraw\fR field, the \fIobj\fR parameter will
+actually contain a pointer to a constant string to be inserted.
 If the item supports modification of the coordinates list by this
 .PP
 The type manager should insert the text and recompute the bounding

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.58 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.59 2009/01/06 21:58:15 nijtmans Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -77,7 +77,7 @@ typedef struct TagSearch {
 				 * return NULL. */
     int type;			/* Search type (see #defs below) */
     int id;			/* Item id for searches by id */
-    char *string;		/* Tag expression string */
+    const char *string;		/* Tag expression string */
     int stringIndex;		/* Current position in string scan */
     int stringLength;		/* Length of tag expression string */
     char *rewritebuffer;	/* Tag string (after removing escapes) */
@@ -531,10 +531,10 @@ ItemIndex(
 	return TCL_OK;
     } else if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
 	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, (char *) objPtr, indexPtr);
+		itemPtr, objPtr, indexPtr);
     } else {
 	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, Tcl_GetString(objPtr), indexPtr);
+		itemPtr, (Tcl_Obj *) Tcl_GetString(objPtr), indexPtr);
     }
 }
 
@@ -547,10 +547,10 @@ ItemInsert(
 {
     if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
 	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
-		beforeThis, (char *) toInsert);
+		beforeThis, toInsert);
     } else {
 	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
-		beforeThis, Tcl_GetString(toInsert));
+		beforeThis, (Tcl_Obj *) Tcl_GetString(toInsert));
     }
 }
 
@@ -975,7 +975,7 @@ CanvasWidgetCmd(
 	if (objc == 5) {
 	    int append = 0;
 	    unsigned long mask;
-	    char *argv4 = Tcl_GetString(objv[4]);
+	    const char *argv4 = Tcl_GetString(objv[4]);
 
 	    if (argv4[0] == 0) {
 		result = Tk_DeleteBinding(interp, canvasPtr->bindingTable,
@@ -1233,7 +1233,7 @@ CanvasWidgetCmd(
 	Tk_Item *itemPtr;
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
-	char *arg;
+	const char *arg;
 	int length;
 
 	if (objc < 3) {
@@ -3316,7 +3316,7 @@ TagSearchScan(
     TagSearch **searchPtrPtr)	/* Record describing tag search; will be
 				 * initialized here. */
 {
-    char *tag = Tcl_GetString(tagObj);
+    const char *tag = Tcl_GetString(tagObj);
     int i;
     TagSearch *searchPtr;
 
