@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgPNG.c,v 1.2 2008/12/28 22:13:31 dkf Exp $
+ * RCS: @(#) $Id: tkImgPNG.c,v 1.3 2009/01/06 01:29:39 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -1169,7 +1169,7 @@ CheckColor(
      */
 
     if (pngPtr->bitDepth < 8) {
-	pngPtr->bitScale = 255 / (pow(2, pngPtr->bitDepth) - 1);
+	pngPtr->bitScale = 255 / (int)(pow(2, pngPtr->bitDepth) - 1);
     } else {
 	pngPtr->bitScale = 1;
     }
