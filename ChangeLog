@@ -1,3 +1,8 @@
+2009-01-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinDialog.c: Use task modal for messagebox instead of
+	system modal [Bug 2484771] (ferrieux,thoyts,mjanssen)
+
 2009-01-03  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/canvas.n: Improve the documentation of the -offset and

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.59 2008/12/16 23:53:14 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.60 2009/01/06 01:26:26 patthoyts Exp $
  *
  */
 
@@ -2151,6 +2151,9 @@ Tk_MessageBoxObjCmd(
 	}
     }
 
+    while (!Tk_IsTopLevel(parent)) {
+	parent = Tk_Parent(parent);
+    }
     Tk_MakeWindowExist(parent);
     hWnd = Tk_GetHWND(Tk_WindowId(parent));
 
@@ -2180,7 +2183,7 @@ Tk_MessageBoxObjCmd(
 	flags = buttonFlagMap[defaultBtnIdx];
     }
 
-    flags |= icon | type | MB_SYSTEMMODAL;
+    flags |= icon | type | MB_TASKMODAL | MB_SETFOREGROUND;
 
     tmpObj = messageObj ? Tcl_DuplicateObj(messageObj)
 	    : Tcl_NewUnicodeObj(NULL, 0);
