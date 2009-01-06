@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Clipboard.3,v 1.5 2008/07/08 22:40:50 patthoyts Exp $
+'\" RCS: @(#) $Id: Clipboard.3,v 1.6 2009/01/06 21:58:15 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_ClipboardClear 3 4.0 Tk "Tk Library Procedures"
@@ -33,7 +33,7 @@ Conversion type for this clipboard item;  has same meaning as
 .AP Atom format in
 Representation to use when data is retrieved;  has same meaning as
 \fIformat\fR argument to \fBTk_CreateSelHandler\fR.
-.AP char *buffer in
+.AP "const char" *buffer in
 Null terminated string containing the data to be appended to the clipboard.
 .BE
 .SH DESCRIPTION
