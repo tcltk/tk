@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.2 2008/11/15 00:37:30 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.3 2009/01/07 00:58:23 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -34,12 +34,16 @@
 
 /*
  * Event structure for synthetic activation events. These events are placed on
- * the event queue whenever a toplevel gets a WM_MOUSEACTIVATE message.
+ * the event queue whenever a toplevel gets a WM_MOUSEACTIVATE message or
+ * a WM_ACTIVATE. If the window is being moved (*flagPtr will be true)
+ * then the handling of this event must be delayed until the operation 
+ * has completed to avoid a premature WM_EXITSIZEMOVE event.
  */
 
 typedef struct ActivateEvent {
     Tcl_Event ev;
     TkWindow *winPtr;
+    int *flagPtr;
 } ActivateEvent;
 
 /*
@@ -418,6 +422,7 @@ TCL_DECLARE_MUTEX(winWmMutex)
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);
 static void		GenerateConfigureNotify(TkWindow *winPtr);
+static void		GenerateActivateEvent(TkWindow *winPtr, int *flagPtr);
 static void		GetMaxSize(WmInfo *wmPtr,
 			    int *maxWidthPtr, int *maxHeightPtr);
 static void		GetMinSize(WmInfo *wmPtr,
@@ -7781,7 +7786,7 @@ WmProc(
 				 * after leaving move/size mode. Note that
 				 * this mechanism assumes move/size is only
 				 * one level deep. */
-    LRESULT result;
+    LRESULT result = 0;
     TkWindow *winPtr = NULL;
 
     switch (message) {
@@ -7805,6 +7810,20 @@ WmProc(
 	break;
 
     case WM_ACTIVATE:
+	if ( WA_ACTIVE == LOWORD(wParam) ) {
+	    winPtr = GetTopLevel(hwnd);
+	    if (winPtr && (TkGrabState(winPtr) == TK_GRAB_EXCLUDED)) {
+		/*
+		 * There is a grab in progress so queue an Activate event
+		 */
+
+		GenerateActivateEvent(winPtr, &inMoveSize);
+		result = 0;
+		goto done;
+	    }
+	}
+	/* fall through */
+	
     case WM_EXITSIZEMOVE:
 	if (inMoveSize) {
 	    inMoveSize = 0;
@@ -7907,9 +7926,7 @@ WmProc(
     }
 
     case WM_MOUSEACTIVATE: {
-	ActivateEvent *eventPtr;
 	winPtr = GetTopLevel((HWND) wParam);
-
 	if (winPtr && (TkGrabState(winPtr) != TK_GRAB_EXCLUDED)) {
 	    /*
 	     * This allows us to pass the message onto the native menus [Bug:
@@ -7928,10 +7945,7 @@ WmProc(
 	 */
 
 	if (winPtr) {
-	    eventPtr = (ActivateEvent *)ckalloc(sizeof(ActivateEvent));
-	    eventPtr->ev.proc = ActivateWindow;
-	    eventPtr->winPtr = winPtr;
-	    Tcl_QueueEvent((Tcl_Event*)eventPtr, TCL_QUEUE_TAIL);
+	    GenerateActivateEvent(winPtr, &inMoveSize);
 	}
 	result = MA_NOACTIVATE;
 	goto done;
@@ -7960,6 +7974,24 @@ WmProc(
     winPtr = GetTopLevel(hwnd);
     switch(message) {
     case WM_SYSCOMMAND:
+	/*
+	 * If there is a grab in effect then ignore the minimize command
+	 * If there is a grab in effect and this window is outside the
+	 * grab tree then ignore all system commands. [Bug 1847002]
+	 */
+
+	if (winPtr) {
+	    int cmd = wParam & 0xfff0;
+	    int grab = TkGrabState(winPtr);
+	    if (grab != TK_GRAB_NONE && SC_MINIMIZE == cmd)
+		goto done;
+	    if (grab == TK_GRAB_EXCLUDED 
+		&& !(SC_MOVE == cmd || SC_SIZE == cmd)) {
+		goto done;
+	    }
+	}
+	/* fall through */
+	
     case WM_INITMENU:
     case WM_COMMAND:
     case WM_MENUCHAR:
@@ -7967,19 +7999,20 @@ WmProc(
     case WM_DRAWITEM:
     case WM_MENUSELECT:
     case WM_ENTERIDLE:
-    case WM_INITMENUPOPUP: {
-	HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window)winPtr);
-
-	if (hMenuHWnd) {
-	    if (SendMessage(hMenuHWnd, message, wParam, lParam)) {
+    case WM_INITMENUPOPUP:
+	if (winPtr) {
+	    HWND hMenuHWnd = Tk_GetEmbeddedMenuHWND((Tk_Window)winPtr);
+	    
+	    if (hMenuHWnd) {
+		if (SendMessage(hMenuHWnd, message, wParam, lParam)) {
+		    goto done;
+		}
+	    } else if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam,
+		    &result)) {
 		goto done;
 	    }
-	} else if (TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam,
-		&result)) {
-	    goto done;
 	}
 	break;
-    }
     }
 
     if (winPtr && winPtr->window) {
@@ -8135,6 +8168,25 @@ TkpGetWrapperWindow(
 /*
  *----------------------------------------------------------------------
  *
+ * GenerateActivateEvent --
+ *
+ *	This function is called to activate a Tk window.
+ */
+
+static void
+GenerateActivateEvent(TkWindow * winPtr, int *flagPtr)
+{
+    ActivateEvent *eventPtr;
+    eventPtr = (ActivateEvent *)ckalloc(sizeof(ActivateEvent));
+    eventPtr->ev.proc = ActivateWindow;
+    eventPtr->winPtr = winPtr;
+    eventPtr->flagPtr = flagPtr;
+    Tcl_QueueEvent((Tcl_Event *)eventPtr, TCL_QUEUE_TAIL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * ActivateWindow --
  *
  *	This function is called when an ActivateEvent is processed.
@@ -8153,13 +8205,22 @@ ActivateWindow(
     Tcl_Event *evPtr,		/* Pointer to ActivateEvent. */
     int flags)			/* Notifier event mask. */
 {
-    TkWindow *winPtr;
+    ActivateEvent *eventPtr = (ActivateEvent *)evPtr;
+    TkWindow *winPtr = eventPtr->winPtr;
 
     if (! (flags & TCL_WINDOW_EVENTS)) {
 	return 0;
     }
 
-    winPtr = ((ActivateEvent *) evPtr)->winPtr;
+    /*
+     * If the toplevel is in the middle of a move or size operation then
+     * we must delay handling of this event to avoid stealing the focus
+     * while the window manage is in control.
+     */
+
+    if (eventPtr->flagPtr && *eventPtr->flagPtr) {
+	return 0;
+    }
 
     /*
      * If the window is excluded by a grab, call SetFocus on the grabbed
