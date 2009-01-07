@@ -1,3 +1,7 @@
+2009-01-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWm.c: prevent grabs being bypassed on Windows [Bug 1847002]
+
 2009-01-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.h:          A few const -> CONST86 modifications, improving
