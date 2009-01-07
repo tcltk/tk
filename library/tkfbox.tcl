@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.70 2008/12/11 18:13:08 jenglish Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.71 2009/01/07 14:35:39 patthoyts Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1815,7 +1815,7 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
     if {$class eq "TkChooseDir" || [file isdirectory $file]} {
 	set appPWD [pwd]
 	if {[catch {cd $file}]} {
-	    tk_messageBox -type ok -parent $w -message -icon warning \
+	    tk_messageBox -type ok -parent $w -icon warning -message \
 		    [mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $file]
 	} else {
 	    cd $appPWD
