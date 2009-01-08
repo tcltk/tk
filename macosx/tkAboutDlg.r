@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAboutDlg.r,v 1.9 2008/02/27 22:45:35 das Exp $
+ * RCS: @(#) $Id: tkAboutDlg.r,v 1.9.2.1 2009/01/08 23:47:44 das Exp $
  */
 
 /*
@@ -47,8 +47,8 @@ resource 'DITL' (128, "About Box", purgeable) {
 	{232, 147, 252, 217}, Button	    {enabled, "Ok"},
 	{ 20, 108, 212, 344}, StaticText    {disabled,
 	    "Tcl " TCL_PATCH_LEVEL " & Tk " TK_PATCH_LEVEL "\n\n"
-	    "© 2002-2008 Tcl Core Team." "\n\n"
-	    "© 2002-2008 Daniel A. Steffen." "\n\n"
+	    "© 2002-2009 Tcl Core Team." "\n\n"
+	    "© 2002-2009 Daniel A. Steffen." "\n\n"
 	    "Jim Ingham & Ian Reid" "\n"
 	    "© 2001-2002 Apple Computer, Inc." "\n\n"
 	    "Jim Ingham & Ray Johnson" "\n"
