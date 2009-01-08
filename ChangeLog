@@ -1,3 +1,8 @@
+2009-01-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/bgerror.tcl: Theme the bgerror dialog and make use of
+	our PNG support to improve the icon.
+
 2009-01-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/tkfbox.tcl: [Bug 2473120] mis-ordered messagebox args.
