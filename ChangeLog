@@ -1,3 +1,15 @@
+2009-01-08  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk3d.c:     CONSTify TkDebugBorder
+	* generic/tkBind.c:   CONSTify TkStringToKeysym
+	* generic/tkBitmap.c: CONSTify TkDebugBitmap
+	* generic/tkColor.c:  CONSTify TkDebugColor
+	* generic/tkCursor.c: CONSTify TkDebugCursor
+	* generic/tkFont.c:   CONSTify TkDebugFont
+	* generic/tkInt.decls All those mods TIP #27 complient,
+	                      no incompatibility risks.
+	* generic/tkIntDecls.h (regenerated)
+
 2009-01-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/bgerror.tcl: Theme the bgerror dialog and make use of

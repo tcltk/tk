@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.24 2008/11/08 18:44:39 dkf Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.25 2009/01/09 07:03:31 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1127,7 +1127,7 @@ Tcl_Obj *
 TkDebugBitmap(
     Tk_Window tkwin,		/* The window in which the bitmap will be used
 				 * (not currently used). */
-    char *name)			/* Name of the desired color. */
+    const char *name)		/* Name of the desired color. */
 {
     TkBitmap *bitmapPtr;
     Tcl_HashEntry *hashPtr;

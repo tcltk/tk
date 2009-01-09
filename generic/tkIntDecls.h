@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.41 2008/12/05 15:51:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.42 2009/01/09 07:03:30 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -541,7 +541,7 @@ EXTERN void		TkSetWindowMenuBar (Tcl_Interp * interp,
 #ifndef TkStringToKeysym_TCL_DECLARED
 #define TkStringToKeysym_TCL_DECLARED
 /* 86 */
-EXTERN KeySym		TkStringToKeysym (char * name);
+EXTERN KeySym		TkStringToKeysym (const char * name);
 #endif
 #ifndef TkThickPolyLineToArea_TCL_DECLARED
 #define TkThickPolyLineToArea_TCL_DECLARED
@@ -605,22 +605,22 @@ EXTERN void		TkWmUnmapWindow (TkWindow * winPtr);
 #ifndef TkDebugBitmap_TCL_DECLARED
 #define TkDebugBitmap_TCL_DECLARED
 /* 98 */
-EXTERN Tcl_Obj *	TkDebugBitmap (Tk_Window tkwin, char * name);
+EXTERN Tcl_Obj *	TkDebugBitmap (Tk_Window tkwin, const char * name);
 #endif
 #ifndef TkDebugBorder_TCL_DECLARED
 #define TkDebugBorder_TCL_DECLARED
 /* 99 */
-EXTERN Tcl_Obj *	TkDebugBorder (Tk_Window tkwin, char * name);
+EXTERN Tcl_Obj *	TkDebugBorder (Tk_Window tkwin, const char * name);
 #endif
 #ifndef TkDebugCursor_TCL_DECLARED
 #define TkDebugCursor_TCL_DECLARED
 /* 100 */
-EXTERN Tcl_Obj *	TkDebugCursor (Tk_Window tkwin, char * name);
+EXTERN Tcl_Obj *	TkDebugCursor (Tk_Window tkwin, const char * name);
 #endif
 #ifndef TkDebugColor_TCL_DECLARED
 #define TkDebugColor_TCL_DECLARED
 /* 101 */
-EXTERN Tcl_Obj *	TkDebugColor (Tk_Window tkwin, char * name);
+EXTERN Tcl_Obj *	TkDebugColor (Tk_Window tkwin, const char * name);
 #endif
 #ifndef TkDebugConfig_TCL_DECLARED
 #define TkDebugConfig_TCL_DECLARED
@@ -631,7 +631,7 @@ EXTERN Tcl_Obj *	TkDebugConfig (Tcl_Interp * interp,
 #ifndef TkDebugFont_TCL_DECLARED
 #define TkDebugFont_TCL_DECLARED
 /* 103 */
-EXTERN Tcl_Obj *	TkDebugFont (Tk_Window tkwin, char * name);
+EXTERN Tcl_Obj *	TkDebugFont (Tk_Window tkwin, const char * name);
 #endif
 #ifndef TkFindStateNumObj_TCL_DECLARED
 #define TkFindStateNumObj_TCL_DECLARED
@@ -1131,7 +1131,7 @@ typedef struct TkIntStubs {
     void (*tkSelPropProc) (XEvent * eventPtr); /* 83 */
     void *reserved84;
     void (*tkSetWindowMenuBar) (Tcl_Interp * interp, Tk_Window tkwin, char * oldMenuName, char * menuName); /* 85 */
-    KeySym (*tkStringToKeysym) (char * name); /* 86 */
+    KeySym (*tkStringToKeysym) (const char * name); /* 86 */
     int (*tkThickPolyLineToArea) (double * coordPtr, int numPoints, double width, int capStyle, int joinStyle, double * rectPtr); /* 87 */
     void (*tkWmAddToColormapWindows) (TkWindow * winPtr); /* 88 */
     void (*tkWmDeadWindow) (TkWindow * winPtr); /* 89 */
@@ -1143,12 +1143,12 @@ typedef struct TkIntStubs {
     void (*tkWmRestackToplevel) (TkWindow * winPtr, int aboveBelow, TkWindow * otherPtr); /* 95 */
     void (*tkWmSetClass) (TkWindow * winPtr); /* 96 */
     void (*tkWmUnmapWindow) (TkWindow * winPtr); /* 97 */
-    Tcl_Obj * (*tkDebugBitmap) (Tk_Window tkwin, char * name); /* 98 */
-    Tcl_Obj * (*tkDebugBorder) (Tk_Window tkwin, char * name); /* 99 */
-    Tcl_Obj * (*tkDebugCursor) (Tk_Window tkwin, char * name); /* 100 */
-    Tcl_Obj * (*tkDebugColor) (Tk_Window tkwin, char * name); /* 101 */
+    Tcl_Obj * (*tkDebugBitmap) (Tk_Window tkwin, const char * name); /* 98 */
+    Tcl_Obj * (*tkDebugBorder) (Tk_Window tkwin, const char * name); /* 99 */
+    Tcl_Obj * (*tkDebugCursor) (Tk_Window tkwin, const char * name); /* 100 */
+    Tcl_Obj * (*tkDebugColor) (Tk_Window tkwin, const char * name); /* 101 */
     Tcl_Obj * (*tkDebugConfig) (Tcl_Interp * interp, Tk_OptionTable table); /* 102 */
-    Tcl_Obj * (*tkDebugFont) (Tk_Window tkwin, char * name); /* 103 */
+    Tcl_Obj * (*tkDebugFont) (Tk_Window tkwin, const char * name); /* 103 */
     int (*tkFindStateNumObj) (Tcl_Interp * interp, Tcl_Obj * optionPtr, const TkStateMap * mapPtr, Tcl_Obj * keyPtr); /* 104 */
     Tcl_HashTable * (*tkGetBitmapPredefTable) (void); /* 105 */
     TkDisplay * (*tkGetDisplayList) (void); /* 106 */
