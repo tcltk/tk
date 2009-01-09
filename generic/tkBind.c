@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.51 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.52 2009/01/09 07:03:31 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -653,10 +653,10 @@ static void		ChangeScreen(Tcl_Interp *interp, char *dispName,
 			    int screenIndex);
 static int		CreateVirtualEvent(Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr, char *virtString,
-			    char *eventString);
+			    const char *eventString);
 static int		DeleteVirtualEvent(Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr, char *virtString,
-			    char *eventString);
+			    const char *eventString);
 static void		DeleteVirtualEventTable(VirtualEventTable *vetPtr);
 static void		ExpandPercents(TkWindow *winPtr, const char *before,
 			    XEvent *eventPtr,KeySym keySym,Tcl_DString *dsPtr);
@@ -2700,7 +2700,8 @@ Tk_EventObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, i;
-    char *name, *event;
+    char *name;
+    const char *event;
     Tk_Window tkwin = clientData;
     VirtualEventTable *vetPtr;
     TkBindInfo bindInfo;
@@ -2871,7 +2872,7 @@ CreateVirtualEvent(
     Tcl_Interp *interp,		/* Used for error reporting. */
     VirtualEventTable *vetPtr,	/* Table in which to augment virtual event. */
     char *virtString,		/* Name of new virtual event. */
-    char *eventString)		/* String describing physical event that
+    const char *eventString)		/* String describing physical event that
 				 * triggers virtual event. */
 {
     PatSeq *psPtr;
@@ -2980,7 +2981,7 @@ DeleteVirtualEvent(
     VirtualEventTable *vetPtr,	/* Table in which to delete event. */
     char *virtString,		/* String describing event sequence that
 				 * triggers binding. */
-    char *eventString)		/* The event sequence that should be deleted,
+    const char *eventString)		/* The event sequence that should be deleted,
 				 * or NULL to delete all event sequences for
 				 * the entire virtual event. */
 {
@@ -3254,7 +3255,7 @@ HandleEventGenerate(
 {
     XEvent event;
     const char *p;
-    char *name, *windowName;
+    const char *name, *windowName;
     int count, flags, synch, i, number, warp;
     Tcl_QueuePosition pos;
     Pattern pat;
@@ -3527,7 +3528,7 @@ HandleEventGenerate(
 	    break;
 	case EVENT_KEYSYM: {
 	    KeySym keysym;
-	    char *value;
+	    const char *value;
 
 	    value = Tcl_GetString(valuePtr);
 	    keysym = TkStringToKeysym(value);
@@ -3823,7 +3824,7 @@ NameToWindow(
     Tcl_Obj *objPtr,		/* Contains name or id string of window. */
     Tk_Window *tkwinPtr)	/* Filled with token for window. */
 {
-    char *name = Tcl_GetString(objPtr);
+    const char *name = Tcl_GetString(objPtr);
     Tk_Window tkwin;
 
     if (name[0] == '.') {
@@ -4552,7 +4553,7 @@ FreeTclBinding(
 
 KeySym
 TkStringToKeysym(
-    char *name)			/* Name of a keysym. */
+    const char *name)		/* Name of a keysym. */
 {
 #ifdef REDO_KEYSYM_LOOKUP
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&keySymTable, name);
