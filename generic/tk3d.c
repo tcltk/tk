@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.24 2008/12/12 00:09:37 nijtmans Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.25 2009/01/09 07:03:31 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1360,7 +1360,7 @@ Tcl_Obj *
 TkDebugBorder(
     Tk_Window tkwin,		/* The window in which the border will be used
 				 * (not currently used). */
-    char *name)			/* Name of the desired color. */
+    const char *name)		/* Name of the desired color. */
 {
     Tcl_HashEntry *hashPtr;
     Tcl_Obj *resultPtr;
