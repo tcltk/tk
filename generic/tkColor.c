@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.19 2008/11/08 18:44:39 dkf Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.20 2009/01/09 07:03:31 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -771,7 +771,7 @@ Tcl_Obj *
 TkDebugColor(
     Tk_Window tkwin,		/* The window in which the color will be used
 				 * (not currently used). */
-    char *name)			/* Name of the desired color. */
+    const char *name)		/* Name of the desired color. */
 {
     Tcl_HashEntry *hashPtr;
     Tcl_Obj *resultPtr;

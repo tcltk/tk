@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.51 2008/12/05 15:51:31 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.52 2009/01/09 07:03:31 nijtmans Exp $
 
 library tk
 
@@ -315,7 +315,7 @@ declare 85 generic {
 	    char *oldMenuName, char *menuName)
 }
 declare 86 generic {
-    KeySym TkStringToKeysym(char *name)
+    KeySym TkStringToKeysym(const char *name)
 }
 declare 87 generic {
     int TkThickPolyLineToArea(double *coordPtr, int numPoints,
@@ -356,22 +356,22 @@ declare 97 generic {
 # new for 8.1
 
 declare 98 generic {
-    Tcl_Obj *TkDebugBitmap(Tk_Window tkwin, char *name)
+    Tcl_Obj *TkDebugBitmap(Tk_Window tkwin, const char *name)
 }
 declare 99 generic {
-    Tcl_Obj *TkDebugBorder(Tk_Window tkwin, char *name)
+    Tcl_Obj *TkDebugBorder(Tk_Window tkwin, const char *name)
 }
 declare 100 generic {
-    Tcl_Obj *TkDebugCursor(Tk_Window tkwin, char *name)
+    Tcl_Obj *TkDebugCursor(Tk_Window tkwin, const char *name)
 }
 declare 101 generic {
-    Tcl_Obj *TkDebugColor(Tk_Window tkwin, char *name)
+    Tcl_Obj *TkDebugColor(Tk_Window tkwin, const char *name)
 }
 declare 102 generic {
     Tcl_Obj *TkDebugConfig(Tcl_Interp *interp, Tk_OptionTable table)
 }
 declare 103 generic {
-    Tcl_Obj *TkDebugFont(Tk_Window tkwin, char *name)
+    Tcl_Obj *TkDebugFont(Tk_Window tkwin, const char *name)
 }
 declare 104 generic {
     int TkFindStateNumObj(Tcl_Interp *interp, Tcl_Obj *optionPtr,
