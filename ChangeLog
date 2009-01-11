@@ -1,3 +1,8 @@
+2009-01-11  George Peter Staplin <georgeps@users.sourceforge.net>
+
+	* generic/tkEvent.c: Fix a possible segv due to a NULL
+	pointer dereference that occurs when XCreateIC fails.
+
 2009-01-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/bgerror.tcl: Pretty up the unix tk_messageBox
