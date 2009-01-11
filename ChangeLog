@@ -1,3 +1,7 @@
+2009-01-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/bind.test: Fixed keysym bind tests for unix [Bug 2336454]
+
 2009-01-11  George Peter Staplin <georgeps@users.sourceforge.net>
 
 	* generic/tkEvent.c: Fix a possible segv due to a NULL

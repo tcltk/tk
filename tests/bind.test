@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: bind.test,v 1.26 2008/11/23 21:58:24 patthoyts Exp $
+# RCS: @(#) $Id: bind.test,v 1.27 2009/01/11 23:08:58 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -563,12 +563,12 @@ test bind-13.1 {Tk_BindEvent procedure} -setup {
     bind Test <KeyPress> {lappend x "%W %K Test KeyPress"}
     bind all <KeyPress> {lappend x "%W %K all KeyPress"}
     bind Test : {lappend x "%W %K Test :"}
-    bind all _ {lappend x "%W %K all _"}
+    bind all  _ {lappend x "%W %K all _"}
     bind .t.f : {lappend x "%W %K .t.f :"}
     
-    event generate .t.f <Key-:>
-    event generate .t.f <Key-+>
-    event generate .t.f <Key-_>
+    event generate .t.f <Key-colon>
+    event generate .t.f <Key-plus>
+    event generate .t.f <Key-underscore>
     return $x
 } -cleanup {
     destroy .t.f
@@ -621,7 +621,7 @@ test bind-13.3 {Tk_BindEvent procedure} -setup {
 test bind-13.4 {Tk_BindEvent procedure} -setup {
     proc foo {} {
         set x 44
-        event generate .t.f <Key-:>
+        event generate .t.f <Key-colon>
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -664,7 +664,7 @@ test bind-13.7 {Tk_BindEvent procedure} -setup {
     bind .t.f : {lappend x "%W (.t.f binding)"}
     bind Test : {lappend x "%W (Test binding)"}
     bind all : {bind .t.f : {}; lappend x "%W (all binding)"}
-    event generate .t.f <Key-:>
+    event generate .t.f <Key-colon>
     return $x
 } -cleanup {
     bind Test : {}
@@ -681,7 +681,7 @@ test bind-13.8 {Tk_BindEvent procedure} -setup {
     bind .t.f : {lappend x "%W (.t.f binding)"}
     bind Test : {lappend x "%W (Test binding)"}
     bind all : {destroy .t.f; lappend x "%W (all binding)"}
-    event generate .t.f <Key-:>
+    event generate .t.f <Key-colon>
     return $x
 } -cleanup {
     bind Test : {}
@@ -763,8 +763,8 @@ test bind-13.13 {Tk_BindEvent procedure: valid key detail} -setup {
 } -body {
     bind .t.f <Key> "lappend x Key%K"
     bind .t.f <KeyRelease> "lappend x Release%K"
-    event generate .t.f <Key> -keysym :
-    event generate .t.f <KeyRelease> -keysym :
+    event generate .t.f <Key> -keysym colon
+    event generate .t.f <KeyRelease> -keysym colon
     return $x
 } -cleanup {
     destroy .t.f
@@ -6143,18 +6143,17 @@ test bind-28.4 {keysym names} -body {
     destroy .t.f
 } -result {a}
 
-
 test bind-28.5 {keysym names} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
     update
 } -body {
-	bind .t.f <Key-:> "lappend x \"keysym received\""
-	bind .t.f <Key-_> "lappend x {bad binding match}"
-	set x [lsort [bind .t.f]]
-	event generate .t.f <Key-:> ;# -state 0
-	set x
+    bind .t.f <Key-colon> "lappend x \"keysym received\""
+    bind .t.f <Key-underscore> "lappend x {bad binding match}"
+    set x [lsort [bind .t.f]]
+    event generate .t.f <Key-colon> ;# -state 0
+    set x
 } -cleanup {
     destroy .t.f
 } -result {: _ {keysym received}}
@@ -6164,11 +6163,11 @@ test bind-28.6 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-	bind .t.f <Key-Return> "lappend x \"keysym Return\""
-	bind .t.f <Key-x> "lappend x {bad binding match}"
-	set x [lsort [bind .t.f]]
-	event generate .t.f <Key-Return> -state 0
-	set x
+    bind .t.f <Key-Return> "lappend x \"keysym Return\""
+    bind .t.f <Key-x> "lappend x {bad binding match}"
+    set x [lsort [bind .t.f]]
+    event generate .t.f <Key-Return> -state 0
+    set x
 } -cleanup {
     destroy .t.f
 } -result {<Key-Return> x {keysym Return}}
@@ -6178,11 +6177,11 @@ test bind-28.7 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-	bind .t.f <Key-X> "lappend x \"keysym X\""
-	bind .t.f <Key-x> "lappend x {bad binding match}"
-	set x [lsort [bind .t.f]]
-	event generate .t.f <Key-X> -state 1
-	set x
+    bind .t.f <Key-X> "lappend x \"keysym X\""
+    bind .t.f <Key-x> "lappend x {bad binding match}"
+    set x [lsort [bind .t.f]]
+    event generate .t.f <Key-X> -state 1
+    set x
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
@@ -6192,11 +6191,11 @@ test bind-28.8 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-	bind .t.f <Key-X> "lappend x \"keysym X\""
-	bind .t.f <Key-x> "lappend x {bad binding match}"
-	set x [lsort [bind .t.f]]
-	event generate .t.f <Key-X> -state 1
-	set x
+    bind .t.f <Key-X> "lappend x \"keysym X\""
+    bind .t.f <Key-x> "lappend x {bad binding match}"
+    set x [lsort [bind .t.f]]
+    event generate .t.f <Key-X> -state 1
+    set x
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
