@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.23.2.1 2008/09/08 13:37:40 tmh Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.23.2.2 2009/01/11 11:27:10 patthoyts Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -48,7 +48,7 @@ to invoke whenever the menu is torn off.  The actual command will
 consist of the value of this option, followed by a space, followed
 by the name of the menu window, followed by a space, followed by
 the name of the name of the torn off menu window.  For example, if
-the option's is
+the option's value is
 .QW "\fBa b\fR"
 and menu \fB.x.y\fR is torn off to
 create a new menu \fB.x.tearoff1\fR, then the command
