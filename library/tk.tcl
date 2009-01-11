@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.81 2008/12/19 14:32:25 dgp Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.82 2009/01/11 11:51:39 patthoyts Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -404,6 +404,7 @@ if {$::tk_library ne ""} {
         namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
+	SourceLibFile icons
 	SourceLibFile button
 	SourceLibFile entry
 	SourceLibFile listbox

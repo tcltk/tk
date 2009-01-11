@@ -11,7 +11,7 @@
 # Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.39 2009/01/08 16:31:03 patthoyts Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.40 2009/01/11 11:51:39 patthoyts Exp $
 #
 
 namespace eval ::tk::dialog::error {
@@ -28,46 +28,6 @@ namespace eval ::tk::dialog::error {
 	option add *ErrorDialog*Button.highlightBackground \
 		systemAlertBackgroundActive widgetDefault
     }
-}
-
-image create photo ::tk::dialog::error::image::stop -data {
-    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
-    ecBf1t8Bael4x3h6yMUAAAAASUVORK5CYII=
 }
 
 proc ::tk::dialog::error::Return {} {
@@ -190,10 +150,6 @@ proc ::tk::dialog::error::bgerror err {
 
     ttk::frame $dlg.bot
     ttk::frame $dlg.top
-    if {$windowingsystem eq "x11"} {
-	#$dlg.bot configure -relief raised -border 1
-	#$dlg.top configure -relief raised -border 1
-    }
     pack $dlg.bot -side bottom -fill both
     pack $dlg.top -side top -fill both -expand 1
 
@@ -220,9 +176,10 @@ proc ::tk::dialog::error::bgerror err {
     # the window manager decorations and aesthetics.
     set wrapwidth [expr {$wrapwidth-60-[winfo pixels $dlg 9m]}]
     ttk::label $dlg.msg -justify left -text $text -wraplength $wrapwidth
-    ttk::label $dlg.bitmap -image ::tk::dialog::error::image::stop
+    ttk::label $dlg.bitmap -image ::tk::icons::error
 
     grid $dlg.bitmap $dlg.msg -in $dlg.top -row 0 -padx 3m -pady 3m
+    grid configure       $dlg.bitmap -sticky ne
     grid configure	 $dlg.msg -sticky nsw -padx {0 3m}
     grid rowconfigure	 $dlg.top 1 -weight 1
     grid columnconfigure $dlg.top 1 -weight 1
