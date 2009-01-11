@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.35.2.1 2008/08/05 20:31:53 jenglish Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.35.2.2 2009/01/11 19:29:42 georgeps Exp $
  */
 
 #include "tkInt.h"
@@ -359,6 +359,12 @@ CreateXIC(
 	XFree(preedit_attlist);
     }
 
+    
+    if (winPtr->inputContext == NULL) {
+	/* XCreateIC failed. */
+        return;
+    }
+    
     /*
      * Adjust the window's event mask if the IM requires it.
      */
