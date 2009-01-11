@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.37 2008/12/11 18:13:08 jenglish Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.38 2009/01/11 11:51:39 patthoyts Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -271,15 +271,11 @@ proc ::tk::MessageBox {args} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
     }
 
-    ttk::frame $w.bot;# -background $bg
+    ttk::frame $w.bot
     grid anchor $w.bot center
     pack $w.bot -side bottom -fill both
-    ttk::frame $w.top;# -background $bg
+    ttk::frame $w.top
     pack $w.top -side top -fill both -expand 1
-    if {$windowingsystem ne "aqua"} {
-	#$w.bot configure -relief raised -bd 1
-	#$w.top configure -relief raised -bd 1
-    }
 
     # 4. Fill the top part with bitmap, message and detail (use the
     # option database for -wraplength and -font so that they can be
@@ -291,53 +287,32 @@ proc ::tk::MessageBox {args} {
     option add *Dialog.dtl.font TkDefaultFont widgetDefault
 
     ttk::label $w.msg -anchor nw -justify left -text $data(-message)
-    #-background $bg
     if {$data(-detail) ne ""} {
 	ttk::label $w.dtl -anchor nw -justify left -text $data(-detail)
-	#-background $bg
     }
     if {$data(-icon) ne ""} {
-	if {$windowingsystem eq "aqua"
-		|| ([winfo depth $w] < 4) || $tk_strictMotif} {
+	if {([winfo depth $w] < 4) || $tk_strictMotif} {
 	    # ttk::label has no -bitmap option
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
-	    canvas $w.bitmap -width 32 -height 32 -highlightthickness 0 \
-		    -background $bg
 	    switch $data(-icon) {
-		error {
-		    $w.bitmap create oval 0 0 31 31 -fill red -outline black
-		    $w.bitmap create line 9 9 23 23 -fill white -width 4
-		    $w.bitmap create line 9 23 23 9 -fill white -width 4
-		}
-		info {
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::b1
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::b2
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::i
-		}
-		question {
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::b1
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::b2
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::q
-		}
-		default {
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::w1
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::w2
-		    $w.bitmap create image 0 0 -anchor nw \
-			    -image ::tk::dialog::w3
-		}
+                error {
+                    ttk::label $w.bitmap -image ::tk::icons::error
+                }
+                info {
+                    ttk::label $w.bitmap -image ::tk::icons::information
+                }
+                question {
+                    ttk::label $w.bitmap -image ::tk::icons::question
+                }
+                default {
+                    ttk::label $w.bitmap -image ::tk::icons::warning
+                }
 	    }
 	}
     }
     grid $w.bitmap $w.msg -in $w.top -sticky news -padx 2m -pady 2m
+    grid configure $w.bitmap -sticky nw
     grid columnconfigure $w.top 1 -weight 1
     if {$data(-detail) ne ""} {
 	grid ^ $w.dtl -in $w.top -sticky news -padx 2m -pady {0 2m}
@@ -360,7 +335,6 @@ proc ::tk::MessageBox {args} {
 
 	eval [list tk::AmpWidget ttk::button $w.$name] $opts \
 		[list -command [list set tk::Priv(button) $name]]
-	# -padx 3m
 
 	if {$name eq $data(-default)} {
 	    $w.$name configure -default active
