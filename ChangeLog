@@ -1,3 +1,10 @@
+2009-01-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/bgerror.tcl: Pretty up the unix tk_messageBox
+	* library/icons.tcl:   icons with PNG images and grouped
+	* library/msgbox.tcl:  all the stock icons in one file.
+	* library/tk.tcl:
+
 2009-01-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkNotebook.c(NotebookCleanup):
