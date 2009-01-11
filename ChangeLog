@@ -1,3 +1,9 @@
+2009-01-11  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkNotebook.c(NotebookCleanup):
+	Don't call Tk_DeleteOptionTable(), it's unnecessary 
+	and quite possibly harmful [Bug 2496162].
+
 2009-01-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk3d.c:     CONSTify TkDebugBorder
