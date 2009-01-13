@@ -1,3 +1,9 @@
+2009-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4: fix [tcl-Bug 2502365] Building of head on
+	  HPUX is broken when using the native CC
+	* unix/configure (autoconf-2.59)
+
 2009-01-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/constraints.tcl: Made the tests more independent of the presence
