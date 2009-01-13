@@ -6,12 +6,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvPs.test,v 1.13 2008/08/07 23:05:15 aniap Exp $
+# RCS: @(#) $Id: canvPs.test,v 1.14 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+imageInit
 
 # canvas used in 1.* and 2.* test cases
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
@@ -157,6 +158,7 @@ test canvPs-3.1 {test ps generation with an embedded window} -constraints {
     file exists $bar
 } -cleanup {
     destroy .c
+    imageCleanup
     removeFile bar.ps
 } -result {1}
 test canvPs-3.2 {test ps generation with an embedded window not mapped} -setup {
@@ -186,6 +188,11 @@ test canvPs-4.1 {test ps generation with single-point uncolored poly, bug 734498
 
 # cleanup
 unset -nocomplain foo bar
+imageFinish
 deleteWindows
 cleanupTests
 return
+
+# Local variables:
+# mode: tcl
+# End:

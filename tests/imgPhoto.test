@@ -10,7 +10,7 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 #
-# RCS: @(#) $Id: imgPhoto.test,v 1.34 2008/08/28 15:36:16 dkf Exp $
+# RCS: @(#) $Id: imgPhoto.test,v 1.35 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -52,7 +52,7 @@ proc checkImgTransLoop {img script1 script2} {
     return $result
 }
 
-image delete {*}[image names]
+imageInit
 set README [makeFile {
     README -- Tk test suite design document.
 } README-imgPhoto]
@@ -113,16 +113,16 @@ test imgPhoto-1.11 {options for photo images - error case} -body {
 } -returnCodes error -result {value for "-format" missing}
 
 test imgPhoto-2.1 {ImgPhotoCreate procedure} -setup {
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     catch {image create photo -blah blah}
-    image names
+    imageNames
 } -result {}
 test imgPhoto-2.2 {ImgPhotoCreate procedure} -setup {
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create photo image1
-    list [info commands image1] [image names] \
+    list [info commands image1] [imageNames] \
 	[image width image1] [image height image1]
 } -cleanup {
     image delete image1
@@ -805,7 +805,7 @@ test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
 } -setup {
     destroy .c
     pack [canvas .c]
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create photo photo1 -file $teapotPhotoFile
     .c create image 0 0 -image photo1 -tags photo1.1
@@ -826,7 +826,7 @@ test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
 test imgPhoto-6.1 {ImgPhotoDisplay procedure, blank display} -setup {
     destroy .c
     pack [canvas .c]
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create photo photo1 -width 10 -height 10
     photo1 blank
@@ -842,7 +842,7 @@ test imgPhoto-7.1 {ImgPhotoFree procedure, resource freeing} -constraints {
 } -setup {
     destroy .c
     pack [canvas .c]
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create photo photo1 -file $teapotPhotoFile
     .c create image 0 0 -image photo1 -anchor nw
@@ -856,7 +856,7 @@ test imgPhoto-7.2 {ImgPhotoFree procedures, unlinking} -constraints {
     hasTeapotPhoto 
 } -setup {
     deleteWindows
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create photo photo1 -file $teapotPhotoFile
     pack [canvas .c]
@@ -881,7 +881,7 @@ test imgPhoto-7.3 {ImgPhotoFree procedures, multiple visuals} -constraints {
     hasTeapotPhoto 
 } -setup {
     deleteWindows
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create photo photo1 -file $teapotPhotoFile
     button .b1 -image photo1
@@ -919,7 +919,7 @@ test imgPhoto-8.3 {ImgPhotoDelete procedure, name cleanup} -body {
     image delete photo2
     photo1 copy photo2
 } -returnCodes error -cleanup {
-    image delete {*}[image names]
+    imageCleanup
 } -result {image "photo2" doesn't exist or is not a photo image}
 
 test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
@@ -927,11 +927,11 @@ test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
 } -body {
     image create photo photo2 -file $teapotPhotoFile
     rename photo2 {}
-    list [lsearch -exact [image names] photo2] [catch {photo2 foo} msg] $msg
+    list [lsearch -exact [imageNames] photo2] [catch {photo2 foo} msg] $msg
 } -result {-1 1 {invalid command name "photo2"}}
 
 test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create photo photo1
     photo1 put "{#ff0000 #ff0000 #ff0000 #ff0000 #ff0000 #ff0000 #ff0000 #ff0000}" -to 0 0
@@ -940,13 +940,13 @@ test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
 } -result {{0 255 0} {0 255 0} {255 0 0}}
 
 test imgPhoto-11.1 {Tk_FindPhoto} -setup {
-    image delete {*}[image names]
+    imageCleanup
 } -body {
     image create bitmap i1
     image create photo photo1
     photo1 copy i1
 } -cleanup {
-    image delete {*}[image names]
+    imageCleanup
 } -returnCodes error -result {image "i1" doesn't exist or is not a photo image}
 
 test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -constraints hasTeapotPhoto -body {
@@ -959,7 +959,7 @@ test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -constraints hasTeapotPhoto -body {
 } -result {{19 92 192} {169 117 90} 512 512 {19 92 192}}
 
 test imgPhoto-13.1 {check separation of images in different interpreters} -setup {
-    image delete {*}[image names]
+    imageCleanup
     set data {
 	R0lGODlhQgBkAPUAANbWxs7Wxs7OxsbOxsbGxsbGvb3Gvca9vcDAwL21vbW1vbW1tbWtta2t
 	ta2ltaWltaWlraWctaWcrZycrZyUrZSUrZSMrZSMpYyMrYyMpYyEpYSEpYR7pYR7nHp7pYRz
@@ -1120,7 +1120,7 @@ test imgPhoto-16.1 {copying to self doesn't access freed memory} -setup {
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
 catch {rename checkImgTransLoop {}}
-image delete {*}[image names]
+imageFinish
 
 # cleanup
 removeFile README-imgPhoto

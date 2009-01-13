@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menubut.test,v 1.12 2008/08/18 16:09:10 aniap Exp $
+# RCS: @(#) $Id: menubut.test,v 1.13 2009/01/13 01:46:06 patthoyts Exp $
 
 # XXX This test file is woefully incomplete right now.  If any part
 # XXX of a procedure has tests then the whole procedure has tests,
@@ -16,6 +16,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
+imageInit
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -455,20 +456,20 @@ test menubutton-4.7 {ConfigureMenuButton procedure} -constraints {
     testImageType 
 } -setup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -body {
     image create test image1
     button .mb1 -image image1
     .mb1 configure -height 0.5x
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -returnCodes error -result {bad screen distance "0.5x"}
 test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
     testImageType 
 } -setup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -body {
     image create test image1
     button .mb1 -image image1
@@ -476,7 +477,7 @@ test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
     return $errorInfo
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {bad screen distance "0.5x"
     (processing -height option)
     invoked from within
@@ -555,7 +556,7 @@ test menubutton-7.1 {ComputeMenuButtonGeometry procedure} -constraints {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {38 23}
 test menubutton-7.2 {ComputeMenuButtonGeometry procedure} -constraints {
     testImageType 
@@ -568,7 +569,7 @@ test menubutton-7.2 {ComputeMenuButtonGeometry procedure} -constraints {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {36 21}
 test menubutton-7.3 {ComputeMenuButtonGeometry procedure} -constraints {
     testImageType 
@@ -581,7 +582,7 @@ test menubutton-7.3 {ComputeMenuButtonGeometry procedure} -constraints {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {34 19}
 test menubutton-7.4 {ComputeMenuButtonGeometry procedure} -constraints {
     testImageType 
@@ -595,7 +596,7 @@ test menubutton-7.4 {ComputeMenuButtonGeometry procedure} -constraints {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {48 23}
 test menubutton-7.5 {ComputeMenuButtonGeometry procedure} -constraints {
     testImageType 
@@ -609,7 +610,7 @@ test menubutton-7.5 {ComputeMenuButtonGeometry procedure} -constraints {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {38 38}
 test menubutton-7.6 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
@@ -716,7 +717,7 @@ test menubutton-7.14 {ComputeMenuButtonGeometry procedure} -constraints {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {64 23}
 test menubutton-7.15 {ComputeMenuButtonGeometry procedure} -constraints {
     testImageType win nonPortable
@@ -733,7 +734,7 @@ test menubutton-7.15 {ComputeMenuButtonGeometry procedure} -constraints {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -result {65 23}
 
 
@@ -752,10 +753,12 @@ test menubutton-8.1 {menubutton vs hidden commands} -body {
 
 deleteWindows
 option clear
+imageFinish
 
 # cleanup
 cleanupTests
 return
 
-
-
+# Local variables:
+# mode: tcl
+# End:

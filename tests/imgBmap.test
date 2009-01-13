@@ -7,12 +7,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: imgBmap.test,v 1.8 2008/08/17 19:40:33 aniap Exp $
+# RCS: @(#) $Id: imgBmap.test,v 1.9 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+imageInit
 
 set data1 {#define foo_width 16
 #define foo_height 16
@@ -34,7 +35,7 @@ set data2 {
 makeFile $data1 foo.bm
 makeFile $data2 foo2.bm
 
-eval image delete [image names]
+imageCleanup
 #canvas .c
 #pack .c
 #update
@@ -121,21 +122,20 @@ rename bgerror {}
 
 
 test imageBmap-2.1 {ImgBmapCreate procedure} -setup {
-    eval image delete [image names]
+    imageCleanup
 } -body {
-    eval image delete [image names]
-    list [catch {image create bitmap -gorp dum} msg] $msg [image names]
+    list [catch {image create bitmap -gorp dum} msg] $msg [imageNames]
 } -result {1 {unknown option "-gorp"} {}}
 test imageBmap-2.2 {ImgBmapCreate procedure} -setup {
-    eval image delete [image names]
+    imageCleanup
 } -body {
     image create bitmap image1
-    list [info commands image1] [image names] \
+    list [info commands image1] [imageNames] \
 	    [image width image1] [image height image1] \
 	    [lindex [image1 configure -foreground] 4] \
 	    [lindex [image1 configure -background] 4]
 } -cleanup {
-	image delete image1
+    image delete image1
 } -result {image1 image1 0 0 #000000 {}}
 
 
@@ -227,41 +227,28 @@ test imageBmap-5.1 {GetBitmapData procedure} -body {
 test imageBmap-5.2 {GetBitmapData procedure} -body {
     list [catch {image create bitmap -file bad_name} msg] [string tolower $msg]
 } -result {1 {couldn't read bitmap file "bad_name": no such file or directory}}
-test imageBmap-5.3 {GetBitmapData procedure} -body {
-    eval image delete [image names]
+test imageBmap-5.3 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap -data { }
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.4 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-    image create bitmap -data {#define foo2_width}
+test imageBmap-5.4 {GetBitmapData procedure} -setup {imageCleanup} -body {
+    image create bitmap -data "#define foo2_width"
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.5 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-    image create bitmap -data {#define foo2_width gorp}
+test imageBmap-5.5 {GetBitmapData procedure} -setup {imageCleanup} -body {
+    image create bitmap -data "#define foo2_width gorp"
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.6 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
-    image create bitmap -data {#define foo2_width 1.4}
+test imageBmap-5.6 {GetBitmapData procedure} -setup {imageCleanup} -body {
+    image create bitmap -data "#define foo2_width 1.4"
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.7 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
-    image create bitmap -data {#define foo2_height}
+test imageBmap-5.7 {GetBitmapData procedure} -setup {imageCleanup} -body {
+    image create bitmap -data "#define foo2_height"
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.8 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
-    image create bitmap -data {#define foo2_height gorp}
+test imageBmap-5.8 {GetBitmapData procedure} -setup {imageCleanup} -body {
+    image create bitmap -data "#define foo2_height gorp"
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.9 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
-    image create bitmap -data {#define foo2_height 1.4}
+test imageBmap-5.9 {GetBitmapData procedure} -setup {imageCleanup} -body {
+    image create bitmap -data "#define foo2_height 1.4"
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.10 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.10 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {
 	#define foo2_height 14
 	#define foo2_width 15 xx _widtg 18 xwidth 18 _heighz 18 xheight 18
@@ -273,11 +260,9 @@ test imageBmap-5.10 {GetBitmapData procedure} -body {
     }
     list [image width i1] [image height i1]
 } -cleanup {
-	image delete i1
+    image delete i1
 } -result {15 14}
-test imageBmap-5.11 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.11 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {
 	_height 14 _width 15
 	char {
@@ -288,11 +273,9 @@ test imageBmap-5.11 {GetBitmapData procedure} -body {
     }
     list [image width i1] [image height i1]
 } -cleanup {
-	image delete i1
+    image delete i1
 } -result {15 14}
-test imageBmap-5.12 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.12 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {
 	#define foo2_height 14
 	#define foo2_width 15
@@ -303,9 +286,7 @@ test imageBmap-5.12 {GetBitmapData procedure} -body {
 	   0xff, 0xff};
     }
 } -returnCodes error -result {format error in bitmap data; looks like it's an obsolete X10 bitmap file}
-test imageBmap-5.13 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.13 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {
 	#define foo2_height 16
 	#define foo2_width 16
@@ -316,25 +297,19 @@ test imageBmap-5.13 {GetBitmapData procedure} -body {
 	   0xff, 0xff;
     }
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.14 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.14 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {
 	#define foo2_width 16
 	static char foo2_bits[] = {
 	   0xff, 0xff, 0xff, }}
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.15 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.15 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {
 	#define foo2_height 16
 	static char foo2_bits[] = {
 	   0xff, 0xff, 0xff, }}
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.16 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.16 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {
 	#define foo2_height 16
 	#define foo2_width 16
@@ -345,9 +320,7 @@ test imageBmap-5.16 {GetBitmapData procedure} -body {
 	   0xff, foo};
     }
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-5.17 {GetBitmapData procedure} -body {
-    eval image delete [image names]
-
+test imageBmap-5.17 {GetBitmapData procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data "
 	#define foo2_height 16
 	#define foo2_width 16
@@ -360,24 +333,21 @@ test imageBmap-5.17 {GetBitmapData procedure} -body {
 } -returnCodes error -result {format error in bitmap data}
 
 
-test imageBmap-6.1 {NextBitmapWord procedure} -body {
-    eval image delete [image names]
+test imageBmap-6.1 {NextBitmapWord procedure} -setup {imageCleanup} -body {
     image create bitmap i1 -data {1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890}
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-6.2 {NextBitmapWord procedure} -body {
-    eval image delete [image names]
+test imageBmap-6.2 {NextBitmapWord procedure} -setup {imageCleanup} -body {
     makeFile {1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890} foo3.bm
     image create bitmap i1 -file foo3.bm
 } -returnCodes error -result {format error in bitmap data}
-test imageBmap-6.3 {NextBitmapWord procedure} -body {
-    eval image delete [image names]
+test imageBmap-6.3 {NextBitmapWord procedure} -setup {imageCleanup} -body {
     makeFile {   } foo3.bm
     image create bitmap i1 -file foo3.bm
 } -returnCodes error -result {format error in bitmap data}
 removeFile foo3.bm
 
 
-eval image delete [image names]
+imageCleanup
 # Image used in 7.* tests
 image create bitmap i1
 test imageBmap-7.1 {ImgBmapCmd procedure} -body {
@@ -445,13 +415,13 @@ test imageBmap-9.1 {ImgBmapDisplay procedure, nothing to display} -setup {
     update
 } -body {
     proc bgerror args {}
-    eval image delete [image names]
+    imageCleanup
     image create bitmap i1 -data $data1
     .c create image 50 100 -image i1 -tags i1.1
     i1 configure -data {}
     update
 } -cleanup {
-	image delete i1
+    image delete i1
     destroy .c
 } -result {}
 test imageBmap-9.2 {ImgBmapDisplay procedure, nothing to display} -setup {
@@ -460,14 +430,14 @@ test imageBmap-9.2 {ImgBmapDisplay procedure, nothing to display} -setup {
     update
 } -body {
     proc bgerror args {}
-    eval image delete [image names]
+    imageCleanup
     .c delete all
     image create bitmap i1 -data $data1
     .c create image 50 100 -image i1 -tags i1.1
     i1 configure -foreground bogus
     update
 } -cleanup {
-	image delete i1
+    image delete i1
     destroy .c
 } -result {}
 if {[info exists bgerror]} {
@@ -480,7 +450,7 @@ test imageBmap-10.1 {ImgBmapFree procedure, resource freeing} -setup {
     pack [canvas .c]
     update
 } -body {
-    eval image delete [image names]
+    imageCleanup
     image create bitmap i1 -data $data1 -maskdata $data2 -foreground #112233 \
 	    -background #445566
     .c create image 100 100 -image i1
@@ -495,7 +465,7 @@ test imageBmap-10.2 {ImgBmapFree procedures, unlinking} -setup {
     pack [canvas .c]
     update
 } -body {
-    eval image delete [image names]
+    imageCleanup
     image create bitmap i1 -data $data1 -maskdata $data2 -foreground #112233 \
 	    -background #445566
     .c create image 100 100 -image i1
@@ -534,14 +504,18 @@ test imageBmap-11.2 {ImgBmapDelete procedure} -body {
 test imageBmap-12.1 {ImgBmapCmdDeletedProc procedure} -body {
     image create bitmap i2 -file foo.bm -maskfile foo2.bm
     rename i2 {}
-    list [lsearch -exact [image names] i2] [catch {i2 foo} msg] $msg
+    list [lsearch -exact [imageNames] i2] [catch {i2 foo} msg] $msg
 } -result {-1 1 {invalid command name "i2"}}
 
 removeFile foo.bm
 removeFile foo2.bm
-eval image delete [image names]
+imageFinish
 
 # cleanup
 cleanupTests
 return
 
+# Local Variables:
+# mode: tcl
+# fill-column: 78
+# End:

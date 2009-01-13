@@ -5,12 +5,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menuDraw.test,v 1.11 2008/08/21 11:19:33 aniap Exp $
+# RCS: @(#) $Id: menuDraw.test,v 1.12 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
+imageInit
 
 test menuDraw-1.1 {TkMenuInitializeDrawingFields} -setup {
     deleteWindows
@@ -325,7 +326,7 @@ test menuDraw-11.1 {TkMenuSelectImageProc - entry selected; redraw not pending} 
     testImageType 
 } -setup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -body {
     image create test image1
     image create test image2
@@ -334,13 +335,15 @@ test menuDraw-11.1 {TkMenuSelectImageProc - entry selected; redraw not pending} 
     .m1 invoke 1
     set tearoff [tk::TearOffMenu .m1 40 40]
     update idletasks
-    list [image delete image2] [destroy .m1] [eval image delete [image names]]
-} -result {{} {} {}}
+    list [image delete image2] [destroy .m1]
+} -cleanup {
+    imageCleanup
+} -result {{} {}}
 test menuDraw-11.2 {TkMenuSelectImageProc - entry selected; redraw pending} -constraints {
     testImageType 
 } -setup {
     deleteWindows
-    catch {eval image delete [image names]}
+    imageCleanup
 } -body {
     image create test image1
     image create test image2
@@ -348,13 +351,15 @@ test menuDraw-11.2 {TkMenuSelectImageProc - entry selected; redraw pending} -con
     .m1 add checkbutton -image image1 -selectimage image2
     .m1 invoke 1
     set tearoff [tk::TearOffMenu .m1 40 40]
-    list [image delete image2] [destroy .m1] [eval image delete [image names]]
-} -result {{} {} {}}
+    list [image delete image2] [destroy .m1]
+} -cleanup {
+    imageCleanup
+} -result {{} {}}
 test menuDraw-11.3 {TkMenuSelectImageProc - entry not selected} -constraints {
     testImageType 
 } -setup {
     deleteWindows
-    catch {eval image delete [image names]}
+    imageCleanup
 } -body {
     image create test image1
     image create test image2
@@ -362,8 +367,10 @@ test menuDraw-11.3 {TkMenuSelectImageProc - entry not selected} -constraints {
     .m1 add checkbutton -image image1 -selectimage image2
     set tearoff [tk::TearOffMenu .m1 40 40]
     update idletasks
-    list [image delete image2] [destroy .m1] [eval image delete [image names]]
-} -result {{} {} {}}
+    list [image delete image2] [destroy .m1]
+} -cleanup {
+    imageCleanup
+} -result {{} {}}
 
 #Don't know how to test missing tkwin in DisplayMenu
 test menuDraw-12.1 {DisplayMenu - menubar background} -constraints unix -setup {
@@ -702,7 +709,11 @@ test menuDraw-17.2 {AdjustMenuCoords - menu} -constraints {
 } -result {}
 
 # cleanup
+imageFinish
 deleteWindows
 cleanupTests
 return
 
+# Local variables:
+# mode: tcl
+# End:
