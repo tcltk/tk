@@ -8,18 +8,18 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winButton.test,v 1.13 2008/08/30 21:52:26 aniap Exp $
+# RCS: @(#) $Id: winButton.test,v 1.14 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
+imageInit
 
 proc bogusTrace args {
     error "trace aborted"
 }
 option clear
-eval image delete [image names]
 
 # ----------------------------------------------------------------------
 
@@ -188,6 +188,7 @@ test winbutton-1.9 {TkpComputeButtonGeometry procedure} -constraints win -setup 
 } -result {23 33}
 
 # cleanup
+imageFinish
 deleteWindows
 cleanupTests
 return
