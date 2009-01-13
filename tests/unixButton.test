@@ -8,12 +8,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixButton.test,v 1.8 2008/08/18 16:09:10 aniap Exp $
+# RCS: @(#) $Id: unixButton.test,v 1.9 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
+imageInit
 
 # Create entries in the option database to be sure that geometry options
 # like border width have predictable values.
@@ -41,7 +42,7 @@ test unixbutton-1.1 {TkpComputeButtonGeometry procedure} -constraints {
     unix testImageType
 } -setup {
     deleteWindows
-    eval image delete [image names]
+    imageCleanup
 } -body {
     image create test image1
     image1 changed 0 0 0 0 60 40
@@ -247,6 +248,10 @@ test unixbutton-2.1 {disabled coloring check, bug 669595} -constraints {
 
 
 # cleanup
+imageFinish
 cleanupTests
 return
 
+# Local variables:
+# mode: tcl
+# End:

@@ -7,12 +7,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textImage.test,v 1.12 2008/08/28 08:52:06 aniap Exp $
+# RCS: @(#) $Id: textImage.test,v 1.13 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+imageInit
 
 # One time setup.  Create a font to insure the tests are font metric invariant.
 destroy .t
@@ -461,12 +462,13 @@ test textImage-5.1 {peer widget images} -setup {
 
 # cleanup
 destroy .t
-foreach image [image names] {image delete $image}
 font delete test_font
+imageFinish
 
 # cleanup
 cleanupTests
 return
 
-
-
+# Local variables:
+# mode: tcl
+# End:

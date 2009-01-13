@@ -7,14 +7,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvImg.test,v 1.11 2008/10/07 00:10:07 patthoyts Exp $
+# RCS: @(#) $Id: canvImg.test,v 1.12 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+imageInit
 
-eval image delete [image names]
 # Canvas used in every test case of the whole file
 canvas .c
 pack .c
@@ -195,21 +195,22 @@ test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
 
 test canvImg-5.1 {DeleteImage procedure} -constraints testImageType -setup {
     .c delete all
+    imageCleanup
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     image create test foo2 -variable y
     image create test xyzzy -variable z
     .c create image 50 100 -image xyzzy -tags i1
     update
-    set names [lsort [image names]]
+    set names [lsort [imageNames]]
     image delete xyzzy
     set z {}
-    set names2 [lsort [image names]]
+    set names2 [lsort [imageNames]]
     .c delete i1
     update
-    list $names $names2 $z [lsort [image names]]
+    list $names $names2 $z [lsort [imageNames]]
 } -cleanup {
-	image delete foo foo2
+    imageCleanup
     .c delete all
 } -result {{foo foo2 xyzzy} {foo foo2} {} {foo foo2}}
 test canvImg-5.2 {DeleteImage procedure (don't delete non-existent image)} -body {
@@ -222,24 +223,24 @@ test canvImg-5.2 {DeleteImage procedure (don't delete non-existent image)} -body
 
 
 test canvImg-6.1 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c create image 15.51 17.51 -image foo -tags i1 -anchor nw
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {16 18 46 33}
 test canvImg-6.2 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c create image 15.49 17.49 -image foo -tags i1 -anchor nw
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {15 17 45 32}
 test canvImg-6.3 {ComputeImageBbox procedure} -setup {
     .c delete all
@@ -250,7 +251,7 @@ test canvImg-6.3 {ComputeImageBbox procedure} -setup {
     .c delete all
 } -result {}
 test canvImg-6.4 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -258,10 +259,10 @@ test canvImg-6.4 {ComputeImageBbox procedure} -constraints testImageType -setup 
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {20 30 50 45}
 test canvImg-6.5 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -269,10 +270,10 @@ test canvImg-6.5 {ComputeImageBbox procedure} -constraints testImageType -setup 
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {5 30 35 45}
 test canvImg-6.6 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -280,10 +281,10 @@ test canvImg-6.6 {ComputeImageBbox procedure} -constraints testImageType -setup 
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {-10 30 20 45}
 test canvImg-6.7 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -291,10 +292,10 @@ test canvImg-6.7 {ComputeImageBbox procedure} -constraints testImageType -setup 
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {-10 23 20 38}
 test canvImg-6.8 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -302,10 +303,10 @@ test canvImg-6.8 {ComputeImageBbox procedure} -constraints testImageType -setup 
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {-10 15 20 30}
 test canvImg-6.9 {ComputeImageBbox procedure} -constraints testImageType -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -313,12 +314,12 @@ test canvImg-6.9 {ComputeImageBbox procedure} -constraints testImageType -setup 
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    imageCleanup
 } -result {5 15 35 30}
 test canvImg-6.10 {ComputeImageBbox procedure} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -326,12 +327,12 @@ test canvImg-6.10 {ComputeImageBbox procedure} -constraints {
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    image delete foo
 } -result {20 15 50 30}
 test canvImg-6.11 {ComputeImageBbox procedure} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -339,12 +340,12 @@ test canvImg-6.11 {ComputeImageBbox procedure} -constraints {
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    image delete foo
 } -result {20 23 50 38}
 test canvImg-6.12 {ComputeImageBbox procedure} -constraints {
 	testImageType 
 } -setup {
-	image create test foo
+    image create test foo
     .c delete all
 } -body {
     .c delete all
@@ -352,7 +353,7 @@ test canvImg-6.12 {ComputeImageBbox procedure} -constraints {
     .c bbox i1
 } -cleanup {
     .c delete all
-	image delete foo
+    image delete foo
 } -result {5 23 35 38}
 
 # The following test is non-portable because of differences in
@@ -363,7 +364,7 @@ test canvImg-7.1 {DisplayImage procedure} -constraints {
 } -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     .c create image 50 100 -image foo -tags i1 -anchor nw
     update
     set x {}
@@ -382,7 +383,7 @@ test canvImg-7.2 {DisplayImage procedure, no image} -body {
 
 # image used in 8.* test cases
 if {[testConstraint testImageType]} {
-	image create test foo
+    image create test foo
 }
 test canvImg-8.1 {ImageToArea procedure} -constraints testImageType -setup {
 	.c create image 50 100 -image foo -tags image -anchor nw
@@ -788,7 +789,10 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 } -result {{foo2 display 0 0 20 40 50 40}}
 
 # cleanup
+imageFinish
 cleanupTests
 return
 
-
+# Local variables:
+# mode: tcl
+# End:
