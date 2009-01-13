@@ -7,13 +7,13 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: button.test,v 1.24 2009/01/11 23:37:15 patthoyts Exp $
+# RCS: @(#) $Id: button.test,v 1.25 2009/01/13 01:46:05 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
-
+imageInit
 
 proc bogusTrace args {
     error "trace aborted"
@@ -3256,21 +3256,17 @@ test button-5.4 {ConfigureButton - variable trace} -body {  ;# ex 6.2a
 test button-5.5 {ConfigureButton - image handling} -constraints {
     testImageType
 } -setup {
-    set images [image names]
+    imageCleanup
     image create test image1
     image create test image2
 } -body {
     button .b -image image1
     image delete image1
     .b configure -image image2
-    set result {}
-    foreach image [image names] {
-	if {$image ni $images} { lappend result $image }
-    }
-    set result
+    imageNames
 } -cleanup {
     destroy .b
-    image delete image2
+    imageCleanup
 } -result {image2}
 
 test button-5.6 {ConfigureButton - default value for variable} -body {
@@ -3914,15 +3910,10 @@ test button-13.8 {size behaviouor: checkbutton} -setup {
     destroy .a .b .c
 } -result {1 1 1} 
 
-
+imageFinish
 cleanupTests
 return
 
-
-
-
-
-
-
-
-
+# Local variables:
+# mode: tcl
+# End:

@@ -1,3 +1,8 @@
+2009-01-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* tests/constraints.tcl: Made the tests more independent of the presence
+	* tests/*.test:          of images in the interpreter.
+
 2009-01-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/bind.test: Fixed keysym bind tests for unix [Bug 2336454]

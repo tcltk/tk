@@ -7,14 +7,15 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: image.test,v 1.16 2008/08/15 01:10:03 aniap Exp $
+# RCS: @(#) $Id: image.test,v 1.17 2009/01/13 01:46:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-eval image delete [image names]
+imageInit
+
 # Canvas used in some tests in the whole file
 canvas .c -highlightthickness 2
 pack .c
@@ -36,27 +37,27 @@ test image-1.4 {Tk_ImageCmd procedure, "create" option} -body {
 test image-1.5 {Tk_ImageCmd procedure, "create" option} -constraints {
     testImageType 
 } -body {
-    list [image create test myimage] [image names]
+    list [image create test myimage] [imageNames]
 } -cleanup {
-    eval image delete [image names]
+    imageCleanup
 } -result {myimage myimage}
 test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
     testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     scan [image create test] image%d first
     image create test myimage
     scan [image create test -variable x] image%d second
     expr $second-$first
 } -cleanup {
-    eval image delete [image names]
+    imageCleanup
 } -result {1}
 
 test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test myimage -variable x
     .c create image 100 50 -image myimage
@@ -67,13 +68,13 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     update
     return $x
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{myimage free} {myimage free} {myimage delete} {myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
 test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
 	testImageType 
 } -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     image create test myimage -variable x
     .c create image 100 50 -image myimage
@@ -86,7 +87,7 @@ test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
     return $x
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -result {{myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
 test image-1.9 {Tk_ImageCmd procedure, "create" option} -constraints {
 	testImageType 
@@ -97,7 +98,7 @@ test image-1.10 {Tk_ImageCmd procedure, "create" option} -constraints {
     testImageType 
 } -body {
     catch {image create test -badName foo}
-    image names
+    imageNames
 } -result {}
 test image-1.11 {Tk_ImageCmd procedure, "create" option with same name as main window} -body {
     set code [loadTkCommand]
@@ -124,8 +125,8 @@ test image-1.12 {Tk_ImageCmd procedure, "create" option with same name as main w
     removeFile script
 } -result {1 {images may not be named the same as the main window}}
 test image-1.13 {Tk_ImageCmd, "create" option: do not generated command name in use} -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     set i [image create bitmap]
     regexp {^image(\d+)$} $i -> serial
@@ -143,41 +144,41 @@ test image-2.1 {Tk_ImageCmd procedure, "delete" option} -body {
     image delete
 } -result {}
 test image-2.2 {Tk_ImageCmd procedure, "delete" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
     set result {}
 } -body {
     image create test myimage
     image create test img2
-    lappend result [lsort [image names]]
+    lappend result [lsort [imageNames]]
     image d myimage img2
-    lappend result [image names]
+    lappend result [imageNames]
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{img2 myimage} {}}
 test image-2.3 {Tk_ImageCmd procedure, "delete" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test myimage
     image create test img2
     image delete myimage gorp img2
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -returnCodes error -result {image "gorp" doesn't exist}
 test image-2.4 {Tk_ImageCmd procedure, "delete" option} -constraints {
     testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test myimage
     image create test img2
     catch {image delete myimage gorp img2}
-    image names
+    imageNames
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {img2}
 
 
@@ -193,14 +194,14 @@ test image-3.3 {Tk_ImageCmd procedure, "height" option} -body {
 test image-3.4 {Tk_ImageCmd procedure, "height" option} -constraints {
     testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test myimage
     set x [image h myimage]
     myimage changed 0 0 0 0 60 50
     list $x [image height myimage]
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {15 50}
 
 
@@ -208,24 +209,34 @@ test image-4.1 {Tk_ImageCmd procedure, "names" option} -body {
     image names x
 } -returnCodes error -result {wrong # args: should be "image names"}
 test image-4.2 {Tk_ImageCmd procedure, "names" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    catch {interp delete testinterp}
 } -body {
-    image create test myimage
-    image create test img2
-    image create test 24613
-    lsort [image names]
+    interp create testinterp
+    load {} Tk testinterp
+    interp eval testinterp {
+        image delete {*}[image names]
+        image create test myimage
+        image create test img2
+        image create test 24613
+        lsort [image names]
+    }
 } -cleanup {
-    eval image delete [image names] 
+    interp delete testinterp
 } -result {24613 img2 myimage}
 test image-4.3 {Tk_ImageCmd procedure, "names" option} -setup {
-    eval image delete [image names] 
+    catch {interp delete testinterp}
 } -body {
-    eval image delete [image names] [image names]
-    lsort [image names]
+    interp create testinterp
+    load {} Tk testinterp
+    interp eval testinterp {
+        image delete {*}[image names]
+        eval image delete [image names] [image names]
+        lsort [image names]
+    }
 } -cleanup {
-    eval image delete [image names] 
+    interp delete testinterp
 } -result {}
 
 
@@ -240,42 +251,42 @@ test image-5.3 {Tk_ImageCmd procedure, "type" option} -body {
 } -returnCodes error -result {image "foo" doesn't exist}
 
 test image-5.4 {Tk_ImageCmd procedure, "type" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test myimage
     image type myimage
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {test}
 test image-5.5 {Tk_ImageCmd procedure, "type" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test myimage
     .c create image 50 50 -image myimage
     image delete myimage
     image type myimage
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -returnCodes error -result {image "myimage" doesn't exist}
 test image-5.6 {Tk_ImageCmd procedure, "type" option} -constraints {
-	testOldImageType 
+    testOldImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create oldtest myimage
     image type myimage
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {oldtest}
 test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
-	testOldImageType 
+    testOldImageType 
 } -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     image create oldtest myimage
     .c create image 50 50 -image myimage
@@ -283,7 +294,7 @@ test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
     image type myimage
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -returnCodes error -result {image "myimage" doesn't exist}
 
 
@@ -307,23 +318,23 @@ test image-7.3 {Tk_ImageCmd procedure, "width" option} -body {
     image width foo
 } -returnCodes error -result {image "foo" doesn't exist}
 test image-7.4 {Tk_ImageCmd procedure, "width" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test myimage
     set x [image w myimage]
     myimage changed 0 0 0 0 60 50
     list $x [image width myimage]
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {30 60}
 
 
 test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
-	testImageType 
+    testImageType 
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
     set res {}
     destroy .b
 } -body {
@@ -332,14 +343,14 @@ test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
     button .b -image myimage2
     lappend res [image inuse myimage2]
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
     catch {destroy .b}
 } -result [list 0 1]
     
 
 test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 50 -image foo
@@ -350,11 +361,11 @@ test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     return $x
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 5 6 7 8 30 30}}
 test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 50 -image foo
@@ -366,20 +377,20 @@ test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     return $x
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 5 6 25 9 30 30} {foo display 0 0 12 14 65 74}}
 
 
 test image-10.1 {Tk_GetImage procedure} -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     .c create image 100 10 -image bad_name
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -returnCodes error -result {image "bad_name" doesn't exist}
 test image-10.2 {Tk_GetImage procedure} -constraints testImageType -setup {
-	destroy .l
-    eval image delete [image names] 
+    destroy .l
+    imageCleanup
 } -body {
     image create test mytest
     label .l -image mytest
@@ -387,13 +398,13 @@ test image-10.2 {Tk_GetImage procedure} -constraints testImageType -setup {
     label .l2 -image mytest
 } -cleanup {
     destroy .l
-    eval image delete [image names] 
+    imageCleanup
 } -returnCodes error -result {image "mytest" doesn't exist}
 
 
 test image-11.1 {Tk_FreeImage procedure} -constraints testImageType -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 50 -image foo -tags i1
@@ -404,30 +415,30 @@ test image-11.1 {Tk_FreeImage procedure} -constraints testImageType -setup {
     .c delete i1
     pack .c
     update
-    list [image names] $x
+    list [imageNames] $x
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -result {foo {{foo free} {foo display 0 0 30 15 103 121}}}
 test image-11.2 {Tk_FreeImage procedure} -constraints testImageType -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 50 -image foo -tags i1
-    set names [image names]
+    set names [imageNames]
     image delete foo
     update
-    set names2 [image names]
+    set names2 [imageNames]
     set x {}
     .c delete i1
     pack forget .c
     pack .c
     update
-    list $names $names2 [image names] $x
+    list $names $names2 [imageNames] $x
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -result {foo {} {} {}}
 
 
@@ -435,7 +446,7 @@ test image-11.2 {Tk_FreeImage procedure} -constraints testImageType -setup {
 test image-12.1 {Tk_RedrawImage procedure, redisplay area clipping} -constraints {
     testImageType nonPortable
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
@@ -445,12 +456,12 @@ test image-12.1 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     update
     return $x
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 0 0 5 5 50 50}}
 test image-12.2 {Tk_RedrawImage procedure, redisplay area clipping} -constraints {
     testImageType nonPortable
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
@@ -460,12 +471,12 @@ test image-12.2 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     update
     return $x
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 10 0 20 5 30 50}}
 test image-12.3 {Tk_RedrawImage procedure, redisplay area clipping} -constraints {
     testImageType nonPortable
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
@@ -475,12 +486,12 @@ test image-12.3 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     update
     return $x
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 10 10 20 5 30 30}}
 test image-12.4 {Tk_RedrawImage procedure, redisplay area clipping} -constraints {
     testImageType nonPortable
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
@@ -490,12 +501,12 @@ test image-12.4 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     update
     return $x
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 0 10 5 5 50 30}}
 test image-12.5 {Tk_RedrawImage procedure, redisplay area clipping} -constraints {
     testImageType nonPortable
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
@@ -505,12 +516,12 @@ test image-12.5 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     update
     return $x
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 0 0 30 15 70 70}}
 test image-12.6 {Tk_RedrawImage procedure, redisplay area clipping} -constraints {
     testImageType nonPortable
 } -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
@@ -520,104 +531,98 @@ test image-12.6 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     update
     return $x
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo display 5 5 20 5 30 30}}
 
 
 test image-13.1 {Tk_SizeOfImage procedure} -constraints testImageType -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
     image create test foo -variable x
     set result [list [image width foo] [image height foo]]
     foo changed 0 0 0 0 85 60
     lappend result [image width foo] [image height foo]
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {30 15 85 60}
 
 test image-13.2 {DeleteImage procedure} -constraints testImageType -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
-    eval image delete [image names] [image names]
     image create test foo -variable x
     .c create image 50 50 -image foo -tags i1
     .c create image 90 100 -image foo -tags i2
     set x {}
     image delete foo
-    lappend x | [image names] | [catch {image delete foo} msg] | $msg | [image names] |
+    lappend x | [imageNames] | [catch {image delete foo} msg] | $msg | [imageNames] |
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" doesn't exist} | {} |}
 
 test image-13.3 {Tk_SizeOfImage procedure} -constraints testOldImageType -setup {
-    eval image delete [image names] 
+    imageCleanup
 } -body {
-    eval image delete [image names] [image names]
     image create oldtest foo -variable x
     set result [list [image width foo] [image height foo]]
     foo changed 0 0 0 0 85 60
     lappend result [image width foo] [image height foo]
 } -cleanup {
-    eval image delete [image names] 
+    imageCleanup
 } -result {30 15 85 60}
 
 test image-13.4 {DeleteImage procedure} -constraints testOldImageType -setup {
-	.c delete all
-    eval image delete [image names] 
-} -body {
     .c delete all
-    eval image delete [image names] [image names]
+    imageCleanup
+} -body {
     image create oldtest foo -variable x
     .c create image 50 50 -image foo -tags i1
     .c create image 90 100 -image foo -tags i2
     set x {}
     image delete foo
-    lappend x | [image names] | [catch {image delete foo} msg] | $msg | [image names] |
+    lappend x | [imageNames] | [catch {image delete foo} msg] | $msg | [imageNames] |
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -result {{foo free} {foo free} {foo delete} | {} | 1 | {image "foo" doesn't exist} | {} |}
-
 
 test image-14.1 {image command vs hidden commands} -body {
     catch {image delete hidden}
-    set l [image names]
+    set l [imageNames]
     set h [interp hidden]
     image create photo hidden
     interp hide {} hidden
     image delete hidden
-    set res1 [list [image names] [interp hidden]]
+    set res1 [list [imageNames] [interp hidden]]
     set res2 [list $l $h]
     expr {$res1 eq $res2}
 } -result 1
 
-
-eval image delete [image names]
 test image-15.1 {deleting image does not make widgets forget about it} -setup {
-	.c delete all
-    eval image delete [image names] 
+    .c delete all
+    imageCleanup
 } -body {
     image create photo foo -width 10 -height 10
     .c create image 10 10 -image foo -tags i1 -anchor nw
     update
     set x [.c bbox i1]
-    lappend x [image names]
+    lappend x [imageNames]
     image delete foo
-    lappend x [image names]
+    lappend x [imageNames]
     image create photo foo -width 20 -height 20
-    lappend x [.c bbox i1] [image names]
+    lappend x [.c bbox i1] [imageNames]
 } -cleanup {
     .c delete all
-    eval image delete [image names] 
+    imageCleanup
 } -result {10 10 20 20 foo {} {10 10 30 30} foo}
     
 destroy .c
-eval image delete [image names]
+imageFinish
 
 # cleanup
 cleanupTests
 return
 
-
-
+# Local variables:
+# mode: tcl
+# End:
