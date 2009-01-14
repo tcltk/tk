@@ -1,3 +1,7 @@
+2009-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgPhoto.c: fix for aMSN compatibility [tcl-Bug 2507326]
+
 2009-01-11  George Peter Staplin  <georgeps@users.sourceforge.net>
 
 	* generic/tkEvent.c: Backport a fix from 8.6 for a NULL pointer
