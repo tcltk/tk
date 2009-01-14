@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.89 2009/01/06 09:22:30 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.90 2009/01/14 22:48:10 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -191,7 +191,7 @@ static char *		ImgGetPhoto(PhotoMaster *masterPtr,
 			    Tk_PhotoImageBlock *blockPtr,
 			    struct SubcommandOptions *optPtr);
 static int		MatchFileFormat(Tcl_Interp *interp, Tcl_Channel chan,
-			    char *fileName, Tcl_Obj *formatString,
+			    const char *fileName, Tcl_Obj *formatString,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    int *widthPtr, int *heightPtr, int *oldformat);
 static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
@@ -234,6 +234,7 @@ PhotoFormatThreadExitProc(
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
+	ckfree((char *) freePtr->name);
 	ckfree((char *) freePtr);
     }
 }
@@ -299,6 +300,10 @@ Tk_CreatePhotoImageFormat(
 	copyPtr->nextPtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = copyPtr;
     } else {
+	/* for compatibility with aMSN: make a copy of formatPtr->name */
+	char *name = ckalloc(strlen(formatPtr->name) + 1);
+	strcpy(name, formatPtr->name);
+	copyPtr->name = name;
 	copyPtr->nextPtr = tsdPtr->formatList;
 	tsdPtr->formatList = copyPtr;
     }
@@ -444,7 +449,7 @@ ImgPhotoCmd(
 	}
 
     case PHOTO_CGET: {
-	char *arg;
+	const char *arg;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
@@ -499,7 +504,7 @@ ImgPhotoCmd(
 	    return TCL_OK;
 
 	} else if (objc == 3) {
-	    char *arg = Tcl_GetStringFromObj(objv[2], &length);
+	    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
 
 	    if (length > 1 && !strncmp(arg, "-data", (unsigned) length)) {
 		Tcl_AppendResult(interp, "-data {} {} {}", NULL);
@@ -741,7 +746,7 @@ ImgPhotoCmd(
 	if (oldformat) {
 	    Tcl_DString buffer;
 	    typedef int (*OldStringWriteProc)(Tcl_Interp *interp,
-		    Tcl_DString *dataPtr, char *formatString,
+		    Tcl_DString *dataPtr, const char *formatString,
 		    Tk_PhotoImageBlock *blockPtr);
 
 	    Tcl_DStringInit(&buffer);
@@ -887,7 +892,7 @@ ImgPhotoCmd(
 	    }
 
 	    for (x = 0; x < dataWidth; ++x) {
-		char *colorString = Tcl_GetString(listObjv[x]);
+		const char *colorString = Tcl_GetString(listObjv[x]);
 		XColor color;
 		int tmpr, tmpg, tmpb;
 
@@ -1520,7 +1525,7 @@ ParseSubcommandOptions(
 		return TCL_ERROR;
 	    }
 	} else if ((bit != OPT_SHRINK) && (bit != OPT_GRAYSCALE)) {
-	    char *val;
+	    const char *val;
 	    maxValues = ((bit == OPT_FROM) || (bit == OPT_TO))? 4: 2;
 	    argIndex = index + 1;
 	    for (numValues = 0; numValues < maxValues; ++numValues) {
@@ -2267,7 +2272,7 @@ static int
 MatchFileFormat(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tcl_Channel chan,		/* The image file, open for reading. */
-    char *fileName,		/* The name of the image file. */
+    const char *fileName,	/* The name of the image file. */
     Tcl_Obj *formatObj,		/* User-specified format string, or NULL. */
     Tk_PhotoImageFormat **imageFormatPtr,
 				/* A pointer to the photo image format record
@@ -2281,7 +2286,7 @@ MatchFileFormat(
     Tk_PhotoImageFormat *formatPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    char *formatString = NULL;
+    const char *formatString = NULL;
 
     if (formatObj) {
 	formatString = Tcl_GetString(formatObj);
@@ -2410,7 +2415,7 @@ MatchStringFormat(
     Tk_PhotoImageFormat *formatPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    char *formatString = NULL;
+    const char *formatString = NULL;
 
     if (formatObj) {
 	formatString = Tcl_GetString(formatObj);
@@ -3797,7 +3802,7 @@ PhotoOptionFind(
     Tcl_Obj *obj)		/* Name of option to be found. */
 {
     int length;
-    char *name = Tcl_GetStringFromObj(obj, &length);
+    const char *name = Tcl_GetStringFromObj(obj, &length);
     char *prevname = NULL;
     Tcl_ObjCmdProc *proc = NULL;
     OptionAssocData *list = Tcl_GetAssocData(interp, "photoOption", NULL);
