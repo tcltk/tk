@@ -1,3 +1,9 @@
+2009-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgPhoto.c: fix for aMSN compatibility [tcl-Bug 2507326]
+	* generic/tkMenu.h: CONSTify Tk(Create|Find)MenuReferences
+	* generic/tkMenu.c: various internal "const" decorations.
+
 2009-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4: fix [tcl-Bug 2502365] Building of head on
