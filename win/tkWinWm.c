@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.28 2007/12/05 19:18:09 hobbs Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.29 2009/01/16 23:45:32 andreas_kupries Exp $
  */
 
 #include "tkWinInt.h"
@@ -2990,8 +2990,13 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 		     * translation.  Add the 0.5 to round the value.
 		     */
 		    if (!(wmPtr->exStyleConfig & WS_EX_LAYERED)) {
+#ifdef _WIN64
 			SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,
 				*stylePtr);
+#else
+			SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,
+				*stylePtr);
+#endif
 		    }
 		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
 			    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
