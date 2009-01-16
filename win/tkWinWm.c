@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.29 2009/01/16 23:45:32 andreas_kupries Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.54.2.30 2009/01/16 23:46:50 andreas_kupries Exp $
  */
 
 #include "tkWinInt.h"
@@ -2994,7 +2994,7 @@ WmAttributesCmd(tkwin, winPtr, interp, objc, objv)
 			SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,
 				*stylePtr);
 #else
-			SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,
+			SetWindowLong(wmPtr->wrapper, GWL_EXSTYLE,
 				*stylePtr);
 #endif
 		    }
