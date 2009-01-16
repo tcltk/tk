@@ -1,3 +1,13 @@
+2009-01-16  Don Porter	<dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump patchlevel to 8.6b1.1 to distinguish
+	* library/tk.tcl:	CVS snapshots from the 8.6b1 and 8.6b2 releases.
+	* unix/configure.in:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2009-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkImgPhoto.c: fix for aMSN compatibility [tcl-Bug 2507326]
