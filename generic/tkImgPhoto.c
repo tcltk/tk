@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.90 2009/01/14 22:48:10 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.91 2009/01/19 14:00:06 das Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -2863,9 +2863,9 @@ Tk_PhotoPutBlock(
 	 */
 
 	if (!(masterPtr->flags & COMPLEX_ALPHA)) {
-	    register unsigned int x1;
+	    register int x1;
 
-	    for (x1=x ; x<x+width ; x1++) {
+	    for (x1=x ; x1<x+width ; x1++) {
 		register unsigned char newAlpha;
 
 		destLinePtr = masterPtr->pix32 + (y*masterPtr->width + x1)*4;
