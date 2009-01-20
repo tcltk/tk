@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.148 2008/12/28 13:08:38 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.149 2009/01/20 03:39:06 kennykb Exp $
 
 # Current Tk version;  used in various names.
 
@@ -91,6 +91,9 @@ HTML_DIR		= @HTML_DIR@
 
 # Directory in which to install html documentation:
 HTML_INSTALL_DIR	= $(INSTALL_ROOT)$(HTML_DIR)
+
+# Directory in which to install the configuration file tkConfig.sh:
+CONFIG_INSTALL_DIR	= $(INSTALL_ROOT)$(libdir)
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
@@ -564,7 +567,7 @@ SHELL_ENV = \
 
 all: binaries libraries doc
 
-binaries: ${LIB_FILE} ${STUB_LIB_FILE} wish
+binaries: ${LIB_FILE} ${STUB_LIB_FILE} ${TK_BUILD_EXP_FILE} wish
 
 libraries:
 
@@ -692,7 +695,8 @@ install-strip:
 # possible (e.g. if installing as root).
 
 install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
-	@for i in "$(LIB_INSTALL_DIR)" "$(BIN_INSTALL_DIR)" "$(PKG_INSTALL_DIR)"; \
+	@for i in "$(LIB_INSTALL_DIR)" "$(BIN_INSTALL_DIR)" \
+	    "$(PKG_INSTALL_DIR)" "$(CONFIG_INSTALL_DIR)" ; \
 	    do \
 	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
@@ -725,8 +729,8 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    fi
 	@echo "Installing wish as $(BIN_INSTALL_DIR)/wish$(VERSION)"
 	@$(INSTALL_PROGRAM) wish "$(BIN_INSTALL_DIR)"/wish$(VERSION)
-	@echo "Installing tkConfig.sh to $(LIB_INSTALL_DIR)/"
-	@$(INSTALL_DATA) tkConfig.sh "$(LIB_INSTALL_DIR)"/tkConfig.sh
+	@echo "Installing tkConfig.sh to $(CONFIG_INSTALL_DIR)/"
+	@$(INSTALL_DATA) tkConfig.sh "$(CONFIG_INSTALL_DIR)"/tkConfig.sh
 	@if test "$(STUB_LIB_FILE)" != "" ; then \
 	    echo "Installing $(STUB_LIB_FILE) to $(LIB_INSTALL_DIR)/"; \
 	    @INSTALL_STUB_LIB@ ; \
