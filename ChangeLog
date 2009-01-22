@@ -1,3 +1,9 @@
+2009-01-22  Kevin B. Kenny  <kennykb@acm.org>
+
+	* unix/tcl.m4: Corrected a typo ($(SHLIB_VEERSION) should be
+	${SHLIB_VERSION}).
+	* unix/configure: Autoconf 2.59
+	
 2009-01-19  Kevin B. Kenny  <kennykb@acm.org>
 
 	* unix/Makefile.in: Added a CONFIG_INSTALL_DIR parameter so that
