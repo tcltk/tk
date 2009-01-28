@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.135 2009/01/07 00:25:43 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.136 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -36,7 +36,7 @@
  * Event structure for synthetic activation events. These events are placed on
  * the event queue whenever a toplevel gets a WM_MOUSEACTIVATE message or
  * a WM_ACTIVATE. If the window is being moved (*flagPtr will be true)
- * then the handling of this event must be delayed until the operation 
+ * then the handling of this event must be delayed until the operation
  * has completed to avoid a premature WM_EXITSIZEMOVE event.
  */
 
@@ -433,7 +433,7 @@ static int		InstallColormaps(HWND hwnd, int message,
 			    int isForemost);
 static void		InvalidateSubTree(TkWindow *winPtr, Colormap colormap);
 static void		InvalidateSubTreeDepth(TkWindow *winPtr);
-static int		ParseGeometry(Tcl_Interp *interp, char *string,
+static int		ParseGeometry(Tcl_Interp *interp, const char *string,
 			    TkWindow *winPtr);
 static void		RefreshColormap(Colormap colormap, TkDisplay *dispPtr);
 static void		SetLimits(HWND hwnd, MINMAXINFO *info);
@@ -2860,7 +2860,7 @@ Tk_WmObjCmd(
 	WMOPT_WITHDRAW
     };
     int index, length;
-    char *argv1;
+    const char *argv1;
     TkWindow *winPtr, **winPtrPtr = &winPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
@@ -3078,7 +3078,7 @@ WmAttributesCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     LONG style, exStyle, styleBit, *stylePtr = NULL;
-    char *string;
+    const char *string;
     int i, boolean, length;
     int config_fullscreen = 0, updatewrapper = 0;
     int fullscreen_attr_changed = 0, fullscreen_attr = 0;
@@ -3192,7 +3192,7 @@ WmAttributesCmd(
 		    }
 		    wmPtr->alpha = dval;
 		} else {			/* -transparentcolor */
-		    char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
+		    const char *crefstr = Tcl_GetStringFromObj(objv[i+1], &length);
 
 		    if (length == 0) {
 			/* reset to no transparent color */
@@ -3370,7 +3370,7 @@ WmClientCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int length;
 
     if ((objc != 3) && (objc != 4)) {
@@ -3532,7 +3532,7 @@ WmCommandCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int cmdArgc;
     const char **cmdArgv;
 
@@ -3542,9 +3542,8 @@ WmCommandCmd(
     }
     if (objc == 3) {
 	if (wmPtr->cmdArgv != NULL) {
-		argv3 = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
-	    Tcl_SetResult(interp, argv3, TCL_VOLATILE);
-	    ckfree(argv3);
+		char *merged = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
+	    Tcl_SetResult(interp, merged, TCL_DYNAMIC);
 	}
 	return TCL_OK;
     }
@@ -3792,7 +3791,7 @@ WmGeometryCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char xSign, ySign;
     int width, height;
-    char *argv3;
+    const char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newGeometry?");
@@ -3944,7 +3943,7 @@ WmGroupCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
-    char *argv3;
+    const char *argv3;
     int length;
 
     if ((objc != 3) && (objc != 4)) {
@@ -4007,7 +4006,7 @@ WmIconbitmapCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
-    char *string;
+    const char *string;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?-default? ?image?");
@@ -4017,7 +4016,7 @@ WmIconbitmapCmd(
 	 * If we have 5 arguments, we must have a '-default' flag.
 	 */
 
-	char *argv3 = Tcl_GetString(objv[3]);
+	const char *argv3 = Tcl_GetString(objv[3]);
 
 	if (strcmp(argv3, "-default")) {
 	    Tcl_AppendResult(interp, "illegal option \"", argv3,
@@ -4197,7 +4196,7 @@ WmIconmaskCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Pixmap pixmap;
-    char *argv3;
+    const char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?bitmap?");
@@ -4254,7 +4253,7 @@ WmIconnameCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int length;
 
     if (objc > 4) {
@@ -4876,7 +4875,7 @@ WmProtocolCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     register ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
-    char *cmd;
+    const char *cmd;
     int cmdLength;
 
     if ((objc < 3) || (objc > 5)) {
@@ -5352,7 +5351,7 @@ WmTitleCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int length;
     HWND wrapper;
 
@@ -6178,7 +6177,7 @@ UpdateGeometryInfo(
 static int
 ParseGeometry(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    char *string,		/* String containing new geometry. Has the
+    const char *string,		/* String containing new geometry. Has the
 				 * standard form "=wxh+x+y". */
     TkWindow *winPtr)		/* Pointer to top-level window whose geometry
 				 * is to be changed. */
@@ -6186,7 +6185,7 @@ ParseGeometry(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, flags;
     char *end;
-    register char *p = string;
+    register const char *p = string;
 
     /*
      * The leading "=" is optional.
@@ -7797,7 +7796,7 @@ WmProc(
 	    }
 	}
 	/* fall through */
-	
+
     case WM_EXITSIZEMOVE:
 	if (inMoveSize) {
 	    inMoveSize = 0;
@@ -7959,13 +7958,13 @@ WmProc(
 	    int grab = TkGrabState(winPtr);
 	    if (grab != TK_GRAB_NONE && SC_MINIMIZE == cmd)
 		goto done;
-	    if (grab == TK_GRAB_EXCLUDED 
+	    if (grab == TK_GRAB_EXCLUDED
 		&& !(SC_MOVE == cmd || SC_SIZE == cmd)) {
 		goto done;
 	    }
 	}
 	/* fall through */
-	
+
     case WM_INITMENU:
     case WM_COMMAND:
     case WM_MENUCHAR:

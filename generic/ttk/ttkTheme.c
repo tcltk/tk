@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.16 2008/10/24 20:01:10 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.17 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include <stdlib.h>
@@ -332,7 +332,7 @@ static Theme *NewTheme(Ttk_ResourceCache cache, Ttk_Theme parent)
     themePtr->rootStyle->styleName =
 	Tcl_GetHashKey(&themePtr->styleTable, entryPtr);
     themePtr->rootStyle->cache = themePtr->cache;
-    Tcl_SetHashValue(entryPtr, (ClientData)themePtr->rootStyle);
+    Tcl_SetHashValue(entryPtr, themePtr->rootStyle);
 
     return themePtr;
 }
@@ -563,7 +563,7 @@ Ttk_CreateTheme(
     if (!parent) parent = pkgPtr->defaultTheme;
 
     themePtr = NewTheme(pkgPtr->cache, parent);
-    Tcl_SetHashValue(entryPtr, (ClientData) themePtr);
+    Tcl_SetHashValue(entryPtr, themePtr);
 
     return themePtr;
 }
@@ -711,7 +711,7 @@ Ttk_Style Ttk_GetStyle(Ttk_Theme themePtr, const char *styleName)
 
 	stylePtr->styleName = Tcl_GetHashKey(&themePtr->styleTable, entryPtr);
 	stylePtr->cache = stylePtr->parentStyle->cache;
-	Tcl_SetHashValue(entryPtr, (ClientData)stylePtr);
+	Tcl_SetHashValue(entryPtr, stylePtr);
 	return stylePtr;
     }
     return (Style*)Tcl_GetHashValue(entryPtr);

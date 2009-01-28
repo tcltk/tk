@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.12 2008/10/17 23:18:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.13 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -394,7 +394,7 @@ XAllocColor(
 	} else {
 	    refCount = ((int) Tcl_GetHashValue(entryPtr)) + 1;
 	}
-	Tcl_SetHashValue(entryPtr, (ClientData)refCount);
+	Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
     } else {
 	/*
 	 * Determine what color will actually be used on non-colormap systems.
@@ -476,7 +476,7 @@ XFreeColors(
 		}
 		Tcl_DeleteHashEntry(entryPtr);
 	    } else {
-		Tcl_SetHashValue(entryPtr, (ClientData)refCount);
+		Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
 	    }
 	}
     }
@@ -539,7 +539,7 @@ XCreateColormap(
 	entryPtr = logPalettePtr->palPalEntry + i;
 	hashPtr = Tcl_CreateHashEntry(&cmap->refCounts, (char*) PALETTERGB(
 		entryPtr->peRed, entryPtr->peGreen, entryPtr->peBlue), &new);
-	Tcl_SetHashValue(hashPtr, (ClientData)1);
+	Tcl_SetHashValue(hashPtr, INT2PTR(1));
     }
 
     return (Colormap)cmap;

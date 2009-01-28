@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.69 2008/12/10 04:13:01 das Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.70 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -330,7 +330,7 @@ static void		GetMaxSize(WmInfo *wmPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		MenubarDestroyProc(ClientData clientData,
 			    XEvent *eventPtr);
-static int		ParseGeometry(Tcl_Interp *interp, char *string,
+static int		ParseGeometry(Tcl_Interp *interp, const char *string,
 			    TkWindow *winPtr);
 static void		ReparentEvent(WmInfo *wmPtr, XReparentEvent *eventPtr);
 static void		PropertyEvent(WmInfo *wmPtr, XPropertyEvent *eventPtr);
@@ -1023,7 +1023,7 @@ Tk_WmObjCmd(
 	WMOPT_WITHDRAW };
     int index;
     int length;
-    char *argv1;
+    const char *argv1;
     TkWindow *winPtr;
     Tk_Window targetWin;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -1437,7 +1437,7 @@ WmClientCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int length;
 
     if ((objc != 3) && (objc != 4)) {
@@ -1622,7 +1622,7 @@ WmCommandCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int cmdArgc;
     const char **cmdArgv;
 
@@ -1632,9 +1632,8 @@ WmCommandCmd(
     }
     if (objc == 3) {
 	if (wmPtr->cmdArgv != NULL) {
-		argv3 = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
-	    Tcl_SetResult(interp, argv3, TCL_VOLATILE);
-	    ckfree(argv3);
+		char *arg = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
+	    Tcl_SetResult(interp, arg, TCL_DYNAMIC);
 	}
 	return TCL_OK;
     }
@@ -1878,7 +1877,7 @@ WmGeometryCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char xSign, ySign;
     int width, height;
-    char *argv3;
+    const char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newGeometry?");
@@ -2031,7 +2030,7 @@ WmGroupCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
     WmInfo *wmPtr2;
-    char *argv3;
+    const char *argv3;
     int length;
 
     if ((objc != 3) && (objc != 4)) {
@@ -2106,7 +2105,7 @@ WmIconbitmapCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Pixmap pixmap;
-    char *argv3;
+    const char *argv3;
 
     if ((objc < 3) || (objc > 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?bitmap?");
@@ -2225,7 +2224,7 @@ WmIconmaskCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Pixmap pixmap;
-    char *argv3;
+    const char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?bitmap?");
@@ -2283,7 +2282,7 @@ WmIconnameCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int length;
 
     if (objc > 4) {
@@ -2944,7 +2943,7 @@ WmProtocolCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     register ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
-    char *cmd;
+    const char *cmd;
     int cmdLength;
 
     if ((objc < 3) || (objc > 5)) {
@@ -3386,7 +3385,7 @@ WmTitleCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char *argv3;
+    const char *argv3;
     int length;
 
     if (objc > 4) {
@@ -5361,7 +5360,7 @@ UpdateHints(
 static int
 ParseGeometry(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    char *string,		/* String containing new geometry. Has the
+    const char *string,		/* String containing new geometry. Has the
 				 * standard form "=wxh+x+y". */
     TkWindow *winPtr)		/* Pointer to top-level window whose geometry
 				 * is to be changed. */
@@ -5369,7 +5368,7 @@ ParseGeometry(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, flags;
     char *end;
-    register char *p = string;
+    register const char *p = string;
 
     /*
      * The leading "=" is optional.
