@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWindow.c,v 1.19 2008/10/20 10:50:20 dkf Exp $
+ * RCS: @(#) $Id: tkWinWindow.c,v 1.20 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -83,7 +83,7 @@ Tk_AttachHWND(
 
     twdPtr->window.handle = hwnd;
     entryPtr = Tcl_CreateHashEntry(&tsdPtr->windowTable, (char *)hwnd, &new);
-    Tcl_SetHashValue(entryPtr, (ClientData)tkwin);
+    Tcl_SetHashValue(entryPtr, tkwin);
 
     return (Window)twdPtr;
 }

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.62 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.63 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -202,7 +202,7 @@ GetNewID(
     	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
 		((char *) NULL) + curID, &newEntry);
     	if (newEntry == 1) {
-	    Tcl_SetHashValue(commandEntryPtr, (char *) mePtr);
+	    Tcl_SetHashValue(commandEntryPtr, mePtr);
 	    *menuIDPtr = curID;
 	    tsdPtr->lastCommandID = curID;
 	    return TCL_OK;
@@ -292,7 +292,7 @@ TkpNewMenu(
 
     hashEntryPtr = Tcl_CreateHashEntry(&tsdPtr->winMenuTable,
 	    (char *) winMenuHdl, &newEntry);
-    Tcl_SetHashValue(hashEntryPtr, (char *) menuPtr);
+    Tcl_SetHashValue(hashEntryPtr, menuPtr);
 
     menuPtr->platformData = (TkMenuPlatformData) winMenuHdl;
     return TCL_OK;
@@ -319,7 +319,7 @@ TkpDestroyMenu(
     TkMenu *menuPtr)		/* The common menu structure */
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
-    char *searchName;
+    const char *searchName;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -1073,7 +1073,7 @@ TkWinHandleMenuEvent(
 	    if ((menuRefPtr != NULL) && (menuRefPtr->parentEntryPtr != NULL)) {
 		for (parentEntryPtr = menuRefPtr->parentEntryPtr ; ;
 			parentEntryPtr = parentEntryPtr->nextCascadePtr) {
-		    char *name = Tcl_GetString(parentEntryPtr->namePtr);
+		    const char *name = Tcl_GetString(parentEntryPtr->namePtr);
 
 		    if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
 			break;
@@ -1356,7 +1356,7 @@ TkpSetWindowMenuBar(
 	winMenuHdl = CreateMenu();
 	hashEntryPtr = Tcl_CreateHashEntry(&tsdPtr->winMenuTable,
 		(char *) winMenuHdl, &newEntry);
-	Tcl_SetHashValue(hashEntryPtr, (char *) menuPtr);
+	Tcl_SetHashValue(hashEntryPtr, menuPtr);
 	menuPtr->platformData = (TkMenuPlatformData) winMenuHdl;
 	TkWinSetMenu(tkwin, winMenuHdl);
 	if (!(menuPtr->menuFlags & MENU_RECONFIGURE_PENDING)) {
@@ -1465,7 +1465,7 @@ GetMenuAccelGeometry(
     } else if (mePtr->accelPtr == NULL) {
 	*widthPtr = 0;
     } else {
-	char *accel = Tcl_GetString(mePtr->accelPtr);
+	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
 	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
     }
@@ -1721,7 +1721,7 @@ DrawMenuEntryAccelerator(
 {
     int baseline;
     int leftEdge = x + mePtr->indicatorSpace + mePtr->labelWidth;
-    char *accel;
+    const char *accel;
 
     if (mePtr->accelPtr != NULL) {
 	accel = Tcl_GetString(mePtr->accelPtr);
@@ -2164,7 +2164,7 @@ DrawMenuEntryLabel(
     }
     if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
 	if (mePtr->labelLength > 0) {
-	    char *label = Tcl_GetString(mePtr->labelPtr);
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
 	    textHeight = fmPtr->linespace;
@@ -2259,7 +2259,7 @@ DrawMenuEntryLabel(
     if ((mePtr->compound != COMPOUND_NONE) || !haveImage) {
     	if (mePtr->labelLength > 0) {
 	    int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
-	    char *label = Tcl_GetString(mePtr->labelPtr);
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    if (TkWinGetPlatformTheme() == TK_THEME_WIN_CLASSIC) {
 		/*
@@ -2463,7 +2463,7 @@ TkpDrawMenuEntry(
     } else {
     	TkMenuEntry *cascadeEntryPtr;
     	int parentDisabled = 0;
-	char *name;
+    	const char *name;
 
     	for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
     		cascadeEntryPtr != NULL;
@@ -2595,7 +2595,7 @@ GetMenuLabelGeometry(
 
     	if (mePtr->labelPtr != NULL) {
 	    int textWidth;
-	    char *label = Tcl_GetString(mePtr->labelPtr);
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
 

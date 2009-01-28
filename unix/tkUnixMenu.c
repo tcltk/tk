@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.22 2008/12/09 23:02:17 dkf Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.23 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "default.h"
@@ -398,9 +398,9 @@ GetMenuAccelGeometry(
     if (mePtr->type == CASCADE_ENTRY) {
     	*widthPtr = 2 * CASCADE_ARROW_WIDTH;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
-	char *accel = Tcl_GetString(mePtr->accelPtr);
+	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
-    	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
+	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
     } else {
     	*widthPtr = 0;
     }
@@ -517,7 +517,7 @@ DrawMenuEntryAccelerator(
 	    	(menuPtr->postedCascade == mePtr)
 	    	? TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
     } else if (mePtr->accelPtr != NULL) {
-	char *accel = Tcl_GetString(mePtr->accelPtr);
+	const char *accel = Tcl_GetString(mePtr->accelPtr);
 	int left = x + mePtr->labelWidth + activeBorderWidth
 		+ mePtr->indicatorSpace;
 
@@ -705,7 +705,7 @@ DrawMenuEntryLabel(
     }
     if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
 	if (mePtr->labelLength > 0) {
-	    char *label = Tcl_GetString(mePtr->labelPtr);
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
 	    textHeight = fmPtr->linespace;
@@ -802,7 +802,7 @@ DrawMenuEntryLabel(
 	int baseline = y + (height + fmPtr->ascent - fmPtr->descent) / 2;
 
     	if (mePtr->labelLength > 0) {
-	    char *label = Tcl_GetString(mePtr->labelPtr);
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    Tk_DrawChars(menuPtr->display, d, gc, tkfont, label,
 		    mePtr->labelLength, leftEdge + textXOffset,
@@ -1346,7 +1346,7 @@ TkpDrawMenuEntry(
     		cascadeEntryPtr != NULL;
     		cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	    if (cascadeEntryPtr->namePtr != NULL) {
-		char *name = Tcl_GetString(cascadeEntryPtr->namePtr);
+		const char *name = Tcl_GetString(cascadeEntryPtr->namePtr);
 
 		if (strcmp(name, Tk_PathName(menuPtr->tkwin)) == 0) {
 		    if (cascadeEntryPtr->state == ENTRY_DISABLED) {
@@ -1490,7 +1490,7 @@ GetMenuLabelGeometry(
 
     	if (mePtr->labelPtr != NULL) {
 	    int textWidth;
-	    char *label = Tcl_GetString(mePtr->labelPtr);
+	    const char *label = Tcl_GetString(mePtr->labelPtr);
 
 	    textWidth = Tk_TextWidth(tkfont, label, mePtr->labelLength);
 	    if ((mePtr->compound != COMPOUND_NONE) && haveImage) {

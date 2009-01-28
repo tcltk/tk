@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.39 2008/11/22 18:08:51 dkf Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.40 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -2361,7 +2361,7 @@ SeenName(
 	}
 	seen += strlen(seen) + 1;
     }
-    Tcl_DStringAppend(dsPtr, (char *) name, (int) (strlen(name) + 1));
+    Tcl_DStringAppend(dsPtr, name, (int) (strlen(name) + 1));
     return 0;
 }
 

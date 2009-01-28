@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.60 2009/01/06 01:26:26 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.61 2009/01/28 20:47:49 nijtmans Exp $
  *
  */
 
@@ -338,7 +338,7 @@ Tk_ChooseColorObjCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	char *string;
+	const char *string;
 	Tcl_Obj *optionPtr, *valuePtr;
 
 	optionPtr = objv[i];
@@ -570,7 +570,7 @@ GetFileNameW(
     OPENFILENAMEW ofn;
     WCHAR file[TK_MULTI_MAX_PATH];
     int filterIndex, result, winCode, oldMode, i, multi = 0;
-    char *extension, *filter, *title;
+    const char *extension, *filter, *title;
     Tk_Window tkwin;
     HWND hWnd;
     Tcl_Obj *filterObj, *initialTypeObj, *typeVariableObj;
@@ -619,7 +619,7 @@ GetFileNameW(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	char *string;
+	const char *string;
 	Tcl_Obj *optionPtr, *valuePtr;
 
 	optionPtr = objv[i];
@@ -1015,7 +1015,7 @@ GetFileNameA(
     OPENFILENAME ofn;
     TCHAR file[TK_MULTI_MAX_PATH], savePath[MAX_PATH];
     int filterIndex, result, winCode, oldMode, i, multi = 0;
-    char *extension, *filter, *title;
+    const char *extension, *filter, *title;
     Tk_Window tkwin;
     HWND hWnd;
     Tcl_Obj *filterObj, *initialTypeObj, *typeVariableObj;
@@ -1063,7 +1063,7 @@ GetFileNameA(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	char *string;
+	const char *string;
 	Tcl_Obj *optionPtr, *valuePtr;
 
 	optionPtr = objv[i];
@@ -1467,7 +1467,7 @@ MakeFilter(
 {
     char *filterStr;
     char *p;
-    char *initial = NULL;
+    const char *initial = NULL;
     int pass;
     int ix = 0; /* index counter */
     FileFilterList flist;
@@ -1687,7 +1687,7 @@ Tk_ChooseDirectoryObjCmd(
 
     Tk_Window tkwin;
     HWND hWnd;
-    char *utfTitle;		/* Title for window */
+    const char *utfTitle;		/* Title for window */
     TCHAR saveDir[MAX_PATH];
     Tcl_DString titleString;	/* UTF Title */
     Tcl_DString initDirString;	/* Initial directory */
@@ -1717,7 +1717,7 @@ Tk_ChooseDirectoryObjCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	char *string;
+	const char *string;
 	Tcl_Obj *optionPtr, *valuePtr;
 
 	optionPtr = objv[i];
@@ -2090,7 +2090,7 @@ Tk_MessageBoxObjCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	char *string;
+	const char *string;
 	Tcl_Obj *optionPtr, *valuePtr;
 
 	optionPtr = objv[i];

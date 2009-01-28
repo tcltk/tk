@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.49 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.50 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -537,7 +537,7 @@ int
 	Tcl_AppendResult(interp, "No more menus can be allocated.", NULL);
 	return TCL_ERROR;
     }
-    Tcl_SetHashValue(commandEntryPtr, (char *) menuPtr);
+    Tcl_SetHashValue(commandEntryPtr, menuPtr);
     *menuIDPtr = returnID;
     return TCL_OK;
 }
@@ -2650,7 +2650,7 @@ DrawMenuEntryAccelerator(
 		    CFRelease(cfStr);
 		}
 	    } else {
-		Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel + 
+		Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel +
 			geometryPtr->accelTextStart, mePtr->accelLength -
 			geometryPtr->accelTextStart, leftEdge, baseline);
 	    }

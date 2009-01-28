@@ -1,3 +1,22 @@
+2009-01-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkCache.c:  - eliminate some unnessary type casts
+	* generic/ttk/ttkLayout.c  - some internal const decorations
+	* generic/ttk/ttkState.c   - spacing
+	* generic/ttk/ttkTheme.c
+	* macosx/tkMacOSXMenu.c
+	* macosx/tkMacOSXPrivate.h
+	* unix/tkUnixFont.c
+	* unix/tkUnixMenu.c
+	* unix/tkUnixWm.c
+	* win/tkWinColor.c
+	* win/tkWinDialog.c
+	* win/tkWinFont.c
+	* win/tkWinMenu.c
+	* win/tkWinSend.c
+	* win/tkWinWindow.c
+	* win/tkWinWM.c
+
 2009-01-22  Kevin B. Kenny  <kennykb@acm.org>
 
 	* unix/tcl.m4: Corrected a typo ($(SHLIB_VERSION) should be
@@ -23,6 +42,7 @@
 
 	* unix/configure:	autoconf-2.59
 	* win/configure:
+
 
 2009-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 

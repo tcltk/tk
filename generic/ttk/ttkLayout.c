@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.13 2008/12/07 16:34:56 das Exp $
+ * $Id: ttkLayout.c,v 1.14 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include <string.h>
@@ -619,7 +619,7 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	return 0;
 
     while (i < objc) {
-	char *elementName = Tcl_GetString(objv[i]);
+	const char *elementName = Tcl_GetString(objv[i]);
 	unsigned flags = 0x0, sticky = TTK_FILL_BOTH;
 	Tcl_Obj *childSpec = 0;
 

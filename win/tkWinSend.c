@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.18 2008/10/17 23:18:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.19 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -791,7 +791,7 @@ Send(
 
 	if (ei.bstrSource != NULL) {
 	    int len;
-	    char *szErrorInfo;
+	    const char *szErrorInfo;
 
 	    opError = Tcl_NewUnicodeObj(ei.bstrSource, -1);
 	    Tcl_ListObjIndex(interp, opError, 0, &opErrorCode);
