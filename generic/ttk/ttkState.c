@@ -1,5 +1,5 @@
 /*
- * $Id: ttkState.c,v 1.3 2008/12/03 18:44:49 jenglish Exp $
+ * $Id: ttkState.c,v 1.4 2009/01/28 20:47:49 nijtmans Exp $
  *
  * Tk widget state utilities.
  *
@@ -83,7 +83,7 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	return status;
 
     for (i = 0; i < objc; ++i) {
-	char *stateName = Tcl_GetString(objv[i]);
+	const char *stateName = Tcl_GetString(objv[i]);
 	int on, j;
 
 	if (*stateName == '!') {

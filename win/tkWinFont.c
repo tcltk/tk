@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.45 2008/11/22 20:05:32 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.46 2009/01/28 20:47:49 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -2363,7 +2363,7 @@ SeenName(
 	}
 	seen += strlen(seen) + 1;
     }
-    Tcl_DStringAppend(dsPtr, (char *) name, (int) (strlen(name) + 1));
+    Tcl_DStringAppend(dsPtr, name, (int) (strlen(name) + 1));
     return 0;
 }
 
@@ -2615,7 +2615,7 @@ FamilyOrAliasExists(
     int i;
 
     if (FamilyExists(hdc, faceName) != 0) {
-	return (char *) faceName;
+	return faceName;
     }
     aliases = TkFontGetAliasList(faceName);
     if (aliases != NULL) {
