@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.37 2007/12/13 15:26:27 dgp Exp $
+# RCS: @(#) $Id: console.tcl,v 1.37.2.1 2009/01/30 21:06:05 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -106,7 +106,7 @@ proc ::tk::ConsoleInit {} {
     . configure -menu .menubar
 
     # See if we can find a better font than the TkFixedFont
-    font create TkConsoleFont {*}[font configure TkFixedFont]
+    catch {font create TkConsoleFont {*}[font configure TkFixedFont]}
     set families [font families]
     switch -exact -- [tk windowingsystem] {
         aqua { set preferred {Monaco 10} }
