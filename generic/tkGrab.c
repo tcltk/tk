@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.17 2008/11/23 21:58:24 patthoyts Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.18 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -188,7 +188,7 @@ Tk_GrabObjCmd(
     int globalGrab;
     Tk_Window tkwin;
     TkDisplay *dispPtr;
-    char *arg;
+    const char *arg;
     int index;
     int len;
     static const char *const optionStrings[] = {

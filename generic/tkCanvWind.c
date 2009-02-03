@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.18 2008/11/09 20:51:28 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.19 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -199,7 +199,7 @@ CreateWinItem(
     if (objc == 1) {
 	i = 1;
     } else {
-	char *arg = Tcl_GetString(objv[1]);
+	const char *arg = Tcl_GetString(objv[1]);
 
 	i = 2;
 	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {

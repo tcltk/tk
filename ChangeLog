@@ -1,3 +1,29 @@
+2009-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvArc.c   - eliminate some unnessary type casts
+	* generic/tkCanvBmap.c  - some internal const decorations
+	* generic/tkCanvImg.c   - spacing
+	* generic/tkCanvWind.c
+	* generic/tkCmds.c
+	* generic/tkConfig.c
+	* generic/tkEntry.c
+	* generic/tkFocus.c
+	* generic/tkFont.c
+	* generic/tkFrame.c
+	* generic/tkGrab.c
+	* generic/tkGrid.c
+	* generic/tkImage.c
+	* generic/tkListbox.c
+	* generic/tkObj.c
+	* generic/tkOption.c
+	* generic/tkPack.c
+	* generic/tkPanedWindow.c
+	* generic/tkRectOval.c
+	* generic/tkSelect.c
+	* generic/tkText.c
+	* generic/tkTextMark.c
+	* generic/tkTextTag.c
+
 2009-01-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkCache.c:  - eliminate some unnessary type casts
