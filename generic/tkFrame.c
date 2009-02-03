@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.37 2008/11/15 00:00:27 patthoyts Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.38 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "default.h"
@@ -760,7 +760,7 @@ FrameWidgetObjCmd(
 	     */
 
 	    for (i = 2; i < objc; i++) {
-		char *arg = Tcl_GetStringFromObj(objv[i], &length);
+		const char *arg = Tcl_GetStringFromObj(objv[i], &length);
 		if (length < 2) {
 		    continue;
 		}
@@ -1071,7 +1071,7 @@ FrameWorldChanged(
     GC gc;
     int anyTextLabel, anyWindowLabel;
     int bWidthLeft, bWidthRight, bWidthTop, bWidthBottom;
-    char *labelText;
+    const char *labelText;
 
     anyTextLabel = (framePtr->type == TYPE_LABELFRAME) &&
 	    (labelframePtr->textPtr != NULL) &&
