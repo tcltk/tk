@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.57 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.58 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -414,7 +414,7 @@ static char *		EntryTextVarProc(ClientData clientData,
 			    const char *name2, int flags);
 static void		EntryUpdateScrollbar(Entry *entryPtr);
 static int		EntryValidate(Entry *entryPtr, char *cmd);
-static int		EntryValidateChange(Entry *entryPtr, char *change,
+static int		EntryValidateChange(Entry *entryPtr, const char *change,
 			    const char *newStr, int index, int type);
 static void		ExpandPercents(Entry *entryPtr, const char *before,
 			    const char *change, const char *newStr, int index,
@@ -428,8 +428,8 @@ static int		EntryWidgetObjCmd(ClientData clientData,
 			    Tcl_Obj *const objv[]);
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
-			    char *string, int *indexPtr);
-static void		InsertChars(Entry *entryPtr, int index, char *string);
+			    const char *string, int *indexPtr);
+static void		InsertChars(Entry *entryPtr, int index, const char *string);
 
 /*
  * These forward declarations are the spinbox specific ones:
@@ -736,7 +736,7 @@ EntryWidgetObjCmd(
 
     case COMMAND_SCAN: {
 	int x;
-	char *minorCmd;
+	const char *minorCmd;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "mark|dragto x");
@@ -1998,7 +1998,7 @@ InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
     int index,			/* Add the new elements before this character
 				 * index. */
-    char *value)		/* New characters to add (NULL-terminated
+    const char *value)	/* New characters to add (NULL-terminated
 				 * string). */
 {
     ptrdiff_t byteIndex;
@@ -2500,7 +2500,7 @@ GetEntryIndex(
     Tcl_Interp *interp,		/* For error messages. */
     Entry *entryPtr,		/* Entry for which the index is being
 				 * specified. */
-    char *string,		/* Specifies character in entryPtr. */
+    const char *string,	/* Specifies character in entryPtr. */
     int *indexPtr)		/* Where to store converted character index */
 {
     size_t length;
@@ -3187,7 +3187,7 @@ EntryValidate(
 static int
 EntryValidateChange(
      register Entry *entryPtr,	/* Entry that needs validation. */
-     char *change,		/* Characters to be added/deleted
+     const char *change,	/* Characters to be added/deleted
 				 * (NUL-terminated string). */
      const char *newValue,	/* Potential new value of entry string */
      int index,			/* index of insert/delete, -1 otherwise */
@@ -3810,7 +3810,7 @@ SpinboxWidgetObjCmd(
 
     case SB_CMD_SCAN: {
 	int x;
-	char *minorCmd;
+	const char *minorCmd;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "mark|dragto x");
@@ -4189,7 +4189,7 @@ SpinboxInvoke(
 		 */
 
 		int i, listc, elemLen, length = entryPtr->numChars;
-		char *bytes;
+		const char *bytes;
 		Tcl_Obj **listv;
 
 		Tcl_ListObjGetElements(interp, sbPtr->listObj, &listc, &listv);

@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.25 2008/11/29 00:12:58 ferrieux Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.26 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -383,7 +383,8 @@ SetPixelFromAny(
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
-    char *string, *rest;
+    const char *string;
+    char *rest;
     double d;
     int i, units;
 
@@ -637,7 +638,8 @@ SetMMFromAny(
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
     const Tcl_ObjType *typePtr;
-    char *string, *rest;
+    const char *string;
+    char *rest;
     double d;
     int units;
     MMRep *mmPtr;
