@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.29 2008/10/15 06:41:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.30 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 /*
@@ -712,7 +712,8 @@ DoObjConfig(
 	break;
     }
     case TK_OPTION_STRING: {
-	char *newStr, *value;
+	char *newStr;
+	const char *value;
 	int length;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
@@ -1123,7 +1124,7 @@ GetOptionFromObj(
     OptionTable *tablePtr)	/* Table in which to look up objPtr. */
 {
     Option *bestPtr;
-    char *name;
+    const char *name;
 
     /*
      * First, check to see if the object already has the answer cached.

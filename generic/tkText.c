@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.87 2008/12/07 16:32:44 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.88 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "default.h"
@@ -4536,7 +4536,7 @@ TextDumpCmd(
 	TkTextIndexForwChars(NULL, &index1, 1, &index2, COUNT_INDICES);
     } else {
 	int length;
-	char *str;
+	const char *str;
 
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;

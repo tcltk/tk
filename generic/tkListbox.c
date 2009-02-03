@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.54 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.55 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "default.h"
@@ -1094,7 +1094,7 @@ ListboxBboxSubCmd(
 
     if ((listPtr->topIndex <= index) && (index < lastVisibleIndex)) {
 	Tcl_Obj *el;
-	char *stringRep;
+	const char *stringRep;
 	int pixelWidth, stringLen, x, y, result;
 	Tk_FontMetrics fm;
 
@@ -1396,7 +1396,7 @@ ListboxGetItemAttributes(
 	attrs->selFgColor = NULL;
 	Tk_InitOptions(interp, (char *)attrs, listPtr->itemAttrOptionTable,
 		listPtr->tkwin);
-	Tcl_SetHashValue(entry, (ClientData) attrs);
+	Tcl_SetHashValue(entry, attrs);
     }
     attrs = (ItemAttr *)Tcl_GetHashValue(entry);
     return attrs;
@@ -1828,7 +1828,7 @@ DisplayListbox(
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
-    char *stringRep;
+    const char *stringRep;
     ItemAttr *attrs;
     Tk_3DBorder selectedBg;
     XGCValues gcValues;
@@ -2211,7 +2211,7 @@ ListboxComputeGeometry(
     int width, height, pixelWidth, pixelHeight, textLength, i, result;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
-    char *text;
+    const char *text;
 
     if (fontChanged || maxIsStale) {
 	listPtr->xScrollUnit = Tk_TextWidth(listPtr->tkfont, "0", 1);
@@ -2297,7 +2297,7 @@ ListboxInsertSubCmd(
 {
     int i, oldMaxWidth, pixelWidth, result, length;
     Tcl_Obj *newListObj;
-    char *stringRep;
+    const char *stringRep;
 
     oldMaxWidth = listPtr->maxWidth;
     for (i = 0; i < objc; i++) {
@@ -2411,7 +2411,7 @@ ListboxDeleteSubCmd(
 {
     int count, i, widthChanged, length, result, pixelWidth;
     Tcl_Obj *newListObj, *element;
-    char *stringRep;
+    const char *stringRep;
     Tcl_HashEntry *entry;
 
     /*
@@ -2701,7 +2701,7 @@ GetListboxIndex(
     int *indexPtr)		/* Where to store converted index. */
 {
     int result, index;
-    char *stringRep;
+    const char *stringRep;
 
     /*
      * First see if the index is one of the named indices.
@@ -2738,7 +2738,8 @@ GetListboxIndex(
     if (stringRep[0] == '@') {
 	/* @x,y index */
 	int y;
-	char *start, *end;
+	const char *start;
+	char *end;
 
 	start = stringRep + 1;
 	strtol(start, &end, 0);
@@ -3043,7 +3044,7 @@ ListboxSelect(
 	    if (select) {
 		entry = Tcl_CreateHashEntry(listPtr->selection,
 			(char *) INT2PTR(i), &isNew);
-		Tcl_SetHashValue(entry, (ClientData) NULL);
+		Tcl_SetHashValue(entry, NULL);
 		listPtr->numSelected++;
 		if (firstRedisplay < 0) {
 		    firstRedisplay = i;
@@ -3099,7 +3100,7 @@ ListboxFetchSelection(
     Tcl_DString selection;
     int length, count, needNewline, stringLen, i;
     Tcl_Obj *curElement;
-    char *stringRep;
+    const char *stringRep;
     Tcl_HashEntry *entry;
 
     if (!listPtr->exportSelection) {

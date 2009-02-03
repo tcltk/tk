@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.52 2009/01/09 07:03:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.53 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -3787,7 +3787,7 @@ TkFontParseXLFD(
     }
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, (char *) str, -1);
+    Tcl_DStringAppend(&ds, str, -1);
     src = Tcl_DStringValue(&ds);
 
     field[0] = src;

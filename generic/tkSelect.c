@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.27 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.28 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -674,9 +674,10 @@ Tk_SelectionObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
-    char *path = NULL;
+    const char *path = NULL;
     Atom selection;
-    char *selName = NULL, *string;
+    const char *selName = NULL;
+    const char *string;
     int count, index;
     Tcl_Obj **objs;
     static const char *const optionStrings[] = {
@@ -754,7 +755,7 @@ Tk_SelectionObjCmd(
 
     case SELECTION_GET: {
 	Atom target;
-	char *targetName = NULL;
+	const char *targetName = NULL;
 	Tcl_DString selBytes;
 	int result;
 	static const char *const getOptionStrings[] = {
@@ -828,8 +829,8 @@ Tk_SelectionObjCmd(
 
     case SELECTION_HANDLE: {
 	Atom target, format;
-	char *targetName = NULL;
-	char *formatName = NULL;
+	const char *targetName = NULL;
+	const char *formatName = NULL;
 	register CommandInfo *cmdInfoPtr;
 	int cmdLength;
 	static const char *const handleOptionStrings[] = {
@@ -918,7 +919,7 @@ Tk_SelectionObjCmd(
 
     case SELECTION_OWN: {
 	register LostCommand *lostPtr;
-	char *script = NULL;
+	const char *script = NULL;
 	int cmdLength;
 	static const char *const ownOptionStrings[] = {
 	    "-command", "-displayof", "-selection", NULL
@@ -1328,7 +1329,8 @@ HandleTclCommand(
     int spaceNeeded, length;
 #define MAX_STATIC_SIZE 100
     char staticSpace[MAX_STATIC_SIZE];
-    char *command, *string;
+    char *command;
+    const char *string;
     Tcl_Interp *interp = cmdInfoPtr->interp;
     Tcl_DString oldResult;
     int extraBytes, charOffset, count, numChars;

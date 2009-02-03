@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.20 2008/11/23 21:58:24 patthoyts Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.21 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -119,7 +119,7 @@ Tk_FocusObjCmd(
     TkWindow *winPtr = clientData;
     TkWindow *newPtr, *focusWinPtr, *topLevelPtr;
     ToplevelFocusInfo *tlFocusPtr;
-    char *windowName;
+    const char *windowName;
     int index;
 
     /*

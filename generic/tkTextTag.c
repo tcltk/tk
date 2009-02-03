@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.30 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.31 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "default.h"
@@ -253,7 +253,7 @@ TkTextTagCmd(
 	if (objc == 6) {
 	    int append = 0;
 	    unsigned long mask;
-	    char *fifth = Tcl_GetString(objv[5]);
+	    const char *fifth = Tcl_GetString(objv[5]);
 
 	    if (fifth[0] == 0) {
 		return Tk_DeleteBinding(interp,
@@ -1686,7 +1686,7 @@ TagBindEvent(
     int numTags,		/* Number of relevant tags. */
     TkTextTag **tagArrayPtr)	/* Array of relevant tags. */
 {
-    #define NUM_BIND_TAGS 10
+#   define NUM_BIND_TAGS 10
     const char *nameArray[NUM_BIND_TAGS];
     const char **nameArrPtr;
     int i;

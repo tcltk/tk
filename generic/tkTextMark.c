@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.23 2008/12/06 10:48:29 dkf Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.24 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -128,7 +128,7 @@ TkTextMarkCmd(
     case MARK_GRAVITY: {
 	char c;
 	int length;
-	char *str;
+	const char *str;
 
 	if (objc < 4 || objc > 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "markName ?gravity?");

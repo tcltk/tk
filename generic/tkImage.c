@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImage.c,v 1.42 2008/11/12 09:56:51 dkf Exp $
+ * RCS: @(#) $Id: tkImage.c,v 1.43 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -226,7 +226,7 @@ Tk_ImageObjCmd(
     Tcl_HashSearch search;
     char idString[16 + TCL_INTEGER_SPACE];
     TkDisplay *dispPtr = winPtr->dispPtr;
-    char *arg, *name;
+    const char *arg, *name;
     ThreadSpecificData *tsdPtr =
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 

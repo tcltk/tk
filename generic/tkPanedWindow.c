@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.37 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.38 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "default.h"
@@ -754,7 +754,7 @@ ConfigureSlaves(
     Tk_Window tkwin = NULL, ancestor, parent;
     Slave *slavePtr, **inserts, **newSlaves;
     Slave options;
-    char *arg;
+    const char *arg;
 
     /*
      * Find the non-window name arguments; these are the configure options for
@@ -2369,7 +2369,8 @@ SetSticky(
     int flags)			/* Flags for the option, set Tk_SetOptions. */
 {
     int sticky = 0;
-    char c, *string, *internalPtr;
+    char c, *internalPtr;
+    const char *string;
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
 

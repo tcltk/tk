@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.49 2008/12/10 05:02:40 das Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.50 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -165,7 +165,7 @@ Tk_BindObjCmd(
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;
     ClientData object;
-    char *string;
+    const char *string;
 
     if ((objc < 2) || (objc > 4)) {
 	Tcl_WrongNumArgs(interp, 1, objv, "window ?pattern? ?command?");
@@ -200,7 +200,7 @@ Tk_BindObjCmd(
     if (objc == 4) {
 	int append = 0;
 	unsigned long mask;
-	char *sequence, *script;
+	const char *sequence, *script;
 	sequence	= Tcl_GetString(objv[2]);
 	script		= Tcl_GetString(objv[3]);
 
@@ -270,7 +270,7 @@ TkBindEventProc(
     ClientData objects[MAX_OBJS], *objPtr;
     TkWindow *topLevPtr;
     int i, count;
-    char *p;
+    const char *p;
     Tcl_HashEntry *hPtr;
 
     if ((winPtr->mainPtr == NULL) || (winPtr->mainPtr->bindingTable == NULL)) {
@@ -289,7 +289,7 @@ TkBindEventProc(
 		    (winPtr->numTags * sizeof(ClientData)));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
-	    p = (char *) winPtr->tagPtr[i];
+	    p = winPtr->tagPtr[i];
 	    if (*p == '.') {
 		hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->nameTable, p);
 		if (hPtr != NULL) {
@@ -351,7 +351,7 @@ Tk_BindtagsObjCmd(
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr, *winPtr2;
     int i, length;
-    char *p;
+    const char *p;
     Tcl_Obj *listPtr, **tags;
 
     if ((objc < 2) || (objc > 3)) {
@@ -449,17 +449,17 @@ TkFreeBindingTags(
     TkWindow *winPtr)		/* Window whose tags are to be released. */
 {
     int i;
-    char *p;
+    const char *p;
 
     for (i = 0; i < winPtr->numTags; i++) {
-	p = (char *) (winPtr->tagPtr[i]);
+	p = winPtr->tagPtr[i];
 	if (*p == '.') {
 	    /*
 	     * Names starting with "." are malloced rather than Uids, so they
 	     * have to be freed.
 	     */
 
-	    ckfree(p);
+	    ckfree((char *) p);
 	}
     }
     ckfree((char *) winPtr->tagPtr);
@@ -675,7 +675,7 @@ AppnameCmd(
 {
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
-    char *string;
+    const char *string;
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetResult(interp,
@@ -940,7 +940,7 @@ InactiveCmd(
 	Tcl_SetObjResult(interp, Tcl_NewLongObj(inactive));
 
     } else if (objc - skip == 2) {
-	char *string;
+	const char *string;
 
 	string = Tcl_GetString(objv[objc-1]);
 	if (strcmp(string, "reset") != 0) {
@@ -2056,7 +2056,7 @@ TkGetDisplayOf(
 				 * unmodified if "-displayof" argument was not
 				 * present. */
 {
-    char *string;
+    const char *string;
     int length;
 
     if (objc < 1) {

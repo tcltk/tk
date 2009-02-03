@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.19 2008/11/22 22:28:52 das Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.20 2009/02/03 23:55:47 nijtmans Exp $
  */
 
 #include <stdio.h>
@@ -299,7 +299,7 @@ CreateArc(
      */
 
     for (i = 1; i < objc; i++) {
-	char *arg = Tcl_GetString(objv[i]);
+	const char *arg = Tcl_GetString(objv[i]);
 
 	if ((arg[0] == '-') && (arg[1] >= 'a') && (arg[1] <= 'z')) {
 	    break;
