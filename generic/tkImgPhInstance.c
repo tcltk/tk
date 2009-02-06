@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhInstance.c,v 1.1 2008/08/25 11:44:04 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhInstance.c,v 1.2 2009/02/06 08:12:07 das Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -350,6 +350,8 @@ TkImgPhotoGet(
 	    WhitePixelOfScreen(Tk_Screen(tkwin));
     gcValues.background = (black != NULL)? black->pixel:
 	    BlackPixelOfScreen(Tk_Screen(tkwin));
+    Tk_FreeColor(white);
+    Tk_FreeColor(black);
     gcValues.graphics_exposures = False;
     instancePtr->gc = Tk_GetGC(tkwin,
 	    GCForeground|GCBackground|GCGraphicsExposures, &gcValues);
