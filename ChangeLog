@@ -1,3 +1,9 @@
+2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkImgPhoto.c:		fix leaks discovered with the Mac OS X
+	* generic/tkMenu.c:		Instruments.app Leaks tool.
+	* macosx/tkMacOSXWm.c:
+
 2009-01-16  Andreas Kupries  <andreask@activestate.com>
 
 	* win/tkWinWm.c (WmAttributesCmd): Fix a single use of
