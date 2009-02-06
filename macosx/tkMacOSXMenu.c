@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.31 2008/12/07 16:44:58 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.6.2.32 2009/02/06 08:14:00 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -447,7 +447,7 @@ TkMacOSXUseMenuID(
  */
 
 int
- TkMacOSXGetNewMenuID(
+TkMacOSXGetNewMenuID(
     Tcl_Interp *interp,		/* Used for error reporting */
     TkMenu *menuPtr,		/* The menu we are working with */
     int cascade,		/* 0 if we are working with a normal menu;
