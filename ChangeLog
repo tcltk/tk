@@ -1,3 +1,15 @@
+2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkImgPhInstance.c:	fix numerous leaks discovered with the
+	* generic/tkMenu.c:		Mac OS X Instruments.app Leaks tool.
+	* generic/tkText.c:
+	* generic/tkTextImage.c:
+	* generic/tkTextIndex.c:
+	* generic/tkUndo.c:
+	* generic/tkUtil.c:
+	* generic/ttk/ttkFrame.c:
+	* macosx/tkMacOSXWm.c:
+
 2009-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkCanvArc.c   - eliminate some unnessary type casts
