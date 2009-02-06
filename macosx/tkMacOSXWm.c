@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.63.2.2 2008/11/15 00:37:30 patthoyts Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.63.2.3 2009/02/06 08:13:23 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -425,6 +425,9 @@ TkWmDeadWindow(
     }
     if (wmPtr->hints.flags & IconMaskHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_mask);
+    }
+    if (wmPtr->iconName != NULL) {
+	ckfree(wmPtr->iconName);
     }
     if (wmPtr->leaderName != NULL) {
 	ckfree(wmPtr->leaderName);
@@ -2960,6 +2963,9 @@ WmTransientCmd(
 
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
 	wmPtr->master = Tk_WindowId(master);
+	if (wmPtr->masterWindowName != NULL) {
+	    ckfree(wmPtr->masterWindowName);
+	}
 	wmPtr->masterWindowName = ckalloc((unsigned) length+1);
 	strcpy(wmPtr->masterWindowName, argv3);
     }

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.79.2.2 2008/12/21 23:52:45 ferrieux Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.79.2.3 2009/02/06 08:13:23 das Exp $
  */
 
 #include "default.h"
@@ -1955,6 +1955,7 @@ DestroyText(
 	if (sharedTextPtr->bindingTable != NULL) {
 	    Tk_DeleteBindingTable(sharedTextPtr->bindingTable);
 	}
+	ckfree((char *) sharedTextPtr);
     }
 
     if (textPtr->tabArrayPtr != NULL) {
