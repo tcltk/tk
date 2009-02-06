@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.12 2008/01/08 20:02:27 jenglish Exp $
+/* $Id: ttkFrame.c,v 1.12.2.1 2009/02/06 08:13:23 das Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
@@ -535,6 +535,9 @@ static void LabelframeCleanup(void *recordPtr)
 {
     Labelframe *lframe = recordPtr;
     Ttk_DeleteManager(lframe->label.mgr);
+    if (lframe->label.labelLayout) {
+	Ttk_FreeLayout(lframe->label.labelLayout);
+    }
 }
 
 /* RaiseLabelWidget --
