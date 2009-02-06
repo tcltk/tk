@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.28 2007/12/13 15:24:17 dgp Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.28.2.1 2009/02/06 08:13:23 das Exp $
  */
 
 #include "default.h"
@@ -113,9 +113,13 @@ DupTextIndexInternalRep(
     dupIndexPtr->tree = indexPtr->tree;
     dupIndexPtr->linePtr = indexPtr->linePtr;
     dupIndexPtr->byteIndex = indexPtr->byteIndex;
-
+    dupIndexPtr->textPtr = indexPtr->textPtr;
+    if (dupIndexPtr->textPtr != NULL) {
+	dupIndexPtr->textPtr->refCount++;
+    }
     SET_TEXTINDEX(copyPtr, dupIndexPtr);
     SET_INDEXEPOCH(copyPtr, epoch);
+    copyPtr->typePtr = &tkTextIndexType;
 }
 
 /*

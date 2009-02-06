@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.22 2007/12/13 15:24:17 dgp Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.22.2.1 2009/02/06 08:13:23 das Exp $
  */
 
 #include "tkPort.h"
@@ -472,6 +472,9 @@ EmbImageDeleteProc(
 
     Tk_FreeConfigOptions((char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
 	    NULL);
+    if (eiPtr->body.ei.name) {
+	ckfree(eiPtr->body.ei.name);
+    }
     ckfree((char *) eiPtr);
     return 0;
 }

@@ -1,3 +1,14 @@
+2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkImgPhoto.c:		fix numerous leaks discovered with the
+	* generic/tkMenu.c:		Mac OS X Instruments.app Leaks tool.
+	* generic/tkText.c:
+	* generic/tkTextImage.c:
+	* generic/tkTextIndex.c:
+	* generic/tkUndo.c:
+	* generic/ttk/ttkFrame.c:
+	* macosx/tkMacOSXWm.c:
+
 2009-01-22  Kevin B. Kenny  <kennykb@acm.org>
 
 	* unix/tcl.m4: Corrected a typo ($(SHLIB_VERSION) should be
