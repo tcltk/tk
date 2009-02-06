@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.27 2008/12/10 05:02:51 das Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.28 2009/02/06 08:12:07 das Exp $
  */
 
 #include "tkInt.h"
@@ -1084,7 +1084,7 @@ TkMakeEnsemble(
 {
     Tcl_Namespace *namespacePtr = NULL;
     Tcl_Command ensemble = NULL;
-    Tcl_Obj *dictObj = NULL;
+    Tcl_Obj *dictObj = NULL, *nameObj;
     Tcl_DString ds;
     int i;
 
@@ -1102,7 +1102,9 @@ TkMakeEnsemble(
         }
     }
 
-    ensemble = Tcl_FindEnsemble(interp, Tcl_NewStringObj(name,-1), 0);
+    nameObj = Tcl_NewStringObj(name, -1);
+    ensemble = Tcl_FindEnsemble(interp, nameObj, 0);
+    Tcl_DecrRefCount(nameObj);
     if (ensemble == NULL) {
         ensemble = Tcl_CreateEnsemble(interp, name,
 	    namespacePtr, TCL_ENSEMBLE_PREFIX);
