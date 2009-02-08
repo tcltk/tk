@@ -1,5 +1,5 @@
 /*
- * $Id: ttkDecls.h,v 1.7 2008/10/22 20:56:43 nijtmans Exp $
+ * $Id: ttkDecls.h,v 1.8 2009/02/08 19:35:35 jenglish Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  */
@@ -50,7 +50,7 @@ TTKAPI int		Ttk_RegisterElementSpec (Ttk_Theme theme,
 				Ttk_ElementSpec * elementSpec,
 				void * clientData);
 /* 6 */
-TTKAPI Ttk_ElementImpl	Ttk_RegisterElement (Tcl_Interp * interp,
+TTKAPI Ttk_ElementClass * Ttk_RegisterElement (Tcl_Interp * interp,
 				Ttk_Theme theme, const char * elementName,
 				Ttk_ElementSpec * elementSpec,
 				void * clientData);
@@ -147,7 +147,7 @@ typedef struct TtkStubs {
     Ttk_Theme (*ttk_CreateTheme) (Tcl_Interp * interp, const char * name, Ttk_Theme parent); /* 3 */
     void (*ttk_RegisterCleanup) (Tcl_Interp * interp, void * deleteData, Ttk_CleanupProc * cleanupProc); /* 4 */
     int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char * elementName, Ttk_ElementSpec * elementSpec, void * clientData); /* 5 */
-    Ttk_ElementImpl (*ttk_RegisterElement) (Tcl_Interp * interp, Ttk_Theme theme, const char * elementName, Ttk_ElementSpec * elementSpec, void * clientData); /* 6 */
+    Ttk_ElementClass * (*ttk_RegisterElement) (Tcl_Interp * interp, Ttk_Theme theme, const char * elementName, Ttk_ElementSpec * elementSpec, void * clientData); /* 6 */
     int (*ttk_RegisterElementFactory) (Tcl_Interp * interp, const char * name, Ttk_ElementFactory factoryProc, void * clientData); /* 7 */
     void (*ttk_RegisterLayout) (Ttk_Theme theme, const char * className, Ttk_LayoutSpec layoutSpec); /* 8 */
     void (*reserved9)(void);

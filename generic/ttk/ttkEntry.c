@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.16 2008/12/15 17:51:31 das Exp $
+ * $Id: ttkEntry.c,v 1.17 2009/02/08 19:35:35 jenglish Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -1052,17 +1052,6 @@ static int EntryPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  * +++ Layout and display.
  */
 
-/* EntryTextArea --
- * 	Return bounding box of entry display ("owner-draw") area.
- */
-static Ttk_Box
-EntryTextArea(Entry *entryPtr)
-{
-    WidgetCore *corePtr = &entryPtr->core;
-    Ttk_LayoutNode *node = Ttk_LayoutFindNode(corePtr->layout, "textarea");
-    return node ? Ttk_LayoutNodeParcel(node) : Ttk_WinBox(corePtr->tkwin);
-}
-
 /* EntryCharPosition --
  * 	Return the X coordinate of the specified character index.
  * 	Precondition: textLayout and layoutX up-to-date.
@@ -1096,7 +1085,7 @@ EntryDoLayout(void *recordPtr)
     Ttk_Box textarea;
 
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
-    textarea = EntryTextArea(entryPtr);
+    textarea = Ttk_ClientRegion(corePtr->layout, "textarea");
 
     /* Center the text vertically within the available parcel:
      */
