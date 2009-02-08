@@ -1,4 +1,4 @@
-/* $Id: ttkProgress.c,v 1.7 2008/11/09 23:53:09 jenglish Exp $
+/* $Id: ttkProgress.c,v 1.8 2009/02/08 19:35:35 jenglish Exp $
  *
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
@@ -291,7 +291,7 @@ static int ProgressbarSize(void *recordPtr, int *widthPtr, int *heightPtr)
 
 static void ProgressbarDeterminateLayout(
     Progressbar *pb,
-    Ttk_LayoutNode *pbarNode,
+    Ttk_Element pbar,
     Ttk_Box parcel,
     double fraction,
     Ttk_Orient orient)
@@ -306,17 +306,17 @@ static void ProgressbarDeterminateLayout(
 	parcel.y += (parcel.height - newHeight);
 	parcel.height = newHeight;
     }
-    Ttk_PlaceLayoutNode(pb->core.layout, pbarNode, parcel);
+    Ttk_PlaceElement(pb->core.layout, pbar, parcel);
 }
 
 static void ProgressbarIndeterminateLayout(
     Progressbar *pb,
-    Ttk_LayoutNode *pbarNode,
+    Ttk_Element pbar,
     Ttk_Box parcel,
     double fraction,
     Ttk_Orient orient)
 {
-    Ttk_Box pbarBox = Ttk_LayoutNodeParcel(pbarNode);
+    Ttk_Box pbarBox = Ttk_ElementParcel(pbar);
 
     fraction = fmod(fabs(fraction), 2.0);
     if (fraction > 1.0) {
@@ -328,18 +328,16 @@ static void ProgressbarIndeterminateLayout(
     } else {
 	pbarBox.y = parcel.y + (int)(fraction * (parcel.height-pbarBox.height));
     }
-    Ttk_PlaceLayoutNode(pb->core.layout, pbarNode, pbarBox);
+    Ttk_PlaceElement(pb->core.layout, pbar, pbarBox);
 }
 
 static void ProgressbarDoLayout(void *recordPtr)
 {
     Progressbar *pb = recordPtr;
     WidgetCore *corePtr = &pb->core;
-    Ttk_LayoutNode *pbarNode = Ttk_LayoutFindNode(corePtr->layout, "pbar");
-    Ttk_LayoutNode *troughNode = Ttk_LayoutFindNode(corePtr->layout, "trough");
+    Ttk_Element pbar = Ttk_FindElement(corePtr->layout, "pbar");
     double value = 0.0, maximum = 100.0;
     int orient = TTK_ORIENT_HORIZONTAL;
-    Ttk_Box parcel = Ttk_WinBox(corePtr->tkwin);
 
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
 
@@ -350,19 +348,16 @@ static void ProgressbarDoLayout(void *recordPtr)
     Tcl_GetDoubleFromObj(NULL, pb->progress.maximumObj, &maximum);
     Ttk_GetOrientFromObj(NULL, pb->progress.orientObj, &orient);
 
-    if (pbarNode) {
+    if (pbar) {
 	double fraction = value / maximum;
-
-	if (troughNode) {
-	    parcel = Ttk_LayoutNodeInternalParcel(corePtr->layout, troughNode);
-	}
+	Ttk_Box parcel = Ttk_ClientRegion(corePtr->layout, "trough");
 
 	if (pb->progress.mode == TTK_PROGRESSBAR_DETERMINATE) {
 	    ProgressbarDeterminateLayout(
-		pb, pbarNode, parcel, fraction, orient);
+		pb, pbar, parcel, fraction, orient);
 	} else {
 	    ProgressbarIndeterminateLayout(
-		pb, pbarNode, parcel, fraction, orient);
+		pb, pbar, parcel, fraction, orient);
 	}
     }
 }
