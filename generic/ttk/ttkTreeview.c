@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.31 2008/12/27 18:54:56 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.32 2009/02/08 19:35:35 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -590,7 +590,7 @@ static TreeItem *FindItem(
 	Tcl_AppendResult(interp, "Item ", itemName, " not found", NULL);
 	return 0;
     }
-    return (TreeItem*)Tcl_GetHashValue(entryPtr);
+    return Tcl_GetHashValue(entryPtr);
 }
 
 /* + GetItemListFromObj --
@@ -1575,11 +1575,11 @@ static Ttk_Layout TreeviewGetLayout(
      && GetSublayout(interp, themePtr, treeLayout, ".Item",
 	    tv->tree.tagOptionTable, &tv->tree.itemLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Cell",
-	    tv->tree.tagOptionTable, &tv->tree.cellLayout)	/*@@@HERE*/
+	    tv->tree.tagOptionTable, &tv->tree.cellLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Heading",
 	    tv->tree.headingOptionTable, &tv->tree.headingLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Row",
-	    tv->tree.tagOptionTable, &tv->tree.rowLayout)	/*@@@HERE*/
+	    tv->tree.tagOptionTable, &tv->tree.rowLayout)
     )) {
 	return 0;
     }
@@ -1615,15 +1615,12 @@ static Ttk_Layout TreeviewGetLayout(
 static void TreeviewDoLayout(void *clientData)
 {
     Treeview *tv = clientData;
-    Ttk_LayoutNode *clientNode = Ttk_LayoutFindNode(tv->core.layout,"treearea");
     int visibleRows;
 
     /* ASSERT: SLACKINVARIANT */
 
     Ttk_PlaceLayout(tv->core.layout,tv->core.state,Ttk_WinBox(tv->core.tkwin));
-    tv->tree.treeArea = clientNode
-	? Ttk_LayoutNodeInternalParcel(tv->core.layout,clientNode)
-	: Ttk_WinBox(tv->core.tkwin) ;
+    tv->tree.treeArea = Ttk_ClientRegion(tv->core.layout, "treearea");
 
     ResizeColumns(tv, tv->tree.treeArea.width);
     /* ASSERT: SLACKINVARIANT */
@@ -2219,17 +2216,17 @@ static int TreeviewHorribleIdentify(
 	    Ttk_Layout layout = tv->tree.itemLayout;
 	    Ttk_Box itemBox;
 	    DisplayItem displayItem;
-	    Ttk_LayoutNode *element;
+	    Ttk_Element element;
 
 	    BoundingBox(tv, item, NULL, &itemBox);
 	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: -text, etc*/
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), itemBox);
-	    element = Ttk_LayoutIdentify(layout, x, y);
+	    element = Ttk_IdentifyElement(layout, x, y);
 
 	    if (element) {
 		what = "item";
-		detail = Ttk_LayoutNodeName(element);
+		detail = Ttk_ElementName(element);
 	    } else {
 		what = "row";
 	    }
@@ -2314,7 +2311,7 @@ static int TreeviewIdentifyCommand(
 	{
 	    Ttk_Layout layout = 0;
 	    DisplayItem displayItem;
-	    Ttk_LayoutNode *element;
+	    Ttk_Element element;
 
 	    switch (region) {
 		case REGION_NOTHING:
@@ -2339,10 +2336,10 @@ static int TreeviewIdentifyCommand(
 	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: fill in -text,etc */
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), bbox);
-	    element = Ttk_LayoutIdentify(layout, x, y);
+	    element = Ttk_IdentifyElement(layout, x, y);
 
 	    if (element) {
-		const char *elementName = Ttk_LayoutNodeName(element);
+		const char *elementName = Ttk_ElementName(element);
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));
 	    }
 	    break;

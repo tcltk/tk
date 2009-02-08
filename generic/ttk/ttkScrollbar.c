@@ -1,4 +1,4 @@
-/* $Id: ttkScrollbar.c,v 1.9 2008/11/09 23:53:09 jenglish Exp $
+/* $Id: ttkScrollbar.c,v 1.10 2009/02/08 19:35:35 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * ttk::scrollbar widget.
@@ -78,7 +78,7 @@ static void ScrollbarDoLayout(void *recordPtr)
 {
     Scrollbar *sb = recordPtr;
     WidgetCore *corePtr = &sb->core;
-    Ttk_LayoutNode *thumb;
+    Ttk_Element thumb;
     Ttk_Box thumbBox;
     int thumbWidth, thumbHeight;
     double first, last, size;
@@ -92,11 +92,11 @@ static void ScrollbarDoLayout(void *recordPtr)
     /*
      * Locate thumb element, extract parcel and requested minimum size:
      */
-    thumb = Ttk_LayoutFindNode(corePtr->layout, "thumb");
+    thumb = Ttk_FindElement(corePtr->layout, "thumb");
     if (!thumb)	/* Something has gone wrong -- bail */
 	return;
 
-    sb->scrollbar.troughBox = thumbBox = Ttk_LayoutNodeParcel(thumb);
+    sb->scrollbar.troughBox = thumbBox = Ttk_ElementParcel(thumb);
     Ttk_LayoutNodeReqSize(
 	corePtr->layout, thumb, &thumbWidth,&thumbHeight);
 
@@ -118,7 +118,7 @@ static void ScrollbarDoLayout(void *recordPtr)
 	thumbBox.width = (int)(size * last) + minSize - (int)(size * first);
     }
     sb->scrollbar.minSize = minSize;
-    Ttk_PlaceLayoutNode(corePtr->layout, thumb, thumbBox);
+    Ttk_PlaceElement(corePtr->layout, thumb, thumbBox);
 }
 
 /*------------------------------------------------------------------------

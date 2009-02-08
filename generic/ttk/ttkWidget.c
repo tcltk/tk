@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.20 2008/12/03 18:44:50 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.21 2009/02/08 19:35:35 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -775,7 +775,7 @@ int TtkWidgetIdentifyCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     WidgetCore *corePtr = recordPtr;
-    Ttk_LayoutNode *node;
+    Ttk_Element element;
     int x, y;
 
     if (objc != 4) {
@@ -787,9 +787,9 @@ int TtkWidgetIdentifyCommand(
 	|| Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)
 	return TCL_ERROR;
 
-    node = Ttk_LayoutIdentify(corePtr->layout, x, y);
-    if (node) {
-	const char *elementName = Ttk_LayoutNodeName(node);
+    element = Ttk_IdentifyElement(corePtr->layout, x, y);
+    if (element) {
+	const char *elementName = Ttk_ElementName(element);
 	Tcl_SetObjResult(interp,Tcl_NewStringObj(elementName,-1));
     }
 

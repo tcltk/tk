@@ -1,5 +1,5 @@
 #
-# $Id: ttk.decls,v 1.3 2008/10/22 20:56:43 nijtmans Exp $
+# $Id: ttk.decls,v 1.4 2009/02/08 19:35:35 jenglish Exp $
 #
 
 library 	ttk
@@ -34,7 +34,7 @@ declare 5 current {
 }
 
 declare 6 current {
-    Ttk_ElementImpl Ttk_RegisterElement(
+    Ttk_ElementClass *Ttk_RegisterElement(
 	Tcl_Interp *interp,
 	Ttk_Theme theme,
 	const char *elementName,

@@ -1,4 +1,4 @@
-/* $Id: ttkTrack.c,v 1.4 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkTrack.c,v 1.5 2009/02/08 19:35:35 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * TtkTrackElementState() -- helper routine for widgets
@@ -30,8 +30,8 @@
 typedef struct 
 {
     WidgetCore		*corePtr;	/* Widget to track */
-    Ttk_LayoutNode	*activeElement;	/* element under the mouse cursor */
-    Ttk_LayoutNode	*pressedElement; /* currently pressed element */
+    Ttk_Element 	activeElement;	/* element under the mouse cursor */
+    Ttk_Element 	pressedElement; /* currently pressed element */
 } ElementStateTracker;
 
 /*
@@ -42,9 +42,9 @@ typedef struct
  * 	The active element has TTK_STATE_ACTIVE set _unless_
  * 	another element is 'pressed'
  */
-static void ActivateElement(ElementStateTracker *es, Ttk_LayoutNode *node)
+static void ActivateElement(ElementStateTracker *es, Ttk_Element element)
 {
-    if (es->activeElement == node) {
+    if (es->activeElement == element) {
 	/* No change */
 	return;
     }
@@ -54,14 +54,14 @@ static void ActivateElement(ElementStateTracker *es, Ttk_LayoutNode *node)
 	    /* Deactivate old element */
 	    Ttk_ChangeElementState(es->activeElement, 0,TTK_STATE_ACTIVE);
 	} 
-	if (node) {
+	if (element) {
 	    /* Activate new element */
-	    Ttk_ChangeElementState(node, TTK_STATE_ACTIVE,0);
+	    Ttk_ChangeElementState(element, TTK_STATE_ACTIVE,0);
 	}
 	TtkRedisplayWidget(es->corePtr);
     }
 
-    es->activeElement = node;
+    es->activeElement = element;
 }
 
 /* ReleaseElement --
@@ -87,18 +87,18 @@ static void ReleaseElement(ElementStateTracker *es)
 /* PressElement --
  * 	Presses the specified element.
  */
-static void PressElement(ElementStateTracker *es, Ttk_LayoutNode *node)
+static void PressElement(ElementStateTracker *es, Ttk_Element element)
 {
     if (es->pressedElement) {
 	ReleaseElement(es);
     }
 
-    if (node) {
+    if (element) {
 	Ttk_ChangeElementState(
-	    node, TTK_STATE_PRESSED|TTK_STATE_ACTIVE, 0);
+	    element, TTK_STATE_PRESSED|TTK_STATE_ACTIVE, 0);
     }
 
-    es->pressedElement = node;
+    es->pressedElement = element;
     TtkRedisplayWidget(es->corePtr);
 }
 
@@ -119,14 +119,14 @@ static void
 ElementStateEventProc(ClientData clientData, XEvent *ev)
 {
     ElementStateTracker *es = (ElementStateTracker *)clientData;
-    Ttk_LayoutNode *node;
+    Ttk_Element element;
 
     switch (ev->type)
     {
 	case MotionNotify :
-	    node = Ttk_LayoutIdentify(
+	    element = Ttk_IdentifyElement(
 		es->corePtr->layout,ev->xmotion.x,ev->xmotion.y);
-	    ActivateElement(es, node);
+	    ActivateElement(es, element);
 	    break;
 	case LeaveNotify:
 	    ActivateElement(es, 0);
@@ -134,15 +134,15 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 		PressElement(es, 0);
 	    break;
 	case EnterNotify:
-	    node = Ttk_LayoutIdentify(
+	    element = Ttk_IdentifyElement(
 		es->corePtr->layout,ev->xcrossing.x,ev->xcrossing.y);
-	    ActivateElement(es, node);
+	    ActivateElement(es, element);
 	    break;
 	case ButtonPress:
-	    node = Ttk_LayoutIdentify(
+	    element = Ttk_IdentifyElement(
 		es->corePtr->layout, ev->xbutton.x, ev->xbutton.y);
-	    if (node) 
-		PressElement(es, node);
+	    if (element) 
+		PressElement(es, element);
 	    break;
 	case ButtonRelease:
 	    ReleaseElement(es);
