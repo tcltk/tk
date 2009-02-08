@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.17 2009/01/11 08:40:19 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.18 2009/02/08 19:35:35 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -367,7 +367,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
     Notebook *nb = clientData;
     NotebookStyle nbstyle;
     Ttk_Padding padding;
-    Ttk_LayoutNode *clientNode = Ttk_LayoutFindNode(nb->core.layout, "client");
+    Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
     int clientWidth = 0, clientHeight = 0,
     	reqWidth = 0, reqHeight = 0,
 	tabrowWidth = 0, tabrowHeight = 0;
@@ -501,7 +501,7 @@ static void NotebookDoLayout(void *recordPtr)
     Tk_Window nbwin = nb->core.tkwin;
     Ttk_Box cavity = Ttk_WinBox(nbwin);
     int tabrowWidth = 0, tabrowHeight = 0;
-    Ttk_LayoutNode *clientNode = Ttk_LayoutFindNode(nb->core.layout, "client");
+    Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
     Ttk_Box tabrowBox;
     NotebookStyle nbstyle;
 
@@ -533,7 +533,7 @@ static void NotebookDoLayout(void *recordPtr)
     /* Layout for client area frame:
      */
     if (clientNode) {
-	Ttk_PlaceLayoutNode(nb->core.layout, clientNode, cavity);
+	Ttk_PlaceElement(nb->core.layout, clientNode, cavity);
 	cavity = Ttk_LayoutNodeInternalParcel(nb->core.layout, clientNode);
     }
 
@@ -1025,7 +1025,7 @@ static int NotebookIdentifyCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Notebook *nb = recordPtr;
-    Ttk_LayoutNode *node = NULL;
+    Ttk_Element element = NULL;
     int x, y, tabIndex;
 
     if (objc != 4) {
@@ -1048,11 +1048,11 @@ static int NotebookIdentifyCommand(
 	Ttk_RebindSublayout(tabLayout, tab);
 	Ttk_PlaceLayout(tabLayout, state, tab->parcel);
 
-	node = Ttk_LayoutIdentify(tabLayout, x, y);
+	element = Ttk_IdentifyElement(tabLayout, x, y);
     }
 
-    if (node) {
-	const char *elementName = Ttk_LayoutNodeName(node);
+    if (element) {
+	const char *elementName = Ttk_ElementName(element);
 	Tcl_SetObjResult(interp,Tcl_NewStringObj(elementName,-1));
     }
 

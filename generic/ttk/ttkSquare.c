@@ -2,14 +2,14 @@
  *
  * Minimal sample ttk widget.
  *
- * $Id: ttkSquare.c,v 1.6 2007/12/13 15:26:26 dgp Exp $
+ * $Id: ttkSquare.c,v 1.7 2009/02/08 19:35:35 jenglish Exp $
  */
 
 #include <tk.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
-#ifdef TTK_SQUARE_WIDGET
+#if defined(TTK_SQUARE_WIDGET) || 1
 
 #ifndef DEFAULT_BORDERWIDTH
 #define DEFAULT_BORDERWIDTH "2"
@@ -100,9 +100,9 @@ SquareDoLayout(void *clientData)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     Ttk_Box winBox;
-    Ttk_LayoutNode *squareNode;
+    Ttk_Element squareNode;
 
-    squareNode = Ttk_LayoutFindNode(corePtr->layout, "square");
+    squareNode = Ttk_FindElement(corePtr->layout, "square");
     winBox = Ttk_WinBox(corePtr->tkwin);
     Ttk_PlaceLayout(corePtr->layout, corePtr->state, winBox);
 
@@ -116,12 +116,12 @@ SquareDoLayout(void *clientData)
 	Tk_Anchor anchor = TK_ANCHOR_CENTER;
 	Ttk_Box b;
 
-	b = Ttk_LayoutNodeParcel(squareNode);
+	b = Ttk_ElementParcel(squareNode);
 	if (squarePtr->square.anchorObj != NULL)
 	    Tk_GetAnchorFromObj(NULL, squarePtr->square.anchorObj, &anchor);
 	b = Ttk_AnchorBox(winBox, b.width, b.height, anchor);
 
-	Ttk_PlaceLayoutNode(corePtr->layout, squareNode, b);
+	Ttk_PlaceElement(corePtr->layout, squareNode, b);
     }
 }
 
