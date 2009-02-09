@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.15 2009/02/08 19:35:35 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.16 2009/02/09 01:45:46 jenglish Exp $
  */
 
 #include <string.h>
@@ -532,7 +532,7 @@ static Ttk_LayoutNode *Ttk_NewLayoutNode(
     node->eclass = elementClass;
     node->state = 0u;
     node->next = node->child = 0;
-    /* parcel uninitialized */
+    node->parcel = Ttk_MakeBox(0,0,0,0);
 
     return node;
 }

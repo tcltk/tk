@@ -4,6 +4,7 @@
 	and functions: ElementImpl -> ElementClass, LayoutNode -> Element.
 	Remove more unnecessary casts.  Add function Ttk_ClientRegion,
 	common factor of entry, scale, progress, and treeview widgets.
+	* generic/ttk/ttkTrack.c: Fix [Bug 2431428].
 
 2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
 
