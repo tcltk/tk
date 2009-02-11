@@ -1,6 +1,15 @@
+2009-02-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/demos/items.tcl, .../label.tcl, .../twind.tcl:
+	* library/demos/images/ouster.png: [Bug 2588919]: Demo GOOBE. Added
+	new image of John Ousterhout that does not look quite so massively out
+	of date, and also showed off a bit of how we can adjust PNG images
+	when loading them. Also labeled JO as the creator; it's the TCT who
+	are the proprietors now.
+
 2009-02-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4: fix [tcl-Bug 2502365] Building of head on HPUX is
+	* unix/tcl.m4: fix [tcl-Bug 2502365]: Building of head on HPUX is
 	broken when using the native CC.
 	* unix/configure (autoconf-2.59)
 
