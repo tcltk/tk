@@ -3,7 +3,7 @@
 # This demonstration script creates a simple collection of widgets
 # that allow you to select and view images in a Tk label.
 #
-# RCS: @(#) $Id: image2.tcl,v 1.11 2007/12/13 15:27:07 dgp Exp $
+# RCS: @(#) $Id: image2.tcl,v 1.12 2009/02/11 15:25:31 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -38,7 +38,7 @@ proc loadDir w {
 proc selectAndLoadDir w {
     global dirName
     set dir [tk_chooseDirectory -initialdir $dirName -parent $w -mustexist 1]
-    if {[string length $dir] != 0} {
+    if {$dir ne ""} {
 	set dirName $dir
 	loadDir $w
     }
