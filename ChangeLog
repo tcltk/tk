@@ -1,3 +1,10 @@
+2009-02-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/iconlist.tcl: Split out the IconList megawidget from
+	tkfbox.tcl into its own file so as to make it easier to maintain. Also
+	cleans up the API for the megawidget, making it more like a
+	conventional Tk widget.
+
 2009-02-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/demos/items.tcl, .../label.tcl, .../twind.tcl:

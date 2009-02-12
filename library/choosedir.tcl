@@ -5,7 +5,7 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
 # 
-# RCS: @(#) $Id: choosedir.tcl,v 1.23 2007/12/13 15:26:27 dgp Exp $
+# RCS: @(#) $Id: choosedir.tcl,v 1.24 2009/02/12 21:32:49 dkf Exp $
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists
 namespace eval ::tk::dialog {}
@@ -211,9 +211,9 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
     # 4b.   If the value is different from the current directory, change to
     #       that directory.
 
-    set selection [tk::IconList_CurSelection $data(icons)]
+    set selection [$data(icons) selection get]
     if {[llength $selection] != 0} {
-	set iconText [tk::IconList_Get $data(icons) [lindex $selection 0]]
+	set iconText [$data(icons) get [lindex $selection 0]]
 	set iconText [file join $data(selectPath) $iconText]
 	Done $w $iconText
     } else {
@@ -261,10 +261,9 @@ proc ::tk::dialog::file::chooseDir::IsOK? {w text} {
 
 proc ::tk::dialog::file::chooseDir::DblClick {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    set selection [tk::IconList_CurSelection $data(icons)]
+    set selection [$data(icons) selection get]
     if {[llength $selection] != 0} {
-	set filenameFragment \
-		[tk::IconList_Get $data(icons) [lindex $selection 0]]
+	set filenameFragment [$data(icons) get [lindex $selection 0]]
 	set file $data(selectPath)
 	if {[file isdirectory $file]} {
 	    ::tk::dialog::file::ListInvoke $w [list $filenameFragment]
