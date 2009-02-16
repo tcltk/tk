@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.77.2.9 2008/12/21 21:02:58 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.77.2.10 2009/02/16 18:11:50 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.59)
@@ -43,6 +43,8 @@ if test "${CFLAGS+set}" != "set" ; then
 fi
 
 AC_PROG_CC
+AC_C_INLINE
+AC_HEADER_STDC
 
 # To properly support cross-compilation, one would
 # need to use these tool checks instead of
@@ -50,9 +52,9 @@ AC_PROG_CC
 # autoconf 2.50. You can also just set
 # the CC, AR, RANLIB, and RC environment
 # variables if you want to cross compile.
-#AC_CHECK_TOOL(AR, ar)
-#AC_CHECK_TOOL(RANLIB, ranlib)
-#AC_CHECK_TOOL(RC, windres)
+dnl AC_CHECK_TOOL(AR, ar)
+dnl AC_CHECK_TOOL(RANLIB, ranlib)
+dnl AC_CHECK_TOOL(RC, windres)
 
 if test "${GCC}" = "yes" ; then
     AC_CHECK_PROG(AR, ar, ar)
