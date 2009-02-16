@@ -1,3 +1,8 @@
+2009-02-16  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/ttk_intro.n: [Bug 2604420]: Improve wording so that this page
+	feels less obviously incomplete.
+
 2009-02-12  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/iconlist.tcl: Split out the IconList megawidget from
