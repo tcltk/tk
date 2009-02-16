@@ -3,7 +3,7 @@
 #	Implements the icon-list megawidget used in the "Tk" standard file
 #	selection dialog boxes.
 #
-# RCS: @(#) $Id: iconlist.tcl,v 1.1 2009/02/12 21:32:49 dkf Exp $
+# RCS: @(#) $Id: iconlist.tcl,v 1.2 2009/02/16 00:57:26 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 # Copyright (c) 2009 Donal K. Fellows
@@ -11,13 +11,29 @@
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-
+# API Summary:
+#	tk::IconList <path> ?<option> <value>? ...
+#	<path> add <imageName> <itemList>
+#	<path> cget <option>
+#	<path> configure ?<option>? ?<value>? ...
+#	<path> deleteall
+#	<path> destroy
+#	<path> get <itemIndex>
+#	<path> index <index>
+#	<path> invoke
+#	<path> see <index>
+#	<path> selection anchor ?<int>?
+#	<path> selection clear <first> ?<last>?
+#	<path> selection get
+#	<path> selection includes <item>
+#	<path> selection set <first> ?<last>?
+
 package require Tk 8.6
 
-oo::class create ::tk::IconList {
-    variable w canvas list index itemList textList selection sbar \
-	maxIW maxIH maxTW maxTH numItems noScroll hull fill \
-	selected rect font itemsPerColumn options arrangeCB
+::oo::class create ::tk::IconList {
+    variable w hull canvas sbar accel accelCB arrangeCB fill font index \
+	itemList itemsPerColumn list maxIH maxIW maxTH maxTW noScroll \
+	numItems oldX oldY options rect selected selection textList
     constructor args {
 	set w [namespace tail [self]]
 	my configure {*}$args
@@ -26,11 +42,12 @@ oo::class create ::tk::IconList {
 	rename ::$w theFrame
 	rename [self] ::$w
 	set arrangeCB {}
+	set accelCB {}
     }
     self {
 	method unknown {w args} {
 	    if {[string match .* $w]} {
-		uplevel 1 [list [self] create $w {*}$args]
+		[self] create $w {*}$args
 		return $w
 	    }
 	    next $w {*}$args
@@ -496,10 +513,9 @@ oo::class create ::tk::IconList {
     #	mouse moves back into the window or the mouse button is released.
     #
     method AutoScan {} {
-	variable ::tk::Priv
 	if {![winfo exists $w]} return
-	set x $Priv(x)
-	set y $Priv(y)
+	set x $oldX
+	set y $oldY
 	if {$noScroll} {
 	    return
 	}
@@ -515,7 +531,7 @@ oo::class create ::tk::IconList {
 	    return
 	}
 	my Motion1 $x $y
-	set Priv(afterId) [after 50 [namespace code {my AutoScan}]]
+	set ::tk::Priv(afterId) [after 50 [namespace code {my AutoScan}]]
     }
 
     # ----------------------------------------------------------------------
@@ -564,9 +580,8 @@ oo::class create ::tk::IconList {
     #	Gets called on button-1 motions
     #
     method Motion1 {x y} {
-	variable ::tk::Priv
-	set Priv(x) $x
-	set Priv(y) $y
+	set oldX $x
+	set oldY $y
 	set i [$w index @$x,$y]
 	if {$i eq ""} {
 	    return
@@ -575,9 +590,8 @@ oo::class create ::tk::IconList {
 	$w selection set $i
     }
     method ShiftMotion1 {x y} {
-	variable ::tk::Priv
-	set Priv(x) $x
-	set Priv(y) $y
+	set oldX $x
+	set oldY $y
 	set i [$w index @$x,$y]
 	if {$i eq ""} {
 	    return
@@ -594,9 +608,8 @@ oo::class create ::tk::IconList {
 	$w invoke
     }
     method Leave1 {x y} {
-	variable ::tk::Priv
-	set Priv(x) $x
-	set Priv(y) $y
+	set oldX $x
+	set oldY $y
 	my AutoScan
     }
     method FocusIn {} {
@@ -666,15 +679,12 @@ oo::class create ::tk::IconList {
     #	Gets called when user enters an arbitrary key in the listbox.
     #
     method KeyPress key {
-	variable ::tk::Priv
-	append Priv(ILAccel,[self]) $key
-	my Goto $Priv(ILAccel,[self])
-	catch {
-	    after cancel $Priv(ILAccel,[self],afterId)
-	}
-	set Priv(ILAccel,[self],afterId) \
-	    [after 500 [namespace code {my Reset}]]
+	append accel $key
+	my Goto $accel
+	after cancel $accelCB
+	set accelCB [after 500 [namespace code {my Reset}]]
     }
+
     method Goto text {
 	if {![info exists list]} {
 	    return
@@ -718,8 +728,6 @@ oo::class create ::tk::IconList {
 	}
     }
     method Reset {} {
-	variable ::tk::Priv
-
-	unset -nocomplain Priv(ILAccel,[self])
+	unset -nocomplain accel
     }
 }
