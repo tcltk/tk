@@ -1,3 +1,8 @@
+2009-02-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/configure.in, win/configure: align better with tcl
+	version. Ensures finding correct CPP for Win64.
+
 2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkImgPhoto.c:		fix numerous leaks discovered with the
