@@ -1,3 +1,9 @@
+2009-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tcl.m4, win/configure: Check if cl groks _WIN64 already to
+	avoid CC manipulation that can screw up later configure checks.
+	Use 'd'ebug runtime in 64-bit builds.
+
 2009-02-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure.in, win/configure: align better with tcl
