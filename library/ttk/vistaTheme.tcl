@@ -198,7 +198,9 @@ namespace eval ttk::theme::vista {
             }
         }
         
-
-       package provide ttk::theme::vista 1.0
+        # Treeview
+        ttk::style configure Item -padding {4 0 0 0}
+         
+        package provide ttk::theme::vista 1.0
     }
 }
