@@ -1,5 +1,8 @@
 2009-02-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/ttk/vistaTheme.tcl: Correct the ttk::treeview border on
+	* win/ttkWinXpTheme.c:        XP and vista.
+
 	* library/console.tcl: [Bug 2546087] In 2004 a fix to Tcl channels
 	prevented the exposure of the internal UTF-8 representation of the
 	ASCII NUL character (\uc080). Since then strings in the console

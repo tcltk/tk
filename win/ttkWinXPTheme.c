@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.22 2008/12/05 11:11:58 patthoyts Exp $
+ * $Id: ttkWinXPTheme.c,v 1.23 2009/02/21 11:38:56 patthoyts Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -751,6 +751,14 @@ static Ttk_StateTable header_statemap[] =
     { HIS_NORMAL, 	0,0 },
 };
 
+static Ttk_StateTable treeview_statemap[] = 
+{
+    { TREIS_DISABLED, 	TTK_STATE_DISABLED, 0 },
+    { TREIS_SELECTED,	TTK_STATE_SELECTED, 0},
+    { TREIS_HOT, 	TTK_STATE_ACTIVE, 0 },
+    { TREIS_NORMAL, 	0,0 },
+};
+
 static Ttk_StateTable tvpglyph_statemap[] = 
 {
     { GLPS_OPENED, 	TTK_STATE_OPEN, 0 },
@@ -997,6 +1005,8 @@ static ElementInfo ElementInfoTable[] = {
     	TP_SPLITBUTTON,toolbutton_statemap, NOPAD,0 },
     { "Menubutton.dropdown", &GenericElementSpec, L"TOOLBAR",
     	TP_SPLITBUTTONDROPDOWN,toolbutton_statemap, NOPAD,0 },
+    { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
+	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), 0 },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
     	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeheading.border", &GenericElementSpec, L"HEADER", 
