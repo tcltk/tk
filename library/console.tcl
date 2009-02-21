@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.40 2009/01/30 21:02:13 patthoyts Exp $
+# RCS: @(#) $Id: console.tcl,v 1.41 2009/02/21 10:22:58 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -663,7 +663,7 @@ proc ::tk::ConsoleInsert {w s} {
 
 proc ::tk::ConsoleOutput {dest string} {
     set w .console
-    $w insert output $string $dest
+    $w insert output [string map {\0 \u25a1} $string] $dest
     ::tk::console::ConstrainBuffer $w $::tk::console::maxLines
     $w see insert
 }
