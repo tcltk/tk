@@ -1,3 +1,10 @@
+2009-02-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/console.tcl: [Bug 2546087] In 2004 a fix to Tcl channels
+	prevented the exposure of the internal UTF-8 representation of the
+	ASCII NUL character (\uc080). Since then strings in the console
+	have been truncated at NUL. This restores the older behaviour.
+
 2009-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tcl.m4, win/configure: Check if cl groks _WIN64 already to
