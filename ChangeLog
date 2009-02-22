@@ -1,3 +1,8 @@
+2009-02-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinCursor.c: Applied patch to support stock Win32 help arrow
+	cursor when question_arrow requested [Patch 2542828] (danckaert)
+
 2009-02-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/vistaTheme.tcl: Correct the ttk::treeview border on
