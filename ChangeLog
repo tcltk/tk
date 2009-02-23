@@ -1,3 +1,8 @@
+2009-02-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinMenu.c: Applied patch for menu image display bug
+	[Bug 1329198, 456299] [Patch 2507419] (cjmcdonald)
+
 2009-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tcl.m4, win/configure: Check if cl groks _WIN64 already to
