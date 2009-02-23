@@ -1,5 +1,7 @@
 2009-02-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/rc/*.cur: [Patch 2513104] fix cursor hotspots (cjmcdonald)
+
 	* win/tkWinMenu.c: Applied patch for menu image display bug
 	[Bug 1329198, 456299] [Patch 2507419] (cjmcdonald)
 
