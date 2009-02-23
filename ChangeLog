@@ -1,5 +1,8 @@
 2009-02-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/tkWinCursor.c: [Patch 2542828] use stock Win32 help arrow
+	cursor when question_arrow requested (danckaert)
+
 	* win/rc/*.cur: [Patch 2513104] fix cursor hotspots (cjmcdonald)
 
 	* win/tkWinMenu.c: Applied patch for menu image display bug

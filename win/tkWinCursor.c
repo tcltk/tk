@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinCursor.c,v 1.15 2007/12/13 15:28:55 dgp Exp $
+ * RCS: @(#) $Id: tkWinCursor.c,v 1.15.2.1 2009/02/23 12:41:03 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -31,6 +31,9 @@ typedef struct {
 
 #ifndef IDC_HAND
 #define IDC_HAND MAKEINTRESOURCE(32649)
+#endif
+#ifndef IDC_HELP
+#define IDC_HELP MAKEINTRESOURCE(32651)
 #endif
 
 /*
@@ -62,6 +65,7 @@ static struct CursorName {
     {"watch",			IDC_WAIT},
     {"xterm",			IDC_IBEAM},
     {"hand2",			IDC_HAND},
+    {"question_arrow",		IDC_HELP},
     {NULL,			0}
 };
 
