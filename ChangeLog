@@ -1,3 +1,15 @@
+2009-02-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/GetBitmap.3     [Feature Request 2636558] Tk_DefineBitmap
+	* generic/tk.decls    and Tk_GetBitmapFromData signature problem
+	* generic/tkInt.decls
+	* generic/tkBitmap.c
+	* generic/tkInt.h
+	* generic/tkStubInit.c
+	* generic/tkDecls.h    (regenerated)
+	* generic/tkIntDecls.h (regenerated)
+	* macosx/tkMacOSXBitmap.c
+
 2009-02-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkWindow.c: [Bug 2645457] check for dead windows after

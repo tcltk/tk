@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.52 2009/01/09 07:03:31 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.53 2009/02/27 23:23:35 nijtmans Exp $
 
 library tk
 
@@ -427,7 +427,7 @@ declare 119 {aqua win} {
 	    TkRegion src, TkRegion dr_return)
 }
 declare 121 aqua {
-    Pixmap TkpCreateNativeBitmap(Display *display, const char *source)
+    Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
 }
 declare 122 aqua {
     void TkpDefineNativeBitmaps(void)
@@ -741,7 +741,7 @@ declare 0 aqua {
 
 # removed duplicates from tkInt table
 #declare 1 aqua {
-#    Pixmap TkpCreateNativeBitmap(Display *display, const char *source)
+#    Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
 #}
 #
 #declare 2 aqua {
