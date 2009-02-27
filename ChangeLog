@@ -1,3 +1,8 @@
+2009-02-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkWindow.c: [Bug 2645457] check for dead windows after
+	calling Tk_MakeWindowExist to avoid a crash when mapping dead windows.
+
 2009-02-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinCursor.c: [Patch 2542828] use stock Win32 help arrow
