@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.99 2008/12/28 13:08:39 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.100 2009/02/27 23:23:35 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -681,7 +681,7 @@ typedef struct TkMainInfo {
  */
 
 typedef struct {
-    const char *source;		/* Bits for bitmap. */
+    const void *source;		/* Bits for bitmap. */
     int width, height;		/* Dimensions of bitmap. */
     int native;			/* 0 means generic (X style) bitmap, 1 means
     				 * native style bitmap. */

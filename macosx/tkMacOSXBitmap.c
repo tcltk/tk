@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.8 2008/04/27 22:39:12 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.9 2009/02/27 23:23:36 nijtmans Exp $
  */
 
 #include "tkMacOSXInt.h"
@@ -107,7 +107,7 @@ TkpDefineNativeBitmaps(void)
 
 	    nativeIconPtr->id = builtInPtr->id;
 	    nativeIconPtr->type = builtInPtr->type;
-	    predefPtr->source = (char *) nativeIconPtr;
+	    predefPtr->source = nativeIconPtr;
 	    predefPtr->width = builtInPtr->size;
 	    predefPtr->height = builtInPtr->size;
 	    predefPtr->native = 1;
@@ -137,7 +137,7 @@ TkpDefineNativeBitmaps(void)
 Pixmap
 TkpCreateNativeBitmap(
     Display *display,
-    const char *source)		/* Info about the icon to build. */
+    const void *source)		/* Info about the icon to build. */
 {
     Pixmap pix;
     Rect destRect;
