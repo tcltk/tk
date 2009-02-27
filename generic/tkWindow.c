@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.102 2008/12/28 13:08:39 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.103 2009/02/27 23:04:39 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -1643,6 +1643,13 @@ Tk_MapWindow(
     }
     if (winPtr->window == None) {
 	Tk_MakeWindowExist(tkwin);
+    }
+    /*
+     * [Bug 2645457]: the previous call permits events to be processed and can
+     * lead to the destruction of the window under some conditions.
+     */
+    if (winPtr->flags & TK_ALREADY_DEAD) {
+	return;
     }
     if (winPtr->flags & TK_WIN_MANAGED) {
 	/*
