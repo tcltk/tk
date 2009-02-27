@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.66 2008/12/04 21:33:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.67 2009/02/27 23:23:36 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -725,7 +725,7 @@ static const TkStubs tkStubs = {
     Tk_CreateSelHandler, /* 41 */
     Tk_CreateWindow, /* 42 */
     Tk_CreateWindowFromPath, /* 43 */
-    Tk_DefineBitmap, /* 44 */
+    Tk_OldDefineBitmap, /* 44 */
     Tk_DefineCursor, /* 45 */
     Tk_DeleteAllBindings, /* 46 */
     Tk_DeleteBinding, /* 47 */
@@ -767,7 +767,7 @@ static const TkStubs tkStubs = {
     Tk_GetAtomName, /* 83 */
     Tk_GetBinding, /* 84 */
     Tk_GetBitmap, /* 85 */
-    Tk_GetBitmapFromData, /* 86 */
+    Tk_OldGetBitmapFromData, /* 86 */
     Tk_GetCapStyle, /* 87 */
     Tk_GetColor, /* 88 */
     Tk_GetColorByValue, /* 89 */
@@ -955,6 +955,8 @@ static const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    Tk_DefineBitmap, /* 274 */
+    Tk_GetBitmapFromData, /* 275 */
 };
 
 /* !END!: Do not edit above this line. */
