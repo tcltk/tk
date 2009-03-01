@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.64 2009/02/23 10:18:38 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.65 2009/03/01 21:54:40 patthoyts Exp $
  */
 
 #define OEMRESOURCE
@@ -1745,7 +1745,8 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryArrow --
  *
  *	This function draws the arrow bitmap on the right side of a menu
- *	entry. This function is currently unused.
+ *	entry. This function is only used when drawing the arrow for a
+ *	disabled cascade menu.
  *
  * Results:
  *	None.
