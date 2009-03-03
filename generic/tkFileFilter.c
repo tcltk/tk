@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.c,v 1.10 2007/05/09 12:51:30 das Exp $
+ * RCS: @(#) $Id: tkFileFilter.c,v 1.10.4.1 2009/03/03 23:54:11 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -338,7 +338,7 @@ AddClause(
 	    globPtr->next = NULL;
 	}
     }
-    if (ostypeCount > 0 && ostypeList != NULL) {
+    if (ostypeList != NULL && ostypeCount > 0) {
 	if (macRoman == NULL) {
 	    macRoman = Tcl_GetEncoding(NULL, "macRoman");
 	}

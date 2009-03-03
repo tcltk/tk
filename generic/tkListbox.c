@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.44.2.2 2008/10/09 21:20:45 dgp Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.44.2.3 2009/03/03 23:54:11 patthoyts Exp $
  */
 
 #include "default.h"
@@ -1343,8 +1343,6 @@ ListboxYviewSubCmd(
     } else {
 	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
 	switch (type) {
-	case TK_SCROLL_ERROR:
-	    return TCL_ERROR;
 	case TK_SCROLL_MOVETO:
 	    index = (int) (listPtr->nElements*fraction + 0.5);
 	    break;
@@ -1358,6 +1356,9 @@ ListboxYviewSubCmd(
 	case TK_SCROLL_UNITS:
 	    index = listPtr->topIndex + count;
 	    break;
+	case TK_SCROLL_ERROR:
+	default:
+	    return TCL_ERROR;
 	}
 	ChangeListboxView(listPtr, index);
     }
