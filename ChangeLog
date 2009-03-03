@@ -1,3 +1,9 @@
+2009-03-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkFileFilter.c: Backported some fixes for uninitialized
+	* generic/tkFont.c:       variables identified by das using clang
+	* generic/tkListbox.c:    analysis.
+
 2009-02-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkWindow.c: [Bug 2645457] check for dead windows after
