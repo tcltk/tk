@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.43 2008/12/10 05:02:52 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.44 2009/03/09 18:50:49 cc_benny Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -2190,7 +2190,9 @@ GetFontFamilyName(
 
     /*
      * QuickDraw font names are encoded with the script that the font uses.
-     * So we determine that encoding and than we reencode the name.
+     * So we determine that encoding and than we reencode the name.  We
+     * pre-set the encoding with the default value, so we do not need to
+     * check result codes here.
      */
 
     encoding = kTextEncodingMacRoman;
@@ -2200,19 +2202,27 @@ GetFontFamilyName(
 	    NULL);
 
     /*
-     * Note: We could use Tcl facilities to do the re-encoding here. We'd
+     * Note: We could use Tcl facilities to do the re-encoding here.  We'd
      * have to maintain tables to map OS encoding codes to Tcl encoding names
-     * like tkMacOSXFont.c did. Using native re-encoding directly instead is
-     * a lot easier and future-proof than that. There is one snag, though: I
-     * have seen CFStringGetCString() crash with invalid encoding ids. But
+     * like tkMacOSXFont.c did.  Using native re-encoding directly instead is
+     * a lot easier and future-proof than that.  There is one snag, though: I
+     * have seen CFStringGetCString() crash with invalid encoding ids.  But
      * than if that happens it would be a bug in
      * FMGetFontFamilyTextEncoding() or RevertTextEncodingToScriptInfo().
+     * Another problem is that users have seen CFStringCreate return null
+     * (Bug #2548661).  This is due to font names with a bad encoding.
      */
 
     cfString = CFStringCreateWithPascalStringNoCopy(
 	    NULL, nativeName, nameencoding, kCFAllocatorNull);
-    CFStringGetCString(
-	    cfString, name, numBytes, kCFStringEncodingUTF8);
+    if (cfString == NULL) {
+        TkMacOSXDbgMsg("CFStringCreate: "
+                "'%.*s' could not be decoded with encoding %d",
+                nativeName[0], nativeName+1, (int) nameencoding);
+        return kTextMalformedInputErr;
+    }
+
+    CFStringGetCString(cfString, name, numBytes, kCFStringEncodingUTF8);
     CFRelease(cfString);
 
     return noErr;
