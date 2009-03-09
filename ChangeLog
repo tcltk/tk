@@ -1,3 +1,8 @@
+2009-03-09  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
+
+	* tkMacOSXFont.c (GetFontFamilyName): [Bug #2548661] Handle NULL
+	return from CFStringCreate.
+
 2009-02-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/GetBitmap.3     [Feature Request 2636558] Tk_DefineBitmap
