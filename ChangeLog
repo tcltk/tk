@@ -1,30 +1,34 @@
+2009-03-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/event.n: Tidy up and improve examples.
+
 2009-03-09  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
-	* tkMacOSXFont.c (GetFontFamilyName): [Bug #2548661] Handle NULL
+	* tkMacOSXFont.c (GetFontFamilyName): [Bug 2548661]: Handle NULL
 	return from CFStringCreate.
 
 2009-02-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* doc/GetBitmap.3     [Feature Request 2636558] Tk_DefineBitmap
+	* doc/GetBitmap.3     [Feature Request 2636558]: Tk_DefineBitmap
 	* generic/tk.decls    and Tk_GetBitmapFromData signature problem
 	* generic/tkInt.decls
 	* generic/tkBitmap.c
 	* generic/tkInt.h
 	* generic/tkStubInit.c
-	* generic/tkDecls.h    (regenerated)
-	* generic/tkIntDecls.h (regenerated)
+	* generic/tkDecls.h:    (regenerated)
+	* generic/tkIntDecls.h: (regenerated)
 	* macosx/tkMacOSXBitmap.c
 
 2009-02-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tkWindow.c: [Bug 2645457] check for dead windows after
+	* generic/tkWindow.c: [Bug 2645457]: Check for dead windows after
 	calling Tk_MakeWindowExist to avoid a crash when mapping dead windows.
 
 2009-02-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/rc/*.cur: [Patch 2513104] fix cursor hotspots (cjmcdonald)
+	* win/rc/*.cur: [Patch 2513104]: Fix cursor hotspots (cjmcdonald)
 
-	* win/tkWinMenu.c: Applied patch for menu image display bug
+	* win/tkWinMenu.c: Applied patch for menu image display bug.
 	[Bug 1329198, 456299] [Patch 2507419] (cjmcdonald)
 
 2009-02-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
@@ -37,21 +41,21 @@
 	* library/ttk/vistaTheme.tcl: Correct the ttk::treeview border on
 	* win/ttkWinXpTheme.c:        XP and vista.
 
-	* library/console.tcl: [Bug 2546087] In 2004 a fix to Tcl channels
+	* library/console.tcl: [Bug 2546087]: In 2004 a fix to Tcl channels
 	prevented the exposure of the internal UTF-8 representation of the
-	ASCII NUL character (\uc080). Since then strings in the console
-	have been truncated at NUL. This restores the older behaviour.
+	ASCII NUL character (\uc080). Since then strings in the console have
+	been truncated at NUL. This restores the older behaviour.
 
 2009-02-17  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/tcl.m4, win/configure: Check if cl groks _WIN64 already to
-	avoid CC manipulation that can screw up later configure checks.
-	Use 'd'ebug runtime in 64-bit builds.
+	* win/tcl.m4, win/configure: Check if cl groks _WIN64 already to avoid
+	CC manipulation that can screw up later configure checks. Use 'd'ebug
+	runtime in 64-bit builds.
 
 2009-02-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/configure.in, win/configure: align better with tcl
-	version. Ensures finding correct CPP for Win64.
+	* win/configure.in, win/configure: Align better with tcl version.
+	Ensures finding correct CPP for Win64.
 
 2009-02-16  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -76,16 +80,16 @@
 
 2009-02-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4: fix [tcl-Bug 2502365]: Building of head on HPUX is
-	broken when using the native CC.
+	* unix/tcl.m4: fix [Bug 2502365]: Building of head on HPUX is broken
+	when using the native CC.
 	* unix/configure (autoconf-2.59)
 
 2008-02-08  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/*.[ch]: Renamed several internal data structures
-	and functions: ElementImpl -> ElementClass, LayoutNode -> Element.
-	Remove more unnecessary casts.  Add function Ttk_ClientRegion,
-	common factor of entry, scale, progress, and treeview widgets.
+	* generic/ttk/*.[ch]: Renamed several internal data structures and
+	functions: ElementImpl -> ElementClass, LayoutNode -> Element. Remove
+	more unnecessary casts. Add function Ttk_ClientRegion, common factor
+	of entry, scale, progress, and treeview widgets.
 	* generic/ttk/ttkTrack.c: Fix [Bug 2431428].
 
 2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
@@ -155,39 +159,38 @@
 
 	* unix/Makefile.in: Added a CONFIG_INSTALL_DIR parameter so that
 	* unix/tcl.m4:      distributors can control where tclConfig.sh goes.
-	Made the installation of 'ldAix' conditional
-	upon actually being on an AIX system.  Allowed for downstream
-	packagers to customize SHLIB_VERSION on BSD-derived systems.
+	Made the installation of 'ldAix' conditional upon actually being on an
+	AIX system. Allowed for downstream packagers to customize
+	SHLIB_VERSION on BSD-derived systems. 
 	Thanks to Stuart Cassoff for [Patch 907924].
 	* unix/configure: Autoconf 2.59
 	
 2009-01-16  Don Porter	<dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump patchlevel to 8.6b1.1 to distinguish
-	* library/tk.tcl:	CVS snapshots from the 8.6b1 and 8.6b2 releases.
-	* unix/configure.in:
+	* library/tk.tcl:	CVS snapshots from the 8.6b1 and 8.6b2
+	* unix/configure.in:	releases.
 	* win/configure.in:
 
 	* unix/configure:	autoconf-2.59
 	* win/configure:
 
-
 2009-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkImgPhoto.c: fix for aMSN compatibility [tcl-Bug 2507326]
+	* generic/tkImgPhoto.c: [Bug 2507326]: Fix for aMSN compatibility
 	* generic/tkMenu.h: CONSTify Tk(Create|Find)MenuReferences
 	* generic/tkMenu.c: various internal "const" decorations.
 
 2009-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4: fix [tcl-Bug 2502365] Building of head on
-	  HPUX is broken when using the native CC
+	* unix/tcl.m4: fix [Bug 2502365]: Building of head on HPUX is broken
+	when using the native CC
 	* unix/configure (autoconf-2.59)
 
 2009-01-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/constraints.tcl: Made the tests more independent of the presence
-	* tests/*.test:          of images in the interpreter.
+	* tests/constraints.tcl: Made the tests more independent of the
+	* tests/*.test:          presence of images in the interpreter.
 
 2009-01-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -195,21 +198,21 @@
 
 2009-01-11  George Peter Staplin <georgeps@users.sourceforge.net>
 
-	* generic/tkEvent.c: Fix a possible segv due to a NULL
-	pointer dereference that occurs when XCreateIC fails.
+	* generic/tkEvent.c: Fix a possible segv due to a NULL pointer
+	dereference that occurs when XCreateIC fails.
 
 2009-01-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/bgerror.tcl: Pretty up the unix tk_messageBox
-	* library/icons.tcl:   icons with PNG images and grouped
-	* library/msgbox.tcl:  all the stock icons in one file.
+	* library/bgerror.tcl: Pretty up the unix tk_messageBox icons with PNG
+	* library/icons.tcl:   images and grouped all the stock icons in one
+	* library/msgbox.tcl:  file.
 	* library/tk.tcl:
 
 2009-01-11  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkNotebook.c(NotebookCleanup):
-	Don't call Tk_DeleteOptionTable(), it's unnecessary 
-	and quite possibly harmful [Bug 2496162].
+	* generic/ttk/ttkNotebook.c (NotebookCleanup): [Bug 2496162]: Don't
+	call Tk_DeleteOptionTable(), it's unnecessary and quite possibly
+	harmful.
 
 2009-01-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -225,26 +228,27 @@
 
 2009-01-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/bgerror.tcl: Theme the bgerror dialog and make use of
-	our PNG support to improve the icon.
+	* library/bgerror.tcl: Theme the bgerror dialog and make use of our
+	PNG support to improve the icon.
 
 2009-01-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/tkfbox.tcl: [Bug 2473120] mis-ordered messagebox args.
+	* library/tkfbox.tcl: [Bug 2473120]: Mis-ordered messagebox args.
 
-	* win/tkWinWm.c: prevent grabs being bypassed on Windows [Bug 1847002]
+	* win/tkWinWm.c: [Bug 1847002]: Prevent grabs being bypassed on
+	Windows.
 
 2009-01-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tk.h:          A few const -> CONST86 modifications, improving
-	* generic/tkCanvas.c:    backwards compatibility. Change Tk_ItemIndexProc
-	* generic/tkCanvLine.c:  and Tk_ItemInsertProc signature to have a Tcl_Obj parameter
-	* generic/tkCanvPoly.c:  in stead of a string parameter. This is binary
-	* generic/tkCanvText.c:  and source compatible with previous API, it just prevents
-	* doc/CrtItemType.3:     the need for a type cast in the Tk_ItemType table construction.
-	* doc/Clipboard.3:       Bring doc in line with API
-	* doc/ConfigWidg.3:
-	* doc/ParseArgv.3:
+	* generic/tk.h:		A few const -> CONST86 modifications,
+	* generic/tkCanvas.c:	improving backwards compatibility. Change
+	* generic/tkCanvLine.c:	Tk_ItemIndexProc and Tk_ItemInsertProc
+	* generic/tkCanvPoly.c:	signature to have a Tcl_Obj parameter instead
+	* generic/tkCanvText.c:	of a string parameter. This is binary and
+	* doc/CrtItemType.3:	source compatible with previous API, it just
+	* doc/Clipboard.3:	prevents the need for a type cast in the
+	* doc/ConfigWidg.3:	Tk_ItemType table construction. Bring doc in
+	* doc/ParseArgv.3:	line with API.
 
 2009-01-06  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -258,8 +262,8 @@
 
 2009-01-03  Donal K. Fellows  <dkf@users.sf.net>
 
-	* doc/canvas.n: Improve the documentation of the -offset and
-	-outlineoffset item options. [Bug 1836621]
+	* doc/canvas.n: [Bug 1836621]: Improve the documentation of the
+	-offset and -outlineoffset item options.
 
 2009-01-03  Jan Nijtmans  <nijtmans@users.sf.net>
 
