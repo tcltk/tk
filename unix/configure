@@ -10694,7 +10694,7 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 
 
 
-                    ac_config_files="$ac_config_files Makefile:../unix/Makefile.in tkConfig.sh:../unix/tkConfig.sh.in"
+                    ac_config_files="$ac_config_files Makefile:../unix/Makefile.in tkConfig.sh:../unix/tkConfig.sh.in tk.pc:../unix/tk.pc.in"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -11261,6 +11261,7 @@ do
   "Wish-Info.plist" ) CONFIG_FILES="$CONFIG_FILES Wish-Info.plist:../macosx/Wish-Info.plist.in" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile:../unix/Makefile.in" ;;
   "tkConfig.sh" ) CONFIG_FILES="$CONFIG_FILES tkConfig.sh:../unix/tkConfig.sh.in" ;;
+  "tk.pc" ) CONFIG_FILES="$CONFIG_FILES tk.pc:../unix/tk.pc.in" ;;
   "Tk.framework" ) CONFIG_COMMANDS="$CONFIG_COMMANDS Tk.framework" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
