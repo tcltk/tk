@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.149 2009/01/20 03:39:06 kennykb Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.150 2009/03/14 17:35:04 dkf Exp $
 
 # Current Tk version;  used in various names.
 
@@ -736,6 +736,9 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    @INSTALL_STUB_LIB@ ; \
 	fi
 	@EXTRA_INSTALL_BINARIES@
+	@echo "Installing pkg-config file to $(LIB_INSTALL_DIR)/pkgconfig/"
+	@mkdir -p $(LIB_INSTALL_DIR)/pkgconfig
+	@$(INSTALL_DATA) tk.pc $(LIB_INSTALL_DIR)/pkgconfig/tk.pc
 
 install-libraries: libraries
 	@if test "$(@TK_WINDOWINGSYSTEM@_XLIB_HDRS)" != ""; then \
@@ -885,7 +888,7 @@ clean:
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
-		$(PACKAGE).* prototype tkConfig.h *.plist Tk.framework
+		$(PACKAGE).* prototype tkConfig.h *.plist Tk.framework tk.pc
 
 depend:
 	makedepend -- $(DEPEND_SWITCHES) -- $(SRCS)
@@ -1521,7 +1524,7 @@ $(MAC_OSX_DIR)/configure: $(MAC_OSX_DIR)/configure.ac $(UNIX_DIR)/configure
 $(UNIX_DIR)/tkConfig.h.in: $(MAC_OSX_DIR)/configure
 	cd $(MAC_OSX_DIR); autoheader; touch $@
 
-dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure genstubs
+dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure genstubs
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)/unix
 	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
@@ -1531,7 +1534,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
 		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage \
-		$(UNIX_DIR)/tkConfig.h.in $(DISTDIR)/unix
+		$(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
 	chmod +x $(DISTDIR)/unix/install-sh
 	mkdir $(DISTDIR)/bitmaps
