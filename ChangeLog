@@ -1,3 +1,11 @@
+2009-03-14  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tk.pc.in (new file):		[Patch 2243962] (hat0)
+	* unix/configure.in, unix/Makefile.in: Added support for reporting
+	Tk's public build configuration via the pkg-config system. TEA is
+	still the official mechanism though, in part because pkg-config is not
+	universally supported across all Tk's supported platforms.
+
 2009-03-10  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/event.n: Tidy up and improve examples.
