@@ -1,3 +1,13 @@
+2009-03-25  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/wish.1            bring doc and demos in line with http://wiki.tcl.tk/812
+	* library/demos/hello
+	* library/demos/rmt
+	* library/demos/square
+	* library/demos/tcolor
+	* library/demos/timer
+	* library/demos/widget
+
 2009-03-25  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/ttk/ttkTheme.c (BuildOptionMap, NewElementClass):
