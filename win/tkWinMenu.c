@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.65 2009/03/01 21:54:40 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.66 2009/03/25 23:39:35 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -2437,9 +2437,9 @@ TkpDrawMenuEntry(
     int adjustedHeight = height - 2 * padY;
     TkWinDrawable memWinDraw;
     TkWinDCState dcState;
-    HBITMAP oldBitmap;
+    HBITMAP oldBitmap = NULL;
     Drawable d;
-    HDC memDc, menuDc;
+    HDC memDc = NULL, menuDc = NULL;
 
     /*
      * If the menu entry includes an image then draw the entry into a
@@ -2557,7 +2557,7 @@ TkpDrawMenuEntry(
 		    fmPtr, adjustedX, adjustedY, width, adjustedHeight);
 	}
     }
-    
+
     /*
      * Copy the entry contents from the temporary bitmap to the menu.
      */

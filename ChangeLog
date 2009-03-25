@@ -7,6 +7,8 @@
 	* library/demos/tcolor
 	* library/demos/timer
 	* library/demos/widget
+	* win/tkWinMenu.c       Eliminate a few compiler warnings on mingw
+	* win/ttkWinXPTheme.c   spacing
 
 2009-03-25  Donal K. Fellows  <dkf@users.sf.net>
 
