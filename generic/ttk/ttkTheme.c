@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.11 2007/12/13 15:26:26 dgp Exp $
+ * $Id: ttkTheme.c,v 1.11.2.1 2009/03/25 09:10:04 dkf Exp $
  */
 
 #include <stdlib.h>
@@ -186,7 +186,7 @@ static OptionMap
 BuildOptionMap(ElementImpl *elementImpl, Tk_OptionTable optionTable)
 {
     OptionMap optionMap = (OptionMap)ckalloc(
-	    sizeof(const Tk_OptionSpec) * elementImpl->nResources);
+	    sizeof(const Tk_OptionSpec) * elementImpl->nResources + 1);
     int i;
 
     for (i = 0; i < elementImpl->nResources; ++i) {
@@ -244,7 +244,7 @@ NewElementImpl(const char *name, Ttk_ElementSpec *specPtr,void *clientData)
     /* Initialize default values:
      */
     elementImpl->defaultValues = (Tcl_Obj**)
-	ckalloc(elementImpl->nResources * sizeof(Tcl_Obj *));
+	ckalloc(elementImpl->nResources * sizeof(Tcl_Obj *) + 1);
     for (i=0; i < elementImpl->nResources; ++i) {
         const char *defaultValue = specPtr->options[i].defaultValue;
 	if (defaultValue) {
