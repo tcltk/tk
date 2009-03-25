@@ -1,5 +1,9 @@
 2009-03-25  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/ttk/ttkTheme.c (BuildOptionMap, NewElementImpl):
+	[Bug 2178820]: Ensure that zero-size allocations don't happen; some
+	malloc implementations don't like it at all.
+
 	* win/wish.exe.manifest.in: [Bug 1871101]: Add magic to make Tk not be
 	blurred on Vista with large fonts.
 
