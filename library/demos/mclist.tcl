@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing a Ttk
 # tree widget configured as a multi-column listbox.
 #
-# RCS: @(#) $Id: mclist.tcl,v 1.4 2008/12/11 18:13:08 jenglish Exp $
+# RCS: @(#) $Id: mclist.tcl,v 1.5 2009/03/31 14:20:41 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -36,6 +36,14 @@ grid $w.hsb         -in $w.container -sticky nsew
 grid column $w.container 0 -weight 1
 grid row    $w.container 0 -weight 1
 
+image create photo upArrow -data {
+    R0lGODlhDgAOAJEAANnZ2YCAgPz8/P///yH5BAEAAAAALAAAAAAOAA4AAAImhI+
+    py+1LIsJHiBAh+BgmiEAJQITgW6DgUQIAECH4JN8IPqYuNxUAOw==}
+image create photo downArrow -data {
+    R0lGODlhDgAOAJEAANnZ2YCAgPz8/P///yH5BAEAAAAALAAAAAAOAA4AAAInhI+
+    py+1I4ocQ/IgDEYIPgYJICUCE4F+YIBolEoKPEJKZmVJK6ZACADs=}
+image create photo noArrow -height 14 -width 14
+
 ## The data we're going to insert
 set data {
     Argentina		{Buenos Aires}		ARS
@@ -56,11 +64,15 @@ set data {
 }
 
 ## Code to insert the data nicely
-set font [ttk::style lookup [$w.tree cget -style] -font]
+set font [ttk::style lookup Heading -font]
 foreach col {country capital currency} name {Country Capital Currency} {
-    $w.tree heading $col -command [list SortBy $w.tree $col 0] -text $name
-    $w.tree column $col -width [font measure $font $name]
+    $w.tree heading $col -text $name -image noArrow -anchor w \
+	-command [list SortBy $w.tree $col 0]
+    $w.tree column $col -width [expr {
+	[font measure $font $name] + [image width noArrow] + 5
+    }]
 }
+set font [ttk::style lookup Treeview -font]
 foreach {country capital currency} $data {
     $w.tree insert {} end -values [list $country $capital $currency]
     foreach col {country capital currency} {
@@ -87,6 +99,9 @@ proc SortBy {tree col direction} {
 	$tree move [lindex $info 1] {} [incr r]
     }
 
+    foreach c {country capital currency} {$tree heading $c -image noArrow}
+
     # Switch the heading so that it will sort in the opposite direction
-    $tree heading $col -command [list SortBy $tree $col [expr {!$direction}]]
+    $tree heading $col -command [list SortBy $tree $col [expr {!$direction}]] \
+	-image [expr {$direction?"upArrow":"downArrow"}]
 }
