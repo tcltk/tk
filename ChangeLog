@@ -1,3 +1,9 @@
+2009-03-31  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/demos/mclist.tcl: Added support for arrow indicators to show
+	which way a column is being sorted. Corrected determination of which
+	fonts to use for measurements.
+
 2009-03-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/wish.1            bring doc and demos in line with http://wiki.tcl.tk/812
