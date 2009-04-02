@@ -1,5 +1,7 @@
 2009-04-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* tests/textTag.test: Ensure the pointer begins outside the window
+	for all the tests checking Enter/Leave motion events.
 	* library/demos/pendulum.tcl: use unicode labels
 	* library/demos/knightstour.tcl: use polygon knight on x11.
 
