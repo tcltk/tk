@@ -3,7 +3,7 @@
 # This demonstration illustrates how Tcl/Tk can be used to construct
 # simulations of physical systems.
 #
-# RCS: @(#) $Id: pendulum.tcl,v 1.3 2006/10/17 05:52:40 das Exp $
+# RCS: @(#) $Id: pendulum.tcl,v 1.4 2009/04/02 08:27:51 patthoyts Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -51,9 +51,9 @@ for {set i 90} {$i>=0} {incr i -10} {
     # Coordinates of these items don't matter; they will be set properly below
     $w.k create line 0 0 1 1 -smooth true -tags graph$i -fill grey$i
 }
-# FIXME: UNICODE labels
-$w.k create text 0 0 -anchor ne -text "q" -font {Symbol 8} -tags label_theta
-$w.k create text 0 0 -anchor ne -text "dq" -font {Symbol 8} -tags label_dtheta
+
+$w.k create text 0 0 -anchor ne -text "\u03b8" -tags label_theta
+$w.k create text 0 0 -anchor ne -text "\u03b4\u03b8" -tags label_dtheta
 pack $w.k -in $w.p.l2 -fill both -expand true
 
 # Initialize some variables
