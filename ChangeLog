@@ -1,3 +1,8 @@
+2009-04-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/demos/pendulum.tcl: use unicode labels
+	* library/demos/knightstour.tcl: use polygon knight on x11.
+
 2009-03-31  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/demos/mclist.tcl: Added support for arrow indicators to show
