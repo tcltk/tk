@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.70 2009/01/28 20:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.71 2009/04/03 20:20:17 jenglish Exp $
  */
 
 #include "tkUnixInt.h"
@@ -823,9 +823,7 @@ TkWmDeadWindow(
 
 	for (prevPtr = (WmInfo *) winPtr->dispPtr->firstWmPtr; ;
 		prevPtr = prevPtr->nextPtr) {
-	    if (prevPtr == NULL) {
-		Tcl_Panic("couldn't unlink window in TkWmDeadWindow");
-	    }
+	    /* ASSERT: prevPtr != NULL [Bug 1789819] */
 	    if (prevPtr->nextPtr == wmPtr) {
 		prevPtr->nextPtr = wmPtr->nextPtr;
 		break;
@@ -916,9 +914,7 @@ TkWmDeadWindow(
 	    }
 	}
     }
-    if (wmPtr->numTransients != 0) {
-	Tcl_Panic("numTransients should be 0");
-    }
+    /* ASSERT: numTransients == 0 [Bug 1789819] */
 
     if (wmPtr->masterPtr != NULL) {
 	wmPtr2 = wmPtr->masterPtr->wmInfoPtr;
@@ -3184,9 +3180,8 @@ WmStackorderCmd(
 
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
-	if (windows == NULL) {
-	    Tcl_Panic("TkWmStackorderToplevel failed");
-	} else {
+	if (windows != NULL) {
+	    /* ASSERT: true [Bug 1789819]*/
 	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
 		Tcl_AppendElement(interp, (*window_ptr)->pathName);
 	    }
@@ -3240,13 +3235,7 @@ WmStackorderCmd(
 		    index2 = (window_ptr - windows);
 		}
 	    }
-	    if (index1 == -1) {
-		Tcl_Panic("winPtr window not found");
-	    }
-	    if (index2 == -1) {
-		Tcl_Panic("winPtr2 window not found");
-	    }
-
+	    /* ASSERT: index1 != -1 && index2 != -2 [Bug 1789819] */
 	    ckfree((char *) windows);
 	}
 
@@ -6225,9 +6214,9 @@ TkWmStackorderToplevel(
 		*window_ptr++ = childWinPtr;
 	    }
 	}
-	if ((window_ptr - windows) != table.numEntries) {
-	    Tcl_Panic("num matched toplevel windows does not equal num children");
-	}
+	/* ASSERT: window_ptr - windows == table.numEntries 
+	 * (#matched toplevel windows == #children) [Bug 1789819]
+	 */
 	*window_ptr = NULL;
 	if (numChildren) {
 	    XFree((char *) children);
