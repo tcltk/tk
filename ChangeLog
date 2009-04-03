@@ -1,9 +1,16 @@
+2009-04-03  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/TextLayout.3: [Bug 974421]: Clarified description of how result
+	of lookup of a point after end of layout relates to the underlying
+	string's length.
+
 2009-04-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/textTag.test: Ensure the pointer begins outside the window
-	for all the tests checking Enter/Leave motion events.
-	* library/demos/pendulum.tcl: use unicode labels
-	* library/demos/knightstour.tcl: use polygon knight on x11.
+	* tests/textTag.test: Ensure the pointer begins outside the window for
+	all the tests checking Enter/Leave motion events.
+
+	* library/demos/pendulum.tcl: Use unicode labels
+	* library/demos/knightstour.tcl: Use polygon knight on x11.
 
 2009-03-31  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -13,15 +20,15 @@
 
 2009-03-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* doc/wish.1            bring doc and demos in line with http://wiki.tcl.tk/812
-	* library/demos/hello
+	* doc/wish.1:		Bring doc and demos in line with
+	* library/demos/hello:	http://wiki.tcl.tk/812
 	* library/demos/rmt
 	* library/demos/square
 	* library/demos/tcolor
 	* library/demos/timer
 	* library/demos/widget
-	* win/tkWinMenu.c       Eliminate a few compiler warnings on mingw
-	* win/ttkWinXPTheme.c   spacing
+	* win/tkWinMenu.c:	Eliminate a few compiler warnings on mingw
+	* win/ttkWinXPTheme.c:	Spacing
 
 2009-03-25  Donal K. Fellows  <dkf@users.sf.net>
 
