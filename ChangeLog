@@ -1,3 +1,7 @@
+2009-04-03  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixWm.c: Don't Panic [Bug 1789819].
+
 2009-04-03  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/TextLayout.3: [Bug 974421]: Clarified description of how result
