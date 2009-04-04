@@ -1,3 +1,7 @@
+2009-04-03  Joe English  <jenglish@users.sourceforge.net>
+
+	* unix/tkUnixWm.c: Don't Panic [Bug 1789819].
+
 2009-03-25  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/ttk/ttkTheme.c (BuildOptionMap, NewElementImpl):
