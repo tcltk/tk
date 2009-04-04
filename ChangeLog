@@ -1,6 +1,12 @@
+2009-04-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/messageBox.n: [Bug 1881896]: Reworded to be clearer on what the
+	platform restrictions really are.
+
 2009-04-03  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tkUnixWm.c: Don't Panic [Bug 1789819].
+	* unix/tkUnixWm.c: [Bug 1789819]: Don't panic when the window manager
+	does something unexpected with the stacking order.
 
 2009-04-03  Donal K. Fellows  <dkf@users.sf.net>
 
