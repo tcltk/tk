@@ -1,3 +1,8 @@
+2009-04-09  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:	Restore _TCL guards around tcl.h inclusion to restore
+	compat with early 8.4.* releases.  Thanks Stuart Cassoff. [Bug 1723812]
+
 2009-02-28  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkWindow.c: [Bug 2645457] check for dead windows after

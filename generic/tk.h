@@ -12,15 +12,17 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.74.2.23 2008/08/06 16:54:48 jenglish Exp $
+ * RCS: @(#) $Id: tk.h,v 1.74.2.24 2009/04/09 15:57:52 dgp Exp $
  */
 
 #ifndef _TK
 #define _TK
 
+#ifndef _TCL
 #include <tcl.h>
 #if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION != 4)
 #	error Tk 8.4 must be compiled with tcl.h from Tcl 8.4
+#endif
 #endif
 
 /*
