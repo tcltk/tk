@@ -1,5 +1,8 @@
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* library/console.tcl (::tk::ConsoleInit): remove redundant TkAqua
+	Quit menu item.
+
 	* generic/tkPointer.c (Tk_UpdatePointer): use all 5 buttons.
 
 	* generic/tkMenu.c (PostProcessEntry): delay call to
