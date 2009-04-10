@@ -6,6 +6,11 @@
 
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* unix/configure.in (Darwin):	use Darwin SUSv3 extensions if
+					available.
+	* unix/configure:		autoconf-2.59
+	* unix/tkConfig.h.in:		autoheader-2.59
+
 	* library/demos/filebox.tcl: only show "Motif Style Dialog" checkbutton
 	on X11 windowingsystem.
 
