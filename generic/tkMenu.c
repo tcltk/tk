@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.50 2009/02/06 08:12:07 das Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.51 2009/04/10 16:16:02 das Exp $
  */
 
 /*
@@ -1784,10 +1784,6 @@ PostProcessEntry(
     	return TCL_ERROR;
     }
 
-    if (TkpConfigureMenuEntry(mePtr) != TCL_OK) {
-    	return TCL_ERROR;
-    }
-
     /*
      * Get the images for the entry, if there are any. Allocate the new images
      * before freeing the old ones, so that the reference counts don't go to
@@ -1882,6 +1878,10 @@ PostProcessEntry(
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MenuVarProc, mePtr);
 	}
+    }
+
+    if (TkpConfigureMenuEntry(mePtr) != TCL_OK) {
+	return TCL_ERROR;
     }
 
     return TCL_OK;
