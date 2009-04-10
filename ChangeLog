@@ -1,5 +1,9 @@
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* library/demos/widget: GOOBE: use ttk::cursor
+
+	* library/ttk/cursors.tcl: backport ttk::cursor from HEAD
+
 	* library/demos/knightstour.tcl: fix knightstour demo not running from
 	interactive wish.
 
