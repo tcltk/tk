@@ -1,5 +1,8 @@
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/tkMenu.c (PostProcessEntry): delay call to
+	TkpConfigureMenuEntry() until all menu entry attributes are setup.
+
 	* library/menu.tcl (::tk::MbPost): fix error thrown in y position
 	computation with indicatoron.
 
