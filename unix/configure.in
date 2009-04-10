@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.153.2.7 2008/12/21 21:02:58 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.153.2.8 2009/04/10 18:01:48 das Exp $
 
 AC_INIT([tk],[8.5])
 AC_PREREQ(2.59)
@@ -320,6 +320,45 @@ if test "`uname -s`" = "Darwin" ; then
 		tcl_cv_ld_weak_l=yes, tcl_cv_ld_weak_l=no)
 	    LDFLAGS=$hold_ldflags])
     fi
+    AC_CHECK_HEADERS(AvailabilityMacros.h)
+    if test "$ac_cv_header_AvailabilityMacros_h" = yes; then
+	AC_CACHE_CHECK([if weak import is available], tcl_cv_cc_weak_import, [
+	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
+	    AC_TRY_LINK([
+		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
+		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
+		    #endif
+		    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1020
+		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1020
+		    #endif
+		    int rand(void) __attribute__((weak_import));
+		], [rand();],
+		tcl_cv_cc_weak_import=yes, tcl_cv_cc_weak_import=no)
+	    CFLAGS=$hold_cflags])
+	if test $tcl_cv_cc_weak_import = yes; then
+	    AC_DEFINE(HAVE_WEAK_IMPORT, 1, [Is weak import available?])
+	fi
+	AC_CACHE_CHECK([if Darwin SUSv3 extensions are available],
+	    tcl_cv_cc_darwin_c_source, [
+	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
+	    AC_TRY_COMPILE([
+		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+		    #endif
+		    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+		    #endif
+		    #define _DARWIN_C_SOURCE 1
+		    #include <sys/cdefs.h>
+		],,tcl_cv_cc_darwin_c_source=yes, tcl_cv_cc_darwin_c_source=no)
+	    CFLAGS=$hold_cflags])
+	if test $tcl_cv_cc_darwin_c_source = yes; then
+	    AC_DEFINE(_DARWIN_C_SOURCE, 1,
+		    [Are Darwin SUSv3 extensions available?])
+	fi
+    fi
 else
     tk_aqua=no
 fi
@@ -577,7 +616,7 @@ if test "`uname -s`" = "Darwin" ; then
     echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
-    EXTRA_APP_CC_SWITCHES='-mdynamic-no-pic'
+    EXTRA_APP_CC_SWITCHES="${EXTRA_APP_CC_SWITCHES}"' -mdynamic-no-pic'
     AC_CONFIG_FILES([Tk-Info.plist:../macosx/Tk-Info.plist.in Wish-Info.plist:../macosx/Wish-Info.plist.in])
     for l in ${LOCALES}; do CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$l</string>"; done
     TK_YEAR="`date +%Y`"
@@ -629,7 +668,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     # needs to go into the Makefile even when using autoheader, so that we  
     # can pick up a potential make override of VERSION. Also, don't put this
     # into CFLAGS as it should not go into tkConfig.sh
-    EXTRA_CC_SWITCHES='-DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
+    EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
