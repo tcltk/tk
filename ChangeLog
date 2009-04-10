@@ -1,5 +1,8 @@
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* library/demos/knightstour.tcl: fix knightstour demo not running from
+	interactive wish.
+
 	* library/console.tcl (::tk::ConsoleInit): remove redundant TkAqua
 	Quit menu item.
 
