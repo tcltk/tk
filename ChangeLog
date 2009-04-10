@@ -1,3 +1,9 @@
+2008-04-10  Joe English  <jenglish@users.sourceforge.net
+
+	* library/palette.tcl(tk_setPalette): Don't set 
+	*selectColor: #b03060; this makes radio- and checkbuttons
+	look wrong post-TIP#109.
+
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* library/msgbox.tcl: don't set msgbox bitmap background on TkAqua.
