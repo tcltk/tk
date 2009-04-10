@@ -1,5 +1,10 @@
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* library/menu.tcl (::tk::MbPost): fix error thrown in y position
+	computation with indicatoron.
+
+	* generic/tkMenubutton.c: s/DEF_BUTTON_JUSTIFY/DEF_MENUBUTTON_JUSTIFY/
+
 	* generic/tkUtil.c (TkBackgroundEvalObjv): use Tcl_BackgroundException.
 
 	* generic/tkBind.c (HandleEventGenerate): ensure window exists before
