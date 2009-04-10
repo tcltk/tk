@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.10.4.1 2008/06/12 17:09:11 das Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.10.4.2 2009/04/10 16:20:11 das Exp $
  */
 
 #include "tkInt.h"
@@ -268,7 +268,7 @@ Tk_UpdatePointer(
      * between the current button state and the last known button state.
      */
 
-    for (b = Button1; b <= Button3; b++) {
+    for (b = Button1; b <= Button5; b++) {
 	mask = ButtonMask(b);
 	if (changes & mask) {
 	    if (state & mask) {

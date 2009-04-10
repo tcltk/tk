@@ -1,5 +1,7 @@
 2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/tkPointer.c (Tk_UpdatePointer): use all 5 buttons.
+
 	* generic/tkMenu.c (PostProcessEntry): delay call to
 	TkpConfigureMenuEntry() until all menu entry attributes are setup.
 
