@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.28 2009/02/06 08:12:07 das Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.29 2009/04/10 16:00:12 das Exp $
  */
 
 #include "tkInt.h"
@@ -1035,7 +1035,7 @@ TkBackgroundEvalObjv(
     }
     if (r == TCL_ERROR) {
         Tcl_AddErrorInfo(interp, "\n    (background event handler)");
-        Tcl_BackgroundError(interp);
+        Tcl_BackgroundException(interp, r);
     }
 
     Tcl_Release(interp);
