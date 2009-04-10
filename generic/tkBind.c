@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkBind.c,v 1.45 2007/12/13 15:24:13 dgp Exp $
+ *  RCS: @(#) $Id: tkBind.c,v 1.45.2.1 2009/04/10 15:54:44 das Exp $
  */
 
 #include "tkInt.h"
@@ -3359,6 +3359,7 @@ HandleEventGenerate(
     event.xany.serial = NextRequest(Tk_Display(tkwin));
     event.xany.send_event = False;
     if (windowName[0]) {
+	Tk_MakeWindowExist(tkwin);
 	event.xany.window = Tk_WindowId(tkwin);
     } else {
 	event.xany.window =
