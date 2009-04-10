@@ -1,6 +1,11 @@
+2009-04-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/tk.tcl: [Bug 2116837]: Add event definitions to handle the
+	standard virtual events when Caps Lock is on.
+
 2009-04-03  Joe English  <jenglish@users.sourceforge.net>
 
-	* unix/tkUnixWm.c: Don't Panic [Bug 1789819].
+	* unix/tkUnixWm.c: [Bug 1789819]: Don't Panic.
 
 2009-03-25  Donal K. Fellows  <dkf@users.sf.net>
 
