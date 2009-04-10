@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.27 2007/12/13 15:24:17 dgp Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.27.2.1 2009/04/10 15:53:28 das Exp $
  */
 
 #include "tkInt.h"
@@ -1517,7 +1517,8 @@ TkBTreeDeleteIndexRange(
 	if (treePtr->startEnd != NULL) {
 	    int checkCount = 0;
 
-	    while (treePtr->startEnd[checkCount] != NULL) {
+	    while (checkCount < treePtr->startEndCount &&
+		    treePtr->startEnd[checkCount] != NULL) {
 		if (treePtr->startEnd[checkCount] == index2Ptr->linePtr) {
 		    TkText *peer = treePtr->startEndRef[checkCount];
 
