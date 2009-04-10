@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.19.2.3 2008/12/22 12:30:51 dgp Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.19.2.4 2009/04/10 11:07:32 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -83,7 +83,7 @@ typedef struct TkPostscriptInfo {
 				 * pre-pass that collects font information, so
 				 * the Postscript generated isn't relevant. */
     int prolog;			/* Non-zero means output should contain the
-				 * file prolog.ps in the header. */
+				 * prolog definitions in the header. */
 } TkPostscriptInfo;
 
 /*

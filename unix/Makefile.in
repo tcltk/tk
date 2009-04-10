@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.143.2.2 2009/01/20 03:54:53 kennykb Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.143.2.3 2009/04/10 11:07:32 dkf Exp $
 
 # Current Tk version;  used in various names.
 
@@ -759,7 +759,7 @@ install-libraries: libraries
 	    $(INSTALL_DATA) $$i "$(INCLUDE_INSTALL_DIR)"/X11; \
 	    done;
 	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)";
-	@for i in $(TOP_DIR)/library/*.tcl $(GENERIC_DIR)/prolog.ps \
+	@for i in $(TOP_DIR)/library/*.tcl \
 	        $(TOP_DIR)/library/tclIndex $(UNIX_DIR)/tkAppInit.c; \
 	    do \
 	    $(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"; \
@@ -1528,7 +1528,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure
 	    fi; \
 	done;)
 	mkdir $(DISTDIR)/generic
-	cp -p $(GENERIC_DIR)/*.[ch] $(GENERIC_DIR)/prolog.ps $(DISTDIR)/generic
+	cp -p $(GENERIC_DIR)/*.[ch] $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/README $(DISTDIR)/generic
 	cp -p $(TOP_DIR)/changes $(TOP_DIR)/ChangeLog \

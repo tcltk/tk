@@ -1,5 +1,11 @@
 2009-04-10  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/tkCanvPs.c (TkPostscriptInfo): [Bug 1466509]: Eliminate old
+	and misleading comments mentioning prolog.ps.
+	* generic/prolog.ps, library/prolog.ps: Remove unused files.
+	* unix/Makefile.in, win/Makefile.in: Stop building distributions that
+	include the removed files or trying to install them.
+
 	* library/tk.tcl: [Bug 2116837]: Add event definitions to handle the
 	standard virtual events when Caps Lock is on.
 
