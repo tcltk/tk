@@ -1,4 +1,6 @@
-2008-12-21  Don Porter  <dgp@users.sourceforge.net>
+2009-04-10  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updated for 8.5.7 release.
 
 	* generic/tk.h:		Bump to 8.5.7 for release.
 	* library/tk.tcl:
@@ -10,13 +12,13 @@
 	* unix/configure:	autoconf-2.59
 	* win/configure:
 
-2008-04-10  Joe English  <jenglish@users.sourceforge.net
+2009-04-10  Joe English  <jenglish@users.sourceforge.net
 
 	* library/palette.tcl(tk_setPalette): Don't set 
 	*selectColor: #b03060; this makes radio- and checkbuttons
 	look wrong post-TIP#109.
 
-2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
+2009-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure.in (Darwin):	use Darwin SUSv3 extensions if
 					available.
