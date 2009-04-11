@@ -34,9 +34,6 @@
 
 	* generic/tkUtil.c (TkBackgroundEvalObjv): use Tcl_BackgroundException.
 
-	* generic/tkBind.c (HandleEventGenerate): ensure window exists before
-	generating an event for it (fixes testsuite crash).
-
 	* generic/tkTextBTree.c (TkBTreeDeleteIndexRange): add bounds check
 	to startEnd array access (fixes testsuite crash).
 
