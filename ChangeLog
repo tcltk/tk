@@ -52,9 +52,6 @@
 
 	* generic/tkMenubutton.c: s/DEF_BUTTON_JUSTIFY/DEF_MENUBUTTON_JUSTIFY/
 
-	* generic/tkBind.c (HandleEventGenerate): ensure window exists before
-	generating an event for it (fixes testsuite crash).
-
 	* generic/tkTextBTree.c (TkBTreeDeleteIndexRange): add bounds check
 	to startEnd array access (fixes testsuite crash).
 
