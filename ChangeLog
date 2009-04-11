@@ -4,7 +4,7 @@
 	*selectColor: #b03060; this makes radio- and checkbuttons
 	look wrong post-TIP#109.
 
-2008-04-10  Daniel Steffen  <das@users.sourceforge.net>
+2009-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/configure.in (Darwin):	use Darwin SUSv3 extensions if
 					available.
