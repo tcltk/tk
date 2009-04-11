@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.84 2009/04/10 10:16:24 dkf Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.85 2009/04/11 12:49:49 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -369,7 +369,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Undo>> <Control-Key-z> <Control-Lock-Key-Z>
 	event add <<Redo>> <Control-Key-Z> <Control-Lock-Key-z>
 	event add <<ContextMenu>> <Button-3>
-	if {$tk_platform(os) eq "Darwin"} {
+	if {$tcl_platform(os) eq "Darwin"} {
 	    event add <<ContextMenu>> <Button-2>
 	}
 
