@@ -1,8 +1,14 @@
+2009-04-13  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/tkfbox.tcl: [Bug 2759119]: Corrected level handling for the
+	* library/xmfbox.tcl: -typevariable option following updates to tk.tcl
+	[Patch 2739360]: Use more modern images from Tango set for the non-
+	Motif file dialog. Thanks to Emiliano for bring this to my attention.
+
 2008-04-10  Joe English  <jenglish@users.sourceforge.net
 
-	* library/palette.tcl(tk_setPalette): Don't set 
-	*selectColor: #b03060; this makes radio- and checkbuttons
-	look wrong post-TIP#109.
+	* library/palette.tcl (tk_setPalette): Don't set *selectColor:
+	#b03060; this makes radio- and checkbuttons look wrong post-TIP#109.
 
 2009-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -11,8 +17,8 @@
 	* unix/configure:		autoconf-2.59
 	* unix/tkConfig.h.in:		autoheader-2.59
 
-	* library/demos/filebox.tcl: only show "Motif Style Dialog" checkbutton
-	on X11 windowingsystem.
+	* library/demos/filebox.tcl: only show "Motif Style Dialog"
+	checkbutton on X11 windowingsystem.
 
 	* library/demos/widget: GOOBE: use ttk::cursor
 
@@ -32,7 +38,7 @@
 
 	* generic/tkMenubutton.c: s/DEF_BUTTON_JUSTIFY/DEF_MENUBUTTON_JUSTIFY/
 
-	* generic/tkUtil.c (TkBackgroundEvalObjv): use Tcl_BackgroundException.
+	* generic/tkUtil.c (TkBackgroundEvalObjv): use Tcl_BackgroundException
 
 	* generic/tkTextBTree.c (TkBTreeDeleteIndexRange): add bounds check
 	to startEnd array access (fixes testsuite crash).
