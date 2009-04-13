@@ -1,5 +1,9 @@
 2009-04-13  Donal K. Fellows  <dkf@users.sf.net>
 
+	* library/tk.tcl: Corrected another problem; can't determine the exact
+	type of OS - needed for figuring out how to guess the correct binding
+	in some circumstances - in a safe interpreter.
+
 	* library/tkfbox.tcl: [Bug 2759119]: Corrected level handling for the
 	* library/xmfbox.tcl: -typevariable option following updates to tk.tcl
 	[Patch 2739360]: Use more modern images from Tango set for the non-
