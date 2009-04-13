@@ -1,17 +1,16 @@
 # tkfbox.tcl --
 #
-#	Implements the "TK" standard file selection dialog box. This
-#	dialog box is used on the Unix platforms whenever the tk_strictMotif
-#	flag is not set.
+#	Implements the "TK" standard file selection dialog box.  This dialog
+#	box is used on the Unix platforms whenever the tk_strictMotif flag is
+#	not set.
 #
-#	The "TK" standard file selection dialog box is similar to the
-#	file selection dialog box on Win95(TM). The user can navigate
-#	the directories by clicking on the folder icons or by
-#	selecting the "Directory" option menu. The user can select
-#	files by clicking on the file icons or by entering a filename
-#	in the "Filename:" entry.
+#	The "TK" standard file selection dialog box is similar to the file
+#	selection dialog box on Win95(TM).  The user can navigate the
+#	directories by clicking on the folder icons or by selecting the
+#	"Directory" option menu.  The user can select files by clicking on the
+#	file icons or by entering a filename in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.72 2009/02/12 21:32:49 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.73 2009/04/13 21:12:52 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -22,15 +21,75 @@
 namespace eval ::tk::dialog {}
 namespace eval ::tk::dialog::file {
     namespace import -force ::tk::msgcat::*
-    set ::tk::dialog::file::showHiddenBtn 0
-    set ::tk::dialog::file::showHiddenVar 1
+    variable showHiddenBtn 0
+    variable showHiddenVar 1
+
+    # Create the images if they did not already exist.
+    if {![info exists ::tk::Priv(updirImage)]} {
+	set ::tk::Priv(updirImage) [image create photo -data {
+	    iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAABmJLR0QA/gD+AP7rGN
+	    SCAAAACXBIWXMAAA3WAAAN1gGQb3mcAAAACXZwQWcAAAAWAAAAFgDcxelYAAAENUlE
+	    QVQ4y7WUbWiVZRjHf/f9POcc9+Kc5bC2aIq5sGG0XnTzNU13zAIlFMNc9CEhTCKwCC
+	    JIgt7AglaR0RcrolAKg14+GBbiGL6xZiYyy63cmzvu7MVznnOe537rw7bDyvlBoT/c
+	    n+6L3/3nf13XLZLJJP+HfICysjKvqqpq+rWKysvLR1tbW+11g+fPn/+bEGIe4KYqCs
+	    Owu66u7oG2trah6wJrrRc0NTVhjME5h7Vj5pxzCCE4duxYZUdHx/aGhoZmgJ+yb+wF
+	    uCO19RmAffv25f8LFslkktraWtvU1CS6u7vRWmOtxVpbAPu+T0tLS04pFU/J34Wd3S
+	    cdFtlfZWeZBU4IcaS5uXn1ZLAEMMY4ay1aa4wx/zpKKYIgoL6+vmjxqoXe5ZLTcsPq
+	    bTyycjODpe1y3WMrvDAMV14jCuW0VhhjiJQpOJ5w7Zwjk8/y9R+vsHHNNq6oFMrkeX
+	    BxI+8d2sktap3YvOPD0lRQrH+Z81fE7t3WB4gihVKazsuaA20aKSUgAG/seQdy2l6W
+	    37+EyopqTv39I6HJUT2zlnlza2jLdgiTaxwmDov6alLHcZUTzXPGGAauWJbfO4dHl9
+	    bgJs3HyfNf0N4ZsOa+jbT3/ownY/hO09p1kBULtjBw+Tvq7xzwauds4dWPDleAcP5E
+	    xlprgtBRUZRgYCRPTzoHwEi2g6OnX+eFrW/RM9qBE4p43CeTz5ATaU6nDrFm2cPs/+
+	    E1SopqkZ7MFJqntXZaa7IKppckwIEvJbg8LWd28OT6nVihCPQQ8UScWCLGqO4hXuQx
+	    qDtJ204eWrqWb1ufRspwtABWaqx5gRKUFSdwDnxPcuLcyyxbuIyaqntIBV34MY9YzC
+	    Owg+S9YeJFkniRpGPkCLMrZzG3+jbktA/KClMxFoUhiKC0OAbAhd79CO8i6xe/STyW
+	    4O7KVRgUJ/sP0heeJV4kEVKw/vZd40sFKxat4mLvp6VLdvnb/XHHGGPIKwBBpC1/9n
+	    3DpfRZnn9/AwCxRII9O79kVPdjvByxuET6Ai8mePeTt4lyheXzhOSpCcdWa00uckTG
+	    kckbGu76nEhbIm2xznH4VB3OWYaiXqQn8GKSWGIMHuXyPL76LBcupmhp69pz4uMnXi
+	    w4VloTGcdQRtGdzmHs1f+RdYZslMZJhzUOHVnceN1ooEiP5JUzdqCQMWCD0JCIeQzn
+	    NNpO+clhrCYf5rC+A2cxWmDUWG2oHEOZMEKIwclgMnnLrTeXUV7sUzpNXgU9DmijWV
+	    v9LEKCkAIhKIBnlvpks6F21qUZ31u/sbExPa9h0/RzwzMov2nGlG5TmW1YOzzlnSfL
+	    mVnyGf19Q7lwZHBp+1fPtflAIgiC7389n9qkihP+lWyeqfUO15ZwQTqlw9H+o2cOvN
+	    QJCAHEgEqgYnI0NyALjAJdyWQy7wMa6AEujUdzo3LjcAXwD/XCTKIRjWytAAAAJXRF
+	    WHRjcmVhdGUtZGF0ZQAyMDA5LTA0LTA2VDIxOjI1OjQxLTAzOjAw8s+uCAAAACV0RV
+	    h0bW9kaWZ5LWRhdGUAMjAwOC0wMS0wM1QxNTowODoyMS0wMjowMJEc/44AAAAZdEVY
+	    dFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC
+	}]
+    }
+    if {![info exists ::tk::Priv(folderImage)]} {
+	set ::tk::Priv(folderImage) [image create photo -data {
+	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiA
+	    AAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBl
+	    Lm9yZ5vuPBoAAAHCSURBVDiNpZAxa5NRFIafc+9XLCni4BC6FBycMnbrLpkcgtDVX6
+	    C70D/g4lZX/4coxLlgxFkpiiSSUGm/JiXfveee45AmNlhawXc53HvPee55X+l2u/yP
+	    qt3d3Tfu/viatwt3fzIYDI5uBJhZr9fr3TMzzAx3B+D09PR+v98/7HQ6z5fNOWdCCG
+	    U4HH6s67oAVDlnV1UmkwmllBUkhMD29nYHeLuEAkyn06qU8qqu64MrgIyqYmZrkHa7
+	    3drc3KTVahFjJITAaDRiPB4/XFlQVVMtHH5IzJo/P4EA4MyB+erWPQB7++zs7ccYvl
+	    U5Z08pMW2cl88eIXLZeDUpXzsBkNQ5eP1+p0opmaoCTgzw6fjs6gLLsp58FB60t0Dc
+	    K1Ul54yIEIMQ43Uj68pquDmCeJVztpwzuBNE2LgBoMVpslHMCUEAFgDVxQbzVAiA+a
+	    K5uGPmmDtZF3VpoUm2ArhqQaRiUjcMf81p1G60UEVhcjZfAFTVUkrgkS+jc06mDX9n
+	    vq4YhJ9nlxZExMwMEaHJRutOdWuIIsJFUoBSuTvHJ4YIfP46unV4qdlsjsBRZRtb/X
+	    fHd5+C8+P7+J8BIoxFwovfRxYhnhxjpzEAAAAASUVORK5CYII=
+	}]
+    }
+    if {![info exists ::tk::Priv(fileImage)]} {
+	set ::tk::Priv(fileImage)   [image create photo -data {
+	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gva
+	    eTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQWFA84umAmQgAAANpJREFU
+	    OMutkj1uhDAQhb8HSLtbISGfgZ+zbJkix0HmFhwhUdocBnMBGvqtTIqIFSReWKK8ai
+	    x73nwzHrVt+zEMwwvH9FrX9TsA1trpqKy10+yUzME4jnjvAZB0LzXHkojjmDRNVyh3
+	    A+89zrlVwlKSqKrqVy/J8lAUxSZBSMny4ZLgp54iyPM8UPHGNJ2IomibAKDv+9VlWZ
+	    bABbgB5/0WQgSSkC4PF2JF4JzbHN430c4vhAm0TyCJruuClefph4yCBCGT3T3Isoy/
+	    KDHGfDZNcz2SZIx547/0BVRRX7n8uT/sAAAAAElFTkSuQmCC
+	}]
+    }
 }
 
 # ::tk::dialog::file:: --
 #
-#	Implements the TK file selection dialog. This dialog is used when
-#	the tk_strictMotif flag is set to false. This procedure shouldn't
-#	be called directly. Call tk_getOpenFile or tk_getSaveFile instead.
+#	Implements the TK file selection dialog.  This dialog is used when the
+#	tk_strictMotif flag is set to false.  This procedure shouldn't be
+#	called directly.  Call tk_getOpenFile or tk_getSaveFile instead.
 #
 # Arguments:
 #	type		"open" or "save"
@@ -39,6 +98,7 @@ namespace eval ::tk::dialog::file {
 
 proc ::tk::dialog::file:: {type args} {
     variable ::tk::Priv
+    variable showHiddenBtn
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
 
@@ -71,7 +131,7 @@ proc ::tk::dialog::file:: {type args} {
 	set data(hiddenBtn) $w.contents.f2.hidden
 	SetSelectMode $w $data(-multiple)
     }
-    if {$::tk::dialog::file::showHiddenBtn} {
+    if {$showHiddenBtn} {
 	$data(hiddenBtn) configure -state normal
 	grid $data(hiddenBtn)
     } else {
@@ -82,12 +142,12 @@ proc ::tk::dialog::file:: {type args} {
     # Make sure subseqent uses of this dialog are independent [Bug 845189]
     unset -nocomplain data(extUsed)
 
-    # Dialog boxes should be transient with respect to their parent,
-    # so that they will always stay on top of their parent window.  However,
-    # some window managers will create the window as withdrawn if the parent
-    # window is withdrawn or iconified.  Combined with the grab we put on the
-    # window, this can hang the entire application.  Therefore we only make
-    # the dialog transient if the parent is viewable.
+    # Dialog boxes should be transient with respect to their parent, so that
+    # they will always stay on top of their parent window.  However, some
+    # window managers will create the window as withdrawn if the parent window
+    # is withdrawn or iconified.  Combined with the grab we put on the window,
+    # this can hang the entire application.  Therefore we only make the dialog
+    # transient if the parent is viewable.
 
     if {[winfo viewable [winfo toplevel $data(-parent)]]} {
 	wm transient $w $data(-parent)
@@ -113,15 +173,15 @@ proc ::tk::dialog::file:: {type args} {
 	set initialtype     [lindex $data(-filetypes) 0]
 	set initialTypeName [lindex $initialtype 0]
 	if {($data(-typevariable) ne "")
-	    && [uplevel 2 [list info exists $data(-typevariable)]]} {
-	    set initialTypeName [uplevel 2 [list set $data(-typevariable)]]
+		&& [uplevel 1 [list info exists $data(-typevariable)]]} {
+	    set initialTypeName [uplevel 1 [list set $data(-typevariable)]]
 	}
 	foreach type $data(-filetypes) {
 	    set title  [lindex $type 0]
 	    set filter [lindex $type 1]
 	    $data(typeMenu) add command -label $title \
 		-command [list ::tk::dialog::file::SetFilter $w $type]
-	    # string first avoids glob-pattern char issues
+	    # [string first] avoids glob-pattern char issues
 	    if {[string first ${initialTypeName} $title] == 0} {
 		set initialtype $type
 	    }
@@ -136,9 +196,9 @@ proc ::tk::dialog::file:: {type args} {
     }
     UpdateWhenIdle $w
 
-    # Withdraw the window, then update all the geometry information
-    # so we know how big it wants to be, then center the window in the
-    # display and de-iconify it.
+    # Withdraw the window, then update all the geometry information so we know
+    # how big it wants to be, then center the window in the display and
+    # de-iconify it.
 
     ::tk::PlaceWindow $w widget $data(-parent)
     wm title $w $data(-title)
@@ -151,11 +211,10 @@ proc ::tk::dialog::file:: {type args} {
     $data(ent) selection range 0 end
     $data(ent) icursor end
 
-    # Wait for the user to respond, then restore the focus and
-    # return the index of the selected button.  Restore the focus
-    # before deleting the window, since otherwise the window manager
-    # may take the focus away so we can't redirect it.  Finally,
-    # restore any grab that was in effect.
+    # Wait for the user to respond, then restore the focus and return the
+    # index of the selected button.  Restore the focus before deleting the
+    # window, since otherwise the window manager may take the focus away so we
+    # can't redirect it.  Finally, restore any grab that was in effect.
 
     vwait ::tk::Priv(selectFilePath)
 
@@ -165,7 +224,7 @@ proc ::tk::dialog::file:: {type args} {
     #
 
     foreach trace [trace info variable data(selectPath)] {
-	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
+	trace remove variable data(selectPath) {*}$trace
     }
     $data(dirMenuBtn) configure -textvariable {}
 
@@ -186,7 +245,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     # if the dialog is now used with a different -parent option.
 
     foreach trace [trace info variable data(selectPath)] {
-	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
+	trace remove variable data(selectPath) {*}$trace
     }
 
     # 1: the configuration specs
@@ -251,8 +310,8 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 	error "bad window path name \"$data(-parent)\""
     }
 
-    # Set -multiple to a one or zero value (not other boolean types
-    # like "yes") so we can use it in tests more easily.
+    # Set -multiple to a one or zero value (not other boolean types like
+    # "yes") so we can use it in tests more easily.
     if {$type eq "save"} {
 	set data(-multiple) 0
     } elseif {$data(-multiple)} {
@@ -285,21 +344,10 @@ proc ::tk::dialog::file::Create {w class} {
     set data(dirMenu) $f1.menu.menu
     ttk::menubutton $f1.menu -menu $data(dirMenu) -direction flush \
 	    -textvariable [format %s(selectPath) ::tk::dialog::file::$dataName]
-    [menu $data(dirMenu) -tearoff 0] add radiobutton -label "" -variable \
+    menu $data(dirMenu) -tearoff 0
+    $data(dirMenu) add radiobutton -label "" -variable \
 	    [format %s(selectPath) ::tk::dialog::file::$dataName]
     set data(upBtn) [ttk::button $f1.up]
-    if {![info exists Priv(updirImage)]} {
-	set Priv(updirImage) [image create bitmap -data {
-#define updir_width 28
-#define updir_height 16
-static char updir_bits[] = {
-   0x00, 0x00, 0x00, 0x00, 0x80, 0x1f, 0x00, 0x00, 0x40, 0x20, 0x00, 0x00,
-   0x20, 0x40, 0x00, 0x00, 0xf0, 0xff, 0xff, 0x01, 0x10, 0x00, 0x00, 0x01,
-   0x10, 0x02, 0x00, 0x01, 0x10, 0x07, 0x00, 0x01, 0x90, 0x0f, 0x00, 0x01,
-   0x10, 0x02, 0x00, 0x01, 0x10, 0x02, 0x00, 0x01, 0x10, 0x02, 0x00, 0x01,
-   0x10, 0xfe, 0x07, 0x01, 0x10, 0x00, 0x00, 0x01, 0x10, 0x00, 0x00, 0x01,
-   0xf0, 0xff, 0xff, 0x01};}]
-    }
     $data(upBtn) configure -image $Priv(updirImage)
 
     $f1.menu configure -takefocus 1;# -highlightthickness 2
@@ -336,8 +384,8 @@ static char updir_bits[] = {
     # -pady 0
     set data(ent) [ttk::entry $f2.ent]
 
-    # The font to use for the icons. The default Canvas font on Unix
-    # is just deviant.
+    # The font to use for the icons. The default Canvas font on Unix is just
+    # deviant.
     set ::tk::$w.contents.icons(font) [$data(ent) cget -font]
 
     # Make the file types bits only if this is a File Dialog
@@ -354,9 +402,9 @@ static char updir_bits[] = {
 		focus $data(typeMenuBtn)]
     }
 
-    # The hidden button is displayed when ::tk::dialog::file::showHiddenBtn
-    # is true.  Create it disabled so the binding doesn't trigger if it
-    # isn't shown.
+    # The hidden button is displayed when ::tk::dialog::file::showHiddenBtn is
+    # true.  Create it disabled so the binding doesn't trigger if it isn't
+    # shown.
     if {$class eq "TkFDialog"} {
 	set text [mc "Show &Hidden Files and Directories"]
     } else {
@@ -465,29 +513,26 @@ proc ::tk::dialog::file::SetSelectMode {w multi} {
 
 # ::tk::dialog::file::UpdateWhenIdle --
 #
-#	Creates an idle event handler which updates the dialog in idle
-#	time. This is important because loading the directory may take a long
-#	time and we don't want to load the same directory for multiple times
-#	due to multiple concurrent events.
+#	Creates an idle event handler which updates the dialog in idle time.
+#	This is important because loading the directory may take a long time
+#	and we don't want to load the same directory for multiple times due to
+#	multiple concurrent events.
 #
 proc ::tk::dialog::file::UpdateWhenIdle {w} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
     if {[info exists data(updateId)]} {
 	return
-    } else {
-	set data(updateId) [after idle [list ::tk::dialog::file::Update $w]]
     }
+    set data(updateId) [after idle [list ::tk::dialog::file::Update $w]]
 }
 
 # ::tk::dialog::file::Update --
 #
-#	Loads the files and directories into the IconList widget. Also
-#	sets up the directory option menu for quick access to parent
-#	directories.
+#	Loads the files and directories into the IconList widget. Also sets up
+#	the directory option menu for quick access to parent directories.
 #
 proc ::tk::dialog::file::Update {w} {
-
     # This proc may be called within an idle handler. Make sure that the
     # window has not been destroyed before this proc is called
     if {![winfo exists $w]} {
@@ -501,30 +546,24 @@ proc ::tk::dialog::file::Update {w} {
     set dataName [winfo name $w]
     upvar ::tk::dialog::file::$dataName data
     variable ::tk::Priv
+    variable showHiddenVar
     global tk_library
     unset -nocomplain data(updateId)
 
-    if {![info exists Priv(folderImage)]} {
-	set Priv(folderImage) [image create photo -data {
-R0lGODlhEAAMAKEAAAD//wAAAPD/gAAAACH5BAEAAAAALAAAAAAQAAwAAAIghINhyycvVFsB
-QtmS3rjaH1Hg141WaT5ouprt2HHcUgAAOw==}]
-	set Priv(fileImage)   [image create photo -data {
-R0lGODlhDAAMAKEAALLA3AAAAP//8wAAACH5BAEAAAAALAAAAAAMAAwAAAIgRI4Ha+IfWHsO
-rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
-    }
     set folder $Priv(folderImage)
     set file   $Priv(fileImage)
 
     set appPWD [pwd]
     if {[catch {
 	cd $data(selectPath)
-    }]} {
+    }]} then {
 	# We cannot change directory to $data(selectPath). $data(selectPath)
-	# should have been checked before ::tk::dialog::file::Update is called, so
-	# we normally won't come to here. Anyways, give an error and abort
-	# action.
-	tk_messageBox -type ok -parent $w -icon warning -message \
-		[mc "Cannot change to the directory \"%1\$s\".\nPermission denied." $data(selectPath)]
+	# should have been checked before ::tk::dialog::file::Update is
+	# called, so we normally won't come to here. Anyways, give an error
+	# and abort action.
+	tk_messageBox -type ok -parent $w -icon warning -message [mc \
+	       "Cannot change to the directory \"%1\$s\".\nPermission denied."\
+		$data(selectPath)]
 	cd $appPWD
 	return
     }
@@ -540,13 +579,15 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     $data(icons) deleteall
 
-    set showHidden $::tk::dialog::file::showHiddenVar
+    set showHidden $showHiddenVar
 
     # Make the dir list
     # Using -directory [pwd] is better in some VFS cases.
     set cmd [list glob -tails -directory [pwd] -type d -nocomplain *]
-    if {$showHidden} { lappend cmd .* }
-    set dirs [lsort -dictionary -unique [eval $cmd]]
+    if {$showHidden} {
+	lappend cmd .*
+    }
+    set dirs [lsort -dictionary -unique [{*}$cmd]]
     set dirList {}
     foreach d $dirs {
 	if {$d eq "." || $d eq ".."} {
@@ -557,8 +598,8 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
     $data(icons) add $folder $dirList
 
     if {$class eq "TkFDialog"} {
-	# Make the file list if this is a File Dialog, selecting all
-	# but 'd'irectory type files.
+	# Make the file list if this is a File Dialog, selecting all but
+	# 'd'irectory type files.
 	#
 	set cmd [list glob -tails -directory [pwd] \
 		-type {f b c l p s} -nocomplain]
@@ -568,9 +609,9 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 		lappend cmd .*
 	    }
 	} else {
-	    eval [list lappend cmd] $data(filter)
+	    lappend cmd {*}$data(filter)
 	}
-	set fileList [lsort -dictionary -unique [eval $cmd]]
+	set fileList [lsort -dictionary -unique [{*}$cmd]]
 	$data(icons) add $file $fileList
     }
 
@@ -616,9 +657,10 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 proc ::tk::dialog::file::SetPathSilently {w path} {
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    trace remove variable data(selectPath) write [list ::tk::dialog::file::SetPath $w]
+    set cb [list ::tk::dialog::file::SetPath $w]
+    trace remove variable data(selectPath) write $cb
     set data(selectPath) $path
-    trace add variable data(selectPath) write [list ::tk::dialog::file::SetPath $w]
+    trace add variable data(selectPath) write $cb
 }
 
 
@@ -645,8 +687,8 @@ proc ::tk::dialog::file::SetFilter {w type} {
     set data(filter) [lindex $type 1]
     $data(typeMenuBtn) configure -text [lindex $type 0] ;#-indicatoron 1
 
-    # If we aren't using a default extension, use the one suppled
-    # by the filter.
+    # If we aren't using a default extension, use the one suppled by the
+    # filter.
     if {![info exists data(extUsed)]} {
 	if {[string length $data(-defaultextension)]} {
 	    set data(extUsed) 1
@@ -656,8 +698,8 @@ proc ::tk::dialog::file::SetFilter {w type} {
     }
 
     if {!$data(extUsed)} {
-	# Get the first extension in the list that matches {^\*\.\w+$}
-	# and remove all * from the filter.
+	# Get the first extension in the list that matches {^\*\.\w+$} and
+	# remove all * from the filter.
 	set index [lsearch -regexp $data(filter) {^\*\.\w+$}]
 	if {$index >= 0} {
 	    set data(-defaultextension) \
@@ -675,8 +717,7 @@ proc ::tk::dialog::file::SetFilter {w type} {
 
 # tk::dialog::file::ResolveFile --
 #
-#	Interpret the user's text input in a file selection dialog.
-#	Performs:
+#	Interpret the user's text input in a file selection dialog.  Performs:
 #
 #	(1) ~ substitution
 #	(2) resolve all instances of . and ..
@@ -697,25 +738,24 @@ proc ::tk::dialog::file::SetFilter {w type} {
 #	 flag = OK	: valid input
 #	      = PATTERN	: valid directory/pattern
 #	      = PATH	: the directory does not exist
-#	      = FILE	: the directory exists by the file doesn't
-#			  exist
+#	      = FILE	: the directory exists by the file doesn't exist
 #	      = CHDIR	: Cannot change to the directory
 #	      = ERROR	: Invalid entry
 #
 #	 directory      : valid only if flag = OK or PATTERN or FILE
 #	 file           : valid only if flag = OK or PATTERN
 #
-#	directory may not be the same as context, because text may contain
-#	a subdirectory name
+#	directory may not be the same as context, because text may contain a
+#	subdirectory name
 #
 proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
     set appPWD [pwd]
 
     set path [JoinFile $context $text]
 
-    # If the file has no extension, append the default.  Be careful not
-    # to do this for directories, otherwise typing a dirname in the box
-    # will give back "dirname.extension" instead of trying to change dir.
+    # If the file has no extension, append the default.  Be careful not to do
+    # this for directories, otherwise typing a dirname in the box will give
+    # back "dirname.extension" instead of trying to change dir.
     if {
 	![file isdirectory $path] && ([file ext $path] eq "") &&
 	![string match {$*} [file tail $path]]
@@ -724,8 +764,8 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
     }
 
     if {[catch {file exists $path}]} {
-	# This "if" block can be safely removed if the following code
-	# stop generating errors.
+	# This "if" block can be safely removed if the following code stop
+	# generating errors.
 	#
 	#	file exists ~nonsuchuser
 	#
@@ -924,8 +964,8 @@ proc ::tk::dialog::file::UpDirCmd {w} {
     }
 }
 
-# Join a file name to a path name. The "file join" command will break
-# if the filename begins with ~
+# Join a file name to a path name. The "file join" command will break if the
+# filename begins with ~
 #
 proc ::tk::dialog::file::JoinFile {path file} {
     if {[string match {~*} $file] && [file exists $path/$file]} {
@@ -945,8 +985,10 @@ proc ::tk::dialog::file::OkCmd {w} {
 	lappend filenames [$data(icons) get $item]
     }
 
-    if {([llength $filenames] && !$data(-multiple)) || \
-	    ($data(-multiple) && ([llength $filenames] == 1))} {
+    if {
+	([llength $filenames] && !$data(-multiple)) ||
+	($data(-multiple) && ([llength $filenames] == 1))
+    } then {
 	set filename [lindex $filenames 0]
 	set file [JoinFile $data(selectPath) $filename]
 	if {[file isdirectory $file]} {
@@ -1021,8 +1063,8 @@ proc ::tk::dialog::file::ListBrowse {w} {
     }
 }
 
-# Gets called when user invokes the IconList widget (double-click,
-# Return key, etc)
+# Gets called when user invokes the IconList widget (double-click, Return key,
+# etc)
 #
 proc ::tk::dialog::file::ListInvoke {w filenames} {
     upvar ::tk::dialog::file::[winfo name $w] data
@@ -1055,11 +1097,11 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
 
 # ::tk::dialog::file::Done --
 #
-#	Gets called when user has input a valid filename.  Pops up a
-#	dialog box to confirm selection when necessary. Sets the
-#	tk::Priv(selectFilePath) variable, which will break the "vwait"
-#	loop in ::tk::dialog::file:: and return the selected filename to the
-#	script that calls tk_getOpenFile or tk_getSaveFile
+#	Gets called when user has input a valid filename.  Pops up a dialog
+#	box to confirm selection when necessary.  Sets the
+#	tk::Priv(selectFilePath) variable, which will break the "vwait" loop
+#	in ::tk::dialog::file:: and return the selected filename to the script
+#	that calls tk_getOpenFile or tk_getSaveFile
 #
 proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
     upvar ::tk::dialog::file::[winfo name $w] data
@@ -1086,10 +1128,12 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 		return
 	    }
 	}
-	if {[info exists data(-typevariable)] && $data(-typevariable) ne ""
+	if {
+	    [info exists data(-typevariable)] && $data(-typevariable) ne ""
 	    && [info exists data(-filetypes)] && [llength $data(-filetypes)]
-	    && [info exists data(filterType)] && $data(filterType) ne ""} {
-	    upvar 4 $data(-typevariable) initialTypeName
+	    && [info exists data(filterType)] && $data(filterType) ne ""
+	} then {
+	    upvar 3 $data(-typevariable) initialTypeName
 	    set initialTypeName [lindex $data(filterType) 0]
 	}
     }
@@ -1098,6 +1142,7 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 }
 
 proc ::tk::dialog::file::CompleteEnt {w} {
+    variable showHiddenVar
     upvar ::tk::dialog::file::[winfo name $w] data
     set f [$data(ent) get]
     if {$data(-multiple)} {
@@ -1114,7 +1159,7 @@ proc ::tk::dialog::file::CompleteEnt {w} {
 		       -nocomplain *]
     if {$data(filter) eq "*"} {
 	lappend globF *
-	if {$::tk::dialog::file::showHiddenVar} {
+	if {$showHiddenVar} {
 	    lappend globF .*
 	    lappend globD .*
 	}
@@ -1125,7 +1170,7 @@ proc ::tk::dialog::file::CompleteEnt {w} {
 	}
 	set dirs [lsort -dictionary -unique [{*}$globD]]
     } else {
-	if {$::tk::dialog::file::showHiddenVar} {
+	if {$showHiddenVar} {
 	    lappend globD .*
 	}
 	if {[winfo class $w] eq "TkFDialog"} {
