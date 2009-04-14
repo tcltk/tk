@@ -1,3 +1,9 @@
+2009-04-14  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/xmfbox.tcl (MotifFDialog_ActivateSEnt): Ensure that the
+	* library/tkfbox.tcl (Done):			  dialogs have the
+	correct levels for [upvar] for accessing the -typevariable var.
+
 2009-04-13  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/tk.tcl: Corrected another problem; can't determine the exact

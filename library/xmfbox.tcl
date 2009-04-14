@@ -4,7 +4,7 @@
 #	Unix platform. This implementation is used only if the
 #	"::tk_strictMotif" flag is set.
 #
-# RCS: @(#) $Id: xmfbox.tcl,v 1.32 2009/04/13 21:12:52 dkf Exp $
+# RCS: @(#) $Id: xmfbox.tcl,v 1.33 2009/04/14 18:09:50 dkf Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Scriptics Corporation
@@ -864,7 +864,7 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
     # Return selected filter
     if {[info exists data(-typevariable)] && $data(-typevariable) ne ""
 	    && [info exists data(-filetypes)] && $data(-filetypes) ne ""} {
-	upvar 1 $data(-typevariable) initialTypeName
+	upvar 2 $data(-typevariable) initialTypeName
 	set initialTypeName [lindex $data(-filetypes) $data(fileType) 0]
     }
 
