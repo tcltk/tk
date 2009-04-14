@@ -6,7 +6,7 @@
 	See the file "license.terms" for information on usage and redistribution of
 	this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-	RCS: @(#) $Id: Tk-Info.plist.in,v 1.2 2007/04/23 21:24:32 das Exp $
+	RCS: @(#) $Id: Tk-Info.plist.in,v 1.3 2009/04/14 00:56:05 das Exp $
 -->
 <plist version="1.0">
 <dict>
@@ -16,10 +16,10 @@
 	<string>@TK_LIB_FILE@</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Tk @TK_WINDOWINGSYSTEM@ @TK_VERSION@@TK_PATCH_LEVEL@,
-Copyright © @TK_YEAR@ Tcl Core Team,
+Copyright © 1989-@TK_YEAR@ Tcl Core Team,
 Copyright © 2002-@TK_YEAR@ Daniel A. Steffen,
-Initial MacOS X Port by Jim Ingham &amp; Ian Reid,
-Copyright © 2001-2002, Apple Computer, Inc.</string>
+Copyright © 2001-2002 Apple Inc.,
+Copyright © 2001-2002 Jim Ingham &amp; Ian Reid</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.tcltk.tklibrary</string>
 	<key>CFBundleInfoDictionaryVersion</key>
