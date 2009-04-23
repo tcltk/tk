@@ -1,3 +1,9 @@
+2009-04-23  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinDialog.c (Tk_ChooseDirectoryObjCmd): enable the new
+	style choosedir that has a "New Folder" button, with
+	::tk::winChooseDirFlags override for new behavior. [Bug 2779910]
+
 2009-04-15  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.7 TAGGED FOR RELEASE ***
