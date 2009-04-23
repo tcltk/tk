@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.1 2008/04/14 20:59:51 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.2 2009/04/23 21:57:11 hobbs Exp $
  *
  */
 
@@ -34,6 +34,10 @@
 
 #ifndef BIF_VALIDATE
 #define BIF_VALIDATE 0x0020
+#endif
+
+#ifndef BIF_NEWDIALOGSTYLE
+#define BIF_NEWDIALOGSTYLE 0x0040
 #endif
 
 #ifndef BFFM_VALIDATEFAILED
@@ -1661,10 +1665,6 @@ MakeFilter(
  * - Not sure how to implement localization of message prompts.
  *
  * - -title is really -message.
- * ToDo:
- * - Fix bugs.
- * - test to see what platforms this really works on. May require v4.71 of
- *   shell32.dll everywhere (what is standard?).
  *
  *----------------------------------------------------------------------
  */
@@ -1689,6 +1689,7 @@ Tk_ChooseDirectoryObjCmd(
     TCHAR saveDir[MAX_PATH];
     Tcl_DString titleString;	/* UTF Title */
     Tcl_DString initDirString;	/* Initial directory */
+    Tcl_Obj *objPtr;
     static CONST char *optionStrings[] = {
 	"-initialdir", "-mustexist",  "-parent",  "-title", NULL
     };
@@ -1794,12 +1795,19 @@ Tk_ChooseDirectoryObjCmd(
     }
 
     /*
-     * Set flags to add edit box (needs 4.71 Shell DLLs), status text line,
-     * validate edit box and
+     * Set flags to add edit box, status text line and use the new ui.
+     * Allow override with magic variable (ignore errors in retrieval).
+     * See http://msdn.microsoft.com/en-us/library/bb773205(VS.85).aspx
+     * for possible flag values.
      */
 
     bInfo.ulFlags = BIF_EDITBOX | BIF_STATUSTEXT | BIF_RETURNFSANCESTORS
-	    | BIF_VALIDATE;
+	| BIF_VALIDATE | BIF_NEWDIALOGSTYLE;
+    objPtr = Tcl_GetVar2Ex(interp, "::tk::winChooseDirFlags", NULL,
+	    TCL_GLOBAL_ONLY);
+    if (objPtr != NULL) {
+	Tcl_GetIntFromObj(NULL, objPtr, &(bInfo.ulFlags));
+    }
 
     /*
      * Callback to handle events
@@ -1899,8 +1907,6 @@ ChooseDirectoryValidateProc(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     chooseDirSharedData = (CHOOSEDIRDATA *)lpData;
-
-    TkWinSetUserData(hwnd, lpData);
 
     if (tsdPtr->debugFlag) {
 	tsdPtr->debugInterp = (Tcl_Interp *) chooseDirSharedData->interp;
