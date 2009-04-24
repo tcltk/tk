@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.150 2009/03/14 17:35:04 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.151 2009/04/24 15:07:48 stwo Exp $
 
 # Current Tk version;  used in various names.
 
@@ -190,7 +190,7 @@ NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
 
 # Some versions of make, like SGI's, use the following variable to
 # determine which shell to use for executing commands:
-SHELL			= /bin/sh
+SHELL			= @SHELL@
 
 # BUILD_TCLSH is the fully qualified path name of the tclsh shell
 # in the Tcl build directory. Test that need to be run in the
@@ -827,9 +827,6 @@ install-demos:
 	    done;
 
 install-doc:
-	@if test ! -x $(UNIX_DIR)/installManPage; then \
-	    chmod +x $(UNIX_DIR)/installManPage; \
-	    fi
 	@for i in "$(MAN_INSTALL_DIR)" "$(MAN1_INSTALL_DIR)" "$(MAN3_INSTALL_DIR)" "$(MANN_INSTALL_DIR)" ; \
 	    do \
 	    if [ ! -d "$$i" ] ; then \
@@ -841,17 +838,17 @@ install-doc:
 	    done;
 	@echo "Installing and cross-linking top-level (.1) docs";
 	@for i in $(TOP_DIR)/doc/*.1; do \
-	    $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MAN1_INSTALL_DIR)"; \
+	    $(SHELL) $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MAN1_INSTALL_DIR)"; \
 	done
 
 	@echo "Installing and cross-linking C API (.3) docs";
 	@for i in $(TOP_DIR)/doc/*.3; do \
-	    $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MAN3_INSTALL_DIR)"; \
+	    $(SHELL) $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MAN3_INSTALL_DIR)"; \
 	done
 
 	@echo "Installing and cross-linking command (.n) docs";
 	@for i in $(TOP_DIR)/doc/*.n; do \
-	    $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MANN_INSTALL_DIR)"; \
+	    $(SHELL) $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MANN_INSTALL_DIR)"; \
 	done
 
 # Optional target to install private headers
