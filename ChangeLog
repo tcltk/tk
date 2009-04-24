@@ -1,5 +1,11 @@
 2009-04-24  Stuart Cassoff <stwo@users.sf.net>
 
+	* unix/Makefile.in:	Removed stray @ from Makefile.in test target.
+	[Bug 2764263], Don't chmod+x square demo. [Bug 1945073],
+	Adjustable demo install location. [Patch 2764272]
+
+2009-04-24  Stuart Cassoff <stwo@users.sf.net>
+
 	* unix/Makefile.in:	Don't chmod/exec installManPage.
 				[Patch 2769530]
 

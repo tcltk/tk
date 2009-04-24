@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.151 2009/04/24 15:07:48 stwo Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.152 2009/04/24 15:34:41 stwo Exp $
 
 # Current Tk version;  used in various names.
 
@@ -94,6 +94,9 @@ HTML_INSTALL_DIR	= $(INSTALL_ROOT)$(HTML_DIR)
 
 # Directory in which to install the configuration file tkConfig.sh:
 CONFIG_INSTALL_DIR	= $(INSTALL_ROOT)$(libdir)
+
+# Directory in which to install the demo files:
+DEMO_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)/demos
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
@@ -557,7 +560,7 @@ PRIVATE_HDRS = $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
 	$(GENERIC_DIR)/tkIntPlatDecls.h $(GENERIC_DIR)/tkPort.h \
 	$(TTK_HDRS) $(@TK_WINDOWINGSYSTEM@_PRIVATE_HDRS)
 
-DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
+DEMOPROGS = browse hello ixset rmt rolodex tcolor timer widget
 
 SHELL_ENV = \
 	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
@@ -642,7 +645,6 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
 test: test-classic test-ttk
-	@
 
 test-classic: tktest
 	$(SHELL_ENV) ./tktest $(TEST_DIR)/all.tcl -geometry +0+0 $(TESTFLAGS)
@@ -795,9 +797,7 @@ install-libraries: libraries
 	    done;
 
 install-demos:
-	@for i in "$(SCRIPT_INSTALL_DIR)" \
-		"$(SCRIPT_INSTALL_DIR)"/demos \
-		"$(SCRIPT_INSTALL_DIR)"/demos/images ; \
+	@for i in "$(DEMO_INSTALL_DIR)" "$(DEMO_INSTALL_DIR)"/images ; \
 	    do \
 	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
@@ -806,23 +806,23 @@ install-demos:
 		else true; \
 		fi; \
 	    done;
-	@echo "Installing demos to $(SCRIPT_INSTALL_DIR)/demos/";
+	@echo "Installing demos to $(DEMO_INSTALL_DIR)/";
 	@for i in $(TOP_DIR)/library/demos/*; \
 	    do \
 	    if [ -f $$i ] ; then \
 		sed -e '3 s|exec wish|exec wish$(VERSION)|' \
-			$$i > "$(SCRIPT_INSTALL_DIR)"/demos/`basename $$i`; \
+			$$i > "$(DEMO_INSTALL_DIR)"/`basename $$i`; \
 	    fi; \
 	    done;
 	@for i in $(DEMOPROGS); \
 	    do \
-	    chmod 755 "$(SCRIPT_INSTALL_DIR)"/demos/$$i; \
+	    chmod 755 "$(DEMO_INSTALL_DIR)"/$$i; \
 	    done;
 	@echo "Installing demo images";
 	@for i in $(TOP_DIR)/library/demos/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"/demos/images; \
+		$(INSTALL_DATA) $$i "$(DEMO_INSTALL_DIR)"/images; \
 		fi; \
 	    done;
 
