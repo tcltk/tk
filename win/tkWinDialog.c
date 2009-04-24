@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.62 2009/04/23 22:01:29 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.63 2009/04/24 17:29:47 hobbs Exp $
  *
  */
 
@@ -1975,7 +1975,7 @@ ChooseDirectoryValidateProc(
 
     case BFFM_SELCHANGED:
 	/*
-	 * Set the status window to the currently selected path. And enable
+	 * Set the status window to the currently selected path and enable
 	 * the OK button if a file system folder, otherwise disable the OK
 	 * button for things like server names. Perhaps a new switch
 	 * -enablenonfolders can be used to allow non folders to be selected.
@@ -1987,7 +1987,6 @@ ChooseDirectoryValidateProc(
 	    SendMessage(hwnd, BFFM_SETSTATUSTEXT, 0, (LPARAM) selDir);
 	    // enable the OK button
 	    SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
-	    SetCurrentDirectory(selDir);
 	} else {
 	    // disable the OK button
 	    SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 0);
