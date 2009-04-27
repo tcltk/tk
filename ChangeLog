@@ -1,3 +1,9 @@
+2009-04-27  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkInt.decls: [Bug 2768945]: Expose (as "private") a set of
+	functions needed for easily building canvas items that work like
+	existing standard ones.
+
 2009-04-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinDialog.c (ChooseDirectoryValidateProc): no need to set
