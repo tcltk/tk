@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.44 2007/12/13 15:24:14 dgp Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.44.2.1 2009/04/27 10:39:57 dkf Exp $
 
 library tk
 
@@ -516,6 +516,41 @@ declare 156 generic {
 declare 157 generic {
     int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int argc,
 	    CONST char **argv)
+}
+
+# Next group of functions exposed due to [Bug 2768945]. Numbers are chosen so
+# as to match 8.6 branch/HEAD.
+declare 169 generic {
+    int TkStateParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 170 generic {
+    char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+declare 171 generic {
+    int TkCanvasDashParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 172 generic {
+    char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+declare 173 generic {
+    int TkOffsetParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 174 generic {
+    char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+declare 175 generic {
+    int TkPixelParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 176 generic {
+    char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 
 ##############################################################################
