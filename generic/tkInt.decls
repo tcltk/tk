@@ -10,9 +10,11 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.53 2009/02/27 23:23:35 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.54 2009/04/27 10:31:35 dkf Exp $
 
 library tk
+
+##############################################################################
 
 # Define the unsupported generic interfaces.
 
@@ -566,7 +568,40 @@ declare 168 generic {
 	    int height, int baseline, Display *display,
 	    Drawable dst, int screenY)
 }
-
+# Next group of functions exposed due to [Bug 2768945].
+declare 169 generic {
+    int TkStateParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 170 generic {
+    const char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+declare 171 generic {
+    int TkCanvasDashParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 172 generic {
+    const char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+declare 173 generic {
+    int TkOffsetParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 174 generic {
+    const char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+declare 175 generic {
+    int TkPixelParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 176 generic {
+    const char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+
 ##############################################################################
 
 # Define the platform specific internal Tcl interface. These functions are
@@ -1619,3 +1654,7 @@ declare 90 aqua {
 declare 91 aqua {
     int XSync(Display *display, Bool flag)
 }
+
+# Local Variables:
+# mode: tcl
+# End:
