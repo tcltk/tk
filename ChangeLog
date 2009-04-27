@@ -1,24 +1,30 @@
+2009-04-27  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkInt.decls: [Bug 2768945]: Expose (as "private") a set of
+	functions needed for easily building canvas items that work like
+	existing standard ones.
+
 2009-04-24  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/tkWinDialog.c (ChooseDirectoryValidateProc): no need to set
-	cwd on selchange. Prevents delete of selected folder in dialog.
+	* win/tkWinDialog.c (ChooseDirectoryValidateProc): No need to set cwd
+	on selchange. Prevents delete of selected folder in dialog.
 
 2009-04-24  Stuart Cassoff <stwo@users.sf.net>
 
-	* unix/Makefile.in:	Removed stray @ from Makefile.in test target.
-	[Bug 2764263], Don't chmod+x square demo. [Bug 1945073],
-	Adjustable demo install location. [Patch 2764272]
+	* unix/Makefile.in: Assorted issues:
+	[Bug 2764263]: Removed stray @ from Makefile.in test target.
+	[Bug 1945073]: Don't chmod+x square demo.
+	[Patch 2764272]: Adjustable demo install location.
 
 2009-04-24  Stuart Cassoff <stwo@users.sf.net>
 
-	* unix/Makefile.in:	Don't chmod/exec installManPage.
-				[Patch 2769530]
+	* unix/Makefile.in: [Patch 2769530]: Don't chmod/exec installManPage.
 
 2009-04-23  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/tkWinDialog.c (Tk_ChooseDirectoryObjCmd): enable the new
-	style choosedir that has a "New Folder" button, with
-	::tk::winChooseDirFlags override for new behavior. [Bug 2779910]
+	* win/tkWinDialog.c (Tk_ChooseDirectoryObjCmd): [Bug 2779910]: Enable
+	the new style choosedir that has a "New Folder" button, with
+	::tk::winChooseDirFlags override for new behavior.
 
 2009-04-14  Donal K. Fellows  <dkf@users.sf.net>
 

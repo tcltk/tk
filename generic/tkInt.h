@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.100 2009/02/27 23:23:35 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.101 2009/04/27 10:31:35 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -114,7 +114,7 @@ typedef void (TkBindFreeProc)(ClientData clientData);
 
 /*
  * One of the following structures is maintained for each cursor in use in the
- * system. This structure is used by tkCursor.c and the various system
+ * system. This structure is used by tkCursor.c and the various system-
  * specific cursor files.
  */
 
@@ -854,8 +854,8 @@ typedef struct TkWindow {
 } TkWindow;
 
 /*
- * The following structure is used with TkMakeEnsemble to create
- * ensemble commands and optionally to create sub-ensembles.
+ * The following structure is used with TkMakeEnsemble to create ensemble
+ * commands and optionally to create sub-ensembles.
  */
 
 typedef struct TkEnsemble {
@@ -1148,10 +1148,8 @@ MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
-						  Tk_Window tkwin,
-						  Tcl_Obj *objPtr,
-						  double *doublePtr);
-
+			    Tk_Window tkwin, Tcl_Obj *objPtr,
+			    double *doublePtr);
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE int	TkCreateMenuCmd(Tcl_Interp *interp);
@@ -1160,30 +1158,12 @@ MODULE_SCOPE int	TkDeadAppCmd(ClientData clientData,
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
-MODULE_SCOPE int	TkCanvasDashParseProc(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE const char * TkCanvasDashPrintProc(ClientData clientData,
-			    Tk_Window tkwin, char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *string, double *doublePtr);
-MODULE_SCOPE int	TkOffsetParseProc(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE const char * TkOffsetPrintProc(ClientData clientData,
-			    Tk_Window tkwin, char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkOrientParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
 MODULE_SCOPE const char * TkOrientPrintProc(ClientData clientData,
-			    Tk_Window tkwin, char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr);
-MODULE_SCOPE int	TkPixelParseProc(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE const char * TkPixelPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
@@ -1195,17 +1175,11 @@ MODULE_SCOPE int	TkSmoothParseProc(ClientData clientData,
 MODULE_SCOPE const char * TkSmoothPrintProc(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr, int offset,
 			    Tcl_FreeProc **freeProcPtr);
-MODULE_SCOPE int	TkStateParseProc(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE const char * TkStatePrintProc(ClientData clientData,
-			    Tk_Window tkwin, char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkTileParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE const char * TkTilePrintProc(ClientData clientData, Tk_Window tkwin,
-			    char *widgRec, int offset,
+MODULE_SCOPE const char * TkTilePrintProc(ClientData clientData,
+			    Tk_Window tkwin, char *widgRec, int offset,
 			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);

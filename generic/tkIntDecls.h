@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.43 2009/02/27 23:23:35 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.44 2009/04/27 10:31:35 dkf Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -1040,6 +1040,66 @@ EXTERN void		TkTextInsertDisplayProc (struct TkText * textPtr,
 				int y, int height, int baseline,
 				Display * display, Drawable dst, int screenY);
 #endif
+#ifndef TkStateParseProc_TCL_DECLARED
+#define TkStateParseProc_TCL_DECLARED
+/* 169 */
+EXTERN int		TkStateParseProc (ClientData clientData,
+				Tcl_Interp * interp, Tk_Window tkwin,
+				const char * value, char * widgRec,
+				int offset);
+#endif
+#ifndef TkStatePrintProc_TCL_DECLARED
+#define TkStatePrintProc_TCL_DECLARED
+/* 170 */
+EXTERN const char *	TkStatePrintProc (ClientData clientData,
+				Tk_Window tkwin, char * widgRec, int offset,
+				Tcl_FreeProc ** freeProcPtr);
+#endif
+#ifndef TkCanvasDashParseProc_TCL_DECLARED
+#define TkCanvasDashParseProc_TCL_DECLARED
+/* 171 */
+EXTERN int		TkCanvasDashParseProc (ClientData clientData,
+				Tcl_Interp * interp, Tk_Window tkwin,
+				const char * value, char * widgRec,
+				int offset);
+#endif
+#ifndef TkCanvasDashPrintProc_TCL_DECLARED
+#define TkCanvasDashPrintProc_TCL_DECLARED
+/* 172 */
+EXTERN const char *	TkCanvasDashPrintProc (ClientData clientData,
+				Tk_Window tkwin, char * widgRec, int offset,
+				Tcl_FreeProc ** freeProcPtr);
+#endif
+#ifndef TkOffsetParseProc_TCL_DECLARED
+#define TkOffsetParseProc_TCL_DECLARED
+/* 173 */
+EXTERN int		TkOffsetParseProc (ClientData clientData,
+				Tcl_Interp * interp, Tk_Window tkwin,
+				const char * value, char * widgRec,
+				int offset);
+#endif
+#ifndef TkOffsetPrintProc_TCL_DECLARED
+#define TkOffsetPrintProc_TCL_DECLARED
+/* 174 */
+EXTERN const char *	TkOffsetPrintProc (ClientData clientData,
+				Tk_Window tkwin, char * widgRec, int offset,
+				Tcl_FreeProc ** freeProcPtr);
+#endif
+#ifndef TkPixelParseProc_TCL_DECLARED
+#define TkPixelParseProc_TCL_DECLARED
+/* 175 */
+EXTERN int		TkPixelParseProc (ClientData clientData,
+				Tcl_Interp * interp, Tk_Window tkwin,
+				const char * value, char * widgRec,
+				int offset);
+#endif
+#ifndef TkPixelPrintProc_TCL_DECLARED
+#define TkPixelPrintProc_TCL_DECLARED
+/* 176 */
+EXTERN const char *	TkPixelPrintProc (ClientData clientData,
+				Tk_Window tkwin, char * widgRec, int offset,
+				Tcl_FreeProc ** freeProcPtr);
+#endif
 
 typedef struct TkIntStubs {
     int magic;
@@ -1313,6 +1373,14 @@ typedef struct TkIntStubs {
     void (*tkTextChanged) (struct TkSharedText * sharedTextPtr, struct TkText * textPtr, const struct TkTextIndex * index1Ptr, const struct TkTextIndex * index2Ptr); /* 166 */
     int (*tkBTreeNumLines) (TkTextBTree tree, const struct TkText * textPtr); /* 167 */
     void (*tkTextInsertDisplayProc) (struct TkText * textPtr, struct TkTextDispChunk * chunkPtr, int x, int y, int height, int baseline, Display * display, Drawable dst, int screenY); /* 168 */
+    int (*tkStateParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 169 */
+    const char * (*tkStatePrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 170 */
+    int (*tkCanvasDashParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 171 */
+    const char * (*tkCanvasDashPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 172 */
+    int (*tkOffsetParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 173 */
+    const char * (*tkOffsetPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 174 */
+    int (*tkPixelParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 175 */
+    const char * (*tkPixelPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 176 */
 } TkIntStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
@@ -2025,6 +2093,38 @@ extern const TkIntStubs *tkIntStubsPtr;
 #ifndef TkTextInsertDisplayProc
 #define TkTextInsertDisplayProc \
 	(tkIntStubsPtr->tkTextInsertDisplayProc) /* 168 */
+#endif
+#ifndef TkStateParseProc
+#define TkStateParseProc \
+	(tkIntStubsPtr->tkStateParseProc) /* 169 */
+#endif
+#ifndef TkStatePrintProc
+#define TkStatePrintProc \
+	(tkIntStubsPtr->tkStatePrintProc) /* 170 */
+#endif
+#ifndef TkCanvasDashParseProc
+#define TkCanvasDashParseProc \
+	(tkIntStubsPtr->tkCanvasDashParseProc) /* 171 */
+#endif
+#ifndef TkCanvasDashPrintProc
+#define TkCanvasDashPrintProc \
+	(tkIntStubsPtr->tkCanvasDashPrintProc) /* 172 */
+#endif
+#ifndef TkOffsetParseProc
+#define TkOffsetParseProc \
+	(tkIntStubsPtr->tkOffsetParseProc) /* 173 */
+#endif
+#ifndef TkOffsetPrintProc
+#define TkOffsetPrintProc \
+	(tkIntStubsPtr->tkOffsetPrintProc) /* 174 */
+#endif
+#ifndef TkPixelParseProc
+#define TkPixelParseProc \
+	(tkIntStubsPtr->tkPixelParseProc) /* 175 */
+#endif
+#ifndef TkPixelPrintProc
+#define TkPixelPrintProc \
+	(tkIntStubsPtr->tkPixelPrintProc) /* 176 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */

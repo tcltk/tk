@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.67 2009/02/27 23:23:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.68 2009/04/27 10:31:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -320,6 +320,14 @@ static const TkIntStubs tkIntStubs = {
     TkTextChanged, /* 166 */
     TkBTreeNumLines, /* 167 */
     TkTextInsertDisplayProc, /* 168 */
+    TkStateParseProc, /* 169 */
+    TkStatePrintProc, /* 170 */
+    TkCanvasDashParseProc, /* 171 */
+    TkCanvasDashPrintProc, /* 172 */
+    TkOffsetParseProc, /* 173 */
+    TkOffsetPrintProc, /* 174 */
+    TkPixelParseProc, /* 175 */
+    TkPixelPrintProc, /* 176 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
