@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.60 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.60.2.1 2009/04/27 10:39:57 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -315,6 +315,25 @@ TkIntStubs tkIntStubs = {
     NULL, /* 155 */
     TkpTestembedCmd, /* 156 */
     TkpTesttextCmd, /* 157 */
+    NULL, /* 158 */
+    NULL, /* 159 */
+    NULL, /* 160 */
+    NULL, /* 161 */
+    NULL, /* 162 */
+    NULL, /* 163 */
+    NULL, /* 164 */
+    NULL, /* 165 */
+    NULL, /* 166 */
+    NULL, /* 167 */
+    NULL, /* 168 */
+    TkStateParseProc, /* 169 */
+    TkStatePrintProc, /* 170 */
+    TkCanvasDashParseProc, /* 171 */
+    TkCanvasDashPrintProc, /* 172 */
+    TkOffsetParseProc, /* 173 */
+    TkOffsetPrintProc, /* 174 */
+    TkPixelParseProc, /* 175 */
+    TkPixelPrintProc, /* 176 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
