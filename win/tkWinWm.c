@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.3 2009/01/07 00:58:23 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.4 2009/04/30 15:06:57 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -4319,11 +4319,13 @@ WmIconphotoCmd(
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
     int i, width, height, idx, bufferSize, startObj = 3;
-    unsigned char *bgraPixelPtr;
+    unsigned char *bgraPixelPtr, *bgraMaskPtr;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
     unsigned size;
+    BITMAPINFO bmInfo;
+    ICONINFO iconInfo;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -4359,39 +4361,91 @@ WmIconphotoCmd(
      */
 
     size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE) * (objc-startObj-1));
-    lpIR = (BlockOfIconImagesPtr) Tcl_AttemptAlloc(size);
+    lpIR = (BlockOfIconImagesPtr) attemptckalloc(size);
     if (lpIR == NULL) {
 	return TCL_ERROR;
     }
     ZeroMemory(lpIR, size);
 
     lpIR->nNumImages = objc - startObj;
+
     for (i = startObj; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	Tk_PhotoGetSize(photo, &width, &height);
 	Tk_PhotoGetImage(photo, &block);
 
 	/*
-	 * Convert the image data into BGRA format (RGBQUAD) and then
-	 * encode the image data into an HICON.
+	 * Don't use CreateIcon to create the icon, as it requires color
+	 * bitmap data in device-dependent format.  Instead we use
+	 * CreateIconIndirect which takes device-independent bitmaps
+	 * and converts them as required.  Initialise icon info structure.
 	 */
-	bufferSize = height * width * block.pixelSize;
-	bgraPixelPtr = ckalloc(bufferSize);
+	
+	ZeroMemory( &iconInfo, sizeof iconInfo );
+	iconInfo.fIcon = TRUE;
+
+	/*
+	 * Create device-independant color bitmap.
+	 */
+	ZeroMemory(&bmInfo,sizeof bmInfo);
+	bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmInfo.bmiHeader.biWidth = width;
+	bmInfo.bmiHeader.biHeight = -height;
+	bmInfo.bmiHeader.biPlanes = 1;
+	bmInfo.bmiHeader.biBitCount = 32;
+	bmInfo.bmiHeader.biCompression = BI_RGB;
+
+	iconInfo.hbmColor = CreateDIBSection( NULL, &bmInfo,
+	    DIB_RGB_COLORS, &bgraPixelPtr, NULL, 0 );
+	if ( !iconInfo.hbmColor ) {
+	    ckfree((char *) lpIR);
+	    Tcl_AppendResult(interp, "failed to create color bitmap for \"",
+		    Tcl_GetString(objv[i]), "\"", NULL);
+	    return TCL_ERROR;	    
+	}
+
+	/*
+	 * Convert the photo image data into BGRA format (RGBQUAD).
+	 */
+	bufferSize = height * width * 4;
 	for (idx = 0 ; idx < bufferSize ; idx += 4) {
 	    bgraPixelPtr[idx] = block.pixelPtr[idx+2];
 	    bgraPixelPtr[idx+1] = block.pixelPtr[idx+1];
 	    bgraPixelPtr[idx+2] = block.pixelPtr[idx+0];
 	    bgraPixelPtr[idx+3] = block.pixelPtr[idx+3];
 	}
-	hIcon = CreateIcon(Tk_GetHINSTANCE(), width, height, 1, 32,
-		NULL, (BYTE *) bgraPixelPtr);
-	ckfree(bgraPixelPtr);
+
+	/*
+	 * Create a dummy mask bitmap.  The contents of this don't
+	 * appear to matter, as CreateIconIndirect will setup the icon
+	 * mask based on the alpha channel in our color bitmap.
+	 */
+	bmInfo.bmiHeader.biBitCount = 1;
+
+	iconInfo.hbmMask = CreateDIBSection( NULL, &bmInfo,
+	    DIB_RGB_COLORS, &bgraMaskPtr, NULL, 0 );
+	if ( !iconInfo.hbmMask ) {
+	    DeleteObject(iconInfo.hbmColor);
+	    ckfree((char *) lpIR);
+	    Tcl_AppendResult(interp, "failed to create mask bitmap for \"",
+		    Tcl_GetString(objv[i]), "\"", NULL);
+	    return TCL_ERROR;	    
+	}
+	
+	ZeroMemory( bgraMaskPtr, width*height/8 );
+	
+	/*
+	 * Create an icon from the bitmaps.
+	 */
+	hIcon = CreateIconIndirect( &iconInfo);
+	DeleteObject(iconInfo.hbmColor);
+	DeleteObject(iconInfo.hbmMask);
 	if (hIcon == NULL) {
 	    /*
 	     * XXX should free up created icons.
 	     */
 
-	    Tcl_Free((char *) lpIR);
+	    ckfree((char *) lpIR);
 	    Tcl_AppendResult(interp, "failed to create icon for \"",
 		    Tcl_GetString(objv[i]), "\"", NULL);
 	    return TCL_ERROR;
@@ -4401,6 +4455,7 @@ WmIconphotoCmd(
 	lpIR->IconImages[i-startObj].Colors = 4;
 	lpIR->IconImages[i-startObj].hIcon = hIcon;
     }
+
     titlebaricon = (WinIconPtr) ckalloc(sizeof(WinIconInstance));
     titlebaricon->iconBlock = lpIR;
     titlebaricon->refCount = 1;

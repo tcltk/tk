@@ -1,3 +1,8 @@
+2009-04-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWm.c: [Patch 2504402] backported change to create
+	wm icons as device independent bitmaps. (cjmcdonald)
+
 2009-04-30  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/tkWinPixmap.c (Tk_GetPixmap): [Bug 2080533]: Added patch that
