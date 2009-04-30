@@ -1,3 +1,8 @@
+2009-04-30  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinPixmap.c (Tk_GetPixmap): [Bug 2080533]: Added patch that
+	allows Tk to keep working even when the graphics card is stressed.
+
 2009-04-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* unix/tcl.m4, unix/configure (SC_CONFIG_CFLAGS): harden the check
