@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.3 2000/02/01 11:41:44 hobbs Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.3.10.1 2009/04/30 14:57:43 dgp Exp $
  */
 
 #include "tkWinInt.h"
@@ -65,7 +65,56 @@ Tk_GetPixmap(display, d, width, height, depth)
 	planes = (int) screen->ext_data;
 	depth /= planes;
     }
-    newTwdPtr->bitmap.handle = CreateBitmap(width, height, planes, depth, NULL);
+    newTwdPtr->bitmap.handle =
+	    CreateBitmap(width, height, (DWORD) planes, (DWORD) depth, NULL);
+
+    /*
+     * CreateBitmap tries to use memory on the graphics card. If it fails,
+     * call CreateDIBSection which uses real memory; slower, but at least
+     * still works. [Bug 2080533]
+     */
+
+    if (newTwdPtr->bitmap.handle == NULL) {
+	static int repeatError = 0;
+	unsigned char *bits = NULL;
+	BITMAPINFO bitmapInfo;
+	HDC dc;
+
+	memset(&bitmapInfo, 0, sizeof(bitmapInfo));
+	bitmapInfo.bmiHeader.biSize = sizeof(bitmapInfo.bmiHeader);
+	bitmapInfo.bmiHeader.biWidth = width;
+	bitmapInfo.bmiHeader.biHeight = height;
+	bitmapInfo.bmiHeader.biPlanes = planes;
+	bitmapInfo.bmiHeader.biBitCount = depth;
+	bitmapInfo.bmiHeader.biCompression = BI_RGB;
+	bitmapInfo.bmiHeader.biSizeImage = 0;
+	dc = GetDC(NULL);
+	newTwdPtr->bitmap.handle = CreateDIBSection(dc, &bitmapInfo,
+		DIB_RGB_COLORS, (void **) &bits, 0, 0);
+	ReleaseDC(NULL, dc);
+
+	/*
+	 * Oh no! Things are still going wrong. Pop up a warning message here
+	 * (because things will probably crash soon) which will encourage
+	 * people to report this as a bug...
+	 */
+
+	if (newTwdPtr->bitmap.handle == NULL && !repeatError) {
+	    LPVOID lpMsgBuf;
+
+	    repeatError = 1;
+	    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		    FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
+		    NULL, GetLastError(),
+		    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		    (LPTSTR) &lpMsgBuf, 0, NULL)) {
+		MessageBox(NULL, (LPCTSTR) lpMsgBuf,
+			"Tk_GetPixmap: Error from CreateDIBSection",
+			MB_OK | MB_ICONINFORMATION);
+		LocalFree(lpMsgBuf);
+	    }
+	}
+    }
 
     if (newTwdPtr->bitmap.handle == NULL) {
 	ckfree((char *) newTwdPtr);
