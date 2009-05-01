@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.25 2008/12/07 16:34:12 das Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.26 2009/05/01 15:03:17 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -73,7 +73,7 @@ typedef struct TkPostscriptInfo {
 				 * NULL means return Postscript info as
 				 * result. Malloc'ed. */
     char *channelName;		/* If -channel is specified, the name of the
-                                 * channel to use. */
+				 * channel to use. */
     Tcl_Channel chan;		/* Open channel corresponding to fileName. */
     Tcl_HashTable fontTable;	/* Hash table containing names of all font
 				 * families used in output. The hash table
@@ -192,7 +192,7 @@ TkCanvPostscriptCmd(
 
     result = Tcl_EvalEx(interp, psenccmd, -1, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
-        return result;
+	return result;
     }
     oldInfoPtr = canvasPtr->psInfo;
     canvasPtr->psInfo = (Tk_PostscriptInfo) psInfoPtr;
@@ -316,28 +316,28 @@ TkCanvPostscriptCmd(
     }
 
     if (psInfo.fileName != NULL) {
-        /*
-         * Check that -file and -channel are not both specified.
-         */
+	/*
+	 * Check that -file and -channel are not both specified.
+	 */
 
-        if (psInfo.channelName != NULL) {
-            Tcl_AppendResult(interp, "can't specify both -file",
-                    " and -channel", NULL);
-            result = TCL_ERROR;
-            goto cleanup;
-        }
+	if (psInfo.channelName != NULL) {
+	    Tcl_AppendResult(interp, "can't specify both -file",
+		    " and -channel", NULL);
+	    result = TCL_ERROR;
+	    goto cleanup;
+	}
 
-        /*
-         * Check that we are not in a safe interpreter. If we are, disallow
-         * the -file specification.
-         */
+	/*
+	 * Check that we are not in a safe interpreter. If we are, disallow
+	 * the -file specification.
+	 */
 
-        if (Tcl_IsSafe(interp)) {
-            Tcl_AppendResult(interp, "can't specify -file in a",
-                    " safe interpreter", NULL);
-            result = TCL_ERROR;
-            goto cleanup;
-        }
+	if (Tcl_IsSafe(interp)) {
+	    Tcl_AppendResult(interp, "can't specify -file in a",
+		    " safe interpreter", NULL);
+	    result = TCL_ERROR;
+	    goto cleanup;
+	}
 
 	p = Tcl_TranslateFileName(interp, psInfo.fileName, &buffer);
 	if (p == NULL) {
@@ -351,24 +351,24 @@ TkCanvPostscriptCmd(
     }
 
     if (psInfo.channelName != NULL) {
-        int mode;
+	int mode;
 
-        /*
-         * Check that the channel is found in this interpreter and that it is
-         * open for writing.
-         */
+	/*
+	 * Check that the channel is found in this interpreter and that it is
+	 * open for writing.
+	 */
 
-        psInfo.chan = Tcl_GetChannel(interp, psInfo.channelName, &mode);
-        if (psInfo.chan == (Tcl_Channel) NULL) {
-            result = TCL_ERROR;
-            goto cleanup;
-        }
-        if ((mode & TCL_WRITABLE) == 0) {
-            Tcl_AppendResult(interp, "channel \"", psInfo.channelName,
+	psInfo.chan = Tcl_GetChannel(interp, psInfo.channelName, &mode);
+	if (psInfo.chan == (Tcl_Channel) NULL) {
+	    result = TCL_ERROR;
+	    goto cleanup;
+	}
+	if ((mode & TCL_WRITABLE) == 0) {
+	    Tcl_AppendResult(interp, "channel \"", psInfo.channelName,
 		    "\" wasn't opened for writing", NULL);
-            result = TCL_ERROR;
-            goto cleanup;
-        }
+	    result = TCL_ERROR;
+	    goto cleanup;
+	}
     }
 
     /*
@@ -598,7 +598,7 @@ TkCanvPostscriptCmd(
 	Tcl_Close(interp, psInfo.chan);
     }
     if (psInfo.channelName != NULL) {
-        ckfree(psInfo.channelName);
+	ckfree(psInfo.channelName);
     }
     Tcl_DeleteHashTable(&psInfo.fontTable);
     canvasPtr->psInfo = (Tk_PostscriptInfo) oldInfoPtr;
@@ -1429,16 +1429,12 @@ Tk_PostscriptPhoto(
 {
     TkPostscriptInfo *psInfoPtr = (TkPostscriptInfo *) psInfo;
     int colorLevel = psInfoPtr->colorLevel;
-    static int codeIncluded = 0;
-
+    const char *displayOperation;
     unsigned char *pixelPtr;
     char buffer[256], cspace[40], decode[40];
-    int bpc;
-    int xx, yy, lineLen;
+    int bpc, xx, yy, lineLen, alpha;
     float red, green, blue;
-    int alpha;
     int bytesPerLine=0, maxWidth=0;
-
     unsigned char opaque = 255;
     unsigned char *alphaPtr;
     int alphaOffset, alphaPitch, alphaIncr;
@@ -1448,134 +1444,18 @@ Tk_PostscriptPhoto(
 	return TCL_OK;
     }
 
-    /*
-     * Define the "TkPhoto" function, which is a modified version of the
-     * original "transparentimage" function posted by ian@five-d.com (Ian
-     * Kemmish) to comp.lang.postscript. For a monochrome colorLevel this is a
-     * slightly different version that uses the imagemask command instead of
-     * image.
-     */
-
-    if (!codeIncluded && (colorLevel != 0)) {
+    if (colorLevel != 0) {
 	/*
 	 * Color and gray-scale code.
 	 */
 
-	codeIncluded = !0;
-	Tcl_AppendResult(interp,
-		"/TkPhoto { \n",
-		"  gsave \n",
-		"  32 dict begin \n",
-		"  /tinteger exch def \n",
-		"  /transparent 1 string def \n",
-		"  transparent 0 tinteger put \n",
-		"  /olddict exch def \n",
-		"  olddict /DataSource get dup type /filetype ne { \n",
-		"    olddict /DataSource 3 -1 roll \n",
-		"    0 () /SubFileDecode filter put \n",
-		"  } { \n",
-		"    pop \n",
-		"  } ifelse \n",
-		"  /newdict olddict maxlength dict def \n",
-		"  olddict newdict copy pop \n",
-		"  /w newdict /Width get def \n",
-		"  /crpp newdict /Decode get length 2 idiv def \n",
-		"  /str w string def \n",
-		"  /pix w crpp mul string def \n",
-		"  /substrlen 2 w log 2 log div floor exp cvi def \n",
-		"  /substrs [ \n",
-		"  { \n",
-		"     substrlen string \n",
-		"     0 1 substrlen 1 sub { \n",
-		"       1 index exch tinteger put \n",
-		"     } for \n",
-		"     /substrlen substrlen 2 idiv def \n",
-		"     substrlen 0 eq {exit} if \n",
-		"  } loop \n",
-		"  ] def \n",
-		"  /h newdict /Height get def \n",
-		"  1 w div 1 h div matrix scale \n",
-		"  olddict /ImageMatrix get exch matrix concatmatrix \n",
-		"  matrix invertmatrix concat \n",
-		"  newdict /Height 1 put \n",
-		"  newdict /DataSource pix put \n",
-		"  /mat [w 0 0 h 0 0] def \n",
-		"  newdict /ImageMatrix mat put \n",
-		"  0 1 h 1 sub { \n",
-		"    mat 5 3 -1 roll neg put \n",
-		"    olddict /DataSource get str readstring pop pop \n",
-		"    /tail str def \n",
-		"    /x 0 def \n",
-		"    olddict /DataSource get pix readstring pop pop \n",
-		"    { \n",
-		"      tail transparent search dup /done exch not def \n",
-		"      {exch pop exch pop} if \n",
-		"      /w1 exch length def \n",
-		"      w1 0 ne { \n",
-		"        newdict /DataSource ",
-		          " pix x crpp mul w1 crpp mul getinterval put \n",
-		"        newdict /Width w1 put \n",
-		"        mat 4 x neg put \n",
-		"        /x x w1 add def \n",
-		"        newdict image \n",
-		"        /tail tail w1 tail length w1 sub getinterval def \n",
-		"      } if \n",
-		"      done {exit} if \n",
-		"      tail substrs { \n",
-		"        anchorsearch {pop} if \n",
-		"      } forall \n",
-		"      /tail exch def \n",
-		"      tail length 0 eq {exit} if \n",
-		"      /x w tail length sub def \n",
-		"    } loop \n",
-		"  } for \n",
-		"  end \n",
-		"  grestore \n",
-		"} bind def \n\n\n", NULL);
-    } else if (!codeIncluded && (colorLevel == 0)) {
+	displayOperation = "TkPhotoColor";
+    } else {
 	/*
 	 * Monochrome-only code
 	 */
 
-	codeIncluded = !0;
-	Tcl_AppendResult(interp,
-		"/TkPhoto { \n",
-		"  gsave \n",
-		"  32 dict begin \n",
-		"  /dummyInteger exch def \n",
-		"  /olddict exch def \n",
-		"  olddict /DataSource get dup type /filetype ne { \n",
-		"    olddict /DataSource 3 -1 roll \n",
-		"    0 () /SubFileDecode filter put \n",
-		"  } { \n",
-		"    pop \n",
-		"  } ifelse \n",
-		"  /newdict olddict maxlength dict def \n",
-		"  olddict newdict copy pop \n",
-		"  /w newdict /Width get def \n",
-		"  /pix w 7 add 8 idiv string def \n",
-		"  /h newdict /Height get def \n",
-		"  1 w div 1 h div matrix scale \n",
-		"  olddict /ImageMatrix get exch matrix concatmatrix \n",
-		"  matrix invertmatrix concat \n",
-		"  newdict /Height 1 put \n",
-		"  newdict /DataSource pix put \n",
-		"  /mat [w 0 0 h 0 0] def \n",
-		"  newdict /ImageMatrix mat put \n",
-		"  0 1 h 1 sub { \n",
-		"    mat 5 3 -1 roll neg put \n",
-		"    0.000 0.000 0.000 setrgbcolor \n",
-		"    olddict /DataSource get pix readstring pop pop \n",
-		"    newdict /DataSource pix put \n",
-		"    newdict imagemask \n",
-		"    1.000 1.000 1.000 setrgbcolor \n",
-		"    olddict /DataSource get pix readstring pop pop \n",
-		"    newdict /DataSource pix put \n",
-		"    newdict imagemask \n",
-		"  } for \n",
-		"  end \n",
-		"  grestore \n",
-		"} bind def \n\n\n", NULL);
+	displayOperation = "TkPhotoMono";
     }
 
     /*
@@ -1629,8 +1509,8 @@ Tk_PostscriptPhoto(
 	    "  /DataSource currentfile  /ASCIIHexDecode filter\n", NULL);
 
     sprintf(buffer, "  /ImageMatrix [1 0 0 -1 0 %d]\n", height);
-    Tcl_AppendResult(interp, buffer, "  /Decode ", decode,
-	    "\n>>\n1 TkPhoto\n", NULL);
+    Tcl_AppendResult(interp, buffer, "  /Decode ", decode, "\n>>\n1 ",
+	    displayOperation, "\n", NULL);
 
     /*
      * Check the PhotoImageBlock information. We assume that:
