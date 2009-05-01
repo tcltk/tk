@@ -1,5 +1,9 @@
 2009-05-01  Donal K. Fellows  <dkf@users.sf.net>
 
+	* library/mkpsenc.tcl (DrawText): [Bug 2777019]: Corrected point of
+	application of rotation transform so rotation is about the anchor
+	point of the text.
+
 	* generic/tkCanvPs.c (Tk_PostscriptPhoto):
 	* library/mkpsenc.tcl: Factor out the postscript code for converting
 	images into postscript so that the code bits are in the prolog and not
