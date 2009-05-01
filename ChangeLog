@@ -1,10 +1,17 @@
+2009-05-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvPs.c (Tk_PostscriptPhoto):
+	* library/mkpsenc.tcl: Factor out the postscript code for converting
+	images into postscript so that the code bits are in the prolog and not
+	emitted at runtime if a non-thread-safe static says to...
+
 2009-04-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinWm.c: [Patch 2504402] Create icon bitmaps as device
-	independent bitmaps. This ensures the icon can be drawn properly
-	on various colour depth surfaces - in particular it fixes a
-	problem with remote desktop and looks better in the vista task
-	switching overlay. (cjmcdonald)
+	* win/tkWinWm.c: [Patch 2504402]: Create icon bitmaps as device
+	independent bitmaps. This ensures the icon can be drawn properly on
+	various colour depth surfaces - in particular it fixes a problem with
+	remote desktop and looks better in the vista task switching overlay.
+	(cjmcdonald)
 
 2009-04-30  Donal K. Fellows  <dkf@users.sf.net>
 
