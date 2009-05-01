@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.26 2009/05/01 15:03:17 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.27 2009/05/01 15:04:03 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1440,7 +1440,6 @@ Tk_PostscriptPhoto(
     int alphaOffset, alphaPitch, alphaIncr;
 
     if (psInfoPtr->prepass) {
-	codeIncluded = 0;
 	return TCL_OK;
     }
 
