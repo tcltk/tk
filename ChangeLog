@@ -1,6 +1,11 @@
+2009-05-03  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinWm.c (UpdateWrapper): [Bug 2785744]: Manipulate flag bit
+	correctly so that menubar updates can't smash other attributes.
+
 2009-04-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinWm.c: [Patch 2504402] backported change to create
+	* win/tkWinWm.c: [Patch 2504402]: Backported change to create
 	wm icons as device independent bitmaps. (cjmcdonald)
 
 2009-04-30  Donal K. Fellows  <dkf@users.sf.net>

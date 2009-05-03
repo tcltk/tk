@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.4 2009/04/30 15:06:57 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.5 2009/05/03 06:48:55 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -2353,7 +2353,7 @@ UpdateWrapper(
      */
 
     if (wmPtr->hMenu != NULL) {
-	wmPtr->flags = WM_SYNC_PENDING;
+	wmPtr->flags |= WM_SYNC_PENDING;
 	SetMenu(wmPtr->wrapper, wmPtr->hMenu);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
     }
