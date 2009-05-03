@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.137 2009/04/30 14:46:36 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.138 2009/05/03 06:46:13 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -1105,7 +1105,7 @@ WinSetIcon(
 	/*
 	 * The following code is exercised if you do
 	 *
-	 *   toplevel .t ; wm titlebaricon .t foo.icr
+	 *	toplevel .t ; wm titlebaricon .t foo.icr
 	 *
 	 * i.e. the wm hasn't had time to properly create the '.t' window
 	 * before you set the icon.
@@ -1593,7 +1593,7 @@ TclWinReadCursorFromFile(
 	return NULL;
     }
     if (lpIR->nNumImages >= 1) {
-	res = CopyImage(lpIR->IconImages[0].hIcon, IMAGE_CURSOR,0,0,0);
+	res = CopyImage(lpIR->IconImages[0].hIcon, IMAGE_CURSOR, 0, 0, 0);
     }
     FreeIconBlock(lpIR);
     return res;
@@ -1635,7 +1635,7 @@ ReadIconOrCursorFromFile(
 
     channel = Tcl_FSOpenFileChannel(interp, fileName, "r", 0);
     if (channel == NULL) {
-	Tcl_AppendResult(interp,"Error opening file \"",
+	Tcl_AppendResult(interp, "Error opening file \"",
 		Tcl_GetString(fileName), "\" for reading", NULL);
 	return NULL;
     }
@@ -1755,7 +1755,7 @@ ReadIconOrCursorFromFile(
 
     ckfree((char *) lpIDE);
     Tcl_Close(NULL, channel);
-    if (lpIR == NULL){
+    if (lpIR == NULL) {
 	Tcl_AppendResult(interp, "Reading of ", Tcl_GetString(fileName),
 		" failed!", NULL);
 	return NULL;
@@ -2094,7 +2094,6 @@ UpdateWrapper(
 	if (!IsWindow(wmPtr->wrapper)) {
 	    Tcl_Panic("UpdateWrapper: Container was destroyed");
 	}
-
     } else {
 	/*
 	 * Pick the decorative frame style. Override redirect windows get
@@ -2214,6 +2213,7 @@ UpdateWrapper(
 	    /*
 	     * Layering not used or supported.
 	     */
+
 	    wmPtr->alpha = 1.0;
 	    if (wmPtr->crefObj) {
 		Tcl_DecrRefCount(wmPtr->crefObj);
@@ -2226,8 +2226,9 @@ UpdateWrapper(
 	wmPtr->x = place.rcNormalPosition.left;
 	wmPtr->y = place.rcNormalPosition.top;
 
-	if( !(winPtr->flags & TK_ALREADY_DEAD) )
+	if (!(winPtr->flags & TK_ALREADY_DEAD)) {
 	    TkInstallFrameMenu((Tk_Window) winPtr);
+	}
 
 	if (oldWrapper && (oldWrapper != wmPtr->wrapper)
 		&& !(wmPtr->exStyle & WS_EX_TOPMOST)) {
@@ -2255,10 +2256,10 @@ UpdateWrapper(
 
     SetParent(child, wmPtr->wrapper);
     if (oldWrapper) {
-	hSmallIcon = (HICON) SendMessage(oldWrapper, WM_GETICON, ICON_SMALL,
-		(LPARAM) NULL);
-	hBigIcon = (HICON) SendMessage(oldWrapper, WM_GETICON, ICON_BIG,
-		(LPARAM) NULL);
+	hSmallIcon = (HICON)
+		SendMessage(oldWrapper, WM_GETICON, ICON_SMALL, (LPARAM)NULL);
+	hBigIcon = (HICON)
+		SendMessage(oldWrapper, WM_GETICON, ICON_BIG, (LPARAM) NULL);
     }
 
     if (oldWrapper && (oldWrapper != wmPtr->wrapper)
@@ -2337,7 +2338,7 @@ UpdateWrapper(
      */
 
     if (winPtr->flags & TK_EMBEDDED) {
-	if(state+1 != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
+	if (state+1 != SendMessage(wmPtr->wrapper, TK_STATE, state, 0)) {
 	    TkpWmSetState(winPtr, NormalState);
 	    wmPtr->hints.initial_state = NormalState;
 	}
@@ -2349,7 +2350,7 @@ UpdateWrapper(
      */
 
     if (wmPtr->hMenu != NULL) {
-	wmPtr->flags = WM_SYNC_PENDING;
+	wmPtr->flags |= WM_SYNC_PENDING;
 	SetMenu(wmPtr->wrapper, wmPtr->hMenu);
 	wmPtr->flags &= ~WM_SYNC_PENDING;
     }
@@ -3810,8 +3811,9 @@ WmGeometryCmd(
 	    width = winPtr->changes.width;
 	    height = winPtr->changes.height;
 	}
-	if(winPtr->flags & TK_EMBEDDED) {
+	if (winPtr->flags & TK_EMBEDDED) {
 	    int result = SendMessage(wmPtr->wrapper, TK_MOVEWINDOW, -1, -1);
+
 	    wmPtr->x = result >> 16;
 	    wmPtr->y = result & 0x0000ffff;
 	}
@@ -4144,7 +4146,7 @@ WmIconifyCmd(
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
-	if(!SendMessage(wmPtr->wrapper, TK_ICONIFY, 0, 0)) {
+	if (!SendMessage(wmPtr->wrapper, TK_ICONIFY, 0, 0)) {
 	    Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
 		    ": the container does not support the request", NULL);
 	    return TCL_ERROR;
@@ -4365,9 +4367,9 @@ WmIconphotoCmd(
 
 	/*
 	 * Don't use CreateIcon to create the icon, as it requires color
-	 * bitmap data in device-dependent format.  Instead we use
-	 * CreateIconIndirect which takes device-independent bitmaps
-	 * and converts them as required.  Initialise icon info structure.
+	 * bitmap data in device-dependent format. Instead we use
+	 * CreateIconIndirect which takes device-independent bitmaps and
+	 * converts them as required. Initialise icon info structure.
 	 */
 	
 	ZeroMemory( &iconInfo, sizeof iconInfo );
@@ -4376,7 +4378,8 @@ WmIconphotoCmd(
 	/*
 	 * Create device-independant color bitmap.
 	 */
-	ZeroMemory(&bmInfo,sizeof bmInfo);
+
+	ZeroMemory(&bmInfo, sizeof bmInfo);
 	bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmInfo.bmiHeader.biWidth = width;
 	bmInfo.bmiHeader.biHeight = -height;
@@ -4405,9 +4408,9 @@ WmIconphotoCmd(
 	}
 
 	/*
-	 * Create a dummy mask bitmap.  The contents of this don't
-	 * appear to matter, as CreateIconIndirect will setup the icon
-	 * mask based on the alpha channel in our color bitmap.
+	 * Create a dummy mask bitmap. The contents of this don't appear to
+	 * matter, as CreateIconIndirect will setup the icon mask based on the
+	 * alpha channel in our color bitmap.
 	 */
 	bmInfo.bmiHeader.biBitCount = 1;
 
@@ -4502,7 +4505,7 @@ WmIconpositionCmd(
 	wmPtr->hints.flags &= ~IconPositionHint;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
-		|| (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)){
+		|| (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	wmPtr->hints.icon_x = x;
@@ -4799,7 +4802,7 @@ WmOverrideredirectCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
 	return TCL_ERROR;
     }
-    if(winPtr->flags & TK_EMBEDDED) {
+    if (winPtr->flags & TK_EMBEDDED) {
 	curValue = SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, -1, -1)-1;
 	if (curValue < 0) {
 	    Tcl_AppendResult(interp,
@@ -4817,7 +4820,7 @@ WmOverrideredirectCmd(
 	return TCL_ERROR;
     }
     if (curValue != boolean) {
-	if(winPtr->flags & TK_EMBEDDED) {
+	if (winPtr->flags & TK_EMBEDDED) {
 	    SendMessage(wmPtr->wrapper, TK_OVERRIDEREDIRECT, boolean, 0);
 	} else {
 	    /*
@@ -5415,7 +5418,7 @@ WmTitleCmd(
 	return TCL_ERROR;
     }
 
-    if(winPtr->flags & TK_EMBEDDED) {
+    if (winPtr->flags & TK_EMBEDDED) {
 	wrapper = (HWND) SendMessage(wmPtr->wrapper, TK_GETFRAMEWID, 0, 0);
     } else {
 	wrapper = wmPtr->wrapper;
@@ -7344,7 +7347,7 @@ InstallColormaps(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD) ) {
+    if (winPtr == NULL || (winPtr->flags & TK_ALREADY_DEAD)) {
 	return 0;
     }
 
