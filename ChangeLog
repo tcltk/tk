@@ -1,3 +1,8 @@
+2009-05-03  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinWm.c (UpdateWrapper): [Bug 2785744]: Manipulate flag bit
+	correctly so that menubar updates can't smash other attributes.
+
 2009-05-01  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/mkpsenc.tcl (DrawText): [Bug 2777019]: Corrected point of
