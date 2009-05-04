@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetImage.3,v 1.10 2008/06/30 22:57:01 dkf Exp $
+'\" RCS: @(#) $Id: GetImage.3,v 1.11 2009/05/04 09:12:33 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetImage 3 4.0 Tk "Tk Library Procedures"
@@ -75,7 +75,7 @@ identifies the window where the image will be displayed.
 \fBTk_GetImage\fR looks up the image in the table of existing
 images and returns a token for a new instance of the image.
 If the image does not exist then \fBTk_GetImage\fR returns NULL
-and leaves an error message in \fIinterp->result\fR.
+and leaves an error message in interpreter \fIinterp\fR's result.
 .PP
 When a widget wishes to actually display an image it must
 call \fBTk_RedrawImage\fR, identifying the image (\fIimage\fR),
