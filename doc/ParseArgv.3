@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ParseArgv.3,v 1.12 2009/01/06 21:58:15 nijtmans Exp $
+'\" RCS: @(#) $Id: ParseArgv.3,v 1.13 2009/05/04 09:12:33 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_ParseArgv 3 "" Tk "Tk Library Procedures"
@@ -62,8 +62,8 @@ elements of \fIargv\fR.
 .PP
 \fBTk_ParseArgv\fR normally returns the value \fBTCL_OK\fR.  If an error
 occurs while parsing the arguments, then \fBTCL_ERROR\fR is returned and
-\fBTk_ParseArgv\fR will leave an error message in \fIinterp->result\fR
-in the standard Tcl fashion.  In
+\fBTk_ParseArgv\fR will leave an error message in the result of
+interpreter \fIinterp\fR in the standard Tcl fashion.  In
 the event of an error return, \fI*argvPtr\fR will not have been
 modified, but \fIargv\fR could have been partially modified.  The
 possible causes of errors are explained below.
@@ -188,7 +188,8 @@ specifiers of this type are ignored (as if they did not exist).
 \fBTK_ARGV_HELP\fR
 When this kind of option is encountered, \fBTk_ParseArgv\fR uses the
 \fIhelp\fR fields of \fIargTable\fR to format a message describing
-all the valid arguments.  The message is placed in \fIinterp->result\fR
+all the valid arguments.  The message is placed in interpreter
+\fIinterp\fR's result
 and \fBTk_ParseArgv\fR returns \fBTCL_ERROR\fR.  When this happens, the
 caller normally prints the help message and aborts.  If the \fIkey\fR
 field of a \fBTK_ARGV_HELP\fR specifier is NULL, then the specifier will
@@ -261,7 +262,8 @@ then return any that are left by compacting them to the beginning of
 \fIargv\fR (starting at \fIargv\fR[0]).  \fIGenfunc\fR
 should return a count of how many arguments are left in \fIargv\fR;
 \fBTk_ParseArgv\fR will process them.  If \fIgenfunc\fR encounters
-an error then it should leave an error message in \fIinterp->result\fR,
+an error then it should leave an error message in interpreter
+\fIinterp\fR's result,
 in the usual Tcl fashion, and return \-1;  when this happens
 \fBTk_ParseArgv\fR will abort its processing and return \fBTCL_ERROR\fR.
 .RE
@@ -331,7 +333,7 @@ main(argc, argv)
     \&...
 
     if (Tk_ParseArgv(interp, tkwin, &argc, argv, argTable, 0) != TCL_OK) {
-        fprintf(stderr, "%s\en", interp->result);
+        fprintf(stderr, "%s\en", Tcl_GetString(Tcl_GetObjResult(interp)));
         exit(1);
     }
 

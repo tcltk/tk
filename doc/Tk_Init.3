@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Tk_Init.3,v 1.7 2008/06/30 22:57:02 dkf Exp $
+'\" RCS: @(#) $Id: Tk_Init.3,v 1.8 2009/05/04 09:12:33 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Init 3 8.0 Tk "Tk Library Procedures"
@@ -35,7 +35,7 @@ and creates a new Tk application, including its main window.
 If the initialization is successful \fBTk_Init\fR returns
 \fBTCL_OK\fR;  if there is an error it returns \fBTCL_ERROR\fR.
 \fBTk_Init\fR also leaves a result or error message
-in \fIinterp->result\fR.
+in interpreter \fIinterp\fR's result.
 .PP
 If there is a variable \fBargv\fR in \fIinterp\fR, \fBTk_Init\fR
 treats the contents of this variable as a list of options for the

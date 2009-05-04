@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetJoinStl.3,v 1.9 2008/06/30 22:57:01 dkf Exp $
+'\" RCS: @(#) $Id: GetJoinStl.3,v 1.10 2009/05/04 09:12:33 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetJoinStyle 3 "" Tk "Tk Library Procedures"
@@ -51,7 +51,7 @@ Under normal circumstances the return value is \fBTCL_OK\fR and
 \fIinterp\fR is unused.
 If \fIstring\fR does not contain a valid join style
 or an abbreviation of one of these names, then an error message is
-stored in \fIinterp->result\fR, \fBTCL_ERROR\fR is returned, and
+stored in interpreter \fIinterp\fR's result, \fBTCL_ERROR\fR is returned, and
 \fI*joinPtr\fR is unmodified.
 .PP
 \fBTk_NameOfJoinStyle\fR is the logical inverse of \fBTk_GetJoinStyle\fR.
