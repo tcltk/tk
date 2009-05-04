@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: BindTable.3,v 1.6 2008/06/30 22:57:00 dkf Exp $
+'\" RCS: @(#) $Id: BindTable.3,v 1.7 2009/05/04 09:12:33 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateBindingTable 3 4.0 Tk "Tk Library Procedures"
@@ -113,25 +113,25 @@ select relevant events, or to disallow the use of certain events
 in bindings.
 If an error occurred while creating the binding (e.g., \fIeventString\fR
 refers to a non-existent event), then 0 is returned and an error
-message is left in \fIinterp->result\fR.
+message is left as the result of interpreter \fIinterp\fR.
 .PP
 \fBTk_DeleteBinding\fR removes from \fIbindingTable\fR the
 binding given by \fIobject\fR and \fIeventString\fR, if
 such a binding exists.
 \fBTk_DeleteBinding\fR always returns \fBTCL_OK\fR.
-In some cases it may reset \fIinterp->result\fR to the default
+In some cases it may reset the interpreter result to the default
 empty value.
 .PP
 \fBTk_GetBinding\fR returns a pointer to the script associated
 with \fIeventString\fR and \fIobject\fR in \fIbindingTable\fR.
 If no such binding exists then NULL is returned and an error
-message is left in \fIinterp->result\fR.
+message is left as the result of interpreter \fIinterp\fR.
 .PP
-\fBTk_GetAllBindings\fR returns in \fIinterp->result\fR a list
+\fBTk_GetAllBindings\fR returns in \fIinterp\fR's result a list
 of all the event strings for which there are bindings in
 \fIbindingTable\fR associated with \fIobject\fR.
-If there are no bindings for \fIobject\fR then an empty
-string is returned in \fIinterp->result\fR.
+If there are no bindings for \fIobject\fR, the result will be an empty
+string.
 .PP
 \fBTk_DeleteAllBindings\fR deletes all of the bindings in
 \fIbindingTable\fR that are associated with \fIobject\fR.

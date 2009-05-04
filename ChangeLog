@@ -1,3 +1,12 @@
+2009-05-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/3DBorder.3, doc/BindTable.3, doc/CanvPsY.3, doc/Clipboard.3:
+	* doc/ConfigWidg.3, doc/CrtWindow.3, doc/GetBitmap.3:
+	* doc/GetCapStyl.3, doc/GetImage.3, doc/GetJoinStl.3, doc/GetScroll.3:
+	* doc/GetSelect.3, doc/GetVisual.3, doc/MainWin.3, doc/Name.3:
+	* doc/ParseArgv.3, doc/TextLayout.3, doc/Tk_Init.3: [Bug 2431507]:
+	Purge all mention of the now-obsolete 'interp->result'.
+
 2009-05-03  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/tkWinWm.c (UpdateWrapper): [Bug 2785744]: Manipulate flag bit
