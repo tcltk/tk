@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: CrtWindow.3,v 1.13 2008/06/30 22:57:01 dkf Exp $
+'\" RCS: @(#) $Id: CrtWindow.3,v 1.14 2009/05/04 09:12:33 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_CreateWindow 3 4.2 Tk "Tk Library Procedures"
@@ -60,8 +60,8 @@ are used to create new windows for
 use in Tk-based applications.  Each of the procedures returns a token
 that can be used to manipulate the window in other calls to the Tk
 library.  If the window could not be created successfully, then NULL
-is returned and \fIinterp->result\fR is modified to hold an error
-message.
+is returned and the result of interpreter \fIinterp\fR is modified to
+hold an error message.
 .PP
 Tk supports two different kinds of windows:  internal
 windows and top-level windows.
