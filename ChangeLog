@@ -1,3 +1,8 @@
+2009-05-05  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/canvas.n (scale): [Bug 1832015]: Clarified that [$c scale] only
+	affects item coordinates.
+
 2009-05-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/3DBorder.3, doc/BindTable.3, doc/CanvPsY.3, doc/Clipboard.3:
