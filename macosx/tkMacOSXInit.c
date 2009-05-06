@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.34.2.2 2008/06/19 00:13:10 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.34.2.3 2009/05/06 16:36:28 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -584,7 +584,7 @@ TkMacOSXGetStringObjFromCFString(
 	CFIndex len;
 
 	if (CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false, NULL,
-		0, &len) > 0) {
+		0, &len) > 0 && len < INT_MAX) {
 	    obj = Tcl_NewObj();
 	    Tcl_SetObjLength(obj, len);
 	    CFStringGetBytes(str, all, kCFStringEncodingUTF8, 0, false,
