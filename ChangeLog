@@ -1,3 +1,11 @@
+2009-05-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/images/lamp.svg: Added an SVG version of the Tk lamp and
+	* library/images/lamp.png: a pre-rendered PNG version.
+	* win/rc/wish.ico: Wish gets a new icon using the SVG lamp and the
+	* win/rc/tk.ico:   tk dll gets the tcl rendered feather. This
+	provides improved icons for Vista/Windows 7.
+
 2009-05-05  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/MainWin.3 (Tk_GetNumMainWindows): [Bug 487220]: Clarified that
