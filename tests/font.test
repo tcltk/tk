@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: font.test,v 1.19 2008/08/15 01:10:03 aniap Exp $
+# RCS: @(#) $Id: font.test,v 1.20 2009/05/13 21:33:32 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -2221,6 +2221,12 @@ test font-38.11 {ParseFontNameObj procedure: stylelist loop} -constraints {
 test font-38.12 {ParseFontNameObj procedure: stylelist error} -body {
     font actual {times 12 bold xyz}
 } -returnCodes error -result {unknown font style "xyz"}
+test font-38.13 "ParseFontNameObj: options with hyphenated family: bug #2791352" -body {
+    font actual {-family sans-serif -size 12 -weight bold -slant roman -underline 0 -overstrike 0}
+} -returnCodes ok -result [font actual {sans-serif 12 bold}]
+test font-38.14 "ParseFontNameObj: bug #2791352" -body {
+    font actual {-invalidfont 8 bold}
+} -returnCodes error -match glob -result {bad option "-invalidfont": *}
 
 
 test font-39.1 {NewChunk procedure: test realloc} -setup {
