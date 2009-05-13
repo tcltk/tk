@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.24 2008/12/10 05:02:52 das Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.25 2009/05/13 22:03:39 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -107,13 +107,15 @@ AppendSystemError(
     Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
 
     length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
+	    | FORMAT_MESSAGE_IGNORE_INSERTS
 	    | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
 	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) &wMsgPtr,
 	    0, NULL);
     if (length == 0) {
 	char *msgPtr;
 
-	length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
+	length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM 
+		| FORMAT_MESSAGE_IGNORE_INSERTS
 		| FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *) &msgPtr,
 		0, NULL);

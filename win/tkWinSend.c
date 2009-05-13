@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.19 2009/01/28 20:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.20 2009/05/13 22:03:38 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -839,9 +839,9 @@ Win32ErrorObj(
     TCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-	    NULL, (DWORD)hrError, LANG_NEUTRAL,
-	    (LPTSTR)&lpBuffer, 0, NULL);
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
+	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
+	    LANG_NEUTRAL, (LPTSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
