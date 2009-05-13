@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.42.2.1 2009/03/03 23:54:11 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.42.2.2 2009/05/13 21:49:12 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -3233,6 +3233,20 @@ ParseFontNameObj(
     xlfd:
 	result = TkFontParseXLFD(string, faPtr, NULL);
 	if (result == TCL_OK) {
+	    return TCL_OK;
+	}
+
+	/*
+	 * If the string failed to parse but was considered to be a XLFD
+	 * then it may be a "-option value" string with a hyphenated family
+	 * name as per bug 2791352
+	 */
+
+	if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+
+	if (ConfigAttributesObj(interp, tkwin, objc, objv, faPtr) == TCL_OK) {
 	    return TCL_OK;
 	}
     }
