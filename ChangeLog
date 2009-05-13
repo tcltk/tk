@@ -1,5 +1,8 @@
 2009-05-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* win/tkWinSend.c: FormatMessage should always use the ignore-inserts
+	* win/tkWinTest.c: flag when processing system errors.
+
 	* generic/tkFont.c: [Bug 2791352] handle parsing of type 5 font
 	* tests/font.test: descriptions with hyphenated family name.
 
