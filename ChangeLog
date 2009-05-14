@@ -1,5 +1,10 @@
 2009-05-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* generic/tkButton.c: [Bug 1923684]: backported checkbutton fix
+	for confused state when -offvalue equals -tristatevalue
+
+2009-05-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
 	* doc/ttk_image.n:  Backported support for the Vista theme.
 	* doc/ttk_style.n:  This requires the vsapi element engine,
 	* doc/ttk_vsapi.n:  the hover state and the theme script
