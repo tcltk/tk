@@ -1,3 +1,9 @@
+2009-05-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkButton.c: [Bug 1923684]: If a checkbutton offvalue is
+	the same as the tristate value we should use the off state in
+	preference. (andrey gusev)
+
 2009-05-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinSend.c: FormatMessage should always use the ignore-inserts
