@@ -1,3 +1,18 @@
+2009-05-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* doc/ttk_image.n:  Backported support for the Vista theme.
+	* doc/ttk_style.n:  This requires the vsapi element engine,
+	* doc/ttk_vsapi.n:  the hover state and the theme script
+	* doc/ttk_widget.n: definition.
+	* generic/ttk/ttkState.c:
+	* generic/ttk/ttkTheme.h:
+	* generic/ttk/ttkWidget.c:
+	* library/ttk/ttk.tcl:
+	* library/ttk/vistaTheme.tcl:
+	* library/ttk/xpTheme.tcl:
+	* tests/ttk/vsapi.test:
+	* win/ttkWinXPTheme.c:
+
 2009-05-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkFont.c: [Bug 2791352]: backported fix and tests for
