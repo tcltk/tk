@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_widget.n,v 1.13.2.1 2008/05/11 00:31:03 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_widget.n,v 1.13.2.2 2009/05/14 00:53:04 patthoyts Exp $
 '\" 
 .so man.macros
 .TH ttk::widget n 8.5 Tk "Tk Themed Widget"
@@ -230,6 +230,14 @@ state, and for buttons with \fB\-default active\fR.
 The widget's value is invalid.
 (Potential uses: scale widget value out of bounds, 
 entry widget value failed validation.)
+.TP
+\fBhover\fR
+The mouse cursor is within the widget.
+This is similar to the \fBactive\fP state;
+it is used in some themes for widgets that
+provide distinct visual feedback for
+the active widget in addition to the active element
+within the widget.
 .PP
 A \fIstate specification\fR or \fIstateSpec\fR is a list
 of state names, optionally prefixed with an exclamation point (!)
