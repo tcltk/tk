@@ -4,13 +4,13 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_image.n,v 1.12 2007/12/13 15:23:44 dgp Exp $
+'\" RCS: @(#) $Id: ttk_image.n,v 1.12.2.1 2009/05/14 00:53:04 patthoyts Exp $
 '\" 
 .so man.macros
-.TH ttk::image n 8.5 Tk "Tk Themed Widget"
+.TH ttk_image n 8.5 Tk "Tk Themed Widget"
 .BS
 .SH NAME
-ttk::image \- Define an element based on an image
+ttk_image \- Define an element based on an image
 .SH SYNOPSIS
 \fBttk::style element create \fIname\fR \fBimage\fR \fIimageSpec\fR ?\fIoptions\fR?
 .BE
@@ -72,6 +72,6 @@ style element create Button.button image \e
     \-border {2 4} \-sticky we
 .CE
 .SH "SEE ALSO"
-image(n), photo(n)
+ttk::intro(n), ttk::style(n), ttk_vsapi(n), image(n), photo(n)
 .SH KEYWORDS
-pixmap theme, image
+style, theme, appearance, pixmap theme, image

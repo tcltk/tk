@@ -1,5 +1,5 @@
 /*
- * $Id: ttkState.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+ * $Id: ttkState.c,v 1.1.4.1 2009/05/14 00:53:04 patthoyts Exp $
  *
  * Tk widget state utilities.
  *
@@ -27,6 +27,13 @@ static const char *stateNames[] =
     "alternate",	/* Widget-specific alternate display style */
     "invalid",		/* Bad value */
     "readonly",		/* Editing/modification disabled */
+    "hover",		/* Mouse cursor is over widget */
+    "reserved1",	/* Reserved for future extension */
+    "reserved2",	/* Reserved for future extension */
+    "reserved3",	/* Reserved for future extension */
+    "user3",		/* User-definable state */
+    "user2",		/* User-definable state */
+    "user1",		/* User-definable state */
     NULL
 };
 
