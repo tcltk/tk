@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.18 2009/02/08 19:35:35 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.19 2009/05/17 17:04:48 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -149,20 +149,27 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &nbstyle->tabPosition);
     }
 
-    /* compute tabPlacement and tabOrient as function of tabPosition:
+    /* Guess default tabPlacement as function of tabPosition:
      */
     if (nbstyle->tabPosition & TTK_PACK_LEFT) {
 	nbstyle->tabPlacement = TTK_PACK_TOP | TTK_STICK_E;
-	nbstyle->tabOrient = TTK_ORIENT_VERTICAL;
     } else if (nbstyle->tabPosition & TTK_PACK_RIGHT) {
 	nbstyle->tabPlacement = TTK_PACK_TOP | TTK_STICK_W;
-	nbstyle->tabOrient = TTK_ORIENT_VERTICAL;
     } else if (nbstyle->tabPosition & TTK_PACK_BOTTOM) {
 	nbstyle->tabPlacement = TTK_PACK_LEFT | TTK_STICK_N;
-	nbstyle->tabOrient = TTK_ORIENT_HORIZONTAL;
     } else { /* Assume TTK_PACK_TOP */
 	nbstyle->tabPlacement = TTK_PACK_LEFT | TTK_STICK_S;
+    }
+    if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabplacement", 0)) != 0) {
+	TtkGetLabelAnchorFromObj(NULL, objPtr, &nbstyle->tabPlacement);
+    }
+
+    /* Compute tabOrient as function of tabPlacement:
+     */
+    if (nbstyle->tabPlacement & (TTK_PACK_LEFT|TTK_PACK_RIGHT)) {
 	nbstyle->tabOrient = TTK_ORIENT_HORIZONTAL;
+    } else {
+	nbstyle->tabOrient = TTK_ORIENT_VERTICAL;
     }
 
     nbstyle->tabMargins = Ttk_UniformPadding(0);
@@ -413,8 +420,13 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 	padding = Ttk_AddPadding(padding, ipad);
     }
 
-    *widthPtr = MAX(tabrowWidth, clientWidth) + Ttk_PaddingWidth(padding);
-    *heightPtr = tabrowHeight + clientHeight + Ttk_PaddingHeight(padding);
+    if (nbstyle.tabPosition & (TTK_PACK_TOP|TTK_PACK_BOTTOM)) {
+	*widthPtr = MAX(tabrowWidth, clientWidth) + Ttk_PaddingWidth(padding);
+	*heightPtr = tabrowHeight + clientHeight + Ttk_PaddingHeight(padding);
+    } else {
+	*widthPtr = tabrowWidth + clientWidth + Ttk_PaddingWidth(padding);
+	*heightPtr = MAX(tabrowHeight,clientHeight) + Ttk_PaddingHeight(padding);
+    }
 
     return 1;
 }
@@ -424,12 +436,12 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
  */
 
 /* SqueezeTabs --
- *	If the notebook is not wide enough to display all tabs,
- *	attempt to decrease tab widths to fit.
+ *	Squeeze or stretch tabs to fit within the tab area parcel.
  *
- *	All tabs are shrunk by an equal amount, but will not be made
+ *	All tabs are adjusted by an equal amount, but will not be made
  *	smaller than the minimum width.  (If all the tabs still do
- *	not fit in the available space, the rightmost tabs are truncated).
+ *	not fit in the available space, the rightmost ones will
+ *	be further squozen by PlaceTabs()).
  *
  *	The algorithm does not always yield an optimal layout, but does
  *	have the important property that decreasing the available width
@@ -438,23 +450,32 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
  *	and grows.
  *
  * @@@ <<NOTE-TABPOSITION>> bug: only works for horizontal orientations
+ * @@@ <<NOTE-SQUEEZE-HIDDEN>> does not account for hidden tabs.
  */
 
 static void SqueezeTabs(
-    Notebook *nb, int desiredWidth, int availableWidth, int minTabWidth)
+    Notebook *nb, int needed, int available, int minTabWidth)
 {
-    int nTabs = Ttk_NumberSlaves(nb->notebook.mgr);
-    int shrinkage = desiredWidth - availableWidth;
-    int extra = 0;
+    int nTabs = Ttk_NumberSlaves(nb->notebook.mgr),
+	difference = available - needed,
+	delta = difference / nTabs,
+	remainder = difference % nTabs;
+    int slack = 0;
     int i;
+
+    if (remainder < 0) { remainder += nTabs; --delta; }
 
     for (i = 0; i < nTabs; ++i) {
 	Tab *tab = Ttk_SlaveData(nb->notebook.mgr,i);
-	int shrink = (shrinkage/nTabs) + (i < (shrinkage%nTabs)) + extra;
-	int shrinkability = MAX(0, tab->width - minTabWidth);
-	int delta = MIN(shrinkability, shrink);
-	tab->width -= delta;
-	extra = shrink - delta;
+	int adj = delta + (i < remainder) + slack;
+
+	if (tab->width + adj >= minTabWidth) {
+	    tab->width += adj;
+	    slack = 0;
+	} else {
+	    slack = adj - (minTabWidth - tab->width);
+	    tab->width = minTabWidth;
+	}
     }
 }
 
@@ -525,9 +546,7 @@ static void NotebookDoLayout(void *recordPtr)
 			nbstyle.tabPosition),
 		    nbstyle.tabMargins);
 
-    if (tabrowWidth > tabrowBox.width) {
-	SqueezeTabs(nb, tabrowWidth, tabrowBox.width, nbstyle.minTabWidth);
-    }
+    SqueezeTabs(nb, tabrowWidth, tabrowBox.width, nbstyle.minTabWidth);
     PlaceTabs(nb, tabrowBox, nbstyle.tabPlacement);
 
     /* Layout for client area frame:
