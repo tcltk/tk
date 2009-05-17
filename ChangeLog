@@ -1,3 +1,7 @@
+2009-05-17  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttkNotebook.c: More flexible tab placement [Bug 1470246]
+
 2009-05-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkButton.c: [Bug 1923684]: If a checkbutton offvalue is
