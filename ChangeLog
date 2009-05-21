@@ -1,3 +1,8 @@
+2009-05-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinMenu.c: [Bug 2794778]: Backported fix for keyboard
+	traversal of the menus on Windows.
+
 2009-05-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkButton.c: [Bug 1923684]: backported checkbutton fix
