@@ -1,3 +1,10 @@
+2009-05-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinMenu.c: [Bug 2794778]: Calls to CallWindowProc can lead
+	to other functions overwriting the event strucure. Therefore
+	preserve a local copy of the XKeyEvent while looping over the key
+	events.
+
 2009-05-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttkNotebook.c: More flexible tab placement [Bug 1470246]
