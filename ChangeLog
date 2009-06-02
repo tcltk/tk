@@ -1,3 +1,8 @@
+2009-06-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWm.c:   [Bug 2799589] Backported fix for crash on
+	* tests/winWm.test: delayed window activation.
+
 2009-05-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinMenu.c: [Bug 2794778]: Backported fix for keyboard
