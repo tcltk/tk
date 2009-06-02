@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.138 2009/05/03 06:46:13 dkf Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.139 2009/06/02 09:26:57 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -8259,10 +8259,20 @@ ActivateWindow(
      */
 
     if (winPtr) {
+	Window window;
 	if (TkGrabState(winPtr) != TK_GRAB_EXCLUDED) {
-	    SetFocus(Tk_GetHWND(winPtr->window));
+	    window = winPtr->window;
 	} else {
-	    SetFocus(Tk_GetHWND(winPtr->dispPtr->grabWinPtr->window));
+	    window = winPtr->dispPtr->grabWinPtr->window;
+	}
+
+	/*
+	 * Ensure the window was not destroyed while we were postponing
+	 * the activation [Bug 2799589]
+	 */
+
+	if (window) {
+	    SetFocus(Tk_GetHWND(window));
 	}
     }
 

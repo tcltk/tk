@@ -1,3 +1,8 @@
+2009-06-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWm.c:    [Bug 2799589] Avoid setting the focus on a
+	* tests/winWm.test: deleted window during delayed activation.
+
 2009-05-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinMenu.c: [Bug 2794778]: Calls to CallWindowProc can lead
