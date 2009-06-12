@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.44 2009/04/27 10:31:35 dkf Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.45 2009/06/12 23:03:23 dkf Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -1100,6 +1100,21 @@ EXTERN const char *	TkPixelPrintProc (ClientData clientData,
 				Tk_Window tkwin, char * widgRec, int offset,
 				Tcl_FreeProc ** freeProcPtr);
 #endif
+#ifndef TkOrientParseProc_TCL_DECLARED
+#define TkOrientParseProc_TCL_DECLARED
+/* 177 */
+EXTERN int		TkOrientParseProc (ClientData clientData,
+				Tcl_Interp * interp, Tk_Window tkwin,
+				const char * value, char * widgRec,
+				int offset);
+#endif
+#ifndef TkOrientPrintProc_TCL_DECLARED
+#define TkOrientPrintProc_TCL_DECLARED
+/* 178 */
+EXTERN const char *	TkOrientPrintProc (ClientData clientData,
+				Tk_Window tkwin, char * widgRec, int offset,
+				Tcl_FreeProc ** freeProcPtr);
+#endif
 
 typedef struct TkIntStubs {
     int magic;
@@ -1381,6 +1396,8 @@ typedef struct TkIntStubs {
     const char * (*tkOffsetPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 174 */
     int (*tkPixelParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 175 */
     const char * (*tkPixelPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 176 */
+    int (*tkOrientParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 177 */
+    const char * (*tkOrientPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 178 */
 } TkIntStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
@@ -2125,6 +2142,14 @@ extern const TkIntStubs *tkIntStubsPtr;
 #ifndef TkPixelPrintProc
 #define TkPixelPrintProc \
 	(tkIntStubsPtr->tkPixelPrintProc) /* 176 */
+#endif
+#ifndef TkOrientParseProc
+#define TkOrientParseProc \
+	(tkIntStubsPtr->tkOrientParseProc) /* 177 */
+#endif
+#ifndef TkOrientPrintProc
+#define TkOrientPrintProc \
+	(tkIntStubsPtr->tkOrientPrintProc) /* 178 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
