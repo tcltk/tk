@@ -1,23 +1,28 @@
+2009-06-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkInt.decls (TkOrientParseProc, TkOrientPrintProc):
+	[Bug 2804935]: Expose these functions through the internal stub table
+	as they are useful to existing third-party code.
+
 2009-06-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinWm.c:    [Bug 2799589] Avoid setting the focus on a
+	* win/tkWinWm.c:    [Bug 2799589]: Avoid setting the focus on a
 	* tests/winWm.test: deleted window during delayed activation.
 
 2009-05-21  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinMenu.c: [Bug 2794778]: Calls to CallWindowProc can lead
-	to other functions overwriting the event strucure. Therefore
-	preserve a local copy of the XKeyEvent while looping over the key
-	events.
+	* win/tkWinMenu.c: [Bug 2794778]: Calls to CallWindowProc can lead to
+	other functions overwriting the event strucure. Therefore preserve a
+	local copy of the XKeyEvent while looping over the key events.
 
 2009-05-17  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttkNotebook.c: More flexible tab placement [Bug 1470246]
+	* generic/ttkNotebook.c: [Bug 1470246]: More flexible tab placement.
 
 2009-05-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tkButton.c: [Bug 1923684]: If a checkbutton offvalue is
-	the same as the tristate value we should use the off state in
+	* generic/tkButton.c: [Bug 1923684]: If a checkbutton offvalue is the
+	same as the tristate value we should use the off state in
 	preference. (andrey gusev)
 
 2009-05-13  Pat Thoyts  <patthoyts@users.sourceforge.net>

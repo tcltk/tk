@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.54 2009/04/27 10:31:35 dkf Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.55 2009/06/12 12:46:11 dkf Exp $
 
 library tk
 
@@ -599,6 +599,14 @@ declare 175 generic {
 }
 declare 176 generic {
     const char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
+	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+}
+declare 177 generic {
+    int TkOrientParseProc(ClientData clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+}
+declare 178 generic {
+    const char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 
