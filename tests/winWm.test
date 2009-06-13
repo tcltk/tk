@@ -9,7 +9,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: winWm.test,v 1.22 2009/06/02 09:26:57 patthoyts Exp $
+# RCS: @(#) $Id: winWm.test,v 1.23 2009/06/13 12:02:14 dgp Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -445,7 +445,7 @@ test winWm-8.2 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -setup 
     destroy .t
 } -result {}
 
-test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -setup {
+test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constraints win -setup {
     proc winwm90click {w} {
         if {![winfo ismapped $w]} { update }
         event generate $w <Enter>
@@ -487,7 +487,7 @@ test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -setup {
         rename winwm90$cmd {}
     }
     destroy .tx .t .sd
-} -result {ok}
+} -result {ok} 
 
 destroy .t
 
