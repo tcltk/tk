@@ -1,3 +1,7 @@
+2009-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvUtil.c fix [Bug #220935] canvas dash update problem
+
 2009-06-12  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkInt.decls (TkOrientParseProc, TkOrientPrintProc):

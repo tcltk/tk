@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.24 2008/11/27 23:47:09 ferrieux Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.25 2009/06/22 05:52:38 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1207,7 +1207,7 @@ Tk_ChangeOutlineGC(
     }
 
     if ((dash->number<-1) ||
-	    ((dash->number == -1) && (dash->pattern.array[1] != ','))) {
+	    ((dash->number == -1) && (dash->pattern.array[0] != ','))) {
 	char *q;
 	int i = -dash->number;
 
@@ -1327,7 +1327,7 @@ Tk_ResetOutlineGC(
 
     if ((dash->number > 2) || (dash->number < -1) || (dash->number==2 &&
 	    (dash->pattern.array[0] != dash->pattern.array[1])) ||
-	    ((dash->number == -1) && (dash->pattern.array[1] != ','))) {
+	    ((dash->number == -1) && (dash->pattern.array[0] != ','))) {
 	if (dash->number < 0) {
 	    dashList = (int) (4 * width + 0.5);
 	} else if (dash->number<3) {
