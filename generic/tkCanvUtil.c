@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.25 2009/06/22 05:52:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.26 2009/06/23 05:16:59 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1122,12 +1122,10 @@ Tk_ConfigOutlineGC(
     if (mask && (dash->number != 0)) {
 	gcValues->line_style = LineOnOffDash;
 	gcValues->dash_offset = outline->offset;
-	if (dash->number >= 2) {
-	    gcValues->dashes = 4;
-	} else if (dash->number > 0) {
+	if (dash->number > 0) {
 	    gcValues->dashes = dash->pattern.array[0];
 	} else {
-	    gcValues->dashes = (char) (4 * width);
+	    gcValues->dashes = (char) (4 * width + 0.5);
 	}
 	mask |= GCLineStyle|GCDashList|GCDashOffset;
     }
@@ -1258,7 +1256,7 @@ Tk_ChangeOutlineGC(
  *
  * Tk_ResetOutlineGC
  *
- *	Restores the GC to the situation before Tk_ChangeDashGC() was called.
+ *	Restores the GC to the situation before Tk_ChangeOutlineGC() was called.
  *	This function should be called just after the dashed item is drawn,
  *	because the GC is supposed to be read-only.
  *
@@ -1328,12 +1326,10 @@ Tk_ResetOutlineGC(
     if ((dash->number > 2) || (dash->number < -1) || (dash->number==2 &&
 	    (dash->pattern.array[0] != dash->pattern.array[1])) ||
 	    ((dash->number == -1) && (dash->pattern.array[0] != ','))) {
-	if (dash->number < 0) {
-	    dashList = (int) (4 * width + 0.5);
-	} else if (dash->number<3) {
+    if (dash->number > 0) {
 	    dashList = dash->pattern.array[0];
 	} else {
-	    dashList = 4;
+	    dashList = (char) (4 * width + 0.5);
 	}
 	XSetDashes(Canvas(canvas)->display, outline->gc, outline->offset,
 		&dashList , 1);
