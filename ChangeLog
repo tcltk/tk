@@ -1,3 +1,7 @@
+2009-06-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvUtil.c fix [Bug #220935] canvas dash update problem
+
 2009-06-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinWm.c:   [Bug 2799589] Backported fix for crash on
