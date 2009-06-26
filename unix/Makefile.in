@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.152 2009/04/24 15:34:41 stwo Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.153 2009/06/26 01:42:05 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -311,7 +311,7 @@ UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
 TOOL_DIR		= @TCL_SRC_DIR@/tools
 TEST_DIR		= $(TOP_DIR)/tests
-MAC_OSX_DIR		= $(TOP_DIR)/macosx
+MAC_OSX_DIR		= $(TOP_DIR)/@MACOSX_SRC_DIR@
 XLIB_DIR		= $(TOP_DIR)/xlib
 
 #----------------------------------------------------------------
@@ -1573,19 +1573,30 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/wish.exe.manifest.in
 	mkdir $(DISTDIR)/macosx
-	cp -p $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
-		$(MAC_OSX_DIR)/Wish.icns $(MAC_OSX_DIR)/*.[chr] \
-		$(MAC_OSX_DIR)/*.in $(MAC_OSX_DIR)/*.ac \
-		$(MAC_OSX_DIR)/*.xcconfig $(MAC_OSX_DIR)/configure \
+	cp -p $(TOP_DIR)/macosx/GNUmakefile $(TOP_DIR)/macosx/README \
+		$(TOP_DIR)/macosx/Wish.icns $(TOP_DIR)/macosx/*.[chr] \
+		$(TOP_DIR)/macosx/*.in $(TOP_DIR)/macosx/*.ac \
+		$(TOP_DIR)/macosx/*.xcconfig $(TOP_DIR)/macosx/configure \
 		$(DISTDIR)/macosx
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/macosx
 	mkdir $(DISTDIR)/macosx/Wish.pbproj
-	cp -p $(MAC_OSX_DIR)/Wish.pbproj/*.pbx* $(DISTDIR)/macosx/Wish.pbproj
+	cp -p $(TOP_DIR)/macosx/Wish.pbproj/*.pbx* $(DISTDIR)/macosx/Wish.pbproj
 	mkdir $(DISTDIR)/macosx/Wish.xcode
-	cp -p $(MAC_OSX_DIR)/Wish.xcode/*.pbx* $(DISTDIR)/macosx/Wish.xcode
+	cp -p $(TOP_DIR)/macosx/Wish.xcode/*.pbx* $(DISTDIR)/macosx/Wish.xcode
 	mkdir $(DISTDIR)/macosx/Wish.xcodeproj
-	cp -p $(MAC_OSX_DIR)/Wish.xcodeproj/*.pbx* \
+	cp -p $(TOP_DIR)/macosx/Wish.xcodeproj/*.pbx* \
 		$(DISTDIR)/macosx/Wish.xcodeproj
+	mkdir $(DISTDIR)/carbon
+	cp -p $(TOP_DIR)/carbon/GNUmakefile $(TOP_DIR)/carbon/README \
+		$(TOP_DIR)/carbon/Wish.icns $(TOP_DIR)/carbon/*.[chr] \
+		$(TOP_DIR)/carbon/*.in $(TOP_DIR)/carbon/*.ac \
+		$(TOP_DIR)/carbon/*.xcconfig $(DISTDIR)/carbon
+	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/carbon
+	mkdir $(DISTDIR)/carbon/Wish.xcode
+	cp -p $(TOP_DIR)/carbon/Wish.xcode/*.pbx* $(DISTDIR)/carbon/Wish.xcode
+	mkdir $(DISTDIR)/carbon/Wish.xcodeproj
+	cp -p $(TOP_DIR)/carbon/Wish.xcodeproj/*.pbx* \
+		$(DISTDIR)/carbon/Wish.xcodeproj
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
 		$(TCLDIR)/compat/stdlib.h $(TCLDIR)/compat/limits.h \
