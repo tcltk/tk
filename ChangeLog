@@ -1,3 +1,15 @@
+2009-06-26  Daniel Steffen  <das@users.sourceforge.net>
+
+	* carbon/ (new directory):	copy of current state of 'macosx'
+	source directory, to preserve legacy TkAqua implementation based on
+	Carbon API (with support for Mac OS X releases older than 10.5).
+
+	* unix/Makefile.in:		add support for --enable-aqua=carbon
+	* unix/configure.in:		configure option (legacy fallback for
+					pre-Mac OS X 10.5 releases).
+
+	* unix/configure:		autoconf-2.59
+
 2009-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkCanvUtil.c fix [Bug #220935] canvas dash update problem
