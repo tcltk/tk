@@ -1,3 +1,9 @@
+2009-06-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls (Tk(Orient|Smooth)(Parse|Print)Proc):
+	Backport [Bug 2804935]: Expose these functions through
+	the internal stub table as they are useful to existing third-party code.
+
 2009-06-23  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkCanvUtil.c fix [Bug #220935] canvas dash update problem
