@@ -1,3 +1,10 @@
+2009-06-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls (added TkSmooth(Parse|Print)Proc,
+	removed TkTile(Parse|Print)Proc which don't exist):
+	Follow-up to [Bug 2804935]: Expose these functions through the
+	internal stub table as they are useful to existing third-party code.
+
 2009-06-26  Daniel Steffen  <das@users.sourceforge.net>
 
 	* carbon/ (new directory):	copy of current state of 'macosx'
@@ -12,7 +19,7 @@
 
 2009-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvUtil.c fix [Bug #220935] canvas dash update problem
+	* generic/tkCanvUtil.c fix [Bug 220935] canvas dash update problem
 
 2009-06-12  Donal K. Fellows  <dkf@users.sf.net>
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.45 2009/06/12 23:03:23 dkf Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.46 2009/06/27 19:33:35 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -1051,7 +1051,7 @@ EXTERN int		TkStateParseProc (ClientData clientData,
 #ifndef TkStatePrintProc_TCL_DECLARED
 #define TkStatePrintProc_TCL_DECLARED
 /* 170 */
-EXTERN const char *	TkStatePrintProc (ClientData clientData,
+EXTERN CONST86 char *	TkStatePrintProc (ClientData clientData,
 				Tk_Window tkwin, char * widgRec, int offset,
 				Tcl_FreeProc ** freeProcPtr);
 #endif
@@ -1066,7 +1066,7 @@ EXTERN int		TkCanvasDashParseProc (ClientData clientData,
 #ifndef TkCanvasDashPrintProc_TCL_DECLARED
 #define TkCanvasDashPrintProc_TCL_DECLARED
 /* 172 */
-EXTERN const char *	TkCanvasDashPrintProc (ClientData clientData,
+EXTERN CONST86 char *	TkCanvasDashPrintProc (ClientData clientData,
 				Tk_Window tkwin, char * widgRec, int offset,
 				Tcl_FreeProc ** freeProcPtr);
 #endif
@@ -1081,7 +1081,7 @@ EXTERN int		TkOffsetParseProc (ClientData clientData,
 #ifndef TkOffsetPrintProc_TCL_DECLARED
 #define TkOffsetPrintProc_TCL_DECLARED
 /* 174 */
-EXTERN const char *	TkOffsetPrintProc (ClientData clientData,
+EXTERN CONST86 char *	TkOffsetPrintProc (ClientData clientData,
 				Tk_Window tkwin, char * widgRec, int offset,
 				Tcl_FreeProc ** freeProcPtr);
 #endif
@@ -1096,7 +1096,7 @@ EXTERN int		TkPixelParseProc (ClientData clientData,
 #ifndef TkPixelPrintProc_TCL_DECLARED
 #define TkPixelPrintProc_TCL_DECLARED
 /* 176 */
-EXTERN const char *	TkPixelPrintProc (ClientData clientData,
+EXTERN CONST86 char *	TkPixelPrintProc (ClientData clientData,
 				Tk_Window tkwin, char * widgRec, int offset,
 				Tcl_FreeProc ** freeProcPtr);
 #endif
@@ -1111,7 +1111,22 @@ EXTERN int		TkOrientParseProc (ClientData clientData,
 #ifndef TkOrientPrintProc_TCL_DECLARED
 #define TkOrientPrintProc_TCL_DECLARED
 /* 178 */
-EXTERN const char *	TkOrientPrintProc (ClientData clientData,
+EXTERN CONST86 char *	TkOrientPrintProc (ClientData clientData,
+				Tk_Window tkwin, char * widgRec, int offset,
+				Tcl_FreeProc ** freeProcPtr);
+#endif
+#ifndef TkSmoothParseProc_TCL_DECLARED
+#define TkSmoothParseProc_TCL_DECLARED
+/* 179 */
+EXTERN int		TkSmoothParseProc (ClientData clientData,
+				Tcl_Interp * interp, Tk_Window tkwin,
+				const char * value, char * widgRec,
+				int offset);
+#endif
+#ifndef TkSmoothPrintProc_TCL_DECLARED
+#define TkSmoothPrintProc_TCL_DECLARED
+/* 180 */
+EXTERN CONST86 char *	TkSmoothPrintProc (ClientData clientData,
 				Tk_Window tkwin, char * widgRec, int offset,
 				Tcl_FreeProc ** freeProcPtr);
 #endif
@@ -1389,15 +1404,17 @@ typedef struct TkIntStubs {
     int (*tkBTreeNumLines) (TkTextBTree tree, const struct TkText * textPtr); /* 167 */
     void (*tkTextInsertDisplayProc) (struct TkText * textPtr, struct TkTextDispChunk * chunkPtr, int x, int y, int height, int baseline, Display * display, Drawable dst, int screenY); /* 168 */
     int (*tkStateParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 169 */
-    const char * (*tkStatePrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 170 */
+    CONST86 char * (*tkStatePrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 170 */
     int (*tkCanvasDashParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 171 */
-    const char * (*tkCanvasDashPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 172 */
+    CONST86 char * (*tkCanvasDashPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 172 */
     int (*tkOffsetParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 173 */
-    const char * (*tkOffsetPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 174 */
+    CONST86 char * (*tkOffsetPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 174 */
     int (*tkPixelParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 175 */
-    const char * (*tkPixelPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 176 */
+    CONST86 char * (*tkPixelPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 176 */
     int (*tkOrientParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 177 */
-    const char * (*tkOrientPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 178 */
+    CONST86 char * (*tkOrientPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 178 */
+    int (*tkSmoothParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 179 */
+    CONST86 char * (*tkSmoothPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 180 */
 } TkIntStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
@@ -2150,6 +2167,14 @@ extern const TkIntStubs *tkIntStubsPtr;
 #ifndef TkOrientPrintProc
 #define TkOrientPrintProc \
 	(tkIntStubsPtr->tkOrientPrintProc) /* 178 */
+#endif
+#ifndef TkSmoothParseProc
+#define TkSmoothParseProc \
+	(tkIntStubsPtr->tkSmoothParseProc) /* 179 */
+#endif
+#ifndef TkSmoothPrintProc
+#define TkSmoothPrintProc \
+	(tkIntStubsPtr->tkSmoothPrintProc) /* 180 */
 #endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
