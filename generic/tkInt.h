@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.82.2.3 2009/04/27 10:39:57 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.82.2.4 2009/06/27 19:53:16 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -1126,27 +1126,9 @@ MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    double *doublePtr);
 MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *string, double *doublePtr);
-MODULE_SCOPE int	TkOrientParseProc(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkOrientPrintProc(ClientData clientData,
-			    Tk_Window tkwin, char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
-MODULE_SCOPE int	TkSmoothParseProc(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *recordPtr, int offset);
-MODULE_SCOPE char *	TkSmoothPrintProc(ClientData clientData,
-			    Tk_Window tkwin, char *recordPtr, int offset,
-			    Tcl_FreeProc **freeProcPtr);
-MODULE_SCOPE int	TkTileParseProc(ClientData clientData,
-			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *widgRec, int offset);
-MODULE_SCOPE char *	TkTilePrintProc(ClientData clientData, Tk_Window tkwin,
-			    char *widgRec, int offset,
-			    Tcl_FreeProc **freeProcPtr);
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
@@ -1194,7 +1176,7 @@ MODULE_SCOPE int	TkUnsupported1ObjCmd(ClientData clientData,
 #define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKINT */
-
+
 /*
  * Local Variables:
  * mode: c
