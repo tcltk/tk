@@ -1,3 +1,143 @@
+2009-06-29  Daniel Steffen  <das@users.sourceforge.net>
+
+	Merge of TkAqua Cocoa port <http://github.com/das/tcltk/tree/de-carbon>
+	*** POTENTIAL INCOMPATIBILITY *** 
+
+	* macosx/tkMacOSX.h:		Large-scale rewrite of TkAqua migrating
+	* macosx/tkMacOSXBitmap.c:	all use of deprecated Carbon API to
+	* macosx/tkMacOSXButton.c:	Cocoa API; now supports 64bit
+	* macosx/tkMacOSXClipboard.c:	architecture and requires Mac OS X 10.5
+	* macosx/tkMacOSXColor.c:	or later; with TkAqua enabled, all Tk
+	* macosx/tkMacOSXConfig.c:	sources are now built with the
+	* macosx/tkMacOSXCursor.c:	Objective-C compiler and running in
+	* macosx/tkMacOSXDebug.c:	Objective-C garbage collection mode as
+	* macosx/tkMacOSXDebug.h:	well as in retain-release mode is
+	* macosx/tkMacOSXDefault.h:	supported; detailed development history
+	* macosx/tkMacOSXDialog.c:	is available in github repository.
+	* macosx/tkMacOSXDraw.c:
+	* macosx/tkMacOSXEmbed.c:	There should be no script-visible
+	* macosx/tkMacOSXEntry.c:	changes to existing Tk functionality,
+	* macosx/tkMacOSXEvent.c:	but there are a few aqua-specific
+	* macosx/tkMacOSXEvent.h:	additions, see macosx/README for
+	* macosx/tkMacOSXFont.c:	details; extensions using only public
+	* macosx/tkMacOSXFont.h:	Tk API should continue to work
+	* macosx/tkMacOSXHLEvents.c:	unchanged but extensions that rely on
+	* macosx/tkMacOSXInit.c:	platform-specific internal Tk API or
+	* macosx/tkMacOSXInt.h:		make assumptions about the inner
+	* macosx/tkMacOSXKeyEvent.c:	workings of TkAqua (in particular
+	* macosx/tkMacOSXKeyboard.c:	presence of QuickDraw) will require
+	* macosx/tkMacOSXMenu.c:	porting.
+	* macosx/tkMacOSXMenubutton.c:
+	* macosx/tkMacOSXMenus.c:	Configure Tk with --enable-aqua=carbon
+	* macosx/tkMacOSXMouseEvent.c:	to fallback to now-deprecated previous
+	* macosx/tkMacOSXNotify.c:	TkAqua implementation in tk/carbon.
+	* macosx/tkMacOSXPort.h:
+	* macosx/tkMacOSXPrivate.h:
+	* macosx/tkMacOSXRegion.c:
+	* macosx/tkMacOSXScale.c:
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXSend.c:
+	* macosx/tkMacOSXSubwindows.c:
+	* macosx/tkMacOSXTest.c:
+	* macosx/tkMacOSXWindowEvent.c:
+	* macosx/tkMacOSXWm.c:
+	* macosx/tkMacOSXWm.h:
+	* macosx/tkMacOSXXStubs.c:
+	* macosx/ttkMacOSXTheme.c:
+	* macosx/tkMacOSXCarbonEvents.c (removed):
+
+	* macosx/tkMacOSXCursors.h (new):	move cursor data from resources
+	* macosx/tkMacOSXXCursors.h (new):	to compiled-in const array;
+	* macosx/tkMacOSXCursors.r (removed):	remove obsolete Rez source
+	* macosx/tkMacOSXXCursors.r (removed):	files for resource data.
+	* macosx/tkAboutDlg.r (removed):
+	* macosx/tkMacOSXAETE.r (removed):
+
+	* macosx/Tk.tiff (new):		rename and update icon to blue feather;
+	* macosx/Tk.icns (new):		add tiff version for about dialog.
+	* macosx/Wish.icns (removed):
+
+	* macosx/Tk-Info.plist.in:	update copyright; adjust minimum system
+	* macosx/Wish-Info.plist.in:	version requirement.
+	* generic/tkEntry.h:
+
+	* license.terms:		sync list of entities with those in the
+					tcl license.terms, add Apple Inc.
+
+	* generic/tk.h:			update comment with list of source
+					files containing tk version numbers.
+
+	* generic/tkButton.c:		on aqua, recompute button geometry on
+					secondary image change to enable cache
+					of native img format in geom compute.
+
+	* generic/tkGrab.c:		on aqua, make all grabs global, the
+					Mac OS X windowserver forces all grabs
+					to be application-local only anyway.
+
+	* generic/tkSelect.c:		enable utf8 atom on aqua.
+
+	* generic/tk.decls:		replace carbon types in public and
+	* generic/tkInt.decls:		internal platform stubs interfaces with
+					void* resp. generic Tk types.
+
+	* xlib/xgc.c:			add support for managing a platform-
+					specific cache appended to a GC.
+
+	* tests/dialog.test:		change name of undefined bit to avoid
+					match with OSType native bitmap name.
+
+	* doc/cursors.n:		update list of cursors mapped to native
+					cursors and add new native cursors.
+
+	* doc/menu.n:			add documentation of new aqua-specific
+					.window menu, document new constraints
+					on .apple menu.
+
+	* library/console.tcl:		add aqua window and help menus.
+
+	* unix/Makefile.in:		add support for TkAqua-implementation-
+					specific sources determined at
+					configure-time. Update dist target for
+					new/removed files.
+
+	* unix/configure.in:		add libraries & compiler flags for
+					Cocoa and Objective-C; update build
+					support for new/removed files; add
+					support for configure-time choice of
+					TkAqua implementation.
+
+	* macosx/Tk-Common.xcconfig (new):	rename Xcode projects and
+	* macosx/Tk-Debug.xcconfig (new):	related files; update for Xcode
+	* macosx/Tk-Release.xcconfig (new):	3.1 and 3.2; update for Cocoa,
+	* macosx/Tk.xcode/* (new):		Objective-C & GC; update with
+	* macosx/Tk.xcodeproj/* (new):		new/removed source files;
+	* macosx/Wish.xcode/* (removed):	standardize on gcc 4.2; remove
+	* macosx/Wish.xcodeproj/* (removed):	obsolete configurations and
+	* macosx/Wish-Debug.xcconfig (removed):	pre-Xcode project.
+	* macosx/Wish-Common.xcconfig (removed):
+	* macosx/Wish-Release.xcconfig (removed):
+	* macosx/Wish.pbproj/* (removed):
+
+	* macosx/README:		document new Cocoa-port features and
+					constraints; update project docs;
+					cleanup.
+
+	* carbon/tkMacOSXInt.h:		add dummy defines for empty GC cache.
+
+	* carbon/tkMacOSXColor.c:	update for type changes in platform
+	* carbon/tkMacOSXDraw.c:	stubs interfaces.
+	* carbon/tkMacOSXHLEvents.c:
+	* carbon/tkMacOSXMouseEvent.c:
+	* carbon/tkMacOSXSubwindows.c:
+	* carbon/tkMacOSXWm.c:
+
+	* carbon/tkMacOSXButton.c:	fix warning.
+
+	* generic/tkPlatDecls.h:	regen.
+	* generic/tkIntPlatDecls.h:
+	* unix/configure:		autoconf-2.59
+
 2009-06-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.decls (added TkSmooth(Parse|Print)Proc,

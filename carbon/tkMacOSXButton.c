@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.1 2009/06/26 01:42:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -191,7 +191,7 @@ TkpDisplayButton(
     Boolean portChanged;
     Pixmap pixmap;
     int width, height, fullWidth, fullHeight, textXOffset, textYOffset;
-    int borderWidth, wasUsingControl;
+    int borderWidth = 0, wasUsingControl;
     int haveImage = 0, haveText = 0, imageWidth = 0, imageHeight = 0;
     int imageXOffset = 0, imageYOffset = 0; /* image information that will
 					     * be used to restrict disabled

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.28 2009/01/11 11:25:21 patthoyts Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.29 2009/06/29 14:35:01 das Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -231,24 +231,36 @@ to system restrictions.
 .SS "SPECIAL MENUS IN MENUBARS"
 .PP
 Certain menus in a menubar will be treated specially.  On the Macintosh,
-access to the special Application and Help menus is provided. On Windows,
-access to the Windows System menu in each window is provided. On X Windows,
-a special right-justified help menu is provided. In all cases, these
-menus must be created with the command name of the menubar menu concatenated
-with the special name. So for a menubar named .menubar, on the Macintosh,
-the special menus would be .menubar.apple and .menubar.help; on Windows,
-the special menu would be .menubar.system; on X Windows, the help
-menu would be .menubar.help.
+access to the special Application, Window and Help menus is provided. On
+Windows, access to the Windows System menu in each window is provided.
+On X Windows, a special right-justified help menu is provided. In all
+cases, these menus must be created with the command name of the menubar
+menu concatenated with the special name. So for a menubar named
+.menubar, on the Macintosh, the special menus would be .menubar.apple,
+.menubar.window and .menubar.help; on Windows, the special menu would be
+.menubar.system; on X Windows, the help menu would be .menubar.help.
 .PP
-When Tk sees a .menubar.apple menu on the Macintosh, that menu's contents
-make up the first items of the Application menu whenever the window
-containing the menubar is in front.
+When Tk sees a .menubar.apple menu as the first menu in a menubar on the
+Macintosh, that menu's contents make up the first items of the
+Application menu whenever the window containing the menubar is in front.
 After all of the Tk-defined items, the menu will have a separator,
 followed by all standard Application menu items.
+Such a .apple menu must be present in a menu when that menu is first
+configured as a toplevel's menubar, otherwise a default application menu
+(hidden from Tk) will be inserted into the menubar at that time and
+subsequent addition of a .apple menu will no longer result in it
+becoming the Application menu.
 .PP
-When Tk sees a Help menu on the Macintosh, the menu's contents are
-appended to the standard Help menu on the right of the user's menubar
-whenever the window's menubar is in front. The first items in the menu
+When Tk sees a .menubar.window menu on the Macintosh, the menu's
+contents are inserted into the standard Window menu of the user's
+menubar whenever the window's menubar is in front. The first items in
+the menu are provided by Mac OS X, and the names of the current
+toplevels are automatically appended after all the Tk-defined items and
+a separator.
+.PP
+When Tk sees a .menubar.help menu on the Macintosh, the menu's contents
+are appended to the standard Help menu of the user's menubar whenever
+the window's menubar is in front. The first items in the menu
 are provided by Mac OS X.
 .PP
 When Tk sees a System menu on Windows, its items are appended to the 

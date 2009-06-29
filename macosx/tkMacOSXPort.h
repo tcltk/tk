@@ -6,13 +6,13 @@
  *	#includes for system include files and a few other things.
  *
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2005-2007 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.15 2008/12/17 22:51:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXPort.h,v 1.16 2009/06/29 14:35:01 das Exp $
  */
 
 #ifndef _TKMACPORT
@@ -125,7 +125,6 @@
  * The following functions are not used on the Mac, so we stub them out.
  */
 
-#define TkpButtonSetDefaults(specPtr) {}
 #define TkpCmapStressed(tkwin,colormap) (0)
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}

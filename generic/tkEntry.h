@@ -6,7 +6,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * Copyright (c) 2002 Apple Computer, Inc.
+ * Copyright (c) 2002 Apple Inc.
  */
 
 #ifndef _TKENTRY

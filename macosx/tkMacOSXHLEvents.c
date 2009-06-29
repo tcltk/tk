@@ -5,13 +5,13 @@
  *	only event that really does anything is the Quit event.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
- * See the file "license.terms" for information on usage and redistribution of
- * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.19 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.20 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -33,22 +33,38 @@ typedef struct KillEvent {
  */
 
 static OSErr		QuitHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		OappHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		RappHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		OdocHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		PrintHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		ScriptHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		PrefsHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static int		MissedAnyParameters(const AppleEvent *theEvent);
 static int		ReallyKillMe(Tcl_Event *eventPtr, int flags);
 static OSStatus		FSRefToDString(const FSRef *fsref, Tcl_DString *ds);
+
+#pragma mark TKApplication(TKHLEvents)
+
+@implementation TKApplication(TKHLEvents)
+
+- (void)terminate:(id)sender {
+    QuitHandler(NULL, NULL, (SRefCon) _eventInterp);
+}
+
+- (void)preferences:(id)sender {
+    PrefsHandler(NULL, NULL, (SRefCon) _eventInterp);
+}
+
+@end
+
+#pragma mark -
 
 /*
  *----------------------------------------------------------------------
@@ -85,32 +101,32 @@ TkMacOSXInitAppleEvents(
 
 	QuitHandlerUPP = NewAEEventHandlerUPP(QuitHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEQuitApplication,
-		QuitHandlerUPP, (long) interp, false);
+		QuitHandlerUPP, (SRefCon) interp, false);
 
 	OappHandlerUPP = NewAEEventHandlerUPP(OappHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEOpenApplication,
-		OappHandlerUPP, (long) interp, false);
+		OappHandlerUPP, (SRefCon) interp, false);
 
 	RappHandlerUPP = NewAEEventHandlerUPP(RappHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEReopenApplication,
-		RappHandlerUPP, (long) interp, false);
+		RappHandlerUPP, (SRefCon) interp, false);
 
 	OdocHandlerUPP = NewAEEventHandlerUPP(OdocHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEOpenDocuments,
-		OdocHandlerUPP, (long) interp, false);
+		OdocHandlerUPP, (SRefCon) interp, false);
 
 	PrintHandlerUPP = NewAEEventHandlerUPP(PrintHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEPrintDocuments,
-		PrintHandlerUPP, (long) interp, false);
+		PrintHandlerUPP, (SRefCon) interp, false);
 
 	PrefsHandlerUPP = NewAEEventHandlerUPP(PrefsHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEShowPreferences,
-		PrefsHandlerUPP, (long) interp, false);
+		PrefsHandlerUPP, (SRefCon) interp, false);
 
 	if (interp) {
 	    ScriptHandlerUPP = NewAEEventHandlerUPP(ScriptHandler);
 	    ChkErr(AEInstallEventHandler, kAEMiscStandards, kAEDoScript,
-		    ScriptHandlerUPP, (long) interp, false);
+		    ScriptHandlerUPP, (SRefCon) interp, false);
 	}
     }
 }
@@ -133,9 +149,9 @@ TkMacOSXInitAppleEvents(
 
 int
 TkMacOSXDoHLEvent(
-    EventRecord *theEvent)
+    void *theEvent)
 {
-    return AEProcessAppleEvent(theEvent);
+    return AEProcessAppleEvent((EventRecord *)theEvent);
 }
 
 /*
@@ -158,7 +174,7 @@ static OSErr
 QuitHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     KillEvent *eventPtr;
@@ -201,7 +217,7 @@ static OSErr
 OappHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_CmdInfo dummy;
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
@@ -236,7 +252,7 @@ static OSErr
 RappHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_CmdInfo dummy;
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
@@ -274,7 +290,7 @@ static OSErr
 PrefsHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_CmdInfo dummy;
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
@@ -309,7 +325,7 @@ static OSErr
 OdocHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     AEDescList fileSpecList;
@@ -400,7 +416,7 @@ static OSErr
 PrintHandler(
     const AppleEvent * event,
     AppleEvent * reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     AEDescList fileSpecList;
@@ -486,7 +502,7 @@ static OSErr
 ScriptHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     OSStatus theErr;
     AEDescList theDesc;
@@ -502,8 +518,8 @@ ScriptHandler(
     theErr = AEGetParamDesc(event, keyDirectObject, typeWildCard,
 	    &theDesc);
     if (theErr != noErr) {
-	sprintf(errString, "AEDoScriptHandler: GetParamDesc error %ld",
-		theErr);
+	sprintf(errString, "AEDoScriptHandler: GetParamDesc error %d",
+		(int)theErr);
 	theErr = AEPutParamPtr(reply, keyErrorString, typeChar, errString,
 		strlen(errString));
     } else if (MissedAnyParameters(event)) {
@@ -593,7 +609,7 @@ ScriptHandler(
 	    AEPutParamPtr(reply, keyDirectObject, typeChar, result, reslen);
 	} else {
 	    AEPutParamPtr(reply, keyErrorString, typeChar, result, reslen);
-	    AEPutParamPtr(reply, keyErrorNumber, typeInteger, (Ptr) &tclErr,
+	    AEPutParamPtr(reply, keyErrorNumber, typeSInt32, (Ptr) &tclErr,
 		    sizeof(int));
 	}
     }
@@ -704,6 +720,7 @@ FSRefToDString(
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
- * fill-column: 78
+ * fill-column: 79
+ * coding: utf-8
  * End:
  */

@@ -8,16 +8,16 @@
  *	Tk application is allowed on the Macintosh.
  *
  * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006-2008 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
- * See the file "license.terms" for information on usage and redistribution of
- * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.19 2008/10/20 10:50:20 dkf Exp $
+ *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.20 2009/06/29 14:35:01 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #include "tkBusy.h"
 
 /*
@@ -146,10 +146,10 @@ TkpMakeWindow(
 	winPtr->privatePtr = macWin;
 	macWin->visRgn = NULL;
 	macWin->aboveVisRgn = NULL;
-	macWin->drawRect = CGRectNull;
+	macWin->drawRgn = NULL;
 	macWin->referenceCount = 0;
 	macWin->flags = TK_CLIP_INVALID;
-	macWin->grafPtr = NULL;
+	macWin->view = nil;
 	macWin->context = NULL;
 	macWin->size = CGSizeZero;
 	if (Tk_IsTopLevel(macWin->winPtr)) {
@@ -280,12 +280,12 @@ TkpUseWindow(
      * correctly find the container's port.
      */
 
-    macWin->grafPtr = NULL;
+    macWin->view = nil;
     macWin->context = NULL;
     macWin->size = CGSizeZero;
     macWin->visRgn = NULL;
     macWin->aboveVisRgn = NULL;
-    macWin->drawRect = CGRectNull;
+    macWin->drawRgn = NULL;
     macWin->referenceCount = 0;
     macWin->flags = TK_CLIP_INVALID;
     macWin->toplevel = macWin;
@@ -313,7 +313,7 @@ TkpUseWindow(
 	 */
 
 	if (tkMacOSXEmbedHandler == NULL ||
-		tkMacOSXEmbedHandler->registerWinProc((int) parent,
+		tkMacOSXEmbedHandler->registerWinProc((long) parent,
 		(Tk_Window) winPtr) != TCL_OK) {
 	    Tcl_AppendResult(interp, "The window ID ", string,
 		    " does not correspond to a valid Tk Window.", NULL);
@@ -1089,7 +1089,7 @@ EmbedWindowDeleted(
 		XEvent event;
 
 		event.xany.serial =
-			Tk_Display(containerPtr->parentPtr)->request;
+			LastKnownRequestProcessed(Tk_Display(containerPtr->parentPtr));
 		event.xany.send_event = False;
 		event.xany.display = Tk_Display(containerPtr->parentPtr);
 
@@ -1179,6 +1179,7 @@ TkpCreateBusy(
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
- * fill-column: 78
+ * fill-column: 79
+ * coding: utf-8
  * End:
  */

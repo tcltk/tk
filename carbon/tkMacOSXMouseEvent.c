@@ -48,7 +48,7 @@
  *	permission to use and distribute the software in accordance with the
  *	terms specified in this license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.1 2009/06/26 01:42:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -342,7 +342,7 @@ TkMacOSXProcessMouseEvent(
 	}
 	break;
     }
-    case inGrow:
+    case inGrow: {
 	/*
 	 * Generally the content region is the domain of Tk sub-windows.
 	 * However, one exception is the grow region. A button down in this
@@ -350,10 +350,12 @@ TkMacOSXProcessMouseEvent(
 	 * Tk may not get button down events in this area!
 	 */
 
-	if (TkMacOSXGrowToplevel(medPtr->whichWin, where) == true) {
+	XPoint p = {where.h, where.v};
+	if (TkMacOSXGrowToplevel(medPtr->whichWin, p) == true) {
 	    statusPtr->stopProcessing = 1;
 	    return true;
 	}
+    }
     case inContent:
 	return GenerateButtonEvent(medPtr);
     }

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.1 2009/06/26 01:42:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -4608,9 +4608,10 @@ TkMacOSXResizable(
 
 int
 TkMacOSXGrowToplevel(
-    WindowRef whichWindow,
-    Point start)
+    void *whichWindow,
+    XPoint s)
 {
+    Point start = {s.y, s.x};
     Point where = start;
     TkDisplay *dispPtr;
     Rect portRect;
@@ -4792,7 +4793,7 @@ TkGetTransientMaster(
 
 Window
 TkMacOSXGetXWindow(
-    WindowRef macWinPtr)
+    void *macWinPtr)
 {
     Tcl_HashEntry *hPtr;
 
@@ -4886,7 +4887,7 @@ TkMacOSXIsWindowZoomed(
 
 int
 TkMacOSXZoomToplevel(
-    WindowRef whichWindow,	/* The Macintosh window to zoom. */
+    void *whichWindow,	/* The Macintosh window to zoom. */
     short zoomPart)		/* Either inZoomIn or inZoomOut */
 {
     Window window;
@@ -5428,7 +5429,7 @@ TkMacOSXMakeRealWindowExist(
 void
 TkMacOSXRegisterOffScreenWindow(
     Window window,		/* Window structure. */
-    GWorldPtr portPtr)		/* Pointer to a Mac GWorld. */
+    void *portPtr)		/* Pointer to a Mac GWorld. */
 {
     Tcl_HashEntry *valueHashPtr;
     int isNew;
@@ -5463,7 +5464,7 @@ TkMacOSXRegisterOffScreenWindow(
 
 void
 TkMacOSXUnregisterMacWindow(
-    WindowRef macWinPtr)	/* Reference to a Mac Window */
+    void *macWinPtr)	/* Reference to a Mac Window */
 {
     Tcl_HashEntry *entryPtr;
 
@@ -5651,7 +5652,7 @@ TkpWmSetState(
 
 int
 TkpIsWindowFloating(
-    WindowRef wRef)
+    void *wRef)
 {
     WindowClass class;
 
@@ -5706,7 +5707,7 @@ TkMacOSXWindowClass(
 
 void
 TkMacOSXWindowOffset(
-    WindowRef wRef,
+    void *wRef,
     int *xOffset,
     int *yOffset)
 {

@@ -5,16 +5,16 @@
  *	the Macintosh platform.
  *
  * Copyright (c) 1996 Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2005-2007 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXTest.c,v 1.6 2007/04/23 21:24:34 das Exp $
+ * RCS: @(#) $Id: tkMacOSXTest.c,v 1.7 2009/06/29 14:35:01 das Exp $
  */
 
-#include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 
 /*
  * Forward declarations of procedures defined later in this file:
@@ -81,3 +81,12 @@ DebuggerCmd(
     Debugger();
     return TCL_OK;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

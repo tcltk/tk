@@ -5,12 +5,12 @@
  *	the configuration package.
  *
  * Copyright (c) 1997 by Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
+ * Copyright 2001, Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXConfig.c,v 1.5 2008/04/27 22:39:12 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXConfig.c,v 1.6 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkInt.h"

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.1 2009/06/26 01:42:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1500,7 +1500,7 @@ TkScrollWindow(
 void
 TkMacOSXSetUpGraphicsPort(
     GC gc,			/* GC to apply to current port. */
-    GWorldPtr destPort)
+    void *destPort)
 {
     CGrafPtr savePort;
     Boolean portChanged;
@@ -1992,7 +1992,7 @@ NoQDClip(
  *----------------------------------------------------------------------
  */
 
-BitMapPtr
+void *
 TkMacOSXMakeStippleMap(
     Drawable drawable,		/* Window to apply stipple. */
     Drawable stipple)		/* The stipple pattern. */
