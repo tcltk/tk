@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.34 2009/05/14 11:54:00 patthoyts Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.35 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkInt.h"
@@ -1800,9 +1800,15 @@ ButtonSelectImageProc(
 {
     register TkButton *butPtr = clientData;
 
+#ifdef MAC_OSX_TK
+    if (butPtr->tkwin != NULL) {
+	TkpComputeButtonGeometry(butPtr);
+    }
+#else
     /*
      * Don't recompute geometry: it's controlled by the primary image.
      */
+#endif
 
     if ((butPtr->flags & SELECTED) && (butPtr->tkwin != NULL)
 	    && Tk_IsMapped(butPtr->tkwin)
@@ -1841,9 +1847,15 @@ ButtonTristateImageProc(
 {
     register TkButton *butPtr = clientData;
 
+#ifdef MAC_OSX_TK
+    if (butPtr->tkwin != NULL) {
+	TkpComputeButtonGeometry(butPtr);
+    }
+#else
     /*
      * Don't recompute geometry: it's controlled by the primary image.
      */
+#endif
 
     if ((butPtr->flags & TRISTATED) && (butPtr->tkwin != NULL)
 	    && Tk_IsMapped(butPtr->tkwin)
