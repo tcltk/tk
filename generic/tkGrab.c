@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.18 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.19 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkInt.h"
@@ -419,7 +419,12 @@ Tk_Grab(
     }
 
     Tk_MakeWindowExist(tkwin);
-    if (!grabGlobal) {
+#ifndef MAC_OSX_TK
+    if (!grabGlobal)
+#else
+    if (0)
+#endif
+    {
 	Window dummy1, dummy2;
 	int dummy3, dummy4, dummy5, dummy6;
 	unsigned int state;

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.1 2009/06/26 01:42:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXSubwindows.c,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -971,20 +971,14 @@ TkMacOSXUpdateClipRgn(
  *----------------------------------------------------------------------
  */
 
-RgnHandle
+TkRegion
 TkMacOSXVisableClipRgn(
     TkWindow *winPtr)
 {
-    static RgnHandle visQdRgn = NULL;
-
-    if (visQdRgn == NULL) {
-	visQdRgn = NewRgn();
-    }
     if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(winPtr);
     }
-    ChkErr(HIShapeGetAsQDRgn, winPtr->privatePtr->visRgn, visQdRgn);
-    return visQdRgn;
+    return (TkRegion)HIShapeCreateMutableCopy(winPtr->privatePtr->visRgn);
 }
 
 /*
@@ -1076,7 +1070,7 @@ TkMacOSXDrawableWindow(
  *----------------------------------------------------------------------
  */
 
-CGrafPtr
+void *
 TkMacOSXGetDrawablePort(
     Drawable drawable)
 {
@@ -1162,7 +1156,7 @@ TkMacOSXGetDrawablePort(
  *----------------------------------------------------------------------
  */
 
-ControlRef
+void *
 TkMacOSXGetRootControl(
     Drawable drawable)
 {
@@ -1288,8 +1282,9 @@ TkMacOSXInvalClipRgns(
 void
 TkMacOSXWinBounds(
     TkWindow *winPtr,
-    Rect *bounds)
+    void *b)
 {
+    Rect *bounds = b;
     bounds->left = winPtr->privatePtr->xOff;
     bounds->top = winPtr->privatePtr->yOff;
     bounds->right = bounds->left + winPtr->changes.width;
