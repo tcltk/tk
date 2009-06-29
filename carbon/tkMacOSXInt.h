@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInt.h,v 1.1 2009/06/26 01:42:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInt.h,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #ifndef _TKMACINT
@@ -101,6 +101,14 @@ typedef struct {
 } TkMacOSXEmbedHandler;
 
 MODULE_SCOPE TkMacOSXEmbedHandler *tkMacOSXEmbedHandler;
+
+/*
+ * Defines for zero-sized GC cache
+ */
+
+typedef struct {} TkpGCCache;
+#define TkpInitGCCache(gc)
+#define TkpFreeGCCache(gc)
 
 /*
  * Defines used for TkMacOSXInvalidateWindow

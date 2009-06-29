@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.1 2009/06/26 01:42:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -283,7 +283,7 @@ GetThemeColor(
 int
 TkSetMacColor(
     unsigned long pixel,		/* Pixel value to convert. */
-    RGBColor *macColor)			/* Mac color struct to modify. */
+    void *macColor)			/* Mac color struct to modify. */
 {
     OSStatus err = -1;
     ThemeBrush brush;
