@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.103 2009/06/27 19:33:35 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.104 2009/06/30 00:56:29 das Exp $
  */
 
 #ifndef _TKINT
@@ -979,6 +979,20 @@ MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 #else
 #define PI	3.14159265358979323846
 #endif
+#endif
+
+/*
+ * Macros for clang static analyzer
+ */
+
+#if defined(PURIFY) && defined(__clang__) && !defined(CLANG_ASSERT)
+#include <assert.h>
+#define CLANG_ASSERT(x) assert(x)
+#define Tcl_PanicEx Tcl_Panic
+#undef Tcl_Panic
+#define Tcl_Panic(f, ...) Tcl_PanicEx(f,##__VA_ARGS__); CLANG_ASSERT(0)
+#elif !defined(CLANG_ASSERT)
+#define CLANG_ASSERT(x)
 #endif
 
 /*
