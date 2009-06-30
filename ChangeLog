@@ -1,3 +1,16 @@
+2009-06-30  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkInt.h:		add assert macros for clang static
+					analyzer and redefine Tcl_Panic to
+					assert after panic in clang PURIFY
+					builds.
+
+	* generic/tkImgPhInstance.c:	small fixes to make clang static
+	* generic/tkTextDisp.c:		analyzer happier.
+
+	* generic/tkConfig.c:		add clang assert for false positives
+	* generic/tkUndo.c:		from static analyzer.
+
 2009-06-29  Daniel Steffen  <das@users.sourceforge.net>
 
 	Merge of TkAqua Cocoa port <http://github.com/das/tcltk/tree/de-carbon>

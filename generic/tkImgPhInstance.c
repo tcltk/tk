@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhInstance.c,v 1.2 2009/02/06 08:12:07 das Exp $
+ * RCS: @(#) $Id: tkImgPhInstance.c,v 1.3 2009/06/30 00:56:29 das Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -337,7 +337,11 @@ TkImgPhotoGet(
     }
     XFree((char *) visInfoPtr);
 
-    sprintf(buf, ((mono) ? "%d": "%d/%d/%d"), nRed, nGreen, nBlue);
+    if (mono) {
+	sprintf(buf, "%d", nRed);
+    } else {
+	sprintf(buf, "%d/%d/%d", nRed, nGreen, nBlue);
+    }
     instancePtr->defaultPalette = Tk_GetUid(buf);
 
     /*
