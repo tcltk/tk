@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.105 2009/06/30 14:21:44 das Exp $
+ * RCS: $Id: tkInt.h,v 1.106 2009/07/02 10:34:32 patthoyts Exp $
  */
 
 #ifndef _TKINT
@@ -1235,7 +1235,7 @@ MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv, int flags);
 MODULE_SCOPE void	TkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
-			    const char *namespace, const char *name,
+			    const char *nsname, const char *name,
 			    ClientData clientData, const TkEnsemble *map);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
