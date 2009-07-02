@@ -1,3 +1,7 @@
+2009-07-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkInt.h: Avoid using C++ reserved word in header.
+
 2009-06-30  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkInt.h:		add assert macros for clang static
