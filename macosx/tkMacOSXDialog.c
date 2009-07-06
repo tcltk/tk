@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.45 2009/07/06 15:45:54 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.46 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -134,7 +134,7 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 #pragma mark TKApplication(TKDialog)
 
 @interface NSColorPanel(TKDialog)
-- (void)_setUseModalAppearance:(BOOL)flag;
+- (void) _setUseModalAppearance: (BOOL) flag;
 @end
 
 @implementation TKApplication(TKDialog)

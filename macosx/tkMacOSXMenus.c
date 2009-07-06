@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.25 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenus.c,v 1.26 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -18,24 +18,29 @@
 
 static void		GenerateEditEvent(const char *name);
 static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
-
+
 #pragma mark TKApplication(TKMenus)
 
 @implementation TKApplication(TKMenus)
-- (void)_setupMenus {
+- (void) _setupMenus
+{
     if (_defaultMainMenu) {
 	return;
     }
     TkMenuInit();
+
     NSString *applicationName = [[NSBundle mainBundle]
 	    objectForInfoDictionaryKey:@"CFBundleName"];
+
     if (!applicationName) {
 	applicationName = [[NSProcessInfo processInfo] processName];
     }
+
     NSString *aboutName = (applicationName &&
 	    ![applicationName isEqualToString:@"Wish"] &&
 	    ![applicationName hasPrefix:@"tclsh"]) ?
 	    applicationName : @"Tcl & Tk";
+
     _servicesMenu = [NSMenu menuWithTitle:@"Services"];
     _defaultApplicationMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem separatorItem],
@@ -65,6 +70,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    [NSMenuItem itemWithTitle:
 		    [NSString stringWithFormat:@"About %@", aboutName]
 		    action:@selector(orderFrontStandardAboutPanel:)] atIndex:0];
+
     TKMenu *fileMenu = [TKMenu menuWithTitle:@"File" menuItems:
 	    [NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
@@ -91,6 +97,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    [NSMenuItem itemWithTitle:@"Delete" action:@selector(delete:)
 		   target:nil],
 	    nil]];
+
     _defaultWindowsMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:@"Minimize"
 		   action:@selector(performMiniaturize:) target:nil
@@ -101,15 +108,19 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    [NSMenuItem itemWithTitle:@"Bring All to Front"
 		   action:@selector(arrangeInFront:)],
 	    nil] retain];
+
     TKMenu *windowsMenu = [TKMenu menuWithTitle:@"Window" menuItems:
 	    _defaultWindowsMenuItems];
+
     _defaultHelpMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"%@ Help", applicationName]
 		   action:@selector(showHelp:) keyEquivalent:@"?"],
 	    nil] retain];
+
     TKMenu *helpMenu = [TKMenu menuWithTitle:@"Help" menuItems:
 	    _defaultHelpMenuItems];
+
     [self setServicesMenu:_servicesMenu];
     [self setWindowsMenu:windowsMenu];
     _defaultMainMenu = [[TKMenu menuWithTitle:@"" submenus:[NSArray
@@ -121,22 +132,28 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     [helpMenu setSpecial:tkHelpMenu];
     [self tkSetMainMenu:nil];
 }
-- (void)dealloc {
+
+- (void) dealloc
+{
     [_defaultMainMenu release];
     [_defaultHelpMenuItems release];
     [_defaultWindowsMenuItems release];
     [_defaultApplicationMenuItems release];
     [super dealloc];
 }
-- (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem {
+
+- (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>) anItem
+{
     SEL action = [anItem action];
 
     if (sel_isEqual(action, @selector(preferences:))) {
 	Tcl_CmdInfo dummy;
+
 	return (_eventInterp && Tcl_GetCommandInfo(_eventInterp,
 		"::tk::mac::ShowPreferences", &dummy));
     } else if (sel_isEqual(action, @selector(tkDemo:))) {
 	BOOL haveDemo = NO;
+
 	if (_eventInterp) {
 	    Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
 
@@ -151,45 +168,58 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
         return [super validateUserInterfaceItem:anItem];
     }
 }
-- (void)orderFrontStandardAboutPanel:(id)sender {
+
+- (void) orderFrontStandardAboutPanel: (id) sender
+{
     Tcl_CmdInfo dummy;
+
     if (!_eventInterp || !Tcl_GetCommandInfo(_eventInterp, "tkAboutDialog",
 	    &dummy) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	TkAboutDlg();
     } else {
 	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", -1,
 		TCL_EVAL_GLOBAL);
+
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(_eventInterp, code);
 	}
 	Tcl_ResetResult(_eventInterp);
     }
 }
-- (void)showHelp:(id)sender {
+
+- (void) showHelp: (id) sender
+{
     Tcl_CmdInfo dummy;
+
     if (!_eventInterp || !Tcl_GetCommandInfo(_eventInterp,
 	    "::tk::mac::ShowHelp", &dummy)) {
 	[super showHelp:sender];
     } else {
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowHelp", -1,
 		TCL_EVAL_GLOBAL);
+
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(_eventInterp, code);
 	}
 	Tcl_ResetResult(_eventInterp);
     }
 }
-- (void)tkSource:(id)sender {
+
+- (void) tkSource: (id) sender
+{
     if (_eventInterp) {
 	if (Tcl_EvalEx(_eventInterp, "tk_getOpenFile -filetypes {"
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
 		-1, TCL_EVAL_GLOBAL) == TCL_OK) {
 	    Tcl_Obj *path = Tcl_GetObjResult(_eventInterp);
 	    int len;
+
 	    Tcl_GetStringFromObj(path, &len);
 	    if (len) {
 		Tcl_IncrRefCount(path);
+
 		int code = Tcl_FSEvalFile(_eventInterp, path);
+
 		if (code != TCL_OK) {
 		    Tcl_BackgroundException(_eventInterp, code);
 		}
@@ -199,12 +229,17 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	Tcl_ResetResult(_eventInterp);
     }
 }
-- (void)tkDemo:(id)sender {
+
+- (void) tkDemo: (id) sender
+{
     if (_eventInterp) {
 	Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
+
 	if (path) {
 	    Tcl_IncrRefCount(path);
+
 	    int code = Tcl_FSEvalFile(_eventInterp, path);
+
 	    if (code != TCL_OK) {
 		Tcl_BackgroundException(_eventInterp, code);
 	    }
@@ -214,15 +249,19 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     }
 }
 @end
-
+
 #pragma mark TKContentView(TKMenus)
 
 @implementation TKContentView(TKMenus)
-- (BOOL)validateUserInterfaceItem:(id <NSValidatedUserInterfaceItem>)anItem {
+
+- (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>) anItem
+{
     return YES;
 }
+
 #define EDIT_ACTION(a, e) \
-    - (void) a:(id)sender { \
+    - (void) a: (id) sender \
+    { \
 	if ([sender isKindOfClass:[NSMenuItem class]]) { \
 	    GenerateEditEvent(#e); \
 	} \
@@ -373,90 +412,129 @@ GenerateEditEvent(
 }
 
 #pragma mark -
+
 #pragma mark NSMenu & NSMenuItem Utilities
 
 @implementation NSMenu(TKUtils)
-+ (id)menuWithTitle:(NSString *)title {
+
++ (id) menuWithTitle: (NSString *) title
+{
     NSMenu *m = [[self alloc] initWithTitle:title];
+
     return [m autorelease];
 }
-+ (id)menuWithTitle:(NSString *)title menuItems:(NSArray *)items {
+
++ (id) menuWithTitle: (NSString *) title menuItems: (NSArray *) items
+{
     NSMenu *m = [[self alloc] initWithTitle:title];
+
     for (NSMenuItem *i in items) {
 	[m addItem:i];
     }
     return [m autorelease];
 }
-+ (id)menuWithTitle:(NSString *)title submenus:(NSArray *)submenus {
+
++ (id) menuWithTitle: (NSString *) title submenus: (NSArray *) submenus
+{
     NSMenu *m = [[self alloc] initWithTitle:title];
+
     for (NSMenu *i in submenus) {
 	[m addItem:[NSMenuItem itemWithSubmenu:i]];
     }
     return [m autorelease];
 }
-- (NSMenuItem *)itemWithSubmenu:(NSMenu *)submenu {
+
+- (NSMenuItem *) itemWithSubmenu: (NSMenu *) submenu
+{
     return [self itemAtIndex:[self indexOfItemWithSubmenu:submenu]];
 }
-- (NSMenuItem *)itemInSupermenu {
+
+- (NSMenuItem *) itemInSupermenu
+{
     NSMenu *supermenu = [self supermenu];
+
     return (supermenu ? [supermenu itemWithSubmenu:self] : nil);
 }
 @end
 
 @implementation NSMenuItem(TKUtils)
-+ (id)itemWithSubmenu:(NSMenu *)submenu {
+
++ (id) itemWithSubmenu: (NSMenu *) submenu
+{
     NSMenuItem *i = [[self alloc] initWithTitle:[submenu title] action:NULL
 	    keyEquivalent:@""];
+
     [i setSubmenu:submenu];
     return [i autorelease];
 }
-+ (id)itemWithTitle:(NSString *)title submenu:(NSMenu *)submenu {
+
++ (id) itemWithTitle: (NSString *) title submenu: (NSMenu *) submenu
+{
     NSMenuItem *i = [[self alloc] initWithTitle:title action:NULL
 	    keyEquivalent:@""];
+
     [i setSubmenu:submenu];
     return [i autorelease];
 }
-+ (id)itemWithTitle:(NSString *)title action:(SEL)action {
+
++ (id) itemWithTitle: (NSString *) title action: (SEL) action
+{
     NSMenuItem *i = [[self alloc] initWithTitle:title action:action
 	    keyEquivalent:@""];
+
     [i setTarget:NSApp];
     return [i autorelease];
 }
-+ (id)itemWithTitle:(NSString *)title action:(SEL)action
-	target:(id)target {
+
++ (id) itemWithTitle: (NSString *) title action: (SEL) action
+	target: (id) target
+{
     NSMenuItem *i = [[self alloc] initWithTitle:title action:action
 	    keyEquivalent:@""];
+
     [i setTarget:target];
     return [i autorelease];
 }
-+ (id)itemWithTitle:(NSString *)title action:(SEL)action
-	keyEquivalent:(NSString *)keyEquivalent {
+
++ (id) itemWithTitle: (NSString *) title action: (SEL) action
+	keyEquivalent: (NSString *) keyEquivalent
+{
     NSMenuItem *i = [[self alloc] initWithTitle:title action:action
 	    keyEquivalent:keyEquivalent];
+
     [i setTarget:NSApp];
     return [i autorelease];
 }
-+ (id)itemWithTitle:(NSString *)title action:(SEL)action
-	target:(id)target keyEquivalent:(NSString *)keyEquivalent {
+
++ (id) itemWithTitle: (NSString *) title action: (SEL) action
+	target: (id) target keyEquivalent: (NSString *) keyEquivalent
+{
     NSMenuItem *i = [[self alloc] initWithTitle:title action:action
 	    keyEquivalent:keyEquivalent];
+
     [i setTarget:target];
     return [i autorelease];
 }
-+ (id)itemWithTitle:(NSString *)title action:(SEL)action
-	keyEquivalent:(NSString *)keyEquivalent
-	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask {
+
++ (id) itemWithTitle: (NSString *) title action: (SEL) action
+	keyEquivalent: (NSString *) keyEquivalent
+	keyEquivalentModifierMask: (NSUInteger) keyEquivalentModifierMask
+{
     NSMenuItem *i = [[self alloc] initWithTitle:title action:action
 	    keyEquivalent:keyEquivalent];
+
     [i setTarget:NSApp];
     [i setKeyEquivalentModifierMask:keyEquivalentModifierMask];
     return [i autorelease];
 }
-+ (id)itemWithTitle:(NSString *)title action:(SEL)action
-	target:(id)target keyEquivalent:(NSString *)keyEquivalent
-	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask {
+
++ (id) itemWithTitle: (NSString *) title action: (SEL) action
+	target: (id) target keyEquivalent: (NSString *) keyEquivalent
+	keyEquivalentModifierMask: (NSUInteger) keyEquivalentModifierMask
+{
     NSMenuItem *i = [[self alloc] initWithTitle:title action:action
 	    keyEquivalent:keyEquivalent];
+
     [i setTarget:target];
     [i setKeyEquivalentModifierMask:keyEquivalentModifierMask];
     return [i autorelease];
@@ -465,7 +543,7 @@ GenerateEditEvent(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

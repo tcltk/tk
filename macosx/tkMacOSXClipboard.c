@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.15 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.16 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -22,8 +22,10 @@ static Tk_Window clipboardOwner = NULL;
 #pragma mark TKApplication(TKClipboard)
 
 @implementation TKApplication(TKClipboard)
-- (void)tkProvidePasteboard:(TkDisplay *)dispPtr
-	pasteboard:(NSPasteboard *)sender provideDataForType:(NSString *)type {
+- (void) tkProvidePasteboard: (TkDisplay *) dispPtr
+	pasteboard: (NSPasteboard *) sender
+	provideDataForType: (NSString *) type
+{
     NSMutableString *string = [NSMutableString new];
 
     if (dispPtr && dispPtr->clipboardActive &&
@@ -37,6 +39,7 @@ static Tk_Window clipboardOwner = NULL;
 		    NSString *s = [[NSString alloc] initWithBytesNoCopy:
 			    cbPtr->buffer length:cbPtr->length
 			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
+
 		    [string appendString:s];
 		    [s release];
 		}
@@ -47,18 +50,25 @@ static Tk_Window clipboardOwner = NULL;
     [sender setString:string forType:type];
     [string release];
 }
-- (void)tkProvidePasteboard:(TkDisplay *)dispPtr {
+
+- (void) tkProvidePasteboard: (TkDisplay *) dispPtr
+{
     if (dispPtr && dispPtr->clipboardActive) {
 	[self tkProvidePasteboard:dispPtr
 		pasteboard:[NSPasteboard generalPasteboard]
 		provideDataForType:NSStringPboardType];
     }
 }
-- (void)pasteboard:(NSPasteboard *)sender provideDataForType:(NSString *)type {
+
+- (void) pasteboard: (NSPasteboard *) sender
+	provideDataForType: (NSString *) type
+{
     [self tkProvidePasteboard:TkGetDisplayList() pasteboard:sender
 	    provideDataForType:type];
 }
-- (void)tkCheckPasteboard {
+
+- (void) tkCheckPasteboard
+{
     if (clipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
 	    changeCount) {
 	TkDisplay *dispPtr = TkGetDisplayList();
@@ -166,6 +176,7 @@ XSetSelectionOwner(
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 	if (!dispPtr->clipboardActive) {
 	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
+
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
@@ -221,6 +232,7 @@ TkSelUpdateClipboard(
 				/* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
+
     changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
 	    owner:NSApp];
 }
@@ -300,7 +312,7 @@ TkSuspendClipboard(void)
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
