@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.22 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXNotify.c,v 1.23 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -26,8 +26,8 @@ typedef struct ThreadSpecificData {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-#define TSD_INIT() ThreadSpecificData *tsdPtr = Tcl_GetThreadData(&dataKey, \
-	    sizeof(ThreadSpecificData))
+#define TSD_INIT() ThreadSpecificData *tsdPtr = \
+	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
 static void TkMacOSXNotifyExitHandler(ClientData clientData);
 static void TkMacOSXEventsSetupProc(ClientData clientData, int flags);
@@ -36,11 +36,12 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 #pragma mark TKApplication(TKNotify)
 
 @interface NSApplication(TKNotify)
-- (void)_modalSession:(NSModalSession)session sendEvent:(NSEvent *)event;
+- (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
 @end
 
 @implementation NSWindow(TKNotify)
-- (id)tkDisplayIfNeeded {
+- (id) tkDisplayIfNeeded
+{
     if (![self isAutodisplay]) {
 	[self displayIfNeeded];
     }
@@ -49,14 +50,18 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 @end
 
 @implementation TKApplication(TKNotify)
-- (NSEvent *)nextEventMatchingMask:(NSUInteger)mask
-	untilDate:(NSDate *)expiration inMode:(NSString *)mode
-	dequeue:(BOOL)deqFlag {
+- (NSEvent *) nextEventMatchingMask: (NSUInteger) mask
+	untilDate: (NSDate *) expiration inMode: (NSString *) mode
+	dequeue: (BOOL) deqFlag
+{
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
+
     [NSApp makeWindowsPerform:@selector(tkDisplayIfNeeded) inOrder:NO];
+
     int oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     NSEvent *event = [[super nextEventMatchingMask:mask untilDate:expiration
 	    inMode:mode dequeue:deqFlag] retain];
+
     Tcl_SetServiceMode(oldMode);
     if (event) {
 	TSD_INIT();
@@ -70,9 +75,12 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
     [pool drain];
     return [event autorelease];
 }
-- (void)sendEvent:(NSEvent *)theEvent {
+
+- (void) sendEvent: (NSEvent *) theEvent
+{
     TSD_INIT();
     int oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+
     tsdPtr->sendEventNestingLevel++;
     [super sendEvent:theEvent];
     tsdPtr->sendEventNestingLevel--;
@@ -137,6 +145,7 @@ void
 Tk_MacOSXSetupTkNotifier(void)
 {
     TSD_INIT();
+
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
 
@@ -185,6 +194,7 @@ TkMacOSXNotifyExitHandler(
     ClientData clientData)	/* Not used. */
 {
     TSD_INIT();
+
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
 	    TkMacOSXEventsCheckProc, GetMainEventQueue());
     tsdPtr->initialized = 0;
@@ -217,13 +227,14 @@ TkMacOSXEventsSetupProc(
     if (flags & TCL_WINDOW_EVENTS &&
 	    ![[NSRunLoop currentRunLoop] currentMode]) {
 	static const Tcl_Time zeroBlockTime = { 0, 0 };
-
 	TSD_INIT();
+
 	if (!tsdPtr->currentEvent) {
 	    NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 		    untilDate:[NSDate distantPast]
 		    inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 		    dequeue:YES];
+
 	    if (currentEvent) {
 		tsdPtr->currentEvent =
 			TkMacOSXMakeUncollectableAndRetain(currentEvent);
@@ -306,7 +317,7 @@ TkMacOSXEventsCheckProc(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

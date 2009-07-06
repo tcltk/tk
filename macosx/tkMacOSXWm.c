@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.75 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.76 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -321,7 +321,7 @@ static void		RemapWindows(TkWindow *winPtr,
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 @interface NSWindow(TkWm)
-- (void)setCanCycle:(BOOL)canCycleFlag;
+- (void) setCanCycle: (BOOL) canCycleFlag;
 @end
 #endif
 
@@ -335,7 +335,8 @@ static void		RemapWindows(TkWindow *winPtr,
 @end
 
 @implementation TKWindow(TKWm)
-- (BOOL)canBecomeKeyWindow {
+- (BOOL) canBecomeKeyWindow
+{
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
     return (winPtr && winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass ==
@@ -6491,7 +6492,7 @@ RemapWindows(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
