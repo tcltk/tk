@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.30 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.31 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -66,13 +66,14 @@ static void		ScrollbarEventProc(ClientData clientData,
 Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs)	/* size */
 };
-
+
 #pragma mark TKApplication(TKScrlbr)
 
 #define NSAppleAquaScrollBarVariantChanged @"AppleAquaScrollBarVariantChanged"
 
 @implementation TKApplication(TKScrlbr)
-- (void)tkScroller:(NSScroller *)scroller {
+- (void) tkScroller: (NSScroller *) scroller
+{
     NSScrollerPart hitPart = [scroller hitPart];
     TkScrollbar *scrollPtr = (TkScrollbar *)[scroller tag];
     Tcl_DString cmdString;
@@ -131,14 +132,19 @@ Tk_ClassProcs tkpScrollbarProcs = {
 	    [scroller knobProportion]);
 #endif
 }
-- (void)scrollBarVariantChanged:(NSNotification *)notification {
+
+- (void) scrollBarVariantChanged: (NSNotification *) notification
+{
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     UpdateScrollbarMetrics();
 }
-- (void)_setupScrollBarNotifications {
+
+- (void) _setupScrollBarNotifications
+{
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+
 #define observe(n, s) [nc addObserver:self selector:@selector(s) name:(n) object:nil]
     observe(NSAppleAquaScrollBarVariantChanged, scrollBarVariantChanged:);
 #undef observe
@@ -235,11 +241,8 @@ TkpCreateScrollbar(
     MacScrollbar *scrollPtr = (MacScrollbar *) ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->scroller = nil;
-
-    Tk_CreateEventHandler(tkwin, ActivateMask|ExposureMask|
-	    StructureNotifyMask|FocusChangeMask,
-	    ScrollbarEventProc, (ClientData) scrollPtr);
-
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask|FocusChangeMask|
+	    ActivateMask|ExposureMask, ScrollbarEventProc, scrollPtr);
     return (TkScrollbar *) scrollPtr;
 }
 
@@ -274,8 +277,8 @@ TkpDestroyScrollbar(
  * TkpDisplayScrollbar --
  *
  *	This procedure redraws the contents of a scrollbar window. It is
- *	invoked as a do-when-idle handler, so it only runs when there's
- *	nothing else for the application to do.
+ *	invoked as a do-when-idle handler, so it only runs when there's nothing
+ *	else for the application to do.
  *
  * Results:
  *	None.
@@ -290,8 +293,8 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
-    MacScrollbar *macScrollPtr = (MacScrollbar *) clientData;
+    TkScrollbar *scrollPtr = clientData;
+    MacScrollbar *macScrollPtr = clientData;
     NSScroller *scroller = macScrollPtr->scroller;
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -338,12 +341,16 @@ TkpDisplayScrollbar(
 	    Tk_Height(tkwin));
     frame = NSInsetRect(frame, scrollPtr->inset, scrollPtr->inset);
     frame.origin.y = viewHeight - (frame.origin.y + frame.size.height);
+
     NSWindow *w = [view window];
+
     if ([w showsResizeIndicator]) {
 	NSRect growBox = [view convertRect:[w _growBoxRect] fromView:nil];
+
 	if (NSIntersectsRect(growBox, frame)) {
 	    if (scrollPtr->vertical) {
 		CGFloat y = frame.origin.y;
+
 		frame.origin.y = growBox.origin.y + growBox.size.height;
 		frame.size.height -= frame.origin.y - y;
  	    } else {
@@ -408,8 +415,12 @@ TkpComputeScrollbarGeometry(
     macScrollPtr->variant = variant;
     if (scroller) {
 	NSSize size = [scroller frame].size;
+
 	if ((size.width > size.height) ^ !scrollPtr->vertical) {
-	    /* Orientation changed, need new scroller */
+	    /*
+	     * Orientation changed, need new scroller.
+	     */
+
 	    if ([scroller superview]) {
 		[scroller removeFromSuperviewWithoutNeedingDisplay];
 	    }
@@ -597,7 +608,7 @@ ScrollbarEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    TkScrollbar *scrollPtr = clientData;
 
     switch (eventPtr->type) {
     case UnmapNotify:
@@ -605,7 +616,7 @@ ScrollbarEventProc(
 	break;
     case ActivateNotify:
     case DeactivateNotify:
-	TkScrollbarEventuallyRedraw((ClientData) scrollPtr);
+	TkScrollbarEventuallyRedraw(scrollPtr);
 	break;
     default:
 	TkScrollbarEventProc(clientData, eventPtr);
@@ -614,7 +625,7 @@ ScrollbarEventProc(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

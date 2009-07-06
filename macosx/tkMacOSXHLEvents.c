@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.20 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.21 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -53,15 +53,15 @@ static OSStatus		FSRefToDString(const FSRef *fsref, Tcl_DString *ds);
 #pragma mark TKApplication(TKHLEvents)
 
 @implementation TKApplication(TKHLEvents)
-
-- (void)terminate:(id)sender {
+- (void) terminate: (id) sender
+{
     QuitHandler(NULL, NULL, (SRefCon) _eventInterp);
 }
 
-- (void)preferences:(id)sender {
+- (void) preferences: (id) sender
+{
     PrefsHandler(NULL, NULL, (SRefCon) _eventInterp);
 }
-
 @end
 
 #pragma mark -
@@ -718,7 +718,7 @@ FSRefToDString(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

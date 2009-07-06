@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.27 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.28 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -31,7 +31,8 @@ static NSModalSession modalSession = NULL;
 #pragma mark TKApplication(TKKeyEvent)
 
 @implementation TKApplication(TKKeyEvent)
-- (NSEvent *)tkProcessKeyEvent:(NSEvent *)theEvent {
+- (NSEvent *) tkProcessKeyEvent: (NSEvent *) theEvent
+{
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -42,7 +43,6 @@ static NSModalSession modalSession = NULL;
     unsigned short  keyCode;
     NSString	    *characters = nil, *charactersIgnoringModifiers = nil;
     static NSUInteger savedModifiers = 0;
-
 
     switch (type) {
     case NSKeyUp:
@@ -61,7 +61,6 @@ static NSModalSession modalSession = NULL;
 
     default:
 	return theEvent;
-	break;
     }
 
     unsigned int state = 0;
@@ -107,6 +106,7 @@ static NSModalSession modalSession = NULL;
     }
 
     XEvent xEvent;
+
     xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
     xEvent.xany.send_event = false;
     xEvent.xany.display = Tk_Display(tkwin);
@@ -343,7 +343,7 @@ Tk_SetCaretPos(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

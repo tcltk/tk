@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXInit.c,v 1.40 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXInit.c,v 1.41 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -43,7 +43,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 #endif
 
 @interface TKApplication(TKKeyboard)
-- (void)keyboardChanged:(NSNotification *)notification;
+- (void) keyboardChanged: (NSNotification *) notification;
 @end
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
@@ -52,15 +52,15 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 #define TKApplication_NSApplicationDelegate
 #endif
 @interface TKApplication(TKWindowEvent) TKApplication_NSApplicationDelegate
-- (void)_setupWindowNotifications;
+- (void) _setupWindowNotifications;
 @end
 
 @interface TKApplication(TKScrlbr)
-- (void)_setupScrollBarNotifications;
+- (void) _setupScrollBarNotifications;
 @end
 
 @interface TKApplication(TKMenus)
-- (void)_setupMenus;
+- (void) _setupMenus;
 @end
 
 @implementation TKApplication
@@ -68,13 +68,17 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 
 @implementation TKApplication(TKInit)
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-- (void)_postedNotification:(NSNotification *)notification {
+- (void) _postedNotification: (NSNotification *) notification
+{
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 }
 #endif
-- (void)_setupApplicationNotifications {
+
+- (void) _setupApplicationNotifications
+{
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-#define observe(n, s) [nc addObserver:self selector:@selector(s) name:(n) object:nil]
+#define observe(n, s) \
+	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
     observe(NSApplicationDidBecomeActiveNotification, applicationActivate:);
     observe(NSApplicationDidResignActiveNotification, applicationDeactivate:);
     observe(NSApplicationDidUnhideNotification, applicationShowHide:);
@@ -86,7 +90,9 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(), NULL, &keyboardChanged, kTISNotifySelectedKeyboardInputSourceChanged, NULL, CFNotificationSuspensionBehaviorCoalesce);
 #endif
 }
-- (void)_setupEventLoop {
+
+- (void) _setupEventLoop
+{
     _running = 1;
     if (!_appFlags._hasBeenRun) {
         _appFlags._hasBeenRun = YES;
@@ -94,7 +100,9 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     }
     [self setWindowsNeedUpdate:YES];
 }
-- (void)_setup:(Tcl_Interp *)interp {
+
+- (void) _setup: (Tcl_Interp *) interp
+{
     _eventInterp = interp;
     _defaultMainMenu = nil;
     [self _setupMenus];
@@ -107,8 +115,11 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     [self _setupScrollBarNotifications];
     [self _setupApplicationNotifications];
 }
-- (NSString *)tkFrameworkImagePath:(NSString*)image {
+
+- (NSString *) tkFrameworkImagePath: (NSString *) image
+{
     NSString *path = nil;
+
     if (tkLibPath[0] != '\0') {
 	path = [[NSBundle bundleWithPath:[[NSString stringWithUTF8String:
 		tkLibPath] stringByAppendingString:@"/../.."]]
@@ -117,8 +128,10 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     if (!path) {
 	const char *tk_library = Tcl_GetVar2(_eventInterp, "tk_library", NULL,
 		TCL_GLOBAL_ONLY);
+
 	if (tk_library) {
 	    NSFileManager *fm = [NSFileManager defaultManager];
+
 	    path = [[NSString stringWithUTF8String:tk_library]
 		    stringByAppendingFormat:@"/%@", image];
 	    if (![fm isReadableFileAtPath:path]) {
@@ -577,7 +590,7 @@ TkMacOSXGetStringObjFromCFString(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
