@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.52 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.53 2009/07/06 15:45:54 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -32,6 +32,7 @@
 #define ENTRY_WINDOWS_MENU	ENTRY_PLATFORM_FLAG3
 
 #define sl(s) ((int) (sizeof(s "") - 1))
+
 #define SPECIALMENU(n, f) {.name = "." #n, .len = sl(#n) + 1, \
 	.flag = ENTRY_##f##_MENU }
 static const struct {
@@ -43,6 +44,7 @@ static const struct {
     {NULL}
 };
 #undef SPECIALMENU
+
 #define MODIFIER(n, f) {.name = #n, .len = sl(#n), .mask = f }
 static const struct {
     const char *name; const size_t len; const NSUInteger mask;
@@ -59,6 +61,7 @@ static const struct {
     {NULL}
 };
 #undef MODIFIER
+
 #define ACCEL(n, c) {.name = #n, .len = sl(#n), .ch = c }
 static const struct {
     const char *name; const size_t len; const UniChar ch;
@@ -108,10 +111,10 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 #pragma mark TKMenu
 
 @interface TKMenu(TKMenuPrivate)
-- (id)initWithTkMenu:(TkMenu *)tkMenu;
-- (TkMenu *)tkMenu;
-- (int)tkIndexOfItem:(NSMenuItem *)menuItem;
-- (void)insertItem:(NSMenuItem *)newItem atTkIndex:(NSInteger)index;
+- (id) initWithTkMenu: (TkMenu *) tkMenu;
+- (TkMenu *) tkMenu;
+- (int) tkIndexOfItem: (NSMenuItem *) menuItem;
+- (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index;
 @end
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
@@ -123,17 +126,21 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @end
 
 @implementation TKMenu
-- (void)setSpecial:(NSUInteger)special {
+- (void) setSpecial: (NSUInteger) special
+{
     NSAssert(!_tkSpecial, @"Cannot change specialness of a special menu");
     _tkSpecial = special;
 }
-- (BOOL)isSpecial:(NSUInteger)special {
+- (BOOL) isSpecial: (NSUInteger) special
+{
     return (_tkSpecial == special);
 }
 @end
 
 @implementation TKMenu(TKMenuPrivate)
-- (id)initWithTitle:(NSString *)aTitle {
+
+- (id) initWithTitle: (NSString *) aTitle
+{
     self = [super initWithTitle:aTitle];
     if (self) {
 	_tkMenu = NULL;
@@ -144,9 +151,12 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     }
     return self;
 }
-- (id)initWithTkMenu:(TkMenu *)tkMenu {
+
+- (id) initWithTkMenu: (TkMenu *) tkMenu
+{
     NSString *title = [[NSString alloc] initWithUTF8String:
 	    Tk_PathName(tkMenu->tkwin)];
+
     self = [self initWithTitle:title];
     [title release];
     if (self) {
@@ -154,8 +164,11 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     }
     return self;
 }
-- (id)copyWithZone:(NSZone *)zone {
+
+- (id) copyWithZone: (NSZone *) zone
+{
     TKMenu *copy = [super copyWithZone:zone];
+
     NSAssert(_tkMenu == nil, @"Cannot copy tkMenu");
     copy->_tkMenu = _tkMenu;
     copy->_tkOffset = _tkOffset;
@@ -163,17 +176,25 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     copy->_tkSpecial = _tkSpecial;
     return copy;
 }
-- (TkMenu *)tkMenu {
+
+- (TkMenu *) tkMenu
+{
     return _tkMenu;
 }
-- (int)tkIndexOfItem:(NSMenuItem *)menuItem {
+
+- (int) tkIndexOfItem: (NSMenuItem *) menuItem
+{
     return [self indexOfItem:menuItem] - _tkOffset;
 }
-- (void)insertItem:(NSMenuItem *)newItem atTkIndex:(NSInteger)index {
+
+- (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index
+{
     [super insertItem:newItem atIndex:index + _tkOffset];
     _tkItemCount++;
 }
-- (void)insertItem:(NSMenuItem *)newItem atIndex:(NSInteger)index {
+
+- (void) insertItem: (NSMenuItem *) newItem atIndex: (NSInteger) index
+{
     if (_tkMenu && index >= 0) {
 	if ((NSUInteger)index <= _tkOffset) {
 	    _tkOffset++;
@@ -184,7 +205,9 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     }
     [super insertItem:newItem atIndex:index];
 }
-- (void)removeItemAtIndex:(NSInteger)index {
+
+- (void) removeItemAtIndex: (NSInteger) index
+{
     if (_tkMenu && index >= 0) {
 	if ((NSUInteger)index < _tkOffset) {
 	    _tkOffset--;
@@ -194,9 +217,12 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     }
     [super removeItemAtIndex:index];
 }
-- (NSMenuItem *)newTkMenuItem:(TkMenuEntry *)mePtr {
+
+- (NSMenuItem *) newTkMenuItem: (TkMenuEntry *) mePtr
+{
     NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:@""
-	action:@selector(tkMenuItemInvoke:) keyEquivalent:@""];
+	    action:@selector(tkMenuItemInvoke:) keyEquivalent:@""];
+
     [menuItem setTarget:self];
     [menuItem setTag:(NSInteger)mePtr];
     return menuItem;
@@ -205,25 +231,34 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 @implementation TKMenu(TKMenuActions)
 // target methods
-- (BOOL)validateMenuItem:(NSMenuItem *)menuItem {
+
+- (BOOL) validateMenuItem: (NSMenuItem *) menuItem
+{
     return [menuItem isEnabled];
 }
-- (void)tkMenuItemInvoke:(id)sender {
+
+- (void) tkMenuItemInvoke: (id) sender
+{
     /*
      * With the delegate matching key equivalents, when a menu action is sent
      * in response to a key equivalent, sender is the whole menu and not the
-     * the specific menu item, use this to ignore key equivalents for our menus
-     * (as Tk handles them directly via bindings).
+     * the specific menu item, use this to ignore key equivalents for our
+     * menus (as Tk handles them directly via bindings).
      */
+
     if ([sender isKindOfClass:[NSMenuItem class]]) {
 	NSMenuItem *menuItem = (NSMenuItem *)sender;
 	TkMenu *menuPtr = (TkMenu *)_tkMenu;
 	TkMenuEntry *mePtr = (TkMenuEntry *)[menuItem tag];
+
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
+
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
+
 	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
+
 	    if (result != TCL_OK && result != TCL_CONTINUE &&
 		    result != TCL_BREAK) {
 		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
@@ -243,20 +278,26 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     ((km) & NSControlKeyMask) != ((m) & NSControlKeyMask) || \
     (((km) & NSShiftKeyMask) != ((m) & NSShiftKeyMask) && \
     ((m) & NSFunctionKeyMask))) ? NO : YES)
-- (BOOL)menuHasKeyEquivalent:(NSMenu*)menu forEvent:(NSEvent*)event
-	target:(id*)target action:(SEL*)action {
+
+- (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
+	target: (id *) target action: (SEL *) action
+{
     NSString *key = [event charactersIgnoringModifiers];
     NSUInteger modifiers = [event modifierFlags] &
 	    NSDeviceIndependentModifierFlagsMask;
+
     if (modifiers == (NSCommandKeyMask | NSShiftKeyMask) &&
 	    [key compare:@"?"] == NSOrderedSame) {
 	return NO;
     }
+
     NSArray *itemArray = [self itemArray];
+
     for (NSMenuItem *item in itemArray) {
 	if ([item isEnabled] && [[item keyEquivalent] compare:key] ==
 		NSOrderedSame) {
 	    NSUInteger keyEquivModifiers = [item keyEquivalentModifierMask];
+
 	    if (keyEquivModifiersMatch(keyEquivModifiers, modifiers)) {
 		*target = [item target];
 		*action = [item action];
@@ -266,31 +307,43 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     }
     return NO;
 }
-- (void)menuWillOpen:(NSMenu *)menu {
+
+- (void) menuWillOpen: (NSMenu *) menu
+{
     if (_tkMenu) {
 	//RecursivelyClearActiveMenu(_tkMenu);
 	GenerateMenuSelectEvent((TKMenu *)[self supermenu],
 		[self itemInSupermenu]);
     }
 }
-- (void)menuDidClose:(NSMenu *)menu {
+
+- (void) menuDidClose: (NSMenu *) menu
+{
     if (_tkMenu) {
 	RecursivelyClearActiveMenu(_tkMenu);
     }
 }
-- (void)menu:(NSMenu *)menu willHighlightItem:(NSMenuItem *)item {
+
+- (void) menu: (NSMenu *) menu willHighlightItem: (NSMenuItem *) item
+{
     if (_tkMenu) {
 	GenerateMenuSelectEvent(self, item);
     }
 }
-- (void)menuNeedsUpdate:(NSMenu*)menu {
-    TkMenu *menuPtr = (TkMenu *)_tkMenu;
+
+- (void) menuNeedsUpdate: (NSMenu *) menu
+{
+    TkMenu *menuPtr = (TkMenu *) _tkMenu;
+
     if (menuPtr) {
 	Tcl_Interp *interp = menuPtr->interp;
+
 	Tcl_Preserve(interp);
 	Tcl_Preserve(menuPtr);
+
 	int result = TkPostCommand(_tkMenu);
-	if (result != TCL_OK && result != TCL_CONTINUE && result != TCL_BREAK) {
+
+	if (result!=TCL_OK && result!=TCL_CONTINUE && result!=TCL_BREAK) {
 	    Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
 	    Tcl_BackgroundException(interp, result);
 	}
@@ -303,18 +356,22 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 #pragma mark TKApplication(TKMenu)
 
 @interface NSApplication(TKMenu)
-- (void)setAppleMenu:(NSMenu *)menu;
+- (void) setAppleMenu: (NSMenu *) menu;
 @end
 
 @implementation TKApplication(TKMenu)
-- (void)menuBeginTracking:(NSNotification *)notification {
+
+- (void) menuBeginTracking: (NSNotification *) notification
+{
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     //TkMacOSXClearMenubarActive();
     //TkMacOSXPreprocessMenu();
 }
-- (void)menuEndTracking:(NSNotification *)notification {
+
+- (void) menuEndTracking: (NSNotification *) notification
+{
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -322,16 +379,22 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	TkMacOSXClearMenubarActive();
     }
 }
-- (void)tkSetMainMenu:(TKMenu *)menu {
+
+- (void) tkSetMainMenu: (TKMenu *) menu
+{
     if (gNoTkMenus) {
 	return;
     }
+
     TKMenu *applicationMenu = nil;
+
     if (menu) {
 	NSMenuItem *applicationMenuItem = [menu numberOfItems] ?
 		[menu itemAtIndex:0] : nil;
+
 	if (![menu isSpecial:tkMainMenu]) {
 	    TkMenuEntry *mePtr = (TkMenuEntry *)[applicationMenuItem tag];
+
 	    if (!mePtr || !(mePtr->entryFlags & ENTRY_APPLE_MENU)) {
 		applicationMenuItem = [NSMenuItem itemWithSubmenu:
 			[[_defaultApplicationMenu copy] autorelease]];
@@ -346,14 +409,18 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	    }
 	    [applicationMenu setSpecial:tkApplicationMenu];
 	}
+
 	NSArray *itemArray = [menu itemArray];
+
 	for (NSMenuItem *item in itemArray) {
 	    TkMenuEntry *mePtr = (TkMenuEntry *)[item tag];
 	    TKMenu *submenu = (TKMenu *)[item submenu];
+
 	    if (mePtr && submenu) {
 		if ((mePtr->entryFlags & ENTRY_WINDOWS_MENU) &&
 			![submenu isSpecial:tkWindowsMenu]) {
 		    NSInteger index = 0;
+
 		    for (NSMenuItem *i in _defaultWindowsMenuItems) {
 			[submenu insertItem:[[i copy] autorelease] atIndex:
 				index++];
@@ -363,6 +430,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 		} else if ((mePtr->entryFlags & ENTRY_HELP_MENU) &&
 			![submenu isSpecial:tkHelpMenu]) {
 		    NSInteger index = 0;
+
 		    for (NSMenuItem *i in _defaultHelpMenuItems) {
 			[submenu insertItem:[[i copy] autorelease] atIndex:
 				index++];
@@ -375,7 +443,10 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	menu = _defaultMainMenu;
 	applicationMenu = _defaultApplicationMenu;
     }
-    NSMenuItem *servicesMenuItem = [applicationMenu itemWithTitle:@"Services"];
+
+    NSMenuItem *servicesMenuItem =
+	    [applicationMenu itemWithTitle:@"Services"];
+
     if (servicesMenuItem && [servicesMenuItem submenu] != _servicesMenu) {
 	[[_servicesMenu itemInSupermenu] setSubmenu:nil];
 	[servicesMenuItem setSubmenu:_servicesMenu];
@@ -399,8 +470,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
  *	Returns a standard Tcl error.
  *
  * Side effects:
- *	Allocates a NSMenu and puts it into the platformData field
- *	of the menuPtr.
+ *	Allocates a NSMenu and puts it into the platformData field of the
+ *	menuPtr.
  *
  *----------------------------------------------------------------------
  */
@@ -472,8 +543,12 @@ TkpMenuNewEntry(
     }
     mePtr->platformEntryData = (TkMenuPlatformEntryData)
 	    TkMacOSXMakeUncollectable(menuItem);
-    /* Caller TkMenuEntry() already did this same insertion into the generic
-     * TkMenu so we just match it for the platform menu. */
+
+    /*
+     * Caller TkMenuEntry() already did this same insertion into the generic
+     * TkMenu so we just match it for the platform menu.
+     */
+
     [menu insertItem:menuItem atTkIndex:mePtr->index];
     return TCL_OK;
 }
@@ -521,6 +596,7 @@ TkpConfigureMenuEntry(
     } else if (mePtr->bitmapPtr != None) {
 	Pixmap bitmap = Tk_GetBitmapFromObj(mePtr->menuPtr->tkwin,
 		mePtr->bitmapPtr);
+
 	Tk_SizeOfBitmap(mePtr->menuPtr->display, bitmap, &imageWidth,
 		&imageHeight);
 	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
@@ -543,8 +619,9 @@ TkpConfigureMenuEntry(
 	attributes = TkMacOSXNSFontAttributesForFont(Tk_GetFontFromObj(
 		mePtr->menuPtr->tkwin, fontPtr));
 	if (gc->foreground != defaultFg || gc->background != defaultBg) {
-	    NSColor *color = TkMacOSXGetNSColor(gc, gc->foreground != defaultFg ?
-		    gc->foreground : gc->background);
+	    NSColor *color = TkMacOSXGetNSColor(gc,
+		    gc->foreground!=defaultFg? gc->foreground:gc->background);
+
 	    attributes = [[attributes mutableCopy] autorelease];
 	    [(NSMutableDictionary *)attributes setObject:color
 		    forKey:NSForegroundColorAttributeName];
@@ -575,10 +652,12 @@ TkpConfigureMenuEntry(
 	    submenu = (TKMenu *) menuRefPtr->menuPtr->platformData;
 	    if ([submenu supermenu] && [menuItem submenu] != submenu) {
 		/*
-		* This happens during a clone, where the parent menu is cloned
-		* before its children, so just ignore this temprary setting,
-		* it will be changed shortly (c.f. tkMenu.c CloneMenu())
-		*/
+		 * This happens during a clone, where the parent menu is
+		 * cloned before its children, so just ignore this temprary
+		 * setting, it will be changed shortly (c.f. tkMenu.c
+		 * CloneMenu())
+		 */
+
 		submenu = nil;
 	    } else {
 		[submenu setTitle:title];
@@ -611,8 +690,9 @@ TkpDestroyMenuEntry(
 {
     if (mePtr->platformEntryData && mePtr->menuPtr->platformData) {
 	TKMenu *menu = (TKMenu *) mePtr->menuPtr->platformData;
-	NSMenuItem *menuItem = (NSMenuItem *)mePtr->platformEntryData;
+	NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
 	NSInteger index = [menu indexOfItem:menuItem];
+
 	if (index > -1) {
 	    [menu removeItemAtIndex:index];
 	}
@@ -646,26 +726,30 @@ TkpPostMenu(
     int y)			/* The global y-coordinate */
 {
     NSWindow *win = [NSApp keyWindow];
-    if (win) {
-	inPostMenu = 1;
-	int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
-	NSView *view = [win contentView];
-	NSRect frame = NSMakeRect(x + 9, tkMacOSXZeroScreenHeight - y - 9, 1, 1);
-	frame.origin = [view convertPoint:
-		[win convertScreenToBase:frame.origin] fromView:nil];
-	NSMenu *menu = (NSMenu *) menuPtr->platformData;
-	NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]
-		initTextCell:@"" pullsDown:NO];
-	[popUpButtonCell setMenu:menu];
-	[popUpButtonCell selectItem:nil];
-	[popUpButtonCell performClickWithFrame:frame inView:view];
-	[popUpButtonCell release];
-	Tcl_SetServiceMode(oldMode);
-	inPostMenu = 0;
-	return TCL_OK;
-    } else {
+    if (!win) {
 	return TCL_ERROR;
     }
+
+    inPostMenu = 1;
+
+    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
+    NSView *view = [win contentView];
+    NSRect frame = NSMakeRect(x + 9, tkMacOSXZeroScreenHeight - y - 9, 1, 1);
+
+    frame.origin = [view convertPoint:
+	    [win convertScreenToBase:frame.origin] fromView:nil];
+
+    NSMenu *menu = (NSMenu *) menuPtr->platformData;
+    NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]
+	    initTextCell:@"" pullsDown:NO];
+
+    [popUpButtonCell setMenu:menu];
+    [popUpButtonCell selectItem:nil];
+    [popUpButtonCell performClickWithFrame:frame inView:view];
+    [popUpButtonCell release];
+    Tcl_SetServiceMode(oldMode);
+    inPostMenu = 0;
+    return TCL_OK;
 }
 
 /*
@@ -723,8 +807,10 @@ TkpSetMainMenubar(
 {
     static Tcl_Interp *currentInterp = NULL;
     TKMenu *menu = nil;
+
     if (menuName) {
 	TkWindow *winPtr = (TkWindow *) tkwin;
+
 	if (winPtr->wmInfoPtr && winPtr->wmInfoPtr->menuPtr &&
 		winPtr->wmInfoPtr->menuPtr->masterMenuPtr &&
 		winPtr->wmInfoPtr->menuPtr->masterMenuPtr->tkwin &&
@@ -734,6 +820,7 @@ TkpSetMainMenubar(
 	} else {
 	    TkMenuReferences *menuRefPtr = TkFindMenuReferences(interp,
 		    menuName);
+
 	    if (menuRefPtr && menuRefPtr->menuPtr &&
 		    menuRefPtr->menuPtr->platformData) {
 		menu = (TKMenu *) menuRefPtr->menuPtr->platformData;
@@ -751,9 +838,9 @@ TkpSetMainMenubar(
  *
  * CheckForSpecialMenu --
  *
- *	Given a menu, check to see whether or not it is a cascade in
- *	a menubar with one of the special names .apple, .help or .window
- *	If it is, the entry that points to this menu will be marked.
+ *	Given a menu, check to see whether or not it is a cascade in a menubar
+ *	with one of the special names .apple, .help or .window If it is, the
+ *	entry that points to this menu will be marked.
  *
  * Results:
  *	None.
@@ -772,7 +859,8 @@ CheckForSpecialMenu(
 	return;
     }
     for (TkMenuEntry *cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
-	    cascadeEntryPtr; cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
+	    cascadeEntryPtr;
+	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
 	if (cascadeEntryPtr->menuPtr->menuType == MENUBAR
 		&& cascadeEntryPtr->menuPtr->masterMenuPtr->tkwin) {
 	    TkMenu *masterMenuPtr = cascadeEntryPtr->menuPtr->masterMenuPtr;
@@ -815,7 +903,7 @@ CheckForSpecialMenu(
  *----------------------------------------------------------------------
  */
 
-static NSString*
+static NSString *
 ParseAccelerator(
     const char *accel,
     NSUInteger *maskPtr)
@@ -893,12 +981,14 @@ ParseAccelerator(
  */
 
 static int
-ModifierCharWidth(Tk_Font tkfont)
+ModifierCharWidth(
+    Tk_Font tkfont)
 {
     static NSString *cmdChar = nil;
 
     if (!cmdChar) {
 	unichar cmd = kCommandUnicode;
+
 	cmdChar = [[NSString alloc] initWithCharacters:&cmd length:1];
     }
     return [cmdChar sizeWithAttributes:
@@ -1023,6 +1113,7 @@ TkpComputeStandardMenuGeometry(
 	    } else if (mePtr->bitmapPtr) {
 		Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin,
 			mePtr->bitmapPtr);
+
 		Tk_SizeOfBitmap(menuPtr->display, bitmap, &width, &height);
 		haveImage = 1;
 	    }
@@ -1145,6 +1236,7 @@ GenerateMenuSelectEvent(
 
     if (menuPtr) {
 	int index = [menu tkIndexOfItem:menuItem];
+
 	if (index < 0 || index >= menuPtr->numEntries ||
 		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
 	    TkActivateMenuEntry(menuPtr, -1);
@@ -1222,16 +1314,15 @@ RecursivelyClearActiveMenu(
     TkMenu *menuPtr)		/* The menu to reset. */
 {
     int i;
-    TkMenuEntry *mePtr;
 
     TkActivateMenuEntry(menuPtr, -1);
     for (i = 0; i < menuPtr->numEntries; i++) {
-	mePtr = menuPtr->entries[i];
-	if (mePtr->type == CASCADE_ENTRY) {
-	    if ((mePtr->childMenuRefPtr != NULL)
-		    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
-		RecursivelyClearActiveMenu(mePtr->childMenuRefPtr->menuPtr);
-	    }
+	TkMenuEntry *mePtr = menuPtr->entries[i];
+
+	if (mePtr->type == CASCADE_ENTRY
+		&& (mePtr->childMenuRefPtr != NULL)
+		&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
+	    RecursivelyClearActiveMenu(mePtr->childMenuRefPtr->menuPtr);
 	}
     }
 }
@@ -1256,8 +1347,10 @@ void
 TkMacOSXClearMenubarActive(void)
 {
     NSMenu *mainMenu = [NSApp mainMenu];
+
     if (mainMenu && [mainMenu isKindOfClass:[TKMenu class]]) {
-	TkMenu *menuPtr = [(TKMenu *)mainMenu tkMenu];
+	TkMenu *menuPtr = [(TKMenu *) mainMenu tkMenu];
+
 	if (menuPtr && menuPtr->numEntries && menuPtr->entries) {
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
@@ -1310,7 +1403,9 @@ TkpMenuInit(void)
     TkColor *tkColPtr;
 
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-#define observe(n, s) [nc addObserver:NSApp selector:@selector(s) name:(n) object:nil]
+
+#define observe(n, s) \
+	[nc addObserver:NSApp selector:@selector(s) name:(n) object:nil]
     observe(NSMenuDidBeginTrackingNotification, menuBeginTracking:);
     observe(NSMenuDidEndTrackingNotification, menuEndTracking:);
 #undef observe
@@ -1476,9 +1571,9 @@ TkpDrawMenuEntry(
     int width,			/* Width of the entry rectangle */
     int height,			/* Height of the current rectangle */
     int strictMotif,		/* Boolean flag */
-    int drawArrow)		/* Whether or not to draw the cascade
-				 * arrow for cascade items. Only applies
-				 * to Windows. */
+    int drawArrow)		/* Whether or not to draw the cascade arrow
+				 * for cascade items. Only applies to
+				 * Windows. */
 {
 }
 
@@ -1630,7 +1725,7 @@ TkMacOSXMenuClick(void)
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

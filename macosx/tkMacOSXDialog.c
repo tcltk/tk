@@ -7,10 +7,10 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.44 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.45 2009/07/06 15:45:54 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -102,9 +102,9 @@ static const NSAlertStyle alertStyles[] = {
 };
 
 /*
- * Need to map from 'alertButtonStrings' and its corresponding integer,
- * index to the native button index, which is 1, 2, 3, from right to left.
- * This is necessary to do for each separate '-type' of button sets.
+ * Need to map from 'alertButtonStrings' and its corresponding integer, index
+ * to the native button index, which is 1, 2, 3, from right to left. This is
+ * necessary to do for each separate '-type' of button sets.
  */
 
 static const short alertButtonIndexAndTypeToNativeButtonIndex[][7] = {
@@ -130,7 +130,7 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_YESNO] =		{5, 6, 0},
     [TYPE_YESNOCANCEL] =	{5, 6, 4},
 };
-
+
 #pragma mark TKApplication(TKDialog)
 
 @interface NSColorPanel(TKDialog)
@@ -138,12 +138,15 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 @end
 
 @implementation TKApplication(TKDialog)
-- (void)tkFilePanelDidEnd:(NSSavePanel *)panel returnCode:(NSInteger)returnCode
-	contextInfo:(void *)contextInfo {
+
+- (void) tkFilePanelDidEnd: (NSSavePanel *) panel
+	returnCode: (NSInteger) returnCode contextInfo: (void *) contextInfo
+{
     FilePanelCallbackInfo *callbackInfo = contextInfo;
 
     if (returnCode == NSFileHandlingPanelOKButton) {
 	Tcl_Obj *resultObj;
+
 	if (callbackInfo->multiple) {
 	    resultObj = Tcl_NewListObj(0, NULL);
 	    for (NSString *name in [(NSOpenPanel*)panel filenames]) {
@@ -157,6 +160,7 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 	    Tcl_Obj **objv, **tmpv;
 	    int objc, result = Tcl_ListObjGetElements(callbackInfo->interp,
 		    callbackInfo->cmdObj, &objc, &objv);
+
 	    if (result == TCL_OK && objc) {
 		tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
@@ -179,18 +183,22 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 	ckfree((char*) callbackInfo);
     }
 }
-- (void)tkAlertDidEnd:(NSAlert *)alert returnCode:(NSInteger)returnCode
-	contextInfo:(void *)contextInfo {
+
+- (void) tkAlertDidEnd: (NSAlert *) alert returnCode: (NSInteger) returnCode
+	contextInfo: (void *) contextInfo
+{
     AlertCallbackInfo *callbackInfo = contextInfo;
 
     if (returnCode != NSAlertErrorReturn) {
 	Tcl_Obj *resultObj = Tcl_NewStringObj(alertButtonStrings[
 		alertNativeButtonIndexAndTypeToButtonIndex[callbackInfo->
 		typeIndex][returnCode - NSAlertFirstButtonReturn]], -1);
+
 	if (callbackInfo->cmdObj) {
 	    Tcl_Obj **objv, **tmpv;
 	    int objc, result = Tcl_ListObjGetElements(callbackInfo->interp,
 		    callbackInfo->cmdObj, &objc, &objv);
+
 	    if (result == TCL_OK && objc) {
 		tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
@@ -264,28 +272,26 @@ Tk_ChooseColorObjCmd(
 	value = Tcl_GetString(objv[i + 1]);
 
 	switch (index) {
-	    case COLOR_INITIAL: {
-		XColor *colorPtr;
+	case COLOR_INITIAL: {
+	    XColor *colorPtr;
 
-		colorPtr = Tk_GetColor(interp, tkwin, value);
-		if (colorPtr == NULL) {
-		    goto end;
-		}
-		initialColor = TkMacOSXGetNSColor(NULL, colorPtr->pixel);
-		Tk_FreeColor(colorPtr);
-		break;
+	    colorPtr = Tk_GetColor(interp, tkwin, value);
+	    if (colorPtr == NULL) {
+		goto end;
 	    }
-	    case COLOR_PARENT: {
-		parent = Tk_NameToWindow(interp, value, tkwin);
-		if (parent == NULL) {
-		    goto end;
-		}
-		break;
+	    initialColor = TkMacOSXGetNSColor(NULL, colorPtr->pixel);
+	    Tk_FreeColor(colorPtr);
+	    break;
+	}
+	case COLOR_PARENT:
+	    parent = Tk_NameToWindow(interp, value, tkwin);
+	    if (parent == NULL) {
+		goto end;
 	    }
-	    case COLOR_TITLE: {
-		title = value;
-		break;
-	    }
+	    break;
+	case COLOR_TITLE:
+	    title = value;
+	    break;
 	}
     }
     colorPanel = [NSColorPanel sharedColorPanel];
@@ -322,6 +328,7 @@ Tk_ChooseColorObjCmd(
 	Tcl_ResetResult(interp);
     }
     result = TCL_OK;
+
 end:
     return result;
 }
@@ -493,7 +500,8 @@ Tk_GetOpenFileObjCmd(
     if (typeVariablePtr && result == TCL_OK) {
 	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), "", 0);
     }
-end:
+
+  end:
     TkFreeFileFilters(&fl);
     return result;
 }
@@ -658,7 +666,8 @@ Tk_GetSaveFileObjCmd(
 		contextInfo:callbackInfo];
     }
     result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
-end:
+
+  end:
     TkFreeFileFilters(&fl);
     return result;
 }
@@ -779,7 +788,8 @@ Tk_ChooseDirectoryObjCmd(
 		contextInfo:callbackInfo];
     }
     result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
-end:
+
+  end:
     return result;
 }
 
@@ -803,20 +813,29 @@ void
 TkAboutDlg(void)
 {
     NSImage *image;
-    NSString *path = [NSApp tkFrameworkImagePath:@"Tk.tiff"];
+    NSString *path = [NSApp tkFrameworkImagePath: @"Tk.tiff"];
+
     if (path) {
 	image = [[[NSImage alloc] initWithContentsOfFile:path] autorelease];
     } else {
 	image = [NSApp applicationIconImage];
     }
+
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+
     [dateFormatter setFormatterBehavior:NSDateFormatterBehavior10_4];
     [dateFormatter setDateFormat:@"Y"];
+
     NSString *year = [dateFormatter stringFromDate:[NSDate date]];
+
     [dateFormatter release];
-    NSMutableParagraphStyle *style = [[[NSParagraphStyle defaultParagraphStyle]
-	    mutableCopy] autorelease];
+
+    NSMutableParagraphStyle *style =
+	    [[[NSParagraphStyle defaultParagraphStyle] mutableCopy]
+	    autorelease];
+
     [style setAlignment:NSCenterTextAlignment];
+
     NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
 	    @"Tcl & Tk", @"ApplicationName",
 	    @"Tcl " TCL_VERSION " & Tk " TK_VERSION, @"ApplicationVersion",
@@ -827,12 +846,12 @@ TkAboutDlg(void)
 	    [[[NSAttributedString alloc] initWithString:
 	    [NSString stringWithFormat:
 	    @"%1$C 1987-%2$@ Tcl Core Team." "\n\n"
-	     "%1$C 2002-%2$@ Daniel A. Steffen." "\n\n"
-	     "%1$C 2001-2009 Apple Inc." "\n\n"
-	     "%1$C 2001-2002 Jim Ingham & Ian Reid" "\n\n"
-	     "%1$C 1998-2000 Jim Ingham & Ray Johnson" "\n\n"
-	     "%1$C 1998-2000 Scriptics Inc." "\n\n"
-	     "%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year] attributes:
+		"%1$C 2002-%2$@ Daniel A. Steffen." "\n\n"
+		"%1$C 2001-2009 Apple Inc." "\n\n"
+		"%1$C 2001-2002 Jim Ingham & Ian Reid" "\n\n"
+		"%1$C 1998-2000 Jim Ingham & Ray Johnson" "\n\n"
+		"%1$C 1998-2000 Scriptics Inc." "\n\n"
+		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year] attributes:
 	    [NSDictionary dictionaryWithObject:style
 	    forKey:NSParagraphStyleAttributeName]] autorelease], @"Credits",
 	    nil];
@@ -978,13 +997,12 @@ Tk_MessageBoxObjCmd(
     }
     if (indexDefaultOption) {
 	/*
-	 * Any '-default' option needs to know the '-type' option, which is why
-	 * we do this here.
+	 * Any '-default' option needs to know the '-type' option, which is
+	 * why we do this here.
 	 */
 
 	if (Tcl_GetIndexFromObj(interp, objv[indexDefaultOption + 1],
-		alertButtonStrings, "value", TCL_EXACT, &index)
-		!= TCL_OK) {
+		alertButtonStrings, "value", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 
@@ -1009,15 +1027,18 @@ Tk_MessageBoxObjCmd(
     buttons = [alert buttons];
     for (NSButton *b in buttons) {
 	NSString *ke = [b keyEquivalent];
+
 	if (([ke isEqualToString:@"\r"] || [ke isEqualToString:@"\033"]) &&
 		![b keyEquivalentModifierMask]) {
 	    [b setKeyEquivalent:@""];
 	}
     }
-    [[buttons objectAtIndex:[buttons count]-1] setKeyEquivalent:@"\033"];
-    [[buttons objectAtIndex:defaultNativeButtonIndex-1] setKeyEquivalent:@"\r"];
+    [[buttons objectAtIndex: [buttons count]-1] setKeyEquivalent: @"\033"];
+    [[buttons objectAtIndex: defaultNativeButtonIndex-1]
+	    setKeyEquivalent: @"\r"];
     if (cmdObj) {
-	callbackInfo = (AlertCallbackInfo *) ckalloc(sizeof(AlertCallbackInfo));
+	callbackInfo = (AlertCallbackInfo *)
+		ckalloc(sizeof(AlertCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
@@ -1039,7 +1060,7 @@ Tk_MessageBoxObjCmd(
 		contextInfo:callbackInfo];
     }
     result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
-end:
+  end:
     [alert release];
     return result;
 }
@@ -1060,19 +1081,25 @@ typedef struct FontchooserData {
     Tcl_Obj *cmdObj;
     Tk_Window parent;
 } FontchooserData;
+
 enum FontchooserEvent { FontchooserClosed, FontchooserSelection };
 
-static void FontchooserEvent(int kind);
-static Tcl_Obj *FontchooserCget(FontchooserData *fcdPtr, int optionIndex);
-static int FontchooserConfigureCmd(ClientData clientData, Tcl_Interp *interp,
-	int objc, Tcl_Obj *const objv[]);
-static int FontchooserShowCmd(ClientData clientData, Tcl_Interp *interp,
-	int objc, Tcl_Obj *const objv[]);
-static int FontchooserHideCmd(ClientData clientData, Tcl_Interp *interp,
-	int objc, Tcl_Obj *const objv[]);
-static void FontchooserParentEventHandler(ClientData clientData,
-	XEvent *eventPtr);
-static void DeleteFontchooserData(ClientData clientData, Tcl_Interp *interp);
+static void		FontchooserEvent(int kind);
+static Tcl_Obj *	FontchooserCget(FontchooserData *fcdPtr,
+			    int optionIndex);
+static int		FontchooserConfigureCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		FontchooserShowCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		FontchooserHideCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static void		FontchooserParentEventHandler(ClientData clientData,
+			    XEvent *eventPtr);
+static void		DeleteFontchooserData(ClientData clientData,
+			    Tcl_Interp *interp);
 
 MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
 const TkEnsemble tkFontchooserEnsemble[] = {
@@ -1095,10 +1122,14 @@ enum FontchooserOption {
 };
 
 @implementation TKApplication(TKFontPanel)
-- (void)changeFont:(id)sender {
+
+- (void) changeFont: (id) sender
+{
     NSFontManager *fm = [NSFontManager sharedFontManager];
+
     if ([fm currentFontAction] == NSViaPanelFontAction) {
 	NSFont *font = [fm convertFont:fontPanelFont];
+
 	if (![fontPanelFont isEqual:font]) {
 	    [fontPanelFont release];
 	    fontPanelFont = [font retain];
@@ -1106,20 +1137,27 @@ enum FontchooserOption {
 	}
     }
 }
-- (void)changeAttributes:(id)sender {
+
+- (void) changeAttributes: (id) sender
+{
     NSDictionary *attributes = [sender convertAttributes:
 	    fontPanelFontAttributes];
+
     if (![fontPanelFontAttributes isEqual:attributes]) {
 	[fontPanelFontAttributes setDictionary:attributes];
 	FontchooserEvent(FontchooserSelection);
     }
 }
-- (NSUInteger) validModesForFontPanel: (NSFontPanel *) fontPanel {
+
+- (NSUInteger) validModesForFontPanel: (NSFontPanel *) fontPanel
+{
     return (NSFontPanelStandardModesMask & ~NSFontPanelAllEffectsModeMask) |
 	    NSFontPanelUnderlineEffectModeMask |
 	    NSFontPanelStrikethroughEffectModeMask;
 }
-- (void)windowDidOrderOffScreen:(NSNotification *)notification {
+
+- (void) windowDidOrderOffScreen: (NSNotification *) notification
+{
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -1159,35 +1197,35 @@ FontchooserEvent(
     }
     fcdPtr = Tcl_GetAssocData(fontchooserInterp, "::tk::fontchooser", NULL);
     switch (kind) {
-	case FontchooserClosed:
-	    if (fcdPtr->parent != None) {
-		TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility");
-		fontchooserInterp = NULL;
-	    }
-	    break;
-	case FontchooserSelection:
-	    fontObj = TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
-		    fontPanelFont, fontPanelFontAttributes);
-	    if (fontObj) {
-		if (fcdPtr->cmdObj) {
-		    int objc, result;
-		    Tcl_Obj **objv, **tmpv;
+    case FontchooserClosed:
+	if (fcdPtr->parent != None) {
+	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility");
+	    fontchooserInterp = NULL;
+	}
+	break;
+    case FontchooserSelection:
+	fontObj = TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
+		fontPanelFont, fontPanelFontAttributes);
+	if (fontObj) {
+	    if (fcdPtr->cmdObj) {
+		int objc, result;
+		Tcl_Obj **objv, **tmpv;
 
-		    result = Tcl_ListObjGetElements(fontchooserInterp,
-			    fcdPtr->cmdObj, &objc, &objv);
-		    if (result == TCL_OK) {
-			tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) *
-				(unsigned)(objc + 2));
-			memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
-			tmpv[objc] = fontObj;
-			TkBackgroundEvalObjv(fontchooserInterp, objc + 1, tmpv,
-				TCL_EVAL_GLOBAL);
-			ckfree((char *)tmpv);
-		    }
+		result = Tcl_ListObjGetElements(fontchooserInterp,
+			fcdPtr->cmdObj, &objc, &objv);
+		if (result == TCL_OK) {
+		    tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) *
+			    (unsigned)(objc + 2));
+		    memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
+		    tmpv[objc] = fontObj;
+		    TkBackgroundEvalObjv(fontchooserInterp, objc + 1, tmpv,
+			    TCL_EVAL_GLOBAL);
+		    ckfree((char *)tmpv);
 		}
-		TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged");
 	    }
-	    break;
+	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged");
+	}
+	break;
     }
 }
 
@@ -1217,47 +1255,41 @@ FontchooserCget(
     Tcl_Obj *resObj = NULL;
 
     switch(optionIndex) {
-	case FontchooserParent: {
-	    if (fcdPtr->parent != None) {
-		resObj = Tcl_NewStringObj(
-			((TkWindow*)fcdPtr->parent)->pathName, -1);
-	    } else {
-		resObj = Tcl_NewStringObj(".", 1);
-	    }
-	    break;
+    case FontchooserParent:
+	if (fcdPtr->parent != None) {
+	    resObj = Tcl_NewStringObj(
+		    ((TkWindow *) fcdPtr->parent)->pathName, -1);
+	} else {
+	    resObj = Tcl_NewStringObj(".", 1);
 	}
-	case FontchooserTitle: {
-	    if (fcdPtr->titleObj) {
-		resObj = fcdPtr->titleObj;
-	    } else {
-		resObj = Tcl_NewObj();
-	    }
-	    break;
-	}
-	case FontchooserFont: {
-	    resObj = TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
-		    fontPanelFont, fontPanelFontAttributes);
-	    if (!resObj) {
-		resObj = Tcl_NewObj();
-	    }
-	    break;
-	}
-	case FontchooserCmd: {
-	    if (fcdPtr->cmdObj) {
-		resObj = fcdPtr->cmdObj;
-	    } else {
-		resObj = Tcl_NewObj();
-	    }
-	    break;
-	}
-	case FontchooserVisible: {
-	    resObj = Tcl_NewBooleanObj([[[NSFontManager sharedFontManager]
-		    fontPanel:NO] isVisible]);
-	    break;
-	}
-	default: {
+	break;
+    case FontchooserTitle:
+	if (fcdPtr->titleObj) {
+	    resObj = fcdPtr->titleObj;
+	} else {
 	    resObj = Tcl_NewObj();
 	}
+	break;
+    case FontchooserFont:
+	resObj = TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
+		fontPanelFont, fontPanelFontAttributes);
+	if (!resObj) {
+	    resObj = Tcl_NewObj();
+	}
+	break;
+    case FontchooserCmd:
+	if (fcdPtr->cmdObj) {
+	    resObj = fcdPtr->cmdObj;
+	} else {
+	    resObj = Tcl_NewObj();
+	}
+	break;
+    case FontchooserVisible:
+	resObj = Tcl_NewBooleanObj([[[NSFontManager sharedFontManager]
+		fontPanel:NO] isVisible]);
+	break;
+    default:
+	resObj = Tcl_NewObj();
     }
     return resObj;
 }
@@ -1298,6 +1330,7 @@ FontchooserConfigureCmd(
     if (objc == 1) {
 	Tcl_Obj *keyObj, *valueObj;
 	Tcl_Obj *dictObj = Tcl_NewDictObj();
+
 	for (i = 0; r == TCL_OK && fontchooserOptionStrings[i] != NULL; ++i) {
 	    keyObj = Tcl_NewStringObj(fontchooserOptionStrings[i], -1);
 	    valueObj = FontchooserCget(fcdPtr, i);
@@ -1311,31 +1344,36 @@ FontchooserConfigureCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int optionIndex, len;
+
 	if (Tcl_GetIndexFromObj(interp, objv[i], fontchooserOptionStrings,
 		"option", 0, &optionIndex) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    /* With one option and no arg, return the current value */
+	    /*
+	     * With one option and no arg, return the current value.
+	     */
+
 	    Tcl_SetObjResult(interp, FontchooserCget(fcdPtr, optionIndex));
 	    return TCL_OK;
 	}
 	if (i + 1 == objc) {
 	    Tcl_AppendResult(interp, "value for \"",
-		Tcl_GetString(objv[i]), "\" missing", NULL);
+		    Tcl_GetString(objv[i]), "\" missing", NULL);
 	    return TCL_ERROR;
 	}
 	switch (optionIndex) {
 	    case FontchooserVisible: {
 		const char *msg = "cannot change read-only option "
-		    "\"-visible\": use the show or hide command";
+			"\"-visible\": use the show or hide command";
 
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, sizeof(msg)-1));
 		return TCL_ERROR;
 	    }
 	    case FontchooserParent: {
 		Tk_Window parent = Tk_NameToWindow(interp,
-		    Tcl_GetString(objv[i+1]), tkwin);
+			Tcl_GetString(objv[i+1]), tkwin);
+
 		if (parent == None) {
 		    return TCL_ERROR;
 		}
@@ -1367,26 +1405,28 @@ FontchooserConfigureCmd(
 		Tcl_GetStringFromObj(objv[i+1], &len);
 		if (len) {
 		    Tk_Font f = Tk_AllocFontFromObj(interp, tkwin, objv[i+1]);
-		    if (f) {
-			[fontPanelFont autorelease];
-			fontPanelFont = [TkMacOSXNSFontForFont(f) retain];
-			[fontPanelFontAttributes setDictionary:
-				TkMacOSXNSFontAttributesForFont(f)];
-			[fontPanelFontAttributes removeObjectsForKeys:[NSArray
-				arrayWithObjects:NSFontAttributeName,
-				NSLigatureAttributeName, NSKernAttributeName,
-				nil]];
-			Tk_FreeFont(f);
-		    } else {
+
+		    if (!f) {
 			return TCL_ERROR;
 		    }
+		    [fontPanelFont autorelease];
+		    fontPanelFont = [TkMacOSXNSFontForFont(f) retain];
+		    [fontPanelFontAttributes setDictionary:
+			    TkMacOSXNSFontAttributesForFont(f)];
+		    [fontPanelFontAttributes removeObjectsForKeys:[NSArray
+			    arrayWithObjects:NSFontAttributeName,
+			    NSLigatureAttributeName, NSKernAttributeName,
+			    nil]];
+		    Tk_FreeFont(f);
 		} else {
 		    [fontPanelFont release];
 		    fontPanelFont = nil;
 		    [fontPanelFontAttributes removeAllObjects];
 		}
+
 		NSFontManager *fm = [NSFontManager sharedFontManager];
 		NSFontPanel *fp = [fm fontPanel:NO];
+
 		[fp setPanelFont:fontPanelFont isMultiple:NO];
 		[fm setSelectedFont:fontPanelFont isMultiple:NO];
 		[fm setSelectedAttributes:fontPanelFontAttributes
@@ -1499,8 +1539,8 @@ FontchooserHideCmd(
  *
  * FontchooserParentEventHandler --
  *
- *	Event handler for StructureNotify events on the font chooser's
- *	parent window.
+ *	Event handler for StructureNotify events on the font chooser's parent
+ *	window.
  *
  * Results:
  *	None.
@@ -1531,8 +1571,8 @@ FontchooserParentEventHandler(
  *
  * DeleteFontchooserData --
  *
- *	Clean up the font chooser configuration data when the interp
- *	is destroyed.
+ *	Clean up the font chooser configuration data when the interp is
+ *	destroyed.
  *
  * Results:
  *	None.
@@ -1601,7 +1641,7 @@ TkInitFontchooser(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
