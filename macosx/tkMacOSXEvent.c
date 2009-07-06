@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.26 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXEvent.c,v 1.27 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -25,7 +25,8 @@ enum {
 
 @implementation TKApplication(TKEvent)
 /* TODO: replace by +[addLocalMonitorForEventsMatchingMask ? */
-- (NSEvent *)tkProcessEvent:(NSEvent *)theEvent {
+- (NSEvent *) tkProcessEvent: (NSEvent *) theEvent
+{
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -148,7 +149,7 @@ TkMacOSXFlushWindows(void)
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8

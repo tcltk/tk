@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.45 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.46 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -93,9 +93,9 @@ static void DrawCharsInContext(Display *display, Drawable drawable, GC gc,
 	int rangeLength, int x, int y, double angle);
 
 @interface NSFont(TKFont)
-- (NSFont *)bestMatchingFontForCharacters:(const UTF16Char *)characters
-	length:(NSUInteger)length attributes:(NSDictionary *)attributes
-	actualCoveredLength:(NSUInteger *)coveredLength;
+- (NSFont *) bestMatchingFontForCharacters: (const UTF16Char *) characters
+	length: (NSUInteger) length attributes: (NSDictionary *) attributes
+	actualCoveredLength: (NSUInteger *) coveredLength;
 @end
 
 #pragma mark -
@@ -1278,7 +1278,7 @@ TkMacOSXUseAntialiasedText(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
