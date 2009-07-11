@@ -1,18 +1,22 @@
+2009-07-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/grid.n: [Bug 2818455]: Corrected example.
+
 2009-07-02  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkInt.h: Avoid using C++ reserved word in header.
 
 2009-06-30  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkInt.h:		add assert macros for clang static
+	* generic/tkInt.h:		Add assert macros for clang static
 					analyzer and redefine Tcl_Panic to
 					assert after panic in clang PURIFY
 					builds.
 
-	* generic/tkImgPhInstance.c:	small fixes to make clang static
+	* generic/tkImgPhInstance.c:	Small fixes to make clang static
 	* generic/tkTextDisp.c:		analyzer happier.
 
-	* generic/tkConfig.c:		add clang assert for false positives
+	* generic/tkConfig.c:		Add clang assert for false positives
 	* generic/tkUndo.c:		from static analyzer.
 
 2009-06-29  Daniel Steffen  <das@users.sourceforge.net>
@@ -63,68 +67,68 @@
 	* macosx/ttkMacOSXTheme.c:
 	* macosx/tkMacOSXCarbonEvents.c (removed):
 
-	* macosx/tkMacOSXCursors.h (new):	move cursor data from resources
+	* macosx/tkMacOSXCursors.h (new):	Move cursor data from resources
 	* macosx/tkMacOSXXCursors.h (new):	to compiled-in const array;
 	* macosx/tkMacOSXCursors.r (removed):	remove obsolete Rez source
 	* macosx/tkMacOSXXCursors.r (removed):	files for resource data.
 	* macosx/tkAboutDlg.r (removed):
 	* macosx/tkMacOSXAETE.r (removed):
 
-	* macosx/Tk.tiff (new):		rename and update icon to blue feather;
+	* macosx/Tk.tiff (new):		Rename and update icon to blue feather;
 	* macosx/Tk.icns (new):		add tiff version for about dialog.
 	* macosx/Wish.icns (removed):
 
-	* macosx/Tk-Info.plist.in:	update copyright; adjust minimum system
+	* macosx/Tk-Info.plist.in:	Update copyright; adjust minimum system
 	* macosx/Wish-Info.plist.in:	version requirement.
 	* generic/tkEntry.h:
 
-	* license.terms:		sync list of entities with those in the
+	* license.terms:		Sync list of entities with those in the
 					tcl license.terms, add Apple Inc.
 
-	* generic/tk.h:			update comment with list of source
+	* generic/tk.h:			Update comment with list of source
 					files containing tk version numbers.
 
-	* generic/tkButton.c:		on aqua, recompute button geometry on
+	* generic/tkButton.c:		On aqua, recompute button geometry on
 					secondary image change to enable cache
 					of native img format in geom compute.
 
-	* generic/tkGrab.c:		on aqua, make all grabs global, the
+	* generic/tkGrab.c:		On aqua, make all grabs global, the
 					Mac OS X windowserver forces all grabs
 					to be application-local only anyway.
 
-	* generic/tkSelect.c:		enable utf8 atom on aqua.
+	* generic/tkSelect.c:		Enable utf8 atom on aqua.
 
-	* generic/tk.decls:		replace carbon types in public and
+	* generic/tk.decls:		Replace carbon types in public and
 	* generic/tkInt.decls:		internal platform stubs interfaces with
 					void* resp. generic Tk types.
 
-	* xlib/xgc.c:			add support for managing a platform-
+	* xlib/xgc.c:			Add support for managing a platform-
 					specific cache appended to a GC.
 
-	* tests/dialog.test:		change name of undefined bit to avoid
+	* tests/dialog.test:		Change name of undefined bit to avoid
 					match with OSType native bitmap name.
 
-	* doc/cursors.n:		update list of cursors mapped to native
+	* doc/cursors.n:		Update list of cursors mapped to native
 					cursors and add new native cursors.
 
-	* doc/menu.n:			add documentation of new aqua-specific
+	* doc/menu.n:			Add documentation of new aqua-specific
 					.window menu, document new constraints
 					on .apple menu.
 
-	* library/console.tcl:		add aqua window and help menus.
+	* library/console.tcl:		Add aqua window and help menus.
 
-	* unix/Makefile.in:		add support for TkAqua-implementation-
+	* unix/Makefile.in:		Add support for TkAqua-implementation-
 					specific sources determined at
 					configure-time. Update dist target for
 					new/removed files.
 
-	* unix/configure.in:		add libraries & compiler flags for
+	* unix/configure.in:		Add libraries & compiler flags for
 					Cocoa and Objective-C; update build
 					support for new/removed files; add
 					support for configure-time choice of
 					TkAqua implementation.
 
-	* macosx/Tk-Common.xcconfig (new):	rename Xcode projects and
+	* macosx/Tk-Common.xcconfig (new):	Rename Xcode projects and
 	* macosx/Tk-Debug.xcconfig (new):	related files; update for Xcode
 	* macosx/Tk-Release.xcconfig (new):	3.1 and 3.2; update for Cocoa,
 	* macosx/Tk.xcode/* (new):		Objective-C & GC; update with
@@ -136,20 +140,20 @@
 	* macosx/Wish-Release.xcconfig (removed):
 	* macosx/Wish.pbproj/* (removed):
 
-	* macosx/README:		document new Cocoa-port features and
+	* macosx/README:		Document new Cocoa-port features and
 					constraints; update project docs;
 					cleanup.
 
-	* carbon/tkMacOSXInt.h:		add dummy defines for empty GC cache.
+	* carbon/tkMacOSXInt.h:		Add dummy defines for empty GC cache.
 
-	* carbon/tkMacOSXColor.c:	update for type changes in platform
+	* carbon/tkMacOSXColor.c:	Update for type changes in platform
 	* carbon/tkMacOSXDraw.c:	stubs interfaces.
 	* carbon/tkMacOSXHLEvents.c:
 	* carbon/tkMacOSXMouseEvent.c:
 	* carbon/tkMacOSXSubwindows.c:
 	* carbon/tkMacOSXWm.c:
 
-	* carbon/tkMacOSXButton.c:	fix warning.
+	* carbon/tkMacOSXButton.c:	Fix warning.
 
 	* generic/tkPlatDecls.h:	regen.
 	* generic/tkIntPlatDecls.h:
@@ -164,11 +168,11 @@
 
 2009-06-26  Daniel Steffen  <das@users.sourceforge.net>
 
-	* carbon/ (new directory):	copy of current state of 'macosx'
+	* carbon/ (new directory):	Copy of current state of 'macosx'
 	source directory, to preserve legacy TkAqua implementation based on
 	Carbon API (with support for Mac OS X releases older than 10.5).
 
-	* unix/Makefile.in:		add support for --enable-aqua=carbon
+	* unix/Makefile.in:		Add support for --enable-aqua=carbon
 	* unix/configure.in:		configure option (legacy fallback for
 					pre-Mac OS X 10.5 releases).
 
@@ -176,7 +180,7 @@
 
 2009-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvUtil.c fix [Bug 220935] canvas dash update problem
+	* generic/tkCanvUtil.c: [Bug 220935]: canvas dash update problem
 
 2009-06-12  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -210,7 +214,7 @@
 	* win/tkWinSend.c: FormatMessage should always use the ignore-inserts
 	* win/tkWinTest.c: flag when processing system errors.
 
-	* generic/tkFont.c: [Bug 2791352] handle parsing of type 5 font
+	* generic/tkFont.c: [Bug 2791352]: Handle parsing of type 5 font
 	* tests/font.test: descriptions with hyphenated family name.
 
 2009-05-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
