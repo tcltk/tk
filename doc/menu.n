@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.29 2009/06/29 14:35:01 das Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.30 2009/07/11 08:45:05 patthoyts Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -236,9 +236,9 @@ Windows, access to the Windows System menu in each window is provided.
 On X Windows, a special right-justified help menu is provided. In all
 cases, these menus must be created with the command name of the menubar
 menu concatenated with the special name. So for a menubar named
-.menubar, on the Macintosh, the special menus would be .menubar.apple,
-.menubar.window and .menubar.help; on Windows, the special menu would be
-.menubar.system; on X Windows, the help menu would be .menubar.help.
+\.menubar, on the Macintosh, the special menus would be .menubar.apple,
+\.menubar.window and .menubar.help; on Windows, the special menu would be
+\.menubar.system; on X Windows, the help menu would be .menubar.help.
 .PP
 When Tk sees a .menubar.apple menu as the first menu in a menubar on the
 Macintosh, that menu's contents make up the first items of the
