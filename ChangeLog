@@ -1,3 +1,9 @@
+2009-07-14  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/configure.in: [Bug 2496018]: Allow the disabling of the use of
+	XScreenSaver at configuration time, so as to permit better control of
+	dependencies in the embedded case.
+
 2009-07-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/grid.n: [Bug 2818455]: Corrected example.
