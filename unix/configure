@@ -862,6 +862,7 @@ Optional Features:
                           on)
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua           use Aqua windowingsystem on Mac OS X (default: off)
+  --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-xft            use freetype/fontconfig/xft (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
@@ -10442,7 +10443,23 @@ if test $tk_aqua = no; then
     tk_oldLibs=$LIBS
     LIBS="$tk_oldLibs $XLIBSW"
     xss_header_found=no
-    echo "$as_me:$LINENO: checking for X11/extensions/scrnsaver.h" >&5
+    xss_lib_found=no
+    echo "$as_me:$LINENO: checking whether to try to use XScreenSaver" >&5
+echo $ECHO_N "checking whether to try to use XScreenSaver... $ECHO_C" >&6
+    # Check whether --enable-xss or --disable-xss was given.
+if test "${enable_xss+set}" = set; then
+  enableval="$enable_xss"
+  enable_xss=$enableval
+else
+  enable_xss=yes
+fi;
+    if test "$enable_xss" = "no" ; then
+	echo "$as_me:$LINENO: result: $enable_xss" >&5
+echo "${ECHO_T}$enable_xss" >&6
+    else
+	echo "$as_me:$LINENO: result: $enable_xss" >&5
+echo "${ECHO_T}$enable_xss" >&6
+	echo "$as_me:$LINENO: checking for X11/extensions/scrnsaver.h" >&5
 echo $ECHO_N "checking for X11/extensions/scrnsaver.h... $ECHO_C" >&6
 if test "${ac_cv_header_X11_extensions_scrnsaver_h+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -10492,13 +10509,12 @@ echo "$as_me:$LINENO: result: $ac_cv_header_X11_extensions_scrnsaver_h" >&5
 echo "${ECHO_T}$ac_cv_header_X11_extensions_scrnsaver_h" >&6
 if test $ac_cv_header_X11_extensions_scrnsaver_h = yes; then
 
-	xss_header_found=yes
+	    xss_header_found=yes
 
 fi
 
 
-    xss_lib_found=no
-    echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo" >&5
+	echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo" >&5
 echo $ECHO_N "checking for XScreenSaverQueryInfo... $ECHO_C" >&6
 if test "${ac_cv_func_XScreenSaverQueryInfo+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -10592,7 +10608,7 @@ if test $ac_cv_func_XScreenSaverQueryInfo = yes; then
   :
 else
 
-	echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo in -lXext" >&5
+	    echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo in -lXext" >&5
 echo $ECHO_N "checking for XScreenSaverQueryInfo in -lXext... $ECHO_C" >&6
 if test "${ac_cv_lib_Xext_XScreenSaverQueryInfo+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -10658,12 +10674,12 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_Xext_XScreenSaverQueryInfo" >&5
 echo "${ECHO_T}$ac_cv_lib_Xext_XScreenSaverQueryInfo" >&6
 if test $ac_cv_lib_Xext_XScreenSaverQueryInfo = yes; then
 
-	    XLIBSW="$XLIBSW -lXext"
-	    xss_lib_found=yes
+		XLIBSW="$XLIBSW -lXext"
+		xss_lib_found=yes
 
 else
 
-	    echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo in -lXss" >&5
+		echo "$as_me:$LINENO: checking for XScreenSaverQueryInfo in -lXss" >&5
 echo $ECHO_N "checking for XScreenSaverQueryInfo in -lXss... $ECHO_C" >&6
 if test "${ac_cv_lib_Xss_XScreenSaverQueryInfo+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -10729,14 +10745,14 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_Xss_XScreenSaverQueryInfo" >&5
 echo "${ECHO_T}$ac_cv_lib_Xss_XScreenSaverQueryInfo" >&6
 if test $ac_cv_lib_Xss_XScreenSaverQueryInfo = yes; then
 
-		if test "$tcl_cv_ld_weak_l" = yes; then
-		    # On Darwin, weak link libXss if possible,
-		    # as it is only available on Tiger or later.
-		    XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
-		else
-		    XLIBSW="$XLIBSW -lXss -lXext"
-		fi
-		xss_lib_found=yes
+		    if test "$tcl_cv_ld_weak_l" = yes; then
+			# On Darwin, weak link libXss if possible,
+			# as it is only available on Tiger or later.
+			XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
+		    else
+			XLIBSW="$XLIBSW -lXss -lXext"
+		    fi
+		    xss_lib_found=yes
 
 fi
 
@@ -10746,7 +10762,8 @@ fi
 
 fi
 
-    if test $xss_lib_found = yes -a $xss_header_found = yes; then
+    fi
+    if test $enable_xss = yes -a $xss_lib_found = yes -a $xss_header_found = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_XSS 1
