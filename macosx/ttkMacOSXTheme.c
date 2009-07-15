@@ -7,6 +7,7 @@
  * Copyright (c) 2005 Neil Madden
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright 2008-2009, Apple Inc.
+ * Copyright 2009 Kevin Walzer/WordTech Communications LLC. 
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -28,7 +29,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.27 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.28 2009/07/15 21:50:40 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -220,26 +221,77 @@ static Ttk_ElementSpec ButtonElementSpec = {
  * +++ Notebook elements.
  */
 
+
+/* Tab position logic, c.f. ttkNotebook.c TabState() */
+
+#define TTK_STATE_NOTEBOOK_FIRST	TTK_STATE_USER1
+#define TTK_STATE_NOTEBOOK_LAST 	TTK_STATE_USER2
 static Ttk_StateTable TabStyleTable[] = {
-    { kThemeTabFrontInactive, TTK_STATE_SELECTED|TTK_STATE_BACKGROUND, 0 },
-    { kThemeTabNonFrontInactive, TTK_STATE_BACKGROUND, 0 },
-    { kThemeTabFrontUnavailable, TTK_STATE_DISABLED|TTK_STATE_SELECTED, 0 },
-    { kThemeTabNonFrontUnavailable, TTK_STATE_DISABLED, 0 },
-    { kThemeTabFront, TTK_STATE_SELECTED, 0 },
-    { kThemeTabNonFrontPressed, TTK_STATE_PRESSED, 0 },
-    { kThemeTabNonFront, 0,0 }
+    { kThemeTabFrontInactive, TTK_STATE_SELECTED|TTK_STATE_BACKGROUND},
+    { kThemeTabNonFrontInactive, TTK_STATE_BACKGROUND},
+    { kThemeTabFrontUnavailable, TTK_STATE_DISABLED|TTK_STATE_SELECTED},
+    { kThemeTabNonFrontUnavailable, TTK_STATE_DISABLED},
+    { kThemeTabFront, TTK_STATE_SELECTED},
+    { kThemeTabNonFrontPressed, TTK_STATE_PRESSED},
+    { kThemeTabNonFront, 0}
+};
+
+static Ttk_StateTable TabAdornmentTable[] = {
+    { kHIThemeTabAdornmentNone,
+	    TTK_STATE_NOTEBOOK_FIRST|TTK_STATE_NOTEBOOK_LAST},
+    {kHIThemeTabAdornmentTrailingSeparator, TTK_STATE_NOTEBOOK_FIRST},
+    {kHIThemeTabAdornmentNone, TTK_STATE_NOTEBOOK_LAST},
+    {kHIThemeTabAdornmentTrailingSeparator, 0 },
+};
+
+static Ttk_StateTable TabPositionTable[] = {
+    { kHIThemeTabPositionOnly,
+	    TTK_STATE_NOTEBOOK_FIRST|TTK_STATE_NOTEBOOK_LAST},
+    { kHIThemeTabPositionFirst, TTK_STATE_NOTEBOOK_FIRST},
+    { kHIThemeTabPositionLast, TTK_STATE_NOTEBOOK_LAST},
+    { kHIThemeTabPositionMiddle, 0 },
 };
 
 /*
- * Quoth DrawThemeTab() reference manual:
- * "Small tabs have a height of 16 pixels large tabs have a height of
- * 21 pixels. (The widths of tabs are variable.) Additionally, the
- * distance that the tab overlaps the pane must be included in the tab
- * rectangle this overlap distance is always 3 pixels, although the
- * 3-pixel overlap is only drawn for the front tab."
+ * Apple XHIG Tab View Specifications:
+ *
+ * Control sizes: Tab views are available in regular, small, and mini sizes.
+ * The tab height is fixed for each size, but you control the size of the pane
+ * area. The tab heights for each size are listed below:
+ *  - Regular size: 20 pixels.
+ *  - Small: 17 pixels.
+ *  - Mini: 15 pixels.
+ *
+ * Label spacing and fonts: The tab labels should be in a font that’s
+ * proportional to the size of the tab view control. In addition, the label
+ * should be placed so that there are equal margins of space before and after
+ * it. The guidelines below provide the specifications you should use for tab
+ * labels:
+ *  - Regular size: System font. Center in tab, leaving 12 pixels on each side.
+ *  - Small: Small system font. Center in tab, leaving 10 pixels on each side.
+ *  - Mini: Mini system font. Center in tab, leaving 8 pixels on each side.
+ *
+ * Control spacing: Whether you decide to inset a tab view in a window or
+ * extend its edges to the window sides and bottom, you should place the top
+ * edge of the tab view 12 or 14 pixels below the bottom edge of the title bar
+ * (or toolbar, if there is one). If you choose to inset a tab view in a
+ * window, you should leave a margin of 20 pixels between the sides and bottom
+ * of the tab view and the sides and bottom of the window (although 16 pixels
+ * is also an acceptable margin-width). If you need to provide controls below
+ * the tab view, leave enough space below the tab view so the controls are 20
+ * pixels above the bottom edge of the window and 12 pixels between the tab
+ * view and the controls.
+ * If you choose to extend the tab view sides and bottom so that they meet the
+ * window sides and bottom, you should leave a margin of at least 20 pixels
+ * between the content in the tab view and the tab-view edges.
+ *
+ * <URL: http://developer.apple.com/documentation/userexperience/Conceptual/
+ *       AppleHIGuidelines/XHIGControls/XHIGControls.html#//apple_ref/doc/uid/
+ *       TP30000359-TPXREF116>
  */
-static const int TAB_HEIGHT = 21;
-static const int TAB_OVERLAP = 3;
+
+static const int TAB_HEIGHT = 10;
+static const int TAB_OVERLAP = 10;
 
 static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -254,13 +306,13 @@ static void TabElementDraw(
 {
     CGRect bounds = BoxToRect(d, b);
     HIThemeTabDrawInfo info = {
-	.version = 0,
+	.version = 1,
 	.style = Ttk_StateTableLookup(TabStyleTable, state),
 	.direction = kThemeTabNorth,
 	.size = kHIThemeTabSizeNormal,
-	.adornment = kHIThemeTabAdornmentNone,
+	.adornment = Ttk_StateTableLookup(TabAdornmentTable, state),
 	.kind = kHIThemeTabKindNormal,
-	.position = kHIThemeTabPositionMiddle,
+	.position = Ttk_StateTableLookup(TabPositionTable, state), 
     };
 
     bounds.size.height += TAB_OVERLAP;
@@ -284,8 +336,7 @@ static void PaneElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    /* Padding determined by trial-and-error */
-    *paddingPtr = Ttk_MakePadding(2, 8, 2, 2);
+    *paddingPtr = Ttk_MakePadding(9, 5, 9, 9);
 }
 
 static void PaneElementDraw(
@@ -294,7 +345,7 @@ static void PaneElementDraw(
 {
     CGRect bounds = BoxToRect(d, b);
     HIThemeTabPaneDrawInfo info = {
-	.version = 0,
+	.version = 1,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
 	.direction = kThemeTabNorth,
 	.size = kHIThemeTabSizeNormal,
@@ -302,6 +353,8 @@ static void PaneElementDraw(
 	.adornment = kHIThemeTabPaneAdornmentNormal,
     };
 
+    bounds.origin.y -= TAB_OVERLAP;
+    bounds.size.height += TAB_OVERLAP;
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
     END_DRAWING
@@ -899,10 +952,21 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
  *	Redefine the header to use a kThemeListHeaderButton.
  */
 
+#define TTK_TREEVIEW_STATE_SORTARROW	TTK_STATE_USER1
+static Ttk_StateTable TreeHeaderValueTable[] = {
+    { kThemeButtonOn, TTK_STATE_ALTERNATE},
+    { kThemeButtonOn, TTK_STATE_SELECTED},
+    { kThemeButtonOff, 0}
+};
 static Ttk_StateTable TreeHeaderAdornmentTable[] = {
-    { kThemeAdornmentHeaderButtonSortUp, TTK_STATE_ALTERNATE, 0 },
-    { kThemeAdornmentFocus, TTK_STATE_FOCUS, 0 },
-    { kThemeAdornmentNone, 0, 0 }
+    { kThemeAdornmentHeaderButtonSortUp,
+	    TTK_STATE_ALTERNATE|TTK_TREEVIEW_STATE_SORTARROW},
+    { kThemeAdornmentDefault,
+	    TTK_STATE_SELECTED|TTK_TREEVIEW_STATE_SORTARROW},
+    { kThemeAdornmentHeaderButtonNoSortArrow, TTK_STATE_ALTERNATE},
+    { kThemeAdornmentHeaderButtonNoSortArrow, TTK_STATE_SELECTED},
+    { kThemeAdornmentFocus, TTK_STATE_FOCUS},
+    { kThemeAdornmentNone, 0}
 };
 
 static void TreeHeaderElementDraw(
@@ -915,7 +979,7 @@ static void TreeHeaderElementDraw(
 	.version = 0,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
 	.kind = params->kind,
-	.value = Ttk_StateTableLookup(ButtonValueTable, state),
+	.value = Ttk_StateTableLookup(TreeHeaderValueTable, state),
 	.adornment = Ttk_StateTableLookup(TreeHeaderAdornmentTable, state),
     };
 
@@ -935,8 +999,8 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
 /*
  * Disclosure triangle:
  */
-#define TTK_TREEVIEW_STATE_OPEN TTK_STATE_USER1
-#define TTK_TREEVIEW_STATE_LEAF TTK_STATE_USER2
+#define TTK_TREEVIEW_STATE_OPEN 	TTK_STATE_USER1
+#define TTK_TREEVIEW_STATE_LEAF 	TTK_STATE_USER2
 static Ttk_StateTable DisclosureValueTable[] = {
     { kThemeDisclosureDown, TTK_TREEVIEW_STATE_OPEN, 0 },
     { kThemeDisclosureRight, 0, 0 },
