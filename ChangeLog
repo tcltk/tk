@@ -1,3 +1,8 @@
+2009-07-15  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixSelect.c (TkSelEventProc, SelRcvIncrProc, SelCvtFromX8):
+	[Bug 2821962]: Make byte sequence selection transfers possible.
+
 2009-07-14  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/canvas.n (WINDOW ITEMS): [Bug 2326602]: Corrected definition of
