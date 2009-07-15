@@ -1,3 +1,14 @@
+2009-07-15  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/ttkMacOSXTheme.c:	Update notebook tab appearance to
+	* library/ttk/aquaTheme.tcl:	modern L&F; adjust tab & notebook
+					padding and tabmargins; correct
+					appearance of selected tree header; add
+					support for native tree header sort
+					arrows via user1 state. [Patch 2819620]
+
+	* library/demos/mclist.tcl:	use native sort arrows with aqua theme.
+
 2009-07-15  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixSelect.c (TkSelEventProc, SelRcvIncrProc, SelCvtFromX8):
