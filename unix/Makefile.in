@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.154 2009/06/29 14:35:01 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.155 2009/07/18 08:16:09 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -131,7 +131,7 @@ CFLAGS_WARNING		= @CFLAGS_WARNING@
 
 # The default switches for optimization or debugging
 CFLAGS_DEBUG		= @CFLAGS_DEBUG@
-CFLAGS_OPTIMIZE		= @CFLAGS_OPTIMIZE@
+CFLAGS_OPTIMIZE		= -DNDEBUG @CFLAGS_OPTIMIZE@
 
 # To change the compiler switches, for example to change from optimization to
 # debugging symbols, change the following line:
