@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.11 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.12 2009/07/18 06:55:10 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -428,7 +428,7 @@ TkMacOSXIconBitmapObjCmd(
 	}
     }
 #endif
-    ib.value = ckalloc(len);
+    ib.value = ckalloc(len + 1);
     strcpy(ib.value, value);
     if (!iconBitmapTable.buckets) {
 	Tcl_InitHashTable(&iconBitmapTable, TCL_STRING_KEYS);
