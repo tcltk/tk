@@ -1,21 +1,27 @@
+2009-07-18  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixSelect.c (SelCvtFromX32, SelCvtFromX8): Make the
+	incremental transfer of binary selections work get deserialized
+	correctly. Thanks to Emiliano Gavilan for detecting.
+
 2009-07-18  Daniel Steffen  <das@users.sourceforge.net>
 
 	* unix/Makefile.in:		Define NDEBUG in optimized (non-
 					symbols) build to disable assert()s.
 
-	* macosx/tkMacOSXBitmap.c:	Fix tk::mac::iconBitmap crash due to
-					off-by-one ckalloc error. [Bug 2821318]
+	* macosx/tkMacOSXBitmap.c:	[Bug 2821318]: Fix tk::mac::iconBitmap
+					crash due to off-by-one ckalloc error.
 
 2009-07-15  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/ttkMacOSXTheme.c:	Update notebook tab appearance to
-	* library/ttk/aquaTheme.tcl:	modern L&F; adjust tab & notebook
-					padding and tabmargins; correct
-					appearance of selected tree header; add
-					support for native tree header sort
-					arrows via user1 state. [Patch 2819620]
+	* macosx/ttkMacOSXTheme.c:	[Patch 2819620]: Update notebook tab
+	* library/ttk/aquaTheme.tcl:	appearance to modern L&F; adjust tab &
+					notebook padding and tabmargins;
+					correct appearance of selected tree
+					header; add support for native tree
+					header sort arrows via user1 state.
 
-	* library/demos/mclist.tcl:	use native sort arrows with aqua theme.
+	* library/demos/mclist.tcl:	Use native sort arrows with aqua theme
 
 2009-07-15  Donal K. Fellows  <dkf@users.sf.net>
 
