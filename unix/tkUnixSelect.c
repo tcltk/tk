@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.21.4.1 2009/07/15 21:08:43 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.21.4.2 2009/07/18 19:32:20 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1504,6 +1504,7 @@ SelCvtFromX32(
 	    Tcl_DStringAppendElement(dsPtr, buf);
 	}
     }
+    Tcl_DStringAppend(dsPtr, " ", 1);
 }
 
 static void
@@ -1528,6 +1529,7 @@ SelCvtFromX8(
 	sprintf(buf, "0x%x", (unsigned char) *propPtr);
 	Tcl_DStringAppendElement(dsPtr, buf);
     }
+    Tcl_DStringAppend(dsPtr, " ", 1);
 }
 
 /*
