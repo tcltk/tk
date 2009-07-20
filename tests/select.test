@@ -1,12 +1,12 @@
 # This file is a Tcl script to test out Tk's selection management code,
-# especially the "selection" command.  It is organized in the standard
-# fashion for Tcl tests.
+# especially the "selection" command. It is organized in the standard fashion
+# for Tcl tests.
 #
 # Copyright (c) 1994 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: select.test,v 1.18 2008/08/28 08:52:05 aniap Exp $
+# RCS: @(#) $Id: select.test,v 1.19 2009/07/20 23:08:38 dkf Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -111,7 +111,7 @@ foreach i {a b c d e f g j h i j k l m o p q r s t u v w x y z} {
 }
 
 # Now we start the main body of the test code
-
+
 test select-1.1 {Tk_CreateSelHandler procedure} -body {
     setup
     lsort [selection get TARGETS]
@@ -812,7 +812,7 @@ test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
     lappend result [dobg {selection get TEST}]
     cleanupbg
     lappend result $selInfo
-} -result {0x400 {TEST 0 4000}}
+} -result {{0x400 } {TEST 0 4000}}
 test select-9.2 {SelCvtToX and SelCvtFromX procedures} -constraints unix -body {
     setup
     setupbg
@@ -824,7 +824,7 @@ test select-9.2 {SelCvtToX and SelCvtFromX procedures} -constraints unix -body {
     lappend result [dobg {selection get TEST}]
     cleanupbg
     lappend result $selInfo
-} -result {{0x400 0xffff 0x800 0xfffffffe} {TEST 0 4000}}
+} -result {{0x400 0xffff 0x800 0xfffffffe } {TEST 0 4000}}
 test select-9.3 {SelCvtToX and SelCvtFromX procedures} -constraints unix -body {
     setup
     setupbg
@@ -836,7 +836,7 @@ test select-9.3 {SelCvtToX and SelCvtFromX procedures} -constraints unix -body {
     lappend result [dobg {selection get TEST}]
     cleanupbg
     lappend result $selInfo
-} -result {{} {TEST 0 4000}}
+} -result {{ } {TEST 0 4000}}
 test select-9.4 {SelCvtToX and SelCvtFromX procedures} -constraints unix -body {
     setup
     setupbg
@@ -848,7 +848,7 @@ test select-9.4 {SelCvtToX and SelCvtFromX procedures} -constraints unix -body {
     lappend result [dobg {selection get TEST}]
     cleanupbg
     lappend result $selInfo
-} -result {{0x10 0x0 0x20} {TEST 0 4000}}
+} -result {{0x10 0x0 0x20 } {TEST 0 4000}}
 test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
@@ -866,7 +866,6 @@ test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
 } -result {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW {text/x-tk-test;detail="foo bar"}}
 
 ##############################################################################
-
 # note, we are not testing MULTIPLE style selections
 
 # most control paths have been exercised above
@@ -1000,7 +999,7 @@ test select-12.1 {DefaultSelection procedure} -constraints unix -body {
     lappend result [dobg {selection get -type TIMESTAMP}]
     cleanupbg
     set result
-} -result {0x0 0x0}
+} -result {0x0 {0x0 }}
 test select-12.2 {DefaultSelection procedure} -constraints unix -body {
     setup
     set result [lsort [list [selection get -type TARGETS]]]
@@ -1046,7 +1045,6 @@ test select-12.6 {DefaultSelection procedure} -body {
     lappend result [selection get TARGETS]
 } -result {{Targets value} {TARGETS.f1 0 4000} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 
-
 test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
 	unix 
 } -setup {
@@ -1075,10 +1073,13 @@ test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
     cleanupbg
     lappend result $selInfo
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000 .f1 STRING 4000 4000}}
-
+
 catch {rename weirdHandler {}}
 
 # cleanup
 cleanupTests
 return
 
+# Local Variables:
+# mode: tcl
+# End:
