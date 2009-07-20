@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.54 2009/05/13 21:33:32 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.55 2009/07/20 23:29:05 ferrieux Exp $
  */
 
 #include "tkInt.h"
@@ -2896,10 +2896,11 @@ Tk_IntersectTextLayout(
 
     result = 0;
     for (i = 0; i < layoutPtr->numChunks; i++) {
-	if (chunkPtr->start[0] == '\n') {
+	if ((chunkPtr->start[0] == '\n') || (chunkPtr->numBytes==0)) {
 	    /*
-	     * Newline characters are not counted when computing area
-	     * intersection (but tab characters would still be considered).
+	     * Newline characters and empty chunks are not counted when
+	     * computing area intersection (but tab characters would still be
+	     * considered).
 	     */
 
 	    chunkPtr++;
