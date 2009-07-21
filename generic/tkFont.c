@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.55 2009/07/20 23:29:05 ferrieux Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.56 2009/07/21 15:16:47 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -2469,11 +2469,11 @@ TkUnderlineAngledTextLayout(
 	    XDrawLines(display, drawable, gc, points, 2, CoordModeOrigin);
 	} else {
 	    points[2].x = x + ROUND16(xx*cosA + dy*sinA + width*cosA
-		    - fontPtr->underlineHeight*sinA);
+		    + fontPtr->underlineHeight*sinA);
 	    points[2].y = y + ROUND16(dy*cosA - xx*sinA - width*sinA
 		    + fontPtr->underlineHeight*cosA);
 	    points[3].x = x + ROUND16(xx*cosA + dy*sinA
-		    - fontPtr->underlineHeight*sinA);
+		    + fontPtr->underlineHeight*sinA);
 	    points[3].y = y + ROUND16(dy*cosA - xx*sinA
 		    + fontPtr->underlineHeight*cosA);
 	    points[4].x = points[0].x;

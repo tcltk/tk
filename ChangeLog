@@ -1,8 +1,13 @@
-2009-07-21  Alexandre Ferrieux 	<ferrieux@users.sourceforge.net>
+2009-07-21  Donal K. Fellows  <dkf@users.sf.net>
 
-	* generic/tkFont.c: Fix [Bug 2328657] by explicitly excluding
-	hacky zero-char chunks from intersection computation. Might
-	deserve generalization to other tests.
+	* generic/tkFont.c (TkUnderlineAngledTextLayout): [Bug 2356057]:
+	Corrected drawing of rotated underlines.
+
+2009-07-21  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
+
+	* generic/tkFont.c: [Bug 2328657]: Explicitly exclude hacky zero-char
+	chunks from intersection computation. Might deserve generalization to
+	other tests.
 
 2009-07-20  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -647,7 +652,7 @@
 	Thanks to Stuart Cassoff for [Patch 907924].
 	* unix/configure: Autoconf 2.59
 	
-2009-01-16  Don Porter	<dgp@users.sourceforge.net>
+2009-01-16  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump patchlevel to 8.6b1.1 to distinguish
 	* library/tk.tcl:	CVS snapshots from the 8.6b1 and 8.6b2
@@ -802,7 +807,7 @@
 	* doc/canvas.n (postscript): Regularized documentation of -channel
 	option.
 
-2008-12-19  Don Porter	<dgp@users.sourceforge.net>
+2008-12-19  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6b1 TAGGED FOR RELEASE ***
 
@@ -823,7 +828,7 @@
 	* unix/configure:	autoconf-2.59
 	* win/configure:
 
-2008-12-18  Don Porter	<dgp@users.sourceforge.net>
+2008-12-18  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/msgs/de.msg:	Updated German messages. Thanks to Ruediger
 	Haertel. [Patch 2442309].
@@ -842,7 +847,7 @@
 
 	* win/tkWinDialog.c: Remove unused variables
 
-2008-12-15  Don Porter	<dgp@users.sourceforge.net>
+2008-12-15  Don Porter  <dgp@users.sourceforge.net>
 
 	TIP #338 IMPLEMENTATION
 
@@ -912,7 +917,7 @@
 	* macosx/tkMacOSXInit.c (TkpInit): Unconditionally show Tk console if
 					   TK_CONSOLE env var is set.
 
-2008-12-09  Don Porter	<dgp@users.sourceforge.net>
+2008-12-09  Don Porter  <dgp@users.sourceforge.net>
 
 	TIP #337 IMPLEMENTATION
 
@@ -1008,7 +1013,7 @@
 	* library/ttk/xpTheme.tcl:
 	* tests/ttk/combobox.test:
 
-2008-11-28  Alexandre Ferrieux 	<ferrieux@users.sourceforge.net>
+2008-11-28  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
 
 	* generic/tkCanvUtil.c:	Millimeter patch. Fixes [1813597,2218964]
 	* generic/tkInt.h:	by eliminating the functional redundancy
@@ -1060,12 +1065,12 @@
 	* generic/tkInt.h:	 estimated. [Patch 1611359]
 	* tests/canvText.test:
 
-2008-11-22  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* test/winDialog.test: Avoid some locale-dependent failures by using
 	* win/tkWinTest.c:     id's or an english constraint. [Bug 2307837]
 
-2008-11-19  Joe English	 <jenglish@users.sourceforge.net>
+2008-11-19  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_panedwindow.n: Remove inoperative text stating that slave
 	windows must be direct children of the master. [Bug 1824996]
@@ -1081,7 +1086,7 @@
 	* unix/tkUnixSend.c
 	* win/tkWinWm.c
 
-2008-11-16  Joe English	 <jenglish@users.sourceforge.net>
+2008-11-16  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c: Widget self-destruction is not necessarily
 	an error. [Bug 2298720]
@@ -1092,7 +1097,7 @@
 	avoid making unwarranted assumptions about how magical it is.
 	Triggered by [Bug 2282861] discussion.
 
-2008-11-14  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-11-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tk.h:	       The TIP 125 implementation permits the
 	* generic/tkFrame.c:   [wm manage] command to manage any widget but
@@ -1102,7 +1107,7 @@
 	* test/wm.test:	       the tests and documentation. See also [Bug
 	* doc/wm.n:	       2239034]
 
-2008-11-12  Joe English	 <jenglish@users.sourceforge.net>
+2008-11-12  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c: Reworked widget construction and
 	destruction sequence; fixes [Bug 2207435] and several other problems
@@ -1111,7 +1116,7 @@
 	initializeProc being called earlier in the construction sequence now.
 	* tests/ttk/ttk.test: Updated test suite.
 
-2008-11-12  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-11-12  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/text.tcl: Handle windows with funky names by avoiding use of
 	* test/text.test:   the window path for anchors. [Bug 1777362]
@@ -1120,7 +1125,7 @@
 
 	* generic/tkImgPhoto.c	  Fix [Bug 2265860] new test failures
 
-2008-11-11  Joe English	 <jenglish@users.sourceforge.net>
+2008-11-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c(BeginDrawing): Don't crash when application
 	uses nondefault visual. [Bug 2264732]
@@ -1148,7 +1153,7 @@
 
 	*** POTENTIAL INCOMPATIBILITY ***
 
-2008-11-09  Joe English	 <jenglish@users.sourceforge.net>
+2008-11-09  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c: Remove unnecessary casts.
 
@@ -1216,7 +1221,7 @@
 	* generic/tkOldTest.c:	  Fix warning: assignment discards qualifiers
 	* win/tkWinTest.c:	  from pointer target type
 
-2008-11-03  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/winClipboard.test: testclipboard no longer returns strings
 	with embedded \r but now returns Tcl strings
@@ -1245,7 +1250,7 @@
 	whether they support finding and moving individual coordinates.
 	* doc/canvas.n, tests/canvas.test: Docs 'n' tests.
 
-2008-11-01  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-11-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/ttk/ttkEntry.c:      Implemented the themed spinbox
 	* library/ttk/altTheme.tcl:    widget.
@@ -1262,7 +1267,7 @@
 	* doc/ttk_spinbox.n:
 	* tests/ttk/spinbox.test:
 
-2008-10-31  Joe English	 <jenglish@users.sourceforge.net>
+2008-10-31  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/widget.c: Temporary workaround for [Bug 2207435]
 
@@ -1285,7 +1290,7 @@
 	* generic/tkText.c
 	* generic/tkTextImage.c
 
-2008-10-30  Don Porter	<dgp@users.sourceforge.net>
+2008-10-30  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/unixSelect.test:	Revise the unixSelect-1.* tests so that
 	they test the ability of Tk's selection mechanism to faithfully pass
@@ -1304,7 +1309,7 @@
 	* generic/tkUtil.c
 	* generic/tkDecls.h:	      (regenerated)
 
-2008-10-29  Joe English	 <jenglish@users.sourceforge.net>
+2008-10-29  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkAtom.c(Tk_GetAtomName): Remove incorrect 'const' qualifier.
 	Remove useless 'register' declarations too, while we're at it.
@@ -1329,7 +1334,7 @@
 	* generic/tkWindow.c:
 	* win/tkWinTest.c:	fix compilation under mingw32
 
-2008-10-28  Joe English	 <jenglish@users.sourceforge.net>
+2008-10-28  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/cursors.tcl, library/ttk/combobox.tcl,
 	library/ttk/entry.tcl, library/ttk/paned.tcl, library/ttk/sizegrip.tcl,
@@ -1338,13 +1343,13 @@
 	Expanded set of symbolic cursors.  Use correct cursor for 
 	ttk::entry and ttk::combobox widgets [Bug 1534835]
 
-2008-10-28  Don Porter	<dgp@users.sourceforge.net>
+2008-10-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/tkWinTest.c:		Revise [testclipboard] to form that
 	* tests/winClipboard.test:	handles encodings.  [Bug 2191960]
 	* tests/constraints.tcl: [tcltest::bytestring] no longer used.
 
-2008-10-24  Joe English	 <jenglish@users.sourceforge.net>
+2008-10-24  Joe English  <jenglish@users.sourceforge.net>
 
 	* tests/ttk/ttk.test: Disable test ttk-6.3, it's not applicable. [Bug
 	2175411]
@@ -1358,7 +1363,7 @@
 	* generic/tkCanvUtil.c (TkSmoothPrintProc): Corrected 'const'ness to
 	quell warning. [Bug 2190619]
 
-2008-10-23  Don Porter	<dgp@users.sourceforge.net>
+2008-10-23  Don Porter  <dgp@users.sourceforge.net>
 
 	* README:		Bump version number to 8.6a4
 	* generic/tk.h:
@@ -1397,7 +1402,7 @@
 	* generic/tkBusy.c, doc/busy.n, tests/busy.test: Implementation of the
 	[tk busy] command. [Patch 1997907]
 
-2008-10-18  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-10-18  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinFont.c: [Bug 1825353] To fix a problem with tiny fonts on
 	Russian versions of Windows we will avoid removing the internal
@@ -1453,7 +1458,7 @@
 	* win/tkWinWm.c:
 	* xlib/xcolors.c:
 
-2008-10-17  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-10-17  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/scale.tcl: Implemented keyboard bindings for ttk::scale
 
@@ -1481,13 +1486,13 @@
 
 	* generic/tkCanvas.c (CanvasWidgetCmd): Corrected result generation.
 
-2008-10-10  Don Porter	<dgp@users.sourceforge.net>
+2008-10-10  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6a3 TAGGED FOR RELEASE ***
 
 	* changes:	Updates for 8.6a3 release.
 
-2008-10-09  Don Porter	<dgp@users.sourceforge.net>
+2008-10-09  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkListbox.c:	Make literal return values consistent with
 	those generated by Tcl_PrintDouble().
@@ -1501,7 +1506,7 @@
 	* unix/tcl.m4:		Fix for bug [2073255]
 	* unix/configure:	regenerated
 
-2008-10-08  Don Porter	<dgp@users.sourceforge.net>
+2008-10-08  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/textDisp.test (textDisp-16.34): Update test that tested string
 	equality of double values based on an assumption of tcl_precision==12.
@@ -1519,7 +1524,7 @@
 	* macosx/tkMacOSXWm.c:	[wm iconphoto] with the test suite and across
 	* tests/unixWm.test:	all platforms.	[Bug 2021443]
 
-2008-10-07  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-10-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/canvImg.test:  Removed dependency on precision in results
 	* tests/canvRect.test:
@@ -1531,7 +1536,7 @@
 	* tests/winWm.test: Fixed incorrect error strings
 	* tests/wm.test:
 
-2008-10-06  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-10-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* tests/winDialog.test: Fixed tests for Vista+
 	* win/tkWinWm.c: corrected some errors from the previous commit
@@ -1601,7 +1606,7 @@
 
 	* doc/menu.n: Fix typo in docs. [Bug 2098425]
 
-2008-09-03  Don Porter	<dgp@users.sourceforge.net>
+2008-09-03  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Dropped use of _ANSI_ARGS_ macro to preserve
 	* generic/tkSelect.h:	Tk's TCL_NO_DEPRECATED build.
@@ -1622,7 +1627,7 @@
 	* tests/winMsbox.test:
 	* tests/winWm.test:
 
-2008-08-28  Don Porter	<dgp@users.sourceforge.net>
+2008-08-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/tkConfig.sh.in:	Added @XFT_LIBS@ to the definition of TK_LIBS
 	to avoid link failures when a "big wish" program links against a
@@ -1699,7 +1704,7 @@
 	the interaction with the script level) and the photo instances (which
 	handle display).
 
-2008-08-22  Don Porter	<dgp@users.sourceforge.net>
+2008-08-22  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6a2 TAGGED FOR RELEASE ***
 
@@ -1745,7 +1750,7 @@
 	* win/tkWinWindow.c: Remove TkpWindowWasRecentlyDeleted.
 	* tests/id.test: Remove this unnecessary test.
 
-2008-08-19  Joe English	 <jenglish@users.sourceforge.net>
+2008-08-19  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkScroll.c: Don't use sprintf "%g" to format floating
 	point numbers in -[xy]scrollcommand callbacks or [xy]view methods.
@@ -1810,7 +1815,7 @@
 	* tests/embed.test:
 	* tests/main.test:
 
-2008-08-12  Don Porter	<dgp@users.sourceforge.net>
+2008-08-12  Don Porter  <dgp@users.sourceforge.net>
 
 	* README:		Bump version number to 8.6a2
 	* generic/tk.h:
@@ -1837,7 +1842,7 @@
 	* tests/config.test:
 	* tests/canvas.test:
 
-2008-08-05  Joe English	 <jenglish@users.sourceforge.net>
+2008-08-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tk.h, generic/tkEvent.c: Fix for [Bug 2010422] "no event
 	type or button # or keysym while executing "bind Listbox
@@ -1850,12 +1855,12 @@
 	* tests/get.test:
 	* tests/text.test: Update to tcltest2; report: 33.11 fails
 
-2008-08-01  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-08-01  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinWm.c: Check wmPtr is valid in TopLevelReqProc to fix
 	* tests/wm.test:  [Bug 2028703]
 
-2008-07-31  Don Porter	<dgp@users.sourceforge.net>
+2008-07-31  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h: Added missing EXTERN for the Tcl_PkgInitStubsCheck
 	declaration to fix inability to embed non-stub-enabled Tk on Windows.
@@ -1870,7 +1875,7 @@
 	* tests/cursor.test: Update to tcltest2
 	* tests/message.test:
 
-2008-07-26  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-07-26  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/options.n: Direct to the font manual for -font. [Bug 1686012]
 
@@ -1912,11 +1917,11 @@
 
 	* macosx/tkMacOSXHLEvents.c: Factor out common code; formatting.
 
-2008-07-08  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-07-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/*.n: Fixed broken line endings from last doc commit.
 
-2008-07-04  Joe English	 <jenglish@users.sourceforge.net>
+2008-07-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkClamTheme.c,
 	* generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: Audit:
@@ -1933,18 +1938,18 @@
 	* doc/*.1, doc/*.3, doc/*.n: Remove out of date changebars, make
 	formatting of typedefs consistent, other small changes.
 
-2008-06-25  Don Porter	<dgp@users.sourceforge.net>
+2008-06-25  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6a1 TAGGED FOR RELEASE ***
 
 	* changes:		Updates for 8.6a1 release.
 
-2008-06-24  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-06-24  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/demos/ttkpane.tcl: Work around missing timezones
 	* doc/text.n: Fix documentation of text tag options. [Bug 1997293]
 
-2008-06-19  Don Porter	<dgp@users.sourceforge.net>
+2008-06-19  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:		Updates for 8.6a1 release.
 
@@ -1988,7 +1993,7 @@
 	incorrect conversion to points of font sizes already in points; factor
 	out retrieval of font family name from font family ID.
 
-2008-06-13  Jeff Hobbs	<jeffh@ActiveState.com>
+2008-06-13  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/configure, win/configure.in (TK_WIN_VERSION): Fix handling of
 	interim a/b versioning for manifest usage.
@@ -2025,7 +2030,7 @@
 	* macosx/Wish.xcode/default.pbxuser:
 	* macosx/README:			Document new build configs.
 
-2008-06-10  Joe English	 <jenglish@users.sourceforge.net>
+2008-06-10  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixKey.c: Use Xutf8LookupString if available. This should
 	fix problems (like [Bug 1908443]) where Xlib's idea of the system
@@ -2037,12 +2042,12 @@
 	* macosx/README:			 debug configs with gcov;
 						 update to Xcode 3.1.
 
-2008-05-27  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-05-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/ttk/ttkTheme.c: [ttk::style theme use] without an argument
 	* doc/ttk_style.n: now returns the current theme.
 
-2008-05-23  Joe English	 <jenglish@users.sourceforge.net>
+2008-05-23  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_treeview.n, generic/ttk/ttkTreeview.c,
 	* generic/ttk/ttkTagSet.c, generic/ttk/ttkLayout.c,
@@ -2060,16 +2065,16 @@
 	Don't need separate 'Item', 'Cell', and 'Row' style settings anymore,
 	only the base "Treeview" style is used.
 
-2008-05-23  Joe English	 <jenglish@users.sourceforge.net>
+2008-05-23  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkLabel.c: Avoid passing width or height <= 0 to
 	Tk_RedrawImage, as this leads to a panic on Windows. [Bug 1967576]
 
-2008-05-16  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-05-16  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/xpTheme.tcl: Add correct border to combobox on Vista
 
-2008-05-15  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-05-15  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: We should use the thread allocator for threaded
 	* win/rules.vc: builds. Added 'tclalloc' option to disable.
@@ -2080,22 +2085,22 @@
 	(DisplayPanedWindow): Ensure that a zero width never gets fed to the
 	underlying window system. [Bug 1639824]
 
-2008-05-13  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-05-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/console.tcl: Support pixel sized font in +/- keybinding.
 	* tests/listbox.test: -activestyle default is underline on windows.
 	* tests/winDialog.test: Fixed hanging tk_chooseColor tests.
 
-2008-05-11  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/tk.tcl: Support for ttk widgets in AmpWidget
 	* doc/button.n: Note negative widths for button. [Patch 1883418]
 
-2008-05-09  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-05-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/ttk_*: 'identify' widget command is on all ttk widgets.
 
-2008-05-04  Joe English	 <jenglish@users.sourceforge.net>
+2008-05-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* macosx/ttkMacOSAquaTheme.c: "default" and "focus" adornments should
 	not be disjoint [Bug 1942785]
@@ -2108,12 +2113,12 @@
 	files allow building things that link against Tcl with really ancient
 	compilers still; the requirement is just when building Tcl itself.)
 
-2008-04-25  Joe English	 <jenglish@users.sourceforge.net>
+2008-04-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/treeview.tcl: BUGFIX: [$tv selection] takes a list of
 	items, not a single item. [Bug 1951733]
 
-2008-04-20  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-04-20  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc: Include ws2_32 in the link list. [Bug 1900872]
 	* doc/menu.n: Minor change regarding the system menu. [Bug 1887169]
@@ -2124,7 +2129,7 @@
 	* doc/text.n: Correct description of when -relief option is ignored on
 	a tag. Thanks to emiliano for spotting.
 
-2008-04-17  Don Porter	<dgp@users.sourceforge.net>
+2008-04-17  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkCanvas.c: Fix logic that determines when canvas item
 	<Enter> event should fire. Thanks to Sebastian Wangnick. [Bug 1327482]
@@ -2135,7 +2140,7 @@
 	* generic/tkWindow.c (Initialize):	and export only a module-scope
 	pointer to to the main stubs table (for package init). [Patch 1938497]
 
-2008-04-14  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-04-14  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinDialog.c:	Fix [tk_chooseColor -title]. [Bug 1941740]
 	* win/tkWinTest.c:	Added parent to testgetwininfo
@@ -2145,7 +2150,7 @@
 
 	* generic/tkImgGIF.c:	Let the GIF writer use a real LZW compressor.
 
-2008-04-08  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-04-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/ttkWinXpTheme.c:	Provide a visual-styles API element engine
 	* tests/ttk/vsapi.test: to permit scripts to create any available
@@ -2159,7 +2164,7 @@
 	* generic/tkIntXlibDecls.h:
 	* generic/tkPlatDecls.h:
 
-2008-04-08  Kevin Kenny	 <kennykb@acm.org>
+2008-04-08  Kevin Kenny  <kennykb@acm.org>
 
 	* tkWinEmbed.c:	 Removed #if 0 code. Trust the revision control
 	system, if you need it again, you can find it.
@@ -2167,19 +2172,19 @@
 	* tkWinSend.c:	 Added conditional compilation to silence several
 	compiler warnings.
 
-2008-04-07  Jeff Hobbs	<jeffh@ActiveState.com>
+2008-04-07  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkWindow.c (Initialize): Fix double-free on Tk_ParseArgv
 	* tests/main.test (main-3.*):	   error. [Bug 1937135]
 
 	* generic/tkArgv.c: Fix -help mem explosion. [Bug 1936238] (kenny)
 
-2008-04-04  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-04-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/sizegrip.tcl: Don't resize if the toplevel is not
 	resizable or the sizegrip has been disabled.
 
-2008-04-03  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-04-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/makefile.vc:    Fixed stubs usage
 	* library/ttk/xpTheme.tcl: fix the colour of labelframe in xp
@@ -2209,7 +2214,7 @@
 
 	* unix/configure:		autoconf-2.59
 
-2008-04-01  Don Porter	<dgp@users.sourceforge.net>
+2008-04-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkStubLib.c (Tk_InitStubs):		Added missing error
 	* generic/tkWindow.c (Tk_PkgInitStubsCheck):	message and removed
@@ -2244,7 +2249,7 @@
 	* generic/tkIntXlibDecls.h:
 	* generic/tkPlatDecls.h:
 
-2008-03-28  Don Porter	<dgp@users.sourceforge.net>
+2008-03-28  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.2 TAGGED FOR RELEASE ***
 
@@ -2260,7 +2265,7 @@
 
 	* changes:	Updates for 8.5.2 release.
 
-2008-03-27  Jeff Hobbs	<jeffh@ActiveState.com>
+2008-03-27  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/safetk.tcl (::safe::tkInterpInit): Make sure tk_library and
 	its subdirs (eg, ttk) are on the "safe" access path.
@@ -2279,20 +2284,20 @@
 	* generic/ttk/ttkDecls.h:	Fix incorrect number of arguments in
 					Ttk_InitStubs macro definition.
 
-2008-03-26  Don Porter	<dgp@users.sourceforge.net>
+2008-03-26  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.2 release.
 
 	* unix/tkUnixCursor.c:	Stop crash in [. configure -cursor] on X11.
 	Thanks to emiliano gavilán. [Bug 1922466]
 
-2008-03-26  Joe English	 <jenglish@users.sourceforge.net>
+2008-03-26  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkInt.h, generic/tkEvent.c, unix/tkUnixEvent.c,
 	* unix/tkUnixKey.c: XIM reorganization and cleanup; see
 	[Patch 1919791] for details.
 
-2008-03-21  Joe English	 <jenglish@users.sourceforge.net>
+2008-03-21  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tk.decls, generic/ttk/ttkStubLib.c, unix/Makefile.in: Keep
 	ttkStubLib.o in libtkstub instead of libtk. [Bug 1920030]
@@ -2307,7 +2312,7 @@
 
 	* doc/GetClrmap.3: Documented Tk_PreserveColormap. [Bug 220809]
 
-2008-03-17  Joe English	 <jenglish@users.sourceforge.net>
+2008-03-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/Makefile.in, win/Makefile.in, win/makefile.vc: Put ttkStubLib.o
 	in libtkstub instead of libtk. [Bug 1863007]
@@ -2323,7 +2328,7 @@
 	* unix/tcl.m4:	     for lib paths in tkConfig.sh. [Bug 1913622]
 	* unix/configure:    autoconf-2.59
 
-2008-03-13  Don Porter	<dgp@users.sourceforge.net>
+2008-03-13  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.2 release.
 
@@ -2333,7 +2338,7 @@
 	* macosx/Wish.xcodeproj/default.pbxuser: CODE_SIGN_IDENTITY and
 	* macosx/Wish-Common.xcconfig:		 'xcodebuild install'.
 
-2008-03-12  Joe English	 <jenglish@users.sourceforge.net>
+2008-03-12  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixRFont.c: Try a fallback font if XftFontOpenPattern()
 	fails in GetFont (workaround for [Bug 1090382]).
@@ -2361,7 +2366,7 @@
 	* unix/Makefile.in (install-strip):	Strip non-global symbols from
 						dynamic library.
 
-2008-03-10  Don Porter	<dgp@users.sourceforge.net>
+2008-03-10  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.2 release.
 
@@ -2369,12 +2374,12 @@
 
 	* doc/colors.n: Reworked to produce nicer HTML output.
 
-2008-03-06  Joe English	 <jenglish@users.sourceforge.net>
+2008-03-06  Joe English  <jenglish@users.sourceforge.net>
 
 	* doc/ttk_notebook.n: Move "TAB IDENTIFIERS" section above "WIDGET
 	COMMAND" section. [Bug 1882011]
 
-2008-02-29  Pat Thoyts	<patthoyts@users.sourceforge.net>
+2008-02-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/demos/widget:	 Added a Knight's tour canvas demo.
 	* library/demos/knightstour.tcl:
@@ -2384,14 +2389,14 @@
 	* macosx/tkMacOSXDraw.c: Workaround leak in Carbon SetPortPenPixPat()
 	API [Bug 1863346]; avoid repeated PixPat allocation/deallocation.
 
-2008-02-23  Joe English	 <jenglish@users.sourceforge.net>
+2008-02-23  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/combobox.tcl, doc/ttk_combobox.n,
 	* tests/ttk/combobox.test: Arrange to deliver <<ComboboxSelected>>
 	event after listbox is unposted, as intended [Bug 1890211]. Clarified
 	documentation.
 
-2008-02-23  Joe English	 <jenglish@users.sourceforge.net>
+2008-02-23  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkPanedWindow.c: Don't enforce minimum sash thickness
 	of 5 pixels, just use 5 as a default. [FR 1898288]
@@ -2404,7 +2409,7 @@
 
 	* doc/ttk_scale.n (new file): Added basic documentation. [Bug 1881925]
 
-2008-02-04  Don Porter	<dgp@users.sourceforge.net>
+2008-02-04  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.1 TAGGED FOR RELEASE ***
 
@@ -2432,7 +2437,7 @@
 
 	* unix/configure:		autoconf-2.59
 
-2008-02-01  Don Porter	<dgp@users.sourceforge.net>
+2008-02-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.1 release.
 
@@ -2441,7 +2446,7 @@
 	* generic/tkImgGIF.c: Fixed a buffer overflow (CVE-2008-0553).
 	* tests/imgPhoto.test: Added a test for the above.
 
-2008-01-31  Jeff Hobbs	<jeffh@ActiveState.com>
+2008-01-31  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/msgbox.tcl (::tk::MessageBox): Don't use ttk::label in low
 	depth/aqua fallback, as it doesn't support -bitmap.
@@ -2459,7 +2464,7 @@
 	* doc/canvas.n, doc/listbox.n, doc/message.n: Fix erroneous listing of
 	"standard" options. [Bug 1882495]
 
-2008-01-29  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-29  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/treeview.tcl: Fix bug in Shift-ButtonPress-1 binding (error
 	if no current focus item; reported on c.l.t.)
@@ -2470,17 +2475,17 @@
 	Ttk manual pages so that they are documented in the correct location.
 	[Bug 1876493]
 
-2008-01-28  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-28  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixRFont.c: Re-fix strict-aliasing warnings reintroduced by
 	last patch.
 
-2008-01-27  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-27  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkNotebook.c: Make sure to schedule a redisplay when
 	adding and/or hiding tabs. [Bug 1878298]
 
-2008-01-27  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-27  Joe English  <jenglish@users.sourceforge.net>
 
 	* unix/tkUnixRFont.c: Merged common code from InitFont() and
 	TkpGetFontAttrsForChar(), factored into GetTkFontAttributes() and
@@ -2489,33 +2494,33 @@
 	TkFontAttributes.family member is a Tk_Uid, as specified. Use
 	FcTypeDouble for XFT_SIZE attribute. Finally: fix [Bug 1835848]
 
-2008-01-25  Don Porter	<dgp@users.sourceforge.net>
+2008-01-25  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.5.1 release.
 
-2008-01-08  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-08  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkFrame.c: BUGFIX: fix crash in [ttk::labelframe] when
 	-style option specified. [Bug 1867122]
 
-2008-01-08  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-08  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/ttkWinTheme.c: Add tristate support to checkbuttons and
 	radiobuttons. [Bug 1865898]
 	Fix check and radio indicator size. [Bug 1679067]
 
-2008-01-06  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-06  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c, generic/ttk/ttkWidget.h: Call
 	Tk_MakeWindowExist() in widget constructor. Removed now-unnecessary
 	initial ConfigureNotify processing.
 
-2008-01-06  Joe English	 <jenglish@users.sourceforge.net>
+2008-01-06  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/treeview.tcl, library/ttk/utils.tcl: Fix MouseWheel
 	bindings for ttk::treeview widget. [Bugs 1442006, 1821939, 1862692]
 
-2008-01-02  Don Porter	<dgp@users.sourceforge.net>
+2008-01-02  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump version number to 8.5.1b1 to distinguish
 	* library/tk.tcl:	CVS development snapshots from the 8.5.0 and
