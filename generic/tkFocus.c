@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.16 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.16.2.1 2009/07/22 07:46:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -867,6 +867,16 @@ TkFocusDeadWindow(
 	    }
 	    break;
 	}
+    }
+
+    /*
+     * Occasionally, things can become unsynchronized. Move them back into
+     * synch now. [Bug 2496114]
+     */
+
+    if (displayFocusPtr->focusWinPtr == winPtr) {
+	DEBUG(dispPtr, ("focus cleared after %s died\n", winPtr->pathName));
+	displayFocusPtr->focusWinPtr = NULL;
     }
 
     if (displayFocusPtr->focusOnMapPtr == winPtr) {
