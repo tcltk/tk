@@ -3,6 +3,8 @@
 	* generic/tkSelect.c (HandleTclCommand): [Bug 2441988]: Stop losing
 	reports of errors in selection handlers; that's what the background
 	error handling code is for.
+	*** POTENTIAL INCOMPATIBILITY *** if your code was relying on erroring
+	selection scripts being silent.
 	(LostSelection, Tk_SelectionObjCmd): Stop using the vastly inefficient
 	TkCopyAndGlobalEval; better to use Tcl_Obj refcount management.
 
