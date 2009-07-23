@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.54 2009/04/11 04:26:49 das Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.55 2009/07/23 22:21:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -4613,12 +4613,14 @@ TkKeysymToString(
  *	evaluate it. It's used in situations where the execution of a command
  *	may cause the original command string to be reallocated.
  *
+ *	OBSOLETE! NOT USED ANYWHERE IN TK! ONLY FOR STUB TABLE!
+ *
  * Results:
  *	Returns the result of evaluating script, including both a standard Tcl
  *	completion code and a string in the interp's result.
  *
  * Side effects:
- *	None.
+ *	Any; depends on script.
  *
  *----------------------------------------------------------------------
  */
