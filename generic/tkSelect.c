@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.29 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.30 2009/07/23 22:21:35 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -43,9 +43,7 @@ typedef struct {
 
 typedef struct LostCommand {
     Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
-    char command[4];		/* Command to invoke. Actual space is
-				 * allocated as large as necessary. This must
-				 * be the last entry in the structure. */
+    Tcl_Obj *cmdObj;		/* Reference to command to invoke. */
 } LostCommand;
 
 /*
@@ -919,8 +917,7 @@ Tk_SelectionObjCmd(
 
     case SELECTION_OWN: {
 	register LostCommand *lostPtr;
-	const char *script = NULL;
-	int cmdLength;
+	Tcl_Obj *commandObj = NULL;
 	static const char *const ownOptionStrings[] = {
 	    "-command", "-displayof", "-selection", NULL
 	};
@@ -946,7 +943,7 @@ Tk_SelectionObjCmd(
 
 	    switch ((enum ownOptions) ownIndex) {
 	    case OWN_COMMAND:
-		script = Tcl_GetString(objs[1]);
+		commandObj = objs[1];
 		break;
 	    case OWN_DISPLAYOF:
 		path = Tcl_GetString(objs[1]);
@@ -1001,17 +998,16 @@ Tk_SelectionObjCmd(
 	    return TCL_ERROR;
 	}
 	if (count == 2) {
-	    script = Tcl_GetString(objs[1]);
+	    commandObj = objs[1];
 	}
-	if (script == NULL) {
+	if (commandObj == NULL) {
 	    Tk_OwnSelection(tkwin, selection, NULL, NULL);
 	    return TCL_OK;
 	}
-	cmdLength = strlen(script);
-	lostPtr = (LostCommand *)
-		ckalloc((unsigned) (sizeof(LostCommand) - 3 + cmdLength));
+	lostPtr = (LostCommand *) ckalloc(sizeof(LostCommand));
 	lostPtr->interp = interp;
-	strcpy(lostPtr->command, script);
+	lostPtr->cmdObj = commandObj;
+	Tcl_IncrRefCount(commandObj);
 	Tk_OwnSelection(tkwin, selection, LostSelection, lostPtr);
 	return TCL_OK;
     }
@@ -1333,7 +1329,7 @@ HandleTclCommand(
     const char *string;
     Tcl_Interp *interp = cmdInfoPtr->interp;
     Tcl_DString oldResult;
-    int extraBytes, charOffset, count, numChars;
+    int extraBytes, charOffset, count, numChars, code;
     const char *p;
 
     /*
@@ -1384,7 +1380,8 @@ HandleTclCommand(
 
     Tcl_DStringInit(&oldResult);
     Tcl_DStringGetResult(interp, &oldResult);
-    if (TkCopyAndGlobalEval(interp, command) == TCL_OK) {
+    code = Tcl_EvalEx(interp, command, -1, TCL_EVAL_GLOBAL);
+    if (code == TCL_OK) {
 	string = Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &length);
 	count = (length > maxBytes) ? maxBytes : length;
 	memcpy(buffer, string, (size_t) count);
@@ -1418,6 +1415,15 @@ HandleTclCommand(
 	}
 	count += extraBytes;
     } else {
+	/*
+	 * Something went wrong. Log errors as background errors, and silently
+	 * drop everything else.
+	 */
+
+	if (code == TCL_ERROR) {
+	    Tcl_AddErrorInfo(interp, "\n    (command handling selection)");
+	    Tcl_BackgroundException(interp, code);
+	}
 	count = -1;
     }
     Tcl_DStringResult(interp, &oldResult);
@@ -1576,7 +1582,7 @@ LostSelection(
     Tcl_IncrRefCount(objPtr);
     Tcl_ResetResult(interp);
 
-    code = TkCopyAndGlobalEval(interp, lostPtr->command);
+    code = Tcl_EvalObjEx(interp, lostPtr->cmdObj, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
 	Tcl_BackgroundException(interp, code);
     }
@@ -1590,6 +1596,7 @@ LostSelection(
      * Free the storage for the command, since we're done with it now.
      */
 
+    Tcl_DecrRefCount(lostPtr->cmdObj);
     ckfree((char *) lostPtr);
 }
 
