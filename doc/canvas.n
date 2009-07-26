@@ -6,7 +6,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: canvas.n,v 1.44 2009/07/14 08:38:13 dkf Exp $
+'\" RCS: @(#) $Id: canvas.n,v 1.45 2009/07/26 19:40:26 dkf Exp $
 '\"
 .so man.macros
 .TH canvas n 8.3 Tk "Tk Built-In Commands"
@@ -1541,7 +1541,7 @@ Where arrowheads are drawn the cap style is ignored.
 \fB\-joinstyle \fIstyle\fR
 Specifies the ways in which joints are to be drawn at the vertices
 of the line.
-\fIStyle\fR may have any of the forms accepted by \fBTk_GetCapStyle\fR
+\fIStyle\fR may have any of the forms accepted by \fBTk_GetJoinStyle\fR
 (\fBbevel\fR, \fBmiter\fR, or \fBround\fR).
 If this option is not specified then it defaults to \fBround\fR.
 If the line only contains two points then this option is
@@ -1660,7 +1660,7 @@ The following extra options are supported for polygons:
 \fB\-joinstyle \fIstyle\fR
 Specifies the ways in which joints are to be drawn at the vertices
 of the outline.
-\fIStyle\fR may have any of the forms accepted by \fBTk_GetCapStyle\fR
+\fIStyle\fR may have any of the forms accepted by \fBTk_GetJoinStyle\fR
 (\fBbevel\fR, \fBmiter\fR, or \fBround\fR).
 If this option is not specified then it defaults to \fBround\fR.
 .TP
