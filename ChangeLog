@@ -1,3 +1,8 @@
+2009-07-26  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/canvas.n: Corrected description of acceptable join styles.
+	Spotted by Emiliano Gavilan.
+
 2009-07-23  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkSelect.c (HandleTclCommand): [Bug 2441988]: Stop losing
