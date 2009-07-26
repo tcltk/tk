@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetJustify.3,v 1.11 2008/06/30 22:57:01 dkf Exp $
+'\" RCS: @(#) $Id: GetJustify.3,v 1.12 2009/07/26 19:45:52 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetJustifyFromObj 3 8.1 Tk "Tk Library Procedures"
@@ -29,11 +29,12 @@ const char *
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting, or NULL.
 .AP Tcl_Obj *objPtr in/out
-String value contains name of justification style, one of
-.QW left ,
-.QW right ,
+String value contains name of justification style \- one of
+.QW \fBleft\fR ,
+.QW \fBright\fR ,
 or
-.QW center .
+.QW \fBcenter\fR
+\- or a unique abbreviation of one.
 The internal rep will be modified to cache corresponding justify value.
 .AP "const char" *string in
 Same as \fIobjPtr\fR except description of justification style is passed as
