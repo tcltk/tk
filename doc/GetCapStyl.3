@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: GetCapStyl.3,v 1.10 2009/05/04 09:12:33 dkf Exp $
+'\" RCS: @(#) $Id: GetCapStyl.3,v 1.11 2009/07/26 19:44:31 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_GetCapStyle 3 "" Tk "Tk Library Procedures"
@@ -26,11 +26,12 @@ const char *
 .AP Tcl_Interp *interp in
 Interpreter to use for error reporting.
 .AP "const char" *string in
-String containing name of cap style: one of
-.QW butt ,
-.QW projecting ,
+String containing name of cap style \- one of
+.QW \fBbutt\fR ,
+.QW \fBprojecting\fR ,
 or
-.QW round .
+.QW \fBround\fR
+\- or a unique abbreviation of one.
 .AP int *capPtr out
 Pointer to location in which to store X cap style corresponding to
 \fIstring\fR.
