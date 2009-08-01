@@ -1,3 +1,9 @@
+2009-08-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixWm.c (WmIconphotoCmd): [Bug 2830420]: Assemble the image
+	for the window manager in a way that doesn't assume we're on a little-
+	endian system.
+
 2009-07-27  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/GetScroll.3: Reworded and reordered so as to indicate that the
