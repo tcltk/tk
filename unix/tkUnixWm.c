@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.72 2009/08/01 07:59:52 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.73 2009/08/01 08:05:11 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -2381,7 +2381,7 @@ WmIconphotoCmd(
     if (iconPropertyData == NULL) {
 	return TCL_ERROR;
     }
-    memset(iconPropertyData, 0, sizeof(long)*size);
+    memset(iconPropertyData, 0, sizeof(unsigned int) * size);
 
     for (i = 3 + isDefault; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
