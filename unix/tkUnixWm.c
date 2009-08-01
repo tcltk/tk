@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.71 2009/04/03 20:20:17 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.72 2009/08/01 07:59:52 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -1780,7 +1780,7 @@ WmFocusmodelCmd(
 static int
 WmForgetCmd(
     Tk_Window tkwin,		/* Main window of the application. */
-    TkWindow *winPtr,           /* Toplevel or Frame to work with */
+    TkWindow *winPtr,		/* Toplevel or Frame to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2333,9 +2333,7 @@ WmIconphotoCmd(
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
     int i, size = 0, width, height, index = 0, x, y, isDefault = 0;
-    long R, G, B, A;
-    long *iconPropertyData;
-    unsigned char *pixelByte;
+    unsigned int *iconPropertyData;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2378,7 +2376,8 @@ WmIconphotoCmd(
      * memory space.
      */
 
-    iconPropertyData = (long *) Tcl_AttemptAlloc(sizeof(long)*size);
+    iconPropertyData = (unsigned int *)
+	    Tcl_AttemptAlloc(sizeof(unsigned int) * size);
     if (iconPropertyData == NULL) {
 	return TCL_ERROR;
     }
@@ -2406,36 +2405,32 @@ WmIconphotoCmd(
 	 *
 	 * This is an array of 32bit packed CARDINAL ARGB with high byte being
 	 * A, low byte being B. The first two cardinals are width, height.
-	 * Data is in rows, left to right and top to bottom.
+	 * Data is in rows, left to right and top to bottom. The data will be
+	 * endian-swapped going to the server if necessary. [Bug 2830420]
 	 */
 
 	/*
 	 * Encode the image data in the iconPropertyData array.
 	 */
 
-	iconPropertyData[index++] = width;
-	iconPropertyData[index++] = height;
+	iconPropertyData[index++] = (unsigned) width;
+	iconPropertyData[index++] = (unsigned) height;
 	for (y = 0; y < height; y++) {
 	    for (x = 0; x < width; x++) {
-		R = *(block.pixelPtr + x*block.pixelSize +
-			y*block.pitch + block.offset[0]);
-		G = *(block.pixelPtr + x*block.pixelSize +
-			y*block.pitch + block.offset[1]);
-		B = *(block.pixelPtr + x*block.pixelSize +
-			y*block.pitch + block.offset[2]);
-		A = *(block.pixelPtr + x*block.pixelSize +
-			y*block.pitch + block.offset[3]);
-		pixelByte = (unsigned char *) &iconPropertyData[index];
-		pixelByte[3] = A;
-		pixelByte[2] = R;
-		pixelByte[1] = G;
-		pixelByte[0] = B;
-		index++;
+		register unsigned char *pixelPtr =
+			block.pixelPtr + x*block.pixelSize + y*block.pitch;
+		register unsigned int R, G, B, A;
+
+		R = pixelPtr[block.offset[0]];
+		G = pixelPtr[block.offset[1]];
+		B = pixelPtr[block.offset[2]];
+		A = pixelPtr[block.offset[3]];
+		iconPropertyData[index++] = A<<24 | R<<16 | G<<8 | B<<0;
 	    }
 	}
     }
     if (wmPtr->iconDataPtr != NULL) {
-	ckfree((char *)wmPtr->iconDataPtr);
+	ckfree((char *) wmPtr->iconDataPtr);
 	wmPtr->iconDataPtr = NULL;
     }
     if (isDefault) {
@@ -2646,7 +2641,7 @@ WmIconwindowCmd(
 static int
 WmManageCmd(
     Tk_Window tkwin,		/* Main window of the application. */
-    TkWindow *winPtr,           /* Toplevel or Frame to work with */
+    TkWindow *winPtr,		/* Toplevel or Frame to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -7146,7 +7141,7 @@ RemapWindows(
 	XGetWindowAttributes(winPtr->display, winPtr->window, &win_attr);
 	if (parentPtr == NULL) {
 	    XReparentWindow(winPtr->display, winPtr->window,
-	            XRootWindow(winPtr->display, winPtr->screenNum),
+		    XRootWindow(winPtr->display, winPtr->screenNum),
 		    win_attr.x, win_attr.y);
 	} else if (parentPtr->window) {
 	    XReparentWindow(parentPtr->display, winPtr->window,
