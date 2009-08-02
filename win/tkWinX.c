@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.60 2008/12/28 22:59:47 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.61 2009/08/02 21:40:17 nijtmans Exp $
  */
 
 /*
@@ -260,6 +260,7 @@ TkWinXInit(
     INITCOMMONCONTROLSEX comctl;
     CHARSETINFO lpCs;
     DWORD lpCP;
+    int useWide;
 
     if (childClassInitialized != 0) {
 	return;
@@ -272,7 +273,8 @@ TkWinXInit(
 	Tcl_Panic("Unable to load common controls?!");
     }
 
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
+    useWide = (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS);
+    if (useWide) {
 	tkWinProcs = &unicodeProcs;
     } else {
 	tkWinProcs = &asciiProcs;
@@ -302,7 +304,7 @@ TkWinXInit(
      * Initialize input language info
      */
 
-    if (GetLocaleInfo(LANGIDFROMLCID(GetKeyboardLayout(0)),
+    if (GetLocaleInfo(LANGIDFROMLCID((DWORD)GetKeyboardLayout(0)),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
 	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
 	    && TranslateCharsetInfo((DWORD *)lpCP, &lpCs, TCI_SRCCODEPAGE)) {
@@ -409,7 +411,7 @@ TkWinGetPlatformId(void)
 		    KEY_READ, &hKey) != ERROR_SUCCESS) {
 		tkWinTheme = TK_THEME_WIN_XP;
 	    } else {
-		RegQueryValueEx(hKey, szCurrent, NULL, NULL, pBuffer, &dwSize);
+		RegQueryValueEx(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
 		RegCloseKey(hKey);
 		if (strcmp(pBuffer, "Windows Standard") == 0) {
 		    tkWinTheme = TK_THEME_WIN_CLASSIC;
@@ -1011,8 +1013,9 @@ GenerateXEvent(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (message == WM_MOUSEWHEEL) {
-	POINTS rootPoint = MAKEPOINTS(lParam);
+	union {LPARAM lParam; POINTS point;} root;
 	POINT pos;
+	root.lParam = lParam;
 
 	/*
 	 * Redirect mousewheel events to the window containing the cursor.
@@ -1020,8 +1023,8 @@ GenerateXEvent(
 	 * platforms work.
 	 */
 
-	pos.x = rootPoint.x;
-	pos.y = rootPoint.y;
+	pos.x = root.point.x;
+	pos.y = root.point.y;
 	hwnd = WindowFromPoint(pos);
     }
 
@@ -1132,17 +1135,15 @@ GenerateXEvent(
 	unsigned int state = GetState(message, wParam, lParam);
 	Time time = TkpGetMS();
 	POINT clientPoint;
-	POINTS rootPoint;	/* Note: POINT and POINTS are different */
-	DWORD msgPos;
+	union {DWORD msgpos; POINTS point;} root;	/* Note: POINT and POINTS are different */
 
 	/*
 	 * Compute the screen and window coordinates of the event.
 	 */
 
-	msgPos = GetMessagePos();
-	rootPoint = MAKEPOINTS(msgPos);
-	clientPoint.x = rootPoint.x;
-	clientPoint.y = rootPoint.y;
+	root.msgpos = GetMessagePos();
+	clientPoint.x = root.point.x;
+	clientPoint.y = root.point.y;
 	ScreenToClient(hwnd, &clientPoint);
 
 	/*
@@ -1153,8 +1154,8 @@ GenerateXEvent(
 	event.xbutton.subwindow = None;
 	event.xbutton.x = clientPoint.x;
 	event.xbutton.y = clientPoint.y;
-	event.xbutton.x_root = rootPoint.x;
-	event.xbutton.y_root = rootPoint.y;
+	event.xbutton.x_root = root.point.x;
+	event.xbutton.y_root = root.point.y;
 	event.xbutton.state = state;
 	event.xbutton.time = time;
 	event.xbutton.same_screen = True;

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.139 2009/06/02 09:26:57 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.140 2009/08/02 21:40:17 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -1729,7 +1729,7 @@ ReadIconOrCursorFromFile(
 	 * Read it in.
 	 */
 
-	dwBytesRead = Tcl_Read(channel, lpIR->IconImages[i].lpBits,
+	dwBytesRead = Tcl_Read(channel, (char *)lpIR->IconImages[i].lpBits,
 		(int) lpIDE[i].dwBytesInRes);
 	if (dwBytesRead != lpIDE[i].dwBytesInRes) {
 	    Tcl_AppendResult(interp, "Error reading file", NULL);
@@ -4388,7 +4388,7 @@ WmIconphotoCmd(
 	bmInfo.bmiHeader.biCompression = BI_RGB;
 
 	iconInfo.hbmColor = CreateDIBSection( NULL, &bmInfo,
-	    DIB_RGB_COLORS, &bgraPixelPtr, NULL, 0 );
+	    DIB_RGB_COLORS, (void **)&bgraPixelPtr, NULL, 0 );
 	if ( !iconInfo.hbmColor ) {
 	    ckfree((char *) lpIR);
 	    Tcl_AppendResult(interp, "failed to create color bitmap for \"",
@@ -4415,7 +4415,7 @@ WmIconphotoCmd(
 	bmInfo.bmiHeader.biBitCount = 1;
 
 	iconInfo.hbmMask = CreateDIBSection( NULL, &bmInfo,
-	    DIB_RGB_COLORS, &bgraMaskPtr, NULL, 0 );
+	    DIB_RGB_COLORS, (void **)&bgraMaskPtr, NULL, 0 );
 	if ( !iconInfo.hbmMask ) {
 	    DeleteObject(iconInfo.hbmColor);
 	    ckfree((char *) lpIR);

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.23 2008/11/22 20:05:32 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDraw.c,v 1.24 2009/08/02 21:40:16 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -745,7 +745,7 @@ RenderObject(
     HPEN pen,
     WinDrawFunc func)
 {
-    RECT rect;
+    RECT rect = {0,0,0,0};
     HPEN oldPen;
     HBRUSH oldBrush;
     POINT *winPoints = ConvertPoints(points, npoints, mode, &rect);

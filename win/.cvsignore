@@ -1,5 +1,6 @@
 Debug
 Release
+autom4te.cache
 *.opt
 *.ncb
 *.plg
@@ -8,10 +9,16 @@ Release
 *.obj
 *.i
 *.asm
+*.lib
+*.res
+*.ilk
+*.pdb
 Makefile
-tcl.hpj
-tclConfig.sh
+tk.hpj
+tkConfig.sh
+config.status
 *.exe
 *.dll
-wish.exe.manifest
+*.exp
+*.manifest
 .#*

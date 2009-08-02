@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinClipboard.c,v 1.10 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkWinClipboard.c,v 1.11 2009/08/02 21:40:17 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -295,7 +295,7 @@ TkWinClipboardRender(
      * encoding before placing it on the clipboard.
      */
 
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS) {
 	Tcl_DStringInit(&ds);
 	Tcl_UtfToUniCharDString(rawText, -1, &ds);
 	ckfree(rawText);
@@ -385,7 +385,7 @@ UpdateClipboard(
      * possible.
      */
 
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
+    if (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS) {
 	SetClipboardData(CF_UNICODETEXT, NULL);
     } else {
 	SetClipboardData(CF_TEXT, NULL);

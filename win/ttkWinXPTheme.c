@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.24 2009/03/25 23:39:34 nijtmans Exp $
+ * $Id: ttkWinXPTheme.c,v 1.25 2009/08/02 21:40:17 nijtmans Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -27,7 +27,11 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 
 #include <windows.h>
 #include <uxtheme.h>
-#include <tmschema.h>
+#if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_LONGHORN)
+#   include <vssym32.h>
+#else
+#   include <tmschema.h>
+#endif
 
 #include <tkWinInt.h>
 
