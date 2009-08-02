@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.67 2009/05/21 22:52:06 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.68 2009/08/02 21:40:17 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -2911,8 +2911,7 @@ MenuSelectEvent(
     TkMenu *menuPtr)		/* the menu we have selected. */
 {
     XVirtualEvent event;
-    POINTS rootPoint;
-    DWORD msgPos;
+    union {DWORD msgpos; POINTS point;} root;
 
     event.type = VirtualEvent;
     event.serial = menuPtr->display->request;
@@ -2924,10 +2923,9 @@ MenuSelectEvent(
     event.subwindow = None;
     event.time = TkpGetMS();
 
-    msgPos = GetMessagePos();
-    rootPoint = MAKEPOINTS(msgPos);
-    event.x_root = rootPoint.x;
-    event.y_root = rootPoint.y;
+    root.msgpos = GetMessagePos();
+    event.x_root = root.point.x;
+    event.y_root = root.point.y;
     event.state = TkWinGetModifierState();
     event.same_screen = 1;
     event.name = Tk_GetUid("MenuSelect");

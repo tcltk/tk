@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.63 2009/04/24 17:29:47 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.64 2009/08/02 21:40:17 nijtmans Exp $
  *
  */
 
@@ -1812,7 +1812,9 @@ Tk_ChooseDirectoryObjCmd(
     objPtr = Tcl_GetVar2Ex(interp, "::tk::winChooseDirFlags", NULL,
 	    TCL_GLOBAL_ONLY);
     if (objPtr != NULL) {
-	Tcl_GetIntFromObj(NULL, objPtr, &(bInfo.ulFlags));
+	int flags;
+	Tcl_GetIntFromObj(NULL, objPtr, &flags);
+	bInfo.ulFlags = flags;
     }
 
     /*
