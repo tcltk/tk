@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.73 2009/06/30 00:56:29 das Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.74 2009/08/04 21:19:27 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -5391,18 +5391,18 @@ TkTextSeeCmd(
 	oneThird = lineWidth/3;
 	if (delta < 0) {
 	    if (delta < -oneThird) {
-		dInfoPtr->newXPixelOffset = (x - lineWidth/2);
+		dInfoPtr->newXPixelOffset = x - lineWidth/2;
 	    } else {
-		dInfoPtr->newXPixelOffset -= ((-delta) );
+		dInfoPtr->newXPixelOffset += delta;
 	    }
 	} else {
 	    delta -= lineWidth - width;
 	    if (delta <= 0) {
 		return TCL_OK;
 	    } else if (delta > oneThird) {
-		dInfoPtr->newXPixelOffset = (x - lineWidth/2);
+		dInfoPtr->newXPixelOffset = x - lineWidth/2;
 	    } else {
-		dInfoPtr->newXPixelOffset += (delta );
+		dInfoPtr->newXPixelOffset += delta;
 	    }
 	}
     }
@@ -7203,11 +7203,21 @@ TkTextCharLayoutProc(
     } else {
 	for (count = bytesThatFit, p += bytesThatFit - 1; count > 0;
 		count--, p--) {
-	    if (isspace(UCHAR(*p))) {
+	    /*
+	     * Don't use isspace(); effects are unpredictable and can lead to
+	     * odd word-wrapping problems on some platforms. Also don't use
+	     * Tcl_UniCharIsSpace here either, as it identifies non-breaking
+	     * spaces as places to break. What we actually want is only the
+	     * ASCII space characters, so use them explicitly...
+	     */
+
+	    switch (*p) {
+	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
 		chunkPtr->breakIndex = count;
-		break;
+		goto checkForNextChunk;
 	    }
 	}
+    checkForNextChunk:
 	if ((bytesThatFit + byteOffset) == segPtr->size) {
 	    for (nextPtr = segPtr->nextPtr; nextPtr != NULL;
 		    nextPtr = nextPtr->nextPtr) {
