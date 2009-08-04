@@ -1,3 +1,10 @@
+2009-08-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkTextDisp.c (TkTextCharLayoutProc): Make the line breaking
+	algorithm (in the word-wrap case) do the right thing with non-breaking
+	spaces by restricting what we break on to ASCII spaces, which is good
+	enough for most purposes.
+
 2009-08-01  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixWm.c (WmIconphotoCmd): [Bug 2830420]: Assemble the image
