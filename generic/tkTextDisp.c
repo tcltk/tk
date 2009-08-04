@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.68 2007/12/13 15:24:17 dgp Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.68.2.1 2009/08/04 21:46:03 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -7209,7 +7209,7 @@ TkTextCharLayoutProc(
     } else {
 	for (count = bytesThatFit, p += bytesThatFit - 1; count > 0;
 		count--, p--) {
-	    if (isspace(UCHAR(*p))) {
+	    if (UCHAR(*p) < 0x80 && isspace(UCHAR(*p))) {
 		chunkPtr->breakIndex = count;
 		break;
 	    }
