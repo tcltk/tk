@@ -1,16 +1,22 @@
+2009-08-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkTextDisp.c (TkTextCharLayoutProc): Make the line breaking
+	algorithm (in the word-wrap case) do the right thing with non-breaking
+	spaces by restricting what we break on to ASCII spaces, which is good
+	enough for most purposes.
+
 2009-08-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinClipboard.c correct check for winNT
-	* win/tkWinDialog.c    eliminate many gcc warnings
+	* win/tkWinClipboard.c Correct check for winNT
+	* win/tkWinDialog.c    Eliminate many gcc warnings
 	* win/tkWinImage.c:
 	* win/tkWinMenu.c:
 	* win/tkWinWm.c:
 	* win/tkWinX.c:
-	* win/ttkWinXPTheme.c: eliminate msvc warnings
+	* win/ttkWinXPTheme.c: Eliminate msvc warnings
 	* win/tcl.m4:
 	* win/configure
-	* win/.cvsignore:      prevent files from being checked
-	                       in by accident.
+	* win/.cvsignore:      Prevent files from being checked in by accident
 
 2009-08-01  Donal K. Fellows  <dkf@users.sf.net>
 
