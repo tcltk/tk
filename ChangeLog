@@ -1,3 +1,8 @@
+2009-08-08  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/demos/pendulum.tcl: Make the display handle being resized
+	more gracefully.
+
 2009-08-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkTextDisp.c (TkTextCharLayoutProc): Make the line breaking
