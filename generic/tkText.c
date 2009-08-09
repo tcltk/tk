@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.89 2009/02/06 08:12:07 das Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.90 2009/08/09 21:20:33 nijtmans Exp $
  */
 
 #include "default.h"
@@ -3402,16 +3402,16 @@ TkTextSelectionEvent(
      *     event generate $textWidget <<Selection>>
      */
 
-    XEvent event;
+    union {XEvent general; XVirtualEvent virtual;} event;
 
     memset(&event, 0, sizeof(event));
-    event.xany.type = VirtualEvent;
-    event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.xany.send_event = False;
-    event.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.xany.display = Tk_Display(textPtr->tkwin);
-    ((XVirtualEvent *) &event)->name = Tk_GetUid("Selection");
-    Tk_HandleEvent(&event);
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
+    event.general.xany.display = Tk_Display(textPtr->tkwin);
+    event.virtual.name = Tk_GetUid("Selection");
+    Tk_HandleEvent(&event.general);
 }
 
 /*
@@ -5173,18 +5173,18 @@ static void
 GenerateModifiedEvent(
     TkText *textPtr)	/* Information about text widget. */
 {
-    XEvent event;
+    union {XEvent general; XVirtualEvent virtual;} event;
 
     Tk_MakeWindowExist(textPtr->tkwin);
 
     memset(&event, 0, sizeof(event));
-    event.xany.type = VirtualEvent;
-    event.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.xany.send_event = False;
-    event.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.xany.display = Tk_Display(textPtr->tkwin);
-    ((XVirtualEvent *) &event)->name = Tk_GetUid("Modified");
-    Tk_HandleEvent(&event);
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
+    event.general.xany.display = Tk_Display(textPtr->tkwin);
+    event.virtual.name = Tk_GetUid("Modified");
+    Tk_HandleEvent(&event.general);
 }
 
 /*
