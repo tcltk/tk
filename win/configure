@@ -3925,6 +3925,63 @@ echo "$as_me: xpnative theme will be unavailable" >&6;}
 fi
 
 
+echo "$as_me:$LINENO: checking for vssym32.h" >&5
+echo $ECHO_N "checking for vssym32.h... $ECHO_C" >&6
+if test "${ac_cv_header_vssym32_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <windows.h>
+#include <uxtheme.h>
+
+#include <vssym32.h>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_header_vssym32_h=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_header_vssym32_h=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_vssym32_h" >&5
+echo "${ECHO_T}$ac_cv_header_vssym32_h" >&6
+if test $ac_cv_header_vssym32_h = yes; then
+  cat >>confdefs.h <<\_ACEOF
+#define HAVE_VSSYM32_H 1
+_ACEOF
+
+fi
+
+
 
 #--------------------------------------------------------------------
 # Set the default compiler switches based on the --enable-symbols
