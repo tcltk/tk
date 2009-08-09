@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.29 2009/04/10 16:00:12 das Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.30 2009/08/09 21:20:33 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1163,17 +1163,17 @@ TkMakeEnsemble(
 void
 TkSendVirtualEvent(Tk_Window target, const char *eventName)
 {
-    XEvent event;
+    union {XEvent general; XVirtualEvent virtual;} event;
 
     memset(&event, 0, sizeof(event));
-    event.xany.type = VirtualEvent;
-    event.xany.serial = NextRequest(Tk_Display(target));
-    event.xany.send_event = False;
-    event.xany.window = Tk_WindowId(target);
-    event.xany.display = Tk_Display(target);
-    ((XVirtualEvent *) &event)->name = Tk_GetUid(eventName);
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(target));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(target);
+    event.general.xany.display = Tk_Display(target);
+    event.virtual.name = Tk_GetUid(eventName);
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 /*
  * Local Variables:

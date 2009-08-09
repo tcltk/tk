@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.8 2008/04/27 22:41:12 dkf Exp $
+/* $Id: ttkInit.c,v 1.9 2009/08/09 21:20:34 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -114,17 +114,17 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
  */
 void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
 {
-    XEvent event;
+    union {XEvent general; XVirtualEvent virtual;} event;
 
     memset(&event, 0, sizeof(event));
-    event.xany.type = VirtualEvent;
-    event.xany.serial = NextRequest(Tk_Display(tgtWin));
-    event.xany.send_event = False;
-    event.xany.window = Tk_WindowId(tgtWin);
-    event.xany.display = Tk_Display(tgtWin);
-    ((XVirtualEvent *) &event)->name = Tk_GetUid(eventName);
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(tgtWin));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(tgtWin);
+    event.general.xany.display = Tk_Display(tgtWin);
+    event.virtual.name = Tk_GetUid(eventName);
 
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
 /* TtkEnumerateOptions, TtkGetOptionValue --
