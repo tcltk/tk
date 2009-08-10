@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.140 2009/08/02 21:40:17 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.141 2009/08/10 23:16:28 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -4310,7 +4310,8 @@ WmIconphotoCmd(
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
     int i, width, height, idx, bufferSize, startObj = 3;
-    unsigned char *bgraPixelPtr, *bgraMaskPtr;
+    union {unsigned char *ptr; void *voidPtr;} bgraPixel;
+    union {unsigned char *ptr; void *voidPtr;} bgraMask;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
@@ -4388,7 +4389,7 @@ WmIconphotoCmd(
 	bmInfo.bmiHeader.biCompression = BI_RGB;
 
 	iconInfo.hbmColor = CreateDIBSection( NULL, &bmInfo,
-	    DIB_RGB_COLORS, (void **)&bgraPixelPtr, NULL, 0 );
+	    DIB_RGB_COLORS, &bgraPixel.voidPtr, NULL, 0 );
 	if ( !iconInfo.hbmColor ) {
 	    ckfree((char *) lpIR);
 	    Tcl_AppendResult(interp, "failed to create color bitmap for \"",
@@ -4401,10 +4402,10 @@ WmIconphotoCmd(
 	 */
 	bufferSize = height * width * 4;
 	for (idx = 0 ; idx < bufferSize ; idx += 4) {
-	    bgraPixelPtr[idx] = block.pixelPtr[idx+2];
-	    bgraPixelPtr[idx+1] = block.pixelPtr[idx+1];
-	    bgraPixelPtr[idx+2] = block.pixelPtr[idx+0];
-	    bgraPixelPtr[idx+3] = block.pixelPtr[idx+3];
+	    bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
+	    bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
+	    bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
+	    bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
 	}
 
 	/*
@@ -4415,7 +4416,7 @@ WmIconphotoCmd(
 	bmInfo.bmiHeader.biBitCount = 1;
 
 	iconInfo.hbmMask = CreateDIBSection( NULL, &bmInfo,
-	    DIB_RGB_COLORS, (void **)&bgraMaskPtr, NULL, 0 );
+	    DIB_RGB_COLORS, &bgraMask.voidPtr, NULL, 0 );
 	if ( !iconInfo.hbmMask ) {
 	    DeleteObject(iconInfo.hbmColor);
 	    ckfree((char *) lpIR);
@@ -4424,7 +4425,7 @@ WmIconphotoCmd(
 	    return TCL_ERROR;	    
 	}
 	
-	ZeroMemory( bgraMaskPtr, width*height/8 );
+	ZeroMemory( bgraMask.ptr, width*height/8 );
 	
 	/*
 	 * Create an icon from the bitmaps.

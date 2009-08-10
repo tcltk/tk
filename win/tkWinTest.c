@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.25 2009/05/13 22:03:39 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.26 2009/08/10 23:16:28 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -100,16 +100,19 @@ AppendSystemError(
     DWORD error)		/* Result code from error. */
 {
     int length;
-    WCHAR *wMsgPtr;
-    char *msg;
+    WCHAR *wMsgPtr, **wMsgPtrPtr = &wMsgPtr;
+    const char *msg;
     char id[TCL_INTEGER_SPACE], msgBuf[24 + TCL_INTEGER_SPACE];
     Tcl_DString ds;
     Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
 
+    if (Tcl_IsShared(resultPtr)) {
+	resultPtr = Tcl_DuplicateObj(resultPtr);
+    }
     length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS
 	    | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
-	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) &wMsgPtr,
+	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) wMsgPtrPtr,
 	    0, NULL);
     if (length == 0) {
 	char *msgPtr;
@@ -128,36 +131,41 @@ AppendSystemError(
     }
     if (length == 0) {
 	if (error == ERROR_CALL_NOT_IMPLEMENTED) {
-	    msg = (char *)"function not supported under Win32s";
+	    strcpy(msgBuf, "function not supported under Win32s");
 	} else {
 	    sprintf(msgBuf, "unknown error: %ld", error);
-	    msg = msgBuf;
 	}
+	msg = msgBuf;
     } else {
 	Tcl_Encoding encoding;
+	char *msgPtr;
 
 	encoding = Tcl_GetEncoding(NULL, "unicode");
-	msg = Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
+	Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
 	Tcl_FreeEncoding(encoding);
 	LocalFree(wMsgPtr);
 
+	msgPtr = Tcl_DStringValue(&ds);
 	length = Tcl_DStringLength(&ds);
 
 	/*
 	 * Trim the trailing CR/LF from the system message.
 	 */
 
-	if (msg[length-1] == '\n') {
-	    msg[--length] = 0;
+	if (msgPtr[length-1] == '\n') {
+	    --length;
 	}
-	if (msg[length-1] == '\r') {
-	    msg[--length] = 0;
+	if (msgPtr[length-1] == '\r') {
+	    --length;
 	}
+	msgPtr[length] = 0;
+	msg = msgPtr;
     }
 
     sprintf(id, "%ld", error);
     Tcl_SetErrorCode(interp, "WINDOWS", id, msg, NULL);
     Tcl_AppendToObj(resultPtr, msg, length);
+    Tcl_SetObjResult(interp, resultPtr);
 
     if (length != 0) {
 	Tcl_DStringFree(&ds);
@@ -427,7 +435,7 @@ TestgetwindowinfoObjCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    HWND hwnd = NULL;
+    long hwnd;
     Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
     char buf[512];
@@ -438,10 +446,10 @@ TestgetwindowinfoObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetLongFromObj(interp, objv[1], (long *)&hwnd) != TCL_OK)
+    if (Tcl_GetLongFromObj(interp, objv[1], &hwnd) != TCL_OK)
 	return TCL_ERROR;
 
-    cch = tkWinProcs->getClassName(hwnd, buf, cchBuf);
+    cch = tkWinProcs->getClassName((HWND)hwnd, buf, cchBuf);
     if (cch == 0) {
     	Tcl_SetResult(interp, "failed to get class name: ", TCL_STATIC);
     	AppendSystemError(interp, GetLastError());
@@ -456,9 +464,9 @@ TestgetwindowinfoObjCmd(
     dictObj = Tcl_NewDictObj();
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("class", 5), classObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
-	Tcl_NewLongObj(GetWindowLong(hwnd, GWL_ID)));
+	Tcl_NewLongObj(GetWindowLong((HWND)hwnd, GWL_ID)));
 
-    cch = tkWinProcs->getWindowText(hwnd, (LPTSTR)buf, cchBuf);
+    cch = tkWinProcs->getWindowText((HWND)hwnd, (LPTSTR)buf, cchBuf);
     if (tkWinProcs->useWide) {
 	textObj = Tcl_NewUnicodeObj((LPCWSTR)buf, cch);
     } else {
@@ -467,10 +475,10 @@ TestgetwindowinfoObjCmd(
 
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
-	Tcl_NewLongObj((long)GetParent(hwnd)));
+	Tcl_NewLongObj((long)GetParent((HWND)hwnd)));
 
     childrenObj = Tcl_NewListObj(0, NULL);
-    EnumChildWindows(hwnd, EnumChildrenProc, (LPARAM)childrenObj);
+    EnumChildWindows((HWND)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", -1), childrenObj);
 
     Tcl_SetObjResult(interp, dictObj);

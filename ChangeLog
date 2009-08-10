@@ -1,3 +1,9 @@
+2009-08-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinPixmap.c:  Eliminate more gcc warnings
+	* win/tkWinWm.c:
+	* win/tkWinTest.c
+
 2009-08-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkInit.c Eliminate gcc warning
