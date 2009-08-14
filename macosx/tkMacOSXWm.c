@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.76 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.77 2009/08/14 14:51:02 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -5341,6 +5341,14 @@ TkMacOSXMakeRealWindowExist(
     [window setAutodisplay:NO];
     if (styleMask & NSUtilityWindowMask) {
 	[(NSPanel*)window setFloatingPanel:YES];
+    }
+    if ((styleMask & (NSTexturedBackgroundWindowMask|NSHUDWindowMask)) &&
+	    !(styleMask & NSDocModalWindowMask)) {
+        /*
+	 * Workaround for [Bug 2824538]: Texured windows are draggable
+	 *                               from opaque content.
+	 */
+	[window setMovableByWindowBackground:NO];
     }
     [window setDocumentEdited:NO];
     wmPtr->window = window;

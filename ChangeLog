@@ -1,3 +1,12 @@
+2009-08-14  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXDraw.c: Avoid exception in XCopyArea() when copying
+	from toplevel that has never been mapped. (reported by Youness Alaoui
+	on tcl-mac)
+
+	* macosx/tkMacOSXWm.c: Workaround for textured windows being draggable
+	from opaque content areas. [Bug 2824538] (walzer)
+
 2009-08-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinPixmap.c:  Eliminate more gcc warnings
