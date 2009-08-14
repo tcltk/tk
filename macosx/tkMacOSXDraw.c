@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.35 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.36 2009/08/14 14:50:19 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -174,7 +174,8 @@ XCopyArea(
 	TkMacOSXRestoreDrawingContext(&dc);
     } else if (TkMacOSXDrawableWindow(src)) {
 	NSView *view = TkMacOSXDrawableView(srcDraw);
-	NSInteger gs = [[view window] gState];
+	NSWindow *w = [view window];
+	NSInteger gs = [w windowNumber] > 0 ? [w gState] : 0;
 	/* // alternative using per-view gState:
 	NSInteger gs = [view gState];
 	if (!gs) {
