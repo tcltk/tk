@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.52 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.53 2009/08/19 23:02:00 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -242,10 +242,13 @@ typedef struct UniformGroup {
  *				size. 0 means if this window is a master then
  *				Tk will set its requested size to fit the
  *				needs of its slaves.
+ * ALLOCED_MASTER               1 means that Grid has allocated itself as
+ *                              geometry master for this window.   
  */
 
 #define REQUESTED_RELAYOUT	1
 #define DONT_PROPAGATE		2
+#define ALLOCED_MASTER		4
 
 /*
  * Prototypes for procedures used only in this file:
@@ -875,8 +878,22 @@ GridPropagateCommand(
     old = !(masterPtr->flags & DONT_PROPAGATE);
     if (propagate != old) {
 	if (propagate) {
+	    /*
+	     * If we have slaves, we need to register as geometry master.
+	     */
+
+	    if (masterPtr->slavePtr != NULL) {
+		if (TkSetGeometryMaster(interp, master, "grid")	!= TCL_OK) {
+		    return TCL_ERROR;	
+		}
+		masterPtr->flags |= ALLOCED_MASTER;
+	    }
 	    masterPtr->flags &= ~DONT_PROPAGATE;
 	} else {
+	    if (masterPtr->flags & ALLOCED_MASTER) {
+		TkFreeGeometryMaster(master, "grid");
+		masterPtr->flags &= ~ALLOCED_MASTER;
+	    }
 	    masterPtr->flags |= DONT_PROPAGATE;
 	}
 
@@ -2724,6 +2741,16 @@ Unlink(
 
     SetGridSize(slavePtr->masterPtr);
     slavePtr->masterPtr = NULL;
+
+    /*
+     * If we have emptied this master from slaves it means we are no longer
+     * handling it and should mark it as free.
+     */
+
+    if ((masterPtr->slavePtr == NULL) && (masterPtr->flags & ALLOCED_MASTER)) {
+	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
+	masterPtr->flags &= ~ALLOCED_MASTER;
+    }
 }
 
 /*
@@ -3262,6 +3289,15 @@ ConfigureSlaves(
 
 	Tk_ManageGeometry(slave, &gridMgrType, slavePtr);
 
+	if (!(masterPtr->flags & DONT_PROPAGATE)) {
+	    if (TkSetGeometryMaster(interp, masterPtr->tkwin, "grid")
+		    != TCL_OK) {
+		Tk_ManageGeometry(slave, NULL, NULL);
+		return TCL_ERROR;
+	    }
+	    masterPtr->flags |= ALLOCED_MASTER;
+	}
+
 	/*
 	 * Assign default position information.
 	 */
@@ -3386,6 +3422,17 @@ ConfigureSlaves(
 	return TCL_ERROR;
     }
     SetGridSize(masterPtr);
+
+    /*
+     * If we have emptied this master from slaves it means we are no longer
+     * handling it and should mark it as free.
+     */
+
+    if (masterPtr->slavePtr == NULL && masterPtr->flags & ALLOCED_MASTER) {
+	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
+	masterPtr->flags &= ~ALLOCED_MASTER;
+    }
+
     return TCL_OK;
 }
 

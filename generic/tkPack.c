@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.33 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.34 2009/08/19 23:02:00 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -89,6 +89,8 @@ typedef struct Packer {
  *				size. 0 means if this window is a master then
  *				Tk will set its requested size to fit the
  *				needs of its slaves.
+ * ALLOCED_MASTER               1 means that Pack has allocated itself as
+ *                              geometry master for this window.   
  */
 
 #define REQUESTED_REPACK	1
@@ -97,6 +99,7 @@ typedef struct Packer {
 #define EXPAND			8
 #define OLD_STYLE		16
 #define DONT_PROPAGATE		32
+#define ALLOCED_MASTER		64
 
 /*
  * The following structure is the official type record for the packer:
@@ -385,6 +388,16 @@ Tk_PackObjCmd(
 	    return TCL_ERROR;
 	}
 	if (propagate) {
+	    /*
+	     * If we have slaves, we need to register as geometry master.
+	     */
+
+	    if (masterPtr->slavePtr != NULL) {
+		if (TkSetGeometryMaster(interp, master, "pack") != TCL_OK) {
+		    return TCL_ERROR;	
+		}
+		masterPtr->flags |= ALLOCED_MASTER;
+	    }
 	    masterPtr->flags &= ~DONT_PROPAGATE;
 
 	    /*
@@ -400,6 +413,10 @@ Tk_PackObjCmd(
 		Tcl_DoWhenIdle(ArrangePacking, masterPtr);
 	    }
 	} else {
+	    if (masterPtr->flags & ALLOCED_MASTER) {
+		TkFreeGeometryMaster(master, "pack");
+		masterPtr->flags &= ~ALLOCED_MASTER;
+	    }
 	    masterPtr->flags |= DONT_PROPAGATE;
 	}
 	break;
@@ -1239,6 +1256,15 @@ PackAfter(
 		prevPtr->nextPtr = packPtr;
 	    }
 	    Tk_ManageGeometry(tkwin, &packerType, packPtr);
+
+	    if (!(masterPtr->flags & DONT_PROPAGATE)) {
+		if (TkSetGeometryMaster(interp, masterPtr->tkwin, "pack")
+			!= TCL_OK) {
+		    Tk_ManageGeometry(tkwin, NULL, NULL);
+		    return TCL_ERROR;	
+		}
+		masterPtr->flags |= ALLOCED_MASTER;
+	    }
 	}
     }
 
@@ -1304,6 +1330,17 @@ Unlink(
     }
 
     packPtr->masterPtr = NULL;
+
+    /*
+     * If we have emptied this master from slaves it means we are no longer
+     * handling it and should mark it as free.
+     */
+
+    if (masterPtr->slavePtr == NULL && masterPtr->flags & ALLOCED_MASTER) {
+	TkFreeGeometryMaster(masterPtr->tkwin, "pack");
+	masterPtr->flags &= ~ALLOCED_MASTER;
+    }
+
 }
 
 /*
@@ -1740,6 +1777,7 @@ ConfigureSlaves(
 	    }
 	    Unlink(slavePtr);
 	}
+
 	slavePtr->masterPtr = masterPtr;
 	if (prevPtr == NULL) {
 	    slavePtr->nextPtr = masterPtr->slavePtr;
@@ -1750,6 +1788,15 @@ ConfigureSlaves(
 	}
 	Tk_ManageGeometry(slave, &packerType, slavePtr);
 	prevPtr = slavePtr;
+
+	if (!(masterPtr->flags & DONT_PROPAGATE)) {
+	    if (TkSetGeometryMaster(interp, masterPtr->tkwin, "pack")
+		    != TCL_OK) {
+		Tk_ManageGeometry(slave, NULL, NULL);
+		return TCL_ERROR;	
+	    }
+	    masterPtr->flags |= ALLOCED_MASTER;
+	}
 
 	/*
 	 * Arrange for the master to be re-packed at the first idle moment.

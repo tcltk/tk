@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.106 2009/07/02 10:34:32 patthoyts Exp $
+ * RCS: $Id: tkInt.h,v 1.107 2009/08/19 23:02:00 pspjuth Exp $
  */
 
 #ifndef _TKINT
@@ -851,6 +851,7 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
+    char *geometryMaster;
 } TkWindow;
 
 /*
@@ -1164,6 +1165,11 @@ MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    double *doublePtr);
+MODULE_SCOPE int	TkSetGeometryMaster(Tcl_Interp *interp,
+			    Tk_Window tkwin, const char *master);
+MODULE_SCOPE void	TkFreeGeometryMaster(Tk_Window tkwin,
+			    const char *master);
+
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE int	TkCreateMenuCmd(Tcl_Interp *interp);

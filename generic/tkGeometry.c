@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.14 2008/11/08 18:44:40 dkf Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.15 2009/08/19 23:02:00 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -301,6 +301,85 @@ Tk_SetMinimumRequestSize(
      */
 
     Tk_ResizeWindow(tkwin, Tk_Width(tkwin), Tk_Height(tkwin));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkSetGeometryMaster --
+ *
+ *	Set a geometry master for this window. Only one master may own
+ *	a window at any time.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The geometry master is recorded for the window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkSetGeometryMaster(
+    Tcl_Interp *interp,		/* Current interpreter, for error. */
+    Tk_Window tkwin,		/* Window that will have geometry master set. */
+    const char *master)		/* The master identity. */
+{
+    register TkWindow *winPtr = (TkWindow *) tkwin;
+
+    if (winPtr->geometryMaster != NULL &&
+	    strcmp(winPtr->geometryMaster, master) == 0) {
+	return TCL_OK;
+    }
+    if (winPtr->geometryMaster != NULL) {
+	if (interp != NULL) {
+	    Tcl_AppendResult(interp, "cannot use geometry manager ", master,
+		    " inside ", Tk_PathName(tkwin),
+  	            " which already has slaves managed by ",
+		    winPtr->geometryMaster, NULL);
+	}
+	return TCL_ERROR;
+    }
+
+    winPtr->geometryMaster = ckalloc(strlen(master) + 1);
+    strcpy(winPtr->geometryMaster, master);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkFreeGeometryMaster --
+ *
+ *	Remove a geometry master for this window. Only one master may own
+ *	a window at any time.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The geometry master is cleared for the window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkFreeGeometryMaster(
+    Tk_Window tkwin,	/* Window that will have geometry master cleared. */
+    const char *master)	/* The master identity. */
+{
+    register TkWindow *winPtr = (TkWindow *) tkwin;
+
+    if (winPtr->geometryMaster != NULL &&
+	    strcmp(winPtr->geometryMaster, master) != 0) {
+	Tcl_Panic("Trying to free %s from geometry manager %s.",
+		winPtr->geometryMaster, master);
+    }
+    if (winPtr->geometryMaster != NULL) {
+	ckfree(winPtr->geometryMaster);
+	winPtr->geometryMaster = NULL;
+    }
 }
 
 /*

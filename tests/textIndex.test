@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: textIndex.test,v 1.18 2005/07/18 22:12:05 vincentdarley Exp $
+# RCS: @(#) $Id: textIndex.test,v 1.19 2009/08/19 23:02:00 pspjuth Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -784,7 +784,7 @@ test textIndex-19.12 {Display lines} {
 } {2.20}
 
 test textIndex-19.13 {Display lines} {
-    destroy .t
+    destroy {*}[pack slaves .]
     text .txt -height 1 -wrap word -yscroll ".sbar set" -width 400
     scrollbar .sbar -command ".txt yview"
     grid .txt .sbar -sticky news
