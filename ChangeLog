@@ -1,3 +1,16 @@
+2009-08-19  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* generic/tk.h
+	* generic/tkGeometry.c
+	* generic/tkGrid.c
+	* generic/tkInt.h
+	* generic/tkPack.c
+	* generic/tkWindow.c
+	* tests/grid.test
+	* tests/packgrid.test
+	* tests/textIndex.test:	Give an error if grid and pack are used in the
+	same master. [Patch 2475855]
+
 2009-08-14  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXDraw.c: Avoid exception in XCopyArea() when copying

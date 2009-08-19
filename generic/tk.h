@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.130 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tk.h,v 1.131 2009/08/19 23:02:00 pspjuth Exp $
  */
 
 #ifndef _TK
@@ -791,6 +791,7 @@ typedef struct Tk_FakeWin {
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
+    char *dummy20;		/* geometryMaster */
 } Tk_FakeWin;
 
 /*

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.103 2009/02/27 23:04:39 patthoyts Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.104 2009/08/19 23:02:00 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -709,6 +709,7 @@ TkAllocWindow(
     winPtr->internalBorderBottom = 0;
     winPtr->minReqWidth = 0;
     winPtr->minReqHeight = 0;
+    winPtr->geometryMaster = NULL;
 
     return winPtr;
 }
@@ -1485,6 +1486,10 @@ Tk_DestroyWindow(
     TkOptionDeadWindow(winPtr);
     TkSelDeadWindow(winPtr);
     TkGrabDeadWindow(winPtr);
+    if (winPtr->geometryMaster != NULL) {
+	ckfree(winPtr->geometryMaster);
+	winPtr->geometryMaster = NULL;
+    }
     if (winPtr->mainPtr != NULL) {
 	if (winPtr->pathName != NULL) {
 	    Tk_DeleteAllBindings(winPtr->mainPtr->bindingTable,
