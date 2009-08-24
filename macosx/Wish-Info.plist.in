@@ -7,7 +7,7 @@
 	See the file "license.terms" for information on usage and redistribution of
 	this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-	RCS: @(#) $Id: Wish-Info.plist.in,v 1.5 2009/06/29 14:35:01 das Exp $
+	RCS: @(#) $Id: Wish-Info.plist.in,v 1.6 2009/08/24 00:57:20 das Exp $
 -->
 <plist version="1.0">
 <dict>
@@ -72,5 +72,7 @@ Copyright © 2001-2002 Jim Ingham &amp; Ian Reid</string>
 	<true/>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
+	<key>OSAScriptingDefinition</key>
+	<string>Wish.sdef</string>
 </dict>
 </plist>

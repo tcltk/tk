@@ -1,3 +1,35 @@
+2009-08-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkBind.c (HandleEventGenerate): Don't generate events for
+	windows that don't exist yet (fixes TkAqua testsuite crash).
+
+	* macosx/tkMacOSXWindowEvent.c: Allow WM_DELETE_WINDOW handlers to
+	prevent window closure by generating WM destroy event earlier (from
+	window delegate's -windowShouldClose:). [Bug 2821084]
+
+	* macosx/tkMacOSXDraw.c (TkMacOSX{Setup,Restore}DrawingContext):
+	Disable window flushing during Tk drawing to avoid immediate flush of
+	NSView-based native widgets on draw. (fixes drawing performance issue
+	reported by Youness Alaoui on tcl-mac)
+
+	* macosx/tkMacOSXHLEvents.c (ScriptHandler):	Fix "do script" apple
+	* carbon/tkMacOSXHLEvents.c (ScriptHandler):	event handler issues
+	on recent OS X releases by using AE coercion to 'utf8' for text data
+	and to 'fsrf' for alias data. (reported by Youness Alaoui on tcl-mac)
+
+	* macosx/Wish.sdef (new file):		Install and enable sdef file
+	* macosx/Wish-Info.plist.in:		into Wish application bundle,
+	* macosx/Tk.xcode/project.pbxproj:	describing TkAqua apple event
+	* macosx/Tk.xcodeproj/project.pbxproj:	support for use by AppleScript.
+	* unix/Makefile.in:			(replaces functionality of
+	* unix/configure.in:			'aete' resource removed with
+						Cocoa port & fixes AppleScript
+						issues reported on tcl-mac)
+	* unix/configure: autoconf-2.59
+
+	* carbon/Wish.xcode/project.pbxproj:	remove references to obsolete
+	* carbon/Wish.xcodeproj/project.pbxproj: prolog.ps file.
+
 2009-08-19  Peter Spjuth  <peter.spjuth@gmail.com>
 
 	* generic/tk.h
