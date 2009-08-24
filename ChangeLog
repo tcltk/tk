@@ -1,8 +1,13 @@
+2009-08-24  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/msgbox.tcl (::tk::MessageBox): Correct bindings so that they
+	work with ttk::buttons. Reported by Hans-Christoph Steiner.
+
 2009-08-24  Daniel Steffen  <das@users.sourceforge.net>
 
-	* macosx/tkMacOSXHLEvents.c (ScriptHandler): fix "do script" apple
+	* macosx/tkMacOSXHLEvents.c (ScriptHandler): Fix "do script" apple
 	event handler issues on recent Mac OS X releases by using AE coercion
-	to 'utf8' for text data and to 'fsrf' for alias data. (reported by
+	to 'utf8' for text data and to 'fsrf' for alias data. (Reported by
 	Youness Alaoui on tcl-mac)
 
 2009-08-08  Donal K. Fellows  <dkf@users.sf.net>
