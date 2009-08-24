@@ -6,12 +6,12 @@
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.11 2007/06/29 03:22:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.12 2009/08/24 00:59:29 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -492,8 +492,8 @@ ScriptHandler(
     theErr = AEGetParamDesc(event, keyDirectObject, typeWildCard,
 	    &theDesc);
     if (theErr != noErr) {
-	sprintf(errString, "AEDoScriptHandler: GetParamDesc error %ld",
-		theErr);
+	sprintf(errString, "AEDoScriptHandler: GetParamDesc error %d",
+		(int)theErr);
 	theErr = AEPutParamPtr(reply, keyErrorString, typeChar, errString,
 		strlen(errString));
     } else if (MissedAnyParameters(event)) {
@@ -502,54 +502,22 @@ ScriptHandler(
 		strlen(errString));
 	theErr = -1771;
     } else {
-	if (theDesc.descriptorType == (DescType)typeChar) {
-	    Tcl_DString encodedText;
-	    short i;
-	    Size  size;
-	    char  * data;
+	Size size;
 
-	    size = AEGetDescDataSize(&theDesc);
-
-	    data = (char *)ckalloc(size + 1);
-	    if ( !data ) {
-		theErr = -1771;
-	    }
-	    else {
-		   AEGetDescData(&theDesc,data,size);
-		   data [ size ] = 0;
-		   for (i = 0; i < size; i++)
-		    if (data[i] == '\r')
-		     data[i] = '\n';
-		   AEReplaceDescData(theDesc.descriptorType, data,
-			   size + 1, &theDesc);
-	    }
-	    Tcl_ExternalToUtfDString(NULL, data, size,
-		    &encodedText);
-	    tclErr = Tcl_EvalEx(interp, Tcl_DStringValue(&encodedText),
-		    Tcl_DStringLength(&encodedText), TCL_EVAL_GLOBAL);
-	    Tcl_DStringFree(&encodedText);
-	} else if (theDesc.descriptorType == (DescType)typeAlias) {
-	    Boolean dummy;
+	if (theDesc.descriptorType == (DescType)typeAlias &&
+		AEGetParamPtr(event, keyDirectObject, typeFSRef, NULL, NULL,
+		0, &size) == noErr && size == sizeof(FSRef)) {
 	    FSRef file;
-	    AliasPtr	alias;
-	    Size	theSize;
 
-	    theSize = AEGetDescDataSize(&theDesc);
-	    alias = (AliasPtr) ckalloc(theSize);
-	    if (alias) {
-		AEGetDescData (&theDesc, alias, theSize);
-
-		theErr = FSResolveAlias(NULL, &alias,
-			&file, &dummy);
-		ckfree((char*)alias);
-	    } else {
-		theErr = memFullErr;
-	    }
+	    theErr = AEGetParamPtr(event, keyDirectObject, typeFSRef, NULL,
+		    &file, size, NULL);
 	    if (theErr == noErr) {
 		Tcl_DString scriptName;
+
 		theErr = FSRefToDString(&file, &scriptName);
 		if (theErr == noErr) {
-		    Tcl_EvalFile(interp, Tcl_DStringValue(&scriptName));
+		    tclErr = Tcl_EvalFile(interp,
+			    Tcl_DStringValue(&scriptName));
 		    Tcl_DStringFree(&scriptName);
 		}
 	    } else {
@@ -557,9 +525,19 @@ ScriptHandler(
 		AEPutParamPtr(reply, keyErrorString, typeChar,
 			errString, strlen(errString));
 	    }
+	} else if (AEGetParamPtr(event, keyDirectObject, typeUTF8Text, NULL,
+		NULL, 0, &size) == noErr && size) {
+	    char *data = ckalloc(size + 1);
+
+	    theErr = AEGetParamPtr(event, keyDirectObject, typeUTF8Text, NULL,
+		    data, size, NULL);
+	    if (theErr == noErr) {
+		tclErr = Tcl_EvalEx(interp, data, size, TCL_EVAL_GLOBAL);
+	    }
 	} else {
 	    sprintf(errString,
-		    "AEDoScriptHandler: invalid script type '%-4.4s', must be 'alis' or 'TEXT'",
+		    "AEDoScriptHandler: invalid script type '%-4.4s', "
+		    "must be 'alis' or coercable to 'utf8'",
 		    (char *)(&theDesc.descriptorType));
 	    AEPutParamPtr(reply, keyErrorString, typeChar,
 		    errString, strlen(errString));
@@ -579,7 +557,7 @@ ScriptHandler(
 	    AEPutParamPtr(reply, keyErrorString, typeChar,
 		Tcl_GetStringResult(interp),
 		strlen(Tcl_GetStringResult(interp)));
-	    AEPutParamPtr(reply, keyErrorNumber, typeInteger,
+	    AEPutParamPtr(reply, keyErrorNumber, typeSInt32,
 		(Ptr) &tclErr, sizeof(int));
 	}
     }
@@ -645,8 +623,8 @@ MissedAnyParameters(
    Size actualSize;
    OSStatus err;
 
-   err = ChkErr(AEGetAttributePtr, theEvent, keyMissedKeywordAttr,
-	   typeWildCard, &returnedType, NULL, 0, &actualSize);
+   err = AEGetAttributePtr(theEvent, keyMissedKeywordAttr,
+	    typeWildCard, &returnedType, NULL, 0, &actualSize);
 
    return (err != errAEDescNotFound);
 }
