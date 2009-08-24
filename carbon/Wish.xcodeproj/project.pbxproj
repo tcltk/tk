@@ -837,7 +837,6 @@
 		F966BAA408F27A38005CB29B /* wm.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = wm.n; sourceTree = "<group>"; };
 		F966BAA608F27A38005CB29B /* default.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = default.h; sourceTree = "<group>"; };
 		F966BAA708F27A38005CB29B /* ks_names.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ks_names.h; sourceTree = "<group>"; };
-		F966BAA808F27A38005CB29B /* prolog.ps */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = prolog.ps; sourceTree = "<group>"; };
 		F966BAA908F27A39005CB29B /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		F966BAAA08F27A39005CB29B /* tk.decls */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tk.decls; sourceTree = "<group>"; };
 		F966BAAB08F27A39005CB29B /* tk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tk.h; sourceTree = "<group>"; };
@@ -2173,7 +2172,7 @@
 				F966C06F08F281DC005CB29B /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.1 2009/06/26 01:42:47 das Exp $\n";
+			comments = "Copyright (c) 2004-2008 Daniel A. Steffen <das@users.sourceforge.net>\n\nSee the file \"license.terms\" for information on usage and redistribution of\nthis file, and for a DISCLAIMER OF ALL WARRANTIES.\n\nRCS: @(#) $Id: project.pbxproj,v 1.2 2009/08/24 00:58:42 das Exp $\n";
 			name = Wish;
 			path = .;
 			sourceTree = SOURCE_ROOT;
@@ -2399,7 +2398,6 @@
 			children = (
 				F966BAA608F27A38005CB29B /* default.h */,
 				F966BAA708F27A38005CB29B /* ks_names.h */,
-				F966BAA808F27A38005CB29B /* prolog.ps */,
 				F966BAA908F27A39005CB29B /* README */,
 				F966BAAA08F27A39005CB29B /* tk.decls */,
 				F966BAAB08F27A39005CB29B /* tk.h */,
