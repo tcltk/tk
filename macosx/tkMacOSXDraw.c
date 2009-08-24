@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.36 2009/08/14 14:50:19 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.37 2009/08/24 00:55:31 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1565,6 +1565,7 @@ TkMacOSXSetupDrawingContext(
 	    if (dontDraw) {
 		goto end;
 	    }
+	    [[view window] disableFlushWindow];
 	    dc.view = view;
 	    dc.context = [[NSGraphicsContext currentContext] graphicsPort];
 	    dc.portBounds = NSRectToCGRect([view bounds]);
@@ -1690,6 +1691,7 @@ TkMacOSXRestoreDrawingContext(
 {
     if (dcPtr->context) {
 	CGContextSynchronize(dcPtr->context);
+	[[dcPtr->view window] enableFlushWindow];
 	if (dcPtr->focusLocked) {
 	    [dcPtr->view unlockFocus];
 	} else {
