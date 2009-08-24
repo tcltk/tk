@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.37 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.38 2009/08/24 00:55:08 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -154,17 +154,23 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
-- (void) windowClosed: (NSNotification *) notification
+- (BOOL) windowShouldClose: (NSWindow *) w
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, w);
 #endif
-    NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
 	TkGenWMDestroyEvent((Tk_Window) winPtr);
     }
+
+    /*
+     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window,
+     * so can always return NO from -windowShouldClose: for a Tk window.
+     */
+
+    return (winPtr ? NO : YES);
 }
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -220,7 +226,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
-    observe(NSWindowWillCloseNotification, windowClosed:);
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
