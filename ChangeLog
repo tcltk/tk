@@ -1,3 +1,10 @@
+2009-08-24  Daniel Steffen  <das@users.sourceforge.net>
+
+	* macosx/tkMacOSXHLEvents.c (ScriptHandler): fix "do script" apple
+	event handler issues on recent Mac OS X releases by using AE coercion
+	to 'utf8' for text data and to 'fsrf' for alias data. (reported by
+	Youness Alaoui on tcl-mac)
+
 2009-07-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkFocus.c (TkFocusDeadWindow): [Bug 2496114]: Ensure that
