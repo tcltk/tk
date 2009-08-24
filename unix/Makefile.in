@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.155 2009/07/18 08:16:09 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.156 2009/08/24 00:57:20 das Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1577,7 +1577,8 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(TOP_DIR)/macosx/*.icns $(TOP_DIR)/macosx/*.tiff \
 		$(TOP_DIR)/macosx/*.[ch] $(TOP_DIR)/macosx/*.in \
 		$(TOP_DIR)/macosx/*.ac $(TOP_DIR)/macosx/*.xcconfig \
-		$(TOP_DIR)/macosx/configure $(DISTDIR)/macosx
+		$(TOP_DIR)/macosx/*.sdef  $(TOP_DIR)/macosx/configure \
+		$(DISTDIR)/macosx
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/macosx
 	mkdir $(DISTDIR)/macosx/Tk.xcode
 	cp -p $(TOP_DIR)/macosx/Tk.xcode/project.pbxproj \
