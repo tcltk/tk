@@ -1,5 +1,8 @@
 2009-08-24  Daniel Steffen  <das@users.sourceforge.net>
 
+	* generic/tkInt.h: Annotate Tcl_Panic as noreturn for clang static
+	analyzer in PURIFY builds, replacing preprocessor/assert technique.
+
 	* generic/tkBind.c (HandleEventGenerate): Don't generate events for
 	windows that don't exist yet (fixes TkAqua testsuite crash).
 
