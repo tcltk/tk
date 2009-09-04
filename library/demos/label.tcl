@@ -3,7 +3,7 @@
 # This demonstration script creates a toplevel window containing
 # several label widgets.
 #
-# RCS: @(#) $Id: label.tcl,v 1.7 2009/02/11 15:17:26 dkf Exp $
+# RCS: @(#) $Id: label.tcl,v 1.8 2009/09/04 10:03:44 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -18,7 +18,7 @@ wm title $w "Label Demonstration"
 wm iconname $w "label"
 positionWindow $w
 
-label $w.msg -font $font -wraplength 4i -justify left -text "Five labels are displayed below: three textual ones on the left, and a bitmap label and a text label on the right.  Labels are pretty boring because you can't do anything with them."
+label $w.msg -font $font -wraplength 4i -justify left -text "Five labels are displayed below: three textual ones on the left, and an image label and a text label on the right.  Labels are pretty boring because you can't do anything with them."
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons
