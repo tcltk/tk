@@ -1,3 +1,9 @@
+2009-09-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkInt.h (TkDisplay): Remove fields that are never read from.
+	* generic/tkWindow.c (Tk_DestroyWindow): Remove code to write to
+	write-only fields of TkDisplay. This follows on from [Bug 2039720].
+
 2009-08-25  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixSend.c (ServerSecure): [Bug 1909931]: Added some support
