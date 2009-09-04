@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.104 2009/08/19 23:02:00 pspjuth Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.105 2009/09/04 09:55:17 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1347,7 +1347,6 @@ Tk_DestroyWindow(
 
     if (!(halfdeadPtr->flags & HD_DESTROY_COUNT)) {
 	halfdeadPtr->flags |= HD_DESTROY_COUNT;
-	dispPtr->destroyCount++;
     }
 
     while (winPtr->childList != NULL) {
@@ -1462,7 +1461,6 @@ Tk_DestroyWindow(
 	     * to do an explicit destroy of this X window.
 	     */
 
-	    dispPtr->lastDestroyRequest = NextRequest(winPtr->display);
 	    XDestroyWindow(winPtr->display, winPtr->window);
 	}
 #endif
@@ -1470,7 +1468,6 @@ Tk_DestroyWindow(
 		(char *) winPtr->window));
 	winPtr->window = None;
     }
-    dispPtr->destroyCount--;
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
     TkBindDeadWindow(winPtr);
@@ -1536,7 +1533,7 @@ Tk_DestroyWindow(
 		Tcl_CreateCommand(winPtr->mainPtr->interp, "send",
 			TkDeadAppCmd, NULL, NULL);
 		Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
-                Tcl_UnlinkVar(winPtr->mainPtr->interp,
+		Tcl_UnlinkVar(winPtr->mainPtr->interp,
 			"::tk::AlwaysShowSelection");
 	    }
 

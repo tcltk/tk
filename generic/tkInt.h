@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.109 2009/08/25 23:49:46 das Exp $
+ * RCS: $Id: tkInt.h,v 1.110 2009/09/04 09:55:17 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -399,10 +399,6 @@ typedef struct TkDisplay {
     int postCommandGeneration;
 
     /*
-     * Information used by tkOption.c only.
-     */
-
-    /*
      * Information used by tkPack.c only.
      */
 
@@ -471,42 +467,12 @@ typedef struct TkDisplay {
 				 * application name on each comm window. */
 
     /*
-     * Information used by tkXId.c only:
-     */
-
-    struct TkIdStack *idStackPtr;
-				/* First in list of chunks of free resource
-				 * identifiers, or NULL if there are no free
-				 * resources. */
-    XID (*defaultAllocProc) (Display *display);
-				/* Default resource allocator for display. */
-    struct TkIdStack *windowStackPtr;
-				/* First in list of chunks of window ids that
-				 * can't be reused right now. */
-    Tcl_TimerToken idCleanupScheduled;
-				/* If set, it means a call to WindowIdCleanup
-				 * has already been scheduled, 0 means it
-				 * hasn't. */
-
-    /*
      * Information used by tkUnixWm.c and tkWinWm.c only:
      */
 
     struct TkWmInfo *firstWmPtr;/* Points to first top-level window. */
     struct TkWmInfo *foregroundWmPtr;
 				/* Points to the foreground window. */
-
-    /*
-     * Information maintained by tkWindow.c for use later on by tkXId.c:
-     */
-
-    int destroyCount;		/* Number of Tk_DestroyWindow operations in
-				 * progress. */
-    unsigned long lastDestroyRequest;
-				/* Id of most recent XDestroyWindow request;
-				 * can re-use ids in windowStackPtr when
-				 * server has seen this request and event
-				 * queue is empty. */
 
     /*
      * Information used by tkVisual.c only:
