@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.29 2009/04/10 15:53:24 das Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.30 2009/09/07 07:29:04 das Exp $
  */
 
 #include "tkInt.h"
@@ -1233,8 +1233,9 @@ SplitSeg(
 		/*
 		 * Reached end of the text.
 		 */
+	    } else {
+		segPtr = linePtr->segPtr;
 	    }
-	    segPtr = linePtr->segPtr;
 	}
     }
     Tcl_Panic("SplitSeg reached end of line!");
@@ -1389,6 +1390,7 @@ TkBTreeDeleteIndexRange(
 		    }
 		}
 		changeToLineCount++;
+		CLANG_ASSERT(curNodePtr);
 		curNodePtr->numChildren--;
 
 		/*
@@ -2465,7 +2467,7 @@ FindTagStart(
      * level 0 node.
      */
 
-    while (nodePtr->level > 0) {
+    while (nodePtr && nodePtr->level > 0) {
 	for (nodePtr = nodePtr->children.nodePtr ; nodePtr != NULL;
 		nodePtr = nodePtr->nextPtr) {
 	    for (summaryPtr = nodePtr->summaryPtr ; summaryPtr != NULL;
@@ -2477,6 +2479,10 @@ FindTagStart(
 	}
     gotNodeWithTag:
 	continue;
+    }
+
+    if (nodePtr == NULL) {
+	return NULL;
     }
 
     /*
@@ -2546,7 +2552,7 @@ FindTagEnd(
      * level 0 node.
      */
 
-    while (nodePtr->level > 0) {
+    while (nodePtr && nodePtr->level > 0) {
 	for (lastNodePtr = NULL, nodePtr = nodePtr->children.nodePtr ;
 		nodePtr != NULL; nodePtr = nodePtr->nextPtr) {
 	    for (summaryPtr = nodePtr->summaryPtr ; summaryPtr != NULL;
@@ -2558,6 +2564,10 @@ FindTagEnd(
 	    }
 	}
 	nodePtr = lastNodePtr;
+    }
+
+    if (nodePtr == NULL) {
+	return NULL;
     }
 
     /*
@@ -4277,9 +4287,11 @@ Rebalance(
 	     */
 
 	    if (nodePtr->level == 0) {
+		CLANG_ASSERT(halfwayLinePtr);
 		otherPtr->children.linePtr = halfwayLinePtr->nextPtr;
 		halfwayLinePtr->nextPtr = NULL;
 	    } else {
+		CLANG_ASSERT(halfwayNodePtr);
 		otherPtr->children.nodePtr = halfwayNodePtr->nextPtr;
 		halfwayNodePtr->nextPtr = NULL;
 	    }

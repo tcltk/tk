@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.35 2009/02/06 08:12:07 das Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.36 2009/09/07 07:29:04 das Exp $
  */
 
 #include "default.h"
@@ -832,7 +832,9 @@ GetIndex(
 	    if (tagPtr == textPtr->selTagPtr) {
 		tagName = "sel";
 	    } else {
-		tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
+		if (hPtr != NULL) {
+		    tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
+		}
 	    }
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp,
