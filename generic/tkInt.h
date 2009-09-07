@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.110 2009/09/04 09:55:17 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.111 2009/09/07 06:20:50 das Exp $
  */
 
 #ifndef _TKINT
@@ -949,19 +949,21 @@ MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 #endif
 
 /*
- * Macros for clang static analyzer
+ * Support for Clang Static Analyzer <http://clang-analyzer.llvm.org>
  */
 
-#if defined(PURIFY) && defined(__clang__) && !defined(CLANG_ASSERT)
+#if defined(PURIFY) && defined(__clang__)
+#if __has_feature(attribute_analyzer_noreturn) && \
+	!defined(Tcl_Panic) && defined(Tcl_Panic_TCL_DECLARED)
+void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
+#endif
+#if !defined(CLANG_ASSERT)
 #include <assert.h>
 #define CLANG_ASSERT(x) assert(x)
-#ifndef USE_TCL_STUBS
-EXTERN void Tcl_Panic(const char * format, ...)
-	__attribute__((analyzer_noreturn));
 #endif
 #elif !defined(CLANG_ASSERT)
 #define CLANG_ASSERT(x)
-#endif
+#endif /* PURIFY && __clang__ */
 
 /*
  * The following magic value is stored in the "send_event" field of FocusIn
