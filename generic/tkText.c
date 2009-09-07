@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.90 2009/08/09 21:20:33 nijtmans Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.91 2009/09/07 07:29:04 das Exp $
  */
 
 #include "default.h"
@@ -5562,6 +5562,7 @@ SearchCore(
 	    int maxExtraLines = 0;
 	    const char *startOfLine = Tcl_GetString(theLine);
 
+	    CLANG_ASSERT(pattern);
 	    do {
 		Tcl_UniChar ch;
 		const char *p;
