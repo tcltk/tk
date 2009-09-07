@@ -10,10 +10,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.38 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.39 2009/09/07 07:29:03 das Exp $
  */
 
-#include "tk.h"
+#include "tkInt.h"
 
 /*
  * Each console is associated with an instance of the ConsoleInfo struct.
@@ -720,6 +720,8 @@ ConsoleObjCmd(
 	    Tcl_ListObjAppendElement(NULL, cmd, objv[2]);
 	}
 	break;
+    default:
+	CLANG_ASSERT(0);
     }
 
     Tcl_IncrRefCount(cmd);

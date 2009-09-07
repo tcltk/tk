@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.31 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.32 2009/09/07 07:29:04 das Exp $
  */
 
 #include "default.h"
@@ -1013,6 +1013,7 @@ TkTextCreateTag(
 	tagPtr->textPtr = textPtr;
 	textPtr->refCount++;
     } else {
+	CLANG_ASSERT(hPtr);
 	Tcl_SetHashValue(hPtr, tagPtr);
     }
     tagPtr->optionTable =

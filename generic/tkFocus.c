@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFocus.c,v 1.22 2009/07/22 05:35:38 dkf Exp $
+ * RCS: @(#) $Id: tkFocus.c,v 1.23 2009/09/07 07:29:03 das Exp $
  */
 
 #include "tkInt.h"
@@ -1177,7 +1177,7 @@ TkFocusJoin(
 	tmpPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tmpPtr->nextPtr;
 	ckfree((char *)tmpPtr);
-    } else {
+    } else if (winPtr && winPtr->mainPtr) {
 	for (tlFocusPtr = winPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 		tlFocusPtr = tlFocusPtr->nextPtr) {
 	    if (tlFocusPtr->nextPtr &&

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkVisual.c,v 1.12 2008/10/28 22:33:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkVisual.c,v 1.13 2009/09/07 07:29:04 das Exp $
  */
 
 #include "tkInt.h"
@@ -303,6 +303,7 @@ Tk_GetVisual(
 	bestPtr = &visInfoList[i];
 	bestPrio = prio;
     }
+    CLANG_ASSERT(bestPtr);
     *depthPtr = bestPtr->depth;
     visual = bestPtr->visual;
     XFree((char *) visInfoList);

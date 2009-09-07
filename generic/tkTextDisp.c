@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.74 2009/08/04 21:19:27 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.75 2009/09/07 07:29:04 das Exp $
  */
 
 #include "tkInt.h"
@@ -8360,7 +8360,9 @@ FreeBaseChunk(
 	ciPtr->chars = NULL;
     }
 
-    Tcl_DStringFree(&((BaseCharInfo *) baseChunkPtr->clientData)->baseChars);
+    if (baseChunkPtr) {
+	Tcl_DStringFree(&((BaseCharInfo *) baseChunkPtr->clientData)->baseChars);
+    }
 }
 
 /*

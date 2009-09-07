@@ -1,3 +1,18 @@
+2009-09-07  Daniel Steffen  <das@users.sourceforge.net>
+
+	* generic/tkFocus.c:	fix potential null dereference flagged by clang
+	* generic/tkMenu.c:	static analyzer.
+	* generic/tkTextBTree.c:
+	* generic/tkTextDisp.c:
+	* generic/tkTextIndex.c:
+
+	* generic/tkConsole.c:	silence false positives from clang static
+	* generic/tkTest.c:	analyzer about potential null dereference.
+	* generic/tkText.c:
+	* generic/tkTextBTree.c:
+	* generic/tkTextTag.c:
+	* generic/tkVisual.c:
+
 2009-09-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkInt.h (TkDisplay): Remove fields that are never read from.

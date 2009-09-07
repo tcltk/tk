@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.41 2008/11/12 00:15:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.42 2009/09/07 07:29:04 das Exp $
  */
 
 #include "tkInt.h"
@@ -2125,6 +2125,7 @@ CustomOptionSet(
 
     if (value == NULL) {
 	objEmpty = 1;
+	CLANG_ASSERT(value);
     } else if ((*value)->bytes != NULL) {
 	objEmpty = ((*value)->length == 0);
     } else {

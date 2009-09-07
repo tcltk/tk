@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.51 2009/04/10 16:16:02 das Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.52 2009/09/07 07:29:04 das Exp $
  */
 
 /*
@@ -2060,7 +2060,7 @@ ConfigureMenuCloneEntries(
     	}
 
 	if (cascadeEntryChanged && (mePtr->namePtr != NULL)) {
-	    if (cascadeMenuRefPtr->menuPtr != NULL) {
+	    if (cascadeMenuRefPtr && cascadeMenuRefPtr->menuPtr != NULL) {
 		Tcl_Obj *newObjv[2];
 		Tcl_Obj *newCloneNamePtr;
 		Tcl_Obj *pathNamePtr = Tcl_NewStringObj(
