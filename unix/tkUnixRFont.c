@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.28 2009/09/09 22:23:58 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.29 2009/09/09 22:47:36 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -421,7 +421,8 @@ TkpGetFontFromAttributes(
 
     /*
      * Hack to work around issues with weird issues with Xft/Xrender
-     * connection.
+     * connection. For details, see comp.lang.tcl thread starting from
+     * <adcc99ed-c73e-4efc-bb5d-e57a57a051e8@l35g2000pra.googlegroups.com>
      */
 
     if (!fontPtr) {
