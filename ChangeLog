@@ -1,3 +1,16 @@
+2009-09-09  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixRFont.c (InitFont): Move pattern disposal in error case
+	to callers so they have more options when they come to recovering from
+	the failure.
+	(TkpGetFontFromAttributes): If the default attributes don't work, try
+	adding a setting to turn off use of XRender. That seems to work for
+	some people for unexplained reasons (possibly local misconfiguration).
+	* generic/tkFont.c (Tk_AllocFontFromObj): Stop this function from
+	keeling over in a heap when the low-level font allocation fails. An
+	error beats a crash! (Issue reported on comp.lang.tcl by Denis
+	Berezhnoy.)
+
 2009-09-07  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkFocus.c:	fix potential null dereference flagged by clang
