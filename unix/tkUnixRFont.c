@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.27 2008/11/22 18:08:51 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.28 2009/09/09 22:23:58 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -244,7 +244,6 @@ InitFont(
 
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set) {
-	FcPatternDestroy(pattern);
 	ckfree((char *) fontPtr);
 	return NULL;
     }
@@ -353,6 +352,7 @@ TkpGetNativeFont(
 
     fontPtr = InitFont(tkwin, pattern, NULL);
     if (!fontPtr) {
+	FcPatternDestroy(pattern);
 	return NULL;
     }
     return &fontPtr->font;
@@ -418,7 +418,19 @@ TkpGetFontFromAttributes(
 	FinishedWithFont(fontPtr);
     }
     fontPtr = InitFont(tkwin, pattern, fontPtr);
+
+    /*
+     * Hack to work around issues with weird issues with Xft/Xrender
+     * connection.
+     */
+
     if (!fontPtr) {
+	XftPatternAddBool(pattern, XFT_RENDER, FcFalse);
+	fontPtr = InitFont(tkwin, pattern, fontPtr);
+    }
+
+    if (!fontPtr) {
+	FcPatternDestroy(pattern);
 	return NULL;
     }
     return &fontPtr->font;
