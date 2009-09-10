@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.42.2.2 2009/05/13 21:49:12 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.42.2.3 2009/09/10 12:47:15 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1192,6 +1192,19 @@ Tk_AllocFontFromObj(
 
 	    fontPtr = TkpGetFontFromAttributes(NULL, tkwin, &fa);
 	}
+    }
+
+    /*
+     * Detect the system font engine going wrong and fail more gracefully.
+     */
+
+    if (fontPtr == NULL) {
+	if (isNew) {
+	    Tcl_DeleteHashEntry(cacheHashPtr);
+	}
+	Tcl_AppendResult(interp, "failed to allocate font due to ",
+		"internal system font engine problem", NULL);
+	return NULL;
     }
 
     fontPtr->resourceRefCount = 1;
