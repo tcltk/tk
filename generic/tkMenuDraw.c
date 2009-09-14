@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenuDraw.c,v 1.10 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkMenuDraw.c,v 1.11 2009/09/14 23:41:42 hobbs Exp $
  */
 
 #include "tkInt.h"
@@ -984,11 +984,15 @@ TkPostSubmenu(
 	 * attempt to match Motif behavior).
 	 *
 	 * The menu has to redrawn so that the entry can change relief.
+	 *
+	 * Set postedCascade early to ensure tear-off submenus work on
+	 * Windows. [Bug 873613]
 	 */
 
 	Tk_GetRootCoords(menuPtr->tkwin, &x, &y);
 	AdjustMenuCoords(menuPtr, mePtr, &x, &y);
 
+	menuPtr->postedCascade = mePtr;
 	subary[0] = mePtr->namePtr;
 	subary[1] = Tcl_NewStringObj("post", -1);
 	subary[2] = Tcl_NewIntObj(x);
@@ -1001,9 +1005,9 @@ TkPostSubmenu(
 	Tcl_DecrRefCount(subary[2]);
 	Tcl_DecrRefCount(subary[3]);
 	if (result != TCL_OK) {
+	    menuPtr->postedCascade = NULL;
 	    return result;
 	}
-	menuPtr->postedCascade = mePtr;
 	TkEventuallyRedrawMenu(menuPtr, mePtr);
     }
     return TCL_OK;
