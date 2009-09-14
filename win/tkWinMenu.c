@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.9 2007/06/09 23:52:40 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.10 2009/09/14 23:39:53 hobbs Exp $
  */
 
 #define OEMRESOURCE
@@ -51,6 +51,10 @@
 
 #define MENU_SYSTEM_MENU	    MENU_PLATFORM_FLAG1
 #define MENU_RECONFIGURE_PENDING    MENU_PLATFORM_FLAG2
+
+#ifndef WM_UNINITMENUPOPUP
+#define WM_UNINITMENUPOPUP              0x0125
+#endif
 
 static int indicatorDimensions[2];
 				/* The dimensions of the indicator space
@@ -940,6 +944,19 @@ TkWinHandleMenuEvent(phwnd, pMessage, pwParam, plParam, plResult)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     switch (*pMessage) {
+ 	case WM_UNINITMENUPOPUP:
+	    hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
+		    (char *) *pwParam);
+	    if (hashEntryPtr != NULL) {
+   		menuPtr = (TkMenu *) Tcl_GetHashValue(hashEntryPtr);
+		if ((menuPtr->menuRefPtr != NULL)
+			&& (menuPtr->menuRefPtr->parentEntryPtr != NULL)) {
+		    TkPostSubmenu(menuPtr->interp,
+			    menuPtr->menuRefPtr->parentEntryPtr->menuPtr, NULL);
+		}
+	    }
+	    break;
+
 	case WM_INITMENU:
 	    TkMenuInit();
 	    hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable, 
@@ -1726,8 +1743,7 @@ DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
     COLORREF oldBgColor;
     RECT rect;
 
-    if (!drawArrow || (mePtr->type != CASCADE_ENTRY) ||
-            (mePtr->state != ENTRY_DISABLED))
+    if (!drawArrow || (mePtr->type != CASCADE_ENTRY))
         return;
 
     oldFgColor = gc->foreground;
@@ -1743,7 +1759,8 @@ DrawMenuEntryArrow(menuPtr, mePtr, d, gc,
         gc->background = activeBgColor->pixel;
     }
 
-    gc->foreground = GetSysColor(COLOR_GRAYTEXT);
+    gc->foreground = GetSysColor((mePtr->state == ENTRY_DISABLED) ?
+	    COLOR_GRAYTEXT : COLOR_MENUTEXT);
 
     rect.top = y + GetSystemMetrics(SM_CYBORDER);
     rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER);
