@@ -1,3 +1,11 @@
+2009-09-14  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* generic/tkMenuDraw.c (TkPostSubmenu): Fix reposting of submenu in
+	* win/tkWinMenu.c (TkWinHandleMenuEvent): torn off Windows menu.
+	[Bug 873613]
+	(DrawMenuEntryArrow): Draw Win menu arrow after being torn
+	off. [Bug 873608]
+
 2009-08-24  Daniel Steffen  <das@users.sourceforge.net>
 
 	* macosx/tkMacOSXHLEvents.c (ScriptHandler): fix "do script" apple
