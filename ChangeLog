@@ -1,3 +1,10 @@
+2009-09-19  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* generic/tkGrid.c
+	* generic/tkPack.c
+	* tests/packgrid.test:	Bug fix in grid/pack collision detect.
+	Faulty slave was not properly blocked from slave list. [Bug 2859912]
+
 2009-09-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* generic/tkMenuDraw.c (TkPostSubmenu): Fix reposting of submenu in
