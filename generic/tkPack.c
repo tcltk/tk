@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPack.c,v 1.34 2009/08/19 23:02:00 pspjuth Exp $
+ * RCS: @(#) $Id: tkPack.c,v 1.35 2009/09/18 22:35:00 pspjuth Exp $
  */
 
 #include "tkInt.h"
@@ -1261,6 +1261,7 @@ PackAfter(
 		if (TkSetGeometryMaster(interp, masterPtr->tkwin, "pack")
 			!= TCL_OK) {
 		    Tk_ManageGeometry(tkwin, NULL, NULL);
+		    Unlink(packPtr);
 		    return TCL_ERROR;	
 		}
 		masterPtr->flags |= ALLOCED_MASTER;
@@ -1793,6 +1794,7 @@ ConfigureSlaves(
 	    if (TkSetGeometryMaster(interp, masterPtr->tkwin, "pack")
 		    != TCL_OK) {
 		Tk_ManageGeometry(slave, NULL, NULL);
+		Unlink(slavePtr);
 		return TCL_ERROR;	
 	    }
 	    masterPtr->flags |= ALLOCED_MASTER;

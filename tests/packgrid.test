@@ -5,7 +5,7 @@
 # Copyright (c) 2008 Peter Spjuth
 # All rights reserved.
 #
-# RCS: @(#) $Id: packgrid.test,v 1.1 2009/08/19 23:02:00 pspjuth Exp $
+# RCS: @(#) $Id: packgrid.test,v 1.2 2009/09/18 22:35:00 pspjuth Exp $
 #
 
 package require tcltest 2.2
@@ -92,6 +92,36 @@ test packgrid-1.6 {pack and grid in same master} -setup {
     # Ok if one is non-propagating
     pack .p
     grid .g
+} -cleanup {
+    destroy .p
+    destroy .g
+} -result {}
+
+test packgrid-1.7 {pack and grid in same master} -setup {
+    grid propagate . true
+    pack propagate . true
+    label .p -text PACK
+    label .g -text GRID
+} -body {
+    # Basic conflict should stop widget from being handled
+    grid .g
+    catch { pack .p }
+    pack slaves .
+} -cleanup {
+    destroy .p
+    destroy .g
+} -result {}
+
+test packgrid-1.8 {pack and grid in same master} -setup {
+    grid propagate . true
+    pack propagate . true
+    label .p -text PACK
+    label .g -text GRID
+} -body {
+    # Basic conflict should stop widget from being handled
+    pack .p
+    catch { grid .g }
+    grid slaves .
 } -cleanup {
     destroy .p
     destroy .g
