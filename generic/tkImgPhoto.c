@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.76.2.3 2009/02/06 08:13:23 das Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.76.2.4 2009/09/25 08:48:53 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -5681,8 +5681,8 @@ ImgGetPhoto(
 	} else if (optPtr->options & OPT_GRAYSCALE) {
 	    for (y = blockPtr->height; y > 0; y--) {
 		for (x = blockPtr->width; x > 0; x--) {
-		    *destPtr = (unsigned char)
-			    (srcPtr[0]*11+srcPtr[1]*16+srcPtr[2]*5 + 16) >> 5;
+		    *destPtr = (unsigned char) ((srcPtr[0]*11 + srcPtr[1]*16
+			    + srcPtr[2]*5 + 16) >> 5);
 		    srcPtr += blockPtr->pixelSize;
 		    destPtr += newPixelSize;
 		}
