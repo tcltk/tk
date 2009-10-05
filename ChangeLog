@@ -1,3 +1,7 @@
+2009-10-05  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updated for 8.5.8 release.
+
 2009-10-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinButton.c: Backported patch avoiding 3D effects with

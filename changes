@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.12 2009/04/15 13:44:05 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.13 2009/10/05 15:21:20 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6603,3 +6603,47 @@ in screen distances, reducing precision loss (ferrieux)
 2009-04-10 (bug fix)[2116837] std virtual events with Caps Lock (fellows)
 
 --- Released 8.5.7, April 15, 2009 --- See ChangeLog for details ---
+
+2009-04-23 (bug fix)[2779910] (hobbs)
+
+2009-04-43 (bug fix) prevent delete of selected folder in Win dialog (hobbs)
+
+2009-04-30 (bug fix)[2080533] (fellows)
+
+2009-04-30 (bug fix)[2504402] (mcdonald,thoyts)
+
+2009-05-03 (bug fix)[2785744] (fellows)
+
+2009-05-13 (bug fix)[2791352] (thoyts)
+
+2009-05-14 (new feature) Vista theme support (thoyts)
+
+2009-05-14 (bug fix)[1923684] confused checkbutton state (thoyts)
+
+2009-05-21 (bug fix)[2794778] Win menu keyboard traversal (thoyts)
+
+2009-06-02 (bug fix)[2799589] crash on delayed window activation (thoyts)
+
+2009-06-23 (bug fix)[220935] canvas dash update problem (nijtmans)
+
+2009-07-15 (bug fix)[2821962] (fellows)
+
+2009-07-22 (bug fix)[2496114] (fellows)
+
+2009-08-01 (bug fix)[2830420] (fellows)
+
+2009-08-04 (bug fix) [text] word-wrap of non-breaking space (fellows)
+
+2009-08-24 (bug fix) tk::MessageBox bindings for ttk::buttons (steiner,fellows)
+
+2009-08-25 (bug fix)[1909931] (fellows)
+
+2009-09-10 (bug fix) (berezhnoy,fellows)
+
+2009-09-14 (bug fix)[873608] (hobbs)
+
+2009-09-14 (bug fix)[873613] (hobbs)
+
+2009-09-25 (bug fix) grayscale from images (vetter,fellows)
+
+--- Released 8.5.8, October xx, 2009 --- See ChangeLog for details ---
