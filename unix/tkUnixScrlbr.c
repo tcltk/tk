@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.3 2000/11/22 01:49:38 ericm Exp $
+ * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.3.6.1 2009/10/07 14:28:37 dkf Exp $
  */
 
 #include "tkScrollbar.h"
@@ -302,8 +302,8 @@ TkpComputeScrollbarGeometry(scrollPtr)
      * a minimal width (so it can be grabbed with the mouse).
      */
 
-    if (scrollPtr->sliderFirst > (fieldLength - 2*scrollPtr->borderWidth)) {
-	scrollPtr->sliderFirst = fieldLength - 2*scrollPtr->borderWidth;
+    if (scrollPtr->sliderFirst > (fieldLength - MIN_SLIDER_LENGTH)) {
+	scrollPtr->sliderFirst = fieldLength - MIN_SLIDER_LENGTH;
     }
     if (scrollPtr->sliderFirst < 0) {
 	scrollPtr->sliderFirst = 0;
