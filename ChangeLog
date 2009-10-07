@@ -1,14 +1,19 @@
+2009-10-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixScrlbr.c (TkpComputeScrollbarGeometry): [Patch 2088597]:
+	Stop scrollbars from getting too small at the end.
+
 2009-10-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinButton.c: [Bug 2860827] avoid 3D effects with
-	user-specified backgrounds. The default disabled text is embossed
-	on Windows. But this looks poor when a non-default background
-	color is in use. This patch disables the embossed effect for
-	buttons and labels when the background is non- standard.
+	* win/tkWinButton.c: [Bug 2860827]: Avoid 3D effects with
+	user-specified backgrounds. The default disabled text is embossed on
+	Windows. But this looks poor when a non-default background color is in
+	use. This patch disables the embossed effect for buttons and labels
+	when the background is non- standard.
 
 2009-09-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/winWm.test: [Bug 2799589] grab on deleted window.
+	* tests/winWm.test: [Bug 2799589]: Grab on deleted window.
 
 2009-09-25  Donal K. Fellows  <dkf@users.sf.net>
 
