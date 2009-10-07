@@ -1,11 +1,16 @@
+2009-10-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixScrlbr.c (TkpComputeScrollbarGeometry): [Patch 2088597]:
+	Stop scrollbars from getting too small at the end.
+
 2009-10-05  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updated for 8.5.8 release.
 
 2009-10-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinButton.c: Backported patch avoiding 3D effects with
-	user-specified background [Bug 2860827]
+	* win/tkWinButton.c: [Bug 2860827]: Backported patch avoiding 3D
+	effects with user-specified background.
 
 2009-09-25  Donal K. Fellows  <dkf@users.sf.net>
 
