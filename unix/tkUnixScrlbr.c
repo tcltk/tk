@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.7 2008/12/09 23:21:48 dkf Exp $
+ * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.8 2009/10/07 14:33:27 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -305,14 +305,13 @@ TkpComputeScrollbarGeometry(
      * grabbed with the mouse).
      */
 
-    if (scrollPtr->sliderFirst > (fieldLength - 2*scrollPtr->borderWidth)) {
-	scrollPtr->sliderFirst = fieldLength - 2*scrollPtr->borderWidth;
+    if (scrollPtr->sliderFirst > fieldLength - MIN_SLIDER_LENGTH) {
+	scrollPtr->sliderFirst = fieldLength - MIN_SLIDER_LENGTH;
     }
     if (scrollPtr->sliderFirst < 0) {
 	scrollPtr->sliderFirst = 0;
     }
-    if (scrollPtr->sliderLast < (scrollPtr->sliderFirst
-	    + MIN_SLIDER_LENGTH)) {
+    if (scrollPtr->sliderLast < scrollPtr->sliderFirst + MIN_SLIDER_LENGTH) {
 	scrollPtr->sliderLast = scrollPtr->sliderFirst + MIN_SLIDER_LENGTH;
     }
     if (scrollPtr->sliderLast > fieldLength) {
