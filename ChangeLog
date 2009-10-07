@@ -1,10 +1,15 @@
+2009-10-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixScrlbr.c (TkpComputeScrollbarGeometry): [Patch 2088597]:
+	Stop scrollbars from getting too small at the end.
+
 2009-09-14  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* generic/tkMenuDraw.c (TkPostSubmenu): Fix reposting of submenu in
-	* win/tkWinMenu.c (TkWinHandleMenuEvent): torn off Windows menu.
-	[Bug 873613]
-	(DrawMenuEntryArrow): Draw Win menu arrow after being torn
-	off. [Bug 873608]
+	* generic/tkMenuDraw.c (TkPostSubmenu): [Bug 873613]: Fix reposting of
+	* win/tkWinMenu.c (TkWinHandleMenuEvent): submenu in torn off Windows
+	menu.
+	(DrawMenuEntryArrow): [Bug 873608]: Draw Win menu arrow after being
+	torn off.
 
 2009-08-24  Daniel Steffen  <das@users.sourceforge.net>
 
