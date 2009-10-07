@@ -16,6 +16,14 @@ namespace eval ttk::theme::vista {
 
     ttk::style theme settings vista {
         
+        # We should ask the system for these, but for now...
+	set SM {
+	    SM_CXVSCROLL 17 SM_CYVSCROLL 0
+	    SM_CXHSCROLL 0 SM_CYHSCROLL 17
+	}
+	set cx [expr {[dict get $SM SM_CXVSCROLL] / 2}]
+	set cy [expr {[dict get $SM SM_CYVSCROLL] / 2}]
+
  	ttk::style configure . \
 	    -background SystemButtonFace \
 	    -foreground SystemWindowText \
@@ -32,6 +40,11 @@ namespace eval ttk::theme::vista {
 	ttk::style configure TRadiobutton -padding 2
 	ttk::style configure TCheckbutton -padding 2
 	ttk::style configure TMenubutton -padding {8 4}
+
+	ttk::style element create Menubutton.dropdown vsapi \
+	    TOOLBAR 4 {{selected active} 6 {selected !active} 5 
+		disabled 4 pressed 3 active 2 {} 1} \
+	    -padding [list $cx $cy]
 
 	ttk::style configure TNotebook -tabmargins {2 2 2 0}
 	ttk::style map TNotebook.Tab \
@@ -56,7 +69,8 @@ namespace eval ttk::theme::vista {
         ttk::style element create Combobox.border vsapi \
             COMBOBOX 4 {disabled 4 focus 3 active 2 hover 2 {} 1}
         ttk::style element create Combobox.rightdownarrow vsapi \
-            COMBOBOX 6 {disabled 4 pressed 3 active 2 {} 1}
+            COMBOBOX 6 {disabled 4 pressed 3 active 2 {} 1} \
+            -padding [list $cx $cy]
         ttk::style layout TCombobox {
             Combobox.border -sticky nswe -border 0 -children {
                 Combobox.rightdownarrow -side right -sticky ns
@@ -200,7 +214,8 @@ namespace eval ttk::theme::vista {
         
         # Treeview
         ttk::style configure Item -padding {4 0 0 0}
-         
+        
+        unset -nocomplain cx cy
         package provide ttk::theme::vista 1.0
     }
 }
