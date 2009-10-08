@@ -1,6 +1,11 @@
+2009-10-08  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/tkfbox.tcl (::tk::IconList_Create): [Patch 2870648]:
+	Corrected cursor used in file/directory dialogs.
+
 2009-10-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/ttk/vistaTheme.tcl: [Bug 2787164] fix size of dropdown
+	* library/ttk/vistaTheme.tcl: [Bug 2787164]: Fix size of dropdown
 	arrow on combobox and menubutton for Windows 7.
 
 2009-10-07  Donal K. Fellows  <dkf@users.sf.net>
