@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.68.2.1 2008/08/25 17:22:40 tmh Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.68.2.2 2009/10/08 12:42:17 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -227,7 +227,7 @@ proc ::tk::IconList_Create {w} {
     upvar ::tk::$w data
 
     ttk::frame $w
-    ttk::entry $w.cHull -takefocus 0
+    ttk::entry $w.cHull -takefocus 0 -cursor {}
     set data(sbar)   [ttk::scrollbar $w.cHull.sbar -orient horizontal -takefocus 0]
     catch {$data(sbar) configure -highlightthickness 0}
     set data(canvas) [canvas $w.cHull.canvas -highlightthick 0 \
