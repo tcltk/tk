@@ -1,6 +1,11 @@
+2009-10-08  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/iconlist.tcl (Create): [Patch 2870648]: Corrected cursor
+	used in file/directory dialogs.
+
 2009-10-07  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/ttk/vistaTheme.tcl: [Bug 2787164] fix size of dropdown
+	* library/ttk/vistaTheme.tcl: [Bug 2787164]: Fix size of dropdown
 	arrow on combobox and menubutton for Windows 7.
 
 2009-10-07  Donal K. Fellows  <dkf@users.sf.net>
@@ -54,13 +59,13 @@
 
 2009-09-07  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkFocus.c:	fix potential null dereference flagged by clang
+	* generic/tkFocus.c:	Fix potential null dereference flagged by clang
 	* generic/tkMenu.c:	static analyzer.
 	* generic/tkTextBTree.c:
 	* generic/tkTextDisp.c:
 	* generic/tkTextIndex.c:
 
-	* generic/tkConsole.c:	silence false positives from clang static
+	* generic/tkConsole.c:	Silence false positives from clang static
 	* generic/tkTest.c:	analyzer about potential null dereference.
 	* generic/tkText.c:
 	* generic/tkTextBTree.c:
@@ -542,7 +547,7 @@
 
 2009-04-28  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* unix/tcl.m4, unix/configure (SC_CONFIG_CFLAGS): harden the check
+	* unix/tcl.m4, unix/configure (SC_CONFIG_CFLAGS): Harden the check
 	to add _r to CC on AIX with threads.
 
 2009-04-27  Donal K. Fellows  <dkf@users.sf.net>
@@ -597,38 +602,38 @@
 
 2009-04-10  Daniel Steffen  <das@users.sourceforge.net>
 
-	* unix/configure.in (Darwin):	use Darwin SUSv3 extensions if
+	* unix/configure.in (Darwin):	Use Darwin SUSv3 extensions if
 					available.
 	* unix/configure:		autoconf-2.59
 	* unix/tkConfig.h.in:		autoheader-2.59
 
-	* library/demos/filebox.tcl: only show "Motif Style Dialog"
+	* library/demos/filebox.tcl: Only show "Motif Style Dialog"
 	checkbutton on X11 windowingsystem.
 
 	* library/demos/widget: GOOBE: use ttk::cursor
 
-	* library/demos/knightstour.tcl: fix knightstour demo not running from
+	* library/demos/knightstour.tcl: Fix knightstour demo not running from
 	interactive wish.
 
-	* library/console.tcl (::tk::ConsoleInit): remove redundant TkAqua
+	* library/console.tcl (::tk::ConsoleInit): Remove redundant TkAqua
 	Quit menu item.
 
-	* generic/tkPointer.c (Tk_UpdatePointer): use all 5 buttons.
+	* generic/tkPointer.c (Tk_UpdatePointer): Use all 5 buttons.
 
-	* generic/tkMenu.c (PostProcessEntry): delay call to
+	* generic/tkMenu.c (PostProcessEntry): Delay call to
 	TkpConfigureMenuEntry() until all menu entry attributes are setup.
 
-	* library/menu.tcl (::tk::MbPost): fix error thrown in y position
+	* library/menu.tcl (::tk::MbPost): Fix error thrown in y position
 	computation with indicatoron.
 
 	* generic/tkMenubutton.c: s/DEF_BUTTON_JUSTIFY/DEF_MENUBUTTON_JUSTIFY/
 
-	* generic/tkUtil.c (TkBackgroundEvalObjv): use Tcl_BackgroundException
+	* generic/tkUtil.c (TkBackgroundEvalObjv): Use Tcl_BackgroundException
 
-	* generic/tkTextBTree.c (TkBTreeDeleteIndexRange): add bounds check
+	* generic/tkTextBTree.c (TkBTreeDeleteIndexRange): Add bounds check
 	to startEnd array access (fixes testsuite crash).
 
-	* tests/unixFont.test: only use xlsfonts with X11 windowingsystem.
+	* tests/unixFont.test: Only use xlsfonts with X11 windowingsystem.
 
 2009-04-10  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -781,8 +786,8 @@
 
 2009-02-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4: fix [Bug 2502365]: Building of head on HPUX is broken
-	when using the native CC.
+	* unix/tcl.m4: [Bug 2502365]: Building of head on HPUX was broken when
+	using the native CC.
 	* unix/configure (autoconf-2.59)
 
 2008-02-08  Joe English  <jenglish@users.sourceforge.net>
@@ -795,7 +800,7 @@
 
 2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
 
-	* generic/tkImgPhInstance.c:	fix numerous leaks discovered with the
+	* generic/tkImgPhInstance.c:	Fix numerous leaks discovered with the
 	* generic/tkMenu.c:		Mac OS X Instruments.app Leaks tool.
 	* generic/tkText.c:
 	* generic/tkTextImage.c:
@@ -884,8 +889,8 @@
 
 2009-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4: fix [Bug 2502365]: Building of head on HPUX is broken
-	when using the native CC
+	* unix/tcl.m4: [Bug 2502365]: Building of head on HPUX was broken when
+	using the native CC
 	* unix/configure (autoconf-2.59)
 
 2009-01-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
@@ -1244,7 +1249,7 @@
 
 2008-11-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tkBind.c:  [Bug 1389270] event generate silently ignored
+	* generic/tkBind.c:  [Bug 1389270]: event generate silently ignored
 	* generic/tkFocus.c: focus events. These can now be generated.
 	* generic/tkGrab.c:
 	* generic/tkInt.h:
@@ -1258,7 +1263,7 @@
 
 2008-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/ttk/combobox.tcl: [Bug 1939129,1991930] combobox dropdown
+	* library/ttk/combobox.tcl: [Bug 1939129,1991930]: combobox dropdown
 				    was drawn behind topmost toplevels.
 	* generic/tkCanvText.c:  Fixed up complaints from MSVC engendered
 	* generic/tkFont.c:      by the last commit. In particular replaced
@@ -1532,7 +1537,7 @@
 
 	* generic/tk.h:		Add "const" to a few struct member fields.
 	* generic/tkInt.h:	CONSTify TkPrintPadAmount
-	* generic/tkSelect.h:	move TkSelGetSelection to tkInt.decls
+	* generic/tkSelect.h:	Move TkSelGetSelection to tkInt.decls
 	* generic/tk.decls:	CONSTify Tk_ParseArgv
 	* generic/tkInt.decls:	CONSTify TkCreateFrame and TkCreateMainWindow
 	* generic/tkDecls.h:	(regenerated)
@@ -1546,7 +1551,7 @@
 	* generic/tkSelect.c:
 	* generic/tkVisual.c:
 	* generic/tkWindow.c:
-	* win/tkWinTest.c:	fix compilation under mingw32
+	* win/tkWinTest.c:	Fix compilation under mingw32
 
 2008-10-28  Joe English  <jenglish@users.sourceforge.net>
 
