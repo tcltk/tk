@@ -3,7 +3,7 @@
 #	Implements the icon-list megawidget used in the "Tk" standard file
 #	selection dialog boxes.
 #
-# RCS: @(#) $Id: iconlist.tcl,v 1.2 2009/02/16 00:57:26 dkf Exp $
+# RCS: @(#) $Id: iconlist.tcl,v 1.3 2009/10/08 12:40:31 dkf Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 # Copyright (c) 2009 Donal K. Fellows
@@ -443,7 +443,7 @@ package require Tk 8.6
     #
     method Create {} {
 	ttk::frame $w
-	set hull [ttk::entry $w.cHull -takefocus 0]
+	set hull [ttk::entry $w.cHull -takefocus 0 -cursor {}]
 	set sbar [ttk::scrollbar $w.cHull.sbar -orient horizontal -takefocus 0]
 	catch {$sbar configure -highlightthickness 0}
 	set canvas [canvas $w.cHull.canvas -highlightthick 0 -takefocus 1 \
