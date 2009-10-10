@@ -1,3 +1,9 @@
+2009-10-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixRFont.c (InitFont,TkpGetFontFromAttributes,Tk_DrawChars):
+	[Bug 1961455]: Draw underlines and overstrikes when using Xft for font
+	rendering.
+
 2009-10-08  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/tkfbox.tcl (::tk::IconList_Create): [Patch 2870648]:
