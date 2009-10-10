@@ -1,3 +1,12 @@
+2009-10-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixRFont.c (InitFont, TkpGetFontFromAttributes)
+	(Tk_DrawChars, TkpDrawAngledChars): [Bug 1961455]: Draw underlines and
+	overstrikes when using Xft for font rendering.
+
+	* generic/tkFont.c (TkDrawAngledTextLayout): Optimize the zero-angle
+	case better.
+
 2009-10-08  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/iconlist.tcl (Create): [Patch 2870648]: Corrected cursor

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.58 2009/09/10 12:16:37 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.59 2009/10/10 17:42:50 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -2376,8 +2376,13 @@ TkDrawAngledTextLayout(
 	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
 	    dx = cosA * (chunkPtr->x + drawX) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x + drawX) + cosA * (chunkPtr->y);
-	    TkpDrawAngledChars(display, drawable, gc, layoutPtr->tkfont,
-		    firstByte, lastByte - firstByte, x+dx, y+dy, angle);
+	    if (angle == 0.0) {
+		Tk_DrawChars(display, drawable, gc, layoutPtr->tkfont,
+			firstByte, lastByte - firstByte, x + dx, y + dy);
+	    } else {
+		TkpDrawAngledChars(display, drawable, gc, layoutPtr->tkfont,
+			firstByte, lastByte - firstByte, x+dx, y+dy, angle);
+	    }
 	}
 	firstChar -= chunkPtr->numChars;
 	lastChar -= chunkPtr->numChars;
