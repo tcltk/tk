@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.89.2.3 2009/02/27 22:59:30 patthoyts Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.89.2.4 2009/10/15 17:48:50 dgp Exp $
  */
 
 #include "tkInt.h"
@@ -2955,7 +2955,7 @@ Initialize(
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
 	return TCL_ERROR;
     }
 
