@@ -1,3 +1,13 @@
+2009-10-15  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConsole.c:	Relax the runtime version requirements on Tcl
+	* generic/tkMain.c:	so that Tk 8.5.8 can [load] into Tcl 8.6 (and
+	* generic/tkWindow.c:	later 8.*) interps.
+	* library/tk.tcl
+	* unix/Makefile.in:
+	* win/Makefile.in:
+	* win/makefile.vc:
+
 2009-10-10  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixRFont.c (InitFont,TkpGetFontFromAttributes,Tk_DrawChars):
