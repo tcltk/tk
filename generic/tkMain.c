@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.28 2007/12/13 15:24:15 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.28.2.1 2009/10/15 17:48:50 dgp Exp $
  */
 
 #include <ctype.h>
@@ -110,7 +110,7 @@ Tk_MainEx(
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
 	abort();
     }
 
