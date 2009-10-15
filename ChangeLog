@@ -2,7 +2,7 @@
 
 	* generic/tkConsole.c:	Relax the runtime version requirements on Tcl
 	* generic/tkMain.c:	so that Tk 8.5.8 can [load] into Tcl 8.6 (and
-	* generic/tkWindow.c:	later 8.*) interps.
+	* generic/tkWindow.c:	later 8.*) interps.  [Feature Request 2794032]
 	* library/tk.tcl
 	* unix/Makefile.in:
 	* win/Makefile.in:
