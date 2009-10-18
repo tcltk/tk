@@ -1,3 +1,9 @@
+2009-10-18  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/menu.n: Reorganized for readability, and added a note describing
+	some subtleties of the -variable entry configuration option following
+	some discussion with Joe Mistachkin.
+
 2009-10-10  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixRFont.c (InitFont, TkpGetFontFromAttributes)
