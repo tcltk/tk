@@ -1,3 +1,9 @@
+2009-10-20  Andreas Kupries  <andreask@activestate.com>
+
+	* library/msgs/pl.msg: Applied patch to Polish message catalog
+	  created and submitted by Pawel Pawlak <morris@elysium.pl> (via
+	  JeffH).
+
 2009-10-18  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/menu.n: Reorganized for readability, and added a note describing
