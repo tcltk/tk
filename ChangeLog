@@ -1,8 +1,14 @@
+2009-10-20  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/Makefile.in:	Compiling Tk no longer requires header files
+	* win/Makefile.in:	from the TCL_PLATFORM DIR.  Baby step in
+	pursuit of [Bug 1712098].
+
 2009-10-20  Andreas Kupries  <andreask@activestate.com>
 
 	* library/msgs/pl.msg: Applied patch to Polish message catalog
-	  created and submitted by Pawel Pawlak <morris@elysium.pl> (via
-	  JeffH).
+	created and submitted by Pawel Pawlak <morris@elysium.pl> (via
+	 JeffH).
 
 2009-10-18  Donal K. Fellows  <dkf@users.sf.net>
 

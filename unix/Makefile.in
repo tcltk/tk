@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.156 2009/08/24 00:57:20 das Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.157 2009/10/20 16:57:25 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -102,10 +102,6 @@ DEMO_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)/demos
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
 TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
-
-# The directory containing the platform specific Tcl sources and headers
-# appropriate for this version of Tk:
-TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
@@ -328,7 +324,7 @@ CC			= @CC@
 
 CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} -I${TCL_GENERIC_DIR} \
--I${TCL_PLATFORM_DIR} ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${AC_FLAGS} \
+${@TK_WINDOWINGSYSTEM@_INCLUDES} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
 ${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
 
@@ -337,7 +333,7 @@ CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) ${TCL_STUB_FLAGS}
 APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 
 DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
--I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${@TK_WINDOWINGSYSTEM@_INCLUDES} \
+-I${TCL_GENERIC_DIR} ${@TK_WINDOWINGSYSTEM@_INCLUDES} \
 ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} \
 ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
 
