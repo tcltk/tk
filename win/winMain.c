@@ -9,9 +9,12 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.27 2008/04/27 22:39:17 dkf Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.28 2009/10/21 20:28:52 nijtmans Exp $
  */
 
+/* Make sure this file is never compiled with Stubs! */
+#undef USE_TCL_STUBS
+#undef USE_TK_STUBS
 #include "tkInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
