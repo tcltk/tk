@@ -1,3 +1,9 @@
+2009-10-21  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in:     Bug fix for #2875562
+	* win/winMain.c:       Make sure that winMain.c and tkAppInit.c
+	* unix/tkAppInit.c     are never compiled with stubs.
+
 2009-10-20  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/Makefile.in:	Compiling Tk no longer requires header files

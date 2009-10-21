@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.84 2009/10/20 16:57:25 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.85 2009/10/21 20:28:52 nijtmans Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -208,13 +208,10 @@ TCL_EXE			= @TCLSH_PROG@
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
--I"${TCL_GENERIC_NATIVE}" ${AC_FLAGS}
+-I"${TCL_GENERIC_NATIVE}" ${AC_FLAGS} -DUSE_TCL_STUBS
 
 CC_OBJNAME = @CC_OBJNAME@
 CC_EXENAME = @CC_EXENAME@
-
-STUB_CC_SWITCHES	= ${CC_SWITCHES} -DUSE_TCL_STUBS
-CON_CC_SWITCHES		= ${CC_SWITCHES} -DCONSOLE
 
 # Tk used to let the configure script choose which program to use
 # for installing, but there are just too many different versions of
@@ -594,14 +591,15 @@ install-private-headers: libraries
 	    done;
 
 $(WISH): $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(WISH_OBJS) wish.$(RES)
-	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
+	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
+	$(TCL_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 tktest : $(TKTEST)
 
 $(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
-	$(CC) $(CFLAGS) $(TKTEST_OBJS) $(TCL_LIB_FILE) \
-	$(TK_LIB_FILE) $(LIBS) \
+	$(CC) $(CFLAGS) $(TKTEST_OBJS) $(TK_LIB_FILE) \
+	$(TCL_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 # Msys make requires this next rule for some reason.
@@ -665,7 +663,7 @@ tkWindow.$(OBJEXT): configure Makefile
 # Implicit rule for all object files that will end up in the Tcl library
 
 .c.$(OBJEXT):
-	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
 	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@
