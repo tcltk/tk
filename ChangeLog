@@ -1,3 +1,14 @@
+2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/xmfbox.tcl (MotifFDialog_FileTypes)
+	(MotifFDialog_ActivateSEnt): 
+	* library/tkfbox.tcl (Done, ::tk::dialog::file::): 
+	* macosx/tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): 
+	* win/tkWinDialog.c (GetFileNameW, GetFileNameA): 
+	* doc/getOpenFile.n: [Patch 2168768]: Corrected handling of the
+	-typevariable option to be consistently global; it's the only way it
+	can work even close to the same on all platforms.
+
 2009-10-15  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConsole.c:	Relax the runtime version requirements on Tcl
