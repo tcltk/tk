@@ -1,5 +1,10 @@
 2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/tkText.c (CreateWidget, TextEditUndo, TextEditRedo)
+	(TextEditCmd, UpdateDirtyFlag): 
+	* generic/tkText.h: [Patch 1469210]: Corrected handling of marking as
+	dirty when inserting after an undo from a non-dirty state.
+
 	* library/xmfbox.tcl (MotifFDialog_FileTypes)
 	(MotifFDialog_ActivateSEnt): 
 	* library/tkfbox.tcl (Done, ::tk::dialog::file::): 
