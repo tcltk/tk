@@ -1,3 +1,10 @@
+2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkText.c (Tk_TextCmd, TextEditUndo, TextEditRedo)
+	(TextEditCmd, updateDirtyFlag):
+	* generic/tkText.h: [Patch 1469210]: Corrected handling of marking as
+	dirty when inserting after an undo from a non-dirty state.
+
 2009-10-07  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixScrlbr.c (TkpComputeScrollbarGeometry): [Patch 2088597]:

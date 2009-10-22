@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.33.2.7 2007/12/13 00:31:33 hobbs Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.33.2.8 2009/10/22 22:10:08 dkf Exp $
  */
 
 #include "default.h"
@@ -415,7 +415,8 @@ Tk_TextCmd(clientData, interp, argc, argv)
     textPtr->pickEvent.type = LeaveNotify;
     textPtr->undoStack = TkUndoInitStack(interp,0);
     textPtr->undo = 1;
-    textPtr->isDirtyIncrement = 1;
+    textPtr->isDirty = 0;
+    textPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     textPtr->autoSeparators = 1;
     textPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 
@@ -2794,25 +2795,29 @@ DumpSegment(interp, key, value, command, index, what)
 
 static int
 TextEditUndo(textPtr)
-    TkText     * textPtr;          /* Overall information about text widget. */
+    TkText *textPtr;		/* Overall information about text widget. */
 {
     int status;
 
     if (!textPtr->undo) {
-       return TCL_OK;
+	return TCL_OK;
     }
 
     /* Turn off the undo feature */
     textPtr->undo = 0;
 
-    /* The dirty counter should count downwards as we are undoing things */
-    textPtr->isDirtyIncrement = -1;
+    /* Set dirty mode to undo, unless it is fixed */
+    if (textPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
+	textPtr->dirtyMode = TK_TEXT_DIRTY_UNDO;
+    }
 
     /* revert one compound action */
     status = TkUndoRevert(textPtr->undoStack);
 
-    /* Restore the isdirty increment */
-    textPtr->isDirtyIncrement = 1;
+    /* Restore dirty mode */
+    if (textPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
+	textPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
+    }
 
     /* Turn back on the undo feature */
     textPtr->undo = 1;
@@ -2833,19 +2838,29 @@ TextEditUndo(textPtr)
 
 static int
 TextEditRedo(textPtr)
-    TkText     * textPtr;       /* Overall information about text widget. */
+    TkText *textPtr;		/* Overall information about text widget. */
 {
     int status;
 
     if (!textPtr->undo) {
-       return TCL_OK;
+	return TCL_OK;
     }
 
     /* Turn off the undo feature temporarily */
     textPtr->undo = 0;
 
+    /* Set dirty mode to redo, unless it is fixed */
+    if (textPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
+	textPtr->dirtyMode = TK_TEXT_DIRTY_REDO;
+    }
+
     /* reapply one compound action */
     status = TkUndoApply(textPtr->undoStack);
+
+    /* Restore dirty mode */
+    if (textPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
+	textPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
+    }
 
     /* Turn back on the undo feature */
     textPtr->undo = 1;
@@ -2891,22 +2906,25 @@ TextEditCmd(textPtr, interp, argc, argv)
 		    argv[0], " edit modified ?boolean?\"", (char *) NULL);
 	    return TCL_ERROR;
 	} else {
-	    int setModified;
+	    int setModified, wasModified = textPtr->isDirty;
 
 	    if (Tcl_GetBoolean(interp, argv[3], &setModified) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 
 	    /*
-	     * Set or reset the dirty info, but trigger a Modified event only
-	     * if it has changed.  Ensure a rationalized value for the bit.
+	     * Set or reset the dirty info, and trigger a Modified event (.
 	     */
 
 	    setModified = setModified ? 1 : 0;
 
 	    textPtr->isDirty = setModified;
-	    if (textPtr->modifiedSet != setModified) {
-		textPtr->modifiedSet = setModified;
+	    if (setModified) {
+		textPtr->dirtyMode = TK_TEXT_DIRTY_FIXED;
+	    } else {
+		textPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
+	    }
+	    if ((!wasModified) != (!setModified)) {
 		GenerateModifiedEvent(textPtr);
 	    }
         }
@@ -3041,7 +3059,7 @@ GenerateModifiedEvent(
 
 /*
  * updateDirtyFlag --
- *    increases the dirtyness of the text widget
+ *    updates the dirtyness of the text widget
  *
  * Results:
  *    None
@@ -3050,16 +3068,36 @@ GenerateModifiedEvent(
  *    None.
  */
 
-static void updateDirtyFlag (textPtr)
+static void
+updateDirtyFlag(textPtr)
     TkText *textPtr;          /* Information about text widget. */
 {
     int oldDirtyFlag;
 
-    if (textPtr->modifiedSet) {
-        return;
+    if (textPtr->dirtyMode == TK_TEXT_DIRTY_FIXED) {
+	return;
     }
+
+    /*
+     * If dirty flag is negative, only redo operations can make it zero again.
+     * If we do a normal operation, it can never become zero anymore.
+     */
+    if (textPtr->isDirty < 0 && textPtr->dirtyMode == TK_TEXT_DIRTY_NORMAL) {
+	textPtr->dirtyMode = TK_TEXT_DIRTY_FIXED;
+	return;
+    }
+
     oldDirtyFlag = textPtr->isDirty;
-    textPtr->isDirty += textPtr->isDirtyIncrement;
+
+    switch (textPtr->dirtyMode) {
+    case TK_TEXT_DIRTY_UNDO:
+	textPtr->isDirty--;
+	break;
+    default:
+	textPtr->isDirty++;
+	break;
+    }
+
     if (textPtr->isDirty == 0 || oldDirtyFlag == 0) {
 	GenerateModifiedEvent(textPtr);
     }
