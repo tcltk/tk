@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.65 2009/10/22 10:12:57 dkf Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.66 2009/10/22 12:56:36 dkf Exp $
  *
  */
 
@@ -186,7 +186,7 @@ static int 		GetFileNameW(ClientData clientData,
 			    Tcl_Obj *const objv[], int isOpen);
 static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 			    Tcl_DString *dsPtr, Tcl_Obj *initialPtr,
-			    int *index);
+			    int *indexPtr);
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static UINT APIENTRY	OFNHookProcW(HWND hdlg, UINT uMsg, WPARAM wParam,
@@ -571,11 +571,11 @@ GetFileNameW(
 {
     OPENFILENAMEW ofn;
     WCHAR file[TK_MULTI_MAX_PATH];
-    int filterIndex, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
-    const char *extension, *filter, *title;
+    int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
+    const char *extension = NULL, *filter = NULL, *title = NULL;
     Tk_Window tkwin = clientData;
     HWND hWnd;
-    Tcl_Obj *filterObj, *initialTypeObj, *typeVariableObj;
+    Tcl_Obj *filterObj=NULL, *initialTypeObj=NULL, *typeVariableObj=NULL;
     Tcl_DString utfFilterString, utfDirString;
     Tcl_DString extString, filterString, dirString, titleString;
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
@@ -596,19 +596,12 @@ GetFileNameW(
     };
 
     file[0] = '\0';
+    Tcl_DStringInit(&utfFilterString);
+    Tcl_DStringInit(&utfDirString);
 
     /*
      * Parse the arguments.
      */
-
-    extension = NULL;
-    filter = NULL;
-    Tcl_DStringInit(&utfFilterString);
-    Tcl_DStringInit(&utfDirString);
-    title = NULL;
-    filterObj = NULL;
-    typeVariableObj = NULL;
-    initialTypeObj = NULL;
 
     if (open) {
 	optionStrings = openOptionStrings;
@@ -1013,14 +1006,14 @@ GetFileNameA(
 {
     OPENFILENAME ofn;
     TCHAR file[TK_MULTI_MAX_PATH], savePath[MAX_PATH];
-    int filterIndex, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
-    const char *extension, *filter, *title;
+    int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
+    const char *extension = NULL, *filter = NULL, *title = NULL;
     Tk_Window tkwin = clientData;
     HWND hWnd;
-    Tcl_Obj *filterObj, *initialTypeObj, *typeVariableObj;
+    Tcl_Obj *filterObj=NULL, *initialTypeObj=NULL, *typeVariableObj=NULL;
     Tcl_DString utfFilterString, utfDirString;
     Tcl_DString extString, filterString, dirString, titleString;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static const char *const saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
@@ -1037,19 +1030,12 @@ GetFileNameA(
     };
 
     file[0] = '\0';
+    Tcl_DStringInit(&utfFilterString);
+    Tcl_DStringInit(&utfDirString);
 
     /*
      * Parse the arguments.
      */
-
-    extension = NULL;
-    filter = NULL;
-    Tcl_DStringInit(&utfFilterString);
-    Tcl_DStringInit(&utfDirString);
-    title = NULL;
-    filterObj = NULL;
-    typeVariableObj = NULL;
-    initialTypeObj = NULL;
 
     if (open) {
 	optionStrings = openOptionStrings;
@@ -1158,7 +1144,6 @@ GetFileNameA(
     ofn.lpstrFilter = NULL;
     ofn.lpstrCustomFilter = NULL;
     ofn.nMaxCustFilter = 0;
-    ofn.nFilterIndex = 0;
     ofn.lpstrFile = (LPTSTR) file;
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.lpstrFileTitle = NULL;
@@ -1195,6 +1180,7 @@ GetFileNameA(
     Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfFilterString),
 	    Tcl_DStringLength(&utfFilterString), &filterString);
     ofn.lpstrFilter = (LPTSTR) Tcl_DStringValue(&filterString);
+    ofn.nFilterIndex = filterIndex;
 
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
 	Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfDirString),
@@ -1461,7 +1447,7 @@ MakeFilter(
     Tcl_Obj *valuePtr,		/* Value of the -filetypes option */
     Tcl_DString *dsPtr,		/* Filled with windows filter string. */
     Tcl_Obj *initialPtr,	/* Initial type name  */
-    int *index)			/* Index of initial type in filter string */
+    int *indexPtr)		/* Index of initial type in filter string */
 {
     char *filterStr;
     char *p;
@@ -1529,13 +1515,14 @@ MakeFilter(
 	    FileFilterClause *clausePtr;
 
 	    /*
-	     * Check initial index for match, set index.
-	     * Filter index is 1 based so increment first
+	     * Check initial index for match, set *indexPtr. Filter index is 1
+	     * based so increment first
 	     */
 
 	    ix++;
-	    if (index && initial && (strcmp(initial, filterPtr->name) == 0)) {
-		*index = ix;
+	    if (indexPtr && initial
+		    && (strcmp(initial, filterPtr->name) == 0)) {
+		*indexPtr = ix;
 	    }
 
 	    /*

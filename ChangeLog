@@ -1,5 +1,8 @@
 2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
 
+	* win/tkWinDialog.c (GetFileNameA): Make the handling of the filter
+	index the same as in GetFileNameW.
+
 	* library/tkfbox.tcl (::tk::dialog::file::, Done): 
 	* library/xmfbox.tcl (MotifFDialog_FileTypes)
 	(MotifFDialog_ActivateSEnt): 
