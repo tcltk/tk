@@ -29,7 +29,7 @@
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
  *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.28 2009/07/15 21:50:40 das Exp $
+ * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.29 2009/10/22 08:32:23 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -45,6 +45,12 @@
 	TkMacOSXRestoreDrawingContext(&dc); }
 
 #define HIOrientation kHIThemeOrientationNormal
+
+#ifdef __LP64__
+#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
+#else
+#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
+#endif /* __LP64__ */
 
 /*----------------------------------------------------------------------
  * +++ Utilities.
@@ -627,7 +633,7 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
-    factor = ((double)(LONG_MAX>>1))/(to - from);
+    factor = RangeToFactor(to - from);
 
     HIThemeTrackDrawInfo info = {
 	.version = 0,
@@ -739,7 +745,7 @@ static void PbarElementDraw(
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
-    factor = ((double)(LONG_MAX>>1))/maximum;
+    factor = RangeToFactor(maximum);
 
     HIThemeTrackDrawInfo info = {
 	.version = 0,
