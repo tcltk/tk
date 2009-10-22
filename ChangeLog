@@ -1,8 +1,13 @@
+2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
+
+	* macosx/ttkMacOSXTheme.c (RangeToFactor): [Bug 2883712]: Factor out
+	some common code and make sure that it is 64-bit correct.
+
 2009-10-21  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/Makefile.in:     Bug fix for #2875562
-	* win/winMain.c:       Make sure that winMain.c and tkAppInit.c
-	* unix/tkAppInit.c     are never compiled with stubs.
+	* win/Makefile.in:	[Bug 2875562]: Make sure that winMain.c and
+	* win/winMain.c:	tkAppInit.c are never compiled with stubs.
+	* unix/tkAppInit.c:
 
 2009-10-20  Don Porter  <dgp@users.sourceforge.net>
 
@@ -16,9 +21,8 @@
 
 2009-10-20  Andreas Kupries  <andreask@activestate.com>
 
-	* library/msgs/pl.msg: Applied patch to Polish message catalog
-	created and submitted by Pawel Pawlak <morris@elysium.pl> (via
-	 JeffH).
+	* library/msgs/pl.msg: Applied patch to Polish message catalog created
+	and submitted by Pawel Pawlak <morris@elysium.pl> (via JeffH).
 
 2009-10-18  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -333,7 +337,7 @@
 2009-06-29  Daniel Steffen  <das@users.sourceforge.net>
 
 	Merge of TkAqua Cocoa port <http://github.com/das/tcltk/tree/de-carbon>
-	*** POTENTIAL INCOMPATIBILITY *** 
+	*** POTENTIAL INCOMPATIBILITY ***
 
 	* macosx/tkMacOSX.h:		Large-scale rewrite of TkAqua migrating
 	* macosx/tkMacOSXBitmap.c:	all use of deprecated Carbon API to
@@ -532,9 +536,9 @@
 
 	* library/images/lamp.svg: Added an SVG version of the Tk lamp and
 	* library/images/lamp.png: a pre-rendered PNG version.
-	* win/rc/wish.ico: Wish gets a new icon using the SVG lamp and the
-	* win/rc/tk.ico:   tk dll gets the tcl rendered feather. This
-	provides improved icons for Vista/Windows 7.
+	* win/rc/wish.ico: Wish gets a new icon using the SVG lamp and the tk
+	* win/rc/tk.ico:   dll gets the tcl rendered feather. This provides
+	improved icons for Vista/Windows 7.
 
 2009-05-05  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -897,17 +901,17 @@
 	* unix/tcl.m4: Corrected a typo ($(SHLIB_VERSION) should be
 	${SHLIB_VERSION}).
 	* unix/configure: Autoconf 2.59
-	
+
 2009-01-19  Kevin B. Kenny  <kennykb@acm.org>
 
 	* unix/Makefile.in: Added a CONFIG_INSTALL_DIR parameter so that
 	* unix/tcl.m4:      distributors can control where tclConfig.sh goes.
 	Made the installation of 'ldAix' conditional upon actually being on an
 	AIX system. Allowed for downstream packagers to customize
-	SHLIB_VERSION on BSD-derived systems. 
+	SHLIB_VERSION on BSD-derived systems.
 	Thanks to Stuart Cassoff for [Patch 907924].
 	* unix/configure: Autoconf 2.59
-	
+
 2009-01-16  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump patchlevel to 8.6b1.1 to distinguish
@@ -1149,8 +1153,8 @@
 	* macosx/tkMacOSXFont.h:
 	* macosx/Wish.xcodeproj/project.pbxproj:
 	* library/fontchooser.tcl (new):
-	* library/tclIndex:		
-	* library/msgs/de.msg:		
+	* library/tclIndex:
+	* library/msgs/de.msg:
 	* library/msgs/en.msg:
 	* tests/fontchooser.test (new):
 	* tests/winDialog.test:
@@ -1247,7 +1251,7 @@
 
 2008-12-04  Donal K. Fellows  <dkf@users.sf.net>
 
-	* doc/ttk_button.n, doc/ttk_checkbutton.n, doc/ttk_menubutton.n: 
+	* doc/ttk_button.n, doc/ttk_checkbutton.n, doc/ttk_menubutton.n:
 	* doc/ttk_radiobutton.n: Added mention of the Toolbutton style to all
 	widgets that can sensibly make use of it.
 
@@ -1596,7 +1600,7 @@
 	library/ttk/entry.tcl, library/ttk/paned.tcl, library/ttk/sizegrip.tcl,
 	library/treeview.tcl:
 	Add correct platform-specific cursors for OSX [Bug 2054562]
-	Expanded set of symbolic cursors.  Use correct cursor for 
+	Expanded set of symbolic cursors.  Use correct cursor for
 	ttk::entry and ttk::combobox widgets [Bug 1534835]
 
 2008-10-28  Don Porter  <dgp@users.sourceforge.net>
