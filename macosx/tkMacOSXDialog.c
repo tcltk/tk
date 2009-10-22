@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.46 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.47 2009/10/22 10:12:57 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -498,7 +498,12 @@ Tk_GetOpenFileObjCmd(
     }
     result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
     if (typeVariablePtr && result == TCL_OK) {
-	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), "", 0);
+	/*
+	 * The -typevariable option is not really supported.
+	 */
+
+	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), "",
+		TCL_GLOBAL_ONLY);
     }
 
   end:

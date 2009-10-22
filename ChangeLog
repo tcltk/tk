@@ -1,5 +1,14 @@
 2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
 
+	* library/tkfbox.tcl (::tk::dialog::file::, Done): 
+	* library/xmfbox.tcl (MotifFDialog_FileTypes)
+	(MotifFDialog_ActivateSEnt): 
+	* macosx/tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): 
+	* win/tkWinDialog.c (GetFileNameW, GetFileNameA): 
+	* doc/getOpenFile.n: [Patch 2168768]: Corrected handling of the
+	-typevariable option to be consistently global; it's the only way it
+	can work even close to the same on all platforms.
+
 	* macosx/ttkMacOSXTheme.c (RangeToFactor): [Bug 2883712]: Factor out
 	some common code and make sure that it is 64-bit correct.
 
