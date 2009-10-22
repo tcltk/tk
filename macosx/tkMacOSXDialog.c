@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.36.2.5 2008/12/07 16:57:44 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.36.2.6 2009/10/22 10:27:58 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -364,7 +364,8 @@ Tk_GetOpenFileObjCmd(
 	initialPtr = &initialDesc;
     }
     if (typeVariablePtr) {
-	initialtype = Tcl_GetVar(interp, Tcl_GetString(typeVariablePtr), 0);
+	initialtype = Tcl_GetVar(interp, Tcl_GetString(typeVariablePtr),
+		TCL_GLOBAL_ONLY);
     }
     result = NavServicesGetFile(interp, &ofd, initialPtr, NULL, &selectDesc,
 	    title, message, initialtype, multiple, OPEN_FILE, parent);
@@ -376,8 +377,11 @@ Tk_GetOpenFileObjCmd(
 	while (filterPtr && i-- > 0) {
 	    filterPtr = filterPtr->next;
 	}
-	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), filterPtr ?
-		filterPtr->name : "", 0);
+	if (Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr),
+		filterPtr ? filterPtr->name : "",
+		TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
+	    result = TCL_ERROR;
+	}
     }
 
   end:

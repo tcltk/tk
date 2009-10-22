@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.3 2009/04/24 17:30:33 hobbs Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.4 2009/10/22 10:27:58 dkf Exp $
  *
  */
 
@@ -702,7 +702,8 @@ GetFileNameW(
 	    break;
 	case FILE_TYPEVARIABLE:
 	    typeVariableObj = valuePtr;
-	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL, 0);
+	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL,
+		    TCL_GLOBAL_ONLY);
 	    break;
 	}
     }
@@ -881,24 +882,26 @@ GetFileNameW(
 		    (char *) ofn.lpstrFile, &ds), NULL);
 	    Tcl_DStringFree(&ds);
 	}
+	result = TCL_OK;
 	if ((ofn.nFilterIndex > 0) &&
 		Tcl_GetCharLength(Tcl_GetObjResult(interp)) > 0 &&
 		typeVariableObj && filterObj) {
 	    int listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
+
 	    if (Tcl_ListObjGetElements(interp, filterObj,
-			    &listObjc, &listObjv) != TCL_OK) {
+		    &listObjc, &listObjv) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ListObjGetElements(interp,
-			    listObjv[ofn.nFilterIndex - 1],
-			    &count, &typeInfo) != TCL_OK) {
+		    listObjv[ofn.nFilterIndex - 1],
+		    &count, &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
-	    } else {
-		Tcl_ObjSetVar2(interp, typeVariableObj, NULL, typeInfo[0], 0);
+	    } else if (Tcl_ObjSetVar2(interp, typeVariableObj, NULL,
+		    typeInfo[0], TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
+		result = TCL_ERROR;
 	    }
 	}
-	result = TCL_OK;
     } else {
 	/*
 	 * Use the CommDlgExtendedError() function to retrieve the error code.
@@ -1144,7 +1147,8 @@ GetFileNameA(
 	    break;
 	case FILE_TYPEVARIABLE:
 	    typeVariableObj = valuePtr;
-	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL, 0);
+	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL,
+		    TCL_GLOBAL_ONLY);
 	    break;
 	}
     }
@@ -1330,24 +1334,26 @@ GetFileNameA(
 		    (char *) ofn.lpstrFile, &ds), NULL);
 	    Tcl_DStringFree(&ds);
 	}
+	result = TCL_OK;
 	if ((ofn.nFilterIndex > 0) &&
 		(Tcl_GetCharLength(Tcl_GetObjResult(interp)) > 0) &&
 		typeVariableObj && filterObj) {
 	    int listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
+
 	    if (Tcl_ListObjGetElements(interp, filterObj,
-			    &listObjc, &listObjv) != TCL_OK) {
+		    &listObjc, &listObjv) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ListObjGetElements(interp,
-			    listObjv[ofn.nFilterIndex - 1],
-			    &count, &typeInfo) != TCL_OK) {
+		    listObjv[ofn.nFilterIndex - 1],
+		    &count, &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
-	    } else {
-		Tcl_ObjSetVar2(interp, typeVariableObj, NULL, typeInfo[0], 0);
+	    } else if (Tcl_ObjSetVar2(interp, typeVariableObj, NULL,
+		    typeInfo[0], TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
+		result = TCL_ERROR;
 	    }
 	}
-	result = TCL_OK;
     } else {
 	/*
 	 * Use the CommDlgExtendedError() function to retrieve the error code.
