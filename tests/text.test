@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.49.2.1 2008/11/12 22:17:02 patthoyts Exp $
+# RCS: @(#) $Id: text.test,v 1.49.2.2 2009/10/22 21:41:20 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -3118,6 +3118,18 @@ test text-25.15 {bug fix 1536735 - undo with empty text} {
     lappend r [catch {.t edit undo}]
     lappend r [.t edit modified]
 } {0 0 1 0}
+test text-25.18 {patch 1469210 - inserting after undo} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t insert end foo
+    .t edit modified 0
+    .t edit undo
+    .t insert end bar
+    .t edit modified
+} -cleanup {
+    destroy .t
+} -result 1
 
 test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
     destroy .t
