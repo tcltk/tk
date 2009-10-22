@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.13.2.1 2006/10/17 05:38:48 dgp Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.13.2.2 2009/10/22 22:10:08 dkf Exp $
  */
 
 #ifndef _TKTEXT
@@ -464,6 +464,19 @@ typedef enum {
 } TkTextEditMode;
 
 /*
+ * Enumeration defining the ways in which a text widget may be modified (for
+ * undo/redo handling).
+ */
+
+typedef enum {
+    TK_TEXT_DIRTY_NORMAL,	/* Normal behavior. */
+    TK_TEXT_DIRTY_UNDO,		/* Reverting a compound action. */
+    TK_TEXT_DIRTY_REDO,		/* Reapplying a compound action. */
+    TK_TEXT_DIRTY_FIXED		/* Forced to be dirty; can't be undone/redone
+				 * by normal activity. */
+} TkTextDirtyMode;
+
+/*
  * A data structure of the following type is kept for each text widget that
  * currently exists for this process:
  */
@@ -639,36 +652,25 @@ typedef struct TkText {
 				 * definitions. */
 
     /*
-     * Information related to the undo/redo functonality
+     * Information related to the undo/redo funcitonality
      */
      
-    TkUndoRedoStack * undoStack; /* The undo/redo stack */
-    
+    TkUndoRedoStack *undoStack;	/* The undo/redo stack. */
     int undo;			/* non zero means the undo/redo behaviour is 
-				 * enabled */
-    
-    int maxUndo;		/* The maximum depth of the undo stack expressed
-             * as the maximum number of compound statements */
-
+				 * enabled. */
+    int maxUndo;		/* The maximum depth of the undo stack
+				 * expressed as the maximum number of compound
+				 * statements. */
     int autoSeparators;		/* non zero means the separatorss will be 
-				 * inserted automatically */
-    
-    int modifiedSet;		/* Flag indicating that the 'dirtynesss' of
-				 * the text widget has been expplicitly set.
-				 */
-
-    int isDirty;		/* Flag indicating the 'dirtynesss' of the text
-				 * widget. If the flag is not zero, unsaved 
-				 * modifications have been applied to the
-				 * text widget */
-
-    int isDirtyIncrement;	/* Amount with which the isDirty flag is
-				 * incremented every edit action
-				 */
-
-    TkTextEditMode lastEditMode;	/* Keeps track of what the last edit mode was
-				 */
-
+				 * inserted automatically. */
+    int isDirty;		/* Flag indicating the 'dirtynesss' of the
+				 * text widget. If the flag is not zero,
+				 * unsaved modifications have been applied to
+				 * the text widget. */
+    TkTextDirtyMode dirtyMode;	/* The nature of the dirtyness characterized
+				 * by the isDirty flag. */
+    TkTextEditMode lastEditMode;/* Keeps track of what the last edit mode
+				 * was. */
 } TkText;
 
 /*
