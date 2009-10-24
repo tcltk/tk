@@ -1,5 +1,9 @@
 2009-10-24  Donal K. Fellows  <dkf@users.sf.net>
 
+	* macosx/ttkMacOSXTheme.c (RangeToFactor, TrackElementDraw)
+	(PbarElementDraw): [Bug 2883712]: Corrected scaling of progress bars
+	and scales, and backported the fix for 64-bitness.
+
 	* library/button.tcl, unix/tkUnixButton.c (TkpDisplayButton):
 	[Patch 1530276]: Make -selectcolor handling work better for both
 	checkbuttons and radiobuttons when they don't have indicators.
