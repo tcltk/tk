@@ -1,3 +1,9 @@
+2009-10-24  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/button.tcl, unix/tkUnixButton.c (TkpDisplayButton):
+	[Patch 1530276]: Make -selectcolor handling work better for both
+	checkbuttons and radiobuttons when they don't have indicators.
+
 2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkText.c (CreateWidget, TextEditUndo, TextEditRedo)
