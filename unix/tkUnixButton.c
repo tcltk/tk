@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.26 2008/11/05 22:20:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.27 2009/10/24 00:01:48 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -281,7 +281,7 @@ TkpDrawCheckIndicator(
     for (iy=0 ; iy<dim ; iy++) {
 	for (ix=0 ; ix<dim ; ix++) {
 	    XPutPixel(img, ix, iy,
-		    imgColors[button_images[imgstart+iy][imgsel+ix] - 'A'] );
+		    imgColors[button_images[imgstart+iy][imgsel+ix] - 'A']);
 	}
     }
 
@@ -295,9 +295,9 @@ TkpDrawCheckIndicator(
     copyGC = Tk_GetGC(tkwin, 0, &gcValues);
 
     XPutImage(display, pixmap, copyGC, img, 0, 0, 0, 0,
-	    (unsigned int)dim, (unsigned int)dim);
+	    (unsigned)dim, (unsigned)dim);
     XCopyArea(display, pixmap, d, copyGC, 0, 0,
-	    (unsigned int)dim, (unsigned int)dim, x, y);
+	    (unsigned)dim, (unsigned)dim, x, y);
 
     /*
      * Tidy up.
@@ -389,8 +389,8 @@ TkpDisplayButton(
     } else {
 	gc = butPtr->normalTextGC;
     }
-    if ((butPtr->flags & SELECTED) && (butPtr->state != STATE_ACTIVE)
-	    && (butPtr->selectBorder != NULL) && !butPtr->indicatorOn) {
+    if ((butPtr->flags & SELECTED) && (butPtr->selectBorder != NULL)
+	    && !butPtr->indicatorOn) {
 	border = butPtr->selectBorder;
     }
 
