@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.25 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.25.2.1 2009/10/24 00:12:03 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -389,8 +389,8 @@ TkpDisplayButton(
     } else {
 	gc = butPtr->normalTextGC;
     }
-    if ((butPtr->flags & SELECTED) && (butPtr->state != STATE_ACTIVE)
-	    && (butPtr->selectBorder != NULL) && !butPtr->indicatorOn) {
+    if ((butPtr->flags & SELECTED) && (butPtr->selectBorder != NULL)
+	    && !butPtr->indicatorOn) {
 	border = butPtr->selectBorder;
     }
 
