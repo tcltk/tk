@@ -1,5 +1,9 @@
 2009-10-25  Donal K. Fellows  <dkf@users.sf.net>
 
+	* unix/tkUnixColor.c (TkpGetColor): [Bug 2809525]: Impose a maximum
+	X11 color name length so that it becomes impossible to blow things up
+	that way.
+
 	* library/text.tcl: [Bug 1854913]: Stop <Delete> actions from ever
 	deleting backwards, even when the insertion cursor is "at the end" of
 	the text widget.
