@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.158 2009/10/20 17:23:09 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.159 2009/10/26 16:56:46 dgp Exp $
 
 # Current Tk version;  used in various names.
 
@@ -881,7 +881,7 @@ clean:
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
-		$(PACKAGE).* prototype tkConfig.h *.plist Tk.framework tk.pc
+		tkConfig.h *.plist Tk.framework tk.pc
 
 depend:
 	makedepend -- $(DEPEND_SWITCHES) -- $(SRCS)
