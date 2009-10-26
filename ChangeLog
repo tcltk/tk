@@ -1,3 +1,8 @@
+2009-10-26  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/Makefile.in:     Remove $(PACKAGE).* and prototype from the
+	`make distclean` target.  Completes 2009-10-20 commit.
+
 2009-10-25  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixColor.c (TkpGetColor): [Bug 2809525]: Impose a maximum
