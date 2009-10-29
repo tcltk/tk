@@ -1,3 +1,10 @@
+2009-10-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinFont.c: [Bug 1825353]: This patch reverts a previous
+	attempt to fix tiny fonts on Russian Windows. It fixes the
+	issue by requesting a suitable fixed font instead of decoding the
+	system stock font.
+
 2009-10-26  Don Porter  <dgp@users.sourceforge.net>
 
 	* unix/Makefile.in:     Remove $(PACKAGE).* and prototype from the
