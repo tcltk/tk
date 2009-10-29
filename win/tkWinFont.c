@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.38 2007/12/13 15:28:55 dgp Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.38.2.1 2009/10/29 10:02:44 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -440,8 +440,24 @@ TkWinSetupSystemFonts(TkMainInfo *mainPtr)
 	    &iconMetrics.lfFont);
     }
 
-    hFont = (HFONT)GetStockObject(ANSI_FIXED_FONT);
-    CreateNamedSystemFont(interp, tkwin, "TkFixedFont", hFont);
+    /*
+     * Identify an available fixed font. Equivalent to ANSI_FIXED_FONT but
+     * more reliable on Russian Windows.
+     */
+
+    {
+	LOGFONTA lfFixed = {
+	    0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "" 
+	};
+	long pointSize, dpi;
+	HDC hdc = GetDC(NULL);
+	dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+	pointSize = -MulDiv(ncMetrics.lfMessageFont.lfHeight, 72, dpi);
+	lfFixed.lfHeight = -MulDiv(pointSize+1, dpi, 72);
+	ReleaseDC(NULL, hdc);
+	CreateNamedSystemLogFont(interp, tkwin, "TkFixedFont", &lfFixed);
+    }
 
     /* 
      * Setup the remaining standard Tk font names as named fonts.
