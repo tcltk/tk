@@ -1,3 +1,8 @@
+2009-10-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinFont.c: [Bug 1825353]: Backported patch for tiny
+	fixed font on Russian Windows systems.
+
 2009-10-25  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixColor.c (TkpGetColor): [Bug 2809525]: Impose a maximum
