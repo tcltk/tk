@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.20 2009/05/17 17:20:49 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.21 2009/11/01 18:12:44 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -1046,18 +1046,24 @@ static int NotebookHideCommand(
 static int NotebookIdentifyCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
+    static const char *whatTable[] = { "element", "tab", NULL };
+    enum { IDENTIFY_ELEMENT, IDENTIFY_TAB };
+    int what = IDENTIFY_ELEMENT;
     Notebook *nb = recordPtr;
     Ttk_Element element = NULL;
     int x, y, tabIndex;
 
-    if (objc != 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "x y");
+    if (objc < 4 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 2,objv, "?what? x y");
 	return TCL_ERROR;
     }
 
-    if (   Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)
-    {
+    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
+	|| (objc == 5 &&
+	    Tcl_GetIndexFromObj(interp, objv[2], whatTable, "option", 0, &what)
+		!= TCL_OK)
+    ) {
 	return TCL_ERROR;
     }
 
@@ -1073,11 +1079,19 @@ static int NotebookIdentifyCommand(
 	element = Ttk_IdentifyElement(tabLayout, x, y);
     }
 
-    if (element) {
-	const char *elementName = Ttk_ElementName(element);
-	Tcl_SetObjResult(interp,Tcl_NewStringObj(elementName,-1));
+    switch (what) {
+	case IDENTIFY_ELEMENT:
+	    if (element) {
+		const char *elementName = Ttk_ElementName(element);
+		Tcl_SetObjResult(interp,Tcl_NewStringObj(elementName,-1));
+	    }
+	    break;
+	case IDENTIFY_TAB:
+	    if (tabIndex >= 0) {
+		Tcl_SetObjResult(interp, Tcl_NewIntObj(tabIndex));
+	    }
+	    break;
     }
-
     return TCL_OK;
 }
 

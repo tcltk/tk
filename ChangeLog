@@ -1,3 +1,17 @@
+2009-11-01  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkWidget.c, doc/ttk_widget.n:
+	Uniform, extensible syntax for [$w identify] methods:
+	[$w identify $component $x $y].  All ttk::* widgets support
+	[$w identify element $x $y]; widgets with other
+	identifiable parts may have additional subcommands.
+	* generic/ttk/ttkNotebook.c, doc/ttk_notebook.n:
+	Notebook widgets support [$nb identify tab].
+	* generic/ttk/ttkPanedwindow.c, doc/ttk_panedwindow.n:
+	Panedwindow widgets support [$w identify sash].
+	Older 2-argument form [$w identify $x $y] still supported,
+	though it does different things depending on the widget.
+
 2009-10-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinFont.c: [Bug 1825353]: This patch reverts a previous

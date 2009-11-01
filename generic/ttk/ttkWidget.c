@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.21 2009/02/08 19:35:35 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.22 2009/11/01 18:12:44 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -769,6 +769,7 @@ int TtkWidgetInstateCommand(
 }
 
 /* $w identify $x $y
+ * $w identify element $x $y
  * 	Returns: name of element at $x, $y
  */
 int TtkWidgetIdentifyCommand(
@@ -776,16 +777,27 @@ int TtkWidgetIdentifyCommand(
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_Element element;
-    int x, y;
+    static const char *whatTable[] = { "element", NULL };
+    int x, y, what;
 
-    if (objc != 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "x y");
+    if (objc < 4 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?what? x y");
 	return TCL_ERROR;
     }
+    if (objc == 5) {
+	/* $w identify element $x $y */
+	if (Tcl_GetIndexFromObj(interp,objv[2],whatTable,"option",0,&what)
+		!= TCL_OK)
+	{
+	    return TCL_ERROR;
+	}
+    }
 
-    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)
+    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
+    ) {
 	return TCL_ERROR;
+    }
 
     element = Ttk_IdentifyElement(corePtr->layout, x, y);
     if (element) {
