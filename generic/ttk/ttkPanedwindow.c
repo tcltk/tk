@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.17 2008/11/09 23:53:09 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.18 2009/11/01 18:12:44 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -573,36 +573,40 @@ static Ttk_Layout PanedGetLayout(
  * +++ Drawing routines.
  */
 
-static void DrawSash(Paned *pw, Drawable d, Ttk_Box b)
+/* SashLayout --
+ * 	Place the sash sublayout after the specified pane,
+ * 	in preparation for drawing.
+ */
+static Ttk_Layout SashLayout(Paned *pw, int index)
 {
-    Ttk_Layout sashLayout = pw->paned.sashLayout;
-    Ttk_State state = pw->core.state;
+    Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+    int thickness = pw->paned.sashThickness,
+	height = Tk_Height(pw->core.tkwin),
+	width = Tk_Width(pw->core.tkwin),
+	sashPos = pane->sashPos;
 
-    Ttk_PlaceLayout(sashLayout, state, b);
-    Ttk_DrawLayout(sashLayout, state, d);
+    Ttk_PlaceLayout(
+	pw->paned.sashLayout, pw->core.state,
+	pw->paned.orient == TTK_ORIENT_HORIZONTAL
+	    ? Ttk_MakeBox(sashPos, 0, thickness, height)
+	    : Ttk_MakeBox(0, sashPos, width, thickness));
+
+    return pw->paned.sashLayout;
+}
+
+static void DrawSash(Paned *pw, int index, Drawable d)
+{
+    Ttk_DrawLayout(SashLayout(pw, index), pw->core.state, d);
 }
 
 static void PanedDisplay(void *recordPtr, Drawable d)
 {
     Paned *pw = recordPtr;
-    int nPanes = Ttk_NumberSlaves(pw->paned.mgr),
-	horizontal =  pw->paned.orient == TTK_ORIENT_HORIZONTAL,
-	thickness = pw->paned.sashThickness,
-	height = Tk_Height(pw->core.tkwin),
-	width = Tk_Width(pw->core.tkwin);
-    int i;
+    int i, nSashes = Ttk_NumberSlaves(pw->paned.mgr) - 1;
 
     TtkWidgetDisplay(recordPtr, d);
-
-    /* Draw sashes:
-     */
-    for (i = 0; i < nPanes; ++i) {
-	Pane *pane = Ttk_SlaveData(pw->paned.mgr, i);
-	if (horizontal) {
-	    DrawSash(pw, d, Ttk_MakeBox(pane->sashPos, 0, thickness, height));
-	} else {
-	    DrawSash(pw, d, Ttk_MakeBox(0, pane->sashPos, width, thickness));
-	}
+    for (i = 0; i < nSashes; ++i) {
+	DrawSash(pw, i, d);
     }
 }
 
@@ -703,24 +707,31 @@ static int PanedForgetCommand(
     return TCL_OK;
 }
 
-/* $pw identify $x $y --
+/* $pw identify ?what? $x $y --
  * 	Return index of sash at $x,$y
  */
 static int PanedIdentifyCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
+    const char *whatTable[] = { "element", "sash", NULL };
+    enum { IDENTIFY_ELEMENT, IDENTIFY_SASH };
+    int what = IDENTIFY_SASH;
     Paned *pw = recordPtr;
     int sashThickness = pw->paned.sashThickness;
     int nSashes = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     int x, y, pos;
     int index;
 
-    if (objc != 4) {
-	Tcl_WrongNumArgs(interp, 2,objv, "x y");
+    if (objc < 4 || objc > 5) {
+	Tcl_WrongNumArgs(interp, 2,objv, "?what? x y");
 	return TCL_ERROR;
     }
-    if (   Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK
+
+    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
+	|| (objc == 5 &&
+	    Tcl_GetIndexFromObj(interp, objv[2], whatTable, "option", 0, &what)
+		!= TCL_OK)
     ) {
 	return TCL_ERROR;
     }
@@ -729,12 +740,26 @@ static int PanedIdentifyCommand(
     for (index = 0; index < nSashes; ++index) {
 	Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
 	if (pane->sashPos <= pos && pos <= pane->sashPos + sashThickness) {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
-	    return TCL_OK;
+	    /* Found it. */
+	    switch (what) {
+		case IDENTIFY_SASH:
+		    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+		    return TCL_OK;
+		case IDENTIFY_ELEMENT:
+		{
+		    Ttk_Element element =
+			Ttk_IdentifyElement(SashLayout(pw, index), x, y);
+		    if (element) {
+			Tcl_SetObjResult(interp,
+			    Tcl_NewStringObj(Ttk_ElementName(element), -1));
+		    }
+		    return TCL_OK;
+		}
+	    }
 	}
     }
 
-    return TCL_OK;	/* return empty string */
+    return TCL_OK; /* nothing found - return empty string */
 }
 
 /* $pw pane $pane ?-option ?value -option value ...??
