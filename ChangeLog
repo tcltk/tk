@@ -1,3 +1,7 @@
+2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
+
+	* doc/loadTk.n: minor fix for htmlhelp target.
+
 2009-11-01  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkWidget.c, doc/ttk_widget.n:

@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: loadTk.n,v 1.14 2009/08/06 12:46:07 dkf Exp $
+'\" RCS: @(#) $Id: loadTk.n,v 1.15 2009/11/01 23:49:50 mistachkin Exp $
 '\" 
 .so man.macros
 .TH "Safe Tk" n 8.0 Tk "Tk Built-In Commands"
@@ -35,7 +35,7 @@ plan to use is a Tk Window of the application you can use the window name
 (e.g.,
 .QW \fB.x.y\fR )
 instead of its window Id (e.g.,
-.QW \fB[winfo id .x.y]\fR ).
+.QW "\fB[winfo id .x.y]\fR" ).
 When \fB\-use\fR is not specified, a new toplevel window is created for the
 .QW .
 window of the safe interpreter. On X11 if you want the embedded window to use
