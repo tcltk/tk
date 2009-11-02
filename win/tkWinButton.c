@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.20.2.4 2006/12/19 19:50:55 hobbs Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.20.2.5 2009/11/02 04:59:10 mistachkin Exp $
  */
 
 #define OEMRESOURCE
@@ -164,6 +164,40 @@ InitBoxes()
 /*
  *----------------------------------------------------------------------
  *
+ * ButtonDefaultsExitHandler --
+ *
+ *	Frees the defaults for the buttons.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+ButtonDefaultsExitHandler(
+    ClientData clientData)	/* Points to an array of option specs,
+				 * terminated by one with type
+				 * TK_OPTION_END. */
+{
+    Tk_OptionSpec *specPtr = (Tk_OptionSpec *)clientData;
+
+    for ( ; specPtr->type != TK_OPTION_END; specPtr++) {
+	if (specPtr->internalOffset == Tk_Offset(TkButton, borderWidth)) {
+	    if (specPtr->defValue != NULL) {
+		ckfree((char *) specPtr->defValue);
+		specPtr->defValue = NULL;
+	    }
+	}
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpButtonSetDefaults --
  *
  *	This procedure is invoked before option tables are created for
@@ -186,6 +220,7 @@ TkpButtonSetDefaults(specPtr)
 				 * TK_OPTION_END. */
 {
     int width;
+    Tk_OptionSpec *savedSpecPtr = specPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -198,9 +233,12 @@ TkpButtonSetDefaults(specPtr)
     }
     for ( ; specPtr->type != TK_OPTION_END; specPtr++) {
 	if (specPtr->internalOffset == Tk_Offset(TkButton, borderWidth)) {
-	    specPtr->defValue = tsdPtr->defWidth;
+	    char *defValue = (char *) ckalloc(strlen(tsdPtr->defWidth) + 1);
+	    strcpy(defValue, tsdPtr->defWidth);
+	    specPtr->defValue = defValue;
 	}
     }
+    TkCreateExitHandler(ButtonDefaultsExitHandler, (ClientData) savedSpecPtr);
 }
 
 /*
