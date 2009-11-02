@@ -1,5 +1,12 @@
 2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
 
+	* win/tkWinButton.c: [Bug 1739613]: The default width being stored
+	in TSD cannot be put into the process-wide options table.  This fix
+	allocates storage for the default width from the heap and frees it
+	using an exit handler.
+
+2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
+
 	* doc/loadTk.n: minor fix for htmlhelp target.
 
 2009-11-01  Joe English  <jenglish@users.sourceforge.net>
