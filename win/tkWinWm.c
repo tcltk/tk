@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.6 2009/06/02 09:41:42 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.7 2009/11/03 23:49:11 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -8031,6 +8031,10 @@ WmProc(
     case WM_SYSCOMMAND:
 	/*
 	 * If there is a grab in effect then ignore the minimize command
+	 * unless the grab is on the main window (.). This is to permit
+	 * applications that leave a grab on . to work normally.
+	 * All other toplevels are deemed non-minimizable when a grab is
+	 * present.
 	 * If there is a grab in effect and this window is outside the
 	 * grab tree then ignore all system commands. [Bug 1847002]
 	 */
@@ -8038,8 +8042,11 @@ WmProc(
 	if (winPtr) {
 	    int cmd = wParam & 0xfff0;
 	    int grab = TkGrabState(winPtr);
-	    if (grab != TK_GRAB_NONE && SC_MINIMIZE == cmd)
+	    if ((SC_MINIMIZE == cmd)
+		&& (grab == TK_GRAB_IN_TREE || grab == TK_GRAB_ANCESTOR)
+		&& (winPtr != winPtr->mainPtr->winPtr)) {
 		goto done;
+	    }
 	    if (grab == TK_GRAB_EXCLUDED 
 		&& !(SC_MOVE == cmd || SC_SIZE == cmd)) {
 		goto done;

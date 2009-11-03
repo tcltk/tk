@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.14 2009/11/03 20:15:24 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.15 2009/11/03 23:49:11 patthoyts Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6669,5 +6669,7 @@ in screen distances, reducing precision loss (ferrieux)
 2009-10-25 (bug fix)[2809525] prevent X crash on overlong color name (goth)
 
 2009-10-29 (bug fix)[1825353] Russian Windows tiny fonts problem (thoyts)
+
+2009-11-03 (bug fix)[2891541] fix grab behaviour for main window (thoyts)
 
 --- Released 8.5.8, November xx, 2009 --- See ChangeLog for details ---
