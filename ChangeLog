@@ -1,3 +1,19 @@
+2009-11-03  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.8 TAGGED FOR RELEASE ***
+
+	* generic/tk.h:		Bump to 8.5.8 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+	* changes:	Updated for 8.5.8 release.
+
 2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
 
 	* win/tkWinButton.c: [Bug 1739613]: The default width being stored
