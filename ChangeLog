@@ -1,8 +1,3 @@
-2009-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
-
-	* win/tkWinWm.c: [Bug 2891541] Permit normal behaviour on
-	Windows for a grabbed toplevel when it is the main window.
-
 2009-11-03  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.8 TAGGED FOR RELEASE ***
@@ -18,6 +13,11 @@
 	* win/configure:
 
 	* changes:	Updated for 8.5.8 release.
+
+2009-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinWm.c: [Bug 2891541] Permit normal behaviour on
+	Windows for a grabbed toplevel when it is the main window.
 
 2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
 
