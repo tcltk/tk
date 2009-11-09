@@ -1,3 +1,9 @@
+2009-11-09  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkFileFilter.c (TkFreeFileFilters): Simplify the code in
+	this file by consolidating the deletion code together into a single
+	function rather than scattering it over four.
+
 2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
 
 	* win/tkWinButton.c: [Bug 1739613]: The default width being stored
@@ -7,28 +13,27 @@
 
 2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
 
-	* doc/loadTk.n: minor fix for htmlhelp target.
+	* doc/loadTk.n: Minor fix for htmlhelp target.
 
 2009-11-01  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkWidget.c, doc/ttk_widget.n:
-	Uniform, extensible syntax for [$w identify] methods:
-	[$w identify $component $x $y].  All ttk::* widgets support
-	[$w identify element $x $y]; widgets with other
+	* generic/ttk/ttkWidget.c, doc/ttk_widget.n: Uniform, extensible
+	syntax for [$w identify] methods: [$w identify $component $x $y].  All
+	ttk::* widgets support [$w identify element $x $y]; widgets with other
 	identifiable parts may have additional subcommands.
-	* generic/ttk/ttkNotebook.c, doc/ttk_notebook.n:
-	Notebook widgets support [$nb identify tab].
-	* generic/ttk/ttkPanedwindow.c, doc/ttk_panedwindow.n:
-	Panedwindow widgets support [$w identify sash].
-	Older 2-argument form [$w identify $x $y] still supported,
-	though it does different things depending on the widget.
+	* generic/ttk/ttkNotebook.c, doc/ttk_notebook.n: Notebook widgets
+	support [$nb identify tab].
+	* generic/ttk/ttkPanedwindow.c, doc/ttk_panedwindow.n: Panedwindow
+	widgets support [$w identify sash].  Older 2-argument form [$w
+	identify $x $y] still supported, though it does different things
+	depending on the widget.
 
 2009-10-29  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* win/tkWinFont.c: [Bug 1825353]: This patch reverts a previous
-	attempt to fix tiny fonts on Russian Windows. It fixes the
-	issue by requesting a suitable fixed font instead of decoding the
-	system stock font.
+	attempt to fix tiny fonts on Russian Windows. It fixes the issue by
+	requesting a suitable fixed font instead of decoding the system stock
+	font.
 
 2009-10-26  Don Porter  <dgp@users.sourceforge.net>
 
@@ -54,18 +59,18 @@
 2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkText.c (CreateWidget, TextEditUndo, TextEditRedo)
-	(TextEditCmd, UpdateDirtyFlag): 
+	(TextEditCmd, UpdateDirtyFlag):
 	* generic/tkText.h: [Patch 1469210]: Corrected handling of marking as
 	dirty when inserting after an undo from a non-dirty state.
 
 	* win/tkWinDialog.c (GetFileNameA): Make the handling of the filter
 	index the same as in GetFileNameW.
 
-	* library/tkfbox.tcl (::tk::dialog::file::, Done): 
+	* library/tkfbox.tcl (::tk::dialog::file::, Done):
 	* library/xmfbox.tcl (MotifFDialog_FileTypes)
-	(MotifFDialog_ActivateSEnt): 
-	* macosx/tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): 
-	* win/tkWinDialog.c (GetFileNameW, GetFileNameA): 
+	(MotifFDialog_ActivateSEnt):
+	* macosx/tkMacOSXDialog.c (Tk_GetOpenFileObjCmd):
+	* win/tkWinDialog.c (GetFileNameW, GetFileNameA):
 	* doc/getOpenFile.n: [Patch 2168768]: Corrected handling of the
 	-typevariable option to be consistently global; it's the only way it
 	can work even close to the same on all platforms.

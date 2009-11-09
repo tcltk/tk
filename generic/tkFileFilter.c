@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFileFilter.c,v 1.12 2008/12/07 16:34:12 das Exp $
+ * RCS: @(#) $Id: tkFileFilter.c,v 1.13 2009/11/09 11:56:57 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -18,9 +18,6 @@
 static int		AddClause(Tcl_Interp *interp, FileFilter *filterPtr,
 			    Tcl_Obj *patternsObj, Tcl_Obj *ostypesObj,
 			    int isWindows);
-static void		FreeClauses(FileFilter *filterPtr);
-static void		FreeGlobPatterns(FileFilterClause *clausePtr);
-static void		FreeMacFileTypes(FileFilterClause *clausePtr);
 static FileFilter *	GetFilter(FileFilterList *flistPtr, const char *name);
 
 /*
@@ -89,7 +86,7 @@ TkGetFileFilters(
     int i;
 
     if (types == NULL) {
-        return TCL_OK;
+	return TCL_OK;
     }
 
     if (Tcl_ListObjGetElements(interp, types, &listObjc,
@@ -105,6 +102,7 @@ TkGetFileFilters(
      * the -filefilters option may have been used more than once in the
      * command line.
      */
+
     TkFreeFileFilters(flistPtr);
 
     for (i = 0; i<listObjc; i++) {
@@ -162,15 +160,47 @@ void
 TkFreeFileFilters(
     FileFilterList *flistPtr)	/* List of file filters to free */
 {
-    FileFilter *filterPtr, *toFree;
+    FileFilter *filterPtr;
+    FileFilterClause *clausePtr;
+    GlobPattern *globPtr;
+    MacFileType *mfPtr;
+    register void *toFree;	/* A pointer that we are about to free. */
 
-    filterPtr=flistPtr->filters;
-    while (filterPtr != NULL) {
+    for (filterPtr = flistPtr->filters; filterPtr != NULL; ) {
+	for (clausePtr = filterPtr->clauses; clausePtr != NULL; ) {
+	    /*
+	     * Squelch each of the glob patterns.
+	     */
+
+	    for (globPtr = clausePtr->patterns; globPtr != NULL; ) {
+		ckfree(globPtr->pattern);
+		toFree = globPtr;
+		globPtr = globPtr->next;
+		ckfree(toFree);
+	    }
+
+	    /*
+	     * Squelch each of the Mac file type codes.
+	     */
+
+	    for (mfPtr = clausePtr->macTypes; mfPtr != NULL; ) {
+		toFree = mfPtr;
+		mfPtr = mfPtr->next;
+		ckfree(toFree);
+	    }
+	    toFree = clausePtr;
+	    clausePtr = clausePtr->next;
+	    ckfree(toFree);
+	}
+
+	/*
+	 * Squelch the name of the filter and the overall structure.
+	 */
+
+	ckfree(filterPtr->name);
 	toFree = filterPtr;
 	filterPtr = filterPtr->next;
-	FreeClauses(toFree);
-	ckfree(toFree->name);
-	ckfree((char *) toFree);
+	ckfree(toFree);
     }
     flistPtr->filters = NULL;
 }
@@ -417,8 +447,8 @@ GetFilter(
     filterPtr = (FileFilter *) ckalloc(sizeof(FileFilter));
     filterPtr->clauses = NULL;
     filterPtr->clausesTail = NULL;
-    len = (strlen(name) + 1) * sizeof(char);
-    filterPtr->name = ckalloc(len);
+    len = strlen(name) + 1;
+    filterPtr->name = ckalloc((unsigned) len);
     memcpy(filterPtr->name, name, len);
 
     if (flistPtr->filters == NULL) {
@@ -431,104 +461,6 @@ GetFilter(
 
     ++flistPtr->numFilters;
     return filterPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FreeClauses --
- *
- *	Frees the malloc'ed file type clause.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The list of clauses in filterPtr->clauses are freed.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FreeClauses(
-    FileFilter *filterPtr)	/* FileFilter whose clauses are to be freed */
-{
-    FileFilterClause *clausePtr = filterPtr->clauses;
-
-    while (clausePtr != NULL) {
-	FileFilterClause *toFree = clausePtr;
-
-	clausePtr = clausePtr->next;
-	FreeGlobPatterns(toFree);
-	FreeMacFileTypes(toFree);
-	ckfree((char *) toFree);
-    }
-    filterPtr->clauses = NULL;
-    filterPtr->clausesTail = NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FreeGlobPatterns --
- *
- *	Frees the malloc'ed glob patterns in a clause
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The list of glob patterns in clausePtr->patterns are freed.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FreeGlobPatterns(
-    FileFilterClause *clausePtr)/* The clause whose patterns are to be freed*/
-{
-    GlobPattern *globPtr = clausePtr->patterns;
-
-    while (globPtr != NULL) {
-	GlobPattern *toFree = globPtr;
-	globPtr = globPtr->next;
-
-	ckfree(toFree->pattern);
-	ckfree((char *) toFree);
-    }
-    clausePtr->patterns = NULL;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * FreeMacFileTypes --
- *
- *	Frees the malloc'ed Mac file types in a clause
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The list of Mac file types in clausePtr->macTypes are freed.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-FreeMacFileTypes(
-    FileFilterClause *clausePtr)/* The clause whose mac types are to be
-				 * freed. */
-{
-    MacFileType *mfPtr = clausePtr->macTypes;
-
-    while (mfPtr != NULL) {
-	MacFileType *toFree = mfPtr;
-
-	mfPtr = mfPtr->next;
-	ckfree((char *) toFree);
-    }
-    clausePtr->macTypes = NULL;
 }
 
 /*
