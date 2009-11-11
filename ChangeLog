@@ -1,3 +1,9 @@
+2009-11-11  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkPlatDecls.h:	Restore C++ friendliness to the
+	tkPlatDecls.h header file, which we insist extensions #include to
+	gain access to the Tk_*HWND*() routines.  [Bug 2886635].
+
 2009-11-10  Andreas Kupries  <andreask@activestate.com>
 
 	* unix/Makefile.in: Partially reverted Don Porter's 2009-10-20
