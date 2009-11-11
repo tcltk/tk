@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.20 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.21 2009/11/11 15:56:48 dgp Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -24,6 +24,10 @@
  * script.  Any modifications to the function declarations below should be made
  * in the generic/tk.decls script.
  */
+
+#ifdef __cplusplus
+#extern "C" {
+#endif
 
 /* !BEGIN!: Do not edit below this line. */
 
@@ -242,6 +246,10 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
 /* !END!: Do not edit above this line. */
+
+#ifdef __cplusplus
+}
+#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
