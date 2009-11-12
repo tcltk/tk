@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.18 2008/12/07 21:24:12 jenglish Exp $
+# $Id: combobox.tcl,v 1.19 2009/11/12 18:17:14 jenglish Exp $
 #
 # Combobox bindings.
 #
@@ -221,9 +221,9 @@ proc ttk::combobox::LBTab {lb dir} {
 	LBSelect $lb
 	Unpost $cb
 	# The [grab release] call in [Unpost] queues events that later
-	# re-set the focus.  [update] to make sure these get processed first:
-	update
-	ttk::traverseTo $newFocus
+	# re-set the focus (@@@ NOTE: this might not be true anymore).
+	# Set new focus later:
+	after 0 [list ttk::traverseTo $newFocus]
     }
 }
 
@@ -397,7 +397,7 @@ proc ttk::combobox::Post {cb} {
 
     set popdown [PopdownWindow $cb]
     ConfigureListbox $cb
-    update idletasks
+    update idletasks	;# needed for geometry propagation.
     PlacePopdown $cb $popdown
     # See <<NOTE-WM-TRANSIENT>>
     switch -- [tk windowingsystem] {
