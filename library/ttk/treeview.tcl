@@ -1,4 +1,4 @@
-# $Id: treeview.tcl,v 1.7 2008/10/28 20:02:03 jenglish Exp $
+# $Id: treeview.tcl,v 1.8 2009/11/12 18:17:14 jenglish Exp $
 #
 # ttk::treeview widget bindings and utilities.
 #
@@ -234,7 +234,7 @@ proc ttk::treeview::heading.drag {w x y} {
 proc ttk::treeview::heading.release {w} {
     variable State
     if {[lsearch -exact [$w heading $State(heading) state] pressed] >= 0} {
-	after idle [$w heading $State(heading) -command]
+	after 0 [$w heading $State(heading) -command]
     }
     $w heading $State(heading) state !pressed
 }

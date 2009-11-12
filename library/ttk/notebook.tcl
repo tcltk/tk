@@ -1,5 +1,5 @@
 #
-# $Id: notebook.tcl,v 1.4 2007/02/24 09:15:07 das Exp $
+# $Id: notebook.tcl,v 1.5 2009/11/12 18:17:14 jenglish Exp $
 #
 # Bindings for TNotebook widget
 #
@@ -32,7 +32,7 @@ proc ttk::notebook::ActivateTab {w tab} {
 	focus $w
     } else {
     	$w select $tab
-	update ;# needed so focus logic sees correct mapped/unmapped states
+	update idletasks ;# needed so focus logic sees correct mapped states
 	if {[set f [ttk::focusFirst [$w select]]] ne ""} {
 	    tk::TabToWindow $f
 	}
