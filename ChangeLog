@@ -1,6 +1,10 @@
-2009-11-03  Don Porter  <dgp@users.sourceforge.net>
+2009-11-12  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.8 TAGGED FOR RELEASE ***
+
+	* changes:	Updated for 8.5.8 release.
+
+2009-11-03  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump to 8.5.8 for release.
 	* library/tk.tcl:
