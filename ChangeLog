@@ -1,3 +1,14 @@
+2009-11-12  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/button.tcl, library/ttk/combobox.tcl,
+	library/ttk/notebook.tcl, library/ttk/treeview.tcl: 
+	[update] hygiene.
+
+	+ Where possible, replace [a; update; b] with [a ; after 0 b].
+	+ Where not possible, use [update idletasks] instead of full [update].
+	+ Use [after 0] in favor of [after idle] for delayed work,
+	  to reduce likelihood of reentrancy issues in [update idletasks].
+
 2009-11-11  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkPlatDecls.h:	Restore C++ friendliness to the
