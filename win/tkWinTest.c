@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.14.2.1 2008/04/14 20:59:51 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.14.2.2 2009/11/13 23:32:05 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -33,6 +33,9 @@ static int		TestfindwindowObjCmd(ClientData clientData,
 static int		TestgetwindowinfoObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
+static int		TestwinlocaleObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 
 
@@ -69,7 +72,8 @@ TkplatformtestInit(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-
+    Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
+	    (ClientData) Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
 
@@ -306,6 +310,8 @@ TestwineventCmd(
 	    child = GetWindow(child, GW_HWNDNEXT);
 	}
 	if (child == NULL) {
+	    Tcl_AppendResult(interp, "could not find a control matching \"",
+		argv[2], "\"", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -478,6 +484,23 @@ TestgetwindowinfoObjCmd(
     Tcl_SetObjResult(interp, resObj);
     return TCL_OK;
 }   
+
+static int
+TestwinlocaleObjCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
+{
+    Tk_Window tkwin = (Tk_Window) clientData;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj((int)GetSystemDefaultLCID()));
+    return TCL_OK;
+}
 
 /*
  * Local Variables:
