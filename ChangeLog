@@ -1,19 +1,24 @@
+2009-11-15  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/ttk_treeview.n (detach): Added note that the 'move' operation
+	restores detached nodes.
+
 2009-11-12  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/button.tcl, library/ttk/combobox.tcl,
-	library/ttk/notebook.tcl, library/ttk/treeview.tcl: 
+	* library/ttk/notebook.tcl, library/ttk/treeview.tcl: 
 	[update] hygiene.
 
 	+ Where possible, replace [a; update; b] with [a ; after 0 b].
 	+ Where not possible, use [update idletasks] instead of full [update].
-	+ Use [after 0] in favor of [after idle] for delayed work,
-	  to reduce likelihood of reentrancy issues in [update idletasks].
+	+ Use [after 0] in favor of [after idle] for delayed work, to reduce
+	likelihood of reentrancy issues in [update idletasks].
 
 2009-11-11  Don Porter  <dgp@users.sourceforge.net>
 
-	* generic/tkPlatDecls.h:	Restore C++ friendliness to the
-	tkPlatDecls.h header file, which we insist extensions #include to
-	gain access to the Tk_*HWND*() routines.  [Bug 2886635].
+	* generic/tkPlatDecls.h:	[Bug 2886635]: Restore C++
+	friendliness to the tkPlatDecls.h header file, which we insist
+	extensions #include to gain access to the Tk_*HWND*() routines.
 
 2009-11-10  Andreas Kupries  <andreask@activestate.com>
 
