@@ -14,10 +14,16 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldTest.c,v 1.4 2008/11/03 22:20:22 nijtmans Exp $
+ * RCS: @(#) $Id: tkOldTest.c,v 1.5 2009/11/19 23:45:08 nijtmans Exp $
  */
 
 #define USE_OLD_IMAGE
+#ifndef USE_TCL_STUBS
+#   define USE_TCL_STUBS
+#endif
+#ifndef USE_TK_STUBS
+#   define USE_TK_STUBS
+#endif
 #include "tkInt.h"
 
 /*
