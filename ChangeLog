@@ -1,3 +1,9 @@
+2009-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:         [Patch #2883533] tcl.m4 support for Haiku OS
+	* unix/configure       (regenerated)
+	* unix/Makefile.in     Fix library order in X11_LIB_SWITCHES
+
 2009-11-19  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkCanvLine.c (LineDeleteCoords): [Bug 2900121]: Get sense of
