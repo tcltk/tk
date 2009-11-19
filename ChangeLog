@@ -1,3 +1,8 @@
+2009-11-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvLine.c (LineDeleteCoords): [Bug 2900121]: Get sense of
+	test for drawing optimization correct.
+
 2009-11-15  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/ttk_treeview.n (detach): Added note that the 'move' operation

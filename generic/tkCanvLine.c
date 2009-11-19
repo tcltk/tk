@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.29 2009/11/19 10:14:06 dkf Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.30 2009/11/19 10:22:07 dkf Exp $
  */
 
 #include <stdio.h>
@@ -25,7 +25,7 @@ typedef enum {
     ARROWS_NONE, ARROWS_FIRST, ARROWS_LAST, ARROWS_BOTH
 } Arrows;
 
-typedef struct LineItem  {
+typedef struct LineItem {
     Tk_Item header;		/* Generic stuff that's the same for all
 				 * types. MUST BE FIRST IN STRUCTURE. */
     Tk_Outline outline;		/* Outline structure */
@@ -420,9 +420,9 @@ LineCoords(
 	for (i = 0; i < objc ; i++) {
 	    if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[i],
 		    coordPtr++) != TCL_OK) {
-  		return TCL_ERROR;
-  	    }
-  	}
+		return TCL_ERROR;
+	    }
+	}
 
 	/*
 	 * Update arrowheads by throwing away any existing arrow-head
@@ -469,7 +469,7 @@ ConfigureLine(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Line item to reconfigure. */
-    int objc,			/* Number of elements in objv.  */
+    int objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
@@ -908,7 +908,7 @@ DisplayLine(
     } else {
 	int intwidth = (int) (linewidth + 0.5);
 
-        if (intwidth < 1) {
+	if (intwidth < 1) {
 	    intwidth = 1;
 	}
 	XFillArc(display, drawable, linePtr->outline.gc,
@@ -1200,7 +1200,7 @@ LineDeleteCoords(
 	}
     }
 
-    if ((first1 < 2) && (last1 >= length-2)) {
+    if ((first1 >= 2) || (last1 < length-2)) {
 	/*
 	 * This is some optimizing code that will result that only the part of
 	 * the line that changed (and the objects that are overlapping with
