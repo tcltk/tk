@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.28 2009/01/06 21:58:15 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.29 2009/11/19 10:14:06 dkf Exp $
  */
 
 #include <stdio.h>
@@ -125,7 +125,7 @@ static void		ScaleLine(Tk_Canvas canvas,
 			    double scaleX, double scaleY);
 static void		TranslateLine(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY);
-
+
 /*
  * Information used for parsing configuration specs. If you change any of the
  * default strings, be sure to change the corresponding default values in
@@ -236,10 +236,10 @@ Tk_ItemType tkLineType = {
     LineToPostscript,			/* postscriptProc */
     ScaleLine,				/* scaleProc */
     TranslateLine,			/* translateProc */
-    GetLineIndex,		/* indexProc */
+    GetLineIndex,			/* indexProc */
     NULL,				/* icursorProc */
     NULL,				/* selectionProc */
-    LineInsert,		/* insertProc */
+    LineInsert,				/* insertProc */
     LineDeleteCoords,			/* dTextProc */
     NULL,				/* nextPtr */
 };
@@ -251,7 +251,7 @@ Tk_ItemType tkLineType = {
  */
 
 #define MAX_STATIC_POINTS 200
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -332,7 +332,7 @@ CreateLine(
     DeleteLine(canvas, itemPtr, Tk_Display(Tk_CanvasTkwin(canvas)));
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -444,7 +444,7 @@ LineCoords(
     }
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -586,7 +586,7 @@ ConfigureLine(
 
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -626,7 +626,7 @@ DeleteLine(
 	ckfree((char *) linePtr->lastArrowPtr);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -810,7 +810,7 @@ ComputeLineBbox(
     linePtr->header.y1 -= 1;
     linePtr->header.y2 += 1;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -935,7 +935,7 @@ DisplayLine(
 	XSetTSOrigin(display, linePtr->arrowGC, 0, 0);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1128,7 +1128,7 @@ LineInsert(
 
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1303,7 +1303,7 @@ LineDeleteCoords(
     }
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1534,7 +1534,7 @@ LineToPoint(
     }
     return bestDist;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1657,7 +1657,7 @@ LineToArea(
     }
     return result;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1720,7 +1720,7 @@ ScaleLine(
     }
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1808,7 +1808,7 @@ GetLineIndex(
     }
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1858,7 +1858,7 @@ TranslateLine(
     }
     ComputeLineBbox(canvas, linePtr);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1925,7 +1925,7 @@ ParseArrowShape(
     ckfree((char *) argv);
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -1962,7 +1962,7 @@ PrintArrowShape(
     *freeProcPtr = TCL_DYNAMIC;
     return buffer;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2025,7 +2025,7 @@ ArrowParseProc(
     *arrowPtr = ARROWS_NONE;
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2070,7 +2070,7 @@ ArrowPrintProc(
 	return "none";
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2230,7 +2230,7 @@ ConfigureArrows(
 
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2405,7 +2405,7 @@ LineToPostscript(
     }
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -2464,7 +2464,7 @@ ArrowheadPostscript(
     }
     return TCL_OK;
 }
-
+
 /*
  * Local Variables:
  * mode: c
