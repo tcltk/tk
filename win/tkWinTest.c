@@ -11,9 +11,15 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.26 2009/08/10 23:16:28 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.27 2009/11/19 23:45:08 nijtmans Exp $
  */
 
+#ifndef USE_TCL_STUBS
+#   define USE_TCL_STUBS
+#endif
+#ifndef USE_TK_STUBS
+#   define USE_TK_STUBS
+#endif
 #include "tkWinInt.h"
 
 HWND tkWinCurrentDialog;
@@ -39,6 +45,50 @@ static int		TestwinlocaleObjCmd(ClientData clientData,
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 static Tk_GetSelProc		SetSelectionResult;
 
+
+static TkWinProcs asciiProcs = {
+    0,
+
+    (LRESULT (WINAPI *)(WNDPROC lpPrevWndFunc, HWND hWnd, UINT Msg,
+	    WPARAM wParam, LPARAM lParam)) CallWindowProcA,
+    (LRESULT (WINAPI *)(HWND hWnd, UINT Msg, WPARAM wParam,
+	    LPARAM lParam)) DefWindowProcA,
+    (ATOM (WINAPI *)(const WNDCLASS *lpWndClass)) RegisterClassA,
+    (BOOL (WINAPI *)(HWND hWnd, LPCTSTR lpString)) SetWindowTextA,
+    (HWND (WINAPI *)(DWORD dwExStyle, LPCTSTR lpClassName,
+	    LPCTSTR lpWindowName, DWORD dwStyle, int x, int y,
+	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
+	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExA,
+    (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
+	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuA,
+    (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextA,
+    (HWND (WINAPI *)(LPCTSTR lpClassName, LPCTSTR lpWindowName)) FindWindowA,
+    (int (WINAPI *)(HWND hwnd, LPTSTR lpClassName, int nMaxCount)) GetClassNameA,
+};
+
+static TkWinProcs unicodeProcs = {
+    1,
+
+    (LRESULT (WINAPI *)(WNDPROC lpPrevWndFunc, HWND hWnd, UINT Msg,
+	    WPARAM wParam, LPARAM lParam)) CallWindowProcW,
+    (LRESULT (WINAPI *)(HWND hWnd, UINT Msg, WPARAM wParam,
+	    LPARAM lParam)) DefWindowProcW,
+    (ATOM (WINAPI *)(const WNDCLASS *lpWndClass)) RegisterClassW,
+    (BOOL (WINAPI *)(HWND hWnd, LPCTSTR lpString)) SetWindowTextW,
+    (HWND (WINAPI *)(DWORD dwExStyle, LPCTSTR lpClassName,
+	    LPCTSTR lpWindowName, DWORD dwStyle, int x, int y,
+	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
+	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExW,
+    (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
+	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuW,
+    (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextW,
+    (HWND (WINAPI *)(LPCTSTR lpClassName, LPCTSTR lpWindowName)) FindWindowW,
+    (int (WINAPI *)(HWND hwnd, LPTSTR lpClassName, int nMaxCount)) GetClassNameW,
+};
+
+static TkWinProcs *tkTestWinProcs = &asciiProcs;
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -60,6 +110,12 @@ int
 TkplatformtestInit(
     Tcl_Interp *interp)		/* Interpreter to add commands to. */
 {
+    int useWide = (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS);
+    if (useWide) {
+	tkTestWinProcs = &unicodeProcs;
+    } else {
+	tkTestWinProcs = &asciiProcs;
+    }
     /*
      * Add commands for platform specific tests on MacOS here.
      */
@@ -401,7 +457,7 @@ TestfindwindowObjCmd(
         class = Tcl_WinUtfToTChar(Tcl_GetString(objv[2]), -1, &classString);
     }
 
-    hwnd  = tkWinProcs->findWindow(class, title);
+    hwnd  = tkTestWinProcs->findWindow(class, title);
 
     if (hwnd == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", -1));
@@ -439,7 +495,7 @@ TestgetwindowinfoObjCmd(
     Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
     char buf[512];
-    int cch, cchBuf = tkWinProcs->useWide ? 256 : 512;
+    int cch, cchBuf = tkTestWinProcs->useWide ? 256 : 512;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "hwnd");
@@ -449,7 +505,7 @@ TestgetwindowinfoObjCmd(
     if (Tcl_GetLongFromObj(interp, objv[1], &hwnd) != TCL_OK)
 	return TCL_ERROR;
 
-    cch = tkWinProcs->getClassName((HWND)hwnd, buf, cchBuf);
+    cch = tkTestWinProcs->getClassName((HWND)hwnd, buf, cchBuf);
     if (cch == 0) {
     	Tcl_SetResult(interp, "failed to get class name: ", TCL_STATIC);
     	AppendSystemError(interp, GetLastError());
@@ -466,8 +522,8 @@ TestgetwindowinfoObjCmd(
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
 	Tcl_NewLongObj(GetWindowLong((HWND)hwnd, GWL_ID)));
 
-    cch = tkWinProcs->getWindowText((HWND)hwnd, (LPTSTR)buf, cchBuf);
-    if (tkWinProcs->useWide) {
+    cch = tkTestWinProcs->getWindowText((HWND)hwnd, (LPTSTR)buf, cchBuf);
+    if (tkTestWinProcs->useWide) {
 	textObj = Tcl_NewUnicodeObj((LPCWSTR)buf, cch);
     } else {
 	textObj = Tcl_NewStringObj((LPCSTR)buf, cch);

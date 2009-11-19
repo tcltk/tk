@@ -13,9 +13,15 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.42 2009/09/07 07:29:04 das Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.43 2009/11/19 23:45:08 nijtmans Exp $
  */
 
+#ifndef USE_TCL_STUBS
+#   define USE_TCL_STUBS
+#endif
+#ifndef USE_TK_STUBS
+#   define USE_TK_STUBS
+#endif
 #include "tkInt.h"
 #include "tkText.h"
 
@@ -32,6 +38,15 @@
 #include "tkUnixInt.h"
 #endif
 
+/*
+ * TCL_STORAGE_CLASS is set unconditionally to DLLEXPORT because the
+ * Tcltest_Init declaration is in the source file itself, which is only
+ * accessed when we are building a library.
+ */
+
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS DLLEXPORT
+EXTERN int		Tktest_Init(Tcl_Interp *interp);
 /*
  * The following data structure represents the master for a test image:
  */
@@ -240,6 +255,13 @@ Tktest_Init(
     Tcl_Interp *interp)		/* Interpreter for application. */
 {
     static int initialized = 0;
+
+    if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
+	return TCL_ERROR;
+    }
+    if (Tk_InitStubs(interp, "8.1", 0) == NULL) {
+	return TCL_ERROR;
+    }
 
     /*
      * Create additional commands for testing Tk.
