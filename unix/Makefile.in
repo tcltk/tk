@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.161 2009/11/19 22:21:01 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.162 2009/11/19 23:45:08 nijtmans Exp $
 
 # Current Tk version;  used in various names.
 
@@ -624,17 +624,17 @@ wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
 tktest: $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
-tktest-real:
-	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ \
+tktest-real: ${TK_STUB_LIB_FILE}
+	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) ${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} @TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o tktest
 
 # FIXME: This xttest rule seems to be broken in a number of ways.
 # It should use CC_SEARCH_FLAGS, it does not include the shared
 # lib location logic from tktest, and it is not clear where this
 # test.o object file comes from.
-xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
+xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE) ${TK_STUB_LIB_FILE}
 	${CC} ${CFLAGS} ${LDFLAGS} test.o tkTest.o tkSquare.o \
-		@TK_BUILD_LIB_SPEC@ \
+		@TK_BUILD_LIB_SPEC@ ${TK_STUB_LIB_FILE}  ${TCL_STUB_LIB_SPEC} \
 		$(WISH_LIBS) $(LD_SEARCH_FLAGS) -lXt -o xttest
 
 # Note, in the target below TCL_LIBRARY needs to be set or else

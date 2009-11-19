@@ -5,8 +5,12 @@
 2009-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/GetHINSTANCE.3   Fix mentioned header file
+	* generic/tkTest.c     Compile with Stubs
+	* generic/tkOldTest.c
+	* generic/tkSquare.c
 	* win/tcl.m4           Should have been checked in together with
 	                       the 2009-08-09 check in of "win/configure"
+	* win/tkWinTest.c      Don't access tkWinProcs from Tk dll any more
 	* unix/tcl.m4:         [Patch #2883533] tcl.m4 support for Haiku OS
 	* unix/configure       (regenerated)
 	* unix/Makefile.in     Fix library order in X11_LIB_SWITCHES
