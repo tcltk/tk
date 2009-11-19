@@ -1,3 +1,7 @@
+2009-11-19  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
+
+	* generic/tkCanvas.c: [Bug 2899685]: fix the redraw logic of [imove]
+
 2009-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:         [Patch #2883533] tcl.m4 support for Haiku OS

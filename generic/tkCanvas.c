@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.59 2009/01/06 21:58:15 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.60 2009/11/19 22:28:12 ferrieux Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -1184,6 +1184,7 @@ CanvasWidgetCmd(
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
 	    int index;
 	    int x1,x2,y1,y2;
+	    int dontRedraw1,dontRedraw2;
 
 	    /*
 	     * The TK_MOVABLE_POINTS flag should only be set for types that
@@ -1210,12 +1211,16 @@ CanvasWidgetCmd(
 
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
 	    x2 = itemPtr->x2; y2 = itemPtr->y2;
+
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
-
 	    ItemDelChars(canvasPtr, itemPtr, index, index);
-	    ItemInsert(canvasPtr, itemPtr, index, tmpObj);
+	    dontRedraw1=itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
-	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
+	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	    ItemInsert(canvasPtr, itemPtr, index, tmpObj);
+	    dontRedraw2=itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+
+	    if (!(dontRedraw1 && dontRedraw2)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 			x1, y1, x2, y2);
 		EventuallyRedrawItem(canvasPtr, itemPtr);
