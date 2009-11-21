@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextIndex.c,v 1.36 2009/09/07 07:29:04 das Exp $
+ * RCS: @(#) $Id: tkTextIndex.c,v 1.37 2009/11/21 17:24:42 dkf Exp $
  */
 
 #include "default.h"
@@ -66,7 +66,7 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
 	((objPtr)->internalRep.twoPtrValue.ptr1 = (void *) (indexPtr))
 #define SET_INDEXEPOCH(objPtr, epoch) \
 	((objPtr)->internalRep.twoPtrValue.ptr2 = INT2PTR(epoch))
-
+
 /*
  * Define the 'textindex' object type, which Tk uses to represent indices in
  * text widgets internally.
@@ -92,10 +92,11 @@ FreeTextIndexInternalRep(
 	     * The text widget has been deleted and we need to free it now.
 	     */
 
-	    ckfree((char *) (indexPtr->textPtr));
+	    ckfree((char *) indexPtr->textPtr);
 	}
     }
     ckfree((char *) indexPtr);
+    indexObjPtr->typePtr = NULL;
 }
 
 static void
@@ -121,7 +122,7 @@ DupTextIndexInternalRep(
     SET_INDEXEPOCH(copyPtr, epoch);
     copyPtr->typePtr = &tkTextIndexType;
 }
-
+
 /*
  * This will not be called except by TkTextNewIndexObj below. This is because
  * if a TkTextIndex is no longer valid, it is not possible to regenerate the
@@ -153,7 +154,7 @@ SetTextIndexFromAny(
 	    "via TkTextGetIndexFromObj API", -1);
     return TCL_ERROR;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -250,7 +251,7 @@ TkTextGetIndexFromObj(
 
     return MakeObjIndex((cache ? textPtr : NULL), objPtr, &index);
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -295,7 +296,7 @@ TkTextNewIndexObj(
     UpdateStringOfTextIndex(retVal);
     return retVal;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -363,7 +364,7 @@ TkTextMakePixelIndex(
     }
     return TkTextMeasureDown(textPtr, indexPtr, pixelOffset);
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -456,7 +457,7 @@ TkTextMakeByteIndex(
     }
     return indexPtr;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -551,7 +552,7 @@ TkTextMakeCharIndex(
     }
     return indexPtr;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -591,7 +592,7 @@ TkTextIndexToSeg(
     }
     return segPtr;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -624,7 +625,7 @@ TkTextSegToOffset(
     }
     return offset;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -653,7 +654,7 @@ TkTextGetObjIndex(
     return GetIndex(interp, NULL, textPtr, Tcl_GetString(idxObj), indexPtr,
 	    NULL);
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -682,7 +683,7 @@ TkTextSharedGetObjIndex(
     return GetIndex(interp, sharedTextPtr, NULL, Tcl_GetString(idxObj),
 	    indexPtr, NULL);
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -711,7 +712,7 @@ TkTextGetIndex(
 {
     return GetIndex(interp, NULL, textPtr, string, indexPtr, NULL);
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1006,7 +1007,7 @@ GetIndex(
     Tcl_AppendResult(interp, "bad text index \"", string, "\"", NULL);
     return TCL_ERROR;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1070,7 +1071,7 @@ TkTextPrintIndex(
     return sprintf(string, "%d.%d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1123,7 +1124,7 @@ TkTextIndexCmp(
     }
     return 0;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1367,7 +1368,7 @@ ForwBack(
     }
     return p;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1437,7 +1438,7 @@ TkTextIndexForwBytes(
 	dstPtr->linePtr = linePtr;
     }
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1616,7 +1617,7 @@ TkTextIndexForwChars(
 	ckfree((char *) infoPtr);
     }
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1813,7 +1814,7 @@ TkTextIndexCount(
     }
     return count;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -1881,7 +1882,7 @@ TkTextIndexBackBytes(
     }
     return 0;
 }
-
+
 /*
  *---------------------------------------------------------------------------
  *
@@ -2096,7 +2097,7 @@ TkTextIndexBackChars(
 	ckfree((char *) infoPtr);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2300,7 +2301,7 @@ StartEnd(
   done:
     return p;
 }
-
+
 /*
  * Local Variables:
  * mode: c
