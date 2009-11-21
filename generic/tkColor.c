@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.20 2009/01/09 07:03:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.21 2009/11/21 17:24:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -44,6 +44,7 @@ static Tcl_ThreadDataKey dataKey;
 
 static void		ColorInit(TkDisplay *dispPtr);
 static void		DupColorObjProc(Tcl_Obj *srcObjPtr,Tcl_Obj *dupObjPtr);
+static void		FreeColorObj(Tcl_Obj *objPtr);
 static void		FreeColorObjProc(Tcl_Obj *objPtr);
 static void		InitColorObj(Tcl_Obj *objPtr);
 
@@ -113,7 +114,7 @@ Tk_AllocColorFromObj(
 	     * longer in use. Clear the reference.
 	     */
 
-	    FreeColorObjProc(objPtr);
+	    FreeColorObj(objPtr);
 	    tkColPtr = NULL;
 	} else if ((Tk_Screen(tkwin) == tkColPtr->screen)
 		&& (Tk_Colormap(tkwin) == tkColPtr->colormap)) {
@@ -131,7 +132,7 @@ Tk_AllocColorFromObj(
     if (tkColPtr != NULL) {
 	TkColor *firstColorPtr = Tcl_GetHashValue(tkColPtr->hashPtr);
 
-	FreeColorObjProc(objPtr);
+	FreeColorObj(objPtr);
 	for (tkColPtr = firstColorPtr; tkColPtr != NULL;
 		tkColPtr = tkColPtr->nextPtr) {
 	    if ((Tk_Screen(tkwin) == tkColPtr->screen)
@@ -527,13 +528,13 @@ Tk_FreeColorFromObj(
     Tcl_Obj *objPtr)		/* The Tcl_Obj * to be freed. */
 {
     Tk_FreeColor(Tk_GetColorFromObj(tkwin, objPtr));
-    FreeColorObjProc(objPtr);
+    FreeColorObj(objPtr);
 }
 
 /*
  *---------------------------------------------------------------------------
  *
- * FreeColorObjProc --
+ * FreeColorObjProc, FreeColorObj --
  *
  *	This proc is called to release an object reference to a color. Called
  *	when the object's internal rep is released or when the cached tkColPtr
@@ -551,6 +552,14 @@ Tk_FreeColorFromObj(
 
 static void
 FreeColorObjProc(
+    Tcl_Obj *objPtr)		/* The object we are releasing. */
+{
+    FreeColorObj(objPtr);
+    objPtr->typePtr = NULL;
+}
+
+static void
+FreeColorObj(
     Tcl_Obj *objPtr)		/* The object we are releasing. */
 {
     TkColor *tkColPtr = objPtr->internalRep.twoPtrValue.ptr1;
@@ -668,7 +677,7 @@ Tk_GetColorFromObj(
 	    (tkColPtr != NULL); tkColPtr = tkColPtr->nextPtr) {
 	if ((Tk_Screen(tkwin) == tkColPtr->screen)
 		&& (Tk_Colormap(tkwin) == tkColPtr->colormap)) {
-	    FreeColorObjProc(objPtr);
+	    FreeColorObj(objPtr);
 	    objPtr->internalRep.twoPtrValue.ptr1 = tkColPtr;
 	    tkColPtr->objRefCount++;
 	    return (XColor *) tkColPtr;

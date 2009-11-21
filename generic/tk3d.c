@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.c,v 1.25 2009/01/09 07:03:31 nijtmans Exp $
+ * RCS: @(#) $Id: tk3d.c,v 1.26 2009/11/21 17:24:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -32,6 +32,7 @@ static const char *const reliefStrings[] = {
 static void		BorderInit(TkDisplay *dispPtr);
 static void		DupBorderObjProc(Tcl_Obj *srcObjPtr,
 			    Tcl_Obj *dupObjPtr);
+static void		FreeBorderObj(Tcl_Obj *objPtr);
 static void		FreeBorderObjProc(Tcl_Obj *objPtr);
 static int		Intersect(XPoint *a1Ptr, XPoint *a2Ptr,
 			    XPoint *b1Ptr, XPoint *b2Ptr, XPoint *iPtr);
@@ -73,8 +74,8 @@ const Tcl_ObjType tkBorderObjType = {
  * Side effects:
  *	The border is added to an internal database with a reference count.
  *	For each call to this function, there should eventually be a call to
- *	FreeBorderObjProc so that the database is cleaned up when borders
- *	aren't in use anymore.
+ *	FreeBorderObj so that the database is cleaned up when borders aren't
+ *	in use anymore.
  *
  *----------------------------------------------------------------------
  */
@@ -105,7 +106,7 @@ Tk_Alloc3DBorderFromObj(
 	     * longer in use. Clear the reference.
 	     */
 
-	    FreeBorderObjProc(objPtr);
+	    FreeBorderObj(objPtr);
 	    borderPtr = NULL;
 	} else if ((Tk_Screen(tkwin) == borderPtr->screen)
 		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
@@ -118,9 +119,7 @@ Tk_Alloc3DBorderFromObj(
      * The object didn't point to the border that we wanted. Search the list
      * of borders with the same name to see if one of the others is the right
      * one.
-     */
-
-    /*
+     *
      * If the cached value is NULL, either the object type was not a color
      * going in, or the object is a color type but had previously been freed.
      *
@@ -132,7 +131,7 @@ Tk_Alloc3DBorderFromObj(
     if (borderPtr != NULL) {
 	TkBorder *firstBorderPtr = Tcl_GetHashValue(borderPtr->hashPtr);
 
-	FreeBorderObjProc(objPtr);
+	FreeBorderObj(objPtr);
 	for (borderPtr = firstBorderPtr ; borderPtr != NULL;
 		borderPtr = borderPtr->nextPtr) {
 	    if ((Tk_Screen(tkwin) == borderPtr->screen)
@@ -496,13 +495,13 @@ Tk_Free3DBorderFromObj(
     Tcl_Obj *objPtr)		/* The Tcl_Obj * to be freed. */
 {
     Tk_Free3DBorder(Tk_Get3DBorderFromObj(tkwin, objPtr));
-    FreeBorderObjProc(objPtr);
+    FreeBorderObj(objPtr);
 }
 
 /*
  *---------------------------------------------------------------------------
  *
- * FreeBorderObjProc --
+ * FreeBorderObjProc, FreeBorderObj --
  *
  *	This proc is called to release an object reference to a border. Called
  *	when the object's internal rep is released or when the cached
@@ -520,6 +519,14 @@ Tk_Free3DBorderFromObj(
 
 static void
 FreeBorderObjProc(
+    Tcl_Obj *objPtr)		/* The object we are releasing. */
+{
+    FreeBorderObj(objPtr);
+    objPtr->typePtr = NULL;
+}
+
+static void
+FreeBorderObj(
     Tcl_Obj *objPtr)		/* The object we are releasing. */
 {
     TkBorder *borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
@@ -657,12 +664,12 @@ Tk_GetRelief(
 	*reliefPtr = TK_RELIEF_FLAT;
     } else if ((c == 'g') && (strncmp(name, "groove", length) == 0)
 	    && (length >= 2)) {
-        *reliefPtr = TK_RELIEF_GROOVE;
+	*reliefPtr = TK_RELIEF_GROOVE;
     } else if ((c == 'r') && (strncmp(name, "raised", length) == 0)
 	    && (length >= 2)) {
 	*reliefPtr = TK_RELIEF_RAISED;
     } else if ((c == 'r') && (strncmp(name, "ridge", length) == 0)) {
-        *reliefPtr = TK_RELIEF_RIDGE;
+	*reliefPtr = TK_RELIEF_RIDGE;
     } else if ((c == 's') && (strncmp(name, "solid", length) == 0)) {
 	*reliefPtr = TK_RELIEF_SOLID;
     } else if ((c == 's') && (strncmp(name, "sunken", length) == 0)) {
@@ -770,9 +777,8 @@ Tk_Draw3DPolygon(
      */
 
     if ((leftRelief == TK_RELIEF_GROOVE) || (leftRelief == TK_RELIEF_RIDGE)) {
-	int halfWidth;
+	int halfWidth = borderWidth/2;
 
-	halfWidth = borderWidth/2;
 	Tk_Draw3DPolygon(tkwin, drawable, border, pointPtr, numPoints,
 		halfWidth, (leftRelief == TK_RELIEF_GROOVE) ? TK_RELIEF_RAISED
 		: TK_RELIEF_SUNKEN);
@@ -1085,19 +1091,18 @@ ShiftLine(
     XPoint *p3Ptr)		/* Store coords of point on new line here. */
 {
     int dx, dy, dxNeg, dyNeg;
-
-    /*
-     * The table below is used for a quick approximation in computing the new
-     * point. An index into the table is 128 times the slope of the original
-     * line (the slope must always be between 0 and 1). The value of the table
-     * entry is 128 times the amount to displace the new line in y for each
-     * unit of perpendicular distance. In other words, the table maps from the
-     * tangent of an angle to the inverse of its cosine. If the slope of the
-     * original line is greater than 1, then the displacement is done in x
-     * rather than in y.
-     */
-
-    static int shiftTable[129];
+    static int shiftTable[129];	/* Used for a quick approximation in computing
+				 * the new point. An index into the table is
+				 * 128 times the slope of the original line
+				 * (the slope must always be between 0 and 1).
+				 * The value of the table entry is 128 times
+				 * the amount to displace the new line in y
+				 * for each unit of perpendicular distance. In
+				 * other words, the table maps from the
+				 * tangent of an angle to the inverse of its
+				 * cosine. If the slope of the original line
+				 * is greater than 1, then the displacement is
+				 * done in x rather than in y. */
 
     /*
      * Initialize the table if this is the first time it is used.
@@ -1283,7 +1288,7 @@ Tk_Get3DBorderFromObj(
 	    borderPtr = borderPtr->nextPtr) {
 	if ((Tk_Screen(tkwin) == borderPtr->screen)
 		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
-	    FreeBorderObjProc(objPtr);
+	    FreeBorderObj(objPtr);
 	    objPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
 	    borderPtr->objRefCount++;
 	    return (Tk_3DBorder) borderPtr;

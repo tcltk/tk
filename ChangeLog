@@ -1,19 +1,30 @@
+2009-11-21  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkUtil.c: Remove some anachronistic techniques (pointless
+	casts, mixed assignments and tests, etc.)
+
+	* generic/tk3d.c, generic/tkBitmap.c, generic/tkColor.c:
+	* generic/tkCursor.c, generic/tkFont.c, generic/tkTextIndex.c:
+	[Tcl Bug 2857044]: Corrections following audit of Tcl_ObjType freeing
+	practises; the typePtr field is now cleared when an object ceases to
+	be of the type.
+
 2009-11-19  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
 
-	* generic/tkCanvas.c: [Bug 2899685]: fix the redraw logic of [imove]
+	* generic/tkCanvas.c: [Bug 2899685]: Fix the redraw logic of [imove]
 
 2009-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* doc/GetHINSTANCE.3   Fix mentioned header file
-	* generic/tkTest.c     Compile with Stubs
+	* doc/GetHINSTANCE.3:	Fix mentioned header file
+	* generic/tkTest.c:	Compile with Stubs
 	* generic/tkOldTest.c
 	* generic/tkSquare.c
-	* win/tcl.m4           Should have been checked in together with
-	                       the 2009-08-09 check in of "win/configure"
-	* win/tkWinTest.c      Don't access tkWinProcs from Tk dll any more
-	* unix/tcl.m4:         [Patch #2883533] tcl.m4 support for Haiku OS
-	* unix/configure       (regenerated)
-	* unix/Makefile.in     Fix library order in X11_LIB_SWITCHES
+	* win/tcl.m4:		Should have been checked in together with the
+				2009-08-09 check in of "win/configure"
+	* win/tkWinTest.c:	Don't access tkWinProcs from Tk dll any more
+	* unix/tcl.m4:		[Patch 2883533]: tcl.m4 support for Haiku OS
+	* unix/configure	(regenerated)
+	* unix/Makefile.in:	Fix library order in X11_LIB_SWITCHES
 
 2009-11-19  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -44,10 +55,10 @@
 
 2009-11-10  Andreas Kupries  <andreask@activestate.com>
 
-	* unix/Makefile.in: Partially reverted Don Porter's 2009-10-20
-	commit. The OSX Cocoa code branch still needs tclInt.h and the
-	internal headers, thus the TCL_PLATFORM directory. See
-	tclMacOSXNotify.c for example.
+	* unix/Makefile.in: Partially reverted Don Porter's 2009-10-20 commit.
+	The OSX Cocoa code branch still needs tclInt.h and the internal
+	headers, thus the TCL_PLATFORM directory. See tclMacOSXNotify.c for
+	example.
 
 2009-11-09  Donal K. Fellows  <dkf@users.sf.net>
 

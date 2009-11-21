@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUtil.c,v 1.30 2009/08/09 21:20:33 nijtmans Exp $
+ * RCS: @(#) $Id: tkUtil.c,v 1.31 2009/11/21 17:24:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -61,7 +61,7 @@ TkStateParseProc(
 
     register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
 
-    if(value == NULL || *value == 0) {
+    if (value == NULL || *value == 0) {
 	*statePtr = TK_STATE_NULL;
 	return TCL_OK;
     }
@@ -181,7 +181,7 @@ TkOrientParseProc(
 
     register int *orientPtr = (int *) (widgRec + offset);
 
-    if(value == NULL || *value == 0) {
+    if (value == NULL || *value == 0) {
 	*orientPtr = 0;
 	return TCL_OK;
     }
@@ -275,7 +275,7 @@ TkOffsetParseProc(
     tsoffset.flags = 0;
     p = value;
 
-    switch(value[0]) {
+    switch (value[0]) {
     case '#':
 	if (PTR2INT(clientData) & TK_OFFSET_RELATIVE) {
 	    tsoffset.flags = TK_OFFSET_RELATIVE;
@@ -338,7 +338,13 @@ TkOffsetParseProc(
 	tsoffset.flags = TK_OFFSET_CENTER|TK_OFFSET_MIDDLE;
 	goto goodTSOffset;
     }
-    if ((q = strchr(p,',')) == NULL) {
+
+    /*
+     * Check for an extra offset.
+     */
+
+    q = strchr(p, ',');
+    if (q == NULL) {
 	if (PTR2INT(clientData) & TK_OFFSET_INDEX) {
 	    if (Tcl_GetInt(interp, (char *) p, &tsoffset.flags) != TCL_OK) {
 		Tcl_ResetResult(interp);
@@ -349,6 +355,7 @@ TkOffsetParseProc(
 	}
 	goto badTSOffset;
     }
+
     *((char *) q) = 0;
     result = Tk_GetPixels(interp, tkwin, (char *) p, &tsoffset.xoffset);
     *((char *) q) = ',';
@@ -359,14 +366,14 @@ TkOffsetParseProc(
 	return TCL_ERROR;
     }
 
-  goodTSOffset:
     /*
      * Below is a hack to allow the stipple/tile offset to be stored in the
      * internal tile structure. Most of the times, offsetPtr is a pointer to
      * an already existing tile structure. However if this structure is not
-     * already created, we must do it with Tk_GetTile()!!!!;
+     * already created, we must do it with Tk_GetTile()!!!!
      */
 
+  goodTSOffset:
     memcpy(offsetPtr, &tsoffset, sizeof(Tk_TSOffset));
     return TCL_OK;
 
@@ -411,7 +418,7 @@ TkOffsetPrintProc(
 	if (offsetPtr->flags >= INT_MAX) {
 	    return "end";
 	}
-	p = (char *) ckalloc(32);
+	p = ckalloc(32);
 	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
@@ -441,7 +448,7 @@ TkOffsetPrintProc(
 	    return "se";
 	}
     }
-    q = p = (char *) ckalloc(32);
+    q = p = ckalloc(32);
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
@@ -463,7 +470,7 @@ TkOffsetPrintProc(
 int
 TkPixelParseProc(
     ClientData clientData,	/* If non-NULL, negative values are allowed as
-				 * well */
+				 * well. */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
@@ -504,7 +511,7 @@ TkPixelPrintProc(
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
-    char *p = (char *) ckalloc(24);
+    char *p = ckalloc(24);
 
     Tcl_PrintDouble(NULL, *doublePtr, p);
     *freeProcPtr = TCL_DYNAMIC;
@@ -709,11 +716,10 @@ Tk_GetScrollInfoObj(
 				 * scroll, if any. */
 {
     int length;
-    const char *arg;
+    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
 
-    arg = Tcl_GetStringFromObj(objv[2], &length);
-
-#define ArgPfxEq(str) ((arg[0]==str[0])&&!strncmp(arg,str,(unsigned)length))
+#define ArgPfxEq(str) \
+	((arg[0] == str[0]) && !strncmp(arg, str, (unsigned)length))
 
     if (ArgPfxEq("moveto")) {
 	if (objc != 4) {
@@ -1034,8 +1040,8 @@ TkBackgroundEvalObjv(
 	Tcl_DecrRefCount(objv[n]);
     }
     if (r == TCL_ERROR) {
-        Tcl_AddErrorInfo(interp, "\n    (background event handler)");
-        Tcl_BackgroundException(interp, r);
+	Tcl_AddErrorInfo(interp, "\n    (background event handler)");
+	Tcl_BackgroundException(interp, r);
     }
 
     Tcl_Release(interp);
@@ -1065,8 +1071,8 @@ TkBackgroundEvalObjv(
  *
  * TkMakeEnsemble --
  *
- *	Create an ensemble from a table of implementation commands.
- *	This may be called recursively to create sub-ensembles.
+ *	Create an ensemble from a table of implementation commands. This may
+ *	be called recursively to create sub-ensembles.
  *
  * Results:
  *	Handle for the ensemble, or NULL if creation of it fails.
@@ -1096,21 +1102,21 @@ TkMakeEnsemble(
 
     namespacePtr = Tcl_FindNamespace(interp, namespace, NULL, 0);
     if (namespacePtr == NULL) {
-        namespacePtr = Tcl_CreateNamespace(interp, namespace, NULL, NULL);
-        if (namespacePtr == NULL) {
-            Tcl_Panic("failed to create namespace \"%s\"", namespace);
-        }
+	namespacePtr = Tcl_CreateNamespace(interp, namespace, NULL, NULL);
+	if (namespacePtr == NULL) {
+	    Tcl_Panic("failed to create namespace \"%s\"", namespace);
+	}
     }
 
     nameObj = Tcl_NewStringObj(name, -1);
     ensemble = Tcl_FindEnsemble(interp, nameObj, 0);
     Tcl_DecrRefCount(nameObj);
     if (ensemble == NULL) {
-        ensemble = Tcl_CreateEnsemble(interp, name,
-	    namespacePtr, TCL_ENSEMBLE_PREFIX);
-        if (ensemble == NULL) {
-            Tcl_Panic("failed to create ensemble \"%s\"", name);
-        }
+	ensemble = Tcl_CreateEnsemble(interp, name, namespacePtr,
+		TCL_ENSEMBLE_PREFIX);
+	if (ensemble == NULL) {
+	    Tcl_Panic("failed to create ensemble \"%s\"", name);
+	}
     }
 
     Tcl_DStringSetLength(&ds, 0);
@@ -1126,15 +1132,15 @@ TkMakeEnsemble(
 
 	nameObj = Tcl_NewStringObj(map[i].name, -1);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
-	    Tcl_DStringLength(&ds));
+		Tcl_DStringLength(&ds));
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
 	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
-		map[i].proc, clientData, NULL);
+		    map[i].proc, clientData, NULL);
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
-		map[i].name, clientData, map[i].subensemble);
+		    map[i].name, clientData, map[i].subensemble);
 	}
     }
 
@@ -1154,14 +1160,16 @@ TkMakeEnsemble(
  * 	Send a virtual event notification to the specified target window.
  * 	Equivalent to "event generate $target <<$eventName>>"
  *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
- * 	so this routine does not reenter the interpreter.
+ * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
+ * 	routine does not reenter the interpreter.
  *
  *----------------------------------------------------------------------
  */
 
 void
-TkSendVirtualEvent(Tk_Window target, const char *eventName)
+TkSendVirtualEvent(
+    Tk_Window target,
+    const char *eventName)
 {
     union {XEvent general; XVirtualEvent virtual;} event;
 

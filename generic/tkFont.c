@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.60 2009/10/21 21:22:26 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.61 2009/11/21 17:24:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -329,6 +329,7 @@ static int		ConfigAttributesObj(Tcl_Interp *interp,
 			    TkFontAttributes *faPtr);
 static void		DupFontObjProc(Tcl_Obj *srcObjPtr, Tcl_Obj *dupObjPtr);
 static int		FieldSpecified(const char *field);
+static void		FreeFontObj(Tcl_Obj *objPtr);
 static void		FreeFontObjProc(Tcl_Obj *objPtr);
 static int		GetAttributeInfoObj(Tcl_Interp *interp,
 			    const TkFontAttributes *faPtr, Tcl_Obj *objPtr);
@@ -1117,7 +1118,7 @@ Tk_AllocFontFromObj(
 	     * longer in use. Clear the reference.
 	     */
 
-	    FreeFontObjProc(objPtr);
+	    FreeFontObj(objPtr);
 	    oldFontPtr = NULL;
 	} else if (Tk_Screen(tkwin) == oldFontPtr->screen) {
 	    oldFontPtr->resourceRefCount++;
@@ -1133,7 +1134,7 @@ Tk_AllocFontFromObj(
     isNew = 0;
     if (oldFontPtr != NULL) {
 	cacheHashPtr = oldFontPtr->cacheHashPtr;
-	FreeFontObjProc(objPtr);
+	FreeFontObj(objPtr);
     } else {
 	cacheHashPtr = Tcl_CreateHashEntry(&fiPtr->fontCache,
 		Tcl_GetString(objPtr), &isNew);
@@ -1297,7 +1298,7 @@ Tk_GetFontFromObj(
 	     * longer in use. Clear the reference.
 	     */
 
-	    FreeFontObjProc(objPtr);
+	    FreeFontObj(objPtr);
 	    fontPtr = NULL;
 	} else if (Tk_Screen(tkwin) == fontPtr->screen) {
 	    return (Tk_Font) fontPtr;
@@ -1311,7 +1312,7 @@ Tk_GetFontFromObj(
 
     if (fontPtr != NULL) {
 	hashPtr = fontPtr->cacheHashPtr;
-	FreeFontObjProc(objPtr);
+	FreeFontObj(objPtr);
     } else {
 	hashPtr = Tcl_FindHashEntry(&fiPtr->fontCache, Tcl_GetString(objPtr));
     }
@@ -1495,7 +1496,7 @@ Tk_FreeFontFromObj(
 /*
  *---------------------------------------------------------------------------
  *
- * FreeFontObjProc --
+ * FreeFontObjProc, FreeFontObj --
  *
  *	This proc is called to release an object reference to a font. Called
  *	when the object's internal rep is released or when the cached fontPtr
@@ -1513,6 +1514,14 @@ Tk_FreeFontFromObj(
 
 static void
 FreeFontObjProc(
+    Tcl_Obj *objPtr)		/* The object we are releasing. */
+{
+    FreeFontObj(objPtr);
+    objPtr->typePtr = NULL;
+}
+
+static void
+FreeFontObj(
     Tcl_Obj *objPtr)		/* The object we are releasing. */
 {
     TkFont *fontPtr = objPtr->internalRep.twoPtrValue.ptr1;
