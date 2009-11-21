@@ -1,3 +1,8 @@
 autom4te.cache
 Makefile
 config.status
+*.dylib
+*.plist
+*.framework
+wish
+tktest
