@@ -1,5 +1,8 @@
 2009-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* tests/winWm.test: Make sure the window is still present
+	* win/tkWinWm.c: when handling delayed activation [Bug 2899949]
+
 	* win/Makefile.vc: Include tk stubs in the tktest link
 
 2009-11-21  Donal K. Fellows  <dkf@users.sf.net>
