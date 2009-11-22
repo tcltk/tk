@@ -1,3 +1,7 @@
+2009-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/Makefile.vc: Include tk stubs in the tktest link
+
 2009-11-21  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkUtil.c: Remove some anachronistic techniques (pointless
