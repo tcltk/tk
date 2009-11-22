@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.7 2009/11/03 23:49:11 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.8 2009/11/22 23:28:36 patthoyts Exp $
  */
 
 #include "tkWinInt.h"
@@ -43,7 +43,8 @@
 typedef struct ActivateEvent {
     Tcl_Event ev;
     TkWindow *winPtr;
-    int *flagPtr;
+    const int *flagPtr;
+    HWND hwnd;
 } ActivateEvent;
 
 /*
@@ -422,7 +423,7 @@ TCL_DECLARE_MUTEX(winWmMutex)
 static int		ActivateWindow(Tcl_Event *evPtr, int flags);
 static void		ConfigureTopLevel(WINDOWPOS *pos);
 static void		GenerateConfigureNotify(TkWindow *winPtr);
-static void		GenerateActivateEvent(TkWindow *winPtr, int *flagPtr);
+static void		GenerateActivateEvent(TkWindow *winPtr, const int *flagPtr);
 static void		GetMaxSize(WmInfo *wmPtr,
 			    int *maxWidthPtr, int *maxHeightPtr);
 static void		GetMinSize(WmInfo *wmPtr,
@@ -8236,13 +8237,14 @@ TkpGetWrapperWindow(
  */
 
 static void
-GenerateActivateEvent(TkWindow * winPtr, int *flagPtr)
+GenerateActivateEvent(TkWindow * winPtr, const int *flagPtr)
 {
     ActivateEvent *eventPtr;
     eventPtr = (ActivateEvent *)ckalloc(sizeof(ActivateEvent));
     eventPtr->ev.proc = ActivateWindow;
     eventPtr->winPtr = winPtr;
     eventPtr->flagPtr = flagPtr;
+    eventPtr->hwnd = Tk_GetHWND(winPtr->window);
     Tcl_QueueEvent((Tcl_Event *)eventPtr, TCL_QUEUE_TAIL);
 }
 
@@ -8272,6 +8274,15 @@ ActivateWindow(
 
     if (! (flags & TCL_WINDOW_EVENTS)) {
 	return 0;
+    }
+
+    /*
+     * Ensure the window has not been destroyed while we delayed
+     * processing the WM_ACTIVATE message [Bug 2899949].
+     */
+
+    if (!IsWindow(eventPtr->hwnd)) {
+	return 1;
     }
 
     /*
