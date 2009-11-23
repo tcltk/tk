@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.163 2009/11/23 15:59:18 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.164 2009/11/23 16:09:33 dkf Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1710,5 +1710,16 @@ BUILD_HTML = \
 	TCLSH="$(TCL_EXE)"; fi ;\
 	"$${TCLSH}" $(TOOL_DIR)/tcltk-man2html.tcl --htmldir="$(HTML_INSTALL_DIR)" \
 		--srcdir=$(TOP_DIR)/.. $(BUILD_HTML_FLAGS)
+
+#
+# The list of all the targets that do not correspond to real files. This stops
+# 'make' from getting confused when someone makes an error in a rule.
+#
+
+.PHONY: all binaries libraries doc tkLibObjs objs tktest-real test test-classic
+.PHONY: test-ttk testlang runtest shell demo gdb install install-strip
+.PHONY: install-binaries install-libraries install-demos install-doc
+.PHONY: install-private-headers clean distclean depend genstubs checkstubs
+.PHONY: checkuchar checkexports rpm dist alldist allpatch html html-tcl html-tk
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
