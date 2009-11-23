@@ -1,7 +1,12 @@
+2009-11-23  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/Makefile.in: Added .PHONY lines to stop make from getting
+	confused when someone makes an error in a rule.
+
 2009-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/winWm.test: Make sure the window is still present
-	* win/tkWinWm.c: when handling delayed activation [Bug 2899949]
+	* tests/winWm.test: [Bug 2899949]: Make sure the window is still
+	* win/tkWinWm.c:    present when handling delayed activation.
 
 	* win/Makefile.vc: Include tk stubs in the tktest link
 
