@@ -1,12 +1,18 @@
+2009-11-24  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixWm.c (WmIconphotoCmd): [Bug 2902814]: Use the correct
+	type for the array of data passed into X. It's wrong, but "right"
+	because of a mistake in the X11 specification.
+
 2009-11-22  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/winWm.test: Make sure the window is still present
-	* win/tkWinWm.c: when handling delayed activation [Bug 2899949]
+	* tests/winWm.test: [Bug 2899949]: Make sure the window is still
+	* win/tkWinWm.c:    present when handling delayed activation
 
 2009-11-13  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* tests/winDialog.test: Backported fix for running dialog tests
-	* win/tkWinTest.c:      on non-English locales [Bug 2307837]
+	* tests/winDialog.test: [Bug 2307837]: Backported fix for running
+	* win/tkWinTest.c:      dialog tests on non-English locales
 
 2009-11-12  Don Porter  <dgp@users.sourceforge.net>
 
@@ -30,7 +36,7 @@
 
 2009-11-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinWm.c: [Bug 2891541] Permit normal behaviour on
+	* win/tkWinWm.c: [Bug 2891541]: Permit normal behaviour on
 	Windows for a grabbed toplevel when it is the main window.
 
 2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
