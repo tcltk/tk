@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.58.2.3 2009/08/01 08:08:18 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.58.2.4 2009/11/24 15:18:17 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -495,7 +495,7 @@ void TkWmCleanup(
 	    ckfree(wmPtr->iconName);
 	}
 	if (wmPtr->iconDataPtr != NULL) {
-	    ckfree((char *)wmPtr->iconDataPtr);
+	    ckfree((char *) wmPtr->iconDataPtr);
 	}
 	if (wmPtr->leaderName != NULL) {
 	    ckfree(wmPtr->leaderName);
@@ -522,7 +522,7 @@ void TkWmCleanup(
 	ckfree((char *) wmPtr);
     }
     if (dispPtr->iconDataPtr != NULL) {
-	ckfree((char *)dispPtr->iconDataPtr);
+	ckfree((char *) dispPtr->iconDataPtr);
 	dispPtr->iconDataPtr = NULL;
     }
 }
@@ -706,7 +706,7 @@ TkWmMapWindow(
 		 * _NET_WM_PID requires that to be set too.
 		 */
 
-		atom = Tk_InternAtom((Tk_Window)winPtr, "_NET_WM_PID");
+		atom = Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_PID");
 		XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 			atom, XA_CARDINAL, 32, PropModeReplace,
 			(unsigned char *) &pid, 1);
@@ -836,7 +836,7 @@ TkWmDeadWindow(
 	ckfree(wmPtr->iconName);
     }
     if (wmPtr->iconDataPtr != NULL) {
-	ckfree((char *)wmPtr->iconDataPtr);
+	ckfree((char *) wmPtr->iconDataPtr);
     }
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -1262,7 +1262,7 @@ WmSetAttribute(
 
 	opacity = 0xFFFFFFFFul * wmPtr->reqState.alpha;
 	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-		Tk_InternAtom((Tk_Window)winPtr, "_NET_WM_WINDOW_OPACITY"),
+		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_WINDOW_OPACITY"),
 		XA_CARDINAL, 32, PropModeReplace,
 		(unsigned char *)&opacity, 1L);
 	wmPtr->attributes.alpha = wmPtr->reqState.alpha;
@@ -1454,7 +1454,8 @@ WmClientCmd(
 	    wmPtr->clientMachine = NULL;
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		XDeleteProperty(winPtr->display, wmPtr->wrapperPtr->window,
-			Tk_InternAtom((Tk_Window)winPtr, "WM_CLIENT_MACHINE"));
+			Tk_InternAtom((Tk_Window) winPtr,
+				"WM_CLIENT_MACHINE"));
 	    }
 	}
 	return TCL_OK;
@@ -1462,8 +1463,7 @@ WmClientCmd(
     if (wmPtr->clientMachine != NULL) {
 	ckfree((char *) wmPtr->clientMachine);
     }
-    wmPtr->clientMachine = (char *)
-	    ckalloc((unsigned) (length + 1));
+    wmPtr->clientMachine = ckalloc((unsigned) length + 1);
     strcpy(wmPtr->clientMachine, argv3);
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	XTextProperty textProp;
@@ -1487,7 +1487,8 @@ WmClientCmd(
 
 	    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 		    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_PID"),
-		    XA_CARDINAL,32, PropModeReplace, (unsigned char*)&pid, 1);
+		    XA_CARDINAL,32, PropModeReplace, (unsigned char *) &pid,
+		    1);
 	}
 	Tcl_DStringFree(&ds);
     }
@@ -1561,7 +1562,7 @@ WmColormapwindowsCmd(
 	return TCL_ERROR;
     }
     cmapList = (Window *) ckalloc((unsigned)
-	    ((windowObjc+1)*sizeof(Window)));
+	    (windowObjc+1) * sizeof(Window));
     gotToplevel = 0;
     for (i = 0; i < windowObjc; i++) {
 	Tk_Window mapWin;
@@ -1788,7 +1789,7 @@ WmForgetCmd(tkwin, winPtr, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    register Tk_Window frameWin = (Tk_Window)winPtr;
+    register Tk_Window frameWin = (Tk_Window) winPtr;
 
     if (Tk_IsTopLevel(frameWin)) {
 	TkFocusJoin(winPtr);
@@ -2069,7 +2070,7 @@ WmGroupCmd(
 	}
 	wmPtr->hints.window_group = Tk_WindowId(wmPtr2->wrapperPtr);
 	wmPtr->hints.flags |= WindowGroupHint;
-	wmPtr->leaderName = ckalloc((unsigned) (length + 1));
+	wmPtr->leaderName = ckalloc((unsigned) length + 1);
 	strcpy(wmPtr->leaderName, argv3);
     }
     UpdateHints(winPtr);
@@ -2297,7 +2298,7 @@ WmIconnameCmd(
 	    ckfree((char *) wmPtr->iconName);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->iconName = ckalloc((unsigned) (length + 1));
+	wmPtr->iconName = ckalloc((unsigned) length + 1);
 	strcpy(wmPtr->iconName, argv3);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    UpdateTitle(winPtr);
@@ -2335,7 +2336,7 @@ WmIconphotoCmd(
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
     int i, size = 0, width, height, index = 0, x, y, isDefault = 0;
-    unsigned int *iconPropertyData;
+    unsigned long *iconPropertyData;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2375,15 +2376,17 @@ WmIconphotoCmd(
 
     /*
      * We have calculated the size of the data. Try to allocate the needed
-     * memory space.
+     * memory space. This is an unsigned long array (despite this being twice
+     * as much as is really needed on LP64 platforms) because that's what X
+     * defines CARD32 arrays to use. [Bug 2902814]
      */
 
-    iconPropertyData = (unsigned int *)
-	    Tcl_AttemptAlloc(sizeof(unsigned int) * size);
+    iconPropertyData = (unsigned long *)
+	    attemptckalloc(sizeof(unsigned long) * size);
     if (iconPropertyData == NULL) {
 	return TCL_ERROR;
     }
-    memset(iconPropertyData, 0, sizeof(unsigned int) * size);
+    memset(iconPropertyData, 0, sizeof(unsigned long) * size);
 
     for (i = 3 + isDefault; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
@@ -2421,7 +2424,7 @@ WmIconphotoCmd(
 	    for (x = 0; x < width; x++) {
 		register unsigned char *pixelPtr =
 			block.pixelPtr + x*block.pixelSize + y*block.pitch;
-		register unsigned int R, G, B, A;
+		register unsigned long R, G, B, A;
 
 		R = pixelPtr[block.offset[0]];
 		G = pixelPtr[block.offset[1]];
@@ -2432,7 +2435,7 @@ WmIconphotoCmd(
 	}
     }
     if (wmPtr->iconDataPtr != NULL) {
-	ckfree((char *)wmPtr->iconDataPtr);
+	ckfree((char *) wmPtr->iconDataPtr);
 	wmPtr->iconDataPtr = NULL;
     }
     if (isDefault) {
@@ -2648,7 +2651,7 @@ WmManageCmd(tkwin, winPtr, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    register Tk_Window frameWin = (Tk_Window)winPtr;
+    register Tk_Window frameWin = (Tk_Window) winPtr;
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (!Tk_IsTopLevel(frameWin)) {
@@ -3388,7 +3391,7 @@ WmTitleCmd(
 	    ckfree((char *) wmPtr->title);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->title = ckalloc((unsigned) (length + 1));
+	wmPtr->title = ckalloc((unsigned) length + 1);
 	strcpy(wmPtr->title, argv3);
 
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -3531,7 +3534,7 @@ WmTransientCmd(
 			wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
 	    } else {
 		XDeleteProperty(winPtr->display, wmPtr->wrapperPtr->window,
-			Tk_InternAtom((Tk_Window)winPtr, "WM_TRANSIENT_FOR"));
+			Tk_InternAtom((Tk_Window) winPtr, "WM_TRANSIENT_FOR"));
 	    }
 	}
     }
@@ -4257,7 +4260,7 @@ PropertyEvent(
 {
     TkWindow *wrapperPtr = wmPtr->wrapperPtr;
     Atom _NET_WM_STATE =
-	    Tk_InternAtom((Tk_Window)wmPtr->winPtr, "_NET_WM_STATE");
+	    Tk_InternAtom((Tk_Window) wmPtr->winPtr, "_NET_WM_STATE");
 
     if (eventPtr->atom == _NET_WM_STATE) {
 	Atom actualType;
@@ -4271,7 +4274,7 @@ PropertyEvent(
 		0l, maxLength, False, XA_ATOM,
 		&actualType, &actualFormat, &numItems, &bytesAfter,
 		&propertyValue) == Success) {
-	    CheckNetWmState(wmPtr, (Atom*)propertyValue, (int)numItems);
+	    CheckNetWmState(wmPtr, (Atom *) propertyValue, (int) numItems);
 	    XFree(propertyValue);
 	}
     }
@@ -4660,7 +4663,7 @@ UpdateGeometryInfo(
 	wmPtr->configHeight = height;
 	if (winPtr->dispPtr->flags & TK_DISPLAY_WM_TRACING) {
 	    printf("UpdateGeometryInfo resizing %p to %d x %d\n",
-		    (void *)wmPtr->wrapperPtr->window, width, height);
+		    (void *) wmPtr->wrapperPtr->window, width, height);
 	}
 	XResizeWindow(winPtr->display, wmPtr->wrapperPtr->window,
 		(unsigned) width, (unsigned) height);
@@ -4831,7 +4834,7 @@ UpdateTitle(
     XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 	    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_NAME"),
 	    XA_UTF8_STRING, 8, PropModeReplace,
-	    (const unsigned char*)string, (signed int)strlen(string));
+	    (const unsigned char *) string, (signed int) strlen(string));
 
     /*
      * Set icon name:
@@ -4846,8 +4849,8 @@ UpdateTitle(
 	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON_NAME"),
 		XA_UTF8_STRING, 8, PropModeReplace,
-		(const unsigned char*)wmPtr->iconName,
-		(signed int)strlen(wmPtr->iconName));
+		(const unsigned char *) wmPtr->iconName,
+		(signed int) strlen(wmPtr->iconName));
     }
 }
 
@@ -4916,7 +4919,7 @@ SetNetWmState(
     const char *atomName,
     int on)
 {
-    Tk_Window tkwin = (Tk_Window)winPtr;
+    Tk_Window tkwin = (Tk_Window) winPtr;
     Atom messageType = Tk_InternAtom(tkwin, "_NET_WM_STATE");
     Atom action = on ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
     Atom property = Tk_InternAtom(tkwin, atomName);
@@ -4963,7 +4966,7 @@ CheckNetWmState(
     Atom *atoms,
     int numAtoms)
 {
-    Tk_Window tkwin = (Tk_Window)wmPtr->wrapperPtr;
+    Tk_Window tkwin = (Tk_Window) wmPtr->wrapperPtr;
     int i;
     Atom _NET_WM_STATE_ABOVE
 	    = Tk_InternAtom(tkwin, "_NET_WM_STATE_ABOVE"),
@@ -5011,7 +5014,7 @@ static void
 UpdateNetWmState(
     WmInfo *wmPtr)
 {
-    Tk_Window tkwin = (Tk_Window)wmPtr->wrapperPtr;
+    Tk_Window tkwin = (Tk_Window) wmPtr->wrapperPtr;
     Atom atoms[NET_WM_STATE_MAX_ATOMS];
     long numAtoms = 0;
 
@@ -5028,7 +5031,7 @@ UpdateNetWmState(
 
     XChangeProperty(Tk_Display(tkwin), wmPtr->wrapperPtr->window,
 	    Tk_InternAtom(tkwin, "_NET_WM_STATE"), XA_ATOM, 32,
-	    PropModeReplace, (unsigned char *)atoms, numAtoms);
+	    PropModeReplace, (unsigned char *) atoms, numAtoms);
 }
 
 /*
@@ -5526,7 +5529,7 @@ Tk_GetRootCoords(
 
 		root = winPtr->wmInfoPtr->vRoot;
 		if (root == None) {
-		    root = RootWindowOfScreen(Tk_Screen((Tk_Window)winPtr));
+		    root = RootWindowOfScreen(Tk_Screen((Tk_Window) winPtr));
 		}
 		XTranslateCoordinates(winPtr->display, winPtr->window,
 			root, 0, 0, &rootX, &rootY, &dummyChild);
@@ -5982,7 +5985,7 @@ UpdateWmProtocols(
 	    protPtr = protPtr->nextPtr, count++) {
 	/* Empty loop body; we're just counting the handlers. */
     }
-    arrayPtr = (Atom *) ckalloc((unsigned) (count * sizeof(Atom)));
+    arrayPtr = (Atom *) ckalloc((unsigned) count * sizeof(Atom));
     deleteWindowAtom = Tk_InternAtom((Tk_Window) wmPtr->winPtr,
 	    "WM_DELETE_WINDOW");
     pingAtom = Tk_InternAtom((Tk_Window) wmPtr->winPtr, "_NET_WM_PING");
@@ -6378,7 +6381,7 @@ TkWmAddToColormapWindows(
      * add the toplevel itself as the last element of the list.
      */
 
-    newPtr = (Window *) ckalloc((unsigned) ((count+2)*sizeof(Window)));
+    newPtr = (Window *) ckalloc((unsigned) (count+2) * sizeof(Window));
     for (i = 0; i < count; i++) {
 	newPtr[i] = oldPtr[i];
     }
@@ -7030,7 +7033,7 @@ UpdateCommand(
      */
 
     cmdArgv = (char **) ckalloc(sizeof(char *) * wmPtr->cmdArgc);
-    offsets = (int *) ckalloc( sizeof(int) * wmPtr->cmdArgc);
+    offsets = (int *) ckalloc(sizeof(int) * wmPtr->cmdArgc);
     Tcl_DStringInit(&cmds);
     for (i = 0; i < wmPtr->cmdArgc; i++) {
 	Tcl_UtfToExternalDString(NULL, wmPtr->cmdArgv[i], -1, &ds);
