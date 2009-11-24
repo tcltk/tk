@@ -1,3 +1,9 @@
+2009-11-24  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixWm.c (WmIconphotoCmd): [Bug 2902814]: Use the correct
+	type for the array of data passed into X. It's wrong, but "right"
+	because of a mistake in the X11 specification.
+
 2009-11-23  Andreas Kupries  <andreask@activestate.com>
 
 	* library/safetk.tcl (::safe::loadTk): [Bug 2902573]: Fixed access
