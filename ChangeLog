@@ -1,3 +1,9 @@
+2009-11-25  Stuart Cassoff <stwo@users.sf.net>
+
+	* unix/tcl.m4:		[Patch 2892871]: Remove unneeded
+	*			AC_STRUCT_TIMEZONE.
+	* unix/configure:	Regenerated with autoconf-2.59.
+
 2009-11-24  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixWm.c (WmIconphotoCmd): [Bug 2902814]: Use the correct
