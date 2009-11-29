@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.14 2009/11/19 23:45:08 nijtmans Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.15 2009/11/29 22:10:36 nijtmans Exp $
  */
 
 #if 0
@@ -98,9 +98,6 @@ static const Tk_OptionSpec optionSpecs[] = {
  * Forward declarations for procedures defined later in this file:
  */
 
-int			SquareObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
 static void		SquareDeletedProc(ClientData clientData);
 static int		SquareConfigure(Tcl_Interp *interp, Square *squarePtr);
 static void		SquareDestroy(char *memPtr);
