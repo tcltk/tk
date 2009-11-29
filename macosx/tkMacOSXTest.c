@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXTest.c,v 1.7 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXTest.c,v 1.8 2009/11/29 22:10:37 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -22,7 +22,6 @@
 
 static int		DebuggerCmd (ClientData dummy, Tcl_Interp *interp,
 			    int argc, const char **argv);
-MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 
 /*
  *----------------------------------------------------------------------

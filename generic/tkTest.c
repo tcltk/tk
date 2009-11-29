@@ -13,9 +13,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.43 2009/11/19 23:45:08 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.44 2009/11/29 22:10:36 nijtmans Exp $
  */
 
+#undef STATIC_BUILD
 #ifndef USE_TCL_STUBS
 #   define USE_TCL_STUBS
 #endif
@@ -112,14 +113,6 @@ typedef struct NewApp {
 
 static NewApp *newAppPtr = NULL;/* First in list of all new interpreters. */
 
-/*
- * Declaration for the square widget's class command function:
- */
-
-extern int		SquareObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-
 typedef struct CBinding {
     Tcl_Interp *interp;
     char *command;
@@ -157,7 +150,6 @@ static int		CBindingEvalProc(ClientData clientData,
 			    Tcl_Interp *interp, XEvent *eventPtr,
 			    Tk_Window tkwin, KeySym keySym);
 static void		CBindingFreeProc(ClientData clientData);
-int			Tktest_Init(Tcl_Interp *interp);
 static int		ImageCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
 static int		TestcbindCmd(ClientData dummy,
@@ -217,21 +209,6 @@ static int		TrivialConfigObjCmd(ClientData dummy,
 			    Tcl_Obj * const objv[]);
 static void		TrivialEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-
-/*
- * External (platform specific) initialization routine:
- */
-
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
-#define TkplatformtestInit(x) TCL_OK
-#else
-MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
-#endif
-
-/*
- * External legacy testing initialization routine:
- */
-MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 
 /*
  *----------------------------------------------------------------------

@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldTest.c,v 1.5 2009/11/19 23:45:08 nijtmans Exp $
+ * RCS: @(#) $Id: tkOldTest.c,v 1.6 2009/11/29 22:10:36 nijtmans Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -84,7 +84,6 @@ static Tk_ImageType imageType = {
 
 static int              ImageCmd(ClientData dummy,
                             Tcl_Interp *interp, int argc, const char **argv);
-MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 
 
 /*

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.27 2009/11/19 23:45:08 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.28 2009/11/29 22:10:36 nijtmans Exp $
  */
 
 #ifndef USE_TCL_STUBS
@@ -42,7 +42,6 @@ static int		TestgetwindowinfoObjCmd(ClientData clientData,
 static int		TestwinlocaleObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 static Tk_GetSelProc		SetSelectionResult;
 
 

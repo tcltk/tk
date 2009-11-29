@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.111 2009/09/07 06:20:50 das Exp $
+ * RCS: $Id: tkInt.h,v 1.112 2009/11/29 22:10:36 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -1224,6 +1224,19 @@ MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 MODULE_SCOPE int	TkUnsupported1ObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+
+/*
+ * For Tktest.
+ */
+MODULE_SCOPE int SquareObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
+MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#define TkplatformtestInit(x) TCL_OK
+#else
+MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
+#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
