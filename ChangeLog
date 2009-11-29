@@ -1,3 +1,15 @@
+2009-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tclInt.h     Make all internal initialization
+	* generic/tkTest.c     routines MODULE_SCOPE
+	* generic/tkOldTest.c
+	* generic/tkSquare.c
+	* carbon/tkMaxOSXTest.c
+	* macosx/tkMaxOSXTest.c
+	* win/tkWinTest.c
+	* win/tcl.m4           (copied from Tcl 8.6)
+	* win/configure        (regenerated)
+
 2009-11-25  Stuart Cassoff  <stwo@users.sf.net>
 
 	* unix/tcl.m4:		[Patch 2892871]: Remove unneeded
