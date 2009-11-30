@@ -1,3 +1,8 @@
+2009-11-30  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * win/Makefile.in  Better dependancies in case of static
+    build. Generate tktest86.dll and tktest86.lib.
+
 2009-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tclInt.h     Make all internal initialization
