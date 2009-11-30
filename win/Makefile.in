@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.88 2009/11/20 00:24:24 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.89 2009/11/30 23:43:49 nijtmans Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -131,6 +131,8 @@ EXESUFFIX		= @EXESUFFIX@
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 TK_LIB_FILE		= @TK_LIB_FILE@
 TK_DLL_FILE		= @TK_DLL_FILE@
+TEST_DLL_FILE		= tktest$(VER)${DLLSUFFIX}
+TEST_LIB_FILE		= @LIBPREFIX@tktest$(VER)${LIBSUFFIX}
 
 SHARED_LIBRARIES 	= $(TK_DLL_FILE) $(TK_STUB_LIB_FILE)
 STATIC_LIBRARIES	= $(TK_LIB_FILE)
@@ -184,12 +186,12 @@ EXEEXT		= @EXEEXT@
 OBJEXT		= @OBJEXT@
 STLIB_LD	= @STLIB_LD@
 SHLIB_LD	= @SHLIB_LD@
-SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@ $(TCL_STUB_LIB_FILE) $(LIBS)
+SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@
 SHLIB_CFLAGS	= @SHLIB_CFLAGS@
 SHLIB_SUFFIX	= @SHLIB_SUFFIX@
 VER		= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER		= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
-LIBS		= @LIBS@ @LIBS_GUI@
+LIBS		= $(TCL_STUB_LIB_FILE) @LIBS@ @LIBS_GUI@
 RMDIR		= rm -rf
 MKDIR		= mkdir -p
 SHELL		= @SHELL@
@@ -226,7 +228,6 @@ WISH_OBJS = \
 	winMain.$(OBJEXT)
 
 TKTEST_OBJS = \
-	testMain.$(OBJEXT) \
 	tkSquare.$(OBJEXT) \
 	tkTest.$(OBJEXT) \
 	tkOldTest.$(OBJEXT) \
@@ -590,17 +591,30 @@ install-private-headers: libraries
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
 
-$(WISH): $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(WISH_OBJS) wish.$(RES)
+$(WISH): $(WISH_OBJS) $(LIBRARIES) $(TK_STUB_LIB_FILE) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
-	$(TCL_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
+	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
-tktest : $(TKTEST)
+tktest: $(TKTEST)
 
-$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
-	$(CC) $(CFLAGS) $(TKTEST_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) \
-	$(TCL_LIB_FILE) $(TCL_STUB_LIB_FILE) $(LIBS) \
+$(TKTEST): testMain.$(OBJEXT) $(TEST_LIB_FILE) $(LIBRARIES) $(TK_STUB_LIB_FILE) wish.$(RES) $(CAT32)
+	$(CC) $(CFLAGS) testMain.$(OBJEXT) $(TEST_LIB_FILE) $(TK_LIB_FILE) \
+	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
+
+${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
+	@-$(RM) ${TEST_DLL_FILE} ${TEST_LIB_FILE}.backup
+	@-$(COPY) ${TEST_LIB_FILE} ${TEST_LIB_FILE}.backup
+	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
+	@-$(RM) ${TEST_LIB_FILE}
+	@-$(COPY) ${TEST_LIB_FILE}.backup ${TEST_LIB_FILE}
+	@-$(RM) ${TEST_LIB_FILE}.backup
+
+${TEST_LIB_FILE}: ${TKTEST_OBJS}
+	@$(RM) ${TEST_LIB_FILE}
+	@MAKE_LIB@ ${TKTEST_OBJS}
+	@POST_MAKE_LIB@
 
 # Msys make requires this next rule for some reason.
 $(TCL_SRC_DIR)/win/cat.c:
