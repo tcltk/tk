@@ -10,9 +10,11 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.44.2.2 2009/06/27 19:53:16 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.44.2.3 2009/12/02 22:20:01 nijtmans Exp $
 
 library tk
+
+##############################################################################
 
 # Define the unsupported generic interfaces.
 
@@ -568,7 +570,7 @@ declare 180 generic {
     char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
-
+
 ##############################################################################
 
 # Define the platform specific internal Tcl interface. These functions are
@@ -741,6 +743,13 @@ declare 34 win {
 }
 declare 35 win {
     int TkWinGetPlatformTheme(void)
+}
+
+# new for 8.6
+
+declare 36 win {
+    LRESULT CALLBACK TkWinChildProc(HWND hwnd,
+	    UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 ################################
@@ -1630,3 +1639,7 @@ declare 90 aqua {
 declare 91 aqua {
     int XSync(Display *display, Bool flag)
 }
+
+# Local Variables:
+# mode: tcl
+# End:
