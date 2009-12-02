@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.29 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkIntPlatDecls.h,v 1.29.2.1 2009/12/02 22:20:01 nijtmans Exp $
  */
 
 #ifndef _TKINTPLATDECLS
@@ -223,6 +223,12 @@ EXTERN void		TkWinSetHINSTANCE (HINSTANCE hInstance);
 #define TkWinGetPlatformTheme_TCL_DECLARED
 /* 35 */
 EXTERN int		TkWinGetPlatformTheme (void);
+#endif
+#ifndef TkWinChildProc_TCL_DECLARED
+#define TkWinChildProc_TCL_DECLARED
+/* 36 */
+EXTERN LRESULT CALLBACK	 TkWinChildProc (HWND hwnd, UINT message, 
+				WPARAM wParam, LPARAM lParam);
 #endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -595,6 +601,7 @@ typedef struct TkIntPlatStubs {
     int (*tkWinGetPlatformId) (void); /* 33 */
     void (*tkWinSetHINSTANCE) (HINSTANCE hInstance); /* 34 */
     int (*tkWinGetPlatformTheme) (void); /* 35 */
+    LRESULT (CALLBACK *tkWinChildProc) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam); /* 36 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow * winPtr, int active); /* 0 */
@@ -825,6 +832,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkWinGetPlatformTheme
 #define TkWinGetPlatformTheme \
 	(tkIntPlatStubsPtr->tkWinGetPlatformTheme) /* 35 */
+#endif
+#ifndef TkWinChildProc
+#define TkWinChildProc \
+	(tkIntPlatStubsPtr->tkWinChildProc) /* 36 */
 #endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
