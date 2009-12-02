@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.89 2009/11/30 23:43:49 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.90 2009/12/02 21:16:45 nijtmans Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -425,15 +425,15 @@ $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c
 
 test: test-classic test-ttk
 
-test-classic: binaries $(TKTEST)
+test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
 	$(TESTFLAGS) | ./$(CAT32)
 
-test-ttk: binaries $(TKTEST)
+test-ttk: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
 	$(TESTFLAGS) | ./$(CAT32)
 
-runtest: binaries $(TKTEST)
+runtest: binaries $(TKTEST) $(TEST_DLL_FILE)
 	$(SHELL_ENV) ./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
 
 # This target can be used to run wish from the build directory
@@ -591,30 +591,20 @@ install-private-headers: libraries
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
 
-$(WISH): $(WISH_OBJS) $(LIBRARIES) $(TK_STUB_LIB_FILE) wish.$(RES)
+$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 tktest: $(TKTEST)
 
-$(TKTEST): testMain.$(OBJEXT) $(TEST_LIB_FILE) $(LIBRARIES) $(TK_STUB_LIB_FILE) wish.$(RES) $(CAT32)
+$(TKTEST): testMain.$(OBJEXT) $(TEST_DLL_FILE) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
 	$(CC) $(CFLAGS) testMain.$(OBJEXT) $(TEST_LIB_FILE) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 
 ${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
-	@-$(RM) ${TEST_DLL_FILE} ${TEST_LIB_FILE}.backup
-	@-$(COPY) ${TEST_LIB_FILE} ${TEST_LIB_FILE}.backup
 	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
-	@-$(RM) ${TEST_LIB_FILE}
-	@-$(COPY) ${TEST_LIB_FILE}.backup ${TEST_LIB_FILE}
-	@-$(RM) ${TEST_LIB_FILE}.backup
-
-${TEST_LIB_FILE}: ${TKTEST_OBJS}
-	@$(RM) ${TEST_LIB_FILE}
-	@MAKE_LIB@ ${TKTEST_OBJS}
-	@POST_MAKE_LIB@
 
 # Msys make requires this next rule for some reason.
 $(TCL_SRC_DIR)/win/cat.c:
@@ -714,3 +704,16 @@ genstubs:
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)\tk.decls" \
             "$(GENERIC_DIR_NATIVE)\tkInt.decls"
+
+#
+# The list of all the targets that do not correspond to real files. This stops
+# 'make' from getting confused when someone makes an error in a rule.
+#
+
+.PHONY: all binaries libraries doc tkLibObjs objs tktest-real test test-classic
+.PHONY: test-ttk testlang runtest shell demo gdb install install-strip
+.PHONY: install-binaries install-libraries install-demos install-doc
+.PHONY: install-private-headers clean distclean depend genstubs checkstubs
+.PHONY: checkuchar checkexports rpm dist alldist allpatch html html-tcl html-tk
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

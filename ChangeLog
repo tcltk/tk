@@ -1,6 +1,12 @@
 2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
     * win/configure       (regenerated)
+    * win/Makefile.in     Use tktest86.dll for all tests.
+    * win/tkWinInt.h      mark various functions MODULE_SCOPE
+    * generic/tkInt.decls make TkWinChildProc available in private
+    stub table. [Bug #220600] and [Bug #220690].
+    * generic/tkIntPlatDecls.h (regenerated)
+    * generic/tkStubInit.c (regenerated)
 
 2009-11-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -9,7 +15,7 @@
 
 2009-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tclInt.h     Make all internal initialization
+	* generic/tkInt.h     Make all internal initialization
 	* generic/tkTest.c     routines MODULE_SCOPE
 	* generic/tkOldTest.c
 	* generic/tkSquare.c
