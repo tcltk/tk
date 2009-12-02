@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.112 2009/11/29 22:10:36 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.113 2009/12/02 21:16:44 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -862,7 +862,7 @@ typedef struct TkpClipMask {
  * Pointer to first entry in list of all displays currently known.
  */
 
-extern TkDisplay *tkDisplayList;
+MODULE_SCOPE TkDisplay *tkDisplayList;
 
 /*
  * Return values from TkGrabState:
