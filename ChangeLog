@@ -1,3 +1,7 @@
+2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * win/configure       (regenerated)
+
 2009-11-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
     * win/Makefile.in  Better dependancies in case of static

@@ -3332,8 +3332,6 @@ echo "$as_me: WARNING: 64bit mode not supported with GCC on Windows" >&2;}
             echo "$as_me:$LINENO: result: using static flags" >&5
 echo "${ECHO_T}using static flags" >&6
 	    runtime=
-	    LIBSUFFIX="s\${DBGX}.a"
-	    LIBFLAGSUFFIX="s\${DBGX}"
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s\${DBGX}.exe"
 	else
@@ -3353,8 +3351,6 @@ echo "$as_me: error: ${CC} does not support the -shared option.
 	    runtime=
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
 
-	    LIBSUFFIX="\${DBGX}.a"
-	    LIBFLAGSUFFIX="\${DBGX}"
 	    EXESUFFIX="\${DBGX}.exe"
 	    LIBRARIES="\${SHARED_LIBRARIES}"
 	fi
@@ -3362,11 +3358,14 @@ echo "$as_me: error: ${CC} does not support the -shared option.
 	# -luser32 and -lmsvcrt by default. Make sure CFLAGS is
 	# included so -mno-cygwin passed the correct libs to the linker.
 	SHLIB_LD='${CC} -shared ${CFLAGS}'
+	SHLIB_LD_LIBS='${LIBS}'
 	MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \$@ ${extra_ldflags} \
 	    -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
 	# DLLSUFFIX is separate because it is the building block for
 	# users of tclConfig.sh that may build shared or static.
 	DLLSUFFIX="\${DBGX}.dll"
+	LIBSUFFIX="\${DBGX}.a"
+	LIBFLAGSUFFIX="\${DBGX}"
 	SHLIB_SUFFIX=.dll
 
 	EXTRA_CFLAGS="${extra_cflags}"
@@ -3406,8 +3405,6 @@ echo "$as_me: error: ${CC} does not support the -shared option.
             echo "$as_me:$LINENO: result: using static flags" >&5
 echo "${ECHO_T}using static flags" >&6
 	    runtime=-MT
-	    LIBSUFFIX="s\${DBGX}.lib"
-	    LIBFLAGSUFFIX="s\${DBGX}"
 	    LIBRARIES="\${STATIC_LIBRARIES}"
 	    EXESUFFIX="s\${DBGX}.exe"
 	else
@@ -3416,15 +3413,15 @@ echo "${ECHO_T}using static flags" >&6
 echo "${ECHO_T}using shared flags" >&6
 	    runtime=-MD
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
-	    LIBSUFFIX="\${DBGX}.lib"
-	    LIBFLAGSUFFIX="\${DBGX}"
-	    EXESUFFIX="\${DBGX}.exe"
 	    LIBRARIES="\${SHARED_LIBRARIES}"
+	    EXESUFFIX="\${DBGX}.exe"
 	fi
 	MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -out:\$@"
 	# DLLSUFFIX is separate because it is the building block for
 	# users of tclConfig.sh that may build shared or static.
 	DLLSUFFIX="\${DBGX}.dll"
+	LIBSUFFIX="\${DBGX}.lib"
+	LIBFLAGSUFFIX="\${DBGX}"
 
  	# This is a 2-stage check to make sure we have the 64-bit SDK
  	# We have to know where the SDK is installed.
@@ -3658,6 +3655,7 @@ _ACEOF
 	fi
 
 	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
+	SHLIB_LD_LIBS='${LIBS}'
 	# link -lib only works when -lib is the first arg
 	STLIB_LD="${LINKBIN} -lib ${lflags}"
 	RC_OUT=-fo
