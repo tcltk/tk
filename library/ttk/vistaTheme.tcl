@@ -57,6 +57,18 @@ namespace eval ttk::theme::vista {
 	    -background [list selected SystemHighlight] \
 	    -foreground [list selected SystemHighlightText] ;
 
+        ttk::style configure Row -background SystemWindow
+        ttk::style configure Cell -background SystemWindow
+        ttk::style map Row \
+            -background [list selected SystemHighlight] \
+            -foreground [list selected SystemHighlightText] ;
+        ttk::style map Cell \
+            -background [list selected SystemHighlight] \
+            -foreground [list selected SystemHighlightText] ;
+        ttk::style map Item \
+ 	    -background [list selected SystemHighlight] \
+ 	    -foreground [list selected SystemHighlightText] ;
+
         # Label and Toolbutton
 	ttk::style configure TLabelframe.Label -foreground "#0046d5"
         
