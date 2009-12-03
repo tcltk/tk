@@ -1,8 +1,13 @@
+2009-12-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/ttk/xpTheme.tcl:    Fix selection of treeview rows on
+	* library/ttk/vistaTheme.tcl: Windows XP and Vista.
+
 2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/GetHINSTANCE.3       correct mentioned header file
 	* win/tkWinInt.h           make TkWinChildProc available in private
-    * generic/tkInt.decls      stub table. [Bug #220600] and [Bug #220690].
+	* generic/tkInt.decls      stub table. [Bug #220600] and [Bug #220690].
 	* generic/tkIntPlatDecls.h (regenerated)
 	* generic/tkStubInit.c     (regenerated)
 
