@@ -1,3 +1,8 @@
+2009-12-06  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
+
+	* macosx/tkMacOSXFont.c (GetFontFamilyName): [Bug #2548661] Merge fix
+	from HEAD (1.44).
+
 2009-12-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/ttk/xpTheme.tcl:    Fix selection of treeview rows on
