@@ -1,3 +1,8 @@
+2009-12-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* unix/tkUnixWm.c: [Bug 2864685] backported window manager hinting
+			   update from HEAD
+
 2009-12-06  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
 	* macosx/tkMacOSXFont.c (GetFontFamilyName): [Bug #2548661] Merge fix
