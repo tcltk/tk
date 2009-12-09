@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.75 2009/12/08 20:34:23 patthoyts Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.76 2009/12/09 10:45:30 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -291,17 +291,18 @@ typedef struct TkWmInfo {
 
 static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
 static void		RemapWindows(TkWindow *winPtr, TkWindow *parentPtr);
-static void		MenubarReqProc(ClientData clientData, Tk_Window tkwin);
+static void		MenubarReqProc(ClientData clientData,
+			    Tk_Window tkwin);
 
 static const Tk_GeomMgr wmMgrType = {
-    "wm",				/* name */
-    TopLevelReqProc,			/* requestProc */
-    NULL,				/* lostSlaveProc */
+    "wm",			/* name */
+    TopLevelReqProc,		/* requestProc */
+    NULL,			/* lostSlaveProc */
 };
 static const Tk_GeomMgr menubarMgrType = {
-    "menubar",				/* name */
-    MenubarReqProc,			/* requestProc */
-    NULL,				/* lostSlaveProc */
+    "menubar",			/* name */
+    MenubarReqProc,		/* requestProc */
+    NULL,			/* lostSlaveProc */
 };
 
 /*
@@ -355,12 +356,12 @@ static void		WaitForConfigureNotify(TkWindow *winPtr,
 static int		WaitForEvent(Display *display,
 			    WmInfo *wmInfoPtr, int type, XEvent *eventPtr);
 static void		WaitForMapNotify(TkWindow *winPtr, int mapped);
-static Tk_RestrictAction
-			WaitRestrictProc(ClientData clientData,
+static Tk_RestrictAction WaitRestrictProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		WrapperEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static void		WmWaitMapProc(ClientData clientData, XEvent *eventPtr);
+static void		WmWaitMapProc(ClientData clientData,
+			    XEvent *eventPtr);
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -370,8 +371,8 @@ static int		WmAttributesCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmClientCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		WmColormapwindowsCmd(Tk_Window tkwin, TkWindow *winPtr,
-			    Tcl_Interp *interp, int objc,
+static int		WmColormapwindowsCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmCommandCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
@@ -427,8 +428,8 @@ static int		WmMaxsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmMinsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		WmOverrideredirectCmd(Tk_Window tkwin,TkWindow *winPtr,
-			    Tcl_Interp *interp, int objc,
+static int		WmOverrideredirectCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmPositionfromCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
@@ -695,8 +696,8 @@ TkWmMapWindow(
 		unsigned long pid = (unsigned long) getpid();
 		Atom atom;
 
-		XSetWMClientMachine(winPtr->display, wmPtr->wrapperPtr->window,
-			&textProp);
+		XSetWMClientMachine(winPtr->display,
+			wmPtr->wrapperPtr->window, &textProp);
 		XFree((char *) textProp.value);
 
 		/*
@@ -926,7 +927,7 @@ TkWmDeadWindow(
 	    wmPtr2->numTransients--;
 	}
 	Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
-		StructureNotifyMask, WmWaitMapProc, (ClientData) winPtr);
+		StructureNotifyMask, WmWaitMapProc, winPtr);
 	wmPtr->masterPtr = NULL;
     }
     ckfree((char *) wmPtr);
@@ -1008,7 +1009,8 @@ Tk_WmObjCmd(
     enum options {
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FORGET,
-	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP, WMOPT_ICONBITMAP,
+	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP,
+	WMOPT_ICONBITMAP,
 	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME, WMOPT_ICONPHOTO,
 	WMOPT_ICONPOSITION, WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE,
 	WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT, WMOPT_POSITIONFROM,
@@ -1030,6 +1032,7 @@ Tk_WmObjCmd(
     if ((argv1[0] == 't') && (strncmp(argv1, "tracing", (size_t) length) == 0)
 	    && (length >= 3)) {
 	int wmTracing;
+
 	if ((objc != 2) && (objc != 3)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?boolean?");
 	    return TCL_ERROR;
@@ -2112,7 +2115,8 @@ WmIconbitmapCmd(
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconPixmapHint) {
 	    Tcl_SetResult(interp, (char *)
-		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
+		    Tk_NameOfBitmap(winPtr->display,
+			    wmPtr->hints.icon_pixmap),
 		    TCL_STATIC);
 	}
 	return TCL_OK;
@@ -2162,6 +2166,7 @@ WmIconifyCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
+
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
 	return TCL_ERROR;
@@ -2676,7 +2681,7 @@ WmManageCmd(
 	 * Flags (above) must be set before calling TkMapTopFrame (below).
 	 */
 
-	TkMapTopFrame (frameWin);
+	TkMapTopFrame(frameWin);
     } else if (Tk_IsTopLevel(frameWin)) {
 	/*
 	 * Already managed by wm - ignore it.
@@ -3001,7 +3006,7 @@ WmProtocolCmd(
 	    } else {
 		prevPtr->nextPtr = protPtr->nextPtr;
 	    }
-	    Tcl_EventuallyFree((ClientData) protPtr, TCL_DYNAMIC);
+	    Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
 	    break;
 	}
     }
@@ -3230,18 +3235,18 @@ WmStackorderCmd(
 	if (windows == NULL) {
 	    Tcl_AppendResult(interp, "TkWmStackorderToplevel failed", NULL);
 	    return TCL_ERROR;
-	} else {
-	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
-		if (*window_ptr == winPtr) {
-		    index1 = (window_ptr - windows);
-		}
-		if (*window_ptr == winPtr2) {
-		    index2 = (window_ptr - windows);
-		}
-	    }
-	    /* ASSERT: index1 != -1 && index2 != -2 [Bug 1789819] */
-	    ckfree((char *) windows);
 	}
+
+	for (window_ptr = windows; *window_ptr ; window_ptr++) {
+	    if (*window_ptr == winPtr) {
+		index1 = (window_ptr - windows);
+	    }
+	    if (*window_ptr == winPtr2) {
+		index2 = (window_ptr - windows);
+	    }
+	}
+	/* ASSERT: index1 != -1 && index2 != -2 [Bug 1789819] */
+	ckfree((char *) windows);
 
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
 		&index) != TCL_OK) {
@@ -3453,7 +3458,7 @@ WmTransientCmd(
 
 	    masterPtr->wmInfoPtr->numTransients--;
 	    Tk_DeleteEventHandler((Tk_Window) masterPtr, StructureNotifyMask,
-		    WmWaitMapProc, (ClientData) winPtr);
+		    WmWaitMapProc, winPtr);
 
 	    /*
 	     * FIXME: Need a call like Win32's UpdateWrapper() so we can
@@ -3512,13 +3517,12 @@ WmTransientCmd(
 	    if (wmPtr->masterPtr != NULL) {
 		wmPtr->masterPtr->wmInfoPtr->numTransients--;
 		Tk_DeleteEventHandler((Tk_Window) wmPtr->masterPtr,
-			StructureNotifyMask,
-			WmWaitMapProc, (ClientData) winPtr);
+			StructureNotifyMask, WmWaitMapProc, winPtr);
 	    }
 
 	    masterPtr->wmInfoPtr->numTransients++;
 	    Tk_CreateEventHandler((Tk_Window) masterPtr,
-		    StructureNotifyMask, WmWaitMapProc, (ClientData) winPtr);
+		    StructureNotifyMask, WmWaitMapProc, winPtr);
 
 	    wmPtr->masterPtr = masterPtr;
 	}
@@ -3602,7 +3606,7 @@ WmUpdateGeom(
     TkWindow *winPtr)
 {
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -3617,7 +3621,7 @@ WmWaitMapProc(
     ClientData clientData,	/* Pointer to window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkWindow *winPtr = (TkWindow *) clientData;
+    TkWindow *winPtr = clientData;
     TkWindow *masterPtr = winPtr->wmInfoPtr->masterPtr;
 
     if (masterPtr == NULL) {
@@ -3744,7 +3748,7 @@ Tk_SetGrid(
     wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -3812,7 +3816,7 @@ Tk_UnsetGrid(
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -4303,14 +4307,14 @@ PropertyEvent(
  */
 
 static const unsigned WrapperEventMask =
-    (StructureNotifyMask | PropertyChangeMask);
+	(StructureNotifyMask | PropertyChangeMask);
 
 static void
 WrapperEventProc(
     ClientData clientData,	/* Information about toplevel window. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
-    WmInfo *wmPtr = (WmInfo *) clientData;
+    WmInfo *wmPtr = clientData;
     XEvent mapEvent;
     TkDisplay *dispPtr = wmPtr->winPtr->dispPtr;
 
@@ -4397,10 +4401,11 @@ TopLevelReqProc(
     Tk_Window tkwin)		/* Information about window. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
-    WmInfo *wmPtr;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
 
-    if ((wmPtr = winPtr->wmInfoPtr) == NULL)
+    if (wmPtr == NULL) {
 	return;
+    }
 
     if ((wmPtr->width >= 0) && (wmPtr->height >= 0)) {
 	/*
@@ -4420,7 +4425,7 @@ TopLevelReqProc(
 
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 
@@ -4459,7 +4464,7 @@ static void
 UpdateGeometryInfo(
     ClientData clientData)	/* Pointer to the window's record. */
 {
-    register TkWindow *winPtr = (TkWindow *) clientData;
+    register TkWindow *winPtr = clientData;
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int x, y, width, height, min, max;
     unsigned long serial;
@@ -4629,7 +4634,7 @@ UpdateGeometryInfo(
     height += wmPtr->menuHeight;
     if (wmPtr->flags & WM_MOVE_PENDING) {
 	if ((x + wmPtr->xInParent == winPtr->changes.x) &&
-		(y + wmPtr->yInParent + wmPtr->menuHeight == winPtr->changes.y)
+		(y+wmPtr->yInParent+wmPtr->menuHeight == winPtr->changes.y)
 		&& (width == wmPtr->wrapperPtr->changes.width)
 		&& (height == wmPtr->wrapperPtr->changes.height)) {
 	    /*
@@ -5167,7 +5172,7 @@ WaitForEvent(
     info.type = type;
     info.eventPtr = eventPtr;
     info.foundEvent = 0;
-    oldRestrictProc = Tk_RestrictEvents(WaitRestrictProc, (ClientData) &info,
+    oldRestrictProc = Tk_RestrictEvents(WaitRestrictProc, &info,
 	    &oldRestrictData);
 
     Tcl_GetTime(&timeout);
@@ -5212,7 +5217,7 @@ WaitRestrictProc(
     ClientData clientData,	/* Pointer to WaitRestrictInfo structure. */
     XEvent *eventPtr)		/* Event that is about to be handled. */
 {
-    WaitRestrictInfo *infoPtr = (WaitRestrictInfo *) clientData;
+    WaitRestrictInfo *infoPtr = clientData;
 
     if (eventPtr->type == ReparentNotify) {
 	return TK_PROCESS_EVENT;
@@ -5454,7 +5459,7 @@ ParseGeometry(
     wmPtr->flags = flags;
 
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
     return TCL_OK;
@@ -5944,9 +5949,9 @@ Tk_MoveToplevelWindow(
 
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	if (wmPtr->flags & WM_UPDATE_PENDING) {
-	    Tcl_CancelIdleCall(UpdateGeometryInfo, (ClientData) winPtr);
+	    Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
 	}
-	UpdateGeometryInfo((ClientData) winPtr);
+	UpdateGeometryInfo(winPtr);
     }
 }
 
@@ -6634,8 +6639,8 @@ TkSetTransientFor(Tk_Window tkwin, Tk_Window parent)
  *
  * TkpMakeMenuWindow --
  *
- *	Configure the window to be either a pull-down (or pop-up) menu, or as
- *	a toplevel (torn-off) menu or palette.
+ *	Configure the window to be either a pull-down menu, a pop-up menu, or
+ *	as a toplevel (torn-off) menu or palette.
  *
  * Results:
  *	None.
@@ -6649,11 +6654,14 @@ TkSetTransientFor(Tk_Window tkwin, Tk_Window parent)
 void
 TkpMakeMenuWindow(
     Tk_Window tkwin,		/* New window. */
-    int transient)		/* 1 means menu is only posted briefly as a
-				 * popup or pulldown or cascade. 0 means menu
-				 * is always visible, e.g. as a torn-off menu.
+    int typeFlag)		/* TK_MAKE_MENU_DROPDOWN means menu is only
+				 * posted briefly as a pulldown or cascade,
+				 * TK_MAKE_MENU_POPUP means it is a popup.
+				 * TK_MAKE_MENU_TEAROFF means menu is always
+				 * visible, e.g. as a torn-off menu.
 				 * Determines whether save_under and
-				 * override_redirect should be set. */
+				 * override_redirect should be set, plus how
+				 * to flag it for the window manager. */
 {
     WmInfo *wmPtr;
     XSetWindowAttributes atts;
@@ -6668,20 +6676,25 @@ TkpMakeMenuWindow(
 	CreateWrapper(wmPtr);
     }
     wrapperPtr = wmPtr->wrapperPtr;
-    if (transient) {
-	atts.override_redirect = True;
-	atts.save_under = True;
-	atom = Tk_InternAtom((Tk_Window) tkwin, "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU");
-    } else {
+    if (typeFlag == TK_MAKE_MENU_TEAROFF) {
 	atts.override_redirect = False;
 	atts.save_under = False;
 	atom = Tk_InternAtom((Tk_Window) tkwin, "_NET_WM_WINDOW_TYPE_MENU");
 	TkSetTransientFor(tkwin, NULL);
+    } else {
+	atts.override_redirect = True;
+	atts.save_under = True;
+	if (typeFlag == TK_MAKE_MENU_DROPDOWN) {
+	    atom = Tk_InternAtom((Tk_Window) tkwin,
+		    "_NET_WM_TYPE_DROPDOWN_MENU");
+	} else {
+	    atom = Tk_InternAtom((Tk_Window) tkwin,
+		    "_NET_WM_WINDOW_TYPE_POPUP_MENU");
+	}
     }
     XChangeProperty(Tk_Display(tkwin), wrapperPtr->window,
-	Tk_InternAtom((Tk_Window) tkwin, "_NET_WM_WINDOW_TYPE"),
-	XA_ATOM, 32, PropModeReplace,
-	(unsigned char *) &atom, 1);
+	    Tk_InternAtom((Tk_Window) tkwin, "_NET_WM_WINDOW_TYPE"),
+	    XA_ATOM, 32, PropModeReplace, (unsigned char *) &atom, 1);
 
     /*
      * The override-redirect and save-under bits must be set on the wrapper
@@ -6792,7 +6805,7 @@ CreateWrapper(
      */
 
     Tk_CreateEventHandler((Tk_Window) wmPtr->wrapperPtr,
-	    WrapperEventMask, WrapperEventProc, (ClientData) wmPtr);
+	    WrapperEventMask, WrapperEventProc, wmPtr);
 }
 
 /*
@@ -6861,9 +6874,13 @@ TkUnixSetMenubar(
     Tk_Window parent;
     TkWindow *menubarPtr = (TkWindow *) menubar;
 
-    /* Could be a Frame (i.e. not a toplevel) */
-    if (wmPtr == NULL)
+    /*
+     * Could be a Frame (i.e. not a toplevel).
+     */
+
+    if (wmPtr == NULL) {
 	return;
+    }
 
     if (wmPtr->menubar != NULL) {
 	/*
@@ -6885,7 +6902,7 @@ TkUnixSetMenubar(
 		    Tk_WindowId(wmPtr->menubar), Tk_WindowId(parent), 0, 0);
 	}
 	Tk_DeleteEventHandler(wmPtr->menubar, StructureNotifyMask,
-		MenubarDestroyProc, (ClientData) wmPtr->menubar);
+		MenubarDestroyProc, wmPtr->menubar);
 	Tk_ManageGeometry(wmPtr->menubar, NULL, NULL);
     }
 
@@ -6911,14 +6928,14 @@ TkUnixSetMenubar(
 	menubarPtr->wmInfoPtr = wmPtr;
 	Tk_MoveResizeWindow(menubar, 0, 0, Tk_Width(tkwin), wmPtr->menuHeight);
 	Tk_MapWindow(menubar);
-	Tk_CreateEventHandler(menubar, StructureNotifyMask, MenubarDestroyProc,
-		(ClientData) menubar);
-	Tk_ManageGeometry(menubar, &menubarMgrType, (ClientData) wmPtr);
+	Tk_CreateEventHandler(menubar, StructureNotifyMask,
+		MenubarDestroyProc, menubar);
+	Tk_ManageGeometry(menubar, &menubarMgrType, wmPtr);
 	menubarPtr->flags |= TK_REPARENTED;
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) tkwin);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, tkwin);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -6957,7 +6974,7 @@ MenubarDestroyProc(
     wmPtr->menuHeight = 0;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) wmPtr->winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, wmPtr->winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }
@@ -6985,7 +7002,7 @@ MenubarReqProc(
 				 * for tkwin's toplevel. */
     Tk_Window tkwin)		/* Handle for menubar window. */
 {
-    WmInfo *wmPtr = (WmInfo *) clientData;
+    WmInfo *wmPtr = clientData;
 
     wmPtr->menuHeight = Tk_ReqHeight(tkwin);
     if (wmPtr->menuHeight <= 0) {
@@ -6993,7 +7010,7 @@ MenubarReqProc(
     }
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) wmPtr->winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, wmPtr->winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
 }

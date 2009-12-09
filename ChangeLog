@@ -1,23 +1,30 @@
+2009-12-09  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixWm.c (TkpMakeMenuWindow):	Improve the determining of what
+	* generic/tkMenu.c (ConfigureMenu):	EWMH hint to use so that we
+	distinguish between dropdown menus (children of menubars) and what are
+	presumably popup menus.
+
 2009-12-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* unix/tkUnixWm.c: [Bug 2864685] Apply suitable extended window
-	manager hints to the menus so that modern unix window managers
-	can use the correct animation modes.
+	* unix/tkUnixWm.c: [Bug 2864685]: Apply suitable extended window
+	manager hints to the menus so that modern unix window managers can use
+	the correct animation modes.
 
 2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/configure:       (regenerated)
-	* win/Makefile.in:     Use tktest86.dll for all tests.
-	* win/tkWinInt.h:      mark various functions MODULE_SCOPE
-	* generic/tkInt.decls: make TkWinChildProc available in private
-	stub table. [Bug #220600] and [Bug #220690].
+	* win/configure:	(regenerated)
+	* win/Makefile.in:	Use tktest86.dll for all tests.
+	* win/tkWinInt.h:	Mark various functions MODULE_SCOPE
+	* generic/tkInt.decls:	[Bugs 220600, 220690]: Make TkWinChildProc
+				available in private stub table.
 	* generic/tkIntPlatDecls.h: (regenerated)
-	* generic/tkStubInit.c: (regenerated)
+	* generic/tkStubInit.c:	(regenerated)
 
 2009-11-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/Makefile.in:  Better dependancies in case of static
-	build. Generate tktest86.dll and tktest86.lib.
+	* win/Makefile.in: Better dependancies in case of static build.
+	Generate tktest86.dll and tktest86.lib.
 
 2009-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
