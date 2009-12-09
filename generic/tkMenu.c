@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.52 2009/09/07 07:29:04 das Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.53 2009/12/09 10:45:30 dkf Exp $
  */
 
 /*
@@ -341,8 +341,9 @@ static void		DestroyMenuHashTable(ClientData clientData,
 			    Tcl_Interp *interp);
 static void		DestroyMenuInstance(TkMenu *menuPtr);
 static void		DestroyMenuEntry(char *memPtr);
-static int		GetIndexFromCoords(Tcl_Interp *interp, TkMenu *menuPtr,
-			    const char *string, int *indexPtr);
+static int		GetIndexFromCoords(Tcl_Interp *interp,
+			    TkMenu *menuPtr, const char *string,
+			    int *indexPtr);
 static int		MenuDoYPosition(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *objPtr);
 static int		MenuDoXPosition(Tcl_Interp *interp,
@@ -405,8 +406,8 @@ TkCreateMenuCmd(
     Tcl_Interp *interp)		/* Interpreter we are creating the command
 				 * in. */
 {
-    TkMenuOptionTables *optionTablesPtr =
-	    (TkMenuOptionTables *) ckalloc(sizeof(TkMenuOptionTables));
+    TkMenuOptionTables *optionTablesPtr = (TkMenuOptionTables *)
+	    ckalloc(sizeof(TkMenuOptionTables));
 
     optionTablesPtr->menuOptionTable =
 	    Tk_CreateOptionTable(interp, tkMenuConfigSpecs);
@@ -475,8 +476,8 @@ MenuCmd(
 
     toplevel = 1;
     for (i = 2; i < (objc - 1); i++) {
-	if (Tcl_GetIndexFromObj(NULL, objv[i], typeStringList, NULL, 0, &index)
-		!= TCL_ERROR) {
+	if (Tcl_GetIndexFromObj(NULL, objv[i], typeStringList, NULL, 0,
+		&index) != TCL_ERROR) {
 	    if ((Tcl_GetIndexFromObj(NULL, objv[i + 1], menuTypeStrings, NULL,
 		    0, &index) == TCL_OK) && (index == MENUBAR)) {
 		toplevel = 0;
@@ -579,7 +580,7 @@ MenuCmd(
      	    	    && ((cascadeListPtr->menuPtr->masterMenuPtr
 		    == cascadeListPtr->menuPtr)))) {
 		newObjv[0] = Tcl_NewStringObj("-menu", -1);
-		newObjv[1] = Tcl_NewStringObj(Tk_PathName(menuPtr->tkwin), -1);
+		newObjv[1] = Tcl_NewStringObj(Tk_PathName(menuPtr->tkwin),-1);
 		Tcl_IncrRefCount(newObjv[0]);
 		Tcl_IncrRefCount(newObjv[1]);
      	    	ConfigureMenuEntry(cascadeListPtr, 2, newObjv);
@@ -712,7 +713,7 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 
-	if (MenuAddOrInsert(interp, menuPtr, NULL, objc-2, objv+2) != TCL_OK) {
+	if (MenuAddOrInsert(interp, menuPtr, NULL, objc-2, objv+2) != TCL_OK){
 	    goto error;
 	}
 	break;
@@ -885,7 +886,8 @@ MenuWidgetObjCmd(
     }
     case MENU_INSERT:
 	if (objc < 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index type ?-option value ...?");
+	    Tcl_WrongNumArgs(interp, 2, objv,
+		    "index type ?-option value ...?");
 	    goto error;
 	}
 	if (MenuAddOrInsert(interp,menuPtr,objv[2],objc-3,objv+3) != TCL_OK) {
@@ -1222,6 +1224,7 @@ DestroyMenuInstance(
 	    menuPtr->optionTablesPtr->menuOptionTable, menuPtr->tkwin);
     if (menuPtr->tkwin != NULL) {
 	Tk_Window tkwin = menuPtr->tkwin;
+
 	menuPtr->tkwin = NULL;
 	Tk_DestroyWindow(tkwin);
     }
@@ -1431,12 +1434,12 @@ DestroyMenuEntry(
     if (mePtr->type == CASCADE_ENTRY) {
 	if (menuPtr->masterMenuPtr != menuPtr) {
 	    TkMenu *destroyThis = NULL;
+	    TkMenuReferences *menuRefPtr = mePtr->childMenuRefPtr;
+
 	    /*
 	     * The menu as a whole is a clone. We must delete the clone of the
 	     * cascaded menu for the particular entry we are destroying.
 	     */
-
-	    TkMenuReferences *menuRefPtr = mePtr->childMenuRefPtr;
 
 	    if (menuRefPtr != NULL) {
 		destroyThis = menuRefPtr->menuPtr;
@@ -1595,12 +1598,30 @@ ConfigureMenu(
 	     */
 
 	    if (menuListPtr->menuType == MASTER_MENU) {
-		TkpMakeMenuWindow(menuListPtr->tkwin, 1);
+		int typeFlag = TK_MAKE_MENU_POPUP;
+		Tk_Window tkwin = menuPtr->tkwin;
+
+		/*
+		 * Work out if we are the child of a menubar or a popup.
+		 */
+
+		while (1) {
+		    Tk_Window parent = Tk_Parent(tkwin);
+
+		    if (Tk_Class(parent) != Tk_Class(menuPtr->tkwin)) {
+			break;
+		    }
+		    tkwin = parent;
+		}
+		if (((TkMenu*) tkwin)->menuType == MENUBAR) {
+		    typeFlag = TK_MAKE_MENU_DROPDOWN;
+		}
+
+		TkpMakeMenuWindow(menuListPtr->tkwin, typeFlag);
 	    } else if (menuListPtr->menuType == TEAROFF_MENU) {
-		TkpMakeMenuWindow(menuListPtr->tkwin, 0);
+		TkpMakeMenuWindow(menuListPtr->tkwin, TK_MAKE_MENU_TEAROFF);
 	    }
 	}
-
 
 	/*
 	 * Depending on the -tearOff option, make sure that there is or isn't
@@ -1612,8 +1633,8 @@ ConfigureMenu(
 		    || (menuListPtr->entries[0]->type != TEAROFF_ENTRY)) {
 		if (MenuNewEntry(menuListPtr, 0, TEAROFF_ENTRY) == NULL) {
 		    for (cleanupPtr = menuPtr->masterMenuPtr;
-			 cleanupPtr != menuListPtr;
-			 cleanupPtr = cleanupPtr->nextInstancePtr) {
+			    cleanupPtr != menuListPtr;
+			    cleanupPtr = cleanupPtr->nextInstancePtr) {
 			Tk_RestoreSavedOptions(cleanupPtr->errorStructPtr);
 			ckfree((char *) cleanupPtr->errorStructPtr);
 			cleanupPtr->errorStructPtr = NULL;
@@ -2258,8 +2279,8 @@ MenuNewEntry(
      * Create a new array of entries with an empty slot for the new entry.
      */
 
-    newEntries = (TkMenuEntry **) ckalloc((unsigned)
-	    ((menuPtr->numEntries+1)*sizeof(TkMenuEntry *)));
+    newEntries = (TkMenuEntry **)
+	    ckalloc((unsigned) (menuPtr->numEntries+1)*sizeof(TkMenuEntry *));
     for (i = 0; i < index; i++) {
 	newEntries[i] = menuPtr->entries[i];
     }
@@ -2361,6 +2382,7 @@ MenuAddOrInsert(
     }
     if (index < 0) {
 	const char *indexString = Tcl_GetString(indexPtr);
+
 	Tcl_AppendResult(interp, "bad index \"", indexString, "\"", NULL);
 	return TCL_ERROR;
     }
