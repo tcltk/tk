@@ -1,5 +1,9 @@
 2009-12-09  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/tkColor.c (Tk_GetColorByValue): [Bug 2911570]: Ensure that
+	hash keys of color values are zeroed first, so that they hash properly
+	on 64-bit systems (where X structures are not tightly packed).
+
 	* unix/tkUnixWm.c (TkpMakeMenuWindow):	Improve the determining of what
 	* generic/tkMenu.c (ConfigureMenu):	EWMH hint to use so that we
 	distinguish between dropdown menus (children of menubars) and what are

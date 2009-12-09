@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkColor.c,v 1.21 2009/11/21 17:24:42 dkf Exp $
+ * RCS: @(#) $Id: tkColor.c,v 1.22 2009/12/09 22:41:52 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -301,8 +301,11 @@ Tk_GetColorByValue(
 
     /*
      * First, check to see if there's already a mapping for this color name.
+     * Must clear the structure first; it's not tightly packed on 64-bit
+     * systems. [Bug 2911570]
      */
 
+    memset(&valueKey, 0, sizeof(ValueKey));
     valueKey.red = colorPtr->red;
     valueKey.green = colorPtr->green;
     valueKey.blue = colorPtr->blue;
