@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.76 2009/12/09 10:45:30 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.77 2009/12/09 13:55:14 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -6686,7 +6686,7 @@ TkpMakeMenuWindow(
 	atts.save_under = True;
 	if (typeFlag == TK_MAKE_MENU_DROPDOWN) {
 	    atom = Tk_InternAtom((Tk_Window) tkwin,
-		    "_NET_WM_TYPE_DROPDOWN_MENU");
+		    "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU");
 	} else {
 	    atom = Tk_InternAtom((Tk_Window) tkwin,
 		    "_NET_WM_WINDOW_TYPE_POPUP_MENU");
