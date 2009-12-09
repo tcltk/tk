@@ -1,11 +1,17 @@
+2009-12-09  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkColor.c (Tk_GetColorByValue): [Bug 2911570]: Ensure that
+	hash keys of color values are zeroed first, so that they hash properly
+	on 64-bit systems (where X structures are not tightly packed).
+
 2009-12-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* unix/tkUnixWm.c: [Bug 2864685] backported window manager hinting
+	* unix/tkUnixWm.c: [Bug 2864685]: Backported window manager hinting
 			   update from HEAD
 
 2009-12-06  Benjamin Riefenstahl  <b.riefenstahl@turtle-trading.net>
 
-	* macosx/tkMacOSXFont.c (GetFontFamilyName): [Bug #2548661] Merge fix
+	* macosx/tkMacOSXFont.c (GetFontFamilyName): [Bug 2548661]: Merge fix
 	from HEAD (1.44).
 
 2009-12-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
@@ -15,11 +21,11 @@
 
 2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* doc/GetHINSTANCE.3       correct mentioned header file
-	* win/tkWinInt.h           make TkWinChildProc available in private
-	* generic/tkInt.decls      stub table. [Bug #220600] and [Bug #220690].
-	* generic/tkIntPlatDecls.h (regenerated)
-	* generic/tkStubInit.c     (regenerated)
+	* doc/GetHINSTANCE.3:	Correct mentioned header file
+	* win/tkWinInt.h:	[Bugs 220600, 220690]: Make TkWinChildProc
+	* generic/tkInt.decls:	available in private stub table.
+	* generic/tkIntPlatDecls.h: (regenerated)
+	* generic/tkStubInit.c:	(regenerated)
 
 2009-11-25  Stuart Cassoff <stwo@users.sf.net>
 
