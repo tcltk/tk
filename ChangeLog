@@ -1,3 +1,10 @@
+2009-12-09  Andreas Kupries  <andreask@activestate.com>
+
+	* library/safetk.tcl (::safe::loadTk): [Bug 2902573]: Fixed access
+	to the cleanupHook of the safe base. The code used the old
+	internal commands which have been removed since 2009-12-09. See
+	Tcl's ChangeLog.
+
 2009-12-09  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkColor.c (Tk_GetColorByValue): [Bug 2911570]: Ensure that
