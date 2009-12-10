@@ -1,3 +1,7 @@
+2009-12-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/demos/ttkscale.tcl: Added demo of [ttk::scale] widget.
+
 2009-12-09  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkColor.c (Tk_GetColorByValue): [Bug 2911570]: Ensure that

@@ -10,7 +10,7 @@ exec wish "$0" ${1+"$@"}
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 #
-# RCS: @(#) $Id: widget,v 1.57 2009/04/10 16:40:03 das Exp $
+# RCS: @(#) $Id: widget,v 1.58 2009/12/10 11:48:38 dkf Exp $
 
 package require Tcl	8.5
 package require Tk	8.5
@@ -357,6 +357,8 @@ addFormattedText {
     @@subtitle	Scales and Progress Bars
     @@demo hscale	Horizontal scale
     @@demo vscale	Vertical scale
+    @@new
+    @@demo ttkscale	Themed scale linked to a label with traces
     @@demo ttkprogress	Progress bar
 
     @@subtitle	Paned Windows and Notebooks
