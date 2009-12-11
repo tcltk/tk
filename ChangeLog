@@ -1,3 +1,8 @@
+2009-12-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/tk.tcl (tk::ScreenChanged): [Bug 2912473]: Stop problems
+	caused by display names with a double colon in.
+
 2009-12-10  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/demos/ttkscale.tcl: Added demo of [ttk::scale] widget.
