@@ -1,22 +1,22 @@
 # tk.tcl --
 #
-# Initialization script normally executed in the interpreter for each
-# Tk-based application.  Arranges class bindings for widgets.
+# Initialization script normally executed in the interpreter for each Tk-based
+# application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.86 2009/04/13 21:26:36 dkf Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.87 2009/12/11 11:17:28 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 #
-# See the file "license.terms" for information on usage and redistribution
-# of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+# See the file "license.terms" for information on usage and redistribution of
+# this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Insist on running with compatible version of Tcl
 package require Tcl 8.6
 # Verify that we have Tk binary and script components from the same release
 package require -exact Tk  8.6b1.1
-
+
 # Create a ::tk namespace
 namespace eval ::tk {
     # Set up the msgcat commands
@@ -72,7 +72,7 @@ set ::tk_strictMotif 0
 # We catch this because safe interpreters may not allow the call.
 
 catch {tk useinputmethods 1}
-
+
 # ::tk::PlaceWindow --
 #   place a toplevel at a particular position
 # Arguments:
@@ -138,7 +138,7 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     wm geometry $w +$x+$y
     wm deiconify $w
 }
-
+
 # ::tk::SetFocusGrab --
 #   swap out current focus and grab temporarily (for dialogs)
 # Arguments:
@@ -198,7 +198,7 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 	}
     }
 }
-
+
 # ::tk::GetSelection --
 #   This tries to obtain the default selection.  On Unix, we first try
 #   and get a UTF8_STRING, a type supported by modern Unix apps for
@@ -234,7 +234,7 @@ if {$tcl_platform(platform) eq "unix"} {
 	}
     }
 }
-
+
 # ::tk::ScreenChanged --
 # This procedure is invoked by the binding mechanism whenever the
 # "current" screen is changing.  The procedure does two things.
@@ -253,7 +253,12 @@ proc ::tk::ScreenChanged screen {
 	set disp $screen
     }
 
-    uplevel #0 upvar #0 ::tk::Priv.$disp ::tk::Priv
+    # Ensure that namespace separators never occur in the display name (as
+    # they cause problems in variable names). Double-colons exist in some VNC
+    # display names. [Bug 2912473]
+    set disp [string map {:: _doublecolon_} $disp]
+
+    uplevel #0 [list upvar #0 ::tk::Priv.$disp ::tk::Priv]
     variable ::tk::Priv
     global tcl_platform
 
@@ -293,7 +298,7 @@ proc ::tk::ScreenChanged screen {
 # value, which will cause trouble later).
 
 tk::ScreenChanged [winfo screen .]
-
+
 # ::tk::EventMotifBindings --
 # This procedure is invoked as a trace whenever ::tk_strictMotif is
 # changed.  It is used to turn on or turn off the motif virtual
@@ -316,7 +321,7 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
     event $op <<Paste>> <Control-Key-y>
     event $op <<Undo>> <Control-underscore>
 }
-
+
 #----------------------------------------------------------------------
 # Define common dialogs on platforms where they are not implemented 
 # using compiled code.
@@ -355,7 +360,7 @@ if {![llength [info command tk_chooseDirectory]]} {
 	tailcall ::tk::dialog::file::chooseDir:: {*}$args
     }
 }
-
+
 #----------------------------------------------------------------------
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
@@ -412,6 +417,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<ContextMenu>> <Button-2>
     }
 }
+
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
@@ -433,6 +439,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile text
     }
 }
+
 # ----------------------------------------------------------------------
 # Default bindings for keyboard traversal.
 # ----------------------------------------------------------------------
@@ -441,7 +448,7 @@ event add <<PrevWindow>> <Shift-Tab>
 event add <<NextWindow>> <Tab>
 bind all <<NextWindow>> {tk::TabToWindow [tk_focusNext %W]}
 bind all <<PrevWindow>> {tk::TabToWindow [tk_focusPrev %W]}
-
+
 # ::tk::CancelRepeat --
 # This procedure is invoked to cancel an auto-repeat action described
 # by ::tk::Priv(afterId).  It's used by several widgets to auto-scroll
@@ -456,7 +463,7 @@ proc ::tk::CancelRepeat {} {
     after cancel $Priv(afterId)
     set Priv(afterId) {}
 }
-
+
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
 # It sends a <<TraverseOut>> virtual event to the previous focus window, 
@@ -474,7 +481,7 @@ proc ::tk::TabToWindow {w} {
     focus $w
     event generate $w <<TraverseIn>>
 }
-
+
 # ::tk::UnderlineAmpersand --
 # This procedure takes some text with ampersand and returns
 # text w/o ampersand and position of the ampersand.
@@ -604,6 +611,7 @@ proc ::tk::mcmaxamp {args} {
     }
     return $maxlen
 }
+
 # For now, turn off the custom mdef proc for the mac:
 
 if {[tk windowingsystem] eq "aqua"} {
@@ -616,3 +624,8 @@ if {[tk windowingsystem] eq "aqua"} {
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
+
+# Local Variables:
+# mode: tcl
+# fill-column: 78
+# End:
