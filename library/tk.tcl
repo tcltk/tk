@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.46.2.7 2007/04/29 02:24:49 das Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.46.2.8 2009/12/11 11:18:54 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -241,6 +241,11 @@ proc ::tk::ScreenChanged screen {
     } else {
 	set disp $screen
     }
+
+    # Ensure that namespace separators never occur in the display name (as
+    # they cause problems in variable names). Double-colons exist in some VNC
+    # display names. [Bug 2912473]
+    set disp [string map {:: _doublecolon_} $disp]
 
     uplevel #0 upvar #0 ::tk::Priv.$disp ::tk::Priv
     variable ::tk::Priv
