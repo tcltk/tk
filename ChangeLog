@@ -1,3 +1,8 @@
+2009-12-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/tk.tcl (::tk::ScreenChanged): [Bug 2912473]: Stop problems
+	caused by display names with a double colon in.
+
 2009-11-01  Joe Mistachkin  <joe@mistachkin.com>
 
 	* win/tkWinButton.c: [Bug 1739613]: The default width being stored
