@@ -2,6 +2,8 @@
 
     * win/makefile.vc:   Fix dependancies on ${TKSTUBLIB} when
                          TCL_USE_STATIC_PACKAGES is defined
+    * generic/tkWindow.c:   Fix gcc warning, using gcc-4.3.4 on cygwin
+                            warning: array subscript has type 'char'
 
 2009-12-11  Donal K. Fellows  <dkf@users.sf.net>
 
