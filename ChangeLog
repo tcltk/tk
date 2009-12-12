@@ -1,3 +1,9 @@
+2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinInt.h:	[Bugs 220600, 220690]: Comment that
+	  TkWinChildProc is exported through the stubs table
+	  since 8.5.9
+
 2009-12-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/tk.tcl (tk::ScreenChanged): [Bug 2912473]: Stop problems
