@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.105 2009/09/04 09:55:17 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.106 2009/12/12 00:10:45 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -3307,7 +3307,7 @@ Tk_PkgInitStubsCheck(
 	int count = 0;
 
 	while (*p) {
-	    count += !isdigit(*p++);
+	    count += !isdigit(UCHAR(*p++));
 	}
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
