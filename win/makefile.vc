@@ -13,7 +13,7 @@
 # Copyright (c) 2003-2008 Pat Thoyts.
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.128 2009/11/22 00:40:21 patthoyts Exp $
+# RCS: @(#) $Id: makefile.vc,v 1.129 2009/12/12 00:02:36 nijtmans Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)
@@ -646,18 +646,18 @@ $(TKSTUBLIB): $(TKSTUBOBJS)
 	$(lib32) -nologo -out:$@ $**
 
 
-$(WISH): $(WISHOBJS) $(TKIMPLIB)
+$(WISH): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(tcllibs) $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
 
-$(WISHC): $(WISHOBJS) $(TKIMPLIB)
+$(WISHC): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(link32) $(conlflags) -stack:2300000 -out:$@ $(guilibs) $(tcllibs) $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
 
-$(TKTEST): $(TKTESTOBJS) $(TKIMPLIB)
-	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(tcllibs) $(TKSTUBLIB) $**
+$(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
+	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(tcllibs) $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
 
