@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.58 2009/12/02 21:16:44 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.59 2009/12/12 00:23:49 nijtmans Exp $
 
 library tk
 
@@ -783,7 +783,7 @@ declare 35 win {
     int TkWinGetPlatformTheme(void)
 }
 
-# new for 8.6
+# Exported through stub table since Tk 8.5.9
 
 declare 36 win {
     LRESULT CALLBACK TkWinChildProc(HWND hwnd,
