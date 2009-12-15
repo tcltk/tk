@@ -1,3 +1,12 @@
+2009-12-15  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConfig.c:	Added another dimension of refCounting to the
+	* generic/tkInt.c:	"option" Tcl_ObjType to improve memory troubles
+	* generic/tkObj.c:	detailed in [Bug 2492179].  Also removed
+	registration of the "option" Tcl_ObjType.
+	*** POTENTIAL INCOMPATIBILITY *** for callers of
+	Tcl_GetObjType("option") which must now handle a NULL return.
+
 2009-12-15  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/demos/unicodeout.tcl (usePresentationFormsFor): Split out

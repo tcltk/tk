@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.31 2009/06/30 00:56:29 das Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.32 2009/12/15 18:12:07 dgp Exp $
  */
 
 /*
@@ -102,6 +102,8 @@ typedef struct OptionTable {
 				 * chain. */
     int numOptions;		/* The number of items in the options array
 				 * below. */
+    int refCount2; /* Reference counter for controlling the freeing
+                    * of the memory occupied by this OptionTable */
     Option options[1];		/* Information about the individual options in
 				 * the table. This must be the last field in
 				 * the structure: the actual size of the array
@@ -127,6 +129,7 @@ static Option *		GetOption(const char *name, OptionTable *tablePtr);
 static Option *		GetOptionFromObj(Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, OptionTable *tablePtr);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
+static void		FreeOptionInternalRep(Tcl_Obj *objPtr);
 static int		SetOptionFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 
 /*
@@ -136,9 +139,9 @@ static int		SetOptionFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
  * the internalPtr2 field points to the entry that matched.
  */
 
-const Tcl_ObjType tkOptionObjType = {
+static const Tcl_ObjType optionObjType = {
     "option",			/* name */
-    NULL,			/* freeIntRepProc */
+    FreeOptionInternalRep,	/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
     SetOptionFromAny		/* setFromAnyProc */
@@ -222,6 +225,7 @@ Tk_CreateOptionTable(
     tablePtr = (OptionTable *) (ckalloc(sizeof(OptionTable)
 	    + (numOptions * sizeof(Option))));
     tablePtr->refCount = 1;
+    tablePtr->refCount2 = 1;
     tablePtr->hashEntryPtr = hashEntryPtr;
     tablePtr->nextPtr = NULL;
     tablePtr->numOptions = numOptions;
@@ -357,7 +361,10 @@ Tk_DeleteOptionTable(
 	}
     }
     Tcl_DeleteHashEntry(tablePtr->hashEntryPtr);
-    ckfree((char *) tablePtr);
+    tablePtr->refCount2--;
+    if (tablePtr->refCount2 <= 0) {
+	ckfree((char *) tablePtr);
+    }
 }
 
 /*
@@ -1130,7 +1137,7 @@ GetOptionFromObj(
      * First, check to see if the object already has the answer cached.
      */
 
-    if (objPtr->typePtr == &tkOptionObjType) {
+    if (objPtr->typePtr == &optionObjType) {
 	if (objPtr->internalRep.twoPtrValue.ptr1 == (void *) tablePtr) {
 	    return (Option *) objPtr->internalRep.twoPtrValue.ptr2;
 	}
@@ -1152,7 +1159,8 @@ GetOptionFromObj(
     }
     objPtr->internalRep.twoPtrValue.ptr1 = (void *) tablePtr;
     objPtr->internalRep.twoPtrValue.ptr2 = (void *) bestPtr;
-    objPtr->typePtr = &tkOptionObjType;
+    objPtr->typePtr = &optionObjType;
+    tablePtr->refCount2++;
     return bestPtr;
 
   error:
@@ -1228,6 +1236,41 @@ SetOptionFromAny(
 	    "can't convert value to option except via GetOptionFromObj API",
 	    NULL);
     return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FreeOptionInternalRep --
+ *
+ *	Part of the option Tcl object type implementation. Frees the storage
+ *	associated with a option object's internal representation unless it
+ *	is still in use.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The option object's internal rep is marked invalid and its memory
+ *	gets freed unless it is still in use somewhere. In that case the
+ *	cleanup is delayed until the last reference goes away.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+FreeOptionInternalRep(
+    register Tcl_Obj *objPtr)	/* Object whose internal rep to free. */
+{
+    register OptionTable *tablePtr = (OptionTable *) objPtr->internalRep.twoPtrValue.ptr1;
+
+    tablePtr->refCount2--;
+    if (tablePtr->refCount2 <= 0) {
+	ckfree((char *)tablePtr);
+    }
+    objPtr->typePtr = NULL;
+    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
+    objPtr->internalRep.twoPtrValue.ptr2 = NULL;
 }
 
 /*
