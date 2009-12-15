@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.114 2009/12/09 10:45:30 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.115 2009/12/15 18:12:07 dgp Exp $
  */
 
 #ifndef _TKINT
@@ -926,7 +926,6 @@ MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
 MODULE_SCOPE const Tcl_ObjType tkColorObjType;
 MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
 MODULE_SCOPE const Tcl_ObjType tkFontObjType;
-MODULE_SCOPE const Tcl_ObjType tkOptionObjType;
 MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
 MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
 
