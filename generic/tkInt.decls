@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.59 2009/12/12 00:23:49 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.60 2009/12/16 22:00:31 nijtmans Exp $
 
 library tk
 
@@ -105,7 +105,7 @@ declare 21 generic {
 	    const TkStateMap *mapPtr, const char *strKey)
 }
 declare 22 generic {
-    char *TkFindStateString(const TkStateMap *mapPtr, int numKey)
+    CONST86 char *TkFindStateString(const TkStateMap *mapPtr, int numKey)
 }
 declare 23 generic {
     void TkFocusDeadWindow(TkWindow *winPtr)
@@ -188,7 +188,7 @@ declare 45 generic {
     void TkInstallFrameMenu(Tk_Window tkwin)
 }
 declare 46 generic {
-    char *TkKeysymToString(KeySym keysym)
+    CONST86 char *TkKeysymToString(KeySym keysym)
 }
 declare 47 generic {
     int TkLineToArea(double end1Ptr[], double end2Ptr[], double rectPtr[])
@@ -393,7 +393,7 @@ declare 108 generic {
 	    Tcl_Obj *objPtr, Tk_Window *windowPtr)
 }
 declare 109 generic {
-    char *TkpGetString(TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr)
+    CONST86 char *TkpGetString(TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr)
 }
 declare 110 generic {
     void TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
