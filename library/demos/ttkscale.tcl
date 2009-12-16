@@ -2,7 +2,7 @@
 #
 # This demonstration script shows an example with a horizontal scale.
 #
-# RCS: @(#) $Id: ttkscale.tcl,v 1.1.2.1 2009/12/10 11:44:07 dkf Exp $
+# RCS: @(#) $Id: ttkscale.tcl,v 1.1.2.2 2009/12/16 13:19:47 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -30,10 +30,10 @@ ttk::frame $w.frame -borderwidth 10
 pack $w.frame -side top -fill x
 
 # List of colors from rainbox; "Indigo" is not a standard color
-set colors {Red Orange Yellow Green Blue Violet}
+set colorList {Red Orange Yellow Green Blue Violet}
 ttk::label $w.frame.label
 ttk::scale $w.frame.scale -from 0 -to 5 -command [list apply {{w idx} {
-    set c [lindex $::colors [tcl::mathfunc::int $idx]]
+    set c [lindex $::colorList [tcl::mathfunc::int $idx]]
     $w.frame.label configure -foreground $c -text "Color: $c"
 }} $w]
 # Trigger the setting of the label's text
