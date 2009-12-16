@@ -6,3 +6,5 @@ config.status
 *.framework
 wish
 tktest
+tk.pc
+tkConfig.sh
