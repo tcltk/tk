@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.55 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.56 2009/12/16 21:12:24 nijtmans Exp $
  */
 
 #include "default.h"
@@ -2742,7 +2742,7 @@ GetListboxIndex(
 	char *end;
 
 	start = stringRep + 1;
-	strtol(start, &end, 0);
+	y = strtol(start, &end, 0);
 	if ((start == end) || (*end != ',')) {
 	    Tcl_AppendResult(interp, "bad listbox index \"", stringRep,
 		    "\": must be active, anchor, end, @x,y, or a number",
