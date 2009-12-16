@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.31 2008/10/22 16:30:16 das Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.32 2009/12/16 21:12:25 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -276,7 +276,12 @@ static void
 TransferXEventsToTcl(
     Display *display)
 {
-    XEvent event;
+    union {
+	XEvent x;
+#ifdef GenericEvent
+	xGenericEvent xge;
+#endif
+    } event;
 
     /*
      * Transfer events from the X event queue to the Tk event queue after XIM
@@ -286,21 +291,19 @@ TransferXEventsToTcl(
      */
 
     while (QLength(display) > 0) {
-	XNextEvent(display, &event);
+	XNextEvent(display, &event.x);
 #ifdef GenericEvent
-	if (event.type == GenericEvent) {
-	    xGenericEvent *xgePtr = (xGenericEvent *) &event;
-
+	if (event.x.type == GenericEvent) {
 	    Tcl_Panic("Wild GenericEvent; panic! (extension=%d,evtype=%d)",
-		    xgePtr->extension, xgePtr->evtype);
+		    event.xge.extension, event.xge.evtype);
 	}
 #endif
-	if (event.type != KeyPress && event.type != KeyRelease) {
-	    if (XFilterEvent(&event, None)) {
+	if (event.x.type != KeyPress && event.x.type != KeyRelease) {
+	    if (XFilterEvent(&event.x, None)) {
 		continue;
 	    }
 	}
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+	Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
     }
 }
 
