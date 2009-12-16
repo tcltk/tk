@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.57 2009/08/24 00:54:42 das Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.58 2009/12/16 22:00:31 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2532,7 +2532,7 @@ ExpandPercents(
 	    goto doNumber;
 	case 'K':
 	    if (flags & KEY) {
-		char *name = TkKeysymToString(keySym);
+		const char *name = TkKeysymToString(keySym);
 
 		if (name != NULL) {
 		    string = name;
@@ -4504,7 +4504,7 @@ GetPatternString(
 	if (patPtr->detail.clientData != 0) {
 	    if ((patPtr->eventType == KeyPress)
 		    || (patPtr->eventType == KeyRelease)) {
-		char *string = TkKeysymToString(patPtr->detail.keySym);
+		const char *string = TkKeysymToString(patPtr->detail.keySym);
 
 		if (string != NULL) {
 		    Tcl_DStringAppend(dsPtr, string, -1);
@@ -4599,7 +4599,7 @@ TkStringToKeysym(
  *----------------------------------------------------------------------
  */
 
-char *
+const char *
 TkKeysymToString(
     KeySym keysym)
 {

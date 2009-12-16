@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.26 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.27 2009/12/16 22:00:30 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -418,7 +418,7 @@ XKeycodeToKeysym(
  *----------------------------------------------------------------------
  */
 
-char *
+const char *
 TkpGetString(
     TkWindow *winPtr,		/* Window where event occurred: Needed to get
 				 * input context. */

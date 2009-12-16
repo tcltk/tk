@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.19 2007/12/13 15:28:55 dgp Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.20 2009/12/16 22:00:31 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -81,7 +81,7 @@ static KeySym		KeycodeToKeysym(unsigned int keycode,
  *----------------------------------------------------------------------
  */
 
-char *
+const char *
 TkpGetString(
     TkWindow *winPtr,		/* Window where event occurred: needed to get
 				 * input context. */

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.46 2009/06/27 19:33:35 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.47 2009/12/16 22:00:31 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -182,7 +182,7 @@ EXTERN int		TkFindStateNum (Tcl_Interp * interp,
 #ifndef TkFindStateString_TCL_DECLARED
 #define TkFindStateString_TCL_DECLARED
 /* 22 */
-EXTERN char *		TkFindStateString (const TkStateMap * mapPtr,
+EXTERN CONST86 char *	TkFindStateString (const TkStateMap * mapPtr,
 				int numKey);
 #endif
 #ifndef TkFocusDeadWindow_TCL_DECLARED
@@ -321,7 +321,7 @@ EXTERN void		TkInstallFrameMenu (Tk_Window tkwin);
 #ifndef TkKeysymToString_TCL_DECLARED
 #define TkKeysymToString_TCL_DECLARED
 /* 46 */
-EXTERN char *		TkKeysymToString (KeySym keysym);
+EXTERN CONST86 char *	TkKeysymToString (KeySym keysym);
 #endif
 #ifndef TkLineToArea_TCL_DECLARED
 #define TkLineToArea_TCL_DECLARED
@@ -665,7 +665,7 @@ EXTERN int		TkGetWindowFromObj (Tcl_Interp * interp,
 #ifndef TkpGetString_TCL_DECLARED
 #define TkpGetString_TCL_DECLARED
 /* 109 */
-EXTERN char *		TkpGetString (TkWindow * winPtr, XEvent * eventPtr,
+EXTERN CONST86 char *	TkpGetString (TkWindow * winPtr, XEvent * eventPtr,
 				Tcl_DString * dsPtr);
 #endif
 #ifndef TkpGetSubFonts_TCL_DECLARED
@@ -1157,7 +1157,7 @@ typedef struct TkIntStubs {
     void (*tkEventDeadWindow) (TkWindow * winPtr); /* 19 */
     void (*tkFillPolygon) (Tk_Canvas canvas, double * coordPtr, int numPoints, Display * display, Drawable drawable, GC gc, GC outlineGC); /* 20 */
     int (*tkFindStateNum) (Tcl_Interp * interp, const char * option, const TkStateMap * mapPtr, const char * strKey); /* 21 */
-    char * (*tkFindStateString) (const TkStateMap * mapPtr, int numKey); /* 22 */
+    CONST86 char * (*tkFindStateString) (const TkStateMap * mapPtr, int numKey); /* 22 */
     void (*tkFocusDeadWindow) (TkWindow * winPtr); /* 23 */
     int (*tkFocusFilterEvent) (TkWindow * winPtr, XEvent * eventPtr); /* 24 */
     TkWindow * (*tkFocusKeyEvent) (TkWindow * winPtr, XEvent * eventPtr); /* 25 */
@@ -1181,7 +1181,7 @@ typedef struct TkIntStubs {
     void (*tkIncludePoint) (Tk_Item * itemPtr, double * pointPtr); /* 43 */
     void (*tkInOutEvents) (XEvent * eventPtr, TkWindow * sourcePtr, TkWindow * destPtr, int leaveType, int enterType, Tcl_QueuePosition position); /* 44 */
     void (*tkInstallFrameMenu) (Tk_Window tkwin); /* 45 */
-    char * (*tkKeysymToString) (KeySym keysym); /* 46 */
+    CONST86 char * (*tkKeysymToString) (KeySym keysym); /* 46 */
     int (*tkLineToArea) (double end1Ptr[], double end2Ptr[], double rectPtr[]); /* 47 */
     double (*tkLineToPoint) (double end1Ptr[], double end2Ptr[], double pointPtr[]); /* 48 */
     int (*tkMakeBezierCurve) (Tk_Canvas canvas, double * pointPtr, int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]); /* 49 */
@@ -1244,7 +1244,7 @@ typedef struct TkIntStubs {
     TkDisplay * (*tkGetDisplayList) (void); /* 106 */
     TkMainInfo * (*tkGetMainInfoList) (void); /* 107 */
     int (*tkGetWindowFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr, Tk_Window * windowPtr); /* 108 */
-    char * (*tkpGetString) (TkWindow * winPtr, XEvent * eventPtr, Tcl_DString * dsPtr); /* 109 */
+    CONST86 char * (*tkpGetString) (TkWindow * winPtr, XEvent * eventPtr, Tcl_DString * dsPtr); /* 109 */
     void (*tkpGetSubFonts) (Tcl_Interp * interp, Tk_Font tkfont); /* 110 */
     Tcl_Obj * (*tkpGetSystemDefault) (Tk_Window tkwin, const char * dbName, const char * className); /* 111 */
     void (*tkpMenuThreadInit) (void); /* 112 */
