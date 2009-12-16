@@ -1,3 +1,7 @@
+2009-12-16  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkNotebook.c: Don't call Tk_DeleteOptionTable()
+	[Bug 2915709], backport fix for [Bug 2496162].
 
 2009-12-14  Kevin B. Kenny  <kennykb@acm.org>
 

@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.13 2008/01/28 00:36:08 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.13.2.1 2009/12/16 20:40:29 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -1241,9 +1241,6 @@ static void NotebookCleanup(void *recordPtr)
     Notebook *nb = recordPtr;
 
     Ttk_DeleteManager(nb->notebook.mgr);
-    Tk_DeleteOptionTable(nb->notebook.tabOptionTable);
-    Tk_DeleteOptionTable(nb->notebook.paneOptionTable);
-
     if (nb->notebook.tabLayout)
 	Ttk_FreeLayout(nb->notebook.tabLayout);
 }
