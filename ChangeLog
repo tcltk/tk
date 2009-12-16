@@ -1,11 +1,17 @@
 2009-12-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkListbox.c:	Fix gcc warning: ignoring return value of ‘strtol’,
-	                        declared with attribute warn_unused_result
+	                        declared with attribute warn_unused_result.
 	* unix/tkUnixEvent.c:   Fix gcc warning: dereferencing pointer ‘xgePtr’ does
-	                        break strict-aliasing rules
-	
-
+	                        break strict-aliasing rules.
+	* generic/tkInt.decls:  CONSTify return values of TkKeysymToString,
+	* generic/tkBind.c      TkFindStateString, TkpGetString, TkpGetChar,
+	* generic/tkIntDecls.h  which are all not supposed to be modified by
+	* generic/tkUtil.c      the caller. In tkUtil.c this gets rid of a
+	* carbon/tkMacOSXKeyboard.c   dangerous type cast.
+	* macosx/tkMacOSXKeyboard.c
+	* unix/tkUnixKey.c
+	* win/tkWinKey.c
 
 2009-12-15  Don Porter  <dgp@users.sourceforge.net>
 
