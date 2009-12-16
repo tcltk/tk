@@ -1,3 +1,12 @@
+2009-12-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkListbox.c:	Fix gcc warning: ignoring return value of ‘strtol’,
+	                        declared with attribute warn_unused_result
+	* unix/tkUnixEvent.c:   Fix gcc warning: dereferencing pointer ‘xgePtr’ does
+	                        break strict-aliasing rules
+	
+
+
 2009-12-15  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConfig.c:	Added another dimension of refCounting to the
