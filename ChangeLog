@@ -1,3 +1,8 @@
+2009-12-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixSend.c (ServerSecure): [Patch 2917663]: Better support
+	for server-interpreted access control addreses.
+
 2009-12-16  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkNotebook.c: Don't call Tk_DeleteOptionTable()
@@ -5,18 +10,17 @@
 
 2009-12-14  Kevin B. Kenny  <kennykb@acm.org>
 
-	* library/demos/unicodeout.tcl: Added code to check for
-	right-to-left support on Windows and adjust Hebrew and Arabic
-	character strings accordingly. Changed the Hebrew string to
-	'ktb ebryt' (ktav Ivrit, "Hebrew writing") to be consistent
-	with at least the Greek and Russian strings. Thanks to
-	Rodrigo Readi for calling the inconsistency to our attention.
+	* library/demos/unicodeout.tcl: Added code to check for right-to-left
+	support on Windows and adjust Hebrew and Arabic character strings
+	accordingly. Changed the Hebrew string to 'ktb ebryt' (ktav Ivrit,
+	"Hebrew writing") to be consistent with at least the Greek and Russian
+	strings. Thanks to Rodrigo Readi for calling the inconsistency to our
+	attention.
 	
 2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkInt.decls:	[Bugs 220600, 220690]: Comment that
-	  TkWinChildProc is exported through the stubs table
-	  since 8.5.9
+	TkWinChildProc is exported through the stubs table since 8.5.9
 
 2009-12-11  Donal K. Fellows  <dkf@users.sf.net>
 
