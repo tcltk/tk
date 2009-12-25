@@ -1,3 +1,9 @@
+2009-12-25  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/utils.tcl, library/notebook.tcl:
+	Reworked ActivateTab focus selection logic ([Bug 2917688],
+	also fixes [Bug 2546779]).
+
 2009-12-25  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/option.n: [Bug 2914943]: Correct the first example.
