@@ -1,14 +1,20 @@
+2009-12-25  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/option.n: [Bug 2914943]: Correct the first example.
+	Also define what the format of option patterns is; that's a much less
+	commonly known fact than it used to be.
+
 2009-12-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
-    * unix/tcl.m4           Sync with current Tcl version
-    * unix/Makefile.in      Use EXE_SUFFIX for Cygwin, and
-                            install libtk8.6.dll in bin directory
-    * unix/configure        (regenerated)
+	* unix/tcl.m4:		Sync with current Tcl version.
+	* unix/Makefile.in:	Use EXE_SUFFIX for Cygwin, and install
+				libtk8.6.dll in bin directory.
+	* unix/configure:	(regenerated)
 
 2009-12-22  Joe English  <jenglish@users.sourceforge.net>
 	
-	* library/ttk/sizegrip.tcl: Patch to avoid bizarro behavior
-	under compiz [Bug 2912356].
+	* library/ttk/sizegrip.tcl: [Bug 2912356]: Patch to avoid bizarro
+	behavior under compiz.
 
 2009-12-20  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -17,10 +23,11 @@
 
 2009-12-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkListbox.c:	Fix gcc warning: ignoring return value of "strtol",
-	                        declared with attribute warn_unused_result.
-	* unix/tkUnixEvent.c:   Fix gcc warning: dereferencing pointer "xgePtr" does
-	                        break strict-aliasing rules.
+	* generic/tkListbox.c:	Fix gcc warning: ignoring return value of
+				"strtol", declared with attribute
+				warn_unused_result.
+	* unix/tkUnixEvent.c:   Fix gcc warning: dereferencing pointer
+				"xgePtr" does break strict-aliasing rules.
 	* generic/tkInt.decls:  CONSTify return values of TkKeysymToString,
 	* generic/tkBind.c      TkFindStateString, TkpGetString, TkpGetChar,
 	* generic/tkIntDecls.h  which are all not supposed to be modified by
