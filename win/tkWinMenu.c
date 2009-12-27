@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.69 2009/09/14 23:41:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.70 2009/12/27 23:36:25 patthoyts Exp $
  */
 
 #define OEMRESOURCE
@@ -1812,8 +1812,10 @@ DrawMenuEntryArrow(
 	gc->background = activeBgColor->pixel;
     }
 
-    gc->foreground = GetSysColor((mePtr->state == ENTRY_DISABLED) ?
-	    COLOR_GRAYTEXT : COLOR_MENUTEXT);
+    gc->foreground = GetSysColor((mePtr->state == ENTRY_DISABLED)
+	? COLOR_GRAYTEXT
+		: ((mePtr->state == ENTRY_ACTIVE)
+		? COLOR_HIGHLIGHTTEXT : COLOR_MENUTEXT));
 
     rect.top = y + GetSystemMetrics(SM_CYBORDER);
     rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER);
