@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.59.2.3 2009/09/14 23:40:42 hobbs Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.59.2.4 2009/12/27 23:42:45 patthoyts Exp $
  */
 
 #define OEMRESOURCE
@@ -1762,7 +1762,8 @@ DrawMenuEntryAccelerator(
  * DrawMenuEntryArrow --
  *
  *	This function draws the arrow bitmap on the right side of a menu
- *	entry. This function is currently unused.
+ *	entry. This function is only used when drawing the arrow for a
+ *	disabled cascade menu.
  *
  * Results:
  *	None.
@@ -1811,8 +1812,10 @@ DrawMenuEntryArrow(
 	gc->background = activeBgColor->pixel;
     }
 
-    gc->foreground = GetSysColor((mePtr->state == ENTRY_DISABLED) ?
-	    COLOR_GRAYTEXT : COLOR_MENUTEXT);
+    gc->foreground = GetSysColor((mePtr->state == ENTRY_DISABLED)
+	? COLOR_GRAYTEXT
+		: ((mePtr->state == ENTRY_ACTIVE)
+		? COLOR_HIGHLIGHTTEXT : COLOR_MENUTEXT));
 
     rect.top = y + GetSystemMetrics(SM_CYBORDER);
     rect.bottom = y + height - GetSystemMetrics(SM_CYBORDER);
