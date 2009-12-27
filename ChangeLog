@@ -1,3 +1,8 @@
+2009-12-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinMenu.c: Highlight for cascade items in torn-off menus
+	is incorrect on Windows. Applied patch from [Bug 2879927].
+
 2009-12-25  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/utils.tcl, library/notebook.tcl:
