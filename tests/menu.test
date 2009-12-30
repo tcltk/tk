@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.23 2009/01/13 01:46:06 patthoyts Exp $
+# RCS: @(#) $Id: menu.test,v 1.24 2009/12/30 00:24:27 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -3309,6 +3309,47 @@ test menu-22.2 {GetIndexFromCoords} -setup {
     .m1 add command -label "test"
     .m1 configure -tearoff 0
     .m1 index @5,5
+} -cleanup {
+	deleteWindows
+} -result {0}
+test menu-22.3 {GetIndexFromCoords: mapped window, y only} -setup {
+	deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -label "test"
+    .m1 configure -tearoff 0
+    tk_popup .m1 0 0
+    tkwait visibility .m1
+    .m1 index @5
+} -cleanup {
+	deleteWindows
+} -result {0}
+test menu-22.4 {GetIndexFromCoords: mapped window x,y} -setup {
+	deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -label "test"
+    .m1 configure -tearoff 0
+    tk_popup .m1 0 0
+    tkwait visibility .m1
+    update
+    set x [expr {[winfo width .m1] - [.m1 cget -borderwidth] - 1}]
+    .m1 index @$x,5
+} -cleanup {
+	deleteWindows
+} -result {0}
+test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
+	deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -label "test"
+    .m1 configure -tearoff 0
+    tk_popup .m1 0 0
+    tkwait visibility .m1
+    wm geometry .m1 200x100
+    update
+    set x [expr {[winfo width .m1] - [.m1 cget -borderwidth] - 1}]
+    .m1 index @$x,5
 } -cleanup {
 	deleteWindows
 } -result {0}
