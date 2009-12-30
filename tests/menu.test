@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.20 2006/12/04 15:16:31 dkf Exp $
+# RCS: @(#) $Id: menu.test,v 1.20.4.1 2009/12/30 00:29:38 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2132,6 +2132,38 @@ test menu-22.2 {GetIndexFromCoords} {
     .m1 add command -label "test"
     .m1 configure -tearoff 0
     list [catch {.m1 index @5,5} msg] $msg [destroy .m1]
+} {0 0 {}}
+test menu-22.3 {GetIndexFromCoords: mapped window, y only} {
+    catch {destroy .m1}
+    menu .m1
+    .m1 add command -label "test"
+    .m1 configure -tearoff 0
+    tk_popup .m1 0 0
+    tkwait visibility .m1
+    list [catch {.m1 index @5} msg] $msg [destroy .m1]
+} {0 0 {}}
+test menu-22.4 {GetIndexFromCoords: mapped window x,y} {
+    catch {destroy .m1}
+    menu .m1
+    .m1 add command -label "test"
+    .m1 configure -tearoff 0
+    tk_popup .m1 0 0
+    tkwait visibility .m1
+    update
+    set x [expr {[winfo width .m1] - [.m1 cget -borderwidth] - 1}]
+    list [catch {.m1 index @$x,5} msg] $msg [destroy .m1]
+} {0 0 {}}
+test menu-22.5 {GetIndexFromCoords: mapped wide window} {
+    catch {destroy .m1}
+    menu .m1
+    .m1 add command -label "test"
+    .m1 configure -tearoff 0
+    tk_popup .m1 0 0
+    tkwait visibility .m1
+    wm geometry .m1 200x100
+    update
+    set x [expr {[winfo width .m1] - [.m1 cget -borderwidth] - 1}]
+    list [catch {.m1 index @$x,5} msg] $msg [destroy .m1]
 } {0 0 {}}
 
 test menu-23.1 {RecursivelyDeleteMenu} {

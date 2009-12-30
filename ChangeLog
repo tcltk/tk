@@ -1,3 +1,9 @@
+2009-12-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkMenu.c: Torn off menu items are only activated over
+	* tests/menu.tcl:   a limited region of the window. Fixed to make
+	the whole width of a menu item activate the entry. [Patch 2879789]
+
 2009-12-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
        * win/tkWinMenu.c: Highlight for cascade items in torn-off menus
