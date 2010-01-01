@@ -1,13 +1,28 @@
+2010-01-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixEvent.c (TransferXEventsToTcl): [Bug 1924761]: Move the
+	* generic/tkEvent.c (Tk_HandleEvent):	     passing of key events to
+	XFilterEvent to the low level point where all other events are
+	handled, where it should have been all along. This makes more input
+	methods work, stops [event generate] from interfering with input
+	methods, and allows the simplification of tkEvent.c by removing half
+	of InvokeInputMethods and allowing the rest - which was not full input
+	method handling - to be rolled back into Tk_HandleEvent. Introduces a
+	small potential bug when a focus change and input method handling are
+	too close together in the Tk event queue, but that should be less
+	deadly to usability than the previous problems where input methods
+	could fail completely or reorder key presses...
+
 2009-12-30  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* generic/tkMenu.c: Torn off menu items are only activated over
-	* tests/menu.tcl:   a limited region of the window. Fixed to make
-	the whole width of a menu item activate the entry. [Patch 2879789]
+	* generic/tkMenu.c: [Patch 2879789]: Torn off menu items are only
+	* tests/menu.tcl:   activated over a limited region of the window.
+	Fixed to make the whole width of a menu item activate the entry.
 
 2009-12-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-       * win/tkWinMenu.c: Highlight for cascade items in torn-off menus
-        is incorrect on Windows. Applied patch from [Bug 2879927].
+       * win/tkWinMenu.c: [Bug 2879927]: Highlight for cascade items in
+	torn-off menus is incorrect on Windows.
 
 2009-12-25  Donal K. Fellows  <dkf@users.sf.net>
 
