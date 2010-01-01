@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.115 2009/12/15 18:12:07 dgp Exp $
+ * RCS: $Id: tkInt.h,v 1.116 2010/01/01 22:50:27 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -314,8 +314,9 @@ typedef struct TkDisplay {
 				 * multiple applications on the display have
 				 * the focus, this will refer to the innermost
 				 * window in the innermost application. This
-				 * information isn't used under Unix or
-				 * Windows, but it's needed on the Mac. */
+				 * information isn't used on Windows, but it's
+				 * needed on the Mac, and also on X11 when XIM
+				 * processing is being done. */
 
     /*
      * Information used by tkGC.c only:
