@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.27 2008/03/26 19:04:10 jenglish Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.27.2.1 2010/01/01 23:03:42 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -279,20 +279,38 @@ TransferXEventsToTcl(
     Display *display)
 {
     XEvent event;
+    Window w;
 
     /*
      * Transfer events from the X event queue to the Tk event queue after XIM
-     * event filtering. KeyPress and KeyRelease events are filtered in
-     * Tk_HandleEvent instead of here, so that Tk's focus management code can
-     * redirect them.
+     * event filtering. KeyPress and KeyRelease events need special treatment
+     * so that they get directed according to Tk's focus rules during XIM
+     * handling. Theoretically they can go to the wrong place still (if
+     * there's a focus change in the queue) but if we push the handling off
+     * until Tk_HandleEvent then many input methods actually cease to work
+     * correctly. Most of the time, Tk processes its event queue fast enough
+     * for this to not be an issue anyway. [Bug 1924761]
      */
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event);
-	if (event.type != KeyPress && event.type != KeyRelease) {
-	    if (XFilterEvent(&event, None)) {
-		continue;
+	w = None;
+	if (event.x.type == KeyPress || event.x.type == KeyRelease) {
+	    TkDisplay *dispPtr;
+
+	    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
+		if (dispPtr == NULL) {
+		    break;
+		} else if (dispPtr->display == event.x.xany.display) {
+		    if (dispPtr->focusPtr != NULL) {
+			w = dispPtr->focusPtr->window;
+		    }
+		    break;
+		}
 	    }
+	}
+	if (XFilterEvent(&event.x, w)) {
+	    continue;
 	}
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
