@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.35.2.2 2009/01/11 19:29:42 georgeps Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.35.2.3 2010/01/01 23:03:42 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -212,7 +212,6 @@ static int		TkXErrorHandler(ClientData clientData,
 static void		UpdateButtonEventState(XEvent *eventPtr);
 static int		WindowEventProc(Tcl_Event *evPtr, int flags);
 #ifdef TK_USE_INPUT_METHODS
-static int		InvokeInputMethods(TkWindow *winPtr, XEvent *eventPtr);
 static void		CreateXIC(TkWindow *winPtr);
 #endif /* TK_USE_INPUT_METHODS */
 
@@ -375,62 +374,6 @@ CreateXIC(
     }
 }
 #endif
-
-/*
- *----------------------------------------------------------------------
- *
- * InvokeInputMethods --
- *
- *	Pass the event to the input method(s), if there are any, and discard
- *	the event if the input method(s) insist. Create the input context for
- *	the window if it hasn't already been done (XFilterEvent needs this
- *	context).
- *
- *	When the event is a FocusIn event, set the input context focus to the
- *	receiving window.
- *
- * Results:
- *	1 when we are done with the event.
- *	0 when the event can be processed further.
- *
- * Side effects:
- *	Input contexts/methods may be created.
- *
- *----------------------------------------------------------------------
- */
-
-#ifdef TK_USE_INPUT_METHODS
-static int
-InvokeInputMethods(
-    TkWindow *winPtr,
-    XEvent *eventPtr)
-{
-    TkDisplay *dispPtr = winPtr->dispPtr;
-
-    if ((dispPtr->flags & TK_DISPLAY_USE_IM)) {
-	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
-	    winPtr->flags |= TK_CHECKED_IC;
-	    if (dispPtr->inputMethod != NULL) {
-		CreateXIC(winPtr);
-	    }
-	}
-	switch (eventPtr->type) {
-	    case FocusIn:
-		if (winPtr->inputContext != NULL) {
-		    XSetICFocus(winPtr->inputContext);
-		}
-		break;
-	    case KeyPress:
-	    case KeyRelease:
-		if (XFilterEvent(eventPtr, None)) {
-		    return 1;
-		}
-		break;
-	}
-    }
-    return 0;
-}
-#endif /*TK_USE_INPUT_METHODS*/
 
 /*
  *----------------------------------------------------------------------
@@ -1346,9 +1289,24 @@ Tk_HandleEvent(
 	}
     }
 
+    /*
+     * Create the input context for the window if it hasn't already been done
+     * (XFilterEvent needs this context). When the event is a FocusIn event,
+     * set the input context focus to the receiving window. This code is only
+     * ever active for X11.
+     */
+
 #ifdef TK_USE_INPUT_METHODS
-    if (InvokeInputMethods(winPtr, eventPtr)) {
-	goto releaseInterpreter;
+    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)) {
+	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
+	    winPtr->flags |= TK_CHECKED_IC;
+	    if (winPtr->dispPtr->inputMethod != NULL) {
+		CreateXIC(winPtr);
+	    }
+	}
+	if (eventPtr->type == FocusIn && winPtr->inputContext != NULL) {
+	    XSetICFocus(winPtr->inputContext);
+	}
     }
 #endif
 
