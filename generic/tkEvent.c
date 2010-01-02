@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.35.2.3 2010/01/01 23:03:42 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.35.2.4 2010/01/02 10:43:26 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -193,6 +193,7 @@ TCL_DECLARE_MUTEX(exitMutex)
  * Prototypes for functions that are only referenced locally within this file.
  */
 
+static void		CleanUpTkEvent(XEvent *eventPtr);
 static void		DelayedMotionProc(ClientData clientData);
 static int		GetButtonMask(unsigned int Button);
 static unsigned long    GetEventMaskFromXEvent(XEvent *eventPtr);
@@ -1235,7 +1236,7 @@ Tk_HandleEvent(
      */
 
     if (InvokeGenericHandlers(tsdPtr, eventPtr)) {
-	goto releaseUserData;
+	goto releaseEventResources;
     }
 
     if (RefreshKeyboardMappingIfNeeded(eventPtr)) {
@@ -1243,14 +1244,14 @@ Tk_HandleEvent(
 	 * We are done with a MappingNotify event.
 	 */
 
-	goto releaseUserData;
+	goto releaseEventResources;
     }
 
     mask = GetEventMaskFromXEvent(eventPtr);
     winPtr = GetTkWindowFromXEvent(eventPtr);
 
     if (winPtr == NULL) {
-	goto releaseUserData;
+	goto releaseEventResources;
     }
 
     /*
@@ -1264,7 +1265,7 @@ Tk_HandleEvent(
 
     if ((winPtr->flags & TK_ALREADY_DEAD)
 	    && (eventPtr->type != DestroyNotify)) {
-	goto releaseUserData;
+	goto releaseEventResources;
     }
 
     if (winPtr->mainPtr != NULL) {
@@ -1388,18 +1389,11 @@ Tk_HandleEvent(
      * Release the user_data from the event (if it is a virtual event and the
      * field was non-NULL in the first place.) Note that this is done using a
      * Tcl_Obj interface, and we set the field back to NULL afterwards out of
-     * paranoia.
+     * paranoia. Also clean up any cached %A substitutions from key events.
      */
 
-  releaseUserData:
-    if (eventPtr->type == VirtualEvent) {
-	XVirtualEvent *vePtr = (XVirtualEvent *) eventPtr;
-
-	if (vePtr->user_data != NULL) {
-	    Tcl_DecrRefCount(vePtr->user_data);
-	    vePtr->user_data = NULL;
-	}
-    }
+  releaseEventResources:
+    CleanUpTkEvent(eventPtr);
 }
 
 /*
@@ -1761,12 +1755,62 @@ WindowEventProc(
 		 * even though we didn't do anything at all.
 		 */
 
+		CleanUpTkEvent(&wevPtr->event);
 		return 1;
 	    }
 	}
     }
     Tk_HandleEvent(&wevPtr->event);
+    CleanUpTkEvent(&wevPtr->event);
     return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CleanUpTkEvent --
+ *
+ *	This function is called to remove and deallocate any information in
+ *	the event which is not directly in the event structure itself. It may
+ *	be called multiple times per event, so it takes care to set the
+ *	cleared pointer fields to NULL afterwards.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Makes the event no longer have any external resources.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+CleanUpTkEvent(
+    XEvent *eventPtr)
+{
+    switch (eventPtr->type) {
+    case KeyPress:
+    case KeyRelease: {
+	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
+
+	if (kePtr->charValuePtr != NULL) {
+	    ckfree(kePtr->charValuePtr);
+	    kePtr->charValuePtr = NULL;
+	    kePtr->charValueLen = 0;
+	}
+	break;
+    }
+
+    case VirtualEvent: {
+	XVirtualEvent *vePtr = (XVirtualEvent *) eventPtr;
+
+	if (vePtr->user_data != NULL) {
+	    Tcl_DecrRefCount(vePtr->user_data);
+	    vePtr->user_data = NULL;
+	}
+	break;
+    }
+    }
 }
 
 /*
