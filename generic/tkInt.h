@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.82.2.5 2010/01/01 23:03:42 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.82.2.6 2010/01/02 10:43:26 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -853,6 +853,22 @@ typedef struct TkWindow {
 } TkWindow;
 
 /*
+ * Real definition of some events. Note that these events come from outside
+ * but have internally generated pieces added to them.
+ */
+
+typedef struct {
+    XKeyEvent keyEvent;		/* The real event from X11. */
+    char *charValuePtr;		/* A pointer to a string that holds the key's
+				 * %A substitution text (before backslash
+				 * adding), or NULL if that has not been
+				 * computed yet. If non-NULL, this string was
+				 * allocated with ckalloc(). */
+    int charValueLen;		/* Length of string in charValuePtr when that
+				 * is non-NULL. */
+} TkKeyEvent;
+
+/*
  * The following structure is used as a two way map between integers and
  * strings, usually to map between an internal C representation and the
  * strings used in Tcl.
@@ -1113,9 +1129,8 @@ MODULE_SCOPE int	Tk_WmObjCmd(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE int	Tk_GetDoublePixelsFromObj(Tcl_Interp *interp,
-						  Tk_Window tkwin,
-						  Tcl_Obj *objPtr,
-						  double *doublePtr);
+			    Tk_Window tkwin, Tcl_Obj *objPtr,
+			    double *doublePtr);
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);

@@ -1,3 +1,21 @@
+2010-01-02  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixEvent.c (TransferXEventsToTcl): [Bug 1924761]: Use the
+	new cache mechanism to force the extraction of the string of a key
+	event from XIM at the right time rather than after queueing when it
+	can be quashed by a race condition centered on the limited amount of
+	state in some XIM implementations.
+
+	* unix/tkUnixKey.c (TkpGetString): [Bug 1373712]: Cache the value that
+	* generic/tkInt.h (TkKeyEvent):		will be substituted via %A so
+	* generic/tkEvent.c (CleanUpTkEvent):	that we do not need to make it
+	* doc/HandleEvent.3 (ARGUMENTS):	fresh each time, which causes
+	* doc/QWinEvent.3 (ARGUMENTS):		trouble with some input
+	* macosx/tkMacOSXKeyEvent.c (InitKeyEvent): methods. Also includes the
+	* win/tkWinX.c (GenerateXEvent):	factoring out of some code and
+	update of documentation to describe the slightly increased constraints
+	on how Tk_HandleEvent can be used.
+
 2010-01-01  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixEvent.c (TransferXEventsToTcl): [Bug 1924761]: Move the
