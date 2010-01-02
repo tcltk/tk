@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.25 2009/04/10 16:07:54 das Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.26 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -767,6 +767,7 @@ MenuButtonEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     TkMenuButton *mbPtr = clientData;
+
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;
     } else if (eventPtr->type == ConfigureNotify) {

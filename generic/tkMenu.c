@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.54 2009/12/30 00:24:27 patthoyts Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.55 2010/01/02 22:52:38 dkf Exp $
  */
 
 /*
@@ -1613,7 +1613,7 @@ ConfigureMenu(
 		    }
 		    tkwin = parent;
 		}
-		if (((TkMenu*) tkwin)->menuType == MENUBAR) {
+		if (((TkMenu *) tkwin)->menuType == MENUBAR) {
 		    typeFlag = TK_MAKE_MENU_DROPDOWN;
 		}
 

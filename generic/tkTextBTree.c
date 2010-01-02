@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.30 2009/09/07 07:29:04 das Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.31 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -3774,7 +3774,7 @@ TkBTreeCheck(
 
     for (entryPtr=Tcl_FirstHashEntry(&treePtr->sharedTextPtr->tagTable,&search);
 	    entryPtr != NULL ; entryPtr = Tcl_NextHashEntry(&search)) {
-	tagPtr = (TkTextTag *) Tcl_GetHashValue(entryPtr);
+	tagPtr = Tcl_GetHashValue(entryPtr);
 	nodePtr = tagPtr->tagRootPtr;
 	if (nodePtr == NULL) {
 	    if (tagPtr->toggleCount != 0) {

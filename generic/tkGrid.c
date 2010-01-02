@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrid.c,v 1.54 2009/09/18 22:35:00 pspjuth Exp $
+ * RCS: @(#) $Id: tkGrid.c,v 1.55 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -664,7 +664,7 @@ GridForgetRemoveCommand(
 		slavePtr->flags = 0;
 		slavePtr->sticky = 0;
 	    }
-	    Tk_ManageGeometry(slave, NULL, (ClientData) NULL);
+	    Tk_ManageGeometry(slave, NULL, NULL);
 	    if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 		Tk_UnmaintainGeometry(slavePtr->tkwin,
 			slavePtr->masterPtr->tkwin);
@@ -2410,7 +2410,7 @@ GetGrid(
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->gridHashTable, (char*) tkwin, &isNew);
     if (!isNew) {
-	return (Gridder *) Tcl_GetHashValue(hPtr);
+	return Tcl_GetHashValue(hPtr);
     }
     gridPtr = (Gridder *) ckalloc(sizeof(Gridder));
     gridPtr->tkwin = tkwin;

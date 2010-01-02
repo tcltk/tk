@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.28 2008/12/09 21:22:56 dgp Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.29 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -179,7 +179,7 @@ ImgBmapCreate(
     int argc,			/* Number of arguments. */
     Tcl_Obj *const argv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
-    const Tk_ImageType *typePtr,	/* Pointer to our type record (not used). */
+    const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
     Tk_ImageMaster master,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it

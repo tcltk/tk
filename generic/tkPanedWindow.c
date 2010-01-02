@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.38 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.39 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "default.h"
@@ -1589,7 +1589,8 @@ PanedWindowReqProc(
 				 * window. */
 {
     Slave *slavePtr = clientData;
-    PanedWindow *pwPtr = (PanedWindow *) (slavePtr->masterPtr);
+    PanedWindow *pwPtr = (PanedWindow *) slavePtr->masterPtr;
+
     if (Tk_IsMapped(pwPtr->tkwin)) {
 	if (!(pwPtr->flags & RESIZE_PENDING)) {
 	    pwPtr->flags |= RESIZE_PENDING;

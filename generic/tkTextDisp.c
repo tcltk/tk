@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.75 2009/09/07 07:29:04 das Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.76 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -933,7 +933,7 @@ GetStyle(
     hPtr = Tcl_CreateHashEntry(&textPtr->dInfoPtr->styleTable,
 	    (char *) &styleValues, &isNew);
     if (!isNew) {
-	stylePtr = (TextStyle *) Tcl_GetHashValue(hPtr);
+	stylePtr = Tcl_GetHashValue(hPtr);
 	stylePtr->refCount++;
 	return stylePtr;
     }
