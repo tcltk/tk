@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.33 2010/01/01 22:50:27 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.34 2010/01/02 11:07:56 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -277,12 +277,15 @@ TransferXEventsToTcl(
     Display *display)
 {
     union {
+	int type;
 	XEvent x;
+	TkKeyEvent k;
 #ifdef GenericEvent
 	xGenericEvent xge;
 #endif
     } event;
     Window w;
+    TkDisplay *dispPtr = NULL;
 
     /*
      * Transfer events from the X event queue to the Tk event queue after XIM
@@ -298,15 +301,13 @@ TransferXEventsToTcl(
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
 #ifdef GenericEvent
-	if (event.x.type == GenericEvent) {
+	if (event.type == GenericEvent) {
 	    Tcl_Panic("Wild GenericEvent; panic! (extension=%d,evtype=%d)",
 		    event.xge.extension, event.xge.evtype);
 	}
 #endif
 	w = None;
-	if (event.x.type == KeyPress || event.x.type == KeyRelease) {
-	    TkDisplay *dispPtr;
-
+	if (event.type == KeyPress || event.type == KeyRelease) {
 	    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
 		if (dispPtr == NULL) {
 		    break;
@@ -320,6 +321,30 @@ TransferXEventsToTcl(
 	}
 	if (XFilterEvent(&event.x, w)) {
 	    continue;
+	}
+	if (event.type == KeyPress || event.type == KeyRelease) {
+	    event.k.charValuePtr = NULL;
+	    event.k.charValueLen = 0;
+
+	    /*
+	     * Force the calling of the input method engine now. The results
+	     * from it will be cached in the event so that they don't get lost
+	     * (to a race condition with other XIM-handled key events) between
+	     * entering the event queue and getting serviced. [Bug 1924761]
+	     */
+
+#ifdef TK_USE_INPUT_METHODS
+	    if (event.type == KeyPress && dispPtr &&
+		    (dispPtr->flags & TK_DISPLAY_USE_IM)) {
+		if (dispPtr->focusPtr && dispPtr->focusPtr->inputContext) {
+		    Tcl_DString ds;
+
+		    Tcl_DStringInit(&ds);
+		    (void) TkpGetString(dispPtr->focusPtr, &event.x, &ds);
+		    Tcl_DStringFree(&ds);
+		}
+	    }
+#endif
 	}
 	Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
     }
