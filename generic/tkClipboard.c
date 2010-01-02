@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkClipboard.c,v 1.23 2009/01/02 23:20:32 nijtmans Exp $
+ * RCS: @(#) $Id: tkClipboard.c,v 1.24 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -599,7 +599,7 @@ Tk_ClipboardObjCmd(
 
 	Tcl_DStringInit(&selBytes);
 	result = Tk_GetSelection(interp, tkwin, selection, target,
-		ClipboardGetProc, (ClientData) &selBytes);
+		ClipboardGetProc, &selBytes);
 	if (result == TCL_OK) {
 	    Tcl_DStringResult(interp, &selBytes);
 	} else {

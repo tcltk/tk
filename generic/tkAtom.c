@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkAtom.c,v 1.11 2008/10/30 23:18:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkAtom.c,v 1.12 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -145,7 +145,7 @@ Tk_GetAtomName(
 	char *mustFree = NULL;
 
 	handler = Tk_CreateErrorHandler(dispPtr->display, BadAtom, -1, -1,
-		NULL, (ClientData) NULL);
+		NULL, NULL);
 	name = mustFree = XGetAtomName(dispPtr->display, atom);
 	if (name == NULL) {
 	    name = "?bad atom?";

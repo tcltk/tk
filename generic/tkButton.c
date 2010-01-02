@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.35 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.36 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -633,7 +633,7 @@ ButtonCreate(
     TkButton *butPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->defaultsInitialized) {
@@ -1336,9 +1336,7 @@ TkButtonWorldChanged(
     XGCValues gcValues;
     GC newGC;
     unsigned long mask;
-    TkButton *butPtr;
-
-    butPtr = (TkButton *) instanceData;
+    TkButton *butPtr = instanceData;
 
     /*
      * Recompute GCs.

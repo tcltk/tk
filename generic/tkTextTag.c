@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.32 2009/09/07 07:29:04 das Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.33 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "default.h"
@@ -353,7 +353,7 @@ TkTextTagCmd(
 	} else {
 	    int result = TCL_OK;
 
-	    if (Tk_SetOptions(interp, (char*)tagPtr, tagPtr->optionTable,
+	    if (Tk_SetOptions(interp, (char *) tagPtr, tagPtr->optionTable,
 		    objc-4, objv+4, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 		return TCL_ERROR;
 	    }
