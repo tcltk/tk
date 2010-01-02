@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.116 2010/01/01 22:50:27 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.117 2010/01/02 11:07:56 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -822,6 +822,22 @@ typedef struct TkWindow {
     int minReqHeight;		/* Minimum requested height. */
     char *geometryMaster;
 } TkWindow;
+
+/*
+ * Real definition of some events. Note that these events come from outside
+ * but have internally generated pieces added to them.
+ */
+
+typedef struct {
+    XKeyEvent keyEvent;		/* The real event from X11. */
+    char *charValuePtr;		/* A pointer to a string that holds the key's
+				 * %A substitution text (before backslash
+				 * adding), or NULL if that has not been
+				 * computed yet. If non-NULL, this string was
+				 * allocated with ckalloc(). */
+    int charValueLen;		/* Length of string in charValuePtr when that
+				 * is non-NULL. */
+} TkKeyEvent;
 
 /*
  * Flags passed to TkpMakeMenuWindow's 'transient' argument.

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.16 2009/12/16 22:00:30 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixKey.c,v 1.17 2010/01/02 11:07:56 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -76,50 +76,6 @@ Tk_SetCaretPos(
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetChar --
- *
- *	Convert a keyboard event to a UTF-8 string using XLookupString.
- *
- *	This is used as a fallback instead of Xutf8LookupString or
- *	XmbLookupString if input methods are turned off and for KeyRelease
- *	events.
- *
- * Notes:
- *	XLookupString() normally returns a single ISO Latin 1 or ASCII control
- *	character.
- *
- *----------------------------------------------------------------------
- */
-static const char *
-TkpGetChar(
-    XEvent *eventPtr,		/* KeyPress or KeyRelease event */
-    Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
-{
-    int len;
-    char buf[TCL_DSTRING_STATIC_SIZE];
-
-    len = XLookupString(&eventPtr->xkey, buf, TCL_DSTRING_STATIC_SIZE, 0, 0);
-    buf[len] = '\0';
-
-    if (len == 1) {
-	len = Tcl_UniCharToUtf((unsigned char) buf[0],
-		Tcl_DStringValue(dsPtr));
-	Tcl_DStringSetLength(dsPtr, len);
-    } else {
-	/*
-	 * len > 1 should only happen if someone has called XRebindKeysym().
-	 * Assume UTF-8.
-	 */
-
-	Tcl_DStringSetLength(dsPtr, len);
-	strncpy(Tcl_DStringValue(dsPtr), buf, len);
-    }
-    return Tcl_DStringValue(dsPtr);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpGetString --
  *
  *	Retrieve the UTF string associated with a keyboard event.
@@ -141,11 +97,25 @@ TkpGetString(
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
 {
+    int len;
+    Tcl_DString buf;
+    TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
+
+    /*
+     * If we have the value cached already, use it now. [Bug 1373712]
+     */
+
+    if (kePtr->charValuePtr != NULL) {
+	Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
+	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
+		(unsigned) kePtr->charValueLen+1);
+	return Tcl_DStringValue(dsPtr);
+    }
+
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (winPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
-	int len;
 	Status status;
 
 #if X_HAVE_UTF8_STRING
@@ -165,13 +135,10 @@ TkpGetString(
 		    NULL, &status);
 	}
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
-	    Tcl_DStringSetLength(dsPtr, 0);
 	    len = 0;
 	}
 	Tcl_DStringSetLength(dsPtr, len);
 #else /* !X_HAVE_UTF8_STRING */
-	Tcl_DString buf;		/* Holds string in system encoding. */
-
 	/*
 	 * Overallocate the dstring to the maximum stack amount.
 	 */
@@ -198,11 +165,49 @@ TkpGetString(
 	Tcl_ExternalToUtfDString(NULL, Tcl_DStringValue(&buf), len, dsPtr);
 	Tcl_DStringFree(&buf);
 #endif /* X_HAVE_UTF8_STRING */
-
-	return Tcl_DStringValue(dsPtr);
-    }
+    } else
 #endif /* TK_USE_INPUT_METHODS */
-    return TkpGetChar(eventPtr, dsPtr);
+    {
+	/*
+	 * Fall back to convert a keyboard event to a UTF-8 string using
+	 * XLookupString. This is used when input methods are turned off and
+	 * for KeyRelease events.
+	 *
+	 * Note: XLookupString() normally returns a single ISO Latin 1 or
+	 * ASCII control character.
+	 */
+
+	Tcl_DStringInit(&buf);
+	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
+	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
+		TCL_DSTRING_STATIC_SIZE, 0, 0);
+	Tcl_DStringValue(&buf)[len] = '\0';
+
+	if (len == 1) {
+	    len = Tcl_UniCharToUtf((unsigned char) Tcl_DStringValue(&buf)[0],
+		    Tcl_DStringValue(dsPtr));
+	    Tcl_DStringSetLength(dsPtr, len);
+	} else {
+	    /*
+	     * len > 1 should only happen if someone has called XRebindKeysym.
+	     * Assume UTF-8.
+	     */
+
+	    Tcl_DStringSetLength(dsPtr, len);
+	    strncpy(Tcl_DStringValue(dsPtr), Tcl_DStringValue(&buf), len);
+	}
+    }
+
+    /*
+     * Cache the string in the event so that if/when we return to this
+     * function, we will be able to produce it without asking X. This stops us
+     * from having to reenter the XIM engine. [Bug 1373712]
+     */
+
+    kePtr->charValuePtr = ckalloc((unsigned) len + 1);
+    kePtr->charValueLen = len;
+    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
+    return Tcl_DStringValue(dsPtr);
 }
 
 /*
