@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.24.2.2 2009/10/10 19:38:27 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.24.2.3 2010/01/02 15:41:04 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -257,6 +257,7 @@ InitFont(
      */
     ftFont = GetFont(fontPtr, 0);
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
+    fontPtr->font.fa.size = TkFontGetPoints(tkwin, fontPtr->font.fa.size);
     GetTkFontAttributes(ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
 
@@ -570,6 +571,7 @@ TkpGetFontAttrsForChar(
 				/* Actual font used to render the character */
 
     GetTkFontAttributes(ftFont, faPtr);
+    faPtr->size = TkFontGetPoints(tkwin, faPtr->size);
     faPtr->underline = fontPtr->font.fa.underline;
     faPtr->overstrike = fontPtr->font.fa.overstrike;
 }
