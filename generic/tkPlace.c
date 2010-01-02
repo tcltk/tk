@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlace.c,v 1.28 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkPlace.c,v 1.29 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -319,7 +319,7 @@ Tk_PlaceObjCmd(
 		(char *) tkwin));
 	Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 		slavePtr);
-	Tk_ManageGeometry(tkwin, NULL, (ClientData) NULL);
+	Tk_ManageGeometry(tkwin, NULL, NULL);
 	Tk_UnmapWindow(tkwin);
 	FreeSlave(slavePtr);
 	break;
@@ -385,7 +385,7 @@ CreateSlave(
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->slaveTable, (char *) tkwin, &isNew);
     if (!isNew) {
-	return (Slave *) Tcl_GetHashValue(hPtr);
+	return Tcl_GetHashValue(hPtr);
     }
 
     /*
@@ -453,16 +453,14 @@ static Slave *
 FindSlave(
     Tk_Window tkwin)		/* Token for desired slave. */
 {
-    Tcl_HashEntry *hPtr;
-    register Slave *slavePtr;
+    register Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, (char *) tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
-    slavePtr = (Slave *) Tcl_GetHashValue(hPtr);
-    return slavePtr;
+    return Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -548,9 +546,9 @@ CreateMaster(
 	masterPtr->flags = 0;
 	Tcl_SetHashValue(hPtr, masterPtr);
 	Tk_CreateEventHandler(masterPtr->tkwin, StructureNotifyMask,
-		MasterStructureProc, (ClientData) masterPtr);
+		MasterStructureProc, masterPtr);
     } else {
-	masterPtr = (Master *) Tcl_GetHashValue(hPtr);
+	masterPtr = Tcl_GetHashValue(hPtr);
     }
     return masterPtr;
 }
@@ -578,16 +576,14 @@ static Master *
 FindMaster(
     Tk_Window tkwin)		/* Token for desired master. */
 {
-    Tcl_HashEntry *hPtr;
-    register Master *masterPtr;
+    register Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, (char *) tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
-    masterPtr = (Master *) Tcl_GetHashValue(hPtr);
-    return masterPtr;
+    return Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -853,7 +849,6 @@ RecomputePlacement(
     int x, y, width, height, tmp;
     int masterWidth, masterHeight, masterX, masterY;
     double x1, y1, x2, y2;
-
     int abort;			/* May get set to non-zero to abort this
 				 * placement operation. */
 

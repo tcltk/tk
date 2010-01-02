@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.92 2009/09/25 08:46:07 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.93 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -330,11 +330,11 @@ static int
 ImgPhotoCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
-    const char *name,			/* Name to use for image. */
+    const char *name,		/* Name to use for image. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
-    const Tk_ImageType *typePtr,	/* Pointer to our type record (not used). */
+    const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
     Tk_ImageMaster master,	/* Token for image, to be used by us in later
 				 * callbacks. */
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
@@ -3858,9 +3858,9 @@ PhotoOptionCleanupProc(
     OptionAssocData *list = clientData;
 
     while (list != NULL) {
-	register OptionAssocData *ptr;
+	register OptionAssocData *ptr = list;
 
-	list = (ptr = list)->nextPtr;
+	list = list->nextPtr;
 	ckfree((char *) ptr);
     }
 }

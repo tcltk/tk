@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEntry.c,v 1.58 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkEntry.c,v 1.59 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1391,7 +1391,7 @@ EntryWorldChanged(
     unsigned long mask;
     Tk_3DBorder border;
     XColor *colorPtr;
-    Entry *entryPtr = (Entry *) instanceData;
+    Entry *entryPtr = instanceData;
 
     entryPtr->avgWidth = Tk_TextWidth(entryPtr->tkfont, "0", 1);
     if (entryPtr->avgWidth == 0) {

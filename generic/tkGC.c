@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGC.c,v 1.10 2007/12/13 15:24:14 dgp Exp $
+ * RCS: @(#) $Id: tkGC.c,v 1.11 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -220,7 +220,7 @@ Tk_GetGC(
     valueHashPtr = Tcl_CreateHashEntry(&dispPtr->gcValueTable,
 	    (char *) &valueKey, &isNew);
     if (!isNew) {
-	gcPtr = (TkGC *) Tcl_GetHashValue(valueHashPtr);
+	gcPtr = Tcl_GetHashValue(valueHashPtr);
 	gcPtr->refCount++;
 	return gcPtr->gc;
     }
@@ -313,7 +313,7 @@ Tk_FreeGC(
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeGC received unknown gc argument");
     }
-    gcPtr = (TkGC *) Tcl_GetHashValue(idHashPtr);
+    gcPtr = Tcl_GetHashValue(idHashPtr);
     gcPtr->refCount--;
     if (gcPtr->refCount == 0) {
 	Tk_FreeXId(gcPtr->display, (XID) XGContextFromGC(gcPtr->gc));
@@ -351,7 +351,7 @@ TkGCCleanup(
 
     for (entryPtr = Tcl_FirstHashEntry(&dispPtr->gcIdTable, &search);
 	    entryPtr != NULL; entryPtr = Tcl_NextHashEntry(&search)) {
-	gcPtr = (TkGC *) Tcl_GetHashValue(entryPtr);
+	gcPtr = Tcl_GetHashValue(entryPtr);
 
 	/*
 	 * This call is not needed, as it is only used on Unix to restore the

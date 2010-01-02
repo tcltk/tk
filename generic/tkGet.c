@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGet.c,v 1.15 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkGet.c,v 1.16 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -489,7 +489,7 @@ static void
 FreeUidThreadExitProc(
     ClientData clientData)		/* Not used. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     Tcl_DeleteHashTable(&tsdPtr->uidTable);
@@ -523,7 +523,7 @@ Tk_GetUid(
     const char *string)		/* String to convert. */
 {
     int dummy;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_HashTable *tablePtr = &tsdPtr->uidTable;
 

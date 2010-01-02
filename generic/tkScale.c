@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.33 2008/11/08 22:52:29 dkf Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.34 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "default.h"
@@ -1004,7 +1004,7 @@ ScaleEventProc(
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
     } else if (eventPtr->type == DestroyNotify) {
-	DestroyScale((char *) clientData);
+	DestroyScale(clientData);
     } else if (eventPtr->type == ConfigureNotify) {
 	ComputeScaleGeometry(scalePtr);
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);

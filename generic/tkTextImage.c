@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.26 2009/02/06 08:12:07 das Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.27 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -99,8 +99,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END}
 };
-
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -292,7 +291,7 @@ TkTextImageCmd(
     }
     return TCL_ERROR;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -345,7 +344,7 @@ EmbImageConfigure(
 
     if (eiPtr->body.ei.imageString != NULL) {
 	image = Tk_GetImage(textPtr->interp, textPtr->tkwin,
-		eiPtr->body.ei.imageString, EmbImageProc, (ClientData) eiPtr);
+		eiPtr->body.ei.imageString, EmbImageProc, eiPtr);
 	if (image == NULL) {
 	    return TCL_ERROR;
 	}
@@ -420,7 +419,7 @@ EmbImageConfigure(
 
     return TCL_OK;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -478,7 +477,7 @@ EmbImageDeleteProc(
     ckfree((char *) eiPtr);
     return 0;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -504,7 +503,7 @@ EmbImageCleanupProc(
     eiPtr->body.ei.linePtr = linePtr;
     return eiPtr;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -588,11 +587,11 @@ EmbImageLayoutProc(
     chunkPtr->width = width;
     chunkPtr->breakIndex = -1;
     chunkPtr->breakIndex = 1;
-    chunkPtr->clientData = (ClientData) eiPtr;
+    chunkPtr->clientData = eiPtr;
     eiPtr->body.ei.chunkCount += 1;
     return 1;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -624,7 +623,7 @@ EmbImageCheckProc(
 		eiPtr->size);
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -660,7 +659,7 @@ EmbImageDisplayProc(
     int screenY)		/* Y-coordinate in text window that
 				 * corresponds to y. */
 {
-    TkTextSegment *eiPtr = (TkTextSegment *) chunkPtr->clientData;
+    TkTextSegment *eiPtr = chunkPtr->clientData;
     int lineX, imageX, imageY, width, height;
     Tk_Image image;
 
@@ -683,7 +682,7 @@ EmbImageDisplayProc(
 
     Tk_RedrawImage(image, 0, 0, width, height, dst, imageX, imageY);
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -724,7 +723,7 @@ EmbImageBboxProc(
     int *heightPtr)		/* Gets filled in with height of image, in
 				 * pixels. */
 {
-    TkTextSegment *eiPtr = (TkTextSegment *) chunkPtr->clientData;
+    TkTextSegment *eiPtr = chunkPtr->clientData;
     Tk_Image image;
 
     image = eiPtr->body.ei.image;
@@ -752,7 +751,7 @@ EmbImageBboxProc(
 	break;
     }
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -785,13 +784,13 @@ TkTextImageIndex(
     if (hPtr == NULL) {
 	return 0;
     }
-    eiPtr = (TkTextSegment *) Tcl_GetHashValue(hPtr);
+    eiPtr = Tcl_GetHashValue(hPtr);
     indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->linePtr = eiPtr->body.ei.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(eiPtr, indexPtr->linePtr);
     return 1;
 }
-
+
 /*
  *--------------------------------------------------------------
  *
@@ -819,7 +818,7 @@ EmbImageProc(
     int imgWidth, int imgHeight)/* New dimensions of image. */
 
 {
-    TkTextSegment *eiPtr = (TkTextSegment *) clientData;
+    TkTextSegment *eiPtr = clientData;
     TkTextIndex index;
 
     index.tree = eiPtr->body.ei.sharedTextPtr->tree;
@@ -836,7 +835,7 @@ EmbImageProc(
     TkTextInvalidateLineMetrics(eiPtr->body.ei.sharedTextPtr, NULL,
 	    index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
 }
-
+
 /*
  * Local Variables:
  * mode: c

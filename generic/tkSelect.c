@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.30 2009/07/23 22:21:35 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.31 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -193,9 +193,9 @@ Tk_CreateSelHandler(
 		     */
 
 		    unsigned cmdInfoLen = sizeof(CommandInfo) +
-			    ((CommandInfo*)clientData)->cmdLength - 3;
+			    ((CommandInfo *) clientData)->cmdLength - 3;
 
-		    selPtr->clientData = (ClientData) ckalloc(cmdInfoLen);
+		    selPtr->clientData = ckalloc(cmdInfoLen);
 		    memcpy(selPtr->clientData, clientData, cmdInfoLen);
 		} else {
 		    selPtr->clientData = clientData;
@@ -243,7 +243,7 @@ Tk_DeleteSelHandler(
     TkWindow *winPtr = (TkWindow *) tkwin;
     register TkSelHandler *selPtr, *prevPtr;
     register TkSelInProgress *ipPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -384,7 +384,7 @@ Tk_OwnSelection(
 	}
     }
     if (infoPtr == NULL) {
-	infoPtr = (TkSelectionInfo*) ckalloc(sizeof(TkSelectionInfo));
+	infoPtr = (TkSelectionInfo *) ckalloc(sizeof(TkSelectionInfo));
 	infoPtr->selection = selection;
 	infoPtr->nextPtr = dispPtr->selectionInfoPtr;
 	dispPtr->selectionInfoPtr = infoPtr;
@@ -558,7 +558,7 @@ Tk_GetSelection(
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkSelectionInfo *infoPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (dispPtr->multipleAtom == None) {
@@ -1036,7 +1036,7 @@ Tk_SelectionObjCmd(
 TkSelInProgress *
 TkSelGetInProgress(void)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->pendingPtr;
@@ -1063,7 +1063,7 @@ void
 TkSelSetInProgress(
     TkSelInProgress *pendingPtr)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->pendingPtr = pendingPtr;
@@ -1093,7 +1093,7 @@ TkSelDeadWindow(
     register TkSelHandler *selPtr;
     register TkSelInProgress *ipPtr;
     TkSelectionInfo *infoPtr, *prevPtr, *nextPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*

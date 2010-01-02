@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextMark.c,v 1.24 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextMark.c,v 1.25 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -541,7 +541,7 @@ MarkLayoutProc(
      */
 
     chunkPtr->breakIndex = -1;
-    chunkPtr->clientData = (ClientData) textPtr;
+    chunkPtr->clientData = textPtr;
     return 1;
 }
 
@@ -582,7 +582,7 @@ TkTextInsertDisplayProc(
      * We have no need for the clientData.
      */
 
-    /* TkText *textPtr = (TkText *) chunkPtr->clientData; */
+    /* TkText *textPtr = chunkPtr->clientData; */
     TkTextIndex index;
     int halfWidth = textPtr->insertWidth/2;
     int rightSideWidth;

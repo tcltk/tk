@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.41 2010/01/02 11:07:56 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.42 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -869,7 +869,7 @@ Tk_DeleteEventHandler(
     register InProgress *ipPtr;
     TkEventHandler *prevPtr;
     register TkWindow *winPtr = (TkWindow *) token;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -941,7 +941,7 @@ Tk_CreateGenericHandler(
     ClientData clientData)	/* One-word value to pass to proc. */
 {
     GenericHandler *handlerPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     handlerPtr = (GenericHandler *) ckalloc(sizeof(GenericHandler));
@@ -982,7 +982,7 @@ Tk_DeleteGenericHandler(
     ClientData clientData)
 {
     GenericHandler * handler;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (handler=tsdPtr->genericList ; handler ; handler=handler->nextPtr) {
@@ -1015,7 +1015,7 @@ Tk_CreateClientMessageHandler(
     Tk_ClientMessageProc *proc)	/* Function to call on event. */
 {
     GenericHandler *handlerPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -1061,7 +1061,7 @@ Tk_DeleteClientMessageHandler(
     Tk_ClientMessageProc *proc)
 {
     GenericHandler * handler;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (handler=tsdPtr->cmList ; handler!=NULL ; handler=handler->nextPtr) {
@@ -1092,7 +1092,7 @@ Tk_DeleteClientMessageHandler(
 void
 TkEventInit(void)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->handlersActive	= 0;
@@ -1127,9 +1127,8 @@ TkXErrorHandler(
     ClientData clientData,	/* Pointer to flag we set. */
     XErrorEvent *errEventPtr)	/* X error info. */
 {
-    int *error;
+    int *error = clientData;
 
-    error = (int *) clientData;
     *error = 1;
     return 0;
 }
@@ -1170,7 +1169,7 @@ ParentXId(
 
     gotXError = 0;
     handler = Tk_CreateErrorHandler(display, -1, -1, -1,
-	    TkXErrorHandler, (ClientData) (&gotXError));
+	    TkXErrorHandler, &gotXError);
 
     /*
      * Get the parent window.
@@ -1414,7 +1413,7 @@ TkEventDeadWindow(
 {
     register TkEventHandler *handlerPtr;
     register InProgress *ipPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -1463,7 +1462,7 @@ TkCurrentTime(
     TkDisplay *dispPtr)		/* Display for which the time is desired. */
 {
     register XEvent *eventPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->pendingPtr == NULL) {
@@ -1517,7 +1516,7 @@ Tk_RestrictEvents(
 				 * argument. */
 {
     Tk_RestrictProc *prev;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     prev = tsdPtr->restrictProc;
@@ -1638,7 +1637,7 @@ Tk_QueueWindowEvent(
 
 	    Tcl_QueueEvent(&dispPtr->delayedMotionPtr->header, position);
 	    dispPtr->delayedMotionPtr = NULL;
-	    Tcl_CancelIdleCall(DelayedMotionProc, (ClientData) dispPtr);
+	    Tcl_CancelIdleCall(DelayedMotionProc, dispPtr);
 	}
     }
 
@@ -1656,7 +1655,7 @@ Tk_QueueWindowEvent(
 	    Tcl_Panic("Tk_QueueWindowEvent found unexpected delayed motion event");
 	}
 	dispPtr->delayedMotionPtr = wevPtr;
-	Tcl_DoWhenIdle(DelayedMotionProc, (ClientData) dispPtr);
+	Tcl_DoWhenIdle(DelayedMotionProc, dispPtr);
     } else {
 	Tcl_QueueEvent(&wevPtr->header, position);
     }
@@ -1732,7 +1731,7 @@ WindowEventProc(
 {
     TkWindowEvent *wevPtr = (TkWindowEvent *) evPtr;
     Tk_RestrictAction result;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
@@ -1831,7 +1830,7 @@ DelayedMotionProc(
     ClientData clientData)	/* Pointer to display containing a delayed
 				 * motion event to be serviced. */
 {
-    TkDisplay *dispPtr = (TkDisplay *) clientData;
+    TkDisplay *dispPtr = clientData;
 
     if (dispPtr->delayedMotionPtr == NULL) {
 	Tcl_Panic("DelayedMotionProc found no delayed mouse motion event");
@@ -1959,7 +1958,7 @@ TkCreateThreadExitHandler(
     ClientData clientData)	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     exitPtr = (ExitHandler *) ckalloc(sizeof(ExitHandler));
@@ -2000,7 +1999,7 @@ TkDeleteThreadExitHandler(
     ClientData clientData)	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr, *prevPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (prevPtr = NULL, exitPtr = tsdPtr->firstExitPtr; exitPtr != NULL;
@@ -2088,7 +2087,7 @@ TkFinalizeThread(
     ClientData clientData)	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     Tcl_DeleteThreadExitHandler(TkFinalizeThread, NULL);

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.58 2009/12/16 22:00:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.59 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -1622,8 +1622,8 @@ Tk_BindEvent(
 		Tcl_Panic("Tk_BindEvent: missing command");
 	    }
 	    if (sourcePtr->eventProc == EvalTclBinding) {
-		ExpandPercents(winPtr, (char *) sourcePtr->clientData,
-			eventPtr, detail.keySym, &scripts);
+		ExpandPercents(winPtr, sourcePtr->clientData, eventPtr,
+			detail.keySym, &scripts);
 	    } else {
 		if (matchCount >= matchSpace) {
 		    PendingBinding *newPtr;

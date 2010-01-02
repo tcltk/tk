@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.60 2009/11/19 22:28:12 ferrieux Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.61 2010/01/02 22:52:38 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -911,7 +911,7 @@ CanvasWidgetCmd(
 	 * tag).
 	 */
 
-	object = 0;
+	object = NULL;
 #ifdef USE_OLD_TAG_SEARCH
 	if (isdigit(UCHAR(Tcl_GetString(objv[2])[0]))) {
 	    int id;
@@ -928,7 +928,7 @@ CanvasWidgetCmd(
 		object = itemPtr;
 	    }
 
-	    if (object == 0) {
+	    if (object == NULL) {
 		Tcl_AppendResult(interp, "item \"", Tcl_GetString(objv[2]),
 			"\" doesn't exist", NULL);
 		result = TCL_ERROR;
@@ -3216,7 +3216,7 @@ NextItem(
 static SearchUids *
 GetStaticUids(void)
 {
-    SearchUids *searchUids = (SearchUids *)
+    SearchUids *searchUids =
 	    Tcl_GetThreadData(&dataKey, sizeof(SearchUids));
 
     if (searchUids->allUid == NULL) {
@@ -5105,8 +5105,8 @@ CanvasDoEvent(
     if (numObjects <= NUM_STATIC) {
 	objectPtr = staticObjects;
     } else {
-	objectPtr = (ClientData *) ckalloc((unsigned)
-		(numObjects * sizeof(ClientData)));
+	objectPtr = (ClientData *)
+		ckalloc((unsigned) numObjects * sizeof(ClientData));
     }
 #ifdef USE_OLD_TAG_SEARCH
     objectPtr[0] = (ClientData) Tk_GetUid("all");

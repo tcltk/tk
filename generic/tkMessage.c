@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.22 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.23 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "default.h"
@@ -527,9 +527,7 @@ MessageWorldChanged(
     XGCValues gcValues;
     GC gc = None;
     Tk_FontMetrics fm;
-    Message *msgPtr;
-
-    msgPtr = (Message *) instanceData;
+    Message *msgPtr = instanceData;
 
     if (msgPtr->border != NULL) {
 	Tk_SetBackgroundFromBorder(msgPtr->tkwin, msgPtr->border);

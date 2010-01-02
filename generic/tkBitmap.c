@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBitmap.c,v 1.27 2009/11/21 17:24:42 dkf Exp $
+ * RCS: @(#) $Id: tkBitmap.c,v 1.28 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -309,7 +309,7 @@ GetBitmap(
     Pixmap bitmap;
     int isNew, width, height, dummy2;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!dispPtr->bitmapInit) {
@@ -483,7 +483,7 @@ Tk_DefineBitmap(
     int isNew;
     Tcl_HashEntry *predefHashPtr;
     TkPredefBitmap *predefPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -679,7 +679,7 @@ Tk_FreeBitmap(
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeBitmap received unknown bitmap argument");
     }
-    FreeBitmap((TkBitmap *) Tcl_GetHashValue(idHashPtr));
+    FreeBitmap(Tcl_GetHashValue(idHashPtr));
 }
 
 /*
@@ -838,7 +838,7 @@ Tk_GetBitmapFromData(
     char string[16 + TCL_INTEGER_SPACE];
     char *name;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
@@ -1030,7 +1030,7 @@ BitmapInit(
 				 * or NULL if unavailable. */
 {
     Tcl_Interp *dummy;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -1208,7 +1208,7 @@ TkDebugBitmap(
 Tcl_HashTable *
 TkGetBitmapPredefTable(void)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return &tsdPtr->predefBitmapTable;

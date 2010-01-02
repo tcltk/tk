@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.26 2009/06/23 05:16:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvUtil.c,v 1.27 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -716,7 +716,7 @@ SmoothMethodCleanupProc(
 
 int
 TkSmoothParseProc(
-    ClientData clientData,	/* some flags.*/
+    ClientData clientData,	/* Ignored. */
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */

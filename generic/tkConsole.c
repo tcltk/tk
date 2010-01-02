@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.39 2009/09/07 07:29:03 das Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.40 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -673,10 +673,11 @@ ConsoleObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects */
 {
     int index, result;
-    static const char *const options[] = {"eval", "hide", "show", "title", NULL};
+    static const char *const options[] = {
+	"eval", "hide", "show", "title", NULL};
     enum option {CON_EVAL, CON_HIDE, CON_SHOW, CON_TITLE};
     Tcl_Obj *cmd = NULL;
-    ConsoleInfo *info = (ConsoleInfo *) clientData;
+    ConsoleInfo *info = clientData;
     Tcl_Interp *consoleInterp = info->consoleInterp;
 
     if (objc < 2) {
