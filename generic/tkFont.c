@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.61 2009/11/21 17:24:42 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.62 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -475,7 +475,7 @@ Tk_FontObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
-    Tk_Window tkwin;
+    Tk_Window tkwin = clientData;
     TkFontInfo *fiPtr;
     static const char *const optionStrings[] = {
 	"actual",	"configure",	"create",	"delete",
@@ -487,7 +487,6 @@ Tk_FontObjCmd(
 	FONT_FAMILIES,	FONT_MEASURE,	FONT_METRICS,	FONT_NAMES
     };
 
-    tkwin = (Tk_Window) clientData;
     fiPtr = ((TkWindow *) tkwin)->mainPtr->fontInfoPtr;
 
     if (objc < 2) {

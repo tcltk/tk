@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.38 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.39 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "default.h"
@@ -450,7 +450,7 @@ CreateFrame(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     enum FrameType type,	/* What widget type to create. */
-    const char *appName)		/* Should only be non-NULL if there are no
+    const char *appName)	/* Should only be non-NULL if there are no
 				 * Main window associated with the
 				 * interpreter. Gives the base name to use for
 				 * the new application. */
@@ -986,7 +986,7 @@ ConfigureFrame(
 	    if (oldWindow != NULL) {
 		Tk_DeleteEventHandler(oldWindow, StructureNotifyMask,
 			FrameStructureProc, framePtr);
-		Tk_ManageGeometry(oldWindow, NULL, (ClientData) NULL);
+		Tk_ManageGeometry(oldWindow, NULL, NULL);
 		Tk_UnmaintainGeometry(oldWindow, framePtr->tkwin);
 		Tk_UnmapWindow(oldWindow);
 	    }
@@ -1805,7 +1805,7 @@ TkInstallFrameMenu(
     TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->mainPtr != NULL) {
-	Frame *framePtr = (Frame *) winPtr->instanceData;
+	Frame *framePtr = winPtr->instanceData;
 
 	if (framePtr == NULL) {
 	    Tcl_Panic("TkInstallFrameMenu couldn't get frame pointer");
@@ -1928,7 +1928,7 @@ void
 TkMapTopFrame(
      Tk_Window tkwin)
 {
-    Frame *framePtr = ((TkWindow*)tkwin)->instanceData;
+    Frame *framePtr = ((TkWindow *) tkwin)->instanceData;
     Tk_OptionTable optionTable;
 
     if (Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_FRAME) {

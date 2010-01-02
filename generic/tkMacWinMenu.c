@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacWinMenu.c,v 1.6 2007/12/13 15:24:15 dgp Exp $
+ * RCS: @(#) $Id: tkMacWinMenu.c,v 1.7 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -45,10 +45,10 @@ PreprocessMenu(
     TkMenu *menuPtr)
 {
     int index, result, finished;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    Tcl_Preserve((ClientData) menuPtr);
+    Tcl_Preserve(menuPtr);
 
     /*
      * First, let's process the post command on ourselves. If this command
@@ -93,7 +93,7 @@ PreprocessMenu(
     } while (!finished);
 
   done:
-    Tcl_Release((ClientData) menuPtr);
+    Tcl_Release(menuPtr);
     return result;
 }
 
@@ -131,7 +131,7 @@ int
 TkPreprocessMenu(
     TkMenu *menuPtr)
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->postCommandGeneration++;

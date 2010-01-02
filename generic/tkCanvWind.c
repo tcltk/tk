@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.19 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.20 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include <stdio.h>
@@ -328,8 +328,8 @@ ConfigureWinItem(
     if (oldWindow != winItemPtr->tkwin) {
 	if (oldWindow != NULL) {
 	    Tk_DeleteEventHandler(oldWindow, StructureNotifyMask,
-		    WinItemStructureProc, (ClientData) winItemPtr);
-	    Tk_ManageGeometry(oldWindow, NULL, (ClientData) NULL);
+		    WinItemStructureProc, winItemPtr);
+	    Tk_ManageGeometry(oldWindow, NULL, NULL);
 	    Tk_UnmaintainGeometry(oldWindow, canvasTkwin);
 	    Tk_UnmapWindow(oldWindow);
 	}
@@ -349,25 +349,19 @@ ConfigureWinItem(
 		if (ancestor == parent) {
 		    break;
 		}
-		if (((Tk_FakeWin *) (ancestor))->flags & TK_TOP_HIERARCHY) {
-		badWindow:
-		    Tcl_AppendResult(interp, "can't use ",
-			    Tk_PathName(winItemPtr->tkwin),
-			    " in a window item of this canvas", NULL);
-		    winItemPtr->tkwin = NULL;
-		    return TCL_ERROR;
+		if (((Tk_FakeWin *) ancestor)->flags & TK_TOP_HIERARCHY) {
+		    goto badWindow;
 		}
 	    }
-	    if (((Tk_FakeWin *) (winItemPtr->tkwin))->flags & TK_TOP_HIERARCHY) {
+	    if (((Tk_FakeWin *) winItemPtr->tkwin)->flags & TK_TOP_HIERARCHY){
 		goto badWindow;
 	    }
 	    if (winItemPtr->tkwin == canvasTkwin) {
 		goto badWindow;
 	    }
 	    Tk_CreateEventHandler(winItemPtr->tkwin, StructureNotifyMask,
-		    WinItemStructureProc, (ClientData) winItemPtr);
-	    Tk_ManageGeometry(winItemPtr->tkwin, &canvasGeomType,
-		    (ClientData) winItemPtr);
+		    WinItemStructureProc, winItemPtr);
+	    Tk_ManageGeometry(winItemPtr->tkwin, &canvasGeomType, winItemPtr);
 	}
     }
     if ((winItemPtr->tkwin != NULL)
@@ -380,8 +374,13 @@ ConfigureWinItem(
     }
 
     ComputeWindowBbox(canvas, winItemPtr);
-
     return TCL_OK;
+
+  badWindow:
+    Tcl_AppendResult(interp, "can't use ", Tk_PathName(winItemPtr->tkwin),
+	    " in a window item of this canvas", NULL);
+    winItemPtr->tkwin = NULL;
+    return TCL_ERROR;
 }
 
 /*
@@ -412,9 +411,8 @@ DeleteWinItem(
 
     if (winItemPtr->tkwin != NULL) {
 	Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
-		WinItemStructureProc, (ClientData) winItemPtr);
-	Tk_ManageGeometry(winItemPtr->tkwin, NULL,
-		(ClientData) NULL);
+		WinItemStructureProc, winItemPtr);
+	Tk_ManageGeometry(winItemPtr->tkwin, NULL, NULL);
 	if (canvasTkwin != Tk_Parent(winItemPtr->tkwin)) {
 	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
 	}
@@ -878,7 +876,7 @@ CanvasPsWindow(
 
 #ifdef X_GetImage
     handle = Tk_CreateErrorHandler(Tk_Display(tkwin), BadMatch,
-	    X_GetImage, -1, xerrorhandler, (ClientData) tkwin);
+	    X_GetImage, -1, xerrorhandler, tkwin);
 #endif
 
     /*
@@ -999,7 +997,7 @@ WinItemStructureProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    WindowItem *winItemPtr = (WindowItem *) clientData;
+    WindowItem *winItemPtr = clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	winItemPtr->tkwin = NULL;
@@ -1029,7 +1027,7 @@ WinItemRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
     Tk_Window tkwin)		/* Window that changed its desired size. */
 {
-    WindowItem *winItemPtr = (WindowItem *) clientData;
+    WindowItem *winItemPtr = clientData;
 
     ComputeWindowBbox(winItemPtr->canvas, winItemPtr);
 

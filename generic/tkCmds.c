@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.50 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.51 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -101,7 +101,7 @@ Tk_BellObjCmd(
 	"-displayof", "-nice", NULL
     };
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     int i, index, nice = 0;
 
     if (objc > 4) {
@@ -162,7 +162,7 @@ Tk_BindObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     TkWindow *winPtr;
     ClientData object;
     const char *string;
@@ -186,7 +186,7 @@ Tk_BindObjCmd(
 	}
 	object = (ClientData) winPtr->pathName;
     } else {
-	winPtr = (TkWindow *) clientData;
+	winPtr = clientData;
 	object = (ClientData) Tk_GetUid(string);
     }
 
@@ -200,9 +200,8 @@ Tk_BindObjCmd(
     if (objc == 4) {
 	int append = 0;
 	unsigned long mask;
-	const char *sequence, *script;
-	sequence	= Tcl_GetString(objv[2]);
-	script		= Tcl_GetString(objv[3]);
+	const char *sequence = Tcl_GetString(objv[2]);
+	const char *script = Tcl_GetString(objv[3]);
 
 	/*
 	 * If the script is null, just delete the binding.
@@ -285,8 +284,8 @@ TkBindEventProc(
 	 */
 
 	if (winPtr->numTags > MAX_OBJS) {
-	    objPtr = (ClientData *) ckalloc((unsigned)
-		    (winPtr->numTags * sizeof(ClientData)));
+	    objPtr = (ClientData *)
+		    ckalloc((unsigned) winPtr->numTags * sizeof(ClientData));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
 	    p = winPtr->tagPtr[i];
@@ -348,7 +347,7 @@ Tk_BindtagsObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     TkWindow *winPtr, *winPtr2;
     int i, length;
     const char *p;
@@ -402,8 +401,8 @@ Tk_BindtagsObjCmd(
     }
 
     winPtr->numTags = length;
-    winPtr->tagPtr = (ClientData *) ckalloc((unsigned)
-	    (length * sizeof(ClientData)));
+    winPtr->tagPtr = (ClientData *)
+	    ckalloc((unsigned) length * sizeof(ClientData));
     for (i = 0; i < length; i++) {
 	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
@@ -416,7 +415,7 @@ Tk_BindtagsObjCmd(
 	     * is one.
 	     */
 
-	    copy = (char *) ckalloc((unsigned) (strlen(p) + 1));
+	    copy = ckalloc((unsigned) strlen(p) + 1);
 	    strcpy(copy, p);
 	    winPtr->tagPtr[i] = (ClientData) copy;
 	} else {
@@ -492,7 +491,7 @@ Tk_DestroyObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window window;
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     int i;
 
     for (i = 1; i < objc; i++) {
@@ -539,7 +538,7 @@ Tk_LowerObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window mainwin = (Tk_Window) clientData;
+    Tk_Window mainwin = clientData;
     Tk_Window tkwin, other;
 
     if ((objc != 2) && (objc != 3)) {
@@ -593,7 +592,7 @@ Tk_RaiseObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window mainwin = (Tk_Window) clientData;
+    Tk_Window mainwin = clientData;
     Tk_Window tkwin, other;
 
     if ((objc != 2) && (objc != 3)) {
@@ -639,7 +638,9 @@ Tk_RaiseObjCmd(
  */
 
 int
-TkInitTkCmd(Tcl_Interp *interp, ClientData clientData)
+TkInitTkCmd(
+    Tcl_Interp *interp,
+    ClientData clientData)
 {
     TkMakeEnsemble(interp, "::", "tk", clientData, tkCmdMap);
 #if defined(__WIN32__) || defined(MAC_OSX_TK)
@@ -803,8 +804,7 @@ ScalingCmd(
     double d;
 
     if (Tcl_IsSafe(interp)) {
-	Tcl_SetResult(interp,
-		"scaling not accessible in a safe interpreter",
+	Tcl_SetResult(interp, "scaling not accessible in a safe interpreter",
 		TCL_STATIC);
 	return TCL_ERROR;
     }
@@ -835,8 +835,7 @@ ScalingCmd(
 	WidthMMOfScreen(screenPtr) = width;
 	HeightMMOfScreen(screenPtr) = height;
     } else {
-	Tcl_WrongNumArgs(interp, 1, objv,
-		"?-displayof window? ?factor?");
+	Tcl_WrongNumArgs(interp, 1, objv, "?-displayof window? ?factor?");
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -990,7 +989,7 @@ Tk_TkwaitObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     int done, index;
     int code = TCL_OK;
     static const char *const optionStrings[] = {
@@ -1014,7 +1013,7 @@ Tk_TkwaitObjCmd(
     case TKWAIT_VARIABLE:
 	if (Tcl_TraceVar(interp, Tcl_GetString(objv[2]),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		WaitVariableProc, (ClientData) &done) != TCL_OK) {
+		WaitVariableProc, &done) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	done = 0;
@@ -1027,7 +1026,7 @@ Tk_TkwaitObjCmd(
 	}
 	Tcl_UntraceVar(interp, Tcl_GetString(objv[2]),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		WaitVariableProc, (ClientData) &done);
+		WaitVariableProc, &done);
 	break;
 
     case TKWAIT_VISIBILITY: {
@@ -1039,7 +1038,7 @@ Tk_TkwaitObjCmd(
 	}
 	Tk_CreateEventHandler(window,
 		VisibilityChangeMask|StructureNotifyMask,
-		WaitVisibilityProc, (ClientData) &done);
+		WaitVisibilityProc, &done);
 	done = 0;
 	while (!done) {
 	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
@@ -1061,7 +1060,7 @@ Tk_TkwaitObjCmd(
 	}
 	Tk_DeleteEventHandler(window,
 		VisibilityChangeMask|StructureNotifyMask,
-		WaitVisibilityProc, (ClientData) &done);
+		WaitVisibilityProc, &done);
 	break;
     }
 
@@ -1073,7 +1072,7 @@ Tk_TkwaitObjCmd(
 	    return TCL_ERROR;
 	}
 	Tk_CreateEventHandler(window, StructureNotifyMask,
-		WaitWindowProc, (ClientData) &done);
+		WaitWindowProc, &done);
 	done = 0;
 	while (!done) {
 	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
@@ -1084,15 +1083,14 @@ Tk_TkwaitObjCmd(
 	}
 
 	/*
-	 * Note: normally there's no need to delete the event handler. It was deleted
-	 * automatically when the window was destroyed; however, if the wait operation
-	 * was canceled, we need to delete it.
+	 * Note: normally there's no need to delete the event handler. It was
+	 * deleted automatically when the window was destroyed; however, if
+	 * the wait operation was canceled, we need to delete it.
 	 */
 
 	if (done == 0) {
-	    Tk_DeleteEventHandler(window,
-		    StructureNotifyMask,
-		    WaitWindowProc, (ClientData) &done);
+	    Tk_DeleteEventHandler(window, StructureNotifyMask,
+		    WaitWindowProc, &done);
 	}
 	break;
     }
@@ -1119,7 +1117,7 @@ WaitVariableProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    int *donePtr = (int *) clientData;
+    int *donePtr = clientData;
 
     *donePtr = 1;
     return NULL;
@@ -1131,7 +1129,7 @@ WaitVisibilityProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
     XEvent *eventPtr)		/* Information about event (not used). */
 {
-    int *donePtr = (int *) clientData;
+    int *donePtr = clientData;
 
     if (eventPtr->type == VisibilityNotify) {
 	*donePtr = 1;
@@ -1146,7 +1144,7 @@ WaitWindowProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    int *donePtr = (int *) clientData;
+    int *donePtr = clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	*donePtr = 1;
@@ -1279,7 +1277,7 @@ Tk_WinfoObjCmd(
     int index, x, y, width, height, useX, useY, class, skip;
     const char *string;
     TkWindow *winPtr;
-    Tk_Window tkwin;
+    Tk_Window tkwin = clientData;
 
     static const TkStateMap visualMap[] = {
 	{PseudoColor,	"pseudocolor"},
@@ -1328,8 +1326,6 @@ Tk_WinfoObjCmd(
 	WIN_EXISTS,	WIN_FPIXELS,	WIN_PIXELS,	WIN_RGB,
 	WIN_VISUALSAVAILABLE
     };
-
-    tkwin = (Tk_Window) clientData;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg?");
@@ -2009,7 +2005,7 @@ Tk_WmObjCmd(
 
   updateGeom:
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, (ClientData) winPtr);
+	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
     }
     return TCL_OK;
