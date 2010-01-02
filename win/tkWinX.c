@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.57 2007/12/13 15:28:56 dgp Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.57.2.1 2010/01/02 10:43:26 dkf Exp $
  */
 
 /*
@@ -1010,6 +1010,7 @@ GenerateXEvent(
 	return;
     }
 
+    memset(&event, 0, sizeof(XEvent));
     event.xany.serial = winPtr->display->request++;
     event.xany.send_event = False;
     event.xany.display = winPtr->display;
