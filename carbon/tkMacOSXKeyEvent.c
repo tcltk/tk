@@ -48,7 +48,7 @@
  *	permission to use and distribute the software in accordance with the
  *	terms specified in this license.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.1 2009/06/26 01:42:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.2 2010/01/02 11:07:55 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -489,6 +489,7 @@ InitKeyEvent(
 	return -1;
     }
 
+    memset(eventPtr, 0, sizeof(XEvent));
     eventPtr->xany.send_event = false;
     eventPtr->xany.serial = Tk_Display(tkwin)->request;
 
