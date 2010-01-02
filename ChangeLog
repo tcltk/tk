@@ -1,10 +1,5 @@
 2010-01-02  Donal K. Fellows  <dkf@users.sf.net>
 
-	* unix/tkUnixRFont.c (InitFont, TkpGetFontAttrsForChar): Apply some
-	patches already in use on Ubuntu. Makes the font size always report as
-	being in points, which is necessary for getting postscript generation
-	right.
-
 	* unix/tkUnixEvent.c (TransferXEventsToTcl): [Bug 1924761]: Use the
 	new cache mechanism to force the extraction of the string of a key
 	event from XIM at the right time rather than after queueing when it
