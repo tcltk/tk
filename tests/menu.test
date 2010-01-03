@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.24 2009/12/30 00:24:27 patthoyts Exp $
+# RCS: @(#) $Id: menu.test,v 1.25 2010/01/03 00:18:19 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -3314,7 +3314,7 @@ test menu-22.2 {GetIndexFromCoords} -setup {
 } -result {0}
 test menu-22.3 {GetIndexFromCoords: mapped window, y only} -setup {
 	deleteWindows
-} -body {
+} -constraints {unix} -body {
     menu .m1
     .m1 add command -label "test"
     .m1 configure -tearoff 0
@@ -3326,7 +3326,7 @@ test menu-22.3 {GetIndexFromCoords: mapped window, y only} -setup {
 } -result {0}
 test menu-22.4 {GetIndexFromCoords: mapped window x,y} -setup {
 	deleteWindows
-} -body {
+} -constraints {unix} -body {
     menu .m1
     .m1 add command -label "test"
     .m1 configure -tearoff 0
@@ -3340,7 +3340,7 @@ test menu-22.4 {GetIndexFromCoords: mapped window x,y} -setup {
 } -result {0}
 test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
 	deleteWindows
-} -body {
+} -constraints {unix} -body {
     menu .m1
     .m1 add command -label "test"
     .m1 configure -tearoff 0
