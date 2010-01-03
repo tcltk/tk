@@ -1,3 +1,12 @@
+2010-01-03  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkFont.c (Tk_TextLayoutToPostscript):	Simplified the code to
+	* generic/tkCanvPs.c (TkCanvPostscriptCmd):	generate the preamble
+	* library/mkpsenc.tcl:				for PS generation and
+	also simplify the code to output text following the observation that
+	it effectively only produces ASCII anyway, even when it might have the
+	option to do otherwise in theory.
+
 2010-01-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/tearoff.tcl: tearoff menus should be transient and use the
