@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.20.4.1 2009/12/30 00:29:38 patthoyts Exp $
+# RCS: @(#) $Id: menu.test,v 1.20.4.2 2010/01/03 00:42:02 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -2133,7 +2133,7 @@ test menu-22.2 {GetIndexFromCoords} {
     .m1 configure -tearoff 0
     list [catch {.m1 index @5,5} msg] $msg [destroy .m1]
 } {0 0 {}}
-test menu-22.3 {GetIndexFromCoords: mapped window, y only} {
+test menu-22.3 {GetIndexFromCoords: mapped window, y only} unix {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test"
@@ -2142,7 +2142,7 @@ test menu-22.3 {GetIndexFromCoords: mapped window, y only} {
     tkwait visibility .m1
     list [catch {.m1 index @5} msg] $msg [destroy .m1]
 } {0 0 {}}
-test menu-22.4 {GetIndexFromCoords: mapped window x,y} {
+test menu-22.4 {GetIndexFromCoords: mapped window x,y} unix {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test"
@@ -2153,7 +2153,7 @@ test menu-22.4 {GetIndexFromCoords: mapped window x,y} {
     set x [expr {[winfo width .m1] - [.m1 cget -borderwidth] - 1}]
     list [catch {.m1 index @$x,5} msg] $msg [destroy .m1]
 } {0 0 {}}
-test menu-22.5 {GetIndexFromCoords: mapped wide window} {
+test menu-22.5 {GetIndexFromCoords: mapped wide window} unix {
     catch {destroy .m1}
     menu .m1
     .m1 add command -label "test"
