@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.27 2009/05/01 15:04:03 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.28 2010/01/03 16:24:13 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -178,7 +178,7 @@ TkCanvPostscriptCmd(
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     Tcl_DString buffer;
-    static const char *psenccmd = "::tk::ensure_psenc_is_loaded";
+    Tcl_Obj *preambleObj;
     int deltaX = 0, deltaY = 0;	/* Offset of lower-left corner of area to be
 				 * marked up, measured in canvas units from
 				 * the positioning point on the page (reflects
@@ -186,14 +186,28 @@ TkCanvPostscriptCmd(
 				 * only to stop compiler warnings. */
 
     /*
+     * Get the generic preamble. We only ever bother with the ASCII encoding;
+     * the others just make life too complicated and never actually worked as
+     * such.
+     */
+
+    result = Tcl_Eval(interp, "::tk::ensure_psenc_is_loaded");
+    if (result != TCL_OK) {
+	return result;
+    }
+    preambleObj = Tcl_GetVar2Ex(interp, "::tk::ps_preamble", NULL,
+	    TCL_LEAVE_ERR_MSG);
+    if (preambleObj == NULL) {
+	return TCL_ERROR;
+    }
+    Tcl_IncrRefCount(preambleObj);
+    Tcl_ResetResult(interp);
+
+    /*
      * Initialize the data structure describing Postscript generation, then
      * process all the arguments to fill the data structure in.
      */
 
-    result = Tcl_EvalEx(interp, psenccmd, -1, TCL_EVAL_GLOBAL);
-    if (result != TCL_OK) {
-	return result;
-    }
     oldInfoPtr = canvasPtr->psInfo;
     canvasPtr->psInfo = (Tk_PostscriptInfo) psInfoPtr;
     psInfo.x = canvasPtr->xOrigin;
@@ -460,8 +474,7 @@ TkCanvPostscriptCmd(
 	 * Insert the prolog
 	 */
 
-	Tcl_AppendResult(interp, Tcl_GetVar(interp, "::tk::ps_preamable",
-		TCL_GLOBAL_ONLY), NULL);
+	Tcl_AppendResult(interp, Tcl_GetString(preambleObj), NULL);
 
 	if (psInfo.chan != NULL) {
 	    Tcl_Write(psInfo.chan, Tcl_GetStringResult(interp), -1);
@@ -602,6 +615,7 @@ TkCanvPostscriptCmd(
     }
     Tcl_DeleteHashTable(&psInfo.fontTable);
     canvasPtr->psInfo = (Tk_PostscriptInfo) oldInfoPtr;
+    Tcl_DecrRefCount(preambleObj);
     return result;
 }
 
