@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.63 2010/01/03 16:24:13 dkf Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.64 2010/01/03 21:21:33 patthoyts Exp $
  */
 
 #include "tkInt.h"
@@ -3295,7 +3295,7 @@ Tk_TextLayoutToPostscript(
 		     * Normal ASCII character.
 		     */
 
-		    buf[used++] = ch;
+		    buf[used++] = (char) ch;
 		} else {
 		    char uindex[5];
 
