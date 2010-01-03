@@ -1,5 +1,12 @@
 2010-01-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* generic/tkMenu.h: [Patch 2848897] Support the system keyboard
+	* win/tkWinMenu.c:  cues option on Windows. This system parameter
+	hides the underlines on menu items unless the keyboard is used to
+	open the menu. (kovalenko, thoyts)
+
+2010-01-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
 	* library/tearoff.tcl: tearoff menus should be transient and use the
 	                       toolwindow style on Windows.
 	* tests/menu.test: menu tests using 'tkwait visibility' are unix only
