@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.66 2009/10/22 12:56:36 dkf Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.67 2010/01/03 00:19:25 patthoyts Exp $
  *
  */
 
@@ -2208,7 +2208,8 @@ Tk_MessageBoxObjCmd(
 
     Tcl_DecrRefCount(tmpObj);
 
-    Tcl_SetResult(interp, TkFindStateString(buttonMap, winCode), TCL_STATIC);
+    Tcl_SetResult(interp,
+	    (char *)TkFindStateString(buttonMap, winCode), TCL_STATIC);
     return TCL_OK;
 }
 
