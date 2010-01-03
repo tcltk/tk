@@ -1,3 +1,10 @@
+2010-01-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* generic/tkMenu.h: [Patch 2848897] Support the system keyboard
+	* win/tkWinMenu.c:  cues option on Windows. This system parameter
+	hides the underlines on menu items unless the keyboard is used to
+	open the menu. (kovalenko, thoyts)
+
 2010-01-03  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkFont.c (Tk_TextLayoutToPostscript):	Simplified the code to
