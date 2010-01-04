@@ -1,5 +1,6 @@
 2010-01-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/dialog.tcl: Backported fix for tk_dialog <Return> binding
 	* library/console.tcl: Backported fix for console keyboard menu
 	activation and <<Cut>> handling from HEAD.
 	* library/tk.tcl: Correctly handle quoted ampersands in AmpMenuArgs
