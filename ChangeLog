@@ -1,5 +1,7 @@
 2010-01-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/console.tcl: Backported fix for console keyboard menu
+	activation and <<Cut>> handling from HEAD.
 	* library/tk.tcl: Correctly handle quoted ampersands in AmpMenuArgs
 
 2010-01-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
