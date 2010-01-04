@@ -1,5 +1,7 @@
 2010-01-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/dialog.tcl: [Bug 2811266] <Return> binding should invoke
+	the button with the focus.
 	* library/fontchooser.tcl: [Bug 2727476] Fix default size of font
 	chooser dialog and assigned minimum sizes for the lists.
 	* library/console.tcl: [Bug 580361] Fix console <<Cut>> binding.
