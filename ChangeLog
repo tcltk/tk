@@ -1,3 +1,7 @@
+2010-01-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/tk.tcl: Correctly handle quoted ampersands in AmpMenuArgs
+
 2010-01-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* generic/tkMenu.h: [Patch 2848897] Support the system keyboard
