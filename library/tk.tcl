@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each Tk-based
 # application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.73.2.13 2009/12/11 11:12:27 dkf Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.73.2.14 2010/01/04 01:28:01 patthoyts Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -471,25 +471,9 @@ proc ::tk::TabToWindow {w} {
 # ones.  Position returned is -1 when there is no ampersand.
 #
 proc ::tk::UnderlineAmpersand {text} {
-    set idx [string first "&" $text]
-    if {$idx >= 0} {
-	set underline $idx
-	# ignore "&&"
-	while {[string match "&" [string index $text [expr {$idx + 1}]]]} {
-	    set base [expr {$idx + 2}]
-	    set idx  [string first "&" [string range $text $base end]]
-	    if {$idx < 0} {
-		break
-	    } else {
-		set underline [expr {$underline + $idx + 1}]
-		incr idx $base
-	    }
-	}
-    }
-    if {$idx >= 0} {
-	regsub -all -- {&([^&])} $text {\1} text
-    }
-    return [list $text $idx]
+    set s [string map {&& & & \ufeff} $text]
+    set idx [string first \ufeff $s]
+    return [list [string map {\ufeff {}} $s] $idx]
 }
 
 # ::tk::SetAmpText -- 
