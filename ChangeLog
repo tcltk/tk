@@ -1,7 +1,7 @@
 2010-01-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/demos/filebox.tcl: Make prettier using ttk.
 	* library/demos/fontchoose.tcl: Fix display of demo code.
-
 	* library/tk.tcl: Correctly handle quoted ampersands in AmpMenuArgs
 
 2010-01-03  Donal K. Fellows  <dkf@users.sf.net>
