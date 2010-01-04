@@ -3,7 +3,7 @@
 # This demonstration script creates a canvas that displays the
 # canvas item types.
 #
-# RCS: @(#) $Id: items.tcl,v 1.10 2009/02/11 15:17:25 dkf Exp $
+# RCS: @(#) $Id: items.tcl,v 1.11 2010/01/04 22:13:59 patthoyts Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
@@ -288,6 +288,6 @@ proc itemDrag {c x y} {
 # is invoked.
 
 proc butPress {w color} {
-    set i [$w create text 25c 18.1c -text "Ouch!!" -fill $color -anchor n]
+    set i [$w create text 25c 18.1c -text "Oooohhh!!" -fill $color -anchor n]
     after 500 "$w delete $i"
 }
