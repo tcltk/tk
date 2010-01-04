@@ -1,5 +1,6 @@
 2010-01-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* library/console.tcl: [Bug 580361] Fix console <<Cut>> binding.
 	* library/console.tcl: Fix keyboard access to console menu.
 	* library/demos/filebox.tcl: Make prettier using ttk.
 	* library/demos/fontchoose.tcl: Fix display of demo code.
