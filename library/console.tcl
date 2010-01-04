@@ -4,7 +4,7 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.43 2009/06/29 14:35:01 das Exp $
+# RCS: @(#) $Id: console.tcl,v 1.44 2010/01/04 13:53:17 patthoyts Exp $
 #
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
@@ -373,6 +373,8 @@ proc ::tk::ConsoleBind {w} {
 
     # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
+    # <Keypress> class binding will also fire and insert the character
+    # which is wrong.
 
     bind Console <Alt-KeyPress> {# nothing }
     bind Console <Meta-KeyPress> {# nothing}
@@ -622,7 +624,6 @@ proc ::tk::ConsoleBind {w} {
 	if {"%A" ne ""} {
 	    ::tk::console::TagProc %W
 	}
-	break
     }
 }
 
