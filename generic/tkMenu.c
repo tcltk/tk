@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.55 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.56 2010/01/05 09:40:46 dkf Exp $
  */
 
 /*
@@ -778,7 +778,18 @@ MenuWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "first ?last?");
 	    goto error;
 	}
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &first) != TCL_OK) {
+
+	/*
+	 * If 'first' explicitly refers to past the end of the menu, we don't
+	 * do anything. [Bug 220950]
+	 */
+
+	if (isdigit(UCHAR(Tcl_GetString(objv[2])[0]))
+		&& Tcl_GetIntFromObj(NULL, objv[2], &first) == TCL_OK) {
+	    if (first >= menuPtr->numEntries) {
+		goto done;
+	    }
+	} else if (TkGetMenuIndex(interp,menuPtr,objv[2],0,&first) != TCL_OK){
 	    goto error;
 	}
 	if (objc == 3) {

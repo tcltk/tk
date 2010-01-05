@@ -5,7 +5,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: menu.test,v 1.25 2010/01/03 00:18:19 patthoyts Exp $
+# RCS: @(#) $Id: menu.test,v 1.26 2010/01/05 09:40:46 dkf Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -1455,6 +1455,17 @@ test menu-3.29 {MenuWidgetCmd procedure, "delete" option} -setup {
 } -cleanup {
 	destroy .m1
 } -result {}
+test menu-3.29+1 {MenuWidgetCmd, "delete", Bug 220950} -setup {
+    destroy .m1
+} -body {
+    menu .m1
+    .m1 add command -label "bogus"
+    .m1 add command -label "ok"
+    .m1 delete 10 20
+    .m1 entrycget last -label
+} -cleanup {
+    destroy .m1
+} -result ok
 test menu-3.30 {MenuWidgetCmd procedure, "entrycget" option} -setup {
 	destroy .m1
 } -body {
