@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.13 2008/11/05 23:29:58 nijtmans Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.14 2010/01/05 08:49:49 dkf Exp $
  */
 
 #ifndef _TKFONT
@@ -187,6 +187,12 @@ typedef struct TkXLFDAttributes {
 #define XLFD_AVERAGE_WIDTH  11
 #define XLFD_CHARSET	    12
 #define XLFD_NUMFIELDS	    13	/* Number of fields in XLFD. */
+
+/*
+ * Helper macro. How to correctly round a double to a short.
+ */
+
+#define ROUND16(x)	((short) round(x))
 
 /*
  * Low-level API exported by generic code to platform-specific code.

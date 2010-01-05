@@ -8,15 +8,13 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.32 2010/01/02 18:40:35 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.33 2010/01/05 08:49:50 dkf Exp $
  */
 
 #include "tkUnixInt.h"
 #include "tkFont.h"
 #include <X11/Xft/Xft.h>
 #include <ctype.h>
-
-#define ROUND16(x) ((short)((x) + 0.5))
 
 typedef struct {
     XftFont *ftFont;
@@ -827,6 +825,25 @@ Tk_DrawChars(
     }
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpDrawAngledChars --
+ *
+ *	Draw some characters at an angle. This would be simple code, except
+ *	Xft has bugs with cumulative errors in character positioning which are
+ *	caused by trying to perform all calculations internally with integers.
+ *	So we have to do the work ourselves with floating-point math.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Target drawable is updated.
+ *
+ *---------------------------------------------------------------------------
+ */
+
 void
 TkpDrawAngledChars(
     Display *display,		/* Display on which to draw. */
@@ -923,8 +940,8 @@ TkpDrawAngledChars(
 		XftDrawGlyphs(fontPtr->ftDraw, &fontPtr->color, currentFtFont,
 			originX, originY, glyphs, nglyph);
 	    }
-	    originX = (int) floor(x + 0.5);
-	    originY = (int) floor(y + 0.5);
+	    originX = ROUND16(x);
+	    originY = ROUND16(y);
 	    if (nglyph) {
 		XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
 			nglyph, &metrics);
@@ -993,8 +1010,8 @@ TkpDrawAngledChars(
 	if (ftFont && ft0Font) {
 	    specs[nspec].font = ftFont;
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
-	    specs[nspec].x = (int) floor(x + 0.5);
-	    specs[nspec].y = (int) floor(y + 0.5);
+	    specs[nspec].x = ROUND16(x);
+	    specs[nspec].y = ROUND16(y);
 	    XftGlyphExtents(fontPtr->display, ft0Font, &specs[nspec].glyph, 1,
 		    &metrics);
 	    x += metrics.xOff*cosA + metrics.yOff*sinA;

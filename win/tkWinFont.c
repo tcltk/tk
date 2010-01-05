@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.47 2009/10/29 09:44:55 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.48 2010/01/05 08:49:50 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -2500,8 +2500,8 @@ GetScreenFont(
     memset(&lf, 0, sizeof(lf));
     lf.lfHeight		= -pixelSize;
     lf.lfWidth		= 0;
-    lf.lfEscapement	= (int) floor(angle * 10 + 0.5);
-    lf.lfOrientation	= (int) floor(angle * 10 + 0.5);
+    lf.lfEscapement	= ROUND16(angle * 10);
+    lf.lfOrientation	= ROUND16(angle * 10);
     lf.lfWeight = (faPtr->weight == TK_FW_NORMAL) ? FW_NORMAL : FW_BOLD;
     lf.lfItalic		= faPtr->slant;
     lf.lfUnderline	= faPtr->underline;
