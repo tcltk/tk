@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.40 2009/01/28 20:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.41 2010/01/05 08:49:49 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -3010,7 +3010,7 @@ GetEncodingAlias(
     EncodingAlias *aliasPtr;
 
     for (aliasPtr = encodingAliases; aliasPtr->aliasPattern != NULL; ) {
-	if (Tcl_StringMatch((char *) name, aliasPtr->aliasPattern)) {
+	if (Tcl_StringMatch(name, aliasPtr->aliasPattern)) {
 	    return aliasPtr->realName;
 	}
 	aliasPtr++;
@@ -3018,6 +3018,28 @@ GetEncodingAlias(
     return name;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkpDrawAngledChars --
+ *
+ *	Draw some characters at an angle. This is awkward here because we have
+ *	no reliable way of drawing any characters at an angle in classic X11;
+ *	we have to draw on a Pixmap which is converted to an XImage (from
+ *	helper function GetImageOfText), rotate the image (hokey code!) onto
+ *	another XImage (from helper function InitDestImage), and then use the
+ *	rotated image as a mask when drawing. This is pretty awful; improved
+ *	versions are welcomed!
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Target drawable is updated.
+ *
+ *---------------------------------------------------------------------------
+ */
+
 static inline XImage *
 GetImageOfText(
     Display *display,		/* Display on which to draw. */
@@ -3179,32 +3201,32 @@ TkpDrawAngledChars(
 	    for (j=0 ; j<srcHeight ; j++) {
 		switch (quadrant) {
 		case Q0:
-		    dx = floor(i*cosA + j*sinA + 0.5);
-		    dy = floor(j*cosA + (srcWidth - i)*sinA + 0.5);
+		    dx = ROUND16(i*cosA + j*sinA);
+		    dy = ROUND16(j*cosA + (srcWidth - i)*sinA);
 		    break;
 		case R1:
 		    dx = j;
 		    dy = srcWidth - i;
 		    break;
 		case Q1:
-		    dx = floor((i - srcWidth)*cosA + j*sinA + 0.5);
-		    dy = floor((srcWidth-i)*sinA + (j-srcHeight)*cosA + 0.5);
+		    dx = ROUND16((i - srcWidth)*cosA + j*sinA);
+		    dy = ROUND16((srcWidth-i)*sinA + (j-srcHeight)*cosA);
 		    break;
 		case R2:
 		    dx = srcWidth - i;
 		    dy = srcHeight - j;
 		    break;
 		case Q2:
-		    dx = floor((i-srcWidth)*cosA + (j-srcHeight)*sinA + 0.5);
-		    dy = floor((j - srcHeight)*cosA - i*sinA + 0.5);
+		    dx = ROUND16((i-srcWidth)*cosA + (j-srcHeight)*sinA);
+		    dy = ROUND16((j - srcHeight)*cosA - i*sinA);
 		    break;
 		case R3:
 		    dx = srcHeight - j;
 		    dy = i;
 		    break;
 		default:
-		    dx = floor(i*cosA + (j - srcHeight)*sinA + 0.5);
-		    dy = floor(j*cosA - i*sinA + 0.5);
+		    dx = ROUND16(i*cosA + (j - srcHeight)*sinA);
+		    dy = ROUND16(j*cosA - i*sinA);
 		}
 
 		if (dx < 0 || dy < 0 || dx >= bufWidth || dy >= bufHeight) {

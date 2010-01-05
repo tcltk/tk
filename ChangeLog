@@ -1,11 +1,21 @@
+2010-01-05  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkFont.h (ROUND16): [Bug 2824916]: Use a correct rounding
+	* unix/tkUnixFont.c (TkpDrawAngledChars):    macro for converting a
+	* unix/tkUnixRFont.c (TkpDrawAngledChars):   double to a short. This
+	* win/tkWinFont.c (GetScreenFont):	     stops a number of small
+	visual artefacts from happening and reduces the effect of others. The
+	ROUND16 macro is now shared across all the font code (though some
+	platforms do not need it specially).
+
 2010-01-04  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* doc/TkInitStubs.3: [Bug 2192104] Mention USE_TK_STUBS macro.
-	* library/dialog.tcl: [Bug 2811266] <Return> binding should invoke
+	* doc/TkInitStubs.3: [Bug 2192104]: Mention USE_TK_STUBS macro.
+	* library/dialog.tcl: [Bug 2811266]: <Return> binding should invoke
 	the button with the focus.
-	* library/fontchooser.tcl: [Bug 2727476] Fix default size of font
+	* library/fontchooser.tcl: [Bug 2727476]: Fix default size of font
 	chooser dialog and assigned minimum sizes for the lists.
-	* library/console.tcl: [Bug 580361] Fix console <<Cut>> binding.
+	* library/console.tcl: [Bug 580361]: Fix console <<Cut>> binding.
 	* library/console.tcl: Fix keyboard access to console menu.
 	* library/demos/filebox.tcl: Make prettier using ttk.
 	* library/demos/fontchoose.tcl: Fix display of demo code.

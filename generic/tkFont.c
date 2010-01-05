@@ -10,13 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.c,v 1.64 2010/01/03 21:21:33 patthoyts Exp $
+ * RCS: @(#) $Id: tkFont.c,v 1.65 2010/01/05 08:49:49 dkf Exp $
  */
 
 #include "tkInt.h"
 #include "tkFont.h"
-
-#define ROUND16(x)	((short)((x) + 0.5))
 
 /*
  * The following structure is used to keep track of all the fonts that exist
