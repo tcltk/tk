@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.14 2010/01/05 08:49:49 dkf Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.15 2010/01/05 19:06:09 dkf Exp $
  */
 
 #ifndef _TKFONT
@@ -192,7 +192,7 @@ typedef struct TkXLFDAttributes {
  * Helper macro. How to correctly round a double to a short.
  */
 
-#define ROUND16(x)	((short) round(x))
+#define ROUND16(x)	((short) floor((x) + 0.5))
 
 /*
  * Low-level API exported by generic code to platform-specific code.
