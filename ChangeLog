@@ -1,3 +1,8 @@
+2010-01-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* win/tkWinDialog.c: [Patch 2898255] Enable unlimited multiple
+	file selection from the open files dialog (pawlak,fellows,thoyts)
+
 2010-01-05  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkMenu.c (MenuWidgetObjCmd): [Bug 220950]: Do not delete
