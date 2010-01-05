@@ -1,5 +1,9 @@
 2010-01-05  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/tkMenu.c (MenuWidgetObjCmd): [Bug 220950]: Do not delete
+	menu entries if the first index to delete is explicitly after the last
+	index of existing entries.
+
 	* generic/tkFont.h (ROUND16): [Bug 2824916]: Use a correct rounding
 	* unix/tkUnixFont.c (TkpDrawAngledChars):    macro for converting a
 	* unix/tkUnixRFont.c (TkpDrawAngledChars):   double to a short. This
