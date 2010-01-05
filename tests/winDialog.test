@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
 #
-# RCS: @(#) $Id: winDialog.test,v 1.25 2008/12/10 13:41:19 patthoyts Exp $
+# RCS: @(#) $Id: winDialog.test,v 1.26 2010/01/05 21:50:54 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -167,7 +167,6 @@ test winDialog-1.7 {Tk_ChooseColorObjCmd: -parent} -constraints {
 
 
 test winDialog-2.1 {ColorDlgHookProc} -constraints {emptyTest nt} -body {}
-
 
 test winDialog-3.1 {Tk_GetOpenFileObjCmd} -constraints {
     nt testwinevent english
