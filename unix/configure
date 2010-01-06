@@ -5210,6 +5210,16 @@ fi
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
+	CYGWIN_*)
+	    SHLIB_CFLAGS=""
+	    SHLIB_LD='${CC} -shared'
+	    SHLIB_LD_LIBS='${LIBS}'
+	    SHLIB_SUFFIX=".dll"
+	    DL_OBJS="tclLoadDl.o"
+	    DL_LIBS="-ldl"
+	    CC_SEARCH_FLAGS=""
+	    LD_SEARCH_FLAGS=""
+	    ;;
 	dgux*)
 	    SHLIB_CFLAGS="-K PIC"
 	    SHLIB_LD='${CC} -G'
@@ -5219,6 +5229,83 @@ fi
 	    DL_LIBS="-ldl"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
+	    ;;
+	Haiku*)
+	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
+	    SHLIB_CFLAGS="-fPIC"
+	    SHLIB_LD_LIBS='${LIBS}'
+	    SHLIB_SUFFIX=".so"
+	    SHLIB_LD='${CC} -shared ${CFLAGS} ${LDFLAGS}'
+	    DL_OBJS="tclLoadDl.o"
+	    DL_LIBS="-lroot"
+	    echo "$as_me:$LINENO: checking for inet_ntoa in -lnetwork" >&5
+echo $ECHO_N "checking for inet_ntoa in -lnetwork... $ECHO_C" >&6
+if test "${ac_cv_lib_network_inet_ntoa+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnetwork  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char inet_ntoa ();
+int
+main ()
+{
+inet_ntoa ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_network_inet_ntoa=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_network_inet_ntoa=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_network_inet_ntoa" >&5
+echo "${ECHO_T}$ac_cv_lib_network_inet_ntoa" >&6
+if test $ac_cv_lib_network_inet_ntoa = yes; then
+  LIBS="$LIBS -lnetwork"
+fi
+
 	    ;;
 	HP-UX-*.11.*)
 	    # Use updated header definitions where possible
@@ -5820,7 +5907,7 @@ fi
 	    UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.a'
 	    TCL_LIB_VERSIONS_OK=nodots
 	    ;;
-	NetBSD-*|FreeBSD-*)
+	NetBSD-*|FreeBSD-[3-4].*)
 	    # FreeBSD 3.* and greater have ELF.
 	    # NetBSD 2.* has ELF and can use 'cc -shared' to build shared libs
 	    SHLIB_CFLAGS="-fPIC"
@@ -5853,6 +5940,36 @@ fi
 	    	TCL_LIB_VERSIONS_OK=nodots
 		;;
 	    esac
+	    ;;
+	FreeBSD-*)
+	    # This configuration from FreeBSD Ports.
+	    SHLIB_CFLAGS="-fPIC"
+	    SHLIB_LD="${CC} -shared"
+	    TCL_SHLIB_LD_EXTRAS="-soname \$@"
+	    SHLIB_LD_LIBS='${LIBS}'
+	    SHLIB_SUFFIX=".so"
+	    DL_OBJS="tclLoadDl.o"
+	    DL_LIBS=""
+	    LDFLAGS=""
+	    if test $doRpath = yes; then
+
+		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
+		LD_SEARCH_FLAGS='-rpath ${LIB_RUNTIME_DIR}'
+fi
+
+	    if test "${TCL_THREADS}" = "1"; then
+
+		# The -pthread needs to go in the LDFLAGS, not LIBS
+		LIBS=`echo $LIBS | sed s/-pthread//`
+		CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+		LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
+fi
+
+	    # Version numbers are dot-stripped by system policy.
+	    TCL_TRIM_DOTS=`echo ${VERSION} | tr -d .`
+	    UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.a'
+	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}\$\{DBGX\}.so.1'
+	    TCL_LIB_VERSIONS_OK=nodots
 	    ;;
 	Darwin-*)
 	    CFLAGS_OPTIMIZE="-Os"
@@ -7038,6 +7155,7 @@ fi
 	case $system in
 	    AIX-*) ;;
 	    BSD/OS*) ;;
+	    CYGWIN_*) ;;
 	    IRIX*) ;;
 	    NetBSD-*|FreeBSD-*) ;;
 	    Darwin-*) ;;
