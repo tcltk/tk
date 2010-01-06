@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.29 2010/01/02 11:07:56 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.30 2010/01/06 14:27:33 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -107,7 +107,7 @@ static NSModalSession modalSession = NULL;
 
     XEvent xEvent;
 
-    memset(xEvent, 0, sizeof(XEvent));
+    memset(&xEvent, 0, sizeof(XEvent));
     xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
     xEvent.xany.send_event = false;
     xEvent.xany.display = Tk_Display(tkwin);
