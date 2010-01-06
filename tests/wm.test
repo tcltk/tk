@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.39.2.2 2008/11/15 00:37:30 patthoyts Exp $
+# RCS: @(#) $Id: wm.test,v 1.39.2.3 2010/01/06 09:30:21 dkf Exp $
 
 # This file tests window manager interactions that work across platforms.
 # Window manager tests that only work on a specific platform should be placed
@@ -1892,6 +1892,23 @@ test wm-transient-7.5 {Reassign transient, destroy transient} -body {
 } -cleanup {
     deleteWindows
 }
+
+test wm-transient-8.1 {transient to withdrawn window, Bug 1163496} -setup {
+    deleteWindows
+    set result {}
+} -body {
+    # Verifies that transients stay on top of their masters, even if they were
+    # made transients when those masters were withdrawn.
+    toplevel .t1; wm withdraw  .t1;     update
+    toplevel .t2; wm transient .t2 .t1; update
+    lappend result [winfo ismapped .t1] [winfo ismapped .t2]
+    wm deiconify .t1; update
+    lappend result [winfo ismapped .t1] [winfo ismapped .t2]
+    raise .t1; update
+    lappend result [lsearch -all -inline -glob [wm stackorder .] ".t?"]
+} -cleanup {
+    deleteWindows
+} -result {0 0 1 1 {.t1 .t2}}
 
 
 ### wm state ###
