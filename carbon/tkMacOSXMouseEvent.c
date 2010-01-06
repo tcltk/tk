@@ -48,7 +48,7 @@
  *	permission to use and distribute the software in accordance with the
  *	terms specified in this license.
  *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.2 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.3 2010/01/06 14:58:30 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1146,6 +1146,40 @@ GenerateToolbarButtonEvent(
 
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
     return true;
+}
+
+void
+TkpWarpPointer(
+    TkDisplay *dispPtr)
+{
+    CGPoint pt;
+    UInt32 buttonState;
+
+    if (dispPtr->warpWindow) {
+	int x, y;
+
+	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
+	pt.x = x + dispPtr->warpX;
+	pt.y = y + dispPtr->warpY;
+    } else {
+	pt.x = dispPtr->warpX;
+	pt.y = dispPtr->warpY;
+    }
+
+    /*
+     * Tell the OSX core to generate the events to make it happen. This is
+     * fairly ugly, but means that under most circumstances we'll register all
+     * the events that would normally be generated correctly. If we use
+     * CGWarpMouseCursorPosition instead, strange things happen.
+     */
+
+    buttonState = (GetCurrentEvent() && Tk_MacOSXIsAppInFront())
+	    ? GetCurrentEventButtonState() : GetCurrentButtonState();
+
+    CGPostMouseEvent(pt, 1 /* generate motion events */, 5,
+	    buttonState&1 ? 1 : 0, buttonState&2 ? 1 : 0,
+	    buttonState&4 ? 1 : 0, buttonState&8 ? 1 : 0,
+	    buttonState&16 ? 1 : 0);
 }
 
 /*

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.34 2010/01/02 11:07:56 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.35 2010/01/06 14:58:30 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -695,6 +695,22 @@ error:
     }
 }
 #endif /* TK_USE_INPUT_METHODS */
+
+void
+TkpWarpPointer(
+    TkDisplay *dispPtr)
+{
+    Window w;			/* Which window to warp relative to. */
+
+    if (dispPtr->warpWindow != NULL) {
+	w = Tk_WindowId(dispPtr->warpWindow);
+    } else {
+	w = RootWindow(dispPtr->display,
+		Tk_ScreenNumber(dispPtr->warpMainwin));
+    }
+    XWarpPointer(dispPtr->display, None, w, 0, 0, 0, 0,
+	    (int) dispPtr->warpX, (int) dispPtr->warpY);
+}
 
 /*
  * Local Variables:

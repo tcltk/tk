@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.59 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.60 2010/01/06 14:58:30 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -3360,7 +3360,8 @@ HandleEventGenerate(
 	event.general.xkey.y_root = -1;
     }
 
-    if (event.general.xany.type == FocusIn || event.general.xany.type == FocusOut) {
+    if (event.general.xany.type == FocusIn
+	    || event.general.xany.type == FocusOut) {
 	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
@@ -3544,7 +3545,8 @@ HandleEventGenerate(
 			"\"", NULL);
 		return TCL_ERROR;
 	    }
-	    if (!(flags & KEY) || (event.general.xkey.type == MouseWheelEvent)) {
+	    if (!(flags & KEY)
+		    || (event.general.xkey.type == MouseWheelEvent)) {
 		goto badopt;
 	    }
 	    break;
@@ -3817,12 +3819,14 @@ HandleEventGenerate(
 	    Tcl_DoWhenIdle(DoWarp, dispPtr);
 	    dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	}
-	dispPtr->warpWindow = event.general.xany.window;
-	dispPtr->warpX = event.general.xkey.x;
-	dispPtr->warpY = event.general.xkey.y;
+	dispPtr->warpWindow = Tk_IdToWindow(Tk_Display(mainWin),
+		event.general.xmotion.window);
+	dispPtr->warpMainwin = mainWin;
+	dispPtr->warpX = event.general.xmotion.x;
+	dispPtr->warpY = event.general.xmotion.y;
     }
 
-done:
+  done:
     Tcl_ResetResult(interp);
     return TCL_OK;
 }
@@ -3888,9 +3892,7 @@ DoWarp(
 {
     TkDisplay *dispPtr = clientData;
 
-    XWarpPointer(dispPtr->display, (Window) None,
-	    (Window) dispPtr->warpWindow, 0, 0, 0, 0,
-	    (int) dispPtr->warpX, (int) dispPtr->warpY);
+    TkpWarpPointer(dispPtr);
     XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
