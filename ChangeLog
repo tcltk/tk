@@ -1,6 +1,12 @@
+2010-01-06  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixWm.c (TkWmMapWindow): [Bug 1163496]: Allow windows to be
+	* tests/wm.test (wm-transient-8.1): set to be transients for withdrawn
+	masters correctly.
+
 2010-01-05  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* win/tkWinDialog.c: [Patch 2898255] Enable unlimited multiple
+	* win/tkWinDialog.c: [Patch 2898255]: Enable unlimited multiple
 	file selection from the open files dialog (pawlak,fellows,thoyts)
 
 2010-01-05  Donal K. Fellows  <dkf@users.sf.net>
