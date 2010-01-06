@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.77 2009/12/09 13:55:14 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.78 2010/01/06 09:25:15 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -676,11 +676,15 @@ TkWmMapWindow(
 	    if (!Tk_IsMapped(wmPtr->masterPtr)) {
 		wmPtr->withdrawn = 1;
 		wmPtr->hints.initial_state = WithdrawnState;
-	    } else {
-		XSetTransientForHint(winPtr->display,
-			wmPtr->wrapperPtr->window,
-			wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
 	    }
+
+	    /*
+	     * Make sure that we actually set the transient-for property, even
+	     * if we are withdrawn. [Bug 1163496]
+	     */
+
+	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
+		    wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
 	}
 
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
