@@ -1,5 +1,13 @@
 2010-01-06  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/tkBind.c (HandleEventGenerate, DoWarp): [Bug 2926819]:
+	* generic/tkInt.h (TkDisplay):			Factor out the pointer
+	* generic/tkWindow.c (GetScreen):		warping code a bit
+	* carbon/tkMacOSXMouseEvent.c (TkpWarpPointer): better and extend it
+	* macosx/tkMacOSXMouseEvent.c (TkpWarpPointer): to work on OSX too.
+	* unix/tkUnixEvent.c (TkpWarpPointer):
+	* win/tkWinPointer.c (TkpWarpPointer):
+
 	* unix/tkUnixWm.c (TkWmMapWindow): [Bug 1163496]: Allow windows to be
 	* tests/wm.test (wm-transient-8.1): set to be transients for withdrawn
 	masters correctly.
