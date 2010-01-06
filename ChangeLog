@@ -1,3 +1,13 @@
+2010-01-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4        Sync with Tcl version
+	* unix/configure     (regenerated)
+	* unix/Makefile.in
+	* unix/.cvsignore
+	* generic/default.h  Trivial CYGWIN fixes
+	* generic/tkWindow.c
+	* doc/.cvsignore
+
 2010-01-06  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixWm.c (TkWmMapWindow): [Bug 1163496]: Allow windows to be
