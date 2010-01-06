@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.106 2009/12/12 00:10:45 nijtmans Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.107 2010/01/06 14:58:30 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -508,7 +508,7 @@ GetScreen(
 	    dispPtr->lastEventTime = CurrentTime;
 	    dispPtr->bindInfoStale = 1;
 	    dispPtr->cursorFont = None;
-	    dispPtr->warpWindow = None;
+	    dispPtr->warpWindow = NULL;
 	    dispPtr->multipleAtom = None;
 
 	    /*

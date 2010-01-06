@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.117 2010/01/02 11:07:56 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.118 2010/01/06 14:58:30 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -506,7 +506,9 @@ typedef struct TkDisplay {
 				 * display. */
     Window mouseButtonWindow;	/* Window the button state was set in, added
 				 * in Tk 8.4. */
-    Window warpWindow;
+    Tk_Window warpWindow;
+    Tk_Window warpMainwin;	/* For finding the root window for warping
+				 * purposes. */
     int warpX;
     int warpY;
 
@@ -1242,6 +1244,7 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
+MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 
 /*
  * Unsupported commands.

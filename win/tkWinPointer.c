@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPointer.c,v 1.10 2005/12/02 00:19:04 dkf Exp $
+ * RCS: @(#) $Id: tkWinPointer.c,v 1.11 2010/01/06 14:58:30 dkf Exp $
  */
 
 #include "tkWinInt.h"
@@ -361,6 +361,20 @@ XWarpPointer(
 
     GetWindowRect(Tk_GetHWND(dest_w), &r);
     SetCursorPos(r.left+dest_x, r.top+dest_y);
+}
+
+void
+TkpWarpPointer(
+    TkDisplay *dispPtr)
+{
+    if (dispPtr->warpWindow) {
+	RECT r;
+
+	GetWindowRect(Tk_GetHWND(Tk_WindowId(dispPtr->warpWindow)), &r);
+	SetCursorPos(r.left + dispPtr->warpX, r.top + dispPtr->warpY);
+    } else {
+	SetCursorPos(dispPtr->warpX, dispPtr->warpY);
+    }
 }
 
 /*
