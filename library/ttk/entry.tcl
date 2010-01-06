@@ -1,5 +1,5 @@
 #
-# $Id: entry.tcl,v 1.6 2008/11/01 15:34:24 patthoyts Exp $
+# $Id: entry.tcl,v 1.7 2010/01/06 18:37:37 dkf Exp $
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #
@@ -95,19 +95,19 @@ bind TEntry <<PasteSelection>>		{ ttk::entry::ScanRelease %W %x }
 
 ## Keyboard navigation bindings:
 #
-bind TEntry <Key-Left> 			{ ttk::entry::Move %W prevchar }
-bind TEntry <Key-Right> 		{ ttk::entry::Move %W nextchar }
-bind TEntry <Control-Key-Left>		{ ttk::entry::Move %W prevword }
-bind TEntry <Control-Key-Right>		{ ttk::entry::Move %W nextword }
-bind TEntry <Key-Home>			{ ttk::entry::Move %W home }
-bind TEntry <Key-End>			{ ttk::entry::Move %W end }
+bind TEntry <<PrevChar>>		{ ttk::entry::Move %W prevchar }
+bind TEntry <<NextChar>> 		{ ttk::entry::Move %W nextchar }
+bind TEntry <<PrevWord>>		{ ttk::entry::Move %W prevword }
+bind TEntry <<NextWord>>		{ ttk::entry::Move %W nextword }
+bind TEntry <<LineStart>>		{ ttk::entry::Move %W home }
+bind TEntry <<LineEnd>>			{ ttk::entry::Move %W end }
 
-bind TEntry <Shift-Key-Left> 		{ ttk::entry::Extend %W prevchar }
-bind TEntry <Shift-Key-Right>		{ ttk::entry::Extend %W nextchar }
-bind TEntry <Shift-Control-Key-Left>	{ ttk::entry::Extend %W prevword }
-bind TEntry <Shift-Control-Key-Right>	{ ttk::entry::Extend %W nextword }
-bind TEntry <Shift-Key-Home>		{ ttk::entry::Extend %W home }
-bind TEntry <Shift-Key-End>		{ ttk::entry::Extend %W end }
+bind TEntry <<SelectPrevChar>> 		{ ttk::entry::Extend %W prevchar }
+bind TEntry <<SelectNextChar>>		{ ttk::entry::Extend %W nextchar }
+bind TEntry <<SelectPrevWord>>		{ ttk::entry::Extend %W prevword }
+bind TEntry <<SelectNextWord>>		{ ttk::entry::Extend %W nextword }
+bind TEntry <<SelectLineStart>>		{ ttk::entry::Extend %W home }
+bind TEntry <<SelectLineEnd>>		{ ttk::entry::Extend %W end }
 
 bind TEntry <Control-Key-slash> 	{ %W selection range 0 end }
 bind TEntry <Control-Key-backslash> 	{ %W selection clear }

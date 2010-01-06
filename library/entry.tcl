@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.26 2007/12/13 15:26:27 dgp Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.27 2010/01/06 18:37:36 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -121,45 +121,45 @@ bind Entry <Control-1> {
     %W icursor @%x
 }
 
-bind Entry <Left> {
+bind Entry <<PrevChar>> {
     tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
 }
-bind Entry <Right> {
+bind Entry <<NextChar>> {
     tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
 }
-bind Entry <Shift-Left> {
+bind Entry <<SelectPrevChar>> {
     tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
     tk::EntrySeeInsert %W
 }
-bind Entry <Shift-Right> {
+bind Entry <<SelectNextChar>> {
     tk::EntryKeySelect %W [expr {[%W index insert] + 1}]
     tk::EntrySeeInsert %W
 }
-bind Entry <Control-Left> {
+bind Entry <<PrevWord>> {
     tk::EntrySetCursor %W [tk::EntryPreviousWord %W insert]
 }
-bind Entry <Control-Right> {
+bind Entry <<NextWord>> {
     tk::EntrySetCursor %W [tk::EntryNextWord %W insert]
 }
-bind Entry <Shift-Control-Left> {
+bind Entry <<SelectPrevWord>> {
     tk::EntryKeySelect %W [tk::EntryPreviousWord %W insert]
     tk::EntrySeeInsert %W
 }
-bind Entry <Shift-Control-Right> {
+bind Entry <<SelectNextWord>> {
     tk::EntryKeySelect %W [tk::EntryNextWord %W insert]
     tk::EntrySeeInsert %W
 }
-bind Entry <Home> {
+bind Entry <<LineStart>> {
     tk::EntrySetCursor %W 0
 }
-bind Entry <Shift-Home> {
+bind Entry <<SelectLineStart>> {
     tk::EntryKeySelect %W 0
     tk::EntrySeeInsert %W
 }
-bind Entry <End> {
+bind Entry <<LineEnd>> {
     tk::EntrySetCursor %W end
 }
-bind Entry <Shift-End> {
+bind Entry <<SelectLineEnd>> {
     tk::EntryKeySelect %W end
     tk::EntrySeeInsert %W
 }
@@ -210,6 +210,8 @@ bind Entry <Escape> {# nothing}
 bind Entry <Return> {# nothing}
 bind Entry <KP_Enter> {# nothing}
 bind Entry <Tab> {# nothing}
+bind Entry <Prior> {# nothing}
+bind Entry <Next> {# nothing}
 if {[tk windowingsystem] eq "aqua"} {
     bind Entry <Command-KeyPress> {# nothing}
 }

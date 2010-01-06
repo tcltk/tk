@@ -1,5 +1,13 @@
 2010-01-06  Donal K. Fellows  <dkf@users.sf.net>
 
+	* library/tk.tcl:		Centralize the definition of keys that
+	* library/entry.tcl:		do common movement in entry and text
+	* library/spinbox.tcl:		widgets. This is because they are
+	* library/text.tcl:		subtlely different on the different
+	* library/ttk/entry.tcl:	platforms. Lets Tk code work more
+	* doc/event.n (PREDEFINED VIRTUAL EVENTS): correctly with platform
+					conventions "out of the box".
+
 	* generic/tkBind.c (HandleEventGenerate, DoWarp): [Bug 2926819]:
 	* generic/tkInt.h (TkDisplay):			Factor out the pointer
 	* generic/tkWindow.c (GetScreen):		warping code a bit

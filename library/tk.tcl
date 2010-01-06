@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each Tk-based
 # application.  Arranges class bindings for widgets.
 #
-# RCS: @(#) $Id: tk.tcl,v 1.89 2010/01/04 01:36:14 patthoyts Exp $
+# RCS: @(#) $Id: tk.tcl,v 1.90 2010/01/06 18:37:37 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -374,6 +374,19 @@ switch -exact -- [tk windowingsystem] {
 	    event add <<ContextMenu>> <Button-2>
 	}
 
+	event add <<NextChar>>		<Right>
+	event add <<SelectNextChar>>	<Shift-Right>
+	event add <<PrevChar>>		<Left>
+	event add <<SelectPrevChar>>	<Shift-Left>
+	event add <<NextWord>>		<Control-Right>
+	event add <<SelectNextWord>>	<Shift-Control-Right>
+	event add <<PrevWord>>		<Control-Left>
+	event add <<SelectPrevWord>>	<Shift-Control-Left>
+	event add <<LineStart>>		<Home>
+	event add <<SelectLineStart>>	<Shift-Home>
+	event add <<LineEnd>>		<End>
+	event add <<SelectLineEnd>>	<Shift-End>
+
 	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
 	# returned when the user presses <Shift-Tab>. In order for tab
 	# traversal to work, we have to add these keysyms to the PrevWindow
@@ -401,6 +414,19 @@ switch -exact -- [tk windowingsystem] {
   	event add <<Undo>> <Control-Key-z> <Control-Lock-Key-Z>
 	event add <<Redo>> <Control-Key-y> <Control-Lock-Key-Y>
 	event add <<ContextMenu>> <Button-3>
+
+	event add <<NextChar>>		<Right>
+	event add <<SelectNextChar>>	<Shift-Right>
+	event add <<PrevChar>>		<Left>
+	event add <<SelectPrevChar>>	<Shift-Left>
+	event add <<NextWord>>		<Control-Right>
+	event add <<SelectNextWord>>	<Shift-Control-Right>
+	event add <<PrevWord>>		<Control-Left>
+	event add <<SelectPrevWord>>	<Shift-Control-Left>
+	event add <<LineStart>>		<Home>
+	event add <<SelectLineStart>>	<Shift-Home>
+	event add <<LineEnd>>		<End>
+	event add <<SelectLineEnd>>	<Shift-End>
     }
     "aqua" {
 	event add <<Cut>> <Command-Key-x> <Key-F2> <Control-Lock-Key-X>
@@ -411,6 +437,23 @@ switch -exact -- [tk windowingsystem] {
   	event add <<Undo>> <Command-Key-z> <Control-Lock-Key-Z>
 	event add <<Redo>> <Command-Key-y> <Control-Lock-Key-Y>
 	event add <<ContextMenu>> <Button-2>
+
+	# Official bindings
+	# See http://support.apple.com/kb/HT1343
+	event add <<NextChar>>		<Right>
+	event add <<SelectNextChar>>	<Shift-Right>
+	event add <<PrevChar>>		<Left>
+	event add <<SelectPrevChar>>	<Shift-Left>
+	event add <<NextWord>>		<Option-Right>
+	event add <<SelectNextWord>>	<Shift-Option-Right>
+	event add <<PrevWord>>		<Option-Left>
+	event add <<SelectPrevWord>>	<Shift-Option-Left>
+	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left>
+	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right>
+	# Not official, but logical extensions of above. Also derived from
+	# bindings present in MS Word on OSX.
+	event add <<LineStart>>		<Home> <Command-Left>
+	event add <<LineEnd>>		<End> <Command-Right>
     }
 }
 

@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: event.n,v 1.22 2009/03/10 11:13:53 dkf Exp $
+'\" RCS: @(#) $Id: event.n,v 1.23 2010/01/06 18:37:36 dkf Exp $
 '\" 
 .so man.macros
 .TH event n 8.3 Tk "Tk Built-In Commands"
@@ -360,6 +360,26 @@ Copy the currently selected widget contents to the clipboard.
 \fB<<Cut>>\fR
 Move the currently selected widget contents to the clipboard.
 .TP
+\fB<<LineEnd>>\fR
+.
+Move to the end of the line in the current widget while deselecting any
+selected contents.
+.TP
+\fB<<LineStart>>\fR
+.
+Move to the start of the line in the current widget while deselecting any
+selected contents.
+.TP
+\fB<<NextChar>>\fR
+.
+Move to the next item (i.e., visible character) in the current widget while
+deselecting any selected contents.
+.TP
+\fB<<NextWord>>\fR
+.
+Move to the next group of items (i.e., visible word) in the current widget
+while deselecting any selected contents.
+.TP
 \fB<<Paste>>\fR
 Replace the currently selected widget contents with the contents of
 the clipboard.
@@ -368,11 +388,51 @@ the clipboard.
 Insert the contents of the selection at the mouse location. (This
 event has meaningful \fB%x\fR and \fB%y\fR substitutions).
 .TP
+\fB<<PrevChar>>\fR
+.
+Move to the previous item (i.e., visible character) in the current widget
+while deselecting any selected contents.
+.TP
 \fB<<PrevWindow>>\fR
 Traverse to the previous window.
 .TP
+\fB<<PrevWord>>\fR
+.
+Move to the previous group of items (i.e., visible word) in the current widget
+while deselecting any selected contents.
+.TP
 \fB<<Redo>>\fR
 Redo one undone action.
+.TP
+\fB<<SelectLineEnd>>\fR
+.
+Move to the end of the line in the current widget while extending the range
+of selected contents.
+.TP
+\fB<<SelectLineStart>>\fR
+.
+Move to the start of the line in the current widget while extending the range
+of selected contents.
+.TP
+\fB<<SelectNextChar>>\fR
+.
+Move to the next item (i.e., visible character) in the current widget while
+extending the range of selected contents.
+.TP
+\fB<<SelectNextWord>>\fR
+.
+Move to the next group of items (i.e., visible word) in the current widget
+while extending the range of selected contents.
+.TP
+\fB<<SelectPrevChar>>\fR
+.
+Move to the previous item (i.e., visible character) in the current widget
+while extending the range of selected contents.
+.TP
+\fB<<SelectPrevWord>>\fR
+.
+Move to the previous group of items (i.e., visible word) in the current widget
+while extending the range of selected contents.
 .TP
 \fB<<Undo>>\fR
 Undo the last action.
@@ -390,6 +450,9 @@ Consider the following virtual event definitions:
 \fBevent add\fR <<Paste>> <Button-2>
 \fBevent add\fR <<Save>> <Control-X><Control-S>
 \fBevent add\fR <<Save>> <Shift-F12>
+if {[tk windowingsystem] eq "aqua"} {
+    \fBevent add\fR <<Save>> <Command-s>
+}
 .CE
 .PP
 In the \fBbind\fR command, a virtual event can be bound like any other
