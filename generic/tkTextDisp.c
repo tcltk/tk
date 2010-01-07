@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.76 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.77 2010/01/07 15:32:18 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -2902,9 +2902,15 @@ AsyncUpdateLineMetrics(
 	return;
     }
 
+    /*
+     * Reify where we end or all hell breaks loose with the calculations when
+     * we try to update. [Bug 2677890]
+     */
+
     lineNum = dInfoPtr->currentMetricUpdateLine;
-    if (lineNum == -1) {
-	dInfoPtr->lastMetricUpdateLine = 0;
+    if (dInfoPtr->lastMetricUpdateLine == -1) {
+	dInfoPtr->lastMetricUpdateLine =
+		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
     }
 
     /*
