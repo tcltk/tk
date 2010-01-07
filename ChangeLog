@@ -1,3 +1,9 @@
+2010-01-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkTextDisp.c (AsyncUpdateLineMetrics): [Bug 2677890]: Fix
+	odd text widget update problem that had scrollbars being unable to
+	cover the whole widget. Fix is to reify the range to update sooner.
+
 2010-01-06  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/tk.tcl:		Centralize the definition of keys that
