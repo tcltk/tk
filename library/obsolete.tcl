@@ -3,7 +3,7 @@
 # This file contains obsolete procedures that people really shouldn't
 # be using anymore, but which are kept around for backward compatibility.
 #
-# RCS: @(#) $Id: obsolete.tcl,v 1.5 2010/01/09 00:43:46 patthoyts Exp $
+# RCS: @(#) $Id: obsolete.tcl,v 1.6 2010/01/09 00:48:36 patthoyts Exp $
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994 Sun Microsystems, Inc.
@@ -118,6 +118,7 @@ proc ::tk::classic::restore_menu {args} {
 	option add *Menu.activeBorderWidth	2 $prio; # 1
 	option add *Menu.borderWidth		2 $prio; # 1
         option add *Menu.clickToFocus		true $prio
+        option add *Menu.useMotifHelp		true $prio
     }
     if {[tk windowingsystem] ne "aqua"} {
 	option add *Menu.font		"TkDefaultFont" $prio; # "TkMenuFont"
