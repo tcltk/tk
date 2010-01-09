@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.19 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.19.2.1 2010/01/09 00:54:06 patthoyts Exp $
  */
 
 #include "default.h"
@@ -1264,6 +1264,18 @@ SetHelpMenu(
      TkMenu *menuPtr)		/* The menu we are checking */
 {
     TkMenuEntry *cascadeEntryPtr;
+    int useMotifHelp = 0;
+    const char *option = NULL;
+    if (menuPtr->tkwin) {
+	option = Tk_GetOption(menuPtr->tkwin, "useMotifHelp", "UseMotifHelp");
+	if (option != NULL) {
+	    Tcl_GetBoolean(NULL, option, &useMotifHelp);
+	}
+    }
+
+    if (!useMotifHelp) {
+	return;
+    }
 
     for (cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
 	    cascadeEntryPtr != NULL;
