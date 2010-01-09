@@ -1,3 +1,8 @@
+2010-01-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/menu.tcl:      [TIP 360] Make Tk menu activation
+	* library/obsolete.tcl:  follow mouse movements.
+
 2010-01-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/photo.n: [Bug 2927569] Multiple edits have peverted the
