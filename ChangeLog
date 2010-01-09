@@ -1,5 +1,9 @@
 2010-01-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
+	* doc/menu.n:           [TIP 360]: Remove special handling of
+	* library/obsolete.tcl: the .help menu on X11.
+	* unix/tkUnixMenu.c:
+
 	* library/menu.tcl:      [TIP 360] Make Tk menu activation
 	* library/obsolete.tcl:  follow mouse movements.
 
