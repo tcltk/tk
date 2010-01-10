@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.107 2010/01/06 14:58:30 dkf Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.108 2010/01/10 20:27:23 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2280,7 +2280,7 @@ Tk_SetClass(
 void
 Tk_SetClassProcs(
     Tk_Window tkwin,		/* Token for window to modify. */
-    Tk_ClassProcs *procs,	/* Class procs structure. */
+    const Tk_ClassProcs *procs,	/* Class procs structure. */
     ClientData instanceData)	/* Data to be passed to class functions. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;

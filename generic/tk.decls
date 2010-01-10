@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.48 2009/06/29 14:35:01 das Exp $
+# RCS: @(#) $Id: tk.decls,v 1.49 2010/01/10 20:27:22 nijtmans Exp $
 
 library tk
 
@@ -929,7 +929,7 @@ declare 241 generic {
 }
 declare 242 generic {
     void Tk_SetClassProcs(Tk_Window tkwin,
-	    Tk_ClassProcs *procs, ClientData instanceData)
+	    const Tk_ClassProcs *procs, ClientData instanceData)
 }
 
 # New in 8.4a4
