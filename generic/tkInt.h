@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.118 2010/01/06 14:58:30 dkf Exp $
+ * RCS: $Id: tkInt.h,v 1.119 2010/01/10 20:27:23 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -802,7 +802,7 @@ typedef struct TkWindow {
      * Information used by widget classes.
      */
 
-    Tk_ClassProcs *classProcsPtr;
+    const Tk_ClassProcs *classProcsPtr;
     ClientData instanceData;
 
     /*

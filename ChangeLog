@@ -1,3 +1,11 @@
+2010-01-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/SetClassProcs.3:  CONSTify Tk_SetClassProcs
+	* generic/tk.decls
+	* generic/tkInt.h
+	* generic/tkWindow.c
+	* generic/tkDecls.h:    (regenerated)
+
 2010-01-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/menu.n:           [TIP 360]: Remove special handling of
