@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.42 2009/02/27 23:23:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.43 2010/01/10 20:27:23 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -1500,7 +1500,7 @@ EXTERN Tk_Window	Tk_CreateAnonymousWindow (Tcl_Interp * interp,
 #define Tk_SetClassProcs_TCL_DECLARED
 /* 242 */
 EXTERN void		Tk_SetClassProcs (Tk_Window tkwin,
-				Tk_ClassProcs * procs,
+				const Tk_ClassProcs * procs,
 				ClientData instanceData);
 #endif
 #ifndef Tk_SetInternalBorderEx_TCL_DECLARED
@@ -1962,7 +1962,7 @@ typedef struct TkStubs {
     void (*tk_CreateClientMessageHandler) (Tk_ClientMessageProc * proc); /* 239 */
     void (*tk_DeleteClientMessageHandler) (Tk_ClientMessageProc * proc); /* 240 */
     Tk_Window (*tk_CreateAnonymousWindow) (Tcl_Interp * interp, Tk_Window parent, const char * screenName); /* 241 */
-    void (*tk_SetClassProcs) (Tk_Window tkwin, Tk_ClassProcs * procs, ClientData instanceData); /* 242 */
+    void (*tk_SetClassProcs) (Tk_Window tkwin, const Tk_ClassProcs * procs, ClientData instanceData); /* 242 */
     void (*tk_SetInternalBorderEx) (Tk_Window tkwin, int left, int right, int top, int bottom); /* 243 */
     void (*tk_SetMinimumRequestSize) (Tk_Window tkwin, int minWidth, int minHeight); /* 244 */
     void (*tk_SetCaretPos) (Tk_Window tkwin, int x, int y, int height); /* 245 */
