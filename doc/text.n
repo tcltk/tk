@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.58 2008/12/06 10:48:29 dkf Exp $
+'\" RCS: @(#) $Id: text.n,v 1.59 2010/01/10 20:38:54 dkf Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -180,8 +180,8 @@ widget. See \fBEMBEDDED WINDOWS\fR below for more details.
 The fourth form of annotation allows Tk images to be embedded in a text
 widget. See \fBEMBEDDED IMAGES\fR below for more details.
 .PP
-The text widget also has a built-in undo/redo mechanism. See \fBTHE UNDO
-MECHANISM\fR below for more details.
+The text widget also has a built-in undo/redo mechanism. See
+\fBTHE UNDO MECHANISM\fR below for more details.
 .PP
 The text widget allows for the creation of peer widgets. These are other text
 widgets which share the same underlying data (text, marks, tags, images, etc).
@@ -619,8 +619,9 @@ The name space for marks is different from that for tags: the same name may be
 used for both a mark and a tag, but they will refer to different things.
 .PP
 Two marks have special significance. First, the mark \fBinsert\fR is
-associated with the insertion cursor, as described under \fBTHE INSERTION
-CURSOR\fR below. Second, the mark \fBcurrent\fR is associated with the
+associated with the insertion cursor, as described under
+\fBTHE INSERTION CURSOR\fR
+below. Second, the mark \fBcurrent\fR is associated with the
 character closest to the mouse and is adjusted automatically to track the
 mouse position and any changes to the text in the widget (one exception:
 \fBcurrent\fR is not updated in response to mouse motions if a mouse button is
