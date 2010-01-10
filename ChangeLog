@@ -5,6 +5,8 @@
 	* generic/tkInt.h
 	* generic/tkWindow.c
 	* generic/tkDecls.h:    (regenerated)
+	* unix/tcl.m4           Sync with Tcl version
+	* unix/configure        (regenerated)
 
 2010-01-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
