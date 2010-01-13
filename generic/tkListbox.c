@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.57 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.58 2010/01/13 23:08:06 nijtmans Exp $
  */
 
 #include "default.h"
@@ -436,9 +436,11 @@ static void		MigrateHashEntries(Tcl_HashTable *table,
  * that can be invoked from generic window code.
  */
 
-static Tk_ClassProcs listboxClass = {
+static const Tk_ClassProcs listboxClass = {
     sizeof(Tk_ClassProcs),	/* size */
     ListboxWorldChanged,	/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*
