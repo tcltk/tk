@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Tk_Main.3,v 1.8 2008/12/15 16:17:18 dgp Exp $
+'\" RCS: @(#) $Id: Tk_Main.3,v 1.9 2010/01/13 13:27:50 dkf Exp $
 '\" 
 .so man.macros
 .TH Tk_Main 3 4.0 Tk "Tk Library Procedures"
@@ -62,6 +62,10 @@ for \fBTcl_AppInit\fR.
 \fBTk_Main\fR supports both an interactive mode and a startup script
 mode, with the file name and encoding of a startup script under the
 control of the \fBTcl_SetStartupScript\fR and \fBTcl_GetStartupScript\fR
-routines.
+routines. However it calls \fBTk_MainLoop\fR after processing any
+supplied script, and in interactive uses events registered with
+\fBTcl_CreateFileHandler\fR to process user input.
+.SH "SEE ALSO"
+Tcl_DoOneEvent(3)
 .SH KEYWORDS
 application-specific initialization, command-line arguments, main program
