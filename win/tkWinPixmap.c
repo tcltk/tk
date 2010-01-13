@@ -9,11 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.9 2009/08/10 23:16:28 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.10 2010/01/13 23:08:12 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
-
 
 /*
  *----------------------------------------------------------------------

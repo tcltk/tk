@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.61 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.62 2010/01/13 23:08:08 nijtmans Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -323,9 +323,11 @@ static Tk_Item *	TagSearchNext(TagSearch *searchPtr);
  * that can be invoked from generic window code.
  */
 
-static Tk_ClassProcs canvasClass = {
+static const Tk_ClassProcs canvasClass = {
     sizeof(Tk_ClassProcs),	/* size */
     CanvasWorldChanged,		/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.56 2010/01/05 09:40:46 dkf Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.57 2010/01/13 23:08:09 nijtmans Exp $
  */
 
 /*
@@ -373,9 +373,11 @@ static void		TkMenuCleanup(ClientData unused);
  * geometry proc to be called.
  */
 
-static Tk_ClassProcs menuClass = {
+static const Tk_ClassProcs menuClass = {
     sizeof(Tk_ClassProcs),	/* size */
-    MenuWorldChanged		/* worldChangedProc */
+    MenuWorldChanged,		/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

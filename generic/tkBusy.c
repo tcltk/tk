@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBusy.c,v 1.6 2008/12/10 00:34:51 das Exp $
+ * RCS: @(#) $Id: tkBusy.c,v 1.7 2010/01/13 23:08:09 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -29,7 +29,7 @@ static Tk_OptionSpec busyOptionSpecs[] = {
 	DEF_BUSY_CURSOR, -1, Tk_Offset(Busy, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
 #endif
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 /*

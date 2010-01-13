@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.31 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.32 2010/01/13 23:08:12 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -63,8 +63,11 @@ static void		ScrollbarEventProc(ClientData clientData,
  * The class procedure table for the scrollbar widget.
  */
 
-Tk_ClassProcs tkpScrollbarProcs = {
-    sizeof(Tk_ClassProcs)	/* size */
+const Tk_ClassProcs tkpScrollbarProcs = {
+    sizeof(Tk_ClassProcs),	/* size */
+    NULL,					/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 #pragma mark TKApplication(TKScrlbr)

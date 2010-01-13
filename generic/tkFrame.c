@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.39 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.40 2010/01/13 23:08:08 nijtmans Exp $
  */
 
 #include "default.h"
@@ -329,9 +329,11 @@ static void		MapFrame(ClientData clientData);
  * can be invoked from generic window code.
  */
 
-static Tk_ClassProcs frameClass = {
+static const Tk_ClassProcs frameClass = {
     sizeof(Tk_ClassProcs),	/* size */
-    FrameWorldChanged		/* worldChangedProc */
+    FrameWorldChanged,		/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

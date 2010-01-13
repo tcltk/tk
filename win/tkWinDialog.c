@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.68 2010/01/05 21:50:54 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.69 2010/01/13 23:08:11 nijtmans Exp $
  *
  */
 
@@ -2338,7 +2338,7 @@ Tk_MessageBoxObjCmd(
     if (defaultBtn >= 0) {
 	int defaultBtnIdx = -1;
 
-	for (i = 0; i < NUM_TYPES; i++) {
+	for (i = 0; i < (int) NUM_TYPES; i++) {
 	    if (type == allowedTypes[i].type) {
 		int j;
 
@@ -2623,7 +2623,7 @@ HookProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
      */
 
     if (WM_COMMAND == msg && LOWORD(wParam) == 1026) {
-	LOGFONT lf = {0};
+	LOGFONT lf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
 	HDC hdc = GetDC(hwndDlg);
 
 	SendMessage(hwndDlg, WM_CHOOSEFONT_GETLOGFONT, 0, (LPARAM) &lf);
