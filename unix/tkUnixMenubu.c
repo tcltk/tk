@@ -9,21 +9,12 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenubu.c,v 1.11 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixMenubu.c,v 1.12 2010/01/13 23:08:11 nijtmans Exp $
  */
 
 #include "tkInt.h"
 #include "tkMenubutton.h"
 
-/*
- * The structure below defines menubutton class behavior by means of functions
- * that can be invoked from generic window code.
- */
-
-Tk_ClassProcs tkpMenubuttonClass = {
-    sizeof(Tk_ClassProcs),	/* size */
-    TkMenuButtonWorldChanged,	/* worldChangedProc */
-};
 
 /*
  *----------------------------------------------------------------------

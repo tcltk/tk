@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.35 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.36 2010/01/13 23:08:12 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -78,9 +78,11 @@ static void ComputeUnixButtonGeometry(TkButton *butPtr);
  * The class procedure table for the button widgets.
  */
 
-Tk_ClassProcs tkpButtonProcs = {
+const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 

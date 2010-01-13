@@ -10,12 +10,24 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.26 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.27 2010/01/13 23:08:07 nijtmans Exp $
  */
 
 #include "tkInt.h"
 #include "tkMenubutton.h"
 #include "default.h"
+
+/*
+ * The structure below defines menubutton class behavior by means of
+ * procedures that can be invoked from generic window code.
+ */
+
+static const Tk_ClassProcs menubuttonClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    TkMenuButtonWorldChanged,	/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
+};
 
 /*
  * The following table defines the legal values for the -direction option. It
@@ -236,7 +248,7 @@ Tk_MenubuttonObjCmd(
     Tk_SetClass(tkwin, "Menubutton");
     mbPtr = TkpCreateMenuButton(tkwin);
 
-    Tk_SetClassProcs(tkwin, &tkpMenubuttonClass, mbPtr);
+    Tk_SetClassProcs(tkwin, &menubuttonClass, mbPtr);
 
     /*
      * Initialize the data structure for the button.

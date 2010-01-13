@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.h,v 1.14 2007/12/13 15:24:16 dgp Exp $
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.15 2010/01/13 23:08:07 nijtmans Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -209,12 +209,6 @@ typedef struct {
 
 #define INDICATOR_WIDTH		40
 #define INDICATOR_HEIGHT	17
-
-/*
- * Declaration of variables shared between the files in the button module.
- */
-
-MODULE_SCOPE Tk_ClassProcs tkpMenubuttonClass;
 
 /*
  * Declaration of procedures used in the implementation of the button widget.

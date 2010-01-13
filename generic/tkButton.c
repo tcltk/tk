@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.36 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.37 2010/01/13 23:08:07 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -144,7 +144,7 @@ static Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	DEF_BUTTON_WRAP_LENGTH, Tk_Offset(TkButton, wrapLengthPtr),
 	Tk_Offset(TkButton, wrapLength), 0, 0, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 static Tk_OptionSpec buttonOptionSpecs[] = {

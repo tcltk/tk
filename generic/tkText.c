@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.93 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.94 2010/01/13 23:08:08 nijtmans Exp $
  */
 
 #include "default.h"
@@ -428,9 +428,11 @@ static SearchLineIndexProc	TextSearchGetLineIndex;
  * can be invoked from generic window code.
  */
 
-static Tk_ClassProcs textClass = {
+static const Tk_ClassProcs textClass = {
     sizeof(Tk_ClassProcs),	/* size */
     TextWorldChangedCallback,	/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

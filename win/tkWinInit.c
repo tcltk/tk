@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.15 2008/04/27 22:39:17 dkf Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.16 2010/01/13 23:08:11 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -129,7 +129,7 @@ TkpDisplayWarning(
 #define TK_MAX_WARN_LEN (1024 * sizeof(WCHAR))
     Tcl_UtfToExternalDString(unicodeEncoding, msg, -1, &msgString);
     Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
-    if (Tcl_DStringLength(&msgString) > TK_MAX_WARN_LEN) {
+    if (Tcl_DStringLength(&msgString) > (int) TK_MAX_WARN_LEN) {
 	Tcl_DStringSetLength(&msgString, TK_MAX_WARN_LEN);
 	Tcl_DStringAppend(&msgString, (char *) L" ...", 4 * sizeof(WCHAR));
     }

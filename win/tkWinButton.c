@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.38 2009/11/02 04:43:26 mistachkin Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.39 2010/01/13 23:08:11 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -89,10 +89,11 @@ static void		InitBoxes(void);
  * The class procedure table for the button widgets.
  */
 
-Tk_ClassProcs tkpButtonProcs = {
+const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
     CreateProc,			/* createProc */
+    NULL					/* modalProc */
 };
 
 

@@ -16,7 +16,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.c,v 1.34 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkScale.c,v 1.35 2010/01/13 23:08:10 nijtmans Exp $
  */
 
 #include "default.h"
@@ -177,9 +177,11 @@ static void		ScaleSetVariable(TkScale *scalePtr);
  * that can be invoked from generic window code.
  */
 
-static Tk_ClassProcs scaleClass = {
+static const Tk_ClassProcs scaleClass = {
     sizeof(Tk_ClassProcs),	/* size */
     ScaleWorldChanged,		/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

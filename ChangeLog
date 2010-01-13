@@ -1,3 +1,38 @@
+2010-01-??  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMenubutton.h:  Eliminate tkpMenubuttonClass
+	* generic/tkButton.h       make tkpButtonProcs CONST
+	* generic/tkBusy.c:        fix gcc warning: missing initializer
+	* generic/tkButton.c
+	* generic/tkCanvas.c
+	* generic/tkConsole.c
+	* generic/tkEntry.c
+	* generic/tkFrame.c
+	* generic/tkListbox.c
+	* generic/tkMenu.c
+	* generic/tkMenubutton.c
+	* generic/tkMessage.c
+	* generic/tkScale.c
+	* generic/tkScrollbar.h
+	* generic/tkText.c
+	* generic/ttk/ttkWidget.c
+	* carbon/tkMacOSXButton.c
+	* carbon/tkMacOSXMenubutton.c
+	* carbon/tkMacOSXScrlbr.c
+	* macosx/tkMacOSXButton.c
+	* macosx/tkMacOSXMenubutton.c
+	* macosx/tkMacOSXScrlbr.c
+	* unix/tkUnixButton.c
+	* unix/tkUnixMenubu.c
+	* unix/tkUnixScrolbr.c
+	* win/tkWinButton.c
+	* win/tkWinDialog.c
+	* win/tkWinEmbed.c
+	* win/tkWinFont.c
+	* win/tkWinInit.c
+	* win/tkWinKey.c
+	* win/tkWinScrlbr.c
+
 2010-01-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/SetClassProcs.3:  CONSTify Tk_SetClassProcs

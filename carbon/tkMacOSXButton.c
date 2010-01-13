@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.2 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.3 2010/01/13 23:08:12 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -116,9 +116,11 @@ static void SetupBevelButton(MacButton *butPtr, ControlRef controlHandle,
  * The class procedure table for the button widgets.
  */
 
-Tk_ClassProcs tkpButtonProcs = {
+const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 static int bCount;

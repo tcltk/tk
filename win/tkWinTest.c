@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.28 2009/11/29 22:10:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.29 2010/01/13 23:08:11 nijtmans Exp $
  */
 
 #ifndef USE_TCL_STUBS
@@ -172,7 +172,7 @@ AppendSystemError(
     if (length == 0) {
 	char *msgPtr;
 
-	length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM 
+	length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
 		| FORMAT_MESSAGE_IGNORE_INSERTS
 		| FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (char *) &msgPtr,
@@ -412,7 +412,7 @@ TestwineventCmd(
 	char buf[TCL_INTEGER_SPACE];
 
 	sprintf(buf, "%d",
-		(int)SendDlgItemMessage(hwnd, id, message, wParam, lParam));
+		(int) SendDlgItemMessage(hwnd, id, message, wParam, lParam));
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	break;
     }

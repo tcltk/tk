@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.20 2009/12/16 22:00:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.21 2010/01/13 23:08:11 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -330,7 +330,7 @@ KeycodeToKeysym(
      */
 
   skipToAscii:
-    if (keycode < 0 || keycode > MAX_KEYCODE) {
+    if (keycode > MAX_KEYCODE) {
 	return NoSymbol;
     }
     switch (keycode) {

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConsole.c,v 1.40 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkConsole.c,v 1.41 2010/01/13 23:08:09 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -66,7 +66,7 @@ static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
  * This structure describes the channel type structure for file based IO:
  */
 
-static Tcl_ChannelType consoleChannelType = {
+static const Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
     TCL_CHANNEL_VERSION_4,	/* v4 channel */
     ConsoleClose,		/* Close proc. */
@@ -83,6 +83,7 @@ static Tcl_ChannelType consoleChannelType = {
     NULL,			/* handler proc. */
     NULL,			/* wide seek proc */
     NULL,			/* thread action proc */
+    NULL
 };
 
 #ifdef __WIN32__

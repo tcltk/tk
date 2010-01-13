@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.1 2009/06/26 01:42:47 das Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.2 2010/01/13 23:08:12 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -97,8 +97,11 @@ static void		UpdateControlValues(MacScrollbar *macScrollPtr);
  * at which the variable is declared.
  */
 
-Tk_ClassProcs tkpScrollbarProcs = {
-    sizeof(Tk_ClassProcs)	/* size */
+const Tk_ClassProcs tkpScrollbarProcs = {
+    sizeof(Tk_ClassProcs),	/* size */
+    NULL,					/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

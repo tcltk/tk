@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.8 2009/10/07 14:33:27 dkf Exp $
+ * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.9 2010/01/13 23:08:10 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -38,8 +38,11 @@ typedef struct UnixScrollbar {
  * variable is declared at this scope.
  */
 
-Tk_ClassProcs tkpScrollbarProcs = {
-    sizeof(Tk_ClassProcs)	/* size */
+const Tk_ClassProcs tkpScrollbarProcs = {
+    sizeof(Tk_ClassProcs),	/* size */
+    NULL,					/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*
