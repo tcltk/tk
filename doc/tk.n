@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tk.n,v 1.22 2009/01/24 14:15:47 dkf Exp $
+'\" RCS: @(#) $Id: tk.n,v 1.23 2010/01/13 15:41:29 dkf Exp $
 '\" 
 .so man.macros
 .TH tk n 8.4 Tk "Tk Built-In Commands"
@@ -54,7 +54,7 @@ This command controls the marking of window hierarchies as
 rendering them non-interactive while some other operation is proceeding. For
 more details see the \fBbusy\fR manual page.
 .TP
-\fBtk caret window \fR?\fB\-x \fIx\fR? ?\fB\-y \fIy\fR? ?\fB\-height \fIheight\fR?
+\fBtk caret \fIwindow \fR?\fB\-x \fIx\fR? ?\fB\-y \fIy\fR? ?\fB\-height \fIheight\fR?
 .
 Sets and queries the caret location for the display of the specified
 Tk window \fIwindow\fR.  The caret is the per-display cursor location
