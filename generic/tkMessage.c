@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.23 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.24 2010/01/13 23:08:09 nijtmans Exp $
  */
 
 #include "default.h"
@@ -190,9 +190,11 @@ static void		DisplayMessage(ClientData clientData);
  * that can be invoked from generic window code.
  */
 
-static Tk_ClassProcs messageClass = {
+static const Tk_ClassProcs messageClass = {
     sizeof(Tk_ClassProcs),	/* size */
     MessageWorldChanged,	/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

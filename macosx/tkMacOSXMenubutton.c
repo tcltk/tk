@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.22 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.23 2010/01/13 23:08:13 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -68,15 +68,6 @@ static const BoundsFix boundsFixes[] = {
 
 static void MenuButtonEventProc(ClientData clientData, XEvent *eventPtr);
 
-/*
- * The structure below defines menubutton class behavior by means of functions
- * that can be invoked from generic window code.
- */
-
-Tk_ClassProcs tkpMenubuttonClass = {
-    sizeof(Tk_ClassProcs),	/* size */
-    TkMenuButtonWorldChanged,	/* worldChangedProc */
-};
 
 /*
  *----------------------------------------------------------------------

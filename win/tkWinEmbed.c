@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.35 2008/04/27 22:39:17 dkf Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.36 2010/01/13 23:08:11 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -738,7 +738,7 @@ TkWinEmbeddedEventProc(
 	     */
 
 	    if (topwinPtr) {
-		if (wParam >= 0 && wParam <= 3) {
+		if (wParam <= 3) {
 		    TkpWmSetState(topwinPtr, wParam);
 		}
 		result = 1+TkpWmGetState(topwinPtr);

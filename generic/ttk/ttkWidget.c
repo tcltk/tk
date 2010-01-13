@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.22 2009/11/01 18:12:44 jenglish Exp $
+/* $Id: ttkWidget.c,v 1.23 2010/01/13 23:08:13 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -359,9 +359,11 @@ static void WidgetWorldChanged(ClientData clientData)
     TtkRedisplayWidget(corePtr);
 }
 
-static struct Tk_ClassProcs widgetClassProcs = {
-    sizeof(Tk_ClassProcs),
-    WidgetWorldChanged
+static Tk_ClassProcs widgetClassProcs = {
+    sizeof(Tk_ClassProcs),	/* size */
+    WidgetWorldChanged,	/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
 
 /*

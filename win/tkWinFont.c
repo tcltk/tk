@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.48 2010/01/05 08:49:50 dkf Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.49 2010/01/13 23:08:12 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -2521,7 +2521,7 @@ GetScreenFont(
 	 * We can only store up to LF_FACESIZE wide characters
 	 */
 
-	if (Tcl_DStringLength(&ds) >= (LF_FACESIZE * sizeof(WCHAR))) {
+	if (Tcl_DStringLength(&ds) >= (int)(LF_FACESIZE * sizeof(WCHAR))) {
 	    Tcl_DStringSetLength(&ds, LF_FACESIZE);
 	}
 	src = (Tcl_UniChar *) Tcl_DStringValue(&ds);
@@ -2808,7 +2808,7 @@ LoadFontRanges(
     }
 
     n = GetFontData(hdc, cmapKey, 0, &cmapTable, sizeof(cmapTable));
-    if (n != GDI_ERROR) {
+    if (n != (int) GDI_ERROR) {
 	if (swapped) {
 	    SwapShort(&cmapTable.numTables);
 	}
