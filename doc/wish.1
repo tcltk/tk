@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wish.1,v 1.12 2009/03/25 23:27:23 nijtmans Exp $
+'\" RCS: @(#) $Id: wish.1,v 1.13 2010/01/13 13:27:51 dkf Exp $
 '\" 
 .so man.macros
 .TH wish 1 8.0 Tk "Tk Applications"
@@ -63,7 +63,7 @@ language, the Tk toolkit, and a main program that reads commands
 from standard input or from a file.
 It creates a main window and then processes Tcl commands.
 If \fBwish\fR is invoked with arguments, then the first few
-arguments, ?\fB\-encoding \fIname\fR? ?\fIfileName\fR? specify the
+arguments, ?\fB\-encoding \fIname\fR? ?\fIfileName\fR?, specify the
 name of a script file, and, optionally, the
 encoding of the text data stored in that script file.  A value
 for \fIfileName\fR is recognized if the appropriate argument
@@ -213,5 +213,7 @@ The variable \fBtcl_prompt2\fR is used in a similar way when
 a newline is typed but the current command is not yet complete;
 if \fBtcl_prompt2\fR is not set then no prompt is output for
 incomplete commands.
+.SH "SEE ALSO"
+tclsh(1), toplevel(n), Tk_Main(3), Tk_MainLoop(3), Tk_MainWindow(3)
 .SH KEYWORDS
 shell, toolkit
