@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.33 2009/12/02 21:16:45 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.34 2010/01/14 22:05:54 nijtmans Exp $
  */
 
 #ifndef _TKWININT
@@ -38,6 +38,9 @@
 
 #ifndef WS_EX_TOOLWINDOW
 #define WS_EX_TOOLWINDOW	0x00000080L
+#endif
+#ifndef SPI_SETKEYBOARDCUES
+#define SPI_SETKEYBOARDCUES 0x100B
 #endif
 
 /*
