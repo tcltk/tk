@@ -1,4 +1,4 @@
-2010-01-??  Jan Nijtmans  <nijtmans@users.sf.net>
+2010-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMenubutton.h:  Eliminate tkpMenubuttonClass
 	* generic/tkButton.h       make tkpButtonProcs CONST
@@ -32,6 +32,8 @@
 	* win/tkWinInit.c
 	* win/tkWinKey.c
 	* win/tkWinScrlbr.c
+	* win/tkWinInt.h      Add SPI_SETKEYBOARDCUES definition,
+	                      needed for original VC++ 6.0
 
 2010-01-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
