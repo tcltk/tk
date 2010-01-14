@@ -5,14 +5,14 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: tkvars.n,v 1.8 2010/01/13 15:24:29 dkf Exp $
+'\" RCS: @(#) $Id: tkvars.n,v 1.9 2010/01/14 11:50:51 dkf Exp $
 '\" 
 .so man.macros
 .TH tkvars n 4.1 Tk "Tk Built-In Commands"
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-tkvars \- Variables used or set by Tk
+geometry, tk_library, tk_patchLevel, tk_strictMotif, tk_version \- Variables used or set by Tk
 .BE
 .SH DESCRIPTION
 .PP
@@ -94,8 +94,17 @@ These variables are set by text widgets when they have debugging
 turned on.  The values written to these variables can be used to
 test or debug text widget operations.  These variables are mostly
 used by Tk's test suite.
+.SH "OTHER GLOBAL VARIABLES"
+The following variables are only guaranteed to exist in \fBwish\fR
+executables; the Tk library does not define them itself but many Tk
+environments do.
+.TP 6
+\fBgeometry\fR
+.
+If set, contains the user-supplied geometry specification to use for
+the main Tk window.
 .SH "SEE ALSO"
-package(n), tclvars(n)
+package(n), tclvars(n), wish(1)
 .SH KEYWORDS
 environment, text, variables, version
 '\" Local Variables:
