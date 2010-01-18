@@ -1,3 +1,8 @@
+2010-01-18  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvas.c       Apply patch [#2932808 ]: Canvas items
+	                           not updating on widget state change 
+
 2010-01-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* doc/menu.n:           [TIP 360]: Remove special handling of
