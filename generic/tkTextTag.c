@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextTag.c,v 1.33 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkTextTag.c,v 1.34 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "default.h"
@@ -89,7 +89,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, wrapMode),
 	TK_OPTION_NULL_OK, (ClientData) wrapStrings, 0},
-    {TK_OPTION_END}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 /*

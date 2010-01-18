@@ -17,11 +17,10 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.93 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.94 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
-#include <ctype.h>
 
 /*
  * The following data structure is used to return information from
@@ -124,7 +123,8 @@ Tk_ImageType tkPhotoImageType = {
     TkImgPhotoFree,		/* freeProc */
     ImgPhotoDelete,		/* deleteProc */
     ImgPhotoPostscript,		/* postscriptProc */
-    NULL			/* nextPtr */
+    NULL,			/* nextPtr */
+    NULL
 };
 
 typedef struct ThreadSpecificData {
@@ -154,16 +154,16 @@ static Tcl_ThreadDataKey dataKey;
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	 NULL, Tk_Offset(PhotoMaster, fileString), TK_CONFIG_NULL_OK},
+	 NULL, Tk_Offset(PhotoMaster, fileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
-	 DEF_PHOTO_GAMMA, Tk_Offset(PhotoMaster, gamma), 0},
+	 DEF_PHOTO_GAMMA, Tk_Offset(PhotoMaster, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
-	 DEF_PHOTO_HEIGHT, Tk_Offset(PhotoMaster, userHeight), 0},
+	 DEF_PHOTO_HEIGHT, Tk_Offset(PhotoMaster, userHeight), 0, NULL},
     {TK_CONFIG_UID, "-palette", NULL, NULL,
-	 DEF_PHOTO_PALETTE, Tk_Offset(PhotoMaster, palette), 0},
+	 DEF_PHOTO_PALETTE, Tk_Offset(PhotoMaster, palette), 0, NULL},
     {TK_CONFIG_INT, "-width", NULL, NULL,
-	 DEF_PHOTO_WIDTH, Tk_Offset(PhotoMaster, userWidth), 0},
-    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
+	 DEF_PHOTO_WIDTH, Tk_Offset(PhotoMaster, userWidth), 0, NULL},
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
 /*

@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.44 2009/11/29 22:10:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.45 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #undef STATIC_BUILD
@@ -97,7 +97,8 @@ static Tk_ImageType imageType = {
     ImageFree,			/* freeProc */
     ImageDelete,		/* deleteProc */
     NULL,			/* postscriptPtr */
-    NULL			/* nextPtr */
+    NULL,			/* nextPtr */
+    NULL
 };
 
 /*
@@ -659,10 +660,10 @@ TestobjconfigObjCmd(
     } ExtensionWidgetRecord;
     static const Tk_OptionSpec baseSpecs[] = {
 	{TK_OPTION_STRING, "-one", "one", "One", "one",
-		Tk_Offset(ExtensionWidgetRecord, base1ObjPtr), -1},
+		Tk_Offset(ExtensionWidgetRecord, base1ObjPtr), -1, 0, NULL, 0},
 	{TK_OPTION_STRING, "-two", "two", "Two", "two",
-		Tk_Offset(ExtensionWidgetRecord, base2ObjPtr), -1},
-	{TK_OPTION_END}
+		Tk_Offset(ExtensionWidgetRecord, base2ObjPtr), -1, 0, NULL, 0},
+	{TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
     };
 
     if (objc < 2) {
@@ -747,7 +748,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, (ClientData)&CustomOption, 0x4000},
 	    {TK_OPTION_SYNONYM, "-synonym", NULL, NULL,
 		NULL, 0, -1, 0, (ClientData) "-color", 0x8000},
-	    {TK_OPTION_END}
+	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
 	Tk_Window tkwin;
@@ -848,16 +849,16 @@ TestobjconfigObjCmd(
 	ExtensionWidgetRecord *recordPtr;
 	static const Tk_OptionSpec extensionSpecs[] = {
 	    {TK_OPTION_STRING, "-three", "three", "Three", "three",
-		Tk_Offset(ExtensionWidgetRecord, extension3ObjPtr), -1},
+		Tk_Offset(ExtensionWidgetRecord, extension3ObjPtr), -1, 0, NULL, 0},
 	    {TK_OPTION_STRING, "-four", "four", "Four", "four",
-		Tk_Offset(ExtensionWidgetRecord, extension4ObjPtr), -1},
+		Tk_Offset(ExtensionWidgetRecord, extension4ObjPtr), -1, 0, NULL, 0},
 	    {TK_OPTION_STRING, "-two", "two", "Two", "two and a half",
-		Tk_Offset(ExtensionWidgetRecord, base2ObjPtr), -1},
+		Tk_Offset(ExtensionWidgetRecord, base2ObjPtr), -1, 0, NULL, 0},
 	    {TK_OPTION_STRING,
 		"-oneAgain", "oneAgain", "OneAgain", "one again",
-		Tk_Offset(ExtensionWidgetRecord, extension5ObjPtr), -1},
+		Tk_Offset(ExtensionWidgetRecord, extension5ObjPtr), -1, 0, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0,
-		(ClientData) baseSpecs}
+		(ClientData) baseSpecs, 0}
 	};
 	Tk_Window tkwin;
 	Tk_OptionTable optionTable;
@@ -905,8 +906,8 @@ TestobjconfigObjCmd(
 	ErrorWidgetRecord widgetRecord;
 	static const Tk_OptionSpec errorSpecs[] = {
 	    {TK_OPTION_INT, "-int", "integer", "Integer", "bogus",
-		Tk_Offset(ErrorWidgetRecord, intPtr)},
-	    {TK_OPTION_END}
+		Tk_Offset(ErrorWidgetRecord, intPtr), 0, 0, NULL, 0},
+	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
 
@@ -1023,7 +1024,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, (ClientData)&CustomOption, 0x4000},
 	    {TK_OPTION_SYNONYM, "-synonym", NULL, NULL,
 		NULL, -1, -1, 0, (ClientData) "-color", 0x8000},
-	    {TK_OPTION_END}
+	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
 	Tk_Window tkwin;
@@ -1093,16 +1094,16 @@ TestobjconfigObjCmd(
 	FiveRecord *recordPtr;
 	static const Tk_OptionSpec smallSpecs[] = {
 	    {TK_OPTION_INT, "-one", "one", "One", "1",
-		Tk_Offset(FiveRecord, one), -1},
+		Tk_Offset(FiveRecord, one), -1, 0, NULL, 0},
 	    {TK_OPTION_INT, "-two", "two", "Two", "2",
-		Tk_Offset(FiveRecord, two), -1},
+		Tk_Offset(FiveRecord, two), -1, 0, NULL, 0},
 	    {TK_OPTION_INT, "-three", "three", "Three", "3",
-		Tk_Offset(FiveRecord, three), -1},
+		Tk_Offset(FiveRecord, three), -1, 0, NULL, 0},
 	    {TK_OPTION_INT, "-four", "four", "Four", "4",
-		Tk_Offset(FiveRecord, four), -1},
+		Tk_Offset(FiveRecord, four), -1, 0, NULL, 0},
 	    {TK_OPTION_STRING, "-five", NULL, NULL, NULL,
-		Tk_Offset(FiveRecord, five), -1},
-	    {TK_OPTION_END}
+		Tk_Offset(FiveRecord, five), -1, 0, NULL, 0},
+	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 
 	if (objc < 3) {
@@ -1147,8 +1148,8 @@ TestobjconfigObjCmd(
 	NotEnoughRecord record;
 	static const Tk_OptionSpec errorSpecs[] = {
 	    {TK_OPTION_INT, "-foo", "foo", "Foo", "0",
-		Tk_Offset(NotEnoughRecord, fooObjPtr)},
-	    {TK_OPTION_END}
+		Tk_Offset(NotEnoughRecord, fooObjPtr), 0, 0, NULL, 0},
+	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tcl_Obj *newObjPtr = Tcl_NewStringObj("-foo", -1);
 	Tk_OptionTable optionTable;
@@ -1178,8 +1179,8 @@ TestobjconfigObjCmd(
 	SlaveRecord *recordPtr;
 	static const Tk_OptionSpec slaveSpecs[] = {
 	    {TK_OPTION_WINDOW, "-window", "window", "Window", ".bar",
-		Tk_Offset(SlaveRecord, windowPtr), -1, TK_CONFIG_NULL_OK},
-	    {TK_OPTION_END}
+		Tk_Offset(SlaveRecord, windowPtr), -1, TK_CONFIG_NULL_OK, NULL, 0},
+	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_Window tkwin = Tk_CreateWindowFromPath(interp,
 		(Tk_Window) clientData, Tcl_GetString(objv[2]), NULL);
