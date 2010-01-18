@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgPNG.c,v 1.3 2009/01/06 01:29:39 patthoyts Exp $
+ * RCS: @(#) $Id: tkImgPNG.c,v 1.4 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -274,7 +274,8 @@ Tk_PhotoImageFormat tkImgFmtPNG = {
     FileReadPNG,		/* fileReadProc */
     StringReadPNG,		/* stringReadProc */
     FileWritePNG,		/* fileWriteProc */
-    StringWritePNG		/* stringWriteProc */
+    StringWritePNG,		/* stringWriteProc */
+    NULL
 };
 
 /*

@@ -1,3 +1,36 @@
+2010-01-18  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvArc.c     fix more gcc warnings: missing initializer
+	* generic/tkCanvBmap.c
+	* generic/tkCanvImg.c
+	* generic/tkCanvLine.c
+	* generic/tkCanvPoly.c
+	* generic/tkCanvPs.c
+	* generic/tkCanvText.c
+	* generic/tkCanvWind.c
+	* generic/tkCmds.c
+	* generic/tkImgBmap.c
+	* generic/tkImgGIF.c
+	* generic/tkImgPhoto.c
+	* generic/tkImgPNG.c
+	* generic/tkImgPPM.c
+	* generic/tkMenu.c
+	* generic/tkMenubutton.c
+	* generic/tkMessage.c
+	* generic/tkOldTest.c
+	* generic/tkPanedWindow.c
+	* generic/tkRectOval.c
+	* generic/tkScrollbar.c
+	* generic/tkSquare.c
+	* generic/tkTest.c
+	* generic/tkText.c
+	* generic/tkTextImage.c
+	* generic/tkTextTag.c
+	* generic/tkTextWind.c
+	* generic/tkTrig.c
+	* generic/tkCanvas.c       Apply patch [#2932808 ]: Canvas items
+	                           not updating on widget state change 
+
 2010-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMenubutton.h:  Eliminate tkpMenubuttonClass

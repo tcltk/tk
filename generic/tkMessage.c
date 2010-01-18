@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMessage.c,v 1.24 2010/01/13 23:08:09 nijtmans Exp $
+ * RCS: @(#) $Id: tkMessage.c,v 1.25 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "default.h"
@@ -135,7 +135,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MESSAGE_FG, -1, Tk_Offset(Message, fgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	 "HighlightBackground", DEF_MESSAGE_HIGHLIGHT_BG, -1,
-	 Tk_Offset(Message, highlightBgColorPtr), 0, 0},
+	 Tk_Offset(Message, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	 DEF_MESSAGE_HIGHLIGHT, -1, Tk_Offset(Message, highlightColorPtr),
 	 0, 0, 0},
@@ -162,7 +162,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_MESSAGE_WIDTH, -1, Tk_Offset(Message, width), 0, 0 ,0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 /*

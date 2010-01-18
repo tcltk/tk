@@ -9,10 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.20 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvArc.c,v 1.21 2010/01/18 20:43:38 nijtmans Exp $
  */
 
-#include <stdio.h>
 #include "tkInt.h"
 #include "tkCanvas.h"
 
@@ -110,13 +109,13 @@ static Tk_ConfigSpec configSpecs[] = {
 	NULL, Tk_Offset(ArcItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, activeFillColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, activeFillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-activeoutline", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, outline.activeColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activeoutlinestipple", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, outline.activeStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, outline.activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, activeFillStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, activeFillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
 	"0.0", Tk_Offset(ArcItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
@@ -124,41 +123,41 @@ static Tk_ConfigSpec configSpecs[] = {
 	NULL, Tk_Offset(ArcItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", Tk_Offset(ArcItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT},
+	"0", Tk_Offset(ArcItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, Tk_Offset(ArcItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, disabledFillColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, disabledFillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-disabledoutline", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, outline.disabledColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, outline.disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledoutlinestipple", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, outline.disabledStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, outline.disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, disabledFillStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, disabledFillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", Tk_Offset(ArcItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_DOUBLE, "-extent", NULL, NULL,
-	"90", Tk_Offset(ArcItem, extent), TK_CONFIG_DONT_SET_DEFAULT},
+	"90", Tk_Offset(ArcItem, extent), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, fillColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
 	"0,0", Tk_Offset(ArcItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_COLOR, "-outline", NULL, NULL,
-	"black", Tk_Offset(ArcItem, outline.color), TK_CONFIG_NULL_OK},
+	"black", Tk_Offset(ArcItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
 	"0,0", Tk_Offset(ArcItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_BITMAP, "-outlinestipple", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, outline.stipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-start", NULL, NULL,
-	"0", Tk_Offset(ArcItem, start), TK_CONFIG_DONT_SET_DEFAULT},
+	"0", Tk_Offset(ArcItem, start), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
 	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(ArcItem, fillStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(ArcItem, fillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-style", NULL, NULL,
 	NULL, Tk_Offset(ArcItem, style), TK_CONFIG_DONT_SET_DEFAULT,
 	&styleOption},
@@ -167,7 +166,7 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
 	"1.0", Tk_Offset(ArcItem, outline.width), TK_CONFIG_DONT_SET_DEFAULT,
 	&pixelOption},
-    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
 /*
@@ -235,6 +234,7 @@ Tk_ItemType tkArcType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
+    NULL, 0, NULL, NULL
 };
 
 /*
