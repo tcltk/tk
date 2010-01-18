@@ -32,7 +32,7 @@
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
  *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.45 2008/10/17 23:18:37 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.46 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -141,6 +141,7 @@ Tk_PhotoImageFormat tkImgFmtGIF = {
     StringReadGIF,	/* stringReadProc */
     FileWriteGIF,	/* fileWriteProc */
     NULL,		/* stringWriteProc */
+    NULL
 };
 
 #define INTERLACE		0x40

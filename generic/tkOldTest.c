@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldTest.c,v 1.6 2009/11/29 22:10:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkOldTest.c,v 1.7 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #define USE_OLD_IMAGE
@@ -75,7 +75,8 @@ static Tk_ImageType imageType = {
     ImageFree,			/* freeProc */
     ImageDelete,		/* deleteProc */
     NULL,			/* postscriptPtr */
-    NULL			/* nextPtr */
+    NULL,			/* nextPtr */
+    NULL
 };
 
 /*

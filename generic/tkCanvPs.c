@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.28 2010/01/03 16:24:13 dkf Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.29 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -96,38 +96,38 @@ typedef struct TkPostscriptInfo {
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-colormap", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, colorVar), 0},
+	"", Tk_Offset(TkPostscriptInfo, colorVar), 0, NULL},
     {TK_CONFIG_STRING, "-colormode", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, colorMode), 0},
+	"", Tk_Offset(TkPostscriptInfo, colorMode), 0, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, fileName), 0},
+	"", Tk_Offset(TkPostscriptInfo, fileName), 0, NULL},
     {TK_CONFIG_STRING, "-channel", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, channelName), 0},
+	"", Tk_Offset(TkPostscriptInfo, channelName), 0, NULL},
     {TK_CONFIG_STRING, "-fontmap", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, fontVar), 0},
+	"", Tk_Offset(TkPostscriptInfo, fontVar), 0, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, height), 0},
+	"", Tk_Offset(TkPostscriptInfo, height), 0, NULL},
     {TK_CONFIG_ANCHOR, "-pageanchor", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageAnchor), 0},
+	"", Tk_Offset(TkPostscriptInfo, pageAnchor), 0, NULL},
     {TK_CONFIG_STRING, "-pageheight", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageHeightString), 0},
+	"", Tk_Offset(TkPostscriptInfo, pageHeightString), 0, NULL},
     {TK_CONFIG_STRING, "-pagewidth", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageWidthString), 0},
+	"", Tk_Offset(TkPostscriptInfo, pageWidthString), 0, NULL},
     {TK_CONFIG_STRING, "-pagex", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageXString), 0},
+	"", Tk_Offset(TkPostscriptInfo, pageXString), 0, NULL},
     {TK_CONFIG_STRING, "-pagey", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageYString), 0},
+	"", Tk_Offset(TkPostscriptInfo, pageYString), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-prolog", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, prolog), 0},
+	"", Tk_Offset(TkPostscriptInfo, prolog), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-rotate", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, rotate), 0},
+	"", Tk_Offset(TkPostscriptInfo, rotate), 0, NULL},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, width), 0},
+	"", Tk_Offset(TkPostscriptInfo, width), 0, NULL},
     {TK_CONFIG_PIXELS, "-x", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, x), 0},
+	"", Tk_Offset(TkPostscriptInfo, x), 0, NULL},
     {TK_CONFIG_PIXELS, "-y", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, y), 0},
-    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
+	"", Tk_Offset(TkPostscriptInfo, y), 0, NULL},
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
 /*

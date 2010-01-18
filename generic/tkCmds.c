@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCmds.c,v 1.51 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkCmds.c,v 1.52 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -62,15 +62,15 @@ MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
  */
 
 static const TkEnsemble tkCmdMap[] = {
-    {"appname",		AppnameCmd },
-    {"busy",		Tk_BusyObjCmd },
-    {"caret",		CaretCmd },
-    {"inactive",	InactiveCmd },
-    {"scaling",		ScalingCmd },
-    {"useinputmethods",	UseinputmethodsCmd },
-    {"windowingsystem",	WindowingsystemCmd },
+    {"appname",		AppnameCmd, NULL },
+    {"busy",		Tk_BusyObjCmd, NULL },
+    {"caret",		CaretCmd, NULL },
+    {"inactive",	InactiveCmd, NULL },
+    {"scaling",		ScalingCmd, NULL },
+    {"useinputmethods",	UseinputmethodsCmd, NULL },
+    {"windowingsystem",	WindowingsystemCmd, NULL },
     {"fontchooser",	NULL, tkFontchooserEnsemble},
-    {NULL}
+    {NULL, NULL, NULL}
 };
 
 /*

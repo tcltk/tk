@@ -13,7 +13,7 @@
  *	Department of Computer Science,
  *	Australian National University.
  *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.22 2008/04/27 22:38:56 dkf Exp $
+ * RCS: @(#) $Id: tkImgPPM.c,v 1.23 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -62,6 +62,7 @@ Tk_PhotoImageFormat tkImgFmtPPM = {
     StringReadPPM,		/* stringReadProc */
     FileWritePPM,		/* fileWriteProc */
     StringWritePPM,		/* stringWriteProc */
+    NULL
 };
 
 /*

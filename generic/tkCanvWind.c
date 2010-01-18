@@ -9,10 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.20 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.21 2010/01/18 20:43:38 nijtmans Exp $
  */
 
-#include <stdio.h>
 #include "tkInt.h"
 #include "tkCanvas.h"
 
@@ -49,18 +48,18 @@ static const Tk_CustomOption tagsOption = {
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT},
+	"center", Tk_Offset(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,
-	"0", Tk_Offset(WindowItem, height), TK_CONFIG_DONT_SET_DEFAULT},
+	"0", Tk_Offset(WindowItem, height), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
 	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", Tk_Offset(WindowItem, width), TK_CONFIG_DONT_SET_DEFAULT},
+	"0", Tk_Offset(WindowItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_WINDOW, "-window", NULL, NULL,
-	NULL, Tk_Offset(WindowItem, tkwin), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
+	NULL, Tk_Offset(WindowItem, tkwin), TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
 /*
@@ -133,6 +132,7 @@ Tk_ItemType tkWindowType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
+    NULL, 0, NULL, NULL
 };
 
 /*

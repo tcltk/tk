@@ -11,10 +11,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.11 2008/11/22 22:28:52 das Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.12 2010/01/18 20:43:38 nijtmans Exp $
  */
 
-#include <stdio.h>
 #include "tkInt.h"
 #include "tkCanvas.h"
 

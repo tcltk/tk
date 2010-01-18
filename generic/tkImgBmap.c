@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.29 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.30 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -100,7 +100,8 @@ Tk_ImageType tkBitmapImageType = {
     ImgBmapFree,		/* freeProc */
     ImgBmapDelete,		/* deleteProc */
     ImgBmapPostscript,		/* postscriptProc */
-    NULL			/* nextPtr */
+    NULL,			/* nextPtr */
+    NULL
 };
 
 /*
@@ -109,18 +110,18 @@ Tk_ImageType tkBitmapImageType = {
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_UID, "-background", NULL, NULL,
-	"", Tk_Offset(BitmapMaster, bgUid), 0},
+	"", Tk_Offset(BitmapMaster, bgUid), 0, NULL},
     {TK_CONFIG_STRING, "-data", NULL, NULL,
-	NULL, Tk_Offset(BitmapMaster, dataString), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(BitmapMaster, dataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	NULL, Tk_Offset(BitmapMaster, fileString), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(BitmapMaster, fileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_UID, "-foreground", NULL, NULL,
-	"#000000", Tk_Offset(BitmapMaster, fgUid), 0},
+	"#000000", Tk_Offset(BitmapMaster, fgUid), 0, NULL},
     {TK_CONFIG_STRING, "-maskdata", NULL, NULL,
-	NULL, Tk_Offset(BitmapMaster, maskDataString), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(BitmapMaster, maskDataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-maskfile", NULL, NULL,
-	NULL, Tk_Offset(BitmapMaster, maskFileString), TK_CONFIG_NULL_OK},
-    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
+	NULL, Tk_Offset(BitmapMaster, maskFileString), TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
 /*

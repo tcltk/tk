@@ -10,10 +10,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.30 2009/11/19 10:22:07 dkf Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.31 2010/01/18 20:43:38 nijtmans Exp $
  */
 
-#include <stdio.h>
 #include "tkInt.h"
 #include "tkCanvas.h"
 
@@ -163,9 +162,9 @@ static Tk_ConfigSpec configSpecs[] = {
 	NULL, Tk_Offset(LineItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(LineItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(LineItem, outline.activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
 	"0.0", Tk_Offset(LineItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
@@ -176,26 +175,26 @@ static Tk_ConfigSpec configSpecs[] = {
 	"8 10 3", Tk_Offset(LineItem, arrowShapeA),
 	TK_CONFIG_DONT_SET_DEFAULT, &arrowShapeOption},
     {TK_CONFIG_CAP_STYLE, "-capstyle", NULL, NULL,
-	"butt", Tk_Offset(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT},
+	"butt", Tk_Offset(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(LineItem, outline.color), TK_CONFIG_NULL_OK},
+	"black", Tk_Offset(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
 	NULL, Tk_Offset(LineItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", Tk_Offset(LineItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT},
+	"0", Tk_Offset(LineItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, Tk_Offset(LineItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(LineItem, outline.disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(LineItem, outline.disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", Tk_Offset(LineItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
-	"round", Tk_Offset(LineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT},
+	"round", Tk_Offset(LineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
 	"0,0", Tk_Offset(LineItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
@@ -203,17 +202,17 @@ static Tk_ConfigSpec configSpecs[] = {
 	"0", Tk_Offset(LineItem, smooth),
 	TK_CONFIG_DONT_SET_DEFAULT, &smoothOption},
     {TK_CONFIG_INT, "-splinesteps", NULL, NULL,
-	"12", Tk_Offset(LineItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT},
+	"12", Tk_Offset(LineItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
 	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.stipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(LineItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
 	"1.0", Tk_Offset(LineItem, outline.width),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
 /*
@@ -242,6 +241,7 @@ Tk_ItemType tkLineType = {
     LineInsert,				/* insertProc */
     LineDeleteCoords,			/* dTextProc */
     NULL,				/* nextPtr */
+    NULL, 0, NULL, NULL
 };
 
 /*

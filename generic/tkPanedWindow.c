@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.39 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.40 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "default.h"
@@ -272,11 +272,11 @@ static Tk_ObjCustomOption stickyOption = {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_PANEDWINDOW_BG_COLOR, -1, Tk_Offset(PanedWindow, background), 0,
-	 (ClientData) DEF_PANEDWINDOW_BG_MONO},
+	 (ClientData) DEF_PANEDWINDOW_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	 NULL, 0, -1, 0, (ClientData) "-borderwidth"},
+	 NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	 NULL, 0, -1, 0, (ClientData) "-background"},
+	 NULL, 0, -1, 0, (ClientData) "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_PANEDWINDOW_BORDERWIDTH, -1, Tk_Offset(PanedWindow, borderWidth),
 	 0, 0, GEOMETRY},
@@ -318,7 +318,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-width", "width", "Width",
 	 DEF_PANEDWINDOW_WIDTH, Tk_Offset(PanedWindow, widthPtr),
 	 Tk_Offset(PanedWindow, width), TK_OPTION_NULL_OK, 0, GEOMETRY},
-    {TK_OPTION_END}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 static const Tk_OptionSpec slaveOptionSpecs[] = {
@@ -348,7 +348,7 @@ static const Tk_OptionSpec slaveOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-width", NULL, NULL,
 	 DEF_PANEDWINDOW_PANE_WIDTH, Tk_Offset(Slave, widthPtr),
 	 Tk_Offset(Slave, width), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_END}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 /*

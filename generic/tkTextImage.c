@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.27 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.28 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -97,7 +97,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-name", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextEmbImage, imageName),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_END}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 /*
