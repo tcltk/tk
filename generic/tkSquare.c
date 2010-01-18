@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSquare.c,v 1.15 2009/11/29 22:10:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkSquare.c,v 1.16 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #if 0
@@ -69,29 +69,29 @@ typedef struct {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	    "#d9d9d9", Tk_Offset(Square, bgBorderPtr), -1, 0,
-	    (ClientData) "white"},
+	    (ClientData) "white", 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, -1, 0,
-	    (ClientData) "-borderwidth"},
+	    (ClientData) "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, -1, 0,
-	    (ClientData) "-background"},
+	    (ClientData) "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	    "2", Tk_Offset(Square, borderWidthPtr), -1},
+	    "2", Tk_Offset(Square, borderWidthPtr), -1, 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
-	    "1", Tk_Offset(Square, doubleBufferPtr), -1},
+	    "1", Tk_Offset(Square, doubleBufferPtr), -1, 0 , NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, -1, 0,
-	    (ClientData) "-foreground"},
+	    (ClientData) "-foreground", 0},
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
 	    "#b03060", Tk_Offset(Square, fgBorderPtr), -1, 0,
-	    (ClientData) "black"},
+	    (ClientData) "black", 0},
     {TK_OPTION_PIXELS, "-posx", "posx", "PosX", "0",
-	    Tk_Offset(Square, xPtr), -1},
+	    Tk_Offset(Square, xPtr), -1, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-posy", "posy", "PosY", "0",
-	    Tk_Offset(Square, yPtr), -1},
+	    Tk_Offset(Square, yPtr), -1, 0, NULL, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	    "raised", Tk_Offset(Square, reliefPtr), -1},
+	    "raised", Tk_Offset(Square, reliefPtr), -1, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-size", "size", "Size", "20",
-	    Tk_Offset(Square, sizeObjPtr), -1},
-    {TK_OPTION_END}
+	    Tk_Offset(Square, sizeObjPtr), -1, 0, NULL, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
 
 /*

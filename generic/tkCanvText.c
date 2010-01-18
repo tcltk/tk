@@ -9,10 +9,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.36 2009/01/06 21:58:15 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.37 2010/01/18 20:43:38 nijtmans Exp $
  */
 
-#include <stdio.h>
 #include "tkInt.h"
 #include "tkCanvas.h"
 #include "default.h"
@@ -98,39 +97,39 @@ static const Tk_CustomOption offsetOption = {
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT},
+	"center", Tk_Offset(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_DOUBLE, "-angle", NULL, NULL,
-	"0.0", Tk_Offset(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT},
+	"0.0", Tk_Offset(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledColor), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledStipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(TextItem, color), TK_CONFIG_NULL_OK},
+	"black", Tk_Offset(TextItem, color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_FONT, "-font", NULL, NULL,
-	DEF_CANVTEXT_FONT, Tk_Offset(TextItem, tkfont), 0},
+	DEF_CANVTEXT_FONT, Tk_Offset(TextItem, tkfont), 0, NULL},
     {TK_CONFIG_JUSTIFY, "-justify", NULL, NULL,
-	"left", Tk_Offset(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT},
+	"left", Tk_Offset(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
 	"0,0", Tk_Offset(TextItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
 	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, stipple), TK_CONFIG_NULL_OK},
+	NULL, Tk_Offset(TextItem, stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
-	"", Tk_Offset(TextItem, text), 0},
+	"", Tk_Offset(TextItem, text), 0, NULL},
     {TK_CONFIG_INT, "-underline", NULL, NULL,
-	"-1", Tk_Offset(TextItem, underline), 0},
+	"-1", Tk_Offset(TextItem, underline), 0, NULL},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", Tk_Offset(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT},
-    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0}
+	"0", Tk_Offset(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+    {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
 /*
@@ -202,6 +201,7 @@ Tk_ItemType tkTextType = {
     TextInsert,			/* insertProc */
     TextDeleteChars,		/* dTextProc */
     NULL,			/* nextPtr */
+    NULL, 0, NULL, NULL
 };
 
 #define ROUND(d) ((int) floor((d) + 0.5))
