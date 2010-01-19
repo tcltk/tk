@@ -1,7 +1,12 @@
+2010-01-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvas.c (TagSearchScanExpr): [Bug 2931374]: Stop overflow
+	of working buffer during construction of long tag expressions.
+
 2010-01-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvas.c       Apply patch [#2932808 ]: Canvas items
-	                           not updating on widget state change 
+	* generic/tkCanvas.c:      [Patch 2932808]: Canvas items not
+	                           updating on widget state change.
 
 2010-01-09  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
