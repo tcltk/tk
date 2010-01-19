@@ -11,7 +11,7 @@
 # Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.40 2009/01/11 11:51:39 patthoyts Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.41 2010/01/19 01:27:41 patthoyts Exp $
 #
 
 namespace eval ::tk::dialog::error {
@@ -146,6 +146,8 @@ proc ::tk::dialog::error::bgerror err {
 
     if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
+    } elseif {$windowingsystem eq "x11"} {
+	wm attributes $dlg -type dialog
     }
 
     ttk::frame $dlg.bot

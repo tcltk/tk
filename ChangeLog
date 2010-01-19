@@ -1,3 +1,16 @@
+2010-01-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/bgerror.tcl:  [TIP 359]: Extended Window Manager Hints
+	* library/clrpick.tcl:  following the freedesktop.org specification
+	* library/demos/widget: are now supported on X11 using a new
+	* library/dialog.tcl:   wm attribute called '-type'
+	* library/msgbox.tcl:   This feature is now used in the Tk library
+	* library/tkfbox.tcl:   functions where appropriate.
+	* library/ttk/combobox.tcl:
+	* tests/unixWm.test:
+	* tests/wm.test:
+	* unix/tkUnixWm.c:
+
 2010-01-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkCanvArc.c     fix more gcc warnings: missing initializer
