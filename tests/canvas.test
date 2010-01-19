@@ -7,7 +7,7 @@
 # Copyright (c) 2008 Donal K. Fellows
 # All rights reserved.
 #
-# RCS: @(#) $Id: canvas.test,v 1.29 2009/01/13 01:46:06 patthoyts Exp $
+# RCS: @(#) $Id: canvas.test,v 1.30 2010/01/19 22:10:03 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
@@ -487,6 +487,15 @@ test canvas-10.12 {multple events bound to same tag expr} -setup {
 } -body {
     .c bind {a && b} <Enter> {puts Enter}
     .c bind {a && b} <Leave> {puts Leave}
+} -result {}
+test canvas-10.13 {more long tag searches; Bug 2931374} -setup {
+    catch {destroy .c}
+    canvas .c
+} -body {
+    .c find withtag {(A&&B&&C&&D)&&area&&!text}
+    # memory errors on failure
+} -cleanup {
+    destroy .c
 } -result {}
 
 test canvas-11.1 {canvas poly fill check, bug 5783} -setup {

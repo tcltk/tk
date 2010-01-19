@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.63 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.64 2010/01/19 22:10:03 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -3561,7 +3561,11 @@ TagSearchScanExpr(
     while (searchPtr->stringIndex < searchPtr->stringLength) {
 	c = searchPtr->string[searchPtr->stringIndex++];
 
-	if (expr->allocated == expr->index) {
+	/*
+	 * Need two slots free at this point, not one. [Bug 2931374]
+	 */
+
+	if (expr->index >= expr->allocated-1) {
 	    expr->allocated += 15;
 	    if (expr->uids) {
 		expr->uids = (Tk_Uid *) ckrealloc((char *) expr->uids,
