@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.47 2010/01/06 09:25:15 dkf Exp $
+# RCS: @(#) $Id: wm.test,v 1.48 2010/01/19 01:27:41 patthoyts Exp $
 
 # This file tests window manager interactions that work across platforms.
 # Window manager tests that only work on a specific platform should be placed
@@ -139,7 +139,7 @@ test wm-attributes-1.2.3 {usage} -constraints win -returnCodes error -body {
 } -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-transparentcolor ?color?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}
 test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error -body {
     wm attributes . _
-} -result {bad attribute "_": must be -alpha, -topmost, -zoomed, or -fullscreen}
+} -result {bad attribute "_": must be -alpha, -topmost, -zoomed, -fullscreen, or -type}
 test wm-attributes-1.2.5 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -modified, -notify, or -titlepath}

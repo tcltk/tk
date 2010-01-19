@@ -10,7 +10,7 @@
 #	"Directory" option menu.  The user can select files by clicking on the
 #	file icons or by entering a filename in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.75 2009/10/22 10:12:57 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.76 2010/01/19 01:27:41 patthoyts Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -330,6 +330,7 @@ proc ::tk::dialog::file::Create {w class} {
     global tk_library
 
     toplevel $w -class $class
+    if {[tk windowingsystem] eq "x11"} {wm attributes $w -type dialog}
     pack [ttk::frame $w.contents] -expand 1 -fill both
     #set w $w.contents
 
