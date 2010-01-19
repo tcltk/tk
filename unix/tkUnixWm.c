@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.78 2010/01/06 09:25:15 dkf Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.79 2010/01/19 01:27:41 patthoyts Exp $
  */
 
 #include "tkUnixInt.h"
@@ -52,12 +52,12 @@ typedef struct {
 
 typedef enum {
     WMATT_ALPHA, WMATT_TOPMOST, WMATT_ZOOMED, WMATT_FULLSCREEN,
-    _WMATT_LAST_ATTRIBUTE
+    WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
     "-alpha", "-topmost", "-zoomed", "-fullscreen",
-    NULL
+    "-type", NULL
 };
 
 /*
@@ -348,6 +348,8 @@ static void		UpdateTitle(TkWindow *winPtr);
 static void		UpdatePhotoIcon(TkWindow *winPtr);
 static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static void		UpdateWmProtocols(WmInfo *wmPtr);
+static int		SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr);
+static Tcl_Obj *	GetNetWmType(TkWindow *winPtr);
 static void 		SetNetWmState(TkWindow*, const char *atomName, int on);
 static void 		CheckNetWmState(WmInfo *, Atom *atoms, int numAtoms);
 static void 		UpdateNetWmState(WmInfo *);
@@ -1279,6 +1281,10 @@ WmSetAttribute(
 	}
 	SetNetWmState(winPtr, "_NET_WM_STATE_ABOVE", wmPtr->reqState.topmost);
 	break;
+    case WMATT_TYPE:
+	if (TCL_OK != SetNetWmType(winPtr, value))
+	    return TCL_ERROR;
+	break;
     case WMATT_ZOOMED:
 	if (Tcl_GetBooleanFromObj(interp, value,
 		&wmPtr->reqState.zoomed) != TCL_OK) {
@@ -1332,6 +1338,8 @@ WmGetAttribute(
 	return Tcl_NewBooleanObj(wmPtr->attributes.zoomed);
     case WMATT_FULLSCREEN:
 	return Tcl_NewBooleanObj(wmPtr->attributes.fullscreen);
+    case WMATT_TYPE:
+	return GetNetWmType(winPtr);
     case _WMATT_LAST_ATTRIBUTE:	/*NOTREACHED*/
 	break;
     }
@@ -5342,6 +5350,130 @@ UpdateHints(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * SetNetWmType --
+ *
+ *	Set the extended window manager hints for a toplevel window
+ *	to the types provided. The specification states that this
+ *	may be a list of window types in preferred order. To permit
+ *	for future type definitions, the set of names is unconstrained
+ *	and names are converted to upper-case and appended to
+ *	"_NET_WM_WINDOW_TYPE_" before being converted to an Atom.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
+{
+    Atom typeAtom, *atoms = NULL;
+    WmInfo *wmPtr;
+    TkWindow *wrapperPtr;
+    Tcl_Obj **objv;
+    int objc, n;
+    Tk_Window tkwin = (Tk_Window)winPtr;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+
+    if (TCL_OK != Tcl_ListObjGetElements(interp, typePtr, &objc, &objv)) {
+	return TCL_ERROR;
+    }
+
+    if (!Tk_HasWrapper(tkwin)) {
+	return TCL_OK; /* error?? */
+    }
+
+    if (objc > 0) {
+	atoms = (Atom *)ckalloc(sizeof(Atom) * objc);
+    }
+
+    for (n = 0; n < objc; ++n) {
+	Tcl_DString ds, dsName;
+	int len;
+	char *name = Tcl_GetStringFromObj(objv[n], &len);
+	Tcl_UtfToUpper(name);
+	Tcl_UtfToExternalDString(NULL, name, len, &dsName);
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds, "_NET_WM_WINDOW_TYPE_", 20);
+	Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsName),
+		Tcl_DStringLength(&dsName));
+	Tcl_DStringFree(&dsName);
+	atoms[n] = Tk_InternAtom(tkwin, Tcl_DStringValue(&ds));
+	Tcl_DStringFree(&ds);
+    }
+
+    wmPtr = winPtr->wmInfoPtr;
+    if (wmPtr->wrapperPtr == NULL) {
+	CreateWrapper(wmPtr);
+    }
+    wrapperPtr = wmPtr->wrapperPtr;
+
+    typeAtom = Tk_InternAtom(tkwin, "_NET_WM_WINDOW_TYPE");
+    XChangeProperty(Tk_Display(tkwin), wrapperPtr->window, typeAtom,
+	XA_ATOM, 32, PropModeReplace, (unsigned char *) atoms, objc);
+
+    ckfree((char *)atoms);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetNetWmType --
+ *
+ *	Read the extended window manager type hint from a window
+ *	and return as a list of names suitable for use with 
+ *	SetNetWmType.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tcl_Obj *
+GetNetWmType(TkWindow *winPtr)
+{
+    Atom typeAtom, actualType, *atoms;
+    int actualFormat;
+    unsigned long n, count, bytesAfter;
+    unsigned char *propertyValue = NULL;
+    long maxLength = 1024;
+    Tk_Window tkwin = (Tk_Window)winPtr;
+    TkWindow *wrapperPtr;
+    Tcl_Obj *typePtr;
+    Tcl_Interp *interp;
+    Tcl_DString ds;
+
+    interp = Tk_Interp(tkwin);
+    typePtr = Tcl_NewListObj(0, NULL);
+
+    if (winPtr->wmInfoPtr->wrapperPtr == NULL) {
+	CreateWrapper(winPtr->wmInfoPtr);
+    }
+    wrapperPtr = winPtr->wmInfoPtr->wrapperPtr;
+
+    typeAtom = Tk_InternAtom(tkwin, "_NET_WM_WINDOW_TYPE");
+    if (Success == XGetWindowProperty(wrapperPtr->display,
+	    wrapperPtr->window, typeAtom, 0L, maxLength, False,
+	    XA_ATOM, &actualType, &actualFormat, &count,
+	    &bytesAfter, &propertyValue)) {
+	atoms = (Atom *)propertyValue;
+	for (n = 0; n < count; ++n) {
+	    const char *name = Tk_GetAtomName(tkwin, atoms[n]);
+	    if (strncmp("_NET_WM_WINDOW_TYPE_", name, 20) == 0) {
+		Tcl_ExternalToUtfDString(NULL, name+20, -1, &ds);
+		Tcl_UtfToLower(Tcl_DStringValue(&ds));
+		Tcl_ListObjAppendElement(interp, typePtr,
+			Tcl_NewStringObj(Tcl_DStringValue(&ds),
+				Tcl_DStringLength(&ds)));
+		Tcl_DStringFree(&ds);
+	    }
+	}
+	XFree(propertyValue);
+    }
+
+    return typePtr;
+}
+
+/*
  *--------------------------------------------------------------
  *
  * ParseGeometry --
@@ -6670,7 +6802,7 @@ TkpMakeMenuWindow(
     WmInfo *wmPtr;
     XSetWindowAttributes atts;
     TkWindow *wrapperPtr;
-    Atom atom;
+    Tcl_Obj *typeObj;
 
     if (!Tk_HasWrapper(tkwin)) {
 	return;
@@ -6683,22 +6815,18 @@ TkpMakeMenuWindow(
     if (typeFlag == TK_MAKE_MENU_TEAROFF) {
 	atts.override_redirect = False;
 	atts.save_under = False;
-	atom = Tk_InternAtom((Tk_Window) tkwin, "_NET_WM_WINDOW_TYPE_MENU");
+	typeObj = Tcl_NewStringObj("menu", -1);
 	TkSetTransientFor(tkwin, NULL);
     } else {
 	atts.override_redirect = True;
 	atts.save_under = True;
 	if (typeFlag == TK_MAKE_MENU_DROPDOWN) {
-	    atom = Tk_InternAtom((Tk_Window) tkwin,
-		    "_NET_WM_WINDOW_TYPE_DROPDOWN_MENU");
+	    typeObj = Tcl_NewStringObj("dropdown_menu", -1);
 	} else {
-	    atom = Tk_InternAtom((Tk_Window) tkwin,
-		    "_NET_WM_WINDOW_TYPE_POPUP_MENU");
+	    typeObj = Tcl_NewStringObj("popup_menu", -1);
 	}
     }
-    XChangeProperty(Tk_Display(tkwin), wrapperPtr->window,
-	    Tk_InternAtom((Tk_Window) tkwin, "_NET_WM_WINDOW_TYPE"),
-	    XA_ATOM, 32, PropModeReplace, (unsigned char *) &atom, 1);
+    SetNetWmType((TkWindow *)tkwin, typeObj);
 
     /*
      * The override-redirect and save-under bits must be set on the wrapper
