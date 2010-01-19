@@ -1,3 +1,8 @@
+2010-01-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvas.c (TagSearchScanExpr): [Bug 2931374]: Stop overflow
+	of working buffer during construction of long tag expressions.
+
 2010-01-19  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/bgerror.tcl:  [TIP 359]: Extended Window Manager Hints
@@ -13,7 +18,7 @@
 
 2010-01-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvArc.c     fix more gcc warnings: missing initializer
+	* generic/tkCanvArc.c     Fix more gcc warnings: missing initializer
 	* generic/tkCanvBmap.c
 	* generic/tkCanvImg.c
 	* generic/tkCanvLine.c
@@ -41,8 +46,8 @@
 	* generic/tkTextTag.c
 	* generic/tkTextWind.c
 	* generic/tkTrig.c
-	* generic/tkCanvas.c       Apply patch [#2932808 ]: Canvas items
-	                           not updating on widget state change 
+	* generic/tkCanvas.c:      [Patch 2932808]: Canvas items not updating
+				   on widget state change.
 
 2010-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -102,7 +107,7 @@
 
 2010-01-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* doc/photo.n: [Bug 2927569] Multiple edits have peverted the
+	* doc/photo.n: [Bug 2927569]: Multiple edits have peverted the
 	original meaning of the phrase 'image file data' to reference
 	a filename option that does not exist.
 
