@@ -1,5 +1,5 @@
 #
-# $Id: combobox.tcl,v 1.12.2.2 2008/11/22 22:14:50 patthoyts Exp $
+# $Id: combobox.tcl,v 1.12.2.3 2010/01/20 23:43:51 patthoyts Exp $
 #
 # Combobox bindings.
 #
@@ -298,6 +298,7 @@ proc ttk::combobox::PopdownToplevel {w} {
 	default -
 	x11 {
 	    $w configure -relief solid -borderwidth 1
+	    wm attributes $w -type combo
 	    wm overrideredirect $w true
 	}
 	win32 {
