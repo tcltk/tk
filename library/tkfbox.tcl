@@ -11,7 +11,7 @@
 #	files by clicking on the file icons or by entering a filename
 #	in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.68.2.4 2009/12/22 18:16:05 dkf Exp $
+# RCS: @(#) $Id: tkfbox.tcl,v 1.68.2.5 2010/01/20 23:43:51 patthoyts Exp $
 #
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
@@ -1047,6 +1047,7 @@ proc ::tk::dialog::file::Create {w class} {
     global tk_library
 
     toplevel $w -class $class
+    if {[tk windowingsystem] eq "x11"} {wm attributes $w -type dialog}
     pack [ttk::frame $w.contents] -expand 1 -fill both
     #set w $w.contents
 
