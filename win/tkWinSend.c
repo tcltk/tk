@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.21 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.22 2010/01/22 14:17:53 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -843,7 +843,7 @@ Win32ErrorObj(
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
-	wsprintf(sBuffer, _T("Error Code: %08lX"), hrError);
+	wsprintf(sBuffer, (const char *)_T("Error Code: %08lX"), hrError);
     }
 
     if ((p = _tcsrchr(lpBuffer, _T('\r'))) != NULL) {
@@ -1034,7 +1034,7 @@ SendTrace(
     static char buffer[1024];
 
     va_start(args, format);
-    _vsnprintf(buffer, 1023, format, args);
+    vsnprintf(buffer, 1023, format, args);
     OutputDebugString(buffer);
     va_end(args);
 }

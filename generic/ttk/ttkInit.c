@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.9 2009/08/09 21:20:34 nijtmans Exp $
+/* $Id: ttkInit.c,v 1.10 2010/01/22 14:17:53 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -185,7 +185,7 @@ Tk_OptionSpec ttkCoreOptionSpecs[] =
 	Tk_Offset(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
     {TK_OPTION_STRING, "-class", "", "", NULL,
 	Tk_Offset(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
-    {TK_OPTION_END}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 /*------------------------------------------------------------------------

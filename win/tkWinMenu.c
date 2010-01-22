@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.71 2010/01/03 19:50:59 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.72 2010/01/22 14:17:53 nijtmans Exp $
  */
 
 #define WINVER        0x0500   /* Requires Windows 2K definitions */
@@ -18,8 +18,6 @@
 #define OEMRESOURCE
 #include "tkWinInt.h"
 #include "tkMenu.h"
-
-#include <string.h>
 
 /*
  * The class of the window for popup menus.
