@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.29 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.30 2010/01/22 14:17:53 nijtmans Exp $
  */
 
 #ifndef USE_TCL_STUBS
@@ -366,9 +366,6 @@ TestwineventCmd(
 	}
     }
     message = TkFindStateNum(NULL, NULL, messageMap, argv[3]);
-    if (message < 0) {
-	message = strtol(argv[3], NULL, 0);
-    }
     wParam = 0;
     lParam = 0;
 

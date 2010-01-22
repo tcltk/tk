@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP AR RANLIB RC SET_MAKE TCL_THREADS CYGPATH CELIB_DIR DL_LIBS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING MAN2TCLFLAGS CFLAGS_DEFAULT LDFLAGS_DEFAULT TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC TCL_DEFS BUILD_TCLSH TCLSH_PROG TK_WIN_VERSION MACHINE TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_LIB_FILE TK_DLL_FILE TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_SRC_DIR TK_BIN_DIR TCL_MAJOR_VERSION TCL_MINOR_VERSION TCL_PATCH_LEVEL TCL_DBGX CFG_TK_SHARED_LIB_SUFFIX CFG_TK_UNSHARED_LIB_SUFFIX CFG_TK_EXPORT_FILE_SUFFIX TK_SHARED_BUILD DEPARG EXTRA_CFLAGS STLIB_LD SHLIB_LD SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX CC_OBJNAME CC_EXENAME LDFLAGS_DEBUG LDFLAGS_OPTIMIZE LDFLAGS_CONSOLE LDFLAGS_WINDOW RC_OUT RC_TYPE RC_INCLUDE RC_DEFINE RC_DEFINES TK_RES RES LIBS_GUI DLLSUFFIX LIBPREFIX LIBSUFFIX EXESUFFIX LIBRARIES MAKE_LIB POST_MAKE_LIB MAKE_DLL MAKE_EXE TK_LIB_FLAG TK_LIB_SPEC TK_BUILD_LIB_SPEC TK_STUB_LIB_SPEC TK_STUB_LIB_PATH TK_BUILD_STUB_LIB_PATH TK_CC_SEARCH_FLAGS TK_LD_SEARCH_FLAGS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP AR RANLIB RC SET_MAKE TCL_THREADS CYGPATH CELIB_DIR DL_LIBS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING MAN2TCLFLAGS CFLAGS_DEFAULT LDFLAGS_DEFAULT TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC TCL_DEFS BUILD_TCLSH TCLSH_PROG TK_WIN_VERSION MACHINE TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_LIB_FILE TK_DLL_FILE TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_SRC_DIR TK_BIN_DIR TCL_MAJOR_VERSION TCL_MINOR_VERSION TCL_PATCH_LEVEL TCL_DBGX CFG_TK_SHARED_LIB_SUFFIX CFG_TK_UNSHARED_LIB_SUFFIX CFG_TK_EXPORT_FILE_SUFFIX EXTRA_CFLAGS DEPARG CC_OBJNAME CC_EXENAME LDFLAGS_DEBUG LDFLAGS_OPTIMIZE LDFLAGS_CONSOLE LDFLAGS_WINDOW TK_RES STLIB_LD SHLIB_LD SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX TK_SHARED_BUILD LIBS_GUI DLLSUFFIX LIBPREFIX LIBSUFFIX EXESUFFIX LIBRARIES MAKE_LIB POST_MAKE_LIB MAKE_DLL MAKE_EXE TK_LIB_FLAG TK_LIB_SPEC TK_BUILD_LIB_SPEC TK_STUB_LIB_SPEC TK_STUB_LIB_PATH TK_BUILD_STUB_LIB_PATH TK_CC_SEARCH_FLAGS TK_LD_SEARCH_FLAGS RC_OUT RC_TYPE RC_INCLUDE RC_DEFINE RC_DEFINES RES LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1322,7 +1322,7 @@ fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
-# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
+# libdir must be a fully qualified path (not ${exec_prefix}/lib)
 eval libdir="$libdir"
 
 #------------------------------------------------------------------------
@@ -2886,7 +2886,7 @@ echo "$as_me: error: Required resource tool 'windres' not found on PATH." >&2;}
 fi
 
 #--------------------------------------------------------------------
-# Checks to see if the make progeam sets the $MAKE variable.
+# Checks to see if the make progam sets the $MAKE variable.
 #--------------------------------------------------------------------
 
 echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
@@ -2923,74 +2923,6 @@ fi
 # Perform additinal compiler tests.
 #--------------------------------------------------------------------
 
-
-echo "$as_me:$LINENO: checking for Cygwin version of gcc" >&5
-echo $ECHO_N "checking for Cygwin version of gcc... $ECHO_C" >&6
-if test "${ac_cv_cygwin+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-#ifdef __CYGWIN__
-#error cygwin
-#endif
-
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_cygwin=no
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_cygwin=yes
-fi
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-
-fi
-echo "$as_me:$LINENO: result: $ac_cv_cygwin" >&5
-echo "${ECHO_T}$ac_cv_cygwin" >&6
-if test "$ac_cv_cygwin" = "yes" ; then
-    { { echo "$as_me:$LINENO: error: Compiling under Cygwin is not currently supported.
-A maintainer for the Cygwin port of Tcl/Tk is needed. See the README
-file for information about building with Mingw." >&5
-echo "$as_me: error: Compiling under Cygwin is not currently supported.
-A maintainer for the Cygwin port of Tcl/Tk is needed. See the README
-file for information about building with Mingw." >&2;}
-   { (exit 1); exit 1; }; }
-fi
 
 #--------------------------------------------------------------------
 # Determines the correct binary file extension (.o, .obj, .exe etc.)
@@ -3270,6 +3202,72 @@ echo "${ECHO_T}yes" >&6
 	cyg_conftest=
     fi
 
+    echo "$as_me:$LINENO: checking for Cygwin version of gcc" >&5
+echo $ECHO_N "checking for Cygwin version of gcc... $ECHO_C" >&6
+if test "${ac_cv_cygwin+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+    #ifdef __CYGWIN__
+    #error cygwin
+    #endif
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_cygwin=no
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_cygwin=yes
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+echo "$as_me:$LINENO: result: $ac_cv_cygwin" >&5
+echo "${ECHO_T}$ac_cv_cygwin" >&6
+    if test "$ac_cv_cygwin" = "yes" ; then
+    { echo "$as_me:$LINENO: WARNING: Compiling under Cygwin is not currently supported.
+If you are not sure you want this, see the README
+file for information about building with Mingw." >&5
+echo "$as_me: WARNING: Compiling under Cygwin is not currently supported.
+If you are not sure you want this, see the README
+file for information about building with Mingw." >&2;}
+    fi
     if test "$CYGPATH" = "echo" || test "$ac_cv_cygwin" = "yes"; then
         DEPARG='"$<"'
     else
@@ -4236,7 +4234,7 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test "$SHARED_BUILD" = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
+if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
     if test "${DBGX}" = "d"; then
         RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
@@ -4297,9 +4295,7 @@ TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`
 
 
 
-
-
-
+# win/tcl.m4 doesn't set (LDFLAGS)
 
 
 
@@ -4336,6 +4332,14 @@ TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`
 
 
 # undefined at this point for win
+
+
+
+
+
+
+
+
 
 
 
@@ -5032,27 +5036,21 @@ s,@TCL_DBGX@,$TCL_DBGX,;t t
 s,@CFG_TK_SHARED_LIB_SUFFIX@,$CFG_TK_SHARED_LIB_SUFFIX,;t t
 s,@CFG_TK_UNSHARED_LIB_SUFFIX@,$CFG_TK_UNSHARED_LIB_SUFFIX,;t t
 s,@CFG_TK_EXPORT_FILE_SUFFIX@,$CFG_TK_EXPORT_FILE_SUFFIX,;t t
-s,@TK_SHARED_BUILD@,$TK_SHARED_BUILD,;t t
-s,@DEPARG@,$DEPARG,;t t
 s,@EXTRA_CFLAGS@,$EXTRA_CFLAGS,;t t
-s,@STLIB_LD@,$STLIB_LD,;t t
-s,@SHLIB_LD@,$SHLIB_LD,;t t
-s,@SHLIB_LD_LIBS@,$SHLIB_LD_LIBS,;t t
-s,@SHLIB_CFLAGS@,$SHLIB_CFLAGS,;t t
-s,@SHLIB_SUFFIX@,$SHLIB_SUFFIX,;t t
+s,@DEPARG@,$DEPARG,;t t
 s,@CC_OBJNAME@,$CC_OBJNAME,;t t
 s,@CC_EXENAME@,$CC_EXENAME,;t t
 s,@LDFLAGS_DEBUG@,$LDFLAGS_DEBUG,;t t
 s,@LDFLAGS_OPTIMIZE@,$LDFLAGS_OPTIMIZE,;t t
 s,@LDFLAGS_CONSOLE@,$LDFLAGS_CONSOLE,;t t
 s,@LDFLAGS_WINDOW@,$LDFLAGS_WINDOW,;t t
-s,@RC_OUT@,$RC_OUT,;t t
-s,@RC_TYPE@,$RC_TYPE,;t t
-s,@RC_INCLUDE@,$RC_INCLUDE,;t t
-s,@RC_DEFINE@,$RC_DEFINE,;t t
-s,@RC_DEFINES@,$RC_DEFINES,;t t
 s,@TK_RES@,$TK_RES,;t t
-s,@RES@,$RES,;t t
+s,@STLIB_LD@,$STLIB_LD,;t t
+s,@SHLIB_LD@,$SHLIB_LD,;t t
+s,@SHLIB_LD_LIBS@,$SHLIB_LD_LIBS,;t t
+s,@SHLIB_CFLAGS@,$SHLIB_CFLAGS,;t t
+s,@SHLIB_SUFFIX@,$SHLIB_SUFFIX,;t t
+s,@TK_SHARED_BUILD@,$TK_SHARED_BUILD,;t t
 s,@LIBS_GUI@,$LIBS_GUI,;t t
 s,@DLLSUFFIX@,$DLLSUFFIX,;t t
 s,@LIBPREFIX@,$LIBPREFIX,;t t
@@ -5071,6 +5069,12 @@ s,@TK_STUB_LIB_PATH@,$TK_STUB_LIB_PATH,;t t
 s,@TK_BUILD_STUB_LIB_PATH@,$TK_BUILD_STUB_LIB_PATH,;t t
 s,@TK_CC_SEARCH_FLAGS@,$TK_CC_SEARCH_FLAGS,;t t
 s,@TK_LD_SEARCH_FLAGS@,$TK_LD_SEARCH_FLAGS,;t t
+s,@RC_OUT@,$RC_OUT,;t t
+s,@RC_TYPE@,$RC_TYPE,;t t
+s,@RC_INCLUDE@,$RC_INCLUDE,;t t
+s,@RC_DEFINE@,$RC_DEFINE,;t t
+s,@RC_DEFINES@,$RC_DEFINES,;t t
+s,@RES@,$RES,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
@@ -5335,4 +5339,5 @@ if test "$no_create" != yes; then
   # would make configure fail if this is the last instruction.
   $ac_cs_success || { (exit 1); exit 1; }
 fi
+
 
